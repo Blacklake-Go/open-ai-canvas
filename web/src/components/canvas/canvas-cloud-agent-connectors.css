@@ -1,94 +1,67 @@
-/* Agent 连接器样式 - 极简紧凑版：高度压缩，图标更小，左右紧密排列 */
 
-.agent-connectors {
-    display: flex;
-    align-items: center;
-    gap: var(--space-2);
-    padding: var(--space-2) var(--space-3) var(--space-2);
-    color: var(--agent-caption);
+/* Codex 连接器：真实连接状态与操作菜单 */
+.agent-connector-codex {
+    position: relative;
 }
 
-.agent-connectors-label {
+.agent-connector-status {
+    position: absolute;
+    right: 0;
+    bottom: 1px;
+    width: 6px;
+    height: 6px;
+    border-radius: 999px;
+    background: #9ca3af;
+    box-shadow: 0 0 0 1.5px var(--agent-surface-base, #fff);
+}
+
+.agent-connector-status.is-connecting {
+    background: #d6a24a;
+    animation: agent-connector-pulse 1.2s ease-in-out infinite;
+}
+
+.agent-connector-status.is-connected {
+    background: #3fb950;
+}
+
+.agent-connector-status.is-error {
+    background: #e66b6b;
+}
+
+@keyframes agent-connector-pulse {
+    0%, 100% { opacity: 0.45; }
+    50% { opacity: 1; }
+}
+
+.agent-connector-menu {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    min-width: 190px;
+    padding: 2px;
+}
+
+.agent-connector-menu-head {
     display: flex;
     align-items: center;
-    gap: 4px;
-    font-size: 11px;
-    font-weight: 500;
-    flex-shrink: 0;
+    gap: 6px;
+    font-size: 12px;
+    font-weight: 600;
+}
+
+.agent-connector-menu-head > svg {
+    width: 14px;
+    height: 14px;
+}
+
+.agent-connector-menu > p {
+    margin: 0 0 4px;
+    font-size: 11.5px;
+    line-height: 1.5;
     opacity: 0.7;
 }
 
-.agent-connectors-label > svg {
-    width: 13px;
-    height: 13px;
-}
-
-.agent-connectors-list {
-    display: flex;
-    align-items: center;
-    gap: 4px;
-    flex: 1;
-    min-width: 0;
-}
-
-.agent-connector-item {
-    width: 24px;
-    height: 24px;
-    padding: 0;
-    border: 0;
-    background: transparent;
-    display: grid;
-    place-items: center;
-    cursor: pointer;
-    border-radius: var(--r-sm);
-    flex-shrink: 0;
-    transition:
-        background-color 150ms var(--motion-ease-out),
-        transform 150ms var(--motion-ease-out);
-}
-
-.agent-connector-item > svg {
-    width: 20px;
-    height: 20px;
-}
-
-.agent-connector-item:hover {
-    background: color-mix(in srgb, var(--agent-ink) 6%, transparent);
-}
-
-.agent-connectors-close {
-    width: 22px;
-    height: 22px;
-    padding: 0;
-    border: 0;
-    border-radius: 999px;
-    background: transparent;
-    color: var(--agent-caption);
-    display: grid;
-    place-items: center;
-    cursor: pointer;
-    flex-shrink: 0;
-    transition:
-        opacity 150ms var(--motion-ease-out),
-        background-color 150ms var(--motion-ease-out),
-        transform 150ms var(--motion-ease-out);
-    opacity: 0.6;
-}
-
-.agent-connectors-close > svg {
-    width: 12px;
-    height: 12px;
-}
-
-.agent-connectors-close:hover {
-    opacity: 1;
-    background: color-mix(in srgb, var(--agent-ink) 6%, transparent);
-}
-
-@media (prefers-reduced-motion: reduce) {
-    .agent-connector-item,
-    .agent-connector-item:hover,
-    .agent-connector-item:active {
-        transform: none;
-    }
+.agent-connector-menu .ant-btn {
+    justify-content: flex-start;
+    font-size: 12px;
 }

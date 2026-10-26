@@ -72,6 +72,7 @@ import "./canvas-cloud-agent.css";
 import { appendAgentError, appendUniqueMessage, applyAgentEvent, positiveNumber, type ApprovalState } from "./canvas-cloud-agent-events";
 import { AgentContextRing, AgentConversation, AgentHeader, AgentHistory, AgentLauncher, ComposerControls } from "./canvas-cloud-agent-panel-parts";
 import { AgentConnectorsBar } from "./canvas-cloud-agent-connectors";
+import { useCodexConnector } from "./use-codex-connector";
 import { useGlobalAgentStore, type AgentPrefillRequest } from "@/stores/use-global-agent-store";
 
 type AgentPanelView = "chat" | "history" | "settings";
@@ -117,6 +118,7 @@ export const CanvasCloudAgentPanel = memo(function CanvasCloudAgentPanel() {
     const [connectionStatus, setConnectionStatus] = useState<"connecting" | "connected" | "reconnecting" | "disconnected">("connecting");
     const [connectionEpoch, setConnectionEpoch] = useState(0);
     const [messages, setMessages] = useState<CloudAgentChatMessage[]>([]);
+    const codex = useCodexConnector({ setMessages, canvasId, nodeCount });
     const [prompt, setPrompt] = useState("");
     const [restoredModel, setRestoredModel] = useState<string | null>(null);
     const lastPrefillIdRef = useRef(0);
@@ -214,7 +216,8 @@ export const CanvasCloudAgentPanel = memo(function CanvasCloudAgentPanel() {
     const currentScope = useRef(conversationScope);
     currentScope.current = conversationScope;
     useEffect(() => () => { currentScope.current = ""; conversationLoadControllerRef.current?.abort(); }, []);
-    const running = Boolean(run?.cleanupPending) || run?.status === "running" || run?.status === "queued" || run?.status === "waiting_approval";
+    const cloudRunning = Boolean(run?.cleanupPending) || run?.status === "running" || run?.status === "queued" || run?.status === "waiting_approval";
+    const running = cloudRunning || codex.busy;
     useSyncExternalStore(canvasEditLeases.subscribe, canvasEditLeases.snapshot, () => 0);
     const canvasAgent = canvasId ? canvasEditLeases.agent(canvasId) : null;
     const otherAgentRunning = Boolean(canvasAgent && canvasAgent.runId !== run?.id);
@@ -371,10 +374,45 @@ export const CanvasCloudAgentPanel = memo(function CanvasCloudAgentPanel() {
         },
         [busy, conversationScope, historyHydrated, installedSkillIds, pendingHydrated, running],
     );
-    const status = run?.status || "idle";
+    const status = codex.connected ? (codex.busy ? "running" : "idle") : run?.status || "idle";
     const statusLabel =
-        status === "waiting_approval" ? "等待审批" : status === "queued" ? "排队中" : status === "running" ? "运行中" : status === "completed" ? "已完成" : status === "failed" ? "异常" : status === "cancelled" ? "已停止" : status === "rejected" ? "已拒绝" : "待命";
-    const statusColor = status === "failed" ? "#e66b6b" : status === "rejected" || status === "cancelled" ? theme.node.muted : status === "waiting_approval" ? "#d6a24a" : status === "running" || status === "queued" ? "#69c29b" : theme.node.muted;
+        codex.status === "connecting"
+            ? "连接中"
+            : codex.connected
+              ? codex.busy
+                  ? "运行中"
+                  : "Codex 已连接"
+              : status === "waiting_approval"
+                ? "等待审批"
+                : status === "queued"
+                  ? "排队中"
+                  : status === "running"
+                    ? "运行中"
+                    : status === "completed"
+                      ? "已完成"
+                      : status === "failed"
+                        ? "异常"
+                        : status === "cancelled"
+                          ? "已停止"
+                          : status === "rejected"
+                            ? "已拒绝"
+                            : "待命";
+    const statusColor =
+        codex.status === "connecting"
+            ? "#d6a24a"
+            : codex.connected
+              ? codex.busy
+                  ? "#69c29b"
+                  : theme.node.muted
+              : status === "failed"
+                ? "#e66b6b"
+                : status === "rejected" || status === "cancelled"
+                  ? theme.node.muted
+                  : status === "waiting_approval"
+                    ? "#d6a24a"
+                    : status === "running" || status === "queued"
+                      ? "#69c29b"
+                      : theme.node.muted;
 
     useEffect(() => {
         if (!prefillRequest || prefillRequest.id === lastPrefillIdRef.current) return;
@@ -797,6 +835,10 @@ export const CanvasCloudAgentPanel = memo(function CanvasCloudAgentPanel() {
     }, [run?.id, connectionStatus, conversationScope, accountScope]);
 
     const interject = async (value: string) => {
+        if (codex.connected) {
+            setMessages((current) => appendUniqueMessage(current, { id: `codex-interject-${Date.now()}`, role: "system", text: "Codex 运行中暂不支持插话，请先停止当前任务或等待完成。" }));
+            return;
+        }
         if (!accountIsCurrent() || pendingSubmission.current) return;
         const activeRun = run;
         if (!value || !activeRun?.id || busy || connectionStatus !== "connected" || currentScope.current !== conversationScope || !historyHydrated) return;
@@ -843,6 +885,17 @@ export const CanvasCloudAgentPanel = memo(function CanvasCloudAgentPanel() {
     };
 
     const submit = async (override?: string, options?: CloudAgentMessagePresentation & { requiresVision?: boolean }) => {
+        const codexDraft = (override ?? prompt).trim();
+        if (codex.connected) {
+            if (!codexDraft) return;
+            if (codex.busy) {
+                setMessages((current) => appendUniqueMessage(current, { id: `codex-busy-${Date.now()}`, role: "system", text: "Codex 正在运行，请先停止当前任务或等待完成后发送。" }));
+                return;
+            }
+            setPrompt("");
+            void codex.send(codexDraft);
+            return;
+        }
         if (!accountIsCurrent() || cloudOpeningRef.current || canvasId && !cloudHistoryReady && !pendingSubmission.current?.request || modelRestoreError && !pendingSubmission.current?.request) return;
         const activity = canvasId ? canvasEditLeases.agent(canvasId) : null;
         if (activity && activity.runId !== run?.id && !pendingSubmission.current?.request) return;
@@ -1037,6 +1090,10 @@ export const CanvasCloudAgentPanel = memo(function CanvasCloudAgentPanel() {
     };
 
     const stop = async () => {
+        if (codex.connected) {
+            await codex.stop();
+            return;
+        }
         const activeRun = run;
         if (!activeRun?.id || stopping || otherAgentRunning) return;
         setStopping(true);
@@ -1185,6 +1242,7 @@ export const CanvasCloudAgentPanel = memo(function CanvasCloudAgentPanel() {
             ...current.filter((conversation) => conversation.messages.length > 0 || conversation.run || conversation.draft?.trim()),
         ]);
         setView("chat");
+        if (codex.connected) void codex.newThread();
     };
 
     const restoreConversation = (conversation: CloudAgentConversation) => {
@@ -1229,6 +1287,7 @@ export const CanvasCloudAgentPanel = memo(function CanvasCloudAgentPanel() {
     };
     const openConversation = async (conversation: CloudAgentConversation) => {
         if (!canSwitchConversation()) return;
+        if (codex.connected) codex.disconnect();
         const id = cloudAgentConversationServerId(conversation);
         if (!id) {
             const selected = { ...conversation, localSelectedCanvasId: canvasId || "global" };
@@ -1392,6 +1451,14 @@ export const CanvasCloudAgentPanel = memo(function CanvasCloudAgentPanel() {
                                             {cloudHistoryError ? <Button size="small" loading={cloudHistoryLoading} onClick={() => setCloudRefreshEpoch((value) => value + 1)}>重新同步</Button> : null}
                                         </div>
                                     ) : null}
+                                    {codex.status === "error" && codex.error ? (
+                                        <div role="status" className="flex items-center justify-between gap-2 px-5 py-2 text-xs" style={{ color: theme.node.muted }}>
+                                            <span>Codex 连接失败：{codex.error}</span>
+                                            <Button size="small" onClick={() => void codex.reconnect()}>
+                                                重试
+                                            </Button>
+                                        </div>
+                                    ) : null}
                                     {run && connectionStatus !== "connected" ? (
                                         <div role="status" className="flex items-center justify-between gap-2 px-5 py-2 text-xs" style={{ color: theme.node.muted }}>
                                             <span>{connectionStatus === "disconnected" ? "连接已断开，服务端任务可能仍在执行；运行记录已保留" : "正在连接并校准运行状态…"}</span>
@@ -1420,7 +1487,7 @@ export const CanvasCloudAgentPanel = memo(function CanvasCloudAgentPanel() {
                                         onApprovalReasonChange={(reason) => setApproval((current) => (current ? { ...current, reason } : current))}
                                         onApprove={(settings) => void submitApproval("approve", settings)}
                                         onReject={() => void submitApproval("reject")}
-                                        onWithdrawInterjection={running && !otherAgentRunning && connectionStatus === "connected" ? (messageId) => void withdrawInterjection(messageId) : undefined}
+                                        onWithdrawInterjection={!codex.connected && running && !otherAgentRunning && connectionStatus === "connected" ? (messageId) => void withdrawInterjection(messageId) : undefined}
                                         withdrawingInterjectionId={withdrawingInterjectionId}
                                     />
                                     {canvasCloudConversation && !canvasCloudConversationIsCurrent ? (
@@ -1443,7 +1510,7 @@ export const CanvasCloudAgentPanel = memo(function CanvasCloudAgentPanel() {
                                             onToggle={() => setPlanMinimized((value) => !value)}
                                         />
                                     ) : null}
-                                    {historyHydrated && !messages.some((message) => message.role === "user" || message.role === "assistant") && !run ? (
+                                    {historyHydrated && !messages.some((message) => message.role === "user" || message.role === "assistant") && !run && !codex.connected && codex.status !== "connecting" ? (
                                         <AgentSceneCapsules
                                             buckets={sceneBuckets}
                                             installedIds={installedSkillIds}
@@ -1458,32 +1525,47 @@ export const CanvasCloudAgentPanel = memo(function CanvasCloudAgentPanel() {
                                     {modelRestoreError ? <div className="px-5 py-2 text-xs" role="status" style={{ color: theme.node.muted }}>{modelRestoreError}</div> : null}
                                     <AgentChatComposer
                                         prompt={prompt}
-                                        submitDisabled={otherAgentRunning && !pendingSubmission.current?.request || Boolean(run && connectionStatus !== "connected" && !pendingSubmission.current?.request) || !historyHydrated || !pendingHydrated || Boolean(canvasId && !cloudHistoryReady && !pendingSubmission.current?.request) || Boolean(cloudOpeningId) || Boolean(modelRestoreError && !pendingSubmission.current?.request)}
+                                        submitDisabled={otherAgentRunning && !pendingSubmission.current?.request || codex.status === "connecting" || (codex.connected ? false : Boolean(run && connectionStatus !== "connected" && !pendingSubmission.current?.request) || !historyHydrated || !pendingHydrated || Boolean(canvasId && !cloudHistoryReady && !pendingSubmission.current?.request) || Boolean(cloudOpeningId) || Boolean(modelRestoreError && !pendingSubmission.current?.request))}
                                         sending={busy}
                                         running={running}
-                                        placeholder={running ? "运行中可直接插话，会在它下一步生效" : "输入操作指导；用 @ 引用画布节点，用 / 或 、 引用 Skills"}
+                                        placeholder={codex.connected ? (codex.busy ? "Codex 正在运行，可点击停止" : "与 Codex 对话；Codex 已连接到这张画布") : running ? "运行中可直接插话，会在它下一步生效" : "输入操作指导；用 @ 引用画布节点，用 / 或 、 引用 Skills"}
                                         theme={theme}
                                         onPromptChange={setPrompt}
                                         onSubmit={() => void submit()}
-                                        onStop={!otherAgentRunning && run?.id && running ? stop : undefined}
+                                        onStop={!otherAgentRunning && running ? stop : undefined}
                                         stopping={stopping}
                                         references={[...references, ...buildSkillMentionReferences(installedSkills)]}
                                         slashSkills={installedSkills}
                                         includeAssetLibrary={false}
                                         submitAccessory={<AgentContextRing view={presentAgentContextUsage(contextUsage)} theme={theme} />}
-                                        footer={connectorsVisible ? <AgentConnectorsBar onClose={() => setConnectorsVisible(false)} /> : null}
+                                        footer={
+                                            connectorsVisible ? (
+                                                <AgentConnectorsBar
+                                                    onClose={() => setConnectorsVisible(false)}
+                                                    codex={{ status: codex.status, detected: codex.detected, busy: codex.busy, error: codex.error }}
+                                                    onConnectCodex={() => {
+                                                        newConversation();
+                                                        void codex.connect();
+                                                    }}
+                                                    onNewCodexThread={() => newConversation()}
+                                                    onDisconnectCodex={() => codex.disconnect()}
+                                                />
+                                            ) : null
+                                        }
                                         left={
-                                            <ComposerControls
-                                                config={config}
-                                                selectedModel={selectedModel}
-                                                permissionMode={permissionMode}
-                                                theme={theme}
-                                                onModelChange={setModel}
-                                                onPermissionChange={setPermissionMode}
-                                                skillsOpen={skillsOpen}
-                                                onSkillsOpenChange={setSkillsOpen}
-                                                selectedSkillCount={selectedSkillIds.length}
-                                            />
+                                            codex.connected ? undefined : (
+                                                <ComposerControls
+                                                    config={config}
+                                                    selectedModel={selectedModel}
+                                                    permissionMode={permissionMode}
+                                                    theme={theme}
+                                                    onModelChange={setModel}
+                                                    onPermissionChange={setPermissionMode}
+                                                    skillsOpen={skillsOpen}
+                                                    onSkillsOpenChange={setSkillsOpen}
+                                                    selectedSkillCount={selectedSkillIds.length}
+                                                />
+                                            )
                                         }
                                     />
                                 </motion.div>
