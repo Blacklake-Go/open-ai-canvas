@@ -32,20 +32,21 @@ import {
 import { encodeChannelModel, logicalModelIDForConfig, modelOptionName, resolveModelRequestConfig, useEffectiveConfig, type AiConfig } from "@/stores/use-config-store";
 import { Select } from "@/components/ui/base/select";
 import { AgentMemoryProposalPanel } from "./agent-memory-proposals";
+import { useI18n } from "@/supdance/plugins/i18n";
 
-const COMPACT_INTERVALS: Array<{ value: AgentMemoryCompactInterval; label: string }> = [
-    { value: "off", label: "手动" },
-    { value: "daily", label: "每天" },
-    { value: "weekly", label: "每周" },
-    { value: "monthly", label: "每月" },
+const getCompactIntervals = (t: (key: string, params?: Record<string, unknown>, fallback?: string) => string): Array<{ value: AgentMemoryCompactInterval; label: string }> => [
+    { value: "off", label: t("settings.memory_interval_off", undefined, "手动") },
+    { value: "daily", label: t("settings.memory_interval_daily", undefined, "每天") },
+    { value: "weekly", label: t("settings.memory_interval_weekly", undefined, "每周") },
+    { value: "monthly", label: t("settings.memory_interval_monthly", undefined, "每月") },
 ];
 
-const STATUS_FILTERS = [
-    { value: "all", label: "全部" },
-    { value: "pending", label: "待审" },
-    { value: "approved", label: "已批" },
-    { value: "rejected", label: "已拒" },
-    { value: "expired", label: "已过期" },
+const getStatusFilters = (t: (key: string, params?: Record<string, unknown>, fallback?: string) => string) => [
+    { value: "all", label: t("settings.memory_status_all", undefined, "全部") },
+    { value: "pending", label: t("settings.memory_status_pending", undefined, "待审") },
+    { value: "approved", label: t("settings.memory_status_approved", undefined, "已批") },
+    { value: "rejected", label: t("settings.memory_status_rejected", undefined, "已拒") },
+    { value: "expired", label: t("settings.memory_status_expired", undefined, "已过期") },
 ] as const;
 
 function memoryStatusTone(status: string) {
@@ -55,11 +56,18 @@ function memoryStatusTone(status: string) {
     return "neutral" as const;
 }
 
-function memoryStatusLabel(status: string) {
-    if (status === "approved") return "已批准";
-    if (status === "rejected") return "已拒绝";
-    if (status === "pending") return "待审";
-    if (status === "expired") return "已过期";
+function memoryStatusLabel(status: string, t?: (key: string, params?: Record<string, unknown>, fallback?: string) => string) {
+    if (!t) {
+        if (status === "approved") return "已批准";
+        if (status === "rejected") return "已拒绝";
+        if (status === "pending") return "待审";
+        if (status === "expired") return "已过期";
+        return status;
+    }
+    if (status === "approved") return t("settings.memory_status_approved", undefined, "已批准");
+    if (status === "rejected") return t("settings.memory_status_rejected", undefined, "已拒绝");
+    if (status === "pending") return t("settings.memory_status_pending", undefined, "待审");
+    if (status === "expired") return t("settings.memory_status_expired", undefined, "已过期");
     return status;
 }
 
@@ -82,22 +90,23 @@ function restoreCompactModel(settings: AgentMemoryCompactView | null, fallback: 
     return fallback;
 }
 
-function compactStatusLabel(settings: AgentMemoryCompactView | null) {
+function compactStatusLabel(settings: AgentMemoryCompactView | null, t?: (key: string, params?: Record<string, unknown>, fallback?: string) => string) {
     if (!settings) return "";
-    if (settings.lastStatus === "queued") return "已排队，等待文本模型压缩";
-    if (settings.lastStatus === "running") return "正在调用文本模型压缩记忆";
-    if (settings.lastStatus === "failed") return settings.lastError || "上次压缩失败";
-    if (settings.lastStatus === "awaiting_review") return "压缩提案已生成，记忆尚未改变。查看修改前后，批准后才会应用。";
-    if (settings.lastStatus === "applied") return "压缩提案已批准并应用，可在历史中查看或恢复。";
-    if (settings.lastStatus === "rejected") return "上次压缩提案已拒绝，原记忆未改变。";
-    if (settings.lastStatus === "restored") return "已恢复上次压缩前的记忆版本。";
+    const tr = t || ((_k: string, _p?: unknown, fb?: string) => fb || "");
+    if (settings.lastStatus === "queued") return tr("settings.memory_status_queued", undefined, "已排队，等待文本模型压缩");
+    if (settings.lastStatus === "running") return tr("settings.memory_status_running", undefined, "正在调用文本模型压缩记忆");
+    if (settings.lastStatus === "failed") return settings.lastError || tr("settings.memory_status_failed_default", undefined, "上次压缩失败");
+    if (settings.lastStatus === "awaiting_review") return tr("settings.memory_status_awaiting_review", undefined, "压缩提案已生成，记忆尚未改变。查看修改前后，批准后才会应用。");
+    if (settings.lastStatus === "applied") return tr("settings.memory_status_applied", undefined, "压缩提案已批准并应用，可在历史中查看或恢复。");
+    if (settings.lastStatus === "rejected") return tr("settings.memory_status_rejected_notice", undefined, "上次压缩提案已拒绝，原记忆未改变。");
+    if (settings.lastStatus === "restored") return tr("settings.memory_status_restored", undefined, "已恢复上次压缩前的记忆版本。");
     if (settings.lastStatus === "succeeded") {
         const summary = settings.summary;
         const parts = [summary?.merged ? `合并 ${summary.merged}` : "", summary?.rewritten ? `改写 ${summary.rewritten}` : "", summary?.removed ? `删除 ${summary.removed}` : ""].filter(Boolean);
         const when = settings.lastCompactAt ? new Date(settings.lastCompactAt).toLocaleString() : "";
-        return [when && `上次 ${when}`, parts.join(" · ") || "模型认为没有需要改动的条目"].filter(Boolean).join(" · ");
+        return [when && `上次 ${when}`, parts.join(" · ") || tr("settings.memory_no_changes_needed", undefined, "模型认为没有需要改动的条目")].filter(Boolean).join(" · ");
     }
-    return "生成提案按文本模型计费；检查差异并批准后才会改写记忆，每次应用都会保留恢复版本。";
+    return tr("settings.memory_compaction_hint", undefined, "生成提案按文本模型计费；检查差异并批准后才会改写记忆，每次应用都会保留恢复版本。");
 }
 
 type MemoryFormValues = {
@@ -122,6 +131,7 @@ function toRequest(values: MemoryFormValues): AgentMemoryRequest {
 }
 
 function AgentMemoryCompactCard({ compact = false, onApplied }: { compact?: boolean; onApplied: () => Promise<void> }) {
+    const { t } = useI18n();
     const { message } = App.useApp();
     const config = useEffectiveConfig();
     const [settings, setSettings] = useState<AgentMemoryCompactView | null>(null);
@@ -140,10 +150,10 @@ function AgentMemoryCompactCard({ compact = false, onApplied }: { compact?: bool
             setModel((current) => restoreCompactModel(next, current || config.textModel || ""));
             return next;
         } catch (error) {
-            if (seq === seqRef.current) message.error(error instanceof Error ? error.message : "读取压缩设置失败");
+            if (seq === seqRef.current) message.error(error instanceof Error ? error.message : t("settings.memory_load_settings_failed", undefined, "读取压缩设置失败"));
             return null;
         }
-    }, [config.textModel, message]);
+    }, [config.textModel, message, t]);
 
     useEffect(() => {
         void loadSettings();
@@ -169,7 +179,7 @@ function AgentMemoryCompactCard({ compact = false, onApplied }: { compact?: bool
             setSettings(next);
             setModel(restoreCompactModel(next, selectedModel));
         } catch (error) {
-            message.error(error instanceof Error ? error.message : "保存压缩设置失败");
+            message.error(error instanceof Error ? error.message : t("settings.memory_save_settings_failed", undefined, "保存压缩设置失败"));
         } finally {
             setSaving(false);
         }
@@ -178,37 +188,37 @@ function AgentMemoryCompactCard({ compact = false, onApplied }: { compact?: bool
     const runCompact = async () => {
         const selected = model.trim();
         if (!selected) {
-            message.warning("请先选择用于压缩的文本模型");
+            message.warning(t("settings.memory_select_model_warning", undefined, "请先选择用于压缩的文本模型"));
             return;
         }
         setCompacting(true);
         try {
             const next = await compactAgentMemories(compactModelFields(config, selected));
             setSettings(next);
-            message.success("已提交提案生成任务，完成后请查看差异并批准");
+            message.success(t("settings.memory_submit_compaction_success", undefined, "已提交提案生成任务，完成后请查看差异并批准"));
         } catch (error) {
-            message.error(error instanceof Error ? error.message : "提交压缩失败");
+            message.error(error instanceof Error ? error.message : t("settings.memory_submit_compaction_failed", undefined, "提交压缩失败"));
         } finally {
             setCompacting(false);
         }
     };
 
-    const statusText = compactStatusLabel(settings);
+    const statusText = compactStatusLabel(settings, t);
     const failed = settings?.lastStatus === "failed";
 
     return (
         <section className={compact ? "space-y-2" : "space-y-3 rounded-2xl bg-surface-secondary/80 px-4 py-4"}>
             <div className="flex items-start justify-between gap-3">
                 <div className="min-w-0">
-                    <h3 className="text-sm font-medium text-foreground">压缩优化</h3>
-                    {compact ? null : <p className="mt-0.5 text-caption leading-5 text-muted-foreground">按文本模型计费，分批生成优化提案。批准前不修改记忆。</p>}
+                    <h3 className="text-sm font-medium text-foreground">{t("settings.memory_compaction_optimization", undefined, "压缩优化")}</h3>
+                    {compact ? null : <p className="mt-0.5 text-caption leading-5 text-muted-foreground">{t("settings.memory_compaction_desc", undefined, "按文本模型计费，分批生成优化提案。批准前不修改记忆。")}</p>}
                 </div>
                 <Button size="small" icon={<Sparkles className="size-3.5" />} loading={compacting || busy} disabled={!model.trim()} onClick={() => void runCompact()}>
-                    {busy ? "生成中" : "生成压缩提案"}
+                    {busy ? t("settings.memory_generating", undefined, "生成中") : t("settings.memory_generate_proposal_btn", undefined, "生成压缩提案")}
                 </Button>
             </div>
             <div className="flex min-w-0 flex-col gap-2">
-                <SegmentedControl size="sm" ariaLabel="压缩周期" value={settings?.compactInterval || "off"} disabled={saving || busy} options={COMPACT_INTERVALS} onChange={(value) => void persist(value, model)} />
+                <SegmentedControl size="sm" ariaLabel={t("settings.memory_interval_aria", undefined, "压缩周期")} value={settings?.compactInterval || "off"} disabled={saving || busy} options={getCompactIntervals(t)} onChange={(value) => void persist(value, model)} />
                 <div className="min-w-0 overflow-hidden rounded-xl bg-surface-tertiary">
                     <ModelPicker
                         config={config}
@@ -219,7 +229,7 @@ function AgentMemoryCompactCard({ compact = false, onApplied }: { compact?: bool
                         showSelectedPrice
                         showOptionPrices
                         className="!h-9 !min-h-9 !border-0 !bg-transparent !shadow-none"
-                        placeholder="选择压缩用的文本模型"
+                        placeholder={t("settings.memory_select_model_placeholder", undefined, "选择压缩用的文本模型")}
                         onChange={(value) => {
                             setModel(value);
                             void persist(settings?.compactInterval || "off", value);
@@ -228,7 +238,7 @@ function AgentMemoryCompactCard({ compact = false, onApplied }: { compact?: bool
                 </div>
             </div>
             {failed && settings?.lastError ? (
-                <Callout tone="warning" title="上次压缩未完成">
+                <Callout tone="warning" title={t("settings.memory_last_unfinished_title", undefined, "上次压缩未完成")}>
                     {settings.lastError}
                 </Callout>
             ) : statusText ? (
