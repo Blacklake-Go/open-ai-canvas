@@ -166,3 +166,8 @@ cd web && bun run dev
 - Git 提交说明使用 `<type>(<scope>): <业务模块> - <变更摘要>`，`type` 为 `feat|fix|refactor|perf|docs|test|build|ci|chore|revert`。
 
 交付前至少检查：改动是否聚焦、调用方和类型是否同步、错误/权限/数据归属是否完整、必要文档是否同步、验证是否如实说明、是否留下密钥或本地数据。
+
+## 10. SupDance 二次开发扩展约定
+
+在进行 SupDance 专属定制、插件开发或上游版本同步时，请同时阅读并遵守 [`docs/supdance/WORKSPACE.md`](docs/supdance/WORKSPACE.md)、[`docs/supdance/ARCHITECTURE.md`](docs/supdance/ARCHITECTURE.md) 与 [`docs/supdance/CUSTOMIZATIONS.md`](docs/supdance/CUSTOMIZATIONS.md) 中的隔离与安全规则。
+

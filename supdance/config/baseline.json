@@ -1,0 +1,39 @@
+{
+  "namespace": "supdance",
+  "upstreamRepository": "https://github.com/ddcat-ai/open-ai-canvas",
+  "forkRepository": "https://github.com/Blacklake-Go/open-ai-canvas",
+  "upstreamBaseline": {
+    "tag": "v1.7.1",
+    "commit": "89fcb53fd65969cb58ae1eba5d18381db51819d1",
+    "schemaVersion": 71
+  },
+  "supdanceRelease": {
+    "tag": "supdance/v2026.10.27.1",
+    "branch": "supdance/main",
+    "baseCommit": "6825bcd82abfa650c7645a6bafe11fd24dc74326"
+  },
+  "coupledUpstreamFiles": [
+    "web/src/components/canvas/canvas-cloud-agent-connectors.css",
+    "web/src/components/canvas/canvas-cloud-agent-connectors.tsx",
+    "web/src/components/canvas/canvas-cloud-agent-panel.tsx"
+  ],
+  "supdanceExtensionFiles": [
+    "web/src/components/canvas/use-codex-connector.ts",
+    "web/src/services/api/codex-connector.ts",
+    "web/src/supdance/theme/supdance-skin.ts",
+    "web/src/supdance/adapters/compatibility.ts",
+    "web/src/supdance/registry/index.ts",
+    "backend/internal/supdance/domain/extension.go",
+    "backend/internal/supdance/adapters/compatibility.go"
+  ],
+  "criticalWatchPaths": [
+    "backend/internal/database/",
+    "backend/internal/model/",
+    "web/src/router.tsx",
+    "web/src/lib/plugins/",
+    "web/src/lib/skin-themes.ts",
+    "web/src/lib/app-theme.ts",
+    "docker-compose.deploy.yml",
+    ".github/workflows/"
+  ]
+}

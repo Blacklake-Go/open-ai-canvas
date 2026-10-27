@@ -1,0 +1,120 @@
+name: SupDance Upstream Sync & Quality Gate
+
+on:
+  schedule:
+    # 每日 UTC 02:00 (北京时间 10:00) 定期检查上游新 Release
+    - cron: "0 2 * * *"
+  workflow_dispatch:
+    inputs:
+      target_ref:
+        description: "指定要对比或集成的上游 Release 标签（留空则默认检查最新正式 Release v*）"
+        required: false
+        default: ""
+      include_unreleased_main:
+        description: "是否对比 upstream/main 未发布分支（默认 false，仅优先稳定 Release）"
+        required: false
+        type: boolean
+        default: false
+      create_integration_pr:
+        description: "发现新版本时是否自动创建待审核的 integration/* 升级 PR（绝不自动合并）"
+        required: false
+        type: boolean
+        default: false
+  pull_request:
+    branches:
+      - "supdance/**"
+      - "integration/**"
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  # 复用上游已有完整质量检查（Go 测试、Agent 架构、支付插件、Web formatting/typecheck/lint/unit/E2E）
+  upstream-quality:
+    if: github.event_name == 'pull_request'
+    uses: ./.github/workflows/quality.yml
+
+  supdance-gate:
+    name: SupDance Extension & Upstream Compatibility Gate
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Checkout repository with full history
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version-file: backend/go.mod
+          cache-dependency-path: backend/go.sum
+
+      - name: Set up Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.3.9
+
+      - name: Fetch upstream metadata and tags
+        run: |
+          git remote add upstream https://github.com/ddcat-ai/open-ai-canvas.git || git remote set-url upstream https://github.com/ddcat-ai/open-ai-canvas.git
+          git fetch --tags upstream
+          git fetch upstream main:refs/remotes/upstream/main
+
+      - name: Run SupDance upstream analyzer & unit tests
+        run: |
+          python3 tools/supdance/test_check_upstream.py
+          args=()
+          if [[ -n "${{ github.event.inputs.target_ref }}" ]]; then
+            args+=(--target "${{ github.event.inputs.target_ref }}")
+          elif [[ "${{ github.event.inputs.include_unreleased_main }}" == "true" ]]; then
+            args+=(--include-unreleased-main)
+          fi
+          python3 tools/supdance/check_upstream.py "${args[@]}" \
+            --output UPSTREAM_UPDATE_REPORT.md \
+            --json-output "$RUNNER_TEMP/upstream-analysis.json"
+
+      - name: Run SupDance backend isolation tests
+        working-directory: backend
+        run: go test -v ./internal/supdance/...
+
+      - name: Run SupDance frontend isolation & plugin tests
+        working-directory: web
+        run: |
+          bun install --frozen-lockfile
+          bun test test/supdance-extension-isolation.test.ts
+
+      - name: Upload UPSTREAM_UPDATE_REPORT.md artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: upstream-update-report
+          path: |
+            UPSTREAM_UPDATE_REPORT.md
+            ${{ runner.temp }}/upstream-analysis.json
+
+      - name: Create pending review integration PR (when new release detected & requested)
+        if: github.event_name != 'pull_request' && github.event.inputs.create_integration_pr == 'true'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          commit_count="$(jq -r '.commitCount' "$RUNNER_TEMP/upstream-analysis.json")"
+          target_ref="$(jq -r '.target' "$RUNNER_TEMP/upstream-analysis.json")"
+          risk_level="$(jq -r '.riskLevel' "$RUNNER_TEMP/upstream-analysis.json")"
+          if [[ "$commit_count" -le 0 ]]; then
+            echo "No new upstream commits for $target_ref; skipping integration PR creation."
+            exit 0
+          fi
+          safe_ref="$(printf '%s' "$target_ref" | tr '/:' '--')"
+          branch="integration/upstream-${safe_ref}"
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git checkout -B "$branch"
+          git add UPSTREAM_UPDATE_REPORT.md
+          git commit -m "docs(supdance): 上游升级评估 - 生成 ${target_ref} 升级评估报告 (风险: ${risk_level})" || true
+          git push -u origin "$branch" --force-with-lease
+          gh pr create \
+            --base supdance/main \
+            --head "$branch" \
+            --title "chore(upstream): 评估集成上游版本 ${target_ref} [Risk: ${risk_level}]" \
+            --body-file UPSTREAM_UPDATE_REPORT.md || true
