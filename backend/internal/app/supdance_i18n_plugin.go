@@ -191,7 +191,7 @@ func (s *Service) UpdateAdminSupDanceI18nSettings(actor *model.User, input supda
 	}
 	normalized, err := supdancei18n.NormalizeSettings(input)
 	if err != nil {
-		return supdancei18n.AdminOverview{}, BadRequest(err.Error())
+		return supdancei18n.AdminOverview{}, err
 	}
 	now := time.Now().UTC()
 	normalized.UpdatedAt = now.Format(time.RFC3339)
@@ -241,7 +241,7 @@ func (s *Service) UpsertAdminSupDanceI18nEntries(actor *model.User, updates []su
 	}
 	next, count, err := supdancei18n.UpsertEntries(existing, updates, actor.ID)
 	if err != nil {
-		return supdancei18n.AdminOverview{}, 0, BadRequest(err.Error())
+		return supdancei18n.AdminOverview{}, 0, err
 	}
 	if err := s.saveSupDanceI18nCustomEntries(actor.ID, next); err != nil {
 		return supdancei18n.AdminOverview{}, 0, err
@@ -337,7 +337,7 @@ func (s *Service) ImportAdminSupDanceI18n(actor *model.User, payload supdancei18
 
 	next, count, err := supdancei18n.UpsertEntries(base, toImport, actor.ID)
 	if err != nil {
-		return supdancei18n.AdminOverview{}, 0, BadRequest(err.Error())
+		return supdancei18n.AdminOverview{}, 0, err
 	}
 	if err := s.saveSupDanceI18nCustomEntries(actor.ID, next); err != nil {
 		return supdancei18n.AdminOverview{}, 0, err

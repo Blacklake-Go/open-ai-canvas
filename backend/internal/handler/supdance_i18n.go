@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"errors"
 	"net/http"
 	"strconv"
 	"strings"
@@ -116,7 +117,7 @@ func RegisterSupDanceI18nRoutes(r *gin.RouterGroup, svc *service.Service) {
 		}
 		key := strings.TrimSpace(c.Query("key"))
 		if key == "" {
-			fail(c, http.StatusBadRequest, service.BadRequest("请提供要重置或删除的词条 key"))
+			fail(c, http.StatusBadRequest, errors.New("请提供要重置或删除的词条 key"))
 			return
 		}
 		overview, removed, err := svc.DeleteAdminSupDanceI18nEntry(user, key)
