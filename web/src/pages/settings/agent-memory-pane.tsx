@@ -34,14 +34,14 @@ import { Select } from "@/components/ui/base/select";
 import { AgentMemoryProposalPanel } from "./agent-memory-proposals";
 import { useI18n } from "@/supdance/plugins/i18n";
 
-const getCompactIntervals = (t: (key: string, params?: Record<string, unknown>, fallback?: string) => string): Array<{ value: AgentMemoryCompactInterval; label: string }> => [
+const getCompactIntervals = (t: (keyOrText: string, params?: Record<string, string | number>, fallbackText?: string) => string): Array<{ value: AgentMemoryCompactInterval; label: string }> => [
     { value: "off", label: t("settings.memory_interval_off", undefined, "手动") },
     { value: "daily", label: t("settings.memory_interval_daily", undefined, "每天") },
     { value: "weekly", label: t("settings.memory_interval_weekly", undefined, "每周") },
     { value: "monthly", label: t("settings.memory_interval_monthly", undefined, "每月") },
 ];
 
-const getStatusFilters = (t: (key: string, params?: Record<string, unknown>, fallback?: string) => string) => [
+const getStatusFilters = (t: (keyOrText: string, params?: Record<string, string | number>, fallbackText?: string) => string) => [
     { value: "all", label: t("settings.memory_status_all", undefined, "全部") },
     { value: "pending", label: t("settings.memory_status_pending", undefined, "待审") },
     { value: "approved", label: t("settings.memory_status_approved", undefined, "已批") },
@@ -56,7 +56,7 @@ function memoryStatusTone(status: string) {
     return "neutral" as const;
 }
 
-function memoryStatusLabel(status: string, t?: (key: string, params?: Record<string, unknown>, fallback?: string) => string) {
+function memoryStatusLabel(status: string, t?: (keyOrText: string, params?: Record<string, string | number>, fallbackText?: string) => string) {
     if (!t) {
         if (status === "approved") return "已批准";
         if (status === "rejected") return "已拒绝";
@@ -90,7 +90,7 @@ function restoreCompactModel(settings: AgentMemoryCompactView | null, fallback: 
     return fallback;
 }
 
-function compactStatusLabel(settings: AgentMemoryCompactView | null, t?: (key: string, params?: Record<string, unknown>, fallback?: string) => string) {
+function compactStatusLabel(settings: AgentMemoryCompactView | null, t?: (keyOrText: string, params?: Record<string, string | number>, fallbackText?: string) => string) {
     if (!settings) return "";
     const tr = t || ((_k: string, _p?: unknown, fb?: string) => fb || "");
     if (settings.lastStatus === "queued") return tr("settings.memory_status_queued", undefined, "已排队，等待文本模型压缩");
@@ -102,9 +102,13 @@ function compactStatusLabel(settings: AgentMemoryCompactView | null, t?: (key: s
     if (settings.lastStatus === "restored") return tr("settings.memory_status_restored", undefined, "已恢复上次压缩前的记忆版本。");
     if (settings.lastStatus === "succeeded") {
         const summary = settings.summary;
-        const parts = [summary?.merged ? `合并 ${summary.merged}` : "", summary?.rewritten ? `改写 ${summary.rewritten}` : "", summary?.removed ? `删除 ${summary.removed}` : ""].filter(Boolean);
+        const parts = [
+            summary?.merged ? tr("settings.memory_compact_part_merged", { count: summary.merged }, `合并 ${summary.merged}`) : "",
+            summary?.rewritten ? tr("settings.memory_compact_part_rewritten", { count: summary.rewritten }, `改写 ${summary.rewritten}`) : "",
+            summary?.removed ? tr("settings.memory_compact_part_removed", { count: summary.removed }, `删除 ${summary.removed}`) : "",
+        ].filter(Boolean);
         const when = settings.lastCompactAt ? new Date(settings.lastCompactAt).toLocaleString() : "";
-        return [when && `上次 ${when}`, parts.join(" · ") || tr("settings.memory_no_changes_needed", undefined, "模型认为没有需要改动的条目")].filter(Boolean).join(" · ");
+        return [when && tr("settings.memory_compact_last_time", { time: when }, `上次 ${when}`), parts.join(" · ") || tr("settings.memory_no_changes_needed", undefined, "模型认为没有需要改动的条目")].filter(Boolean).join(" · ");
     }
     return tr("settings.memory_compaction_hint", undefined, "生成提案按文本模型计费；检查差异并批准后才会改写记忆，每次应用都会保留恢复版本。");
 }
@@ -255,6 +259,7 @@ function AgentMemoryCompactCard({ compact = false, onApplied }: { compact?: bool
 }
 
 export default function AgentMemoryPane({ compact = false }: { compact?: boolean }) {
+    const { t } = useI18n();
     const { message, modal } = App.useApp();
     const [items, setItems] = useState<AgentMemory[]>([]);
     const [loading, setLoading] = useState(true);
@@ -385,7 +390,7 @@ export default function AgentMemoryPane({ compact = false }: { compact?: boolean
     };
 
     const pendingCount = items.filter((item) => item.status === "pending").length;
-    const statusFilters = STATUS_FILTERS.map((option) => ({
+    const statusFilters = getStatusFilters(t).map((option) => ({
         ...option,
         label: option.value === "pending" && pendingCount ? `待审 ${pendingCount}` : option.label,
     }));

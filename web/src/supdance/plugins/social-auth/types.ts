@@ -1,3 +1,5 @@
+export const SUPDANCE_SOCIAL_AUTH_PLUGIN_ID = "supdance-social-auth" as const;
+
 export type SocialAuthRegion = "cn" | "intl";
 
 export type SocialAuthStatus = "unconfigured" | "credentials_required" | "ready" | "online";

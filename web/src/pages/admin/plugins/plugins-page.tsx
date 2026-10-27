@@ -3,7 +3,7 @@ import { Switch } from "@/pages/admin/ui/controls";
 import { AlipayCircleFilled, WechatFilled } from "@ant-design/icons";
 import { ZHIFUFM_LOGO_SRC } from "@/components/payment-brand-icons";
 import type { ColumnsType } from "antd/es/table";
-import { BookOpenText, CloudUpload, Languages, PlugZap, RefreshCw, Search, Settings2, Trash2, UsersRound } from "lucide-react";
+import { BookOpenText, CloudUpload, Languages, PlugZap, RefreshCw, Search, Settings2, Share2, Trash2, UsersRound } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router";
 
@@ -22,6 +22,7 @@ import { AdminDataTable, AdminStatusBadge, AdminTableEmpty } from "../components
 import { Select } from "@/components/ui/base/select";
 import { usePluginStore } from "@/stores/use-plugin-store";
 import { SUPDANCE_I18N_PLUGIN_ID, useSupDanceI18nStore } from "@/supdance/plugins/i18n";
+import { SUPDANCE_SOCIAL_AUTH_PLUGIN_ID } from "@/supdance/plugins/social-auth/types";
 
 type AdminPluginItem = {
     manifest: PluginManifest | PluginManifestV2;
@@ -190,6 +191,13 @@ export default function AdminPluginsPage() {
                                 </span>
                                 <Link to="/admin/i18n/entries" className="inline-flex items-center gap-1 font-medium text-primary hover:underline">
                                     <BookOpenText className="size-3" /> 词条与字段修改
+                                </Link>
+                            </div>
+                        ) : null}
+                        {item.manifest.id === SUPDANCE_SOCIAL_AUTH_PLUGIN_ID ? (
+                            <div className="mt-1.5 flex flex-wrap items-center gap-2 text-xs">
+                                <Link to="/admin/settings/social-auth" className="inline-flex items-center gap-1 font-medium text-primary hover:underline">
+                                    <Settings2 className="size-3" /> 社交登录配置中心
                                 </Link>
                             </div>
                         ) : null}
@@ -387,6 +395,13 @@ function PluginBrandIcon({ pluginId }: { pluginId: string }) {
             </span>
         );
     }
+    if (pluginId === SUPDANCE_SOCIAL_AUTH_PLUGIN_ID) {
+        return (
+            <span className="grid size-9 shrink-0 place-items-center rounded-lg bg-pink-500/10 text-pink-500">
+                <Share2 className="size-4" aria-hidden="true" />
+            </span>
+        );
+    }
     if (pluginId === "official-payment-wechat-native") {
         return (
             <span className="grid size-9 shrink-0 place-items-center rounded-lg bg-[#07c160]/10 text-[#07c160]">
@@ -419,16 +434,17 @@ function mergePlugins(remote: BackendPlugin[]): AdminPluginItem[] {
     const byId = new Map<string, AdminPluginItem>();
     for (const plugin of listRegisteredPlugins()) {
         const isSupDanceI18n = plugin.manifest.id === SUPDANCE_I18N_PLUGIN_ID;
-        const application = isOfficialApplicationPluginId(plugin.manifest.id) || isSupDanceI18n;
+        const isSupDanceSocialAuth = plugin.manifest.id === SUPDANCE_SOCIAL_AUTH_PLUGIN_ID;
+        const application = isOfficialApplicationPluginId(plugin.manifest.id) || isSupDanceI18n || isSupDanceSocialAuth;
         byId.set(plugin.manifest.id, {
             manifest: plugin.manifest,
             source: plugin.source || "bundled",
-            status: isSupDanceI18n ? (useSupDanceI18nStore.getState().pluginEnabled ? "enabled" : "disabled") : undefined,
+            status: isSupDanceI18n ? (useSupDanceI18nStore.getState().pluginEnabled ? "enabled" : "disabled") : "enabled",
             management: {
                 origin: "official",
                 kind: application ? "application" : "protocol",
-                activationScope: isSupDanceI18n ? "system" : application ? "user" : "system",
-                configurationScope: isSupDanceI18n ? "system" : application ? (plugin.manifest.id === EAGLE_PLUGIN_ID || plugin.manifest.id === RUNNINGHUB_PLUGIN_ID ? "user" : "none") : "system",
+                activationScope: isSupDanceI18n || isSupDanceSocialAuth ? "system" : application ? "user" : "system",
+                configurationScope: isSupDanceI18n || isSupDanceSocialAuth ? "system" : application ? (plugin.manifest.id === EAGLE_PLUGIN_ID || plugin.manifest.id === RUNNINGHUB_PLUGIN_ID ? "user" : "none") : "system",
             },
         });
     }
