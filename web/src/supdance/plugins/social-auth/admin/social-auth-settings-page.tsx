@@ -164,10 +164,13 @@ export default function SocialAuthSettingsPage() {
         );
     }
 
-    const providersList = Object.values(data.providers);
-    const cnProviders = providersList.filter((p) => p.region === "cn");
-    const intlProviders = providersList.filter((p) => p.region === "intl");
+    const cnProviders = data.mainlandProviders || (data.providers ? Object.values(data.providers).filter((p) => p.region === "cn") : []);
+    const intlProviders = data.intlProviders || (data.providers ? Object.values(data.providers).filter((p) => p.region === "intl") : []);
     const currentList = activeTab === "cn" ? cnProviders : intlProviders;
+
+    const cnCount = data.cnCount ?? cnProviders.length;
+    const intlCount = data.intlCount ?? intlProviders.length;
+    const onlineCount = data.onlineCount ?? [...cnProviders, ...intlProviders].filter((p) => p.enabled).length;
 
     const renderStatusTag = (status: SocialAuthProviderAdmin["status"]) => {
         switch (status) {
@@ -218,11 +221,11 @@ export default function SocialAuthSettingsPage() {
                         </div>
                         <div className="flex items-center gap-2 rounded-lg bg-slate-800/80 px-3 py-1.5 border border-white/5">
                             <span className="text-slate-400">渠道状态:</span>
-                            <span className="text-emerald-400 font-semibold">{data.onlineCount} 在线</span>
+                            <span className="text-emerald-400 font-semibold">{onlineCount} 在线</span>
                             <span className="text-slate-600">/</span>
-                            <span className="text-slate-300">大陆 {data.cnCount}</span>
+                            <span className="text-slate-300">大陆 {cnCount}</span>
                             <span className="text-slate-600">/</span>
-                            <span className="text-slate-300">海外 {data.intlCount}</span>
+                            <span className="text-slate-300">海外 {intlCount}</span>
                         </div>
                     </div>
 

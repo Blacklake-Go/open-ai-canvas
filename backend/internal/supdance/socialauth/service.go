@@ -239,6 +239,21 @@ func (s *Service) GetAdminSettings(r *http.Request, actor *model.User) (*AdminSe
 		}
 	}
 
+	providersMap := make(map[string]ProviderAdminView)
+	onlineCount := 0
+	for _, p := range mainlandList {
+		providersMap[p.ID] = p
+		if p.Enabled {
+			onlineCount++
+		}
+	}
+	for _, p := range intlList {
+		providersMap[p.ID] = p
+		if p.Enabled {
+			onlineCount++
+		}
+	}
+
 	return &AdminSettingsView{
 		ClientIP:              ipLoc.ClientIP,
 		DetectedRegion:        ipLoc.Region,
@@ -247,6 +262,10 @@ func (s *Service) GetAdminSettings(r *http.Request, actor *model.User) (*AdminSe
 		DefaultFallbackRegion: settings.DefaultFallbackRegion,
 		MainlandProviders:     mainlandList,
 		IntlProviders:         intlList,
+		Providers:             providersMap,
+		CNCount:               len(mainlandList),
+		IntlCount:             len(intlList),
+		OnlineCount:           onlineCount,
 		UpdatedAt:             settings.UpdatedAt,
 	}, nil
 }
@@ -366,11 +385,15 @@ func (s *Service) GetPublicProviders(r *http.Request) (*PublicProvidersResponse,
 	}
 
 	return &PublicProvidersResponse{
-		Region:      ipLoc.Region,
-		RegionLabel: ipLoc.RegionLabel,
-		ClientIP:    ipLoc.ClientIP,
-		Providers:   activeList,
-		AllRegions:  allRegions,
+		Region:         ipLoc.Region,
+		DetectedRegion: ipLoc.Region,
+		RegionLabel:    ipLoc.RegionLabel,
+		ClientIP:       ipLoc.ClientIP,
+		FallbackRegion: settings.DefaultFallbackRegion,
+		Providers:      activeList,
+		CN:             allRegions[RegionCN],
+		Intl:           allRegions[RegionIntl],
+		AllRegions:     allRegions,
 	}, nil
 }
 

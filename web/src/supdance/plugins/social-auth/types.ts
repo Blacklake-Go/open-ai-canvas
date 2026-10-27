@@ -5,46 +5,65 @@ export type SocialAuthStatus = "unconfigured" | "credentials_required" | "ready"
 export interface SocialAuthProviderPublic {
     id: string;
     name: string;
-    icon: string;
+    platform?: string;
     region: SocialAuthRegion;
-    status: SocialAuthStatus;
-    sandboxEnabled: boolean;
+    icon: string;
+    authorizeUrl?: string;
+    sandboxEnabled?: boolean;
+    status?: SocialAuthStatus;
 }
 
 export interface PublicProvidersResponse {
-    detectedRegion: SocialAuthRegion;
+    region: SocialAuthRegion;
+    detectedRegion?: SocialAuthRegion;
+    regionLabel?: string;
     clientIp: string;
-    fallbackRegion: SocialAuthRegion;
-    cn: SocialAuthProviderPublic[];
-    intl: SocialAuthProviderPublic[];
-    activeProviders: SocialAuthProviderPublic[];
+    fallbackRegion?: SocialAuthRegion;
+    providers: SocialAuthProviderPublic[];
+    cn?: SocialAuthProviderPublic[];
+    intl?: SocialAuthProviderPublic[];
+    allRegions?: {
+        cn?: SocialAuthProviderPublic[];
+        intl?: SocialAuthProviderPublic[];
+    };
 }
 
 export interface SocialAuthProviderAdmin {
     id: string;
     name: string;
-    icon: string;
+    platform?: string;
     region: SocialAuthRegion;
+    icon: string;
     enabled: boolean;
     status: SocialAuthStatus;
-    statusMessage: string;
-    clientIdMasked: string;
-    clientSecretMasked: string;
+    statusMessage?: string;
+    clientIdMasked?: string;
+    clientSecretMasked?: string;
+    maskedSecret?: string;
     callbackUrl: string;
-    testPingUrl: string;
-    sandboxMockSupported: boolean;
-    sandboxMockEnabled: boolean;
-    updatedAt: string;
+    customRedirectUrl?: string;
+    testPingUrl?: string;
+    latencyMs?: number;
+    scopes?: string[];
+    docUrl?: string;
+    sandboxMockSupported?: boolean;
+    sandboxMockEnabled?: boolean;
+    updatedAt?: string;
 }
 
 export interface AdminSettingsView {
     clientIp: string;
     detectedRegion: SocialAuthRegion;
+    detectedRegionLabel?: string;
+    ipSourceHeader?: string;
     defaultFallbackRegion: SocialAuthRegion;
-    cnCount: number;
-    intlCount: number;
-    onlineCount: number;
-    providers: Record<string, SocialAuthProviderAdmin>;
+    mainlandProviders?: SocialAuthProviderAdmin[];
+    intlProviders?: SocialAuthProviderAdmin[];
+    providers?: Record<string, SocialAuthProviderAdmin>;
+    cnCount?: number;
+    intlCount?: number;
+    onlineCount?: number;
+    updatedAt?: string;
 }
 
 export interface ProviderUpdateInput {

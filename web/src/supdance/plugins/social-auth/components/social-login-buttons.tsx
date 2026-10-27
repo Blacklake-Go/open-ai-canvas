@@ -76,7 +76,10 @@ export function SocialLoginButtons({
         return null;
     }
 
-    const currentProviders = activeRegion === "cn" ? data.cn : data.intl;
+    const detectedRegion = data.detectedRegion || data.region || "cn";
+    const cnList = data.cn || data.allRegions?.cn || (detectedRegion === "cn" ? data.providers : []);
+    const intlList = data.intl || data.allRegions?.intl || (detectedRegion === "intl" ? data.providers : []);
+    const currentProviders = (activeRegion === "cn" ? cnList : intlList) || [];
     const isDark = variant === "dark-card";
 
     return (
@@ -88,7 +91,7 @@ export function SocialLoginButtons({
                     <span>
                         IP 分区:{" "}
                         <strong className={isDark ? "text-slate-200" : "text-slate-700"}>
-                            {data.detectedRegion === "cn" ? "中国大陆 (CN)" : "海外/港澳台 (Intl)"}
+                            {detectedRegion === "cn" ? "中国大陆 (CN)" : "海外/港澳台 (Intl)"}
                         </strong>
                     </span>
                 </div>
@@ -127,42 +130,48 @@ export function SocialLoginButtons({
             </div>
 
             {/* Providers Button Grid */}
-            <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-4">
-                {currentProviders.map((provider) => {
-                    const isMock = provider.sandboxEnabled;
-                    return (
-                        <Tooltip
-                            key={provider.id}
-                            title={isMock ? `${provider.name} (沙盒联调模式)` : `${provider.name} 登录`}
-                        >
-                            <button
-                                type="button"
-                                onClick={() => handleProviderClick(provider)}
-                                className={`group relative flex flex-col items-center justify-center gap-1.5 rounded-xl p-2.5 transition-all focus:outline-none ${
-                                    isDark
-                                        ? "border border-white/10 bg-white/[0.04] hover:border-pink-500/50 hover:bg-white/[0.08] active:scale-95"
-                                        : "border border-slate-200/80 bg-slate-50/60 hover:border-pink-400/60 hover:bg-white hover:shadow-sm active:scale-95"
-                                }`}
+            {currentProviders.length > 0 ? (
+                <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-4">
+                    {currentProviders.map((provider) => {
+                        const isMock = !!provider.sandboxEnabled;
+                        return (
+                            <Tooltip
+                                key={provider.id}
+                                title={isMock ? `${provider.name} (沙盒联调模式)` : `${provider.name} 登录`}
                             >
-                                {isMock && (
-                                    <span className="absolute -top-1.5 -right-1 flex items-center gap-0.5 rounded-full bg-pink-500/20 px-1.5 py-0.2 text-[9px] font-semibold text-pink-400 border border-pink-500/40">
-                                        <Sparkles className="size-2" />
-                                        Mock
-                                    </span>
-                                )}
-                                <SocialProviderIcon provider={provider.id} className="size-6 transition-transform group-hover:scale-110" />
-                                <span
-                                    className={`text-xs font-medium truncate max-w-full ${
-                                        isDark ? "text-slate-200 group-hover:text-white" : "text-slate-700 group-hover:text-slate-900"
+                                <button
+                                    type="button"
+                                    onClick={() => handleProviderClick(provider)}
+                                    className={`group relative flex flex-col items-center justify-center gap-1.5 rounded-xl p-2.5 transition-all focus:outline-none ${
+                                        isDark
+                                            ? "border border-white/10 bg-white/[0.04] hover:border-pink-500/50 hover:bg-white/[0.08] active:scale-95"
+                                            : "border border-slate-200/80 bg-slate-50/60 hover:border-pink-400/60 hover:bg-white hover:shadow-sm active:scale-95"
                                     }`}
                                 >
-                                    {provider.name}
-                                </span>
-                            </button>
-                        </Tooltip>
-                    );
-                })}
-            </div>
+                                    {isMock && (
+                                        <span className="absolute -top-1.5 -right-1 flex items-center gap-0.5 rounded-full bg-pink-500/20 px-1.5 py-0.2 text-[9px] font-semibold text-pink-400 border border-pink-500/40">
+                                            <Sparkles className="size-2" />
+                                            Mock
+                                        </span>
+                                    )}
+                                    <SocialProviderIcon provider={provider.id} className="size-6 transition-transform group-hover:scale-110" />
+                                    <span
+                                        className={`text-xs font-medium truncate max-w-full ${
+                                            isDark ? "text-slate-200 group-hover:text-white" : "text-slate-700 group-hover:text-slate-900"
+                                        }`}
+                                    >
+                                        {provider.name}
+                                    </span>
+                                </button>
+                            </Tooltip>
+                        );
+                    })}
+                </div>
+            ) : (
+                <div className={`rounded-xl border border-dashed py-3 text-center text-xs ${isDark ? "border-white/10 text-slate-500" : "border-slate-200 text-slate-400"}`}>
+                    当前分区暂无开放的快捷登录方式
+                </div>
+            )}
         </div>
     );
 }

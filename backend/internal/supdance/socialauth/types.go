@@ -97,14 +97,18 @@ type ProviderAdminView struct {
 
 // AdminSettingsView is the full view for the Admin Social Login Config Center.
 type AdminSettingsView struct {
-	ClientIP              string              `json:"clientIp"`
-	DetectedRegion        string              `json:"detectedRegion"` // "cn" or "intl"
-	DetectedRegionLabel   string              `json:"detectedRegionLabel"`
-	IPSourceHeader        string              `json:"ipSourceHeader"` // e.g. "x-real-ip" or "x-forwarded-for"
-	DefaultFallbackRegion string              `json:"defaultFallbackRegion"`
-	MainlandProviders     []ProviderAdminView `json:"mainlandProviders"`
-	IntlProviders         []ProviderAdminView `json:"intlProviders"`
-	UpdatedAt             time.Time           `json:"updatedAt"`
+	ClientIP              string                       `json:"clientIp"`
+	DetectedRegion        string                       `json:"detectedRegion"` // "cn" or "intl"
+	DetectedRegionLabel   string                       `json:"detectedRegionLabel"`
+	IPSourceHeader        string                       `json:"ipSourceHeader"` // e.g. "x-real-ip" or "x-forwarded-for"
+	DefaultFallbackRegion string                       `json:"defaultFallbackRegion"`
+	MainlandProviders     []ProviderAdminView          `json:"mainlandProviders"`
+	IntlProviders         []ProviderAdminView          `json:"intlProviders"`
+	Providers             map[string]ProviderAdminView `json:"providers,omitempty"`
+	CNCount               int                          `json:"cnCount"`
+	IntlCount             int                          `json:"intlCount"`
+	OnlineCount           int                          `json:"onlineCount"`
+	UpdatedAt             time.Time                    `json:"updatedAt"`
 }
 
 // ProviderPublicView is returned to frontend login pages.
@@ -119,10 +123,14 @@ type ProviderPublicView struct {
 
 // PublicProvidersResponse is returned by GET /api/auth/social/providers.
 type PublicProvidersResponse struct {
-	Region         string               `json:"region"` // "cn" or "intl"
-	RegionLabel    string               `json:"regionLabel"`
-	ClientIP       string               `json:"clientIp"`
-	Providers      []ProviderPublicView `json:"providers"`
+	Region         string                          `json:"region"` // "cn" or "intl"
+	DetectedRegion string                          `json:"detectedRegion,omitempty"`
+	RegionLabel    string                          `json:"regionLabel"`
+	ClientIP       string                          `json:"clientIp"`
+	FallbackRegion string                          `json:"fallbackRegion,omitempty"`
+	Providers      []ProviderPublicView            `json:"providers"`
+	CN             []ProviderPublicView            `json:"cn,omitempty"`
+	Intl           []ProviderPublicView            `json:"intl,omitempty"`
 	AllRegions     map[string][]ProviderPublicView `json:"allRegions,omitempty"` // for preview / dev
 }
 
