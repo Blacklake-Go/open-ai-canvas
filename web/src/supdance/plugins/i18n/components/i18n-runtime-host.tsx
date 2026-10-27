@@ -2,7 +2,7 @@ import { useEffect, useRef } from "react";
 import { usePluginStore } from "@/stores/use-plugin-store";
 import { getPublicSupDanceI18nBundle } from "../api";
 import { SupDanceDomTranslator } from "../engine/dom-observer";
-import { useSupDanceI18nEnabled, useSupDanceI18nStore } from "../store";
+import { SUPDANCE_I18N_CACHE_STORAGE_KEY, SUPDANCE_I18N_DISCOVERED_STORAGE_KEY, SUPDANCE_I18N_LOCALE_STORAGE_KEY, useSupDanceI18nEnabled, useSupDanceI18nStore } from "../store";
 import { SUPDANCE_I18N_PLUGIN_ID } from "../types";
 
 export function SupDanceI18nRuntimeHost() {
@@ -12,6 +12,8 @@ export function SupDanceI18nRuntimeHost() {
     const dictionary = useSupDanceI18nStore((s) => s.dictionary);
     const revision = useSupDanceI18nStore((s) => s.revision);
     const applyBundle = useSupDanceI18nStore((s) => s.applyBundle);
+    const recordUntranslatedText = useSupDanceI18nStore((s) => s.recordUntranslatedText);
+    const syncFromStorage = useSupDanceI18nStore((s) => s.syncFromStorage);
 
     const translatorRef = useRef<SupDanceDomTranslator | null>(null);
 
@@ -52,12 +54,21 @@ export function SupDanceI18nRuntimeHost() {
         const handleFocus = () => {
             void syncBundle();
         };
+
+        const handleStorage = (event: StorageEvent) => {
+            if (event.key === SUPDANCE_I18N_LOCALE_STORAGE_KEY || event.key === SUPDANCE_I18N_CACHE_STORAGE_KEY || event.key === SUPDANCE_I18N_DISCOVERED_STORAGE_KEY) {
+                syncFromStorage();
+            }
+        };
+
         window.addEventListener("focus", handleFocus);
+        window.addEventListener("storage", handleStorage);
         return () => {
             controller.abort();
             window.removeEventListener("focus", handleFocus);
+            window.removeEventListener("storage", handleStorage);
         };
-    }, [applyBundle]);
+    }, [applyBundle, syncFromStorage]);
 
     useEffect(() => {
         if (typeof document === "undefined" || !document.body) return;
@@ -76,8 +87,11 @@ export function SupDanceI18nRuntimeHost() {
         document.documentElement.lang = locale;
         translator.attach(document.body, dictionary, locale, settings.fallbackLocale, {
             translateAdminPages: settings.translateAdminPages,
+            onUntranslatedText: (sourceText) => {
+                recordUntranslatedText(sourceText);
+            },
         });
-    }, [dictionary, enabled, locale, revision, settings.fallbackLocale, settings.translateAdminPages]);
+    }, [dictionary, enabled, locale, recordUntranslatedText, revision, settings.fallbackLocale, settings.translateAdminPages]);
 
     useEffect(() => {
         return () => {

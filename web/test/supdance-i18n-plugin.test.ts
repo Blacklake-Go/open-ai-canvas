@@ -20,6 +20,7 @@ type MockTextNode = {
     nodeType: 3;
     nodeValue: string;
     parentElement: MockElementNode | null;
+    isConnected?: boolean;
 };
 
 type MockElementNode = {
@@ -28,6 +29,7 @@ type MockElementNode = {
     parentElement: MockElementNode | null;
     childNodes: Array<MockElementNode | MockTextNode>;
     attrs: Map<string, string>;
+    isConnected?: boolean;
     classList: { contains: (cls: string) => boolean };
     getAttribute: (name: string) => string | null;
     setAttribute: (name: string, value: string) => void;
@@ -219,5 +221,121 @@ describe("supdance-i18n plugin architecture and engine", () => {
             expect(antdLocale).toBeDefined();
             expect(typeof antdLocale.locale).toBe("string");
         }
+    });
+
+    test("compiles custom {var} placeholder entries into dynamic DOM regex rules and preserves modified zh-CN source matching", () => {
+        const merged = mergeI18nEntries({
+            "nav.create": {
+                key: "nav.create",
+                namespace: "nav",
+                sourceText: "AI 创作中心",
+                translations: {
+                    "zh-CN": "AI 创作中心",
+                    "en-US": "AI Creation Hub",
+                    "zh-TW": "AI 創作中心",
+                    "ja-JP": "AI制作センター",
+                    "ko-KR": "AI 창작 센터",
+                    "es-ES": "Centro de Creación IA",
+                },
+                origin: "modified",
+            },
+            "custom.shotProgress": {
+                key: "custom.shotProgress",
+                namespace: "projects",
+                sourceText: "第 {shot} 镜 · 耗时 {sec} 秒",
+                translations: {
+                    "zh-CN": "第 {shot} 镜 · 耗时 {sec} 秒",
+                    "en-US": "Shot #{shot} · {sec}s elapsed",
+                    "zh-TW": "第 {shot} 鏡 · 耗時 {sec} 秒",
+                    "ja-JP": "カット #{shot} · {sec}秒経過",
+                    "ko-KR": "샷 #{shot} · {sec}초 소요",
+                    "es-ES": "Toma #{shot} · {sec}s transcurridos",
+                },
+                origin: "custom",
+            },
+        });
+
+        const dict = compileI18nDictionary(merged);
+
+        // Even though zh-CN was customized to "AI 创作中心", the original DOM text "创作" still matches!
+        expect(translateSourceText(dict, "创作", "zh-CN", "zh-CN")).toBe("AI 创作中心");
+        expect(translateSourceText(dict, "创作", "en-US", "zh-CN")).toBe("AI Creation Hub");
+
+        // Dynamic {var} placeholder template automatically matches and interpolates DOM strings
+        expect(translateSourceText(dict, "第 12 镜 · 耗时 4.5 秒", "en-US", "zh-CN")).toBe("Shot #12 · 4.5s elapsed");
+        expect(translateSourceText(dict, "第 12 镜 · 耗时 4.5 秒", "ja-JP", "zh-CN")).toBe("カット #12 · 4.5秒経過");
+        expect(translateSourceText(dict, "第 12 镜 · 耗时 4.5 秒", "es-ES", "zh-CN")).toBe("Toma #12 · 4.5s transcurridos");
+    });
+
+    test("prunes disconnected DOM nodes, restores deleted custom entries/attributes immediately, and collects untranslated Chinese text", () => {
+        const customNode = createMockText("专属自定义按钮");
+        customNode.isConnected = true;
+        const unknownChineseNode = createMockText("未收录的深层弹窗提示文案");
+        unknownChineseNode.isConnected = true;
+
+        const customInput = createMockElement("input", {
+            placeholder: "专属自定义输入框",
+        });
+        customInput.isConnected = true;
+
+        const root = createMockElement("div", { id: "root" }, [createMockElement("button", {}, [customNode]), createMockElement("span", {}, [unknownChineseNode]), customInput]);
+
+        const customDict = compileI18nDictionary(
+            mergeI18nEntries({
+                "custom.btn": {
+                    key: "custom.btn",
+                    namespace: "custom",
+                    sourceText: "专属自定义按钮",
+                    translations: {
+                        "zh-CN": "专属自定义按钮",
+                        "en-US": "Exclusive Custom Button",
+                        "zh-TW": "專屬自訂按鈕",
+                        "ja-JP": "専用カスタムボタン",
+                        "ko-KR": "전용 커스텀 버튼",
+                        "es-ES": "Botón personalizado exclusivo",
+                    },
+                    origin: "custom",
+                },
+                "custom.input": {
+                    key: "custom.input",
+                    namespace: "custom",
+                    sourceText: "专属自定义输入框",
+                    translations: {
+                        "zh-CN": "专属自定义输入框",
+                        "en-US": "Exclusive Custom Input",
+                        "zh-TW": "專屬自訂輸入框",
+                        "ja-JP": "専用カスタム入力欄",
+                        "ko-KR": "전용 커스텀 입력란",
+                        "es-ES": "Entrada personalizada exclusiva",
+                    },
+                    origin: "custom",
+                },
+            }),
+        );
+
+        const discovered: string[] = [];
+        const translator = new SupDanceDomTranslator();
+        translator.attach(root as unknown as HTMLElement, customDict, "en-US", "zh-CN", {
+            translateAdminPages: true,
+            onUntranslatedText: (text) => discovered.push(text),
+        });
+
+        expect(customNode.nodeValue).toBe("Exclusive Custom Button");
+        expect(customInput.getAttribute("placeholder")).toBe("Exclusive Custom Input");
+        expect(discovered).toContain("未收录的深层弹窗提示文案");
+        expect(translator.getTouchedNodeCounts()).toEqual({ textNodes: 1, elements: 1 });
+
+        // Delete custom entries while still viewing en-US -> must immediately restore both text and placeholder to original Chinese
+        const baseDict = compileI18nDictionary(mergeI18nEntries({}));
+        translator.update(baseDict, "en-US", "zh-CN", { translateAdminPages: true });
+        expect(customNode.nodeValue).toBe("专属自定义按钮");
+        expect(customInput.getAttribute("placeholder")).toBe("专属自定义输入框");
+
+        // Simulate unmounting nodes from DOM -> pruneDisconnectedNodes frees strong references
+        customNode.isConnected = false;
+        customInput.isConnected = false;
+        const pruned = translator.pruneDisconnectedNodes();
+        expect(pruned).toEqual({ prunedTextNodes: 1, prunedElements: 1 });
+        expect(translator.getTouchedNodeCounts()).toEqual({ textNodes: 0, elements: 0 });
     });
 });

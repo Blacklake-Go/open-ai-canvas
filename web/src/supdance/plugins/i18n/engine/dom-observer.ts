@@ -1,24 +1,26 @@
 import type { SupDanceLocaleCode } from "../types";
-import { translateSourceText, type CompiledI18nDictionary } from "./translator";
+import { isCandidateUntranslatedChinese, translateSourceText, type CompiledI18nDictionary } from "./translator";
 
 const IGNORED_TAG_NAMES = new Set(["SCRIPT", "STYLE", "CODE", "PRE", "TEXTAREA", "NOSCRIPT", "SVG", "MATH"]);
 const TRANSLATABLE_ATTRIBUTES = ["placeholder", "title", "aria-label"] as const;
+const PRUNE_THRESHOLD = 200;
 
 export type DomTranslatorOptions = {
     translateAdminPages?: boolean;
+    onUntranslatedText?: (sourceText: string) => void;
 };
 
 /**
- * Zero-intrusion reactive DOM translator with lossless original-text restoration.
- *
- * Every modified Text node and Element attribute has its original Chinese value
- * recorded in a WeakMap, allowing instant rollback when switching back to zh-CN
- * or when the supdance-i18n plugin is disabled in `/admin/plugins`.
+ * Zero-intrusion reactive DOM translator with lossless original-text restoration,
+ * automatic disconnected-node pruning (preventing SPA memory leaks), and
+ * untranslated Chinese candidate discovery.
  */
 export class SupDanceDomTranslator {
     private originalTextByNode = new WeakMap<Text, string>();
+    private lastAppliedTextByNode = new WeakMap<Text, string>();
     private touchedTextNodes = new Set<Text>();
     private originalAttrsByElement = new WeakMap<Element, Map<string, string>>();
+    private lastAppliedAttrsByElement = new WeakMap<Element, Map<string, string>>();
     private touchedElements = new Set<Element>();
     private observer: MutationObserver | null = null;
     private isApplying = false;
@@ -36,6 +38,7 @@ export class SupDanceDomTranslator {
         this.fallbackLocale = fallbackLocale;
         this.options = options;
 
+        this.pruneDisconnectedNodes();
         this.applyToSubtree(root);
 
         if (typeof MutationObserver !== "undefined" && !this.observer) {
@@ -73,9 +76,39 @@ export class SupDanceDomTranslator {
         this.currentLocale = locale;
         this.fallbackLocale = fallbackLocale;
         this.options = options;
+        this.pruneDisconnectedNodes();
         if (this.targetRoot) {
             this.applyToSubtree(this.targetRoot);
         }
+    }
+
+    /**
+     * Removes any Text or Element references that have been unmounted from the live DOM tree
+     * so long-running SPA sessions never accumulate detached DOM nodes in memory.
+     */
+    public pruneDisconnectedNodes(): { prunedTextNodes: number; prunedElements: number } {
+        let prunedTextNodes = 0;
+        let prunedElements = 0;
+        for (const textNode of this.touchedTextNodes) {
+            if (textNode.isConnected === false) {
+                this.touchedTextNodes.delete(textNode);
+                prunedTextNodes += 1;
+            }
+        }
+        for (const element of this.touchedElements) {
+            if (element.isConnected === false) {
+                this.touchedElements.delete(element);
+                prunedElements += 1;
+            }
+        }
+        return { prunedTextNodes, prunedElements };
+    }
+
+    public getTouchedNodeCounts(): { textNodes: number; elements: number } {
+        return {
+            textNodes: this.touchedTextNodes.size,
+            elements: this.touchedElements.size,
+        };
     }
 
     public restoreAndDetach(): void {
@@ -115,6 +148,9 @@ export class SupDanceDomTranslator {
     private scheduleBatch(nodes: Set<Node>): void {
         const run = () => {
             this.rafId = null;
+            if (this.touchedTextNodes.size > PRUNE_THRESHOLD || this.touchedElements.size > PRUNE_THRESHOLD) {
+                this.pruneDisconnectedNodes();
+            }
             for (const node of nodes) {
                 this.applyToSubtree(node);
             }
@@ -194,10 +230,10 @@ export class SupDanceDomTranslator {
             baseSource = currentValue;
         } else {
             // Check if React updated the underlying textNode to a brand new Chinese string
-            const previousTranslated = translateSourceText(this.currentDictionary, baseSource, this.currentLocale, this.fallbackLocale);
-            if (currentValue !== baseSource && currentValue !== previousTranslated) {
+            const lastApplied = this.lastAppliedTextByNode.get(textNode);
+            if (currentValue !== baseSource && currentValue !== lastApplied) {
                 const isNewSourceMatch = translateSourceText(this.currentDictionary, currentValue, this.currentLocale, this.fallbackLocale) !== null;
-                if (isNewSourceMatch) {
+                if (isNewSourceMatch || isCandidateUntranslatedChinese(currentValue)) {
                     baseSource = currentValue;
                     this.originalTextByNode.set(textNode, baseSource);
                 }
@@ -209,14 +245,22 @@ export class SupDanceDomTranslator {
             if (!this.originalTextByNode.has(textNode)) {
                 this.originalTextByNode.set(textNode, baseSource);
             }
+            this.lastAppliedTextByNode.set(textNode, translated);
             this.touchedTextNodes.add(textNode);
             if (textNode.nodeValue !== translated) {
                 textNode.nodeValue = translated;
             }
-        } else if (this.originalTextByNode.has(textNode) && this.currentLocale === "zh-CN") {
-            const orig = this.originalTextByNode.get(textNode)!;
-            if (textNode.nodeValue !== orig) {
-                textNode.nodeValue = orig;
+        } else {
+            // Restore original value if this node was previously translated (e.g. custom entry was deleted)
+            if (this.originalTextByNode.has(textNode)) {
+                const orig = this.originalTextByNode.get(textNode)!;
+                this.lastAppliedTextByNode.set(textNode, orig);
+                if (textNode.nodeValue !== orig) {
+                    textNode.nodeValue = orig;
+                }
+            }
+            if (this.options.onUntranslatedText && isCandidateUntranslatedChinese(baseSource)) {
+                this.options.onUntranslatedText(baseSource.trim());
             }
         }
     }
@@ -228,13 +272,14 @@ export class SupDanceDomTranslator {
             if (!currentVal || !currentVal.trim()) continue;
 
             let attrMap = this.originalAttrsByElement.get(element);
+            let appliedMap = this.lastAppliedAttrsByElement.get(element);
             let baseSource = attrMap?.get(attr);
             if (baseSource === undefined) {
                 baseSource = currentVal;
             } else {
-                const prevTranslated = translateSourceText(this.currentDictionary, baseSource, this.currentLocale, this.fallbackLocale);
-                if (currentVal !== baseSource && currentVal !== prevTranslated) {
-                    if (translateSourceText(this.currentDictionary, currentVal, this.currentLocale, this.fallbackLocale) !== null) {
+                const lastApplied = appliedMap?.get(attr);
+                if (currentVal !== baseSource && currentVal !== lastApplied) {
+                    if (translateSourceText(this.currentDictionary, currentVal, this.currentLocale, this.fallbackLocale) !== null || isCandidateUntranslatedChinese(currentVal)) {
                         baseSource = currentVal;
                         attrMap!.set(attr, baseSource);
                     }
@@ -250,9 +295,25 @@ export class SupDanceDomTranslator {
                 if (!attrMap.has(attr)) {
                     attrMap.set(attr, baseSource);
                 }
+                if (!appliedMap) {
+                    appliedMap = new Map<string, string>();
+                    this.lastAppliedAttrsByElement.set(element, appliedMap);
+                }
+                appliedMap.set(attr, translated);
                 this.touchedElements.add(element);
                 if (element.getAttribute(attr) !== translated) {
                     element.setAttribute(attr, translated);
+                }
+            } else {
+                if (attrMap?.has(attr)) {
+                    const orig = attrMap.get(attr)!;
+                    appliedMap?.set(attr, orig);
+                    if (element.getAttribute(attr) !== orig) {
+                        element.setAttribute(attr, orig);
+                    }
+                }
+                if (this.options.onUntranslatedText && isCandidateUntranslatedChinese(baseSource)) {
+                    this.options.onUntranslatedText(baseSource.trim());
                 }
             }
         }

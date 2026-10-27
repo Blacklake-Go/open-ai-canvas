@@ -2,12 +2,14 @@ import { useMemo } from "react";
 import { create } from "zustand";
 import { usePluginStore } from "@/stores/use-plugin-store";
 import { getAntdLocaleForCode } from "./engine/antd-locale";
-import { compileI18nDictionary, translateByKey, translateSourceText, type CompiledI18nDictionary } from "./engine/translator";
+import { compileI18nDictionary, isCandidateUntranslatedChinese, translateByKey, translateSourceText, type CompiledI18nDictionary } from "./engine/translator";
 import { BUILTIN_I18N_ENTRIES, DEFAULT_SUPDANCE_I18N_SETTINGS, mergeI18nEntries, SUPPORTED_LOCALE_CODES } from "./locales";
-import { SUPDANCE_I18N_PLUGIN_ID, type SupDanceI18nEntry, type SupDanceI18nPublicBundle, type SupDanceI18nSettings, type SupDanceLanguageItem, type SupDanceLocaleCode } from "./types";
+import { SUPDANCE_I18N_PLUGIN_ID, type SupDanceDiscoveredTextItem, type SupDanceI18nEntry, type SupDanceI18nPublicBundle, type SupDanceI18nSettings, type SupDanceLanguageItem, type SupDanceLocaleCode } from "./types";
 
 export const SUPDANCE_I18N_LOCALE_STORAGE_KEY = "supdance:i18n:locale";
 export const SUPDANCE_I18N_CACHE_STORAGE_KEY = "supdance:i18n:config-cache";
+export const SUPDANCE_I18N_DISCOVERED_STORAGE_KEY = "supdance:i18n:discovered-untranslated";
+const MAX_DISCOVERED_ITEMS = 200;
 
 type StoredI18nCache = {
     pluginEnabled?: boolean;
@@ -32,6 +34,27 @@ function writeStoredCache(cache: StoredI18nCache): void {
         window.localStorage.setItem(SUPDANCE_I18N_CACHE_STORAGE_KEY, JSON.stringify(cache));
     } catch {
         // Ignore storage write errors in restricted privacy contexts
+    }
+}
+
+function readStoredDiscovered(): SupDanceDiscoveredTextItem[] {
+    if (typeof window === "undefined") return [];
+    try {
+        const raw = window.localStorage.getItem(SUPDANCE_I18N_DISCOVERED_STORAGE_KEY);
+        if (!raw) return [];
+        const parsed = JSON.parse(raw);
+        return Array.isArray(parsed) ? (parsed as SupDanceDiscoveredTextItem[]) : [];
+    } catch {
+        return [];
+    }
+}
+
+function writeStoredDiscovered(items: SupDanceDiscoveredTextItem[]): void {
+    if (typeof window === "undefined") return;
+    try {
+        window.localStorage.setItem(SUPDANCE_I18N_DISCOVERED_STORAGE_KEY, JSON.stringify(items.slice(0, MAX_DISCOVERED_ITEMS)));
+    } catch {
+        // Ignore storage write errors
     }
 }
 
@@ -105,6 +128,10 @@ function resolveEffectiveLocale(preferred: SupDanceLocaleCode | null, settings: 
     return firstEnabled ?? "zh-CN";
 }
 
+function filterOutTranslatedDiscovered(discovered: SupDanceDiscoveredTextItem[], dictionary: CompiledI18nDictionary): SupDanceDiscoveredTextItem[] {
+    return discovered.filter((item) => translateSourceText(dictionary, item.sourceText, "en-US", "zh-CN") === null);
+}
+
 const initialCache = readStoredCache();
 const initialSettings = initialCache?.settings ?? DEFAULT_SUPDANCE_I18N_SETTINGS;
 const initialCustomEntries = initialCache?.customEntries ?? {};
@@ -112,6 +139,7 @@ const initialPluginEnabled = typeof initialCache?.pluginEnabled === "boolean" ? 
 const initialEntries = mergeI18nEntries(initialCustomEntries);
 const initialDictionary = compileI18nDictionary(initialEntries);
 const initialLocale = resolveEffectiveLocale(readStoredLocale(), initialSettings);
+const initialDiscovered = filterOutTranslatedDiscovered(readStoredDiscovered(), initialDictionary);
 
 export type SupDanceI18nStoreState = {
     initialized: boolean;
@@ -121,6 +149,7 @@ export type SupDanceI18nStoreState = {
     customEntries: Record<string, SupDanceI18nEntry>;
     entries: SupDanceI18nEntry[];
     dictionary: CompiledI18nDictionary;
+    discoveredUntranslated: SupDanceDiscoveredTextItem[];
     revision: string;
     setLocale: (locale: SupDanceLocaleCode) => void;
     setPluginEnabled: (enabled: boolean) => void;
@@ -128,6 +157,9 @@ export type SupDanceI18nStoreState = {
     updateLocalSettings: (settings: SupDanceI18nSettings) => void;
     upsertLocalEntries: (items: SupDanceI18nEntry[]) => void;
     removeLocalEntry: (key: string) => void;
+    recordUntranslatedText: (sourceText: string, route?: string) => void;
+    clearDiscoveredUntranslated: (sourceText?: string) => void;
+    syncFromStorage: () => void;
 };
 
 export const useSupDanceI18nStore = create<SupDanceI18nStoreState>((set, get) => ({
@@ -138,6 +170,7 @@ export const useSupDanceI18nStore = create<SupDanceI18nStoreState>((set, get) =>
     customEntries: initialCustomEntries,
     entries: initialEntries,
     dictionary: initialDictionary,
+    discoveredUntranslated: initialDiscovered,
     revision: initialSettings.revision || DEFAULT_SUPDANCE_I18N_SETTINGS.revision,
 
     setLocale: (nextLocale) => {
@@ -162,8 +195,10 @@ export const useSupDanceI18nStore = create<SupDanceI18nStoreState>((set, get) =>
         const entries = mergeI18nEntries(customEntries);
         const dictionary = compileI18nDictionary(entries);
         const nextLocale = resolveEffectiveLocale(currentStored ?? get().locale, settings);
+        const discoveredUntranslated = filterOutTranslatedDiscovered(get().discoveredUntranslated, dictionary);
 
         writeStoredCache({ pluginEnabled, settings, customEntries });
+        writeStoredDiscovered(discoveredUntranslated);
         set({
             initialized: true,
             pluginEnabled,
@@ -171,6 +206,7 @@ export const useSupDanceI18nStore = create<SupDanceI18nStoreState>((set, get) =>
             customEntries,
             entries,
             dictionary,
+            discoveredUntranslated,
             locale: nextLocale,
             revision: bundle.revision || settings.revision || "builtin-v1",
         });
@@ -199,15 +235,18 @@ export const useSupDanceI18nStore = create<SupDanceI18nStoreState>((set, get) =>
         }
         const entries = mergeI18nEntries(nextCustom);
         const dictionary = compileI18nDictionary(entries);
+        const discoveredUntranslated = filterOutTranslatedDiscovered(get().discoveredUntranslated, dictionary);
         writeStoredCache({
             pluginEnabled: get().pluginEnabled,
             settings: get().settings,
             customEntries: nextCustom,
         });
+        writeStoredDiscovered(discoveredUntranslated);
         set({
             customEntries: nextCustom,
             entries,
             dictionary,
+            discoveredUntranslated,
             revision: `local-${Date.now()}`,
         });
     },
@@ -227,6 +266,79 @@ export const useSupDanceI18nStore = create<SupDanceI18nStoreState>((set, get) =>
             entries,
             dictionary,
             revision: `local-${Date.now()}`,
+        });
+    },
+
+    recordUntranslatedText: (rawSourceText, route) => {
+        const trimmed = rawSourceText.trim();
+        if (!isCandidateUntranslatedChinese(trimmed)) return;
+        const { dictionary, discoveredUntranslated } = get();
+        if (translateSourceText(dictionary, trimmed, "en-US", "zh-CN") !== null) return;
+
+        const now = new Date().toISOString();
+        const activeRoute = route || (typeof window !== "undefined" ? window.location.pathname : "/");
+        const existingIndex = discoveredUntranslated.findIndex((item) => item.sourceText === trimmed);
+        if (existingIndex >= 0) {
+            const existing = discoveredUntranslated[existingIndex]!;
+            // Avoid noisy state churn if already recorded on this route recently
+            if (existing.route === activeRoute && existing.count >= 1) return;
+            const next = [...discoveredUntranslated];
+            next[existingIndex] = {
+                ...existing,
+                route: activeRoute,
+                count: existing.count + 1,
+                lastSeenAt: now,
+            };
+            writeStoredDiscovered(next);
+            set({ discoveredUntranslated: next });
+            return;
+        }
+
+        if (discoveredUntranslated.length >= MAX_DISCOVERED_ITEMS) return;
+        const next: SupDanceDiscoveredTextItem[] = [
+            {
+                sourceText: trimmed,
+                route: activeRoute,
+                count: 1,
+                firstSeenAt: now,
+                lastSeenAt: now,
+            },
+            ...discoveredUntranslated,
+        ];
+        writeStoredDiscovered(next);
+        set({ discoveredUntranslated: next });
+    },
+
+    clearDiscoveredUntranslated: (sourceText) => {
+        if (!sourceText) {
+            writeStoredDiscovered([]);
+            set({ discoveredUntranslated: [] });
+            return;
+        }
+        const next = get().discoveredUntranslated.filter((item) => item.sourceText !== sourceText);
+        writeStoredDiscovered(next);
+        set({ discoveredUntranslated: next });
+    },
+
+    syncFromStorage: () => {
+        const storedCache = readStoredCache();
+        const storedLocale = readStoredLocale();
+        const settings = storedCache?.settings ?? get().settings;
+        const customEntries = storedCache?.customEntries ?? get().customEntries;
+        const pluginEnabled = typeof storedCache?.pluginEnabled === "boolean" ? storedCache.pluginEnabled : get().pluginEnabled;
+        const entries = mergeI18nEntries(customEntries);
+        const dictionary = compileI18nDictionary(entries);
+        const locale = resolveEffectiveLocale(storedLocale ?? get().locale, settings);
+        const discoveredUntranslated = filterOutTranslatedDiscovered(readStoredDiscovered(), dictionary);
+        set({
+            pluginEnabled,
+            settings,
+            customEntries,
+            entries,
+            dictionary,
+            locale,
+            discoveredUntranslated,
+            revision: `storage-${Date.now()}`,
         });
     },
 }));

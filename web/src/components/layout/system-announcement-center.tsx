@@ -6,6 +6,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 
 import { aceternityMotion } from "@/lib/aceternity-motion";
 import { getAnnouncementFeed, markAnnouncementsRead } from "@/services/api/announcements";
+import { useI18n } from "@/supdance/plugins/i18n";
 
 const AnnouncementTimelineModal = lazy(() => import("@/components/ui/aceternity/announcement-timeline-modal").then((module) => ({ default: module.AnnouncementTimelineModal })));
 
@@ -27,6 +28,7 @@ type SystemAnnouncementCenterProps = {
 };
 
 export function SystemAnnouncementCenter({ userId, className, style, showLabel = false, labelClassName, staticMotion = false, autoOpen = false }: SystemAnnouncementCenterProps) {
+    const { t } = useI18n();
     const reducedMotion = useReducedMotion();
     const queryClient = useQueryClient();
     const [open, setOpen] = useState(false);
@@ -88,8 +90,8 @@ export function SystemAnnouncementCenter({ userId, className, style, showLabel =
                 whileTap={reducedMotion || staticMotion ? undefined : { scale: 0.94 }}
                 transition={aceternityMotion.spring.dock}
                 onClick={() => void openAnnouncements()}
-                aria-label={unreadCount ? `系统公告，${unreadCount} 条未读` : "系统公告"}
-                title="系统公告"
+                aria-label={unreadCount ? t("nav.announcements_unread", { count: unreadCount }) : t("nav.announcements")}
+                title={t("nav.announcements")}
                 data-icon-only={showLabel ? undefined : true}
             >
                 <span className="relative shrink-0">
@@ -110,7 +112,7 @@ export function SystemAnnouncementCenter({ userId, className, style, showLabel =
                 </span>
                 {showLabel ? (
                     <span className={`min-w-0 flex-1 items-center justify-between gap-2 whitespace-nowrap ${labelClassName || ""}`}>
-                        <span>系统公告</span>
+                        <span>{t("nav.announcements")}</span>
                         <Tag color={unreadCount > 0 ? "gold" : undefined} className="!m-0 !min-w-6 !px-2 !text-center !text-[var(--fs-micro)] !font-medium !leading-[18px] tabular-nums">{announcements.length}</Tag>
                     </span>
                 ) : null}

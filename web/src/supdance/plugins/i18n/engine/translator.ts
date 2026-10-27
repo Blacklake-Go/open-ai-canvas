@@ -1,14 +1,28 @@
+import { BUILTIN_SUPDANCE_I18N_ENTRIES } from "../locales";
 import type { SupDanceI18nEntry, SupDanceLocaleCode } from "../types";
+
+export type CompiledTemplateRule = {
+    key: string;
+    regex: RegExp;
+    paramNames: string[];
+    entry: SupDanceI18nEntry;
+};
 
 export type CompiledI18nDictionary = {
     byKey: Map<string, SupDanceI18nEntry>;
     bySourceText: Map<string, SupDanceI18nEntry>;
+    templateRules: CompiledTemplateRule[];
 };
 
 type DynamicPatternRule = {
     regex: RegExp;
     format: Record<SupDanceLocaleCode, (...groups: string[]) => string>;
 };
+
+const BUILTIN_SOURCE_BY_KEY = new Map<string, string>(BUILTIN_SUPDANCE_I18N_ENTRIES.map((item) => [item.key, item.sourceText.trim()]));
+
+const PLACEHOLDER_TOKEN_REGEX = /\{([a-zA-Z0-9_]+)\}/g;
+const HAN_CHARACTER_REGEX = /[\u4e00-\u9fff]/;
 
 const DYNAMIC_PATTERN_RULES: readonly DynamicPatternRule[] = [
     {
@@ -79,23 +93,82 @@ const DYNAMIC_PATTERN_RULES: readonly DynamicPatternRule[] = [
     },
 ];
 
+function escapeRegexLiteral(text: string): string {
+    return text.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
+
+function buildTemplateRule(patternText: string, entry: SupDanceI18nEntry): CompiledTemplateRule | null {
+    if (!patternText.includes("{")) return null;
+    const paramNames: string[] = [];
+    let lastIndex = 0;
+    let regexBody = "";
+    let match: RegExpExecArray | null;
+    const tokenRegex = new RegExp(PLACEHOLDER_TOKEN_REGEX.source, "g");
+
+    while ((match = tokenRegex.exec(patternText)) !== null) {
+        const literalSlice = patternText.slice(lastIndex, match.index);
+        // Allow flexible whitespace around placeholders when literal has spaces
+        regexBody += escapeRegexLiteral(literalSlice).replace(/\s+/g, "\\s*");
+        paramNames.push(match[1]!);
+        regexBody += "(.+?)";
+        lastIndex = match.index + match[0].length;
+    }
+
+    if (paramNames.length === 0) return null;
+    const trailingLiteral = patternText.slice(lastIndex);
+    regexBody += escapeRegexLiteral(trailingLiteral).replace(/\s+/g, "\\s*");
+
+    // Avoid degenerate pattern that is purely `{x}` with no literal anchor
+    const strippedLiterals = patternText.replace(PLACEHOLDER_TOKEN_REGEX, "").trim();
+    if (!strippedLiterals) return null;
+
+    try {
+        return {
+            key: entry.key,
+            regex: new RegExp(`^${regexBody}$`),
+            paramNames,
+            entry,
+        };
+    } catch {
+        return null;
+    }
+}
+
 export function compileI18nDictionary(entries: readonly SupDanceI18nEntry[]): CompiledI18nDictionary {
     const byKey = new Map<string, SupDanceI18nEntry>();
     const bySourceText = new Map<string, SupDanceI18nEntry>();
+    const templateRules: CompiledTemplateRule[] = [];
+    const seenTemplatePatterns = new Set<string>();
 
     for (const entry of entries) {
         byKey.set(entry.key, entry);
+
+        const builtinOriginal = BUILTIN_SOURCE_BY_KEY.get(entry.key);
+        if (builtinOriginal) {
+            bySourceText.set(builtinOriginal, entry);
+        }
+
         const source = entry.sourceText.trim();
         if (source) {
             bySourceText.set(source, entry);
         }
+
         const zhCN = entry.translations["zh-CN"]?.trim();
         if (zhCN && !bySourceText.has(zhCN)) {
             bySourceText.set(zhCN, entry);
         }
+
+        for (const candidatePattern of [builtinOriginal, source, zhCN]) {
+            if (!candidatePattern || seenTemplatePatterns.has(`${entry.key}::${candidatePattern}`)) continue;
+            const rule = buildTemplateRule(candidatePattern, entry);
+            if (rule) {
+                seenTemplatePatterns.add(`${entry.key}::${candidatePattern}`);
+                templateRules.push(rule);
+            }
+        }
     }
 
-    return { byKey, bySourceText };
+    return { byKey, bySourceText, templateRules };
 }
 
 export function interpolateTemplate(template: string, vars?: Record<string, string | number>): string {
@@ -138,6 +211,24 @@ export function translateSourceText(dictionary: CompiledI18nDictionary, rawText:
         return `${leading}${translated}${trailing}`;
     }
 
+    if (dictionary.templateRules?.length) {
+        for (const rule of dictionary.templateRules) {
+            const groups = core.match(rule.regex);
+            if (groups) {
+                const vars: Record<string, string> = {};
+                for (let i = 0; i < rule.paramNames.length; i++) {
+                    const paramName = rule.paramNames[i];
+                    if (paramName) {
+                        vars[paramName] = (groups[i + 1] ?? "").trim();
+                    }
+                }
+                const resolvedTemplate = resolveEntryTranslation(rule.entry, locale, fallbackLocale);
+                const interpolated = interpolateTemplate(resolvedTemplate, vars);
+                return `${leading}${interpolated}${trailing}`;
+            }
+        }
+    }
+
     for (const rule of DYNAMIC_PATTERN_RULES) {
         const groups = core.match(rule.regex);
         if (groups) {
@@ -147,4 +238,13 @@ export function translateSourceText(dictionary: CompiledI18nDictionary, rawText:
     }
 
     return null;
+}
+
+export function isCandidateUntranslatedChinese(rawText: string): boolean {
+    const trimmed = rawText.trim();
+    if (trimmed.length < 2 || trimmed.length > 64) return false;
+    if (!HAN_CHARACTER_REGEX.test(trimmed)) return false;
+    if (/^https?:\/\//i.test(trimmed)) return false;
+    if (/^[{[\]<>/\\]+/.test(trimmed)) return false;
+    return true;
 }

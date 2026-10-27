@@ -50,6 +50,7 @@ export function SupDanceI18nSettingsPage() {
     const [loading, setLoading] = useState(false);
     const [saving, setSaving] = useState(false);
     const [togglingPlugin, setTogglingPlugin] = useState(false);
+    const [serverConnected, setServerConnected] = useState<boolean | null>(null);
     const [draftSettings, setDraftSettings] = useState<SupDanceI18nSettings>(storeSettings);
     const [remoteStats, setRemoteStats] = useState<SupDanceLanguageStats[] | null>(null);
     const [counts, setCounts] = useState<{ totalEntries: number; customCount: number; modifiedCount: number }>({
@@ -62,6 +63,7 @@ export function SupDanceI18nSettingsPage() {
         setLoading(true);
         try {
             const overview = await getAdminSupDanceI18nOverview();
+            setServerConnected(true);
             setDraftSettings(overview.settings);
             updateLocalSettings(overview.settings);
             setStorePluginEnabled(overview.pluginEnabled);
@@ -72,6 +74,7 @@ export function SupDanceI18nSettingsPage() {
                 modifiedCount: overview.modifiedCount,
             });
         } catch {
+            setServerConnected(false);
             setDraftSettings(useSupDanceI18nStore.getState().settings);
             setRemoteStats(null);
         } finally {
@@ -95,10 +98,15 @@ export function SupDanceI18nSettingsPage() {
     const handleTogglePluginMaster = async (checked: boolean) => {
         setTogglingPlugin(true);
         try {
+            let persistedOnServer = false;
+            let serverErrReason = "";
             try {
                 await setPluginPlatformAvailability(SUPDANCE_I18N_PLUGIN_ID, checked);
-            } catch {
-                // Allow local preview toggle even when running frontend standalone
+                persistedOnServer = true;
+                setServerConnected(true);
+            } catch (err) {
+                setServerConnected(false);
+                serverErrReason = err instanceof Error ? err.message : "服务端未响应";
             }
             usePluginStore.setState((state) => ({
                 pluginStates: {
@@ -115,7 +123,11 @@ export function SupDanceI18nSettingsPage() {
                 },
             }));
             setStorePluginEnabled(checked);
-            message.success(checked ? "站点多语言插件已启用，右上角切换图标已挂载" : "站点多语言插件已停用，全站已恢复默认中文");
+            if (persistedOnServer) {
+                message.success(checked ? "站点多语言插件已在服务端启用，右上角切换图标已挂载" : "站点多语言插件已在服务端停用，全站已恢复默认中文");
+            } else {
+                message.warning(`服务端持久化未完成（${serverErrReason}），插件开关当前仅在本机浏览器缓存生效`);
+            }
         } finally {
             setTogglingPlugin(false);
         }
@@ -169,13 +181,17 @@ export function SupDanceI18nSettingsPage() {
         try {
             try {
                 const overview = await updateAdminSupDanceI18nSettings(draftSettings);
+                setServerConnected(true);
                 setDraftSettings(overview.settings);
                 updateLocalSettings(overview.settings);
                 setRemoteStats(overview.languageStats);
-            } catch {
+                message.success("多语言设置已持久化至服务端并全站实时生效");
+            } catch (err) {
+                setServerConnected(false);
                 updateLocalSettings(draftSettings);
+                const reason = err instanceof Error ? err.message : "服务端未响应";
+                message.warning(`服务端持久化未完成（${reason}），当前设置仅保存在本机浏览器缓存中`);
             }
-            message.success("多语言设置已保存并实时生效");
         } finally {
             setSaving(false);
         }
@@ -209,6 +225,7 @@ export function SupDanceI18nSettingsPage() {
             actions={
                 <div className="flex flex-wrap items-center gap-2">
                     <AdminStatusBadge label={pluginEnabled ? "插件已启用" : "插件已关闭"} tone={pluginEnabled ? "success" : "neutral"} />
+                    {serverConnected !== null ? <AdminStatusBadge label={serverConnected ? "服务端已同步" : "本地缓存降级"} tone={serverConnected ? "info" : "warning"} /> : null}
                     <AdminStatusBadge label={`支持 ${SUPPORTED_LOCALE_CODES.length} 大语种`} tone="info" />
                     <Button icon={<BookOpenText className="size-4" />} onClick={() => navigate("/admin/i18n/entries")}>
                         词条与字段修改

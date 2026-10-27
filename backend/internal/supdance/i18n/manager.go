@@ -161,12 +161,9 @@ func MergeEntries(custom map[string]Entry) ([]Entry, int, int) {
 					mergedTrans[code] = strings.TrimSpace(val)
 				}
 			}
-			sourceText := strings.TrimSpace(override.SourceText)
-			if sourceText == "" {
-				sourceText = mergedTrans[LocaleZhCN]
-			}
-			if sourceText == "" {
-				sourceText = b.SourceText
+			sourceText := b.SourceText
+			if trimmedOverrideSource := strings.TrimSpace(override.SourceText); trimmedOverrideSource != "" && trimmedOverrideSource != mergedTrans[LocaleZhCN] {
+				sourceText = trimmedOverrideSource
 			}
 			desc := strings.TrimSpace(override.Description)
 			if desc == "" {

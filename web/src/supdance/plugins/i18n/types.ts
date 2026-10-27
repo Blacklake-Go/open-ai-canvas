@@ -103,3 +103,11 @@ export type SupDanceI18nExportPayload = {
     entries: SupDanceI18nEntry[];
     overrides?: Record<string, SupDanceI18nEntry>;
 };
+
+export type SupDanceDiscoveredTextItem = {
+    sourceText: string;
+    route: string;
+    count: number;
+    firstSeenAt: string;
+    lastSeenAt: string;
+};

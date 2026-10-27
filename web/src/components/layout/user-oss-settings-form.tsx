@@ -8,6 +8,7 @@ import { getUserOSSSetting, testUserOSSConnection, updateUserOSSSetting, type Us
 import { useUserStore } from "@/stores/use-user-store";
 import { StatusBadge } from "@/components/ui/base/badges";
 import { Select } from "@/components/ui/base/select";
+import { useI18n } from "@/supdance/plugins/i18n";
 
 type OSSFormValues = {
     enabled?: boolean;
@@ -28,6 +29,7 @@ type OSSFormValues = {
 };
 
 export function UserOSSSettingsForm() {
+    const { t } = useI18n();
     const actor = useUserStore((state) => state.user);
     const { message } = App.useApp();
     const [form] = Form.useForm<OSSFormValues>();
@@ -58,20 +60,20 @@ export function UserOSSSettingsForm() {
                 form.setFieldsValue(toFormValues(data.setting));
                 setTestResult(data.setting.testedAt ? { ok: true, testedAt: data.setting.testedAt, testedDigest: data.setting.testedDigest } : null);
             })
-            .catch((error) => active && message.error(error instanceof Error ? error.message : "读取个人对象存储配置失败"))
+            .catch((error) => active && message.error(error instanceof Error ? error.message : t("settings.oss_load_failed", undefined, "读取个人对象存储配置失败")))
             .finally(() => active && setLoading(false));
         return () => {
             active = false;
         };
-    }, [actor?.id, form, message]);
+    }, [actor?.id, form, message, t]);
 
     if (!actor) {
-        return <div className="rounded-md border border-dashed border-border px-5 py-10 text-center text-sm text-foreground/55">登录后可配置个人对象存储。</div>;
+        return <div className="rounded-md border border-dashed border-border px-5 py-10 text-center text-sm text-foreground/55">{t("settings.oss_not_logged_in", undefined, "登录后可配置个人对象存储。")}</div>;
     }
 
     const save = async () => {
         const values = await form.validateFields();
-        if (values.enabled && values.provider === "s3" && !setting?.allowUserS3) return message.error("平台管理员尚未允许个人 S3 兼容存储");
+        if (values.enabled && values.provider === "s3" && !setting?.allowUserS3) return message.error(t("settings.oss_s3_not_allowed", undefined, "平台管理员尚未允许个人 S3 兼容存储"));
         setSaving(true);
         try {
             const data = await updateUserOSSSetting({
@@ -95,9 +97,9 @@ export function UserOSSSettingsForm() {
             form.setFieldsValue(toFormValues(data.setting));
             setTestResult(data.setting.testedAt ? { ok: true, testedAt: data.setting.testedAt, testedDigest: data.setting.testedDigest } : null);
             setTestStale(false);
-            message.success(data.setting.enabled ? "个人对象存储已启用，后续上传将优先使用该存储" : "个人对象存储已停用，后续上传将使用平台存储");
+            message.success(data.setting.enabled ? t("settings.oss_save_success_enabled", undefined, "个人对象存储已启用，后续上传将优先使用该存储") : t("settings.oss_save_success_disabled", undefined, "个人对象存储已停用，后续上传将使用平台存储"));
         } catch (error) {
-            message.error(error instanceof Error ? error.message : "保存个人对象存储配置失败");
+            message.error(error instanceof Error ? error.message : t("settings.oss_save_failed", undefined, "保存个人对象存储配置失败"));
         } finally {
             setSaving(false);
         }
@@ -115,9 +117,9 @@ export function UserOSSSettingsForm() {
             const result = await testUserOSSConnection(connectionInput(values));
             setTestResult(result);
             setTestStale(false);
-            result.ok ? message.success(result.message || "连接测试通过") : message.error(result.message || "连接测试失败");
+            result.ok ? message.success(result.message || t("settings.oss_test_success", undefined, "连接测试通过")) : message.error(result.message || t("settings.oss_test_failed", undefined, "连接测试失败"));
         } catch (error) {
-            setTestResult({ ok: false, message: error instanceof Error ? error.message : "连接测试失败" });
+            setTestResult({ ok: false, message: error instanceof Error ? error.message : t("settings.oss_test_failed", undefined, "连接测试失败") });
             setTestStale(false);
         } finally {
             setTesting(false);
@@ -130,23 +132,23 @@ export function UserOSSSettingsForm() {
                 <div className="min-w-0">
                     <div className="flex items-center gap-2 text-sm font-semibold">
                         <Cloud className="size-4" />
-                        我的对象存储
+                        {t("settings.oss_title", undefined, "我的对象存储")}
                     </div>
-                    <p className="mt-1 max-w-3xl text-xs leading-5 text-foreground/55">启用后，新上传和新生成的媒体优先写入你的存储桶；停用时回退到平台存储。</p>
+                    <p className="mt-1 max-w-3xl text-xs leading-5 text-foreground/55">{t("settings.oss_desc", undefined, "启用后，新上传和新生成的媒体优先写入你的存储桶；停用时回退到平台存储。")}</p>
                 </div>
                 <div className="flex shrink-0 gap-2">
-                    <StatusBadge tone={setting?.enabled ? "success" : "neutral"} label={setting?.enabled ? "已启用" : "未启用"} />
+                    <StatusBadge tone={setting?.enabled ? "success" : "neutral"} label={setting?.enabled ? t("settings.oss_enabled_badge", undefined, "已启用") : t("settings.oss_disabled_badge", undefined, "未启用")} />
                     <Tag color={setting?.hasAccessKeySecret ? "processing" : "warning"} icon={<ShieldCheck className="size-3" />}>
-                        {setting?.hasAccessKeySecret ? "密钥已加密" : "未保存密钥"}
+                        {setting?.hasAccessKeySecret ? t("settings.oss_secret_encrypted", undefined, "密钥已加密") : t("settings.oss_secret_not_saved", undefined, "未保存密钥")}
                     </Tag>
                 </div>
             </div>
 
             <div className="grid grid-cols-1 gap-x-4 md:grid-cols-2 xl:grid-cols-3">
-                <Form.Item name="enabled" label="启用个人对象存储" valuePropName="checked" className="mb-3">
-                    <Switch checkedChildren="启用" unCheckedChildren="停用" />
+                <Form.Item name="enabled" label={t("settings.oss_enable_label", undefined, "启用个人对象存储")} valuePropName="checked" className="mb-3">
+                    <Switch checkedChildren={t("settings.oss_enable_switch", undefined, "启用")} unCheckedChildren={t("settings.oss_disable_switch", undefined, "停用")} />
                 </Form.Item>
-                <Form.Item name="provider" label="存储服务" rules={[{ required: true, message: "请选择存储服务" }]} className="mb-3">
+                <Form.Item name="provider" label={t("settings.oss_provider_label", undefined, "存储服务")} rules={[{ required: true, message: t("settings.oss_provider_required", undefined, "请选择存储服务") }]} className="mb-3">
                     <Select
                         options={[{ label: "阿里云 OSS", value: "aliyun" }, { label: "腾讯云 COS", value: "tencent" }, { label: "七牛云 Kodo", value: "qiniu" }, { label: "S3 兼容存储", value: "s3", disabled: setting?.allowUserS3 === false }]}
                         onChange={(nextProvider: OSSFormValues["provider"]) => {
@@ -192,7 +194,7 @@ export function UserOSSSettingsForm() {
                 <Form.Item name="allowPrivateProxy" label="允许模型输入代理" valuePropName="checked" extra="仅允许服务端向第三方模型提交参考素材时读取私有源站。浏览器展示、复制、下载和本地处理始终直连 OSS/CDN，不会经平台中转媒体正文。" className="mb-3">
                     <Switch checkedChildren="允许" unCheckedChildren="禁止" />
                 </Form.Item>
-                <Form.Item name="bucket" label="Bucket" className="mb-3">
+                <Form.Item name="bucket" label={t("settings.oss_bucket_label", undefined, "存储桶 / Bucket")} className="mb-3">
                     <Input spellCheck={false} placeholder={isTencentCOS ? "my-canvas-assets-1250000000" : isQiniuKodo ? "七牛云存储空间名称" : "my-canvas-assets"} />
                 </Form.Item>
                 <Form.Item name="pathPrefix" label="路径前缀" className="mb-3">
@@ -218,7 +220,7 @@ export function UserOSSSettingsForm() {
 
             <div className="mt-2 flex flex-wrap items-center justify-between gap-3 border-t border-border pt-3">
                 <div className="flex flex-wrap items-center gap-2"><span className="text-xs text-foreground/50">{savedAt ? `上次保存：${savedAt}` : "尚未保存个人对象存储配置"}</span><ConnectionTestStatus result={testResult} stale={testStale} /></div>
-                <div className="flex flex-wrap gap-2"><Button loading={testing} onClick={() => void testConnection()}>测试连接</Button><Button type="primary" loading={saving} onClick={() => void save()}>保存个人对象存储</Button></div>
+                <div className="flex flex-wrap gap-2"><Button loading={testing} onClick={() => void testConnection()}>{t("settings.oss_test_connection", undefined, "测试连接")}</Button><Button type="primary" loading={saving} onClick={() => void save()}>保存个人对象存储</Button></div>
             </div>
         </Form>
     );

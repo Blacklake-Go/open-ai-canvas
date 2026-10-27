@@ -7,8 +7,10 @@ import { aceternityMotion } from "@/lib/aceternity-motion";
 import { useAppearanceStore } from "@/stores/use-appearance-store";
 import { updateAnnouncementVersion } from "@/lib/update-announcement";
 import { UpdateAnnouncementContent } from "./update-announcement-content";
+import { useI18n } from "@/supdance/plugins/i18n";
 
 export function AppChangelogDialog({ open, onClose }: { open: boolean; onClose: () => void }) {
+    const { t } = useI18n();
     const reducedMotion = useReducedMotion();
     const updates = useAppearanceStore((state) => state.appearance.updates);
     const custom = Boolean(updates?.enabled);
@@ -23,10 +25,10 @@ export function AppChangelogDialog({ open, onClose }: { open: boolean; onClose: 
                         <ScrollText className="size-4" />
                     </span>
                     <div className="app-changelog-heading-copy">
-                        <div className="app-changelog-heading-title">{custom ? "更新公告" : "更新日志"}</div>
-                        <div className="app-changelog-heading-description">{custom ? "按版本查看本站发布的更新与功能介绍" : "按版本查看产品能力、交互与稳定性变化"}</div>
+                        <div className="app-changelog-heading-title">{custom ? t("nav.announcement_update") : t("nav.changelog")}</div>
+                        <div className="app-changelog-heading-description">{custom ? t("nav.announcement_update_desc") : t("nav.changelog_desc")}</div>
                     </div>
-                    <span className="app-changelog-current-version">当前版本 {version}</span>
+                    <span className="app-changelog-current-version">{t("nav.current_version", { version })}</span>
                 </div>
             }
             open={open}
@@ -54,8 +56,8 @@ export function AppChangelogDialog({ open, onClose }: { open: boolean; onClose: 
                                 return (
                                     <h3 className={`app-changelog-section-heading${latest ? " is-latest" : ""}`}>
                                         <span className="app-changelog-section-marker" aria-hidden="true" />
-                                        <span>{latest ? "开发中" : label}</span>
-                                        {latest ? <span className="app-changelog-latest-badge">最新</span> : null}
+                                        <span>{latest ? t("nav.in_development") : label}</span>
+                                        {latest ? <span className="app-changelog-latest-badge">{t("nav.latest")}</span> : null}
                                     </h3>
                                 );
                             },

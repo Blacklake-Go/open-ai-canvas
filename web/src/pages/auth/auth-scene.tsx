@@ -9,30 +9,7 @@ import { SiteComplianceFooter } from "@/components/layout/site-compliance-footer
 import { aceternityMotion } from "@/lib/aceternity-motion";
 import { brandStudioLabel, useAppearanceStore } from "@/stores/use-appearance-store";
 import { useThemeStore } from "@/stores/use-theme-store";
-import { TopbarLanguageSwitcher } from "@/supdance/plugins/i18n";
-
-const AUTH_TABS = [
-    { key: "login", label: "登录" },
-    { key: "register", label: "注册" },
-];
-
-const authCopy = {
-    login: {
-        eyebrow: "WELCOME BACK",
-        title: "进入创作现场",
-        description: "继续编辑你的画布、素材与生成任务。",
-    },
-    register: {
-        eyebrow: "CREATE ACCOUNT",
-        title: "建立你的创作空间",
-        description: "一个账号管理画布、素材、技能和模型偏好。",
-    },
-    recovery: {
-        eyebrow: "ACCOUNT RECOVERY",
-        title: "重新设置密码",
-        description: "验证账号邮箱后，设置一个新的登录密码。",
-    },
-} as const;
+import { TopbarLanguageSwitcher, useI18n } from "@/supdance/plugins/i18n";
 
 export function LinuxDOIcon() {
     return (
@@ -48,6 +25,7 @@ export function LinuxDOIcon() {
 }
 
 export function AuthScene() {
+    const { t } = useI18n();
     const appearance = useAppearanceStore((state) => state.appearance);
     const theme = useThemeStore((state) => state.theme);
     const location = useLocation();
@@ -59,7 +37,30 @@ export function AuthScene() {
     const [failedPosterURL, setFailedPosterURL] = useState("");
     const recovery = location.pathname === "/forgot-password";
     const activeTab = location.pathname === "/register" ? "register" : "login";
-    const copy = recovery ? authCopy.recovery : activeTab === "register" ? authCopy.register : authCopy.login;
+
+    const authTabs = [
+        { key: "login", label: t("auth.login") },
+        { key: "register", label: t("auth.register") },
+    ];
+
+    const copy = recovery
+        ? {
+              eyebrow: "ACCOUNT RECOVERY",
+              title: t("auth.reset_password"),
+              description: t("auth.reset_password_desc"),
+          }
+        : activeTab === "register"
+          ? {
+                eyebrow: "CREATE ACCOUNT",
+                title: t("auth.create_space"),
+                description: t("auth.register_desc"),
+            }
+          : {
+                eyebrow: "WELCOME BACK",
+                title: t("auth.enter_studio"),
+                description: t("auth.login_desc"),
+            };
+
     const automaticVideoActive = appearance.authVideoAutoplay && !reducedMotion;
     const videoActive = Boolean(appearance.authVideoUrl && (automaticVideoActive || manualVideoActive));
 
@@ -111,7 +112,7 @@ export function AuthScene() {
                             aria-pressed={videoPlaying}
                         >
                             <Play className="size-3 fill-current" />
-                            {videoPlaying ? "创作正在发生" : "播放品牌影片"}
+                            {videoPlaying ? t("auth.creation_happening") : t("auth.play_brand_video")}
                         </button>
                     </div>
                     <motion.div
@@ -131,7 +132,7 @@ export function AuthScene() {
                         <TopbarLanguageSwitcher surface="auth" className="auth-scene-return h-9 rounded-full px-3 backdrop-blur-xl" />
                         <Link to="/" className="auth-scene-return inline-flex h-9 items-center gap-2 rounded-full px-4 text-xs backdrop-blur-xl transition">
                             <ArrowLeft className="size-3.5" />
-                            返回首页
+                            {t("auth.back_home")}
                         </Link>
                     </div>
 
@@ -152,7 +153,7 @@ export function AuthScene() {
                                     </header>
                                     {!recovery ? (
                                         <div className="px-6 sm:px-8">
-                                            <Tabs className="auth-card-tabs" activeKey={activeTab} items={AUTH_TABS} onChange={(key) => navigate({ pathname: key === "register" ? "/register" : "/login", search: location.search })} />
+                                            <Tabs className="auth-card-tabs" activeKey={activeTab} items={authTabs} onChange={(key) => navigate({ pathname: key === "register" ? "/register" : "/login", search: location.search })} />
                                         </div>
                                     ) : null}
                                     <div key={location.pathname} className={`${!recovery && activeTab === "login" ? "" : "flex-1"} px-6 py-6 sm:px-8 sm:py-7`}>

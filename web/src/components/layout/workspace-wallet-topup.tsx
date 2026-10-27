@@ -8,6 +8,7 @@ import { cn } from "@/lib/utils";
 import type { PaymentProvider, TopupProduct, TopupProductKind } from "@/services/api/payments";
 import type { AccountFileStorageUsage } from "@/services/api/resources";
 import { storageGrantActive, type UserStorageGrant } from "@/services/api/storage-grants";
+import { useI18n } from "@/supdance/plugins/i18n";
 
 import "./workspace-wallet-topup.css";
 
@@ -18,13 +19,20 @@ const KIND_META: Record<TopupProductKind, { label: string; description: string; 
     storage: { label: "存储空间", description: "扩充素材文件与 Agent 会话附件的总容量，支付后立即生效。", icon: HardDrive },
 };
 
-function productAvailability(product: TopupProduct) {
-    if (product.saleStatus === "upcoming") return `${product.saleStartAt ? new Date(product.saleStartAt).toLocaleString("zh-CN", { hour12: false, month: "2-digit", day: "2-digit", hour: "2-digit", minute: "2-digit" }) : "待定"} 开售`;
-    if (product.saleStatus === "ended") return "已结束";
-    if (product.saleStatus === "sold_out") return "已售罄";
-    if (product.saleStrategy === "inventory") return `剩余 ${product.stockRemaining ?? 0} 份`;
-    if (product.saleStrategy === "periodic") return `每 ${product.periodDays} 天限购 ${product.periodPurchaseLimit} 次`;
-    if (product.saleStrategy === "timed" && product.saleEndAt) return `${new Date(product.saleEndAt).toLocaleString("zh-CN", { hour12: false, month: "2-digit", day: "2-digit", hour: "2-digit", minute: "2-digit" })} 截止`;
+function productAvailability(product: TopupProduct, t?: (k: string, p?: Record<string, string | number>, f?: string) => string) {
+    const tr = t ?? ((_k: string, _p?: Record<string, string | number>, f?: string) => f ?? "");
+    if (product.saleStatus === "upcoming") {
+        const timeStr = product.saleStartAt ? new Date(product.saleStartAt).toLocaleString("zh-CN", { hour12: false, month: "2-digit", day: "2-digit", hour: "2-digit", minute: "2-digit" }) : "待定";
+        return tr("settings.wallet_sale_upcoming", { time: timeStr }, `${timeStr} 开售`);
+    }
+    if (product.saleStatus === "ended") return tr("settings.wallet_sale_ended", undefined, "已结束");
+    if (product.saleStatus === "sold_out") return tr("settings.wallet_sale_sold_out", undefined, "已售罄");
+    if (product.saleStrategy === "inventory") return tr("settings.wallet_sale_remaining", { count: product.stockRemaining ?? 0 }, `剩余 ${product.stockRemaining ?? 0} 份`);
+    if (product.saleStrategy === "periodic") return tr("settings.wallet_sale_period_limit", { days: product.periodDays ?? 0, limit: product.periodPurchaseLimit ?? 0 }, `每 ${product.periodDays ?? 0} 天限购 ${product.periodPurchaseLimit ?? 0} 次`);
+    if (product.saleStrategy === "timed" && product.saleEndAt) {
+        const timeStr = new Date(product.saleEndAt).toLocaleString("zh-CN", { hour12: false, month: "2-digit", day: "2-digit", hour: "2-digit", minute: "2-digit" });
+        return tr("settings.wallet_sale_timed_end", { time: timeStr }, `${timeStr} 截止`);
+    }
     return "";
 }
 
@@ -34,8 +42,9 @@ export function topupProductValue(product: TopupProduct) {
 }
 
 function ProductCard({ product, selected, onSelect }: { product: TopupProduct; selected: boolean; onSelect: () => void }) {
+    const { t } = useI18n();
     const Icon = KIND_META[product.kind].icon;
-    const availability = productAvailability(product);
+    const availability = productAvailability(product, t);
     return (
         <button
             type="button"
@@ -68,8 +77,10 @@ function ProductCard({ product, selected, onSelect }: { product: TopupProduct; s
 }
 
 function TopupGroup({ kind, products, selectedProductId, onSelectProduct, aside, children }: { kind: TopupProductKind; products: TopupProduct[]; selectedProductId: string; onSelectProduct: (id: string) => void; aside?: ReactNode; children?: ReactNode }) {
+    const { t } = useI18n();
     const meta = KIND_META[kind];
     const Icon = meta.icon;
+    const groupTitle = kind === "credits" ? t("settings.wallet_credits_plan", undefined, "积分套餐") : t("settings.wallet_storage_plan", undefined, "存储空间套餐");
     return (
         <section className={cn("wallet-topup-group", `is-${kind}`)} data-topup-kind={kind} aria-labelledby={`wallet-topup-group-${kind}`}>
             <header className="wallet-topup-group-head">
@@ -77,7 +88,7 @@ function TopupGroup({ kind, products, selectedProductId, onSelectProduct, aside,
                     <Icon />
                 </span>
                 <div>
-                    <h3 id={`wallet-topup-group-${kind}`}>{meta.label}套餐</h3>
+                    <h3 id={`wallet-topup-group-${kind}`}>{groupTitle}</h3>
                     <p title={meta.description}>{meta.description}</p>
                 </div>
                 {aside}
@@ -90,13 +101,14 @@ function TopupGroup({ kind, products, selectedProductId, onSelectProduct, aside,
                     ))}
                 </div>
             ) : (
-                <div className="wallet-topup-group-empty">暂未上架{meta.label}套餐</div>
+                <div className="wallet-topup-group-empty">{t("settings.wallet_no_packages", { label: meta.label }, `暂未上架${meta.label}套餐`)}</div>
             )}
         </section>
     );
 }
 
 function StorageSummary({ usage, grants, onCleanAssets }: { usage?: AccountFileStorageUsage; grants: UserStorageGrant[]; onCleanAssets: () => void }) {
+    const { t } = useI18n();
     const meter = accountStorageMeter(usage);
     const stateMessage = accountStorageStateMessage(meter);
     const activeGrants = grants.filter((grant) => storageGrantActive(grant));
@@ -104,14 +116,14 @@ function StorageSummary({ usage, grants, onCleanAssets }: { usage?: AccountFileS
         <div className="wallet-topup-storage">
             <div className="wallet-topup-storage-usage">
                 <span>
-                    已用 <b>{usage ? meter.usedLabel : "--"}</b> / {usage ? meter.totalLabel : "--"}
+                    {t("settings.wallet_used_storage", undefined, "已用")} <b>{usage ? meter.usedLabel : "--"}</b> / {usage ? meter.totalLabel : "--"}
                 </span>
                 <span className={cn("wallet-topup-storage-track", meter.tone !== "ok" && `is-${meter.tone}`)} role="progressbar" aria-label="账号文件容量使用进度" aria-valuemin={0} aria-valuemax={100} aria-valuenow={Math.round(meter.percent)}>
                     <span style={{ width: `${meter.percent}%` }} />
                 </span>
                 <span className="wallet-topup-storage-split">
-                    基础 {meter.baseLabel}
-                    {meter.purchasedLabel ? ` + 已购 ${meter.purchasedLabel}` : ""}
+                    {t("settings.wallet_base_storage", { base: meter.baseLabel }, `基础 ${meter.baseLabel}`)}
+                    {meter.purchasedLabel ? t("settings.wallet_purchased_storage", { purchased: meter.purchasedLabel }, ` + 已购 ${meter.purchasedLabel}`) : ""}
                 </span>
             </div>
             {stateMessage ? (
@@ -119,7 +131,7 @@ function StorageSummary({ usage, grants, onCleanAssets }: { usage?: AccountFileS
                     <CircleAlert aria-hidden="true" />
                     <span>{stateMessage}</span>
                     <Button size="small" icon={<FolderOpen />} onClick={onCleanAssets}>
-                        清理素材
+                        {t("settings.wallet_clean_assets", undefined, "清理素材")}
                     </Button>
                 </div>
             ) : null}
@@ -169,6 +181,7 @@ export function WalletTopupPanel({
     storageGrants: UserStorageGrant[];
     onCleanAssets: () => void;
 }) {
+    const { t } = useI18n();
     const groupsRef = useRef<HTMLDivElement>(null);
 
     useEffect(() => {
@@ -227,11 +240,11 @@ export function WalletTopupPanel({
                                 <b>¥ {(selectedProduct.amountFen / 100).toFixed(2)}</b>
                             </>
                         ) : (
-                            <span className="wallet-topup-checkout-hint">选择一个套餐</span>
+                            <span className="wallet-topup-checkout-hint">{t("settings.wallet_select_plan_hint", undefined, "选择一个套餐")}</span>
                         )}
                     </div>
                     {providers.length ? (
-                        <div className="workspace-wallet-providers" role="radiogroup" aria-label="支付方式">
+                        <div className="workspace-wallet-providers" role="radiogroup" aria-label={t("settings.wallet_payment_methods", undefined, "支付方式")}>
                             {providers.map((provider) => (
                                 <button key={provider.id} type="button" role="radio" aria-checked={selectedProviderId === provider.id} className={selectedProviderId === provider.id ? "is-selected" : ""} onClick={() => onSelectProvider(provider.id)}>
                                     <CreditCard />
@@ -240,18 +253,18 @@ export function WalletTopupPanel({
                             ))}
                         </div>
                     ) : (
-                        <span className="wallet-topup-checkout-hint">暂无可用支付渠道，请联系管理员</span>
+                        <span className="wallet-topup-checkout-hint">{t("settings.wallet_no_providers", undefined, "暂无可用支付渠道，请联系管理员")}</span>
                     )}
                     <Button type="primary" size="large" loading={creating} disabled={!selectedProduct || !selectedProduct.canPurchase || !providers.length || !selectedProviderId} onClick={onPay}>
-                        立即支付
+                        {t("settings.wallet_pay_now", undefined, "立即支付")}
                     </Button>
                 </footer>
             ) : (
                 <div className="workspace-wallet-inline-state">
                     <CircleAlert />
                     <div>
-                        <strong>在线充值暂不可用</strong>
-                        <span>当前没有已上架的套餐，请使用兑换码或联系管理员。</span>
+                        <strong>{t("settings.wallet_topup_unavailable", undefined, "在线充值暂不可用")}</strong>
+                        <span>{t("settings.wallet_topup_unavailable_desc", undefined, "当前没有已上架的套餐，请使用兑换码或联系管理员。")}</span>
                     </div>
                 </div>
             )}

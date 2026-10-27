@@ -3,6 +3,7 @@ import { lazy, Suspense, useState, type CSSProperties, type ReactNode } from "re
 import { useAppearanceStore } from "@/stores/use-appearance-store";
 import { updateAnnouncementVersion } from "@/lib/update-announcement";
 import { refreshPublicAppearance } from "@/services/appearance-bootstrap";
+import { useI18n } from "@/supdance/plugins/i18n";
 
 const AppChangelogDialog = lazy(() => import("@/components/layout/app-changelog-dialog").then((module) => ({ default: module.AppChangelogDialog })));
 
@@ -20,9 +21,10 @@ type AppChangelogButtonProps = {
 };
 
 export function AppChangelogButton({ className, style, showVersion = false, showLabel = false, labelClassName, versionClassName, icon, label }: AppChangelogButtonProps) {
+    const { t } = useI18n();
     const [open, setOpen] = useState(false);
     const updates = useAppearanceStore((state) => state.appearance.updates);
-    const title = updates?.enabled ? "更新公告" : "更新日志";
+    const title = updates?.enabled ? t("nav.announcement_update") : t("nav.changelog");
 
     return (
         <>
@@ -34,7 +36,7 @@ export function AppChangelogButton({ className, style, showVersion = false, show
                     void refreshPublicAppearance();
                     setOpen(true);
                 }}
-                aria-label={`查看${title}`}
+                aria-label={title}
                 title={title}
             >
                 {icon ?? <ScrollText className="size-4 shrink-0" />}

@@ -18,6 +18,7 @@ import { RUNNINGHUB_PLUGIN_ID } from "@/lib/plugins/builtin/workflows";
 import { usePluginStore } from "@/stores/use-plugin-store";
 import { ProfilePane } from "./profile-pane";
 import { FeedbackInboxPane } from "./feedback-inbox-pane";
+import { useI18n } from "@/supdance/plugins/i18n";
 
 type ConfigSectionKey = "profile" | "channels" | "models" | "runninghub" | "preferences" | "prompts" | "agent-memory" | "storage" | "diagnostics" | "feedbacks";
 
@@ -34,11 +35,25 @@ const configSections: Array<{ key: ConfigSectionKey; label: string; description:
     { key: "feedbacks", label: "我的反馈", description: "提交问题、建议与官方答复", icon: <Inbox className="size-4" /> },
 ];
 
+const sectionKeyMap: Record<ConfigSectionKey, { labelKey: string; descKey: string }> = {
+    profile: { labelKey: "settings.profile_info", descKey: "settings.profile_info_desc" },
+    channels: { labelKey: "settings.personal_channels", descKey: "settings.personal_channels_desc" },
+    runninghub: { labelKey: "settings.runninghub", descKey: "settings.runninghub_desc" },
+    models: { labelKey: "settings.models", descKey: "settings.models_desc" },
+    preferences: { labelKey: "settings.preferences", descKey: "settings.preferences_desc" },
+    prompts: { labelKey: "settings.prompts", descKey: "settings.prompts_desc" },
+    "agent-memory": { labelKey: "settings.agent_memory", descKey: "settings.agent_memory_desc" },
+    storage: { labelKey: "settings.storage_title", descKey: "settings.storage_desc" },
+    diagnostics: { labelKey: "settings.diagnostics", descKey: "settings.diagnostics_desc" },
+    feedbacks: { labelKey: "settings.feedbacks", descKey: "settings.feedbacks_desc" },
+};
+
 export function isConfigSection(value: string | null): value is ConfigSectionKey {
     return configSections.some((section) => section.key === value);
 }
 
 export default function SettingsPage() {
+    const { t } = useI18n();
     const { message } = App.useApp();
     const navigate = useNavigate();
     const [searchParams, setSearchParams] = useSearchParams();
@@ -72,12 +87,12 @@ export default function SettingsPage() {
         if (!userId) return;
         let cancelled = false;
         void refreshSystemChannels().catch((error) => {
-            if (!cancelled) message.warning(error instanceof Error ? `系统模型刷新失败：${error.message}` : "系统模型刷新失败，继续使用本地缓存");
+            if (!cancelled) message.warning(error instanceof Error ? `${t("settings.refresh_system_failed", undefined, "系统模型刷新失败")}：${error.message}` : t("settings.refresh_system_failed", undefined, "系统模型刷新失败，继续使用本地缓存"));
         });
         return () => {
             cancelled = true;
         };
-    }, [message, userId]);
+    }, [message, userId, t]);
 
     const selectSection = (section: ConfigSectionKey) => {
         if (section === "runninghub" && !runningHubPluginEnabled) return;
@@ -91,17 +106,17 @@ export default function SettingsPage() {
         const invalidChannel = customChannelsEnabled ? userChannels.find((channel) => channelValidationError(channel)) : undefined;
         if (invalidChannel) {
             selectSection("channels");
-            message.warning(`${invalidChannel.name || "未命名渠道"}：${channelValidationError(invalidChannel)}`);
+            message.warning(`${invalidChannel.name || t("settings.unnamed_channel", undefined, "未命名渠道")}：${channelValidationError(invalidChannel)}`);
             focusInvalidChannelField(invalidChannel);
             return;
         }
         const workflowReady = Boolean(runningHubPluginEnabled && config.runningHub.enabled && config.runningHub.workflowId.trim() && config.runningHub.baseUrl.trim() && config.runningHub.apiKey.trim());
         if (!effectiveConfig.channels.some(isChannelReady) && !workflowReady) {
             selectSection(customChannelsEnabled ? "channels" : "models");
-            message.error(customChannelsEnabled ? (shouldPromptContinue ? "请先完成至少一个渠道的 Base URL、API Key 和模型配置" : "当前没有可用渠道，请先完成连接信息和模型配置") : "当前没有可用的系统模型，请联系管理员配置系统渠道");
+            message.error(customChannelsEnabled ? (shouldPromptContinue ? t("settings.configure_channel_first", undefined, "请先完成至少一个渠道的 Base URL、API Key 和模型配置") : t("settings.no_channel_error", undefined, "当前没有可用渠道，请先完成连接信息和模型配置")) : t("settings.no_system_channel_error", undefined, "当前没有可用的系统模型，请联系管理员配置系统渠道"));
             return;
         }
-        message.success("配置已保存，正在返回创作页面");
+        message.success(t("settings.saved_returning", undefined, "配置已保存，正在返回创作页面"));
         navigate(-1);
     };
 
@@ -112,8 +127,8 @@ export default function SettingsPage() {
             <SettingsPane>
                 <div className="settings-pane-header">
                     <div className="min-w-0">
-                        <h2>模型选择</h2>
-                        <p>按领域选择默认模型；模型能力与请求协议在渠道“模型与能力”中配置。</p>
+                        <h2>{t("settings.models", undefined, "模型选择")}</h2>
+                        <p>{t("settings.models_domain_desc", undefined, "按领域选择默认模型；模型能力与请求协议在渠道“模型与能力”中配置。")}</p>
                     </div>
                 </div>
                 <div className="settings-section">
@@ -126,18 +141,18 @@ export default function SettingsPage() {
             <SettingsPane>
                 <div className="settings-pane-header">
                     <div className="min-w-0">
-                        <h2>生成偏好</h2>
-                        <p>设置新建生成任务时使用的初始值，节点内仍可单独覆盖。</p>
+                        <h2>{t("settings.preferences", undefined, "生成偏好")}</h2>
+                        <p>{t("settings.preferences_initial_desc", undefined, "设置新建生成任务时使用的初始值，节点内仍可单独覆盖。")}</p>
                     </div>
                 </div>
                 <div className="settings-section">
                     <section className="settings-preference-block">
                         <div className="settings-preference-heading">
-                            <h3>画布生成</h3>
-                            <p>用于新建图片生成任务，节点内仍可单独覆盖。</p>
+                            <h3>{t("settings.canvas_generation", undefined, "画布生成")}</h3>
+                            <p>{t("settings.canvas_generation_desc", undefined, "用于新建图片生成任务，节点内仍可单独覆盖。")}</p>
                         </div>
                         <SettingsRow
-                            label="默认生图张数"
+                            label={t("settings.default_image_count", undefined, "默认生图张数")}
                             control={
                                 <InputNumber
                                     min={1}
@@ -159,8 +174,8 @@ export default function SettingsPage() {
             <SettingsPane>
                 <div className="settings-pane-header">
                     <div className="min-w-0">
-                        <h2>Agent 记忆</h2>
-                        <p>只属于你。Agent 记下的先待批准；手动添加立刻生效。可导入导出，也可用文本模型压缩相近条目。</p>
+                        <h2>{t("settings.agent_memory", undefined, "Agent 记忆")}</h2>
+                        <p>{t("settings.agent_memory_summary", undefined, "只属于你。Agent 记下的先待批准；手动添加立刻生效。可导入导出，也可用文本模型压缩相近条目。")}</p>
                     </div>
                 </div>
                 <div className="settings-section">
@@ -184,16 +199,19 @@ export default function SettingsPage() {
             {shouldPromptContinue ? (
                 <div className="settings-topbar shrink-0">
                     <div className="ml-auto flex flex-wrap items-center justify-end gap-2">
-                        <Button icon={<ArrowLeft className="size-4" />} onClick={() => navigate(-1)}>返回创作</Button>
-                        <Button type="primary" onClick={finishConfig}>保存并返回</Button>
+                        <Button icon={<ArrowLeft className="size-4" />} onClick={() => navigate(-1)}>{t("settings.back_to_creation", undefined, "返回创作")}</Button>
+                        <Button type="primary" onClick={finishConfig}>{t("settings.save_and_return", undefined, "保存并返回")}</Button>
                     </div>
                 </div>
             ) : null}
             <div className="settings-library-frame flex min-h-0 flex-1 flex-col md:flex-row">
                 <aside className="settings-nav-panel w-full shrink-0 md:w-[200px]">
-                    <nav className="thin-scrollbar flex gap-1 overflow-x-auto p-2 md:block md:space-y-1 md:p-2" aria-label="配置分类">
+                    <nav className="thin-scrollbar flex gap-1 overflow-x-auto p-2 md:block md:space-y-1 md:p-2" aria-label={t("settings.category_aria", undefined, "配置分类")}>
                         {visibleConfigSections.map((item) => {
                             const selected = item.key === activeTab;
+                            const sectionMeta = sectionKeyMap[item.key];
+                            const label = sectionMeta ? t(sectionMeta.labelKey, undefined, item.label) : item.label;
+                            const description = sectionMeta ? t(sectionMeta.descKey, undefined, item.description) : item.description;
                             return (
                                 <button
                                     key={item.key}
@@ -204,8 +222,8 @@ export default function SettingsPage() {
                                 >
                                     <span className={`shrink-0 md:mt-0.5 ${selected ? "text-[var(--workspace-accent)]" : ""}`}>{item.icon}</span>
                                     <span className="min-w-0">
-                                        <span className="block whitespace-nowrap text-sm font-medium">{item.label}</span>
-                                        <span className="mt-1 hidden text-[var(--fs-label)] leading-4 text-current opacity-65 md:block">{item.description}</span>
+                                        <span className="block whitespace-nowrap text-sm font-medium">{label}</span>
+                                        <span className="mt-1 hidden text-[var(--fs-label)] leading-4 text-current opacity-65 md:block">{description}</span>
                                     </span>
                                 </button>
                             );

@@ -2,7 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { App, Button, Input } from "antd";
 import type { ColumnsType } from "antd/es/table";
 import { saveAs } from "file-saver";
-import { Download, Edit3, Plus, RotateCcw, Search, Settings2, Trash2, Upload } from "lucide-react";
+import { Download, Edit3, Plus, Radar, RotateCcw, Search, Settings2, Trash2, Upload } from "lucide-react";
 import { useNavigate, useSearchParams } from "react-router";
 
 import { Select } from "@/components/ui/base/select";
@@ -12,7 +12,7 @@ import { AdminDrawer, AdminModal } from "@/pages/admin/ui/overlays";
 import { deleteAdminSupDanceI18nEntry, exportAdminSupDanceI18n, importAdminSupDanceI18n, listAdminSupDanceI18nEntries, upsertAdminSupDanceI18nEntries } from "../api";
 import { DEFAULT_SUPDANCE_LANGUAGES, NAMESPACE_LABELS, SUPPORTED_LOCALE_CODES } from "../locales";
 import { useSupDanceI18nStore } from "../store";
-import { SUPDANCE_I18N_PLUGIN_ID, type SupDanceI18nEntry, type SupDanceLocaleCode } from "../types";
+import { SUPDANCE_I18N_PLUGIN_ID, type SupDanceDiscoveredTextItem, type SupDanceI18nEntry, type SupDanceLocaleCode } from "../types";
 
 const EMPTY_TRANSLATIONS: Record<SupDanceLocaleCode, string> = {
     "zh-CN": "",
@@ -34,6 +34,28 @@ function createEmptyEntryDraft(): SupDanceI18nEntry {
     };
 }
 
+function inferNamespaceFromRoute(route: string): string {
+    const clean = route.toLowerCase();
+    if (clean.startsWith("/canvas")) return "canvas";
+    if (clean.startsWith("/projects")) return "projects";
+    if (clean.startsWith("/create")) return "create";
+    if (clean.startsWith("/assets")) return "assets";
+    if (clean.startsWith("/skills")) return "skills";
+    if (clean.startsWith("/plugins")) return "plugins";
+    if (clean.startsWith("/settings")) return "settings";
+    if (clean.startsWith("/login") || clean.startsWith("/register") || clean.startsWith("/auth")) return "auth";
+    if (clean.startsWith("/admin")) return "admin";
+    return "custom";
+}
+
+function buildSuggestedKeyFromText(namespace: string, sourceText: string): string {
+    let hash = 0;
+    for (let i = 0; i < sourceText.length; i++) {
+        hash = (hash * 31 + sourceText.charCodeAt(i)) >>> 0;
+    }
+    return `${namespace}.auto_${hash.toString(36).slice(0, 8)}`;
+}
+
 export function SupDanceI18nEntriesPage() {
     const { message, modal } = App.useApp();
     const navigate = useNavigate();
@@ -41,8 +63,10 @@ export function SupDanceI18nEntriesPage() {
 
     const storeEntries = useSupDanceI18nStore((s) => s.entries);
     const storeSettings = useSupDanceI18nStore((s) => s.settings);
+    const discoveredUntranslated = useSupDanceI18nStore((s) => s.discoveredUntranslated);
     const upsertLocalEntries = useSupDanceI18nStore((s) => s.upsertLocalEntries);
     const removeLocalEntry = useSupDanceI18nStore((s) => s.removeLocalEntry);
+    const clearDiscoveredUntranslated = useSupDanceI18nStore((s) => s.clearDiscoveredUntranslated);
 
     const [keyword, setKeyword] = useState(() => searchParams.get("keyword") ?? "");
     const [namespace, setNamespace] = useState(() => searchParams.get("namespace") ?? "all");
@@ -52,6 +76,7 @@ export function SupDanceI18nEntriesPage() {
     const [pageSize, setPageSize] = useState(20);
 
     const [loading, setLoading] = useState(false);
+    const [serverConnected, setServerConnected] = useState<boolean | null>(null);
     const [remoteItems, setRemoteItems] = useState<SupDanceI18nEntry[] | null>(null);
     const [remoteTotal, setRemoteTotal] = useState<number | null>(null);
 
@@ -59,6 +84,8 @@ export function SupDanceI18nEntriesPage() {
     const [isCreateMode, setIsCreateMode] = useState(false);
     const [editingEntry, setEditingEntry] = useState<SupDanceI18nEntry>(createEmptyEntryDraft);
     const [savingEntry, setSavingEntry] = useState(false);
+
+    const [discoveredDrawerOpen, setDiscoveredDrawerOpen] = useState(false);
 
     const [importModalOpen, setImportModalOpen] = useState(false);
     const [importJsonText, setImportJsonText] = useState("");
@@ -75,9 +102,11 @@ export function SupDanceI18nEntriesPage() {
                 page,
                 pageSize,
             });
+            setServerConnected(true);
             setRemoteItems(res.items);
             setRemoteTotal(res.total);
         } catch {
+            setServerConnected(false);
             setRemoteItems(null);
             setRemoteTotal(null);
         } finally {
@@ -150,6 +179,25 @@ export function SupDanceI18nEntriesPage() {
         setDrawerOpen(true);
     };
 
+    const openCreateFromDiscovered = (item: SupDanceDiscoveredTextItem) => {
+        const inferredNamespace = inferNamespaceFromRoute(item.route);
+        const suggestedKey = buildSuggestedKeyFromText(inferredNamespace, item.sourceText);
+        setIsCreateMode(true);
+        setEditingEntry({
+            key: suggestedKey,
+            namespace: inferredNamespace,
+            sourceText: item.sourceText,
+            description: `自动嗅探自页面 ${item.route}`,
+            translations: {
+                ...EMPTY_TRANSLATIONS,
+                "zh-CN": item.sourceText,
+            },
+            origin: "custom",
+        });
+        setDiscoveredDrawerOpen(false);
+        setDrawerOpen(true);
+    };
+
     const openEditDrawer = (record: SupDanceI18nEntry) => {
         setIsCreateMode(false);
         setEditingEntry({
@@ -195,15 +243,24 @@ export function SupDanceI18nEntriesPage() {
 
         setSavingEntry(true);
         try {
+            let persistedOnServer = false;
+            let serverErrReason = "";
             try {
                 await upsertAdminSupDanceI18nEntries([normalizedEntry]);
-            } catch {
-                // Keep local store hot-updated even if backend is offline
+                persistedOnServer = true;
+                setServerConnected(true);
+            } catch (err) {
+                setServerConnected(false);
+                serverErrReason = err instanceof Error ? err.message : "服务端未响应";
             }
             upsertLocalEntries([normalizedEntry]);
             setDrawerOpen(false);
             void fetchRemoteEntries();
-            message.success(isCreateMode ? "新翻译词条已创建并全站实时生效" : "词条六语翻译已更新并实时生效");
+            if (persistedOnServer) {
+                message.success(isCreateMode ? "新翻译词条已持久化到服务端并全站实时生效" : "词条六语翻译已持久化到服务端并实时生效");
+            } else {
+                message.warning(`服务端持久化未完成（${serverErrReason}），当前词条仅保存在本机浏览器缓存中`);
+            }
         } finally {
             setSavingEntry(false);
         }
@@ -218,14 +275,23 @@ export function SupDanceI18nEntriesPage() {
             cancelText: "取消",
             okButtonProps: { danger: isCustom },
             onOk: async () => {
+                let persistedOnServer = false;
+                let serverErrReason = "";
                 try {
                     await deleteAdminSupDanceI18nEntry(record.key);
-                } catch {
-                    // Fallback to local removal
+                    persistedOnServer = true;
+                    setServerConnected(true);
+                } catch (err) {
+                    setServerConnected(false);
+                    serverErrReason = err instanceof Error ? err.message : "服务端未响应";
                 }
                 removeLocalEntry(record.key);
                 void fetchRemoteEntries();
-                message.success(isCustom ? "已删除自定义词条" : "已恢复内置默认词条");
+                if (persistedOnServer) {
+                    message.success(isCustom ? "已在服务端删除自定义词条" : "已在服务端恢复内置默认词条");
+                } else {
+                    message.warning(`服务端操作未完成（${serverErrReason}），当前仅更新本机浏览器缓存`);
+                }
             },
         });
     };
@@ -273,16 +339,25 @@ export function SupDanceI18nEntriesPage() {
                 return;
             }
 
+            let persistedOnServer = false;
+            let serverErrReason = "";
             try {
                 await importAdminSupDanceI18n({ entries: list });
-            } catch {
-                // Apply to local store when offline
+                persistedOnServer = true;
+                setServerConnected(true);
+            } catch (err) {
+                setServerConnected(false);
+                serverErrReason = err instanceof Error ? err.message : "服务端未响应";
             }
             upsertLocalEntries(list);
             setImportModalOpen(false);
             setImportJsonText("");
             void fetchRemoteEntries();
-            message.success(`成功导入并热更新 ${list.length} 条多语言词条`);
+            if (persistedOnServer) {
+                message.success(`成功导入并持久化 ${list.length} 条多语言词条至服务端`);
+            } else {
+                message.warning(`服务端导入未完成（${serverErrReason}），${list.length} 条词条当前仅保存在本机浏览器缓存中`);
+            }
         } catch (err) {
             message.error(err instanceof Error ? `JSON 解析失败: ${err.message}` : "导入失败");
         } finally {
@@ -403,6 +478,10 @@ export function SupDanceI18nEntriesPage() {
             description="随时在线搜索、编辑或新增站点任意字段的六国语言（简中、英语、繁中、日文、韩语、西班牙语）翻译词条，保存后全站免编译即时热生效。"
             actions={
                 <div className="flex flex-wrap items-center gap-2">
+                    {serverConnected !== null ? <AdminStatusBadge label={serverConnected ? "服务端已同步" : "本地缓存降级"} tone={serverConnected ? "info" : "warning"} /> : null}
+                    <Button icon={<Radar className="size-4" />} onClick={() => setDiscoveredDrawerOpen(true)}>
+                        未收录词条嗅探 ({discoveredUntranslated.length})
+                    </Button>
                     <Button icon={<Settings2 className="size-4" />} onClick={() => navigate("/admin/i18n/settings")}>
                         语言管理设置
                     </Button>
@@ -423,7 +502,7 @@ export function SupDanceI18nEntriesPage() {
                     <AdminStatTile label="全站词条总数" value={summaryStats.total} detail="支持 Key 绑定与 DOM 原文自动映射" />
                     <AdminStatTile label="内置基础词条" value={summaryStats.builtin} detail="出厂预设六大语种完整词库" />
                     <AdminStatTile label="已修订内置词条" value={summaryStats.modified} detail="可随时一键还原为出厂默认翻译" />
-                    <AdminStatTile label="自定义新增字段" value={summaryStats.custom} detail="新增任意中文文案即可自动匹配翻译" />
+                    <AdminStatTile label="自定义新增字段" value={summaryStats.custom} detail={`页面自动嗅探待收录 ${discoveredUntranslated.length} 条`} />
                 </div>
 
                 <AdminDataTable<SupDanceI18nEntry>
@@ -523,6 +602,56 @@ export function SupDanceI18nEntriesPage() {
             </div>
 
             <AdminDrawer
+                open={discoveredDrawerOpen}
+                width={560}
+                title={`页面未收录中文词条嗅探 (${discoveredUntranslated.length})`}
+                onClose={() => setDiscoveredDrawerOpen(false)}
+                extra={
+                    discoveredUntranslated.length > 0 ? (
+                        <Button
+                            size="small"
+                            onClick={() => {
+                                clearDiscoveredUntranslated();
+                                message.success("已清空待收录嗅探列表");
+                            }}
+                        >
+                            清空列表
+                        </Button>
+                    ) : null
+                }
+            >
+                <div className="space-y-3" data-i18n-ignore="true">
+                    <div className="rounded-lg border bg-muted/30 p-3 text-xs text-muted-foreground">当您在前台页面浏览或切换语言时，DOM 翻译引擎会自动嗅探尚未收录进词库的中文文案并汇总在此。点击「一键收录并翻译」即可快速补全六语翻译。</div>
+                    {discoveredUntranslated.length === 0 ? (
+                        <div className="rounded-lg border border-dashed p-8 text-center text-xs text-muted-foreground">当前暂未发现未收录的页面中文词条。您可前往前台工作区、画布或弹窗浏览页面，未命中词库的中文文案会自动出现在此处。</div>
+                    ) : (
+                        <div className="divide-y rounded-lg border" style={{ borderColor: "var(--admin-border)" }}>
+                            {discoveredUntranslated.map((item) => (
+                                <div key={item.sourceText} className="flex items-center justify-between gap-3 p-3">
+                                    <div className="min-w-0 flex-1 space-y-1">
+                                        <div className="break-words text-xs font-medium text-foreground">{item.sourceText}</div>
+                                        <div className="flex items-center gap-2 text-[11px] text-muted-foreground">
+                                            <span>发现路由：{item.route}</span>
+                                            <span>·</span>
+                                            <span>出现 {item.count} 次</span>
+                                        </div>
+                                    </div>
+                                    <div className="flex shrink-0 items-center gap-1.5">
+                                        <Button type="primary" size="small" icon={<Plus className="size-3.5" />} onClick={() => openCreateFromDiscovered(item)}>
+                                            一键收录并翻译
+                                        </Button>
+                                        <Button type="text" size="small" onClick={() => clearDiscoveredUntranslated(item.sourceText)}>
+                                            忽略
+                                        </Button>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    )}
+                </div>
+            </AdminDrawer>
+
+            <AdminDrawer
                 open={drawerOpen}
                 width={560}
                 title={isCreateMode ? "新增多语言字段词条" : `编辑词条翻译 · ${editingEntry.key}`}
@@ -538,7 +667,7 @@ export function SupDanceI18nEntriesPage() {
             >
                 <div className="space-y-4" data-i18n-ignore="true">
                     <div className="rounded-lg border bg-muted/30 p-3 text-xs text-muted-foreground">
-                        提示：支持 ICU 占位变量（如 <code>{"{count}"}</code>、<code>{"{name}"}</code>）。只要「简体中文 (zh-CN)」与页面上的中文文案一致，切换语言时全站对应文本与按钮会自动替换为目标语种译文。
+                        提示：支持 ICU 动态占位变量（如 <code>{"{count}"}</code>、<code>{"{name}"}</code>）。只要「简体中文 (zh-CN)」与页面上的中文文案或动态格式一致，切换语言时全站对应文本与按钮会自动匹配并替换为目标语种译文。
                     </div>
 
                     <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
