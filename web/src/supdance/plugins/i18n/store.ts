@@ -7,6 +7,33 @@ import { BUILTIN_I18N_ENTRIES, DEFAULT_SUPDANCE_I18N_SETTINGS, mergeI18nEntries,
 import { SUPDANCE_I18N_PLUGIN_ID, type SupDanceI18nEntry, type SupDanceI18nPublicBundle, type SupDanceI18nSettings, type SupDanceLanguageItem, type SupDanceLocaleCode } from "./types";
 
 export const SUPDANCE_I18N_LOCALE_STORAGE_KEY = "supdance:i18n:locale";
+export const SUPDANCE_I18N_CACHE_STORAGE_KEY = "supdance:i18n:config-cache";
+
+type StoredI18nCache = {
+    pluginEnabled?: boolean;
+    settings?: SupDanceI18nSettings;
+    customEntries?: Record<string, SupDanceI18nEntry>;
+};
+
+function readStoredCache(): StoredI18nCache | null {
+    if (typeof window === "undefined") return null;
+    try {
+        const raw = window.localStorage.getItem(SUPDANCE_I18N_CACHE_STORAGE_KEY);
+        if (!raw) return null;
+        return JSON.parse(raw) as StoredI18nCache;
+    } catch {
+        return null;
+    }
+}
+
+function writeStoredCache(cache: StoredI18nCache): void {
+    if (typeof window === "undefined") return;
+    try {
+        window.localStorage.setItem(SUPDANCE_I18N_CACHE_STORAGE_KEY, JSON.stringify(cache));
+    } catch {
+        // Ignore storage write errors in restricted privacy contexts
+    }
+}
 
 function isValidLocaleCode(value: unknown): value is SupDanceLocaleCode {
     return typeof value === "string" && (SUPPORTED_LOCALE_CODES as readonly string[]).includes(value);
@@ -78,9 +105,13 @@ function resolveEffectiveLocale(preferred: SupDanceLocaleCode | null, settings: 
     return firstEnabled ?? "zh-CN";
 }
 
-const initialEntries = mergeI18nEntries({});
+const initialCache = readStoredCache();
+const initialSettings = initialCache?.settings ?? DEFAULT_SUPDANCE_I18N_SETTINGS;
+const initialCustomEntries = initialCache?.customEntries ?? {};
+const initialPluginEnabled = typeof initialCache?.pluginEnabled === "boolean" ? initialCache.pluginEnabled : true;
+const initialEntries = mergeI18nEntries(initialCustomEntries);
 const initialDictionary = compileI18nDictionary(initialEntries);
-const initialLocale = resolveEffectiveLocale(readStoredLocale(), DEFAULT_SUPDANCE_I18N_SETTINGS);
+const initialLocale = resolveEffectiveLocale(readStoredLocale(), initialSettings);
 
 export type SupDanceI18nStoreState = {
     initialized: boolean;
@@ -101,13 +132,13 @@ export type SupDanceI18nStoreState = {
 
 export const useSupDanceI18nStore = create<SupDanceI18nStoreState>((set, get) => ({
     initialized: false,
-    pluginEnabled: true,
+    pluginEnabled: initialPluginEnabled,
     locale: initialLocale,
-    settings: DEFAULT_SUPDANCE_I18N_SETTINGS,
-    customEntries: {},
+    settings: initialSettings,
+    customEntries: initialCustomEntries,
     entries: initialEntries,
     dictionary: initialDictionary,
-    revision: DEFAULT_SUPDANCE_I18N_SETTINGS.revision,
+    revision: initialSettings.revision || DEFAULT_SUPDANCE_I18N_SETTINGS.revision,
 
     setLocale: (nextLocale) => {
         const { settings } = get();
@@ -118,6 +149,8 @@ export const useSupDanceI18nStore = create<SupDanceI18nStoreState>((set, get) =>
     },
 
     setPluginEnabled: (enabled) => {
+        const { settings, customEntries } = get();
+        writeStoredCache({ pluginEnabled: enabled, settings, customEntries });
         set({ pluginEnabled: enabled });
     },
 
@@ -125,13 +158,15 @@ export const useSupDanceI18nStore = create<SupDanceI18nStoreState>((set, get) =>
         const currentStored = readStoredLocale();
         const settings = bundle.settings ?? DEFAULT_SUPDANCE_I18N_SETTINGS;
         const customEntries = bundle.customEntries ?? {};
+        const pluginEnabled = Boolean(bundle.pluginEnabled);
         const entries = mergeI18nEntries(customEntries);
         const dictionary = compileI18nDictionary(entries);
         const nextLocale = resolveEffectiveLocale(currentStored ?? get().locale, settings);
 
+        writeStoredCache({ pluginEnabled, settings, customEntries });
         set({
             initialized: true,
-            pluginEnabled: Boolean(bundle.pluginEnabled),
+            pluginEnabled,
             settings,
             customEntries,
             entries,
@@ -144,6 +179,11 @@ export const useSupDanceI18nStore = create<SupDanceI18nStoreState>((set, get) =>
     updateLocalSettings: (settings) => {
         const currentStored = readStoredLocale();
         const nextLocale = resolveEffectiveLocale(currentStored ?? get().locale, settings);
+        writeStoredCache({
+            pluginEnabled: get().pluginEnabled,
+            settings,
+            customEntries: get().customEntries,
+        });
         set({
             settings,
             locale: nextLocale,
@@ -159,6 +199,11 @@ export const useSupDanceI18nStore = create<SupDanceI18nStoreState>((set, get) =>
         }
         const entries = mergeI18nEntries(nextCustom);
         const dictionary = compileI18nDictionary(entries);
+        writeStoredCache({
+            pluginEnabled: get().pluginEnabled,
+            settings: get().settings,
+            customEntries: nextCustom,
+        });
         set({
             customEntries: nextCustom,
             entries,
@@ -172,6 +217,11 @@ export const useSupDanceI18nStore = create<SupDanceI18nStoreState>((set, get) =>
         delete nextCustom[key];
         const entries = mergeI18nEntries(nextCustom);
         const dictionary = compileI18nDictionary(entries);
+        writeStoredCache({
+            pluginEnabled: get().pluginEnabled,
+            settings: get().settings,
+            customEntries: nextCustom,
+        });
         set({
             customEntries: nextCustom,
             entries,

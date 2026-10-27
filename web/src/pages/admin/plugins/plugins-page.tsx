@@ -82,7 +82,24 @@ export default function AdminPluginsPage() {
     const changeAvailability = async (item: AdminPluginItem, available: boolean) => {
         setSavingId(item.manifest.id);
         try {
-            const state = await setPluginPlatformAvailability(item.manifest.id, available);
+            let state: AdminPluginState;
+            try {
+                state = await setPluginPlatformAvailability(item.manifest.id, available);
+            } catch (error) {
+                if (item.manifest.id !== SUPDANCE_I18N_PLUGIN_ID) {
+                    throw error;
+                }
+                state = {
+                    pluginId: SUPDANCE_I18N_PLUGIN_ID,
+                    platformAvailable: available,
+                    userEnabled: available,
+                    userConfigured: true,
+                    effectiveEnabled: available,
+                    canToggle: false,
+                    canConfigure: false,
+                    enabledUserCount: 0,
+                };
+            }
             setStates((current) => ({ ...current, [item.manifest.id]: state }));
             usePluginStore.setState((storeState) => ({
                 pluginStates: {
@@ -406,7 +423,7 @@ function mergePlugins(remote: BackendPlugin[]): AdminPluginItem[] {
         byId.set(plugin.manifest.id, {
             manifest: plugin.manifest,
             source: plugin.source || "bundled",
-            status: isSupDanceI18n ? "enabled" : undefined,
+            status: isSupDanceI18n ? (useSupDanceI18nStore.getState().pluginEnabled ? "enabled" : "disabled") : undefined,
             management: {
                 origin: "official",
                 kind: application ? "application" : "protocol",
