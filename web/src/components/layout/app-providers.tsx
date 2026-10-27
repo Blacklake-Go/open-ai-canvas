@@ -2,7 +2,6 @@ import type { ReactNode } from "react";
 import { lazy, Suspense, useEffect, useLayoutEffect } from "react";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { ConfigProvider } from "antd";
-import zhCN from "antd/locale/zh_CN";
 
 import { AuthSessionHydrator } from "@/components/auth/auth-session-hydrator";
 import { AppFeedbackProvider } from "@/components/layout/app-feedback";
@@ -15,6 +14,7 @@ import { useActiveTheme } from "@/stores/canvas/use-canvas-theme-store";
 import { applyAppearanceMetadata, useAppearanceStore } from "@/stores/use-appearance-store";
 import { useUserStore } from "@/stores/use-user-store";
 import { refreshPublicAppearance } from "@/services/appearance-bootstrap";
+import { SupDanceI18nRuntimeHost, useSupDanceAntdLocale } from "@/supdance/plugins/i18n";
 
 const ClientRootInit = lazy(() => import("@/components/layout/client-root-init").then((module) => ({ default: module.ClientRootInit })));
 
@@ -32,6 +32,7 @@ export function AppProviders({ children }: { children: ReactNode }) {
     const theme = useActiveTheme();
     const dark = theme === "dark";
     const appearance = useAppearanceStore((state) => state.appearance);
+    const antdLocale = useSupDanceAntdLocale();
 
     useLayoutEffect(() => {
         document.documentElement.classList.toggle("dark", dark);
@@ -59,15 +60,18 @@ export function AppProviders({ children }: { children: ReactNode }) {
     }, [isolateDevRepro]);
 
     return (
-        <ConfigProvider locale={zhCN} theme={getAntThemeConfig(dark, appearance.activeSkin)} wave={{ disabled: true }}>
+        <ConfigProvider locale={antdLocale} theme={getAntThemeConfig(dark, appearance.activeSkin)} wave={{ disabled: true }}>
             <AppFeedbackProvider>
                 <QueryClientProvider client={appQueryClient}>
                     {isolateDevRepro ? (
                         children
                     ) : (
-                        <AuthSessionHydrator>
-                            <ClientRootBoundary>{children}</ClientRootBoundary>
-                        </AuthSessionHydrator>
+                        <>
+                            <SupDanceI18nRuntimeHost />
+                            <AuthSessionHydrator>
+                                <ClientRootBoundary>{children}</ClientRootBoundary>
+                            </AuthSessionHydrator>
+                        </>
                     )}
                 </QueryClientProvider>
             </AppFeedbackProvider>

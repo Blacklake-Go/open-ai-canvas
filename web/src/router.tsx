@@ -22,6 +22,8 @@ const AgentLessonsPage = lazy(() => import("@/pages/admin/admin-route-pages").th
 const ChannelsPage = lazy(() => import("@/pages/admin/channels/channels-page"));
 const LogicalModelsPage = lazy(() => import("@/pages/admin/logical-models/logical-models-page"));
 const AdminPluginsPage = lazy(() => import("@/pages/admin/plugins/plugins-page"));
+const SupDanceI18nSettingsPage = lazy(() => import("@/supdance/plugins/i18n/admin/i18n-settings-page"));
+const SupDanceI18nEntriesPage = lazy(() => import("@/supdance/plugins/i18n/admin/i18n-entries-page"));
 const SkillCurationPage = lazy(() => import("@/pages/admin/skill-curation-page"));
 const AdminPaymentsPage = lazy(() => import("@/pages/admin/payments/payments-page"));
 const LogsPage = lazy(() => import("@/pages/admin/logs/logs-page"));
@@ -231,6 +233,9 @@ export const router = createBrowserRouter([
                         ),
                     },
                     { path: "plugins", element: <AdminPluginsPage /> },
+                    { path: "i18n", element: <Navigate to="/admin/i18n/settings" replace /> },
+                    { path: "i18n/settings", element: <SupDanceI18nSettingsPage /> },
+                    { path: "i18n/entries", element: <SupDanceI18nEntriesPage /> },
                     { path: "workbench-tools", element: <WorkbenchToolsPage /> },
                     { path: "skill-curation", element: <SkillCurationPage /> },
                     { path: "payments", element: <AdminPaymentsPage /> },

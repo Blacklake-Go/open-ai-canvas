@@ -1,0 +1,493 @@
+import { useCallback, useEffect, useMemo, useState } from "react";
+import { App, Button } from "antd";
+import { ArrowDown, ArrowUp, BookOpenText, CheckCircle2, Globe2, Languages, Save } from "lucide-react";
+import { useNavigate } from "react-router";
+
+import { Select } from "@/components/ui/base/select";
+import { AdminPageFrame } from "@/pages/admin/components/admin-shell";
+import { AdminStatTile, AdminStatusBadge } from "@/pages/admin/components/admin-ui";
+import { Switch } from "@/pages/admin/ui/controls";
+import { setPluginPlatformAvailability } from "@/services/api/plugins";
+import { usePluginStore } from "@/stores/use-plugin-store";
+import { getAdminSupDanceI18nOverview, updateAdminSupDanceI18nSettings } from "../api";
+import { SUPPORTED_LOCALE_CODES } from "../locales";
+import { useSupDanceI18nEnabled, useSupDanceI18nStore } from "../store";
+import { SUPDANCE_I18N_PLUGIN_ID, type SupDanceI18nSettings, type SupDanceLanguageItem, type SupDanceLanguageStats, type SupDanceLocaleCode, type SupDanceSwitcherStyle } from "../types";
+
+function computeLocalLanguageStats(languages: SupDanceLanguageItem[], entries: ReturnType<typeof useSupDanceI18nStore.getState>["entries"]): SupDanceLanguageStats[] {
+    const totalCount = entries.length;
+    return languages.map((lang) => {
+        let translatedCount = 0;
+        for (const entry of entries) {
+            if (entry.translations[lang.code]?.trim()) {
+                translatedCount += 1;
+            }
+        }
+        const missingCount = Math.max(0, totalCount - translatedCount);
+        const coveragePercent = totalCount > 0 ? Math.round((translatedCount / totalCount) * 1000) / 10 : 100;
+        return {
+            ...lang,
+            translatedCount,
+            totalCount,
+            missingCount,
+            coveragePercent,
+        };
+    });
+}
+
+export function SupDanceI18nSettingsPage() {
+    const { message } = App.useApp();
+    const navigate = useNavigate();
+
+    const pluginEnabled = useSupDanceI18nEnabled();
+    const storeSettings = useSupDanceI18nStore((s) => s.settings);
+    const storeEntries = useSupDanceI18nStore((s) => s.entries);
+    const currentLocale = useSupDanceI18nStore((s) => s.locale);
+    const setLocale = useSupDanceI18nStore((s) => s.setLocale);
+    const setStorePluginEnabled = useSupDanceI18nStore((s) => s.setPluginEnabled);
+    const updateLocalSettings = useSupDanceI18nStore((s) => s.updateLocalSettings);
+
+    const [loading, setLoading] = useState(false);
+    const [saving, setSaving] = useState(false);
+    const [togglingPlugin, setTogglingPlugin] = useState(false);
+    const [draftSettings, setDraftSettings] = useState<SupDanceI18nSettings>(storeSettings);
+    const [remoteStats, setRemoteStats] = useState<SupDanceLanguageStats[] | null>(null);
+    const [counts, setCounts] = useState<{ totalEntries: number; customCount: number; modifiedCount: number }>({
+        totalEntries: storeEntries.length,
+        customCount: storeEntries.filter((e) => e.origin === "custom").length,
+        modifiedCount: storeEntries.filter((e) => e.origin === "modified").length,
+    });
+
+    const loadOverview = useCallback(async () => {
+        setLoading(true);
+        try {
+            const overview = await getAdminSupDanceI18nOverview();
+            setDraftSettings(overview.settings);
+            updateLocalSettings(overview.settings);
+            setStorePluginEnabled(overview.pluginEnabled);
+            setRemoteStats(overview.languageStats);
+            setCounts({
+                totalEntries: overview.totalEntries,
+                customCount: overview.customCount,
+                modifiedCount: overview.modifiedCount,
+            });
+        } catch {
+            setDraftSettings(useSupDanceI18nStore.getState().settings);
+            setRemoteStats(null);
+        } finally {
+            setLoading(false);
+        }
+    }, [setStorePluginEnabled, updateLocalSettings]);
+
+    useEffect(() => {
+        void loadOverview();
+    }, [loadOverview]);
+
+    const sortedLanguages = useMemo(() => [...draftSettings.languages].sort((a, b) => a.sortOrder - b.sortOrder), [draftSettings.languages]);
+
+    const languageStatsMap = useMemo(() => {
+        const stats = remoteStats ?? computeLocalLanguageStats(sortedLanguages, storeEntries);
+        return new Map(stats.map((item) => [item.code, item]));
+    }, [remoteStats, sortedLanguages, storeEntries]);
+
+    const enabledLanguageCount = useMemo(() => sortedLanguages.filter((item) => item.enabled).length, [sortedLanguages]);
+
+    const handleTogglePluginMaster = async (checked: boolean) => {
+        setTogglingPlugin(true);
+        try {
+            try {
+                await setPluginPlatformAvailability(SUPDANCE_I18N_PLUGIN_ID, checked);
+            } catch {
+                // Allow local preview toggle even when running frontend standalone
+            }
+            usePluginStore.setState((state) => ({
+                pluginStates: {
+                    ...state.pluginStates,
+                    [SUPDANCE_I18N_PLUGIN_ID]: {
+                        pluginId: SUPDANCE_I18N_PLUGIN_ID,
+                        platformAvailable: checked,
+                        userEnabled: checked,
+                        userConfigured: true,
+                        effectiveEnabled: checked,
+                        canToggle: false,
+                        canConfigure: false,
+                    },
+                },
+            }));
+            setStorePluginEnabled(checked);
+            message.success(checked ? "站点多语言插件已启用，右上角切换图标已挂载" : "站点多语言插件已停用，全站已恢复默认中文");
+        } finally {
+            setTogglingPlugin(false);
+        }
+    };
+
+    const handleLanguageToggle = (code: SupDanceLocaleCode, enabled: boolean) => {
+        if (!enabled && sortedLanguages.filter((item) => item.enabled).length <= 1) {
+            message.warning("至少需要保留 1 个启用状态的语言");
+            return;
+        }
+        const nextLanguages = sortedLanguages.map((item) => (item.code === code ? { ...item, enabled } : item));
+        let nextDefault = draftSettings.defaultLocale;
+        if (!enabled && draftSettings.defaultLocale === code) {
+            nextDefault = nextLanguages.find((item) => item.enabled)?.code ?? "zh-CN";
+        }
+        setDraftSettings((prev) => ({
+            ...prev,
+            defaultLocale: nextDefault,
+            languages: nextLanguages,
+        }));
+    };
+
+    const handleMoveLanguage = (index: number, direction: -1 | 1) => {
+        const targetIndex = index + direction;
+        if (targetIndex < 0 || targetIndex >= sortedLanguages.length) return;
+        const cloned = [...sortedLanguages];
+        const [moved] = cloned.splice(index, 1);
+        if (!moved) return;
+        cloned.splice(targetIndex, 0, moved);
+        const reordered = cloned.map((item, idx) => ({
+            ...item,
+            sortOrder: idx + 1,
+        }));
+        setDraftSettings((prev) => ({
+            ...prev,
+            languages: reordered,
+        }));
+    };
+
+    const handleSetDefaultLocale = (code: SupDanceLocaleCode) => {
+        const nextLanguages = sortedLanguages.map((item) => (item.code === code ? { ...item, enabled: true } : item));
+        setDraftSettings((prev) => ({
+            ...prev,
+            defaultLocale: code,
+            languages: nextLanguages,
+        }));
+    };
+
+    const handleSaveSettings = async () => {
+        setSaving(true);
+        try {
+            try {
+                const overview = await updateAdminSupDanceI18nSettings(draftSettings);
+                setDraftSettings(overview.settings);
+                updateLocalSettings(overview.settings);
+                setRemoteStats(overview.languageStats);
+            } catch {
+                updateLocalSettings(draftSettings);
+            }
+            message.success("多语言设置已保存并实时生效");
+        } finally {
+            setSaving(false);
+        }
+    };
+
+    const languageSelectOptions = useMemo(
+        () =>
+            sortedLanguages
+                .filter((item) => item.enabled)
+                .map((item) => ({
+                    value: item.code,
+                    label: `${item.nativeName} (${item.name} · ${item.code})`,
+                })),
+        [sortedLanguages],
+    );
+
+    const allLanguageSelectOptions = useMemo(
+        () =>
+            sortedLanguages.map((item) => ({
+                value: item.code,
+                label: `${item.nativeName} (${item.name} · ${item.code})`,
+            })),
+        [sortedLanguages],
+    );
+
+    return (
+        <AdminPageFrame
+            scroll
+            title="语言管理设置"
+            description="管理站点六大语种（简中、英语、繁中、日文、韩语、西班牙语）的启用状态、排序、右上角语言切换图标样式与全站回退策略。"
+            actions={
+                <div className="flex flex-wrap items-center gap-2">
+                    <AdminStatusBadge label={pluginEnabled ? "插件已启用" : "插件已关闭"} tone={pluginEnabled ? "success" : "neutral"} />
+                    <AdminStatusBadge label={`支持 ${SUPPORTED_LOCALE_CODES.length} 大语种`} tone="info" />
+                    <Button icon={<BookOpenText className="size-4" />} onClick={() => navigate("/admin/i18n/entries")}>
+                        词条与字段修改
+                    </Button>
+                    <Button type="primary" icon={<Save className="size-4" />} loading={saving} onClick={() => void handleSaveSettings()}>
+                        保存设置
+                    </Button>
+                </div>
+            }
+        >
+            <div className="space-y-4" data-i18n-ignore="true">
+                <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-4">
+                    <AdminStatTile label="已启用语种" value={`${enabledLanguageCount} / ${sortedLanguages.length}`} detail={`默认语言：${draftSettings.defaultLocale}`} />
+                    <AdminStatTile label="词库总词条" value={counts.totalEntries} detail="覆盖全站核心导航、创作、画布与设置" />
+                    <AdminStatTile label="自定义与修订词条" value={counts.customCount + counts.modifiedCount} detail={`修订内置 ${counts.modifiedCount} 条 · 新增 ${counts.customCount} 条`} />
+                    <div className="admin-stat-tile flex flex-col justify-between">
+                        <div className="admin-stat-tile-label">当前浏览器预览语言</div>
+                        <div className="mt-1 flex items-center gap-2">
+                            <Select size="small" value={currentLocale} className="w-full" options={languageSelectOptions} onChange={(val) => setLocale(val as SupDanceLocaleCode)} aria-label="实时预览切换当前语言" />
+                        </div>
+                        <div className="admin-stat-tile-detail mt-1">
+                            <span>切换后可立即在站点右上角预览效果</span>
+                        </div>
+                    </div>
+                </div>
+
+                <section className="rounded-lg border bg-card p-4" style={{ borderColor: "var(--admin-border)" }}>
+                    <div className="flex flex-wrap items-center justify-between gap-4">
+                        <div className="flex items-start gap-3">
+                            <div className="flex size-10 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
+                                <Languages className="size-5" />
+                            </div>
+                            <div>
+                                <div className="flex items-center gap-2">
+                                    <h2 className="text-sm font-semibold text-foreground">站点多语言插件总开关 (supdance-i18n)</h2>
+                                    <AdminStatusBadge label={pluginEnabled ? "运行中" : "已停用"} tone={pluginEnabled ? "success" : "warning"} />
+                                </div>
+                                <p className="mt-1 text-xs text-muted-foreground">此开关与「插件管理」页面实时同步。关闭后，站点右上角的语言切换图标将自动卸载，所有已翻译的页面文本将无损回滚为原始简体中文。</p>
+                            </div>
+                        </div>
+                        <div className="flex items-center gap-2">
+                            <span className="text-xs text-muted-foreground">{pluginEnabled ? "已启用多语言" : "已停用多语言"}</span>
+                            <Switch checked={pluginEnabled} loading={togglingPlugin} onChange={(checked) => void handleTogglePluginMaster(checked)} aria-label="启用或停用站点多语言插件" />
+                        </div>
+                    </div>
+                </section>
+
+                <section className="rounded-lg border bg-card p-4" style={{ borderColor: "var(--admin-border)" }}>
+                    <div className="mb-4 flex items-center justify-between">
+                        <div>
+                            <h2 className="text-sm font-semibold text-foreground">全局策略与右上角切换图标设置</h2>
+                            <p className="mt-0.5 text-xs text-muted-foreground">配置首次访问时的语言匹配规则、缺省回退语言以及站点右上角语言图标的展示形态与挂载位置。</p>
+                        </div>
+                    </div>
+
+                    <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
+                        <div className="space-y-1.5">
+                            <label className="text-xs font-medium text-foreground">默认站点语言</label>
+                            <Select
+                                value={draftSettings.defaultLocale}
+                                className="w-full"
+                                options={languageSelectOptions}
+                                onChange={(value) =>
+                                    setDraftSettings((prev) => ({
+                                        ...prev,
+                                        defaultLocale: value as SupDanceLocaleCode,
+                                    }))
+                                }
+                            />
+                            <p className="text-[11px] text-muted-foreground">新访客在未手动选择且未命中浏览器语言时使用的默认语言。</p>
+                        </div>
+
+                        <div className="space-y-1.5">
+                            <label className="text-xs font-medium text-foreground">缺省回退语言 (Fallback)</label>
+                            <Select
+                                value={draftSettings.fallbackLocale}
+                                className="w-full"
+                                options={allLanguageSelectOptions}
+                                onChange={(value) =>
+                                    setDraftSettings((prev) => ({
+                                        ...prev,
+                                        fallbackLocale: value as SupDanceLocaleCode,
+                                    }))
+                                }
+                            />
+                            <p className="text-[11px] text-muted-foreground">当目标语言的某个词条尚未翻译时，优先回退显示的语言。</p>
+                        </div>
+
+                        <div className="space-y-1.5">
+                            <label className="text-xs font-medium text-foreground">右上角切换图标展示样式</label>
+                            <Select
+                                value={draftSettings.switcherStyle}
+                                className="w-full"
+                                options={[
+                                    { value: "icon_code", label: "语言图标 + 语言简码（如：文 EN / 中）" },
+                                    { value: "icon_only", label: "仅展示语言切换图标（紧凑模式）" },
+                                    { value: "icon_name", label: "语言图标 + 母语名称（如：文 English）" },
+                                ]}
+                                onChange={(value) =>
+                                    setDraftSettings((prev) => ({
+                                        ...prev,
+                                        switcherStyle: value as SupDanceSwitcherStyle,
+                                    }))
+                                }
+                            />
+                            <p className="text-[11px] text-muted-foreground">控制站点右上角语言切换按钮的外观展示形态。</p>
+                        </div>
+                    </div>
+
+                    <div className="mt-4 grid grid-cols-1 gap-3 border-t pt-4 sm:grid-cols-2 lg:grid-cols-3" style={{ borderColor: "var(--admin-row-border)" }}>
+                        <div className="flex items-center justify-between rounded-md border px-3 py-2.5" style={{ borderColor: "var(--admin-row-border)" }}>
+                            <div>
+                                <div className="text-xs font-medium text-foreground">自动识别浏览器语言</div>
+                                <div className="text-[11px] text-muted-foreground">根据访客 Navigator 语言自动匹配六大语种</div>
+                            </div>
+                            <Switch checked={draftSettings.autoDetectBrowser} onChange={(checked) => setDraftSettings((prev) => ({ ...prev, autoDetectBrowser: checked }))} />
+                        </div>
+
+                        <div className="flex items-center justify-between rounded-md border px-3 py-2.5" style={{ borderColor: "var(--admin-row-border)" }}>
+                            <div>
+                                <div className="text-xs font-medium text-foreground">工作台右上角显示切换图标</div>
+                                <div className="text-[11px] text-muted-foreground">主工作区顶栏（通知与主题切换旁）</div>
+                            </div>
+                            <Switch checked={draftSettings.showInWorkspaceTopBar} onChange={(checked) => setDraftSettings((prev) => ({ ...prev, showInWorkspaceTopBar: checked }))} />
+                        </div>
+
+                        <div className="flex items-center justify-between rounded-md border px-3 py-2.5" style={{ borderColor: "var(--admin-row-border)" }}>
+                            <div>
+                                <div className="text-xs font-medium text-foreground">登录/注册页右上角显示图标</div>
+                                <div className="text-[11px] text-muted-foreground">允许未登录访客在登录页切换语言</div>
+                            </div>
+                            <Switch checked={draftSettings.showInAuthPage} onChange={(checked) => setDraftSettings((prev) => ({ ...prev, showInAuthPage: checked }))} />
+                        </div>
+
+                        <div className="flex items-center justify-between rounded-md border px-3 py-2.5" style={{ borderColor: "var(--admin-row-border)" }}>
+                            <div>
+                                <div className="text-xs font-medium text-foreground">自由画布顶栏右上角显示图标</div>
+                                <div className="text-[11px] text-muted-foreground">在独立全屏画布工具栏右上角挂载入口</div>
+                            </div>
+                            <Switch checked={draftSettings.showInCanvasTopBar} onChange={(checked) => setDraftSettings((prev) => ({ ...prev, showInCanvasTopBar: checked }))} />
+                        </div>
+
+                        <div className="flex items-center justify-between rounded-md border px-3 py-2.5" style={{ borderColor: "var(--admin-row-border)" }}>
+                            <div>
+                                <div className="text-xs font-medium text-foreground">管理后台顶栏右上角显示图标</div>
+                                <div className="text-[11px] text-muted-foreground">在后台标题栏操作区显示语言切换器</div>
+                            </div>
+                            <Switch checked={draftSettings.showInAdminTopBar} onChange={(checked) => setDraftSettings((prev) => ({ ...prev, showInAdminTopBar: checked }))} />
+                        </div>
+
+                        <div className="flex items-center justify-between rounded-md border px-3 py-2.5" style={{ borderColor: "var(--admin-row-border)" }}>
+                            <div>
+                                <div className="text-xs font-medium text-foreground">管理后台页面同步翻译</div>
+                                <div className="text-[11px] text-muted-foreground">开启后 `/admin` 后台界面也将跟随切换语言</div>
+                            </div>
+                            <Switch checked={draftSettings.translateAdminPages} onChange={(checked) => setDraftSettings((prev) => ({ ...prev, translateAdminPages: checked }))} />
+                        </div>
+                    </div>
+                </section>
+
+                <section className="rounded-lg border bg-card p-4" style={{ borderColor: "var(--admin-border)" }}>
+                    <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
+                        <div>
+                            <h2 className="text-sm font-semibold text-foreground">六大支持语种管理与翻译覆盖率</h2>
+                            <p className="mt-0.5 text-xs text-muted-foreground">支持对简体中文、英语、繁体中文、日文、韩国语、西班牙语进行独立启用/停用、下拉顺序调整及缺失词条补全。</p>
+                        </div>
+                    </div>
+
+                    <div className="overflow-x-auto">
+                        <table className="w-full border-collapse text-left text-xs">
+                            <thead>
+                                <tr className="border-b text-muted-foreground" style={{ borderColor: "var(--admin-border)" }}>
+                                    <th className="py-2.5 pr-3 font-medium">排序</th>
+                                    <th className="px-3 py-2.5 font-medium">语种标识与名称</th>
+                                    <th className="px-3 py-2.5 font-medium">Locale 代码</th>
+                                    <th className="px-3 py-2.5 font-medium">词条翻译覆盖率</th>
+                                    <th className="px-3 py-2.5 font-medium">角色状态</th>
+                                    <th className="px-3 py-2.5 font-medium">启用状态</th>
+                                    <th className="py-2.5 pl-3 text-right font-medium">操作</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {sortedLanguages.map((lang, index) => {
+                                    const stat = languageStatsMap.get(lang.code);
+                                    const translated = stat?.translatedCount ?? counts.totalEntries;
+                                    const total = stat?.totalCount ?? counts.totalEntries;
+                                    const coverage = stat?.coveragePercent ?? 100;
+                                    const missing = stat?.missingCount ?? 0;
+                                    const isDefault = draftSettings.defaultLocale === lang.code;
+                                    const isFallback = draftSettings.fallbackLocale === lang.code;
+
+                                    return (
+                                        <tr key={lang.code} className="border-b last:border-b-0" style={{ borderColor: "var(--admin-row-border)" }}>
+                                            <td className="py-3 pr-3">
+                                                <div className="flex items-center gap-1">
+                                                    <span className="inline-flex w-5 justify-center font-mono text-muted-foreground">{index + 1}</span>
+                                                    <Button type="text" size="small" disabled={index === 0 || loading} icon={<ArrowUp className="size-3.5" />} aria-label={`上移 ${lang.name}`} onClick={() => handleMoveLanguage(index, -1)} />
+                                                    <Button
+                                                        type="text"
+                                                        size="small"
+                                                        disabled={index === sortedLanguages.length - 1 || loading}
+                                                        icon={<ArrowDown className="size-3.5" />}
+                                                        aria-label={`下移 ${lang.name}`}
+                                                        onClick={() => handleMoveLanguage(index, 1)}
+                                                    />
+                                                </div>
+                                            </td>
+                                            <td className="px-3 py-3">
+                                                <div className="flex items-center gap-2.5">
+                                                    <span className="inline-flex h-6 min-w-[28px] items-center justify-center rounded bg-muted px-1.5 text-xs font-semibold text-foreground">{lang.badge}</span>
+                                                    <div>
+                                                        <div className="font-medium text-foreground">{lang.nativeName}</div>
+                                                        <div className="text-[11px] text-muted-foreground">{lang.name}</div>
+                                                    </div>
+                                                </div>
+                                            </td>
+                                            <td className="px-3 py-3 font-mono text-xs text-foreground/85">{lang.code}</td>
+                                            <td className="px-3 py-3">
+                                                <div className="w-48 max-w-full space-y-1">
+                                                    <div className="flex items-center justify-between text-[11px]">
+                                                        <span className="font-medium text-foreground">
+                                                            {translated} / {total} ({coverage}%)
+                                                        </span>
+                                                        {missing > 0 ? (
+                                                            <span className="text-amber-500">待译 {missing} 条</span>
+                                                        ) : (
+                                                            <span className="inline-flex items-center gap-0.5 text-emerald-500">
+                                                                <CheckCircle2 className="size-3" /> 已完整
+                                                            </span>
+                                                        )}
+                                                    </div>
+                                                    <div className="h-1.5 w-full overflow-hidden rounded-full bg-muted">
+                                                        <div className="h-full rounded-full bg-primary transition-all" style={{ width: `${Math.min(100, Math.max(0, coverage))}%` }} />
+                                                    </div>
+                                                </div>
+                                            </td>
+                                            <td className="px-3 py-3">
+                                                <div className="flex flex-wrap items-center gap-1.5">
+                                                    {isDefault ? <AdminStatusBadge label="默认语言" tone="success" /> : null}
+                                                    {isFallback ? <AdminStatusBadge label="回退语言" tone="info" /> : null}
+                                                    {currentLocale === lang.code ? <AdminStatusBadge label="当前预览" tone="neutral" /> : null}
+                                                </div>
+                                            </td>
+                                            <td className="px-3 py-3">
+                                                <Switch checked={lang.enabled} onChange={(checked) => handleLanguageToggle(lang.code, checked)} aria-label={`启用或禁用 ${lang.name}`} />
+                                            </td>
+                                            <td className="py-3 pl-3 text-right">
+                                                <div className="inline-flex items-center justify-end gap-1">
+                                                    <Button
+                                                        type="text"
+                                                        size="small"
+                                                        icon={<Globe2 className="size-3.5" />}
+                                                        disabled={!lang.enabled || currentLocale === lang.code}
+                                                        onClick={() => {
+                                                            setLocale(lang.code);
+                                                            message.success(`已切换当前预览语言为 ${lang.nativeName}`);
+                                                        }}
+                                                    >
+                                                        预览
+                                                    </Button>
+                                                    {!isDefault ? (
+                                                        <Button type="text" size="small" onClick={() => handleSetDefaultLocale(lang.code)}>
+                                                            设为默认
+                                                        </Button>
+                                                    ) : null}
+                                                    <Button type="link" size="small" onClick={() => navigate(missing > 0 ? `/admin/i18n/entries?missingLocale=${encodeURIComponent(lang.code)}` : `/admin/i18n/entries`)}>
+                                                        {missing > 0 ? `补全 (${missing})` : "词条修改"}
+                                                    </Button>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    );
+                                })}
+                            </tbody>
+                        </table>
+                    </div>
+                </section>
+            </div>
+        </AdminPageFrame>
+    );
+}
+export default SupDanceI18nSettingsPage;

@@ -24,5 +24,10 @@
   - 新增 `.github/workflows/supdance-upstream-sync.yml`，支持每日定期检查上游正式 Release、生成 `UPSTREAM_UPDATE_REPORT.md` 报告及运行前后端扩展隔离测试。
 - **本机 SupDance Canvas Agent (Codex) 连接器**（移植自 `6825bcd8`）：
   - 在 `v1.7.1` 云端 Agent 面板底部接入本机 Codex 连接器发现、配对、SSE 流与对话控制。
+- **站点多语言与实时词条中心插件 (`supdance-i18n`)**：
+  - 支持在后台「插件管理」(`/admin/plugins`) 一键开启或关闭，停用时卸载顶栏入口并无损回滚全站 DOM 为默认简体中文。
+  - 在站点右上角（工作台顶栏、登录注册页、自由画布顶栏、管理后台顶栏）挂载语言切换图标，覆盖简体中文 (`zh-CN`)、英语 (`en-US`)、繁体中文 (`zh-TW`)、日文 (`ja-JP`)、韩国语 (`ko-KR`)、西班牙语 (`es-ES`) 六大语种。
+  - 采用混合响应式 i18n 架构（Key-Value 词典 + ICU 参数插值 + Ant Design `ConfigProvider` Locale 联动 + `WeakMap` 零侵入响应式 DOM 观察器）。
+  - 新增后台「语言管理设置」页面 (`/admin/i18n/settings`) 与「多语言词条与字段修改」页面 (`/admin/i18n/entries`)，支持随时在线编辑或新增六语词条并实时热生效，支持 JSON 词库导入导出。
 - **维护文档体系 (`docs/supdance/`)**：
   - 建立 `INITIAL_AUDIT.md`、`WORKSPACE.md`、`ARCHITECTURE.md`、`UPSTREAM_BASELINE.md`、`UPSTREAM_SYNC.md`、`CUSTOMIZATIONS.md`、`PLUGIN_COMPATIBILITY.md`、`DEPLOYMENT.md`、`RECOVERY.md` 与 `CHANGELOG.md`。

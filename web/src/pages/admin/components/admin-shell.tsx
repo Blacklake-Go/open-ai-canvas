@@ -5,6 +5,7 @@ import {
     ArrowLeft,
     BarChart3,
     BellRing,
+    BookOpenText,
     ChevronDown,
     CloudUpload,
     Coins,
@@ -16,6 +17,7 @@ import {
     Inbox,
     Infinity as InfinityIcon,
     KeyRound,
+    Languages,
     Layers3,
     Mail,
     Megaphone,
@@ -50,6 +52,7 @@ import { cn } from "@/lib/utils";
 import { useThemeStore } from "@/stores/use-theme-store";
 import { useUserStore } from "@/stores/use-user-store";
 import { useAppearanceStore } from "@/stores/use-appearance-store";
+import { TopbarLanguageSwitcher } from "@/supdance/plugins/i18n";
 import { getIsolatedAdminAntTheme } from "../theme/admin-ant-theme";
 import { AdminTooltip } from "../ui/controls";
 import { AdminDensityProvider, useAdminDensity } from "./admin-density";
@@ -104,6 +107,8 @@ const adminNavigation: Array<{ label: string; items: AdminNavigationItem[] }> = 
         label: "平台配置",
         items: [
             { path: "/admin/plugins", label: "插件管理", shortLabel: "插件", description: "平台可用性、上传与卸载", icon: <PlugZap className="size-4" /> },
+            { path: "/admin/i18n/settings", label: "语言管理", shortLabel: "语言", description: "六国语种开关、排序与顶栏图标", icon: <Languages className="size-4" /> },
+            { path: "/admin/i18n/entries", label: "词条修改", shortLabel: "词条", description: "全站多语言字段实时翻译与词库", icon: <BookOpenText className="size-4" /> },
             { path: "/admin/skill-curation", label: "技能分类", shortLabel: "技能", description: "平台策展与分类维护", icon: <PlugZap className="size-4" /> },
             { path: "/admin/settings/appearance", label: "站点及外观", shortLabel: "外观", description: "品牌、SEO、备案与皮肤", icon: <Palette className="size-4" /> },
             { path: "/admin/settings/features", label: "功能开放", shortLabel: "功能", description: "工作台、插件与模型能力", icon: <ToggleLeft className="size-4" /> },
@@ -253,6 +258,7 @@ export function AdminPageFrame({ title, description, actions, back, scroll = fal
                     </div>
                     <div className="admin-page-actions flex shrink-0 flex-wrap items-center">
                         {actions}
+                        <TopbarLanguageSwitcher surface="admin" />
                         <AdminDensityButton />
                         <AdminThemeButton />
                     </div>

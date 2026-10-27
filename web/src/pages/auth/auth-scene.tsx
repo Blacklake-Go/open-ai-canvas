@@ -9,6 +9,7 @@ import { SiteComplianceFooter } from "@/components/layout/site-compliance-footer
 import { aceternityMotion } from "@/lib/aceternity-motion";
 import { brandStudioLabel, useAppearanceStore } from "@/stores/use-appearance-store";
 import { useThemeStore } from "@/stores/use-theme-store";
+import { TopbarLanguageSwitcher } from "@/supdance/plugins/i18n";
 
 const AUTH_TABS = [
     { key: "login", label: "登录" },
@@ -78,7 +79,23 @@ export function AuthScene() {
         <main className="auth-scene h-dvh min-h-0 overflow-y-auto lg:overflow-hidden">
             <div className="grid min-h-full lg:h-full lg:grid-cols-[minmax(0,1.32fr)_minmax(520px,1fr)]">
                 <section className="auth-scene-hero relative min-h-[250px] overflow-hidden sm:min-h-[320px] lg:min-h-0" aria-label={`${appearance.brandName}品牌影片`}>
-                    {videoActive && appearance.authVideoUrl ? <video ref={videoRef} className="absolute inset-0 size-full object-cover" src={appearance.authVideoUrl} poster={appearance.authVideoPosterUrl || undefined} autoPlay muted loop playsInline preload="metadata" onPlay={() => setVideoPlaying(true)} onPause={() => setVideoPlaying(false)} /> : appearance.authVideoPosterUrl && failedPosterURL !== appearance.authVideoPosterUrl ? <img className="absolute inset-0 size-full object-cover" src={appearance.authVideoPosterUrl} alt="" decoding="async" onError={() => setFailedPosterURL(appearance.authVideoPosterUrl)} /> : null}
+                    {videoActive && appearance.authVideoUrl ? (
+                        <video
+                            ref={videoRef}
+                            className="absolute inset-0 size-full object-cover"
+                            src={appearance.authVideoUrl}
+                            poster={appearance.authVideoPosterUrl || undefined}
+                            autoPlay
+                            muted
+                            loop
+                            playsInline
+                            preload="metadata"
+                            onPlay={() => setVideoPlaying(true)}
+                            onPause={() => setVideoPlaying(false)}
+                        />
+                    ) : appearance.authVideoPosterUrl && failedPosterURL !== appearance.authVideoPosterUrl ? (
+                        <img className="absolute inset-0 size-full object-cover" src={appearance.authVideoPosterUrl} alt="" decoding="async" onError={() => setFailedPosterURL(appearance.authVideoPosterUrl)} />
+                    ) : null}
                     <div aria-hidden className="auth-scene-hero-overlay absolute inset-0" />
                     <div aria-hidden className="auth-scene-video-blend absolute inset-y-0 right-0 hidden w-[clamp(120px,14vw,240px)] lg:block" />
                     <div className="absolute inset-x-0 top-0 flex items-center justify-between gap-4 p-5 sm:p-7 lg:p-9">
@@ -86,7 +103,13 @@ export function AuthScene() {
                             <BrandLogo theme={theme} className="size-7" alt="" fallback={<span className="size-7 bg-current" style={{ mask: "url(/logo.svg) center / contain no-repeat", WebkitMask: "url(/logo.svg) center / contain no-repeat" }} />} />
                             {appearance.brandName}
                         </Link>
-                        <button type="button" className="auth-scene-hero-control inline-flex items-center gap-2 rounded-full px-3 py-2 text-[var(--fs-label)] backdrop-blur-xl transition disabled:cursor-default" onClick={playVideo} disabled={videoPlaying || !appearance.authVideoUrl} aria-pressed={videoPlaying}>
+                        <button
+                            type="button"
+                            className="auth-scene-hero-control inline-flex items-center gap-2 rounded-full px-3 py-2 text-[var(--fs-label)] backdrop-blur-xl transition disabled:cursor-default"
+                            onClick={playVideo}
+                            disabled={videoPlaying || !appearance.authVideoUrl}
+                            aria-pressed={videoPlaying}
+                        >
                             <Play className="size-3 fill-current" />
                             {videoPlaying ? "创作正在发生" : "播放品牌影片"}
                         </button>
@@ -104,10 +127,13 @@ export function AuthScene() {
                 </section>
 
                 <section className="auth-scene-form-pane relative flex min-h-[660px] flex-col items-center overflow-y-auto px-4 pt-20 sm:px-8 lg:min-h-0 lg:px-10 lg:pt-20">
-                    <Link to="/" className="auth-scene-return absolute right-5 top-5 z-20 inline-flex h-9 items-center gap-2 rounded-full px-4 text-xs backdrop-blur-xl transition lg:right-8 lg:top-8">
-                        <ArrowLeft className="size-3.5" />
-                        返回首页
-                    </Link>
+                    <div className="absolute right-5 top-5 z-20 flex items-center gap-2 lg:right-8 lg:top-8">
+                        <TopbarLanguageSwitcher surface="auth" className="auth-scene-return h-9 rounded-full px-3 backdrop-blur-xl" />
+                        <Link to="/" className="auth-scene-return inline-flex h-9 items-center gap-2 rounded-full px-4 text-xs backdrop-blur-xl transition">
+                            <ArrowLeft className="size-3.5" />
+                            返回首页
+                        </Link>
+                    </div>
 
                     <div className="flex w-full flex-1 items-center justify-center">
                         <motion.div

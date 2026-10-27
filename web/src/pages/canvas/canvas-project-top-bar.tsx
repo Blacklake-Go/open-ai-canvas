@@ -13,6 +13,7 @@ import type { CanvasShortDramaProgress } from "@/lib/canvas/canvas-short-drama";
 import { canvasThemes } from "@/lib/canvas-theme";
 import { useCanvasThemeStore } from "@/stores/canvas/use-canvas-theme-store";
 import { useUserStore } from "@/stores/use-user-store";
+import { TopbarLanguageSwitcher } from "@/supdance/plugins/i18n";
 import { CanvasShortcutsModal } from "./canvas-shortcuts-modal";
 
 export type CanvasProjectView = "canvas" | "assets";
@@ -249,6 +250,7 @@ export function CanvasTopBar({
                             </Button>
                         </CanvasTopBarTooltip>
                     ) : null}
+                    <TopbarLanguageSwitcher surface="canvas" className="canvas-topbar-action !h-10 !rounded-xl" />
                     <CanvasTopBarTooltip label="分享画布">
                         <Button type="text" className="canvas-topbar-action !h-10 !w-10 !min-w-10 !rounded-xl !p-0" style={{ color: theme.node.text }} icon={<Share2 className="size-4" />} onClick={onShare} aria-label="分享画布" />
                     </CanvasTopBarTooltip>

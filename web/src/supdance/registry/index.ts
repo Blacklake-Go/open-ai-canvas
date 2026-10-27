@@ -47,3 +47,5 @@ export {
     upgradeSupDancePlugin,
     validateSupDancePluginManifest,
 };
+
+export * from "@/supdance/plugins/i18n";
