@@ -31,6 +31,12 @@ var supdanceSystemApplicationPolicies = map[string]PluginManagementView{
 		ActivationScope:    PluginScopeSystem,
 		ConfigurationScope: PluginConfigurationSystem,
 	},
+	PluginSupDanceSocialAuth: {
+		Origin:             PluginOriginOfficial,
+		Kind:               PluginKindApplication,
+		ActivationScope:    PluginScopeSystem,
+		ConfigurationScope: PluginConfigurationSystem,
+	},
 }
 
 func isSupDanceSystemApplicationPluginID(pluginID string) bool {

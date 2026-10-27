@@ -24,6 +24,8 @@ const LogicalModelsPage = lazy(() => import("@/pages/admin/logical-models/logica
 const AdminPluginsPage = lazy(() => import("@/pages/admin/plugins/plugins-page"));
 const SupDanceI18nSettingsPage = lazy(() => import("@/supdance/plugins/i18n/admin/i18n-settings-page"));
 const SupDanceI18nEntriesPage = lazy(() => import("@/supdance/plugins/i18n/admin/i18n-entries-page"));
+const SocialAuthSettingsPage = lazy(() => import("@/supdance/plugins/social-auth/admin/social-auth-settings-page"));
+const DarkLoginPage = lazy(() => import("@/supdance/pages/dark-login-page"));
 const SkillCurationPage = lazy(() => import("@/pages/admin/skill-curation-page"));
 const AdminPaymentsPage = lazy(() => import("@/pages/admin/payments/payments-page"));
 const LogsPage = lazy(() => import("@/pages/admin/logs/logs-page"));
@@ -116,6 +118,7 @@ export const router = createBrowserRouter([
             { path: "/forgot-password", element: fullScreenDeferred(<ForgotPasswordPage />) },
         ],
     },
+    { path: "/zh/login", element: fullScreenDeferred(<DarkLoginPage />), errorElement: <RouteErrorPage /> },
     { path: "/share/canvas/:token", element: fullScreenDeferred(<SharedCanvasPage />), errorElement: <RouteErrorPage /> },
     ...(import.meta.env.DEV ? devRoutes() : []),
     {
@@ -255,6 +258,8 @@ export const router = createBrowserRouter([
                     { path: "settings/runtime-policy", element: <RuntimePolicySettingsPage /> },
                     { path: "settings/features", element: <FeatureAvailabilityPage /> },
                     { path: "settings/access", element: <AccessSettingsPage /> },
+                    { path: "settings/social-auth", element: <SocialAuthSettingsPage /> },
+                    { path: "social-auth", element: <Navigate to="/admin/settings/social-auth" replace /> },
                     { path: "settings/email", element: <EmailSettingsPage /> },
                     { path: "settings/storage", element: <StorageSettingsPage /> },
                     { path: "settings/ark-private-assets", element: <ArkPrivateAssetsSettingsPage /> },

@@ -10,8 +10,8 @@ test("password recovery keeps the approved login placement and dedicated route",
         Bun.file(new URL("../src/pages/admin/components/email-settings-panel.tsx", import.meta.url)).text(),
     ]);
 
-    expect(loginSource).toContain('label="密码"');
-    expect(loginSource).toContain("忘记密码？");
+    expect(loginSource).toMatch(/label=("密码"|{t\("auth\.password"\)})/);
+    expect(loginSource).toMatch(/(忘记密码？|{t\("auth\.forgot_password"\)})/);
     expect(loginSource).toContain("forgotPasswordURL");
     expect(routerSource).toContain('{ path: "/forgot-password"');
     expect(sceneSource).toContain('eyebrow: "ACCOUNT RECOVERY"');

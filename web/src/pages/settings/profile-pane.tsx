@@ -137,7 +137,7 @@ export function ProfilePane() {
         const file = event.target.files?.[0];
         event.target.value = "";
         if (!file) return;
-        const error = profileAvatarError(file);
+        const error = profileAvatarError(file, t);
         setError("avatar", error || "");
         if (error) return;
         setCropSource({ file, url: URL.createObjectURL(file) });
@@ -155,7 +155,7 @@ export function ProfilePane() {
             setCropSource(null);
         } catch (error) {
             if (cropGeneration.current !== generation) return;
-            const msg = errorMessage(error, "裁剪头像失败，请重试");
+            const msg = errorMessage(error, t("settings.crop_avatar_failed", undefined, "裁剪头像失败，请重试"));
             setError("avatar", msg);
             message.error(msg);
         } finally {
@@ -174,7 +174,7 @@ export function ProfilePane() {
             updateAvatarUser(user);
             message.success(t("settings.avatar_saved", undefined, "头像已保存"));
         } catch (error) {
-            setError("avatar", errorMessage(error, "保存头像失败，请重试"));
+            setError("avatar", errorMessage(error, t("settings.save_avatar_failed", undefined, "保存头像失败，请重试")));
         } finally {
             end();
         }
@@ -190,7 +190,7 @@ export function ProfilePane() {
             updateAvatarUser(user);
             message.success(t("settings.system_avatar_applied", undefined, "已使用选择的系统头像"));
         } catch (error) {
-            setError("avatar", errorMessage(error, "保存头像失败，请重试"));
+            setError("avatar", errorMessage(error, t("settings.save_avatar_failed", undefined, "保存头像失败，请重试")));
         } finally {
             end();
         }
@@ -209,7 +209,7 @@ export function ProfilePane() {
         } catch (error) {
             useUserStore.getState().clearSession();
             useUserStore.getState().setHydrated(true);
-            message.error({ content: `${notice} 清理本地会话失败：${errorMessage(error, "请重新登录")}`, duration: 8 });
+            message.error({ content: `${notice} ${t("settings.clean_local_session_failed", undefined, "清理本地会话失败：")}${errorMessage(error, t("auth.please_relogin", undefined, "请重新登录"))}`, duration: 8 });
         } finally {
             navigate("/login", { replace: true });
         }
@@ -222,7 +222,7 @@ export function ProfilePane() {
             await changeProfilePassword({ currentPassword: profile?.hasPassword ? values.currentPassword : "", newPassword: values.newPassword });
             await finishSecurityChange(t("settings.password_updated_relogin", undefined, "密码已更新，所有登录会话已退出，请重新登录"));
         } catch (error) {
-            setError("password", errorMessage(error, "修改密码失败，请重试"));
+            setError("password", errorMessage(error, t("settings.change_password_failed", undefined, "修改密码失败，请重试")));
         } finally {
             end();
         }
@@ -249,7 +249,7 @@ export function ProfilePane() {
             message.success(t("settings.email_sent_to_new", undefined, "验证码已发送到新邮箱"));
         } catch (error) {
             if (error instanceof ApiError && error.retryAfterMs) setRetryAt(Date.now() + error.retryAfterMs);
-            setError("email", errorMessage(error, "发送验证码失败，请重试"));
+            setError("email", errorMessage(error, t("settings.send_code_failed", undefined, "发送验证码失败，请重试")));
         } finally {
             end();
         }
@@ -260,9 +260,9 @@ export function ProfilePane() {
         setError("email", "");
         try {
             const result = await changeProfileEmail({ ticket: emailTicket.value, emailCode: values.emailCode, currentPassword: profile.hasPassword ? values.currentPassword : "" });
-            await finishSecurityChange(result.notificationStatus === "failed" ? "邮箱已更新，但旧邮箱通知发送失败。所有登录会话已退出，请重新登录" : t("settings.email_updated_relogin", undefined, "邮箱已更新，所有登录会话已退出，请重新登录"), result.notificationStatus === "failed");
+            await finishSecurityChange(result.notificationStatus === "failed" ? t("settings.email_updated_notify_failed", undefined, "邮箱已更新，但旧邮箱通知发送失败。所有登录会话已退出，请重新登录") : t("settings.email_updated_relogin", undefined, "邮箱已更新，所有登录会话已退出，请重新登录"), result.notificationStatus === "failed");
         } catch (error) {
-            setError("email", errorMessage(error, "修改邮箱失败，请重试"));
+            setError("email", errorMessage(error, t("settings.change_email_failed", undefined, "修改邮箱失败，请重试")));
         } finally {
             end();
         }
@@ -544,10 +544,10 @@ export function ProfilePane() {
                                     <img
                                         className="profile-avatar-dialog-preview"
                                         src={draftAvatar.url}
-                                        alt="待保存的头像预览"
+                                        alt={t("settings.avatar_preview_alt", undefined, "待保存的头像预览")}
                                         onError={() => {
                                             setDraftAvatar(null);
-                                            setError("avatar", "无法读取图片，请选择有效的 PNG 或 JPEG 图片");
+                                            setError("avatar", t("settings.read_image_failed", undefined, "无法读取图片，请选择有效的 PNG 或 JPEG 图片"));
                                         }}
                                     />
                                 ) : (

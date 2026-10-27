@@ -9,6 +9,7 @@ import { LinuxDOIcon } from "./auth-scene";
 import { VerificationFields } from "@/components/auth/verification-fields";
 import { emptyVerification, loginVerification, methodLabels, verificationMethods, type VerificationMethod } from "@/services/api/verification";
 import { useI18n } from "@/supdance/plugins/i18n";
+import { SocialLoginButtons } from "@/supdance/plugins/social-auth";
 
 export default function LoginPage() {
     const { t } = useI18n();
@@ -100,15 +101,16 @@ export default function LoginPage() {
             <Button type="primary" htmlType="submit" size="large" block loading={submitting} icon={<ArrowRight className="size-4" />} iconPlacement="end">
                 {t("auth.login")}
             </Button>
+            <Divider plain className="auth-scene-divider">
+                {t("auth.social_login_divider")}
+            </Divider>
+            <SocialLoginButtons variant="light-card" next={next} />
             {linuxdoEnabled ? (
-                <>
-                    <Divider plain className="auth-scene-divider">
-                        {t("auth.or_divider")}
-                    </Divider>
+                <div className="pt-2">
                     <Button size="large" block icon={<LinuxDOIcon />} href={linuxDOLoginURL(next)}>
                         {t("auth.login_with_linuxdo")}
                     </Button>
-                </>
+                </div>
             ) : null}
         </form>
     );

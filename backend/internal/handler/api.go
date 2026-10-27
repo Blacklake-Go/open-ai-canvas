@@ -47,6 +47,7 @@ func RegisterCanvasAPI(api *gin.RouterGroup, svc *service.Service) {
 	RegisterDiagnosticsRoutes(api, svc)
 	RegisterPluginRoutes(api, svc)
 	RegisterSupDanceI18nRoutes(api, svc)
+	RegisterSocialAuthRoutes(api, svc)
 	RegisterLibraryRoutes(api, svc)
 	RegisterFeedbackRoutes(api, svc)
 	RegisterStorageGrantRoutes(api, svc)
