@@ -29,3 +29,11 @@
 - **修改原因**：上游 `.yingce-plugin` 当前不开放云端 Agent 悬浮面板底部连接器栏与对话发送拦截钩子，因此需要在面板组件内挂载 `useCodexConnector`。
 - **上游基线**：`v1.7.1` (`89fcb53fd65969cb58ae1eba5d18381db51819d1`)
 - **升级风险与回归保障**：已通过 `tools/supdance/check_upstream.py` 将上述 3 个文件纳入 `coupledUpstreamFiles` 监控；一旦上游修改这 3 个文件，升级报告会自动升级风险为 `HIGH` 并列出冲突路径。
+
+### 补丁 ID：`supdance-workspace-governance`
+- **被修改的上游文件**：
+  1. `.gitignore`
+  2. `AGENTS.md`
+- **修改原因**：上游 `.gitignore` 默认忽略 `docs/*`，需最小化放行 `!docs/supdance/`；并在 `AGENTS.md` 末尾追加第 10 节二开文档索引指针，不改动上游既有 1–9 节约定。
+- **上游基线**：`v1.7.1` (`89fcb53fd65969cb58ae1eba5d18381db51819d1`)
+- **升级风险与回归保障**：`LOW`，均位于文件尾部追加且已纳入 `coupledUpstreamFiles` 与 `SUPDANCE_UPSTREAM_PATCH_REGISTRY` 自动对齐校验。

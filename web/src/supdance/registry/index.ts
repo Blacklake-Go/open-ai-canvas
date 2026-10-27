@@ -4,7 +4,19 @@
 // 支持随时禁用并无损回退到上游默认行为。
 
 import { applySupDanceTheme, createSupDanceSkinDefinition, SUPDANCE_BRAND_DEFAULTS, SUPDANCE_SKIN_ID } from "@/supdance/theme/supdance-skin";
-import { mergeSupDanceRoutes, registerSupDancePlugin, SUPDANCE_RESERVED_PLUGIN_PREFIX, SUPDANCE_UPSTREAM_PATCH_REGISTRY, unregisterSupDancePlugin, validateSupDancePluginManifest } from "@/supdance/adapters/compatibility";
+import {
+    activateSupDancePluginSafely,
+    compareSemVer,
+    deactivateSupDancePluginSafely,
+    mergeSupDanceRoutes,
+    registerSupDancePlugin,
+    SUPDANCE_HOST_VERSION,
+    SUPDANCE_RESERVED_PLUGIN_PREFIX,
+    SUPDANCE_UPSTREAM_PATCH_REGISTRY,
+    unregisterSupDancePlugin,
+    upgradeSupDancePlugin,
+    validateSupDancePluginManifest,
+} from "@/supdance/adapters/compatibility";
 
 export type SupDanceFeatureFlags = {
     themeExtensionEnabled: boolean;
@@ -19,14 +31,19 @@ export const DEFAULT_SUPDANCE_FEATURE_FLAGS: Readonly<SupDanceFeatureFlags> = Ob
 });
 
 export {
+    activateSupDancePluginSafely,
     applySupDanceTheme,
+    compareSemVer,
     createSupDanceSkinDefinition,
+    deactivateSupDancePluginSafely,
     mergeSupDanceRoutes,
     registerSupDancePlugin,
     SUPDANCE_BRAND_DEFAULTS,
+    SUPDANCE_HOST_VERSION,
     SUPDANCE_RESERVED_PLUGIN_PREFIX,
     SUPDANCE_SKIN_ID,
     SUPDANCE_UPSTREAM_PATCH_REGISTRY,
     unregisterSupDancePlugin,
+    upgradeSupDancePlugin,
     validateSupDancePluginManifest,
 };

@@ -12,6 +12,8 @@ const (
 	TableNamespacePrefix = "supdance_"
 	// PluginIDPrefix enforces ID isolation for SupDance custom plugins.
 	PluginIDPrefix = "supdance-"
+	// APINamespacePrefix enforces route prefix isolation for SupDance custom HTTP endpoints.
+	APINamespacePrefix = "/api/v1/supdance/"
 )
 
 // ExtensionMetadata describes the current SupDance extension runtime baseline.
@@ -57,6 +59,15 @@ func ValidateCustomPluginID(pluginID string) error {
 	trimmed := strings.TrimSpace(pluginID)
 	if !strings.HasPrefix(trimmed, PluginIDPrefix) || len(trimmed) <= len(PluginIDPrefix) {
 		return fmt.Errorf("custom plugin ID %q must start with prefix %q", pluginID, PluginIDPrefix)
+	}
+	return nil
+}
+
+// ValidateCustomAPIRoute ensures any SupDance custom HTTP route uses the /api/v1/supdance/ prefix.
+func ValidateCustomAPIRoute(routePath string) error {
+	trimmed := strings.TrimSpace(routePath)
+	if !strings.HasPrefix(trimmed, APINamespacePrefix) || len(trimmed) <= len(APINamespacePrefix) {
+		return fmt.Errorf("custom API route %q must start with prefix %q", routePath, APINamespacePrefix)
 	}
 	return nil
 }

@@ -13,6 +13,8 @@
     "baseCommit": "6825bcd82abfa650c7645a6bafe11fd24dc74326"
   },
   "coupledUpstreamFiles": [
+    ".gitignore",
+    "AGENTS.md",
     "web/src/components/canvas/canvas-cloud-agent-connectors.css",
     "web/src/components/canvas/canvas-cloud-agent-connectors.tsx",
     "web/src/components/canvas/canvas-cloud-agent-panel.tsx"
@@ -20,6 +22,7 @@
   "supdanceExtensionFiles": [
     "web/src/components/canvas/use-codex-connector.ts",
     "web/src/services/api/codex-connector.ts",
+    "web/src/supdance/index.ts",
     "web/src/supdance/theme/supdance-skin.ts",
     "web/src/supdance/adapters/compatibility.ts",
     "web/src/supdance/registry/index.ts",

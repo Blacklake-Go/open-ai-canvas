@@ -31,17 +31,28 @@ def run_git(repo_root: Path, *args: str) -> str:
     return result.stdout.strip()
 
 
-def parse_semver_key(tag: str) -> tuple[int, ...]:
-    cleaned = tag.lstrip("v")
-    parts = re.split(r"[.-]", cleaned)
+def parse_semver_key(tag: str) -> tuple[int, int, int, int, int, str]:
+    cleaned = tag.strip().lstrip("v")
+    main_part, sep, prerelease = cleaned.partition("-")
+    if not sep and ".rc" in main_part:
+        main_part, _, prerelease = main_part.partition(".rc")
+        prerelease = f"rc{prerelease}"
     nums: list[int] = []
-    for part in parts:
+    for part in main_part.split("."):
         if part.isdigit():
             nums.append(int(part))
         else:
-            # Prerelease suffix ranks lower than formal release
-            nums.append(-1)
-    return tuple(nums)
+            m = re.match(r"^(\d+)(.+)$", part)
+            if m:
+                nums.append(int(m.group(1)))
+                if not prerelease:
+                    prerelease = m.group(2)
+            else:
+                nums.append(0)
+    while len(nums) < 4:
+        nums.append(0)
+    is_final = 0 if prerelease else 1
+    return (nums[0], nums[1], nums[2], nums[3], is_final, prerelease)
 
 
 def find_latest_stable_tag(repo_root: Path) -> str:
@@ -96,6 +107,7 @@ def analyze_diff(
     diff_status_raw = run_git(repo_root, "diff", "--name-status", base_sha, target_sha)
     changed_files: list[tuple[str, str]] = []
     renamed_or_deleted: list[str] = []
+    deleted_or_renamed_paths: set[str] = set()
     for line in diff_status_raw.splitlines():
         if not line.strip():
             continue
@@ -105,10 +117,15 @@ def analyze_diff(
         changed_files.append((status, path))
         if status.startswith(("D", "R")):
             renamed_or_deleted.append(f"{status}\t{' -> '.join(parts[1:])}")
+            for p in parts[1:]:
+                deleted_or_renamed_paths.add(p)
 
-    changed_paths = {path for _, path in changed_files}
+    changed_paths = {path for _, path in changed_files} | deleted_or_renamed_paths
     coupled_files = set(baseline_cfg.get("coupledUpstreamFiles", []))
-    direct_conflicts = sorted(changed_paths & coupled_files)
+    extension_files = set(baseline_cfg.get("supdanceExtensionFiles", []))
+    tracked_supdance_files = coupled_files | extension_files
+    direct_conflicts = sorted(changed_paths & tracked_supdance_files)
+    destructive_coupled = sorted(deleted_or_renamed_paths & coupled_files)
 
     db_changes = sorted(
         p for p in changed_paths
@@ -144,11 +161,18 @@ def analyze_diff(
     # Risk assessment: LOW / MEDIUM / HIGH / CRITICAL
     risk_level = "LOW"
     risk_reasons: list[str] = []
+    if destructive_coupled or (direct_conflicts and (db_changes or "docker-compose.deploy.yml" in changed_paths)):
+        risk_level = "CRITICAL"
+        risk_reasons.append(
+            "存在高危破坏性变更（SupDance 耦合核心文件被删除/重命名，或耦合文件冲突同时伴随数据库/生产编排变更）"
+        )
     if direct_conflicts:
-        risk_level = "HIGH"
-        risk_reasons.append(f"直接修改了 SupDance 耦合文件: {', '.join(direct_conflicts)}")
+        if risk_level != "CRITICAL":
+            risk_level = "HIGH"
+        risk_reasons.append(f"直接修改了 SupDance 耦合或扩展文件: {', '.join(direct_conflicts)}")
     if db_changes:
-        risk_level = "HIGH" if risk_level != "CRITICAL" else risk_level
+        if risk_level not in {"CRITICAL", "HIGH"}:
+            risk_level = "HIGH"
         risk_reasons.append(f"涉及数据库 Schema 或 Model 变更 ({len(db_changes)} 个文件)")
     if route_theme_changes or plugin_changes:
         if risk_level == "LOW":
@@ -162,14 +186,19 @@ def analyze_diff(
         risk_reasons.append("当前基线已与目标版本完全一致，无需升级")
 
     return {
+        "base": base_ref,
         "base_ref": base_ref,
         "base_sha": base_sha,
+        "target": target_ref,
         "target_ref": target_ref,
         "target_sha": target_sha,
         "merge_base": merge_base,
+        "commitCount": len(commits),
         "commits": commits,
         "classified": classify_commits(commits),
+        "changedFiles": len(changed_files),
         "changed_count": len(changed_files),
+        "directConflicts": direct_conflicts,
         "direct_conflicts": direct_conflicts,
         "db_changes": db_changes,
         "api_changes": api_changes,
@@ -178,6 +207,7 @@ def analyze_diff(
         "deploy_ci_changes": deploy_ci_changes,
         "route_theme_changes": route_theme_changes,
         "renamed_or_deleted": renamed_or_deleted,
+        "riskLevel": risk_level,
         "risk_level": risk_level,
         "risk_reasons": risk_reasons,
     }

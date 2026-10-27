@@ -38,11 +38,12 @@ fi
 SAFE_NAME="$(printf '%s' "$TARGET_REF" | tr '/:' '--')"
 INTEGRATION_BRANCH="integration/upstream-${SAFE_NAME}"
 
-echo "==> 1. 生成上游版本升级评估报告 (目标: ${TARGET_REF})"
-python3 tools/supdance/check_upstream.py --target "$TARGET_REF" --output UPSTREAM_UPDATE_REPORT.md
-
 if [[ "$MODE" == "--dry-run" ]]; then
-    echo "==> Dry-run 模式完成：已生成 UPSTREAM_UPDATE_REPORT.md，未切换分支或执行合并。"
+    mkdir -p .local
+    DRY_RUN_REPORT=".local/UPSTREAM_UPDATE_REPORT.${SAFE_NAME}.md"
+    echo "==> 1. [Dry-run] 生成上游版本升级评估报告 (目标: ${TARGET_REF} -> ${DRY_RUN_REPORT})"
+    python3 tools/supdance/check_upstream.py --target "$TARGET_REF" --output "$DRY_RUN_REPORT"
+    echo "==> Dry-run 模式完成：评估报告已输出至 ${DRY_RUN_REPORT}，未污染当前分支跟踪文件，未切换分支或执行合并。"
     exit 0
 fi
 
@@ -52,14 +53,21 @@ if ! git show-ref --verify --quiet "refs/heads/${BASE_BRANCH}"; then
     exit 1
 fi
 
-echo "==> 2. 从 ${BASE_BRANCH} 创建集成分支 ${INTEGRATION_BRANCH}"
+echo "==> 1. 从 ${BASE_BRANCH} 创建集成分支 ${INTEGRATION_BRANCH}"
 git checkout -B "$INTEGRATION_BRANCH" "$BASE_BRANCH"
+
+mkdir -p .local
+TEMP_REPORT=".local/UPSTREAM_UPDATE_REPORT.${SAFE_NAME}.md"
+echo "==> 2. 生成上游版本升级评估报告 (目标: ${TARGET_REF})"
+python3 tools/supdance/check_upstream.py --target "$TARGET_REF" --output "$TEMP_REPORT"
 
 echo "==> 3. 合并上游版本 ${TARGET_REF}（禁用整文件 ours/theirs 策略）"
 if git merge --no-edit "$TARGET_REF"; then
-    echo "==> 合并成功，无直接 Git 文本冲突。请继续运行前后端回归测试后再提交 PR。"
+    cp "$TEMP_REPORT" UPSTREAM_UPDATE_REPORT.md
+    echo "==> 合并成功，无直接 Git 文本冲突，且已更新 UPSTREAM_UPDATE_REPORT.md。请继续运行前后端回归测试后再提交 PR。"
 else
-    echo "⚠️ 检测到合并冲突！已保留 ${INTEGRATION_BRANCH} 分支现场。" >&2
+    cp "$TEMP_REPORT" UPSTREAM_UPDATE_REPORT.md || true
+    echo "⚠️ 检测到合并冲突！已保留 ${INTEGRATION_BRANCH} 分支现场与 UPSTREAM_UPDATE_REPORT.md。" >&2
     echo "请使用 git status 查看冲突文件，结合共同祖先 (git merge-base ${BASE_BRANCH} ${TARGET_REF}) 手工解决，严禁删除 SupDance 自定义功能。" >&2
     exit 2
 fi

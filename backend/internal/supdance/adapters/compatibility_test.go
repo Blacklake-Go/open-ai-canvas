@@ -39,4 +39,22 @@ func TestSupDanceDomainAndAdapterIsolation(t *testing.T) {
 	if err := adapters.CheckPluginManifestCompatibility("supdance-workflow-helper", "yingce.plugin/v99", upstream); err == nil {
 		t.Fatal("expected rejection for unsupported apiVersion")
 	}
+
+	if err := adapters.VerifyBaselineSchema(71); err != nil {
+		t.Fatalf("expected valid schema baseline 71, got: %v", err)
+	}
+	if err := adapters.VerifyBaselineSchema(59); err == nil {
+		t.Fatal("expected error for outdated schema version 59")
+	}
+
+	reg := adapters.NewRegistry()
+	if err := reg.RegisterRoute("/api/v1/supdance/workflows"); err != nil {
+		t.Fatalf("expected valid SupDance API route, got: %v", err)
+	}
+	if err := reg.RegisterRoute("/api/canvas-projects"); err == nil {
+		t.Fatal("expected error for upstream route without /api/v1/supdance/ prefix")
+	}
+	if err := reg.RegisterTable("supdance_workflows"); err != nil {
+		t.Fatalf("expected valid SupDance table registration, got: %v", err)
+	}
 }

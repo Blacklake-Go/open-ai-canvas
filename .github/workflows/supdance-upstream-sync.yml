@@ -43,6 +43,7 @@ jobs:
       - name: Checkout repository with full history
         uses: actions/checkout@v4
         with:
+          ref: ${{ github.event_name == 'pull_request' && '' || 'supdance/main' }}
           fetch-depth: 0
 
       - name: Set up Go
@@ -98,11 +99,11 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          commit_count="$(jq -r '.commitCount' "$RUNNER_TEMP/upstream-analysis.json")"
-          target_ref="$(jq -r '.target' "$RUNNER_TEMP/upstream-analysis.json")"
-          risk_level="$(jq -r '.riskLevel' "$RUNNER_TEMP/upstream-analysis.json")"
-          if [[ "$commit_count" -le 0 ]]; then
-            echo "No new upstream commits for $target_ref; skipping integration PR creation."
+          commit_count="$(jq -r '.commitCount // 0' "$RUNNER_TEMP/upstream-analysis.json")"
+          target_ref="$(jq -r '.target // empty' "$RUNNER_TEMP/upstream-analysis.json")"
+          risk_level="$(jq -r '.riskLevel // "UNKNOWN"' "$RUNNER_TEMP/upstream-analysis.json")"
+          if [[ -z "$target_ref" || "$commit_count" -le 0 ]]; then
+            echo "No new upstream commits for ${target_ref:-unknown}; skipping integration PR creation."
             exit 0
           fi
           safe_ref="$(printf '%s' "$target_ref" | tr '/:' '--')"

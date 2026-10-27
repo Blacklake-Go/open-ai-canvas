@@ -11,12 +11,12 @@ from check_upstream import classify_commits, parse_semver_key
 
 
 class CheckUpstreamTest(unittest.TestCase):
-    def test_parse_semver_key_orders_releases_properly(self):
-        tags = ["v1.6.9", "v1.7.0", "v1.6.9.2", "v1.7.1", "v1.6.8.12"]
+    def test_parse_semver_key_orders_releases_and_prereleases_properly(self):
+        tags = ["v1.6.9", "v1.7.1-rc1", "v1.7.0", "v1.6.9.2", "v1.7.1", "v1.6.8.12"]
         sorted_tags = sorted(tags, key=parse_semver_key)
         self.assertEqual(
             sorted_tags,
-            ["v1.6.8.12", "v1.6.9", "v1.6.9.2", "v1.7.0", "v1.7.1"],
+            ["v1.6.8.12", "v1.6.9", "v1.6.9.2", "v1.7.0", "v1.7.1-rc1", "v1.7.1"],
         )
 
     def test_classify_commits(self):
@@ -55,12 +55,38 @@ class CheckUpstreamTest(unittest.TestCase):
                 check=True,
             )
             summary = json.loads(proc.stdout)
-            self.assertEqual(summary["base"], "v1.7.1")
-            self.assertEqual(summary["target"], "v1.7.1")
-            self.assertEqual(summary["commitCount"], 0)
-            self.assertEqual(summary["riskLevel"], "LOW")
+            json_payload = json.loads(json_out.read_text(encoding="utf-8"))
+            for data in (summary, json_payload):
+                self.assertEqual(data["base"], "v1.7.1")
+                self.assertEqual(data["target"], "v1.7.1")
+                self.assertEqual(data["commitCount"], 0)
+                self.assertEqual(data["riskLevel"], "LOW")
             self.assertTrue(md_out.is_file())
             self.assertIn("UPSTREAM_UPDATE_REPORT", md_out.read_text(encoding="utf-8"))
+
+            # Verify --include-unreleased-main detects upstream/main commits and outputs valid JSON keys
+            main_md = Path(tmpdir) / "main_report.md"
+            main_json = Path(tmpdir) / "main_report.json"
+            proc_main = subprocess.run(
+                [
+                    "python3",
+                    str(script),
+                    "--include-unreleased-main",
+                    "--output",
+                    str(main_md),
+                    "--json-output",
+                    str(main_json),
+                ],
+                cwd=repo_root,
+                capture_output=True,
+                text=True,
+                check=True,
+            )
+            main_payload = json.loads(main_json.read_text(encoding="utf-8"))
+            self.assertEqual(main_payload["target"], "upstream/main")
+            self.assertGreaterEqual(main_payload["commitCount"], 1)
+            self.assertIn(main_payload["riskLevel"], {"MEDIUM", "HIGH", "CRITICAL"})
+            self.assertEqual(main_payload["riskLevel"], json.loads(proc_main.stdout)["riskLevel"])
 
 
 if __name__ == "__main__":
