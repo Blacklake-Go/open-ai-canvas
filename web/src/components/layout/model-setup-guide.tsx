@@ -6,8 +6,10 @@ import { aceternityMotion } from "@/lib/aceternity-motion";
 import { navigateToSettings } from "@/lib/settings-navigation";
 import { useConfigStore } from "@/stores/use-config-store";
 import { useUserStore } from "@/stores/use-user-store";
+import { useI18n } from "@/supdance/plugins/i18n";
 
 export function ModelSetupGuide({ hidden = false }: { hidden?: boolean }) {
+    const { t } = useI18n();
     const reducedMotion = useReducedMotion();
     const [dismissed, setDismissed] = useState(false);
     const registrationGuide = typeof window !== "undefined" && window.sessionStorage.getItem("yingce:model-setup-guide") === "1";
@@ -31,11 +33,11 @@ export function ModelSetupGuide({ hidden = false }: { hidden?: boolean }) {
             <div className="flex items-start gap-3 p-4">
                 <span className="grid size-9 shrink-0 place-items-center rounded-xl border border-amber-400/25 bg-amber-400/10 text-amber-600 dark:text-amber-300"><Sparkles className="size-4" /></span>
                 <button type="button" className="min-w-0 flex-1 text-left" onClick={openModels}>
-                    <span className="block text-sm font-semibold">先选择创作模型</span>
-                    <span className="mt-1 block text-xs leading-5 text-foreground/55">配置生图、视频和文本的默认模型，价格会在选择时显示。</span>
-                    <span className="mt-3 inline-flex items-center gap-2 text-xs font-semibold text-foreground">打开模型选择 <ArrowRight className="size-3.5" /></span>
+                    <span className="block text-sm font-semibold">{t("nav.guide_choose_model")}</span>
+                    <span className="mt-1 block text-xs leading-5 text-foreground/55">{t("nav.guide_choose_model_desc")}</span>
+                    <span className="mt-3 inline-flex items-center gap-2 text-xs font-semibold text-foreground">{t("nav.guide_open_models")} <ArrowRight className="size-3.5" /></span>
                 </button>
-                <button type="button" className="grid size-7 shrink-0 place-items-center rounded-full text-foreground/40 transition hover:bg-muted hover:text-foreground" onClick={close} aria-label="关闭模型配置引导"><X className="size-3.5" /></button>
+                <button type="button" className="grid size-7 shrink-0 place-items-center rounded-full text-foreground/40 transition hover:bg-muted hover:text-foreground" onClick={close} aria-label={t("nav.guide_close_aria")}><X className="size-3.5" /></button>
             </div>
         </motion.aside>
     );

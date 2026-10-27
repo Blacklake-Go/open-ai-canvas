@@ -65,16 +65,30 @@ const S3_PRESET_HINTS: Record<S3Preset, { region: string; endpoint: string; help
 
 const CONNECTION_FIELDS = new Set(["provider", "s3Preset", "region", "endpoint", "cdnBaseUrl", "bucket", "accessKeyId", "accessKeySecret", "sessionToken", "pathPrefix", "pathStyle"]);
 
-export function getS3PresetHints(preset?: S3Preset) {
-    return S3_PRESET_HINTS[preset || "custom"];
+export function getS3PresetHints(preset?: S3Preset, t?: (key: string, params?: Record<string, string | number>, fallback?: string) => string) {
+    const validPreset: S3Preset = preset && (preset in S3_PRESET_HINTS) ? preset : "custom";
+    const raw = S3_PRESET_HINTS[validPreset];
+    if (!t) return raw;
+    const keyMap: Record<S3Preset, string> = {
+        aws: "settings.oss_s3_hint_aws",
+        r2: "settings.oss_s3_hint_r2",
+        b2: "settings.oss_s3_hint_b2",
+        rustfs: "settings.oss_s3_hint_rustfs",
+        custom: "settings.oss_s3_hint_custom",
+    };
+    const key = keyMap[validPreset];
+    return {
+        ...raw,
+        help: t(key, undefined, raw.help),
+    };
 }
 
 export function changesRequireOSSRetest(changedValues: Record<string, unknown>) {
     return Object.keys(changedValues).some((key) => CONNECTION_FIELDS.has(key));
 }
 
-export function validateOSSConnectionDraft(input: OSSConnectionTestDraft) {
-    if (!trimConnectionValue(input.bucket)) return "请填写对象存储 Bucket";
+export function validateOSSConnectionDraft(input: OSSConnectionTestDraft, t?: (key: string, params?: any, fallback?: string) => string) {
+    if (!trimConnectionValue(input.bucket)) return t ? t("settings.oss_bucket_required", undefined, "请填写对象存储 Bucket") : "请填写对象存储 Bucket";
     return "";
 }
 

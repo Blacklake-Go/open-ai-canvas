@@ -384,7 +384,7 @@ export function SupDanceI18nEntriesPage() {
             width: 220,
             render: (_val, record) => (
                 <div className="space-y-1">
-                    <div className="font-mono text-xs font-medium text-foreground">{record.key}</div>
+                    <div className="font-mono text-xs font-medium text-[var(--admin-text-primary)]">{record.key}</div>
                     <div className="flex flex-wrap items-center gap-1.5">
                         <AdminStatusBadge label={NAMESPACE_LABELS[record.namespace] || record.namespace} tone="neutral" />
                         {record.origin === "modified" ? <AdminStatusBadge label="已修订" tone="info" /> : record.origin === "custom" ? <AdminStatusBadge label="自定义新增" tone="success" /> : <AdminStatusBadge label="内置" tone="neutral" />}
@@ -398,9 +398,9 @@ export function SupDanceI18nEntriesPage() {
             key: "zh-CN",
             width: 190,
             render: (_val, record) => (
-                <button type="button" className="group flex w-full items-start justify-between gap-1.5 rounded px-1.5 py-1 text-left transition-colors hover:bg-muted/70" onClick={() => openEditDrawer(record)} title="点击修改词条翻译">
-                    <span className="text-xs font-medium text-foreground">{record.translations["zh-CN"] || record.sourceText}</span>
-                    <Edit3 className="mt-0.5 size-3 shrink-0 text-muted-foreground opacity-60 group-hover:opacity-100" />
+                <button type="button" className="group flex w-full items-start justify-between gap-1.5 rounded px-1.5 py-1 text-left transition-colors hover:bg-[var(--admin-row-hover)]" onClick={() => openEditDrawer(record)} title="点击修改词条翻译">
+                    <span className="text-xs font-medium text-[var(--admin-text-primary)]">{record.translations["zh-CN"] || record.sourceText}</span>
+                    <Edit3 className="mt-0.5 size-3 shrink-0 text-[var(--admin-text-secondary)] opacity-60 group-hover:opacity-100" />
                 </button>
             ),
         },
@@ -411,9 +411,9 @@ export function SupDanceI18nEntriesPage() {
             render: (_val, record) => {
                 const text = record.translations["en-US"];
                 return (
-                    <button type="button" className="group flex w-full items-start justify-between gap-1.5 rounded px-1.5 py-1 text-left transition-colors hover:bg-muted/70" onClick={() => openEditDrawer(record)}>
-                        {text ? <span className="text-xs text-foreground/90">{text}</span> : <span className="text-xs italic text-amber-500">待翻译 (点击补充)</span>}
-                        <Edit3 className="mt-0.5 size-3 shrink-0 text-muted-foreground opacity-0 group-hover:opacity-100" />
+                    <button type="button" className="group flex w-full items-start justify-between gap-1.5 rounded px-1.5 py-1 text-left transition-colors hover:bg-[var(--admin-row-hover)]" onClick={() => openEditDrawer(record)}>
+                        {text ? <span className="text-xs text-[var(--admin-text-primary)]">{text}</span> : <span className="text-xs italic text-[var(--admin-status-warning)]">待翻译 (点击补充)</span>}
+                        <Edit3 className="mt-0.5 size-3 shrink-0 text-[var(--admin-text-secondary)] opacity-0 group-hover:opacity-100" />
                     </button>
                 );
             },
@@ -425,9 +425,9 @@ export function SupDanceI18nEntriesPage() {
             render: (_val, record) => {
                 const text = record.translations["zh-TW"];
                 return (
-                    <button type="button" className="group flex w-full items-start justify-between gap-1.5 rounded px-1.5 py-1 text-left transition-colors hover:bg-muted/70" onClick={() => openEditDrawer(record)}>
-                        {text ? <span className="text-xs text-foreground/90">{text}</span> : <span className="text-xs italic text-amber-500">待翻译</span>}
-                        <Edit3 className="mt-0.5 size-3 shrink-0 text-muted-foreground opacity-0 group-hover:opacity-100" />
+                    <button type="button" className="group flex w-full items-start justify-between gap-1.5 rounded px-1.5 py-1 text-left transition-colors hover:bg-[var(--admin-row-hover)]" onClick={() => openEditDrawer(record)}>
+                        {text ? <span className="text-xs text-[var(--admin-text-primary)]">{text}</span> : <span className="text-xs italic text-[var(--admin-status-warning)]">待翻译</span>}
+                        <Edit3 className="mt-0.5 size-3 shrink-0 text-[var(--admin-text-secondary)] opacity-0 group-hover:opacity-100" />
                     </button>
                 );
             },
@@ -437,14 +437,14 @@ export function SupDanceI18nEntriesPage() {
             key: "other-locales",
             width: 280,
             render: (_val, record) => (
-                <div className="cursor-pointer space-y-1 rounded px-1.5 py-1 transition-colors hover:bg-muted/70" onClick={() => openEditDrawer(record)}>
+                <div className="cursor-pointer space-y-1 rounded px-1.5 py-1 transition-colors hover:bg-[var(--admin-row-hover)]" onClick={() => openEditDrawer(record)}>
                     {(["ja-JP", "ko-KR", "es-ES"] as const).map((code) => {
                         const val = record.translations[code];
                         const badge = code === "ja-JP" ? "日" : code === "ko-KR" ? "韓" : "ES";
                         return (
                             <div key={code} className="flex items-center gap-1.5 text-xs">
-                                <span className="inline-flex h-4 min-w-[20px] shrink-0 items-center justify-center rounded bg-muted px-1 text-[10px] font-semibold text-muted-foreground">{badge}</span>
-                                {val ? <span className="truncate text-foreground/85">{val}</span> : <span className="italic text-amber-500">未翻译</span>}
+                                <span className="inline-flex h-4 min-w-[20px] shrink-0 items-center justify-center rounded bg-[var(--admin-surface-2)] px-1 text-xs font-semibold text-[var(--admin-text-secondary)]">{badge}</span>
+                                {val ? <span className="truncate text-[var(--admin-text-primary)]">{val}</span> : <span className="italic text-[var(--admin-status-warning)]">未翻译</span>}
                             </div>
                         );
                     })}
@@ -497,7 +497,7 @@ export function SupDanceI18nEntriesPage() {
                 </div>
             }
         >
-            <div className="space-y-4" data-i18n-ignore="true">
+            <div className="admin-i18n-entries space-y-4" data-i18n-ignore="true" data-plugin-scope="i18n">
                 <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-4">
                     <AdminStatTile label="全站词条总数" value={summaryStats.total} detail="支持 Key 绑定与 DOM 原文自动映射" />
                     <AdminStatTile label="内置基础词条" value={summaryStats.builtin} detail="出厂预设六大语种完整词库" />
@@ -620,17 +620,17 @@ export function SupDanceI18nEntriesPage() {
                     ) : null
                 }
             >
-                <div className="space-y-3" data-i18n-ignore="true">
-                    <div className="rounded-lg border bg-muted/30 p-3 text-xs text-muted-foreground">当您在前台页面浏览或切换语言时，DOM 翻译引擎会自动嗅探尚未收录进词库的中文文案并汇总在此。点击「一键收录并翻译」即可快速补全六语翻译。</div>
+                <div className="space-y-3" data-i18n-ignore="true" data-plugin-scope="i18n">
+                    <div className="rounded-lg border border-[var(--admin-border)] bg-[var(--admin-surface-2)]/50 p-3 text-xs text-[var(--admin-text-secondary)]">当您在前台页面浏览或切换语言时，DOM 翻译引擎会自动嗅探尚未收录进词库的中文文案并汇总在此。点击「一键收录并翻译」即可快速补全六语翻译。</div>
                     {discoveredUntranslated.length === 0 ? (
-                        <div className="rounded-lg border border-dashed p-8 text-center text-xs text-muted-foreground">当前暂未发现未收录的页面中文词条。您可前往前台工作区、画布或弹窗浏览页面，未命中词库的中文文案会自动出现在此处。</div>
+                        <div className="rounded-lg border border-dashed border-[var(--admin-border)] p-8 text-center text-xs text-[var(--admin-text-secondary)]">当前暂未发现未收录的页面中文词条。您可前往前台工作区、画布或弹窗浏览页面，未命中词库的中文文案会自动出现在此处。</div>
                     ) : (
-                        <div className="divide-y rounded-lg border" style={{ borderColor: "var(--admin-border)" }}>
+                        <div className="divide-y divide-[var(--admin-row-border)] rounded-lg border border-[var(--admin-border)]">
                             {discoveredUntranslated.map((item) => (
                                 <div key={item.sourceText} className="flex items-center justify-between gap-3 p-3">
                                     <div className="min-w-0 flex-1 space-y-1">
-                                        <div className="break-words text-xs font-medium text-foreground">{item.sourceText}</div>
-                                        <div className="flex items-center gap-2 text-[11px] text-muted-foreground">
+                                        <div className="break-words text-xs font-medium text-[var(--admin-text-primary)]">{item.sourceText}</div>
+                                        <div className="flex items-center gap-2 text-xs text-[var(--admin-text-secondary)]">
                                             <span>发现路由：{item.route}</span>
                                             <span>·</span>
                                             <span>出现 {item.count} 次</span>
@@ -665,14 +665,14 @@ export function SupDanceI18nEntriesPage() {
                     </div>
                 }
             >
-                <div className="space-y-4" data-i18n-ignore="true">
-                    <div className="rounded-lg border bg-muted/30 p-3 text-xs text-muted-foreground">
+                <div className="space-y-4" data-i18n-ignore="true" data-plugin-scope="i18n">
+                    <div className="rounded-lg border border-[var(--admin-border)] bg-[var(--admin-surface-2)]/50 p-3 text-xs text-[var(--admin-text-secondary)]">
                         提示：支持 ICU 动态占位变量（如 <code>{"{count}"}</code>、<code>{"{name}"}</code>）。只要「简体中文 (zh-CN)」与页面上的中文文案或动态格式一致，切换语言时全站对应文本与按钮会自动匹配并替换为目标语种译文。
                     </div>
 
                     <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
                         <div className="space-y-1">
-                            <label className="text-xs font-medium text-foreground">词条唯一标识 (Key)</label>
+                            <label className="text-xs font-medium text-[var(--admin-text-primary)]">词条唯一标识 (Key)</label>
                             <Input
                                 disabled={!isCreateMode}
                                 value={editingEntry.key}
@@ -687,7 +687,7 @@ export function SupDanceI18nEntriesPage() {
                         </div>
 
                         <div className="space-y-1">
-                            <label className="text-xs font-medium text-foreground">所属业务模块 (Namespace)</label>
+                            <label className="text-xs font-medium text-[var(--admin-text-primary)]">所属业务模块 (Namespace)</label>
                             <Select
                                 value={editingEntry.namespace}
                                 className="w-full"
@@ -706,7 +706,7 @@ export function SupDanceI18nEntriesPage() {
                     </div>
 
                     <div className="space-y-1">
-                        <label className="text-xs font-medium text-foreground">备注说明（可选，供管理员查阅）</label>
+                        <label className="text-xs font-medium text-[var(--admin-text-primary)]">备注说明（可选，供管理员查阅）</label>
                         <Input
                             value={editingEntry.description ?? ""}
                             placeholder="说明该词条在页面中的位置或语境..."
@@ -719,29 +719,29 @@ export function SupDanceI18nEntriesPage() {
                         />
                     </div>
 
-                    <div className="space-y-3 border-t pt-3" style={{ borderColor: "var(--admin-row-border)" }}>
-                        <div className="text-xs font-semibold text-foreground">六大语种对应译文配置</div>
+                    <div className="space-y-3 border-t border-[var(--admin-row-border)] pt-3">
+                        <div className="text-xs font-semibold text-[var(--admin-text-primary)]">六大语种对应译文配置</div>
 
                         {DEFAULT_SUPDANCE_LANGUAGES.map((lang) => {
                             const val = editingEntry.translations[lang.code] ?? "";
                             return (
                                 <div key={lang.code} className="space-y-1">
                                     <div className="flex items-center justify-between">
-                                        <label className="flex items-center gap-1.5 text-xs font-medium text-foreground">
-                                            <span className="inline-flex h-4 min-w-[22px] items-center justify-center rounded bg-muted px-1 text-[10px] font-semibold">{lang.badge}</span>
+                                        <label className="flex items-center gap-1.5 text-xs font-medium text-[var(--admin-text-primary)]">
+                                            <span className="inline-flex h-4 min-w-[22px] items-center justify-center rounded bg-[var(--admin-surface-2)] px-1 text-xs font-semibold text-[var(--admin-text-secondary)]">{lang.badge}</span>
                                             <span>
                                                 {lang.nativeName} ({lang.name})
                                             </span>
-                                            <span className="font-mono text-[11px] text-muted-foreground">{lang.code}</span>
+                                            <span className="font-mono text-xs text-[var(--admin-text-secondary)]">{lang.code}</span>
                                         </label>
-                                        {lang.code === "zh-CN" ? <span className="text-[11px] text-primary">基准匹配原文（必填）</span> : null}
+                                        {lang.code === "zh-CN" ? <span className="text-xs text-[var(--admin-accent)]">基准匹配原文（必填）</span> : null}
                                     </div>
                                     <Input.TextArea
                                         autoSize={{ minRows: 1, maxRows: 4 }}
                                         value={val}
                                         placeholder={`请输入 ${lang.nativeName} (${lang.code}) 译文...`}
                                         onChange={(e) => {
-                                            const nextVal = e.target.value;
+                                             const nextVal = e.target.value;
                                             setEditingEntry((prev) => ({
                                                 ...prev,
                                                 sourceText: lang.code === "zh-CN" ? nextVal : prev.sourceText,
@@ -760,8 +760,8 @@ export function SupDanceI18nEntriesPage() {
             </AdminDrawer>
 
             <AdminModal open={importModalOpen} title="导入多语言词库 (JSON)" okText="确认导入并热生效" cancelText="取消" confirmLoading={importing} onCancel={() => setImportModalOpen(false)} onOk={() => void handleImportJson()}>
-                <div className="space-y-3 pt-2" data-i18n-ignore="true">
-                    <p className="text-xs text-muted-foreground">
+                <div className="space-y-3 pt-2" data-i18n-ignore="true" data-plugin-scope="i18n">
+                    <p className="text-xs text-[var(--admin-text-secondary)]">
                         支持粘贴由「导出词库」生成的 JSON 内容，或包含 <code>entries</code> 数组的词条文件，同 Key 词条将自动覆盖更新。
                     </p>
                     <Input.TextArea

@@ -5,6 +5,7 @@ import { useEffect, useState } from "react";
 
 import { cn } from "@/lib/utils";
 import { Select } from "@/components/ui/base/select";
+import { useI18n } from "@/supdance/plugins/i18n";
 
 export function WorkspacePage({ children, className, grid = false, fluid = false, scroll = true }: { children: ReactNode; className?: string; grid?: boolean; fluid?: boolean; scroll?: boolean }) {
     return (
@@ -50,6 +51,7 @@ export function ListToolbar({
     onReset?: () => void;
     className?: string;
 }) {
+    const { t } = useI18n();
     const [filtersOpen, setFiltersOpen] = useState(false);
 
     useEffect(() => {
@@ -64,7 +66,7 @@ export function ListToolbar({
                     <>
                         {!filtersAlwaysVisible ? (
                             <Button type="default" className="admin-filter-toggle" aria-expanded={filtersOpen} icon={<ListFilter className="size-3.5" />} onClick={() => setFiltersOpen((open) => !open)}>
-                                筛选{active ? <span className="admin-filter-active-dot" aria-label="有已应用筛选" /> : null}
+                                {t("common.filter")}{active ? <span className="admin-filter-active-dot" aria-label={t("common.filter_active_aria")} /> : null}
                             </Button>
                         ) : null}
                         <div className={cn("admin-list-toolbar-filters flex flex-wrap items-center gap-2", (filtersAlwaysVisible || filtersOpen) && "is-open")}>{filters}</div>
@@ -75,7 +77,7 @@ export function ListToolbar({
             <div className="admin-list-toolbar-actions flex shrink-0 flex-wrap items-center gap-2">
                 {active && onReset ? (
                     <Button type="text" icon={<RotateCcw className="size-3.5" />} onClick={onReset}>
-                        重置
+                        {t("common.reset")}
                     </Button>
                 ) : null}
                 {trailing}
@@ -107,7 +109,7 @@ export function PaginationBar({
     onChange,
     pageSizeOptions = [20, 50, 100],
     alwaysShow = false,
-    itemLabel = "条",
+    itemLabel,
     className,
 }: {
     current: number;
@@ -119,6 +121,8 @@ export function PaginationBar({
     itemLabel?: string;
     className?: string;
 }) {
+    const { t, locale } = useI18n();
+    const effectiveLabel = itemLabel ?? t("common.items_unit");
     const [jump, setJump] = useState("");
     if (!alwaysShow && total <= pageSize && current === 1) return null;
     const pages = Math.max(1, Math.ceil(total / pageSize));
@@ -132,13 +136,19 @@ export function PaginationBar({
         if (Number.isFinite(page) && page !== current) go(page);
     };
     return (
-        <nav className={cn("app-pagination-bar", className)} aria-label="分页">
+        <nav className={cn("app-pagination-bar", className)} aria-label={t("common.pagination_aria")}>
             <span className="app-pagination-total">
-                {total === 0 ? <>共 <b>0</b> {itemLabel}</> : <>第 <b>{start}–{end}</b> {itemLabel}，共 <b>{total.toLocaleString("zh-CN")}</b> {itemLabel}</>}
+                {total === 0 ? (
+                    <>{t("common.totalCount", { count: 0 })}</>
+                ) : (
+                    <>
+                        <b>{start}–{end}</b> / <b>{total.toLocaleString(locale)}</b> {effectiveLabel}
+                    </>
+                )}
             </span>
             <div className="app-pagination-controls">
                 <div className="app-pagination-pages">
-                    <button type="button" className="app-pagination-btn app-pagination-prev" disabled={current <= 1} aria-label="上一页" onClick={() => go(current - 1)}>
+                    <button type="button" className="app-pagination-btn app-pagination-prev" disabled={current <= 1} aria-label={t("common.prev_page")} onClick={() => go(current - 1)}>
                         <ChevronLeft className="size-4" />
                     </button>
                     {items.map((item, index) =>
@@ -147,24 +157,25 @@ export function PaginationBar({
                                 …
                             </span>
                         ) : (
-                            <button key={item} type="button" className={cn("app-pagination-btn", item === current && "is-active")} aria-current={item === current ? "page" : undefined} aria-label={`第 ${item} 页`} onClick={() => go(item)}>
+                            <button key={item} type="button" className={cn("app-pagination-btn", item === current && "is-active")} aria-current={item === current ? "page" : undefined} aria-label={String(item)} onClick={() => go(item)}>
                                 {item}
                             </button>
                         ),
                     )}
-                    <button type="button" className="app-pagination-btn app-pagination-next" disabled={current >= pages} aria-label="下一页" onClick={() => go(current + 1)}>
+                    <button type="button" className="app-pagination-btn app-pagination-next" disabled={current >= pages} aria-label={t("common.next_page")} onClick={() => go(current + 1)}>
                         <ChevronRight className="size-4" />
                     </button>
                 </div>
                 {pages > 7 ? (
                     <label className="app-pagination-jump">
-                        跳至
-                        <input inputMode="numeric" value={jump} placeholder={String(current)} aria-label="跳转页码" onChange={(event) => setJump(event.target.value.replace(/\D/g, "").slice(0, 6))} onKeyDown={(event) => { if (event.key === "Enter") submitJump(); }} onBlur={() => { if (jump) submitJump(); }} />
-                        页
+                        <input inputMode="numeric" value={jump} placeholder={String(current)} aria-label={t("common.page_jump_placeholder")} onChange={(event) => setJump(event.target.value.replace(/\D/g, "").slice(0, 6))} onKeyDown={(event) => { if (event.key === "Enter") submitJump(); }} onBlur={() => { if (jump) submitJump(); }} />
+                        <button type="button" onClick={submitJump} className="app-pagination-btn px-2 text-xs">
+                            {t("common.page_jump_btn")}
+                        </button>
                     </label>
                 ) : null}
                 {pageSizeOptions.length > 1 ? (
-                    <Select size="small" value={pageSize} className="app-pagination-size" popupMatchSelectWidth={false} ariaLabel="每页数量" options={pageSizeOptions.map((size) => ({ value: size, label: `${size} ${itemLabel}/页` }))} onChange={(value) => onChange(1, Number(value))} />
+                    <Select size="small" value={pageSize} className="app-pagination-size" popupMatchSelectWidth={false} ariaLabel={t("common.page_size_suffix")} options={pageSizeOptions.map((size) => ({ value: size, label: `${size} ${t("common.page_size_suffix")}` }))} onChange={(value) => onChange(1, Number(value))} />
                 ) : null}
             </div>
         </nav>

@@ -383,7 +383,7 @@ export function ProfilePane() {
                                     rules={[
                                         {
                                             validator: async (_, value: string = "") => {
-                                                const error = profilePasswordError(value);
+                                                const error = profilePasswordError(value, t);
                                                 if (error) throw new Error(error);
                                             },
                                         },

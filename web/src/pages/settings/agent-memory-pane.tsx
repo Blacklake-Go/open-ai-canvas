@@ -280,11 +280,11 @@ export default function AgentMemoryPane({ compact = false }: { compact?: boolean
             if (seq !== seqRef.current) return;
             setItems(data.memories || []);
         } catch (error) {
-            if (seq === seqRef.current) message.error(error instanceof Error ? error.message : "读取记忆失败");
+            if (seq === seqRef.current) message.error(error instanceof Error ? error.message : t("settings.memory_load_memories_failed", undefined, "读取记忆失败"));
         } finally {
             if (seq === seqRef.current) setLoading(false);
         }
-    }, [message, status]);
+    }, [message, status, t]);
 
     useEffect(() => {
         void load();
@@ -314,22 +314,22 @@ export default function AgentMemoryPane({ compact = false }: { compact?: boolean
         const values = await form.validateFields();
         const request = toRequest(values);
         if (!request.lesson && !(request.steps && request.steps.length)) {
-            message.warning("请填写做法，或至少添加一步路线");
+            message.warning(t("settings.memory_fill_lesson_warning", undefined, "请填写做法，或至少添加一步路线"));
             return;
         }
         setSaving(true);
         try {
             if (editing) {
                 await updateAgentMemory(editing.id, request);
-                message.success("已保存");
+                message.success(t("common.save_success", undefined, "已保存"));
             } else {
                 await createAgentMemory(request);
-                message.success("已添加，立刻对你的 Agent 生效");
+                message.success(t("settings.memory_added_success", undefined, "已添加，立刻对你的 Agent 生效"));
             }
             setEditorOpen(false);
             await load();
         } catch (error) {
-            message.error(error instanceof Error ? error.message : "保存失败");
+            message.error(error instanceof Error ? error.message : t("common.save_failed", undefined, "保存失败"));
         } finally {
             setSaving(false);
         }
@@ -339,10 +339,10 @@ export default function AgentMemoryPane({ compact = false }: { compact?: boolean
         setBusyId(record.id);
         try {
             await decideAgentMemory(record.id, decision);
-            message.success(decision === "approve" ? "已批准，之后的会话会用到这条记忆" : "已拒绝，不会再注入会话");
+            message.success(decision === "approve" ? t("settings.memory_approve_success", undefined, "已批准，之后的会话会用到这条记忆") : t("settings.memory_reject_success", undefined, "已拒绝，不会再注入会话"));
             await load();
         } catch (error) {
-            message.error(error instanceof Error ? error.message : "处理失败");
+            message.error(error instanceof Error ? error.message : t("common.save_failed", undefined, "处理失败"));
         } finally {
             setBusyId(null);
         }
@@ -350,13 +350,13 @@ export default function AgentMemoryPane({ compact = false }: { compact?: boolean
 
     const remove = (record: AgentMemory) => {
         modal.confirm({
-            title: `删除记忆「${record.topic}」`,
-            content: "删除后不会再出现在你的 Agent 上下文里。确认删除？",
-            okText: "删除",
+            title: t("settings.memory_delete_confirm_title", { topic: record.topic }, `删除记忆「${record.topic}」`),
+            content: t("settings.memory_delete_confirm_content", undefined, "删除后不会再出现在你的 Agent 上下文里。确认删除？"),
+            okText: t("common.delete", undefined, "删除"),
             okButtonProps: { danger: true },
             onOk: async () => {
                 await deleteAgentMemory(record.id);
-                message.success("已删除");
+                message.success(t("common.save_success", undefined, "已删除"));
                 await load();
             },
         });
@@ -372,9 +372,9 @@ export default function AgentMemoryPane({ compact = false }: { compact?: boolean
             link.download = `agent-memories-${bundle.exportedAt.slice(0, 10)}.json`;
             link.click();
             URL.revokeObjectURL(url);
-            message.success(`已导出 ${bundle.memories.length} 条`);
+            message.success(t("settings.memory_export_success", { count: bundle.memories.length }, `已导出 ${bundle.memories.length} 条`));
         } catch (error) {
-            message.error(error instanceof Error ? error.message : "导出失败");
+            message.error(error instanceof Error ? error.message : t("settings.memory_export_failed", undefined, "导出失败"));
         }
     };
 
@@ -382,28 +382,28 @@ export default function AgentMemoryPane({ compact = false }: { compact?: boolean
         try {
             const parsed = JSON.parse(await file.text()) as AgentMemoryBundle;
             const result = await importAgentMemories(parsed);
-            message.success(`导入 ${result.imported} 条，合并 ${result.merged} 条，跳过 ${result.skipped} 条`);
+            message.success(t("settings.memory_import_success", { imported: result.imported, merged: result.merged, skipped: result.skipped }, `导入 ${result.imported} 条，合并 ${result.merged} 条，跳过 ${result.skipped} 条`));
             await load();
         } catch (error) {
-            message.error(error instanceof Error ? error.message : "导入失败，请确认是本产品导出的 JSON");
+            message.error(error instanceof Error ? error.message : t("settings.memory_import_failed", undefined, "导入失败，请确认是本产品导出的 JSON"));
         }
     };
 
     const pendingCount = items.filter((item) => item.status === "pending").length;
     const statusFilters = getStatusFilters(t).map((option) => ({
         ...option,
-        label: option.value === "pending" && pendingCount ? `待审 ${pendingCount}` : option.label,
+        label: option.value === "pending" && pendingCount ? `${option.label} ${pendingCount}` : option.label,
     }));
 
     return (
         <div className={compact ? "flex min-h-0 flex-1 flex-col gap-3 overflow-hidden" : "flex flex-col gap-5"}>
             <div className="flex shrink-0 flex-wrap items-center gap-2">
-                <SegmentedControl size="sm" ariaLabel="记忆状态" value={status} options={statusFilters} onChange={setStatus} />
+                <SegmentedControl size="sm" ariaLabel={t("common.status", undefined, "记忆状态")} value={status} options={statusFilters} onChange={setStatus} />
                 <div className="ml-auto flex items-center gap-1">
-                    <IconButton variant="ghost" size="sm" icon={Download} aria-label="导出记忆" onClick={() => void onExport()} />
-                    <IconButton variant="ghost" size="sm" icon={Upload} aria-label="导入记忆" onClick={() => fileRef.current?.click()} />
+                    <IconButton variant="ghost" size="sm" icon={Download} aria-label={t("common.export", undefined, "导出记忆")} onClick={() => void onExport()} />
+                    <IconButton variant="ghost" size="sm" icon={Upload} aria-label={t("common.import", undefined, "导入记忆")} onClick={() => fileRef.current?.click()} />
                     <Button type="primary" icon={<Plus className="size-4" />} onClick={openCreate}>
-                        添加记忆
+                        {t("settings.memory_add_btn", undefined, "添加记忆")}
                     </Button>
                 </div>
                 <input
@@ -434,12 +434,12 @@ export default function AgentMemoryPane({ compact = false }: { compact?: boolean
                         compact
                         icon="empty"
                         className={compact ? "min-h-0 flex-1 py-8" : "min-h-[220px] py-10"}
-                        title={status === "pending" ? "没有待批准的记忆" : "还没有个人记忆"}
-                        description={status === "pending" ? "Agent 跑通任务后会把可复用做法记到这里，等你点头。" : "手动添加立刻生效，也可以等 Agent 记下后再批准。"}
+                        title={status === "pending" ? t("settings.memory_empty_pending_title", undefined, "没有待批准的记忆") : t("settings.memory_empty_personal_title", undefined, "还没有个人记忆")}
+                        description={status === "pending" ? t("settings.memory_empty_pending_desc", undefined, "Agent 跑通任务后会把可复用做法记到这里，等你点头。") : t("settings.memory_empty_personal_desc", undefined, "手动添加立刻生效，也可以等 Agent 记下后再批准。")}
                         action={
                             status === "pending" ? undefined : (
                                 <Button type="primary" icon={<Plus className="size-4" />} onClick={openCreate}>
-                                    添加记忆
+                                    {t("settings.memory_add_btn", undefined, "添加记忆")}
                                 </Button>
                             )
                         }
@@ -453,27 +453,27 @@ export default function AgentMemoryPane({ compact = false }: { compact?: boolean
                                     <div className="min-w-0 flex-1">
                                         <div className="flex flex-wrap items-center gap-2">
                                             <h3 className="text-sm font-medium text-foreground">{record.topic}</h3>
-                                            <StatusBadge size="sm" tone={memoryStatusTone(record.status)} label={memoryStatusLabel(record.status)} />
-                                            <span className="text-[var(--fs-label)] text-muted-foreground">{agentMemoryCategoryLabel(record.category)}</span>
+                                            <StatusBadge size="sm" tone={memoryStatusTone(record.status)} label={memoryStatusLabel(record.status, t)} />
+                                            <span className="text-[var(--fs-label)] text-muted-foreground">{t(`settings.memory_cat_${record.category || "other"}`, undefined, agentMemoryCategoryLabel(record.category))}</span>
                                         </div>
                                         <p className="mt-1 text-caption leading-5 text-muted-foreground">{record.situation}</p>
                                         {record.lesson ? <p className="mt-1 text-caption leading-5 text-foreground/80">{record.lesson}</p> : null}
                                         {record.originRunId || record.evidence?.length || record.source ? (
                                             <details className="mt-2 text-caption leading-5 text-muted-foreground">
-                                                <summary className="cursor-pointer focus-visible:outline focus-visible:outline-2">来源与执行证据</summary>
+                                                <summary className="cursor-pointer focus-visible:outline focus-visible:outline-2">{t("settings.memory_source_and_evidence", undefined, "来源与执行证据")}</summary>
                                                 <div className="mt-1 space-y-1">
-                                                    {record.source ? <p>来源：{record.source}</p> : null}
-                                                    {record.originRunId ? <p className="break-all">来源运行：{record.originRunId}</p> : null}
+                                                    {record.source ? <p>{t("settings.memory_source_label", { source: record.source }, `来源：${record.source}`)}</p> : null}
+                                                    {record.originRunId ? <p className="break-all">{t("settings.memory_run_id_label", { runId: record.originRunId }, `来源运行：${record.originRunId}`)}</p> : null}
                                                     {record.evidence?.length ? (
                                                         <ul className="ml-4 list-disc">
                                                             {record.evidence.map((entry, index) => (
                                                                 <li key={`${entry.sequence}-${index}`}>
-                                                                    {entry.tool} · 事件 {entry.sequence}
+                                                                    {entry.tool} · {t("settings.memory_proposal_event", { sequence: entry.sequence }, `事件 ${entry.sequence}`)}
                                                                 </li>
                                                             ))}
                                                         </ul>
                                                     ) : null}
-                                                    <p>工具成功仅说明这条经验的来源；待审记忆尚未生效，不代表经验已验证有效。</p>
+                                                    <p>{t("settings.memory_tool_evidence_hint", undefined, "工具成功仅说明这条经验的来源；待审记忆尚未生效，不代表经验已验证有效。")}</p>
                                                 </div>
                                             </details>
                                         ) : null}
@@ -494,15 +494,15 @@ export default function AgentMemoryPane({ compact = false }: { compact?: boolean
                                         {record.status === "pending" ? (
                                             <>
                                                 <Button size="small" type="primary" icon={<Check className="size-3.5" />} loading={busyId === record.id} onClick={() => void decide(record, "approve")}>
-                                                    批准
+                                                    {t("settings.memory_approve_btn", undefined, "批准")}
                                                 </Button>
                                                 <Button size="small" icon={<X className="size-3.5" />} loading={busyId === record.id} onClick={() => void decide(record, "reject")}>
-                                                    拒绝
+                                                    {t("settings.memory_reject_btn", undefined, "拒绝")}
                                                 </Button>
                                             </>
                                         ) : null}
-                                        <IconButton variant="ghost" size="sm" icon={Pencil} aria-label={`编辑 ${record.topic}`} onClick={() => openEdit(record)} />
-                                        <IconButton variant="danger" size="sm" icon={Trash2} aria-label={`删除 ${record.topic}`} onClick={() => remove(record)} />
+                                        <IconButton variant="ghost" size="sm" icon={Pencil} aria-label={t("common.edit", undefined, `编辑 ${record.topic}`)} onClick={() => openEdit(record)} />
+                                        <IconButton variant="danger" size="sm" icon={Trash2} aria-label={t("common.delete", undefined, `删除 ${record.topic}`)} onClick={() => remove(record)} />
                                     </div>
                                 </div>
                             </article>
@@ -517,42 +517,42 @@ export default function AgentMemoryPane({ compact = false }: { compact?: boolean
                 </div>
             ) : null}
 
-            <AppModal open={editorOpen} title={editing ? "编辑记忆" : "添加记忆"} okText={editing ? "保存" : "添加"} confirmLoading={saving} onOk={() => void save()} onCancel={() => setEditorOpen(false)}>
+            <AppModal open={editorOpen} title={editing ? t("settings.memory_modal_edit_title", undefined, "编辑记忆") : t("settings.memory_modal_add_title", undefined, "添加记忆")} okText={editing ? t("common.save", undefined, "保存") : t("common.create", undefined, "添加")} confirmLoading={saving} onOk={() => void save()} onCancel={() => setEditorOpen(false)}>
                 <Form form={form} layout="vertical" className="pt-2">
-                    <Form.Item name="topic" label="主题" rules={[{ required: true, message: "请填写主题" }]}>
-                        <Input maxLength={120} placeholder="例如 canvas.snapshot-hash" />
+                    <Form.Item name="topic" label={t("settings.memory_field_topic", undefined, "主题")} rules={[{ required: true, message: t("settings.memory_field_topic_required", undefined, "请填写主题") }]}>
+                        <Input maxLength={120} placeholder={t("settings.memory_field_topic_placeholder", undefined, "例如 canvas.snapshot-hash")} />
                     </Form.Item>
-                    <Form.Item name="category" label="分类" rules={[{ required: true, message: "请选择分类" }]}>
-                        <Select options={AGENT_MEMORY_CATEGORIES.map((entry) => ({ value: entry.key, label: entry.label }))} />
+                    <Form.Item name="category" label={t("settings.memory_field_category", undefined, "分类")} rules={[{ required: true, message: t("settings.memory_field_category_required", undefined, "请选择分类") }]}>
+                        <Select options={AGENT_MEMORY_CATEGORIES.map((entry) => ({ value: entry.key, label: t(`settings.memory_cat_${entry.key}`, undefined, entry.label) }))} />
                     </Form.Item>
-                    <Form.Item name="situation" label="适用场景" rules={[{ required: true, message: "请填写适用场景" }]}>
-                        <Input maxLength={200} placeholder="什么情况下用这条记忆" />
+                    <Form.Item name="situation" label={t("settings.memory_field_situation", undefined, "适用场景")} rules={[{ required: true, message: t("settings.memory_field_situation_required", undefined, "请填写适用场景") }]}>
+                        <Input maxLength={200} placeholder={t("settings.memory_field_situation_placeholder", undefined, "什么情况下用这条记忆")} />
                     </Form.Item>
-                    <Form.Item name="lesson" label="做法">
-                        <Input.TextArea rows={3} maxLength={400} placeholder="一句话说明该怎么做" />
+                    <Form.Item name="lesson" label={t("settings.memory_field_lesson", undefined, "做法")}>
+                        <Input.TextArea rows={3} maxLength={400} placeholder={t("settings.memory_field_lesson_placeholder", undefined, "一句话说明该怎么做")} />
                     </Form.Item>
-                    <Form.Item name="source" label="来源（可选）">
+                    <Form.Item name="source" label={t("settings.memory_field_source", undefined, "来源（可选）")}>
                         <Input maxLength={200} />
                     </Form.Item>
                     <Form.List name="steps">
                         {(fields, { add, remove: removeStep }) => (
                             <div className="space-y-2">
                                 <div className="flex items-center justify-between">
-                                    <span className="text-sm">路线步骤（可选）</span>
+                                    <span className="text-sm">{t("settings.memory_route_steps", undefined, "路线步骤（可选）")}</span>
                                     <Button size="small" onClick={() => add({ tool: "", action: "", note: "" })}>
-                                        加一步
+                                        {t("settings.memory_add_step_btn", undefined, "加一步")}
                                     </Button>
                                 </div>
                                 {fields.map((field) => (
                                     <Space key={field.key} className="flex w-full" align="start">
                                         <Form.Item {...field} name={[field.name, "tool"]} className="mb-0 flex-1">
-                                            <Input placeholder="工具名" />
+                                            <Input placeholder={t("settings.memory_step_tool_placeholder", undefined, "工具名")} />
                                         </Form.Item>
                                         <Form.Item {...field} name={[field.name, "action"]} className="mb-0 flex-1">
-                                            <Input placeholder="做什么" />
+                                            <Input placeholder={t("settings.memory_step_action_placeholder", undefined, "做什么")} />
                                         </Form.Item>
                                         <Button type="text" danger onClick={() => removeStep(field.name)}>
-                                            删
+                                            {t("settings.memory_delete_step_btn", undefined, "删")}
                                         </Button>
                                     </Space>
                                 ))}

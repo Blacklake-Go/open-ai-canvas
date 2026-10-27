@@ -23,15 +23,15 @@ export function TopbarLanguageSwitcher({ surface = "workspace", className }: { s
         return {
             key: lang.code,
             label: (
-                <div data-i18n-ignore="true" className="flex min-w-[168px] items-center justify-between gap-3 py-0.5">
+                <div data-i18n-ignore="true" className="flex min-w-[172px] items-center justify-between gap-3 py-1">
                     <div className="flex items-center gap-2">
-                        <span className="inline-flex h-5 min-w-[24px] items-center justify-center rounded bg-muted px-1 text-[11px] font-semibold text-foreground/80">{lang.badge}</span>
+                        <span className="inline-flex h-5 min-w-[24px] items-center justify-center rounded bg-muted/70 px-1 text-xs font-semibold text-foreground/85">{lang.badge}</span>
                         <div className="flex flex-col leading-tight">
-                            <span className={cn("text-[13px]", active ? "font-semibold text-foreground" : "text-foreground/90")}>{lang.nativeName}</span>
-                            {lang.name !== lang.nativeName ? <span className="text-[11px] text-muted-foreground">{lang.name}</span> : null}
+                            <span className={cn("text-xs", active ? "font-semibold text-foreground" : "text-foreground/90")}>{lang.nativeName}</span>
+                            {lang.name !== lang.nativeName ? <span className="text-xs text-muted-foreground">{lang.name}</span> : null}
                         </div>
                     </div>
-                    {active ? <Check className="size-3.5 text-primary" /> : null}
+                    {active ? <Check className="size-3.5 text-primary" aria-hidden="true" /> : null}
                 </div>
             ),
             onClick: () => setLocale(lang.code as SupDanceLocaleCode),
@@ -43,26 +43,33 @@ export function TopbarLanguageSwitcher({ surface = "workspace", className }: { s
     const showName = styleMode === "icon_name";
 
     return (
-        <Dropdown
-            menu={{
-                items: menuItems,
-                selectedKeys: [locale],
-            }}
-            trigger={["click"]}
-            placement="bottomRight"
-        >
-            <button
-                type="button"
-                data-i18n-ignore="true"
-                data-canvas-no-zoom="true"
-                aria-label={t("nav.switch_language", undefined, "切换语言")}
-                title={`${t("nav.switch_language", undefined, "切换语言")} (${currentLanguage.nativeName})`}
-                className={cn("app-workspace-topbar-icon-button inline-flex items-center justify-center gap-1.5 transition-colors", (showBadge || showName) && "!w-auto px-2.5", className)}
+        <div data-plugin-scope="i18n" className="inline-flex items-center">
+            <Dropdown
+                menu={{
+                    items: menuItems,
+                    selectedKeys: [locale],
+                }}
+                trigger={["click"]}
+                placement="bottomRight"
             >
-                <Languages className="size-4 shrink-0" aria-hidden="true" />
-                {showBadge ? <span className="text-[11px] font-semibold tracking-tight text-foreground/85">{currentLanguage.badge}</span> : null}
-                {showName ? <span className="max-w-[84px] truncate text-[12px] font-medium text-foreground/85">{currentLanguage.nativeName}</span> : null}
-            </button>
-        </Dropdown>
+                <button
+                    type="button"
+                    data-i18n-ignore="true"
+                    data-canvas-no-zoom="true"
+                    aria-haspopup="menu"
+                    aria-label={t("nav.switch_language", undefined, "切换语言")}
+                    title={`${t("nav.switch_language", undefined, "切换语言")} (${currentLanguage.nativeName})`}
+                    className={cn(
+                        "app-workspace-topbar-icon-button inline-flex min-h-[32px] items-center justify-center gap-1.5 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1 active:scale-95",
+                        (showBadge || showName) && "!w-auto px-2.5",
+                        className
+                    )}
+                >
+                    <Languages className="size-4 shrink-0" aria-hidden="true" />
+                    {showBadge ? <span className="text-xs font-semibold tracking-tight text-foreground/85">{currentLanguage.badge}</span> : null}
+                    {showName ? <span className="max-w-[88px] truncate text-xs font-medium text-foreground/85">{currentLanguage.nativeName}</span> : null}
+                </button>
+            </Dropdown>
+        </div>
     );
 }

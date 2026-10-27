@@ -247,11 +247,11 @@ export function ChannelSettingsPane({ onOpenModels, onOpenRunningHub }: ChannelS
                                                     <p className="mt-1 text-xs text-foreground/50">{t("settings.channel_connection_info_desc", undefined, "用于拉取模型目录并向当前渠道发起请求。")}</p>
                                                 </div>
                                                 <div className="model-editor-connection-fields grid gap-3 sm:grid-cols-2">
-                                                    <Form.Item label={t("settings.channel_name_label", undefined, "渠道名称")} htmlFor={`channel-${channel.id}-name`} className="mb-0 sm:col-span-1"><Input id={`channel-${channel.id}-name`} value={channel.name} placeholder="例如：我的 NewAPI" onChange={(event) => updateChannel(channel.id, { name: event.target.value })} onBlur={(event) => updateChannel(channel.id, { name: event.target.value.trim() || t("settings.unnamed_channel", undefined, "未命名渠道") })} /></Form.Item>
+                                                    <Form.Item label={t("settings.channel_name_label", undefined, "渠道名称")} htmlFor={`channel-${channel.id}-name`} className="mb-0 sm:col-span-1"><Input id={`channel-${channel.id}-name`} value={channel.name} placeholder={t("settings.channel_name_placeholder", undefined, "例如：我的 NewAPI")} onChange={(event) => updateChannel(channel.id, { name: event.target.value })} onBlur={(event) => updateChannel(channel.id, { name: event.target.value.trim() || t("settings.unnamed_channel", undefined, "未命名渠道") })} /></Form.Item>
                                                     <Form.Item label={t("settings.channel_catalog_type_label", undefined, "目录连接类型")} className="mb-0 sm:col-span-1" extra={t("settings.channel_catalog_type_extra", undefined, "仅影响模型目录拉取。")}><Segmented<UserChannelConnection> block value={channelConnectionMode(channel)} options={[{ label: "OpenAI", value: "openai" }, { label: "Gemini", value: "gemini" }]} onChange={(value) => updateChannelConnection(channel, value)} /></Form.Item>
-                                                    <Form.Item label="Base URL" htmlFor={`channel-${channel.id}-base-url`} className="mb-0 sm:col-span-1"><Input id={`channel-${channel.id}-base-url`} inputMode="url" value={channel.baseUrl} placeholder="填写云端渠道 Base URL" onChange={(event) => updateChannel(channel.id, { baseUrl: event.target.value })} onBlur={(event) => updateChannel(channel.id, { baseUrl: event.target.value.trim().replace(/\/+$/u, "") })} /></Form.Item>
-                                                    <Form.Item label="API Key" htmlFor={`channel-${channel.id}-api-key`} className="mb-0 sm:col-span-1"><Input.Password id={`channel-${channel.id}-api-key`} autoComplete="new-password" value={channel.apiKey} placeholder={channel.apiFormat === "gemini" ? "填写 Gemini API Key" : "填写当前渠道 API Key"} onChange={(event) => updateChannel(channel.id, { apiKey: event.target.value })} onBlur={(event) => updateChannel(channel.id, { apiKey: event.target.value.trim() })} /></Form.Item>
-                                                    <Form.Item label={t("settings.channel_secret_key_optional", undefined, "Secret Key（可选）")} htmlFor={`channel-${channel.id}-secret-key`} className="mb-0 sm:col-span-1" extra="即梦等 AK/SK 协议需要；其他协议留空。"><Input.Password id={`channel-${channel.id}-secret-key`} autoComplete="new-password" value={channel.secretKey || ""} placeholder="填写 Secret Key" onChange={(event) => updateChannel(channel.id, { secretKey: event.target.value })} onBlur={(event) => updateChannel(channel.id, { secretKey: event.target.value.trim() })} /></Form.Item>
+                                                    <Form.Item label="Base URL" htmlFor={`channel-${channel.id}-base-url`} className="mb-0 sm:col-span-1"><Input id={`channel-${channel.id}-base-url`} inputMode="url" value={channel.baseUrl} placeholder={t("settings.channel_base_url_placeholder", undefined, "填写云端渠道 Base URL")} onChange={(event) => updateChannel(channel.id, { baseUrl: event.target.value })} onBlur={(event) => updateChannel(channel.id, { baseUrl: event.target.value.trim().replace(/\/+$/u, "") })} /></Form.Item>
+                                                    <Form.Item label="API Key" htmlFor={`channel-${channel.id}-api-key`} className="mb-0 sm:col-span-1"><Input.Password id={`channel-${channel.id}-api-key`} autoComplete="new-password" value={channel.apiKey} placeholder={channel.apiFormat === "gemini" ? t("settings.channel_api_key_gemini_ph", undefined, "填写 Gemini API Key") : t("settings.channel_api_key_openai_ph", undefined, "填写当前渠道 API Key")} onChange={(event) => updateChannel(channel.id, { apiKey: event.target.value })} onBlur={(event) => updateChannel(channel.id, { apiKey: event.target.value.trim() })} /></Form.Item>
+                                                    <Form.Item label={t("settings.channel_secret_key_optional", undefined, "Secret Key（可选）")} htmlFor={`channel-${channel.id}-secret-key`} className="mb-0 sm:col-span-1" extra={t("settings.channel_secret_key_extra", undefined, "即梦等 AK/SK 协议需要；其他协议留空。")}><Input.Password id={`channel-${channel.id}-secret-key`} autoComplete="new-password" value={channel.secretKey || ""} placeholder={t("settings.channel_secret_key_placeholder", undefined, "填写 Secret Key")} onChange={(event) => updateChannel(channel.id, { secretKey: event.target.value })} onBlur={(event) => updateChannel(channel.id, { secretKey: event.target.value.trim() })} /></Form.Item>
                                                     <div className="sm:col-span-2"><ChannelHeadersEditor value={channel.headers} onChange={(headers) => updateChannel(channel.id, { headers })} /></div>
                                                 </div>
                                             </section>
@@ -260,7 +260,7 @@ export function ChannelSettingsPane({ onOpenModels, onOpenRunningHub }: ChannelS
                                                     <h2>{t("settings.channel_models_and_capabilities", undefined, "模型与能力")}</h2>
                                                     <p className="mt-1 text-xs text-foreground/50">{t("settings.channel_models_and_capabilities_desc", undefined, "维护渠道模型，并在单个模型中配置调用协议、能力和定价。")}</p>
                                                 </div>
-                                                <Form.Item label={t("settings.channel_model_list_label", undefined, "模型列表")} htmlFor={`channel-${channel.id}-models`} className="mb-0"><Select id={`channel-${channel.id}-models`} mode="tags" showSearch allowClear maxTagCount="responsive" tokenSeparators={[",", "\n"]} placeholder="输入模型名，或点击拉取模型" value={channel.models} onChange={(models) => updateChannel(channel.id, { models: uniqueModels(models) })} /></Form.Item>
+                                                <Form.Item label={t("settings.channel_model_list_label", undefined, "模型列表")} htmlFor={`channel-${channel.id}-models`} className="mb-0"><Select id={`channel-${channel.id}-models`} mode="tags" showSearch allowClear maxTagCount="responsive" tokenSeparators={[",", "\n"]} placeholder={t("settings.channel_models_placeholder", undefined, "输入模型名，或点击拉取模型")} value={channel.models} onChange={(models) => updateChannel(channel.id, { models: uniqueModels(models) })} /></Form.Item>
                                                 <ChannelModelSettings channel={channel} onChange={(modelCosts) => updateChannel(channel.id, { modelCosts })} />
                                             </section>
                                         </div>
@@ -292,7 +292,7 @@ function WorkflowChannelEntry({ icon, title, description, status, ready, onOpen 
     );
 }
 
-export function channelValidationError(channel: ModelChannel, t?: (key: string, params?: Record<string, unknown>, fallback?: string) => string) {
+export function channelValidationError(channel: ModelChannel, t?: (keyOrText: string, params?: Record<string, string | number>, fallbackText?: string) => string) {
     return channelConnectionError(channel, t) || validateChannelHeaders(channel.headers) || (!channel.models.length ? (t ? t("settings.configure_channel_first", undefined, "请添加至少一个模型") : "请添加至少一个模型") : "");
 }
 
@@ -338,7 +338,7 @@ function uniqueModels(models: string[]) {
     return Array.from(new Set(models.map((model) => model.trim()).filter(Boolean)));
 }
 
-function channelModelFetchErrorMessage(error: unknown, t?: (key: string, params?: Record<string, unknown>, fallback?: string) => string) {
+function channelModelFetchErrorMessage(error: unknown, t?: (keyOrText: string, params?: Record<string, string | number>, fallbackText?: string) => string) {
     const detail = error instanceof Error ? error.message : (t ? t("settings.channel_err_read_models", undefined, "读取模型失败") : "读取模型失败");
     if (detail.includes("不允许访问本机") || detail.includes("不允许访问保留地址")) return `${detail}；${t ? t("settings.channel_err_ssrf_private", undefined, "可信私网服务需由部署管理员配置 CANVAS_ALLOWED_PRIVATE_UPSTREAM_HOSTS 放行") : "可信私网服务需由部署管理员配置 CANVAS_ALLOWED_PRIVATE_UPSTREAM_HOSTS 放行"}`;
     return `${detail}；${t ? t("settings.channel_err_manual_model_hint", undefined, "也可以直接在模型列表中手动输入模型名") : "也可以直接在模型列表中手动输入模型名"}`;
@@ -348,7 +348,7 @@ function channelConnectionMode(channel: ModelChannel): UserChannelConnection {
     return channel.apiFormat === "gemini" ? "gemini" : "openai";
 }
 
-function channelConnectionError(channel: ModelChannel, t?: (key: string, params?: Record<string, unknown>, fallback?: string) => string) {
+function channelConnectionError(channel: ModelChannel, t?: (keyOrText: string, params?: Record<string, string | number>, fallbackText?: string) => string) {
     const baseUrl = channel.baseUrl.trim();
     if (!baseUrl) return t ? t("settings.channel_err_fill_base_url", undefined, "请填写 Base URL") : "请填写 Base URL";
     try {
@@ -366,7 +366,7 @@ function channelConnectionSignature(channel: ModelChannel) {
     return [channel.baseUrl.trim(), channel.apiKey.trim(), channel.secretKey?.trim() || "", channel.apiFormat, JSON.stringify(channel.headers || [])].join("\n");
 }
 
-function channelProtocolLabel(channel: ModelChannel, t?: (key: string, params?: Record<string, unknown>, fallback?: string) => string) {
+function channelProtocolLabel(channel: ModelChannel, t?: (keyOrText: string, params?: Record<string, string | number>, fallbackText?: string) => string) {
     return channelConnectionMode(channel) === "gemini" ? (t ? t("settings.channel_proto_gemini_native", undefined, "Gemini 原生") : "Gemini 原生") : (t ? t("settings.channel_proto_openai_compat", undefined, "OpenAI 兼容") : "OpenAI 兼容");
 }
 

@@ -7,6 +7,7 @@ import { useNavigate } from "react-router";
 import { accountFileStorageUsageQueryKey } from "@/lib/account-storage-usage";
 import { openStoragePurchase, STORAGE_LIMIT_REASONS } from "@/lib/workspace-storage";
 import { apiClient } from "@/services/api/request";
+import { useI18n } from "@/supdance/plugins/i18n";
 
 const NOTICE_KEY = "workspace-storage-limit";
 const NOTICE_INTERVAL_MS = 20_000;
@@ -16,6 +17,7 @@ const NOTICE_INTERVAL_MS = 20_000;
  * 只补充提醒，调用方原有的错误处理和提示保持不变。
  */
 export function WorkspaceStorageLimitNotice() {
+    const { t } = useI18n();
     const { notification } = App.useApp();
     const queryClient = useQueryClient();
     const navigate = useNavigate();
@@ -32,8 +34,8 @@ export function WorkspaceStorageLimitNotice() {
                     const readOnly = reason === "storage_read_only";
                     notification.warning({
                         key: NOTICE_KEY,
-                        title: readOnly ? "账号已进入只读状态" : "账号存储空间不足",
-                        description: readOnly ? "已超出容量且宽限期已结束。删除素材腾出空间或购买存储空间后即可恢复编辑。" : "已暂停上传和生成。可以清理素材，或购买更多存储空间。",
+                        title: readOnly ? t("nav.storage_limit_readonly_title") : t("nav.storage_limit_title"),
+                        description: readOnly ? t("nav.storage_limit_desc_readonly") : t("nav.storage_limit_desc_pause"),
                         actions: (
                             <span style={{ display: "inline-flex", gap: "var(--space-2, 8px)" }}>
                                 <Button
@@ -43,7 +45,7 @@ export function WorkspaceStorageLimitNotice() {
                                         navigate("/assets");
                                     }}
                                 >
-                                    清理素材
+                                    {t("nav.storage_limit_clean")}
                                 </Button>
                                 <Button
                                     size="small"
@@ -53,7 +55,7 @@ export function WorkspaceStorageLimitNotice() {
                                         openStoragePurchase();
                                     }}
                                 >
-                                    购买空间
+                                    {t("nav.storage_limit_buy")}
                                 </Button>
                             </span>
                         ),
@@ -63,7 +65,7 @@ export function WorkspaceStorageLimitNotice() {
             return Promise.reject(error);
         });
         return () => apiClient.interceptors.response.eject(interceptor);
-    }, [navigate, notification, queryClient]);
+    }, [navigate, notification, queryClient, t]);
 
     return null;
 }

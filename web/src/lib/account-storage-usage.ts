@@ -37,18 +37,24 @@ export function formatStorageCapacity(bytes: number) {
     return formatStorageBytes(bytes);
 }
 
-export function formatStorageDuration(days: number) {
-    if (!days) return "永久有效";
-    if (days % 365 === 0) return `${days / 365} 年`;
-    if (days % 30 === 0) return `${days / 30} 个月`;
-    return `${days} 天`;
+export function formatStorageDuration(days: number, t?: (key: string, params?: Record<string, string | number>, fallback?: string) => string) {
+    if (!days || days <= 0 || !Number.isFinite(days)) return t ? t("settings.wallet_duration_permanent", undefined, "永久有效") : "永久有效";
+    if (days % 365 === 0) {
+        const count = days / 365;
+        return t ? t("settings.wallet_duration_years", { count }, `${count} 年`) : `${count} 年`;
+    }
+    if (days % 30 === 0) {
+        const count = days / 30;
+        return t ? t("settings.wallet_duration_months", { count }, `${count} 个月`) : `${count} 个月`;
+    }
+    return t ? t("settings.wallet_duration_days", { count: days }, `${days} 天`) : `${days} 天`;
 }
 
-export function formatStorageDate(value?: string) {
-    return value ? new Date(value).toLocaleString("zh-CN", { hour12: false, year: "numeric", month: "2-digit", day: "2-digit", hour: "2-digit", minute: "2-digit" }) : "";
+export function formatStorageDate(value?: string, locale: string = "zh-CN") {
+    return value ? new Date(value).toLocaleString(locale, { hour12: false, year: "numeric", month: "2-digit", day: "2-digit", hour: "2-digit", minute: "2-digit" }) : "";
 }
 
-export function accountStorageMeter(usage?: AccountFileStorageUsage | null): AccountStorageMeter {
+export function accountStorageMeter(usage?: AccountFileStorageUsage | null, locale: string = "zh-CN"): AccountStorageMeter {
     const usedBytes = usage && Number.isFinite(usage.usedBytes) ? Math.max(0, usage.usedBytes) : 0;
     const totalBytes = usage && Number.isFinite(usage.totalBytes) ? Math.max(0, usage.totalBytes) : 0;
     const remainingBytes = Math.max(0, totalBytes - usedBytes);
@@ -69,15 +75,33 @@ export function accountStorageMeter(usage?: AccountFileStorageUsage | null): Acc
         tone,
         full,
         state,
-        readOnlyAtLabel: formatStorageDate(usage?.readOnlyAt),
-        nextExpiresAtLabel: formatStorageDate(usage?.nextExpiresAt),
+        readOnlyAtLabel: formatStorageDate(usage?.readOnlyAt, locale),
+        nextExpiresAtLabel: formatStorageDate(usage?.nextExpiresAt, locale),
     };
 }
 
 /** 超额提示文案，侧栏、素材页和扩容弹窗共用。 */
-export function accountStorageStateMessage(meter: AccountStorageMeter) {
-    if (meter.state === "read_only") return "已超出容量且宽限期已结束，账号处于只读状态。删除素材或购买空间后恢复。";
-    if (meter.state === "grace") return `已超出容量，暂停上传和生成。${meter.readOnlyAtLabel ? `${meter.readOnlyAtLabel} 后` : "宽限期结束后"}将进入只读状态。`;
-    if (meter.full) return "容量已满，暂停上传和生成。";
+export function accountStorageStateMessage(
+    meter: AccountStorageMeter,
+    t?: (key: string, params?: Record<string, string | number>, fallback?: string) => string,
+) {
+    if (meter.state === "read_only") {
+        return t
+            ? t("nav.storage_state_msg_readonly", undefined, "已超出容量且宽限期已结束，账号处于只读状态。删除素材或购买空间后恢复。")
+            : "已超出容量且宽限期已结束，账号处于只读状态。删除素材或购买空间后恢复。";
+    }
+    if (meter.state === "grace") {
+        if (meter.readOnlyAtLabel) {
+            return t
+                ? t("nav.storage_state_msg_grace_time", { time: meter.readOnlyAtLabel }, `已超出容量，暂停上传和生成。${meter.readOnlyAtLabel} 后将进入只读状态。`)
+                : `已超出容量，暂停上传和生成。${meter.readOnlyAtLabel} 后将进入只读状态。`;
+        }
+        return t
+            ? t("nav.storage_state_msg_grace", undefined, "已超出容量，暂停上传和生成。宽限期结束后将进入只读状态。")
+            : "已超出容量，暂停上传和生成。宽限期结束后将进入只读状态。";
+    }
+    if (meter.full) {
+        return t ? t("nav.storage_state_msg_full", undefined, "容量已满，暂停上传和生成。") : "容量已满，暂停上传和生成。";
+    }
     return "";
 }

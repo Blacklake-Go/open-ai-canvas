@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { App, Button, Input, Select, Skeleton } from "antd";
+import { App, Button, Input, Skeleton } from "antd";
 import { Switch } from "@/pages/admin/ui/controls";
 import {
     AlertTriangle,
@@ -18,6 +18,7 @@ import {
 } from "lucide-react";
 
 import { cn } from "@/lib/utils";
+import { Select } from "@/components/ui/base/select";
 import { AdminPageFrame } from "@/pages/admin/components/admin-shell";
 import {
     AdminStatTile,
@@ -25,6 +26,7 @@ import {
     configuredSecretText,
     SettingsSectionCard,
 } from "@/pages/admin/components/admin-ui";
+import { useI18n } from "@/supdance/plugins/i18n";
 import {
     getAdminSocialAuthSettings,
     testSocialAuthProvider,
@@ -47,6 +49,7 @@ interface ProviderDraftState {
 }
 
 export default function SocialAuthSettingsPage() {
+    const { t } = useI18n();
     const { message } = App.useApp();
     const [loading, setLoading] = useState(true);
     const [refreshing, setRefreshing] = useState(false);
@@ -125,12 +128,12 @@ export default function SocialAuthSettingsPage() {
     const handleResetDraft = () => {
         if (!data) return;
         initDraftsFromData(data);
-        message.info("已撤销当前未保存的调整");
+        message.info(t("admin.social_auth.reset_reverted", undefined, "已撤销当前未保存的调整"));
     };
 
     const handleCopy = (text: string, label = "内容") => {
         navigator.clipboard.writeText(text);
-        message.success(`已复制${label}到剪贴板`);
+        message.success(t("admin.social_auth.copy_success", { label }, `已复制${label}到剪贴板`));
     };
 
     const handlePing = async (provider: SocialAuthProviderAdmin) => {
@@ -184,7 +187,7 @@ export default function SocialAuthSettingsPage() {
 
             setData(res);
             initDraftsFromData(res);
-            message.success("社交登录配置已保存并即时生效");
+            message.success(t("admin.social_auth.save_success", undefined, "社交登录配置已保存并即时生效"));
         } catch (err) {
             message.error(err instanceof Error ? err.message : "保存配置失败");
         } finally {
@@ -199,7 +202,7 @@ export default function SocialAuthSettingsPage() {
                 description="全站统一 8 大主流平台登录、IP 智能分区策略与沙盒联调测试"
                 scroll
             >
-                <div className="admin-settings-stack admin-social-auth-settings" role="status">
+                <div data-plugin-scope="social-auth" className="admin-settings-stack admin-social-auth-settings" role="status">
                     <div className="admin-social-auth-command-bar">
                         <Skeleton active title={{ width: 220 }} paragraph={false} />
                     </div>
@@ -225,7 +228,7 @@ export default function SocialAuthSettingsPage() {
                 description="全站统一 8 大主流平台登录、IP 智能分区策略与沙盒联调测试"
                 scroll
             >
-                <div className="admin-settings-stack admin-social-auth-settings">
+                <div data-plugin-scope="social-auth" className="admin-settings-stack admin-social-auth-settings">
                     <div className="admin-access-load-error" role="alert">
                         <span className="admin-access-load-error-icon">
                             <AlertTriangle className="size-5" aria-hidden="true" />
@@ -299,10 +302,10 @@ export default function SocialAuthSettingsPage() {
                         </span>
                         <div>
                             <div className="flex flex-wrap items-center gap-2">
-                                <strong className="text-sm font-semibold text-foreground">
+                                <strong className="text-sm font-semibold text-[var(--admin-text-primary)]">
                                     {provider.name}
                                 </strong>
-                                <span className="font-mono text-xs text-foreground/45">
+                                <span className="font-mono text-xs text-[var(--admin-text-muted)]">
                                     ({provider.id})
                                 </span>
                                 <AdminStatusBadge
@@ -320,7 +323,7 @@ export default function SocialAuthSettingsPage() {
                         </div>
                     </div>
                     <div className="flex items-center gap-3">
-                        <span className="text-xs text-foreground/50">
+                        <span className="text-xs text-[var(--admin-text-secondary)]">
                             {draft.enabled ? "已启用" : "已停用"}
                         </span>
                         <Switch
@@ -339,7 +342,7 @@ export default function SocialAuthSettingsPage() {
                 {/* Provider Form Inputs */}
                 <div className="admin-social-provider-grid">
                     <div>
-                        <label className="mb-1 block text-xs font-medium text-foreground/75">
+                        <label className="mb-1.5 block text-xs font-medium text-[var(--admin-text-secondary)]">
                             App ID / Client ID
                         </label>
                         <Input
@@ -355,7 +358,7 @@ export default function SocialAuthSettingsPage() {
                         />
                     </div>
                     <div>
-                        <label className="mb-1 block text-xs font-medium text-foreground/75">
+                        <label className="mb-1.5 block text-xs font-medium text-[var(--admin-text-secondary)]">
                             App Secret / Client Secret
                         </label>
                         <Input.Password
@@ -371,7 +374,7 @@ export default function SocialAuthSettingsPage() {
                         />
                     </div>
                     <div>
-                        <label className="mb-1 block text-xs font-medium text-foreground/75">
+                        <label className="mb-1.5 block text-xs font-medium text-[var(--admin-text-secondary)]">
                             回调重定向地址 (Redirect URI)
                         </label>
                         <Input
@@ -382,6 +385,7 @@ export default function SocialAuthSettingsPage() {
                                     type="text"
                                     size="small"
                                     icon={<Copy className="size-3.5" />}
+                                    aria-label={`复制 ${provider.name} 回调地址`}
                                     onClick={() => handleCopy(provider.callbackUrl, `${provider.name} 回调地址`)}
                                 >
                                     复制
@@ -405,7 +409,7 @@ export default function SocialAuthSettingsPage() {
                             }
                             aria-label={`${provider.name} 沙盒联调模式`}
                         />
-                        <span className="text-xs text-foreground/70">沙盒 Mock 联调模式</span>
+                        <span className="text-xs text-[var(--admin-text-secondary)]">沙盒 Mock 联调模式</span>
                         <AdminStatusBadge label="免审核模拟授权" tone="neutral" />
                     </div>
 
@@ -436,7 +440,7 @@ export default function SocialAuthSettingsPage() {
             description="全站统一 8 大主流平台登录、IP 智能分区策略与沙盒联调测试"
             scroll
         >
-            <div className="admin-settings-stack admin-social-auth-settings">
+            <div data-plugin-scope="social-auth" className="admin-settings-stack admin-social-auth-settings">
                 {/* Command Bar */}
                 <div className={cn("admin-social-auth-command-bar", isDirty && "is-dirty")}>
                     <div className="admin-social-auth-command-copy" aria-live="polite">
@@ -538,17 +542,17 @@ export default function SocialAuthSettingsPage() {
                 >
                     <div className="flex flex-col gap-4 p-4 sm:flex-row sm:items-center sm:justify-between">
                         <div className="space-y-1">
-                            <strong className="text-sm font-medium text-foreground">
+                            <strong className="text-sm font-medium text-[var(--admin-text-primary)]">
                                 未知/异常 IP 默认回退分区
                             </strong>
-                            <p className="text-xs text-foreground/50">
+                            <p className="text-xs text-[var(--admin-text-muted)]">
                                 当访客 IP 无法解析或 GeoIP 服务离线时，系统权威回退展示的登录渠道集。
                             </p>
                         </div>
                         <div className="shrink-0">
                             <Select
                                 value={draftFallbackRegion}
-                                onChange={(val) => setDraftFallbackRegion(val)}
+                                onChange={(val) => setDraftFallbackRegion(val as SocialAuthRegion)}
                                 className="w-52"
                                 options={[
                                     { value: "cn", label: "中国大陆渠道 (CN)" },

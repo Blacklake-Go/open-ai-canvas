@@ -2,8 +2,8 @@
  * Keep status actions in the sticky top command bar. Configuration summaries remain
  * full-width document content so they never become a detached side panel while scrolling.
  */
-:is(.admin-drawing-settings, .admin-runtime-policy, .admin-access-settings, .admin-email-settings, .admin-storage-settings, .admin-ark-settings, .admin-intercept-settings, .admin-third-party-settings, .admin-social-auth-settings)
-    :is(.admin-drawing-overview, .admin-runtime-policy-overview, .admin-access-overview, .admin-email-overview, .admin-storage-overview, .admin-ark-overview, .admin-intercept-overview, .admin-third-party-overview, .admin-social-auth-overview)
+:is(.admin-drawing-settings, .admin-runtime-policy, .admin-access-settings, .admin-email-settings, .admin-storage-settings, .admin-ark-settings, .admin-intercept-settings, .admin-third-party-settings, .admin-social-auth-settings, .admin-i18n-settings)
+    :is(.admin-drawing-overview, .admin-runtime-policy-overview, .admin-access-overview, .admin-email-overview, .admin-storage-overview, .admin-ark-overview, .admin-intercept-overview, .admin-third-party-overview, .admin-social-auth-overview, .admin-i18n-overview)
     .admin-stat-tile {
     min-height: 88px;
     padding: 16px 16px;
@@ -1337,15 +1337,15 @@
     }
 }
 
-:is(.admin-drawing-settings, .admin-runtime-policy, .admin-access-settings, .admin-email-settings, .admin-storage-settings, .admin-ark-settings, .admin-intercept-settings, .admin-third-party-settings, .admin-social-auth-settings)
-    :is(.admin-drawing-overview, .admin-runtime-policy-overview, .admin-access-overview, .admin-email-overview, .admin-storage-overview, .admin-ark-overview, .admin-intercept-overview, .admin-third-party-overview, .admin-social-auth-overview)
+:is(.admin-drawing-settings, .admin-runtime-policy, .admin-access-settings, .admin-email-settings, .admin-storage-settings, .admin-ark-settings, .admin-intercept-settings, .admin-third-party-settings, .admin-social-auth-settings, .admin-i18n-settings)
+    :is(.admin-drawing-overview, .admin-runtime-policy-overview, .admin-access-overview, .admin-email-overview, .admin-storage-overview, .admin-ark-overview, .admin-intercept-overview, .admin-third-party-overview, .admin-social-auth-overview, .admin-i18n-overview)
     .admin-stat-tile-value {
     margin-top: 4px;
     font-size: 16px;
 }
 
-:is(.admin-drawing-settings, .admin-runtime-policy, .admin-access-settings, .admin-email-settings, .admin-storage-settings, .admin-ark-settings, .admin-intercept-settings, .admin-third-party-settings, .admin-social-auth-settings)
-    :is(.admin-drawing-overview, .admin-runtime-policy-overview, .admin-access-overview, .admin-email-overview, .admin-storage-overview, .admin-ark-overview, .admin-intercept-overview, .admin-third-party-overview, .admin-social-auth-overview)
+:is(.admin-drawing-settings, .admin-runtime-policy, .admin-access-settings, .admin-email-settings, .admin-storage-settings, .admin-ark-settings, .admin-intercept-settings, .admin-third-party-settings, .admin-social-auth-settings, .admin-i18n-settings)
+    :is(.admin-drawing-overview, .admin-runtime-policy-overview, .admin-access-overview, .admin-email-overview, .admin-storage-overview, .admin-ark-overview, .admin-intercept-overview, .admin-third-party-overview, .admin-social-auth-overview, .admin-i18n-overview)
     .admin-stat-tile-detail {
     margin-top: 4px;
 }
@@ -3476,7 +3476,7 @@
     width: 32px;
     height: 32px;
     place-items: center;
-    border: 1px solid color-mix(in srgb, var(--foreground) 10%, transparent);
+    border: 1px solid var(--admin-border);
     border-radius: 8px;
     background: var(--admin-layer-2);
     color: var(--admin-text-secondary);
@@ -3577,6 +3577,78 @@
     margin-top: 14px;
     padding-top: 12px;
     border-top: 1px dashed var(--admin-border);
+}
+
+/* I18n Settings & Overview */
+.admin-i18n-settings {
+    padding-bottom: 24px;
+}
+
+.admin-i18n-settings .admin-settings-section {
+    border: 1px solid var(--admin-card-border);
+}
+
+.admin-i18n-settings .admin-settings-section-summary,
+.admin-i18n-settings .admin-settings-section-content {
+    background: var(--admin-layer-1);
+}
+
+.admin-i18n-overview {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    overflow: hidden;
+    border: 1px solid var(--admin-card-border);
+    border-radius: var(--r-lg);
+    background: var(--admin-layer-1);
+    box-shadow: var(--admin-card-shadow);
+}
+
+.admin-i18n-overview .admin-stat-tile {
+    min-height: 104px;
+    background: var(--admin-layer-1);
+    box-shadow: none;
+}
+
+.admin-i18n-overview .admin-stat-tile-value {
+    overflow: hidden;
+    font-size: 20px;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.admin-i18n-overview .admin-stat-tile-detail {
+    overflow: hidden;
+    font-size: 11px;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.admin-i18n-lang-table table {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+}
+
+.admin-i18n-lang-table table th {
+    padding: 10px 14px;
+    font-size: 12px;
+    font-weight: 600;
+    border-bottom: 1px solid var(--admin-border);
+}
+
+.admin-i18n-lang-table table td {
+    padding: 10px 14px;
+    font-size: 12px;
+    border-bottom: 1px solid var(--admin-row-border);
+    transition: background-color var(--admin-motion);
+}
+
+.admin-i18n-lang-table table tr:last-child td {
+    border-bottom: none;
+}
+
+.admin-i18n-lang-table table tr:hover td {
+    background: var(--admin-row-hover);
 }
 
 .admin-email-settings {
@@ -6722,6 +6794,22 @@
 }
 
 @media (max-width: 1279px) {
+    .admin-social-auth-overview,
+    .admin-i18n-overview {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .admin-social-auth-overview .admin-stat-tile:nth-child(3),
+    .admin-i18n-overview .admin-stat-tile:nth-child(3) {
+        border-left: 0;
+        border-top: 1px solid var(--admin-card-border);
+    }
+
+    .admin-social-auth-overview .admin-stat-tile:nth-child(4),
+    .admin-i18n-overview .admin-stat-tile:nth-child(4) {
+        border-top: 1px solid var(--admin-card-border);
+    }
+
     .admin-third-party-overview {
         grid-template-columns: repeat(2, minmax(0, 1fr));
     }
@@ -6955,6 +7043,22 @@
 }
 
 @media (max-width: 720px) {
+    .admin-social-auth-overview,
+    .admin-i18n-overview {
+        grid-template-columns: 1fr;
+    }
+
+    .admin-social-auth-overview .admin-stat-tile,
+    .admin-i18n-overview .admin-stat-tile {
+        border-left: 0;
+        border-top: 1px solid var(--admin-card-border);
+    }
+
+    .admin-social-auth-overview .admin-stat-tile:first-child,
+    .admin-i18n-overview .admin-stat-tile:first-child {
+        border-top: 0;
+    }
+
     .admin-intercept-policy-control,
     .admin-third-party-policy-control {
         align-items: stretch;

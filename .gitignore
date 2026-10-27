@@ -4,6 +4,7 @@ node_modules/
 open-storyboard-canvas/
 docs/*
 !docs/design/
+!docs/design-system/
 !docs/index.md
 !docs/adr/
 !docs/plans/

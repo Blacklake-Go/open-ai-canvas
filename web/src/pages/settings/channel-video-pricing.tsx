@@ -275,7 +275,7 @@ function defaultProtocolForModel(model: string, availableProtocols: ModelProtoco
     return defaultProtocolForCapability(capability, availableProtocols);
 }
 
-function capabilityLabel(value: ModelCost["capability"], t?: (key: string, params?: Record<string, unknown>, fallback?: string) => string) {
+function capabilityLabel(value: ModelCost["capability"], t?: (keyOrText: string, params?: Record<string, string | number>, fallbackText?: string) => string) {
     if (!t) return { text: "文本", image: "图片", video: "视频", audio: "音频", "": "待配置" }[value] || "待配置";
     const labels: Record<string, string> = {
         text: t("settings.cap_text", undefined, "文本"),

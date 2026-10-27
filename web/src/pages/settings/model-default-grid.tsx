@@ -54,7 +54,7 @@ export function ModelDefaultGrid({ config, onChange }: { config: AiConfig; onCha
                 const title = meta ? t(meta.titleKey, undefined, group.title) : group.title;
                 const description = meta ? t(meta.descKey, undefined, group.description) : group.description;
                 const capInfo = capabilityKeyMap[group.capability];
-                const capName = capInfo ? t(capInfo.labelKey, undefined, capInfo.fallback) : capabilityLabel(group.capability);
+                const capName = capInfo ? t(capInfo.labelKey, undefined, capInfo.fallback) : capabilityLabel(group.capability, t);
 
                 return (
                     <section key={group.capability} className="py-5 first:pt-0 last:pb-0" aria-labelledby={`default-${group.capability}-title`}>
@@ -115,7 +115,9 @@ export function ModelDefaultGrid({ config, onChange }: { config: AiConfig; onCha
     );
 }
 
-function capabilityLabel(capability: ModelCapability) {
+function capabilityLabel(capability: ModelCapability, t?: (key: string, params?: any, fallback?: string) => string) {
+    const info = capabilityKeyMap[capability];
+    if (info && t) return t(info.labelKey, undefined, info.fallback);
     return { image: "图片", video: "视频", text: "文本", audio: "音频" }[capability];
 }
 

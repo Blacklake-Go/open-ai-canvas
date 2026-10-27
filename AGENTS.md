@@ -171,3 +171,25 @@ cd web && bun run dev
 
 在进行 SupDance 专属定制、插件开发或上游版本同步时，请同时阅读并遵守 [`docs/supdance/WORKSPACE.md`](docs/supdance/WORKSPACE.md)、[`docs/supdance/ARCHITECTURE.md`](docs/supdance/ARCHITECTURE.md) 与 [`docs/supdance/CUSTOMIZATIONS.md`](docs/supdance/CUSTOMIZATIONS.md) 中的隔离与安全规则。
 
+## 11. SupDance 全站 UI Design System 长期执行规范 (RULE 001 - RULE 016)
+
+所有面向本项目的 AI 编程工具与协作者必须将 [`docs/design-system/README.md`](docs/design-system/README.md) 视为全站最高 UI/UX 执行标准。任何新页面、新组件、新插件或样式修改，必须严格执行以下十六条永久规则：
+
+- **RULE 001 — Design System First**：任何新页面、新组件、新插件或 UI 改动，必须先阅读当前适用的 UI Design System 文档。严禁自造第二套样式标准。
+- **RULE 002 — Token First**：优先复用已有 Design Tokens，禁止无理由新增硬编码颜色、字号、阴影与圆角。禁止裸写 `text-[Npx]`、`rounded-[Npx]`、`z-[99999]` 与裸 Hex 色值。
+- **RULE 003 — Component Reuse**：优先查找现有共享组件（`@/components/ui/` 自研组件层或既有封装），禁止重复创造功能相同但视觉不同的冗余组件。
+- **RULE 004 — Backend Appearance Priority**：后台正式外观配置（`/admin/settings/appearance`）在其受控范围内享有最高优先级，优先于默认主题和组件默认样式。
+- **RULE 005 — Scope Isolation**：前台（Public）、后台（Admin）、生成岛（Studio）、画布（Canvas）、插件（Plugin）必须遵守各自样式作用域，严禁跨域样式污染。
+- **RULE 006 — No Visual Regression**：UI 修改必须同时验证亮色与暗色模式及主要交互状态，不得破坏其他模块。
+- **RULE 007 — Responsive Required**：新增 UI 必须同时考虑桌面、平板及移动端，移动端主要触控目标保持 ≥ 44×44px，输入控件不被软键盘遮挡。
+- **RULE 008 — Complete Interaction States**：任何交互组件都必须具备必要的 Default、Hover、Active、Focus-visible、Selected、Disabled、Loading、Error 和 Empty 状态。
+- **RULE 009 — Motion Consistency**：必须使用统一动效变量（80–320ms）并严格支持系统级减弱动效偏好 (`prefers-reduced-motion`)。
+- **RULE 010 — Internationalization**：禁止在界面中直接硬编码中文文本，必须接入 `supdance-i18n` 词条体系，且布局必须为西文字符膨胀预留弹性空间。
+- **RULE 011 — Accessibility**：遵循 WCAG 2.2 AA 标准，文本与背景对比度达标（正文 ≥ 4.5:1），纯图标按钮提供 `aria-label`，全键盘操作具备焦点循环捕获与恢复。
+- **RULE 012 — Upstream Compatibility**：遵循二次开发隔离边界，尽量不直接修改上游核心文件；不可避免的修改必须在 `docs/supdance/CUSTOMIZATIONS.md` 中登记。
+- **RULE 013 — Business Logic Protection**：纯 UI 修改不得无意改变模型计费、积分扣减、用户权限、支付流程、长轮询任务生成等核心业务逻辑。
+- **RULE 014 — Verify Before Completion**：AI 不得仅凭编译成功就声称 UI 开发完成。必须完成适用的运行态与合规测试检查（如 `bun test test/design-system-compliance.test.ts`）。
+- **RULE 015 — No Silent Exceptions**：如果业务需求确实需要偏离规范，必须在交付报告或 PR 中明确记录偏离原因、影响范围和审批结果。
+- **RULE 016 — Future AI Agent Compliance**：以后任何 AI 编程任务开始前，必须主动确认相关 Design System 规范，不得依赖用户每次重新提醒。
+
+

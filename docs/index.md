@@ -12,6 +12,8 @@
 
 ## 设计沉淀
 
+- [SupDance 全站 UI Design System 设计规范与长期执行体系](design-system/README.md)：全站最高 UI/UX 执行标准（RULE 001 - RULE 016）。包含四层架构、7 大物理资产映射、Tokens 字典、六大作用域隔离、组件契约、浮层 Z-Index 体系、例外偏离台账与自动化测试门禁。
+
 - [资源访问与 OSS/CDN 分发架构重构](design/resource-delivery-architecture.md)：资源身份、场景授权与分发策略分离，统一访问合同、全入口迁移、旧实现退场及流量/安全验收门槛（核心代码已实施，待真实 OSS/CDN 链路验收）。
 
 - [短信渠道插件与登录注册策略](design/sms-channels-and-auth-policy.md)：阿里云/腾讯云官方 SDK 候选基线、多渠道与模板路由、发送记录、验证码安全、短信和邮箱登录注册组合及分阶段验收（核心代码已实施，待真实 OSS/CDN 链路验收）。

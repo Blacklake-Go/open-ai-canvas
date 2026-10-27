@@ -46,7 +46,7 @@ export function SystemAnnouncementCenter({ userId, className, style, showLabel =
     });
     const announcements = feedQuery.data?.announcements || [];
     const unreadCount = Math.max(0, feedQuery.data?.unreadCount || 0);
-    const error = feedQuery.error instanceof Error ? feedQuery.error.message : feedQuery.error ? "读取公告失败" : "";
+    const error = feedQuery.error instanceof Error ? feedQuery.error.message : feedQuery.error ? t("nav.announcements_load_failed", undefined, "读取公告失败") : "";
 
     useEffect(() => {
         if (!autoOpen || open || !feedQuery.isSuccess || announcements.length === 0) return;

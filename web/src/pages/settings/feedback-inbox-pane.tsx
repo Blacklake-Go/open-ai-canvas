@@ -4,9 +4,11 @@ import { Archive, Bug, CheckCircle2, Clock, Inbox, Lightbulb, MessageSquare, Pap
 
 import { getMyFeedbacks, type FeedbackItem, type FeedbackType, type FeedbackAttachment } from "@/services/api/feedback";
 import { FeedbackModal } from "@/components/feedback/feedback-modal";
+import { useI18n } from "@/supdance/plugins/i18n";
 import { cn } from "@/lib/utils";
 
 export function FeedbackInboxPane() {
+    const { t, locale } = useI18n();
     const [loading, setLoading] = useState(false);
     const [feedbacks, setFeedbacks] = useState<FeedbackItem[]>([]);
     const [submitModalOpen, setSubmitModalOpen] = useState(false);
@@ -34,19 +36,19 @@ export function FeedbackInboxPane() {
     const displayedFeedbacks = activeTab === "active" ? activeFeedbacks : archivedFeedbacks;
 
     return (
-        <section className="space-y-4" aria-label="我的反馈收件箱">
+        <section className="space-y-4" aria-label={t("settings.feedback_inbox_aria", undefined, "我的反馈收件箱")}>
             {/* Header */}
             <div className="flex flex-wrap items-center justify-between gap-3 border-b border-border/50 pb-4">
                 <div>
-                    <h3 className="text-base font-semibold text-foreground">我的反馈与建议</h3>
-                    <p className="text-xs text-muted-foreground mt-0.5">查看您提交的问题缺陷、功能提议、官方回复进展与历史归档。</p>
+                    <h3 className="text-base font-semibold text-foreground">{t("settings.feedback_heading", undefined, "我的反馈与建议")}</h3>
+                    <p className="text-xs text-muted-foreground mt-0.5">{t("settings.feedback_heading_desc", undefined, "查看您提交的问题缺陷、功能提议、官方回复进展与历史归档。")}</p>
                 </div>
                 <div className="flex items-center gap-2">
                     <Button size="small" icon={<RefreshCw className={cn("size-3.5", loading && "animate-spin")} />} onClick={() => void loadData()}>
-                        刷新
+                        {t("common.refresh", undefined, "刷新")}
                     </Button>
                     <Button type="primary" size="small" icon={<Plus className="size-3.5" />} onClick={() => setSubmitModalOpen(true)}>
-                        新建反馈
+                        {t("settings.feedback_new_btn", undefined, "新建反馈")}
                     </Button>
                 </div>
             </div>
@@ -58,8 +60,8 @@ export function FeedbackInboxPane() {
                         value={activeTab}
                         onChange={(v) => setActiveTab(v as "active" | "archived")}
                         options={[
-                            { label: `进行中 (${activeFeedbacks.length})`, value: "active" },
-                            { label: `历史归档 (${archivedFeedbacks.length})`, value: "archived" },
+                            { label: t("settings.feedback_tab_active", { count: activeFeedbacks.length }, `进行中 (${activeFeedbacks.length})`), value: "active" },
+                            { label: t("settings.feedback_tab_archived", { count: archivedFeedbacks.length }, `历史归档 (${archivedFeedbacks.length})`), value: "archived" },
                         ]}
                         className="bg-muted/40 text-xs"
                     />
@@ -70,17 +72,17 @@ export function FeedbackInboxPane() {
             {loading && feedbacks.length === 0 ? (
                 <div className="flex flex-col items-center justify-center py-20 text-muted-foreground text-xs gap-2">
                     <Clock className="size-6 animate-pulse text-primary/60" />
-                    <span>正在加载反馈列表…</span>
+                    <span>{t("settings.feedback_loading", undefined, "正在加载反馈列表…")}</span>
                 </div>
             ) : feedbacks.length === 0 ? (
                 <div className="flex flex-col items-center justify-center py-16 text-muted-foreground text-xs gap-3 rounded-2xl border border-dashed border-border/60 bg-muted/10">
                     <Inbox className="size-10 text-muted-foreground/30" />
                     <div className="text-center">
-                        <p className="font-medium text-foreground">暂无提交记录</p>
-                        <p className="text-[var(--fs-label)] text-muted-foreground/80 mt-1">遇到问题或有新想法，可以随时提交反馈。</p>
+                        <p className="font-medium text-foreground">{t("settings.feedback_empty_submissions", undefined, "暂无提交记录")}</p>
+                        <p className="text-[var(--fs-label)] text-muted-foreground/80 mt-1">{t("settings.feedback_empty_submissions_desc", undefined, "遇到问题或有新想法，可以随时提交反馈。")}</p>
                     </div>
                     <Button type="primary" size="small" onClick={() => setSubmitModalOpen(true)}>
-                        提交第一条反馈
+                        {t("settings.feedback_submit_first", undefined, "提交第一条反馈")}
                     </Button>
                 </div>
             ) : displayedFeedbacks.length === 0 ? (
@@ -89,26 +91,26 @@ export function FeedbackInboxPane() {
                         <>
                             <CheckCircle2 className="size-8 text-green-500/80" />
                             <div className="text-center">
-                                <p className="font-medium text-foreground">当前没有进行中的反馈</p>
-                                {archivedFeedbacks.length > 0 ? <p className="text-[var(--fs-label)] text-muted-foreground/80 mt-1">您有 {archivedFeedbacks.length} 条已归档的历史反馈</p> : null}
+                                <p className="font-medium text-foreground">{t("settings.feedback_empty_active", undefined, "当前没有进行中的反馈")}</p>
+                                {archivedFeedbacks.length > 0 ? <p className="text-[var(--fs-label)] text-muted-foreground/80 mt-1">{t("settings.feedback_archived_count_hint", { count: archivedFeedbacks.length }, `您有 ${archivedFeedbacks.length} 条已归档的历史反馈`)}</p> : null}
                             </div>
                             {archivedFeedbacks.length > 0 ? (
                                 <Button size="small" onClick={() => setActiveTab("archived")}>
-                                    查看历史归档
+                                    {t("settings.feedback_view_archived_btn", undefined, "查看历史归档")}
                                 </Button>
                             ) : null}
                         </>
                     ) : (
                         <>
                             <Archive className="size-8 text-muted-foreground/40" />
-                            <p className="font-medium text-foreground">暂无历史归档记录</p>
+                            <p className="font-medium text-foreground">{t("settings.feedback_empty_archived", undefined, "暂无历史归档记录")}</p>
                         </>
                     )}
                 </div>
             ) : (
                 <div className="space-y-3">
                     {displayedFeedbacks.map((item) => (
-                        <FeedbackDetailCard key={item.id} item={item} onPreviewVideo={(url) => setPreviewVideoUrl(url)} />
+                        <FeedbackDetailCard key={item.id} item={item} onPreviewVideo={(url) => setPreviewVideoUrl(url)} t={t} locale={locale} />
                     ))}
                 </div>
             )}
@@ -122,7 +124,7 @@ export function FeedbackInboxPane() {
             />
 
             {previewVideoUrl ? (
-                <Modal open={Boolean(previewVideoUrl)} onCancel={() => setPreviewVideoUrl(null)} footer={null} width={720} destroyOnClose title="附件视频预览">
+                <Modal open={Boolean(previewVideoUrl)} onCancel={() => setPreviewVideoUrl(null)} footer={null} width={720} destroyOnClose title={t("settings.feedback_video_preview", undefined, "附件视频预览")}>
                     <div className="py-2">
                         <video src={previewVideoUrl} controls autoPlay className="w-full max-h-[60vh] rounded-lg bg-black" />
                     </div>
@@ -132,7 +134,17 @@ export function FeedbackInboxPane() {
     );
 }
 
-function FeedbackDetailCard({ item, onPreviewVideo }: { item: FeedbackItem; onPreviewVideo: (url: string) => void }) {
+function FeedbackDetailCard({
+    item,
+    onPreviewVideo,
+    t,
+    locale,
+}: {
+    item: FeedbackItem;
+    onPreviewVideo: (url: string) => void;
+    t: (keyOrText: string, params?: Record<string, string | number>, fallbackText?: string) => string;
+    locale: string;
+}) {
     let parsedAttachments: FeedbackAttachment[] = [];
     try {
         if (item.attachments) parsedAttachments = JSON.parse(item.attachments);
@@ -141,24 +153,24 @@ function FeedbackDetailCard({ item, onPreviewVideo }: { item: FeedbackItem; onPr
     }
 
     const typeConfig: Record<FeedbackType, { label: string; color: string; icon: typeof Bug }> = {
-        bug: { label: "Bug 缺陷", color: "error", icon: Bug },
-        feature: { label: "功能提议", color: "processing", icon: Lightbulb },
-        improvement: { label: "体验建议", color: "cyan", icon: Sparkles },
-        other: { label: "其他反馈", color: "default", icon: MessageSquare },
+        bug: { label: t("settings.feedback_type_bug", undefined, "Bug 缺陷"), color: "error", icon: Bug },
+        feature: { label: t("settings.feedback_type_feature", undefined, "功能提议"), color: "processing", icon: Lightbulb },
+        improvement: { label: t("settings.feedback_type_improvement", undefined, "体验建议"), color: "cyan", icon: Sparkles },
+        other: { label: t("settings.feedback_type_other", undefined, "其他反馈"), color: "default", icon: MessageSquare },
     };
 
     const statusConfig: Record<string, { label: string; tagColor: string }> = {
-        pending: { label: "待处理", tagColor: "orange" },
-        processing: { label: "处理中", tagColor: "blue" },
-        resolved: { label: "已解决 / 已采纳", tagColor: "green" },
-        closed: { label: "已关闭", tagColor: "default" },
+        pending: { label: t("settings.feedback_status_pending", undefined, "待处理"), tagColor: "orange" },
+        processing: { label: t("settings.feedback_status_processing", undefined, "处理中"), tagColor: "blue" },
+        resolved: { label: t("settings.feedback_status_resolved", undefined, "已解决 / 已采纳"), tagColor: "green" },
+        closed: { label: t("settings.feedback_status_closed", undefined, "已关闭"), tagColor: "default" },
     };
 
     const typeInfo = typeConfig[item.type] || typeConfig.other;
     const statusInfo = statusConfig[item.status] || { label: item.status, tagColor: "default" };
     const TypeIcon = typeInfo.icon;
 
-    const formattedTime = new Date(item.createdAt).toLocaleString("zh-CN", {
+    const formattedTime = new Date(item.createdAt).toLocaleString(locale, {
         year: "numeric",
         month: "2-digit",
         day: "2-digit",
@@ -174,7 +186,7 @@ function FeedbackDetailCard({ item, onPreviewVideo }: { item: FeedbackItem; onPr
                         {item.archived ? (
                             <Tag className="flex items-center gap-1 m-0 text-[var(--fs-label)] px-2 py-0.5 bg-muted/60 text-muted-foreground border-border/60">
                                 <Archive className="size-3" />
-                                <span>已归档</span>
+                                <span>{t("settings.feedback_archived_badge", undefined, "已归档")}</span>
                             </Tag>
                         ) : null}
                         <Tag color={typeInfo.color} className="flex items-center gap-1 m-0 text-[var(--fs-label)] px-2 py-0.5">
@@ -196,7 +208,7 @@ function FeedbackDetailCard({ item, onPreviewVideo }: { item: FeedbackItem; onPr
                 <div className="space-y-2">
                     <div className="text-[var(--fs-label)] text-muted-foreground flex items-center gap-1">
                         <Paperclip className="size-3" />
-                        <span>附件文件 ({parsedAttachments.length})：</span>
+                        <span>{t("settings.feedback_attachments_count", { count: parsedAttachments.length }, `附件文件 (${parsedAttachments.length})：`)}</span>
                     </div>
                     <div className="flex items-center gap-2 flex-wrap">
                         {parsedAttachments.map((att) => (
@@ -225,9 +237,9 @@ function FeedbackDetailCard({ item, onPreviewVideo }: { item: FeedbackItem; onPr
                     <div className="flex items-center justify-between text-blue-500 dark:text-blue-400 font-semibold text-xs">
                         <span className="flex items-center gap-2">
                             <CheckCircle2 className="size-3.5" />
-                            <span>官方处理答复</span>
+                            <span>{t("settings.feedback_official_reply", undefined, "官方处理答复")}</span>
                         </span>
-                        {item.repliedAt ? <span className="font-normal opacity-80 text-[var(--fs-label)]">{new Date(item.repliedAt).toLocaleString("zh-CN", { month: "2-digit", day: "2-digit", hour: "2-digit", minute: "2-digit" })}</span> : null}
+                        {item.repliedAt ? <span className="font-normal opacity-80 text-[var(--fs-label)]">{new Date(item.repliedAt).toLocaleString(locale, { month: "2-digit", day: "2-digit", hour: "2-digit", minute: "2-digit" })}</span> : null}
                     </div>
                     <p className="text-foreground/90 whitespace-pre-wrap leading-relaxed">{item.adminReply}</p>
                 </div>
