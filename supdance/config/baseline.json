@@ -8,9 +8,9 @@
     "schemaVersion": 74
   },
   "supdanceRelease": {
-    "tag": "supdance/v2026.10.27.1",
+    "tag": "supdance/v2026.10.28.2",
     "branch": "supdance/main",
-    "baseCommit": "6825bcd82abfa650c7645a6bafe11fd24dc74326"
+    "baseCommit": "259e7e3fba0b6f70ac3cfd65941c3ca345d60249"
   },
   "coupledUpstreamFiles": [
     ".gitignore",
