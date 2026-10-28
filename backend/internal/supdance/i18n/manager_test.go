@@ -19,15 +19,17 @@ func TestDefaultLanguagesCoverAllSixLocales(t *testing.T) {
 
 func TestBuiltinEntriesHaveCompleteSixLanguageTranslations(t *testing.T) {
 	entries := BuiltinEntries()
-	if len(entries) < 80 {
-		t.Fatalf("expected rich builtin dictionary, got %d entries", len(entries))
+	if len(entries) < 1600 {
+		t.Fatalf("expected rich builtin dictionary with >= 1600 entries, got %d entries", len(entries))
 	}
 	seenKeys := make(map[string]bool, len(entries))
+	seenNamespaces := make(map[string]bool)
 	for _, item := range entries {
 		if seenKeys[item.Key] {
 			t.Fatalf("duplicate builtin key %q", item.Key)
 		}
 		seenKeys[item.Key] = true
+		seenNamespaces[item.Namespace] = true
 		if item.SourceText == "" {
 			t.Fatalf("entry %q has empty sourceText", item.Key)
 		}
@@ -35,6 +37,12 @@ func TestBuiltinEntriesHaveCompleteSixLanguageTranslations(t *testing.T) {
 			if item.Translations[code] == "" {
 				t.Fatalf("entry %q missing translation for %s", item.Key, code)
 			}
+		}
+	}
+
+	for _, requiredNs := range []string{"workbench", "tasks", "referral", "auth", "canvas", "plugins", "settings", "projects", "assets", "skills", "admin", "common"} {
+		if !seenNamespaces[requiredNs] {
+			t.Fatalf("expected namespace %q to be covered in builtin entries", requiredNs)
 		}
 	}
 }

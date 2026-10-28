@@ -1,5 +1,5 @@
-import { PLUGIN_API_VERSION, type RegisteredPlugin } from "@/lib/plugins/plugin-types";
-import { registerSupDancePlugin } from "@/supdance/adapters/compatibility";
+import { PLUGIN_API_VERSION_V2, type RegisteredPlugin } from "@/lib/plugins/plugin-types";
+import { registerSupDancePlugin, type SupDancePluginManifest } from "@/supdance/adapters/compatibility";
 import { useSupDanceI18nStore } from "./store";
 import { SUPDANCE_I18N_PLUGIN_ID } from "./types";
 
@@ -10,16 +10,27 @@ export const supdanceI18nPlugin: RegisteredPlugin = {
         version: "1.0.0",
         publishedAt: "2026-10-27",
         updatedAt: "2026-10-27",
-        apiVersion: PLUGIN_API_VERSION,
-        description: "为站点提供右上角语言切换图标与六大语种（简体中文、英语、繁体中文、日文、韩国语、西班牙语）实时切换能力，支持后台语言管理设置与在线字段词条热编辑。",
+        apiVersion: PLUGIN_API_VERSION_V2,
+        minHostVersion: "1.7.1",
+        description: "站点级多语言国际化插件：内置简中、英语、繁中、日文、韩语、西班牙语六大语种，提供右上角语言切换器、后台语言管理与动态词条即时修改能力。",
         author: "SupDance Team",
-        surfaces: ["hybrid"],
+        surfaces: ["hybrid", "settings"],
         permissions: ["canvas.read"],
         trusted: true,
+        runtime: {
+            backend: "declarative",
+            web: "declarative",
+        },
         contributes: {
             usageObservers: ["supdance-i18n"],
+            commands: [
+                {
+                    id: "supdance-i18n.switch-language",
+                    label: "切换站点界面语言",
+                },
+            ],
         },
-    },
+    } as SupDancePluginManifest,
     activate: () => {
         useSupDanceI18nStore.getState().setPluginEnabled(true);
     },

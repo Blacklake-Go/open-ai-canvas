@@ -35,3 +35,4 @@
 | 插件 ID | 插件名称 | 插件版本 | 所需宿主版本 | 宿主 API 版本 | 声明权限 | 测试结果 | 当前兼容状态 |
 | --- | --- | --- | --- | --- | --- | --- | --- |
 | `supdance-workflow-assistant` | SupDance 创作工作流助手 | `0.1.0` | `>= v1.7.1` | `yingce.plugin/v2` | `canvas.read`, `ai.text` | `web/test/supdance-extension-isolation.test.ts` 通过（含与上游 110+ 插件包的 ID 冲突扫描） | **兼容 (Verified)** |
+| `supdance-i18n` | 站点多语言与实时词条中心 | `1.0.0` | `>= v1.7.1` | `yingce.plugin/v2` | `canvas.read` | `web/test/supdance-i18n-plugin.test.ts`、`backend/internal/supdance/i18n` 单测通过（六大语种全量覆盖、DOM 翻译器与无障碍属性） | **兼容 (Verified)** |

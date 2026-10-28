@@ -106,13 +106,42 @@ describe("supdance-i18n plugin architecture and engine", () => {
         expect(translateByKey(dict, "common.totalCount", "en-US", "zh-CN", { count: 42 })).toBe("Total 42");
         expect(translateByKey(dict, "common.totalCount", "ja-JP", "zh-CN", { count: 42 })).toBe("全 42 件");
 
+        expect(BUILTIN_I18N_ENTRIES.length).toBeGreaterThanOrEqual(1600);
+
+        // Namespace translations (workbench, tasks, referral, auth, etc.)
+        expect(translateByKey(dict, "workbench.select_production_target", "en-US", "zh-CN")).toBe("Select Production Target");
+        expect(translateByKey(dict, "workbench.select_production_target", "ja-JP", "zh-CN")).toBe("制作目標を選択");
+        expect(translateByKey(dict, "workbench.select_production_target", "ko-KR", "zh-CN")).toBe("제작 목표 선택");
+        expect(translateByKey(dict, "workbench.select_production_target", "es-ES", "zh-CN")).toBe("Seleccionar objetivo de producción");
+
+        expect(translateByKey(dict, "workbench.start_creation", "en-US", "zh-CN")).toBe("Start Creating");
+        expect(translateByKey(dict, "tasks.op_text_to_video", "en-US", "zh-CN")).toBe("Text-to-Video");
+        expect(translateByKey(dict, "referral.copy_link", "en-US", "zh-CN")).toBe("Copy Link");
+        expect(translateByKey(dict, "common.please_retry", "es-ES", "zh-CN")).toBe("Por favor reintente");
+
+        expect(translateByKey(dict, "tasks.grouped_by_canvas", "en-US", "zh-CN")).toBe("Group by Canvas");
+        expect(translateByKey(dict, "tasks.grouped_by_canvas", "ja-JP", "zh-CN")).toBe("キャンバス別にグループ化");
+
+        expect(translateByKey(dict, "referral.my_link", "en-US", "zh-CN")).toBe("My Referral Link");
+        expect(translateByKey(dict, "referral.my_link", "ko-KR", "zh-CN")).toBe("내 추천 링크");
+
+        expect(translateByKey(dict, "auth.read_and_agree", "en-US", "zh-CN")).toBe("I have read and agree to");
+        expect(translateByKey(dict, "auth.read_and_agree", "es-ES", "zh-CN")).toBe("He leído y acepto");
+
         // Source text exact + whitespace-preserving match
         expect(translateSourceText(dict, "  自由画布  ", "en-US", "zh-CN")).toBe("  Infinite Canvas  ");
         expect(translateSourceText(dict, "自由画布", "ko-KR", "zh-CN")).toBe("무한 캔버스");
+        expect(translateSourceText(dict, "选择出品目标", "en-US", "zh-CN")).toBe("Select Production Target");
+        expect(translateSourceText(dict, "我的推广链接", "ja-JP", "zh-CN")).toBe("マイ紹介リンク");
 
         // Dynamic regex pattern match
         expect(translateSourceText(dict, "打开积分中心，可用 1,280 积分", "en-US", "zh-CN")).toBe("Open Credits Center, 1,280 available");
         expect(translateSourceText(dict, "已选择 5 项", "es-ES", "zh-CN")).toBe("5 seleccionados");
+        expect(translateSourceText(dict, "第 3 镜", "en-US", "zh-CN")).toBe("Shot #3");
+        expect(translateSourceText(dict, "第 5 镜", "ja-JP", "zh-CN")).toBe("カット #5");
+        expect(translateSourceText(dict, "10 秒", "en-US", "zh-CN")).toBe("10s");
+        expect(translateSourceText(dict, "共 12 个镜头", "en-US", "zh-CN")).toBe("12 shots total");
+        expect(translateSourceText(dict, "共 8 个镜头", "ko-KR", "zh-CN")).toBe("총 8개 샷");
     });
 
     test("supports hot-adding custom entries and overriding built-in entries at runtime", () => {

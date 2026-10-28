@@ -91,6 +91,39 @@ const DYNAMIC_PATTERN_RULES: readonly DynamicPatternRule[] = [
             "es-ES": (bal) => `Abrir centro de créditos, ${bal} disponibles`,
         },
     },
+    {
+        regex: /^第\s*(\d+)\s*镜$/,
+        format: {
+            "zh-CN": (shot) => `第 ${shot} 镜`,
+            "en-US": (shot) => `Shot #${shot}`,
+            "zh-TW": (shot) => `第 ${shot} 鏡`,
+            "ja-JP": (shot) => `カット #${shot}`,
+            "ko-KR": (shot) => `샷 #${shot}`,
+            "es-ES": (shot) => `Toma #${shot}`,
+        },
+    },
+    {
+        regex: /^(\d+)\s*秒$/,
+        format: {
+            "zh-CN": (sec) => `${sec} 秒`,
+            "en-US": (sec) => `${sec}s`,
+            "zh-TW": (sec) => `${sec} 秒`,
+            "ja-JP": (sec) => `${sec}秒`,
+            "ko-KR": (sec) => `${sec}초`,
+            "es-ES": (sec) => `${sec}s`,
+        },
+    },
+    {
+        regex: /^共\s*(\d+)\s*个镜头$/,
+        format: {
+            "zh-CN": (count) => `共 ${count} 个镜头`,
+            "en-US": (count) => `${count} shots total`,
+            "zh-TW": (count) => `共 ${count} 個鏡頭`,
+            "ja-JP": (count) => `合計 ${count} カット`,
+            "ko-KR": (count) => `총 ${count}개 샷`,
+            "es-ES": (count) => `${count} tomas en total`,
+        },
+    },
 ];
 
 function escapeRegexLiteral(text: string): string {
@@ -211,6 +244,14 @@ export function translateSourceText(dictionary: CompiledI18nDictionary, rawText:
         return `${leading}${translated}${trailing}`;
     }
 
+    for (const rule of DYNAMIC_PATTERN_RULES) {
+        const groups = core.match(rule.regex);
+        if (groups) {
+            const formatter = rule.format[locale] || rule.format[fallbackLocale] || rule.format["zh-CN"];
+            return `${leading}${formatter(...groups.slice(1))}${trailing}`;
+        }
+    }
+
     if (dictionary.templateRules?.length) {
         for (const rule of dictionary.templateRules) {
             const groups = core.match(rule.regex);
@@ -226,14 +267,6 @@ export function translateSourceText(dictionary: CompiledI18nDictionary, rawText:
                 const interpolated = interpolateTemplate(resolvedTemplate, vars);
                 return `${leading}${interpolated}${trailing}`;
             }
-        }
-    }
-
-    for (const rule of DYNAMIC_PATTERN_RULES) {
-        const groups = core.match(rule.regex);
-        if (groups) {
-            const formatter = rule.format[locale] || rule.format[fallbackLocale] || rule.format["zh-CN"];
-            return `${leading}${formatter(...groups.slice(1))}${trailing}`;
         }
     }
 
