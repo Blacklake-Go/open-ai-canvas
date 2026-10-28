@@ -16,6 +16,7 @@
 | **SupDance 工作流助手插件模板** | [`supdance/plugins/supdance-workflow-assistant/manifest.json`](../../supdance/plugins/supdance-workflow-assistant/manifest.json) | `yingce.plugin/v2` 契约 | **无侵入（独立目录）** | 原生 `.yingce-plugin` Manifest 合同 | 否 |
 | **站点多语言与实时词条插件 (`supdance-i18n`)** | [`web/src/supdance/plugins/i18n/`](../../web/src/supdance/plugins/i18n/)<br>[`backend/internal/supdance/i18n/`](../../backend/internal/supdance/i18n/)<br>[`supdance/plugins/supdance-i18n/`](../../supdance/plugins/supdance-i18n/) | `yingce.plugin/v2`、`SystemSetting`、Zustand、Ant Design `ConfigProvider` | **低耦合（插件化热插拔架构）** | 复用平台插件注册表、后台插件可用性开关与 `SystemSetting` KV存储 | 仅当顶栏或后台导航入口结构调整时需核对单行挂载点 |
 | **SupDance 全站 UI Design System 规范与合规体系** | [`docs/design-system/`](../../docs/design-system/)<br>[`web/test/design-system-compliance.test.ts`](../../web/test/design-system-compliance.test.ts) | `@/lib/skin-themes`, `globals.css`, Ant Design | **无侵入（纯新增规范与非侵入式门禁单测）** | 遵守上游四层架构与多皮肤合同 | 否（上游升级零冲突） |
+| **统一第三方社交登录插件 (`supdance-social-auth`)** | [`web/src/supdance/plugins/social-auth/`](../../web/src/supdance/plugins/social-auth/)<br>[`backend/internal/supdance/socialauth/`](../../backend/internal/supdance/socialauth/)<br>[`supdance/plugins/supdance-social-auth/`](../../supdance/plugins/supdance-social-auth/) | `yingce.plugin/v2`、OAuth2、JWT、Ant Design | **低耦合（插件化热插拔架构）** | 登录页挂载第三方登录组件与后台独立管理配置 | 仅当登录页结构变化时需核对挂载点 |
 
 ---
 
@@ -29,7 +30,7 @@
   2. `web/src/components/canvas/canvas-cloud-agent-connectors.tsx`
   3. `web/src/components/canvas/canvas-cloud-agent-panel.tsx`
 - **修改原因**：上游 `.yingce-plugin` 当前不开放云端 Agent 悬浮面板底部连接器栏与对话发送拦截钩子，因此需要在面板组件内挂载 `useCodexConnector`。
-- **上游基线**：`v1.7.1` (`89fcb53fd65969cb58ae1eba5d18381db51819d1`)
+- **上游基线**：`v1.7.2` (`e4e3a40c94242b8845650e4c7090ec7cb6c46ed0`)
 - **升级风险与回归保障**：已通过 `tools/supdance/check_upstream.py` 将上述 3 个文件纳入 `coupledUpstreamFiles` 监控；一旦上游修改这 3 个文件，升级报告会自动升级风险为 `HIGH` 并列出冲突路径。
 
 ### 补丁 ID：`supdance-workspace-governance`
@@ -37,7 +38,7 @@
   1. `.gitignore`
   2. `AGENTS.md`
 - **修改原因**：上游 `.gitignore` 默认忽略 `docs/*`，需最小化放行 `!docs/supdance/`；并在 `AGENTS.md` 末尾追加第 10 节二开文档索引指针，不改动上游既有 1–9 节约定。
-- **上游基线**：`v1.7.1` (`89fcb53fd65969cb58ae1eba5d18381db51819d1`)
+- **上游基线**：`v1.7.2` (`e4e3a40c94242b8845650e4c7090ec7cb6c46ed0`)
 - **升级风险与回归保障**：`LOW`，均位于文件尾部追加且已纳入 `coupledUpstreamFiles` 与 `SUPDANCE_UPSTREAM_PATCH_REGISTRY` 自动对齐校验。
 
 ### 补丁 ID：`supdance-i18n-plugin`
@@ -53,5 +54,5 @@
   9. `web/src/pages/admin/plugins/plugins-page.tsx`
   10. `web/src/router.tsx`
 - **修改原因**：以可热插拔插件形式在站点右上角挂载语言切换器 `<TopbarLanguageSwitcher />`、在 `AppProviders` 注入动态 `ConfigProvider locale` 与 `<SupDanceI18nRuntimeHost />`，并在后台挂载语言管理设置 (`/admin/i18n/settings`) 与字段词条修改 (`/admin/i18n/entries`) 路由。
-- **上游基线**：`v1.7.1` (`89fcb53fd65969cb58ae1eba5d18381db51819d1`)
+- **上游基线**：`v1.7.2` (`e4e3a40c94242b8845650e4c7090ec7cb6c46ed0`)
 - **升级风险与回归保障**：`LOW`，所有核心状态、词库、DOM 翻译器与后台管理页面均隔离在 `web/src/supdance/plugins/i18n/` 与 `backend/internal/supdance/i18n/` 下，宿主仅保留单行组件挂载与路由注册。

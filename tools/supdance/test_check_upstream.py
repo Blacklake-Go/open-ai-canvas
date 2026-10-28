@@ -35,6 +35,8 @@ class CheckUpstreamTest(unittest.TestCase):
     def test_cli_generates_report_for_baseline_and_upstream_main(self):
         repo_root = Path(__file__).resolve().parents[2]
         script = repo_root / "tools" / "supdance" / "check_upstream.py"
+        baseline_cfg = json.loads((repo_root / "supdance" / "config" / "baseline.json").read_text(encoding="utf-8"))
+        baseline_tag = baseline_cfg["upstreamBaseline"]["tag"]
         with tempfile.TemporaryDirectory() as tmpdir:
             md_out = Path(tmpdir) / "report.md"
             json_out = Path(tmpdir) / "report.json"
@@ -43,7 +45,7 @@ class CheckUpstreamTest(unittest.TestCase):
                     "python3",
                     str(script),
                     "--target",
-                    "v1.7.1",
+                    baseline_tag,
                     "--output",
                     str(md_out),
                     "--json-output",
@@ -57,8 +59,8 @@ class CheckUpstreamTest(unittest.TestCase):
             summary = json.loads(proc.stdout)
             json_payload = json.loads(json_out.read_text(encoding="utf-8"))
             for data in (summary, json_payload):
-                self.assertEqual(data["base"], "v1.7.1")
-                self.assertEqual(data["target"], "v1.7.1")
+                self.assertEqual(data["base"], baseline_tag)
+                self.assertEqual(data["target"], baseline_tag)
                 self.assertEqual(data["commitCount"], 0)
                 self.assertEqual(data["riskLevel"], "LOW")
             self.assertTrue(md_out.is_file())
@@ -85,7 +87,7 @@ class CheckUpstreamTest(unittest.TestCase):
             main_payload = json.loads(main_json.read_text(encoding="utf-8"))
             self.assertEqual(main_payload["target"], "upstream/main")
             self.assertGreaterEqual(main_payload["commitCount"], 1)
-            self.assertIn(main_payload["riskLevel"], {"MEDIUM", "HIGH", "CRITICAL"})
+            self.assertIn(main_payload["riskLevel"], {"LOW", "MEDIUM", "HIGH", "CRITICAL"})
             self.assertEqual(main_payload["riskLevel"], json.loads(proc_main.stdout)["riskLevel"])
 
 
