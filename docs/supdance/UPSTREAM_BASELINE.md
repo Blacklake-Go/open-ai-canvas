@@ -5,10 +5,10 @@
 | 维度 | 值 |
 | --- | --- |
 | **上游仓库** | `https://github.com/ddcat-ai/open-ai-canvas` |
-| **当前采用的上游正式标签** | `v1.7.1` |
-| **上游基线 Commit SHA** | `89fcb53fd65969cb58ae1eba5d18381db51819d1` |
-| **上游发布时间** | `2026-10-26T23:26:38+08:00` |
-| **数据库 Schema 版本** | `71` (`drama_segment_mode`) |
+| **当前采用的上游正式标签** | `v1.7.2` |
+| **上游基线 Commit SHA** | `e4e3a40c94242b8845650e4c7090ec7cb6c46ed0` |
+| **上游发布时间** | `2026-10-27T22:41:37+08:00` |
+| **数据库 Schema 版本** | `74` |
 | **外观配置 JSON 合同版本** | `10` (`updates` / `canvas` / `skinThemes` buttons v8+) |
 | **插件宿主 API 版本** | `yingce.plugin/v1`、`yingce.plugin/v2` |
 | **前端包管理器与锁文件** | `bun@1.3.9` (`web/bun.lock`) |
@@ -16,7 +16,7 @@
 
 ## 2. 生产镜像基线 (GHCR Digests)
 
-当前生产环境 (`y.supdance.com` / `one.supdance.com`) 对应 `v1.7.1` 的固定镜像摘要：
+当前生产环境 (`y.supdance.com` / `one.supdance.com`) 对应 `v1.7.2` 升级周期：
 
 - **`CANVAS_BACKEND_IMAGE`**：
   `ghcr.io/ddcat-ai/open-ai-canvas-backend@sha256:da21981ba178b3ce5e77b0ab19de828457f31275a404a77e98d263a51f9297fc`
@@ -27,7 +27,8 @@
 
 ## 3. 上游未发布分支动态观察
 
-截至本次基线记录时，上游 `upstream/main` 在 `v1.7.1` 之后有 1 个尚未打 Release 标签的提交：
+截至本次基线记录时，上游 `upstream/main` 在 `v1.7.2` 之后有 2 个文档提交：
 
-- `e9ce0604f9896e533cd2230b3d2711bf0d3f0e85`：`feat(platform): 推广中心 - 支持邀请注册、推广人管理与充值积分返佣`（涉及 41 个文件改动及数据库 Schema 变更）。
-- **处理策略**：遵循“默认优先稳定 Release，不自动部署上游 main”原则，暂不合并该未发布提交，待上游发布 `v1.7.2` 正式版后再通过 `integration/upstream-v1.7.2` 分支评估集成。
+- `d77e977a914b9758b2e8023c6c34173b9f078e0f`：`docs(readme): 产品介绍 - 新增影策世界引擎内测预告`
+- `dd121d798fefdbcf1914eb4f94fc2a76fdf2592d`：`docs(readme): 产品介绍 - 重写产品宣传并补充核心页面截图`
+- **分析结论**：两项均为根 `README.md` 与产品宣传截图更新，无业务逻辑、数据表、路由或核心 API 变更，当前基线 `v1.7.2` 运行稳健。

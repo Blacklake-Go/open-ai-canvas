@@ -4,11 +4,11 @@
 
 | 维度 | 值 |
 | --- | --- |
-| SupDance 当前已集成上游版本 | `v1.7.1` (`89fcb53fd65969cb58ae1eba5d18381db51819d1`) |
-| 本次评估目标上游版本 | `v1.7.1` (`89fcb53fd65969cb58ae1eba5d18381db51819d1`) |
-| 上游最新正式 Release | `v1.7.1` |
-| 上游开发分支 (`upstream/main`) 最新 Commit | `e9ce0604f9896e533cd2230b3d2711bf0d3f0e85` |
-| 共同祖先 (Merge Base) | `89fcb53fd65969cb58ae1eba5d18381db51819d1` |
+| SupDance 当前已集成上游版本 | `v1.7.2` (`e4e3a40c94242b8845650e4c7090ec7cb6c46ed0`) |
+| 本次评估目标上游版本 | `v1.7.2` (`e4e3a40c94242b8845650e4c7090ec7cb6c46ed0`) |
+| 上游最新正式 Release | `v1.7.2` |
+| 上游开发分支 (`upstream/main`) 最新 Commit | `d77e977a914b9758b2e8023c6c34173b9f078e0f` |
+| 共同祖先 (Merge Base) | `e4e3a40c94242b8845650e4c7090ec7cb6c46ed0` |
 | 相差提交数量 | `0` |
 | 变更文件数量 | `0` |
 | **综合升级风险等级** | **LOW** |
@@ -57,7 +57,7 @@
 
 ## 5. 标准集成操作流程
 
-1. 创建集成分支：`bash tools/supdance/prepare_integration.sh v1.7.1`
+1. 创建集成分支：`bash tools/supdance/prepare_integration.sh v1.7.2`
 2. 若存在冲突，优先保留上游安全/Bug 修复与 SupDance 连接器/扩展能力，**严禁整文件无差别使用 `--ours` 或 `--theirs`**。
 3. 运行验证：`cd web && bun run typecheck && bun run lint && bun test` 以及 `cd backend && go test ./...`。
 4. 通过 PR 提交人工审核，禁止自动合并到 `supdance/main` 或直接改动生产服务器。

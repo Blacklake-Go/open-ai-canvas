@@ -17,13 +17,17 @@ export const OFFICIAL_APPLICATION_PLUGIN_IDS = [
     ART_CRITIQUE_PLUGIN_ID,
     EDITOR_SHELL_PLUGIN_ID,
     "user-feedback",
+] as const;
+
+export const SUPDANCE_APPLICATION_PLUGIN_IDS = [
     SUPDANCE_I18N_PLUGIN_ID,
     SUPDANCE_SOCIAL_AUTH_PLUGIN_ID,
 ] as const;
 
 const officialApplicationIdSet = new Set<string>(OFFICIAL_APPLICATION_PLUGIN_IDS);
+const supdanceApplicationIdSet = new Set<string>(SUPDANCE_APPLICATION_PLUGIN_IDS);
 
 /** 判断插件是否为官方应用型插件（用户可在插件页自主启停）。 */
 export function isOfficialApplicationPluginId(pluginId: string) {
-    return officialApplicationIdSet.has(pluginId);
+    return officialApplicationIdSet.has(pluginId) || supdanceApplicationIdSet.has(pluginId);
 }

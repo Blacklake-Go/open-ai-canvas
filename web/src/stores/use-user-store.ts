@@ -89,5 +89,6 @@ export const useUserStore = create<UserStore>()((set) => ({
     setFeatures: (features) => set({ features: features ? { ...defaultFeatureAvailability, ...features } : defaultFeatureAvailability }),
     setReferralAvailable: (available) => set({ referralAvailable: Boolean(available) }),
     setHydrated: (hydrated) => set({ hydrated }),
-    clearSession: () => set({ user: null, runtimeLimits: { activeTaskLimit: 5, resourceUploadMB: 50, recycleBinRetentionDays: 30 }, drawingEngine: { defaultEngine: DEFAULT_DRAWING_ENGINE }, features: defaultFeatureAvailability, referralAvailable: false }),
+    clearSession: () =>
+        set({ user: null, runtimeLimits: { activeTaskLimit: 5, resourceUploadMB: 50, recycleBinRetentionDays: 30 }, drawingEngine: { defaultEngine: DEFAULT_DRAWING_ENGINE }, features: defaultFeatureAvailability, referralAvailable: false }),
 }));
