@@ -415,7 +415,7 @@ function WalletLedgerRow({ entry }: { entry: CreditLedgerEntry }) {
     const { t, locale } = useI18n();
     const positive = entry.amountMicrocredits > 0;
     const note = entry.note ? generationErrorMessage(entry.note) : "";
-    const title = entry.type === "consume" ? t("settings.wallet_entry_consume", undefined, "模型调用") : entry.type === "refund" ? t("settings.wallet_entry_refund", undefined, "消费退款") : entry.type === "payment_topup" ? t("settings.wallet_entry_topup", undefined, "在线充值") : entry.type === "redeem" ? t("settings.wallet_entry_redeem", undefined, "兑换码充值") : note || t("settings.wallet_entry_adjust", undefined, "积分调整");
+    const title = entry.type === "consume" ? t("settings.wallet_entry_consume", undefined, "模型调用") : entry.type === "refund" ? t("settings.wallet_entry_refund", undefined, "消费退款") : entry.type === "payment_topup" ? t("settings.wallet_entry_topup", undefined, "在线充值") : entry.type === "redeem" ? t("settings.wallet_entry_redeem", undefined, "兑换码充值") : entry.type === "referral_commission" ? t("settings.wallet_entry_referral_commission", undefined, "推广返佣") : note || t("settings.wallet_entry_adjust", undefined, "积分调整");
     return (
         <article className="workspace-wallet-ledger-row">
             <span className={cn("workspace-wallet-ledger-icon", positive ? "is-income" : "is-consume")}>{positive ? <Coins /> : <CreditCard />}</span>

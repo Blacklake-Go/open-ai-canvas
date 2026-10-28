@@ -1,5 +1,5 @@
 import { Button } from "antd";
-import { ArrowUpRight, Coins, LogOut, RefreshCw, Settings, ShieldCheck } from "lucide-react";
+import { ArrowUpRight, Coins, Gift, LogOut, RefreshCw, Settings, ShieldCheck } from "lucide-react";
 import { Link } from "react-router";
 import { useWalletBalance } from "@/hooks/use-wallet-balance";
 import { useWorkspaceLogout } from "@/hooks/use-workspace-logout";
@@ -13,6 +13,7 @@ export function WorkspaceAccountCard({ onWallet, onNavigate }: { onWallet: () =>
     const { t } = useI18n();
     const user = useUserStore((state) => state.user);
     const creditsEnabled = useUserStore((state) => state.features.creditsEnabled);
+    const referralAvailable = useUserStore((state) => state.referralAvailable);
     const { availableMicrocredits, refreshing, refresh } = useWalletBalance(user?.id, creditsEnabled);
     const { handleLogout, loggingOut } = useWorkspaceLogout();
     if (!user) return null;
@@ -28,6 +29,7 @@ export function WorkspaceAccountCard({ onWallet, onNavigate }: { onWallet: () =>
         </div> : null}
         <nav className="workspace-account-card-actions" aria-label={t("nav.account_actions")}>
             <Link to="/settings?section=profile" onClick={onNavigate}><Settings /><span>{t("nav.account_settings")}</span><ArrowUpRight /></Link>
+            {referralAvailable ? <Link to="/referral" onClick={onNavigate}><Gift /><span>{t("nav.referral_center", undefined, "推广中心")}</span><ArrowUpRight /></Link> : null}
             {user.role === "admin" ? <Link to="/admin" onClick={onNavigate}><ShieldCheck /><span>{t("nav.admin_console")}</span><ArrowUpRight /></Link> : null}
             <Button danger type="text" icon={<LogOut />} loading={loggingOut} onClick={() => void handleLogout()}>{t("nav.logout")}</Button>
         </nav>
