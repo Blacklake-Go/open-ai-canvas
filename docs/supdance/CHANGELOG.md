@@ -25,8 +25,11 @@
     - 适配上游新增的用户分组体系（`<UserGroupAvatarRing>`、`<UserGroupBadge>`）、个人记忆文件面板、短剧精修画布及导航栏重构。
     - 词典新增 `admin.user_groups`、`admin.user_group_manage`、`admin.user_group_badge`、`settings.agent_memory_doc`、`projects.drama_refine_canvas`、`projects.drama_send_to_canvas`、`projects.drama_apply_canvas`、`projects.drama_parallel_produce`、`projects.drama_episode_split`、`skills.recommend_install` 等核心词条并覆盖全部 6 国语言（简中、英语、繁中、日文、韩文、西语）。
     - 保留全站动态 DOM 翻译观察器 (`dom-observer.ts`)，对上游所有新增页面与动态卡片提供零侵入自动翻译支持。
-  - **统一第三方社交登录插件 (`supdance-social-auth`)**：
-    - 校验在登录页 (`/login`) 与管理后台配置中心 (`/admin/settings/social-auth`) 的挂载点与交互，与全站统一按钮规范（墨色主按钮与实体次要按钮）完美对齐。
+  - **统一第三方社交登录插件 (`supdance-social-auth`) 区域识别与热插拔重构**：
+    - 彻底移除前台登录页用户区域切换按钮（「当前显示国内渠道 · 切换至国际登录」及空白态切换），前台严格依服务端高精度 IP 判定结果直接呈现，杜绝用户手动越界。
+    - 根治 IP 误判技术根因：废除原粗暴 `/8` CIDR 段（修复日本、韩国、澳大利亚、新加坡等海外公网 IP 误判大陆问题），构建基于 APNIC 官方授权数据的高精度内存二分查找库（IPv4 匹配平均耗时 <20ns，零堆内存分配；IPv6 全面覆盖中国电信、中国移动、中国联通与教育科研网前缀）；支持 Cloudflare、AWS CloudFront、阿里云 CDN 等多边缘权威国家标头，港澳台（HK/MO/TW）及海外 IP 严格归入国际渠道。
+    - 严格遵循插件热插拔规范：后端新增 `SocialAuthPluginAvailable()` 平台守卫，后台停用插件时前后台双向即时熔断；公开接口收敛为仅返回当前访客合规渠道，禁止泄露异区渠道配置。
+    - 登录页表单联动：无可用渠道或插件停用时干净收起分割线，绝不悬挂多余视觉元素。
     - 8 大平台（微信、QQ、抖音、B站、Google、X、Instagram、TikTok）及 IP 分区检测机制运行稳定。
 - **治理与基线对齐**：
   - 更新 `supdance/config/baseline.json` 与 `UPSTREAM_BASELINE.md` 至 `v1.7.3`（Schema 77）。

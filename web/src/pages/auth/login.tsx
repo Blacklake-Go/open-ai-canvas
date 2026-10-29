@@ -23,6 +23,7 @@ export default function LoginPage() {
     const [methods, setMethods] = useState<VerificationMethod[]>([]);
     const [method, setMethod] = useState<"password" | VerificationMethod>("password");
     const [verification, setVerification] = useState({ ...emptyVerification });
+    const [hasSocialProviders, setHasSocialProviders] = useState(false);
     const next = safeNext(params.get("next"));
     const forgotPasswordURL = `/forgot-password?next=${encodeURIComponent(next)}`;
     const user = useUserStore((state) => state.user);
@@ -101,10 +102,16 @@ export default function LoginPage() {
             <Button type="primary" htmlType="submit" size="large" block loading={submitting} icon={<ArrowRight className="size-4" />} iconPlacement="end">
                 {t("auth.login")}
             </Button>
-            <Divider plain className="auth-scene-divider">
-                {t("auth.social_login_divider")}
-            </Divider>
-            <SocialLoginButtons variant="light-card" next={next} />
+            {hasSocialProviders ? (
+                <Divider plain className="auth-scene-divider">
+                    {t("auth.social_login_divider")}
+                </Divider>
+            ) : null}
+            <SocialLoginButtons
+                variant="light-card"
+                next={next}
+                onProvidersChange={(providers) => setHasSocialProviders(providers.length > 0)}
+            />
             {linuxdoEnabled ? (
                 <div className="pt-2">
                     <Button size="large" block icon={<LinuxDOIcon />} href={linuxDOLoginURL(next)}>

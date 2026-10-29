@@ -19,6 +19,7 @@ export default function DarkLoginPage() {
     const [password, setPassword] = useState("");
     const [submitting, setSubmitting] = useState(false);
     const [acceptedTerms, setAcceptedTerms] = useState(true);
+    const [hasSocialProviders, setHasSocialProviders] = useState(false);
 
     const next = safeNext(params.get("next"));
     const user = useUserStore((state) => state.user);
@@ -197,9 +198,11 @@ export default function DarkLoginPage() {
                     </form>
 
                     {/* Divider for Social Login */}
-                    <Divider className="my-5 border-white/10 text-xs text-slate-500">
-                        或使用第三方账号快捷登录
-                    </Divider>
+                    {hasSocialProviders ? (
+                        <Divider className="my-5 border-white/10 text-xs text-slate-500">
+                            或使用第三方账号快捷登录
+                        </Divider>
+                    ) : null}
 
                     {/* Dynamic Social Login Grid */}
                     <SocialLoginButtons
@@ -207,6 +210,7 @@ export default function DarkLoginPage() {
                         next={next}
                         acceptedTerms={acceptedTerms}
                         onRequireAcceptTerms={() => acceptedTerms}
+                        onProvidersChange={(providers) => setHasSocialProviders(providers.length > 0)}
                     />
 
                     {/* Terms Agreement Checkbox */}

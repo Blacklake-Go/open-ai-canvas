@@ -384,17 +384,23 @@ func (s *Service) GetPublicProviders(r *http.Request) (*PublicProvidersResponse,
 		}
 	}
 
-	return &PublicProvidersResponse{
+	resp := &PublicProvidersResponse{
 		Region:         ipLoc.Region,
 		DetectedRegion: ipLoc.Region,
 		RegionLabel:    ipLoc.RegionLabel,
 		ClientIP:       ipLoc.ClientIP,
 		FallbackRegion: settings.DefaultFallbackRegion,
 		Providers:      activeList,
-		CN:             allRegions[RegionCN],
-		Intl:           allRegions[RegionIntl],
-		AllRegions:     allRegions,
-	}, nil
+	}
+
+	// Strictly restrict cross-region provider details to simulated admin/testing sessions
+	if ipLoc.IsSimulated {
+		resp.CN = allRegions[RegionCN]
+		resp.Intl = allRegions[RegionIntl]
+		resp.AllRegions = allRegions
+	}
+
+	return resp, nil
 }
 
 // BeginAuth initializes OAuth flow with authoritative Geo-Partitioning validation and state recording.

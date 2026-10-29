@@ -64,4 +64,21 @@ describe("SupDance Social Auth Plugin", () => {
         expect(routerSource).toContain('path: "settings/social-auth"');
         expect(routerSource).toContain("SocialAuthSettingsPage");
     });
+
+    test("social-login-buttons component does not display region switch button and follows hot-plugging", () => {
+        const compPath = resolve(import.meta.dir, "../src/supdance/plugins/social-auth/components/social-login-buttons.tsx");
+        const compSource = readFileSync(compPath, "utf-8");
+
+        // Verify region switch button and strings are completely removed
+        expect(compSource).not.toContain("showing_cn_switch_intl");
+        expect(compSource).not.toContain("showing_intl_switch_cn");
+        expect(compSource).not.toContain("switch_to_intl");
+        expect(compSource).not.toContain("switch_to_cn");
+        expect(compSource).not.toContain("Globe");
+
+        // Verify plugin store hot-plug integration
+        expect(compSource).toContain("usePluginStore");
+        expect(compSource).toContain("SUPDANCE_SOCIAL_AUTH_PLUGIN_ID");
+        expect(compSource).toContain("platformAvailable");
+    });
 });
