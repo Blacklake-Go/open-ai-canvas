@@ -6,6 +6,7 @@ import { Link, useLocation, useNavigate, useSearchParams } from "react-router";
 
 import { BrandLogoFrame } from "@/components/brand/brand-logo";
 import { UserAvatar } from "@/components/layout/user-avatar";
+import { UserGroupAvatarRing, UserGroupBadge } from "@/components/layout/user-group-badge";
 import { Kbd } from "@/components/ui/base/kbd";
 import { navigationTools, type NavigationToolSlug } from "@/constant/navigation-tools";
 import { useWorkspaceLogout } from "@/hooks/use-workspace-logout";
@@ -76,7 +77,8 @@ function buildNav(features: FeatureAvailability, t: (key: string) => string): { 
 function WorkspaceSidebarProfile({ collapsed, user, onExpand, onCollapse }: { collapsed: boolean; user: NonNullable<ReturnType<typeof useUserStore.getState>["user"]> | null; onExpand: () => void; onCollapse: () => void }) {
     const { t } = useI18n();
     const [menuOpen, setMenuOpen] = useState(false);
-    const profileName = user?.displayName || user?.username || t("nav.guest");
+    const userGroup = useUserStore((state) => state.userGroup);
+    const profileName = user?.displayName || user?.username || t("nav.guest", undefined, "未登录");
 
     if (!user) {
         return (
@@ -105,12 +107,12 @@ function WorkspaceSidebarProfile({ collapsed, user, onExpand, onCollapse }: { co
             <WorkspaceSidebarStorageMeter collapsed={collapsed} />
             <div className={cn("app-workspace-sidebar-profile-row", collapsed && "is-collapsed")}>
                 <Popover open={menuOpen} onOpenChange={setMenuOpen} trigger="click" placement="topLeft" arrow={false} rootClassName="workspace-account-popover" content={content}>
-                    <button type="button" className={cn("app-workspace-sidebar-profile", collapsed && "is-collapsed")} aria-label={t("nav.account_menu")} title={profileName}>
-                        <UserAvatar user={user} className="app-workspace-sidebar-profile-avatar" />
+                    <button type="button" className={cn("app-workspace-sidebar-profile", collapsed && "is-collapsed")} aria-label={t("nav.account_menu", undefined, "打开账户菜单")} title={profileName}>
+                        <UserGroupAvatarRing><UserAvatar user={user} className="app-workspace-sidebar-profile-avatar" /></UserGroupAvatarRing>
                         {!collapsed ? (
                             <span className="app-workspace-sidebar-profile-copy">
                                 <strong>{profileName}</strong>
-                                <span>{t("nav.workspace")}</span>
+                                {userGroup?.badgeStyle === "vip" || userGroup?.badgeStyle === "svip" ? <UserGroupBadge className="self-start" /> : <span>{t("nav.workspace", undefined, "创作工作台")}</span>}
                             </span>
                         ) : null}
                     </button>
