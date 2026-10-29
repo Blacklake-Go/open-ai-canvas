@@ -96,5 +96,13 @@ export const useUserStore = create<UserStore>()((set) => ({
     setReferralAvailable: (available) => set({ referralAvailable: Boolean(available) }),
     setUserGroup: (userGroup) => set({ userGroup: userGroup || null }),
     setHydrated: (hydrated) => set({ hydrated }),
-    clearSession: () => set({ user: null, runtimeLimits: { activeTaskLimit: 5, resourceUploadMB: 50, recycleBinRetentionDays: 30 }, drawingEngine: { defaultEngine: DEFAULT_DRAWING_ENGINE }, features: defaultFeatureAvailability, referralAvailable: false, userGroup: null }),
+    clearSession: () =>
+        set({
+            user: null,
+            runtimeLimits: { activeTaskLimit: 5, resourceUploadMB: 50, recycleBinRetentionDays: 30 },
+            drawingEngine: { defaultEngine: DEFAULT_DRAWING_ENGINE },
+            features: defaultFeatureAvailability,
+            referralAvailable: false,
+            userGroup: null,
+        }),
 }));
