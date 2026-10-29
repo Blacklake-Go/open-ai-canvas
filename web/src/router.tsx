@@ -72,6 +72,7 @@ const AdminReferralPage = lazy(() => import("@/pages/admin/referral/referral-adm
 const TestVoiceRecording = lazy(() => import("@/pages/test-voice-recording"));
 const UserLayout = lazy(() => import("@/layouts/user-layout"));
 const RequireFeature = lazy(() => import("@/components/auth/require-feature").then((module) => ({ default: module.RequireFeature })));
+const RequirePlugin = lazy(() => import("@/components/auth/require-plugin").then((module) => ({ default: module.RequirePlugin })));
 
 function deferred(element: ReactNode) {
     return <Suspense fallback={<WorkspaceRouteLoader />}>{element}</Suspense>;
@@ -150,7 +151,13 @@ export const router = createBrowserRouter([
             },
             {
                 path: "/toolbox/music",
-                element: <RequireAuth>{deferred(<MusicWorkbenchPage />)}</RequireAuth>,
+                element: (
+                    <RequireAuth>
+                        <RequirePlugin pluginId="music-generation" pluginName="AI 音乐生成">
+                            {deferred(<MusicWorkbenchPage />)}
+                        </RequirePlugin>
+                    </RequireAuth>
+                ),
             },
             {
                 path: "/tasks",

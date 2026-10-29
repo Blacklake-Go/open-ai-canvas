@@ -10,6 +10,7 @@ import {
     type MusicTask,
     type SubmitMusicTaskPayload,
 } from "../services/music-api";
+import { syncMusicTaskToAssetStore } from "../services/music-asset-bridge";
 
 const draftStorage = localforage.createInstance({
     name: "supdance_music_drafts",
@@ -130,6 +131,8 @@ type MusicState = {
     tasks: MusicTask[];
     loadingTasks: boolean;
     activeTaskIds: Set<string>;
+    activeTrackId: string | null;
+    activeTrack: MusicTask | null;
 
     // Audio Playback Controller (Single Instance Guard & Zero Autoplay)
     playingTaskId: string | null;
@@ -142,6 +145,7 @@ type MusicState = {
     isLoop: boolean;
 
     // Actions
+    setActiveTrack: (task: MusicTask | null) => void;
     setDraftField: <K extends keyof MusicDraft>(field: K, value: MusicDraft[K], userId?: string) => void;
     setModel: (model: string, userId?: string) => void;
     loadUserDraft: (userId: string) => Promise<void>;
@@ -167,6 +171,8 @@ export const useMusicStore = create<MusicState>((set, get) => ({
     tasks: [],
     loadingTasks: false,
     activeTaskIds: new Set<string>(),
+    activeTrackId: null,
+    activeTrack: null,
 
     playingTaskId: null,
     audioElement: null,
@@ -176,6 +182,13 @@ export const useMusicStore = create<MusicState>((set, get) => ({
     volume: 0.8,
     isMuted: false,
     isLoop: false,
+
+    setActiveTrack: (task) => {
+        set({
+            activeTrack: task,
+            activeTrackId: task ? (task.taskId || task.id) : null,
+        });
+    },
 
     setDraftField: (field, value, userId) => {
         set((state) => {
@@ -239,13 +252,32 @@ export const useMusicStore = create<MusicState>((set, get) => ({
                 if (t.status === "submitted" || t.status === "queued" || t.status === "generating" || t.status === "transcoding") {
                     activeIds.add(t.taskId || t.id);
                 }
+                // 资产桥接：如果任务已完成，自动同步入库至平台全局素材库 (AssetStore)
+                if (t.status === "completed" && t.resultAudioUrl) {
+                    syncMusicTaskToAssetStore(t);
+                }
             });
 
-            set({ tasks: res.items, loadingTasks: false, activeTaskIds: activeIds });
+            const currentActiveTrack = get().activeTrack;
+            // 若当前未选定播放曲目，默认载入最新一条完成作品（或第一条作品）
+            let nextActiveTrack = currentActiveTrack;
+            if (!nextActiveTrack && res.items.length > 0) {
+                nextActiveTrack = res.items.find((item) => item.status === "completed" && item.resultAudioUrl) || res.items[0];
+            }
 
-            // Ensure background polling is running for active tasks
+            set({
+                tasks: res.items,
+                loadingTasks: false,
+                activeTaskIds: activeIds,
+                activeTrack: nextActiveTrack,
+                activeTrackId: nextActiveTrack ? (nextActiveTrack.taskId || nextActiveTrack.id) : null,
+            });
+
+            // 启动自适应退避轮询
             if (activeIds.size > 0 && !pollInterval) {
+                let pollCycles = 0;
                 pollInterval = setInterval(() => {
+                    pollCycles += 1;
                     const currentActive = get().activeTaskIds;
                     if (currentActive.size === 0) {
                         if (pollInterval) {
@@ -254,22 +286,37 @@ export const useMusicStore = create<MusicState>((set, get) => ({
                         }
                         return;
                     }
+
+                    // 自适应轮询间隔：前 5 次 (约 10s) 每次执行，后续每 2 次执行一次，超过 15 次每 3 次执行一次
+                    if (pollCycles > 15 && pollCycles % 3 !== 0) return;
+                    if (pollCycles > 5 && pollCycles % 2 !== 0) return;
+
                     currentActive.forEach(async (tid) => {
                         try {
                             const updated = await queryMusicTask(tid);
+                            if (updated.status === "completed" && updated.resultAudioUrl) {
+                                syncMusicTaskToAssetStore(updated);
+                            }
                             set((state) => {
                                 const newActive = new Set(state.activeTaskIds);
                                 if (updated.status === "completed" || updated.status === "failed" || updated.status === "cancelled") {
                                     newActive.delete(tid);
                                 }
                                 const updatedTasks = state.tasks.map((item) => ((item.taskId || item.id) === tid ? updated : item));
-                                return { tasks: updatedTasks, activeTaskIds: newActive };
+                                const currentTrackId = state.activeTrackId;
+                                const isCur = currentTrackId === tid || (!currentTrackId && updated.status === "completed");
+                                return {
+                                    tasks: updatedTasks,
+                                    activeTaskIds: newActive,
+                                    activeTrack: isCur ? updated : state.activeTrack,
+                                    activeTrackId: isCur ? (updated.taskId || updated.id) : state.activeTrackId,
+                                };
                             });
                         } catch {
                             // ignore transient polling error
                         }
                     });
-                }, 3000);
+                }, 2000);
             }
         } catch {
             set({ loadingTasks: false });

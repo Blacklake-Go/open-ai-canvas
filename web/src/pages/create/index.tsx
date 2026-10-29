@@ -43,6 +43,7 @@ import { createCreationSubmitGate } from "./creation-submit-gate";
 import { creationVideoConfig } from "./creation-generation-config";
 import { CreationLoginDialog } from "./creation-login-dialog";
 import { submitMusicTask, queryMusicTask, type SubmitMusicTaskPayload } from "@/supdance/plugins/music-generation/services/music-api";
+import { syncMusicTaskToAssetStore } from "@/supdance/plugins/music-generation/services/music-asset-bridge";
 
 const AssetLibraryPickerModal = lazy(() => import("@/components/assets/asset-library-picker-modal").then((module) => ({ default: module.AssetLibraryPickerModal })));
 const InspirationHall = lazy(() => import("@/pages/inspirations"));
@@ -869,12 +870,14 @@ export default function CreatePage() {
                 let finished = false;
                 let pollAttempts = 0;
                 while (!finished && !requestLifecycle.signal.aborted) {
-                    await new Promise((res) => setTimeout(res, 2500));
+                    const pollDelay = pollAttempts < 5 ? 2000 : pollAttempts < 12 ? 3500 : 5000;
+                    await new Promise((res) => setTimeout(res, pollDelay));
                     pollAttempts++;
                     try {
                         const taskDetail = await queryMusicTask(taskId);
                         if (taskDetail.status === "completed") {
                             finished = true;
+                            syncMusicTaskToAssetStore(taskDetail);
                             updateOriginAssistant((item) => ({
                                 ...item,
                                 status: "done",

@@ -29,6 +29,7 @@ import { modelQuoteDescription, modelQuoteRequest } from "@/lib/model-pricing";
 import { quoteModel, type LogicalModelQuote } from "@/services/api/logical-models";
 import { modelOptionName, resolveModelChannel, type AiConfig } from "@/stores/use-config-store";
 import { useUserStore } from "@/stores/use-user-store";
+import { usePluginStore } from "@/stores/use-plugin-store";
 import type { PromptOptimizerProvider } from "@/lib/plugins/plugin-types";
 import { type CreationReference } from "./creation-references";
 import { creationAttachmentKind, type CreationAttachment, type CreationMode } from "./creation-assets";
@@ -729,10 +730,18 @@ export function CreationComposer(props: ComposerProps) {
 
 export function CreationModeTabs({ mode, onModeChange, agentActive = false, onAgentSelect, orientation = "horizontal" }: { mode: CreationMode; onModeChange: (mode: CreationMode) => void; agentActive?: boolean; onAgentSelect?: () => void; orientation?: "horizontal" | "vertical" }) {
     const reducedMotion = useReducedMotion();
+    const musicPluginActive = usePluginStore((state) => {
+        const inst = state.installations.find((item) => item.manifest.id === "music-generation");
+        if (inst) return inst.enabled;
+        const pluginState = state.pluginStates["music-generation"];
+        if (pluginState) return pluginState.effectiveEnabled;
+        return true;
+    });
+
     const items: { mode: CreationMode; icon: ReactNode; label: string }[] = [
         { mode: "video", icon: <Film />, label: "视频" },
         { mode: "image", icon: <ImageIcon />, label: "图片" },
-        { mode: "music", icon: <Music />, label: "音乐" },
+        ...(musicPluginActive ? [{ mode: "music" as CreationMode, icon: <Music />, label: "音乐" }] : []),
         { mode: "text", icon: <MessageSquareText />, label: "文本" },
     ];
     const indicator = (pressed: boolean) => pressed ? (

@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { Download, AlertCircle, Disc3 } from "lucide-react";
 import { useI18n } from "@/supdance/plugins/i18n";
 import { startBrowserDownload } from "@/services/browser-download";
+import { useMusicStore } from "../stores/use-music-store";
 import { WaveformPlayer } from "./waveform-player";
 import { getAudioDownloadUrl, type AudioFormat, type MusicTask } from "../services/music-api";
 
@@ -12,6 +13,11 @@ interface TaskCardProps {
 export function TaskCard({ task }: TaskCardProps) {
     const { t } = useI18n();
     const [downloadingFormat, setDownloadingFormat] = useState<AudioFormat | null>(null);
+
+    const activeTrackId = useMusicStore((state) => state.activeTrackId);
+    const setActiveTrack = useMusicStore((state) => state.setActiveTrack);
+    const taskId = task.taskId || task.id;
+    const isSelected = activeTrackId === taskId;
 
     const isTerminal = task.status === "completed" || task.status === "failed" || task.status === "cancelled";
     const isCompleted = task.status === "completed" && task.resultAudioUrl;
@@ -25,7 +31,14 @@ export function TaskCard({ task }: TaskCardProps) {
     };
 
     return (
-        <div className="plugin-task-card flex flex-col gap-3 rounded-xl border border-border/60 bg-card p-4 shadow-sm transition-all hover:border-border">
+        <div
+            onClick={() => setActiveTrack(task)}
+            className={`plugin-task-card flex flex-col gap-3 rounded-xl border p-4 shadow-xs transition-all cursor-pointer ${
+                isSelected
+                    ? "border-emerald-500/80 bg-emerald-500/[0.04] shadow-sm ring-1 ring-emerald-500/30"
+                    : "border-border/60 bg-card hover:border-border hover:bg-muted/20"
+            }`}
+        >
             <div className="flex items-start justify-between gap-2">
                 <div className="flex items-center gap-2 min-w-0">
                     <span className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">

@@ -15,6 +15,7 @@ import { cn } from "@/lib/utils";
 import { preloadWorkspaceRoute } from "@/lib/workspace-route-modules";
 import { useUserStore, type FeatureAvailability } from "@/stores/use-user-store";
 import { useAppearanceStore } from "@/stores/use-appearance-store";
+import { usePluginStore } from "@/stores/use-plugin-store";
 import { WorkspaceAccountCard } from "./workspace-account-card";
 import { WorkspaceSidebarCheckin } from "./workspace-sidebar-checkin";
 import { WorkspaceSidebarStorageMeter } from "./workspace-sidebar-storage-meter";
@@ -42,7 +43,7 @@ function toolItem(slug: NavigationToolSlug, to: string): WorkspaceNavItem {
     return { id: slug, title: tool?.label ?? slug, icon: tool?.icon, to };
 }
 
-function buildNav(features: FeatureAvailability, t: (key: string) => string): { groups: WorkspaceNavGroup[]; footer: WorkspaceNavItem[] } {
+export function buildNav(features: FeatureAvailability, t: (key: string) => string, musicPluginActive = true): { groups: WorkspaceNavGroup[]; footer: WorkspaceNavItem[] } {
     const groups: WorkspaceNavGroup[] = [
         {
             items: [
@@ -56,7 +57,7 @@ function buildNav(features: FeatureAvailability, t: (key: string) => string): { 
             items: [
                 ...(features.imageWorkbenchEnabled ? [{ id: "toolbox-image", title: t("nav.image_gen"), icon: ImageIcon, to: "/toolbox/image" }] : []),
                 ...(features.videoWorkbenchEnabled ? [{ id: "toolbox-video", title: t("nav.video_gen"), icon: Video, to: "/toolbox/video" }] : []),
-                { id: "toolbox-music", title: t("music.nav_music_gen"), icon: Music, to: "/toolbox/music" },
+                ...(musicPluginActive ? [{ id: "toolbox-music", title: t("music.nav_music_gen"), icon: Music, to: "/toolbox/music" }] : []),
                 { ...toolItem("skills", "/skills"), title: t("nav.skills") },
                 ...(features.pluginCenterEnabled ? [{ ...toolItem("plugins", "/plugins"), title: t("nav.plugins") }] : []),
             ],
@@ -367,8 +368,15 @@ export function WorkspaceSidebarNav({ collapsed, onNavigate, onOpenSearch, onExp
     const [searchParams] = useSearchParams();
     const features = useUserStore((state) => state.features);
     const user = useUserStore((state) => state.user);
+    const musicPluginActive = usePluginStore((state) => {
+        const inst = state.installations.find((item) => item.manifest.id === "music-generation");
+        if (inst) return inst.enabled;
+        const pluginState = state.pluginStates["music-generation"];
+        if (pluginState) return pluginState.effectiveEnabled;
+        return true;
+    });
     const { handleLogout } = useWorkspaceLogout();
-    const { groups, footer } = useMemo(() => buildNav(features, t), [features, t]);
+    const { groups, footer } = useMemo(() => buildNav(features, t, musicPluginActive), [features, t, musicPluginActive]);
 
     const activeId = workspaceNavActiveId(pathname, searchParams.get("section"));
 
