@@ -498,10 +498,16 @@ func (h *musicLifecycleHost) TrackMusicTaskExecution() func() {
 	return h.svc.TrackMusicTaskExecution()
 }
 
+var musicDBMigrateOnce sync.Once
+
 func (s *Service) MusicService() *music.Service {
 	var repo music.Repository
 	if s.repo != nil && s.repo.DB() != nil {
-		repo = music.NewRepository(s.repo.DB())
+		gormRepo := music.NewRepository(s.repo.DB())
+		musicDBMigrateOnce.Do(func() {
+			_ = gormRepo.AutoMigrate(context.Background())
+		})
+		repo = gormRepo
 	}
 	return music.NewService(
 		repo,
