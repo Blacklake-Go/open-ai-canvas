@@ -7,7 +7,7 @@ import type { RouteObject } from "react-router";
 import type { PluginHostContext, PluginManifest, PluginManifestV2, RegisteredPlugin } from "@/lib/plugins/plugin-types";
 import { getRegisteredPlugin, registerPlugin, unregisterPlugin } from "@/lib/plugins/plugin-registry";
 
-export const SUPDANCE_HOST_VERSION = "1.7.2" as const;
+export const SUPDANCE_HOST_VERSION = "1.7.3" as const;
 
 export type UpstreamPatchRecord = {
     id: string;
@@ -26,7 +26,7 @@ export type UpstreamPatchRecord = {
 export const SUPDANCE_UPSTREAM_PATCH_REGISTRY: readonly UpstreamPatchRecord[] = [
     {
         id: "supdance-codex-agent-connector",
-        upstreamBaseline: "v1.7.2",
+        upstreamBaseline: "v1.7.3",
         feature: "本机 SupDance Canvas Agent (Codex) 连接器发现、配对、SSE 与对话转发",
         coupledUpstreamFiles: ["web/src/components/canvas/canvas-cloud-agent-connectors.css", "web/src/components/canvas/canvas-cloud-agent-connectors.tsx", "web/src/components/canvas/canvas-cloud-agent-panel.tsx"],
         files: [
@@ -41,7 +41,7 @@ export const SUPDANCE_UPSTREAM_PATCH_REGISTRY: readonly UpstreamPatchRecord[] = 
     },
     {
         id: "supdance-workspace-governance",
-        upstreamBaseline: "v1.7.2",
+        upstreamBaseline: "v1.7.3",
         feature: "SupDance 二开文档放行规则与 AI 编程工作区索引入口",
         coupledUpstreamFiles: [".gitignore", "AGENTS.md"],
         files: [".gitignore", "AGENTS.md"],
@@ -50,7 +50,7 @@ export const SUPDANCE_UPSTREAM_PATCH_REGISTRY: readonly UpstreamPatchRecord[] = 
     },
     {
         id: "supdance-i18n-plugin",
-        upstreamBaseline: "v1.7.2",
+        upstreamBaseline: "v1.7.3",
         feature: "站点多语言插件 (supdance-i18n)：右上角六国语言切换图标、响应式词条引擎、后台语言管理设置与在线字段修改页面",
         coupledUpstreamFiles: [
             "backend/internal/app/plugin_management.go",

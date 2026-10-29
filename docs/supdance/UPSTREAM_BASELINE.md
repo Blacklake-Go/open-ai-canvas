@@ -5,10 +5,10 @@
 | 维度 | 值 |
 | --- | --- |
 | **上游仓库** | `https://github.com/ddcat-ai/open-ai-canvas` |
-| **当前采用的上游正式标签** | `v1.7.2` |
-| **上游基线 Commit SHA** | `e4e3a40c94242b8845650e4c7090ec7cb6c46ed0` |
-| **上游发布时间** | `2026-10-27T22:41:37+08:00` |
-| **数据库 Schema 版本** | `74` |
+| **当前采用的上游正式标签** | `v1.7.3` |
+| **上游基线 Commit SHA** | `0a6f7c4d345d75e9f5f596644c88410e63bb1bc6`（含正式 Release `v1.7.3` 与最新修复） |
+| **上游发布时间** | `2026-10-28T21:15:00+08:00` |
+| **数据库 Schema 版本** | `77` |
 | **外观配置 JSON 合同版本** | `10` (`updates` / `canvas` / `skinThemes` buttons v8+) |
 | **插件宿主 API 版本** | `yingce.plugin/v1`、`yingce.plugin/v2` |
 | **前端包管理器与锁文件** | `bun@1.3.9` (`web/bun.lock`) |

@@ -4,6 +4,35 @@
 
 ---
 
+## [supdance/v2026.10.29.1] — 2026-10-29
+
+### 上游基线深度同步
+- **Tag**: `v1.7.3`
+- **Commit**: `0a6f7c4d345d75e9f5f596644c88410e63bb1bc6`（含正式 Release `v1.7.3` 与最新修复）
+- **Database Schema**: `77`
+
+### 深度升级与插件适配 (Upgrade & Plugins Adaptation)
+- **上游核心功能深度集成**：
+  - 合并上游 `v1.7.3` 官方 Release 及后续提交（22 个 Commit，419 个变更文件），包括：
+    - Schema 75-77：用户分组体系、分组渠道权限、模型倍率与多币种计价（`models_user_group.go` 等）。
+    - 短剧精修画布投送与采用、分集方式、制作台并行出片与提示词参考图引用约束。
+    - 云端 Agent 个人记忆文件（`agent_memory_document`）、技能目录自动发现与推荐安装、回复选项卡与右侧停靠。
+    - 全站统一墨色主按钮与实体次要按钮规范（`button-tokens.css`）。
+    - 插件宿主素材上传、幂等交单与分离式回查。
+    - xAI 视频协议嵌套 video.url 结果提取及 Pi 工具批次查看图片补送修复。
+- **两大自研插件深度适配与兼容保障**：
+  - **站点多语言与实时词条插件 (`supdance-i18n`)**：
+    - 适配上游新增的用户分组体系（`<UserGroupAvatarRing>`、`<UserGroupBadge>`）、个人记忆文件面板、短剧精修画布及导航栏重构。
+    - 词典新增 `admin.user_groups`、`admin.user_group_manage`、`admin.user_group_badge`、`settings.agent_memory_doc`、`projects.drama_refine_canvas`、`projects.drama_send_to_canvas`、`projects.drama_apply_canvas`、`projects.drama_parallel_produce`、`projects.drama_episode_split`、`skills.recommend_install` 等核心词条并覆盖全部 6 国语言（简中、英语、繁中、日文、韩文、西语）。
+    - 保留全站动态 DOM 翻译观察器 (`dom-observer.ts`)，对上游所有新增页面与动态卡片提供零侵入自动翻译支持。
+  - **统一第三方社交登录插件 (`supdance-social-auth`)**：
+    - 校验在登录页 (`/login`) 与管理后台配置中心 (`/admin/settings/social-auth`) 的挂载点与交互，与全站统一按钮规范（墨色主按钮与实体次要按钮）完美对齐。
+    - 8 大平台（微信、QQ、抖音、B站、Google、X、Instagram、TikTok）及 IP 分区检测机制运行稳定。
+- **治理与基线对齐**：
+  - 更新 `supdance/config/baseline.json` 与 `UPSTREAM_BASELINE.md` 至 `v1.7.3`（Schema 77）。
+  - 更新 `web/src/supdance/adapters/compatibility.ts` 的 `SUPDANCE_HOST_VERSION` 至 `1.7.3`，并更新所有补丁基线。
+  - 运行并通过全站 2910+ 前端测试与后端全量测试套件，Prettier 与 ESLint 检查全部通过。
+
 ## [supdance/v2026.10.27.1] — 2026-10-27
 
 ### 上游基线

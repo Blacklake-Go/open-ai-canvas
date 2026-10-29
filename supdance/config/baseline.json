@@ -3,9 +3,9 @@
   "upstreamRepository": "https://github.com/ddcat-ai/open-ai-canvas",
   "forkRepository": "https://github.com/Blacklake-Go/open-ai-canvas",
   "upstreamBaseline": {
-    "tag": "v1.7.2",
-    "commit": "e4e3a40c94242b8845650e4c7090ec7cb6c46ed0",
-    "schemaVersion": 74
+    "tag": "v1.7.3",
+    "commit": "0a6f7c4d345d75e9f5f596644c88410e63bb1bc6",
+    "schemaVersion": 77
   },
   "supdanceRelease": {
     "tag": "supdance/v2026.10.28.2",
