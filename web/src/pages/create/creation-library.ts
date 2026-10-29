@@ -6,6 +6,7 @@ import { creationAttachmentFromAsset, creationAttachmentFromAudioAsset, creation
 export function creationLibraryDisabledReason(mode: CreationMode, kind: string | undefined, videoLimits?: CreationReferenceLimits) {
     if (kind !== "image" && kind !== "video" && kind !== "audio") return "此类型素材暂不支持作为创作参考";
     if (mode === "image") return kind === "image" ? undefined : "图片创作仅支持参考图";
+    if (mode === "music") return kind === "audio" ? undefined : "音乐创作仅支持参考音频";
     if (mode !== "video") return undefined;
 
     const maximum = kind === "image" ? videoLimits?.maxImages : kind === "video" ? videoLimits?.maxVideos : videoLimits?.maxAudios;

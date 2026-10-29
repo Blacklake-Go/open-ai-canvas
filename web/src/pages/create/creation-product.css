@@ -57,7 +57,7 @@
     .creation-canvas-tile { transition: none; }
 }
 /* 创作模式切换是分段控件：12px 轨道 + 4px 内衬 + 8px 选中块（同心），选中只换表面与文字颜色，不改字重。 */
-.creation-mode-tabs { position: relative; isolation: isolate; display: grid; width: min(456px, 100%); margin: 0 auto 20px; padding: 4px; border-radius: 12px; background: var(--user-surface-muted); }
+.creation-mode-tabs { position: relative; isolation: isolate; display: grid; width: min(560px, 100%); margin: 0 auto 20px; padding: 4px; border-radius: 12px; background: var(--user-surface-muted); }
 .creation-mode-indicator { position: absolute; z-index: -1; inset: 0; border-radius: var(--button-radius); background: var(--user-surface); box-shadow: var(--button-secondary-shadow); }
 .creation-mode-button { position: relative; isolation: isolate; display: inline-flex; align-items: center; justify-content: center; gap: var(--button-gap); min-width: 0; height: 44px; padding: 0 12px; border: 0; border-radius: var(--button-radius); background: transparent; color: var(--user-ink-muted); font-size: 14px; font-weight: var(--button-font-weight); cursor: pointer; transition: color var(--button-motion); }
 .creation-mode-button svg { width: var(--button-icon-size); height: var(--button-icon-size); stroke-width: var(--button-icon-stroke); color: currentColor; }

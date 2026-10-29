@@ -3,7 +3,7 @@ import { createJSONStorage, persist } from "zustand/middleware";
 
 import { scopedLocalStorage } from "@/lib/user-scope";
 
-export type CreationModePreference = "text" | "image" | "video";
+export type CreationModePreference = "text" | "image" | "video" | "music";
 
 export type CreationImagePreferences = {
     model?: string;

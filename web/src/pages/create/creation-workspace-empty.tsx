@@ -2,7 +2,7 @@
 
 import { useAppearanceStore } from "@/stores/use-appearance-store";
 import type { CreationMode } from "./creation-assets";
-import { ArrowUp, ChevronDown, Clapperboard, FileText, Image as ImageIcon, Blocks, Bookmark } from "lucide-react";
+import { ArrowUp, ChevronDown, Clapperboard, FileText, Image as ImageIcon, Blocks, Bookmark, Disc3, Mic2, Music, Sparkles } from "lucide-react";
 import { LayoutGroup, motion, useReducedMotion } from "motion/react";
 import { useState } from "react";
 import { aceternityMotion } from "@/lib/aceternity-motion";
@@ -40,16 +40,24 @@ export const creationEmptySuggestions: Array<{ mode: CreationMode; icon: typeof 
     { mode: "video", icon: Blocks, title: "引用技能增强", hint: "@技能 调用分镜、配音等专业能力", prompt: "调用分镜技能，帮我规划这个镜头的拍摄方案：" },
 ];
 
-export function CreationEmptySuggest({ onStartPrompt, onOpenLibrary }: { onStartPrompt: (mode: CreationMode, prompt: string) => void; onOpenLibrary: () => void }) {
+export const creationMusicEmptySuggestions: Array<{ mode: CreationMode; icon: typeof Music; title: string; hint: string; prompt: string }> = [
+    { mode: "music", icon: Music, title: "创作流行歌曲", hint: "夏日海滩、浪漫轻快的男女声对唱", prompt: "一首节奏明快的流行舞曲，关于夏日海滩与浪漫邂逅，男声主唱，带清脆吉他分解" },
+    { mode: "music", icon: Disc3, title: "影视配乐 (BGM)", hint: "情绪舒缓宏大的管弦乐氛围", prompt: "电影级管弦乐氛围背景音乐，情绪舒缓宏大，钢琴与大提琴交织，适合故事叙述，纯音乐" },
+    { mode: "music", icon: Sparkles, title: "未来感电子乐", hint: "强劲低音与赛博朋克合成器音色", prompt: "128 BPM 现代合成波电子舞曲，强劲低音与未来感合成器音色，纯音乐" },
+    { mode: "music", icon: Mic2, title: "古风国潮乐曲", hint: "古筝、竹笛与现代鼓点融合", prompt: "轻柔悠扬的古风国潮乐曲，古筝、竹笛与现代鼓点融合，女声吟唱" },
+];
+
+export function CreationEmptySuggest({ mode, onStartPrompt, onOpenLibrary }: { mode?: CreationMode; onStartPrompt: (mode: CreationMode, prompt: string) => void; onOpenLibrary: () => void }) {
     const reducedMotion = useReducedMotion();
     const [hovered, setHovered] = useState<string | null>(null);
+    const suggestions = mode === "music" ? creationMusicEmptySuggestions : creationEmptySuggestions;
     return (
         <LayoutGroup id="creation-empty-suggest">
             <div className="creation-empty-suggest" aria-label="快捷创作入口">
-                {creationEmptySuggestions.map((item) => {
+                {suggestions.map((item) => {
                     const Icon = item.icon;
                     const start = () => {
-                        if (item.openLibrary) onOpenLibrary();
+                        if ("openLibrary" in item && item.openLibrary) onOpenLibrary();
                         else onStartPrompt(item.mode, item.prompt);
                     };
                     return (

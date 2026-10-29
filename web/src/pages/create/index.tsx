@@ -42,6 +42,7 @@ import { CreationAgentEntry } from "./creation-agent-entry";
 import { createCreationSubmitGate } from "./creation-submit-gate";
 import { creationVideoConfig } from "./creation-generation-config";
 import { CreationLoginDialog } from "./creation-login-dialog";
+import { submitMusicTask, queryMusicTask, type SubmitMusicTaskPayload } from "@/supdance/plugins/music-generation/services/music-api";
 
 const AssetLibraryPickerModal = lazy(() => import("@/components/assets/asset-library-picker-modal").then((module) => ({ default: module.AssetLibraryPickerModal })));
 const InspirationHall = lazy(() => import("@/pages/inspirations"));
@@ -113,6 +114,10 @@ export default function CreatePage() {
     const [imageParameters, setImageParameters] = useState("{}");
     const [videoQuality, setVideoQuality] = useState(config.vquality || "720");
     const [count, setCount] = useState(String(Math.max(1, Math.min(4, Number(config.count) || 1))));
+    const [musicModel, setMusicModel] = useState("mureka-9.5");
+    const [musicDuration, setMusicDuration] = useState(120);
+    const [musicInstrumental, setMusicInstrumental] = useState(false);
+    const [musicLyrics, setMusicLyrics] = useState("");
     const [textStreaming, setTextStreaming] = useState(() => readComposerPref(TEXT_STREAMING_PREF_KEY, true));
     const [textThinking, setTextThinking] = useState(() => readComposerPref(TEXT_THINKING_PREF_KEY, false));
     const [busy, setBusy] = useState(false);
@@ -148,10 +153,10 @@ export default function CreatePage() {
         () => conversations.filter((conversation) => conversation.id === activeId || conversation.messages.length > 0).sort((left, right) => conversationTimestamp(right.updatedAt) - conversationTimestamp(left.updatedAt)),
         [activeId, conversations],
     );
-    const preferredModel = mode === "text" ? config.textModel : mode === "image" ? config.imageModel : config.videoModel;
+    const preferredModel = mode === "text" ? config.textModel : mode === "image" ? config.imageModel : mode === "video" ? config.videoModel : musicModel;
     const hasPrompt = Boolean(prompt.trim());
     const modelRequirements = useMemo<ModelRequirements>(() => ({
-        capability: mode,
+        capability: mode === "music" ? "audio" : mode,
         input: {
             textCount: hasPrompt ? 1 : 0,
             imageCount: attachments.filter(isImageAttachment).length,
@@ -167,7 +172,7 @@ export default function CreatePage() {
 				? { size: ratio, videoSeconds: Number(seconds), vquality: videoQuality }
 				: {},
     }), [attachments, config, preferredModel, count, hasPrompt, imageResolution, imageParameters, mode, quality, ratio, seconds, videoQuality]);
-    const selectedModel = resolveCompatibleModel(config, preferredModel, modelRequirements) || preferredModel;
+    const selectedModel = mode === "music" ? musicModel : (resolveCompatibleModel(config, preferredModel, modelRequirements) || preferredModel);
     const generationConfig = useMemo(() => mode === "video"
         ? creationVideoConfig(config, selectedModel, { ratio, seconds, videoQuality })
         : config, [config, mode, ratio, seconds, selectedModel, videoQuality]);
@@ -698,7 +703,7 @@ export default function CreatePage() {
             return;
         }
         const releaseSubmitGate = () => submitGateRef.current.release(submitToken);
-        const text = prompt.trim();
+        const text = prompt.trim() || (mode === "music" ? musicLyrics.trim() : "");
         if (!text || busy || !activeConversation) {
             releaseRetryLock();
             releaseSubmitGate();
@@ -731,7 +736,9 @@ export default function CreatePage() {
             releaseSubmitGate();
             return;
         }
-        const settings = { ratio, seconds, quality, videoQuality, count };
+        const settings = mode === "music"
+            ? ({ duration: String(musicDuration), instrumental: musicInstrumental, model: musicModel, title: text.slice(0, 30), seconds: String(musicDuration) } as any)
+            : { ratio, seconds, quality, videoQuality, count };
         const references = selectedCreationReferences(text, mentionReferences);
         // 后端对图片和视频使用不同的参考字段；这里先拆分，避免媒体类型在写入任务时被误判。
         const { referenceImages, referenceVideos, referenceAudios } = splitCreationAttachments(attachments);
@@ -835,7 +842,71 @@ export default function CreatePage() {
         };
         let handedOverToRecovery = false;
         try {
-            if (mode === "text") {
+            if (mode === "music") {
+                const nonce = "mus_" + Date.now().toString(36) + "_" + Math.random().toString(36).slice(2, 8);
+                const musicPayload: SubmitMusicTaskPayload = {
+                    model: musicModel,
+                    mode: "simple",
+                    prompt: expandedPrompt,
+                    lyrics: musicLyrics.trim() || undefined,
+                    instrumental: musicInstrumental,
+                    duration: musicDuration,
+                    format: "mp3",
+                    idempotencyNonce: nonce,
+                };
+                const taskRes = await submitMusicTask(musicPayload);
+                const taskId = taskRes.taskId || (taskRes as any).id;
+                bindTask({ id: taskId, stage: "submitted", status: "submitted" } as any);
+                updateOriginAssistant((item) => ({
+                    ...item,
+                    taskIds: [taskId],
+                    generationStage: "排队中",
+                    generationStatus: "running" as TaskStatus,
+                    generationProgress: 15,
+                }));
+
+                let finished = false;
+                let pollAttempts = 0;
+                while (!finished && !requestLifecycle.signal.aborted) {
+                    await new Promise((res) => setTimeout(res, 2500));
+                    pollAttempts++;
+                    try {
+                        const taskDetail = await queryMusicTask(taskId);
+                        if (taskDetail.status === "completed") {
+                            finished = true;
+                            updateOriginAssistant((item) => ({
+                                ...item,
+                                status: "done",
+                                content: taskDetail.title || "音乐已生成",
+                                resultUrls: [taskDetail.resultAudioUrl!],
+                                generationStatus: "succeeded" as TaskStatus,
+                                generationProgress: 100,
+                                settings: {
+                                    ...item.settings,
+                                    title: taskDetail.title || text.slice(0, 30),
+                                    duration: String(taskDetail.resultDurationMs ? Math.round(taskDetail.resultDurationMs / 1000) : musicDuration),
+                                    instrumental: taskDetail.instrumental,
+                                    model: taskDetail.model,
+                                } as any,
+                            }));
+                        } else if (taskDetail.status === "failed" || taskDetail.status === "cancelled") {
+                            finished = true;
+                            throw new Error(taskDetail.errorMessage || "音乐生成失败");
+                        } else {
+                            const progressEstimate = taskDetail.status === "transcoding" ? 90 : taskDetail.status === "generating" ? 60 : 30;
+                            updateOriginAssistant((item) => ({
+                                ...item,
+                                generationStage: taskDetail.stage || (taskDetail.status === "transcoding" ? "音频转码中" : taskDetail.status === "generating" ? "正在作曲合成" : "排队中"),
+                                generationStatus: "running" as TaskStatus,
+                                generationProgress: Math.min(95, progressEstimate + Math.min(5, pollAttempts)),
+                            }));
+                        }
+                    } catch (e: any) {
+                        if (finished) break;
+                        if (e.message && e.message.includes("音乐生成失败")) throw e;
+                    }
+                }
+            } else if (mode === "text") {
                 const result = await runtime.runGenerationOperationOnce(retryContext?.clientOperationId, () => runtime.runBackendGenerationTask({
                     mode: "text",
                     prompt: expandedPrompt,
@@ -1222,6 +1293,14 @@ export default function CreatePage() {
         promptOptimizerProvider,
         composerFocusRef,
         onPromptFocus: loadAddedSkills,
+        musicModel,
+        onMusicModelChange: setMusicModel,
+        musicDuration,
+        onMusicDurationChange: setMusicDuration,
+        musicInstrumental,
+        onMusicInstrumentalChange: setMusicInstrumental,
+        musicLyrics,
+        onMusicLyricsChange: setMusicLyrics,
         onSubmit: () => void submit(),
     };
 
@@ -1256,6 +1335,7 @@ export default function CreatePage() {
                         {agentMode ? <CreationAgentEntry /> : <div className="creation-empty-composer"><CreationComposer {...composerProps} variant="empty" /></div>}
                     </div>
                     <CreationEmptySuggest
+                        mode={mode}
                         onStartPrompt={startPrompt}
                         onOpenLibrary={() => { setAgentMode(false); selectMode("image"); setLibraryOpen(true); }}
                     />

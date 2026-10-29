@@ -4,10 +4,11 @@ import { imageResolutionUsesQuality, imageSizePresets } from "@/lib/image-size-p
 import { createPortal } from "react-dom";
 import { lazy, Suspense, useCallback, useEffect, useMemo, useRef, useState, type CSSProperties, type PointerEvent, type ReactNode, type RefObject } from "react";
 import { Button, Popover } from "antd";
+import { AppModal } from "@/components/ui/product/app-modal";
 import { useWorkspaceTopBarMount } from "@/components/layout/workspace-top-bar-extension";
 import { Tooltip } from "@/components/ui/base/tooltip";
 import { Reorder, LayoutGroup, motion, useReducedMotion } from "motion/react";
-import { ArrowUp, ChevronDown, ChevronLeft, ChevronRight, Clapperboard, Clock3, Film, History, Image as ImageIcon, LoaderCircle, Maximize2, MessageSquareText, Minimize2, Plus, SlidersHorizontal, Trash2, Waves, X, Lightbulb, Orbit, PenLine } from "lucide-react";
+import { ArrowUp, ChevronDown, ChevronLeft, ChevronRight, Clapperboard, Clock3, Disc3, Film, History, Image as ImageIcon, LoaderCircle, Maximize2, MessageSquareText, Mic2, Minimize2, Music, Plus, SlidersHorizontal, Trash2, Waves, X, Lightbulb, Orbit, PenLine } from "lucide-react";
 
 import { WorkingGlow } from "@/components/ai/working-indicator";
 import { formatVideoResolutionLabel as videoResolutionLabel } from "@/lib/video-generation-options";
@@ -132,15 +133,231 @@ type ComposerProps = {
     composerFocusRef: RefObject<HTMLTextAreaElement | null>;
     onPromptFocus: () => void;
     placeholderOverride?: string;
+    musicModel?: string;
+    onMusicModelChange?: (value: string) => void;
+    musicDuration?: number;
+    onMusicDurationChange?: (value: number) => void;
+    musicInstrumental?: boolean;
+    onMusicInstrumentalChange?: (value: boolean) => void;
+    musicLyrics?: string;
+    onMusicLyricsChange?: (value: string) => void;
     onSubmit: () => void;
 };
 
 type CreationReferenceFilter = "all" | "image" | "video" | "audio" | "file";
 
+export const MUSIC_MODELS = [
+    { id: "mureka-9.5", name: "Mureka V9.5", tag: "高保真声乐", credits: 10, maxDuration: 300, minDuration: 30 },
+    { id: "suno-v6", name: "Suno v6", tag: "全能旋律", credits: 12, maxDuration: 240, minDuration: 15 },
+    { id: "lyria-3.5", name: "Google Lyria 3.5", tag: "氛围 BGM", credits: 8, maxDuration: 180, minDuration: 10 },
+    { id: "music_v2_5", name: "Eleven Music v2.5", tag: "专业分轨", credits: 15, maxDuration: 240, minDuration: 30 },
+];
+
+function MusicModelPicker({ value, onChange, disabled }: { value: string; onChange: (model: string) => void; disabled?: boolean }) {
+    const [open, setOpen] = useState(false);
+    const active = MUSIC_MODELS.find((item) => item.id === value) || MUSIC_MODELS[0];
+    const content = (
+        <div className="flex flex-col gap-1 p-1 min-w-[220px]">
+            <div className="px-2 py-1 text-xs font-semibold text-muted-foreground border-b border-border/40">
+                AI 音乐生成模型
+            </div>
+            {MUSIC_MODELS.map((item) => (
+                <button
+                    key={item.id}
+                    type="button"
+                    onClick={() => {
+                        onChange(item.id);
+                        setOpen(false);
+                    }}
+                    className={`flex items-center justify-between rounded-lg px-2.5 py-2 text-left text-xs transition-colors cursor-pointer ${
+                        item.id === active.id
+                            ? "bg-primary/10 text-primary font-medium"
+                            : "hover:bg-muted text-foreground"
+                    }`}
+                >
+                    <div className="flex flex-col">
+                        <span className="font-semibold">{item.name}</span>
+                        <span className="text-[11px] text-muted-foreground">{item.tag} · 上限 {item.maxDuration}s</span>
+                    </div>
+                    <span className="rounded-full bg-muted px-2 py-0.5 text-[10px] font-mono font-medium text-foreground">
+                        {item.credits} 积分
+                    </span>
+                </button>
+            ))}
+        </div>
+    );
+
+    return (
+        <Popover
+            open={open}
+            onOpenChange={setOpen}
+            trigger="click"
+            placement="bottom"
+            arrow={false}
+            classNames={{
+                root: "creation-control-popover",
+                container: "creation-control-popover-surface",
+                content: "creation-control-popover-content",
+            }}
+            content={content}
+        >
+            <button
+                type="button"
+                className="creation-chat-control"
+                disabled={disabled}
+                aria-label={`选择音乐模型：当前为 ${active.name}`}
+            >
+                <Music className="size-3.5 text-emerald-400" />
+                <span>{active.name}</span>
+                <ChevronDown className={open ? "is-open size-3 opacity-60" : "size-3 opacity-60"} />
+            </button>
+        </Popover>
+    );
+}
+
+function MusicDurationMenu({ duration, maxDuration, onChange, disabled }: { duration: number; maxDuration: number; onChange: (sec: number) => void; disabled?: boolean }) {
+    const [open, setOpen] = useState(false);
+    const presets = [30, 60, 120, 180, 240, 300].filter((sec) => sec <= maxDuration);
+    const fallbackPresets = presets.length > 0 ? presets : [maxDuration];
+
+    const content = (
+        <div className="flex flex-col gap-2 p-2 min-w-[160px]">
+            <div className="flex items-center justify-between text-xs font-semibold text-muted-foreground pb-1 border-b border-border/40">
+                <span>音乐时长</span>
+                <strong className="text-foreground">{duration} 秒</strong>
+            </div>
+            <div className="grid grid-cols-3 gap-1.5 pt-1">
+                {fallbackPresets.map((sec) => (
+                    <button
+                        key={sec}
+                        type="button"
+                        onClick={() => {
+                            onChange(sec);
+                            setOpen(false);
+                        }}
+                        className={`rounded-md px-2 py-1.5 text-xs font-mono font-medium transition-colors cursor-pointer text-center ${
+                            duration === sec
+                                ? "bg-primary text-primary-foreground"
+                                : "bg-muted/60 hover:bg-muted text-foreground"
+                        }`}
+                    >
+                        {sec}s
+                    </button>
+                ))}
+            </div>
+        </div>
+    );
+
+    return (
+        <Popover
+            open={open}
+            onOpenChange={setOpen}
+            trigger="click"
+            placement="bottom"
+            arrow={false}
+            classNames={{
+                root: "creation-control-popover",
+                container: "creation-control-popover-surface",
+                content: "creation-control-popover-content",
+            }}
+            content={content}
+        >
+            <button
+                type="button"
+                className="creation-chat-control is-duration"
+                disabled={disabled}
+                aria-label={`音乐时长：${duration}秒`}
+            >
+                <Clock3 className="size-3.5" />
+                <span>{duration}s</span>
+                <ChevronDown className={open ? "is-open size-3 opacity-60" : "size-3 opacity-60"} />
+            </button>
+        </Popover>
+    );
+}
+
+function LyricsEditorModal({
+    open,
+    lyrics,
+    onClose,
+    onChange,
+}: {
+    open: boolean;
+    lyrics: string;
+    onClose: () => void;
+    onChange: (val: string) => void;
+}) {
+    const [draftLyrics, setDraftLyrics] = useState(lyrics);
+    useEffect(() => {
+        if (open) setDraftLyrics(lyrics);
+    }, [open, lyrics]);
+
+    const tags = ["[Intro]", "[Verse 1]", "[Chorus]", "[Verse 2]", "[Bridge]", "[Outro]"];
+
+    const insertTag = (tag: string) => {
+        setDraftLyrics((prev) => (prev.trim() ? `${prev}\n\n${tag}\n` : `${tag}\n`));
+    };
+
+    return (
+        <AppModal
+            open={open}
+            onCancel={onClose}
+            title={
+                <div className="flex items-center gap-2">
+                    <Mic2 className="size-4 text-primary" />
+                    <span>结构化歌词编辑</span>
+                </div>
+            }
+            footer={
+                <div className="flex items-center justify-between">
+                    <span className="text-xs text-muted-foreground">{draftLyrics.length} 字</span>
+                    <div className="flex items-center gap-2">
+                        <Button onClick={onClose}>取消</Button>
+                        <Button
+                            type="primary"
+                            onClick={() => {
+                                onChange(draftLyrics);
+                                onClose();
+                            }}
+                        >
+                            保存歌词
+                        </Button>
+                    </div>
+                </div>
+            }
+            width={520}
+        >
+            <div className="flex flex-col gap-3 py-2">
+                <div className="flex flex-wrap items-center gap-1.5">
+                    <span className="text-xs text-muted-foreground mr-1">快捷结构标签:</span>
+                    {tags.map((tag) => (
+                        <button
+                            key={tag}
+                            type="button"
+                            onClick={() => insertTag(tag)}
+                            className="rounded-md border border-border/60 bg-muted/50 px-2 py-0.5 text-xs text-foreground/80 hover:bg-muted hover:text-foreground transition-colors cursor-pointer"
+                        >
+                            {tag}
+                        </button>
+                    ))}
+                </div>
+                <textarea
+                    rows={10}
+                    value={draftLyrics}
+                    onChange={(e) => setDraftLyrics(e.target.value)}
+                    placeholder="在这里输入歌词，支持填入段落结构标记，例如：&#10;[Verse 1]&#10;阳光穿过树梢落在大海&#10;&#10;[Chorus]&#10;风吹起思念的节拍…"
+                    className="w-full resize-none rounded-xl border border-border/80 bg-background/80 p-3 text-sm text-foreground focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
+                />
+            </div>
+        </AppModal>
+    );
+}
+
 export function CreationComposer(props: ComposerProps) {
     const [previewUrl, setPreviewUrl] = useState("");
     const [previewType, setPreviewType] = useState<"image" | "video">("image");
     const [promptOptimizerOpen, setPromptOptimizerOpen] = useState(false);
+    const [lyricsModalOpen, setLyricsModalOpen] = useState(false);
     const [referenceFilter, setReferenceFilter] = useState<CreationReferenceFilter>("all");
     const [canDragReferences, setCanDragReferences] = useState(false);
     const [dropTargetReferenceId, setDropTargetReferenceId] = useState<string | null>(null);
@@ -150,20 +367,21 @@ export function CreationComposer(props: ComposerProps) {
     const [trackState, setTrackState] = useState({ canScrollLeft: false, canScrollRight: false, isExpanded: true, isDragging: false });
     const previousAttachmentCountRef = useRef(0);
     const interactionBusy = props.busy || props.referenceReplacementBusy;
-    const canSubmit = Boolean(props.prompt.trim()) && !interactionBusy;
+    const canSubmit = (Boolean(props.prompt.trim()) || (props.mode === "music" && Boolean(props.musicLyrics?.trim()))) && !interactionBusy;
     const creditsEnabled = useUserStore((state) => state.features.creditsEnabled);
     const priceChannel = resolveModelChannel(props.config, props.model);
-    const quoteRequest = useMemo(() => modelQuoteRequest(props.config, props.model, props.mode, props.modelRequirements), [props.config, props.mode, props.model, props.modelRequirements]);
+    const quoteRequest = useMemo(() => (props.mode === "music" ? null : modelQuoteRequest(props.config, props.model, props.mode, props.modelRequirements)), [props.config, props.mode, props.model, props.modelRequirements]);
     const [routeQuote, setRouteQuote] = useState<LogicalModelQuote | null>(null);
     const canOptimizePrompt = Boolean(props.promptOptimizerProvider) && (props.mode === "image" || props.mode === "video");
     const optimizerReferences = props.references.filter((reference) => reference.active && reference.kind !== "skill");
-    const credits = requestCreditCost({
+    const activeMusicModel = MUSIC_MODELS.find((m) => m.id === (props.musicModel || "mureka-9.5")) || MUSIC_MODELS[0];
+    const credits = props.mode === "music" ? activeMusicModel.credits : requestCreditCost({
         channelMode: priceChannel.scope === "system" ? "remote" : "local",
         modelCosts: priceChannel.modelCosts,
         model: modelOptionName(props.model),
         count: props.mode === "image" ? props.count : 1,
         seconds: props.mode === "video" ? props.seconds : 1,
-        capability: props.mode,
+        capability: props.mode === "music" ? "audio" : props.mode,
         config: props.config,
         requirements: props.modelRequirements,
     });
@@ -181,8 +399,8 @@ export function CreationComposer(props: ComposerProps) {
             });
         return () => controller.abort();
     }, [creditsEnabled, quoteRequest]);
-    const generationCredits = routeQuote ? routeQuote.amountMicrocredits / 1_000_000 : credits;
-    const showCost = creditsEnabled && generationCredits !== null && generationCredits !== undefined;
+    const generationCredits = props.mode === "music" ? activeMusicModel.credits : (routeQuote ? routeQuote.amountMicrocredits / 1_000_000 : credits);
+    const showCost = props.mode === "music" ? true : (creditsEnabled && generationCredits !== null && generationCredits !== undefined);
     const formattedCredits = generationCredits?.toLocaleString("zh-CN", { maximumFractionDigits: 6 });
     const actionLabel = props.referenceReplacementBusy ? "正在替换参考图" : interactionBusy || (props.generationActive && !canSubmit) ? "生成中" : showCost ? `${routeQuote?.estimated ? "预估" : "消耗"} ${formattedCredits} 积分，发送` : "发送";
     // Send-button working state must span the WHOLE generation (not just the
@@ -195,8 +413,12 @@ export function CreationComposer(props: ComposerProps) {
         ? "描述你的故事、角色或想继续讨论的创意"
         : props.mode === "image"
             ? "描述画面、人物、场景、构图与风格"
-            : "描述镜头内容、运动、光线与节奏";
-    const emptyPlaceholder = "输入你的镜头、画面或故事。也可以添加参考图开始创作";
+            : props.mode === "music"
+                ? "描述音乐风格、乐器、人声或情绪，或输入歌词创作"
+                : "描述镜头内容、运动、光线与节奏";
+    const emptyPlaceholder = props.mode === "music"
+        ? "描述你想创作的歌曲或纯音乐，也可展开歌词辅助创作"
+        : "输入你的镜头、画面或故事。也可以添加参考图开始创作";
     const imageReferencesSupported = props.imageProfile.references.maxImages > 0;
     const referencesSupported = props.mode === "image" ? imageReferencesSupported : props.mode !== "video" || props.maxReferences > 0;
     const canAddMoreReferences = referencesSupported && props.attachments.length < props.maxReferences;
@@ -395,9 +617,50 @@ export function CreationComposer(props: ComposerProps) {
                         <span>优化</span>
                     </button>
                 </Tooltip> : null}
-				<ModelPicker config={props.config} value={props.model} onChange={props.onModelChange} capability={props.mode} requirements={props.modelRequirements} className="creation-model-picker" placeholder={`选择${modeLabels[props.mode]}模型`} showSelectedPrice={false} showOptionPrices variant="creation" />
+				{props.mode === "music" ? (
+                    <MusicModelPicker
+                        value={props.musicModel || "mureka-9.5"}
+                        onChange={(val) => props.onMusicModelChange?.(val)}
+                        disabled={interactionBusy}
+                    />
+                ) : (
+                    <ModelPicker config={props.config} value={props.model} onChange={props.onModelChange} capability={props.mode} requirements={props.modelRequirements} className="creation-model-picker" placeholder={`选择${modeLabels[props.mode]}模型`} showSelectedPrice={false} showOptionPrices variant="creation" />
+                )}
                 {props.mode === "video" || (props.mode === "image" && imageSettingsSupported) ? <GenerationSettingsMenu {...props} /> : null}
                 {props.mode === "video" ? <DurationMenu profile={props.videoProfile} seconds={props.seconds} onChange={props.setSeconds} /> : null}
+                {props.mode === "music" ? <>
+                    <Tooltip title={props.musicInstrumental ? "纯音乐模式已开启（无声乐演唱）" : "开启纯音乐模式（无声乐演唱）"}>
+                        <button
+                            type="button"
+                            className="creation-chat-control"
+                            aria-pressed={props.musicInstrumental}
+                            disabled={interactionBusy}
+                            onClick={() => props.onMusicInstrumentalChange?.(!props.musicInstrumental)}
+                        >
+                            <Disc3 className="size-4" />
+                            <span>纯音乐</span>
+                            {props.musicInstrumental ? <span className="size-1.5 rounded-full bg-emerald-400 shrink-0 shadow-sm" /> : null}
+                        </button>
+                    </Tooltip>
+                    <Tooltip title="编辑/插入结构化歌词">
+                        <button
+                            type="button"
+                            className="creation-chat-control"
+                            disabled={interactionBusy}
+                            onClick={() => setLyricsModalOpen(true)}
+                        >
+                            <Mic2 className="size-4" />
+                            <span>歌词</span>
+                            {props.musicLyrics?.trim() ? <span className="size-1.5 rounded-full bg-blue-400 shrink-0 shadow-sm" /> : null}
+                        </button>
+                    </Tooltip>
+                    <MusicDurationMenu
+                        duration={props.musicDuration || 120}
+                        maxDuration={activeMusicModel.maxDuration}
+                        disabled={interactionBusy}
+                        onChange={(sec) => props.onMusicDurationChange?.(sec)}
+                    />
+                </> : null}
                 {props.mode === "text" ? <>
                     <Tooltip title={interactionBusy ? "生成中，此开关将在下次发送时生效" : (props.textStreaming ? "流式输出已开启" : "流式输出已关闭")}>
                         <button type="button" className="creation-chat-control" aria-pressed={props.textStreaming} disabled={interactionBusy} onClick={() => props.setTextStreaming(!props.textStreaming)}>
@@ -429,11 +692,17 @@ export function CreationComposer(props: ComposerProps) {
                 title={!canSubmit && !interactionBusy ? "输入创作想法后即可生成" : actionLabel}
             >
                 {showWorkingGlow ? <WorkingGlow active color="var(--creation-text)" radius="var(--button-radius)" /> : null}
-                {showCost ? <span className="creation-submit-cost" title={routeQuote ? modelQuoteDescription(routeQuote) : undefined}><CreditSymbol /><span>{routeQuote?.estimated ? `预估:${formattedCredits}` : formattedCredits}</span></span> : null}
+                {showCost ? <span className="creation-submit-cost" title={props.mode === "music" ? `${activeMusicModel.name} · ${activeMusicModel.credits} 积分/首` : (routeQuote ? modelQuoteDescription(routeQuote) : undefined)}><CreditSymbol /><span>{routeQuote?.estimated ? `预估:${formattedCredits}` : formattedCredits}</span></span> : null}
                 <span className="creation-submit-action" aria-hidden>{showWorkingSpinner ? <LoaderCircle className="size-4 animate-spin" /> : <ArrowUp className="size-4" />}<span>{showWorkingSpinner ? "生成中" : "开始创作"}</span></span>
             </Button>
         </footer>
         <CreationMediaPreviewModal url={previewUrl} type={previewType} onClose={() => setPreviewUrl("")} />
+        <LyricsEditorModal
+            open={lyricsModalOpen}
+            lyrics={props.musicLyrics || ""}
+            onClose={() => setLyricsModalOpen(false)}
+            onChange={(val) => props.onMusicLyricsChange?.(val)}
+        />
         </SpotlightSurface>
     </HoverBorderGradient>;
 
@@ -463,6 +732,7 @@ export function CreationModeTabs({ mode, onModeChange, agentActive = false, onAg
     const items: { mode: CreationMode; icon: ReactNode; label: string }[] = [
         { mode: "video", icon: <Film />, label: "视频" },
         { mode: "image", icon: <ImageIcon />, label: "图片" },
+        { mode: "music", icon: <Music />, label: "音乐" },
         { mode: "text", icon: <MessageSquareText />, label: "文本" },
     ];
     const indicator = (pressed: boolean) => pressed ? (
@@ -474,7 +744,7 @@ export function CreationModeTabs({ mode, onModeChange, agentActive = false, onAg
         />
     ) : null;
     return <LayoutGroup id={`creation-mode-tabs-${orientation}`}>
-        <div className="creation-mode-tabs" role="group" aria-label="创作模式" data-active-mode={agentActive ? "agent" : mode} data-orientation={orientation} style={{ gridTemplateColumns: orientation === "vertical" ? "minmax(0, 1fr)" : `repeat(${onAgentSelect ? 4 : 3}, minmax(0, 1fr))` }}>
+        <div className="creation-mode-tabs" role="group" aria-label="创作模式" data-active-mode={agentActive ? "agent" : mode} data-orientation={orientation} style={{ gridTemplateColumns: orientation === "vertical" ? "minmax(0, 1fr)" : `repeat(${items.length + (onAgentSelect ? 1 : 0)}, minmax(0, 1fr))` }}>
         {items.map((item) => (
             <button key={item.mode} type="button" className="creation-mode-button" data-mode={item.mode} aria-pressed={!agentActive && item.mode === mode} aria-label={`${item.label}生成`} onClick={() => onModeChange(item.mode)}>
                 {indicator(!agentActive && item.mode === mode)}

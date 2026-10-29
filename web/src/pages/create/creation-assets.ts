@@ -32,6 +32,7 @@ export type CreationAssetIdentity = {
 
 export function creationUploadAccept(mode: CreationMode) {
     if (mode === "video") return "image/*,video/*,audio/*";
+    if (mode === "music") return "audio/*";
     if (mode === "text") return `image/*,video/*,audio/*,${textDocumentExtensions.join(",")}`;
     return "image/*";
 }
@@ -39,6 +40,7 @@ export function creationUploadAccept(mode: CreationMode) {
 export function creationFileAccepted(mode: CreationMode, file: Pick<File, "type" | "name">) {
     if (file.type.startsWith("image/")) return true;
     if (mode === "video") return file.type.startsWith("video/") || file.type.startsWith("audio/");
+    if (mode === "music") return file.type.startsWith("audio/") || file.name.endsWith(".txt") || file.name.endsWith(".lrc");
     if (mode !== "text") return false;
     const name = file.name.toLowerCase();
     return file.type.startsWith("video/") || file.type.startsWith("audio/") || file.type.startsWith("text/") || textDocumentExtensions.some((extension) => name.endsWith(extension));
