@@ -16,7 +16,7 @@ import { modelCapabilityConfigFor, normalizeImageValue, normalizeVideoValue, vid
 import { inferVideoOperation, modelGroupReferenceLimits, resolveCompatibleModel, mergedImageCapabilityConfig, type ModelRequirements } from "@/lib/model-selection";
 import type { BackendGenerationResult } from "@/services/api/generation-task";
 import type { Skill } from "@/services/api/skills";
-import type { GenerationTask } from "@/services/api/task-center";
+import type { GenerationTask, TaskStatus } from "@/services/api/task-center";
 import { loadCreationConversations, pendingCreationTaskIds, removeCreationConversationSnapshot, saveCreationConversations, updateCreationConversationSnapshot } from "@/services/creation-conversation-store";
 import { resolveModelChannel, resolveModelRequestConfig, selectableModelsByCapability, useConfigStore, useEffectiveConfig } from "@/stores/use-config-store";
 import { useCreationPreferencesStore } from "@/stores/use-creation-preferences-store";
@@ -509,6 +509,7 @@ export default function CreatePage() {
     const selectMode = (next: CreationMode) => {
         setMode(next);
         rememberMode(next);
+        if (next === "music") return;
         const nextModels = selectableModelsByCapability(config, next);
         const current = next === "text" ? config.textModel : next === "image" ? config.imageModel : config.videoModel;
         if (!nextModels.includes(current) && nextModels[0]) {

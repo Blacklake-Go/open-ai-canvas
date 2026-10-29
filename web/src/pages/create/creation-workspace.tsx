@@ -381,7 +381,7 @@ export function CreationComposer(props: ComposerProps) {
         model: modelOptionName(props.model),
         count: props.mode === "image" ? props.count : 1,
         seconds: props.mode === "video" ? props.seconds : 1,
-        capability: props.mode === "music" ? "audio" : props.mode,
+        capability: props.mode,
         config: props.config,
         requirements: props.modelRequirements,
     });

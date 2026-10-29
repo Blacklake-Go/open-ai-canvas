@@ -183,9 +183,9 @@ export function InspirationHall({ onUse }: { onUse: (item: CreationInspiration) 
         return counts;
     }, [resolved, hiddenItems]);
 
-    /** 图片 / 视频 / 文本是库里的两大主类（文本较少），按当前视图与来源统计数量。 */
+    /** 图片 / 视频 / 音乐 / 文本是库里的分类，按当前视图与来源统计数量。 */
     const modeCounts = useMemo(() => {
-        const counts: Record<ModeFilter, number> = { all: 0, image: 0, video: 0, text: 0 };
+        const counts: Record<ModeFilter, number> = { all: 0, image: 0, video: 0, music: 0, text: 0 };
         const pool = view === "hidden" ? hiddenItems : resolved;
         const favoriteSet = new Set(favorites);
         for (const item of pool) {
@@ -204,6 +204,7 @@ export function InspirationHall({ onUse }: { onUse: (item: CreationInspiration) 
                     { label: "全部", value: "all" },
                     { label: "图片", value: "image" },
                     { label: "视频", value: "video" },
+                    { label: "音乐", value: "music" },
                     { label: "文本", value: "text" },
                 ] as const
             ).map((option) => ({
