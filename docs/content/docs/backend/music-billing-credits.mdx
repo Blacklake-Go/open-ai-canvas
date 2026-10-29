@@ -1,0 +1,105 @@
+---
+title: SupDance Music Generation Single-Ledger Billing, Credits & Transcoding Specification
+description: 影策 SupDance 音乐生成插件零二次资金池单账本规范、基于 BillingOrder 的积分预占与多退少补结算、确定性失败全额退款、不确定状态对账与服务端 ffmpeg 实时转码流水线
+---
+
+# SupDance Music Generation: Single-Ledger Billing, Credits & Transcoding Specification (DOC-6)
+
+本技术规范定义了 SupDance 专属 AI 音乐生成插件（`supdance-music-generation`）的财务核算机制、单账本（Single-Ledger）复用准则、基于真实音频时长的动态结算流程以及服务端 ffmpeg 转码管道标准。
+
+---
+
+## 1. 单账本与零二次资金池准则 (Single-Ledger Principle)
+
+为确保平台财务数据的一致性与严密合规，本插件严格遵守以下铁律：
+1. **严禁二次资金系统**：插件内部绝不创建任何属于音乐生成的余额表、钱包表或代币账本。
+2. **复用核心实体**：全部资产变动严格通过宿主系统的 `CreditAccount`（账户余额）与 `BillingOrder`（计费订单）完成。
+3. **流水可回溯**：每一笔扣费、预占、结算与退款均在 `CreditLedgerEntry` 中生成不可篡改的审计流水。
+
+---
+
+## 2. 积分生命周期与四阶状态流转
+
+```text
+┌─────────────────┐
+│ 用户提交生成请求 │
+└────────┬────────┘
+         │ 1. 预占最大可能消耗积分 (ReserveBillingOrder)
+         ▼
+┌─────────────────┐
+│ BillingReserved ├───────────► 上游生成失败 ──► 立即全额退款 (RefundBillingOrder)
+└────────┬────────┘
+         │ 2. 上游完成，获取实际音频时长 (实际秒数 / 毫秒)
+         ▼
+┌─────────────────┐
+│ SettleWithAudio ├───────────► 实际时长 < 预估时长 ──► 差额自动返还至用户可用余额
+└────────┬────────┘
+         │ 3. 发生网络 504 / 超时未决
+         ▼
+┌─────────────────┐
+│ BillingUncertain├───────────► 后台对账工人定时重试对账 ──► 确认成功结算 / 确认失败退款
+└─────────────────┘
+```
+
+---
+
+## 3. 时长向上取整结算机制 (Ceiling Duration Settlement)
+
+当模型配置为 `per_second`（按秒计费）时：
+
+### 3.1 预估预占 (Reservation Phase)
+- 用户申请生成 $T_{\text{est}}$ 秒（例如预估 120 秒，单价 10 点/秒）。
+- 系统调用 `ReserveBillingOrder` 预占 $120 \times 10 = 1200$ 点积分。
+- 若用户可用余额 $< 1200$，直接报错拦截，任务不予投递至上游。
+
+### 3.2 实际音频时长核销 (Settlement Phase)
+- 上游音频生成完成后，元数据返回实际时长（例如实际输出音频时长为 $93.4$ 秒）。
+- 系统采用严格的向上取整规则：
+  $$\text{ChargedSeconds} = \lceil 93.4 \rceil = 94 \text{ 秒}$$
+- 实际应收金额：
+  $$\text{ActualCost} = 94 \times 10 = 940 \text{ 点}$$
+- 差额退还：
+  $$\text{RefundAmount} = 1200 - 940 = 260 \text{ 点}$$
+- 调用 `repo.SettleBillingOrderWithAudioDuration(orderID, providerReqID, durationMs)`，一步完成 940 点结算与 260 点差额返还。
+
+---
+
+## 4. 异常退款与未决对账 (Refund & Reconciliation)
+
+### 4.1 确定性失败全额退款
+当上游网关明确返回 HTTP 4xx/5xx、敏感词拦截或生成超时失败时：
+- 系统标记任务状态为 `failed`。
+- 立即调用 `repo.RefundBillingOrder(orderID, failureReason)`，将预占的 1200 点积分全额解冻退还至用户可用余额。
+
+### 4.2 不确定状态对账 (Uncertain Reconciliation)
+当发生上游网关 504 Gateway Timeout 或本地网络闪断，无法得知上游是否实际扣费时：
+- 订单状态标记为 `BillingStatusUncertain`。
+- 独立的后台对账协程（Reconciliation Worker）每隔 60 秒轮询上游任务状态。
+- 若上游最终生成成功，补录实际结算并归档；若上游最终失败或任务超时放弃，执行安全退款。
+
+---
+
+## 5. 服务端 ffmpeg 音频转码引擎 (Transcoding Pipeline)
+
+为满足用户不同场景的需求，服务端内置基于 `ffmpeg` 的流式转码流水线：
+
+```go
+// backend/internal/supdance/music/transcoder.go
+func (t *Transcoder) Transcode(ctx context.Context, input io.Reader, format string) ([]byte, error) {
+    switch format {
+    case "mp3":
+        // -codec:a libmp3lame -qscale:a 2 (High Quality VBR)
+    case "wav":
+        // -codec:a pcm_s16le -ar 44100
+    case "flac":
+        // -codec:a flac -compression_level 5
+    }
+}
+```
+
+### 严格的二进制文件格式魔法字节校验：
+- **MP3**：检查前 3 字节 ID3 标识（`ID3` 标头）或同步字（`0xFF 0xFB/FA`）。
+- **WAV**：检查前 4 字节 `RIFF` 与第 8–11 字节 `WAVE`。
+- **FLAC**：检查前 4 字节 `fLaC` 签名。
+
+转码全程使用子进程上下文超时（Timeout Context）约束，并在内存限制内完成，保障宿主系统的稳定性。

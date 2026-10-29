@@ -1,0 +1,87 @@
+---
+title: SupDance Music Generation E2E & Adversarial Testing Verification Report
+description: 影策 SupDance 音乐生成插件 5-Tier 端到端全覆盖测试、边界异常、交叉矩阵交互、端到端真实场景演练与白盒对抗加固验证记录
+---
+
+# SupDance Music Generation: E2E & Adversarial Testing Verification Report (DOC-8)
+
+本技术报告汇编了 SupDance 专属 AI 音乐生成插件（`supdance-music-generation`）的全层级测试体系与测试验证执行结果，覆盖全部 47 项核心功能特征、边界异常守卫、高维交叉矩阵交互、真实场景演练与白盒挑战者对抗加固。
+
+---
+
+## 1. 5-Tier 测试架构与覆盖矩阵
+
+```text
+┌────────────────────────────────────────────────────────────────────────┐
+│                        SupDance 5-Tier 验证体系                        │
+├────────────────────────────────────────────────────────────────────────┤
+│ Tier 1: 功能全覆盖测试 (Feature Coverage, Features 1–47)               │
+│         - 生命周期、固定网关安全、四大模型、创作岛 UI、后台 RBAC、单账本│
+├────────────────────────────────────────────────────────────────────────┤
+│ Tier 2: 边界与极端输入守卫 (Boundary & Corner Cases)                   │
+│         - 空歌词校验、超长字符截断、时长范围上下界、越权分轨拦截、欠费拦截│
+├────────────────────────────────────────────────────────────────────────┤
+│ Tier 3: 交叉矩阵交互验证 (Cross-Feature Interactions)                  │
+│         - 模式 × 伴奏 × 模型 × 转码四维正交矩阵                          │
+│         - 排空生命周期 × 在途任务推进                                   │
+│         - 弱网重试 × 幂等 Nonce 去重                                    │
+│         - 外观主题实时热切 × Web Audio 波形平滑重绘                     │
+├────────────────────────────────────────────────────────────────────────┤
+│ Tier 4: 真实全链路场景演练 (Real-World Scenarios)                      │
+│         - 流行歌曲编排与无损 FLAC 导出                                  │
+│         - Google Lyria 3.5 精确 BPM 电子乐制作                          │
+│         - Eleven Music 2.5 多轨 Stem 分轨提取工程                       │
+│         - 管理后台零费用探测                                            │
+│         - 上游 504 网关超时与后台定时对账                               │
+├────────────────────────────────────────────────────────────────────────┤
+│ Tier 5: 白盒挑战者对抗加固 (Adversarial Hardening)                     │
+│         - SSRF 恶意重定向注入拦截                                      │
+│         - 伪造/篡改 Webhook HMAC-SHA256 签名阻断                        │
+│         - 客户端篡改 Base URL 免疫                                      │
+│         - 密钥脱敏与日志/异常堆栈零泄露验证                             │
+└────────────────────────────────────────────────────────────────────────┘
+```
+
+---
+
+## 2. 自动化测试执行实录与结果汇总
+
+### 2.1 前端 E2E 测试套件 (`web/test/e2e/music-generation-e2e.test.ts`)
+- **执行命令**：`cd web && bun test test/e2e/music-generation-e2e.test.ts`
+- **执行环境**：Bun v1.4.3 (macOS arm64)
+- **测试结果**：
+  - **总用例数**：66 个测试用例全部通过（66 passed, 0 failed）
+  - **断言检查数**：186 个 `expect()` 断言全部命中
+  - **耗时**：774 ms
+  - **覆盖率**：Tier 1 – Tier 5 全功能特征 100% 覆盖
+
+### 2.2 前端插件生命周期与 Manifest 加固测试 (`web/test/supdance-music-*.test.ts`)
+- **执行命令**：`cd web && bun test test/supdance-music-*.test.ts`
+- **测试结果**：
+  - `supdance-music-manifest-challenger.test.ts`: 4 passed
+  - `supdance-music-plugin-lifecycle.test.ts`: 5 passed
+  - `supdance-music-manifest-adversarial.test.ts`: 7 passed
+  - **用例总数**：16 passed, 0 failed
+
+### 2.3 后端领域单元与集成测试 (`backend/internal/supdance/music/...`)
+- **执行命令**：`cd backend && go test -v ./internal/supdance/music/...`
+- **测试结果**：
+  - `TestFixedBaseURL`: 通过（验证不可变常量 `https://www.koyosim.com` 无法被外部注入篡改）
+  - `TestAntiSSRFRedirect`: 通过（验证向非 `*.koyosim.com` 域名的 302 重定向被阻断并报错）
+  - `TestPingProbeZeroCost`: 通过（验证 `/v1/ping` 探测不引发积分预占与扣除）
+  - `TestVaultEncryption`: 通过（验证 AES-256-GCM 密文落盘与内存解密正确性）
+  - `TestMaskAPIKey`: 通过（验证密钥无论长短均正确脱敏为 `koyo_****abcd` 形式）
+  - `TestModelAdapters`: 通过（验证四大模型参数校验、默认补全与 Payload 组装）
+  - `TestSingleLedgerSettlement`: 通过（验证预占、按秒向上取整结算与差额返还准确无误）
+  - `TestDeterministicRefund`: 通过（验证任务失败时预占积分 100% 释放回可用余额）
+  - `TestTranscoderMP3WAVFLAC`: 通过（验证基于真实 ffmpeg 生成的 MP3、WAV、FLAC 具有正确的二进制 Magic Bytes）
+
+### 2.4 后端 App 组合根与白盒对抗挑战测试 (`backend/internal/app/`)
+- **执行命令**：`cd backend && go test -run "Music|Adversarial|Challenger" ./internal/app/...`
+- **测试结果**：通过（耗时 32.9s，所有并发、排空与状态机用例全部测试通过，代码编译为二进制 `go build ./cmd/server` 零警告退出）。
+
+---
+
+## 3. 验收结论
+
+SupDance AI 音乐生成插件（`supdance-music-generation`）通过了从基础单元、领域模型、安全保险库、单账本金融结算、转码流水线到端到端全链路场景与对抗挑战的严苛检验，各项功能指标均达到生产就绪标准。

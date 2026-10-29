@@ -25,6 +25,8 @@ const AdminPluginsPage = lazy(() => import("@/pages/admin/plugins/plugins-page")
 const SupDanceI18nSettingsPage = lazy(() => import("@/supdance/plugins/i18n/admin/i18n-settings-page"));
 const SupDanceI18nEntriesPage = lazy(() => import("@/supdance/plugins/i18n/admin/i18n-entries-page"));
 const SocialAuthSettingsPage = lazy(() => import("@/supdance/plugins/social-auth/admin/social-auth-settings-page"));
+const MusicWorkbenchPage = lazy(() => import("@/supdance/plugins/music-generation/pages/music-workbench-page"));
+const MusicAdminSettingsPage = lazy(() => import("@/supdance/plugins/music-generation/admin/music-admin-settings-page"));
 const DarkLoginPage = lazy(() => import("@/supdance/pages/dark-login-page"));
 const SkillCurationPage = lazy(() => import("@/pages/admin/skill-curation-page"));
 const AdminPaymentsPage = lazy(() => import("@/pages/admin/payments/payments-page"));
@@ -147,6 +149,10 @@ export const router = createBrowserRouter([
                 ),
             },
             {
+                path: "/toolbox/music",
+                element: <RequireAuth>{deferred(<MusicWorkbenchPage />)}</RequireAuth>,
+            },
+            {
                 path: "/tasks",
                 element: (
                     <RequireAuth>
@@ -241,6 +247,7 @@ export const router = createBrowserRouter([
                         ),
                     },
                     { path: "plugins", element: <AdminPluginsPage /> },
+                    { path: "plugins/music-generation", element: <MusicAdminSettingsPage /> },
                     { path: "i18n", element: <Navigate to="/admin/i18n/settings" replace /> },
                     { path: "i18n/settings", element: <SupDanceI18nSettingsPage /> },
                     { path: "i18n/entries", element: <SupDanceI18nEntriesPage /> },

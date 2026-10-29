@@ -3,7 +3,7 @@ import { Switch } from "@/pages/admin/ui/controls";
 import { AlipayCircleFilled, WechatFilled } from "@ant-design/icons";
 import { ZHIFUFM_LOGO_SRC } from "@/components/payment-brand-icons";
 import type { ColumnsType } from "antd/es/table";
-import { BookOpenText, CloudUpload, Languages, PlugZap, RefreshCw, Search, Settings2, Share2, Trash2, UsersRound } from "lucide-react";
+import { BookOpenText, CloudUpload, Languages, Music, PlugZap, RefreshCw, Search, Settings2, Share2, Trash2, UsersRound } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router";
 
@@ -23,6 +23,7 @@ import { Select } from "@/components/ui/base/select";
 import { usePluginStore } from "@/stores/use-plugin-store";
 import { SUPDANCE_I18N_PLUGIN_ID, useSupDanceI18nStore } from "@/supdance/plugins/i18n";
 import { SUPDANCE_SOCIAL_AUTH_PLUGIN_ID } from "@/supdance/plugins/social-auth/types";
+import { SUPDANCE_MUSIC_PLUGIN_ID } from "@/supdance/plugins/music-generation/types";
 
 type AdminPluginItem = {
     manifest: PluginManifest | PluginManifestV2;
@@ -87,11 +88,11 @@ export default function AdminPluginsPage() {
             try {
                 state = await setPluginPlatformAvailability(item.manifest.id, available);
             } catch (error) {
-                if (item.manifest.id !== SUPDANCE_I18N_PLUGIN_ID) {
+                if (item.manifest.id !== SUPDANCE_I18N_PLUGIN_ID && item.manifest.id !== SUPDANCE_MUSIC_PLUGIN_ID) {
                     throw error;
                 }
                 state = {
-                    pluginId: SUPDANCE_I18N_PLUGIN_ID,
+                    pluginId: item.manifest.id,
                     platformAvailable: available,
                     userEnabled: available,
                     userConfigured: true,
@@ -198,6 +199,19 @@ export default function AdminPluginsPage() {
                             <div className="mt-1.5 flex flex-wrap items-center gap-2 text-xs">
                                 <Link to="/admin/settings/social-auth" className="inline-flex items-center gap-1 font-medium text-primary hover:underline">
                                     <Settings2 className="size-3" /> 社交登录配置中心
+                                </Link>
+                            </div>
+                        ) : null}
+                        {item.manifest.id === SUPDANCE_MUSIC_PLUGIN_ID ? (
+                            <div className="mt-1.5 flex flex-wrap items-center gap-2 text-xs">
+                                <Link to="/admin/plugins/music-generation" className="inline-flex items-center gap-1 font-medium text-primary hover:underline">
+                                    <Settings2 className="size-3" /> 音乐生成管理配置
+                                </Link>
+                                <span className="text-foreground/20" aria-hidden="true">
+                                    ·
+                                </span>
+                                <Link to="/toolbox/music" className="inline-flex items-center gap-1 font-medium text-primary hover:underline">
+                                    <Music className="size-3" /> 进入创作岛
                                 </Link>
                             </div>
                         ) : null}
@@ -402,6 +416,13 @@ function PluginBrandIcon({ pluginId }: { pluginId: string }) {
             </span>
         );
     }
+    if (pluginId === SUPDANCE_MUSIC_PLUGIN_ID) {
+        return (
+            <span className="grid size-9 shrink-0 place-items-center rounded-lg bg-indigo-500/10 text-indigo-500">
+                <Music className="size-4" aria-hidden="true" />
+            </span>
+        );
+    }
     if (pluginId === "official-payment-wechat-native") {
         return (
             <span className="grid size-9 shrink-0 place-items-center rounded-lg bg-[#07c160]/10 text-[#07c160]">
@@ -435,7 +456,8 @@ function mergePlugins(remote: BackendPlugin[]): AdminPluginItem[] {
     for (const plugin of listRegisteredPlugins()) {
         const isSupDanceI18n = plugin.manifest.id === SUPDANCE_I18N_PLUGIN_ID;
         const isSupDanceSocialAuth = plugin.manifest.id === SUPDANCE_SOCIAL_AUTH_PLUGIN_ID;
-        const application = isOfficialApplicationPluginId(plugin.manifest.id) || isSupDanceI18n || isSupDanceSocialAuth;
+        const isSupDanceMusic = plugin.manifest.id === SUPDANCE_MUSIC_PLUGIN_ID;
+        const application = isOfficialApplicationPluginId(plugin.manifest.id) || isSupDanceI18n || isSupDanceSocialAuth || isSupDanceMusic;
         byId.set(plugin.manifest.id, {
             manifest: plugin.manifest,
             source: plugin.source || "bundled",
@@ -443,8 +465,8 @@ function mergePlugins(remote: BackendPlugin[]): AdminPluginItem[] {
             management: {
                 origin: "official",
                 kind: application ? "application" : "protocol",
-                activationScope: isSupDanceI18n || isSupDanceSocialAuth ? "system" : application ? "user" : "system",
-                configurationScope: isSupDanceI18n || isSupDanceSocialAuth ? "system" : application ? (plugin.manifest.id === EAGLE_PLUGIN_ID || plugin.manifest.id === RUNNINGHUB_PLUGIN_ID ? "user" : "none") : "system",
+                activationScope: isSupDanceI18n || isSupDanceSocialAuth || isSupDanceMusic ? "system" : application ? "user" : "system",
+                configurationScope: isSupDanceI18n || isSupDanceSocialAuth || isSupDanceMusic ? "system" : application ? (plugin.manifest.id === EAGLE_PLUGIN_ID || plugin.manifest.id === RUNNINGHUB_PLUGIN_ID ? "user" : "none") : "system",
             },
         });
     }

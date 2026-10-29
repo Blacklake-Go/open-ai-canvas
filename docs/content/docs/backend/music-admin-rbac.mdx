@@ -1,0 +1,88 @@
+---
+title: SupDance Music Generation Admin Management & RBAC Security Specification
+description: 影策 SupDance 音乐生成插件后台管理接口、RequireAdmin 权限守卫、只读 Base URL、密钥保险库安全编辑、模型计费与可用性策略、任务排空监控及审计日志规范
+---
+
+# SupDance Music Generation: Admin Management & RBAC Security Specification (DOC-5)
+
+本技术规范详细说明了 SupDance 专属 AI 音乐生成插件（`supdance-music-generation`）的管理后台接口、基于角色权限控制（RBAC）、只读上游网关防护、模型计费控制台与操作审计追踪标准。
+
+---
+
+## 1. 权限边界与 RBAC 架构
+
+所有插件管理接口挂载在 `/api/admin/plugins/music-generation/` 前缀下，必须且只能由具备系统管理员身份的主体调用：
+
+```go
+// backend/internal/handler/supdance_music.go
+adminGroup.Use(middleware.RequireAdmin())
+{
+    adminGroup.GET("/config", h.GetAdminConfig)
+    adminGroup.POST("/config", h.UpdateAdminConfig)
+    adminGroup.POST("/test-connection", h.TestConnection)
+    adminGroup.GET("/models", h.GetAdminModels)
+    adminGroup.PUT("/models/:id", h.UpdateAdminModelPricing)
+    adminGroup.GET("/tasks", h.ListAdminTasks)
+    adminGroup.POST("/drain", h.TriggerTaskDraining)
+}
+```
+
+### 鉴权守卫准则：
+- 未携带认证凭据或普通用户凭据访问时，Gin 路由中间件立即截断并返回 HTTP 401 Unauthorized / HTTP 403 Forbidden。
+- 前端界面的管理按钮仅用于视觉导流，后端的权限校验作为唯一可信凭证（遵循安全原则：*Never trust the client*）。
+
+---
+
+## 2. 不可变 Base URL 只读保护 (Read-Only Base URL)
+
+在后台管理页面中，外部服务网关地址呈现为**纯只读视图**：
+- 输入框呈现灰色锁定状态，带有“权威只读网关”标签。
+- 即使管理员通过修改 HTTP Payload 发送自定义的 `baseUrl` 字段，服务端反序列化后坚决忽略该字段，始终固定为 `https://www.koyosim.com`。
+
+---
+
+## 3. 密钥保险库与脱敏编辑机制 (Vault & Safe Editing)
+
+管理员在后台配置 Koyosim API Key 时的安全保护机制如下：
+
+1. **读取状态（Masked View）**：
+   - 接口 `GET /config` 返回经过脱敏处理的字符串，如 `koyo_****abcd`。
+   - 前端管理员界面的输入框初始只显示掩码占位符。
+2. **更新状态（Safe Patching）**：
+   - 当管理员提交新 Key（例如 `koyo_live_1234567890abcdef`）时，服务端校验格式，通过 AES-256-GCM 加密落盘。
+   - 若提交的输入框内容未变或仅为掩码字符串，服务端自动忽略更新，绝不发生误将掩码当作真实密钥覆盖的情况。
+
+---
+
+## 4. 模型定价与可用性配置 (Pricing & Availability)
+
+管理员可在后台针对 4 大模型独立设置计费策略：
+
+| 配置字段 | 类型 | 说明 | 示例值 |
+| :--- | :--- | :--- | :--- |
+| `enabled` | boolean | 该模型是否对普通创作者开放 | `true` |
+| `billing_type` | string | 计费类型：`fixed`（按单次任务扣费）或 `per_second`（按实际音频秒数扣费） | `per_second` |
+| `unit_price_credits` | int64 | 单位单价（微积分或点数） | `100` (点/秒) |
+| `min_duration_s` | int | 允许生成的最小秒数限制 | `30` |
+| `max_duration_s` | int | 允许生成的最大秒数限制 | `300` |
+
+---
+
+## 5. 任务排空与平滑维护监控 (Task Draining Inspector)
+
+在插件维护、配置更新或版本升级前，管理员可一键触发排空引流模式（Draining）：
+
+1. **排空激活**：调用 `POST /drain?action=start`，插件状态切换为 `draining`。
+2. **新请求熔断**：创作者发起新音乐生成任务立即返回 HTTP 503，提示系统维护中。
+3. **在途任务观测**：后台任务监控视图展示：
+   - 处于 `submitted`, `queued`, `generating`, `transcoding` 中的在途任务数 `activeTaskCount`。
+   - 当在途任务数安全归零时，排空状态指示器显示“排空完毕，可安全升级/停用”。
+
+---
+
+## 6. 管理审计日志留痕 (Audit Trail)
+
+所有后台管理操作均记录到系统审计数据库中：
+- **操作者 ID**：`admin_user_id` 与客户端来源 IP。
+- **操作类型**：`MUSIC_CONFIG_UPDATE`, `MUSIC_CONNECTION_TEST`, `MUSIC_MODEL_PRICE_CHANGE`, `MUSIC_DRAINING_TRIGGER`。
+- **操作明细**：记录变更前后的差异字段（敏感密钥自动隐匿，记录为 `[REDACTED]`）。

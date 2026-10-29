@@ -1,0 +1,351 @@
+---
+title: SupDance Music Generation Plugin Lifecycle & Isolation Architecture Specification
+description: 影策 SupDance 音乐生成插件 (supdance-music-generation) 的 Manifest V2 规范、七大生命周期状态机、零停机动态启停、任务排空引流、数据与素材持久化保障及上游零污染架构
+---
+
+# SupDance Music Generation Plugin: Lifecycle & Isolation Architecture Specification
+
+本规范定义了 SupDance 专属 AI 音乐生成插件（`supdance-music-generation`）在影策（`open-ai-canvas`）宿主环境下的架构隔离、Manifest V2 契约、七大生命周期状态机流转、零停机动态热插拔、任务排空引流（Task Draining）、卸载数据与资产持久化以及上游零污染守卫标准。
+
+---
+
+## 1. 插件元数据与 Manifest V2 规范契约
+
+音乐生成插件严格遵循 `yingce.plugin/v2` 契约，统一声明在 `supdance/plugins/supdance-music-generation/manifest.json` 与前端扩展入口 `web/src/supdance/plugins/music-generation/manifest.json`。
+
+### 1.1 命名空间与版本约束
+- **插件标识符 (ID)**：`supdance-music-generation`（受 `backend/internal/supdance/domain/extension.go` 与 `web/src/supdance/adapters/compatibility.ts` 强校验，必须以 `supdance-` 开头）。
+- **用户呈现别名 (Display Alias)**：`music-generation`（用于 UI 标牌、CLI 别名和 URL 友好路径）。
+- **版本规范 (SemVer)**：`1.0.0`，严格匹配正则表达式 `/^\d+\.\d+\.\d+(?:-[0-9A-Za-z.-]+)?$/`。
+- **最低宿主版本 (`minHostVersion`)**：`1.7.1`，若宿主版本低于此版本，`validateSupDancePluginManifest` 拒绝注册。
+
+### 1.2 权威 Manifest V2 JSON Schema
+
+```json
+{
+  "apiVersion": "yingce.plugin/v2",
+  "id": "supdance-music-generation",
+  "name": "AI 音乐生成 (Music Studio)",
+  "version": "1.0.0",
+  "publishedAt": "2026-10-29",
+  "updatedAt": "2026-10-29",
+  "minHostVersion": "1.7.1",
+  "author": "SupDance Team",
+  "description": "SupDance 专业级 AI 音乐与歌曲生成扩展：深度集成固定服务端 Koyosim 网关（https://www.koyosim.com），支持 Mureka V9.5、Suno v6、Google Lyria 3.5 与 Eleven Music v2.5 四大前沿音频模型。具备简单/自定义双创作模式、专业多行歌词编辑器与结构标签插入、无伪百分比真实阶段状态机、Web Audio API 64频段波形播放器、无损音频下载（MP3/WAV/FLAC 服务端实时转码）与单账本积分预占/结算，全生命周期独立安全启停。",
+  "surfaces": [
+    "fullscreen",
+    "settings",
+    "hybrid"
+  ],
+  "permissions": [
+    "canvas.read",
+    "canvas.write",
+    "asset.read",
+    "asset.upload",
+    "generation.run",
+    "ai.text",
+    "media.read"
+  ],
+  "trusted": true,
+  "runtime": {
+    "backend": "declarative",
+    "web": "declarative"
+  },
+  "contributes": {
+    "usageObservers": [
+      "supdance-music-generation"
+    ],
+    "commands": [
+      {
+        "id": "supdance-music-generation.open-studio",
+        "label": "打开 AI 音乐创作岛"
+      },
+      {
+        "id": "supdance-music-generation.admin-settings",
+        "label": "管理音乐生成插件设置"
+      }
+    ],
+    "aiCapabilities": [
+      "music-generation",
+      "audio"
+    ]
+  }
+}
+```
+
+---
+
+## 2. 七大生命周期状态机与流转模型 (Seven Lifecycle States)
+
+插件必须支持且严格限制在以下 7 种生命周期状态中运行：
+
+```text
+ ┌─────────────┐         Admin Enable          ┌─────────────┐
+ │  installed  │ ────────────────────────────> │   enabled   │ <──────────┐
+ └─────────────┘                               └──────┬──────┘            │
+        │                                             │                   │
+        │                                    Admin Disable/Update/        │
+        │                                    Uninstall (Tasks > 0)        │
+        │                                             ▼                   │
+        │                                      ┌─────────────┐            │
+        │                                      │   draining  │            │
+        │                                      └──────┬──────┘            │
+        │                                             │ (Active Tasks == 0│
+        │                                             ▼                   │
+        │   Admin Uninstall (Tasks == 0)       ┌─────────────┐            │
+        ├────────────────────────────────────> │  disabled   │ ───────────┘
+        │                                      └──────┬──────┘     Admin Re-enable
+        │                                             │
+        │                      Admin Upgrade          │ Admin Uninstall
+        │                      (Tasks == 0)           │ (Tasks == 0)
+        │                             ▼               ▼
+        │                      ┌─────────────┐ ┌─────────────┐
+        │                      │  updating   │ │ uninstalled │
+        │                      └─────────────┘ └─────────────┘
+        │                             ▲
+        └─────────────────────────────┼───────────────────────────────┐
+                                      │ Hook Exception                │
+                               ┌──────┴──────┐                        │
+                               │    error    │ ───────────────────────┘
+                               └─────────────┘   Admin Retry / Recover
+```
+
+### 2.1 状态定义
+
+| 状态 | 标识符 | 含义与行为约束 |
+|---|---|---|
+| **已安装** | `installed` | 插件包与 Manifest 校验通过，完成前端与后端系统注册。平台可用性记录 `PluginPlatformState.Available = false`，默认不对普通用户开放。不可提交任务。 |
+| **已启用** | `enabled` | 管理员开启平台可用性（`Available = true`）。工作区开放 `/toolbox/music` 路由，API 准入通道打开，接受生成任务提交，前端状态机激活。 |
+| **排空中** | `draining` | 管理员在有活跃在途任务（`ActiveTasks > 0`）时触发停用、更新或卸载。**准入门禁立刻拦截一切新任务提交（HTTP 503）**；后台轮询与执行引擎保持活跃，直至所有在途任务全部完成结算或退款。 |
+| **已停用** | `disabled` | 平台可用性为 `false`，且活跃任务数为 0。普通用户无法访问音乐工作台，前端组件安全注销，所有历史数据与素材永久只读保留。 |
+| **更新中** | `updating` | 插件版本升迁过渡态（如 1.0.0 -> 1.1.0）。必须在任务排空（`ActiveTasks == 0`）后进入，执行新旧 Manifest 对比、平滑卸载旧钩子并挂载新版本。 |
+| **异常态** | `error` | 插件生命周期钩子（如 `activate`）或外部致命依赖发生非受控崩溃。由 `activateSupDancePluginSafely` 捕获并隔离，避免击垮宿主画布与主进程。 |
+| **已卸载** | `uninstalled` | 插件从平台注册表中注销，删除平台与用户启用状态。**严格保证：用户音乐历史与物理资源记录 100% 留存，永不级联删除**。 |
+
+### 2.2 状态流转规则与断言矩阵
+
+| 起始状态 | 目标状态 | 触发源 | 前置断言与保护条件 | 后置行为 |
+|---|---|---|---|---|
+| `installed` | `enabled` | 管理员操作 | `s.RequireAdmin(actor) == nil`，校验 Manifest 签名通过 | 设置 `Available = true`，触发 `activateSupDancePluginSafely` |
+| `enabled` | `draining` | 管理员停用/升级/卸载 | 检测到 `ActiveMusicTasks > 0` | 开启 `draining.Store(true)`，新请求直接返回 503 |
+| `enabled` | `disabled` | 管理员停用 | 检测到 `ActiveMusicTasks == 0` | 直接设置 `Available = false`，调用 `deactivateSupDancePluginSafely` |
+| `draining` | `disabled` | 系统自动轮询 | 在途任务计数衰减为 0 (`ActiveMusicTasks == 0`) 且目标为停用 | 关闭排空标记，置 `Available = false`，调用 `deactivate` |
+| `draining` | `updating` | 系统自动轮询 | 在途任务计数衰减为 0 且目标为升级 | 启动 `upgradeSupDancePlugin`，比对 SemVer |
+| `draining` | `uninstalled` | 系统自动轮询 | 在途任务计数衰减为 0 且目标为卸载 | 执行卸载清理流程（仅清理状态表） |
+| `disabled` | `enabled` | 管理员重新启用 | `s.RequireAdmin(actor) == nil` | 恢复 `Available = true`，重新初始化调度器 |
+| `disabled` | `updating` | 管理员触发更新 | 新包 SemVer > 当前版本 | 执行版本平滑升级 |
+| `disabled` | `uninstalled` | 管理员确认卸载 | `ActiveMusicTasks == 0` | 物理移除注册状态，触发审计日志 |
+| *任意状态* | `error` | 运行时异常 | `activate()` 抛出异常或外部依赖崩溃 | 宿主安全卸载故障实例，记录 `lastError`，展示故障恢复按钮 |
+| `error` | `disabled` | 管理员安全隔离 | 管理员确认停用故障插件 | 置 `Available = false`，清空活动任务调度，保护宿主环境 |
+| `error` | `installed` | 管理员重置/重装 | 管理员选择重置插件环境 | 清理临时故障上下文，重置插件至全新就绪态 |
+| `error` | `enabled` | 管理员重试激活 | 外部依赖恢复后重新尝试激活 | 重新触发 `activateSupDancePluginSafely` 验证依赖 |
+| `error` | `uninstalled` | 管理员卸载 | 无法修复时确认卸载，要求 `ActiveMusicTasks == 0` | 移除注册与状态，保留历史数据与已生成资源 |
+
+---
+
+## 3. 零停机动态启停协议 (Zero-Downtime Dynamic Enable/Disable)
+
+为了防止插件启停引起宿主重新编译、容器重启或阻塞其他视频/图像生成服务，必须采用完全的运行时动态热插拔机制。
+
+### 3.1 前端故障隔离契约 (`compatibility.ts`)
+前端必须使用 `activateSupDancePluginSafely` 与 `deactivateSupDancePluginSafely`：
+
+```typescript
+// web/src/supdance/adapters/compatibility.ts
+export async function activateSupDancePluginSafely(
+    pluginId: string, 
+    context: PluginHostContext
+): Promise<SupDancePluginLifecycleResult> {
+    const registered = getRegisteredPlugin(pluginId);
+    if (!registered) {
+        return { ok: false, pluginId, error: `插件 ${pluginId} 未注册` };
+    }
+    try {
+        await registered.activate?.(context);
+        return { ok: true, pluginId };
+    } catch (err) {
+        const message = err instanceof Error ? err.message : String(err);
+        // 关键保护：若激活抛错，自动注销该插件，防止毒化宿主主渲染循环
+        unregisterPlugin(pluginId);
+        return { ok: false, pluginId, error: message };
+    }
+}
+```
+
+### 3.2 动态启停时序图
+
+```text
+Admin Client          Backend Server           Worker Runtime         Koyosim Upstream
+     │                      │                        │                       │
+     │ 1. PUT /availability │                        │                       │
+     │    (available:false) │                        │                       │
+     │─────────────────────>│                        │                       │
+     │                      │ 2. Check Active Tasks  │                       │
+     │                      │    Count = 3 > 0       │                       │
+     │                      │ 3. Enter 'draining'    │                       │
+     │                      │    draining.Store(true)│                       │
+     │<─────────────────────│                        │                       │
+     │  HTTP 200 (draining) │                        │                       │
+     │                      │                        │                       │
+User ──┐ (New Task)         │                        │                       │
+     │ 4. POST /tasks       │                        │                       │
+     │─────────────────────>│                        │                       │
+     │                      │ 5. IsDraining() == true│                       │
+     │<─────────────────────│    Reject with 503     │                       │
+     │  HTTP 503 (Draining) │    Zero Credit Deduct  │                       │
+     │                      │                        │                       │
+     │                      │                        │ 6. In-flight Polling  │
+     │                      │                        │──────────────────────>│
+     │                      │                        │<──────────────────────│
+     │                      │                        │ 7. Settle/Refund      │
+     │                      │                        │    Active Count -> 0  │
+     │                      │ 8. Auto Transition     │                       │
+     │                      │    State -> 'disabled' │                       │
+     │                      │    Available = false   │                       │
+```
+
+---
+
+## 4. 任务排空引流引擎 (Task Draining Engine)
+
+任务排空引擎是插件在维护、停用、更新与卸载期间避免用户积分损失与生成资产丢失的核心保护屏障。
+
+### 4.1 双层排空防御架构
+1. **准入门禁层 (Front-Door Admission Gate)**：
+   位于 HTTP Handler 与 Service 入口处。在扣除任何积分、创建任何生成订单之前拦截请求。
+   ```go
+   func (s *Service) CheckMusicTaskAdmission(userID string) error {
+       if s.IsDraining() {
+           return &AppError{Status: 503, Code: 503, Reason: kernel.ReasonUnavailable, Message: "服务正在维护，暂不接受新的生成任务", Retryable: true}
+       }
+       if s.IsMusicPluginDraining() {
+           return &AppError{Status: 503, Code: 503, Reason: kernel.ReasonUnavailable, Message: "音乐生成插件正在维护排空中，暂不接受新的生成任务", Retryable: true}
+       }
+       available, err := s.MusicPluginPlatformAvailable()
+       if err != nil {
+           return fmt.Errorf("校验音乐插件状态：%w", err)
+       }
+       if !available {
+           return Forbidden("管理员已停用 AI 音乐生成插件")
+       }
+       userEnabled, err := s.MusicPluginUserEnabled(userID)
+       if err != nil {
+           return fmt.Errorf("校验用户音乐插件激活状态：%w", err)
+       }
+       if !userEnabled {
+           return Forbidden("您未启用音乐生成功能，请在设置中开启后重试")
+       }
+       return nil
+   }
+   ```
+2. **执行排空层 (Back-Door Execution Drain)**：
+   - 内部维护 `activeTasks atomic.Int64`。
+   - 每个任务提交后，`activeTasks.Add(1)`。
+   - 任务通过后台分离轮询（Detached Polling）或 SSE 接收到终态（`completed`, `failed`, `cancelled`）并执行单账本结算/退款后，`activeTasks.Add(-1)`。
+   - 排空期间，后台调度器不接受新的轮询注册，但会保障现有活跃任务的上下文直到超时（最大超时保护：600 秒）。
+
+### 4.2 排空超时与兜底保障
+- 若在途任务因为上游 Koyosim 网络断连超过 300 秒无响应：
+  - 任务被标记为 `failed`（状态为 `BillingStatusUncertain`）。
+  - 排空计数减 1。
+  - 触发财务对账中心登记，不阻塞插件生命周期的最终完成。
+
+---
+
+## 5. 卸载数据与资产持久化保障 (Storage & Asset Retention Guarantee)
+
+在影策平台中，**插件逻辑生命周期必须与用户数据资产生命周期严格解耦**。
+
+### 5.1 数据表隔离规范
+- 音乐生成历史必须存储在拥有 `supdance_` 前缀的独立专用数据表 `supdance_music_generations` 中：
+  ```sql
+  CREATE TABLE IF NOT EXISTS supdance_music_generations (
+      id VARCHAR(36) PRIMARY KEY,
+      user_id VARCHAR(36) NOT NULL,
+      task_id VARCHAR(64) NOT NULL UNIQUE,
+      upstream_task_id VARCHAR(120),
+      model VARCHAR(64) NOT NULL,
+      mode VARCHAR(32) DEFAULT 'simple',
+      prompt TEXT,
+      title VARCHAR(255),
+      lyrics TEXT,
+      tags VARCHAR(500),
+      instrumental BOOLEAN DEFAULT FALSE,
+      duration_target_seconds INT DEFAULT 0,
+      status VARCHAR(32) NOT NULL,
+      stage VARCHAR(64) NOT NULL,
+      result_audio_url TEXT,
+      result_duration_ms BIGINT DEFAULT 0,
+      format VARCHAR(16) DEFAULT 'mp3',
+      stems_json TEXT,
+      resource_id VARCHAR(36),
+      billing_order_id VARCHAR(64),
+      microcredits_cost BIGINT DEFAULT 0,
+      error_message TEXT,
+      created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+      updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+  );
+  CREATE INDEX IF NOT EXISTS idx_music_gen_user_created ON supdance_music_generations (user_id, created_at DESC);
+  ```
+
+### 5.2 卸载持久化保证矩阵
+
+| 数据分类 | 存储物理位置 | 插件卸载时的操作 | 状态与保障要求 |
+|---|---|---|---|
+| **插件平台状态** | `plugin_platform_states` | `DELETE WHERE plugin_id = 'supdance-music-generation'` | 清理，重置为未安装/未启用 |
+| **用户启用配置** | `user_plugin_states` | `DELETE WHERE plugin_id = 'supdance-music-generation'` | 清理用户个人开启偏好 |
+| **用户音乐任务历史** | `supdance_music_generations` | **不执行任何操作 (NO-OP)** | **永久保留，严禁 DROP 或 TRUNCATE** |
+| **生成音频物理对象** | S3 / MinIO / 本地 OSS Bucket | **不执行任何操作 (NO-OP)** | **物理媒体永不删除** |
+| **平台素材库登记** | `models_project.Asset` / `Resource` | **不执行任何操作 (NO-OP)** | 用户素材中心依然可见并可播放 |
+| **计费订单与审计账本** | `billing_orders` / `credit_ledger` | **不执行任何操作 (NO-OP)** | 财务账目永存，保障对账一致性 |
+
+**防误删安全守卫**：
+在 `UninstallPlugin` 实现中，禁止调用任何动态建表/删表 DDL。卸载仅操作状态模型，绝不调用对 `supdance_music_generations` 的级联清理。
+
+---
+
+## 6. 上游零污染兼容守卫 (`ARCHITECTURE.md` Compliance)
+
+本插件严格遵守 [`docs/supdance/ARCHITECTURE.md`](../../supdance/ARCHITECTURE.md) 与 [`docs/supdance/WORKSPACE.md`](../../supdance/WORKSPACE.md) 所确立的三层架构防污染准则。
+
+### 6.1 三层架构隔离矩阵
+
+```text
+┌────────────────────────────────────────────────────────────────────────┐
+│ 1. Upstream Core Layer (上游核心层 — 零污染)                            │
+│    web/src/pages/, backend/internal/app/ (核心调度), backend/cmd/     │
+│    - 严禁在上述目录中编写任何 Koyosim 专有代码、歌词解析器或音乐播放算法   │
+└────────────────────────────────────────────────────────────────────────┘
+                                    ▲
+                                    │ 依赖桥接与适配
+┌────────────────────────────────────────────────────────────────────────┐
+│ 2. Compatibility Adapters Layer (兼容适配层 — 严格登记)                 │
+│    web/src/supdance/adapters/compatibility.ts                          │
+│    backend/internal/supdance/adapters/compatibility.go                 │
+│    - 集中登记 SUPDANCE_UPSTREAM_PATCH_REGISTRY 与路由守卫                 │
+└────────────────────────────────────────────────────────────────────────┘
+                                    ▲
+                                    │ 领域隔离
+┌────────────────────────────────────────────────────────────────────────┐
+│ 3. SupDance Extensions Layer (定制扩展层 — 独立沙盒)                    │
+│    Frontend: web/src/supdance/plugins/music-generation/                │
+│    Backend:  backend/internal/supdance/music/                          │
+│    Manifest: supdance/plugins/supdance-music-generation/               │
+│    - 100% 独立开发，可完整随插件热插拔                                  │
+└────────────────────────────────────────────────────────────────────────┘
+```
+
+### 6.2 零污染五项铁律
+1. **命名空间铁律**：
+   - 数据库表名必须以 `supdance_` 开头。
+   - 插件 ID 必须以 `supdance-` 开头。
+   - 自定义 API 路由必须以 `/api/v1/supdance/music/` 开头。
+2. **样式隔离铁律**：
+   - 遵循 `docs/design-system/README.md` (RULE 001 - RULE 016)。
+   - 所有前端 CSS 样式类必须限定在 `.plugin-music-generation` 作用域内，严禁污染 `:root` 或全局选择器。
+3. **依赖方向铁律**：
+   - `backend/internal/supdance/music/` 绝不得反向 import `yingce/backend/internal/app` 或 `yingce/backend/internal/service`。所有宿主能力（Admin 校验、Secret 加解密、财务接口）均通过宿主适配器接口注入。
+4. **上游补丁登记铁律**：
+   - 任何涉及上游挂载的单行变动，必须登记在 `docs/supdance/CUSTOMIZATIONS.md`、`web/src/supdance/adapters/compatibility.ts` 与 `supdance/config/baseline.json` 中。
+5. **门禁回归铁律**：
+   - 提交前必须通过 `web/test/supdance-extension-isolation.test.ts`、`web/test/supdance-music-plugin-lifecycle.test.ts` 与 `backend/internal/supdance/music/lifecycle_test.go`。

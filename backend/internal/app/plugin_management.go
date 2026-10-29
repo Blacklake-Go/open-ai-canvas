@@ -241,7 +241,7 @@ func (s *Service) pluginStateForUser(actor *model.User, pluginID string, items [
 		// explicitly saves a personal choice. Other official applications were
 		// already controlled by each user's local installation state.
 		if !userConfigured {
-			if pluginID == PluginMediaConversion || pluginID == PluginUserFeedback {
+			if pluginID == PluginMediaConversion || pluginID == PluginUserFeedback || pluginID == PluginSupDanceMusicGeneration {
 				userEnabled = true
 			} else if hasRuntime && pluginID == WorkflowPluginRunningHub {
 				userEnabled = runtimePlugin.Status == "enabled"

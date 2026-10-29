@@ -1,0 +1,87 @@
+---
+title: SupDance Music Generation Plugin Changelog
+description: 影策 SupDance 音乐生成插件开发与迭代版本更新记录 (MUSIC_PLUGIN_CHANGELOG)
+---
+
+# SupDance Music Generation Plugin: Changelog (DOC-8-B / MUSIC_PLUGIN_CHANGELOG.md)
+
+本文件记录 SupDance 专属 AI 音乐生成插件（`music-generation` / `supdance-music-generation`）的全生命周期迭代演进与版本变更记录。
+
+---
+
+## [v1.0.0] - 2026-10-29
+
+### 🎯 总体发布概述
+- 首个生产就绪正式版本发布；
+- 遵循 SupDance 插件架构 V2 规范，深度集成于工作区音乐生成岛（`/toolbox/music`）与管理后台；
+- 唯一外部 API 固定对接 `https://www.koyosim.com`，提供不可变 Base URL、AES-256-GCM 服务端凭据金库与 SSRF 拦截防御；
+- 覆盖 Mureka V9.5、Suno v6、Google Lyria 3.5、Eleven Music v2.5 四款模型统一能力抽象；
+- 接入 SupDance 单一账本积分预留与实扣体系，提供 ffmpeg 音频转码流水线；
+- 全面适配 Light / Dark / System 三套主题与 6 种国际化语言。
+
+---
+
+### ✨ 新增核心特性 (Added)
+
+#### 1. 插件架构与生命周期引擎 (Milestone 1)
+- **Manifest V2 规范**：独立声明 `supdance/plugins/supdance-music-generation/manifest.json`；
+- **七状态生命周期机**：实现 `installed`, `enabled`, `disabled`, `updating`, `draining`, `error`, `uninstalled` 状态转移与故障自愈；
+- **任务优雅排空 (Draining)**：排空期间返回 HTTP 503 拒绝新任务，保障在途异步任务平稳完成；
+- **零侵入资产保护**：插件禁用或卸载时，永久保留用户历史创作记录与 `model.Resource` 音频素材资产。
+
+#### 2. 固定外部 API 客户端与网络安全 (Milestone 2)
+- **固定 Base URL 锁定**：强制锁定 `const KoyosimAPIBaseURL = "https://www.koyosim.com"`，禁止客户端和管理员改写；
+- **防 SSRF 重定向拦截器**：严格检查 HTTP 301/302 重定向跳转，拒绝跳转至非 `*.koyosim.com` 外部主机；
+- **TLS 1.3 CA 证书校验**：强制启用根证书体系验证，杜绝中间人劫持；
+- **零计费探活端点**：提供 `/v1/ping` 快速连通性检查，不产生任何 API 计费或积分扣减；
+- **AES-256-GCM 凭据金库**：服务端加密存储 API Key，前端及日志脱敏为 `koyo_****abcd`。
+
+#### 3. 四大音乐模型适配器与能力抽象 (Milestone 2)
+- **Mureka V9.5** (`mureka-9.5`)：支持歌词结构标签（`[Verse]`, `[Chorus]`, `[Bridge]`）、男女声人声音色选择、无损 FLAC、30–300 秒时长；
+- **Suno v6** (`suno-v6`)：支持简易提示词模式、自定义模式、风格标签及续写片段 ID；
+- **Google Lyria 3.5** (`lyria-3.5`)：支持精准 BPM（40–240）、调号签名设置与 SynthID 音频水印；
+- **Eleven Music v2.5** (`music_v2_5`)：支持高保真声乐建模与多轨分轨（Vocal / Drums / Bass / Other）。
+
+#### 4. 音乐生成岛前端与 Web Audio 播放器 (Milestone 3)
+- **创作岛工作台**：挂载于 `/toolbox/music` 路由，与现有媒体岛视觉统一；
+- **动态模型表单**：模型切换时动态更新字段可见性、输入上限约束与预估积分；
+- **多行歌词编辑器**：支持结构标签快速插入、实时字数统计与超出告警；
+- **用户本地草稿自动保存**：基于 `localforage` 实现按用户隔离的草稿防丢机制；
+- **真实进度状态机**：展示 `submitted -> queued -> generating -> transcoding -> completed` 真实阶段，无伪造百分比；
+- **Web Audio API 64 柱实时波形播放器**：支持指针拖拽寻道、播放列表循环、单实例互斥防自播；
+- **多格式流式下载**：支持原始格式及 MP3 / WAV / FLAC 服务端按需转码下载。
+
+#### 5. 后台插件管理与 RBAC 权限 (Milestone 4)
+- **插件管理入口**：在 `/admin/plugins/music-generation` 注册管理面板；
+- **只读 Base URL 展示**：明确标注 API 固定来源，禁止任何自定义上游；
+- **模型与计费定价配置**：支持管理员按模型调整积分倍率与启用禁用；
+- **实时队列监控与排空控制**：提供排队任务检查、强制排空触发与重试；
+- **RBAC 鉴权与审计日志**：全部管理接口受控于 `RequireAdmin()` 并写入审计日志。
+
+#### 6. 单一账本财务与服务端转码流水线 (Milestone 5)
+- **无二级余额原则**：完全依托现有 `CreditAccount` 与 `CreditLedgerEntry`；
+- **幂等事务预留**：任务提交时以 Nonce 为键锁定预估微积分；
+- **按实际时长结算**：依据上游返回的实际音频秒数精确扣费，多退少补；
+- **失败秒级退款**：确定性失败（4xx/5xx/取消）立即全额释放预留额度；
+- **超时异常对账**：针对网络未知状态标记 `BillingStatusUncertain`，由后台协调器安全对账；
+- **ffmpeg 转码管线**：服务端按需转码 MP3/WAV/FLAC 并验证二进制文件头魔数。
+
+#### 7. 全站三套主题适配与国际化 (Milestone 6)
+- **主题即时响应**：完整支持 Light / Dark / System 模式，优先响应 `/admin/settings/appearance` 运行时 Tokens；
+- **样式严格隔离**：私有样式全部封装在 `.plugin-music-generation.*` 作用域下，零全局 `:root` 污染；
+- **响应式与无障碍**：适配 360px–1440px 断点，触控目标 ≥ 44×44px，文本对比度 ≥ 4.5:1 符合 WCAG 2.2 AA；
+- **6 种语言国际化**：在 `supdance-i18n` 注册 `music.*` 完整字典（中文简体、英文、繁体中文、日文、韩文、西班牙文）。
+
+#### 8. 全套工程规范与测试套件 (Milestone 7)
+- 交付 DOC-1 至 DOC-8 共 8 份工程架构规范文档；
+- 编写 5-Tier 端到端测试套件（66 项功能特征与对抗测试通过）；
+- 编写 Manifest 与生命周期白盒对抗用例（16 项全部通过）；
+- 编写真实 Store 与单实例音频控制器测试（5 项全部通过）。
+
+---
+
+### 🛡️ 架构与安全审计保证 (Security & Assurance)
+- **Zero Host Pollution**：未污染原有图片/视频/画布等核心生成流程；
+- **No Spoofed Progress**：无任何伪造确定性进度百分比；
+- **Immutable API Egress**：彻底封堵客户端篡改 API 地址或进行 SSRF 跨域渗透的可能；
+- **Credential Redaction**：错误日志与网络响应中绝不包含明文 API 密钥。

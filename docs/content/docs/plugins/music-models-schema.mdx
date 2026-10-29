@@ -1,0 +1,93 @@
+---
+title: SupDance Music Generation Four Core Models & Schema Specification
+description: 影策 SupDance 音乐生成四大核心音频大模型（Mureka V9.5、Suno v6、Google Lyria 3.5 与 Eleven Music v2.5）的参数 Schema、能力矩阵、动态能力发现与适配器转换规范
+---
+
+# SupDance Music Generation: Four Core Models & Schema Specification (DOC-3)
+
+本规范定义了 SupDance 专属 AI 音乐生成插件（`supdance-music-generation`）所支持的四大权威音频大模型的能力标准、参数约束、Schema 校验规则以及动态能力发现协议。
+
+---
+
+## 1. 四大核心模型能力矩阵
+
+| 模型标识 (Model ID) | 商业名称 | 核心专长 | 模式支持 | 伴奏支持 | 时长范围 | 特色能力 |
+| :--- | :--- | :--- | :--- | :--- | :--- | :--- |
+| `mureka-9.5` | Mureka V9.5 | 流行歌曲、编曲丰富度、高质量人声 | 简单 / 自定义 | 支持纯伴奏 | 30s – 300s | 无损 FLAC、男女音色切换、段落结构控制 |
+| `suno-v6` | Suno v6 | 复杂结构长歌曲、多风格融汇 | 简单 / 自定义 | 支持纯伴奏 | 30s – 240s | 续写接力 (`continuationClipId`)、风格标签注入 |
+| `lyria-3.5` | Google Lyria 3.5 | 殿堂级编曲质感、严谨乐理调校 | 简单 / 自定义 | 支持纯伴奏 | 30s – 180s | 精确 BPM 调控 (40–240)、调号 (Key)、SynthID 水印 |
+| `music_v2_5` | Eleven Music v2.5 | 极高保真度人声表现力、分轨提取 | 简单 / 自定义 | 支持纯伴奏 | 30s – 240s | 多轨 Stem 分轨分离 (人声/鼓点/贝斯/其他) |
+
+---
+
+## 2. 模型详细 Schema 与参数规范
+
+### 2.1 Mureka V9.5 (`mureka-9.5`)
+- **适用场景**：人声歌唱作品、商业单曲、需要精细人声音色控制的流行音乐。
+- **特定参数 (Custom Options)**：
+  - `vocal_gender`: `auto` | `male` | `female`（人声性别倾向）
+  - `quality_tier`: `standard` | `hd_lossless`（音频质量档位，`hd_lossless` 输出 24-bit 48kHz 无损 FLAC）
+- **时长范围**：30 – 300 秒（步长 1 秒）。
+- **歌词标记**：支持标准段落标记：`[Verse]`, `[Chorus]`, `[Bridge]`, `[Outro]`, `[Intro]`。
+
+### 2.2 Suno v6 (`suno-v6`)
+- **适用场景**：跨界融合曲风、需要无缝续写拼接的长篇史诗乐章。
+- **特定参数 (Custom Options)**：
+  - `style_tags`: 逗号分隔的风格标签（例如 `synthwave, retro 80s, driving bass`）
+  - `continuation_clip_id`: 续写源片段的上游 Task ID，用于接续上一段未完的旋律。
+- **时长范围**：30 – 240 秒。
+
+### 2.3 Google Lyria 3.5 (`lyria-3.5`)
+- **适用场景**：严谨乐理创作、交响乐配乐、游戏与影视背景音乐。
+- **特定参数 (Custom Options)**：
+  - `tempo_bpm`: `40` – `240` 整数（默认 120，精确控制节拍速度）。
+  - `key_signature`: 调号枚举（如 `C Major`, `A Minor`, `F# Minor`, `Eb Major` 等）。
+  - `synth_id_watermark`: 布尔值（默认为 `true`，注入 Google DeepMind SynthID 音频水印以保证内容合规可追溯）。
+- **时长范围**：30 – 180 秒。
+
+### 2.4 Eleven Music v2.5 (`music_v2_5`)
+- **适用场景**：高表现力人声制作、专业母带重混、后期多轨混音工程。
+- **特定参数 (Custom Options)**：
+  - `stem_separation`: 布尔值（启用后在生成主混音的同时，上游将并行输出人声轨 `vocals`、鼓组轨 `drums`、低音贝斯轨 `bass` 及伴奏伴音轨 `other` 四路独立音频）。
+- **时长范围**：30 – 240 秒。
+
+---
+
+## 3. 统一请求与响应契约
+
+### 3.1 客户端提交请求 Payload
+```json
+{
+  "model": "lyria-3.5",
+  "mode": "custom",
+  "prompt": "Cyberpunk synthwave with driving bass and neon arpeggio",
+  "title": "Night Runner",
+  "lyrics": "[Verse 1]\nStreets of chrome under neon rain...",
+  "instrumental": false,
+  "duration": 120,
+  "tempoBpm": 128,
+  "keySignature": "D Minor",
+  "idempotencyNonce": "4a123f8b-c9e1-4c12-8874-bf83501fbb02"
+}
+```
+
+### 3.2 适配器转换 (Adapter Transformation)
+服务端适配层将上述统一请求转换为上游 Koyosim 专用协议：
+```go
+// backend/internal/supdance/music/adapter.go
+func TransformRequest(req *UnifiedMusicRequest) (*KoyosimTaskPayload, error) {
+    // 1. 基础校验 (时长、模式、歌词要求)
+    // 2. 依据 req.Model 派发至 Mureka, Suno, Lyria 或 Eleven 转换器
+    // 3. 打包为符合 Koyosim API 的 POST 请求体
+}
+```
+
+---
+
+## 4. 动态能力发现与保底机制 (Capability Discovery)
+
+为了保证在上游模型版本升级或临时维护时前端界面的韧性，系统设计了动态能力探测与本地静态目录双保险策略：
+
+1. **动态探测**：后台服务启动或管理员刷新时，调用 `GET https://www.koyosim.com/v1/audio/music/models`。
+2. **能力合并**：上游返回的实时模型列表与本地静态配置做差分补全。
+3. **安全降级保底**：当网络不可用或上游接口超时时，系统立即降级为内置的 4 大模型权威静态目录，确保前端界面正常渲染与离线校验，绝不发生白屏崩溃。

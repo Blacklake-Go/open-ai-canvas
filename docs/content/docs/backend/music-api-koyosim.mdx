@@ -1,0 +1,151 @@
+---
+title: SupDance Music Generation Fixed Koyosim Gateway Integration Specification
+description: 影策 SupDance 音乐生成插件固定上游网关 https://www.koyosim.com 的出站网络安全、不可变 Base URL、AES-256-GCM 凭据保管库、无损健康探测、异步脱钩轮询、SSE 流与 HMAC 签名 Webhook 规范
+---
+
+# SupDance Music Generation: Fixed Koyosim Gateway Integration Specification (DOC-2)
+
+本技术规范定义了 SupDance 专属 AI 音乐生成插件（`supdance-music-generation`）与外部固定上游网关 `https://www.koyosim.com` 之间的网络通信、出站安全边界、凭据保护、状态同步与异步任务调度全套标准。
+
+---
+
+## 1. 架构总览与网络边界
+
+```text
+┌────────────────────────────────────────────────────────────────────────┐
+│                     SupDance 内部服务层 (Internal)                     │
+│                                                                        │
+│   Client (Fixed Base URL: https://www.koyosim.com)                     │
+│    ├── CheckRedirect (SSRF 防护: 拒绝任何跨域重定向)                   │
+│    ├── TLS CA Verification (Strict TLS 1.3 / InsecureSkipVerify=false) │
+│    ├── AES-256-GCM Vault (密文存储与内存解密)                          │
+│    └── Redaction Logger (koyo_****abcd 脱敏输出)                       │
+└───────────────────────────────────┬────────────────────────────────────┘
+                                    │ Egress (TLS 1.3 / HTTPS)
+                                    ▼
+┌────────────────────────────────────────────────────────────────────────┐
+│                   外部固定上游: https://www.koyosim.com                │
+│                                                                        │
+│   ├── GET  /v1/ping                    (零费用连通性探测)              │
+│   ├── GET  /v1/audio/music/models      (动态可用模型与参数)            │
+│   ├── POST /v1/audio/music/generate    (任务投递)                      │
+│   ├── GET  /v1/audio/music/tasks/:id   (脱钩指数退避轮询)              │
+│   ├── GET  /v1/audio/music/tasks/:id/events (SSE 实时阶段推送)         │
+│   └── POST /api/v1/supdance/music/webhook   (HMAC-SHA256 回调)         │
+└────────────────────────────────────────────────────────────────────────┘
+```
+
+---
+
+## 2. 不可变服务端 Base URL (Immutable Base URL)
+
+在整个插件的代码实现中，外部网关基础地址定义为唯一不可变常量：
+
+```go
+// backend/internal/supdance/music/client.go
+const KoyosimAPIBaseURL = "https://www.koyosim.com"
+```
+
+### 约束与防御准则：
+1. **服务端强一致性**：`client.BaseURL()` 永远返回 `https://www.koyosim.com`。
+2. **禁止覆盖与篡改**：管理后台、环境变量、前端请求或租户配置中任何传入替代 `baseUrl` 的参数均被拦截忽略，严防请求走入恶意中间人服务器。
+3. **出站白名单守卫**：与影策出站安全管理器（SSRF Guard）严格对齐，仅放行经过验证的权威域名。
+
+---
+
+## 3. 出站网络安全防御体系
+
+### 3.1 跨域重定向拦截 (Anti-SSRF CheckRedirect)
+恶意攻击者可能通过在上游服务器注入 301/302 重定向，试图将出站请求诱导至内部局域网敏感地址（例如 `http://169.254.169.254/` 或 `http://127.0.0.1:8080/`）。
+为此，HTTP Client 配置严格的重定向校验钩子：
+
+```go
+client.client.CheckRedirect = func(req *http.Request, via []*http.Request) error {
+    if len(via) >= 5 {
+        return errors.New("stopped after 5 redirects")
+    }
+    // 强制重定向目标必须依然属于 koyosim.com 域名
+    host := req.URL.Hostname()
+    if host != "www.koyosim.com" && host != "koyosim.com" && !strings.HasSuffix(host, ".koyosim.com") {
+        return fmt.Errorf("security violation: redirect to untrusted external host disallowed: %s", host)
+    }
+    return nil
+}
+```
+
+### 3.2 严格 TLS 证书与 CA 链验证
+- 禁止开启 `InsecureSkipVerify: true`。
+- 强制使用宿主系统的权威 Root CA 证书池验证 TLS 证书签名。
+- 最低 TLS 协议版本强制要求 TLS 1.2+（推荐 TLS 1.3）。
+
+---
+
+## 4. 凭据加密保管库与脱敏输出 (Vault & Log Redaction)
+
+### 4.1 AES-256-GCM 加密存储
+API Key 作为高价值凭证，绝不允许明文存放在数据库中。`music.Vault` 采用 AES-256-GCM 认证加密模式：
+
+1. **密钥源**：从主控环境变量 `CANVAS_APP_KEY` 派生 32 字节主密钥。
+2. **IV/Nonce**：每次加密生成密码学安全的 12 字节随机 Nonce。
+3. **认证标签**：GCM 提供完整性校验，防止密文被篡改。
+4. **存储格式**：`hex(nonce) + ":" + hex(ciphertext_with_tag)`。
+
+### 4.2 严格脱敏规范 (Masking)
+无论是在 API 返回的配置详情，还是系统运行日志、异常堆栈中，API Key 均被脱敏格式化：
+
+```go
+func MaskAPIKey(key string) string {
+    trimmed := strings.TrimSpace(key)
+    if len(trimmed) <= 8 {
+        return "koyo_****"
+    }
+    prefix := trimmed[:5] // 如 "koyo_"
+    suffix := trimmed[len(trimmed)-4:]
+    return fmt.Sprintf("%s****%s", prefix, suffix)
+}
+```
+日志框架在处理带有敏感字段的上下文时，自动调用脱敏过滤，彻底消除日志泄密风险。
+
+---
+
+## 5. 零费用连通性探测 (Non-Billing Ping)
+
+管理员在后台配置或检查上游连接时，系统调用 `/v1/ping` 接口验证 Key 的有效性，绝不调用计费生成接口：
+
+- **探测端点**：`GET https://www.koyosim.com/v1/ping`
+- **请求头**：`Authorization: Bearer <API_KEY>`
+- **成功标准**：HTTP 200 OK，返回 `{ "code": 0, "status": "pong", "message": "alive" }`
+- **计费影响**：**零积分扣除**，上游及下游均无财务副作用。
+
+---
+
+## 6. 异步脱钩轮询与 SSE 阶段驱动
+
+音频生成通常需要 15 秒至 120 秒，为防止 HTTP 线程池耗尽，系统采用脱钩调度（Detached Worker）。
+
+### 6.1 指数退避轮询引擎 (Exponential Backoff)
+当采用轮询模式时，调度器遵循如下时间序列：
+- 初始重试间隔：`2.5s`
+- 退避倍率：`1.5`
+- 最大间隔封顶：`10.0s`
+- 最大超时时间：`300s`
+
+### 6.2 SSE 实时流事件解析 (Stage Stream)
+上游网关提供 Server-Sent Events 流 `GET /v1/audio/music/tasks/{id}/events`：
+- 事件流按真实生成阶段流转：`submitted` -> `queued` -> `generating` -> `transcoding` -> `completed` / `failed`。
+- 本地任务状态机捕获事件并实时推送到前端，**绝不生成伪进度百分比**。
+
+---
+
+## 7. 带签名的 Webhook 回调接收器 (HMAC-SHA256)
+
+### 7.1 签名机制
+上游任务完成时，向影策回调端点 `POST /api/v1/supdance/music/webhook` 发送通知。
+请求头携带：
+- `X-Koyosim-Signature`: `sha256=<HMAC_HEX>`
+- `X-Koyosim-Timestamp`: Unix 时间戳（秒）
+
+### 7.2 安全防范措施
+1. **重放攻击防御**：校验 `abs(now - timestamp) <= 300` 秒（5分钟窗口期），超过则直接抛弃。
+2. **恒定时间比对**：使用 `subtle.ConstantTimeCompare` 验证 HMAC，抵御时序侧信道攻击。
+3. **幂等处理**：已结算或已处于终止态的任务，重复收到 Webhook 不产生二次积分扣退。

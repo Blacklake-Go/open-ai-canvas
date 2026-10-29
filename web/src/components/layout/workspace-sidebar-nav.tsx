@@ -1,5 +1,5 @@
 import { Popover } from "antd";
-import { ChevronDown, ChevronRight, CircleUserRound, History as HistoryIcon, Image as ImageIcon, Infinity as InfinityIcon, PanelLeftClose, PanelLeftOpen, Plus, Video } from "lucide-react";
+import { ChevronDown, ChevronRight, CircleUserRound, History as HistoryIcon, Image as ImageIcon, Infinity as InfinityIcon, Music, PanelLeftClose, PanelLeftOpen, Plus, Video } from "lucide-react";
 import { LayoutGroup, motion, useReducedMotion } from "motion/react";
 import { useEffect, useMemo, useRef, useState, type ComponentType, type CSSProperties } from "react";
 import { Link, useLocation, useNavigate, useSearchParams } from "react-router";
@@ -56,6 +56,7 @@ function buildNav(features: FeatureAvailability, t: (key: string) => string): { 
             items: [
                 ...(features.imageWorkbenchEnabled ? [{ id: "toolbox-image", title: t("nav.image_gen"), icon: ImageIcon, to: "/toolbox/image" }] : []),
                 ...(features.videoWorkbenchEnabled ? [{ id: "toolbox-video", title: t("nav.video_gen"), icon: Video, to: "/toolbox/video" }] : []),
+                { id: "toolbox-music", title: t("music.nav_music_gen"), icon: Music, to: "/toolbox/music" },
                 { ...toolItem("skills", "/skills"), title: t("nav.skills") },
                 ...(features.pluginCenterEnabled ? [{ ...toolItem("plugins", "/plugins"), title: t("nav.plugins") }] : []),
             ],

@@ -7,5 +7,6 @@ import "./editor/editor-shell";
 import "./user-feedback";
 import "@/supdance/plugins/i18n";
 import "@/supdance/plugins/social-auth";
+import "@/supdance/plugins/music-generation";
 
 export * from "./user-feedback";

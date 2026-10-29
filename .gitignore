@@ -17,6 +17,8 @@ docs/content/docs/*
 !docs/content/docs/plugins/
 docs/content/docs/plugins/*
 !docs/content/docs/plugins/ai-art-critique.mdx
+!docs/content/docs/plugins/music-generation-lifecycle.mdx
+!docs/content/docs/plugins/music-models-schema.mdx
 # Keep the task stability runbook versioned without unignoring generated docs.
 !docs/content/docs/backend/
 docs/content/docs/backend/*
@@ -31,6 +33,15 @@ docs/content/docs/backend/*
 !docs/content/docs/backend/bailian-minimax-video.mdx
 !docs/content/docs/backend/video-token-billing.mdx
 !docs/content/docs/backend/creative-agent-runtime.mdx
+!docs/content/docs/backend/music-api-koyosim.mdx
+!docs/content/docs/backend/music-admin-rbac.mdx
+!docs/content/docs/backend/music-billing-credits.mdx
+!docs/content/docs/progress/
+docs/content/docs/progress/*
+!docs/content/docs/progress/music-generation-testing.mdx
+!docs/content/docs/progress/music-generation-changelog.mdx
+!docs/content/docs/progress/todo.mdx
+!docs/content/docs/progress/pending-test.mdx
 # Keep the creative Agent design versioned without unignoring generated docs.
 !docs/content/docs/overview/
 docs/content/docs/overview/*
@@ -81,5 +92,9 @@ backend/tmp_*
 # Keep the runtime in source control; its optional debug map is not deployed.
 /web/public/live2d/live2dcubismcore.min.js.map
 .zocde/
+.agents/
+PROJECT.md
+TEST_INFRA.md
+TEST_READY.md
 __pycache__/
 *.pyc
