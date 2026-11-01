@@ -95,3 +95,34 @@
 3. **生产 `pluginCenterEnabled=false`**（`system_settings.feature_availability`，2026-10-29 由管理员设置，早于本次发布）：前台 `/plugins` 显示「插件中心暂未开放」。这会影响插件守卫页上「前往插件中心」自助开启入口的可用性——若未来需要在生产让用户自助开启插件，需先该项打开并重新验收。
 4. **服务器 `/opt/www.supdance.com` 是数据目录宿主**（`backend-data`/`postgres-data`/`redis-data`/`updater-socket`），其内残留的 git checkout 仍停在 `a934a655` 且有未提交改动；本次发布未触碰该目录，运行态与它无关。
 5. **磁盘水位**：发布前 `/` 已用 98%（剩余 1.2G），清理悬空镜像回收 1.66G 后为 87%（剩余 7.5G）。旧 `releases/1.7.3-supdance-v1..v5` 与 `yingce-backend-…-v1..v3` 仍占约 1G，可在确认无需回滚后按保留策略清理。
+
+## 5. 发布记录：`1.7.4-supdance.1` 第三方登录后台面板 → 生产（仅前端）
+
+### 5.1 发布坐标
+
+| 项目 | 切换前 | 切换后 |
+| --- | --- | --- |
+| 提交 | `bc5ebcf7` 的前端产物 | `2548fbc0`（`release/supdance-1.7.4-supdance.1`，其父 `dbcc7751` 声明 v1.7.4 版本坐标） |
+| `CANVAS_WEB_RELEASE_PATH` | `releases/1.7.3-supdance-v6`（入口 `index-8kvu_b7m.js`） | `releases/1.7.4-supdance-v1`（2114 文件 / 141,108,422 B，入口 `index-BFwj8vGq.js`） |
+| `CANVAS_BACKEND_RELEASE_BINARY` | `releases/yingce-backend-1.7.3-supdance-v4` | 未变更（本次无 Go 改动） |
+| 镜像 | `supdance-canvas-backend:bc5ebcf7` / `supdance-canvas-web:bc5ebcf7` | 未变更（未重建任何镜像） |
+| 数据库 | — | 零 Schema 变更、零数据写入（`migrate` 未触发） |
+
+webroot `index.html` 由 `e59eaf0bbd70f0a80c204091c927b7bd` 变为 `2096a1c35ae875dd886a1a2e6fe97839`。回滚坐标见 `/opt/y-supdance-canvas/ROLLBACK-1.7.4-web.md`（`0600`）与 `.env.bak-174web-20261102-030936`；回滚动作 = 恢复该 `.env` 后 `docker compose -f docker-compose.deploy.yml up -d web`。
+
+### 5.2 构建与发布方式
+
+纯前端改动，因此未走第 4 节的镜像重建：本地 `web/` 执行 `bun run build`（`tsc --noEmit && vite build`，10.74s，exit 0），`rsync -a --delete` 把 `dist/` 上传为新 release 目录，只改 `.env` 的 `CANVAS_WEB_RELEASE_PATH` 一个键并重启 `web` 服务，由 `docker/canvas-web-entrypoint.sh` 以锁目录 + 原子改名、HTML 最后落地的方式发布。仓库 Dockerfile、compose、后端二进制、镜像与数据库均未触碰。
+
+### 5.3 验证结果
+
+- 产物可达：`assets/social-auth-settings-page-DeX8j_OY.js` 返回 200（17,957 B），内含 `admin-social-key-modal`、`admin-social-provider-grid`、`安全提交凭证`；`assets/admin-shell-DOZajAz_.css` 返回 200，内含 `admin-social-provider-grid`、`admin-social-auth-save-bar`、`admin-social-key-meta-row`、`admin-social-key-secure`。
+- 向后兼容：旧入口 `index-8kvu_b7m.js` 与旧面板 chunk `social-auth-settings-page-DM2uAMWU.js` 仍返回 200（7 天哈希产物保留策略生效，已打开的标签页不受影响）；首页与 `/admin/settings/social-auth` 均 200。
+- 真实浏览器（生产、已登录管理员）：`/admin/settings/social-auth` 渲染为渠道卡片网格，「中国大陆渠道 · 4 / 海外渠道 · 4」分区切换正常，掩码密钥芯片、回调地址复制/打开、前台展示开关、底部保存条（「前台展示与线上一致 · 已启用 6 / 8 个渠道」）均正常。
+- 连通性测试：Google 与 X 卡片触发测试后，徽标由后端真实结果置为「待录入凭证」，未出现估算延迟值冒充在线健康度。
+- 授权段（服务器本机发起，未知 IP → 回退 `intl`）：`/api/auth/social/providers` 返回 `region: intl` 且含 google/x 与 `authorizeUrl`；`/api/auth/social/google/start` 302 至 `accounts.google.com/o/oauth2/v2/auth`，跟随后 Google 正常渲染登录页（无 `redirect_uri_mismatch`、无 `invalid_client`）；`/api/auth/social/x/start` 302 至 `x.com/i/oauth2/authorize`，PKCE `code_challenge` 正常，跟随后返回 X 登录页。
+- 分区门禁：中国大陆出口 IP 直接访问 `/api/auth/social/{google,x}/start` 返回 `403 该社交登录渠道仅限海外及港澳台访问者使用`，与面板分区策略一致 —— 国际渠道的验收必须从海外/港澳台出口或未知 IP 进行。
+
+### 5.4 未完成项
+
+Google 与 X 的 `clientSecret` 在生产库 `system_settings.supdance_social_auth` 中仍是空串（qq/douyin/bilibili 已是 `enc:v1:` 密文，wechat 的 `clientId`/`clientSecret` 亦为空但前台展示为开启）。密钥只能由管理员本人在后台「配置密钥 / 轮换」弹窗内录入：其值仅存在于 Google Cloud Console 与 X Developer Console，按既定凭据边界不由助手读取、代填或写入对话。令牌段（code → token → 建会话）需在该项录入后重跑一次真实登录才能验收。
