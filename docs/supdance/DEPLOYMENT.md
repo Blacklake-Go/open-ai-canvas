@@ -126,3 +126,22 @@ webroot `index.html` 由 `e59eaf0bbd70f0a80c204091c927b7bd` 变为 `2096a1c35ae8
 ### 5.4 未完成项
 
 Google 与 X 的 `clientSecret` 在生产库 `system_settings.supdance_social_auth` 中仍是空串（qq/douyin/bilibili 已是 `enc:v1:` 密文，wechat 的 `clientId`/`clientSecret` 亦为空但前台展示为开启）。密钥只能由管理员本人在后台「配置密钥 / 轮换」弹窗内录入：其值仅存在于 Google Cloud Console 与 X Developer Console，按既定凭据边界不由助手读取、代填或写入对话。令牌段（code → token → 建会话）需在该项录入后重跑一次真实登录才能验收。
+
+## 6. 验收中发现的登录旁路（`d2f6618a` + `c20a849a`，尚未发布到生产）
+
+验收「令牌段」时发现：本次要做到「自动验证 google/x 登录」，前提是该登录真的会向上游交换令牌，而 `bc5ebcf7`（当前生产二进制 `releases/yingce-backend-1.7.3-supdance-v4`）的实现并不成立。
+
+- `resolveUserProfile` 的非 mock 分支不访问任何上游接口，直接把授权码拼成身份：`Subject = providerID + "_live_" + code[:8]`（`bc5ebcf7` 的 service.go:684）。后果有二：真实登录每次都会新建一个空账号（用户在 QQ/抖音/B 站登进来的作品不可能找回），以及 `/api/auth/social/{provider}/callback` 对任意 `code` 都会签发会话。
+- mock 身份只看 `code` 前缀（`bc5ebcf7` 的 service.go:639），与渠道是否开启沙箱无关。
+- `/start` 与 `/callback` 都是公开端点：攻击者自行调用 `/start` 即可拿到合法 `state`（`oauth_states` 行），再用 `code=mock_code_anything` 或任意字符串回调，即可铸造账号与会话。本地回归 `TestMockCallbackCodeIsHonoredOnlyWhenSandboxEnabled` / `TestLiveCallbackRequiresRealTokenExchange` 在该修复前均实测铸出用户，生产运行同一份代码。
+
+修复内容：
+
+1. `credentialsUsable`：只填了 Client ID、未录入密钥的渠道不再出现在公开 providers 列表，`/start` 也直接拒绝（消除「点了才在回调阶段失败」的坏按钮；渠道录入密钥后自动恢复展示，无需人工再开）。
+2. mock 只接受服务端配置（`sandboxMockEnabled` 或配置里本就是 `mock_` 凭据），`?mock=true` 与 `code=mock_code_*` 都不再单独生效。
+3. Google 与 X 接入真实交换：`oauth2.googleapis.com/token` → `openidconnect.googleapis.com/v1/userinfo`；`api.x.com/2/oauth2/token`（Basic 凭据 + PKCE `code_verifier`）→ `/2/users/me`。上游端点为包级变量，可用 httptest 覆盖；两条真实链路由测试证明，含上游拒绝时必须失败。
+4. 其余渠道在未接入上游交换前 fail-closed，明确报「尚未接入真实授权码交换」。
+
+已验证的生产出网能力（发布后端时不构成阻碍）：`oauth2.googleapis.com` 404（端点可达）、`accounts.google.com` 302、`api.x.com` 401、`graph.qq.com` 200；容器内无 curl，探针在宿主机执行。
+
+发布前提（需管理员确认，见任务清单）：后端二进制需在服务器用 `backend/Dockerfile` 的 builder 阶段交叉编译（`CGO_ENABLED=1`），产物落到 `releases/yingce-backend-1.7.4-supdance-v1`，只改 `.env` 的 `CANVAS_BACKEND_RELEASE_BINARY` 一个键后 `up -d backend`；回滚即改回旧键值。代价是后端容器重启数秒，以及 QQ/抖音/B 站登录从「静默新建空账号」变为明确报错，直到接入各自的令牌交换。
