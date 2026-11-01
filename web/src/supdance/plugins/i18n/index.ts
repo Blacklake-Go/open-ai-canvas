@@ -6,10 +6,10 @@ import { SUPDANCE_I18N_PLUGIN_ID } from "./types";
 export const supdanceI18nPlugin: RegisteredPlugin = {
     manifest: {
         id: SUPDANCE_I18N_PLUGIN_ID,
-        name: "站点多语言与实时词条中心",
-        version: "1.0.0",
+        name: "Supdance国际化",
+        version: "1.1.0",
         publishedAt: "2026-10-27",
-        updatedAt: "2026-10-27",
+        updatedAt: "2026-10-31",
         apiVersion: PLUGIN_API_VERSION_V2,
         minHostVersion: "1.7.1",
         description: "站点级多语言国际化插件：内置简中、英语、繁中、日文、韩语、西班牙语六大语种，提供右上角语言切换器、后台语言管理与动态词条即时修改能力。",

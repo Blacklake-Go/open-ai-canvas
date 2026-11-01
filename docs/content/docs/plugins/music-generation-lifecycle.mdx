@@ -14,9 +14,8 @@ description: 影策 SupDance 音乐生成插件 (supdance-music-generation) 的 
 音乐生成插件严格遵循 `yingce.plugin/v2` 契约，统一声明在 `supdance/plugins/supdance-music-generation/manifest.json` 与前端扩展入口 `web/src/supdance/plugins/music-generation/manifest.json`。
 
 ### 1.1 命名空间与版本约束
-- **插件标识符 (ID)**：`supdance-music-generation`（受 `backend/internal/supdance/domain/extension.go` 与 `web/src/supdance/adapters/compatibility.ts` 强校验，必须以 `supdance-` 开头）。
-- **用户呈现别名 (Display Alias)**：`music-generation`（用于 UI 标牌、CLI 别名和 URL 友好路径）。
-- **版本规范 (SemVer)**：`1.0.0`，严格匹配正则表达式 `/^\d+\.\d+\.\d+(?:-[0-9A-Za-z.-]+)?$/`。
+- **插件标识符 (ID)**：`supdance-music-generation`（受 `backend/internal/supdance/domain/extension.go` 与 `web/src/supdance/adapters/compatibility.ts` 强校验，必须以 `supdance-` 开头）。路由守卫、侧栏入口与创作岛模式药丸等一切生效判定均只使用该清单 id；历史上短暂存在的别名 `music-generation` 已于 `supdance/v2026.11.01.1` 移除，不再作为任何状态键。
+- **版本规范 (SemVer)**：`1.1.0`，严格匹配正则表达式 `/^\d+\.\d+\.\d+(?:-[0-9A-Za-z.-]+)?$/`。
 - **最低宿主版本 (`minHostVersion`)**：`1.7.1`，若宿主版本低于此版本，`validateSupDancePluginManifest` 拒绝注册。
 
 ### 1.2 权威 Manifest V2 JSON Schema
@@ -25,10 +24,10 @@ description: 影策 SupDance 音乐生成插件 (supdance-music-generation) 的 
 {
   "apiVersion": "yingce.plugin/v2",
   "id": "supdance-music-generation",
-  "name": "AI 音乐生成 (Music Studio)",
-  "version": "1.0.0",
+  "name": "Supdance音乐音频生成",
+  "version": "1.1.0",
   "publishedAt": "2026-10-29",
-  "updatedAt": "2026-10-29",
+  "updatedAt": "2026-10-31",
   "minHostVersion": "1.7.1",
   "author": "SupDance Team",
   "description": "SupDance 专业级 AI 音乐与歌曲生成扩展：深度集成固定服务端 Koyosim 网关（https://www.koyosim.com），支持 Mureka V9.5、Suno v6、Google Lyria 3.5 与 Eleven Music v2.5 四大前沿音频模型。具备简单/自定义双创作模式、专业多行歌词编辑器与结构标签插入、无伪百分比真实阶段状态机、Web Audio API 64频段波形播放器、无损音频下载（MP3/WAV/FLAC 服务端实时转码）与单账本积分预占/结算，全生命周期独立安全启停。",

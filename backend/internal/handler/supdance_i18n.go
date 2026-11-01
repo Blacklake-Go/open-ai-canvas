@@ -21,6 +21,13 @@ func RegisterSupDanceI18nRoutes(r *gin.RouterGroup, svc *service.Service) {
 			failService(c, err)
 			return
 		}
+		etag := `"` + bundle.Revision + `"`
+		c.Header("Cache-Control", "public, max-age=60, stale-while-revalidate=300")
+		c.Header("ETag", etag)
+		if match := c.GetHeader("If-None-Match"); match != "" && (match == etag || match == bundle.Revision) {
+			c.Status(http.StatusNotModified)
+			return
+		}
 		ok(c, bundle)
 	})
 

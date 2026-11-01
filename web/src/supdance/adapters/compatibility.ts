@@ -103,6 +103,24 @@ export const SUPDANCE_UPSTREAM_PATCH_REGISTRY: readonly UpstreamPatchRecord[] = 
         reason: "以可热插拔插件形式挂载右上角语言切换器、AntD 动态 Locale 与后台语言管理/词条修改路由，所有业务逻辑位于独立 supdance/i18n 扩展包内。",
         upgradeRisk: "LOW",
     },
+    {
+        id: "supdance-music-plugin-gates",
+        upstreamBaseline: "v1.7.3",
+        feature: "音乐生成插件 (supdance-music-generation) 路由守卫、侧栏入口与创作岛模式药丸统一按清单 id 与服务端状态判定",
+        coupledUpstreamFiles: [
+            "web/src/components/auth/require-plugin.tsx",
+            "web/src/pages/create/creation-workspace.tsx",
+            "web/src/stores/use-plugin-store.ts",
+        ],
+        files: [
+            "web/src/components/auth/require-plugin.tsx",
+            "web/src/pages/create/creation-workspace.tsx",
+            "web/src/stores/use-plugin-store.ts",
+            "web/src/supdance/plugins/music-generation/types.ts",
+        ],
+        reason: "上游路由守卫与入口显隐原先优先读取本地安装记录（ensurePlugin 新建记录默认 enabled=false）或别名 id（服务端无对应状态记录），会把服务端已生效的插件误判为停用；现统一收敛为 use-plugin-store 的 selectPluginEffectivelyEnabled（服务端 states -> 运行时 statuses -> 本地安装记录），插件 id 一律使用清单 id。",
+        upgradeRisk: "LOW",
+    },
 ] as const;
 
 export const SUPDANCE_RESERVED_PLUGIN_PREFIX = "supdance-" as const;

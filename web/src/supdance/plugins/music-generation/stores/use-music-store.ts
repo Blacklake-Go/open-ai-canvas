@@ -12,10 +12,17 @@ import {
 } from "../services/music-api";
 import { syncMusicTaskToAssetStore } from "../services/music-asset-bridge";
 
-const draftStorage = localforage.createInstance({
-    name: "supdance_music_drafts",
-    storeName: "drafts",
-});
+let draftStorageInstance: LocalForage | null = null;
+
+function getDraftStorage(): LocalForage {
+    if (!draftStorageInstance) {
+        draftStorageInstance = localforage.createInstance({
+            name: "supdance_music_drafts",
+            storeName: "drafts",
+        });
+    }
+    return draftStorageInstance;
+}
 
 export type MusicDraft = {
     model: string;
@@ -194,7 +201,7 @@ export const useMusicStore = create<MusicState>((set, get) => ({
         set((state) => {
             const updated = { ...state.draft, [field]: value };
             if (userId) {
-                void draftStorage.setItem(`draft_${userId}`, updated);
+                void getDraftStorage().setItem(`draft_${userId}`, updated);
             }
             return { draft: updated };
         });
@@ -215,7 +222,7 @@ export const useMusicStore = create<MusicState>((set, get) => ({
                 duration: Math.min(Math.max(state.draft.duration, caps?.minDuration || 30), caps?.maxDuration || 240),
             };
             if (userId) {
-                void draftStorage.setItem(`draft_${userId}`, updated);
+                void getDraftStorage().setItem(`draft_${userId}`, updated);
             }
             return { draft: updated };
         });
@@ -224,7 +231,7 @@ export const useMusicStore = create<MusicState>((set, get) => ({
     loadUserDraft: async (userId: string) => {
         if (!userId) return;
         try {
-            const saved = await draftStorage.getItem<MusicDraft>(`draft_${userId}`);
+            const saved = await getDraftStorage().getItem<MusicDraft>(`draft_${userId}`);
             if (saved) {
                 set({ draft: { ...DEFAULT_DRAFT, ...saved } });
             }

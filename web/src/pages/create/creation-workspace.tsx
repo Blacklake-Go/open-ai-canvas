@@ -29,7 +29,8 @@ import { modelQuoteDescription, modelQuoteRequest } from "@/lib/model-pricing";
 import { quoteModel, type LogicalModelQuote } from "@/services/api/logical-models";
 import { modelOptionName, resolveModelChannel, type AiConfig } from "@/stores/use-config-store";
 import { useUserStore } from "@/stores/use-user-store";
-import { usePluginStore } from "@/stores/use-plugin-store";
+import { selectPluginEffectivelyEnabled, usePluginStore } from "@/stores/use-plugin-store";
+import { SUPDANCE_MUSIC_PLUGIN_ID } from "@/supdance/plugins/music-generation/types";
 import type { PromptOptimizerProvider } from "@/lib/plugins/plugin-types";
 import { type CreationReference } from "./creation-references";
 import { creationAttachmentKind, type CreationAttachment, type CreationMode } from "./creation-assets";
@@ -728,15 +729,12 @@ export function CreationComposer(props: ComposerProps) {
     );
 }
 
+// 音乐药丸的显隐与后端准入判定共用同一插件 id（清单 id），别名查不到服务端状态会导致永久隐藏。
+const musicPluginGate = selectPluginEffectivelyEnabled(SUPDANCE_MUSIC_PLUGIN_ID, true);
+
 export function CreationModeTabs({ mode, onModeChange, agentActive = false, onAgentSelect, orientation = "horizontal" }: { mode: CreationMode; onModeChange: (mode: CreationMode) => void; agentActive?: boolean; onAgentSelect?: () => void; orientation?: "horizontal" | "vertical" }) {
     const reducedMotion = useReducedMotion();
-    const musicPluginActive = usePluginStore((state) => {
-        const inst = state.installations.find((item) => item.manifest.id === "music-generation");
-        if (inst) return inst.enabled;
-        const pluginState = state.pluginStates["music-generation"];
-        if (pluginState) return pluginState.effectiveEnabled;
-        return true;
-    });
+    const musicPluginActive = usePluginStore(musicPluginGate);
 
     const items: { mode: CreationMode; icon: ReactNode; label: string }[] = [
         { mode: "video", icon: <Film />, label: "视频" },

@@ -12,25 +12,24 @@ interface WaveformPlayerProps {
 
 export function WaveformPlayer({ taskId, audioUrl, durationSeconds = 180, title }: WaveformPlayerProps) {
     const { t } = useI18n();
-    const {
-        playingTaskId,
-        isPlaying,
-        currentTime: storeTime,
-        duration: storeDur,
-        volume,
-        isMuted,
-        isLoop,
-        togglePlayback,
-        seekAudio,
-        setAudioVolume,
-        toggleAudioMute,
-        toggleAudioLoop,
-    } = useMusicStore();
 
-    const isThisPlaying = playingTaskId === taskId && isPlaying;
-    const isThisTrack = playingTaskId === taskId;
-    const currentTime = isThisTrack ? storeTime : 0;
+    // Targeted atomic selectors to eliminate 4Hz playback churn on non-playing instances
+    const isThisPlaying = useMusicStore((s) => s.playingTaskId === taskId && s.isPlaying);
+    const isThisTrack = useMusicStore((s) => s.playingTaskId === taskId);
+    const currentTime = useMusicStore((s) => (s.playingTaskId === taskId ? s.currentTime : 0));
+    const storeDur = useMusicStore((s) => (s.playingTaskId === taskId ? s.duration : 0));
     const duration = isThisTrack && storeDur > 0 ? storeDur : durationSeconds;
+
+    const volume = useMusicStore((s) => s.volume);
+    const isMuted = useMusicStore((s) => s.isMuted);
+    const isLoop = useMusicStore((s) => s.isLoop);
+
+    // Stable action references
+    const togglePlayback = useMusicStore((s) => s.togglePlayback);
+    const seekAudio = useMusicStore((s) => s.seekAudio);
+    const setAudioVolume = useMusicStore((s) => s.setAudioVolume);
+    const toggleAudioMute = useMusicStore((s) => s.toggleAudioMute);
+    const toggleAudioLoop = useMusicStore((s) => s.toggleAudioLoop);
 
     const waveformContainerRef = useRef<HTMLDivElement | null>(null);
 
@@ -163,3 +162,5 @@ export function WaveformPlayer({ taskId, audioUrl, durationSeconds = 180, title 
         </div>
     );
 }
+
+export default WaveformPlayer;

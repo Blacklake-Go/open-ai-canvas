@@ -6,7 +6,6 @@ const (
 	PluginSupDanceI18n            = app.PluginSupDanceI18n
 	PluginSupDanceSocialAuth      = app.PluginSupDanceSocialAuth
 	PluginSupDanceMusicGeneration = app.PluginSupDanceMusicGeneration
-	PluginSupDanceMusicAlias      = app.PluginSupDanceMusicAlias
 
 	MusicLifecycleInstalled   = app.MusicLifecycleInstalled
 	MusicLifecycleEnabled     = app.MusicLifecycleEnabled

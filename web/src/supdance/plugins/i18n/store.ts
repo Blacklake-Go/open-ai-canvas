@@ -1,9 +1,10 @@
-import { useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { create } from "zustand";
+import type { Locale } from "antd/es/locale";
 import { usePluginStore } from "@/stores/use-plugin-store";
-import { getAntdLocaleForCode } from "./engine/antd-locale";
+import { getAntdLocaleForCode, loadAntdLocale } from "./engine/antd-locale";
 import { compileI18nDictionary, isCandidateUntranslatedChinese, translateByKey, translateSourceText, type CompiledI18nDictionary } from "./engine/translator";
-import { BUILTIN_I18N_ENTRIES, DEFAULT_SUPDANCE_I18N_SETTINGS, mergeI18nEntries, SUPPORTED_LOCALE_CODES } from "./locales";
+import { BUILTIN_I18N_ENTRIES, DEFAULT_SUPDANCE_I18N_SETTINGS, loadLocalePack, mergeI18nEntries, SUPPORTED_LOCALE_CODES } from "./locales";
 import { SUPDANCE_I18N_PLUGIN_ID, type SupDanceDiscoveredTextItem, type SupDanceI18nEntry, type SupDanceI18nPublicBundle, type SupDanceI18nSettings, type SupDanceLanguageItem, type SupDanceLocaleCode } from "./types";
 
 export const SUPDANCE_I18N_LOCALE_STORAGE_KEY = "supdance:i18n:locale";
@@ -179,6 +180,13 @@ export const useSupDanceI18nStore = create<SupDanceI18nStoreState>((set, get) =>
         const resolved = enabledCodes.has(nextLocale) ? nextLocale : settings.defaultLocale;
         writeStoredLocale(resolved);
         set({ locale: resolved });
+        if (resolved !== "zh-CN") {
+            void loadLocalePack(resolved).then(() => {
+                const entries = mergeI18nEntries(get().customEntries);
+                const dictionary = compileI18nDictionary(entries);
+                set({ entries, dictionary });
+            });
+        }
     },
 
     setPluginEnabled: (enabled) => {
@@ -210,6 +218,14 @@ export const useSupDanceI18nStore = create<SupDanceI18nStoreState>((set, get) =>
             locale: nextLocale,
             revision: bundle.revision || settings.revision || "builtin-v1",
         });
+
+        if (nextLocale !== "zh-CN") {
+            void loadLocalePack(nextLocale).then(() => {
+                const updatedEntries = mergeI18nEntries(get().customEntries);
+                const updatedDictionary = compileI18nDictionary(updatedEntries);
+                set({ entries: updatedEntries, dictionary: updatedDictionary });
+            });
+        }
     },
 
     updateLocalSettings: (settings) => {
@@ -270,6 +286,7 @@ export const useSupDanceI18nStore = create<SupDanceI18nStoreState>((set, get) =>
     },
 
     recordUntranslatedText: (rawSourceText, route) => {
+        if (get().locale === "zh-CN") return;
         const trimmed = rawSourceText.trim();
         if (!isCandidateUntranslatedChinese(trimmed)) return;
         const { dictionary, discoveredUntranslated } = get();
@@ -376,7 +393,23 @@ export function useSupDanceAntdLocale() {
     const enabled = useSupDanceI18nEnabled();
     const locale = useSupDanceI18nStore((s) => s.locale);
     const effectiveLocale: SupDanceLocaleCode = enabled ? locale : "zh-CN";
-    return useMemo(() => getAntdLocaleForCode(effectiveLocale), [effectiveLocale]);
+    const [antdLocale, setAntdLocale] = useState<Locale>(() => getAntdLocaleForCode(effectiveLocale));
+
+    useEffect(() => {
+        let active = true;
+        if (effectiveLocale === "zh-CN") {
+            setAntdLocale(getAntdLocaleForCode("zh-CN"));
+            return;
+        }
+        void loadAntdLocale(effectiveLocale).then((loaded) => {
+            if (active) setAntdLocale(loaded);
+        });
+        return () => {
+            active = false;
+        };
+    }, [effectiveLocale]);
+
+    return antdLocale;
 }
 
 /**

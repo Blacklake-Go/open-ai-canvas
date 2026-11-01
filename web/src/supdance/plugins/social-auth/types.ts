@@ -39,6 +39,7 @@ export interface SocialAuthProviderAdmin {
     enabled: boolean;
     status: SocialAuthStatus;
     statusMessage?: string;
+    maskedClientId?: string;
     clientIdMasked?: string;
     clientSecretMasked?: string;
     maskedSecret?: string;
@@ -83,8 +84,10 @@ export interface UpdateSettingsRequest {
 
 export interface ProviderTestResult {
     provider: string;
-    status: "ok" | "degraded" | "error";
+    status: "ok" | "online" | "degraded" | "error";
     message: string;
-    pingLatencyMs: number;
-    testedAt: string;
+    latencyMs?: number;
+    pingLatencyMs?: number;
+    testedAt?: string;
+    checkedAt?: string;
 }

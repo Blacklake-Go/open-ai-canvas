@@ -16,7 +16,6 @@ import (
 
 const (
 	PluginSupDanceMusicGeneration = "supdance-music-generation"
-	PluginSupDanceMusicAlias      = "music-generation"
 	MusicLifecycleSettingKey      = "supdance_music_lifecycle"
 )
 
@@ -128,13 +127,9 @@ func ResetMusicLifecycleManagerForTest(state MusicPluginLifecycleState) {
 
 func init() {
 	// Register music plugin policies into supdanceSystemApplicationPolicies
+	// 只登记清单 id：曾经额外登记别名 "music-generation"，会在 /plugins/status 暴露一个
+	// 没有清单、没有入口、默认未激活的幽灵插件身份，前端一旦按别名判定就会误判为停用。
 	supdanceSystemApplicationPolicies[PluginSupDanceMusicGeneration] = PluginManagementView{
-		Origin:             PluginOriginOfficial,
-		Kind:               PluginKindApplication,
-		ActivationScope:    PluginScopeUser,
-		ConfigurationScope: PluginConfigurationSystem,
-	}
-	supdanceSystemApplicationPolicies[PluginSupDanceMusicAlias] = PluginManagementView{
 		Origin:             PluginOriginOfficial,
 		Kind:               PluginKindApplication,
 		ActivationScope:    PluginScopeUser,

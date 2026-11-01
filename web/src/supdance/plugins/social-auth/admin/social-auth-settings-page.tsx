@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { App, Button, Input, Skeleton } from "antd";
+import { useQueryClient } from "@tanstack/react-query";
 import { Switch } from "@/pages/admin/ui/controls";
 import {
     AlertTriangle,
@@ -51,6 +52,7 @@ interface ProviderDraftState {
 export default function SocialAuthSettingsPage() {
     const { t } = useI18n();
     const { message } = App.useApp();
+    const queryClient = useQueryClient();
     const [loading, setLoading] = useState(true);
     const [refreshing, setRefreshing] = useState(false);
     const [saving, setSaving] = useState(false);
@@ -74,9 +76,10 @@ export default function SocialAuthSettingsPage() {
             ...(settings.providers ? Object.values(settings.providers) : []),
         ];
         for (const p of all) {
+            const maskedId = p.clientIdMasked || p.maskedClientId || "";
             drafts[p.id] = {
                 enabled: p.enabled,
-                clientId: p.clientIdMasked && !p.clientIdMasked.includes("*") ? p.clientIdMasked : "",
+                clientId: maskedId && !maskedId.includes("*") ? maskedId : "",
                 clientSecret: "",
                 sandboxMockEnabled: Boolean(p.sandboxMockEnabled),
             };
@@ -119,7 +122,8 @@ export default function SocialAuthSettingsPage() {
             if (!draft) continue;
             if (draft.enabled !== p.enabled) return true;
             if (draft.sandboxMockEnabled !== Boolean(p.sandboxMockEnabled)) return true;
-            if (draft.clientId && draft.clientId !== p.clientIdMasked) return true;
+            const currentMaskedId = p.clientIdMasked || p.maskedClientId || "";
+            if (draft.clientId && draft.clientId !== currentMaskedId) return true;
             if (draft.clientSecret.trim().length > 0) return true;
         }
         return false;
@@ -141,8 +145,10 @@ export default function SocialAuthSettingsPage() {
         try {
             const res = await testSocialAuthProvider(provider.id);
             setTestResults((prev) => ({ ...prev, [provider.id]: res }));
-            if (res.status === "ok") {
-                message.success(`${provider.name} 连通性测试通过 (${res.pingLatencyMs}ms)`);
+            const isSuccess = res.status === "ok" || res.status === "online";
+            const latency = res.pingLatencyMs ?? res.latencyMs ?? 0;
+            if (isSuccess) {
+                message.success(`${provider.name} 连通性测试通过 (${latency}ms)`);
             } else if (res.status === "degraded") {
                 message.warning(`${provider.name}: ${res.message}`);
             } else {
@@ -187,6 +193,8 @@ export default function SocialAuthSettingsPage() {
 
             setData(res);
             initDraftsFromData(res);
+            void queryClient.invalidateQueries({ queryKey: ["public-social-auth-providers"] });
+            void queryClient.invalidateQueries({ queryKey: ["social-auth"] });
             message.success(t("admin.social_auth.save_success", undefined, "社交登录配置已保存并即时生效"));
         } catch (err) {
             message.error(err instanceof Error ? err.message : "保存配置失败");
@@ -346,7 +354,7 @@ export default function SocialAuthSettingsPage() {
                             App ID / Client ID
                         </label>
                         <Input
-                            placeholder={provider.clientIdMasked || "输入 App ID / Client ID"}
+                            placeholder={(provider.clientIdMasked || provider.maskedClientId) || "输入 App ID / Client ID"}
                             value={draft.clientId}
                             onChange={(e) => {
                                 const val = e.target.value;
@@ -362,7 +370,7 @@ export default function SocialAuthSettingsPage() {
                             App Secret / Client Secret
                         </label>
                         <Input.Password
-                            placeholder={hasSecret ? configuredSecretText : "输入 App Secret / Client Secret"}
+                            placeholder={hasSecret ? "已配置 · 留空不改" : "输入 App Secret / Client Secret"}
                             value={draft.clientSecret}
                             onChange={(e) => {
                                 const val = e.target.value;
@@ -415,10 +423,16 @@ export default function SocialAuthSettingsPage() {
 
                     <div className="flex items-center gap-2">
                         {testRes && (
-                            <AdminStatusBadge
-                                label={`${testRes.pingLatencyMs}ms · ${testRes.status === "ok" ? "连接畅通" : "异常"}`}
-                                tone={testRes.status === "ok" ? "success" : "error"}
-                            />
+                            (() => {
+                                const isSuccess = testRes.status === "ok" || testRes.status === "online";
+                                const latency = testRes.pingLatencyMs ?? testRes.latencyMs ?? 0;
+                                return (
+                                    <AdminStatusBadge
+                                        label={`${latency}ms · ${isSuccess ? "连接畅通" : "异常"}`}
+                                        tone={isSuccess ? "success" : "error"}
+                                    />
+                                );
+                            })()
                         )}
                         <Button
                             size="small"

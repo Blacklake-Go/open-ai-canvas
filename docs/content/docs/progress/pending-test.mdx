@@ -4,6 +4,13 @@ description: 当前项目已实现功能的手工验证清单与未确认边界
 ---
 
 # 待测试
+## 插件生效判定统一与音乐工作台误拦截修复（supdance/v2026.11.01.1）
+- 已修复：`/toolbox/music` 被 `RequirePlugin` 误判为"已停用"（服务端 `effectiveEnabled=true`）。根因是路由守卫与入口显隐读取别名 id `music-generation` 或本地安装记录（默认 `enabled=false`）。现统一为 `selectPluginEffectivelyEnabled`（服务端 states → 运行时 statuses → 本地安装记录），插件 id 一律使用清单 id；后端移除幽灵别名策略 `PluginSupDanceMusicAlias`。
+- 已改进：停用守卫页文案区分"用户可自行开启（前往插件中心）"与"管理员统一停用"，并显示服务端 `blockedReason`。
+- 已验证（真实 Chrome）：`/toolbox/music` 暗/亮主题三栏工作台渲染；插件中心停用 → 守卫页 → 再启用回环；`/create` 音乐药丸与侧栏"音乐生成"入口恢复；`/api/plugins/status` 不再包含 `music-generation` 幽灵键。`web/test/supdance-*` 10 文件 70 项通过；`bun run typecheck` 通过；`backend go build ./...`、`go test ./internal/app/... ./internal/service/... ./internal/supdance/...` 通过。
+- [ ] 多账号回归：未启用音乐插件的新账号访问 `/toolbox/music` 应看到"可自行开启"守卫页而非空白错误；管理员在后台停用平台可用性后，所有账号看到"管理员统一停用"文案。
+- [ ] 上游升级回归：`tools/supdance/check_upstream.py` 对新增耦合文件（`require-plugin.tsx`、`creation-workspace.tsx`、`use-plugin-store.ts`）的冲突提示正常。
+
 ## Agent 记忆文件、技能自动发现、回复选项卡与右侧停靠（#908）
 - 已实现（记忆）：每个用户一份长期记忆文件替代旧版经验（Schema 76，补列 Schema 77），容量 5000 字、单条 400 字、最多 80 条。模式 `auto`（默认，直接写入并可撤销）/ `review`（先暂存待确认）/ `off`。每轮开始冻结快照，以 user 数据消息注入，不进 system；首次读取时把已批准的旧经验导入为可撤销的 `seed` 修订。设置页可编辑、撤销、采纳或拒绝；管理员可只读查看。
 - 已实现（技能）：已安装且 `agentMode=auto` 的技能按 5% 输入预算（至少 1000 token）进入 system 技能目录，策略要求开工前先查合适的技能；固定技能（最多 16 个，`pinnedSkillIds`）走 `skill_hints`。技能库可设「自动 / 仅手动」。按行业推荐安装（技能页、Agent 设置、欢迎区入口）；对话中 Agent 只发推荐卡片，不替用户安装。

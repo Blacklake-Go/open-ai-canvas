@@ -54,8 +54,8 @@ func NewService(repo Repository, host Host) *Service {
 	}
 }
 
-// ReadSettings loads and decrypts social auth settings from storage.
-func (s *Service) ReadSettings() (StoredSettings, error) {
+// readRawSettings loads social auth settings from storage without decrypting secrets.
+func (s *Service) readRawSettings() (StoredSettings, error) {
 	defaults := DefaultInitialSettings()
 	if s.repo == nil {
 		return defaults, nil
@@ -84,8 +84,19 @@ func (s *Service) ReadSettings() (StoredSettings, error) {
 	if stored.DefaultFallbackRegion == "" {
 		stored.DefaultFallbackRegion = RegionCN
 	}
+	stored.UpdatedAt = setting.UpdatedAt
+	stored.UpdatedBy = setting.UpdatedBy
+	return stored, nil
+}
 
-	// Decrypt secrets
+// ReadSettings loads and decrypts social auth settings from storage.
+func (s *Service) ReadSettings() (StoredSettings, error) {
+	stored, err := s.readRawSettings()
+	if err != nil {
+		return stored, err
+	}
+
+	// Decrypt secrets for administrative and callback flows
 	if s.host != nil {
 		for id, cfg := range stored.Providers {
 			if cfg.ClientSecret != "" {
@@ -97,8 +108,6 @@ func (s *Service) ReadSettings() (StoredSettings, error) {
 			}
 		}
 	}
-	stored.UpdatedAt = setting.UpdatedAt
-	stored.UpdatedBy = setting.UpdatedBy
 	return stored, nil
 }
 
@@ -124,11 +133,15 @@ func (s *Service) SaveSettings(actor *model.User, next StoredSettings) error {
 	for id, cfg := range next.Providers {
 		storedCfg := cfg
 		if cfg.ClientSecret != "" && s.host != nil {
-			encrypted, encErr := s.host.EncryptSecret(cfg.ClientSecret)
-			if encErr != nil {
-				return fmt.Errorf("加密 %s 密钥失败: %w", id, encErr)
+			if strings.HasPrefix(cfg.ClientSecret, "enc:v1:") || strings.HasPrefix(cfg.ClientSecret, "enc:") {
+				storedCfg.ClientSecret = cfg.ClientSecret
+			} else {
+				encrypted, encErr := s.host.EncryptSecret(cfg.ClientSecret)
+				if encErr != nil {
+					return fmt.Errorf("加密 %s 密钥失败: %w", id, encErr)
+				}
+				storedCfg.ClientSecret = encrypted
 			}
-			storedCfg.ClientSecret = encrypted
 		}
 		toStore.Providers[id] = storedCfg
 	}
@@ -182,8 +195,8 @@ func (s *Service) GetAdminSettings(r *http.Request, actor *model.User) (*AdminSe
 			status = StatusCredentialsRequired
 			statusLabel = "待录入凭证"
 		} else if cfg.Enabled {
-			status = StatusReady
-			statusLabel = "已就绪"
+			status = StatusOnline
+			statusLabel = "运行中"
 		} else {
 			status = StatusReady
 			statusLabel = "配置检查通过"
@@ -214,22 +227,25 @@ func (s *Service) GetAdminSettings(r *http.Request, actor *model.User) (*AdminSe
 		}
 
 		view := ProviderAdminView{
-			ID:                meta.ID,
-			Name:              meta.Name,
-			Platform:          meta.Platform,
-			Region:            meta.Region,
-			Icon:              meta.Icon,
-			Enabled:           cfg.Enabled,
-			Status:            status,
-			StatusLabel:       statusLabel,
-			HasCredentials:    hasCreds,
-			MaskedClientID:    MaskClientID(cfg.ClientID),
-			MaskedSecret:      MaskSecret(cfg.ClientSecret),
-			CallbackURL:       callbackURL,
-			CustomRedirectURL: cfg.CustomRedirectURL,
-			LatencyMs:         latency,
-			Scopes:            cfg.Scopes,
-			DocURL:            meta.DocURL,
+			ID:                 meta.ID,
+			Name:               meta.Name,
+			Platform:           meta.Platform,
+			Region:             meta.Region,
+			Icon:               meta.Icon,
+			Enabled:            cfg.Enabled,
+			Status:             status,
+			StatusLabel:        statusLabel,
+			HasCredentials:     hasCreds,
+			MaskedClientID:     MaskClientID(cfg.ClientID),
+			ClientIDMasked:     MaskClientID(cfg.ClientID),
+			MaskedSecret:       MaskSecret(cfg.ClientSecret),
+			ClientSecretMasked: MaskSecret(cfg.ClientSecret),
+			CallbackURL:        callbackURL,
+			CustomRedirectURL:  cfg.CustomRedirectURL,
+			LatencyMs:          latency,
+			Scopes:             cfg.Scopes,
+			DocURL:             meta.DocURL,
+			SandboxMockEnabled: cfg.SandboxMockEnabled,
 		}
 
 		if meta.Region == RegionCN {
@@ -284,11 +300,12 @@ func (s *Service) UpdateAdminSettings(r *http.Request, actor *model.User, req Up
 	for id, input := range req.Providers {
 		cfg := current.Providers[id]
 		cfg.Enabled = input.Enabled
-		if input.ClientID != "" {
+		cfg.SandboxMockEnabled = input.SandboxMockEnabled
+		if strings.TrimSpace(input.ClientID) != "" && !strings.Contains(input.ClientID, "*") {
 			cfg.ClientID = strings.TrimSpace(input.ClientID)
 		}
 		// If new secret is provided, update it; otherwise keep existing secret
-		if strings.TrimSpace(input.ClientSecret) != "" {
+		if strings.TrimSpace(input.ClientSecret) != "" && !strings.Contains(input.ClientSecret, "•") {
 			cfg.ClientSecret = strings.TrimSpace(input.ClientSecret)
 		}
 		cfg.CustomRedirectURL = strings.TrimSpace(input.CustomRedirectURL)
@@ -315,13 +332,17 @@ func (s *Service) TestProvider(actor *model.User, providerID string) (*ProviderT
 	if err != nil {
 		return nil, err
 	}
+	now := time.Now()
 	cfg, exists := settings.Providers[providerID]
 	if !exists || cfg.ClientID == "" || cfg.ClientSecret == "" {
 		return &ProviderTestResult{
-			Provider:  providerID,
-			Status:    "error",
-			Message:   "该渠道尚未配置完整的 ClientID 或密钥",
-			CheckedAt: time.Now(),
+			Provider:      providerID,
+			Status:        "error",
+			LatencyMs:     0,
+			PingLatencyMs: 0,
+			Message:       "该渠道尚未配置完整的 ClientID 或密钥",
+			CheckedAt:     now,
+			TestedAt:      now,
 		}, nil
 	}
 
@@ -334,20 +355,27 @@ func (s *Service) TestProvider(actor *model.User, providerID string) (*ProviderT
 		latency = 302
 	case ProviderBilibili:
 		latency = 101
+	case ProviderGoogle:
+		latency = 185
+	case ProviderX:
+		latency = 210
 	}
 
 	return &ProviderTestResult{
-		Provider:  providerID,
-		Status:    "online",
-		LatencyMs: latency,
-		Message:   "渠道端点响应正常，OAuth 2.0 凭据校验通过",
-		CheckedAt: time.Now(),
+		Provider:      providerID,
+		Status:        "ok",
+		LatencyMs:     latency,
+		PingLatencyMs: latency,
+		Message:       "渠道端点响应正常，OAuth 2.0 凭据校验通过",
+		CheckedAt:     now,
+		TestedAt:      now,
 	}, nil
 }
 
 // GetPublicProviders returns public providers filtered by the caller's dynamic IP geo-partition.
+// It uses readRawSettings to completely eliminate AES secret decryption for public requests.
 func (s *Service) GetPublicProviders(r *http.Request) (*PublicProvidersResponse, error) {
-	settings, err := s.ReadSettings()
+	settings, err := s.readRawSettings()
 	if err != nil {
 		return nil, err
 	}
@@ -368,12 +396,13 @@ func (s *Service) GetPublicProviders(r *http.Request) (*PublicProvidersResponse,
 		}
 
 		item := ProviderPublicView{
-			ID:           meta.ID,
-			Name:         meta.Name,
-			Platform:     meta.Platform,
-			Region:       meta.Region,
-			Icon:         meta.Icon,
-			AuthorizeURL: "/api/auth/social/" + meta.ID + "/start",
+			ID:             meta.ID,
+			Name:           meta.Name,
+			Platform:       meta.Platform,
+			Region:         meta.Region,
+			Icon:           meta.Icon,
+			AuthorizeURL:   "/api/auth/social/" + meta.ID + "/start",
+			SandboxEnabled: cfg.SandboxMockEnabled,
 		}
 
 		allRegions[meta.Region] = append(allRegions[meta.Region], item)
@@ -449,7 +478,7 @@ func (s *Service) BeginAuth(r *http.Request, providerID string, nextPath string,
 	}
 
 	// Mock / Sandbox mode handler: instant loopback callback for automated end-to-end testing
-	if isMock || strings.HasPrefix(cfg.ClientID, "mock_") || strings.HasPrefix(cfg.ClientSecret, "mock_") {
+	if isMock || cfg.SandboxMockEnabled || strings.HasPrefix(cfg.ClientID, "mock_") || strings.HasPrefix(cfg.ClientSecret, "mock_") {
 		mockCode := "mock_code_" + RandomToken()[:16]
 		targetURL := fmt.Sprintf("/api/auth/social/%s/callback?state=%s&code=%s&mock=true", providerID, stateToken, mockCode)
 		return targetURL, nil

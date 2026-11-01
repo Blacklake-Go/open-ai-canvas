@@ -9,7 +9,7 @@ import { LinuxDOIcon } from "./auth-scene";
 import { VerificationFields } from "@/components/auth/verification-fields";
 import { emptyVerification, loginVerification, methodLabels, verificationMethods, type VerificationMethod } from "@/services/api/verification";
 import { useI18n } from "@/supdance/plugins/i18n";
-import { SocialLoginButtons } from "@/supdance/plugins/social-auth";
+import { SocialLoginButtons } from "@/supdance/plugins/social-auth/components/social-login-buttons";
 
 export default function LoginPage() {
     const { t } = useI18n();

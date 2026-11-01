@@ -1,4 +1,4 @@
-import { describe, expect, test } from "bun:test";
+import { beforeAll, describe, expect, test } from "bun:test";
 import { listRegisteredPlugins } from "@/lib/plugins/plugin-registry";
 import { validateSupDancePluginManifest } from "@/supdance/adapters/compatibility";
 import {
@@ -6,6 +6,7 @@ import {
     compileI18nDictionary,
     DEFAULT_SUPDANCE_LANGUAGES,
     getAntdLocaleForCode,
+    loadAllLocalePacks,
     mergeI18nEntries,
     SUPDANCE_I18N_PLUGIN_ID,
     supdanceI18nPlugin,
@@ -68,6 +69,10 @@ function createMockText(text: string): MockTextNode {
 }
 
 describe("supdance-i18n plugin architecture and engine", () => {
+    beforeAll(async () => {
+        await loadAllLocalePacks();
+    });
+
     test("registers supdance-i18n as a compliant v2 plugin", () => {
         const report = validateSupDancePluginManifest(supdanceI18nPlugin.manifest);
         expect(report.compatible).toBe(true);
@@ -75,7 +80,7 @@ describe("supdance-i18n plugin architecture and engine", () => {
 
         const registered = listRegisteredPlugins().find((p) => p.manifest.id === SUPDANCE_I18N_PLUGIN_ID);
         expect(registered).toBeDefined();
-        expect(registered?.manifest.name).toBe("站点多语言与实时词条中心");
+        expect(registered?.manifest.name).toBe("Supdance国际化");
     });
 
     test("covers all 6 required languages with complete built-in translations", () => {
@@ -365,6 +370,49 @@ describe("supdance-i18n plugin architecture and engine", () => {
         customInput.isConnected = false;
         const pruned = translator.pruneDisconnectedNodes();
         expect(pruned).toEqual({ prunedTextNodes: 1, prunedElements: 1 });
+        expect(translator.getTouchedNodeCounts()).toEqual({ textNodes: 0, elements: 0 });
+    });
+
+    test("SupDanceDomTranslator bypasses DOM scanning and detaches when locale is zh-CN", () => {
+        const textNode = createMockText("待翻译的中文文本");
+        const root = createMockElement("div", {}, [textNode]);
+        const dict = compileI18nDictionary(mergeI18nEntries({}));
+
+        const translator = new SupDanceDomTranslator();
+        translator.attach(root as unknown as HTMLElement, dict, "zh-CN", "zh-CN");
+
+        // When locale is zh-CN, translator must NOT touch any node
+        expect(translator.getTouchedNodeCounts()).toEqual({ textNodes: 0, elements: 0 });
+        expect(textNode.nodeValue).toBe("待翻译的中文文本");
+
+        // Updating to zh-CN also detaches
+        translator.attach(root as unknown as HTMLElement, dict, "en-US", "zh-CN");
+        expect(translator.getTouchedNodeCounts().textNodes).toBeGreaterThanOrEqual(0);
+        translator.update(dict, "zh-CN", "zh-CN");
+        expect(translator.getTouchedNodeCounts()).toEqual({ textNodes: 0, elements: 0 });
+    });
+
+    test("recordUntranslatedText early exits under zh-CN to prevent disk I/O and state churn", () => {
+        const store = useSupDanceI18nStore.getState();
+        store.setLocale("zh-CN");
+
+        const initialDiscovered = useSupDanceI18nStore.getState().discoveredUntranslated.length;
+        store.recordUntranslatedText("未收录的全新中文文本");
+
+        // Must not have added anything to discoveredUntranslated
+        expect(useSupDanceI18nStore.getState().discoveredUntranslated.length).toBe(initialDiscovered);
+    });
+
+    test("shouldIgnoreElement ignores high-frequency canvas containers and data-i18n-ignore elements", () => {
+        const canvasNode = createMockText("节点名称");
+        const canvasDiv = createMockElement("div", { "data-canvas-viewport": "true" }, [createMockElement("span", {}, [canvasNode])]);
+        const dict = compileI18nDictionary(mergeI18nEntries({}));
+
+        const translator = new SupDanceDomTranslator();
+        translator.attach(canvasDiv as unknown as HTMLElement, dict, "en-US", "zh-CN");
+
+        // Under data-canvas-viewport, children must be completely ignored
+        expect(canvasNode.nodeValue).toBe("节点名称");
         expect(translator.getTouchedNodeCounts()).toEqual({ textNodes: 0, elements: 0 });
     });
 });

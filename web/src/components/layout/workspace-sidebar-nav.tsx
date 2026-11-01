@@ -15,12 +15,17 @@ import { cn } from "@/lib/utils";
 import { preloadWorkspaceRoute } from "@/lib/workspace-route-modules";
 import { useUserStore, type FeatureAvailability } from "@/stores/use-user-store";
 import { useAppearanceStore } from "@/stores/use-appearance-store";
-import { usePluginStore } from "@/stores/use-plugin-store";
+import { selectPluginEffectivelyEnabled, usePluginStore } from "@/stores/use-plugin-store";
 import { WorkspaceAccountCard } from "./workspace-account-card";
 import { WorkspaceSidebarCheckin } from "./workspace-sidebar-checkin";
 import { WorkspaceSidebarStorageMeter } from "./workspace-sidebar-storage-meter";
 import { openWorkspaceWallet } from "@/lib/workspace-wallet";
 import { useI18n } from "@/supdance/plugins/i18n";
+import { SUPDANCE_MUSIC_PLUGIN_ID } from "@/supdance/plugins/music-generation/types";
+
+// 音乐岛入口的显隐必须与后端准入判定使用同一插件 id（清单 id），
+// 不能用别名，否则服务端状态查不到对应记录而永久隐藏入口。
+const musicPluginGate = selectPluginEffectivelyEnabled(SUPDANCE_MUSIC_PLUGIN_ID, true);
 
 export type WorkspaceNavItem = {
     id: string;
@@ -368,13 +373,7 @@ export function WorkspaceSidebarNav({ collapsed, onNavigate, onOpenSearch, onExp
     const [searchParams] = useSearchParams();
     const features = useUserStore((state) => state.features);
     const user = useUserStore((state) => state.user);
-    const musicPluginActive = usePluginStore((state) => {
-        const inst = state.installations.find((item) => item.manifest.id === "music-generation");
-        if (inst) return inst.enabled;
-        const pluginState = state.pluginStates["music-generation"];
-        if (pluginState) return pluginState.effectiveEnabled;
-        return true;
-    });
+    const musicPluginActive = usePluginStore(musicPluginGate);
     const { handleLogout } = useWorkspaceLogout();
     const { groups, footer } = useMemo(() => buildNav(features, t, musicPluginActive), [features, t, musicPluginActive]);
 

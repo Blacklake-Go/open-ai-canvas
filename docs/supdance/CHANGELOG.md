@@ -4,6 +4,32 @@
 
 ---
 
+## [supdance/v2026.11.01.1] — 2026-11-01
+
+### 浏览器 UI 验收驱动的插件生效判定修复（P1）
+- **现象**：登录后访问 `/toolbox/music` 被 `RequirePlugin` 整页拦截为"Supdance音乐音频生成已停用"，侧栏"音乐生成"入口与创作岛"音乐"药丸同时消失；而服务端 `/api/plugins/status` 中 `supdance-music-generation.effectiveEnabled=true`。
+- **根因**：路由守卫与入口显隐读取了错误的插件身份——别名 `music-generation`（后端曾为其登记幽灵策略，服务端状态默认未激活）或本地安装记录（`ensurePlugin` 新建记录默认 `enabled=false`），未以服务端 `effectiveEnabled` 为权威结论。
+- **修复**：
+  - `web/src/stores/use-plugin-store.ts` 新增 `selectPluginEffectivelyEnabled(pluginId, unknownFallback)`，统一判定顺序：服务端 states → 运行时 statuses → 本地安装记录 → unknownFallback。
+  - `web/src/components/auth/require-plugin.tsx` 改用统一选择器（服务端状态未就绪时放行，后端 `CheckMusicTaskAdmission` 仍是最终准入闸门），停用文案区分"用户可自行开启（前往插件中心）"与"管理员统一停用"。
+  - `web/src/router.tsx`、`web/src/components/layout/workspace-sidebar-nav.tsx`、`web/src/pages/create/creation-workspace.tsx` 统一改用清单 id `SUPDANCE_MUSIC_PLUGIN_ID`。
+  - 后端移除幽灵别名策略 `PluginSupDanceMusicAlias`（`backend/internal/app/supdance_music_plugin.go`、`backend/internal/service/aliases_supdance.go`），`/api/plugins/status` 不再暴露无清单、无入口、默认未激活的 `music-generation` 身份。
+- **登记**：新增补丁 ID `supdance-music-plugin-gates`，同步 `SUPDANCE_UPSTREAM_PATCH_REGISTRY`、`supdance/config/baseline.json` 与 `docs/supdance/CUSTOMIZATIONS.md`。
+- **验证**：真实 Chrome 验收 `/toolbox/music` 暗/亮两主题三栏工作台渲染、"停用 → 守卫页 → 再启用"回环、`/create` 音乐药丸与侧栏入口恢复；`web/test/supdance-*` 10 个文件 70 项通过；`bun run typecheck` 通过；`backend go build ./...` 与 `go test ./internal/app/... ./internal/service/... ./internal/supdance/...` 通过。
+
+## [supdance/v2026.10.31.1] — 2026-10-31
+
+### 自研插件规范化审计与上游兼容性加固 V2.0
+- **插件显示名称规范化（内部唯一 ID 保持不变，无数据迁移）**：
+  - `supdance-social-auth`：`第三方社交统一登录 (Social Auth)` → `Supdance社交登录配置`。
+  - `supdance-music-generation`：`AI 音乐生成 (Music Studio)` → `Supdance音乐音频生成`。
+  - `supdance-i18n`：`站点多语言与实时词条中心` → `Supdance国际化`。
+- **版本升级（SemVer MINOR：`1.0.0` → `1.1.0`）**：三个插件的前端 Manifest、`supdance/plugins/*/manifest.json` 包清单、后台词条导出回退版本与 `docs/content/docs/plugins/music-generation-lifecycle.mdx` 示例同步升级；`publishedAt` 保留原值，`updatedAt` 更新为 `2026-10-31`。
+- **清单契约统一**：`supdance-social-auth` 前端 Manifest 由 `yingce.plugin/v1` 升级为 `yingce.plugin/v2`，补齐 `minHostVersion: 1.7.1`、`runtime: { backend: declarative, web: declarative }` 与后台配置命令声明（`supdance-social-auth.admin-settings`），三个插件自此遵循同一套标准插件结构；包清单权限声明与前端 Manifest 对齐为 `canvas.read`。
+- **兼容性登记表补全**：`docs/supdance/PLUGIN_COMPATIBILITY.md` 补齐 `supdance-social-auth` 与 `supdance-music-generation` 登记行并更新 `supdance-i18n` 版本与测试证据。
+- **文档体系**：新增 `docs/plugins/` 插件规范目录（README、PLUGIN_COMPATIBILITY、PLUGIN_LIFECYCLE、PLUGIN_VERSIONING、UPSTREAM_UPDATE、PLUGIN_AUDIT_REPORT、PLUGIN_TEST_REPORT），与 `docs/supdance/` 既有文档交叉引用、不重复不冲突。
+- **验证**：`web/test/supdance-*` 10 个测试文件 70 项全部通过（含清单挑战者、生命周期升级/降级拒绝、扩展隔离与上游补丁注册表对齐校验）；`backend go test ./internal/supdance/...` 全部通过；`bun run typecheck` 通过；未改动任何上游核心源码文件。
+
 ## [supdance/v2026.10.29.1] — 2026-10-29
 
 ### 上游基线深度同步

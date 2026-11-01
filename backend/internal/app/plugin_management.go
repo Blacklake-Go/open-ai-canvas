@@ -350,6 +350,9 @@ func (s *Service) SetPluginPlatformAvailability(actor *model.User, pluginID stri
 		}
 		return AdminPluginStateView{}, fmt.Errorf("保存插件平台状态：%w", err)
 	}
+	if pluginID == PluginSupDanceI18n {
+		invalidateI18nBundleCache()
+	}
 	if err := s.appendAdminAudit(actor, "plugin.availability.update", "plugin", pluginID, "更新插件平台可用状态", map[string]any{"available": available, "kind": policy.Kind, "origin": policy.Origin}); err != nil {
 		return AdminPluginStateView{}, err
 	}

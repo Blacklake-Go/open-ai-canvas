@@ -304,7 +304,7 @@ export function SupDanceI18nEntriesPage() {
             } catch {
                 payload = {
                     pluginId: SUPDANCE_I18N_PLUGIN_ID,
-                    version: "1.0.0",
+                    version: "1.1.0",
                     exportedAt: new Date().toISOString(),
                     settings: storeSettings,
                     entries: storeEntries,

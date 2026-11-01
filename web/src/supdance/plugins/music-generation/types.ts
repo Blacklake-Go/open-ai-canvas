@@ -1,5 +1,4 @@
 export const SUPDANCE_MUSIC_PLUGIN_ID = "supdance-music-generation" as const;
-export const SUPDANCE_MUSIC_PLUGIN_ALIAS = "music-generation" as const;
 
 export type SupDanceMusicLifecycleState =
     | "installed"

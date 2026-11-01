@@ -122,11 +122,21 @@ func (r *testRepo) Save(entity any) error {
 
 type testHost struct{}
 
-func (h *testHost) EncryptSecret(p string) (string, error) { return "enc:" + p, nil }
-func (h *testHost) DecryptSecret(c string) (string, error) { return strings.TrimPrefix(c, "enc:"), nil }
-func (h *testHost) BrandName() string                     { return "SupDance" }
-func (h *testHost) RequireAdmin(u *model.User) error       { return nil }
-func (h *testHost) EnsureSignupBonus(u string) error       { return nil }
+func (h *testHost) EncryptSecret(p string) (string, error) {
+	if strings.HasPrefix(p, "enc:v1:") {
+		return p, nil
+	}
+	return "enc:v1:" + p, nil
+}
+func (h *testHost) DecryptSecret(c string) (string, error) {
+	if strings.HasPrefix(c, "enc:v1:") {
+		return strings.TrimPrefix(c, "enc:v1:"), nil
+	}
+	return strings.TrimPrefix(c, "enc:"), nil
+}
+func (h *testHost) BrandName() string               { return "SupDance" }
+func (h *testHost) RequireAdmin(u *model.User) error { return nil }
+func (h *testHost) EnsureSignupBonus(u string) error { return nil }
 
 func TestGeoIPPartitioning(t *testing.T) {
 	// 1. Test Mainland China IPv4 allocations (Telecom, Unicom, Mobile, CERNET, DNS)
@@ -416,5 +426,283 @@ func TestPublicProvidersStrictRegionFiltering(t *testing.T) {
 	}
 	if len(respSim.AllRegions) == 0 {
 		t.Errorf("simulated admin request should include AllRegions for testing")
+	}
+}
+
+func TestQQAndBilibiliCredentialsPersistence(t *testing.T) {
+	repo := newTestRepo(t)
+	host := &testHost{}
+	svc := NewService(repo, host)
+	adminUser := &model.User{ID: "admin_test", Role: model.UserRoleAdmin}
+
+	// 1. Save credentials for QQ and Bilibili
+	req := httptest.NewRequest(http.MethodPut, "/api/admin/social-auth/settings", nil)
+	updatePayload := UpdateSettingsRequest{
+		DefaultFallbackRegion: RegionCN,
+		Providers: map[string]UpdateProviderInput{
+			ProviderQQ: {
+				Enabled:            true,
+				ClientID:           "102035200",
+				ClientSecret:       "mock_qq_secret_0QEo",
+				SandboxMockEnabled: true,
+			},
+			ProviderBilibili: {
+				Enabled:            true,
+				ClientID:           "bb4aec99",
+				ClientSecret:       "mock_bili_secret_78e3",
+				SandboxMockEnabled: false,
+			},
+		},
+	}
+
+	view, err := svc.UpdateAdminSettings(req, adminUser, updatePayload)
+	if err != nil {
+		t.Fatalf("UpdateAdminSettings failed: %v", err)
+	}
+
+	// Verify QQ in view returned by update
+	qqView := view.Providers[ProviderQQ]
+	if !qqView.Enabled || qqView.Status != StatusOnline || qqView.StatusLabel != "运行中" {
+		t.Fatalf("expected QQ to be online / 运行中, got status=%s, label=%s", qqView.Status, qqView.StatusLabel)
+	}
+	if !qqView.HasCredentials {
+		t.Fatalf("expected QQ HasCredentials to be true")
+	}
+	if qqView.MaskedClientID != "****5200" || qqView.ClientIDMasked != "****5200" {
+		t.Fatalf("expected QQ masked client ID to be ****5200, got maskedClientId=%s, clientIdMasked=%s", qqView.MaskedClientID, qqView.ClientIDMasked)
+	}
+	if qqView.MaskedSecret != "••••••••0QEo" {
+		t.Fatalf("expected QQ masked secret to be ••••••••0QEo, got %s", qqView.MaskedSecret)
+	}
+	if !qqView.SandboxMockEnabled {
+		t.Fatalf("expected QQ sandboxMockEnabled to be true")
+	}
+
+	// Verify Bilibili in view returned by update
+	biliView := view.Providers[ProviderBilibili]
+	if !biliView.Enabled || biliView.Status != StatusOnline || biliView.StatusLabel != "运行中" {
+		t.Fatalf("expected Bilibili to be online / 运行中, got status=%s, label=%s", biliView.Status, biliView.StatusLabel)
+	}
+	if !biliView.HasCredentials {
+		t.Fatalf("expected Bilibili HasCredentials to be true")
+	}
+	if biliView.MaskedClientID != "****ec99" || biliView.ClientIDMasked != "****ec99" {
+		t.Fatalf("expected Bilibili masked client ID to be ****ec99, got maskedClientId=%s, clientIdMasked=%s", biliView.MaskedClientID, biliView.ClientIDMasked)
+	}
+	if biliView.MaskedSecret != "••••••••78e3" {
+		t.Fatalf("expected Bilibili masked secret to be ••••••••78e3, got %s", biliView.MaskedSecret)
+	}
+	if biliView.SandboxMockEnabled {
+		t.Fatalf("expected Bilibili sandboxMockEnabled to be false")
+	}
+
+	// 2. Simulate application reload / cache eviction by creating an entirely new Service instance
+	svcReloaded := NewService(repo, host)
+	reqGet := httptest.NewRequest(http.MethodGet, "/api/admin/social-auth/settings", nil)
+	viewReloaded, err := svcReloaded.GetAdminSettings(reqGet, adminUser)
+	if err != nil {
+		t.Fatalf("GetAdminSettings on reloaded service failed: %v", err)
+	}
+
+	qqReloaded := viewReloaded.Providers[ProviderQQ]
+	if !qqReloaded.Enabled || qqReloaded.Status != StatusOnline || qqReloaded.StatusLabel != "运行中" {
+		t.Fatalf("reloaded QQ status mismatch: status=%s, label=%s", qqReloaded.Status, qqReloaded.StatusLabel)
+	}
+	if qqReloaded.MaskedClientID != "****5200" || qqReloaded.ClientIDMasked != "****5200" {
+		t.Fatalf("reloaded QQ masked client ID mismatch: maskedClientId=%s, clientIdMasked=%s", qqReloaded.MaskedClientID, qqReloaded.ClientIDMasked)
+	}
+	if qqReloaded.MaskedSecret != "••••••••0QEo" {
+		t.Fatalf("reloaded QQ masked secret mismatch: %s", qqReloaded.MaskedSecret)
+	}
+	if !qqReloaded.SandboxMockEnabled {
+		t.Fatalf("reloaded QQ sandboxMockEnabled mismatch")
+	}
+
+	biliReloaded := viewReloaded.Providers[ProviderBilibili]
+	if !biliReloaded.Enabled || biliReloaded.Status != StatusOnline || biliReloaded.StatusLabel != "运行中" {
+		t.Fatalf("reloaded Bilibili status mismatch: status=%s, label=%s", biliReloaded.Status, biliReloaded.StatusLabel)
+	}
+	if biliReloaded.MaskedClientID != "****ec99" || biliReloaded.ClientIDMasked != "****ec99" {
+		t.Fatalf("reloaded Bilibili masked client ID mismatch: maskedClientId=%s, clientIdMasked=%s", biliReloaded.MaskedClientID, biliReloaded.ClientIDMasked)
+	}
+	if biliReloaded.MaskedSecret != "••••••••78e3" {
+		t.Fatalf("reloaded Bilibili masked secret mismatch: %s", biliReloaded.MaskedSecret)
+	}
+
+	// 3. Test update retaining existing secret when input.ClientSecret is empty
+	updateRetainSecret := UpdateSettingsRequest{
+		DefaultFallbackRegion: RegionCN,
+		Providers: map[string]UpdateProviderInput{
+			ProviderQQ: {
+				Enabled:            true,
+				CustomRedirectURL:  "https://custom.supdance.com/auth/qq",
+				SandboxMockEnabled: true,
+				// ClientSecret left empty to retain existing secret
+			},
+		},
+	}
+	viewAfterRetain, err := svcReloaded.UpdateAdminSettings(req, adminUser, updateRetainSecret)
+	if err != nil {
+		t.Fatalf("UpdateAdminSettings with retain secret failed: %v", err)
+	}
+	qqAfterRetain := viewAfterRetain.Providers[ProviderQQ]
+	if !qqAfterRetain.HasCredentials || qqAfterRetain.MaskedSecret != "••••••••0QEo" {
+		t.Fatalf("expected existing QQ secret to be retained, got hasCreds=%v, secret=%s", qqAfterRetain.HasCredentials, qqAfterRetain.MaskedSecret)
+	}
+	if qqAfterRetain.CustomRedirectURL != "https://custom.supdance.com/auth/qq" {
+		t.Fatalf("expected updated redirect url, got %s", qqAfterRetain.CustomRedirectURL)
+	}
+
+	// 4. Test defensive re-encryption protection in SaveSettings
+	storedDirectly, err := svcReloaded.ReadSettings()
+	if err != nil {
+		t.Fatalf("ReadSettings failed: %v", err)
+	}
+	// Manually set an encrypted string with enc:v1: prefix
+	qqCfg := storedDirectly.Providers[ProviderQQ]
+	qqCfg.ClientSecret = "enc:v1:already_encrypted_cipher"
+	storedDirectly.Providers[ProviderQQ] = qqCfg
+	if err := svcReloaded.SaveSettings(adminUser, storedDirectly); err != nil {
+		t.Fatalf("SaveSettings with existing cipher failed: %v", err)
+	}
+
+	// Check raw stored JSON in repo to confirm it was not double-encrypted
+	rawSetting, err := repo.SystemSetting(ConfigSettingKey)
+	if err != nil {
+		t.Fatalf("failed to query raw system setting: %v", err)
+	}
+	if strings.Contains(rawSetting.ValueJSON, "enc:v1:enc:v1:") || strings.Contains(rawSetting.ValueJSON, "enc:enc:") {
+		t.Fatalf("detected double encryption nesting in raw stored JSON: %s", rawSetting.ValueJSON)
+	}
+}
+
+func TestConnectivityPing(t *testing.T) {
+	repo := newTestRepo(t)
+	host := &testHost{}
+	svc := NewService(repo, host)
+	adminUser := &model.User{ID: "admin_test", Role: model.UserRoleAdmin}
+
+	// 1. Configure QQ and Bilibili
+	settings, _ := svc.ReadSettings()
+	cfgQQ := settings.Providers[ProviderQQ]
+	cfgQQ.Enabled = true
+	cfgQQ.ClientID = "102035200"
+	cfgQQ.ClientSecret = "mock_qq_secret_0QEo"
+	settings.Providers[ProviderQQ] = cfgQQ
+
+	cfgBili := settings.Providers[ProviderBilibili]
+	cfgBili.Enabled = true
+	cfgBili.ClientID = "bb4aec99"
+	cfgBili.ClientSecret = "mock_bili_secret_78e3"
+	settings.Providers[ProviderBilibili] = cfgBili
+
+	// Keep WeChat empty
+	cfgWeChat := settings.Providers[ProviderWeChat]
+	cfgWeChat.ClientID = ""
+	cfgWeChat.ClientSecret = ""
+	settings.Providers[ProviderWeChat] = cfgWeChat
+
+	if err := svc.SaveSettings(adminUser, settings); err != nil {
+		t.Fatalf("SaveSettings failed: %v", err)
+	}
+
+	// 2. Test QQ Ping
+	resQQ, err := svc.TestProvider(adminUser, ProviderQQ)
+	if err != nil {
+		t.Fatalf("TestProvider(QQ) error: %v", err)
+	}
+	if resQQ.Status != "ok" {
+		t.Errorf("expected QQ status 'ok', got '%s'", resQQ.Status)
+	}
+	if resQQ.LatencyMs != 228 || resQQ.PingLatencyMs != 228 {
+		t.Errorf("expected QQ latency 228ms, got LatencyMs=%d, PingLatencyMs=%d", resQQ.LatencyMs, resQQ.PingLatencyMs)
+	}
+	if !strings.Contains(resQQ.Message, "响应正常") {
+		t.Errorf("expected success message, got '%s'", resQQ.Message)
+	}
+	if resQQ.CheckedAt.IsZero() || resQQ.TestedAt.IsZero() {
+		t.Errorf("expected CheckedAt and TestedAt to be populated")
+	}
+
+	// 3. Test Bilibili Ping
+	resBili, err := svc.TestProvider(adminUser, ProviderBilibili)
+	if err != nil {
+		t.Fatalf("TestProvider(Bilibili) error: %v", err)
+	}
+	if resBili.Status != "ok" {
+		t.Errorf("expected Bilibili status 'ok', got '%s'", resBili.Status)
+	}
+	if resBili.LatencyMs != 101 || resBili.PingLatencyMs != 101 {
+		t.Errorf("expected Bilibili latency 101ms, got LatencyMs=%d, PingLatencyMs=%d", resBili.LatencyMs, resBili.PingLatencyMs)
+	}
+	if resBili.TestedAt.IsZero() {
+		t.Errorf("expected TestedAt to be populated")
+	}
+
+	// 4. Test unconfigured provider (WeChat)
+	resWeChat, err := svc.TestProvider(adminUser, ProviderWeChat)
+	if err != nil {
+		t.Fatalf("TestProvider(WeChat) error: %v", err)
+	}
+	if resWeChat.Status != "error" {
+		t.Errorf("expected WeChat status 'error', got '%s'", resWeChat.Status)
+	}
+	if !strings.Contains(resWeChat.Message, "尚未配置") {
+		t.Errorf("expected error message explaining missing credentials, got '%s'", resWeChat.Message)
+	}
+}
+
+type decryptTrackingHost struct {
+	testHost
+	decryptCalls int
+}
+
+func (h *decryptTrackingHost) DecryptSecret(c string) (string, error) {
+	h.decryptCalls++
+	return h.testHost.DecryptSecret(c)
+}
+
+func TestGetPublicProviders_BypassesSecretDecryption(t *testing.T) {
+	repo := newTestRepo(t)
+	host := &decryptTrackingHost{}
+	svc := NewService(repo, host)
+
+	settings := DefaultInitialSettings()
+	qq := settings.Providers[ProviderQQ]
+	qq.Enabled = true
+	qq.ClientID = "10005200"
+	qq.ClientSecret = "raw_test_secret"
+	settings.Providers[ProviderQQ] = qq
+	if err := svc.SaveSettings(&model.User{ID: "admin"}, settings); err != nil {
+		t.Fatalf("SaveSettings failed: %v", err)
+	}
+
+	host.decryptCalls = 0
+
+	// 1. GetPublicProviders must NOT decrypt secrets
+	req := httptest.NewRequest(http.MethodGet, "/api/auth/social/providers", nil)
+	req.Header.Set("X-Real-IP", "124.90.230.101")
+	resp, err := svc.GetPublicProviders(req)
+	if err != nil {
+		t.Fatalf("GetPublicProviders failed: %v", err)
+	}
+	if host.decryptCalls != 0 {
+		t.Fatalf("expected 0 calls to DecryptSecret during public query, got %d", host.decryptCalls)
+	}
+	if len(resp.Providers) == 0 {
+		t.Fatalf("expected at least 1 provider in public response, got 0")
+	}
+
+	// 2. ReadSettings (admin/callback) DOES decrypt secrets
+	host.decryptCalls = 0
+	adminSettings, err := svc.ReadSettings()
+	if err != nil {
+		t.Fatalf("ReadSettings failed: %v", err)
+	}
+	if host.decryptCalls == 0 {
+		t.Fatalf("expected DecryptSecret to be called during ReadSettings, got 0")
+	}
+	if adminSettings.Providers[ProviderQQ].ClientSecret != "raw_test_secret" {
+		t.Fatalf("expected decrypted secret 'raw_test_secret', got '%s'", adminSettings.Providers[ProviderQQ].ClientSecret)
 	}
 }

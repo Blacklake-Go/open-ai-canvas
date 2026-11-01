@@ -8,6 +8,8 @@ import { CanvasRefreshShell } from "@/pages/canvas/canvas-refresh-shell";
 import { AuthScene } from "@/pages/auth/auth-scene";
 import RouteErrorPage from "@/pages/route-error";
 import { isGuestWorkspacePath } from "@/lib/guest-workspace";
+// 仅引入常量模块，不触发插件运行时注册；插件 id 必须与清单 id 一致，后端准入判定同样以该 id 为准。
+import { SUPDANCE_MUSIC_PLUGIN_ID } from "@/supdance/plugins/music-generation/types";
 
 const AdminPage = lazy(() => import("@/pages/admin"));
 const AnalyticsPage = lazy(() => import("@/pages/admin/admin-route-pages").then((module) => ({ default: module.AnalyticsPage })));
@@ -153,7 +155,7 @@ export const router = createBrowserRouter([
                 path: "/toolbox/music",
                 element: (
                     <RequireAuth>
-                        <RequirePlugin pluginId="music-generation" pluginName="AI 音乐生成">
+                        <RequirePlugin pluginId={SUPDANCE_MUSIC_PLUGIN_ID} pluginName="Supdance音乐音频生成">
                             {deferred(<MusicWorkbenchPage />)}
                         </RequirePlugin>
                     </RequireAuth>

@@ -462,6 +462,7 @@ export function CanvasViewport({
         <div
             ref={containerRef}
             data-canvas-viewport
+            data-i18n-ignore="true"
             data-popover-anchor-container
             data-canvas-pan-state={isPanning ? "grabbing" : isSpacePressed || !boxSelectEnabled ? "grab" : undefined}
             className={`relative h-full w-full select-none overflow-clip touch-none ${isPanning ? "cursor-grabbing" : isSpacePressed || !boxSelectEnabled ? "cursor-grab" : "canvas-cursor-select"}`}

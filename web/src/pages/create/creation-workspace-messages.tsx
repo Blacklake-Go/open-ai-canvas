@@ -13,7 +13,7 @@ import { UserAvatar } from "@/components/layout/user-avatar";
 import { generationErrorMessage } from "@/lib/generation-error";
 import { generationPhaseHint, generationPhaseLabel, generationPhaseStep, generationTaskPhase, generationTaskSavingState, generationTaskShowsProgress, type GenerationPhase } from "@/lib/generation-task-display";
 import { useTaskElapsed } from "@/hooks/use-task-elapsed";
-import { useEffect, useState, type CSSProperties, type ReactNode } from "react";
+import { useEffect, useState, lazy, Suspense, type CSSProperties, type ReactNode } from "react";
 import { useCopyText } from "@/hooks/use-copy-text";
 import { type CreationReference, displayCreationPrompt } from "./creation-references";
 import { useUserStore } from "@/stores/use-user-store";
@@ -28,8 +28,13 @@ import { resolveImageUrl } from "@/services/image-storage";
 import { Button } from "antd";
 import { CanvasImagePreview } from "@/components/canvas/canvas-image-preview";
 import { AppModal } from "@/components/ui/product/app-modal";
-import { WaveformPlayer } from "@/supdance/plugins/music-generation/components/waveform-player";
 import { creationResultEntries } from "./creation-result-urls";
+
+const WaveformPlayer = lazy(() =>
+    import("@/supdance/plugins/music-generation/components/waveform-player").then((m) => ({
+        default: m.WaveformPlayer || m.default,
+    }))
+);
 
 export function CreationMessageView({
     item,
@@ -100,11 +105,11 @@ export function CreationMessageView({
                 <>
                     <div className="creation-message-heading">{heading}</div>
                     {item.reasoning ? (
-                        <div className="creation-message-reasoning-wrap">
+                        <div className="creation-message-reasoning-wrap" data-i18n-ignore="true">
                             <MessageReasoning reasoning={item.reasoning} isStreaming={item.status === "streaming"} />
                         </div>
                     ) : null}
-                    <div className="creation-message-content">
+                    <div className="creation-message-content" data-i18n-ignore="true">
                         {item.content ? (
                             <AIMessageMarkdown isStreaming={item.status === "streaming"}>{item.content}</AIMessageMarkdown>
                         ) : (
@@ -309,12 +314,20 @@ function CreationMusicResult({ item, url, onRetry }: { item: CreationMessage; ur
                 </div>
             </div>
 
-            <WaveformPlayer
-                taskId={taskId}
-                audioUrl={url}
-                durationSeconds={duration}
-                title={title}
-            />
+            <Suspense
+                fallback={
+                    <div className="plugin-music-player flex h-24 items-center justify-center rounded-xl border border-border/60 bg-card/60 p-4 shadow-sm animate-pulse text-xs text-muted-foreground">
+                        加载音频播放器...
+                    </div>
+                }
+            >
+                <WaveformPlayer
+                    taskId={taskId}
+                    audioUrl={url}
+                    durationSeconds={duration}
+                    title={title}
+                />
+            </Suspense>
 
             <div className="flex items-center justify-between pt-1 border-t border-border/40 text-xs text-muted-foreground">
                 <span>音频时长：约 {duration} 秒</span>

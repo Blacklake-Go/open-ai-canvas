@@ -1,12 +1,13 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef } from "react";
 import { App, Tooltip } from "antd";
+import { useQuery } from "@tanstack/react-query";
 
 import { usePluginStore } from "@/stores/use-plugin-store";
 import { useI18n } from "@/supdance/plugins/i18n";
 import { buildSocialAuthStartUrl, getPublicSocialAuthProviders } from "../api";
 import { SocialProviderIcon } from "./social-provider-icons";
 import { SUPDANCE_SOCIAL_AUTH_PLUGIN_ID } from "../types";
-import type { PublicProvidersResponse, SocialAuthProviderPublic } from "../types";
+import type { SocialAuthProviderPublic } from "../types";
 
 export interface SocialLoginButtonsProps {
     variant?: "dark-card" | "light-card";
@@ -25,8 +26,6 @@ export function SocialLoginButtons({
 }: SocialLoginButtonsProps) {
     const { t } = useI18n();
     const { message } = App.useApp();
-    const [loading, setLoading] = useState(true);
-    const [data, setData] = useState<PublicProvidersResponse | null>(null);
 
     // Platform and user plugin availability check for hot-plugging
     const isPluginActive = usePluginStore((state) => {
@@ -38,38 +37,26 @@ export function SocialLoginButtons({
         return true;
     });
 
+    const { data, isLoading } = useQuery({
+        queryKey: ["public-social-auth-providers"],
+        queryFn: ({ signal }) => getPublicSocialAuthProviders(undefined, signal),
+        enabled: isPluginActive,
+        staleTime: 10 * 60 * 1000,
+        gcTime: 30 * 60 * 1000,
+    });
+
+    const onProvidersChangeRef = useRef(onProvidersChange);
+    onProvidersChangeRef.current = onProvidersChange;
+
     useEffect(() => {
         if (!isPluginActive) {
-            setLoading(false);
-            onProvidersChange?.([]);
+            onProvidersChangeRef.current?.([]);
             return;
         }
-
-        let mounted = true;
-        const controller = new AbortController();
-
-        getPublicSocialAuthProviders(undefined, controller.signal)
-            .then((res) => {
-                if (!mounted) return;
-                setData(res);
-                const providers = res.providers || [];
-                onProvidersChange?.(providers);
-            })
-            .catch((err) => {
-                if (mounted && err?.name !== "AbortError") {
-                    console.warn("加载社交登录配置失败:", err);
-                    onProvidersChange?.([]);
-                }
-            })
-            .finally(() => {
-                if (mounted) setLoading(false);
-            });
-
-        return () => {
-            mounted = false;
-            controller.abort();
-        };
-    }, [isPluginActive, onProvidersChange]);
+        if (data?.providers) {
+            onProvidersChangeRef.current?.(data.providers);
+        }
+    }, [isPluginActive, data?.providers]);
 
     const handleProviderClick = (provider: SocialAuthProviderPublic) => {
         if (onRequireAcceptTerms && !onRequireAcceptTerms()) {
@@ -89,7 +76,7 @@ export function SocialLoginButtons({
         return null;
     }
 
-    if (loading) {
+    if (isLoading && !data) {
         return (
             <div data-plugin-scope="social-auth" className="flex items-center justify-center py-2.5" role="status" aria-label="正在加载第三方登录渠道">
                 <span className="inline-block size-4 animate-spin rounded-full border-2 border-primary/20 border-t-primary" />

@@ -20,13 +20,11 @@ export default function MusicWorkbenchPage() {
 
     const [mobileTab, setMobileTab] = useState<"generate" | "master" | "tasks">("generate");
 
-    const {
-        loadCapabilities,
-        loadTasks,
-        loadUserDraft,
-        tasks,
-        loadingTasks,
-    } = useMusicStore();
+    const loadCapabilities = useMusicStore((s) => s.loadCapabilities);
+    const loadTasks = useMusicStore((s) => s.loadTasks);
+    const loadUserDraft = useMusicStore((s) => s.loadUserDraft);
+    const tasks = useMusicStore((s) => s.tasks);
+    const loadingTasks = useMusicStore((s) => s.loadingTasks);
 
     useEffect(() => {
         void loadCapabilities();

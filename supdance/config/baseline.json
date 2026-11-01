@@ -17,6 +17,7 @@
     "AGENTS.md",
     "backend/internal/app/plugin_management.go",
     "backend/internal/handler/api.go",
+    "web/src/components/auth/require-plugin.tsx",
     "web/src/components/canvas/canvas-cloud-agent-connectors.css",
     "web/src/components/canvas/canvas-cloud-agent-connectors.tsx",
     "web/src/components/canvas/canvas-cloud-agent-panel.tsx",
@@ -39,10 +40,12 @@
     "web/src/pages/auth/auth-scene.tsx",
     "web/src/pages/auth/login.tsx",
     "web/src/pages/canvas/canvas-project-top-bar.tsx",
+    "web/src/pages/create/creation-workspace.tsx",
     "web/src/pages/settings/index.tsx",
     "web/src/pages/settings/model-default-grid.tsx",
     "web/src/pages/settings/profile-pane.tsx",
-    "web/src/router.tsx"
+    "web/src/router.tsx",
+    "web/src/stores/use-plugin-store.ts"
   ],
   "supdanceExtensionFiles": [
     "web/src/components/canvas/use-codex-connector.ts",

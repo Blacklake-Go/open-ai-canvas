@@ -38,6 +38,11 @@ export class SupDanceDomTranslator {
         this.fallbackLocale = fallbackLocale;
         this.options = options;
 
+        if (locale === "zh-CN") {
+            this.restoreAndDetach();
+            return;
+        }
+
         this.pruneDisconnectedNodes();
         this.applyToSubtree(root);
 
@@ -76,6 +81,12 @@ export class SupDanceDomTranslator {
         this.currentLocale = locale;
         this.fallbackLocale = fallbackLocale;
         this.options = options;
+
+        if (locale === "zh-CN") {
+            this.restoreAndDetach();
+            return;
+        }
+
         this.pruneDisconnectedNodes();
         if (this.targetRoot) {
             this.applyToSubtree(this.targetRoot);
@@ -167,7 +178,9 @@ export class SupDanceDomTranslator {
         let current: Element | null = element;
         while (current) {
             if (IGNORED_TAG_NAMES.has(current.tagName)) return true;
-            if (current.hasAttribute("data-i18n-ignore")) return true;
+            if (current.hasAttribute("data-i18n-ignore") || current.getAttribute("data-i18n-ignore") === "true") return true;
+            if (current.hasAttribute("data-canvas-no-zoom") || current.hasAttribute("data-canvas-viewport") || current.hasAttribute("data-canvas-editor") || current.hasAttribute("data-canvas-world-layer") || current.hasAttribute("data-canvas-world-raster-layer")) return true;
+            if (current.classList?.contains("canvas-editor-shell")) return true;
             const contentEditable = current.getAttribute("contenteditable");
             if (contentEditable === "true" || contentEditable === "") return true;
             if (current.classList?.contains("ProseMirror") || current.classList?.contains("excalidraw") || current.classList?.contains("cm-editor")) {
@@ -259,7 +272,7 @@ export class SupDanceDomTranslator {
                     textNode.nodeValue = orig;
                 }
             }
-            if (this.options.onUntranslatedText && isCandidateUntranslatedChinese(baseSource)) {
+            if (this.currentLocale !== "zh-CN" && this.options.onUntranslatedText && isCandidateUntranslatedChinese(baseSource)) {
                 this.options.onUntranslatedText(baseSource.trim());
             }
         }
@@ -312,7 +325,7 @@ export class SupDanceDomTranslator {
                         element.setAttribute(attr, orig);
                     }
                 }
-                if (this.options.onUntranslatedText && isCandidateUntranslatedChinese(baseSource)) {
+                if (this.currentLocale !== "zh-CN" && this.options.onUntranslatedText && isCandidateUntranslatedChinese(baseSource)) {
                     this.options.onUntranslatedText(baseSource.trim());
                 }
             }

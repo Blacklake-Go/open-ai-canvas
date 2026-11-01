@@ -32,7 +32,7 @@ describe("SupDance Social Auth Plugin", () => {
 
         expect(manifest.apiVersion).toBe("yingce.plugin/v2");
         expect(manifest.id).toBe("supdance-social-auth");
-        expect(manifest.version).toBe("1.0.0");
+        expect(manifest.version).toBe("1.1.0");
         expect(manifest.trusted).toBe(true);
         expect(manifest.surfaces).toContain("auth");
         expect(manifest.surfaces).toContain("settings");
@@ -80,5 +80,101 @@ describe("SupDance Social Auth Plugin", () => {
         expect(compSource).toContain("usePluginStore");
         expect(compSource).toContain("SUPDANCE_SOCIAL_AUTH_PLUGIN_ID");
         expect(compSource).toContain("platformAvailable");
+    });
+
+    test("SocialAuthProviderAdmin types and draft initialization handle both clientIdMasked and maskedClientId", () => {
+        const adminPagePath = resolve(import.meta.dir, "../src/supdance/plugins/social-auth/admin/social-auth-settings-page.tsx");
+        const adminSource = readFileSync(adminPagePath, "utf-8");
+
+        // Verify placeholder detection checks both keys
+        expect(adminSource).toContain("p.clientIdMasked || p.maskedClientId");
+        expect(adminSource).toContain("(provider.clientIdMasked || provider.maskedClientId)");
+        expect(adminSource).toContain('"已配置 · 留空不改"');
+
+        // Simulate draft init logic
+        const sampleQQ = {
+            id: "qq",
+            name: "QQ",
+            region: "cn" as const,
+            icon: "qq",
+            enabled: true,
+            status: "online" as const,
+            maskedClientId: "****5200",
+            clientIdMasked: "****5200",
+            maskedSecret: "••••••••0QEo",
+            sandboxMockEnabled: true,
+            callbackUrl: "https://www.supdance.com/api/auth/qq/callback",
+        };
+
+        const resolvedMaskedId = sampleQQ.clientIdMasked || sampleQQ.maskedClientId || "";
+        expect(resolvedMaskedId).toBe("****5200");
+        const draftClientId = resolvedMaskedId && !resolvedMaskedId.includes("*") ? resolvedMaskedId : "";
+        expect(draftClientId).toBe("");
+
+        const placeholder = (sampleQQ.clientIdMasked || sampleQQ.maskedClientId) || "输入 App ID / Client ID";
+        expect(placeholder).toBe("****5200");
+
+        const hasSecret = Boolean(sampleQQ.maskedSecret);
+        const secretPlaceholder = hasSecret ? "已配置 · 留空不改" : "输入 App Secret / Client Secret";
+        expect(secretPlaceholder).toBe("已配置 · 留空不改");
+    });
+
+    test("ProviderTestResult and handlePing correctly evaluate both 'ok' and 'online' statuses and ping latency", () => {
+        const adminPagePath = resolve(import.meta.dir, "../src/supdance/plugins/social-auth/admin/social-auth-settings-page.tsx");
+        const adminSource = readFileSync(adminPagePath, "utf-8");
+
+        // Verify status check condition in settings page
+        expect(adminSource).toContain('res.status === "ok" || res.status === "online"');
+        expect(adminSource).toContain("res.pingLatencyMs ?? res.latencyMs ?? 0");
+
+        // Simulate ping response evaluation
+        const okResult = {
+            provider: "qq",
+            status: "ok" as const,
+            latencyMs: 228,
+            pingLatencyMs: 228,
+            message: "渠道端点响应正常，OAuth 2.0 凭据校验通过",
+            checkedAt: new Date().toISOString(),
+            testedAt: new Date().toISOString(),
+        };
+
+        const isOkSuccess = okResult.status === "ok" || (okResult.status as string) === "online";
+        const okLatency = okResult.pingLatencyMs ?? okResult.latencyMs ?? 0;
+        expect(isOkSuccess).toBe(true);
+        expect(okLatency).toBe(228);
+
+        const onlineResult = {
+            provider: "bilibili",
+            status: "online" as const,
+            latencyMs: 101,
+            message: "渠道端点响应正常，OAuth 2.0 凭据校验通过",
+            testedAt: new Date().toISOString(),
+        };
+
+        const isOnlineSuccess = (onlineResult.status as string) === "ok" || onlineResult.status === "online";
+        const onlineLatency = onlineResult.pingLatencyMs ?? onlineResult.latencyMs ?? 0;
+        expect(isOnlineSuccess).toBe(true);
+        expect(onlineLatency).toBe(101);
+
+        const badgeLabel = `${onlineLatency}ms · ${isOnlineSuccess ? "连接畅通" : "异常"}`;
+        const badgeTone = isOnlineSuccess ? "success" : "error";
+        expect(badgeLabel).toBe("101ms · 连接畅通");
+        expect(badgeTone).toBe("success");
+    });
+
+    test("supdance-social-auth barrel does not export SocialAuthSettingsPage (no admin leak)", () => {
+        const barrelPath = resolve(import.meta.dir, "../src/supdance/plugins/social-auth/index.ts");
+        const barrelSource = readFileSync(barrelPath, "utf-8");
+
+        expect(barrelSource).not.toContain("SocialAuthSettingsPage");
+        expect(barrelSource).toContain("./components/social-login-buttons");
+    });
+
+    test("social-login-buttons uses React Query caching with 10-minute staleTime", () => {
+        const compPath = resolve(import.meta.dir, "../src/supdance/plugins/social-auth/components/social-login-buttons.tsx");
+        const compSource = readFileSync(compPath, "utf-8");
+
+        expect(compSource).toContain("useQuery");
+        expect(compSource).toContain("staleTime: 10 * 60 * 1000");
     });
 });

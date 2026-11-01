@@ -1,4 +1,4 @@
-import { describe, expect, test } from "bun:test";
+import { beforeAll, describe, expect, test } from "bun:test";
 import {
     STATIC_MODEL_CAPABILITIES,
     useMusicStore,
@@ -6,11 +6,16 @@ import {
 import {
     BUILTIN_SUPDANCE_I18N_ENTRIES,
     SUPPORTED_LOCALE_CODES,
+    loadAllLocalePacks,
 } from "../src/supdance/plugins/i18n/locales";
 import { readFileSync, readdirSync } from "node:fs";
 import { join } from "node:path";
 
 describe("SupDance Music Plugin — Real Store & Controller Integration Suite", () => {
+    beforeAll(async () => {
+        await loadAllLocalePacks();
+    });
+
     test("Static model capabilities contains all 4 required models with valid constraints", () => {
         expect(STATIC_MODEL_CAPABILITIES.length).toBe(4);
 
@@ -129,5 +134,36 @@ describe("SupDance Music Plugin — Real Store & Controller Integration Suite", 
             const alertMatch = content.match(/\balert\s*\(/);
             expect(alertMatch).toBeNull();
         }
+    });
+
+    test("use-music-store.ts uses lazy getter for localforage drafts storage", () => {
+        const storeFile = join(import.meta.dir, "../src/supdance/plugins/music-generation/stores/use-music-store.ts");
+        const content = readFileSync(storeFile, "utf-8");
+
+        expect(content).toContain("function getDraftStorage()");
+        expect(content).not.toMatch(/^const draftStorage\s*=\s*localforage\.createInstance/m);
+        expect(content).toContain("getDraftStorage().setItem");
+        expect(content).toContain("getDraftStorage().getItem");
+    });
+
+    test("waveform-player.tsx uses fine-grained atomic selectors to prevent 4Hz playback churn", () => {
+        const playerFile = join(import.meta.dir, "../src/supdance/plugins/music-generation/components/waveform-player.tsx");
+        const content = readFileSync(playerFile, "utf-8");
+
+        // Verify fine-grained selectors are used instead of monolithic useMusicStore()
+        expect(content).not.toContain("const {\n        playingTaskId,");
+        expect(content).toContain("useMusicStore((s) => s.playingTaskId === taskId && s.isPlaying)");
+        expect(content).toContain("useMusicStore((s) => (s.playingTaskId === taskId ? s.currentTime : 0))");
+        expect(content).toContain("export default WaveformPlayer");
+    });
+
+    test("creation-workspace-messages.tsx dynamically loads WaveformPlayer with lazy & Suspense", () => {
+        const messagesFile = join(import.meta.dir, "../src/pages/create/creation-workspace-messages.tsx");
+        const content = readFileSync(messagesFile, "utf-8");
+
+        expect(content).not.toMatch(/^import\s*\{\s*WaveformPlayer\s*\}\s*from/m);
+        expect(content).toContain("lazy(() =>");
+        expect(content).toContain("waveform-player");
+        expect(content).toContain("<Suspense");
     });
 });

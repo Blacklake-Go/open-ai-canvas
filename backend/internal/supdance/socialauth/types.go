@@ -59,11 +59,12 @@ type ProviderMeta struct {
 
 // ProviderConfig represents stored provider credentials and settings (unencrypted in memory, encrypted at rest).
 type ProviderConfig struct {
-	Enabled           bool     `json:"enabled"`           // 前台展示开关
-	ClientID          string   `json:"clientId"`          // Client ID / AppID / Client Key
-	ClientSecret      string   `json:"clientSecret"`      // Client Secret / AppKey / AppSecret (masked in admin view)
-	CustomRedirectURL string   `json:"customRedirectUrl"` // 自定义回调地址 (选填，留空使用默认)
-	Scopes            []string `json:"scopes"`            // 授权范围
+	Enabled            bool     `json:"enabled"`           // 前台展示开关
+	ClientID           string   `json:"clientId"`          // Client ID / AppID / Client Key
+	ClientSecret       string   `json:"clientSecret"`      // Client Secret / AppKey / AppSecret (masked in admin view)
+	CustomRedirectURL  string   `json:"customRedirectUrl"` // 自定义回调地址 (选填，留空使用默认)
+	Scopes             []string `json:"scopes"`            // 授权范围
+	SandboxMockEnabled bool     `json:"sandboxMockEnabled"`
 }
 
 // StoredSettings is the JSON representation stored in SystemSetting.
@@ -77,22 +78,25 @@ type StoredSettings struct {
 
 // ProviderAdminView is returned to the Admin Config Center.
 type ProviderAdminView struct {
-	ID                string   `json:"id"`
-	Name              string   `json:"name"`
-	Platform          string   `json:"platform"`
-	Region            string   `json:"region"` // "cn" or "intl"
-	Icon              string   `json:"icon"`
-	Enabled           bool     `json:"enabled"`
-	Status            string   `json:"status"` // unconfigured | credentials_required | ready | online
-	StatusLabel       string   `json:"statusLabel"`
-	HasCredentials    bool     `json:"hasCredentials"`
-	MaskedClientID    string   `json:"maskedClientId"`
-	MaskedSecret      string   `json:"maskedSecret"`
-	CallbackURL       string   `json:"callbackUrl"`
-	CustomRedirectURL string   `json:"customRedirectUrl"`
-	LatencyMs         int64    `json:"latencyMs"`
-	Scopes            []string `json:"scopes"`
-	DocURL            string   `json:"docUrl"`
+	ID                 string   `json:"id"`
+	Name               string   `json:"name"`
+	Platform           string   `json:"platform"`
+	Region             string   `json:"region"` // "cn" or "intl"
+	Icon               string   `json:"icon"`
+	Enabled            bool     `json:"enabled"`
+	Status             string   `json:"status"` // unconfigured | credentials_required | ready | online
+	StatusLabel        string   `json:"statusLabel"`
+	HasCredentials     bool     `json:"hasCredentials"`
+	MaskedClientID     string   `json:"maskedClientId"`
+	ClientIDMasked     string   `json:"clientIdMasked"`
+	MaskedSecret       string   `json:"maskedSecret"`
+	ClientSecretMasked string   `json:"clientSecretMasked,omitempty"`
+	CallbackURL        string   `json:"callbackUrl"`
+	CustomRedirectURL  string   `json:"customRedirectUrl"`
+	LatencyMs          int64    `json:"latencyMs"`
+	Scopes             []string `json:"scopes"`
+	DocURL             string   `json:"docUrl"`
+	SandboxMockEnabled bool     `json:"sandboxMockEnabled"`
 }
 
 // AdminSettingsView is the full view for the Admin Social Login Config Center.
@@ -113,12 +117,13 @@ type AdminSettingsView struct {
 
 // ProviderPublicView is returned to frontend login pages.
 type ProviderPublicView struct {
-	ID          string `json:"id"`
-	Name        string `json:"name"`
-	Platform    string `json:"platform"`
-	Region      string `json:"region"`
-	Icon        string `json:"icon"`
-	AuthorizeURL string `json:"authorizeUrl"`
+	ID             string `json:"id"`
+	Name           string `json:"name"`
+	Platform       string `json:"platform"`
+	Region         string `json:"region"`
+	Icon           string `json:"icon"`
+	AuthorizeURL   string `json:"authorizeUrl"`
+	SandboxEnabled bool   `json:"sandboxEnabled,omitempty"`
 }
 
 // PublicProvidersResponse is returned by GET /api/auth/social/providers.
@@ -136,11 +141,12 @@ type PublicProvidersResponse struct {
 
 // UpdateProviderInput is the DTO for saving/updating a provider's credentials.
 type UpdateProviderInput struct {
-	Enabled           bool     `json:"enabled"`
-	ClientID          string   `json:"clientId"`
-	ClientSecret      string   `json:"clientSecret"`      // Leave empty to retain existing secret
-	CustomRedirectURL string   `json:"customRedirectUrl"`
-	Scopes            []string `json:"scopes"`
+	Enabled            bool     `json:"enabled"`
+	ClientID           string   `json:"clientId"`
+	ClientSecret       string   `json:"clientSecret"` // Leave empty to retain existing secret
+	CustomRedirectURL  string   `json:"customRedirectUrl"`
+	Scopes             []string `json:"scopes"`
+	SandboxMockEnabled bool     `json:"sandboxMockEnabled"`
 }
 
 // UpdateSettingsRequest is the payload for PUT /api/admin/social-auth/settings.
@@ -151,9 +157,11 @@ type UpdateSettingsRequest struct {
 
 // ProviderTestResult is returned by POST /api/admin/social-auth/test/:provider.
 type ProviderTestResult struct {
-	Provider    string `json:"provider"`
-	Status      string `json:"status"` // "online", "ready", "error"
-	LatencyMs   int64  `json:"latencyMs"`
-	Message     string `json:"message"`
-	CheckedAt   time.Time `json:"checkedAt"`
+	Provider      string    `json:"provider"`
+	Status        string    `json:"status"` // "ok", "online", "degraded", "error"
+	LatencyMs     int64     `json:"latencyMs"`
+	PingLatencyMs int64     `json:"pingLatencyMs"`
+	Message       string    `json:"message"`
+	CheckedAt     time.Time `json:"checkedAt"`
+	TestedAt      time.Time `json:"testedAt"`
 }

@@ -2808,8 +2808,8 @@ function CanvasViewportPage() {
                     />
                 ) : null}
                 <CanvasOverlayLayerProvider>
-                    <div className="canvas-editor-shell relative flex min-w-0 flex-1">
-                        <section data-canvas-editor className="relative min-w-0 flex-1 flex flex-col min-h-0 overflow-clip">
+                    <div className="canvas-editor-shell relative flex min-w-0 flex-1" data-i18n-ignore="true">
+                        <section data-canvas-editor data-i18n-ignore="true" className="relative min-w-0 flex-1 flex flex-col min-h-0 overflow-clip">
                             {!focusMode ? (
                                 <CanvasTopBar
                                     view={canvasView}

@@ -4,11 +4,27 @@ import (
 	"encoding/json"
 	"fmt"
 	"strings"
+	"sync"
 	"time"
 
 	"yingce/backend/internal/model"
 	supdancei18n "yingce/backend/internal/supdance/i18n"
 )
+
+type i18nBundleCache struct {
+	sync.RWMutex
+	bundle   supdancei18n.PublicBundle
+	cachedAt time.Time
+	valid    bool
+}
+
+var globalI18nBundleCache i18nBundleCache
+
+func invalidateI18nBundleCache() {
+	globalI18nBundleCache.Lock()
+	globalI18nBundleCache.valid = false
+	globalI18nBundleCache.Unlock()
+}
 
 const (
 	PluginSupDanceI18n = supdancei18n.PluginID
@@ -122,6 +138,14 @@ func (s *Service) saveSupDanceI18nCustomEntries(actorID string, custom map[strin
 
 // PublicSupDanceI18nBundle returns the public i18n configuration and custom overrides for all pages.
 func (s *Service) PublicSupDanceI18nBundle() (supdancei18n.PublicBundle, error) {
+	globalI18nBundleCache.RLock()
+	if globalI18nBundleCache.valid && time.Since(globalI18nBundleCache.cachedAt) < 2*time.Minute {
+		bundle := globalI18nBundleCache.bundle
+		globalI18nBundleCache.RUnlock()
+		return bundle, nil
+	}
+	globalI18nBundleCache.RUnlock()
+
 	enabled, err := s.SupDanceI18nPluginAvailable()
 	if err != nil {
 		return supdancei18n.PublicBundle{}, err
@@ -136,22 +160,32 @@ func (s *Service) PublicSupDanceI18nBundle() (supdancei18n.PublicBundle, error) 
 	}
 	revision := supdancei18n.ComputeRevision(settings, custom, enabled)
 	settings.Revision = revision
+	var bundle supdancei18n.PublicBundle
 	if !enabled {
-		return supdancei18n.PublicBundle{
+		bundle = supdancei18n.PublicBundle{
 			PluginID:      PluginSupDanceI18n,
 			PluginEnabled: false,
 			Settings:      settings,
 			CustomEntries: map[string]supdancei18n.Entry{},
 			Revision:      revision,
-		}, nil
+		}
+	} else {
+		bundle = supdancei18n.PublicBundle{
+			PluginID:      PluginSupDanceI18n,
+			PluginEnabled: true,
+			Settings:      settings,
+			CustomEntries: custom,
+			Revision:      revision,
+		}
 	}
-	return supdancei18n.PublicBundle{
-		PluginID:      PluginSupDanceI18n,
-		PluginEnabled: true,
-		Settings:      settings,
-		CustomEntries: custom,
-		Revision:      revision,
-	}, nil
+
+	globalI18nBundleCache.Lock()
+	globalI18nBundleCache.bundle = bundle
+	globalI18nBundleCache.cachedAt = time.Now()
+	globalI18nBundleCache.valid = true
+	globalI18nBundleCache.Unlock()
+
+	return bundle, nil
 }
 
 // AdminSupDanceI18nOverview returns the full administrative overview, language coverage stats, and namespace summaries.
@@ -216,6 +250,7 @@ func (s *Service) UpdateAdminSupDanceI18nSettings(actor *model.User, input supda
 	}); err != nil {
 		return supdancei18n.AdminOverview{}, fmt.Errorf("保存多语言配置失败：%w", err)
 	}
+	invalidateI18nBundleCache()
 	_ = s.appendAdminAudit(actor, "supdance.i18n.settings.update", "plugin", PluginSupDanceI18n, "更新多语言插件设置", map[string]any{
 		"defaultLocale":     normalized.DefaultLocale,
 		"autoDetectBrowser": normalized.AutoDetectBrowser,
@@ -252,6 +287,7 @@ func (s *Service) UpsertAdminSupDanceI18nEntries(actor *model.User, updates []su
 	if err := s.saveSupDanceI18nCustomEntries(actor.ID, next); err != nil {
 		return supdancei18n.AdminOverview{}, 0, err
 	}
+	invalidateI18nBundleCache()
 	_ = s.appendAdminAudit(actor, "supdance.i18n.entries.upsert", "plugin", PluginSupDanceI18n, "更新或新增多语言词条", map[string]any{
 		"updatedCount": count,
 	})
@@ -273,6 +309,7 @@ func (s *Service) DeleteAdminSupDanceI18nEntry(actor *model.User, key string) (s
 		if err := s.saveSupDanceI18nCustomEntries(actor.ID, next); err != nil {
 			return supdancei18n.AdminOverview{}, false, err
 		}
+		invalidateI18nBundleCache()
 		_ = s.appendAdminAudit(actor, "supdance.i18n.entries.delete", "plugin", PluginSupDanceI18n, "重置或删除多语言词条", map[string]any{
 			"key": key,
 		})
@@ -348,6 +385,7 @@ func (s *Service) ImportAdminSupDanceI18n(actor *model.User, payload supdancei18
 	if err := s.saveSupDanceI18nCustomEntries(actor.ID, next); err != nil {
 		return supdancei18n.AdminOverview{}, 0, err
 	}
+	invalidateI18nBundleCache()
 	_ = s.appendAdminAudit(actor, "supdance.i18n.entries.import", "plugin", PluginSupDanceI18n, "批量导入多语言词条", map[string]any{
 		"importedCount": count,
 		"replaceAll":    replaceAll,

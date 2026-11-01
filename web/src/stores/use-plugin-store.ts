@@ -77,3 +77,20 @@ export function isPluginEffectivelyEnabled(pluginId: string, fallbackEnabled?: b
     if (fallbackEnabled !== undefined) return fallbackEnabled;
     return Boolean(state.installations.find((item) => item.manifest.id === pluginId)?.enabled);
 }
+
+/**
+ * 组件内订阅用的统一插件生效判定选择器，判定顺序与 isPluginEffectivelyEnabled 一致：
+ * 服务端 states -> 运行时 statuses -> 本地安装记录 -> unknownFallback。
+ * 服务端 effectiveEnabled 是权威结论（管理员平台开关与用户自主启停都已合并），
+ * 本地安装记录只在服务端状态尚未就绪时兜底，避免同一插件在不同入口得出相反结论。
+ */
+export function selectPluginEffectivelyEnabled(pluginId: string, unknownFallback = false) {
+    return (state: PluginStore): boolean => {
+        const serverState = state.pluginStates[pluginId];
+        if (serverState) return serverState.effectiveEnabled;
+        if (pluginId in state.runtimeStatuses) return state.runtimeStatuses[pluginId] === "enabled";
+        const installation = state.installations.find((item) => item.manifest.id === pluginId);
+        if (installation) return installation.enabled;
+        return unknownFallback;
+    };
+}

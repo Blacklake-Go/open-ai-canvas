@@ -125,3 +125,70 @@ func TestSupDanceI18nPluginLifecycleAndDictionaryManagement(t *testing.T) {
 		t.Fatalf("expected restored public bundle to have 2 custom entries, got %#v", restoredBundle)
 	}
 }
+
+func TestPublicSupDanceI18nBundle_CacheReadThroughAndInvalidation(t *testing.T) {
+	db, err := gorm.Open(sqlite.Open("file:"+newID()+"?mode=memory&cache=shared"), &gorm.Config{})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err := db.AutoMigrate(&model.PluginPlatformState{}, &model.UserPluginState{}, &model.SystemSetting{}, &model.AdminAuditEvent{}); err != nil {
+		t.Fatal(err)
+	}
+	center, err := newPluginRuntime(t.TempDir())
+	if err != nil {
+		t.Fatal(err)
+	}
+	svc := &Service{repo: repository.New(db), pluginRuntime: center}
+	admin := &model.User{ID: "admin-1", Role: model.UserRoleAdmin}
+
+	// Invalidate any residual cache
+	invalidateI18nBundleCache()
+
+	// 1. Initial read populates cache
+	b1, err := svc.PublicSupDanceI18nBundle()
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !globalI18nBundleCache.valid {
+		t.Fatal("expected globalI18nBundleCache.valid to be true after read")
+	}
+	if globalI18nBundleCache.bundle.Revision != b1.Revision {
+		t.Fatalf("expected cached revision %s, got %s", b1.Revision, globalI18nBundleCache.bundle.Revision)
+	}
+
+	// 2. Read again returns from cache
+	b2, err := svc.PublicSupDanceI18nBundle()
+	if err != nil {
+		t.Fatal(err)
+	}
+	if b2.Revision != b1.Revision {
+		t.Fatalf("expected identical revision from cache, got %s vs %s", b1.Revision, b2.Revision)
+	}
+
+	// 3. Update settings invalidates cache
+	overview, err := svc.AdminSupDanceI18nOverview(admin)
+	if err != nil {
+		t.Fatal(err)
+	}
+	newSettings := overview.Settings
+	newSettings.DefaultLocale = supdancei18n.LocaleJaJP
+	_, err = svc.UpdateAdminSupDanceI18nSettings(admin, newSettings)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if globalI18nBundleCache.valid {
+		t.Fatal("expected globalI18nBundleCache.valid to be false after settings update")
+	}
+
+	// 4. Next read repopulates cache with updated default locale
+	b3, err := svc.PublicSupDanceI18nBundle()
+	if err != nil {
+		t.Fatal(err)
+	}
+	if b3.Settings.DefaultLocale != supdancei18n.LocaleJaJP {
+		t.Fatalf("expected updated default locale ja-JP, got %s", b3.Settings.DefaultLocale)
+	}
+	if !globalI18nBundleCache.valid {
+		t.Fatal("expected cache to be valid again after read")
+	}
+}

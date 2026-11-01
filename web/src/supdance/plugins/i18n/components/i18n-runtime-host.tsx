@@ -2,6 +2,7 @@ import { useEffect, useRef } from "react";
 import { usePluginStore } from "@/stores/use-plugin-store";
 import { getPublicSupDanceI18nBundle } from "../api";
 import { SupDanceDomTranslator } from "../engine/dom-observer";
+import { loadLocalePack } from "../locales";
 import { SUPDANCE_I18N_CACHE_STORAGE_KEY, SUPDANCE_I18N_DISCOVERED_STORAGE_KEY, SUPDANCE_I18N_LOCALE_STORAGE_KEY, useSupDanceI18nEnabled, useSupDanceI18nStore } from "../store";
 import { SUPDANCE_I18N_PLUGIN_ID } from "../types";
 
@@ -51,21 +52,15 @@ export function SupDanceI18nRuntimeHost() {
 
         void syncBundle();
 
-        const handleFocus = () => {
-            void syncBundle();
-        };
-
         const handleStorage = (event: StorageEvent) => {
             if (event.key === SUPDANCE_I18N_LOCALE_STORAGE_KEY || event.key === SUPDANCE_I18N_CACHE_STORAGE_KEY || event.key === SUPDANCE_I18N_DISCOVERED_STORAGE_KEY) {
                 syncFromStorage();
             }
         };
 
-        window.addEventListener("focus", handleFocus);
         window.addEventListener("storage", handleStorage);
         return () => {
             controller.abort();
-            window.removeEventListener("focus", handleFocus);
             window.removeEventListener("storage", handleStorage);
         };
     }, [applyBundle, syncFromStorage]);
@@ -78,19 +73,27 @@ export function SupDanceI18nRuntimeHost() {
         }
         const translator = translatorRef.current;
 
-        if (!enabled) {
+        if (!enabled || locale === "zh-CN") {
             translator.restoreAndDetach();
             document.documentElement.lang = "zh-CN";
             return;
         }
 
         document.documentElement.lang = locale;
-        translator.attach(document.body, dictionary, locale, settings.fallbackLocale, {
-            translateAdminPages: settings.translateAdminPages,
-            onUntranslatedText: (sourceText) => {
-                recordUntranslatedText(sourceText);
-            },
+        let active = true;
+        void loadLocalePack(locale).then(() => {
+            if (!active) return;
+            const currentDict = useSupDanceI18nStore.getState().dictionary;
+            translator.attach(document.body, currentDict, locale, settings.fallbackLocale, {
+                translateAdminPages: settings.translateAdminPages,
+                onUntranslatedText: (sourceText) => {
+                    recordUntranslatedText(sourceText);
+                },
+            });
         });
+        return () => {
+            active = false;
+        };
     }, [dictionary, enabled, locale, recordUntranslatedText, revision, settings.fallbackLocale, settings.translateAdminPages]);
 
     useEffect(() => {

@@ -13,15 +13,13 @@ export function MusicForm({ userId, onSubmitted }: MusicFormProps) {
     const { t } = useI18n();
     const [submitError, setSubmitError] = useState<string | null>(null);
 
-    const {
-        draft,
-        capabilities,
-        loadingCaps,
-        submitting,
-        setDraftField,
-        setModel,
-        submitGeneration,
-    } = useMusicStore();
+    const draft = useMusicStore((s) => s.draft);
+    const capabilities = useMusicStore((s) => s.capabilities);
+    const loadingCaps = useMusicStore((s) => s.loadingCaps);
+    const submitting = useMusicStore((s) => s.submitting);
+    const setDraftField = useMusicStore((s) => s.setDraftField);
+    const setModel = useMusicStore((s) => s.setModel);
+    const submitGeneration = useMusicStore((s) => s.submitGeneration);
 
     const selectedModelCap =
         capabilities.find((c) => c.id === draft.model) ||
