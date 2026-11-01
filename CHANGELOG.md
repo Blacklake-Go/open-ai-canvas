@@ -1,5 +1,16 @@
 # CHANGELOG
 
+## v1.7.4-supdance.1
+
+- 发布形态：SupDance 二开版本改为由自有仓库流水线构建并发布到 `ghcr.io/blacklake-go/open-ai-canvas-{backend,web,yingce-agent}` 的版本镜像，宿主机不再用 bind mount 覆盖后端二进制和前端静态产物，生产部署回到仓库版 `docker-compose.deploy.yml`。
+- 在线更新：Host Updater 的发布源指向 SupDance 仓库，检查、下载 Compose、拉取镜像、校验摘要、备份与自动回滚全链路对二开版本生效；后台「系统更新」不再用上游官方 Compose 抹掉二开前端。
+- 多语言插件：`supdance-i18n` 六国语言词条扩充至 1602 条并补全动态 `{var}` 模板匹配优先级、未收录词条嗅探、多标签页同步与后台词条管理；保留人工修改的翻译内容。
+- 第三方登录插件：`supdance-social-auth` 统一八大平台登录，基于 APNIC 委托前缀重构高精度 IP 分区，移除前台区域切换，补齐热插拔守卫与双端登录入口。
+- 音乐生成插件：`supdance-music-generation` 交付 AI 音乐生成，重构为标准三栏工作台与动态热插拔素材库回流闭环，创作岛支持音乐药丸切换与波形播放器，数据表由插件自动迁移创建。
+- 插件运行时：自研插件标识统一为 `supdance-` 前缀规范，收敛插件生效判定优先级（服务端生效状态 → 运行状态 → 本地安装 → 未知回退），修复音乐工作台被误拦截。
+- 全站规范：插件与管理页按 `docs/design-system/README.md`（RULE 001–016）落地 Token 复用、明暗双态、焦点可见与 `prefers-reduced-motion`。
+- 升级注意：基于上游 v1.7.3，数据库 Schema 保持 77，本次不引入编号迁移；Web、Backend、yingce-agent 三个镜像需同时更新到同一版本，`CANVAS_IMAGE_TAG` 与三个 `CANVAS_*_IMAGE` 摘要必须来自同一个 Release。
+
 ## v1.7.3
 
 - 用户分组：后台新增「用户分组」，可按分组绑定可用系统渠道、设置分组倍率与单个模型倍率；用户管理可给用户分配分组并按分组筛选，用户只能看到并使用所属分组渠道下的模型，价格按分组换算后展示和扣费。分组可选 VIP / SVIP 徽章与头像光环。
