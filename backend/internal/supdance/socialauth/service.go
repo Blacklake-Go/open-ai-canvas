@@ -1,6 +1,7 @@
 package socialauth
 
 import (
+	"context"
 	"crypto/rand"
 	"crypto/sha256"
 	"encoding/hex"
@@ -202,10 +203,7 @@ func (s *Service) GetAdminSettings(r *http.Request, actor *model.User) (*AdminSe
 			statusLabel = "配置检查通过"
 		}
 
-		callbackURL := cfg.CustomRedirectURL
-		if callbackURL == "" {
-			callbackURL = "https://www.supdance.com" + meta.DefaultPath
-		}
+		callbackURL := resolveCallbackURL(cfg, meta)
 
 		// Realistic baseline latency for online providers
 		latency := int64(0)
@@ -372,18 +370,34 @@ func (s *Service) TestProvider(actor *model.User, providerID string) (*ProviderT
 	}, nil
 }
 
-// credentialsUsable reports whether a provider channel can complete an OAuth
-// exchange: it needs both a Client ID and a Client Secret, unless sandbox/mock
-// mode short-circuits the token exchange. Callers that read raw (still
-// encrypted) settings get the same answer because a stored secret is never an
-// empty string once configured.
-func credentialsUsable(cfg ProviderConfig) bool {
-	if cfg.SandboxMockEnabled ||
+// mockAllowed reports whether a channel is explicitly running in the built-in
+// sandbox / mock mode. It is the only way a loopback login may be minted, so it
+// depends on server-side configuration rather than on anything a visitor sends.
+func mockAllowed(cfg ProviderConfig) bool {
+	return cfg.SandboxMockEnabled ||
 		strings.HasPrefix(cfg.ClientID, "mock_") ||
-		strings.HasPrefix(cfg.ClientSecret, "mock_") {
+		strings.HasPrefix(cfg.ClientSecret, "mock_")
+}
+
+// credentialsUsable reports whether a provider channel can complete an OAuth
+// exchange and therefore may be shown on the login page: it needs both a Client
+// ID and a Client Secret, or an explicit sandbox/mock mode. Callers that read
+// raw (still encrypted) settings get the same answer because a stored secret is
+// never an empty string once configured.
+func credentialsUsable(cfg ProviderConfig) bool {
+	if mockAllowed(cfg) {
 		return true
 	}
 	return cfg.ClientID != "" && cfg.ClientSecret != ""
+}
+
+// resolveCallbackURL mirrors the redirect_uri that BeginAuth sends upstream, so
+// the token exchange presents exactly the same value.
+func resolveCallbackURL(cfg ProviderConfig, meta ProviderMeta) string {
+	if custom := strings.TrimSpace(cfg.CustomRedirectURL); custom != "" {
+		return custom
+	}
+	return "https://www.supdance.com" + meta.DefaultPath
 }
 
 // GetPublicProviders returns public providers filtered by the caller's dynamic IP geo-partition.
@@ -492,13 +506,12 @@ func (s *Service) BeginAuth(r *http.Request, providerID string, nextPath string,
 		}
 	}
 
-	callbackURL := cfg.CustomRedirectURL
-	if callbackURL == "" {
-		callbackURL = "https://www.supdance.com" + meta.DefaultPath
-	}
+	callbackURL := resolveCallbackURL(cfg, meta)
 
-	// Mock / Sandbox mode handler: instant loopback callback for automated end-to-end testing
-	if isMock || cfg.SandboxMockEnabled || strings.HasPrefix(cfg.ClientID, "mock_") || strings.HasPrefix(cfg.ClientSecret, "mock_") {
+	// Mock / Sandbox mode handler: instant loopback callback for automated
+	// end-to-end testing. Only the channel configuration can switch it on, so a
+	// visitor passing ?mock=true cannot mint a session.
+	if mockAllowed(cfg) {
 		mockCode := "mock_code_" + RandomToken()[:16]
 		targetURL := fmt.Sprintf("/api/auth/social/%s/callback?state=%s&code=%s&mock=true", providerID, stateToken, mockCode)
 		return targetURL, nil
@@ -560,8 +573,18 @@ func (s *Service) CompleteAuth(r *http.Request, providerID string, stateToken st
 		state = &model.OAuthState{NextPath: "/create"}
 	}
 
-	// Resolve user profile (mock or live)
-	profile, err := s.resolveUserProfile(providerID, code, state.CodeVerifier)
+	// Resolve user profile. A mock identity is only honoured while the channel is
+	// explicitly in sandbox/mock mode; anything else redeems the code upstream.
+	var cfg ProviderConfig
+	if s.repo != nil {
+		settings, settingsErr := s.ReadSettings()
+		if settingsErr != nil {
+			return nil, settingsErr
+		}
+		cfg = settings.Providers[providerID]
+	}
+	meta := ProviderRegistry[providerID]
+	profile, err := s.resolveUserProfile(r.Context(), providerID, code, state.CodeVerifier, cfg, resolveCallbackURL(cfg, meta))
 	if err != nil {
 		return nil, err
 	}
@@ -654,9 +677,10 @@ type socialProfile struct {
 	AvatarURL   string
 }
 
-func (s *Service) resolveUserProfile(providerID string, code string, verifier string) (*socialProfile, error) {
-	// Mock / Sandbox mode detection
-	if strings.HasPrefix(code, "mock_code_") || code == "test_auth_code" {
+func (s *Service) resolveUserProfile(ctx context.Context, providerID string, code string, verifier string, cfg ProviderConfig, redirectURI string) (*socialProfile, error) {
+	// Mock / Sandbox mode detection. It is gated by the channel's own server-side
+	// configuration, never by a code prefix a caller can freely invent.
+	if mockAllowed(cfg) && (strings.HasPrefix(code, "mock_code_") || code == "test_auth_code") {
 		sum := sha256.Sum256([]byte(code))
 		mockID := hex.EncodeToString(sum[:4])
 
@@ -699,12 +723,12 @@ func (s *Service) resolveUserProfile(providerID string, code string, verifier st
 		}
 	}
 
-	// Live upstream OAuth code exchange (for real provider credentials)
-	return &socialProfile{
-		Subject:     providerID + "_live_" + code[:8],
-		Username:    providerID + "_member",
-		DisplayName: strings.ToUpper(providerID) + " Member",
-	}, nil
+	// Live upstream OAuth code exchange (for real provider credentials). Channels
+	// that have no real exchange fail closed instead of fabricating an identity.
+	if !liveExchangeSupported(providerID) {
+		return nil, fmt.Errorf("渠道 %s 尚未接入真实授权码交换，已拒绝登录以避免伪造身份", providerID)
+	}
+	return redeemCode(ctx, providerID, cfg, code, verifier, redirectURI)
 }
 
 func (s *Service) buildNewSocialUser(providerID string, profile *socialProfile) (*model.User, *model.UserIdentity) {
