@@ -3,6 +3,8 @@ import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
 
 import { buildSocialAuthStartUrl } from "@/supdance/plugins/social-auth/api";
+import { credentialKeyLabels, draftFromProvider, isMaskedPreview, probeBadgeOf, statusBadgeOf } from "@/supdance/plugins/social-auth/admin/credential-helpers";
+import type { ProviderTestResult, SocialAuthProviderAdmin } from "@/supdance/plugins/social-auth/types";
 
 describe("SupDance Social Auth Plugin", () => {
     test("buildSocialAuthStartUrl generates correct URL and parameters", () => {
@@ -85,11 +87,14 @@ describe("SupDance Social Auth Plugin", () => {
     test("SocialAuthProviderAdmin types and draft initialization handle both clientIdMasked and maskedClientId", () => {
         const adminPagePath = resolve(import.meta.dir, "../src/supdance/plugins/social-auth/admin/social-auth-settings-page.tsx");
         const adminSource = readFileSync(adminPagePath, "utf-8");
+        const helpersSource = readFileSync(resolve(import.meta.dir, "../src/supdance/plugins/social-auth/admin/credential-helpers.ts"), "utf-8");
+        const modalSource = readFileSync(resolve(import.meta.dir, "../src/supdance/plugins/social-auth/admin/provider-credential-modal.tsx"), "utf-8");
 
         // Verify placeholder detection checks both keys
-        expect(adminSource).toContain("p.clientIdMasked || p.maskedClientId");
+        expect(helpersSource).toContain("provider.clientIdMasked || provider.maskedClientId");
         expect(adminSource).toContain("(provider.clientIdMasked || provider.maskedClientId)");
-        expect(adminSource).toContain('"已配置 · 留空不改"');
+        // 凭证只在弹窗内录入，占位必须写清"留空保持现有凭证"，避免管理员以为被清空。
+        expect(modalSource).toContain("留空保持现有凭证，输入新值覆盖");
 
         // Simulate draft init logic
         const sampleQQ = {
@@ -110,6 +115,14 @@ describe("SupDance Social Auth Plugin", () => {
         expect(resolvedMaskedId).toBe("****5200");
         const draftClientId = resolvedMaskedId && !resolvedMaskedId.includes("*") ? resolvedMaskedId : "";
         expect(draftClientId).toBe("");
+        expect(draftFromProvider(sampleQQ as SocialAuthProviderAdmin).clientId).toBe("");
+        expect(draftFromProvider(sampleQQ as SocialAuthProviderAdmin).clientSecret).toBe("");
+        expect(draftFromProvider(sampleQQ as SocialAuthProviderAdmin).sandboxMockEnabled).toBe(true);
+        expect(isMaskedPreview("****5200")).toBe(true);
+        expect(isMaskedPreview("••••••••0QEo")).toBe(true);
+        expect(isMaskedPreview("102035200")).toBe(false);
+        expect(credentialKeyLabels("qq")).toEqual({ id: "App ID", secret: "App Key" });
+        expect(credentialKeyLabels("google")).toEqual({ id: "Client ID", secret: "Client Secret" });
 
         const placeholder = (sampleQQ.clientIdMasked || sampleQQ.maskedClientId) || "输入 App ID / Client ID";
         expect(placeholder).toBe("****5200");
@@ -156,10 +169,23 @@ describe("SupDance Social Auth Plugin", () => {
         expect(isOnlineSuccess).toBe(true);
         expect(onlineLatency).toBe(101);
 
-        const badgeLabel = `${onlineLatency}ms · ${isOnlineSuccess ? "连接畅通" : "异常"}`;
-        const badgeTone = isOnlineSuccess ? "success" : "error";
-        expect(badgeLabel).toBe("101ms · 连接畅通");
-        expect(badgeTone).toBe("success");
+        const badge = probeBadgeOf(onlineResult as ProviderTestResult);
+        expect(badge?.label).toBe("正常在线 101ms");
+        expect(badge?.tone).toBe("success");
+
+        // 后端在未录入凭证时返回 error + 固定话术，面板必须按"待录入"而不是"网关故障"呈现。
+        const missingCredentials = probeBadgeOf({
+            provider: "google",
+            status: "error",
+            message: "该渠道尚未配置完整的 ClientID 或密钥",
+        } satisfies ProviderTestResult);
+        expect(missingCredentials?.label).toBe("待录入凭证");
+        expect(missingCredentials?.tone).toBe("warning");
+
+        expect(probeBadgeOf({ provider: "x", status: "error", message: "上游网关连接超时" } as ProviderTestResult)?.tone).toBe("error");
+        expect(probeBadgeOf({ provider: "tiktok", status: "degraded", latencyMs: 1800, message: "响应较慢" } as ProviderTestResult)?.label).toBe("响应稍慢 1800ms");
+        expect(probeBadgeOf(undefined)).toBeNull();
+        expect(statusBadgeOf({ id: "qq", name: "QQ", region: "cn", icon: "qq", enabled: true, status: "online", statusLabel: "运行中", callbackUrl: "" } as SocialAuthProviderAdmin)).toEqual({ label: "运行中", tone: "success" });
     });
 
     test("supdance-social-auth barrel does not export SocialAuthSettingsPage (no admin leak)", () => {

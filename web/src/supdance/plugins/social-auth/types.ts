@@ -38,6 +38,8 @@ export interface SocialAuthProviderAdmin {
     icon: string;
     enabled: boolean;
     status: SocialAuthStatus;
+    statusLabel?: string;
+    hasCredentials?: boolean;
     statusMessage?: string;
     maskedClientId?: string;
     clientIdMasked?: string;
@@ -69,11 +71,17 @@ export interface AdminSettingsView {
     updatedAt?: string;
 }
 
+/**
+ * 与 backend/internal/supdance/socialauth.UpdateProviderInput 逐字段对齐。
+ * 后端对 enabled / sandboxMockEnabled / customRedirectUrl 是无条件覆盖写入，
+ * 因此任何一次保存都必须带上这三项的当前值，否则会被静默清空。
+ */
 export interface ProviderUpdateInput {
     enabled?: boolean;
     clientId?: string;
     clientSecret?: string;
-    callbackUrl?: string;
+    customRedirectUrl?: string;
+    scopes?: string[];
     sandboxMockEnabled?: boolean;
 }
 

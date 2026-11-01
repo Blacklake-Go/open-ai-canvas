@@ -3,6 +3,7 @@ import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
 
 import { buildSocialAuthStartUrl } from "@/supdance/plugins/social-auth/api";
+import { draftFromProvider, isMaskedPreview } from "@/supdance/plugins/social-auth/admin/credential-helpers";
 import type { ProviderTestResult, SocialAuthProviderAdmin } from "@/supdance/plugins/social-auth/types";
 
 describe("Adversarial Stress Testing: SupDance Social Auth Frontend", () => {
@@ -57,19 +58,26 @@ describe("Adversarial Stress Testing: SupDance Social Auth Frontend", () => {
     test("Adversarial: Form dirty-checking and submission avoid sending masked previews as new credentials", () => {
         const adminPagePath = resolve(import.meta.dir, "../src/supdance/plugins/social-auth/admin/social-auth-settings-page.tsx");
         const adminSource = readFileSync(adminPagePath, "utf-8");
+        const helpersSource = readFileSync(resolve(import.meta.dir, "../src/supdance/plugins/social-auth/admin/credential-helpers.ts"), "utf-8");
+        const modalSource = readFileSync(resolve(import.meta.dir, "../src/supdance/plugins/social-auth/admin/provider-credential-modal.tsx"), "utf-8");
 
         // Verify draft init sets empty string when maskedId contains asterisk
-        expect(adminSource).toContain('clientId: maskedId && !maskedId.includes("*") ? maskedId : ""');
-        expect(adminSource).toContain('clientSecret: ""');
+        expect(helpersSource).toContain('clientId: maskedId && !maskedId.includes("*") ? maskedId : ""');
+        expect(helpersSource).toContain('clientSecret: ""');
 
-        // Verify dirty checking checks
-        expect(adminSource).toContain('const currentMaskedId = p.clientIdMasked || p.maskedClientId || "";');
-        expect(adminSource).toContain("if (draft.clientId && draft.clientId !== currentMaskedId) return true;");
-        expect(adminSource).toContain("if (draft.clientSecret.trim().length > 0) return true;");
+        // Verify page dirty checking only tracks display switches; credentials save instantly from the modal
+        expect(adminSource).toContain("if (draft && draft.enabled !== p.enabled) return true;");
 
-        // Verify submit payload only includes non-empty trimmed values
-        expect(adminSource).toContain("if (draft.clientId.trim())");
-        expect(adminSource).toContain("if (draft.clientSecret.trim())");
+        // Verify submit payload rejects masked previews in both save paths
+        expect(adminSource).toContain("if (clientId && !isMaskedPreview(clientId)) update.clientId = clientId;");
+        expect(adminSource).toContain("if (clientSecret && !isMaskedPreview(clientSecret)) update.clientSecret = clientSecret;");
+        expect(modalSource).toContain("const sendsId = Boolean(clientId) && !isMaskedPreview(clientId);");
+        expect(modalSource).toContain("const sendsSecret = Boolean(clientSecret) && !isMaskedPreview(clientSecret);");
+
+        // 后端也是同样口径（含 * 或 • 直接忽略），前端提前拦下才不会写出"掩码当密钥"的脏数据。
+        expect(draftFromProvider({ id: "qq", name: "QQ", region: "cn", icon: "qq", enabled: true, status: "online", clientIdMasked: "****5200", maskedSecret: "••••••••0QEo", callbackUrl: "" } as SocialAuthProviderAdmin).clientId).toBe("");
+        expect(isMaskedPreview("****5200")).toBe(true);
+        expect(isMaskedPreview("aw8n726kuf")).toBe(false);
 
         // Simulate dirty checking logic
         const currentMaskedId = "****5200";
