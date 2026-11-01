@@ -17,6 +17,11 @@
 - **登记**：新增补丁 ID `supdance-music-plugin-gates`，同步 `SUPDANCE_UPSTREAM_PATCH_REGISTRY`、`supdance/config/baseline.json` 与 `docs/supdance/CUSTOMIZATIONS.md`。
 - **验证**：真实 Chrome 验收 `/toolbox/music` 暗/亮两主题三栏工作台渲染、"停用 → 守卫页 → 再启用"回环、`/create` 音乐药丸与侧栏入口恢复；`web/test/supdance-*` 10 个文件 70 项通过；`bun run typecheck` 通过；`backend go build ./...` 与 `go test ./internal/app/... ./internal/service/... ./internal/supdance/...` 通过。
 
+### 生产发布（先演练后切换）
+- **发布内容**：`bc5ebcf7`（`supdance/main`）以服务器本地构建镜像 `supdance-canvas-backend:bc5ebcf7` / `supdance-canvas-web:bc5ebcf7` + 宿主发布产物 `yingce-backend-1.7.3-supdance-v4` / `releases/1.7.3-supdance-v6` 上线 `43.133.253.76` 主栈 `y-supdance-canvas`；`yingce-agent` 镜像与其余 `.env` 键未变更。
+- **门禁**：隔离演练栈（`127.0.0.1:3270/3271`，独立数据库与卷）先完成 `migrate` 与真实浏览器验收；生产 `pg_dump` 恢复到演练库后执行新镜像 `migrate-schema up`，迁移台账与生产逐行一致 → 本次发布零 Schema 变更；切换前完成数据库 custom-format + plain 双备份。
+- **验证**：生产 `/api/health/ready` 为 `v1.7.3` / `schema 77/77 ready`；`https://www.supdance.com/toolbox/music` 真实浏览器渲染工作台；`/api/plugins/status` 仅返回 `supdance-music-generation`（幻影别名消失）；旧入口 chunk 仍保留可访问。完整坐标、回滚方式与遗留风险见 [`DEPLOYMENT.md`](./DEPLOYMENT.md) 第 4 节。
+
 ## [supdance/v2026.10.31.1] — 2026-10-31
 
 ### 自研插件规范化审计与上游兼容性加固 V2.0
