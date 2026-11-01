@@ -372,6 +372,20 @@ func (s *Service) TestProvider(actor *model.User, providerID string) (*ProviderT
 	}, nil
 }
 
+// credentialsUsable reports whether a provider channel can complete an OAuth
+// exchange: it needs both a Client ID and a Client Secret, unless sandbox/mock
+// mode short-circuits the token exchange. Callers that read raw (still
+// encrypted) settings get the same answer because a stored secret is never an
+// empty string once configured.
+func credentialsUsable(cfg ProviderConfig) bool {
+	if cfg.SandboxMockEnabled ||
+		strings.HasPrefix(cfg.ClientID, "mock_") ||
+		strings.HasPrefix(cfg.ClientSecret, "mock_") {
+		return true
+	}
+	return cfg.ClientID != "" && cfg.ClientSecret != ""
+}
+
 // GetPublicProviders returns public providers filtered by the caller's dynamic IP geo-partition.
 // It uses readRawSettings to completely eliminate AES secret decryption for public requests.
 func (s *Service) GetPublicProviders(r *http.Request) (*PublicProvidersResponse, error) {
@@ -391,7 +405,13 @@ func (s *Service) GetPublicProviders(r *http.Request) (*PublicProvidersResponse,
 			continue
 		}
 		cfg := settings.Providers[id]
-		if !cfg.Enabled || cfg.ClientID == "" {
+		if !cfg.Enabled {
+			continue
+		}
+		// Advertise a channel only once it can actually finish the exchange, so the
+		// login page never offers a button that dies at the callback (admin view
+		// reports the same state as "待录入凭证").
+		if !credentialsUsable(cfg) {
 			continue
 		}
 
@@ -439,7 +459,7 @@ func (s *Service) BeginAuth(r *http.Request, providerID string, nextPath string,
 		return "", err
 	}
 	cfg, exists := settings.Providers[providerID]
-	if !exists || !cfg.Enabled || cfg.ClientID == "" {
+	if !exists || !cfg.Enabled || !credentialsUsable(cfg) {
 		return "", kernel.Forbidden("该第三方登录渠道未开放或未配置")
 	}
 	meta := ProviderRegistry[providerID]

@@ -371,6 +371,7 @@ func TestPublicProvidersStrictRegionFiltering(t *testing.T) {
 	cfgGoogle := settings.Providers[ProviderGoogle]
 	cfgGoogle.Enabled = true
 	cfgGoogle.ClientID = "test_google_client"
+	cfgGoogle.ClientSecret = "test_google_secret"
 	settings.Providers[ProviderGoogle] = cfgGoogle
 	_ = svc.SaveSettings(&model.User{ID: "admin"}, settings)
 
@@ -426,6 +427,94 @@ func TestPublicProvidersStrictRegionFiltering(t *testing.T) {
 	}
 	if len(respSim.AllRegions) == 0 {
 		t.Errorf("simulated admin request should include AllRegions for testing")
+	}
+}
+
+// A channel whose Client Secret has not been entered yet must not be offered on
+// the login page, and must refuse an OAuth start instead of dying at callback.
+func TestIncompleteCredentialsAreNotAdvertised(t *testing.T) {
+	repo := newTestRepo(t)
+	host := &testHost{}
+	svc := NewService(repo, host)
+	adminUser := &model.User{ID: "admin", Role: model.UserRoleAdmin}
+
+	settings, err := svc.ReadSettings()
+	if err != nil {
+		t.Fatalf("ReadSettings failed: %v", err)
+	}
+	google := settings.Providers[ProviderGoogle]
+	google.Enabled = true
+	google.ClientID = "google_client_without_secret"
+	google.ClientSecret = ""
+	settings.Providers[ProviderGoogle] = google
+
+	x := settings.Providers[ProviderX]
+	x.Enabled = true
+	x.ClientID = "x_client_with_secret"
+	x.ClientSecret = "x_secret"
+	settings.Providers[ProviderX] = x
+
+	douyin := settings.Providers[ProviderDouyin]
+	douyin.Enabled = true
+	douyin.ClientID = "mock_douyin_client"
+	douyin.ClientSecret = ""
+	douyin.SandboxMockEnabled = true
+	settings.Providers[ProviderDouyin] = douyin
+
+	if err := svc.SaveSettings(adminUser, settings); err != nil {
+		t.Fatalf("SaveSettings failed: %v", err)
+	}
+
+	// 1. Public intl list advertises X but hides the secret-less Google channel.
+	reqUS := httptest.NewRequest(http.MethodGet, "/api/auth/social/providers", nil)
+	reqUS.Header.Set("CF-IPCountry", "US")
+	respUS, err := svc.GetPublicProviders(reqUS)
+	if err != nil {
+		t.Fatalf("GetPublicProviders failed: %v", err)
+	}
+	seen := map[string]bool{}
+	for _, p := range respUS.Providers {
+		seen[p.ID] = true
+	}
+	if seen[ProviderGoogle] {
+		t.Errorf("Google without a Client Secret must not be advertised")
+	}
+	if !seen[ProviderX] {
+		t.Errorf("fully configured X should be advertised, got %+v", respUS.Providers)
+	}
+
+	// 2. Sandbox/mock channels stay advertised without a real secret.
+	reqCN := httptest.NewRequest(http.MethodGet, "/api/auth/social/providers", nil)
+	reqCN.Header.Set("X-Real-IP", "124.90.230.101")
+	respCN, err := svc.GetPublicProviders(reqCN)
+	if err != nil {
+		t.Fatalf("GetPublicProviders (CN) failed: %v", err)
+	}
+	var cnHasMockDouyin bool
+	for _, p := range respCN.Providers {
+		if p.ID == ProviderDouyin {
+			cnHasMockDouyin = true
+		}
+	}
+	if !cnHasMockDouyin {
+		t.Errorf("sandbox/mock Douyin should stay advertised, got %+v", respCN.Providers)
+	}
+
+	// 3. BeginAuth refuses the incomplete channel but allows the mock one.
+	if _, err := svc.BeginAuth(reqUS, ProviderGoogle, "/", true, false); err == nil {
+		t.Errorf("expected BeginAuth to reject Google without credentials")
+	}
+	if _, err := svc.BeginAuth(reqCN, ProviderDouyin, "/", true, false); err != nil {
+		t.Errorf("sandbox/mock Douyin should still start, got %v", err)
+	}
+
+	// 4. Admin view reports the half-configured channel as 待录入凭证.
+	view, err := svc.GetAdminSettings(reqUS, adminUser)
+	if err != nil {
+		t.Fatalf("GetAdminSettings failed: %v", err)
+	}
+	if g := view.Providers[ProviderGoogle]; g.Status != StatusCredentialsRequired || g.StatusLabel != "待录入凭证" {
+		t.Errorf("expected Google 待录入凭证, got status=%s label=%s", g.Status, g.StatusLabel)
 	}
 }
 
