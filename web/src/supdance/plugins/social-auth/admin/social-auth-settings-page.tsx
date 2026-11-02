@@ -212,28 +212,13 @@ export default function SocialAuthSettingsPage() {
                     <div className="flex flex-wrap items-center gap-3 text-xs">
                         <span className="flex items-center gap-1.5 text-[var(--admin-text-secondary)]" title={`来访 IP 来源请求头：${data.ipSourceHeader || "未知"}`}>
                             <code>{data.clientIp || "未知 IP"}</code>
-                            <AdminStatusBadge
-                                label={data.detectedRegion === "cn" ? "来访：中国大陆" : "来访：海外/港澳台"}
-                                tone={data.detectedRegion === "cn" ? "info" : "neutral"}
-                            />
+                            <AdminStatusBadge label={data.detectedRegion === "cn" ? "来访：中国大陆" : "来访：海外/港澳台"} tone={data.detectedRegion === "cn" ? "info" : "neutral"} />
                         </span>
                         <div className="flex items-center gap-1.5 border-l border-[var(--admin-border)] pl-3">
                             <span className="text-[var(--admin-text-muted)]">未知 IP 回退:</span>
-                            <Select
-                                size="sm"
-                                ariaLabel="未知或异常 IP 的默认回退分区"
-                                value={data.defaultFallbackRegion || "cn"}
-                                onChange={(value) => void handleFallbackRegionChange(value as SocialAuthRegion)}
-                                options={FALLBACK_OPTIONS}
-                            />
+                            <Select size="sm" ariaLabel="未知或异常 IP 的默认回退分区" value={data.defaultFallbackRegion || "cn"} onChange={(value) => void handleFallbackRegionChange(value as SocialAuthRegion)} options={FALLBACK_OPTIONS} />
                         </div>
-                        <IconButton
-                            icon={RefreshCw}
-                            loading={refreshing}
-                            title="刷新配置状态"
-                            aria-label="刷新配置状态"
-                            onClick={() => void loadSettings(false)}
-                        />
+                        <IconButton icon={RefreshCw} loading={refreshing} title="刷新配置状态" aria-label="刷新配置状态" onClick={() => void loadSettings(false)} />
                     </div>
                 </div>
 
@@ -250,9 +235,7 @@ export default function SocialAuthSettingsPage() {
                     {/* Table Rows */}
                     <div className="divide-y divide-[var(--admin-border)]">
                         {activeProviders.length === 0 ? (
-                            <div className="py-8 text-center text-xs text-[var(--admin-text-muted)]">
-                                当前分区无可用第三方登录渠道
-                            </div>
+                            <div className="py-8 text-center text-xs text-[var(--admin-text-muted)]">当前分区无可用第三方登录渠道</div>
                         ) : (
                             activeProviders.map((provider) => {
                                 const labels = credentialKeyLabels(provider.id);
@@ -264,13 +247,7 @@ export default function SocialAuthSettingsPage() {
                                 const canToggle = provider.hasCredentials && (provider.status === "ready" || provider.status === "online");
 
                                 return (
-                                    <div
-                                        key={provider.id}
-                                        className={cn(
-                                            "flex flex-col sm:flex-row sm:items-center px-4 py-3 text-xs transition-colors hover:bg-[var(--admin-row-hover)]",
-                                            !provider.enabled && "opacity-85"
-                                        )}
-                                    >
+                                    <div key={provider.id} className={cn("flex flex-col sm:flex-row sm:items-center px-4 py-3 text-xs transition-colors hover:bg-[var(--admin-row-hover)]", !provider.enabled && "opacity-85")}>
                                         {/* Col 1: Provider icon + name + ID badge (180px) */}
                                         <div className="flex w-[180px] shrink-0 items-center gap-2.5">
                                             <span className="flex size-7 shrink-0 items-center justify-center rounded-md bg-[var(--admin-surface-2)]">
@@ -278,27 +255,26 @@ export default function SocialAuthSettingsPage() {
                                             </span>
                                             <div className="min-w-0 flex flex-col">
                                                 <div className="flex items-center gap-1.5">
-                                                    <strong className="truncate font-semibold text-[var(--admin-text)]">
-                                                        {provider.name}
-                                                    </strong>
+                                                    <strong className="truncate font-semibold text-[var(--admin-text)]">{provider.name}</strong>
                                                 </div>
-                                                <span className="text-[11px] text-[var(--admin-text-muted)] truncate">
-                                                    {provider.platform || provider.id}
-                                                </span>
+                                                <span className="text-[var(--fs-label)] text-[var(--admin-text-muted)] truncate">{provider.platform || provider.id}</span>
                                             </div>
                                         </div>
 
                                         {/* Col 2: Masked ID + Status badge (Online / Ready / Unconfigured) (220px) */}
                                         <div className="flex w-[220px] shrink-0 items-center gap-2">
                                             <AdminStatusBadge label={status.label} tone={status.tone} title={provider.statusMessage} />
-                                            <span className="min-w-0 truncate font-mono text-[11px] text-[var(--admin-text-secondary)]" title={`${labels.id}: ${maskedId || "未录入"}`}>
+                                            <span className="min-w-0 truncate font-mono text-[var(--fs-label)] text-[var(--admin-text-secondary)]" title={`${labels.id}: ${maskedId || "未录入"}`}>
                                                 {maskedId || "未录入凭证"}
                                             </span>
                                         </div>
 
                                         {/* Col 3: Callback URI + Copy button + Doc link (flex-1) */}
                                         <div className="flex min-w-[200px] flex-1 items-center gap-2 px-2 my-1 sm:my-0">
-                                            <code className="truncate max-w-[340px] rounded border border-[var(--admin-border)] bg-[var(--admin-surface-2)] px-2 py-0.5 font-mono text-[11px] text-[var(--admin-text-secondary)] select-all" title={provider.callbackUrl}>
+                                            <code
+                                                className="truncate max-w-[340px] rounded border border-[var(--admin-border)] bg-[var(--admin-surface-2)] px-2 py-0.5 font-mono text-[var(--fs-label)] text-[var(--admin-text-secondary)] select-all"
+                                                title={provider.callbackUrl}
+                                            >
                                                 {provider.callbackUrl}
                                             </code>
                                             <IconButton
@@ -319,28 +295,15 @@ export default function SocialAuthSettingsPage() {
                                                     <ExternalLink className="size-3" aria-hidden="true" />
                                                 </a>
                                             ) : null}
-                                            {probe ? (
-                                                <AdminStatusBadge label={probe.label} tone={probe.tone} title={probe.detail} />
-                                            ) : null}
+                                            {probe ? <AdminStatusBadge label={probe.label} tone={probe.tone} title={probe.detail} /> : null}
                                         </div>
 
                                         {/* Col 4: [配置密钥] + [🔄 probe] + inline instant Switch (160px, right-aligned) */}
                                         <div className="flex w-[160px] shrink-0 items-center justify-end gap-2">
-                                            <Button
-                                                size="small"
-                                                icon={<KeyRound className="size-3" />}
-                                                className="text-xs"
-                                                onClick={() => handleOpenCredentialModal(provider)}
-                                            >
+                                            <Button size="small" icon={<KeyRound className="size-3" />} className="text-xs" onClick={() => handleOpenCredentialModal(provider)}>
                                                 配置密钥
                                             </Button>
-                                            <IconButton
-                                                icon={RefreshCw}
-                                                loading={testingProvider === provider.id}
-                                                title="测试连通性"
-                                                aria-label={`测试 ${provider.name} 连通性`}
-                                                onClick={() => void handlePing(provider)}
-                                            />
+                                            <IconButton icon={RefreshCw} loading={testingProvider === provider.id} title="测试连通性" aria-label={`测试 ${provider.name} 连通性`} onClick={() => void handlePing(provider)} />
                                             <Tooltip title={!canToggle ? "请先配置密钥后再开启" : provider.enabled ? "点击即时停用" : "点击即时启用"}>
                                                 <div className="inline-flex items-center">
                                                     <Switch

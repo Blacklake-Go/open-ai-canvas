@@ -41,7 +41,7 @@ export function buildSocialAuthStartUrl(
         next?: string;
         acceptedTerms?: boolean;
         simulateRegion?: SocialAuthRegion;
-    }
+    },
 ) {
     const params = new URLSearchParams();
     if (options?.next) params.set("next", options.next);
@@ -67,9 +67,7 @@ export async function searchSocialAuthUsers(query?: string, limit?: number, sign
 }
 
 export async function adminUnbindSocialAuth(userId: string, provider: string) {
-    return http.delete<{ message: string }>(
-        `/admin/social-auth/operations/users/${encodeURIComponent(userId)}/unbind/${encodeURIComponent(provider)}`
-    );
+    return http.delete<{ message: string }>(`/admin/social-auth/operations/users/${encodeURIComponent(userId)}/unbind/${encodeURIComponent(provider)}`);
 }
 
 export async function getSocialAuthLoginLogs(limit?: number, signal?: AbortSignal) {
@@ -104,4 +102,3 @@ export function buildSocialAuthBindUrl(providerId: string, next?: string) {
 export async function unbindSocialIdentity(providerId: string) {
     return http.post<UserIdentitiesView>(`/auth/social/${encodeURIComponent(providerId)}/unbind`);
 }
-

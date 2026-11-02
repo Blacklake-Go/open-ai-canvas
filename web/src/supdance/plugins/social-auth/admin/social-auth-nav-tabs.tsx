@@ -16,12 +16,7 @@ export function SocialAuthNavTabs() {
                 <Link
                     key={tab.path}
                     to={tab.path}
-                    className={cn(
-                        "relative pb-2.5 text-xs transition-colors",
-                        tab.active
-                            ? "text-[var(--admin-text)] border-b-2 border-[var(--admin-text)] font-semibold"
-                            : "text-[var(--admin-text-secondary)] hover:text-[var(--admin-text)] font-normal"
-                    )}
+                    className={cn("relative pb-2.5 text-xs transition-colors", tab.active ? "text-[var(--admin-text)] border-b-2 border-[var(--admin-text)] font-semibold" : "text-[var(--admin-text-secondary)] hover:text-[var(--admin-text)] font-normal")}
                 >
                     {tab.label}
                 </Link>

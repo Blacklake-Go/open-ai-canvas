@@ -128,9 +128,7 @@ export function ProviderCredentialModal({ provider, draft: draftProp, onDraftCha
                             {copied ? "已复制" : "复制"}
                         </Button>
                     </div>
-                    <code className="rounded border border-[var(--admin-border)] bg-[var(--admin-surface-2)] px-2.5 py-1.5 font-mono text-[11px] text-[var(--admin-text)] break-all select-all">
-                        {provider.callbackUrl}
-                    </code>
+                    <code className="rounded border border-[var(--admin-border)] bg-[var(--admin-surface-2)] px-2.5 py-1.5 font-mono text-[var(--fs-label)] text-[var(--admin-text)] break-all select-all">{provider.callbackUrl}</code>
                 </div>
 
                 {/* Client ID */}

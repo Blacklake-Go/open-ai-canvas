@@ -19,6 +19,9 @@ import { usePluginStore } from "@/stores/use-plugin-store";
 import { ProfilePane } from "./profile-pane";
 import { FeedbackInboxPane } from "./feedback-inbox-pane";
 import { useI18n } from "@/supdance/plugins/i18n";
+import { SUPDANCE_SOCIAL_AUTH_PLUGIN_ID } from "@/supdance/plugins/social-auth/types";
+import { selectPluginEffectivelyEnabled } from "@/stores/use-plugin-store";
+import { UserProfileModal } from "@/components/layout/user-profile-modal";
 
 type ConfigSectionKey = "profile" | "channels" | "models" | "runninghub" | "preferences" | "prompts" | "agent-memory" | "storage" | "diagnostics" | "feedbacks";
 
@@ -61,6 +64,7 @@ export default function SettingsPage() {
     const customChannelsEnabled = useUserStore((state) => state.features.customChannelsEnabled);
     const runtimeStatuses = usePluginStore((state) => state.runtimeStatuses);
     const runningHubPluginEnabled = runtimeStatuses[RUNNINGHUB_PLUGIN_ID] === "enabled";
+    const socialAuthEnabled = usePluginStore(selectPluginEffectivelyEnabled(SUPDANCE_SOCIAL_AUTH_PLUGIN_ID, true));
     const requestedSectionEnabled = requestedSection !== "runninghub" || runningHubPluginEnabled;
     const initialSection = isConfigSection(requestedSection) && requestedSectionEnabled ? requestedSection : "profile";
     const [activeTab, setActiveTab] = useState<ConfigSectionKey>(initialSection === "channels" && !customChannelsEnabled ? "models" : initialSection);
@@ -70,8 +74,10 @@ export default function SettingsPage() {
     const shouldPromptContinue = searchParams.get("continue") === "1";
     const userId = useUserStore((state) => state.user?.id);
     const userChannels = config.channels.filter((channel) => channel.scope !== "system");
-    const visibleConfigSections = useMemo(() => (customChannelsEnabled ? configSections : configSections.filter((section) => section.key !== "channels"))
-        .filter((section) => section.key !== "runninghub" || runningHubPluginEnabled), [customChannelsEnabled, runningHubPluginEnabled]);
+    const visibleConfigSections = useMemo(
+        () => (customChannelsEnabled ? configSections : configSections.filter((section) => section.key !== "channels")).filter((section) => section.key !== "runninghub" || runningHubPluginEnabled),
+        [customChannelsEnabled, runningHubPluginEnabled],
+    );
 
     const isVisibleConfigSection = (value: string | null): value is ConfigSectionKey => isConfigSection(value) && visibleConfigSections.some((section) => section.key === value);
 
@@ -113,16 +119,53 @@ export default function SettingsPage() {
         const workflowReady = Boolean(runningHubPluginEnabled && config.runningHub.enabled && config.runningHub.workflowId.trim() && config.runningHub.baseUrl.trim() && config.runningHub.apiKey.trim());
         if (!effectiveConfig.channels.some(isChannelReady) && !workflowReady) {
             selectSection(customChannelsEnabled ? "channels" : "models");
-            message.error(customChannelsEnabled ? (shouldPromptContinue ? t("settings.configure_channel_first", undefined, "请先完成至少一个渠道的 Base URL、API Key 和模型配置") : t("settings.no_channel_error", undefined, "当前没有可用渠道，请先完成连接信息和模型配置")) : t("settings.no_system_channel_error", undefined, "当前没有可用的系统模型，请联系管理员配置系统渠道"));
+            message.error(
+                customChannelsEnabled
+                    ? shouldPromptContinue
+                        ? t("settings.configure_channel_first", undefined, "请先完成至少一个渠道的 Base URL、API Key 和模型配置")
+                        : t("settings.no_channel_error", undefined, "当前没有可用渠道，请先完成连接信息和模型配置")
+                    : t("settings.no_system_channel_error", undefined, "当前没有可用的系统模型，请联系管理员配置系统渠道"),
+            );
             return;
         }
         message.success(t("settings.saved_returning", undefined, "配置已保存，正在返回创作页面"));
         navigate(-1);
     };
 
+    if (socialAuthEnabled) {
+        return (
+            <div className="fixed inset-0 z-40 flex items-center justify-center p-4 bg-black/60 backdrop-blur-md animate-in fade-in duration-200">
+                <UserProfileModal
+                    open={true}
+                    activeTab={(activeTab === "preferences" ? "generation" : activeTab) as any}
+                    onTabChange={(tab) => {
+                        const targetSection = tab === "generation" ? "preferences" : tab;
+                        selectSection(targetSection as any);
+                    }}
+                    onClose={() => {
+                        if (window.history.length > 1) {
+                            navigate(-1);
+                        } else {
+                            navigate("/create");
+                        }
+                    }}
+                    searchParams={searchParams}
+                />
+            </div>
+        );
+    }
+
     const panes: Record<ConfigSectionKey, ReactNode> = {
-        profile: <SettingsPane><ProfilePane key={userId} /></SettingsPane>,
-        channels: <SettingsPane><ChannelSettingsPane onOpenModels={() => selectSection("models")} onOpenRunningHub={runningHubPluginEnabled ? () => selectSection("runninghub") : undefined} /></SettingsPane>,
+        profile: (
+            <SettingsPane>
+                <ProfilePane key={userId} />
+            </SettingsPane>
+        ),
+        channels: (
+            <SettingsPane>
+                <ChannelSettingsPane onOpenModels={() => selectSection("models")} onOpenRunningHub={runningHubPluginEnabled ? () => selectSection("runninghub") : undefined} />
+            </SettingsPane>
+        ),
         models: (
             <SettingsPane>
                 <div className="settings-pane-header">
@@ -136,7 +179,11 @@ export default function SettingsPage() {
                 </div>
             </SettingsPane>
         ),
-        runninghub: <SettingsPane><RunningHubSettingsPane /></SettingsPane>,
+        runninghub: (
+            <SettingsPane>
+                <RunningHubSettingsPane />
+            </SettingsPane>
+        ),
         preferences: (
             <SettingsPane>
                 <div className="settings-pane-header">
@@ -169,7 +216,11 @@ export default function SettingsPage() {
                 </div>
             </SettingsPane>
         ),
-        prompts: <SettingsPane fill><PromptPreferencesPane /></SettingsPane>,
+        prompts: (
+            <SettingsPane fill>
+                <PromptPreferencesPane />
+            </SettingsPane>
+        ),
         "agent-memory": (
             <SettingsPane>
                 <div className="settings-pane-header">
@@ -183,7 +234,11 @@ export default function SettingsPage() {
                 </div>
             </SettingsPane>
         ),
-        diagnostics: <SettingsPane><DiagnosticsPanel taskId={searchParams.get("taskId") || undefined} projectId={searchParams.get("projectId") || undefined} /></SettingsPane>,
+        diagnostics: (
+            <SettingsPane>
+                <DiagnosticsPanel taskId={searchParams.get("taskId") || undefined} projectId={searchParams.get("projectId") || undefined} />
+            </SettingsPane>
+        ),
         storage: (
             <SettingsPane>
                 <div className="settings-section">
@@ -191,7 +246,11 @@ export default function SettingsPage() {
                 </div>
             </SettingsPane>
         ),
-        feedbacks: <SettingsPane><FeedbackInboxPane /></SettingsPane>,
+        feedbacks: (
+            <SettingsPane>
+                <FeedbackInboxPane />
+            </SettingsPane>
+        ),
     };
 
     return (
@@ -199,8 +258,12 @@ export default function SettingsPage() {
             {shouldPromptContinue ? (
                 <div className="settings-topbar shrink-0">
                     <div className="ml-auto flex flex-wrap items-center justify-end gap-2">
-                        <Button icon={<ArrowLeft className="size-4" />} onClick={() => navigate(-1)}>{t("settings.back_to_creation", undefined, "返回创作")}</Button>
-                        <Button type="primary" onClick={finishConfig}>{t("settings.save_and_return", undefined, "保存并返回")}</Button>
+                        <Button icon={<ArrowLeft className="size-4" />} onClick={() => navigate(-1)}>
+                            {t("settings.back_to_creation", undefined, "返回创作")}
+                        </Button>
+                        <Button type="primary" onClick={finishConfig}>
+                            {t("settings.save_and_return", undefined, "保存并返回")}
+                        </Button>
                     </div>
                 </div>
             ) : null}
@@ -232,9 +295,7 @@ export default function SettingsPage() {
                 </aside>
                 <section className="settings-content flex min-h-0 min-w-0 flex-1 flex-col">
                     <div className="app-workspace-scroll min-h-0 flex-1 overflow-y-auto overscroll-contain px-4 py-4 md:px-6 md:py-5">
-                        <div className={`settings-pane-root ${activeTab === "prompts" ? "h-full w-full" : "mx-auto w-full max-w-none"}`}>
-                            {panes[activeTab]}
-                        </div>
+                        <div className={`settings-pane-root ${activeTab === "prompts" ? "h-full w-full" : "mx-auto w-full max-w-none"}`}>{panes[activeTab]}</div>
                     </div>
                 </section>
             </div>

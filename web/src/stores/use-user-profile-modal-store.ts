@@ -1,6 +1,6 @@
 import { create } from "zustand";
 
-export type UserProfileModalTab = "profile" | "security" | "social" | "preferences";
+export type UserProfileModalTab = "profile" | "security" | "social" | "models" | "channels" | "runninghub" | "generation" | "prompts" | "agent-memory" | "preferences" | "storage" | "diagnostics" | "feedbacks";
 
 interface UserProfileModalState {
     isOpen: boolean;

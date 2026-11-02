@@ -65,12 +65,11 @@ describe("Adversarial Stress Testing: SupDance Social Auth Frontend", () => {
         expect(helpersSource).toContain('clientId: maskedId && !maskedId.includes("*") ? maskedId : ""');
         expect(helpersSource).toContain('clientSecret: ""');
 
-        // Verify page dirty checking only tracks display switches; credentials save instantly from the modal
-        expect(adminSource).toContain("if (draft && draft.enabled !== p.enabled) return true;");
+        // Verify instant toggle guards unconfigured channels and updates state immediately
+        expect(adminSource).toContain("const handleToggleEnable = async");
+        expect(adminSource).toContain("if (!provider.hasCredentials && checked)");
 
-        // Verify submit payload rejects masked previews in both save paths
-        expect(adminSource).toContain("if (clientId && !isMaskedPreview(clientId)) update.clientId = clientId;");
-        expect(adminSource).toContain("if (clientSecret && !isMaskedPreview(clientSecret)) update.clientSecret = clientSecret;");
+        // Verify modal submit payload rejects masked previews
         expect(modalSource).toContain("const sendsId = Boolean(clientId) && !isMaskedPreview(clientId);");
         expect(modalSource).toContain("const sendsSecret = Boolean(clientSecret) && !isMaskedPreview(clientSecret);");
 
@@ -153,13 +152,11 @@ describe("Adversarial Stress Testing: SupDance Social Auth Frontend", () => {
         const url = buildSocialAuthStartUrl("qq", {
             next: injectionTarget,
             acceptedTerms: true,
-            mock: true,
         });
 
         expect(url).toContain("/api/auth/social/qq/start");
         expect(url).toContain("next=%2Fcanvas%2Ftest%3Fa%3D1%26b%3D2%23hash");
         expect(url).toContain("acceptedTerms=true");
-        expect(url).toContain("mock=true");
 
         // Test provider ID with slashes
         const strangeProvider = "custom/provider";

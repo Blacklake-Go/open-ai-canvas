@@ -17,7 +17,6 @@ import { invalidateAuthSessionCache, type LocalUser } from "@/services/api/auth"
 import { changeProfileEmail, changeProfilePassword, profileLinuxDOReauthURL, requestProfileEmailCode, selectDefaultProfileAvatar, uploadProfileAvatar, type UserProfile } from "@/services/api/profile";
 import { ApiError } from "@/services/api/request";
 import { useUserStore } from "@/stores/use-user-store";
-import { openUserProfileModal } from "@/stores/use-user-profile-modal-store";
 import { SocialAccountBindings } from "@/supdance/plugins/social-auth";
 import { profileAvatarError, profilePasswordError, profileReauthReady, profileSecondsRemaining } from "./profile-validation";
 
@@ -285,9 +284,6 @@ export function ProfilePane() {
                     <p>管理你的头像、登录密码与邮箱。</p>
                 </div>
                 <div className="flex items-center gap-2">
-                    <Button icon={<Sparkles className="size-4" />} onClick={() => openUserProfileModal("profile")}>
-                        打开独立浮窗
-                    </Button>
                     <Button icon={<RefreshCw className="size-4" />} loading={profileQuery.isFetching} disabled={!!pending} onClick={() => void profileQuery.refetch()}>
                         刷新资料
                     </Button>
@@ -324,6 +320,24 @@ export function ProfilePane() {
                             <Button type="primary" icon={<ImagePlus className="size-4" />} disabled={!!pending} onClick={openAvatarDialog}>
                                 更换头像
                             </Button>
+                        </div>
+                        <div className="mt-4 grid grid-cols-1 gap-2.5 sm:grid-cols-2 lg:grid-cols-4">
+                            <div className="rounded-xl border border-white/5 bg-white/[0.02] p-3">
+                                <span className="mb-1 block text-[var(--fs-label)] text-foreground/45">创作者 ID</span>
+                                <div className="truncate font-mono text-xs font-semibold text-white">@{profile.user.username}</div>
+                            </div>
+                            <div className="rounded-xl border border-white/5 bg-white/[0.02] p-3">
+                                <span className="mb-1 block text-[var(--fs-label)] text-foreground/45">显示昵称</span>
+                                <div className="truncate text-xs font-semibold text-white">{profile.user.displayName || profile.user.username}</div>
+                            </div>
+                            <div className="rounded-xl border border-white/5 bg-white/[0.02] p-3">
+                                <span className="mb-1 block text-[var(--fs-label)] text-foreground/45">账号角色</span>
+                                <div className="text-xs font-semibold text-[#00f5d4]">{profile.user.role === "admin" ? "平台管理员" : "创作者"}</div>
+                            </div>
+                            <div className="rounded-xl border border-white/5 bg-white/[0.02] p-3" title={profile.user.id}>
+                                <span className="mb-1 block text-[var(--fs-label)] text-foreground/45">系统 UID</span>
+                                <div className="truncate font-mono text-[var(--fs-label)] text-foreground/70">{profile.user.id}</div>
+                            </div>
                         </div>
                     </section>
 

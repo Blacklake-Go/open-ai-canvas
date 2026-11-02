@@ -2,7 +2,7 @@
 
 本文件记录 SupDance Canvas 相对上游 `ddcat-ai/open-ai-canvas` 的每一项定制改造、耦合边界及升级处理方式。
 
-## 统一社交登录插件：`supdance-social-auth` v1.3.4
+## 统一社交登录插件：`supdance-social-auth` v1.4.0
 
 补丁 ID：`supdance-social-auth`
 
