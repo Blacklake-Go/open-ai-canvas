@@ -40,6 +40,7 @@ import {
     UsersRound,
     BookMarked,
     Shapes,
+    Sparkles,
 } from "lucide-react";
 import { Suspense, useEffect, useState, type ReactNode } from "react";
 import { Link, NavLink, Outlet, useLocation } from "react-router";
@@ -58,6 +59,7 @@ import { AdminDensityProvider, useAdminDensity } from "./admin-density";
 import "@/styles/admin-ui.css";
 import "../theme/admin-tokens.css";
 import "../theme/admin-chrome.css";
+import { useVisualEngineStore } from "@/supdance/plugins/visual-engine";
 
 type AdminNavigationItem = {
     path: string;
@@ -123,6 +125,23 @@ const adminNavigation: Array<{ label: string; items: AdminNavigationItem[] }> = 
         ],
     },
 ];
+
+export function getAdminNavigation(visualEngineEnabled = true): Array<{ label: string; items: AdminNavigationItem[] }> {
+    return adminNavigation.map((group) => {
+        if (group.label !== "平台配置" || !visualEngineEnabled) return group;
+        const hasVisualEngine = group.items.some((item) => item.path === "/admin/plugins/visual-engine");
+        if (hasVisualEngine) return group;
+        const nextItems = [...group.items];
+        nextItems.splice(1, 0, {
+            path: "/admin/plugins/visual-engine",
+            label: "视觉引擎",
+            shortLabel: "视觉",
+            description: "全站主题、UI、交互动效与控制台",
+            icon: <Sparkles className="size-4 text-sky-400" />,
+        });
+        return { ...group, items: nextItems };
+    });
+}
 
 function isAdminNavigationPath(pathname: string, navigationPath: string) {
     if (navigationPath === "/admin") {
@@ -225,7 +244,9 @@ function AdminShellLayout() {
 
 export function AdminPageFrame({ title, description, actions, back, scroll = false, children }: { title: string; description?: string; actions?: ReactNode; back?: { label: string; onClick: () => void }; scroll?: boolean; children: ReactNode }) {
     const location = useLocation();
-    const currentSection = adminNavigation.find((section) => section.items.some((item) => isAdminNavigationPath(location.pathname, item.path)));
+    const visualEngineEnabled = useVisualEngineStore((state) => state.enabled);
+    const nav = getAdminNavigation(visualEngineEnabled);
+    const currentSection = nav.find((section) => section.items.some((item) => isAdminNavigationPath(location.pathname, item.path)));
     const currentItem = currentSection?.items.find((item) => isAdminNavigationPath(location.pathname, item.path));
     const sectionLabel = back ? (currentItem?.label ?? currentSection?.label ?? "管理后台") : (currentSection?.label ?? "管理后台");
     const sectionPath = back ? (currentItem?.path ?? currentSection?.items[0]?.path ?? "/admin") : (currentSection?.items[0]?.path ?? "/admin");
@@ -296,7 +317,9 @@ function AdminThemeButton() {
 function MobileAdminNavigation() {
     const features = useUserStore((state) => state.features);
     const location = useLocation();
-    const visibleGroups = adminNavigation.map((group) => ({ ...group, items: group.items.filter((item) => !item.requireFeature || features[item.requireFeature]) })).filter((group) => group.items.length > 0);
+    const visualEngineEnabled = useVisualEngineStore((state) => state.enabled);
+    const nav = getAdminNavigation(visualEngineEnabled);
+    const visibleGroups = nav.map((group) => ({ ...group, items: group.items.filter((item) => !item.requireFeature || features[item.requireFeature]) })).filter((group) => group.items.length > 0);
     const visibleItems = visibleGroups.flatMap((group) => group.items);
     const currentItem = visibleItems.find((item) => item.path === location.pathname) || visibleItems[0];
     const menuItems: MenuProps["items"] = visibleGroups.map((group) => ({
@@ -340,10 +363,12 @@ function MobileAdminNavigation() {
 
 function AdminNavigation({ collapsed }: { collapsed: boolean }) {
     const features = useUserStore((state) => state.features);
+    const visualEngineEnabled = useVisualEngineStore((state) => state.enabled);
+    const nav = getAdminNavigation(visualEngineEnabled);
 
     return (
         <nav className="admin-sidebar-nav thin-scrollbar flex-1 overflow-y-auto" aria-label="管理后台菜单">
-            {adminNavigation.map((group) => {
+            {nav.map((group) => {
                 const visibleItems = group.items.filter((item) => !item.requireFeature || features[item.requireFeature]);
                 if (visibleItems.length === 0) return null;
 

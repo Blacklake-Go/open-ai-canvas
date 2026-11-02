@@ -3,8 +3,9 @@ import { Switch } from "@/pages/admin/ui/controls";
 import { AlipayCircleFilled, WechatFilled } from "@ant-design/icons";
 import { ZHIFUFM_LOGO_SRC } from "@/components/payment-brand-icons";
 import type { ColumnsType } from "antd/es/table";
-import { CloudUpload, PlugZap, RefreshCw, Search, Trash2, UsersRound } from "lucide-react";
+import { CloudUpload, PlugZap, RefreshCw, Search, Sparkles, Trash2, UsersRound } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
+import { Link } from "react-router";
 
 import { PaginationBar } from "@/pages/admin/components/admin-ui";
 import "@/lib/plugins/builtin";
@@ -214,11 +215,21 @@ export default function AdminPluginsPage() {
             },
         },
         {
-            title: "卸载",
+            title: "控制台 / 操作",
             key: "actions",
-            width: 72,
+            width: 140,
             align: "center",
             render: (_, item) =>
+                item.manifest.id === "supdance-visual-engine" ? (
+                    <Link
+                        to="/admin/plugins/visual-engine"
+                        className="inline-flex items-center gap-1 rounded px-2.5 py-1 text-xs font-semibold text-sky-400 bg-sky-500/10 hover:bg-sky-500/20 transition-all"
+                        title="进入 Visual Console 控制台"
+                    >
+                        <Sparkles className="size-3.5" />
+                        控制台
+                    </Link>
+                ) :
                 item.management.origin === "uploaded" ? (
                     <Button danger type="text" size="small" aria-label={`卸载 ${item.manifest.name}`} icon={<Trash2 className="size-3.5" aria-hidden="true" />} onClick={() => remove(item)} />
                 ) : (
@@ -338,6 +349,13 @@ function OverviewItem({ label, value, tone = "default" }: { label: string; value
 }
 
 function PluginBrandIcon({ pluginId }: { pluginId: string }) {
+    if (pluginId === "supdance-visual-engine") {
+        return (
+            <span className="grid size-9 shrink-0 place-items-center rounded-lg bg-sky-500/15 text-sky-400">
+                <Sparkles className="size-4" aria-hidden />
+            </span>
+        );
+    }
     if (pluginId === "official-payment-wechat-native") {
         return (
             <span className="grid size-9 shrink-0 place-items-center rounded-lg bg-[#07c160]/10 text-[#07c160]">

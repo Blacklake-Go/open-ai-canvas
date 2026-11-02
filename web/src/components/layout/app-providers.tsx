@@ -15,6 +15,7 @@ import { useActiveTheme } from "@/stores/canvas/use-canvas-theme-store";
 import { applyAppearanceMetadata, useAppearanceStore } from "@/stores/use-appearance-store";
 import { useUserStore } from "@/stores/use-user-store";
 import { refreshPublicAppearance } from "@/services/appearance-bootstrap";
+import { VisualEngineRuntimeHost } from "@/supdance/plugins/visual-engine";
 
 const ClientRootInit = lazy(() => import("@/components/layout/client-root-init").then((module) => ({ default: module.ClientRootInit })));
 
@@ -66,9 +67,12 @@ export function AppProviders({ children }: { children: ReactNode }) {
                     {isolateDevRepro ? (
                         children
                     ) : (
-                        <AuthSessionHydrator>
-                            <ClientRootBoundary>{children}</ClientRootBoundary>
-                        </AuthSessionHydrator>
+                        <>
+                            <VisualEngineRuntimeHost />
+                            <AuthSessionHydrator>
+                                <ClientRootBoundary>{children}</ClientRootBoundary>
+                            </AuthSessionHydrator>
+                        </>
                     )}
                 </QueryClientProvider>
             </AppFeedbackProvider>

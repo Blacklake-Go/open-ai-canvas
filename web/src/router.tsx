@@ -22,6 +22,7 @@ const AgentLessonsPage = lazy(() => import("@/pages/admin/admin-route-pages").th
 const ChannelsPage = lazy(() => import("@/pages/admin/channels/channels-page"));
 const LogicalModelsPage = lazy(() => import("@/pages/admin/logical-models/logical-models-page"));
 const AdminPluginsPage = lazy(() => import("@/pages/admin/plugins/plugins-page"));
+const VisualConsole = lazy(() => import("@/supdance/plugins/visual-engine/admin/VisualConsole"));
 const SkillCurationPage = lazy(() => import("@/pages/admin/skill-curation-page"));
 const AdminPaymentsPage = lazy(() => import("@/pages/admin/payments/payments-page"));
 const LogsPage = lazy(() => import("@/pages/admin/logs/logs-page"));
@@ -236,6 +237,8 @@ export const router = createBrowserRouter([
                         ),
                     },
                     { path: "plugins", element: <AdminPluginsPage /> },
+                    { path: "plugins/visual-engine", element: <VisualConsole /> },
+                    { path: "visual-engine", element: <Navigate to="/admin/plugins/visual-engine" replace /> },
                     { path: "workbench-tools", element: <WorkbenchToolsPage /> },
                     { path: "skill-curation", element: <SkillCurationPage /> },
                     { path: "payments", element: <AdminPaymentsPage /> },
