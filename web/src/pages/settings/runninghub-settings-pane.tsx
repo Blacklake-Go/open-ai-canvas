@@ -156,7 +156,13 @@ export function RunningHubSettingsPane() {
         setDraftId("");
         setWorkflowText("");
         setTitle("");
-        message.success(t("settings.runninghub_delete_success", { kind: workflowKind(workflow) === "app" ? " App" : " Workflow", name: workflow.title || workflow.workflowId }, `已删除${workflowKind(workflow) === "app" ? " App" : " Workflow"}：${workflow.title || workflow.workflowId}`));
+        message.success(
+            t(
+                "settings.runninghub_delete_success",
+                { kind: workflowKind(workflow) === "app" ? " App" : " Workflow", name: workflow.title || workflow.workflowId },
+                `已删除${workflowKind(workflow) === "app" ? " App" : " Workflow"}：${workflow.title || workflow.workflowId}`,
+            ),
+        );
     };
 
     const updateCapability = (value: RunningHubCapability) => {
@@ -238,10 +244,18 @@ export function RunningHubSettingsPane() {
                         <Input placeholder={t("settings.runninghub_base_url_placeholder", undefined, "选择官方站点或填写兼容网关地址")} />
                     </AutoComplete>
                 </Form.Item>
-                <Form.Item label={t("settings.runninghub_apikey_label", undefined, "积分 API Key（工作流提交）")} className="mb-0 lg:col-span-6" extra={t("settings.runninghub_apikey_extra", undefined, "用于拉取工作流参数、创建任务和查询结果；最终提交固定使用这把 Key。若提示企业版余额不足，请检查这里没有填企业级上传 Key。")}>
+                <Form.Item
+                    label={t("settings.runninghub_apikey_label", undefined, "积分 API Key（工作流提交）")}
+                    className="mb-0 lg:col-span-6"
+                    extra={t("settings.runninghub_apikey_extra", undefined, "用于拉取工作流参数、创建任务和查询结果；最终提交固定使用这把 Key。若提示企业版余额不足，请检查这里没有填企业级上传 Key。")}
+                >
                     <Input.Password autoComplete="new-password" value={runningHub.apiKey} onChange={(event) => update({ apiKey: event.target.value })} />
                 </Form.Item>
-                <Form.Item label={t("settings.runninghub_asset_apikey_label", undefined, "素材上传 API Key（企业级）")} className="mb-0 lg:col-span-6" extra={t("settings.runninghub_asset_apikey_extra", undefined, "仅用于上传参考图片、视频、音频和蒙版；没有参考素材时可以留空。")}>
+                <Form.Item
+                    label={t("settings.runninghub_asset_apikey_label", undefined, "素材上传 API Key（企业级）")}
+                    className="mb-0 lg:col-span-6"
+                    extra={t("settings.runninghub_asset_apikey_extra", undefined, "仅用于上传参考图片、视频、音频和蒙版；没有参考素材时可以留空。")}
+                >
                     <Input.Password autoComplete="new-password" value={runningHub.uploadApiKey || ""} onChange={(event) => update({ uploadApiKey: event.target.value })} />
                 </Form.Item>
                 <Form.Item label={t("settings.runninghub_workflow_purpose", undefined, "工作流用途")} className="mb-0 lg:col-span-6">
@@ -309,7 +323,13 @@ export function RunningHubSettingsPane() {
                 {workspaceMode === "fields" && kind === "workflow" ? (
                     <>
                         <div className="lg:col-span-12">
-                            <WorkflowGraphEditor workflowJson={selected?.workflowJson} fields={selected?.fields || []} disabled={!selected || !draftMatchesSelected} onChange={updateWorkflowFields} emptyDescription={t("settings.runninghub_select_workflow_to_edit", undefined, "请先拉取 RunningHub Workflow")} />
+                            <WorkflowGraphEditor
+                                workflowJson={selected?.workflowJson}
+                                fields={selected?.fields || []}
+                                disabled={!selected || !draftMatchesSelected}
+                                onChange={updateWorkflowFields}
+                                emptyDescription={t("settings.runninghub_select_workflow_to_edit", undefined, "请先拉取 RunningHub Workflow")}
+                            />
                         </div>
                         <details className="workflow-json-details lg:col-span-12">
                             <summary>{t("settings.runninghub_view_comfyui_json", undefined, "查看或编辑 ComfyUI API JSON")}</summary>
@@ -327,7 +347,11 @@ export function RunningHubSettingsPane() {
                     </>
                 ) : null}
                 {workspaceMode === "fields" && kind === "app" ? (
-                    <Form.Item label={t("settings.runninghub_app_params_label", undefined, "App 公开参数映射")} className="mb-0 lg:col-span-12" extra={t("settings.runninghub_app_params_extra", undefined, "AI 应用不返回完整 ComfyUI 拓扑，只能编辑当前发布版本的公开参数；应用更新后请再次点击“拉取参数”。")}>
+                    <Form.Item
+                        label={t("settings.runninghub_app_params_label", undefined, "App 公开参数映射")}
+                        className="mb-0 lg:col-span-12"
+                        extra={t("settings.runninghub_app_params_extra", undefined, "AI 应用不返回完整 ComfyUI 拓扑，只能编辑当前发布版本的公开参数；应用更新后请再次点击“拉取参数”。")}
+                    >
                         <WorkflowFieldMappingEditor fields={selected?.fields || []} disabled={!selected || !draftMatchesSelected} onChange={updateWorkflowFields} />
                     </Form.Item>
                 ) : null}
@@ -342,7 +366,13 @@ export function RunningHubSettingsPane() {
                             capability={selected ? workflowCapability(selected, capability) : capability}
                             fields={selected?.fields || []}
                             disabled={!selected || !draftMatchesSelected || !runningHub.baseUrl.trim() || !runningHub.apiKey.trim()}
-                            disabledReason={!selected || !draftMatchesSelected ? t("settings.runninghub_select_or_fetch_prompt", undefined, "请先拉取或选择一个已保存的 RunningHub 条目") : !runningHub.baseUrl.trim() ? t("settings.runninghub_fill_baseurl_prompt", undefined, "请先填写 RunningHub 站点 Base URL") : t("settings.runninghub_fill_apikey_prompt", undefined, "请先填写积分 API Key")}
+                            disabledReason={
+                                !selected || !draftMatchesSelected
+                                    ? t("settings.runninghub_select_or_fetch_prompt", undefined, "请先拉取或选择一个已保存的 RunningHub 条目")
+                                    : !runningHub.baseUrl.trim()
+                                      ? t("settings.runninghub_fill_baseurl_prompt", undefined, "请先填写 RunningHub 站点 Base URL")
+                                      : t("settings.runninghub_fill_apikey_prompt", undefined, "请先填写积分 API Key")
+                            }
                         />
                     </div>
                 ) : null}

@@ -62,7 +62,7 @@ export function TopbarLanguageSwitcher({ surface = "workspace", className }: { s
                     className={cn(
                         "app-workspace-topbar-icon-button inline-flex min-h-[32px] items-center justify-center gap-1.5 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1 active:scale-95",
                         (showBadge || showName) && "!w-auto px-2.5",
-                        className
+                        className,
                     )}
                 >
                     <Languages className="size-4 shrink-0" aria-hidden="true" />

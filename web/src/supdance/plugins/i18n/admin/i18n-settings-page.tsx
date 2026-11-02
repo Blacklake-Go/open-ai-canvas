@@ -258,33 +258,17 @@ export function SupDanceI18nSettingsPage() {
                     icon={<Languages className="size-4" aria-hidden="true" />}
                     title="1. 站点多语言引擎总控"
                     description="一键启用或停用全站多语言实时切换能力。关闭后，站点各入口语言切换图标将自动卸载，页面文本无损恢复原始中文。"
-                    status={
-                        <AdminStatusBadge
-                            label={pluginEnabled ? "运行中" : "已停用"}
-                            tone={pluginEnabled ? "success" : "neutral"}
-                        />
-                    }
+                    status={<AdminStatusBadge label={pluginEnabled ? "运行中" : "已停用"} tone={pluginEnabled ? "success" : "neutral"} />}
                     layout="split"
                 >
                     <div className="flex flex-col gap-3 p-4 sm:flex-row sm:items-center sm:justify-between">
                         <div>
-                            <div className="text-sm font-medium text-[var(--admin-text-primary)]">
-                                站点多语言实时转译引擎 (supdance-i18n)
-                            </div>
-                            <p className="mt-0.5 text-xs text-[var(--admin-text-muted)]">
-                                状态与系统插件中心实时双向同步。关闭后全站恢复默认语言，词条数据完整保留。
-                            </p>
+                            <div className="text-sm font-medium text-[var(--admin-text-primary)]">站点多语言实时转译引擎 (supdance-i18n)</div>
+                            <p className="mt-0.5 text-xs text-[var(--admin-text-muted)]">状态与系统插件中心实时双向同步。关闭后全站恢复默认语言，词条数据完整保留。</p>
                         </div>
                         <div className="flex items-center gap-2 shrink-0">
-                            <span className="text-xs text-[var(--admin-text-secondary)]">
-                                {pluginEnabled ? "已启用" : "已停用"}
-                            </span>
-                            <Switch
-                                checked={pluginEnabled}
-                                loading={togglingPlugin}
-                                onChange={(checked) => void handleTogglePluginMaster(checked)}
-                                aria-label="启用或停用站点多语言插件"
-                            />
+                            <span className="text-xs text-[var(--admin-text-secondary)]">{pluginEnabled ? "已启用" : "已停用"}</span>
+                            <Switch checked={pluginEnabled} loading={togglingPlugin} onChange={(checked) => void handleTogglePluginMaster(checked)} aria-label="启用或停用站点多语言插件" />
                         </div>
                     </div>
                 </SettingsSectionCard>
@@ -294,12 +278,7 @@ export function SupDanceI18nSettingsPage() {
                     icon={<Globe2 className="size-4" aria-hidden="true" />}
                     title="2. 全局语言策略与切换器展示设置"
                     description="配置访客首次访问时的语言匹配规则、缺省回退语言以及全站各页面顶栏语言图标的展示形态与挂载入口。"
-                    status={
-                        <AdminStatusBadge
-                            label={`默认: ${draftSettings.defaultLocale}`}
-                            tone="info"
-                        />
-                    }
+                    status={<AdminStatusBadge label={`默认: ${draftSettings.defaultLocale}`} tone="info" />}
                     layout="stacked"
                 >
                     <div className="p-4 space-y-4">
@@ -417,12 +396,7 @@ export function SupDanceI18nSettingsPage() {
                     icon={<BookOpenText className="size-4" aria-hidden="true" />}
                     title="3. 六大支持语种管理与翻译覆盖率"
                     description="支持对简体中文、英语、繁体中文、日文、韩国语、西班牙语进行独立启用/停用、下拉顺序调整及缺失词条补全。"
-                    status={
-                        <AdminStatusBadge
-                            label={`${enabledLanguageCount} / ${sortedLanguages.length} 已开放`}
-                            tone={enabledLanguageCount > 0 ? "success" : "neutral"}
-                        />
-                    }
+                    status={<AdminStatusBadge label={`${enabledLanguageCount} / ${sortedLanguages.length} 已开放`} tone={enabledLanguageCount > 0 ? "success" : "neutral"} />}
                     layout="stacked"
                 >
                     <div className="overflow-x-auto">
@@ -466,7 +440,9 @@ export function SupDanceI18nSettingsPage() {
                                             </td>
                                             <td>
                                                 <div className="flex items-center gap-2.5">
-                                                    <span className="inline-flex h-6 min-w-[28px] items-center justify-center rounded bg-[var(--admin-layer-2)] border border-[var(--admin-border)] px-1.5 text-xs font-semibold text-[var(--admin-text-primary)]">{lang.badge}</span>
+                                                    <span className="inline-flex h-6 min-w-[28px] items-center justify-center rounded bg-[var(--admin-layer-2)] border border-[var(--admin-border)] px-1.5 text-xs font-semibold text-[var(--admin-text-primary)]">
+                                                        {lang.badge}
+                                                    </span>
                                                     <div>
                                                         <div className="font-medium text-[var(--admin-text-primary)]">{lang.nativeName}</div>
                                                         <div className="text-xs text-[var(--admin-text-muted)]">{lang.name}</div>
@@ -480,11 +456,7 @@ export function SupDanceI18nSettingsPage() {
                                                         <span className="font-medium text-[var(--admin-text-primary)]">
                                                             {translated} / {total} ({coverage}%)
                                                         </span>
-                                                        {missing > 0 ? (
-                                                            <AdminStatusBadge label={`待译 ${missing} 条`} tone="warning" />
-                                                        ) : (
-                                                            <AdminStatusBadge label="已完整" tone="success" />
-                                                        )}
+                                                        {missing > 0 ? <AdminStatusBadge label={`待译 ${missing} 条`} tone="warning" /> : <AdminStatusBadge label="已完整" tone="success" />}
                                                     </div>
                                                     <div className="h-1.5 w-full overflow-hidden rounded-full bg-[var(--admin-layer-2)]">
                                                         <div className="h-full rounded-full bg-[var(--admin-primary)] transition-all" style={{ width: `${Math.min(100, Math.max(0, coverage))}%` }} />

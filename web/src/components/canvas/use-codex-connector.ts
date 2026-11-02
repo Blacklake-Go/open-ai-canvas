@@ -90,106 +90,121 @@ export function useCodexConnector({ setMessages, canvasId, nodeCount }: Options)
         if (mountedRef.current) setBusy(value);
     }, []);
 
-    const appendMessage = useCallback((message: CloudAgentChatMessage) => {
-        setMessages((current) => (current.some((item) => item.id === message.id) ? current.map((item) => (item.id === message.id ? message : item)) : [...current, message]));
-    }, [setMessages]);
+    const appendMessage = useCallback(
+        (message: CloudAgentChatMessage) => {
+            setMessages((current) => (current.some((item) => item.id === message.id) ? current.map((item) => (item.id === message.id ? message : item)) : [...current, message]));
+        },
+        [setMessages],
+    );
 
-    const appendSystem = useCallback((text: string, id = `codex-system-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`) => {
-        appendMessage({ id, role: "system", text });
-    }, [appendMessage]);
+    const appendSystem = useCallback(
+        (text: string, id = `codex-system-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`) => {
+            appendMessage({ id, role: "system", text });
+        },
+        [appendMessage],
+    );
 
-    const appendError = useCallback((id: string, cause: unknown, title = "Codex 请求失败") => {
-        appendMessage({ id, role: "error", text: `${title}：${errorText(cause)}` });
-    }, [appendMessage]);
+    const appendError = useCallback(
+        (id: string, cause: unknown, title = "Codex 请求失败") => {
+            appendMessage({ id, role: "error", text: `${title}：${errorText(cause)}` });
+        },
+        [appendMessage],
+    );
 
-    const handleAgentEvent = useCallback((payload: CodexAgentEvent) => {
-        const item = payload.item;
-        if (payload.type === "item.updated" && item?.id) {
-            const id = `codex-item-${item.id}`;
-            const delta = String(item.delta || "");
-            if (!delta) return;
-            setMessages((current) => {
-                const index = current.findIndex((message) => message.id === id);
-                if (item.type === "agent_message") {
-                    if (index === -1) return [...current, { id, role: "assistant", text: delta, streaming: true }];
-                    const next = [...current];
-                    next[index] = { ...next[index], text: `${next[index].text}${delta}`, streaming: true };
-                    return next;
-                }
-                if (item.type === "reasoning") {
-                    if (index === -1) return [...current, { id, role: "assistant", text: delta, reasoning: true, streaming: true }];
-                    const next = [...current];
-                    next[index] = { ...next[index], text: `${next[index].text}${delta}`, streaming: true };
-                    return next;
-                }
-                return current;
-            });
-            return;
-        }
-        if (payload.type === "item.completed" && item) {
-            if (item.type === "agent_message" && item.id) {
+    const handleAgentEvent = useCallback(
+        (payload: CodexAgentEvent) => {
+            const item = payload.item;
+            if (payload.type === "item.updated" && item?.id) {
                 const id = `codex-item-${item.id}`;
-                const text = String(item.text || "");
+                const delta = String(item.delta || "");
+                if (!delta) return;
                 setMessages((current) => {
                     const index = current.findIndex((message) => message.id === id);
-                    if (index === -1) return text ? [...current, { id, role: "assistant", text, final: true }] : current;
-                    const next = [...current];
-                    next[index] = { ...next[index], text: text || next[index].text, streaming: false, final: true };
-                    return next;
+                    if (item.type === "agent_message") {
+                        if (index === -1) return [...current, { id, role: "assistant", text: delta, streaming: true }];
+                        const next = [...current];
+                        next[index] = { ...next[index], text: `${next[index].text}${delta}`, streaming: true };
+                        return next;
+                    }
+                    if (item.type === "reasoning") {
+                        if (index === -1) return [...current, { id, role: "assistant", text: delta, reasoning: true, streaming: true }];
+                        const next = [...current];
+                        next[index] = { ...next[index], text: `${next[index].text}${delta}`, streaming: true };
+                        return next;
+                    }
+                    return current;
                 });
+                return;
             }
-            if (item.type === "error") {
-                appendError(`codex-item-error-${item.id || Date.now()}`, String(item.text || item.error?.message || "Codex 返回了错误"), "Codex 运行失败");
+            if (payload.type === "item.completed" && item) {
+                if (item.type === "agent_message" && item.id) {
+                    const id = `codex-item-${item.id}`;
+                    const text = String(item.text || "");
+                    setMessages((current) => {
+                        const index = current.findIndex((message) => message.id === id);
+                        if (index === -1) return text ? [...current, { id, role: "assistant", text, final: true }] : current;
+                        const next = [...current];
+                        next[index] = { ...next[index], text: text || next[index].text, streaming: false, final: true };
+                        return next;
+                    });
+                }
+                if (item.type === "error") {
+                    appendError(`codex-item-error-${item.id || Date.now()}`, String(item.text || item.error?.message || "Codex 返回了错误"), "Codex 运行失败");
+                    setBusyState(false);
+                }
+                return;
+            }
+            if (payload.type === "turn.completed") {
                 setBusyState(false);
+                if (payload.status === "failed") {
+                    const message = typeof payload.error === "string" ? payload.error : payload.error?.message;
+                    if (message) appendError(`codex-turn-error-${payload.turn_id || Date.now()}`, message, "Codex 运行失败");
+                }
             }
-            return;
-        }
-        if (payload.type === "turn.completed") {
-            setBusyState(false);
-            if (payload.status === "failed") {
-                const message = typeof payload.error === "string" ? payload.error : payload.error?.message;
-                if (message) appendError(`codex-turn-error-${payload.turn_id || Date.now()}`, message, "Codex 运行失败");
-            }
-        }
-    }, [appendError, setBusyState, setMessages]);
+        },
+        [appendError, setBusyState, setMessages],
+    );
 
-    const handleEvent = useCallback((type: string, payload: Record<string, unknown>) => {
-        if (type === "hello") {
-            const codex = payload.codex as { busy?: boolean } | undefined;
-            setBusyState(Boolean(codex?.busy));
-            helloRef.current?.resolve();
-            helloRef.current = null;
-            return;
-        }
-        if (type === "codex_state") {
-            setBusyState(Boolean(payload.busy));
-            return;
-        }
-        if (type === "conversation_changed") {
-            const state = payload as CodexConversationState;
-            setConversationStatus(state.status || "");
-            if (state.status === "failed") appendError(`codex-conversation-${state.conversationId || Date.now()}`, state.error || "Codex 对话初始化失败", "Codex 连接失败");
-            return;
-        }
-        if (type === "agent_event") {
-            handleAgentEvent(payload as CodexAgentEvent);
-            return;
-        }
-        if (type === "agent_done") {
-            setBusyState(false);
-            return;
-        }
-        if (type === "agent_error") {
-            appendError(`codex-agent-error-${Date.now()}`, String(payload.message || "Codex 进程异常"), "Codex 运行失败");
-            setBusyState(false);
-            return;
-        }
-        if (type === "codex_approval") {
-            const requestId = String(payload.requestId || "");
-            const connection = connectionRef.current;
-            if (requestId && connection) void resolveCodexApproval(connection.endpoint, connection.token, requestId, "acceptForSession").catch(() => undefined);
-        }
-    }, [appendError, handleAgentEvent, setBusyState]);
+    const handleEvent = useCallback(
+        (type: string, payload: Record<string, unknown>) => {
+            if (type === "hello") {
+                const codex = payload.codex as { busy?: boolean } | undefined;
+                setBusyState(Boolean(codex?.busy));
+                helloRef.current?.resolve();
+                helloRef.current = null;
+                return;
+            }
+            if (type === "codex_state") {
+                setBusyState(Boolean(payload.busy));
+                return;
+            }
+            if (type === "conversation_changed") {
+                const state = payload as CodexConversationState;
+                setConversationStatus(state.status || "");
+                if (state.status === "failed") appendError(`codex-conversation-${state.conversationId || Date.now()}`, state.error || "Codex 对话初始化失败", "Codex 连接失败");
+                return;
+            }
+            if (type === "agent_event") {
+                handleAgentEvent(payload as CodexAgentEvent);
+                return;
+            }
+            if (type === "agent_done") {
+                setBusyState(false);
+                return;
+            }
+            if (type === "agent_error") {
+                appendError(`codex-agent-error-${Date.now()}`, String(payload.message || "Codex 进程异常"), "Codex 运行失败");
+                setBusyState(false);
+                return;
+            }
+            if (type === "codex_approval") {
+                const requestId = String(payload.requestId || "");
+                const connection = connectionRef.current;
+                if (requestId && connection) void resolveCodexApproval(connection.endpoint, connection.token, requestId, "acceptForSession").catch(() => undefined);
+            }
+        },
+        [appendError, handleAgentEvent, setBusyState],
+    );
 
     const closeStream = useCallback(() => {
         const connection = connectionRef.current;
@@ -199,39 +214,42 @@ export function useCodexConnector({ setMessages, canvasId, nodeCount }: Options)
         }
     }, []);
 
-    const openStream = useCallback(async (endpoint: string, token: string, nextThreadId = "") => {
-        closeStream();
-        const clientId = clientIdRef.current;
-        const { ticket } = await createCodexEventsTicket(endpoint, token, clientId);
-        if (!ticket) throw new Error("本地 Agent 没有返回事件流 ticket");
-        const connection: Connection = { endpoint, token, clientId, threadId: nextThreadId || connectionRef.current?.threadId || "", source: null };
-        connectionRef.current = connection;
-        const ready = new Promise<void>((resolve, reject) => {
-            helloRef.current = { resolve, reject };
-            window.setTimeout(() => {
+    const openStream = useCallback(
+        async (endpoint: string, token: string, nextThreadId = "") => {
+            closeStream();
+            const clientId = clientIdRef.current;
+            const { ticket } = await createCodexEventsTicket(endpoint, token, clientId);
+            if (!ticket) throw new Error("本地 Agent 没有返回事件流 ticket");
+            const connection: Connection = { endpoint, token, clientId, threadId: nextThreadId || connectionRef.current?.threadId || "", source: null };
+            connectionRef.current = connection;
+            const ready = new Promise<void>((resolve, reject) => {
+                helloRef.current = { resolve, reject };
+                window.setTimeout(() => {
+                    if (helloRef.current) {
+                        helloRef.current = null;
+                        reject(new Error("本地 Codex 事件流连接超时"));
+                    }
+                }, 6000);
+            });
+            const source = openCodexEventStream(endpoint, ticket, clientId, (event) => handleEvent(event.type, event.payload));
+            connection.source = source;
+            source.onerror = () => {
+                if (connectionRef.current?.source !== source) return;
+                source.close();
+                connection.source = null;
                 if (helloRef.current) {
+                    helloRef.current.reject(new Error("无法连接本地 Codex 事件流"));
                     helloRef.current = null;
-                    reject(new Error("本地 Codex 事件流连接超时"));
+                    return;
                 }
-            }, 6000);
-        });
-        const source = openCodexEventStream(endpoint, ticket, clientId, (event) => handleEvent(event.type, event.payload));
-        connection.source = source;
-        source.onerror = () => {
-            if (connectionRef.current?.source !== source) return;
-            source.close();
-            connection.source = null;
-            if (helloRef.current) {
-                helloRef.current.reject(new Error("无法连接本地 Codex 事件流"));
-                helloRef.current = null;
-                return;
-            }
-            setStatus("error");
-            setError("Codex 事件流已断开");
-            setBusyState(false);
-        };
-        await ready;
-    }, [closeStream, handleEvent, setBusyState]);
+                setStatus("error");
+                setError("Codex 事件流已断开");
+                setBusyState(false);
+            };
+            await ready;
+        },
+        [closeStream, handleEvent, setBusyState],
+    );
 
     const waitForReady = useCallback(async (endpoint: string) => {
         for (let attempt = 0; attempt < 120; attempt += 1) {
@@ -247,46 +265,52 @@ export function useCodexConnector({ setMessages, canvasId, nodeCount }: Options)
         throw new Error("Codex 对话初始化超时，请重试");
     }, []);
 
-    const sendInternal = useCallback(async (text: string, options: { userVisible: boolean; messageId?: string }) => {
-        const connection = connectionRef.current;
-        if (!connection || !connection.threadId) throw new Error("Codex 尚未连接");
-        const messageId = options.messageId || createClientUUID();
-        if (options.userVisible) appendMessage({ id: `codex-user-${messageId}`, role: "user", text });
-        setBusyState(true);
-        try {
-            await sendCodexTurn(connection.endpoint, connection.token, {
-                threadId: connection.threadId,
-                clientId: connection.clientId,
-                prompt: text,
-                messageId,
-                messageText: options.userVisible ? text : "连接器唤醒 Codex",
-            });
-        } finally {
-            setBusyState(false);
-        }
-    }, [appendMessage, setBusyState]);
-
-    const startThread = useCallback(async (connection: Connection, greet: boolean) => {
-        setBusyState(true);
-        try {
-            appendSystem("正在创建 Codex 对话…");
-            const created = await createCodexThread(connection.endpoint, connection.token, connection.clientId);
-            const nextThreadId = String(created.thread?.id || "");
-            if (!nextThreadId) throw new Error(created.error || "Codex 没有返回对话 ID");
-            connection.threadId = nextThreadId;
-            setThreadId(nextThreadId);
-            saveCodexConnection({ endpoint: connection.endpoint, token: connection.token, clientId: connection.clientId, threadId: nextThreadId });
-            await waitForReady(connection.endpoint);
-            appendSystem(greet ? "Codex 已连接，第一个对话已开始" : "新的 Codex 对话已就绪");
-            setBusyState(false);
-            if (greet) {
-                const context = canvasId ? `当前画布有 ${nodeCount || 0} 个节点。` : "当前不在画布中。";
-                await sendInternal(`${WELCOME_PROMPT.replace("。", `。${context}`)}`, { userVisible: false });
+    const sendInternal = useCallback(
+        async (text: string, options: { userVisible: boolean; messageId?: string }) => {
+            const connection = connectionRef.current;
+            if (!connection || !connection.threadId) throw new Error("Codex 尚未连接");
+            const messageId = options.messageId || createClientUUID();
+            if (options.userVisible) appendMessage({ id: `codex-user-${messageId}`, role: "user", text });
+            setBusyState(true);
+            try {
+                await sendCodexTurn(connection.endpoint, connection.token, {
+                    threadId: connection.threadId,
+                    clientId: connection.clientId,
+                    prompt: text,
+                    messageId,
+                    messageText: options.userVisible ? text : "连接器唤醒 Codex",
+                });
+            } finally {
+                setBusyState(false);
             }
-        } finally {
-            setBusyState(false);
-        }
-    }, [appendSystem, canvasId, nodeCount, setBusyState, sendInternal, waitForReady]);
+        },
+        [appendMessage, setBusyState],
+    );
+
+    const startThread = useCallback(
+        async (connection: Connection, greet: boolean) => {
+            setBusyState(true);
+            try {
+                appendSystem("正在创建 Codex 对话…");
+                const created = await createCodexThread(connection.endpoint, connection.token, connection.clientId);
+                const nextThreadId = String(created.thread?.id || "");
+                if (!nextThreadId) throw new Error(created.error || "Codex 没有返回对话 ID");
+                connection.threadId = nextThreadId;
+                setThreadId(nextThreadId);
+                saveCodexConnection({ endpoint: connection.endpoint, token: connection.token, clientId: connection.clientId, threadId: nextThreadId });
+                await waitForReady(connection.endpoint);
+                appendSystem(greet ? "Codex 已连接，第一个对话已开始" : "新的 Codex 对话已就绪");
+                setBusyState(false);
+                if (greet) {
+                    const context = canvasId ? `当前画布有 ${nodeCount || 0} 个节点。` : "当前不在画布中。";
+                    await sendInternal(`${WELCOME_PROMPT.replace("。", `。${context}`)}`, { userVisible: false });
+                }
+            } finally {
+                setBusyState(false);
+            }
+        },
+        [appendSystem, canvasId, nodeCount, setBusyState, sendInternal, waitForReady],
+    );
 
     const connect = useCallback(async () => {
         if (connectingRef.current) return;
@@ -371,15 +395,18 @@ export function useCodexConnector({ setMessages, canvasId, nodeCount }: Options)
         }
     }, [appendError, startThread]);
 
-    const send = useCallback(async (text: string) => {
-        const value = text.trim();
-        if (!value || busyRef.current) return;
-        try {
-            await sendInternal(value, { userVisible: true });
-        } catch (cause) {
-            appendError(`codex-send-${Date.now()}`, cause, "消息没有送达");
-        }
-    }, [appendError, sendInternal]);
+    const send = useCallback(
+        async (text: string) => {
+            const value = text.trim();
+            if (!value || busyRef.current) return;
+            try {
+                await sendInternal(value, { userVisible: true });
+            } catch (cause) {
+                appendError(`codex-send-${Date.now()}`, cause, "消息没有送达");
+            }
+        },
+        [appendError, sendInternal],
+    );
 
     const stop = useCallback(async () => {
         const connection = connectionRef.current;

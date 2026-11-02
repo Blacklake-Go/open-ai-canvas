@@ -1,26 +1,6 @@
 import { useEffect, useRef, useState, type ChangeEvent } from "react";
 import { App, Button, Form, Input, Skeleton, Tooltip } from "antd";
-import {
-    Camera,
-    CheckCircle2,
-    Eye,
-    EyeOff,
-    Globe,
-    KeyRound,
-    Link2,
-    Lock,
-    Mail,
-    Moon,
-    Shield,
-    ShieldCheck,
-    SlidersHorizontal,
-    Sparkles,
-    Sun,
-    Upload,
-    User,
-    UserRound,
-    X,
-} from "lucide-react";
+import { Camera, CheckCircle2, Eye, EyeOff, Globe, KeyRound, Link2, Lock, Mail, Moon, Shield, ShieldCheck, SlidersHorizontal, Sparkles, Sun, Upload, User, UserRound, X } from "lucide-react";
 
 import { AppModal } from "@/components/ui/product/app-modal";
 import { Switch } from "@/components/ui/base/switch";
@@ -28,23 +8,11 @@ import { UserAvatar } from "@/components/layout/user-avatar";
 import { UserGroupBadge } from "@/components/layout/user-group-badge";
 import { DEFAULT_USER_AVATARS } from "@/lib/default-user-avatars";
 import { applyUserSession } from "@/lib/user-session";
-import {
-    changeProfileEmail,
-    changeProfilePassword,
-    getUserProfile,
-    requestProfileEmailCode,
-    selectDefaultProfileAvatar,
-    uploadProfileAvatar,
-    type UserProfile,
-} from "@/services/api/profile";
+import { changeProfileEmail, changeProfilePassword, getUserProfile, requestProfileEmailCode, selectDefaultProfileAvatar, uploadProfileAvatar, type UserProfile } from "@/services/api/profile";
 import { useAppearanceStore } from "@/stores/use-appearance-store";
 import { useThemeStore } from "@/stores/use-theme-store";
 import { useUserStore } from "@/stores/use-user-store";
-import {
-    useUserProfileModalStore,
-    type UserProfileModalTab,
-    USER_PROFILE_MODAL_EVENT,
-} from "@/stores/use-user-profile-modal-store";
+import { useUserProfileModalStore, type UserProfileModalTab, USER_PROFILE_MODAL_EVENT } from "@/stores/use-user-profile-modal-store";
 import { SocialAccountBindings } from "@/supdance/plugins/social-auth/components/social-account-bindings";
 import { useSupDanceI18nStore } from "@/supdance/plugins/i18n/store";
 
@@ -67,14 +35,7 @@ export function UserProfileModalHost() {
 
     if (!currentUser) return null;
 
-    return (
-        <UserProfileModal
-            open={isOpen}
-            activeTab={activeTab}
-            onTabChange={setTab}
-            onClose={closeModal}
-        />
-    );
+    return <UserProfileModal open={isOpen} activeTab={activeTab} onTabChange={setTab} onClose={closeModal} />;
 }
 
 interface UserProfileModalProps {
@@ -84,12 +45,7 @@ interface UserProfileModalProps {
     onClose: () => void;
 }
 
-export function UserProfileModal({
-    open,
-    activeTab,
-    onTabChange,
-    onClose,
-}: UserProfileModalProps) {
+export function UserProfileModal({ open, activeTab, onTabChange, onClose }: UserProfileModalProps) {
     const { message } = App.useApp();
     const currentUser = useUserStore((state) => state.user);
     const theme = useThemeStore((state) => state.theme);
@@ -328,15 +284,7 @@ export function UserProfileModal({
     ];
 
     return (
-        <AppModal
-            open={open}
-            flush
-            closable={false}
-            footer={null}
-            width={860}
-            centered
-            onCancel={onClose}
-        >
+        <AppModal open={open} flush closable={false} footer={null} width={860} centered onCancel={onClose}>
             <div
                 className="relative flex h-[620px] w-full overflow-hidden rounded-2xl border border-white/10 text-foreground shadow-2xl backdrop-blur-2xl"
                 style={{
@@ -367,23 +315,15 @@ export function UserProfileModal({
                                     type="button"
                                     onClick={() => onTabChange(tab.key)}
                                     className={`flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left transition-all ${
-                                        isActive
-                                            ? "border border-[#00f5d4]/30 bg-[#00f5d4]/10 text-[#00f5d4] shadow-sm"
-                                            : "border border-transparent text-foreground/60 hover:bg-white/[0.04] hover:text-white"
+                                        isActive ? "border border-[#00f5d4]/30 bg-[#00f5d4]/10 text-[#00f5d4] shadow-sm" : "border border-transparent text-foreground/60 hover:bg-white/[0.04] hover:text-white"
                                     }`}
                                 >
-                                    <span className={isActive ? "text-[#00f5d4]" : "text-foreground/40"}>
-                                        {tab.icon}
-                                    </span>
+                                    <span className={isActive ? "text-[#00f5d4]" : "text-foreground/40"}>{tab.icon}</span>
                                     <div className="min-w-0 flex-1">
                                         <div className="text-xs font-medium leading-none">{tab.label}</div>
-                                        <div className="mt-1 truncate text-[10px] text-foreground/40 leading-none">
-                                            {tab.sublabel}
-                                        </div>
+                                        <div className="mt-1 truncate text-[10px] text-foreground/40 leading-none">{tab.sublabel}</div>
                                     </div>
-                                    {isActive && (
-                                        <span className="size-1.5 rounded-full bg-[#00f5d4]" />
-                                    )}
+                                    {isActive && <span className="size-1.5 rounded-full bg-[#00f5d4]" />}
                                 </button>
                             );
                         })}
@@ -394,12 +334,8 @@ export function UserProfileModal({
                         <div className="flex items-center gap-2.5 px-2 py-1.5 rounded-xl bg-white/[0.02]">
                             {currentUser && <UserAvatar user={currentUser} className="size-8 shrink-0 rounded-full" />}
                             <div className="min-w-0 flex-1">
-                                <div className="truncate text-xs font-semibold text-white">
-                                    {currentUser?.displayName || currentUser?.username}
-                                </div>
-                                <div className="truncate text-[10px] text-foreground/40">
-                                    @{currentUser?.username}
-                                </div>
+                                <div className="truncate text-xs font-semibold text-white">{currentUser?.displayName || currentUser?.username}</div>
+                                <div className="truncate text-[10px] text-foreground/40">@{currentUser?.username}</div>
                             </div>
                         </div>
                     </div>
@@ -410,19 +346,10 @@ export function UserProfileModal({
                     {/* Header bar with title and close button */}
                     <header className="flex h-16 shrink-0 items-center justify-between border-b border-white/10 px-6">
                         <div>
-                            <h2 className="text-base font-semibold text-white">
-                                {tabs.find((t) => t.key === activeTab)?.label}
-                            </h2>
-                            <p className="text-xs text-foreground/50">
-                                {tabs.find((t) => t.key === activeTab)?.sublabel}
-                            </p>
+                            <h2 className="text-base font-semibold text-white">{tabs.find((t) => t.key === activeTab)?.label}</h2>
+                            <p className="text-xs text-foreground/50">{tabs.find((t) => t.key === activeTab)?.sublabel}</p>
                         </div>
-                        <button
-                            type="button"
-                            onClick={onClose}
-                            className="flex size-8 items-center justify-center rounded-lg text-foreground/40 transition-colors hover:bg-white/10 hover:text-white"
-                            aria-label="关闭"
-                        >
+                        <button type="button" onClick={onClose} className="flex size-8 items-center justify-center rounded-lg text-foreground/40 transition-colors hover:bg-white/10 hover:text-white" aria-label="关闭">
                             <X className="size-4" />
                         </button>
                     </header>
@@ -443,12 +370,7 @@ export function UserProfileModal({
                                             <div className="mb-3 text-xs font-semibold text-white">头像设置</div>
                                             <div className="flex items-center gap-5">
                                                 <div className="relative group size-16 shrink-0">
-                                                    {currentUser && (
-                                                        <UserAvatar
-                                                            user={currentUser}
-                                                            className="size-16 rounded-full border-2 border-white/10 object-cover"
-                                                        />
-                                                    )}
+                                                    {currentUser && <UserAvatar user={currentUser} className="size-16 rounded-full border-2 border-white/10 object-cover" />}
                                                     <button
                                                         type="button"
                                                         onClick={() => avatarInputRef.current?.click()}
@@ -469,17 +391,9 @@ export function UserProfileModal({
                                                         >
                                                             上传新头像
                                                         </Button>
-                                                        <input
-                                                            ref={avatarInputRef}
-                                                            type="file"
-                                                            accept="image/png,image/jpeg,image/webp"
-                                                            className="hidden"
-                                                            onChange={handleAvatarFileSelected}
-                                                        />
+                                                        <input ref={avatarInputRef} type="file" accept="image/png,image/jpeg,image/webp" className="hidden" onChange={handleAvatarFileSelected} />
                                                     </div>
-                                                    <p className="text-[11px] text-foreground/45">
-                                                        支持 JPG, PNG, WebP 格式，文件大小不超过 5MB
-                                                    </p>
+                                                    <p className="text-[11px] text-foreground/45">支持 JPG, PNG, WebP 格式，文件大小不超过 5MB</p>
                                                 </div>
                                             </div>
 
@@ -507,33 +421,25 @@ export function UserProfileModal({
                                             <div className="grid grid-cols-2 gap-4 text-xs">
                                                 <div>
                                                     <span className="text-foreground/40 block mb-1">创作者 ID</span>
-                                                    <div className="font-mono text-white/90 bg-white/[0.03] px-3 py-2 rounded-lg border border-white/5">
-                                                        @{currentUser?.username}
-                                                    </div>
+                                                    <div className="font-mono text-white/90 bg-white/[0.03] px-3 py-2 rounded-lg border border-white/5">@{currentUser?.username}</div>
                                                 </div>
 
                                                 <div>
                                                     <span className="text-foreground/40 block mb-1">显示昵称</span>
-                                                    <div className="text-white/90 bg-white/[0.03] px-3 py-2 rounded-lg border border-white/5">
-                                                        {currentUser?.displayName || currentUser?.username}
-                                                    </div>
+                                                    <div className="text-white/90 bg-white/[0.03] px-3 py-2 rounded-lg border border-white/5">{currentUser?.displayName || currentUser?.username}</div>
                                                 </div>
 
                                                 <div>
                                                     <span className="text-foreground/40 block mb-1">账号角色</span>
                                                     <div className="flex items-center gap-2 bg-white/[0.03] px-3 py-2 rounded-lg border border-white/5">
-                                                        <span className="text-white">
-                                                            {currentUser?.role === "admin" ? "平台管理员" : "创作者"}
-                                                        </span>
+                                                        <span className="text-white">{currentUser?.role === "admin" ? "平台管理员" : "创作者"}</span>
                                                         <UserGroupBadge />
                                                     </div>
                                                 </div>
 
                                                 <div>
                                                     <span className="text-foreground/40 block mb-1">系统 UID</span>
-                                                    <div className="font-mono text-foreground/60 bg-white/[0.03] px-3 py-2 rounded-lg border border-white/5 truncate">
-                                                        {currentUser?.id}
-                                                    </div>
+                                                    <div className="font-mono text-foreground/60 bg-white/[0.03] px-3 py-2 rounded-lg border border-white/5 truncate">{currentUser?.id}</div>
                                                 </div>
                                             </div>
                                         </div>
@@ -548,19 +454,11 @@ export function UserProfileModal({
                                             <div className="flex items-center justify-between">
                                                 <div className="flex items-center gap-2">
                                                     <KeyRound className="size-4 text-[#00f5d4]" />
-                                                    <span className="text-xs font-semibold text-white">
-                                                        {profile?.hasPassword ? "修改独立登录密码" : "设置独立登录密码"}
-                                                    </span>
+                                                    <span className="text-xs font-semibold text-white">{profile?.hasPassword ? "修改独立登录密码" : "设置独立登录密码"}</span>
                                                 </div>
-                                                {!profile?.hasPassword && (
-                                                    <span className="rounded-full bg-amber-500/10 px-2 py-0.5 text-[10px] text-amber-400">
-                                                        尚未设置独立密码
-                                                    </span>
-                                                )}
+                                                {!profile?.hasPassword && <span className="rounded-full bg-amber-500/10 px-2 py-0.5 text-[10px] text-amber-400">尚未设置独立密码</span>}
                                             </div>
-                                            <p className="text-[11px] text-foreground/50">
-                                                设置独立密码后，可直接使用账号/邮箱配合密码登录，且支持解绑第三方快捷登录。
-                                            </p>
+                                            <p className="text-[11px] text-foreground/50">设置独立密码后，可直接使用账号/邮箱配合密码登录，且支持解绑第三方快捷登录。</p>
 
                                             <div className="space-y-2.5 pt-1">
                                                 {profile?.hasPassword && (
@@ -593,11 +491,7 @@ export function UserProfileModal({
                                                 />
 
                                                 <div className="flex items-center justify-between pt-1">
-                                                    <button
-                                                        type="button"
-                                                        onClick={() => setShowPass(!showPass)}
-                                                        className="flex items-center gap-1 text-[11px] text-foreground/50 hover:text-white"
-                                                    >
+                                                    <button type="button" onClick={() => setShowPass(!showPass)} className="flex items-center gap-1 text-[11px] text-foreground/50 hover:text-white">
                                                         {showPass ? <EyeOff className="size-3.5" /> : <Eye className="size-3.5" />}
                                                         <span>{showPass ? "隐藏明文" : "显示明文"}</span>
                                                     </button>
@@ -628,9 +522,7 @@ export function UserProfileModal({
                                                         <ShieldCheck className="size-3" /> 已绑定
                                                     </span>
                                                 ) : (
-                                                    <span className="rounded-full bg-amber-500/10 px-2 py-0.5 text-[10px] text-amber-400">
-                                                        未绑定
-                                                    </span>
+                                                    <span className="rounded-full bg-amber-500/10 px-2 py-0.5 text-[10px] text-amber-400">未绑定</span>
                                                 )}
                                             </div>
 
@@ -639,9 +531,7 @@ export function UserProfileModal({
                                                     当前绑定邮箱: <strong className="text-white">{currentUser.email}</strong>
                                                 </div>
                                             ) : (
-                                                <p className="text-[11px] text-foreground/50">
-                                                    绑定邮箱后可用于账号找回、接收安全与任务完成通知。
-                                                </p>
+                                                <p className="text-[11px] text-foreground/50">绑定邮箱后可用于账号找回、接收安全与任务完成通知。</p>
                                             )}
 
                                             <div className="space-y-2.5 pt-1">
@@ -677,19 +567,8 @@ export function UserProfileModal({
 
                                                 {emailTicket && (
                                                     <div className="flex gap-2">
-                                                        <Input
-                                                            value={emailVerifyCode}
-                                                            onChange={(e) => setEmailVerifyCode(e.target.value)}
-                                                            placeholder="输入 6 位邮件验证码"
-                                                            className="h-9 rounded-lg border-white/10 bg-white/[0.03] text-xs text-white"
-                                                        />
-                                                        <Button
-                                                            type="primary"
-                                                            size="small"
-                                                            loading={bindingEmail}
-                                                            onClick={handleBindEmail}
-                                                            className="h-9 shrink-0 rounded-lg bg-[#00f5d4] text-xs font-semibold text-[#0e1117] hover:!bg-[#00f5d4]/90"
-                                                        >
+                                                        <Input value={emailVerifyCode} onChange={(e) => setEmailVerifyCode(e.target.value)} placeholder="输入 6 位邮件验证码" className="h-9 rounded-lg border-white/10 bg-white/[0.03] text-xs text-white" />
+                                                        <Button type="primary" size="small" loading={bindingEmail} onClick={handleBindEmail} className="h-9 shrink-0 rounded-lg bg-[#00f5d4] text-xs font-semibold text-[#0e1117] hover:!bg-[#00f5d4]/90">
                                                             确认绑定
                                                         </Button>
                                                     </div>
@@ -700,11 +579,7 @@ export function UserProfileModal({
                                 )}
 
                                 {/* TAB 3: SOCIAL ACCOUNTS */}
-                                {activeTab === "social" && (
-                                    <SocialAccountBindings
-                                        onNavigateSecurity={() => onTabChange("security")}
-                                    />
-                                )}
+                                {activeTab === "social" && <SocialAccountBindings onNavigateSecurity={() => onTabChange("security")} />}
 
                                 {/* TAB 4: PREFERENCES */}
                                 {activeTab === "preferences" && (
@@ -713,25 +588,14 @@ export function UserProfileModal({
                                         <div className="flex items-center justify-between rounded-xl border border-white/10 bg-white/[0.02] p-4">
                                             <div className="flex items-center gap-3">
                                                 <div className="flex size-9 items-center justify-center rounded-lg border border-white/10 bg-white/[0.04]">
-                                                    {theme === "dark" ? (
-                                                        <Moon className="size-4 text-[#00f5d4]" />
-                                                    ) : (
-                                                        <Sun className="size-4 text-amber-400" />
-                                                    )}
+                                                    {theme === "dark" ? <Moon className="size-4 text-[#00f5d4]" /> : <Sun className="size-4 text-amber-400" />}
                                                 </div>
                                                 <div>
                                                     <div className="text-xs font-semibold text-white">深色模式</div>
-                                                    <div className="text-[11px] text-foreground/50">
-                                                        适配影视创作者工作台的专业暗色调视觉
-                                                    </div>
+                                                    <div className="text-[11px] text-foreground/50">适配影视创作者工作台的专业暗色调视觉</div>
                                                 </div>
                                             </div>
-                                            <Switch
-                                                size="sm"
-                                                checked={theme === "dark"}
-                                                onChange={(checked) => setTheme(checked ? "dark" : "light")}
-                                                aria-label="深色模式切换"
-                                            />
+                                            <Switch size="sm" checked={theme === "dark"} onChange={(checked) => setTheme(checked ? "dark" : "light")} aria-label="深色模式切换" />
                                         </div>
 
                                         {/* i18n Language Settings */}
@@ -742,9 +606,7 @@ export function UserProfileModal({
                                                 </div>
                                                 <div>
                                                     <div className="text-xs font-semibold text-white">界面语言</div>
-                                                    <div className="text-[11px] text-foreground/50">
-                                                        切换 SupDance 系统显示的语言种类
-                                                    </div>
+                                                    <div className="text-[11px] text-foreground/50">切换 SupDance 系统显示的语言种类</div>
                                                 </div>
                                             </div>
 
@@ -762,15 +624,11 @@ export function UserProfileModal({
                                                                     message.success(`已切换为 ${lang.name}`);
                                                                 }}
                                                                 className={`flex items-center justify-between rounded-xl border p-3 text-left transition-all ${
-                                                                    isSelected
-                                                                        ? "border-[#00f5d4]/40 bg-[#00f5d4]/10 text-[#00f5d4]"
-                                                                        : "border-white/5 bg-white/[0.02] text-foreground/70 hover:border-white/15 hover:text-white"
+                                                                    isSelected ? "border-[#00f5d4]/40 bg-[#00f5d4]/10 text-[#00f5d4]" : "border-white/5 bg-white/[0.02] text-foreground/70 hover:border-white/15 hover:text-white"
                                                                 }`}
                                                             >
                                                                 <span className="text-xs font-medium">{lang.name}</span>
-                                                                {isSelected && (
-                                                                    <CheckCircle2 className="size-4 text-[#00f5d4]" />
-                                                                )}
+                                                                {isSelected && <CheckCircle2 className="size-4 text-[#00f5d4]" />}
                                                             </button>
                                                         );
                                                     })}

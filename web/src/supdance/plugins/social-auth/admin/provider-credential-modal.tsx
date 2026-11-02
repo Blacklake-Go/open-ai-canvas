@@ -171,13 +171,7 @@ export function ProviderCredentialModal({ provider, draft, onDraftChange, onClos
                         <label htmlFor={`social-${provider.id}-client-id`}>{labels.id}</label>
                         {maskedId ? <AdminStatusBadge label="掩码回显" tone="neutral" title="后台只回显掩码，无法反查原文" /> : null}
                     </div>
-                    <Input
-                        id={`social-${provider.id}-client-id`}
-                        value={draft.clientId}
-                        placeholder={maskedId || `输入${labels.id}`}
-                        autoComplete="off"
-                        onChange={(event) => onDraftChange({ clientId: event.target.value })}
-                    />
+                    <Input id={`social-${provider.id}-client-id`} value={draft.clientId} placeholder={maskedId || `输入${labels.id}`} autoComplete="off" onChange={(event) => onDraftChange({ clientId: event.target.value })} />
                 </div>
 
                 <div className="admin-social-key-field">
@@ -197,13 +191,7 @@ export function ProviderCredentialModal({ provider, draft, onDraftChange, onClos
                     <div className="admin-social-key-field-head">
                         <label htmlFor={`social-${provider.id}-redirect`}>自定义回调地址（选填）</label>
                     </div>
-                    <Input
-                        id={`social-${provider.id}-redirect`}
-                        value={draft.customRedirectUrl}
-                        placeholder="留空使用服务端默认回调地址"
-                        autoComplete="off"
-                        onChange={(event) => onDraftChange({ customRedirectUrl: event.target.value })}
-                    />
+                    <Input id={`social-${provider.id}-redirect`} value={draft.customRedirectUrl} placeholder="留空使用服务端默认回调地址" autoComplete="off" onChange={(event) => onDraftChange({ customRedirectUrl: event.target.value })} />
                     <p className="admin-social-key-help">仅在反向代理前缀或多域名回调与默认地址不同时填写；此处一旦保存，上方 Redirect URI 会随之变更。</p>
                 </div>
 
@@ -212,12 +200,7 @@ export function ProviderCredentialModal({ provider, draft, onDraftChange, onClos
                         <strong>沙盒 Mock 联调</strong>
                         <p>开启后跳过真实三方授权直接返回模拟用户资料，用于本地与预发联调；上线前必须关闭。</p>
                     </div>
-                    <Switch
-                        size="sm"
-                        checked={draft.sandboxMockEnabled}
-                        onChange={(checked) => onDraftChange({ sandboxMockEnabled: checked })}
-                        aria-label={`${provider.name} 沙盒 Mock 联调模式`}
-                    />
+                    <Switch size="sm" checked={draft.sandboxMockEnabled} onChange={(checked) => onDraftChange({ sandboxMockEnabled: checked })} aria-label={`${provider.name} 沙盒 Mock 联调模式`} />
                 </div>
 
                 {notice ? (

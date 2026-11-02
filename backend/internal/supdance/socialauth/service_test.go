@@ -171,14 +171,14 @@ func (h *testHost) DecryptSecret(c string) (string, error) {
 	}
 	return strings.TrimPrefix(c, "enc:"), nil
 }
-func (h *testHost) BrandName() string               { return "SupDance" }
+func (h *testHost) BrandName() string                { return "SupDance" }
 func (h *testHost) RequireAdmin(u *model.User) error { return nil }
 func (h *testHost) EnsureSignupBonus(u string) error { return nil }
 
 func TestGeoIPPartitioning(t *testing.T) {
 	// 1. Test Mainland China IPv4 allocations (Telecom, Unicom, Mobile, CERNET, DNS)
 	cnIPv4s := []string{
-		"124.90.230.101", // China Telecom/Mobile (Fujian)
+		"124.90.230.101",  // China Telecom/Mobile (Fujian)
 		"114.114.114.114", // 114 DNS (China Telecom)
 		"223.5.5.5",       // AliDNS (China Alibaba)
 		"119.29.29.29",    // DNSPod (China Tencent)

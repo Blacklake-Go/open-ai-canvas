@@ -112,11 +112,16 @@ export async function discoverCodexConnector(endpoint = CODEX_CONNECTOR_ENDPOINT
 
 /** 配对：Agent 校验页面来源后返回本地地址与 token。 */
 export function pairCodexConnector(clientId: string, endpoint = CODEX_CONNECTOR_ENDPOINT) {
-    return connectorFetch<CodexConnectResult>(endpoint, "/connect", {
-        method: "POST",
-        headers: { "content-type": "application/json" },
-        body: JSON.stringify({ connector: "codex", clientId }),
-    }, 5000);
+    return connectorFetch<CodexConnectResult>(
+        endpoint,
+        "/connect",
+        {
+            method: "POST",
+            headers: { "content-type": "application/json" },
+            body: JSON.stringify({ connector: "codex", clientId }),
+        },
+        5000,
+    );
 }
 
 export function fetchCodexHealth(endpoint: string) {
@@ -124,11 +129,16 @@ export function fetchCodexHealth(endpoint: string) {
 }
 
 export function createCodexEventsTicket(endpoint: string, token: string, clientId: string) {
-    return connectorFetch<{ ticket?: string }>(endpoint, "/events-ticket", {
-        method: "POST",
-        headers: { "content-type": "application/json", "x-canvas-agent-token": token },
-        body: JSON.stringify({ clientId }),
-    }, 5000);
+    return connectorFetch<{ ticket?: string }>(
+        endpoint,
+        "/events-ticket",
+        {
+            method: "POST",
+            headers: { "content-type": "application/json", "x-canvas-agent-token": token },
+            body: JSON.stringify({ clientId }),
+        },
+        5000,
+    );
 }
 
 /** 打开一次性 ticket 的 SSE 事件流。 */
@@ -148,41 +158,66 @@ export function openCodexEventStream(endpoint: string, ticket: string, clientId:
 }
 
 export function createCodexThread(endpoint: string, token: string, clientId: string) {
-    return connectorFetch<CodexThreadResponse>(endpoint, "/agent/codex/threads/new", {
-        method: "POST",
-        headers: { "content-type": "application/json", "x-canvas-agent-token": token },
-        body: JSON.stringify({ clientId, permissionMode: "automatic" }),
-    }, 90000);
+    return connectorFetch<CodexThreadResponse>(
+        endpoint,
+        "/agent/codex/threads/new",
+        {
+            method: "POST",
+            headers: { "content-type": "application/json", "x-canvas-agent-token": token },
+            body: JSON.stringify({ clientId, permissionMode: "automatic" }),
+        },
+        90000,
+    );
 }
 
 export function resumeCodexThread(endpoint: string, token: string, threadId: string, clientId: string) {
-    return connectorFetch<CodexThreadResponse>(endpoint, `/agent/codex/threads/${encodeURIComponent(threadId)}/resume`, {
-        method: "POST",
-        headers: { "content-type": "application/json", "x-canvas-agent-token": token },
-        body: JSON.stringify({ clientId, permissionMode: "automatic" }),
-    }, 90000);
+    return connectorFetch<CodexThreadResponse>(
+        endpoint,
+        `/agent/codex/threads/${encodeURIComponent(threadId)}/resume`,
+        {
+            method: "POST",
+            headers: { "content-type": "application/json", "x-canvas-agent-token": token },
+            body: JSON.stringify({ clientId, permissionMode: "automatic" }),
+        },
+        90000,
+    );
 }
 
 export function sendCodexTurn(endpoint: string, token: string, input: { threadId: string; clientId: string; prompt: string; messageId: string; messageText?: string }) {
-    return connectorFetch<{ ok?: boolean; threadId?: string; error?: string }>(endpoint, "/agent/codex/turn", {
-        method: "POST",
-        headers: { "content-type": "application/json", "x-canvas-agent-token": token },
-        body: JSON.stringify({ ...input, permissionMode: "automatic" }),
-    }, 300000);
+    return connectorFetch<{ ok?: boolean; threadId?: string; error?: string }>(
+        endpoint,
+        "/agent/codex/turn",
+        {
+            method: "POST",
+            headers: { "content-type": "application/json", "x-canvas-agent-token": token },
+            body: JSON.stringify({ ...input, permissionMode: "automatic" }),
+        },
+        300000,
+    );
 }
 
 export function interruptCodexTurn(endpoint: string, token: string, threadId: string) {
-    return connectorFetch<{ ok?: boolean }>(endpoint, "/agent/codex/interrupt", {
-        method: "POST",
-        headers: { "content-type": "application/json", "x-canvas-agent-token": token },
-        body: JSON.stringify({ threadId }),
-    }, 10000);
+    return connectorFetch<{ ok?: boolean }>(
+        endpoint,
+        "/agent/codex/interrupt",
+        {
+            method: "POST",
+            headers: { "content-type": "application/json", "x-canvas-agent-token": token },
+            body: JSON.stringify({ threadId }),
+        },
+        10000,
+    );
 }
 
 export function resolveCodexApproval(endpoint: string, token: string, requestId: string, decision: "accept" | "acceptForSession" | "decline" | "cancel") {
-    return connectorFetch<{ ok?: boolean }>(endpoint, "/agent/codex/approval", {
-        method: "POST",
-        headers: { "content-type": "application/json", "x-canvas-agent-token": token },
-        body: JSON.stringify({ requestId, decision }),
-    }, 10000);
+    return connectorFetch<{ ok?: boolean }>(
+        endpoint,
+        "/agent/codex/approval",
+        {
+            method: "POST",
+            headers: { "content-type": "application/json", "x-canvas-agent-token": token },
+            body: JSON.stringify({ requestId, decision }),
+        },
+        10000,
+    );
 }

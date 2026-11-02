@@ -410,4 +410,3 @@ func TestMusicPluginLifecycleStatePersistenceAcrossRestart(t *testing.T) {
 		t.Fatalf("expected recovered state to be enabled across restart, got %s", recovered.State)
 	}
 }
-

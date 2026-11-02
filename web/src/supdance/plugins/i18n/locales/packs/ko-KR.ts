@@ -499,7 +499,7 @@ const pack: Record<string, string> = {
     "settings.prompts_save_success": "프롬프트 환경설정이 저장되었습니다",
     "settings.prompts_save_failed": "프롬프트 환경설정 저장 실패",
     "settings.prompts_restore_confirm_title": "플랫폼 템플릿으로 복원하시겠습니까?",
-    "settings.prompts_restore_confirm_content": "\"{label}\"의 개인 설정을 삭제하고 이후 플랫폼 버전을 따릅니다.",
+    "settings.prompts_restore_confirm_content": '"{label}"의 개인 설정을 삭제하고 이후 플랫폼 버전을 따릅니다.',
     "settings.prompts_restore_confirm_ok": "플랫폼으로 복원",
     "settings.prompts_restore_success": "플랫폼 템플릿으로 복원되었습니다",
     "settings.prompts_restore_failed": "플랫폼 템플릿 복원 실패",
@@ -558,7 +558,7 @@ const pack: Record<string, string> = {
     "settings.memory_added_success": "추가되었습니다. Agent에 즉시 반영됩니다",
     "settings.memory_approve_success": "승인되었습니다. 이후 세션에서 이 메모리가 활용됩니다",
     "settings.memory_reject_success": "거부되었습니다. 더 이상 세션에 주입되지 않습니다",
-    "settings.memory_delete_confirm_title": "메모리 \"{topic}\" 삭제",
+    "settings.memory_delete_confirm_title": '메모리 "{topic}" 삭제',
     "settings.memory_delete_confirm_content": "삭제하면 더 이상 Agent 문맥에 나타나지 않습니다. 삭제하시겠습니까?",
     "settings.memory_export_success": "{count}개 항목 내보내기 완료",
     "settings.memory_export_failed": "내보내기 실패",
@@ -781,7 +781,7 @@ const pack: Record<string, string> = {
     "nav.checkin_claim_btn_aria": "{amount} 크레딧 받기",
     "nav.command_palette_placeholder": "페이지 또는 작업 검색…",
     "nav.command_palette_close": "검색 닫기",
-    "nav.command_palette_empty": "\"{query}\" 관련 페이지를 찾을 수 없습니다",
+    "nav.command_palette_empty": '"{query}" 관련 페이지를 찾을 수 없습니다',
     "nav.storage_limit_readonly_title": "계정이 읽기 전용 상태로 전환되었습니다",
     "nav.storage_limit_title": "계정 스토리지 공간이 부족합니다",
     "nav.storage_limit_clean": "에셋 정리",
@@ -795,7 +795,7 @@ const pack: Record<string, string> = {
     "nav.announcement_click_detail": "클릭하여 세부 정보 보기",
     "nav.announcement_close": "공지 닫기",
     "common.clear_filter": "필터 지우기",
-    "common.no_results_keyword": "\"{keyword}\"에 관한 콘텐츠를 찾을 수 없습니다",
+    "common.no_results_keyword": '"{keyword}"에 관한 콘텐츠를 찾을 수 없습니다',
     "common.no_results_filter": "선택한 필터 조건과 일치하는 콘텐츠가 없습니다",
     "common.no_results_hint": "다른 키워드를 시도하거나 필터를 지워 전체를 확인하세요.",
     "common.load_failed_temp": "일시적으로 로드할 수 없습니다",
@@ -1536,7 +1536,7 @@ const pack: Record<string, string> = {
     "plugins.first_time_plugin": "플러그인을 처음 제작하시나요?",
     "plugins.view_dev_guide": "개발 및 패키징 가이드 보기",
     "plugins.copy_manifest_example": "사양의 manifest.json 예제 복사",
-    "plugins.optimizer_no_auto_overwrite": "프롬프트가 자동으로 덮어쓰이지 않으며, \"적용\"을 클릭해야 입력창에 반영됩니다.",
+    "plugins.optimizer_no_auto_overwrite": '프롬프트가 자동으로 덮어쓰이지 않으며, "적용"을 클릭해야 입력창에 반영됩니다.',
     "canvas.opening_canvas": "캔버스 여는 중...",
     "canvas.add_to_project": "프로젝트에 추가",
     "canvas.remove_from_project": "프로젝트에서 제거",
@@ -1655,7 +1655,7 @@ const pack: Record<string, string> = {
     "music.admin_desc": "고정 KoyoSIM 게이트웨이(https://www.koyosim.com) 연동, 모델 가격 책정 및 전체 라이프사이클 제어",
     "music.test_connection": "연결 테스트",
     "music.save_config": "설정 저장",
-    "music.submitting": "제출 중..."
+    "music.submitting": "제출 중...",
 };
 
 export default pack;

@@ -43,7 +43,7 @@ describe("Music Workbench UI Alignment & Architecture Suite", () => {
         expect(pageContent).toContain("createPortal");
 
         // ZERO internal secondary header
-        expect(pageContent).not.toContain("<header className=\"border-b");
+        expect(pageContent).not.toContain('<header className="border-b');
     });
 
     it("verifies MusicMasterStage provides Web Audio visualizer and action bar", () => {

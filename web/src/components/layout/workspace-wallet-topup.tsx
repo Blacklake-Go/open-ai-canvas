@@ -38,9 +38,7 @@ function productAvailability(product: TopupProduct, t?: (k: string, p?: Record<s
 
 /** 选中商品的权益摘要，结算栏与卡片共用。 */
 export function topupProductValue(product: TopupProduct, t?: (k: string, p?: Record<string, string | number>, f?: string) => string) {
-    return product.kind === "storage"
-        ? `+${formatStorageCapacity(product.storageBytes)}`
-        : `${formatCredits(product.creditsMicrocredits, 6)} ${t ? t("nav.credits", undefined, "积分") : "积分"}`;
+    return product.kind === "storage" ? `+${formatStorageCapacity(product.storageBytes)}` : `${formatCredits(product.creditsMicrocredits, 6)} ${t ? t("nav.credits", undefined, "积分") : "积分"}`;
 }
 
 function ProductCard({ product, selected, onSelect }: { product: TopupProduct; selected: boolean; onSelect: () => void }) {
@@ -83,9 +81,7 @@ function TopupGroup({ kind, products, selectedProductId, onSelectProduct, aside,
     const meta = KIND_META[kind];
     const Icon = meta.icon;
     const groupTitle = kind === "credits" ? t("settings.wallet_credits_plan", undefined, "积分套餐") : t("settings.wallet_storage_plan", undefined, "存储空间套餐");
-    const groupDescription = kind === "credits"
-        ? t("settings.wallet_credits_plan_desc", undefined, meta.description)
-        : t("settings.wallet_storage_plan_desc", undefined, meta.description);
+    const groupDescription = kind === "credits" ? t("settings.wallet_credits_plan_desc", undefined, meta.description) : t("settings.wallet_storage_plan_desc", undefined, meta.description);
     return (
         <section className={cn("wallet-topup-group", `is-${kind}`)} data-topup-kind={kind} aria-labelledby={`wallet-topup-group-${kind}`}>
             <header className="wallet-topup-group-head">
@@ -106,7 +102,9 @@ function TopupGroup({ kind, products, selectedProductId, onSelectProduct, aside,
                     ))}
                 </div>
             ) : (
-                <div className="wallet-topup-group-empty">{t("settings.wallet_no_packages", { label: kind === "credits" ? t("nav.credits", undefined, "积分") : t("settings.wallet_storage_space", undefined, "存储空间") }, `暂未上架${meta.label}套餐`)}</div>
+                <div className="wallet-topup-group-empty">
+                    {t("settings.wallet_no_packages", { label: kind === "credits" ? t("nav.credits", undefined, "积分") : t("settings.wallet_storage_space", undefined, "存储空间") }, `暂未上架${meta.label}套餐`)}
+                </div>
             )}
         </section>
     );
@@ -123,7 +121,14 @@ function StorageSummary({ usage, grants, onCleanAssets }: { usage?: AccountFileS
                 <span>
                     {t("settings.wallet_used_storage", undefined, "已用")} <b>{usage ? meter.usedLabel : "--"}</b> / {usage ? meter.totalLabel : "--"}
                 </span>
-                <span className={cn("wallet-topup-storage-track", meter.tone !== "ok" && `is-${meter.tone}`)} role="progressbar" aria-label={t("nav.storage_meter_aria", undefined, "账号文件容量使用进度")} aria-valuemin={0} aria-valuemax={100} aria-valuenow={Math.round(meter.percent)}>
+                <span
+                    className={cn("wallet-topup-storage-track", meter.tone !== "ok" && `is-${meter.tone}`)}
+                    role="progressbar"
+                    aria-label={t("nav.storage_meter_aria", undefined, "账号文件容量使用进度")}
+                    aria-valuemin={0}
+                    aria-valuemax={100}
+                    aria-valuenow={Math.round(meter.percent)}
+                >
                     <span style={{ width: `${meter.percent}%` }} />
                 </span>
                 <span className="wallet-topup-storage-split">
@@ -144,7 +149,8 @@ function StorageSummary({ usage, grants, onCleanAssets }: { usage?: AccountFileS
                 <ul className="wallet-topup-grants" aria-label={t("settings.wallet_grants_active", undefined, "生效中的扩容")}>
                     {activeGrants.slice(0, 4).map((grant) => (
                         <li key={grant.id} title={grant.productName || (grant.source === "admin" ? t("settings.wallet_grant_source_admin", undefined, "管理员赠送") : t("settings.wallet_grant_source_purchase", undefined, "存储扩容"))}>
-                            +{formatStorageCapacity(grant.bytes)} · {grant.expiresAt ? t("settings.wallet_grant_expires", { time: formatStorageDate(grant.expiresAt, locale) }, `${formatStorageDate(grant.expiresAt, locale)} 到期`) : t("settings.wallet_duration_permanent", undefined, "永久有效")}
+                            +{formatStorageCapacity(grant.bytes)} ·{" "}
+                            {grant.expiresAt ? t("settings.wallet_grant_expires", { time: formatStorageDate(grant.expiresAt, locale) }, `${formatStorageDate(grant.expiresAt, locale)} 到期`) : t("settings.wallet_duration_permanent", undefined, "永久有效")}
                         </li>
                     ))}
                     {activeGrants.length > 4 ? <li>{t("settings.wallet_grants_more", { count: activeGrants.length - 4 }, `另有 ${activeGrants.length - 4} 份`)}</li> : null}

@@ -174,7 +174,7 @@ func RegisterSupDanceI18nRoutes(r *gin.RouterGroup, svc *service.Service) {
 		}
 		c.Request.Body = http.MaxBytesReader(c.Writer, c.Request.Body, 16<<20)
 		var req struct {
-			ReplaceAll bool                            `json:"replaceAll"`
+			ReplaceAll bool                              `json:"replaceAll"`
 			Payload    service.SupDanceI18nExportPayload `json:"payload"`
 		}
 		if err := c.ShouldBindJSON(&req); err != nil {

@@ -59,9 +59,7 @@ export function SocialOnboardingModal() {
                 if (cancelled) return;
                 setProfile(data);
                 // Pre-fill username: clean up providerUsername or displayName to alphanumeric
-                const baseCandidate = (data.providerUsername?.split("@")[0] || data.displayName || "creator")
-                    .replace(/[^a-zA-Z0-9_-]/g, "")
-                    .toLowerCase();
+                const baseCandidate = (data.providerUsername?.split("@")[0] || data.displayName || "creator").replace(/[^a-zA-Z0-9_-]/g, "").toLowerCase();
                 const initialUsername = (baseCandidate.length >= 3 ? baseCandidate : `user_${baseCandidate}`).slice(0, 20);
 
                 setUsername(initialUsername);
@@ -171,15 +169,7 @@ export function SocialOnboardingModal() {
     if (!open) return null;
 
     return (
-        <AppModal
-            open={open}
-            flush
-            closable={false}
-            maskClosable={false}
-            footer={null}
-            width={520}
-            centered
-        >
+        <AppModal open={open} flush closable={false} maskClosable={false} footer={null} width={520} centered>
             <div
                 className="relative overflow-hidden rounded-2xl border border-white/[0.08] p-6 sm:p-7 text-[#FAFAFA] shadow-[0_16px_48px_rgba(0,0,0,0.60)] backdrop-blur-2xl"
                 style={{
@@ -190,22 +180,14 @@ export function SocialOnboardingModal() {
                 {/* Header Badge & Title */}
                 <div className="flex flex-col items-center text-center">
                     <div className="relative mb-3 flex size-14 items-center justify-center rounded-2xl border border-white/15 bg-white/[0.04] p-3 shadow-inner">
-                        {profile?.provider ? (
-                            <SocialProviderIcon provider={profile.provider} className="size-8" />
-                        ) : (
-                            <Sparkles className="size-8 text-[#00f5d4]" />
-                        )}
+                        {profile?.provider ? <SocialProviderIcon provider={profile.provider} className="size-8" /> : <Sparkles className="size-8 text-[#00f5d4]" />}
                         <span className="absolute -bottom-1 -right-1 flex size-5 items-center justify-center rounded-full bg-[#00f5d4] text-[#0e1117] ring-2 ring-[#0e1117]">
                             <CheckCircle2 className="size-3.5 stroke-[2.5]" />
                         </span>
                     </div>
 
-                    <h2 className="text-xl font-bold tracking-tight text-white">
-                        欢迎加入 SupDance
-                    </h2>
-                    <p className="mt-1 text-xs text-foreground/60">
-                        已成功通过 {profile?.providerName || "第三方账号"} 授权，完成入站配置后立即开启创作
-                    </p>
+                    <h2 className="text-xl font-bold tracking-tight text-white">欢迎加入 SupDance</h2>
+                    <p className="mt-1 text-xs text-foreground/60">已成功通过 {profile?.providerName || "第三方账号"} 授权，完成入站配置后立即开启创作</p>
                 </div>
 
                 {loading ? (
@@ -217,11 +199,7 @@ export function SocialOnboardingModal() {
                         {/* Third-party verified info card */}
                         <div className="flex items-center gap-3 rounded-xl border border-white/10 bg-white/[0.03] p-3.5">
                             {profile?.avatarUrl ? (
-                                <img
-                                    src={profile.avatarUrl}
-                                    alt="Avatar"
-                                    className="size-11 rounded-full border border-white/20 object-cover"
-                                />
+                                <img src={profile.avatarUrl} alt="Avatar" className="size-11 rounded-full border border-white/20 object-cover" />
                             ) : (
                                 <div className="flex size-11 items-center justify-center rounded-full bg-white/10 text-foreground/50">
                                     <User className="size-5" />
@@ -229,16 +207,10 @@ export function SocialOnboardingModal() {
                             )}
                             <div className="min-w-0 flex-1">
                                 <div className="flex items-center gap-2">
-                                    <span className="truncate text-sm font-semibold text-white">
-                                        {profile?.displayName || "第三方用户"}
-                                    </span>
-                                    <span className="rounded-full bg-[#00f5d4]/10 px-2 py-0.5 text-[10px] font-medium text-[#00f5d4]">
-                                        {profile?.providerName} 授权
-                                    </span>
+                                    <span className="truncate text-sm font-semibold text-white">{profile?.displayName || "第三方用户"}</span>
+                                    <span className="rounded-full bg-[#00f5d4]/10 px-2 py-0.5 text-[var(--fs-label)] font-medium text-[#00f5d4]">{profile?.providerName} 授权</span>
                                 </div>
-                                <div className="truncate text-xs text-foreground/50">
-                                    {profile?.providerUsername || profile?.email || "已验证第三方身份"}
-                                </div>
+                                <div className="truncate text-xs text-foreground/50">{profile?.providerUsername || profile?.email || "已验证第三方身份"}</div>
                             </div>
                         </div>
 
@@ -250,14 +222,12 @@ export function SocialOnboardingModal() {
                                     <span>绑定邮箱</span>
                                 </span>
                                 {hasProviderEmail ? (
-                                    <span className="flex items-center gap-1 text-[11px] text-[#00f5d4]">
+                                    <span className="flex items-center gap-1 text-[var(--fs-label)] text-[#00f5d4]">
                                         <ShieldCheck className="size-3" />
                                         已自 {profile?.providerName} 自动验证绑定 🔒
                                     </span>
                                 ) : (
-                                    <span className="text-[11px] text-foreground/40">
-                                        建议绑定以接收重要通知与找回密码
-                                    </span>
+                                    <span className="text-[var(--fs-label)] text-foreground/40">建议绑定以接收重要通知与找回密码</span>
                                 )}
                             </div>
 
@@ -267,15 +237,9 @@ export function SocialOnboardingModal() {
                                 disabled={hasProviderEmail}
                                 placeholder="输入您的邮箱"
                                 prefix={<Mail className="size-3.5 text-foreground/40" />}
-                                className={`h-10 rounded-lg border-white/10 bg-white/[0.04] text-sm text-white placeholder:text-foreground/30 ${
-                                    hasProviderEmail ? "cursor-not-allowed opacity-80" : ""
-                                }`}
+                                className={`h-10 rounded-lg border-white/10 bg-white/[0.04] text-sm text-white placeholder:text-foreground/30 ${hasProviderEmail ? "cursor-not-allowed opacity-80" : ""}`}
                             />
-                            {hasProviderEmail && (
-                                <p className="mt-1 text-[11px] text-foreground/45">
-                                    第三方渠道返回了已验证的邮箱地址，已自动为您绑定，无需重复核验。
-                                </p>
-                            )}
+                            {hasProviderEmail && <p className="mt-1 text-[var(--fs-label)] text-foreground/45">第三方渠道返回了已验证的邮箱地址，已自动为您绑定，无需重复核验。</p>}
                         </div>
 
                         {/* Username and Nickname Section */}
@@ -292,17 +256,11 @@ export function SocialOnboardingModal() {
                                     status={username && !isUsernameValid ? "error" : ""}
                                     className="h-10 rounded-lg border-white/10 bg-[#171717] text-sm text-white placeholder:text-white/30"
                                 />
-                                {username && !isUsernameValid ? (
-                                    <p className="mt-1 text-[11px] text-rose-400">字母/数字/下划线(3-30字符)</p>
-                                ) : (
-                                    <p className="mt-1 text-[11px] text-white/50">作品署名与空间链接</p>
-                                )}
+                                {username && !isUsernameValid ? <p className="mt-1 text-[var(--fs-label)] text-rose-400">字母/数字/下划线(3-30字符)</p> : <p className="mt-1 text-[var(--fs-label)] text-white/50">作品署名与空间链接</p>}
                             </div>
 
                             <div>
-                                <label className="mb-1.5 block text-xs font-medium text-white/85">
-                                    显示昵称
-                                </label>
+                                <label className="mb-1.5 block text-xs font-medium text-white/85">显示昵称</label>
                                 <Input
                                     value={nickname}
                                     onChange={(e) => setNickname(e.target.value)}
@@ -310,7 +268,7 @@ export function SocialOnboardingModal() {
                                     prefix={<UserCheck className="size-3.5 text-white/40" />}
                                     className="h-10 rounded-lg border-white/10 bg-[#171717] text-sm text-white placeholder:text-white/30"
                                 />
-                                <p className="mt-1 text-[11px] text-white/50">社区与创作台展示名称</p>
+                                <p className="mt-1 text-[var(--fs-label)] text-white/50">社区与创作台展示名称</p>
                             </div>
                         </div>
 
@@ -321,9 +279,7 @@ export function SocialOnboardingModal() {
                                     <Lock className="size-3.5 text-foreground/50" />
                                     <span>设置独立登录密码（可选）</span>
                                 </span>
-                                <span className="text-[10px] text-foreground/40">
-                                    支持后续使用账号/邮箱密码直接登录
-                                </span>
+                                <span className="text-[var(--fs-label)] text-foreground/40">支持后续使用账号/邮箱密码直接登录</span>
                             </div>
 
                             <div className="space-y-2">
@@ -333,11 +289,7 @@ export function SocialOnboardingModal() {
                                     onChange={(e) => setPassword(e.target.value)}
                                     placeholder="至少 6 位（留空则仅使用第三方登录）"
                                     suffix={
-                                        <button
-                                            type="button"
-                                            onClick={() => setShowPassword(!showPassword)}
-                                            className="text-foreground/40 hover:text-foreground"
-                                        >
+                                        <button type="button" onClick={() => setShowPassword(!showPassword)} className="text-foreground/40 hover:text-foreground">
                                             {showPassword ? <EyeOff className="size-3.5" /> : <Eye className="size-3.5" />}
                                         </button>
                                     }
@@ -355,35 +307,19 @@ export function SocialOnboardingModal() {
                                     />
                                 ) : null}
 
-                                {password && !isPasswordMatch ? (
-                                    <p className="text-[11px] text-rose-400">两次输入的密码不一致</p>
-                                ) : null}
+                                {password && !isPasswordMatch ? <p className="text-[var(--fs-label)] text-rose-400">两次输入的密码不一致</p> : null}
                             </div>
                         </div>
 
                         {/* Terms and conditions */}
                         <div className="flex items-center gap-2 pt-1">
-                            <Checkbox
-                                checked={acceptedTerms}
-                                onChange={(e) => setAcceptedTerms(e.target.checked)}
-                                className="text-xs text-foreground/60"
-                            >
+                            <Checkbox checked={acceptedTerms} onChange={(e) => setAcceptedTerms(e.target.checked)} className="text-xs text-foreground/60">
                                 我已阅读并同意
-                                <a
-                                    href="/terms"
-                                    target="_blank"
-                                    rel="noreferrer"
-                                    className="mx-1 text-[#00f5d4] hover:underline"
-                                >
+                                <a href="/terms" target="_blank" rel="noreferrer" className="mx-1 text-[#00f5d4] hover:underline">
                                     《用户服务协议》
                                 </a>
                                 与
-                                <a
-                                    href="/privacy"
-                                    target="_blank"
-                                    rel="noreferrer"
-                                    className="ml-1 text-[#00f5d4] hover:underline"
-                                >
+                                <a href="/privacy" target="_blank" rel="noreferrer" className="ml-1 text-[#00f5d4] hover:underline">
                                     《隐私政策》
                                 </a>
                             </Checkbox>

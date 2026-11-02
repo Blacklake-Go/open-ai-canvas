@@ -1,13 +1,6 @@
 export const SUPDANCE_MUSIC_PLUGIN_ID = "supdance-music-generation" as const;
 
-export type SupDanceMusicLifecycleState =
-    | "installed"
-    | "enabled"
-    | "draining"
-    | "disabled"
-    | "updating"
-    | "error"
-    | "uninstalled";
+export type SupDanceMusicLifecycleState = "installed" | "enabled" | "draining" | "disabled" | "updating" | "error" | "uninstalled";
 
 export type SupDanceMusicPluginStatus = {
     pluginId: string;

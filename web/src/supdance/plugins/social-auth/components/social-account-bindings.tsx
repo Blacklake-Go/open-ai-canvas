@@ -19,10 +19,7 @@ export function SocialAccountBindings({ onNavigateSecurity }: { onNavigateSecuri
     const loadData = async (signal?: AbortSignal) => {
         try {
             setLoading(true);
-            const [identRes, provRes] = await Promise.all([
-                getUserSocialIdentities(signal),
-                getPublicSocialAuthProviders(undefined, signal),
-            ]);
+            const [identRes, provRes] = await Promise.all([getUserSocialIdentities(signal), getPublicSocialAuthProviders(undefined, signal)]);
             setIdentitiesView(identRes);
             setProviders(provRes.providers || []);
         } catch (err) {
@@ -64,9 +61,7 @@ export function SocialAccountBindings({ onNavigateSecurity }: { onNavigateSecuri
                         <p className="mb-2">
                             您当前尚未设置<strong>独立登录密码</strong>，且仅绑定了 <strong>{provider.name}</strong> 这一种登录方式。
                         </p>
-                        <p className="text-amber-400/90">
-                            若现在解除绑定，您将失去进入此账号的唯一凭证，导致账号无法再次登录。
-                        </p>
+                        <p className="text-amber-400/90">若现在解除绑定，您将失去进入此账号的唯一凭证，导致账号无法再次登录。</p>
                     </div>
                 ),
                 okText: "前往设置登录密码",
@@ -86,7 +81,9 @@ export function SocialAccountBindings({ onNavigateSecurity }: { onNavigateSecuri
             icon: <Unlink className="size-5 text-rose-400" />,
             content: (
                 <div className="py-2 text-xs leading-relaxed text-foreground/80">
-                    <p>确定要解除与当前账号绑定的 <strong>{identity.providerUsername || provider.name}</strong> 吗？</p>
+                    <p>
+                        确定要解除与当前账号绑定的 <strong>{identity.providerUsername || provider.name}</strong> 吗？
+                    </p>
                     <p className="mt-1 text-foreground/50">解绑后，您将无法再使用该 {provider.name} 账号直接一键登录。</p>
                 </div>
             ),
@@ -129,9 +126,7 @@ export function SocialAccountBindings({ onNavigateSecurity }: { onNavigateSecuri
                     <ShieldCheck className="mt-0.5 size-4 text-[#00f5d4] shrink-0" />
                     <div className="space-y-1">
                         <div className="font-medium text-white">多渠道统一入站与安全凭证</div>
-                        <p className="text-foreground/60 leading-relaxed">
-                            绑定第三方平台后，即可使用对应账号一键免密登录 SupDance。若第三方授权包含邮箱，系统已自动同步为绑定邮箱。
-                        </p>
+                        <p className="text-foreground/60 leading-relaxed">绑定第三方平台后，即可使用对应账号一键免密登录 SupDance。若第三方授权包含邮箱，系统已自动同步为绑定邮箱。</p>
                         {!identitiesView.hasPassword && (
                             <p className="flex items-center gap-1 text-amber-400">
                                 <AlertCircle className="size-3.5" />
@@ -149,14 +144,7 @@ export function SocialAccountBindings({ onNavigateSecurity }: { onNavigateSecuri
                     const isUnbinding = unbindingId === provider.id;
 
                     return (
-                        <div
-                            key={provider.id}
-                            className={`flex items-center justify-between gap-4 rounded-xl border p-3.5 transition-colors ${
-                                bound
-                                    ? "border-[#00f5d4]/20 bg-[#00f5d4]/[0.02]"
-                                    : "border-white/5 bg-white/[0.015] hover:border-white/10"
-                            }`}
-                        >
+                        <div key={provider.id} className={`flex items-center justify-between gap-4 rounded-xl border p-3.5 transition-colors ${bound ? "border-[#00f5d4]/20 bg-[#00f5d4]/[0.02]" : "border-white/5 bg-white/[0.015] hover:border-white/10"}`}>
                             {/* Provider info & status */}
                             <div className="flex items-center gap-3 min-w-0">
                                 <div className="flex size-10 shrink-0 items-center justify-center rounded-xl border border-white/10 bg-white/[0.04]">
@@ -167,12 +155,12 @@ export function SocialAccountBindings({ onNavigateSecurity }: { onNavigateSecuri
                                     <div className="flex items-center gap-2">
                                         <span className="text-sm font-medium text-white">{provider.name}</span>
                                         {bound ? (
-                                            <span className="inline-flex items-center gap-1 rounded-full bg-[#00f5d4]/10 px-2 py-0.5 text-[10px] font-medium text-[#00f5d4]">
+                                            <span className="inline-flex items-center gap-1 rounded-full bg-[#00f5d4]/10 px-2 py-0.5 text-[var(--fs-label)] font-medium text-[#00f5d4]">
                                                 <span className="size-1.5 rounded-full bg-[#00f5d4]" />
                                                 已绑定
                                             </span>
                                         ) : (
-                                            <span className="inline-flex items-center gap-1 rounded-full bg-white/5 px-2 py-0.5 text-[10px] text-foreground/40">
+                                            <span className="inline-flex items-center gap-1 rounded-full bg-white/5 px-2 py-0.5 text-[var(--fs-label)] text-foreground/40">
                                                 <span className="size-1.5 rounded-full bg-foreground/30" />
                                                 未绑定
                                             </span>
@@ -183,11 +171,7 @@ export function SocialAccountBindings({ onNavigateSecurity }: { onNavigateSecuri
                                         {bound ? (
                                             <span>
                                                 账号: <strong className="text-white/80">{bound.providerUsername || bound.subject}</strong>
-                                                {bound.boundAt && (
-                                                    <span className="ml-2 text-[11px] text-foreground/40">
-                                                        ({new Date(bound.boundAt).toLocaleDateString()})
-                                                    </span>
-                                                )}
+                                                {bound.boundAt && <span className="ml-2 text-[var(--fs-label)] text-foreground/40">({new Date(bound.boundAt).toLocaleDateString()})</span>}
                                             </span>
                                         ) : (
                                             <span>绑定后可直接一键登录</span>
@@ -208,14 +192,7 @@ export function SocialAccountBindings({ onNavigateSecurity }: { onNavigateSecuri
                                         >
                                             换绑
                                         </Button>
-                                        <Button
-                                            size="small"
-                                            danger
-                                            loading={isUnbinding}
-                                            icon={<Unlink className="size-3.5" />}
-                                            onClick={() => handleUnbind(provider, bound)}
-                                            className="h-8 rounded-lg text-xs active:scale-[0.98]"
-                                        >
+                                        <Button size="small" danger loading={isUnbinding} icon={<Unlink className="size-3.5" />} onClick={() => handleUnbind(provider, bound)} className="h-8 rounded-lg text-xs active:scale-[0.98]">
                                             解绑
                                         </Button>
                                     </>

@@ -447,4 +447,3 @@ func TestAdversarialTableNamingValidation(t *testing.T) {
 		t.Fatalf("table name %q failed domain validation: %v", modelTableName, err)
 	}
 }
-

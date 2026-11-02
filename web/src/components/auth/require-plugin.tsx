@@ -6,15 +6,7 @@ import { WorkspaceState } from "@/components/layout/workspace-state";
 import { selectPluginEffectivelyEnabled, usePluginStore } from "@/stores/use-plugin-store";
 import { useI18n } from "@/supdance/plugins/i18n";
 
-export function RequirePlugin({
-    pluginId,
-    pluginName = "功能插件",
-    children,
-}: {
-    pluginId: string;
-    pluginName?: string;
-    children: ReactNode;
-}) {
+export function RequirePlugin({ pluginId, pluginName = "功能插件", children }: { pluginId: string; pluginName?: string; children: ReactNode }) {
     const navigate = useNavigate();
     const { t } = useI18n();
 
@@ -30,12 +22,7 @@ export function RequirePlugin({
             <WorkspacePage>
                 <WorkspaceState
                     title={`${pluginName}已停用`}
-                    description={
-                        serverState?.blockedReason
-                        ?? (canSelfToggle
-                            ? "该功能插件当前未启用。你可以前往插件中心自行开启后继续使用。"
-                            : "该功能插件已由管理员统一停用。如需继续使用，请联系管理员在后台插件中心恢复启用。")
-                    }
+                    description={serverState?.blockedReason ?? (canSelfToggle ? "该功能插件当前未启用。你可以前往插件中心自行开启后继续使用。" : "该功能插件已由管理员统一停用。如需继续使用，请联系管理员在后台插件中心恢复启用。")}
                     action={
                         canSelfToggle ? (
                             <Button type="primary" onClick={() => navigate("/plugins")}>

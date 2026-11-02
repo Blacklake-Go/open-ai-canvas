@@ -81,24 +81,15 @@ export function accountStorageMeter(usage?: AccountFileStorageUsage | null, loca
 }
 
 /** 超额提示文案，侧栏、素材页和扩容弹窗共用。 */
-export function accountStorageStateMessage(
-    meter: AccountStorageMeter,
-    t?: (key: string, params?: Record<string, string | number>, fallback?: string) => string,
-) {
+export function accountStorageStateMessage(meter: AccountStorageMeter, t?: (key: string, params?: Record<string, string | number>, fallback?: string) => string) {
     if (meter.state === "read_only") {
-        return t
-            ? t("nav.storage_state_msg_readonly", undefined, "已超出容量且宽限期已结束，账号处于只读状态。删除素材或购买空间后恢复。")
-            : "已超出容量且宽限期已结束，账号处于只读状态。删除素材或购买空间后恢复。";
+        return t ? t("nav.storage_state_msg_readonly", undefined, "已超出容量且宽限期已结束，账号处于只读状态。删除素材或购买空间后恢复。") : "已超出容量且宽限期已结束，账号处于只读状态。删除素材或购买空间后恢复。";
     }
     if (meter.state === "grace") {
         if (meter.readOnlyAtLabel) {
-            return t
-                ? t("nav.storage_state_msg_grace_time", { time: meter.readOnlyAtLabel }, `已超出容量，暂停上传和生成。${meter.readOnlyAtLabel} 后将进入只读状态。`)
-                : `已超出容量，暂停上传和生成。${meter.readOnlyAtLabel} 后将进入只读状态。`;
+            return t ? t("nav.storage_state_msg_grace_time", { time: meter.readOnlyAtLabel }, `已超出容量，暂停上传和生成。${meter.readOnlyAtLabel} 后将进入只读状态。`) : `已超出容量，暂停上传和生成。${meter.readOnlyAtLabel} 后将进入只读状态。`;
         }
-        return t
-            ? t("nav.storage_state_msg_grace", undefined, "已超出容量，暂停上传和生成。宽限期结束后将进入只读状态。")
-            : "已超出容量，暂停上传和生成。宽限期结束后将进入只读状态。";
+        return t ? t("nav.storage_state_msg_grace", undefined, "已超出容量，暂停上传和生成。宽限期结束后将进入只读状态。") : "已超出容量，暂停上传和生成。宽限期结束后将进入只读状态。";
     }
     if (meter.full) {
         return t ? t("nav.storage_state_msg_full", undefined, "容量已满，暂停上传和生成。") : "容量已满，暂停上传和生成。";

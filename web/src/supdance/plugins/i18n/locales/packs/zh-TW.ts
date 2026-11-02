@@ -1655,7 +1655,7 @@ const pack: Record<string, string> = {
     "music.admin_desc": "固定 KoyoSIM 外部閘道（https://www.koyosim.com）整合、模型定價與全生命週期狀態控制",
     "music.test_connection": "測試連線",
     "music.save_config": "儲存設定",
-    "music.submitting": "提交中..."
+    "music.submitting": "提交中...",
 };
 
 export default pack;

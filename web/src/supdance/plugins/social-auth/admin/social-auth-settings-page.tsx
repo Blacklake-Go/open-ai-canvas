@@ -49,11 +49,7 @@ export default function SocialAuthSettingsPage() {
     const initDraftsFromData = (settings: AdminSettingsView) => {
         setDraftFallbackRegion(settings.defaultFallbackRegion || "cn");
         const drafts: Record<string, ProviderDraftState> = {};
-        const all = [
-            ...(settings.mainlandProviders || []),
-            ...(settings.intlProviders || []),
-            ...(settings.providers ? Object.values(settings.providers) : []),
-        ];
+        const all = [...(settings.mainlandProviders || []), ...(settings.intlProviders || []), ...(settings.providers ? Object.values(settings.providers) : [])];
         for (const p of all) drafts[p.id] = draftFromProvider(p);
         setProviderDrafts(drafts);
     };
@@ -184,8 +180,8 @@ export default function SocialAuthSettingsPage() {
     const renderProviderCard = (provider: SocialAuthProviderAdmin) => {
         const draft = providerDrafts[provider.id] || draftFromProvider(provider);
         const labels = credentialKeyLabels(provider.id);
-        const maskedId = (provider.clientIdMasked || provider.maskedClientId) || "";
-        const maskedSecret = (provider.clientSecretMasked || provider.maskedSecret) || "";
+        const maskedId = provider.clientIdMasked || provider.maskedClientId || "";
+        const maskedSecret = provider.clientSecretMasked || provider.maskedSecret || "";
         const status = statusBadgeOf(provider);
         const probe = probeBadgeOf(testResults[provider.id]);
         const isCopied = copiedProviderId === provider.id;
@@ -205,12 +201,7 @@ export default function SocialAuthSettingsPage() {
 
                 <div className="admin-social-provider-uri">
                     <code title={provider.callbackUrl}>{provider.callbackUrl}</code>
-                    <IconButton
-                        icon={isCopied ? Check : Copy}
-                        title={isCopied ? "已复制回调地址" : "复制回调地址"}
-                        aria-label={`复制 ${provider.name} 回调地址`}
-                        onClick={() => handleCopy(provider.callbackUrl, `${provider.name} 回调地址`, provider.id)}
-                    />
+                    <IconButton icon={isCopied ? Check : Copy} title={isCopied ? "已复制回调地址" : "复制回调地址"} aria-label={`复制 ${provider.name} 回调地址`} onClick={() => handleCopy(provider.callbackUrl, `${provider.name} 回调地址`, provider.id)} />
                     {provider.docUrl ? (
                         <a className="admin-social-provider-uri-link" href={provider.docUrl} target="_blank" rel="noreferrer" title="打开凭证申请平台" aria-label={`打开 ${provider.name} 凭证申请平台`}>
                             <ExternalLink className="size-3.5" aria-hidden="true" />
@@ -313,20 +304,11 @@ export default function SocialAuthSettingsPage() {
                         <div className="admin-social-auth-overview-side">
                             <span className="admin-social-auth-detect" title={`来访 IP 来源请求头：${data.ipSourceHeader || "未知"}`}>
                                 <code>{data.clientIp || "未知 IP"}</code>
-                                <AdminStatusBadge
-                                    label={data.detectedRegion === "cn" ? "本次访问：中国大陆" : "本次访问：海外及港澳台"}
-                                    tone={data.detectedRegion === "cn" ? "info" : "neutral"}
-                                />
+                                <AdminStatusBadge label={data.detectedRegion === "cn" ? "本次访问：中国大陆" : "本次访问：海外及港澳台"} tone={data.detectedRegion === "cn" ? "info" : "neutral"} />
                             </span>
                             <div className="admin-social-auth-fallback">
                                 <span>未知 IP 回退</span>
-                                <Select
-                                    size="sm"
-                                    ariaLabel="未知或异常 IP 的默认回退分区"
-                                    value={draftFallbackRegion}
-                                    onChange={(value) => setDraftFallbackRegion(value as SocialAuthRegion)}
-                                    options={FALLBACK_OPTIONS}
-                                />
+                                <Select size="sm" ariaLabel="未知或异常 IP 的默认回退分区" value={draftFallbackRegion} onChange={(value) => setDraftFallbackRegion(value as SocialAuthRegion)} options={FALLBACK_OPTIONS} />
                             </div>
                             <IconButton icon={RefreshCw} loading={refreshing} title="刷新渠道状态" aria-label="刷新渠道状态" onClick={() => void loadSettings(false)} />
                         </div>
@@ -336,13 +318,7 @@ export default function SocialAuthSettingsPage() {
                     </p>
                 </div>
 
-                <div className="admin-social-provider-grid">
-                    {activeProviders.length ? (
-                        activeProviders.map(renderProviderCard)
-                    ) : (
-                        <div className="admin-social-provider-empty">该分区当前没有可配置的渠道，请检查插件渠道注册表。</div>
-                    )}
-                </div>
+                <div className="admin-social-provider-grid">{activeProviders.length ? activeProviders.map(renderProviderCard) : <div className="admin-social-provider-empty">该分区当前没有可配置的渠道，请检查插件渠道注册表。</div>}</div>
 
                 <div className={cn("admin-social-auth-save-bar", isDirty && "is-dirty")}>
                     <div className="admin-social-auth-save-copy" aria-live="polite">

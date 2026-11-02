@@ -1,11 +1,7 @@
 import { describe, expect, test } from "bun:test";
 import { readFileSync, existsSync } from "node:fs";
 import { resolve } from "node:path";
-import {
-    SUPDANCE_HOST_VERSION,
-    type SupDancePluginManifest,
-    validateSupDancePluginManifest,
-} from "@/supdance";
+import { SUPDANCE_HOST_VERSION, type SupDancePluginManifest, validateSupDancePluginManifest } from "@/supdance";
 
 describe("Challenger 2: Manifest V2 Adversarial Schema and Permission Conformance", () => {
     const manifestPath = resolve(import.meta.dir, "../../supdance/plugins/supdance-music-generation/manifest.json");
@@ -36,15 +32,7 @@ describe("Challenger 2: Manifest V2 Adversarial Schema and Permission Conformanc
         expect(manifest.permissions.length).toBeGreaterThan(0);
 
         // Disallow dangerous privilege escalation permissions
-        const prohibitedPermissions = [
-            "system.admin",
-            "user.manage",
-            "database.direct",
-            "plugin.install",
-            "plugin.uninstall",
-            "fs.root",
-            "network.raw",
-        ];
+        const prohibitedPermissions = ["system.admin", "user.manage", "database.direct", "plugin.install", "plugin.uninstall", "fs.root", "network.raw"];
 
         for (const forbidden of prohibitedPermissions) {
             expect(manifest.permissions).not.toContain(forbidden as any);

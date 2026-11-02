@@ -4,10 +4,11 @@ import { renderToStaticMarkup } from "react-dom/server";
 
 import { CanvasNode } from "../src/components/canvas/canvas-node";
 import { canvasNodeCanResyncTask } from "../src/lib/canvas/canvas-task-state";
+import { taskTickerSnapshot } from "../src/lib/canvas/task-ticker";
 import { CanvasNodeType, type CanvasNodeData } from "../src/types/canvas";
 
 const noop = () => {};
-const createdAt = () => new Date(Date.now() - 103_000).toISOString();
+const createdAt = () => new Date(taskTickerSnapshot() - 103_000).toISOString();
 
 function renderNode(metadata: CanvasNodeData["metadata"], type: CanvasNodeData["type"] = CanvasNodeType.Image) {
     return renderToStaticMarkup(

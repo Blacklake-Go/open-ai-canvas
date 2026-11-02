@@ -45,14 +45,10 @@ describe("M2 Empirical Challenger: supdance-music-generation & supdance-social-a
 
         try {
             // Import useMusicStore
-            const { useMusicStore } = await import(
-                "../src/supdance/plugins/music-generation/stores/use-music-store"
-            );
+            const { useMusicStore } = await import("../src/supdance/plugins/music-generation/stores/use-music-store");
 
             // 1. Verify that upon store import, supdance_music_drafts is NOT instantiated
-            const draftInstancesAfterImport = instancesCreated.filter(
-                (o) => o.name === "supdance_music_drafts"
-            );
+            const draftInstancesAfterImport = instancesCreated.filter((o) => o.name === "supdance_music_drafts");
             expect(draftInstancesAfterImport.length).toBe(0);
 
             // 2. Perform various non-draft operations (playback controls, seeking, volume, model change without userId)
@@ -61,16 +57,12 @@ describe("M2 Empirical Challenger: supdance-music-generation & supdance-social-a
             useMusicStore.getState().toggleAudioLoop();
             useMusicStore.getState().setModel("lyria-3.5"); // no userId passed -> draft not written to IDB
 
-            const draftInstancesAfterNonDraft = instancesCreated.filter(
-                (o) => o.name === "supdance_music_drafts"
-            );
+            const draftInstancesAfterNonDraft = instancesCreated.filter((o) => o.name === "supdance_music_drafts");
             expect(draftInstancesAfterNonDraft.length).toBe(0);
 
             // 3. Perform draft read (loadUserDraft)
             await useMusicStore.getState().loadUserDraft("emp_user_alpha");
-            const draftInstancesAfterLoad = instancesCreated.filter(
-                (o) => o.name === "supdance_music_drafts"
-            );
+            const draftInstancesAfterLoad = instancesCreated.filter((o) => o.name === "supdance_music_drafts");
             expect(draftInstancesAfterLoad.length).toBe(1);
             expect(draftInstancesAfterLoad[0].storeName).toBe("drafts");
 
@@ -78,9 +70,7 @@ describe("M2 Empirical Challenger: supdance-music-generation & supdance-social-a
             useMusicStore.getState().setDraftField("prompt", "Adversarial test prompt", "emp_user_alpha");
 
             // Must reuse the singleton instance without creating a second storage instance
-            const draftInstancesAfterSave = instancesCreated.filter(
-                (o) => o.name === "supdance_music_drafts"
-            );
+            const draftInstancesAfterSave = instancesCreated.filter((o) => o.name === "supdance_music_drafts");
             expect(draftInstancesAfterSave.length).toBe(1);
         } finally {
             localforage.createInstance = origCreateInstance;
@@ -90,12 +80,8 @@ describe("M2 Empirical Challenger: supdance-music-generation & supdance-social-a
     test("Adversarial 2: Rapid audio playback timeupdates cause 0 re-renders on unplayed players and workbench", async () => {
         const { act, Profiler } = await import("react");
         const { createRoot } = await import("react-dom/client");
-        const { useMusicStore } = await import(
-            "../src/supdance/plugins/music-generation/stores/use-music-store"
-        );
-        const { WaveformPlayer } = await import(
-            "../src/supdance/plugins/music-generation/components/waveform-player"
-        );
+        const { useMusicStore } = await import("../src/supdance/plugins/music-generation/stores/use-music-store");
+        const { WaveformPlayer } = await import("../src/supdance/plugins/music-generation/components/waveform-player");
 
         let activeCommits = 0;
         let idle1Commits = 0;
@@ -109,13 +95,7 @@ describe("M2 Empirical Challenger: supdance-music-generation & supdance-social-a
             const loadUserDraft = useMusicStore((s) => s.loadUserDraft);
             const tasks = useMusicStore((s) => s.tasks);
             const loadingTasks = useMusicStore((s) => s.loadingTasks);
-            return (
-                <div
-                    data-testid="workbench-probe"
-                    data-task-count={tasks.length}
-                    data-loading={loadingTasks}
-                />
-            );
+            return <div data-testid="workbench-probe" data-task-count={tasks.length} data-loading={loadingTasks} />;
         }
 
         // Initialize playback state
@@ -136,30 +116,18 @@ describe("M2 Empirical Challenger: supdance-music-generation & supdance-social-a
             root.render(
                 <div>
                     <Profiler id="active-player" onRender={() => activeCommits++}>
-                        <WaveformPlayer
-                            taskId="track-playing-live"
-                            audioUrl="https://cdn.example.com/audio/active.mp3"
-                            durationSeconds={180}
-                        />
+                        <WaveformPlayer taskId="track-playing-live" audioUrl="https://cdn.example.com/audio/active.mp3" durationSeconds={180} />
                     </Profiler>
                     <Profiler id="idle-player-1" onRender={() => idle1Commits++}>
-                        <WaveformPlayer
-                            taskId="track-idle-1"
-                            audioUrl="https://cdn.example.com/audio/idle1.mp3"
-                            durationSeconds={120}
-                        />
+                        <WaveformPlayer taskId="track-idle-1" audioUrl="https://cdn.example.com/audio/idle1.mp3" durationSeconds={120} />
                     </Profiler>
                     <Profiler id="idle-player-2" onRender={() => idle2Commits++}>
-                        <WaveformPlayer
-                            taskId="track-idle-2"
-                            audioUrl="https://cdn.example.com/audio/idle2.mp3"
-                            durationSeconds={240}
-                        />
+                        <WaveformPlayer taskId="track-idle-2" audioUrl="https://cdn.example.com/audio/idle2.mp3" durationSeconds={240} />
                     </Profiler>
                     <Profiler id="workbench-probe" onRender={() => workbenchCommits++}>
                         <WorkbenchSubscriptionProbe />
                     </Profiler>
-                </div>
+                </div>,
             );
         });
 
@@ -199,9 +167,7 @@ describe("M2 Empirical Challenger: supdance-music-generation & supdance-social-a
         const { createRoot } = await import("react-dom/client");
         const { QueryClient, QueryClientProvider } = await import("@tanstack/react-query");
         const { http } = await import("../src/services/api/request");
-        const { SocialLoginButtons } = await import(
-            "../src/supdance/plugins/social-auth/components/social-login-buttons"
-        );
+        const { SocialLoginButtons } = await import("../src/supdance/plugins/social-auth/components/social-login-buttons");
 
         let networkCalls = 0;
         let abortCount = 0;
@@ -247,11 +213,7 @@ describe("M2 Empirical Challenger: supdance-music-generation & supdance-social-a
 
             return (
                 <div data-testid="login-form">
-                    <input
-                        id="username-input"
-                        value={username}
-                        onChange={(e) => setUsername(e.target.value)}
-                    />
+                    <input id="username-input" value={username} onChange={(e) => setUsername(e.target.value)} />
                     <SocialLoginButtons
                         // Deliberately pass a brand-new inline callback on every render to test ref stabilization
                         onProvidersChange={(providers) => {
@@ -271,7 +233,7 @@ describe("M2 Empirical Challenger: supdance-music-generation & supdance-social-a
                 root.render(
                     <QueryClientProvider client={queryClient}>
                         <MockParentLoginForm />
-                    </QueryClientProvider>
+                    </QueryClientProvider>,
                 );
             });
 

@@ -20,7 +20,6 @@ import { SupDancePluginRuntimeSync } from "@/supdance/adapters/plugin-runtime-sy
 import { SocialOnboardingModal } from "@/supdance/plugins/social-auth";
 import { UserProfileModalHost } from "@/components/layout/user-profile-modal";
 
-
 const ClientRootInit = lazy(() => import("@/components/layout/client-root-init").then((module) => ({ default: module.ClientRootInit })));
 
 function ClientRootBoundary({ children }: { children: ReactNode }) {

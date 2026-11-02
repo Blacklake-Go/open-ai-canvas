@@ -1,11 +1,5 @@
 import { afterEach, beforeAll, beforeEach, describe, expect, test } from "bun:test";
-import {
-    compileI18nDictionary,
-    loadAllLocalePacks,
-    mergeI18nEntries,
-    SupDanceDomTranslator,
-    useSupDanceI18nStore,
-} from "@/supdance/plugins/i18n";
+import { compileI18nDictionary, loadAllLocalePacks, mergeI18nEntries, SupDanceDomTranslator, useSupDanceI18nStore } from "@/supdance/plugins/i18n";
 
 type MockTextNode = {
     nodeType: 3;
@@ -139,9 +133,7 @@ describe("Adversarial Stress Harness: supdance-i18n optimizations", () => {
     // =========================================================================
     describe("Scope 1: MutationObserver lifecycle & zero observer under zh-CN / disabled", () => {
         test("CRITICAL: attach() under zh-CN produces exactly ZERO MutationObserver instances", () => {
-            const root = createMockElement("body", { id: "app-body" }, [
-                createMockElement("span", {}, [createMockText("创作")]),
-            ]);
+            const root = createMockElement("body", { id: "app-body" }, [createMockElement("span", {}, [createMockText("创作")])]);
             const dict = compileI18nDictionary(mergeI18nEntries({}));
             const translator = new SupDanceDomTranslator();
 
@@ -154,9 +146,7 @@ describe("Adversarial Stress Harness: supdance-i18n optimizations", () => {
         });
 
         test("CRITICAL: switching from en-US to zh-CN completely detaches and zeroes active MutationObserver", () => {
-            const root = createMockElement("body", { id: "app-body" }, [
-                createMockElement("span", {}, [createMockText("创作")]),
-            ]);
+            const root = createMockElement("body", { id: "app-body" }, [createMockElement("span", {}, [createMockText("创作")])]);
             const dict = compileI18nDictionary(mergeI18nEntries({}));
             const translator = new SupDanceDomTranslator();
 
@@ -176,9 +166,7 @@ describe("Adversarial Stress Harness: supdance-i18n optimizations", () => {
         });
 
         test("CRITICAL: restoreAndDetach() zeroes active MutationObserver when plugin is disabled", () => {
-            const root = createMockElement("body", { id: "app-body" }, [
-                createMockElement("span", {}, [createMockText("创作")]),
-            ]);
+            const root = createMockElement("body", { id: "app-body" }, [createMockElement("span", {}, [createMockText("创作")])]);
             const dict = compileI18nDictionary(mergeI18nEntries({}));
             const translator = new SupDanceDomTranslator();
 
@@ -274,9 +262,7 @@ describe("Adversarial Stress Harness: supdance-i18n optimizations", () => {
             for (let i = 0; i < 200; i++) {
                 const cardText = createMockText("自由画布");
                 cardTexts.push(cardText);
-                const card = createMockElement("div", { class: "canvas-node-card", "data-node-id": `node-${i}` }, [
-                    cardText,
-                ]);
+                const card = createMockElement("div", { class: "canvas-node-card", "data-node-id": `node-${i}` }, [cardText]);
                 currentLevel.appendChild(card);
             }
 

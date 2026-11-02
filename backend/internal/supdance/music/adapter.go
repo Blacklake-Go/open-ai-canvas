@@ -136,7 +136,7 @@ func NewMurekaAdapter() *MurekaAdapter {
 	}
 }
 
-func (a *MurekaAdapter) ModelID() string { return ModelMurekaV95 }
+func (a *MurekaAdapter) ModelID() string                 { return ModelMurekaV95 }
 func (a *MurekaAdapter) Capabilities() ModelCapabilities { return a.caps }
 
 func (a *MurekaAdapter) Validate(req *MusicGenerationRequest) error {
@@ -236,7 +236,7 @@ func NewSunoAdapter() *SunoAdapter {
 	}
 }
 
-func (a *SunoAdapter) ModelID() string { return ModelSunoV6 }
+func (a *SunoAdapter) ModelID() string                 { return ModelSunoV6 }
 func (a *SunoAdapter) Capabilities() ModelCapabilities { return a.caps }
 
 func (a *SunoAdapter) Validate(req *MusicGenerationRequest) error {
@@ -337,7 +337,7 @@ func NewLyriaAdapter() *LyriaAdapter {
 	}
 }
 
-func (a *LyriaAdapter) ModelID() string { return ModelLyria35 }
+func (a *LyriaAdapter) ModelID() string                 { return ModelLyria35 }
 func (a *LyriaAdapter) Capabilities() ModelCapabilities { return a.caps }
 
 func (a *LyriaAdapter) Validate(req *MusicGenerationRequest) error {
@@ -453,7 +453,7 @@ func NewElevenMusicAdapter() *ElevenMusicAdapter {
 	}
 }
 
-func (a *ElevenMusicAdapter) ModelID() string { return ModelElevenMusic }
+func (a *ElevenMusicAdapter) ModelID() string                 { return ModelElevenMusic }
 func (a *ElevenMusicAdapter) Capabilities() ModelCapabilities { return a.caps }
 
 func (a *ElevenMusicAdapter) Validate(req *MusicGenerationRequest) error {

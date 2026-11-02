@@ -1,10 +1,5 @@
 import { describe, expect, test } from "bun:test";
-import {
-    compareSemVer,
-    SUPDANCE_HOST_VERSION,
-    type SupDancePluginManifest,
-    validateSupDancePluginManifest,
-} from "@/supdance";
+import { compareSemVer, SUPDANCE_HOST_VERSION, type SupDancePluginManifest, validateSupDancePluginManifest } from "@/supdance";
 
 describe("Adversarial Manifest Validation Harness (validateSupDancePluginManifest)", () => {
     const validBaseManifest: SupDancePluginManifest = {
@@ -36,11 +31,7 @@ describe("Adversarial Manifest Validation Harness (validateSupDancePluginManifes
         ];
 
         for (const version of invalidVersions) {
-            const report = validateSupDancePluginManifest(
-                { ...validBaseManifest, version },
-                new Set(),
-                SUPDANCE_HOST_VERSION
-            );
+            const report = validateSupDancePluginManifest({ ...validBaseManifest, version }, new Set(), SUPDANCE_HOST_VERSION);
             expect(report.compatible).toBe(false);
             expect(report.errors.some((e) => e.includes("必须遵循 SemVer"))).toBe(true);
         }
@@ -48,11 +39,7 @@ describe("Adversarial Manifest Validation Harness (validateSupDancePluginManifes
         // Valid semver formats with pre-release tags should pass
         const validVersions = ["1.0.0", "1.0.0-beta.1", "2.14.3-rc.0"];
         for (const version of validVersions) {
-            const report = validateSupDancePluginManifest(
-                { ...validBaseManifest, version },
-                new Set(),
-                SUPDANCE_HOST_VERSION
-            );
+            const report = validateSupDancePluginManifest({ ...validBaseManifest, version }, new Set(), SUPDANCE_HOST_VERSION);
             expect(report.compatible).toBe(true);
         }
     });
@@ -65,21 +52,13 @@ describe("Adversarial Manifest Validation Harness (validateSupDancePluginManifes
         ];
 
         for (const permissions of duplicateCases) {
-            const report = validateSupDancePluginManifest(
-                { ...validBaseManifest, permissions: permissions as any },
-                new Set(),
-                SUPDANCE_HOST_VERSION
-            );
+            const report = validateSupDancePluginManifest({ ...validBaseManifest, permissions: permissions as any }, new Set(), SUPDANCE_HOST_VERSION);
             expect(report.compatible).toBe(false);
             expect(report.errors).toContain("插件权限声明包含重复项");
         }
 
         // Empty permissions array is valid
-        const emptyPermReport = validateSupDancePluginManifest(
-            { ...validBaseManifest, permissions: [] },
-            new Set(),
-            SUPDANCE_HOST_VERSION
-        );
+        const emptyPermReport = validateSupDancePluginManifest({ ...validBaseManifest, permissions: [] }, new Set(), SUPDANCE_HOST_VERSION);
         expect(emptyPermReport.compatible).toBe(true);
     });
 
@@ -96,56 +75,32 @@ describe("Adversarial Manifest Validation Harness (validateSupDancePluginManifes
         ];
 
         for (const { id } of invalidIds) {
-            const report = validateSupDancePluginManifest(
-                { ...validBaseManifest, id },
-                new Set(),
-                SUPDANCE_HOST_VERSION
-            );
+            const report = validateSupDancePluginManifest({ ...validBaseManifest, id }, new Set(), SUPDANCE_HOST_VERSION);
             expect(report.compatible).toBe(false);
             expect(report.errors.length).toBeGreaterThan(0);
         }
 
         // Valid kebab-case with numbers is accepted
-        const validReport = validateSupDancePluginManifest(
-            { ...validBaseManifest, id: "supdance-music-v2-4" },
-            new Set(),
-            SUPDANCE_HOST_VERSION
-        );
+        const validReport = validateSupDancePluginManifest({ ...validBaseManifest, id: "supdance-music-v2-4" }, new Set(), SUPDANCE_HOST_VERSION);
         expect(validReport.compatible).toBe(true);
     });
 
     test("Challenge 3.5: Enforces minHostVersion comparison against host version", () => {
         // Higher minHostVersion than host (1.7.1)
-        const tooHighReport = validateSupDancePluginManifest(
-            { ...validBaseManifest, minHostVersion: "2.0.0" },
-            new Set(),
-            "1.7.1"
-        );
+        const tooHighReport = validateSupDancePluginManifest({ ...validBaseManifest, minHostVersion: "2.0.0" }, new Set(), "1.7.1");
         expect(tooHighReport.compatible).toBe(false);
         expect(tooHighReport.errors.some((e) => e.includes("低于插件要求的最低兼容版本"))).toBe(true);
 
         // Equal host version
-        const equalReport = validateSupDancePluginManifest(
-            { ...validBaseManifest, minHostVersion: "1.7.1" },
-            new Set(),
-            "1.7.1"
-        );
+        const equalReport = validateSupDancePluginManifest({ ...validBaseManifest, minHostVersion: "1.7.1" }, new Set(), "1.7.1");
         expect(equalReport.compatible).toBe(true);
 
         // Lower host requirement than host version
-        const lowerReport = validateSupDancePluginManifest(
-            { ...validBaseManifest, minHostVersion: "1.0.0" },
-            new Set(),
-            "1.7.1"
-        );
+        const lowerReport = validateSupDancePluginManifest({ ...validBaseManifest, minHostVersion: "1.0.0" }, new Set(), "1.7.1");
         expect(lowerReport.compatible).toBe(true);
 
         // Malformed minHostVersion
-        const badMinReport = validateSupDancePluginManifest(
-            { ...validBaseManifest, minHostVersion: "invalid-semver" },
-            new Set(),
-            "1.7.1"
-        );
+        const badMinReport = validateSupDancePluginManifest({ ...validBaseManifest, minHostVersion: "invalid-semver" }, new Set(), "1.7.1");
         expect(badMinReport.compatible).toBe(false);
         expect(badMinReport.errors.some((e) => e.includes("必须遵循 SemVer"))).toBe(true);
     });
@@ -153,22 +108,14 @@ describe("Adversarial Manifest Validation Harness (validateSupDancePluginManifes
     test("Challenge 3.6: Enforces apiVersion contract and prevents collision", () => {
         const invalidApiVersions = ["yingce.plugin/v3", "v2", "1.0", ""];
         for (const apiVersion of invalidApiVersions) {
-            const report = validateSupDancePluginManifest(
-                { ...validBaseManifest, apiVersion: apiVersion as any },
-                new Set(),
-                SUPDANCE_HOST_VERSION
-            );
+            const report = validateSupDancePluginManifest({ ...validBaseManifest, apiVersion: apiVersion as any }, new Set(), SUPDANCE_HOST_VERSION);
             expect(report.compatible).toBe(false);
             expect(report.errors.some((e) => e.includes("不支持的宿主 apiVersion"))).toBe(true);
         }
 
         // Collision check
         const existingIds = new Set(["supdance-music-generation"]);
-        const collisionReport = validateSupDancePluginManifest(
-            validBaseManifest,
-            existingIds,
-            SUPDANCE_HOST_VERSION
-        );
+        const collisionReport = validateSupDancePluginManifest(validBaseManifest, existingIds, SUPDANCE_HOST_VERSION);
         expect(collisionReport.compatible).toBe(false);
         expect(collisionReport.errors.some((e) => e.includes("与现有插件冲突"))).toBe(true);
     });

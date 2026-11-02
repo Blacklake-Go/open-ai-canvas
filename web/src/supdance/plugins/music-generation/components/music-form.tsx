@@ -21,10 +21,7 @@ export function MusicForm({ userId, onSubmitted }: MusicFormProps) {
     const setModel = useMusicStore((s) => s.setModel);
     const submitGeneration = useMusicStore((s) => s.submitGeneration);
 
-    const selectedModelCap =
-        capabilities.find((c) => c.id === draft.model) ||
-        STATIC_MODEL_CAPABILITIES.find((c) => c.id === draft.model) ||
-        STATIC_MODEL_CAPABILITIES[1];
+    const selectedModelCap = capabilities.find((c) => c.id === draft.model) || STATIC_MODEL_CAPABILITIES.find((c) => c.id === draft.model) || STATIC_MODEL_CAPABILITIES[1];
 
     const isCustomMode = draft.mode === "custom";
     const estimatedCost = draft.duration * (selectedModelCap.costPerSecondMicrocredits || 60);
@@ -69,19 +66,13 @@ export function MusicForm({ userId, onSubmitted }: MusicFormProps) {
                                 disabled={!model.available}
                                 onClick={() => setModel(model.id, userId)}
                                 className={`relative flex flex-col justify-between rounded-xl border p-3.5 text-left transition-all ${
-                                    isSelected
-                                        ? "border-primary bg-primary/5 shadow-xs ring-1 ring-primary"
-                                        : "border-border/60 bg-card hover:border-border hover:bg-muted/30"
+                                    isSelected ? "border-primary bg-primary/5 shadow-xs ring-1 ring-primary" : "border-border/60 bg-card hover:border-border hover:bg-muted/30"
                                 } ${!model.available ? "opacity-50 cursor-not-allowed" : "cursor-pointer"}`}
                             >
                                 <div>
                                     <div className="flex items-center justify-between gap-1">
                                         <span className="font-semibold text-sm text-foreground">{model.name}</span>
-                                        {!model.available && (
-                                            <span className="rounded-sm bg-destructive/10 px-1.5 py-0.5 text-xs text-destructive">
-                                                维护中
-                                            </span>
-                                        )}
+                                        {!model.available && <span className="rounded-sm bg-destructive/10 px-1.5 py-0.5 text-xs text-destructive">维护中</span>}
                                     </div>
                                     <p className="mt-1 text-xs text-muted-foreground line-clamp-2">
                                         {model.id === "mureka-9.5" && "高表现力旋律与男女声乐控制，支持无损 FLAC"}
@@ -106,11 +97,7 @@ export function MusicForm({ userId, onSubmitted }: MusicFormProps) {
                     type="button"
                     disabled={!selectedModelCap.modes.includes("simple")}
                     onClick={() => setDraftField("mode", "simple", userId)}
-                    className={`rounded-md px-3 py-1.5 text-xs font-medium transition-all ${
-                        draft.mode === "simple"
-                            ? "bg-card text-foreground shadow-xs"
-                            : "text-muted-foreground hover:text-foreground disabled:opacity-40"
-                    }`}
+                    className={`rounded-md px-3 py-1.5 text-xs font-medium transition-all ${draft.mode === "simple" ? "bg-card text-foreground shadow-xs" : "text-muted-foreground hover:text-foreground disabled:opacity-40"}`}
                 >
                     {t("music.mode_simple", undefined, "简单模式")}
                 </button>
@@ -118,11 +105,7 @@ export function MusicForm({ userId, onSubmitted }: MusicFormProps) {
                     type="button"
                     disabled={!selectedModelCap.modes.includes("custom")}
                     onClick={() => setDraftField("mode", "custom", userId)}
-                    className={`rounded-md px-3 py-1.5 text-xs font-medium transition-all ${
-                        draft.mode === "custom"
-                            ? "bg-card text-foreground shadow-xs"
-                            : "text-muted-foreground hover:text-foreground disabled:opacity-40"
-                    }`}
+                    className={`rounded-md px-3 py-1.5 text-xs font-medium transition-all ${draft.mode === "custom" ? "bg-card text-foreground shadow-xs" : "text-muted-foreground hover:text-foreground disabled:opacity-40"}`}
                 >
                     {t("music.mode_custom", undefined, "专业自定义")}
                 </button>
@@ -150,9 +133,7 @@ export function MusicForm({ userId, onSubmitted }: MusicFormProps) {
                 <div className="flex flex-col gap-4 rounded-xl border border-border/60 bg-card/40 p-4">
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         <div className="flex flex-col gap-1.5">
-                            <label className="text-xs font-medium text-foreground">
-                                {t("music.song_title", undefined, "歌曲标题")}
-                            </label>
+                            <label className="text-xs font-medium text-foreground">{t("music.song_title", undefined, "歌曲标题")}</label>
                             <input
                                 type="text"
                                 value={draft.title}
@@ -162,9 +143,7 @@ export function MusicForm({ userId, onSubmitted }: MusicFormProps) {
                             />
                         </div>
                         <div className="flex flex-col gap-1.5">
-                            <label className="text-xs font-medium text-foreground">
-                                {t("music.tags_label", undefined, "风格标签")}
-                            </label>
+                            <label className="text-xs font-medium text-foreground">{t("music.tags_label", undefined, "风格标签")}</label>
                             <input
                                 type="text"
                                 value={draft.tags}
@@ -178,30 +157,17 @@ export function MusicForm({ userId, onSubmitted }: MusicFormProps) {
                     {/* Instrumental Toggle */}
                     <div className="flex items-center justify-between border-t border-border/40 pt-3">
                         <div>
-                            <span className="text-sm font-medium text-foreground">
-                                {t("music.instrumental_only", undefined, "纯纯伴奏 (无歌词人声)")}
-                            </span>
+                            <span className="text-sm font-medium text-foreground">{t("music.instrumental_only", undefined, "纯纯伴奏 (无歌词人声)")}</span>
                             <p className="text-xs text-muted-foreground">仅生成背景器乐伴奏，忽略歌词</p>
                         </div>
-                        <input
-                            type="checkbox"
-                            checked={draft.instrumental}
-                            onChange={(e) => setDraftField("instrumental", e.target.checked, userId)}
-                            className="size-5 rounded-sm accent-primary cursor-pointer"
-                        />
+                        <input type="checkbox" checked={draft.instrumental} onChange={(e) => setDraftField("instrumental", e.target.checked, userId)} className="size-5 rounded-sm accent-primary cursor-pointer" />
                     </div>
 
                     {/* Lyrics Editor (Hidden when instrumental) */}
                     {!draft.instrumental && (
                         <div className="flex flex-col gap-1.5">
-                            <label className="text-xs font-medium text-foreground">
-                                {t("music.lyrics_editor", undefined, "专业歌词编辑器")}
-                            </label>
-                            <LyricsEditor
-                                value={draft.lyrics}
-                                onChange={(val) => setDraftField("lyrics", val, userId)}
-                                maxChars={selectedModelCap.maxLyricsChars}
-                            />
+                            <label className="text-xs font-medium text-foreground">{t("music.lyrics_editor", undefined, "专业歌词编辑器")}</label>
+                            <LyricsEditor value={draft.lyrics} onChange={(val) => setDraftField("lyrics", val, userId)} maxChars={selectedModelCap.maxLyricsChars} />
                         </div>
                     )}
 
@@ -209,9 +175,7 @@ export function MusicForm({ userId, onSubmitted }: MusicFormProps) {
                     {draft.model === "lyria-3.5" && selectedModelCap.tempoBpmRange && (
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 border-t border-border/40 pt-3">
                             <div className="flex flex-col gap-1.5">
-                                <label className="text-xs font-medium text-foreground">
-                                    节奏速度: {draft.tempoBpm} BPM
-                                </label>
+                                <label className="text-xs font-medium text-foreground">节奏速度: {draft.tempoBpm} BPM</label>
                                 <input
                                     type="range"
                                     min={selectedModelCap.tempoBpmRange[0]}
@@ -223,13 +187,11 @@ export function MusicForm({ userId, onSubmitted }: MusicFormProps) {
                             </div>
                             <div className="flex flex-col gap-1.5">
                                 <label className="text-xs font-medium text-foreground">调性选择</label>
-                                <select
-                                    value={draft.keySignature}
-                                    onChange={(e) => setDraftField("keySignature", e.target.value, userId)}
-                                    className="rounded-lg border border-border/60 bg-card px-3 py-2 text-sm text-foreground"
-                                >
+                                <select value={draft.keySignature} onChange={(e) => setDraftField("keySignature", e.target.value, userId)} className="rounded-lg border border-border/60 bg-card px-3 py-2 text-sm text-foreground">
                                     {(selectedModelCap.keySignatures || ["C"]).map((key) => (
-                                        <option key={key} value={key}>{key}</option>
+                                        <option key={key} value={key}>
+                                            {key}
+                                        </option>
                                     ))}
                                 </select>
                             </div>
@@ -242,14 +204,7 @@ export function MusicForm({ userId, onSubmitted }: MusicFormProps) {
                             <div className="flex items-center gap-3">
                                 {selectedModelCap.vocalGenders.map((gender) => (
                                     <label key={gender} className="flex items-center gap-1.5 text-xs text-foreground cursor-pointer">
-                                        <input
-                                            type="radio"
-                                            name="vocalGender"
-                                            value={gender}
-                                            checked={draft.vocalGender === gender}
-                                            onChange={() => setDraftField("vocalGender", gender, userId)}
-                                            className="accent-primary"
-                                        />
+                                        <input type="radio" name="vocalGender" value={gender} checked={draft.vocalGender === gender} onChange={() => setDraftField("vocalGender", gender, userId)} className="accent-primary" />
                                         <span>{gender === "male" ? "男声" : gender === "female" ? "女声" : "自动识别"}</span>
                                     </label>
                                 ))}
@@ -269,9 +224,7 @@ export function MusicForm({ userId, onSubmitted }: MusicFormProps) {
                                                 type="checkbox"
                                                 checked={checked}
                                                 onChange={(e) => {
-                                                    const next = e.target.checked
-                                                        ? [...draft.stems, stem]
-                                                        : draft.stems.filter((s) => s !== stem);
+                                                    const next = e.target.checked ? [...draft.stems, stem] : draft.stems.filter((s) => s !== stem);
                                                     setDraftField("stems", next, userId);
                                                 }}
                                                 className="accent-primary"
@@ -305,9 +258,7 @@ export function MusicForm({ userId, onSubmitted }: MusicFormProps) {
                 </div>
 
                 <div className="flex flex-col gap-1.5">
-                    <label className="text-xs font-medium text-foreground">
-                        {t("music.output_format", undefined, "输出音频格式")}
-                    </label>
+                    <label className="text-xs font-medium text-foreground">{t("music.output_format", undefined, "输出音频格式")}</label>
                     <div className="flex items-center gap-2">
                         {selectedModelCap.formats.map((fmt) => (
                             <button
@@ -315,9 +266,7 @@ export function MusicForm({ userId, onSubmitted }: MusicFormProps) {
                                 type="button"
                                 onClick={() => setDraftField("format", fmt, userId)}
                                 className={`rounded-md border px-3 py-1.5 text-xs font-medium uppercase transition-all ${
-                                    draft.format === fmt
-                                        ? "border-primary bg-primary/10 text-primary"
-                                        : "border-border/60 bg-card text-muted-foreground hover:bg-muted"
+                                    draft.format === fmt ? "border-primary bg-primary/10 text-primary" : "border-border/60 bg-card text-muted-foreground hover:bg-muted"
                                 }`}
                             >
                                 {fmt}
@@ -333,9 +282,7 @@ export function MusicForm({ userId, onSubmitted }: MusicFormProps) {
                     <Coins className="size-4 text-amber-500" />
                     <span>{t("music.estimated_credits", undefined, "预估消耗积分:")}</span>
                     <span className="font-semibold text-foreground">{estimatedCost}</span>
-                    <span className="text-xs text-muted-foreground/70">
-                        {t("music.settle_tip", undefined, "(实际结算以最终音频秒数精确计费)")}
-                    </span>
+                    <span className="text-xs text-muted-foreground/70">{t("music.settle_tip", undefined, "(实际结算以最终音频秒数精确计费)")}</span>
                 </div>
 
                 <button

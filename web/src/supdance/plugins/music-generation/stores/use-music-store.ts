@@ -1,15 +1,6 @@
 import { create } from "zustand";
 import localforage from "localforage";
-import {
-    fetchMusicCapabilities,
-    listUserMusicTasks,
-    queryMusicTask,
-    submitMusicTask,
-    type AudioFormat,
-    type ModelCapabilities,
-    type MusicTask,
-    type SubmitMusicTaskPayload,
-} from "../services/music-api";
+import { fetchMusicCapabilities, listUserMusicTasks, queryMusicTask, submitMusicTask, type AudioFormat, type ModelCapabilities, type MusicTask, type SubmitMusicTaskPayload } from "../services/music-api";
 import { syncMusicTaskToAssetStore } from "../services/music-asset-bridge";
 
 let draftStorageInstance: LocalForage | null = null;
@@ -101,10 +92,7 @@ export const STATIC_MODEL_CAPABILITIES: ModelCapabilities[] = [
         maxLyricsChars: 2000,
         costPerSecondMicrocredits: 80,
         tempoBpmRange: [40, 240],
-        keySignatures: [
-            "C", "C#", "D", "Eb", "E", "F", "F#", "G", "Ab", "A", "Bb", "B",
-            "F# Minor", "A Minor", "D Minor",
-        ],
+        keySignatures: ["C", "C#", "D", "Eb", "E", "F", "F#", "G", "Ab", "A", "Bb", "B", "F# Minor", "A Minor", "D Minor"],
         synthIdWatermarking: true,
         stemSeparation: false,
         available: true,
@@ -193,7 +181,7 @@ export const useMusicStore = create<MusicState>((set, get) => ({
     setActiveTrack: (task) => {
         set({
             activeTrack: task,
-            activeTrackId: task ? (task.taskId || task.id) : null,
+            activeTrackId: task ? task.taskId || task.id : null,
         });
     },
 
@@ -277,7 +265,7 @@ export const useMusicStore = create<MusicState>((set, get) => ({
                 loadingTasks: false,
                 activeTaskIds: activeIds,
                 activeTrack: nextActiveTrack,
-                activeTrackId: nextActiveTrack ? (nextActiveTrack.taskId || nextActiveTrack.id) : null,
+                activeTrackId: nextActiveTrack ? nextActiveTrack.taskId || nextActiveTrack.id : null,
             });
 
             // 启动自适应退避轮询
@@ -316,7 +304,7 @@ export const useMusicStore = create<MusicState>((set, get) => ({
                                     tasks: updatedTasks,
                                     activeTaskIds: newActive,
                                     activeTrack: isCur ? updated : state.activeTrack,
-                                    activeTrackId: isCur ? (updated.taskId || updated.id) : state.activeTrackId,
+                                    activeTrackId: isCur ? updated.taskId || updated.id : state.activeTrackId,
                                 };
                             });
                         } catch {
@@ -342,7 +330,7 @@ export const useMusicStore = create<MusicState>((set, get) => ({
                 mode: draft.mode,
                 prompt: draft.prompt.trim(),
                 title: draft.title.trim() || undefined,
-                lyrics: draft.instrumental ? undefined : (draft.lyrics.trim() || undefined),
+                lyrics: draft.instrumental ? undefined : draft.lyrics.trim() || undefined,
                 tags: draft.tags.trim() || undefined,
                 instrumental: draft.instrumental,
                 duration: draft.duration,

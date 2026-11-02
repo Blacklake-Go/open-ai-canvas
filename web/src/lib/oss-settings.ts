@@ -66,7 +66,7 @@ const S3_PRESET_HINTS: Record<S3Preset, { region: string; endpoint: string; help
 const CONNECTION_FIELDS = new Set(["provider", "s3Preset", "region", "endpoint", "cdnBaseUrl", "bucket", "accessKeyId", "accessKeySecret", "sessionToken", "pathPrefix", "pathStyle"]);
 
 export function getS3PresetHints(preset?: S3Preset, t?: (key: string, params?: Record<string, string | number>, fallback?: string) => string) {
-    const validPreset: S3Preset = preset && (preset in S3_PRESET_HINTS) ? preset : "custom";
+    const validPreset: S3Preset = preset && preset in S3_PRESET_HINTS ? preset : "custom";
     const raw = S3_PRESET_HINTS[validPreset];
     if (!t) return raw;
     const keyMap: Record<S3Preset, string> = {

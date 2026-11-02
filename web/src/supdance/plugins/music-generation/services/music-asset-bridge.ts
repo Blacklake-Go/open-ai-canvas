@@ -28,19 +28,14 @@ export function syncMusicTaskToAssetStore(task: MusicTask): string | null {
     const assetStore = useAssetStore.getState();
 
     // 检查素材库中是否已存在该任务对应的资产
-    const exists = assetStore.assets.some(
-        (asset) =>
-            asset.kind === "audio" &&
-            ("metadata" in asset && (asset.metadata as Record<string, unknown>)?.musicTaskId === taskId ||
-             asset.data?.url === task.resultAudioUrl)
-    );
+    const exists = assetStore.assets.some((asset) => asset.kind === "audio" && (("metadata" in asset && (asset.metadata as Record<string, unknown>)?.musicTaskId === taskId) || asset.data?.url === task.resultAudioUrl));
 
     if (exists) {
         syncedTaskIds.add(taskId);
         return null;
     }
 
-    const durationSeconds = task.resultDurationMs ? Math.round(task.resultDurationMs / 1000) : (task.durationTargetSeconds || 180);
+    const durationSeconds = task.resultDurationMs ? Math.round(task.resultDurationMs / 1000) : task.durationTargetSeconds || 180;
     const format = task.format || "mp3";
     const mimeType = format === "wav" ? "audio/wav" : format === "flac" ? "audio/flac" : "audio/mpeg";
 

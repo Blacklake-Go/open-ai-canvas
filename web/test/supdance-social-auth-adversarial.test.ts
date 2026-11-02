@@ -16,7 +16,7 @@ describe("Adversarial Stress Testing: SupDance Social Auth Frontend", () => {
         };
         const maskedId1 = legacyOnly.clientIdMasked || legacyOnly.maskedClientId || "";
         expect(maskedId1).toBe("****5200");
-        const placeholder1 = (legacyOnly.clientIdMasked || legacyOnly.maskedClientId) || "输入 App ID / Client ID";
+        const placeholder1 = legacyOnly.clientIdMasked || legacyOnly.maskedClientId || "输入 App ID / Client ID";
         expect(placeholder1).toBe("****5200");
 
         // Case 2: Provider with new clientIdMasked (no maskedClientId)
@@ -27,7 +27,7 @@ describe("Adversarial Stress Testing: SupDance Social Auth Frontend", () => {
         };
         const maskedId2 = newOnly.clientIdMasked || newOnly.maskedClientId || "";
         expect(maskedId2).toBe("****ec99");
-        const placeholder2 = (newOnly.clientIdMasked || newOnly.maskedClientId) || "输入 App ID / Client ID";
+        const placeholder2 = newOnly.clientIdMasked || newOnly.maskedClientId || "输入 App ID / Client ID";
         expect(placeholder2).toBe("****ec99");
 
         // Case 3: Completely unconfigured provider (both undefined/empty)
@@ -39,7 +39,7 @@ describe("Adversarial Stress Testing: SupDance Social Auth Frontend", () => {
         };
         const maskedId3 = unconfigured.clientIdMasked || unconfigured.maskedClientId || "";
         expect(maskedId3).toBe("");
-        const placeholder3 = (unconfigured.clientIdMasked || unconfigured.maskedClientId) || "输入 App ID / Client ID";
+        const placeholder3 = unconfigured.clientIdMasked || unconfigured.maskedClientId || "输入 App ID / Client ID";
         expect(placeholder3).toBe("输入 App ID / Client ID");
         const hasSecret3 = Boolean(unconfigured.maskedSecret);
         const secretPlaceholder3 = hasSecret3 ? "已配置 · 留空不改" : "输入 App Secret / Client Secret";

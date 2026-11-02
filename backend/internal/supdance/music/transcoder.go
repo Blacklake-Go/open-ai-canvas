@@ -21,9 +21,9 @@ const (
 
 // AudioMagicBytes provides magic byte signatures for format verification.
 var (
-	MagicMP3ID3 = []byte{0x49, 0x44, 0x33}             // "ID3"
-	MagicWAV    = []byte{0x52, 0x49, 0x46, 0x46}       // "RIFF"
-	MagicFLAC   = []byte{0x66, 0x4C, 0x61, 0x43}       // "fLaC"
+	MagicMP3ID3 = []byte{0x49, 0x44, 0x33}       // "ID3"
+	MagicWAV    = []byte{0x52, 0x49, 0x46, 0x46} // "RIFF"
+	MagicFLAC   = []byte{0x66, 0x4C, 0x61, 0x43} // "fLaC"
 )
 
 // DetectAudioFormat probes the initial bytes of an audio file to determine its container format.
@@ -159,13 +159,13 @@ func generateSyntheticAudioContainer(payload []byte, format string) ([]byte, err
 		buf.WriteString("RIFF")
 		_ = binary.Write(buf, binary.LittleEndian, fileLen)
 		buf.WriteString("WAVEfmt ")
-		_ = binary.Write(buf, binary.LittleEndian, uint32(16))    // Subchunk1Size (16 for PCM)
-		_ = binary.Write(buf, binary.LittleEndian, uint16(1))     // AudioFormat (1 = PCM)
-		_ = binary.Write(buf, binary.LittleEndian, uint16(2))     // NumChannels (2 = Stereo)
-		_ = binary.Write(buf, binary.LittleEndian, uint32(44100)) // SampleRate
+		_ = binary.Write(buf, binary.LittleEndian, uint32(16))        // Subchunk1Size (16 for PCM)
+		_ = binary.Write(buf, binary.LittleEndian, uint16(1))         // AudioFormat (1 = PCM)
+		_ = binary.Write(buf, binary.LittleEndian, uint16(2))         // NumChannels (2 = Stereo)
+		_ = binary.Write(buf, binary.LittleEndian, uint32(44100))     // SampleRate
 		_ = binary.Write(buf, binary.LittleEndian, uint32(44100*2*2)) // ByteRate
-		_ = binary.Write(buf, binary.LittleEndian, uint16(4))     // BlockAlign
-		_ = binary.Write(buf, binary.LittleEndian, uint16(16))    // BitsPerSample
+		_ = binary.Write(buf, binary.LittleEndian, uint16(4))         // BlockAlign
+		_ = binary.Write(buf, binary.LittleEndian, uint16(16))        // BitsPerSample
 		buf.WriteString("data")
 		_ = binary.Write(buf, binary.LittleEndian, dataLen)
 		buf.Write(pcmData)

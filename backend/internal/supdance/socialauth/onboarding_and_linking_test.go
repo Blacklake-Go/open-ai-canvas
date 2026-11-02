@@ -210,4 +210,3 @@ func TestSocialAuthOnboardingTicketSharedAcrossServiceInstances(t *testing.T) {
 		t.Fatalf("expected provider username dancer@gmail.com, got %s", profileView.ProviderUsername)
 	}
 }
-

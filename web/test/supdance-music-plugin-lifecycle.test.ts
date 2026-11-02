@@ -137,17 +137,11 @@ describe("SupDance Music Generation Plugin Lifecycle & Manifest V2 Conformance",
         expect(getRegisteredPlugin(MUSIC_PLUGIN_ID)?.manifest.version).toBe("1.1.0");
 
         // Reject downgrade
-        await expect(
-            upgradeSupDancePlugin({ manifest: { ...rawManifest, version: "1.0.0" } }, { context: ctx })
-        ).rejects.toThrow(/必须高于当前已安装版本/);
+        await expect(upgradeSupDancePlugin({ manifest: { ...rawManifest, version: "1.0.0" } }, { context: ctx })).rejects.toThrow(/必须高于当前已安装版本/);
     });
 
     test("guards against route collision when mounting /toolbox/music studio route", () => {
-        const upstreamRoutes = [
-            { path: "/toolbox/image" },
-            { path: "/toolbox/video" },
-            { path: "/tasks" },
-        ];
+        const upstreamRoutes = [{ path: "/toolbox/image" }, { path: "/toolbox/video" }, { path: "/tasks" }];
 
         // Should successfully mount /toolbox/music
         const customMusicRoutes = [{ path: "/toolbox/music" }];

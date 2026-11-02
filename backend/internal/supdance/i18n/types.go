@@ -103,14 +103,14 @@ type PublicBundle struct {
 
 // AdminOverview combines plugin state, settings, per-language stats, and namespace summaries.
 type AdminOverview struct {
-	PluginID       string             `json:"pluginId"`
-	PluginEnabled  bool               `json:"pluginEnabled"`
-	Settings       Settings           `json:"settings"`
-	LanguageStats  []LanguageStats    `json:"languageStats"`
-	Namespaces     []NamespaceSummary `json:"namespaces"`
-	TotalEntries   int                `json:"totalEntries"`
-	CustomCount    int                `json:"customCount"`
-	ModifiedCount  int                `json:"modifiedCount"`
+	PluginID      string             `json:"pluginId"`
+	PluginEnabled bool               `json:"pluginEnabled"`
+	Settings      Settings           `json:"settings"`
+	LanguageStats []LanguageStats    `json:"languageStats"`
+	Namespaces    []NamespaceSummary `json:"namespaces"`
+	TotalEntries  int                `json:"totalEntries"`
+	CustomCount   int                `json:"customCount"`
+	ModifiedCount int                `json:"modifiedCount"`
 }
 
 // EntryFilter specifies query criteria for the admin entry editor page.

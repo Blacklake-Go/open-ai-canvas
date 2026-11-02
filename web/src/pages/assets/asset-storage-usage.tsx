@@ -27,11 +27,7 @@ export function AssetStorageUsage() {
                 <HardDrive />
             </span>
             <span className="assets-storage-usage-title">
-                {meter.state === "read_only"
-                    ? t("nav.storage_read_only", undefined, "账号只读")
-                    : meter.state === "grace"
-                        ? t("nav.storage_over_limit", undefined, "容量已超额")
-                        : t("nav.storage_aria_prefix", undefined, "账号容量")}
+                {meter.state === "read_only" ? t("nav.storage_read_only", undefined, "账号只读") : meter.state === "grace" ? t("nav.storage_over_limit", undefined, "容量已超额") : t("nav.storage_aria_prefix", undefined, "账号容量")}
             </span>
             {usage ? (
                 <>

@@ -1,6 +1,6 @@
 /**
  * Koyosim Mock Server & Fixtures
- * 
+ *
  * Simulates the fixed external API https://www.koyosim.com
  * Supports:
  * - 4 target models: Mureka V9.5, Suno v6, Google Lyria 3.5, Eleven Music v2.5
@@ -92,7 +92,7 @@ export const KOYOSIM_MODELS: Record<KoyosimModelId, KoyosimModelSpec> = {
         synthIdWatermarking: true,
         stemSeparation: false,
     },
-    "music_v2_5": {
+    music_v2_5: {
         id: "music_v2_5",
         name: "Eleven Music v2.5",
         version: "2.5.4",
@@ -151,14 +151,7 @@ export interface KoyosimTaskRecord {
     failAtStage?: KoyosimTaskStage;
 }
 
-export type SimulatedErrorType =
-    | "400_bad_request"
-    | "401_unauthorized"
-    | "429_rate_limit"
-    | "504_timeout"
-    | "connection_drop"
-    | "ssrf_redirect"
-    | null;
+export type SimulatedErrorType = "400_bad_request" | "401_unauthorized" | "429_rate_limit" | "504_timeout" | "connection_drop" | "ssrf_redirect" | null;
 
 export class KoyosimMockServer {
     private tasks = new Map<string, KoyosimTaskRecord>();
@@ -209,14 +202,32 @@ export class KoyosimMockServer {
             // Authentic ID3v2.4 Header + MPEG-1 Layer 3 Sync Word
             // ID3v2 header: 'ID3', version 4.0, flags 0, synchsafe size 10 bytes
             const header = [
-                0x49, 0x44, 0x33, // 'I', 'D', '3'
-                0x04, 0x00,       // Version 2.4
-                0x00,             // Flags
-                0x00, 0x00, 0x00, 0x0a, // Synchsafe header size (10 bytes)
+                0x49,
+                0x44,
+                0x33, // 'I', 'D', '3'
+                0x04,
+                0x00, // Version 2.4
+                0x00, // Flags
+                0x00,
+                0x00,
+                0x00,
+                0x0a, // Synchsafe header size (10 bytes)
                 // ID3 dummy tag bytes (10 bytes)
-                0x54, 0x49, 0x54, 0x32, 0x00, 0x00, 0x00, 0x02, 0x00, 0x00,
+                0x54,
+                0x49,
+                0x54,
+                0x32,
+                0x00,
+                0x00,
+                0x00,
+                0x02,
+                0x00,
+                0x00,
                 // MPEG Frame Sync (11 bits set = 0xFF 0xFB for MPEG-1 Layer 3, 128kbps, 44100Hz)
-                0xff, 0xfb, 0x90, 0x64,
+                0xff,
+                0xfb,
+                0x90,
+                0x64,
             ];
             const payload = new Uint8Array(256);
             payload.set(header, 0);
@@ -228,11 +239,20 @@ export class KoyosimMockServer {
             const buffer = new ArrayBuffer(44 + 128);
             const view = new DataView(buffer);
             // 'RIFF' chunk descriptor
-            view.setUint8(0, 0x52); view.setUint8(1, 0x49); view.setUint8(2, 0x46); view.setUint8(3, 0x46); // 'RIFF'
+            view.setUint8(0, 0x52);
+            view.setUint8(1, 0x49);
+            view.setUint8(2, 0x46);
+            view.setUint8(3, 0x46); // 'RIFF'
             view.setUint32(4, 36 + 128, true); // ChunkSize
-            view.setUint8(8, 0x57); view.setUint8(9, 0x41); view.setUint8(10, 0x56); view.setUint8(11, 0x45); // 'WAVE'
+            view.setUint8(8, 0x57);
+            view.setUint8(9, 0x41);
+            view.setUint8(10, 0x56);
+            view.setUint8(11, 0x45); // 'WAVE'
             // 'fmt ' sub-chunk
-            view.setUint8(12, 0x66); view.setUint8(13, 0x6d); view.setUint8(14, 0x74); view.setUint8(15, 0x20); // 'fmt '
+            view.setUint8(12, 0x66);
+            view.setUint8(13, 0x6d);
+            view.setUint8(14, 0x74);
+            view.setUint8(15, 0x20); // 'fmt '
             view.setUint32(16, 16, true); // Subchunk1Size (16 for PCM)
             view.setUint16(20, 1, true); // AudioFormat (1 = PCM)
             view.setUint16(22, 2, true); // NumChannels (2 = Stereo)
@@ -241,7 +261,10 @@ export class KoyosimMockServer {
             view.setUint16(32, 4, true); // BlockAlign
             view.setUint16(34, 16, true); // BitsPerSample
             // 'data' sub-chunk
-            view.setUint8(36, 0x64); view.setUint8(37, 0x61); view.setUint8(38, 0x74); view.setUint8(39, 0x61); // 'data'
+            view.setUint8(36, 0x64);
+            view.setUint8(37, 0x61);
+            view.setUint8(38, 0x74);
+            view.setUint8(39, 0x61); // 'data'
             view.setUint32(40, 128, true); // Subchunk2Size
             return new Uint8Array(buffer);
         }
@@ -249,16 +272,51 @@ export class KoyosimMockServer {
         if (format === "flac") {
             // Authentic FLAC 4-byte stream marker 'fLaC' + STREAMINFO metadata block
             const header = [
-                0x66, 0x4c, 0x61, 0x43, // 'f', 'L', 'a', 'C'
-                0x80,                   // Last metadata block flag (1) + block type (0 = STREAMINFO)
-                0x00, 0x00, 0x22,       // Block length (34 bytes for STREAMINFO)
+                0x66,
+                0x4c,
+                0x61,
+                0x43, // 'f', 'L', 'a', 'C'
+                0x80, // Last metadata block flag (1) + block type (0 = STREAMINFO)
+                0x00,
+                0x00,
+                0x22, // Block length (34 bytes for STREAMINFO)
                 // STREAMINFO block data (34 bytes)
-                0x10, 0x00, 0x10, 0x00, // Min/max block size
-                0x00, 0x00, 0x00, 0x00, // Min frame size
-                0x00, 0x00, 0x00, 0x00, // Max frame size
-                0x0a, 0xc4, 0x42, 0xf0, // Sample rate (44100), channels (2), bps (16)
-                0x00, 0x00, 0x01, 0x00, // Total samples
-                0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+                0x10,
+                0x00,
+                0x10,
+                0x00, // Min/max block size
+                0x00,
+                0x00,
+                0x00,
+                0x00, // Min frame size
+                0x00,
+                0x00,
+                0x00,
+                0x00, // Max frame size
+                0x0a,
+                0xc4,
+                0x42,
+                0xf0, // Sample rate (44100), channels (2), bps (16)
+                0x00,
+                0x00,
+                0x01,
+                0x00, // Total samples
+                0x00,
+                0x00,
+                0x00,
+                0x00,
+                0x00,
+                0x00,
+                0x00,
+                0x00,
+                0x00,
+                0x00,
+                0x00,
+                0x00,
+                0x00,
+                0x00,
+                0x00,
+                0x00,
             ];
             const payload = new Uint8Array(128);
             payload.set(header, 0);
@@ -274,11 +332,14 @@ export class KoyosimMockServer {
     public async handleRequest(url: string, init: RequestInit = {}): Promise<Response> {
         // Enforce strict Base URL verification
         if (!url.startsWith(KOYOSIM_API_BASE_URL)) {
-            return new Response(JSON.stringify({
-                code: 40301,
-                error: "forbidden_origin",
-                message: `Egress violation: Requests must target ${KOYOSIM_API_BASE_URL}`,
-            }), { status: 403, headers: { "Content-Type": "application/json" } });
+            return new Response(
+                JSON.stringify({
+                    code: 40301,
+                    error: "forbidden_origin",
+                    message: `Egress violation: Requests must target ${KOYOSIM_API_BASE_URL}`,
+                }),
+                { status: 403, headers: { "Content-Type": "application/json" } },
+            );
         }
 
         // Check for simulated errors
@@ -286,18 +347,24 @@ export class KoyosimMockServer {
             throw new TypeError("fetch failed: connection reset by peer");
         }
         if (this.errorInjection === "504_timeout") {
-            return new Response(JSON.stringify({
-                code: 50401,
-                error: "gateway_timeout",
-                message: "Upstream Koyosim inference cluster timed out",
-            }), { status: 504, headers: { "Content-Type": "application/json" } });
+            return new Response(
+                JSON.stringify({
+                    code: 50401,
+                    error: "gateway_timeout",
+                    message: "Upstream Koyosim inference cluster timed out",
+                }),
+                { status: 504, headers: { "Content-Type": "application/json" } },
+            );
         }
         if (this.errorInjection === "429_rate_limit") {
-            return new Response(JSON.stringify({
-                code: 42901,
-                error: "rate_limited",
-                message: "Koyosim concurrency limit reached. Please backoff.",
-            }), { status: 429, headers: { "Content-Type": "application/json", "Retry-After": "10" } });
+            return new Response(
+                JSON.stringify({
+                    code: 42901,
+                    error: "rate_limited",
+                    message: "Koyosim concurrency limit reached. Please backoff.",
+                }),
+                { status: 429, headers: { "Content-Type": "application/json", "Retry-After": "10" } },
+            );
         }
         if (this.errorInjection === "ssrf_redirect") {
             return new Response(null, {
@@ -307,15 +374,17 @@ export class KoyosimMockServer {
         }
 
         // Authorization check
-        const authHeader = (init.headers as Record<string, string>)?.["Authorization"] ||
-            (init.headers as Record<string, string>)?.["authorization"];
-        
+        const authHeader = (init.headers as Record<string, string>)?.["Authorization"] || (init.headers as Record<string, string>)?.["authorization"];
+
         if (this.errorInjection === "401_unauthorized" || !authHeader || !authHeader.startsWith("Bearer ") || authHeader.slice(7) !== MOCK_VALID_API_KEY) {
-            return new Response(JSON.stringify({
-                code: 40101,
-                error: "unauthorized",
-                message: "Missing or invalid Koyosim API Bearer token",
-            }), { status: 401, headers: { "Content-Type": "application/json" } });
+            return new Response(
+                JSON.stringify({
+                    code: 40101,
+                    error: "unauthorized",
+                    message: "Missing or invalid Koyosim API Bearer token",
+                }),
+                { status: 401, headers: { "Content-Type": "application/json" } },
+            );
         }
 
         const path = url.slice(KOYOSIM_API_BASE_URL.length);
@@ -324,33 +393,42 @@ export class KoyosimMockServer {
         // 1. GET /v1/ping (Non-billing connection probe)
         if (method === "GET" && path === "/v1/ping") {
             this.pingCount++;
-            return new Response(JSON.stringify({
-                code: 0,
-                status: "healthy",
-                timestamp: Date.now(),
-                billed: false,
-                costMicrocredits: 0,
-                version: "2026.10.koyosim-core",
-            }), { status: 200, headers: { "Content-Type": "application/json" } });
+            return new Response(
+                JSON.stringify({
+                    code: 0,
+                    status: "healthy",
+                    timestamp: Date.now(),
+                    billed: false,
+                    costMicrocredits: 0,
+                    version: "2026.10.koyosim-core",
+                }),
+                { status: 200, headers: { "Content-Type": "application/json" } },
+            );
         }
 
         // 2. GET /v1/models (Catalog and dynamic capability discovery)
         if (method === "GET" && path === "/v1/models") {
-            return new Response(JSON.stringify({
-                code: 0,
-                data: Object.values(KOYOSIM_MODELS),
-                msg: "ok",
-            }), { status: 200, headers: { "Content-Type": "application/json" } });
+            return new Response(
+                JSON.stringify({
+                    code: 0,
+                    data: Object.values(KOYOSIM_MODELS),
+                    msg: "ok",
+                }),
+                { status: 200, headers: { "Content-Type": "application/json" } },
+            );
         }
 
         // 3. POST /v1/audio/music/generate (Create asynchronous generation task)
         if (method === "POST" && path === "/v1/audio/music/generate") {
             if (this.errorInjection === "400_bad_request") {
-                return new Response(JSON.stringify({
-                    code: 40001,
-                    error: "bad_request",
-                    message: "Simulated invalid request parameter",
-                }), { status: 400, headers: { "Content-Type": "application/json" } });
+                return new Response(
+                    JSON.stringify({
+                        code: 40001,
+                        error: "bad_request",
+                        message: "Simulated invalid request parameter",
+                    }),
+                    { status: 400, headers: { "Content-Type": "application/json" } },
+                );
             }
 
             const body: KoyosimGenerateRequest = JSON.parse((init.body as string) || "{}");
@@ -359,99 +437,129 @@ export class KoyosimMockServer {
             if (body.idempotencyNonce && this.idempotencyMap.has(body.idempotencyNonce)) {
                 const existingId = this.idempotencyMap.get(body.idempotencyNonce)!;
                 const existingTask = this.tasks.get(existingId)!;
-                return new Response(JSON.stringify({
-                    code: 0,
-                    data: {
-                        task_id: existingTask.id,
-                        status: existingTask.stage,
-                        idempotent_replay: true,
-                    },
-                    msg: "ok",
-                }), { status: 200, headers: { "Content-Type": "application/json" } });
+                return new Response(
+                    JSON.stringify({
+                        code: 0,
+                        data: {
+                            task_id: existingTask.id,
+                            status: existingTask.stage,
+                            idempotent_replay: true,
+                        },
+                        msg: "ok",
+                    }),
+                    { status: 200, headers: { "Content-Type": "application/json" } },
+                );
             }
 
             // Model existence & validation
             const spec = KOYOSIM_MODELS[body.model];
             if (!spec) {
-                return new Response(JSON.stringify({
-                    code: 40002,
-                    error: "unsupported_model",
-                    message: `Model '${body.model}' is not supported by Koyosim`,
-                }), { status: 400, headers: { "Content-Type": "application/json" } });
+                return new Response(
+                    JSON.stringify({
+                        code: 40002,
+                        error: "unsupported_model",
+                        message: `Model '${body.model}' is not supported by Koyosim`,
+                    }),
+                    { status: 400, headers: { "Content-Type": "application/json" } },
+                );
             }
 
             // Mode validation
             if (!spec.modes.includes(body.mode)) {
-                return new Response(JSON.stringify({
-                    code: 40003,
-                    error: "unsupported_mode",
-                    message: `Mode '${body.mode}' is not supported by model '${body.model}'`,
-                }), { status: 400, headers: { "Content-Type": "application/json" } });
+                return new Response(
+                    JSON.stringify({
+                        code: 40003,
+                        error: "unsupported_mode",
+                        message: `Mode '${body.mode}' is not supported by model '${body.model}'`,
+                    }),
+                    { status: 400, headers: { "Content-Type": "application/json" } },
+                );
             }
 
             // Prompt length validation
             if (!body.prompt || body.prompt.trim().length === 0) {
-                return new Response(JSON.stringify({
-                    code: 40004,
-                    error: "empty_prompt",
-                    message: "Generation prompt cannot be empty",
-                }), { status: 400, headers: { "Content-Type": "application/json" } });
+                return new Response(
+                    JSON.stringify({
+                        code: 40004,
+                        error: "empty_prompt",
+                        message: "Generation prompt cannot be empty",
+                    }),
+                    { status: 400, headers: { "Content-Type": "application/json" } },
+                );
             }
             if (body.prompt.length > spec.maxPromptChars) {
-                return new Response(JSON.stringify({
-                    code: 40005,
-                    error: "prompt_too_long",
-                    message: `Prompt exceeds maximum length of ${spec.maxPromptChars} characters`,
-                }), { status: 400, headers: { "Content-Type": "application/json" } });
+                return new Response(
+                    JSON.stringify({
+                        code: 40005,
+                        error: "prompt_too_long",
+                        message: `Prompt exceeds maximum length of ${spec.maxPromptChars} characters`,
+                    }),
+                    { status: 400, headers: { "Content-Type": "application/json" } },
+                );
             }
 
             // Lyrics length validation
             if (body.lyrics && body.lyrics.length > spec.maxLyricsChars) {
-                return new Response(JSON.stringify({
-                    code: 40006,
-                    error: "lyrics_too_long",
-                    message: `Lyrics exceed maximum length of ${spec.maxLyricsChars} characters`,
-                }), { status: 400, headers: { "Content-Type": "application/json" } });
+                return new Response(
+                    JSON.stringify({
+                        code: 40006,
+                        error: "lyrics_too_long",
+                        message: `Lyrics exceed maximum length of ${spec.maxLyricsChars} characters`,
+                    }),
+                    { status: 400, headers: { "Content-Type": "application/json" } },
+                );
             }
 
             // Custom mode requires lyrics if not instrumental
             if (body.mode === "custom" && !body.instrumental && (!body.lyrics || body.lyrics.trim().length === 0)) {
-                return new Response(JSON.stringify({
-                    code: 40007,
-                    error: "lyrics_required",
-                    message: "Custom mode vocal generation requires lyrics",
-                }), { status: 400, headers: { "Content-Type": "application/json" } });
+                return new Response(
+                    JSON.stringify({
+                        code: 40007,
+                        error: "lyrics_required",
+                        message: "Custom mode vocal generation requires lyrics",
+                    }),
+                    { status: 400, headers: { "Content-Type": "application/json" } },
+                );
             }
 
             // Duration boundaries
             const requestedDuration = body.duration ?? 180;
             if (requestedDuration < spec.minDuration || requestedDuration > spec.maxDuration) {
-                return new Response(JSON.stringify({
-                    code: 40008,
-                    error: "invalid_duration",
-                    message: `Requested duration ${requestedDuration}s must be between ${spec.minDuration}s and ${spec.maxDuration}s`,
-                }), { status: 400, headers: { "Content-Type": "application/json" } });
+                return new Response(
+                    JSON.stringify({
+                        code: 40008,
+                        error: "invalid_duration",
+                        message: `Requested duration ${requestedDuration}s must be between ${spec.minDuration}s and ${spec.maxDuration}s`,
+                    }),
+                    { status: 400, headers: { "Content-Type": "application/json" } },
+                );
             }
 
             // Stem separation capability validation
             if (body.stems && body.stems.length > 0) {
                 if (!spec.stemSeparation) {
-                    return new Response(JSON.stringify({
-                        code: 40009,
-                        error: "stems_not_supported",
-                        message: `Stem separation is not supported on model '${body.model}'`,
-                    }), { status: 400, headers: { "Content-Type": "application/json" } });
+                    return new Response(
+                        JSON.stringify({
+                            code: 40009,
+                            error: "stems_not_supported",
+                            message: `Stem separation is not supported on model '${body.model}'`,
+                        }),
+                        { status: 400, headers: { "Content-Type": "application/json" } },
+                    );
                 }
             }
 
             // Format validation
             const format = body.format ?? "mp3";
             if (!spec.formats.includes(format)) {
-                return new Response(JSON.stringify({
-                    code: 40010,
-                    error: "unsupported_format",
-                    message: `Audio format '${format}' is not supported by model '${body.model}'`,
-                }), { status: 400, headers: { "Content-Type": "application/json" } });
+                return new Response(
+                    JSON.stringify({
+                        code: 40010,
+                        error: "unsupported_format",
+                        message: `Audio format '${format}' is not supported by model '${body.model}'`,
+                    }),
+                    { status: 400, headers: { "Content-Type": "application/json" } },
+                );
             }
 
             // Create task
@@ -480,17 +588,20 @@ export class KoyosimMockServer {
                 this.idempotencyMap.set(body.idempotencyNonce, taskId);
             }
 
-            return new Response(JSON.stringify({
-                code: 0,
-                data: {
-                    task_id: taskId,
-                    status: "submitted",
-                    estimated_duration_seconds: requestedDuration,
-                    model: body.model,
-                    created_at: task.createdAt,
-                },
-                msg: "ok",
-            }), { status: 200, headers: { "Content-Type": "application/json" } });
+            return new Response(
+                JSON.stringify({
+                    code: 0,
+                    data: {
+                        task_id: taskId,
+                        status: "submitted",
+                        estimated_duration_seconds: requestedDuration,
+                        model: body.model,
+                        created_at: task.createdAt,
+                    },
+                    msg: "ok",
+                }),
+                { status: 200, headers: { "Content-Type": "application/json" } },
+            );
         }
 
         // 4. GET /v1/audio/music/tasks/:id (Poll task lifecycle state)
@@ -499,11 +610,14 @@ export class KoyosimMockServer {
             const task = this.tasks.get(taskId);
 
             if (!task) {
-                return new Response(JSON.stringify({
-                    code: 40401,
-                    error: "task_not_found",
-                    message: `Task '${taskId}' not found on Koyosim`,
-                }), { status: 404, headers: { "Content-Type": "application/json" } });
+                return new Response(
+                    JSON.stringify({
+                        code: 40401,
+                        error: "task_not_found",
+                        message: `Task '${taskId}' not found on Koyosim`,
+                    }),
+                    { status: 404, headers: { "Content-Type": "application/json" } },
+                );
             }
 
             task.pollCount++;
@@ -526,24 +640,27 @@ export class KoyosimMockServer {
                 }
             }
 
-            return new Response(JSON.stringify({
-                code: 0,
-                data: {
-                    task_id: task.id,
-                    model: task.model,
-                    mode: task.mode,
-                    stage: task.stage,
-                    poll_count: task.pollCount,
-                    duration: task.actualDuration,
-                    audio_url: task.audioUrl,
-                    audio_formats: task.audioFormats,
-                    stems: task.stemUrls,
-                    synth_id_watermarked: task.synthIdWatermarked,
-                    error_reason: task.errorReason,
-                    updated_at: task.updatedAt,
-                },
-                msg: "ok",
-            }), { status: 200, headers: { "Content-Type": "application/json" } });
+            return new Response(
+                JSON.stringify({
+                    code: 0,
+                    data: {
+                        task_id: task.id,
+                        model: task.model,
+                        mode: task.mode,
+                        stage: task.stage,
+                        poll_count: task.pollCount,
+                        duration: task.actualDuration,
+                        audio_url: task.audioUrl,
+                        audio_formats: task.audioFormats,
+                        stems: task.stemUrls,
+                        synth_id_watermarked: task.synthIdWatermarked,
+                        error_reason: task.errorReason,
+                        updated_at: task.updatedAt,
+                    },
+                    msg: "ok",
+                }),
+                { status: 200, headers: { "Content-Type": "application/json" } },
+            );
         }
 
         // 5. GET /v1/audio/music/artifacts/:filename (Download binary audio)
@@ -572,11 +689,14 @@ export class KoyosimMockServer {
             });
         }
 
-        return new Response(JSON.stringify({
-            code: 40400,
-            error: "endpoint_not_found",
-            message: `Endpoint ${method} ${path} does not exist on Koyosim API`,
-        }), { status: 404, headers: { "Content-Type": "application/json" } });
+        return new Response(
+            JSON.stringify({
+                code: 40400,
+                error: "endpoint_not_found",
+                message: `Endpoint ${method} ${path} does not exist on Koyosim API`,
+            }),
+            { status: 404, headers: { "Content-Type": "application/json" } },
+        );
     }
 
     private finalizeTask(task: KoyosimTaskRecord): void {
@@ -621,9 +741,7 @@ export class KoyosimMockServer {
         };
         const body = JSON.stringify(bodyObj);
         const signaturePayload = `${timestamp}.${body}`;
-        const signature = createHmac("sha256", this.webhookSecret)
-            .update(signaturePayload)
-            .digest("hex");
+        const signature = createHmac("sha256", this.webhookSecret).update(signaturePayload).digest("hex");
 
         return { body, signature: `t=${timestamp},v1=${signature}`, timestamp };
     }

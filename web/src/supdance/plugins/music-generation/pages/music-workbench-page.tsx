@@ -73,19 +73,14 @@ export default function MusicWorkbenchPage() {
                 {/* 标准三栏工作台架构 */}
                 <div className="music-workbench-columns">
                     {/* 第一栏：左侧参数生成配置 */}
-                    <section
-                        className={`music-input-column ${mobileTab === "generate" ? "is-mobile-active" : ""}`}
-                        aria-label="创作参数"
-                    >
+                    <section className={`music-input-column ${mobileTab === "generate" ? "is-mobile-active" : ""}`} aria-label="创作参数">
                         <div className="music-composer-panel">
                             <div className="music-panel-head">
                                 <div className="music-panel-title">
                                     <Sparkles className="size-4 text-emerald-500" />
                                     <span>{t("music.create_new", undefined, "创作新音乐")}</span>
                                 </div>
-                                <span className="text-xs text-muted-foreground">
-                                    {t("music.auto_save_tip", undefined, "草稿自动加密暂存")}
-                                </span>
+                                <span className="text-xs text-muted-foreground">{t("music.auto_save_tip", undefined, "草稿自动加密暂存")}</span>
                             </div>
 
                             <MusicForm userId={userId} />
@@ -98,19 +93,14 @@ export default function MusicWorkbenchPage() {
                     </div>
 
                     {/* 第三栏：右侧历史作品抽屉 */}
-                    <aside
-                        className={`music-task-column ${mobileTab === "tasks" ? "is-mobile-active" : ""}`}
-                        aria-label="我的作品与历史"
-                    >
+                    <aside className={`music-task-column ${mobileTab === "tasks" ? "is-mobile-active" : ""}`} aria-label="我的作品与历史">
                         <div className="music-history-panel">
                             <div className="music-panel-head">
                                 <div className="music-panel-title">
                                     <History className="size-4 text-primary" />
                                     <span>{t("music.my_works", undefined, "我的音乐作品")}</span>
                                 </div>
-                                <span className="text-xs text-muted-foreground tabular-nums">
-                                    共 {tasks.length} 首
-                                </span>
+                                <span className="text-xs text-muted-foreground tabular-nums">共 {tasks.length} 首</span>
                             </div>
 
                             {loadingTasks && tasks.length === 0 ? (
@@ -122,9 +112,7 @@ export default function MusicWorkbenchPage() {
                                 <div className="flex flex-col items-center justify-center rounded-2xl border border-dashed border-border/60 p-12 text-center text-muted-foreground my-auto">
                                     <Music className="size-10 opacity-30 mb-2" />
                                     <p className="text-sm font-medium">暂无生成的音乐作品</p>
-                                    <p className="text-xs text-muted-foreground/80 mt-1">
-                                        在左侧表单中输入描述并点击“立即生成音乐”开启创作
-                                    </p>
+                                    <p className="text-xs text-muted-foreground/80 mt-1">在左侧表单中输入描述并点击“立即生成音乐”开启创作</p>
                                 </div>
                             ) : (
                                 <div className="music-history-list">

@@ -228,10 +228,10 @@ func TestChallengerM1_1_TaskAdmissionPreCreditDrainingRejections(t *testing.T) {
 }
 
 // TestChallengerM1_1_TableNamingDomainValidation rigorously challenges domain.ValidateCustomTableName:
-// 1. Rejects invalid tables (empty, whitespace, missing prefix, prefix-only, bad prefix)
-// 2. Accepts valid custom tables with prefix "supdance_"
-// 3. Verifies that music.SupDanceMusicGeneration model TableName matches "supdance_music_generations"
-//    and passes domain.ValidateCustomTableName.
+//  1. Rejects invalid tables (empty, whitespace, missing prefix, prefix-only, bad prefix)
+//  2. Accepts valid custom tables with prefix "supdance_"
+//  3. Verifies that music.SupDanceMusicGeneration model TableName matches "supdance_music_generations"
+//     and passes domain.ValidateCustomTableName.
 func TestChallengerM1_1_TableNamingDomainValidation(t *testing.T) {
 	// 1. Valid names must pass
 	validNames := []string{

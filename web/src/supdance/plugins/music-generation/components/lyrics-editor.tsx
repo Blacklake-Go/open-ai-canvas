@@ -78,11 +78,7 @@ export function LyricsEditor({ value, onChange, maxChars, disabled }: LyricsEdit
                     type="button"
                     disabled={disabled || !value}
                     onClick={handleClear}
-                    className={`flex items-center gap-1 rounded-sm px-1.5 py-0.5 text-xs transition-colors disabled:opacity-40 ${
-                        confirmingClear
-                            ? "bg-destructive/15 text-destructive font-medium"
-                            : "text-muted-foreground hover:text-destructive"
-                    }`}
+                    className={`flex items-center gap-1 rounded-sm px-1.5 py-0.5 text-xs transition-colors disabled:opacity-40 ${confirmingClear ? "bg-destructive/15 text-destructive font-medium" : "text-muted-foreground hover:text-destructive"}`}
                     title={confirmingClear ? "再次点击确认清空" : t("music.lyrics_clear", undefined, "清空歌词")}
                 >
                     <Trash2 className="size-3.5" />

@@ -124,9 +124,18 @@ export default function DiagnosticsPanel({ taskId, projectId }: DiagnosticsPanel
                                     <span>{t("settings.diag_available_records", undefined, "当前账号的可用记录")}</span>
                                 </div>
                                 <div className="mt-3 grid grid-cols-3 divide-x divide-border/55">
-                                    <DiagnosticMetric label={t("settings.diag_metric_fe_events", undefined, "前端事件")} value={loadingPreview ? t("settings.diag_loading_status", undefined, "读取中") : t("settings.diag_metric_fe_events_val", undefined, "最多 500")} />
-                                    <DiagnosticMetric label={t("settings.diag_metric_tasks", undefined, "任务")} value={loadingPreview ? t("settings.diag_loading_status", undefined, "读取中") : preview ? String(preview.taskCount) : t("settings.diag_metric_pending", undefined, "待统计")} />
-                                    <DiagnosticMetric label={t("settings.diag_metric_upstream", undefined, "上游调用")} value={loadingPreview ? t("settings.diag_loading_status", undefined, "读取中") : preview ? String(preview.apiCallCount) : t("settings.diag_metric_pending", undefined, "待统计")} />
+                                    <DiagnosticMetric
+                                        label={t("settings.diag_metric_fe_events", undefined, "前端事件")}
+                                        value={loadingPreview ? t("settings.diag_loading_status", undefined, "读取中") : t("settings.diag_metric_fe_events_val", undefined, "最多 500")}
+                                    />
+                                    <DiagnosticMetric
+                                        label={t("settings.diag_metric_tasks", undefined, "任务")}
+                                        value={loadingPreview ? t("settings.diag_loading_status", undefined, "读取中") : preview ? String(preview.taskCount) : t("settings.diag_metric_pending", undefined, "待统计")}
+                                    />
+                                    <DiagnosticMetric
+                                        label={t("settings.diag_metric_upstream", undefined, "上游调用")}
+                                        value={loadingPreview ? t("settings.diag_loading_status", undefined, "读取中") : preview ? String(preview.apiCallCount) : t("settings.diag_metric_pending", undefined, "待统计")}
+                                    />
                                 </div>
                             </div>
                         </div>
@@ -145,7 +154,15 @@ export default function DiagnosticsPanel({ taskId, projectId }: DiagnosticsPanel
                         </div>
                         <label className="mt-4 block" htmlFor="diagnostic-description">
                             <span className="sr-only">{t("settings.diag_desc_sr_only", undefined, "遇到了什么问题？")}</span>
-                            <Input.TextArea id="diagnostic-description" rows={4} maxLength={1000} showCount value={description} onChange={(event) => setDescription(event.target.value)} placeholder={t("settings.diag_desc_placeholder", undefined, "例如：点击“生成”后一直转圈没有报错，或某条任务失败但提示信息不完整。")} />
+                            <Input.TextArea
+                                id="diagnostic-description"
+                                rows={4}
+                                maxLength={1000}
+                                showCount
+                                value={description}
+                                onChange={(event) => setDescription(event.target.value)}
+                                placeholder={t("settings.diag_desc_placeholder", undefined, "例如：点击“生成”后一直转圈没有报错，或某条任务失败但提示信息不完整。")}
+                            />
                         </label>
                     </section>
                 </div>

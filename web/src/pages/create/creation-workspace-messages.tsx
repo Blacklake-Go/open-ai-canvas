@@ -3,7 +3,30 @@
 import { conversationTimeFormatter, type CreationMessage } from "./creation-types";
 import { creationMessageNeedsResultSync } from "./creation-conversations";
 import { useAppearanceStore } from "@/stores/use-appearance-store";
-import { AlertCircle, AlertTriangle, CircleStop, CloudOff, Copy, Download, ExternalLink, FileText, Film, Image as ImageIcon, ImageOff, Maximize2, Music, Music2, Pencil, RefreshCw, RotateCcw, UserRound, X, type LucideIcon, Blocks, Orbit } from "lucide-react";
+import {
+    AlertCircle,
+    AlertTriangle,
+    CircleStop,
+    CloudOff,
+    Copy,
+    Download,
+    ExternalLink,
+    FileText,
+    Film,
+    Image as ImageIcon,
+    ImageOff,
+    Maximize2,
+    Music,
+    Music2,
+    Pencil,
+    RefreshCw,
+    RotateCcw,
+    UserRound,
+    X,
+    type LucideIcon,
+    Blocks,
+    Orbit,
+} from "lucide-react";
 import { GenerationToolCard, type GenerationToolStatus } from "@/components/ai/generation-tool-card";
 import { GenerationPhaseSteps } from "@/components/ai/generation-phase-steps";
 import { MessageReasoning } from "@/components/ai/message-reasoning";
@@ -33,7 +56,7 @@ import { creationResultEntries } from "./creation-result-urls";
 const WaveformPlayer = lazy(() =>
     import("@/supdance/plugins/music-generation/components/waveform-player").then((m) => ({
         default: m.WaveformPlayer || m.default,
-    }))
+    })),
 );
 
 export function CreationMessageView({
@@ -291,52 +314,25 @@ function CreationMusicResult({ item, url, onRetry }: { item: CreationMessage; ur
                     <span className="text-sm font-semibold text-foreground/90 truncate max-w-[280px]" title={title}>
                         {title}
                     </span>
-                    <span className="rounded-md bg-muted px-1.5 py-0.5 text-[11px] font-medium text-muted-foreground uppercase">
-                        {model}
-                    </span>
-                    {isInstrumental ? (
-                        <span className="rounded-md bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 px-1.5 py-0.5 text-[11px] font-medium">
-                            纯音乐
-                        </span>
-                    ) : null}
+                    <span className="rounded-md bg-muted px-1.5 py-0.5 text-[11px] font-medium text-muted-foreground uppercase">{model}</span>
+                    {isInstrumental ? <span className="rounded-md bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 px-1.5 py-0.5 text-[11px] font-medium">纯音乐</span> : null}
                 </div>
                 <div className="flex items-center gap-2">
-                    <a
-                        href="/toolbox/music"
-                        target="_blank"
-                        rel="noreferrer"
-                        className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors"
-                        title="在音乐生成岛中打开完整工作室"
-                    >
+                    <a href="/toolbox/music" target="_blank" rel="noreferrer" className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors" title="在音乐生成岛中打开完整工作室">
                         <span>音乐岛</span>
                         <ExternalLink className="size-3" />
                     </a>
                 </div>
             </div>
 
-            <Suspense
-                fallback={
-                    <div className="plugin-music-player flex h-24 items-center justify-center rounded-xl border border-border/60 bg-card/60 p-4 shadow-sm animate-pulse text-xs text-muted-foreground">
-                        加载音频播放器...
-                    </div>
-                }
-            >
-                <WaveformPlayer
-                    taskId={taskId}
-                    audioUrl={url}
-                    durationSeconds={duration}
-                    title={title}
-                />
+            <Suspense fallback={<div className="plugin-music-player flex h-24 items-center justify-center rounded-xl border border-border/60 bg-card/60 p-4 shadow-sm animate-pulse text-xs text-muted-foreground">加载音频播放器...</div>}>
+                <WaveformPlayer taskId={taskId} audioUrl={url} durationSeconds={duration} title={title} />
             </Suspense>
 
             <div className="flex items-center justify-between pt-1 border-t border-border/40 text-xs text-muted-foreground">
                 <span>音频时长：约 {duration} 秒</span>
                 <div className="flex items-center gap-2">
-                    <button
-                        type="button"
-                        onClick={() => handleDownload("mp3")}
-                        className="inline-flex items-center gap-1 rounded-md px-2 py-1 bg-muted/60 hover:bg-muted text-foreground transition-colors cursor-pointer"
-                    >
+                    <button type="button" onClick={() => handleDownload("mp3")} className="inline-flex items-center gap-1 rounded-md px-2 py-1 bg-muted/60 hover:bg-muted text-foreground transition-colors cursor-pointer">
                         <Download className="size-3.5" />
                         <span>下载 MP3</span>
                     </button>

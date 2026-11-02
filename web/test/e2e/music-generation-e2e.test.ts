@@ -12,28 +12,13 @@
 
 import { beforeEach, describe, expect, test } from "bun:test";
 import { createHmac } from "node:crypto";
-import {
-    AudioFormat,
-    KOYOSIM_API_BASE_URL,
-    KOYOSIM_MODELS,
-    KoyosimMockServer,
-    KoyosimModelId,
-    MOCK_VALID_API_KEY,
-    MOCK_WEBHOOK_SECRET,
-} from "./koyosim-mock-server";
+import { AudioFormat, KOYOSIM_API_BASE_URL, KOYOSIM_MODELS, KoyosimMockServer, KoyosimModelId, MOCK_VALID_API_KEY, MOCK_WEBHOOK_SECRET } from "./koyosim-mock-server";
 
 // ---------------------------------------------------------------------------
 // Opaque-Box Test Client & Plugin Service Harness
 // ---------------------------------------------------------------------------
 
-export type PluginLifecycleState =
-    | "installed"
-    | "enabled"
-    | "disabled"
-    | "updating"
-    | "draining"
-    | "error"
-    | "uninstalled";
+export type PluginLifecycleState = "installed" | "enabled" | "disabled" | "updating" | "draining" | "error" | "uninstalled";
 
 export interface CreditAccount {
     userId: string;
@@ -116,21 +101,24 @@ export class MusicPluginTestHarness {
     /**
      * Submit task endpoint: POST /api/v1/supdance/music/tasks
      */
-    public async submitTask(userId: string, payload: {
-        model: KoyosimModelId;
-        mode: "simple" | "custom";
-        prompt: string;
-        title?: string;
-        lyrics?: string;
-        instrumental?: boolean;
-        duration?: number;
-        format?: AudioFormat;
-        stems?: ("vocals" | "drums" | "bass" | "other")[];
-        tempoBpm?: number;
-        keySignature?: string;
-        synthIdWatermark?: boolean;
-        idempotencyNonce?: string;
-    }): Promise<{ code: number; data?: any; msg: string; reason?: string }> {
+    public async submitTask(
+        userId: string,
+        payload: {
+            model: KoyosimModelId;
+            mode: "simple" | "custom";
+            prompt: string;
+            title?: string;
+            lyrics?: string;
+            instrumental?: boolean;
+            duration?: number;
+            format?: AudioFormat;
+            stems?: ("vocals" | "drums" | "bass" | "other")[];
+            tempoBpm?: number;
+            keySignature?: string;
+            synthIdWatermark?: boolean;
+            idempotencyNonce?: string;
+        },
+    ): Promise<{ code: number; data?: any; msg: string; reason?: string }> {
         // Feature 4: Draining engine check
         if (this.isDraining() || this.lifecycleState === "disabled") {
             return {
@@ -150,7 +138,7 @@ export class MusicPluginTestHarness {
 
         // Feature 34 & 35: Single-ledger credit reservation
         const account = this.creditAccounts.get(userId);
-        if (!account || (account.balanceMicrocredits - account.reservedMicrocredits) < estimatedCost) {
+        if (!account || account.balanceMicrocredits - account.reservedMicrocredits < estimatedCost) {
             return {
                 code: 40201,
                 reason: "insufficient_credits",
@@ -368,9 +356,7 @@ describe("SupDance AI Music Generation Plugin — Opaque-Box E2E Test Suite", ()
             });
 
             test("Feature 2: manages seven independent lifecycle states", () => {
-                const validStates: PluginLifecycleState[] = [
-                    "installed", "enabled", "disabled", "updating", "draining", "error", "uninstalled",
-                ];
+                const validStates: PluginLifecycleState[] = ["installed", "enabled", "disabled", "updating", "draining", "error", "uninstalled"];
                 for (const state of validStates) {
                     harness.lifecycleState = state;
                     expect(harness.lifecycleState).toBe(state);
@@ -498,9 +484,7 @@ describe("SupDance AI Music Generation Plugin — Opaque-Box E2E Test Suite", ()
                 const { body, signature, timestamp } = harness.mockServer.createSignedWebhookPayload(sampleTask as any);
 
                 // Verify signature
-                const expectedHash = createHmac("sha256", MOCK_WEBHOOK_SECRET)
-                    .update(`${timestamp}.${body}`)
-                    .digest("hex");
+                const expectedHash = createHmac("sha256", MOCK_WEBHOOK_SECRET).update(`${timestamp}.${body}`).digest("hex");
                 expect(signature).toContain(expectedHash);
             });
         });
@@ -768,9 +752,7 @@ describe("SupDance AI Music Generation Plugin — Opaque-Box E2E Test Suite", ()
             });
 
             test("Feature 45: Engineering documentation verifies all 8 specification docs", () => {
-                const requiredDocs = [
-                    "DOC-1", "DOC-2", "DOC-3", "DOC-4", "DOC-5", "DOC-6", "DOC-7", "DOC-8",
-                ];
+                const requiredDocs = ["DOC-1", "DOC-2", "DOC-3", "DOC-4", "DOC-5", "DOC-6", "DOC-7", "DOC-8"];
                 expect(requiredDocs).toHaveLength(8);
             });
 
@@ -1154,13 +1136,9 @@ Fading into morning mist`;
             const tamperedBody = body.replace("completed", "failed");
 
             // Recalculate signature over tampered body with wrong secret
-            const fakeSignature = createHmac("sha256", "wrong_attacker_secret")
-                .update(`${timestamp}.${tamperedBody}`)
-                .digest("hex");
+            const fakeSignature = createHmac("sha256", "wrong_attacker_secret").update(`${timestamp}.${tamperedBody}`).digest("hex");
 
-            const validSignature = createHmac("sha256", MOCK_WEBHOOK_SECRET)
-                .update(`${timestamp}.${tamperedBody}`)
-                .digest("hex");
+            const validSignature = createHmac("sha256", MOCK_WEBHOOK_SECRET).update(`${timestamp}.${tamperedBody}`).digest("hex");
 
             expect(fakeSignature).not.toBe(validSignature);
         });

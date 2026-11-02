@@ -1,14 +1,5 @@
 import { compactApiParams, http } from "@/services/api/request";
-import type {
-    AdminSettingsView,
-    CompleteOnboardingRequest,
-    OnboardingProfileView,
-    ProviderTestResult,
-    PublicProvidersResponse,
-    SocialAuthRegion,
-    UpdateSettingsRequest,
-    UserIdentitiesView,
-} from "./types";
+import type { AdminSettingsView, CompleteOnboardingRequest, OnboardingProfileView, ProviderTestResult, PublicProvidersResponse, SocialAuthRegion, UpdateSettingsRequest, UserIdentitiesView } from "./types";
 
 export async function getPublicSocialAuthProviders(params?: { simulateRegion?: SocialAuthRegion }, signal?: AbortSignal) {
     return http.get<PublicProvidersResponse>("/auth/social/providers", {
@@ -42,7 +33,7 @@ export function buildSocialAuthStartUrl(
         acceptedTerms?: boolean;
         mock?: boolean;
         simulateRegion?: SocialAuthRegion;
-    }
+    },
 ) {
     const params = new URLSearchParams();
     if (options?.next) params.set("next", options.next);
@@ -78,4 +69,3 @@ export function buildSocialAuthBindUrl(providerId: string, next?: string) {
 export async function unbindSocialIdentity(providerId: string) {
     return http.post<UserIdentitiesView>(`/auth/social/${encodeURIComponent(providerId)}/unbind`);
 }
-
