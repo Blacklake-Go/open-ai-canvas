@@ -197,8 +197,10 @@ type OnboardingProfileView struct {
 // CompleteOnboardingRequest is the payload for POST /api/auth/social/onboarding/complete.
 type CompleteOnboardingRequest struct {
 	TicketID    string `json:"ticketId"`
+	Ticket      string `json:"ticket"`
 	Username    string `json:"username"`
 	DisplayName string `json:"displayName"`
+	Nickname    string `json:"nickname"`
 	Email       string `json:"email"`
 	Password    string `json:"password"`
 }

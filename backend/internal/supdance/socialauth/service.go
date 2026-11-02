@@ -908,7 +908,11 @@ func (s *Service) GetOnboardingProfile(ticketID string) (*OnboardingProfileView,
 
 // CompleteOnboarding registers a new user with custom username, auto-bound/confirmed email and optional password.
 func (s *Service) CompleteOnboarding(req CompleteOnboardingRequest) (*model.User, *model.AuthSession, error) {
-	t, err := s.consumeTicket(req.TicketID)
+	ticketID := strings.TrimSpace(req.TicketID)
+	if ticketID == "" {
+		ticketID = strings.TrimSpace(req.Ticket)
+	}
+	t, err := s.consumeTicket(ticketID)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -966,6 +970,9 @@ func (s *Service) CompleteOnboarding(req CompleteOnboardingRequest) (*model.User
 	}
 
 	displayName := strings.TrimSpace(req.DisplayName)
+	if displayName == "" {
+		displayName = strings.TrimSpace(req.Nickname)
+	}
 	if displayName == "" {
 		displayName = t.DisplayName
 	}

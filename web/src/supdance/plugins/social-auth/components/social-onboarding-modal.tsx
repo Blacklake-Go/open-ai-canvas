@@ -129,7 +129,9 @@ export function SocialOnboardingModal() {
             setSubmitting(true);
             const res = await completeSocialOnboarding({
                 ticket,
+                ticketId: ticket,
                 username: username.trim(),
+                displayName: nickname.trim() || undefined,
                 nickname: nickname.trim() || undefined,
                 email: email.trim() || undefined,
                 password: password ? password : undefined,
@@ -270,36 +272,36 @@ export function SocialOnboardingModal() {
                         {/* Username and Nickname Section */}
                         <div className="grid grid-cols-2 gap-3">
                             <div>
-                                <label className="mb-1.5 block text-xs font-medium text-foreground/80">
+                                <label className="mb-1.5 block text-xs font-medium text-white/85">
                                     创作者 ID <span className="text-[#00f5d4]">*</span>
                                 </label>
                                 <Input
                                     value={username}
                                     onChange={(e) => setUsername(e.target.value)}
                                     placeholder="3-30位字母数字"
-                                    prefix={<span className="text-foreground/40">@</span>}
+                                    prefix={<span className="text-white/40">@</span>}
                                     status={username && !isUsernameValid ? "error" : ""}
-                                    className="h-10 rounded-lg border-white/10 bg-white/[0.04] text-sm text-white placeholder:text-foreground/30"
+                                    className="h-10 rounded-lg border-white/10 bg-[#171717] text-sm text-white placeholder:text-white/30"
                                 />
                                 {username && !isUsernameValid ? (
                                     <p className="mt-1 text-[11px] text-rose-400">字母/数字/下划线(3-30字符)</p>
                                 ) : (
-                                    <p className="mt-1 text-[11px] text-foreground/40">作品署名与空间链接</p>
+                                    <p className="mt-1 text-[11px] text-white/50">作品署名与空间链接</p>
                                 )}
                             </div>
 
                             <div>
-                                <label className="mb-1.5 block text-xs font-medium text-foreground/80">
+                                <label className="mb-1.5 block text-xs font-medium text-white/85">
                                     显示昵称
                                 </label>
                                 <Input
                                     value={nickname}
                                     onChange={(e) => setNickname(e.target.value)}
                                     placeholder="输入显示昵称"
-                                    prefix={<UserCheck className="size-3.5 text-foreground/40" />}
-                                    className="h-10 rounded-lg border-white/10 bg-white/[0.04] text-sm text-white placeholder:text-foreground/30"
+                                    prefix={<UserCheck className="size-3.5 text-white/40" />}
+                                    className="h-10 rounded-lg border-white/10 bg-[#171717] text-sm text-white placeholder:text-white/30"
                                 />
-                                <p className="mt-1 text-[11px] text-foreground/40">社区与创作台展示名称</p>
+                                <p className="mt-1 text-[11px] text-white/50">社区与创作台展示名称</p>
                             </div>
                         </div>
 
@@ -385,7 +387,8 @@ export function SocialOnboardingModal() {
                                 loading={submitting}
                                 disabled={!isUsernameValid || (Boolean(password) && (!isPasswordValid || !isPasswordMatch)) || !acceptedTerms}
                                 onClick={handleSubmit}
-                                className="h-11 flex-1 rounded-xl bg-[#00f5d4] font-semibold text-[#0e1117] hover:!bg-[#00f5d4]/90 hover:!text-[#0e1117] active:scale-[0.98] border-none shadow-none"
+                                style={{ backgroundColor: "#00f5d4", color: "#0e1117", borderColor: "#00f5d4" }}
+                                className="h-11 flex-1 rounded-xl font-bold active:scale-[0.98] border-none shadow-none"
                             >
                                 完成配置并进入 SupDance
                             </Button>

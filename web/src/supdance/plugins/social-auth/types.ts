@@ -112,8 +112,10 @@ export interface OnboardingProfileView {
 }
 
 export interface CompleteOnboardingRequest {
-    ticket: string;
+    ticket?: string;
+    ticketId?: string;
     username: string;
+    displayName?: string;
     nickname?: string;
     email?: string;
     password?: string;
