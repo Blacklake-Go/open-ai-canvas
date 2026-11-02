@@ -1,10 +1,13 @@
 import { compactApiParams, http } from "@/services/api/request";
 import type {
     AdminSettingsView,
+    CompleteOnboardingRequest,
+    OnboardingProfileView,
     ProviderTestResult,
     PublicProvidersResponse,
     SocialAuthRegion,
     UpdateSettingsRequest,
+    UserIdentitiesView,
 } from "./types";
 
 export async function getPublicSocialAuthProviders(params?: { simulateRegion?: SocialAuthRegion }, signal?: AbortSignal) {
@@ -49,3 +52,30 @@ export function buildSocialAuthStartUrl(
     const query = params.toString();
     return `/api/auth/social/${encodeURIComponent(providerId)}/start${query ? `?${query}` : ""}`;
 }
+
+export async function getSocialOnboardingProfile(ticket: string, signal?: AbortSignal) {
+    return http.get<OnboardingProfileView>("/auth/social/onboarding/profile", {
+        params: { ticket },
+        signal,
+    });
+}
+
+export async function completeSocialOnboarding(req: CompleteOnboardingRequest) {
+    return http.post<{ user: any; next: string }>("/auth/social/onboarding/complete", req);
+}
+
+export async function getUserSocialIdentities(signal?: AbortSignal) {
+    return http.get<UserIdentitiesView>("/auth/social/identities", { signal });
+}
+
+export function buildSocialAuthBindUrl(providerId: string, next?: string) {
+    const params = new URLSearchParams();
+    if (next) params.set("next", next);
+    const query = params.toString();
+    return `/api/auth/social/${encodeURIComponent(providerId)}/bind${query ? `?${query}` : ""}`;
+}
+
+export async function unbindSocialIdentity(providerId: string) {
+    return http.post<UserIdentitiesView>(`/auth/social/${encodeURIComponent(providerId)}/unbind`);
+}
+

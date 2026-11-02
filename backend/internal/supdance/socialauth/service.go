@@ -11,8 +11,10 @@ import (
 	"net/http"
 	"net/url"
 	"strings"
+	"sync"
 	"time"
 
+	"golang.org/x/crypto/bcrypt"
 	"gorm.io/gorm"
 	"yingce/backend/internal/kernel"
 	"yingce/backend/internal/model"
@@ -24,12 +26,16 @@ type Repository interface {
 	SaveSystemSetting(setting *model.SystemSetting) error
 	UserIdentity(provider string, subject string) (*model.UserIdentity, error)
 	UserIdentityForUser(userID string, provider string) (*model.UserIdentity, error)
+	UserIdentitiesForUser(userID string) ([]model.UserIdentity, error)
+	DeleteUserIdentity(userID string, provider string) error
+	UpsertUserIdentity(identity *model.UserIdentity) error
 	CreateOAuthState(state *model.OAuthState) error
 	ConsumeOAuthState(provider string, stateHash string) (*model.OAuthState, error)
 	CreateOAuthUser(user *model.User, identity *model.UserIdentity) error
 	User(id string) (*model.User, error)
 	UserByUsername(username string) (*model.User, error)
 	UserByEmail(email string) (*model.User, error)
+	CheckEmailAvailable(email string, excludeUserID string) error
 	UpdateUserLoginTime(userID string, t time.Time) error
 	Save(entity any) error
 }
@@ -44,14 +50,17 @@ type Host interface {
 }
 
 type Service struct {
-	repo Repository
-	host Host
+	repo      Repository
+	host      Host
+	ticketsMu sync.RWMutex
+	tickets   map[string]*OnboardingTicket
 }
 
 func NewService(repo Repository, host Host) *Service {
 	return &Service{
-		repo: repo,
-		host: host,
+		repo:    repo,
+		host:    host,
+		tickets: make(map[string]*OnboardingTicket),
 	}
 }
 
@@ -531,37 +540,42 @@ func (s *Service) BeginAuth(r *http.Request, providerID string, nextPath string,
 	}
 
 	// Generate standard OAuth 2.0 authorization URL
+	return buildAuthorizeURL(providerID, cfg, callbackURL, stateToken, codeVerifier), nil
+}
+
+func buildAuthorizeURL(providerID string, cfg ProviderConfig, callbackURL string, stateToken string, codeVerifier string) string {
 	switch providerID {
 	case ProviderQQ:
 		return fmt.Sprintf("https://graph.qq.com/oauth2.0/authorize?response_type=code&client_id=%s&redirect_uri=%s&state=%s&scope=get_user_info",
-			url.QueryEscape(cfg.ClientID), url.QueryEscape(callbackURL), stateToken), nil
+			url.QueryEscape(cfg.ClientID), url.QueryEscape(callbackURL), stateToken)
 	case ProviderWeChat:
 		return fmt.Sprintf("https://open.weixin.qq.com/connect/qrconnect?appid=%s&redirect_uri=%s&response_type=code&scope=snsapi_login&state=%s#wechat_redirect",
-			url.QueryEscape(cfg.ClientID), url.QueryEscape(callbackURL), stateToken), nil
+			url.QueryEscape(cfg.ClientID), url.QueryEscape(callbackURL), stateToken)
 	case ProviderDouyin:
 		return fmt.Sprintf("https://open.douyin.com/platform/oauth/connect/?client_key=%s&response_type=code&scope=user_info&redirect_uri=%s&state=%s",
-			url.QueryEscape(cfg.ClientID), url.QueryEscape(callbackURL), stateToken), nil
+			url.QueryEscape(cfg.ClientID), url.QueryEscape(callbackURL), stateToken)
 	case ProviderBilibili:
 		return fmt.Sprintf("https://passport.bilibili.com/register/verification.html?client_id=%s&response_type=code&redirect_uri=%s&state=%s",
-			url.QueryEscape(cfg.ClientID), url.QueryEscape(callbackURL), stateToken), nil
+			url.QueryEscape(cfg.ClientID), url.QueryEscape(callbackURL), stateToken)
 	case ProviderGoogle:
 		return fmt.Sprintf("https://accounts.google.com/o/oauth2/v2/auth?response_type=code&client_id=%s&redirect_uri=%s&scope=openid+profile+email&state=%s",
-			url.QueryEscape(cfg.ClientID), url.QueryEscape(callbackURL), stateToken), nil
+			url.QueryEscape(cfg.ClientID), url.QueryEscape(callbackURL), stateToken)
 	case ProviderX:
 		return fmt.Sprintf("https://twitter.com/i/oauth2/authorize?response_type=code&client_id=%s&redirect_uri=%s&scope=users.read+tweet.read&state=%s&code_challenge=%s&code_challenge_method=plain",
-			url.QueryEscape(cfg.ClientID), url.QueryEscape(callbackURL), stateToken, codeVerifier), nil
+			url.QueryEscape(cfg.ClientID), url.QueryEscape(callbackURL), stateToken, codeVerifier)
 	default:
 		return fmt.Sprintf("https://oauth.supdance.com/%s/authorize?client_id=%s&redirect_uri=%s&state=%s",
-			providerID, url.QueryEscape(cfg.ClientID), url.QueryEscape(callbackURL), stateToken), nil
+			providerID, url.QueryEscape(cfg.ClientID), url.QueryEscape(callbackURL), stateToken)
 	}
 }
 
 // SocialAuthCallbackResult contains user session and redirect target on success.
 type SocialAuthCallbackResult struct {
-	Session *model.AuthSession
-	User    *model.User
-	Next    string
-	IsNew   bool
+	Session          *model.AuthSession
+	User             *model.User
+	Next             string
+	IsNew            bool
+	OnboardingTicket string
 }
 
 // CompleteAuth processes the OAuth callback code, authenticates or creates user, and returns user session.
@@ -602,14 +616,24 @@ func (s *Service) CompleteAuth(r *http.Request, providerID string, stateToken st
 		return nil, err
 	}
 
+	// Determine if this is a logged-in account linking operation
+	bindingUserID := currentUserID
+	if bindingUserID == "" && state.ReauthUserID != "" {
+		bindingUserID = state.ReauthUserID
+	}
+
 	// 1. Check if identity already bound
 	var user *model.User
 	var identity *model.UserIdentity
+	var ticketID string
 	isNew := false
 
 	if s.repo != nil {
 		identity, err = s.repo.UserIdentity(providerID, profile.Subject)
 		if err == nil && identity != nil {
+			if bindingUserID != "" && identity.UserID != bindingUserID {
+				return nil, kernel.BadAuthRequest("该第三方账号已被其他 SupDance 账号绑定，无法重复绑定")
+			}
 			// Identity exists -> fetch existing user
 			user, err = s.repo.User(identity.UserID)
 			if err != nil {
@@ -620,13 +644,20 @@ func (s *Service) CompleteAuth(r *http.Request, providerID string, stateToken st
 			identity.AvatarURL = profile.AvatarURL
 			identity.UpdatedAt = time.Now()
 			_ = s.repo.Save(identity)
+
+			if bindingUserID != "" {
+				return &SocialAuthCallbackResult{
+					User:  user,
+					Next:  "/?bind_success=" + url.QueryEscape(providerID),
+					IsNew: false,
+				}, nil
+			}
 		} else if errors.Is(err, gorm.ErrRecordNotFound) || identity == nil {
-			// Account Linking for logged-in user vs First-time Registration
-			if currentUserID != "" {
-				// Link identity to current logged in user
+			// Account Linking for logged-in user vs First-time Onboarding
+			if bindingUserID != "" {
 				identity = &model.UserIdentity{
 					ID:               kernel.NewID(),
-					UserID:           currentUserID,
+					UserID:           bindingUserID,
 					Provider:         providerID,
 					Subject:          profile.Subject,
 					ProviderUsername: profile.Username,
@@ -634,13 +665,18 @@ func (s *Service) CompleteAuth(r *http.Request, providerID string, stateToken st
 					CreatedAt:        time.Now(),
 					UpdatedAt:        time.Now(),
 				}
-				if err := s.repo.Save(identity); err != nil {
+				if err := s.repo.UpsertUserIdentity(identity); err != nil {
 					return nil, fmt.Errorf("绑定社交账号失败：%w", err)
 				}
-				user, err = s.repo.User(currentUserID)
+				user, err = s.repo.User(bindingUserID)
 				if err != nil {
 					return nil, err
 				}
+				return &SocialAuthCallbackResult{
+					User:  user,
+					Next:  "/?bind_success=" + url.QueryEscape(providerID),
+					IsNew: false,
+				}, nil
 			} else {
 				// Register on first login
 				isNew = true
@@ -651,6 +687,21 @@ func (s *Service) CompleteAuth(r *http.Request, providerID string, stateToken st
 				if s.host != nil {
 					_ = s.host.EnsureSignupBonus(user.ID)
 				}
+
+				ticketID = "onboard_" + RandomToken()
+				t := &OnboardingTicket{
+					TicketID:         ticketID,
+					UserID:           user.ID,
+					Provider:         providerID,
+					ProviderName:     meta.Name,
+					Subject:          profile.Subject,
+					ProviderUsername: profile.Username,
+					DisplayName:      profile.DisplayName,
+					Email:            profile.Email,
+					AvatarURL:        profile.AvatarURL,
+					ExpiresAt:        time.Now().Add(30 * time.Minute),
+				}
+				s.saveTicket(t)
 			}
 		} else {
 			return nil, err
@@ -674,11 +725,17 @@ func (s *Service) CompleteAuth(r *http.Request, providerID string, stateToken st
 		UpdatedAt: time.Now(),
 	}
 
+	nextPath := SafeOAuthNext(state.NextPath)
+	if isNew && ticketID != "" {
+		nextPath = "/?onboarding=1&ticket=" + url.QueryEscape(ticketID)
+	}
+
 	return &SocialAuthCallbackResult{
-		Session: session,
-		User:    user,
-		Next:    SafeOAuthNext(state.NextPath),
-		IsNew:   isNew,
+		Session:          session,
+		User:             user,
+		Next:             nextPath,
+		IsNew:            isNew,
+		OnboardingTicket: ticketID,
 	}, nil
 }
 
@@ -791,4 +848,323 @@ func SafeOAuthNext(value string) string {
 		return "/create"
 	}
 	return parsed.RequestURI()
+}
+
+var (
+	globalTicketsMu sync.RWMutex
+	globalTickets   = make(map[string]*OnboardingTicket)
+)
+
+func (s *Service) saveTicket(t *OnboardingTicket) {
+	globalTicketsMu.Lock()
+	defer globalTicketsMu.Unlock()
+	now := time.Now()
+	for id, item := range globalTickets {
+		if now.After(item.ExpiresAt) {
+			delete(globalTickets, id)
+		}
+	}
+	globalTickets[t.TicketID] = t
+}
+
+func (s *Service) getTicket(ticketID string) (*OnboardingTicket, error) {
+	globalTicketsMu.RLock()
+	defer globalTicketsMu.RUnlock()
+	t, ok := globalTickets[ticketID]
+	if !ok || time.Now().After(t.ExpiresAt) {
+		return nil, kernel.BadAuthRequest("授权入站凭证已过期或不存在，请重新发起登录")
+	}
+	return t, nil
+}
+
+func (s *Service) consumeTicket(ticketID string) (*OnboardingTicket, error) {
+	globalTicketsMu.Lock()
+	defer globalTicketsMu.Unlock()
+	t, ok := globalTickets[ticketID]
+	if !ok || time.Now().After(t.ExpiresAt) {
+		return nil, kernel.BadAuthRequest("授权入站凭证已过期或不存在，请重新发起登录")
+	}
+	delete(globalTickets, ticketID)
+	return t, nil
+}
+
+// GetOnboardingProfile returns the initial user profile carried by the verified OAuth onboarding ticket.
+func (s *Service) GetOnboardingProfile(ticketID string) (*OnboardingProfileView, error) {
+	t, err := s.getTicket(ticketID)
+	if err != nil {
+		return nil, err
+	}
+	return &OnboardingProfileView{
+		TicketID:         t.TicketID,
+		Provider:         t.Provider,
+		ProviderName:     t.ProviderName,
+		ProviderUsername: t.ProviderUsername,
+		DisplayName:      t.DisplayName,
+		Email:            t.Email,
+		AvatarURL:        t.AvatarURL,
+		EmailAutoBound:   t.Email != "",
+	}, nil
+}
+
+// CompleteOnboarding registers a new user with custom username, auto-bound/confirmed email and optional password.
+func (s *Service) CompleteOnboarding(req CompleteOnboardingRequest) (*model.User, *model.AuthSession, error) {
+	t, err := s.consumeTicket(req.TicketID)
+	if err != nil {
+		return nil, nil, err
+	}
+	if s.repo == nil {
+		return nil, nil, errors.New("存储未初始化")
+	}
+
+	username := strings.TrimSpace(req.Username)
+	email := strings.TrimSpace(req.Email)
+	if t.Email != "" && email == "" {
+		email = t.Email
+	}
+
+	var user *model.User
+	if t.UserID != "" {
+		user, err = s.repo.User(t.UserID)
+		if err != nil {
+			return nil, nil, fmt.Errorf("找不到对应用户：%w", err)
+		}
+	}
+
+	if username != "" && (user == nil || username != user.Username) {
+		if len(username) < 3 || len(username) > 40 {
+			return nil, nil, kernel.BadAuthRequest("用户名长度须在 3 到 40 个字符之间")
+		}
+		excludeID := ""
+		if user != nil {
+			excludeID = user.ID
+		}
+		if existing, err := s.repo.UserByUsername(username); err == nil && existing != nil && existing.ID != excludeID {
+			return nil, nil, kernel.BadAuthRequest("该用户名已被占用，请尝试其他用户名")
+		}
+	}
+
+	if email != "" && (user == nil || email != user.Email) {
+		excludeID := ""
+		if user != nil {
+			excludeID = user.ID
+		}
+		if err := s.repo.CheckEmailAvailable(email, excludeID); err != nil {
+			return nil, nil, kernel.BadAuthRequest("该邮箱已被其他账号使用：" + err.Error())
+		}
+	}
+
+	var passwordHash string
+	if password := strings.TrimSpace(req.Password); password != "" {
+		if len(password) < 6 {
+			return nil, nil, kernel.BadAuthRequest("密码长度至少为 6 个字符")
+		}
+		hash, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
+		if err != nil {
+			return nil, nil, fmt.Errorf("加密密码失败：%w", err)
+		}
+		passwordHash = string(hash)
+	}
+
+	displayName := strings.TrimSpace(req.DisplayName)
+	if displayName == "" {
+		displayName = t.DisplayName
+	}
+	if displayName == "" {
+		displayName = username
+	}
+
+	now := time.Now()
+	var emailVerifiedAt *time.Time
+	if email != "" && t.Email != "" && strings.EqualFold(email, t.Email) {
+		emailVerifiedAt = &now
+	}
+
+	if user != nil {
+		if username != "" {
+			user.Username = username
+		}
+		if displayName != "" {
+			user.DisplayName = displayName
+		}
+		if email != "" {
+			user.Email = email
+			if emailVerifiedAt != nil {
+				user.EmailVerifiedAt = emailVerifiedAt
+			}
+		}
+		if passwordHash != "" {
+			user.PasswordHash = passwordHash
+		}
+		user.UpdatedAt = now
+		if err := s.repo.Save(user); err != nil {
+			return nil, nil, fmt.Errorf("更新用户信息失败：%w", err)
+		}
+	} else {
+		userID := kernel.NewID()
+		user = &model.User{
+			ID:              userID,
+			Username:        username,
+			DisplayName:     displayName,
+			Email:           email,
+			EmailVerifiedAt: emailVerifiedAt,
+			PasswordHash:    passwordHash,
+			Role:            model.UserRoleUser,
+			Status:          model.UserStatusActive,
+			CreatedAt:       now,
+			UpdatedAt:       now,
+		}
+
+		identity := &model.UserIdentity{
+			ID:               kernel.NewID(),
+			UserID:           userID,
+			Provider:         t.Provider,
+			Subject:          t.Subject,
+			ProviderUsername: t.ProviderUsername,
+			AvatarURL:        t.AvatarURL,
+			CreatedAt:        now,
+			UpdatedAt:        now,
+		}
+
+		if err := s.repo.CreateOAuthUser(user, identity); err != nil {
+			return nil, nil, fmt.Errorf("创建用户失败：%w", err)
+		}
+		if s.host != nil {
+			_ = s.host.EnsureSignupBonus(user.ID)
+		}
+	}
+
+	rawToken := RandomToken()
+	session := &model.AuthSession{
+		ID:        kernel.NewID(),
+		UserID:    user.ID,
+		TokenHash: HashToken(rawToken),
+		ExpiresAt: time.Now().Add(30 * 24 * time.Hour),
+		CreatedAt: time.Now(),
+		UpdatedAt: time.Now(),
+	}
+
+	return user, session, nil
+}
+
+// GetUserIdentities returns connected social accounts and password state for account management.
+func (s *Service) GetUserIdentities(actor *model.User) (*UserIdentitiesView, error) {
+	if actor == nil {
+		return nil, kernel.Unauthorized("未登录")
+	}
+	var boundMap = make(map[string]model.UserIdentity)
+	if s.repo != nil {
+		identities, err := s.repo.UserIdentitiesForUser(actor.ID)
+		if err != nil {
+			return nil, err
+		}
+		for _, ident := range identities {
+			boundMap[ident.Provider] = ident
+		}
+	}
+
+	order := []string{
+		ProviderGoogle, ProviderX, ProviderTikTok, ProviderInstagram,
+		ProviderWeChat, ProviderQQ, ProviderDouyin, ProviderBilibili,
+	}
+	var items []UserIdentityItem
+	for _, pid := range order {
+		meta, ok := ProviderRegistry[pid]
+		if !ok {
+			continue
+		}
+		item := UserIdentityItem{
+			Provider:     pid,
+			ProviderName: meta.Name,
+		}
+		if ident, found := boundMap[pid]; found {
+			item.Bound = true
+			item.ProviderUsername = ident.ProviderUsername
+			item.AvatarURL = ident.AvatarURL
+			t := ident.CreatedAt
+			item.BoundAt = &t
+		}
+		items = append(items, item)
+	}
+
+	return &UserIdentitiesView{
+		HasPassword: actor.PasswordHash != "",
+		Identities:  items,
+	}, nil
+}
+
+// BeginBind initiates OAuth flow bound to an existing logged in user account.
+func (s *Service) BeginBind(r *http.Request, actor *model.User, providerID string) (string, error) {
+	if actor == nil {
+		return "", kernel.Unauthorized("未登录")
+	}
+	settings, err := s.ReadSettings()
+	if err != nil {
+		return "", err
+	}
+	cfg, exists := settings.Providers[providerID]
+	if !exists || !cfg.Enabled || !channelAdvertisable(providerID, cfg) {
+		return "", kernel.Forbidden("该第三方登录渠道未开放或未配置")
+	}
+	meta := ProviderRegistry[providerID]
+
+	stateToken := RandomToken()
+	codeVerifier := RandomToken()
+
+	record := &model.OAuthState{
+		ID:            kernel.NewID(),
+		Provider:      providerID,
+		StateHash:     HashToken(stateToken),
+		CodeVerifier:  codeVerifier,
+		NextPath:      "/?bind_success=" + url.QueryEscape(providerID),
+		ReauthUserID:  actor.ID,
+		AcceptedTerms: true,
+		ExpiresAt:     time.Now().Add(10 * time.Minute),
+		CreatedAt:     time.Now(),
+	}
+	if s.repo != nil {
+		if err := s.repo.CreateOAuthState(record); err != nil {
+			return "", err
+		}
+	}
+
+	callbackURL := resolveCallbackURL(cfg, meta)
+	if mockAllowed(cfg) {
+		mockCode := "mock_code_" + RandomToken()[:16]
+		targetURL := fmt.Sprintf("/api/auth/social/%s/callback?state=%s&code=%s&mock=true", providerID, stateToken, mockCode)
+		return targetURL, nil
+	}
+
+	return buildAuthorizeURL(providerID, cfg, callbackURL, stateToken, codeVerifier), nil
+}
+
+// Unbind safely removes a connected third-party identity, preventing orphaned accounts.
+func (s *Service) Unbind(actor *model.User, providerID string) error {
+	if actor == nil {
+		return kernel.Unauthorized("未登录")
+	}
+	if s.repo == nil {
+		return nil
+	}
+	identities, err := s.repo.UserIdentitiesForUser(actor.ID)
+	if err != nil {
+		return err
+	}
+	var targetFound bool
+	for _, ident := range identities {
+		if ident.Provider == providerID {
+			targetFound = true
+			break
+		}
+	}
+	if !targetFound {
+		return kernel.BadAuthRequest("未找到已绑定的该渠道账号")
+	}
+
+	// Security Guard Check: Prevent user from being locked out without password or other login methods
+	hasPassword := actor.PasswordHash != ""
+	if !hasPassword && len(identities) <= 1 {
+		return kernel.BadAuthRequest("无法解绑唯一的登录凭证。请先在安全设置中设置独立登录密码，或绑定其他第三方账号。")
+	}
+
+	return s.repo.DeleteUserIdentity(actor.ID, providerID)
 }

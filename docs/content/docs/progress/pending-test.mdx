@@ -4,6 +4,27 @@ description: 当前项目已实现功能的手工验证清单与未确认边界
 ---
 
 # 待测试
+
+## 社交登录插件增强 v1.2.0 与全局用户资料浮窗（supdance/v2026.11.02.1）
+- 已实现（目的1A - 授权入站浮窗）：新增 `SocialOnboardingModal`（`web/src/supdance/plugins/social-auth/components/social-onboarding-modal.tsx`），支持全渠道 OAuth 授权后入站过程配置浮窗。检测到首次入站票据后自动弹出；第三方渠道返回邮箱时（如 Google / GitHub 等）自动将用户账号邮箱绑定并标记已验证 🔒；支持用户自定义创作者 ID（正则校验 `^[a-zA-Z0-9_-]{3,30}$`）、昵称以及可选设置独立登录密码。
+- 已实现（目的1B - 账号解绑换绑与账号名展示）：新增 `SocialAccountBindings`（`web/src/supdance/plugins/social-auth/components/social-account-bindings.tsx`），列出 8 大渠道的绑定状态与真实第三方账号标识（`providerUsername`）；支持绑定、换绑与解绑，并严格执行防孤立账号安全守卫（`Anti-Orphan Safety Guard`）：用户未设密码且仅剩一个绑定身份时，禁止解绑并引导先设密码。
+- 已实现（目的2 - 用户中心全局浮窗）：新增 `UserProfileModal` 与 `useUserProfileModalStore`（`web/src/components/layout/user-profile-modal.tsx`），将用户资料界面从传统内嵌页面升级为随时可呼出的全局浮窗；严格遵循 Apple 冷黑底色 `#0e1117`、电光青 `--primary: #00f5d4`、发丝边框 `border-white/10` 与 `backdrop-blur-2xl`，整合个人资料、密码与安全、第三方账号绑定与个性偏好；侧栏与顶栏账户入口优先唤起该浮窗，不打断画布与工作区。
+- 已实现（版本号与清单规范）：插件清单 `manifest.json` 与代码版本同步升至 `1.2.0`，新增 `onboarding-modal` 与 `user-account-bindings` 表面契约。
+- 已验证：`backend go build ./cmd/server`、`go test ./internal/supdance/socialauth/...`、`cd web && bun test test/supdance-social-auth.test.ts`（13 项）、`cd web && bun run build`（`tsc --noEmit && vite build`）全部通过。
+- [ ] 真实第三方 OAuth 回调联调：在 `https://www.supdance.com` 配置真实 Google/微信/QQ 凭证，测试授权回调后自动弹出入站浮窗、邮箱自动绑定显示已验证 🔒；测试未设密码时解绑被拦截。
+- [ ] 浮窗交互与响应式验收：在不同屏幕尺寸下呼出用户中心浮窗，验证头像上传/裁剪、密码修改、深浅模式切换与第三方换绑流程。
+
+
+## 公开服务条款与隐私政策页（`/terms`、`/privacy`）
+- 已实现：新增 `web/src/supdance/pages/legal/`（内容模型 + 共享渲染器 + 两份文档），注册为顶层公开路由（`RequireAuth` 子树之外，未登录可访问），并在 `SiteComplianceFooter` 补两个入口；登录页原有的 `/terms`、`/privacy` 死链因此恢复可用。
+- 已实现：条款按 Waffo Pancake 收单审核要求覆盖积分制预付计费、即时数字交付、7 天未使用积分退款 + EU/UK 14 天撤回、拒付与账单争议、第三方模型供应商披露表、责任上限；隐私政策覆盖 GDPR 目的↔法律依据对照表、处理者清单、跨境传输、保留期限表、8 项数据主体权利与 72 小时泄露通知，并如实写明当前限制（无 2FA、无整盘加密、无年龄验证、除会话过期与回收站外无自动删除任务）。
+- 已实现：正文整体标记 `data-i18n-ignore`（法律文本不接受未经审阅的机器改写），界面外壳走 `supdance-i18n`，新增 `legal.*` 词条并补齐 5 个语言包；运营方信息未填写时（`【待补充…】`）页面顶部显示不可发布提示条。
+- 已验证：`bun run build`（含 `tsc --noEmit`）、`bun run lint`、`bun test test/supdance-extension-isolation.test.ts test/design-system-compliance.test.ts`（17 项）全部通过；真实 Chrome 本地路由验收 `/terms`、`/privacy` 在亮/暗主题下渲染正常，目录锚点跳转、披露表横向滚动、页脚入口与待补充提示条均生效。
+- 顺带修复：`client-root-init.tsx` 把 `fetchPluginRuntimeState(signal?)` 直接当 TanStack `queryFn` 使用导致 `tsc` 失败（`bun run build` 中断），改为 `({ signal }) => fetchPluginRuntimeState(signal)`。
+- [ ] 运营方信息补全：`legal-meta.ts` 的 `mailingAddress`（可送达地址）与 `effectiveDate`（生效日期）必须填写后才能对外发布；填写后确认顶部提示条消失。
+- [ ] 浏览器验收（窄屏）：本项未能通过外部浏览器 viewport 覆盖验证，需在真机或 DevTools 设备模式下确认 <640px 时目录折叠为 `<details>`、表格横向滚动不撑破版面。
+- [ ] 部署后线上验收：发布到 `www.supdance.com` 后，用未登录会话确认 `/terms`、`/privacy` 返回真实文档而非 SPA 回退的 404 页（历史缺陷：nginx 回退让任意路径都返回 200，收单自检因此假通过）。
+- [ ] 英文译本：是否需要英文版条款与政策（当前仅中文为准 + 界面外壳可翻译）由收单审核结论决定。
 ## 插件生效判定统一与音乐工作台误拦截修复（supdance/v2026.11.01.1）
 - 已修复：`/toolbox/music` 被 `RequirePlugin` 误判为"已停用"（服务端 `effectiveEnabled=true`）。根因是路由守卫与入口显隐读取别名 id `music-generation` 或本地安装记录（默认 `enabled=false`）。现统一为 `selectPluginEffectivelyEnabled`（服务端 states → 运行时 statuses → 本地安装记录），插件 id 一律使用清单 id；后端移除幽灵别名策略 `PluginSupDanceMusicAlias`。
 - 已改进：停用守卫页文案区分"用户可自行开启（前往插件中心）"与"管理员统一停用"，并显示服务端 `blockedReason`。

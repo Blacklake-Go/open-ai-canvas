@@ -17,10 +17,14 @@ const (
 )
 
 type (
-	SocialAuthAdminSettingsView     = socialauth.AdminSettingsView
-	SocialAuthSettingsUpdateRequest = socialauth.UpdateSettingsRequest
-	SocialAuthProviderTestResult    = socialauth.ProviderTestResult
-	SocialAuthProvidersPublicView   = socialauth.PublicProvidersResponse
+	SocialAuthAdminSettingsView         = socialauth.AdminSettingsView
+	SocialAuthSettingsUpdateRequest     = socialauth.UpdateSettingsRequest
+	SocialAuthProviderTestResult        = socialauth.ProviderTestResult
+	SocialAuthProvidersPublicView       = socialauth.PublicProvidersResponse
+	SocialAuthOnboardingProfileView     = socialauth.OnboardingProfileView
+	SocialAuthCompleteOnboardingRequest = socialauth.CompleteOnboardingRequest
+	SocialAuthUserIdentitiesView        = socialauth.UserIdentitiesView
+	SocialAuthUserIdentityItem          = socialauth.UserIdentityItem
 )
 
 type socialAuthHost struct {
@@ -142,13 +146,14 @@ func (s *Service) BeginSocialAuth(r *http.Request, providerID string, nextPath s
 
 // SocialAuthLoginResult combines social auth callback with session creation and login logging.
 type SocialAuthLoginResult struct {
-	Session *AuthSessionResult
-	Next    string
-	IsNew   bool
-	User    *model.User
+	Session          *AuthSessionResult
+	Next             string
+	IsNew            bool
+	User             *model.User
+	OnboardingTicket string
 }
 
-// CompleteSocialAuth completes social login, binds user, and records login logs.
+// CompleteSocialAuth completes social login, binds user, or initiates onboarding ticket.
 func (s *Service) CompleteSocialAuth(r *http.Request, providerID string, state string, code string, cookie string, contexts ...LoginContext) (*SocialAuthLoginResult, error) {
 	available, err := s.SocialAuthPluginAvailable()
 	if err != nil {
@@ -180,20 +185,87 @@ func (s *Service) CompleteSocialAuth(r *http.Request, providerID string, state s
 		return nil, err
 	}
 
-	auth.LoginLogUser(event, result.User)
-	now := time.Now()
-	result.User.LastLoginAt = &now
-	_ = s.repo.UpdateUserLoginTime(result.User.ID, now)
+	// New OAuth user awaiting onboarding profile confirmation
+	if result.OnboardingTicket != "" {
+		return &SocialAuthLoginResult{
+			OnboardingTicket: result.OnboardingTicket,
+			Next:             result.Next,
+			IsNew:            true,
+		}, nil
+	}
 
-	session, err := s.authDomain().CreateAuthSession(result.User, event)
+	if result.User != nil {
+		auth.LoginLogUser(event, result.User)
+		now := time.Now()
+		result.User.LastLoginAt = &now
+		_ = s.repo.UpdateUserLoginTime(result.User.ID, now)
+
+		session, err := s.authDomain().CreateAuthSession(result.User, event)
+		if err != nil {
+			return nil, err
+		}
+
+		return &SocialAuthLoginResult{
+			Session: session,
+			Next:    result.Next,
+			IsNew:   result.IsNew,
+			User:    result.User,
+		}, nil
+	}
+
+	return &SocialAuthLoginResult{
+		Next:  result.Next,
+		IsNew: result.IsNew,
+	}, nil
+}
+
+// SocialAuthOnboardingProfile returns the profile info for the onboarding modal.
+func (s *Service) SocialAuthOnboardingProfile(ticket string) (*socialauth.OnboardingProfileView, error) {
+	return s.socialAuthService().GetOnboardingProfile(ticket)
+}
+
+// CompleteSocialAuthOnboarding creates the user and signs them in after onboarding modal confirmation.
+func (s *Service) CompleteSocialAuthOnboarding(r *http.Request, req socialauth.CompleteOnboardingRequest, contexts ...LoginContext) (*SocialAuthLoginResult, error) {
+	user, session, err := s.socialAuthService().CompleteOnboarding(req)
 	if err != nil {
 		return nil, err
 	}
 
+	var context LoginContext
+	if len(contexts) > 0 {
+		context = contexts[0]
+	}
+	event := auth.NewLoginLog("social_onboarding", "login", context)
+	auth.LoginLogUser(event, user)
+	now := time.Now()
+	user.LastLoginAt = &now
+	_ = s.repo.UpdateUserLoginTime(user.ID, now)
+
+	authSession, err := s.authDomain().CreateAuthSession(user, event)
+	if err != nil {
+		return nil, err
+	}
+	_ = session
+
 	return &SocialAuthLoginResult{
-		Session: session,
-		Next:    result.Next,
-		IsNew:   result.IsNew,
-		User:    result.User,
+		Session: authSession,
+		Next:    "/create",
+		IsNew:   true,
+		User:    user,
 	}, nil
+}
+
+// UserSocialIdentities returns connected accounts and password status for user settings.
+func (s *Service) UserSocialIdentities(actor *model.User) (*socialauth.UserIdentitiesView, error) {
+	return s.socialAuthService().GetUserIdentities(actor)
+}
+
+// BeginSocialAuthBind starts the OAuth flow to bind a provider to the logged in user.
+func (s *Service) BeginSocialAuthBind(r *http.Request, actor *model.User, providerID string) (string, error) {
+	return s.socialAuthService().BeginBind(r, actor, providerID)
+}
+
+// UnbindSocialAuth disconnects a social identity while guarding against orphaned accounts.
+func (s *Service) UnbindSocialAuth(actor *model.User, providerID string) error {
+	return s.socialAuthService().Unbind(actor, providerID)
 }

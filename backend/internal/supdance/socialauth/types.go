@@ -9,6 +9,8 @@ const (
 
 	ConfigSettingKey = "supdance_social_auth"
 
+	OAuthBindingCookie = "supdance_social_oauth"
+
 	RegionCN   = "cn"   // 中国大陆渠道
 	RegionIntl = "intl" // 海外及港澳台渠道
 
@@ -164,4 +166,55 @@ type ProviderTestResult struct {
 	Message       string    `json:"message"`
 	CheckedAt     time.Time `json:"checkedAt"`
 	TestedAt      time.Time `json:"testedAt"`
+}
+
+// OnboardingTicket represents temporary verified OAuth profile details awaiting user confirmation.
+type OnboardingTicket struct {
+	TicketID         string    `json:"ticketId"`
+	UserID           string    `json:"userId"`
+	Provider         string    `json:"provider"`
+	ProviderName     string    `json:"providerName"`
+	Subject          string    `json:"subject"`
+	ProviderUsername string    `json:"providerUsername"`
+	DisplayName      string    `json:"displayName"`
+	Email            string    `json:"email"`
+	AvatarURL        string    `json:"avatarUrl"`
+	ExpiresAt        time.Time `json:"expiresAt"`
+}
+
+// OnboardingProfileView is returned by GET /api/auth/social/onboarding/profile.
+type OnboardingProfileView struct {
+	TicketID         string `json:"ticketId"`
+	Provider         string `json:"provider"`
+	ProviderName     string `json:"providerName"`
+	ProviderUsername string `json:"providerUsername"`
+	DisplayName      string `json:"displayName"`
+	Email            string `json:"email"`
+	AvatarURL        string `json:"avatarUrl"`
+	EmailAutoBound   bool   `json:"emailAutoBound"`
+}
+
+// CompleteOnboardingRequest is the payload for POST /api/auth/social/onboarding/complete.
+type CompleteOnboardingRequest struct {
+	TicketID    string `json:"ticketId"`
+	Username    string `json:"username"`
+	DisplayName string `json:"displayName"`
+	Email       string `json:"email"`
+	Password    string `json:"password"`
+}
+
+// UserIdentityItem describes one third-party connection state in user settings.
+type UserIdentityItem struct {
+	Provider         string     `json:"provider"`
+	ProviderName     string     `json:"providerName"`
+	Bound            bool       `json:"bound"`
+	ProviderUsername string     `json:"providerUsername"`
+	AvatarURL        string     `json:"avatarUrl"`
+	BoundAt          *time.Time `json:"boundAt"`
+}
+
+// UserIdentitiesView is returned by GET /api/auth/social/identities.
+type UserIdentitiesView struct {
+	HasPassword bool               `json:"hasPassword"`
+	Identities  []UserIdentityItem `json:"identities"`
 }

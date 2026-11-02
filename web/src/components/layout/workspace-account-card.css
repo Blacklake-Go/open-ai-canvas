@@ -18,10 +18,10 @@
 .workspace-account-card-avatar svg { width: 100%; height: 100%; }
 .workspace-account-card-actions { display: grid; gap: 4px; }
 .workspace-account-card-actions > a, .workspace-account-card-actions > button { display: flex; align-items: center; gap: 8px; min-height: 40px; height: auto; width: 100%; padding: 8px; border: 0; border-radius: 12px; font-size: 13px; text-align: left; justify-content: flex-start; transition: background var(--user-motion), transform var(--user-motion); }
-.workspace-account-card-actions > a { color: var(--user-ink); }
-.workspace-account-card-actions > a > span { flex: 1; }
-.workspace-account-card-actions > a > svg:last-child { color: var(--user-ink-soft); width: 14px; }
-.workspace-account-card-actions > a:hover { background: var(--user-surface-muted); }
-.workspace-account-card-actions > a:active { transform: scale(.97); }
-.workspace-account-card-actions > a:focus-visible, .workspace-account-card-wallet > button:focus-visible { outline: 2px solid var(--user-accent); outline-offset: 2px; }
-@media (prefers-reduced-motion: reduce) { .workspace-account-card-actions > a:active { transform: none; } }
+.workspace-account-card-actions > a, .workspace-account-card-actions > button { color: var(--user-ink); background: transparent; cursor: pointer; }
+.workspace-account-card-actions > a > span, .workspace-account-card-actions > button > span { flex: 1; }
+.workspace-account-card-actions > a > svg:last-child, .workspace-account-card-actions > button > svg:last-child { color: var(--user-ink-soft); width: 14px; }
+.workspace-account-card-actions > a:hover, .workspace-account-card-actions > button:hover { background: var(--user-surface-muted); }
+.workspace-account-card-actions > a:active, .workspace-account-card-actions > button:active { transform: scale(.97); }
+.workspace-account-card-actions > a:focus-visible, .workspace-account-card-actions > button:focus-visible, .workspace-account-card-wallet > button:focus-visible { outline: 2px solid var(--user-accent); outline-offset: 2px; }
+@media (prefers-reduced-motion: reduce) { .workspace-account-card-actions > a:active, .workspace-account-card-actions > button:active { transform: none; } }

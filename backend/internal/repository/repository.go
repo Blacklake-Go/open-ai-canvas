@@ -40,6 +40,10 @@ type Repository struct {
 	canvasChanges        map[canvasChange]struct{}
 }
 
+func (r *Repository) DB() *gorm.DB {
+	return r.db
+}
+
 type UserStorageUsage struct {
 	AssetCount   int64 `json:"assetCount"`
 	AssetBytes   int64 `json:"assetBytes"`
@@ -77,10 +81,6 @@ func (r *Repository) Transaction(fn func(*Repository) error) error {
 
 func (r *Repository) Dialect() string {
 	return r.db.Dialector.Name()
-}
-
-func (r *Repository) DB() *gorm.DB {
-	return r.db
 }
 
 func (r *Repository) ReleaseTaskLease(id string, owner string) error {

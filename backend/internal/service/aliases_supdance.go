@@ -25,11 +25,15 @@ type (
 	SupDanceI18nAdminOverview   = app.SupDanceI18nAdminOverview
 	SupDanceI18nExportPayload   = app.SupDanceI18nExportPayload
 
-	SocialAuthAdminSettingsView     = app.SocialAuthAdminSettingsView
-	SocialAuthSettingsUpdateRequest = app.SocialAuthSettingsUpdateRequest
-	SocialAuthProviderTestResult    = app.SocialAuthProviderTestResult
-	SocialAuthProvidersPublicView   = app.SocialAuthProvidersPublicView
-	SocialAuthLoginResult           = app.SocialAuthLoginResult
+	SocialAuthAdminSettingsView         = app.SocialAuthAdminSettingsView
+	SocialAuthSettingsUpdateRequest     = app.SocialAuthSettingsUpdateRequest
+	SocialAuthProviderTestResult        = app.SocialAuthProviderTestResult
+	SocialAuthProvidersPublicView       = app.SocialAuthProvidersPublicView
+	SocialAuthLoginResult               = app.SocialAuthLoginResult
+	SocialAuthOnboardingProfileView     = app.SocialAuthOnboardingProfileView
+	SocialAuthCompleteOnboardingRequest = app.SocialAuthCompleteOnboardingRequest
+	SocialAuthUserIdentitiesView        = app.SocialAuthUserIdentitiesView
+	SocialAuthUserIdentityItem          = app.SocialAuthUserIdentityItem
 
 	MusicPluginLifecycleState = app.MusicPluginLifecycleState
 	MusicLifecycleInfo        = app.MusicLifecycleInfo

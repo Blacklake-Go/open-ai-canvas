@@ -2,6 +2,7 @@ import type { ReactNode } from "react";
 import { lazy, Suspense, useEffect, useLayoutEffect } from "react";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { ConfigProvider } from "antd";
+import zhCN from "antd/locale/zh_CN";
 
 import { AuthSessionHydrator } from "@/components/auth/auth-session-hydrator";
 import { AppFeedbackProvider } from "@/components/layout/app-feedback";
@@ -15,6 +16,10 @@ import { applyAppearanceMetadata, useAppearanceStore } from "@/stores/use-appear
 import { useUserStore } from "@/stores/use-user-store";
 import { refreshPublicAppearance } from "@/services/appearance-bootstrap";
 import { SupDanceI18nRuntimeHost, useSupDanceAntdLocale } from "@/supdance/plugins/i18n";
+import { SupDancePluginRuntimeSync } from "@/supdance/adapters/plugin-runtime-sync";
+import { SocialOnboardingModal } from "@/supdance/plugins/social-auth";
+import { UserProfileModalHost } from "@/components/layout/user-profile-modal";
+
 
 const ClientRootInit = lazy(() => import("@/components/layout/client-root-init").then((module) => ({ default: module.ClientRootInit })));
 
@@ -32,7 +37,6 @@ export function AppProviders({ children }: { children: ReactNode }) {
     const theme = useActiveTheme();
     const dark = theme === "dark";
     const appearance = useAppearanceStore((state) => state.appearance);
-    const antdLocale = useSupDanceAntdLocale();
 
     useLayoutEffect(() => {
         document.documentElement.classList.toggle("dark", dark);
@@ -61,14 +65,17 @@ export function AppProviders({ children }: { children: ReactNode }) {
 
     return (
         // 两个汉字的按钮（取消、确定）不再被 antd 拉开字距，与其他按钮的文字节奏一致。
-        <ConfigProvider locale={antdLocale} theme={getAntThemeConfig(dark, appearance.activeSkin)} wave={{ disabled: true }} button={{ autoInsertSpace: false }}>
+        <ConfigProvider locale={zhCN} theme={getAntThemeConfig(dark, appearance.activeSkin)} wave={{ disabled: true }} button={{ autoInsertSpace: false }}>
             <AppFeedbackProvider>
                 <QueryClientProvider client={appQueryClient}>
                     {isolateDevRepro ? (
                         children
                     ) : (
                         <>
+                            <SupDancePluginRuntimeSync />
                             <SupDanceI18nRuntimeHost />
+                            <SocialOnboardingModal />
+                            <UserProfileModalHost />
                             <AuthSessionHydrator>
                                 <ClientRootBoundary>{children}</ClientRootBoundary>
                             </AuthSessionHydrator>

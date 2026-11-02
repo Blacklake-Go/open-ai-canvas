@@ -65,3 +65,28 @@ func (r *Repository) CreateOAuthUser(user *model.User, identity *model.UserIdent
 		return tx.Create(&model.CreditAccount{UserID: user.ID}).Error
 	})
 }
+
+func (r *Repository) UserIdentitiesForUser(userID string) ([]model.UserIdentity, error) {
+	var list []model.UserIdentity
+	if err := r.db.Find(&list, "user_id = ?", userID).Error; err != nil {
+		return nil, err
+	}
+	return list, nil
+}
+
+func (r *Repository) DeleteUserIdentity(userID string, provider string) error {
+	return r.db.Delete(&model.UserIdentity{}, "user_id = ? AND provider = ?", userID, provider).Error
+}
+
+func (r *Repository) UpsertUserIdentity(identity *model.UserIdentity) error {
+	var existing model.UserIdentity
+	err := r.db.First(&existing, "user_id = ? AND provider = ?", identity.UserID, identity.Provider).Error
+	if err == nil {
+		existing.Subject = identity.Subject
+		existing.ProviderUsername = identity.ProviderUsername
+		existing.AvatarURL = identity.AvatarURL
+		existing.UpdatedAt = time.Now()
+		return r.db.Save(&existing).Error
+	}
+	return r.db.Create(identity).Error
+}

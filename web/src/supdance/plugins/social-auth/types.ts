@@ -99,3 +99,39 @@ export interface ProviderTestResult {
     testedAt?: string;
     checkedAt?: string;
 }
+
+export interface OnboardingProfileView {
+    ticketId: string;
+    provider: string;
+    providerName: string;
+    providerUsername: string;
+    displayName: string;
+    email: string;
+    avatarUrl: string;
+    expiresAt: string;
+}
+
+export interface CompleteOnboardingRequest {
+    ticket: string;
+    username: string;
+    nickname?: string;
+    email?: string;
+    password?: string;
+}
+
+export interface UserIdentityItem {
+    id: number;
+    provider: string;
+    providerName: string;
+    subject: string;
+    providerUsername: string;
+    avatarUrl: string;
+    boundAt: string;
+}
+
+export interface UserIdentitiesView {
+    hasPassword: boolean;
+    identities: UserIdentityItem[];
+    count: number;
+}
+

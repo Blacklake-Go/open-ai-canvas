@@ -1,6 +1,6 @@
 import { App, Popover } from "antd";
 import { Switch } from "@/components/ui/base/switch";
-import { ChevronRight, LogIn, LogOut, Moon, ShieldCheck, Sun } from "lucide-react";
+import { ChevronRight, LogIn, LogOut, Moon, Settings, ShieldCheck, Sun, UserRound } from "lucide-react";
 import { useState, type ReactNode } from "react";
 import { Link, useNavigate } from "react-router";
 
@@ -15,7 +15,8 @@ import { cn } from "@/lib/utils";
 import { logout } from "@/services/api/auth";
 import { useThemeStore } from "@/stores/use-theme-store";
 import { useUserStore, type LocalUser } from "@/stores/use-user-store";
-import { useI18n } from "@/supdance/plugins/i18n";
+import { openUserProfileModal } from "@/stores/use-user-profile-modal-store";
+
 
 type WorkspaceSidebarFooterProps = {
     expandedClassName: string;
@@ -25,7 +26,6 @@ type WorkspaceSidebarFooterProps = {
 };
 
 export function WorkspaceSidebarFooter({ expandedClassName, collapsedClassName, accountClassName, showAnnouncement = true }: WorkspaceSidebarFooterProps) {
-    const { t } = useI18n();
     const theme = useThemeStore((state) => state.theme);
     const setTheme = useThemeStore((state) => state.setTheme);
     const user = useUserStore((state) => state.user);
@@ -44,10 +44,10 @@ export function WorkspaceSidebarFooter({ expandedClassName, collapsedClassName, 
             await logout();
             await applyUserSession({ user: null });
             setMenuOpen(false);
-            message.success(t("nav.logout_success"));
+            message.success("已退出登录");
             navigate("/login", { replace: true });
         } catch (error) {
-            message.error(error instanceof Error ? error.message : t("nav.logout_failed"));
+            message.error(error instanceof Error ? error.message : "退出失败");
         }
     };
 
@@ -76,13 +76,29 @@ export function WorkspaceSidebarFooter({ expandedClassName, collapsedClassName, 
                                 <SidebarUserAvatar user={user} className="size-8" />
                                 <div className="min-w-0 flex-1">
                                     <div className="flex min-w-0 items-center gap-2"><span className="truncate text-sm font-medium">{user.displayName || user.username}</span><UserGroupBadge /><IdentityProviderBadge user={user} /></div>
-                                    {creditsEnabled ? <div className="mt-0.5 truncate text-[var(--fs-label)] tabular-nums text-foreground/45">{t("nav.available_credits_inline", { balance })}</div> : null}
+                                    {creditsEnabled ? <div className="mt-0.5 truncate text-[var(--fs-label)] tabular-nums text-foreground/45">可用 {balance} 积分</div> : null}
                                 </div>
                             </div>
 
+                            <div className="py-2 space-y-1">
+                                <button
+                                    type="button"
+                                    className="flex h-9 w-full items-center gap-2 rounded px-2 text-xs text-foreground/62 hover:bg-surface-hover hover:text-foreground [&_svg]:size-3.5 [&_svg]:shrink-0"
+                                    onClick={() => {
+                                        setMenuOpen(false);
+                                        openUserProfileModal("profile");
+                                    }}
+                                >
+                                    <UserRound className="size-3.5 shrink-0" />
+                                    <span className="flex-1 text-left">个人中心与资料</span>
+                                    <ChevronRight className="!size-3 text-foreground/25" />
+                                </button>
+                                <MenuLink to="/settings?section=models" icon={<Settings />} label="工作区设置" onNavigate={() => setMenuOpen(false)} />
+                            </div>
+
                             {user.role === "admin" ? (
-                                <nav className="py-2" aria-label={t("nav.account_actions")}>
-                                    <MenuLink to="/admin" icon={<ShieldCheck />} label={t("nav.admin_console")} onNavigate={() => setMenuOpen(false)} />
+                                <nav className="pb-2" aria-label="管理工具">
+                                    <MenuLink to="/admin" icon={<ShieldCheck />} label="管理员后台" onNavigate={() => setMenuOpen(false)} />
                                 </nav>
                             ) : null}
 
@@ -92,25 +108,25 @@ export function WorkspaceSidebarFooter({ expandedClassName, collapsedClassName, 
 
                             <div className="flex h-10 items-center px-2">
                                 {theme === "dark" ? <Moon className="size-3.5 text-foreground/45" /> : <Sun className="size-3.5 text-foreground/45" />}
-                                <span className="ml-2 flex-1 text-xs text-foreground/65">{t("nav.dark_mode")}</span>
-                                <Switch size="sm" checked={theme === "dark"} onChange={(checked) => setTheme(checked ? "dark" : "light")} aria-label={t("nav.dark_mode")} />
+                                <span className="ml-2 flex-1 text-xs text-foreground/65">深色模式</span>
+                                <Switch size="sm" checked={theme === "dark"} onChange={(checked) => setTheme(checked ? "dark" : "light")} aria-label="深色模式" />
                             </div>
-                            <button type="button" className="flex h-9 w-full items-center gap-2 rounded px-2 text-xs text-foreground/55 hover:bg-surface-hover hover:text-foreground" onClick={() => void handleLogout()}><LogOut className="size-3.5" />{t("nav.logout")}</button>
+                            <button type="button" className="flex h-9 w-full items-center gap-2 rounded px-2 text-xs text-foreground/55 hover:bg-surface-hover hover:text-foreground" onClick={() => void handleLogout()}><LogOut className="size-3.5" />退出登录</button>
                         </div>
                     )}
                 >
-                    <button type="button" className={cn("app-workspace-account-button flex min-h-10 w-full min-w-0 items-center overflow-hidden rounded-md text-left transition-colors hover:bg-surface-hover", accountClassName)} title={creditsEnabled ? `${user.displayName || user.username} · ${t("nav.available_credits_inline", { balance })}` : user.displayName || user.username}>
+                    <button type="button" className={cn("app-workspace-account-button flex min-h-10 w-full min-w-0 items-center overflow-hidden rounded-md text-left transition-colors hover:bg-surface-hover", accountClassName)} title={creditsEnabled ? `${user.displayName || user.username} · ${balance} 积分` : user.displayName || user.username}>
                         <SidebarUserAvatar user={user} className="size-7" />
                         <span className={cn("min-w-0 flex-1 flex-col", expandedClassName)}>
                             <span className="flex min-w-0 items-center gap-1.5"><span className="truncate text-xs font-medium">{user.displayName || user.username}</span><UserGroupBadge compact /></span>
-                            {creditsEnabled ? <span className="mt-0.5 block truncate text-[var(--fs-micro)] tabular-nums text-foreground/42">{t("nav.available_credits_inline", { balance })}</span> : null}
+                            {creditsEnabled ? <span className="mt-0.5 block truncate text-[var(--fs-micro)] tabular-nums text-foreground/42">{balance} 积分</span> : null}
                         </span>
                         <ChevronRight className={cn("size-3.5 shrink-0 text-foreground/30", expandedClassName)} />
                     </button>
                 </Popover>
             ) : (
-                <Link to="/login" className={cn("flex h-10 items-center rounded-md text-xs text-foreground/65 hover:bg-surface-hover hover:text-foreground", collapsedClassName)} title={t("auth.login")}>
-                    <LogIn className="size-4 shrink-0" /><span className={expandedClassName}>{t("auth.login")}</span>
+                <Link to="/login" className={cn("flex h-10 items-center rounded-md text-xs text-foreground/65 hover:bg-surface-hover hover:text-foreground", collapsedClassName)} title="登录">
+                    <LogIn className="size-4 shrink-0" /><span className={expandedClassName}>登录</span>
                 </Link>
             )}
         </div>

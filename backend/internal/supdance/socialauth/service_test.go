@@ -1,6 +1,7 @@
 package socialauth
 
 import (
+	"errors"
 	"net/http"
 	"net/http/httptest"
 	"strings"
@@ -118,6 +119,42 @@ func (r *testRepo) CreateAuthSession(session *model.AuthSession) error {
 
 func (r *testRepo) Save(entity any) error {
 	return r.db.Save(entity).Error
+}
+
+func (r *testRepo) CheckEmailAvailable(email string, excludeUserID string) error {
+	var count int64
+	query := r.db.Model(&model.User{}).Where("email = ?", email)
+	if excludeUserID != "" {
+		query = query.Where("id != ?", excludeUserID)
+	}
+	query.Count(&count)
+	if count > 0 {
+		return errors.New("email already taken")
+	}
+	return nil
+}
+
+func (r *testRepo) UserIdentitiesForUser(userID string) ([]model.UserIdentity, error) {
+	var list []model.UserIdentity
+	err := r.db.Find(&list, "user_id = ?", userID).Error
+	return list, err
+}
+
+func (r *testRepo) DeleteUserIdentity(userID string, provider string) error {
+	return r.db.Delete(&model.UserIdentity{}, "user_id = ? AND provider = ?", userID, provider).Error
+}
+
+func (r *testRepo) UpsertUserIdentity(identity *model.UserIdentity) error {
+	var existing model.UserIdentity
+	err := r.db.First(&existing, "user_id = ? AND provider = ?", identity.UserID, identity.Provider).Error
+	if err == nil {
+		existing.Subject = identity.Subject
+		existing.ProviderUsername = identity.ProviderUsername
+		existing.AvatarURL = identity.AvatarURL
+		existing.UpdatedAt = time.Now()
+		return r.db.Save(&existing).Error
+	}
+	return r.db.Create(identity).Error
 }
 
 type testHost struct{}

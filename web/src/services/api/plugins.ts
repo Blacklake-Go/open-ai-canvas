@@ -40,8 +40,8 @@ export async function fetchPlugins() {
     return http.get<{ plugins: BackendPlugin[]; states: Record<string, PluginState> }>("/plugins");
 }
 
-export async function fetchPluginRuntimeState() {
-    return http.get<{ statuses: Record<string, WorkflowPluginStatus>; states: Record<string, PluginState> }>("/plugins/status");
+export async function fetchPluginRuntimeState(signal?: AbortSignal) {
+    return http.get<{ statuses: Record<string, WorkflowPluginStatus>; states: Record<string, PluginState> }>("/plugins/status", { signal });
 }
 
 export async function uploadPlugin(file: File) {
