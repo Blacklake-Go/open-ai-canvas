@@ -43,18 +43,26 @@ func TestMockCallbackCodeIsHonoredOnlyWhenSandboxEnabled(t *testing.T) {
 func TestLiveCallbackRequiresRealTokenExchange(t *testing.T) {
 	repo, svc := newSecurityTestService(t)
 	seedChannel(t, svc, ProviderQQ, "real_qq_client", "real_qq_secret", false)
-	req := cnRequest("/api/auth/social/qq/start")
-	redirectURL, err := svc.BeginAuth(req, ProviderQQ, "/create", true, false)
-	if err != nil {
-		t.Fatalf("BeginAuth failed: %v", err)
+	// 未接入上游交换的渠道现在既不能发起授权，也不出现在登录页。
+	if _, err := svc.BeginAuth(cnRequest("/api/auth/social/qq/start"), ProviderQQ, "/create", true, false); err == nil {
+		t.Fatalf("BeginAuth accepted a channel with no upstream token exchange")
 	}
-	state := oauthStateFromRedirect(t, redirectURL)
+	state := mintState(t, repo, ProviderQQ)
 
 	if res, err := svc.CompleteAuth(cnRequest("/callback"), ProviderQQ, state, "abcdef1234567890", ""); err == nil {
 		t.Fatalf("no upstream exchange implemented but callback minted identity %s", res.User.ID)
 	}
 	if id, err := repo.UserIdentity(ProviderQQ, "qq_live_abcdef12"); err == nil && id != nil && id.ID != "" {
 		t.Fatalf("callback persisted a fabricated identity %+v", id)
+	}
+	respCN, err := svc.GetPublicProviders(cnRequest("/api/auth/social/providers"))
+	if err != nil {
+		t.Fatalf("GetPublicProviders failed: %v", err)
+	}
+	for _, p := range respCN.Providers {
+		if p.ID == ProviderQQ {
+			t.Fatalf("QQ without a real exchange must not be advertised, got %+v", respCN.Providers)
+		}
 	}
 }
 

@@ -391,6 +391,19 @@ func credentialsUsable(cfg ProviderConfig) bool {
 	return cfg.ClientID != "" && cfg.ClientSecret != ""
 }
 
+// channelAdvertisable reports whether a login page may offer a channel and let a
+// visitor start its OAuth flow: the credentials have to be complete, and the
+// exchange has to be able to finish — either the channel is explicitly in
+// sandbox/mock mode, or the backend really implements that provider's token
+// exchange. Channels that would only fail after the user finished consent are kept
+// off the login page entirely.
+func channelAdvertisable(providerID string, cfg ProviderConfig) bool {
+	if !credentialsUsable(cfg) {
+		return false
+	}
+	return mockAllowed(cfg) || liveExchangeSupported(providerID)
+}
+
 // resolveCallbackURL mirrors the redirect_uri that BeginAuth sends upstream, so
 // the token exchange presents exactly the same value.
 func resolveCallbackURL(cfg ProviderConfig, meta ProviderMeta) string {
@@ -425,7 +438,7 @@ func (s *Service) GetPublicProviders(r *http.Request) (*PublicProvidersResponse,
 		// Advertise a channel only once it can actually finish the exchange, so the
 		// login page never offers a button that dies at the callback (admin view
 		// reports the same state as "待录入凭证").
-		if !credentialsUsable(cfg) {
+		if !channelAdvertisable(id, cfg) {
 			continue
 		}
 
@@ -473,7 +486,7 @@ func (s *Service) BeginAuth(r *http.Request, providerID string, nextPath string,
 		return "", err
 	}
 	cfg, exists := settings.Providers[providerID]
-	if !exists || !cfg.Enabled || !credentialsUsable(cfg) {
+	if !exists || !cfg.Enabled || !channelAdvertisable(providerID, cfg) {
 		return "", kernel.Forbidden("该第三方登录渠道未开放或未配置")
 	}
 	meta := ProviderRegistry[providerID]

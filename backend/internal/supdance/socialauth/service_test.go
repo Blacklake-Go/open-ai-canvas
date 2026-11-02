@@ -762,6 +762,12 @@ func TestGetPublicProviders_BypassesSecretDecryption(t *testing.T) {
 	qq.ClientID = "10005200"
 	qq.ClientSecret = "raw_test_secret"
 	settings.Providers[ProviderQQ] = qq
+	// 抖音保持沙箱模式：公开列表只展示「确实能完成登录」的渠道，
+	// 这里需要一个仍会被展示的渠道来验证它不解密密钥。
+	douyin := settings.Providers[ProviderDouyin]
+	douyin.Enabled = true
+	douyin.SandboxMockEnabled = true
+	settings.Providers[ProviderDouyin] = douyin
 	if err := svc.SaveSettings(&model.User{ID: "admin"}, settings); err != nil {
 		t.Fatalf("SaveSettings failed: %v", err)
 	}
