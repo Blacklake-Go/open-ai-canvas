@@ -8,12 +8,22 @@ import (
 	"yingce/backend/internal/auth"
 	"yingce/backend/internal/kernel"
 	"yingce/backend/internal/model"
+	"yingce/backend/internal/platform"
 	"yingce/backend/internal/supdance/socialauth"
 )
 
 const (
 	PluginSupDanceSocialAuth = socialauth.PluginID
 )
+
+// wireSocialAuthTicketStore keeps onboarding tickets in the shared Redis so a
+// backend restart or an additional replica cannot lose or replay them. Without
+// Redis the service falls back to its single-process in-memory tickets.
+func wireSocialAuthTicketStore(coordinator *platform.Coordinator) {
+	if coordinator != nil && coordinator.HasRedis() {
+		socialauth.UseTicketStore(socialauth.NewRedisTicketStore(coordinator.Redis()))
+	}
+}
 
 type (
 	SocialAuthAdminSettingsView         = socialauth.AdminSettingsView

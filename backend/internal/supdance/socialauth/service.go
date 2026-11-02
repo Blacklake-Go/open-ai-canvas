@@ -861,6 +861,15 @@ var (
 )
 
 func (s *Service) saveTicket(t *OnboardingTicket) {
+	if store := currentTicketStore(); store != nil {
+		ctx, cancel := ticketStoreContext()
+		defer cancel()
+		if err := store.SaveTicket(ctx, t); err == nil {
+			return
+		}
+		// Shared store unavailable: keep this replica able to finish onboarding
+		// from local memory until the store recovers.
+	}
 	globalTicketsMu.Lock()
 	defer globalTicketsMu.Unlock()
 	now := time.Now()
@@ -873,21 +882,35 @@ func (s *Service) saveTicket(t *OnboardingTicket) {
 }
 
 func (s *Service) getTicket(ticketID string) (*OnboardingTicket, error) {
+	if store := currentTicketStore(); store != nil {
+		ctx, cancel := ticketStoreContext()
+		defer cancel()
+		if ticket, err := store.GetTicket(ctx, ticketID); err == nil {
+			return ticket, nil
+		}
+	}
 	globalTicketsMu.RLock()
 	defer globalTicketsMu.RUnlock()
 	t, ok := globalTickets[ticketID]
 	if !ok || time.Now().After(t.ExpiresAt) {
-		return nil, kernel.BadAuthRequest("授权入站凭证已过期或不存在，请重新发起登录")
+		return nil, ticketExpiredError()
 	}
 	return t, nil
 }
 
 func (s *Service) consumeTicket(ticketID string) (*OnboardingTicket, error) {
+	if store := currentTicketStore(); store != nil {
+		ctx, cancel := ticketStoreContext()
+		defer cancel()
+		if ticket, err := store.ConsumeTicket(ctx, ticketID); err == nil {
+			return ticket, nil
+		}
+	}
 	globalTicketsMu.Lock()
 	defer globalTicketsMu.Unlock()
 	t, ok := globalTickets[ticketID]
 	if !ok || time.Now().After(t.ExpiresAt) {
-		return nil, kernel.BadAuthRequest("授权入站凭证已过期或不存在，请重新发起登录")
+		return nil, ticketExpiredError()
 	}
 	delete(globalTickets, ticketID)
 	return t, nil

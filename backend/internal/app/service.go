@@ -148,6 +148,7 @@ func New(repo *repository.Repository, dataDir string) *Service {
 
 func newService(repo *repository.Repository, dataDir string) *Service {
 	coordinator, err := platform.NewCoordinator(repo.Dialect())
+	wireSocialAuthTicketStore(coordinator)
 	canvasRealtime := canvas.NewRealtimeHub(coordinator.Redis())
 	repo = repo.WithCanvasChangeNotifier(canvasRealtime.Changed)
 	pluginRuntime, pluginRuntimeErr := newPluginRuntime(dataDir)
