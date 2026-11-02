@@ -19,6 +19,7 @@ import { SupDanceI18nRuntimeHost, useSupDanceAntdLocale } from "@/supdance/plugi
 import { SupDancePluginRuntimeSync } from "@/supdance/adapters/plugin-runtime-sync";
 import { SocialOnboardingModal } from "@/supdance/plugins/social-auth";
 import { UserProfileModalHost } from "@/components/layout/user-profile-modal";
+import { VisualEngineRuntimeHost } from "@/supdance/plugins/visual-engine";
 
 const ClientRootInit = lazy(() => import("@/components/layout/client-root-init").then((module) => ({ default: module.ClientRootInit })));
 
@@ -75,6 +76,7 @@ export function AppProviders({ children }: { children: ReactNode }) {
                             <SupDanceI18nRuntimeHost />
                             <SocialOnboardingModal />
                             <UserProfileModalHost />
+                            <VisualEngineRuntimeHost />
                             <AuthSessionHydrator>
                                 <ClientRootBoundary>{children}</ClientRootBoundary>
                             </AuthSessionHydrator>

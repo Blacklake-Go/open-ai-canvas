@@ -65,6 +65,7 @@ import { preloadAdminPages } from "../admin-page-loader";
 import "@/styles/admin-ui.css";
 import "../theme/admin-tokens.css";
 import "../theme/admin-chrome.css";
+import { useVisualEngineStore } from "@/supdance/plugins/visual-engine";
 
 type AdminNavigationItem = {
     path: string;
@@ -146,6 +147,23 @@ const adminNavigation: AdminNavigationGroup[] = [
     },
 ];
 
+export function getAdminNavigation(visualEngineEnabled = true): AdminNavigationGroup[] {
+    return adminNavigation.map((group) => {
+        if (group.key !== "creation" || !visualEngineEnabled) return group;
+        const hasVisualEngine = group.items.some((item) => item.path === "/admin/plugins/visual-engine");
+        if (hasVisualEngine) return group;
+        const nextItems = [...group.items];
+        const pluginsIndex = nextItems.findIndex((item) => item.path === "/admin/plugins");
+        nextItems.splice(pluginsIndex >= 0 ? pluginsIndex + 1 : nextItems.length, 0, {
+            path: "/admin/plugins/visual-engine",
+            label: "视觉引擎",
+            shortLabel: "视觉",
+            icon: <Sparkles className="size-4 text-sky-400" />,
+        });
+        return { ...group, items: nextItems };
+    });
+}
+
 function isAdminNavigationPath(pathname: string, navigationPath: string) {
     if (navigationPath === "/admin") {
         return pathname === navigationPath;
@@ -154,7 +172,7 @@ function isAdminNavigationPath(pathname: string, navigationPath: string) {
 }
 
 function findAdminNavigation(pathname: string) {
-    for (const group of adminNavigation) {
+    for (const group of getAdminNavigation()) {
         const item = group.items.find((candidate) => isAdminNavigationPath(pathname, candidate.path));
         if (item) return { group, item };
     }
@@ -162,7 +180,7 @@ function findAdminNavigation(pathname: string) {
 }
 
 function visibleNavigationGroups(features: Partial<Record<"frontendModelsEnabled", boolean>>) {
-    return adminNavigation.map((group) => ({ ...group, items: group.items.filter((item) => !item.requireFeature || features[item.requireFeature]) })).filter((group) => group.items.length > 0);
+    return getAdminNavigation().map((group) => ({ ...group, items: group.items.filter((item) => !item.requireFeature || features[item.requireFeature]) })).filter((group) => group.items.length > 0);
 }
 
 // v2：从“全部展开”改为默认只展开当前所在分组，菜单更紧凑。

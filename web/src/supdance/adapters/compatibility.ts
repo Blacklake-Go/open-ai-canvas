@@ -118,6 +118,43 @@ export const SUPDANCE_UPSTREAM_PATCH_REGISTRY: readonly UpstreamPatchRecord[] = 
         reason: "上游路由守卫与入口显隐原先优先读取本地安装记录（ensurePlugin 新建记录默认 enabled=false）或别名 id（服务端无对应状态记录），会把服务端已生效的插件误判为停用；现统一收敛为 use-plugin-store 的 selectPluginEffectivelyEnabled（服务端 states -> 运行时 statuses -> 本地安装记录），插件 id 一律使用清单 id。",
         upgradeRisk: "LOW",
     },
+    {
+        id: "supdance-legal-docs",
+        upstreamBaseline: "v1.7.3",
+        feature: "公开可访问的服务条款 (/terms) 与隐私政策 (/privacy) 页面，并在通用页脚挂接入口",
+        coupledUpstreamFiles: ["web/src/router.tsx", "web/src/components/layout/site-compliance-footer.tsx"],
+        files: [
+            "web/src/router.tsx",
+            "web/src/components/layout/site-compliance-footer.tsx",
+            "web/src/supdance/pages/legal/legal-meta.ts",
+            "web/src/supdance/pages/legal/legal-page.tsx",
+            "web/src/supdance/pages/legal/terms-content.ts",
+            "web/src/supdance/pages/legal/terms-page.tsx",
+            "web/src/supdance/pages/legal/privacy-content.ts",
+            "web/src/supdance/pages/legal/privacy-page.tsx",
+        ],
+        reason: "收单机构（Waffo Pancake）账户审核要求条款与隐私政策在未登录状态可访问且从站内可达；上游仅有登录页内联的 /terms /privacy 死链，故在顶层路由注册公开页并在通用合规页脚补入口。",
+        upgradeRisk: "LOW",
+    },
+    {
+        id: "supdance-visual-engine",
+        upstreamBaseline: "v1.7.3",
+        feature: "全站视觉与交互引擎 (supdance-visual-engine)：集中管理三层 Token、E0–E4 深度阴影、Motion 动效、图 1 工作区恢复动画及后台专属控制台",
+        coupledUpstreamFiles: [
+            "web/src/pages/admin/components/admin-shell.tsx",
+            "web/src/router.tsx",
+            "web/src/components/layout/app-providers.tsx",
+            "web/src/pages/admin/plugins/plugins-page.tsx",
+        ],
+        files: [
+            "supdance/plugins/supdance-visual-engine/manifest.json",
+            "web/src/supdance/plugins/visual-engine/index.ts",
+            "web/src/supdance/plugins/visual-engine/types.ts",
+            "web/src/supdance/plugins/visual-engine/admin/VisualConsole.tsx",
+        ],
+        reason: "以独立插件形式挂载双入口统一控制台 (/admin/plugins/visual-engine)、全站设计令牌桥接与工作区恢复动画，不侵入宿主业务逻辑。",
+        upgradeRisk: "LOW",
+    },
 ] as const;
 
 export const SUPDANCE_RESERVED_PLUGIN_PREFIX = "supdance-" as const;

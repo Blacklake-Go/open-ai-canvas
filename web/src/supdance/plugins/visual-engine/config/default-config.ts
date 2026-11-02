@@ -1,0 +1,129 @@
+import type { VisualEngineConfig } from "../types";
+import { nativePreset } from "./presets/native-preset";
+import { darkPreset } from "./presets/dark-preset";
+import { lightPreset } from "./presets/light-preset";
+import { studioPreset } from "./presets/studio-preset";
+
+export const BUILTIN_THEME_PRESETS = [nativePreset, darkPreset, lightPreset, studioPreset];
+
+export const DEFAULT_VISUAL_ENGINE_CONFIG: VisualEngineConfig = {
+    schemaVersion: 2,
+    activePreset: "studio",
+    themeMode: "dark",
+    tokens: {
+        light: studioPreset.tokens.light,
+        dark: studioPreset.tokens.dark,
+    },
+    components: studioPreset.components,
+    elevations: {
+        E0: {
+            level: "E0",
+            label: "底板层 (Base Content)",
+            usage: "标准页面画布、基础文档、静态内容区",
+            shadowLight: "none",
+            shadowDark: "none",
+            blurRadius: 0,
+        },
+        E1: {
+            level: "E1",
+            label: "操作台与工具栏 (Controls)",
+            usage: "悬浮工具栏、底栏播放器、创作控制条",
+            shadowLight: "0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04)",
+            shadowDark: "0 2px 6px rgba(0,0,0,0.45)",
+            blurRadius: 3,
+        },
+        E2: {
+            level: "E2",
+            label: "浮动菜单与微弹窗 (Dropdown/Popover)",
+            usage: "下拉选择框、模型气泡菜单、操作上下文菜单",
+            shadowLight: "0 4px 6px -1px rgba(0,0,0,0.08), 0 2px 4px -2px rgba(0,0,0,0.05)",
+            shadowDark: "0 6px 18px rgba(0,0,0,0.55)",
+            blurRadius: 6,
+        },
+        E3: {
+            level: "E3",
+            label: "模态窗口与全局抽屉 (Modal/Drawer)",
+            usage: "居中对话框、设置抽屉、关键确认弹层",
+            shadowLight: "0 10px 15px -3px rgba(0,0,0,0.1), 0 4px 6px -4px rgba(0,0,0,0.05)",
+            shadowDark: "0 14px 32px rgba(0,0,0,0.68)",
+            blurRadius: 15,
+        },
+        E4: {
+            level: "E4",
+            label: "拖拽预览与极顶提示 (Drag/Topmost)",
+            usage: "画布画卷拖拽手势镜像、全局置顶警报",
+            shadowLight: "0 20px 25px -5px rgba(0,0,0,0.12), 0 8px 10px -6px rgba(0,0,0,0.06)",
+            shadowDark: "0 22px 48px rgba(0,0,0,0.85)",
+            blurRadius: 25,
+        },
+    },
+    overlays: {
+        modalBackdropBlur: 8,
+        modalBackdropOpacity: 0.65,
+        drawerBackdropBlur: 4,
+        drawerBackdropOpacity: 0.5,
+        menuBackdropBlur: 12,
+        enableTextProtectionGradient: true,
+    },
+    motion: {
+        enabled: true,
+        durationQuick: 150,
+        durationDropdownEnter: 200,
+        durationDropdownExit: 150,
+        durationModal: 200,
+        durationDrawer: 250,
+        durationTabSwitch: 200,
+        easingStandard: "cubic-bezier(0.16, 1, 0.3, 1)",
+        easingBounce: "cubic-bezier(0.34, 1.56, 0.64, 1)",
+        easingSmooth: "cubic-bezier(0.4, 0, 0.2, 1)",
+        reducedMotionBehavior: "fade-only",
+    },
+    workspaceRecovery: {
+        enabled: true,
+        themeMode: "dark",
+        brandLogoUrl: "/logo.svg",
+        brandName: "SupDance",
+        orbitSpeed: 1.0,
+        orbitNodesCount: 6,
+        floatingCardsCount: 4,
+        glowIntensity: 0.75,
+        gridDensity: "normal",
+        timeoutMs: 8000,
+        statusCopies: {
+            init: "正在初始化 SupDance 创作空间…",
+            recovering: "正在恢复创作者工作区…",
+            syncing: "正在同步项目数据与模型连接…",
+            ready: "工作区已就绪，即将进入…",
+            failed: "工作区恢复超时，请检查网络或点击重试",
+        },
+        stageDetails: {
+            auth: "验证账户会话与创作者身份",
+            workspace: "还原面板布局与画板视图状态",
+            projects: "检查近期创作画卷与资产缓存",
+            environment: "准备本地与云端模型能力",
+        },
+    },
+    pageRules: [
+        {
+            id: "rule-admin-isolation",
+            name: "管理后台视觉隔离",
+            pathPattern: "/admin/*",
+            themePresetOverride: "native",
+            motionEnabledOverride: true,
+            recoveryEnabledOverride: false,
+            notes: "后台遵循微信公众平台/腾讯We分析高阶体系，保持极简降噪，关闭工作区大型轨道动效",
+        },
+        {
+            id: "rule-create-workspace",
+            name: "创作工坊沉浸规则",
+            pathPattern: "/create/*",
+            themePresetOverride: "studio",
+            motionEnabledOverride: true,
+            recoveryEnabledOverride: true,
+            notes: "创作工作台启用 4px 高精栅格与工作区深度过渡动效",
+        },
+    ],
+    publishedVersion: "2.0.0",
+    updatedAt: "2026-11-03T00:00:00.000Z",
+    updatedBy: "SupDance Architecture Team",
+};

@@ -51,6 +51,7 @@ const SocialAuthOperationsPage = lazyAdminPage(() => import("@/supdance/plugins/
 const MusicWorkbenchPage = lazy(() => import("@/supdance/plugins/music-generation/pages/music-workbench-page"));
 const MusicAdminSettingsPage = lazyAdminPage(() => import("@/supdance/plugins/music-generation/admin/music-admin-settings-page"));
 const DarkLoginPage = lazy(() => import("@/supdance/pages/dark-login-page"));
+const VisualConsole = lazyAdminPage(() => import("@/supdance/plugins/visual-engine/admin/VisualConsole"));
 const AssetsPage = lazy(loadAssetsPage);
 const LoginPage = lazy(() => import("@/pages/auth/login"));
 const RegisterPage = lazy(() => import("@/pages/auth/register"));
@@ -256,6 +257,8 @@ export const router = createBrowserRouter([
                     { path: "i18n", element: <Navigate to="/admin/i18n/settings" replace /> },
                     { path: "i18n/settings", element: <SupDanceI18nSettingsPage /> },
                     { path: "i18n/entries", element: <SupDanceI18nEntriesPage /> },
+                    { path: "plugins/visual-engine", element: <VisualConsole /> },
+                    { path: "visual-engine", element: <Navigate to="/admin/plugins/visual-engine" replace /> },
                     { path: "workbench-tools", element: <WorkbenchToolsPage /> },
                     { path: "skill-curation", element: <SkillCurationPage /> },
                     { path: "payments", element: <AdminPaymentsPage /> },
