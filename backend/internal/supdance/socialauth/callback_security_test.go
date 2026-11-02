@@ -42,17 +42,17 @@ func TestMockCallbackCodeIsHonoredOnlyWhenSandboxEnabled(t *testing.T) {
 // 真实（非 mock）授权码分支以前直接拼造 profile，等价于任何渠道都能被空转登录。
 func TestLiveCallbackRequiresRealTokenExchange(t *testing.T) {
 	repo, svc := newSecurityTestService(t)
-	seedChannel(t, svc, ProviderQQ, "real_qq_client", "real_qq_secret", false)
+	seedChannel(t, svc, ProviderBilibili, "real_bili_client", "real_bili_secret", false)
 	// 未接入上游交换的渠道现在既不能发起授权，也不出现在登录页。
-	if _, err := svc.BeginAuth(cnRequest("/api/auth/social/qq/start"), ProviderQQ, "/create", true, false); err == nil {
+	if _, err := svc.BeginAuth(cnRequest("/api/auth/social/bilibili/start"), ProviderBilibili, "/create", true, false); err == nil {
 		t.Fatalf("BeginAuth accepted a channel with no upstream token exchange")
 	}
-	state := mintState(t, repo, ProviderQQ)
+	state := mintState(t, repo, ProviderBilibili)
 
-	if res, err := svc.CompleteAuth(cnRequest("/callback"), ProviderQQ, state, "abcdef1234567890", ""); err == nil {
+	if res, err := svc.CompleteAuth(cnRequest("/callback"), ProviderBilibili, state, "abcdef1234567890", ""); err == nil {
 		t.Fatalf("no upstream exchange implemented but callback minted identity %s", res.User.ID)
 	}
-	if id, err := repo.UserIdentity(ProviderQQ, "qq_live_abcdef12"); err == nil && id != nil && id.ID != "" {
+	if id, err := repo.UserIdentity(ProviderBilibili, "bilibili_live_abcdef12"); err == nil && id != nil && id.ID != "" {
 		t.Fatalf("callback persisted a fabricated identity %+v", id)
 	}
 	respCN, err := svc.GetPublicProviders(cnRequest("/api/auth/social/providers"))
@@ -60,8 +60,8 @@ func TestLiveCallbackRequiresRealTokenExchange(t *testing.T) {
 		t.Fatalf("GetPublicProviders failed: %v", err)
 	}
 	for _, p := range respCN.Providers {
-		if p.ID == ProviderQQ {
-			t.Fatalf("QQ without a real exchange must not be advertised, got %+v", respCN.Providers)
+		if p.ID == ProviderBilibili {
+			t.Fatalf("Bilibili without a real exchange must not be advertised, got %+v", respCN.Providers)
 		}
 	}
 }
@@ -125,6 +125,74 @@ func TestXLiveExchangeUsesUpstreamProfile(t *testing.T) {
 	withXEndpoints(t, badToken, badMe)
 	if res, err := svc.CompleteAuth(intlRequest("/callback"), ProviderX, mintState(t, repo, ProviderX), "code_without_verifier_check", ""); err == nil {
 		t.Fatalf("upstream rejected the exchange but a session was minted for %s", res.User.ID)
+	}
+}
+
+// ---------------------------------------------------------------------------
+// QQ / 抖音的真实令牌交换（CN 分区）
+// ---------------------------------------------------------------------------
+
+// QQ Connect 的三步链各有自己的响应格式：令牌是 query-string、openid 是 JSONP、
+// 用户信息是带 ret 的 JSON。这里逐段验证，并确认上游说「不」时不会铸出身份。
+func TestQQLiveExchangeUsesUpstreamProfile(t *testing.T) {
+	repo, svc := newSecurityTestService(t)
+	seedChannel(t, svc, ProviderQQ, "1000520", "real_qq_secret", false)
+	useQQStub(t, "real_qq_secret", "7F8A9B0C1D2E3F40")
+
+	// 接入真实交换后，QQ 重新可以发起授权（此前 BeginAuth 直接拒绝）。
+	if _, err := svc.BeginAuth(cnRequest("/api/auth/social/qq/start"), ProviderQQ, "/create", true, false); err != nil {
+		t.Fatalf("BeginAuth should accept a channel with a real exchange: %v", err)
+	}
+	res, err := svc.CompleteAuth(cnRequest("/callback"), ProviderQQ, mintState(t, repo, ProviderQQ), "upstream_code_qq_1", "")
+	if err != nil {
+		t.Fatalf("CompleteAuth failed: %v", err)
+	}
+	identity, err := repo.UserIdentity(ProviderQQ, "qq_openid_7F8A9B0C1D2E3F40")
+	if err != nil || identity == nil {
+		t.Fatalf("expected upstream subject qq_openid_7F8A9B0C1D2E3F40 to be persisted: %v", err)
+	}
+	if res.User == nil || res.Session == nil {
+		t.Fatalf("expected user and session")
+	}
+	if res.User.DisplayName != "星尘编剧" {
+		t.Errorf("profile should come from get_user_info, got %q", res.User.DisplayName)
+	}
+	if identity.AvatarURL != "https://example.test/qq-avatar.png" {
+		t.Errorf("avatar should come from get_user_info, got %q", identity.AvatarURL)
+	}
+
+	// 上游拒绝授权码时（QQ 用 JSONP 包裹错误）必须失败，而不是退化成伪造身份。
+	useQQStub(t, "a_different_secret", "never-used")
+	if bad, err := svc.CompleteAuth(cnRequest("/callback"), ProviderQQ, mintState(t, repo, ProviderQQ), "code_rejected_by_qq", ""); err == nil {
+		t.Fatalf("QQ rejected the exchange but a session was minted for %s", bad.User.ID)
+	}
+	if id, err := repo.UserIdentity(ProviderQQ, "qq_live_code_rej"); err == nil && id != nil && id.ID != "" {
+		t.Fatalf("callback persisted a fabricated identity %+v", id)
+	}
+}
+
+// 抖音在 HTTP 200 里用 data.error_code 报告业务失败，所以状态码友好不代表交换成功。
+func TestDouyinLiveExchangeUsesUpstreamProfile(t *testing.T) {
+	repo, svc := newSecurityTestService(t)
+	seedChannel(t, svc, ProviderDouyin, "awj7wwc7sh2g6kuf", "real_douyin_secret", false)
+	useDouyinStub(t, "awj7wwc7sh2g6kuf", "real_douyin_secret", "aad3-bbbb-cccc-dddd")
+
+	res, err := svc.CompleteAuth(cnRequest("/callback"), ProviderDouyin, mintState(t, repo, ProviderDouyin), "upstream_code_dy_1", "")
+	if err != nil {
+		t.Fatalf("CompleteAuth failed: %v", err)
+	}
+	identity, err := repo.UserIdentity(ProviderDouyin, "douyin_openid_aad3-bbbb-cccc-dddd")
+	if err != nil || identity == nil {
+		t.Fatalf("expected upstream subject douyin_openid_aad3-bbbb-cccc-dddd: %v", err)
+	}
+	if res.Session == nil {
+		t.Fatalf("expected a session")
+	}
+
+	// 密钥对不上时抖音返回 error_code=22（非法应用），交换必须失败。
+	useDouyinStub(t, "a_different_key", "real_douyin_secret", "never-used")
+	if bad, err := svc.CompleteAuth(cnRequest("/callback"), ProviderDouyin, mintState(t, repo, ProviderDouyin), "upstream_code_dy_2", ""); err == nil {
+		t.Fatalf("Douyin rejected the exchange but a session was minted for %s", bad.User.ID)
 	}
 }
 
@@ -276,4 +344,102 @@ func withXEndpoints(t *testing.T, tokenURL, meURL string) {
 	prevToken, prevMe := xTokenURL, xUserInfoURL
 	xTokenURL, xUserInfoURL = tokenURL, meURL
 	t.Cleanup(func() { xTokenURL, xUserInfoURL = prevToken, prevMe })
+}
+
+// startQQStub 复现 QQ Connect 的三种响应格式：令牌是 query-string、openid 是
+// JSONP 包裹、get_user_info 是带 ret 的 JSON。
+func useQQStub(t *testing.T, wantSecret, openID string) {
+	t.Helper()
+	accessToken := "qq_at_" + openID
+	mux := http.NewServeMux()
+	mux.HandleFunc("/token", func(w http.ResponseWriter, r *http.Request) {
+		_ = r.ParseForm()
+		w.Header().Set("Content-Type", "text/plain; charset=ISO-8859-1")
+		if r.FormValue("client_secret") != wantSecret || strings.HasPrefix(r.FormValue("code"), "code_rejected") {
+			_, _ = w.Write([]byte(`callback( {"error":100016,"error_description":"the code is a wrong one"} );`))
+			return
+		}
+		_, _ = w.Write([]byte("access_token=" + accessToken + "&expires_in=31536000&refresh_token=rt_1"))
+	})
+	mux.HandleFunc("/me", func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "text/javascript; charset=UTF-8")
+		if r.URL.Query().Get("access_token") != accessToken {
+			_, _ = w.Write([]byte(`callback( {"error":100004,"error_description":"access token is illegal"} );`))
+			return
+		}
+		_, _ = w.Write([]byte(`callback( {"client_id":"1000520","openid":"` + openID + `"} );`))
+	})
+	mux.HandleFunc("/get_user_info", func(w http.ResponseWriter, r *http.Request) {
+		query := r.URL.Query()
+		w.Header().Set("Content-Type", "application/json; charset=UTF-8")
+		if query.Get("access_token") != accessToken || query.Get("openid") != openID || query.Get("oauth_consumer_key") == "" {
+			_, _ = w.Write([]byte(`{"ret":100016,"msg":"the openid is invalid"}`))
+			return
+		}
+		_, _ = w.Write([]byte(`{"ret":0,"msg":"","nickname":"星尘编剧","figureurl_qq_2":"https://example.test/qq-avatar.png"}`))
+	})
+	srv := httptest.NewServer(mux)
+	t.Cleanup(srv.Close)
+	withQQEndpoints(t, srv.URL+"/token", srv.URL+"/me", srv.URL+"/get_user_info")
+}
+
+func withQQEndpoints(t *testing.T, tokenURL, openIDURL, userInfoURL string) {
+	t.Helper()
+	prevToken, prevMe, prevInfo := qqTokenURL, qqOpenIDURL, qqUserInfoURL
+	qqTokenURL, qqOpenIDURL, qqUserInfoURL = tokenURL, openIDURL, userInfoURL
+	t.Cleanup(func() { qqTokenURL, qqOpenIDURL, qqUserInfoURL = prevToken, prevMe, prevInfo })
+}
+
+// startDouyinStub 复现 Login Kit v2：业务失败也走 HTTP 200 + data.error_code。
+func useDouyinStub(t *testing.T, wantKey, wantSecret, openID string) {
+	t.Helper()
+	accessToken := "dy_at_" + openID
+	fail := func(w http.ResponseWriter, code int, desc string) {
+		w.Header().Set("Content-Type", "application/json")
+		_ = json.NewEncoder(w).Encode(map[string]any{
+			"data":   map[string]any{"error_code": code, "description": desc},
+			"log_id": "stub",
+		})
+	}
+	mux := http.NewServeMux()
+	mux.HandleFunc("/access_token", func(w http.ResponseWriter, r *http.Request) {
+		_ = r.ParseForm()
+		if r.FormValue("client_key") != wantKey || r.FormValue("client_secret") != wantSecret {
+			fail(w, 22, "非法应用")
+			return
+		}
+		w.Header().Set("Content-Type", "application/json")
+		_ = json.NewEncoder(w).Encode(map[string]any{
+			"data": map[string]any{
+				"error_code": 0, "access_token": accessToken, "open_id": openID,
+				"scope": "user_info", "expires_in": 864000,
+			},
+			"message": "success",
+		})
+	})
+	mux.HandleFunc("/userinfo", func(w http.ResponseWriter, r *http.Request) {
+		query := r.URL.Query()
+		if query.Get("access_token") != accessToken || query.Get("open_id") != openID {
+			fail(w, 21018, "access_token 无效")
+			return
+		}
+		w.Header().Set("Content-Type", "application/json")
+		_ = json.NewEncoder(w).Encode(map[string]any{
+			"data": map[string]any{
+				"error_code": 0, "open_id": openID,
+				"nickname": "短剧组", "avatar": "https://example.test/dy-avatar.png",
+			},
+			"message": "success",
+		})
+	})
+	srv := httptest.NewServer(mux)
+	t.Cleanup(srv.Close)
+	withDouyinEndpoints(t, srv.URL+"/access_token", srv.URL+"/userinfo")
+}
+
+func withDouyinEndpoints(t *testing.T, tokenURL, userInfoURL string) {
+	t.Helper()
+	prevToken, prevInfo := douyinTokenURL, douyinUserInfoURL
+	douyinTokenURL, douyinUserInfoURL = tokenURL, userInfoURL
+	t.Cleanup(func() { douyinTokenURL, douyinUserInfoURL = prevToken, prevInfo })
 }
