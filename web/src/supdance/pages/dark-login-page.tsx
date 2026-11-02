@@ -191,7 +191,8 @@ export default function DarkLoginPage() {
                             loading={submitting}
                             icon={<ArrowRight className="size-4" />}
                             iconPlacement="end"
-                            className="h-11 rounded-xl bg-[#00f5d4] font-semibold text-[#0e1117] hover:!bg-[#00f5d4]/90 hover:!text-[#0e1117] active:scale-[0.98] border-none mt-2 shadow-none transition-transform"
+                            style={{ backgroundColor: "#00f5d4", color: "#0e1117", borderColor: "#00f5d4" }}
+                            className="h-11 rounded-xl font-bold active:scale-[0.98] border-none mt-2 shadow-none transition-transform"
                         >
                             立即登录
                         </Button>

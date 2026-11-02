@@ -43,6 +43,7 @@ import { useUserStore } from "@/stores/use-user-store";
 import {
     useUserProfileModalStore,
     type UserProfileModalTab,
+    USER_PROFILE_MODAL_EVENT,
 } from "@/stores/use-user-profile-modal-store";
 import { SocialAccountBindings } from "@/supdance/plugins/social-auth/components/social-account-bindings";
 import { useSupDanceI18nStore } from "@/supdance/plugins/i18n/store";
@@ -52,7 +53,17 @@ export function UserProfileModalHost() {
     const activeTab = useUserProfileModalStore((state) => state.activeTab);
     const setTab = useUserProfileModalStore((state) => state.setTab);
     const closeModal = useUserProfileModalStore((state) => state.closeModal);
+    const openModal = useUserProfileModalStore((state) => state.openModal);
     const currentUser = useUserStore((state) => state.user);
+
+    useEffect(() => {
+        const handler = (e: Event) => {
+            const detail = (e as CustomEvent).detail;
+            openModal(detail?.tab || "profile");
+        };
+        window.addEventListener(USER_PROFILE_MODAL_EVENT, handler);
+        return () => window.removeEventListener(USER_PROFILE_MODAL_EVENT, handler);
+    }, [openModal]);
 
     if (!currentUser) return null;
 
