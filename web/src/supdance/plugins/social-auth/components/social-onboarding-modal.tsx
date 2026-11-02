@@ -137,20 +137,29 @@ export function SocialOnboardingModal() {
                 password: password ? password : undefined,
             });
 
+            const resolvedUser = res.user || (res as any).User || (res as any).session?.user || (res as any).Session?.user;
+            const resolvedNext = res.next || (res as any).Next || "/";
+
             message.success({
-                content: `欢迎来到 SupDance 影策，${res.user?.displayName || res.user?.username || "创作者"}！`,
+                content: `欢迎来到 SupDance 影策，${resolvedUser?.displayName || resolvedUser?.username || "创作者"}！`,
                 icon: <Sparkles className="size-4 text-[#00f5d4]" />,
             });
 
-            if (res.user) {
-                await applyUserSession({ user: res.user });
+            const { getAuthSession } = await import("@/services/api/auth");
+            try {
+                const sessionPayload = await getAuthSession();
+                await applyUserSession(sessionPayload);
+            } catch {
+                if (resolvedUser) {
+                    await applyUserSession({ user: resolvedUser });
+                }
             }
 
             cleanupUrl();
             setOpen(false);
 
-            if (res.next && res.next !== "/") {
-                window.location.href = res.next;
+            if (resolvedNext && resolvedNext !== window.location.pathname) {
+                window.location.href = resolvedNext;
             }
         } catch (err) {
             message.error(err instanceof Error ? err.message : "入站配置保存失败，请重试");

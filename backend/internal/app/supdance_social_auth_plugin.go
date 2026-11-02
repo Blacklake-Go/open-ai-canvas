@@ -146,11 +146,11 @@ func (s *Service) BeginSocialAuth(r *http.Request, providerID string, nextPath s
 
 // SocialAuthLoginResult combines social auth callback with session creation and login logging.
 type SocialAuthLoginResult struct {
-	Session          *AuthSessionResult
-	Next             string
-	IsNew            bool
-	User             *model.User
-	OnboardingTicket string
+	Session          *AuthSessionResult `json:"session,omitempty"`
+	Next             string             `json:"next"`
+	IsNew            bool               `json:"isNew"`
+	User             *model.User        `json:"user,omitempty"`
+	OnboardingTicket string             `json:"onboardingTicket,omitempty"`
 }
 
 // CompleteSocialAuth completes social login, binds user, or initiates onboarding ticket.
