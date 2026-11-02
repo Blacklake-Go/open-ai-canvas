@@ -438,7 +438,7 @@ func stripJSONP(body string) string {
 	if end <= open {
 		return s
 	}
-	return strings.TrimRight(s[open+1:end], "; \t\r\n")
+	return strings.TrimSpace(s[open+1 : end])
 }
 
 func firstNonEmpty(values ...string) string {
