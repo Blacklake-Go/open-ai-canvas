@@ -2,6 +2,7 @@ package socialauth
 
 import (
 	"context"
+	"encoding/json"
 	"io"
 	"net/http"
 	"net/http/httptest"
@@ -132,5 +133,25 @@ func TestUnifiedNoAccountOrSessionBeforeOnboarding(t *testing.T) {
 	}
 	if _, _, err := svc.CompleteOnboarding(req); err == nil {
 		t.Fatal("completed ticket replayed")
+	}
+}
+
+func TestUnifiedEmptyOperationsListsAreArrays(t *testing.T) {
+	_, svc := newSecurityTestService(t)
+	logs, err := svc.GetLoginLogs(nil, 10)
+	if err != nil {
+		t.Fatal(err)
+	}
+	encoded, err := json.Marshal(logs)
+	if err != nil || string(encoded) != "[]" {
+		t.Fatalf("empty logs are not an array: %s %v", encoded, err)
+	}
+	users, err := svc.SearchUsers(nil, "missing-user")
+	if err != nil {
+		t.Fatal(err)
+	}
+	encoded, err = json.Marshal(users)
+	if err != nil || string(encoded) != "[]" {
+		t.Fatalf("empty users are not an array: %s %v", encoded, err)
 	}
 }

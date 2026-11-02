@@ -1288,10 +1288,10 @@ func (s *Service) SearchUsers(actor *model.User, query string) ([]UserSocialBind
 	if err != nil {
 		return nil, err
 	}
-	var items []UserSocialBindingAdminItem
+	items := make([]UserSocialBindingAdminItem, 0, len(users))
 	for _, u := range users {
 		rawIdentities := idMap[u.ID]
-		var idItems []UserIdentityItem
+		idItems := make([]UserIdentityItem, 0, len(rawIdentities))
 		for _, ri := range rawIdentities {
 			meta := ProviderRegistry[ri.Provider]
 			idItems = append(idItems, UserIdentityItem{
@@ -1362,7 +1362,7 @@ func (s *Service) GetLoginLogs(actor *model.User, limit int) ([]SocialLoginLogIt
 	if err != nil {
 		return nil, err
 	}
-	var items []SocialLoginLogItem
+	items := make([]SocialLoginLogItem, 0, len(rawLogs))
 	for _, l := range rawLogs {
 		uid := ""
 		if l.UserID != nil {

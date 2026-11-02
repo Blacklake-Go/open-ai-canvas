@@ -69,7 +69,7 @@ export default function SocialAuthOperationsPage() {
             if (ov.policies) {
                 setPolicies(ov.policies);
             }
-            setLogs(lg);
+            setLogs(lg ?? []);
         } catch (err) {
             message.error(err instanceof Error ? err.message : "读取运营数据失败");
         } finally {
@@ -107,7 +107,7 @@ export default function SocialAuthOperationsPage() {
         setSearchingUsers(true);
         try {
             const results = await searchSocialAuthUsers(userQuery.trim(), 20);
-            setUserResults(results);
+            setUserResults(results ?? []);
             setSearched(true);
         } catch (err) {
             message.error(err instanceof Error ? err.message : "搜索用户失败");
