@@ -440,6 +440,9 @@ func TestAdversarial_ConnectivityPing_All8Providers(t *testing.T) {
 		cfg := settings.Providers[pid]
 		cfg.Enabled = true
 		cfg.ClientID = fmt.Sprintf("valid_client_id_%s", pid)
+		if pid == ProviderQQ {
+			cfg.ClientID = "1000520"
+		}
 		cfg.ClientSecret = fmt.Sprintf("valid_client_secret_%s", pid)
 		settings.Providers[pid] = cfg
 	}

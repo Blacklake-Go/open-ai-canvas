@@ -230,6 +230,9 @@ func (s *Service) GetAdminSettings(r *http.Request, actor *model.User) (*AdminSe
 		} else if !channelAdvertisable(id, cfg) {
 			status = StatusCredentialsRequired
 			statusLabel = "尚未就绪"
+			if id == ProviderQQ && !providerClientIDValid(id, cfg.ClientID) {
+				statusLabel = "App ID 无效"
+			}
 		} else if cfg.Enabled {
 			status = StatusOnline
 			statusLabel = "已启用"
@@ -249,7 +252,7 @@ func (s *Service) GetAdminSettings(r *http.Request, actor *model.User) (*AdminSe
 			Platform:           meta.Platform,
 			Region:             meta.Region,
 			Icon:               meta.Icon,
-			Enabled:            cfg.Enabled,
+			Enabled:            cfg.Enabled && channelAdvertisable(id, cfg),
 			Status:             status,
 			StatusLabel:        statusLabel,
 			HasCredentials:     hasCreds,
@@ -318,6 +321,9 @@ func (s *Service) UpdateAdminSettings(r *http.Request, actor *model.User, req Up
 			return nil, kernel.BadAuthRequest("未知社交登录渠道")
 		}
 		cfg := current.Providers[id]
+		if strings.TrimSpace(input.ClientID) != "" && !strings.Contains(input.ClientID, "*") && !providerClientIDValid(id, strings.TrimSpace(input.ClientID)) {
+			return nil, kernel.BadAuthRequest("QQ App ID 必须是开放平台提供的数字，不能使用邮箱或账号名")
+		}
 		if strings.TrimSpace(input.ClientID) != "" && !strings.Contains(input.ClientID, "*") {
 			cfg.ClientID = strings.TrimSpace(input.ClientID)
 		}
@@ -425,10 +431,17 @@ func callbackURLValid(id string, cfg ProviderConfig) bool {
 // visitor start its OAuth flow: the credentials have to be complete and the
 // backend must implement that provider's token exchange.
 func channelAdvertisable(providerID string, cfg ProviderConfig) bool {
-	if !credentialsUsable(cfg) {
+	if !credentialsUsable(cfg) || !providerClientIDValid(providerID, cfg.ClientID) {
 		return false
 	}
 	return liveExchangeSupported(providerID) && callbackURLValid(providerID, cfg)
+}
+
+func providerClientIDValid(providerID, clientID string) bool {
+	if providerID != ProviderQQ {
+		return true
+	}
+	return clientID != "" && strings.IndexFunc(clientID, func(r rune) bool { return r < '0' || r > '9' }) < 0
 }
 
 // resolveCallbackURL mirrors the redirect_uri that BeginAuth sends upstream, so

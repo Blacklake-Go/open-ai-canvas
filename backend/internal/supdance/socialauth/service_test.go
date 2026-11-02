@@ -681,7 +681,7 @@ func TestQQAndBilibiliCredentialsPersistence(t *testing.T) {
 func TestConnectivityPing(t *testing.T) {
 	repo, svc := newSecurityTestService(t)
 	_ = repo
-	seedChannel(t, svc, ProviderQQ, "client", "secret", false)
+	seedChannel(t, svc, ProviderQQ, "1000520", "secret", false)
 	stubProbeClient(t)
 	result, err := svc.TestProvider(nil, ProviderQQ)
 	if err != nil || result.Status != "reachable" || !strings.Contains(result.Message, "尚未验证真实登录") {

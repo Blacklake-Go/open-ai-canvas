@@ -85,7 +85,7 @@ func TestUnifiedUnverifiedGoogleEmailIsNotTrusted(t *testing.T) {
 func TestUnifiedLegacyMockCredentialsCannotBeAdvertised(t *testing.T) {
 	repo, svc := newSecurityTestService(t)
 	_ = repo
-	seedChannel(t, svc, ProviderQQ, "legacy_client", "mock_qq_secret_builtin", false)
+	seedChannel(t, svc, ProviderQQ, "1000520", "mock_qq_secret_builtin", false)
 	view, err := svc.GetPublicProviders(cnRequest("/providers"))
 	if err != nil {
 		t.Fatal(err)
@@ -165,5 +165,30 @@ func TestUnifiedEmptyPublicProviderListIsArray(t *testing.T) {
 	encoded, err := json.Marshal(view.Providers)
 	if err != nil || string(encoded) != "[]" {
 		t.Fatalf("empty public provider list is not an array: %s %v", encoded, err)
+	}
+}
+
+func TestUnifiedQQEmailCannotBeUsedAsAppID(t *testing.T) {
+	_, svc := newSecurityTestService(t)
+	seedChannel(t, svc, ProviderQQ, "wrong@example.test", "credential", false)
+	admin, err := svc.GetAdminSettings(cnRequest("/settings"), nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if admin.Providers[ProviderQQ].Enabled || admin.Providers[ProviderQQ].StatusLabel != "App ID 无效" {
+		t.Fatal("invalid stored QQ configuration appears enabled")
+	}
+	view, err := svc.GetPublicProviders(cnRequest("/providers"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	for _, p := range view.Providers {
+		if p.ID == ProviderQQ {
+			t.Fatal("email used as QQ App ID was advertised")
+		}
+	}
+	_, err = svc.UpdateAdminSettings(cnRequest("/settings"), nil, UpdateSettingsRequest{Providers: map[string]UpdateProviderInput{ProviderQQ: {ClientID: "wrong@example.test", ClientSecret: "credential", Enabled: true}}})
+	if err == nil {
+		t.Fatal("email used as QQ App ID was saved")
 	}
 }

@@ -537,7 +537,7 @@ func TestWeChatLiveExchangeUsesUpstreamProfile(t *testing.T) {
 
 func TestNewOAuthUserHandlesUsernameAndEmailCollisions(t *testing.T) {
 	repo, svc := newSecurityTestService(t)
-	seedChannel(t, svc, ProviderQQ, "real_qq_key", "real_qq_secret", false)
+	seedChannel(t, svc, ProviderQQ, "1000520", "real_qq_secret", false)
 
 	// Create an existing user with conflicting username and email
 	existingUser := &model.User{

@@ -51,6 +51,11 @@ export function ProviderCredentialModal({ provider, draft: draftProp, onDraftCha
         const sendsSecret = Boolean(clientSecret) && !isMaskedPreview(clientSecret);
         const redirectChanged = draft.customRedirectUrl.trim() !== (provider.customRedirectUrl || "");
 
+        if (provider.id === "qq" && sendsId && !/^\d+$/.test(clientId)) {
+            setNotice("QQ App ID 必须是开放平台提供的数字，不能使用邮箱或账号名。");
+            return;
+        }
+
         const willHaveId = sendsId || Boolean(maskedId);
         const willHaveSecret = sendsSecret || Boolean(maskedSecret);
 
