@@ -202,7 +202,7 @@ export function SocialAccountBindings({ onNavigateSecurity }: { onNavigateSecuri
                                             size="small"
                                             icon={<ArrowRightLeft className="size-3.5" />}
                                             onClick={() => handleBind(provider.id)}
-                                            className="h-8 rounded-lg border-white/10 text-xs text-foreground/70 hover:!border-white/20 hover:!text-white"
+                                            className="h-8 rounded-lg border-white/10 text-xs text-foreground/70 hover:!border-white/20 hover:!text-white active:scale-[0.98]"
                                         >
                                             换绑
                                         </Button>
@@ -212,7 +212,7 @@ export function SocialAccountBindings({ onNavigateSecurity }: { onNavigateSecuri
                                             loading={isUnbinding}
                                             icon={<Unlink className="size-3.5" />}
                                             onClick={() => handleUnbind(provider, bound)}
-                                            className="h-8 rounded-lg text-xs"
+                                            className="h-8 rounded-lg text-xs active:scale-[0.98]"
                                         >
                                             解绑
                                         </Button>
@@ -223,7 +223,7 @@ export function SocialAccountBindings({ onNavigateSecurity }: { onNavigateSecuri
                                         type="primary"
                                         icon={<Link2 className="size-3.5" />}
                                         onClick={() => handleBind(provider.id)}
-                                        className="h-8 rounded-lg bg-[#00f5d4] font-medium text-[#0e1117] hover:!bg-[#00f5d4]/90 hover:!text-[#0e1117]"
+                                        className="h-8 rounded-lg bg-[#00f5d4] font-medium text-[#0e1117] hover:!bg-[#00f5d4]/90 hover:!text-[#0e1117] active:scale-[0.98] border-none"
                                     >
                                         立即绑定
                                     </Button>

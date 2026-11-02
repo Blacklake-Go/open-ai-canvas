@@ -170,10 +170,10 @@ export function SocialOnboardingModal() {
             centered
         >
             <div
-                className="relative overflow-hidden rounded-2xl border border-white/10 p-6 text-foreground shadow-2xl backdrop-blur-2xl"
+                className="relative overflow-hidden rounded-2xl border border-white/[0.08] p-6 sm:p-7 text-[#FAFAFA] shadow-[0_16px_48px_rgba(0,0,0,0.60)] backdrop-blur-2xl"
                 style={{
-                    backgroundColor: "#0e1117",
-                    backgroundImage: "radial-gradient(ellipse 90% 50% at 50% -20%, rgba(0, 245, 212, 0.16), transparent)",
+                    backgroundColor: "#1A1A1A",
+                    backgroundImage: "radial-gradient(ellipse 90% 50% at 50% -20%, rgba(0, 245, 212, 0.08), transparent)",
                 }}
             >
                 {/* Header Badge & Title */}
@@ -385,7 +385,7 @@ export function SocialOnboardingModal() {
                                 loading={submitting}
                                 disabled={!isUsernameValid || (Boolean(password) && (!isPasswordValid || !isPasswordMatch)) || !acceptedTerms}
                                 onClick={handleSubmit}
-                                className="h-11 flex-1 rounded-xl bg-[#00f5d4] font-semibold text-[#0e1117] hover:!bg-[#00f5d4]/90 hover:!text-[#0e1117]"
+                                className="h-11 flex-1 rounded-xl bg-[#00f5d4] font-semibold text-[#0e1117] hover:!bg-[#00f5d4]/90 hover:!text-[#0e1117] active:scale-[0.98] border-none shadow-none"
                             >
                                 完成配置并进入 SupDance
                             </Button>

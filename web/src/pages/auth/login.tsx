@@ -8,11 +8,9 @@ import { useUserStore } from "@/stores/use-user-store";
 import { LinuxDOIcon } from "./auth-scene";
 import { VerificationFields } from "@/components/auth/verification-fields";
 import { emptyVerification, loginVerification, methodLabels, verificationMethods, type VerificationMethod } from "@/services/api/verification";
-import { useI18n } from "@/supdance/plugins/i18n";
 import { SocialLoginButtons } from "@/supdance/plugins/social-auth/components/social-login-buttons";
 
 export default function LoginPage() {
-    const { t } = useI18n();
     const navigate = useNavigate();
     const [params] = useSearchParams();
     const { message } = App.useApp();
@@ -23,7 +21,6 @@ export default function LoginPage() {
     const [methods, setMethods] = useState<VerificationMethod[]>([]);
     const [method, setMethod] = useState<"password" | VerificationMethod>("password");
     const [verification, setVerification] = useState({ ...emptyVerification });
-    const [hasSocialProviders, setHasSocialProviders] = useState(false);
     const next = safeNext(params.get("next"));
     const forgotPasswordURL = `/forgot-password?next=${encodeURIComponent(next)}`;
     const user = useUserStore((state) => state.user);
@@ -54,15 +51,15 @@ export default function LoginPage() {
         try {
             if (method === "password") await login({ username, password });
             else {
-                if (!verification.ticket) throw new Error(t("auth.get_code_first"));
+                if (!verification.ticket) throw new Error("请先获取本次登录验证码");
                 await loginVerification(verification);
             }
             const { applyUserSession } = await import("@/lib/user-session");
             await applyUserSession(await getAuthSession());
-            message.success(t("auth.login_success"));
+            message.success("登录成功");
             navigate(next, { replace: true });
         } catch (error) {
-            message.error(error instanceof Error ? error.message : t("auth.login_failed"));
+            message.error(error instanceof Error ? error.message : "登录失败");
         } finally {
             setSubmitting(false);
         }
@@ -70,20 +67,20 @@ export default function LoginPage() {
 
     return (
         <form onSubmit={submit} className="space-y-5">
-            {methods.length > 0 && <Segmented block aria-label={t("auth.login_method")} value={method} disabled={submitting} options={[{ value: "password", label: t("auth.password_login") }, ...methods.map((value) => ({ value, label: methodLabels[value] }))]} onChange={(value) => { setMethod(value as typeof method); setVerification({ ...emptyVerification }); }} />}
+            {methods.length > 0 && <Segmented block aria-label="登录方式" value={method} disabled={submitting} options={[{ value: "password", label: "密码登录" }, ...methods.map((value) => ({ value, label: methodLabels[value] }))]} onChange={(value) => { setMethod(value as typeof method); setVerification({ ...emptyVerification }); }} />}
             {method !== "password" ? <VerificationFields key={method} purpose="login" method={method} value={verification} onChange={setVerification} disabled={submitting} /> : <>
-            <AuthField label={t("auth.username_or_email")} htmlFor="login-account">
-                <Input id="login-account" size="large" prefix={<UserRound className="auth-scene-icon size-4" />} value={username} onChange={(event) => setUsername(event.target.value)} placeholder={t("auth.username_placeholder")} autoComplete="username" required />
+            <AuthField label="用户名 / 邮箱" htmlFor="login-account">
+                <Input id="login-account" size="large" prefix={<UserRound className="auth-scene-icon size-4" />} value={username} onChange={(event) => setUsername(event.target.value)} placeholder="用户名或邮箱" autoComplete="username" required />
             </AuthField>
             <AuthField
-                label={t("auth.password")}
+                label="密码"
                 htmlFor="login-password"
                 action={
                     <Link
                         to={forgotPasswordURL}
                         className="auth-scene-link -my-2 inline-flex min-h-8 items-center rounded-sm text-xs font-medium transition-colors"
                     >
-                        {t("auth.forgot_password")}
+                        忘记密码？
                     </Link>
                 }
             >
@@ -93,32 +90,29 @@ export default function LoginPage() {
                     prefix={<LockKeyhole className="auth-scene-icon size-4" />}
                     value={password}
                     onChange={(event) => setPassword(event.target.value)}
-                    placeholder={t("auth.password_placeholder")}
+                    placeholder="请输入密码"
                     autoComplete="current-password"
                     required
                 />
             </AuthField>
             </>}
             <Button type="primary" htmlType="submit" size="large" block loading={submitting} icon={<ArrowRight className="size-4" />} iconPlacement="end">
-                {t("auth.login")}
+                登录
             </Button>
-            {hasSocialProviders ? (
-                <Divider plain className="auth-scene-divider">
-                    {t("auth.social_login_divider")}
-                </Divider>
-            ) : null}
-            <SocialLoginButtons
-                variant="light-card"
-                next={next}
-                onProvidersChange={(providers) => setHasSocialProviders(providers.length > 0)}
-            />
             {linuxdoEnabled ? (
-                <div className="pt-2">
+                <>
+                    <Divider plain className="auth-scene-divider">
+                        或
+                    </Divider>
                     <Button size="large" block icon={<LinuxDOIcon />} href={linuxDOLoginURL(next)}>
-                        {t("auth.login_with_linuxdo")}
+                        使用 Linux.do 登录
                     </Button>
-                </div>
+                </>
             ) : null}
+            <Divider plain className="auth-scene-divider">
+                或使用快捷方式登录
+            </Divider>
+            <SocialLoginButtons variant="light-card" next={next} />
         </form>
     );
 }

@@ -111,25 +111,26 @@ export function SocialLoginButtons({
                             key={provider.id}
                             title={tooltipText}
                             placement="top"
+                            mouseEnterDelay={0.4}
                         >
                             <button
                                 type="button"
                                 aria-label={tooltipText}
                                 onClick={() => handleProviderClick(provider)}
-                                className={`group relative flex size-11 items-center justify-center rounded-xl transition-all duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 active:scale-95 ${
+                                className={`group relative flex size-11 items-center justify-center rounded-xl transition-all duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#00f5d4]/50 focus-visible:ring-offset-2 active:scale-[0.98] ${
                                     isDark
-                                        ? "border border-white/10 bg-white/[0.04] text-white hover:border-white/25 hover:bg-white/[0.08] hover:shadow-sm"
+                                        ? "border border-white/10 bg-[#1A1A1A] text-white hover:border-white/20 hover:bg-white/[0.08] hover:shadow-sm"
                                         : "border border-border/70 bg-card text-foreground hover:border-primary/50 hover:bg-accent hover:shadow-sm"
                                 }`}
                             >
                                 <SocialProviderIcon
                                     provider={provider.id}
-                                    className="size-5 transition-transform duration-150 group-hover:scale-110"
+                                    className="size-5 transition-transform duration-150 group-hover:scale-105"
                                 />
                                 {isMock && (
                                     <span
                                         className={`absolute -top-1 -right-1 size-2 rounded-full ${
-                                            isDark ? "bg-amber-400 ring-2 ring-slate-900" : "bg-amber-500 ring-2 ring-background"
+                                            isDark ? "bg-amber-400 ring-2 ring-[#1A1A1A]" : "bg-amber-500 ring-2 ring-background"
                                         }`}
                                         title={t("auth.sandbox_mock_mode", undefined, "沙盒联调模式")}
                                         aria-hidden="true"

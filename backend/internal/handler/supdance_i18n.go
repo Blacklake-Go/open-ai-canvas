@@ -14,6 +14,23 @@ import (
 // RegisterSupDanceI18nRoutes mounts the public and administrative HTTP endpoints
 // for the SupDance multi-language plugin (supdance-i18n).
 func RegisterSupDanceI18nRoutes(r *gin.RouterGroup, svc *service.Service) {
+	r.GET("/plugins/supdance/status", func(c *gin.Context) {
+		c.Header("Cache-Control", "no-store")
+		availability := make(map[string]bool)
+		for id, read := range map[string]func() (bool, error){
+			"supdance-i18n":             svc.SupDanceI18nPluginAvailable,
+			"supdance-social-auth":      svc.SocialAuthPluginAvailable,
+			"supdance-music-generation": svc.MusicPluginPlatformAvailable,
+		} {
+			enabled, err := read()
+			if err != nil {
+				failService(c, err)
+				return
+			}
+			availability[id] = enabled
+		}
+		ok(c, availability)
+	})
 	// Public bundle endpoint (accessible before login so login/register/guest pages also get i18n).
 	r.GET("/plugins/supdance-i18n/bundle", func(c *gin.Context) {
 		bundle, err := svc.PublicSupDanceI18nBundle()

@@ -9,6 +9,7 @@ import { ApiError } from "@/services/api/request";
 import { VerificationFields } from "@/components/auth/verification-fields";
 import { emptyVerification, methodLabels, verificationMethods, type VerificationMethod } from "@/services/api/verification";
 import { useAppearanceStore } from "@/stores/use-appearance-store";
+import { SocialLoginButtons } from "@/supdance/plugins/social-auth/components/social-login-buttons";
 
 type AuthSettings = Awaited<ReturnType<typeof getAuthSettings>>;
 
@@ -214,6 +215,21 @@ export default function RegisterPage() {
                     </Button>
                 </>
             ) : null}
+            <Divider plain className="auth-scene-divider">
+                或使用第三方账号快捷注册 / 登录
+            </Divider>
+            <SocialLoginButtons
+                variant="light-card"
+                next={next}
+                acceptedTerms={agreementAccepted}
+                onRequireAcceptTerms={() => {
+                    if (!agreementAccepted) {
+                        message.warning("请先阅读并勾选服务协议");
+                        return false;
+                    }
+                    return true;
+                }}
+            />
             <Modal
                 className="workspace-modal workspace-modal-compact auth-agreement-modal"
                 title={agreementTitle}
