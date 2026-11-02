@@ -183,3 +183,15 @@ CN 三渠道的上游实测（在容器内发起，读 `Location` 头）说明�
 
 `dd8554b5` 把展示门槛从「凭据完整」收紧为 `channelAdvertisable`（凭据完整且「沙箱模拟已开 或 后端真的实现了该渠道的兑换」），使 `/start` 与公开列表同源，避免把用户送到一次注定失败的授权。它同时会让 CN 登录页暂时不再出现 QQ/抖音/B 站按钮 —— 属于面向真实访客的可见变更，且与「渠道需要管理员到各开放平台重新登记凭据」这件事耦合，因此先发布到生产前需要管理员点头；`google`/`x` 在密钥录入后不受影响，会照常展示。
 
+### 6.3 CN 渠道交换补齐（`fb4ac0ef` + `88e33f86`，已提交、暂未发布）
+
+为了让 `dd8554b5` 不是「把按钮藏起来」而是「把登录做通」，补齐了两条有权威文档、且端点可从生产出口验证的链路：
+
+- QQ Connect 三段：`graph.qq.com/oauth2.0/token`（成功是 query-string，不是 JSON）→ `graph.qq.com/oauth2.0/me`（`callback( {…} );` JSONP，成功与错误同样包裹）→ `graph.qq.com/user/get_user_info`（`ret`/`msg` 信封，`ret!=0` 即失败）。身份主体为 `qq_openid_<openid>`。
+- 抖音 Login Kit v2 两段：`open.douyin.com/oauth/v2/access_token` 与 `open.douyin.com/oauth/v2/userinfo`。两者都在 HTTP 200 里用 `data.error_code` 报业务失败（实测 `22 非法应用`），所以只看状态码会把拒绝当成功。身份主体为 `douyin_openid_<open_id>`。抖音取参走 query string（实测可解析），表单体同时保留以兼容两种实现。
+- 哔哩哔哩仍未接入，且是刻意的：从生产出口实测公开文档里的四个令牌端点 `member.bilibili.com/x/account-oauth2/v1/token`、`app.bilibili.com/x/oauth2/token`、`api.bilibili.com/x/passport-login/oauth2/access_token`、`passport.bilibili.com/api/v2/oauth2/token` 无论 GET/POST 全为 404；其第三方 OAuth 需应用审核通过后另行下发可用域名。没有可验证端点前继续 fail-closed。
+- `88e33f86` 把上述真实报文（含四种「看起来像成功」的失败）固化成契约测试；`stripJSONP` 的前导空白毛病就是被这组测试抓出来的。
+
+发布后的行为差异（这是需要管理员确认的那一点）：QQ 与抖音因凭据字段非空且已有真实交换，会重新出现在 CN 登录页并可发起授权 —— 但库里 QQ 的 `clientId` 目前是字面量 `supdance`、B 站是公开示例 appkey，所以 QQ 点了仍会在 QQ 侧看到 `error=100001`，要真正可用必须先到 QQ 互联 / 抖音开放平台 / B 站开放平台登记本站应用；`bilibili` 与 `wechat` 则因缺交换或缺凭据而不再展示。
+
+
