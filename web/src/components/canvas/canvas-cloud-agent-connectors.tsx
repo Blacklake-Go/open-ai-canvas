@@ -135,32 +135,11 @@ const AGENT_CONNECTORS: AgentConnector[] = [
 ];
 
 /** 输入框底部的连接器条，流光溢彩背景，紧凑图标阵列。 */
-export function AgentConnectorsBar({
-    onClose,
-    codex,
-    onConnectCodex,
-    onNewCodexThread,
-    onDisconnectCodex,
-}: {
-    onClose: () => void;
-    codex: CodexConnectorBarState;
-    onConnectCodex: () => void;
-    onNewCodexThread: () => void;
-    onDisconnectCodex: () => void;
-}) {
+export function AgentConnectorsBar({ onClose, codex, onConnectCodex, onNewCodexThread, onDisconnectCodex }: { onClose?: () => void; codex: CodexConnectorBarState; onConnectCodex: () => void; onNewCodexThread: () => void; onDisconnectCodex: () => void }) {
     const { message } = App.useApp();
     const [codexMenuOpen, setCodexMenuOpen] = useState(false);
     const connected = codex.status === "connected";
-    const codexTitle =
-        codex.status === "connected"
-            ? codex.busy
-                ? "Codex · 运行中"
-                : "Codex · 已连接"
-            : codex.status === "connecting"
-              ? "Codex · 连接中"
-              : codex.detected
-                ? "Codex · 点击连接"
-                : "Codex · 未检测到本地插件";
+    const codexTitle = codex.status === "connected" ? (codex.busy ? "Codex · 运行中" : "Codex · 已连接") : codex.status === "connecting" ? "Codex · 连接中" : codex.detected ? "Codex · 点击连接" : "Codex · 未检测到本地插件";
     const codexButton = (
         <button
             type="button"
@@ -184,10 +163,27 @@ export function AgentConnectorsBar({
                 <span>{codex.busy ? "Codex 正在运行" : "Codex 已连接"}</span>
             </div>
             <p>{codex.error || "可直接在输入框与 Codex 对话。"}</p>
-            <Button size="small" type="text" icon={<MessageSquarePlus />} onClick={() => { setCodexMenuOpen(false); onNewCodexThread(); }}>
+            <Button
+                size="small"
+                type="text"
+                icon={<MessageSquarePlus />}
+                onClick={() => {
+                    setCodexMenuOpen(false);
+                    onNewCodexThread();
+                }}
+            >
                 新建 Codex 对话
             </Button>
-            <Button size="small" type="text" danger icon={<Unplug />} onClick={() => { setCodexMenuOpen(false); onDisconnectCodex(); }}>
+            <Button
+                size="small"
+                type="text"
+                danger
+                icon={<Unplug />}
+                onClick={() => {
+                    setCodexMenuOpen(false);
+                    onDisconnectCodex();
+                }}
+            >
                 断开连接
             </Button>
         </div>
@@ -216,9 +212,11 @@ export function AgentConnectorsBar({
                     </Tooltip>
                 ))}
             </div>
-            <button type="button" className="agent-connectors-close" aria-label="收起连接器" onClick={onClose}>
-                <X />
-            </button>
+            {onClose ? (
+                <button type="button" className="agent-connectors-close" aria-label="收起连接器" onClick={onClose}>
+                    <X />
+                </button>
+            ) : null}
         </div>
     );
 }

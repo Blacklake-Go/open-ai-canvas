@@ -1,15 +1,10 @@
 import { AudioLines, Check, Film, Image, MessageSquareText } from "lucide-react";
 
 import { ModelIcon } from "@/components/model-picker";
+import { isDirectSystemModel, modelChannelLabel } from "@/lib/model-picker-groups";
+import { configuredModelDisplayName } from "@/lib/model-selection";
 import { cn } from "@/lib/utils";
-import {
-    filterModelsByCapability,
-    modelDisplayName,
-    modelOptionName,
-    resolveModelChannel,
-    type AiConfig,
-    type ModelCapability,
-} from "@/stores/use-config-store";
+import { filterModelsByCapability, modelOptionName, resolveModelChannel, type AiConfig, type ModelCapability } from "@/stores/use-config-store";
 import { useUserStore } from "@/stores/use-user-store";
 import { useI18n } from "@/supdance/plugins/i18n";
 
@@ -59,9 +54,13 @@ export function ModelDefaultGrid({ config, onChange }: { config: AiConfig; onCha
                 return (
                     <section key={group.capability} className="py-5 first:pt-0 last:pb-0" aria-labelledby={`default-${group.capability}-title`}>
                         <div className="mb-3 flex items-start gap-3">
-                            <span className="grid size-8 shrink-0 place-items-center rounded-md bg-surface-active text-foreground/65"><Icon className="size-4" /></span>
+                            <span className="grid size-8 shrink-0 place-items-center rounded-md bg-surface-active text-foreground/65">
+                                <Icon className="size-4" />
+                            </span>
                             <div className="min-w-0">
-                                <h3 id={`default-${group.capability}-title`} className="text-sm font-semibold">{title}</h3>
+                                <h3 id={`default-${group.capability}-title`} className="text-sm font-semibold">
+                                    {title}
+                                </h3>
                                 <p className="mt-0.5 text-xs text-foreground/48">{description}</p>
                             </div>
                             <span className="ml-auto shrink-0 text-xs tabular-nums text-foreground/38">{t("settings.models_available_count", { count: models.length }, `${models.length} 个可用`)}</span>
@@ -72,7 +71,11 @@ export function ModelDefaultGrid({ config, onChange }: { config: AiConfig; onCha
                                     const channel = resolveModelChannel(config, model);
                                     const selected = config[group.modelKey] === model;
                                     const cost = channel.modelCosts?.find((item) => item.model === modelOptionName(model));
-                                    const billingUnit = cost?.billingMode === "token" ? t("settings.per_million_tokens", undefined, "百万 Token") : cost?.billingMode === "per_second" ? t("settings.per_second", undefined, "秒") : t("settings.per_call", undefined, "次");
+                                    const billingUnit =
+                                        cost?.billingMode === "token" ? t("settings.per_million_tokens", undefined, "百万 Token") : cost?.billingMode === "per_second" ? t("settings.per_second", undefined, "秒") : t("settings.per_call", undefined, "次");
+                                    const directSystemModel = isDirectSystemModel(config, model);
+                                    const modelName = directSystemModel ? modelChannelLabel(config, model) : configuredModelDisplayName(config, model);
+                                    const groupName = directSystemModel ? cost?.displayName?.trim() || "未分类" : "";
                                     return (
                                         <button
                                             key={model}
@@ -90,11 +93,22 @@ export function ModelDefaultGrid({ config, onChange }: { config: AiConfig; onCha
                                                     <ModelIcon config={config} model={model} />
                                                 </span>
                                                 <span className="min-w-0 flex-1">
-                                                    <span className="block truncate text-xs font-semibold">{modelDisplayName(config, model)}</span>
+                                                    {groupName && groupName !== modelName ? (
+                                                        <span className="mb-0.5 block truncate text-[var(--fs-tiny)] text-foreground/55" title={groupName}>
+                                                            {groupName}
+                                                        </span>
+                                                    ) : null}
+                                                    <span className="block break-words text-xs font-semibold" title={modelName}>
+                                                        {modelName}
+                                                    </span>
                                                     <span className="flex min-w-0 flex-wrap items-center gap-x-2 gap-y-1 text-[var(--fs-tiny)] text-foreground/45">
                                                         <span className="max-w-full truncate">{channel.scope === "system" ? t("settings.system_model", undefined, "系统模型") : channel.name || t("settings.unnamed_channel", undefined, "未命名渠道")}</span>
                                                         <span className="model-default-option-scope">{channel.scope === "system" ? t("settings.system_scope", undefined, "系统") : t("settings.custom_scope", undefined, "自定义")}</span>
-                                                        {creditsEnabled && cost ? <span className="model-default-price">{formatPrice(cost.billingMode === "token" ? (cost.outputTokenPriceMicrocredits || 0) : cost.unitPriceMicrocredits, locale)} /{billingUnit}</span> : null}
+                                                        {creditsEnabled && cost ? (
+                                                            <span className="model-default-price">
+                                                                {formatPrice(cost.billingMode === "token" ? cost.outputTokenPriceMicrocredits || 0 : cost.unitPriceMicrocredits, locale)} /{billingUnit}
+                                                            </span>
+                                                        ) : null}
                                                     </span>
                                                 </span>
                                                 <span className={cn("model-default-option-check grid size-5 shrink-0 place-items-center rounded-full", selected ? "is-selected" : "text-transparent")}>

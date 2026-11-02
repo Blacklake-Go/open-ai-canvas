@@ -23,11 +23,60 @@ func (c DramaModelChoice) Empty() bool {
 }
 
 // DramaModels 是制作用到的三类模型：文本（改编、分镜、视频提示词）、图片（角色/道具/场景参考图）、
-// 视频（按剧情段生成带对白与音效的视频）。
+// 视频（按剧情段生成带对白与音效的视频）。文字步骤与参考图类型可以单独指定模型，为空沿用同能力的默认模型。
 type DramaModels struct {
 	Text  DramaModelChoice `json:"text"`
 	Image DramaModelChoice `json:"image"`
 	Video DramaModelChoice `json:"video"`
+
+	BibleText      DramaModelChoice `json:"bibleText"`
+	ScriptText     DramaModelChoice `json:"scriptText"`
+	PromptText     DramaModelChoice `json:"promptText"`
+	CharacterImage DramaModelChoice `json:"characterImage"`
+	PropImage      DramaModelChoice `json:"propImage"`
+	SceneImage     DramaModelChoice `json:"sceneImage"`
+}
+
+// 文字步骤：bible 资产提取（作品圣经），script 分镜拆分（每集剧本与镜头表），prompt 剧情段视频提示词。
+// 分集规划沿用默认文本模型。
+const (
+	DramaStepBible  = "bible"
+	DramaStepScript = "script"
+	DramaStepPrompt = "prompt"
+)
+
+// textFor 是文字步骤实际使用的文本模型。
+func (m DramaModels) textFor(step string) DramaModelChoice {
+	var override DramaModelChoice
+	switch step {
+	case DramaStepBible:
+		override = m.BibleText
+	case DramaStepScript:
+		override = m.ScriptText
+	case DramaStepPrompt:
+		override = m.PromptText
+	}
+	if !override.Empty() {
+		return override
+	}
+	return m.Text
+}
+
+// imageFor 是某类参考图（character / prop / scene）实际使用的图片模型。
+func (m DramaModels) imageFor(kind string) DramaModelChoice {
+	var override DramaModelChoice
+	switch kind {
+	case "character":
+		override = m.CharacterImage
+	case "prop":
+		override = m.PropImage
+	case "scene":
+		override = m.SceneImage
+	}
+	if !override.Empty() {
+		return override
+	}
+	return m.Image
 }
 
 func (m DramaModels) choice(capability string) DramaModelChoice {
@@ -56,17 +105,35 @@ const (
 	DramaReviewAuto   = "auto"
 )
 
-// DramaSkillRef 指向用户技能库里的一个技能文件，用作剧情段视频提示词的写作方法。
+// DramaSkillRef 指向用户技能库里的一个技能文件，用作文字步骤（资产提取、分镜拆分、视频提示词）的写作方法。
 type DramaSkillRef struct {
 	SkillID   string `json:"skillId"`
 	SkillName string `json:"skillName"`
 	Path      string `json:"path"`
 }
 
+// normalizedDramaSkillRef 截断字段长度；没有技能 ID 时视为未选择。
+func normalizedDramaSkillRef(value *DramaSkillRef) *DramaSkillRef {
+	if value == nil {
+		return nil
+	}
+	ref := DramaSkillRef{SkillID: truncateRunes(strings.TrimSpace(value.SkillID), 64), SkillName: truncateRunes(strings.TrimSpace(value.SkillName), 120), Path: truncateRunes(strings.TrimSpace(value.Path), 300)}
+	if ref.SkillID == "" {
+		return nil
+	}
+	if ref.Path == "" {
+		ref.Path = "SKILL.md"
+	}
+	return &ref
+}
+
 type DramaSettings struct {
 	production.Settings
 	// PromptSkill 为空时按内置格式撰写段视频提示词。
 	PromptSkill *DramaSkillRef `json:"promptSkill,omitempty"`
+	// BibleSkill / ScriptSkill 是资产提取与分镜拆分的写作技能，为空按内置规则；输出结构始终由系统固定。
+	BibleSkill  *DramaSkillRef `json:"bibleSkill,omitempty"`
+	ScriptSkill *DramaSkillRef `json:"scriptSkill,omitempty"`
 	ReviewMode  string         `json:"reviewMode"`
 	MediaMode   string         `json:"mediaMode"`
 	Concurrency int            `json:"concurrency"`
@@ -79,6 +146,8 @@ type DramaSettings struct {
 	ChaptersPerEpisode int    `json:"chaptersPerEpisode,omitempty"`
 	// VideoContinuity 是剧情段视频的衔接方式，见 DramaContinuityTailFrame / DramaContinuityParallel。
 	VideoContinuity string `json:"videoContinuity"`
+	// VideoResolution 是剧情段视频的分辨率档位（取自视频模型声明的分辨率，如 720p、1080p）；空串按模型默认。
+	VideoResolution string `json:"videoResolution,omitempty"`
 }
 
 // 剧情段视频衔接方式：tail_frame 第 2 段起用上一段视频的最后一帧做首帧，同集各段按顺序生成；
@@ -114,16 +183,9 @@ func (s DramaSettings) normalized() DramaSettings {
 		// 早于该设置创建的作品一直是全自动，保持原行为；新建作品由 CreateDrama 默认 manual。
 		s.MediaMode = DramaMediaAuto
 	}
-	if s.PromptSkill != nil {
-		ref := DramaSkillRef{SkillID: truncateRunes(strings.TrimSpace(s.PromptSkill.SkillID), 64), SkillName: truncateRunes(strings.TrimSpace(s.PromptSkill.SkillName), 120), Path: truncateRunes(strings.TrimSpace(s.PromptSkill.Path), 300)}
-		s.PromptSkill = nil
-		if ref.SkillID != "" {
-			if ref.Path == "" {
-				ref.Path = "SKILL.md"
-			}
-			s.PromptSkill = &ref
-		}
-	}
+	s.PromptSkill = normalizedDramaSkillRef(s.PromptSkill)
+	s.BibleSkill = normalizedDramaSkillRef(s.BibleSkill)
+	s.ScriptSkill = normalizedDramaSkillRef(s.ScriptSkill)
 	if s.Concurrency <= 0 {
 		s.Concurrency = 4
 	}
@@ -131,6 +193,10 @@ func (s DramaSettings) normalized() DramaSettings {
 		s.Concurrency = 16
 	}
 	s.ReferenceLimit = max(0, min(dramaMaxReferenceLimit, s.ReferenceLimit))
+	s.VideoResolution = truncateRunes(strings.TrimSpace(s.VideoResolution), 32)
+	if isAutomaticVideoResolution(s.VideoResolution) {
+		s.VideoResolution = ""
+	}
 	if s.VideoContinuity != DramaContinuityParallel {
 		// 早于该设置创建的作品一直按尾帧续接，保持原行为。
 		s.VideoContinuity = DramaContinuityTailFrame
@@ -191,6 +257,21 @@ type CreateDramaRequest struct {
 	// SourceFormat 是素材类型：novel 小说、script 剧本、storyboard 分镜；剧本与分镜总是每章一集。
 	SourceFormat string `json:"sourceFormat"`
 	EpisodeMode  string `json:"episodeMode"`
+	// SelectedChapters 是先加入制作的章节下标（从 0 起，对应 Chapters）；为空表示全部章节。
+	// 没选中的章节原文照常保存为预留章节，不参与资产提取、分集与改编，之后可在制作台加入。
+	SelectedChapters []int `json:"selectedChapters"`
+}
+
+// ProduceDramaChaptersRequest 把预留的原著章节加入制作：按章节顺序每 ChaptersPerEpisode 章建成一集（不连续的章节不合并），
+// 追加在现有分集之后。ChaptersPerEpisode 为 0 时沿用作品的按章分集设置，没有设置按每章一集。
+type ProduceDramaChaptersRequest struct {
+	ChapterIDs         []string `json:"chapterIds"`
+	ChaptersPerEpisode int      `json:"chaptersPerEpisode"`
+}
+
+// ProduceDramaChaptersResult 是加入制作后新建的集，按集号排列。
+type ProduceDramaChaptersResult struct {
+	EpisodeIDs []string `json:"episodeIds"`
 }
 
 // AddDramaEpisodeRequest 在作品末尾追加一集：原文直接成为这一集，不经过分集规划。
@@ -281,17 +362,23 @@ type DramaProductionView struct {
 	PauseReason        string        `json:"pauseReason"`
 	Settings           DramaSettings `json:"settings"`
 	BudgetMicrocredits int64         `json:"budgetMicrocredits"`
-	// SpentMicrocredits 是作品总花费：流水线任务加关联画布上的精修任务，预算按它判断。
+	// SpentMicrocredits 是作品已实际扣费的总额：流水线任务加关联画布上的精修任务，按订单结算实收计（退回不计）。
+	// CanvasSpentMicrocredits 是其中画布精修的部分；HeldMicrocredits 是尚未结算订单的冻结额（冻结中）。
+	// 预算按 SpentMicrocredits + HeldMicrocredits 保守判断。
 	SpentMicrocredits       int64  `json:"spentMicrocredits"`
 	CanvasSpentMicrocredits int64  `json:"canvasSpentMicrocredits"`
+	HeldMicrocredits        int64  `json:"heldMicrocredits"`
 	PlanDone                bool   `json:"planDone"`
 	PlanCursor              int    `json:"planCursor"`
 	SampleApproved          bool   `json:"sampleApproved"`
 	AssetsReleased          bool   `json:"assetsReleased"`
 	Logline                 string `json:"logline"`
 	Tone                    string `json:"tone"`
-	ChapterCount            int    `json:"chapterCount"`
-	WordCount               int    `json:"wordCount"`
+	// ChapterCount / WordCount 只统计已加入制作的章节；Reserved* 是导入时未选中、尚未加入制作的原著章节。
+	ChapterCount         int `json:"chapterCount"`
+	WordCount            int `json:"wordCount"`
+	ReservedChapterCount int `json:"reservedChapterCount"`
+	ReservedWordCount    int `json:"reservedWordCount"`
 }
 
 // DramaEpisodeStats 按剧情段统计进度：视频提示词写好几段、视频生成几段、失败几段。
@@ -318,6 +405,9 @@ type DramaEpisodeRow struct {
 	FinalResourceID string            `json:"finalResourceId,omitempty"`
 	FinalStale      bool              `json:"finalStale"`
 	Stats           DramaEpisodeStats `json:"stats"`
+	// Revision / UpdatedAt 是集记录的版本与最后更新时间（RFC3339），用于判断读到的状态是否最新。
+	Revision  int64  `json:"revision"`
+	UpdatedAt string `json:"updatedAt"`
 }
 
 type DramaInboxItem struct {
@@ -408,6 +498,9 @@ type DramaChapterRef struct {
 	Title     string `json:"title"`
 	Position  int    `json:"position"`
 	WordCount int    `json:"wordCount"`
+	// Reserved 表示原著章节尚未加入制作；EpisodeNumber 是使用这一章的第一集（未分到集时为 0）。只在章节目录里给出。
+	Reserved      bool `json:"reserved,omitempty"`
+	EpisodeNumber int  `json:"episodeNumber,omitempty"`
 }
 
 type DramaEpisodeDetail struct {
@@ -425,8 +518,9 @@ type DramaEpisodeDetail struct {
 // DramaSegmentView 是一个剧情段：视频提示词、参考图、生成方式与视频结果。
 type DramaSegmentView struct {
 	ID string `json:"id"`
-	// Revision 用于画布采用时的乐观并发校验。
+	// Revision 用于画布采用时的乐观并发校验；UpdatedAt 是段记录最后更新时间（RFC3339），段还没有记录时为空。
 	Revision   int64    `json:"revision"`
+	UpdatedAt  string   `json:"updatedAt,omitempty"`
 	Index      int      `json:"index"`
 	Title      string   `json:"title"`
 	ShotIDs    []string `json:"shotIds"`
@@ -464,6 +558,15 @@ type DramaSegmentRequest struct {
 	Operation       string `json:"operation"`
 	Seconds         int    `json:"seconds"`
 	MaxVideoSeconds int    `json:"maxVideoSeconds"`
+	// AspectRatio 是作品画幅；Size / Resolution 是实际发送的画面参数：声明比例参数的模型发 Size，
+	// 用完整分辨率标签表达横竖的模型发 Resolution（例如 768p竖）。
+	AspectRatio string `json:"aspectRatio"`
+	Size        string `json:"size,omitempty"`
+	Resolution  string `json:"resolution,omitempty"`
+	// PromptMaxChars 是视频模型的提示词字符上限（含开头的参考图说明）；0 表示未声明。
+	PromptMaxChars int `json:"promptMaxChars,omitempty"`
+	// GenerateAudio 表示视频模型同步生成对白与音效；为 false 时本段视频没有声音。
+	GenerateAudio bool `json:"generateAudio"`
 	// FirstFrame 是上一段视频的最后一帧；第一段为空。FirstFramePending 表示上一段还没生成，生成后才能提交本段。
 	FirstFrameResourceID string                  `json:"firstFrameResourceId,omitempty"`
 	FirstFramePending    bool                    `json:"firstFramePending"`
@@ -479,6 +582,20 @@ type DramaSegmentRequest struct {
 	Warning string `json:"warning,omitempty"`
 	// UnknownReferences 是提示词正文里不属于本段的“参考图N”（编号超出本段参考图数量），存在时不能提交视频。
 	UnknownReferences []string `json:"unknownReferences,omitempty"`
+	// AudioReferences 是本段说话、且指定了声音样本的角色（按开口顺序）；Sent 的作为“参考音频N”随请求发送。
+	// ModelMaxAudios 是视频模型声明的参考音频上限，0 表示不支持参考音频。
+	AudioReferences []DramaSegmentAudioReference `json:"audioReferences"`
+	ModelMaxAudios  int                          `json:"modelMaxAudios,omitempty"`
+}
+
+// DramaSegmentAudioReference 是一个说话角色的声音样本；没有随请求发送时 Note 说明原因，本段按声线描述生成该角色的对白。
+type DramaSegmentAudioReference struct {
+	CastID     string `json:"castId"`
+	Name       string `json:"name"`
+	Label      string `json:"label,omitempty"`
+	ResourceID string `json:"resourceId"`
+	Sent       bool   `json:"sent"`
+	Note       string `json:"note,omitempty"`
 }
 
 type DramaSegmentReference struct {
@@ -513,6 +630,25 @@ type UpdateDramaShotRequest struct {
 	DurationSeconds *float64 `json:"durationSeconds"`
 }
 
+// SetDramaCastVoiceRequest 为角色指定声音：VoiceProfileID 从声音库选，SampleResourceID 是刚上传或录制的样本音频
+// （按 VoiceName 登记到声音库，同一样本重复使用同一条）。RestyleSegments 让引用该角色的剧情段视频重新生成。
+type SetDramaCastVoiceRequest struct {
+	VoiceProfileID   string `json:"voiceProfileId"`
+	SampleResourceID string `json:"sampleResourceId"`
+	VoiceName        string `json:"voiceName"`
+	RestyleSegments  bool   `json:"restyleSegments"`
+}
+
+// DramaCastLookRequest 新增或修改一套角色造型：LookName 造型名，Appearance 这套造型的外观，
+// FromChapter / ToChapter 默认适用的原著章节号（从 1 起，0 或 nil 表示该端不限）。
+type DramaCastLookRequest struct {
+	LookName        string `json:"lookName"`
+	Appearance      string `json:"appearance"`
+	FromChapter     *int   `json:"fromChapter"`
+	ToChapter       *int   `json:"toChapter"`
+	RestyleSegments bool   `json:"restyleSegments"`
+}
+
 type UpdateDramaCastRequest struct {
 	Name              *string   `json:"name"`
 	Aliases           *[]string `json:"aliases"`
@@ -535,7 +671,9 @@ type DramaListItem struct {
 	AspectRatio       string   `json:"aspectRatio"`
 	StyleName         string   `json:"styleName,omitempty"`
 	SpentMicrocredits int64    `json:"spentMicrocredits"`
-	UpdatedAt         string   `json:"updatedAt"`
+	// HeldMicrocredits 是尚未结算订单的冻结额，口径同 DramaProductionView。
+	HeldMicrocredits int64  `json:"heldMicrocredits"`
+	UpdatedAt        string `json:"updatedAt"`
 }
 
 type DramaModelOption struct {
@@ -547,6 +685,13 @@ type DramaModelOption struct {
 	MaxVideoSeconds int `json:"maxVideoSeconds,omitempty"`
 	// TailFrameChain 仅视频模型：是否支持图生视频，可用于“尾帧续接”；不支持的模型只能并行出片。
 	TailFrameChain bool `json:"tailFrameChain,omitempty"`
+	// VideoRatios 仅视频模型：能准确给出的作品画幅；不含作品画幅的模型不能用于该作品。
+	VideoRatios []string `json:"videoRatios,omitempty"`
+	// GenerateAudio 仅视频模型：是否同步生成对白与音效；false 时段视频没有声音。
+	GenerateAudio *bool `json:"generateAudio,omitempty"`
+	// VideoResolutions 仅视频模型：作品可指定的分辨率档位（如 720p、1080p）与模型默认档位；为空表示模型不提供可选分辨率。
+	VideoResolutions       []string `json:"videoResolutions,omitempty"`
+	DefaultVideoResolution string   `json:"defaultVideoResolution,omitempty"`
 	// 以下仅图片模型：可指定的参考图分辨率档位、默认档位，以及能按默认档位准确出图的参考图画幅。
 	ImageResolutions       []string `json:"imageResolutions,omitempty"`
 	DefaultImageResolution string   `json:"defaultImageResolution,omitempty"`

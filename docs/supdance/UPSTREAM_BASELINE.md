@@ -5,16 +5,18 @@
 | 维度 | 值 |
 | --- | --- |
 | **上游仓库** | `https://github.com/ddcat-ai/open-ai-canvas` |
-| **当前采用的上游正式标签** | `v1.7.3` |
-| **上游基线 Commit SHA** | `0a6f7c4d345d75e9f5f596644c88410e63bb1bc6`（含正式 Release `v1.7.3` 与最新修复） |
-| **上游发布时间** | `2026-10-28T21:15:00+08:00` |
-| **数据库 Schema 版本** | `77` |
+| **当前采用的上游正式标签** | `v1.7.3.4` |
+| **上游基线 Commit SHA** | `dc035d51311925e48ab1542df094bd1e2b07ba7f` |
+| **上游发布提交时间** | `2026-11-02T21:40:52+08:00` |
+| **数据库 Schema 版本** | `78`（生产迁移需恢复副本验证） |
 | **外观配置 JSON 合同版本** | `10` (`updates` / `canvas` / `skinThemes` buttons v8+) |
 | **插件宿主 API 版本** | `yingce.plugin/v1`、`yingce.plugin/v2` |
 | **前端包管理器与锁文件** | `bun@1.3.9` (`web/bun.lock`) |
 | **后端 Go 版本** | `go 1.25.0` (生产镜像运行 `go1.25.14`) |
 
-## 2. 生产镜像基线 (GHCR Digests)
+本次源码集成版本为 `v1.7.4-supdance.2`，以已提交的 `release/supdance-1.7.4-supdance.1` 为定制来源。并行插件任务的未提交修改及其他修复分支不纳入本次发布；以下生产镜像坐标为历史记录，不能据此判断当前部署。
+
+## 2. 历史生产镜像基线 (GHCR Digests)
 
 当前生产环境 (`y.supdance.com` / `one.supdance.com`) 对应 `v1.7.2` 升级周期：
 
@@ -25,7 +27,7 @@
 - **`CANVAS_YINGCE_AGENT_IMAGE`**：
   `ghcr.io/ddcat-ai/open-ai-canvas-yingce-agent@sha256:c821a60623f23bc9b75af26f9f426e3bcd7a88b35029a9421263932d791667c6`
 
-## 3. 上游未发布分支动态观察
+## 3. 历史上游分支观察（v1.7.2 周期）
 
 截至本次基线记录时，上游 `upstream/main` 在 `v1.7.2` 之后有 2 个文档提交：
 

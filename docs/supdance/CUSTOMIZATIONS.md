@@ -29,9 +29,10 @@
   1. `web/src/components/canvas/canvas-cloud-agent-connectors.css`
   2. `web/src/components/canvas/canvas-cloud-agent-connectors.tsx`
   3. `web/src/components/canvas/canvas-cloud-agent-panel.tsx`
-- **修改原因**：上游 `.yingce-plugin` 当前不开放云端 Agent 悬浮面板底部连接器栏与对话发送拦截钩子，因此需要在面板组件内挂载 `useCodexConnector`。
-- **上游基线**：`v1.7.2` (`e4e3a40c94242b8845650e4c7090ec7cb6c46ed0`)
-- **升级风险与回归保障**：已通过 `tools/supdance/check_upstream.py` 将上述 3 个文件纳入 `coupledUpstreamFiles` 监控；一旦上游修改这 3 个文件，升级报告会自动升级风险为 `HIGH` 并列出冲突路径。
+  4. `web/src/components/canvas/canvas-cloud-agent-settings.tsx`
+- **修改原因**：在面板挂载 `useCodexConnector` 并分流本机发送与停止；按上游新布局将连接器移入设置「工具与连接」，由面板注入真实状态和操作。连接本机期间阻止云端队列自动派发，保留云端队列和附件流程。
+- **上游基线**：`v1.7.3.4` (`dc035d51311925e48ab1542df094bd1e2b07ba7f`)
+- **升级风险与回归保障**：上述 4 个文件纳入 `coupledUpstreamFiles` 监控，并通过插件隔离、Agent 布局和模型选择专项检查；真实本机配对与页面验收仍需在运行环境完成。
 
 ### 补丁 ID：`supdance-workspace-governance`
 - **被修改的上游文件**：

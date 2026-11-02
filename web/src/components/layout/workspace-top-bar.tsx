@@ -26,6 +26,11 @@ const PAGE_TITLE_KEYS: Record<string, string> = {
     settings: "nav.settings",
 };
 
+const TOOLBOX_TITLES: Record<string, string> = {
+    image: "图片生成",
+    video: "视频生成",
+};
+
 export function WorkspaceTopBar({ sidebarOpen, onToggleSidebar }: { sidebarOpen: boolean; onToggleSidebar: () => void }) {
     const { t } = useI18n();
     const brandName = useAppearanceStore((state) => state.appearance.brandName);
@@ -35,19 +40,14 @@ export function WorkspaceTopBar({ sidebarOpen, onToggleSidebar }: { sidebarOpen:
     const creditsEnabled = useUserStore((state) => state.features.creditsEnabled);
     const { availableMicrocredits } = useWalletBalance(user?.id, creditsEnabled);
     const { pathname } = useLocation();
-    const slug = pathname.split("/").filter(Boolean)[0];
+    const [slug, subSlug] = pathname.split("/").filter(Boolean);
     const pageTitleKey = slug ? PAGE_TITLE_KEYS[slug] : PAGE_TITLE_KEYS.home;
-    const pageTitle = pageTitleKey ? t(pageTitleKey) : (slug ? slug : brandName);
+    const pageTitle = slug === "toolbox" ? TOOLBOX_TITLES[subSlug ?? ""] || brandName : pageTitleKey ? t(pageTitleKey) : brandName;
     const balance = availableMicrocredits === null ? "--" : (availableMicrocredits / 1_000_000).toLocaleString("zh-CN", { maximumFractionDigits: 2 });
 
     return (
         <header className="app-workspace-topbar">
-            <button
-                type="button"
-                className="app-workspace-mobile-menu app-workspace-topbar-icon-button"
-                aria-label={sidebarOpen ? t("nav.collapse_sidebar") : t("nav.expand_sidebar")}
-                onClick={onToggleSidebar}
-            >
+            <button type="button" className="app-workspace-mobile-menu app-workspace-topbar-icon-button" aria-label={sidebarOpen ? t("nav.collapse_sidebar") : t("nav.expand_sidebar")} onClick={onToggleSidebar}>
                 {sidebarOpen ? <PanelLeftClose className="size-4" /> : <PanelLeftOpen className="size-4" />}
             </button>
             <nav className="app-workspace-topbar-breadcrumb" aria-label={t("nav.current_location")}>
@@ -61,12 +61,7 @@ export function WorkspaceTopBar({ sidebarOpen, onToggleSidebar }: { sidebarOpen:
             <div className="app-workspace-topbar-actions">
                 {user ? <TopbarFeedbackButton /> : null}
                 {creditsEnabled ? (
-                    <button
-                        type="button"
-                        className="app-workspace-topbar-credit-pill"
-                        aria-label={t("nav.credits_aria", { balance })}
-                        onClick={() => openWorkspaceWallet()}
-                    >
+                    <button type="button" className="app-workspace-topbar-credit-pill" aria-label={t("nav.credits_aria", { balance })} onClick={() => openWorkspaceWallet()}>
                         <WorkspaceCreditGiftMark />
                         <span>{t("nav.credits")}</span>
                         <strong>{balance}</strong>

@@ -3,9 +3,9 @@
   "upstreamRepository": "https://github.com/ddcat-ai/open-ai-canvas",
   "forkRepository": "https://github.com/Blacklake-Go/open-ai-canvas",
   "upstreamBaseline": {
-    "tag": "v1.7.3",
-    "commit": "0a6f7c4d345d75e9f5f596644c88410e63bb1bc6",
-    "schemaVersion": 77
+    "tag": "v1.7.3.4",
+    "commit": "dc035d51311925e48ab1542df094bd1e2b07ba7f",
+    "schemaVersion": 78
   },
   "supdanceRelease": {
     "tag": "supdance/v2026.10.28.2",
@@ -21,6 +21,7 @@
     "web/src/components/canvas/canvas-cloud-agent-connectors.css",
     "web/src/components/canvas/canvas-cloud-agent-connectors.tsx",
     "web/src/components/canvas/canvas-cloud-agent-panel.tsx",
+    "web/src/components/canvas/canvas-cloud-agent-settings.tsx",
     "web/src/components/layout/app-changelog-dialog.tsx",
     "web/src/components/layout/app-changelog-modal.tsx",
     "web/src/components/layout/app-providers.tsx",

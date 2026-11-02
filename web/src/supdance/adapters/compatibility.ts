@@ -7,7 +7,7 @@ import type { RouteObject } from "react-router";
 import type { PluginHostContext, PluginManifest, PluginManifestV2, RegisteredPlugin } from "@/lib/plugins/plugin-types";
 import { getRegisteredPlugin, registerPlugin, unregisterPlugin } from "@/lib/plugins/plugin-registry";
 
-export const SUPDANCE_HOST_VERSION = "1.7.3" as const;
+export const SUPDANCE_HOST_VERSION = "1.7.3.4" as const;
 
 export type UpstreamPatchRecord = {
     id: string;
@@ -28,15 +28,21 @@ export const SUPDANCE_UPSTREAM_PATCH_REGISTRY: readonly UpstreamPatchRecord[] = 
         id: "supdance-codex-agent-connector",
         upstreamBaseline: "v1.7.3",
         feature: "本机 SupDance Canvas Agent (Codex) 连接器发现、配对、SSE 与对话转发",
-        coupledUpstreamFiles: ["web/src/components/canvas/canvas-cloud-agent-connectors.css", "web/src/components/canvas/canvas-cloud-agent-connectors.tsx", "web/src/components/canvas/canvas-cloud-agent-panel.tsx"],
+        coupledUpstreamFiles: [
+            "web/src/components/canvas/canvas-cloud-agent-connectors.css",
+            "web/src/components/canvas/canvas-cloud-agent-connectors.tsx",
+            "web/src/components/canvas/canvas-cloud-agent-panel.tsx",
+            "web/src/components/canvas/canvas-cloud-agent-settings.tsx",
+        ],
         files: [
             "web/src/components/canvas/canvas-cloud-agent-connectors.css",
             "web/src/components/canvas/canvas-cloud-agent-connectors.tsx",
             "web/src/components/canvas/canvas-cloud-agent-panel.tsx",
+            "web/src/components/canvas/canvas-cloud-agent-settings.tsx",
             "web/src/components/canvas/use-codex-connector.ts",
             "web/src/services/api/codex-connector.ts",
         ],
-        reason: "在画布底部 Agent 连接器栏挂载本机 Codex 协作入口与状态机，同时保留上游云端 Agent 撤回插话、后台标签页不轮询等原生行为。",
+        reason: "在 Agent 设置的工具与连接页挂载本机 Codex 协作入口与状态机，同时保留上游云端 Agent 队列、附件和插话行为。",
         upgradeRisk: "MEDIUM",
     },
     {
@@ -107,17 +113,8 @@ export const SUPDANCE_UPSTREAM_PATCH_REGISTRY: readonly UpstreamPatchRecord[] = 
         id: "supdance-music-plugin-gates",
         upstreamBaseline: "v1.7.3",
         feature: "音乐生成插件 (supdance-music-generation) 路由守卫、侧栏入口与创作岛模式药丸统一按清单 id 与服务端状态判定",
-        coupledUpstreamFiles: [
-            "web/src/components/auth/require-plugin.tsx",
-            "web/src/pages/create/creation-workspace.tsx",
-            "web/src/stores/use-plugin-store.ts",
-        ],
-        files: [
-            "web/src/components/auth/require-plugin.tsx",
-            "web/src/pages/create/creation-workspace.tsx",
-            "web/src/stores/use-plugin-store.ts",
-            "web/src/supdance/plugins/music-generation/types.ts",
-        ],
+        coupledUpstreamFiles: ["web/src/components/auth/require-plugin.tsx", "web/src/pages/create/creation-workspace.tsx", "web/src/stores/use-plugin-store.ts"],
+        files: ["web/src/components/auth/require-plugin.tsx", "web/src/pages/create/creation-workspace.tsx", "web/src/stores/use-plugin-store.ts", "web/src/supdance/plugins/music-generation/types.ts"],
         reason: "上游路由守卫与入口显隐原先优先读取本地安装记录（ensurePlugin 新建记录默认 enabled=false）或别名 id（服务端无对应状态记录），会把服务端已生效的插件误判为停用；现统一收敛为 use-plugin-store 的 selectPluginEffectivelyEnabled（服务端 states -> 运行时 statuses -> 本地安装记录），插件 id 一律使用清单 id。",
         upgradeRisk: "LOW",
     },

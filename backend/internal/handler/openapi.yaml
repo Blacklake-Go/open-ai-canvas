@@ -1591,7 +1591,7 @@ paths:
     post:
       tags: [agent]
       summary: 向正在运行的 Agent 轮次插入一句话
-      description: 不新建轮次、不产生新的扣费身份。插话排进当前运行，在下一次模型调用前送达；运行已结束返回 409。
+      description: 不新建轮次、不产生新的扣费身份。插话排进当前运行，在下一次模型调用前送达；同一 messageId 幂等。运行已结束返回 409（reason=agent_interjection_run_finished），客户端把这条留在本机队列作为下一轮发送。
       requestBody:
         required: true
         content:
@@ -1611,7 +1611,7 @@ paths:
         "200":
           description: 信封 data.accepted 与 data.pending
         "409":
-          description: 本轮已结束，应改为新一轮发送
+          description: reason=agent_interjection_run_finished 表示本轮已结束，改为下一轮发送；reason=agent_run_state_busy 表示运行状态并发写入冲突，可用同一 messageId 重试
   /agent/runs/{id}/interjections/{messageId}:
     parameters:
       - $ref: "#/components/parameters/AgentRunID"
@@ -1631,7 +1631,7 @@ paths:
         "404":
           description: 插话不存在
         "409":
-          description: 插话已送达模型或本轮已结束，无法撤回
+          description: reason=agent_interjection_already_delivered 表示已送达模型或本轮已结束，不能撤回；reason=agent_run_state_busy 表示并发写入冲突，可重试
   /agent/runs/{id}/cancel:
     parameters:
       - $ref: "#/components/parameters/AgentRunID"
@@ -2357,7 +2357,7 @@ paths:
             schema:
               type: object
               additionalProperties: false
-              required: [kind, prompt, model, modelChoice, parameters, references]
+              required: [kind, prompt, model]
               properties:
                 kind: { type: string, enum: [image, video] }
                 toolId: { type: string }
@@ -2365,6 +2365,16 @@ paths:
                 prompt: { type: string, minLength: 1, maxLength: 32000 }
                 model: { type: string }
                 logicalModelId: { type: string }
+                channelId: { type: string, description: 系统渠道模型没有 logicalModelId 时提交渠道 ID，二者至少一个 }
+                batch:
+                  type: object
+                  additionalProperties: false
+                  description: 同一次提交拆出的多个任务共用一个批次 ID，只用于列表分组展示；每个任务仍各自准入和计费。列表项通过 clientContext.batchId/batchIndex/batchCount 返回。
+                  required: [id, index, count]
+                  properties:
+                    id: { type: string, pattern: "^[A-Za-z0-9_-]{8,64}$" }
+                    index: { type: integer, minimum: 0 }
+                    count: { type: integer, minimum: 1, maximum: 20 }
                 modelChoice:
                   type: object
                   additionalProperties: false
@@ -2384,8 +2394,9 @@ paths:
                   properties:
                     size: { type: string }
                     quality: { type: string }
-                    count: { type: integer, minimum: 1 }
-                    videoSeconds: { type: integer, minimum: 1 }
+                    imageResolution: { type: string }
+                    count: { type: integer, minimum: 1, maximum: 20 }
+                    seconds: { type: integer, minimum: 1 }
                     ratio: { type: string }
                     resolution: { type: string }
                     generateAudio: { type: boolean }
@@ -2396,11 +2407,12 @@ paths:
                   items:
                     type: object
                     additionalProperties: false
-                    required: [resourceId, kind, role]
+                    required: [resourceId, kind]
                     properties:
                       resourceId: { type: string }
                       kind: { type: string, enum: [image, video, audio] }
                       role: { type: string, enum: [reference, first_frame, last_frame] }
+                      slotKey: { type: string }
       responses:
         "200":
           $ref: "#/components/responses/Envelope"
