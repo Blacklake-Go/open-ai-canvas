@@ -930,6 +930,25 @@ func (s *Service) CompleteOnboarding(req CompleteOnboardingRequest) (*model.User
 	if !req.AcceptedTerms {
 		return nil, nil, kernel.BadAuthRequest("请先同意服务协议与隐私条款")
 	}
+	if t.UserID == "" {
+		identity, err := s.repo.UserIdentity(t.Provider, t.Subject)
+		if err == nil && identity != nil {
+			user, err := s.repo.User(identity.UserID)
+			if err != nil {
+				return nil, nil, err
+			}
+			if user.Status != model.UserStatusActive {
+				return nil, nil, kernel.Forbidden("该账号已被禁用")
+			}
+			// Another verified ticket already created or bound this identity.
+			// Reuse the account; stale form fields must never change its password.
+			_, _ = s.consumeTicket(ticketID)
+			return user, nil, nil
+		}
+		if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, nil, err
+		}
+	}
 	settings, err := s.ReadSettings()
 	if err != nil {
 		return nil, nil, err

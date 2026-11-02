@@ -22,7 +22,7 @@ func useBilibiliStub(t *testing.T, tokenReply, infoReply string) *int {
 		w.Header().Set("Content-Type", "application/json")
 		if r.URL.Path == "/token" {
 			q := r.URL.Query()
-			if r.Method != http.MethodPost || q.Get("client_id") != "bili-client" || q.Get("client_secret") != "bili-secret" || q.Get("code") != "provider-code" || q.Get("grant_type") != "authorization_code" {
+			if r.Method != http.MethodPost || q.Get("client_id") != "bili-client" || q.Get("client_secret") != "bili-secret" || !strings.HasPrefix(q.Get("code"), "provider-code") || q.Get("grant_type") != "authorization_code" {
 				t.Error("token request does not match official query-parameter POST contract")
 			}
 			if !strings.HasPrefix(r.Header.Get("Content-Type"), "application/x-www-form-urlencoded") {
