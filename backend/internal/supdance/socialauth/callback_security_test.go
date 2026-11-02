@@ -40,19 +40,19 @@ func TestMockCallbackCodeIsHonoredOnlyWhenSandboxEnabled(t *testing.T) {
 }
 
 // 真实（非 mock）授权码分支以前直接拼造 profile，等价于任何渠道都能被空转登录。
-func TestLiveCallbackRequiresRealTokenExchange(t *testing.T) {
+func TestUnsupportedChannelFailsClosed(t *testing.T) {
 	repo, svc := newSecurityTestService(t)
-	seedChannel(t, svc, ProviderBilibili, "real_bili_client", "real_bili_secret", false)
+	seedChannel(t, svc, ProviderInstagram, "real_bili_client", "real_bili_secret", false)
 	// 未接入上游交换的渠道现在既不能发起授权，也不出现在登录页。
-	if _, err := svc.BeginAuth(cnRequest("/api/auth/social/bilibili/start"), ProviderBilibili, "/create", true); err == nil {
+	if _, err := svc.BeginAuth(cnRequest("/api/auth/social/instagram/start"), ProviderInstagram, "/create", true); err == nil {
 		t.Fatalf("BeginAuth accepted a channel with no upstream token exchange")
 	}
-	state := mintState(t, repo, ProviderBilibili)
+	state := mintState(t, repo, ProviderInstagram)
 
-	if res, err := completeBoundTestAuth(t, svc, cnRequest("/callback"), ProviderBilibili, state, "abcdef1234567890", ""); err == nil {
+	if res, err := completeBoundTestAuth(t, svc, cnRequest("/callback"), ProviderInstagram, state, "abcdef1234567890", ""); err == nil {
 		t.Fatalf("no upstream exchange implemented but callback minted identity %s", res.User.ID)
 	}
-	if id, err := repo.UserIdentity(ProviderBilibili, "bilibili_live_abcdef12"); err == nil && id != nil && id.ID != "" {
+	if id, err := repo.UserIdentity(ProviderInstagram, "bilibili_live_abcdef12"); err == nil && id != nil && id.ID != "" {
 		t.Fatalf("callback persisted a fabricated identity %+v", id)
 	}
 	respCN, err := svc.GetPublicProviders(cnRequest("/api/auth/social/providers"))
@@ -60,8 +60,8 @@ func TestLiveCallbackRequiresRealTokenExchange(t *testing.T) {
 		t.Fatalf("GetPublicProviders failed: %v", err)
 	}
 	for _, p := range respCN.Providers {
-		if p.ID == ProviderBilibili {
-			t.Fatalf("Bilibili without a real exchange must not be advertised, got %+v", respCN.Providers)
+		if p.ID == ProviderInstagram {
+			t.Fatalf("Instagram without a real exchange must not be advertised, got %+v", respCN.Providers)
 		}
 	}
 }

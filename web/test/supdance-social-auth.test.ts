@@ -31,7 +31,7 @@ describe("SupDance Social Auth Plugin", () => {
 
         expect(manifest.apiVersion).toBe("yingce.plugin/v2");
         expect(manifest.id).toBe("supdance-social-auth");
-        expect(manifest.version).toBe("1.3.1");
+        expect(manifest.version).toBe("1.3.2");
         expect(manifest.trusted).toBe(true);
         expect(manifest.surfaces).toContain("auth");
         expect(manifest.surfaces).toContain("settings");
@@ -162,11 +162,11 @@ describe("SupDance Social Auth Plugin", () => {
         expect(useUserProfileModalStore.getState().isOpen).toBe(false);
     });
 
-    test("docs/supdance/CUSTOMIZATIONS.md documents supdance-social-auth v1.3.1 and upstream patch", () => {
+    test("docs/supdance/CUSTOMIZATIONS.md documents supdance-social-auth v1.3.2 and upstream patch", () => {
         const docPath = resolve(import.meta.dir, "../../docs/supdance/CUSTOMIZATIONS.md");
         const docSource = readFileSync(docPath, "utf-8");
 
-        expect(docSource).toContain("supdance-social-auth` v1.3.1");
+        expect(docSource).toContain("supdance-social-auth` v1.3.2");
         expect(docSource).toContain("补丁 ID：`supdance-social-auth`");
     });
 

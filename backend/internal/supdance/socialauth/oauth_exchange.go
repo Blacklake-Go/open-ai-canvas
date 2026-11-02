@@ -42,15 +42,9 @@ var (
 // upstream. Channels without a real exchange must fail closed: the previous
 // placeholder synthesised a profile straight from the code string, which let
 // anyone who first called the public /start endpoint mint accounts and sessions.
-//
-// 哔哩哔哩刻意仍未接入：从生产出口实测，公开文档里能找到的四个令牌端点
-// （member.bilibili.com/x/account-oauth2/v1/token、app.bilibili.com/x/oauth2/token、
-// api.bilibili.com/x/passport-login/oauth2/access_token、passport.bilibili.com/api/v2/oauth2/token）
-// GET/POST 一律 404，其第三方 OAuth 需应用审核通过后另行下发可用域名；
-// 在没有可验证端点之前继续 fail-closed，比照抄一份猜测地址更负责。
 func liveExchangeSupported(providerID string) bool {
 	switch providerID {
-	case ProviderGoogle, ProviderX, ProviderQQ, ProviderDouyin, ProviderWeChat:
+	case ProviderGoogle, ProviderX, ProviderQQ, ProviderDouyin, ProviderWeChat, ProviderBilibili:
 		return true
 	default:
 		return false
@@ -70,6 +64,8 @@ func redeemCode(ctx context.Context, providerID string, cfg ProviderConfig, code
 		return redeemDouyin(ctx, cfg, code)
 	case ProviderWeChat:
 		return redeemWeChat(ctx, cfg, code)
+	case ProviderBilibili:
+		return redeemBilibili(ctx, cfg, code)
 	default:
 		return nil, fmt.Errorf("渠道 %s 尚未接入真实授权码交换，已拒绝登录以避免伪造身份", providerID)
 	}

@@ -321,6 +321,7 @@ func (s *Service) UpdateAdminSettings(r *http.Request, actor *model.User, req Up
 			return nil, kernel.BadAuthRequest("未知社交登录渠道")
 		}
 		cfg := current.Providers[id]
+		previouslyReady := channelAdvertisable(id, cfg)
 		if strings.TrimSpace(input.ClientID) != "" && !strings.Contains(input.ClientID, "*") && !providerClientIDValid(id, strings.TrimSpace(input.ClientID)) {
 			return nil, kernel.BadAuthRequest("QQ App ID 必须是开放平台提供的数字，不能使用邮箱或账号名")
 		}
@@ -330,6 +331,9 @@ func (s *Service) UpdateAdminSettings(r *http.Request, actor *model.User, req Up
 		// If new secret is provided, update it; otherwise keep existing secret
 		if strings.TrimSpace(input.ClientSecret) != "" && !strings.Contains(input.ClientSecret, "•") {
 			cfg.ClientSecret = strings.TrimSpace(input.ClientSecret)
+		}
+		if id == ProviderBilibili && !previouslyReady && (strings.TrimSpace(input.ClientID) != "" || strings.TrimSpace(input.ClientSecret) != "") {
+			input.Enabled = false
 		}
 		if input.Enabled && !channelAdvertisable(id, cfg) {
 			return nil, kernel.BadAuthRequest(fmt.Sprintf("渠道 %s 尚未配置完整密钥，无法启用", id))
@@ -576,7 +580,7 @@ func buildAuthorizeURL(providerID string, cfg ProviderConfig, callbackURL string
 		return fmt.Sprintf("https://open.douyin.com/platform/oauth/connect/?client_key=%s&response_type=code&scope=user_info&redirect_uri=%s&state=%s",
 			url.QueryEscape(cfg.ClientID), url.QueryEscape(callbackURL), stateToken)
 	case ProviderBilibili:
-		return fmt.Sprintf("https://passport.bilibili.com/register/verification.html?client_id=%s&response_type=code&redirect_uri=%s&state=%s",
+		return fmt.Sprintf("https://account.bilibili.com/pc/account-pc/auth/oauth?client_id=%s&gourl=%s&state=%s",
 			url.QueryEscape(cfg.ClientID), url.QueryEscape(callbackURL), stateToken)
 	case ProviderGoogle:
 		return fmt.Sprintf("https://accounts.google.com/o/oauth2/v2/auth?response_type=code&client_id=%s&redirect_uri=%s&scope=openid+profile+email&state=%s",

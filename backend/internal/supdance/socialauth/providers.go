@@ -137,7 +137,7 @@ func DefaultInitialSettings() StoredSettings {
 				Enabled:      false,
 				ClientID:     "",
 				ClientSecret: "",
-				Scopes:       []string{"identify"},
+				Scopes:       []string{"USER_INFO"},
 			},
 			ProviderGoogle: {
 				Enabled:      false,

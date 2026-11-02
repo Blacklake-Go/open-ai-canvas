@@ -17,6 +17,8 @@ description: 信封、错误码与 OpenAPI
 
 当前入站票据保存在单后端进程内，重启会过期；多副本部署前须改为共享存储。
 
+Bilibili 授权使用当前网页入口及 `gourl` 回调参数，令牌交换遵循服务商的 URL 参数 POST 合同；请求 URL 含凭据，不记录到日志。用户资料请求执行 2.0 版本 HMAC-SHA256 签名，并要求已获得 USER_INFO 权限。缺少权限、身份或服务商返回错误时拒绝登录。首次保存 Bilibili 凭据保持停用，管理员需另行启用。
+
 ## 画布实时会话
 
 `GET /api/canvas-projects/:id/realtime` 使用登录 Cookie 升级为 WebSocket，握手校验当前用户对画布的归属和请求 Origin。首帧 `welcome` 提供服务端分配的 `selfId` 和窗口 Presence；客户端发送 `presence`，服务端推送 `peer`、`leave`、`invalidate` 和 `heartbeat`。Presence 只含有界世界坐标和拖拽矩形，不包含密钥、编辑租约 token、画布正文或实际保存指令。
