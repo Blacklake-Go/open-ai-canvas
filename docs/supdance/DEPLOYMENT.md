@@ -203,5 +203,32 @@ CN 三渠道的上游实测（在容器内发起，读 `Location` 头）说明�
 - 站点：`/`、`/login`、`/register`、`/admin/settings/social-auth` 均 200；容器 `healthy`，镜像仍为 `supdance-canvas-backend:bc5ebcf7`（未换镜像，只换 bind-mount 二进制）。
 - 当前中国大陆访客在登录页看不到任何社交渠道，这是 `dd8554b5` 的既定结果；要恢复 QQ/抖音按钮需要发布 `fb4ac0ef`（并先到开放平台换真实凭据），要恢复 B 站按钮需要接入其交换。
 
+### 6.5 v3 产物已构建并落位，未切指针（2026-11-02 08:35 UTC）
+
+`fb4ac0ef` + `88e33f86` 的发布产物按同一套流程预生成，随时可以一次指针切换完成发布，但**未改动线上**：`.env` 仍是 `releases/yingce-backend-1.7.4-supdance-v2`，容器未重启（`started=2026-11-02T07:16:29Z healthy`）。
+
+- 构建：源码 rsync 到 `/opt/build-174v3`，`golang:1.25-alpine` 容器内 `apk add build-base` → `go mod download` → `CGO_ENABLED=1 go build -trimpath`，ldflags 注入 `Version=v1.7.4-supdance.1 / Commit=fee8789a / BuildTime=2026-11-02T08:30:37Z`，模块缓存复用命名卷 `174be-gomod`；链路末尾的 `go vet ./internal/supdance/socialauth/` 无输出即通过。
+- 产物：88,873,848 B，md5 `4db3fa4a636840aa80b7d9931b6e3ea3`；落位 `/opt/y-supdance-canvas/releases/yingce-backend-1.7.4-supdance-v3`（0755）。
+- 标记复核：`graph.qq.com/oauth2.0/me`、`graph.qq.com/user/get_user_info`、`open.douyin.com/oauth/v2/access_token`、`oauth2.googleapis.com/token`、`api.x.com/2/oauth2/token` 各 1 次；UTF-8 中文串 `尚未接入真实授权码交换` 计数 1（`strings` 不取多字节，需 `grep -a`）；旧旁路串 `_live_` 计数 0。
+- 暂不切换的理由：v3 对 intl（google/x）没有增益 —— 那两条交换 v1/v2 就已包含，只缺密钥；它唯一的行为变化是让凭据字段非空但实为占位值的 QQ/抖音重新出现在 CN 登录页，点击后会在 QQ 侧撞到 `error=100001`。也就是说 v3 应在「开放平台换成真实凭据」之后或同时发布，先发只是把坏按钮放回去。
+
+### 6.6 上游侧配置已实测通过，只缺密钥（2026-11-02 08:40 UTC）
+
+用生产库里的 `clientId`（公开值，非密钥）直接打上游授权端点，验证控制台侧登记是否正确 —— 这一步不需要密钥即可完成：
+
+- Google：`accounts.google.com/o/oauth2/v2/auth?client_id=795218…googleusercontent.com&redirect_uri=https://www.supdance.com/api/auth/social/google/callback&scope=openid+profile+email` 返回 `200` 并落到 `accounts.google.com/v3/signin/identifier`（标题 `Sign in - Google Accounts`，URL 带 `app_domain=https://www.supdance.com`）。既不是 `Error 400: invalid_request`，也不是 `redirect_uri_mismatch` —— 说明 OAuth 客户端有效、应用已发布、该回调地址已在控制台登记。对照组：同一请求缺 `client_id` 时确实返回 `Error 400: invalid_request`，证明探针有区分力。
+- X：`twitter.com/i/oauth2/authorize?client_id=azFm…&redirect_uri=https://www.supdance.com/api/auth/social/x/callback&scope=users.read tweet.read&code_challenge=…&code_challenge_method=plain` 返回 `200` 且停留在 `x.com/i/oauth2/authorize`，页面标题 `Authorize app / X`，无 `invalid_client` / `invalid redirect` 提示。
+- 结论：`google`/`x` 的令牌段（code → token → 建会话）在生产已具备条件，卡点只剩两把 Client Secret 未录入（`clientId` 长度 72/34，`clientSecret` 为空）。按既定凭据边界，密钥只由管理员本人在后台「配置密钥 / 轮换」弹窗录入，助手不读取、不代填，也不从任何第三方站点获取他人凭据。录入后 `credentialsUsable`/`channelAdvertisable` 自动放行，无需改代码、无需重启。
+
+### 6.7 后台面板「看不到」的实测原因（前端侧，非本仓发布）
+
+复核线上 Next.js 应用（`/home/wwwroot/AI/domain/supdance.com/web`，`next-server` 监听 127.0.0.1:3100 与 :3200）：
+
+- 生产构建 `BUILD_ID=sg3gRHo8x2aZTdAZviauK`，`.next` 时间戳 `2026-10-29 22:29`，进程启动于 10-29 / 10-31 —— 即当前线上前端产物是 10-29 的构建。
+- 该构建里已存在卡片+密钥弹窗面板（`配置密钥` 命中 8 个文件、`轮换` 7、`三方登录` 5，路由 `.next/server/app/admin/providers/social` 与 `admin/system/login` 均在）。
+- 本次新增的「授权后入站与账号安全策略」段落（`SocialLoginPanel.js` 的工作区改动，随附 `lib/auth/oauthPolicy.js`、`lib/services/oauthFlow.js`、迁移 `088_oauth_onboarding.sql` 等新文件）在生产**源码与构建产物中计数都为 0**，服务器侧 `SocialLoginPanel.js` 时间戳还是 10-18。即：这部分改动从未进入线上，所以后台看不到，属预期而非渲染故障。
+- 发布它需要把整个 `feat/oauth-onboarding-20261102` 工作区（约 50 个改动 + 20 个新文件，含法律页/i18n/模型中心等其他工作流内容）落到生产应用目录、跑 `next build`、重启 next-server 服务并执行迁移 088 —— 属于带停机与库变更的发布档位，需管理员单独确认，且要先与并行会话的改动划清边界。
+- 顺带纠正本文早前引用：社交登录后台面板的真实路由是 `/admin/system/login`（面板组件）与 `/admin/providers/social`，`/admin/settings/social-auth` 只是返回 200 的通配页，不能作为「面板已发布」的判据。
+
 
 
