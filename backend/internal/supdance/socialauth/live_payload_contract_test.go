@@ -69,8 +69,8 @@ func TestQQParsersMatchRecordedLivePayloads(t *testing.T) {
 }
 
 func TestDouyinParsersMatchRecordedLivePayloads(t *testing.T) {
-	// open.douyin.com/oauth/v2/access_token 与 /oauth/v2/userinfo 在参数不合法时
-	// 都是 HTTP 200 + data.error_code（实测原文：error_code 22「非法应用」）。
+	// open.douyin.com/oauth/access_token/ 与 /oauth/userinfo/ 在参数不合法时
+	// 都是 HTTP 200 + data.error_code。
 	srv := recorded(t, map[string]string{
 		"/access_token": `{"data":{"captcha":"","desc_url":"","description":"非法应用","error_code":22},"message":"error"}`,
 		"/userinfo":     `{"data":{"captcha":"","desc_url":"","description":"非法应用","error_code":22},"message":"error"}`,

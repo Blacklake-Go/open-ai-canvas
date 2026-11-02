@@ -6,7 +6,7 @@ export const supdanceSocialAuthManifest: SupDancePluginManifest = {
     apiVersion: PLUGIN_API_VERSION_V2,
     id: SUPDANCE_SOCIAL_AUTH_PLUGIN_ID,
     name: "Supdance社交登录配置",
-    version: "1.3.3",
+    version: "1.3.4",
     publishedAt: "2026-10-27",
     updatedAt: "2026-11-03",
     minHostVersion: "1.7.1",

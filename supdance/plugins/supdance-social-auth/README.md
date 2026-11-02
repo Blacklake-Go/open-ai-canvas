@@ -1,4 +1,4 @@
-# SupDance 社交登录插件 v1.3.3
+# SupDance 社交登录插件 v1.3.4
 
 插件 ID：`supdance-social-auth`。当前生产入口为 `https://www.supdance.com`；原站、ONE 与 Canvas 的用户、数据库和钱包不在本插件更新时合并。
 
@@ -12,7 +12,7 @@
 python3 tools/supdance/package_social_auth.py --output-dir /tmp/supdance-social-auth-release
 ```
 
-产出 `supdance-social-auth-1.3.3.yingce-plugin`、所含文件哈希清单及部署说明。打包仅读取明确列出的源码清单和本说明，不读取 `.env`、业务数据、浏览器内容或服务商凭据。产物保存在仓库外，代码仓库只提交可复现打包工具。
+产出 `supdance-social-auth-1.3.4.yingce-plugin`、所含文件哈希清单及部署说明。打包仅读取明确列出的源码清单和本说明，不读取 `.env`、业务数据、浏览器内容或服务商凭据。产物保存在仓库外，代码仓库只提交可复现打包工具。
 
 `.yingce-plugin` 使用宿主要求的顶层 ID、名称和版本合同，保持原始插件 ID 和版本。宿主要求及源码提交记录在包内 `docs/host-requirements.json`。当前生产实现为 `42de461f`，版本 `1.7.4-supdance-social-1.3.3`；包内宿主要求以此次运行打包工具的实际提交为准。
 

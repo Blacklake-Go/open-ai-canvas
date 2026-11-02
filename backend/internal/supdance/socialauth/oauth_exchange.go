@@ -28,8 +28,8 @@ var (
 	qqUserInfoURL = "https://graph.qq.com/user/get_user_info"
 
 	// Douyin Login Kit v2：两个响应都是 {"data":{…,"error_code":n,"description":"…"},"message":…} 信封。
-	douyinTokenURL    = "https://open.douyin.com/oauth/v2/access_token"
-	douyinUserInfoURL = "https://open.douyin.com/oauth/v2/userinfo"
+	douyinTokenURL    = "https://open.douyin.com/oauth/access_token/"
+	douyinUserInfoURL = "https://open.douyin.com/oauth/userinfo/"
 
 	// WeChat Open Platform 网页扫码授权
 	wechatTokenURL    = "https://api.weixin.qq.com/sns/oauth2/access_token"
