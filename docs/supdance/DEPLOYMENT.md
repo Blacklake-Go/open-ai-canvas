@@ -167,7 +167,7 @@ Google 与 X 的 `clientSecret` 在生产库 `system_settings.supdance_social_au
 - 遗留数据：`users` 中 3 个由旧占位实现铸出的账号仍在（`qq_qq_live_BD736CD0` 2026-11-01 13:30 UTC、`douyin_douyin_live_bd13c` 03:25 UTC、`douyin_douyin_live_5b713` 06:26 UTC），是否为真实用户点击产生尚无法从库里区分；未做任何删除，等管理员决定清理策略。
 - 仍需注意：`open-ai-canvas-updater.service` 处于 active，后台点「系统更新」会用官方版本覆写 `.env` 的镜像 digest 与 release 指针（含本次的 backend 指针）。
 
-### 6.2 复测与下一道门（`dd8554b5`，已提交、暂未发布）
+### 6.2 复测与下一道门（`dd8554b5`，已提交，发布经过见 6.4）
 
 发布后 1 小时复测（2026-11-02 06:56–06:59 UTC，全部为生产实测）：
 
@@ -184,7 +184,6 @@ CN 三渠道的上游实测（在容器内发起，读 `Location` 头）说明�
 `dd8554b5` 把展示门槛从「凭据完整」收紧为 `channelAdvertisable`（凭据完整且「沙箱模拟已开 或 后端真的实现了该渠道的兑换」），使 `/start` 与公开列表同源，避免把用户送到一次注定失败的授权。它同时会让 CN 登录页暂时不再出现 QQ/抖音/B 站按钮 —— 属于面向真实访客的可见变更，且与「渠道需要管理员到各开放平台重新登记凭据」这件事耦合，因此先发布到生产前需要管理员点头；`google`/`x` 在密钥录入后不受影响，会照常展示。
 
 ### 6.3 CN 渠道交换补齐（`fb4ac0ef` + `88e33f86`，已提交、暂未发布）
-
 为了让 `dd8554b5` 不是「把按钮藏起来」而是「把登录做通」，补齐了两条有权威文档、且端点可从生产出口验证的链路：
 
 - QQ Connect 三段：`graph.qq.com/oauth2.0/token`（成功是 query-string，不是 JSON）→ `graph.qq.com/oauth2.0/me`（`callback( {…} );` JSONP，成功与错误同样包裹）→ `graph.qq.com/user/get_user_info`（`ret`/`msg` 信封，`ret!=0` 即失败）。身份主体为 `qq_openid_<openid>`。
@@ -193,5 +192,16 @@ CN 三渠道的上游实测（在容器内发起，读 `Location` 头）说明�
 - `88e33f86` 把上述真实报文（含四种「看起来像成功」的失败）固化成契约测试；`stripJSONP` 的前导空白毛病就是被这组测试抓出来的。
 
 发布后的行为差异（这是需要管理员确认的那一点）：QQ 与抖音因凭据字段非空且已有真实交换，会重新出现在 CN 登录页并可发起授权 —— 但库里 QQ 的 `clientId` 目前是字面量 `supdance`、B 站是公开示例 appkey，所以 QQ 点了仍会在 QQ 侧看到 `error=100001`，要真正可用必须先到 QQ 互联 / 抖音开放平台 / B 站开放平台登记本站应用；`bilibili` 与 `wechat` 则因缺交换或缺凭据而不再展示。
+
+### 6.4 `dd8554b5` 已由管理员侧发布为 v2（2026-11-02 07:16 UTC）
+
+生产实际指针已推进到 `releases/yingce-backend-1.7.4-supdance-v2`（md5 `58a4e5464ee6fe64773c5a0ddc754c95`，88,857,368 B），构建沿用 `/opt/build-174be/build.sh`，其 `-X buildinfo.Commit=2ea78e39` 说明源树取到的是「门槛收紧 + 文档」两笔，尚未含 `fb4ac0ef`（QQ/抖音交换）。发布由管理员侧执行，助手未参与该次构建；因此对其做了独立复核：
+
+- 二进制内 `_live_` 串计数 0（旁路未回归）、含 `channelAdvertisable`；中文串因 `strings` 不取多字节而计数为 0，不作为判据。
+- 门槛在生产生效：CN 分区 `/api/auth/social/providers` 由「qq/抖音/B 站三张卡」变为 `providers: null`；`qq/douyin/google/x` 的 `/start` 全部 `403`。
+- 旁路实测仍关闭：伪造 `state` + `code=mock_code_attacker` / `code=deadbeef12345678abcd` 回调均 `302 /login?oauth_error=登录授权状态已过期或已使用，请重新登录`，无 `Set-Cookie`；`users` 9、`user_identities` 9、`_live_` 3 与发布前逐字一致，未新增。
+- 站点：`/`、`/login`、`/register`、`/admin/settings/social-auth` 均 200；容器 `healthy`，镜像仍为 `supdance-canvas-backend:bc5ebcf7`（未换镜像，只换 bind-mount 二进制）。
+- 当前中国大陆访客在登录页看不到任何社交渠道，这是 `dd8554b5` 的既定结果；要恢复 QQ/抖音按钮需要发布 `fb4ac0ef`（并先到开放平台换真实凭据），要恢复 B 站按钮需要接入其交换。
+
 
 
