@@ -450,7 +450,7 @@ func (s *Service) GetPublicProviders(r *http.Request) (*PublicProvidersResponse,
 
 	ipLoc := ResolveIPRegion(r, settings.DefaultFallbackRegion)
 
-	var activeList []ProviderPublicView
+	activeList := make([]ProviderPublicView, 0)
 	allRegions := make(map[string][]ProviderPublicView)
 
 	for _, id := range AllKnownProviders {

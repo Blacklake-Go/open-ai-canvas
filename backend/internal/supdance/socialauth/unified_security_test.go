@@ -155,3 +155,15 @@ func TestUnifiedEmptyOperationsListsAreArrays(t *testing.T) {
 		t.Fatalf("empty users are not an array: %s %v", encoded, err)
 	}
 }
+
+func TestUnifiedEmptyPublicProviderListIsArray(t *testing.T) {
+	_, svc := newSecurityTestService(t)
+	view, err := svc.GetPublicProviders(intlRequest("/providers"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	encoded, err := json.Marshal(view.Providers)
+	if err != nil || string(encoded) != "[]" {
+		t.Fatalf("empty public provider list is not an array: %s %v", encoded, err)
+	}
+}

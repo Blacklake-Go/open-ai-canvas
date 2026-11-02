@@ -5,6 +5,18 @@ description: 信封、错误码与 OpenAPI
 
 # HTTP API 合同
 
+## SupDance 社交登录与入站
+
+`GET /api/auth/social/providers` 仅返回当前区域已启用、配置有效且具备真实令牌交换适配的渠道；空结果为 `providers: []`。历史 Mock 凭据不构成有效配置，公开请求不能通过 `simulate_region` 切换准入区域。
+
+`GET /api/auth/social/:provider/start` 创建一次性 state，并设置 HttpOnly、Secure、SameSite=Lax 的浏览器绑定 Cookie。回调必须同时匹配 Cookie 与 state，X 使用 S256 PKCE。登录与绑定分别发起，绑定回调要求原发起用户仍处于登录状态。插件或渠道停用后不能继续授权。
+
+新用户授权成功后仅签发短期入站票据，不创建账号或会话。`GET /api/auth/social/onboarding/profile?ticket=...` 与 `POST /api/auth/social/onboarding/complete` 同时要求对应入站 Cookie。完成请求包含 `ticketId`（现有 `ticket` 别名保留）、`username`、`displayName`、可选 `email`/`password` 和必填的 `acceptedTerms: true`。用户名为 3–30 位字母、数字、下划线或短横线。校验失败可重试；成功建号后票据不可重放。手填邮箱保持未验证状态，服务商明确已验证的邮箱才可自动绑定。
+
+后台 `/api/admin/social-auth/operations/*` 要求管理员权限。查询及日志始终返回数组，空结果不返回 `null`。新用户准入与邮箱必填策略在后端执行；防孤立解绑保护固定开启，注册奖励使用宿主统一积分策略。渠道探测仅检查固定授权端点可达，不发送 Client Secret，不生成账号，也不代表真实授权通过。
+
+当前入站票据保存在单后端进程内，重启会过期；多副本部署前须改为共享存储。
+
 ## 画布实时会话
 
 `GET /api/canvas-projects/:id/realtime` 使用登录 Cookie 升级为 WebSocket，握手校验当前用户对画布的归属和请求 Origin。首帧 `welcome` 提供服务端分配的 `selfId` 和窗口 Presence；客户端发送 `presence`，服务端推送 `peer`、`leave`、`invalidate` 和 `heartbeat`。Presence 只含有界世界坐标和拖拽矩形，不包含密钥、编辑租约 token、画布正文或实际保存指令。
