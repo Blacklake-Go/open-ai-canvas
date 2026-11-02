@@ -108,18 +108,6 @@ func ResolveIPRegion(r *http.Request, defaultFallback string) IPLocationResult {
 		defaultFallback = RegionCN
 	}
 
-	// 1. Simulation override for admin testing & preview (Header or Query parameter)
-	simHeader := strings.ToLower(strings.TrimSpace(r.Header.Get("X-SupDance-Simulate-Region")))
-	if simHeader == RegionCN || simHeader == RegionIntl {
-		clientIP, src := ExtractClientIP(r)
-		return buildLocationResult(clientIP, src, simHeader, true)
-	}
-	simQuery := strings.ToLower(strings.TrimSpace(r.URL.Query().Get("simulate_region")))
-	if simQuery == RegionCN || simQuery == RegionIntl {
-		clientIP, src := ExtractClientIP(r)
-		return buildLocationResult(clientIP, src, simQuery, true)
-	}
-
 	clientIP, srcHeader := ExtractClientIP(r)
 
 	// 2. Check Edge CDN Authoritative Geo Country Headers

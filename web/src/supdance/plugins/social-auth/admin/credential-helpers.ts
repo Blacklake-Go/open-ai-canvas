@@ -19,7 +19,6 @@ export interface ProviderDraftState {
     clientId: string;
     clientSecret: string;
     customRedirectUrl: string;
-    sandboxMockEnabled: boolean;
 }
 
 const CREDENTIAL_KEY_LABELS: Record<string, CredentialKeyLabels> = {
@@ -59,7 +58,6 @@ export function draftFromProvider(provider: SocialAuthProviderAdmin): ProviderDr
         clientId: maskedId && !maskedId.includes("*") ? maskedId : "",
         clientSecret: "",
         customRedirectUrl: provider.customRedirectUrl || "",
-        sandboxMockEnabled: Boolean(provider.sandboxMockEnabled),
     };
 }
 
@@ -71,9 +69,9 @@ const STATUS_TONE: Record<SocialAuthStatus, AdminStatusTone> = {
 };
 
 const FALLBACK_STATUS_LABEL: Record<SocialAuthStatus, string> = {
-    online: "运行中",
-    ready: "配置检查通过",
-    credentials_required: "待录入凭证",
+    online: "已启用",
+    ready: "未启用",
+    credentials_required: "待完善凭证",
     unconfigured: "未配置",
 };
 
@@ -84,12 +82,12 @@ export function statusBadgeOf(provider: SocialAuthProviderAdmin): { label: strin
     };
 }
 
-/** 只渲染真实探针结果；配置接口里的 latencyMs 是基线估算，不能伪装成测量值。 */
+/** 端点探测不等于真实登录验收。 */
 export function probeBadgeOf(result: ProviderTestResult | undefined): { label: string; tone: AdminStatusTone; detail: string } | null {
     if (!result) return null;
     const latency = result.pingLatencyMs ?? result.latencyMs ?? 0;
-    if (result.status === "ok" || result.status === "online") {
-        return { label: `正常在线 ${latency}ms`, tone: "success", detail: result.message };
+    if (result.status === "reachable") {
+        return { label: `端点可达 ${latency}ms`, tone: "info", detail: result.message };
     }
     if (result.status === "degraded") {
         return { label: `响应稍慢 ${latency}ms`, tone: "warning", detail: result.message };

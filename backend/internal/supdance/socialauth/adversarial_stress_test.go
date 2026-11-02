@@ -36,20 +36,18 @@ func TestAdversarial_MultiCyclePersistence_QQ_Bilibili(t *testing.T) {
 		DefaultFallbackRegion: RegionCN,
 		Providers: map[string]UpdateProviderInput{
 			ProviderQQ: {
-				Enabled:            true,
-				ClientID:           "102035200",
-				ClientSecret:       "mock_qq_secret_0QEo",
-				CustomRedirectURL:  "https://custom.supdance.com/auth/qq",
-				SandboxMockEnabled: true,
-				Scopes:             []string{"get_user_info", "add_share"},
+				Enabled:           true,
+				ClientID:          "102035200",
+				ClientSecret:      "test_qq_secret_0QEo",
+				CustomRedirectURL: "https://www.supdance.com/api/auth/qq/callback",
+				Scopes:            []string{"get_user_info", "add_share"},
 			},
-			ProviderBilibili: {
-				Enabled:            true,
-				ClientID:           "bb4aec99",
-				ClientSecret:       "mock_bili_secret_78e3",
-				CustomRedirectURL:  "https://custom.supdance.com/auth/bilibili",
-				SandboxMockEnabled: true,
-				Scopes:             []string{"identify"},
+			ProviderWeChat: {
+				Enabled:           true,
+				ClientID:          "bb4aec99",
+				ClientSecret:      "test_bili_secret_78e3",
+				CustomRedirectURL: "https://www.supdance.com/api/auth/oauth/wechat/callback",
+				Scopes:            []string{"identify"},
 			},
 		},
 	}
@@ -72,7 +70,7 @@ func TestAdversarial_MultiCyclePersistence_QQ_Bilibili(t *testing.T) {
 		if !ok {
 			t.Fatalf("Cycle %d: QQ provider missing from view", cycle)
 		}
-		if !qqView.Enabled || qqView.Status != StatusOnline || qqView.StatusLabel != "运行中" {
+		if !qqView.Enabled || qqView.Status != StatusOnline || qqView.StatusLabel != "已启用" {
 			t.Fatalf("Cycle %d: QQ status wrong: status=%s, label=%s", cycle, qqView.Status, qqView.StatusLabel)
 		}
 		if qqView.MaskedClientID != "****5200" || qqView.ClientIDMasked != "****5200" {
@@ -81,18 +79,15 @@ func TestAdversarial_MultiCyclePersistence_QQ_Bilibili(t *testing.T) {
 		if qqView.MaskedSecret != "••••••••0QEo" || qqView.ClientSecretMasked != "••••••••0QEo" {
 			t.Fatalf("Cycle %d: QQ masked secret mismatch: %s / %s", cycle, qqView.MaskedSecret, qqView.ClientSecretMasked)
 		}
-		if !qqView.SandboxMockEnabled {
-			t.Fatalf("Cycle %d: QQ SandboxMockEnabled lost", cycle)
-		}
-		if qqView.CustomRedirectURL != "https://custom.supdance.com/auth/qq" {
+		if qqView.CustomRedirectURL != "https://www.supdance.com/api/auth/qq/callback" {
 			t.Fatalf("Cycle %d: QQ CustomRedirectURL mismatch: %s", cycle, qqView.CustomRedirectURL)
 		}
 
-		biliView, ok := view.Providers[ProviderBilibili]
+		biliView, ok := view.Providers[ProviderWeChat]
 		if !ok {
 			t.Fatalf("Cycle %d: Bilibili provider missing from view", cycle)
 		}
-		if !biliView.Enabled || biliView.Status != StatusOnline || biliView.StatusLabel != "运行中" {
+		if !biliView.Enabled || biliView.Status != StatusOnline || biliView.StatusLabel != "已启用" {
 			t.Fatalf("Cycle %d: Bilibili status wrong: status=%s, label=%s", cycle, biliView.Status, biliView.StatusLabel)
 		}
 		if biliView.MaskedClientID != "****ec99" || biliView.ClientIDMasked != "****ec99" {
@@ -101,20 +96,17 @@ func TestAdversarial_MultiCyclePersistence_QQ_Bilibili(t *testing.T) {
 		if biliView.MaskedSecret != "••••••••78e3" || biliView.ClientSecretMasked != "••••••••78e3" {
 			t.Fatalf("Cycle %d: Bilibili masked secret mismatch: %s / %s", cycle, biliView.MaskedSecret, biliView.ClientSecretMasked)
 		}
-		if !biliView.SandboxMockEnabled {
-			t.Fatalf("Cycle %d: Bilibili SandboxMockEnabled lost", cycle)
-		}
 
 		// B. Verify direct decryption through ReadSettings
 		stored, err := svcReloaded.ReadSettings()
 		if err != nil {
 			t.Fatalf("Cycle %d: ReadSettings failed: %v", cycle, err)
 		}
-		if stored.Providers[ProviderQQ].ClientSecret != "mock_qq_secret_0QEo" {
+		if stored.Providers[ProviderQQ].ClientSecret != "test_qq_secret_0QEo" {
 			t.Fatalf("Cycle %d: QQ decrypted secret mismatch: %s", cycle, stored.Providers[ProviderQQ].ClientSecret)
 		}
-		if stored.Providers[ProviderBilibili].ClientSecret != "mock_bili_secret_78e3" {
-			t.Fatalf("Cycle %d: Bilibili decrypted secret mismatch: %s", cycle, stored.Providers[ProviderBilibili].ClientSecret)
+		if stored.Providers[ProviderWeChat].ClientSecret != "test_bili_secret_78e3" {
+			t.Fatalf("Cycle %d: Bilibili decrypted secret mismatch: %s", cycle, stored.Providers[ProviderWeChat].ClientSecret)
 		}
 
 		// C. In even cycles, perform an update on a DIFFERENT provider (e.g. Douyin)
@@ -123,10 +115,9 @@ func TestAdversarial_MultiCyclePersistence_QQ_Bilibili(t *testing.T) {
 			_, err = svcReloaded.UpdateAdminSettings(req, adminUser, UpdateSettingsRequest{
 				Providers: map[string]UpdateProviderInput{
 					ProviderDouyin: {
-						Enabled:            true,
-						ClientID:           fmt.Sprintf("douyin_client_%d", cycle),
-						ClientSecret:       fmt.Sprintf("douyin_secret_%d", cycle),
-						SandboxMockEnabled: false,
+						Enabled:      true,
+						ClientID:     fmt.Sprintf("douyin_client_%d", cycle),
+						ClientSecret: fmt.Sprintf("douyin_secret_%d", cycle),
 					},
 				},
 			})
@@ -150,12 +141,11 @@ func TestAdversarial_IdempotencyAndPartialUpdates(t *testing.T) {
 		DefaultFallbackRegion: RegionCN,
 		Providers: map[string]UpdateProviderInput{
 			ProviderQQ: {
-				Enabled:            true,
-				ClientID:           "102035200",
-				ClientSecret:       "mock_qq_secret_0QEo",
-				CustomRedirectURL:  "https://custom.supdance.com/auth/qq",
-				SandboxMockEnabled: true,
-				Scopes:             []string{"get_user_info"},
+				Enabled:           true,
+				ClientID:          "102035200",
+				ClientSecret:      "test_qq_secret_0QEo",
+				CustomRedirectURL: "https://www.supdance.com/api/auth/qq/callback",
+				Scopes:            []string{"get_user_info"},
 			},
 		},
 	})
@@ -167,11 +157,10 @@ func TestAdversarial_IdempotencyAndPartialUpdates(t *testing.T) {
 	viewA, err := svc.UpdateAdminSettings(req, adminUser, UpdateSettingsRequest{
 		Providers: map[string]UpdateProviderInput{
 			ProviderQQ: {
-				Enabled:            true,
-				ClientID:           "", // empty
-				ClientSecret:       "", // empty
-				CustomRedirectURL:  "https://custom.supdance.com/auth/qq_v2",
-				SandboxMockEnabled: true,
+				Enabled:           true,
+				ClientID:          "", // empty
+				ClientSecret:      "", // empty
+				CustomRedirectURL: "https://www.supdance.com/api/auth/qq/callback",
 			},
 		},
 	})
@@ -182,7 +171,7 @@ func TestAdversarial_IdempotencyAndPartialUpdates(t *testing.T) {
 	if !qqA.HasCredentials || qqA.ClientIDMasked != "****5200" || qqA.ClientSecretMasked != "••••••••0QEo" {
 		t.Fatalf("Scenario A corrupted credentials: hasCreds=%v, id=%s, sec=%s", qqA.HasCredentials, qqA.ClientIDMasked, qqA.ClientSecretMasked)
 	}
-	if qqA.CustomRedirectURL != "https://custom.supdance.com/auth/qq_v2" {
+	if qqA.CustomRedirectURL != "https://www.supdance.com/api/auth/qq/callback" {
 		t.Fatalf("Scenario A failed to update redirect url: %s", qqA.CustomRedirectURL)
 	}
 
@@ -191,11 +180,10 @@ func TestAdversarial_IdempotencyAndPartialUpdates(t *testing.T) {
 	viewB, err := svc.UpdateAdminSettings(req, adminUser, UpdateSettingsRequest{
 		Providers: map[string]UpdateProviderInput{
 			ProviderQQ: {
-				Enabled:            true,
-				ClientID:           "****5200",     // contains asterisk
-				ClientSecret:       "••••••••0QEo", // contains bullet
-				CustomRedirectURL:  "https://custom.supdance.com/auth/qq_v3",
-				SandboxMockEnabled: false,
+				Enabled:           true,
+				ClientID:          "****5200",     // contains asterisk
+				ClientSecret:      "••••••••0QEo", // contains bullet
+				CustomRedirectURL: "https://www.supdance.com/api/auth/qq/callback",
 			},
 		},
 	})
@@ -205,9 +193,6 @@ func TestAdversarial_IdempotencyAndPartialUpdates(t *testing.T) {
 	qqB := viewB.Providers[ProviderQQ]
 	if !qqB.HasCredentials || qqB.ClientIDMasked != "****5200" || qqB.ClientSecretMasked != "••••••••0QEo" {
 		t.Fatalf("Scenario B corrupted credentials with masked inputs: hasCreds=%v, id=%s, sec=%s", qqB.HasCredentials, qqB.ClientIDMasked, qqB.ClientSecretMasked)
-	}
-	if qqB.SandboxMockEnabled != false {
-		t.Fatalf("Scenario B failed to update SandboxMockEnabled to false")
 	}
 
 	// Scenario C: Update with whitespace-only ClientID and ClientSecret
@@ -248,7 +233,7 @@ func TestAdversarial_IdempotencyAndPartialUpdates(t *testing.T) {
 	if storedFinal.Providers[ProviderQQ].ClientID != "102035200" {
 		t.Fatalf("Plaintext ClientID was corrupted: %s", storedFinal.Providers[ProviderQQ].ClientID)
 	}
-	if storedFinal.Providers[ProviderQQ].ClientSecret != "mock_qq_secret_0QEo" {
+	if storedFinal.Providers[ProviderQQ].ClientSecret != "test_qq_secret_0QEo" {
 		t.Fatalf("Plaintext ClientSecret was corrupted: %s", storedFinal.Providers[ProviderQQ].ClientSecret)
 	}
 }
@@ -455,6 +440,9 @@ func TestAdversarial_ConnectivityPing_All8Providers(t *testing.T) {
 		cfg := settings.Providers[pid]
 		cfg.Enabled = true
 		cfg.ClientID = fmt.Sprintf("valid_client_id_%s", pid)
+		if pid == ProviderQQ {
+			cfg.ClientID = "1000520"
+		}
 		cfg.ClientSecret = fmt.Sprintf("valid_client_secret_%s", pid)
 		settings.Providers[pid] = cfg
 	}
@@ -463,64 +451,24 @@ func TestAdversarial_ConnectivityPing_All8Providers(t *testing.T) {
 		t.Fatalf("SaveSettings for all 8 providers failed: %v", err)
 	}
 
-	// Expected specific latencies defined in service.go
-	expectedLatencies := map[string]int64{
-		ProviderQQ:        228,
-		ProviderDouyin:    302,
-		ProviderBilibili:  101,
-		ProviderGoogle:    185,
-		ProviderX:         210,
-		ProviderWeChat:    120, // default fallback in switch
-		ProviderInstagram: 120, // default fallback in switch
-		ProviderTikTok:    120, // default fallback in switch
-	}
-
+	stubProbeClient(t)
 	for _, pid := range all8Providers {
 		t.Run("Ping_"+pid, func(t *testing.T) {
-			res, err := svc.TestProvider(adminUser, pid)
+			result, err := svc.TestProvider(adminUser, pid)
 			if err != nil {
-				t.Fatalf("TestProvider(%s) returned error: %v", pid, err)
+				t.Fatal(err)
 			}
-
-			// Must be "ok" (not "error", not "online")
-			if res.Status != "ok" {
-				t.Errorf("[%s] Expected status 'ok', got '%s'", pid, res.Status)
+			if liveExchangeSupported(pid) {
+				if result.Status != "reachable" || !strings.Contains(result.Message, "尚未验证真实登录") {
+					t.Fatalf("probe overclaims: %+v", result)
+				}
+			} else if result.Status != "error" {
+				t.Fatalf("unsupported provider passed: %+v", result)
 			}
-
-			// Latency must be non-zero
-			if res.LatencyMs <= 0 {
-				t.Errorf("[%s] Expected LatencyMs > 0, got %d", pid, res.LatencyMs)
-			}
-			if res.PingLatencyMs <= 0 {
-				t.Errorf("[%s] Expected PingLatencyMs > 0, got %d", pid, res.PingLatencyMs)
-			}
-
-			// Both fields must match
-			if res.LatencyMs != res.PingLatencyMs {
-				t.Errorf("[%s] LatencyMs (%d) != PingLatencyMs (%d)", pid, res.LatencyMs, res.PingLatencyMs)
-			}
-
-			// Check expected latency benchmark
-			expectedLat, ok := expectedLatencies[pid]
-			if !ok {
-				t.Fatalf("[%s] No expected latency defined in test map", pid)
-			}
-			if res.LatencyMs != expectedLat {
-				t.Errorf("[%s] Expected latency %d ms, got %d ms", pid, expectedLat, res.LatencyMs)
-			}
-
-			// Message must indicate success
-			if !strings.Contains(res.Message, "响应正常") || !strings.Contains(res.Message, "凭据校验通过") {
-				t.Errorf("[%s] Unexpected message: %s", pid, res.Message)
-			}
-
-			// Timestamps must be populated
-			if res.CheckedAt.IsZero() {
-				t.Errorf("[%s] CheckedAt is zero time", pid)
-			}
-			if res.TestedAt.IsZero() {
-				t.Errorf("[%s] TestedAt is zero time", pid)
+			if result.CheckedAt.IsZero() || result.TestedAt.IsZero() {
+				t.Fatal("missing timestamp")
 			}
 		})
 	}
+
 }

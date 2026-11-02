@@ -7,12 +7,14 @@ import { SocialProviderIcon } from "./social-provider-icons";
 import type { OnboardingProfileView } from "../types";
 import { applyUserSession } from "@/lib/user-session";
 import { useUserStore } from "@/stores/use-user-store";
+import { usePluginStore, selectPluginEffectivelyEnabled } from "@/stores/use-plugin-store";
 
 const USERNAME_REGEX = /^[a-zA-Z0-9_-]{3,30}$/;
 
 export function SocialOnboardingModal() {
     const { message } = App.useApp();
     const currentUser = useUserStore((state) => state.user);
+    const active = usePluginStore(selectPluginEffectivelyEnabled("supdance-social-auth", true));
 
     const [open, setOpen] = useState(false);
     const [ticket, setTicket] = useState<string | null>(null);
@@ -27,7 +29,11 @@ export function SocialOnboardingModal() {
     const [password, setPassword] = useState("");
     const [confirmPassword, setConfirmPassword] = useState("");
     const [showPassword, setShowPassword] = useState(false);
-    const [acceptedTerms, setAcceptedTerms] = useState(true);
+    const [acceptedTerms, setAcceptedTerms] = useState(false);
+
+    useEffect(() => {
+        if (!active) setOpen(false);
+    }, [active]);
 
     // Check URL parameters for onboarding ticket on mount and on history changes
     useEffect(() => {
@@ -39,6 +45,7 @@ export function SocialOnboardingModal() {
             if (isOnboarding && ticketParam) {
                 setTicket(ticketParam);
                 setOpen(true);
+                cleanupUrl();
             }
         };
 
@@ -126,6 +133,7 @@ export function SocialOnboardingModal() {
         try {
             setSubmitting(true);
             const res = await completeSocialOnboarding({
+                acceptedTerms,
                 ticket,
                 ticketId: ticket,
                 username: username.trim(),

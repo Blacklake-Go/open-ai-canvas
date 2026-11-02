@@ -1,5 +1,18 @@
 import { compactApiParams, http } from "@/services/api/request";
-import type { AdminSettingsView, CompleteOnboardingRequest, OnboardingProfileView, ProviderTestResult, PublicProvidersResponse, SocialAuthRegion, UpdateSettingsRequest, UserIdentitiesView } from "./types";
+import type {
+    AdminSettingsView,
+    CompleteOnboardingRequest,
+    OnboardingProfileView,
+    OperationalPolicies,
+    OperationsOverview,
+    ProviderTestResult,
+    PublicProvidersResponse,
+    SocialAuthRegion,
+    SocialLoginLogItem,
+    UpdateSettingsRequest,
+    UserIdentitiesView,
+    UserSocialBindingAdminItem,
+} from "./types";
 
 export async function getPublicSocialAuthProviders(params?: { simulateRegion?: SocialAuthRegion }, signal?: AbortSignal) {
     return http.get<PublicProvidersResponse>("/auth/social/providers", {
@@ -22,26 +35,48 @@ export async function testSocialAuthProvider(providerId: string) {
     return http.post<ProviderTestResult>(`/admin/social-auth/test/${encodeURIComponent(providerId)}`);
 }
 
-export async function triggerMockSocialCallback(payload: { provider: string; state: string; code: string }) {
-    return http.post<{ user: any; next: string; isNew: boolean }>("/auth/social/mock-callback", payload);
-}
-
 export function buildSocialAuthStartUrl(
     providerId: string,
     options?: {
         next?: string;
         acceptedTerms?: boolean;
-        mock?: boolean;
         simulateRegion?: SocialAuthRegion;
-    },
+    }
 ) {
     const params = new URLSearchParams();
     if (options?.next) params.set("next", options.next);
     if (options?.acceptedTerms) params.set("acceptedTerms", "true");
-    if (options?.mock) params.set("mock", "true");
     if (options?.simulateRegion) params.set("simulate_region", options.simulateRegion);
     const query = params.toString();
     return `/api/auth/social/${encodeURIComponent(providerId)}/start${query ? `?${query}` : ""}`;
+}
+
+export async function getSocialAuthOperationsOverview(signal?: AbortSignal) {
+    return http.get<OperationsOverview>("/admin/social-auth/operations/overview", { signal });
+}
+
+export async function updateSocialAuthPolicies(policies: OperationalPolicies) {
+    return http.put<OperationsOverview>("/admin/social-auth/operations/policies", policies);
+}
+
+export async function searchSocialAuthUsers(query?: string, limit?: number, signal?: AbortSignal) {
+    return http.get<UserSocialBindingAdminItem[]>("/admin/social-auth/operations/users", {
+        params: compactApiParams({ q: query, limit }),
+        signal,
+    });
+}
+
+export async function adminUnbindSocialAuth(userId: string, provider: string) {
+    return http.delete<{ message: string }>(
+        `/admin/social-auth/operations/users/${encodeURIComponent(userId)}/unbind/${encodeURIComponent(provider)}`
+    );
+}
+
+export async function getSocialAuthLoginLogs(limit?: number, signal?: AbortSignal) {
+    return http.get<SocialLoginLogItem[]>("/admin/social-auth/operations/logs", {
+        params: compactApiParams({ limit }),
+        signal,
+    });
 }
 
 export async function getSocialOnboardingProfile(ticket: string, signal?: AbortSignal) {
@@ -69,3 +104,4 @@ export function buildSocialAuthBindUrl(providerId: string, next?: string) {
 export async function unbindSocialIdentity(providerId: string) {
     return http.post<UserIdentitiesView>(`/auth/social/${encodeURIComponent(providerId)}/unbind`);
 }
+

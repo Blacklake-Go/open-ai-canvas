@@ -2,6 +2,26 @@
 
 本文件记录 SupDance Canvas 相对上游 `ddcat-ai/open-ai-canvas` 的每一项定制改造、耦合边界及升级处理方式。
 
+## 统一社交登录插件：`supdance-social-auth` v1.3.4
+
+补丁 ID：`supdance-social-auth`
+
+分发工具：`python3 tools/supdance/package_social_auth.py --output-dir /tmp/supdance-social-auth-release`，生成 `.yingce-plugin`、SHA-256 清单和宿主部署说明。包仅携带清单与文档，使用宿主顶层 ID/名称/版本合同；不声明独立 Web 入口，不包含真实凭据。完整 Go/React 实现已随 `1.7.4-supdance-social-1.3.3`（`42de461f`）宿主部署，不能把元数据包上传等同于运行时代码升级。
+
+Bilibili 依据[网页接入](https://open.bilibili.com/doc/4/aac73b2e-4ff2-b75c-4c96-35ced865797b)、[账号授权](https://openhome.bilibili.com/doc/4/eaf0e2b5-bde9-b9a0-9be1-019bb455701c)、[接口签名](https://open.bilibili.com/doc/4/8673959e-f7bb-56e6-6e68-d225f971b81b)与[用户信息](https://open.bilibili.com/doc/4/feb66f99-7d87-c206-00e7-d84164cd701c)实现真实协议；要求 USER_INFO 授权。令牌交换按官方合同在服务端 URL 参数传入凭据，禁止记录该请求 URL；用户资料使用随机 nonce、当前时间戳和 HMAC-SHA256。服务商头像禁止热链，当前保留原生头像回退，缓存适配待验收。端点可达与本地协议测试仍不能代替正式应用授权。
+
+v1.3.2 根据真实 QQ 授权页的 100001 错误补齐数字 App ID 校验；无效或尚未就绪的历史配置在管理界面显示为停用，避免空凭据开关保持开启的误导。
+
+v1.3.3 将授权后入站票据从单进程内存迁移至共享 Redis（键前缀 `supdance:socialauth:onboarding-ticket:`，TTL 与票据 30 分钟有效期一致）；消费使用 Lua 原子读取并删除，后端重启或多副本部署不再丢失票据，也无法重放已消费票据。Redis 不可用时自动降级为单进程内存票据，保持入站可用。
+
+合并渠道凭据管理、运营控制与授权后入站流程。后台保留四列配置列表、480px 凭据浮窗和独立运营页；账号中心保留第三方身份展示、绑定、换绑与防孤立解绑保护。关闭插件后，授权开始、回调与入站完成均拒绝执行。
+
+真实授权使用服务商令牌交换、浏览器绑定 Cookie、一次性 state 与 X S256 PKCE。移除默认 Mock 凭据与模拟身份链路，历史 Mock 凭据不能展示为可用渠道。QQ、微信、抖音、Bilibili、Google、X 已提供协议适配；Instagram、TikTok 保留配置入口，尚未开放真实登录。配置字段完整和授权端点可达不代表生产授权已验收。
+
+入站票据仅在表单提交成功后消费，失败可重试；用户确认协议后才创建账号与身份。仅服务商确认已验证的邮箱可自动绑定，手填邮箱保持未验证状态。新增用户开关与必填邮箱策略在后端执行；注册奖励沿用站点统一积分策略，防孤立保护固定开启。入站票据默认保存在共享 Redis，重启与多副本安全；无 Redis 的环境降级为单进程内存票据，重启会失效。
+
+与宿主耦合点为 `RegisterSocialAuthRoutes`、`supdance_social_auth_plugin.go`、`AppProviders`、登录注册页、用户资料浮窗与 `router.tsx`。服务商凭据由宿主加密，运营统计来自数据库，端点探测不携带凭据且不生成账号。真实服务商授权、回调验收与界面核对列于待测试文档。
+
 ## 1. 定制功能矩阵
 
 | 功能名称 | 文件位置 | 依赖关系 | 与上游耦合程度 | 是否使用扩展接口 | 上游升级时是否需人工处理 |

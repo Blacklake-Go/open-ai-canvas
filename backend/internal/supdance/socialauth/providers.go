@@ -104,34 +104,40 @@ func MaskClientID(id string) string {
 }
 
 // DefaultInitialSettings returns the default configuration for all 8 providers,
-// pre-seeding the initial state matching Figure 3 (QQ, Douyin, Bilibili ready, WeChat credentials missing).
+// with all channels unconfigured and awaiting user credential entry.
 func DefaultInitialSettings() StoredSettings {
 	return StoredSettings{
 		DefaultFallbackRegion: RegionCN,
+		Policies: OperationalPolicies{
+			AutoDirectRegistration:   true,
+			MandatoryEmailOnboarding: false,
+			SignupBonusCredits:       50,
+			OrphanAccountSafety:      true,
+		},
 		Providers: map[string]ProviderConfig{
 			ProviderQQ: {
-				Enabled:      true,
-				ClientID:     "102035200",
-				ClientSecret: "mock_qq_secret_0QEo",
+				Enabled:      false,
+				ClientID:     "",
+				ClientSecret: "",
 				Scopes:       []string{"get_user_info"},
 			},
 			ProviderWeChat: {
-				Enabled:      true,
+				Enabled:      false,
 				ClientID:     "",
 				ClientSecret: "",
 				Scopes:       []string{"snsapi_login"},
 			},
 			ProviderDouyin: {
-				Enabled:      true,
-				ClientID:     "aw8n726kuf",
-				ClientSecret: "mock_douyin_secret_70b6",
+				Enabled:      false,
+				ClientID:     "",
+				ClientSecret: "",
 				Scopes:       []string{"user_info"},
 			},
 			ProviderBilibili: {
-				Enabled:      true,
-				ClientID:     "bb4aec99",
-				ClientSecret: "mock_bili_secret_78e3",
-				Scopes:       []string{"identify"},
+				Enabled:      false,
+				ClientID:     "",
+				ClientSecret: "",
+				Scopes:       []string{"USER_INFO"},
 			},
 			ProviderGoogle: {
 				Enabled:      false,

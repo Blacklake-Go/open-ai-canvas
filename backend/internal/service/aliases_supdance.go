@@ -34,6 +34,10 @@ type (
 	SocialAuthCompleteOnboardingRequest = app.SocialAuthCompleteOnboardingRequest
 	SocialAuthUserIdentitiesView        = app.SocialAuthUserIdentitiesView
 	SocialAuthUserIdentityItem          = app.SocialAuthUserIdentityItem
+	SocialAuthOperationalPolicies       = app.SocialAuthOperationalPolicies
+	SocialAuthOperationsOverview        = app.SocialAuthOperationsOverview
+	SocialAuthUserSocialBindingItem     = app.SocialAuthUserSocialBindingItem
+	SocialAuthLoginLogItem              = app.SocialAuthLoginLogItem
 
 	MusicPluginLifecycleState = app.MusicPluginLifecycleState
 	MusicLifecycleInfo        = app.MusicLifecycleInfo

@@ -17,7 +17,13 @@ export interface SocialLoginButtonsProps {
     onProvidersChange?: (providers: SocialAuthProviderPublic[]) => void;
 }
 
-export function SocialLoginButtons({ variant = "light-card", next = "/", acceptedTerms = true, onRequireAcceptTerms, onProvidersChange }: SocialLoginButtonsProps) {
+export function SocialLoginButtons({
+    variant = "light-card",
+    next = "/",
+    acceptedTerms = true,
+    onRequireAcceptTerms,
+    onProvidersChange,
+}: SocialLoginButtonsProps) {
     const { t } = useI18n();
     const { message } = App.useApp();
 
@@ -35,7 +41,9 @@ export function SocialLoginButtons({ variant = "light-card", next = "/", accepte
         queryKey: ["public-social-auth-providers"],
         queryFn: ({ signal }) => getPublicSocialAuthProviders(undefined, signal),
         enabled: isPluginActive,
-        staleTime: 10 * 60 * 1000,
+        staleTime: 0,
+        refetchInterval: 15_000,
+        refetchOnWindowFocus: true,
         gcTime: 30 * 60 * 1000,
     });
 
@@ -61,7 +69,6 @@ export function SocialLoginButtons({ variant = "light-card", next = "/", accepte
         const url = buildSocialAuthStartUrl(provider.id, {
             next,
             acceptedTerms,
-            mock: provider.sandboxEnabled,
         });
         window.location.href = url;
     };
@@ -95,11 +102,15 @@ export function SocialLoginButtons({ variant = "light-card", next = "/", accepte
             {/* Branded Social Login Buttons */}
             <div className="flex flex-wrap items-center justify-center gap-3 sm:gap-3.5" role="group" aria-label={t("auth.social_login_group", undefined, "快捷社交登录方式")}>
                 {currentProviders.map((provider) => {
-                    const isMock = Boolean(provider.sandboxEnabled);
-                    const tooltipText = isMock ? `${provider.name} (${t("auth.sandbox_mock_mode", undefined, "沙盒联调模式")})` : `${provider.name} ${t("auth.social_login_action", undefined, "登录")}`;
+                    const tooltipText = `${provider.name} ${t("auth.social_login_action", undefined, "登录")}`;
 
                     return (
-                        <Tooltip key={provider.id} title={tooltipText} placement="top" mouseEnterDelay={0.4}>
+                        <Tooltip
+                            key={provider.id}
+                            title={tooltipText}
+                            placement="top"
+                            mouseEnterDelay={0.4}
+                        >
                             <button
                                 type="button"
                                 aria-label={tooltipText}
@@ -110,14 +121,10 @@ export function SocialLoginButtons({ variant = "light-card", next = "/", accepte
                                         : "border border-border/70 bg-card text-foreground hover:border-primary/50 hover:bg-accent hover:shadow-sm"
                                 }`}
                             >
-                                <SocialProviderIcon provider={provider.id} className="size-5 transition-transform duration-150 group-hover:scale-105" />
-                                {isMock && (
-                                    <span
-                                        className={`absolute -top-1 -right-1 size-2 rounded-full ${isDark ? "bg-amber-400 ring-2 ring-[#1A1A1A]" : "bg-amber-500 ring-2 ring-background"}`}
-                                        title={t("auth.sandbox_mock_mode", undefined, "沙盒联调模式")}
-                                        aria-hidden="true"
-                                    />
-                                )}
+                                <SocialProviderIcon
+                                    provider={provider.id}
+                                    className="size-5 transition-transform duration-150 group-hover:scale-105"
+                                />
                             </button>
                         </Tooltip>
                     );

@@ -28,25 +28,23 @@ var (
 	qqUserInfoURL = "https://graph.qq.com/user/get_user_info"
 
 	// Douyin Login Kit v2：两个响应都是 {"data":{…,"error_code":n,"description":"…"},"message":…} 信封。
-	douyinTokenURL    = "https://open.douyin.com/oauth/v2/access_token"
-	douyinUserInfoURL = "https://open.douyin.com/oauth/v2/userinfo"
+	douyinTokenURL    = "https://open.douyin.com/oauth/access_token/"
+	douyinUserInfoURL = "https://open.douyin.com/oauth/userinfo/"
 
-	oauthUpstreamClient = &http.Client{Timeout: 12 * time.Second}
+	// WeChat Open Platform 网页扫码授权
+	wechatTokenURL    = "https://api.weixin.qq.com/sns/oauth2/access_token"
+	wechatUserInfoURL = "https://api.weixin.qq.com/sns/userinfo"
+
+	oauthUpstreamClient = &http.Client{Timeout: 12 * time.Second, CheckRedirect: func(*http.Request, []*http.Request) error { return http.ErrUseLastResponse }}
 )
 
 // liveExchangeSupported reports whether a channel redeems its authorization code
 // upstream. Channels without a real exchange must fail closed: the previous
 // placeholder synthesised a profile straight from the code string, which let
 // anyone who first called the public /start endpoint mint accounts and sessions.
-//
-// 哔哩哔哩刻意仍未接入：从生产出口实测，公开文档里能找到的四个令牌端点
-// （member.bilibili.com/x/account-oauth2/v1/token、app.bilibili.com/x/oauth2/token、
-// api.bilibili.com/x/passport-login/oauth2/access_token、passport.bilibili.com/api/v2/oauth2/token）
-// GET/POST 一律 404，其第三方 OAuth 需应用审核通过后另行下发可用域名；
-// 在没有可验证端点之前继续 fail-closed，比照抄一份猜测地址更负责。
 func liveExchangeSupported(providerID string) bool {
 	switch providerID {
-	case ProviderGoogle, ProviderX, ProviderQQ, ProviderDouyin:
+	case ProviderGoogle, ProviderX, ProviderQQ, ProviderDouyin, ProviderWeChat, ProviderBilibili:
 		return true
 	default:
 		return false
@@ -64,6 +62,10 @@ func redeemCode(ctx context.Context, providerID string, cfg ProviderConfig, code
 		return redeemQQ(ctx, cfg, code, redirectURI)
 	case ProviderDouyin:
 		return redeemDouyin(ctx, cfg, code)
+	case ProviderWeChat:
+		return redeemWeChat(ctx, cfg, code)
+	case ProviderBilibili:
+		return redeemBilibili(ctx, cfg, code)
 	default:
 		return nil, fmt.Errorf("渠道 %s 尚未接入真实授权码交换，已拒绝登录以避免伪造身份", providerID)
 	}
@@ -91,16 +93,20 @@ func redeemGoogle(ctx context.Context, cfg ProviderConfig, code, redirectURI str
 	}
 
 	var info struct {
-		Sub     string `json:"sub"`
-		Name    string `json:"name"`
-		Picture string `json:"picture"`
-		Email   string `json:"email"`
+		Sub           string `json:"sub"`
+		Name          string `json:"name"`
+		Picture       string `json:"picture"`
+		Email         string `json:"email"`
+		EmailVerified bool   `json:"email_verified"`
 	}
 	if err := getJSON(ctx, googleUserInfoURL, tokens.AccessToken, &info); err != nil {
 		return nil, err
 	}
 	if strings.TrimSpace(info.Sub) == "" {
 		return nil, errors.New("Google 身份接口未返回 sub")
+	}
+	if !info.EmailVerified {
+		info.Email = ""
 	}
 
 	display := strings.TrimSpace(info.Name)
@@ -343,6 +349,78 @@ func redeemDouyin(ctx context.Context, cfg ProviderConfig, code string) (*social
 	}, nil
 }
 
+// redeemWeChat implements WeChat Open Platform OAuth2 access token exchange and userinfo query.
+func redeemWeChat(ctx context.Context, cfg ProviderConfig, code string) (*socialProfile, error) {
+	tokenURL := fmt.Sprintf("%s?appid=%s&secret=%s&code=%s&grant_type=authorization_code",
+		wechatTokenURL,
+		url.QueryEscape(cfg.ClientID),
+		url.QueryEscape(cfg.ClientSecret),
+		url.QueryEscape(code),
+	)
+
+	status, body, err := upstreamFetch(ctx, http.MethodGet, tokenURL, nil, nil)
+	if err != nil {
+		return nil, err
+	}
+
+	var tokenReply struct {
+		AccessToken string `json:"access_token"`
+		ExpiresIn   int    `json:"expires_in"`
+		OpenID      string `json:"openid"`
+		UnionID     string `json:"unionid"`
+		Scope       string `json:"scope"`
+		ErrCode     int    `json:"errcode"`
+		ErrMsg      string `json:"errmsg"`
+	}
+	if err := decodeUpstream(status, body, &tokenReply); err != nil {
+		return nil, err
+	}
+	if tokenReply.ErrCode != 0 || tokenReply.AccessToken == "" || tokenReply.OpenID == "" {
+		return nil, fmt.Errorf("微信未签发访问令牌：errcode=%d %s", tokenReply.ErrCode, truncateForError(tokenReply.ErrMsg))
+	}
+
+	infoURL := fmt.Sprintf("%s?access_token=%s&openid=%s",
+		wechatUserInfoURL,
+		url.QueryEscape(tokenReply.AccessToken),
+		url.QueryEscape(tokenReply.OpenID),
+	)
+	status, body, err = upstreamFetch(ctx, http.MethodGet, infoURL, nil, nil)
+	if err != nil {
+		return nil, err
+	}
+
+	var infoReply struct {
+		OpenID     string `json:"openid"`
+		Nickname   string `json:"nickname"`
+		Sex        int    `json:"sex"`
+		HeadImgURL string `json:"headimgurl"`
+		UnionID    string `json:"unionid"`
+		ErrCode    int    `json:"errcode"`
+		ErrMsg     string `json:"errmsg"`
+	}
+	if err := decodeUpstream(status, body, &infoReply); err != nil {
+		return nil, err
+	}
+	if infoReply.ErrCode != 0 {
+		return nil, fmt.Errorf("微信用户信息接口拒绝：errcode=%d %s", infoReply.ErrCode, truncateForError(infoReply.ErrMsg))
+	}
+
+	subjectID := tokenReply.UnionID
+	if subjectID == "" {
+		subjectID = infoReply.UnionID
+	}
+	if subjectID == "" {
+		subjectID = tokenReply.OpenID
+	}
+
+	return &socialProfile{
+		Subject:     "wechat_unionid_" + subjectID,
+		Username:    sanitizeHandle(firstNonEmpty(subjectID, tokenReply.OpenID)),
+		DisplayName: firstNonEmpty(infoReply.Nickname, "微信创作者"),
+		AvatarURL:   infoReply.HeadImgURL,
+	}, nil
+}
+
 // sanitizeHandle turns an upstream login/email into a short account handle.
 func sanitizeHandle(raw string) string {
 	if at := strings.IndexAny(raw, "@"); at > 0 {
@@ -405,7 +483,7 @@ func upstreamFetch(ctx context.Context, method, endpoint string, form url.Values
 	}
 	resp, err := oauthUpstreamClient.Do(req)
 	if err != nil {
-		return 0, "", fmt.Errorf("无法连接 %s：%w", endpoint, err)
+		return 0, "", errors.New("无法连接授权服务，请稍后重试")
 	}
 	defer resp.Body.Close()
 	raw, err := io.ReadAll(io.LimitReader(resp.Body, 1<<20))
@@ -417,10 +495,10 @@ func upstreamFetch(ctx context.Context, method, endpoint string, form url.Values
 
 func decodeUpstream(status int, body string, out any) error {
 	if status < 200 || status >= 300 {
-		return fmt.Errorf("上游返回 HTTP %d：%s", status, truncateForError(body))
+		return fmt.Errorf("授权服务返回 HTTP %d", status)
 	}
 	if err := json.Unmarshal([]byte(body), out); err != nil {
-		return fmt.Errorf("解析上游响应失败：%w（%s）", err, truncateForError(body))
+		return errors.New("授权服务返回无效响应")
 	}
 	return nil
 }
