@@ -42,7 +42,9 @@ export function SocialAccountBindings({ onNavigateSecurity }: { onNavigateSecuri
     const boundMap = new Map<string, UserIdentityItem>();
     if (identitiesView?.identities) {
         for (const item of identitiesView.identities) {
-            boundMap.set(item.provider.toLowerCase(), item);
+            if (item.bound) {
+                boundMap.set(item.provider.toLowerCase(), item);
+            }
         }
     }
 
@@ -53,7 +55,7 @@ export function SocialAccountBindings({ onNavigateSecurity }: { onNavigateSecuri
 
     const handleUnbind = (provider: SocialAuthProviderPublic, identity: UserIdentityItem) => {
         // Anti-orphan guard: check if user has password or multiple identities
-        if (!identitiesView.hasPassword && identitiesView.count <= 1) {
+        if (!identitiesView.hasPassword && boundMap.size <= 1) {
             modal.confirm({
                 title: "无法解除绑定",
                 icon: <ShieldAlert className="size-5 text-amber-400" />,

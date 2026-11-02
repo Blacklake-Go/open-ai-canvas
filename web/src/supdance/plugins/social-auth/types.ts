@@ -122,13 +122,14 @@ export interface CompleteOnboardingRequest {
 }
 
 export interface UserIdentityItem {
-    id: number;
+    id?: number | string;
     provider: string;
     providerName: string;
-    subject: string;
+    subject?: string;
     providerUsername: string;
-    avatarUrl: string;
-    boundAt: string;
+    avatarUrl?: string;
+    boundAt?: string | null;
+    bound?: boolean;
 }
 
 export interface UserIdentitiesView {
