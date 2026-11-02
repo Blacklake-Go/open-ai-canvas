@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"crypto/subtle"
 	"fmt"
 	"net/http"
 	"net/url"
@@ -33,9 +34,8 @@ func RegisterSocialAuthRoutes(api *gin.RouterGroup, svc *service.Service) {
 		}
 		nextPath := c.Query("next")
 		acceptedTerms := c.Query("acceptedTerms") == "true"
-		isMock := c.Query("mock") == "true"
 
-		target, err := svc.BeginSocialAuth(c.Request, provider, nextPath, acceptedTerms, isMock)
+		target, err := svc.BeginSocialAuth(c.Request, provider, nextPath, acceptedTerms)
 		if err != nil {
 			failService(c, err)
 			return
@@ -51,6 +51,8 @@ func RegisterSocialAuthRoutes(api *gin.RouterGroup, svc *service.Service) {
 	})
 
 	callbackHandler := func(c *gin.Context, provider string) {
+		c.Header("Cache-Control", "no-store")
+		c.Header("Referrer-Policy", "no-referrer")
 		if !enforceRateLimit(c, "social-cb:"+provider+":"+c.ClientIP(), 60, 10*time.Minute) {
 			return
 		}
@@ -71,6 +73,7 @@ func RegisterSocialAuthRoutes(api *gin.RouterGroup, svc *service.Service) {
 
 		// 1. If new user awaiting onboarding confirmation
 		if result.OnboardingTicket != "" {
+			http.SetCookie(c.Writer, &http.Cookie{Name: "supdance_social_onboarding", Value: socialauth.HashToken(result.OnboardingTicket), Path: "/api/auth/social", HttpOnly: true, Secure: true, SameSite: http.SameSiteLaxMode, MaxAge: 1800})
 			if result.Session != nil {
 				setSessionCookie(c, result.Session.Session, result.Session.MaxAgeSecs)
 			}
@@ -86,8 +89,16 @@ func RegisterSocialAuthRoutes(api *gin.RouterGroup, svc *service.Service) {
 	}
 
 	// 2. Onboarding endpoints
+	validOnboardingBrowser := func(c *gin.Context, ticket string) bool {
+		cookie, err := c.Request.Cookie("supdance_social_onboarding")
+		return err == nil && subtle.ConstantTimeCompare([]byte(cookie.Value), []byte(socialauth.HashToken(ticket))) == 1
+	}
 	api.GET("/auth/social/onboarding/profile", func(c *gin.Context) {
 		ticket := c.Query("ticket")
+		if !validOnboardingBrowser(c, ticket) {
+			fail(c, http.StatusBadRequest, fmt.Errorf("入站浏览器校验失败，请重新登录"))
+			return
+		}
 		if strings.TrimSpace(ticket) == "" {
 			fail(c, http.StatusBadRequest, fmt.Errorf("缺少入站凭证"))
 			return
@@ -107,6 +118,14 @@ func RegisterSocialAuthRoutes(api *gin.RouterGroup, svc *service.Service) {
 			fail(c, http.StatusBadRequest, err)
 			return
 		}
+		ticket := req.TicketID
+		if ticket == "" {
+			ticket = req.Ticket
+		}
+		if !validOnboardingBrowser(c, ticket) {
+			fail(c, http.StatusBadRequest, fmt.Errorf("入站浏览器校验失败，请重新登录"))
+			return
+		}
 		result, err := svc.CompleteSocialAuthOnboarding(c.Request, req, loginRequestContext(c))
 		if err != nil {
 			failService(c, err)
@@ -115,6 +134,7 @@ func RegisterSocialAuthRoutes(api *gin.RouterGroup, svc *service.Service) {
 		if result.Session != nil {
 			setSessionCookie(c, result.Session.Session, result.Session.MaxAgeSecs)
 		}
+		http.SetCookie(c.Writer, &http.Cookie{Name: "supdance_social_onboarding", Value: "", Path: "/api/auth/social", HttpOnly: true, Secure: true, SameSite: http.SameSiteLaxMode, MaxAge: -1})
 		ok(c, result)
 	})
 
@@ -193,12 +213,7 @@ func RegisterSocialAuthRoutes(api *gin.RouterGroup, svc *service.Service) {
 		callbackHandler(c, "bilibili")
 	})
 
-	// 2. Mock callback test harness JSON endpoint
-	api.POST("/auth/social/mock-callback", func(c *gin.Context) {
-		c.AbortWithStatusJSON(http.StatusGone, gin.H{"code": 410, "msg": "模拟登录入口已移除"})
-	})
-
-	// 3. Admin Social Login Config Center endpoints
+	// 2. Admin Social Login Config Center endpoints
 	admin := api.Group("/admin/social-auth")
 	{
 		admin.GET("/settings", func(c *gin.Context) {
@@ -246,6 +261,86 @@ func RegisterSocialAuthRoutes(api *gin.RouterGroup, svc *service.Service) {
 				return
 			}
 			ok(c, result)
+		})
+
+		// Operations endpoints
+		admin.GET("/operations/overview", func(c *gin.Context) {
+			actor, err := currentUser(c, svc)
+			if err != nil {
+				failService(c, err)
+				return
+			}
+			overview, err := svc.SocialAuthOperationsOverview(c.Request, actor)
+			if err != nil {
+				failService(c, err)
+				return
+			}
+			ok(c, overview)
+		})
+
+		admin.PUT("/operations/policies", func(c *gin.Context) {
+			actor, err := currentUser(c, svc)
+			if err != nil {
+				failService(c, err)
+				return
+			}
+			var policies service.SocialAuthOperationalPolicies
+			if err := c.ShouldBindJSON(&policies); err != nil {
+				fail(c, http.StatusBadRequest, err)
+				return
+			}
+			overview, err := svc.UpdateSocialAuthPolicies(actor, policies)
+			if err != nil {
+				failService(c, err)
+				return
+			}
+			ok(c, overview)
+		})
+
+		admin.GET("/operations/users", func(c *gin.Context) {
+			actor, err := currentUser(c, svc)
+			if err != nil {
+				failService(c, err)
+				return
+			}
+			query := c.Query("q")
+			users, err := svc.SearchSocialAuthUsers(actor, query)
+			if err != nil {
+				failService(c, err)
+				return
+			}
+			ok(c, users)
+		})
+
+		unbindHandler := func(c *gin.Context) {
+			actor, err := currentUser(c, svc)
+			if err != nil {
+				failService(c, err)
+				return
+			}
+			targetUserID := c.Param("userId")
+			provider := c.Param("provider")
+			if err := svc.AdminUnbindSocialAuth(actor, targetUserID, provider); err != nil {
+				failService(c, err)
+				return
+			}
+			ok(c, gin.H{"success": true})
+		}
+		admin.POST("/operations/users/:userId/unbind/:provider", unbindHandler)
+		admin.DELETE("/operations/users/:userId/unbind/:provider", unbindHandler)
+
+		admin.GET("/operations/logs", func(c *gin.Context) {
+			actor, err := currentUser(c, svc)
+			if err != nil {
+				failService(c, err)
+				return
+			}
+			logs, err := svc.SocialAuthLoginLogs(actor, 100)
+			if err != nil {
+				failService(c, err)
+				return
+			}
+			ok(c, logs)
 		})
 	}
 }

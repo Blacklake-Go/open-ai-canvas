@@ -3,7 +3,6 @@ package app
 import (
 	"fmt"
 	"net/http"
-	"strings"
 	"time"
 
 	"yingce/backend/internal/auth"
@@ -25,6 +24,10 @@ type (
 	SocialAuthCompleteOnboardingRequest = socialauth.CompleteOnboardingRequest
 	SocialAuthUserIdentitiesView        = socialauth.UserIdentitiesView
 	SocialAuthUserIdentityItem          = socialauth.UserIdentityItem
+	SocialAuthOperationalPolicies       = socialauth.OperationalPolicies
+	SocialAuthOperationsOverview        = socialauth.OperationsOverview
+	SocialAuthUserSocialBindingItem     = socialauth.UserSocialBindingAdminItem
+	SocialAuthLoginLogItem              = socialauth.SocialLoginLogItem
 )
 
 type socialAuthHost struct {
@@ -133,7 +136,7 @@ func (s *Service) PublicSocialAuthProviders(r *http.Request) (*socialauth.Public
 }
 
 // BeginSocialAuth starts social authorization flow with authoritative geo-partition enforcement.
-func (s *Service) BeginSocialAuth(r *http.Request, providerID string, nextPath string, acceptedTerms bool, isMock bool) (string, error) {
+func (s *Service) BeginSocialAuth(r *http.Request, providerID string, nextPath string, acceptedTerms bool) (string, error) {
 	available, err := s.SocialAuthPluginAvailable()
 	if err != nil {
 		return "", err
@@ -141,7 +144,7 @@ func (s *Service) BeginSocialAuth(r *http.Request, providerID string, nextPath s
 	if !available {
 		return "", kernel.Forbidden("第三方社交登录插件已被系统管理员停用")
 	}
-	return s.socialAuthService().BeginAuth(r, providerID, nextPath, acceptedTerms, isMock)
+	return s.socialAuthService().BeginAuth(r, providerID, nextPath, acceptedTerms)
 }
 
 // SocialAuthLoginResult combines social auth callback with session creation and login logging.
@@ -168,9 +171,6 @@ func (s *Service) CompleteSocialAuth(r *http.Request, providerID string, state s
 		context = contexts[0]
 	}
 	event := auth.NewLoginLog("social_"+providerID, "login", context)
-	if strings.HasPrefix(code, "mock_code_") {
-		event.Source = "mock_social_" + providerID
-	}
 
 	currentUserID := ""
 	if cookie != "" {
@@ -226,6 +226,13 @@ func (s *Service) SocialAuthOnboardingProfile(ticket string) (*socialauth.Onboar
 
 // CompleteSocialAuthOnboarding creates the user and signs them in after onboarding modal confirmation.
 func (s *Service) CompleteSocialAuthOnboarding(r *http.Request, req socialauth.CompleteOnboardingRequest, contexts ...LoginContext) (*SocialAuthLoginResult, error) {
+	available, err := s.SocialAuthPluginAvailable()
+	if err != nil {
+		return nil, err
+	}
+	if !available {
+		return nil, kernel.Forbidden("第三方社交登录插件已被系统管理员停用")
+	}
 	user, session, err := s.socialAuthService().CompleteOnboarding(req)
 	if err != nil {
 		return nil, err
@@ -262,10 +269,59 @@ func (s *Service) UserSocialIdentities(actor *model.User) (*socialauth.UserIdent
 
 // BeginSocialAuthBind starts the OAuth flow to bind a provider to the logged in user.
 func (s *Service) BeginSocialAuthBind(r *http.Request, actor *model.User, providerID string) (string, error) {
+	available, err := s.SocialAuthPluginAvailable()
+	if err != nil {
+		return "", err
+	}
+	if !available {
+		return "", kernel.Forbidden("第三方社交登录插件已被系统管理员停用")
+	}
 	return s.socialAuthService().BeginBind(r, actor, providerID)
 }
 
 // UnbindSocialAuth disconnects a social identity while guarding against orphaned accounts.
 func (s *Service) UnbindSocialAuth(actor *model.User, providerID string) error {
 	return s.socialAuthService().Unbind(actor, providerID)
+}
+
+// SocialAuthOperationsOverview returns operational dashboard statistics and current policies.
+func (s *Service) SocialAuthOperationsOverview(r *http.Request, actor *model.User) (*socialauth.OperationsOverview, error) {
+	return s.socialAuthService().GetOperationsOverview(r, actor)
+}
+
+// UpdateSocialAuthPolicies updates global operational policies.
+func (s *Service) UpdateSocialAuthPolicies(actor *model.User, policies socialauth.OperationalPolicies) (*socialauth.OperationsOverview, error) {
+	view, err := s.socialAuthService().UpdatePolicies(actor, policies)
+	if err != nil {
+		return nil, err
+	}
+	_ = s.appendAdminAudit(actor, "socialauth.policies.update", "plugin", PluginSupDanceSocialAuth, "更新第三方社交登录运营策略", map[string]any{
+		"autoDirectRegistration":   policies.AutoDirectRegistration,
+		"mandatoryEmailOnboarding": policies.MandatoryEmailOnboarding,
+		"signupBonusCredits":       policies.SignupBonusCredits,
+		"orphanAccountSafety":      policies.OrphanAccountSafety,
+	})
+	return view, nil
+}
+
+// SearchSocialAuthUsers queries users and their bound social identities.
+func (s *Service) SearchSocialAuthUsers(actor *model.User, query string) ([]socialauth.UserSocialBindingAdminItem, error) {
+	return s.socialAuthService().SearchUsers(actor, query)
+}
+
+// AdminUnbindSocialAuth unbinds a social identity for any user by administrator.
+func (s *Service) AdminUnbindSocialAuth(actor *model.User, targetUserID string, providerID string) error {
+	if err := s.socialAuthService().AdminUnbindUser(actor, targetUserID, providerID); err != nil {
+		return err
+	}
+	_ = s.appendAdminAudit(actor, "socialauth.identity.unbind", "user", targetUserID, "管理员解绑用户社交登录身份", map[string]any{
+		"targetUserId": targetUserID,
+		"provider":     providerID,
+	})
+	return nil
+}
+
+// SocialAuthLoginLogs returns recent social login logs for auditing.
+func (s *Service) SocialAuthLoginLogs(actor *model.User, limit int) ([]socialauth.SocialLoginLogItem, error) {
+	return s.socialAuthService().GetLoginLogs(actor, limit)
 }

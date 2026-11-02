@@ -11,7 +11,6 @@ export interface SocialAuthProviderPublic {
     region: SocialAuthRegion;
     icon: string;
     authorizeUrl?: string;
-    sandboxEnabled?: boolean;
     status?: SocialAuthStatus;
 }
 
@@ -51,8 +50,6 @@ export interface SocialAuthProviderAdmin {
     latencyMs?: number;
     scopes?: string[];
     docUrl?: string;
-    sandboxMockSupported?: boolean;
-    sandboxMockEnabled?: boolean;
     updatedAt?: string;
 }
 
@@ -73,8 +70,8 @@ export interface AdminSettingsView {
 
 /**
  * 与 backend/internal/supdance/socialauth.UpdateProviderInput 逐字段对齐。
- * 后端对 enabled / sandboxMockEnabled / customRedirectUrl 是无条件覆盖写入，
- * 因此任何一次保存都必须带上这三项的当前值，否则会被静默清空。
+ * 后端对 enabled / customRedirectUrl 是无条件覆盖写入，
+ * 因此任何一次保存都必须带上两项的当前值，否则会被静默清空。
  */
 export interface ProviderUpdateInput {
     enabled?: boolean;
@@ -82,7 +79,49 @@ export interface ProviderUpdateInput {
     clientSecret?: string;
     customRedirectUrl?: string;
     scopes?: string[];
-    sandboxMockEnabled?: boolean;
+}
+
+export interface OperationalPolicies {
+    autoDirectRegistration: boolean;
+    mandatoryEmailOnboarding: boolean;
+    signupBonusCredits: number;
+    orphanAccountSafety: boolean;
+}
+
+export interface DailyLoginCount {
+    date: string;
+    count: number;
+}
+
+export interface OperationsOverview {
+    policies: OperationalPolicies;
+    providerDistribution: Record<string, number>;
+    totalBindings: number;
+    dailyActiveTrend: DailyLoginCount[];
+    totalLogins30d: number;
+}
+
+export interface UserSocialBindingAdminItem {
+    userId: string;
+    username: string;
+    email: string;
+    displayName: string;
+    createdAt: string;
+    identities: UserIdentityItem[];
+}
+
+export interface SocialLoginLogItem {
+    id: string;
+    userId: string;
+    username: string;
+    account: string;
+    method: string;
+    source: string;
+    result: string;
+    reason: string;
+    message: string;
+    ip: string;
+    createdAt: string;
 }
 
 export interface UpdateSettingsRequest {
@@ -92,7 +131,7 @@ export interface UpdateSettingsRequest {
 
 export interface ProviderTestResult {
     provider: string;
-    status: "ok" | "online" | "degraded" | "error";
+    status: "reachable" | "ok" | "online" | "degraded" | "error";
     message: string;
     latencyMs?: number;
     pingLatencyMs?: number;
@@ -112,6 +151,7 @@ export interface OnboardingProfileView {
 }
 
 export interface CompleteOnboardingRequest {
+    acceptedTerms: boolean;
     ticket?: string;
     ticketId?: string;
     username: string;

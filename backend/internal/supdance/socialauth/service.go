@@ -4,11 +4,14 @@ import (
 	"context"
 	"crypto/rand"
 	"crypto/sha256"
+	"crypto/subtle"
+	"encoding/base64"
 	"encoding/hex"
 	"encoding/json"
 	"errors"
 	"fmt"
 	"net/http"
+	"net/mail"
 	"net/url"
 	"strings"
 	"sync"
@@ -38,6 +41,10 @@ type Repository interface {
 	CheckEmailAvailable(email string, excludeUserID string) error
 	UpdateUserLoginTime(userID string, t time.Time) error
 	Save(entity any) error
+	UserIdentitiesCountByProvider() (map[string]int64, error)
+	SocialLoginLogs(limit int) ([]model.LoginLog, error)
+	RecentSocialLoginLogs(since time.Time) ([]model.LoginLog, error)
+	SearchUsersWithSocialIdentities(query string, limit int) ([]model.User, map[string][]model.UserIdentity, error)
 }
 
 // Host provides host environment hooks (encryption, admin check, bonuses).
@@ -94,6 +101,12 @@ func (s *Service) readRawSettings() (StoredSettings, error) {
 	if stored.DefaultFallbackRegion == "" {
 		stored.DefaultFallbackRegion = RegionCN
 	}
+	var fields map[string]json.RawMessage
+	_ = json.Unmarshal([]byte(setting.ValueJSON), &fields)
+	if _, exists := fields["policies"]; !exists {
+		stored.Policies = defaults.Policies
+	}
+	stored.Policies.OrphanAccountSafety = true
 	stored.UpdatedAt = setting.UpdatedAt
 	stored.UpdatedBy = setting.UpdatedBy
 	return stored, nil
@@ -111,9 +124,13 @@ func (s *Service) ReadSettings() (StoredSettings, error) {
 		for id, cfg := range stored.Providers {
 			if cfg.ClientSecret != "" {
 				decrypted, decErr := s.host.DecryptSecret(cfg.ClientSecret)
-				if decErr == nil {
-					cfg.ClientSecret = decrypted
+				if decErr != nil {
+					cfg.ClientSecret = ""
+					cfg.Enabled = false
+					stored.Providers[id] = cfg
+					continue
 				}
+				cfg.ClientSecret = decrypted
 				stored.Providers[id] = cfg
 			}
 		}
@@ -132,13 +149,19 @@ func (s *Service) SaveSettings(actor *model.User, next StoredSettings) error {
 		return errors.New("repository not initialized")
 	}
 
+	actorID := ""
+	if actor != nil {
+		actorID = actor.ID
+	}
+
 	// Encrypt secrets before persisting
 	toStore := StoredSettings{
 		DefaultFallbackRegion: next.DefaultFallbackRegion,
 		TrustedProxyHeaders:   next.TrustedProxyHeaders,
+		Policies:              next.Policies,
 		Providers:             make(map[string]ProviderConfig),
 		UpdatedAt:             time.Now(),
-		UpdatedBy:             actor.ID,
+		UpdatedBy:             actorID,
 	}
 	for id, cfg := range next.Providers {
 		storedCfg := cfg
@@ -164,7 +187,7 @@ func (s *Service) SaveSettings(actor *model.User, next StoredSettings) error {
 	setting := &model.SystemSetting{
 		Key:       ConfigSettingKey,
 		ValueJSON: string(data),
-		UpdatedBy: actor.ID,
+		UpdatedBy: actorID,
 		UpdatedAt: now,
 	}
 	return s.repo.SaveSystemSetting(setting)
@@ -196,42 +219,29 @@ func (s *Service) GetAdminSettings(r *http.Request, actor *model.User) (*AdminSe
 
 		status := StatusUnconfigured
 		statusLabel := "未配置"
-		hasCreds := cfg.ClientID != "" && cfg.ClientSecret != ""
+		hasCreds := credentialsUsable(cfg)
 
 		if cfg.ClientID == "" && cfg.ClientSecret == "" {
 			status = StatusUnconfigured
 			statusLabel = "未配置"
 		} else if cfg.ClientID == "" || cfg.ClientSecret == "" {
 			status = StatusCredentialsRequired
-			statusLabel = "待录入凭证"
+			statusLabel = "待完善凭证"
+		} else if !channelAdvertisable(id, cfg) {
+			status = StatusCredentialsRequired
+			statusLabel = "尚未就绪"
 		} else if cfg.Enabled {
 			status = StatusOnline
-			statusLabel = "运行中"
+			statusLabel = "已启用"
 		} else {
 			status = StatusReady
-			statusLabel = "配置检查通过"
+			statusLabel = "未启用"
 		}
 
 		callbackURL := resolveCallbackURL(cfg, meta)
 
-		// Realistic baseline latency for online providers
+		// Latency is only known after an explicit endpoint probe.
 		latency := int64(0)
-		if hasCreds && cfg.Enabled {
-			switch id {
-			case ProviderQQ:
-				latency = 228
-			case ProviderDouyin:
-				latency = 302
-			case ProviderBilibili:
-				latency = 101
-			case ProviderGoogle:
-				latency = 185
-			case ProviderX:
-				latency = 210
-			default:
-				latency = 150
-			}
-		}
 
 		view := ProviderAdminView{
 			ID:                 meta.ID,
@@ -252,7 +262,6 @@ func (s *Service) GetAdminSettings(r *http.Request, actor *model.User) (*AdminSe
 			LatencyMs:          latency,
 			Scopes:             cfg.Scopes,
 			DocURL:             meta.DocURL,
-			SandboxMockEnabled: cfg.SandboxMockEnabled,
 		}
 
 		if meta.Region == RegionCN {
@@ -305,9 +314,10 @@ func (s *Service) UpdateAdminSettings(r *http.Request, actor *model.User, req Up
 	}
 
 	for id, input := range req.Providers {
+		if _, exists := ProviderRegistry[id]; !exists {
+			return nil, kernel.BadAuthRequest("未知社交登录渠道")
+		}
 		cfg := current.Providers[id]
-		cfg.Enabled = input.Enabled
-		cfg.SandboxMockEnabled = input.SandboxMockEnabled
 		if strings.TrimSpace(input.ClientID) != "" && !strings.Contains(input.ClientID, "*") {
 			cfg.ClientID = strings.TrimSpace(input.ClientID)
 		}
@@ -315,7 +325,14 @@ func (s *Service) UpdateAdminSettings(r *http.Request, actor *model.User, req Up
 		if strings.TrimSpace(input.ClientSecret) != "" && !strings.Contains(input.ClientSecret, "•") {
 			cfg.ClientSecret = strings.TrimSpace(input.ClientSecret)
 		}
+		if input.Enabled && !channelAdvertisable(id, cfg) {
+			return nil, kernel.BadAuthRequest(fmt.Sprintf("渠道 %s 尚未配置完整密钥，无法启用", id))
+		}
+		cfg.Enabled = input.Enabled
 		cfg.CustomRedirectURL = strings.TrimSpace(input.CustomRedirectURL)
+		if !callbackURLValid(id, cfg) {
+			return nil, kernel.BadAuthRequest("回调地址必须使用本站 HTTPS 渠道回调路径")
+		}
 		if len(input.Scopes) > 0 {
 			cfg.Scopes = kernel.UniqueNonEmpty(input.Scopes)
 		}
@@ -341,76 +358,77 @@ func (s *Service) TestProvider(actor *model.User, providerID string) (*ProviderT
 	}
 	now := time.Now()
 	cfg, exists := settings.Providers[providerID]
-	if !exists || cfg.ClientID == "" || cfg.ClientSecret == "" {
+	if !exists || !channelAdvertisable(providerID, cfg) {
 		return &ProviderTestResult{
 			Provider:      providerID,
 			Status:        "error",
 			LatencyMs:     0,
 			PingLatencyMs: 0,
-			Message:       "该渠道尚未配置完整的 ClientID 或密钥",
+			Message:       "该渠道尚未配置有效凭据或真实授权适配",
 			CheckedAt:     now,
 			TestedAt:      now,
 		}, nil
 	}
 
-	// Calculate latency simulation
-	latency := int64(120)
-	switch providerID {
-	case ProviderQQ:
-		latency = 228
-	case ProviderDouyin:
-		latency = 302
-	case ProviderBilibili:
-		latency = 101
-	case ProviderGoogle:
-		latency = 185
-	case ProviderX:
-		latency = 210
+	endpoint, _ := url.Parse(buildAuthorizeURL(providerID, cfg, resolveCallbackURL(cfg, ProviderRegistry[providerID]), "probe", "probe"))
+	endpoint.RawQuery = ""
+	endpoint.Fragment = ""
+	ctx, cancel := context.WithTimeout(context.Background(), 8*time.Second)
+	defer cancel()
+	request, err := http.NewRequestWithContext(ctx, http.MethodGet, endpoint.String(), nil)
+	if err != nil {
+		return nil, err
 	}
-
-	return &ProviderTestResult{
+	started := time.Now()
+	resp, err := oauthUpstreamClient.Do(request)
+	latency := time.Since(started).Milliseconds()
+	result := &ProviderTestResult{
 		Provider:      providerID,
-		Status:        "ok",
+		Status:        "error",
 		LatencyMs:     latency,
 		PingLatencyMs: latency,
-		Message:       "渠道端点响应正常，OAuth 2.0 凭据校验通过",
+		Message:       "授权端点连接失败；凭据须通过真实登录验证",
 		CheckedAt:     now,
 		TestedAt:      now,
-	}, nil
-}
-
-// mockAllowed reports whether a channel is explicitly running in the built-in
-// sandbox / mock mode. It is the only way a loopback login may be minted, so it
-// depends on server-side configuration rather than on anything a visitor sends.
-func mockAllowed(cfg ProviderConfig) bool {
-	return cfg.SandboxMockEnabled ||
-		strings.HasPrefix(cfg.ClientID, "mock_") ||
-		strings.HasPrefix(cfg.ClientSecret, "mock_")
-}
-
-// credentialsUsable reports whether a provider channel can complete an OAuth
-// exchange and therefore may be shown on the login page: it needs both a Client
-// ID and a Client Secret, or an explicit sandbox/mock mode. Callers that read
-// raw (still encrypted) settings get the same answer because a stored secret is
-// never an empty string once configured.
-func credentialsUsable(cfg ProviderConfig) bool {
-	if mockAllowed(cfg) {
-		return true
 	}
-	return cfg.ClientID != "" && cfg.ClientSecret != ""
+	if resp != nil {
+		defer resp.Body.Close()
+	}
+	if err == nil && resp.StatusCode >= 200 && resp.StatusCode < 500 && resp.StatusCode != 404 {
+		result.Status = "reachable"
+		result.Message = "授权端点可达，配置字段完整；尚未验证真实登录"
+	}
+	return result, nil
+}
+
+// Historical mock credentials must never become real login options after upgrade.
+func credentialsUsable(cfg ProviderConfig) bool {
+	for _, value := range []string{cfg.ClientID, cfg.ClientSecret} {
+		value = strings.TrimSpace(value)
+		if value == "" || strings.HasPrefix(strings.ToLower(value), "mock_") || strings.HasPrefix(value, "enc:") || strings.HasPrefix(value, "enc:v1:") {
+			return false
+		}
+	}
+	return true
+}
+
+func callbackURLValid(id string, cfg ProviderConfig) bool {
+	meta, exists := ProviderRegistry[id]
+	if !exists {
+		return false
+	}
+	u, err := url.Parse(resolveCallbackURL(cfg, meta))
+	return err == nil && u.Scheme == "https" && u.Host == "www.supdance.com" && (u.Path == meta.DefaultPath || u.Path == "/api/auth/social/"+id+"/callback") && u.RawQuery == "" && u.Fragment == "" && u.User == nil
 }
 
 // channelAdvertisable reports whether a login page may offer a channel and let a
-// visitor start its OAuth flow: the credentials have to be complete, and the
-// exchange has to be able to finish — either the channel is explicitly in
-// sandbox/mock mode, or the backend really implements that provider's token
-// exchange. Channels that would only fail after the user finished consent are kept
-// off the login page entirely.
+// visitor start its OAuth flow: the credentials have to be complete and the
+// backend must implement that provider's token exchange.
 func channelAdvertisable(providerID string, cfg ProviderConfig) bool {
 	if !credentialsUsable(cfg) {
 		return false
 	}
-	return mockAllowed(cfg) || liveExchangeSupported(providerID)
+	return liveExchangeSupported(providerID) && callbackURLValid(providerID, cfg)
 }
 
 // resolveCallbackURL mirrors the redirect_uri that BeginAuth sends upstream, so
@@ -425,7 +443,7 @@ func resolveCallbackURL(cfg ProviderConfig, meta ProviderMeta) string {
 // GetPublicProviders returns public providers filtered by the caller's dynamic IP geo-partition.
 // It uses readRawSettings to completely eliminate AES secret decryption for public requests.
 func (s *Service) GetPublicProviders(r *http.Request) (*PublicProvidersResponse, error) {
-	settings, err := s.readRawSettings()
+	settings, err := s.ReadSettings()
 	if err != nil {
 		return nil, err
 	}
@@ -452,13 +470,12 @@ func (s *Service) GetPublicProviders(r *http.Request) (*PublicProvidersResponse,
 		}
 
 		item := ProviderPublicView{
-			ID:             meta.ID,
-			Name:           meta.Name,
-			Platform:       meta.Platform,
-			Region:         meta.Region,
-			Icon:           meta.Icon,
-			AuthorizeURL:   "/api/auth/social/" + meta.ID + "/start",
-			SandboxEnabled: cfg.SandboxMockEnabled,
+			ID:           meta.ID,
+			Name:         meta.Name,
+			Platform:     meta.Platform,
+			Region:       meta.Region,
+			Icon:         meta.Icon,
+			AuthorizeURL: "/api/auth/social/" + meta.ID + "/start",
 		}
 
 		allRegions[meta.Region] = append(allRegions[meta.Region], item)
@@ -489,7 +506,7 @@ func (s *Service) GetPublicProviders(r *http.Request) (*PublicProvidersResponse,
 }
 
 // BeginAuth initializes OAuth flow with authoritative Geo-Partitioning validation and state recording.
-func (s *Service) BeginAuth(r *http.Request, providerID string, nextPath string, acceptedTerms bool, isMock bool) (string, error) {
+func (s *Service) BeginAuth(r *http.Request, providerID string, nextPath string, acceptedTerms bool) (string, error) {
 	settings, err := s.ReadSettings()
 	if err != nil {
 		return "", err
@@ -530,15 +547,6 @@ func (s *Service) BeginAuth(r *http.Request, providerID string, nextPath string,
 
 	callbackURL := resolveCallbackURL(cfg, meta)
 
-	// Mock / Sandbox mode handler: instant loopback callback for automated
-	// end-to-end testing. Only the channel configuration can switch it on, so a
-	// visitor passing ?mock=true cannot mint a session.
-	if mockAllowed(cfg) {
-		mockCode := "mock_code_" + RandomToken()[:16]
-		targetURL := fmt.Sprintf("/api/auth/social/%s/callback?state=%s&code=%s&mock=true", providerID, stateToken, mockCode)
-		return targetURL, nil
-	}
-
 	// Generate standard OAuth 2.0 authorization URL
 	return buildAuthorizeURL(providerID, cfg, callbackURL, stateToken, codeVerifier), nil
 }
@@ -561,8 +569,9 @@ func buildAuthorizeURL(providerID string, cfg ProviderConfig, callbackURL string
 		return fmt.Sprintf("https://accounts.google.com/o/oauth2/v2/auth?response_type=code&client_id=%s&redirect_uri=%s&scope=openid+profile+email&state=%s",
 			url.QueryEscape(cfg.ClientID), url.QueryEscape(callbackURL), stateToken)
 	case ProviderX:
-		return fmt.Sprintf("https://twitter.com/i/oauth2/authorize?response_type=code&client_id=%s&redirect_uri=%s&scope=users.read+tweet.read&state=%s&code_challenge=%s&code_challenge_method=plain",
-			url.QueryEscape(cfg.ClientID), url.QueryEscape(callbackURL), stateToken, codeVerifier)
+		sum := sha256.Sum256([]byte(codeVerifier))
+		return fmt.Sprintf("https://x.com/i/oauth2/authorize?response_type=code&client_id=%s&redirect_uri=%s&scope=users.read+tweet.read&state=%s&code_challenge=%s&code_challenge_method=S256",
+			url.QueryEscape(cfg.ClientID), url.QueryEscape(callbackURL), stateToken, base64.RawURLEncoding.EncodeToString(sum[:]))
 	default:
 		return fmt.Sprintf("https://oauth.supdance.com/%s/authorize?client_id=%s&redirect_uri=%s&state=%s",
 			providerID, url.QueryEscape(cfg.ClientID), url.QueryEscape(callbackURL), stateToken)
@@ -583,6 +592,10 @@ func (s *Service) CompleteAuth(r *http.Request, providerID string, stateToken st
 	if strings.TrimSpace(stateToken) == "" || strings.TrimSpace(code) == "" {
 		return nil, kernel.BadAuthRequest("社交登录回调缺少必要参数")
 	}
+	cookie, cookieErr := r.Cookie(OAuthBindingCookie)
+	if cookieErr != nil || subtle.ConstantTimeCompare([]byte(cookie.Value), []byte(HashToken(stateToken))) != 1 {
+		return nil, kernel.BadAuthRequest("授权浏览器不匹配，请从当前浏览器重新登录")
+	}
 
 	stateHash := HashToken(stateToken)
 	var state *model.OAuthState
@@ -600,8 +613,7 @@ func (s *Service) CompleteAuth(r *http.Request, providerID string, stateToken st
 		state = &model.OAuthState{NextPath: "/create"}
 	}
 
-	// Resolve user profile. A mock identity is only honoured while the channel is
-	// explicitly in sandbox/mock mode; anything else redeems the code upstream.
+	// Recheck lifecycle and credentials after the user returns from the provider.
 	var cfg ProviderConfig
 	if s.repo != nil {
 		settings, settingsErr := s.ReadSettings()
@@ -610,6 +622,12 @@ func (s *Service) CompleteAuth(r *http.Request, providerID string, stateToken st
 		}
 		cfg = settings.Providers[providerID]
 	}
+	if !cfg.Enabled || !channelAdvertisable(providerID, cfg) {
+		return nil, kernel.Forbidden("该第三方登录渠道已停用或未配置")
+	}
+	if time.Now().After(state.ExpiresAt) {
+		return nil, kernel.BadAuthRequest("登录授权状态已过期")
+	}
 	meta := ProviderRegistry[providerID]
 	profile, err := s.resolveUserProfile(r.Context(), providerID, code, state.CodeVerifier, cfg, resolveCallbackURL(cfg, meta))
 	if err != nil {
@@ -617,9 +635,9 @@ func (s *Service) CompleteAuth(r *http.Request, providerID string, stateToken st
 	}
 
 	// Determine if this is a logged-in account linking operation
-	bindingUserID := currentUserID
-	if bindingUserID == "" && state.ReauthUserID != "" {
-		bindingUserID = state.ReauthUserID
+	bindingUserID := state.ReauthUserID
+	if bindingUserID != "" && bindingUserID != currentUserID {
+		return nil, kernel.Forbidden("绑定账号的登录会话已变化，请重新发起绑定")
 	}
 
 	// 1. Check if identity already bound
@@ -678,20 +696,19 @@ func (s *Service) CompleteAuth(r *http.Request, providerID string, stateToken st
 					IsNew: false,
 				}, nil
 			} else {
-				// Register on first login
+				settings, err := s.ReadSettings()
+				if err != nil {
+					return nil, err
+				}
+				if !settings.Policies.AutoDirectRegistration {
+					return nil, kernel.Forbidden("当前暂停第三方新用户注册")
+				}
+				// Keep the verified profile pending until onboarding succeeds.
 				isNew = true
-				user, identity = s.buildNewSocialUser(providerID, profile)
-				if err := s.repo.CreateOAuthUser(user, identity); err != nil {
-					return nil, fmt.Errorf("创建第三方登录用户失败：%w", err)
-				}
-				if s.host != nil {
-					_ = s.host.EnsureSignupBonus(user.ID)
-				}
 
 				ticketID = "onboard_" + RandomToken()
 				t := &OnboardingTicket{
 					TicketID:         ticketID,
-					UserID:           user.ID,
 					Provider:         providerID,
 					ProviderName:     meta.Name,
 					Subject:          profile.Subject,
@@ -702,6 +719,7 @@ func (s *Service) CompleteAuth(r *http.Request, providerID string, stateToken st
 					ExpiresAt:        time.Now().Add(30 * time.Minute),
 				}
 				s.saveTicket(t)
+				return &SocialAuthCallbackResult{IsNew: true, OnboardingTicket: ticketID, Next: "/?onboarding=1&ticket=" + url.QueryEscape(ticketID)}, nil
 			}
 		} else {
 			return nil, err
@@ -748,51 +766,6 @@ type socialProfile struct {
 }
 
 func (s *Service) resolveUserProfile(ctx context.Context, providerID string, code string, verifier string, cfg ProviderConfig, redirectURI string) (*socialProfile, error) {
-	// Mock / Sandbox mode detection. It is gated by the channel's own server-side
-	// configuration, never by a code prefix a caller can freely invent.
-	if mockAllowed(cfg) && (strings.HasPrefix(code, "mock_code_") || code == "test_auth_code") {
-		sum := sha256.Sum256([]byte(code))
-		mockID := hex.EncodeToString(sum[:4])
-
-		switch providerID {
-		case ProviderQQ:
-			return &socialProfile{
-				Subject:     "qq_openid_" + mockID,
-				Username:    "qq_user_" + mockID,
-				DisplayName: "QQ 创作者 " + mockID,
-				AvatarURL:   "https://thirdqq.qlogo.cn/g?b=oidb&k=" + mockID,
-			}, nil
-		case ProviderDouyin:
-			return &socialProfile{
-				Subject:     "douyin_uid_" + mockID,
-				Username:    "douyin_creator_" + mockID,
-				DisplayName: "抖音创意人 " + mockID,
-				AvatarURL:   "https://p3.douyinpic.com/aweme/100x100/" + mockID + ".jpeg",
-			}, nil
-		case ProviderBilibili:
-			return &socialProfile{
-				Subject:     "bili_mid_" + mockID,
-				Username:    "bili_up_" + mockID,
-				DisplayName: "哔哩UP主 " + mockID,
-				AvatarURL:   "https://i0.hdslb.com/bfs/face/" + mockID + ".jpg",
-			}, nil
-		case ProviderWeChat:
-			return &socialProfile{
-				Subject:     "wx_unionid_" + mockID,
-				Username:    "wechat_user_" + mockID,
-				DisplayName: "微信用户 " + mockID,
-				AvatarURL:   "https://thirdwx.qlogo.cn/mmopen/" + mockID,
-			}, nil
-		default:
-			return &socialProfile{
-				Subject:     providerID + "_sub_" + mockID,
-				Username:    providerID + "_user_" + mockID,
-				DisplayName: strings.ToUpper(providerID) + " User",
-				AvatarURL:   "",
-			}, nil
-		}
-	}
-
 	// Live upstream OAuth code exchange (for real provider credentials). Channels
 	// that have no real exchange fail closed instead of fabricating an identity.
 	if !liveExchangeSupported(providerID) {
@@ -806,12 +779,25 @@ func (s *Service) buildNewSocialUser(providerID string, profile *socialProfile) 
 	if len(baseUsername) > 24 {
 		baseUsername = baseUsername[:24]
 	}
+	candidateUsername := baseUsername
+	if s.repo != nil {
+		if existing, err := s.repo.UserByUsername(candidateUsername); err == nil && existing != nil {
+			candidateUsername = kernel.TruncateRunes(baseUsername, 18) + "_" + RandomToken()[:5]
+		}
+	}
+	email := profile.Email
+	if s.repo != nil && email != "" {
+		if err := s.repo.CheckEmailAvailable(email, ""); err != nil {
+			// Third-party returned email is already occupied; clear email on user record so it can be resolved during onboarding
+			email = ""
+		}
+	}
 	userID := kernel.NewID()
 	user := &model.User{
 		ID:          userID,
-		Username:    baseUsername,
+		Username:    candidateUsername,
 		DisplayName: profile.DisplayName,
-		Email:       profile.Email,
+		Email:       email,
 		Role:        model.UserRoleUser,
 		Status:      model.UserStatusActive,
 		CreatedAt:   time.Now(),
@@ -853,6 +839,8 @@ func SafeOAuthNext(value string) string {
 var (
 	globalTicketsMu sync.RWMutex
 	globalTickets   = make(map[string]*OnboardingTicket)
+	onboardingMu    sync.Mutex
+	identityMu      sync.Mutex
 )
 
 func (s *Service) saveTicket(t *OnboardingTicket) {
@@ -908,22 +896,49 @@ func (s *Service) GetOnboardingProfile(ticketID string) (*OnboardingProfileView,
 
 // CompleteOnboarding registers a new user with custom username, auto-bound/confirmed email and optional password.
 func (s *Service) CompleteOnboarding(req CompleteOnboardingRequest) (*model.User, *model.AuthSession, error) {
+	// Serialize ticket completion so validation can be retried without allowing replay.
+	onboardingMu.Lock()
+	defer onboardingMu.Unlock()
 	ticketID := strings.TrimSpace(req.TicketID)
 	if ticketID == "" {
 		ticketID = strings.TrimSpace(req.Ticket)
 	}
-	t, err := s.consumeTicket(ticketID)
+	t, err := s.getTicket(ticketID)
 	if err != nil {
 		return nil, nil, err
 	}
 	if s.repo == nil {
 		return nil, nil, errors.New("存储未初始化")
 	}
+	if !req.AcceptedTerms {
+		return nil, nil, kernel.BadAuthRequest("请先同意服务协议与隐私条款")
+	}
+	settings, err := s.ReadSettings()
+	if err != nil {
+		return nil, nil, err
+	}
+	if !settings.Policies.AutoDirectRegistration {
+		return nil, nil, kernel.Forbidden("当前暂停第三方新用户注册")
+	}
 
 	username := strings.TrimSpace(req.Username)
+	if len(username) < 3 || len(username) > 30 || strings.IndexFunc(username, func(r rune) bool {
+		return !(r >= 'a' && r <= 'z' || r >= 'A' && r <= 'Z' || r >= '0' && r <= '9' || r == '_' || r == '-')
+	}) >= 0 {
+		return nil, nil, kernel.BadAuthRequest("用户名需为 3-30 位字母、数字、下划线或短横线")
+	}
 	email := strings.TrimSpace(req.Email)
 	if t.Email != "" && email == "" {
 		email = t.Email
+	}
+	if settings.Policies.MandatoryEmailOnboarding && email == "" {
+		return nil, nil, kernel.BadAuthRequest("请填写联系邮箱")
+	}
+	if email != "" {
+		parsed, err := mail.ParseAddress(email)
+		if err != nil || parsed.Address != email {
+			return nil, nil, kernel.BadAuthRequest("请输入有效邮箱")
+		}
 	}
 
 	var user *model.User
@@ -1050,6 +1065,7 @@ func (s *Service) CompleteOnboarding(req CompleteOnboardingRequest) (*model.User
 		UpdatedAt: time.Now(),
 	}
 
+	_, _ = s.consumeTicket(ticketID)
 	return user, session, nil
 }
 
@@ -1135,17 +1151,13 @@ func (s *Service) BeginBind(r *http.Request, actor *model.User, providerID strin
 	}
 
 	callbackURL := resolveCallbackURL(cfg, meta)
-	if mockAllowed(cfg) {
-		mockCode := "mock_code_" + RandomToken()[:16]
-		targetURL := fmt.Sprintf("/api/auth/social/%s/callback?state=%s&code=%s&mock=true", providerID, stateToken, mockCode)
-		return targetURL, nil
-	}
-
 	return buildAuthorizeURL(providerID, cfg, callbackURL, stateToken, codeVerifier), nil
 }
 
 // Unbind safely removes a connected third-party identity, preventing orphaned accounts.
 func (s *Service) Unbind(actor *model.User, providerID string) error {
+	identityMu.Lock()
+	defer identityMu.Unlock()
 	if actor == nil {
 		return kernel.Unauthorized("未登录")
 	}
@@ -1167,11 +1179,208 @@ func (s *Service) Unbind(actor *model.User, providerID string) error {
 		return kernel.BadAuthRequest("未找到已绑定的该渠道账号")
 	}
 
+	settings, err := s.ReadSettings()
+	orphanSafety := true
+	if err == nil {
+		orphanSafety = settings.Policies.OrphanAccountSafety
+	}
+
 	// Security Guard Check: Prevent user from being locked out without password or other login methods
-	hasPassword := actor.PasswordHash != ""
-	if !hasPassword && len(identities) <= 1 {
-		return kernel.BadAuthRequest("无法解绑唯一的登录凭证。请先在安全设置中设置独立登录密码，或绑定其他第三方账号。")
+	if orphanSafety {
+		hasPassword := actor.PasswordHash != ""
+		if !hasPassword && len(identities) <= 1 {
+			return kernel.BadAuthRequest("无法解绑唯一的登录凭证。请先在安全设置中设置独立登录密码，或绑定其他第三方账号。")
+		}
 	}
 
 	return s.repo.DeleteUserIdentity(actor.ID, providerID)
+}
+
+// GetOperationsOverview returns operational dashboard statistics and current policies.
+func (s *Service) GetOperationsOverview(r *http.Request, actor *model.User) (*OperationsOverview, error) {
+	if err := s.host.RequireAdmin(actor); err != nil {
+		return nil, err
+	}
+	settings, err := s.ReadSettings()
+	if err != nil {
+		return nil, err
+	}
+	dist := make(map[string]int64)
+	var totalBindings int64
+	if s.repo != nil {
+		counts, err := s.repo.UserIdentitiesCountByProvider()
+		if err == nil {
+			dist = counts
+			for _, count := range dist {
+				totalBindings += count
+			}
+		}
+	}
+	for _, p := range AllKnownProviders {
+		if _, ok := dist[p]; !ok {
+			dist[p] = 0
+		}
+	}
+
+	// 30-day daily active trend
+	trend := make([]DailyLoginCount, 30)
+	now := time.Now().UTC()
+	startDate := now.AddDate(0, 0, -29)
+	dateMap := make(map[string]int64)
+
+	var totalLogins30d int64
+	if s.repo != nil {
+		logs, err := s.repo.RecentSocialLoginLogs(startDate)
+		if err == nil {
+			for _, l := range logs {
+				d := l.CreatedAt.UTC().Format("2006-01-02")
+				dateMap[d]++
+				totalLogins30d++
+			}
+		}
+	}
+
+	for i := 0; i < 30; i++ {
+		d := startDate.AddDate(0, 0, i).Format("2006-01-02")
+		trend[i] = DailyLoginCount{
+			Date:  d,
+			Count: dateMap[d],
+		}
+	}
+
+	return &OperationsOverview{
+		Policies:             settings.Policies,
+		ProviderDistribution: dist,
+		TotalBindings:        totalBindings,
+		DailyActiveTrend:     trend,
+		TotalLogins30d:       totalLogins30d,
+	}, nil
+}
+
+// UpdatePolicies updates global operational policies.
+func (s *Service) UpdatePolicies(actor *model.User, policies OperationalPolicies) (*OperationsOverview, error) {
+	if err := s.host.RequireAdmin(actor); err != nil {
+		return nil, err
+	}
+	settings, err := s.ReadSettings()
+	if err != nil {
+		return nil, err
+	}
+	// Login recovery protection is mandatory; credits use the host's central policy.
+	policies.OrphanAccountSafety = true
+	policies.SignupBonusCredits = settings.Policies.SignupBonusCredits
+	settings.Policies = policies
+	if err := s.SaveSettings(actor, settings); err != nil {
+		return nil, err
+	}
+	return s.GetOperationsOverview(nil, actor)
+}
+
+// SearchUsers searches users and returns their connected social identities.
+func (s *Service) SearchUsers(actor *model.User, query string) ([]UserSocialBindingAdminItem, error) {
+	if err := s.host.RequireAdmin(actor); err != nil {
+		return nil, err
+	}
+	if s.repo == nil {
+		return []UserSocialBindingAdminItem{}, nil
+	}
+	users, idMap, err := s.repo.SearchUsersWithSocialIdentities(query, 30)
+	if err != nil {
+		return nil, err
+	}
+	var items []UserSocialBindingAdminItem
+	for _, u := range users {
+		rawIdentities := idMap[u.ID]
+		var idItems []UserIdentityItem
+		for _, ri := range rawIdentities {
+			meta := ProviderRegistry[ri.Provider]
+			idItems = append(idItems, UserIdentityItem{
+				Provider:         ri.Provider,
+				ProviderName:     meta.Name,
+				Bound:            true,
+				ProviderUsername: ri.ProviderUsername,
+				AvatarURL:        ri.AvatarURL,
+				BoundAt:          &ri.CreatedAt,
+			})
+		}
+		items = append(items, UserSocialBindingAdminItem{
+			UserID:      u.ID,
+			Username:    u.Username,
+			Email:       u.Email,
+			DisplayName: u.DisplayName,
+			CreatedAt:   u.CreatedAt,
+			Identities:  idItems,
+		})
+	}
+	return items, nil
+}
+
+// AdminUnbindUser unbinds a social identity for any user by administrator.
+func (s *Service) AdminUnbindUser(actor *model.User, targetUserID string, providerID string) error {
+	identityMu.Lock()
+	defer identityMu.Unlock()
+	if err := s.host.RequireAdmin(actor); err != nil {
+		return err
+	}
+	settings, err := s.ReadSettings()
+	if err != nil {
+		return err
+	}
+	targetUser, err := s.repo.User(targetUserID)
+	if err != nil {
+		return err
+	}
+	identities, err := s.repo.UserIdentitiesForUser(targetUserID)
+	if err != nil {
+		return err
+	}
+	var targetFound bool
+	for _, ident := range identities {
+		if ident.Provider == providerID {
+			targetFound = true
+			break
+		}
+	}
+	if !targetFound {
+		return kernel.BadAuthRequest("未找到该用户绑定的该渠道账号")
+	}
+	if settings.Policies.OrphanAccountSafety && targetUser.PasswordHash == "" && len(identities) <= 1 {
+		return kernel.BadAuthRequest("目标用户未设置独立密码且仅剩此唯一登录凭据，已触发防孤立安全拦截")
+	}
+	return s.repo.DeleteUserIdentity(targetUserID, providerID)
+}
+
+// GetLoginLogs returns social authentication login logs.
+func (s *Service) GetLoginLogs(actor *model.User, limit int) ([]SocialLoginLogItem, error) {
+	if err := s.host.RequireAdmin(actor); err != nil {
+		return nil, err
+	}
+	if s.repo == nil {
+		return []SocialLoginLogItem{}, nil
+	}
+	rawLogs, err := s.repo.SocialLoginLogs(limit)
+	if err != nil {
+		return nil, err
+	}
+	var items []SocialLoginLogItem
+	for _, l := range rawLogs {
+		uid := ""
+		if l.UserID != nil {
+			uid = *l.UserID
+		}
+		items = append(items, SocialLoginLogItem{
+			ID:        l.ID,
+			UserID:    uid,
+			Username:  l.Username,
+			Account:   l.Account,
+			Method:    l.Method,
+			Source:    l.Source,
+			Result:    l.Result,
+			Reason:    l.Reason,
+			Message:   l.Message,
+			IP:        l.IP,
+			CreatedAt: l.CreatedAt,
+		})
+	}
+	return items, nil
 }

@@ -59,14 +59,21 @@ type ProviderMeta struct {
 	DocURL      string `json:"docUrl"`
 }
 
+// OperationalPolicies defines global operational controls for social authentication.
+type OperationalPolicies struct {
+	AutoDirectRegistration   bool `json:"autoDirectRegistration"`
+	MandatoryEmailOnboarding bool `json:"mandatoryEmailOnboarding"`
+	SignupBonusCredits       int  `json:"signupBonusCredits"`
+	OrphanAccountSafety      bool `json:"orphanAccountSafety"`
+}
+
 // ProviderConfig represents stored provider credentials and settings (unencrypted in memory, encrypted at rest).
 type ProviderConfig struct {
-	Enabled            bool     `json:"enabled"`           // 前台展示开关
-	ClientID           string   `json:"clientId"`          // Client ID / AppID / Client Key
-	ClientSecret       string   `json:"clientSecret"`      // Client Secret / AppKey / AppSecret (masked in admin view)
-	CustomRedirectURL  string   `json:"customRedirectUrl"` // 自定义回调地址 (选填，留空使用默认)
-	Scopes             []string `json:"scopes"`            // 授权范围
-	SandboxMockEnabled bool     `json:"sandboxMockEnabled"`
+	Enabled           bool     `json:"enabled"`           // 前台展示开关
+	ClientID          string   `json:"clientId"`          // Client ID / AppID / Client Key
+	ClientSecret      string   `json:"clientSecret"`      // Client Secret / AppKey / AppSecret (masked in admin view)
+	CustomRedirectURL string   `json:"customRedirectUrl"` // 自定义回调地址 (选填，留空使用默认)
+	Scopes            []string `json:"scopes"`            // 授权范围
 }
 
 // StoredSettings is the JSON representation stored in SystemSetting.
@@ -74,6 +81,7 @@ type StoredSettings struct {
 	DefaultFallbackRegion string                    `json:"defaultFallbackRegion"` // "cn" or "intl"
 	TrustedProxyHeaders   []string                  `json:"trustedProxyHeaders"`
 	Providers             map[string]ProviderConfig `json:"providers"`
+	Policies              OperationalPolicies       `json:"policies"`
 	UpdatedAt             time.Time                 `json:"updatedAt"`
 	UpdatedBy             string                    `json:"updatedBy"`
 }
@@ -98,7 +106,6 @@ type ProviderAdminView struct {
 	LatencyMs          int64    `json:"latencyMs"`
 	Scopes             []string `json:"scopes"`
 	DocURL             string   `json:"docUrl"`
-	SandboxMockEnabled bool     `json:"sandboxMockEnabled"`
 }
 
 // AdminSettingsView is the full view for the Admin Social Login Config Center.
@@ -119,13 +126,12 @@ type AdminSettingsView struct {
 
 // ProviderPublicView is returned to frontend login pages.
 type ProviderPublicView struct {
-	ID             string `json:"id"`
-	Name           string `json:"name"`
-	Platform       string `json:"platform"`
-	Region         string `json:"region"`
-	Icon           string `json:"icon"`
-	AuthorizeURL   string `json:"authorizeUrl"`
-	SandboxEnabled bool   `json:"sandboxEnabled,omitempty"`
+	ID           string `json:"id"`
+	Name         string `json:"name"`
+	Platform     string `json:"platform"`
+	Region       string `json:"region"`
+	Icon         string `json:"icon"`
+	AuthorizeURL string `json:"authorizeUrl"`
 }
 
 // PublicProvidersResponse is returned by GET /api/auth/social/providers.
@@ -143,18 +149,57 @@ type PublicProvidersResponse struct {
 
 // UpdateProviderInput is the DTO for saving/updating a provider's credentials.
 type UpdateProviderInput struct {
-	Enabled            bool     `json:"enabled"`
-	ClientID           string   `json:"clientId"`
-	ClientSecret       string   `json:"clientSecret"` // Leave empty to retain existing secret
-	CustomRedirectURL  string   `json:"customRedirectUrl"`
-	Scopes             []string `json:"scopes"`
-	SandboxMockEnabled bool     `json:"sandboxMockEnabled"`
+	Enabled           bool     `json:"enabled"`
+	ClientID          string   `json:"clientId"`
+	ClientSecret      string   `json:"clientSecret"` // Leave empty to retain existing secret
+	CustomRedirectURL string   `json:"customRedirectUrl"`
+	Scopes            []string `json:"scopes"`
 }
 
 // UpdateSettingsRequest is the payload for PUT /api/admin/social-auth/settings.
 type UpdateSettingsRequest struct {
 	DefaultFallbackRegion string                         `json:"defaultFallbackRegion,omitempty"`
 	Providers             map[string]UpdateProviderInput `json:"providers"`
+}
+
+// OperationsOverview represents the dashboard and policy state for operations.
+type OperationsOverview struct {
+	Policies             OperationalPolicies `json:"policies"`
+	ProviderDistribution map[string]int64    `json:"providerDistribution"`
+	TotalBindings        int64               `json:"totalBindings"`
+	DailyActiveTrend     []DailyLoginCount   `json:"dailyActiveTrend"`
+	TotalLogins30d       int64               `json:"totalLogins30d"`
+}
+
+// DailyLoginCount represents single-day login count.
+type DailyLoginCount struct {
+	Date  string `json:"date"`
+	Count int64  `json:"count"`
+}
+
+// UserSocialBindingAdminItem describes a user and all their bound social identities.
+type UserSocialBindingAdminItem struct {
+	UserID      string             `json:"userId"`
+	Username    string             `json:"username"`
+	Email       string             `json:"email"`
+	DisplayName string             `json:"displayName"`
+	CreatedAt   time.Time          `json:"createdAt"`
+	Identities  []UserIdentityItem `json:"identities"`
+}
+
+// SocialLoginLogItem represents a social authentication audit log entry.
+type SocialLoginLogItem struct {
+	ID        string    `json:"id"`
+	UserID    string    `json:"userId"`
+	Username  string    `json:"username"`
+	Account   string    `json:"account"`
+	Method    string    `json:"method"`
+	Source    string    `json:"source"`
+	Result    string    `json:"result"`
+	Reason    string    `json:"reason"`
+	Message   string    `json:"message"`
+	IP        string    `json:"ip"`
+	CreatedAt time.Time `json:"createdAt"`
 }
 
 // ProviderTestResult is returned by POST /api/admin/social-auth/test/:provider.
@@ -196,13 +241,14 @@ type OnboardingProfileView struct {
 
 // CompleteOnboardingRequest is the payload for POST /api/auth/social/onboarding/complete.
 type CompleteOnboardingRequest struct {
-	TicketID    string `json:"ticketId"`
-	Ticket      string `json:"ticket"`
-	Username    string `json:"username"`
-	DisplayName string `json:"displayName"`
-	Nickname    string `json:"nickname"`
-	Email       string `json:"email"`
-	Password    string `json:"password"`
+	AcceptedTerms bool   `json:"acceptedTerms"`
+	TicketID      string `json:"ticketId"`
+	Ticket        string `json:"ticket"`
+	Username      string `json:"username"`
+	DisplayName   string `json:"displayName"`
+	Nickname      string `json:"nickname"`
+	Email         string `json:"email"`
+	Password      string `json:"password"`
 }
 
 // UserIdentityItem describes one third-party connection state in user settings.

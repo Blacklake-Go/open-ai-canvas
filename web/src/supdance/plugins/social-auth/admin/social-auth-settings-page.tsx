@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
-import { App, Button, Skeleton } from "antd";
+import { App, Button, Skeleton, Tooltip } from "antd";
 import { useQueryClient } from "@tanstack/react-query";
-import { AlertTriangle, Check, Copy, ExternalLink, KeyRound, RefreshCw, RotateCcw, Save } from "lucide-react";
+import { AlertTriangle, Check, Copy, ExternalLink, KeyRound, RefreshCw } from "lucide-react";
 
 import { cn } from "@/lib/utils";
 import { Select } from "@/components/ui/base/select";
@@ -11,9 +11,10 @@ import { IconButton, SegmentedControl, Switch } from "@/pages/admin/ui/controls"
 import { useI18n } from "@/supdance/plugins/i18n";
 import { getAdminSocialAuthSettings, testSocialAuthProvider, updateAdminSocialAuthSettings } from "../api";
 import { SocialProviderIcon } from "../components/social-provider-icons";
-import type { AdminSettingsView, ProviderTestResult, ProviderUpdateInput, SocialAuthProviderAdmin, SocialAuthRegion } from "../types";
-import { credentialKeyLabels, draftFromProvider, isMaskedPreview, probeBadgeOf, statusBadgeOf, type ProviderDraftState } from "./credential-helpers";
+import type { AdminSettingsView, ProviderTestResult, SocialAuthProviderAdmin, SocialAuthRegion } from "../types";
+import { credentialKeyLabels, draftFromProvider, maskedClientIdOf, probeBadgeOf, statusBadgeOf, type ProviderDraftState } from "./credential-helpers";
 import { ProviderCredentialModal } from "./provider-credential-modal";
+import { SocialAuthNavTabs } from "./social-auth-nav-tabs";
 
 const REGION_TABS: Array<{ value: SocialAuthRegion; label: string; hint: string }> = [
     { value: "cn", label: "中国大陆渠道", hint: "面向中国大陆来访 IP 展示国内登录入口。" },
@@ -31,32 +32,19 @@ export default function SocialAuthSettingsPage() {
     const queryClient = useQueryClient();
     const [loading, setLoading] = useState(true);
     const [refreshing, setRefreshing] = useState(false);
-    const [saving, setSaving] = useState(false);
     const [data, setData] = useState<AdminSettingsView | null>(null);
     const [loadError, setLoadError] = useState("");
 
     const [activeRegion, setActiveRegion] = useState<SocialAuthRegion>("cn");
-    const [draftFallbackRegion, setDraftFallbackRegion] = useState<SocialAuthRegion>("cn");
-    const [providerDrafts, setProviderDrafts] = useState<Record<string, ProviderDraftState>>({});
     const [credentialProviderId, setCredentialProviderId] = useState<string | null>(null);
+    const [modalDraft, setModalDraft] = useState<ProviderDraftState | null>(null);
+    const [togglingProviderId, setTogglingProviderId] = useState<string | null>(null);
 
     const [testingProvider, setTestingProvider] = useState<string | null>(null);
     const [testResults, setTestResults] = useState<Record<string, ProviderTestResult>>({});
     const [copiedProviderId, setCopiedProviderId] = useState<string | null>(null);
 
     const allProviders = useMemo(() => (data ? [...(data.mainlandProviders || []), ...(data.intlProviders || [])] : []), [data]);
-
-    const initDraftsFromData = (settings: AdminSettingsView) => {
-        setDraftFallbackRegion(settings.defaultFallbackRegion || "cn");
-        const drafts: Record<string, ProviderDraftState> = {};
-        const all = [
-            ...(settings.mainlandProviders || []),
-            ...(settings.intlProviders || []),
-            ...(settings.providers ? Object.values(settings.providers) : []),
-        ];
-        for (const p of all) drafts[p.id] = draftFromProvider(p);
-        setProviderDrafts(drafts);
-    };
 
     const loadSettings = async (isInitial = false) => {
         if (isInitial) setLoading(true);
@@ -65,7 +53,6 @@ export default function SocialAuthSettingsPage() {
         try {
             const res = await getAdminSocialAuthSettings();
             setData(res);
-            initDraftsFromData(res);
         } catch (err) {
             const msg = err instanceof Error ? err.message : "读取社交登录配置失败";
             setLoadError(msg);
@@ -80,30 +67,9 @@ export default function SocialAuthSettingsPage() {
         void loadSettings(true);
     }, []);
 
-    // 凭证与沙盒开关在弹窗内即时落库，页面草稿只剩"前台展示 + 回退分区"。
-    const isDirty = useMemo(() => {
-        if (!data) return false;
-        if (draftFallbackRegion !== (data.defaultFallbackRegion || "cn")) return true;
-        for (const p of allProviders) {
-            const draft = providerDrafts[p.id];
-            if (draft && draft.enabled !== p.enabled) return true;
-        }
-        return false;
-    }, [allProviders, data, draftFallbackRegion, providerDrafts]);
-
-    const patchDraft = (providerId: string, patch: Partial<ProviderDraftState>) => {
-        setProviderDrafts((prev) => ({ ...prev, [providerId]: { ...prev[providerId], ...patch } }));
-    };
-
     const invalidatePublicProviders = () => {
         void queryClient.invalidateQueries({ queryKey: ["public-social-auth-providers"] });
         void queryClient.invalidateQueries({ queryKey: ["social-auth"] });
-    };
-
-    const handleResetDraft = () => {
-        if (!data) return;
-        initDraftsFromData(data);
-        message.info(t("admin.social_auth.reset_reverted", undefined, "已撤销当前未保存的调整"));
     };
 
     const handleCopy = (text: string, label = "内容", feedbackKey?: string) => {
@@ -119,10 +85,10 @@ export default function SocialAuthSettingsPage() {
         try {
             const res = await testSocialAuthProvider(provider.id);
             setTestResults((prev) => ({ ...prev, [provider.id]: res }));
-            const isSuccess = res.status === "ok" || res.status === "online";
+            const isSuccess = res.status === "reachable";
             const latency = res.pingLatencyMs ?? res.latencyMs ?? 0;
             if (isSuccess) {
-                message.success(`${provider.name} 连通性测试通过 (${latency}ms)`);
+                message.success(`${provider.name} 端点可达 (${latency}ms)，真实登录待验证`);
             } else if (res.status === "degraded") {
                 message.warning(`${provider.name}: ${res.message}`);
             } else {
@@ -135,132 +101,67 @@ export default function SocialAuthSettingsPage() {
         }
     };
 
-    const handleSubmitSave = async () => {
-        if (!data) return;
-        setSaving(true);
+    // Instant toggle Switch handler
+    const handleToggleEnable = async (provider: SocialAuthProviderAdmin, checked: boolean) => {
+        if (!provider.hasCredentials && checked) {
+            message.warning("请先配置密钥后再启用该渠道");
+            return;
+        }
+
+        setTogglingProviderId(provider.id);
         try {
-            const providersPayload: Record<string, ProviderUpdateInput> = {};
-            for (const p of allProviders) {
-                const draft = providerDrafts[p.id];
-                if (!draft) continue;
-                const clientId = draft.clientId.trim();
-                const clientSecret = draft.clientSecret.trim();
-                const update: ProviderUpdateInput = {
-                    enabled: draft.enabled,
-                    sandboxMockEnabled: draft.sandboxMockEnabled,
-                    customRedirectUrl: draft.customRedirectUrl.trim(),
-                };
-                if (clientId && !isMaskedPreview(clientId)) update.clientId = clientId;
-                if (clientSecret && !isMaskedPreview(clientSecret)) update.clientSecret = clientSecret;
-                providersPayload[p.id] = update;
-            }
-
             const res = await updateAdminSocialAuthSettings({
-                defaultFallbackRegion: draftFallbackRegion,
-                providers: providersPayload,
+                providers: {
+                    [provider.id]: {
+                        enabled: checked,
+                        customRedirectUrl: provider.customRedirectUrl,
+                    },
+                },
             });
-
             setData(res);
-            initDraftsFromData(res);
             invalidatePublicProviders();
-            message.success(t("admin.social_auth.save_success", undefined, "社交登录配置已保存并即时生效"));
+            message.success(checked ? `${provider.name} 登录已即时开启` : `${provider.name} 登录已关闭`);
         } catch (err) {
-            message.error(err instanceof Error ? err.message : "保存配置失败");
+            message.error(err instanceof Error ? err.message : "更新渠道状态失败");
         } finally {
-            setSaving(false);
+            setTogglingProviderId(null);
         }
     };
 
-    // 弹窗只提交单个渠道，回包也只同步这一个渠道，避免覆盖其他未保存的草稿。
+    const handleFallbackRegionChange = async (value: SocialAuthRegion) => {
+        try {
+            const res = await updateAdminSocialAuthSettings({
+                defaultFallbackRegion: value,
+                providers: {},
+            });
+            setData(res);
+            invalidatePublicProviders();
+            message.success("默认回退分区已更新");
+        } catch (err) {
+            message.error(err instanceof Error ? err.message : "更新回退分区失败");
+        }
+    };
+
     const handleCredentialSaved = ({ view, providerId, credentialsWritten }: { view: AdminSettingsView; providerId: string; credentialsWritten: boolean }) => {
         setData(view);
-        const saved = [...(view.mainlandProviders || []), ...(view.intlProviders || [])].find((p) => p.id === providerId) || view.providers?.[providerId];
-        if (saved) setProviderDrafts((prev) => ({ ...prev, [providerId]: draftFromProvider(saved) }));
         setCredentialProviderId(null);
+        setModalDraft(null);
         invalidatePublicProviders();
+        const saved = [...(view.mainlandProviders || []), ...(view.intlProviders || [])].find((p) => p.id === providerId) || view.providers?.[providerId];
         if (credentialsWritten && saved) void handlePing(saved);
     };
 
-    const renderProviderCard = (provider: SocialAuthProviderAdmin) => {
-        const draft = providerDrafts[provider.id] || draftFromProvider(provider);
-        const labels = credentialKeyLabels(provider.id);
-        const maskedId = (provider.clientIdMasked || provider.maskedClientId) || "";
-        const maskedSecret = (provider.clientSecretMasked || provider.maskedSecret) || "";
-        const status = statusBadgeOf(provider);
-        const probe = probeBadgeOf(testResults[provider.id]);
-        const isCopied = copiedProviderId === provider.id;
-
-        return (
-            <section key={provider.id} className={cn("admin-social-provider-card", !draft.enabled && "is-hidden")}>
-                <header className="admin-social-provider-card-head">
-                    <span className="admin-social-provider-icon">
-                        <SocialProviderIcon provider={provider.id} className="size-5" />
-                    </span>
-                    <div className="admin-social-provider-card-names">
-                        <strong title={provider.name}>{provider.name}</strong>
-                        <span title={provider.platform}>{provider.platform || provider.id}</span>
-                    </div>
-                    <AdminStatusBadge label={status.label} tone={status.tone} title={provider.statusMessage} />
-                </header>
-
-                <div className="admin-social-provider-uri">
-                    <code title={provider.callbackUrl}>{provider.callbackUrl}</code>
-                    <IconButton
-                        icon={isCopied ? Check : Copy}
-                        title={isCopied ? "已复制回调地址" : "复制回调地址"}
-                        aria-label={`复制 ${provider.name} 回调地址`}
-                        onClick={() => handleCopy(provider.callbackUrl, `${provider.name} 回调地址`, provider.id)}
-                    />
-                    {provider.docUrl ? (
-                        <a className="admin-social-provider-uri-link" href={provider.docUrl} target="_blank" rel="noreferrer" title="打开凭证申请平台" aria-label={`打开 ${provider.name} 凭证申请平台`}>
-                            <ExternalLink className="size-3.5" aria-hidden="true" />
-                        </a>
-                    ) : null}
-                </div>
-
-                <div className="admin-social-provider-keys">
-                    <span className="admin-social-provider-key">
-                        <em>{labels.id}</em>
-                        <code className={maskedId ? "is-set" : "is-missing"}>{maskedId || "未配置"}</code>
-                    </span>
-                    <span className="admin-social-provider-key">
-                        <em>{labels.secret}</em>
-                        <code className={maskedSecret ? "is-set" : "is-missing"}>{maskedSecret || "未配置"}</code>
-                    </span>
-                </div>
-
-                <footer className="admin-social-provider-card-foot">
-                    <div className="admin-social-provider-display">
-                        <Switch size="sm" checked={draft.enabled} onChange={(checked) => patchDraft(provider.id, { enabled: checked })} aria-label={`前台展示 ${provider.name}`} />
-                        <span>前台展示</span>
-                        {draft.sandboxMockEnabled ? <AdminStatusBadge label="沙盒 Mock" tone="info" title="该渠道正在使用模拟授权，未接入真实三方登录" /> : null}
-                    </div>
-                    <div className="admin-social-provider-card-actions">
-                        {probe ? <AdminStatusBadge label={probe.label} tone={probe.tone} title={probe.detail} /> : null}
-                        <IconButton icon={RefreshCw} loading={testingProvider === provider.id} title="连通性测试" aria-label={`测试 ${provider.name} 连通性`} onClick={() => void handlePing(provider)} />
-                        <Button size="small" icon={<KeyRound className="size-3.5" />} onClick={() => setCredentialProviderId(provider.id)}>
-                            配置密钥 / 轮换
-                        </Button>
-                    </div>
-                </footer>
-            </section>
-        );
+    const handleOpenCredentialModal = (provider: SocialAuthProviderAdmin) => {
+        setCredentialProviderId(provider.id);
+        setModalDraft(draftFromProvider(provider));
     };
 
     if (loading && !data) {
         return (
-            <AdminPageFrame title="第三方登录配置" description="全站统一 8 大主流平台登录、IP 智能分区策略与沙盒联调测试" scroll>
-                <div data-plugin-scope="social-auth" className="admin-settings-stack admin-social-auth-settings" role="status">
-                    <div className="admin-social-auth-overview">
-                        <Skeleton active title={{ width: 240 }} paragraph={false} />
-                    </div>
-                    <div className="admin-social-provider-grid">
-                        {Array.from({ length: 4 }).map((_, index) => (
-                            <div key={index} className="admin-social-provider-card">
-                                <Skeleton active avatar paragraph={{ rows: 3 }} />
-                            </div>
-                        ))}
-                    </div>
+            <AdminPageFrame title="第三方登录配置" description="第三方登录凭据、IP 分区与即时启停；渠道可用性以真实授权验收为准" scroll>
+                <div data-plugin-scope="social-auth" className="flex flex-col gap-4 py-2" role="status">
+                    <SocialAuthNavTabs />
+                    <Skeleton active paragraph={{ rows: 6 }} />
                 </div>
             </AdminPageFrame>
         );
@@ -268,17 +169,14 @@ export default function SocialAuthSettingsPage() {
 
     if (!data) {
         return (
-            <AdminPageFrame title="第三方登录配置" description="全站统一 8 大主流平台登录、IP 智能分区策略与沙盒联调测试" scroll>
-                <div data-plugin-scope="social-auth" className="admin-settings-stack admin-social-auth-settings">
-                    <div className="admin-access-load-error" role="alert">
-                        <span className="admin-access-load-error-icon">
-                            <AlertTriangle className="size-5" aria-hidden="true" />
-                        </span>
-                        <div>
-                            <h2>无法读取社交登录配置</h2>
-                            <p>{loadError || "当前没有可显示的配置，请稍后重试。"}</p>
-                        </div>
-                        <Button icon={<RefreshCw className="size-4" />} onClick={() => void loadSettings(true)}>
+            <AdminPageFrame title="第三方登录配置" description="第三方登录凭据、IP 分区与即时启停；渠道可用性以真实授权验收为准" scroll>
+                <div data-plugin-scope="social-auth" className="flex flex-col gap-4 py-2">
+                    <SocialAuthNavTabs />
+                    <div className="flex flex-col items-center justify-center gap-3 rounded-lg border border-[var(--admin-border)] bg-[var(--admin-surface)] p-8 text-center" role="alert">
+                        <AlertTriangle className="size-6 text-amber-500" aria-hidden="true" />
+                        <h2 className="text-sm font-semibold text-[var(--admin-text)]">无法读取社交登录配置</h2>
+                        <p className="text-xs text-[var(--admin-text-secondary)]">{loadError || "请检查网络或后端服务状态"}</p>
+                        <Button icon={<RefreshCw className="size-3.5" />} onClick={() => void loadSettings(true)}>
                             重新读取
                         </Button>
                     </div>
@@ -290,85 +188,189 @@ export default function SocialAuthSettingsPage() {
     const cnProviders = data.mainlandProviders || [];
     const intlProviders = data.intlProviders || [];
     const activeProviders = activeRegion === "cn" ? cnProviders : intlProviders;
-    const enabledCount = allProviders.filter((p) => providerDrafts[p.id]?.enabled ?? p.enabled).length;
-    const activeTabHint = REGION_TABS.find((tab) => tab.value === activeRegion)?.hint || "";
-
     const credentialProvider = credentialProviderId ? allProviders.find((p) => p.id === credentialProviderId) || null : null;
-    const credentialDraft = credentialProvider ? providerDrafts[credentialProvider.id] : undefined;
 
     return (
-        <AdminPageFrame title="第三方登录配置" description="全站统一 8 大主流平台登录、IP 智能分区策略与沙盒联调测试" scroll>
-            <div data-plugin-scope="social-auth" className="admin-settings-stack admin-social-auth-settings">
-                <div className="admin-social-auth-overview">
-                    <div className="admin-social-auth-overview-head">
+        <AdminPageFrame title="第三方登录配置" description="第三方登录凭据、IP 分区与即时启停；渠道可用性以真实授权验收为准" scroll>
+            <div data-plugin-scope="social-auth" className="flex flex-col gap-4 py-2">
+                {/* WeChat-style underline nav tabs */}
+                <SocialAuthNavTabs />
+
+                {/* Sub-header controls: Region toggle, detect indicator & fallback */}
+                <div className="flex flex-col gap-3 rounded-lg border border-[var(--admin-border)] bg-[var(--admin-surface)] p-3.5 sm:flex-row sm:items-center sm:justify-between">
+                    <div className="flex items-center gap-3">
                         <SegmentedControl
                             ariaLabel="社交登录分区"
                             value={activeRegion}
                             onChange={(value) => setActiveRegion(value as SocialAuthRegion)}
                             options={REGION_TABS.map((tab) => ({
                                 value: tab.value,
-                                label: `${tab.label} · ${tab.value === "cn" ? cnProviders.length : intlProviders.length}`,
+                                label: `${tab.label} (${tab.value === "cn" ? cnProviders.length : intlProviders.length})`,
                             }))}
                         />
-                        <div className="admin-social-auth-overview-side">
-                            <span className="admin-social-auth-detect" title={`来访 IP 来源请求头：${data.ipSourceHeader || "未知"}`}>
-                                <code>{data.clientIp || "未知 IP"}</code>
-                                <AdminStatusBadge
-                                    label={data.detectedRegion === "cn" ? "本次访问：中国大陆" : "本次访问：海外及港澳台"}
-                                    tone={data.detectedRegion === "cn" ? "info" : "neutral"}
-                                />
-                            </span>
-                            <div className="admin-social-auth-fallback">
-                                <span>未知 IP 回退</span>
-                                <Select
-                                    size="sm"
-                                    ariaLabel="未知或异常 IP 的默认回退分区"
-                                    value={draftFallbackRegion}
-                                    onChange={(value) => setDraftFallbackRegion(value as SocialAuthRegion)}
-                                    options={FALLBACK_OPTIONS}
-                                />
-                            </div>
-                            <IconButton icon={RefreshCw} loading={refreshing} title="刷新渠道状态" aria-label="刷新渠道状态" onClick={() => void loadSettings(false)} />
-                        </div>
                     </div>
-                    <p className="admin-social-auth-hint">
-                        分区只认访客的网络 IP，语言、时区与账号资料都不会改变它。<span>{activeTabHint}</span>
-                    </p>
-                </div>
-
-                <div className="admin-social-provider-grid">
-                    {activeProviders.length ? (
-                        activeProviders.map(renderProviderCard)
-                    ) : (
-                        <div className="admin-social-provider-empty">该分区当前没有可配置的渠道，请检查插件渠道注册表。</div>
-                    )}
-                </div>
-
-                <div className={cn("admin-social-auth-save-bar", isDirty && "is-dirty")}>
-                    <div className="admin-social-auth-save-copy" aria-live="polite">
-                        <strong>{isDirty ? "存在未保存的前台展示变更" : "前台展示与线上一致"}</strong>
-                        <span>
-                            已启用 {enabledCount} / {allProviders.length} 个渠道 · 凭证与沙盒开关在弹窗内即时保存
+                    <div className="flex flex-wrap items-center gap-3 text-xs">
+                        <span className="flex items-center gap-1.5 text-[var(--admin-text-secondary)]" title={`来访 IP 来源请求头：${data.ipSourceHeader || "未知"}`}>
+                            <code>{data.clientIp || "未知 IP"}</code>
+                            <AdminStatusBadge
+                                label={data.detectedRegion === "cn" ? "来访：中国大陆" : "来访：海外/港澳台"}
+                                tone={data.detectedRegion === "cn" ? "info" : "neutral"}
+                            />
                         </span>
-                    </div>
-                    <div className="admin-social-auth-save-actions">
-                        {isDirty ? (
-                            <Button icon={<RotateCcw className="size-4" />} disabled={saving} onClick={handleResetDraft}>
-                                撤销改动
-                            </Button>
-                        ) : null}
-                        <Button type="primary" icon={<Save className="size-4" />} loading={saving} disabled={!isDirty} onClick={() => void handleSubmitSave()}>
-                            保存分区设置
-                        </Button>
+                        <div className="flex items-center gap-1.5 border-l border-[var(--admin-border)] pl-3">
+                            <span className="text-[var(--admin-text-muted)]">未知 IP 回退:</span>
+                            <Select
+                                size="sm"
+                                ariaLabel="未知或异常 IP 的默认回退分区"
+                                value={data.defaultFallbackRegion || "cn"}
+                                onChange={(value) => void handleFallbackRegionChange(value as SocialAuthRegion)}
+                                options={FALLBACK_OPTIONS}
+                            />
+                        </div>
+                        <IconButton
+                            icon={RefreshCw}
+                            loading={refreshing}
+                            title="刷新配置状态"
+                            aria-label="刷新配置状态"
+                            onClick={() => void loadSettings(false)}
+                        />
                     </div>
                 </div>
 
-                {credentialProvider && credentialDraft ? (
+                {/* 4-column Setting Table conforming to ADMIN_UI_DESIGN_SYSTEM.md */}
+                <div className="overflow-hidden rounded-lg border border-[var(--admin-border)] bg-[var(--admin-surface)]">
+                    {/* Table Header */}
+                    <div className="flex items-center border-b border-[var(--admin-border)] bg-[var(--admin-surface-2)] px-4 py-2 text-xs font-medium text-[var(--admin-text-secondary)]">
+                        <div className="w-[180px] shrink-0">渠道平台</div>
+                        <div className="w-[220px] shrink-0">凭证状态与标识</div>
+                        <div className="flex-1 min-w-[200px] px-2">授权回调地址 (Redirect URI)</div>
+                        <div className="w-[160px] shrink-0 text-right">操作与启用</div>
+                    </div>
+
+                    {/* Table Rows */}
+                    <div className="divide-y divide-[var(--admin-border)]">
+                        {activeProviders.length === 0 ? (
+                            <div className="py-8 text-center text-xs text-[var(--admin-text-muted)]">
+                                当前分区无可用第三方登录渠道
+                            </div>
+                        ) : (
+                            activeProviders.map((provider) => {
+                                const labels = credentialKeyLabels(provider.id);
+                                const maskedId = maskedClientIdOf(provider);
+                                const status = statusBadgeOf(provider);
+                                const probe = probeBadgeOf(testResults[provider.id]);
+                                const isCopied = copiedProviderId === provider.id;
+                                const isToggling = togglingProviderId === provider.id;
+                                const canToggle = provider.hasCredentials && (provider.status === "ready" || provider.status === "online");
+
+                                return (
+                                    <div
+                                        key={provider.id}
+                                        className={cn(
+                                            "flex flex-col sm:flex-row sm:items-center px-4 py-3 text-xs transition-colors hover:bg-[var(--admin-row-hover)]",
+                                            !provider.enabled && "opacity-85"
+                                        )}
+                                    >
+                                        {/* Col 1: Provider icon + name + ID badge (180px) */}
+                                        <div className="flex w-[180px] shrink-0 items-center gap-2.5">
+                                            <span className="flex size-7 shrink-0 items-center justify-center rounded-md bg-[var(--admin-surface-2)]">
+                                                <SocialProviderIcon provider={provider.id} className="size-4" />
+                                            </span>
+                                            <div className="min-w-0 flex flex-col">
+                                                <div className="flex items-center gap-1.5">
+                                                    <strong className="truncate font-semibold text-[var(--admin-text)]">
+                                                        {provider.name}
+                                                    </strong>
+                                                </div>
+                                                <span className="text-[11px] text-[var(--admin-text-muted)] truncate">
+                                                    {provider.platform || provider.id}
+                                                </span>
+                                            </div>
+                                        </div>
+
+                                        {/* Col 2: Masked ID + Status badge (Online / Ready / Unconfigured) (220px) */}
+                                        <div className="flex w-[220px] shrink-0 items-center gap-2">
+                                            <AdminStatusBadge label={status.label} tone={status.tone} title={provider.statusMessage} />
+                                            <span className="min-w-0 truncate font-mono text-[11px] text-[var(--admin-text-secondary)]" title={`${labels.id}: ${maskedId || "未录入"}`}>
+                                                {maskedId || "未录入凭证"}
+                                            </span>
+                                        </div>
+
+                                        {/* Col 3: Callback URI + Copy button + Doc link (flex-1) */}
+                                        <div className="flex min-w-[200px] flex-1 items-center gap-2 px-2 my-1 sm:my-0">
+                                            <code className="truncate max-w-[340px] rounded border border-[var(--admin-border)] bg-[var(--admin-surface-2)] px-2 py-0.5 font-mono text-[11px] text-[var(--admin-text-secondary)] select-all" title={provider.callbackUrl}>
+                                                {provider.callbackUrl}
+                                            </code>
+                                            <IconButton
+                                                icon={isCopied ? Check : Copy}
+                                                title={isCopied ? "已复制回调地址" : "复制回调地址"}
+                                                aria-label={`复制 ${provider.name} 回调地址`}
+                                                onClick={() => handleCopy(provider.callbackUrl, `${provider.name} 回调地址`, provider.id)}
+                                            />
+                                            {provider.docUrl ? (
+                                                <a
+                                                    className="inline-flex size-6 items-center justify-center rounded text-[var(--admin-text-muted)] hover:text-[var(--admin-text)] hover:bg-[var(--admin-surface-2)]"
+                                                    href={provider.docUrl}
+                                                    target="_blank"
+                                                    rel="noreferrer"
+                                                    title="打开三方开放平台文档"
+                                                    aria-label={`打开 ${provider.name} 开发者后台`}
+                                                >
+                                                    <ExternalLink className="size-3" aria-hidden="true" />
+                                                </a>
+                                            ) : null}
+                                            {probe ? (
+                                                <AdminStatusBadge label={probe.label} tone={probe.tone} title={probe.detail} />
+                                            ) : null}
+                                        </div>
+
+                                        {/* Col 4: [配置密钥] + [🔄 probe] + inline instant Switch (160px, right-aligned) */}
+                                        <div className="flex w-[160px] shrink-0 items-center justify-end gap-2">
+                                            <Button
+                                                size="small"
+                                                icon={<KeyRound className="size-3" />}
+                                                className="text-xs"
+                                                onClick={() => handleOpenCredentialModal(provider)}
+                                            >
+                                                配置密钥
+                                            </Button>
+                                            <IconButton
+                                                icon={RefreshCw}
+                                                loading={testingProvider === provider.id}
+                                                title="测试连通性"
+                                                aria-label={`测试 ${provider.name} 连通性`}
+                                                onClick={() => void handlePing(provider)}
+                                            />
+                                            <Tooltip title={!canToggle ? "请先配置密钥后再开启" : provider.enabled ? "点击即时停用" : "点击即时启用"}>
+                                                <div className="inline-flex items-center">
+                                                    <Switch
+                                                        size="sm"
+                                                        checked={provider.enabled}
+                                                        loading={isToggling}
+                                                        disabled={!canToggle || isToggling}
+                                                        onChange={(checked) => void handleToggleEnable(provider, checked)}
+                                                        aria-label={`${provider.name} 登录即时开关`}
+                                                    />
+                                                </div>
+                                            </Tooltip>
+                                        </div>
+                                    </div>
+                                );
+                            })
+                        )}
+                    </div>
+                </div>
+
+                {/* Credential Modal */}
+                {credentialProvider && modalDraft ? (
                     <ProviderCredentialModal
                         provider={credentialProvider}
-                        draft={credentialDraft}
-                        onDraftChange={(patch) => patchDraft(credentialProvider.id, patch)}
-                        onClose={() => setCredentialProviderId(null)}
+                        draft={modalDraft}
+                        onDraftChange={(patch) => setModalDraft((prev) => (prev ? { ...prev, ...patch } : prev))}
+                        onClose={() => {
+                            setCredentialProviderId(null);
+                            setModalDraft(null);
+                        }}
                         onSaved={handleCredentialSaved}
                         onCopy={handleCopy}
                     />

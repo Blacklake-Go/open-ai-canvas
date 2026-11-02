@@ -157,6 +157,34 @@ func (r *testRepo) UpsertUserIdentity(identity *model.UserIdentity) error {
 	return r.db.Create(identity).Error
 }
 
+func (r *testRepo) UserIdentitiesCountByProvider() (map[string]int64, error) {
+	type Result struct {
+		Provider string
+		Count    int64
+	}
+	var results []Result
+	if err := r.db.Model(&model.UserIdentity{}).Select("provider, count(*) as count").Group("provider").Scan(&results).Error; err != nil {
+		return nil, err
+	}
+	m := make(map[string]int64)
+	for _, res := range results {
+		m[res.Provider] = res.Count
+	}
+	return m, nil
+}
+
+func (r *testRepo) SocialLoginLogs(limit int) ([]model.LoginLog, error) {
+	return nil, nil
+}
+
+func (r *testRepo) RecentSocialLoginLogs(since time.Time) ([]model.LoginLog, error) {
+	return nil, nil
+}
+
+func (r *testRepo) SearchUsersWithSocialIdentities(query string, limit int) ([]model.User, map[string][]model.UserIdentity, error) {
+	return nil, nil, nil
+}
+
 type testHost struct{}
 
 func (h *testHost) EncryptSecret(p string) (string, error) {
@@ -171,14 +199,14 @@ func (h *testHost) DecryptSecret(c string) (string, error) {
 	}
 	return strings.TrimPrefix(c, "enc:"), nil
 }
-func (h *testHost) BrandName() string               { return "SupDance" }
+func (h *testHost) BrandName() string                { return "SupDance" }
 func (h *testHost) RequireAdmin(u *model.User) error { return nil }
 func (h *testHost) EnsureSignupBonus(u string) error { return nil }
 
 func TestGeoIPPartitioning(t *testing.T) {
 	// 1. Test Mainland China IPv4 allocations (Telecom, Unicom, Mobile, CERNET, DNS)
 	cnIPv4s := []string{
-		"124.90.230.101", // China Telecom/Mobile (Fujian)
+		"124.90.230.101",  // China Telecom/Mobile (Fujian)
 		"114.114.114.114", // 114 DNS (China Telecom)
 		"223.5.5.5",       // AliDNS (China Alibaba)
 		"119.29.29.29",    // DNSPod (China Tencent)
@@ -286,22 +314,23 @@ func TestGeoIPPartitioning(t *testing.T) {
 	// 7. Test Simulation Override
 	reqSim := httptest.NewRequest(http.MethodGet, "/api/auth/social/providers", nil)
 	reqSim.Header.Set("X-SupDance-Simulate-Region", "intl")
+	reqSim.Header.Set("X-Real-IP", "114.114.114.114")
 	locSim := ResolveIPRegion(reqSim, RegionCN)
-	if locSim.Region != RegionIntl || !locSim.IsSimulated {
-		t.Fatalf("expected simulated intl region, got %s", locSim.Region)
+	if locSim.Region != RegionCN || locSim.IsSimulated {
+		t.Fatalf("untrusted simulation header changed region: %s", locSim.Region)
 	}
 }
 
 func TestMasking(t *testing.T) {
-	if MaskSecret("mock_qq_secret_0QEo") != "••••••••0QEo" {
-		t.Fatalf("unexpected secret mask: %s", MaskSecret("mock_qq_secret_0QEo"))
+	if MaskSecret("test_qq_secret_0QEo") != "••••••••0QEo" {
+		t.Fatalf("unexpected secret mask: %s", MaskSecret("test_qq_secret_0QEo"))
 	}
 	if MaskClientID("102035200") != "****5200" {
 		t.Fatalf("unexpected client id mask: %s", MaskClientID("102035200"))
 	}
 }
 
-func TestMockOAuthFlowEndToEnd(t *testing.T) {
+func TestOAuthFlowRejectsUnconfiguredProviders(t *testing.T) {
 	repo := newTestRepo(t)
 	host := &testHost{}
 	svc := NewService(repo, host)
@@ -309,55 +338,11 @@ func TestMockOAuthFlowEndToEnd(t *testing.T) {
 	providers := []string{ProviderQQ, ProviderDouyin, ProviderBilibili}
 
 	for _, p := range providers {
-		// 1. BeginAuth with mock
 		req := httptest.NewRequest(http.MethodGet, "/api/auth/social/"+p+"/start", nil)
 		req.Header.Set("X-Real-IP", "124.90.230.101") // CN IP
-		redirectURL, err := svc.BeginAuth(req, p, "/create", true, true)
-		if err != nil {
-			t.Fatalf("[%s] BeginAuth failed: %v", p, err)
-		}
-		if !strings.Contains(redirectURL, "mock=true") {
-			t.Fatalf("[%s] expected mock redirect url, got %s", p, redirectURL)
-		}
-
-		// Extract state and code from redirect URL
-		u, err := http.NewRequest(http.MethodGet, redirectURL, nil)
-		if err != nil {
-			t.Fatalf("parse url err: %v", err)
-		}
-		state := u.URL.Query().Get("state")
-		code := u.URL.Query().Get("code")
-
-		// 2. CompleteAuth
-		res, err := svc.CompleteAuth(req, p, state, code, "")
-		if err != nil {
-			t.Fatalf("[%s] CompleteAuth failed: %v", p, err)
-		}
-		if res.User == nil || res.Session == nil {
-			t.Fatalf("[%s] expected user and session", p)
-		}
-		if !res.IsNew {
-			t.Fatalf("[%s] expected first login to be new user", p)
-		}
-
-		// 3. Second login with same mock identity should reuse existing user
-		state2 := RandomToken()
-		repo.CreateOAuthState(&model.OAuthState{
-			ID:        RandomToken()[:32],
-			Provider:  p,
-			StateHash: HashToken(state2),
-			NextPath:  "/create",
-			CreatedAt: time.Now(),
-		})
-		res2, err := svc.CompleteAuth(req, p, state2, code, "")
-		if err != nil {
-			t.Fatalf("[%s] repeat login failed: %v", p, err)
-		}
-		if res2.IsNew {
-			t.Fatalf("[%s] second login should reuse existing user", p)
-		}
-		if res2.User.ID != res.User.ID {
-			t.Fatalf("[%s] expected same user ID %s, got %s", p, res.User.ID, res2.User.ID)
+		// By default all providers are unconfigured and disabled in v1.3.0
+		if _, err := svc.BeginAuth(req, p, "/create", true); err == nil {
+			t.Fatalf("[%s] expected BeginAuth to fail on unconfigured/disabled provider", p)
 		}
 	}
 }
@@ -367,19 +352,26 @@ func TestAuthoritativeRegionEnforcement(t *testing.T) {
 	host := &testHost{}
 	svc := NewService(repo, host)
 
-	// Enable Google provider
+	// Enable Google and QQ providers
 	settings, _ := svc.ReadSettings()
 	cfg := settings.Providers[ProviderGoogle]
 	cfg.Enabled = true
 	cfg.ClientID = "test_google_client_id"
 	cfg.ClientSecret = "test_google_secret"
 	settings.Providers[ProviderGoogle] = cfg
+
+	qq := settings.Providers[ProviderQQ]
+	qq.Enabled = true
+	qq.ClientID = "10005200"
+	qq.ClientSecret = "test_qq_secret"
+	settings.Providers[ProviderQQ] = qq
+
 	svc.SaveSettings(&model.User{ID: "admin"}, settings)
 
 	// Visitor from Mainland China tries to initiate Google auth
 	req := httptest.NewRequest(http.MethodGet, "/api/auth/social/google/start", nil)
 	req.Header.Set("X-Real-IP", "124.90.230.101") // Mainland China
-	_, err := svc.BeginAuth(req, ProviderGoogle, "/create", true, false)
+	_, err := svc.BeginAuth(req, ProviderGoogle, "/create", true)
 	if err == nil || !strings.Contains(err.Error(), "海外及港澳台") {
 		t.Fatalf("expected rejection for Google auth from mainland IP, got err: %v", err)
 	}
@@ -387,7 +379,7 @@ func TestAuthoritativeRegionEnforcement(t *testing.T) {
 	// Visitor from US tries to initiate QQ auth
 	reqUS := httptest.NewRequest(http.MethodGet, "/api/auth/social/qq/start", nil)
 	reqUS.Header.Set("CF-IPCountry", "US")
-	_, errUS := svc.BeginAuth(reqUS, ProviderQQ, "/create", true, false)
+	_, errUS := svc.BeginAuth(reqUS, ProviderQQ, "/create", true)
 	if errUS == nil || !strings.Contains(errUS.Error(), "中国大陆") {
 		t.Fatalf("expected rejection for QQ auth from US IP, got err: %v", errUS)
 	}
@@ -455,15 +447,16 @@ func TestPublicProvidersStrictRegionFiltering(t *testing.T) {
 
 	// 3. Admin simulated request: should include AllRegions for preview
 	reqSim := httptest.NewRequest(http.MethodGet, "/api/auth/social/providers?simulate_region=intl", nil)
+	reqSim.Header.Set("X-Real-IP", "114.114.114.114")
 	respSim, err := svc.GetPublicProviders(reqSim)
 	if err != nil {
 		t.Fatalf("simulated GetPublicProviders failed: %v", err)
 	}
-	if respSim.Region != RegionIntl {
-		t.Errorf("expected simulated intl, got %s", respSim.Region)
+	if respSim.Region != RegionCN {
+		t.Errorf("untrusted simulation query changed region: %s", respSim.Region)
 	}
-	if len(respSim.AllRegions) == 0 {
-		t.Errorf("simulated admin request should include AllRegions for testing")
+	if len(respSim.AllRegions) != 0 {
+		t.Errorf("public request exposed cross-region provider map")
 	}
 }
 
@@ -495,7 +488,6 @@ func TestIncompleteCredentialsAreNotAdvertised(t *testing.T) {
 	douyin.Enabled = true
 	douyin.ClientID = "mock_douyin_client"
 	douyin.ClientSecret = ""
-	douyin.SandboxMockEnabled = true
 	settings.Providers[ProviderDouyin] = douyin
 
 	if err := svc.SaveSettings(adminUser, settings); err != nil {
@@ -520,38 +512,34 @@ func TestIncompleteCredentialsAreNotAdvertised(t *testing.T) {
 		t.Errorf("fully configured X should be advertised, got %+v", respUS.Providers)
 	}
 
-	// 2. Sandbox/mock channels stay advertised without a real secret.
+	// 2. Unconfigured / incomplete secret channels must NOT be advertised in CN either.
 	reqCN := httptest.NewRequest(http.MethodGet, "/api/auth/social/providers", nil)
 	reqCN.Header.Set("X-Real-IP", "124.90.230.101")
 	respCN, err := svc.GetPublicProviders(reqCN)
 	if err != nil {
 		t.Fatalf("GetPublicProviders (CN) failed: %v", err)
 	}
-	var cnHasMockDouyin bool
 	for _, p := range respCN.Providers {
 		if p.ID == ProviderDouyin {
-			cnHasMockDouyin = true
+			t.Errorf("incomplete Douyin must not be advertised, got %+v", respCN.Providers)
 		}
 	}
-	if !cnHasMockDouyin {
-		t.Errorf("sandbox/mock Douyin should stay advertised, got %+v", respCN.Providers)
-	}
 
-	// 3. BeginAuth refuses the incomplete channel but allows the mock one.
-	if _, err := svc.BeginAuth(reqUS, ProviderGoogle, "/", true, false); err == nil {
+	// 3. BeginAuth refuses incomplete channels.
+	if _, err := svc.BeginAuth(reqUS, ProviderGoogle, "/", true); err == nil {
 		t.Errorf("expected BeginAuth to reject Google without credentials")
 	}
-	if _, err := svc.BeginAuth(reqCN, ProviderDouyin, "/", true, false); err != nil {
-		t.Errorf("sandbox/mock Douyin should still start, got %v", err)
+	if _, err := svc.BeginAuth(reqCN, ProviderDouyin, "/", true); err == nil {
+		t.Errorf("expected BeginAuth to reject incomplete Douyin")
 	}
 
-	// 4. Admin view reports the half-configured channel as 待录入凭证.
+	// 4. Admin view reports the half-configured channel as 待完善凭证.
 	view, err := svc.GetAdminSettings(reqUS, adminUser)
 	if err != nil {
 		t.Fatalf("GetAdminSettings failed: %v", err)
 	}
-	if g := view.Providers[ProviderGoogle]; g.Status != StatusCredentialsRequired || g.StatusLabel != "待录入凭证" {
-		t.Errorf("expected Google 待录入凭证, got status=%s label=%s", g.Status, g.StatusLabel)
+	if g := view.Providers[ProviderGoogle]; g.Status != StatusCredentialsRequired || g.StatusLabel != "待完善凭证" {
+		t.Errorf("expected Google 待完善凭证, got status=%s label=%s", g.Status, g.StatusLabel)
 	}
 }
 
@@ -567,16 +555,14 @@ func TestQQAndBilibiliCredentialsPersistence(t *testing.T) {
 		DefaultFallbackRegion: RegionCN,
 		Providers: map[string]UpdateProviderInput{
 			ProviderQQ: {
-				Enabled:            true,
-				ClientID:           "102035200",
-				ClientSecret:       "mock_qq_secret_0QEo",
-				SandboxMockEnabled: true,
+				Enabled:      true,
+				ClientID:     "102035200",
+				ClientSecret: "test_qq_secret_0QEo",
 			},
-			ProviderBilibili: {
-				Enabled:            true,
-				ClientID:           "bb4aec99",
-				ClientSecret:       "mock_bili_secret_78e3",
-				SandboxMockEnabled: false,
+			ProviderWeChat: {
+				Enabled:      true,
+				ClientID:     "bb4aec99",
+				ClientSecret: "test_bili_secret_78e3",
 			},
 		},
 	}
@@ -588,7 +574,7 @@ func TestQQAndBilibiliCredentialsPersistence(t *testing.T) {
 
 	// Verify QQ in view returned by update
 	qqView := view.Providers[ProviderQQ]
-	if !qqView.Enabled || qqView.Status != StatusOnline || qqView.StatusLabel != "运行中" {
+	if !qqView.Enabled || qqView.Status != StatusOnline || qqView.StatusLabel != "已启用" {
 		t.Fatalf("expected QQ to be online / 运行中, got status=%s, label=%s", qqView.Status, qqView.StatusLabel)
 	}
 	if !qqView.HasCredentials {
@@ -600,13 +586,10 @@ func TestQQAndBilibiliCredentialsPersistence(t *testing.T) {
 	if qqView.MaskedSecret != "••••••••0QEo" {
 		t.Fatalf("expected QQ masked secret to be ••••••••0QEo, got %s", qqView.MaskedSecret)
 	}
-	if !qqView.SandboxMockEnabled {
-		t.Fatalf("expected QQ sandboxMockEnabled to be true")
-	}
 
 	// Verify Bilibili in view returned by update
-	biliView := view.Providers[ProviderBilibili]
-	if !biliView.Enabled || biliView.Status != StatusOnline || biliView.StatusLabel != "运行中" {
+	biliView := view.Providers[ProviderWeChat]
+	if !biliView.Enabled || biliView.Status != StatusOnline || biliView.StatusLabel != "已启用" {
 		t.Fatalf("expected Bilibili to be online / 运行中, got status=%s, label=%s", biliView.Status, biliView.StatusLabel)
 	}
 	if !biliView.HasCredentials {
@@ -618,9 +601,6 @@ func TestQQAndBilibiliCredentialsPersistence(t *testing.T) {
 	if biliView.MaskedSecret != "••••••••78e3" {
 		t.Fatalf("expected Bilibili masked secret to be ••••••••78e3, got %s", biliView.MaskedSecret)
 	}
-	if biliView.SandboxMockEnabled {
-		t.Fatalf("expected Bilibili sandboxMockEnabled to be false")
-	}
 
 	// 2. Simulate application reload / cache eviction by creating an entirely new Service instance
 	svcReloaded := NewService(repo, host)
@@ -631,7 +611,7 @@ func TestQQAndBilibiliCredentialsPersistence(t *testing.T) {
 	}
 
 	qqReloaded := viewReloaded.Providers[ProviderQQ]
-	if !qqReloaded.Enabled || qqReloaded.Status != StatusOnline || qqReloaded.StatusLabel != "运行中" {
+	if !qqReloaded.Enabled || qqReloaded.Status != StatusOnline || qqReloaded.StatusLabel != "已启用" {
 		t.Fatalf("reloaded QQ status mismatch: status=%s, label=%s", qqReloaded.Status, qqReloaded.StatusLabel)
 	}
 	if qqReloaded.MaskedClientID != "****5200" || qqReloaded.ClientIDMasked != "****5200" {
@@ -640,12 +620,9 @@ func TestQQAndBilibiliCredentialsPersistence(t *testing.T) {
 	if qqReloaded.MaskedSecret != "••••••••0QEo" {
 		t.Fatalf("reloaded QQ masked secret mismatch: %s", qqReloaded.MaskedSecret)
 	}
-	if !qqReloaded.SandboxMockEnabled {
-		t.Fatalf("reloaded QQ sandboxMockEnabled mismatch")
-	}
 
-	biliReloaded := viewReloaded.Providers[ProviderBilibili]
-	if !biliReloaded.Enabled || biliReloaded.Status != StatusOnline || biliReloaded.StatusLabel != "运行中" {
+	biliReloaded := viewReloaded.Providers[ProviderWeChat]
+	if !biliReloaded.Enabled || biliReloaded.Status != StatusOnline || biliReloaded.StatusLabel != "已启用" {
 		t.Fatalf("reloaded Bilibili status mismatch: status=%s, label=%s", biliReloaded.Status, biliReloaded.StatusLabel)
 	}
 	if biliReloaded.MaskedClientID != "****ec99" || biliReloaded.ClientIDMasked != "****ec99" {
@@ -660,9 +637,8 @@ func TestQQAndBilibiliCredentialsPersistence(t *testing.T) {
 		DefaultFallbackRegion: RegionCN,
 		Providers: map[string]UpdateProviderInput{
 			ProviderQQ: {
-				Enabled:            true,
-				CustomRedirectURL:  "https://custom.supdance.com/auth/qq",
-				SandboxMockEnabled: true,
+				Enabled:           true,
+				CustomRedirectURL: "https://www.supdance.com/api/auth/qq/callback",
 				// ClientSecret left empty to retain existing secret
 			},
 		},
@@ -675,7 +651,7 @@ func TestQQAndBilibiliCredentialsPersistence(t *testing.T) {
 	if !qqAfterRetain.HasCredentials || qqAfterRetain.MaskedSecret != "••••••••0QEo" {
 		t.Fatalf("expected existing QQ secret to be retained, got hasCreds=%v, secret=%s", qqAfterRetain.HasCredentials, qqAfterRetain.MaskedSecret)
 	}
-	if qqAfterRetain.CustomRedirectURL != "https://custom.supdance.com/auth/qq" {
+	if qqAfterRetain.CustomRedirectURL != "https://www.supdance.com/api/auth/qq/callback" {
 		t.Fatalf("expected updated redirect url, got %s", qqAfterRetain.CustomRedirectURL)
 	}
 
@@ -703,78 +679,17 @@ func TestQQAndBilibiliCredentialsPersistence(t *testing.T) {
 }
 
 func TestConnectivityPing(t *testing.T) {
-	repo := newTestRepo(t)
-	host := &testHost{}
-	svc := NewService(repo, host)
-	adminUser := &model.User{ID: "admin_test", Role: model.UserRoleAdmin}
-
-	// 1. Configure QQ and Bilibili
-	settings, _ := svc.ReadSettings()
-	cfgQQ := settings.Providers[ProviderQQ]
-	cfgQQ.Enabled = true
-	cfgQQ.ClientID = "102035200"
-	cfgQQ.ClientSecret = "mock_qq_secret_0QEo"
-	settings.Providers[ProviderQQ] = cfgQQ
-
-	cfgBili := settings.Providers[ProviderBilibili]
-	cfgBili.Enabled = true
-	cfgBili.ClientID = "bb4aec99"
-	cfgBili.ClientSecret = "mock_bili_secret_78e3"
-	settings.Providers[ProviderBilibili] = cfgBili
-
-	// Keep WeChat empty
-	cfgWeChat := settings.Providers[ProviderWeChat]
-	cfgWeChat.ClientID = ""
-	cfgWeChat.ClientSecret = ""
-	settings.Providers[ProviderWeChat] = cfgWeChat
-
-	if err := svc.SaveSettings(adminUser, settings); err != nil {
-		t.Fatalf("SaveSettings failed: %v", err)
+	repo, svc := newSecurityTestService(t)
+	_ = repo
+	seedChannel(t, svc, ProviderQQ, "client", "secret", false)
+	stubProbeClient(t)
+	result, err := svc.TestProvider(nil, ProviderQQ)
+	if err != nil || result.Status != "reachable" || !strings.Contains(result.Message, "尚未验证真实登录") {
+		t.Fatalf("probe overclaims: %+v %v", result, err)
 	}
-
-	// 2. Test QQ Ping
-	resQQ, err := svc.TestProvider(adminUser, ProviderQQ)
-	if err != nil {
-		t.Fatalf("TestProvider(QQ) error: %v", err)
-	}
-	if resQQ.Status != "ok" {
-		t.Errorf("expected QQ status 'ok', got '%s'", resQQ.Status)
-	}
-	if resQQ.LatencyMs != 228 || resQQ.PingLatencyMs != 228 {
-		t.Errorf("expected QQ latency 228ms, got LatencyMs=%d, PingLatencyMs=%d", resQQ.LatencyMs, resQQ.PingLatencyMs)
-	}
-	if !strings.Contains(resQQ.Message, "响应正常") {
-		t.Errorf("expected success message, got '%s'", resQQ.Message)
-	}
-	if resQQ.CheckedAt.IsZero() || resQQ.TestedAt.IsZero() {
-		t.Errorf("expected CheckedAt and TestedAt to be populated")
-	}
-
-	// 3. Test Bilibili Ping
-	resBili, err := svc.TestProvider(adminUser, ProviderBilibili)
-	if err != nil {
-		t.Fatalf("TestProvider(Bilibili) error: %v", err)
-	}
-	if resBili.Status != "ok" {
-		t.Errorf("expected Bilibili status 'ok', got '%s'", resBili.Status)
-	}
-	if resBili.LatencyMs != 101 || resBili.PingLatencyMs != 101 {
-		t.Errorf("expected Bilibili latency 101ms, got LatencyMs=%d, PingLatencyMs=%d", resBili.LatencyMs, resBili.PingLatencyMs)
-	}
-	if resBili.TestedAt.IsZero() {
-		t.Errorf("expected TestedAt to be populated")
-	}
-
-	// 4. Test unconfigured provider (WeChat)
-	resWeChat, err := svc.TestProvider(adminUser, ProviderWeChat)
-	if err != nil {
-		t.Fatalf("TestProvider(WeChat) error: %v", err)
-	}
-	if resWeChat.Status != "error" {
-		t.Errorf("expected WeChat status 'error', got '%s'", resWeChat.Status)
-	}
-	if !strings.Contains(resWeChat.Message, "尚未配置") {
-		t.Errorf("expected error message explaining missing credentials, got '%s'", resWeChat.Message)
+	result, err = svc.TestProvider(nil, ProviderBilibili)
+	if err != nil || result.Status != "error" {
+		t.Fatalf("unsupported channel accepted: %+v %v", result, err)
 	}
 }
 
@@ -788,7 +703,7 @@ func (h *decryptTrackingHost) DecryptSecret(c string) (string, error) {
 	return h.testHost.DecryptSecret(c)
 }
 
-func TestGetPublicProviders_BypassesSecretDecryption(t *testing.T) {
+func TestGetPublicProviders_ValidatesDecryptedCredentials(t *testing.T) {
 	repo := newTestRepo(t)
 	host := &decryptTrackingHost{}
 	svc := NewService(repo, host)
@@ -799,12 +714,6 @@ func TestGetPublicProviders_BypassesSecretDecryption(t *testing.T) {
 	qq.ClientID = "10005200"
 	qq.ClientSecret = "raw_test_secret"
 	settings.Providers[ProviderQQ] = qq
-	// 抖音保持沙箱模式：公开列表只展示「确实能完成登录」的渠道，
-	// 这里需要一个仍会被展示的渠道来验证它不解密密钥。
-	douyin := settings.Providers[ProviderDouyin]
-	douyin.Enabled = true
-	douyin.SandboxMockEnabled = true
-	settings.Providers[ProviderDouyin] = douyin
 	if err := svc.SaveSettings(&model.User{ID: "admin"}, settings); err != nil {
 		t.Fatalf("SaveSettings failed: %v", err)
 	}
@@ -818,8 +727,8 @@ func TestGetPublicProviders_BypassesSecretDecryption(t *testing.T) {
 	if err != nil {
 		t.Fatalf("GetPublicProviders failed: %v", err)
 	}
-	if host.decryptCalls != 0 {
-		t.Fatalf("expected 0 calls to DecryptSecret during public query, got %d", host.decryptCalls)
+	if host.decryptCalls != 1 {
+		t.Fatalf("expected 1 call to DecryptSecret during public query, got %d", host.decryptCalls)
 	}
 	if len(resp.Providers) == 0 {
 		t.Fatalf("expected at least 1 provider in public response, got 0")

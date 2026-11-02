@@ -27,6 +27,7 @@ const AdminPluginsPage = lazy(() => import("@/pages/admin/plugins/plugins-page")
 const SupDanceI18nSettingsPage = lazy(() => import("@/supdance/plugins/i18n/admin/i18n-settings-page"));
 const SupDanceI18nEntriesPage = lazy(() => import("@/supdance/plugins/i18n/admin/i18n-entries-page"));
 const SocialAuthSettingsPage = lazy(() => import("@/supdance/plugins/social-auth/admin/social-auth-settings-page"));
+const SocialAuthOperationsPage = lazy(() => import("@/supdance/plugins/social-auth/admin/social-auth-operations-page"));
 const MusicWorkbenchPage = lazy(() => import("@/supdance/plugins/music-generation/pages/music-workbench-page"));
 const MusicAdminSettingsPage = lazy(() => import("@/supdance/plugins/music-generation/admin/music-admin-settings-page"));
 const DarkLoginPage = lazy(() => import("@/supdance/pages/dark-login-page"));
@@ -281,6 +282,7 @@ export const router = createBrowserRouter([
                     { path: "settings/features", element: <FeatureAvailabilityPage /> },
                     { path: "settings/access", element: <AccessSettingsPage /> },
                     { path: "settings/social-auth", element: <SocialAuthSettingsPage /> },
+                    { path: "settings/social-auth/operations", element: <SocialAuthOperationsPage /> },
                     { path: "social-auth", element: <Navigate to="/admin/settings/social-auth" replace /> },
                     { path: "settings/email", element: <EmailSettingsPage /> },
                     { path: "settings/storage", element: <StorageSettingsPage /> },

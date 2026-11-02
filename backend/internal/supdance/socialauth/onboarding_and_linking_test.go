@@ -40,7 +40,7 @@ func TestSocialAuthOnboardingAndAutoEmailBinding(t *testing.T) {
 	}
 
 	// 3. Complete Onboarding with custom username and optional password
-	completeReq := CompleteOnboardingRequest{
+	completeReq := CompleteOnboardingRequest{AcceptedTerms: true,
 		TicketID:    ticketID,
 		Username:    "alex_dance_pro",
 		DisplayName: "Alex The Dancer",
@@ -166,7 +166,6 @@ func TestBeginBindGeneratesCorrectState(t *testing.T) {
 	cfg.Enabled = true
 	cfg.ClientID = "test_client_id"
 	cfg.ClientSecret = "test_client_secret"
-	cfg.SandboxMockEnabled = true
 	settings.Providers[ProviderGoogle] = cfg
 	if err := svc.SaveSettings(&model.User{ID: "admin"}, settings); err != nil {
 		t.Fatalf("SaveSettings failed: %v", err)
@@ -210,4 +209,3 @@ func TestSocialAuthOnboardingTicketSharedAcrossServiceInstances(t *testing.T) {
 		t.Fatalf("expected provider username dancer@gmail.com, got %s", profileView.ProviderUsername)
 	}
 }
-
