@@ -145,3 +145,25 @@ Google 与 X 的 `clientSecret` 在生产库 `system_settings.supdance_social_au
 已验证的生产出网能力（发布后端时不构成阻碍）：`oauth2.googleapis.com` 404（端点可达）、`accounts.google.com` 302、`api.x.com` 401、`graph.qq.com` 200；容器内无 curl，探针在宿主机执行。
 
 发布前提（需管理员确认，见任务清单）：后端二进制需在服务器用 `backend/Dockerfile` 的 builder 阶段交叉编译（`CGO_ENABLED=1`），产物落到 `releases/yingce-backend-1.7.4-supdance-v1`，只改 `.env` 的 `CANVAS_BACKEND_RELEASE_BINARY` 一个键后 `up -d backend`；回滚即改回旧键值。代价是后端容器重启数秒，以及 QQ/抖音/B 站登录从「静默新建空账号」变为明确报错，直到接入各自的令牌交换。
+
+### 6.1 发布记录（2026-11-02，管理员已确认「现在就发后端」）
+
+坐标：
+
+| 项 | 发布前 | 发布后 |
+| --- | --- | --- |
+| `CANVAS_BACKEND_RELEASE_BINARY` | `releases/yingce-backend-1.7.3-supdance-v4` | `releases/yingce-backend-1.7.4-supdance-v1` |
+| 二进制大小 / md5 | 88,832,632 B | 88,857,368 B / `a27d4c53e13183d59fe262c9bb8a7f1e` |
+| 镜像 / compose / 数据库 / 迁移 | `supdance-canvas-backend:bc5ebcf7`、`CANVAS_AUTO_MIGRATE=false` | 未改动 |
+| 回滚 | `ROLLBACK-1.7.4-backend.md`、`.env.bak-174be-20261102-143201` | 一步 sed + `up -d backend` |
+
+构建方式（服务器无 buildx，`docker build --target backend-build` 不可用）：`rsync` 源码到 `/opt/build-174be`，用 `golang:1.25-alpine` 容器复现 Dockerfile 的编译步骤（`apk add build-base` → `go mod download` → `CGO_ENABLED=1 go build -trimpath -ldflags=... ./cmd/server`），模块缓存放在命名卷 `174be-gomod`；产物 musl 动态链接，与 alpine 运行时一致。二进制内已无 `_live_` 伪造串，且含 `oauth2.googleapis.com/token`、`openidconnect.googleapis.com/v1/userinfo`、`api.x.com/2/oauth2/token(+/2/users/me)`、`尚未接入真实授权码交换`。
+
+发布后验证（均为生产实测）：
+
+- 容器 `y-supdance-canvas-backend-1` 重建后 `Up (healthy)`，`/usr/local/bin/yingce-backend` 挂载点即新二进制；`/`、`/login`、`/admin/settings/social-auth` 均 200，正常业务流量继续进入（日志可见真实请求）。
+- 旁路已堵：先调用公开 `/api/auth/social/qq/start`（带 `X-Real-IP: 124.90.230.101`，QQ/抖音/B 站为 CN 分区，服务器本机出口被判为 `intl`）铸造合法 `state`（64 位），再分别用 `code=mock_code_attacker1234` 与 `code=deadbeef12345678abcd` 打回调 —— 两次都 `302 /login?oauth_error=渠道 qq 尚未接入真实授权码交换，已拒绝登录以避免伪造身份`，响应头无 `Set-Cookie`；`users` 与 `user_identities` 仍为 9 行，未新增。
+- 凭据不完整即不展示：`/api/auth/social/providers`（本机 IP，回退 `intl`）现在返回 `providers: null`，此前会返回 google/x —— `d2f6618a` 的门槛在生产生效，管理员录入密钥后自动恢复展示。
+- 遗留数据：`users` 中 3 个由旧占位实现铸出的账号仍在（`qq_qq_live_BD736CD0` 2026-11-01 13:30 UTC、`douyin_douyin_live_bd13c` 03:25 UTC、`douyin_douyin_live_5b713` 06:26 UTC），是否为真实用户点击产生尚无法从库里区分；未做任何删除，等管理员决定清理策略。
+- 仍需注意：`open-ai-canvas-updater.service` 处于 active，后台点「系统更新」会用官方版本覆写 `.env` 的镜像 digest 与 release 指针（含本次的 backend 指针）。
+
