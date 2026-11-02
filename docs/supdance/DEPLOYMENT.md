@@ -127,7 +127,7 @@ webroot `index.html` 由 `e59eaf0bbd70f0a80c204091c927b7bd` 变为 `2096a1c35ae8
 
 Google 与 X 的 `clientSecret` 在生产库 `system_settings.supdance_social_auth` 中仍是空串（qq/douyin/bilibili 已是 `enc:v1:` 密文，wechat 的 `clientId`/`clientSecret` 亦为空但前台展示为开启）。密钥只能由管理员本人在后台「配置密钥 / 轮换」弹窗内录入：其值仅存在于 Google Cloud Console 与 X Developer Console，按既定凭据边界不由助手读取、代填或写入对话。令牌段（code → token → 建会话）需在该项录入后重跑一次真实登录才能验收。
 
-## 6. 验收中发现的登录旁路（`d2f6618a` + `c20a849a`，尚未发布到生产）
+## 6. 验收中发现的登录旁路（`d2f6618a` + `c20a849a`，已发布到生产，见 6.1）
 
 验收「令牌段」时发现：本次要做到「自动验证 google/x 登录」，前提是该登录真的会向上游交换令牌，而 `bc5ebcf7`（当前生产二进制 `releases/yingce-backend-1.7.3-supdance-v4`）的实现并不成立。
 
@@ -166,4 +166,20 @@ Google 与 X 的 `clientSecret` 在生产库 `system_settings.supdance_social_au
 - 凭据不完整即不展示：`/api/auth/social/providers`（本机 IP，回退 `intl`）现在返回 `providers: null`，此前会返回 google/x —— `d2f6618a` 的门槛在生产生效，管理员录入密钥后自动恢复展示。
 - 遗留数据：`users` 中 3 个由旧占位实现铸出的账号仍在（`qq_qq_live_BD736CD0` 2026-11-01 13:30 UTC、`douyin_douyin_live_bd13c` 03:25 UTC、`douyin_douyin_live_5b713` 06:26 UTC），是否为真实用户点击产生尚无法从库里区分；未做任何删除，等管理员决定清理策略。
 - 仍需注意：`open-ai-canvas-updater.service` 处于 active，后台点「系统更新」会用官方版本覆写 `.env` 的镜像 digest 与 release 指针（含本次的 backend 指针）。
+
+### 6.2 复测与下一道门（`dd8554b5`，已提交、暂未发布）
+
+发布后 1 小时复测（2026-11-02 06:56–06:59 UTC，全部为生产实测）：
+
+- 容器 `Up 14 minutes (healthy)`，`releases/yingce-backend-1.7.4-supdance-v1` md5 仍为 `a27d4c53e13183d59fe262c9bb8a7f1e`（无人改动指针）。
+- 数据未再被铸造：`users` 9 行、`user_identities` 9 行、`subject like '%_live_%'` 3 行，与发布后首测逐字一致（最近一条伪造记录 06:26 UTC，早于容器重启）。
+- 门槛分布符合预期：google / x 的 `/start` 均 `403 该第三方登录渠道未开放或未配置`（`clientSecret` 长度仍为 0 —— google `clientId` 72 字符已录入、x `clientId` 34 字符已录入，只差密钥）；`providers`（`intl`）仍为 `null`，（`cn`）返回 qq / douyin / bilibili。
+
+CN 三渠道的上游实测（在容器内发起，读 `Location` 头）说明它们并非「只是没接交换」：
+
+- `qq/start` → `graph.qq.com/oauth2.0/authorize?...client_id=supdance...`，QQ 立即 `302` 到 `graph.qq.com/oauth2.0/show?which=error...&error=100001`（`client_id` 被 QQ 判为非法）。库里 qq 的 `clientId` 就是字面量 `supdance`，不是 QQ 互联的应用 ID。
+- `bilibili/start` 携带的 `client_id=6f51861a1d834aec` 是公开示例工程里流传的演示 appkey，不是本站注册的应用。
+- `douyin/start` 的 `client_key=awj7wwc7sh2g6kuf` 格式合规，但是否为本账号应用未经验证；上游未返回可用结果。
+
+`dd8554b5` 把展示门槛从「凭据完整」收紧为 `channelAdvertisable`（凭据完整且「沙箱模拟已开 或 后端真的实现了该渠道的兑换」），使 `/start` 与公开列表同源，避免把用户送到一次注定失败的授权。它同时会让 CN 登录页暂时不再出现 QQ/抖音/B 站按钮 —— 属于面向真实访客的可见变更，且与「渠道需要管理员到各开放平台重新登记凭据」这件事耦合，因此先发布到生产前需要管理员点头；`google`/`x` 在密钥录入后不受影响，会照常展示。
 
