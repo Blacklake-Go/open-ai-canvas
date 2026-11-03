@@ -37,6 +37,7 @@
 
 | 上游位置 | 值或转换表达式 |
 | --- | --- |
+| `create.originPath` / `poll.originPath` | `true`：路径以 `/openapi/v2/...` 为站点根路径直发，避免宿主按 OpenAI 兼容默认值插入 `/v1` 前缀（否则上游返回 401） |
 | `create.method` | `"POST"` |
 | `create.path` | `"/openapi/v2/{{request.model}}"` |
 | `create.contentType` | `"application/json"` |
@@ -259,7 +260,8 @@
                 "$ref": "request.seed"
               }
             }
-          }
+          },
+          "originPath": true
         },
         "poll": {
           "method": "POST",
@@ -269,7 +271,8 @@
             "taskId": {
               "$ref": "taskId"
             }
-          }
+          },
+          "originPath": true
         },
         "response": {
           "taskId": {
@@ -576,7 +579,8 @@
                 "$ref": "request.seed"
               }
             }
-          }
+          },
+          "originPath": true
         },
         "poll": {
           "method": "POST",
@@ -586,7 +590,8 @@
             "taskId": {
               "$ref": "taskId"
             }
-          }
+          },
+          "originPath": true
         },
         "response": {
           "taskId": {
@@ -773,7 +778,8 @@
                 "$ref": "request.quality"
               }
             }
-          }
+          },
+          "originPath": true
         },
         "poll": {
           "method": "POST",
@@ -783,7 +789,8 @@
             "taskId": {
               "$ref": "taskId"
             }
-          }
+          },
+          "originPath": true
         },
         "response": {
           "taskId": {
