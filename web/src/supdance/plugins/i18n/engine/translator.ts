@@ -124,6 +124,61 @@ const DYNAMIC_PATTERN_RULES: readonly DynamicPatternRule[] = [
             "es-ES": (count) => `${count} tomas en total`,
         },
     },
+    {
+        regex: /^(\d+)\s*个节点$/,
+        format: {
+            "zh-CN": (count) => `${count} 个节点`,
+            "en-US": (count) => `${count} ${Number(count) === 1 ? "node" : "nodes"}`,
+            "zh-TW": (count) => `${count} 個節點`,
+            "ja-JP": (count) => `${count} ノード`,
+            "ko-KR": (count) => `${count}개 노드`,
+            "es-ES": (count) => `${count} ${Number(count) === 1 ? "nodo" : "nodos"}`,
+        },
+    },
+    {
+        regex: /^(\d+)\s*天前$/,
+        format: {
+            "zh-CN": (d) => `${d} 天前`,
+            "en-US": (d) => `${d}d ago`,
+            "zh-TW": (d) => `${d} 天前`,
+            "ja-JP": (d) => `${d}日前`,
+            "ko-KR": (d) => `${d}일 전`,
+            "es-ES": (d) => `hace ${d} d`,
+        },
+    },
+    {
+        regex: /^(\d+)\s*小时前$/,
+        format: {
+            "zh-CN": (h) => `${h} 小时前`,
+            "en-US": (h) => `${h}h ago`,
+            "zh-TW": (h) => `${h} 小時前`,
+            "ja-JP": (h) => `${h}時間前`,
+            "ko-KR": (h) => `${h}시간 전`,
+            "es-ES": (h) => `hace ${h} h`,
+        },
+    },
+    {
+        regex: /^(\d+)\s*分钟前$/,
+        format: {
+            "zh-CN": (m) => `${m} 分钟前`,
+            "en-US": (m) => `${m}m ago`,
+            "zh-TW": (m) => `${m} 分鐘前`,
+            "ja-JP": (m) => `${m}分前`,
+            "ko-KR": (m) => `${m}분 전`,
+            "es-ES": (m) => `hace ${m} m`,
+        },
+    },
+    {
+        regex: /^刚刚$/,
+        format: {
+            "zh-CN": () => "刚刚",
+            "en-US": () => "Just now",
+            "zh-TW": () => "剛剛",
+            "ja-JP": () => "たった今",
+            "ko-KR": () => "방금 전",
+            "es-ES": () => "Justo ahora",
+        },
+    },
 ];
 
 function escapeRegexLiteral(text: string): string {

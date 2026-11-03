@@ -9,8 +9,10 @@ import { Select } from "@/components/ui/base/select";
 import { Tooltip } from "@/components/ui/base/tooltip";
 import { useDebouncedValue } from "@/hooks/use-debounced-value";
 import { catalogIdOf, inspirationSourceOf, inspirationSources, type CreationInspiration, type InspirationSourceId } from "@/lib/inspirations/catalog";
+import { resolveInspirationCategoryLabel } from "@/lib/inspirations/category-i18n";
 import { isCustomInspiration, resolveInspirations } from "@/lib/inspirations/resolve";
 import { loadInspirationCatalog, type InspirationCatalog } from "@/services/inspiration-catalog";
+import { useI18n } from "@/supdance/plugins/i18n";
 import { useInspirationStore } from "@/stores/use-inspiration-store";
 import { useUserStore } from "@/stores/use-user-store";
 import { InspirationCover, InspirationDetailModal } from "./inspiration-detail-modal";
@@ -53,6 +55,7 @@ function downloadText(text: string, fileName: string) {
 export function InspirationHall({ onUse }: { onUse: (item: CreationInspiration) => void }) {
     const { message, modal } = App.useApp();
     const inspirationSourcesVisible = useUserStore((state) => state.features.inspirationSourcesVisible);
+    const { locale } = useI18n();
 
     const custom = useInspirationStore((state) => state.custom);
     const overrides = useInspirationStore((state) => state.overrides);
@@ -146,10 +149,11 @@ export function InspirationHall({ onUse }: { onUse: (item: CreationInspiration) 
     const categoryLabels = useMemo(() => {
         const map = new Map<string, Map<string, string>>();
         for (const [sourceId, options] of Object.entries(catalog?.categoriesBySource ?? {})) {
-            map.set(sourceId, new Map(options.map((option) => [option.id, option.label])));
+            // manifest 里的分类标签是简中原文，按当前语种换成对应译文；未收录的分类保持原文。
+            map.set(sourceId, new Map(options.map((option) => [option.id, resolveInspirationCategoryLabel(option.label, locale)])));
         }
         return map;
-    }, [catalog]);
+    }, [catalog, locale]);
 
     const categoryLabel = useCallback(
         (item: CreationInspiration) => {
@@ -158,6 +162,16 @@ export function InspirationHall({ onUse }: { onUse: (item: CreationInspiration) 
             return categoryLabels.get(item.sourceId ?? "original")?.get(code) ?? code;
         },
         [categoryLabels],
+    );
+
+    /** 搜索命中面额外带上简中原名：切到外语后用户仍能用中文关键词搜到同一条灵感。 */
+    const categoryLabelZh = useCallback(
+        (item: CreationInspiration) => {
+            const code = item.category?.trim();
+            if (!code) return "";
+            return catalog?.categoriesBySource[item.sourceId ?? "original"]?.find((option) => option.id === code)?.label ?? code;
+        },
+        [catalog],
     );
 
     /** 分类跟随当前来源，并纳入自建和改写后的条目。 */
@@ -230,12 +244,12 @@ export function InspirationHall({ onUse }: { onUse: (item: CreationInspiration) 
             if (modeFilter !== "all" && item.mode !== modeFilter) return false;
             if (category !== "all" && (item.category?.trim() ?? "") !== category) return false;
             if (!keyword) return true;
-            const haystack = [item.title, item.description, item.category, categoryLabel(item), ...(item.tags ?? [])].join(" ").toLowerCase();
+            const haystack = [item.title, item.description, item.category, categoryLabel(item), categoryLabelZh(item), ...(item.tags ?? [])].join(" ").toLowerCase();
             return haystack.includes(keyword);
         });
         if (sort === "title") return [...filtered].sort((left, right) => left.title.localeCompare(right.title, "zh-Hans-CN"));
         return filtered;
-    }, [view, resolved, hiddenItems, debouncedSearch, favorites, source, modeFilter, category, sort, categoryLabel]);
+    }, [view, resolved, hiddenItems, debouncedSearch, favorites, source, modeFilter, category, sort, categoryLabel, categoryLabelZh]);
 
     const lastPage = Math.max(1, Math.ceil(visible.length / pageSize));
     const currentPage = Math.min(page, lastPage);

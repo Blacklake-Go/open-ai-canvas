@@ -444,7 +444,8 @@ export function useI18n() {
     const t = useMemo(() => {
         return (keyOrText: string, params?: Record<string, string | number>, fallbackText?: string): string => {
             if (!enabled) {
-                return fallbackText ?? keyOrText;
+                // 插件停用时要退回简中原文，而不是把 auth.login 这类技术键名直接吐到界面上。
+                return translateByKey(dictionary, keyOrText, "zh-CN", "zh-CN", params, fallbackText) || fallbackText || keyOrText;
             }
             if (dictionary.byKey.has(keyOrText)) {
                 return translateByKey(dictionary, keyOrText, effectiveLocale, settings.fallbackLocale, params, fallbackText);
