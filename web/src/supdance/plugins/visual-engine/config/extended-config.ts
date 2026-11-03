@@ -27,7 +27,8 @@ export const DEFAULT_INTERACTIONS: InteractionConfig = {
     performanceMode: "auto",
 };
 export const DEFAULT_TRANSITIONS: TransitionConfig = {
-    enabled: true,
+    // 上游 (ddcat-ai/open-ai-canvas) 没有路由过渡动画；整页 opacity 0→1 渐入会被感知为切菜单闪屏，默认关闭。
+    enabled: false,
     preset: "fade",
     duration: 150,
     delay: 0,

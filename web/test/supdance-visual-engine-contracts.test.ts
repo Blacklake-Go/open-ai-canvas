@@ -51,7 +51,7 @@ describe("visual engine production contracts", () => {
         expect(findMatchingPageRule("/projects/other", rules)?.id).toBe("projects");
     });
     it("removes displacement in reduced motion and cancels active animations", () => {
-        const config = { ...defaults.transitions, preset: "slide" as const };
+        const config = { ...defaults.transitions, enabled: true, preset: "slide" as const };
         expect(transitionFrames(config, true)[0].transform).toBeUndefined();
         let cancelled = false;
         const cancel = playRouteTransition(

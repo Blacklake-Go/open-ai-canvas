@@ -6,8 +6,6 @@ import { createVisualEngineOverlayStyles } from "../adapters/overlay-theme";
 import { detectHostCompatibility } from "../diagnostics/host-compatibility";
 import { registerThemeExtension } from "@/lib/theme-extensions";
 import "../components/visual-components.css";
-import { playRouteTransition } from "../transitions/route-transition";
-import { matchPathPattern } from "../page-rules/rule-matcher";
 import { useUserStore } from "@/stores/use-user-store";
 import { fetchVisualEngineCapabilities } from "../api/visual-engine-api";
 import { useVisualEngineStore } from "../storage/visual-engine-store";
@@ -104,32 +102,6 @@ function ActiveVisualEngineRuntime({ navigation }: { navigation: NavigationSourc
     const enabled = useVisualEngineStore((state) => state.enabled);
     const config = useVisualEngineStore((state) => state.config);
     const theme = useActiveTheme();
-    const previousPath = useRef(pathname);
-    useEffect(() => {
-        const changed = previousPath.current !== pathname;
-        previousPath.current = pathname;
-        if (
-            !changed ||
-            !enabled ||
-            pathname.startsWith("/admin") ||
-            !config.motion.enabled ||
-            config.interactions.performanceMode === "low" ||
-            !(config.transitions.components.includes("page") || (pathname.startsWith("/projects") && config.transitions.components.includes("workspace")) || (pathname.startsWith("/create") && config.transitions.components.includes("generation"))) ||
-            !config.transitions.paths.some((pattern) => matchPathPattern(pattern, pathname))
-        )
-            return;
-        const policy = resolvePageVisualPolicy(pathname, config, theme);
-        if (!policy.motionEnabled || config.activePreset === "native" || policy.matchedRule?.themePresetOverride === "native") return;
-        const target = document.getElementById("root");
-        if (!target) return;
-        return playRouteTransition(
-            target,
-            { ...config.transitions, duration: config.motion.reducedMotionBehavior === "instant" && window.matchMedia("(prefers-reduced-motion: reduce)").matches ? 0 : config.transitions.duration },
-            window.matchMedia("(prefers-reduced-motion: reduce)").matches,
-            config.motion.easingStandard,
-        );
-    }, [pathname, enabled, config, theme]);
-
     useLayoutEffect(() => {
         const mode = config.themeMode === "system" ? theme : config.themeMode;
         const policy = resolvePageVisualPolicy(pathname, config, mode);
