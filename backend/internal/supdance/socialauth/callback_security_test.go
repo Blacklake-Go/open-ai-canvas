@@ -160,6 +160,13 @@ func TestQQLiveExchangeUsesUpstreamProfile(t *testing.T) {
 	if identity.AvatarURL != "https://example.test/qq-avatar.png" {
 		t.Errorf("avatar should come from get_user_info, got %q", identity.AvatarURL)
 	}
+	// 设置中心展示的「账号」取自 ProviderUsername：必须是 QQ 昵称，不能是十六进制 openid。
+	if identity.ProviderUsername != "星尘编剧" {
+		t.Errorf("ProviderUsername should be the QQ nickname, got %q", identity.ProviderUsername)
+	}
+	if strings.Contains(identity.ProviderUsername, "7F8A9B0C1D2E3F40") {
+		t.Errorf("ProviderUsername leaked raw openid: %q", identity.ProviderUsername)
+	}
 
 	// 上游拒绝授权码时（QQ 用 JSONP 包裹错误）必须失败，而不是退化成伪造身份。
 	useQQStub(t, "a_different_secret", "never-used")

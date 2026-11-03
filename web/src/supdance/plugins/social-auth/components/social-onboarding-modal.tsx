@@ -347,12 +347,15 @@ export function SocialOnboardingModal() {
                         <div className="flex items-center gap-2 pt-1">
                             <Checkbox checked={acceptedTerms} onChange={(e) => setAcceptedTerms(e.target.checked)} className="text-xs text-foreground/70">
                                 {t("auth.onboarding.agree_prefix", {}, "我已阅读并同意")}
-                                <a href="/terms" target="_blank" rel="noreferrer" className="mx-1 text-primary hover:underline">
-                                    《用户服务协议》
+                                {" "}
+                                <a href="/terms" target="_blank" rel="noreferrer" className="text-primary hover:underline">
+                                    {t("auth.onboarding.terms_service", {}, "《用户服务协议》")}
                                 </a>
-                                与
-                                <a href="/privacy" target="_blank" rel="noreferrer" className="ml-1 text-primary hover:underline">
-                                    《隐私政策》
+                                {" "}
+                                {t("auth.onboarding.terms_and", {}, "与")}
+                                {" "}
+                                <a href="/privacy" target="_blank" rel="noreferrer" className="text-primary hover:underline">
+                                    {t("auth.onboarding.terms_privacy", {}, "《隐私政策》")}
                                 </a>
                             </Checkbox>
                         </div>
