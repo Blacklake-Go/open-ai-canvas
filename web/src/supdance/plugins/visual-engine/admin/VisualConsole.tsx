@@ -17,7 +17,6 @@ import { ComponentsPane } from "./pages/ComponentsPane";
 import { EffectsPane } from "./pages/EffectsPane";
 import { InteractionsPane } from "./pages/InteractionsPane";
 import { MotionPane } from "./pages/MotionPane";
-import { TransitionsPane } from "./pages/TransitionsPane";
 import { LoadingPane } from "./pages/LoadingPane";
 import { PageRulesPane } from "./pages/PageRulesPane";
 import { PreviewPane } from "./pages/PreviewPane";
@@ -104,8 +103,6 @@ export default function VisualConsole() {
                 return <InteractionsPane />;
             case "motion":
                 return <MotionPane />;
-            case "transitions":
-                return <TransitionsPane />;
             case "loading":
                 return <LoadingPane />;
             case "pagerules":

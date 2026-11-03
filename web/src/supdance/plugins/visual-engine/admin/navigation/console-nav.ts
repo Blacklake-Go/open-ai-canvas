@@ -7,7 +7,6 @@ import {
     Shield,
     MousePointerClick,
     Zap,
-    GitCommit,
     Loader2,
     Compass,
     Eye,
@@ -50,7 +49,6 @@ export const CONSOLE_NAV_SECTIONS: ConsoleNavSection[] = [
         title: "动效与恢复",
         items: [
             { key: "motion", label: "动效引擎 Motion", shortLabel: "动效", icon: Zap },
-            { key: "transitions", label: "页面过渡 Transitions", shortLabel: "过渡", icon: GitCommit },
             { key: "loading", label: "工作区恢复 Loading (图1)", shortLabel: "恢复", icon: Loader2 },
         ],
     },

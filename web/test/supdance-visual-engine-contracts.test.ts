@@ -4,7 +4,6 @@ import { validateVisualEngineConfig } from "../src/supdance/plugins/visual-engin
 import { parseVisualEngineImport } from "../src/supdance/plugins/visual-engine/config/import-config";
 import { diffVisualConfig } from "../src/supdance/plugins/visual-engine/config/config-diff";
 import { findMatchingPageRule } from "../src/supdance/plugins/visual-engine/page-rules/rule-matcher";
-import { transitionFrames, playRouteTransition } from "../src/supdance/plugins/visual-engine/transitions/route-transition";
 import { createVisualEngineOverlayStyles } from "../src/supdance/plugins/visual-engine/adapters/overlay-theme";
 import { runTokenHealthCheck } from "../src/supdance/plugins/visual-engine/diagnostics/token-health-check";
 describe("visual engine production contracts", () => {
@@ -49,37 +48,6 @@ describe("visual engine production contracts", () => {
         ];
         expect(findMatchingPageRule("/projects/current", rules)?.id).toBe("exact");
         expect(findMatchingPageRule("/projects/other", rules)?.id).toBe("projects");
-    });
-    it("removes displacement in reduced motion and cancels active animations", () => {
-        const config = { ...defaults.transitions, enabled: true, preset: "slide" as const };
-        expect(transitionFrames(config, true)[0].transform).toBeUndefined();
-        let cancelled = false;
-        const cancel = playRouteTransition(
-            {
-                animate: () => ({
-                    cancel: () => {
-                        cancelled = true;
-                    },
-                }),
-            } as unknown as HTMLElement,
-            config,
-            false,
-            "linear",
-        );
-        cancel();
-        expect(cancelled).toBe(true);
-        expect(() =>
-            playRouteTransition(
-                {
-                    animate: () => {
-                        throw Error("unsupported");
-                    },
-                } as unknown as HTMLElement,
-                config,
-                false,
-                "bad",
-            ),
-        ).not.toThrow();
     });
     it("applies real modal blur and separate drawer mask opacity", () => {
         const modal = createVisualEngineOverlayStyles(defaults, "dark", "modal"),

@@ -1,5 +1,5 @@
 import type { VisualEngineConfig } from "../types";
-import { DEFAULT_TYPOGRAPHY, DEFAULT_INTERACTIONS, DEFAULT_TRANSITIONS, DEFAULT_MODEL_PICKER } from "./extended-config";
+import { DEFAULT_TYPOGRAPHY, DEFAULT_INTERACTIONS, DEFAULT_MODEL_PICKER } from "./extended-config";
 import { nativePreset } from "./presets/native-preset";
 import { darkPreset } from "./presets/dark-preset";
 import { lightPreset } from "./presets/light-preset";
@@ -10,7 +10,6 @@ export const BUILTIN_THEME_PRESETS = [nativePreset, darkPreset, lightPreset, stu
 export const DEFAULT_VISUAL_ENGINE_CONFIG: VisualEngineConfig = {
     typography: structuredClone(DEFAULT_TYPOGRAPHY),
     interactions: { ...DEFAULT_INTERACTIONS },
-    transitions: structuredClone(DEFAULT_TRANSITIONS),
     modelPicker: { ...DEFAULT_MODEL_PICKER },
     customPresets: [],
     schemaVersion: 2,

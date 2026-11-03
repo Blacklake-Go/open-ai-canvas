@@ -25,18 +25,6 @@ type InteractionConfig struct {
 	CheckboxDark    string  `json:"checkboxDark"`
 	PerformanceMode string  `json:"performanceMode"`
 }
-type TransitionConfig struct {
-	Enabled    bool     `json:"enabled"`
-	Preset     string   `json:"preset"`
-	Duration   int      `json:"duration"`
-	Delay      int      `json:"delay"`
-	Distance   int      `json:"distance"`
-	Scale      float64  `json:"scale"`
-	Opacity    float64  `json:"opacity"`
-	Direction  string   `json:"direction"`
-	Paths      []string `json:"paths"`
-	Components []string `json:"components"`
-}
 type ThemePreset struct {
 	ID          string                    `json:"id"`
 	Name        string                    `json:"name"`
@@ -66,9 +54,6 @@ func DefaultModelPicker() *ModelPickerVisualConfig {
 	}
 }
 
-func DefaultTransitions() *TransitionConfig {
-	return &TransitionConfig{Enabled: true, Preset: "fade", Duration: 150, Distance: 8, Scale: 0.98, Direction: "forward", Paths: []string{"/*"}, Components: []string{"page"}}
-}
 func floatPointer(value float64) *float64 { return &value }
 func MigrateConfig(config Config) Config {
 	recovery := &config.WorkspaceRecovery
@@ -104,9 +89,6 @@ func MigrateConfig(config Config) Config {
 	}
 	if config.Interactions == nil {
 		config.Interactions = DefaultInteractions()
-	}
-	if config.Transitions == nil {
-		config.Transitions = DefaultTransitions()
 	}
 	if config.ModelPicker == nil {
 		config.ModelPicker = DefaultModelPicker()
@@ -144,7 +126,7 @@ func validateExtendedConfig(config Config) error {
 			return fmt.Errorf("遮罩透明度无效")
 		}
 	}
-	if config.Typography == nil || config.Interactions == nil || config.Transitions == nil || config.ModelPicker == nil {
+	if config.Typography == nil || config.Interactions == nil || config.ModelPicker == nil {
 		return fmt.Errorf("扩展配置缺失")
 	}
 	typography := config.Typography
@@ -164,20 +146,6 @@ func validateExtendedConfig(config Config) error {
 	for _, color := range []string{interaction.SwitchOnLight, interaction.SwitchOnDark, interaction.CheckboxLight, interaction.CheckboxDark} {
 		if !hexColor.MatchString(color) {
 			return fmt.Errorf("交互颜色无效")
-		}
-	}
-	transition := config.Transitions
-	if transition.Duration < 0 || transition.Duration > 1000 || transition.Delay < 0 || transition.Delay > 300 || transition.Distance < 0 || transition.Distance > 32 || transition.Scale < 0.9 || transition.Scale > 1 || transition.Opacity < 0 || transition.Opacity > 1 || (transition.Preset != "fade" && transition.Preset != "slide" && transition.Preset != "scale") || (transition.Direction != "forward" && transition.Direction != "backward") || len(transition.Paths) > 100 {
-		return fmt.Errorf("页面过渡参数无效")
-	}
-	for _, path := range transition.Paths {
-		if len(path) == 0 || path[0] != '/' || len(path) > 200 {
-			return fmt.Errorf("页面过渡路径无效")
-		}
-	}
-	for _, component := range transition.Components {
-		if component != "page" && component != "workspace" && component != "generation" && component != "overlay" {
-			return fmt.Errorf("动效组件范围无效")
 		}
 	}
 	if len(config.CustomPresets) > 30 {

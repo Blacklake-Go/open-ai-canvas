@@ -139,7 +139,6 @@ type PageRule struct {
 type Config struct {
 	Typography        *TypographyConfig         `json:"typography"`
 	Interactions      *InteractionConfig        `json:"interactions"`
-	Transitions       *TransitionConfig         `json:"transitions"`
 	ModelPicker       *ModelPickerVisualConfig  `json:"modelPicker"`
 	CustomPresets     []ThemePreset             `json:"customPresets"`
 	SchemaVersion     int                       `json:"schemaVersion"`

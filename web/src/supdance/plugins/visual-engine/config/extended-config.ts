@@ -1,4 +1,4 @@
-import type { InteractionConfig, TransitionConfig, TypographyConfig, ModelPickerVisualConfig } from "../types";
+import type { InteractionConfig, TypographyConfig, ModelPickerVisualConfig } from "../types";
 
 export const DEFAULT_TYPOGRAPHY: TypographyConfig = {
     fontFamilySans: "system",
@@ -25,19 +25,6 @@ export const DEFAULT_INTERACTIONS: InteractionConfig = {
     checkboxLight: "#18181b",
     checkboxDark: "#f4f4f5",
     performanceMode: "auto",
-};
-export const DEFAULT_TRANSITIONS: TransitionConfig = {
-    // 上游 (ddcat-ai/open-ai-canvas) 没有路由过渡动画；整页 opacity 0→1 渐入会被感知为切菜单闪屏，默认关闭。
-    enabled: false,
-    preset: "fade",
-    duration: 150,
-    delay: 0,
-    distance: 8,
-    scale: 0.98,
-    opacity: 0,
-    direction: "forward",
-    paths: ["/*"],
-    components: ["page"],
 };
 export const FONT_FAMILIES = {
     system: '"SF Pro Text","PingFang SC","Microsoft YaHei",system-ui,sans-serif',

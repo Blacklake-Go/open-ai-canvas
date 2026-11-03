@@ -5,7 +5,7 @@ import { DEFAULT_VISUAL_ENGINE_CONFIG, BUILTIN_THEME_PRESETS } from "../config/d
 import { validateVisualEngineConfig } from "../config/schema";
 import { apiPublishVisualEngineConfig, apiRollbackVisualEngineConfig, apiSaveVisualEngineDraft, type VisualEngineAdminOverview, type VisualEnginePublicBundle } from "../api/visual-engine-api";
 
-export type ConsoleModuleKey = "dashboard" | "themes" | "colors" | "typography" | "components" | "effects" | "interactions" | "motion" | "transitions" | "loading" | "pagerules" | "preview" | "presets" | "versions" | "diagnostics" | "auditlogs";
+export type ConsoleModuleKey = "dashboard" | "themes" | "colors" | "typography" | "components" | "effects" | "interactions" | "motion" | "loading" | "pagerules" | "preview" | "presets" | "versions" | "diagnostics" | "auditlogs";
 type MutationResult = { success: boolean; error?: string };
 type VisualEngineState = {
     permissions: VisualEnginePermission[];

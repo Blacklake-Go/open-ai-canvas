@@ -1,7 +1,7 @@
 # 2.0.3
 修复切菜单时的整页闪屏（对齐上游 ddcat-ai/open-ai-canvas 行为）：
-- 运行时不再播放页面级路由过渡动画（`#root` opacity 0→1 整页渐入）。上游宿主没有任何路由过渡，该动画是定制层引入的闪屏根因；Visual Console 中的过渡面板配置保留但不再影响路由切换。
-- 默认配置 `DEFAULT_TRANSITIONS.enabled` 改为 `false`。
+- 彻底移除路由过渡功能：前端删除 TransitionsPane 面板、路由过渡模块与 `Config.transitions` 字段，后端同步删除 `Transitions` 配置、默认值与校验；已发布配置中的旧 `transitions` JSON 键在解析时被忽略，无迁移风险。
+- 上游宿主没有任何路由过渡动画，切菜单不再出现 `#root` opacity 0→1 整页渐入闪屏。
 - 主题变量应用保持布局 effect 同步执行，路由切换时不再出现可感知的主题重注入闪烁。
 
 # 2.0.2

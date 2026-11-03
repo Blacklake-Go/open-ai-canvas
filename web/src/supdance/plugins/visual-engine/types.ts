@@ -209,7 +209,6 @@ export type ThemePreset = {
 export type VisualEngineConfig = {
     typography: TypographyConfig;
     interactions: InteractionConfig;
-    transitions: TransitionConfig;
     modelPicker: ModelPickerVisualConfig;
     customPresets: ThemePreset[];
     schemaVersion: 2;
@@ -257,19 +256,6 @@ export type InteractionConfig = {
     checkboxDark: string;
     performanceMode: "auto" | "low" | "full";
 };
-export type TransitionConfig = {
-    enabled: boolean;
-    preset: "fade" | "slide" | "scale";
-    duration: number;
-    delay: number;
-    distance: number;
-    scale: number;
-    opacity: number;
-    direction: "forward" | "backward";
-    paths: string[];
-    components: string[];
-};
-
 /**
  * 版本快照与审计日志
  */

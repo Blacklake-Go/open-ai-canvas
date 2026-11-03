@@ -80,7 +80,6 @@ function validateConfig(input: unknown): { valid: boolean; errors: string[]; con
             ) as VisualEngineConfig["typography"]["scales"],
         },
         interactions: { ...DEFAULT_VISUAL_ENGINE_CONFIG.interactions, ...raw.interactions },
-        transitions: { ...DEFAULT_VISUAL_ENGINE_CONFIG.transitions, ...raw.transitions },
         modelPicker: { ...DEFAULT_VISUAL_ENGINE_CONFIG.modelPicker, ...raw.modelPicker },
         customPresets: structuredClone(raw.customPresets ?? []),
         schemaVersion: 2,
@@ -122,31 +121,6 @@ function validateConfig(input: unknown): { valid: boolean; errors: string[]; con
         !["auto", "low", "full"].includes(interaction.performanceMode)
     )
         errors.push("交互参数超出范围");
-    const transition = validated.transitions;
-    if (
-        ![transition.duration, transition.delay, transition.distance, transition.scale, transition.opacity].every(Number.isFinite) ||
-        transition.duration < 0 ||
-        transition.duration > 1000 ||
-        transition.delay < 0 ||
-        transition.delay > 300 ||
-        transition.distance < 0 ||
-        transition.distance > 32 ||
-        transition.scale < 0.9 ||
-        transition.scale > 1 ||
-        transition.opacity < 0 ||
-        transition.opacity > 1 ||
-        !["fade", "slide", "scale"].includes(transition.preset) ||
-        !["forward", "backward"].includes(transition.direction)
-    )
-        errors.push("页面过渡参数超出范围");
-    if (
-        !Array.isArray(transition.paths) ||
-        transition.paths.length > 100 ||
-        transition.paths.some((path) => typeof path !== "string" || !path.startsWith("/") || path.length > 200) ||
-        !Array.isArray(transition.components) ||
-        transition.components.some((value) => !["page", "workspace", "generation", "overlay"].includes(value))
-    )
-        errors.push("动效适用范围无效");
 
     const modelPicker = validated.modelPicker;
     if (typeof modelPicker.simplified !== "boolean" || typeof modelPicker.hideChannelMeta !== "boolean" || typeof modelPicker.hideTelemetry !== "boolean" || typeof modelPicker.cleanCardLayout !== "boolean") {

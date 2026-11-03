@@ -2,7 +2,7 @@ package visualengine
 
 func DefaultConfig() Config {
 	return Config{
-		Typography: DefaultTypography(), Interactions: DefaultInteractions(), Transitions: DefaultTransitions(), ModelPicker: DefaultModelPicker(), CustomPresets: []ThemePreset{},
+		Typography: DefaultTypography(), Interactions: DefaultInteractions(), ModelPicker: DefaultModelPicker(), CustomPresets: []ThemePreset{},
 		SchemaVersion:    2,
 		ActivePreset:     "studio",
 		ThemeMode:        "system",
