@@ -5,7 +5,7 @@
 - 上游：`ddcat-ai/open-ai-canvas` 的 `main`，固定提交 `4d25e4a547fccdf8bf9bded53939a3378708ebb6`，版本 `v1.7.3.4`。
 - 维护仓库：`Blacklake-Go/open-ai-canvas`，目标分支 `main`。
 - 原工作区提交：`04f8cc6c`；更新前源码检查点：`19ff061a`。
-- 合并提交：`be14d04c`，保留检查点与上游两个父提交。后续兼容回归修复：`5a937da8`。
+- 合并提交：`be14d04c`，保留检查点与上游两个父提交。后续兼容回归与 CI 修复：`5a937da8`、`6aa24164`、`e48c81db`、`677d447a`。
 - 合并包含 52 个原工作区缺少的上游提交。上游提交是当前结果的祖先；未用文件覆盖替代 Git 合并。
 - 宿主 schema 基线为 78。兼容层元数据原来仍指向 77，现已对齐；本轮未执行生产数据库迁移。
 
@@ -50,16 +50,16 @@ git merge-base --is-ancestor 4d25e4a547fccdf8bf9bded53939a3378708ebb6 HEAD
 
 | 分类 | 文件数 |
 | --- | ---: |
-| 宿主修改 | 44 |
+| 宿主修改 | 46 |
 | 测试 | 18 |
 | 新增后端适配与测试 | 14 |
 | 独立插件与命名空间 | 164 |
 | 文档 | 6 |
 | RunningHub 协议插件 | 4 |
 | 其他新增前端适配与资源 | 5 |
-| 合计 | 255 |
+| 合计 | 257 |
 
-新增 200 个文件，修改 55 个上游已有文件；无上游文件删除。完整路径如下。
+新增 200 个文件，修改 57 个上游已有文件；无上游文件删除。完整路径如下。
 
 ## 逐文件差异
 
@@ -159,8 +159,10 @@ git merge-base --is-ancestor 4d25e4a547fccdf8bf9bded53939a3378708ebb6 HEAD
 | M | 宿主修改 | `web/index.html` |
 | A | 其他新增前端适配与资源 | `web/public/robots.txt` |
 | A | 其他新增前端适配与资源 | `web/public/sitemap.xml` |
+| M | 宿主修改 | `web/scripts/previs-p0-chrome-e2e.mjs` |
 | M | 宿主修改 | `web/src/application.tsx` |
 | M | 宿主修改 | `web/src/components/auth/auth-session-hydrator.tsx` |
+| M | 宿主修改 | `web/src/components/canvas/previs/previs-viewport-capture.ts` |
 | M | 宿主修改 | `web/src/components/layout/app-providers.tsx` |
 | M | 宿主修改 | `web/src/components/layout/client-root-init.tsx` |
 | M | 宿主修改 | `web/src/components/layout/site-compliance-footer.tsx` |
@@ -325,9 +327,9 @@ git merge-base --is-ancestor 4d25e4a547fccdf8bf9bded53939a3378708ebb6 HEAD
 
 ## 验证与恢复
 
-推送前运行仓库要求的 `bun scripts/verify-before-push.mjs --jobs 4`，覆盖前端格式、类型、lint、包含 pretest 的全量测试，以及 Go 格式、其他包与 app 四分片测试。另运行 `cd web && bun run build`。最终命令退出码与统计随交付测试报告保存。
+推送前运行仓库要求的 `bun scripts/verify-before-push.mjs --jobs 4`，覆盖前端格式、类型、lint、包含 pretest 的全量测试，以及 Go 格式、其他包与 app 四分片测试。另运行 `cd web && bun run build` 与 `cd web && bun run test:previs:e2e`。最终命令退出码与统计随交付测试报告保存。
 
-已验证：11 项推送前检查全部通过，前端全量 3066 项测试通过（另含 pretest 的 64 项）；前端生产构建与后端 `go build -o /dev/null ./cmd/server` 通过。视觉引擎专项 22 项通过，包含本次新增的导航启停与真实面包屑渲染。
+已验证：前端全量 3066 项测试通过（另含 pretest 的 64 项）；前端生产构建、TypeScript、lint、格式检查、后端 `go build -o /dev/null ./cmd/server`、视觉引擎专项 22 项和 Previs Chrome E2E 通过。最终 GitHub Quality checks 与镜像构建全部通过：run `41709655680`，提交 `677d447a`。
 
 本地未覆盖：支付插件 Docker 双架构产物、Agent 的 golangci-lint 静态检查、需要独立 PostgreSQL/Redis 服务的集成用例，以及真实浏览器全站视觉验收；这些不由构建成功代替。
 
