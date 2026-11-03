@@ -1,3 +1,4 @@
+import { startPluginStateSync } from "@/supdance/adapters/plugin-state-sync";
 import { useCallback, useEffect, useLayoutEffect, useRef, useSyncExternalStore } from "react";
 import { registerCanvasThemeExtension, refreshCanvasThemeExtensions } from "@/lib/canvas-theme";
 import { createVisualEngineCanvasTheme } from "../adapters/canvas-theme";
@@ -40,7 +41,9 @@ function VisualEngineMetadataHost() {
     const installed = useVisualEngineStore((state) => state.installation.installed);
     const platform = usePluginStore((state) => state.pluginStates["supdance-visual-engine"]?.platformAvailable);
     const user = useUserStore((state) => state.user);
-    const initialized = useRef(false);
+    useLayoutEffect(() => {
+        useVisualEngineStore.getState().resetSession();
+    }, [user?.id]);
     useEffect(() => {
         synchronizeVisualEngineRegistration(installed);
     }, [installed]);
@@ -57,40 +60,23 @@ function VisualEngineMetadataHost() {
                 });
         return () => controller.abort();
     }, [user?.id, user?.role, platform]);
-    useEffect(() => {
-        if (!installed && platform !== true && initialized.current) return;
-        initialized.current = true;
-        const controller = new AbortController();
-        let pending = false;
-        const refresh = async () => {
-            if (pending) return;
-            pending = true;
-            try {
-                const bundle = await fetchVisualEnginePublicBundle(controller.signal);
-                if (!controller.signal.aborted) useVisualEngineStore.getState().acceptBundle(bundle);
-            } catch (error) {
-                if (!controller.signal.aborted) {
-                    useVisualEngineStore.getState().setEnabled(false);
-                    console.warn("视觉引擎配置读取失败，已恢复宿主样式", error);
+    useEffect(
+        () =>
+            startPluginStateSync(async (signal) => {
+                const revision = useVisualEngineStore.getState().revision;
+                try {
+                    const bundle = await fetchVisualEnginePublicBundle(signal);
+                    if (!signal.aborted && (useVisualEngineStore.getState().revision === revision || useVisualEngineStore.getState().revision === bundle.revision)) useVisualEngineStore.getState().acceptBundle(bundle);
+                } catch (error) {
+                    if (!signal.aborted) {
+                        useVisualEngineStore.getState().setEnabled(false);
+                        useVisualEngineStore.getState().setPermissions([]);
+                        console.warn("视觉引擎配置读取失败，已恢复宿主样式", error);
+                    }
                 }
-            } finally {
-                pending = false;
-            }
-        };
-        void refresh();
-        const active = installed && enabled;
-        const timer = active
-            ? window.setInterval(() => {
-                  if (!document.hidden) void refresh();
-              }, 15000)
-            : undefined;
-        if (active) window.addEventListener("focus", refresh);
-        return () => {
-            controller.abort();
-            if (timer !== undefined) window.clearInterval(timer);
-            if (active) window.removeEventListener("focus", refresh);
-        };
-    }, [installed, enabled, platform]);
+            }),
+        [installed, platform, user?.id],
+    );
     return null;
 }
 

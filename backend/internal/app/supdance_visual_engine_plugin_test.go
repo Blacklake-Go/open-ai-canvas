@@ -60,7 +60,7 @@ func TestSupDanceVisualEngineConfigLifecycleAndRollback(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if published.Bundle.Config.Components.ButtonRadius != 12 || published.Bundle.Config.UpdatedBy != admin.Username || published.Bundle.Version == initial.Version || len(published.Snapshots) != 2 || published.Draft != nil {
+	if published.Bundle.Config.Components.ButtonRadius != 12 || published.Bundle.Config.UpdatedBy != admin.ID || published.Bundle.Version == initial.Version || len(published.Snapshots) != 2 || published.Draft != nil {
 		t.Fatal("publish contract failed")
 	}
 	if _, err := svc.PublishAdminVisualEngine(other, config, "stale", initial.Revision); err == nil {

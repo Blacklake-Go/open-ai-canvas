@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useUserStore } from "@/stores/use-user-store";
 import { AppDrawer } from "@/components/ui/product/app-drawer";
 import "./console.css";
 import { useAppearanceStore } from "@/stores/use-appearance-store";
@@ -27,6 +28,7 @@ import { DiagnosticsPane } from "./pages/DiagnosticsPane";
 import { AuditLogsPane } from "./pages/AuditLogsPane";
 
 export default function VisualConsole() {
+    const userId = useUserStore((state) => state.user?.id);
     const activeModule = useVisualEngineStore((state) => state.activeConsoleModule);
     const setConsoleModule = useVisualEngineStore((state) => state.setConsoleModule);
     const [previewOpen, setPreviewOpen] = useState(true);
@@ -62,7 +64,7 @@ export default function VisualConsole() {
         return () => {
             disposed = true;
         };
-    }, [retry]);
+    }, [retry, userId]);
 
     if (loadState === "loading")
         return (

@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"encoding/json"
 	"net/http"
 
 	"yingce/backend/internal/service"
@@ -50,13 +51,18 @@ func RegisterSupDanceVisualEngineRoutes(r *gin.RouterGroup, svc *service.Service
 			return
 		}
 		var request struct {
-			Config visualengine.Config `json:"config"`
+			Config json.RawMessage `json:"config"`
 		}
 		if err := c.ShouldBindJSON(&request); err != nil {
 			fail(c, http.StatusBadRequest, err)
 			return
 		}
-		config, err := svc.PreviewAdminVisualEngine(actor, request.Config)
+		parsed, err := visualengine.DecodeConfig(request.Config)
+		if err != nil {
+			fail(c, http.StatusBadRequest, err)
+			return
+		}
+		config, err := svc.PreviewAdminVisualEngine(actor, parsed)
 		if err != nil {
 			failService(c, err)
 			return
@@ -121,13 +127,18 @@ func RegisterSupDanceVisualEngineRoutes(r *gin.RouterGroup, svc *service.Service
 			return
 		}
 		var req struct {
-			Config visualengine.Config `json:"config"`
+			Config json.RawMessage `json:"config"`
 		}
 		if err := c.ShouldBindJSON(&req); err != nil {
 			fail(c, http.StatusBadRequest, err)
 			return
 		}
-		draft, err := svc.SaveAdminVisualEngineDraft(user, req.Config)
+		config, err := visualengine.DecodeConfig(req.Config)
+		if err != nil {
+			fail(c, http.StatusBadRequest, err)
+			return
+		}
+		draft, err := svc.SaveAdminVisualEngineDraft(user, config)
 		if err != nil {
 			failService(c, err)
 			return
@@ -154,15 +165,20 @@ func RegisterSupDanceVisualEngineRoutes(r *gin.RouterGroup, svc *service.Service
 			return
 		}
 		var req struct {
-			Config           visualengine.Config `json:"config"`
-			Comment          string              `json:"comment"`
-			ExpectedRevision string              `json:"expectedRevision" binding:"required"`
+			Config           json.RawMessage `json:"config"`
+			Comment          string          `json:"comment"`
+			ExpectedRevision string          `json:"expectedRevision" binding:"required"`
 		}
 		if err := c.ShouldBindJSON(&req); err != nil {
 			fail(c, http.StatusBadRequest, err)
 			return
 		}
-		overview, err := svc.PublishAdminVisualEngine(user, req.Config, req.Comment, req.ExpectedRevision)
+		config, err := visualengine.DecodeConfig(req.Config)
+		if err != nil {
+			fail(c, http.StatusBadRequest, err)
+			return
+		}
+		overview, err := svc.PublishAdminVisualEngine(user, config, req.Comment, req.ExpectedRevision)
 		if err != nil {
 			failService(c, err)
 			return

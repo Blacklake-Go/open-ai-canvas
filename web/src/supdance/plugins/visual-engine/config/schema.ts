@@ -2,6 +2,12 @@ import type { VisualEngineConfig } from "../types";
 import { DEFAULT_VISUAL_ENGINE_CONFIG } from "./default-config";
 
 const HEX_COLOR_PATTERN = /^#(?:[0-9a-fA-F]{3}|[0-9a-fA-F]{6})$/;
+const SHADOW_LENGTH = String.raw`(?:0|(?:\d+(?:\.\d+)?|\.\d+)(?:px|rem|em))`;
+const SHADOW_CHANNEL = String.raw`(?:25[0-5]|2[0-4]\d|1?\d{1,2})`;
+const SHADOW_ALPHA = String.raw`(?:0(?:\.\d+)?|1(?:\.0+)?|\.\d+)`;
+const SHADOW_COLOR = String.raw`(?:#[0-9a-fA-F]{3}(?:[0-9a-fA-F]{3})?|rgb\(\s*${SHADOW_CHANNEL}\s*,\s*${SHADOW_CHANNEL}\s*,\s*${SHADOW_CHANNEL}\s*\)|rgba\(\s*${SHADOW_CHANNEL}\s*,\s*${SHADOW_CHANNEL}\s*,\s*${SHADOW_CHANNEL}\s*,\s*${SHADOW_ALPHA}\s*\)|transparent|black|white)`;
+const SINGLE_SHADOW = String.raw`(?:inset\s+)?[+-]?${SHADOW_LENGTH}\s+[+-]?${SHADOW_LENGTH}(?:\s+${SHADOW_LENGTH}(?:\s+[+-]?${SHADOW_LENGTH})?)?\s+${SHADOW_COLOR}`;
+const SHADOW = new RegExp(String.raw`^(?:none|${SINGLE_SHADOW}(?:,\s*${SINGLE_SHADOW})*)$`);
 
 function collectInvalidColorTokens(prefix: string, tokens: Record<string, unknown>, errors: string[]): void {
     for (const [key, value] of Object.entries(tokens)) {
@@ -18,6 +24,21 @@ function validateConfig(input: unknown): { valid: boolean; errors: string[]; con
     }
 
     const raw = input as Partial<VisualEngineConfig>;
+    const validateStructure = (value: unknown, baseline: unknown, path: string) => {
+        if (Array.isArray(baseline)) {
+            if (!Array.isArray(value)) errors.push(`${path} 必须是数组`);
+        } else if (baseline && typeof baseline === "object") {
+            if (!value || typeof value !== "object" || Array.isArray(value)) {
+                errors.push(`${path} 必须是完整对象`);
+                return;
+            }
+            const fields = value as Record<string, unknown>;
+            for (const [key, child] of Object.entries(baseline)) validateStructure(fields[key], child, `${path}.${key}`);
+            for (const key of Object.keys(fields)) if (!(key in baseline)) errors.push(`${path}.${key} 是未知字段`);
+        } else if (typeof value !== typeof baseline || (typeof value === "number" && !Number.isFinite(value))) errors.push(`${path} 类型无效`);
+    };
+    validateStructure(raw, DEFAULT_VISUAL_ENGINE_CONFIG, "config");
+    if (errors.length) return { valid: false, errors, config: structuredClone(DEFAULT_VISUAL_ENGINE_CONFIG) };
     for (const mode of ["light", "dark"] as const) for (const key of Object.keys(DEFAULT_VISUAL_ENGINE_CONFIG.tokens[mode])) if (typeof raw.tokens?.[mode]?.[key as keyof typeof raw.tokens.light] !== "string") errors.push(`缺少颜色 ${mode}.${key}`);
     if (raw.schemaVersion !== 2 || !raw.tokens?.light || !raw.tokens.dark || !raw.components) errors.push("缺少完整的 Schema、主题或组件配置");
     if (!["dark", "light", "system"].includes(String(raw.themeMode))) errors.push("主题模式无效");
@@ -177,13 +198,7 @@ function validateConfig(input: unknown): { valid: boolean; errors: string[]; con
     for (const [key, value] of Object.entries(overlays)) if (key !== "enableTextProtectionGradient" && (!Number.isFinite(value) || Number(value) < 0 || Number(value) > (key.endsWith("Blur") ? 100 : 1))) errors.push("遮罩参数无效");
     for (const level of ["E0", "E1", "E2", "E3", "E4"] as const) {
         const token = elevations[level];
-        if (
-            !token ||
-            ![token.shadowLight, token.shadowDark].every((value) => typeof value === "string" && value.length <= 240 && /^(none|[-0-9.pxrgba(), #%]+)$/.test(value)) ||
-            !Number.isInteger(token.blurRadius) ||
-            token.blurRadius < 0 ||
-            token.blurRadius > 100
-        )
+        if (!token || ![token.shadowLight, token.shadowDark].every((value) => typeof value === "string" && value.length <= 240 && SHADOW.test(value)) || !Number.isInteger(token.blurRadius) || token.blurRadius < 0 || token.blurRadius > 100)
             errors.push("阴影参数无效");
     }
     const recovery = workspaceRecovery;
