@@ -22,7 +22,7 @@
 | --- | --- | --- | --- | --- |
 | `model` | string | 是 | `create path` | 标准模型端点，如 `rhart-image-g-2-official/text-to-image`、`kling-v4/image-to-video`。 |
 | `prompt` | string | 是 | `prompt` / `text` | 提示词或合成文本。 |
-| `images` | media[] | 否 | image：`imageUrls`；video：`imageUrl`+`firstImageUrl`+`lastImageUrl`+`imageUrls`(多图) | 参考图、编辑源图或首尾帧。 |
+| `images` | media[] | 否 | image：`imageUrls`；video：`imageUrl`+`firstImageUrl`+`lastImageUrl`+`imageUrls` | 参考图、编辑源图或首尾帧。 |
 | `videos` | media[] | 否 | video：`videoUrl` | 参考视频。 |
 | `audios` | media[] | 否 | audio：`audioUrl`；video：`audioUrl` | 参考音频。 |
 | `duration` | integer | 否 | video/audio：`duration`（字符串化） | 时长秒数。 |
@@ -45,7 +45,7 @@
 | `create.body.imageUrls` (image) | `{"$omitEmpty":{"$map":{"from":{"$ref":"request.images"},"as":"media","in":{"$ref":"media.value"}}}}` |
 | `create.body.imageUrl/firstImageUrl` (video) | 第一张参考图 URL |
 | `create.body.lastImageUrl` (video) | role 为 `last` 的参考图 URL |
-| `create.body.imageUrls` (video) | 多于一张参考图时的完整 URL 列表 |
+| `create.body.imageUrls` (video) | 参考图 URL 列表；单图也发送，满足只接受 `imageUrls` 的端点（如 Veo 3.1 Fast） |
 | `create.body.videoUrl/audioUrl` | 参考视频/音频的第一个 URL |
 | `create.body.duration` | `{"$omitEmpty":{"$toString":{"$ref":"request.duration"}}}` |
 | `create.body.aspectRatio/resolution/quality/seed/watermark` | 同名统一字段，空值省略 |
@@ -491,29 +491,14 @@
             },
             "imageUrls": {
               "$omitEmpty": {
-                "$if": {
-                  "condition": {
-                    "$gt": [
-                      {
-                        "$len": {
-                          "$ref": "request.images"
-                        }
-                      },
-                      1
-                    ]
+                "$map": {
+                  "from": {
+                    "$ref": "request.images"
                   },
-                  "then": {
-                    "$map": {
-                      "from": {
-                        "$ref": "request.images"
-                      },
-                      "as": "media",
-                      "in": {
-                        "$ref": "media.value"
-                      }
-                    }
-                  },
-                  "else": null
+                  "as": "media",
+                  "in": {
+                    "$ref": "media.value"
+                  }
                 }
               }
             },
