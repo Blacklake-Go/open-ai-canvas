@@ -97,6 +97,8 @@ export const BUILTIN_SUPDANCE_I18N_ENTRIES: readonly SupDanceI18nEntry[] = [
     e("common.save_failed", "common", "保存失败", "通用保存失败提示"),
     e("common.try_again_later", "common", "请稍后重试", "通用稍后重试提示"),
     e("common.site_compliance_aria", "common", "站点版权与备案信息", "页脚版权与备案无障碍描述"),
+    e("common.legal_terms", "common", "服务条款", "页脚法务文档链接：服务条款"),
+    e("common.legal_privacy", "common", "隐私政策", "页脚法务文档链接：隐私政策"),
     e("nav.workspace", "nav", "创作工作台", "侧栏品牌副标题"),
     e("nav.create", "nav", "创作", "主导航：创作工作台"),
     e("nav.projects", "nav", "短剧制作", "主导航：短剧制作"),
@@ -428,6 +430,19 @@ export const BUILTIN_SUPDANCE_I18N_ENTRIES: readonly SupDanceI18nEntry[] = [
     e("admin.features", "admin", "功能开放", "后台：功能开放"),
     e("admin.system_update", "admin", "系统更新", "后台：系统更新"),
     e("auth.social_login_divider", "auth", "第三方账号快捷登录", "第三方登录分割线文案"),
+    e("admin.social_auth.brand_icon", "admin", "品牌图标", "社交登录渠道品牌图标入口按钮"),
+    e("admin.social_auth.brand_icon_setting", "admin", "品牌图标设置", "品牌图标设置弹窗副标题"),
+    e("admin.social_auth.icon_light", "admin", "亮色图标", "亮色界面品牌图标"),
+    e("admin.social_auth.icon_dark", "admin", "暗色图标", "暗色界面品牌图标"),
+    e("admin.social_auth.icon_upload", "admin", "上传文件", "品牌图标上传按钮"),
+    e("admin.social_auth.icon_replace", "admin", "替换文件", "品牌图标替换按钮"),
+    e("admin.social_auth.icon_clear", "admin", "清除", "清除自定义品牌图标"),
+    e("admin.social_auth.icon_save", "admin", "保存图标", "品牌图标保存按钮"),
+    e("admin.social_auth.icon_saved", "admin", "品牌图标已更新", "品牌图标保存成功提示"),
+    e("admin.social_auth.icon_save_failed", "admin", "品牌图标保存失败", "品牌图标保存失败提示"),
+    e("admin.social_auth.icon_upload_failed", "admin", "图标上传失败", "品牌图标上传失败提示"),
+    e("admin.social_auth.icon_hint", "admin", "分别上传亮色与暗色两版品牌图标（建议 128×128 PNG/SVG）；登录页与管理台会按界面明暗自动切换，清除后恢复默认图标。", "品牌图标设置说明"),
+    e("admin.social_auth.icon_notice_title", "admin", "提示", "品牌图标弹窗提示标题"),
     e("auth.please_relogin", "auth", "请重新登录", "重新登录提示"),
     e("settings.crop_avatar_failed", "settings", "裁剪头像失败，请重试", "头像裁剪失败提示"),
     e("settings.save_avatar_failed", "settings", "保存头像失败，请重试", "头像保存失败提示"),
@@ -1891,7 +1906,7 @@ export const BUILTIN_SUPDANCE_I18N_ENTRIES: readonly SupDanceI18nEntry[] = [
     e("inspiration.more_ops_title", "inspiration", "更多操作", "创作工作区词条"),
     e("inspiration.modes_aria", "inspiration", "按创作类型筛选灵感", "创作工作区词条"),
     e("inspiration.search_aria", "inspiration", "搜索灵感", "创作工作区词条"),
-]
+];
 
 export const packLoaders: Record<Exclude<SupDanceLocaleCode, "zh-CN">, () => Promise<{ default: Record<string, string> }>> = {
     "en-US": () => import("./packs/en-US"),

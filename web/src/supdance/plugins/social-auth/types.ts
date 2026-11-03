@@ -11,6 +11,8 @@ export interface SocialAuthProviderPublic {
     region: SocialAuthRegion;
     icon: string;
     authorizeUrl?: string;
+    iconLightUrl?: string;
+    iconDarkUrl?: string;
     status?: SocialAuthStatus;
 }
 
@@ -35,6 +37,8 @@ export interface SocialAuthProviderAdmin {
     platform?: string;
     region: SocialAuthRegion;
     icon: string;
+    iconLightUrl?: string;
+    iconDarkUrl?: string;
     enabled: boolean;
     status: SocialAuthStatus;
     statusLabel?: string;
@@ -79,6 +83,8 @@ export interface ProviderUpdateInput {
     clientSecret?: string;
     customRedirectUrl?: string;
     scopes?: string[];
+    iconLightUrl?: string;
+    iconDarkUrl?: string;
 }
 
 export interface OperationalPolicies {

@@ -295,11 +295,7 @@ export default function AdminPluginsPage() {
                 item.manifest.id === "supdance-visual-engine" ? (
                     <VisualEnginePluginControls onChanged={reload} />
                 ) : item.manifest.id === "supdance-html-page-manager" ? (
-                    <Link
-                        to="/admin/plugins/html-pages"
-                        className="inline-flex items-center gap-1 rounded px-2.5 py-1 text-xs font-semibold text-emerald-400 bg-emerald-500/10 hover:bg-emerald-500/20 transition-all"
-                        title="进入 HTML 页面管理与排版编辑器"
-                    >
+                    <Link to="/admin/plugins/html-pages" className="inline-flex items-center gap-1 rounded px-2.5 py-1 text-xs font-semibold text-emerald-400 bg-emerald-500/10 hover:bg-emerald-500/20 transition-all" title="进入 HTML 页面管理与排版编辑器">
                         <FileCode className="size-3.5" />
                         编辑页面
                     </Link>

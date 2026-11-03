@@ -1,20 +1,4 @@
-import {
-    LayoutDashboard,
-    Palette,
-    Droplet,
-    Type,
-    Layers,
-    Shield,
-    MousePointerClick,
-    Zap,
-    Loader2,
-    Compass,
-    Eye,
-    Package,
-    History,
-    MonitorCheck,
-    ClipboardList,
-} from "lucide-react";
+import { LayoutDashboard, Palette, Droplet, Type, Layers, Shield, MousePointerClick, Zap, Loader2, Compass, Eye, Package, History, MonitorCheck, ClipboardList } from "lucide-react";
 import type { ConsoleModuleKey } from "../../storage/visual-engine-store";
 
 export type ConsoleNavSection = {

@@ -2,8 +2,8 @@ import type { ElevationLevel, ElevationToken } from "../types";
 
 export const ELEVATION_Z_INDEX_MAP: Record<ElevationLevel, number> = {
     E0: 0,
-    E1: 10,   // 工具栏 / 播放器
-    E2: 100,  // 下拉 / 气泡菜单
+    E1: 10, // 工具栏 / 播放器
+    E2: 100, // 下拉 / 气泡菜单
     E3: 1000, // 模态弹窗 / 抽屉
     E4: 2000, // 全局置顶 / 拖拽幽灵元素
 };

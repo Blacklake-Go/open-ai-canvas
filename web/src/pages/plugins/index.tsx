@@ -282,16 +282,21 @@ export default function PluginsPage() {
                         </nav>
                     </aside>
                     <div className="plugins-page-content">
-                        <CollectionToolbar label="插件筛选" trailing={<div className="plugins-toolbar-actions">
-                                <Button icon={<RefreshCw className="size-4" />} loading={backendPluginsLoading} onClick={() => void reloadBackendPlugins()}>
-                                    刷新插件
-                                </Button>
-                                {user?.role === "admin" ? (
-                                    <Button type="primary" onClick={() => navigate("/admin/plugins")}>
-                                        管理员插件管理
+                        <CollectionToolbar
+                            label="插件筛选"
+                            trailing={
+                                <div className="plugins-toolbar-actions">
+                                    <Button icon={<RefreshCw className="size-4" />} loading={backendPluginsLoading} onClick={() => void reloadBackendPlugins()}>
+                                        刷新插件
                                     </Button>
-                                ) : null}
-                            </div>}>
+                                    {user?.role === "admin" ? (
+                                        <Button type="primary" onClick={() => navigate("/admin/plugins")}>
+                                            管理员插件管理
+                                        </Button>
+                                    ) : null}
+                                </div>
+                            }
+                        >
                             <Input
                                 className="plugins-search"
                                 prefix={<Search className="size-4 text-foreground/38" aria-hidden="true" />}
@@ -369,11 +374,7 @@ export default function PluginsPage() {
                                                                 >
                                                                     <div className="plugin-card-heading">
                                                                         <span className={`plugin-icon-tile${trusted ? " is-trusted" : ""}`} aria-hidden="true">
-                                                                            {plugin.manifest.id === SUPDANCE_SOCIAL_AUTH_PLUGIN_ID ? (
-                                                                                <Share2 className="size-5 text-pink-500" />
-                                                                            ) : (
-                                                                                <SectionIcon className="size-5" />
-                                                                            )}
+                                                                            {plugin.manifest.id === SUPDANCE_SOCIAL_AUTH_PLUGIN_ID ? <Share2 className="size-5 text-pink-500" /> : <SectionIcon className="size-5" />}
                                                                         </span>
                                                                         <div className="min-w-0 flex-1">
                                                                             <div className="plugin-card-title-row">
@@ -447,20 +448,12 @@ export default function PluginsPage() {
                                                                         </Button>
                                                                     ) : null}
                                                                     {plugin.manifest.id === SUPDANCE_SOCIAL_AUTH_PLUGIN_ID ? (
-                                                                        <Button
-                                                                            className="plugin-settings-button"
-                                                                            icon={<Settings2 className="size-4" />}
-                                                                            onClick={() => navigate("/admin/settings/social-auth")}
-                                                                        >
+                                                                        <Button className="plugin-settings-button" icon={<Settings2 className="size-4" />} onClick={() => navigate("/admin/settings/social-auth")}>
                                                                             配置中心
                                                                         </Button>
                                                                     ) : null}
                                                                     {plugin.manifest.id === SUPDANCE_I18N_PLUGIN_ID ? (
-                                                                        <Button
-                                                                            className="plugin-settings-button"
-                                                                            icon={<Settings2 className="size-4" />}
-                                                                            onClick={() => navigate("/admin/i18n/settings")}
-                                                                        >
+                                                                        <Button className="plugin-settings-button" icon={<Settings2 className="size-4" />} onClick={() => navigate("/admin/i18n/settings")}>
                                                                             多语言设置
                                                                         </Button>
                                                                     ) : null}

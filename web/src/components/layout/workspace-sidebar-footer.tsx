@@ -17,7 +17,6 @@ import { useThemeStore } from "@/stores/use-theme-store";
 import { useUserStore, type LocalUser } from "@/stores/use-user-store";
 import { openUserProfileModal } from "@/stores/use-user-profile-modal-store";
 
-
 type WorkspaceSidebarFooterProps = {
     expandedClassName: string;
     collapsedClassName: string;
@@ -35,9 +34,7 @@ export function WorkspaceSidebarFooter({ expandedClassName, collapsedClassName, 
     const { message } = App.useApp();
     const [menuOpen, setMenuOpen] = useState(false);
     const { availableMicrocredits } = useWalletBalance(user?.id, creditsEnabled);
-    const balance = availableMicrocredits === null
-        ? "--"
-        : (availableMicrocredits / 1_000_000).toLocaleString("zh-CN", { maximumFractionDigits: 2 });
+    const balance = availableMicrocredits === null ? "--" : (availableMicrocredits / 1_000_000).toLocaleString("zh-CN", { maximumFractionDigits: 2 });
 
     const handleLogout = async () => {
         try {
@@ -70,12 +67,16 @@ export function WorkspaceSidebarFooter({ expandedClassName, collapsedClassName, 
                     placement="rightBottom"
                     open={menuOpen}
                     onOpenChange={setMenuOpen}
-                    content={(
+                    content={
                         <div className="w-[232px] py-0.5">
                             <div className="flex items-center gap-3 border-b border-border/65 px-1 pb-3">
                                 <SidebarUserAvatar user={user} className="size-8" />
                                 <div className="min-w-0 flex-1">
-                                    <div className="flex min-w-0 items-center gap-2"><span className="truncate text-sm font-medium">{user.displayName || user.username}</span><UserGroupBadge /><IdentityProviderBadge user={user} /></div>
+                                    <div className="flex min-w-0 items-center gap-2">
+                                        <span className="truncate text-sm font-medium">{user.displayName || user.username}</span>
+                                        <UserGroupBadge />
+                                        <IdentityProviderBadge user={user} />
+                                    </div>
                                     {creditsEnabled ? <div className="mt-0.5 truncate text-[var(--fs-label)] tabular-nums text-foreground/45">可用 {balance} 积分</div> : null}
                                 </div>
                             </div>
@@ -103,7 +104,12 @@ export function WorkspaceSidebarFooter({ expandedClassName, collapsedClassName, 
                             ) : null}
 
                             <div className="border-y border-border/65 py-2">
-                                <AppChangelogButton className="flex h-8 w-full items-center gap-2 rounded px-2 text-[var(--fs-label)] text-foreground/58 hover:bg-surface-hover hover:text-foreground [&_svg]:size-3.5" showLabel showVersion versionClassName="ml-auto text-[var(--fs-micro)] tabular-nums text-foreground/32" />
+                                <AppChangelogButton
+                                    className="flex h-8 w-full items-center gap-2 rounded px-2 text-[var(--fs-label)] text-foreground/58 hover:bg-surface-hover hover:text-foreground [&_svg]:size-3.5"
+                                    showLabel
+                                    showVersion
+                                    versionClassName="ml-auto text-[var(--fs-micro)] tabular-nums text-foreground/32"
+                                />
                             </div>
 
                             <div className="flex h-10 items-center px-2">
@@ -111,14 +117,24 @@ export function WorkspaceSidebarFooter({ expandedClassName, collapsedClassName, 
                                 <span className="ml-2 flex-1 text-xs text-foreground/65">深色模式</span>
                                 <Switch size="sm" checked={theme === "dark"} onChange={(checked) => setTheme(checked ? "dark" : "light")} aria-label="深色模式" />
                             </div>
-                            <button type="button" className="flex h-9 w-full items-center gap-2 rounded px-2 text-xs text-foreground/55 hover:bg-surface-hover hover:text-foreground" onClick={() => void handleLogout()}><LogOut className="size-3.5" />退出登录</button>
+                            <button type="button" className="flex h-9 w-full items-center gap-2 rounded px-2 text-xs text-foreground/55 hover:bg-surface-hover hover:text-foreground" onClick={() => void handleLogout()}>
+                                <LogOut className="size-3.5" />
+                                退出登录
+                            </button>
                         </div>
-                    )}
+                    }
                 >
-                    <button type="button" className={cn("app-workspace-account-button flex min-h-10 w-full min-w-0 items-center overflow-hidden rounded-md text-left transition-colors hover:bg-surface-hover", accountClassName)} title={creditsEnabled ? `${user.displayName || user.username} · ${balance} 积分` : user.displayName || user.username}>
+                    <button
+                        type="button"
+                        className={cn("app-workspace-account-button flex min-h-10 w-full min-w-0 items-center overflow-hidden rounded-md text-left transition-colors hover:bg-surface-hover", accountClassName)}
+                        title={creditsEnabled ? `${user.displayName || user.username} · ${balance} 积分` : user.displayName || user.username}
+                    >
                         <SidebarUserAvatar user={user} className="size-7" />
                         <span className={cn("min-w-0 flex-1 flex-col", expandedClassName)}>
-                            <span className="flex min-w-0 items-center gap-1.5"><span className="truncate text-xs font-medium">{user.displayName || user.username}</span><UserGroupBadge compact /></span>
+                            <span className="flex min-w-0 items-center gap-1.5">
+                                <span className="truncate text-xs font-medium">{user.displayName || user.username}</span>
+                                <UserGroupBadge compact />
+                            </span>
                             {creditsEnabled ? <span className="mt-0.5 block truncate text-[var(--fs-micro)] tabular-nums text-foreground/42">{balance} 积分</span> : null}
                         </span>
                         <ChevronRight className={cn("size-3.5 shrink-0 text-foreground/30", expandedClassName)} />
@@ -126,7 +142,8 @@ export function WorkspaceSidebarFooter({ expandedClassName, collapsedClassName, 
                 </Popover>
             ) : (
                 <Link to="/login" className={cn("flex h-10 items-center rounded-md text-xs text-foreground/65 hover:bg-surface-hover hover:text-foreground", collapsedClassName)} title="登录">
-                    <LogIn className="size-4 shrink-0" /><span className={expandedClassName}>登录</span>
+                    <LogIn className="size-4 shrink-0" />
+                    <span className={expandedClassName}>登录</span>
                 </Link>
             )}
         </div>
@@ -134,7 +151,13 @@ export function WorkspaceSidebarFooter({ expandedClassName, collapsedClassName, 
 }
 
 function MenuLink({ to, icon, label, onNavigate }: { to: string; icon: ReactNode; label: string; onNavigate: () => void }) {
-    return <Link to={to} onClick={onNavigate} className="flex h-9 items-center gap-2 rounded px-2 text-xs text-foreground/62 hover:bg-surface-hover hover:text-foreground [&_svg]:size-3.5 [&_svg]:shrink-0">{icon}<span className="flex-1">{label}</span><ChevronRight className="!size-3 text-foreground/25" /></Link>;
+    return (
+        <Link to={to} onClick={onNavigate} className="flex h-9 items-center gap-2 rounded px-2 text-xs text-foreground/62 hover:bg-surface-hover hover:text-foreground [&_svg]:size-3.5 [&_svg]:shrink-0">
+            {icon}
+            <span className="flex-1">{label}</span>
+            <ChevronRight className="!size-3 text-foreground/25" />
+        </Link>
+    );
 }
 
 function SidebarUserAvatar({ user, className }: { user: LocalUser; className: string }) {

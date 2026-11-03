@@ -106,7 +106,7 @@ describe("Social Auth UX & Onboarding Improvements", () => {
         expect(source).toContain('selectPluginEffectivelyEnabled("supdance-social-auth"');
         expect(source).toContain("function accountManagementItems(socialAuthEnabled: boolean)");
         expect(source).toContain('items.filter((item) => item.key !== "social")');
-        expect(source).toContain("currentTab === \"social\" && socialAuthPluginEnabled && <SocialAccountBindings />");
+        expect(source).toContain('currentTab === "social" && socialAuthPluginEnabled && <SocialAccountBindings />');
     });
 
     it("blocks the identities read path on the backend when the plugin is disabled", () => {

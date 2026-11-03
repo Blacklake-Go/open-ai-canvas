@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { App, Button, Skeleton, Tooltip } from "antd";
 import { useQueryClient } from "@tanstack/react-query";
-import { AlertTriangle, Check, Copy, ExternalLink, KeyRound, RefreshCw } from "lucide-react";
+import { AlertTriangle, Check, Copy, ExternalLink, Image, KeyRound, RefreshCw } from "lucide-react";
 
 import { cn } from "@/lib/utils";
 import { Select } from "@/components/ui/base/select";
@@ -10,10 +10,11 @@ import { AdminStatusBadge } from "@/pages/admin/components/admin-ui";
 import { IconButton, SegmentedControl, Switch } from "@/pages/admin/ui/controls";
 import { useI18n } from "@/supdance/plugins/i18n";
 import { getAdminSocialAuthSettings, testSocialAuthProvider, updateAdminSocialAuthSettings } from "../api";
-import { SocialProviderIcon } from "../components/social-provider-icons";
+import { SocialProviderBrandIcon } from "../components/social-provider-icons";
 import type { AdminSettingsView, ProviderTestResult, SocialAuthProviderAdmin, SocialAuthRegion } from "../types";
 import { credentialKeyLabels, draftFromProvider, maskedClientIdOf, probeBadgeOf, statusBadgeOf, type ProviderDraftState } from "./credential-helpers";
 import { ProviderCredentialModal } from "./provider-credential-modal";
+import { ProviderIconModal } from "./provider-icon-modal";
 import { SocialAuthNavTabs } from "./social-auth-nav-tabs";
 
 const REGION_TABS: Array<{ value: SocialAuthRegion; label: string; hint: string }> = [
@@ -37,6 +38,7 @@ export default function SocialAuthSettingsPage() {
 
     const [activeRegion, setActiveRegion] = useState<SocialAuthRegion>("cn");
     const [credentialProviderId, setCredentialProviderId] = useState<string | null>(null);
+    const [iconProviderId, setIconProviderId] = useState<string | null>(null);
     const [modalDraft, setModalDraft] = useState<ProviderDraftState | null>(null);
     const [togglingProviderId, setTogglingProviderId] = useState<string | null>(null);
 
@@ -156,6 +158,13 @@ export default function SocialAuthSettingsPage() {
         setModalDraft(draftFromProvider(provider));
     };
 
+    const handleIconSaved = (view: AdminSettingsView) => {
+        setData(view);
+        setIconProviderId(null);
+        invalidatePublicProviders();
+        void loadSettings(false);
+    };
+
     if (loading && !data) {
         return (
             <AdminPageFrame title="第三方登录配置" description="第三方登录凭据、IP 分区与即时启停；渠道可用性以真实授权验收为准" scroll>
@@ -189,6 +198,7 @@ export default function SocialAuthSettingsPage() {
     const intlProviders = data.intlProviders || [];
     const activeProviders = activeRegion === "cn" ? cnProviders : intlProviders;
     const credentialProvider = credentialProviderId ? allProviders.find((p) => p.id === credentialProviderId) || null : null;
+    const iconProvider = iconProviderId ? allProviders.find((p) => p.id === iconProviderId) || null : null;
 
     return (
         <AdminPageFrame title="第三方登录配置" description="第三方登录凭据、IP 分区与即时启停；渠道可用性以真实授权验收为准" scroll>
@@ -229,7 +239,7 @@ export default function SocialAuthSettingsPage() {
                         <div className="w-[180px] shrink-0">渠道平台</div>
                         <div className="w-[220px] shrink-0">凭证状态与标识</div>
                         <div className="flex-1 min-w-[200px] px-2">授权回调地址 (Redirect URI)</div>
-                        <div className="w-[160px] shrink-0 text-right">操作与启用</div>
+                        <div className="w-[220px] shrink-0 text-right">操作与启用</div>
                     </div>
 
                     {/* Table Rows */}
@@ -250,8 +260,8 @@ export default function SocialAuthSettingsPage() {
                                     <div key={provider.id} className={cn("flex flex-col sm:flex-row sm:items-center px-4 py-3 text-xs transition-colors hover:bg-[var(--admin-row-hover)]", !provider.enabled && "opacity-85")}>
                                         {/* Col 1: Provider icon + name + ID badge (180px) */}
                                         <div className="flex w-[180px] shrink-0 items-center gap-2.5">
-                                            <span className="flex size-7 shrink-0 items-center justify-center rounded-md bg-[var(--admin-surface-2)]">
-                                                <SocialProviderIcon provider={provider.id} className="size-4" />
+                                            <span className="flex size-7 shrink-0 items-center justify-center overflow-hidden rounded-md bg-[var(--admin-surface-2)]">
+                                                <SocialProviderBrandIcon provider={provider.id} iconLightUrl={provider.iconLightUrl} iconDarkUrl={provider.iconDarkUrl} className="size-4" />
                                             </span>
                                             <div className="min-w-0 flex flex-col">
                                                 <div className="flex items-center gap-1.5">
@@ -299,9 +309,12 @@ export default function SocialAuthSettingsPage() {
                                         </div>
 
                                         {/* Col 4: [配置密钥] + [🔄 probe] + inline instant Switch (160px, right-aligned) */}
-                                        <div className="flex w-[160px] shrink-0 items-center justify-end gap-2">
+                                        <div className="flex w-[220px] shrink-0 items-center justify-end gap-2">
                                             <Button size="small" icon={<KeyRound className="size-3" />} className="text-xs" onClick={() => handleOpenCredentialModal(provider)}>
                                                 配置密钥
+                                            </Button>
+                                            <Button size="small" icon={<Image className="size-3" />} className="text-xs" onClick={() => setIconProviderId(provider.id)}>
+                                                品牌图标
                                             </Button>
                                             <IconButton icon={RefreshCw} loading={testingProvider === provider.id} title="测试连通性" aria-label={`测试 ${provider.name} 连通性`} onClick={() => void handlePing(provider)} />
                                             <Tooltip title={!canToggle ? "请先配置密钥后再开启" : provider.enabled ? "点击即时停用" : "点击即时启用"}>
@@ -338,6 +351,8 @@ export default function SocialAuthSettingsPage() {
                         onCopy={handleCopy}
                     />
                 ) : null}
+
+                {iconProvider ? <ProviderIconModal provider={iconProvider} onClose={() => setIconProviderId(null)} onSaved={({ view }) => handleIconSaved(view)} /> : null}
             </div>
         </AdminPageFrame>
     );

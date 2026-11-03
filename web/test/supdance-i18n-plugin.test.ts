@@ -207,10 +207,14 @@ describe("supdance-i18n plugin architecture and engine", () => {
             "aria-label": "搜索插件",
         });
         const textareaUserInput = createMockText("用户手写的中文提示词，不应被翻译");
-        const promptTextarea = createMockElement("textarea", {
-            placeholder: "输入你的镜头、画面或故事。也可以添加参考图开始创作",
-            "aria-label": "创作提示词，可使用 @ 引用当前参考内容或技能；回车发送，Shift+回车换行",
-        }, [textareaUserInput]);
+        const promptTextarea = createMockElement(
+            "textarea",
+            {
+                placeholder: "输入你的镜头、画面或故事。也可以添加参考图开始创作",
+                "aria-label": "创作提示词，可使用 @ 引用当前参考内容或技能；回车发送，Shift+回车换行",
+            },
+            [textareaUserInput],
+        );
         const codeBlock = createMockElement("code", {}, [codeText]);
         const ignoredDiv = createMockElement("div", { "data-i18n-ignore": "true" }, [createMockElement("span", {}, [ignoredText])]);
         const root = createMockElement("div", { id: "root" }, [createMockElement("a", {}, [navCreateText]), createMockElement("a", {}, [navProjectsText]), searchInput, promptTextarea, codeBlock, ignoredDiv]);

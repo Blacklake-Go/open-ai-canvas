@@ -77,7 +77,14 @@ export function InspirationDetailModal({
                             </div>
                             <div className="flex shrink-0 items-center gap-2">
                                 <Tooltip title={favorite ? t("inspiration.unfavorite_aria", undefined, "取消收藏灵感") : t("inspiration.favorite_aria", undefined, "收藏灵感")}>
-                                    <button type="button" data-icon-only className="inspiration-icon-button" aria-label={favorite ? t("inspiration.unfavorite_aria", undefined, "取消收藏灵感") : t("inspiration.favorite_aria", undefined, "收藏灵感")} aria-pressed={favorite} onClick={() => onToggleFavorite(localizedItem)}>
+                                    <button
+                                        type="button"
+                                        data-icon-only
+                                        className="inspiration-icon-button"
+                                        aria-label={favorite ? t("inspiration.unfavorite_aria", undefined, "取消收藏灵感") : t("inspiration.favorite_aria", undefined, "收藏灵感")}
+                                        aria-pressed={favorite}
+                                        onClick={() => onToggleFavorite(localizedItem)}
+                                    >
                                         <span aria-hidden="true">
                                             <Heart className="size-4" fill={favorite ? "currentColor" : "none"} />
                                         </span>
@@ -91,7 +98,13 @@ export function InspirationDetailModal({
                                     </button>
                                 </Tooltip>
                                 <Tooltip title={custom ? t("inspiration.delete", undefined, "删除灵感") : t("inspiration.hide_aria", undefined, "隐藏灵感")}>
-                                    <button type="button" data-icon-only className="inspiration-icon-button" aria-label={custom ? t("inspiration.delete", undefined, "删除灵感") : t("inspiration.hide_aria", undefined, "隐藏灵感")} onClick={() => onDelete(localizedItem)}>
+                                    <button
+                                        type="button"
+                                        data-icon-only
+                                        className="inspiration-icon-button"
+                                        aria-label={custom ? t("inspiration.delete", undefined, "删除灵感") : t("inspiration.hide_aria", undefined, "隐藏灵感")}
+                                        onClick={() => onDelete(localizedItem)}
+                                    >
                                         <span aria-hidden="true">
                                             <Trash2 className="size-4" />
                                         </span>
@@ -140,12 +153,7 @@ export function InspirationDetailModal({
                             copyText={t("common.copy", undefined, "复制")}
                         />
                         {localizedItem.promptZh && localizedItem.prompt !== localizedItem.promptZh ? (
-                            <PromptSection
-                                label={t("inspiration.prompt_source_label", undefined, "提示词 · 原文")}
-                                text={localizedItem.prompt}
-                                onCopy={onCopy}
-                                copyText={t("common.copy", undefined, "复制")}
-                            />
+                            <PromptSection label={t("inspiration.prompt_source_label", undefined, "提示词 · 原文")} text={localizedItem.prompt} onCopy={onCopy} copyText={t("common.copy", undefined, "复制")} />
                         ) : null}
                     </div>
 

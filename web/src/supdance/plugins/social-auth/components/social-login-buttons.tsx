@@ -103,9 +103,7 @@ export function SocialLoginButtons({ variant = "light-card", next = "/", accepte
                             aria-label={provider.name}
                             onClick={() => handleProviderClick(provider)}
                             className={`group flex min-h-12 items-center justify-center gap-2.5 rounded-full px-5 text-sm font-medium transition-all duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#00f5d4]/50 focus-visible:ring-offset-2 active:scale-[0.98] ${
-                                isDark
-                                    ? "border border-white/10 bg-white/[0.04] text-white hover:border-white/25 hover:bg-white/[0.09]"
-                                    : "border border-border/70 bg-card text-foreground hover:border-primary/50 hover:bg-accent"
+                                isDark ? "border border-white/10 bg-white/[0.04] text-white hover:border-white/25 hover:bg-white/[0.09]" : "border border-border/70 bg-card text-foreground hover:border-primary/50 hover:bg-accent"
                             }`}
                         >
                             <SocialProviderBrandIcon provider={provider.id} iconLightUrl={provider.iconLightUrl} iconDarkUrl={provider.iconDarkUrl} className="size-5 shrink-0 transition-transform duration-150 group-hover:scale-110" />

@@ -4,18 +4,10 @@
 function parseHexColor(hex: string): [number, number, number] {
     const cleaned = hex.replace("#", "").trim();
     if (cleaned.length === 3) {
-        return [
-            parseInt(cleaned[0] + cleaned[0], 16),
-            parseInt(cleaned[1] + cleaned[1], 16),
-            parseInt(cleaned[2] + cleaned[2], 16),
-        ];
+        return [parseInt(cleaned[0] + cleaned[0], 16), parseInt(cleaned[1] + cleaned[1], 16), parseInt(cleaned[2] + cleaned[2], 16)];
     }
     if (cleaned.length === 6) {
-        return [
-            parseInt(cleaned.slice(0, 2), 16),
-            parseInt(cleaned.slice(2, 4), 16),
-            parseInt(cleaned.slice(4, 6), 16),
-        ];
+        return [parseInt(cleaned.slice(0, 2), 16), parseInt(cleaned.slice(2, 4), 16), parseInt(cleaned.slice(4, 6), 16)];
     }
     return [0, 0, 0];
 }
@@ -40,9 +32,9 @@ export function calculateContrastRatio(foregroundHex: string, backgroundHex: str
 }
 
 export function evaluateContrastCompliance(ratio: number): {
-    aaNormalText: boolean;  // ≥ 4.5:1
-    aaLargeText: boolean;   // ≥ 3.0:1
-    uiComponents: boolean;  // ≥ 3.0:1
+    aaNormalText: boolean; // ≥ 4.5:1
+    aaLargeText: boolean; // ≥ 3.0:1
+    uiComponents: boolean; // ≥ 3.0:1
     rating: "AAA" | "AA" | "FAIL";
 } {
     const aaNormalText = ratio >= 4.5;

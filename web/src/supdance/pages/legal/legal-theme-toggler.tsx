@@ -13,12 +13,5 @@ export function LegalThemeToggler() {
         root.style.colorScheme = theme;
     }, [theme]);
 
-    return (
-        <AnimatedThemeToggler
-            className={`legal-theme-toggler ${theme === "dark" ? "is-dark" : "is-light"}`}
-            theme={theme}
-            onThemeChange={setTheme}
-            aria-label={theme === "dark" ? "Switch to light theme" : "Switch to dark theme"}
-        />
-    );
+    return <AnimatedThemeToggler className={`legal-theme-toggler ${theme === "dark" ? "is-dark" : "is-light"}`} theme={theme} onThemeChange={setTheme} aria-label={theme === "dark" ? "Switch to light theme" : "Switch to dark theme"} />;
 }

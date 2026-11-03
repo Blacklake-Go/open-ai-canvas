@@ -346,14 +346,11 @@ export function SocialOnboardingModal() {
                         {/* Terms and conditions */}
                         <div className="flex items-center gap-2 pt-1">
                             <Checkbox checked={acceptedTerms} onChange={(e) => setAcceptedTerms(e.target.checked)} className="text-xs text-foreground/70">
-                                {t("auth.onboarding.agree_prefix", {}, "我已阅读并同意")}
-                                {" "}
+                                {t("auth.onboarding.agree_prefix", {}, "我已阅读并同意")}{" "}
                                 <a href="/terms" target="_blank" rel="noreferrer" className="text-primary hover:underline">
                                     {t("auth.onboarding.terms_service", {}, "《用户服务协议》")}
-                                </a>
-                                {" "}
-                                {t("auth.onboarding.terms_and", {}, "与")}
-                                {" "}
+                                </a>{" "}
+                                {t("auth.onboarding.terms_and", {}, "与")}{" "}
                                 <a href="/privacy" target="_blank" rel="noreferrer" className="text-primary hover:underline">
                                     {t("auth.onboarding.terms_privacy", {}, "《隐私政策》")}
                                 </a>

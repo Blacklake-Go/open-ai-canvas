@@ -1,18 +1,8 @@
 import type { WorkspaceRecoveryStage, WorkspaceRecoveryConfig } from "../types";
 
-export type StageTransitionEvent =
-    | { type: "START" }
-    | { type: "AUTH_VERIFIED" }
-    | { type: "PROJECTS_SYNCED" }
-    | { type: "APP_READY" }
-    | { type: "ERROR"; error?: string }
-    | { type: "RETRY" }
-    | { type: "TIMEOUT" };
+export type StageTransitionEvent = { type: "START" } | { type: "AUTH_VERIFIED" } | { type: "PROJECTS_SYNCED" } | { type: "APP_READY" } | { type: "ERROR"; error?: string } | { type: "RETRY" } | { type: "TIMEOUT" };
 
-export function getNextRecoveryStage(
-    current: WorkspaceRecoveryStage,
-    event: StageTransitionEvent,
-): WorkspaceRecoveryStage {
+export function getNextRecoveryStage(current: WorkspaceRecoveryStage, event: StageTransitionEvent): WorkspaceRecoveryStage {
     switch (current) {
         case "init":
             if (event.type === "START" || event.type === "AUTH_VERIFIED") return "recovering";
@@ -37,7 +27,10 @@ export function getNextRecoveryStage(
     }
 }
 
-export function getStageCopy(stage: WorkspaceRecoveryStage, config: WorkspaceRecoveryConfig): {
+export function getStageCopy(
+    stage: WorkspaceRecoveryStage,
+    config: WorkspaceRecoveryConfig,
+): {
     title: string;
     detail: string;
 } {

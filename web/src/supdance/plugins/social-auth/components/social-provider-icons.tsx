@@ -149,3 +149,21 @@ export function SocialProviderIcon({ provider, className = "size-5" }: { provide
             return <div className={`rounded-full bg-slate-500/20 ${className}`} />;
     }
 }
+
+/**
+ * 品牌图标渲染：管理员上传了明暗两版自定义图标时优先使用，并跟随站点明暗主题
+ * 自动切换（复用画布主题的 `dark:` 类语义）；未上传时回退到内置品牌 SVG。
+ */
+export function SocialProviderBrandIcon({ provider, iconLightUrl, iconDarkUrl, className = "size-5", alt = "" }: { provider: string; iconLightUrl?: string; iconDarkUrl?: string; className?: string; alt?: string }) {
+    const lightUrl = iconLightUrl?.trim();
+    const darkUrl = (iconDarkUrl?.trim() || lightUrl) ?? "";
+    if (!lightUrl) {
+        return <SocialProviderIcon provider={provider} className={className} />;
+    }
+    return (
+        <span className={`relative inline-flex items-center justify-center ${className}`} data-social-brand-icon={provider}>
+            <img src={lightUrl} alt={alt} loading="lazy" decoding="async" aria-hidden={alt ? undefined : true} className={`absolute inset-0 size-full object-contain dark:hidden`} />
+            <img src={darkUrl} alt="" loading="lazy" decoding="async" aria-hidden="true" className={`absolute inset-0 size-full object-contain hidden dark:block`} />
+        </span>
+    );
+}
