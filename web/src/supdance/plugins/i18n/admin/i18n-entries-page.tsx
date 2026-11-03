@@ -605,7 +605,7 @@ export function SupDanceI18nEntriesPage() {
                 />
             </div>
 
-            <AdminDrawer open={workflowOpen} onClose={() => setWorkflowOpen(false)} title={t("admin.i18n_workflow.title")} width="min(100vw, 64rem)">
+            <AdminDrawer open={workflowOpen} onClose={() => setWorkflowOpen(false)} title={t("admin.i18n_workflow.title")} size="min(100vw, 64rem)">
                 {workflowOpen ? <TranslationWorkflowPanel onChanged={() => void fetchRemoteEntries()} /> : null}
             </AdminDrawer>
             <AdminDrawer

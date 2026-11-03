@@ -1,4 +1,4 @@
-import { parseSync } from "@babel/core";
+import { parse } from "@babel/parser";
 import { createHash } from "node:crypto";
 
 export const hashText = (text) => createHash("sha256").update(text).digest("hex");
@@ -9,7 +9,7 @@ const textCalls = /^(?:message|notification|modal)\.(?:success|error|warning|inf
 export function scanSource(source, file) {
     let ast;
     try {
-        ast = parseSync(source, { filename: file, configFile: false, babelrc: false, parserOpts: { plugins: ["typescript", ...(file.endsWith("tsx") ? ["jsx"] : [])] } });
+        ast = parse(source, { sourceFilename: file, sourceType: "unambiguous", plugins: ["typescript", ...(file.endsWith("tsx") ? ["jsx"] : [])] });
     } catch (error) {
         return { items: [], references: [], diagnostics: [{ file, message: error.message }] };
     }

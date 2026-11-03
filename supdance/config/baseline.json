@@ -13,6 +13,11 @@
     "baseCommit": "259e7e3fba0b6f70ac3cfd65941c3ca345d60249"
   },
   "coupledUpstreamFiles": [
+    ".github/workflows/quality.yml",
+    ".github/workflows/supdance-upstream-sync.yml",
+    "scripts/verify-before-push.mjs",
+    "web/package.json",
+    "VERSION",
     ".gitignore",
     "AGENTS.md",
     "backend/internal/app/plugin_management.go",

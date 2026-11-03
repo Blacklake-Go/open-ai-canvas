@@ -168,7 +168,7 @@ export function TranslationWorkflowPanel({ onChanged }: { onChanged: () => void 
                 title={text("edit")}
                 open={!!editing}
                 onClose={() => setEditing(null)}
-                width="min(100vw, 48rem)"
+                size="min(100vw, 48rem)"
                 extra={
                     <Button
                         type="primary"
