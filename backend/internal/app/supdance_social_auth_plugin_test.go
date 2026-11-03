@@ -146,12 +146,17 @@ func TestSupDanceSocialAuthPluginLifecycleAndAdminOperations(t *testing.T) {
 
 	updatedPolicies := overview.Policies
 	updatedPolicies.SignupBonusCredits = 100
+	updatedPolicies.OrphanAccountSafety = false
+	updatedPolicies.MandatoryEmailOnboarding = true
 	updatedOverview, err := svc.UpdateSocialAuthPolicies(admin, updatedPolicies)
 	if err != nil {
 		t.Fatalf("UpdateSocialAuthPolicies failed: %v", err)
 	}
-	if updatedOverview.Policies.SignupBonusCredits != 100 {
-		t.Fatalf("expected updated signup bonus 100, got %d", updatedOverview.Policies.SignupBonusCredits)
+	if updatedOverview.Policies.SignupBonusCredits != overview.Policies.SignupBonusCredits {
+		t.Fatal("plugin policies must not override the host's central signup bonus")
+	}
+	if !updatedOverview.Policies.OrphanAccountSafety || !updatedOverview.Policies.MandatoryEmailOnboarding {
+		t.Fatalf("mandatory recovery protection and editable email policy were not preserved: %+v", updatedOverview.Policies)
 	}
 
 	// 10. User accounts & unbind orphan account safety

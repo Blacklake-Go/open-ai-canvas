@@ -261,10 +261,10 @@ describe("Empirical Challenger Suite: Milestone 1 Stress & Verification", () => 
             const dict = useSupDanceI18nStore.getState().dictionary;
 
             const cardKeys = [
-                { title: "create.card_first_shot_title", hint: "create.card_first_shot_hint" },
-                { title: "create.card_ref_image_title", hint: "create.card_ref_image_hint" },
-                { title: "create.card_story_title", hint: "create.card_story_hint" },
-                { title: "create.card_skills_title", hint: "create.card_skills_hint" },
+                { title: "create.suggest_first_shot_title", hint: "create.suggest_first_shot_hint" },
+                { title: "create.suggest_ref_image_title", hint: "create.suggest_ref_image_hint" },
+                { title: "create.suggest_continue_story_title", hint: "create.suggest_continue_story_hint" },
+                { title: "create.suggest_skills_title", hint: "create.suggest_skills_hint" },
             ];
 
             for (const locale of ALL_LOCALES) {

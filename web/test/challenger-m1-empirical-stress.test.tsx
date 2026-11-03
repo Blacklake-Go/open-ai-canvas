@@ -129,15 +129,15 @@ describe("Empirical Challenger Milestone 1 Stress & Adversarial Suite", () => {
             expect(subtitle).toBe("Haz clic para ver las instrucciones completas y continúa creando con tus ideas favoritas.");
             expect(hanRegex.test(subtitle)).toBeFalse();
 
-            const newBtn = tEs("inspirations.new");
+            const newBtn = tEs("inspiration.new_inspiration");
             expect(newBtn).toBe("Nueva inspiración");
             expect(hanRegex.test(newBtn)).toBeFalse();
 
-            const moreFilters = tEs("inspirations.more_filters");
+            const moreFilters = tEs("inspiration.more_filters");
             expect(moreFilters).toBe("Más filtros");
             expect(hanRegex.test(moreFilters)).toBeFalse();
 
-            const searchPlaceholder = tEs("inspirations.search_placeholder");
+            const searchPlaceholder = tEs("inspiration.search_placeholder");
             expect(searchPlaceholder).toBe("Buscar por título, descripción o etiquetas");
             expect(hanRegex.test(searchPlaceholder)).toBeFalse();
 
@@ -278,7 +278,7 @@ describe("Empirical Challenger Milestone 1 Stress & Adversarial Suite", () => {
                 const current = useSupDanceI18nStore.getState();
                 expect(current.locale).toBe(targetLocale);
                 expect(current.dictionary).toBeDefined();
-                expect(current.dictionary.byKey.size).toBeGreaterThanOrEqual(1728);
+                expect(current.dictionary.byKey.size).toBeGreaterThanOrEqual(BUILTIN_SUPDANCE_I18N_ENTRIES.length);
             }
         });
 
