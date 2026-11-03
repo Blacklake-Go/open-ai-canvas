@@ -28,6 +28,12 @@ func TestDefaultBuiltinHtmlPages(t *testing.T) {
 		if !strings.Contains(p.HTML, "<!DOCTYPE html>") {
 			t.Errorf("页面 HTML 必须为自包含标准 HTML 文档: %s", p.Slug)
 		}
+		if !strings.Contains(p.HTML, "id=\"theme-toggle\"") {
+			t.Errorf("页面 HTML 必须内置明暗主题切换按钮 #theme-toggle: %s", p.Slug)
+		}
+		if !strings.Contains(p.HTML, "startViewTransition") {
+			t.Errorf("页面 HTML 必须支持 View Transition 缩放动效: %s", p.Slug)
+		}
 		slugMap[p.Slug] = true
 	}
 
@@ -36,5 +42,18 @@ func TestDefaultBuiltinHtmlPages(t *testing.T) {
 		if !slugMap[s] {
 			t.Errorf("缺少核心必须的页面 slug: %s", s)
 		}
+	}
+}
+
+func TestHtmlPageManagerPolicies(t *testing.T) {
+	policy, ok := officialApplicationPolicies[PluginSupDanceHtmlPageManager]
+	if !ok {
+		t.Fatalf("supdance-html-page-manager 必须在官方应用策略中注册")
+	}
+	if policy.Kind != PluginKindApplication {
+		t.Errorf("预期插件类型为 application，实际为 %v", policy.Kind)
+	}
+	if policy.ActivationScope != PluginScopeSystem {
+		t.Errorf("预期激活作用域为 system，实际为 %v", policy.ActivationScope)
 	}
 }

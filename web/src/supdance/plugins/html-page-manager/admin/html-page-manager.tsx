@@ -99,7 +99,7 @@ export default function HtmlPageManager() {
     const [activeId, setActiveId] = useState<string>("");
     const [viewMode, setViewMode] = useState<"split" | "code" | "preview">("split");
     const [deviceViewport, setDeviceViewport] = useState<"desktop" | "tablet" | "mobile">("desktop");
-    const [previewTheme, setPreviewTheme] = useState<"default" | "dark" | "light">("default");
+    const [previewTheme, setPreviewTheme] = useState<"dark" | "light">("dark");
     const [templateModalOpen, setTemplateModalOpen] = useState(false);
     const [newPageModalOpen, setNewPageModalOpen] = useState(false);
     const [newTitle, setNewTitle] = useState("");
@@ -107,6 +107,17 @@ export default function HtmlPageManager() {
     const [newTemplateId, setNewTemplateId] = useState("linear-dark");
 
     const textareaRef = useRef<HTMLTextAreaElement | null>(null);
+    const iframeRef = useRef<HTMLIFrameElement | null>(null);
+
+    const togglePreviewTheme = () => {
+        const next = previewTheme === "light" ? "dark" : "light";
+        setPreviewTheme(next);
+        const doc = iframeRef.current?.contentDocument;
+        if (doc) {
+            doc.documentElement.setAttribute("data-theme", next);
+            doc.documentElement.style.colorScheme = next;
+        }
+    };
 
     // 加载页面列表
     const loadData = async () => {
@@ -234,10 +245,18 @@ export default function HtmlPageManager() {
     // 在新标签页全屏预览
     const handleOpenInNewTab = () => {
         if (!activePage) return;
-        const newWin = window.open("about:blank", "_blank");
-        if (newWin) {
-            newWin.document.write(activePage.html);
-            newWin.document.close();
+        window.open(`/p/${activePage.slug}`, "_blank");
+    };
+
+    // 复制在线预览地址
+    const handleCopyPreviewLink = async () => {
+        if (!activePage) return;
+        const previewUrl = `${window.location.origin}/p/${activePage.slug}`;
+        try {
+            await navigator.clipboard.writeText(previewUrl);
+            message.success(`已复制在线预览地址: ${previewUrl}`);
+        } catch {
+            message.info(`在线预览地址: ${previewUrl}`);
         }
     };
 
@@ -379,6 +398,18 @@ export default function HtmlPageManager() {
                             <button type="button" onClick={() => setDeviceViewport("mobile")} className={`p-1 rounded transition-colors ${deviceViewport === "mobile" ? "text-white bg-white/15" : "text-[#8a8f98] hover:text-white"}`} title="手机端 375px">
                                 <Smartphone className="size-3.5" />
                             </button>
+                            <div className="mx-1 h-3.5 w-px bg-white/10" />
+                            <button
+                                type="button"
+                                onClick={togglePreviewTheme}
+                                className={`flex items-center gap-1 rounded px-2 py-0.5 text-xs transition-transform active:scale-90 hover:scale-105 ${
+                                    previewTheme === "light" ? "text-amber-400 bg-white/10 font-medium" : "text-sky-400 bg-white/10 font-medium"
+                                }`}
+                                title={previewTheme === "light" ? "当前预览: 白昼 (点击切换为黑夜)" : "当前预览: 黑夜 (点击切换为白昼)"}
+                            >
+                                {previewTheme === "light" ? <Sun className="size-3.5" /> : <Moon className="size-3.5" />}
+                                <span className="font-mono text-xs uppercase">{previewTheme === "light" ? "Light" : "Dark"}</span>
+                            </button>
                         </>
                     )}
                 </div>
@@ -391,6 +422,11 @@ export default function HtmlPageManager() {
                     <Tooltip title="一键格式化与整洁排版">
                         <Button size="small" icon={<Wand2 className="size-3.5" />} onClick={handleBeautify} className="border-white/15 text-xs bg-white/5">
                             排版美化
+                        </Button>
+                    </Tooltip>
+                    <Tooltip title={`复制在线预览链接 (/p/${activePage?.slug})`}>
+                        <Button size="small" icon={<Copy className="size-3.5 text-sky-400" />} onClick={() => void handleCopyPreviewLink()} className="border-white/15 text-xs bg-white/5">
+                            预览链接
                         </Button>
                     </Tooltip>
                     <Tooltip title="下载独立单文件 HTML">
@@ -575,14 +611,33 @@ export default function HtmlPageManager() {
                                     <div className="flex items-center gap-2">
                                         <span className="size-2 rounded-full bg-emerald-500 animate-pulse" />
                                         <span className="font-mono text-xs">实时沙箱预览</span>
-                                        <span className="text-xs text-[#555]">（自包含 CSS 隔离环境）</span>
+                                        <span className="text-xs text-[#666]">/p/{activePage?.slug}</span>
                                     </div>
-                                    <div className="font-mono text-xs text-[#666]">视口: {viewportWidthStyle}</div>
+                                    <div className="flex items-center gap-3 font-mono text-xs text-[#666]">
+                                        <span>视口: {viewportWidthStyle}</span>
+                                        <button type="button" onClick={() => void handleCopyPreviewLink()} className="text-sky-400 hover:text-sky-300 flex items-center gap-1" title="复制预览地址">
+                                            <Copy className="size-3" />
+                                            复制链接
+                                        </button>
+                                    </div>
                                 </div>
 
                                 <div className="flex flex-1 items-center justify-center overflow-auto p-4 bg-[#0a0a0c]/60">
                                     <div style={{ width: viewportWidthStyle, height: "100%" }} className="h-full rounded-lg shadow-2xl overflow-hidden border border-white/10 bg-black transition-all duration-200">
-                                        <iframe title="HTML Page Live Preview" srcDoc={activePage?.html || "<p>无预览内容</p>"} sandbox="allow-scripts allow-same-origin" className="h-full w-full border-0 bg-transparent" />
+                                        <iframe
+                                            ref={iframeRef}
+                                            title="HTML Page Live Preview"
+                                            srcDoc={activePage?.html || "<p>无预览内容</p>"}
+                                            sandbox="allow-scripts allow-same-origin"
+                                            className="h-full w-full border-0 bg-transparent"
+                                            onLoad={() => {
+                                                if (iframeRef.current?.contentDocument) {
+                                                    const doc = iframeRef.current.contentDocument;
+                                                    doc.documentElement.setAttribute("data-theme", previewTheme);
+                                                    doc.documentElement.style.colorScheme = previewTheme;
+                                                }
+                                            }}
+                                        />
                                     </div>
                                 </div>
                             </div>

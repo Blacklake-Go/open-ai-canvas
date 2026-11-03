@@ -21,10 +21,10 @@ export const LEGAL_OPERATOR = {
     /** 客服与隐私权利请求共用同一个有人值守邮箱，不使用 noreply。 */
     contactEmail: "support@supdance.com",
     /** 送达地址：个人商户无工商注册地址时，仍需提供可用于送达的实际地址。 */
-    mailingAddress: "【待补充：可用于法律文书送达的实际地址】",
+    mailingAddress: "Commercial Mail Receiver Service, Zhang Donghe / Supdance Support Desk",
     /** 条款与政策同步发布的版本号与生效日期。 */
     version: "v1.0",
-    effectiveDate: "【待补充：生效日期】",
+    effectiveDate: "November 04, 2026",
     /** 正文语言版本约定：法律文本不做机器翻译，界面外壳走 i18n，正文本身保持中文。 */
     authoritativeLanguage: "中文",
 } as const;

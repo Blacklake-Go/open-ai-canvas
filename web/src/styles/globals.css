@@ -694,22 +694,30 @@
     color: color-mix(in srgb, var(--foreground) 58%, transparent);
     transition:
         background-color var(--motion-instant) ease-out,
-        color var(--motion-instant) ease-out;
+        color var(--motion-instant) ease-out,
+        transform 0.18s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
 .legal-theme-toggler > svg {
     width: 18px;
     height: 18px;
     stroke-width: 1.8;
+    transition: transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
 .legal-theme-toggler:hover {
     background: color-mix(in srgb, var(--foreground) 5%, transparent);
     color: var(--foreground);
+    transform: scale(1.06);
+}
+
+.legal-theme-toggler:hover > svg {
+    transform: rotate(12deg) scale(1.05);
 }
 
 .legal-theme-toggler:active {
     background: color-mix(in srgb, var(--foreground) 8%, transparent);
+    transform: scale(0.92);
 }
 
 .legal-theme-toggler:focus-visible {

@@ -21,6 +21,7 @@ export default function LoginPage() {
     const [methods, setMethods] = useState<VerificationMethod[]>([]);
     const [method, setMethod] = useState<"password" | VerificationMethod>("password");
     const [verification, setVerification] = useState({ ...emptyVerification });
+    const [hasSocialProviders, setHasSocialProviders] = useState(false);
     const next = safeNext(params.get("next"));
     const forgotPasswordURL = `/forgot-password?next=${encodeURIComponent(next)}`;
     const user = useUserStore((state) => state.user);
@@ -125,10 +126,12 @@ export default function LoginPage() {
                     </Button>
                 </>
             ) : null}
-            <Divider plain className="auth-scene-divider">
-                或使用快捷方式登录
-            </Divider>
-            <SocialLoginButtons variant="light-card" next={next} />
+            {hasSocialProviders ? (
+                <Divider plain className="auth-scene-divider">
+                    或使用快捷方式登录
+                </Divider>
+            ) : null}
+            <SocialLoginButtons variant="light-card" next={next} onProvidersChange={(providers) => setHasSocialProviders(providers.length > 0)} />
         </form>
     );
 }

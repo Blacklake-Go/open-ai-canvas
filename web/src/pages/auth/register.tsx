@@ -29,6 +29,7 @@ export default function RegisterPage() {
     const [password, setPassword] = useState("");
     const [confirmPassword, setConfirmPassword] = useState("");
     const [agreementAccepted, setAgreementAccepted] = useState(false);
+    const [hasSocialProviders, setHasSocialProviders] = useState(false);
     const [agreementOpen, setAgreementOpen] = useState(false);
     const [settingsFailed, setSettingsFailed] = useState(false);
     const [settingsReloadKey, setSettingsReloadKey] = useState(0);
@@ -236,9 +237,11 @@ export default function RegisterPage() {
                     </Button>
                 </>
             ) : null}
-            <Divider plain className="auth-scene-divider">
-                或使用第三方账号快捷注册 / 登录
-            </Divider>
+            {hasSocialProviders ? (
+                <Divider plain className="auth-scene-divider">
+                    或使用第三方账号快捷注册 / 登录
+                </Divider>
+            ) : null}
             <SocialLoginButtons
                 variant="light-card"
                 next={next}
@@ -250,6 +253,7 @@ export default function RegisterPage() {
                     }
                     return true;
                 }}
+                onProvidersChange={(providers) => setHasSocialProviders(providers.length > 0)}
             />
             <Modal className="workspace-modal workspace-modal-compact auth-agreement-modal" title={agreementTitle} open={agreementOpen} onCancel={() => setAgreementOpen(false)} footer={null} destroyOnHidden>
                 {agreementParagraphs.length === 0 ? (

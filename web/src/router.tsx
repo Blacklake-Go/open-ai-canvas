@@ -57,6 +57,7 @@ const TermsPage = lazy(() => import("@/supdance/pages/legal/terms-page"));
 const PrivacyPage = lazy(() => import("@/supdance/pages/legal/privacy-page"));
 const AupPage = lazy(() => import("@/supdance/pages/legal/aup-page"));
 const LegalHubPage = lazy(() => import("@/supdance/pages/legal/legal-hub-page"));
+const PublicHtmlViewerPage = lazy(() => import("@/supdance/pages/html-viewer/public-html-page"));
 const AssetsPage = lazy(loadAssetsPage);
 const LoginPage = lazy(() => import("@/pages/auth/login"));
 const RegisterPage = lazy(() => import("@/pages/auth/register"));
@@ -140,6 +141,8 @@ export const router = createBrowserRouter([
     { path: "/aup", element: fullScreenDeferred(<AupPage />), errorElement: <RouteErrorPage /> },
     { path: "/acceptable-use", element: <Navigate to="/aup" replace /> },
     { path: "/legal", element: fullScreenDeferred(<LegalHubPage />), errorElement: <RouteErrorPage /> },
+    { path: "/p/:slug", element: fullScreenDeferred(<PublicHtmlViewerPage />), errorElement: <RouteErrorPage /> },
+    { path: "/html/:slug", element: fullScreenDeferred(<PublicHtmlViewerPage />), errorElement: <RouteErrorPage /> },
     { path: "/share/canvas/:token", element: fullScreenDeferred(<SharedCanvasPage />), errorElement: <RouteErrorPage /> },
     ...(import.meta.env.DEV ? devRoutes() : []),
     {
