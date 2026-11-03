@@ -11,7 +11,6 @@ export function SiteComplianceFooter({ className, variant = "default" }: { class
     const appearance = useAppearanceStore((state) => state.appearance);
     const { t } = useI18n();
 
-
     return (
         <footer className={cn("site-compliance-footer", variant === "auth" && "is-auth", className)} aria-label="站点版权与备案信息">
             <span>{appearance.footerCopyright}</span>

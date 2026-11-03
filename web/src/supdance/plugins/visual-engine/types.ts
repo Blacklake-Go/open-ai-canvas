@@ -28,13 +28,13 @@ export type PrimitiveColors = {
 export type PrimitiveTypography = {
     fontFamilySans: string;
     fontFamilyMono: string;
-    sizeLabel: number;       // 11px
-    sizeCaption: number;     // 12px
-    sizeUI: number;          // 13px
-    sizeBody: number;        // 14px
-    sizeHeading: number;     // 16px
-    sizeTitle: number;       // 22px
-    sizeDisplay: number;     // 32px
+    sizeLabel: number; // 11px
+    sizeCaption: number; // 12px
+    sizeUI: number; // 13px
+    sizeBody: number; // 14px
+    sizeHeading: number; // 16px
+    sizeTitle: number; // 22px
+    sizeDisplay: number; // 32px
 };
 
 /**
@@ -115,15 +115,15 @@ export type OverlaysConfig = {
  */
 export type MotionConfig = {
     enabled: boolean;
-    durationQuick: number;           // 150ms 快速微交互
-    durationDropdownEnter: number;   // 200ms 下拉展开
-    durationDropdownExit: number;    // 150ms 下拉收起
-    durationModal: number;           // 200ms 弹窗展开
-    durationDrawer: number;          // 250ms 抽屉滑入
-    durationTabSwitch: number;       // 200ms 分段切换
-    easingStandard: string;          // cubic-bezier(0.16, 1, 0.3, 1)
-    easingBounce: string;            // cubic-bezier(0.34, 1.56, 0.64, 1)
-    easingSmooth: string;            // cubic-bezier(0.4, 0, 0.2, 1)
+    durationQuick: number; // 150ms 快速微交互
+    durationDropdownEnter: number; // 200ms 下拉展开
+    durationDropdownExit: number; // 150ms 下拉收起
+    durationModal: number; // 200ms 弹窗展开
+    durationDrawer: number; // 250ms 抽屉滑入
+    durationTabSwitch: number; // 200ms 分段切换
+    easingStandard: string; // cubic-bezier(0.16, 1, 0.3, 1)
+    easingBounce: string; // cubic-bezier(0.34, 1.56, 0.64, 1)
+    easingSmooth: string; // cubic-bezier(0.4, 0, 0.2, 1)
     reducedMotionBehavior: "instant" | "fade-only";
 };
 
@@ -137,12 +137,12 @@ export type WorkspaceRecoveryConfig = {
     themeMode: "dark" | "light";
     brandLogoUrl: string;
     brandName: string;
-    orbitSpeed: number;              // 1.0 = normal, 0.5 = slow, 2.0 = fast
-    orbitNodesCount: number;         // 4 - 8
-    floatingCardsCount: number;      // 2 - 6
-    glowIntensity: number;           // 0.0 - 1.0
+    orbitSpeed: number; // 1.0 = normal, 0.5 = slow, 2.0 = fast
+    orbitNodesCount: number; // 4 - 8
+    floatingCardsCount: number; // 2 - 6
+    glowIntensity: number; // 0.0 - 1.0
     gridDensity: "compact" | "normal" | "sparse";
-    timeoutMs: number;               // 超时重试阈值，默认 8000ms
+    timeoutMs: number; // 超时重试阈值，默认 8000ms
     statusCopies: {
         init: string;
         recovering: string;
@@ -164,7 +164,7 @@ export type WorkspaceRecoveryConfig = {
 export type PageRule = {
     id: string;
     name: string;
-    pathPattern: string;             // e.g. "/admin/*", "/create/*", "/auth/*"
+    pathPattern: string; // e.g. "/admin/*", "/create/*", "/auth/*"
     themePresetOverride?: PresetId;
     motionEnabledOverride?: boolean;
     recoveryEnabledOverride?: boolean;

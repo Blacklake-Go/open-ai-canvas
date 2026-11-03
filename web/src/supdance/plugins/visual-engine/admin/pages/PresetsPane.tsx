@@ -24,16 +24,10 @@ export function PresetsPane() {
                         <Package className="h-5 w-5 text-sky-400" />
                         主题预设管理与导入导出 (Theme Presets)
                     </h2>
-                    <p className="text-sm text-foreground/60 leading-relaxed mt-1">
-                        支持将当前调校的主题方案导出为标准 JSON 规范包，或跨开发环境导入经过校验的预设方案。
-                    </p>
+                    <p className="text-sm text-foreground/60 leading-relaxed mt-1">支持将当前调校的主题方案导出为标准 JSON 规范包，或跨开发环境导入经过校验的预设方案。</p>
                 </div>
                 <div className="flex items-center gap-2">
-                    <button
-                        type="button"
-                        onClick={handleExport}
-                        className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-border hover:bg-foreground/5 text-xs font-medium text-foreground transition-all"
-                    >
+                    <button type="button" onClick={handleExport} className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-border hover:bg-foreground/5 text-xs font-medium text-foreground transition-all">
                         <Download className="h-3.5 w-3.5" /> 导出当前主题包
                     </button>
                 </div>
@@ -44,9 +38,7 @@ export function PresetsPane() {
                     <div key={preset.id} className="p-4 rounded-xl border border-border/70 bg-card space-y-3">
                         <div className="flex items-center justify-between">
                             <span className="text-sm font-bold text-foreground">{preset.name}</span>
-                            <span className="text-xs px-2 py-0.5 rounded bg-sky-500/10 text-sky-400 font-mono">
-                                官方内置
-                            </span>
+                            <span className="text-xs px-2 py-0.5 rounded bg-sky-500/10 text-sky-400 font-mono">官方内置</span>
                         </div>
                         <p className="text-xs text-foreground/60 leading-relaxed">{preset.description}</p>
                         <div className="pt-2 border-t border-border/50 text-xs text-foreground/40 flex justify-between">

@@ -112,9 +112,7 @@ export function LegalPage({ doc }: { doc: LegalDocument }) {
         // 目录高亮只反映“当前读到哪一节”，用 IntersectionObserver 而不是 scroll 监听，避免长文档滚动时反复触发布局计算。
         const observer = new IntersectionObserver(
             (entries) => {
-                const visible = entries
-                    .filter((entry) => entry.isIntersecting)
-                    .sort((a, b) => a.boundingClientRect.top - b.boundingClientRect.top)[0];
+                const visible = entries.filter((entry) => entry.isIntersecting).sort((a, b) => a.boundingClientRect.top - b.boundingClientRect.top)[0];
                 if (visible?.target.id) setActiveSectionId(visible.target.id);
             },
             { root: container, rootMargin: "-8% 0px -72% 0px", threshold: 0 },
@@ -137,7 +135,10 @@ export function LegalPage({ doc }: { doc: LegalDocument }) {
     return (
         <div className="app-workspace-page flex h-dvh flex-col overflow-hidden text-foreground">
             <header className="flex h-[var(--page-topbar-h)] shrink-0 items-center gap-2 border-b border-border px-4 sm:gap-3 sm:px-6">
-                <Link to="/" className="inline-flex min-w-0 items-center rounded-[var(--r-md)] text-[var(--fs-heading)] font-semibold tracking-normal text-foreground transition-colors hover:text-muted-foreground focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--ring)]">
+                <Link
+                    to="/"
+                    className="inline-flex min-w-0 items-center rounded-[var(--r-md)] text-[var(--fs-heading)] font-semibold tracking-normal text-foreground transition-colors hover:text-muted-foreground focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--ring)]"
+                >
                     <span className="truncate">{brandName}</span>
                 </Link>
                 <span aria-hidden="true" className="hidden text-muted-foreground/40 sm:inline">
@@ -148,14 +149,20 @@ export function LegalPage({ doc }: { doc: LegalDocument }) {
                     <Link
                         to="/terms"
                         aria-current={doc.slug === "terms" ? "page" : undefined}
-                        className={cn("rounded-[var(--r-md)] px-2 py-1.5 transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--ring)]", doc.slug === "terms" ? "bg-accent font-medium text-foreground" : "text-muted-foreground hover:bg-accent hover:text-foreground")}
+                        className={cn(
+                            "rounded-[var(--r-md)] px-2 py-1.5 transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--ring)]",
+                            doc.slug === "terms" ? "bg-accent font-medium text-foreground" : "text-muted-foreground hover:bg-accent hover:text-foreground",
+                        )}
                     >
                         {t("legal.terms")}
                     </Link>
                     <Link
                         to="/privacy"
                         aria-current={doc.slug === "privacy" ? "page" : undefined}
-                        className={cn("rounded-[var(--r-md)] px-2 py-1.5 transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--ring)]", doc.slug === "privacy" ? "bg-accent font-medium text-foreground" : "text-muted-foreground hover:bg-accent hover:text-foreground")}
+                        className={cn(
+                            "rounded-[var(--r-md)] px-2 py-1.5 transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--ring)]",
+                            doc.slug === "privacy" ? "bg-accent font-medium text-foreground" : "text-muted-foreground hover:bg-accent hover:text-foreground",
+                        )}
                     >
                         {t("legal.privacy")}
                     </Link>
@@ -183,7 +190,9 @@ export function LegalPage({ doc }: { doc: LegalDocument }) {
 
                     <div className="min-w-0 lg:hidden">
                         <details className="rounded-[var(--r-lg)] border border-border bg-card p-3">
-                            <summary className="cursor-pointer text-[var(--fs-caption)] font-medium text-muted-foreground focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-[var(--ring)]">{t("legal.contents")}</summary>
+                            <summary className="cursor-pointer text-[var(--fs-caption)] font-medium text-muted-foreground focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-[var(--ring)]">
+                                {t("legal.contents")}
+                            </summary>
                             <div className="mt-2">
                                 <TocList doc={doc} activeSectionId={activeSectionId} onPick={setActiveSectionId} />
                             </div>
@@ -215,10 +224,16 @@ export function LegalPage({ doc }: { doc: LegalDocument }) {
                         <p className="mt-10 border-t border-border pt-6 text-[var(--fs-caption)] leading-relaxed text-muted-foreground">{doc.closing}</p>
 
                         <div className="mt-4 flex flex-wrap items-center gap-3">
-                            <Link to={`/${doc.related.slug}`} className="inline-flex h-10 items-center gap-2 rounded-[var(--r-md)] border border-border px-4 text-[var(--fs-body)] font-medium text-foreground transition-colors hover:bg-accent focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--ring)]">
+                            <Link
+                                to={`/${doc.related.slug}`}
+                                className="inline-flex h-10 items-center gap-2 rounded-[var(--r-md)] border border-border px-4 text-[var(--fs-body)] font-medium text-foreground transition-colors hover:bg-accent focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--ring)]"
+                            >
                                 {relatedLabel}
                             </Link>
-                            <Link to="/" className="inline-flex h-10 items-center gap-2 rounded-[var(--r-md)] px-4 text-[var(--fs-body)] font-medium text-muted-foreground transition-colors hover:bg-accent hover:text-foreground focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--ring)]">
+                            <Link
+                                to="/"
+                                className="inline-flex h-10 items-center gap-2 rounded-[var(--r-md)] px-4 text-[var(--fs-body)] font-medium text-muted-foreground transition-colors hover:bg-accent hover:text-foreground focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--ring)]"
+                            >
                                 {t("auth.back_home")}
                             </Link>
                         </div>

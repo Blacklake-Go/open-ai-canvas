@@ -76,18 +76,12 @@ export default function DarkLoginPage() {
             <header className="relative z-10 flex items-center justify-between border-b border-white/[0.06] bg-[#171717]/80 px-6 py-4.5 backdrop-blur-md lg:px-12">
                 <Link to="/" className="flex items-center gap-3 group">
                     <div className="flex size-10 items-center justify-center rounded-xl border border-white/10 bg-[#1A1A1A] p-0.5 shadow-sm transition-transform group-hover:scale-105">
-                        <BrandLogo
-                            className="size-full rounded-[10px]"
-                            alt="SupDance"
-                            fallback={<Sparkles className="size-5 text-[#00f5d4]" />}
-                        />
+                        <BrandLogo className="size-full rounded-[10px]" alt="SupDance" fallback={<Sparkles className="size-5 text-[#00f5d4]" />} />
                     </div>
                     <div>
                         <span className="text-lg font-bold tracking-tight text-[#FAFAFA] flex items-center gap-2">
                             SupDance 影策
-                            <span className="rounded-full bg-[#00f5d4]/10 px-2 py-0.5 text-[10px] font-semibold text-[#00f5d4] border border-[#00f5d4]/20">
-                                AI 影视引擎
-                            </span>
+                            <span className="rounded-full bg-[#00f5d4]/10 px-2 py-0.5 text-[10px] font-semibold text-[#00f5d4] border border-[#00f5d4]/20">AI 影视引擎</span>
                         </span>
                     </div>
                 </Link>
@@ -118,14 +112,10 @@ export default function DarkLoginPage() {
                         把无限想象力，
                         <br />
                         化作真实的
-                        <span className="bg-gradient-to-r from-[#00f5d4] via-teal-300 to-cyan-400 bg-clip-text text-transparent ml-2">
-                            光影世界
-                        </span>
+                        <span className="bg-gradient-to-r from-[#00f5d4] via-teal-300 to-cyan-400 bg-clip-text text-transparent ml-2">光影世界</span>
                     </h1>
 
-                    <p className="max-w-md text-sm leading-relaxed text-white/65">
-                        从智能剧本拆解、高精角色分镜设计，到端到端视频生成与画布流编排，为独立创作者与影视团队提供工业级 AI 生产力。
-                    </p>
+                    <p className="max-w-md text-sm leading-relaxed text-white/65">从智能剧本拆解、高精角色分镜设计，到端到端视频生成与画布流编排，为独立创作者与影视团队提供工业级 AI 生产力。</p>
 
                     <div className="grid grid-cols-2 gap-3 pt-2">
                         <div className="rounded-xl border border-white/[0.08] bg-[#171717] p-3.5 backdrop-blur transition-colors hover:border-white/15">
@@ -165,10 +155,7 @@ export default function DarkLoginPage() {
                         <div className="space-y-1.5">
                             <div className="flex items-center justify-between">
                                 <label className="text-xs font-medium text-white/80">登录密码</label>
-                                <Link
-                                    to={`/forgot-password?next=${encodeURIComponent(next)}`}
-                                    className="text-xs text-[#00f5d4] hover:text-[#00f5d4]/80 transition-colors"
-                                >
+                                <Link to={`/forgot-password?next=${encodeURIComponent(next)}`} className="text-xs text-[#00f5d4] hover:text-[#00f5d4]/80 transition-colors">
                                     忘记密码？
                                 </Link>
                             </div>
@@ -199,28 +186,14 @@ export default function DarkLoginPage() {
                     </form>
 
                     {/* Divider for Social Login */}
-                    {hasSocialProviders ? (
-                        <Divider className="my-5 border-white/[0.08] text-xs text-white/40">
-                            或使用第三方账号快捷登录
-                        </Divider>
-                    ) : null}
+                    {hasSocialProviders ? <Divider className="my-5 border-white/[0.08] text-xs text-white/40">或使用第三方账号快捷登录</Divider> : null}
 
                     {/* Dynamic Social Login Grid */}
-                    <SocialLoginButtons
-                        variant="dark-card"
-                        next={next}
-                        acceptedTerms={acceptedTerms}
-                        onRequireAcceptTerms={() => acceptedTerms}
-                        onProvidersChange={(providers) => setHasSocialProviders(providers.length > 0)}
-                    />
+                    <SocialLoginButtons variant="dark-card" next={next} acceptedTerms={acceptedTerms} onRequireAcceptTerms={() => acceptedTerms} onProvidersChange={(providers) => setHasSocialProviders(providers.length > 0)} />
 
                     {/* Terms Agreement Checkbox */}
                     <div className="mt-5 flex items-start gap-2 pt-2 border-t border-white/[0.06]">
-                        <Checkbox
-                            checked={acceptedTerms}
-                            onChange={(e) => setAcceptedTerms(e.target.checked)}
-                            className="mt-0.5 text-xs text-white/60"
-                        >
+                        <Checkbox checked={acceptedTerms} onChange={(e) => setAcceptedTerms(e.target.checked)} className="mt-0.5 text-xs text-white/60">
                             <span className="text-[11px] text-white/60">
                                 我已阅读并同意
                                 <a href="/terms" target="_blank" rel="noreferrer" className="text-[#00f5d4] hover:underline mx-0.5">

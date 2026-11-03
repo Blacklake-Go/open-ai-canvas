@@ -7,7 +7,7 @@ import type { RouteObject } from "react-router";
 import type { PluginHostContext, PluginManifest, PluginManifestV2, RegisteredPlugin } from "@/lib/plugins/plugin-types";
 import { getRegisteredPlugin, registerPlugin, unregisterPlugin } from "@/lib/plugins/plugin-registry";
 
-export const SUPDANCE_HOST_VERSION = "1.7.3" as const;
+export const SUPDANCE_HOST_VERSION = "1.7.3.4" as const;
 
 export type UpstreamPatchRecord = {
     id: string;
@@ -107,17 +107,8 @@ export const SUPDANCE_UPSTREAM_PATCH_REGISTRY: readonly UpstreamPatchRecord[] = 
         id: "supdance-music-plugin-gates",
         upstreamBaseline: "v1.7.3",
         feature: "音乐生成插件 (supdance-music-generation) 路由守卫、侧栏入口与创作岛模式药丸统一按清单 id 与服务端状态判定",
-        coupledUpstreamFiles: [
-            "web/src/components/auth/require-plugin.tsx",
-            "web/src/pages/create/creation-workspace.tsx",
-            "web/src/stores/use-plugin-store.ts",
-        ],
-        files: [
-            "web/src/components/auth/require-plugin.tsx",
-            "web/src/pages/create/creation-workspace.tsx",
-            "web/src/stores/use-plugin-store.ts",
-            "web/src/supdance/plugins/music-generation/types.ts",
-        ],
+        coupledUpstreamFiles: ["web/src/components/auth/require-plugin.tsx", "web/src/pages/create/creation-workspace.tsx", "web/src/stores/use-plugin-store.ts"],
+        files: ["web/src/components/auth/require-plugin.tsx", "web/src/pages/create/creation-workspace.tsx", "web/src/stores/use-plugin-store.ts", "web/src/supdance/plugins/music-generation/types.ts"],
         reason: "上游路由守卫与入口显隐原先优先读取本地安装记录（ensurePlugin 新建记录默认 enabled=false）或别名 id（服务端无对应状态记录），会把服务端已生效的插件误判为停用；现统一收敛为 use-plugin-store 的 selectPluginEffectivelyEnabled（服务端 states -> 运行时 statuses -> 本地安装记录），插件 id 一律使用清单 id。",
         upgradeRisk: "LOW",
     },
@@ -143,18 +134,8 @@ export const SUPDANCE_UPSTREAM_PATCH_REGISTRY: readonly UpstreamPatchRecord[] = 
         id: "supdance-visual-engine",
         upstreamBaseline: "v1.7.3",
         feature: "全站视觉与交互引擎 (supdance-visual-engine)：集中管理三层 Token、E0–E4 深度阴影、Motion 动效、图 1 工作区恢复动画及后台专属控制台",
-        coupledUpstreamFiles: [
-            "web/src/pages/admin/components/admin-shell.tsx",
-            "web/src/router.tsx",
-            "web/src/components/layout/app-providers.tsx",
-            "web/src/pages/admin/plugins/plugins-page.tsx",
-        ],
-        files: [
-            "supdance/plugins/supdance-visual-engine/manifest.json",
-            "web/src/supdance/plugins/visual-engine/index.ts",
-            "web/src/supdance/plugins/visual-engine/types.ts",
-            "web/src/supdance/plugins/visual-engine/admin/VisualConsole.tsx",
-        ],
+        coupledUpstreamFiles: ["web/src/pages/admin/components/admin-shell.tsx", "web/src/router.tsx", "web/src/components/layout/app-providers.tsx", "web/src/pages/admin/plugins/plugins-page.tsx"],
+        files: ["supdance/plugins/supdance-visual-engine/manifest.json", "web/src/supdance/plugins/visual-engine/index.ts", "web/src/supdance/plugins/visual-engine/types.ts", "web/src/supdance/plugins/visual-engine/admin/VisualConsole.tsx"],
         reason: "以独立插件形式挂载双入口统一控制台 (/admin/plugins/visual-engine)、全站设计令牌桥接与工作区恢复动画，不侵入宿主业务逻辑。",
         upgradeRisk: "LOW",
     },
@@ -162,16 +143,8 @@ export const SUPDANCE_UPSTREAM_PATCH_REGISTRY: readonly UpstreamPatchRecord[] = 
         id: "supdance-html-page-manager",
         upstreamBaseline: "v1.7.3",
         feature: "supdance html页面管理插件：内置 Linear/Vercel/Anthropic/Supabase 等大气简洁法务模板、集成高效开源 HTML 双栏排版编辑器与单文件导出",
-        coupledUpstreamFiles: [
-            "web/src/pages/admin/plugins/plugins-page.tsx",
-            "web/src/pages/plugins/index.tsx",
-            "web/src/router.tsx",
-        ],
-        files: [
-            "web/src/supdance/plugins/html-page-manager/manifest.json",
-            "web/src/supdance/plugins/html-page-manager/index.ts",
-            "web/src/supdance/plugins/html-page-manager/admin/html-page-manager.tsx",
-        ],
+        coupledUpstreamFiles: ["web/src/pages/admin/plugins/plugins-page.tsx", "web/src/pages/plugins/index.tsx", "web/src/router.tsx"],
+        files: ["web/src/supdance/plugins/html-page-manager/manifest.json", "web/src/supdance/plugins/html-page-manager/index.ts", "web/src/supdance/plugins/html-page-manager/admin/html-page-manager.tsx"],
         reason: "将法务条款（服务条款、隐私政策等）从分散静态文件收敛为独立可管理的插件系统，提供所见即所得的双栏沙箱排版编辑器，且不侵入宿主业务逻辑。",
         upgradeRisk: "LOW",
     },

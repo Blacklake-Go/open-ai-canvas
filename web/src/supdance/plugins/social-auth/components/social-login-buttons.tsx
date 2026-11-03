@@ -17,13 +17,7 @@ export interface SocialLoginButtonsProps {
     onProvidersChange?: (providers: SocialAuthProviderPublic[]) => void;
 }
 
-export function SocialLoginButtons({
-    variant = "light-card",
-    next = "/",
-    acceptedTerms = true,
-    onRequireAcceptTerms,
-    onProvidersChange,
-}: SocialLoginButtonsProps) {
+export function SocialLoginButtons({ variant = "light-card", next = "/", acceptedTerms = true, onRequireAcceptTerms, onProvidersChange }: SocialLoginButtonsProps) {
     const { t } = useI18n();
     const { message } = App.useApp();
 
@@ -103,12 +97,7 @@ export function SocialLoginButtons({
                     const tooltipText = `${provider.name} ${t("auth.social_login_action", undefined, "登录")}`;
 
                     return (
-                        <Tooltip
-                            key={provider.id}
-                            title={tooltipText}
-                            placement="top"
-                            mouseEnterDelay={0.4}
-                        >
+                        <Tooltip key={provider.id} title={tooltipText} placement="top" mouseEnterDelay={0.4}>
                             <button
                                 type="button"
                                 aria-label={tooltipText}
@@ -119,10 +108,7 @@ export function SocialLoginButtons({
                                         : "border border-border/70 bg-card text-foreground hover:border-primary/50 hover:bg-accent hover:shadow-sm"
                                 }`}
                             >
-                                <SocialProviderIcon
-                                    provider={provider.id}
-                                    className="size-5 transition-transform duration-150 group-hover:scale-105"
-                                />
+                                <SocialProviderIcon provider={provider.id} className="size-5 transition-transform duration-150 group-hover:scale-105" />
                             </button>
                         </Tooltip>
                     );

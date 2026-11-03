@@ -5,28 +5,9 @@ import { Window } from "happy-dom";
 import { usePluginStore } from "../src/stores/use-plugin-store";
 import { getAntdLocaleForCode, loadAntdLocale } from "../src/supdance/plugins/i18n/engine/antd-locale";
 import { SupDanceDomTranslator } from "../src/supdance/plugins/i18n/engine/dom-observer";
-import {
-    compileI18nDictionary,
-    interpolateTemplate,
-    isCandidateUntranslatedChinese,
-    resolveEntryTranslation,
-    translateByKey,
-    translateSourceText,
-} from "../src/supdance/plugins/i18n/engine/translator";
-import {
-    BUILTIN_SUPDANCE_I18N_ENTRIES,
-    DEFAULT_SUPDANCE_I18N_SETTINGS,
-    loadAllLocalePacks,
-    loadLocalePack,
-    mergeI18nEntries,
-} from "../src/supdance/plugins/i18n/locales";
-import {
-    SUPDANCE_I18N_CACHE_STORAGE_KEY,
-    SUPDANCE_I18N_DISCOVERED_STORAGE_KEY,
-    SUPDANCE_I18N_LOCALE_STORAGE_KEY,
-    useI18n,
-    useSupDanceI18nStore,
-} from "../src/supdance/plugins/i18n/store";
+import { compileI18nDictionary, interpolateTemplate, isCandidateUntranslatedChinese, resolveEntryTranslation, translateByKey, translateSourceText } from "../src/supdance/plugins/i18n/engine/translator";
+import { BUILTIN_SUPDANCE_I18N_ENTRIES, DEFAULT_SUPDANCE_I18N_SETTINGS, loadAllLocalePacks, loadLocalePack, mergeI18nEntries } from "../src/supdance/plugins/i18n/locales";
+import { SUPDANCE_I18N_CACHE_STORAGE_KEY, SUPDANCE_I18N_DISCOVERED_STORAGE_KEY, SUPDANCE_I18N_LOCALE_STORAGE_KEY, useI18n, useSupDanceI18nStore } from "../src/supdance/plugins/i18n/store";
 import type { SupDanceI18nEntry, SupDanceLocaleCode } from "../src/supdance/plugins/i18n/types";
 
 describe("SupDance Localization 4-Tier Test Suite", () => {
@@ -192,9 +173,7 @@ describe("SupDance Localization 4-Tier Test Suite", () => {
             const dict = useSupDanceI18nStore.getState().dictionary;
 
             // Missing key with fallbackText provided
-            expect(translateByKey(dict, "unregistered.custom_key", "es-ES", "zh-CN", undefined, "Texto de respaldo")).toBe(
-                "Texto de respaldo",
-            );
+            expect(translateByKey(dict, "unregistered.custom_key", "es-ES", "zh-CN", undefined, "Texto de respaldo")).toBe("Texto de respaldo");
 
             // Missing key without fallbackText returns the key itself
             expect(translateByKey(dict, "unregistered.custom_key", "es-ES", "zh-CN")).toBe("unregistered.custom_key");
@@ -282,9 +261,7 @@ describe("SupDance Localization 4-Tier Test Suite", () => {
             const template = "已使用 {used}，剩余 {remaining}，共 {total} 项";
 
             // Complete parameters
-            expect(interpolateTemplate(template, { used: "5GB", remaining: "15GB", total: 100 })).toBe(
-                "已使用 5GB，剩余 15GB，共 100 项",
-            );
+            expect(interpolateTemplate(template, { used: "5GB", remaining: "15GB", total: 100 })).toBe("已使用 5GB，剩余 15GB，共 100 项");
 
             // Missing parameters: unprovided placeholders remain verbatim
             expect(interpolateTemplate(template, { used: "5GB" })).toBe("已使用 5GB，剩余 {remaining}，共 {total} 项");
@@ -358,7 +335,7 @@ describe("SupDance Localization 4-Tier Test Suite", () => {
             // Invalid candidates
             expect(isCandidateUntranslatedChinese("https://ddcat.ai/api/v1")).toBe(false);
             expect(isCandidateUntranslatedChinese("http://localhost:3000")).toBe(false);
-            expect(isCandidateUntranslatedChinese("{\"status\": 200, \"msg\": \"ok\"}")).toBe(false);
+            expect(isCandidateUntranslatedChinese('{"status": 200, "msg": "ok"}')).toBe(false);
             expect(isCandidateUntranslatedChinese("<div className='box'>")).toBe(false);
             expect(isCandidateUntranslatedChinese("// 注释代码行")).toBe(false);
             expect(isCandidateUntranslatedChinese("我")).toBe(false); // Length < 2
@@ -549,11 +526,7 @@ describe("SupDance Localization 4-Tier Test Suite", () => {
             expect(heroTitle).not.toContain("聊聊创作想法");
 
             // R1.2 Composer placeholder
-            const composerPlaceholder = tEs(
-                "create.empty_composer_placeholder",
-                undefined,
-                "Introduce tu toma, plano o historia. También puedes añadir una imagen de referencia para empezar a crear.",
-            );
+            const composerPlaceholder = tEs("create.empty_composer_placeholder", undefined, "Introduce tu toma, plano o historia. También puedes añadir una imagen de referencia para empezar a crear.");
             expect(composerPlaceholder).toContain("Introduce tu toma");
             expect(composerPlaceholder).not.toContain("输入你的镜头");
 
@@ -612,11 +585,7 @@ describe("SupDance Localization 4-Tier Test Suite", () => {
             const inspirationTitle = tEs("create.inspiration");
             expect(inspirationTitle).toBe("Galería de Inspiración");
 
-            const inspirationSubtitle = tEs(
-                "inspirations.subtitle",
-                undefined,
-                "Haz clic para ver el prompt completo y seguir creando con tu idea favorita.",
-            );
+            const inspirationSubtitle = tEs("inspirations.subtitle", undefined, "Haz clic para ver el prompt completo y seguir creando con tu idea favorita.");
             expect(inspirationSubtitle).toContain("Haz clic para ver");
 
             const newInspirationBtn = tEs("inspirations.new", undefined, "Nueva inspiración");

@@ -60,4 +60,3 @@ var (
 	ValidateMusicLifecycleTransition  = app.ValidateMusicLifecycleTransition
 	ResetMusicLifecycleManagerForTest = app.ResetMusicLifecycleManagerForTest
 )
-

@@ -31,7 +31,8 @@ const originalAdapter = apiClient.defaults.adapter;
 const originalPluginStorage = usePluginStore.persist.getOptions().storage;
 let root: Root | undefined;
 let container: HTMLDivElement;
-beforeAll(() => {
+let adminShell: typeof import("../src/pages/admin/components/admin-shell");
+beforeAll(async () => {
     for (const [key, value] of Object.entries({
         window: dom,
         document: dom.document,
@@ -44,11 +45,13 @@ beforeAll(() => {
         ShadowRoot: dom.ShadowRoot,
         SVGElement: dom.SVGElement,
         IS_REACT_ACT_ENVIRONMENT: true,
+        __APP_VERSION__: "1.7.3.4",
     })) {
         originals.set(key, Object.getOwnPropertyDescriptor(globalThis, key));
         Object.defineProperty(globalThis, key, { configurable: true, value });
     }
     usePluginStore.persist.setOptions({ storage: { getItem: async () => null, setItem: async () => {}, removeItem: async () => {} } });
+    adminShell = await import("../src/pages/admin/components/admin-shell");
 });
 beforeEach(() => {
     useVisualEngineStore.getState().resetSession();
@@ -83,6 +86,29 @@ function overview() {
         canRollback: true,
     };
 }
+
+test("upstream navigation regrouping preserves one visual engine entry and removes it when disabled", () => {
+    const { getAdminNavigation } = adminShell;
+    const enabled = getAdminNavigation(true);
+    const visualGroup = enabled.find((group) => group.items.some((item) => item.path === "/admin/plugins/visual-engine"));
+    expect(visualGroup?.key).toBe("creation");
+    expect(enabled.flatMap((group) => group.items).filter((item) => item.path === "/admin/plugins/visual-engine")).toHaveLength(1);
+    expect(getAdminNavigation(true)).toEqual(enabled);
+    const disabledPaths = getAdminNavigation(false).flatMap((group) => group.items.map((item) => item.path));
+    expect(disabledPaths).not.toContain("/admin/plugins/visual-engine");
+    expect(disabledPaths).toContain("/admin/plugins");
+    expect(disabledPaths).toContain("/admin/settings/system-update");
+});
+
+test("visual console breadcrumb uses its specific entry after upstream navigation regrouping", async () => {
+    const { AdminPageFrame } = adminShell;
+    useVisualEngineStore.setState({ enabled: true });
+    await render(createElement(MemoryRouter, { initialEntries: ["/admin/plugins/visual-engine"] }, createElement(AdminPageFrame, { title: "视觉引擎", children: createElement("div", null, "console") })));
+    const breadcrumb = container.querySelector('nav[aria-label="当前位置"]');
+    expect(breadcrumb?.textContent).toContain("创作与扩展");
+    expect(breadcrumb?.textContent).toContain("视觉引擎");
+    expect(breadcrumb?.textContent).not.toContain("插件管理");
+});
 async function render(element: React.ReactNode) {
     root = createRoot(container);
     await act(async () => root?.render(element));

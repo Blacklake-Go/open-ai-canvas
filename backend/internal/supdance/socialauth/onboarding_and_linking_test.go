@@ -41,11 +41,12 @@ func TestSocialAuthOnboardingAndAutoEmailBinding(t *testing.T) {
 
 	// 3. Complete Onboarding with custom username and optional password
 	completeReq := CompleteOnboardingRequest{
-		TicketID:    ticketID,
-		Username:    "alex_dance_pro",
-		DisplayName: "Alex The Dancer",
-		Email:       "dancer@gmail.com",
-		Password:    "SecurePass123!",
+		AcceptedTerms: true,
+		TicketID:      ticketID,
+		Username:      "alex_dance_pro",
+		DisplayName:   "Alex The Dancer",
+		Email:         "dancer@gmail.com",
+		Password:      "SecurePass123!",
 	}
 	user, session, err := svc.CompleteOnboarding(completeReq)
 	if err != nil {
@@ -209,4 +210,3 @@ func TestSocialAuthOnboardingTicketSharedAcrossServiceInstances(t *testing.T) {
 		t.Fatalf("expected provider username dancer@gmail.com, got %s", profileView.ProviderUsername)
 	}
 }
-

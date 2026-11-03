@@ -621,9 +621,13 @@ export function SupDanceI18nEntriesPage() {
                 }
             >
                 <div className="space-y-3" data-i18n-ignore="true" data-plugin-scope="i18n">
-                    <div className="rounded-lg border border-[var(--admin-border)] bg-[var(--admin-surface-2)]/50 p-3 text-xs text-[var(--admin-text-secondary)]">当您在前台页面浏览或切换语言时，DOM 翻译引擎会自动嗅探尚未收录进词库的中文文案并汇总在此。点击「一键收录并翻译」即可快速补全六语翻译。</div>
+                    <div className="rounded-lg border border-[var(--admin-border)] bg-[var(--admin-surface-2)]/50 p-3 text-xs text-[var(--admin-text-secondary)]">
+                        当您在前台页面浏览或切换语言时，DOM 翻译引擎会自动嗅探尚未收录进词库的中文文案并汇总在此。点击「一键收录并翻译」即可快速补全六语翻译。
+                    </div>
                     {discoveredUntranslated.length === 0 ? (
-                        <div className="rounded-lg border border-dashed border-[var(--admin-border)] p-8 text-center text-xs text-[var(--admin-text-secondary)]">当前暂未发现未收录的页面中文词条。您可前往前台工作区、画布或弹窗浏览页面，未命中词库的中文文案会自动出现在此处。</div>
+                        <div className="rounded-lg border border-dashed border-[var(--admin-border)] p-8 text-center text-xs text-[var(--admin-text-secondary)]">
+                            当前暂未发现未收录的页面中文词条。您可前往前台工作区、画布或弹窗浏览页面，未命中词库的中文文案会自动出现在此处。
+                        </div>
                     ) : (
                         <div className="divide-y divide-[var(--admin-row-border)] rounded-lg border border-[var(--admin-border)]">
                             {discoveredUntranslated.map((item) => (
@@ -741,7 +745,7 @@ export function SupDanceI18nEntriesPage() {
                                         value={val}
                                         placeholder={`请输入 ${lang.nativeName} (${lang.code}) 译文...`}
                                         onChange={(e) => {
-                                             const nextVal = e.target.value;
+                                            const nextVal = e.target.value;
                                             setEditingEntry((prev) => ({
                                                 ...prev,
                                                 sourceText: lang.code === "zh-CN" ? nextVal : prev.sourceText,

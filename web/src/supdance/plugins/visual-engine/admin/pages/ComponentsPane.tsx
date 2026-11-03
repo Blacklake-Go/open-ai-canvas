@@ -44,9 +44,7 @@ export function ComponentsPane() {
                     <Layers className="h-5 w-5 text-sky-400" />
                     UI 组件光学与状态管理
                 </h2>
-                <p className="text-sm text-foreground/60 leading-relaxed mt-1">
-                    集中管理全站按钮、输入框、下拉框、卡片及浮层组件的高精几何、状态尺寸与圆角。
-                </p>
+                <p className="text-sm text-foreground/60 leading-relaxed mt-1">集中管理全站按钮、输入框、下拉框、卡片及浮层组件的高精几何、状态尺寸与圆角。</p>
             </div>
 
             <div className="space-y-6">
@@ -60,14 +58,12 @@ export function ComponentsPane() {
                             {group.items.map((item) => {
                                 const currentVal = comp[item.key as keyof typeof comp];
                                 return (
-                                    <div
-                                        key={item.key}
-                                        className="p-3.5 rounded-lg border border-border/60 bg-background/50 space-y-2"
-                                    >
+                                    <div key={item.key} className="p-3.5 rounded-lg border border-border/60 bg-background/50 space-y-2">
                                         <div className="flex items-center justify-between text-xs">
                                             <span className="font-medium text-foreground">{item.label}</span>
                                             <span className="font-mono text-sky-400 font-bold">
-                                                {currentVal}{item.unit}
+                                                {currentVal}
+                                                {item.unit}
                                             </span>
                                         </div>
                                         <div className="flex items-center gap-3">

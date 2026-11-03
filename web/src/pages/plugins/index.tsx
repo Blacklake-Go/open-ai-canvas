@@ -280,16 +280,21 @@ export default function PluginsPage() {
                         </nav>
                     </aside>
                     <div className="plugins-page-content">
-                        <CollectionToolbar label="插件筛选" trailing={<div className="plugins-toolbar-actions">
-                                <Button icon={<RefreshCw className="size-4" />} loading={backendPluginsLoading} onClick={() => void reloadBackendPlugins()}>
-                                    刷新插件
-                                </Button>
-                                {user?.role === "admin" ? (
-                                    <Button type="primary" onClick={() => navigate("/admin/plugins")}>
-                                        管理员插件管理
+                        <CollectionToolbar
+                            label="插件筛选"
+                            trailing={
+                                <div className="plugins-toolbar-actions">
+                                    <Button icon={<RefreshCw className="size-4" />} loading={backendPluginsLoading} onClick={() => void reloadBackendPlugins()}>
+                                        刷新插件
                                     </Button>
-                                ) : null}
-                            </div>}>
+                                    {user?.role === "admin" ? (
+                                        <Button type="primary" onClick={() => navigate("/admin/plugins")}>
+                                            管理员插件管理
+                                        </Button>
+                                    ) : null}
+                                </div>
+                            }
+                        >
                             <Input
                                 className="plugins-search"
                                 prefix={<Search className="size-4 text-foreground/38" aria-hidden="true" />}
@@ -441,11 +446,7 @@ export default function PluginsPage() {
                                                                         </Button>
                                                                     ) : null}
                                                                     {plugin.manifest.id === "supdance-html-page-manager" ? (
-                                                                        <Button
-                                                                            className="plugin-settings-button"
-                                                                            icon={<FileCode className="size-4" />}
-                                                                            onClick={() => navigate("/admin/plugins/html-pages")}
-                                                                        >
+                                                                        <Button className="plugin-settings-button" icon={<FileCode className="size-4" />} onClick={() => navigate("/admin/plugins/html-pages")}>
                                                                             编辑页面
                                                                         </Button>
                                                                     ) : null}

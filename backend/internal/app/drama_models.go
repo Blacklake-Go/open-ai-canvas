@@ -4,6 +4,8 @@ import (
 	"errors"
 	"fmt"
 	"math"
+	"regexp"
+	"slices"
 	"strconv"
 	"strings"
 
@@ -35,7 +37,7 @@ func dramaSegmentOperation(settings DramaSettings, profile dramaVideoProfile) (s
 	return "text_to_video", nil
 }
 
-// validateDramaVideoSettings 在保存设置时确认视频模型支持所选的段落衔接方式。
+// validateDramaVideoSettings 在保存设置时确认视频模型能按作品画幅出片，并支持所选的段落衔接方式。
 func (s *Service) validateDramaVideoSettings(settings DramaSettings) error {
 	if settings.Models.Video.Empty() {
 		return nil
@@ -43,6 +45,9 @@ func (s *Service) validateDramaVideoSettings(settings DramaSettings) error {
 	profile, err := s.dramaVideoProfile(settings.Models.Video)
 	if err != nil {
 		return BadAuthRequest("视频模型不可用于短剧：" + err.Error())
+	}
+	if issue := profile.screen(settings.AspectRatio, settings.VideoResolution).Issue; issue != "" {
+		return BadAuthRequest(issue)
 	}
 	if issue := profile.continuityIssue(settings); issue != "" {
 		return BadAuthRequest(issue)
@@ -136,8 +141,13 @@ func (s *Service) dramaChoiceIssue(access *userGroupAccess, choice DramaModelCho
 		}
 	}
 	if capability == "video" {
-		if _, err := s.dramaVideoProfile(choice); err != nil {
+		profile, err := s.dramaVideoProfile(choice)
+		if err != nil {
 			return err.Error()
+		}
+		// 一个作品画幅都给不出的模型对短剧没有用；能给出部分画幅的由前端按作品画幅置灰。
+		if len(profile.ratios()) == 0 {
+			return profile.screen(production.AspectRatios[0], "").Issue
 		}
 	}
 	if capability == "image" {
@@ -149,19 +159,50 @@ func (s *Service) dramaChoiceIssue(access *userGroupAccess, choice DramaModelCho
 	return ""
 }
 
-// validateDramaImageSettings 在保存设置时确认所选图片模型能按参考图画幅与分辨率出图，
+// validateDramaImageSettings 在保存设置时确认角色、道具、场景各自的图片模型能按该类参考图的画幅与分辨率出图，
 // 避免开工后每张参考图都失败。模型能力读不到时交给提交时校验。
 func (s *Service) validateDramaImageSettings(models DramaModels, assets production.AssetSettings) error {
-	if models.Image.Empty() {
-		return nil
+	labels := map[string]string{"character": "角色", "prop": "道具", "scene": "场景"}
+	for _, kind := range []string{"character", "prop", "scene"} {
+		choice := models.imageFor(kind)
+		if choice.Empty() {
+			continue
+		}
+		ratio := production.AssetImageRatio
+		if kind == "character" {
+			ratio = assets.CharacterRatio
+		}
+		if request := s.dramaImageRequestFor(choice, ratio, assets.ResolutionFor(kind)); request.Issue != "" {
+			return BadAuthRequest(labels[kind] + "参考图设置与图片模型不匹配：" + request.Issue)
+		}
 	}
-	ratios := []string{production.AssetImageRatio}
-	if assets.CharacterRatio != production.AssetImageRatio {
-		ratios = append(ratios, assets.CharacterRatio)
+	return nil
+}
+
+// validateDramaModelOverrides 确认单独指定的步骤模型与参考图模型都在当前用户可用的短剧模型目录里，防止提交任意渠道标识。
+func (s *Service) validateDramaModelOverrides(userID string, models DramaModels) error {
+	for _, item := range []struct {
+		capability string
+		choice     DramaModelChoice
+	}{{"text", models.BibleText}, {"text", models.ScriptText}, {"text", models.PromptText}, {"image", models.CharacterImage}, {"image", models.PropImage}, {"image", models.SceneImage}} {
+		if item.choice.Empty() {
+			continue
+		}
+		if err := s.requireDramaModelOption(userID, item.capability, item.choice); err != nil {
+			return err
+		}
 	}
-	for _, ratio := range ratios {
-		if request := s.dramaImageRequestFor(models.Image, ratio, assets.Resolution); request.Issue != "" {
-			return BadAuthRequest("参考图设置与图片模型不匹配：" + request.Issue)
+	return nil
+}
+
+// validateDramaSkills 确认三个文字步骤选定的技能都可读。
+func (s *Service) validateDramaSkills(userID string, settings DramaSettings) error {
+	for _, item := range []struct {
+		label string
+		ref   *DramaSkillRef
+	}{{"资产提取", settings.BibleSkill}, {"分镜拆分", settings.ScriptSkill}, {"视频提示词", settings.PromptSkill}} {
+		if _, err := s.dramaWritingSkill(userID, item.ref, item.label); err != nil {
+			return err
 		}
 	}
 	return nil
@@ -187,25 +228,47 @@ func (s *Service) DramaModelCatalog(userID string) (DramaModelCatalog, error) {
 		}
 		result.Options[capability] = options
 		result.Unavailable[capability] = unavailable
-		// 新作品默认尾帧续接，默认视频模型优先选支持图生视频的。
-		if option, ok := preferredDramaOption(options, DramaSettings{VideoContinuity: DramaContinuityTailFrame}); ok {
+		// 新作品默认竖屏、尾帧续接；新建页按用户实际选的画幅与衔接方式重新挑选。
+		defaults := DramaSettings{Settings: production.Settings{AspectRatio: production.AspectRatios[0]}, VideoContinuity: DramaContinuityTailFrame}
+		if option, ok := preferredDramaOption(options, defaults); ok {
 			setDramaModelChoice(&result.Defaults, capability, option.Choice)
 		}
 	}
 	return result, nil
 }
 
-// preferredDramaOption 返回第一个满足作品衔接方式的候选；都不满足时退回第一个，由保存时校验说明原因。
+// preferredDramaOption 返回第一个可用的候选；视频模型还要能按作品画幅出片并支持作品的段落衔接方式。
+// 都不满足时不替用户挑一个开工后才失败的模型，由调用方提示没有可用模型。
 func preferredDramaOption(options []DramaModelOption, settings DramaSettings) (DramaModelOption, bool) {
-	if len(options) == 0 {
-		return DramaModelOption{}, false
-	}
 	for _, option := range options {
-		if option.Capability != "video" || settings.parallelVideo() || option.TailFrameChain {
+		if option.Capability != "video" || dramaVideoOptionFits(option, settings) {
 			return option, true
 		}
 	}
-	return options[0], true
+	return DramaModelOption{}, false
+}
+
+func dramaVideoOptionFits(option DramaModelOption, settings DramaSettings) bool {
+	return (settings.parallelVideo() || option.TailFrameChain) && slices.Contains(option.VideoRatios, settings.AspectRatio) && dramaVideoResolutionOffered(option.VideoResolutions, settings.VideoResolution)
+}
+
+// dramaVideoResolutionOffered 判断作品指定的分辨率在模型可选档位里；未指定（按模型默认）总是可以。
+func dramaVideoResolutionOffered(options []string, value string) bool {
+	if value == "" {
+		return true
+	}
+	key := dramaVideoResolutionKey(value)
+	for _, option := range options {
+		if dramaVideoResolutionKey(option) == key {
+			return true
+		}
+	}
+	return false
+}
+
+// dramaVideoResolutionKey 让 720、720p、4k、2160p 这类写法按同一档位比较。
+func dramaVideoResolutionKey(value string) string {
+	return strings.ToLower(normalizeVideoResolution(strings.TrimSpace(value)))
 }
 
 func setDramaModelChoice(models *DramaModels, capability string, choice DramaModelChoice) {
@@ -249,12 +312,35 @@ func missingDramaCapabilities(models DramaModels) []string {
 	return missing
 }
 
-// dramaVideoProfile 是视频模型能力合同中短剧需要的部分：时长档位、支持的生成方式、参考图上限与是否可开启原声。
+// dramaVideoProfile 是视频模型能力合同中短剧需要的部分：时长档位、支持的生成方式、参考图上限、
+// 是否同步生成声音，以及换算作品画幅所需的比例与分辨率声明。
 type dramaVideoProfile struct {
-	Durations     production.DurationOptions
-	Operations    []string
-	MaxImages     int
-	GenerateAudio bool
+	Durations  production.DurationOptions
+	Operations []string
+	MaxImages  int
+	// MaxAudios / MaxAudioSeconds 是参考音频的张数与单段时长上限（秒，0 表示未声明），用于随段发送角色声音样本。
+	MaxAudios       int
+	MaxAudioSeconds int
+	GenerateAudio   bool
+	// PromptMaxChars 是提示词字符上限（含系统追加的参考图说明），与任务准入同一份能力合同；0 表示不限。
+	PromptMaxChars int
+	video          *VideoCapabilityConfig
+}
+
+// screen 把作品画幅与分辨率换算成本模型的画面参数，与任务准入使用同一份能力合同；resolution 为空按模型默认。
+func (p dramaVideoProfile) screen(ratio string, resolution string) dramaVideoScreen {
+	return dramaVideoScreenFor(p.video, ratio, resolution)
+}
+
+// ratios 是本模型能准确给出的作品画幅（按 production.AspectRatios 的顺序）。
+func (p dramaVideoProfile) ratios() []string {
+	ratios := []string{}
+	for _, ratio := range production.AspectRatios {
+		if p.screen(ratio, "").Issue == "" {
+			ratios = append(ratios, ratio)
+		}
+	}
+	return ratios
 }
 
 // supports 与 MatchCapability 一致：未声明生成方式的模型视为不限制。
@@ -314,13 +400,11 @@ func (s *Service) dramaVideoProfile(choice DramaModelChoice) (dramaVideoProfile,
 		return dramaVideoProfile{}, errors.New("模型未声明视频能力")
 	}
 	video := capability.Video
-	options := production.DurationOptions{Values: video.Duration.Values, Min: video.Duration.Min, Max: video.Duration.Max, Step: video.Duration.Step}
-	profile := dramaVideoProfile{Durations: options, Operations: video.Operations, MaxImages: video.References.MaxImages, GenerateAudio: video.GenerateAudio.Supported}
+	options := dramaDurationOptions(video.Duration)
+	// 不声明同步生成声音的模型也可以用：段视频没有对白与音效，由用户在选模型时自行取舍。
+	profile := dramaVideoProfile{Durations: options, Operations: video.Operations, MaxImages: video.References.MaxImages, MaxAudios: max(video.References.MaxAudios, 0), MaxAudioSeconds: max(video.References.MaxAudioDuration, 0), GenerateAudio: video.GenerateAudio.Supported, PromptMaxChars: max(video.References.PromptMaxChars, 0), video: video}
 	if profile.maxSeconds() <= 0 {
 		return profile, errors.New("未声明可生成时长，无法按剧情段切分")
-	}
-	if !profile.GenerateAudio {
-		return profile, errors.New("未声明原声对白（generateAudio）：短剧台词由视频模型直接出声")
 	}
 	if !profile.supports("reference_to_video") && !profile.supports("text_to_video") {
 		return profile, errors.New("短剧需要支持参考图生视频或文生视频（开场段与并行出片）")
@@ -367,7 +451,7 @@ func (s *Service) EstimateDrama(userID string, req DramaEstimateRequest) (DramaE
 		return DramaEstimate{}, err
 	}
 	// 一个剧情段一次视频调用；智能模式按模型上限估算，是调用次数的下限。
-	segmentSeconds := max(settings.Storyboard.SegmentLimits(profile.maxSeconds()).TargetSeconds(), 1)
+	segmentSeconds := max(settings.Storyboard.SegmentLimits(profile.Durations).TargetSeconds(), 1)
 	segmentsPerEpisode := max(1, int(math.Ceil(float64(settings.EpisodeSeconds)/float64(segmentSeconds))))
 	casts := min(60, 12+episodes/3)
 	estimate := DramaEstimate{
@@ -378,21 +462,43 @@ func (s *Service) EstimateDrama(userID string, req DramaEstimateRequest) (DramaE
 		TextCalls:       1 + (chapters+9)/10 + episodes*(1+segmentsPerEpisode),
 		DurationMinutes: episodes * settings.EpisodeSeconds / 60,
 	}
-	textCost, okText := s.quoteDramaChoice(userID, models.Text, ModelRequestIntent{Capability: "text"})
-	// 参考图按实际提交的尺寸与分辨率报价，避免按模型默认档位低估。
-	imageIntent := *dramaModelIntent("image")
-	if request := s.dramaImageRequestFor(models.Image, production.AssetImageRatio, settings.Assets.Resolution); request.Issue == "" {
-		imageIntent.Options = map[string]any{}
-		if request.Size != "" {
-			imageIntent.Options["size"] = request.Size
+	textCost, okText := s.quoteDramaChoice(userID, models.textFor(DramaStepScript), ModelRequestIntent{Capability: "text"})
+	// 参考图按每类实际提交的模型、尺寸与分辨率报价，避免按模型默认档位低估；角色、道具、场景按等量估算。
+	var imageTotal int64
+	imagePriced, okImage := 0, false
+	for _, kind := range []string{"character", "prop", "scene"} {
+		choice := models.imageFor(kind)
+		ratio := production.AssetImageRatio
+		if kind == "character" {
+			ratio = settings.Assets.CharacterRatio
 		}
-		if request.Resolution != "" {
-			imageIntent.Options["imageResolution"] = request.Resolution
+		imageIntent := *dramaModelIntent("image")
+		if request := s.dramaImageRequestFor(choice, ratio, settings.Assets.ResolutionFor(kind)); request.Issue == "" {
+			imageIntent.Options = map[string]any{}
+			if request.Size != "" {
+				imageIntent.Options["size"] = request.Size
+			}
+			if request.Resolution != "" {
+				imageIntent.Options["imageResolution"] = request.Resolution
+			}
+		}
+		if cost, ok := s.quoteDramaChoice(userID, choice, imageIntent); ok {
+			imageTotal += cost
+			imagePriced++
+			okImage = true
 		}
 	}
-	imageCost, okImage := s.quoteDramaChoice(userID, models.Image, imageIntent)
+	var imageCost int64
+	if imagePriced > 0 {
+		imageCost = imageTotal / int64(imagePriced)
+	}
 	operation, inputs := dramaSegmentOperation(settings, profile)
-	videoCost, okVideo := s.quoteDramaChoice(userID, models.Video, ModelRequestIntent{Capability: "video", Operation: operation, Inputs: inputs, Options: map[string]any{"videoSeconds": itoa(production.SnapVideoSeconds(int64(segmentSeconds)*1000, profile.Durations))}})
+	// 与剧情段提交时的画面参数和声音开关一致，价格档可能按分辨率与是否出声区分。
+	videoOptions := map[string]any{"videoSeconds": itoa(production.SnapVideoSeconds(int64(segmentSeconds)*1000, profile.Durations)), "videoGenerateAudio": strconv.FormatBool(profile.GenerateAudio)}
+	if screen := profile.screen(settings.AspectRatio, settings.VideoResolution); screen.Issue == "" {
+		screen.apply(videoOptions)
+	}
+	videoCost, okVideo := s.quoteDramaChoice(userID, models.Video, ModelRequestIntent{Capability: "video", Operation: operation, Inputs: inputs, Options: videoOptions})
 	total := int64(estimate.TextCalls)*textCost + int64(estimate.Images)*imageCost + int64(estimate.Videos)*videoCost
 	sample := textCost*int64(2+segmentsPerEpisode) + int64(casts)*imageCost + int64(segmentsPerEpisode)*videoCost
 	estimate.Priced = okText || okImage || okVideo
@@ -681,6 +787,126 @@ func dramaRatioValue(value string) (float64, bool) {
 	return width / height, true
 }
 
+// dramaVideoScreen 是剧情段视频按作品画幅出片时发送的画面参数。声明了比例参数的模型发 Size；
+// 能力里带 fixedScreenSpec 的模型（如 AutoDL）用完整分辨率标签表达横竖，任务准入会清空它们的 size，
+// 只能发 Resolution（例如 768p竖）。Issue 非空表示所选模型给不出这个画幅。
+type dramaVideoScreen struct {
+	Size       string
+	Resolution string
+	Issue      string
+}
+
+func (s dramaVideoScreen) apply(config map[string]any) {
+	if s.Size != "" {
+		config["size"] = s.Size
+	}
+	if s.Resolution != "" {
+		config["vquality"] = s.Resolution
+	}
+}
+
+// dramaVideoScreenFor 只按能力合同声明的取值换算；给不出时返回原因，不让上游按默认画幅（多为横屏）出片。
+// resolution 是作品指定的分辨率档位，为空时不发分辨率，由任务准入按模型默认补齐；模型没有这一档时返回原因，不悄悄降档。
+func dramaVideoScreenFor(video *VideoCapabilityConfig, ratio string, resolution string) dramaVideoScreen {
+	target, ok := dramaRatioValue(ratio)
+	if !ok {
+		return dramaVideoScreen{Issue: "作品画幅无效：" + ratio}
+	}
+	if video == nil {
+		return dramaVideoScreen{Issue: "模型未声明视频能力"}
+	}
+	if video.FixedScreenSpec != nil {
+		return dramaLabeledVideoScreen(video, ratio, target, resolution)
+	}
+	if len(video.Ratios) == 0 {
+		return dramaVideoScreen{Issue: "所选视频模型没有声明可选画幅，无法保证按 " + ratio + " 出片；请在后台为该模型配置画面比例，或换用其他视频模型"}
+	}
+	if !videoRatioAllowed(video.Ratios, ratio) {
+		return dramaVideoScreen{Issue: fmt.Sprintf("所选视频模型不支持 %s 画幅（可选 %s），请换用支持 %s 的视频模型", ratio, strings.Join(video.Ratios, "、"), ratio)}
+	}
+	if resolution == "" {
+		return dramaVideoScreen{Size: ratio}
+	}
+	if name := videoResolutionNameRequest(video, resolution); name != "" {
+		return dramaVideoScreen{Size: ratio, Resolution: name}
+	}
+	if len(video.Resolutions) == 0 {
+		return dramaVideoScreen{Issue: fmt.Sprintf("所选视频模型不提供可选分辨率，无法按 %s 出片；请把视频分辨率改为“模型默认”，或换用其他视频模型", resolution)}
+	}
+	return dramaVideoScreen{Issue: fmt.Sprintf("所选视频模型不支持 %s 分辨率（可选 %s），请改选分辨率或换用其他视频模型", resolution, strings.Join(video.Resolutions, "、"))}
+}
+
+// dramaLabeledVideoScreen 从分辨率标签里挑与作品画幅一致的一档：作品指定了分辨率时只取同档，
+// 否则优先模型默认分辨率，其次与默认同档（默认 768p横、作品竖屏时取 768p竖），再按后台配置的顺序取第一个。
+func dramaLabeledVideoScreen(video *VideoCapabilityConfig, ratio string, target float64, resolution string) dramaVideoScreen {
+	matches := []string{}
+	for _, label := range video.Resolutions {
+		if value, ok := dramaResolutionLabelRatio(label); ok && math.Abs(math.Log(value)-math.Log(target)) <= dramaRatioTolerance {
+			matches = append(matches, label)
+		}
+	}
+	if len(matches) == 0 {
+		return dramaVideoScreen{Issue: fmt.Sprintf("所选视频模型的分辨率里没有 %s 画幅（可选 %s），请换用其他视频模型，或在后台为该模型添加对应分辨率", ratio, strings.Join(video.Resolutions, "、"))}
+	}
+	if resolution != "" {
+		tier := dramaResolutionTier(resolution)
+		for _, label := range matches {
+			if strings.EqualFold(label, resolution) || (tier != "" && dramaResolutionTier(label) == tier) {
+				return dramaVideoScreen{Resolution: label}
+			}
+		}
+		return dramaVideoScreen{Issue: fmt.Sprintf("所选视频模型没有 %s 画幅的 %s 分辨率（可选 %s），请改选分辨率或换用其他视频模型", ratio, resolution, strings.Join(matches, "、"))}
+	}
+	for _, label := range matches {
+		if strings.EqualFold(label, video.DefaultResolution) {
+			return dramaVideoScreen{Resolution: label}
+		}
+	}
+	if tier := dramaResolutionTier(video.DefaultResolution); tier != "" {
+		for _, label := range matches {
+			if dramaResolutionTier(label) == tier {
+				return dramaVideoScreen{Resolution: label}
+			}
+		}
+	}
+	return dramaVideoScreen{Resolution: matches[0]}
+}
+
+var (
+	dramaLabelPixelsPattern = regexp.MustCompile(`(\d{2,5})\s*[*xX×]\s*(\d{2,5})`)
+	dramaLabelRatioPattern  = regexp.MustCompile(`(\d{1,2})\s*:\s*(\d{1,2})`)
+	dramaLabelTierPattern   = regexp.MustCompile(`^\s*(\d{3,4})\s*[pP]`)
+)
+
+// dramaResolutionLabelRatio 读出分辨率标签表达的宽高比：写了像素（768*1344）或比例（1:1）的按数值，
+// 否则“竖”按 9:16、“横”按 16:9；读不出方向时返回 false，这一档不参与画幅匹配。
+func dramaResolutionLabelRatio(label string) (float64, bool) {
+	for _, pattern := range []*regexp.Regexp{dramaLabelPixelsPattern, dramaLabelRatioPattern} {
+		if match := pattern.FindStringSubmatch(label); match != nil {
+			width, _ := strconv.ParseFloat(match[1], 64)
+			height, _ := strconv.ParseFloat(match[2], 64)
+			if width > 0 && height > 0 {
+				return width / height, true
+			}
+		}
+	}
+	switch {
+	case strings.Contains(label, "竖"):
+		return 9.0 / 16.0, true
+	case strings.Contains(label, "横"):
+		return 16.0 / 9.0, true
+	}
+	return 0, false
+}
+
+// dramaResolutionTier 是分辨率标签的清晰度档位，例如 768p竖 与 768p横 同为 768。
+func dramaResolutionTier(label string) string {
+	if match := dramaLabelTierPattern.FindStringSubmatch(label); match != nil {
+		return match[1]
+	}
+	return ""
+}
+
 // dramaSizeRejected 判断准入错误是否只因尺寸参数；只看结构化字段，不解析文案。
 
 func (s *Service) dramaModelOption(choice DramaModelChoice, capability, label, priceLabel string) DramaModelOption {
@@ -689,6 +915,10 @@ func (s *Service) dramaModelOption(choice DramaModelChoice, capability, label, p
 		if profile, err := s.dramaVideoProfile(choice); err == nil {
 			option.MaxVideoSeconds = profile.maxSeconds()
 			option.TailFrameChain = profile.supports("image_to_video")
+			option.VideoRatios = profile.ratios()
+			audio := profile.GenerateAudio
+			option.GenerateAudio = &audio
+			option.VideoResolutions, option.DefaultVideoResolution = dramaVideoResolutionsFor(profile.video)
 		}
 	}
 	if capability == "image" {
@@ -705,6 +935,46 @@ func (s *Service) dramaModelOption(choice DramaModelChoice, capability, label, p
 	return option
 }
 
+// dramaVideoResolutionsFor 是作品可指定的视频分辨率档位与模型默认档位。用分辨率标签区分横竖的模型
+// （fixedScreenSpec，如 768p竖 / 768p横）按清晰度合并成一档（768p），横竖由作品画幅决定。
+func dramaVideoResolutionsFor(video *VideoCapabilityConfig) ([]string, string) {
+	if video == nil {
+		return nil, ""
+	}
+	tierOf := func(label string) string {
+		label = strings.TrimSpace(label)
+		if video.FixedScreenSpec != nil {
+			if tier := dramaResolutionTier(label); tier != "" {
+				return tier + "p"
+			}
+		}
+		return label
+	}
+	values := []string{}
+	for _, label := range video.Resolutions {
+		if value := tierOf(label); value != "" && !slices.Contains(values, value) {
+			values = append(values, value)
+		}
+	}
+	fallback := ""
+	if value := tierOf(video.DefaultResolution); slices.Contains(values, value) {
+		fallback = value
+	}
+	return values, fallback
+}
+
+// dramaDurationOptions 只取能力合同里生效的那组时长声明：枚举只用档位，范围只用上下限与步长。
+// 合同切换过选择方式时另一组字段可能残留旧值，混用会选出任务准入拒绝的秒数。
+func dramaDurationOptions(duration VideoDurationConfig) production.DurationOptions {
+	switch duration.Selection {
+	case "enum":
+		return production.DurationOptions{Values: append([]int(nil), duration.Values...)}
+	case "range":
+		return production.DurationOptions{Min: duration.Min, Max: duration.Max, Step: duration.Step}
+	}
+	return production.DurationOptions{Values: duration.Values, Min: duration.Min, Max: duration.Max, Step: duration.Step}
+}
+
 // dramaMaxVideoSeconds 是视频模型单次可生成的最长秒数，也是一个剧情段的时长上限。
 func dramaMaxVideoSeconds(options production.DurationOptions) int {
 	longest := options.Max
@@ -714,17 +984,17 @@ func dramaMaxVideoSeconds(options production.DurationOptions) int {
 	return longest
 }
 
-// dramaWritingSkill 读取作品选定的视频提示词写作技能；技能不可读时报错，不悄悄退回内置格式。
-func (s *Service) dramaWritingSkill(userID string, ref *DramaSkillRef) (*production.WritingSkill, error) {
+// dramaWritingSkill 读取作品为某个文字步骤选定的写作技能；技能不可读时报错，不悄悄退回内置写法。label 用于错误提示。
+func (s *Service) dramaWritingSkill(userID string, ref *DramaSkillRef, label string) (*production.WritingSkill, error) {
 	if ref == nil {
 		return nil, nil
 	}
 	file, err := s.SkillPackageFile(userID, ref.SkillID, ref.Path)
 	if err != nil {
-		return nil, BadAuthRequest("视频提示词技能「" + firstNonEmpty(ref.SkillName, ref.SkillID) + "」不可用：" + err.Error())
+		return nil, BadAuthRequest(label + "技能「" + firstNonEmpty(ref.SkillName, ref.SkillID) + "」不可用：" + err.Error())
 	}
 	if file.Binary || strings.TrimSpace(file.Content) == "" {
-		return nil, BadAuthRequest("视频提示词技能文件 " + ref.Path + " 不是文本或为空")
+		return nil, BadAuthRequest(label + "技能文件 " + ref.Path + " 不是文本或为空")
 	}
 	return &production.WritingSkill{Name: firstNonEmpty(ref.SkillName, ref.SkillID), Path: ref.Path, Content: file.Content}, nil
 }

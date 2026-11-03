@@ -32,19 +32,11 @@ export function ConsolePreviewPanel() {
                     <button
                         type="button"
                         onClick={() => setActiveTab("components")}
-                        className={`px-2.5 py-1 rounded font-medium ${
-                            activeTab === "components" ? "bg-foreground/10 text-foreground font-semibold" : "text-foreground/50 hover:text-foreground"
-                        }`}
+                        className={`px-2.5 py-1 rounded font-medium ${activeTab === "components" ? "bg-foreground/10 text-foreground font-semibold" : "text-foreground/50 hover:text-foreground"}`}
                     >
                         组件沙箱
                     </button>
-                    <button
-                        type="button"
-                        onClick={() => setActiveTab("recovery")}
-                        className={`px-2.5 py-1 rounded font-medium ${
-                            activeTab === "recovery" ? "bg-foreground/10 text-foreground font-semibold" : "text-foreground/50 hover:text-foreground"
-                        }`}
-                    >
+                    <button type="button" onClick={() => setActiveTab("recovery")} className={`px-2.5 py-1 rounded font-medium ${activeTab === "recovery" ? "bg-foreground/10 text-foreground font-semibold" : "text-foreground/50 hover:text-foreground"}`}>
                         图 1 恢复动画
                     </button>
                 </div>
@@ -52,28 +44,13 @@ export function ConsolePreviewPanel() {
                 <div className="flex items-center gap-2">
                     {/* 视口切换 */}
                     <div className="flex items-center rounded border border-border p-0.5 bg-background">
-                        <button
-                            type="button"
-                            onClick={() => setPreviewViewport("desktop")}
-                            className={`p-1 rounded ${previewViewport === "desktop" ? "bg-sky-500 text-white" : "text-foreground/50"}`}
-                            title="桌面 (1280px+)"
-                        >
+                        <button type="button" onClick={() => setPreviewViewport("desktop")} className={`p-1 rounded ${previewViewport === "desktop" ? "bg-sky-500 text-white" : "text-foreground/50"}`} title="桌面 (1280px+)">
                             <Monitor className="h-3.5 w-3.5" />
                         </button>
-                        <button
-                            type="button"
-                            onClick={() => setPreviewViewport("tablet")}
-                            className={`p-1 rounded ${previewViewport === "tablet" ? "bg-sky-500 text-white" : "text-foreground/50"}`}
-                            title="平板 (768px)"
-                        >
+                        <button type="button" onClick={() => setPreviewViewport("tablet")} className={`p-1 rounded ${previewViewport === "tablet" ? "bg-sky-500 text-white" : "text-foreground/50"}`} title="平板 (768px)">
                             <Tablet className="h-3.5 w-3.5" />
                         </button>
-                        <button
-                            type="button"
-                            onClick={() => setPreviewViewport("mobile")}
-                            className={`p-1 rounded ${previewViewport === "mobile" ? "bg-sky-500 text-white" : "text-foreground/50"}`}
-                            title="手机 (390px)"
-                        >
+                        <button type="button" onClick={() => setPreviewViewport("mobile")} className={`p-1 rounded ${previewViewport === "mobile" ? "bg-sky-500 text-white" : "text-foreground/50"}`} title="手机 (390px)">
                             <Smartphone className="h-3.5 w-3.5" />
                         </button>
                     </div>
@@ -92,16 +69,10 @@ export function ConsolePreviewPanel() {
 
             {/* 隔离沙箱视口画板 */}
             <div className="flex-1 overflow-y-auto p-4 flex justify-center bg-black/10">
-                <div
-                    style={sandboxVariables as React.CSSProperties}
-                    className={`transition-all duration-300 rounded-2xl border border-border bg-[var(--background)] text-[var(--foreground)] p-5 shadow-2xl flex flex-col gap-6 ${viewportWidthStyle} h-fit`}
-                >
+                <div style={sandboxVariables as React.CSSProperties} className={`transition-all duration-300 rounded-2xl border border-border bg-[var(--background)] text-[var(--foreground)] p-5 shadow-2xl flex flex-col gap-6 ${viewportWidthStyle} h-fit`}>
                     {activeTab === "recovery" ? (
                         <div className="h-[460px] rounded-xl overflow-hidden border border-border/70">
-                            <WorkspaceRecoveryAnimator
-                                config={draftConfig.workspaceRecovery}
-                                interactivePreview={true}
-                            />
+                            <WorkspaceRecoveryAnimator config={draftConfig.workspaceRecovery} interactivePreview={true} />
                         </div>
                     ) : (
                         <>
@@ -111,16 +82,12 @@ export function ConsolePreviewPanel() {
                                     <span className="text-xs font-bold block">Live Components Preview</span>
                                     <span className="text-[10px] text-[var(--muted-foreground)]">实时应用草稿令牌</span>
                                 </div>
-                                <span className="text-[10px] px-2 py-0.5 rounded bg-[var(--accent)] text-[var(--accent-foreground)] font-mono">
-                                    {previewThemeMode.toUpperCase()}
-                                </span>
+                                <span className="text-[10px] px-2 py-0.5 rounded bg-[var(--accent)] text-[var(--accent-foreground)] font-mono">{previewThemeMode.toUpperCase()}</span>
                             </div>
 
                             {/* 按钮群组测试 */}
                             <div className="space-y-2">
-                                <label className="text-[11px] font-semibold text-[var(--muted-foreground)] block">
-                                    按钮光学 (Buttons)
-                                </label>
+                                <label className="text-[11px] font-semibold text-[var(--muted-foreground)] block">按钮光学 (Buttons)</label>
                                 <div className="flex flex-wrap items-center gap-2">
                                     <button
                                         type="button"
@@ -165,9 +132,7 @@ export function ConsolePreviewPanel() {
 
                             {/* 输入框与选择菜单 */}
                             <div className="space-y-2">
-                                <label className="text-[11px] font-semibold text-[var(--muted-foreground)] block">
-                                    表单与下拉框 (Input & Select)
-                                </label>
+                                <label className="text-[11px] font-semibold text-[var(--muted-foreground)] block">表单与下拉框 (Input & Select)</label>
                                 <div className="space-y-2.5">
                                     <input
                                         type="text"
@@ -203,9 +168,7 @@ export function ConsolePreviewPanel() {
 
                             {/* 表面卡片与景深 */}
                             <div className="space-y-2">
-                                <label className="text-[11px] font-semibold text-[var(--muted-foreground)] block">
-                                    卡片景深与悬停 (Card & Elevation)
-                                </label>
+                                <label className="text-[11px] font-semibold text-[var(--muted-foreground)] block">卡片景深与悬停 (Card & Elevation)</label>
                                 <div
                                     style={{
                                         backgroundColor: "var(--card-surface)",
@@ -217,13 +180,9 @@ export function ConsolePreviewPanel() {
                                 >
                                     <div className="flex items-center justify-between">
                                         <span className="text-xs font-bold text-[var(--foreground)]">电影分镜预览卡片</span>
-                                        <span className="text-[10px] px-1.5 py-0.5 rounded bg-[var(--primary)] text-[var(--primary-foreground)]">
-                                            E2 Elevation
-                                        </span>
+                                        <span className="text-[10px] px-1.5 py-0.5 rounded bg-[var(--primary)] text-[var(--primary-foreground)]">E2 Elevation</span>
                                     </div>
-                                    <p className="text-[11px] text-[var(--muted-foreground)] leading-relaxed">
-                                        悬停卡片触发微上浮与光泽增强，边框细致平滑。
-                                    </p>
+                                    <p className="text-[11px] text-[var(--muted-foreground)] leading-relaxed">悬停卡片触发微上浮与光泽增强，边框细致平滑。</p>
                                 </div>
                             </div>
 
@@ -262,9 +221,7 @@ export function ConsolePreviewPanel() {
                                         className="w-full max-w-xs p-5 space-y-4 shadow-2xl"
                                     >
                                         <h4 className="text-sm font-bold">模态窗口 (E3 Optical Depth)</h4>
-                                        <p className="text-xs text-[var(--muted-foreground)] leading-relaxed">
-                                            背景应用了毛玻璃模糊滤镜，点击下方按钮关闭并返回焦点。
-                                        </p>
+                                        <p className="text-xs text-[var(--muted-foreground)] leading-relaxed">背景应用了毛玻璃模糊滤镜，点击下方按钮关闭并返回焦点。</p>
                                         <div className="flex justify-end gap-2 pt-2">
                                             <button
                                                 type="button"

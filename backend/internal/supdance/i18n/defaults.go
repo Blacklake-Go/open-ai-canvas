@@ -1724,6 +1724,5 @@ func BuiltinEntries() []Entry {
 		entry("canvas.disconnect", "canvas", "断开连接", "Disconnect", "中斷連線", "切断", "연결 끊기", "Desconectar", "断开Agent连接"),
 		entry("canvas.connector", "canvas", "连接器", "Connector", "連接器", "コネクタ", "커넥터", "Conector", "底部Agent连接器"),
 		entry("canvas.collapse_connector", "canvas", "收起连接器", "Collapse Connector", "收起連接器", "コネクタを折りたたむ", "커넥터 접기", "Plegar conector", "收起底部连接器"),
-
 	}
 }

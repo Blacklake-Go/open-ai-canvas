@@ -34,20 +34,18 @@ export function LoadingPane() {
                         <Loader2 className="h-5 w-5 text-sky-400" />
                         工作区恢复动画模块 (图 1 Workspace Recovery)
                     </h2>
-                    <p className="text-sm text-foreground/60 leading-relaxed mt-1">
-                        基于图 1 建立的 5 阶段环形运动轨道、卫星节点与浮动 UI 卡片恢复动画，深度绑定真实业务事件，拒绝虚假百分比。
-                    </p>
+                    <p className="text-sm text-foreground/60 leading-relaxed mt-1">基于图 1 建立的 5 阶段环形运动轨道、卫星节点与浮动 UI 卡片恢复动画，深度绑定真实业务事件，拒绝虚假百分比。</p>
                 </div>
                 <div className="flex items-center gap-2">
                     <span className="text-xs text-foreground/60">模块开关：</span>
                     <button
                         type="button"
-                        onClick={() => updateDraft((d) => { d.workspaceRecovery.enabled = !d.workspaceRecovery.enabled; })}
-                        className={`px-3 py-1 text-xs font-semibold rounded-lg border transition-all ${
-                            recovery.enabled
-                                ? "bg-emerald-500/20 text-emerald-400 border-emerald-500/30"
-                                : "bg-foreground/5 text-foreground/50 border-border"
-                        }`}
+                        onClick={() =>
+                            updateDraft((d) => {
+                                d.workspaceRecovery.enabled = !d.workspaceRecovery.enabled;
+                            })
+                        }
+                        className={`px-3 py-1 text-xs font-semibold rounded-lg border transition-all ${recovery.enabled ? "bg-emerald-500/20 text-emerald-400 border-emerald-500/30" : "bg-foreground/5 text-foreground/50 border-border"}`}
                     >
                         {recovery.enabled ? "已启用 (Enabled)" : "已停用 (Disabled)"}
                     </button>
@@ -70,11 +68,7 @@ export function LoadingPane() {
                                     setAutoPlay(false);
                                     setPreviewStage(st);
                                 }}
-                                className={`px-2.5 py-1 text-xs rounded-md border font-mono transition-all ${
-                                    previewStage === st && !autoPlay
-                                        ? "bg-sky-500 text-white border-sky-500 font-bold"
-                                        : "border-border text-foreground/60 hover:text-foreground"
-                                }`}
+                                className={`px-2.5 py-1 text-xs rounded-md border font-mono transition-all ${previewStage === st && !autoPlay ? "bg-sky-500 text-white border-sky-500 font-bold" : "border-border text-foreground/60 hover:text-foreground"}`}
                             >
                                 Stage: {st}
                             </button>
@@ -85,9 +79,7 @@ export function LoadingPane() {
                                 setAutoPlay(true);
                                 setPreviewStage("init");
                             }}
-                            className={`flex items-center gap-1 px-3 py-1 text-xs rounded-md border font-medium ${
-                                autoPlay ? "bg-emerald-500 text-white border-emerald-500" : "border-border text-foreground/70"
-                            }`}
+                            className={`flex items-center gap-1 px-3 py-1 text-xs rounded-md border font-medium ${autoPlay ? "bg-emerald-500 text-white border-emerald-500" : "border-border text-foreground/70"}`}
                         >
                             <RefreshCw className="h-3 w-3" /> 演进全流程
                         </button>
@@ -96,13 +88,7 @@ export function LoadingPane() {
 
                 {/* 模拟器画板容器 */}
                 <div className="h-[420px] w-full rounded-xl border border-border/80 overflow-hidden shadow-2xl relative">
-                    <WorkspaceRecoveryAnimator
-                        config={recovery}
-                        activeStage={previewStage}
-                        interactivePreview={autoPlay}
-                        onStageChange={(next) => setPreviewStage(next)}
-                        onRetry={() => setPreviewStage("init")}
-                    />
+                    <WorkspaceRecoveryAnimator config={recovery} activeStage={previewStage} interactivePreview={autoPlay} onStageChange={(next) => setPreviewStage(next)} onRetry={() => setPreviewStage("init")} />
                 </div>
             </div>
 

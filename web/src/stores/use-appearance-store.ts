@@ -58,7 +58,11 @@ export function normalizePublicAppearance(value?: Partial<PublicAppearance> | nu
     const darkLogoUrl = safeAppearanceURL(value?.darkLogoUrl, logoUrl);
     const resolvedBrandName = brandName || DEFAULT_PUBLIC_APPEARANCE.brandName;
     const seoTitle = normalizeAppearanceCopy(value?.seoTitle, `${resolvedBrandName} — AI Creative Workspace for Video & Story Generation`);
-    const seoDescription = normalizeAppearanceCopy(value?.seoDescription, `${resolvedBrandName} is an all-in-one AI creative workspace for video, image, and multimedia storytelling. Create, iterate, and produce cinematic content with generative AI.`, true);
+    const seoDescription = normalizeAppearanceCopy(
+        value?.seoDescription,
+        `${resolvedBrandName} is an all-in-one AI creative workspace for video, image, and multimedia storytelling. Create, iterate, and produce cinematic content with generative AI.`,
+        true,
+    );
     const seoKeywords = normalizeAppearanceCopy(value?.seoKeywords, DEFAULT_PUBLIC_APPEARANCE.seoKeywords, true);
     const footerCopyright = normalizeAppearanceCopy(value?.footerCopyright, `© ${new Date().getFullYear()} ${resolvedBrandName}. All rights reserved.`);
     const icpFilingNumber = normalizeAppearanceCopy(value?.icpFilingNumber, "", true);

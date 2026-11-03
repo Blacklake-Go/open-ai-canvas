@@ -385,9 +385,18 @@ export function InspirationHall({ onUse }: { onUse: (item: CreationInspiration) 
 
             <div className="inspiration-hall-toolbar">
                 <SegmentedControl options={modeOptions} value={modeFilter} onChange={(value) => setModeFilter(value as ModeFilter)} ariaLabel={t("inspiration.modes_aria", undefined, "按创作类型筛选灵感")} className="inspiration-hall-modes" />
-                <Input allowClear prefix={<Search className="size-4" />} placeholder={t("inspiration.search_placeholder", undefined, "搜索标题、描述或标签")} aria-label={t("inspiration.search_aria", undefined, "搜索灵感")} value={search} onChange={(event) => setSearch(event.target.value)} className="inspiration-hall-search" />
+                <Input
+                    allowClear
+                    prefix={<Search className="size-4" />}
+                    placeholder={t("inspiration.search_placeholder", undefined, "搜索标题、描述或标签")}
+                    aria-label={t("inspiration.search_aria", undefined, "搜索灵感")}
+                    value={search}
+                    onChange={(event) => setSearch(event.target.value)}
+                    className="inspiration-hall-search"
+                />
                 <Button type="text" icon={<SlidersHorizontal className="size-4" />} aria-expanded={filtersOpen} aria-controls="inspiration-hall-filters" onClick={() => setFiltersOpen((open) => !open)} className="inspiration-hall-filter-toggle">
-                    {t("inspiration.more_filters", undefined, "更多筛选")}{advancedFilterCount ? ` · ${advancedFilterCount}` : ""}
+                    {t("inspiration.more_filters", undefined, "更多筛选")}
+                    {advancedFilterCount ? ` · ${advancedFilterCount}` : ""}
                     <ChevronDown className={filtersOpen ? "is-open" : undefined} aria-hidden="true" />
                 </Button>
                 <span className="inspiration-hall-count" role="status">

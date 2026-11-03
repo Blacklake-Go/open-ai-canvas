@@ -33,9 +33,7 @@ export function EffectsPane() {
                     <Shield className="h-5 w-5 text-sky-400" />
                     阴影、遮罩与浮层深度引擎 (E0–E4)
                 </h2>
-                <p className="text-sm text-foreground/60 leading-relaxed mt-1">
-                    严格按光学分层管理阴影景深、模态遮罩毛玻璃模糊度（Backdrop Blur）与文字保护渐变。
-                </p>
+                <p className="text-sm text-foreground/60 leading-relaxed mt-1">严格按光学分层管理阴影景深、模态遮罩毛玻璃模糊度（Backdrop Blur）与文字保护渐变。</p>
             </div>
 
             {/* E0-E4 深度层级卡片 */}
@@ -48,9 +46,7 @@ export function EffectsPane() {
                             <div key={level} className="rounded-xl border border-border/70 bg-card p-4 space-y-3">
                                 <div className="flex items-center justify-between">
                                     <div>
-                                        <span className="inline-block px-2 py-0.5 rounded font-mono font-bold text-xs bg-sky-500/20 text-sky-400 mr-2">
-                                            {item.level}
-                                        </span>
+                                        <span className="inline-block px-2 py-0.5 rounded font-mono font-bold text-xs bg-sky-500/20 text-sky-400 mr-2">{item.level}</span>
                                         <span className="text-sm font-medium text-foreground">{item.label}</span>
                                         <span className="text-xs text-foreground/50 ml-2">({item.usage})</span>
                                     </div>

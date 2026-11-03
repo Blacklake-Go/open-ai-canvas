@@ -1,31 +1,12 @@
 import { afterEach, beforeEach, describe, expect, test } from "bun:test";
 import { Window } from "happy-dom";
 import { getAntdLocaleForCode, loadAntdLocale } from "../src/supdance/plugins/i18n/engine/antd-locale";
-import {
-    compileI18nDictionary,
-    interpolateTemplate,
-    translateByKey,
-    translateSourceText,
-} from "../src/supdance/plugins/i18n/engine/translator";
-import {
-    DEFAULT_SUPDANCE_I18N_SETTINGS,
-    loadAllLocalePacks,
-    mergeI18nEntries,
-} from "../src/supdance/plugins/i18n/locales";
-import {
-    useI18n,
-    useSupDanceI18nStore,
-} from "../src/supdance/plugins/i18n/store";
+import { compileI18nDictionary, interpolateTemplate, translateByKey, translateSourceText } from "../src/supdance/plugins/i18n/engine/translator";
+import { DEFAULT_SUPDANCE_I18N_SETTINGS, loadAllLocalePacks, mergeI18nEntries } from "../src/supdance/plugins/i18n/locales";
+import { useI18n, useSupDanceI18nStore } from "../src/supdance/plugins/i18n/store";
 import type { SupDanceLocaleCode } from "../src/supdance/plugins/i18n/types";
 
-const ALL_LOCALES: readonly SupDanceLocaleCode[] = [
-    "zh-CN",
-    "en-US",
-    "zh-TW",
-    "ja-JP",
-    "ko-KR",
-    "es-ES",
-];
+const ALL_LOCALES: readonly SupDanceLocaleCode[] = ["zh-CN", "en-US", "zh-TW", "ja-JP", "ko-KR", "es-ES"];
 
 describe("Empirical Challenger Suite: Milestone 1 Stress & Verification", () => {
     let initialStoreState: ReturnType<typeof useSupDanceI18nStore.getState>;
@@ -353,40 +334,21 @@ describe("Empirical Challenger Suite: Milestone 1 Stress & Verification", () => 
         test("translateByKey: missing key with explicit fallback returns fallback", () => {
             const dict = useSupDanceI18nStore.getState().dictionary;
 
-            const result = translateByKey(
-                dict,
-                "some.totally.bogus.key",
-                "es-ES",
-                "zh-CN",
-                undefined,
-                "Default Text Here"
-            );
+            const result = translateByKey(dict, "some.totally.bogus.key", "es-ES", "zh-CN", undefined, "Default Text Here");
             expect(result).toBe("Default Text Here");
         });
 
         test("translateByKey: missing key without fallback returns key name verbatim", () => {
             const dict = useSupDanceI18nStore.getState().dictionary;
 
-            const result = translateByKey(
-                dict,
-                "some.totally.bogus.key",
-                "es-ES",
-                "zh-CN"
-            );
+            const result = translateByKey(dict, "some.totally.bogus.key", "es-ES", "zh-CN");
             expect(result).toBe("some.totally.bogus.key");
         });
 
         test("translateByKey: missing key with parameterized fallback interpolates parameters", () => {
             const dict = useSupDanceI18nStore.getState().dictionary;
 
-            const result = translateByKey(
-                dict,
-                "missing.key.with.param",
-                "es-ES",
-                "zh-CN",
-                { user: "Alice", count: 42 },
-                "User {user} has {count} items"
-            );
+            const result = translateByKey(dict, "missing.key.with.param", "es-ES", "zh-CN", { user: "Alice", count: 42 }, "User {user} has {count} items");
             expect(result).toBe("User Alice has 42 items");
         });
 
@@ -416,9 +378,7 @@ describe("Empirical Challenger Suite: Milestone 1 Stress & Verification", () => 
             expect(interpolateTemplate("Prefix {str} Suffix", { str: "" })).toBe("Prefix  Suffix");
 
             // Meta-characters
-            expect(
-                interpolateTemplate("Path: {path}", { path: "C:\\Users\\test/$1/.*" })
-            ).toBe("Path: C:\\Users\\test/$1/.*");
+            expect(interpolateTemplate("Path: {path}", { path: "C:\\Users\\test/$1/.*" })).toBe("Path: C:\\Users\\test/$1/.*");
         });
     });
 

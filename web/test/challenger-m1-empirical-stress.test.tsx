@@ -1,23 +1,9 @@
 import { afterEach, beforeEach, describe, expect, test } from "bun:test";
 import { Window } from "happy-dom";
 import { SupDanceDomTranslator } from "../src/supdance/plugins/i18n/engine/dom-observer";
-import {
-    compileI18nDictionary,
-    interpolateTemplate,
-    translateByKey,
-    translateSourceText,
-    type CompiledI18nDictionary,
-} from "../src/supdance/plugins/i18n/engine/translator";
-import {
-    BUILTIN_SUPDANCE_I18N_ENTRIES,
-    DEFAULT_SUPDANCE_I18N_SETTINGS,
-    loadAllLocalePacks,
-    loadLocalePack,
-    mergeI18nEntries,
-} from "../src/supdance/plugins/i18n/locales";
-import {
-    useSupDanceI18nStore,
-} from "../src/supdance/plugins/i18n/store";
+import { compileI18nDictionary, interpolateTemplate, translateByKey, translateSourceText, type CompiledI18nDictionary } from "../src/supdance/plugins/i18n/engine/translator";
+import { BUILTIN_SUPDANCE_I18N_ENTRIES, DEFAULT_SUPDANCE_I18N_SETTINGS, loadAllLocalePacks, loadLocalePack, mergeI18nEntries } from "../src/supdance/plugins/i18n/locales";
+import { useSupDanceI18nStore } from "../src/supdance/plugins/i18n/store";
 import type { SupDanceLocaleCode } from "../src/supdance/plugins/i18n/types";
 
 describe("Empirical Challenger Milestone 1 Stress & Adversarial Suite", () => {
@@ -40,8 +26,7 @@ describe("Empirical Challenger Milestone 1 Stress & Adversarial Suite", () => {
     });
 
     describe("Challenge 1: Spanish (es-ES) Screenshot 8-Item Deep Verification", () => {
-        const tEs = (key: string, vars?: Record<string, string | number>, fallback?: string) =>
-            translateByKey(dict, key, "es-ES", "zh-CN", vars, fallback);
+        const tEs = (key: string, vars?: Record<string, string | number>, fallback?: string) => translateByKey(dict, key, "es-ES", "zh-CN", vars, fallback);
 
         test("Item 1: Hero Chat Title resolves to Spanish without residual Chinese", () => {
             const title = tEs("create.hero_chat_title", { brand: "Supdance" });
@@ -51,9 +36,7 @@ describe("Empirical Challenger Milestone 1 Stress & Adversarial Suite", () => {
 
         test("Item 2: Composer Placeholders resolve to Spanish without residual Chinese", () => {
             const emptyPlaceholder = tEs("create.empty_composer_placeholder");
-            expect(emptyPlaceholder).toBe(
-                "Introduce tu toma, imagen o historia. También puedes añadir imágenes de referencia para empezar a crear"
-            );
+            expect(emptyPlaceholder).toBe("Introduce tu toma, imagen o historia. También puedes añadir imágenes de referencia para empezar a crear");
             expect(hanRegex.test(emptyPlaceholder)).toBeFalse();
 
             const textPlaceholder = tEs("create.composer_placeholder_text");
@@ -143,9 +126,7 @@ describe("Empirical Challenger Milestone 1 Stress & Adversarial Suite", () => {
             expect(hanRegex.test(title)).toBeFalse();
 
             const subtitle = tEs("inspiration.hall_subtitle");
-            expect(subtitle).toBe(
-                "Haz clic para ver las instrucciones completas y continúa creando con tus ideas favoritas."
-            );
+            expect(subtitle).toBe("Haz clic para ver las instrucciones completas y continúa creando con tus ideas favoritas.");
             expect(hanRegex.test(subtitle)).toBeFalse();
 
             const newBtn = tEs("inspirations.new");

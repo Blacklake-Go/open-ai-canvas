@@ -74,8 +74,8 @@ type mockLifecycleGuard struct {
 	admitErr error
 }
 
-func (m *mockLifecycleGuard) IsDraining() bool           { return m.draining }
-func (m *mockLifecycleGuard) ActiveTaskCount() int64     { return 0 }
+func (m *mockLifecycleGuard) IsDraining() bool       { return m.draining }
+func (m *mockLifecycleGuard) ActiveTaskCount() int64 { return 0 }
 func (m *mockLifecycleGuard) CheckMusicTaskAdmission(userID string) error {
 	return m.admitErr
 }

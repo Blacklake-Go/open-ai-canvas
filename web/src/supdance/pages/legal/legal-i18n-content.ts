@@ -1,6 +1,6 @@
 /**
  * 网站核心法务条款多语言内容模型（以 English 英语为根语言/权威版本，提供 5 大语言翻译版本）
- * 
+ *
  * 严格依据 Waffo Pancake MOR 审核规范与 Supdance 站点实际业务（V2 积分制、纯数字交付、PCI-DSS 支付）：
  * - Terms of Service (TOS)
  * - Privacy Policy
@@ -70,15 +70,13 @@ export const AUP_DOC_MAP: Record<SupportedLegalLanguage, LocalizedLegalDoc> = {
                 title: "1. Scope & Core Commitments",
                 paragraphs: [
                     `${LEGAL_OPERATOR_CONFIG.tradeName} (operated by ${LEGAL_OPERATOR_CONFIG.legalName}, hereinafter "Platform", "we", "us", or "our") is dedicated to providing a safe, legal, and responsible AI-powered creative environment.`,
-                    "This Acceptable Use Policy (\"AUP\") applies to all content modalities processed or generated through our services, including text prompts, image generation, video synthesis, audio/music generation, and multi-track project canvases.",
+                    'This Acceptable Use Policy ("AUP") applies to all content modalities processed or generated through our services, including text prompts, image generation, video synthesis, audio/music generation, and multi-track project canvases.',
                 ],
             },
             {
                 id: "content-standards",
                 title: "2. Content Standards & Prohibited Categories",
-                paragraphs: [
-                    "We strictly prohibit the use of our services to generate, process, upload, or disseminate content within the following prohibited categories:",
-                ],
+                paragraphs: ["We strictly prohibit the use of our services to generate, process, upload, or disseminate content within the following prohibited categories:"],
                 bullets: [
                     "Pornographic / Explicit Adult / NSFW Content: Any sexually explicit depictions, nudity, or non-consensual sexual material.",
                     "Violent & Graphic Imagery: Content depicting graphic violence, blood, gore, mutilation, self-harm, suicide encouragement, or physical abuse.",
@@ -87,7 +85,8 @@ export const AUP_DOC_MAP: Record<SupportedLegalLanguage, LocalizedLegalDoc> = {
                     "Deepfakes & Non-Consensual Impersonation: Realistic synthetic depiction of real living persons or deceased individuals without verifiable explicit consent, fraudulent voice cloning, or misleading political manipulation.",
                     "Intellectual Property & Trademark Infringement: Unauthorized generation that misappropriates third-party registered trademarks, proprietary trade dress, or copyrighted characters without legal entitlement.",
                 ],
-                callout: "Real Person Material Restriction: If you upload real photographs or voice samples for character customization, you represent and warrant that you hold all necessary legal rights and explicit written consent from the depicted individuals.",
+                callout:
+                    "Real Person Material Restriction: If you upload real photographs or voice samples for character customization, you represent and warrant that you hold all necessary legal rights and explicit written consent from the depicted individuals.",
             },
             {
                 id: "moderation",
@@ -100,13 +99,8 @@ export const AUP_DOC_MAP: Record<SupportedLegalLanguage, LocalizedLegalDoc> = {
             {
                 id: "reporting",
                 title: "4. Violation Reporting & Handling Timelines",
-                paragraphs: [
-                    "We maintain an active, human-monitored reporting desk to respond to rights infringement, safety concerns, and policy violations.",
-                ],
-                bullets: [
-                    `Dedicated Compliance Email: ${LEGAL_OPERATOR_CONFIG.safetyEmail} (or support desk: ${LEGAL_OPERATOR_CONFIG.supportEmail})`,
-                    "Online Form: Accessible via the Help Center within your workspace dashboard.",
-                ],
+                paragraphs: ["We maintain an active, human-monitored reporting desk to respond to rights infringement, safety concerns, and policy violations."],
+                bullets: [`Dedicated Compliance Email: ${LEGAL_OPERATOR_CONFIG.safetyEmail} (or support desk: ${LEGAL_OPERATOR_CONFIG.supportEmail})`, "Online Form: Accessible via the Help Center within your workspace dashboard."],
                 table: {
                     head: ["Severity Level", "Initial Response", "Final Resolution"],
                     rows: [
@@ -119,9 +113,7 @@ export const AUP_DOC_MAP: Record<SupportedLegalLanguage, LocalizedLegalDoc> = {
             {
                 id: "enforcement-actions",
                 title: "5. Enforcement Actions",
-                paragraphs: [
-                    "In the event of an AUP violation, we reserve the full right to take prompt, proportional enforcement actions based on the severity and history of violations:",
-                ],
+                paragraphs: ["In the event of an AUP violation, we reserve the full right to take prompt, proportional enforcement actions based on the severity and history of violations:"],
                 table: {
                     head: ["Action", "Description", "Typical Circumstance"],
                     rows: [
@@ -184,19 +176,13 @@ export const AUP_DOC_MAP: Record<SupportedLegalLanguage, LocalizedLegalDoc> = {
             {
                 id: "moderation",
                 title: "3. 内容审核机制",
-                paragraphs: [
-                    "平台采用“实时机器安全拦截 + 人工合规复核”的多层级内容安全防护网。",
-                    "所有提示词与输出媒体均需经过合规分类器扫描，被识别为高风险的违规请求将直接予以拦截，且不会扣除您的积分余额。",
-                ],
+                paragraphs: ["平台采用“实时机器安全拦截 + 人工合规复核”的多层级内容安全防护网。", "所有提示词与输出媒体均需经过合规分类器扫描，被识别为高风险的违规请求将直接予以拦截，且不会扣除您的积分余额。"],
             },
             {
                 id: "reporting",
                 title: "4. 举报渠道与处理时效",
                 paragraphs: ["我们设立了有人值守的合规举报通道，确保及时受理各类侵权与违规反馈："],
-                bullets: [
-                    `专用合规举报邮箱：${LEGAL_OPERATOR_CONFIG.safetyEmail}（或客服邮箱：${LEGAL_OPERATOR_CONFIG.supportEmail}）`,
-                    "站内表单：登录后可通过工作区底栏的“帮助与反馈”直接提交举报。",
-                ],
+                bullets: [`专用合规举报邮箱：${LEGAL_OPERATOR_CONFIG.safetyEmail}（或客服邮箱：${LEGAL_OPERATOR_CONFIG.supportEmail}）`, "站内表单：登录后可通过工作区底栏的“帮助与反馈”直接提交举报。"],
                 table: {
                     head: ["违规严重度", "初步响应时限", "最终处置完成"],
                     rows: [
@@ -224,18 +210,12 @@ export const AUP_DOC_MAP: Record<SupportedLegalLanguage, LocalizedLegalDoc> = {
             {
                 id: "appeals",
                 title: "6. 申诉机制",
-                paragraphs: [
-                    `如您认为处置行动存在事实认定错误，可在收到通知后 14 个自然日内致信 ${LEGAL_OPERATOR_CONFIG.supportEmail} 提交申诉理由与证明材料。`,
-                    "合规团队将在 10 个工作日内完成独立复核，并向您的注册邮箱反馈复核结果。",
-                ],
+                paragraphs: [`如您认为处置行动存在事实认定错误，可在收到通知后 14 个自然日内致信 ${LEGAL_OPERATOR_CONFIG.supportEmail} 提交申诉理由与证明材料。`, "合规团队将在 10 个工作日内完成独立复核，并向您的注册邮箱反馈复核结果。"],
             },
             {
                 id: "transparency",
                 title: "7. 透明度与政策变更",
-                paragraphs: [
-                    "平台定期评估并修订本政策，以顺应不断发展的生成式人工智能安全准则与监管法规要求。",
-                    "重大政策变更将至少提前 15 天通过网站公告或邮件告知，继续使用服务即视为接受修订。",
-                ],
+                paragraphs: ["平台定期评估并修订本政策，以顺应不断发展的生成式人工智能安全准则与监管法规要求。", "重大政策变更将至少提前 15 天通过网站公告或邮件告知，继续使用服务即视为接受修订。"],
             },
         ],
     },
@@ -256,14 +236,7 @@ export const AUP_DOC_MAP: Record<SupportedLegalLanguage, LocalizedLegalDoc> = {
                 id: "content-standards",
                 title: "2. 內容標準與禁止類別",
                 paragraphs: ["嚴格禁止利用本服務生成或傳播以下六大類違規內容："],
-                bullets: [
-                    "色情與成人內容（NSFW）",
-                    "暴力與血腥殘害內容",
-                    "仇恨言論與騷擾攻擊",
-                    "兒童不當內容（CSAM）—— 零容忍即時通報",
-                    "未經同意之深偽技術與冒充（Deepfake）",
-                    "侵犯專利、著作權或商標之行為",
-                ],
+                bullets: ["色情與成人內容（NSFW）", "暴力與血腥殘害內容", "仇恨言論與騷擾攻擊", "兒童不當內容（CSAM）—— 零容忍即時通報", "未經同意之深偽技術與冒充（Deepfake）", "侵犯專利、著作權或商標之行為"],
             },
             {
                 id: "reporting",
@@ -332,14 +305,7 @@ export const AUP_DOC_MAP: Record<SupportedLegalLanguage, LocalizedLegalDoc> = {
                 id: "content-standards",
                 title: "2. 콘텐츠 표준 및 금지 카테고리",
                 paragraphs: ["다음 카테고리에 해당하는 콘텐츠 생성 및 공유를 엄격히 금지합니다:"],
-                bullets: [
-                    "음란물 및 성인(NSFW) 콘텐츠",
-                    "폭력적 및 유혈 표현물",
-                    "혐오 발언 및 괴롭힘",
-                    "아동 안전 침해(CSAM) - 무관용 즉각 신고",
-                    "딥페이크 및 무단 사칭",
-                    "지적 재산권 및 상표권 침해",
-                ],
+                bullets: ["음란물 및 성인(NSFW) 콘텐츠", "폭력적 및 유혈 표현물", "혐오 발언 및 괴롭힘", "아동 안전 침해(CSAM) - 무관용 즉각 신고", "딥페이크 및 무단 사칭", "지적 재산권 및 상표권 침해"],
             },
             {
                 id: "reporting",
@@ -455,9 +421,7 @@ export const TOS_DOC_MAP: Record<SupportedLegalLanguage, LocalizedLegalDoc> = {
             {
                 id: "refund",
                 title: "6. Refund Policy & Failed Task Reversal",
-                paragraphs: [
-                    "Due to the immediate provisioning nature of digital computing resources, refunds are governed by the following clear terms:",
-                ],
+                paragraphs: ["Due to the immediate provisioning nature of digital computing resources, refunds are governed by the following clear terms:"],
                 bullets: [
                     "7-Day Unused Refund: You are entitled to request a 100% full refund on any credit top-up purchase within 7 calendar days of purchase, provided that zero credits from that package have been consumed.",
                     "Generated Resource Consumption: Once computing credits have been consumed to render AI imagery, videos, or audio, those consumed portions cannot be refunded.",
@@ -485,7 +449,7 @@ export const TOS_DOC_MAP: Record<SupportedLegalLanguage, LocalizedLegalDoc> = {
                 id: "disclaimers",
                 title: "9. Disclaimers & Limitation of Liability",
                 paragraphs: [
-                    "The platform and all AI outputs are provided strictly on an \"AS IS\" and \"AS AVAILABLE\" basis without warranties of any kind. AI models may occasionally generate inaccurate, unpolished, or unpredictable results.",
+                    'The platform and all AI outputs are provided strictly on an "AS IS" and "AS AVAILABLE" basis without warranties of any kind. AI models may occasionally generate inaccurate, unpolished, or unpredictable results.',
                     `To the maximum extent permitted by law, ${LEGAL_OPERATOR_CONFIG.tradeName} shall not be liable for any indirect, incidental, or consequential damages. Our aggregate liability for all claims shall not exceed the total fees paid by you in the 3 months preceding the event.`,
                 ],
             },
@@ -527,17 +491,12 @@ export const TOS_DOC_MAP: Record<SupportedLegalLanguage, LocalizedLegalDoc> = {
             {
                 id: "account",
                 title: "3. 账号注册与安全保管",
-                paragraphs: [
-                    "注册时须提供真实、准确的个人信息。您对妥善保管登录凭据及该账号下的全部操作负有完全法律责任。",
-                    `如发现账号存在任何未经授权的异常登录，应立即通过 ${LEGAL_OPERATOR_CONFIG.supportEmail} 通知我们协助处理。`,
-                ],
+                paragraphs: ["注册时须提供真实、准确的个人信息。您对妥善保管登录凭据及该账号下的全部操作负有完全法律责任。", `如发现账号存在任何未经授权的异常登录，应立即通过 ${LEGAL_OPERATOR_CONFIG.supportEmail} 通知我们协助处理。`],
             },
             {
                 id: "billing",
                 title: "4. 计费模式与积分方案（V2 一次性充值）",
-                paragraphs: [
-                    "本平台严格采用一次性预付积分计费体系，绝无订阅自动续费、无任何形式的周期性静默扣款，每一笔账单均由您本人主动下单支付触发。",
-                ],
+                paragraphs: ["本平台严格采用一次性预付积分计费体系，绝无订阅自动续费、无任何形式的周期性静默扣款，每一笔账单均由您本人主动下单支付触发。"],
                 bullets: [
                     "积分充值包：一次性购买相应额度的算力积分，按各 AI 模型公开明码标价进行调用扣除。",
                     "存储扩容包：一次性购买一定有效期的项目素材存储配额。",
@@ -575,10 +534,7 @@ export const TOS_DOC_MAP: Record<SupportedLegalLanguage, LocalizedLegalDoc> = {
             {
                 id: "intellectual-property",
                 title: "8. AI 输出内容与知识产权",
-                paragraphs: [
-                    "在您遵守本条款及 AUP 的前提下，您使用已购积分生成的最终创作产物（包含图片、视频与剧本分镜）的合法权益均归您所有。",
-                    "您可以将该产物自由用于商业运营、发布或授权，但不得用于违反公序良俗或侵害他人知识产权的非法用途。",
-                ],
+                paragraphs: ["在您遵守本条款及 AUP 的前提下，您使用已购积分生成的最终创作产物（包含图片、视频与剧本分镜）的合法权益均归您所有。", "您可以将该产物自由用于商业运营、发布或授权，但不得用于违反公序良俗或侵害他人知识产权的非法用途。"],
             },
             {
                 id: "disclaimers",
@@ -591,10 +547,7 @@ export const TOS_DOC_MAP: Record<SupportedLegalLanguage, LocalizedLegalDoc> = {
             {
                 id: "general",
                 title: "10. 适用法律与通用条款",
-                paragraphs: [
-                    "本条款受运营主体所在司法管辖区法律管辖。双方发生争议时应秉持诚信友好原则先予协商解决。",
-                    "语言效力：本服务条款以英文文本（Authoritative English Version）为唯一权威依据，多语言翻译件仅供创作者理解参考。",
-                ],
+                paragraphs: ["本条款受运营主体所在司法管辖区法律管辖。双方发生争议时应秉持诚信友好原则先予协商解决。", "语言效力：本服务条款以英文文本（Authoritative English Version）为唯一权威依据，多语言翻译件仅供创作者理解参考。"],
             },
         ],
     },
@@ -757,9 +710,7 @@ export const PRIVACY_DOC_MAP: Record<SupportedLegalLanguage, LocalizedLegalDoc> 
             {
                 id: "purposes",
                 title: "3. Purposes and Legal Bases for Processing",
-                paragraphs: [
-                    "We process your data strictly under recognized legal bases under the GDPR and applicable privacy frameworks:",
-                ],
+                paragraphs: ["We process your data strictly under recognized legal bases under the GDPR and applicable privacy frameworks:"],
                 table: {
                     head: ["Processing Purpose", "Data Involved", "Legal Basis (GDPR)"],
                     rows: [
@@ -773,9 +724,7 @@ export const PRIVACY_DOC_MAP: Record<SupportedLegalLanguage, LocalizedLegalDoc> 
             {
                 id: "sharing",
                 title: "4. Information Sharing & Third-Party Processors",
-                paragraphs: [
-                    "We only share data with trusted infrastructure providers bound by strict confidentiality and data processing agreements:",
-                ],
+                paragraphs: ["We only share data with trusted infrastructure providers bound by strict confidentiality and data processing agreements:"],
                 bullets: [
                     `Payment Processing: ${LEGAL_OPERATOR_CONFIG.paymentProcessor} (PCI-DSS Level 1 compliant Merchant of Record).`,
                     "AI Model Upstreams: Reputable, enterprise-grade model inference providers (e.g., text, image, and video synthesis APIs). Data transmitted to model endpoints is processed solely in-flight for generation and is not utilized for unauthorized public foundation model training.",
@@ -793,13 +742,11 @@ export const PRIVACY_DOC_MAP: Record<SupportedLegalLanguage, LocalizedLegalDoc> 
             {
                 id: "rights",
                 title: "6. Your Privacy Rights (GDPR & CCPA)",
-                paragraphs: [
-                    "Depending on your geographic location, you enjoy the following enforceable rights:",
-                ],
+                paragraphs: ["Depending on your geographic location, you enjoy the following enforceable rights:"],
                 bullets: [
                     "Right of Access & Portability: Inquire what personal data we hold and receive a portable copy of your account assets.",
                     "Right to Rectification: Correct inaccurate or outdated profile information.",
-                    "Right to Erasure (\"Right to be Forgotten\"): Request permanent deletion of your account and associated project data.",
+                    'Right to Erasure ("Right to be Forgotten"): Request permanent deletion of your account and associated project data.',
                     "Account Deletion: Submit an account closure request directly in your workspace settings or email support.",
                 ],
                 callout: `To exercise any of these rights, contact our Privacy Desk at ${LEGAL_OPERATOR_CONFIG.supportEmail}. We will verify your identity and fulfill valid requests within 30 calendar days at no charge.`,
@@ -815,9 +762,7 @@ export const PRIVACY_DOC_MAP: Record<SupportedLegalLanguage, LocalizedLegalDoc> 
             {
                 id: "contact",
                 title: "8. Policy Updates & Contact",
-                paragraphs: [
-                    `We may update this Privacy Policy periodically. Significant changes will be announced on our website. For inquiries or rights requests, contact ${LEGAL_OPERATOR_CONFIG.supportEmail}.`,
-                ],
+                paragraphs: [`We may update this Privacy Policy periodically. Significant changes will be announced on our website. For inquiries or rights requests, contact ${LEGAL_OPERATOR_CONFIG.supportEmail}.`],
             },
         ],
     },
@@ -906,9 +851,7 @@ export const PRIVACY_DOC_MAP: Record<SupportedLegalLanguage, LocalizedLegalDoc> 
             {
                 id: "contact",
                 title: "8. 政策变更与联系方式",
-                paragraphs: [
-                    `政策发生重大变更时将提前公示通知。如对隐私保护有任何建议或投诉，请随时致信 ${LEGAL_OPERATOR_CONFIG.supportEmail}。`,
-                ],
+                paragraphs: [`政策发生重大变更时将提前公示通知。如对隐私保护有任何建议或投诉，请随时致信 ${LEGAL_OPERATOR_CONFIG.supportEmail}。`],
             },
         ],
     },

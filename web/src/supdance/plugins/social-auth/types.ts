@@ -177,4 +177,3 @@ export interface UserIdentitiesView {
     identities: UserIdentityItem[];
     count: number;
 }
-

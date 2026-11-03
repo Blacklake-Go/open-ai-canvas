@@ -33,8 +33,9 @@ func TestMockCallbackCodeIsHonoredOnlyWhenSandboxEnabled(t *testing.T) {
 		t.Fatalf("sandbox disabled but BeginAuth issued a loopback mock redirect: %s", redirectURL)
 	}
 	state := oauthStateFromRedirect(t, redirectURL)
+	withGoogleEndpoints(t, "http://127.0.0.1:1/token", "http://127.0.0.1:1/userinfo")
 
-	if res, err := svc.CompleteAuth(intlRequest("/callback"), ProviderGoogle, state, "mock_code_attacker", ""); err == nil {
+	if res, err := completeOAuthFlowForTest(t, svc, intlRequest("/callback"), ProviderGoogle, state, "mock_code_attacker", ""); err == nil {
 		t.Fatalf("forged mock code minted session for user %s", res.User.ID)
 	}
 }
@@ -49,7 +50,7 @@ func TestLiveCallbackRequiresRealTokenExchange(t *testing.T) {
 	}
 	state := mintState(t, repo, ProviderBilibili)
 
-	if res, err := svc.CompleteAuth(cnRequest("/callback"), ProviderBilibili, state, "abcdef1234567890", ""); err == nil {
+	if res, err := completeOAuthFlowForTest(t, svc, cnRequest("/callback"), ProviderBilibili, state, "abcdef1234567890", ""); err == nil {
 		t.Fatalf("no upstream exchange implemented but callback minted identity %s", res.User.ID)
 	}
 	if id, err := repo.UserIdentity(ProviderBilibili, "bilibili_live_abcdef12"); err == nil && id != nil && id.ID != "" {
@@ -79,7 +80,7 @@ func TestGoogleLiveExchangeUsesUpstreamProfile(t *testing.T) {
 	withGoogleEndpoints(t, tokenSrv, userinfoSrv)
 
 	state := mintState(t, repo, ProviderGoogle)
-	res, err := svc.CompleteAuth(intlRequest("/callback"), ProviderGoogle, state, "upstream_code_1234", "")
+	res, err := completeOAuthFlowForTest(t, svc, intlRequest("/callback"), ProviderGoogle, state, "upstream_code_1234", "")
 	if err != nil {
 		t.Fatalf("CompleteAuth failed: %v", err)
 	}
@@ -97,7 +98,7 @@ func TestGoogleLiveExchangeUsesUpstreamProfile(t *testing.T) {
 	// 上游不认这把密钥时必须失败，而不是退化成伪造身份。
 	badToken, badUserinfo, _ := startGoogleStub(t, "a_different_secret", "sub-888", "other@example.com", nil)
 	withGoogleEndpoints(t, badToken, badUserinfo)
-	if res, err := svc.CompleteAuth(intlRequest("/callback"), ProviderGoogle, mintState(t, repo, ProviderGoogle), "upstream_code_9999", ""); err == nil {
+	if res, err := completeOAuthFlowForTest(t, svc, intlRequest("/callback"), ProviderGoogle, mintState(t, repo, ProviderGoogle), "upstream_code_9999", ""); err == nil {
 		t.Fatalf("upstream rejected the exchange but a session was minted for %s", res.User.ID)
 	}
 }
@@ -109,7 +110,7 @@ func TestXLiveExchangeUsesUpstreamProfile(t *testing.T) {
 	tokenSrv, meSrv := startXStub(t, "real_x_client", "real_x_secret", "x-42", "nova")
 	withXEndpoints(t, tokenSrv, meSrv)
 
-	res, err := svc.CompleteAuth(intlRequest("/callback"), ProviderX, mintState(t, repo, ProviderX), "upstream_code_5678", "")
+	res, err := completeOAuthFlowForTest(t, svc, intlRequest("/callback"), ProviderX, mintState(t, repo, ProviderX), "upstream_code_5678", "")
 	if err != nil {
 		t.Fatalf("CompleteAuth failed: %v", err)
 	}
@@ -123,7 +124,7 @@ func TestXLiveExchangeUsesUpstreamProfile(t *testing.T) {
 	// 上游拒绝授权码时交换必须失败，而不是退化成伪造身份。
 	badToken, badMe := startXStub(t, "real_x_client", "real_x_secret", "x-43", "magma")
 	withXEndpoints(t, badToken, badMe)
-	if res, err := svc.CompleteAuth(intlRequest("/callback"), ProviderX, mintState(t, repo, ProviderX), "code_without_verifier_check", ""); err == nil {
+	if res, err := completeOAuthFlowForTest(t, svc, intlRequest("/callback"), ProviderX, mintState(t, repo, ProviderX), "code_without_verifier_check", ""); err == nil {
 		t.Fatalf("upstream rejected the exchange but a session was minted for %s", res.User.ID)
 	}
 }
@@ -143,7 +144,7 @@ func TestQQLiveExchangeUsesUpstreamProfile(t *testing.T) {
 	if _, err := svc.BeginAuth(cnRequest("/api/auth/social/qq/start"), ProviderQQ, "/create", true); err != nil {
 		t.Fatalf("BeginAuth should accept a channel with a real exchange: %v", err)
 	}
-	res, err := svc.CompleteAuth(cnRequest("/callback"), ProviderQQ, mintState(t, repo, ProviderQQ), "upstream_code_qq_1", "")
+	res, err := completeOAuthFlowForTest(t, svc, cnRequest("/callback"), ProviderQQ, mintState(t, repo, ProviderQQ), "upstream_code_qq_1", "")
 	if err != nil {
 		t.Fatalf("CompleteAuth failed: %v", err)
 	}
@@ -163,7 +164,7 @@ func TestQQLiveExchangeUsesUpstreamProfile(t *testing.T) {
 
 	// 上游拒绝授权码时（QQ 用 JSONP 包裹错误）必须失败，而不是退化成伪造身份。
 	useQQStub(t, "a_different_secret", "never-used")
-	if bad, err := svc.CompleteAuth(cnRequest("/callback"), ProviderQQ, mintState(t, repo, ProviderQQ), "code_rejected_by_qq", ""); err == nil {
+	if bad, err := completeOAuthFlowForTest(t, svc, cnRequest("/callback"), ProviderQQ, mintState(t, repo, ProviderQQ), "code_rejected_by_qq", ""); err == nil {
 		t.Fatalf("QQ rejected the exchange but a session was minted for %s", bad.User.ID)
 	}
 	if id, err := repo.UserIdentity(ProviderQQ, "qq_live_code_rej"); err == nil && id != nil && id.ID != "" {
@@ -177,7 +178,7 @@ func TestDouyinLiveExchangeUsesUpstreamProfile(t *testing.T) {
 	seedChannel(t, svc, ProviderDouyin, "awj7wwc7sh2g6kuf", "real_douyin_secret", false)
 	useDouyinStub(t, "awj7wwc7sh2g6kuf", "real_douyin_secret", "aad3-bbbb-cccc-dddd")
 
-	res, err := svc.CompleteAuth(cnRequest("/callback"), ProviderDouyin, mintState(t, repo, ProviderDouyin), "upstream_code_dy_1", "")
+	res, err := completeOAuthFlowForTest(t, svc, cnRequest("/callback"), ProviderDouyin, mintState(t, repo, ProviderDouyin), "upstream_code_dy_1", "")
 	if err != nil {
 		t.Fatalf("CompleteAuth failed: %v", err)
 	}
@@ -191,7 +192,7 @@ func TestDouyinLiveExchangeUsesUpstreamProfile(t *testing.T) {
 
 	// 密钥对不上时抖音返回 error_code=22（非法应用），交换必须失败。
 	useDouyinStub(t, "a_different_key", "real_douyin_secret", "never-used")
-	if bad, err := svc.CompleteAuth(cnRequest("/callback"), ProviderDouyin, mintState(t, repo, ProviderDouyin), "upstream_code_dy_2", ""); err == nil {
+	if bad, err := completeOAuthFlowForTest(t, svc, cnRequest("/callback"), ProviderDouyin, mintState(t, repo, ProviderDouyin), "upstream_code_dy_2", ""); err == nil {
 		t.Fatalf("Douyin rejected the exchange but a session was minted for %s", bad.User.ID)
 	}
 }
@@ -515,7 +516,7 @@ func TestWeChatLiveExchangeUsesUpstreamProfile(t *testing.T) {
 	state := oauthStateFromRedirect(t, redirectURL)
 
 	// CompleteAuth exchanges token and mints identity
-	res, err := svc.CompleteAuth(cnRequest("/callback"), ProviderWeChat, state, "upstream_wx_code", "")
+	res, err := completeOAuthFlowForTest(t, svc, cnRequest("/callback"), ProviderWeChat, state, "upstream_wx_code", "")
 	if err != nil {
 		t.Fatalf("CompleteAuth failed: %v", err)
 	}
@@ -530,14 +531,14 @@ func TestWeChatLiveExchangeUsesUpstreamProfile(t *testing.T) {
 	// Bad credentials test: upstream rejects with errcode
 	seedChannel(t, svc, ProviderWeChat, "wx_appid_test", "wrong_secret", false)
 	badState := mintState(t, repo, ProviderWeChat)
-	if _, err := svc.CompleteAuth(cnRequest("/callback"), ProviderWeChat, badState, "some_code", ""); err == nil {
+	if _, err := completeOAuthFlowForTest(t, svc, cnRequest("/callback"), ProviderWeChat, badState, "some_code", ""); err == nil {
 		t.Fatalf("expected error on invalid WeChat secret, but got success")
 	}
 }
 
-func TestNewOAuthUserHandlesUsernameAndEmailCollisions(t *testing.T) {
+func TestOAuthOnboardingRejectsUsernameAndEmailCollisions(t *testing.T) {
 	repo, svc := newSecurityTestService(t)
-	seedChannel(t, svc, ProviderQQ, "real_qq_key", "real_qq_secret", false)
+	seedChannel(t, svc, ProviderQQ, "10005200", "real_qq_secret", false)
 
 	// Create an existing user with conflicting username and email
 	existingUser := &model.User{
@@ -555,15 +556,54 @@ func TestNewOAuthUserHandlesUsernameAndEmailCollisions(t *testing.T) {
 	useQQStub(t, "real_qq_secret", "collided_1")
 
 	state := mintState(t, repo, ProviderQQ)
-	res, err := svc.CompleteAuth(cnRequest("/callback"), ProviderQQ, state, "code_collision_test", "")
+	req := cnRequest("/callback")
+	req.AddCookie(&http.Cookie{Name: OAuthBindingCookie, Value: HashToken(state)})
+	result, err := svc.CompleteAuth(req, ProviderQQ, state, "code_collision_test", "")
 	if err != nil {
-		t.Fatalf("CompleteAuth should handle username and email collision gracefully, but failed: %v", err)
+		t.Fatal(err)
 	}
-	if res.User == nil {
-		t.Fatalf("expected user to be created despite collisions")
+	if result.OnboardingTicket == "" || result.User != nil || result.Session != nil {
+		t.Fatal("new identity must wait for onboarding")
 	}
-	if res.User.Username == "qq_qq_openid_collided_1" {
-		t.Fatalf("expected username to have random suffix on collision, got %s", res.User.Username)
+	input := CompleteOnboardingRequest{TicketID: result.OnboardingTicket, Username: existingUser.Username, AcceptedTerms: true}
+	if _, _, err := svc.CompleteOnboarding(input); err == nil {
+		t.Fatal("occupied username must be rejected")
 	}
+	input.Username = "available_qq_user"
+	input.Email = existingUser.Email
+	if _, _, err := svc.CompleteOnboarding(input); err == nil {
+		t.Fatal("occupied email must be rejected")
+	}
+	input.Email = ""
+	user, session, err := svc.CompleteOnboarding(input)
+	if err != nil || user == nil || session == nil {
+		t.Fatalf("corrected onboarding must succeed: %v", err)
+	}
+	if user.ID == existingUser.ID || user.Username != input.Username {
+		t.Fatalf("existing account was reused or overwritten: %+v", user)
+	}
+
 }
 
+// Exercise browser binding and the actual onboarding boundary before asserting a registered identity.
+func completeOAuthFlowForTest(t *testing.T, svc *Service, req *http.Request, provider, state, code, currentUser string) (*SocialAuthCallbackResult, error) {
+	t.Helper()
+	req.AddCookie(&http.Cookie{Name: OAuthBindingCookie, Value: HashToken(state)})
+	result, err := svc.CompleteAuth(req, provider, state, code, currentUser)
+	if err != nil || result.OnboardingTicket == "" {
+		return result, err
+	}
+	if result.User != nil || result.Session != nil {
+		t.Fatal("new OAuth identities must remain pending before onboarding")
+	}
+	profile, err := svc.GetOnboardingProfile(result.OnboardingTicket)
+	if err != nil {
+		return nil, err
+	}
+	user, session, err := svc.CompleteOnboarding(CompleteOnboardingRequest{TicketID: result.OnboardingTicket, Username: "fixture_" + RandomToken()[:12], DisplayName: profile.DisplayName, AcceptedTerms: true})
+	if err != nil {
+		return nil, err
+	}
+	result.User, result.Session = user, session
+	return result, nil
+}

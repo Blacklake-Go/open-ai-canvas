@@ -102,11 +102,7 @@ export function WaveformPlayer({ taskId, audioUrl, durationSeconds = 180, title 
                         <div
                             key={idx}
                             style={{ height: `${Math.round(peak * 100)}%` }}
-                            className={`w-full rounded-xs transition-colors duration-150 ${
-                                isPlayed
-                                    ? "bg-primary group-hover:bg-primary/90"
-                                    : "bg-muted-foreground/30 group-hover:bg-muted-foreground/45"
-                            }`}
+                            className={`w-full rounded-xs transition-colors duration-150 ${isPlayed ? "bg-primary group-hover:bg-primary/90" : "bg-muted-foreground/30 group-hover:bg-muted-foreground/45"}`}
                         />
                     );
                 })}
@@ -127,9 +123,7 @@ export function WaveformPlayer({ taskId, audioUrl, durationSeconds = 180, title 
                     <button
                         type="button"
                         onClick={toggleAudioLoop}
-                        className={`flex size-11 items-center justify-center rounded-lg transition-colors ${
-                            isThisTrack && isLoop ? "text-primary bg-primary/10" : "text-muted-foreground hover:bg-muted"
-                        }`}
+                        className={`flex size-11 items-center justify-center rounded-lg transition-colors ${isThisTrack && isLoop ? "text-primary bg-primary/10" : "text-muted-foreground hover:bg-muted"}`}
                         aria-label={t("music.player_loop", undefined, "循环播放")}
                         aria-pressed={isThisTrack && isLoop}
                     >

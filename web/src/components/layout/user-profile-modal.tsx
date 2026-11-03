@@ -353,9 +353,7 @@ export function UserProfileModal({ open, activeTab, onTabChange, onClose, search
                                 <div className="space-y-3 rounded-xl border border-border bg-surface-subtle p-4">
                                     <div className="flex items-center justify-between">
                                         <div className="flex items-center gap-3">
-                                            <div className="flex size-9 items-center justify-center rounded-lg border border-border bg-card">
-                                                {theme === "dark" ? <Moon className="size-4 text-primary" /> : <Sun className="size-4 text-amber-500" />}
-                                            </div>
+                                            <div className="flex size-9 items-center justify-center rounded-lg border border-border bg-card">{theme === "dark" ? <Moon className="size-4 text-primary" /> : <Sun className="size-4 text-amber-500" />}</div>
                                             <div>
                                                 <div className="text-xs font-semibold text-foreground">{t("settings.preferences.theme_title", {}, "外观偏好")}</div>
                                                 <div className="text-[11px] text-foreground/50">{t("settings.preferences.theme_desc", {}, "深色模式、浅色模式与跟随系统自动切换")}</div>

@@ -8,9 +8,7 @@ export function TransitionsPane() {
                     <GitCommit className="h-5 w-5 text-sky-400" />
                     页面路由与工作区过渡 (Transitions)
                 </h2>
-                <p className="text-sm text-foreground/60 leading-relaxed mt-1">
-                    统一管理由登录注册页至工作区（如 /register?next=%2Fprojects）的平滑过渡，消除白屏跳变。
-                </p>
+                <p className="text-sm text-foreground/60 leading-relaxed mt-1">统一管理由登录注册页至工作区（如 /register?next=%2Fprojects）的平滑过渡，消除白屏跳变。</p>
             </div>
 
             <div className="rounded-xl border border-border/70 bg-card p-5 space-y-4">

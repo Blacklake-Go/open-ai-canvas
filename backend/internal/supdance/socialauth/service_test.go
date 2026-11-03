@@ -1,7 +1,9 @@
 package socialauth
 
 import (
+	"encoding/json"
 	"errors"
+	"io"
 	"net/http"
 	"net/http/httptest"
 	"strings"
@@ -199,14 +201,14 @@ func (h *testHost) DecryptSecret(c string) (string, error) {
 	}
 	return strings.TrimPrefix(c, "enc:"), nil
 }
-func (h *testHost) BrandName() string               { return "SupDance" }
+func (h *testHost) BrandName() string                { return "SupDance" }
 func (h *testHost) RequireAdmin(u *model.User) error { return nil }
 func (h *testHost) EnsureSignupBonus(u string) error { return nil }
 
 func TestGeoIPPartitioning(t *testing.T) {
 	// 1. Test Mainland China IPv4 allocations (Telecom, Unicom, Mobile, CERNET, DNS)
 	cnIPv4s := []string{
-		"124.90.230.101", // China Telecom/Mobile (Fujian)
+		"124.90.230.101",  // China Telecom/Mobile (Fujian)
 		"114.114.114.114", // 114 DNS (China Telecom)
 		"223.5.5.5",       // AliDNS (China Alibaba)
 		"119.29.29.29",    // DNSPod (China Tencent)
@@ -321,8 +323,8 @@ func TestGeoIPPartitioning(t *testing.T) {
 }
 
 func TestMasking(t *testing.T) {
-	if MaskSecret("mock_qq_secret_0QEo") != "••••••••0QEo" {
-		t.Fatalf("unexpected secret mask: %s", MaskSecret("mock_qq_secret_0QEo"))
+	if MaskSecret("fixture_qq_secret_0QEo") != "••••••••0QEo" {
+		t.Fatalf("unexpected secret mask: %s", MaskSecret("fixture_qq_secret_0QEo"))
 	}
 	if MaskClientID("102035200") != "****5200" {
 		t.Fatalf("unexpected client id mask: %s", MaskClientID("102035200"))
@@ -555,12 +557,12 @@ func TestQQAndBilibiliCredentialsPersistence(t *testing.T) {
 			ProviderQQ: {
 				Enabled:      true,
 				ClientID:     "102035200",
-				ClientSecret: "mock_qq_secret_0QEo",
+				ClientSecret: "fixture_qq_secret_0QEo",
 			},
 			ProviderBilibili: {
 				Enabled:      true,
 				ClientID:     "bb4aec99",
-				ClientSecret: "mock_bili_secret_78e3",
+				ClientSecret: "fixture_bili_secret_78e3",
 			},
 		},
 	}
@@ -572,7 +574,7 @@ func TestQQAndBilibiliCredentialsPersistence(t *testing.T) {
 
 	// Verify QQ in view returned by update
 	qqView := view.Providers[ProviderQQ]
-	if !qqView.Enabled || qqView.Status != StatusOnline || qqView.StatusLabel != "运行中" {
+	if !qqView.Enabled || qqView.Status != StatusOnline || qqView.StatusLabel != "已启用" {
 		t.Fatalf("expected QQ to be online / 运行中, got status=%s, label=%s", qqView.Status, qqView.StatusLabel)
 	}
 	if !qqView.HasCredentials {
@@ -587,7 +589,7 @@ func TestQQAndBilibiliCredentialsPersistence(t *testing.T) {
 
 	// Verify Bilibili in view returned by update
 	biliView := view.Providers[ProviderBilibili]
-	if !biliView.Enabled || biliView.Status != StatusOnline || biliView.StatusLabel != "运行中" {
+	if biliView.Enabled || biliView.Status != StatusCredentialsRequired || biliView.StatusLabel != "尚未就绪" {
 		t.Fatalf("expected Bilibili to be online / 运行中, got status=%s, label=%s", biliView.Status, biliView.StatusLabel)
 	}
 	if !biliView.HasCredentials {
@@ -609,7 +611,7 @@ func TestQQAndBilibiliCredentialsPersistence(t *testing.T) {
 	}
 
 	qqReloaded := viewReloaded.Providers[ProviderQQ]
-	if !qqReloaded.Enabled || qqReloaded.Status != StatusOnline || qqReloaded.StatusLabel != "运行中" {
+	if !qqReloaded.Enabled || qqReloaded.Status != StatusOnline || qqReloaded.StatusLabel != "已启用" {
 		t.Fatalf("reloaded QQ status mismatch: status=%s, label=%s", qqReloaded.Status, qqReloaded.StatusLabel)
 	}
 	if qqReloaded.MaskedClientID != "****5200" || qqReloaded.ClientIDMasked != "****5200" {
@@ -620,7 +622,7 @@ func TestQQAndBilibiliCredentialsPersistence(t *testing.T) {
 	}
 
 	biliReloaded := viewReloaded.Providers[ProviderBilibili]
-	if !biliReloaded.Enabled || biliReloaded.Status != StatusOnline || biliReloaded.StatusLabel != "运行中" {
+	if biliReloaded.Enabled || biliReloaded.Status != StatusCredentialsRequired || biliReloaded.StatusLabel != "尚未就绪" {
 		t.Fatalf("reloaded Bilibili status mismatch: status=%s, label=%s", biliReloaded.Status, biliReloaded.StatusLabel)
 	}
 	if biliReloaded.MaskedClientID != "****ec99" || biliReloaded.ClientIDMasked != "****ec99" {
@@ -636,7 +638,7 @@ func TestQQAndBilibiliCredentialsPersistence(t *testing.T) {
 		Providers: map[string]UpdateProviderInput{
 			ProviderQQ: {
 				Enabled:           true,
-				CustomRedirectURL: "https://custom.supdance.com/auth/qq",
+				CustomRedirectURL: "https://www.supdance.com/api/auth/social/qq/callback",
 				// ClientSecret left empty to retain existing secret
 			},
 		},
@@ -649,7 +651,7 @@ func TestQQAndBilibiliCredentialsPersistence(t *testing.T) {
 	if !qqAfterRetain.HasCredentials || qqAfterRetain.MaskedSecret != "••••••••0QEo" {
 		t.Fatalf("expected existing QQ secret to be retained, got hasCreds=%v, secret=%s", qqAfterRetain.HasCredentials, qqAfterRetain.MaskedSecret)
 	}
-	if qqAfterRetain.CustomRedirectURL != "https://custom.supdance.com/auth/qq" {
+	if qqAfterRetain.CustomRedirectURL != "https://www.supdance.com/api/auth/social/qq/callback" {
 		t.Fatalf("expected updated redirect url, got %s", qqAfterRetain.CustomRedirectURL)
 	}
 
@@ -678,78 +680,52 @@ func TestQQAndBilibiliCredentialsPersistence(t *testing.T) {
 
 func TestConnectivityPing(t *testing.T) {
 	repo := newTestRepo(t)
-	host := &testHost{}
-	svc := NewService(repo, host)
-	adminUser := &model.User{ID: "admin_test", Role: model.UserRoleAdmin}
-
-	// 1. Configure QQ and Bilibili
-	settings, _ := svc.ReadSettings()
-	cfgQQ := settings.Providers[ProviderQQ]
-	cfgQQ.Enabled = true
-	cfgQQ.ClientID = "102035200"
-	cfgQQ.ClientSecret = "mock_qq_secret_0QEo"
-	settings.Providers[ProviderQQ] = cfgQQ
-
-	cfgBili := settings.Providers[ProviderBilibili]
-	cfgBili.Enabled = true
-	cfgBili.ClientID = "bb4aec99"
-	cfgBili.ClientSecret = "mock_bili_secret_78e3"
-	settings.Providers[ProviderBilibili] = cfgBili
-
-	// Keep WeChat empty
-	cfgWeChat := settings.Providers[ProviderWeChat]
-	cfgWeChat.ClientID = ""
-	cfgWeChat.ClientSecret = ""
-	settings.Providers[ProviderWeChat] = cfgWeChat
-
-	if err := svc.SaveSettings(adminUser, settings); err != nil {
-		t.Fatalf("SaveSettings failed: %v", err)
+	svc := NewService(repo, &testHost{})
+	admin := &model.User{ID: "admin_probe", Role: model.UserRoleAdmin}
+	hits := installProbeTransport(t)
+	settings := DefaultInitialSettings()
+	settings.Providers[ProviderQQ] = ProviderConfig{Enabled: true, ClientID: "102035200", ClientSecret: "fixture_qq_secret"}
+	settings.Providers[ProviderBilibili] = ProviderConfig{Enabled: true, ClientID: "bili_fixture", ClientSecret: "fixture_bili_secret"}
+	if err := svc.SaveSettings(admin, settings); err != nil {
+		t.Fatal(err)
 	}
-
-	// 2. Test QQ Ping
-	resQQ, err := svc.TestProvider(adminUser, ProviderQQ)
+	result, err := svc.TestProvider(admin, ProviderQQ)
 	if err != nil {
-		t.Fatalf("TestProvider(QQ) error: %v", err)
+		t.Fatal(err)
 	}
-	if resQQ.Status != "ok" {
-		t.Errorf("expected QQ status 'ok', got '%s'", resQQ.Status)
+	if result.Status != "reachable" || result.LatencyMs < 0 || result.LatencyMs != result.PingLatencyMs || result.CheckedAt.IsZero() || result.TestedAt.IsZero() {
+		t.Fatalf("unexpected measured probe: %+v", result)
 	}
-	if resQQ.LatencyMs != 228 || resQQ.PingLatencyMs != 228 {
-		t.Errorf("expected QQ latency 228ms, got LatencyMs=%d, PingLatencyMs=%d", resQQ.LatencyMs, resQQ.PingLatencyMs)
+	if !strings.Contains(result.Message, "尚未验证真实登录") || *hits != 1 {
+		t.Fatalf("probe must make one request without claiming login success: %+v, requests=%d", result, *hits)
 	}
-	if !strings.Contains(resQQ.Message, "响应正常") {
-		t.Errorf("expected success message, got '%s'", resQQ.Message)
+	for _, provider := range []string{ProviderBilibili, ProviderWeChat} {
+		result, err := svc.TestProvider(admin, provider)
+		if err != nil || result.Status != "error" || result.LatencyMs != 0 {
+			t.Fatalf("unready provider %s must fail closed: %+v, %v", provider, result, err)
+		}
 	}
-	if resQQ.CheckedAt.IsZero() || resQQ.TestedAt.IsZero() {
-		t.Errorf("expected CheckedAt and TestedAt to be populated")
+	if *hits != 1 {
+		t.Fatalf("unready channels must not make requests, got %d", *hits)
 	}
+}
 
-	// 3. Test Bilibili Ping
-	resBili, err := svc.TestProvider(adminUser, ProviderBilibili)
-	if err != nil {
-		t.Fatalf("TestProvider(Bilibili) error: %v", err)
-	}
-	if resBili.Status != "ok" {
-		t.Errorf("expected Bilibili status 'ok', got '%s'", resBili.Status)
-	}
-	if resBili.LatencyMs != 101 || resBili.PingLatencyMs != 101 {
-		t.Errorf("expected Bilibili latency 101ms, got LatencyMs=%d, PingLatencyMs=%d", resBili.LatencyMs, resBili.PingLatencyMs)
-	}
-	if resBili.TestedAt.IsZero() {
-		t.Errorf("expected TestedAt to be populated")
-	}
+type probeRoundTripper func(*http.Request) (*http.Response, error)
 
-	// 4. Test unconfigured provider (WeChat)
-	resWeChat, err := svc.TestProvider(adminUser, ProviderWeChat)
-	if err != nil {
-		t.Fatalf("TestProvider(WeChat) error: %v", err)
-	}
-	if resWeChat.Status != "error" {
-		t.Errorf("expected WeChat status 'error', got '%s'", resWeChat.Status)
-	}
-	if !strings.Contains(resWeChat.Message, "尚未配置") {
-		t.Errorf("expected error message explaining missing credentials, got '%s'", resWeChat.Message)
-	}
+func (f probeRoundTripper) RoundTrip(r *http.Request) (*http.Response, error) { return f(r) }
+func installProbeTransport(t *testing.T) *int {
+	t.Helper()
+	previous := oauthUpstreamClient
+	hits := new(int)
+	oauthUpstreamClient = &http.Client{Transport: probeRoundTripper(func(r *http.Request) (*http.Response, error) {
+		*hits++
+		if r.URL.Scheme != "https" || r.URL.RawQuery != "" {
+			t.Errorf("probe must omit authorization parameters: %s", r.URL.Redacted())
+		}
+		return &http.Response{StatusCode: http.StatusOK, Header: make(http.Header), Body: io.NopCloser(strings.NewReader("probe"))}, nil
+	})}
+	t.Cleanup(func() { oauthUpstreamClient = previous })
+	return hits
 }
 
 type decryptTrackingHost struct {
@@ -762,7 +738,7 @@ func (h *decryptTrackingHost) DecryptSecret(c string) (string, error) {
 	return h.testHost.DecryptSecret(c)
 }
 
-func TestGetPublicProviders_BypassesSecretDecryption(t *testing.T) {
+func TestGetPublicProvidersValidatesDecryptedCredentialsWithoutExposingThem(t *testing.T) {
 	repo := newTestRepo(t)
 	host := &decryptTrackingHost{}
 	svc := NewService(repo, host)
@@ -779,15 +755,19 @@ func TestGetPublicProviders_BypassesSecretDecryption(t *testing.T) {
 
 	host.decryptCalls = 0
 
-	// 1. GetPublicProviders must NOT decrypt secrets
+	// Public availability validates stored credentials but only returns the public projection.
 	req := httptest.NewRequest(http.MethodGet, "/api/auth/social/providers", nil)
 	req.Header.Set("X-Real-IP", "124.90.230.101")
 	resp, err := svc.GetPublicProviders(req)
 	if err != nil {
 		t.Fatalf("GetPublicProviders failed: %v", err)
 	}
-	if host.decryptCalls != 0 {
-		t.Fatalf("expected 0 calls to DecryptSecret during public query, got %d", host.decryptCalls)
+	if host.decryptCalls == 0 {
+		t.Fatal("public availability must validate decrypted credential readiness")
+	}
+	encoded, _ := json.Marshal(resp)
+	if strings.Contains(string(encoded), "raw_test_secret") || strings.Contains(string(encoded), "10005200") {
+		t.Fatal("public response exposed credentials")
 	}
 	if len(resp.Providers) == 0 {
 		t.Fatalf("expected at least 1 provider in public response, got 0")

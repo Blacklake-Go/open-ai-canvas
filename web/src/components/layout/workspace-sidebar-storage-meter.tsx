@@ -20,19 +20,15 @@ export function WorkspaceSidebarStorageMeter({ collapsed }: { collapsed: boolean
     const { t } = useI18n();
     const query = useAccountFileStorageUsage();
     const meter = accountStorageMeter(query.data);
-    const usedText = query.data
-        ? t("nav.storage_used", { used: meter.usedLabel }, `已用 ${meter.usedLabel}`)
-        : query.isError
-            ? t("nav.storage_unavailable", undefined, "容量暂不可用")
-            : t("nav.storage_calculating", undefined, "正在统计容量");
+    const usedText = query.data ? t("nav.storage_used", { used: meter.usedLabel }, `已用 ${meter.usedLabel}`) : query.isError ? t("nav.storage_unavailable", undefined, "容量暂不可用") : t("nav.storage_calculating", undefined, "正在统计容量");
     const remainingText = query.data
         ? meter.state === "read_only"
             ? t("nav.storage_read_only", undefined, "账号只读")
             : meter.state === "grace"
-                ? t("nav.storage_over_limit", undefined, "已超额")
-                : meter.full
-                    ? t("nav.storage_full", undefined, "容量已满")
-                    : t("nav.storage_remaining", { remaining: meter.remainingLabel }, `剩余 ${meter.remainingLabel}`)
+              ? t("nav.storage_over_limit", undefined, "已超额")
+              : meter.full
+                ? t("nav.storage_full", undefined, "容量已满")
+                : t("nav.storage_remaining", { remaining: meter.remainingLabel }, `剩余 ${meter.remainingLabel}`)
         : "";
     const totalText = query.data ? t("nav.storage_total", { total: meter.totalLabel }, `共 ${meter.totalLabel}`) : "";
     const summary = query.data ? [usedText, remainingText, totalText].filter(Boolean).join(", ") : usedText;

@@ -26,20 +26,18 @@ export function MotionPane() {
                         <Zap className="h-5 w-5 text-sky-400" />
                         全站交互与 Motion Engine
                     </h2>
-                    <p className="text-sm text-foreground/60 leading-relaxed mt-1">
-                        统一管理全站微交互时长、缓动曲线、页面路由进出场过渡及无障碍动效降级策略。
-                    </p>
+                    <p className="text-sm text-foreground/60 leading-relaxed mt-1">统一管理全站微交互时长、缓动曲线、页面路由进出场过渡及无障碍动效降级策略。</p>
                 </div>
                 <div className="flex items-center gap-2">
                     <span className="text-xs text-foreground/60">动效引擎总开关：</span>
                     <button
                         type="button"
-                        onClick={() => updateDraft((d) => { d.motion.enabled = !d.motion.enabled; })}
-                        className={`px-3 py-1 text-xs font-semibold rounded-lg border transition-all ${
-                            motion.enabled
-                                ? "bg-emerald-500/20 text-emerald-400 border-emerald-500/30"
-                                : "bg-foreground/5 text-foreground/50 border-border"
-                        }`}
+                        onClick={() =>
+                            updateDraft((d) => {
+                                d.motion.enabled = !d.motion.enabled;
+                            })
+                        }
+                        className={`px-3 py-1 text-xs font-semibold rounded-lg border transition-all ${motion.enabled ? "bg-emerald-500/20 text-emerald-400 border-emerald-500/30" : "bg-foreground/5 text-foreground/50 border-border"}`}
                     >
                         {motion.enabled ? "已启用 (Enabled)" : "已全局禁用 (Disabled)"}
                     </button>
@@ -164,23 +162,23 @@ export function MotionPane() {
                     <div className="flex items-center gap-2">
                         <button
                             type="button"
-                            onClick={() => updateDraft((d) => { d.motion.reducedMotionBehavior = "fade-only"; })}
-                            className={`px-3 py-1 rounded text-xs border ${
-                                motion.reducedMotionBehavior === "fade-only"
-                                    ? "bg-sky-500/20 text-sky-400 border-sky-500/30"
-                                    : "border-border text-foreground/60"
-                            }`}
+                            onClick={() =>
+                                updateDraft((d) => {
+                                    d.motion.reducedMotionBehavior = "fade-only";
+                                })
+                            }
+                            className={`px-3 py-1 rounded text-xs border ${motion.reducedMotionBehavior === "fade-only" ? "bg-sky-500/20 text-sky-400 border-sky-500/30" : "border-border text-foreground/60"}`}
                         >
                             仅淡入淡出 (Fade-only)
                         </button>
                         <button
                             type="button"
-                            onClick={() => updateDraft((d) => { d.motion.reducedMotionBehavior = "instant"; })}
-                            className={`px-3 py-1 rounded text-xs border ${
-                                motion.reducedMotionBehavior === "instant"
-                                    ? "bg-sky-500/20 text-sky-400 border-sky-500/30"
-                                    : "border-border text-foreground/60"
-                            }`}
+                            onClick={() =>
+                                updateDraft((d) => {
+                                    d.motion.reducedMotionBehavior = "instant";
+                                })
+                            }
+                            className={`px-3 py-1 rounded text-xs border ${motion.reducedMotionBehavior === "instant" ? "bg-sky-500/20 text-sky-400 border-sky-500/30" : "border-border text-foreground/60"}`}
                         >
                             瞬间完成 (Instant)
                         </button>

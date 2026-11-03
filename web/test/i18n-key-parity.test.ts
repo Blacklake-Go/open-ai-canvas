@@ -1,11 +1,5 @@
 import { describe, expect, test } from "bun:test";
-import {
-    BUILTIN_SUPDANCE_I18N_ENTRIES,
-    DEFAULT_SUPDANCE_I18N_SETTINGS,
-    DEFAULT_SUPDANCE_LANGUAGES,
-    NAMESPACE_LABELS,
-    SUPPORTED_LOCALE_CODES,
-} from "../src/supdance/plugins/i18n/locales";
+import { BUILTIN_SUPDANCE_I18N_ENTRIES, DEFAULT_SUPDANCE_I18N_SETTINGS, DEFAULT_SUPDANCE_LANGUAGES, NAMESPACE_LABELS, SUPPORTED_LOCALE_CODES } from "../src/supdance/plugins/i18n/locales";
 import enUSPack from "../src/supdance/plugins/i18n/locales/packs/en-US";
 import esESPack from "../src/supdance/plugins/i18n/locales/packs/es-ES";
 import jaJPPack from "../src/supdance/plugins/i18n/locales/packs/ja-JP";

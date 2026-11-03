@@ -40,27 +40,13 @@ export function ColorsPane() {
                         <Droplet className="h-5 w-5 text-sky-400" />
                         色彩中心 (Color Tokens)
                     </h2>
-                    <p className="text-sm text-foreground/60 leading-relaxed mt-1">
-                        集中配置三层语义色彩令牌。深浅色模式采用独立色彩设计体系，杜绝生硬反相。
-                    </p>
+                    <p className="text-sm text-foreground/60 leading-relaxed mt-1">集中配置三层语义色彩令牌。深浅色模式采用独立色彩设计体系，杜绝生硬反相。</p>
                 </div>
                 <div className="flex items-center rounded-lg border border-border p-1 bg-card">
-                    <button
-                        type="button"
-                        onClick={() => setEditMode("dark")}
-                        className={`px-3 py-1 text-xs font-medium rounded-md transition-all ${
-                            editMode === "dark" ? "bg-sky-500 text-white" : "text-foreground/60 hover:text-foreground"
-                        }`}
-                    >
+                    <button type="button" onClick={() => setEditMode("dark")} className={`px-3 py-1 text-xs font-medium rounded-md transition-all ${editMode === "dark" ? "bg-sky-500 text-white" : "text-foreground/60 hover:text-foreground"}`}>
                         编辑深色 (Dark)
                     </button>
-                    <button
-                        type="button"
-                        onClick={() => setEditMode("light")}
-                        className={`px-3 py-1 text-xs font-medium rounded-md transition-all ${
-                            editMode === "light" ? "bg-sky-500 text-white" : "text-foreground/60 hover:text-foreground"
-                        }`}
-                    >
+                    <button type="button" onClick={() => setEditMode("light")} className={`px-3 py-1 text-xs font-medium rounded-md transition-all ${editMode === "light" ? "bg-sky-500 text-white" : "text-foreground/60 hover:text-foreground"}`}>
                         编辑浅色 (Light)
                     </button>
                 </div>
@@ -71,25 +57,13 @@ export function ColorsPane() {
                 {colorFields.map((field) => {
                     const value = tokens[field.key] || "#000000";
                     return (
-                        <div
-                            key={field.key}
-                            className="flex items-center justify-between p-3.5 rounded-xl border border-border/70 bg-card hover:border-foreground/20 transition-all"
-                        >
+                        <div key={field.key} className="flex items-center justify-between p-3.5 rounded-xl border border-border/70 bg-card hover:border-foreground/20 transition-all">
                             <div className="space-y-0.5 max-w-[240px]">
-                                <label className="text-xs font-semibold text-foreground block">
-                                    {field.label}
-                                </label>
-                                <span className="text-[11px] text-foreground/50 block truncate">
-                                    {field.desc}
-                                </span>
+                                <label className="text-xs font-semibold text-foreground block">{field.label}</label>
+                                <span className="text-[11px] text-foreground/50 block truncate">{field.desc}</span>
                             </div>
                             <div className="flex items-center gap-2">
-                                <input
-                                    type="color"
-                                    value={value.startsWith("#") ? value : "#38bdf8"}
-                                    onChange={(e) => handleColorChange(field.key, e.target.value)}
-                                    className="h-8 w-8 cursor-pointer rounded-lg border border-border bg-transparent p-0.5"
-                                />
+                                <input type="color" value={value.startsWith("#") ? value : "#38bdf8"} onChange={(e) => handleColorChange(field.key, e.target.value)} className="h-8 w-8 cursor-pointer rounded-lg border border-border bg-transparent p-0.5" />
                                 <input
                                     type="text"
                                     value={value}

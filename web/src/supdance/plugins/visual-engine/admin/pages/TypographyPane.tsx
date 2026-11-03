@@ -18,9 +18,7 @@ export function TypographyPane() {
                     <Type className="h-5 w-5 text-sky-400" />
                     字体与排版层级 (Typography Engine)
                 </h2>
-                <p className="text-sm text-foreground/60 leading-relaxed mt-1">
-                    严格对齐 V1.0 规范的 7 级字体梯队体系，内置 Inter、系统无衬线字体与 JetBrains Mono 等宽字体契约。
-                </p>
+                <p className="text-sm text-foreground/60 leading-relaxed mt-1">严格对齐 V1.0 规范的 7 级字体梯队体系，内置 Inter、系统无衬线字体与 JetBrains Mono 等宽字体契约。</p>
             </div>
 
             <div className="rounded-xl border border-border/70 bg-card p-5 divide-y divide-border/50">

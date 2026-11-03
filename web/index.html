@@ -64,8 +64,22 @@
                 border-radius: 999px;
                 animation: appearance-bootstrap-orbit 2.8s linear infinite;
             }
-            @keyframes appearance-bootstrap-pulse { 0%, 100% { opacity: .62; transform: scale(.82); } 50% { opacity: 1; transform: scale(1.08); } }
-            @keyframes appearance-bootstrap-orbit { to { transform: rotate(360deg); } }
+            @keyframes appearance-bootstrap-pulse {
+                0%,
+                100% {
+                    opacity: 0.62;
+                    transform: scale(0.82);
+                }
+                50% {
+                    opacity: 1;
+                    transform: scale(1.08);
+                }
+            }
+            @keyframes appearance-bootstrap-orbit {
+                to {
+                    transform: rotate(360deg);
+                }
+            }
             @media (prefers-reduced-motion: reduce) {
                 #root:empty::before,
                 #root:empty::after {
@@ -82,7 +96,7 @@
             } catch (e) {}
         </script>
     </head>
-    <body class="bg-background text-foreground antialiased" style="background:#ffffff">
+    <body class="bg-background text-foreground antialiased" style="background: #ffffff">
         <div id="root"></div>
         <script type="module" src="/src/main.tsx"></script>
     </body>

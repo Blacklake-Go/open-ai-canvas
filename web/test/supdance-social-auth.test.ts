@@ -111,7 +111,7 @@ describe("SupDance Social Auth Plugin", () => {
         const draftClientId = resolvedMaskedId && !resolvedMaskedId.includes("*") ? resolvedMaskedId : "";
         expect(draftClientId).toBe("");
 
-        const placeholder = (sampleQQ.clientIdMasked || sampleQQ.maskedClientId) || "输入 App ID / Client ID";
+        const placeholder = sampleQQ.clientIdMasked || sampleQQ.maskedClientId || "输入 App ID / Client ID";
         expect(placeholder).toBe("****5200");
 
         const hasSecret = Boolean(sampleQQ.maskedSecret);
@@ -231,4 +231,3 @@ describe("SupDance Social Auth Plugin", () => {
         expect(modalSource).toContain("onPressEnter={() => void submit()}");
     });
 });
-

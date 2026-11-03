@@ -151,7 +151,7 @@ func TestLyriaAdapterBPMAndKeySignatures(t *testing.T) {
 		t.Errorf("expected invalid_tempo error for 30 BPM, got: %v", err)
 	}
 
-	req.TempoBpm = 128 // Valid
+	req.TempoBpm = 128           // Valid
 	req.KeySignature = "X Major" // Invalid key
 	if err := adapter.Validate(req); err == nil || !strings.Contains(err.Error(), "invalid_key_signature") {
 		t.Errorf("expected invalid_key_signature error, got: %v", err)

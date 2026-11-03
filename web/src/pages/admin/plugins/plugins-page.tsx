@@ -221,26 +221,16 @@ export default function AdminPluginsPage() {
             align: "center",
             render: (_, item) =>
                 item.manifest.id === "supdance-visual-engine" ? (
-                    <Link
-                        to="/admin/plugins/visual-engine"
-                        className="inline-flex items-center gap-1 rounded px-2.5 py-1 text-xs font-semibold text-sky-400 bg-sky-500/10 hover:bg-sky-500/20 transition-all"
-                        title="进入 Visual Console 控制台"
-                    >
+                    <Link to="/admin/plugins/visual-engine" className="inline-flex items-center gap-1 rounded px-2.5 py-1 text-xs font-semibold text-sky-400 bg-sky-500/10 hover:bg-sky-500/20 transition-all" title="进入 Visual Console 控制台">
                         <Sparkles className="size-3.5" />
                         控制台
                     </Link>
-                ) :
-                item.manifest.id === "supdance-html-page-manager" ? (
-                    <Link
-                        to="/admin/plugins/html-pages"
-                        className="inline-flex items-center gap-1 rounded px-2.5 py-1 text-xs font-semibold text-emerald-400 bg-emerald-500/10 hover:bg-emerald-500/20 transition-all"
-                        title="进入 HTML 页面管理与排版编辑器"
-                    >
+                ) : item.manifest.id === "supdance-html-page-manager" ? (
+                    <Link to="/admin/plugins/html-pages" className="inline-flex items-center gap-1 rounded px-2.5 py-1 text-xs font-semibold text-emerald-400 bg-emerald-500/10 hover:bg-emerald-500/20 transition-all" title="进入 HTML 页面管理与排版编辑器">
                         <FileCode className="size-3.5" />
                         编辑页面
                     </Link>
-                ) :
-                item.management.origin === "uploaded" ? (
+                ) : item.management.origin === "uploaded" ? (
                     <Button danger type="text" size="small" aria-label={`卸载 ${item.manifest.name}`} icon={<Trash2 className="size-3.5" aria-hidden="true" />} onClick={() => remove(item)} />
                 ) : (
                     <span title="内置插件不可卸载">

@@ -25,7 +25,10 @@ test("plugin sync serializes in-flight changes, refreshes on focus, and aborts o
     stop = startPluginStateSync(async (signal) => {
         requestSignal = signal;
         calls++;
-        if (calls === 1) await new Promise<void>((resolve) => { release = resolve; });
+        if (calls === 1)
+            await new Promise<void>((resolve) => {
+                release = resolve;
+            });
     }, 60_000);
     dom.dispatchEvent(new dom.Event(PLUGIN_STATE_CHANGED_EVENT));
     dom.dispatchEvent(new dom.Event(PLUGIN_STATE_CHANGED_EVENT));

@@ -29,11 +29,7 @@ export const LEGAL_OPERATOR = {
     authoritativeLanguage: "中文",
 } as const;
 
-export type LegalBlock =
-    | { kind: "p"; text: string }
-    | { kind: "ul"; items: string[] }
-    | { kind: "ol"; items: string[] }
-    | { kind: "table"; head: string[]; rows: string[][] };
+export type LegalBlock = { kind: "p"; text: string } | { kind: "ul"; items: string[] } | { kind: "ol"; items: string[] } | { kind: "table"; head: string[]; rows: string[][] };
 
 export type LegalSection = {
     /** 锚点 id，同时用于目录导航。 */
