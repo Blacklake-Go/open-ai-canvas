@@ -208,6 +208,7 @@
             "name": "quality",
             "label": "质量",
             "type": "string",
+            "pricing": true,
             "values": [
               "low",
               "medium",
