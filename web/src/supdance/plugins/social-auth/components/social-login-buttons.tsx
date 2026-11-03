@@ -1,11 +1,11 @@
+import { App } from "antd";
 import { useEffect, useRef } from "react";
-import { App, Tooltip } from "antd";
 import { useQuery } from "@tanstack/react-query";
 
 import { usePluginStore } from "@/stores/use-plugin-store";
 import { useI18n } from "@/supdance/plugins/i18n";
 import { buildSocialAuthStartUrl, getPublicSocialAuthProviders } from "../api";
-import { SocialProviderIcon } from "./social-provider-icons";
+import { SocialProviderBrandIcon } from "./social-provider-icons";
 import { SUPDANCE_SOCIAL_AUTH_PLUGIN_ID } from "../types";
 import type { SocialAuthProviderPublic } from "../types";
 
@@ -93,26 +93,24 @@ export function SocialLoginButtons({ variant = "light-card", next = "/", accepte
 
     return (
         <div data-plugin-scope="social-auth" className="w-full">
-            {/* Branded Social Login Buttons */}
-            <div className="flex flex-wrap items-center justify-center gap-3 sm:gap-3.5" role="group" aria-label={t("auth.social_login_group", undefined, "快捷社交登录方式")}>
+            {/* 大药丸快捷登录：品牌图标 + 渠道名，两列网格对齐登录主操作宽度 */}
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2" role="group" aria-label={t("auth.social_login_group", undefined, "快捷社交登录方式")}>
                 {currentProviders.map((provider) => {
-                    const tooltipText = `${provider.name} ${t("auth.social_login_action", undefined, "登录")}`;
-
                     return (
-                        <Tooltip key={provider.id} title={tooltipText} placement="top" mouseEnterDelay={0.4}>
-                            <button
-                                type="button"
-                                aria-label={tooltipText}
-                                onClick={() => handleProviderClick(provider)}
-                                className={`group relative flex size-11 items-center justify-center rounded-xl transition-all duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#00f5d4]/50 focus-visible:ring-offset-2 active:scale-[0.98] ${
-                                    isDark
-                                        ? "border border-white/10 bg-[#1A1A1A] text-white hover:border-white/20 hover:bg-white/[0.08] hover:shadow-sm"
-                                        : "border border-border/70 bg-card text-foreground hover:border-primary/50 hover:bg-accent hover:shadow-sm"
-                                }`}
-                            >
-                                <SocialProviderIcon provider={provider.id} className="size-5 transition-transform duration-150 group-hover:scale-105" />
-                            </button>
-                        </Tooltip>
+                        <button
+                            key={provider.id}
+                            type="button"
+                            aria-label={provider.name}
+                            onClick={() => handleProviderClick(provider)}
+                            className={`group flex min-h-12 items-center justify-center gap-2.5 rounded-full px-5 text-sm font-medium transition-all duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#00f5d4]/50 focus-visible:ring-offset-2 active:scale-[0.98] ${
+                                isDark
+                                    ? "border border-white/10 bg-white/[0.04] text-white hover:border-white/25 hover:bg-white/[0.09]"
+                                    : "border border-border/70 bg-card text-foreground hover:border-primary/50 hover:bg-accent"
+                            }`}
+                        >
+                            <SocialProviderBrandIcon provider={provider.id} iconLightUrl={provider.iconLightUrl} iconDarkUrl={provider.iconDarkUrl} className="size-5 shrink-0 transition-transform duration-150 group-hover:scale-110" />
+                            <span className="truncate">{provider.name}</span>
+                        </button>
                     );
                 })}
             </div>
