@@ -274,6 +274,14 @@ func (s *Service) CompleteSocialAuthOnboarding(r *http.Request, req socialauth.C
 
 // UserSocialIdentities returns connected accounts and password status for user settings.
 func (s *Service) UserSocialIdentities(actor *model.User) (*socialauth.UserIdentitiesView, error) {
+	// 插件被管理员停用时不泄漏渠道与绑定状态，与 bind/unbind 的守卫保持一致。
+	available, err := s.SocialAuthPluginAvailable()
+	if err != nil {
+		return nil, err
+	}
+	if !available {
+		return nil, kernel.Forbidden("第三方社交登录插件已被系统管理员停用")
+	}
 	return s.socialAuthService().GetUserIdentities(actor)
 }
 

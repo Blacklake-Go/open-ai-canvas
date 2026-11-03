@@ -1,4 +1,6 @@
 import { describe, expect, it } from "bun:test";
+import { readFileSync } from "node:fs";
+import { resolve } from "node:path";
 import { BUILTIN_SUPDANCE_I18N_ENTRIES } from "@/supdance/plugins/i18n/locales";
 import enUS from "@/supdance/plugins/i18n/locales/packs/en-US";
 import zhTW from "@/supdance/plugins/i18n/locales/packs/zh-TW";
@@ -94,5 +96,25 @@ describe("Social Auth UX & Onboarding Improvements", () => {
         expect(isNickHex).toBe(false);
         const formattedNick = isNickHex ? `QQ 创作者 (${nickname.slice(-4)})` : nickname;
         expect(formattedNick).toBe("星尘编剧");
+    });
+
+    it("hot-unplugs the social tab from the profile modal when the plugin is disabled", () => {
+        const modalPath = resolve(import.meta.dir, "../src/components/layout/user-profile-modal.tsx");
+        const source = readFileSync(modalPath, "utf-8");
+
+        // 入口与内容面板都必须受插件可用性守卫，不能只隐藏一半
+        expect(source).toContain('selectPluginEffectivelyEnabled("supdance-social-auth"');
+        expect(source).toContain("function accountManagementItems(socialAuthEnabled: boolean)");
+        expect(source).toContain('items.filter((item) => item.key !== "social")');
+        expect(source).toContain("currentTab === \"social\" && socialAuthPluginEnabled && <SocialAccountBindings />");
+    });
+
+    it("blocks the identities read path on the backend when the plugin is disabled", () => {
+        const pluginPath = resolve(import.meta.dir, "../../backend/internal/app/supdance_social_auth_plugin.go");
+        const source = readFileSync(pluginPath, "utf-8");
+        const identitiesFn = source.slice(source.indexOf("func (s *Service) UserSocialIdentities"), source.indexOf("// BeginSocialAuthBind"));
+
+        expect(identitiesFn).toContain("SocialAuthPluginAvailable()");
+        expect(identitiesFn).toContain("第三方社交登录插件已被系统管理员停用");
     });
 });

@@ -9,7 +9,7 @@ import { UserAvatar } from "@/components/layout/user-avatar";
 import { UserOSSSettingsForm } from "@/components/layout/user-oss-settings-form";
 import { RUNNINGHUB_PLUGIN_ID } from "@/lib/plugins/builtin/workflows";
 import { defaultConfig, useConfigStore, useEffectiveConfig } from "@/stores/use-config-store";
-import { usePluginStore } from "@/stores/use-plugin-store";
+import { selectPluginEffectivelyEnabled, usePluginStore } from "@/stores/use-plugin-store";
 import { useThemeStore } from "@/stores/use-theme-store";
 import { useUserStore } from "@/stores/use-user-store";
 import { useUserProfileModalStore, type UserProfileModalTab, USER_PROFILE_MODAL_EVENT } from "@/stores/use-user-profile-modal-store";
@@ -39,6 +39,25 @@ interface NavSection {
         description: string;
         icon: ReactNode;
     }>;
+}
+
+/** 社交登录是热插拔插件：管理员停用后，账号管理分组里不应再出现「第三方账号」入口。 */
+function accountManagementItems(socialAuthEnabled: boolean): NavSection["items"] {
+    const items: NavSection["items"] = [
+        {
+            key: "profile",
+            label: "基本资料与安全",
+            description: "头像、身份与账户安全",
+            icon: <UserRound className="size-4" />,
+        },
+        {
+            key: "social",
+            label: "第三方账号",
+            description: "社交授权绑定与换绑",
+            icon: <Link2 className="size-4" />,
+        },
+    ];
+    return socialAuthEnabled ? items : items.filter((item) => item.key !== "social");
 }
 
 export function UserProfileModalHost() {
@@ -89,6 +108,7 @@ export function UserProfileModal({ open, activeTab, onTabChange, onClose, search
     const customChannelsEnabled = useUserStore((state) => state.features.customChannelsEnabled);
     const runtimeStatuses = usePluginStore((state) => state.runtimeStatuses);
     const runningHubPluginEnabled = runtimeStatuses[RUNNINGHUB_PLUGIN_ID] === "enabled";
+    const socialAuthPluginEnabled = usePluginStore(selectPluginEffectivelyEnabled("supdance-social-auth", true));
 
     const config = useConfigStore((state) => state.config);
     const effectiveConfig = useEffectiveConfig();
@@ -136,20 +156,7 @@ export function UserProfileModal({ open, activeTab, onTabChange, onClose, search
         const sections: NavSection[] = [
             {
                 group: "账号管理",
-                items: [
-                    {
-                        key: "profile",
-                        label: "基本资料与安全",
-                        description: "头像、身份与账户安全",
-                        icon: <UserRound className="size-4" />,
-                    },
-                    {
-                        key: "social",
-                        label: "第三方账号",
-                        description: "社交授权绑定与换绑",
-                        icon: <Link2 className="size-4" />,
-                    },
-                ],
+                items: accountManagementItems(socialAuthPluginEnabled),
             },
             {
                 group: "创作设置",
@@ -231,7 +238,7 @@ export function UserProfileModal({ open, activeTab, onTabChange, onClose, search
             },
         ];
         return sections;
-    }, [customChannelsEnabled, runningHubPluginEnabled]);
+    }, [customChannelsEnabled, runningHubPluginEnabled, socialAuthPluginEnabled]);
 
     const allItems = useMemo(() => navSections.flatMap((s) => s.items), [navSections]);
     const currentMeta = allItems.find((item) => item.key === currentTab) || allItems[0];
@@ -314,7 +321,7 @@ export function UserProfileModal({ open, activeTab, onTabChange, onClose, search
                     {/* Content Body */}
                     <div className="thin-scrollbar flex-1 overflow-y-auto p-6">
                         {currentTab === "profile" && <ProfilePane key={currentUser?.id} />}
-                        {currentTab === "social" && <SocialAccountBindings />}
+                        {currentTab === "social" && socialAuthPluginEnabled && <SocialAccountBindings />}
                         {currentTab === "models" && <ModelDefaultGrid config={effectiveConfig} onChange={(key, model) => updateConfig(key, model)} />}
                         {currentTab === "channels" && <ChannelSettingsPane onOpenModels={() => onTabChange("models")} onOpenRunningHub={runningHubPluginEnabled ? () => onTabChange("runninghub") : undefined} />}
                         {currentTab === "runninghub" && <RunningHubSettingsPane />}
