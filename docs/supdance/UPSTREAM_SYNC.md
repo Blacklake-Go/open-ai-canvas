@@ -327,6 +327,8 @@ git merge-base --is-ancestor 4d25e4a547fccdf8bf9bded53939a3378708ebb6 HEAD
 
 推送前运行仓库要求的 `bun scripts/verify-before-push.mjs --jobs 4`，覆盖前端格式、类型、lint、包含 pretest 的全量测试，以及 Go 格式、其他包与 app 四分片测试。另运行 `cd web && bun run build`。最终命令退出码与统计随交付测试报告保存。
 
-本地未覆盖：支付插件 Docker 双架构产物、需要独立 PostgreSQL/Redis 服务的集成用例，以及真实浏览器全站视觉验收；这些不由构建成功代替。
+已验证：11 项推送前检查全部通过，前端全量 3066 项测试通过（另含 pretest 的 64 项）；前端生产构建与后端 `go build -o /dev/null ./cmd/server` 通过。视觉引擎专项 22 项通过，包含本次新增的导航启停与真实面包屑渲染。
+
+本地未覆盖：支付插件 Docker 双架构产物、Agent 的 golangci-lint 静态检查、需要独立 PostgreSQL/Redis 服务的集成用例，以及真实浏览器全站视觉验收；这些不由构建成功代替。
 
 原始未提交文件与二进制差异已在工作区之外备份，并保留 `codex/pre-upstream-20261104-04f8cc6c` 与源码检查点 `19ff061a`。恢复代码时在独立分支操作，禁止覆盖当前业务数据。生产回滚需要使用实际部署保留的镜像和数据库备份，不能用本地 Git 回退代替。

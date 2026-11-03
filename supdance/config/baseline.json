@@ -14,6 +14,7 @@
   "coupledUpstreamFiles": [
     ".gitignore",
     "backend/internal/app/appearance.go",
+    "backend/internal/app/appearance_live2d_test.go",
     "backend/internal/app/plugin_management.go",
     "backend/internal/app/user_groups.go",
     "backend/internal/auth/auth.go",
