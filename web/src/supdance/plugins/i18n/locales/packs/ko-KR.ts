@@ -1777,6 +1777,7 @@ const pack: Record<string, string> = {
     "canvas.node_text": "텍스트 생성",
     "inspiration.hall_subtitle": "카드를 열어 전체 프롬프트를 확인하고 마음에 드는 크리에이션으로 계속 창작하세요.",
     "inspiration.more_filters": "추가 필터",
+    "inspiration.community_picks_ccby": "커뮤니티 추천 · CC BY 4.0",
 };
 
 export default pack;

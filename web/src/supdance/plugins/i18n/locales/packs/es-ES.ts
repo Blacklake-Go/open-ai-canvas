@@ -1777,6 +1777,7 @@ const pack: Record<string, string> = {
     "canvas.node_text": "Generación de texto",
     "inspiration.hall_subtitle": "Abre una tarjeta para ver el prompt completo y seguir creando con las ideas que te gusten.",
     "inspiration.more_filters": "Más filtros",
+    "inspiration.community_picks_ccby": "Selección de la comunidad · CC BY 4.0",
 };
 
 export default pack;

@@ -1777,6 +1777,7 @@ const pack: Record<string, string> = {
     "canvas.node_text": "文字生成",
     "inspiration.hall_subtitle": "點開檢視完整提示詞，用喜歡的創意繼續創作。",
     "inspiration.more_filters": "更多篩選",
+    "inspiration.community_picks_ccby": "社群精選 · CC BY 4.0",
 };
 
 export default pack;

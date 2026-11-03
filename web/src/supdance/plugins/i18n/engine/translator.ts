@@ -223,6 +223,51 @@ const DYNAMIC_PATTERN_RULES: readonly DynamicPatternRule[] = [
             "es-ES": (max) => `Se alcanzó el límite de referencias de este modelo (${max})`,
         },
     },
+    // 灵感卡片的操作无障碍标签把内容标题拼进同一个字符串，词典原文匹配不到，只能按前缀模板整串替换。
+    {
+        regex: /^查看灵感：(.+)$/,
+        format: {
+            "zh-CN": (title) => `查看灵感：${title}`,
+            "en-US": (title) => `View inspiration: ${title}`,
+            "zh-TW": (title) => `檢視靈感：${title}`,
+            "ja-JP": (title) => `インスピレーションを見る: ${title}`,
+            "ko-KR": (title) => `영감 보기: ${title}`,
+            "es-ES": (title) => `Ver inspiración: ${title}`,
+        },
+    },
+    {
+        regex: /^收藏：(.+)$/,
+        format: {
+            "zh-CN": (title) => `收藏：${title}`,
+            "en-US": (title) => `Add to favorites: ${title}`,
+            "zh-TW": (title) => `收藏：${title}`,
+            "ja-JP": (title) => `お気に入りに追加: ${title}`,
+            "ko-KR": (title) => `즐겨찾기 추가: ${title}`,
+            "es-ES": (title) => `Añadir a favoritos: ${title}`,
+        },
+    },
+    {
+        regex: /^更多灵感操作：(.+)$/,
+        format: {
+            "zh-CN": (title) => `更多灵感操作：${title}`,
+            "en-US": (title) => `More inspiration actions: ${title}`,
+            "zh-TW": (title) => `更多靈感操作：${title}`,
+            "ja-JP": (title) => `その他の操作: ${title}`,
+            "ko-KR": (title) => `추가 작업: ${title}`,
+            "es-ES": (title) => `Más acciones de inspiración: ${title}`,
+        },
+    },
+    {
+        regex: /^生成设置：(.+)$/,
+        format: {
+            "zh-CN": (summary) => `生成设置：${summary}`,
+            "en-US": (summary) => `Generation settings: ${summary}`,
+            "zh-TW": (summary) => `生成設定：${summary}`,
+            "ja-JP": (summary) => `生成設定: ${summary}`,
+            "ko-KR": (summary) => `생성 설정: ${summary}`,
+            "es-ES": (summary) => `Ajustes de generación: ${summary}`,
+        },
+    },
 ];
 
 function escapeRegexLiteral(text: string): string {

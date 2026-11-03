@@ -1835,7 +1835,7 @@ func BuiltinEntries() []Entry {
 		entry("music.test_connection", "music", "测试连接", "Test Connection", "測試連線", "接続テスト", "연결 테스트", "Probar conexión", "测试连接按钮"),
 		entry("music.save_config", "music", "保存配置", "Save Configuration", "儲存設定", "設定を保存", "설정 저장", "Guardar configuración", "保存配置按钮"),
 		entry("music.submitting", "music", "提交中...", "Submitting...", "提交中...", "送信中...", "제출 중...", "Enviando...", "提交中提示"),
-		// ==================== inspiration: 灵感大厅与创意目录 (61) ====================
+		// ==================== inspiration: 灵感大厅与创意目录 (62) ====================
 		entry("inspiration.fashion_editorial", "inspiration", "时尚编辑", "Fashion Editorial", "時尚編輯", "ファッションエディトリアル", "패션 에디토리얼", "Editorial de moda", "灵感分类：时尚编辑"),
 		entry("inspiration.hall_title", "inspiration", "灵感大厅", "Inspiration Hall", "靈感大廳", "インスピレーションホール", "영감 홀", "Sala de inspiración", "灵感大厅页面主标题"),
 		entry("inspiration.field_source", "inspiration", "来源", "Source", "來源", "出典", "출처", "Fuente", "灵感详情：来源字段标签"),
@@ -1897,5 +1897,6 @@ func BuiltinEntries() []Entry {
 		entry("inspiration.icon_only_button", "inspiration", "纯图标按钮", "Icon-only button", "純圖示按鈕", "アイコンのみのボタン", "아이콘 전용 버튼", "Botón solo icono", "首页灵感画廊：纯图标按钮无障碍标签"),
 		entry("inspiration.hall_subtitle", "inspiration", "点开查看完整提示词，用喜欢的创意继续创作。", "Open a card to read the full prompt and keep creating with ideas you like.", "點開檢視完整提示詞，用喜歡的創意繼續創作。", "カードを開いて完全なプロンプトを確認し、好きなアイデアで続行できます。", "카드를 열어 전체 프롬프트를 확인하고 마음에 드는 크리에이션으로 계속 창작하세요.", "Abre una tarjeta para ver el prompt completo y seguir creando con las ideas que te gusten.", "灵感大厅：副标题"),
 		entry("inspiration.more_filters", "inspiration", "更多筛选", "More filters", "更多篩選", "その他の絞り込み", "추가 필터", "Más filtros", "灵感大厅：进阶筛选按钮"),
+		entry("inspiration.community_picks_ccby", "inspiration", "社区精选 · CC BY 4.0", "Community picks · CC BY 4.0", "社群精選 · CC BY 4.0", "コミュニティ厳選 · CC BY 4.0", "커뮤니티 추천 · CC BY 4.0", "Selección de la comunidad · CC BY 4.0", "灵感来源标签：社区精选与授权"),
 	}
 }

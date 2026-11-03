@@ -1777,6 +1777,7 @@ const pack: Record<string, string> = {
     "canvas.node_text": "Text generation",
     "inspiration.hall_subtitle": "Open a card to read the full prompt and keep creating with ideas you like.",
     "inspiration.more_filters": "More filters",
+    "inspiration.community_picks_ccby": "Community picks · CC BY 4.0",
 };
 
 export default pack;

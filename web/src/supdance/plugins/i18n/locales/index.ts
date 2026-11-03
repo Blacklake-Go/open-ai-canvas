@@ -1843,6 +1843,7 @@ export const BUILTIN_SUPDANCE_I18N_ENTRIES: readonly SupDanceI18nEntry[] = [
     e("canvas.node_text", "canvas", "文本生成", "画布节点类型：文本"),
     e("inspiration.hall_subtitle", "inspiration", "点开查看完整提示词，用喜欢的创意继续创作。", "灵感大厅：副标题"),
     e("inspiration.more_filters", "inspiration", "更多筛选", "灵感大厅：进阶筛选按钮"),
+    e("inspiration.community_picks_ccby", "inspiration", "社区精选 · CC BY 4.0", "灵感来源标签：社区精选与授权"),
 ];
 
 export const packLoaders: Record<Exclude<SupDanceLocaleCode, "zh-CN">, () => Promise<{ default: Record<string, string> }>> = {
