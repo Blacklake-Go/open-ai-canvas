@@ -10,6 +10,7 @@ const (
 	PluginID                = "supdance-visual-engine"
 	ConfigSettingKey        = "supdance_visual_engine_config"
 	SnapshotsSettingKey     = "supdance_visual_engine_snapshots"
+	AuditSettingKey         = "supdance_visual_engine_audit"
 	DefaultPublishedVersion = "2.0.0"
 )
 
@@ -183,6 +184,8 @@ type AdminOverview struct {
 	CanPublish  bool            `json:"canPublish"`
 	CanRollback bool            `json:"canRollback"`
 }
+
+type AuditEntry = AuditLogEntry
 
 type AuditLogEntry struct {
 	ID        string `json:"id"`

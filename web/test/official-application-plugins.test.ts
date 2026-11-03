@@ -2,7 +2,7 @@ import { describe, expect, test } from "bun:test";
 import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
 
-import { OFFICIAL_APPLICATION_PLUGIN_IDS, isOfficialApplicationPluginId } from "../src/lib/plugins/official-applications";
+import { OFFICIAL_APPLICATION_PLUGIN_IDS, SUPDANCE_APPLICATION_PLUGIN_IDS, isOfficialApplicationPluginId } from "../src/lib/plugins/official-applications";
 
 describe("official application plugin classification", () => {
     test("covers every built-in application plugin, including editor and art critique", () => {
@@ -23,12 +23,16 @@ describe("official application plugin classification", () => {
         expect(isOfficialApplicationPluginId("comfyui-workflow-provider")).toBe(false);
     });
 
-    test("exposes a single de-duplicated id list", () => {
-        const ids = [...OFFICIAL_APPLICATION_PLUGIN_IDS];
+    test("exposes de-duplicated id lists covering html page manager and user feedback", () => {
+        const ids = [...OFFICIAL_APPLICATION_PLUGIN_IDS, ...SUPDANCE_APPLICATION_PLUGIN_IDS];
         expect(new Set(ids).size).toBe(ids.length);
-        expect(ids).toHaveLength(7);
+        expect(OFFICIAL_APPLICATION_PLUGIN_IDS).toHaveLength(6);
+        expect(SUPDANCE_APPLICATION_PLUGIN_IDS).toHaveLength(3);
         expect(ids).toContain("supdance-html-page-manager");
         expect(ids).toContain("user-feedback");
+        expect(isOfficialApplicationPluginId("supdance-html-page-manager")).toBe(true);
+        expect(isOfficialApplicationPluginId("supdance-i18n")).toBe(true);
+        expect(isOfficialApplicationPluginId("supdance-social-auth")).toBe(true);
     });
 
     test("both plugin pages consume the shared list instead of a local copy", () => {

@@ -684,6 +684,47 @@
     outline-offset: 3px;
 }
 
+.legal-theme-toggler {
+    display: inline-flex;
+    width: 34px;
+    height: 34px;
+    align-items: center;
+    justify-content: center;
+    border-radius: var(--button-radius);
+    color: color-mix(in srgb, var(--foreground) 58%, transparent);
+    transition:
+        background-color var(--motion-instant) ease-out,
+        color var(--motion-instant) ease-out;
+}
+
+.legal-theme-toggler > svg {
+    width: 18px;
+    height: 18px;
+    stroke-width: 1.8;
+}
+
+.legal-theme-toggler:hover {
+    background: color-mix(in srgb, var(--foreground) 5%, transparent);
+    color: var(--foreground);
+}
+
+.legal-theme-toggler:active {
+    background: color-mix(in srgb, var(--foreground) 8%, transparent);
+}
+
+.legal-theme-toggler:focus-visible {
+    outline: 2px solid color-mix(in srgb, var(--ring) 68%, transparent);
+    outline-offset: 2px;
+}
+
+/* 首页同款 View Transition 已用圆形 clip 完成整页揭示；这里关闭法务页自身颜色过渡，避免出现二次拖影。 */
+html[data-theme-switching="true"] .legal-public-page,
+html[data-theme-switching="true"] .legal-public-page *,
+html[data-magicui-theme-vt="active"] .legal-public-page,
+html[data-magicui-theme-vt="active"] .legal-public-page * {
+    transition: none !important;
+}
+
 .site-compliance-footer svg {
     width: 11px;
     height: 11px;

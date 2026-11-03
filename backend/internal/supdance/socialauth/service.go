@@ -265,6 +265,8 @@ func (s *Service) GetAdminSettings(r *http.Request, actor *model.User) (*AdminSe
 			LatencyMs:          latency,
 			Scopes:             cfg.Scopes,
 			DocURL:             meta.DocURL,
+			IconLightURL:       cfg.IconLightURL,
+			IconDarkURL:        cfg.IconDarkURL,
 		}
 
 		if meta.Region == RegionCN {
@@ -340,6 +342,11 @@ func (s *Service) UpdateAdminSettings(r *http.Request, actor *model.User, req Up
 		}
 		cfg.Enabled = input.Enabled
 		cfg.CustomRedirectURL = strings.TrimSpace(input.CustomRedirectURL)
+		cfg.IconLightURL = strings.TrimSpace(input.IconLightURL)
+		cfg.IconDarkURL = strings.TrimSpace(input.IconDarkURL)
+		if !brandIconURLValid(cfg.IconLightURL) || !brandIconURLValid(cfg.IconDarkURL) {
+			return nil, kernel.BadAuthRequest("品牌图标地址必须是 https:// 或本站 / 开头的图片路径")
+		}
 		if !callbackURLValid(id, cfg) {
 			return nil, kernel.BadAuthRequest("回调地址必须使用本站 HTTPS 渠道回调路径")
 		}
@@ -431,6 +438,25 @@ func callbackURLValid(id string, cfg ProviderConfig) bool {
 	return err == nil && u.Scheme == "https" && u.Host == "www.supdance.com" && (u.Path == meta.DefaultPath || u.Path == "/api/auth/social/"+id+"/callback") && u.RawQuery == "" && u.Fragment == "" && u.User == nil
 }
 
+// brandIconURLValid accepts only https:// URLs or same-site absolute paths so a
+// custom brand icon can never smuggle javascript:/data: payloads into <img src>.
+func brandIconURLValid(raw string) bool {
+	if raw == "" {
+		return true
+	}
+	if len(raw) > 500 {
+		return false
+	}
+	if strings.HasPrefix(raw, "/") {
+		return !strings.HasPrefix(raw, "//")
+	}
+	u, err := url.Parse(raw)
+	if err != nil || u.User != nil {
+		return false
+	}
+	return u.Scheme == "https" && u.Host != ""
+}
+
 // channelAdvertisable reports whether a login page may offer a channel and let a
 // visitor start its OAuth flow: the credentials have to be complete and the
 // backend must implement that provider's token exchange.
@@ -493,6 +519,8 @@ func (s *Service) GetPublicProviders(r *http.Request) (*PublicProvidersResponse,
 			Region:       meta.Region,
 			Icon:         meta.Icon,
 			AuthorizeURL: "/api/auth/social/" + meta.ID + "/start",
+			IconLightURL: cfg.IconLightURL,
+			IconDarkURL:  cfg.IconDarkURL,
 		}
 
 		allRegions[meta.Region] = append(allRegions[meta.Region], item)

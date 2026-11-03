@@ -4,7 +4,7 @@ import type { VisualEngineConfig } from "../types";
 
 export function mergeVisualEngineAntTheme(base: ThemeConfig, config: VisualEngineConfig, policy: ResolvedPageVisualPolicy, reducedMotion: boolean): ThemeConfig {
     const tokens = policy.activeTokens;
-    const components = policy.activeComponents;
+    const components = config.components;
     const duration = (value: number) => `${!policy.motionEnabled || reducedMotion ? 0 : value}ms`;
     return {
         ...base,

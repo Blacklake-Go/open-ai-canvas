@@ -226,7 +226,7 @@ describe("supdance-i18n plugin architecture and engine", () => {
         expect(navProjectsText.nodeValue).toBe("Short Drama");
         expect(searchInput.getAttribute("placeholder")).toBe("Search plugin name, ID or author");
         expect(searchInput.getAttribute("aria-label")).toBe("Search plugins");
-        expect(promptTextarea.getAttribute("placeholder")).toBe("Describe your shot, frame or story. You can also add a reference image to start.");
+        expect(promptTextarea.getAttribute("placeholder")).toBe("Enter your shot, image or story. You can also add reference images to start creating");
         expect(textareaUserInput.nodeValue).toBe("用户手写的中文提示词，不应被翻译");
 
         // Code and data-i18n-ignore must remain untouched
@@ -242,14 +242,14 @@ describe("supdance-i18n plugin architecture and engine", () => {
         translator.update(dict, "ko-KR", "zh-CN", { translateAdminPages: true });
         expect(navCreateText.nodeValue).toBe("창작");
         expect(navProjectsText.nodeValue).toBe("숏폼 드라마 제작");
-        expect(promptTextarea.getAttribute("placeholder")).toBe("컷, 화면, 이야기를 입력하세요. 참고 이미지를 추가해 시작할 수도 있습니다");
+        expect(promptTextarea.getAttribute("placeholder")).toBe("장면, 이미지 또는 이야기를 입력하세요. 참고 이미지를 추가해 창작을 시작할 수도 있습니다");
         expect(textareaUserInput.nodeValue).toBe("用户手写的中文提示词，不应被翻译");
 
         // Switch to Spanish
         translator.update(dict, "es-ES", "zh-CN", { translateAdminPages: true });
         expect(navCreateText.nodeValue).toBe("Crear");
         expect(navProjectsText.nodeValue).toBe("Producción de Microdramas");
-        expect(promptTextarea.getAttribute("placeholder")).toBe("Describe tu plano, escena o historia. También puedes añadir una imagen de referencia para empezar.");
+        expect(promptTextarea.getAttribute("placeholder")).toBe("Introduce tu toma, imagen o historia. También puedes añadir imágenes de referencia para empezar a crear");
         expect(textareaUserInput.nodeValue).toBe("用户手写的中文提示词，不应被翻译");
 
         // Disable plugin -> lossless restore to original Simplified Chinese

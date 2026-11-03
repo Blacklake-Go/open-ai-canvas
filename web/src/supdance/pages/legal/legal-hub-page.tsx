@@ -1,25 +1,17 @@
-import { ArrowRight, FileText, Globe, Moon, Shield, Sun } from "lucide-react";
+import { ArrowRight, FileText, Globe, Shield } from "lucide-react";
 import { useState } from "react";
 import { Link } from "react-router";
 
+import { useThemeStore } from "@/stores/use-theme-store";
 import { LEGAL_OPERATOR_CONFIG } from "./legal-i18n-content";
+import { LegalThemeToggler } from "./legal-theme-toggler";
 
 export default function LegalHubPage() {
-    const [isDark, setIsDark] = useState<boolean>(() => {
-        const stored = localStorage.getItem("supdance-legal-theme");
-        if (stored) return stored === "dark";
-        return true;
-    });
-
-    const toggleTheme = () => {
-        const next = !isDark;
-        setIsDark(next);
-        localStorage.setItem("supdance-legal-theme", next ? "dark" : "light");
-    };
+    const isDark = useThemeStore((state) => state.theme === "dark");
 
     return (
         <div
-            className={`min-h-screen w-full transition-colors duration-200 ${isDark ? "bg-[#000000] text-[#f4f4f6]" : "bg-[#ffffff] text-[#111111]"}`}
+            className={`legal-public-page min-h-screen w-full transition-colors duration-200 ${isDark ? "bg-[#000000] text-[#f4f4f6]" : "bg-[#ffffff] text-[#111111]"}`}
             style={{
                 fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif',
             }}
@@ -36,13 +28,7 @@ export default function LegalHubPage() {
                     <Link to="/" className={`text-xs font-medium no-underline transition-colors ${isDark ? "text-white/60 hover:text-white" : "text-black/60 hover:text-black"}`}>
                         返回创作台 &rarr;
                     </Link>
-                    <button
-                        type="button"
-                        onClick={toggleTheme}
-                        className={`p-1.5 rounded-full border transition-colors ${isDark ? "border-white/15 bg-white/5 text-white/80 hover:text-white" : "border-black/15 bg-black/5 text-black/80 hover:text-black"}`}
-                    >
-                        {isDark ? <Sun className="size-3.5" /> : <Moon className="size-3.5" />}
-                    </button>
+                    <LegalThemeToggler />
                 </div>
             </header>
 

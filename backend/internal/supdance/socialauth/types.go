@@ -74,6 +74,8 @@ type ProviderConfig struct {
 	ClientSecret      string   `json:"clientSecret"`      // Client Secret / AppKey / AppSecret (masked in admin view)
 	CustomRedirectURL string   `json:"customRedirectUrl"` // 自定义回调地址 (选填，留空使用默认)
 	Scopes            []string `json:"scopes"`            // 授权范围
+	IconLightURL      string   `json:"iconLightUrl"`      // 自定义品牌图标（亮色界面）
+	IconDarkURL       string   `json:"iconDarkUrl"`       // 自定义品牌图标（暗色界面）
 }
 
 // StoredSettings is the JSON representation stored in SystemSetting.
@@ -106,6 +108,8 @@ type ProviderAdminView struct {
 	LatencyMs          int64    `json:"latencyMs"`
 	Scopes             []string `json:"scopes"`
 	DocURL             string   `json:"docUrl"`
+	IconLightURL       string   `json:"iconLightUrl"`
+	IconDarkURL        string   `json:"iconDarkUrl"`
 }
 
 // AdminSettingsView is the full view for the Admin Social Login Config Center.
@@ -132,6 +136,8 @@ type ProviderPublicView struct {
 	Region       string `json:"region"`
 	Icon         string `json:"icon"`
 	AuthorizeURL string `json:"authorizeUrl"`
+	IconLightURL string `json:"iconLightUrl,omitempty"`
+	IconDarkURL  string `json:"iconDarkUrl,omitempty"`
 }
 
 // PublicProvidersResponse is returned by GET /api/auth/social/providers.
@@ -154,6 +160,8 @@ type UpdateProviderInput struct {
 	ClientSecret      string   `json:"clientSecret"` // Leave empty to retain existing secret
 	CustomRedirectURL string   `json:"customRedirectUrl"`
 	Scopes            []string `json:"scopes"`
+	IconLightURL      string   `json:"iconLightUrl"` // 空字符串表示清除自定义图标
+	IconDarkURL       string   `json:"iconDarkUrl"`
 }
 
 // UpdateSettingsRequest is the payload for PUT /api/admin/social-auth/settings.

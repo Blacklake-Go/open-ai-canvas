@@ -291,7 +291,7 @@ describe("Empirical Challenger Suite: Milestone 1 Stress & Verification", () => 
 
                 if (locale === "es-ES") {
                     expect(createBtn).toBe("Crear lienzo");
-                    expect(creatingBtn).toBe("Creando...");
+                    expect(creatingBtn).toBe("Creando…");
                 }
             }
         });

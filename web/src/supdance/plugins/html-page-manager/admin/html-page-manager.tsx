@@ -331,7 +331,7 @@ export default function HtmlPageManager() {
                     <div className="flex items-center gap-2">
                         <FileCode className="size-4 text-sky-400" />
                         <h1 className="text-sm font-semibold tracking-tight text-white">supdance html页面管理</h1>
-                        <Tag color="cyan" className="rounded-full text-[10px] px-2 border-0">
+                        <Tag color="cyan" className="rounded-full text-\[10px\] px-2 border-0">
                             法务条款 & 单页工作台
                         </Tag>
                     </div>
@@ -433,9 +433,9 @@ export default function HtmlPageManager() {
                                             <span className="truncate">{p.title}</span>
                                             {p.isPublished ? <span className="size-1.5 rounded-full bg-emerald-400 shrink-0" title="已发布" /> : <span className="size-1.5 rounded-full bg-amber-400 shrink-0" title="草稿" />}
                                         </div>
-                                        <div className="font-mono text-[11px] text-[#6a6a75] truncate mt-0.5">/{p.slug}</div>
+                                        <div className="font-mono text-xs text-[#6a6a75] truncate mt-0.5">/{p.slug}</div>
                                     </div>
-                                    <span className="text-[10px] text-[#555] group-hover:text-[#888] font-mono shrink-0">{p.templateId ? p.templateId.replace("-", " ") : "html"}</span>
+                                    <span className="text-\[10px\] text-[#555] group-hover:text-[#888] font-mono shrink-0">{p.templateId ? p.templateId.replace("-", " ") : "html"}</span>
                                 </div>
                             );
                         })}
@@ -445,7 +445,7 @@ export default function HtmlPageManager() {
                     {activePage && (
                         <div className="border-t border-white/10 p-3 space-y-2.5 bg-black/30">
                             <div className="space-y-1">
-                                <label className="text-[11px] text-[#7c7c88]">页面标题</label>
+                                <label className="text-xs text-[#7c7c88]">页面标题</label>
                                 <input
                                     type="text"
                                     value={activePage.title}
@@ -454,7 +454,7 @@ export default function HtmlPageManager() {
                                 />
                             </div>
                             <div className="space-y-1">
-                                <label className="text-[11px] text-[#7c7c88]">访问路径 (Slug)</label>
+                                <label className="text-xs text-[#7c7c88]">访问路径 (Slug)</label>
                                 <input
                                     type="text"
                                     value={activePage.slug}
@@ -467,11 +467,11 @@ export default function HtmlPageManager() {
                                 <Switch size="small" checked={activePage.isPublished} onChange={(checked) => updateActivePage({ isPublished: checked })} />
                             </div>
                             <div className="flex items-center justify-between pt-2 border-t border-white/10">
-                                <button type="button" onClick={handleDeleteCurrentPage} className="inline-flex items-center gap-1 text-[11px] text-red-400 hover:text-red-300">
+                                <button type="button" onClick={handleDeleteCurrentPage} className="inline-flex items-center gap-1 text-xs text-red-400 hover:text-red-300">
                                     <Trash2 className="size-3" />
                                     删除此页
                                 </button>
-                                <button type="button" onClick={handleReset} className="inline-flex items-center gap-1 text-[11px] text-[#7c7c88] hover:text-white" title="恢复默认官方条款">
+                                <button type="button" onClick={handleReset} className="inline-flex items-center gap-1 text-xs text-[#7c7c88] hover:text-white" title="恢复默认官方条款">
                                     <RotateCcw className="size-3" />
                                     重置
                                 </button>
@@ -485,7 +485,7 @@ export default function HtmlPageManager() {
                     {/* 排版快捷工具栏 */}
                     {viewMode !== "preview" && (
                         <div className="flex items-center gap-1 overflow-x-auto border-b border-white/10 px-3 py-1.5 bg-[#121215] text-xs">
-                            <span className="text-[11px] font-mono text-[#666] mr-2 shrink-0">排版快捷元素:</span>
+                            <span className="text-xs font-mono text-[#666] mr-2 shrink-0">排版快捷元素:</span>
                             <button type="button" onClick={() => insertSnippet((s) => `<h1>${s || "大标题"}</h1>\n`)} className="rounded px-2 py-1 text-[#a2a2ad] hover:bg-white/10 hover:text-white" title="插入一级大标题">
                                 <Heading1 className="size-3.5" />
                             </button>
@@ -496,13 +496,13 @@ export default function HtmlPageManager() {
                                 <Heading3 className="size-3.5" />
                             </button>
                             <div className="h-3 w-px bg-white/15 mx-1" />
-                            <button type="button" onClick={() => insertSnippet((s) => `<p>${s || "请输入正文段落说明..."}</p>\n`)} className="rounded px-2 py-1 text-[#a2a2ad] hover:bg-white/10 hover:text-white font-mono text-[11px]" title="插入段落 <p>">
+                            <button type="button" onClick={() => insertSnippet((s) => `<p>${s || "请输入正文段落说明..."}</p>\n`)} className="rounded px-2 py-1 text-[#a2a2ad] hover:bg-white/10 hover:text-white font-mono text-xs" title="插入段落 <p>">
                                 P
                             </button>
-                            <button type="button" onClick={() => insertSnippet((s) => `<strong>${s || "重点条款"}</strong>`)} className="rounded px-2 py-1 text-[#a2a2ad] hover:bg-white/10 hover:text-white font-bold text-[11px]" title="粗体 <strong>">
+                            <button type="button" onClick={() => insertSnippet((s) => `<strong>${s || "重点条款"}</strong>`)} className="rounded px-2 py-1 text-[#a2a2ad] hover:bg-white/10 hover:text-white font-bold text-xs" title="粗体 <strong>">
                                 B
                             </button>
-                            <button type="button" onClick={() => insertSnippet((s) => `<em>${s || "强调内容"}</em>`)} className="rounded px-2 py-1 text-[#a2a2ad] hover:bg-white/10 hover:text-white italic text-[11px]" title="斜体 <em>">
+                            <button type="button" onClick={() => insertSnippet((s) => `<em>${s || "强调内容"}</em>`)} className="rounded px-2 py-1 text-[#a2a2ad] hover:bg-white/10 hover:text-white italic text-xs" title="斜体 <em>">
                                 I
                             </button>
                             <div className="h-3 w-px bg-white/15 mx-1" />
@@ -527,7 +527,7 @@ export default function HtmlPageManager() {
                             <button
                                 type="button"
                                 onClick={() => insertSnippet((s) => `<div class="callout">\n  <strong>特别提醒：</strong>${s || "本条款涉及您的核心退款与数据所有权益，请仔细审阅。"}\n</div>\n`)}
-                                className="rounded px-2 py-1 text-amber-300/80 hover:bg-white/10 hover:text-amber-200 text-[11px]"
+                                className="rounded px-2 py-1 text-amber-300/80 hover:bg-white/10 hover:text-amber-200 text-xs"
                                 title="插入高亮重点声明框"
                             >
                                 Callout
@@ -535,13 +535,13 @@ export default function HtmlPageManager() {
                             <button
                                 type="button"
                                 onClick={() => insertSnippet(`<hr style="border:0;border-top:1px solid var(--border,#333);margin:32px 0;" />\n`)}
-                                className="rounded px-2 py-1 text-[#a2a2ad] hover:bg-white/10 hover:text-white text-[11px] font-mono"
+                                className="rounded px-2 py-1 text-[#a2a2ad] hover:bg-white/10 hover:text-white text-xs font-mono"
                                 title="插入水平分割线 <hr>"
                             >
                                 HR
                             </button>
                             <div className="flex-1" />
-                            <button type="button" onClick={handleCopyHtml} className="flex items-center gap-1 text-[11px] text-[#a2a2ad] hover:text-white px-2 py-1 rounded hover:bg-white/5" title="复制全文代码">
+                            <button type="button" onClick={handleCopyHtml} className="flex items-center gap-1 text-xs text-[#a2a2ad] hover:text-white px-2 py-1 rounded hover:bg-white/5" title="复制全文代码">
                                 <Copy className="size-3" />
                                 复制代码
                             </button>
@@ -559,9 +559,9 @@ export default function HtmlPageManager() {
                                     onChange={(e) => updateActivePage({ html: e.target.value })}
                                     placeholder="在此输入或粘贴完整自包含 HTML 页面代码..."
                                     spellCheck={false}
-                                    className="flex-1 w-full resize-none bg-[#09090b] p-4 font-mono text-[13px] leading-relaxed text-[#e2e2e8] focus:outline-none selection:bg-sky-500/30"
+                                    className="flex-1 w-full resize-none bg-[#09090b] p-4 font-mono text-sm leading-relaxed text-[#e2e2e8] focus:outline-none selection:bg-sky-500/30"
                                 />
-                                <div className="flex items-center justify-between border-t border-white/5 bg-[#0a0a0c] px-3 py-1 text-[11px] text-[#666] font-mono">
+                                <div className="flex items-center justify-between border-t border-white/5 bg-[#0a0a0c] px-3 py-1 text-xs text-[#666] font-mono">
                                     <span>字数: {activePage?.html.length || 0} 字符</span>
                                     <span>模板类型: {activePage?.templateId || "custom"}</span>
                                 </div>
@@ -574,10 +574,10 @@ export default function HtmlPageManager() {
                                 <div className="flex items-center justify-between border-b border-white/10 bg-[#111114] px-4 py-1 text-xs text-[#8a8f98]">
                                     <div className="flex items-center gap-2">
                                         <span className="size-2 rounded-full bg-emerald-500 animate-pulse" />
-                                        <span className="font-mono text-[11px]">实时沙箱预览</span>
-                                        <span className="text-[11px] text-[#555]">（自包含 CSS 隔离环境）</span>
+                                        <span className="font-mono text-xs">实时沙箱预览</span>
+                                        <span className="text-xs text-[#555]">（自包含 CSS 隔离环境）</span>
                                     </div>
-                                    <div className="font-mono text-[11px] text-[#666]">视口: {viewportWidthStyle}</div>
+                                    <div className="font-mono text-xs text-[#666]">视口: {viewportWidthStyle}</div>
                                 </div>
 
                                 <div className="flex flex-1 items-center justify-center overflow-auto p-4 bg-[#0a0a0c]/60">
@@ -601,7 +601,7 @@ export default function HtmlPageManager() {
                                 <div>
                                     <div className="flex items-center justify-between gap-2 mb-2">
                                         <h3 className="font-semibold text-sm group-hover:text-primary transition-colors">{tpl.name}</h3>
-                                        <Tag color={tpl.theme === "dark" ? "default" : "blue"} className="text-[10px]">
+                                        <Tag color={tpl.theme === "dark" ? "default" : "blue"} className="text-\[10px\]">
                                             {tpl.badge}
                                         </Tag>
                                     </div>

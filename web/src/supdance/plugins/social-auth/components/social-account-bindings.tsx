@@ -204,12 +204,12 @@ export function SocialAccountBindings({ onNavigateSecurity }: { onNavigateSecuri
                                     <div className="flex items-center gap-2">
                                         <span className="text-sm font-medium text-foreground">{provider.name}</span>
                                         {bound ? (
-                                            <span className="inline-flex items-center gap-1 rounded-full bg-primary/10 px-2 py-0.5 text-[11px] font-medium text-primary">
+                                            <span className="inline-flex items-center gap-1 rounded-full bg-primary/10 px-2 py-0.5 text-xs font-medium text-primary">
                                                 <span className="size-1.5 rounded-full bg-primary" />
                                                 {t("settings.social.bound", {}, "已绑定")}
                                             </span>
                                         ) : (
-                                            <span className="inline-flex items-center gap-1 rounded-full bg-surface-raised px-2 py-0.5 text-[11px] text-foreground/50">
+                                            <span className="inline-flex items-center gap-1 rounded-full bg-surface-raised px-2 py-0.5 text-xs text-foreground/50">
                                                 <span className="size-1.5 rounded-full bg-foreground/30" />
                                                 {t("settings.social.unbound", {}, "未绑定")}
                                             </span>
@@ -220,7 +220,7 @@ export function SocialAccountBindings({ onNavigateSecurity }: { onNavigateSecuri
                                         {bound ? (
                                             <span>
                                                 {renderAccountIdentifier(provider.id, bound)}
-                                                {bound.boundAt && <span className="ml-2 text-[11px] text-foreground/40">({new Date(bound.boundAt).toLocaleDateString()})</span>}
+                                                {bound.boundAt && <span className="ml-2 text-xs text-foreground/40">({new Date(bound.boundAt).toLocaleDateString()})</span>}
                                             </span>
                                         ) : (
                                             <span>绑定后可直接一键登录</span>

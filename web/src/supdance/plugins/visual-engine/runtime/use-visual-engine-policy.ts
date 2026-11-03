@@ -25,7 +25,7 @@ export function useSystemReducedMotion() {
 export function useVisualEnginePolicy() {
     const { pathname } = useLocation();
     const config = useVisualEngineStore((state) => state.config);
-    const enabled = useVisualEngineStore((state) => state.loaded && state.enabled);
+    const enabled = useVisualEngineStore((state) => state.enabled);
     const platformEnabled = usePluginStore((state) => state.pluginStates["supdance-visual-engine"]?.effectiveEnabled);
     const hostMode = useActiveTheme();
     const canvasActive = useCanvasThemeStore((state) => state.active);

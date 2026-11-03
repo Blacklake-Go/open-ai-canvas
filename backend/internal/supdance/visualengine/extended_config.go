@@ -113,7 +113,7 @@ func validateExtendedConfig(config Config) error {
 			return fmt.Errorf("恢复动画状态说明无效")
 		}
 	}
-	if !hexColor.MatchString(recovery.BackgroundLight) || !hexColor.MatchString(recovery.BackgroundDark) || recovery.AnimationSpeed < 0.25 || recovery.AnimationSpeed > 2 || (recovery.ExitEffect != "fade" && recovery.ExitEffect != "instant") || (recovery.TimeoutFeedback != "retry" && recovery.TimeoutFeedback != "reload") || len(recovery.Paths) > 100 {
+	if !colorPattern.MatchString(recovery.BackgroundLight) || !colorPattern.MatchString(recovery.BackgroundDark) || recovery.AnimationSpeed < 0.25 || recovery.AnimationSpeed > 2 || (recovery.ExitEffect != "fade" && recovery.ExitEffect != "instant") || (recovery.TimeoutFeedback != "retry" && recovery.TimeoutFeedback != "reload") || len(recovery.Paths) > 100 {
 		return fmt.Errorf("恢复动画配置无效")
 	}
 	for _, path := range recovery.Paths {
@@ -144,7 +144,7 @@ func validateExtendedConfig(config Config) error {
 		return fmt.Errorf("交互参数超出范围")
 	}
 	for _, color := range []string{interaction.SwitchOnLight, interaction.SwitchOnDark, interaction.CheckboxLight, interaction.CheckboxDark} {
-		if !hexColor.MatchString(color) {
+		if !colorPattern.MatchString(color) {
 			return fmt.Errorf("交互颜色无效")
 		}
 	}

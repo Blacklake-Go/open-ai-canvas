@@ -244,7 +244,7 @@ export function SocialOnboardingModal() {
                             <div className="min-w-0 flex-1">
                                 <div className="flex items-center gap-2">
                                     <span className="truncate text-sm font-semibold text-foreground">{profile?.displayName || t("auth.onboarding.verified_identity", {}, "第三方用户")}</span>
-                                    <span className="rounded-full bg-primary/10 px-2 py-0.5 text-[11px] font-medium text-primary">
+                                    <span className="rounded-full bg-primary/10 px-2 py-0.5 text-xs font-medium text-primary">
                                         {t("auth.onboarding.authorized_badge", { provider: profile?.providerName || "第三方" }, `${profile?.providerName || "第三方"} 授权`)}
                                     </span>
                                 </div>
@@ -260,7 +260,7 @@ export function SocialOnboardingModal() {
                                     <span>{t("auth.onboarding.bind_email", {}, "绑定邮箱")}</span>
                                 </span>
                                 {hasProviderEmail ? (
-                                    <span className="flex items-center gap-1 text-[11px] font-medium text-emerald-500">
+                                    <span className="flex items-center gap-1 text-xs font-medium text-emerald-500">
                                         <ShieldCheck className="size-3" />
                                         {t("auth.onboarding.email_verified_auto", {}, "第三方已自动验证")}
                                     </span>
@@ -339,7 +339,7 @@ export function SocialOnboardingModal() {
                                     />
                                 ) : null}
 
-                                {password && !isPasswordMatch ? <p className="text-[11px] text-rose-400">{t("auth.password_mismatch", {}, "两次输入的密码不一致")}</p> : null}
+                                {password && !isPasswordMatch ? <p className="text-xs text-rose-400">{t("auth.password_mismatch", {}, "两次输入的密码不一致")}</p> : null}
                             </div>
                         </div>
 

@@ -71,16 +71,6 @@ export function isPluginEffectivelyEnabled(pluginId: string, fallbackEnabled?: b
     return selectPluginEffectivelyEnabled(pluginId, fallbackEnabled)(usePluginStore.getState());
 }
 
-export function selectPluginEffectivelyEnabled(pluginId: string, fallbackEnabled?: boolean) {
-    return (state: PluginStore) => {
-        const serverState = state.pluginStates[pluginId];
-        if (serverState) return serverState.effectiveEnabled;
-        if (pluginId in state.runtimeStatuses) return state.runtimeStatuses[pluginId] === "enabled";
-        if (fallbackEnabled !== undefined) return fallbackEnabled;
-        return Boolean(state.installations.find((item) => item.manifest.id === pluginId)?.enabled);
-    };
-}
-
 /**
  * 组件内订阅用的统一插件生效判定选择器，判定顺序与 isPluginEffectivelyEnabled 一致：
  * 服务端 states -> 运行时 statuses -> 本地安装记录 -> unknownFallback。

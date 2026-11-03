@@ -8,6 +8,7 @@ import "./styles/shared/overlays.css";
 import "./styles/shared/scrollbars.css";
 import { RouterProvider } from "react-router";
 
+import { AppProviders } from "@/components/layout/app-providers";
 import { router } from "@/router";
 import { VisualEngineRuntimeHost } from "@/supdance/plugins/visual-engine/runtime/visual-engine-runtime-host";
 

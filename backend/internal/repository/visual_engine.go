@@ -1,13 +1,14 @@
 package repository
 
 import (
+	"errors"
+
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
 	"yingce/backend/internal/model"
-	visualengine "yingce/backend/internal/supdance/visualengine"
 )
 
-var ErrVisualEngineConflict = visualengine.ErrConflict
+var ErrVisualEngineConflict = errors.New("视觉配置已被其他管理员更新，请重新加载")
 
 func (r *Repository) SaveVisualEngineSettingsWithAudit(settings []*model.SystemSetting, audit *model.AdminAuditEvent) error {
 	return r.db.Transaction(func(tx *gorm.DB) error {

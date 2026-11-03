@@ -1,8 +1,10 @@
-import { Check, ChevronDown, Globe, Moon, Sun } from "lucide-react";
+import { Check, ChevronDown, Globe } from "lucide-react";
 import { useEffect, useState } from "react";
 import { Link, useLocation } from "react-router";
 
+import { useThemeStore } from "@/stores/use-theme-store";
 import { LEGAL_LANGUAGE_LABELS, LEGAL_OPERATOR_CONFIG, type LocalizedLegalDoc, type SupportedLegalLanguage } from "./legal-i18n-content";
+import { LegalThemeToggler } from "./legal-theme-toggler";
 
 interface LinearLegalPageProps {
     docMap: Record<SupportedLegalLanguage, LocalizedLegalDoc>;
@@ -15,6 +17,7 @@ interface LinearLegalPageProps {
  */
 export function LinearLegalPage({ docMap, currentSlug }: LinearLegalPageProps) {
     const location = useLocation();
+    const isDark = useThemeStore((state) => state.theme === "dark");
     const [lang, setLang] = useState<SupportedLegalLanguage>(() => {
         const searchParams = new URLSearchParams(window.location.search);
         const paramLang = searchParams.get("lang") as SupportedLegalLanguage;
@@ -22,12 +25,6 @@ export function LinearLegalPage({ docMap, currentSlug }: LinearLegalPageProps) {
         const stored = localStorage.getItem("supdance-legal-lang") as SupportedLegalLanguage;
         if (stored && stored in docMap) return stored;
         return "en"; // 根语言默认为 English
-    });
-
-    const [isDark, setIsDark] = useState<boolean>(() => {
-        const stored = localStorage.getItem("supdance-legal-theme");
-        if (stored) return stored === "dark";
-        return true; // 默认采用参考截图中的极黑高奢风格
     });
 
     const [langDropdownOpen, setLangDropdownOpen] = useState(false);
@@ -40,13 +37,6 @@ export function LinearLegalPage({ docMap, currentSlug }: LinearLegalPageProps) {
         const url = new URL(window.location.href);
         url.searchParams.set("lang", selected);
         window.history.replaceState({}, "", url.toString());
-    };
-
-    // 切换明暗主题
-    const toggleTheme = () => {
-        const next = !isDark;
-        setIsDark(next);
-        localStorage.setItem("supdance-legal-theme", next ? "dark" : "light");
     };
 
     // 处理 hash 锚点滚动（如 #content-standards, #enforcement-actions, #reporting）
@@ -66,7 +56,7 @@ export function LinearLegalPage({ docMap, currentSlug }: LinearLegalPageProps) {
 
     return (
         <div
-            className={`min-h-screen w-full transition-colors duration-200 ${isDark ? "bg-[#000000] text-[#f4f4f6]" : "bg-[#ffffff] text-[#111111]"}`}
+            className={`legal-public-page min-h-screen w-full transition-colors duration-200 ${isDark ? "bg-[#000000] text-[#f4f4f6]" : "bg-[#ffffff] text-[#111111]"}`}
             style={{
                 fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif',
             }}
@@ -142,14 +132,7 @@ export function LinearLegalPage({ docMap, currentSlug }: LinearLegalPageProps) {
                     </div>
 
                     {/* 明暗模式切换 */}
-                    <button
-                        type="button"
-                        onClick={toggleTheme}
-                        className={`p-1.5 rounded-full border transition-colors ${isDark ? "border-white/15 bg-white/5 text-white/80 hover:text-white" : "border-black/15 bg-black/5 text-black/80 hover:text-black"}`}
-                        title={isDark ? "切换为明亮模式" : "切换为极黑高奢模式"}
-                    >
-                        {isDark ? <Sun className="size-3.5" /> : <Moon className="size-3.5" />}
-                    </button>
+                    <LegalThemeToggler />
                 </div>
             </header>
 
