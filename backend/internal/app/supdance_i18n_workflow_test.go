@@ -2,6 +2,7 @@ package app
 
 import (
 	"encoding/json"
+	"errors"
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
 	"testing"
@@ -9,6 +10,50 @@ import (
 	"yingce/backend/internal/repository"
 	i18n "yingce/backend/internal/supdance/i18n"
 )
+
+func TestSupDanceI18nWorkflowPostgresConcurrentRevision(t *testing.T) {
+	// The shared helper owns a unique schema and removes only that schema at cleanup.
+	svc, db := newProjectNameConflictPostgresService(t)
+	if err := db.AutoMigrate(&model.SystemSetting{}, &model.AdminAuditEvent{}); err != nil {
+		t.Fatal(err)
+	}
+	admin := &model.User{ID: "admin", Role: model.UserRoleAdmin}
+	zero := 0
+	draft := i18n.TranslationDraft{Entry: i18n.Entry{Key: "custom.concurrent", Namespace: "custom", SourceText: "并发草稿", Translations: map[string]string{i18n.LocaleZhCN: "并发草稿"}}, SourceHash: i18n.SourceHash("并发草稿")}
+	start := make(chan struct{})
+	results := make(chan error, 2)
+	for i := 0; i < 2; i++ {
+		go func() {
+			<-start
+			_, err := svc.UpdateSupDanceI18nWorkflow(admin, i18n.WorkflowRequest{Action: "stage", ExpectedRevision: &zero, Drafts: []i18n.TranslationDraft{draft}})
+			results <- err
+		}()
+	}
+	close(start)
+	succeeded, conflicted := 0, 0
+	for i := 0; i < 2; i++ {
+		err := <-results
+		if err == nil {
+			succeeded++
+		} else if errors.Is(err, i18n.ErrWorkflowConflict) {
+			conflicted++
+		} else {
+			t.Fatal(err)
+		}
+	}
+	if succeeded != 1 || conflicted != 1 {
+		t.Fatalf("success=%d conflict=%d", succeeded, conflicted)
+	}
+	state, err := svc.AdminSupDanceI18nWorkflow(admin)
+	if err != nil || state.Revision != 1 || len(state.Drafts) != 1 {
+		t.Fatal("concurrent state corrupted", state, err)
+	}
+	var count int64
+	db.Model(&model.AdminAuditEvent{}).Count(&count)
+	if count != 1 {
+		t.Fatalf("audit rows=%d", count)
+	}
+}
 
 func TestSupDanceI18nWorkflowPersistencePermissionsAndIsolation(t *testing.T) {
 	db, err := gorm.Open(sqlite.Open("file:"+newID()+"?mode=memory&cache=shared"), &gorm.Config{})
