@@ -3,7 +3,7 @@ package visualengine
 import (
 	"encoding/json"
 	"errors"
-	"fmt"
+	"github.com/google/uuid"
 	"slices"
 	"strings"
 	"sync"
@@ -236,8 +236,8 @@ func (s *Manager) publishVisualEngine(actor *model.User, config Config, comment,
 	}
 	now := time.Now().UTC()
 	config.UpdatedAt = now.Format(time.RFC3339Nano)
-	config.UpdatedBy = actor.Username
-	config.PublishedVersion = fmt.Sprintf("2.0.%d", now.UnixNano())
+	config.UpdatedBy = actor.ID
+	config.PublishedVersion = "2.0.0-" + uuid.NewString()
 	snapshot := Snapshot{Version: config.PublishedVersion, Timestamp: config.UpdatedAt, Actor: config.UpdatedBy, Summary: comment, Config: config, Action: action}
 	snapshots = append([]Snapshot{snapshot}, snapshots...)
 	if len(snapshots) > 50 {

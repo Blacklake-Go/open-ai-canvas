@@ -9,12 +9,32 @@ const baseline = structuredClone(DEFAULT_VISUAL_ENGINE_CONFIG);
 function overview(config = baseline): VisualEngineAdminOverview {
     return { bundle: { pluginId: "supdance-visual-engine", enabled: true, version: config.publishedVersion, config, revision: "server-revision" }, snapshots: [], auditLogs: [], draft: null, canPublish: true, canRollback: false };
 }
-afterEach(() => { apiClient.request = originalRequest; });
+afterEach(() => {
+    apiClient.request = originalRequest;
+});
 
 describe("visual engine server persistence", () => {
+    test("account reset rejects a late publication response", async () => {
+        useVisualEngineStore.getState().acceptOverview(overview());
+        let resolveRequest!: (value: unknown) => void;
+        apiClient.request = (() =>
+            new Promise((resolve) => {
+                resolveRequest = resolve;
+            })) as typeof apiClient.request;
+        const pending = useVisualEngineStore.getState().publishDraft();
+        useVisualEngineStore.getState().resetSession();
+        const late = structuredClone(baseline);
+        late.publishedVersion = "late-admin-version";
+        resolveRequest({ data: { code: 0, msg: "ok", data: overview(late) }, status: 200 });
+        expect((await pending).success).toBe(false);
+        expect(useVisualEngineStore.getState().config.publishedVersion).toBe(baseline.publishedVersion);
+        expect(useVisualEngineStore.getState().permissions).toEqual([]);
+    });
     test("draft is isolated and publication only adopts a successful server response", async () => {
         useVisualEngineStore.getState().acceptOverview(overview());
-        useVisualEngineStore.getState().updateDraft((draft) => { draft.components.buttonRadius = 18; });
+        useVisualEngineStore.getState().updateDraft((draft) => {
+            draft.components.buttonRadius = 18;
+        });
         expect(useVisualEngineStore.getState().config.components.buttonRadius).toBe(baseline.components.buttonRadius);
         let called = false;
         apiClient.request = (async (options: { url: string; data: { expectedRevision: string; config: typeof baseline } }) => {
@@ -35,7 +55,9 @@ describe("visual engine server persistence", () => {
 
     test("server rejects publication without changing the stable configuration or losing draft", async () => {
         useVisualEngineStore.getState().acceptOverview(overview());
-        useVisualEngineStore.getState().updateDraft((draft) => { draft.components.buttonRadius = 16; });
+        useVisualEngineStore.getState().updateDraft((draft) => {
+            draft.components.buttonRadius = 16;
+        });
         apiClient.request = (async () => ({ data: { code: 409, msg: "revision conflict", data: null }, status: 200 })) as typeof apiClient.request;
         const result = await useVisualEngineStore.getState().publishDraft();
         expect(result.success).toBe(false);

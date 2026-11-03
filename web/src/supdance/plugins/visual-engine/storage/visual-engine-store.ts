@@ -1,4 +1,5 @@
 import { create } from "zustand";
+import { notifyPluginStateChanged } from "@/supdance/adapters/plugin-state-sync";
 import type { VisualEnginePermission, VisualEngineInstallation } from "../api/visual-engine-api";
 import type { VisualEngineConfig, VisualEngineSnapshot, AuditLogEntry, PresetId } from "../types";
 import { DEFAULT_VISUAL_ENGINE_CONFIG, BUILTIN_THEME_PRESETS } from "../config/default-config";
@@ -7,7 +8,9 @@ import { apiPublishVisualEngineConfig, apiRollbackVisualEngineConfig, apiSaveVis
 
 export type ConsoleModuleKey = "dashboard" | "themes" | "colors" | "typography" | "components" | "effects" | "interactions" | "motion" | "loading" | "pagerules" | "preview" | "presets" | "versions" | "diagnostics" | "auditlogs";
 type MutationResult = { success: boolean; error?: string };
+let sessionEpoch = 0;
 type VisualEngineState = {
+    resetSession: () => void;
     permissions: VisualEnginePermission[];
     setPermissions: (permissions: VisualEnginePermission[]) => void;
     installation: VisualEngineInstallation;
@@ -41,6 +44,10 @@ type VisualEngineState = {
 };
 
 export const useVisualEngineStore = create<VisualEngineState>((set, get) => ({
+    resetSession: () => {
+        sessionEpoch++;
+        set({ permissions: [], snapshots: [], auditLogs: [], draftConfig: structuredClone(get().config), isDraftDirty: false, isSaving: false, isPublishing: false });
+    },
     permissions: [],
     setPermissions: (permissions) => set({ permissions }),
     installation: { installed: true, version: "2.0.0", availableVersion: "2.0.1", configRetained: true },
@@ -78,20 +85,23 @@ export const useVisualEngineStore = create<VisualEngineState>((set, get) => ({
         });
     },
     saveDraft: async () => {
+        const epoch = sessionEpoch;
         if (get().isSaving || get().isPublishing) return { success: false, error: "操作正在进行" };
         set({ isSaving: true });
         try {
             const validation = validateVisualEngineConfig(get().draftConfig);
             if (!validation.valid) throw new Error(validation.errors.join("；"));
             await apiSaveVisualEngineDraft(validation.config);
+            if (epoch !== sessionEpoch) throw new Error("账号已变化，请重新读取配置");
             return { success: true };
         } catch (error) {
             return { success: false, error: error instanceof Error ? error.message : "草稿保存失败" };
         } finally {
-            set({ isSaving: false });
+            if (epoch === sessionEpoch) set({ isSaving: false });
         }
     },
     publishDraft: async (_actor, summary = "发布视觉配置变更") => {
+        const epoch = sessionEpoch;
         if (get().isPublishing) return { success: false, error: "操作正在进行" };
         set({ isPublishing: true });
         try {
@@ -99,26 +109,31 @@ export const useVisualEngineStore = create<VisualEngineState>((set, get) => ({
             if (!validation.valid) throw new Error(validation.errors.join("；"));
             if (!get().revision) throw new Error("请先加载服务端配置");
             const overview = await apiPublishVisualEngineConfig(validation.config, summary, get().revision);
+            if (epoch !== sessionEpoch) throw new Error("账号已变化，请重新读取配置");
             get().acceptOverview({ ...overview, draft: null });
+            if (typeof window !== "undefined") notifyPluginStateChanged();
             return { success: true };
         } catch (error) {
             return { success: false, error: error instanceof Error ? error.message : "发布失败" };
         } finally {
-            set({ isPublishing: false });
+            if (epoch === sessionEpoch) set({ isPublishing: false });
         }
     },
     rollbackToSnapshot: async (version) => {
+        const epoch = sessionEpoch;
         if (get().isPublishing) return { success: false, error: "操作正在进行" };
         set({ isPublishing: true });
         try {
             if (!get().revision) throw new Error("请先加载服务端配置");
             const overview = await apiRollbackVisualEngineConfig(version, get().revision);
+            if (epoch !== sessionEpoch) throw new Error("账号已变化，请重新读取配置");
             get().acceptOverview({ ...overview, draft: null });
+            if (typeof window !== "undefined") notifyPluginStateChanged();
             return { success: true };
         } catch (error) {
             return { success: false, error: error instanceof Error ? error.message : "回滚失败" };
         } finally {
-            set({ isPublishing: false });
+            if (epoch === sessionEpoch) set({ isPublishing: false });
         }
     },
     acceptBundle: (bundle) => {

@@ -11,7 +11,14 @@ import (
 
 var hexColor = regexp.MustCompile(`^#([0-9a-fA-F]{3}|[0-9a-fA-F]{6})$`)
 var easing = regexp.MustCompile(`^(linear|ease|ease-in|ease-out|ease-in-out|cubic-bezier\([-0-9., ]+\))$`)
-var shadow = regexp.MustCompile(`^(none|[-0-9.pxrgba(), #%]+)$`)
+
+const shadowLength = `(?:0|(?:\d+(?:\.\d+)?|\.\d+)(?:px|rem|em))`
+const shadowChannel = `(?:25[0-5]|2[0-4]\d|1?\d{1,2})`
+const shadowAlpha = `(?:0(?:\.\d+)?|1(?:\.0+)?|\.\d+)`
+const shadowColor = `(?:#[0-9a-fA-F]{3}(?:[0-9a-fA-F]{3})?|rgb\(\s*` + shadowChannel + `\s*,\s*` + shadowChannel + `\s*,\s*` + shadowChannel + `\s*\)|rgba\(\s*` + shadowChannel + `\s*,\s*` + shadowChannel + `\s*,\s*` + shadowChannel + `\s*,\s*` + shadowAlpha + `\s*\)|transparent|black|white)`
+const singleShadow = `(?:inset\s+)?[+-]?` + shadowLength + `\s+[+-]?` + shadowLength + `(?:\s+` + shadowLength + `(?:\s+[+-]?` + shadowLength + `)?)?\s+` + shadowColor
+
+var shadow = regexp.MustCompile(`^(?:none|` + singleShadow + `(?:,\s*` + singleShadow + `)*)$`)
 
 func ValidateConfig(config Config) error {
 	if config.SchemaVersion != 2 {
@@ -22,6 +29,9 @@ func ValidateConfig(config Config) error {
 	}
 	if len(config.ActivePreset) == 0 || len(config.ActivePreset) > 80 {
 		return fmt.Errorf("主题标识无效")
+	}
+	if len(config.Tokens) != 2 || len(config.Elevations) != 5 {
+		return fmt.Errorf("主题或阴影层级存在未知字段")
 	}
 	for _, mode := range []string{"light", "dark"} {
 		tokens, found := config.Tokens[mode]
@@ -47,7 +57,7 @@ func ValidateConfig(config Config) error {
 	}
 	for _, level := range []string{"E0", "E1", "E2", "E3", "E4"} {
 		token, found := config.Elevations[level]
-		if !found || !shadow.MatchString(token.ShadowLight) || !shadow.MatchString(token.ShadowDark) || len(token.ShadowLight) > 240 || len(token.ShadowDark) > 240 || token.BlurRadius < 0 || token.BlurRadius > 100 {
+		if !found || token.Level != level || !shadow.MatchString(token.ShadowLight) || !shadow.MatchString(token.ShadowDark) || len(token.ShadowLight) > 240 || len(token.ShadowDark) > 240 || token.BlurRadius < 0 || token.BlurRadius > 100 {
 			return fmt.Errorf("阴影配置无效：%s", level)
 		}
 	}
