@@ -320,6 +320,224 @@
         }
       },
       {
+        "id": "runninghub-standard-image-youchuan",
+        "label": "RunningHub Standard Image (Midjourney/悠船)",
+        "capabilities": [
+          "image"
+        ],
+        "scopes": [
+          "admin.system-channel",
+          "user.custom-channel",
+          "canvas",
+          "creation",
+          "agent"
+        ],
+        "baseUrl": "https://www.runninghub.ai",
+        "requiresPublicMediaUrls": false,
+        "auth": {
+          "type": "bearer",
+          "field": "apiKey"
+        },
+        "parameters": [
+          {
+            "name": "model",
+            "type": "string",
+            "required": true,
+            "mapping": "create path",
+            "description": "RunningHub 标准模型端点，如 rhart-image-g-2-official/text-to-image。"
+          },
+          {
+            "name": "prompt",
+            "type": "string",
+            "required": true,
+            "mapping": "prompt",
+            "description": "图片提示词或编辑指令。"
+          },
+          {
+            "name": "images",
+            "type": "media[]",
+            "required": false,
+            "mapping": "imageUrls",
+            "description": "参考图或编辑源图，图生图端点必填。"
+          },
+          {
+            "name": "aspectRatio",
+            "type": "string",
+            "required": false,
+            "mapping": "aspectRatio",
+            "description": "画幅比例，如 16:9。"
+          },
+          {
+            "name": "resolution",
+            "type": "string",
+            "required": false,
+            "mapping": "resolution",
+            "description": "分辨率档位 1k/2k/4k，多数端点必填。"
+          },
+          {
+            "name": "quality",
+            "type": "string",
+            "required": false,
+            "mapping": "quality",
+            "description": "质量档位 low/medium/high，仅部分端点接受。"
+          },
+          {
+            "name": "seed",
+            "type": "integer",
+            "required": false,
+            "mapping": "seed",
+            "description": "随机种子。"
+          },
+          {
+            "name": "providerOptions",
+            "type": "object",
+            "required": false,
+            "mapping": "provider-specific fields",
+            "description": "插件命名空间内的厂商扩展字段。"
+          },
+          {
+            "name": "familyDefaults",
+            "type": "object",
+            "required": false,
+            "mapping": "hd=false",
+            "description": "悠船 v8.2 族专用：上游必填 hd。"
+          }
+        ],
+        "imageParameters": [
+          {
+            "name": "size",
+            "label": "画幅比例",
+            "type": "string",
+            "binding": "aspectRatio"
+          },
+          {
+            "name": "imageResolution",
+            "label": "分辨率",
+            "type": "string",
+            "values": [
+              "1k",
+              "2k",
+              "4k"
+            ],
+            "default": "1k",
+            "pricing": true,
+            "binding": "resolution"
+          },
+          {
+            "name": "quality",
+            "label": "质量",
+            "type": "string",
+            "pricing": true,
+            "values": [
+              "low",
+              "medium",
+              "high"
+            ],
+            "default": "medium",
+            "binding": "quality"
+          }
+        ],
+        "create": {
+          "method": "POST",
+          "path": "/openapi/v2/{{request.model}}",
+          "contentType": "application/json",
+          "body": {
+            "prompt": {
+              "$ref": "request.prompt"
+            },
+            "imageUrls": {
+              "$omitEmpty": {
+                "$map": {
+                  "from": {
+                    "$ref": "request.images"
+                  },
+                  "as": "media",
+                  "in": {
+                    "$ref": "media.value"
+                  }
+                }
+              }
+            },
+            "aspectRatio": {
+              "$omitEmpty": {
+                "$ref": "request.aspectRatio"
+              }
+            },
+            "resolution": {
+              "$omitEmpty": {
+                "$ref": "request.resolution"
+              }
+            },
+            "quality": {
+              "$omitEmpty": {
+                "$ref": "request.quality"
+              }
+            },
+            "seed": {
+              "$omitEmpty": {
+                "$ref": "request.seed"
+              }
+            },
+            "hd": false
+          },
+          "originPath": true
+        },
+        "poll": {
+          "method": "POST",
+          "path": "/openapi/v2/query",
+          "contentType": "application/json",
+          "body": {
+            "taskId": {
+              "$ref": "taskId"
+            }
+          },
+          "originPath": true
+        },
+        "response": {
+          "taskId": {
+            "$coalesce": [
+              {
+                "$ref": "response.taskId"
+              },
+              {
+                "$ref": "taskId"
+              }
+            ]
+          },
+          "status": {
+            "$coalesce": [
+              {
+                "$ref": "response.status"
+              },
+              "pending"
+            ]
+          },
+          "message": {
+            "$coalesce": [
+              {
+                "$ref": "response.errorMessage"
+              },
+              {
+                "$ref": "response.errorCode"
+              }
+            ]
+          },
+          "images": {
+            "$ref": "response.results"
+          },
+          "errorPaths": [
+            "errorCode"
+          ],
+          "messagePaths": [
+            "errorMessage"
+          ],
+          "resultEphemeral": true,
+          "usage": {
+            "$ref": "response.usage"
+          }
+        }
+      },
+      {
         "id": "runninghub-standard-video",
         "label": "RunningHub Standard Video",
         "capabilities": [
@@ -879,6 +1097,1610 @@
             "prompt": {
               "$ref": "request.prompt"
             }
+          },
+          "originPath": true
+        },
+        "poll": {
+          "method": "POST",
+          "path": "/openapi/v2/query",
+          "contentType": "application/json",
+          "body": {
+            "taskId": {
+              "$ref": "taskId"
+            }
+          },
+          "originPath": true
+        },
+        "response": {
+          "taskId": {
+            "$coalesce": [
+              {
+                "$ref": "response.taskId"
+              },
+              {
+                "$ref": "taskId"
+              }
+            ]
+          },
+          "status": {
+            "$coalesce": [
+              {
+                "$ref": "response.status"
+              },
+              "pending"
+            ]
+          },
+          "message": {
+            "$coalesce": [
+              {
+                "$ref": "response.errorMessage"
+              },
+              {
+                "$ref": "response.errorCode"
+              }
+            ]
+          },
+          "videos": {
+            "$ref": "response.results"
+          },
+          "errorPaths": [
+            "errorCode"
+          ],
+          "messagePaths": [
+            "errorMessage"
+          ],
+          "resultEphemeral": true,
+          "usage": {
+            "$ref": "response.usage"
+          }
+        }
+      },
+      {
+        "id": "runninghub-standard-video-vidu",
+        "label": "RunningHub Standard Video (Vidu)",
+        "capabilities": [
+          "video"
+        ],
+        "scopes": [
+          "admin.system-channel",
+          "user.custom-channel",
+          "canvas",
+          "creation",
+          "agent"
+        ],
+        "baseUrl": "https://www.runninghub.ai",
+        "requiresPublicMediaUrls": false,
+        "auth": {
+          "type": "bearer",
+          "field": "apiKey"
+        },
+        "parameters": [
+          {
+            "name": "model",
+            "type": "string",
+            "required": true,
+            "mapping": "create path",
+            "description": "RunningHub 标准模型端点，如 kling-v4/image-to-video。"
+          },
+          {
+            "name": "prompt",
+            "type": "string",
+            "required": true,
+            "mapping": "prompt",
+            "description": "视频提示词。"
+          },
+          {
+            "name": "images",
+            "type": "media[]",
+            "required": false,
+            "mapping": "imageUrl/firstImageUrl/lastImageUrl/imageUrls",
+            "description": "首帧、尾帧或参考图；单图同时映射 imageUrl 与 firstImageUrl。"
+          },
+          {
+            "name": "videos",
+            "type": "media[]",
+            "required": false,
+            "mapping": "videoUrl/videoUrls",
+            "description": "参考视频输入。"
+          },
+          {
+            "name": "audios",
+            "type": "media[]",
+            "required": false,
+            "mapping": "audioUrl",
+            "description": "参考音频输入。"
+          },
+          {
+            "name": "duration",
+            "type": "integer",
+            "required": false,
+            "mapping": "duration (string)",
+            "description": "时长秒数，上游按字符串接收。"
+          },
+          {
+            "name": "aspectRatio",
+            "type": "string",
+            "required": false,
+            "mapping": "aspectRatio",
+            "description": "画幅比例。"
+          },
+          {
+            "name": "resolution",
+            "type": "string",
+            "required": false,
+            "mapping": "resolution",
+            "description": "分辨率档位，如 720p/1080p。"
+          },
+          {
+            "name": "quality",
+            "type": "string",
+            "required": false,
+            "mapping": "quality",
+            "description": "质量档位，仅部分端点接受。"
+          },
+          {
+            "name": "watermark",
+            "type": "boolean",
+            "required": false,
+            "mapping": "watermark",
+            "description": "水印开关。"
+          },
+          {
+            "name": "seed",
+            "type": "integer",
+            "required": false,
+            "mapping": "seed",
+            "description": "随机种子。"
+          },
+          {
+            "name": "providerOptions",
+            "type": "object",
+            "required": false,
+            "mapping": "provider-specific fields",
+            "description": "插件命名空间内的厂商扩展字段。"
+          },
+          {
+            "name": "familyDefaults",
+            "type": "object",
+            "required": false,
+            "mapping": "movementAmplitude=auto, bgm=false",
+            "description": "Vidu 族专用：上游必填 movementAmplitude 与 bgm，由该 provider 固定给出。"
+          }
+        ],
+        "create": {
+          "method": "POST",
+          "path": "/openapi/v2/{{request.model}}",
+          "contentType": "application/json",
+          "body": {
+            "prompt": {
+              "$ref": "request.prompt"
+            },
+            "imageUrl": {
+              "$omitEmpty": {
+                "$first": {
+                  "$map": {
+                    "from": {
+                      "$ref": "request.images"
+                    },
+                    "as": "media",
+                    "in": {
+                      "$ref": "media.value"
+                    }
+                  }
+                }
+              }
+            },
+            "firstImageUrl": {
+              "$omitEmpty": {
+                "$first": {
+                  "$map": {
+                    "from": {
+                      "$ref": "request.images"
+                    },
+                    "as": "media",
+                    "in": {
+                      "$ref": "media.value"
+                    }
+                  }
+                }
+              }
+            },
+            "lastImageUrl": {
+              "$omitEmpty": {
+                "$first": {
+                  "$map": {
+                    "from": {
+                      "$filter": {
+                        "from": {
+                          "$ref": "request.images"
+                        },
+                        "as": "media",
+                        "where": {
+                          "$eq": [
+                            {
+                              "$ref": "media.role"
+                            },
+                            "last"
+                          ]
+                        }
+                      }
+                    },
+                    "as": "media",
+                    "in": {
+                      "$ref": "media.value"
+                    }
+                  }
+                }
+              }
+            },
+            "imageUrls": {
+              "$omitEmpty": {
+                "$map": {
+                  "from": {
+                    "$ref": "request.images"
+                  },
+                  "as": "media",
+                  "in": {
+                    "$ref": "media.value"
+                  }
+                }
+              }
+            },
+            "videoUrl": {
+              "$omitEmpty": {
+                "$first": {
+                  "$map": {
+                    "from": {
+                      "$ref": "request.videos"
+                    },
+                    "as": "media",
+                    "in": {
+                      "$ref": "media.value"
+                    }
+                  }
+                }
+              }
+            },
+            "audioUrl": {
+              "$omitEmpty": {
+                "$first": {
+                  "$map": {
+                    "from": {
+                      "$ref": "request.audios"
+                    },
+                    "as": "media",
+                    "in": {
+                      "$ref": "media.value"
+                    }
+                  }
+                }
+              }
+            },
+            "duration": {
+              "$omitEmpty": {
+                "$toString": {
+                  "$ref": "request.duration"
+                }
+              }
+            },
+            "aspectRatio": {
+              "$omitEmpty": {
+                "$ref": "request.aspectRatio"
+              }
+            },
+            "resolution": {
+              "$omitEmpty": {
+                "$ref": "request.resolution"
+              }
+            },
+            "quality": {
+              "$omitEmpty": {
+                "$ref": "request.quality"
+              }
+            },
+            "watermark": {
+              "$omitEmpty": {
+                "$ref": "request.watermark"
+              }
+            },
+            "seed": {
+              "$omitEmpty": {
+                "$ref": "request.seed"
+              }
+            },
+            "movementAmplitude": "auto",
+            "bgm": false
+          },
+          "originPath": true
+        },
+        "poll": {
+          "method": "POST",
+          "path": "/openapi/v2/query",
+          "contentType": "application/json",
+          "body": {
+            "taskId": {
+              "$ref": "taskId"
+            }
+          },
+          "originPath": true
+        },
+        "response": {
+          "taskId": {
+            "$coalesce": [
+              {
+                "$ref": "response.taskId"
+              },
+              {
+                "$ref": "taskId"
+              }
+            ]
+          },
+          "status": {
+            "$coalesce": [
+              {
+                "$ref": "response.status"
+              },
+              "pending"
+            ]
+          },
+          "message": {
+            "$coalesce": [
+              {
+                "$ref": "response.errorMessage"
+              },
+              {
+                "$ref": "response.errorCode"
+              }
+            ]
+          },
+          "videos": {
+            "$ref": "response.results"
+          },
+          "errorPaths": [
+            "errorCode"
+          ],
+          "messagePaths": [
+            "errorMessage"
+          ],
+          "resultEphemeral": true,
+          "usage": {
+            "$ref": "response.usage"
+          }
+        }
+      },
+      {
+        "id": "runninghub-standard-video-seedance",
+        "label": "RunningHub Standard Video (Seedance)",
+        "capabilities": [
+          "video"
+        ],
+        "scopes": [
+          "admin.system-channel",
+          "user.custom-channel",
+          "canvas",
+          "creation",
+          "agent"
+        ],
+        "baseUrl": "https://www.runninghub.ai",
+        "requiresPublicMediaUrls": false,
+        "auth": {
+          "type": "bearer",
+          "field": "apiKey"
+        },
+        "parameters": [
+          {
+            "name": "model",
+            "type": "string",
+            "required": true,
+            "mapping": "create path",
+            "description": "RunningHub 标准模型端点，如 kling-v4/image-to-video。"
+          },
+          {
+            "name": "prompt",
+            "type": "string",
+            "required": true,
+            "mapping": "prompt",
+            "description": "视频提示词。"
+          },
+          {
+            "name": "images",
+            "type": "media[]",
+            "required": false,
+            "mapping": "imageUrl/firstImageUrl/lastImageUrl/imageUrls",
+            "description": "首帧、尾帧或参考图；单图同时映射 imageUrl 与 firstImageUrl。"
+          },
+          {
+            "name": "videos",
+            "type": "media[]",
+            "required": false,
+            "mapping": "videoUrl/videoUrls",
+            "description": "参考视频输入。"
+          },
+          {
+            "name": "audios",
+            "type": "media[]",
+            "required": false,
+            "mapping": "audioUrl",
+            "description": "参考音频输入。"
+          },
+          {
+            "name": "duration",
+            "type": "integer",
+            "required": false,
+            "mapping": "duration (string)",
+            "description": "时长秒数，上游按字符串接收。"
+          },
+          {
+            "name": "aspectRatio",
+            "type": "string",
+            "required": false,
+            "mapping": "aspectRatio",
+            "description": "画幅比例。"
+          },
+          {
+            "name": "resolution",
+            "type": "string",
+            "required": false,
+            "mapping": "resolution",
+            "description": "分辨率档位，如 720p/1080p。"
+          },
+          {
+            "name": "quality",
+            "type": "string",
+            "required": false,
+            "mapping": "quality",
+            "description": "质量档位，仅部分端点接受。"
+          },
+          {
+            "name": "watermark",
+            "type": "boolean",
+            "required": false,
+            "mapping": "watermark",
+            "description": "水印开关。"
+          },
+          {
+            "name": "seed",
+            "type": "integer",
+            "required": false,
+            "mapping": "seed",
+            "description": "随机种子。"
+          },
+          {
+            "name": "providerOptions",
+            "type": "object",
+            "required": false,
+            "mapping": "provider-specific fields",
+            "description": "插件命名空间内的厂商扩展字段。"
+          },
+          {
+            "name": "familyDefaults",
+            "type": "object",
+            "required": false,
+            "mapping": "firstFrameUrl/lastFrameUrl + generateAudio=false",
+            "description": "Seedance 族专用：上游用 firstFrameUrl/lastFrameUrl 命名首尾帧，并要求 generateAudio。"
+          }
+        ],
+        "create": {
+          "method": "POST",
+          "path": "/openapi/v2/{{request.model}}",
+          "contentType": "application/json",
+          "body": {
+            "prompt": {
+              "$ref": "request.prompt"
+            },
+            "imageUrl": {
+              "$omitEmpty": {
+                "$first": {
+                  "$map": {
+                    "from": {
+                      "$ref": "request.images"
+                    },
+                    "as": "media",
+                    "in": {
+                      "$ref": "media.value"
+                    }
+                  }
+                }
+              }
+            },
+            "firstImageUrl": {
+              "$omitEmpty": {
+                "$first": {
+                  "$map": {
+                    "from": {
+                      "$ref": "request.images"
+                    },
+                    "as": "media",
+                    "in": {
+                      "$ref": "media.value"
+                    }
+                  }
+                }
+              }
+            },
+            "lastImageUrl": {
+              "$omitEmpty": {
+                "$first": {
+                  "$map": {
+                    "from": {
+                      "$filter": {
+                        "from": {
+                          "$ref": "request.images"
+                        },
+                        "as": "media",
+                        "where": {
+                          "$eq": [
+                            {
+                              "$ref": "media.role"
+                            },
+                            "last"
+                          ]
+                        }
+                      }
+                    },
+                    "as": "media",
+                    "in": {
+                      "$ref": "media.value"
+                    }
+                  }
+                }
+              }
+            },
+            "imageUrls": {
+              "$omitEmpty": {
+                "$map": {
+                  "from": {
+                    "$ref": "request.images"
+                  },
+                  "as": "media",
+                  "in": {
+                    "$ref": "media.value"
+                  }
+                }
+              }
+            },
+            "videoUrl": {
+              "$omitEmpty": {
+                "$first": {
+                  "$map": {
+                    "from": {
+                      "$ref": "request.videos"
+                    },
+                    "as": "media",
+                    "in": {
+                      "$ref": "media.value"
+                    }
+                  }
+                }
+              }
+            },
+            "audioUrl": {
+              "$omitEmpty": {
+                "$first": {
+                  "$map": {
+                    "from": {
+                      "$ref": "request.audios"
+                    },
+                    "as": "media",
+                    "in": {
+                      "$ref": "media.value"
+                    }
+                  }
+                }
+              }
+            },
+            "duration": {
+              "$omitEmpty": {
+                "$toString": {
+                  "$ref": "request.duration"
+                }
+              }
+            },
+            "aspectRatio": {
+              "$omitEmpty": {
+                "$ref": "request.aspectRatio"
+              }
+            },
+            "resolution": {
+              "$omitEmpty": {
+                "$ref": "request.resolution"
+              }
+            },
+            "quality": {
+              "$omitEmpty": {
+                "$ref": "request.quality"
+              }
+            },
+            "watermark": {
+              "$omitEmpty": {
+                "$ref": "request.watermark"
+              }
+            },
+            "seed": {
+              "$omitEmpty": {
+                "$ref": "request.seed"
+              }
+            },
+            "firstFrameUrl": {
+              "$omitEmpty": {
+                "$first": {
+                  "$map": {
+                    "from": {
+                      "$ref": "request.images"
+                    },
+                    "as": "media",
+                    "in": {
+                      "$ref": "media.value"
+                    }
+                  }
+                }
+              }
+            },
+            "lastFrameUrl": {
+              "$omitEmpty": {
+                "$first": {
+                  "$map": {
+                    "from": {
+                      "$filter": {
+                        "from": {
+                          "$ref": "request.images"
+                        },
+                        "as": "media",
+                        "where": {
+                          "$eq": [
+                            {
+                              "$ref": "media.role"
+                            },
+                            "last"
+                          ]
+                        }
+                      }
+                    },
+                    "as": "media",
+                    "in": {
+                      "$ref": "media.value"
+                    }
+                  }
+                }
+              }
+            },
+            "generateAudio": false
+          },
+          "originPath": true
+        },
+        "poll": {
+          "method": "POST",
+          "path": "/openapi/v2/query",
+          "contentType": "application/json",
+          "body": {
+            "taskId": {
+              "$ref": "taskId"
+            }
+          },
+          "originPath": true
+        },
+        "response": {
+          "taskId": {
+            "$coalesce": [
+              {
+                "$ref": "response.taskId"
+              },
+              {
+                "$ref": "taskId"
+              }
+            ]
+          },
+          "status": {
+            "$coalesce": [
+              {
+                "$ref": "response.status"
+              },
+              "pending"
+            ]
+          },
+          "message": {
+            "$coalesce": [
+              {
+                "$ref": "response.errorMessage"
+              },
+              {
+                "$ref": "response.errorCode"
+              }
+            ]
+          },
+          "videos": {
+            "$ref": "response.results"
+          },
+          "errorPaths": [
+            "errorCode"
+          ],
+          "messagePaths": [
+            "errorMessage"
+          ],
+          "resultEphemeral": true,
+          "usage": {
+            "$ref": "response.usage"
+          }
+        }
+      },
+      {
+        "id": "runninghub-standard-video-minimax",
+        "label": "RunningHub Standard Video (MiniMax)",
+        "capabilities": [
+          "video"
+        ],
+        "scopes": [
+          "admin.system-channel",
+          "user.custom-channel",
+          "canvas",
+          "creation",
+          "agent"
+        ],
+        "baseUrl": "https://www.runninghub.ai",
+        "requiresPublicMediaUrls": false,
+        "auth": {
+          "type": "bearer",
+          "field": "apiKey"
+        },
+        "parameters": [
+          {
+            "name": "model",
+            "type": "string",
+            "required": true,
+            "mapping": "create path",
+            "description": "RunningHub 标准模型端点，如 kling-v4/image-to-video。"
+          },
+          {
+            "name": "prompt",
+            "type": "string",
+            "required": true,
+            "mapping": "prompt",
+            "description": "视频提示词。"
+          },
+          {
+            "name": "images",
+            "type": "media[]",
+            "required": false,
+            "mapping": "imageUrl/firstImageUrl/lastImageUrl/imageUrls",
+            "description": "首帧、尾帧或参考图；单图同时映射 imageUrl 与 firstImageUrl。"
+          },
+          {
+            "name": "videos",
+            "type": "media[]",
+            "required": false,
+            "mapping": "videoUrl/videoUrls",
+            "description": "参考视频输入。"
+          },
+          {
+            "name": "audios",
+            "type": "media[]",
+            "required": false,
+            "mapping": "audioUrl",
+            "description": "参考音频输入。"
+          },
+          {
+            "name": "duration",
+            "type": "integer",
+            "required": false,
+            "mapping": "duration (string)",
+            "description": "时长秒数，上游按字符串接收。"
+          },
+          {
+            "name": "aspectRatio",
+            "type": "string",
+            "required": false,
+            "mapping": "aspectRatio",
+            "description": "画幅比例。"
+          },
+          {
+            "name": "resolution",
+            "type": "string",
+            "required": false,
+            "mapping": "resolution",
+            "description": "分辨率档位，如 720p/1080p。"
+          },
+          {
+            "name": "quality",
+            "type": "string",
+            "required": false,
+            "mapping": "quality",
+            "description": "质量档位，仅部分端点接受。"
+          },
+          {
+            "name": "watermark",
+            "type": "boolean",
+            "required": false,
+            "mapping": "watermark",
+            "description": "水印开关。"
+          },
+          {
+            "name": "seed",
+            "type": "integer",
+            "required": false,
+            "mapping": "seed",
+            "description": "随机种子。"
+          },
+          {
+            "name": "providerOptions",
+            "type": "object",
+            "required": false,
+            "mapping": "provider-specific fields",
+            "description": "插件命名空间内的厂商扩展字段。"
+          },
+          {
+            "name": "familyDefaults",
+            "type": "object",
+            "required": false,
+            "mapping": "enablePromptExpansion=false",
+            "description": "MiniMax 海螺族专用：上游必填 enablePromptExpansion。"
+          }
+        ],
+        "create": {
+          "method": "POST",
+          "path": "/openapi/v2/{{request.model}}",
+          "contentType": "application/json",
+          "body": {
+            "prompt": {
+              "$ref": "request.prompt"
+            },
+            "imageUrl": {
+              "$omitEmpty": {
+                "$first": {
+                  "$map": {
+                    "from": {
+                      "$ref": "request.images"
+                    },
+                    "as": "media",
+                    "in": {
+                      "$ref": "media.value"
+                    }
+                  }
+                }
+              }
+            },
+            "firstImageUrl": {
+              "$omitEmpty": {
+                "$first": {
+                  "$map": {
+                    "from": {
+                      "$ref": "request.images"
+                    },
+                    "as": "media",
+                    "in": {
+                      "$ref": "media.value"
+                    }
+                  }
+                }
+              }
+            },
+            "lastImageUrl": {
+              "$omitEmpty": {
+                "$first": {
+                  "$map": {
+                    "from": {
+                      "$filter": {
+                        "from": {
+                          "$ref": "request.images"
+                        },
+                        "as": "media",
+                        "where": {
+                          "$eq": [
+                            {
+                              "$ref": "media.role"
+                            },
+                            "last"
+                          ]
+                        }
+                      }
+                    },
+                    "as": "media",
+                    "in": {
+                      "$ref": "media.value"
+                    }
+                  }
+                }
+              }
+            },
+            "imageUrls": {
+              "$omitEmpty": {
+                "$map": {
+                  "from": {
+                    "$ref": "request.images"
+                  },
+                  "as": "media",
+                  "in": {
+                    "$ref": "media.value"
+                  }
+                }
+              }
+            },
+            "videoUrl": {
+              "$omitEmpty": {
+                "$first": {
+                  "$map": {
+                    "from": {
+                      "$ref": "request.videos"
+                    },
+                    "as": "media",
+                    "in": {
+                      "$ref": "media.value"
+                    }
+                  }
+                }
+              }
+            },
+            "audioUrl": {
+              "$omitEmpty": {
+                "$first": {
+                  "$map": {
+                    "from": {
+                      "$ref": "request.audios"
+                    },
+                    "as": "media",
+                    "in": {
+                      "$ref": "media.value"
+                    }
+                  }
+                }
+              }
+            },
+            "duration": {
+              "$omitEmpty": {
+                "$toString": {
+                  "$ref": "request.duration"
+                }
+              }
+            },
+            "aspectRatio": {
+              "$omitEmpty": {
+                "$ref": "request.aspectRatio"
+              }
+            },
+            "resolution": {
+              "$omitEmpty": {
+                "$ref": "request.resolution"
+              }
+            },
+            "quality": {
+              "$omitEmpty": {
+                "$ref": "request.quality"
+              }
+            },
+            "watermark": {
+              "$omitEmpty": {
+                "$ref": "request.watermark"
+              }
+            },
+            "seed": {
+              "$omitEmpty": {
+                "$ref": "request.seed"
+              }
+            },
+            "enablePromptExpansion": false
+          },
+          "originPath": true
+        },
+        "poll": {
+          "method": "POST",
+          "path": "/openapi/v2/query",
+          "contentType": "application/json",
+          "body": {
+            "taskId": {
+              "$ref": "taskId"
+            }
+          },
+          "originPath": true
+        },
+        "response": {
+          "taskId": {
+            "$coalesce": [
+              {
+                "$ref": "response.taskId"
+              },
+              {
+                "$ref": "taskId"
+              }
+            ]
+          },
+          "status": {
+            "$coalesce": [
+              {
+                "$ref": "response.status"
+              },
+              "pending"
+            ]
+          },
+          "message": {
+            "$coalesce": [
+              {
+                "$ref": "response.errorMessage"
+              },
+              {
+                "$ref": "response.errorCode"
+              }
+            ]
+          },
+          "videos": {
+            "$ref": "response.results"
+          },
+          "errorPaths": [
+            "errorCode"
+          ],
+          "messagePaths": [
+            "errorMessage"
+          ],
+          "resultEphemeral": true,
+          "usage": {
+            "$ref": "response.usage"
+          }
+        }
+      },
+      {
+        "id": "runninghub-standard-video-skyreels",
+        "label": "RunningHub Standard Video (SkyReels)",
+        "capabilities": [
+          "video"
+        ],
+        "scopes": [
+          "admin.system-channel",
+          "user.custom-channel",
+          "canvas",
+          "creation",
+          "agent"
+        ],
+        "baseUrl": "https://www.runninghub.ai",
+        "requiresPublicMediaUrls": false,
+        "auth": {
+          "type": "bearer",
+          "field": "apiKey"
+        },
+        "parameters": [
+          {
+            "name": "model",
+            "type": "string",
+            "required": true,
+            "mapping": "create path",
+            "description": "RunningHub 标准模型端点，如 kling-v4/image-to-video。"
+          },
+          {
+            "name": "prompt",
+            "type": "string",
+            "required": true,
+            "mapping": "prompt",
+            "description": "视频提示词。"
+          },
+          {
+            "name": "images",
+            "type": "media[]",
+            "required": false,
+            "mapping": "imageUrl/firstImageUrl/lastImageUrl/imageUrls",
+            "description": "首帧、尾帧或参考图；单图同时映射 imageUrl 与 firstImageUrl。"
+          },
+          {
+            "name": "videos",
+            "type": "media[]",
+            "required": false,
+            "mapping": "videoUrl/videoUrls",
+            "description": "参考视频输入。"
+          },
+          {
+            "name": "audios",
+            "type": "media[]",
+            "required": false,
+            "mapping": "audioUrl",
+            "description": "参考音频输入。"
+          },
+          {
+            "name": "duration",
+            "type": "integer",
+            "required": false,
+            "mapping": "duration (string)",
+            "description": "时长秒数，上游按字符串接收。"
+          },
+          {
+            "name": "aspectRatio",
+            "type": "string",
+            "required": false,
+            "mapping": "aspectRatio",
+            "description": "画幅比例。"
+          },
+          {
+            "name": "resolution",
+            "type": "string",
+            "required": false,
+            "mapping": "resolution",
+            "description": "分辨率档位，如 720p/1080p。"
+          },
+          {
+            "name": "quality",
+            "type": "string",
+            "required": false,
+            "mapping": "quality",
+            "description": "质量档位，仅部分端点接受。"
+          },
+          {
+            "name": "watermark",
+            "type": "boolean",
+            "required": false,
+            "mapping": "watermark",
+            "description": "水印开关。"
+          },
+          {
+            "name": "seed",
+            "type": "integer",
+            "required": false,
+            "mapping": "seed",
+            "description": "随机种子。"
+          },
+          {
+            "name": "providerOptions",
+            "type": "object",
+            "required": false,
+            "mapping": "provider-specific fields",
+            "description": "插件命名空间内的厂商扩展字段。"
+          },
+          {
+            "name": "familyDefaults",
+            "type": "object",
+            "required": false,
+            "mapping": "promptOptimizer=false",
+            "description": "SkyReels 族专用：上游必填 promptOptimizer。"
+          }
+        ],
+        "create": {
+          "method": "POST",
+          "path": "/openapi/v2/{{request.model}}",
+          "contentType": "application/json",
+          "body": {
+            "prompt": {
+              "$ref": "request.prompt"
+            },
+            "imageUrl": {
+              "$omitEmpty": {
+                "$first": {
+                  "$map": {
+                    "from": {
+                      "$ref": "request.images"
+                    },
+                    "as": "media",
+                    "in": {
+                      "$ref": "media.value"
+                    }
+                  }
+                }
+              }
+            },
+            "firstImageUrl": {
+              "$omitEmpty": {
+                "$first": {
+                  "$map": {
+                    "from": {
+                      "$ref": "request.images"
+                    },
+                    "as": "media",
+                    "in": {
+                      "$ref": "media.value"
+                    }
+                  }
+                }
+              }
+            },
+            "lastImageUrl": {
+              "$omitEmpty": {
+                "$first": {
+                  "$map": {
+                    "from": {
+                      "$filter": {
+                        "from": {
+                          "$ref": "request.images"
+                        },
+                        "as": "media",
+                        "where": {
+                          "$eq": [
+                            {
+                              "$ref": "media.role"
+                            },
+                            "last"
+                          ]
+                        }
+                      }
+                    },
+                    "as": "media",
+                    "in": {
+                      "$ref": "media.value"
+                    }
+                  }
+                }
+              }
+            },
+            "imageUrls": {
+              "$omitEmpty": {
+                "$map": {
+                  "from": {
+                    "$ref": "request.images"
+                  },
+                  "as": "media",
+                  "in": {
+                    "$ref": "media.value"
+                  }
+                }
+              }
+            },
+            "videoUrl": {
+              "$omitEmpty": {
+                "$first": {
+                  "$map": {
+                    "from": {
+                      "$ref": "request.videos"
+                    },
+                    "as": "media",
+                    "in": {
+                      "$ref": "media.value"
+                    }
+                  }
+                }
+              }
+            },
+            "audioUrl": {
+              "$omitEmpty": {
+                "$first": {
+                  "$map": {
+                    "from": {
+                      "$ref": "request.audios"
+                    },
+                    "as": "media",
+                    "in": {
+                      "$ref": "media.value"
+                    }
+                  }
+                }
+              }
+            },
+            "duration": {
+              "$omitEmpty": {
+                "$toString": {
+                  "$ref": "request.duration"
+                }
+              }
+            },
+            "aspectRatio": {
+              "$omitEmpty": {
+                "$ref": "request.aspectRatio"
+              }
+            },
+            "resolution": {
+              "$omitEmpty": {
+                "$ref": "request.resolution"
+              }
+            },
+            "quality": {
+              "$omitEmpty": {
+                "$ref": "request.quality"
+              }
+            },
+            "watermark": {
+              "$omitEmpty": {
+                "$ref": "request.watermark"
+              }
+            },
+            "seed": {
+              "$omitEmpty": {
+                "$ref": "request.seed"
+              }
+            },
+            "promptOptimizer": false
+          },
+          "originPath": true
+        },
+        "poll": {
+          "method": "POST",
+          "path": "/openapi/v2/query",
+          "contentType": "application/json",
+          "body": {
+            "taskId": {
+              "$ref": "taskId"
+            }
+          },
+          "originPath": true
+        },
+        "response": {
+          "taskId": {
+            "$coalesce": [
+              {
+                "$ref": "response.taskId"
+              },
+              {
+                "$ref": "taskId"
+              }
+            ]
+          },
+          "status": {
+            "$coalesce": [
+              {
+                "$ref": "response.status"
+              },
+              "pending"
+            ]
+          },
+          "message": {
+            "$coalesce": [
+              {
+                "$ref": "response.errorMessage"
+              },
+              {
+                "$ref": "response.errorCode"
+              }
+            ]
+          },
+          "videos": {
+            "$ref": "response.results"
+          },
+          "errorPaths": [
+            "errorCode"
+          ],
+          "messagePaths": [
+            "errorMessage"
+          ],
+          "resultEphemeral": true,
+          "usage": {
+            "$ref": "response.usage"
+          }
+        }
+      },
+      {
+        "id": "runninghub-standard-video-pixverse",
+        "label": "RunningHub Standard Video (PixVerse)",
+        "capabilities": [
+          "video"
+        ],
+        "scopes": [
+          "admin.system-channel",
+          "user.custom-channel",
+          "canvas",
+          "creation",
+          "agent"
+        ],
+        "baseUrl": "https://www.runninghub.ai",
+        "requiresPublicMediaUrls": false,
+        "auth": {
+          "type": "bearer",
+          "field": "apiKey"
+        },
+        "parameters": [
+          {
+            "name": "model",
+            "type": "string",
+            "required": true,
+            "mapping": "create path",
+            "description": "RunningHub 标准模型端点，如 kling-v4/image-to-video。"
+          },
+          {
+            "name": "prompt",
+            "type": "string",
+            "required": true,
+            "mapping": "prompt",
+            "description": "视频提示词。"
+          },
+          {
+            "name": "images",
+            "type": "media[]",
+            "required": false,
+            "mapping": "imageUrl/firstImageUrl/lastImageUrl/imageUrls",
+            "description": "首帧、尾帧或参考图；单图同时映射 imageUrl 与 firstImageUrl。"
+          },
+          {
+            "name": "videos",
+            "type": "media[]",
+            "required": false,
+            "mapping": "videoUrl/videoUrls",
+            "description": "参考视频输入。"
+          },
+          {
+            "name": "audios",
+            "type": "media[]",
+            "required": false,
+            "mapping": "audioUrl",
+            "description": "参考音频输入。"
+          },
+          {
+            "name": "duration",
+            "type": "integer",
+            "required": false,
+            "mapping": "duration (string)",
+            "description": "时长秒数，上游按字符串接收。"
+          },
+          {
+            "name": "aspectRatio",
+            "type": "string",
+            "required": false,
+            "mapping": "aspectRatio",
+            "description": "画幅比例。"
+          },
+          {
+            "name": "resolution",
+            "type": "string",
+            "required": false,
+            "mapping": "resolution",
+            "description": "分辨率档位，如 720p/1080p。"
+          },
+          {
+            "name": "quality",
+            "type": "string",
+            "required": false,
+            "mapping": "quality",
+            "description": "质量档位，仅部分端点接受。"
+          },
+          {
+            "name": "watermark",
+            "type": "boolean",
+            "required": false,
+            "mapping": "watermark",
+            "description": "水印开关。"
+          },
+          {
+            "name": "seed",
+            "type": "integer",
+            "required": false,
+            "mapping": "seed",
+            "description": "随机种子。"
+          },
+          {
+            "name": "providerOptions",
+            "type": "object",
+            "required": false,
+            "mapping": "provider-specific fields",
+            "description": "插件命名空间内的厂商扩展字段。"
+          },
+          {
+            "name": "familyDefaults",
+            "type": "object",
+            "required": false,
+            "mapping": "generateAudioSwitch=false",
+            "description": "PixVerse 族专用：上游必填 generateAudioSwitch。"
+          }
+        ],
+        "create": {
+          "method": "POST",
+          "path": "/openapi/v2/{{request.model}}",
+          "contentType": "application/json",
+          "body": {
+            "prompt": {
+              "$ref": "request.prompt"
+            },
+            "imageUrl": {
+              "$omitEmpty": {
+                "$first": {
+                  "$map": {
+                    "from": {
+                      "$ref": "request.images"
+                    },
+                    "as": "media",
+                    "in": {
+                      "$ref": "media.value"
+                    }
+                  }
+                }
+              }
+            },
+            "firstImageUrl": {
+              "$omitEmpty": {
+                "$first": {
+                  "$map": {
+                    "from": {
+                      "$ref": "request.images"
+                    },
+                    "as": "media",
+                    "in": {
+                      "$ref": "media.value"
+                    }
+                  }
+                }
+              }
+            },
+            "lastImageUrl": {
+              "$omitEmpty": {
+                "$first": {
+                  "$map": {
+                    "from": {
+                      "$filter": {
+                        "from": {
+                          "$ref": "request.images"
+                        },
+                        "as": "media",
+                        "where": {
+                          "$eq": [
+                            {
+                              "$ref": "media.role"
+                            },
+                            "last"
+                          ]
+                        }
+                      }
+                    },
+                    "as": "media",
+                    "in": {
+                      "$ref": "media.value"
+                    }
+                  }
+                }
+              }
+            },
+            "imageUrls": {
+              "$omitEmpty": {
+                "$map": {
+                  "from": {
+                    "$ref": "request.images"
+                  },
+                  "as": "media",
+                  "in": {
+                    "$ref": "media.value"
+                  }
+                }
+              }
+            },
+            "videoUrl": {
+              "$omitEmpty": {
+                "$first": {
+                  "$map": {
+                    "from": {
+                      "$ref": "request.videos"
+                    },
+                    "as": "media",
+                    "in": {
+                      "$ref": "media.value"
+                    }
+                  }
+                }
+              }
+            },
+            "audioUrl": {
+              "$omitEmpty": {
+                "$first": {
+                  "$map": {
+                    "from": {
+                      "$ref": "request.audios"
+                    },
+                    "as": "media",
+                    "in": {
+                      "$ref": "media.value"
+                    }
+                  }
+                }
+              }
+            },
+            "duration": {
+              "$omitEmpty": {
+                "$toString": {
+                  "$ref": "request.duration"
+                }
+              }
+            },
+            "aspectRatio": {
+              "$omitEmpty": {
+                "$ref": "request.aspectRatio"
+              }
+            },
+            "resolution": {
+              "$omitEmpty": {
+                "$ref": "request.resolution"
+              }
+            },
+            "quality": {
+              "$omitEmpty": {
+                "$ref": "request.quality"
+              }
+            },
+            "watermark": {
+              "$omitEmpty": {
+                "$ref": "request.watermark"
+              }
+            },
+            "seed": {
+              "$omitEmpty": {
+                "$ref": "request.seed"
+              }
+            },
+            "generateAudioSwitch": false
           },
           "originPath": true
         },
