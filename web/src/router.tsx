@@ -52,6 +52,11 @@ const MusicWorkbenchPage = lazy(() => import("@/supdance/plugins/music-generatio
 const MusicAdminSettingsPage = lazyAdminPage(() => import("@/supdance/plugins/music-generation/admin/music-admin-settings-page"));
 const DarkLoginPage = lazy(() => import("@/supdance/pages/dark-login-page"));
 const VisualConsole = lazyAdminPage(() => import("@/supdance/plugins/visual-engine/admin/VisualConsole"));
+const HtmlPageManager = lazyAdminPage(() => import("@/supdance/plugins/html-page-manager/admin/html-page-manager"));
+const TermsPage = lazy(() => import("@/supdance/pages/legal/terms-page"));
+const PrivacyPage = lazy(() => import("@/supdance/pages/legal/privacy-page"));
+const AupPage = lazy(() => import("@/supdance/pages/legal/aup-page"));
+const LegalHubPage = lazy(() => import("@/supdance/pages/legal/legal-hub-page"));
 const AssetsPage = lazy(loadAssetsPage);
 const LoginPage = lazy(() => import("@/pages/auth/login"));
 const RegisterPage = lazy(() => import("@/pages/auth/register"));
@@ -130,6 +135,11 @@ export const router = createBrowserRouter([
         ],
     },
     { path: "/zh/login", element: fullScreenDeferred(<DarkLoginPage />), errorElement: <RouteErrorPage /> },
+    { path: "/terms", element: fullScreenDeferred(<TermsPage />), errorElement: <RouteErrorPage /> },
+    { path: "/privacy", element: fullScreenDeferred(<PrivacyPage />), errorElement: <RouteErrorPage /> },
+    { path: "/aup", element: fullScreenDeferred(<AupPage />), errorElement: <RouteErrorPage /> },
+    { path: "/acceptable-use", element: <Navigate to="/aup" replace /> },
+    { path: "/legal", element: fullScreenDeferred(<LegalHubPage />), errorElement: <RouteErrorPage /> },
     { path: "/share/canvas/:token", element: fullScreenDeferred(<SharedCanvasPage />), errorElement: <RouteErrorPage /> },
     ...(import.meta.env.DEV ? devRoutes() : []),
     {
@@ -259,6 +269,8 @@ export const router = createBrowserRouter([
                     { path: "i18n/entries", element: <SupDanceI18nEntriesPage /> },
                     { path: "plugins/visual-engine", element: <VisualConsole /> },
                     { path: "visual-engine", element: <Navigate to="/admin/plugins/visual-engine" replace /> },
+                    { path: "plugins/html-pages", element: <HtmlPageManager /> },
+                    { path: "html-pages", element: <Navigate to="/admin/plugins/html-pages" replace /> },
                     { path: "workbench-tools", element: <WorkbenchToolsPage /> },
                     { path: "skill-curation", element: <SkillCurationPage /> },
                     { path: "payments", element: <AdminPaymentsPage /> },

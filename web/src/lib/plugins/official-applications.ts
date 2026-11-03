@@ -4,6 +4,7 @@ import { PROMPT_OPTIMIZER_PLUGIN_ID } from "@/lib/plugins/builtin/prompt-optimiz
 import { RUNNINGHUB_PLUGIN_ID } from "@/lib/plugins/builtin/workflows";
 import { SUPDANCE_I18N_PLUGIN_ID } from "@/supdance/plugins/i18n/types";
 import { SUPDANCE_SOCIAL_AUTH_PLUGIN_ID } from "@/supdance/plugins/social-auth/types";
+import { SUPDANCE_HTML_PAGE_MANAGER_PLUGIN_ID } from "@/supdance/plugins/html-page-manager/types";
 
 import { EDITOR_SHELL_PLUGIN_ID } from "./builtin/editor/editor-shell";
 
@@ -22,6 +23,7 @@ export const OFFICIAL_APPLICATION_PLUGIN_IDS = [
 export const SUPDANCE_APPLICATION_PLUGIN_IDS = [
     SUPDANCE_I18N_PLUGIN_ID,
     SUPDANCE_SOCIAL_AUTH_PLUGIN_ID,
+    SUPDANCE_HTML_PAGE_MANAGER_PLUGIN_ID,
 ] as const;
 
 const officialApplicationIdSet = new Set<string>(OFFICIAL_APPLICATION_PLUGIN_IDS);

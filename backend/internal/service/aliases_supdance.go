@@ -5,6 +5,7 @@ import "yingce/backend/internal/app"
 const (
 	PluginSupDanceI18n            = app.PluginSupDanceI18n
 	PluginSupDanceSocialAuth      = app.PluginSupDanceSocialAuth
+	PluginSupDanceHtmlPageManager = app.PluginSupDanceHtmlPageManager
 	PluginSupDanceMusicGeneration = app.PluginSupDanceMusicGeneration
 
 	MusicLifecycleInstalled   = app.MusicLifecycleInstalled
