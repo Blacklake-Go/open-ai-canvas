@@ -116,12 +116,13 @@ export function UserProfileModal({ open, activeTab, onTabChange, onClose, search
 
     const theme = useThemeStore((state) => state.theme);
     const setTheme = useThemeStore((state) => state.setTheme);
+    // 首次访问没有记录时跟随当前生效主题，避免「界面是浅色、选择器却显示深色」的不一致。
     const [themeMode, setThemeMode] = useState<"light" | "dark" | "system">(() => {
         try {
-            return (localStorage.getItem("yingce:theme_mode") as any) || "dark";
-        } catch {
-            return "dark";
-        }
+            const stored = localStorage.getItem("yingce:theme_mode");
+            if (stored === "light" || stored === "dark" || stored === "system") return stored;
+        } catch {}
+        return theme;
     });
 
     const handleThemeModeChange = (mode: "light" | "dark" | "system") => {
