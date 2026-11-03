@@ -50,6 +50,10 @@ type (
 	MusicGenerationResponse   = app.MusicGenerationResponse
 	MusicModelCapabilities    = app.MusicModelCapabilities
 	SupDanceMusicGeneration   = app.SupDanceMusicGeneration
+
+	HtmlPageItem           = app.HtmlPageItem
+	HtmlPagesAdminOverview = app.HtmlPagesAdminOverview
+	HtmlPagesStorePayload  = app.HtmlPagesStorePayload
 )
 
 var (

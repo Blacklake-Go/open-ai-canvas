@@ -26,7 +26,8 @@ describe("official application plugin classification", () => {
     test("exposes a single de-duplicated id list", () => {
         const ids = [...OFFICIAL_APPLICATION_PLUGIN_IDS];
         expect(new Set(ids).size).toBe(ids.length);
-        expect(ids).toHaveLength(6);
+        expect(ids).toHaveLength(7);
+        expect(ids).toContain("supdance-html-page-manager");
         expect(ids).toContain("user-feedback");
     });
 

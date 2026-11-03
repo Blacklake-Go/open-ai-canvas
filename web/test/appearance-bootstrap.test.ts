@@ -3,11 +3,11 @@ import { expect, test } from "bun:test";
 import { appearanceLogoURL, normalizePublicAppearance } from "../src/stores/use-appearance-store";
 import { moduleGroupSource } from "./helpers/module-group-source";
 
-test("initial HTML stays brand neutral until the public appearance is resolved", async () => {
+test("initial HTML retains SupDance search metadata before public appearance takes over", async () => {
     const [html, mainSource] = await Promise.all([Bun.file(new URL("../index.html", import.meta.url)).text(), Bun.file(new URL("../src/main.tsx", import.meta.url)).text()]);
 
     expect(html).not.toContain("影策");
-    expect(html).toContain("<title>正在加载</title>");
+    expect(html).toContain("<title>SupDance — AI Creative Workspace for Video &amp; Story Generation</title>");
     expect(mainSource).toContain("bootstrapAppearance()");
     expect(mainSource).toContain('import("./application")');
     expect(mainSource.indexOf("bootstrapAppearance()")).toBeLessThan(mainSource.indexOf('import("./application")'));

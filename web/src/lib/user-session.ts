@@ -19,6 +19,7 @@ import { clearResourceAccessCache } from "@/services/api/resources";
 import { clearResourceBlobCache } from "@/services/resource-blob-cache";
 import { withGenerationConsumersPaused } from "@/services/generation-consumer-lifecycle";
 import { recordDiagnosticEvent } from "@/services/diagnostics/client-diagnostics";
+import { setSessionRecoveryStage } from "@/lib/session-recovery";
 
 export async function switchUserStorageScope(userId?: string | null) {
     await withGenerationConsumersPaused(async () => {
@@ -36,6 +37,7 @@ let sessionGeneration = 0;
 
 export async function applyUserSession(payload: AuthSessionPayload) {
     const generation = ++sessionGeneration;
+    setSessionRecoveryStage("recovering");
     const previousUserId = useUserStore.getState().user?.id || "";
     const nextUserId = payload.user?.id || "";
     useUserStore.getState().setHydrated(false);
@@ -44,9 +46,13 @@ export async function applyUserSession(payload: AuthSessionPayload) {
     await switchUserStorageScope(payload.user?.id);
     // 切换存储 scope 时 user store 仍保留旧身份；此处只能先检查 generation。
     if (!isCurrentGeneration(generation)) return;
-    withCanvasStorePersistenceSuppressed(() => withAssetStorePersistenceSuppressed(() => withUserScopedPersistenceSuppressed(() => {
-        resetUserScopedMemory();
-    })));
+    withCanvasStorePersistenceSuppressed(() =>
+        withAssetStorePersistenceSuppressed(() =>
+            withUserScopedPersistenceSuppressed(() => {
+                resetUserScopedMemory();
+            }),
+        ),
+    );
     useUserStore.getState().setUser(payload.user);
     useUserStore.getState().setRuntimeLimits(payload.runtimeLimits);
     useUserStore.getState().setDrawingEngine(payload.drawingEngine);
@@ -58,7 +64,10 @@ export async function applyUserSession(payload: AuthSessionPayload) {
         // 缓存恢复和同步基线必须先于工作区开放，防止生成/编辑抢跑，或被初始化误记为已同步。
         await hydrateUserSessionData(payload, generation);
     } catch (error) {
-        if (isCurrentSession(generation, nextUserId)) console.warn("用户工作区后台初始化失败，基础页面仍可继续", error);
+        if (isCurrentSession(generation, nextUserId)) {
+            setSessionRecoveryStage("failed");
+            console.warn("用户工作区后台初始化失败，基础页面仍可继续", error);
+        }
     } finally {
         if (isCurrentSession(generation, nextUserId)) useUserStore.getState().setHydrated(true);
     }
@@ -104,6 +113,7 @@ async function hydrateUserSessionData(payload: AuthSessionPayload, generation: n
     if (!persistedCreationPreferences) useCreationPreferencesStore.setState({ preferences: {} });
 
     if (userId) {
+        setSessionRecoveryStage("syncing");
         await initializeRemoteUserDataSession(userId);
     } else {
         resetRemoteUserDataSync();
@@ -132,6 +142,7 @@ async function hydrateUserSessionData(payload: AuthSessionPayload, generation: n
         }
     })();
     if (isCurrentSession(generation, userId)) {
+        setSessionRecoveryStage("ready");
         recordDiagnosticEvent({
             category: "navigation",
             level: "info",

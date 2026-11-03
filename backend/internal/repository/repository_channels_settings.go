@@ -149,6 +149,14 @@ func (r *Repository) SaveSystemSetting(setting *model.SystemSetting) error {
 	return r.db.Save(setting).Error
 }
 
+func (r *Repository) LockSystemSetting(key string, initialJSON string) error {
+	setting := model.SystemSetting{Key: key, ValueJSON: initialJSON, UpdatedAt: time.Now()}
+	if err := r.db.Clauses(clause.OnConflict{DoNothing: true}).Create(&setting).Error; err != nil {
+		return err
+	}
+	return r.db.Clauses(clause.Locking{Strength: "UPDATE"}).First(&setting, "key = ?", key).Error
+}
+
 func (r *Repository) SaveSystemSettings(settings ...*model.SystemSetting) error {
 	return r.db.Transaction(func(tx *gorm.DB) error {
 		for _, setting := range settings {

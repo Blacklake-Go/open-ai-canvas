@@ -179,4 +179,24 @@ func TestChannelCostHTTPAuthorizationAndPublicProjection(t *testing.T) {
 			t.Fatalf("public cost leaked: %s", w.Body.String())
 		}
 	}
+
+	// 验证未登录访客（游客模式）只读访问模型目录成功
+	guestCatalogReq := httptest.NewRequest(http.MethodGet, "/api/model-catalog", nil)
+	guestCatalogW := httptest.NewRecorder()
+	router.ServeHTTP(guestCatalogW, guestCatalogReq)
+	if guestCatalogW.Code != http.StatusOK {
+		t.Fatalf("guest model-catalog expected 200, got: %d %s", guestCatalogW.Code, guestCatalogW.Body.String())
+	}
+	if !strings.Contains(guestCatalogW.Body.String(), `"channels"`) {
+		t.Fatalf("guest model-catalog expected channels in response: %s", guestCatalogW.Body.String())
+	}
+
+	// 验证报价接口仍严格要求登录态
+	guestQuoteReq := httptest.NewRequest(http.MethodPost, "/api/model-catalog/quote", strings.NewReader(`{"channelId":"channel","modelKey":"text-model","intent":{"capability":"text"}}`))
+	guestQuoteReq.Header.Set("Content-Type", "application/json")
+	guestQuoteW := httptest.NewRecorder()
+	router.ServeHTTP(guestQuoteW, guestQuoteReq)
+	if guestQuoteW.Code != http.StatusUnauthorized {
+		t.Fatalf("guest quote expected 401, got: %d %s", guestQuoteW.Code, guestQuoteW.Body.String())
+	}
 }

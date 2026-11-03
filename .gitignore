@@ -6,6 +6,7 @@ docs/*
 !docs/design/
 !docs/design-system/
 !docs/index.md
+!docs/supdance/
 !docs/adr/
 !docs/plans/
 !docs/supdance/

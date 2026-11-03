@@ -1,13 +1,31 @@
 <!doctype html>
-<html lang="zh-CN" class="font-sans">
+<html lang="en" class="font-sans">
     <head>
         <meta charset="UTF-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-        <meta name="description" content="AI 影视与短剧创作工作台" />
+        <title>SupDance — AI Creative Workspace for Video &amp; Story Generation</title>
+        <meta name="description" content="SupDance is an all-in-one AI creative workspace for video, image, and multimedia storytelling. Create, iterate, and produce cinematic content with generative AI." />
+        <meta name="keywords" content="SupDance, AI video generator, AI filmmaking, generative AI, AI canvas, text to video, image to video, creative workspace, AI studio, storytelling" />
+        <meta name="author" content="SupDance" />
+        <meta name="robots" content="index, follow" />
+        <link rel="canonical" href="https://www.supdance.com/" />
+
+        <!-- Open Graph / Facebook -->
+        <meta property="og:type" content="website" />
+        <meta property="og:url" content="https://www.supdance.com/" />
+        <meta property="og:title" content="SupDance — AI Creative Workspace for Video &amp; Story Generation" />
+        <meta property="og:description" content="SupDance is an all-in-one AI creative workspace for video, image, and multimedia storytelling. Create, iterate, and produce cinematic content with generative AI." />
+        <meta property="og:site_name" content="SupDance" />
+        <meta property="og:image" content="https://www.supdance.com/logo.svg" />
+
+        <!-- Twitter Card -->
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:title" content="SupDance — AI Creative Workspace for Video &amp; Story Generation" />
+        <meta name="twitter:description" content="SupDance is an all-in-one AI creative workspace for video, image, and multimedia storytelling. Create, iterate, and produce cinematic content with generative AI." />
+        <meta name="twitter:image" content="https://www.supdance.com/logo.svg" />
         <!-- 不写内置品牌资源：首屏必须品牌中性，favicon 由 use-appearance-store 解析出外观后写入。
              空 data URL 只是为了不让浏览器去请求 /favicon.ico（那会是一条 404）。 -->
         <link rel="icon" href="data:," />
-        <title>正在加载</title>
         <style>
             /* Fix layer order before production chunks can register utilities ahead of base. */
             @layer theme, base, components, utilities;
@@ -46,8 +64,22 @@
                 border-radius: 999px;
                 animation: appearance-bootstrap-orbit 2.8s linear infinite;
             }
-            @keyframes appearance-bootstrap-pulse { 0%, 100% { opacity: .62; transform: scale(.82); } 50% { opacity: 1; transform: scale(1.08); } }
-            @keyframes appearance-bootstrap-orbit { to { transform: rotate(360deg); } }
+            @keyframes appearance-bootstrap-pulse {
+                0%,
+                100% {
+                    opacity: 0.62;
+                    transform: scale(0.82);
+                }
+                50% {
+                    opacity: 1;
+                    transform: scale(1.08);
+                }
+            }
+            @keyframes appearance-bootstrap-orbit {
+                to {
+                    transform: rotate(360deg);
+                }
+            }
             @media (prefers-reduced-motion: reduce) {
                 #root:empty::before,
                 #root:empty::after {
@@ -64,7 +96,7 @@
             } catch (e) {}
         </script>
     </head>
-    <body class="bg-background text-foreground antialiased" style="background:#ffffff">
+    <body class="bg-background text-foreground antialiased" style="background: #ffffff">
         <div id="root"></div>
         <script type="module" src="/src/main.tsx"></script>
     </body>

@@ -8,12 +8,13 @@ import { useI18n } from "@/supdance/plugins/i18n";
 const MIIT_FILING_URL = "https://beian.miit.gov.cn/";
 
 export function SiteComplianceFooter({ className, variant = "default" }: { className?: string; variant?: "default" | "auth" }) {
-    const { t } = useI18n();
     const appearance = useAppearanceStore((state) => state.appearance);
+    const { t } = useI18n();
 
     return (
-        <footer className={cn("site-compliance-footer", variant === "auth" && "is-auth", className)} aria-label={t("common.site_compliance_aria")}>
+        <footer className={cn("site-compliance-footer", variant === "auth" && "is-auth", className)} aria-label="站点版权与备案信息">
             <span>{appearance.footerCopyright}</span>
+            {/* 收单机构与 GDPR 都要求政策页在未登录状态下从任意页面可达，因此挂在通用页脚而不是只放在登录页。 */}
             <Link to="/terms">{t("legal.terms")}</Link>
             <Link to="/privacy">{t("legal.privacy")}</Link>
             <Link to="/aup">AUP</Link>

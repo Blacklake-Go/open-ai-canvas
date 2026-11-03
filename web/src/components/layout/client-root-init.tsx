@@ -20,15 +20,19 @@ export function ClientRootInit({ children }: { children: ReactNode }) {
     const setPluginStates = usePluginStore((state) => state.setPluginStates);
     const pluginStoreHydrated = usePluginStore((state) => state.hydrated);
 
-    useEffect(() => () => {
-        usePluginStore.getState().setRuntimeStatuses({});
-        usePluginStore.getState().setPluginStates({});
-    }, []);
+    useEffect(
+        () => () => {
+            usePluginStore.getState().setRuntimeStatuses({});
+            usePluginStore.getState().setPluginStates({});
+        },
+        [],
+    );
 
     useEffect(() => {
         if (!userId || !pluginStoreHydrated) return;
         let cancelled = false;
-        void appQueryClient.fetchQuery({ queryKey: ["plugin-runtime", userId], queryFn: ({ signal }) => fetchPluginRuntimeState(signal), staleTime: 30_000 })
+        void appQueryClient
+            .fetchQuery({ queryKey: ["plugin-runtime", userId], queryFn: ({ signal }) => fetchPluginRuntimeState(signal), staleTime: 30_000 })
             .then(async (runtime) => {
                 if (cancelled || useUserStore.getState().user?.id !== userId) return;
                 const statuses = { ...runtime.statuses };

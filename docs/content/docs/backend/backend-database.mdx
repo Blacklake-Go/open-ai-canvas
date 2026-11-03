@@ -5,6 +5,12 @@ description: 影策后端核心持久化表与状态边界
 
 # 后端数据库
 
+## 视觉引擎配置与版本
+
+复用 `system_settings`，不增加表或结构迁移。`supdance_visual_engine_config` 保存完整 Schema 2 生效配置；`supdance_visual_engine_snapshots` 保存版本快照数组；`supdance_visual_engine_audit` 保存发布与回滚审计数组。配置写入事务先创建或锁定配置行，然后在同一事务中读旧配置并保存三项记录；任何写入失败均回滚。
+
+首次发布保存发布前的配置快照；版本由服务端生成唯一标识，回滚产生新版本并保留历史内容。审计记录的操作人为已鉴权管理员 ID，不接受客户端身份。损坏配置或快照读取失败阻止发布，禁止用默认配置覆盖存储错误。
+
 ## Agent 记忆文件列补齐（Schema 77）
 
 版本 77 `agent_memory_document_columns` 只做补列：确保 `agent_memory_documents.next_entry_seq` 与 `agent_memory_document_revisions.call_id` 存在，并把空值回填为 `0` / 空串。开发期的早期构建执行 v76 时这两列还没加入模型，v76 已记为完成、校验和不能再改，缺列会让创建 Agent 轮次时读取记忆文件失败（`no column named next_entry_seq`）。新库由 v76 一次建全，v77 是空操作；不改写既有记忆内容。

@@ -155,7 +155,7 @@ test("nested admin pages return to their own parent entry", async () => {
     const source = await Bun.file(new URL("../src/pages/admin/components/admin-shell.tsx", import.meta.url)).text();
     const compacted = compactSource(source);
     // 子页面的面包屑链接回所属入口（或所属页签），分组名只作文字，不再跳到分组第一项。
-    expect(compacted).toContain("const current = findAdminNavigation(location.pathname)");
+    expect(compacted).toContain("const current = findAdminNavigation(location.pathname, visualEngineEnabled)");
     expect(compacted).toContain("<Link to={current.item.path}");
     expect(compacted).not.toContain("currentSection?.items[0]?.path");
 });

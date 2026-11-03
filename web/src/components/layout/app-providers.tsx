@@ -2,7 +2,6 @@ import type { ReactNode } from "react";
 import { lazy, Suspense, useEffect, useLayoutEffect } from "react";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { ConfigProvider } from "antd";
-import zhCN from "antd/locale/zh_CN";
 
 import { AuthSessionHydrator } from "@/components/auth/auth-session-hydrator";
 import { AppFeedbackProvider } from "@/components/layout/app-feedback";
@@ -40,6 +39,7 @@ export function AppProviders({ children, extensions }: { children: ReactNode; ex
     const visualAdapter = useVisualEngineHostAdapter(hostTheme, appearance.activeSkin);
     const theme = visualAdapter.mode;
     const dark = theme === "dark";
+    const antdLocale = useSupDanceAntdLocale();
 
     useLayoutEffect(() => {
         document.documentElement.classList.toggle("dark", dark);
@@ -68,7 +68,7 @@ export function AppProviders({ children, extensions }: { children: ReactNode; ex
 
     return (
         // 两个汉字的按钮（取消、确定）不再被 antd 拉开字距，与其他按钮的文字节奏一致。
-        <ConfigProvider locale={zhCN} theme={visualAdapter.theme} wave={{ disabled: true }} button={{ autoInsertSpace: false }}>
+        <ConfigProvider locale={antdLocale} theme={visualAdapter.theme} wave={{ disabled: true }} button={{ autoInsertSpace: false }}>
             <AppFeedbackProvider>
                 <QueryClientProvider client={appQueryClient}>
                     {isolateDevRepro ? (

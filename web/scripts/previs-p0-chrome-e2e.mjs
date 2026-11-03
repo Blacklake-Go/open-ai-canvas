@@ -817,10 +817,9 @@ async function shotOutputs(cdp, baseUrl) {
         const el = document.querySelector('.previs-viewport-shell');
         let fiber = el[Object.keys(el).find(key => key.startsWith('__reactFiber'))];
         while (fiber && !fiber.ref?.current?.capture) fiber = fiber.return;
-        const resources = performance.getEntriesByType('resource').map(item => item.name);
-        const r3f = await import(resources.find(url => url.includes('/@react-three_fiber.js')));
+        const r3f = await import('/node_modules/.vite/deps/@react-three_fiber.js');
         const root = [...r3f._roots.values()].find(item => item.store.getState().gl.domElement === el.querySelector('canvas')).store.getState();
-        const three = await import(resources.find(url => url.includes('/three.js')));
+        const three = await import('/node_modules/.vite/deps/three.js');
         window.__previsCaptureTest = { handle: fiber.ref.current, data: fiber.memoizedProps.scene, root, three };
         return !!fiber.ref.current;
     })()`);
