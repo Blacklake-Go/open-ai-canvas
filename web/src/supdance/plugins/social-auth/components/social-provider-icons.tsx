@@ -162,6 +162,35 @@ export function TikTokIcon(props: SVGProps<SVGSVGElement>) {
 }
 
 /**
+ * 飞书官方标准品牌图标 (Official Feishu Vector)
+ * 包含飞书官方标准折纸飞鸟渐变造型
+ */
+export function FeishuIcon(props: SVGProps<SVGSVGElement>) {
+    return (
+        <svg viewBox="0 0 24 24" width="1em" height="1em" aria-hidden="true" {...props}>
+            <path d="M2.5 7.5L12 2l9.5 5.5v9L12 22 2.5 16.5v-9z" fill="#00D6B9" opacity="0.15" />
+            <path d="M4.2 8.4l7.8-4.5 7.8 4.5v7.2l-7.8 4.5-7.8-4.5V8.4z" fill="#00D6B9" opacity="0.3" />
+            <path d="M5.5 14.8l6.5-6.5 6.5 6.5-2.2 2.2-4.3-4.3-4.3 4.3-2.2-2.2z" fill="#0084FF" />
+            <path d="M12 4.5l6.5 6.5-2.2 2.2L12 8.9 7.7 13.2 5.5 11 12 4.5z" fill="#00D6B9" />
+        </svg>
+    );
+}
+
+/**
+ * Linux.do 官方三色标
+ */
+export function LinuxDOIcon(props: SVGProps<SVGSVGElement>) {
+    return (
+        <svg viewBox="0 0 24 24" width="1em" height="1em" aria-hidden="true" {...props}>
+            <circle cx="12" cy="12" r="10" fill="#1D1D1F" />
+            <path d="M2 12A10 10 0 0 0 12 22A10 10 0 0 0 22 12H2Z" fill="#FEB005" />
+            <path d="M2 12A10 10 0 0 0 12 22A10 10 0 0 0 22 12H2Z" fill="#EFEFEF" clipPath="polygon(0 35%, 100% 35%, 100% 65%, 0 65%)" />
+            <rect x="2" y="8.5" width="20" height="7" fill="#EFEFEF" />
+        </svg>
+    );
+}
+
+/**
  * 统一品牌图标选择器，分发 8 大平台官方矢量图标
  */
 export function SocialProviderIcon({ provider, className = "size-5" }: { provider: string; className?: string }) {
@@ -183,6 +212,12 @@ export function SocialProviderIcon({ provider, className = "size-5" }: { provide
             return <InstagramIcon className={className} />;
         case "tiktok":
             return <TikTokIcon className={className} />;
+        case "feishu":
+        case "lark":
+            return <FeishuIcon className={className} />;
+        case "linuxdo":
+        case "linux.do":
+            return <LinuxDOIcon className={className} />;
         default:
             return <div className={`rounded-full bg-slate-500/20 ${className}`} />;
     }

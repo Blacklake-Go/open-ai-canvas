@@ -1950,9 +1950,9 @@ export const BUILTIN_SUPDANCE_I18N_ENTRIES: readonly SupDanceI18nEntry[] = [
     e("settings.social.no_password_tip", "settings", "提示：您尚未设置独立密码，建议前往【基本资料与安全】设置密码以保障多渠道访问。", "未设置密码警告提示"),
     e("settings.social.account_label", "settings", "账号", "社交绑定账号标签"),
     e("settings.social.unbind_failed", "settings", "解绑失败，请稍后重试", "解绑失败提示"),
-    e("legal.terms", "legal", "服务条款", "法务文档：服务条款"),
-    e("legal.privacy", "legal", "隐私政策", "法务文档：隐私政策"),
-    e("legal.aup", "legal", "AUP 使用政策", "法务文档：AUP 政策"),
+    e("legal.terms", "common", "服务条款", "法务文档：服务条款"),
+    e("legal.privacy", "common", "隐私政策", "法务文档：隐私政策"),
+    e("legal.aup", "common", "AUP 使用政策", "法务文档：AUP 政策"),
     e("common.legal_aup", "common", "AUP", "页脚法务文档链接：AUP"),
 ];
 
