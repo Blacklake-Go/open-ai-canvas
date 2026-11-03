@@ -1795,6 +1795,12 @@ const pack: Record<string, string> = {
     "common.default_sort": "デフォルト順",
     "common.sort_by_title": "タイトル順",
     "inspiration.view_aria": "インスピレーションを見る",
+    "create.placeholder_text": "ストーリー、キャラクター、深めたいアイデアを説明",
+    "create.placeholder_image": "被写体、シーン、構図、スタイルを説明",
+    "create.placeholder_music": "音楽のジャンル、楽器、ボーカル、ムードを説明するか、歌詞を入力",
+    "create.placeholder_video": "カット内容、カメラワーク、ライティング、リズムを説明",
+    "create.placeholder_music_empty": "作りたい楽曲やインストを説明するか、作詞アシスタントを展開",
+    "create.max_references_reached": "このモデルの参照上限（{count} 件）に達しました",
 };
 
 export default pack;

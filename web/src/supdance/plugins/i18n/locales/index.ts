@@ -1861,6 +1861,12 @@ export const BUILTIN_SUPDANCE_I18N_ENTRIES: readonly SupDanceI18nEntry[] = [
     e("common.default_sort", "common", "默认顺序", "排序选项：默认顺序"),
     e("common.sort_by_title", "common", "按标题", "排序选项：按标题"),
     e("inspiration.view_aria", "inspiration", "查看灵感", "灵感卡片无障碍标签前缀"),
+    e("create.placeholder_text", "create", "描述你的故事、角色或想继续讨论的创意", "创作输入框：文本模式占位符"),
+    e("create.placeholder_image", "create", "描述画面、人物、场景、构图与风格", "创作输入框：图片模式占位符"),
+    e("create.placeholder_music", "create", "描述音乐风格、乐器、人声或情绪，或输入歌词创作", "创作输入框：音乐模式占位符"),
+    e("create.placeholder_video", "create", "描述镜头内容、运动、光线与节奏", "创作输入框：视频模式占位符"),
+    e("create.placeholder_music_empty", "create", "描述你想创作的歌曲或纯音乐，也可展开歌词辅助创作", "创作输入框：音乐空态占位符"),
+    e("create.max_references_reached", "create", "已达到当前模型的参考内容上限（{count} 个）", "参考内容按钮达到上限提示"),
 ];
 
 export const packLoaders: Record<Exclude<SupDanceLocaleCode, "zh-CN">, () => Promise<{ default: Record<string, string> }>> = {

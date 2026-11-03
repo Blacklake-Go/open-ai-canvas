@@ -1795,6 +1795,12 @@ const pack: Record<string, string> = {
     "common.default_sort": "Orden predeterminado",
     "common.sort_by_title": "Por título",
     "inspiration.view_aria": "Ver inspiración",
+    "create.placeholder_text": "Describe tu historia, personajes o ideas que quieras explorar",
+    "create.placeholder_image": "Describe el sujeto, la escena, la composición y el estilo",
+    "create.placeholder_music": "Describe el estilo musical, instrumentos, voces o ambiente, o escribe la letra",
+    "create.placeholder_video": "Describe el plano, movimiento, iluminación y ritmo",
+    "create.placeholder_music_empty": "Describe la canción o instrumental que deseas crear o abre el asistente de letras",
+    "create.max_references_reached": "Límite de referencias alcanzado para este modelo ({count})",
 };
 
 export default pack;

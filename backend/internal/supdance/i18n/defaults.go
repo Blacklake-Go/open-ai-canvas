@@ -412,7 +412,7 @@ func BuiltinEntries() []Entry {
 		entry("auth.onboarding.terms_service", "auth", "《用户服务协议》", "Terms of Service", "《用戶服務協議》", "利用規約", "이용약관", "Términos de servicio", "服务协议链接文案"),
 		entry("auth.onboarding.terms_and", "auth", "与", "and", "與", "および", "및", "y la", "协议链接之间的连接词"),
 		entry("auth.onboarding.terms_privacy", "auth", "《隐私政策》", "Privacy Policy", "《隱私政策》", "プライバシーポリシー", "개인정보 처리방침", "Política de privacidad", "隐私政策链接文案"),
-		// ==================== create: 首页创作工作台 (27) ====================
+		// ==================== create: 首页创作工作台 (33) ====================
 		entry("create.recent_canvases", "create", "最近画布", "Recent Canvases", "最近畫布", "最近のキャンバス", "최근 캔버스", "Lienzos recientes", "创作页：最近画布"),
 		entry("create.new_canvas", "create", "新建画布", "New Canvas", "新建畫布", "新規キャンバス", "새 캔버스", "Nuevo lienzo", "创作页：新建画布"),
 		entry("create.inspiration", "create", "灵感广场", "Inspiration Gallery", "靈感廣場", "インスピレーション", "영감 갤러리", "Galería de Inspiración", "创作页：灵感广场"),
@@ -440,6 +440,12 @@ func BuiltinEntries() []Entry {
 		entry("create.use_this_idea", "create", "使用这个创意", "Use this idea", "使用這個創意", "このアイデアを使う", "이 아이디어 사용", "Usar esta idea", "首页灵感画廊：卡片操作按钮"),
 		entry("create.gallery_prev_aria", "create", "上一张灵感", "Previous inspiration", "上一張靈感", "前のインスピレーション", "이전 영감", "Inspiración anterior", "首页灵感画廊：向左箭头按钮"),
 		entry("create.gallery_next_aria", "create", "下一张灵感", "Next inspiration", "下一張靈感", "次のインスピレーション", "다음 영감", "Siguiente inspiración", "首页灵感画廊：向右箭头按钮"),
+		entry("create.placeholder_text", "create", "描述你的故事、角色或想继续讨论的创意", "Describe your story, characters or ideas you want to explore", "描述你的故事、角色或想繼續討論的創意", "ストーリー、キャラクター、深めたいアイデアを説明", "이야기, 캐릭터 또는 나누고 싶은 아이디어를 설명하세요", "Describe tu historia, personajes o ideas que quieras explorar", "创作输入框：文本模式占位符"),
+		entry("create.placeholder_image", "create", "描述画面、人物、场景、构图与风格", "Describe the subject, scene, composition and style", "描述畫面、人物、場景、構圖與風格", "被写体、シーン、構図、スタイルを説明", "피사체, 장면, 구도 및 스타일을 설명하세요", "Describe el sujeto, la escena, la composición y el estilo", "创作输入框：图片模式占位符"),
+		entry("create.placeholder_music", "create", "描述音乐风格、乐器、人声或情绪，或输入歌词创作", "Describe the music style, instruments, vocals or mood, or enter lyrics to create", "描述音樂風格、樂器、人聲或情緒，或輸入歌詞創作", "音楽のジャンル、楽器、ボーカル、ムードを説明するか、歌詞を入力", "음악 스타일, 악기, 보컬 또는 분위기를 설명하거나 가사를 입력하세요", "Describe el estilo musical, instrumentos, voces o ambiente, o escribe la letra", "创作输入框：音乐模式占位符"),
+		entry("create.placeholder_video", "create", "描述镜头内容、运动、光线与节奏", "Describe shot content, motion, lighting and pacing", "描述鏡頭內容、運動、光線與節奏", "カット内容、カメラワーク、ライティング、リズムを説明", "샷 내용, 카메라 무빙, 조명 및 호흡을 설명하세요", "Describe el plano, movimiento, iluminación y ritmo", "创作输入框：视频模式占位符"),
+		entry("create.placeholder_music_empty", "create", "描述你想创作的歌曲或纯音乐，也可展开歌词辅助创作", "Describe the song or instrumental you want to create, or expand the lyric assistant", "描述你想創作的歌曲或純音樂，也可展開歌詞輔助創作", "作りたい楽曲やインストを説明するか、作詞アシスタントを展開", "만들고 싶은 곡이나 연주곡을 설명하거나 가사 어시스턴트를 펼치세요", "Describe la canción o instrumental que deseas crear o abre el asistente de letras", "创作输入框：音乐空态占位符"),
+		entry("create.max_references_reached", "create", "已达到当前模型的参考内容上限（{count} 个）", "Reached the reference limit for this model ({count})", "已達到目前模型的參考內容上限（{count} 個）", "このモデルの参照上限（{count} 件）に達しました", "이 모델의 참고 자료 한도({count}개)에 도달했습니다", "Límite de referencias alcanzado para este modelo ({count})", "参考内容按钮达到上限提示"),
 		// ==================== canvas: 自由画布与节点 (132) ====================
 		entry("canvas.my_canvases", "canvas", "我的画布", "My Canvases", "我的畫布", "マイキャンバス", "내 캔버스", "Mis lienzos", "画布列表标题"),
 		entry("canvas.create_project", "canvas", "新建画布项目", "New Canvas Project", "新建畫布專案", "新規キャンバスプロジェクト", "새 캔버스 프로젝트", "Nuevo proyecto de lienzo", "新建画布项目"),

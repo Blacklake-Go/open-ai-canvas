@@ -28,6 +28,7 @@ import { imageQualityLabel } from "@/lib/image-quality";
 import { modelQuoteDescription, modelQuoteRequest } from "@/lib/model-pricing";
 import { quoteModel, type LogicalModelQuote } from "@/services/api/logical-models";
 import { modelOptionName, resolveModelChannel, type AiConfig } from "@/stores/use-config-store";
+import { useI18n } from "@/supdance/plugins/i18n";
 import { useUserStore } from "@/stores/use-user-store";
 import { selectPluginEffectivelyEnabled, usePluginStore } from "@/stores/use-plugin-store";
 import { SUPDANCE_MUSIC_PLUGIN_ID } from "@/supdance/plugins/music-generation/types";
@@ -356,6 +357,7 @@ function LyricsEditorModal({
 }
 
 export function CreationComposer(props: ComposerProps) {
+    const { t } = useI18n();
     const [previewUrl, setPreviewUrl] = useState("");
     const [previewType, setPreviewType] = useState<"image" | "video">("image");
     const [promptOptimizerOpen, setPromptOptimizerOpen] = useState(false);
@@ -412,19 +414,23 @@ export function CreationComposer(props: ComposerProps) {
     const showWorkingSpinner = interactionBusy || (props.generationActive && !canSubmit);
     const showWorkingGlow = props.generationActive && !canSubmit;
     const placeholder = props.mode === "text"
-        ? "描述你的故事、角色或想继续讨论的创意"
+        ? t("create.placeholder_text", undefined, "描述你的故事、角色或想继续讨论的创意")
         : props.mode === "image"
-            ? "描述画面、人物、场景、构图与风格"
+            ? t("create.placeholder_image", undefined, "描述画面、人物、场景、构图与风格")
             : props.mode === "music"
-                ? "描述音乐风格、乐器、人声或情绪，或输入歌词创作"
-                : "描述镜头内容、运动、光线与节奏";
+                ? t("create.placeholder_music", undefined, "描述音乐风格、乐器、人声或情绪，或输入歌词创作")
+                : t("create.placeholder_video", undefined, "描述镜头内容、运动、光线与节奏");
     const emptyPlaceholder = props.mode === "music"
-        ? "描述你想创作的歌曲或纯音乐，也可展开歌词辅助创作"
-        : "输入你的镜头、画面或故事。也可以添加参考图开始创作";
+        ? t("create.placeholder_music_empty", undefined, "描述你想创作的歌曲或纯音乐，也可展开歌词辅助创作")
+        : t("create.composer_placeholder_empty", undefined, "输入你的镜头、画面或故事。也可以添加参考图开始创作");
     const imageReferencesSupported = props.imageProfile.references.maxImages > 0;
     const referencesSupported = props.mode === "image" ? imageReferencesSupported : props.mode !== "video" || props.maxReferences > 0;
     const canAddMoreReferences = referencesSupported && props.attachments.length < props.maxReferences;
-    const addReferenceLabel = interactionBusy ? (props.referenceReplacementBusy ? "正在替换参考图" : "生成中暂不能添加参考内容") : canAddMoreReferences ? "添加更多参考内容" : `已达到当前模型的参考内容上限（${props.maxReferences} 个）`;
+    const addReferenceLabel = interactionBusy
+        ? (props.referenceReplacementBusy ? t("create.replacing_reference", undefined, "正在替换参考图") : t("create.busy_add_reference_blocked", undefined, "生成中暂不能添加参考内容"))
+        : canAddMoreReferences
+            ? t("create.add_more_references", undefined, "添加更多参考内容")
+            : t("create.max_references_reached", { count: props.maxReferences }, `已达到当前模型的参考内容上限（${props.maxReferences} 个）`);
     const referenceCounts = useMemo(() => props.attachments.reduce((counts, attachment) => {
         const kind = creationAttachmentKind(attachment);
         counts[kind] += 1;

@@ -1795,6 +1795,12 @@ const pack: Record<string, string> = {
     "common.default_sort": "기본 정렬",
     "common.sort_by_title": "제목순",
     "inspiration.view_aria": "영감 보기",
+    "create.placeholder_text": "이야기, 캐릭터 또는 나누고 싶은 아이디어를 설명하세요",
+    "create.placeholder_image": "피사체, 장면, 구도 및 스타일을 설명하세요",
+    "create.placeholder_music": "음악 스타일, 악기, 보컬 또는 분위기를 설명하거나 가사를 입력하세요",
+    "create.placeholder_video": "샷 내용, 카메라 무빙, 조명 및 호흡을 설명하세요",
+    "create.placeholder_music_empty": "만들고 싶은 곡이나 연주곡을 설명하거나 가사 어시스턴트를 펼치세요",
+    "create.max_references_reached": "이 모델의 참고 자료 한도({count}개)에 도달했습니다",
 };
 
 export default pack;

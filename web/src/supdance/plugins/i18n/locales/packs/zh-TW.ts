@@ -1795,6 +1795,12 @@ const pack: Record<string, string> = {
     "common.default_sort": "預設順序",
     "common.sort_by_title": "依標題",
     "inspiration.view_aria": "檢視靈感",
+    "create.placeholder_text": "描述你的故事、角色或想繼續討論的創意",
+    "create.placeholder_image": "描述畫面、人物、場景、構圖與風格",
+    "create.placeholder_music": "描述音樂風格、樂器、人聲或情緒，或輸入歌詞創作",
+    "create.placeholder_video": "描述鏡頭內容、運動、光線與節奏",
+    "create.placeholder_music_empty": "描述你想創作的歌曲或純音樂，也可展開歌詞輔助創作",
+    "create.max_references_reached": "已達到目前模型的參考內容上限（{count} 個）",
 };
 
 export default pack;

@@ -1795,6 +1795,12 @@ const pack: Record<string, string> = {
     "common.default_sort": "Default Order",
     "common.sort_by_title": "By Title",
     "inspiration.view_aria": "View inspiration",
+    "create.placeholder_text": "Describe your story, characters or ideas you want to explore",
+    "create.placeholder_image": "Describe the subject, scene, composition and style",
+    "create.placeholder_music": "Describe the music style, instruments, vocals or mood, or enter lyrics to create",
+    "create.placeholder_video": "Describe shot content, motion, lighting and pacing",
+    "create.placeholder_music_empty": "Describe the song or instrumental you want to create, or expand the lyric assistant",
+    "create.max_references_reached": "Reached the reference limit for this model ({count})",
 };
 
 export default pack;
