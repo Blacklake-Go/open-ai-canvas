@@ -1714,7 +1714,7 @@ const pack: Record<string, string> = {
     "inspiration.more_actions": "Más acciones de gestión",
     "inspiration.filter_by_mode": "Filtrar inspiraciones por tipo de creación",
     "inspiration.search_placeholder": "Buscar títulos, descripciones o etiquetas",
-    "inspiration_search_aria": "Buscar inspiraciones",
+    inspiration_search_aria: "Buscar inspiraciones",
     "inspiration.advanced_filters": "Filtros avanzados de inspiración",
     "inspiration.filter_by_state": "Filtrar por todas, favoritas u ocultas",
     "inspiration.sort": "Ordenar inspiraciones",

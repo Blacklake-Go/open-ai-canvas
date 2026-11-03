@@ -1714,7 +1714,7 @@ const pack: Record<string, string> = {
     "inspiration.more_actions": "영감 관리 추가 작업",
     "inspiration.filter_by_mode": "제작 유형으로 영감 필터",
     "inspiration.search_placeholder": "제목, 설명 또는 태그 검색",
-    "inspiration_search_aria": "영감 검색",
+    inspiration_search_aria: "영감 검색",
     "inspiration.advanced_filters": "영감 고급 필터",
     "inspiration.filter_by_state": "전체, 즐겨찾기 또는 숨김 상태로 필터",
     "inspiration.sort": "영감 정렬",

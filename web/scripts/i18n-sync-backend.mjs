@@ -31,7 +31,7 @@ const packs = {};
 for (const code of LOCALES_CODES) {
     const source = readFileSync(resolve(LOCALES, "packs", `${code}.ts`), "utf8");
     const map = {};
-    for (const match of source.matchAll(/^\s{4}"([^"]+)":\s*(?:"((?:[^"\\]|\\.)*)"|'((?:[^'\\]|\\.)*)')\s*,?$/gm)) map[match[1]] = unescapeTs(match[2] ?? match[3]);
+    for (const match of source.matchAll(/^\s{4}(?:"([^"]+)"|([A-Za-z0-9_.-]+)):\s*(?:"((?:[^"\\]|\\.)*)"|'((?:[^'\\]|\\.)*)')\s*,?$/gm)) map[match[1] || match[2]] = unescapeTs(match[3] ?? match[4]);
     packs[code] = map;
 }
 

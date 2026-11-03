@@ -1714,7 +1714,7 @@ const pack: Record<string, string> = {
     "inspiration.more_actions": "その他の管理操作",
     "inspiration.filter_by_mode": "制作タイプで絞り込む",
     "inspiration.search_placeholder": "タイトル・説明・タグを検索",
-    "inspiration_search_aria": "インスピレーションを検索",
+    inspiration_search_aria: "インスピレーションを検索",
     "inspiration.advanced_filters": "詳細フィルター",
     "inspiration.filter_by_state": "すべて・お気に入り・非表示で絞り込む",
     "inspiration.sort": "インスピレーションの並べ替え",

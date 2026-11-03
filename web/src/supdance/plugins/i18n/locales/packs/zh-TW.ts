@@ -1714,7 +1714,7 @@ const pack: Record<string, string> = {
     "inspiration.more_actions": "更多靈感管理操作",
     "inspiration.filter_by_mode": "依創作類型篩選靈感",
     "inspiration.search_placeholder": "搜尋標題、描述或標籤",
-    "inspiration_search_aria": "搜尋靈感",
+    inspiration_search_aria: "搜尋靈感",
     "inspiration.advanced_filters": "靈感進階篩選",
     "inspiration.filter_by_state": "依全部、收藏或隱藏狀態篩選靈感",
     "inspiration.sort": "靈感排序",
