@@ -7,6 +7,7 @@ import { useI18n, useSupDanceI18nStore } from "../src/supdance/plugins/i18n/stor
 import type { SupDanceLocaleCode } from "../src/supdance/plugins/i18n/types";
 
 const ALL_LOCALES: readonly SupDanceLocaleCode[] = ["zh-CN", "en-US", "zh-TW", "ja-JP", "ko-KR", "es-ES"];
+const originalGlobalDescriptors = new Map(["window", "document", "navigator", "MutationObserver"].map((name) => [name, Object.getOwnPropertyDescriptor(globalThis, name)]));
 
 describe("Empirical Challenger Suite: Milestone 1 Stress & Verification", () => {
     let initialStoreState: ReturnType<typeof useSupDanceI18nStore.getState>;
@@ -29,10 +30,10 @@ describe("Empirical Challenger Suite: Milestone 1 Stress & Verification", () => 
 
     afterEach(() => {
         useSupDanceI18nStore.setState(initialStoreState);
-        delete (globalThis as any).window;
-        delete (globalThis as any).document;
-        delete (globalThis as any).navigator;
-        delete (globalThis as any).MutationObserver;
+        for (const [name, descriptor] of originalGlobalDescriptors) {
+            if (descriptor) Object.defineProperty(globalThis, name, descriptor);
+            else Reflect.deleteProperty(globalThis, name);
+        }
     });
 
     // =========================================================================

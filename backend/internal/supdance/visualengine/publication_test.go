@@ -2,6 +2,7 @@ package visualengine
 
 import (
 	"encoding/json"
+	"net/url"
 	"os"
 	"strings"
 	"sync"
@@ -14,6 +15,32 @@ import (
 	"yingce/backend/internal/model"
 	"yingce/backend/internal/repository"
 )
+
+func withPostgresSearchPath(dsn string, schema string) string {
+	parsed, err := url.Parse(dsn)
+	if err == nil && (parsed.Scheme == "postgres" || parsed.Scheme == "postgresql") {
+		query := parsed.Query()
+		query.Set("search_path", schema)
+		parsed.RawQuery = query.Encode()
+		return parsed.String()
+	}
+	return dsn + " search_path=" + schema
+}
+
+func TestWithPostgresSearchPath(t *testing.T) {
+	urlDSN := "postgres://postgres:canvas_test@127.0.0.1:5432/canvas_test?sslmode=disable"
+	got := withPostgresSearchPath(urlDSN, "visual_test_schema")
+	parsed, err := url.Parse(got)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if parsed.Query().Get("sslmode") != "disable" || parsed.Query().Get("search_path") != "visual_test_schema" {
+		t.Fatalf("existing query parameters were not preserved: %s", got)
+	}
+	if keywordDSN := "host=127.0.0.1 user=postgres"; withPostgresSearchPath(keywordDSN, "visual_test_schema") != "host=127.0.0.1 user=postgres search_path=visual_test_schema" {
+		t.Fatal("keyword DSN was not extended")
+	}
+}
 
 func TestDecodeConfigRejectsOmittedNullAndUnknownFields(t *testing.T) {
 	raw, err := json.Marshal(DefaultConfig())
@@ -58,7 +85,7 @@ func TestPostgresConcurrentPublicationAndAtomicAuditFailure(t *testing.T) {
 		connection, _ := db.DB()
 		_ = connection.Close()
 	})
-	isolated, err := gorm.Open(postgres.Open(dsn+" search_path="+schema), &gorm.Config{})
+	isolated, err := gorm.Open(postgres.Open(withPostgresSearchPath(dsn, schema)), &gorm.Config{})
 	if err != nil {
 		t.Fatal(err)
 	}
