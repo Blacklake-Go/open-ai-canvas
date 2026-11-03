@@ -1,7 +1,7 @@
 import type { SupDanceLocaleCode } from "../types";
 import { isCandidateUntranslatedChinese, translateSourceText, type CompiledI18nDictionary } from "./translator";
 
-const IGNORED_TAG_NAMES = new Set(["SCRIPT", "STYLE", "CODE", "PRE", "TEXTAREA", "NOSCRIPT", "SVG", "MATH"]);
+const IGNORED_TAG_NAMES = new Set(["SCRIPT", "STYLE", "CODE", "PRE", "NOSCRIPT", "SVG", "MATH"]);
 const TRANSLATABLE_ATTRIBUTES = ["placeholder", "title", "aria-label"] as const;
 const PRUNE_THRESHOLD = 200;
 
@@ -240,7 +240,8 @@ export class SupDanceDomTranslator {
     private processTextNode(textNode: Text): void {
         if (!this.currentDictionary) return;
         const parent = textNode.parentElement;
-        if (parent && this.shouldIgnoreElement(parent)) return;
+        // textarea 的 placeholder 和 aria-label 是界面控件需要翻译，但内部用户输入文本绝不能被当成文本节点翻译。
+        if (parent && (this.shouldIgnoreElement(parent) || parent.tagName === "TEXTAREA")) return;
 
         const currentValue = textNode.nodeValue ?? "";
         if (!currentValue.trim()) return;

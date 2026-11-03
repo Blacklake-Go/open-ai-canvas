@@ -1844,6 +1844,23 @@ export const BUILTIN_SUPDANCE_I18N_ENTRIES: readonly SupDanceI18nEntry[] = [
     e("inspiration.hall_subtitle", "inspiration", "点开查看完整提示词，用喜欢的创意继续创作。", "灵感大厅：副标题"),
     e("inspiration.more_filters", "inspiration", "更多筛选", "灵感大厅：进阶筛选按钮"),
     e("inspiration.community_picks_ccby", "inspiration", "社区精选 · CC BY 4.0", "灵感来源标签：社区精选与授权"),
+    e("common.category", "common", "分类", "通用分类标签"),
+    e("create.use_this_idea", "create", "使用这个创意", "首页灵感画廊：卡片操作按钮"),
+    e("create.gallery_prev_aria", "create", "上一张灵感", "首页灵感画廊：向左箭头按钮"),
+    e("create.gallery_next_aria", "create", "下一张灵感", "首页灵感画廊：向右箭头按钮"),
+    e("inspiration.source_original_prompts", "inspiration", "原创提示词", "灵感来源标签：原创"),
+    e("inspiration.source_chatgpt_prompts", "inspiration", "开源改编 · CC0", "灵感来源标签：开源改编"),
+    e("inspiration.source_haohaoxue", "inspiration", "好好学 AI · 图片提示词", "灵感来源标签：好好学 AI"),
+    e("inspiration.source_youmind", "inspiration", "YouMind 提示词库 · CC BY 4.0", "灵感来源标签：YouMind"),
+    e("common.image", "common", "图片", "通用类型：图片"),
+    e("common.video", "common", "视频", "通用类型：视频"),
+    e("inspiration.browse_scope", "inspiration", "浏览范围", "灵感大厅筛选器：浏览范围"),
+    e("inspiration.all_sources", "inspiration", "全部来源", "灵感大厅来源筛选：全部来源"),
+    e("inspiration.all_categories", "inspiration", "全部分类", "灵感大厅分类筛选：全部分类"),
+    e("common.reset_filters", "common", "重置筛选", "通用重置筛选按钮"),
+    e("common.default_sort", "common", "默认顺序", "排序选项：默认顺序"),
+    e("common.sort_by_title", "common", "按标题", "排序选项：按标题"),
+    e("inspiration.view_aria", "inspiration", "查看灵感", "灵感卡片无障碍标签前缀"),
 ];
 
 export const packLoaders: Record<Exclude<SupDanceLocaleCode, "zh-CN">, () => Promise<{ default: Record<string, string> }>> = {

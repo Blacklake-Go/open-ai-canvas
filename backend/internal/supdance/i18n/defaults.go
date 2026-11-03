@@ -103,7 +103,7 @@ func entry(key, ns, zhCN, enUS, zhTW, jaJP, koKR, esES, desc string) Entry {
 // BuiltinEntries 由 web/scripts/i18n-sync-backend.mjs 从前端词典生成，不要手工编辑词条体。
 func BuiltinEntries() []Entry {
 	return []Entry{
-		// ==================== common: 通用与基础控件 (124) ====================
+		// ==================== common: 通用与基础控件 (130) ====================
 		entry("common.confirm", "common", "确认", "Confirm", "確認", "確認", "확인", "Confirmar", "通用确认按钮"),
 		entry("common.cancel", "common", "取消", "Cancel", "取消", "キャンセル", "취소", "Cancelar", "通用取消按钮"),
 		entry("common.save", "common", "保存", "Save", "儲存", "保存", "저장", "Guardar", "通用保存按钮"),
@@ -228,6 +228,12 @@ func BuiltinEntries() []Entry {
 		entry("common.time", "common", "时间", "Time", "時間", "時間", "시간", "Hora", "时间字段"),
 		entry("common.chinese", "common", "中文", "Chinese", "中文", "中国語", "중국어", "Chino", "中文语言选项"),
 		entry("common.music", "common", "音乐", "Music", "音樂", "音楽", "음악", "Música", "通用：创作类型「音乐」标签"),
+		entry("common.category", "common", "分类", "Category", "分類", "カテゴリー", "분류", "Categoría", "通用分类标签"),
+		entry("common.image", "common", "图片", "Image", "圖片", "画像", "이미지", "Imagen", "通用类型：图片"),
+		entry("common.video", "common", "视频", "Video", "影片", "動画", "비디오", "Vídeo", "通用类型：视频"),
+		entry("common.reset_filters", "common", "重置筛选", "Reset Filters", "重設篩選", "フィルターをリセット", "필터 재설정", "Restablecer filtros", "通用重置筛选按钮"),
+		entry("common.default_sort", "common", "默认顺序", "Default Order", "預設順序", "デフォルト順", "기본 정렬", "Orden predeterminado", "排序选项：默认顺序"),
+		entry("common.sort_by_title", "common", "按标题", "By Title", "依標題", "タイトル順", "제목순", "Por título", "排序选项：按标题"),
 		// ==================== nav: 顶栏与侧栏导航 (94) ====================
 		entry("nav.workspace", "nav", "创作工作台", "Creative Studio", "創作工作台", "制作スタジオ", "크리에이티브 스튜디오", "Estudio Creativo", "侧栏品牌副标题"),
 		entry("nav.create", "nav", "创作", "Create", "創作", "制作", "창작", "Crear", "主导航：创作工作台"),
@@ -406,7 +412,7 @@ func BuiltinEntries() []Entry {
 		entry("auth.onboarding.terms_service", "auth", "《用户服务协议》", "Terms of Service", "《用戶服務協議》", "利用規約", "이용약관", "Términos de servicio", "服务协议链接文案"),
 		entry("auth.onboarding.terms_and", "auth", "与", "and", "與", "および", "및", "y la", "协议链接之间的连接词"),
 		entry("auth.onboarding.terms_privacy", "auth", "《隐私政策》", "Privacy Policy", "《隱私政策》", "プライバシーポリシー", "개인정보 처리방침", "Política de privacidad", "隐私政策链接文案"),
-		// ==================== create: 首页创作工作台 (24) ====================
+		// ==================== create: 首页创作工作台 (27) ====================
 		entry("create.recent_canvases", "create", "最近画布", "Recent Canvases", "最近畫布", "最近のキャンバス", "최근 캔버스", "Lienzos recientes", "创作页：最近画布"),
 		entry("create.new_canvas", "create", "新建画布", "New Canvas", "新建畫布", "新規キャンバス", "새 캔버스", "Nuevo lienzo", "创作页：新建画布"),
 		entry("create.inspiration", "create", "灵感广场", "Inspiration Gallery", "靈感廣場", "インスピレーション", "영감 갤러리", "Galería de Inspiración", "创作页：灵感广场"),
@@ -431,6 +437,9 @@ func BuiltinEntries() []Entry {
 		entry("create.busy_add_reference_blocked", "create", "生成中暂不能添加参考内容", "Cannot add references while generating", "生成中暫無法新增參考內容", "生成中は参照を追加できません", "생성 중에는 참고 자료를 추가할 수 없습니다", "No se pueden añadir referencias durante la generación", "参考内容按钮：生成中禁用提示"),
 		entry("create.generate_after_prompt", "create", "输入创作想法后即可生成", "Enter an idea to start generating", "輸入創作想法後即可生成", "アイデアを入力すると生成できます", "아이디어를 입력하면 생성할 수 있습니다", "Introduce una idea para empezar a generar", "生成按钮：禁用态提示"),
 		entry("create.voice_live_chat", "create", "实时对话", "Live voice chat", "即時對話", "リアルタイム会話", "실시간 대화", "Chat de voz en directo", "语音输入按钮无障碍标签"),
+		entry("create.use_this_idea", "create", "使用这个创意", "Use this idea", "使用這個創意", "このアイデアを使う", "이 아이디어 사용", "Usar esta idea", "首页灵感画廊：卡片操作按钮"),
+		entry("create.gallery_prev_aria", "create", "上一张灵感", "Previous inspiration", "上一張靈感", "前のインスピレーション", "이전 영감", "Inspiración anterior", "首页灵感画廊：向左箭头按钮"),
+		entry("create.gallery_next_aria", "create", "下一张灵感", "Next inspiration", "下一張靈感", "次のインスピレーション", "다음 영감", "Siguiente inspiración", "首页灵感画廊：向右箭头按钮"),
 		// ==================== canvas: 自由画布与节点 (132) ====================
 		entry("canvas.my_canvases", "canvas", "我的画布", "My Canvases", "我的畫布", "マイキャンバス", "내 캔버스", "Mis lienzos", "画布列表标题"),
 		entry("canvas.create_project", "canvas", "新建画布项目", "New Canvas Project", "新建畫布專案", "新規キャンバスプロジェクト", "새 캔버스 프로젝트", "Nuevo proyecto de lienzo", "新建画布项目"),
@@ -1835,7 +1844,7 @@ func BuiltinEntries() []Entry {
 		entry("music.test_connection", "music", "测试连接", "Test Connection", "測試連線", "接続テスト", "연결 테스트", "Probar conexión", "测试连接按钮"),
 		entry("music.save_config", "music", "保存配置", "Save Configuration", "儲存設定", "設定を保存", "설정 저장", "Guardar configuración", "保存配置按钮"),
 		entry("music.submitting", "music", "提交中...", "Submitting...", "提交中...", "送信中...", "제출 중...", "Enviando...", "提交中提示"),
-		// ==================== inspiration: 灵感大厅与创意目录 (62) ====================
+		// ==================== inspiration: 灵感大厅与创意目录 (70) ====================
 		entry("inspiration.fashion_editorial", "inspiration", "时尚编辑", "Fashion Editorial", "時尚編輯", "ファッションエディトリアル", "패션 에디토리얼", "Editorial de moda", "灵感分类：时尚编辑"),
 		entry("inspiration.hall_title", "inspiration", "灵感大厅", "Inspiration Hall", "靈感大廳", "インスピレーションホール", "영감 홀", "Sala de inspiración", "灵感大厅页面主标题"),
 		entry("inspiration.field_source", "inspiration", "来源", "Source", "來源", "出典", "출처", "Fuente", "灵感详情：来源字段标签"),
@@ -1898,5 +1907,13 @@ func BuiltinEntries() []Entry {
 		entry("inspiration.hall_subtitle", "inspiration", "点开查看完整提示词，用喜欢的创意继续创作。", "Open a card to read the full prompt and keep creating with ideas you like.", "點開檢視完整提示詞，用喜歡的創意繼續創作。", "カードを開いて完全なプロンプトを確認し、好きなアイデアで続行できます。", "카드를 열어 전체 프롬프트를 확인하고 마음에 드는 크리에이션으로 계속 창작하세요.", "Abre una tarjeta para ver el prompt completo y seguir creando con las ideas que te gusten.", "灵感大厅：副标题"),
 		entry("inspiration.more_filters", "inspiration", "更多筛选", "More filters", "更多篩選", "その他の絞り込み", "추가 필터", "Más filtros", "灵感大厅：进阶筛选按钮"),
 		entry("inspiration.community_picks_ccby", "inspiration", "社区精选 · CC BY 4.0", "Community picks · CC BY 4.0", "社群精選 · CC BY 4.0", "コミュニティ厳選 · CC BY 4.0", "커뮤니티 추천 · CC BY 4.0", "Selección de la comunidad · CC BY 4.0", "灵感来源标签：社区精选与授权"),
+		entry("inspiration.source_original_prompts", "inspiration", "原创提示词", "Original Prompts", "原創提示詞", "オリジナルプロンプト", "오리지널 프롬프트", "Prompts originales", "灵感来源标签：原创"),
+		entry("inspiration.source_chatgpt_prompts", "inspiration", "开源改编 · CC0", "Open source adaptation · CC0", "開源改編 · CC0", "オープンソース翻案 · CC0", "오픈소스 개작 · CC0", "Adaptación de código abierto · CC0", "灵感来源标签：开源改编"),
+		entry("inspiration.source_haohaoxue", "inspiration", "好好学 AI · 图片提示词", "Haohaoxue AI · Image Prompts", "好好學 AI · 圖片提示詞", "Haohaoxue AI · 画像プロンプト", "하오하오쉐 AI · 이미지 프롬프트", "Haohaoxue AI · Prompts de imagen", "灵感来源标签：好好学 AI"),
+		entry("inspiration.source_youmind", "inspiration", "YouMind 提示词库 · CC BY 4.0", "YouMind Prompt Library · CC BY 4.0", "YouMind 提示詞庫 · CC BY 4.0", "YouMind プロンプトライブラリ · CC BY 4.0", "YouMind 프롬프트 라이브러리 · CC BY 4.0", "Biblioteca de prompts YouMind · CC BY 4.0", "灵感来源标签：YouMind"),
+		entry("inspiration.browse_scope", "inspiration", "浏览范围", "Browse Scope", "瀏覽範圍", "表示範囲", "탐색 범위", "Alcance de exploración", "灵感大厅筛选器：浏览范围"),
+		entry("inspiration.all_sources", "inspiration", "全部来源", "All Sources", "全部來源", "すべてのソース", "모든 출처", "Todas las fuentes", "灵感大厅来源筛选：全部来源"),
+		entry("inspiration.all_categories", "inspiration", "全部分类", "All Categories", "全部分類", "すべてのカテゴリー", "모든 분류", "Todas las categorías", "灵感大厅分类筛选：全部分类"),
+		entry("inspiration.view_aria", "inspiration", "查看灵感", "View inspiration", "檢視靈感", "インスピレーションを見る", "영감 보기", "Ver inspiración", "灵感卡片无障碍标签前缀"),
 	}
 }

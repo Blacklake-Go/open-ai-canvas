@@ -1778,6 +1778,23 @@ const pack: Record<string, string> = {
     "inspiration.hall_subtitle": "Open a card to read the full prompt and keep creating with ideas you like.",
     "inspiration.more_filters": "More filters",
     "inspiration.community_picks_ccby": "Community picks · CC BY 4.0",
+    "common.category": "Category",
+    "create.use_this_idea": "Use this idea",
+    "create.gallery_prev_aria": "Previous inspiration",
+    "create.gallery_next_aria": "Next inspiration",
+    "inspiration.source_original_prompts": "Original Prompts",
+    "inspiration.source_chatgpt_prompts": "Open source adaptation · CC0",
+    "inspiration.source_haohaoxue": "Haohaoxue AI · Image Prompts",
+    "inspiration.source_youmind": "YouMind Prompt Library · CC BY 4.0",
+    "common.image": "Image",
+    "common.video": "Video",
+    "inspiration.browse_scope": "Browse Scope",
+    "inspiration.all_sources": "All Sources",
+    "inspiration.all_categories": "All Categories",
+    "common.reset_filters": "Reset Filters",
+    "common.default_sort": "Default Order",
+    "common.sort_by_title": "By Title",
+    "inspiration.view_aria": "View inspiration",
 };
 
 export default pack;

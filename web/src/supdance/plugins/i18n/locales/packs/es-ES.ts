@@ -1778,6 +1778,23 @@ const pack: Record<string, string> = {
     "inspiration.hall_subtitle": "Abre una tarjeta para ver el prompt completo y seguir creando con las ideas que te gusten.",
     "inspiration.more_filters": "Más filtros",
     "inspiration.community_picks_ccby": "Selección de la comunidad · CC BY 4.0",
+    "common.category": "Categoría",
+    "create.use_this_idea": "Usar esta idea",
+    "create.gallery_prev_aria": "Inspiración anterior",
+    "create.gallery_next_aria": "Siguiente inspiración",
+    "inspiration.source_original_prompts": "Prompts originales",
+    "inspiration.source_chatgpt_prompts": "Adaptación de código abierto · CC0",
+    "inspiration.source_haohaoxue": "Haohaoxue AI · Prompts de imagen",
+    "inspiration.source_youmind": "Biblioteca de prompts YouMind · CC BY 4.0",
+    "common.image": "Imagen",
+    "common.video": "Vídeo",
+    "inspiration.browse_scope": "Alcance de exploración",
+    "inspiration.all_sources": "Todas las fuentes",
+    "inspiration.all_categories": "Todas las categorías",
+    "common.reset_filters": "Restablecer filtros",
+    "common.default_sort": "Orden predeterminado",
+    "common.sort_by_title": "Por título",
+    "inspiration.view_aria": "Ver inspiración",
 };
 
 export default pack;

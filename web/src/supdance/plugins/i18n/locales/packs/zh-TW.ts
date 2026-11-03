@@ -1778,6 +1778,23 @@ const pack: Record<string, string> = {
     "inspiration.hall_subtitle": "點開檢視完整提示詞，用喜歡的創意繼續創作。",
     "inspiration.more_filters": "更多篩選",
     "inspiration.community_picks_ccby": "社群精選 · CC BY 4.0",
+    "common.category": "分類",
+    "create.use_this_idea": "使用這個創意",
+    "create.gallery_prev_aria": "上一張靈感",
+    "create.gallery_next_aria": "下一張靈感",
+    "inspiration.source_original_prompts": "原創提示詞",
+    "inspiration.source_chatgpt_prompts": "開源改編 · CC0",
+    "inspiration.source_haohaoxue": "好好學 AI · 圖片提示詞",
+    "inspiration.source_youmind": "YouMind 提示詞庫 · CC BY 4.0",
+    "common.image": "圖片",
+    "common.video": "影片",
+    "inspiration.browse_scope": "瀏覽範圍",
+    "inspiration.all_sources": "全部來源",
+    "inspiration.all_categories": "全部分類",
+    "common.reset_filters": "重設篩選",
+    "common.default_sort": "預設順序",
+    "common.sort_by_title": "依標題",
+    "inspiration.view_aria": "檢視靈感",
 };
 
 export default pack;
