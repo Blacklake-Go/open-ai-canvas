@@ -481,7 +481,9 @@ export function SupDanceI18nEntriesPage() {
             description="随时在线搜索、编辑或新增站点任意字段的六国语言（简中、英语、繁中、日文、韩语、西班牙语）翻译词条，保存后全站免编译即时热生效。"
             actions={
                 <div className="flex flex-wrap items-center gap-2">
-                    <Button onClick={() => setWorkflowOpen(true)}>{t("admin.i18n_workflow.open")}</Button>
+                    <Button className="min-h-11 sm:min-h-0" onClick={() => setWorkflowOpen(true)}>
+                        {t("admin.i18n_workflow.open")}
+                    </Button>
                     {serverConnected !== null ? <AdminStatusBadge label={serverConnected ? "服务端已同步" : "本地缓存降级"} tone={serverConnected ? "info" : "warning"} /> : null}
                     <Button icon={<Radar className="size-4" />} onClick={() => setDiscoveredDrawerOpen(true)}>
                         未收录词条嗅探 ({discoveredUntranslated.length})
@@ -605,7 +607,7 @@ export function SupDanceI18nEntriesPage() {
                 />
             </div>
 
-            <AdminDrawer open={workflowOpen} onClose={() => setWorkflowOpen(false)} title={t("admin.i18n_workflow.title")} size="min(100vw, 64rem)">
+            <AdminDrawer className="[&_.ant-drawer-close]:min-h-11 [&_.ant-drawer-close]:min-w-11" open={workflowOpen} onClose={() => setWorkflowOpen(false)} title={t("admin.i18n_workflow.title")} size="min(100vw, 64rem)">
                 {workflowOpen ? <TranslationWorkflowPanel onChanged={() => void fetchRemoteEntries()} /> : null}
             </AdminDrawer>
             <AdminDrawer

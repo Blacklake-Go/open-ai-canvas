@@ -67,7 +67,7 @@ export function TranslationWorkflowPanel({ onChanged }: { onChanged: () => void 
     const confirm = (action: "publish" | "discard" | "rollback", releaseId?: string) => modal.confirm({ title: text("confirm"), content: text(action), onOk: () => act(action, releaseId ? { releaseId } : { keys: selected }) });
 
     return (
-        <div data-plugin-scope="supdance-i18n" className="space-y-6">
+        <div data-plugin-scope="supdance-i18n" className="space-y-6 [&_button]:min-h-11 sm:[&_button]:min-h-0 [&_.ant-input]:min-h-11 sm:[&_.ant-input]:min-h-0 [&_.ant-checkbox-wrapper]:min-h-11 sm:[&_.ant-checkbox-wrapper]:min-h-0">
             <p className="text-sm text-[var(--admin-text-secondary)]">{text("description")}</p>
             <p className="text-xs text-[var(--admin-text-secondary)]">{t("admin.i18n_workflow.version", { version: SUPDANCE_I18N_VERSION, revision: state?.revision ?? 0 })}</p>
             {error ? (
@@ -169,6 +169,7 @@ export function TranslationWorkflowPanel({ onChanged }: { onChanged: () => void 
                 open={!!editing}
                 onClose={() => setEditing(null)}
                 size="min(100vw, 48rem)"
+                className="[&_.ant-drawer-close]:min-h-11 [&_.ant-drawer-close]:min-w-11 [&_button]:min-h-11 sm:[&_button]:min-h-0"
                 extra={
                     <Button
                         type="primary"
