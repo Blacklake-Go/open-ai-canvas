@@ -1,0 +1,8 @@
+{
+  "protected": ["SupDance", "OpenAI", "Gemini", "Seedream", "Kling", "Sora"],
+  "terms": {
+    "画布": { "en-US": "Canvas", "zh-TW": "畫布", "ja-JP": "キャンバス", "ko-KR": "캔버스", "es-ES": "Lienzo" },
+    "积分": { "en-US": "Credits", "zh-TW": "積分", "ja-JP": "クレジット", "ko-KR": "크레딧", "es-ES": "Créditos" },
+    "素材": { "en-US": "Assets", "zh-TW": "素材", "ja-JP": "素材", "ko-KR": "에셋", "es-ES": "Recursos" }
+  }
+}

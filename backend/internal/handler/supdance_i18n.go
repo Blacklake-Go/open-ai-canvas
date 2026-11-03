@@ -7,6 +7,7 @@ import (
 	"strings"
 
 	"yingce/backend/internal/service"
+	i18n "yingce/backend/internal/supdance/i18n"
 
 	"github.com/gin-gonic/gin"
 )
@@ -40,7 +41,7 @@ func RegisterSupDanceI18nRoutes(r *gin.RouterGroup, svc *service.Service) {
 			return
 		}
 		etag := `"` + bundle.Revision + `"`
-		c.Header("Cache-Control", "public, max-age=60, stale-while-revalidate=300")
+		c.Header("Cache-Control", "public, no-cache, must-revalidate")
 		c.Header("ETag", etag)
 		if match := c.GetHeader("If-None-Match"); match != "" && (match == etag || match == bundle.Revision) {
 			c.Status(http.StatusNotModified)
@@ -50,6 +51,46 @@ func RegisterSupDanceI18nRoutes(r *gin.RouterGroup, svc *service.Service) {
 	})
 
 	adminGroup := r.Group("/admin/plugins/supdance-i18n")
+	adminGroup.GET("/workflow", func(c *gin.Context) {
+		user, err := currentUser(c, svc)
+		if err != nil {
+			failService(c, err)
+			return
+		}
+		state, err := svc.AdminSupDanceI18nWorkflow(user)
+		if err != nil {
+			failService(c, err)
+			return
+		}
+		ok(c, state)
+	})
+	adminGroup.POST("/workflow", func(c *gin.Context) {
+		user, err := currentUser(c, svc)
+		if err != nil {
+			failService(c, err)
+			return
+		}
+		c.Request.Body = http.MaxBytesReader(c.Writer, c.Request.Body, 8<<20)
+		var req service.SupDanceI18nWorkflowRequest
+		if err = c.ShouldBindJSON(&req); err != nil {
+			fail(c, http.StatusBadRequest, err)
+			return
+		}
+		state, err := svc.UpdateSupDanceI18nWorkflow(user, req)
+		if errors.Is(err, i18n.ErrWorkflowConflict) {
+			fail(c, http.StatusConflict, err)
+			return
+		}
+		if errors.Is(err, i18n.ErrInvalidTranslation) {
+			fail(c, http.StatusBadRequest, err)
+			return
+		}
+		if err != nil {
+			failService(c, err)
+			return
+		}
+		ok(c, state)
+	})
 	adminGroup.GET("/settings", func(c *gin.Context) {
 		user, err := currentUser(c, svc)
 		if err != nil {

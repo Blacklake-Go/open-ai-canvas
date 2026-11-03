@@ -6,6 +6,7 @@
     "local-development",
     "canvas-agent-appearance",
     "http-api",
+    "supdance-i18n",
     "code-map",
     "backend-database",
     "video-token-billing",

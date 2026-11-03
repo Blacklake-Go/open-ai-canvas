@@ -64,6 +64,35 @@ function e(key: string, namespace: string, zhCN: string, description = ""): SupD
 }
 
 export const BUILTIN_SUPDANCE_I18N_ENTRIES: readonly SupDanceI18nEntry[] = [
+    e("admin.i18n_workflow.stale", "admin", "源文已变化，请复核人工覆盖译文", "源文变化提醒"),
+    e("admin.i18n_workflow.load_failed", "admin", "语言包加载失败，已恢复简体中文，请重试。", "语言包加载错误"),
+    e("admin.i18n_workflow.title", "admin", "翻译更新中心", "翻译更新中心"),
+    e("admin.i18n_workflow.open", "admin", "翻译更新中心", "翻译更新中心"),
+    e("admin.i18n_workflow.description", "admin", "导入扫描草稿，补全六语种后审核发布；已发布版本可回滚。", "翻译更新中心"),
+    e("admin.i18n_workflow.import", "admin", "导入草稿 JSON", "翻译更新中心"),
+    e("admin.i18n_workflow.stage", "admin", "保存草稿", "翻译更新中心"),
+    e("admin.i18n_workflow.review", "admin", "审核所选", "翻译更新中心"),
+    e("admin.i18n_workflow.publish", "admin", "发布所选", "翻译更新中心"),
+    e("admin.i18n_workflow.discard", "admin", "移除所选草稿", "翻译更新中心"),
+    e("admin.i18n_workflow.reload", "admin", "重新加载", "翻译更新中心"),
+    e("admin.i18n_workflow.draft", "admin", "待补全或审核", "翻译更新中心"),
+    e("admin.i18n_workflow.reviewed", "admin", "已审核", "翻译更新中心"),
+    e("admin.i18n_workflow.empty", "admin", "暂无待处理翻译草稿", "翻译更新中心"),
+    e("admin.i18n_workflow.select", "admin", "选择词条 {key}", "翻译更新中心"),
+    e("admin.i18n_workflow.edit", "admin", "编辑草稿", "翻译更新中心"),
+    e("admin.i18n_workflow.source", "admin", "基准原文", "翻译更新中心"),
+    e("admin.i18n_workflow.history", "admin", "发布历史（最近十次）", "翻译更新中心"),
+    e("admin.i18n_workflow.rollback", "admin", "回滚到该次发布之前", "翻译更新中心"),
+    e("admin.i18n_workflow.confirm", "admin", "确认执行此操作？", "翻译更新中心"),
+    e("admin.i18n_workflow.done", "admin", "翻译工作流已更新", "翻译更新中心"),
+    e("admin.i18n_workflow.failed", "admin", "操作失败，请检查内容并重新加载", "翻译更新中心"),
+    e("admin.i18n_workflow.locked", "admin", "人工锁定的词条", "翻译更新中心"),
+    e("admin.i18n_workflow.lock", "admin", "锁定词条", "翻译更新中心"),
+    e("admin.i18n_workflow.unlock", "admin", "解除锁定", "翻译更新中心"),
+    e("admin.i18n_workflow.key", "admin", "词条 Key", "翻译更新中心"),
+    e("admin.i18n_workflow.json", "admin", "粘贴扫描工具生成的 drafts.json", "翻译更新中心"),
+    e("admin.i18n_workflow.invalid", "admin", "草稿文件格式不正确", "翻译更新中心"),
+    e("admin.i18n_workflow.version", "admin", "插件版本 {version} · 工作流修订 {revision}", "翻译更新中心"),
     e("common.confirm", "common", "确认", "通用确认按钮"),
     e("common.cancel", "common", "取消", "通用取消按钮"),
     e("common.save", "common", "保存", "通用保存按钮"),
@@ -1985,8 +2014,9 @@ export async function loadLocalePack(locale: SupDanceLocaleCode): Promise<Record
         const pack = mod.default || mod;
         applyPackToBuiltinEntries(locale, pack);
         return pack;
-    } catch {
-        return {};
+    } catch (error) {
+        console.warn("[supdance-i18n] language_pack_load_failed", locale);
+        throw error;
     }
 }
 

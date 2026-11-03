@@ -1,4 +1,5 @@
 export const SUPDANCE_I18N_PLUGIN_ID = "supdance-i18n" as const;
+export const SUPDANCE_I18N_VERSION = "1.2.0" as const;
 
 export type SupDanceLocaleCode = "zh-CN" | "en-US" | "zh-TW" | "ja-JP" | "ko-KR" | "es-ES";
 
@@ -40,6 +41,7 @@ export type SupDanceI18nSettings = {
 };
 
 export type SupDanceI18nEntry = {
+    builtinSourceHash?: string;
     key: string;
     namespace: string;
     sourceText: string;

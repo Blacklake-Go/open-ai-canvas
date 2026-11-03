@@ -236,6 +236,17 @@ jobs:
         run: bun run lint
       - name: Run tests
         run: bun run test
+      - name: Check translation source changes and generated dictionary
+        run: |
+          bun scripts/i18n-scan.mjs --check
+          bun scripts/i18n-sync-backend.mjs --check
+      - name: Upload translation change report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: i18n-source-report
+          path: .local/cache/i18n/scan.json
+          if-no-files-found: ignore
       # ubuntu-latest 预装 google-chrome；脚本的解析顺序已覆盖该路径，
       # 因此不引入第三方 setup action，也不需要任何 secret。
       - name: Previs P0 Chrome E2E

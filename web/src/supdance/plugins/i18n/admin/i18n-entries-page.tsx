@@ -11,7 +11,8 @@ import { AdminDataTable, AdminFilterChip, AdminStatTile, AdminStatusBadge, Admin
 import { AdminDrawer, AdminModal } from "@/pages/admin/ui/overlays";
 import { deleteAdminSupDanceI18nEntry, exportAdminSupDanceI18n, importAdminSupDanceI18n, listAdminSupDanceI18nEntries, upsertAdminSupDanceI18nEntries } from "../api";
 import { DEFAULT_SUPDANCE_LANGUAGES, NAMESPACE_LABELS, SUPPORTED_LOCALE_CODES } from "../locales";
-import { useSupDanceI18nStore } from "../store";
+import { useI18n, useSupDanceI18nStore } from "../store";
+import { TranslationWorkflowPanel } from "./translation-workflow";
 import { SUPDANCE_I18N_PLUGIN_ID, type SupDanceDiscoveredTextItem, type SupDanceI18nEntry, type SupDanceLocaleCode } from "../types";
 
 const EMPTY_TRANSLATIONS: Record<SupDanceLocaleCode, string> = {
@@ -57,6 +58,8 @@ function buildSuggestedKeyFromText(namespace: string, sourceText: string): strin
 }
 
 export function SupDanceI18nEntriesPage() {
+    const { t } = useI18n();
+    const [workflowOpen, setWorkflowOpen] = useState(false);
     const { message, modal } = App.useApp();
     const navigate = useNavigate();
     const [searchParams, setSearchParams] = useSearchParams();
@@ -304,7 +307,7 @@ export function SupDanceI18nEntriesPage() {
             } catch {
                 payload = {
                     pluginId: SUPDANCE_I18N_PLUGIN_ID,
-                    version: "1.1.0",
+                    version: "1.2.0",
                     exportedAt: new Date().toISOString(),
                     settings: storeSettings,
                     entries: storeEntries,
@@ -478,6 +481,7 @@ export function SupDanceI18nEntriesPage() {
             description="随时在线搜索、编辑或新增站点任意字段的六国语言（简中、英语、繁中、日文、韩语、西班牙语）翻译词条，保存后全站免编译即时热生效。"
             actions={
                 <div className="flex flex-wrap items-center gap-2">
+                    <Button onClick={() => setWorkflowOpen(true)}>{t("admin.i18n_workflow.open")}</Button>
                     {serverConnected !== null ? <AdminStatusBadge label={serverConnected ? "服务端已同步" : "本地缓存降级"} tone={serverConnected ? "info" : "warning"} /> : null}
                     <Button icon={<Radar className="size-4" />} onClick={() => setDiscoveredDrawerOpen(true)}>
                         未收录词条嗅探 ({discoveredUntranslated.length})
@@ -601,6 +605,9 @@ export function SupDanceI18nEntriesPage() {
                 />
             </div>
 
+            <AdminDrawer open={workflowOpen} onClose={() => setWorkflowOpen(false)} title={t("admin.i18n_workflow.title")} width="min(100vw, 64rem)">
+                {workflowOpen ? <TranslationWorkflowPanel onChanged={() => void fetchRemoteEntries()} /> : null}
+            </AdminDrawer>
             <AdminDrawer
                 open={discoveredDrawerOpen}
                 width={560}

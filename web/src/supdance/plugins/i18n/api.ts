@@ -2,6 +2,28 @@ import { compactApiParams, http } from "@/services/api/request";
 
 import type { SupDanceI18nAdminOverview, SupDanceI18nEntry, SupDanceI18nEntryListResult, SupDanceI18nEntryQuery, SupDanceI18nExportPayload, SupDanceI18nPublicBundle, SupDanceI18nSettings } from "./types";
 
+export type TranslationDraft = {
+    entry: SupDanceI18nEntry;
+    sourceHash: string;
+    baseSourceHash?: string;
+    references?: { file: string; line: number }[];
+    status: "draft" | "reviewed";
+    reviewedBy?: string;
+};
+export type TranslationWorkflow = {
+    staleOverrides: string[];
+    revision: number;
+    drafts: TranslationDraft[];
+    lockedKeys: Record<string, boolean>;
+    releases: { id: string; createdAt: string; createdBy: string; count: number }[];
+};
+export function getTranslationWorkflow() {
+    return http.get<TranslationWorkflow>("/admin/plugins/supdance-i18n/workflow");
+}
+export function updateTranslationWorkflow(request: { action: "stage" | "review" | "publish" | "discard" | "lock" | "unlock" | "rollback"; expectedRevision: number; drafts?: TranslationDraft[]; keys?: string[]; releaseId?: string }) {
+    return http.post<TranslationWorkflow>("/admin/plugins/supdance-i18n/workflow", request);
+}
+
 export async function getPublicSupDanceI18nBundle(signal?: AbortSignal) {
     return http.get<SupDanceI18nPublicBundle>("/plugins/supdance-i18n/bundle", { signal });
 }

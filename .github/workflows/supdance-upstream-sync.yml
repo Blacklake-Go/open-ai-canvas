@@ -85,6 +85,19 @@ jobs:
         run: |
           bun install --frozen-lockfile
           bun test test/supdance-extension-isolation.test.ts
+          bun scripts/i18n-scan.mjs --check
+          bun scripts/i18n-sync-backend.mjs --check
+
+      - name: Scan target release UI text changes (advisory before integration)
+        run: |
+          target_ref="$(jq -r '.target // empty' "$RUNNER_TEMP/upstream-analysis.json")"
+          if [[ -n "$target_ref" ]]; then
+            mkdir -p "$RUNNER_TEMP/i18n-upstream"
+            git archive "$target_ref" web/src | tar -x -C "$RUNNER_TEMP/i18n-upstream"
+            cd web
+            bun scripts/i18n-scan.mjs --source-root "$RUNNER_TEMP/i18n-upstream/web/src" --output "$RUNNER_TEMP/upstream-i18n.json"
+            bun scripts/i18n-draft.mjs --input "$RUNNER_TEMP/upstream-i18n.json" --output "$RUNNER_TEMP/upstream-i18n-drafts.json"
+          fi
 
       - name: Upload UPSTREAM_UPDATE_REPORT.md artifact
         uses: actions/upload-artifact@v4
@@ -93,6 +106,9 @@ jobs:
           path: |
             UPSTREAM_UPDATE_REPORT.md
             ${{ runner.temp }}/upstream-analysis.json
+            ${{ runner.temp }}/upstream-i18n.json
+            ${{ runner.temp }}/upstream-i18n-drafts.json
+            .local/cache/i18n/scan.json
 
       - name: Create pending review integration PR (when new release detected & requested)
         if: github.event_name != 'pull_request' && github.event.inputs.create_integration_pr == 'true'

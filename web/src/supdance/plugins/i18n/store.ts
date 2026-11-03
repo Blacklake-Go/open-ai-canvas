@@ -181,11 +181,15 @@ export const useSupDanceI18nStore = create<SupDanceI18nStoreState>((set, get) =>
         writeStoredLocale(resolved);
         set({ locale: resolved });
         if (resolved !== "zh-CN") {
-            void loadLocalePack(resolved).then(() => {
-                const entries = mergeI18nEntries(get().customEntries);
-                const dictionary = compileI18nDictionary(entries);
-                set({ entries, dictionary });
-            });
+            void loadLocalePack(resolved)
+                .then(() => {
+                    const entries = mergeI18nEntries(get().customEntries);
+                    const dictionary = compileI18nDictionary(entries);
+                    set({ entries, dictionary });
+                })
+                .catch(() => {
+                    /* Runtime host shows the load error and restores the fallback locale. */
+                });
         }
     },
 
@@ -220,11 +224,15 @@ export const useSupDanceI18nStore = create<SupDanceI18nStoreState>((set, get) =>
         });
 
         if (nextLocale !== "zh-CN") {
-            void loadLocalePack(nextLocale).then(() => {
-                const updatedEntries = mergeI18nEntries(get().customEntries);
-                const updatedDictionary = compileI18nDictionary(updatedEntries);
-                set({ entries: updatedEntries, dictionary: updatedDictionary });
-            });
+            void loadLocalePack(nextLocale)
+                .then(() => {
+                    const updatedEntries = mergeI18nEntries(get().customEntries);
+                    const updatedDictionary = compileI18nDictionary(updatedEntries);
+                    set({ entries: updatedEntries, dictionary: updatedDictionary });
+                })
+                .catch(() => {
+                    /* Runtime host shows the load error and restores the fallback locale. */
+                });
         }
     },
 

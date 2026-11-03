@@ -152,6 +152,7 @@ func MergeEntries(custom map[string]Entry) ([]Entry, int, int) {
 	customCount := 0
 
 	for _, b := range builtins {
+		b.BuiltinSourceHash = SourceHash(b.SourceText)
 		builtinKeys[b.Key] = b
 		if override, ok := custom[b.Key]; ok {
 			mergedTrans := make(map[string]string, len(SupportedLocaleCodes))
@@ -162,7 +163,7 @@ func MergeEntries(custom map[string]Entry) ([]Entry, int, int) {
 				}
 			}
 			sourceText := b.SourceText
-			if trimmedOverrideSource := strings.TrimSpace(override.SourceText); trimmedOverrideSource != "" && trimmedOverrideSource != mergedTrans[LocaleZhCN] {
+			if trimmedOverrideSource := strings.TrimSpace(override.SourceText); trimmedOverrideSource != "" {
 				sourceText = trimmedOverrideSource
 			}
 			desc := strings.TrimSpace(override.Description)
@@ -174,14 +175,15 @@ func MergeEntries(custom map[string]Entry) ([]Entry, int, int) {
 				ns = b.Namespace
 			}
 			result = append(result, Entry{
-				Key:          b.Key,
-				Namespace:    ns,
-				SourceText:   sourceText,
-				Description:  desc,
-				Translations: mergedTrans,
-				Origin:       EntryOriginModified,
-				UpdatedAt:    override.UpdatedAt,
-				UpdatedBy:    override.UpdatedBy,
+				BuiltinSourceHash: override.BuiltinSourceHash,
+				Key:               b.Key,
+				Namespace:         ns,
+				SourceText:        sourceText,
+				Description:       desc,
+				Translations:      mergedTrans,
+				Origin:            EntryOriginModified,
+				UpdatedAt:         override.UpdatedAt,
+				UpdatedBy:         override.UpdatedBy,
 			})
 			modifiedCount++
 		} else {
@@ -412,6 +414,9 @@ func UpsertEntries(existing map[string]Entry, updates []Entry, actorID string) (
 		}
 
 		base, isBuiltin := builtinByKey[key]
+		if isBuiltin && item.BuiltinSourceHash != "" && item.BuiltinSourceHash != SourceHash(base.SourceText) {
+			return nil, 0, fmt.Errorf("%w: stale_source %s", ErrInvalidTranslation, key)
+		}
 		if !isBuiltin && sourceText == "" {
 			return nil, 0, fmt.Errorf("词条 %q 缺少基准中文原文（sourceText 或 zh-CN）", key)
 		}
@@ -432,6 +437,9 @@ func UpsertEntries(existing map[string]Entry, updates []Entry, actorID string) (
 			if item.Translations != nil {
 				val = strings.TrimSpace(item.Translations[code])
 			}
+			if val == "" {
+				val = existing[key].Translations[code]
+			}
 			if val == "" && isBuiltin {
 				val = base.Translations[code]
 			}
@@ -439,6 +447,13 @@ func UpsertEntries(existing map[string]Entry, updates []Entry, actorID string) (
 		}
 		if trans[LocaleZhCN] == "" {
 			trans[LocaleZhCN] = sourceText
+		}
+		for _, code := range SupportedLocaleCodes {
+			if trans[code] != "" {
+				if err := ValidateTranslation(sourceText, trans[code]); err != nil {
+					return nil, 0, fmt.Errorf("%s [%s]: %w", key, code, err)
+				}
+			}
 		}
 
 		origin := EntryOriginCustom
@@ -452,6 +467,12 @@ func UpsertEntries(existing map[string]Entry, updates []Entry, actorID string) (
 		}
 
 		next[key] = Entry{
+			BuiltinSourceHash: func() string {
+				if isBuiltin {
+					return SourceHash(base.SourceText)
+				}
+				return ""
+			}(),
 			Key:          key,
 			Namespace:    ns,
 			SourceText:   sourceText,
@@ -485,10 +506,12 @@ func DeleteOrResetEntry(existing map[string]Entry, key string) (map[string]Entry
 // ComputeRevision returns a deterministic short hash for client cache invalidation.
 func ComputeRevision(settings Settings, custom map[string]Entry, pluginEnabled bool) string {
 	payload := struct {
+		Catalog  string           `json:"catalog"`
 		Enabled  bool             `json:"enabled"`
 		Settings Settings         `json:"settings"`
 		Custom   map[string]Entry `json:"custom"`
 	}{
+		Catalog:  builtinCatalogRevision(),
 		Enabled:  pluginEnabled,
 		Settings: settings,
 		Custom:   custom,

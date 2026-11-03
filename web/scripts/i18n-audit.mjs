@@ -17,7 +17,9 @@ const SRC_DIR = join(WEB_DIR, "src");
 const args = process.argv.slice(2);
 const asJson = args.includes("--json");
 const fail = args.includes("--fail");
-const budget = Number(args[args.indexOf("--budget") + 1] ?? 0);
+const budgetIndex = args.indexOf("--budget");
+const budget = budgetIndex < 0 ? 0 : Number(args[budgetIndex + 1]);
+if (!Number.isInteger(budget) || budget < 0) throw new Error("--budget must be a non-negative integer");
 
 const indexSource = readFileSync(join(SRC_DIR, "supdance/plugins/i18n/locales/index.ts"), "utf8");
 const dictTexts = new Set();
@@ -80,7 +82,7 @@ if (asJson) {
         .forEach(([file, count]) => console.log(String(count).padStart(4), file));
 }
 
-if (fail && budget && user.length > budget) {
+if (fail && user.length > budget) {
     console.error(`\n用户可见漏译 ${user.length} 条，超过预算 ${budget} 条`);
     process.exit(1);
 }

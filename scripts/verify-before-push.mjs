@@ -114,6 +114,7 @@ if (wantWeb) {
         { name: "web:format", cwd: WEB, cmd: "bun", args: ["scripts/check-changed-formatting.mjs"], env: { BASE_SHA: base, GITHUB_SHA: formatHead }, weight: 10 },
         { name: "web:typecheck", cwd: WEB, cmd: "bun", args: ["run", "typecheck"], weight: 60 },
         { name: "web:lint", cwd: WEB, cmd: "bun", args: ["run", "lint"], weight: 50 },
+        { name: "web:i18n", cwd: WEB, cmd: "bun", args: ["run", "i18n:check"], weight: 30 },
         // bun run test 会先跑 pretest，与 CI 一致；直接 bun test 会跳过它。
         { name: "web:test", cwd: WEB, cmd: "bun", args: ["run", "test"], weight: 120 },
     );

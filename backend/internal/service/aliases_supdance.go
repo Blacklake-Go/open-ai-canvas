@@ -25,6 +25,7 @@ type (
 	SupDanceI18nPublicBundle    = app.SupDanceI18nPublicBundle
 	SupDanceI18nAdminOverview   = app.SupDanceI18nAdminOverview
 	SupDanceI18nExportPayload   = app.SupDanceI18nExportPayload
+	SupDanceI18nWorkflowRequest = app.SupDanceI18nWorkflowRequest
 
 	SocialAuthAdminSettingsView         = app.SocialAuthAdminSettingsView
 	SocialAuthSettingsUpdateRequest     = app.SocialAuthSettingsUpdateRequest

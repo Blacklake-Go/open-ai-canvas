@@ -1,8 +1,8 @@
 import type { SupDanceLocaleCode } from "../types";
-import { isCandidateUntranslatedChinese, translateSourceText, type CompiledI18nDictionary } from "./translator";
+import { isCandidateUntranslatedChinese, translateSourceText, translateByKey, type CompiledI18nDictionary } from "./translator";
 
 const IGNORED_TAG_NAMES = new Set(["SCRIPT", "STYLE", "CODE", "PRE", "NOSCRIPT", "SVG", "MATH"]);
-const TRANSLATABLE_ATTRIBUTES = ["placeholder", "title", "aria-label"] as const;
+const TRANSLATABLE_ATTRIBUTES = ["placeholder", "title", "aria-label", "alt"] as const;
 const PRUNE_THRESHOLD = 200;
 
 export type DomTranslatorOptions = {
@@ -25,6 +25,7 @@ export class SupDanceDomTranslator {
     private observer: MutationObserver | null = null;
     private isApplying = false;
     private rafId: number | null = null;
+    private pendingNodes = new Set<Node>();
     private currentDictionary: CompiledI18nDictionary | null = null;
     private currentLocale: SupDanceLocaleCode = "zh-CN";
     private fallbackLocale: SupDanceLocaleCode = "zh-CN";
@@ -131,6 +132,7 @@ export class SupDanceDomTranslator {
             this.observer.disconnect();
             this.observer = null;
         }
+        this.pendingNodes.clear();
         this.isApplying = true;
         try {
             for (const textNode of this.touchedTextNodes) {
@@ -157,17 +159,20 @@ export class SupDanceDomTranslator {
     }
 
     private scheduleBatch(nodes: Set<Node>): void {
+        for (const node of nodes) this.pendingNodes.add(node);
+        if (this.rafId !== null) return;
         const run = () => {
             this.rafId = null;
+            const batch = this.pendingNodes;
+            this.pendingNodes = new Set<Node>();
             if (this.touchedTextNodes.size > PRUNE_THRESHOLD || this.touchedElements.size > PRUNE_THRESHOLD) {
                 this.pruneDisconnectedNodes();
             }
-            for (const node of nodes) {
+            for (const node of batch) {
                 this.applyToSubtree(node);
             }
         };
         if (typeof requestAnimationFrame !== "undefined") {
-            if (this.rafId !== null) cancelAnimationFrame(this.rafId);
             this.rafId = requestAnimationFrame(run);
         } else {
             run();
@@ -179,6 +184,7 @@ export class SupDanceDomTranslator {
         while (current) {
             if (IGNORED_TAG_NAMES.has(current.tagName)) return true;
             if (current.hasAttribute("data-i18n-ignore") || current.getAttribute("data-i18n-ignore") === "true") return true;
+            if (current.hasAttribute("data-i18n-user-content")) return true;
             if (
                 current.hasAttribute("data-canvas-no-zoom") ||
                 current.hasAttribute("data-canvas-viewport") ||
@@ -261,7 +267,11 @@ export class SupDanceDomTranslator {
             }
         }
 
-        const translated = translateSourceText(this.currentDictionary, baseSource, this.currentLocale, this.fallbackLocale);
+        const explicitKey = parent?.getAttribute("data-i18n-key");
+        const translated =
+            explicitKey && this.currentDictionary.byKey.has(explicitKey)
+                ? translateByKey(this.currentDictionary, explicitKey, this.currentLocale, this.fallbackLocale)
+                : translateSourceText(this.currentDictionary, baseSource, this.currentLocale, this.fallbackLocale);
         if (translated !== null) {
             if (!this.originalTextByNode.has(textNode)) {
                 this.originalTextByNode.set(textNode, baseSource);

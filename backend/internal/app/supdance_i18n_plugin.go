@@ -112,8 +112,11 @@ func (s *Service) readSupDanceI18nCustomEntries() (map[string]supdancei18n.Entry
 		return map[string]supdancei18n.Entry{}, nil
 	}
 	var custom map[string]supdancei18n.Entry
-	if err := json.Unmarshal([]byte(setting.ValueJSON), &custom); err != nil || custom == nil {
-		return map[string]supdancei18n.Entry{}, nil
+	if err := json.Unmarshal([]byte(setting.ValueJSON), &custom); err != nil {
+		return nil, fmt.Errorf("读取自定义词条失败：%w", err)
+	}
+	if custom == nil {
+		return nil, fmt.Errorf("自定义词条数据不合法")
 	}
 	return custom, nil
 }
@@ -163,6 +166,7 @@ func (s *Service) PublicSupDanceI18nBundle() (supdancei18n.PublicBundle, error) 
 	var bundle supdancei18n.PublicBundle
 	if !enabled {
 		bundle = supdancei18n.PublicBundle{
+			PluginVersion: supdancei18n.Version,
 			PluginID:      PluginSupDanceI18n,
 			PluginEnabled: false,
 			Settings:      settings,
@@ -171,6 +175,7 @@ func (s *Service) PublicSupDanceI18nBundle() (supdancei18n.PublicBundle, error) 
 		}
 	} else {
 		bundle = supdancei18n.PublicBundle{
+			PluginVersion: supdancei18n.Version,
 			PluginID:      PluginSupDanceI18n,
 			PluginEnabled: true,
 			Settings:      settings,
@@ -210,6 +215,7 @@ func (s *Service) AdminSupDanceI18nOverview(actor *model.User) (supdancei18n.Adm
 	settings.Revision = revision
 
 	return supdancei18n.AdminOverview{
+		PluginVersion: supdancei18n.Version,
 		PluginID:      PluginSupDanceI18n,
 		PluginEnabled: enabled,
 		Settings:      settings,
@@ -276,15 +282,17 @@ func (s *Service) UpsertAdminSupDanceI18nEntries(actor *model.User, updates []su
 	if err := s.RequireAdmin(actor); err != nil {
 		return supdancei18n.AdminOverview{}, 0, err
 	}
-	existing, err := s.readSupDanceI18nCustomEntries()
-	if err != nil {
-		return supdancei18n.AdminOverview{}, 0, err
+	keys := make([]string, 0, len(updates))
+	for _, e := range updates {
+		keys = append(keys, e.Key)
 	}
-	next, count, err := supdancei18n.UpsertEntries(existing, updates, actor.ID)
+	count := 0
+	err := s.mutateI18nEntries(actor.ID, keys, func(existing map[string]supdancei18n.Entry) (map[string]supdancei18n.Entry, error) {
+		next, n, err := supdancei18n.UpsertEntries(existing, updates, actor.ID)
+		count = n
+		return next, err
+	})
 	if err != nil {
-		return supdancei18n.AdminOverview{}, 0, err
-	}
-	if err := s.saveSupDanceI18nCustomEntries(actor.ID, next); err != nil {
 		return supdancei18n.AdminOverview{}, 0, err
 	}
 	invalidateI18nBundleCache()
@@ -300,15 +308,16 @@ func (s *Service) DeleteAdminSupDanceI18nEntry(actor *model.User, key string) (s
 	if err := s.RequireAdmin(actor); err != nil {
 		return supdancei18n.AdminOverview{}, false, err
 	}
-	existing, err := s.readSupDanceI18nCustomEntries()
+	removed := false
+	err := s.mutateI18nEntries(actor.ID, []string{key}, func(existing map[string]supdancei18n.Entry) (map[string]supdancei18n.Entry, error) {
+		next, ok := supdancei18n.DeleteOrResetEntry(existing, key)
+		removed = ok
+		return next, nil
+	})
 	if err != nil {
 		return supdancei18n.AdminOverview{}, false, err
 	}
-	next, removed := supdancei18n.DeleteOrResetEntry(existing, key)
 	if removed {
-		if err := s.saveSupDanceI18nCustomEntries(actor.ID, next); err != nil {
-			return supdancei18n.AdminOverview{}, false, err
-		}
 		invalidateI18nBundleCache()
 		_ = s.appendAdminAudit(actor, "supdance.i18n.entries.delete", "plugin", PluginSupDanceI18n, "重置或删除多语言词条", map[string]any{
 			"key": key,
@@ -334,7 +343,7 @@ func (s *Service) ExportAdminSupDanceI18n(actor *model.User) (supdancei18n.Expor
 	merged, _, _ := supdancei18n.MergeEntries(custom)
 	return supdancei18n.ExportPayload{
 		PluginID:   PluginSupDanceI18n,
-		Version:    "1.0.0",
+		Version:    supdancei18n.Version,
 		ExportedAt: time.Now().UTC().Format(time.RFC3339),
 		Settings:   settings,
 		Entries:    merged,
@@ -346,16 +355,6 @@ func (s *Service) ExportAdminSupDanceI18n(actor *model.User) (supdancei18n.Expor
 func (s *Service) ImportAdminSupDanceI18n(actor *model.User, payload supdancei18n.ExportPayload, replaceAll bool) (supdancei18n.AdminOverview, int, error) {
 	if err := s.RequireAdmin(actor); err != nil {
 		return supdancei18n.AdminOverview{}, 0, err
-	}
-	var base map[string]supdancei18n.Entry
-	if replaceAll {
-		base = map[string]supdancei18n.Entry{}
-	} else {
-		var err error
-		base, err = s.readSupDanceI18nCustomEntries()
-		if err != nil {
-			return supdancei18n.AdminOverview{}, 0, err
-		}
 	}
 
 	toImport := make([]supdancei18n.Entry, 0, len(payload.Overrides)+len(payload.Entries))
@@ -378,11 +377,31 @@ func (s *Service) ImportAdminSupDanceI18n(actor *model.User, payload supdancei18
 		return overview, 0, err
 	}
 
-	next, count, err := supdancei18n.UpsertEntries(base, toImport, actor.ID)
-	if err != nil {
-		return supdancei18n.AdminOverview{}, 0, err
+	keys := make([]string, 0, len(toImport))
+	for _, e := range toImport {
+		keys = append(keys, e.Key)
 	}
-	if err := s.saveSupDanceI18nCustomEntries(actor.ID, next); err != nil {
+	if replaceAll {
+		state, err := s.AdminSupDanceI18nWorkflow(actor)
+		if err != nil {
+			return supdancei18n.AdminOverview{}, 0, err
+		}
+		for k, locked := range state.LockedKeys {
+			if locked {
+				keys = append(keys, k)
+			}
+		}
+	}
+	count := 0
+	err := s.mutateI18nEntries(actor.ID, keys, func(base map[string]supdancei18n.Entry) (map[string]supdancei18n.Entry, error) {
+		if replaceAll {
+			base = map[string]supdancei18n.Entry{}
+		}
+		next, n, err := supdancei18n.UpsertEntries(base, toImport, actor.ID)
+		count = n
+		return next, err
+	})
+	if err != nil {
 		return supdancei18n.AdminOverview{}, 0, err
 	}
 	invalidateI18nBundleCache()

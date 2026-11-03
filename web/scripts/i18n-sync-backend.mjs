@@ -13,40 +13,33 @@
 import { readFileSync, writeFileSync } from "node:fs";
 import { dirname, resolve } from "node:path";
 import { spawnSync } from "node:child_process";
+import { BUILTIN_SUPDANCE_I18N_ENTRIES, NAMESPACE_LABELS } from "../src/supdance/plugins/i18n/locales/index.ts";
+import { validateTranslation } from "./i18n/source-scanner.mjs";
 
 const WEB_DIR = resolve(import.meta.dir, "..");
 const LOCALES = resolve(WEB_DIR, "src/supdance/plugins/i18n/locales");
 const TARGET = resolve(WEB_DIR, "../backend/internal/supdance/i18n/defaults.go");
 const LOCALES_CODES = ["en-US", "zh-TW", "ja-JP", "ko-KR", "es-ES"];
 
-const indexSource = readFileSync(resolve(LOCALES, "index.ts"), "utf8");
-
-const entries = [];
-for (const match of indexSource.matchAll(/^\s{4}e\("([^"]+)",\s*"([^"]+)",\s*(?:"((?:[^"\\]|\\.)*)"|'((?:[^'\\]|\\.)*)')\s*,\s*(?:"((?:[^"\\]|\\.)*)"|'((?:[^'\\]|\\.)*)')\s*\),$/gm)) {
-    entries.push({ key: match[1], namespace: match[2], zh: unescapeTs(match[3] ?? match[4]), description: unescapeTs(match[5] ?? match[6]) });
-}
-if (entries.length < 1000) throw new Error(`从 index.ts 只解析到 ${entries.length} 条词条，解析规则已失效，拒绝写回`);
+const entries = BUILTIN_SUPDANCE_I18N_ENTRIES.map((e) => ({ key: e.key, namespace: e.namespace, zh: e.sourceText, description: e.description ?? "" }));
+if (new Set(entries.map((e) => e.key)).size !== entries.length) throw new Error("Duplicate catalog keys");
 
 const packs = {};
 for (const code of LOCALES_CODES) {
-    const source = readFileSync(resolve(LOCALES, "packs", `${code}.ts`), "utf8");
-    const map = {};
-    for (const match of source.matchAll(/^\s{4}(?:"([^"]+)"|([A-Za-z0-9_.-]+)):\s*(?:"((?:[^"\\]|\\.)*)"|'((?:[^'\\]|\\.)*)')\s*,?$/gm)) map[match[1] || match[2]] = unescapeTs(match[3] ?? match[4]);
-    packs[code] = map;
+    packs[code] = (await import(resolve(LOCALES, "packs", `${code}.ts`))).default;
 }
 
-const namespaceLabels = {};
-const labelsBlock = indexSource.match(/export const NAMESPACE_LABELS: Record<string, string> = \{([\s\S]*?)\n\};/);
-if (!labelsBlock) throw new Error("index.ts 里找不到 NAMESPACE_LABELS");
-for (const match of labelsBlock[1].matchAll(/^\s{4}([A-Za-z0-9_]+|"[^"]+"):\s*"((?:[^"\\]|\\.)*)",$/gm)) {
-    namespaceLabels[match[1].replace(/^"|"$/g, "")] = unescapeTs(match[2]);
-}
+const namespaceLabels = NAMESPACE_LABELS;
 
 const missing = [];
 for (const entry of entries) {
     if (!namespaceLabels[entry.namespace]) missing.push(`${entry.key} 的命名空间 ${entry.namespace} 没有标签`);
     for (const code of LOCALES_CODES) {
         if (!packs[code][entry.key]?.trim()) missing.push(`${entry.key} 缺少 ${code} 译文`);
+        else {
+            const error = validateTranslation(entry.zh, packs[code][entry.key]);
+            if (error) missing.push(`${entry.key} [${code}] ${error}`);
+        }
     }
 }
 if (missing.length) throw new Error(`词典不完整，拒绝生成后端字典：\n  ${missing.slice(0, 20).join("\n  ")}\n  共 ${missing.length} 项`);
@@ -111,8 +104,3 @@ if (process.argv.includes("--check")) {
 
 writeFileSync(TARGET, generated);
 console.log(`已生成 defaults.go：${entries.length} 条词条，${namespaceOrder.length} 个命名空间`);
-
-/** TS 字面量里的 \\" 与 \\n 还原成真实字符，交给 Go 侧再按 Go 规则转义。 */
-function unescapeTs(value) {
-    return value.replace(/\\(["\\nt])/g, (_all, group) => (group === "n" ? "\n" : group === "t" ? "\t" : group));
-}

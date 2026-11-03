@@ -64,6 +64,7 @@ v1.3.3 将授权后入站票据从单进程内存迁移至共享 Redis（键前�
 - **升级风险与回归保障**：`LOW`，均位于文件尾部追加且已纳入 `coupledUpstreamFiles` 与 `SUPDANCE_UPSTREAM_PATCH_REGISTRY` 自动对齐校验。
 
 ### 补丁 ID：`supdance-i18n-plugin`
+- **1.2.0 扩展**：增加 Babel AST 增量扫描、版本化源文/译文基线、上游 Release 扫描草稿产物、可选受预算约束的模型补译 CLI，以及后台翻译更新中心。工作流草稿、审核、发布、锁定和十次历史回滚复用 SystemSetting，发布与审计事务提交；已有编辑/导入接口共享行锁。公开版本、ETag 与语言包恢复逻辑同步升级。宿主新增修改仅涉及 Quality/Upstream CI、推送前验证脚本、service 别名和 VERSION；业务实现继续位于原插件边界。详见 `docs/content/docs/backend/supdance-i18n.mdx`。
 - **被修改的上游文件**：
   1. `backend/internal/app/plugin_management.go`
   2. `backend/internal/handler/api.go`

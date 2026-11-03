@@ -74,14 +74,15 @@ type Settings struct {
 
 // Entry represents one i18n dictionary entry across all 6 supported languages.
 type Entry struct {
-	Key          string            `json:"key"`
-	Namespace    string            `json:"namespace"`
-	SourceText   string            `json:"sourceText"`
-	Description  string            `json:"description,omitempty"`
-	Translations map[string]string `json:"translations"`
-	Origin       string            `json:"origin"`
-	UpdatedAt    string            `json:"updatedAt,omitempty"`
-	UpdatedBy    string            `json:"updatedBy,omitempty"`
+	BuiltinSourceHash string            `json:"builtinSourceHash,omitempty"`
+	Key               string            `json:"key"`
+	Namespace         string            `json:"namespace"`
+	SourceText        string            `json:"sourceText"`
+	Description       string            `json:"description,omitempty"`
+	Translations      map[string]string `json:"translations"`
+	Origin            string            `json:"origin"`
+	UpdatedAt         string            `json:"updatedAt,omitempty"`
+	UpdatedBy         string            `json:"updatedBy,omitempty"`
 }
 
 // NamespaceSummary describes a dictionary module category and its entry count.
@@ -94,6 +95,7 @@ type NamespaceSummary struct {
 // PublicBundle is returned to all clients (including unauthenticated login pages)
 // so the frontend can initialize or update its active language and custom overrides.
 type PublicBundle struct {
+	PluginVersion string           `json:"pluginVersion"`
 	PluginID      string           `json:"pluginId"`
 	PluginEnabled bool             `json:"pluginEnabled"`
 	Settings      Settings         `json:"settings"`
@@ -103,6 +105,7 @@ type PublicBundle struct {
 
 // AdminOverview combines plugin state, settings, per-language stats, and namespace summaries.
 type AdminOverview struct {
+	PluginVersion string             `json:"pluginVersion"`
 	PluginID      string             `json:"pluginId"`
 	PluginEnabled bool               `json:"pluginEnabled"`
 	Settings      Settings           `json:"settings"`

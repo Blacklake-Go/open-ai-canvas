@@ -1,5 +1,7 @@
 # 站点多语言插件 (`supdance-i18n`)
 
+当前版本 **1.2.0**：新增源码增量扫描、源文失效检测、翻译草稿、审核发布、人工锁定与历史回滚。完整操作、预算配置、API 和部署回退说明见 [国际化扫描与翻译更新](../../../docs/content/docs/backend/supdance-i18n.mdx)。
+
 本插件为 SupDance Canvas 提供热插拔站点多语言（i18n）能力，遵循 `yingce.plugin/v2` 插件契约与 SupDance 三层隔离架构。
 
 ## 核心能力
