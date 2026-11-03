@@ -80,7 +80,7 @@ describe("SupDance Visual Engine V2.0", () => {
 
     it("declares the plugin manifest required for dual-entry lifecycle management", () => {
         expect(supdanceVisualEngineManifest.id).toBe("supdance-visual-engine");
-        expect(supdanceVisualEngineManifest.version).toBe("2.0.0");
+        expect(supdanceVisualEngineManifest.version).toBe("2.0.1");
         expect(supdanceVisualEngineManifest.contributes?.commands?.length).toBeGreaterThanOrEqual(2);
     });
 });

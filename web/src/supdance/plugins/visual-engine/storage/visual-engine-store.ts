@@ -1,4 +1,5 @@
 import { create } from "zustand";
+import type { VisualEnginePermission, VisualEngineInstallation } from "../api/visual-engine-api";
 import type { VisualEngineConfig, VisualEngineSnapshot, AuditLogEntry, PresetId } from "../types";
 import { DEFAULT_VISUAL_ENGINE_CONFIG, BUILTIN_THEME_PRESETS } from "../config/default-config";
 import { validateVisualEngineConfig } from "../config/schema";
@@ -7,6 +8,11 @@ import { apiPublishVisualEngineConfig, apiRollbackVisualEngineConfig, apiSaveVis
 export type ConsoleModuleKey = "dashboard" | "themes" | "colors" | "typography" | "components" | "effects" | "interactions" | "motion" | "transitions" | "loading" | "pagerules" | "preview" | "presets" | "versions" | "diagnostics" | "auditlogs";
 type MutationResult = { success: boolean; error?: string };
 type VisualEngineState = {
+    permissions: VisualEnginePermission[];
+    setPermissions: (permissions: VisualEnginePermission[]) => void;
+    installation: VisualEngineInstallation;
+    runtimePath: string;
+    setRuntimePath: (path: string) => void;
     enabled: boolean;
     config: VisualEngineConfig;
     draftConfig: VisualEngineConfig;
@@ -35,6 +41,11 @@ type VisualEngineState = {
 };
 
 export const useVisualEngineStore = create<VisualEngineState>((set, get) => ({
+    permissions: [],
+    setPermissions: (permissions) => set({ permissions }),
+    installation: { installed: true, version: "2.0.0", availableVersion: "2.0.1", configRetained: true },
+    runtimePath: typeof window === "undefined" ? "/" : window.location.pathname,
+    setRuntimePath: (runtimePath) => set({ runtimePath }),
     enabled: false,
     config: structuredClone(DEFAULT_VISUAL_ENGINE_CONFIG),
     draftConfig: structuredClone(DEFAULT_VISUAL_ENGINE_CONFIG),
@@ -57,7 +68,7 @@ export const useVisualEngineStore = create<VisualEngineState>((set, get) => ({
     },
     resetDraft: () => set({ draftConfig: structuredClone(get().config), isDraftDirty: false }),
     switchPreset: (presetId) => {
-        const preset = BUILTIN_THEME_PRESETS.find((item) => item.id === presetId);
+        const preset = [...BUILTIN_THEME_PRESETS, ...get().draftConfig.customPresets].find((item) => item.id === presetId);
         if (!preset) return;
         get().updateDraft((draft) => {
             draft.activePreset = preset.id;
@@ -113,13 +124,24 @@ export const useVisualEngineStore = create<VisualEngineState>((set, get) => ({
     acceptBundle: (bundle) => {
         const validation = validateVisualEngineConfig(bundle.config);
         if (!validation.valid) throw new Error(validation.errors.join("；"));
-        set((state) => ({ enabled: bundle.enabled, config: validation.config, revision: state.isDraftDirty ? state.revision : bundle.revision,
-            ...(state.isDraftDirty ? {} : { draftConfig: structuredClone(validation.config) }) }));
+        set((state) => ({
+            installation: bundle.installation ?? state.installation,
+            enabled: bundle.enabled,
+            config: validation.config,
+            revision: state.isDraftDirty ? state.revision : bundle.revision,
+            ...(state.isDraftDirty ? {} : { draftConfig: structuredClone(validation.config) }),
+        }));
     },
     acceptOverview: (overview) => {
         get().acceptBundle(overview.bundle);
-        set({ snapshots: overview.snapshots ?? [], auditLogs: overview.auditLogs ?? [], revision: overview.bundle.revision,
-            draftConfig: structuredClone(overview.draft ?? overview.bundle.config), isDraftDirty: !!overview.draft });
+        set({
+            permissions: overview.permissions ?? get().permissions,
+            snapshots: overview.snapshots ?? [],
+            auditLogs: overview.auditLogs ?? [],
+            revision: overview.bundle.revision,
+            draftConfig: structuredClone(overview.draft ?? overview.bundle.config),
+            isDraftDirty: !!overview.draft,
+        });
     },
     hydrate: (initial) => {
         if (!initial) return;

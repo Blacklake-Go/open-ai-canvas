@@ -500,3 +500,7 @@ Schema 32 为 `channel_models` 新增 `tags`（TEXT、NOT NULL、默认 `'[]'`�
 迁移 46 新增 skill_curation_settings、skill_curation_categories、skill_curation_assignments；默认关闭，不导入技能内容。表结构与事务规则见 [平台技能策展](./skill-curation)。
 
 迁移 47 依赖 46，新增 skill_curation_roots 与 skill_curation_root_assignments；保留原五个根 ID，根停用时使用派生默认桶，根表为空回落固定五类。
+
+## SupDance Visual Engine 配置命名空间
+
+复用 system_settings、plugin_platform_states、admin_audit_events，不新增表或迁移编号。主题配置为 supdance_visual_engine_config，历史为 supdance_visual_engine_snapshots，每管理员草稿使用 supdance_visual_engine_draft: 前缀；安装状态、权限和升级备份使用本插件独立键。发布使用行锁、预期原始 JSON 条件写入和事务，拒绝跨管理员过期覆盖。清理卸载只删除插件配置/草稿/历史/迁移备份，权限与审计保留，不删除宿主用户或项目。

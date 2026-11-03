@@ -66,6 +66,9 @@ func TestSupDanceVisualEngineConfigLifecycleAndRollback(t *testing.T) {
 	if _, err := svc.PublishAdminVisualEngine(other, config, "stale", initial.Revision); err == nil {
 		t.Fatal("stale publish succeeded")
 	}
+	if _, err := svc.PublishAdminVisualEngine(other, config, "saved stale draft after refresh", published.Bundle.Revision); err == nil {
+		t.Fatal("stale draft base accepted")
+	}
 	invalid := visualengine.DefaultConfig()
 	tokens := invalid.Tokens["dark"]
 	tokens.Primary = "url(https://example.com/tracker)"
@@ -76,6 +79,7 @@ func TestSupDanceVisualEngineConfigLifecycleAndRollback(t *testing.T) {
 	if err := db.Exec("CREATE TRIGGER reject_visual_audit BEFORE INSERT ON admin_audit_events BEGIN SELECT RAISE(ABORT, 'audit unavailable'); END;").Error; err != nil {
 		t.Fatal(err)
 	}
+	config.PublishedVersion = published.Bundle.Version
 	if _, err := svc.PublishAdminVisualEngine(admin, config, "must fail", published.Bundle.Revision); err == nil {
 		t.Fatal("failed audit did not abort publish")
 	}
@@ -93,7 +97,7 @@ func TestSupDanceVisualEngineConfigLifecycleAndRollback(t *testing.T) {
 	if restored.Bundle.Config.Components.ButtonRadius != initial.Config.Components.ButtonRadius || restored.Bundle.Version == initial.Version || restored.Bundle.Version == published.Bundle.Version {
 		t.Fatal("rollback did not restore content as a unique new release")
 	}
-	if len(restored.AuditLogs) != 2 || restored.AuditLogs[0].Action != "config.rollback" {
+	if len(restored.AuditLogs) < 3 || restored.AuditLogs[0].Action != "config.rollback" {
 		t.Fatal("server audit missing")
 	}
 	fresh := &Service{repo: repository.New(db)}

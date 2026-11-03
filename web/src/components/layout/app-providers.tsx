@@ -19,6 +19,8 @@ import { SupDanceI18nRuntimeHost, useSupDanceAntdLocale } from "@/supdance/plugi
 import { SupDancePluginRuntimeSync } from "@/supdance/adapters/plugin-runtime-sync";
 import { SocialOnboardingModal } from "@/supdance/plugins/social-auth";
 import { UserProfileModalHost } from "@/components/layout/user-profile-modal";
+import { useVisualEngineHostAdapter } from "@/supdance/plugins/visual-engine/adapters/antd-theme";
+import { WorkspaceRecoveryBoundary } from "@/supdance/plugins/visual-engine/loading/workspace-recovery-boundary";
 
 const ClientRootInit = lazy(() => import("@/components/layout/client-root-init").then((module) => ({ default: module.ClientRootInit })));
 
@@ -26,16 +28,18 @@ function ClientRootBoundary({ children }: { children: ReactNode }) {
     const authenticated = useUserStore((state) => Boolean(state.user));
     if (!authenticated) return children;
     return (
-        <Suspense fallback={<FullScreenLoader label="正在准备创作环境" detail="连接本地能力与模型配置" />}>
+        <Suspense fallback={<WorkspaceRecoveryBoundary phase="syncing" fallback={<FullScreenLoader label="正在准备创作环境" detail="连接本地能力与模型配置" />} />}>
             <ClientRootInit>{children}</ClientRootInit>
         </Suspense>
     );
 }
 
-export function AppProviders({ children }: { children: ReactNode }) {
-    const theme = useActiveTheme();
-    const dark = theme === "dark";
+export function AppProviders({ children, extensions }: { children: ReactNode; extensions?: ReactNode }) {
+    const hostTheme = useActiveTheme();
     const appearance = useAppearanceStore((state) => state.appearance);
+    const visualAdapter = useVisualEngineHostAdapter(hostTheme, appearance.activeSkin);
+    const theme = visualAdapter.mode;
+    const dark = theme === "dark";
 
     useLayoutEffect(() => {
         document.documentElement.classList.toggle("dark", dark);
@@ -64,7 +68,7 @@ export function AppProviders({ children }: { children: ReactNode }) {
 
     return (
         // 两个汉字的按钮（取消、确定）不再被 antd 拉开字距，与其他按钮的文字节奏一致。
-        <ConfigProvider locale={zhCN} theme={getAntThemeConfig(dark, appearance.activeSkin)} wave={{ disabled: true }} button={{ autoInsertSpace: false }}>
+        <ConfigProvider locale={zhCN} theme={visualAdapter.theme} wave={{ disabled: true }} button={{ autoInsertSpace: false }}>
             <AppFeedbackProvider>
                 <QueryClientProvider client={appQueryClient}>
                     {isolateDevRepro ? (
@@ -75,7 +79,8 @@ export function AppProviders({ children }: { children: ReactNode }) {
                             <SupDanceI18nRuntimeHost />
                             <SocialOnboardingModal />
                             <UserProfileModalHost />
-                            <AuthSessionHydrator>
+                            {extensions}
+                            <AuthSessionHydrator fallback={<WorkspaceRecoveryBoundary fallback={<FullScreenLoader />} />}>
                                 <ClientRootBoundary>{children}</ClientRootBoundary>
                             </AuthSessionHydrator>
                         </>

@@ -5,6 +5,7 @@ import (
 	"strings"
 	"time"
 
+	"yingce/backend/internal/kernel"
 	"yingce/backend/internal/model"
 )
 
@@ -320,6 +321,18 @@ func (s *Service) AdminPluginStates(actor *model.User) (map[string]AdminPluginSt
 func (s *Service) SetPluginPlatformAvailability(actor *model.User, pluginID string, available bool) (AdminPluginStateView, error) {
 	if err := s.RequireAdmin(actor); err != nil {
 		return AdminPluginStateView{}, err
+	}
+	if pluginID == PluginSupDanceVisualEngine {
+		if err := s.requireVisualEnginePermission(actor, "lifecycle"); err != nil {
+			return AdminPluginStateView{}, err
+		}
+		state, err := s.VisualEngineLifecycle()
+		if err != nil {
+			return AdminPluginStateView{}, err
+		}
+		if available && !state.Installed {
+			return AdminPluginStateView{}, kernel.NewAppError(409, "视觉引擎已卸载，请先安装")
+		}
 	}
 	items := s.Plugins()
 	runtimePlugin, hasRuntime := runtimePluginByID(items, pluginID)

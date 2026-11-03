@@ -5,6 +5,7 @@ import (
 	"math"
 	"reflect"
 	"regexp"
+	"strconv"
 	"strings"
 )
 
@@ -64,7 +65,7 @@ func ValidateConfig(config Config) error {
 		}
 	}
 	for _, curve := range []string{motion.EasingStandard, motion.EasingBounce, motion.EasingSmooth} {
-		if len(curve) > 100 || !easing.MatchString(curve) {
+		if len(curve) > 100 || !validEasing(curve) {
 			return fmt.Errorf("动画曲线无效")
 		}
 	}
@@ -75,7 +76,7 @@ func ValidateConfig(config Config) error {
 	if !strings.HasPrefix(recovery.BrandLogoURL, "/") || strings.HasPrefix(recovery.BrandLogoURL, "//") || strings.ContainsAny(recovery.BrandLogoURL, "\\\r\n") {
 		return fmt.Errorf("Logo 必须使用站内资源路径")
 	}
-	if recovery.TimeoutMs < 1000 || recovery.TimeoutMs > 120000 || recovery.OrbitNodesCount < 0 || recovery.OrbitNodesCount > 20 || recovery.FloatingCardsCount < 0 || recovery.FloatingCardsCount > 12 || math.IsNaN(recovery.OrbitSpeed) || recovery.OrbitSpeed < 0.1 || recovery.OrbitSpeed > 10 || recovery.GlowIntensity < 0 || recovery.GlowIntensity > 1 {
+	if recovery.TimeoutMs < 1000 || recovery.TimeoutMs > 120000 || recovery.OrbitNodesCount < 0 || recovery.OrbitNodesCount > 8 || recovery.FloatingCardsCount < 0 || recovery.FloatingCardsCount > 4 || math.IsNaN(recovery.OrbitSpeed) || recovery.OrbitSpeed < 0.1 || recovery.OrbitSpeed > 10 || recovery.GlowIntensity < 0 || recovery.GlowIntensity > 1 {
 		return fmt.Errorf("恢复动画参数超出范围")
 	}
 	if len(config.PageRules) > 100 {
@@ -92,11 +93,50 @@ func ValidateConfig(config Config) error {
 			return fmt.Errorf("页面规则标识或路径无效")
 		}
 		ids[rule.ID] = true
+		if rule.PerformanceMode != "" && rule.PerformanceMode != "auto" && rule.PerformanceMode != "low" && rule.PerformanceMode != "full" {
+			return fmt.Errorf("页面性能模式无效")
+		}
+		if rule.Components != nil || rule.Overlays != nil || rule.Elevations != nil {
+			scoped := config
+			scoped.PageRules = nil
+			scoped.CustomPresets = nil
+			if rule.Components != nil {
+				scoped.Components = *rule.Components
+			}
+			if rule.Overlays != nil {
+				scoped.Overlays = *rule.Overlays
+			}
+			if rule.Elevations != nil {
+				scoped.Elevations = rule.Elevations
+			}
+			if err := ValidateConfig(scoped); err != nil {
+				return fmt.Errorf("页面覆盖配置无效: %w", err)
+			}
+		}
 		for name, color := range rule.CustomTokens {
 			if !tokenNames[name] || !hexColor.MatchString(color) {
 				return fmt.Errorf("页面规则颜色无效")
 			}
 		}
 	}
-	return nil
+	return validateExtendedConfig(config)
+}
+func validEasing(value string) bool {
+	if !easing.MatchString(value) {
+		return false
+	}
+	if !strings.HasPrefix(value, "cubic-bezier(") {
+		return true
+	}
+	parts := strings.Split(strings.TrimSuffix(strings.TrimPrefix(value, "cubic-bezier("), ")"), ",")
+	if len(parts) != 4 {
+		return false
+	}
+	for index, part := range parts {
+		number, err := strconv.ParseFloat(strings.TrimSpace(part), 64)
+		if err != nil || math.IsNaN(number) || math.IsInf(number, 0) || ((index == 0 || index == 2) && (number < 0 || number > 1)) {
+			return false
+		}
+	}
+	return true
 }

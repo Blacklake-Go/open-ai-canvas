@@ -1,0 +1,85 @@
+html[data-visual-engine-theme] body {
+    font-family: var(--ve-font-sans);
+    font-size: var(--ve-type-body-size);
+    line-height: var(--ve-type-body-line);
+}
+html[data-visual-engine-theme] :where(h1) {
+    font-size: var(--ve-type-title-size);
+    line-height: var(--ve-type-title-line);
+    font-weight: var(--ve-type-title-weight);
+}
+html[data-visual-engine-theme] :where(h2, h3) {
+    font-size: var(--ve-type-heading-size);
+    line-height: var(--ve-type-heading-line);
+    font-weight: var(--ve-type-heading-weight);
+}
+html[data-visual-engine-theme] :where(code, pre) {
+    font-family: var(--ve-font-mono);
+}
+html[data-visual-engine-theme] :where(button, [role="button"], input, textarea, select):focus-visible {
+    outline: var(--ve-focus-width) solid var(--control-focus);
+    outline-offset: var(--ve-focus-offset);
+}
+html[data-visual-engine-theme] :where(button, [role="button"]):not(:disabled):not([aria-disabled="true"]) {
+    transition-timing-function: var(--motion-ease-standard);
+    transition-property: background-color, color, border-color, box-shadow;
+    transition-duration: var(--motion-quick);
+}
+html[data-visual-engine-theme] :where(button[disabled], [aria-disabled="true"]) {
+    opacity: var(--ve-disabled-opacity);
+}
+html[data-visual-engine-theme] :where([data-visual-component="card"]):hover {
+    translate: 0 var(--ve-hover-lift);
+}
+html[data-visual-engine-theme] :where(button):not(:disabled):active {
+    scale: var(--ve-pressed-scale);
+}
+html[data-visual-engine-theme] :where([data-visual-depth="E1"]) {
+    box-shadow: var(--elevation-e1);
+}
+html[data-visual-engine-theme] :where([data-visual-depth="E2"]) {
+    box-shadow: var(--elevation-e2);
+}
+html[data-visual-engine-theme] :where([data-visual-depth="E3"]) {
+    box-shadow: var(--elevation-e3);
+}
+html[data-visual-engine-theme] :where([data-visual-depth="E4"]) {
+    box-shadow: var(--elevation-e4);
+}
+html[data-visual-engine-theme] :where([data-visual-mask="busy"]) {
+    background: color-mix(in srgb, var(--surface) calc(var(--ve-busy-opacity) * 100%), transparent);
+}
+html[data-visual-engine-theme] :where([data-visual-mask="media"]) {
+    background: var(--ve-media-gradient);
+    pointer-events: none;
+}
+@media (prefers-reduced-motion: reduce) {
+    html[data-visual-engine-theme] :where(button, [role="button"], input, textarea, select) {
+        transition-duration: 0s;
+    }
+    html[data-visual-engine-theme] :where(button):active {
+        scale: none;
+    }
+    html[data-visual-engine-theme] :where([data-visual-component="card"]):hover {
+        translate: none;
+    }
+}
+html[data-visual-engine-theme] :where(.canvas-config-composer, .canvas-floating-dock) {
+    box-shadow: var(--elevation-e1);
+    border-radius: var(--card-radius);
+}
+html[data-visual-engine-theme] :where([data-visual-mask="scroll"]) {
+    background: linear-gradient(transparent, color-mix(in srgb, var(--surface) calc(var(--ve-scroll-edge-opacity) * 100%), transparent));
+    pointer-events: none;
+}
+html[data-visual-engine-theme] :where([data-visual-component="parameter-popover"]) {
+    box-shadow: var(--elevation-e2);
+    backdrop-filter: blur(var(--ve-menu-blur));
+}
+html[data-visual-engine-theme] :where(.asset-library-card .library-card-media)::after {
+    content: "";
+    position: absolute;
+    inset: 40% 0 0;
+    background: var(--ve-media-gradient);
+    pointer-events: none;
+}

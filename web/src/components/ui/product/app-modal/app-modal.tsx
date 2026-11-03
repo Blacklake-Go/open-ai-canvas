@@ -1,5 +1,6 @@
 import { Modal, type ModalProps } from "antd";
 import type { CSSProperties } from "react";
+import { resolveOverlayExtensionStyles } from "@/lib/overlay-extensions";
 
 // 用途：产品弹窗壳。消费 token 由内容自己负责。接管 AntD Modal 的重复 flush 内边距。
 const FLUSH_STYLES = {
@@ -14,7 +15,7 @@ export type AppModalProps = ModalProps & {
 
 export function AppModal({ flush = false, destroyOnHidden = true, styles, ...props }: AppModalProps) {
     const mergeResolvedStyles = (resolved: unknown) => {
-        const base = resolved && typeof resolved === "object" ? (resolved as Record<string, unknown>) : {};
+        const base = resolveOverlayExtensionStyles("modal", resolved);
         if (!flush) return base;
         const container = base.container && typeof base.container === "object" ? (base.container as CSSProperties) : {};
         const body = base.body && typeof base.body === "object" ? (base.body as CSSProperties) : {};
@@ -24,10 +25,7 @@ export function AppModal({ flush = false, destroyOnHidden = true, styles, ...pro
             body: { ...body, ...FLUSH_STYLES.body },
         };
     };
-    const mergedStyles =
-        typeof styles === "function"
-            ? (info: { props: ModalProps }) => mergeResolvedStyles(styles(info))
-            : mergeResolvedStyles(styles);
+    const mergedStyles = typeof styles === "function" ? (info: { props: ModalProps }) => mergeResolvedStyles(styles(info)) : mergeResolvedStyles(styles);
 
     return <Modal destroyOnHidden={destroyOnHidden} {...props} styles={mergedStyles as ModalProps["styles"]} />;
 }

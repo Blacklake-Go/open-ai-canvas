@@ -119,6 +119,14 @@ export function setDiagnosticUserScope(userId: string) {
     activeTraceId = createDiagnosticId("trace");
 }
 
+const diagnosticObservers = new Set<(event: ClientDiagnosticEvent) => void>();
+export function subscribeClientDiagnostics(observer: (event: ClientDiagnosticEvent) => void) {
+    diagnosticObservers.add(observer);
+    return () => {
+        diagnosticObservers.delete(observer);
+    };
+}
+
 export function recordDiagnosticEvent(input: DiagnosticEventInput) {
     const event: ClientDiagnosticEvent = {
         id: createDiagnosticId("event"),
@@ -140,6 +148,13 @@ export function recordDiagnosticEvent(input: DiagnosticEventInput) {
         stack: redactClientText(input.stack, 4000),
     };
     events.push(event);
+    for (const observer of diagnosticObservers) {
+        try {
+            observer(event);
+        } catch (error) {
+            console.warn("诊断观察器失败", error);
+        }
+    }
     if (events.length > maxEvents) events.splice(0, events.length - maxEvents);
 }
 

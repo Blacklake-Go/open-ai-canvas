@@ -3,7 +3,7 @@ export type CanvasBackgroundMode = "dots" | "lines" | "blank";
 export const DEFAULT_CANVAS_COLOR_THEME: CanvasColorTheme = "dark";
 export const CANVAS_CONNECTION_STROKE_WIDTH = 1.4;
 
-export const canvasThemes = {
+const nativeCanvasThemes = {
     light: {
         connection: {
             stroke: "#a3a3a3",
@@ -147,4 +147,48 @@ export const canvasThemes = {
     },
 } as const;
 
-export type CanvasTheme = (typeof canvasThemes)[CanvasColorTheme];
+export type CanvasTheme = { [Group in keyof typeof nativeCanvasThemes.light]: { [Token in keyof (typeof nativeCanvasThemes.light)[Group]]: string } };
+type CanvasThemeExtension = (base: CanvasTheme, mode: CanvasColorTheme) => CanvasTheme;
+const extensions = new Set<CanvasThemeExtension>(),
+    listeners = new Set<() => void>();
+let revision = 0;
+export function refreshCanvasThemeExtensions() {
+    revision++;
+    for (const listener of listeners) listener();
+}
+export function subscribeCanvasThemeExtensions(listener: () => void) {
+    listeners.add(listener);
+    return () => {
+        listeners.delete(listener);
+    };
+}
+export function getCanvasThemeExtensionRevision() {
+    return revision;
+}
+export function registerCanvasThemeExtension(extension: CanvasThemeExtension) {
+    extensions.add(extension);
+    refreshCanvasThemeExtensions();
+    return () => {
+        extensions.delete(extension);
+        refreshCanvasThemeExtensions();
+    };
+}
+function resolveCanvasTheme(mode: CanvasColorTheme): CanvasTheme {
+    let current: CanvasTheme = nativeCanvasThemes[mode];
+    for (const extension of extensions) {
+        try {
+            current = extension(current, mode);
+        } catch (error) {
+            console.warn("画布主题扩展失败，保留原生颜色", error);
+        }
+    }
+    return current;
+}
+export const canvasThemes: Record<CanvasColorTheme, CanvasTheme> = {
+    get light() {
+        return resolveCanvasTheme("light");
+    },
+    get dark() {
+        return resolveCanvasTheme("dark");
+    },
+};

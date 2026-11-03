@@ -2,15 +2,21 @@ import { create } from "zustand";
 import { persist } from "zustand/middleware";
 import type { ThemeName } from "@/stores/use-theme-store";
 import { useThemeStore } from "@/stores/use-theme-store";
-import { useLayoutEffect } from "react";
-import { DEFAULT_CANVAS_COLOR_THEME } from "@/lib/canvas-theme";
+import { useLayoutEffect, useSyncExternalStore } from "react";
+import { DEFAULT_CANVAS_COLOR_THEME, subscribeCanvasThemeExtensions, getCanvasThemeExtensionRevision } from "@/lib/canvas-theme";
 
 type CanvasThemeStore = { theme: ThemeName; active: boolean; setTheme: (theme: ThemeName) => void };
 
 /** 画布外观是编辑器状态，不能写入用户工作台的全局主题。 */
 export const useCanvasThemeStore = create<CanvasThemeStore>()(
     persist(
-        (set) => ({ theme: DEFAULT_CANVAS_COLOR_THEME, active: false, setTheme: (theme) => { if (theme === "light" || theme === "dark") set({ theme }); } }),
+        (set) => ({
+            theme: DEFAULT_CANVAS_COLOR_THEME,
+            active: false,
+            setTheme: (theme) => {
+                if (theme === "light" || theme === "dark") set({ theme });
+            },
+        }),
         {
             name: "yingce:canvas-theme",
             partialize: ({ theme }) => ({ theme }),
@@ -26,11 +32,14 @@ export const useCanvasThemeStore = create<CanvasThemeStore>()(
 export function useCanvasThemeScope() {
     useLayoutEffect(() => {
         useCanvasThemeStore.setState({ active: true });
-        return () => { useCanvasThemeStore.setState({ active: false }); };
+        return () => {
+            useCanvasThemeStore.setState({ active: false });
+        };
     }, []);
 }
 
 export function useActiveTheme() {
+    useSyncExternalStore(subscribeCanvasThemeExtensions, getCanvasThemeExtensionRevision, () => 0);
     const workspaceTheme = useThemeStore((state) => state.theme);
     const canvasTheme = useCanvasThemeStore((state) => state.theme);
     const active = useCanvasThemeStore((state) => state.active);

@@ -867,3 +867,19 @@ install 的 Base URL、协议、能力和成本全部从服务端快照读取，
 - 预算口径：`GET /dramas/:id` 的 `production.spentMicrocredits` 是作品总花费，含关联画布上生成任务的花费；其中画布部分为 `canvasSpentMicrocredits`。画布花费在读取时汇总：任务的 `project_id` 是关联到作品的画布，按其计费订单下单金额计（已退款除外，在途订单也计入），口径与流水线一致。派发、继续制作与修改设置都按总花费判断预算；关联画布上创建生成任务时作品预算已用完返回 400 `drama_budget_exhausted`。
 - 资源保护：短剧表直接持有的资源（设定参考图、剧情段视频与尾帧、成片以及全部版本记录）在资源引用快照里记为 `短剧` 引用，素材“彻底删除”与 24 小时孤儿资源清理都会保留它们。
 - 段视图新增 `revision`（采用时的乐观并发校验）与 `videoSeconds`（当前视频进入成片的秒数，与成片时间线一致）。
+
+## SupDance Visual Engine 插件 API
+
+公共 `GET /api/plugins/supdance-visual-engine/bundle` 返回安装状态、启用状态、Schema 2 配置、发布版本及 revision，使用 no-store 和 ETag。管理前缀为 `/api/admin/plugins/supdance-visual-engine`，复用登录 Cookie 和宿主 admin 身份。
+
+| 方法/路径 | 能力 |
+| --- | --- |
+| GET /capabilities、GET /overview | 当前操作能力、查看 |
+| PUT /draft | 编辑当前管理员草稿 |
+| POST /preview | 预览权限和配置校验，不发布 |
+| POST /publish | 发布，要求 expectedRevision 及有效草稿基线 |
+| POST /rollback | 回滚，传 version 与 expectedRevision |
+| GET/PUT /permissions | 生命周期管理员管理六类权限 |
+| POST /lifecycle | install/activate/deactivate/update/uninstall；retainConfig 控制卸载保留 |
+
+权限分 view、edit、preview、publish、rollback、lifecycle。服务端限制请求体 1 MiB，非法配置返回 400，无权限 403，旧 revision/基线或不兼容迁移返回 409。发布/回滚将配置、历史、草稿清理和审计原子提交；失败保留上一配置。插件不改认证、任务或账务接口。

@@ -1,13 +1,47 @@
 package repository
 
 import (
-	"errors"
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
 	"yingce/backend/internal/model"
+	visualengine "yingce/backend/internal/supdance/visualengine"
 )
 
-var ErrVisualEngineConflict = errors.New("视觉配置已被其他管理员更新，请重新加载")
+var ErrVisualEngineConflict = visualengine.ErrConflict
+
+func (r *Repository) SaveVisualEngineSettingsWithAudit(settings []*model.SystemSetting, audit *model.AdminAuditEvent) error {
+	return r.db.Transaction(func(tx *gorm.DB) error {
+		for _, setting := range settings {
+			if err := tx.Save(setting).Error; err != nil {
+				return err
+			}
+		}
+		return tx.Create(audit).Error
+	})
+}
+func (r *Repository) SaveVisualEngineLifecycle(settings []*model.SystemSetting, state *model.PluginPlatformState, clearConfig bool, audit *model.AdminAuditEvent) error {
+	return r.db.Transaction(func(tx *gorm.DB) error {
+		for _, setting := range settings {
+			if err := tx.Save(setting).Error; err != nil {
+				return err
+			}
+		}
+		if err := tx.Save(state).Error; err != nil {
+			return err
+		}
+		if clearConfig {
+			if err := tx.Where("key IN ? OR key LIKE ? OR key LIKE ?", []string{"supdance_visual_engine_config", "supdance_visual_engine_snapshots"}, "supdance_visual_engine_draft:%", "supdance_visual_engine_migration_backup:%").Delete(&model.SystemSetting{}).Error; err != nil {
+				return err
+			}
+		}
+		return tx.Create(audit).Error
+	})
+}
+func (r *Repository) VisualEngineAuditEvents() ([]model.AdminAuditEvent, error) {
+	var events []model.AdminAuditEvent
+	err := r.db.Where("target_id = ?", "supdance-visual-engine").Order("created_at DESC").Limit(200).Find(&events).Error
+	return events, err
+}
 
 func (r *Repository) SaveVisualEngineRelease(previousJSON string, config, snapshots, draft *model.SystemSetting, audit *model.AdminAuditEvent) error {
 	return r.db.Transaction(func(tx *gorm.DB) error {

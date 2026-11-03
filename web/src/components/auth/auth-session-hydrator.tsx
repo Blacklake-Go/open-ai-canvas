@@ -7,7 +7,7 @@ import { preloadWorkspaceRoute } from "@/lib/workspace-route-modules";
 import { useUserStore } from "@/stores/use-user-store";
 import { recordDiagnosticEvent } from "@/services/diagnostics/client-diagnostics";
 
-export function AuthSessionHydrator({ children }: { children: ReactNode }) {
+export function AuthSessionHydrator({ children, fallback }: { children: ReactNode; fallback?: ReactNode }) {
     const hydrated = useUserStore((state) => state.hydrated);
 
     useEffect(() => {
@@ -65,7 +65,7 @@ export function AuthSessionHydrator({ children }: { children: ReactNode }) {
         };
     }, []);
 
-    return hydrated ? children : <FullScreenLoader />;
+    return hydrated ? children : (fallback ?? <FullScreenLoader />);
 }
 
 async function applyAnonymousSession(payload: AuthSessionPayload) {

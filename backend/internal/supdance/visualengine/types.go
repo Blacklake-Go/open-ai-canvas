@@ -67,12 +67,15 @@ type ElevationToken struct {
 }
 
 type OverlaysConfig struct {
-	ModalBackdropBlur            int     `json:"modalBackdropBlur"`
-	ModalBackdropOpacity         float64 `json:"modalBackdropOpacity"`
-	DrawerBackdropBlur           int     `json:"drawerBackdropBlur"`
-	DrawerBackdropOpacity        float64 `json:"drawerBackdropOpacity"`
-	MenuBackdropBlur             int     `json:"menuBackdropBlur"`
-	EnableTextProtectionGradient bool    `json:"enableTextProtectionGradient"`
+	ImageGradientOpacity         *float64 `json:"imageGradientOpacity,omitempty"`
+	ScrollEdgeOpacity            *float64 `json:"scrollEdgeOpacity,omitempty"`
+	BusyOpacity                  *float64 `json:"busyOpacity,omitempty"`
+	ModalBackdropBlur            int      `json:"modalBackdropBlur"`
+	ModalBackdropOpacity         float64  `json:"modalBackdropOpacity"`
+	DrawerBackdropBlur           int      `json:"drawerBackdropBlur"`
+	DrawerBackdropOpacity        float64  `json:"drawerBackdropOpacity"`
+	MenuBackdropBlur             int      `json:"menuBackdropBlur"`
+	EnableTextProtectionGradient bool     `json:"enableTextProtectionGradient"`
 }
 
 type MotionConfig struct {
@@ -90,6 +93,12 @@ type MotionConfig struct {
 }
 
 type WorkspaceRecoveryConfig struct {
+	BackgroundLight    string            `json:"backgroundLight"`
+	BackgroundDark     string            `json:"backgroundDark"`
+	AnimationSpeed     float64           `json:"animationSpeed"`
+	ExitEffect         string            `json:"exitEffect"`
+	Paths              []string          `json:"paths"`
+	TimeoutFeedback    string            `json:"timeoutFeedback"`
 	Enabled            bool              `json:"enabled"`
 	ThemeMode          string            `json:"themeMode"`
 	BrandLogoURL       string            `json:"brandLogoUrl"`
@@ -105,17 +114,25 @@ type WorkspaceRecoveryConfig struct {
 }
 
 type PageRule struct {
-	CustomTokens            map[string]string `json:"customTokens,omitempty"`
-	ID                      string            `json:"id"`
-	Name                    string            `json:"name"`
-	PathPattern             string            `json:"pathPattern"`
-	ThemePresetOverride     string            `json:"themePresetOverride,omitempty"`
-	MotionEnabledOverride   *bool             `json:"motionEnabledOverride,omitempty"`
-	RecoveryEnabledOverride *bool             `json:"recoveryEnabledOverride,omitempty"`
-	Notes                   string            `json:"notes,omitempty"`
+	Components              *ComponentTokens          `json:"components,omitempty"`
+	Overlays                *OverlaysConfig           `json:"overlays,omitempty"`
+	Elevations              map[string]ElevationToken `json:"elevations,omitempty"`
+	PerformanceMode         string                    `json:"performanceMode,omitempty"`
+	CustomTokens            map[string]string         `json:"customTokens,omitempty"`
+	ID                      string                    `json:"id"`
+	Name                    string                    `json:"name"`
+	PathPattern             string                    `json:"pathPattern"`
+	ThemePresetOverride     string                    `json:"themePresetOverride,omitempty"`
+	MotionEnabledOverride   *bool                     `json:"motionEnabledOverride,omitempty"`
+	RecoveryEnabledOverride *bool                     `json:"recoveryEnabledOverride,omitempty"`
+	Notes                   string                    `json:"notes,omitempty"`
 }
 
 type Config struct {
+	Typography        *TypographyConfig         `json:"typography"`
+	Interactions      *InteractionConfig        `json:"interactions"`
+	Transitions       *TransitionConfig         `json:"transitions"`
+	CustomPresets     []ThemePreset             `json:"customPresets"`
 	SchemaVersion     int                       `json:"schemaVersion"`
 	ActivePreset      string                    `json:"activePreset"`
 	ThemeMode         string                    `json:"themeMode"`
@@ -141,14 +158,16 @@ type Snapshot struct {
 }
 
 type PublicBundle struct {
-	PluginID string `json:"pluginId"`
-	Enabled  bool   `json:"enabled"`
-	Version  string `json:"version"`
-	Config   Config `json:"config"`
-	Revision string `json:"revision"`
+	Installation LifecycleState `json:"installation"`
+	PluginID     string         `json:"pluginId"`
+	Enabled      bool           `json:"enabled"`
+	Version      string         `json:"version"`
+	Config       Config         `json:"config"`
+	Revision     string         `json:"revision"`
 }
 
 type AdminOverview struct {
+	Permissions []string        `json:"permissions"`
 	Draft       *Config         `json:"draft"`
 	AuditLogs   []AuditLogEntry `json:"auditLogs"`
 	Bundle      PublicBundle    `json:"bundle"`
@@ -168,11 +187,16 @@ type AuditLogEntry struct {
 	Success   bool   `json:"success"`
 }
 
-func ComputeRevision(cfg Config, enabled bool) string {
+func ComputeRevision(cfg Config, enabled bool, states ...LifecycleState) string {
+	var state *LifecycleState
+	if len(states) > 0 {
+		state = &states[0]
+	}
 	raw, _ := json.Marshal(struct {
-		Config  Config `json:"config"`
-		Enabled bool   `json:"enabled"`
-	}{Config: cfg, Enabled: enabled})
+		Config       Config          `json:"config"`
+		Enabled      bool            `json:"enabled"`
+		Installation *LifecycleState `json:"installation,omitempty"`
+	}{Config: cfg, Enabled: enabled, Installation: state})
 	h := sha256.Sum256(raw)
 	return hex.EncodeToString(h[:8])
 }

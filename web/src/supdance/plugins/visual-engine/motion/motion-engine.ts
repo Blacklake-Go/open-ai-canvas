@@ -1,4 +1,5 @@
 import type { MotionConfig } from "../types";
+import { useSyncExternalStore } from "react";
 import { MOTION_EASINGS, MOTION_SPRINGS } from "./motion-constants";
 
 export function checkSystemReducedMotion(): boolean {
@@ -6,19 +7,23 @@ export function checkSystemReducedMotion(): boolean {
     return window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 }
 
-export function getComponentTransition(
-    actionType: "quick" | "dropdownEnter" | "dropdownExit" | "modal" | "drawer" | "tabSwitch",
-    config: MotionConfig,
-    userReducedMotion = false,
-) {
+function subscribeReducedMotion(listener: () => void) {
+    if (typeof window === "undefined" || !window.matchMedia) return () => {};
+    const query = window.matchMedia("(prefers-reduced-motion: reduce)");
+    query.addEventListener("change", listener);
+    return () => query.removeEventListener("change", listener);
+}
+export function useSystemReducedMotion() {
+    return useSyncExternalStore(subscribeReducedMotion, checkSystemReducedMotion, () => false);
+}
+
+export function getComponentTransition(actionType: "quick" | "dropdownEnter" | "dropdownExit" | "modal" | "drawer" | "tabSwitch", config: MotionConfig, userReducedMotion = false) {
     if (!config.enabled) {
         return { duration: 0 };
     }
 
     if (userReducedMotion) {
-        return config.reducedMotionBehavior === "instant"
-            ? { duration: 0 }
-            : { duration: 0.1, ease: "linear" };
+        return config.reducedMotionBehavior === "instant" ? { duration: 0 } : { duration: 0.1, ease: "linear" };
     }
 
     switch (actionType) {

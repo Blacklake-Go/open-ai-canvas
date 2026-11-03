@@ -4355,3 +4355,9 @@ SQLite 与 HTTP recorder 已验证；PostgreSQL 16／17、前端构建及浏览�
 - 已验证：`go test ./... -count=1 -timeout=20m`、`go vet ./...`、`go build ./...`、前端 2716 项测试、`bun run lint`、`bun run build` 通过；数据库与API迁移测试包含SQLite。四篇修改后的MDX逐篇编译及OpenAPI引用解析通过。
 - 环境阻塞：文档站 `bun run types:check` 在 MDX 扫描前失败，当前忽略的 `docs/node_modules/fdir/dist/index.mjs` 调用了 `Dirent.isPrevisy()`（Node Dirent 无此方法）；为避免改依赖，本轮未继续修补 node_modules。
 - [ ] 真实模型/收费生成与多次运行pass^k、provider缓存命中率、PostgreSQL 58迁移、浏览器记忆提案与历史撤销尚未人工验收。
+
+## Visual Engine 2.0.1 用户验收
+
+- 已由自动测试和真实页面验证草稿隔离、发布生效、回滚、安装升级卸载重装、六类权限、四视口、200% 字号、模态焦点、减少动效和暂停。
+- 尚待用户确认最终视觉偏好；旧用户发布配色不会被新默认色覆盖。
+- 不把视觉测试当作真实收费生成、第三方 OAuth/支付或其他独立子域名验收。对应业务另按其预算、认证与资源闭环验收。

@@ -1,4 +1,5 @@
 import type { VisualEngineConfig } from "../types";
+import { DEFAULT_TYPOGRAPHY, DEFAULT_INTERACTIONS, DEFAULT_TRANSITIONS } from "./extended-config";
 import { nativePreset } from "./presets/native-preset";
 import { darkPreset } from "./presets/dark-preset";
 import { lightPreset } from "./presets/light-preset";
@@ -7,6 +8,10 @@ import { studioPreset } from "./presets/studio-preset";
 export const BUILTIN_THEME_PRESETS = [nativePreset, darkPreset, lightPreset, studioPreset];
 
 export const DEFAULT_VISUAL_ENGINE_CONFIG: VisualEngineConfig = {
+    typography: structuredClone(DEFAULT_TYPOGRAPHY),
+    interactions: { ...DEFAULT_INTERACTIONS },
+    transitions: structuredClone(DEFAULT_TRANSITIONS),
+    customPresets: [],
     schemaVersion: 2,
     activePreset: "studio",
     themeMode: "system",
@@ -58,6 +63,9 @@ export const DEFAULT_VISUAL_ENGINE_CONFIG: VisualEngineConfig = {
         },
     },
     overlays: {
+        imageGradientOpacity: 0.85,
+        scrollEdgeOpacity: 0.8,
+        busyOpacity: 0.65,
         modalBackdropBlur: 8,
         modalBackdropOpacity: 0.65,
         drawerBackdropBlur: 4,
@@ -79,6 +87,12 @@ export const DEFAULT_VISUAL_ENGINE_CONFIG: VisualEngineConfig = {
         reducedMotionBehavior: "fade-only",
     },
     workspaceRecovery: {
+        backgroundLight: "#f4f4f5",
+        backgroundDark: "#07080b",
+        animationSpeed: 1,
+        exitEffect: "fade",
+        paths: ["/*"],
+        timeoutFeedback: "retry",
         enabled: true,
         themeMode: "dark",
         brandLogoUrl: "/logo.svg",
@@ -92,15 +106,15 @@ export const DEFAULT_VISUAL_ENGINE_CONFIG: VisualEngineConfig = {
         statusCopies: {
             init: "正在初始化 SupDance 创作空间…",
             recovering: "正在恢复创作者工作区…",
-            syncing: "正在同步项目数据与模型连接…",
+            syncing: "正在准备创作环境…",
             ready: "工作区已就绪，即将进入…",
             failed: "工作区恢复超时，请检查网络或点击重试",
         },
         stageDetails: {
             auth: "验证账户会话与创作者身份",
             workspace: "还原面板布局与画板视图状态",
-            projects: "检查近期创作画卷与资产缓存",
-            environment: "准备本地与云端模型能力",
+            projects: "等待工作区数据就绪",
+            environment: "准备创作界面",
         },
     },
     pageRules: [

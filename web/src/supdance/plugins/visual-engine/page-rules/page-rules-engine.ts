@@ -10,11 +10,7 @@ export type ResolvedPageVisualPolicy = {
     recoveryEnabled: boolean;
 };
 
-export function resolvePageVisualPolicy(
-    pathname: string,
-    config: VisualEngineConfig,
-    systemMode: "light" | "dark",
-): ResolvedPageVisualPolicy {
+export function resolvePageVisualPolicy(pathname: string, config: VisualEngineConfig, systemMode: "light" | "dark"): ResolvedPageVisualPolicy {
     const rule = findMatchingPageRule(pathname, config.pageRules);
 
     let activeTokens = { ...config.tokens[systemMode] };
@@ -23,7 +19,7 @@ export function resolvePageVisualPolicy(
 
     if (rule) {
         if (rule.themePresetOverride) {
-            const preset = BUILTIN_THEME_PRESETS.find((p) => p.id === rule.themePresetOverride);
+            const preset = [...BUILTIN_THEME_PRESETS, ...config.customPresets].find((p) => p.id === rule.themePresetOverride);
             if (preset) {
                 activeTokens = { ...preset.tokens[systemMode] };
             }

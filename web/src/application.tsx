@@ -16,8 +16,7 @@ document.body.style.fontFamily = '"SF Pro Display","SF Pro Text","PingFang SC","
 
 createRoot(document.getElementById("root")!).render(
     <React.StrictMode>
-        <AppProviders>
-            <VisualEngineRuntimeHost navigation={router} />
+        <AppProviders extensions={<VisualEngineRuntimeHost navigation={router} />}>
             <RouterProvider router={router} useTransitions={false} />
         </AppProviders>
     </React.StrictMode>,

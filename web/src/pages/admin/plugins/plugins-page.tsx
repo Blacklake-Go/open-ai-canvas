@@ -26,6 +26,8 @@ import { SUPDANCE_SOCIAL_AUTH_PLUGIN_ID } from "@/supdance/plugins/social-auth/t
 import { SUPDANCE_MUSIC_PLUGIN_ID } from "@/supdance/plugins/music-generation/types";
 import { SUPDANCE_VISUAL_ENGINE_PLUGIN_ID } from "@/supdance/plugins/visual-engine/types";
 import { useVisualEngineStore } from "@/supdance/plugins/visual-engine/storage/visual-engine-store";
+import { VisualEnginePluginControls } from "@/supdance/plugins/visual-engine/admin/components/plugin-controls";
+import { supdanceVisualEnginePlugin } from "@/supdance/plugins/visual-engine";
 
 type AdminPluginItem = {
     manifest: PluginManifest | PluginManifestV2;
@@ -36,6 +38,7 @@ type AdminPluginItem = {
 };
 
 export default function AdminPluginsPage() {
+    const visualPermissions = useVisualEngineStore((state) => state.permissions);
     const { message, modal } = App.useApp();
     const [plugins, setPlugins] = useState<BackendPlugin[]>([]);
     const [states, setStates] = useState<Record<string, AdminPluginState>>({});
@@ -272,6 +275,7 @@ export default function AdminPluginsPage() {
                     <div className="flex items-center justify-center gap-3">
                         <AdminStatusBadge label={available ? "已开放" : "已停用"} tone={available ? "success" : "neutral"} />
                         <Switch
+                            disabled={item.manifest.id === SUPDANCE_VISUAL_ENGINE_PLUGIN_ID && !visualPermissions.includes("lifecycle")}
                             className="plugin-state-switch"
                             loading={savingId === item.manifest.id}
                             checked={available}
@@ -289,16 +293,8 @@ export default function AdminPluginsPage() {
             align: "center",
             render: (_, item) =>
                 item.manifest.id === "supdance-visual-engine" ? (
-                    <Link
-                        to="/admin/plugins/visual-engine"
-                        className="inline-flex items-center gap-1 rounded px-2.5 py-1 text-xs font-semibold text-sky-400 bg-sky-500/10 hover:bg-sky-500/20 transition-all"
-                        title="进入 Visual Console 控制台"
-                    >
-                        <Sparkles className="size-3.5" />
-                        控制台
-                    </Link>
-                ) :
-                item.management.origin === "uploaded" ? (
+                    <VisualEnginePluginControls onChanged={reload} />
+                ) : item.management.origin === "uploaded" ? (
                     <Button danger type="text" size="small" aria-label={`卸载 ${item.manifest.name}`} icon={<Trash2 className="size-3.5" aria-hidden="true" />} onClick={() => remove(item)} />
                 ) : (
                     <span title="内置插件不可卸载">
@@ -475,7 +471,9 @@ function PluginBrandIcon({ pluginId }: { pluginId: string }) {
 
 function mergePlugins(remote: BackendPlugin[]): AdminPluginItem[] {
     const byId = new Map<string, AdminPluginItem>();
-    for (const plugin of listRegisteredPlugins()) {
+    const catalog = listRegisteredPlugins();
+    if (!catalog.some((plugin) => plugin.manifest.id === SUPDANCE_VISUAL_ENGINE_PLUGIN_ID)) catalog.push(supdanceVisualEnginePlugin);
+    for (const plugin of catalog) {
         const isSupDanceI18n = plugin.manifest.id === SUPDANCE_I18N_PLUGIN_ID;
         const isSupDanceSocialAuth = plugin.manifest.id === SUPDANCE_SOCIAL_AUTH_PLUGIN_ID;
         const isSupDanceMusic = plugin.manifest.id === SUPDANCE_MUSIC_PLUGIN_ID;
@@ -489,7 +487,8 @@ function mergePlugins(remote: BackendPlugin[]): AdminPluginItem[] {
                 origin: "official",
                 kind: application ? "application" : "protocol",
                 activationScope: isSupDanceI18n || isSupDanceSocialAuth || isSupDanceMusic || isVisualEngine ? "system" : application ? "user" : "system",
-                configurationScope: isSupDanceI18n || isSupDanceSocialAuth || isSupDanceMusic || isVisualEngine ? "system" : application ? (plugin.manifest.id === EAGLE_PLUGIN_ID || plugin.manifest.id === RUNNINGHUB_PLUGIN_ID ? "user" : "none") : "system",
+                configurationScope:
+                    isSupDanceI18n || isSupDanceSocialAuth || isSupDanceMusic || isVisualEngine ? "system" : application ? (plugin.manifest.id === EAGLE_PLUGIN_ID || plugin.manifest.id === RUNNINGHUB_PLUGIN_ID ? "user" : "none") : "system",
             },
         });
     }

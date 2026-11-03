@@ -28,13 +28,13 @@ export type PrimitiveColors = {
 export type PrimitiveTypography = {
     fontFamilySans: string;
     fontFamilyMono: string;
-    sizeLabel: number;       // 11px
-    sizeCaption: number;     // 12px
-    sizeUI: number;          // 13px
-    sizeBody: number;        // 14px
-    sizeHeading: number;     // 16px
-    sizeTitle: number;       // 22px
-    sizeDisplay: number;     // 32px
+    sizeLabel: number; // 11px
+    sizeCaption: number; // 12px
+    sizeUI: number; // 13px
+    sizeBody: number; // 14px
+    sizeHeading: number; // 16px
+    sizeTitle: number; // 22px
+    sizeDisplay: number; // 32px
 };
 
 /**
@@ -102,6 +102,9 @@ export type ElevationToken = {
 };
 
 export type OverlaysConfig = {
+    imageGradientOpacity: number;
+    scrollEdgeOpacity: number;
+    busyOpacity: number;
     modalBackdropBlur: number;
     modalBackdropOpacity: number;
     drawerBackdropBlur: number;
@@ -115,15 +118,15 @@ export type OverlaysConfig = {
  */
 export type MotionConfig = {
     enabled: boolean;
-    durationQuick: number;           // 150ms 快速微交互
-    durationDropdownEnter: number;   // 200ms 下拉展开
-    durationDropdownExit: number;    // 150ms 下拉收起
-    durationModal: number;           // 200ms 弹窗展开
-    durationDrawer: number;          // 250ms 抽屉滑入
-    durationTabSwitch: number;       // 200ms 分段切换
-    easingStandard: string;          // cubic-bezier(0.16, 1, 0.3, 1)
-    easingBounce: string;            // cubic-bezier(0.34, 1.56, 0.64, 1)
-    easingSmooth: string;            // cubic-bezier(0.4, 0, 0.2, 1)
+    durationQuick: number; // 150ms 快速微交互
+    durationDropdownEnter: number; // 200ms 下拉展开
+    durationDropdownExit: number; // 150ms 下拉收起
+    durationModal: number; // 200ms 弹窗展开
+    durationDrawer: number; // 250ms 抽屉滑入
+    durationTabSwitch: number; // 200ms 分段切换
+    easingStandard: string; // cubic-bezier(0.16, 1, 0.3, 1)
+    easingBounce: string; // cubic-bezier(0.34, 1.56, 0.64, 1)
+    easingSmooth: string; // cubic-bezier(0.4, 0, 0.2, 1)
     reducedMotionBehavior: "instant" | "fade-only";
 };
 
@@ -133,16 +136,22 @@ export type MotionConfig = {
 export type WorkspaceRecoveryStage = "init" | "recovering" | "syncing" | "ready" | "failed";
 
 export type WorkspaceRecoveryConfig = {
+    backgroundLight: string;
+    backgroundDark: string;
+    animationSpeed: number;
+    exitEffect: "fade" | "instant";
+    paths: string[];
+    timeoutFeedback: "retry" | "reload";
     enabled: boolean;
     themeMode: "dark" | "light";
     brandLogoUrl: string;
     brandName: string;
-    orbitSpeed: number;              // 1.0 = normal, 0.5 = slow, 2.0 = fast
-    orbitNodesCount: number;         // 4 - 8
-    floatingCardsCount: number;      // 2 - 6
-    glowIntensity: number;           // 0.0 - 1.0
+    orbitSpeed: number; // 1.0 = normal, 0.5 = slow, 2.0 = fast
+    orbitNodesCount: number; // 4 - 8
+    floatingCardsCount: number; // 2 - 6
+    glowIntensity: number; // 0.0 - 1.0
     gridDensity: "compact" | "normal" | "sparse";
-    timeoutMs: number;               // 超时重试阈值，默认 8000ms
+    timeoutMs: number; // 超时重试阈值，默认 8000ms
     statusCopies: {
         init: string;
         recovering: string;
@@ -162,10 +171,14 @@ export type WorkspaceRecoveryConfig = {
  * 页面规则配置
  */
 export type PageRule = {
+    components?: ComponentTokens;
+    overlays?: OverlaysConfig;
+    elevations?: Record<ElevationLevel, ElevationToken>;
+    performanceMode?: InteractionConfig["performanceMode"];
     id: string;
     name: string;
-    pathPattern: string;             // e.g. "/admin/*", "/create/*", "/auth/*"
-    themePresetOverride?: PresetId;
+    pathPattern: string; // e.g. "/admin/*", "/create/*", "/auth/*"
+    themePresetOverride?: string;
     motionEnabledOverride?: boolean;
     recoveryEnabledOverride?: boolean;
     customTokens?: Partial<SemanticTokens>;
@@ -193,6 +206,10 @@ export type ThemePreset = {
  * 全站视觉引擎核心配置对象
  */
 export type VisualEngineConfig = {
+    typography: TypographyConfig;
+    interactions: InteractionConfig;
+    transitions: TransitionConfig;
+    customPresets: ThemePreset[];
     schemaVersion: 2;
     activePreset: string;
     themeMode: ThemeMode;
@@ -209,6 +226,38 @@ export type VisualEngineConfig = {
     publishedVersion: string;
     updatedAt: string;
     updatedBy: string;
+};
+
+export type TypeScale = { size: number; lineHeight: number; weight: number };
+export type TypographyConfig = {
+    fontFamilySans: "system" | "inter";
+    fontFamilyMono: "system" | "mono";
+    spacingUnit: number;
+    scales: Record<"label" | "caption" | "ui" | "body" | "heading" | "title" | "display", TypeScale>;
+};
+export type InteractionConfig = {
+    focusWidth: number;
+    focusOffset: number;
+    hoverLift: number;
+    pressedScale: number;
+    disabledOpacity: number;
+    switchOnLight: string;
+    switchOnDark: string;
+    checkboxLight: string;
+    checkboxDark: string;
+    performanceMode: "auto" | "low" | "full";
+};
+export type TransitionConfig = {
+    enabled: boolean;
+    preset: "fade" | "slide" | "scale";
+    duration: number;
+    delay: number;
+    distance: number;
+    scale: number;
+    opacity: number;
+    direction: "forward" | "backward";
+    paths: string[];
+    components: string[];
 };
 
 /**

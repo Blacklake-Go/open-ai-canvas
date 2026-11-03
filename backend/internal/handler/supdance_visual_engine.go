@@ -29,6 +29,91 @@ func RegisterSupDanceVisualEngineRoutes(r *gin.RouterGroup, svc *service.Service
 	})
 
 	adminGroup := r.Group("/admin/plugins/supdance-visual-engine")
+	adminGroup.Use(func(c *gin.Context) { c.Request.Body = http.MaxBytesReader(c.Writer, c.Request.Body, 1<<20); c.Next() })
+	adminGroup.GET("/capabilities", func(c *gin.Context) {
+		actor, err := currentUser(c, svc)
+		if err != nil {
+			failService(c, err)
+			return
+		}
+		permissions, err := svc.AdminVisualEngineCapabilities(actor)
+		if err != nil {
+			failService(c, err)
+			return
+		}
+		ok(c, permissions)
+	})
+	adminGroup.POST("/preview", func(c *gin.Context) {
+		actor, err := currentUser(c, svc)
+		if err != nil {
+			failService(c, err)
+			return
+		}
+		var request struct {
+			Config visualengine.Config `json:"config"`
+		}
+		if err := c.ShouldBindJSON(&request); err != nil {
+			fail(c, http.StatusBadRequest, err)
+			return
+		}
+		config, err := svc.PreviewAdminVisualEngine(actor, request.Config)
+		if err != nil {
+			failService(c, err)
+			return
+		}
+		ok(c, config)
+	})
+	adminGroup.POST("/lifecycle", func(c *gin.Context) {
+		actor, err := currentUser(c, svc)
+		if err != nil {
+			failService(c, err)
+			return
+		}
+		var request struct {
+			Action       string `json:"action" binding:"required"`
+			RetainConfig bool   `json:"retainConfig"`
+		}
+		if err := c.ShouldBindJSON(&request); err != nil {
+			fail(c, http.StatusBadRequest, err)
+			return
+		}
+		result, err := svc.ManageAdminVisualEngine(actor, request.Action, request.RetainConfig)
+		if err != nil {
+			failService(c, err)
+			return
+		}
+		ok(c, result)
+	})
+	adminGroup.GET("/permissions", func(c *gin.Context) {
+		actor, err := currentUser(c, svc)
+		if err != nil {
+			failService(c, err)
+			return
+		}
+		result, err := svc.AdminVisualEnginePermissions(actor)
+		if err != nil {
+			failService(c, err)
+			return
+		}
+		ok(c, result)
+	})
+	adminGroup.PUT("/permissions", func(c *gin.Context) {
+		actor, err := currentUser(c, svc)
+		if err != nil {
+			failService(c, err)
+			return
+		}
+		var request visualengine.PermissionPolicy
+		if err := c.ShouldBindJSON(&request); err != nil {
+			fail(c, http.StatusBadRequest, err)
+			return
+		}
+		if err := svc.SaveAdminVisualEnginePermissions(actor, request); err != nil {
+			failService(c, err)
+			return
+		}
+		ok(c, request)
+	})
 	adminGroup.PUT("/draft", func(c *gin.Context) {
 		user, err := currentUser(c, svc)
 		if err != nil {

@@ -1,10 +1,7 @@
 import type { VisualEngineConfig, SemanticTokens } from "../types";
+import { FONT_FAMILIES } from "../config/extended-config";
 
-export function generateVisualEngineCSSVariables(
-    config: VisualEngineConfig,
-    mode: "light" | "dark",
-    customTokens?: Partial<SemanticTokens>,
-): Record<string, string> {
+export function generateVisualEngineCSSVariables(config: VisualEngineConfig, mode: "light" | "dark", customTokens?: Partial<SemanticTokens>): Record<string, string> {
     const tokens: SemanticTokens = {
         ...config.tokens[mode],
         ...(customTokens || {}),
@@ -12,11 +9,33 @@ export function generateVisualEngineCSSVariables(
     const comp = config.components;
     const elev = config.elevations;
     const overlays = config.overlays;
-    const motion = config.motion;
+    const motion =
+        config.motion.enabled && config.interactions.performanceMode !== "low" ? config.motion : { ...config.motion, durationQuick: 0, durationDropdownEnter: 0, durationDropdownExit: 0, durationModal: 0, durationDrawer: 0, durationTabSwitch: 0 };
 
     const shadowProp = mode === "light" ? "shadowLight" : "shadowDark";
 
     return {
+        "--ve-media-gradient": overlays.enableTextProtectionGradient ? `linear-gradient(transparent,rgba(0,0,0,${overlays.imageGradientOpacity ?? 0.85}))` : "none",
+        "--ve-scroll-edge-opacity": String(overlays.scrollEdgeOpacity ?? 0.8),
+        "--ve-busy-opacity": String(overlays.busyOpacity ?? 0.65),
+        "--ve-menu-blur": `${overlays.menuBackdropBlur}px`,
+        ...Object.fromEntries(
+            Object.entries(config.typography.scales).flatMap(([name, scale]) => [
+                [`--ve-type-${name}-size`, `${scale.size / 16}rem`],
+                [`--ve-type-${name}-line`, `${scale.lineHeight / 16}rem`],
+                [`--ve-type-${name}-weight`, String(scale.weight)],
+            ]),
+        ),
+        "--ve-font-sans": FONT_FAMILIES[config.typography.fontFamilySans],
+        "--ve-font-mono": config.typography.fontFamilyMono === "mono" ? FONT_FAMILIES.mono : "ui-monospace,monospace",
+        "--spacing": `${config.typography.spacingUnit / 16}rem`,
+        "--ve-focus-width": `${config.interactions.focusWidth}px`,
+        "--ve-focus-offset": `${config.interactions.focusOffset}px`,
+        "--ve-hover-lift": `-${config.interactions.hoverLift}px`,
+        "--ve-pressed-scale": String(config.interactions.pressedScale),
+        "--ve-disabled-opacity": String(config.interactions.disabledOpacity),
+        "--control-switch-checked-bg": mode === "dark" ? config.interactions.switchOnDark : config.interactions.switchOnLight,
+        "--control-check-bg": mode === "dark" ? config.interactions.checkboxDark : config.interactions.checkboxLight,
         // Semantic Canvas & Surface
         "--background": tokens.canvas,
         "--foreground": tokens.text,
@@ -92,6 +111,42 @@ export function generateVisualEngineCSSVariables(
         "--height-btn-compact": `${comp.buttonHeightCompact}px`,
         "--height-btn-micro": `${comp.buttonHeightMicro}px`,
         "--height-input": `${comp.inputHeight}px`,
+        "--accent": tokens.selected,
+        "--accent-foreground": tokens.selectedForeground,
+        "--surface-card": tokens.surfaceSubtle,
+        "--surface-card-hover": tokens.controlHover,
+        "--control-check-fg": mode === "dark" ? "#18181b" : "#ffffff",
+        "--control-switch-checked-hover-bg": mode === "dark" ? config.interactions.switchOnDark : config.interactions.switchOnLight,
+        "--control-switch-checked-handle": mode === "dark" ? "#0a0a0f" : "#ffffff",
+        "--control-disabled-bg": tokens.surfaceSubtle,
+        "--control-disabled-fg": tokens.textMuted,
+        "--control-focus-ring": tokens.controlFocus,
+        "--workspace-surface": tokens.canvas,
+        "--workspace-surface-strong": tokens.surfaceRaised,
+        "--workspace-border": tokens.border,
+        "--workspace-border-strong": tokens.controlBorder,
+        "--workspace-accent": tokens.primary,
+        "--icon-foreground": tokens.text,
+        "--icon-muted": tokens.textMuted,
+        "--icon-active": tokens.primary,
+        "--r-sm": `${comp.inputRadius}px`,
+        "--r-md": `${comp.buttonRadius}px`,
+        "--r-lg": `${comp.cardRadius}px`,
+        "--r-xl": `${comp.overlayRadius}px`,
+        "--r-2xl": `${comp.overlayRadius}px`,
+        "--radius": `${comp.buttonRadius / 16}rem`,
+        "--control-radius": `${comp.inputRadius}px`,
+        "--button-radius": `${comp.buttonRadius}px`,
+        "--input-radius": `${comp.inputRadius}px`,
+        "--card-radius": `${comp.cardRadius}px`,
+        "--overlay-radius": `${comp.overlayRadius}px`,
+        "--menu-radius": `${comp.menuRadius}px`,
+        "--user-control-height": `${comp.buttonHeightRegular}px`,
+        "--user-control-height-sm": `${comp.buttonHeightCompact}px`,
+        "--user-radius-button": `${comp.buttonRadius}px`,
+        "--focus-ring-width": `${config.interactions.focusWidth}px`,
+        "--motion-fast": `${motion.enabled ? motion.durationQuick : 0}ms`,
+        "--motion-normal": `${motion.enabled ? motion.durationModal : 0}ms`,
 
         // E0–E4 Elevation Depth
         "--elevation-e0": elev.E0[shadowProp],

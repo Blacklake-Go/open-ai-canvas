@@ -17,6 +17,8 @@
     "AGENTS.md",
     "backend/internal/app/plugin_management.go",
     "backend/internal/handler/api.go",
+    "web/src/application.tsx",
+    "web/src/components/auth/auth-session-hydrator.tsx",
     "web/src/components/auth/require-plugin.tsx",
     "web/src/components/canvas/canvas-cloud-agent-connectors.css",
     "web/src/components/canvas/canvas-cloud-agent-connectors.tsx",
@@ -35,7 +37,12 @@
     "web/src/components/layout/workspace-top-bar.tsx",
     "web/src/components/layout/workspace-wallet-modal.tsx",
     "web/src/components/layout/workspace-wallet-topup.tsx",
+    "web/src/components/ui/product/app-drawer/app-drawer.tsx",
+    "web/src/components/ui/product/app-modal/app-modal.tsx",
+    "web/src/layouts/user-layout.tsx",
+    "web/src/lib/canvas-theme.ts",
     "web/src/lib/plugins/builtin/index.ts",
+    "web/src/lib/skin-themes.ts",
     "web/src/pages/admin/components/admin-shell.tsx",
     "web/src/pages/admin/plugins/plugins-page.tsx",
     "web/src/pages/auth/auth-scene.tsx",
@@ -46,6 +53,8 @@
     "web/src/pages/settings/model-default-grid.tsx",
     "web/src/pages/settings/profile-pane.tsx",
     "web/src/router.tsx",
+    "web/src/services/diagnostics/client-diagnostics.ts",
+    "web/src/stores/canvas/use-canvas-theme-store.ts",
     "web/src/stores/use-plugin-store.ts"
   ],
   "supdanceExtensionFiles": [
@@ -75,7 +84,12 @@
     "backend/internal/app/supdance_i18n_plugin.go",
     "backend/internal/service/aliases_supdance.go",
     "backend/internal/handler/supdance_i18n.go",
-    "supdance/plugins/supdance-i18n/manifest.json"
+    "supdance/plugins/supdance-i18n/manifest.json",
+    "web/src/lib/theme-extensions.ts",
+    "web/src/lib/overlay-extensions.ts",
+    "web/src/supdance/plugins/visual-engine/index.ts",
+    "backend/internal/supdance/visualengine/manager.go",
+    "backend/internal/supdance/visualengine/ports.go"
   ],
   "criticalWatchPaths": [
     "backend/internal/database/",

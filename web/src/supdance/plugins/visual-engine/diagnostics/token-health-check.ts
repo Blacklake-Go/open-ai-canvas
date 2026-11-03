@@ -54,7 +54,7 @@ export function runTokenHealthCheck(config: VisualEngineConfig, mode: "light" | 
     }
 
     return {
-        pass: errors.length === 0,
+        pass: errors.length === 0 && contrastChecks.every((check) => check.pass),
         contrastChecks,
         warnings,
         errors,
