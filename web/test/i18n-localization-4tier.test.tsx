@@ -13,6 +13,7 @@ import type { SupDanceI18nEntry, SupDanceLocaleCode } from "../src/supdance/plug
 describe("SupDance Localization 4-Tier Test Suite", () => {
     let initialStoreState: ReturnType<typeof useSupDanceI18nStore.getState>;
     let initialPluginStoreState: ReturnType<typeof usePluginStore.getState>;
+    const originalGlobalDescriptors = new Map(["window", "document", "navigator", "MutationObserver"].map((name) => [name, Object.getOwnPropertyDescriptor(globalThis, name)]));
 
     beforeEach(async () => {
         initialStoreState = useSupDanceI18nStore.getState();
@@ -34,10 +35,10 @@ describe("SupDance Localization 4-Tier Test Suite", () => {
     afterEach(() => {
         useSupDanceI18nStore.setState(initialStoreState);
         usePluginStore.setState(initialPluginStoreState);
-        delete (globalThis as any).window;
-        delete (globalThis as any).document;
-        delete (globalThis as any).navigator;
-        delete (globalThis as any).MutationObserver;
+        for (const [name, descriptor] of originalGlobalDescriptors) {
+            if (descriptor) Object.defineProperty(globalThis, name, descriptor);
+            else Reflect.deleteProperty(globalThis, name);
+        }
     });
 
     /**
