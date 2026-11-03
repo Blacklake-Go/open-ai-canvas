@@ -1,10 +1,16 @@
-import { beforeAll, describe, expect, test } from "bun:test";
+import { beforeAll, beforeEach, afterEach, describe, expect, test } from "bun:test";
 import { STATIC_MODEL_CAPABILITIES, useMusicStore } from "../src/supdance/plugins/music-generation/stores/use-music-store";
 import { BUILTIN_SUPDANCE_I18N_ENTRIES, SUPPORTED_LOCALE_CODES, loadAllLocalePacks } from "../src/supdance/plugins/i18n/locales";
 import { readFileSync, readdirSync } from "node:fs";
 import { join } from "node:path";
 
 describe("SupDance Music Plugin — Real Store & Controller Integration Suite", () => {
+    let previousState: ReturnType<typeof useMusicStore.getState>;
+    beforeEach(() => {
+        previousState = useMusicStore.getState();
+        useMusicStore.setState(useMusicStore.getInitialState(), true);
+    });
+    afterEach(() => useMusicStore.setState(previousState, true));
     beforeAll(async () => {
         await loadAllLocalePacks();
     });

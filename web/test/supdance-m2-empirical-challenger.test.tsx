@@ -5,6 +5,12 @@ import localforage from "localforage";
 // Setup Happy-DOM environment for React client-side rendering
 const dom = new Window({ url: "http://localhost/" });
 const originals = new Map<string, PropertyDescriptor | undefined>();
+let restoreMusicStore: (() => void) | undefined;
+beforeAll(async () => {
+    const { useMusicStore } = await import("../src/supdance/plugins/music-generation/stores/use-music-store");
+    const state = useMusicStore.getState();
+    restoreMusicStore = () => useMusicStore.setState(state, true);
+});
 for (const [key, value] of Object.entries({
     window: dom,
     document: dom.document,
@@ -21,6 +27,7 @@ for (const [key, value] of Object.entries({
 }
 
 afterAll(() => {
+    restoreMusicStore?.();
     dom.happyDOM.abort();
     for (const [key, value] of originals) {
         if (value) Object.defineProperty(globalThis, key, value);
