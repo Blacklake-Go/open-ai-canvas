@@ -1,17 +1,13 @@
 package visualengine
 
-import (
-	"time"
-)
-
 func DefaultConfig() Config {
 	return Config{
 		SchemaVersion:    2,
 		ActivePreset:     "studio",
-		ThemeMode:        "dark",
+		ThemeMode:        "system",
 		PublishedVersion: DefaultPublishedVersion,
-		UpdatedAt:        time.Now().UTC().Format(time.RFC3339),
-		UpdatedBy:        "SupDance Architecture Team",
+		UpdatedAt:        "2026-11-03T00:00:00Z",
+		UpdatedBy:        "System",
 		Tokens: map[string]SemanticTokens{
 			"dark": {
 				Canvas:             "#0a0a0f",

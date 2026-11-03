@@ -29,7 +29,7 @@ export function VersionsPane() {
                         发布历史与版本快照 (Versions & Rollback)
                     </h2>
                     <p className="text-sm text-foreground/60 leading-relaxed mt-1">
-                        所有正式发布的视觉配置均留存不可篡改的历史快照，发生任何兼容异常可随时一键毫秒级无损回滚。
+                        正式发布配置会保存服务端历史快照。回滚将恢复所选配置内容，并记录为一个新的发布版本。
                     </p>
                 </div>
             </div>

@@ -147,7 +147,7 @@ const adminNavigation: AdminNavigationGroup[] = [
     },
 ];
 
-export function getAdminNavigation(visualEngineEnabled = true): AdminNavigationGroup[] {
+export function getAdminNavigation(visualEngineEnabled = useVisualEngineStore.getState().enabled): AdminNavigationGroup[] {
     return adminNavigation.map((group) => {
         if (group.key !== "creation" || !visualEngineEnabled) return group;
         const hasVisualEngine = group.items.some((item) => item.path === "/admin/plugins/visual-engine");
@@ -295,6 +295,7 @@ function AdminShellLayout() {
 }
 
 export function AdminPageFrame({ title, description, actions, back, scroll = false, children }: { title: string; description?: string; actions?: ReactNode; back?: { label: string; onClick: () => void }; scroll?: boolean; children: ReactNode }) {
+    useVisualEngineStore((state) => state.enabled);
     const location = useLocation();
     const current = findAdminNavigation(location.pathname);
 
@@ -371,6 +372,7 @@ function AdminThemeButton() {
 }
 
 function MobileAdminNavigation() {
+    useVisualEngineStore((state) => state.enabled);
     const features = useUserStore((state) => state.features);
     const location = useLocation();
     const visibleGroups = visibleNavigationGroups(features);
@@ -417,6 +419,7 @@ function MobileAdminNavigation() {
 }
 
 function AdminNavigation({ collapsed }: { collapsed: boolean }) {
+    useVisualEngineStore((state) => state.enabled);
     const features = useUserStore((state) => state.features);
     const location = useLocation();
     const groups = visibleNavigationGroups(features);

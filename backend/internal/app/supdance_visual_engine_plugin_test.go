@@ -1,121 +1,107 @@
 package app
 
 import (
+	"gorm.io/driver/sqlite"
+	"gorm.io/gorm"
+	"gorm.io/gorm/logger"
 	"testing"
-
 	"yingce/backend/internal/model"
 	"yingce/backend/internal/repository"
 	visualengine "yingce/backend/internal/supdance/visualengine"
-
-	"gorm.io/driver/sqlite"
-	"gorm.io/gorm"
 )
 
 func TestSupDanceVisualEngineConfigLifecycleAndRollback(t *testing.T) {
-	db, err := gorm.Open(sqlite.Open("file:"+newID()+"?mode=memory&cache=shared"), &gorm.Config{})
+	db, err := gorm.Open(sqlite.Open("file:"+newID()+"?mode=memory&cache=shared"), &gorm.Config{Logger: logger.Default.LogMode(logger.Silent)})
 	if err != nil {
 		t.Fatal(err)
 	}
-	if err := db.AutoMigrate(&model.PluginPlatformState{}, &model.UserPluginState{}, &model.SystemSetting{}, &model.AdminAuditEvent{}); err != nil {
+	if err := db.AutoMigrate(&model.PluginPlatformState{}, &model.SystemSetting{}, &model.AdminAuditEvent{}); err != nil {
 		t.Fatal(err)
 	}
 	svc := &Service{repo: repository.New(db)}
-	user := &model.User{ID: "user-1", Role: model.UserRoleUser}
-	admin := &model.User{ID: "admin-1", Role: model.UserRoleAdmin, Username: "root"}
-
-	// 1. Default plugin state is available and serves the built-in dark/light token sets.
-	available, err := svc.VisualEnginePluginAvailable()
+	admin := &model.User{ID: "admin-ve", Role: model.UserRoleAdmin, Username: "ve-admin"}
+	other := &model.User{ID: "other-ve", Role: model.UserRoleAdmin, Username: "other-admin"}
+	user := &model.User{ID: "user-ve", Role: model.UserRoleUser}
+	initial, err := svc.PublicVisualEngineBundle()
 	if err != nil {
 		t.Fatal(err)
 	}
-	if !available {
-		t.Fatal("expected supdance-visual-engine to be platform-available by default")
+	same, _ := svc.PublicVisualEngineBundle()
+	if same.Revision != initial.Revision {
+		t.Fatal("default revisions are unstable")
 	}
-
-	bundle, err := svc.PublicVisualEngineBundle()
-	if err != nil {
-		t.Fatal(err)
-	}
-	if bundle.PluginID != PluginSupDanceVisualEngine || !bundle.Enabled {
-		t.Fatalf("unexpected public bundle: %#v", bundle)
-	}
-	if len(bundle.Config.Tokens["dark"].Primary) == 0 || len(bundle.Config.Tokens["light"].Primary) == 0 {
-		t.Fatalf("expected built-in dark and light semantic tokens, got %#v", bundle.Config.Tokens)
-	}
-	if bundle.Revision == "" {
-		t.Fatal("expected a non-empty config revision")
-	}
-
-	// 2. Ordinary users cannot read or mutate the admin visual engine config.
+	config := visualengine.DefaultConfig()
+	config.Components.ButtonRadius = 12
 	if _, err := svc.AdminVisualEngineOverview(user); err == nil {
-		t.Fatal("ordinary user accessed admin visual engine overview")
+		t.Fatal("ordinary user read admin state")
 	}
-	if _, err := svc.PublishAdminVisualEngine(user, bundle.Config, "unauthorized"); err == nil {
-		t.Fatal("ordinary user published visual engine config")
+	if _, err := svc.SaveAdminVisualEngineDraft(user, config); err == nil {
+		t.Fatal("ordinary user saved draft")
 	}
-	if _, err := svc.RollbackAdminVisualEngine(user, "1.0.0"); err == nil {
-		t.Fatal("ordinary user rolled back visual engine config")
+	if _, err := svc.PublishAdminVisualEngine(user, config, "denied"); err == nil {
+		t.Fatal("ordinary user published")
 	}
-
-	// 3. Admin publishes a new config; a snapshot is recorded and cache invalidated.
-	nextConfig := bundle.Config
-	nextConfig.PublishedVersion = "2.1.0"
-	nextConfig.ThemeMode = "light"
-	nextConfig.Tokens["light"] = func() visualengine.SemanticTokens {
-		tokens := nextConfig.Tokens["light"]
-		tokens.Primary = "#1677ff"
-		return tokens
-	}()
-	overview, err := svc.PublishAdminVisualEngine(admin, nextConfig, "切换默认浅色主题并更新品牌主色")
+	if _, err := svc.RollbackAdminVisualEngine(user, initial.Version); err == nil {
+		t.Fatal("ordinary user rolled back")
+	}
+	if _, err := svc.SaveAdminVisualEngineDraft(admin, config); err != nil {
+		t.Fatal(err)
+	}
+	afterDraft, _ := svc.PublicVisualEngineBundle()
+	if afterDraft.Revision != initial.Revision {
+		t.Fatal("draft affected published config")
+	}
+	overview, _ := svc.AdminVisualEngineOverview(admin)
+	otherOverview, _ := svc.AdminVisualEngineOverview(other)
+	if overview.Draft == nil || otherOverview.Draft != nil {
+		t.Fatal("draft owner isolation failed")
+	}
+	published, err := svc.PublishAdminVisualEngine(admin, config, "radius test", initial.Revision)
 	if err != nil {
 		t.Fatal(err)
 	}
-	if overview.Bundle.Config.PublishedVersion != "2.1.0" || overview.Bundle.Config.ThemeMode != "light" {
-		t.Fatalf("unexpected published config: %#v", overview.Bundle.Config)
+	if published.Bundle.Config.Components.ButtonRadius != 12 || published.Bundle.Config.UpdatedBy != admin.Username || published.Bundle.Version == initial.Version || len(published.Snapshots) != 2 || published.Draft != nil {
+		t.Fatal("publish contract failed")
 	}
-	if overview.Bundle.Config.Tokens["light"].Primary != "#1677ff" {
-		t.Fatalf("expected updated light primary token, got %s", overview.Bundle.Config.Tokens["light"].Primary)
+	if _, err := svc.PublishAdminVisualEngine(other, config, "stale", initial.Revision); err == nil {
+		t.Fatal("stale publish succeeded")
 	}
-	if overview.Bundle.Config.UpdatedBy != "root" {
-		t.Fatalf("expected updatedBy=root, got %s", overview.Bundle.Config.UpdatedBy)
+	invalid := visualengine.DefaultConfig()
+	tokens := invalid.Tokens["dark"]
+	tokens.Primary = "url(https://example.com/tracker)"
+	invalid.Tokens["dark"] = tokens
+	if _, err := svc.PublishAdminVisualEngine(admin, invalid, "invalid", published.Bundle.Revision); err == nil {
+		t.Fatal("unsafe config accepted")
 	}
-	if len(overview.Snapshots) != 1 || overview.Snapshots[0].Version != "2.1.0" {
-		t.Fatalf("expected one snapshot for v2.1.0, got %#v", overview.Snapshots)
+	if err := db.Exec("CREATE TRIGGER reject_visual_audit BEFORE INSERT ON admin_audit_events BEGIN SELECT RAISE(ABORT, 'audit unavailable'); END;").Error; err != nil {
+		t.Fatal(err)
 	}
-	if !overview.CanRollback {
-		t.Fatal("expected rollback to be available after the first publish")
+	if _, err := svc.PublishAdminVisualEngine(admin, config, "must fail", published.Bundle.Revision); err == nil {
+		t.Fatal("failed audit did not abort publish")
 	}
-
-	// 4. Cache invalidation means a fresh public bundle immediately reflects the publish.
-	refreshed, err := svc.PublicVisualEngineBundle()
+	afterFailure, _ := svc.PublicVisualEngineBundle()
+	if afterFailure.Revision != published.Bundle.Revision {
+		t.Fatal("failed transaction changed published config")
+	}
+	if err := db.Exec("DROP TRIGGER reject_visual_audit").Error; err != nil {
+		t.Fatal(err)
+	}
+	restored, err := svc.RollbackAdminVisualEngine(admin, initial.Version, published.Bundle.Revision)
 	if err != nil {
 		t.Fatal(err)
 	}
-	if refreshed.Config.PublishedVersion != "2.1.0" || refreshed.Revision == bundle.Revision {
-		t.Fatalf("expected refreshed bundle for v2.1.0 with a new revision, got %#v", refreshed)
+	if restored.Bundle.Config.Components.ButtonRadius != initial.Config.Components.ButtonRadius || restored.Bundle.Version == initial.Version || restored.Bundle.Version == published.Bundle.Version {
+		t.Fatal("rollback did not restore content as a unique new release")
 	}
-
-	// 5. Rollback restores the previous stable snapshot content as a new publish.
-	restored, err := svc.RollbackAdminVisualEngine(admin, "2.1.0")
-	if err != nil {
-		t.Fatal(err)
+	if len(restored.AuditLogs) != 2 || restored.AuditLogs[0].Action != "config.rollback" {
+		t.Fatal("server audit missing")
 	}
-	if restored.Bundle.Config.PublishedVersion != "2.1.0" {
-		t.Fatalf("expected rollback to publish v2.1.0 content, got %#v", restored.Bundle.Config)
+	fresh := &Service{repo: repository.New(db)}
+	persisted, err := fresh.PublicVisualEngineBundle()
+	if err != nil || persisted.Revision != restored.Bundle.Revision {
+		t.Fatal("fresh service did not read persisted release")
 	}
-	if len(restored.Snapshots) != 2 {
-		t.Fatalf("expected rollback to append a new snapshot, got %#v", restored.Snapshots)
-	}
-
-	// 6. Rolling back to an unknown version fails without mutating the current config.
-	if _, err := svc.RollbackAdminVisualEngine(admin, "9.9.9"); err == nil {
-		t.Fatal("rollback to an unknown version succeeded")
-	}
-	after, err := svc.PublicVisualEngineBundle()
-	if err != nil {
-		t.Fatal(err)
-	}
-	if after.Config.PublishedVersion != "2.1.0" {
-		t.Fatalf("failed rollback mutated the active config: %#v", after.Config)
+	if _, err := svc.RollbackAdminVisualEngine(admin, "missing"); err == nil {
+		t.Fatal("unknown rollback accepted")
 	}
 }

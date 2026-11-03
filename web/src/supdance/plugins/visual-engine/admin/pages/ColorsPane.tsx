@@ -76,7 +76,7 @@ export function ColorsPane() {
                             className="flex items-center justify-between p-3.5 rounded-xl border border-border/70 bg-card hover:border-foreground/20 transition-all"
                         >
                             <div className="space-y-0.5 max-w-[240px]">
-                                <label className="text-xs font-semibold text-foreground block">
+                                <label htmlFor={`ve-color-${editMode}-${field.key}`} className="text-xs font-semibold text-foreground block">
                                     {field.label}
                                 </label>
                                 <span className="text-[11px] text-foreground/50 block truncate">
@@ -92,6 +92,7 @@ export function ColorsPane() {
                                 />
                                 <input
                                     type="text"
+                                    id={`ve-color-${editMode}-${field.key}`}
                                     value={value}
                                     onChange={(e) => handleColorChange(field.key, e.target.value)}
                                     className="h-8 w-24 rounded-lg border border-border bg-background px-2 text-xs font-mono text-foreground focus:border-sky-400 focus:outline-none"

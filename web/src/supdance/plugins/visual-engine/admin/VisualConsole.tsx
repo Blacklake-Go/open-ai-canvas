@@ -1,4 +1,5 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { fetchAdminVisualEngineOverview } from "../api/visual-engine-api";
 import { CONSOLE_NAV_SECTIONS } from "./navigation/console-nav";
 import { ConsoleHeader } from "./layouts/console-header";
 import { ConsolePreviewPanel } from "./layouts/console-preview-panel";
@@ -26,6 +27,29 @@ export default function VisualConsole() {
     const activeModule = useVisualEngineStore((state) => state.activeConsoleModule);
     const setConsoleModule = useVisualEngineStore((state) => state.setConsoleModule);
     const [previewOpen, setPreviewOpen] = useState(true);
+    const [loadState, setLoadState] = useState<"loading" | "ready" | "error">("loading");
+    const [loadError, setLoadError] = useState("");
+    const [retry, setRetry] = useState(0);
+    const enabled = useVisualEngineStore((state) => state.enabled);
+
+    useEffect(() => {
+        let disposed = false;
+        setLoadState("loading");
+        fetchAdminVisualEngineOverview().then((overview) => {
+            if (disposed) return;
+            useVisualEngineStore.getState().acceptOverview(overview);
+            setLoadState("ready");
+        }).catch((error) => {
+            if (disposed) return;
+            setLoadError(error instanceof Error ? error.message : "配置加载失败");
+            setLoadState("error");
+        });
+        return () => { disposed = true; };
+    }, [retry]);
+
+    if (loadState === "loading") return <p role="status" className="p-6">正在读取服务端视觉配置…</p>;
+    if (loadState === "error") return <div role="alert" className="p-6 space-y-3"><p>{loadError}</p><button type="button" onClick={() => setRetry((value) => value + 1)}>重新加载</button></div>;
+    if (!enabled) return <p role="status" className="p-6">视觉引擎已停用，请从插件管理重新启用。</p>;
 
     const renderActiveModule = () => {
         switch (activeModule) {

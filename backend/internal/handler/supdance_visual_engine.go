@@ -29,6 +29,26 @@ func RegisterSupDanceVisualEngineRoutes(r *gin.RouterGroup, svc *service.Service
 	})
 
 	adminGroup := r.Group("/admin/plugins/supdance-visual-engine")
+	adminGroup.PUT("/draft", func(c *gin.Context) {
+		user, err := currentUser(c, svc)
+		if err != nil {
+			failService(c, err)
+			return
+		}
+		var req struct {
+			Config visualengine.Config `json:"config"`
+		}
+		if err := c.ShouldBindJSON(&req); err != nil {
+			fail(c, http.StatusBadRequest, err)
+			return
+		}
+		draft, err := svc.SaveAdminVisualEngineDraft(user, req.Config)
+		if err != nil {
+			failService(c, err)
+			return
+		}
+		ok(c, draft)
+	})
 	adminGroup.GET("/overview", func(c *gin.Context) {
 		user, err := currentUser(c, svc)
 		if err != nil {
@@ -49,14 +69,15 @@ func RegisterSupDanceVisualEngineRoutes(r *gin.RouterGroup, svc *service.Service
 			return
 		}
 		var req struct {
-			Config  visualengine.Config `json:"config"`
-			Comment string              `json:"comment"`
+			Config           visualengine.Config `json:"config"`
+			Comment          string              `json:"comment"`
+			ExpectedRevision string              `json:"expectedRevision" binding:"required"`
 		}
 		if err := c.ShouldBindJSON(&req); err != nil {
 			fail(c, http.StatusBadRequest, err)
 			return
 		}
-		overview, err := svc.PublishAdminVisualEngine(user, req.Config, req.Comment)
+		overview, err := svc.PublishAdminVisualEngine(user, req.Config, req.Comment, req.ExpectedRevision)
 		if err != nil {
 			failService(c, err)
 			return
@@ -70,13 +91,14 @@ func RegisterSupDanceVisualEngineRoutes(r *gin.RouterGroup, svc *service.Service
 			return
 		}
 		var req struct {
-			Version string `json:"version" binding:"required"`
+			Version          string `json:"version" binding:"required"`
+			ExpectedRevision string `json:"expectedRevision" binding:"required"`
 		}
 		if err := c.ShouldBindJSON(&req); err != nil {
 			fail(c, http.StatusBadRequest, err)
 			return
 		}
-		overview, err := svc.RollbackAdminVisualEngine(user, req.Version)
+		overview, err := svc.RollbackAdminVisualEngine(user, req.Version, req.ExpectedRevision)
 		if err != nil {
 			failService(c, err)
 			return

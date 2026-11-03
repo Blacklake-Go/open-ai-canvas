@@ -1,6 +1,5 @@
-import axios from "axios";
+import { http } from "@/services/api/request";
 import type { VisualEngineConfig, VisualEngineSnapshot, AuditLogEntry } from "../types";
-import { DEFAULT_VISUAL_ENGINE_CONFIG } from "../config/default-config";
 
 export type VisualEnginePublicBundle = {
     pluginId: "supdance-visual-engine";
@@ -14,62 +13,29 @@ export type VisualEngineAdminOverview = {
     bundle: VisualEnginePublicBundle;
     snapshots: VisualEngineSnapshot[];
     auditLogs: AuditLogEntry[];
+    draft: VisualEngineConfig | null;
     canPublish: boolean;
     canRollback: boolean;
 };
 
-export async function fetchVisualEnginePublicBundle(): Promise<VisualEnginePublicBundle> {
-    try {
-        const response = await axios.get<VisualEnginePublicBundle>("/api/supdance/visual-engine/bundle", {
-            timeout: 3000,
-        });
-        return response.data;
-    } catch {
-        // 本地/脱机模式安全降级
-        return {
-            pluginId: "supdance-visual-engine",
-            enabled: true,
-            version: "2.0.0",
-            config: DEFAULT_VISUAL_ENGINE_CONFIG,
-            revision: "local-fallback",
-        };
-    }
+const adminPath = "/admin/plugins/supdance-visual-engine";
+
+export function fetchVisualEnginePublicBundle() {
+    return http.get<VisualEnginePublicBundle>("/plugins/supdance-visual-engine/bundle");
 }
 
-export async function fetchAdminVisualEngineOverview(): Promise<VisualEngineAdminOverview> {
-    try {
-        const response = await axios.get<VisualEngineAdminOverview>("/api/supdance/visual-engine/admin/overview", {
-            timeout: 5000,
-        });
-        return response.data;
-    } catch {
-        return {
-            bundle: {
-                pluginId: "supdance-visual-engine",
-                enabled: true,
-                version: "2.0.0",
-                config: DEFAULT_VISUAL_ENGINE_CONFIG,
-                revision: "local-fallback",
-            },
-            snapshots: [],
-            auditLogs: [],
-            canPublish: true,
-            canRollback: true,
-        };
-    }
+export function fetchAdminVisualEngineOverview() {
+    return http.get<VisualEngineAdminOverview>(`${adminPath}/overview`);
 }
 
-export async function apiPublishVisualEngineConfig(config: VisualEngineConfig, comment: string): Promise<VisualEngineAdminOverview> {
-    const response = await axios.post<VisualEngineAdminOverview>("/api/supdance/visual-engine/admin/publish", {
-        config,
-        comment,
-    });
-    return response.data;
+export function apiSaveVisualEngineDraft(config: VisualEngineConfig) {
+    return http.put<VisualEngineConfig>(`${adminPath}/draft`, { config });
 }
 
-export async function apiRollbackVisualEngineConfig(version: string): Promise<VisualEngineAdminOverview> {
-    const response = await axios.post<VisualEngineAdminOverview>("/api/supdance/visual-engine/admin/rollback", {
-        version,
-    });
-    return response.data;
+export function apiPublishVisualEngineConfig(config: VisualEngineConfig, comment: string, expectedRevision: string) {
+    return http.post<VisualEngineAdminOverview>(`${adminPath}/publish`, { config, comment, expectedRevision });
+}
+
+export function apiRollbackVisualEngineConfig(version: string, expectedRevision: string) {
+    return http.post<VisualEngineAdminOverview>(`${adminPath}/rollback`, { version, expectedRevision });
 }

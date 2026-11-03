@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { AppModal } from "@/components/ui/product/app-modal";
 import { Sparkles, Check, Send, RotateCcw, PanelRightClose, PanelRightOpen, Sun, Moon } from "lucide-react";
 import { useVisualEngineStore } from "../../storage/visual-engine-store";
 import { BUILTIN_THEME_PRESETS } from "../../config/default-config";
@@ -18,6 +19,9 @@ export function ConsoleHeader({
     const resetDraft = useVisualEngineStore((state) => state.resetDraft);
     const publishDraft = useVisualEngineStore((state) => state.publishDraft);
     const switchPreset = useVisualEngineStore((state) => state.switchPreset);
+    const saveDraft = useVisualEngineStore((state) => state.saveDraft);
+    const isSaving = useVisualEngineStore((state) => state.isSaving);
+    const [saveStatus, setSaveStatus] = useState("");
 
     const [publishModalOpen, setPublishModalOpen] = useState(false);
     const [publishComment, setPublishComment] = useState("");
@@ -55,6 +59,13 @@ export function ConsoleHeader({
 
             {/* 操作工具栏 */}
             <div className="flex items-center gap-2.5">
+                <span role="status" className="text-xs">{saveStatus}</span>
+                <button type="button" disabled={isSaving || isPublishing} onClick={async () => {
+                    const result = await saveDraft();
+                    setSaveStatus(result.success ? "草稿已保存到服务端" : result.error ?? "保存失败");
+                }} className="h-8 px-3 rounded-lg border border-border text-xs">
+                    {isSaving ? "正在保存…" : "保存草稿"}
+                </button>
                 {/* 快速预设选择 */}
                 <select
                     value={draftConfig.activePreset}
@@ -102,15 +113,14 @@ export function ConsoleHeader({
             </div>
 
             {/* 发布确认弹窗 */}
-            {publishModalOpen ? (
-                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
-                    <div className="w-full max-w-md rounded-2xl border border-border bg-card p-6 shadow-2xl space-y-4 text-foreground">
+            <AppModal open={publishModalOpen} onCancel={() => setPublishModalOpen(false)} footer={null} title="发布视觉配置" width={480}>
+                    <div className="space-y-4">
                         <div className="flex items-center gap-2">
                             <Sparkles className="h-5 w-5 text-sky-400" />
                             <h3 className="text-base font-bold">正式发布 Visual Engine 配置</h3>
                         </div>
                         <p className="text-xs text-foreground/60 leading-relaxed">
-                            发布将生成不可篡改的新版本快照并立即向全站生效。若发现视觉异常，可在“版本管理”中一键回滚。
+                            发布将保存服务端版本快照，并向全站生效。若发现视觉异常，可在“版本管理”中一键回滚。
                         </p>
                         <div className="space-y-1">
                             <label className="text-xs text-foreground/70 block">本次发布说明/变更摘要：</label>
@@ -133,14 +143,14 @@ export function ConsoleHeader({
                             <button
                                 type="button"
                                 onClick={handleConfirmPublish}
+                                disabled={isPublishing}
                                 className="px-4 py-2 rounded-lg bg-sky-500 hover:bg-sky-400 text-white text-xs font-semibold shadow-md active:scale-95"
                             >
                                 确认并立即发布
                             </button>
                         </div>
                     </div>
-                </div>
-            ) : null}
+            </AppModal>
         </header>
     );
 }

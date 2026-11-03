@@ -105,13 +105,14 @@ type WorkspaceRecoveryConfig struct {
 }
 
 type PageRule struct {
-	ID                      string `json:"id"`
-	Name                    string `json:"name"`
-	PathPattern             string `json:"pathPattern"`
-	ThemePresetOverride     string `json:"themePresetOverride,omitempty"`
-	MotionEnabledOverride   *bool  `json:"motionEnabledOverride,omitempty"`
-	RecoveryEnabledOverride *bool  `json:"recoveryEnabledOverride,omitempty"`
-	Notes                   string `json:"notes,omitempty"`
+	CustomTokens            map[string]string `json:"customTokens,omitempty"`
+	ID                      string            `json:"id"`
+	Name                    string            `json:"name"`
+	PathPattern             string            `json:"pathPattern"`
+	ThemePresetOverride     string            `json:"themePresetOverride,omitempty"`
+	MotionEnabledOverride   *bool             `json:"motionEnabledOverride,omitempty"`
+	RecoveryEnabledOverride *bool             `json:"recoveryEnabledOverride,omitempty"`
+	Notes                   string            `json:"notes,omitempty"`
 }
 
 type Config struct {
@@ -131,6 +132,7 @@ type Config struct {
 }
 
 type Snapshot struct {
+	Action    string `json:"action,omitempty"`
 	Version   string `json:"version"`
 	Timestamp string `json:"timestamp"`
 	Actor     string `json:"actor"`
@@ -147,10 +149,23 @@ type PublicBundle struct {
 }
 
 type AdminOverview struct {
-	Bundle      PublicBundle `json:"bundle"`
-	Snapshots   []Snapshot   `json:"snapshots"`
-	CanPublish  bool         `json:"canPublish"`
-	CanRollback bool         `json:"canRollback"`
+	Draft       *Config         `json:"draft"`
+	AuditLogs   []AuditLogEntry `json:"auditLogs"`
+	Bundle      PublicBundle    `json:"bundle"`
+	Snapshots   []Snapshot      `json:"snapshots"`
+	CanPublish  bool            `json:"canPublish"`
+	CanRollback bool            `json:"canRollback"`
+}
+
+type AuditLogEntry struct {
+	ID        string `json:"id"`
+	Timestamp string `json:"timestamp"`
+	Actor     string `json:"actor"`
+	Module    string `json:"module"`
+	Action    string `json:"action"`
+	Details   string `json:"details"`
+	Version   string `json:"version"`
+	Success   bool   `json:"success"`
 }
 
 func ComputeRevision(cfg Config, enabled bool) string {

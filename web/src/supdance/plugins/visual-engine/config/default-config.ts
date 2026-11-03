@@ -9,7 +9,7 @@ export const BUILTIN_THEME_PRESETS = [nativePreset, darkPreset, lightPreset, stu
 export const DEFAULT_VISUAL_ENGINE_CONFIG: VisualEngineConfig = {
     schemaVersion: 2,
     activePreset: "studio",
-    themeMode: "dark",
+    themeMode: "system",
     tokens: {
         light: studioPreset.tokens.light,
         dark: studioPreset.tokens.dark,

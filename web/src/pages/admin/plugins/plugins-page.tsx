@@ -24,6 +24,8 @@ import { usePluginStore } from "@/stores/use-plugin-store";
 import { SUPDANCE_I18N_PLUGIN_ID, useSupDanceI18nStore } from "@/supdance/plugins/i18n";
 import { SUPDANCE_SOCIAL_AUTH_PLUGIN_ID } from "@/supdance/plugins/social-auth/types";
 import { SUPDANCE_MUSIC_PLUGIN_ID } from "@/supdance/plugins/music-generation/types";
+import { SUPDANCE_VISUAL_ENGINE_PLUGIN_ID } from "@/supdance/plugins/visual-engine/types";
+import { useVisualEngineStore } from "@/supdance/plugins/visual-engine/storage/visual-engine-store";
 
 type AdminPluginItem = {
     manifest: PluginManifest | PluginManifestV2;
@@ -103,6 +105,9 @@ export default function AdminPluginsPage() {
                 };
             }
             setStates((current) => ({ ...current, [item.manifest.id]: state }));
+            if (item.manifest.id === SUPDANCE_VISUAL_ENGINE_PLUGIN_ID) {
+                useVisualEngineStore.getState().setEnabled(state.platformAvailable);
+            }
             usePluginStore.setState((storeState) => ({
                 pluginStates: {
                     ...storeState.pluginStates,
@@ -474,7 +479,8 @@ function mergePlugins(remote: BackendPlugin[]): AdminPluginItem[] {
         const isSupDanceI18n = plugin.manifest.id === SUPDANCE_I18N_PLUGIN_ID;
         const isSupDanceSocialAuth = plugin.manifest.id === SUPDANCE_SOCIAL_AUTH_PLUGIN_ID;
         const isSupDanceMusic = plugin.manifest.id === SUPDANCE_MUSIC_PLUGIN_ID;
-        const application = isOfficialApplicationPluginId(plugin.manifest.id) || isSupDanceI18n || isSupDanceSocialAuth || isSupDanceMusic;
+        const isVisualEngine = plugin.manifest.id === SUPDANCE_VISUAL_ENGINE_PLUGIN_ID;
+        const application = isOfficialApplicationPluginId(plugin.manifest.id) || isSupDanceI18n || isSupDanceSocialAuth || isSupDanceMusic || isVisualEngine;
         byId.set(plugin.manifest.id, {
             manifest: plugin.manifest,
             source: plugin.source || "bundled",
@@ -482,8 +488,8 @@ function mergePlugins(remote: BackendPlugin[]): AdminPluginItem[] {
             management: {
                 origin: "official",
                 kind: application ? "application" : "protocol",
-                activationScope: isSupDanceI18n || isSupDanceSocialAuth || isSupDanceMusic ? "system" : application ? "user" : "system",
-                configurationScope: isSupDanceI18n || isSupDanceSocialAuth || isSupDanceMusic ? "system" : application ? (plugin.manifest.id === EAGLE_PLUGIN_ID || plugin.manifest.id === RUNNINGHUB_PLUGIN_ID ? "user" : "none") : "system",
+                activationScope: isSupDanceI18n || isSupDanceSocialAuth || isSupDanceMusic || isVisualEngine ? "system" : application ? "user" : "system",
+                configurationScope: isSupDanceI18n || isSupDanceSocialAuth || isSupDanceMusic || isVisualEngine ? "system" : application ? (plugin.manifest.id === EAGLE_PLUGIN_ID || plugin.manifest.id === RUNNINGHUB_PLUGIN_ID ? "user" : "none") : "system",
             },
         });
     }
