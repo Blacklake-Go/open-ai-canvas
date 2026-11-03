@@ -8,6 +8,7 @@ import { useUserStore } from "@/stores/use-user-store";
 import { LinuxDOIcon } from "./auth-scene";
 import { VerificationFields } from "@/components/auth/verification-fields";
 import { emptyVerification, loginVerification, methodLabels, verificationMethods, type VerificationMethod } from "@/services/api/verification";
+import { SocialLoginButtons } from "@/supdance/plugins/social-auth/components/social-login-buttons";
 
 export default function LoginPage() {
     const navigate = useNavigate();
@@ -108,6 +109,10 @@ export default function LoginPage() {
                     </Button>
                 </>
             ) : null}
+            <Divider plain className="auth-scene-divider">
+                或使用快捷方式登录
+            </Divider>
+            <SocialLoginButtons variant="light-card" next={next} />
         </form>
     );
 }

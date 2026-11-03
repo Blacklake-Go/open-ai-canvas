@@ -23,9 +23,9 @@ export function runTokenHealthCheck(config: VisualEngineConfig, mode: "light" | 
     const contrastPairs = [
         { name: "主文字 vs 画布底色", fg: tokens.text, bg: tokens.canvas, min: 4.5 },
         { name: "主操作文字 vs 主操作按钮", fg: tokens.primaryForeground, bg: tokens.primary, min: 4.5 },
-        { name: "次级文字 vs 画布底色", fg: tokens.textMuted, bg: tokens.canvas, min: 3.0 },
+        { name: "次级文字 vs 画布底色", fg: tokens.textMuted, bg: tokens.canvas, min: 4.5 },
         { name: "危险操作文字 vs 危险背景", fg: tokens.dangerForeground, bg: tokens.danger, min: 4.5 },
-        { name: "选中高亮文字 vs 选中背景", fg: tokens.selectedForeground, bg: tokens.selected, min: 3.0 },
+        { name: "选中高亮文字 vs 选中背景", fg: tokens.selectedForeground, bg: tokens.selected, min: 4.5 },
     ];
 
     const contrastChecks = contrastPairs.map((pair) => {
@@ -54,7 +54,7 @@ export function runTokenHealthCheck(config: VisualEngineConfig, mode: "light" | 
     }
 
     return {
-        pass: errors.length === 0,
+        pass: errors.length === 0 && contrastChecks.every((check) => check.pass),
         contrastChecks,
         warnings,
         errors,

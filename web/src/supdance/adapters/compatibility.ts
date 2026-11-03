@@ -158,6 +158,23 @@ export const SUPDANCE_UPSTREAM_PATCH_REGISTRY: readonly UpstreamPatchRecord[] = 
         reason: "以独立插件形式挂载双入口统一控制台 (/admin/plugins/visual-engine)、全站设计令牌桥接与工作区恢复动画，不侵入宿主业务逻辑。",
         upgradeRisk: "LOW",
     },
+    {
+        id: "supdance-html-page-manager",
+        upstreamBaseline: "v1.7.3",
+        feature: "supdance html页面管理插件：内置 Linear/Vercel/Anthropic/Supabase 等大气简洁法务模板、集成高效开源 HTML 双栏排版编辑器与单文件导出",
+        coupledUpstreamFiles: [
+            "web/src/pages/admin/plugins/plugins-page.tsx",
+            "web/src/pages/plugins/index.tsx",
+            "web/src/router.tsx",
+        ],
+        files: [
+            "web/src/supdance/plugins/html-page-manager/manifest.json",
+            "web/src/supdance/plugins/html-page-manager/index.ts",
+            "web/src/supdance/plugins/html-page-manager/admin/html-page-manager.tsx",
+        ],
+        reason: "将法务条款（服务条款、隐私政策等）从分散静态文件收敛为独立可管理的插件系统，提供所见即所得的双栏沙箱排版编辑器，且不侵入宿主业务逻辑。",
+        upgradeRisk: "LOW",
+    },
 ] as const;
 
 export const SUPDANCE_RESERVED_PLUGIN_PREFIX = "supdance-" as const;

@@ -12,6 +12,7 @@ import { useUserStore } from "@/stores/use-user-store";
 import { useAppearanceStore } from "@/stores/use-appearance-store";
 import { useWalletBalance } from "@/hooks/use-wallet-balance";
 import { openWorkspaceWallet } from "@/lib/workspace-wallet";
+import { TopbarLanguageSwitcher } from "@/supdance/plugins/i18n";
 
 const PAGE_TITLES: Record<string, string> = {
     home: "创作",
@@ -56,6 +57,7 @@ export function WorkspaceTopBar({ sidebarOpen, onToggleSidebar }: { sidebarOpen:
                     <strong>{balance}</strong>
                 </button> : null}
                 {user ? <SystemAnnouncementCenter userId={user.id} className="app-workspace-topbar-icon-button" autoOpen /> : null}
+                <TopbarLanguageSwitcher surface="workspace" />
                 <AnimatedThemeToggler className="app-workspace-topbar-icon-button" theme={theme} onThemeChange={setTheme} aria-label="切换主题" />
                 <WorkspaceAccountMenu />
             </div>

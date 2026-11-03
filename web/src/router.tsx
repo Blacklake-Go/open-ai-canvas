@@ -1,5 +1,6 @@
 import { lazy, Suspense, type ReactNode } from "react";
 import { createBrowserRouter, Navigate, Outlet, useLocation } from "react-router";
+import { AppProviders } from "@/components/layout/app-providers";
 
 import { RequireAuth } from "@/components/auth/require-auth";
 import { FullScreenLoader, WorkspaceRouteLoader } from "@/components/ui/aceternity/full-screen-loader";
@@ -22,7 +23,19 @@ const AgentLessonsPage = lazy(() => import("@/pages/admin/admin-route-pages").th
 const ChannelsPage = lazy(() => import("@/pages/admin/channels/channels-page"));
 const LogicalModelsPage = lazy(() => import("@/pages/admin/logical-models/logical-models-page"));
 const AdminPluginsPage = lazy(() => import("@/pages/admin/plugins/plugins-page"));
+const SupDanceI18nSettingsPage = lazy(() => import("@/supdance/plugins/i18n/admin/i18n-settings-page"));
+const SupDanceI18nEntriesPage = lazy(() => import("@/supdance/plugins/i18n/admin/i18n-entries-page"));
+const SocialAuthSettingsPage = lazy(() => import("@/supdance/plugins/social-auth/admin/social-auth-settings-page"));
+const SocialAuthOperationsPage = lazy(() => import("@/supdance/plugins/social-auth/admin/social-auth-operations-page"));
+const MusicWorkbenchPage = lazy(() => import("@/supdance/plugins/music-generation/pages/music-workbench-page"));
+const MusicAdminSettingsPage = lazy(() => import("@/supdance/plugins/music-generation/admin/music-admin-settings-page"));
 const VisualConsole = lazy(() => import("@/supdance/plugins/visual-engine/admin/VisualConsole"));
+const HtmlPageManager = lazy(() => import("@/supdance/plugins/html-page-manager/admin/html-page-manager"));
+const DarkLoginPage = lazy(() => import("@/supdance/pages/dark-login-page"));
+const TermsPage = lazy(() => import("@/supdance/pages/legal/terms-page"));
+const PrivacyPage = lazy(() => import("@/supdance/pages/legal/privacy-page"));
+const AupPage = lazy(() => import("@/supdance/pages/legal/aup-page"));
+const LegalHubPage = lazy(() => import("@/supdance/pages/legal/legal-hub-page"));
 const SkillCurationPage = lazy(() => import("@/pages/admin/skill-curation-page"));
 const AdminPaymentsPage = lazy(() => import("@/pages/admin/payments/payments-page"));
 const LogsPage = lazy(() => import("@/pages/admin/logs/logs-page"));
@@ -110,166 +123,190 @@ function devRoutes() {
 
 export const router = createBrowserRouter([
     {
-        element: <AuthScene />,
-        errorElement: <RouteErrorPage />,
+        element: (
+            <AppProviders>
+                <Outlet />
+            </AppProviders>
+        ),
         children: [
-            { path: "/login", element: fullScreenDeferred(<LoginPage />) },
-            { path: "/register", element: fullScreenDeferred(<RegisterPage />) },
-            { path: "/forgot-password", element: fullScreenDeferred(<ForgotPasswordPage />) },
-        ],
-    },
-    { path: "/share/canvas/:token", element: fullScreenDeferred(<SharedCanvasPage />), errorElement: <RouteErrorPage /> },
-    ...(import.meta.env.DEV ? devRoutes() : []),
-    {
-        element: <AuthenticatedWorkspaceLayout />,
-        errorElement: <RouteErrorPage />,
-        children: [
-            { path: "/", element: deferred(<CreatePage />) },
-            { path: "/create", element: deferred(<CreatePage />) },
             {
-                path: "/toolbox/image",
-                element: (
-                    <RequireAuth>
-                        <RequireFeature feature="imageWorkbenchEnabled">{deferred(<ImageWorkbenchPage />)}</RequireFeature>
-                    </RequireAuth>
-                ),
-            },
-            {
-                path: "/toolbox/video",
-                element: (
-                    <RequireAuth>
-                        <RequireFeature feature="videoWorkbenchEnabled">{deferred(<VideoWorkbenchPage />)}</RequireFeature>
-                    </RequireAuth>
-                ),
-            },
-            {
-                path: "/tasks",
-                element: (
-                    <RequireAuth>
-                        <RequireFeature feature="taskCenterEnabled">{deferred(<TasksPage />)}</RequireFeature>
-                    </RequireAuth>
-                ),
-            },
-            { path: "/assets", element: <RequireAuth>{deferred(<AssetsPage />)}</RequireAuth> },
-            { path: "/skills", element: <RequireAuth>{deferred(<SkillsPage />)}</RequireAuth> },
-            { path: "/skills/:skillId/edit", element: <RequireAuth>{deferred(<SkillWorkbenchPage />)}</RequireAuth> },
-            {
-                path: "/plugins",
-                element: (
-                    <RequireAuth>
-                        <RequireFeature feature="pluginCenterEnabled">{deferred(<PluginsPage />)}</RequireFeature>
-                    </RequireAuth>
-                ),
-            },
-            {
-                path: "/plugins/eagle",
-                element: (
-                    <RequireAuth>
-                        <RequireFeature feature="pluginCenterEnabled">{deferred(<EagleLibraryPage />)}</RequireFeature>
-                    </RequireAuth>
-                ),
-            },
-            {
-                path: "/wallet",
-                element: <RequireAuth>{null}</RequireAuth>,
-            },
-            { path: "/settings", element: <RequireAuth>{deferred(<SettingsPage />)}</RequireAuth> },
-            { path: "/referral", element: <RequireAuth>{deferred(<ReferralPage />)}</RequireAuth> },
-            { path: "/test-voice-recording", element: <RequireAuth>{deferred(<TestVoiceRecording />)}</RequireAuth> },
-            {
-                path: "/projects",
-                element: (
-                    <RequireAuth>
-                        <RequireFeature feature="shortDramaEnabled">{deferred(<ProjectsPage />)}</RequireFeature>
-                    </RequireAuth>
-                ),
-            },
-            {
-                path: "/projects/new",
-                element: (
-                    <RequireAuth>
-                        <RequireFeature feature="shortDramaEnabled">{deferred(<ProjectCreatePage />)}</RequireFeature>
-                    </RequireAuth>
-                ),
-            },
-            {
-                path: "/projects/:projectId",
-                element: (
-                    <RequireAuth>
-                        <RequireFeature feature="shortDramaEnabled">{deferred(<ProjectDetailPage />)}</RequireFeature>
-                    </RequireAuth>
-                ),
-            },
-            {
-                path: "/projects/:projectId/e/:episodeId",
-                element: (
-                    <RequireAuth>
-                        <RequireFeature feature="shortDramaEnabled">{deferred(<ProjectDetailPage />)}</RequireFeature>
-                    </RequireAuth>
-                ),
-            },
-            { path: "/projects/:projectId/*", element: <Navigate to=".." relative="path" replace /> },
-            { path: "/canvas", element: <RequireAuth>{deferred(<CanvasPage />)}</RequireAuth> },
-            {
-                path: "/canvas/:id",
-                element: (
-                    <RequireAuth>
-                        <CanvasProjectPage />
-                    </RequireAuth>
-                ),
-            },
-            {
-                path: "/admin",
-                element: <RequireAuth>{deferred(<AdminPage />)}</RequireAuth>,
+                element: <AuthScene />,
+                errorElement: <RouteErrorPage />,
                 children: [
-                    { index: true, element: <AnalyticsPage /> },
-                    { path: "users", element: <UsersPage /> },
-                    { path: "user-groups", element: <UserGroupsPage /> },
-                    { path: "login-logs", element: <LoginLogsPage /> },
-                    { path: "feedbacks", element: <AdminFeedbacksPage /> },
-                    { path: "channels", element: <ChannelsPage /> },
-                    {
-                        path: "models",
-                        element: (
-                            <RequireFeature feature="frontendModelsEnabled">
-                                <LogicalModelsPage />
-                            </RequireFeature>
-                        ),
-                    },
-                    { path: "plugins", element: <AdminPluginsPage /> },
-                    { path: "plugins/visual-engine", element: <VisualConsole /> },
-                    { path: "visual-engine", element: <Navigate to="/admin/plugins/visual-engine" replace /> },
-                    { path: "workbench-tools", element: <WorkbenchToolsPage /> },
-                    { path: "skill-curation", element: <SkillCurationPage /> },
-                    { path: "payments", element: <AdminPaymentsPage /> },
-                    { path: "prompt-templates", element: <StoryboardPromptsPage /> },
-                    { path: "storyboard-prompts", element: <Navigate to="/admin/prompt-templates" replace /> },
-                    { path: "announcements", element: <AnnouncementsPage /> },
-                    { path: "banner-announcements", element: <BannerAnnouncementsPage /> },
-                    { path: "agent-lessons", element: <AgentLessonsPage /> },
-                    { path: "resources", element: <StorageResourcesPage /> },
-                    { path: "credit-operations", element: <CreditOperationsPage /> },
-                    { path: "redemption-codes", element: <RedemptionCodesPage /> },
-                    { path: "referral", element: <AdminReferralPage /> },
-                    { path: "logs", element: <LogsPage /> },
-                    { path: "settings", element: <Navigate to="runtime-policy" replace /> },
-                    { path: "settings/appearance", element: <AppearanceSettingsPage /> },
-                    { path: "settings/drawing-engine", element: <DrawingEngineSettingsPage /> },
-                    { path: "settings/concurrency", element: <Navigate to="/admin/settings/runtime-policy" replace /> },
-                    { path: "settings/runtime-policy", element: <RuntimePolicySettingsPage /> },
-                    { path: "settings/features", element: <FeatureAvailabilityPage /> },
-                    { path: "settings/access", element: <AccessSettingsPage /> },
-                    { path: "settings/email", element: <EmailSettingsPage /> },
-                    { path: "settings/storage", element: <StorageSettingsPage /> },
-                    { path: "settings/ark-private-assets", element: <ArkPrivateAssetsSettingsPage /> },
-                    { path: "settings/response-interception", element: <ResponseInterceptionSettingsPage /> },
-                    { path: "settings/third-party", element: <ThirdPartySettingsPage /> },
-                    { path: "settings/system-update", element: <SystemUpdatePage /> },
-                    { path: "settings/system-performance", element: <SystemPerformancePage /> },
-                    { path: "settings/libtv", element: <Navigate to="/admin/settings/third-party" replace /> },
+                    { path: "/login", element: fullScreenDeferred(<LoginPage />) },
+                    { path: "/register", element: fullScreenDeferred(<RegisterPage />) },
+                    { path: "/forgot-password", element: fullScreenDeferred(<ForgotPasswordPage />) },
                 ],
             },
+            { path: "/zh/login", element: fullScreenDeferred(<DarkLoginPage />), errorElement: <RouteErrorPage /> },
+            // 收单机构与用户都必须在未登录状态下读到这两份文件，因此注册为顶层公开路由，不进 RequireAuth 子树。
+            { path: "/terms", element: fullScreenDeferred(<TermsPage />), errorElement: <RouteErrorPage /> },
+            { path: "/privacy", element: fullScreenDeferred(<PrivacyPage />), errorElement: <RouteErrorPage /> },
+            { path: "/aup", element: fullScreenDeferred(<AupPage />), errorElement: <RouteErrorPage /> },
+            { path: "/acceptable-use", element: <Navigate to="/aup" replace /> },
+            { path: "/legal", element: fullScreenDeferred(<LegalHubPage />), errorElement: <RouteErrorPage /> },
+            { path: "/share/canvas/:token", element: fullScreenDeferred(<SharedCanvasPage />), errorElement: <RouteErrorPage /> },
+            ...(import.meta.env.DEV ? devRoutes() : []),
+            {
+                element: <AuthenticatedWorkspaceLayout />,
+                errorElement: <RouteErrorPage />,
+                children: [
+                    { path: "/", element: deferred(<CreatePage />) },
+                    { path: "/create", element: deferred(<CreatePage />) },
+                    {
+                        path: "/toolbox/image",
+                        element: (
+                            <RequireAuth>
+                                <RequireFeature feature="imageWorkbenchEnabled">{deferred(<ImageWorkbenchPage />)}</RequireFeature>
+                            </RequireAuth>
+                        ),
+                    },
+                    {
+                        path: "/toolbox/video",
+                        element: (
+                            <RequireAuth>
+                                <RequireFeature feature="videoWorkbenchEnabled">{deferred(<VideoWorkbenchPage />)}</RequireFeature>
+                            </RequireAuth>
+                        ),
+                    },
+                    {
+                        path: "/tasks",
+                        element: (
+                            <RequireAuth>
+                                <RequireFeature feature="taskCenterEnabled">{deferred(<TasksPage />)}</RequireFeature>
+                            </RequireAuth>
+                        ),
+                    },
+                    { path: "/assets", element: <RequireAuth>{deferred(<AssetsPage />)}</RequireAuth> },
+                    { path: "/skills", element: <RequireAuth>{deferred(<SkillsPage />)}</RequireAuth> },
+                    { path: "/skills/:skillId/edit", element: <RequireAuth>{deferred(<SkillWorkbenchPage />)}</RequireAuth> },
+                    {
+                        path: "/plugins",
+                        element: (
+                            <RequireAuth>
+                                <RequireFeature feature="pluginCenterEnabled">{deferred(<PluginsPage />)}</RequireFeature>
+                            </RequireAuth>
+                        ),
+                    },
+                    {
+                        path: "/plugins/eagle",
+                        element: (
+                            <RequireAuth>
+                                <RequireFeature feature="pluginCenterEnabled">{deferred(<EagleLibraryPage />)}</RequireFeature>
+                            </RequireAuth>
+                        ),
+                    },
+                    {
+                        path: "/wallet",
+                        element: <RequireAuth>{null}</RequireAuth>,
+                    },
+                    { path: "/settings", element: <RequireAuth>{deferred(<SettingsPage />)}</RequireAuth> },
+                    { path: "/referral", element: <RequireAuth>{deferred(<ReferralPage />)}</RequireAuth> },
+                    { path: "/test-voice-recording", element: <RequireAuth>{deferred(<TestVoiceRecording />)}</RequireAuth> },
+                    {
+                        path: "/projects",
+                        element: (
+                            <RequireAuth>
+                                <RequireFeature feature="shortDramaEnabled">{deferred(<ProjectsPage />)}</RequireFeature>
+                            </RequireAuth>
+                        ),
+                    },
+                    {
+                        path: "/projects/new",
+                        element: (
+                            <RequireAuth>
+                                <RequireFeature feature="shortDramaEnabled">{deferred(<ProjectCreatePage />)}</RequireFeature>
+                            </RequireAuth>
+                        ),
+                    },
+                    {
+                        path: "/projects/:projectId",
+                        element: (
+                            <RequireAuth>
+                                <RequireFeature feature="shortDramaEnabled">{deferred(<ProjectDetailPage />)}</RequireFeature>
+                            </RequireAuth>
+                        ),
+                    },
+                    {
+                        path: "/projects/:projectId/e/:episodeId",
+                        element: (
+                            <RequireAuth>
+                                <RequireFeature feature="shortDramaEnabled">{deferred(<ProjectDetailPage />)}</RequireFeature>
+                            </RequireAuth>
+                        ),
+                    },
+                    { path: "/projects/:projectId/*", element: <Navigate to=".." relative="path" replace /> },
+                    { path: "/canvas", element: <RequireAuth>{deferred(<CanvasPage />)}</RequireAuth> },
+                    {
+                        path: "/canvas/:id",
+                        element: (
+                            <RequireAuth>
+                                <CanvasProjectPage />
+                            </RequireAuth>
+                        ),
+                    },
+                    {
+                        path: "/admin",
+                        element: <RequireAuth>{deferred(<AdminPage />)}</RequireAuth>,
+                        children: [
+                            { index: true, element: <AnalyticsPage /> },
+                            { path: "users", element: <UsersPage /> },
+                            { path: "user-groups", element: <UserGroupsPage /> },
+                            { path: "login-logs", element: <LoginLogsPage /> },
+                            { path: "feedbacks", element: <AdminFeedbacksPage /> },
+                            { path: "channels", element: <ChannelsPage /> },
+                            {
+                                path: "models",
+                                element: (
+                                    <RequireFeature feature="frontendModelsEnabled">
+                                        <LogicalModelsPage />
+                                    </RequireFeature>
+                                ),
+                            },
+                            { path: "plugins", element: <AdminPluginsPage /> },
+                            { path: "plugins/visual-engine", element: <VisualConsole /> },
+                            { path: "visual-engine", element: <Navigate to="/admin/plugins/visual-engine" replace /> },
+                            { path: "plugins/html-pages", element: <HtmlPageManager /> },
+                            { path: "html-pages", element: <Navigate to="/admin/plugins/html-pages" replace /> },
+                            { path: "workbench-tools", element: <WorkbenchToolsPage /> },
+                            { path: "skill-curation", element: <SkillCurationPage /> },
+                            { path: "payments", element: <AdminPaymentsPage /> },
+                            { path: "prompt-templates", element: <StoryboardPromptsPage /> },
+                            { path: "storyboard-prompts", element: <Navigate to="/admin/prompt-templates" replace /> },
+                            { path: "announcements", element: <AnnouncementsPage /> },
+                            { path: "banner-announcements", element: <BannerAnnouncementsPage /> },
+                            { path: "agent-lessons", element: <AgentLessonsPage /> },
+                            { path: "resources", element: <StorageResourcesPage /> },
+                            { path: "credit-operations", element: <CreditOperationsPage /> },
+                            { path: "redemption-codes", element: <RedemptionCodesPage /> },
+                            { path: "referral", element: <AdminReferralPage /> },
+                            { path: "logs", element: <LogsPage /> },
+                            { path: "settings", element: <Navigate to="runtime-policy" replace /> },
+                            { path: "settings/appearance", element: <AppearanceSettingsPage /> },
+                            { path: "settings/drawing-engine", element: <DrawingEngineSettingsPage /> },
+                            { path: "settings/concurrency", element: <Navigate to="/admin/settings/runtime-policy" replace /> },
+                            { path: "settings/runtime-policy", element: <RuntimePolicySettingsPage /> },
+                            { path: "settings/features", element: <FeatureAvailabilityPage /> },
+                            { path: "settings/access", element: <AccessSettingsPage /> },
+                            { path: "settings/social-auth", element: <SocialAuthSettingsPage /> },
+                            { path: "settings/social-auth/operations", element: <SocialAuthOperationsPage /> },
+                            { path: "social-auth", element: <Navigate to="/admin/settings/social-auth" replace /> },
+                            { path: "settings/i18n", element: <SupDanceI18nSettingsPage /> },
+                            { path: "settings/i18n/entries", element: <SupDanceI18nEntriesPage /> },
+                            { path: "settings/music", element: <MusicAdminSettingsPage /> },
+                            { path: "settings/email", element: <EmailSettingsPage /> },
+                            { path: "settings/storage", element: <StorageSettingsPage /> },
+                            { path: "settings/ark-private-assets", element: <ArkPrivateAssetsSettingsPage /> },
+                            { path: "settings/response-interception", element: <ResponseInterceptionSettingsPage /> },
+                            { path: "settings/third-party", element: <ThirdPartySettingsPage /> },
+                            { path: "settings/system-update", element: <SystemUpdatePage /> },
+                            { path: "settings/system-performance", element: <SystemPerformancePage /> },
+                            { path: "settings/libtv", element: <Navigate to="/admin/settings/third-party" replace /> },
+                        ],
+                    },
+                ],
+            },
+            { path: "*", element: fullScreenDeferred(<NotFound />) },
         ],
     },
-    { path: "*", element: fullScreenDeferred(<NotFound />) },
 ]);

@@ -9,10 +9,10 @@ export const DEFAULT_PUBLIC_APPEARANCE: PublicAppearance = {
     updates: DEFAULT_UPDATE_ANNOUNCEMENT,
     canvas: DEFAULT_CANVAS_APPEARANCE,
     schemaVersion: 10,
-    brandName: "影策",
-    brandSlug: "open-ai-canvas",
-    authHeroTitle: "让一个故事，\n从文字走向银幕。",
-    authHeroDescription: "",
+    brandName: "SupDance",
+    brandSlug: "supdance",
+    authHeroTitle: "Transform Ideas into\nCinematic Stories.",
+    authHeroDescription: "An all-in-one AI creative workspace for video, image, and multimedia storytelling.",
     logoUrl: "/logo.svg",
     darkLogoUrl: "/logo.svg",
     logoFrameEnabled: true,
@@ -21,10 +21,10 @@ export const DEFAULT_PUBLIC_APPEARANCE: PublicAppearance = {
     authVideoAutoplay: true,
     skinId: "classic",
     activeSkin: DEFAULT_CLASSIC_SKIN,
-    seoTitle: "影策",
-    seoDescription: "影策，面向 AI 影视与短剧创作的工作台。",
-    seoKeywords: "",
-    footerCopyright: `© ${new Date().getFullYear()} 影策. All rights reserved.`,
+    seoTitle: "SupDance — AI Creative Workspace for Video & Story Generation",
+    seoDescription: "SupDance is an all-in-one AI creative workspace for video, image, and multimedia storytelling. Create, iterate, and produce cinematic content with generative AI.",
+    seoKeywords: "SupDance, AI video generator, AI filmmaking, generative AI, AI canvas, text to video, image to video, creative workspace, AI studio, storytelling",
+    footerCopyright: `© ${new Date().getFullYear()} SupDance. All rights reserved.`,
     icpFilingEnabled: false,
     icpFilingNumber: "",
     redeemPurchaseUrl: "",
@@ -57,9 +57,9 @@ export function normalizePublicAppearance(value?: Partial<PublicAppearance> | nu
     const logoUrl = safeAppearanceURL(value?.logoUrl, DEFAULT_PUBLIC_APPEARANCE.logoUrl);
     const darkLogoUrl = safeAppearanceURL(value?.darkLogoUrl, logoUrl);
     const resolvedBrandName = brandName || DEFAULT_PUBLIC_APPEARANCE.brandName;
-    const seoTitle = normalizeAppearanceCopy(value?.seoTitle, resolvedBrandName);
-    const seoDescription = normalizeAppearanceCopy(value?.seoDescription, `${resolvedBrandName}，面向 AI 影视与短剧创作的工作台。`, true);
-    const seoKeywords = normalizeAppearanceCopy(value?.seoKeywords, "", true);
+    const seoTitle = normalizeAppearanceCopy(value?.seoTitle, `${resolvedBrandName} — AI Creative Workspace for Video & Story Generation`);
+    const seoDescription = normalizeAppearanceCopy(value?.seoDescription, `${resolvedBrandName} is an all-in-one AI creative workspace for video, image, and multimedia storytelling. Create, iterate, and produce cinematic content with generative AI.`, true);
+    const seoKeywords = normalizeAppearanceCopy(value?.seoKeywords, DEFAULT_PUBLIC_APPEARANCE.seoKeywords, true);
     const footerCopyright = normalizeAppearanceCopy(value?.footerCopyright, `© ${new Date().getFullYear()} ${resolvedBrandName}. All rights reserved.`);
     const icpFilingNumber = normalizeAppearanceCopy(value?.icpFilingNumber, "", true);
     const redeemPurchaseUrl = typeof value?.redeemPurchaseUrl === "string" ? safeAppearanceURL(value.redeemPurchaseUrl, "") : "";
@@ -120,7 +120,7 @@ export function applyAppearanceMetadata(appearance: PublicAppearance, targetDocu
     setMeta(targetDocument, "property", "og:description", appearance.seoDescription);
     setMeta(targetDocument, "property", "og:site_name", appearance.brandName);
     setMeta(targetDocument, "property", "og:type", "website");
-    setMeta(targetDocument, "name", "twitter:card", "summary");
+    setMeta(targetDocument, "name", "twitter:card", "summary_large_image");
     setMeta(targetDocument, "name", "twitter:title", appearance.seoTitle || appearance.brandName);
     setMeta(targetDocument, "name", "twitter:description", appearance.seoDescription);
     const mode = targetDocument.documentElement.classList.contains("dark") ? "dark" : "light";
@@ -131,10 +131,16 @@ export function applyAppearanceMetadata(appearance: PublicAppearance, targetDocu
         favicon.rel = "icon";
         targetDocument.head.appendChild(favicon);
     }
-    favicon.href = appearanceLogoURL(appearance, targetDocument.documentElement.classList.contains("dark") ? "dark" : "light");
+    const logoUrl = appearanceLogoURL(appearance, mode);
+    favicon.href = logoUrl;
 
     const location = targetDocument.defaultView?.location;
     if (location && (location.protocol === "http:" || location.protocol === "https:")) {
+        const fullLogoUrl = logoUrl.startsWith("http") ? logoUrl : `${location.origin}${logoUrl}`;
+        setMeta(targetDocument, "property", "og:image", fullLogoUrl);
+        setMeta(targetDocument, "name", "twitter:image", fullLogoUrl);
+        setMeta(targetDocument, "property", "og:url", `${location.origin}${location.pathname}`);
+
         let canonical = targetDocument.querySelector<HTMLLinkElement>('link[rel="canonical"]');
         if (!canonical) {
             canonical = targetDocument.createElement("link");

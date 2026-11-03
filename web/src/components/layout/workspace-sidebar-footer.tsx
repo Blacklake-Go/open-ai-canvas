@@ -1,6 +1,6 @@
 import { App, Popover } from "antd";
 import { Switch } from "@/components/ui/base/switch";
-import { ChevronRight, LogIn, LogOut, Moon, ShieldCheck, Sun } from "lucide-react";
+import { ChevronRight, LogIn, LogOut, Moon, Settings, ShieldCheck, Sun, UserRound } from "lucide-react";
 import { useState, type ReactNode } from "react";
 import { Link, useNavigate } from "react-router";
 
@@ -15,6 +15,8 @@ import { cn } from "@/lib/utils";
 import { logout } from "@/services/api/auth";
 import { useThemeStore } from "@/stores/use-theme-store";
 import { useUserStore, type LocalUser } from "@/stores/use-user-store";
+import { openUserProfileModal } from "@/stores/use-user-profile-modal-store";
+
 
 type WorkspaceSidebarFooterProps = {
     expandedClassName: string;
@@ -78,8 +80,24 @@ export function WorkspaceSidebarFooter({ expandedClassName, collapsedClassName, 
                                 </div>
                             </div>
 
+                            <div className="py-2 space-y-1">
+                                <button
+                                    type="button"
+                                    className="flex h-9 w-full items-center gap-2 rounded px-2 text-xs text-foreground/62 hover:bg-surface-hover hover:text-foreground [&_svg]:size-3.5 [&_svg]:shrink-0"
+                                    onClick={() => {
+                                        setMenuOpen(false);
+                                        openUserProfileModal("profile");
+                                    }}
+                                >
+                                    <UserRound className="size-3.5 shrink-0" />
+                                    <span className="flex-1 text-left">个人中心与资料</span>
+                                    <ChevronRight className="!size-3 text-foreground/25" />
+                                </button>
+                                <MenuLink to="/settings?section=models" icon={<Settings />} label="工作区设置" onNavigate={() => setMenuOpen(false)} />
+                            </div>
+
                             {user.role === "admin" ? (
-                                <nav className="py-2" aria-label="管理工具">
+                                <nav className="pb-2" aria-label="管理工具">
                                     <MenuLink to="/admin" icon={<ShieldCheck />} label="管理员后台" onNavigate={() => setMenuOpen(false)} />
                                 </nav>
                             ) : null}

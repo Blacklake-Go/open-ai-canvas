@@ -28,9 +28,7 @@ export function VersionsPane() {
                         <History className="h-5 w-5 text-sky-400" />
                         发布历史与版本快照 (Versions & Rollback)
                     </h2>
-                    <p className="text-sm text-foreground/60 leading-relaxed mt-1">
-                        所有正式发布的视觉配置均留存不可篡改的历史快照，发生任何兼容异常可随时一键毫秒级无损回滚。
-                    </p>
+                    <p className="text-sm text-foreground/60 leading-relaxed mt-1">服务端保留每次正式发布的视觉配置快照。回滚成功后会生成新版本，其他页面在自动同步时应用。</p>
                 </div>
             </div>
 
@@ -46,19 +44,10 @@ export function VersionsPane() {
                 {snapshots.map((item) => {
                     const isCurrent = item.version === publishedVersion;
                     return (
-                        <div
-                            key={item.version}
-                            className={`rounded-xl border p-4 space-y-3 transition-all ${
-                                isCurrent
-                                    ? "border-sky-400/80 bg-sky-400/5 ring-1 ring-sky-400/50"
-                                    : "border-border/70 bg-card hover:border-foreground/20"
-                            }`}
-                        >
+                        <div key={item.version} className={`rounded-xl border p-4 space-y-3 transition-all ${isCurrent ? "border-sky-400/80 bg-sky-400/5 ring-1 ring-sky-400/50" : "border-border/70 bg-card hover:border-foreground/20"}`}>
                             <div className="flex items-center justify-between">
                                 <div className="flex items-center gap-2.5">
-                                    <span className="font-mono text-xs font-bold px-2.5 py-0.5 rounded-full bg-foreground/10 text-foreground">
-                                        v{item.version}
-                                    </span>
+                                    <span className="font-mono text-xs font-bold px-2.5 py-0.5 rounded-full bg-foreground/10 text-foreground">v{item.version}</span>
                                     {isCurrent ? (
                                         <span className="text-xs font-semibold text-sky-400 flex items-center gap-1">
                                             <CheckCircle2 className="h-3.5 w-3.5" /> 当前生效版本
@@ -76,9 +65,7 @@ export function VersionsPane() {
                                 ) : null}
                             </div>
 
-                            <p className="text-xs text-foreground/80 leading-relaxed">
-                                {item.summary || "未填写发布摘要"}
-                            </p>
+                            <p className="text-xs text-foreground/80 leading-relaxed">{item.summary || "未填写发布摘要"}</p>
 
                             <div className="pt-2 border-t border-border/50 flex items-center justify-between text-xs text-foreground/50">
                                 <span>发布人：{item.actor}</span>

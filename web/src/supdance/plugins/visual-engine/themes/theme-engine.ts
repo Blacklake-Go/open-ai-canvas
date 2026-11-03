@@ -1,30 +1,7 @@
 import type { VisualEngineConfig, SemanticTokens } from "../types";
 import { generateVisualEngineCSSVariables } from "./css-variables";
 
-let injectedStyleElement: HTMLStyleElement | null = null;
-
-const MANAGED_VISUAL_ENGINE_PROPERTIES = [
-    "--background", "--foreground", "--canvas", "--surface", "--surface-subtle", "--surface-raised",
-    "--surface-hover", "--surface-active", "--card", "--card-foreground", "--card-surface",
-    "--card-surface-hover", "--card-surface-raised", "--popover", "--popover-foreground",
-    "--primary", "--primary-hover", "--primary-active", "--primary-foreground",
-    "--button-primary-bg", "--button-primary-hover-bg", "--button-primary-active-bg", "--button-primary-fg",
-    "--btn-solid-bg", "--btn-solid-hover-bg", "--btn-solid-active-bg", "--btn-solid-fg",
-    "--secondary", "--secondary-foreground", "--muted", "--muted-foreground",
-    "--text-primary", "--text-secondary", "--border", "--input", "--ring",
-    "--control-border", "--control-focus", "--control-selected-bg", "--control-selected-hover-bg",
-    "--control-selected-active-bg", "--control-selected-fg", "--selected", "--selected-hover",
-    "--selected-active", "--selected-foreground", "--destructive", "--destructive-hover",
-    "--destructive-active", "--destructive-foreground", "--palette-status-error",
-    "--palette-status-success", "--palette-status-warning", "--palette-status-info",
-    "--radius-btn", "--radius-input", "--radius-card", "--radius-overlay", "--radius-menu",
-    "--radius-tag", "--height-btn-regular", "--height-btn-compact", "--height-btn-micro",
-    "--height-input", "--elevation-e0", "--elevation-e1", "--elevation-e2", "--elevation-e3",
-    "--elevation-e4", "--backdrop-blur-modal", "--backdrop-opacity-modal", "--backdrop-blur-drawer",
-    "--backdrop-opacity-drawer", "--backdrop-blur-menu", "--motion-quick",
-    "--motion-dropdown-enter", "--motion-dropdown-exit", "--motion-modal", "--motion-drawer",
-    "--motion-tab-switch", "--motion-ease-standard", "--motion-ease-bounce", "--motion-ease-smooth"
-];
+const appliedProperties = new WeakMap<HTMLElement, Map<string, { previous: string; priority: string; applied: string }>>();
 
 /**
  * 将视觉引擎的 CSS 变量无侵入注入至页面根节点
@@ -43,10 +20,14 @@ export function applyVisualEngineTheme(
 
     const targetElement = options.isolationScope ?? doc.documentElement;
     const variables = generateVisualEngineCSSVariables(config, activeMode, options.customTokens);
+    const saved = appliedProperties.get(targetElement) ?? new Map();
 
     for (const [prop, val] of Object.entries(variables)) {
+        const original = saved.get(prop);
+        saved.set(prop, { previous: original?.previous ?? targetElement.style.getPropertyValue(prop), priority: original?.priority ?? targetElement.style.getPropertyPriority(prop), applied: val });
         targetElement.style.setProperty(prop, val);
     }
+    appliedProperties.set(targetElement, saved);
 
     targetElement.dataset.visualEngineTheme = config.activePreset;
     targetElement.dataset.visualEngineMode = activeMode;
@@ -67,16 +48,15 @@ export function removeVisualEngineTheme(
 
     const targetElement = options.isolationScope ?? doc.documentElement;
 
-    for (const prop of MANAGED_VISUAL_ENGINE_PROPERTIES) {
-        targetElement.style.removeProperty(prop);
+    const saved = appliedProperties.get(targetElement);
+    for (const [property, value] of saved ?? []) {
+        if (targetElement.style.getPropertyValue(property) !== value.applied) continue;
+        if (value.previous) targetElement.style.setProperty(property, value.previous, value.priority);
+        else targetElement.style.removeProperty(property);
     }
+    appliedProperties.delete(targetElement);
 
     delete targetElement.dataset.visualEngineTheme;
     delete targetElement.dataset.visualEngineMode;
     delete targetElement.dataset.visualEngineVersion;
-
-    if (injectedStyleElement && injectedStyleElement.parentNode) {
-        injectedStyleElement.parentNode.removeChild(injectedStyleElement);
-        injectedStyleElement = null;
-    }
 }

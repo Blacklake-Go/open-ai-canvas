@@ -12,10 +12,12 @@ import { createCanvasProjectWithRemoteSync } from "@/services/user-data-sync";
 import { flushCanvasStorePersistence, useCanvasStore } from "@/stores/canvas/use-canvas-store";
 import { useUserStore } from "@/stores/use-user-store";
 import { RelativeTime } from "@/components/ui/product/relative-time";
+import { useI18n } from "@/supdance/plugins/i18n";
 
 const RECENT_COUNT = 4;
 
 export function CreationRecentCanvases({ onRequireLogin }: { onRequireLogin: () => void }) {
+    const { t } = useI18n();
     const { message } = App.useApp();
     const navigate = useNavigate();
     const userId = useUserStore((state) => state.user?.id);
@@ -83,7 +85,7 @@ export function CreationRecentCanvases({ onRequireLogin }: { onRequireLogin: () 
                     <button type="button" className="creation-canvas-tile is-create" disabled={!sessionHydrated || !canvasHydrated || creating} onClick={() => void createCanvas()} onPointerEnter={preload} onFocus={preload}>
                         <span className="creation-canvas-thumbnail is-create">{creating ? <LoaderCircle className="animate-spin" aria-hidden="true" /> : <Plus aria-hidden="true" />}</span>
                         <span className="creation-canvas-copy">
-                            <strong>{creating ? "正在创建…" : "创建画布"}</strong>
+                            <strong>{creating ? t("create.creating_canvas", undefined, "正在创建…") : t("create.create_canvas", undefined, "创建画布")}</strong>
                             <small>从空白开始</small>
                         </span>
                     </button>

@@ -9,6 +9,7 @@ import { aceternityMotion } from "@/lib/aceternity-motion";
 import { curatedInspirations, inspirationSourceOf, inspirationSources } from "@/lib/inspirations/catalog";
 import { modeLabels } from "./creation-types";
 import { Button } from "antd";
+import { useI18n } from "@/supdance/plugins/i18n";
 
 export const creationEmptyBannerFrames = [
     { src: "/short-drama-styles/cyberpunk-neon.jpg", caption: "镜头01 · 雨夜霓虹" },
@@ -33,43 +34,60 @@ export function CreationEmptyBanner() {
     );
 }
 
-export const creationEmptySuggestions: Array<{ mode: CreationMode; icon: typeof Clapperboard; title: string; hint: string; prompt: string; openLibrary?: boolean }> = [
-    { mode: "video", icon: Clapperboard, title: "生成第一个镜头", hint: "描述画面、镜头运动与光线", prompt: "雨夜天台，镜头缓缓推近霓虹灯牌下的主角，她回眸看向镜头，强对比电影感布光" },
-    { mode: "image", icon: ImageIcon, title: "从参考图开始", hint: "上传风格图，生成同风格画面", prompt: "", openLibrary: true },
-    { mode: "text", icon: FileText, title: "续写故事", hint: "和 AI 讨论剧情、角色与对白", prompt: "帮我续写一个短剧故事，先聊聊剧情走向：" },
-    { mode: "video", icon: Blocks, title: "引用技能增强", hint: "@技能 调用分镜、配音等专业能力", prompt: "调用分镜技能，帮我规划这个镜头的拍摄方案：" },
+export type CreationEmptySuggestionItem = {
+    id: string;
+    mode: CreationMode;
+    icon: typeof Clapperboard;
+    titleKey: string;
+    hintKey: string;
+    promptKey?: string;
+    title: string;
+    hint: string;
+    prompt: string;
+    openLibrary?: boolean;
+};
+
+export const creationEmptySuggestions: CreationEmptySuggestionItem[] = [
+    { id: "first_shot", mode: "video", icon: Clapperboard, titleKey: "create.suggest_first_shot_title", hintKey: "create.suggest_first_shot_hint", promptKey: "create.suggest_first_shot_prompt", title: "生成第一个镜头", hint: "描述画面、镜头运动与光线", prompt: "雨夜天台，镜头缓缓推近霓虹灯牌下的主角，她回眸看向镜头，强对比电影感布光" },
+    { id: "ref_image", mode: "image", icon: ImageIcon, titleKey: "create.suggest_ref_image_title", hintKey: "create.suggest_ref_image_hint", title: "从参考图开始", hint: "上传风格图，生成同风格画面", prompt: "", openLibrary: true },
+    { id: "continue_story", mode: "text", icon: FileText, titleKey: "create.suggest_continue_story_title", hintKey: "create.suggest_continue_story_hint", promptKey: "create.suggest_continue_story_prompt", title: "续写故事", hint: "和 AI 讨论剧情、角色与对白", prompt: "帮我续写一个短剧故事，先聊聊剧情走向：" },
+    { id: "skills", mode: "video", icon: Blocks, titleKey: "create.suggest_skills_title", hintKey: "create.suggest_skills_hint", promptKey: "create.suggest_skills_prompt", title: "引用技能增强", hint: "@技能 调用分镜、配音等专业能力", prompt: "调用分镜技能，帮我规划这个镜头的拍摄方案：" },
 ];
 
 export function CreationEmptySuggest({ onStartPrompt, onOpenLibrary }: { onStartPrompt: (mode: CreationMode, prompt: string) => void; onOpenLibrary: () => void }) {
+    const { t } = useI18n();
     const reducedMotion = useReducedMotion();
     const [hovered, setHovered] = useState<string | null>(null);
     return (
         <LayoutGroup id="creation-empty-suggest">
-            <div className="creation-empty-suggest" aria-label="快捷创作入口">
+            <div className="creation-empty-suggest" aria-label={t("create.quick_start_aria", undefined, "快捷创作入口")}>
                 {creationEmptySuggestions.map((item) => {
                     const Icon = item.icon;
+                    const localizedTitle = t(item.titleKey, undefined, item.title);
+                    const localizedHint = t(item.hintKey, undefined, item.hint);
+                    const localizedPrompt = item.promptKey ? t(item.promptKey, undefined, item.prompt) : item.prompt;
                     const start = () => {
                         if (item.openLibrary) onOpenLibrary();
-                        else onStartPrompt(item.mode, item.prompt);
+                        else onStartPrompt(item.mode, localizedPrompt);
                     };
                     return (
                         <motion.button
-                            key={item.title}
+                            key={item.id}
                             type="button"
                             className="suggest-card"
                             onClick={start}
-                            onHoverStart={() => setHovered(item.title)}
+                            onHoverStart={() => setHovered(item.id)}
                             onHoverEnd={() => setHovered(null)}
                             whileHover={reducedMotion ? undefined : { y: -2 }}
                             transition={aceternityMotion.spring.surface}
                         >
-                            {hovered === item.title ? <motion.span layoutId="creation-suggest-hover" className="suggest-card-hover" aria-hidden transition={reducedMotion ? { duration: 0 } : aceternityMotion.spring.surface} /> : null}
+                            {hovered === item.id ? <motion.span layoutId="creation-suggest-hover" className="suggest-card-hover" aria-hidden transition={reducedMotion ? { duration: 0 } : aceternityMotion.spring.surface} /> : null}
                             <span className="library-icon-tile suggest-icon">
                                 <Icon size={18} strokeWidth={2} />
                             </span>
                             <span className="suggest-copy">
-                                <strong>{item.title}</strong>
-                                <span>{item.hint}</span>
+                                <strong>{localizedTitle}</strong>
+                                <span>{localizedHint}</span>
                             </span>
                         </motion.button>
                     );

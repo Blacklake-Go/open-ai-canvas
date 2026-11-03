@@ -40,6 +40,10 @@ type Repository struct {
 	canvasChanges        map[canvasChange]struct{}
 }
 
+func (r *Repository) DB() *gorm.DB {
+	return r.db
+}
+
 type UserStorageUsage struct {
 	AssetCount   int64 `json:"assetCount"`
 	AssetBytes   int64 `json:"assetBytes"`

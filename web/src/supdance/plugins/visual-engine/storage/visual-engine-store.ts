@@ -1,28 +1,24 @@
 import { create } from "zustand";
 import type { VisualEngineConfig, VisualEngineSnapshot, AuditLogEntry, PresetId } from "../types";
 import { DEFAULT_VISUAL_ENGINE_CONFIG, BUILTIN_THEME_PRESETS } from "../config/default-config";
-import { applyVisualEngineTheme, removeVisualEngineTheme } from "../themes/theme-engine";
+import { apiPublishVisualEngineConfig, apiRollbackVisualEngineConfig, fetchAdminVisualEngineOverview, fetchVisualEnginePublicBundle, type VisualEngineAdminOverview } from "../api/visual-engine-api";
+import { validateVisualEngineConfig } from "../config/schema";
+import { notifyPluginStateChanged } from "@/supdance/adapters/plugin-state-sync";
+import { useUserStore } from "@/stores/use-user-store";
 
-export type ConsoleModuleKey =
-    | "dashboard"
-    | "themes"
-    | "colors"
-    | "typography"
-    | "components"
-    | "effects"
-    | "interactions"
-    | "motion"
-    | "transitions"
-    | "loading"
-    | "pagerules"
-    | "preview"
-    | "presets"
-    | "versions"
-    | "diagnostics"
-    | "auditlogs";
+let sessionEpoch = 0;
+
+export type ConsoleModuleKey = "dashboard" | "themes" | "colors" | "typography" | "components" | "effects" | "interactions" | "motion" | "transitions" | "loading" | "pagerules" | "preview" | "presets" | "versions" | "diagnostics" | "auditlogs";
 
 type VisualEngineState = {
     enabled: boolean;
+    loaded: boolean;
+    canPublish: boolean;
+    canRollback: boolean;
+    error: string | null;
+    revision: string;
+    refresh: (admin?: boolean, signal?: AbortSignal) => Promise<void>;
+    resetSession: () => void;
     config: VisualEngineConfig;
     draftConfig: VisualEngineConfig;
     snapshots: VisualEngineSnapshot[];
@@ -44,62 +40,19 @@ type VisualEngineState = {
     switchPreset: (presetId: PresetId | string) => void;
     publishDraft: (actor?: string, summary?: string) => Promise<{ success: boolean; error?: string }>;
     rollbackToSnapshot: (version: string, actor?: string) => Promise<{ success: boolean; error?: string }>;
-    hydrate: (initial?: Partial<{ enabled: boolean; config: VisualEngineConfig; snapshots: VisualEngineSnapshot[]; auditLogs: AuditLogEntry[] }>) => void;
 };
 
-const STORAGE_KEY_CONFIG = "supdance_visual_engine_config_v2";
-const STORAGE_KEY_SNAPSHOTS = "supdance_visual_engine_snapshots_v2";
-const STORAGE_KEY_AUDIT = "supdance_visual_engine_audit_v2";
-
-function safeLoadLocalStorage<T>(key: string, fallback: T): T {
-    if (typeof window === "undefined" || !window.localStorage) return fallback;
-    try {
-        const item = window.localStorage.getItem(key);
-        if (!item) return fallback;
-        return JSON.parse(item) as T;
-    } catch {
-        return fallback;
-    }
-}
-
-function safeSaveLocalStorage<T>(key: string, value: T): void {
-    if (typeof window === "undefined" || !window.localStorage) return;
-    try {
-        window.localStorage.setItem(key, JSON.stringify(value));
-    } catch {
-        // quota exceeded or storage disabled
-    }
-}
-
-const initialSavedConfig = safeLoadLocalStorage<VisualEngineConfig>(STORAGE_KEY_CONFIG, DEFAULT_VISUAL_ENGINE_CONFIG);
-const initialSnapshots = safeLoadLocalStorage<VisualEngineSnapshot[]>(STORAGE_KEY_SNAPSHOTS, [
-    {
-        version: "2.0.0",
-        timestamp: "2026-11-03T00:00:00.000Z",
-        actor: "SupDance Architecture Team",
-        summary: "SupDance Visual Engine V2.0 初始稳定发行版本",
-        config: DEFAULT_VISUAL_ENGINE_CONFIG,
-    },
-]);
-const initialAuditLogs = safeLoadLocalStorage<AuditLogEntry[]>(STORAGE_KEY_AUDIT, [
-    {
-        id: "audit-init-20261103",
-        timestamp: "2026-11-03T00:00:00.000Z",
-        actor: "SupDance Architecture Team",
-        module: "System",
-        action: "plugin.install",
-        details: "初始化 SupDance Visual Engine V2.0 核心引擎与默认配置",
-        version: "2.0.0",
-        success: true,
-    },
-]);
-
 export const useVisualEngineStore = create<VisualEngineState>((set, get) => ({
-    enabled: true,
-    config: initialSavedConfig,
-    draftConfig: JSON.parse(JSON.stringify(initialSavedConfig)),
-    snapshots: initialSnapshots,
-    auditLogs: initialAuditLogs,
+    enabled: false,
+    loaded: false,
+    canPublish: false,
+    canRollback: false,
+    error: null,
+    revision: "",
+    config: structuredClone(DEFAULT_VISUAL_ENGINE_CONFIG),
+    draftConfig: structuredClone(DEFAULT_VISUAL_ENGINE_CONFIG),
+    snapshots: [],
+    auditLogs: [],
     activeConsoleModule: "dashboard",
     previewViewport: "desktop",
     previewThemeMode: "dark",
@@ -107,12 +60,33 @@ export const useVisualEngineStore = create<VisualEngineState>((set, get) => ({
     isSaving: false,
     isPublishing: false,
 
-    setEnabled: (enabled) => {
-        set({ enabled });
-        if (enabled) {
-            applyVisualEngineTheme(get().config, get().config.themeMode === "light" ? "light" : "dark");
-        } else {
-            removeVisualEngineTheme();
+    setEnabled: (enabled) => set({ enabled }),
+    resetSession: () => {
+        sessionEpoch++;
+        set({ canPublish: false, canRollback: false, snapshots: [], auditLogs: [], draftConfig: structuredClone(get().config), isDraftDirty: false, isPublishing: false });
+    },
+    refresh: async (admin = false, signal) => {
+        const epoch = sessionEpoch;
+        const userId = useUserStore.getState().user?.id;
+        try {
+            const overview = admin ? await fetchAdminVisualEngineOverview(signal) : undefined;
+            const bundle = overview?.bundle ?? (await fetchVisualEnginePublicBundle(signal));
+            if (signal?.aborted || epoch !== sessionEpoch || userId !== useUserStore.getState().user?.id) return;
+            const validated = validateVisualEngineConfig(bundle.config);
+            if (!validated.valid) throw new Error(validated.errors.join("；"));
+            set((state) => ({
+                enabled: bundle.enabled,
+                loaded: true,
+                revision: bundle.revision,
+                config: validated.config,
+                error: null,
+                draftConfig: state.isDraftDirty ? state.draftConfig : structuredClone(validated.config),
+                ...(overview ? { snapshots: overview.snapshots, auditLogs: overview.auditLogs, canPublish: overview.canPublish, canRollback: overview.canRollback } : {}),
+            }));
+        } catch (error) {
+            if (signal?.aborted || epoch !== sessionEpoch || userId !== useUserStore.getState().user?.id) return;
+            set({ enabled: false, canPublish: false, canRollback: false, error: error instanceof Error ? error.message : "读取视觉配置失败" });
+            throw error;
         }
     },
 
@@ -147,118 +121,62 @@ export const useVisualEngineStore = create<VisualEngineState>((set, get) => ({
         });
     },
 
-    publishDraft: async (actor = "Administrator", summary = "发布视觉配置变更") => {
+    publishDraft: async (_actor, summary = "发布视觉配置变更") => {
+        const userId = useUserStore.getState().user?.id;
+        const epoch = sessionEpoch;
+        if (get().isPublishing) return { success: false, error: "正在保存，请稍候" };
+        if (!get().canPublish) return { success: false, error: "尚未取得服务端发布权限，请刷新配置" };
+        const validated = validateVisualEngineConfig(get().draftConfig);
+        if (!validated.valid) return { success: false, error: validated.errors.join("；") };
         set({ isPublishing: true });
         try {
-            const currentDraft = get().draftConfig;
-            const nextVersion = `2.0.${get().snapshots.length}`;
-            const publishedConfig: VisualEngineConfig = {
-                ...currentDraft,
-                publishedVersion: nextVersion,
-                updatedAt: new Date().toISOString(),
-                updatedBy: actor,
-            };
-
-            const newSnapshot: VisualEngineSnapshot = {
-                version: nextVersion,
-                timestamp: publishedConfig.updatedAt,
-                actor,
-                summary,
-                config: publishedConfig,
-            };
-
-            const newAuditEntry: AuditLogEntry = {
-                id: `audit-${Date.now()}`,
-                timestamp: publishedConfig.updatedAt,
-                actor,
-                module: "Publish",
-                action: "config.publish",
-                details: `正式发布配置版本 v${nextVersion}：${summary}`,
-                version: nextVersion,
-                success: true,
-            };
-
-            const nextSnapshots = [newSnapshot, ...get().snapshots];
-            const nextAuditLogs = [newAuditEntry, ...get().auditLogs];
-
-            set({
-                config: publishedConfig,
-                draftConfig: JSON.parse(JSON.stringify(publishedConfig)),
-                snapshots: nextSnapshots,
-                auditLogs: nextAuditLogs,
-                isDraftDirty: false,
-            });
-
-            safeSaveLocalStorage(STORAGE_KEY_CONFIG, publishedConfig);
-            safeSaveLocalStorage(STORAGE_KEY_SNAPSHOTS, nextSnapshots);
-            safeSaveLocalStorage(STORAGE_KEY_AUDIT, nextAuditLogs);
-
-            if (get().enabled) {
-                applyVisualEngineTheme(publishedConfig, publishedConfig.themeMode === "light" ? "light" : "dark");
-            }
-
+            const overview = await apiPublishVisualEngineConfig(validated.config, summary);
+            if (epoch !== sessionEpoch || userId !== useUserStore.getState().user?.id) throw new Error("账号已变化，请重新读取配置");
+            sessionEpoch++;
+            acceptOverview(overview);
+            notifyPluginStateChanged();
             return { success: true };
-        } catch (err) {
-            return { success: false, error: err instanceof Error ? err.message : "发布失败" };
+        } catch (error) {
+            return { success: false, error: error instanceof Error ? error.message : "发布失败" };
         } finally {
             set({ isPublishing: false });
         }
     },
 
-    rollbackToSnapshot: async (targetVersion, actor = "Administrator") => {
-        const snapshot = get().snapshots.find((s) => s.version === targetVersion);
-        if (!snapshot) {
-            return { success: false, error: `未找到指定版本快照：${targetVersion}` };
-        }
-
+    rollbackToSnapshot: async (version) => {
+        const userId = useUserStore.getState().user?.id;
+        const epoch = sessionEpoch;
+        if (get().isPublishing || !get().canRollback) return { success: false, error: "当前无法回滚，请刷新配置" };
+        set({ isPublishing: true });
         try {
-            const rolledBackConfig: VisualEngineConfig = {
-                ...JSON.parse(JSON.stringify(snapshot.config)),
-                updatedAt: new Date().toISOString(),
-                updatedBy: `${actor} (Rollback to v${targetVersion})`,
-            };
-
-            const newAuditEntry: AuditLogEntry = {
-                id: `audit-${Date.now()}`,
-                timestamp: rolledBackConfig.updatedAt,
-                actor,
-                module: "Rollback",
-                action: "config.rollback",
-                details: `回滚配置至历史稳定快照 v${targetVersion}（原发布时间：${snapshot.timestamp}）`,
-                version: targetVersion,
-                success: true,
-            };
-
-            const nextAuditLogs = [newAuditEntry, ...get().auditLogs];
-
-            set({
-                config: rolledBackConfig,
-                draftConfig: JSON.parse(JSON.stringify(rolledBackConfig)),
-                auditLogs: nextAuditLogs,
-                isDraftDirty: false,
-            });
-
-            safeSaveLocalStorage(STORAGE_KEY_CONFIG, rolledBackConfig);
-            safeSaveLocalStorage(STORAGE_KEY_AUDIT, nextAuditLogs);
-
-            if (get().enabled) {
-                applyVisualEngineTheme(rolledBackConfig, rolledBackConfig.themeMode === "light" ? "light" : "dark");
-            }
-
+            const overview = await apiRollbackVisualEngineConfig(version);
+            if (epoch !== sessionEpoch || userId !== useUserStore.getState().user?.id) throw new Error("账号已变化，请重新读取配置");
+            sessionEpoch++;
+            acceptOverview(overview);
+            notifyPluginStateChanged();
             return { success: true };
-        } catch (err) {
-            return { success: false, error: err instanceof Error ? err.message : "回滚失败" };
+        } catch (error) {
+            return { success: false, error: error instanceof Error ? error.message : "回滚失败" };
+        } finally {
+            set({ isPublishing: false });
         }
-    },
-
-    hydrate: (initial) => {
-        if (!initial) return;
-        set((state) => ({
-            enabled: initial.enabled ?? state.enabled,
-            config: initial.config ?? state.config,
-            draftConfig: initial.config ? JSON.parse(JSON.stringify(initial.config)) : state.draftConfig,
-            snapshots: initial.snapshots ?? state.snapshots,
-            auditLogs: initial.auditLogs ?? state.auditLogs,
-        }));
     },
 }));
+
+function acceptOverview(overview: VisualEngineAdminOverview) {
+    const validated = validateVisualEngineConfig(overview.bundle.config);
+    if (!validated.valid) throw new Error("服务端返回了无效配置：" + validated.errors.join("；"));
+    useVisualEngineStore.setState({
+        enabled: overview.bundle.enabled,
+        loaded: true,
+        revision: overview.bundle.revision,
+        config: validated.config,
+        draftConfig: structuredClone(validated.config),
+        isDraftDirty: false,
+        snapshots: overview.snapshots,
+        auditLogs: overview.auditLogs,
+        canPublish: overview.canPublish,
+        canRollback: overview.canRollback,
+        error: null,
+    });
+}

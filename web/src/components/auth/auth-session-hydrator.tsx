@@ -2,7 +2,8 @@ import type { ReactNode } from "react";
 import { useEffect } from "react";
 
 import { getAuthSession, type AuthSessionPayload } from "@/services/api/auth";
-import { FullScreenLoader } from "@/components/ui/aceternity/full-screen-loader";
+import { VisualEngineWorkspaceLoader } from "@/supdance/plugins/visual-engine/loading/workspace-recovery-loader";
+import { setSessionRecoveryStage } from "@/lib/session-recovery";
 import { preloadWorkspaceRoute } from "@/lib/workspace-route-modules";
 import { useUserStore } from "@/stores/use-user-store";
 import { recordDiagnosticEvent } from "@/services/diagnostics/client-diagnostics";
@@ -12,6 +13,7 @@ export function AuthSessionHydrator({ children }: { children: ReactNode }) {
 
     useEffect(() => {
         let cancelled = false;
+        setSessionRecoveryStage("init");
         const startedAt = performance.now();
         recordDiagnosticEvent({ category: "navigation", level: "info", code: "startup.auth_session_started", message: "开始恢复认证会话" });
         getAuthSession()
@@ -65,7 +67,7 @@ export function AuthSessionHydrator({ children }: { children: ReactNode }) {
         };
     }, []);
 
-    return hydrated ? children : <FullScreenLoader />;
+    return hydrated ? children : <VisualEngineWorkspaceLoader />;
 }
 
 async function applyAnonymousSession(payload: AuthSessionPayload) {

@@ -1701,7 +1701,7 @@
 
     body.app-spatial-overlays {
         --workspace-overlay-bg: rgba(244, 244, 245, 1);
-        --workspace-overlay-bg-strong: rgba(250, 250, 250, 1);
+        --workspace-overlay-bg-strong: var(--visual-overlay-bg, rgba(250, 250, 250, 1));
         --workspace-overlay-border: rgba(17, 17, 17, 0.22);
         --workspace-overlay-divider: rgba(17, 17, 17, 0.1);
         --workspace-overlay-highlight: rgba(255, 255, 255, 0.86);
@@ -1712,7 +1712,7 @@
 
     .dark body.app-spatial-overlays {
         --workspace-overlay-bg: rgba(10, 10, 11, 1);
-        --workspace-overlay-bg-strong: rgba(15, 15, 16, 1);
+        --workspace-overlay-bg-strong: var(--visual-overlay-bg, rgba(15, 15, 16, 1));
         --workspace-overlay-border: rgba(255, 255, 255, 0.22);
         --workspace-overlay-divider: rgba(255, 255, 255, 0.105);
         --workspace-overlay-highlight: rgba(255, 255, 255, 0.2);
@@ -1786,7 +1786,8 @@
     }
 
     body.app-spatial-overlays :where(.ant-dropdown-menu, .ant-select-dropdown, .ant-popover-container, .ant-cascader-menus, .ant-mentions-dropdown) {
-        border-radius: 8px !important;
+        border-radius: var(--menu-radius, 8px) !important;
+        backdrop-filter: blur(var(--backdrop-blur-menu, 0px));
     }
 
     /* 下拉层用背景和柔和阴影建立层次，不再用亮色描边圈住选项。 */
@@ -5996,7 +5997,7 @@ html:not(.dark) .creation-studio-control[aria-expanded="true"] { background: #e7
     .library-card:hover .project-library-cover { background: var(--project-library-cover-surface) !important; }
     .project-library-cover-art { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; transition: transform 250ms var(--motion-ease-out), filter 250ms ease-out; }
     .library-card:hover .project-library-cover-art, .library-card:focus-within .project-library-cover-art { filter: saturate(1.08); }
-    .project-library-cover-scrim { position: absolute; inset: 0; background: linear-gradient(180deg, rgba(0, 0, 0, 0.08) 0%, rgba(0, 0, 0, 0.42) 100%); }
+    .project-library-cover-scrim { position: absolute; inset: 0; background: var(--visual-text-protection, linear-gradient(180deg, rgba(0, 0, 0, 0.08) 0%, rgba(0, 0, 0, 0.42) 100%)); }
     .project-library-cover-delete {
         position: absolute;
         z-index: 3;

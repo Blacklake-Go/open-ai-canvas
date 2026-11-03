@@ -1,10 +1,6 @@
 import type { VisualEngineConfig, SemanticTokens } from "../types";
 
-export function generateVisualEngineCSSVariables(
-    config: VisualEngineConfig,
-    mode: "light" | "dark",
-    customTokens?: Partial<SemanticTokens>,
-): Record<string, string> {
+export function generateVisualEngineCSSVariables(config: VisualEngineConfig, mode: "light" | "dark", customTokens?: Partial<SemanticTokens>): Record<string, string> {
     const tokens: SemanticTokens = {
         ...config.tokens[mode],
         ...(customTokens || {}),
@@ -15,8 +11,28 @@ export function generateVisualEngineCSSVariables(
     const motion = config.motion;
 
     const shadowProp = mode === "light" ? "shadowLight" : "shadowDark";
+    const duration = (value: number) => `${motion.enabled ? value : 0}ms`;
 
     return {
+        "--visual-overlay-bg": tokens.overlay,
+        "--visual-text-protection": overlays.enableTextProtectionGradient ? "linear-gradient(180deg, transparent 0%, rgba(0,0,0,0.65) 100%)" : "none",
+        "--button-radius": `${comp.buttonRadius}px`,
+        "--input-radius": `${comp.inputRadius}px`,
+        "--card-radius": `${comp.cardRadius}px`,
+        "--overlay-radius": `${comp.overlayRadius}px`,
+        "--menu-radius": `${comp.menuRadius}px`,
+        "--r-sm": `${comp.inputRadius}px`,
+        "--r-md": `${comp.buttonRadius}px`,
+        "--r-lg": `${comp.cardRadius}px`,
+        "--r-xl": `${comp.overlayRadius}px`,
+        "--r-2xl": `${comp.overlayRadius}px`,
+        "--motion-instant": duration(motion.durationQuick),
+        "--motion-state": duration(motion.durationQuick),
+        "--motion-ease-out": motion.easingStandard,
+        "--theme-hover-lift": motion.enabled ? "2px" : "0px",
+        "--elevation-card": elev.E1[shadowProp],
+        "--elevation-card-hover": elev.E2[shadowProp],
+        "--elevation-overlay": elev.E3[shadowProp],
         // Semantic Canvas & Surface
         "--background": tokens.canvas,
         "--foreground": tokens.text,
@@ -108,12 +124,12 @@ export function generateVisualEngineCSSVariables(
         "--backdrop-blur-menu": `${overlays.menuBackdropBlur}px`,
 
         // Motion Engine
-        "--motion-quick": `${motion.durationQuick}ms`,
-        "--motion-dropdown-enter": `${motion.durationDropdownEnter}ms`,
-        "--motion-dropdown-exit": `${motion.durationDropdownExit}ms`,
-        "--motion-modal": `${motion.durationModal}ms`,
-        "--motion-drawer": `${motion.durationDrawer}ms`,
-        "--motion-tab-switch": `${motion.durationTabSwitch}ms`,
+        "--motion-quick": duration(motion.durationQuick),
+        "--motion-dropdown-enter": duration(motion.durationDropdownEnter),
+        "--motion-dropdown-exit": duration(motion.durationDropdownExit),
+        "--motion-modal": duration(motion.durationModal),
+        "--motion-drawer": duration(motion.durationDrawer),
+        "--motion-tab-switch": duration(motion.durationTabSwitch),
         "--motion-ease-standard": motion.easingStandard,
         "--motion-ease-bounce": motion.easingBounce,
         "--motion-ease-smooth": motion.easingSmooth,

@@ -1,6 +1,8 @@
 package handler
 
 import (
+	"encoding/json"
+	"errors"
 	"net/http"
 
 	"yingce/backend/internal/service"
@@ -49,14 +51,23 @@ func RegisterSupDanceVisualEngineRoutes(r *gin.RouterGroup, svc *service.Service
 			return
 		}
 		var req struct {
-			Config  visualengine.Config `json:"config"`
-			Comment string              `json:"comment"`
+			Config  json.RawMessage `json:"config"`
+			Comment string          `json:"comment"`
 		}
 		if err := c.ShouldBindJSON(&req); err != nil {
 			fail(c, http.StatusBadRequest, err)
 			return
 		}
-		overview, err := svc.PublishAdminVisualEngine(user, req.Config, req.Comment)
+		config, err := visualengine.DecodeConfig(req.Config)
+		if err != nil {
+			fail(c, http.StatusBadRequest, err)
+			return
+		}
+		if len(req.Comment) > 2000 {
+			fail(c, http.StatusBadRequest, errors.New("发布说明不能超过 2000 字节"))
+			return
+		}
+		overview, err := svc.PublishAdminVisualEngine(user, config, req.Comment)
 		if err != nil {
 			failService(c, err)
 			return
@@ -78,6 +89,10 @@ func RegisterSupDanceVisualEngineRoutes(r *gin.RouterGroup, svc *service.Service
 		}
 		overview, err := svc.RollbackAdminVisualEngine(user, req.Version)
 		if err != nil {
+			if errors.Is(err, visualengine.ErrSnapshotNotFound) {
+				fail(c, http.StatusNotFound, err)
+				return
+			}
 			failService(c, err)
 			return
 		}

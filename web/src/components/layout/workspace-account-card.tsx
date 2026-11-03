@@ -1,9 +1,10 @@
 import { Button } from "antd";
-import { ArrowUpRight, Coins, Gift, LogOut, RefreshCw, Settings, ShieldCheck } from "lucide-react";
+import { ArrowUpRight, Coins, Gift, LogOut, RefreshCw, Settings, ShieldCheck, UserRound } from "lucide-react";
 import { Link } from "react-router";
 import { useWalletBalance } from "@/hooks/use-wallet-balance";
 import { useWorkspaceLogout } from "@/hooks/use-workspace-logout";
 import { useUserStore } from "@/stores/use-user-store";
+import { openUserProfileModal } from "@/stores/use-user-profile-modal-store";
 import { UserAvatar } from "./user-avatar";
 import { UserGroupAvatarRing, UserGroupBadge } from "./user-group-badge";
 import "./workspace-account-card.css";
@@ -27,10 +28,20 @@ export function WorkspaceAccountCard({ onWallet, onNavigate }: { onWallet: () =>
             {availableMicrocredits === null ? <Button size="small" loading={refreshing} icon={<RefreshCw />} onClick={() => void refresh()}>刷新余额</Button> : <button type="button" onClick={onWallet}>充值 / 兑换<ArrowUpRight /></button>}
         </div> : null}
         <nav className="workspace-account-card-actions" aria-label="账户操作">
-            <Link to="/settings?section=profile" onClick={onNavigate}><Settings /><span>账户与设置</span><ArrowUpRight /></Link>
+            <button
+                type="button"
+                onClick={() => {
+                    onNavigate();
+                    openUserProfileModal("profile");
+                }}
+            >
+                <UserRound /><span>个人中心与资料</span><ArrowUpRight />
+            </button>
+            <Link to="/settings?section=models" onClick={onNavigate}><Settings /><span>工作区设置</span><ArrowUpRight /></Link>
             {referralAvailable ? <Link to="/referral" onClick={onNavigate}><Gift /><span>推广中心</span><ArrowUpRight /></Link> : null}
             {user.role === "admin" ? <Link to="/admin" onClick={onNavigate}><ShieldCheck /><span>管理员后台</span><ArrowUpRight /></Link> : null}
             <Button danger type="text" icon={<LogOut />} loading={loggingOut} onClick={() => void handleLogout()}>退出登录</Button>
         </nav>
     </section>;
 }
+

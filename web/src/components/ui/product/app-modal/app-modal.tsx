@@ -15,19 +15,19 @@ export type AppModalProps = ModalProps & {
 export function AppModal({ flush = false, destroyOnHidden = true, styles, ...props }: AppModalProps) {
     const mergeResolvedStyles = (resolved: unknown) => {
         const base = resolved && typeof resolved === "object" ? (resolved as Record<string, unknown>) : {};
-        if (!flush) return base;
+        const mask = base.mask && typeof base.mask === "object" ? (base.mask as CSSProperties) : {};
+        const overlay = { backdropFilter: "blur(var(--backdrop-blur-modal, 0px))", backgroundColor: "rgb(0 0 0 / var(--backdrop-opacity-modal, 0.45))", ...mask };
+        if (!flush) return { ...base, mask: overlay };
         const container = base.container && typeof base.container === "object" ? (base.container as CSSProperties) : {};
         const body = base.body && typeof base.body === "object" ? (base.body as CSSProperties) : {};
         return {
             ...base,
+            mask: overlay,
             container: { ...container, ...FLUSH_STYLES.container },
             body: { ...body, ...FLUSH_STYLES.body },
         };
     };
-    const mergedStyles =
-        typeof styles === "function"
-            ? (info: { props: ModalProps }) => mergeResolvedStyles(styles(info))
-            : mergeResolvedStyles(styles);
+    const mergedStyles = typeof styles === "function" ? (info: { props: ModalProps }) => mergeResolvedStyles(styles(info)) : mergeResolvedStyles(styles);
 
     return <Modal destroyOnHidden={destroyOnHidden} {...props} styles={mergedStyles as ModalProps["styles"]} />;
 }

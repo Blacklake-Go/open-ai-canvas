@@ -10,6 +10,7 @@ const (
 	PluginID                = "supdance-visual-engine"
 	ConfigSettingKey        = "supdance_visual_engine_config"
 	SnapshotsSettingKey     = "supdance_visual_engine_snapshots"
+	AuditSettingKey         = "supdance_visual_engine_audit"
 	DefaultPublishedVersion = "2.0.0"
 )
 
@@ -105,13 +106,14 @@ type WorkspaceRecoveryConfig struct {
 }
 
 type PageRule struct {
-	ID                      string `json:"id"`
-	Name                    string `json:"name"`
-	PathPattern             string `json:"pathPattern"`
-	ThemePresetOverride     string `json:"themePresetOverride,omitempty"`
-	MotionEnabledOverride   *bool  `json:"motionEnabledOverride,omitempty"`
-	RecoveryEnabledOverride *bool  `json:"recoveryEnabledOverride,omitempty"`
-	Notes                   string `json:"notes,omitempty"`
+	CustomTokens            map[string]string `json:"customTokens,omitempty"`
+	ID                      string            `json:"id"`
+	Name                    string            `json:"name"`
+	PathPattern             string            `json:"pathPattern"`
+	ThemePresetOverride     string            `json:"themePresetOverride,omitempty"`
+	MotionEnabledOverride   *bool             `json:"motionEnabledOverride,omitempty"`
+	RecoveryEnabledOverride *bool             `json:"recoveryEnabledOverride,omitempty"`
+	Notes                   string            `json:"notes,omitempty"`
 }
 
 type Config struct {
@@ -147,10 +149,22 @@ type PublicBundle struct {
 }
 
 type AdminOverview struct {
+	AuditLogs   []AuditEntry `json:"auditLogs"`
 	Bundle      PublicBundle `json:"bundle"`
 	Snapshots   []Snapshot   `json:"snapshots"`
 	CanPublish  bool         `json:"canPublish"`
 	CanRollback bool         `json:"canRollback"`
+}
+
+type AuditEntry struct {
+	ID        string `json:"id"`
+	Timestamp string `json:"timestamp"`
+	Actor     string `json:"actor"`
+	Module    string `json:"module"`
+	Action    string `json:"action"`
+	Details   string `json:"details"`
+	Version   string `json:"version"`
+	Success   bool   `json:"success"`
 }
 
 func ComputeRevision(cfg Config, enabled bool) string {

@@ -42,6 +42,7 @@ import { CreationAgentEntry } from "./creation-agent-entry";
 import { createCreationSubmitGate } from "./creation-submit-gate";
 import { creationVideoConfig } from "./creation-generation-config";
 import { CreationLoginDialog } from "./creation-login-dialog";
+import { useI18n } from "@/supdance/plugins/i18n";
 
 const AssetLibraryPickerModal = lazy(() => import("@/components/assets/asset-library-picker-modal").then((module) => ({ default: module.AssetLibraryPickerModal })));
 const InspirationHall = lazy(() => import("@/pages/inspirations"));
@@ -70,6 +71,7 @@ function writeComposerPref(key: string, value: boolean) {
 export default function CreatePage() {
     const [agentMode, setAgentMode] = useState(false);
     const { message: toast, modal } = App.useApp();
+    const { t } = useI18n();
     const navigate = useNavigate();
     const [openingCanvas, setOpeningCanvas] = useState(false);
     const openingCanvasRef = useRef(false);
@@ -1246,7 +1248,7 @@ export default function CreatePage() {
                 <section ref={launchpadRef} className="creation-launchpad" aria-label="开始创作">
                     <header className="creation-start-heading">
                         <div>
-                            <h1>和{brandName}聊聊创作想法</h1>
+                            <h1>{t("create.hero_chat_title", { brand: brandName }, `和${brandName}聊聊创作想法`)}</h1>
                             <p>从一个画面、一个角色或一句话开始。</p>
                         </div>
                         <button type="button" className="creation-history-entry" aria-label="查看历史对话" aria-expanded={historyOpen} onClick={() => setHistoryOpen(true)}><History aria-hidden="true" /><span>历史对话</span></button>

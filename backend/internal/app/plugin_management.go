@@ -323,14 +323,15 @@ func (s *Service) SetPluginPlatformAvailability(actor *model.User, pluginID stri
 	previousRuntimeEnabled := false
 	runtimeChanged := false
 	if policy.ActivationScope == PluginScopeSystem {
-		if !hasRuntime {
+		if hasRuntime {
+			previousRuntimeEnabled = runtimePlugin.Status == "enabled"
+			if _, err := s.SetPluginEnabled(pluginID, available); err != nil {
+				return AdminPluginStateView{}, err
+			}
+			runtimeChanged = previousRuntimeEnabled != available
+		} else if !isKnownRuntimeOptionalPlugin(pluginID) {
 			return AdminPluginStateView{}, fmt.Errorf("插件 %q 缺少运行时", pluginID)
 		}
-		previousRuntimeEnabled = runtimePlugin.Status == "enabled"
-		if _, err := s.SetPluginEnabled(pluginID, available); err != nil {
-			return AdminPluginStateView{}, err
-		}
-		runtimeChanged = previousRuntimeEnabled != available
 	}
 	now := time.Now()
 	platformState := &model.PluginPlatformState{PluginID: pluginID, Available: available, UpdatedBy: actor.ID, CreatedAt: now, UpdatedAt: now}
@@ -342,6 +343,9 @@ func (s *Service) SetPluginPlatformAvailability(actor *model.User, pluginID stri
 	}
 	if err := s.appendAdminAudit(actor, "plugin.availability.update", "plugin", pluginID, "更新插件平台可用状态", map[string]any{"available": available, "kind": policy.Kind, "origin": policy.Origin}); err != nil {
 		return AdminPluginStateView{}, err
+	}
+	if pluginID == PluginSupDanceI18n {
+		invalidateI18nBundleCache()
 	}
 	states, err := s.AdminPluginStates(actor)
 	if err != nil {

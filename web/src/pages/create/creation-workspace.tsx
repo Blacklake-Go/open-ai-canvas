@@ -40,6 +40,7 @@ import { CreationAttachmentThumbnail, CreationMediaPreviewModal } from "./creati
 export { CreationHistoryDrawer } from "./creation-workspace-history";
 export { CreationMessageView } from "./creation-workspace-messages";
 export { CreationEmptyBanner, CreationEmptySuggest, CreationFeaturedWorks } from "./creation-workspace-empty";
+import { useI18n } from "@/supdance/plugins/i18n";
 
 const CanvasPromptOptimizerDrawer = lazy(() => import("@/components/canvas/canvas-prompt-optimizer-drawer").then((module) => ({ default: module.CanvasPromptOptimizerDrawer })));
 
@@ -138,6 +139,7 @@ type ComposerProps = {
 type CreationReferenceFilter = "all" | "image" | "video" | "audio" | "file";
 
 export function CreationComposer(props: ComposerProps) {
+    const { t } = useI18n();
     const [previewUrl, setPreviewUrl] = useState("");
     const [previewType, setPreviewType] = useState<"image" | "video">("image");
     const [promptOptimizerOpen, setPromptOptimizerOpen] = useState(false);
@@ -192,11 +194,11 @@ export function CreationComposer(props: ComposerProps) {
     const showWorkingSpinner = interactionBusy || (props.generationActive && !canSubmit);
     const showWorkingGlow = props.generationActive && !canSubmit;
     const placeholder = props.mode === "text"
-        ? "描述你的故事、角色或想继续讨论的创意"
+        ? t("create.composer_placeholder_text", undefined, "描述你的故事、角色或想继续讨论的创意")
         : props.mode === "image"
-            ? "描述画面、人物、场景、构图与风格"
-            : "描述镜头内容、运动、光线与节奏";
-    const emptyPlaceholder = "输入你的镜头、画面或故事。也可以添加参考图开始创作";
+            ? t("create.composer_placeholder_image", undefined, "描述画面、人物、场景、构图与风格")
+            : t("create.composer_placeholder_video", undefined, "描述镜头内容、运动、光线与节奏");
+    const emptyPlaceholder = t("create.empty_composer_placeholder", undefined, "输入你的镜头、画面或故事。也可以添加参考图开始创作");
     const imageReferencesSupported = props.imageProfile.references.maxImages > 0;
     const referencesSupported = props.mode === "image" ? imageReferencesSupported : props.mode !== "video" || props.maxReferences > 0;
     const canAddMoreReferences = referencesSupported && props.attachments.length < props.maxReferences;
@@ -395,7 +397,7 @@ export function CreationComposer(props: ComposerProps) {
                         <span>优化</span>
                     </button>
                 </Tooltip> : null}
-				<ModelPicker config={props.config} value={props.model} onChange={props.onModelChange} capability={props.mode} requirements={props.modelRequirements} className="creation-model-picker" placeholder={`选择${modeLabels[props.mode]}模型`} showSelectedPrice={false} showOptionPrices variant="creation" />
+				<ModelPicker config={props.config} value={props.model} onChange={props.onModelChange} capability={props.mode} requirements={props.modelRequirements} className="creation-model-picker" placeholder={t("create.select_model_placeholder", { mode: props.mode === "image" ? t("create.mode_image", undefined, "图片") : props.mode === "video" ? t("create.mode_video", undefined, "视频") : t("create.mode_text", undefined, "文本") }, `选择${modeLabels[props.mode]}模型`)} showSelectedPrice={false} showOptionPrices variant="creation" />
                 {props.mode === "video" || (props.mode === "image" && imageSettingsSupported) ? <GenerationSettingsMenu {...props} /> : null}
                 {props.mode === "video" ? <DurationMenu profile={props.videoProfile} seconds={props.seconds} onChange={props.setSeconds} /> : null}
                 {props.mode === "text" ? <>

@@ -1,34 +1,39 @@
-import { useEffect } from "react";
+import { useEffect, useLayoutEffect } from "react";
 import { useLocation } from "react-router";
 import { useVisualEngineStore } from "../storage/visual-engine-store";
 import { applyVisualEngineTheme, removeVisualEngineTheme } from "../themes/theme-engine";
-import { resolvePageVisualPolicy } from "../page-rules/page-rules-engine";
-import { useThemeStore } from "@/stores/use-theme-store";
+import { startPluginStateSync } from "@/supdance/adapters/plugin-state-sync";
+import { useUserStore } from "@/stores/use-user-store";
+import { useAppearanceStore } from "@/stores/use-appearance-store";
+import { useVisualEnginePolicy } from "./use-visual-engine-policy";
 
 export function VisualEngineRuntimeHost() {
-    const location = useLocation();
-    const enabled = useVisualEngineStore((state) => state.enabled);
-    const config = useVisualEngineStore((state) => state.config);
-    const theme = useThemeStore((state) => state.theme);
-    const isDark = theme === "dark";
+    const { pathname } = useLocation();
+    const { active, config, policy, reducedMotion } = useVisualEnginePolicy();
+    const userId = useUserStore((state) => state.user?.id ?? "");
+    const isAdmin = useUserStore((state) => state.user?.role === "admin");
+    const skin = useAppearanceStore((state) => state.appearance.activeSkin);
+    const admin = isAdmin && pathname.startsWith("/admin/plugins/visual-engine");
+
+    useLayoutEffect(() => {
+        useVisualEngineStore.getState().resetSession();
+    }, [userId]);
+
+    useEffect(() => startPluginStateSync((signal) => useVisualEngineStore.getState().refresh(admin, signal)), [userId, admin]);
 
     useEffect(() => {
-        if (!enabled) {
+        if (!active) {
             removeVisualEngineTheme();
             return;
         }
-
-        const mode = isDark ? "dark" : "light";
-        const pagePolicy = resolvePageVisualPolicy(location.pathname, config, mode);
-
-        applyVisualEngineTheme(config, pagePolicy.activeThemeMode, {
-            customTokens: pagePolicy.activeTokens,
-        });
-
-        return () => {
-            // 当离开特定页面规则时还原
-        };
-    }, [config, enabled, isDark, location.pathname]);
+        const motion = { ...config.motion, enabled: policy.motionEnabled };
+        if (reducedMotion) {
+            const duration = config.motion.reducedMotionBehavior === "instant" ? 0 : 100;
+            motion.durationQuick = motion.durationDropdownEnter = motion.durationDropdownExit = motion.durationModal = motion.durationDrawer = motion.durationTabSwitch = duration;
+        }
+        applyVisualEngineTheme({ ...config, components: policy.activeComponents, motion }, policy.activeThemeMode, { customTokens: policy.activeTokens });
+        return () => removeVisualEngineTheme();
+    }, [active, config, pathname, reducedMotion, skin, policy.activeThemeMode, policy.motionEnabled]);
 
     return null;
 }

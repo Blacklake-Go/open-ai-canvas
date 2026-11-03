@@ -70,10 +70,15 @@ export const usePluginStore = create<PluginStore>()(
 );
 
 export function isPluginEffectivelyEnabled(pluginId: string, fallbackEnabled?: boolean) {
-    const state = usePluginStore.getState();
+    return selectPluginEffectivelyEnabled(pluginId, fallbackEnabled)(usePluginStore.getState());
+}
+
+export function selectPluginEffectivelyEnabled(pluginId: string, fallbackEnabled?: boolean) {
+    return (state: PluginStore) => {
     const serverState = state.pluginStates[pluginId];
     if (serverState) return serverState.effectiveEnabled;
     if (pluginId in state.runtimeStatuses) return state.runtimeStatuses[pluginId] === "enabled";
     if (fallbackEnabled !== undefined) return fallbackEnabled;
     return Boolean(state.installations.find((item) => item.manifest.id === pluginId)?.enabled);
+    };
 }

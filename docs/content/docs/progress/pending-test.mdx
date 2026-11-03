@@ -4,6 +4,91 @@ description: 当前项目已实现功能的手工验证清单与未确认边界
 ---
 
 # 待测试
+
+## 视觉引擎发布与运行时一致性修复（待用户验收）
+
+- 已实现：配置、快照及审计以服务端为唯一发布来源；浏览器只保留当前草稿，不再持久化本地发布记录。使用统一业务 API 解包，读取、保存失败不伪造成功、启用状态或管理员权限，发布失败保留草稿。
+- 已实现：平台开关、公共配置与运行时联动，支持定时、焦点及跨标签页同步；账号切换清除管理员状态并拒绝过期响应。画布主题优先于插件工作区主题；停用时恢复原 CSS 变量和优先级，不覆盖宿主后来写入的值。
+- 已实现：前后端完整结构及范围校验，拒绝缺失字段、null、未知字段、非法颜色、阴影、尺寸、缓动曲线、恢复参数和页面规则。服务端不再通过补默认值掩盖损坏配置。
+- 已实现：同一数据库事务锁定配置行，配置、版本快照和审计一起提交；首次发布保留原生效配置，版本由服务端生成并记录当前管理员 ID。回滚恢复历史内容并创建新版本，任一写入失败全部回滚。
+- 已实现：组件尺寸、圆角、阴影、遮罩接入真实宿主 CSS 与 Ant Design；动效使用配置时长、缓动和系统减少动态效果偏好。工作区恢复组件消费真实会话恢复及同步阶段，自动推进仅用于明确的预览模式。
+- 已实现：页面规则支持新增、编辑、删除及自定义语义色，具体路径优先；全局关闭后规则不能重新开启动效或恢复动画。诊断读取草稿并支持分别检查深浅模式，对比度失败会使总体检查失败，兼容性通过实际浏览器能力检测得到。
+- 已实现：修正根 Provider 位于 Router 外导致真实页面崩溃的问题；发布确认使用 AppModal。窄屏改用模块选择器并收起常驻预览，避免预览和侧栏挤压主编辑区。
+- 已验证：前端视觉引擎、真实组件回归和插件同步共 20 项测试通过；整站 `bun run build`（包含 TypeScript 检查）通过。后端视觉引擎域测试、应用发布生命周期测试及 handler 测试通过；SQLite 故障注入验证快照和审计失败均不产生部分提交。独立 PostgreSQL 实测 8 次并发发布产生 9 个唯一快照和 8 条审计，审计故障注入能回滚配置及快照。
+- 已验证：隔离本地服务和真实浏览器完成发布、初始快照、规则创建编辑发布、历史回滚生成新版本、跨标签页同步、平台停用清理与刷新后停用、深浅模式、减少动态效果及 390px 窄屏操作。实际模态遮罩消费配置的 blur；浅色配置的 17px 按钮圆角和减少动效的 0ms 已在页面 CSS 验证。
+- 已验证：未登录管理请求返回 401，普通用户读取/发布/回滚返回 403；缺失布尔字段、null 数值和非法阴影返回 400，未知回滚版本返回 404，均不增加快照或修改生效版本。
+- 独立遗留：社交登录完整包仍有 13 项测试失败，涉及旧凭据/连通性假设、首次入站条款字段和第三方适配范围；当前只完成获准的最小编译阻塞修复及共享票据失败路径专项测试。工作区的国际化公共接口未注册仍返回 404，未扩大本次视觉引擎修复范围。
+- [ ] 用户最终验收及部署后的真实站点复验。本轮未部署生产，未调用付费生成，也未验证真实第三方 OAuth 授权；构建和专项通过不代表整站全部业务已经验收。
+
+## RunningHub 标准模型第二/三梯队与图像质量阶梯计价（2026-11-03）
+- 已实现（四级梯队体系）：按用户定义把渠道模型统一标注为「最新 / 最稳定 / 最具性价比 / 准下线」四档徽章（`tags` = `{text,color}`，颜色 blue/green/gold/pink，前端由 `web/src/components/model-tags.tsx` 渲染）。渠道现有 76 个模型（73 启用、目录可见），梯队覆盖：NanoBanana、Seedance/即梦、Grok、Hailuo、Kling、Midjourney 各 4 级；OpenAI、Qwen、Krea、Flux、Sora、Vidu 各 3 级；Alibaba、Minimax、Gemini、Skywork、PixVerse 各 2 级；Lightricks 1 级（其文生视频端点是 ComfyUI 节点式参数，插件无法驱动）。
+- 已实现（新增 26 个梯队模型）：Sora 2 Pro / Sora 2 经济通道；Nano Banana 2.1 文生图与图像编辑、2 Lite、V1 编辑；Seedance 2.0 全球 / Fast / Mini 图生视频；海螺 02 Pro 与 2.3 Pro / 2.3 Fast 图生视频；Vidu Q2 Pro 图生视频；Grok Imagine V1.5 图生视频、Grok 文生图经济档；Krea V2 Large；SkyReels V4 Fast 图生视频；悠船 V8.2 预览 / V8.2 快速 / V6 / 图生视频；PixVerse V6 图生与文生视频；千问 3.0 图像编辑、千问 2.0 文生图。价格一律取 RunningHub 官方阶梯表（按分辨率 / 时长 / 音频档逐档建价），售价 = 成本 × 1.5。
+- 已实现（provider 拆分）：新增 `runninghub-standard-video-vidu`（`movementAmplitude=auto`、`bgm=false`）、`-seedance`（`firstFrameUrl`/`lastFrameUrl` + `generateAudio=false`）、`-minimax`（`enablePromptExpansion=false`）、`-skyreels`（`promptOptimizer=false`）、`-pixverse`（`generateAudioSwitch=false`）、`runninghub-standard-image-youchuan`（`hd=false`），并把此前停用的 Vidu Q2 Turbo / Q2 Pro Fast 切到 vidu provider 后重新启用。提交：`04f8cc6c`、`40f767c9`。
+- 已知边界（需后续产品化）：上述族 provider 目前把音频 / 高清 / 提示词扩展等开关写成**固定常量**（默认关闭），因此这些档位在 UI 上不可切换，价格也只建了无音频 / 非高清档（不会低估成本）。可灵族例外：`sound` 已由 `generateAudio` 映射，可正常切换。后续应把这类开关提升为按模型的可视化能力项，而不是常量。
+- 已验证（零成本）：22 个新端点存在性探测 21 个返回 `1007` 参数校验；`rhart-video-s/image-to-video-pro-deprecated` 返回 `1000 未知错误`（任何输入均如此、不建任务），据此判定该旧通道在上游已停用，对应模型 `sora2-pro-depr-i2v` 已置为停用并在描述中说明。
+- [ ] 26 个新模型尚未逐条真实出片验证（会产生消耗）：必填项是按官方 schema 逐项核对、端点存在性已零成本探测，但建议至少抽验 Seedance 2.0、海螺 2.3、悠船 V8.2、PixVerse V6 各一条最便宜规格。
+- 已实现（模型配置，生产站点 `CHANNEL_000002` 新增 17 个模型，均带品牌图标与阶梯价）：谷歌 Nano Banana 2 图像编辑（1k/2k/4k）、Veo 3.1 Fast 图生视频（8 秒 $0.2/次）、Veo 3.1 Lite 文生视频（720p/1080p 按秒）；OpenAI GPT Image 2 文生图（low/medium/high × 1k/2k/4k 九档）与 GPT Image 2 编辑 Economy；阿里万相 2.5 Preview 图生图、千问 2.0 图像编辑；MiniMax H3 Max Turbo 文生视频（480p/768p 按秒）；可灵 3.0 Pro 图生视频（无声/有声按秒）、可灵 2.5 Turbo 标准档文生视频（5/10 秒）；Vidu Q2 Turbo（6 档）与 Q2 Pro Fast（4 档）图生视频；Grok Imagine 图生视频 Stable（6/10 秒）；Krea V2 Turbo 图生图（1k/2k）；FLUX 3 Klein 图像编辑（1k/2k/4k）；悠船 V7 与 Niji 7 文生图。售价统一为成本 × 1.5。
+- 已实现（插件缺陷修复）：`runninghub-standard` 插件图像能力 `quality` 参数声明 `pricing: true`，使质量档可作为计价维度（此前仅 `imageResolution` 可计价，GPT Image 2 的质量阶梯无法建价）。
+- 已验证：`GET /api/admin/channels/CHANNEL_000002/models` 共 49 个模型，17 个新模型全部启用且出现在 `/api/model-catalog`；创作端影片/图片模型选择器实测品牌分组、品牌图标（OpenAI、Nano Banana、Gemini、Alibaba、Qwen、Minimax、Kling、Vidu、Grok、Krea、Flux、Midjourney）与阶梯积分价展示正常。
+- 已验证（零成本校验探测）：用空请求/缺参请求对 21 个候选端点逐一探测必填校验，未创建任何生成任务、未产生消费；据此排除了插件无法发送必填参数的模型：Seedance 2.0 图生视频（`generateAudio`）、海螺 02 Pro（`enablePromptExpansion`）、可灵 2.6 Pro（`sound`）、SkyReels V4 fast 系列（`promptOptimizer`）、Grok Imagine 图生图（`model` 必填）、f-2-klein-4b LoRA（节点式参数键）。
+- 已修复（阻断性根因）：渠道请求被拼成 `https://www.runninghub.ai/v1/openapi/v2/...`。宿主 `apiURLWithDefaultPrefix` 对未识别的版本前缀会补 `/v1`，而 RunningHub 的 `/v1/*` 返回 HTTP 401，后端把 401 映射成「模型服务鉴权失败」，导致该渠道全部生成失败。修法是在插件 `create` / `poll` 声明 `originPath: true`（image / video / audio 共 6 处），使 `/openapi/v2/...` 按站点根路径直发。
+- 已验证（真实最小成本验收，前端提交，累计 −0.363 积分）：`gpt-image-2-t2i`（medium/1k）succeeded，1024×1024 PNG 已转存站内资源且有计费单号，余额 −0.081；`minimax-h3-max-turbo-t2v`（480p/5s）succeeded，mp4 5.18s，上游 `thirdPartyConsumeMoney=0.16` 与配置 `$0.032/秒 × 5` 一致，余额 −0.24；`krea-v2-turbo-i2i`（1k）succeeded，余额 −0.03；`flux3-klein-edit2`（1k，参考图取自素材库）succeeded，验证 image provider 的 `imageUrls` 多图参考映射，余额 −0.012。
+- 已验证（协议层）：`imageUrl` / `firstImageUrl` 被 veo3.1-fast、grok-imagine-video、vidu-q2、kling-v3.0-pro 端点接受（补上必填项后才继续报下一个缺失字段），视频参考图映射可用；`sound`（kling2.6）、`enablePromptExpansion`（hailuo02）、`promptOptimizer`（skyreels fast）、`model`（grok 图生图）、`generateAudio`（seedance2）为上游必填且插件模板无法发送，相关模型未收录。
+- 已纠正（前一轮结论错误）：RunningHub 先校验参数再校验鉴权，空请求返回 `1007` 不能证明密钥有效（无效密钥同样返回 `1007`）。鉴权判别须用 `/openapi/v2/query`：无效密钥 → `806 APIKEY_USER_NOT_FOUND`，企业级与消费级密钥 → `1004 任务不存在`。渠道密钥已确认为企业级-共享那把。
+- 已修复（能力漂移）：`nano-banana-pro-edit-ultra`（MODEL_000006）已从 `capability=text` + `protocol=a6api-chat` PATCH 回 `capability=image` + `protocol=runninghub-standard-image`，并恢复图片能力画像（`references.maxImages=14`、`resolution 1k/2k/4k` 计价、14 种画幅），价格档保持 `$0.14 → 0.21 积分`。前端复核：图片页「Nano Banana Pro」分组恢复为 2 个渠道（编辑旗舰 0.21 积分 + 文生图 0.18 积分），文字页恢复为「选择文本模型」不再被图片模型占用；渠道能力统计由 `image 22 / text 1` 变为 `image 23 / text 0`。
+- 已修复（视频参考图模板缺口）：video provider 此前只在多图时发送 `imageUrls`，导致只接受 `imageUrls` 的端点（Veo 3.1 Fast）单图必失败。现改为有参考图就发送列表，`veo31-fast-i2v` 实跑成功（1280×720 / 7.93s，上游 `thirdPartyConsumeMoney=0.2`，与配置的 $0.2/次一致）。
+- 已验证（i2v 端到端成功）：`grok-imagine-video-i2v`（720p/6s）succeeded，1290×714 / 6.04s，上游成本 `0.27`，钱包流水 `consume −405000`（=0.405 积分售价）；`veo31-fast-i2v`（720p/8s）succeeded。两条都经站点任务 API（与前端同一 admission/计费链路）提交，参考图按前端约定只传 `storageKey: resource:<id>`（传站内私有 URL 会被上游判为无效图片格式）。
+- 已修复（可灵 `sound` 必填）：新增按模型族拆分的 provider `runninghub-standard-video-kling`，把统一请求的 `generateAudio` 映射为上游必填的 `sound`（始终显式发送 true/false，不复用通用 video provider，避免给 Sora/Veo/Grok 等端点多塞字段）。`kling3-pro-i2v` 已切到该 provider 并开启音频开关，实跑 3 秒无声 succeeded（1440×1440 / 3.04s，上游 `thirdPartyConsumeMoney=0.3`，与无声档 $0.1/秒一致）。
+- 已新增（可灵下一级型号）：`kling26-std-i2v` = `/kling-v2.6-std/image-to-video`「可灵 2.6 标准版 图生视频」，5 秒 $0.15、10 秒 $0.30（售价 0.225 / 0.45 积分）。该端点不要求 `sound`，因此沿用通用 video provider。实跑 5 秒档 succeeded（960×960 / 5.04s，上游 `0.15` 与配置一致）。可灵梯队现为 4.0（旗舰）→ 3.0 Pro（有声/无声）→ 2.6 标准版（入门）。RunningHub 标准模型库没有 2.8 档；同级备选还有 `可灵图生视频3.0-std`（$0.08/秒无声、$0.11/秒有声）与 `可灵图生视频2.6-pro`（5 秒 $0.30 / 10 秒 $0.59，有声更贵），两者都需要 `sound`，可直接挂到新 provider。
+- 已停用：`vidu-q2-turbo-i2v`（Vidu Q2 Turbo）与 `vidu-q2-pro-fast-i2v`（Vidu Q2 Pro Fast）——上游必填 `movementAmplitude`（另需 `bgm`），通用 video provider 无对应字段，提交即校验失败（未扣费）。前端影片选择器已确认两者消失。
+- [ ] Vidu 两档如需上线：要么给通用 video provider 增加 `movementAmplitude` / `bgm` 的按模型映射（同样建议拆独立 provider），要么等后端支持「按模型额外 body 参数」；同类待解锁的还有可灵 2.6 Pro（`sound`）、海螺 02 Pro（`enablePromptExpansion`）、SkyReels V4 fast（`promptOptimizer`）、Seedance 2.0（`generateAudio`）。
+- [ ] 视频图生视频（i2v）站点入口存在循环门控，三个入口实测一致且无法绕过：
+  - 首页 composer：切到「影片」后参考图缩略图被丢弃（2 → 1），且没有「參考內容」入口（仅图片模式提供）。
+  - `/toolbox/video`：`參考素材` 显示「当前模型不接受参考素材」，页面虽有 `input[type=file]` 但触发入口隐藏；模型面板里 `Vidu Q2 Turbo`、`可灵 3.0 Pro`、`Grok Imagine 视频`、`Veo 3.1 Fast` 行 `disabled=true`。把 `時長` 从 5 秒改为 6 秒后仍全部禁用，说明禁用条件是「尚无参考素材」而不是规格不匹配。
+  - 结论：选 i2v 模型需要先有参考图，上传参考图需要先选 i2v 模型 → 死锁。建议门控改为按模型能力（`operations` 含 `image_to_video`）放行选择，或在影片模式常驻参考素材入口。
+  - 协议层已单独验证 i2v 可用：`imageUrl` / `firstImageUrl` 被上述四个端点接受（补齐必填项后才继续报下一个缺失字段）。
+  - 待办：门控修好后用 `/toolbox/video` 或站点任务 API 实跑一条 `vidu-q2-turbo-i2v`（540p/4s，0.06 积分）作为端到端证据。
+- [ ] 未定价模型待补价：`GPT Image 2.5`（图片 ×2）与 `minimax-speech-hd` / `minimax-speech-turbo`（音频）`priceConfigured=false`，不对用户开放；音乐模块目前由其他渠道的 Mureka 承担。
+- [ ] kling3-pro-i2v 顶层单价显示为有声档（225000）：需确认按选择器匹配无声档价格是否正确落账。
+- [ ] 生产环境观察：2026-11-03 07:26 部署 `v1.7.4-supdance.2`（commit `0f7134f6`，非本地 HEAD 祖先），期间约 1 分钟 502；现 `/api/health` 200、schema 78 ready。
+
+## 社交登录插件升级 v1.3.0（完全移除 Mock、四列即时开关设置与运营控制大盘）
+- 已实现（目的1 - 彻底移除 Sandbox Mock 模式）：彻底移除后端与前端的 `SandboxMockEnabled` / `sandboxEnabled` 逻辑与伪造循环（移除 `/auth/social/mock-callback`、`mock=true` 参数与前台 Mock 小黄点提示）；未配置完整密钥或未接入实际 OAuth 交换的渠道一律 Fail-closed，拒绝伪造身份铸造。
+- 已实现（目的2 - 简化 480px 凭证配置弹窗）：凭证弹窗宽度设为 480px，移除 AES-256 宣传横条、冗长说明文案和 Mock 开关；保留轻量 Redirect URI 一键复制、Client ID / Secret 输入（掩码回显不反显）。
+- 已实现（目的3 - 四列式即时生效设置面板）：重构 `/admin/settings/social-auth` 为 4 列模型（Col 1: 平台图标+名称+ID / Col 2: 掩码ID+状态徽章 / Col 3: 回调地址与分区规则 / Col 4: 配置密钥+连通性测试+行内即时 Switch）；未配置密钥时 Switch 禁用并悬停提示，配置后立即解锁；切换 Switch 立即触发 PUT 请求存盘并 Toast 提示，移除底部悬浮保存条。
+- 已实现（目的4 - 微信风格下划线 Tab 与运营控制大盘）：顶部提供微信风格下划线切换 Tab（渠道凭证配置 vs 运营控制与大盘）；新增 `/admin/settings/social-auth/operations` 页面，包含全局入站与安全策略卡片（自动注册、安全邮箱、首次赠额、防孤立拦截）、多渠道绑定分布与 30 天登录活跃趋势大盘、用户绑定支持检索解绑与审计日志及 CSV 导出。
+- 已实现（版本号与清单规范）：插件清单与代码版本号全量升级至 `1.3.0`。
+- 已验证：`backend go build ./cmd/server`、`cd backend && go test -count=1 ./internal/supdance/socialauth/... ./internal/handler/...`、`cd web && bun test test/supdance-social-auth.test.ts`（13项通过）、`cd web && bun test test/admin-ui-regressions.test.ts`（17项通过）、`cd web && bun run build`（`tsc --noEmit && vite build` 0 错误）全部通过。
+- [ ] 真实环境多渠道即时开关验证：配置实际 OAuth 凭证后，在管理后台行内点击 Switch，验证是否无需刷新即时开启/关闭并在前台登录页同步生效。
+- [ ] 运营大盘与日志导出验证：在 `/admin/settings/social-auth/operations` 调整策略并保存，检索已绑定用户执行解绑测试，导出 CSV 核对格式。
+
+## 社交登录插件增强 v1.2.0 与全局用户资料浮窗（supdance/v2026.11.02.1）
+- 已实现（目的1A - 授权入站浮窗）：新增 `SocialOnboardingModal`（`web/src/supdance/plugins/social-auth/components/social-onboarding-modal.tsx`），支持全渠道 OAuth 授权后入站过程配置浮窗。检测到首次入站票据后自动弹出；第三方渠道返回邮箱时（如 Google / GitHub 等）自动将用户账号邮箱绑定并标记已验证 🔒；支持用户自定义创作者 ID（正则校验 `^[a-zA-Z0-9_-]{3,30}$`）、昵称以及可选设置独立登录密码。
+- 已实现（目的1B - 账号解绑换绑与账号名展示）：新增 `SocialAccountBindings`（`web/src/supdance/plugins/social-auth/components/social-account-bindings.tsx`），列出 8 大渠道的绑定状态与真实第三方账号标识（`providerUsername`）；支持绑定、换绑与解绑，并严格执行防孤立账号安全守卫（`Anti-Orphan Safety Guard`）：用户未设密码且仅剩一个绑定身份时，禁止解绑并引导先设密码。
+- 已实现（目的2 - 用户中心全局浮窗）：新增 `UserProfileModal` 与 `useUserProfileModalStore`（`web/src/components/layout/user-profile-modal.tsx`），将用户资料界面从传统内嵌页面升级为随时可呼出的全局浮窗；严格遵循 Apple 冷黑底色 `#0e1117`、电光青 `--primary: #00f5d4`、发丝边框 `border-white/10` 与 `backdrop-blur-2xl`，整合个人资料、密码与安全、第三方账号绑定与个性偏好；侧栏与顶栏账户入口优先唤起该浮窗，不打断画布与工作区。
+- 已实现（版本号与清单规范）：插件清单 `manifest.json` 与代码版本同步升至 `1.2.0`，新增 `onboarding-modal` 与 `user-account-bindings` 表面契约。
+- 已验证：`backend go build ./cmd/server`、`go test ./internal/supdance/socialauth/...`、`cd web && bun test test/supdance-social-auth.test.ts`（13 项）、`cd web && bun run build`（`tsc --noEmit && vite build`）全部通过。
+- [ ] 真实第三方 OAuth 回调联调：在 `https://www.supdance.com` 配置真实 Google/微信/QQ 凭证，测试授权回调后自动弹出入站浮窗、邮箱自动绑定显示已验证 🔒；测试未设密码时解绑被拦截。
+- [ ] 浮窗交互与响应式验收：在不同屏幕尺寸下呼出用户中心浮窗，验证头像上传/裁剪、密码修改、深浅模式切换与第三方换绑流程。
+
+
+## 公开服务条款与隐私政策页（`/terms`、`/privacy`）
+- 已实现：新增 `web/src/supdance/pages/legal/`（内容模型 + 共享渲染器 + 两份文档），注册为顶层公开路由（`RequireAuth` 子树之外，未登录可访问），并在 `SiteComplianceFooter` 补两个入口；登录页原有的 `/terms`、`/privacy` 死链因此恢复可用。
+- 已实现：条款按 Waffo Pancake 收单审核要求覆盖积分制预付计费、即时数字交付、7 天未使用积分退款 + EU/UK 14 天撤回、拒付与账单争议、第三方模型供应商披露表、责任上限；隐私政策覆盖 GDPR 目的↔法律依据对照表、处理者清单、跨境传输、保留期限表、8 项数据主体权利与 72 小时泄露通知，并如实写明当前限制（无 2FA、无整盘加密、无年龄验证、除会话过期与回收站外无自动删除任务）。
+- 已实现：正文整体标记 `data-i18n-ignore`（法律文本不接受未经审阅的机器改写），界面外壳走 `supdance-i18n`，新增 `legal.*` 词条并补齐 5 个语言包；运营方信息未填写时（`【待补充…】`）页面顶部显示不可发布提示条。
+- 已验证：`bun run build`（含 `tsc --noEmit`）、`bun run lint`、`bun test test/supdance-extension-isolation.test.ts test/design-system-compliance.test.ts`（17 项）全部通过；真实 Chrome 本地路由验收 `/terms`、`/privacy` 在亮/暗主题下渲染正常，目录锚点跳转、披露表横向滚动、页脚入口与待补充提示条均生效。
+- 顺带修复：`client-root-init.tsx` 把 `fetchPluginRuntimeState(signal?)` 直接当 TanStack `queryFn` 使用导致 `tsc` 失败（`bun run build` 中断），改为 `({ signal }) => fetchPluginRuntimeState(signal)`。
+- [ ] 运营方信息补全：`legal-meta.ts` 的 `mailingAddress`（可送达地址）与 `effectiveDate`（生效日期）必须填写后才能对外发布；填写后确认顶部提示条消失。
+- [ ] 浏览器验收（窄屏）：本项未能通过外部浏览器 viewport 覆盖验证，需在真机或 DevTools 设备模式下确认 <640px 时目录折叠为 `<details>`、表格横向滚动不撑破版面。
+- [ ] 部署后线上验收：发布到 `www.supdance.com` 后，用未登录会话确认 `/terms`、`/privacy` 返回真实文档而非 SPA 回退的 404 页（历史缺陷：nginx 回退让任意路径都返回 200，收单自检因此假通过）。
+- [ ] 英文译本：是否需要英文版条款与政策（当前仅中文为准 + 界面外壳可翻译）由收单审核结论决定。
+## 插件生效判定统一与音乐工作台误拦截修复（supdance/v2026.11.01.1）
+- 已修复：`/toolbox/music` 被 `RequirePlugin` 误判为"已停用"（服务端 `effectiveEnabled=true`）。根因是路由守卫与入口显隐读取别名 id `music-generation` 或本地安装记录（默认 `enabled=false`）。现统一为 `selectPluginEffectivelyEnabled`（服务端 states → 运行时 statuses → 本地安装记录），插件 id 一律使用清单 id；后端移除幽灵别名策略 `PluginSupDanceMusicAlias`。
+- 已改进：停用守卫页文案区分"用户可自行开启（前往插件中心）"与"管理员统一停用"，并显示服务端 `blockedReason`。
+- 已验证（真实 Chrome）：`/toolbox/music` 暗/亮主题三栏工作台渲染；插件中心停用 → 守卫页 → 再启用回环；`/create` 音乐药丸与侧栏"音乐生成"入口恢复；`/api/plugins/status` 不再包含 `music-generation` 幽灵键。`web/test/supdance-*` 10 文件 70 项通过；`bun run typecheck` 通过；`backend go build ./...`、`go test ./internal/app/... ./internal/service/... ./internal/supdance/...` 通过。
+- [ ] 多账号回归：未启用音乐插件的新账号访问 `/toolbox/music` 应看到"可自行开启"守卫页而非空白错误；管理员在后台停用平台可用性后，所有账号看到"管理员统一停用"文案。
+- [ ] 上游升级回归：`tools/supdance/check_upstream.py` 对新增耦合文件（`require-plugin.tsx`、`creation-workspace.tsx`、`use-plugin-store.ts`）的冲突提示正常。
+
 ## Agent 记忆文件、技能自动发现、回复选项卡与右侧停靠（#908）
 - 已实现（记忆）：每个用户一份长期记忆文件替代旧版经验（Schema 76，补列 Schema 77），容量 5000 字、单条 400 字、最多 80 条。模式 `auto`（默认，直接写入并可撤销）/ `review`（先暂存待确认）/ `off`。每轮开始冻结快照，以 user 数据消息注入，不进 system；首次读取时把已批准的旧经验导入为可撤销的 `seed` 修订。设置页可编辑、撤销、采纳或拒绝；管理员可只读查看。
 - 已实现（技能）：已安装且 `agentMode=auto` 的技能按 5% 输入预算（至少 1000 token）进入 system 技能目录，策略要求开工前先查合适的技能；固定技能（最多 16 个，`pinnedSkillIds`）走 `skill_hints`。技能库可设「自动 / 仅手动」。按行业推荐安装（技能页、Agent 设置、欢迎区入口）；对话中 Agent 只发推荐卡片，不替用户安装。

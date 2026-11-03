@@ -70,16 +70,16 @@ func TestSupDanceVisualEngineConfigLifecycleAndRollback(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if overview.Bundle.Config.PublishedVersion != "2.1.0" || overview.Bundle.Config.ThemeMode != "light" {
+	if overview.Bundle.Config.PublishedVersion == "2.1.0" || overview.Bundle.Config.ThemeMode != "light" {
 		t.Fatalf("unexpected published config: %#v", overview.Bundle.Config)
 	}
 	if overview.Bundle.Config.Tokens["light"].Primary != "#1677ff" {
 		t.Fatalf("expected updated light primary token, got %s", overview.Bundle.Config.Tokens["light"].Primary)
 	}
-	if overview.Bundle.Config.UpdatedBy != "root" {
+	if overview.Bundle.Config.UpdatedBy != admin.ID {
 		t.Fatalf("expected updatedBy=root, got %s", overview.Bundle.Config.UpdatedBy)
 	}
-	if len(overview.Snapshots) != 1 || overview.Snapshots[0].Version != "2.1.0" {
+	if len(overview.Snapshots) != 2 || overview.Snapshots[0].Version != overview.Bundle.Version {
 		t.Fatalf("expected one snapshot for v2.1.0, got %#v", overview.Snapshots)
 	}
 	if !overview.CanRollback {
@@ -91,19 +91,19 @@ func TestSupDanceVisualEngineConfigLifecycleAndRollback(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if refreshed.Config.PublishedVersion != "2.1.0" || refreshed.Revision == bundle.Revision {
+	if refreshed.Config.PublishedVersion != overview.Bundle.Version || refreshed.Revision == bundle.Revision {
 		t.Fatalf("expected refreshed bundle for v2.1.0 with a new revision, got %#v", refreshed)
 	}
 
 	// 5. Rollback restores the previous stable snapshot content as a new publish.
-	restored, err := svc.RollbackAdminVisualEngine(admin, "2.1.0")
+	restored, err := svc.RollbackAdminVisualEngine(admin, bundle.Version)
 	if err != nil {
 		t.Fatal(err)
 	}
-	if restored.Bundle.Config.PublishedVersion != "2.1.0" {
+	if restored.Bundle.Config.PublishedVersion == overview.Bundle.Version || restored.Bundle.Config.ThemeMode != bundle.Config.ThemeMode {
 		t.Fatalf("expected rollback to publish v2.1.0 content, got %#v", restored.Bundle.Config)
 	}
-	if len(restored.Snapshots) != 2 {
+	if len(restored.Snapshots) != 3 {
 		t.Fatalf("expected rollback to append a new snapshot, got %#v", restored.Snapshots)
 	}
 
@@ -115,7 +115,7 @@ func TestSupDanceVisualEngineConfigLifecycleAndRollback(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if after.Config.PublishedVersion != "2.1.0" {
+	if after.Config.PublishedVersion != restored.Bundle.Version {
 		t.Fatalf("failed rollback mutated the active config: %#v", after.Config)
 	}
 }

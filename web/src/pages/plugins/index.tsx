@@ -1,7 +1,7 @@
 import { CollectionToolbar } from "@/components/layout/collection-toolbar";
 import { App, Button, Input, Modal, Typography } from "antd";
 import { Switch } from "@/components/ui/base/switch";
-import { AudioLines, CalendarDays, CheckCircle2, Clock3, CreditCard, ExternalLink, Film, FolderOpen, Image as ImageIcon, MessageSquareText, PlugZap, RefreshCw, Search, Settings2, ShieldCheck, SlidersHorizontal } from "lucide-react";
+import { AudioLines, CalendarDays, CheckCircle2, Clock3, CreditCard, ExternalLink, FileCode, Film, FolderOpen, Image as ImageIcon, MessageSquareText, PlugZap, RefreshCw, Search, Settings2, ShieldCheck, SlidersHorizontal } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router";
 
@@ -438,6 +438,15 @@ export default function PluginsPage() {
                                                                             onClick={() => setSettingsPluginId(plugin.manifest.id)}
                                                                         >
                                                                             设置
+                                                                        </Button>
+                                                                    ) : null}
+                                                                    {plugin.manifest.id === "supdance-html-page-manager" ? (
+                                                                        <Button
+                                                                            className="plugin-settings-button"
+                                                                            icon={<FileCode className="size-4" />}
+                                                                            onClick={() => navigate("/admin/plugins/html-pages")}
+                                                                        >
+                                                                            编辑页面
                                                                         </Button>
                                                                     ) : null}
                                                                 </div>

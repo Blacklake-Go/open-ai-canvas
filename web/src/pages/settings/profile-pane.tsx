@@ -1,6 +1,6 @@
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { App, Avatar, Button, Form, Input, Skeleton } from "antd";
-import { BadgeCheck, Crop, ImagePlus, KeyRound, Mail, RefreshCw, ShieldCheck } from "lucide-react";
+import { BadgeCheck, Crop, ImagePlus, KeyRound, Mail, RefreshCw, ShieldCheck, Sparkles } from "lucide-react";
 import { useEffect, useRef, useState, type ChangeEvent } from "react";
 import { useNavigate, useSearchParams } from "react-router";
 
@@ -17,7 +17,10 @@ import { invalidateAuthSessionCache, type LocalUser } from "@/services/api/auth"
 import { changeProfileEmail, changeProfilePassword, profileLinuxDOReauthURL, requestProfileEmailCode, selectDefaultProfileAvatar, uploadProfileAvatar, type UserProfile } from "@/services/api/profile";
 import { ApiError } from "@/services/api/request";
 import { useUserStore } from "@/stores/use-user-store";
+import { openUserProfileModal } from "@/stores/use-user-profile-modal-store";
+import { SocialAccountBindings } from "@/supdance/plugins/social-auth";
 import { profileAvatarError, profilePasswordError, profileReauthReady, profileSecondsRemaining } from "./profile-validation";
+
 import "./profile-pane.css";
 
 type PasswordFields = { currentPassword: string; newPassword: string; confirmPassword: string };
@@ -281,9 +284,14 @@ export function ProfilePane() {
                     <h2>个人信息</h2>
                     <p>管理你的头像、登录密码与邮箱。</p>
                 </div>
-                <Button icon={<RefreshCw className="size-4" />} loading={profileQuery.isFetching} disabled={!!pending} onClick={() => void profileQuery.refetch()}>
-                    刷新资料
-                </Button>
+                <div className="flex items-center gap-2">
+                    <Button icon={<Sparkles className="size-4" />} onClick={() => openUserProfileModal("profile")}>
+                        打开独立浮窗
+                    </Button>
+                    <Button icon={<RefreshCw className="size-4" />} loading={profileQuery.isFetching} disabled={!!pending} onClick={() => void profileQuery.refetch()}>
+                        刷新资料
+                    </Button>
+                </div>
             </div>
             {profileQuery.isPending ? (
                 <Skeleton active paragraph={{ rows: 7 }} />
@@ -500,6 +508,16 @@ export function ProfilePane() {
                                     </Button>
                                 </Form>
                             )}
+                        </section>
+
+                        <section className="profile-section" aria-labelledby="profile-social-title">
+                            <div className="profile-section-heading">
+                                <h3 id="profile-social-title">第三方账号绑定</h3>
+                                <p>绑定主流平台账号后支持免密快捷登录，若授权提供邮箱将自动绑定为登录邮箱。</p>
+                            </div>
+                            <div className="pt-2">
+                                <SocialAccountBindings />
+                            </div>
                         </section>
                     </div>
                 </div>

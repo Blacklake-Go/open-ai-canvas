@@ -41,13 +41,13 @@ const (
 )
 
 const (
-	defaultAppearanceBrandName = "影策"
-	defaultAppearanceBrandSlug = "open-ai-canvas"
+	defaultAppearanceBrandName = "SupDance"
+	defaultAppearanceBrandSlug = "supdance"
 	defaultAppearanceSkinID    = "classic"
 	defaultAppearanceLogoURL   = "/logo.svg"
 	defaultAppearanceVideoURL  = "https://boss-shjd.biliapi.net/updream/aniforge/video/video_bbcb00bd-650d-4249-9346-5cd21fd2484c_m1hc-u0-1pu13x-3v1s.mp4"
 	defaultAppearancePosterURL = "https://i0.hdslb.com/bfs/aitool/aniforge/image/02933f26-5f1b-49ff-a811-b7f95ee5e5b8_m1hc-u0-sau.jpg"
-	defaultAppearanceHeroTitle = "让一个故事，\n从文字走向银幕。"
+	defaultAppearanceHeroTitle = "Transform Ideas into\nCinematic Stories."
 	defaultRedeemPurchaseURL   = "" // 默认不配置购买链接，前端为空时不展示入口
 )
 
@@ -807,7 +807,7 @@ func effectiveAppearanceSEODescription(value AppearanceSetting) string {
 	if value.SEODescription != "" {
 		return value.SEODescription
 	}
-	return value.BrandName + "，面向 AI 影视与短剧创作的工作台。"
+	return value.BrandName + " is an all-in-one AI creative workspace for video, image, and multimedia storytelling."
 }
 
 func effectiveAppearanceCopyright(value AppearanceSetting) string {

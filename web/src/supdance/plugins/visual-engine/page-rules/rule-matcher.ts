@@ -21,10 +21,10 @@ export function matchPathPattern(pattern: string, pathname: string): boolean {
 }
 
 export function findMatchingPageRule(pathname: string, rules: PageRule[]): PageRule | undefined {
-    for (const rule of rules) {
-        if (matchPathPattern(rule.pathPattern, pathname)) {
-            return rule;
-        }
-    }
-    return undefined;
+    return rules
+        .filter((rule) => matchPathPattern(rule.pathPattern, pathname))
+        .sort((first, second) => {
+            const score = (rule: PageRule) => rule.pathPattern.replace(/\*$/, "").length * 2 + (rule.pathPattern.includes("*") ? 0 : 1);
+            return score(second) - score(first);
+        })[0];
 }
