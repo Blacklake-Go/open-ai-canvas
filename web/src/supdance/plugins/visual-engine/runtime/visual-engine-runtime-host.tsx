@@ -146,6 +146,7 @@ function ActiveVisualEngineRuntime({ navigation }: { navigation: NavigationSourc
                     elevations: policy.matchedRule?.elevations ?? config.elevations,
                     interactions: { ...config.interactions, performanceMode: policy.matchedRule?.performanceMode ?? config.interactions.performanceMode },
                     motion: { ...config.motion, enabled: policy.motionEnabled },
+                    modelPicker: policy.matchedRule?.modelPicker ? { ...config.modelPicker, ...policy.matchedRule.modelPicker } : config.modelPicker,
                 },
                 policy.activeThemeMode,
                 { customTokens: policy.activeTokens },

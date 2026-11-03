@@ -1,4 +1,4 @@
-import type { InteractionConfig, TransitionConfig, TypographyConfig } from "../types";
+import type { InteractionConfig, TransitionConfig, TypographyConfig, ModelPickerVisualConfig } from "../types";
 
 export const DEFAULT_TYPOGRAPHY: TypographyConfig = {
     fontFamilySans: "system",
@@ -42,4 +42,11 @@ export const FONT_FAMILIES = {
     system: '"SF Pro Text","PingFang SC","Microsoft YaHei",system-ui,sans-serif',
     inter: 'Inter,"PingFang SC","Microsoft YaHei",system-ui,sans-serif',
     mono: '"JetBrains Mono","SFMono-Regular",Consolas,monospace',
+};
+
+export const DEFAULT_MODEL_PICKER: ModelPickerVisualConfig = {
+    simplified: true,
+    hideChannelMeta: true,
+    hideTelemetry: true,
+    cleanCardLayout: true,
 };

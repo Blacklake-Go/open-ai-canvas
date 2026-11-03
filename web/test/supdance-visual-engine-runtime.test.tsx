@@ -94,3 +94,19 @@ test("real runtime mounts outside Router and cleans navigation subscriptions und
     expect(canvasThemes.light.accent.primary).toBe("#171717");
     expect(window.history.pushState).toBe(originalPush);
 });
+
+test("model picker simplified dataset adheres to hot-plug lifecycle on DOM", () => {
+    const target = dom.document.createElement("div") as unknown as HTMLElement;
+    const config = structuredClone(DEFAULT_VISUAL_ENGINE_CONFIG);
+    applyVisualEngineTheme(config, "dark", { isolationScope: target });
+    expect(target.dataset.veSimplifiedModelPicker).toBe("true");
+    expect(target.dataset.veHideChannelMeta).toBe("true");
+    expect(target.dataset.veHideTelemetry).toBe("true");
+    expect(target.dataset.veCleanCardLayout).toBe("true");
+
+    removeVisualEngineTheme({ isolationScope: target });
+    expect(target.dataset.veSimplifiedModelPicker).toBeUndefined();
+    expect(target.dataset.veHideChannelMeta).toBeUndefined();
+    expect(target.dataset.veHideTelemetry).toBeUndefined();
+    expect(target.dataset.veCleanCardLayout).toBeUndefined();
+});

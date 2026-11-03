@@ -56,6 +56,16 @@ func DefaultTypography() *TypographyConfig {
 func DefaultInteractions() *InteractionConfig {
 	return &InteractionConfig{FocusWidth: 2, FocusOffset: 3, PressedScale: 0.98, DisabledOpacity: 0.45, SwitchOnLight: "#15803d", SwitchOnDark: "#22c55e", CheckboxLight: "#18181b", CheckboxDark: "#f4f4f5", PerformanceMode: "auto"}
 }
+
+func DefaultModelPicker() *ModelPickerVisualConfig {
+	return &ModelPickerVisualConfig{
+		Simplified:      true,
+		HideChannelMeta: true,
+		HideTelemetry:   true,
+		CleanCardLayout: true,
+	}
+}
+
 func DefaultTransitions() *TransitionConfig {
 	return &TransitionConfig{Enabled: true, Preset: "fade", Duration: 150, Distance: 8, Scale: 0.98, Direction: "forward", Paths: []string{"/*"}, Components: []string{"page"}}
 }
@@ -98,6 +108,9 @@ func MigrateConfig(config Config) Config {
 	if config.Transitions == nil {
 		config.Transitions = DefaultTransitions()
 	}
+	if config.ModelPicker == nil {
+		config.ModelPicker = DefaultModelPicker()
+	}
 	if config.CustomPresets == nil {
 		config.CustomPresets = []ThemePreset{}
 	}
@@ -131,7 +144,7 @@ func validateExtendedConfig(config Config) error {
 			return fmt.Errorf("遮罩透明度无效")
 		}
 	}
-	if config.Typography == nil || config.Interactions == nil || config.Transitions == nil {
+	if config.Typography == nil || config.Interactions == nil || config.Transitions == nil || config.ModelPicker == nil {
 		return fmt.Errorf("扩展配置缺失")
 	}
 	typography := config.Typography

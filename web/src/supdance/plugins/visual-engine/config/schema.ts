@@ -81,6 +81,7 @@ function validateConfig(input: unknown): { valid: boolean; errors: string[]; con
         },
         interactions: { ...DEFAULT_VISUAL_ENGINE_CONFIG.interactions, ...raw.interactions },
         transitions: { ...DEFAULT_VISUAL_ENGINE_CONFIG.transitions, ...raw.transitions },
+        modelPicker: { ...DEFAULT_VISUAL_ENGINE_CONFIG.modelPicker, ...raw.modelPicker },
         customPresets: structuredClone(raw.customPresets ?? []),
         schemaVersion: 2,
         activePreset,
@@ -146,6 +147,12 @@ function validateConfig(input: unknown): { valid: boolean; errors: string[]; con
         transition.components.some((value) => !["page", "workspace", "generation", "overlay"].includes(value))
     )
         errors.push("动效适用范围无效");
+
+    const modelPicker = validated.modelPicker;
+    if (typeof modelPicker.simplified !== "boolean" || typeof modelPicker.hideChannelMeta !== "boolean" || typeof modelPicker.hideTelemetry !== "boolean" || typeof modelPicker.cleanCardLayout !== "boolean") {
+        errors.push("模型选择器精简配置无效");
+    }
+
     if (!Array.isArray(validated.customPresets) || validated.customPresets.length > 30) errors.push("自定义预设数量无效");
     else
         for (const preset of validated.customPresets) {

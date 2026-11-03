@@ -13,6 +13,28 @@ export function applyVisualEngineTheme(config: VisualEngineConfig, activeMode: "
     target.dataset.visualEngineTheme = config.activePreset;
     target.dataset.visualEngineMode = activeMode;
     target.dataset.visualEngineVersion = config.publishedVersion;
+
+    const mp = config.modelPicker;
+    if (mp?.simplified) {
+        target.dataset.veSimplifiedModelPicker = "true";
+    } else {
+        delete target.dataset.veSimplifiedModelPicker;
+    }
+    if (mp?.hideChannelMeta) {
+        target.dataset.veHideChannelMeta = "true";
+    } else {
+        delete target.dataset.veHideChannelMeta;
+    }
+    if (mp?.hideTelemetry) {
+        target.dataset.veHideTelemetry = "true";
+    } else {
+        delete target.dataset.veHideTelemetry;
+    }
+    if (mp?.cleanCardLayout) {
+        target.dataset.veCleanCardLayout = "true";
+    } else {
+        delete target.dataset.veCleanCardLayout;
+    }
 }
 
 export function removeVisualEngineTheme(options: { targetDocument?: Document; isolationScope?: HTMLElement } = {}): void {
@@ -24,6 +46,11 @@ export function removeVisualEngineTheme(options: { targetDocument?: Document; is
     delete target.dataset.visualEngineTheme;
     delete target.dataset.visualEngineMode;
     delete target.dataset.visualEngineVersion;
+
+    delete target.dataset.veSimplifiedModelPicker;
+    delete target.dataset.veHideChannelMeta;
+    delete target.dataset.veHideTelemetry;
+    delete target.dataset.veCleanCardLayout;
 }
 
 function applyManagedProperties(target: HTMLElement, values: Record<string, string>) {

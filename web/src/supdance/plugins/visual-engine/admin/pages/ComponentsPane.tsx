@@ -1,4 +1,5 @@
-import { Sliders, CheckSquare, Layers, Box } from "lucide-react";
+import { Sliders, CheckSquare, Layers, Box, Cpu } from "lucide-react";
+import { ToggleField } from "../components/config-fields";
 import { useVisualEngineStore } from "../../storage/visual-engine-store";
 
 export function ComponentsPane() {
@@ -44,9 +45,63 @@ export function ComponentsPane() {
                     <Layers className="h-5 w-5 text-sky-400" />
                     UI 组件光学与状态管理
                 </h2>
-                <p className="text-sm text-foreground/60 leading-relaxed mt-1">
-                    集中管理全站按钮、输入框、下拉框、卡片及浮层组件的高精几何、状态尺寸与圆角。
-                </p>
+                <p className="text-sm text-foreground/60 leading-relaxed mt-1">集中管理全站按钮、输入框、下拉框、卡片及浮层组件的高精几何、状态尺寸与圆角。</p>
+            </div>
+
+            {/* 模型选择器视觉优化设置 */}
+            <div className="rounded-xl border border-border/70 bg-card p-5 space-y-4">
+                <div className="flex items-center justify-between">
+                    <div>
+                        <h3 className="text-sm font-semibold text-foreground flex items-center gap-2">
+                            <Cpu className="h-4 w-4 text-sky-400" />
+                            模型下拉选择器精简视觉设置 (Model Picker Simplified Visuals)
+                        </h3>
+                        <p className="text-xs text-foreground/60 leading-relaxed mt-1">非侵入式前端视觉优化：左侧突出品牌，右侧参考图 2 音乐模型卡片风格呈现，保留原积分区间；隐藏渠道底层文本与调用采样统计浮窗（仅视觉隐藏，不删除任何数据与调用逻辑）。</p>
+                    </div>
+                    <button
+                        type="button"
+                        onClick={() =>
+                            updateDraft((d) => {
+                                d.modelPicker.simplified = !d.modelPicker.simplified;
+                            })
+                        }
+                        className={`px-3 py-1 text-xs font-semibold rounded-lg border transition-colors ${
+                            draftConfig.modelPicker.simplified ? "bg-emerald-500/20 text-emerald-400 border-emerald-500/30" : "bg-foreground/5 text-foreground/50 border-border"
+                        }`}
+                    >
+                        {draftConfig.modelPicker.simplified ? "已启用精简视图" : "使用原生视图"}
+                    </button>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2 border-t border-border/40">
+                    <ToggleField
+                        label="隐藏品牌栏渠道统计与平台标记（图 1 标记项）"
+                        value={draftConfig.modelPicker.hideChannelMeta}
+                        onChange={(val) =>
+                            updateDraft((d) => {
+                                d.modelPicker.hideChannelMeta = val;
+                            })
+                        }
+                    />
+                    <ToggleField
+                        label="隐藏调用采样统计浮窗与状态指示（图 3 标记项，仅隐藏不删除组件）"
+                        value={draftConfig.modelPicker.hideTelemetry}
+                        onChange={(val) =>
+                            updateDraft((d) => {
+                                d.modelPicker.hideTelemetry = val;
+                            })
+                        }
+                    />
+                    <ToggleField
+                        label="图 2 风格卡片布局与独立积分区间药丸"
+                        value={draftConfig.modelPicker.cleanCardLayout}
+                        onChange={(val) =>
+                            updateDraft((d) => {
+                                d.modelPicker.cleanCardLayout = val;
+                            })
+                        }
+                    />
+                </div>
             </div>
 
             <div className="space-y-6">
@@ -60,14 +115,12 @@ export function ComponentsPane() {
                             {group.items.map((item) => {
                                 const currentVal = comp[item.key as keyof typeof comp];
                                 return (
-                                    <div
-                                        key={item.key}
-                                        className="p-3.5 rounded-lg border border-border/60 bg-background/50 space-y-2"
-                                    >
+                                    <div key={item.key} className="p-3.5 rounded-lg border border-border/60 bg-background/50 space-y-2">
                                         <div className="flex items-center justify-between text-xs">
                                             <span className="font-medium text-foreground">{item.label}</span>
                                             <span className="font-mono text-sky-400 font-bold">
-                                                {currentVal}{item.unit}
+                                                {currentVal}
+                                                {item.unit}
                                             </span>
                                         </div>
                                         <div className="flex items-center gap-3">

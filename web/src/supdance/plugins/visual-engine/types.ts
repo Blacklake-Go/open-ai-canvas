@@ -175,6 +175,7 @@ export type PageRule = {
     overlays?: OverlaysConfig;
     elevations?: Record<ElevationLevel, ElevationToken>;
     performanceMode?: InteractionConfig["performanceMode"];
+    modelPicker?: Partial<ModelPickerVisualConfig>;
     id: string;
     name: string;
     pathPattern: string; // e.g. "/admin/*", "/create/*", "/auth/*"
@@ -209,6 +210,7 @@ export type VisualEngineConfig = {
     typography: TypographyConfig;
     interactions: InteractionConfig;
     transitions: TransitionConfig;
+    modelPicker: ModelPickerVisualConfig;
     customPresets: ThemePreset[];
     schemaVersion: 2;
     activePreset: string;
@@ -235,6 +237,14 @@ export type TypographyConfig = {
     spacingUnit: number;
     scales: Record<"label" | "caption" | "ui" | "body" | "heading" | "title" | "display", TypeScale>;
 };
+
+export type ModelPickerVisualConfig = {
+    simplified: boolean; // 模型下拉精简视图总开关（默认开启）
+    hideChannelMeta: boolean; // 隐藏左侧品牌栏渠道数与平台服务标记（图 1 标记项）
+    hideTelemetry: boolean; // 隐藏调用采样统计浮窗与状态指示（图 3 标记项，仅隐藏不删除底层 DOM/组件）
+    cleanCardLayout: boolean; // 启用卡片式精简布局与独立积分药丸（参考图 2 样式，保留原积分区间）
+};
+
 export type InteractionConfig = {
     focusWidth: number;
     focusOffset: number;

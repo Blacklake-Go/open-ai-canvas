@@ -88,6 +88,19 @@ describe("visual engine production contracts", () => {
         expect(drawer.mask.backgroundColor).toContain("0.5");
         expect(modal.container.boxShadow).toBe(defaults.elevations.E3.shadowDark);
     });
+
+    it("manages simplified model picker configuration and schema validation", () => {
+        expect(defaults.modelPicker.simplified).toBe(true);
+        expect(defaults.modelPicker.hideChannelMeta).toBe(true);
+        expect(defaults.modelPicker.hideTelemetry).toBe(true);
+        expect(defaults.modelPicker.cleanCardLayout).toBe(true);
+
+        const invalid = structuredClone(defaults);
+        // @ts-expect-error test invalid type
+        invalid.modelPicker.simplified = "yes";
+        expect(validateVisualEngineConfig(invalid).valid).toBe(false);
+    });
+
     for (const preset of BUILTIN_THEME_PRESETS)
         for (const mode of ["light", "dark"] as const)
             it(preset.id + " " + mode + " default contrast", () => {

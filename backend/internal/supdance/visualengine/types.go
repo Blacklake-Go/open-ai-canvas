@@ -66,6 +66,13 @@ type ElevationToken struct {
 	BlurRadius  int    `json:"blurRadius"`
 }
 
+type ModelPickerVisualConfig struct {
+	Simplified      bool `json:"simplified"`
+	HideChannelMeta bool `json:"hideChannelMeta"`
+	HideTelemetry   bool `json:"hideTelemetry"`
+	CleanCardLayout bool `json:"cleanCardLayout"`
+}
+
 type OverlaysConfig struct {
 	ImageGradientOpacity         *float64 `json:"imageGradientOpacity,omitempty"`
 	ScrollEdgeOpacity            *float64 `json:"scrollEdgeOpacity,omitempty"`
@@ -119,6 +126,7 @@ type PageRule struct {
 	Elevations              map[string]ElevationToken `json:"elevations,omitempty"`
 	PerformanceMode         string                    `json:"performanceMode,omitempty"`
 	CustomTokens            map[string]string         `json:"customTokens,omitempty"`
+	ModelPicker             *ModelPickerVisualConfig  `json:"modelPicker,omitempty"`
 	ID                      string                    `json:"id"`
 	Name                    string                    `json:"name"`
 	PathPattern             string                    `json:"pathPattern"`
@@ -132,6 +140,7 @@ type Config struct {
 	Typography        *TypographyConfig         `json:"typography"`
 	Interactions      *InteractionConfig        `json:"interactions"`
 	Transitions       *TransitionConfig         `json:"transitions"`
+	ModelPicker       *ModelPickerVisualConfig  `json:"modelPicker"`
 	CustomPresets     []ThemePreset             `json:"customPresets"`
 	SchemaVersion     int                       `json:"schemaVersion"`
 	ActivePreset      string                    `json:"activePreset"`
