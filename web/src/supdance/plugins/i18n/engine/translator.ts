@@ -24,6 +24,17 @@ const BUILTIN_SOURCE_BY_KEY = new Map<string, string>(BUILTIN_SUPDANCE_I18N_ENTR
 const PLACEHOLDER_TOKEN_REGEX = /\{([a-zA-Z0-9_]+)\}/g;
 const HAN_CHARACTER_REGEX = /[\u4e00-\u9fff]/;
 
+/** 动态规则里出现的封闭名词，按语种给出对应说法；不在表内的原文保持原样。 */
+const MODE_NOUN_BY_LOCALE: Record<string, Record<string, string>> = {
+    "en-US": { 图片: "image", 视频: "video", 音乐: "music", 文本: "text", 音频: "audio", 全部: "All" },
+    "zh-TW": { 图片: "圖片", 视频: "影片", 音乐: "音樂", 文本: "文字", 音频: "音訊", 全部: "全部" },
+    "ja-JP": { 图片: "画像", 视频: "動画", 音乐: "音楽", 文本: "テキスト", 音频: "音声", 全部: "すべて" },
+    "ko-KR": { 图片: "이미지", 视频: "비디오", 音乐: "음악", 文本: "텍스트", 音频: "오디오", 全部: "전체" },
+    "es-ES": { 图片: "imagen", 视频: "vídeo", 音乐: "música", 文本: "texto", 音频: "audio", 全部: "Todos" },
+};
+
+const modeNoun = (locale: string, zh: string) => MODE_NOUN_BY_LOCALE[locale]?.[zh] ?? zh;
+
 const DYNAMIC_PATTERN_RULES: readonly DynamicPatternRule[] = [
     {
         regex: /^共\s*(\d+)\s*条$/,
@@ -177,6 +188,39 @@ const DYNAMIC_PATTERN_RULES: readonly DynamicPatternRule[] = [
             "ja-JP": () => "たった今",
             "ko-KR": () => "방금 전",
             "es-ES": () => "Justo ahora",
+        },
+    },
+    {
+        regex: /^选择(图片|视频|音乐|文本|音频)模型$/,
+        format: {
+            "zh-CN": (mode) => `选择${mode}模型`,
+            "en-US": (mode) => `Select ${modeNoun("en-US", mode)} model`,
+            "zh-TW": (mode) => `選擇${modeNoun("zh-TW", mode)}模型`,
+            "ja-JP": (mode) => `${modeNoun("ja-JP", mode)}モデルを選択`,
+            "ko-KR": (mode) => `${modeNoun("ko-KR", mode)} 모델 선택`,
+            "es-ES": (mode) => `Selecciona modelo de ${modeNoun("es-ES", mode)}`,
+        },
+    },
+    {
+        regex: /^(全部|图片|视频|音乐|文本)\s+([\d,.]+)\s*条$/,
+        format: {
+            "zh-CN": (mode, count) => `${mode} ${count} 条`,
+            "en-US": (mode, count) => `${modeNoun("en-US", mode)} ${count}`,
+            "zh-TW": (mode, count) => `${modeNoun("zh-TW", mode)} ${count} 條`,
+            "ja-JP": (mode, count) => `${modeNoun("ja-JP", mode)} ${count} 件`,
+            "ko-KR": (mode, count) => `${modeNoun("ko-KR", mode)} ${count}개`,
+            "es-ES": (mode, count) => `${modeNoun("es-ES", mode)} ${count}`,
+        },
+    },
+    {
+        regex: /^已达到当前模型的参考内容上限（(\d+) 个）$/,
+        format: {
+            "zh-CN": (max) => `已达到当前模型的参考内容上限（${max} 个）`,
+            "en-US": (max) => `Reached this model's reference limit (${max})`,
+            "zh-TW": (max) => `已達到目前模型的參考內容上限（${max} 個）`,
+            "ja-JP": (max) => `このモデルの参照上限に達しました（${max} 件）`,
+            "ko-KR": (max) => `이 모델의 참고 자료 한도에 도달했습니다(${max}개)`,
+            "es-ES": (max) => `Se alcanzó el límite de referencias de este modelo (${max})`,
         },
     },
 ];

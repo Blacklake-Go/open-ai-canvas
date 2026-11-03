@@ -13,7 +13,8 @@ import { useUserStore } from "@/stores/use-user-store";
 function MetaRow({ label, children }: { label: string; children: React.ReactNode }) {
     return (
         <div className="flex min-w-0 items-baseline gap-3 text-xs leading-5">
-            <span className="w-12 shrink-0 text-foreground/45">{label}</span>
+            {/* 标签列要容纳六语种里最长的说法（如“Página original”“원본 페이지”），48px 会把词拆断行。 */}
+            <span className="w-24 shrink-0 text-foreground/45">{label}</span>
             <span className="min-w-0 flex-1 text-foreground/78">{children}</span>
         </div>
     );

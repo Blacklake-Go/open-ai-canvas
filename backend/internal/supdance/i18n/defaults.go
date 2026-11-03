@@ -103,7 +103,7 @@ func entry(key, ns, zhCN, enUS, zhTW, jaJP, koKR, esES, desc string) Entry {
 // BuiltinEntries 由 web/scripts/i18n-sync-backend.mjs 从前端词典生成，不要手工编辑词条体。
 func BuiltinEntries() []Entry {
 	return []Entry{
-		// ==================== common: 通用与基础控件 (123) ====================
+		// ==================== common: 通用与基础控件 (124) ====================
 		entry("common.confirm", "common", "确认", "Confirm", "確認", "確認", "확인", "Confirmar", "通用确认按钮"),
 		entry("common.cancel", "common", "取消", "Cancel", "取消", "キャンセル", "취소", "Cancelar", "通用取消按钮"),
 		entry("common.save", "common", "保存", "Save", "儲存", "保存", "저장", "Guardar", "通用保存按钮"),
@@ -227,6 +227,7 @@ func BuiltinEntries() []Entry {
 		entry("common.email", "common", "邮箱", "Email", "電子郵件", "メール", "이메일", "Correo electrónico", "电子邮箱"),
 		entry("common.time", "common", "时间", "Time", "時間", "時間", "시간", "Hora", "时间字段"),
 		entry("common.chinese", "common", "中文", "Chinese", "中文", "中国語", "중국어", "Chino", "中文语言选项"),
+		entry("common.music", "common", "音乐", "Music", "音樂", "音楽", "음악", "Música", "通用：创作类型「音乐」标签"),
 		// ==================== nav: 顶栏与侧栏导航 (94) ====================
 		entry("nav.workspace", "nav", "创作工作台", "Creative Studio", "創作工作台", "制作スタジオ", "크리에이티브 스튜디오", "Estudio Creativo", "侧栏品牌副标题"),
 		entry("nav.create", "nav", "创作", "Create", "創作", "制作", "창작", "Crear", "主导航：创作工作台"),
@@ -405,13 +406,32 @@ func BuiltinEntries() []Entry {
 		entry("auth.onboarding.terms_service", "auth", "《用户服务协议》", "Terms of Service", "《用戶服務協議》", "利用規約", "이용약관", "Términos de servicio", "服务协议链接文案"),
 		entry("auth.onboarding.terms_and", "auth", "与", "and", "與", "および", "및", "y la", "协议链接之间的连接词"),
 		entry("auth.onboarding.terms_privacy", "auth", "《隐私政策》", "Privacy Policy", "《隱私政策》", "プライバシーポリシー", "개인정보 처리방침", "Política de privacidad", "隐私政策链接文案"),
-		// ==================== create: 首页创作工作台 (5) ====================
+		// ==================== create: 首页创作工作台 (24) ====================
 		entry("create.recent_canvases", "create", "最近画布", "Recent Canvases", "最近畫布", "最近のキャンバス", "최근 캔버스", "Lienzos recientes", "创作页：最近画布"),
 		entry("create.new_canvas", "create", "新建画布", "New Canvas", "新建畫布", "新規キャンバス", "새 캔버스", "Nuevo lienzo", "创作页：新建画布"),
 		entry("create.inspiration", "create", "灵感广场", "Inspiration Gallery", "靈感廣場", "インスピレーション", "영감 갤러리", "Galería de Inspiración", "创作页：灵感广场"),
 		entry("create.send", "create", "发送", "Send", "發送", "送信", "전송", "Enviar", "发送提示词"),
 		entry("create.generate", "create", "开始生成", "Generate", "開始生成", "生成開始", "생성 시작", "Generar", "开始生成按钮"),
-		// ==================== canvas: 自由画布与节点 (131) ====================
+		entry("create.hero_chat_title", "create", "和{brand}聊聊创作想法", "Talk through your ideas with {brand}", "和{brand}聊聊創作想法", "{brand}と創作アイデアを語り合う", "{brand}와 창작 아이디어를 이야기하세요", "Habla de tus ideas con {brand}", "创作页：主标题（含 {brand} 插值）"),
+		entry("create.suggest_first_shot_title", "create", "生成第一个镜头", "Generate your first shot", "生成第一個鏡頭", "最初のカットを生成", "첫 컷 생성", "Genera tu primer plano", "创作页快捷推荐卡：标题"),
+		entry("create.suggest_first_shot_hint", "create", "描述画面、镜头运动与光线", "Describe the frame, camera move and lighting", "描述畫面、鏡頭運動與光線", "画面・カメラワーク・ライティングを説明", "화면, 카메라 무빙, 빛을 설명하세요", "Describe la escena, el movimiento de cámara y la luz", "创作页快捷推荐卡：说明"),
+		entry("create.suggest_reference_title", "create", "从参考图开始", "Start from a reference image", "從參考圖開始", "参考画像から始める", "참고 이미지로 시작", "Empieza desde una imagen de referencia", "创作页快捷推荐卡：标题"),
+		entry("create.suggest_reference_hint", "create", "上传风格图，生成同风格画面", "Upload a style image and generate matching frames", "上傳風格圖，生成同風格畫面", "スタイル画像をアップロードして同調の画面を生成", "스타일 이미지를 올려 같은 결의 화면을 생성", "Sube una imagen de estilo y genera planos con el mismo estilo", "创作页快捷推荐卡：说明"),
+		entry("create.suggest_story_title", "create", "续写故事", "Continue the story", "續寫故事", "ストーリーを続行", "이야기 이어쓰기", "Continuar la historia", "创作页快捷推荐卡：标题"),
+		entry("create.suggest_story_hint", "create", "和 AI 讨论剧情、角色与对白", "Discuss plot, characters and dialogue with AI", "和 AI 討論劇情、角色與對白", "AI と展開・キャラクター・台詞を相談", "AI와 전개, 캐릭터, 대사를 논의", "Debate trama, personajes y diálogos con la IA", "创作页快捷推荐卡：说明"),
+		entry("create.suggest_skill_title", "create", "引用技能增强", "Boost with a skill", "引用技能增強", "スキル参照で強化", "스킬 참조로 강화", "Mejóralo con una habilidad", "创作页快捷推荐卡：标题"),
+		entry("create.suggest_skill_hint", "create", "@技能 调用分镜、配音等专业能力", "Use @skill to call storyboarding, voiceover and other pro abilities", "@技能 呼叫分鏡、配音等專業能力", "@スキル で絵コンテ・吹き替えなどの専門機能を呼び出し", "@스킬로 스토리보드, 더빙 등 전문 기능을 호출", "Usa @habilidad para invocar guion gráfico, doblaje y otras funciones profesionales", "创作页快捷推荐卡：说明"),
+		entry("create.create_canvas", "create", "创建画布", "Create canvas", "建立畫布", "キャンバスを作成", "캔버스 만들기", "Crear lienzo", "最近画布区：新建卡片标题"),
+		entry("create.creating_canvas", "create", "正在创建…", "Creating…", "正在建立…", "作成中…", "생성 중…", "Creando…", "最近画布区：创建中状态"),
+		entry("create.recent_empty_guest", "create", "登录后，最近的画布会显示在这里。", "Once you sign in, your recent canvases appear here.", "登入後，最近的畫布會顯示在這裡。", "ログインすると、最近のキャンバスがここに表示されます。", "로그인하면 최근 캔버스가 여기에 표시됩니다.", "Cuando inicies sesión, tus lienzos recientes aparecerán aquí.", "最近画布区：未登录空态"),
+		entry("create.recent_empty_user", "create", "还没有画布，把第一个想法留在这里。", "No canvases yet — leave your first idea here.", "還沒有畫布，把第一個想法留在這裡。", "キャンバスはまだありません。最初のアイデアをここに。", "아직 캔버스가 없습니다. 첫 아이디어를 여기에 남겨 보세요.", "Aún no hay lienzos: deja aquí tu primera idea.", "最近画布区：已登录空态"),
+		entry("create.composer_placeholder_empty", "create", "输入你的镜头、画面或故事。也可以添加参考图开始创作", "Describe your shot, frame or story. You can also add a reference image to start.", "輸入你的鏡頭、畫面或故事。也可以新增參考圖開始創作", "カット・画面・ストーリーを入力。参考画像を追加して始めることもできます", "컷, 화면, 이야기를 입력하세요. 참고 이미지를 추가해 시작할 수도 있습니다", "Describe tu plano, escena o historia. También puedes añadir una imagen de referencia para empezar.", "创作输入框：空态占位符"),
+		entry("create.add_more_references", "create", "添加更多参考内容", "Add more references", "新增更多參考內容", "参照をさらに追加", "참고 자료 더 추가", "Añadir más referencias", "参考内容添加按钮无障碍标签"),
+		entry("create.replacing_reference", "create", "正在替换参考图", "Replacing reference image", "正在取代參考圖", "参考画像を差し替え中", "참고 이미지를 교체 중", "Reemplazando la imagen de referencia", "参考内容按钮：替换中状态"),
+		entry("create.busy_add_reference_blocked", "create", "生成中暂不能添加参考内容", "Cannot add references while generating", "生成中暫無法新增參考內容", "生成中は参照を追加できません", "생성 중에는 참고 자료를 추가할 수 없습니다", "No se pueden añadir referencias durante la generación", "参考内容按钮：生成中禁用提示"),
+		entry("create.generate_after_prompt", "create", "输入创作想法后即可生成", "Enter an idea to start generating", "輸入創作想法後即可生成", "アイデアを入力すると生成できます", "아이디어를 입력하면 생성할 수 있습니다", "Introduce una idea para empezar a generar", "生成按钮：禁用态提示"),
+		entry("create.voice_live_chat", "create", "实时对话", "Live voice chat", "即時對話", "リアルタイム会話", "실시간 대화", "Chat de voz en directo", "语音输入按钮无障碍标签"),
+		// ==================== canvas: 自由画布与节点 (132) ====================
 		entry("canvas.my_canvases", "canvas", "我的画布", "My Canvases", "我的畫布", "マイキャンバス", "내 캔버스", "Mis lienzos", "画布列表标题"),
 		entry("canvas.create_project", "canvas", "新建画布项目", "New Canvas Project", "新建畫布專案", "新規キャンバスプロジェクト", "새 캔버스 프로젝트", "Nuevo proyecto de lienzo", "新建画布项目"),
 		entry("canvas.switch_to_assets", "canvas", "切换到资产视图", "Switch to Assets View", "切換到資產視圖", "アセット表示に切り替え", "자산 보기로 전환", "Cambiar a vista de activos", "画布顶栏菜单"),
@@ -543,6 +563,7 @@ func BuiltinEntries() []Entry {
 		entry("canvas.disconnect", "canvas", "断开连接", "Disconnect", "中斷連線", "切断", "연결 끊기", "Desconectar", "断开Agent连接"),
 		entry("canvas.connector", "canvas", "连接器", "Connector", "連接器", "コネクタ", "커넥터", "Conector", "底部Agent连接器"),
 		entry("canvas.collapse_connector", "canvas", "收起连接器", "Collapse Connector", "收起連接器", "コネクタを折りたたむ", "커넥터 접기", "Plegar conector", "收起底部连接器"),
+		entry("canvas.node_text", "canvas", "文本生成", "Text generation", "文字生成", "テキスト生成", "텍스트 생성", "Generación de texto", "画布节点类型：文本"),
 		// ==================== projects: 短剧制作工作台 (24) ====================
 		entry("projects.title", "projects", "短剧项目", "Short Drama Projects", "短劇專案", "ショートドラマプロジェクト", "숏폼 드라마 프로젝트", "Proyectos de Microdrama", "短剧项目列表标题"),
 		entry("projects.create", "projects", "新建短剧", "New Short Drama", "新建短劇", "新規ショートドラマ", "새 숏폼 드라마", "Nuevo Microdrama", "新建短剧按钮"),
@@ -1814,7 +1835,7 @@ func BuiltinEntries() []Entry {
 		entry("music.test_connection", "music", "测试连接", "Test Connection", "測試連線", "接続テスト", "연결 테스트", "Probar conexión", "测试连接按钮"),
 		entry("music.save_config", "music", "保存配置", "Save Configuration", "儲存設定", "設定を保存", "설정 저장", "Guardar configuración", "保存配置按钮"),
 		entry("music.submitting", "music", "提交中...", "Submitting...", "提交中...", "送信中...", "제출 중...", "Enviando...", "提交中提示"),
-		// ==================== inspiration: 灵感大厅与创意目录 (59) ====================
+		// ==================== inspiration: 灵感大厅与创意目录 (61) ====================
 		entry("inspiration.fashion_editorial", "inspiration", "时尚编辑", "Fashion Editorial", "時尚編輯", "ファッションエディトリアル", "패션 에디토리얼", "Editorial de moda", "灵感分类：时尚编辑"),
 		entry("inspiration.hall_title", "inspiration", "灵感大厅", "Inspiration Hall", "靈感大廳", "インスピレーションホール", "영감 홀", "Sala de inspiración", "灵感大厅页面主标题"),
 		entry("inspiration.field_source", "inspiration", "来源", "Source", "來源", "出典", "출처", "Fuente", "灵感详情：来源字段标签"),
@@ -1874,5 +1895,7 @@ func BuiltinEntries() []Entry {
 		entry("inspiration.editor_prompt_zh_hint", "inspiration", "填了以后，卡片和「用这个创意创作」会优先用中文这版", "If filled, cards and “Create with this idea” will prefer the Chinese version", "填寫後，卡片和「用這個創意創作」會優先使用中文版", "入力するとカードと「このアイデアで作る」は中国語版を優先します", "입력하면 카드와 '이 아이디어로 창작'에서 중국어 버전을 우선 사용합니다", "Si lo rellenas, las tarjetas y «Crear con esta idea» usarán primero la versión en chino", "灵感编辑器：中文正文说明"),
 		entry("inspiration.editor_prompt_zh_placeholder", "inspiration", "中文改写版，留空则只用上面的正文", "Chinese rewrite; leave blank to use only the body above", "中文改寫版，留空則只用上面的正文", "中国語書き換え版。空欄なら上の本文のみ使用", "중국어 수정본. 비워 두면 위 본문만 사용합니다", "Reescritura en chino; déjalo en blanco para usar solo el cuerpo de arriba", "灵感编辑器：中文正文占位符"),
 		entry("inspiration.icon_only_button", "inspiration", "纯图标按钮", "Icon-only button", "純圖示按鈕", "アイコンのみのボタン", "아이콘 전용 버튼", "Botón solo icono", "首页灵感画廊：纯图标按钮无障碍标签"),
+		entry("inspiration.hall_subtitle", "inspiration", "点开查看完整提示词，用喜欢的创意继续创作。", "Open a card to read the full prompt and keep creating with ideas you like.", "點開檢視完整提示詞，用喜歡的創意繼續創作。", "カードを開いて完全なプロンプトを確認し、好きなアイデアで続行できます。", "카드를 열어 전체 프롬프트를 확인하고 마음에 드는 크리에이션으로 계속 창작하세요.", "Abre una tarjeta para ver el prompt completo y seguir creando con las ideas que te gusten.", "灵感大厅：副标题"),
+		entry("inspiration.more_filters", "inspiration", "更多筛选", "More filters", "更多篩選", "その他の絞り込み", "추가 필터", "Más filtros", "灵感大厅：进阶筛选按钮"),
 	}
 }
