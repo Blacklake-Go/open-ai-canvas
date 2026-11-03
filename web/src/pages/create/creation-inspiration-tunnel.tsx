@@ -18,8 +18,10 @@ import { ArrowUp, ChevronLeft, ChevronRight } from "lucide-react";
 import { useReducedMotion } from "motion/react";
 
 import { catalogIdOf, type CreationInspiration } from "@/lib/inspirations/catalog";
+import { useLocalizedInspirations } from "@/lib/inspirations/inspiration-i18n";
 import { fillablePrompt } from "@/lib/inspirations/resolve";
 import { loadGalleryPool } from "@/services/inspiration-catalog";
+import { useI18n } from "@/supdance/plugins/i18n";
 import type { CreationMode } from "./creation-types";
 import { createGalleryWheelGesture } from "./creation-gallery-gesture";
 import "./creation-inspiration-tunnel.css";
@@ -97,6 +99,7 @@ function pickBatch(pool: CreationInspiration[], size: number, mode: CreationMode
  * 当前展示的是哪一张由下面那条 aria-live 文本播报。
  */
 export function CreationInspirationTunnel({ mode, onStartPrompt }: { mode: CreationMode; onStartPrompt: (mode: CreationMode, prompt: string) => void }) {
+    const { t, locale } = useI18n();
     /**
      * 池子来自 gallery-pool.json，是单独一份静态 JSON，不打包。
      * 它没到之前整条画廊不渲染——先摆一小批再换成大池子，用户会看到画面整排重排一次。
@@ -111,6 +114,8 @@ export function CreationInspirationTunnel({ mode, onStartPrompt }: { mode: Creat
     const stageRef = useRef<HTMLDivElement>(null);
     const activeRef = useRef(0);
     activeRef.current = active;
+
+    const localizedShots = useLocalizedInspirations(shots, locale);
 
     const modePool = useMemo(() => pool.filter((item) => item.mode === mode), [pool, mode]);
     /** 轮换时读最新的池子，但不把池子写进轮播的依赖——否则池子一到就重置计时。 */
@@ -199,14 +204,14 @@ export function CreationInspirationTunnel({ mode, onStartPrompt }: { mode: Creat
         return () => node.removeEventListener("wheel", handleWheel);
     }, [step, shots.length]);
 
-    const current = shots[active];
+    const current = localizedShots[active];
 
     if (!shots.length) return null;
 
     return (
         <div className="creation-inspiration-tunnel" onPointerEnter={() => setPaused(true)} onPointerLeave={() => setPaused(false)} onFocusCapture={() => setPaused(true)} onBlurCapture={() => setPaused(false)}>
             <div ref={stageRef} className="creation-gallery-stage" aria-hidden="true">
-                {shots.map((inspiration, index) => {
+                {localizedShots.map((inspiration, index) => {
                     const id = catalogIdOf(inspiration);
                     // 相对当前卡片的距离，绕成最短路径，形成首尾相接的队列。
                     const half = Math.floor(shots.length / 2);
@@ -247,7 +252,7 @@ export function CreationInspirationTunnel({ mode, onStartPrompt }: { mode: Creat
                             <span className="creation-tunnel-card-info">
                                 <span className="creation-tunnel-card-cta">
                                     <ArrowUp aria-hidden="true" />
-                                    使用这个创意
+                                    {t("create.use_this_idea", undefined, "使用这个创意")}
                                 </span>
                                 <span className="creation-tunnel-card-title">{inspiration.title}</span>
                                 <span className="creation-tunnel-card-desc">{inspiration.description}</span>
@@ -261,12 +266,12 @@ export function CreationInspirationTunnel({ mode, onStartPrompt }: { mode: Creat
                 `button:has(> svg):not(:has(> span)):not(:disabled):hover` 会认领"纯图标按钮"，
                 用 !important 改写 color / background 并把 transform 顶成 translateY(-1px)，
                 按钮会当场掉半个身位。带 span 的按钮不在那条规则的射程内。 */}
-            <button type="button" className="creation-gallery-arrow is-prev" aria-label="上一张灵感" onClick={() => step(-1)}>
+            <button type="button" className="creation-gallery-arrow is-prev" aria-label={t("create.gallery_prev_aria", undefined, "上一张灵感")} onClick={() => step(-1)}>
                 <span className="creation-gallery-arrow-icon">
                     <ChevronLeft aria-hidden="true" />
                 </span>
             </button>
-            <button type="button" className="creation-gallery-arrow is-next" aria-label="下一张灵感" onClick={() => step(1)}>
+            <button type="button" className="creation-gallery-arrow is-next" aria-label={t("create.gallery_next_aria", undefined, "下一张灵感")} onClick={() => step(1)}>
                 <span className="creation-gallery-arrow-icon">
                     <ChevronRight aria-hidden="true" />
                 </span>

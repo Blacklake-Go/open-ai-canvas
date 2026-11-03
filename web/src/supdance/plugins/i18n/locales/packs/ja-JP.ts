@@ -1778,6 +1778,23 @@ const pack: Record<string, string> = {
     "inspiration.hall_subtitle": "カードを開いて完全なプロンプトを確認し、好きなアイデアで続行できます。",
     "inspiration.more_filters": "その他の絞り込み",
     "inspiration.community_picks_ccby": "コミュニティ厳選 · CC BY 4.0",
+    "common.category": "カテゴリー",
+    "create.use_this_idea": "このアイデアを使う",
+    "create.gallery_prev_aria": "前のインスピレーション",
+    "create.gallery_next_aria": "次のインスピレーション",
+    "inspiration.source_original_prompts": "オリジナルプロンプト",
+    "inspiration.source_chatgpt_prompts": "オープンソース翻案 · CC0",
+    "inspiration.source_haohaoxue": "Haohaoxue AI · 画像プロンプト",
+    "inspiration.source_youmind": "YouMind プロンプトライブラリ · CC BY 4.0",
+    "common.image": "画像",
+    "common.video": "動画",
+    "inspiration.browse_scope": "表示範囲",
+    "inspiration.all_sources": "すべてのソース",
+    "inspiration.all_categories": "すべてのカテゴリー",
+    "common.reset_filters": "フィルターをリセット",
+    "common.default_sort": "デフォルト順",
+    "common.sort_by_title": "タイトル順",
+    "inspiration.view_aria": "インスピレーションを見る",
 };
 
 export default pack;

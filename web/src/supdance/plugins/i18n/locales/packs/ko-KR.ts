@@ -1778,6 +1778,23 @@ const pack: Record<string, string> = {
     "inspiration.hall_subtitle": "카드를 열어 전체 프롬프트를 확인하고 마음에 드는 크리에이션으로 계속 창작하세요.",
     "inspiration.more_filters": "추가 필터",
     "inspiration.community_picks_ccby": "커뮤니티 추천 · CC BY 4.0",
+    "common.category": "분류",
+    "create.use_this_idea": "이 아이디어 사용",
+    "create.gallery_prev_aria": "이전 영감",
+    "create.gallery_next_aria": "다음 영감",
+    "inspiration.source_original_prompts": "오리지널 프롬프트",
+    "inspiration.source_chatgpt_prompts": "오픈소스 개작 · CC0",
+    "inspiration.source_haohaoxue": "하오하오쉐 AI · 이미지 프롬프트",
+    "inspiration.source_youmind": "YouMind 프롬프트 라이브러리 · CC BY 4.0",
+    "common.image": "이미지",
+    "common.video": "비디오",
+    "inspiration.browse_scope": "탐색 범위",
+    "inspiration.all_sources": "모든 출처",
+    "inspiration.all_categories": "모든 분류",
+    "common.reset_filters": "필터 재설정",
+    "common.default_sort": "기본 정렬",
+    "common.sort_by_title": "제목순",
+    "inspiration.view_aria": "영감 보기",
 };
 
 export default pack;

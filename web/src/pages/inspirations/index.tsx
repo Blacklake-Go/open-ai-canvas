@@ -10,6 +10,7 @@ import { Tooltip } from "@/components/ui/base/tooltip";
 import { useDebouncedValue } from "@/hooks/use-debounced-value";
 import { catalogIdOf, inspirationSourceOf, inspirationSources, type CreationInspiration, type InspirationSourceId } from "@/lib/inspirations/catalog";
 import { resolveInspirationCategoryLabel } from "@/lib/inspirations/category-i18n";
+import { useLocalizedInspirations } from "@/lib/inspirations/inspiration-i18n";
 import { isCustomInspiration, resolveInspirations } from "@/lib/inspirations/resolve";
 import { loadInspirationCatalog, type InspirationCatalog } from "@/services/inspiration-catalog";
 import { useI18n } from "@/supdance/plugins/i18n";
@@ -55,7 +56,7 @@ function downloadText(text: string, fileName: string) {
 export function InspirationHall({ onUse }: { onUse: (item: CreationInspiration) => void }) {
     const { message, modal } = App.useApp();
     const inspirationSourcesVisible = useUserStore((state) => state.features.inspirationSourcesVisible);
-    const { locale } = useI18n();
+    const { t, locale } = useI18n();
 
     const custom = useInspirationStore((state) => state.custom);
     const overrides = useInspirationStore((state) => state.overrides);
@@ -137,14 +138,16 @@ export function InspirationHall({ onUse }: { onUse: (item: CreationInspiration) 
     }, [source, modeFilter, category, view, sort, debouncedSearch, pageSize]);
 
     const overlay = useMemo(() => ({ custom, overrides, hidden }), [custom, hidden, overrides]);
-    const resolved = useMemo(() => (catalog ? resolveInspirations(catalog.entries, overlay) : []), [catalog, overlay]);
+    const rawResolved = useMemo(() => (catalog ? resolveInspirations(catalog.entries, overlay) : []), [catalog, overlay]);
+    const resolved = useLocalizedInspirations(rawResolved, locale);
 
     /** 隐藏态在合成结果里已经滤掉了，单独还原一份给「已隐藏」视图。 */
-    const hiddenItems = useMemo(() => {
+    const rawHiddenItems = useMemo(() => {
         if (!catalog) return [];
         const hiddenSet = new Set(hidden);
         return catalog.entries.filter((item) => hiddenSet.has(catalogIdOf(item)));
     }, [catalog, hidden]);
+    const hiddenItems = useLocalizedInspirations(rawHiddenItems, locale);
 
     const categoryLabels = useMemo(() => {
         const map = new Map<string, Map<string, string>>();
@@ -215,11 +218,11 @@ export function InspirationHall({ onUse }: { onUse: (item: CreationInspiration) 
         () =>
             (
                 [
-                    { label: "全部", value: "all" },
-                    { label: "图片", value: "image" },
-                    { label: "视频", value: "video" },
-                    { label: "音乐", value: "music" },
-                    { label: "文本", value: "text" },
+                    { label: t("common.all", undefined, "全部"), value: "all" },
+                    { label: t("common.image", undefined, "图片"), value: "image" },
+                    { label: t("common.video", undefined, "视频"), value: "video" },
+                    { label: t("common.music", undefined, "音乐"), value: "music" },
+                    { label: t("common.text", undefined, "文本"), value: "text" },
                 ] as const
             ).map((option) => ({
                 value: option.value,
@@ -231,7 +234,24 @@ export function InspirationHall({ onUse }: { onUse: (item: CreationInspiration) 
                 ),
                 title: catalog ? `${option.label} ${modeCounts[option.value]} 条` : option.label,
             })),
-        [catalog, modeCounts],
+        [catalog, modeCounts, t],
+    );
+
+    const viewOptions = useMemo(
+        () => [
+            { label: t("common.all", undefined, "全部"), value: "all" as ViewFilter },
+            { label: t("skills.tab_favorites", undefined, "收藏"), value: "favorites" as ViewFilter },
+            { label: t("inspiration.hidden_badge", undefined, "已隐藏"), value: "hidden" as ViewFilter },
+        ],
+        [t],
+    );
+
+    const sortOptions = useMemo(
+        () => [
+            { label: t("common.default_sort", undefined, "默认顺序"), value: "default" as SortKey },
+            { label: t("common.sort_by_title", undefined, "按标题"), value: "title" as SortKey },
+        ],
+        [t],
     );
 
     const visible = useMemo(() => {
@@ -409,15 +429,15 @@ export function InspirationHall({ onUse }: { onUse: (item: CreationInspiration) 
             {filtersOpen ? (
                 <div id="inspiration-hall-filters" className="inspiration-hall-filters" role="group" aria-label="灵感进阶筛选">
                     <div className="inspiration-hall-field">
-                        <span>浏览范围</span>
-                        <Select options={VIEW_OPTIONS} value={view} onChange={(value) => setView(value as ViewFilter)} ariaLabel="按全部、收藏或隐藏状态筛选灵感" />
+                        <span>{t("inspiration.browse_scope", undefined, "浏览范围")}</span>
+                        <Select options={viewOptions} value={view} onChange={(value) => setView(value as ViewFilter)} ariaLabel="按全部、收藏或隐藏状态筛选灵感" />
                     </div>
                     {inspirationSourcesVisible ? (
                         <div className="inspiration-hall-field">
-                            <span>来源</span>
+                            <span>{t("inspiration.field_source", undefined, "来源")}</span>
                             <Select
                                 options={[
-                                    { label: "全部来源", value: "all" },
+                                    { label: t("inspiration.all_sources", undefined, "全部来源"), value: "all" },
                                     ...SOURCE_ORDER.filter((key) => (sourceCounts.get(key) ?? 0) > 0).map((key) => ({
                                         label: `${inspirationSources[key].name ?? inspirationSources[key].label} (${sourceCounts.get(key) ?? 0})`,
                                         value: key,
@@ -433,23 +453,23 @@ export function InspirationHall({ onUse }: { onUse: (item: CreationInspiration) 
                         </div>
                     ) : null}
                     <div className="inspiration-hall-field">
-                        <span>分类</span>
+                        <span>{t("common.category", undefined, "分类")}</span>
                         <Select
                             showSearch
                             optionFilterProp="label"
-                            options={[{ label: "全部分类", value: "all" }, ...categoryChoices.map((choice) => ({ value: choice.value, label: `${choice.label} (${choice.count})` }))]}
+                            options={[{ label: t("inspiration.all_categories", undefined, "全部分类"), value: "all" }, ...categoryChoices.map((choice) => ({ value: choice.value, label: `${choice.label} (${choice.count})` }))]}
                             value={category}
                             onChange={setCategory}
                             ariaLabel="按分类筛选灵感"
                         />
                     </div>
                     <div className="inspiration-hall-field">
-                        <span>排序</span>
-                        <Select options={SORT_OPTIONS} value={sort} onChange={(value) => setSort(value as SortKey)} ariaLabel="灵感排序" />
+                        <span>{t("common.sort", undefined, "排序")}</span>
+                        <Select options={sortOptions} value={sort} onChange={(value) => setSort(value as SortKey)} ariaLabel="灵感排序" />
                     </div>
                     {hasFilters ? (
                         <Button type="text" icon={<RotateCcw className="size-4" />} onClick={resetFilters} className="inspiration-hall-reset">
-                            重置筛选
+                            {t("common.reset_filters", undefined, "重置筛选")}
                         </Button>
                     ) : null}
                 </div>
@@ -566,11 +586,12 @@ function InspirationCard({
     onEdit: () => void;
     onDelete: () => void;
 }) {
+    const { t } = useI18n();
     const [menuOpen, setMenuOpen] = useState(false);
-    const favoriteLabel = favorite ? "取消收藏" : "收藏";
+    const favoriteLabel = favorite ? t("inspiration.unfavorite_aria", undefined, "取消收藏灵感") : t("inspiration.favorite_aria", undefined, "收藏灵感");
     return (
         <article className="inspiration-card">
-            <button type="button" className="inspiration-card-open" aria-label={`查看灵感：${item.title}`} aria-haspopup="dialog" onClick={onOpen}>
+            <button type="button" className="inspiration-card-open" aria-label={`${t("inspiration.view_aria", undefined, "查看灵感")}：${item.title}`} aria-haspopup="dialog" onClick={onOpen}>
                 <span className="inspiration-card-cover">
                     <InspirationCover key={item.image} image={item.image} />
                     {showSources ? <span className="inspiration-card-source">{inspirationSourceOf(item)?.label ?? "未标注来源"}</span> : null}
@@ -594,8 +615,8 @@ function InspirationCard({
                     </button>
                 </Tooltip>
                 {hidden ? (
-                    <Tooltip title="恢复显示">
-                        <button type="button" data-icon-only className="inspiration-card-action" aria-label={`恢复显示：${item.title}`} onClick={onRestore}>
+                    <Tooltip title={t("inspiration.restore", undefined, "恢复显示")}>
+                        <button type="button" data-icon-only className="inspiration-card-action" aria-label={`${t("inspiration.restore", undefined, "恢复显示")}：${item.title}`} onClick={onRestore}>
                             <span aria-hidden="true">
                                 <RotateCcw className="size-3.5" />
                             </span>
@@ -609,8 +630,8 @@ function InspirationCard({
                         onOpenChange={setMenuOpen}
                         menu={{
                             items: [
-                                { key: "edit", icon: <Pencil className="size-3.5" />, label: "编辑", onClick: onEdit },
-                                { key: "delete", icon: <Trash2 className="size-3.5" />, label: isCustomInspiration(catalogIdOf(item)) ? "删除" : "隐藏", danger: true, onClick: onDelete },
+                                { key: "edit", icon: <Pencil className="size-3.5" />, label: t("common.edit", undefined, "编辑"), onClick: onEdit },
+                                { key: "delete", icon: <Trash2 className="size-3.5" />, label: isCustomInspiration(catalogIdOf(item)) ? t("common.delete", undefined, "删除") : t("inspiration.hide", undefined, "隐藏"), danger: true, onClick: onDelete },
                             ],
                         }}
                     >

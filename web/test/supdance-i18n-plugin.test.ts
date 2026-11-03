@@ -206,9 +206,14 @@ describe("supdance-i18n plugin architecture and engine", () => {
             placeholder: "搜索插件名称、ID 或作者",
             "aria-label": "搜索插件",
         });
+        const textareaUserInput = createMockText("用户手写的中文提示词，不应被翻译");
+        const promptTextarea = createMockElement("textarea", {
+            placeholder: "输入你的镜头、画面或故事。也可以添加参考图开始创作",
+            "aria-label": "创作提示词，可使用 @ 引用当前参考内容或技能；回车发送，Shift+回车换行",
+        }, [textareaUserInput]);
         const codeBlock = createMockElement("code", {}, [codeText]);
         const ignoredDiv = createMockElement("div", { "data-i18n-ignore": "true" }, [createMockElement("span", {}, [ignoredText])]);
-        const root = createMockElement("div", { id: "root" }, [createMockElement("a", {}, [navCreateText]), createMockElement("a", {}, [navProjectsText]), searchInput, codeBlock, ignoredDiv]);
+        const root = createMockElement("div", { id: "root" }, [createMockElement("a", {}, [navCreateText]), createMockElement("a", {}, [navProjectsText]), searchInput, promptTextarea, codeBlock, ignoredDiv]);
 
         const dict = compileI18nDictionary(mergeI18nEntries({}));
         const translator = new SupDanceDomTranslator();
@@ -221,6 +226,8 @@ describe("supdance-i18n plugin architecture and engine", () => {
         expect(navProjectsText.nodeValue).toBe("Short Drama");
         expect(searchInput.getAttribute("placeholder")).toBe("Search plugin name, ID or author");
         expect(searchInput.getAttribute("aria-label")).toBe("Search plugins");
+        expect(promptTextarea.getAttribute("placeholder")).toBe("Describe your shot, frame or story. You can also add a reference image to start.");
+        expect(textareaUserInput.nodeValue).toBe("用户手写的中文提示词，不应被翻译");
 
         // Code and data-i18n-ignore must remain untouched
         expect(codeText.nodeValue).toBe("创作");
@@ -235,11 +242,15 @@ describe("supdance-i18n plugin architecture and engine", () => {
         translator.update(dict, "ko-KR", "zh-CN", { translateAdminPages: true });
         expect(navCreateText.nodeValue).toBe("창작");
         expect(navProjectsText.nodeValue).toBe("숏폼 드라마 제작");
+        expect(promptTextarea.getAttribute("placeholder")).toBe("컷, 화면, 이야기를 입력하세요. 참고 이미지를 추가해 시작할 수도 있습니다");
+        expect(textareaUserInput.nodeValue).toBe("用户手写的中文提示词，不应被翻译");
 
         // Switch to Spanish
         translator.update(dict, "es-ES", "zh-CN", { translateAdminPages: true });
         expect(navCreateText.nodeValue).toBe("Crear");
         expect(navProjectsText.nodeValue).toBe("Producción de Microdramas");
+        expect(promptTextarea.getAttribute("placeholder")).toBe("Describe tu plano, escena o historia. También puedes añadir una imagen de referencia para empezar.");
+        expect(textareaUserInput.nodeValue).toBe("用户手写的中文提示词，不应被翻译");
 
         // Disable plugin -> lossless restore to original Simplified Chinese
         translator.restoreAndDetach();
@@ -247,6 +258,8 @@ describe("supdance-i18n plugin architecture and engine", () => {
         expect(navProjectsText.nodeValue).toBe("短剧制作");
         expect(searchInput.getAttribute("placeholder")).toBe("搜索插件名称、ID 或作者");
         expect(searchInput.getAttribute("aria-label")).toBe("搜索插件");
+        expect(promptTextarea.getAttribute("placeholder")).toBe("输入你的镜头、画面或故事。也可以添加参考图开始创作");
+        expect(textareaUserInput.nodeValue).toBe("用户手写的中文提示词，不应被翻译");
     });
 
     test("maps all 6 locales to valid Ant Design locale objects", () => {
