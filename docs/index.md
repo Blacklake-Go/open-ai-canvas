@@ -65,6 +65,8 @@
 
 ## 按约定维护的文档（`docs/content/docs/`）
 
+- [SupDance 上游同步与完整差异清单](supdance/UPSTREAM_SYNC.md)
+
 功能、代码地图、待办、待测试分别维护在以下页面；尚未建立的专题会在对应任务中补齐：
 
 - [AI 审美批改画布插件](content/docs/plugins/ai-art-critique.mdx)
