@@ -15,9 +15,15 @@ export function SiteComplianceFooter({ className, variant = "default" }: { class
         <footer className={cn("site-compliance-footer", variant === "auth" && "is-auth", className)} aria-label="站点版权与备案信息">
             <span>{appearance.footerCopyright}</span>
             {/* 收单机构与 GDPR 都要求政策页在未登录状态下从任意页面可达，因此挂在通用页脚而不是只放在登录页。 */}
-            <Link to="/terms">{t("common.legal_terms")}</Link>
-            <Link to="/privacy">{t("common.legal_privacy")}</Link>
-            <Link to="/aup">AUP</Link>
+            <Link to="/terms" target="_blank" rel="noopener noreferrer">
+                {t("common.legal_terms", undefined, t("legal.terms", undefined, "服务条款"))}
+            </Link>
+            <Link to="/privacy" target="_blank" rel="noopener noreferrer">
+                {t("common.legal_privacy", undefined, t("legal.privacy", undefined, "隐私政策"))}
+            </Link>
+            <Link to="/aup" target="_blank" rel="noopener noreferrer">
+                {t("common.legal_aup", undefined, t("legal.aup", undefined, "AUP"))}
+            </Link>
             {appearance.icpFilingEnabled && appearance.icpFilingNumber ? (
                 <a href={MIIT_FILING_URL} target="_blank" rel="noopener noreferrer" aria-label={`${appearance.icpFilingNumber}，前往工业和信息化部备案管理系统查询`}>
                     {appearance.icpFilingNumber}

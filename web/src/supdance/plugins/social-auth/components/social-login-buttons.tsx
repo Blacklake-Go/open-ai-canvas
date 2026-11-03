@@ -93,19 +93,20 @@ export function SocialLoginButtons({ variant = "light-card", next = "/", accepte
 
     return (
         <div data-plugin-scope="social-auth" className="w-full">
-            {/* 品牌药丸快捷登录 (Pill-shaped Social Login)：官方高清品牌图标 + 渠道名 + 胶囊完全圆角 */}
+            {/* 品牌药丸快捷登录 (Pill-shaped Social Login)：官方高清品牌图标 + 品牌名 + 胶囊完全圆角 */}
             <div className="flex flex-wrap items-center justify-center gap-2.5 w-full" role="group" aria-label={t("auth.social_login_group", undefined, "快捷社交登录方式")}>
                 {currentProviders.map((provider) => {
+                    const shortName = provider.name.replace(/\s*(登录|登入|Login|Sign in)$/i, "").trim() || provider.name;
                     const isSingle = currentProviders.length === 1;
                     const isPair = currentProviders.length === 2;
                     return (
                         <button
                             key={provider.id}
                             type="button"
-                            aria-label={provider.name}
+                            aria-label={`${shortName} ${t("auth.social_login_action", undefined, "登录")}`}
                             onClick={() => handleProviderClick(provider)}
                             className={`group relative flex h-11 items-center justify-center gap-2.5 rounded-full px-5 text-sm font-medium transition-all duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40 focus-visible:ring-offset-2 active:scale-[0.98] ${
-                                isSingle ? "w-full" : isPair ? "w-full sm:flex-1 sm:min-w-[140px]" : "flex-1 min-w-[130px] sm:min-w-[140px]"
+                                isSingle ? "w-full" : isPair ? "w-full sm:flex-1 sm:min-w-[140px]" : "flex-1 min-w-[120px] sm:min-w-[130px]"
                             } ${
                                 isDark
                                     ? "border border-white/10 bg-white/[0.05] text-[#FAFAFA] hover:border-white/25 hover:bg-white/[0.09] hover:shadow-[0_0_12px_rgba(255,255,255,0.06)]"
@@ -113,7 +114,7 @@ export function SocialLoginButtons({ variant = "light-card", next = "/", accepte
                             }`}
                         >
                             <SocialProviderBrandIcon provider={provider.id} iconLightUrl={provider.iconLightUrl} iconDarkUrl={provider.iconDarkUrl} className="size-5 shrink-0 transition-transform duration-200 group-hover:scale-110" />
-                            <span className="truncate">{provider.name}</span>
+                            <span className="truncate">{shortName}</span>
                         </button>
                     );
                 })}

@@ -129,8 +129,8 @@ export function LegalPage({ doc }: { doc: LegalDocument }) {
         scrollContainerRef.current?.scrollTo({ top: 0 });
     }, [doc.slug]);
 
-    const docLabel = doc.slug === "terms" ? t("legal.terms") : t("legal.privacy");
-    const relatedLabel = doc.related.slug === "terms" ? t("legal.terms") : t("legal.privacy");
+    const docLabel = doc.slug === "terms" ? t("legal.terms", undefined, "服务条款") : t("legal.privacy", undefined, "隐私政策");
+    const relatedLabel = doc.related.slug === "terms" ? t("legal.terms", undefined, "服务条款") : t("legal.privacy", undefined, "隐私政策");
 
     return (
         <div className="app-workspace-page flex h-dvh flex-col overflow-hidden text-foreground">
@@ -154,7 +154,7 @@ export function LegalPage({ doc }: { doc: LegalDocument }) {
                             doc.slug === "terms" ? "bg-accent font-medium text-foreground" : "text-muted-foreground hover:bg-accent hover:text-foreground",
                         )}
                     >
-                        {t("legal.terms")}
+                        {t("legal.terms", undefined, "服务条款")}
                     </Link>
                     <Link
                         to="/privacy"
@@ -164,7 +164,7 @@ export function LegalPage({ doc }: { doc: LegalDocument }) {
                             doc.slug === "privacy" ? "bg-accent font-medium text-foreground" : "text-muted-foreground hover:bg-accent hover:text-foreground",
                         )}
                     >
-                        {t("legal.privacy")}
+                        {t("legal.privacy", undefined, "隐私政策")}
                     </Link>
                 </nav>
             </header>

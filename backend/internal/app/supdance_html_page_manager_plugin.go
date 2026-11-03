@@ -437,7 +437,7 @@ const defaultLinearTermsHtml = `<!DOCTYPE html>
       color: var(--fg-muted);
       cursor: pointer;
       flex-shrink: 0;
-      transition: transform 0.18s cubic-bezier(0.34, 1.56, 0.64, 1), background-color 0.2s ease, border-color 0.2s ease, color 0.2s ease;
+      transition: transform 0.18s cubic-bezier(0.16, 1, 0.3, 1), background-color 0.2s ease, border-color 0.2s ease, color 0.2s ease;
     }
     .theme-toggle-btn:hover {
       color: var(--fg);
@@ -451,7 +451,7 @@ const defaultLinearTermsHtml = `<!DOCTYPE html>
       position: absolute;
       width: 16px;
       height: 16px;
-      transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1), opacity 0.25s ease;
+      transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.25s ease;
     }
     html[data-theme="dark"] .sun-icon {
       opacity: 1;
@@ -757,7 +757,7 @@ const defaultLinearAupHtml = `<!DOCTYPE html>
       color: var(--fg-muted);
       cursor: pointer;
       flex-shrink: 0;
-      transition: transform 0.18s cubic-bezier(0.34, 1.56, 0.64, 1), background-color 0.2s ease, border-color 0.2s ease, color 0.2s ease;
+      transition: transform 0.18s cubic-bezier(0.16, 1, 0.3, 1), background-color 0.2s ease, border-color 0.2s ease, color 0.2s ease;
     }
     .theme-toggle-btn:hover {
       color: var(--fg);
@@ -771,7 +771,7 @@ const defaultLinearAupHtml = `<!DOCTYPE html>
       position: absolute;
       width: 16px;
       height: 16px;
-      transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1), opacity 0.25s ease;
+      transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.25s ease;
     }
     html[data-theme="dark"] .sun-icon {
       opacity: 1;
@@ -1098,7 +1098,7 @@ const defaultVercelPrivacyHtml = `<!DOCTYPE html>
       color: var(--fg-muted);
       cursor: pointer;
       flex-shrink: 0;
-      transition: transform 0.18s cubic-bezier(0.34, 1.56, 0.64, 1), background-color 0.2s ease, border-color 0.2s ease, color 0.2s ease;
+      transition: transform 0.18s cubic-bezier(0.16, 1, 0.3, 1), background-color 0.2s ease, border-color 0.2s ease, color 0.2s ease;
     }
     .theme-toggle-btn:hover {
       color: var(--fg);
@@ -1112,7 +1112,7 @@ const defaultVercelPrivacyHtml = `<!DOCTYPE html>
       position: absolute;
       width: 16px;
       height: 16px;
-      transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1), opacity 0.25s ease;
+      transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.25s ease;
     }
     html[data-theme="dark"] .sun-icon {
       opacity: 1;
@@ -1376,7 +1376,7 @@ const defaultAnthropicLegalHubHtml = `<!DOCTYPE html>
       display: flex;
       flex-direction: column;
       justify-content: space-between;
-      transition: all 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+      transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
     }
     .card:hover {
       border-color: rgba(217, 119, 6, 0.4);
@@ -1429,7 +1429,7 @@ const defaultAnthropicLegalHubHtml = `<!DOCTYPE html>
       color: var(--fg-muted);
       cursor: pointer;
       flex-shrink: 0;
-      transition: transform 0.18s cubic-bezier(0.34, 1.56, 0.64, 1), background-color 0.2s ease, border-color 0.2s ease, color 0.2s ease;
+      transition: transform 0.18s cubic-bezier(0.16, 1, 0.3, 1), background-color 0.2s ease, border-color 0.2s ease, color 0.2s ease;
     }
     .theme-toggle-btn:hover {
       color: var(--fg);
@@ -1443,7 +1443,7 @@ const defaultAnthropicLegalHubHtml = `<!DOCTYPE html>
       position: absolute;
       width: 16px;
       height: 16px;
-      transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1), opacity 0.25s ease;
+      transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.25s ease;
     }
     html[data-theme="dark"] .sun-icon {
       opacity: 1;
@@ -1717,7 +1717,7 @@ const defaultSupabaseRefundHtml = `<!DOCTYPE html>
       color: var(--fg-muted);
       cursor: pointer;
       flex-shrink: 0;
-      transition: transform 0.18s cubic-bezier(0.34, 1.56, 0.64, 1), background-color 0.2s ease, border-color 0.2s ease, color 0.2s ease;
+      transition: transform 0.18s cubic-bezier(0.16, 1, 0.3, 1), background-color 0.2s ease, border-color 0.2s ease, color 0.2s ease;
     }
     .theme-toggle-btn:hover {
       color: var(--fg);
@@ -1731,7 +1731,7 @@ const defaultSupabaseRefundHtml = `<!DOCTYPE html>
       position: absolute;
       width: 16px;
       height: 16px;
-      transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1), opacity 0.25s ease;
+      transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.25s ease;
     }
     html[data-theme="dark"] .sun-icon {
       opacity: 1;

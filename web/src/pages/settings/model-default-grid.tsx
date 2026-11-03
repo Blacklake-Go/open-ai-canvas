@@ -66,7 +66,7 @@ export function ModelDefaultGrid({ config, onChange }: { config: AiConfig; onCha
                             <span className="ml-auto shrink-0 text-xs tabular-nums text-foreground/38">{t("settings.models_available_count", { count: models.length }, `${models.length} 个可用`)}</span>
                         </div>
                         {models.length ? (
-                            <div role="radiogroup" aria-label={title} className="grid gap-2 sm:grid-cols-2 xl:grid-cols-3">
+                            <div role="radiogroup" aria-label={title} className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
                                 {models.map((model) => {
                                     const channel = resolveModelChannel(config, model);
                                     const selected = config[group.modelKey] === model;
@@ -75,7 +75,7 @@ export function ModelDefaultGrid({ config, onChange }: { config: AiConfig; onCha
                                         cost?.billingMode === "token" ? t("settings.per_million_tokens", undefined, "百万 Token") : cost?.billingMode === "per_second" ? t("settings.per_second", undefined, "秒") : t("settings.per_call", undefined, "次");
                                     const directSystemModel = isDirectSystemModel(config, model);
                                     const modelName = directSystemModel ? modelChannelLabel(config, model) : configuredModelDisplayName(config, model);
-                                    const groupName = directSystemModel ? cost?.displayName?.trim() || "未分类" : "";
+                                    const groupName = directSystemModel ? cost?.displayName?.trim() || t("settings.uncategorized", undefined, "未分类") : "";
                                     return (
                                         <button
                                             key={model}
@@ -83,7 +83,7 @@ export function ModelDefaultGrid({ config, onChange }: { config: AiConfig; onCha
                                             role="radio"
                                             aria-checked={selected}
                                             className={cn(
-                                                "model-default-option group relative overflow-hidden rounded-md px-3 py-2 text-left transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring motion-reduce:transition-none",
+                                                "model-default-option group relative overflow-hidden rounded-xl p-3 text-left transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring motion-reduce:transition-none",
                                                 selected && "is-selected",
                                             )}
                                             onClick={() => onChange(group.modelKey, model)}

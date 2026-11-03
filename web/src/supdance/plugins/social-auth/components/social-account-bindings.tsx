@@ -85,18 +85,17 @@ export function SocialAccountBindings({ onNavigateSecurity }: { onNavigateSecuri
         // Anti-orphan guard: check if user has password or multiple identities
         if (!identitiesView.hasPassword && boundMap.size <= 1) {
             modal.confirm({
-                title: "无法解除绑定",
+                title: t("settings.social.unbind_forbidden_title", {}, "无法解除绑定"),
                 icon: <ShieldAlert className="size-5 text-amber-400" />,
                 content: (
                     <div className="py-2 text-xs leading-relaxed text-foreground/80">
                         <p className="mb-2">
-                            您当前尚未设置<strong>独立登录密码</strong>，且仅绑定了 <strong>{provider.name}</strong> 这一种登录方式。
+                            {t("settings.social.unbind_forbidden_content", { name: provider.name }, `您当前尚未设置独立登录密码，且仅绑定了 ${provider.name} 这一种登录方式。若现在解除绑定，您将失去进入此账号的唯一凭证，导致账号无法再次登录。`)}
                         </p>
-                        <p className="text-amber-400/90">若现在解除绑定，您将失去进入此账号的唯一凭证，导致账号无法再次登录。</p>
                     </div>
                 ),
-                okText: "前往设置登录密码",
-                cancelText: "取消",
+                okText: t("settings.social.go_to_security", {}, "前往设置登录密码"),
+                cancelText: t("common.cancel", {}, "取消"),
                 centered: true,
                 onOk: () => {
                     if (onNavigateSecurity) {
@@ -120,7 +119,7 @@ export function SocialAccountBindings({ onNavigateSecurity }: { onNavigateSecuri
             ),
             okText: t("settings.social.unbind_action", {}, "解绑"),
             okType: "danger",
-            cancelText: "取消",
+            cancelText: t("common.cancel", {}, "取消"),
             centered: true,
             onOk: async () => {
                 try {
@@ -133,7 +132,7 @@ export function SocialAccountBindings({ onNavigateSecurity }: { onNavigateSecuri
                     }
                     message.success(t("settings.social.unbind_success", { name: provider.name }, `已成功解除与 ${provider.name} 的绑定`));
                 } catch (err) {
-                    message.error(err instanceof Error ? err.message : "解绑失败，请稍后重试");
+                    message.error(err instanceof Error ? err.message : t("settings.social.unbind_failed", {}, "解绑失败，请稍后重试"));
                 } finally {
                     setUnbindingId(null);
                 }
@@ -162,7 +161,7 @@ export function SocialAccountBindings({ onNavigateSecurity }: { onNavigateSecuri
         }
         return (
             <span>
-                账号: <strong className="text-foreground/90 font-medium">{rawVal}</strong>
+                {t("settings.social.account_label", {}, "账号")}: <strong className="text-foreground/90 font-medium">{rawVal}</strong>
             </span>
         );
     };
@@ -179,7 +178,7 @@ export function SocialAccountBindings({ onNavigateSecurity }: { onNavigateSecuri
                         {!identitiesView.hasPassword && (
                             <p className="flex items-center gap-1 text-amber-400">
                                 <AlertCircle className="size-3.5" />
-                                提示：您尚未设置独立密码，建议前往【密码与安全】设置密码以保障多渠道访问。
+                                {t("settings.social.no_password_tip", {}, "提示：您尚未设置独立密码，建议前往【密码与安全】设置密码以保障多渠道访问。")}
                             </p>
                         )}
                     </div>
@@ -223,7 +222,7 @@ export function SocialAccountBindings({ onNavigateSecurity }: { onNavigateSecuri
                                                 {bound.boundAt && <span className="ml-2 text-xs text-foreground/40">({new Date(bound.boundAt).toLocaleDateString()})</span>}
                                             </span>
                                         ) : (
-                                            <span>绑定后可直接一键登录</span>
+                                            <span>{t("settings.social.bind_to_login", {}, "绑定后可直接一键登录")}</span>
                                         )}
                                     </div>
                                 </div>

@@ -154,26 +154,44 @@ export function UserProfileModal({ open, activeTab, onTabChange, onClose, search
     const currentTab = activeTab === "security" ? "profile" : activeTab;
 
     const navSections: NavSection[] = useMemo(() => {
+        const accountItems = [
+            {
+                key: "profile" as const,
+                label: t("settings.tab_profile", undefined, "基本资料与安全"),
+                description: t("settings.tab_profile_desc", undefined, "头像、身份与账户安全"),
+                icon: <UserRound className="size-4" />,
+            },
+            ...(socialAuthPluginEnabled
+                ? [
+                      {
+                          key: "social" as const,
+                          label: t("settings.tab_social", undefined, "第三方账号"),
+                          description: t("settings.tab_social_desc", undefined, "社交授权绑定与换绑"),
+                          icon: <Link2 className="size-4" />,
+                      },
+                  ]
+                : []),
+        ];
         const sections: NavSection[] = [
             {
-                group: "账号管理",
-                items: accountManagementItems(socialAuthPluginEnabled),
+                group: t("settings.group_account", undefined, "账号管理"),
+                items: accountItems,
             },
             {
-                group: "创作设置",
+                group: t("settings.group_creative", undefined, "创作设置"),
                 items: [
                     {
                         key: "models",
-                        label: "模型选择",
-                        description: "按领域选择默认模型",
+                        label: t("settings.tab_models", undefined, "模型选择"),
+                        description: t("settings.tab_models_desc", undefined, "按领域选择默认模型"),
                         icon: <Boxes className="size-4" />,
                     },
                     ...(customChannelsEnabled
                         ? [
                               {
                                   key: "channels" as const,
-                                  label: "个人渠道",
-                                  description: "模型服务与工作流",
+                                  label: t("settings.tab_channels", undefined, "个人渠道"),
+                                  description: t("settings.tab_channels_desc", undefined, "模型服务与工作流"),
                                   icon: <RadioTower className="size-4" />,
                               },
                           ]
@@ -182,94 +200,94 @@ export function UserProfileModal({ open, activeTab, onTabChange, onClose, search
                         ? [
                               {
                                   key: "runninghub" as const,
-                                  label: "RunningHub",
-                                  description: "个人云端工作流配置",
+                                  label: t("settings.tab_runninghub", undefined, "RunningHub"),
+                                  description: t("settings.tab_runninghub_desc", undefined, "个人云端工作流配置"),
                                   icon: <Workflow className="size-4" />,
                               },
                           ]
                         : []),
                     {
                         key: "generation",
-                        label: "生成偏好",
-                        description: "画布生成默认值",
+                        label: t("settings.tab_generation", undefined, "生成偏好"),
+                        description: t("settings.tab_generation_desc", undefined, "画布生成默认值"),
                         icon: <SlidersHorizontal className="size-4" />,
                     },
                     {
                         key: "prompts",
-                        label: "提示词偏好",
-                        description: "按任务定制模板",
+                        label: t("settings.tab_prompts", undefined, "提示词偏好"),
+                        description: t("settings.tab_prompts_desc", undefined, "按任务定制模板"),
                         icon: <MessageSquareText className="size-4" />,
                     },
                     {
                         key: "agent-memory",
-                        label: "Agent 记忆",
-                        description: "经验与偏好记忆",
+                        label: t("settings.tab_agent_memory", undefined, "Agent 记忆"),
+                        description: t("settings.tab_agent_memory_desc", undefined, "经验与偏好记忆"),
                         icon: <BookMarked className="size-4" />,
                     },
                 ],
             },
             {
-                group: "系统与偏好",
+                group: t("settings.group_system", undefined, "系统与偏好"),
                 items: [
                     {
                         key: "preferences",
-                        label: "个性偏好",
-                        description: "深浅外观与语言界面",
+                        label: t("settings.tab_preferences", undefined, "个性偏好"),
+                        description: t("settings.tab_preferences_desc", undefined, "深浅外观与语言界面"),
                         icon: <SlidersHorizontal className="size-4" />,
                     },
                     {
                         key: "storage",
-                        label: "我的对象存储",
-                        description: "管理个人媒体存储",
+                        label: t("settings.tab_storage", undefined, "我的对象存储"),
+                        description: t("settings.tab_storage_desc", undefined, "管理个人媒体存储"),
                         icon: <Cloud className="size-4" />,
                     },
                     {
                         key: "diagnostics",
-                        label: "问题诊断",
-                        description: "导出日志协助排查",
+                        label: t("settings.tab_diagnostics", undefined, "问题诊断"),
+                        description: t("settings.tab_diagnostics_desc", undefined, "导出日志协助排查"),
                         icon: <Bug className="size-4" />,
                     },
                     {
                         key: "feedbacks",
-                        label: "我的反馈",
-                        description: "意见建议与官方答复",
+                        label: t("settings.tab_feedbacks", undefined, "我的反馈"),
+                        description: t("settings.tab_feedbacks_desc", undefined, "意见建议与官方答复"),
                         icon: <Inbox className="size-4" />,
                     },
                 ],
             },
         ];
         return sections;
-    }, [customChannelsEnabled, runningHubPluginEnabled, socialAuthPluginEnabled]);
+    }, [customChannelsEnabled, runningHubPluginEnabled, socialAuthPluginEnabled, t]);
 
     const allItems = useMemo(() => navSections.flatMap((s) => s.items), [navSections]);
     const currentMeta = allItems.find((item) => item.key === currentTab) || allItems[0];
 
     return (
-        <AppModal open={open} flush closable={false} footer={null} width={1040} centered onCancel={onClose}>
+        <AppModal open={open} flush closable={false} footer={null} width={1240} centered onCancel={onClose}>
             <div
-                className="relative flex h-[780px] max-h-[90vh] w-full overflow-hidden rounded-2xl border border-border bg-card text-foreground shadow-2xl backdrop-blur-2xl"
+                className="relative flex h-[850px] max-h-[92vh] w-full overflow-hidden rounded-2xl border border-border bg-card text-foreground shadow-2xl backdrop-blur-2xl"
                 style={{
-                    backgroundImage: "radial-gradient(ellipse 70% 40% at 70% -10%, rgba(var(--primary-rgb, 0, 245, 212), 0.08), transparent)",
+                    backgroundImage: "radial-gradient(ellipse 70% 40% at 70% -10%, color-mix(in srgb, var(--primary) 8%, transparent), transparent)",
                 }}
             >
                 {/* Left Navigation Sidebar */}
-                <aside className="flex w-64 shrink-0 flex-col border-r border-border bg-surface-subtle/40 p-4">
+                <aside className="flex w-72 shrink-0 flex-col border-r border-border bg-surface-subtle/40 p-4 sm:p-5">
                     {/* Header Branding */}
-                    <div className="mb-4 flex items-center gap-2.5 px-2 pt-1">
-                        <div className="flex size-8 items-center justify-center rounded-xl bg-primary/10 text-primary ring-1 ring-primary/20">
-                            <Sparkles className="size-4" />
+                    <div className="mb-5 flex items-center gap-3 px-2 pt-1">
+                        <div className="flex size-9 items-center justify-center rounded-xl bg-primary/10 text-primary ring-1 ring-primary/20">
+                            <Sparkles className="size-4.5" />
                         </div>
                         <div>
-                            <h3 className="text-sm font-semibold text-foreground">个人与创作设置</h3>
+                            <h3 className="text-sm font-semibold text-foreground">{t("settings.profile_modal_title", undefined, "个人与创作设置")}</h3>
                             <p className="text-[var(--fs-label)] text-foreground/45">SupDance Studio</p>
                         </div>
                     </div>
 
                     {/* Navigation Groups */}
-                    <nav className="thin-scrollbar flex-1 space-y-4 overflow-y-auto pr-1" aria-label="设置导航">
+                    <nav className="thin-scrollbar flex-1 space-y-4 overflow-y-auto pr-1" aria-label={t("settings.nav_aria", undefined, "设置导航")}>
                         {navSections.map((sec) => (
                             <div key={sec.group} className="space-y-1">
-                                <div className="px-3 text-[var(--fs-label)] font-semibold text-foreground/35">{sec.group}</div>
+                                <div className="px-3 pb-1 text-[var(--fs-label)] font-semibold text-foreground/35">{sec.group}</div>
                                 {sec.items.map((tab) => {
                                     const isActive = currentTab === tab.key;
                                     return (
@@ -277,14 +295,14 @@ export function UserProfileModal({ open, activeTab, onTabChange, onClose, search
                                             key={tab.key}
                                             type="button"
                                             onClick={() => onTabChange(tab.key)}
-                                            className={`flex w-full items-center gap-3 rounded-xl px-3 py-2 text-left transition-all ${
+                                            className={`flex w-full items-center gap-3 rounded-xl px-3.5 py-2.5 text-left transition-all ${
                                                 isActive ? "border border-primary/30 bg-primary/10 text-primary shadow-sm font-medium" : "border border-transparent text-foreground/70 hover:bg-surface-hover hover:text-foreground"
                                             }`}
                                         >
                                             <span className={isActive ? "text-primary" : "text-foreground/40"}>{tab.icon}</span>
                                             <div className="min-w-0 flex-1">
-                                                <div className="text-xs font-medium leading-none">{tab.label}</div>
-                                                <div className="mt-1 truncate text-[var(--fs-label)] text-foreground/40 leading-none">{tab.description}</div>
+                                                <div className="text-xs font-medium leading-snug">{tab.label}</div>
+                                                <div className="mt-0.5 truncate text-[var(--fs-label)] text-foreground/40 leading-none">{tab.description}</div>
                                             </div>
                                             {isActive && <span className="size-1.5 shrink-0 rounded-full bg-primary" />}
                                         </button>
@@ -309,18 +327,23 @@ export function UserProfileModal({ open, activeTab, onTabChange, onClose, search
                 {/* Right Content Pane */}
                 <main className="flex flex-1 flex-col overflow-hidden">
                     {/* Header Bar */}
-                    <header className="flex h-16 shrink-0 items-center justify-between border-b border-border bg-surface-subtle/30 px-6">
+                    <header className="flex h-16 shrink-0 items-center justify-between border-b border-border bg-surface-subtle/30 px-8">
                         <div>
                             <h2 className="text-base font-semibold text-foreground">{currentMeta?.label}</h2>
-                            <p className="text-xs text-foreground/50">{currentMeta?.description}</p>
+                            <p className="mt-0.5 text-xs text-foreground/50">{currentMeta?.description}</p>
                         </div>
-                        <button type="button" onClick={onClose} className="flex size-8 items-center justify-center rounded-lg text-foreground/40 transition-colors hover:bg-surface-hover hover:text-foreground" aria-label="关闭设置浮窗">
+                        <button
+                            type="button"
+                            onClick={onClose}
+                            className="flex size-8 items-center justify-center rounded-lg text-foreground/40 transition-colors hover:bg-surface-hover hover:text-foreground"
+                            aria-label={t("settings.close_modal_aria", undefined, "关闭设置浮窗")}
+                        >
                             <X className="size-4" />
                         </button>
                     </header>
 
                     {/* Content Body */}
-                    <div className="thin-scrollbar flex-1 overflow-y-auto p-6">
+                    <div className="thin-scrollbar flex-1 overflow-y-auto p-8">
                         {currentTab === "profile" && <ProfilePane key={currentUser?.id} />}
                         {currentTab === "social" && socialAuthPluginEnabled && <SocialAccountBindings />}
                         {currentTab === "models" && <ModelDefaultGrid config={effectiveConfig} onChange={(key, model) => updateConfig(key, model)} />}
@@ -330,11 +353,11 @@ export function UserProfileModal({ open, activeTab, onTabChange, onClose, search
                             <div className="space-y-4">
                                 <section className="settings-preference-block">
                                     <div className="settings-preference-heading">
-                                        <h3 className="text-sm font-semibold text-foreground">画布生成默认值</h3>
-                                        <p className="text-xs text-foreground/50">用于新建图片生成任务，节点内仍可单独覆盖。</p>
+                                        <h3 className="text-sm font-semibold text-foreground">{t("settings.canvas_gen_defaults", undefined, "画布生成默认值")}</h3>
+                                        <p className="text-xs text-foreground/50">{t("settings.canvas_gen_defaults_desc", undefined, "用于新建图片生成任务，节点内仍可单独覆盖。")}</p>
                                     </div>
                                     <SettingsRow
-                                        label="默认生图张数"
+                                        label={t("settings.default_canvas_image_count", undefined, "默认生图张数")}
                                         control={
                                             <InputNumber
                                                 min={1}
@@ -364,7 +387,7 @@ export function UserProfileModal({ open, activeTab, onTabChange, onClose, search
                                             <div className="flex size-9 items-center justify-center rounded-lg border border-border bg-card">{theme === "dark" ? <Moon className="size-4 text-primary" /> : <Sun className="size-4 text-amber-500" />}</div>
                                             <div>
                                                 <div className="text-xs font-semibold text-foreground">{t("settings.preferences.theme_title", {}, "外观偏好")}</div>
-                                                <div className="text-[11px] text-foreground/50">{t("settings.preferences.theme_desc", {}, "深色模式、浅色模式与跟随系统自动切换")}</div>
+                                                <div className="text-[var(--fs-label)] text-foreground/50">{t("settings.preferences.theme_desc", {}, "深色模式、浅色模式与跟随系统自动切换")}</div>
                                             </div>
                                         </div>
                                     </div>
@@ -404,8 +427,8 @@ export function UserProfileModal({ open, activeTab, onTabChange, onClose, search
                                             <Globe className="size-4 text-primary" />
                                         </div>
                                         <div>
-                                            <div className="text-xs font-semibold text-foreground">多语言界面</div>
-                                            <div className="text-[var(--fs-label)] text-foreground/50">全站界面与文案实时多语言切换</div>
+                                            <div className="text-xs font-semibold text-foreground">{t("settings.preferences.i18n_title", undefined, "多语言界面")}</div>
+                                            <div className="text-[var(--fs-label)] text-foreground/50">{t("settings.preferences.i18n_desc", undefined, "全站界面与文案实时多语言切换")}</div>
                                         </div>
                                     </div>
                                     <div className="grid grid-cols-2 gap-2 pt-1">
@@ -419,7 +442,7 @@ export function UserProfileModal({ open, activeTab, onTabChange, onClose, search
                                                         type="button"
                                                         onClick={() => {
                                                             setI18nLocale(lang.code as any);
-                                                            message.success(`已切换为 ${lang.name}`);
+                                                            message.success(t("settings.preferences.locale_switched", { name: lang.name }, `已切换为 ${lang.name}`));
                                                         }}
                                                         className={`flex items-center justify-between rounded-xl border p-3 text-left transition-all ${
                                                             isSelected ? "border-primary/40 bg-primary/10 text-primary font-medium" : "border-border bg-card text-foreground/75 hover:border-border hover:bg-surface-hover hover:text-foreground"

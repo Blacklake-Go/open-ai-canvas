@@ -37,6 +37,7 @@ v1.3.3 将授权后入站票据从单进程内存迁移至共享 Redis（键前�
 | **站点多语言与实时词条插件 (`supdance-i18n`)** | [`web/src/supdance/plugins/i18n/`](../../web/src/supdance/plugins/i18n/)<br>[`backend/internal/supdance/i18n/`](../../backend/internal/supdance/i18n/)<br>[`supdance/plugins/supdance-i18n/`](../../supdance/plugins/supdance-i18n/) | `yingce.plugin/v2`、`SystemSetting`、Zustand、Ant Design `ConfigProvider` | **低耦合（插件化热插拔架构）** | 复用平台插件注册表、后台插件可用性开关与 `SystemSetting` KV存储 | 仅当顶栏或后台导航入口结构调整时需核对单行挂载点 |
 | **SupDance 全站 UI Design System 规范与合规体系** | [`docs/design-system/`](../../docs/design-system/)<br>[`web/test/design-system-compliance.test.ts`](../../web/test/design-system-compliance.test.ts) | `@/lib/skin-themes`, `globals.css`, Ant Design | **无侵入（纯新增规范与非侵入式门禁单测）** | 遵守上游四层架构与多皮肤合同 | 否（上游升级零冲突） |
 | **统一第三方社交登录插件 (`supdance-social-auth`)** | [`web/src/supdance/plugins/social-auth/`](../../web/src/supdance/plugins/social-auth/)<br>[`backend/internal/supdance/socialauth/`](../../backend/internal/supdance/socialauth/)<br>[`supdance/plugins/supdance-social-auth/`](../../supdance/plugins/supdance-social-auth/) | `yingce.plugin/v2`、OAuth2、JWT、Ant Design | **低耦合（插件化热插拔架构）** | 登录页挂载第三方登录组件与后台独立管理配置 | 仅当登录页结构变化时需核对挂载点 |
+| **全站视觉与交互引擎 (`supdance-visual-engine`)** | [`web/src/supdance/plugins/visual-engine/`](../../web/src/supdance/plugins/visual-engine/)<br>[`backend/internal/supdance/visualengine/`](../../backend/internal/supdance/visualengine/)<br>[`supdance/plugins/supdance-visual-engine/`](../../supdance/plugins/supdance-visual-engine/) | `yingce.plugin/v2`、主题/浮层扩展接口、`SystemSetting`、Zustand | **低耦合（插件化热插拔架构）** | 双入口 Visual Console、主题/浮层扩展与独立生命周期管理 | 核对主题扩展、后台插件入口、路由与诊断订阅挂载点 |
 
 ---
 
@@ -86,3 +87,24 @@ v1.3.3 将授权后入站票据从单进程内存迁移至共享 Redis（键前�
 - **修改原因**：上游路由守卫 (`RequirePlugin`) 与创作岛模式药丸原先优先读取本地安装记录（`ensurePlugin` 新建记录默认 `enabled=false`）或别名 id `music-generation`（服务端无对应状态记录），会把服务端 `effectiveEnabled=true` 的插件误判为停用（`/toolbox/music` 曾因此整页拦截）。现将判定收敛为 `use-plugin-store` 导出的 `selectPluginEffectivelyEnabled`（服务端 states → 运行时 statuses → 本地安装记录），插件 id 一律使用清单 id `supdance-music-generation`，与后端 `CheckMusicTaskAdmission` 的准入判定保持一致。
 - **上游基线**：`v1.7.3`
 - **升级风险与回归保障**：`LOW`，仅调整插件生效判定的读取顺序与 id 常量来源，不改变任何路由、权限或业务逻辑；已纳入 `coupledUpstreamFiles` 与 `SUPDANCE_UPSTREAM_PATCH_REGISTRY` 自动对齐校验，并由 `web/test/supdance-extension-isolation.test.ts` 校验注册表与 `supdance/config/baseline.json` 对齐。
+
+### 补丁 ID：`supdance-visual-engine`
+- **被修改的上游文件**：
+  1. `backend/internal/app/plugin_management.go`
+  2. `backend/internal/handler/api.go`
+  3. `web/src/application.tsx`
+  4. `web/src/components/auth/auth-session-hydrator.tsx`
+  5. `web/src/components/layout/app-providers.tsx`
+  6. `web/src/components/ui/product/app-drawer/app-drawer.tsx`
+  7. `web/src/components/ui/product/app-modal/app-modal.tsx`
+  8. `web/src/layouts/user-layout.tsx`
+  9. `web/src/lib/canvas-theme.ts`
+  10. `web/src/lib/skin-themes.ts`
+  11. `web/src/pages/admin/components/admin-shell.tsx`
+  12. `web/src/pages/admin/plugins/plugins-page.tsx`
+  13. `web/src/router.tsx`
+  14. `web/src/services/diagnostics/client-diagnostics.ts`
+  15. `web/src/stores/canvas/use-canvas-theme-store.ts`
+- **修改原因**：以独立插件形式挂载双入口 Visual Console、主题/浮层扩展、恢复动画边界和插件生命周期控制；业务配置、权限、审计、发布与回滚集中在 `web/src/supdance/plugins/visual-engine/` 和 `backend/internal/supdance/visualengine/`。
+- **上游基线**：`v1.7.3`
+- **升级风险与回归保障**：`LOW`，所有耦合点已纳入 `SUPDANCE_UPSTREAM_PATCH_REGISTRY`、`supdance/config/baseline.json` 与扩展隔离测试；配置热插拔、失败回退、停用清理和发布/回滚已有专项测试，但独立安装包闭环仍待完成。
