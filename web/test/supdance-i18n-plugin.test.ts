@@ -1,4 +1,4 @@
-import { beforeAll, describe, expect, test } from "bun:test";
+import { beforeAll, beforeEach, afterEach, describe, expect, test } from "bun:test";
 import { listRegisteredPlugins } from "@/lib/plugins/plugin-registry";
 import { validateSupDancePluginManifest } from "@/supdance/adapters/compatibility";
 import {
@@ -69,6 +69,17 @@ function createMockText(text: string): MockTextNode {
 }
 
 describe("supdance-i18n plugin architecture and engine", () => {
+    let previousObserver: PropertyDescriptor | undefined;
+    beforeEach(() => {
+        // These synchronous fixtures are plain objects, not DOM Nodes. Real observer
+        // behavior is covered by i18n-dom-batching and the localization DOM suites.
+        previousObserver = Object.getOwnPropertyDescriptor(globalThis, "MutationObserver");
+        Object.defineProperty(globalThis, "MutationObserver", { configurable: true, value: undefined });
+    });
+    afterEach(() => {
+        if (previousObserver) Object.defineProperty(globalThis, "MutationObserver", previousObserver);
+        else Reflect.deleteProperty(globalThis, "MutationObserver");
+    });
     beforeAll(async () => {
         await loadAllLocalePacks();
     });
