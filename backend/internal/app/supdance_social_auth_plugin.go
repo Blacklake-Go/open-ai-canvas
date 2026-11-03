@@ -278,7 +278,7 @@ func (s *Service) UserSocialIdentities(actor *model.User) (*socialauth.UserIdent
 }
 
 // BeginSocialAuthBind starts the OAuth flow to bind a provider to the logged in user.
-func (s *Service) BeginSocialAuthBind(r *http.Request, actor *model.User, providerID string) (string, error) {
+func (s *Service) BeginSocialAuthBind(r *http.Request, actor *model.User, providerID string, nextPath ...string) (string, error) {
 	available, err := s.SocialAuthPluginAvailable()
 	if err != nil {
 		return "", err
@@ -286,7 +286,7 @@ func (s *Service) BeginSocialAuthBind(r *http.Request, actor *model.User, provid
 	if !available {
 		return "", kernel.Forbidden("第三方社交登录插件已被系统管理员停用")
 	}
-	return s.socialAuthService().BeginBind(r, actor, providerID)
+	return s.socialAuthService().BeginBind(r, actor, providerID, nextPath...)
 }
 
 // UnbindSocialAuth disconnects a social identity while guarding against orphaned accounts.

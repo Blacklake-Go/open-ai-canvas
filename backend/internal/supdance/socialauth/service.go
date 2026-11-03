@@ -1175,7 +1175,7 @@ func (s *Service) GetUserIdentities(actor *model.User) (*UserIdentitiesView, err
 }
 
 // BeginBind initiates OAuth flow bound to an existing logged in user account.
-func (s *Service) BeginBind(r *http.Request, actor *model.User, providerID string) (string, error) {
+func (s *Service) BeginBind(r *http.Request, actor *model.User, providerID string, nextPath ...string) (string, error) {
 	if actor == nil {
 		return "", kernel.Unauthorized("未登录")
 	}
@@ -1192,12 +1192,32 @@ func (s *Service) BeginBind(r *http.Request, actor *model.User, providerID strin
 	stateToken := RandomToken()
 	codeVerifier := RandomToken()
 
+	resolvedNext := "/?open_settings=social&bind_success=" + url.QueryEscape(providerID)
+	if len(nextPath) > 0 && strings.TrimSpace(nextPath[0]) != "" {
+		raw := SafeOAuthNext(nextPath[0])
+		if !strings.Contains(raw, "bind_success=") {
+			sep := "?"
+			if strings.Contains(raw, "?") {
+				sep = "&"
+			}
+			raw += sep + "bind_success=" + url.QueryEscape(providerID)
+		}
+		if !strings.Contains(raw, "open_settings=") {
+			sep := "?"
+			if strings.Contains(raw, "?") {
+				sep = "&"
+			}
+			raw += sep + "open_settings=social"
+		}
+		resolvedNext = raw
+	}
+
 	record := &model.OAuthState{
 		ID:            kernel.NewID(),
 		Provider:      providerID,
 		StateHash:     HashToken(stateToken),
 		CodeVerifier:  codeVerifier,
-		NextPath:      "/?bind_success=" + url.QueryEscape(providerID),
+		NextPath:      resolvedNext,
 		ReauthUserID:  actor.ID,
 		AcceptedTerms: true,
 		ExpiresAt:     time.Now().Add(10 * time.Minute),

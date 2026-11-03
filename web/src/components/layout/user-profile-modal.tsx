@@ -1,6 +1,6 @@
-import { useEffect, useMemo, type ReactNode } from "react";
+import { useEffect, useMemo, useState, type ReactNode } from "react";
 import { App, InputNumber } from "antd";
-import { BookMarked, Boxes, Bug, CheckCircle2, Cloud, Globe, Inbox, Link2, MessageSquareText, Moon, RadioTower, SlidersHorizontal, Sparkles, Sun, UserRound, Workflow, X } from "lucide-react";
+import { BookMarked, Boxes, Bug, CheckCircle2, Cloud, Globe, Inbox, Link2, MessageSquareText, Moon, RadioTower, SlidersHorizontal, Sparkles, Sun, UserRound, Workflow, X, Laptop } from "lucide-react";
 
 import { AppModal } from "@/components/ui/product/app-modal";
 import { Switch } from "@/components/ui/base/switch";
@@ -14,6 +14,7 @@ import { useThemeStore } from "@/stores/use-theme-store";
 import { useUserStore } from "@/stores/use-user-store";
 import { useUserProfileModalStore, type UserProfileModalTab, USER_PROFILE_MODAL_EVENT } from "@/stores/use-user-profile-modal-store";
 import { useSupDanceI18nStore } from "@/supdance/plugins/i18n/store";
+import { useI18n } from "@/supdance/plugins/i18n";
 import { SocialAccountBindings } from "@/supdance/plugins/social-auth/components/social-account-bindings";
 
 import { ChannelSettingsPane } from "@/pages/settings/channel-settings-pane";
@@ -57,6 +58,17 @@ export function UserProfileModalHost() {
         return () => window.removeEventListener(USER_PROFILE_MODAL_EVENT, handler);
     }, [openModal]);
 
+    useEffect(() => {
+        const checkUrlParams = () => {
+            const params = new URLSearchParams(window.location.search);
+            const openSettings = params.get("open_settings");
+            if (openSettings) {
+                openModal((openSettings as UserProfileModalTab) || "social");
+            }
+        };
+        checkUrlParams();
+    }, [openModal]);
+
     if (!currentUser) return null;
 
     return <UserProfileModal open={isOpen} activeTab={activeTab === "security" ? "profile" : activeTab} onTabChange={setTab} onClose={closeModal} />;
@@ -72,6 +84,7 @@ export interface UserProfileModalProps {
 
 export function UserProfileModal({ open, activeTab, onTabChange, onClose, searchParams }: UserProfileModalProps) {
     const { message } = App.useApp();
+    const { t } = useI18n();
     const currentUser = useUserStore((state) => state.user);
     const customChannelsEnabled = useUserStore((state) => state.features.customChannelsEnabled);
     const runtimeStatuses = usePluginStore((state) => state.runtimeStatuses);
@@ -83,6 +96,35 @@ export function UserProfileModal({ open, activeTab, onTabChange, onClose, search
 
     const theme = useThemeStore((state) => state.theme);
     const setTheme = useThemeStore((state) => state.setTheme);
+    const [themeMode, setThemeMode] = useState<"light" | "dark" | "system">(() => {
+        try {
+            return (localStorage.getItem("yingce:theme_mode") as any) || "dark";
+        } catch {
+            return "dark";
+        }
+    });
+
+    const handleThemeModeChange = (mode: "light" | "dark" | "system") => {
+        setThemeMode(mode);
+        try {
+            localStorage.setItem("yingce:theme_mode", mode);
+        } catch {}
+        if (mode === "system") {
+            const prefersDark = typeof window !== "undefined" && window.matchMedia("(prefers-color-scheme: dark)").matches;
+            setTheme(prefersDark ? "dark" : "light");
+        } else {
+            setTheme(mode);
+        }
+    };
+
+    useEffect(() => {
+        if (themeMode !== "system") return;
+        const media = window.matchMedia("(prefers-color-scheme: dark)");
+        const updateTheme = () => setTheme(media.matches ? "dark" : "light");
+        updateTheme();
+        media.addEventListener("change", updateTheme);
+        return () => media.removeEventListener("change", updateTheme);
+    }, [themeMode, setTheme]);
 
     const i18nLocale = useSupDanceI18nStore((state) => state.locale);
     const setI18nLocale = useSupDanceI18nStore((state) => state.setLocale);
@@ -197,21 +239,20 @@ export function UserProfileModal({ open, activeTab, onTabChange, onClose, search
     return (
         <AppModal open={open} flush closable={false} footer={null} width={1040} centered onCancel={onClose}>
             <div
-                className="relative flex h-[780px] max-h-[90vh] w-full overflow-hidden rounded-2xl border border-white/10 text-foreground shadow-2xl backdrop-blur-2xl"
+                className="relative flex h-[780px] max-h-[90vh] w-full overflow-hidden rounded-2xl border border-border bg-card text-foreground shadow-2xl backdrop-blur-2xl"
                 style={{
-                    backgroundColor: "rgba(14, 17, 23, 0.92)",
-                    backgroundImage: "radial-gradient(ellipse 70% 40% at 70% -10%, rgba(0, 245, 212, 0.12), transparent)",
+                    backgroundImage: "radial-gradient(ellipse 70% 40% at 70% -10%, rgba(var(--primary-rgb, 0, 245, 212), 0.08), transparent)",
                 }}
             >
                 {/* Left Navigation Sidebar */}
-                <aside className="flex w-64 shrink-0 flex-col border-r border-white/10 bg-white/[0.02] p-4">
+                <aside className="flex w-64 shrink-0 flex-col border-r border-border bg-surface-subtle/40 p-4">
                     {/* Header Branding */}
                     <div className="mb-4 flex items-center gap-2.5 px-2 pt-1">
-                        <div className="flex size-8 items-center justify-center rounded-xl bg-[#00f5d4]/10 text-[#00f5d4] ring-1 ring-[#00f5d4]/20">
+                        <div className="flex size-8 items-center justify-center rounded-xl bg-primary/10 text-primary ring-1 ring-primary/20">
                             <Sparkles className="size-4" />
                         </div>
                         <div>
-                            <h3 className="text-sm font-semibold text-white">个人与创作设置</h3>
+                            <h3 className="text-sm font-semibold text-foreground">个人与创作设置</h3>
                             <p className="text-[var(--fs-label)] text-foreground/45">SupDance Studio</p>
                         </div>
                     </div>
@@ -229,15 +270,15 @@ export function UserProfileModal({ open, activeTab, onTabChange, onClose, search
                                             type="button"
                                             onClick={() => onTabChange(tab.key)}
                                             className={`flex w-full items-center gap-3 rounded-xl px-3 py-2 text-left transition-all ${
-                                                isActive ? "border border-[#00f5d4]/30 bg-[#00f5d4]/10 text-[#00f5d4] shadow-sm" : "border border-transparent text-foreground/65 hover:bg-white/[0.04] hover:text-white"
+                                                isActive ? "border border-primary/30 bg-primary/10 text-primary shadow-sm font-medium" : "border border-transparent text-foreground/70 hover:bg-surface-hover hover:text-foreground"
                                             }`}
                                         >
-                                            <span className={isActive ? "text-[#00f5d4]" : "text-foreground/40"}>{tab.icon}</span>
+                                            <span className={isActive ? "text-primary" : "text-foreground/40"}>{tab.icon}</span>
                                             <div className="min-w-0 flex-1">
                                                 <div className="text-xs font-medium leading-none">{tab.label}</div>
                                                 <div className="mt-1 truncate text-[var(--fs-label)] text-foreground/40 leading-none">{tab.description}</div>
                                             </div>
-                                            {isActive && <span className="size-1.5 shrink-0 rounded-full bg-[#00f5d4]" />}
+                                            {isActive && <span className="size-1.5 shrink-0 rounded-full bg-primary" />}
                                         </button>
                                     );
                                 })}
@@ -246,11 +287,11 @@ export function UserProfileModal({ open, activeTab, onTabChange, onClose, search
                     </nav>
 
                     {/* Footer Identity Card */}
-                    <div className="mt-auto border-t border-white/10 pt-3">
-                        <div className="flex items-center gap-2.5 rounded-xl bg-white/[0.02] px-2 py-1.5">
+                    <div className="mt-auto border-t border-border pt-3">
+                        <div className="flex items-center gap-2.5 rounded-xl bg-surface-subtle px-2 py-1.5 border border-border/50">
                             {currentUser && <UserAvatar user={currentUser} className="size-8 shrink-0 rounded-full" />}
                             <div className="min-w-0 flex-1">
-                                <div className="truncate text-xs font-semibold text-white">{currentUser?.displayName || currentUser?.username}</div>
+                                <div className="truncate text-xs font-semibold text-foreground">{currentUser?.displayName || currentUser?.username}</div>
                                 <div className="truncate font-mono text-[var(--fs-label)] text-foreground/40">@{currentUser?.username}</div>
                             </div>
                         </div>
@@ -260,12 +301,12 @@ export function UserProfileModal({ open, activeTab, onTabChange, onClose, search
                 {/* Right Content Pane */}
                 <main className="flex flex-1 flex-col overflow-hidden">
                     {/* Header Bar */}
-                    <header className="flex h-16 shrink-0 items-center justify-between border-b border-white/10 px-6">
+                    <header className="flex h-16 shrink-0 items-center justify-between border-b border-border bg-surface-subtle/30 px-6">
                         <div>
-                            <h2 className="text-base font-semibold text-white">{currentMeta?.label}</h2>
+                            <h2 className="text-base font-semibold text-foreground">{currentMeta?.label}</h2>
                             <p className="text-xs text-foreground/50">{currentMeta?.description}</p>
                         </div>
-                        <button type="button" onClick={onClose} className="flex size-8 items-center justify-center rounded-lg text-foreground/40 transition-colors hover:bg-white/10 hover:text-white" aria-label="关闭设置浮窗">
+                        <button type="button" onClick={onClose} className="flex size-8 items-center justify-center rounded-lg text-foreground/40 transition-colors hover:bg-surface-hover hover:text-foreground" aria-label="关闭设置浮窗">
                             <X className="size-4" />
                         </button>
                     </header>
@@ -281,7 +322,7 @@ export function UserProfileModal({ open, activeTab, onTabChange, onClose, search
                             <div className="space-y-4">
                                 <section className="settings-preference-block">
                                     <div className="settings-preference-heading">
-                                        <h3 className="text-sm font-semibold text-white">画布生成默认值</h3>
+                                        <h3 className="text-sm font-semibold text-foreground">画布生成默认值</h3>
                                         <p className="text-xs text-foreground/50">用于新建图片生成任务，节点内仍可单独覆盖。</p>
                                     </div>
                                     <SettingsRow
@@ -308,28 +349,56 @@ export function UserProfileModal({ open, activeTab, onTabChange, onClose, search
                         {currentTab === "feedbacks" && <FeedbackInboxPane />}
                         {currentTab === "preferences" && (
                             <div className="space-y-6">
-                                {/* Theme Selection */}
-                                <div className="flex items-center justify-between rounded-xl border border-white/10 bg-white/[0.02] p-4">
-                                    <div className="flex items-center gap-3">
-                                        <div className="flex size-9 items-center justify-center rounded-lg border border-white/10 bg-white/[0.04]">
-                                            {theme === "dark" ? <Moon className="size-4 text-[#00f5d4]" /> : <Sun className="size-4 text-amber-400" />}
-                                        </div>
-                                        <div>
-                                            <div className="text-xs font-semibold text-white">深色模式</div>
-                                            <div className="text-[var(--fs-label)] text-foreground/50">适配影视创作者工作台的专业暗色调视觉</div>
+                                {/* Theme Appearance Selection with 3 Modes */}
+                                <div className="space-y-3 rounded-xl border border-border bg-surface-subtle p-4">
+                                    <div className="flex items-center justify-between">
+                                        <div className="flex items-center gap-3">
+                                            <div className="flex size-9 items-center justify-center rounded-lg border border-border bg-card">
+                                                {theme === "dark" ? <Moon className="size-4 text-primary" /> : <Sun className="size-4 text-amber-500" />}
+                                            </div>
+                                            <div>
+                                                <div className="text-xs font-semibold text-foreground">{t("settings.preferences.theme_title", {}, "外观偏好")}</div>
+                                                <div className="text-[11px] text-foreground/50">{t("settings.preferences.theme_desc", {}, "深色模式、浅色模式与跟随系统自动切换")}</div>
+                                            </div>
                                         </div>
                                     </div>
-                                    <Switch size="sm" checked={theme === "dark"} onChange={(checked) => setTheme(checked ? "dark" : "light")} aria-label="深色模式切换" />
+
+                                    {/* 3-Pill High-Visibility Segmented Selector */}
+                                    <div className="grid grid-cols-3 gap-2 pt-1">
+                                        {[
+                                            { mode: "light", label: t("settings.preferences.theme_light", {}, "浅色模式"), icon: <Sun className="size-4 text-amber-500" /> },
+                                            { mode: "dark", label: t("settings.preferences.theme_dark", {}, "深色模式"), icon: <Moon className="size-4 text-primary" /> },
+                                            { mode: "system", label: t("settings.preferences.theme_system", {}, "跟随系统"), icon: <Laptop className="size-4 text-foreground/60" /> },
+                                        ].map((opt) => {
+                                            const isSelected = themeMode === opt.mode;
+                                            return (
+                                                <button
+                                                    key={opt.mode}
+                                                    type="button"
+                                                    onClick={() => handleThemeModeChange(opt.mode as "light" | "dark" | "system")}
+                                                    className={`flex items-center justify-center gap-2 rounded-xl border py-2.5 px-3 text-xs font-medium transition-all ${
+                                                        isSelected
+                                                            ? "border-primary bg-primary/10 text-primary shadow-sm ring-1 ring-primary/40 font-semibold"
+                                                            : "border-border bg-card text-foreground/75 hover:border-border hover:bg-surface-hover hover:text-foreground"
+                                                    }`}
+                                                >
+                                                    {opt.icon}
+                                                    <span>{opt.label}</span>
+                                                    {isSelected && <CheckCircle2 className="size-3.5 text-primary ml-0.5" />}
+                                                </button>
+                                            );
+                                        })}
+                                    </div>
                                 </div>
 
                                 {/* Language Selection */}
-                                <div className="space-y-3 rounded-xl border border-white/10 bg-white/[0.02] p-4">
+                                <div className="space-y-3 rounded-xl border border-border bg-surface-subtle p-4">
                                     <div className="flex items-center gap-3">
-                                        <div className="flex size-9 items-center justify-center rounded-lg border border-white/10 bg-white/[0.04]">
-                                            <Globe className="size-4 text-[#00f5d4]" />
+                                        <div className="flex size-9 items-center justify-center rounded-lg border border-border bg-card">
+                                            <Globe className="size-4 text-primary" />
                                         </div>
                                         <div>
-                                            <div className="text-xs font-semibold text-white">多语言界面</div>
+                                            <div className="text-xs font-semibold text-foreground">多语言界面</div>
                                             <div className="text-[var(--fs-label)] text-foreground/50">全站界面与文案实时多语言切换</div>
                                         </div>
                                     </div>
@@ -347,11 +416,11 @@ export function UserProfileModal({ open, activeTab, onTabChange, onClose, search
                                                             message.success(`已切换为 ${lang.name}`);
                                                         }}
                                                         className={`flex items-center justify-between rounded-xl border p-3 text-left transition-all ${
-                                                            isSelected ? "border-[#00f5d4]/40 bg-[#00f5d4]/10 text-[#00f5d4]" : "border-white/5 bg-white/[0.02] text-foreground/70 hover:border-white/15 hover:text-white"
+                                                            isSelected ? "border-primary/40 bg-primary/10 text-primary font-medium" : "border-border bg-card text-foreground/75 hover:border-border hover:bg-surface-hover hover:text-foreground"
                                                         }`}
                                                     >
                                                         <span className="text-xs font-medium">{lang.name}</span>
-                                                        {isSelected && <CheckCircle2 className="size-4 text-[#00f5d4]" />}
+                                                        {isSelected && <CheckCircle2 className="size-4 text-primary" />}
                                                     </button>
                                                 );
                                             })}

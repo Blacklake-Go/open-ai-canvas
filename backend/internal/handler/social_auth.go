@@ -161,7 +161,8 @@ func RegisterSocialAuthRoutes(api *gin.RouterGroup, svc *service.Service) {
 			return
 		}
 		provider := c.Param("provider")
-		target, err := svc.BeginSocialAuthBind(c.Request, actor, provider)
+		next := c.Query("next")
+		target, err := svc.BeginSocialAuthBind(c.Request, actor, provider, next)
 		if err != nil {
 			failService(c, err)
 			return

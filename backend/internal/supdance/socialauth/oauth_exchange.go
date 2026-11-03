@@ -247,10 +247,19 @@ func redeemQQ(ctx context.Context, cfg ProviderConfig, code, redirectURI string)
 	if info.Ret != 0 {
 		return nil, fmt.Errorf("QQ 用户信息接口拒绝：ret=%d %s", info.Ret, truncateForError(info.Msg))
 	}
+	qqNick := strings.TrimSpace(info.Nickname)
+	displayHandle := qqNick
+	if displayHandle == "" {
+		if len(me.OpenID) > 6 {
+			displayHandle = "QQ用户_" + me.OpenID[len(me.OpenID)-6:]
+		} else {
+			displayHandle = "QQ用户_" + me.OpenID
+		}
+	}
 	return &socialProfile{
 		Subject:     "qq_openid_" + me.OpenID,
-		Username:    sanitizeHandle(me.OpenID),
-		DisplayName: firstNonEmpty(info.Nickname, "QQ 创作者"),
+		Username:    displayHandle,
+		DisplayName: firstNonEmpty(qqNick, "QQ 创作者"),
 		AvatarURL:   firstNonEmpty(info.FigureurlQQ2, info.FigureurlQQ1, info.Figureurl1),
 	}, nil
 }

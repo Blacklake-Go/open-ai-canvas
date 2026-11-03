@@ -1,19 +1,23 @@
 import { useEffect, useMemo, useState } from "react";
 import { App, Button, Checkbox, Input, Skeleton } from "antd";
-import { CheckCircle2, Eye, EyeOff, Lock, Mail, ShieldAlert, ShieldCheck, Sparkles, User, UserCheck } from "lucide-react";
+import { CheckCircle2, Eye, EyeOff, Lock, Mail, ShieldCheck, Sparkles, User, UserCheck, X } from "lucide-react";
 import { AppModal } from "@/components/ui/product/app-modal";
 import { completeSocialOnboarding, getSocialOnboardingProfile } from "../api";
 import { SocialProviderIcon } from "./social-provider-icons";
 import type { OnboardingProfileView } from "../types";
 import { applyUserSession } from "@/lib/user-session";
 import { useUserStore } from "@/stores/use-user-store";
+import { useAppearanceStore } from "@/stores/use-appearance-store";
 import { usePluginStore, selectPluginEffectivelyEnabled } from "@/stores/use-plugin-store";
+import { useI18n } from "@/supdance/plugins/i18n";
 
 const USERNAME_REGEX = /^[a-zA-Z0-9_-]{3,30}$/;
 
 export function SocialOnboardingModal() {
-    const { message } = App.useApp();
+    const { message, modal } = App.useApp();
+    const { t } = useI18n();
     const currentUser = useUserStore((state) => state.user);
+    const brandName = useAppearanceStore((state) => state.appearance.brandName);
     const active = usePluginStore(selectPluginEffectivelyEnabled("supdance-social-auth", true));
 
     const [open, setOpen] = useState(false);
@@ -111,22 +115,37 @@ export function SocialOnboardingModal() {
 
     const hasProviderEmail = Boolean(profile?.email && profile.email.trim().length > 0);
 
+    const handleExit = () => {
+        modal.confirm({
+            title: t("auth.onboarding.exit", {}, "退出"),
+            content: t("auth.onboarding.exit_confirm", {}, "确定退出当前入站配置？未完成的信息将不会保存。"),
+            okText: t("common.confirm", {}, "确定退出"),
+            cancelText: t("common.cancel", {}, "继续配置"),
+            centered: true,
+            onOk: () => {
+                cleanupUrl();
+                setOpen(false);
+                window.location.href = "/login";
+            },
+        });
+    };
+
     const handleSubmit = async () => {
         if (!ticket) return;
         if (!isUsernameValid) {
-            message.warning("用户名需为 3-30 位字母、数字、下划线或短横线");
+            message.warning(t("auth.onboarding.creator_id_placeholder", {}, "用户名需为 3-30 位字母、数字、下划线或短横线"));
             return;
         }
         if (!acceptedTerms) {
-            message.warning("请先勾选同意服务协议与隐私条款");
+            message.warning(t("auth.agree_terms_first", {}, "请先勾选同意服务协议与隐私条款"));
             return;
         }
         if (password && !isPasswordValid) {
-            message.warning("设置密码长度至少需为 6 位");
+            message.warning(t("auth.password_min_length", {}, "设置密码长度至少需为 6 位"));
             return;
         }
         if (password && !isPasswordMatch) {
-            message.warning("两次输入的密码不一致");
+            message.warning(t("auth.password_mismatch", {}, "两次输入的密码不一致"));
             return;
         }
 
@@ -179,23 +198,32 @@ export function SocialOnboardingModal() {
     return (
         <AppModal open={open} flush closable={false} maskClosable={false} footer={null} width={520} centered>
             <div
-                className="relative overflow-hidden rounded-2xl border border-white/[0.08] p-6 sm:p-7 text-[#FAFAFA] shadow-[0_16px_48px_rgba(0,0,0,0.60)] backdrop-blur-2xl"
+                className="relative overflow-hidden rounded-2xl border border-border bg-card p-6 sm:p-7 text-foreground shadow-2xl backdrop-blur-2xl"
                 style={{
-                    backgroundColor: "#1A1A1A",
-                    backgroundImage: "radial-gradient(ellipse 90% 50% at 50% -20%, rgba(0, 245, 212, 0.08), transparent)",
+                    backgroundImage: "radial-gradient(ellipse 90% 50% at 50% -20%, rgba(var(--primary-rgb, 0, 245, 212), 0.08), transparent)",
                 }}
             >
+                {/* Top-right Exit Button (Reference Image 3) */}
+                <button
+                    type="button"
+                    onClick={handleExit}
+                    aria-label={t("auth.onboarding.exit", {}, "退出")}
+                    className="absolute right-4 top-4 z-10 flex size-8 items-center justify-center rounded-full border border-border/50 bg-surface-subtle text-foreground/60 transition-all hover:border-border hover:bg-surface-hover hover:text-foreground active:scale-95"
+                >
+                    <X className="size-4" />
+                </button>
+
                 {/* Header Badge & Title */}
-                <div className="flex flex-col items-center text-center">
-                    <div className="relative mb-3 flex size-14 items-center justify-center rounded-2xl border border-white/15 bg-white/[0.04] p-3 shadow-inner">
-                        {profile?.provider ? <SocialProviderIcon provider={profile.provider} className="size-8" /> : <Sparkles className="size-8 text-[#00f5d4]" />}
-                        <span className="absolute -bottom-1 -right-1 flex size-5 items-center justify-center rounded-full bg-[#00f5d4] text-[#0e1117] ring-2 ring-[#0e1117]">
+                <div className="flex flex-col items-center text-center pr-4">
+                    <div className="relative mb-3 flex size-14 items-center justify-center rounded-2xl border border-border bg-surface-subtle p-3 shadow-inner">
+                        {profile?.provider ? <SocialProviderIcon provider={profile.provider} className="size-8" /> : <Sparkles className="size-8 text-primary" />}
+                        <span className="absolute -bottom-1 -right-1 flex size-5 items-center justify-center rounded-full bg-primary text-primary-foreground ring-2 ring-card">
                             <CheckCircle2 className="size-3.5 stroke-[2.5]" />
                         </span>
                     </div>
 
-                    <h2 className="text-xl font-bold tracking-tight text-white">欢迎加入 SupDance</h2>
-                    <p className="mt-1 text-xs text-foreground/60">已成功通过 {profile?.providerName || "第三方账号"} 授权，完成入站配置后立即开启创作</p>
+                    <h2 className="text-xl font-bold tracking-tight text-foreground">{t("auth.onboarding.title", { brand: brandName || "SupDance" }, "欢迎加入 SupDance")}</h2>
+                    <p className="mt-1 text-xs text-foreground/60">{t("auth.onboarding.subtitle", {}, "完善基础信息即可开启创作")}</p>
                 </div>
 
                 {loading ? (
@@ -203,22 +231,24 @@ export function SocialOnboardingModal() {
                         <Skeleton active paragraph={{ rows: 4 }} />
                     </div>
                 ) : (
-                    <div className="mt-6 space-y-5">
+                    <div className="mt-5 space-y-4">
                         {/* Third-party verified info card */}
-                        <div className="flex items-center gap-3 rounded-xl border border-white/10 bg-white/[0.03] p-3.5">
+                        <div className="flex items-center gap-3 rounded-xl border border-border bg-surface-subtle p-3">
                             {profile?.avatarUrl ? (
-                                <img src={profile.avatarUrl} alt="Avatar" className="size-11 rounded-full border border-white/20 object-cover" />
+                                <img src={profile.avatarUrl} alt="Avatar" className="size-10 rounded-full border border-border object-cover" />
                             ) : (
-                                <div className="flex size-11 items-center justify-center rounded-full bg-white/10 text-foreground/50">
+                                <div className="flex size-10 items-center justify-center rounded-full bg-surface-raised text-foreground/50">
                                     <User className="size-5" />
                                 </div>
                             )}
                             <div className="min-w-0 flex-1">
                                 <div className="flex items-center gap-2">
-                                    <span className="truncate text-sm font-semibold text-white">{profile?.displayName || "第三方用户"}</span>
-                                    <span className="rounded-full bg-[#00f5d4]/10 px-2 py-0.5 text-[var(--fs-label)] font-medium text-[#00f5d4]">{profile?.providerName} 授权</span>
+                                    <span className="truncate text-sm font-semibold text-foreground">{profile?.displayName || t("auth.onboarding.verified_identity", {}, "第三方用户")}</span>
+                                    <span className="rounded-full bg-primary/10 px-2 py-0.5 text-[11px] font-medium text-primary">
+                                        {t("auth.onboarding.authorized_badge", { provider: profile?.providerName || "第三方" }, `${profile?.providerName || "第三方"} 授权`)}
+                                    </span>
                                 </div>
-                                <div className="truncate text-xs text-foreground/50">{profile?.providerUsername || profile?.email || "已验证第三方身份"}</div>
+                                <div className="truncate text-xs text-foreground/50">{profile?.providerUsername || profile?.email || t("auth.onboarding.verified_identity", {}, "已验证第三方身份")}</div>
                             </div>
                         </div>
 
@@ -227,67 +257,61 @@ export function SocialOnboardingModal() {
                             <div className="mb-1.5 flex items-center justify-between text-xs font-medium text-foreground/80">
                                 <span className="flex items-center gap-1.5">
                                     <Mail className="size-3.5 text-foreground/50" />
-                                    <span>绑定邮箱</span>
+                                    <span>{t("auth.onboarding.bind_email", {}, "绑定邮箱")}</span>
                                 </span>
                                 {hasProviderEmail ? (
-                                    <span className="flex items-center gap-1 text-[var(--fs-label)] text-[#00f5d4]">
+                                    <span className="flex items-center gap-1 text-[11px] font-medium text-emerald-500">
                                         <ShieldCheck className="size-3" />
-                                        已自 {profile?.providerName} 自动验证绑定 🔒
+                                        {t("auth.onboarding.email_verified_auto", {}, "第三方已自动验证")}
                                     </span>
-                                ) : (
-                                    <span className="text-[var(--fs-label)] text-foreground/40">建议绑定以接收重要通知与找回密码</span>
-                                )}
+                                ) : null}
                             </div>
 
                             <Input
                                 value={email}
                                 onChange={(e) => setEmail(e.target.value)}
                                 disabled={hasProviderEmail}
-                                placeholder="输入您的邮箱"
+                                placeholder={t("auth.onboarding.email_placeholder", {}, "输入您的邮箱（可选）")}
                                 prefix={<Mail className="size-3.5 text-foreground/40" />}
-                                className={`h-10 rounded-lg border-white/10 bg-white/[0.04] text-sm text-white placeholder:text-foreground/30 ${hasProviderEmail ? "cursor-not-allowed opacity-80" : ""}`}
+                                className={`h-10 rounded-lg border border-border bg-surface-subtle text-sm text-foreground placeholder:text-foreground/35 ${hasProviderEmail ? "cursor-not-allowed opacity-80" : ""}`}
                             />
-                            {hasProviderEmail && <p className="mt-1 text-[var(--fs-label)] text-foreground/45">第三方渠道返回了已验证的邮箱地址，已自动为您绑定，无需重复核验。</p>}
                         </div>
 
                         {/* Username and Nickname Section */}
                         <div className="grid grid-cols-2 gap-3">
                             <div>
-                                <label className="mb-1.5 block text-xs font-medium text-white/85">
-                                    创作者 ID <span className="text-[#00f5d4]">*</span>
+                                <label className="mb-1.5 block text-xs font-medium text-foreground/85">
+                                    {t("auth.onboarding.creator_id", {}, "创作者 ID")} <span className="text-primary">*</span>
                                 </label>
                                 <Input
                                     value={username}
                                     onChange={(e) => setUsername(e.target.value)}
-                                    placeholder="3-30位字母数字"
-                                    prefix={<span className="text-white/40">@</span>}
+                                    placeholder={t("auth.onboarding.creator_id_placeholder", {}, "3-30 位字母/数字/下划线")}
+                                    prefix={<span className="text-foreground/40">@</span>}
                                     status={username && !isUsernameValid ? "error" : ""}
-                                    className="h-10 rounded-lg border-white/10 bg-[#171717] text-sm text-white placeholder:text-white/30"
+                                    className="h-10 rounded-lg border border-border bg-surface-subtle text-sm text-foreground placeholder:text-foreground/35"
                                 />
-                                {username && !isUsernameValid ? <p className="mt-1 text-[var(--fs-label)] text-rose-400">字母/数字/下划线(3-30字符)</p> : <p className="mt-1 text-[var(--fs-label)] text-white/50">作品署名与空间链接</p>}
                             </div>
 
                             <div>
-                                <label className="mb-1.5 block text-xs font-medium text-white/85">显示昵称</label>
+                                <label className="mb-1.5 block text-xs font-medium text-foreground/85">{t("auth.onboarding.display_name", {}, "显示昵称")}</label>
                                 <Input
                                     value={nickname}
                                     onChange={(e) => setNickname(e.target.value)}
-                                    placeholder="输入显示昵称"
-                                    prefix={<UserCheck className="size-3.5 text-white/40" />}
-                                    className="h-10 rounded-lg border-white/10 bg-[#171717] text-sm text-white placeholder:text-white/30"
+                                    placeholder={t("auth.onboarding.display_name_placeholder", {}, "输入显示昵称")}
+                                    prefix={<UserCheck className="size-3.5 text-foreground/40" />}
+                                    className="h-10 rounded-lg border border-border bg-surface-subtle text-sm text-foreground placeholder:text-foreground/35"
                                 />
-                                <p className="mt-1 text-[var(--fs-label)] text-white/50">社区与创作台展示名称</p>
                             </div>
                         </div>
 
                         {/* Optional Password Section */}
-                        <div className="rounded-xl border border-white/5 bg-white/[0.02] p-3.5">
+                        <div className="rounded-xl border border-border bg-surface-subtle p-3.5">
                             <div className="mb-2 flex items-center justify-between">
                                 <span className="flex items-center gap-1.5 text-xs font-medium text-foreground/80">
                                     <Lock className="size-3.5 text-foreground/50" />
-                                    <span>设置独立登录密码（可选）</span>
+                                    <span>{t("auth.onboarding.optional_password", {}, "设置独立登录密码（可选）")}</span>
                                 </span>
-                                <span className="text-[var(--fs-label)] text-foreground/40">支持后续使用账号/邮箱密码直接登录</span>
                             </div>
 
                             <div className="space-y-2">
@@ -295,13 +319,13 @@ export function SocialOnboardingModal() {
                                     type={showPassword ? "text" : "password"}
                                     value={password}
                                     onChange={(e) => setPassword(e.target.value)}
-                                    placeholder="至少 6 位（留空则仅使用第三方登录）"
+                                    placeholder={t("auth.onboarding.password_placeholder", {}, "至少 6 位（留空仅使用第三方登录）")}
                                     suffix={
                                         <button type="button" onClick={() => setShowPassword(!showPassword)} className="text-foreground/40 hover:text-foreground">
                                             {showPassword ? <EyeOff className="size-3.5" /> : <Eye className="size-3.5" />}
                                         </button>
                                     }
-                                    className="h-9 rounded-lg border-white/10 bg-white/[0.04] text-xs text-white placeholder:text-foreground/30"
+                                    className="h-9 rounded-lg border border-border bg-card text-xs text-foreground placeholder:text-foreground/35"
                                 />
 
                                 {password ? (
@@ -309,25 +333,25 @@ export function SocialOnboardingModal() {
                                         type={showPassword ? "text" : "password"}
                                         value={confirmPassword}
                                         onChange={(e) => setConfirmPassword(e.target.value)}
-                                        placeholder="确认密码"
+                                        placeholder={t("auth.onboarding.password_confirm", {}, "确认密码")}
                                         status={confirmPassword && !isPasswordMatch ? "error" : ""}
-                                        className="h-9 rounded-lg border-white/10 bg-white/[0.04] text-xs text-white placeholder:text-foreground/30"
+                                        className="h-9 rounded-lg border border-border bg-card text-xs text-foreground placeholder:text-foreground/35"
                                     />
                                 ) : null}
 
-                                {password && !isPasswordMatch ? <p className="text-[var(--fs-label)] text-rose-400">两次输入的密码不一致</p> : null}
+                                {password && !isPasswordMatch ? <p className="text-[11px] text-rose-400">{t("auth.password_mismatch", {}, "两次输入的密码不一致")}</p> : null}
                             </div>
                         </div>
 
                         {/* Terms and conditions */}
                         <div className="flex items-center gap-2 pt-1">
-                            <Checkbox checked={acceptedTerms} onChange={(e) => setAcceptedTerms(e.target.checked)} className="text-xs text-foreground/60">
-                                我已阅读并同意
-                                <a href="/terms" target="_blank" rel="noreferrer" className="mx-1 text-[#00f5d4] hover:underline">
+                            <Checkbox checked={acceptedTerms} onChange={(e) => setAcceptedTerms(e.target.checked)} className="text-xs text-foreground/70">
+                                {t("auth.onboarding.agree_prefix", {}, "我已阅读并同意")}
+                                <a href="/terms" target="_blank" rel="noreferrer" className="mx-1 text-primary hover:underline">
                                     《用户服务协议》
                                 </a>
                                 与
-                                <a href="/privacy" target="_blank" rel="noreferrer" className="ml-1 text-[#00f5d4] hover:underline">
+                                <a href="/privacy" target="_blank" rel="noreferrer" className="ml-1 text-primary hover:underline">
                                     《隐私政策》
                                 </a>
                             </Checkbox>
@@ -340,10 +364,9 @@ export function SocialOnboardingModal() {
                                 loading={submitting}
                                 disabled={!isUsernameValid || (Boolean(password) && (!isPasswordValid || !isPasswordMatch)) || !acceptedTerms}
                                 onClick={handleSubmit}
-                                style={{ backgroundColor: "#00f5d4", color: "#0e1117", borderColor: "#00f5d4" }}
-                                className="h-11 flex-1 rounded-xl font-bold active:scale-[0.98] border-none shadow-none"
+                                className="h-11 flex-1 rounded-xl font-bold active:scale-[0.98] border-none shadow-sm !bg-primary !text-primary-foreground hover:opacity-90"
                             >
-                                完成配置并进入 SupDance
+                                {t("auth.onboarding.submit", { brand: brandName || "SupDance" }, `完成配置并进入 ${brandName || "SupDance"}`)}
                             </Button>
                         </div>
                     </div>
