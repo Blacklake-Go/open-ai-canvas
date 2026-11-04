@@ -58,10 +58,10 @@ describe("workspace sidebar storage meter", () => {
         expect(sidebar.indexOf("WorkspaceSidebarStorageMeter")).toBeLessThan(sidebar.indexOf("app-workspace-sidebar-profile-row"));
         expect(meter).toContain("HardDrive");
         expect(meter).toContain("app-workspace-sidebar-storage-icon");
-        expect(meter).toContain('t("account.layout.storage.used", { size: meter.usedLabel })');
+        expect(meter).toContain('t("nav.storage_used", { used: meter.usedLabel }, `已用 ${meter.usedLabel}`)');
         expect(accountZh.layout.storage.used).toBe("已用 {{size}}");
-        expect(meter).toContain('t("account.layout.storage.remaining", { size: meter.remainingLabel })');
-        expect(meter).toContain('t("account.layout.storage.total", { size: meter.totalLabel })');
+        expect(meter).toContain('t("nav.storage_remaining", { remaining: meter.remainingLabel }, `剩余 ${meter.remainingLabel}`)');
+        expect(meter).toContain('t("nav.storage_total", { total: meter.totalLabel }, `共 ${meter.totalLabel}`)');
         expect(accountZh.layout.storage).toMatchObject({ remaining: "剩余 {{size}}", total: "共 {{size}}" });
         expect(meter).toContain('to="/assets"');
         expect(css).toContain(".app-workspace-sidebar-storage-icon");

@@ -80,6 +80,7 @@ export const SUPDANCE_UPSTREAM_PATCH_REGISTRY: readonly UpstreamPatchRecord[] = 
         coupledUpstreamFiles: [
             ".github/workflows/quality.yml",
             "web/src/i18n/index.ts",
+            "web/src/pages/create/index.tsx",
             ".github/workflows/supdance-upstream-sync.yml",
             "scripts/verify-before-push.mjs",
             "web/package.json",

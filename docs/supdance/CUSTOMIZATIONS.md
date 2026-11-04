@@ -8,6 +8,7 @@
 - 保留已上线第一阶段：正式版自带 `b0d56dea` 分页，再精确带入 `common.load_more`、令牌、焦点与 44px 触控适配；移植 `338b75c8` 品牌与第二屏修复、相关测试及 E2E 调用参数。`supdance-agent-history-pagination` registry 与 baseline 两个路径同步保留；第一阶段文档不整体覆盖候选。
 - 集成包含 Schema 81、积分默认零奖励与取消登录补发，以及通用素材恢复。音乐插件独立素材桥接、RunningHub 真实结果和多标签恢复仍需分别验收；不把静态合并视为业务闭环通过。
 - 新适配器 `web/src/supdance/adapters/upstream-i18n.ts` 将上游 `web/src/i18n/index.ts` 的翻译后处理接入 SupDance 词库。插件语言、管理员词条和停用控制优先；仅保留一个语言选择器和 AntD locale 配置。新增耦合点已登记 compatibility registry 与 baseline。英文、西班牙语、繁体中文及停用回退有真实 React 渲染回归。
+- 创作页上传提示复用上游原生翻译键，经同一桥接保留插件发布优先；源码扫描器识别两套合法目录并排除目录定义，未知键仍拒绝。上游待译候选与本次接入基线单独记录在 `supdance/i18n/upstream-main-8de0a239-review.json`，不计作补译完成。
 - 迁移先在 PostgreSQL 备份恢复副本演练；旧 Schema 78 程序拒绝连接 Schema 81，回退必须恢复匹配数据库。源码元数据不能替代生产迁移证据。
 
 本文件记录 SupDance Canvas 相对上游 `ddcat-ai/open-ai-canvas` 的每一项定制改造、耦合边界及升级处理方式。

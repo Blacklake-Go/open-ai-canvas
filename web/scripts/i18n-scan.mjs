@@ -2,6 +2,7 @@ import { readFileSync, readdirSync, writeFileSync, mkdirSync, existsSync } from 
 import { resolve, relative, dirname } from "node:path";
 import { BUILTIN_SUPDANCE_I18N_ENTRIES } from "../src/supdance/plugins/i18n/locales/index.ts";
 import { scanSource, compareManifests, hashText } from "./i18n/source-scanner.mjs";
+import { i18n } from "../src/i18n/index.ts";
 
 const root = resolve(import.meta.dir, "..");
 const args = process.argv.slice(2);
@@ -31,7 +32,7 @@ function walk(dir) {
     for (const entry of readdirSync(dir, { withFileTypes: true }).sort((a, b) => a.name.localeCompare(b.name))) {
         const path = resolve(dir, entry.name);
         if (entry.isDirectory()) {
-            if (relative(sourceRoot, path) !== "supdance/plugins/i18n") walk(path);
+            if (!["supdance/plugins/i18n", "i18n"].includes(relative(sourceRoot, path).replaceAll("\\", "/"))) walk(path);
         } else if (/\.tsx?$/.test(entry.name) && !entry.name.endsWith(".d.ts")) {
             const result = scanSource(readFileSync(path, "utf8"), `src/${relative(sourceRoot, path).replaceAll("\\", "/")}`);
             items.push(...result.items);
@@ -49,7 +50,7 @@ for (const item of items) {
     item.status = matches.length > 1 ? "ambiguous" : matches.length === 1 ? "known" : item.dynamic ? "needs_context" : "new";
 }
 const knownKeys = new Set(entries.map((e) => e.key));
-const missingKeys = references.filter((r) => !knownKeys.has(r.key));
+const missingKeys = references.filter((r) => !knownKeys.has(r.key) && !i18n.exists(r.key, { lng: "zh-CN" }));
 if (!existsSync(baseline) && !args.includes("--write-baseline")) throw new Error("Missing baseline; create it explicitly with --write-baseline");
 const previous = existsSync(baseline) ? JSON.parse(readFileSync(baseline, "utf8")) : { schemaVersion: 1, items: [], missingKeys: [] };
 if (previous.schemaVersion !== 1 || !Array.isArray(previous.items)) throw new Error("Unsupported baseline schema");

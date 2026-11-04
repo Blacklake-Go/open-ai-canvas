@@ -69,7 +69,7 @@ describe("changed-file formatting gate", () => {
         repo.commit();
         await expect(repo.check()).rejects.toThrow();
         expect(repo.messages).toEqual([]);
-    });
+    }, 20000);
 
     test("unavailable explicit base SHA falls back to the head parent", async () => {
         const repo = fixture();

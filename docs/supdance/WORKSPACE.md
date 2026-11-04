@@ -37,6 +37,8 @@ mkdir -p .local/project-workbench-debug .local/cache/go-build .local/cache/go-mo
 
 ## 3. Git 分支模型与职责
 
+当前自有仓库的 `main` 与 `supdance/main` 已共同包含 SupDance 定制。本次按用户要求将完整上游集成同步至这两个分支，并从自有 `main` 固定提交部署；不通过重写历史把现有 `main` 恢复为上游镜像。以下图示为最初规划，涉及「main 只做干净镜像」的描述不再作为当前分支写入规则。
+
 ```text
 upstream/main
     |

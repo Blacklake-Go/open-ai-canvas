@@ -46,9 +46,9 @@ describe("workspace sidebar checkin card", () => {
 
         expect(checkinIndex).toBeGreaterThan(-1);
         expect(storageIndex).toBeGreaterThan(checkinIndex);
-        expect(card).toContain('t("account.layout.checkin.claim")');
+        expect(card).toContain('t("nav.checkin_claim_now", undefined, "立即领取")');
         expect(accountZh.layout.checkin.claim).toBe("立即领取");
-        expect(card).toContain('{t("account.layout.checkin.offerBefore")}\n                    <em>{amount}</em>\n                    {t("account.layout.checkin.offerAfter")}');
+        expect(card).toMatch(/\{t\("nav\.checkin_today_prefix", undefined, "今日"\)\}\s*<em>\{amount\}<\/em>\s*\{t\("nav\.checkin_credits_suffix", undefined, "积分"\)\}/);
         expect(accountZh.layout.checkin).toMatchObject({ offerBefore: "今日", offerAfter: "积分" });
         expect(card).toContain("checkinCredits()");
         expect(block).toContain("background: #fff;");

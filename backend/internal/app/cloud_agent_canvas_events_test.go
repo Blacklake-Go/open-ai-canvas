@@ -3,11 +3,14 @@ package app
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"strings"
 	"testing"
+	"time"
 
 	"yingce/backend/internal/model"
 	"yingce/backend/internal/prompts"
+	"yingce/backend/internal/repository"
 )
 
 func agentCanvasPatchForOperation(t *testing.T, state cloudAgentRuntime, operation string) map[string]any {
@@ -126,9 +129,26 @@ func TestCloudAgentCanvasPatchesPersistDraftSubmissionAndAllTerminalStates(t *te
 				t.Fatalf("terminal patch lost task identity/state: %+v", changes[0])
 			}
 			// Replaying a checkpoint must not create another charged task or delta.
-			if err := s.advanceCloudAgentByID("user", run.ID); err != nil {
+			var replayErr error
+			for attempt := 0; attempt < 3; attempt++ {
+				replayErr = s.advanceCloudAgentByID("user", run.ID)
+				if !errors.Is(replayErr, repository.ErrCreationConflict) {
+					break
+				}
+				time.Sleep(10 * time.Millisecond)
+			}
+			if replayErr != nil {
+				t.Fatal(replayErr)
+			}
+			replayed, err := s.repo.CloudAgent("user", run.ID)
+			if err != nil {
 				t.Fatal(err)
 			}
+			replayedState, err := cloudAgentDecode(replayed)
+			if err != nil {
+				t.Fatal(err)
+			}
+			agentCanvasPatchForOperation(t, replayedState, "generate_media_complete")
 			var count int64
 			db.Model(&model.Task{}).Where("type = ?", "canvas_video").Count(&count)
 			if count != 1 {

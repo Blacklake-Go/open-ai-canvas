@@ -879,7 +879,7 @@ async function shotOutputs(cdp, baseUrl) {
     assert(result.maxColorError <= 2, "G5 beauty matches default framebuffer tone mapping", `max error=${result.maxColorError}`);
     const recording = await cdp.evaluate(`(async () => {
         const handle=window.__previsCaptureTest.handle;
-        const blob=await handle.recordVideo(.6,12,'depth',{longEdge:320});
+        const blob=await handle.recordVideo(2,12,'depth',{longEdge:320});
         const video=document.createElement('video'),url=URL.createObjectURL(blob);video.muted=true;
         try { await new Promise((resolve,reject)=>{video.onloadeddata=resolve;video.onerror=()=>reject(new Error('recording cannot decode'));video.src=url;});
             const abort=new AbortController();const pending=handle.recordVideo(2,12,'beauty',{longEdge:320,signal:abort.signal});abort.abort();

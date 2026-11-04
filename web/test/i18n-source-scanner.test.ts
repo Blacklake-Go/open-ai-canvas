@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test";
-import { mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
 import { scanSource, compareManifests, validateTranslation, hashText } from "../scripts/i18n/source-scanner.mjs";
@@ -61,6 +61,27 @@ describe("source update localization pipeline", () => {
             rmSync(dir, { recursive: true, force: true });
         }
     });
+    test("accepts upstream catalog keys while rejecting unknown keys and excluding catalog definitions", () => {
+        const directory = mkdtempSync(join(tmpdir(), "supdance-native-catalog-"));
+        try {
+            const sourceRoot = join(directory, "src");
+            mkdirSync(join(sourceRoot, "i18n"), { recursive: true });
+            writeFileSync(join(sourceRoot, "i18n", "catalog.ts"), 'export const catalog = { title: "目录中的测试词条" };');
+            const baseline = join(directory, "baseline.json");
+            const report = join(directory, "report.json");
+            writeFileSync(baseline, JSON.stringify({ schemaVersion: 1, items: [], catalog: [], missingKeys: [] }));
+            const page = join(sourceRoot, "page.tsx");
+            const run = () => Bun.spawnSync([process.execPath, "scripts/i18n-scan.mjs", "--check", "--source-root", sourceRoot, "--baseline", baseline, "--output", report], { cwd: resolve(import.meta.dir, "..") });
+            writeFileSync(page, 'const Page = () => <div>{t("nav.tools.canvas")}{t("supdance.nonexistent_native_key")}</div>;');
+            expect(run().exitCode).toBe(1);
+            expect(JSON.parse(readFileSync(report, "utf8")).missingKeys.map((item: { key: string }) => item.key)).toEqual(["supdance.nonexistent_native_key"]);
+            writeFileSync(page, 'const Page = () => <div>{t("nav.tools.canvas")}</div>;');
+            expect(run().exitCode).toBe(0);
+            expect(JSON.parse(readFileSync(report, "utf8")).summary.scannedTexts).toBe(0);
+        } finally {
+            rmSync(directory, { recursive: true, force: true });
+        }
+    }, 20000);
     test("legacy zero-budget and invalid-budget gates cannot silently pass", () => {
         for (const args of [["--fail", "--budget", "0"], ["--fail"], ["--fail", "--budget", "NaN"]]) {
             const result = Bun.spawnSync([process.execPath, "scripts/i18n-audit.mjs", ...args], { cwd: resolve(import.meta.dir, "..") });

@@ -16,8 +16,12 @@ test("welcome entry loads configured appearance", async () => {
         window: { location: { pathname: "/welcome" } },
         installChunkRecovery() {},
         isIsolatedDirectorRepro: () => false,
-        bootstrapAppearance: async () => { calls++; },
-        loadModule: async (name) => { imports.push(name); },
+        bootstrapAppearance: async () => {
+            calls++;
+        },
+        loadModule: async (name) => {
+            imports.push(name);
+        },
     });
     await Promise.resolve();
     assert.equal(calls, 1, "welcome entry must bootstrap appearance");
@@ -35,8 +39,12 @@ test("welcome effects preserve configured SEO title", () => {
             vm.runInNewContext(`(() => {${body}\n})()`, {
                 document,
                 window: { matchMedia: () => ({ matches: false, addEventListener() {}, removeEventListener() {} }), addEventListener() {}, removeEventListener() {} },
-                storyRef: { current: null }, restorePickerFocus: { current: false },
-                setReduced() {}, setLook() {}, getWelcomeLook() {},
+                storyRef: { current: null },
+                restorePickerFocus: { current: false },
+                dialogRef: { current: null },
+                setReduced() {},
+                setLook() {},
+                getWelcomeLook() {},
             });
         }
         assert.equal(document.title, title, "welcome must preserve appearance metadata title");

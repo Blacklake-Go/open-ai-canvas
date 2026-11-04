@@ -21,6 +21,7 @@
     "baseCommit": "259e7e3fba0b6f70ac3cfd65941c3ca345d60249"
   },
   "coupledUpstreamFiles": [
+    "web/src/pages/create/index.tsx",
     "web/src/i18n/index.ts",
     "web/src/components/canvas/canvas-cloud-agent-panel-parts.tsx",
     "web/src/components/canvas/canvas-cloud-agent.css",

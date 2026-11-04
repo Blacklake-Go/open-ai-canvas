@@ -26,5 +26,5 @@ test("拖入时高亮拖放区", () => {
 });
 
 test("失败行直接显示后端返回的原因（截断，悬停看全文）", () => {
-    expect(source).toContain('{item.status === "error" && item.error ? <span className="block truncate text-[var(--fs-label)] text-red-500" title={item.error}>{item.error}</span> : null}');
+    expect(source).toMatch(/\{item\.status === "error" && item\.error \? \(\s*<span className="block truncate text-\[var\(--fs-label\)\] text-red-500" title=\{item\.error\}>\s*\{item\.error\}\s*<\/span>\s*\) : null\}/);
 });
