@@ -10,15 +10,15 @@ let activeLocale = "zh-CN" as ReturnType<typeof useSupDanceI18nStore.getState>["
 let activeEnabled = false;
 
 setTranslationOverride((value: string, keys: string | string[], options: TOptions) => {
-        if (!activeEnabled) return value;
-        const state = useSupDanceI18nStore.getState();
-        const key = Array.isArray(keys) ? keys[0] : keys;
-        if (key && state.dictionary.byKey.has(key)) {
-            const params = Object.fromEntries(Object.entries(options).filter(([, item]) => typeof item === "string" || typeof item === "number")) as Record<string, string | number>;
-            return translateByKey(state.dictionary, key, activeLocale, state.settings.fallbackLocale, params);
-        }
-        const source = key ? i18n.getFixedT("zh-CN")(key, { ...options, lng: "zh-CN", postProcess: [] }) : value;
-        return translateSourceText(state.dictionary, source, activeLocale, state.settings.fallbackLocale) ?? value;
+    if (!activeEnabled) return value;
+    const state = useSupDanceI18nStore.getState();
+    const key = Array.isArray(keys) ? keys[0] : keys;
+    if (key && state.dictionary.byKey.has(key)) {
+        const params = Object.fromEntries(Object.entries(options).filter(([, item]) => typeof item === "string" || typeof item === "number")) as Record<string, string | number>;
+        return translateByKey(state.dictionary, key, activeLocale, state.settings.fallbackLocale, params);
+    }
+    const source = key ? i18n.getFixedT("zh-CN")(key, { ...options, lng: "zh-CN", postProcess: [] }) : value;
+    return translateSourceText(state.dictionary, source, activeLocale, state.settings.fallbackLocale) ?? value;
 });
 
 export function useSupDanceUpstreamI18n() {

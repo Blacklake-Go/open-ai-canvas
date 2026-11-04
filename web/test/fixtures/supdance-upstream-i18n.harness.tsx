@@ -2,7 +2,17 @@ import { afterAll, expect, test } from "bun:test";
 import { Window } from "happy-dom";
 
 const dom = new Window({ url: "http://localhost/" });
-for (const [key, value] of Object.entries({ window: dom, document: dom.document, navigator: dom.navigator, localStorage: dom.localStorage, HTMLElement: dom.HTMLElement, Element: dom.Element, Node: dom.Node, Event: dom.Event, IS_REACT_ACT_ENVIRONMENT: true })) {
+for (const [key, value] of Object.entries({
+    window: dom,
+    document: dom.document,
+    navigator: dom.navigator,
+    localStorage: dom.localStorage,
+    HTMLElement: dom.HTMLElement,
+    Element: dom.Element,
+    Node: dom.Node,
+    Event: dom.Event,
+    IS_REACT_ACT_ENVIRONMENT: true,
+})) {
     Object.defineProperty(globalThis, key, { configurable: true, writable: true, value });
 }
 const { act } = await import("react");
@@ -24,7 +34,12 @@ afterAll(async () => dom.happyDOM.close());
 test("published source translations override upstream text for English and Spanish, then disable restores Chinese", async () => {
     const source = i18n.getFixedT("zh-CN")("nav.tools.canvas", { postProcess: [] });
     const state = useSupDanceI18nStore.getState();
-    const entry = { ...state.entries[0], key: "custom.upstream_canvas", sourceText: source, translations: { "zh-CN": source, "en-US": "Published canvas", "es-ES": "Lienzo publicado", "zh-TW": "已發佈畫布", "ja-JP": "公開キャンバス", "ko-KR": "게시된 캔버스" } };
+    const entry = {
+        ...state.entries[0],
+        key: "custom.upstream_canvas",
+        sourceText: source,
+        translations: { "zh-CN": source, "en-US": "Published canvas", "es-ES": "Lienzo publicado", "zh-TW": "已發佈畫布", "ja-JP": "公開キャンバス", "ko-KR": "게시된 캔버스" },
+    };
     const host = document.createElement("div");
     document.body.append(host);
     const root = createRoot(host);
