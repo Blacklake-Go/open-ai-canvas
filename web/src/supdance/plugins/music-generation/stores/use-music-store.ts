@@ -160,6 +160,8 @@ export const useMusicStore = create<MusicState>((set, get) => ({
                 ...state.draft,
                 model,
                 mode,
+                lyrics: modes.includes("custom") ? state.draft.lyrics : "",
+                instrumental: caps?.instrumentalSupported === true && state.draft.instrumental,
                 duration: Math.min(Math.max(state.draft.duration, caps?.minDuration || 30), caps?.maxDuration || 240),
             };
             if (userId) {

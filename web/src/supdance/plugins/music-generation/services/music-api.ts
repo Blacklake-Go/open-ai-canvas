@@ -9,6 +9,7 @@ export type ModelCapabilities = {
     name: string;
     version: string;
     modes: ("simple" | "custom")[];
+    instrumentalSupported?: boolean;
     minDuration: number;
     maxDuration: number;
     formats: AudioFormat[];

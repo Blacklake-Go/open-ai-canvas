@@ -22,6 +22,8 @@
   },
   "coupledUpstreamFiles": [
     "web/src/pages/create/index.tsx",
+    "web/src/styles/globals.css",
+    "web/src/pages/create/creation-product.css",
     "web/src/i18n/index.ts",
     "web/src/components/canvas/canvas-cloud-agent-panel-parts.tsx",
     "web/src/components/canvas/canvas-cloud-agent.css",

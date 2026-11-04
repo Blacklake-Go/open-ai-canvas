@@ -144,91 +144,21 @@ export function MusicForm({ userId, onSubmitted }: MusicFormProps) {
                         </div>
                     </div>
 
-                    {/* Instrumental Toggle */}
-                    <div className="flex items-center justify-between border-t border-border/40 pt-3">
-                        <div>
-                            <span className="text-sm font-medium text-foreground">{t("music.instrumental_only", undefined, "纯纯伴奏 (无歌词人声)")}</span>
-                            <p className="text-xs text-muted-foreground">仅生成背景器乐伴奏，忽略歌词</p>
-                        </div>
-                        <input type="checkbox" checked={draft.instrumental} onChange={(e) => setDraftField("instrumental", e.target.checked, userId)} className="size-5 rounded-sm accent-primary cursor-pointer" />
-                    </div>
-
                     {/* Lyrics Editor (Hidden when instrumental) */}
-                    {!draft.instrumental && (
+                    {(!selectedModelCap.instrumentalSupported || !draft.instrumental) && (
                         <div className="flex flex-col gap-1.5">
                             <label className="text-xs font-medium text-foreground">{t("music.lyrics_editor", undefined, "专业歌词编辑器")}</label>
                             <LyricsEditor value={draft.lyrics} onChange={(val) => setDraftField("lyrics", val, userId)} maxChars={selectedModelCap.maxLyricsChars} />
                         </div>
                     )}
-
-                    {/* Model-Specific Controls */}
-                    {draft.model === "lyria-3.5" && selectedModelCap.tempoBpmRange && (
-                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 border-t border-border/40 pt-3">
-                            <div className="flex flex-col gap-1.5">
-                                <label className="text-xs font-medium text-foreground">节奏速度: {draft.tempoBpm} BPM</label>
-                                <input
-                                    type="range"
-                                    min={selectedModelCap.tempoBpmRange[0]}
-                                    max={selectedModelCap.tempoBpmRange[1]}
-                                    value={draft.tempoBpm}
-                                    onChange={(e) => setDraftField("tempoBpm", parseInt(e.target.value, 10), userId)}
-                                    className="cursor-pointer accent-primary"
-                                />
-                            </div>
-                            <div className="flex flex-col gap-1.5">
-                                <label className="text-xs font-medium text-foreground">调性选择</label>
-                                <select value={draft.keySignature} onChange={(e) => setDraftField("keySignature", e.target.value, userId)} className="rounded-lg border border-border/60 bg-card px-3 py-2 text-sm text-foreground">
-                                    {(selectedModelCap.keySignatures || ["C"]).map((key) => (
-                                        <option key={key} value={key}>
-                                            {key}
-                                        </option>
-                                    ))}
-                                </select>
-                            </div>
-                        </div>
-                    )}
-
-                    {draft.model === "mureka-9.5" && selectedModelCap.vocalGenders && (
-                        <div className="flex flex-col gap-1.5 border-t border-border/40 pt-3">
-                            <label className="text-xs font-medium text-foreground">人声音色倾向</label>
-                            <div className="flex items-center gap-3">
-                                {selectedModelCap.vocalGenders.map((gender) => (
-                                    <label key={gender} className="flex items-center gap-1.5 text-xs text-foreground cursor-pointer">
-                                        <input type="radio" name="vocalGender" value={gender} checked={draft.vocalGender === gender} onChange={() => setDraftField("vocalGender", gender, userId)} className="accent-primary" />
-                                        <span>{gender === "male" ? "男声" : gender === "female" ? "女声" : "自动识别"}</span>
-                                    </label>
-                                ))}
-                            </div>
-                        </div>
-                    )}
-
-                    {draft.model === "music_v2_5" && selectedModelCap.stemSeparation && (
-                        <div className="flex flex-col gap-1.5 border-t border-border/40 pt-3">
-                            <label className="text-xs font-medium text-foreground">多音轨分轨导出 (Stems)</label>
-                            <div className="flex flex-wrap items-center gap-4">
-                                {(selectedModelCap.supportedStems || ["vocals", "drums", "bass", "other"]).map((stem) => {
-                                    const checked = draft.stems.includes(stem);
-                                    return (
-                                        <label key={stem} className="flex items-center gap-1.5 text-xs text-foreground cursor-pointer">
-                                            <input
-                                                type="checkbox"
-                                                checked={checked}
-                                                onChange={(e) => {
-                                                    const next = e.target.checked ? [...draft.stems, stem] : draft.stems.filter((s) => s !== stem);
-                                                    setDraftField("stems", next, userId);
-                                                }}
-                                                className="accent-primary"
-                                            />
-                                            <span className="capitalize">{stem}</span>
-                                        </label>
-                                    );
-                                })}
-                            </div>
-                        </div>
-                    )}
                 </div>
             )}
-
+            {selectedModelCap.instrumentalSupported && (
+                <div className="flex items-center justify-between border-t border-border/40 pt-3">
+                    <span className="text-sm font-medium text-foreground">{t("music.instrumental_only")}</span>
+                    <input type="checkbox" aria-label={t("music.instrumental_only")} checked={draft.instrumental} onChange={(e) => setDraftField("instrumental", e.target.checked, userId)} className="size-5 rounded-sm accent-primary cursor-pointer" />
+                </div>
+            )}
             {/* Target Duration & Output Format */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="flex flex-col gap-1.5">
@@ -246,6 +176,7 @@ export function MusicForm({ userId, onSubmitted }: MusicFormProps) {
                         onChange={(e) => setDraftField("duration", parseInt(e.target.value, 10), userId)}
                         className="cursor-pointer accent-primary"
                     />
+                    <p className="text-xs text-muted-foreground">{t("music.target_duration_hint", { seconds: draft.duration })}</p>
                 </div>
 
                 <div className="flex flex-col gap-1.5">

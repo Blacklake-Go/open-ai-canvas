@@ -6,6 +6,8 @@ import { Link, useLocation } from "react-router";
 import { useThemeStore } from "@/stores/use-theme-store";
 import { LEGAL_OPERATOR_CONFIG, type LocalizedLegalDoc, type SupportedLegalLanguage } from "./legal-i18n-content";
 import { LegalThemeToggler } from "./legal-theme-toggler";
+import { LegalBrand } from "./legal-brand";
+import { LegalHeaderNav } from "./legal-header-nav";
 
 interface LinearLegalPageProps {
     docMap: Record<SupportedLegalLanguage, LocalizedLegalDoc>;
@@ -89,27 +91,10 @@ export function LinearLegalPage({ docMap, currentSlug }: LinearLegalPageProps) {
             {/* 顶部 Sticky Header (Linear 风格) */}
             <header className="legal-public-header flex h-16 w-full items-center justify-between px-6 sm:px-12 transition-colors">
                 {/* 左侧：Logo 与品牌 */}
-                <Link to="/" className="flex items-center gap-2.5 text-base font-semibold tracking-tight no-underline group">
-                    <span className="size-6 rounded-full flex items-center justify-center font-bold text-xs bg-black text-white dark:bg-white dark:text-black">S</span>
-                    <span className="text-black dark:text-white font-semibold">{LEGAL_OPERATOR_CONFIG.tradeName}</span>
-                    <span className="text-[11px] font-mono tracking-widest uppercase px-1.5 py-0.5 rounded bg-black/5 text-black/60 dark:bg-white/10 dark:text-white/60">LEGAL</span>
-                </Link>
+                <LegalBrand badge="LEGAL" />
 
                 {/* 中间：协议导航链接 */}
-                <nav className="hidden md:flex items-center gap-6 text-xs font-medium tracking-wide">
-                    <Link to="/terms" className={`transition-colors no-underline ${currentSlug === "terms" ? "text-black dark:text-white font-semibold" : "text-black/60 hover:text-black dark:text-white/60 dark:hover:text-white"}`}>
-                        Terms of Service
-                    </Link>
-                    <Link to="/privacy" className={`transition-colors no-underline ${currentSlug === "privacy" ? "text-black dark:text-white font-semibold" : "text-black/60 hover:text-black dark:text-white/60 dark:hover:text-white"}`}>
-                        Privacy Policy
-                    </Link>
-                    <Link to="/aup" className={`transition-colors no-underline ${currentSlug === "aup" ? "text-black dark:text-white font-semibold" : "text-black/60 hover:text-black dark:text-white/60 dark:hover:text-white"}`}>
-                        Acceptable Use (AUP)
-                    </Link>
-                    <Link to="/legal" className="transition-colors no-underline text-black/40 hover:text-black dark:text-white/40 dark:hover:text-white">
-                        Legal Hub
-                    </Link>
-                </nav>
+                <LegalHeaderNav currentPath={`/${currentSlug}`} />
 
                 {/* 右侧：多语言切换器 + 明暗切换 */}
                 <div className="flex items-center gap-3">

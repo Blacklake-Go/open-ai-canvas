@@ -17,7 +17,8 @@ export function siteMusicModels(config: AiConfig): ModelCapabilities[] {
                 id,
                 name: configuredModelDisplayName(config, id),
                 version: "",
-                modes: ["simple", "custom"],
+                modes: cost.protocol === "runninghub-standard-audio-mureka" || cost.protocol === "runninghub-standard-audio-minimax-music" ? ["simple", "custom"] : ["simple"],
+                instrumentalSupported: cost.protocol === "runninghub-standard-audio-suno" || cost.protocol === "runninghub-standard-audio-minimax-music",
                 minDuration: 30,
                 maxDuration: 300,
                 formats: ["mp3"],
@@ -37,15 +38,21 @@ export async function siteMusicQuote(model: string, duration: number, signal?: A
     return (await quoteModel(request, signal)).quote;
 }
 
-export async function submitSiteMusicTask(payload: SubmitMusicTaskPayload) {
-    const config = useConfigStore.getState().config;
-    if (!siteMusicModels(config).some((model) => model.id === payload.model && model.available)) throw new Error("Music model is unavailable");
-    const task = await submitBackendGenerationTask({
+export async function submitSiteMusicTask(payload: SubmitMusicTaskPayload, dependencies = { config: useConfigStore.getState().config, submitTask: submitBackendGenerationTask }) {
+    const config = dependencies.config;
+    const model = siteMusicModels(config).find((item) => item.id === payload.model && item.available);
+    if (!model) throw new Error("Music model is unavailable");
+    if (!model.modes.includes(payload.mode)) throw new Error("Music mode is unsupported by this model");
+    const instrumental = model.instrumentalSupported && payload.instrumental === true;
+    const task = await dependencies.submitTask({
         mode: "audio",
         prompt: [payload.prompt, payload.tags].filter(Boolean).join("\n"),
         config: { ...config, model: payload.model, audioModel: payload.model, audioFormat: "mp3" },
         clientOperationId: payload.idempotencyNonce,
-        metadata: { source: "music-workbench", music: { title: payload.title, lyrics: payload.lyrics || "", instrumental: payload.instrumental === true, duration: payload.duration } },
+        metadata: {
+            source: "music-workbench",
+            music: { title: payload.title, ...(payload.mode === "custom" && !instrumental ? { lyrics: payload.lyrics || "" } : {}), ...(model.instrumentalSupported ? { instrumental } : {}), duration: payload.duration },
+        },
     });
     return { taskId: task.id, status: task.status };
 }
@@ -102,6 +109,6 @@ export async function querySiteMusicTask(taskId: string) {
 
 export async function listSiteMusicTasks(page: number, pageSize: number, dependencies = { listTasks: listGenerationTasks, queryTask: queryGenerationTask }) {
     const tasks = (await dependencies.listTasks(1000)).filter((task) => task.type === "canvas_audio" && /suno|mureka|music/i.test(task.model || ""));
-    const items = await Promise.all(tasks.slice((page - 1) * pageSize, page * pageSize).map(async (summary) => accessibleMusicTask(await dependencies.queryTask(summary.id))));
+    const items = await Promise.all(tasks.slice((page - 1) * pageSize, page * pageSize).map(async (summary) => accessibleMusicTask({ ...(await dependencies.queryTask(summary.id)), billing: summary.billing })));
     return { items, total: tasks.length, page, pageSize };
 }

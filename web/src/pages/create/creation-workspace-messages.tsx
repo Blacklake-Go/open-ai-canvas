@@ -53,6 +53,7 @@ import { CanvasImagePreview } from "@/components/canvas/canvas-image-preview";
 import { AppModal } from "@/components/ui/product/app-modal";
 import { creationResultEntries } from "./creation-result-urls";
 import { useI18n } from "@/supdance/plugins/i18n";
+import { translate } from "@/i18n";
 import "./creation-music.css";
 
 const WaveformPlayer = lazy(() =>
@@ -100,8 +101,8 @@ export function CreationMessageView({
             <>
                 {shotNumber > 0 ? <span className="creation-shot-badge">镜 {shotNumber}</span> : null}
                 <span className="creation-message-mark">{mode === "music" ? <Music /> : <Orbit />}</span>
-                <strong>{mode === "music" ? t("music.message_generation", undefined, "音乐生成") : mode === "image" ? "图像生成" : "视频生成"}</strong>
-                {item.status === "done" ? <span className="creation-message-progress-copy">{mode === "music" ? t("music.message_created", undefined, "音乐已生成") : `你的${mode === "video" ? "视频" : "图像"}已创建`}</span> : null}
+                <strong>{mode === "music" ? t("music.message_generation") : mode === "image" ? translate("create.message.imageGeneration") : translate("create.message.videoGeneration")}</strong>
+                {item.status === "done" ? <span className="creation-message-progress-copy">{mode === "music" ? t("music.message_created") : mode === "image" ? t("music.image_created") : t("music.video_created")}</span> : null}
                 {item.status === "done" ? (
                     <button type="button" className="creation-message-variant-action" onClick={onCreateVariant}>
                         <RefreshCw />
@@ -545,14 +546,14 @@ export function MediaResult({
                 </div>
             )}
             <div className="creation-media-actions">
-                <span>{isMusic ? t("music.result_count", { count: displayResultUrls.length }, "{count} 个音频结果") : isVideo ? "视频结果" : `${displayResultUrls.length} 张图片`}</span>
+                <span>{isMusic ? t("music.result_count", { count: displayResultUrls.length }) : isVideo ? t("music.video_results") : t("music.image_result_count", { count: displayResultUrls.length })}</span>
                 <Button type="link" size="small" loading={openingCanvas} disabled={!canContinueWithResults} title={canContinueWithResults ? undefined : "素材保存完成后才能转入画布"} onClick={() => onContinueCanvas(resultAssetIds)}>
                     添加到画布
                 </Button>
                 {displayResultUrls.map((url, index) => (
                     <a key={`download-${index}`} href={url} download>
                         {displayResultUrls.length > 1 ? (
-                            `下载 ${index + 1}`
+                            t("music.download_number", { number: index + 1 })
                         ) : (
                             <>
                                 <Download />

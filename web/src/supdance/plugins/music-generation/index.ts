@@ -1,6 +1,7 @@
 import { PLUGIN_API_VERSION_V2, type RegisteredPlugin } from "@/lib/plugins/plugin-types";
 import { registerSupDancePlugin, type SupDancePluginManifest } from "@/supdance/adapters/compatibility";
 import { SUPDANCE_MUSIC_PLUGIN_ID } from "./types";
+import { MUSIC_SITE_DESCRIPTION } from "../i18n/locales/music-site";
 
 export const supdanceMusicManifest: SupDancePluginManifest = {
     apiVersion: PLUGIN_API_VERSION_V2,
@@ -11,7 +12,7 @@ export const supdanceMusicManifest: SupDancePluginManifest = {
     updatedAt: "2026-10-31",
     minHostVersion: "1.7.1",
     author: "SupDance Team",
-    description: "音乐工作台使用后台配置的平台音乐模型、统一音频生成任务与实时报价，提供简单和歌词创作、目标时长、原始 MP3 播放下载及共享任务历史。模型与版本由渠道配置决定。",
+    description: MUSIC_SITE_DESCRIPTION,
     surfaces: ["fullscreen", "settings", "hybrid"],
     permissions: ["canvas.read", "canvas.write", "asset.read", "asset.upload", "generation.run", "ai.text", "media.read"],
     trusted: true,

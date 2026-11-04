@@ -1,6 +1,13 @@
 import type { SupDanceI18nEntry } from "../types";
 
+export const MUSIC_SITE_DESCRIPTION = "音乐工作台使用后台配置的平台音乐模型、统一音频生成任务与实时报价，提供简单和歌词创作、目标时长、原始 MP3 播放下载及共享任务历史。模型与版本由渠道配置决定。";
+
 const definitions = [
+    ["image_created", "你的图像已创建", "Your image is ready", "你的圖像已建立", "画像が生成されました", "이미지가 생성되었습니다", "Tu imagen está lista"],
+    ["video_created", "你的视频已创建", "Your video is ready", "你的影片已建立", "動画が生成されました", "동영상이 생성되었습니다", "Tu vídeo está listo"],
+    ["video_results", "视频结果", "Video results", "影片結果", "動画の結果", "동영상 결과", "Resultados de vídeo"],
+    ["image_result_count", "{count} 张图片", "{count} images", "{count} 張圖片", "画像 {count} 枚", "이미지 {count}개", "{count} imágenes"],
+    ["download_number", "下载 {number}", "Download {number}", "下載 {number}", "ダウンロード {number}", "다운로드 {number}", "Descargar {number}"],
     [
         "no_models",
         "暂无可用音乐模型，请在后台配置音乐渠道。",

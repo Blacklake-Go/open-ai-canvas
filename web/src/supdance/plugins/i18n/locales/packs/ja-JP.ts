@@ -1,4 +1,7 @@
+import { MUSIC_SITE_I18N_ENTRIES } from "../music-site";
+
 const pack: Record<string, string> = {
+    ...Object.fromEntries(MUSIC_SITE_I18N_ENTRIES.map((entry) => [entry.key, entry.translations["ja-JP"]])),
     "admin.social_auth.icon_upload_hint": "ライト用とダーク用のアイコンをアップロードしてください（128×128 PNG/WebP 推奨、最大5MB）。テーマに合わせて切り替わり、クリアすると既定に戻ります。",
     "admin.visual_motion.enable": "サイト全体のトランジションを有効にする",
     "admin.visual_motion.description": "初期設定はオフです。上流のロゴ、3つの点、読み込み表示を残し、追加の復元アニメーションを省略します。ページルールでこの設定は上書きできません。オンにすると既存の動きを復元し、上流にない画面遷移は追加しません。",
@@ -78,6 +81,7 @@ const pack: Record<string, string> = {
     "nav.assets_history": "アセットと履歴",
     "nav.assets": "アセット",
     "nav.tasks": "制作履歴",
+    "nav.pricing": "料金表",
     "nav.tasks_short": "履歴",
     "nav.settings": "設定",
     "nav.feedback": "フィードバック",

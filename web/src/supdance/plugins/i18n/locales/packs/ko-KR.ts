@@ -1,4 +1,7 @@
+import { MUSIC_SITE_I18N_ENTRIES } from "../music-site";
+
 const pack: Record<string, string> = {
+    ...Object.fromEntries(MUSIC_SITE_I18N_ENTRIES.map((entry) => [entry.key, entry.translations["ko-KR"]])),
     "admin.social_auth.icon_upload_hint": "밝은 테마와 어두운 테마 아이콘을 각각 업로드하세요(128×128 PNG/WebP 권장, 최대 5MB). 테마에 따라 전환되며 지우면 기본 아이콘으로 복원됩니다.",
     "admin.visual_motion.enable": "사이트 전체 전환 효과 사용",
     "admin.visual_motion.description":
@@ -79,6 +82,7 @@ const pack: Record<string, string> = {
     "nav.assets_history": "자산 및 기록",
     "nav.assets": "자산",
     "nav.tasks": "창작 기록",
+    "nav.pricing": "요금표",
     "nav.tasks_short": "기록",
     "nav.settings": "설정",
     "nav.feedback": "피드백",

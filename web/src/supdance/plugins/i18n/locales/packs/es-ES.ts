@@ -1,4 +1,7 @@
+import { MUSIC_SITE_I18N_ENTRIES } from "../music-site";
+
 const pack: Record<string, string> = {
+    ...Object.fromEntries(MUSIC_SITE_I18N_ENTRIES.map((entry) => [entry.key, entry.translations["es-ES"]])),
     "admin.social_auth.icon_upload_hint": "Sube iconos claros y oscuros por separado (PNG/WebP de 128×128 recomendado, hasta 5MB). Siguen el tema de la interfaz; al borrarlos se restaura el icono predeterminado.",
     "admin.visual_motion.enable": "Activar transiciones del sitio",
     "admin.visual_motion.description":
@@ -79,6 +82,7 @@ const pack: Record<string, string> = {
     "nav.assets_history": "Activos e Historial",
     "nav.assets": "Activos",
     "nav.tasks": "Historial de Creación",
+    "nav.pricing": "Precios",
     "nav.tasks_short": "Historial",
     "nav.settings": "Configuración",
     "nav.feedback": "Comentarios",

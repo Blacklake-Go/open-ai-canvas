@@ -1,4 +1,7 @@
+import { MUSIC_SITE_I18N_ENTRIES } from "../music-site";
+
 const pack: Record<string, string> = {
+    ...Object.fromEntries(MUSIC_SITE_I18N_ENTRIES.map((entry) => [entry.key, entry.translations["zh-TW"]])),
     "admin.social_auth.icon_upload_hint": "分別上傳亮色與暗色兩版品牌圖示（建議 128×128 PNG/WebP，最大 5MB）；依介面主題自動切換，清除後恢復預設圖示。",
     "admin.visual_motion.enable": "啟用全站過渡動效",
     "admin.visual_motion.description": "預設關閉。關閉後僅保留上游的 Logo、三點與頁面載入提示，略過額外恢復動畫；頁面規則不能覆寫總開關。開啟後恢復既有動效，不新增上游沒有的路由動畫。",
@@ -78,6 +81,7 @@ const pack: Record<string, string> = {
     "nav.assets_history": "資產與歷史",
     "nav.assets": "資產",
     "nav.tasks": "創作歷史",
+    "nav.pricing": "價目表",
     "nav.tasks_short": "歷史",
     "nav.settings": "設定",
     "nav.feedback": "回饋",

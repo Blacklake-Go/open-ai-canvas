@@ -183,6 +183,15 @@ export const SUPDANCE_UPSTREAM_PATCH_REGISTRY: readonly UpstreamPatchRecord[] = 
         reason: "以独立插件形式挂载双入口统一控制台 (/admin/plugins/visual-engine)、全站设计令牌桥接与工作区恢复动画，不侵入宿主业务逻辑。",
         upgradeRisk: "LOW",
     },
+    {
+        id: "supdance-public-pricing",
+        upstreamBaseline: "main@8de0a239",
+        feature: "公开定价表入口和法律页共享导航",
+        coupledUpstreamFiles: ["web/src/styles/globals.css", "web/src/pages/create/creation-product.css", "web/src/pages/create/index.tsx", "web/src/components/layout/workspace-sidebar-nav.tsx"],
+        files: ["web/public/pricing.html", "web/public/pricing-i18n.js", "web/scripts/generate-public-pricing.py", "web/src/supdance/pages/legal/legal-header-nav.tsx"],
+        reason: "统一保留并行任务已发布的静态价目表和入口，法律页样式限定 legal 作用域，静态页面链接使用完整导航。",
+        upgradeRisk: "LOW",
+    },
 ] as const;
 
 export const SUPDANCE_RESERVED_PLUGIN_PREFIX = "supdance-" as const;

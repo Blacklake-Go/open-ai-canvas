@@ -44,6 +44,33 @@ describe("SupDance Music Plugin — Real Store & Controller Integration Suite", 
         expect(useMusicStore.getState().draft.mode).toBe("custom");
         expect(useMusicStore.getState().draft.duration).toBe(180);
     });
+    test("switching models removes unsupported lyrics and instrumental state", () => {
+        const capability = {
+            id: "suno",
+            name: "Suno",
+            version: "",
+            modes: ["simple" as const],
+            minDuration: 30,
+            maxDuration: 300,
+            formats: ["mp3" as const],
+            maxPromptChars: 1500,
+            maxLyricsChars: 3000,
+            costPerSecondMicrocredits: 0,
+            stemSeparation: false,
+            available: true,
+            instrumentalSupported: true,
+        };
+        useMusicStore.setState({ capabilities: [capability, { ...capability, id: "mureka", modes: ["custom"], instrumentalSupported: false }] });
+        useMusicStore.getState().setDraftField("lyrics", "Previous verse");
+        useMusicStore.getState().setDraftField("mode", "custom");
+        useMusicStore.getState().setDraftField("instrumental", true);
+        useMusicStore.getState().setModel("suno");
+        expect(useMusicStore.getState().draft.mode).toBe("simple");
+        expect(useMusicStore.getState().draft.lyrics).toBe("");
+        expect(useMusicStore.getState().draft.instrumental).toBe(true);
+        useMusicStore.getState().setModel("mureka");
+        expect(useMusicStore.getState().draft.instrumental).toBe(false);
+    });
     test("Single-instance playback controller controls and synchronizes audio state", () => {
         const store = useMusicStore.getState();
 
