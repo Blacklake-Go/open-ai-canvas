@@ -2,6 +2,7 @@
 
 ## 音乐工作台统一渠道补丁
 
+- 平台音频任务的规范素材由后端 `registerRecoveredMediaAssets` 按任务和输出序号生成稳定 ID；音乐工作台只读任务及资源，不再在载入历史或轮询完成时调用前端 `addAsset`。移除仅内存去重的旧桥接，避免目录未 hydration 或刷新后产生随机副本。历史重载、账号状态重置和轮询完成共用真实 store 回归；既有素材不自动删除。
 - 创作页模型分组、目标时长与音乐结果组件保留最小适配，业务协议在 `plugin-packages/runninghub-standard/`，独立工作台适配在 `web/src/supdance/plugins/music-generation/services/music-site-api.ts`。
 - 复用平台模型目录、报价、`canvas_audio` 任务和资源访问 API，不增加账本、用户或数据表；新文案通过 `supdance-i18n` 六语词条模块提供。
 - 上游更新需保留 RunningHub 1.1.1 源清单与发行包，避免启动时旧官方包覆盖音乐接口；创作页、工作台、失败退款与账号切换需共同回归。
@@ -17,7 +18,7 @@
 - 九个冲突按语义处理：设置仓储同时保留 `LockSystemSetting` 与 `SystemSettingsWithPrefix`；OpenAPI 按完整端点保留视觉引擎与电商请求体及响应；侧栏保留 SupDance `t()`、音乐开关、账号菜单；审批测试外层 30 秒保留大于子进程 20 秒的期限。版本、变更日志及三篇文档保留双方内容。
 - 电商侧栏使用后台功能条件和既有六语词条；同步 main 的支付/币种和 TOS 表单协议，避免保留旧 UI 却调用新后端合同。
 - 保留已上线第一阶段：正式版自带 `b0d56dea` 分页，再精确带入 `common.load_more`、令牌、焦点与 44px 触控适配；移植 `338b75c8` 品牌与第二屏修复、相关测试及 E2E 调用参数。`supdance-agent-history-pagination` registry 与 baseline 两个路径同步保留；第一阶段文档不整体覆盖候选。
-- 集成包含 Schema 81、积分默认零奖励与取消登录补发，以及通用素材恢复。音乐插件独立素材桥接、RunningHub 真实结果和多标签恢复仍需分别验收；不把静态合并视为业务闭环通过。
+- 集成包含 Schema 81、积分默认零奖励与取消登录补发，以及通用素材恢复。音乐插件复用后端规范素材；RunningHub 真实结果、素材去重和多标签恢复分别记录运行证据，不把静态合并视为业务闭环通过。
 - 新适配器 `web/src/supdance/adapters/upstream-i18n.ts` 将上游 `web/src/i18n/index.ts` 的翻译后处理接入 SupDance 词库。插件语言、管理员词条和停用控制优先；仅保留一个语言选择器和 AntD locale 配置。新增耦合点已登记 compatibility registry 与 baseline。英文、西班牙语、繁体中文及停用回退有真实 React 渲染回归。
 - 创作页上传提示复用上游原生翻译键，经同一桥接保留插件发布优先；源码扫描器识别两套合法目录并排除目录定义，未知键仍拒绝。上游待译候选与本次接入基线单独记录在 `supdance/i18n/upstream-main-8de0a239-review.json`，不计作补译完成。
 - 迁移先在 PostgreSQL 备份恢复副本演练；旧 Schema 78 程序拒绝连接 Schema 81，回退必须恢复匹配数据库。源码元数据不能替代生产迁移证据。

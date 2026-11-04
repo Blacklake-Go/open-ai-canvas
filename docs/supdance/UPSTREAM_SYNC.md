@@ -241,7 +241,7 @@ git merge-base --is-ancestor 4d25e4a547fccdf8bf9bded53939a3378708ebb6 HEAD
 | A    | 独立插件与命名空间     | `web/src/supdance/plugins/music-generation/index.ts`                             |
 | A    | 独立插件与命名空间     | `web/src/supdance/plugins/music-generation/pages/music-workbench-page.tsx`       |
 | A    | 独立插件与命名空间     | `web/src/supdance/plugins/music-generation/services/music-api.ts`                |
-| A    | 独立插件与命名空间     | `web/src/supdance/plugins/music-generation/services/music-asset-bridge.ts`       |
+| A    | 独立插件与命名空间     | `web/src/supdance/plugins/music-generation/services/music-site-api.ts`           |
 | A    | 独立插件与命名空间     | `web/src/supdance/plugins/music-generation/stores/use-music-store.ts`            |
 | A    | 独立插件与命名空间     | `web/src/supdance/plugins/music-generation/styles/music-generation.css`          |
 | A    | 独立插件与命名空间     | `web/src/supdance/plugins/music-generation/styles/music-workbench.css`           |

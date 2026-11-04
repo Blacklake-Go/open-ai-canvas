@@ -1,7 +1,6 @@
 import { create } from "zustand";
 import localforage from "localforage";
 import { fetchMusicCapabilities, listUserMusicTasks, queryMusicTask, submitMusicTask, type AudioFormat, type ModelCapabilities, type MusicTask, type SubmitMusicTaskPayload } from "../services/music-api";
-import { syncMusicTaskToAssetStore } from "../services/music-asset-bridge";
 
 let draftStorageInstance: LocalForage | null = null;
 
@@ -207,10 +206,6 @@ export const useMusicStore = create<MusicState>((set, get) => ({
                 if (t.status === "submitted" || t.status === "queued" || t.status === "generating" || t.status === "transcoding") {
                     activeIds.add(t.taskId || t.id);
                 }
-                // 资产桥接：如果任务已完成，自动同步入库至平台全局素材库 (AssetStore)
-                if (t.status === "completed" && t.resultAudioUrl) {
-                    syncMusicTaskToAssetStore(t);
-                }
             });
 
             const currentActiveTrack = get().activeTrack;
@@ -250,9 +245,6 @@ export const useMusicStore = create<MusicState>((set, get) => ({
                         try {
                             const updated = await queryMusicTask(tid);
                             if (sequence !== userScopeSequence) return;
-                            if (updated.status === "completed" && updated.resultAudioUrl) {
-                                syncMusicTaskToAssetStore(updated);
-                            }
                             set((state) => {
                                 const newActive = new Set(state.activeTaskIds);
                                 if (updated.status === "completed" || updated.status === "failed" || updated.status === "cancelled") {
