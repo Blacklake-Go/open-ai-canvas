@@ -74,14 +74,15 @@ func (t *Transcoder) Transcode(ctx context.Context, input []byte, targetFormat s
 
 	if t.HasFFmpeg() && len(input) > 0 {
 		out, err := t.transcodeWithFFmpeg(ctx, input, targetFormat)
-		if err == nil && len(out) > 0 {
-			return out, nil
+		if err != nil {
+			return nil, err
 		}
-		// If ffmpeg failed on synthetic/mock data during test execution, fall back to pure container generator
+		if len(out) == 0 {
+			return nil, errors.New("audio transcoder returned empty output")
+		}
+		return out, nil
 	}
-
-	// Pure Go fallback generator for testing and minimal environments without ffmpeg
-	return generateSyntheticAudioContainer(input, targetFormat)
+	return nil, errors.New("audio transcoding requires ffmpeg and a non-empty source artifact")
 }
 
 func (t *Transcoder) transcodeWithFFmpeg(ctx context.Context, input []byte, targetFormat string) ([]byte, error) {

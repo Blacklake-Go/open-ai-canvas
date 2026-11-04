@@ -61,12 +61,19 @@ export function priceTierSummaryLabel(tiers: ModelPriceTier[], capability?: Mode
             .filter((value) => Number.isFinite(value) && value >= 0);
     const fixedRequestValues = unitPrices("fixed_request");
     const perSecondValues = unitPrices("per_second");
-    const tokenValues = tiers.filter((tier) => tier.billingMode === "token").map((tier) => tier.outputTokenPriceMicrocredits / 1_000_000).filter((value) => Number.isFinite(value) && value >= 0);
-    return [
-        fixedRequestValues.length ? formatPriceRange(fixedRequestValues, "积分") : "",
-        perSecondValues.length ? formatPriceRange(perSecondValues, "积分/秒") : "",
-        tokenValues.length ? `${capability === "video" ? "" : "输出 "}${formatPriceRange(tokenValues, capability === "video" ? "积分/百万视频 Token" : "积分/百万 Token")}` : "",
-    ].filter(Boolean).join(" · ") || "未配置";
+    const tokenValues = tiers
+        .filter((tier) => tier.billingMode === "token")
+        .map((tier) => tier.outputTokenPriceMicrocredits / 1_000_000)
+        .filter((value) => Number.isFinite(value) && value >= 0);
+    return (
+        [
+            fixedRequestValues.length ? formatPriceRange(fixedRequestValues, "积分") : "",
+            perSecondValues.length ? formatPriceRange(perSecondValues, "积分/秒") : "",
+            tokenValues.length ? `${capability === "video" ? "" : "输出 "}${formatPriceRange(tokenValues, capability === "video" ? "积分/百万视频 Token" : "积分/百万 Token")}` : "",
+        ]
+            .filter(Boolean)
+            .join(" · ") || "未配置"
+    );
 }
 
 export function formatPriceRange(values: number[], suffix: string) {
@@ -84,9 +91,8 @@ export function modelQuoteDescription(quote: LogicalModelQuote) {
         if (estimate.referenceDurationEstimated) descriptions.push("未知的参考视频时长按 15 秒估算");
         if (estimate.dimensionsEstimated) descriptions.push("实际画幅尚未确定，尺寸按当前参数估算");
     }
-    if (quote.billingMode === "token") descriptions.push(estimate
-        ? "预估金额并非费用上限，成功任务优先按有效的实际用量结算；未返回用量时按火山引擎公式结算，额外预留不计入公式结算，可能补扣或退回差额"
-        : "预估金额并非费用上限，最终以成功任务返回的实际用量结算，可能补扣或退回差额");
+    if (quote.billingMode === "token")
+        descriptions.push(estimate ? "预估金额并非费用上限，成功任务优先按有效的实际用量结算；未返回用量时按火山引擎公式结算，额外预留不计入公式结算，可能补扣或退回差额" : "预估金额并非费用上限，最终以成功任务返回的实际用量结算，可能补扣或退回差额");
     return descriptions.join("；");
 }
 
@@ -95,7 +101,7 @@ export function modelQuoteRequest(config: AiConfig, value: string, capability?: 
     const channel = resolveModelChannel(config, value);
     if (channel.scope !== "system") return undefined;
     const cost = channel.modelCosts?.find((item) => item.model === modelOptionName(value));
-    if (!cost || (!cost.logicalModelId && capability !== "video")) return undefined;
+    if (!cost || (!cost.logicalModelId && capability !== "video" && capability !== "audio")) return undefined;
     const input = requirements?.input;
     const intent: ModelRequestIntent = {
         capability,
@@ -147,7 +153,9 @@ function priceSelectorForRequest(capability: ModelCapability | undefined, config
             }
             return requested;
         }
-        const imageQuality = String(options.quality ?? "").trim().toLowerCase();
+        const imageQuality = String(options.quality ?? "")
+            .trim()
+            .toLowerCase();
         const imageSize = String(options.size ?? "").trim();
         Object.assign(requested, imagePriceSelector(imageQuality, imageSize, modelCapabilityConfigFor(config, config.model || config.imageModel)?.image));
     }

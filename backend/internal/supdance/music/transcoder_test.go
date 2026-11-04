@@ -26,8 +26,9 @@ func TestTranscoderFormats(t *testing.T) {
 	transcoder := NewTranscoder()
 	ctx := context.Background()
 
+	wavSample, _ := generateSyntheticAudioContainer(make([]byte, 1024), AudioFormatWAV)
 	for _, format := range []string{AudioFormatMP3, AudioFormatWAV, AudioFormatFLAC} {
-		out, err := transcoder.Transcode(ctx, []byte("pcm-stream-data"), format)
+		out, err := transcoder.Transcode(ctx, wavSample, format)
 		if err != nil {
 			t.Fatalf("transcode to %s failed: %v", format, err)
 		}

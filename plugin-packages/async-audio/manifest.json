@@ -136,6 +136,45 @@
                   }
                 ]
               }
+            },
+            "lyrics": {
+              "$omitEmpty": {
+                "$coalesce": [
+                  {
+                    "$ref": "request.extra.lyrics"
+                  },
+                  {
+                    "$ref": "request.providerOptions.async-audio.lyrics"
+                  }
+                ]
+              }
+            },
+            "instrumental": {
+              "$omitEmpty": {
+                "$coalesce": [
+                  {
+                    "$ref": "request.extra.instrumental"
+                  },
+                  {
+                    "$ref": "request.providerOptions.async-audio.instrumental"
+                  }
+                ]
+              }
+            },
+            "duration": {
+              "$omitEmpty": {
+                "$coalesce": [
+                  {
+                    "$ref": "request.duration"
+                  },
+                  {
+                    "$ref": "request.extra.duration"
+                  },
+                  {
+                    "$ref": "request.providerOptions.async-audio.duration"
+                  }
+                ]
+              }
             }
           }
         },

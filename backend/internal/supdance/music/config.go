@@ -11,6 +11,9 @@ const (
 
 // StoredMusicConfig represents the encrypted configuration persisted in system_settings.
 type StoredMusicConfig struct {
+	// BaseURL stores the configured upstream audio API base URL.
+	BaseURL string `json:"baseUrl,omitempty"`
+
 	// APIKeyCipher stores the AES-256-GCM encrypted API key with "enc:v1:" prefix.
 	APIKeyCipher string `json:"apiKeyCipher"`
 
@@ -38,7 +41,7 @@ type ModelPricingConfig struct {
 
 // AdminMusicConfigView is the safe public view exposed to Admin UI.
 type AdminMusicConfigView struct {
-	// BaseURL is strictly immutable and hardcoded to "https://www.koyosim.com".
+	// BaseURL is the configured upstream API endpoint.
 	BaseURL string `json:"baseUrl"`
 
 	// HasAPIKey indicates whether an API key has been configured.
@@ -65,7 +68,6 @@ type AdminMusicConfigView struct {
 
 // UpdateMusicConfigRequest represents the admin request payload.
 type UpdateMusicConfigRequest struct {
-	// BaseURL if supplied must equal "https://www.koyosim.com" or the request is rejected.
 	BaseURL string `json:"baseUrl,omitempty"`
 
 	// APIKey updates the secret key if non-empty and not masked.

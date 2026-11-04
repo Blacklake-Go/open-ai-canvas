@@ -423,14 +423,14 @@ export function CreationComposer(props: ComposerProps) {
     const canSubmit = (Boolean(props.prompt.trim()) || (props.mode === "music" && Boolean(props.musicLyrics?.trim()))) && !interactionBusy;
     const creditsEnabled = useUserStore((state) => state.features.creditsEnabled);
     const priceChannel = resolveModelChannel(props.config, props.model);
-    const quoteRequest = useMemo(() => (props.mode === "music" ? null : modelQuoteRequest(props.config, props.model, props.mode, props.modelRequirements)), [props.config, props.mode, props.model, props.modelRequirements]);
+    const quoteRequest = useMemo(() => modelQuoteRequest(props.config, props.model, props.mode === "music" ? "audio" : props.mode, props.modelRequirements), [props.config, props.mode, props.model, props.modelRequirements]);
     const [routeQuote, setRouteQuote] = useState<LogicalModelQuote | null>(null);
     const canOptimizePrompt = Boolean(props.promptOptimizerProvider) && (props.mode === "image" || props.mode === "video");
     const optimizerReferences = props.references.filter((reference) => reference.active && reference.kind !== "skill");
     const activeMusicModel = MUSIC_MODELS.find((m) => m.id === (props.musicModel || "mureka-9.5")) || MUSIC_MODELS[0];
     const credits =
         props.mode === "music"
-            ? activeMusicModel.credits
+            ? null
             : requestCreditCost({
                   channelMode: priceChannel.scope === "system" ? "remote" : "local",
                   modelCosts: priceChannel.modelCosts,
@@ -455,8 +455,8 @@ export function CreationComposer(props: ComposerProps) {
             });
         return () => controller.abort();
     }, [creditsEnabled, quoteRequest]);
-    const generationCredits = props.mode === "music" ? activeMusicModel.credits : routeQuote ? routeQuote.amountMicrocredits / 1_000_000 : credits;
-    const showCost = props.mode === "music" ? true : creditsEnabled && generationCredits !== null && generationCredits !== undefined;
+    const generationCredits = routeQuote ? routeQuote.amountMicrocredits / 1_000_000 : credits;
+    const showCost = creditsEnabled && generationCredits !== null && generationCredits !== undefined;
     const formattedCredits = generationCredits?.toLocaleString("zh-CN", { maximumFractionDigits: 6 });
     const actionLabel = props.referenceReplacementBusy ? "正在替换参考图" : interactionBusy || (props.generationActive && !canSubmit) ? "生成中" : showCost ? `${routeQuote?.estimated ? "预估" : "消耗"} ${formattedCredits} 积分，发送` : "发送";
     // Send-button working state must span the WHOLE generation (not just the
@@ -751,14 +751,12 @@ export function CreationComposer(props: ComposerProps) {
                                 </button>
                             </Tooltip>
                         ) : null}
-                        {props.mode === "music" ? (
-                            <MusicModelPicker value={props.musicModel || "mureka-9.5"} onChange={(val) => props.onMusicModelChange?.(val)} disabled={interactionBusy} />
-                        ) : (
+                        {
                             <ModelPicker
                                 config={props.config}
                                 value={props.model}
-                                onChange={props.onModelChange}
-                                capability={props.mode}
+                                onChange={props.mode === "music" ? (val) => props.onMusicModelChange?.(val) : props.onModelChange}
+                                capability={props.mode === "music" ? "audio" : props.mode}
                                 requirements={props.modelRequirements}
                                 className="creation-model-picker"
                                 placeholder={`选择${modeLabels[props.mode]}模型`}
@@ -766,7 +764,7 @@ export function CreationComposer(props: ComposerProps) {
                                 showOptionPrices
                                 variant="creation"
                             />
-                        )}
+                        }
                         {props.mode === "video" || (props.mode === "image" && imageSettingsSupported) ? <GenerationSettingsMenu {...props} /> : null}
                         {props.mode === "video" ? <DurationMenu profile={props.videoProfile} seconds={props.seconds} onChange={props.setSeconds} /> : null}
                         {props.mode === "music" ? (
@@ -785,7 +783,7 @@ export function CreationComposer(props: ComposerProps) {
                                         {props.musicLyrics?.trim() ? <span className="size-1.5 rounded-full bg-blue-400 shrink-0 shadow-sm" /> : null}
                                     </button>
                                 </Tooltip>
-                                <MusicDurationMenu duration={props.musicDuration || 120} maxDuration={activeMusicModel.maxDuration} disabled={interactionBusy} onChange={(sec) => props.onMusicDurationChange?.(sec)} />
+                                <MusicDurationMenu duration={props.musicDuration || 120} maxDuration={300} disabled={interactionBusy} onChange={(sec) => props.onMusicDurationChange?.(sec)} />
                             </>
                         ) : null}
                         {props.mode === "text" ? (
@@ -831,7 +829,7 @@ export function CreationComposer(props: ComposerProps) {
                     >
                         {showWorkingGlow ? <WorkingGlow active color="var(--creation-text)" radius="var(--button-radius)" /> : null}
                         {showCost ? (
-                            <span className="creation-submit-cost" title={props.mode === "music" ? `${activeMusicModel.name} · ${activeMusicModel.credits} 积分/首` : routeQuote ? modelQuoteDescription(routeQuote) : undefined}>
+                            <span className="creation-submit-cost" title={routeQuote ? modelQuoteDescription(routeQuote) : undefined}>
                                 <CreditSymbol />
                                 <span>{routeQuote?.estimated ? `预估:${formattedCredits}` : formattedCredits}</span>
                             </span>

@@ -16,6 +16,7 @@ export default function MusicAdminSettingsPage() {
     const [saving, setSaving] = useState(false);
 
     // Form inputs
+    const [baseUrl, setBaseUrl] = useState("");
     const [apiKey, setApiKey] = useState("");
     const [webhookSecret, setWebhookSecret] = useState("");
     const [defaultModel, setDefaultModel] = useState("suno-v6");
@@ -32,6 +33,7 @@ export default function MusicAdminSettingsPage() {
             setLifecycle(life);
             setTasks(taskList.items);
             setDefaultModel(cfg.defaultModel || "suno-v6");
+            setBaseUrl(cfg.baseUrl || "https://www.koyosim.com");
         } catch (err: any) {
             message.error(err.message || "读取音乐插件管理数据失败");
         } finally {
@@ -48,6 +50,7 @@ export default function MusicAdminSettingsPage() {
         setSaving(true);
         try {
             const updated = await updateMusicAdminConfig({
+                baseUrl: baseUrl.trim() || undefined,
                 apiKey: apiKey.trim() || undefined,
                 webhookSecret: webhookSecret.trim() || undefined,
                 defaultModel,
@@ -123,7 +126,7 @@ export default function MusicAdminSettingsPage() {
                         <Sparkles className="size-5 text-primary" />
                         <span>{t("music.admin_title", undefined, "AI 音乐生成插件管理中心")}</span>
                     </h1>
-                    <p className="text-sm text-muted-foreground mt-1">{t("music.admin_desc", undefined, "固定 KoyoSIM 外部网关（https://www.koyosim.com）集成、模型定价与全生命周期状态控制")}</p>
+                    <p className="text-sm text-muted-foreground mt-1">{t("music.admin_desc", undefined, "AI 音乐生成网关接口、模型定价与全生命周期状态控制。支持与系统渠道、生图生视频统一协议接入。")}</p>
                 </div>
 
                 {lifecycle && (
@@ -170,19 +173,24 @@ export default function MusicAdminSettingsPage() {
             <form onSubmit={handleSaveConfig} className="rounded-xl border border-border/60 bg-card p-5 shadow-xs space-y-6">
                 <div className="flex items-center gap-2 border-b border-border/40 pb-3">
                     <Lock className="size-4 text-primary" />
-                    <h2 className="text-base font-semibold text-foreground">API 网关与凭据金库 (固定来源)</h2>
+                    <h2 className="text-base font-semibold text-foreground">API 网关与凭据设置</h2>
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    {/* Read-only Immutable API Base URL Display */}
+                    {/* Configurable API Base URL Input */}
                     <div className="flex flex-col gap-2">
-                        <label className="text-xs font-medium text-foreground">唯一外部模型 API 来源 (不可篡改)</label>
-                        <div className="flex items-center gap-2 rounded-lg border border-border/60 bg-muted/50 px-3 py-2.5 text-sm font-mono text-muted-foreground select-none">
-                            <ShieldCheck className="size-4 text-emerald-500 shrink-0" />
-                            <span>{config?.baseUrl || "https://www.koyosim.com"}</span>
-                            <span className="ml-auto rounded-sm bg-primary/10 px-1.5 py-0.5 text-xs text-primary">固定服务端绑定</span>
-                        </div>
-                        <p className="text-xs text-muted-foreground">安全硬约束：系统禁止前端或后台覆盖 Base URL，所有外部流量强制 TLS 1.3 证书与防 SSRF 重定向校验。</p>
+                        <label className="text-xs font-medium text-foreground flex items-center justify-between">
+                            <span>API 网关 Base URL</span>
+                            <span className="text-xs text-muted-foreground">支持兼容端点</span>
+                        </label>
+                        <input
+                            type="text"
+                            value={baseUrl}
+                            onChange={(e) => setBaseUrl(e.target.value)}
+                            placeholder="https://www.koyosim.com 或其他兼容网关"
+                            className="rounded-lg border border-border/60 bg-background px-3 py-2 text-sm text-foreground focus:border-primary focus:outline-hidden"
+                        />
+                        <p className="text-xs text-muted-foreground">支持兼容 OpenAI / NewAPI 格式的音频网关。所有外部流量均执行防 SSRF 与 TLS 安全校验。</p>
                     </div>
 
                     {/* Masked Secret API Key Input */}
@@ -237,7 +245,7 @@ export default function MusicAdminSettingsPage() {
                             className="flex items-center gap-1.5 rounded-lg border border-border/60 bg-muted/60 px-4 py-2 text-xs font-medium text-foreground hover:bg-muted transition-colors disabled:opacity-50"
                         >
                             <Radio className={`size-3.5 ${testingProbe ? "animate-pulse" : ""}`} />
-                            <span>{testingProbe ? "探测中..." : t("music.test_connection", undefined, "测试安全连通性 (零计费 /v1/ping)")}</span>
+                            <span>{testingProbe ? "探测中..." : t("music.test_connection", undefined, "测试安全连通性 (零计费探测)")}</span>
                         </button>
 
                         {probeResult && (

@@ -60,6 +60,16 @@ func protocolRequestFromInput(input canvasGenerationInput) protocol.GenerationRe
 			"count":             input.Config.Count,
 		},
 	}
+	if music, ok := input.Metadata["music"].(map[string]any); ok {
+		for k, v := range music {
+			request.Extra[k] = v
+		}
+		if d, ok := music["duration"].(int); ok && d > 0 {
+			request.Duration = d
+		} else if dFloat, ok := music["duration"].(float64); ok && dFloat > 0 {
+			request.Duration = int(dFloat)
+		}
+	}
 	for _, message := range input.TextHistory {
 		role := strings.ToLower(strings.TrimSpace(message.Role))
 		if role != "user" && role != "assistant" && role != "system" {

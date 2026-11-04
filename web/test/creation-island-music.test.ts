@@ -5,6 +5,10 @@ import { creationMusicEmptySuggestions } from "@/pages/create/creation-workspace
 import { MUSIC_MODELS } from "@/pages/create/creation-workspace";
 import { thinkingFor } from "@/pages/create/creation-workspace-messages";
 import { creationLibraryDisabledReason } from "@/pages/create/creation-library";
+import { completedCreationGenerationTask } from "@/pages/create/creation-conversations";
+import { modelQuoteRequest } from "@/lib/model-pricing";
+import type { CreationRuntime } from "@/pages/create/creation-runtime";
+import type { AiConfig } from "@/stores/use-config-store";
 
 describe("Creation Island Music Integration Suite", () => {
     it("CreationMode supports music with complete label dictionaries", () => {
@@ -58,5 +62,61 @@ describe("Creation Island Music Integration Suite", () => {
         expect(thinking.title).toContain("乐曲");
         expect(thinking.hint).toContain("SupDance");
         expect(thinking.steps).toContain("合成母带");
+    });
+
+    it("completedCreationGenerationTask accepts mode audio and generates valid task entity", () => {
+        const mockRuntime = {
+            projectGenerationTaskResult: (task: any, result: any) => ({
+                ...task,
+                resultJson: JSON.stringify(result),
+            }),
+        } as unknown as CreationRuntime;
+
+        const task = completedCreationGenerationTask(mockRuntime, {
+            taskId: "task_audio_123",
+            mode: "audio",
+            prompt: "Summer pop track with upbeat synth",
+            result: {
+                mode: "audio",
+                audio: { dataUrl: "https://cdn.example.com/audio.mp3", durationMs: 120000, mimeType: "audio/mpeg" },
+            },
+            conversationId: "conv_1",
+            messageId: "msg_1",
+        });
+
+        expect(task.id).toBe("task_audio_123");
+        expect(task.type).toBe("audio");
+        expect(task.status).toBe("succeeded");
+        expect(task.clientContext?.conversationId).toBe("conv_1");
+    });
+
+    it("modelQuoteRequest evaluates audio capability quotes from system channels", () => {
+        const mockConfig = {
+            channels: [
+                {
+                    id: "ch_sys_1",
+                    scope: "system",
+                    models: ["suno-v4"],
+                    modelCosts: [
+                        {
+                            model: "suno-v4",
+                            capability: "audio",
+                            unitPriceMicrocredits: 80000000,
+                            billingMode: "per_request",
+                        },
+                    ],
+                },
+            ],
+        } as unknown as AiConfig;
+
+        const quote = modelQuoteRequest(mockConfig, "suno-v4", "audio", {
+            capability: "audio",
+            input: { textCount: 1, imageCount: 0, videoCount: 0, audioCount: 0, characterCount: 0 },
+        });
+
+        expect(quote).toBeDefined();
+        expect(quote?.channelId).toBe("ch_sys_1");
+        expect(quote?.modelKey).toBe("suno-v4");
+        expect(quote?.intent.capability).toBe("audio");
     });
 });

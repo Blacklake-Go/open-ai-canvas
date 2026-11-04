@@ -76,6 +76,7 @@ func NewService(
 func (s *Service) GetStoredConfig(ctx context.Context) (*StoredMusicConfig, error) {
 	if s.settings == nil {
 		return &StoredMusicConfig{
+			BaseURL:      KoyosimAPIBaseURL,
 			DefaultModel: ModelSunoV6,
 			ModelPricing: make(map[string]ModelPricingConfig),
 		}, nil
@@ -132,8 +133,13 @@ func (s *Service) GetAdminConfigView(ctx context.Context) (*AdminMusicConfigView
 		pricing[k] = v
 	}
 
+	baseURL := stored.BaseURL
+	if baseURL == "" {
+		baseURL = KoyosimAPIBaseURL
+	}
+
 	return &AdminMusicConfigView{
-		BaseURL:          KoyosimAPIBaseURL, // Immutable fixed URL
+		BaseURL:          baseURL,
 		HasAPIKey:        hasKey,
 		MaskedAPIKey:     maskedKey,
 		HasWebhookSecret: hasWebhook,
@@ -146,14 +152,17 @@ func (s *Service) GetAdminConfigView(ctx context.Context) (*AdminMusicConfigView
 
 // UpdateAdminConfig validates and updates the music plugin configuration.
 func (s *Service) UpdateAdminConfig(ctx context.Context, actorID string, req UpdateMusicConfigRequest) (*AdminMusicConfigView, error) {
-	// Base URL immutability validation (Feature 8, Feature 30)
-	if strings.TrimSpace(req.BaseURL) != "" && strings.TrimSpace(req.BaseURL) != KoyosimAPIBaseURL {
-		return nil, errors.New("API Base URL is strictly immutable and fixed to https://www.koyosim.com; overrides are forbidden")
-	}
-
 	stored, err := s.GetStoredConfig(ctx)
 	if err != nil {
 		return nil, err
+	}
+
+	if strings.TrimSpace(req.BaseURL) != "" {
+		cleaned := strings.TrimRight(strings.TrimSpace(req.BaseURL), "/")
+		if !strings.HasPrefix(cleaned, "https://") && !strings.HasPrefix(cleaned, "http://") {
+			return nil, errors.New("API Base URL 必须以 http:// 或 https:// 开头")
+		}
+		stored.BaseURL = cleaned
 	}
 
 	// Update API Key if provided and not masked
@@ -241,7 +250,11 @@ func (s *Service) GetClient(ctx context.Context) (*Client, error) {
 		}
 	}
 
-	client, err := NewClient(plainKey)
+	opts := []ClientOption{}
+	if strings.TrimSpace(stored.BaseURL) != "" {
+		opts = append(opts, WithBaseURL(stored.BaseURL))
+	}
+	client, err := NewClient(plainKey, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -267,7 +280,12 @@ func (s *Service) TestConnection(ctx context.Context, candidateKey string) (map[
 		apiKey = plain
 	}
 
-	client, err := NewClient(apiKey)
+	stored, _ := s.GetStoredConfig(ctx)
+	opts := []ClientOption{}
+	if stored != nil && strings.TrimSpace(stored.BaseURL) != "" {
+		opts = append(opts, WithBaseURL(stored.BaseURL))
+	}
+	client, err := NewClient(apiKey, opts...)
 	if err != nil {
 		return nil, fmt.Errorf("create test client: %w", err)
 	}
@@ -278,7 +296,7 @@ func (s *Service) TestConnection(ctx context.Context, candidateKey string) (map[
 			"status":   "error",
 			"code":     502,
 			"message":  RedactSecretFromText(err.Error(), apiKey),
-			"endpoint": KoyosimAPIBaseURL + "/v1/ping",
+			"endpoint": client.BaseURL(),
 			"billed":   false,
 		}, nil
 	}
@@ -287,7 +305,7 @@ func (s *Service) TestConnection(ctx context.Context, candidateKey string) (map[
 		"status":   "ok",
 		"code":     pingResp.Code,
 		"message":  pingResp.Status,
-		"endpoint": KoyosimAPIBaseURL + "/v1/ping",
+		"endpoint": client.BaseURL(),
 		"billed":   false, // Zero credit deduction upstream & downstream verified
 	}, nil
 }
@@ -629,7 +647,7 @@ func (s *Service) DownloadAudio(ctx context.Context, userID, taskID, format stri
 	}
 
 	if len(rawData) == 0 {
-		rawData, _ = generateSyntheticAudioContainer([]byte(task.Title+"_"+task.Prompt), AudioFormatMP3)
+		return nil, "", "", errors.New("upstream audio unavailable: no downloadable artifact; retry the existing task without generating again")
 	}
 
 	transcoded, err := s.transcoder.Transcode(ctx, rawData, format)

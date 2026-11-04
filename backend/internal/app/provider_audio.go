@@ -40,6 +40,16 @@ func runAudioTask(ctx context.Context, input canvasGenerationInput) (map[string]
 	if input.Config.AudioInstructions != "" {
 		body["instructions"] = input.Config.AudioInstructions
 	}
+	if music, ok := input.Metadata["music"].(map[string]any); ok {
+		for k, v := range music {
+			if v != nil && v != "" {
+				body[k] = v
+			}
+		}
+	}
+	if _, ok := body["prompt"]; !ok && input.Prompt != "" {
+		body["prompt"] = input.Prompt
+	}
 	if input.Config.InterfaceType == string(model.ChannelInterfaceAsyncAudio) {
 		return runAsyncAudioTask(ctx, input, body, format)
 	}

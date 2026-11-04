@@ -102,7 +102,7 @@ func setupTestService(t *testing.T) (*music.Service, *mockSettingsStore, *mockBi
 	return svc, settings, billing, lifecycle, repo
 }
 
-func TestServiceBaseURLImmutability(t *testing.T) {
+func TestServiceBaseURLConfiguration(t *testing.T) {
 	svc, _, _, _, _ := setupTestService(t)
 	ctx := context.Background()
 
@@ -121,15 +121,26 @@ func TestServiceBaseURLImmutability(t *testing.T) {
 		t.Fatalf("expected masked key koyo_****3456, got %s", view.MaskedAPIKey)
 	}
 
-	// Invalid update: attempted mutation of BaseURL
+	// Valid update: custom BaseURL
+	customView, err := svc.UpdateAdminConfig(ctx, "admin_1", music.UpdateMusicConfigRequest{
+		BaseURL: "https://custom-music.example.com",
+	})
+	if err != nil {
+		t.Fatalf("custom base url update failed: %v", err)
+	}
+	if customView.BaseURL != "https://custom-music.example.com" {
+		t.Fatalf("expected custom BaseURL, got %s", customView.BaseURL)
+	}
+	if !strings.HasPrefix(customView.BaseURL, "https://") {
+		t.Fatalf("expected https prefix")
+	}
+
+	// Invalid update: invalid scheme
 	_, err = svc.UpdateAdminConfig(ctx, "admin_1", music.UpdateMusicConfigRequest{
-		BaseURL: "https://evil-proxy.com",
+		BaseURL: "ftp://invalid-scheme.com",
 	})
 	if err == nil {
-		t.Fatalf("expected error when overriding BaseURL, got nil")
-	}
-	if !strings.Contains(err.Error(), "immutable") {
-		t.Fatalf("expected immutability error message, got: %v", err)
+		t.Fatalf("expected error for invalid scheme, got nil")
 	}
 }
 

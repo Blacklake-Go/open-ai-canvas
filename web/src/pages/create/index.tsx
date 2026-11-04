@@ -80,8 +80,6 @@ import { CreationAgentEntry } from "./creation-agent-entry";
 import { createCreationSubmitGate } from "./creation-submit-gate";
 import { creationVideoConfig } from "./creation-generation-config";
 import { CreationLoginDialog } from "./creation-login-dialog";
-import { submitMusicTask, queryMusicTask, type SubmitMusicTaskPayload } from "@/supdance/plugins/music-generation/services/music-api";
-import { syncMusicTaskToAssetStore } from "@/supdance/plugins/music-generation/services/music-asset-bridge";
 import { useI18n } from "@/supdance/plugins/i18n";
 
 const AssetLibraryPickerModal = lazy(() => import("@/components/assets/asset-library-picker-modal").then((module) => ({ default: module.AssetLibraryPickerModal })));
@@ -155,7 +153,7 @@ export default function CreatePage() {
     const [imageParameters, setImageParameters] = useState("{}");
     const [videoQuality, setVideoQuality] = useState(config.vquality || "720");
     const [count, setCount] = useState(String(Math.max(1, Math.min(4, Number(config.count) || 1))));
-    const [musicModel, setMusicModel] = useState("mureka-9.5");
+    const [musicModel, setMusicModel] = useState("");
     const [musicDuration, setMusicDuration] = useState(120);
     const [musicInstrumental, setMusicInstrumental] = useState(false);
     const [musicLyrics, setMusicLyrics] = useState("");
@@ -194,7 +192,7 @@ export default function CreatePage() {
         () => conversations.filter((conversation) => conversation.id === activeId || conversation.messages.length > 0).sort((left, right) => conversationTimestamp(right.updatedAt) - conversationTimestamp(left.updatedAt)),
         [activeId, conversations],
     );
-    const preferredModel = mode === "text" ? config.textModel : mode === "image" ? config.imageModel : mode === "video" ? config.videoModel : musicModel;
+    const preferredModel = mode === "text" ? config.textModel : mode === "image" ? config.imageModel : mode === "video" ? config.videoModel : musicModel || config.audioModel;
     const hasPrompt = Boolean(prompt.trim());
     const modelRequirements = useMemo<ModelRequirements>(
         () => ({
@@ -223,7 +221,7 @@ export default function CreatePage() {
         }),
         [attachments, config, preferredModel, count, hasPrompt, imageResolution, imageParameters, mode, quality, ratio, seconds, videoQuality],
     );
-    const selectedModel = mode === "music" ? musicModel : resolveCompatibleModel(config, preferredModel, modelRequirements) || preferredModel;
+    const selectedModel = resolveCompatibleModel(config, preferredModel, modelRequirements) || preferredModel;
     const generationConfig = useMemo(() => (mode === "video" ? creationVideoConfig(config, selectedModel, { ratio, seconds, videoQuality }) : config), [config, mode, ratio, seconds, selectedModel, videoQuality]);
     const imageProfile = useMemo(() => modelCapabilityConfigFor(config, selectedModel).image!, [config, selectedModel]);
     const videoProfile = useMemo(() => modelCapabilityConfigFor(config, selectedModel).video!, [config, selectedModel]);
@@ -907,71 +905,38 @@ export default function CreatePage() {
         let handedOverToRecovery = false;
         try {
             if (mode === "music") {
-                const nonce = "mus_" + Date.now().toString(36) + "_" + Math.random().toString(36).slice(2, 8);
-                const musicPayload: SubmitMusicTaskPayload = {
-                    model: musicModel,
-                    mode: "simple",
-                    prompt: expandedPrompt,
-                    lyrics: musicLyrics.trim() || undefined,
-                    instrumental: musicInstrumental,
-                    duration: musicDuration,
-                    format: "mp3",
-                    idempotencyNonce: nonce,
-                };
-                const taskRes = await submitMusicTask(musicPayload);
-                const taskId = taskRes.taskId || (taskRes as any).id;
-                bindTask({ id: taskId, stage: "submitted", status: "submitted" } as any);
-                updateOriginAssistant((item) => ({
-                    ...item,
-                    taskIds: [taskId],
-                    generationStage: "排队中",
-                    generationStatus: "running" as TaskStatus,
-                    generationProgress: 15,
-                }));
-
-                let finished = false;
-                let pollAttempts = 0;
-                while (!finished && !requestLifecycle.signal.aborted) {
-                    const pollDelay = pollAttempts < 5 ? 2000 : pollAttempts < 12 ? 3500 : 5000;
-                    await new Promise((res) => setTimeout(res, pollDelay));
-                    pollAttempts++;
-                    try {
-                        const taskDetail = await queryMusicTask(taskId);
-                        if (taskDetail.status === "completed") {
-                            finished = true;
-                            syncMusicTaskToAssetStore(taskDetail);
-                            updateOriginAssistant((item) => ({
-                                ...item,
-                                status: "done",
-                                content: taskDetail.title || "音乐已生成",
-                                resultUrls: [taskDetail.resultAudioUrl!],
-                                generationStatus: "succeeded" as TaskStatus,
-                                generationProgress: 100,
-                                settings: {
-                                    ...item.settings,
-                                    title: taskDetail.title || text.slice(0, 30),
-                                    duration: String(taskDetail.resultDurationMs ? Math.round(taskDetail.resultDurationMs / 1000) : musicDuration),
-                                    instrumental: taskDetail.instrumental,
-                                    model: taskDetail.model,
-                                } as any,
-                            }));
-                        } else if (taskDetail.status === "failed" || taskDetail.status === "cancelled") {
-                            finished = true;
-                            throw new Error(taskDetail.errorMessage || "音乐生成失败");
-                        } else {
-                            const progressEstimate = taskDetail.status === "transcoding" ? 90 : taskDetail.status === "generating" ? 60 : 30;
-                            updateOriginAssistant((item) => ({
-                                ...item,
-                                generationStage: taskDetail.stage || (taskDetail.status === "transcoding" ? "音频转码中" : taskDetail.status === "generating" ? "正在作曲合成" : "排队中"),
-                                generationStatus: "running" as TaskStatus,
-                                generationProgress: Math.min(95, progressEstimate + Math.min(5, pollAttempts)),
-                            }));
-                        }
-                    } catch (e: any) {
-                        if (finished) break;
-                        if (e.message && e.message.includes("音乐生成失败")) throw e;
-                    }
-                }
+                const result = await runtime.runGenerationOperationOnce(retryContext?.clientOperationId, () =>
+                    runtime.runBackendGenerationTask({
+                        mode: "audio",
+                        prompt: expandedPrompt || musicLyrics.trim(),
+                        config: { ...requestConfig, audioModel: selectedModel, audioFormat: "mp3" },
+                        referenceAudios,
+                        signal: requestLifecycle.signal,
+                        metadata: {
+                            source: "create-page",
+                            conversationId: activeConversation.id,
+                            messageId: assistantMessage.id,
+                            music: { lyrics: musicLyrics.trim(), instrumental: musicInstrumental, duration: musicDuration },
+                            ...referenceMetadata,
+                        },
+                        onTaskUpdate: bindTask,
+                        ...retryContext,
+                    }),
+                );
+                if (!result.audio?.dataUrl && !result.audios?.length) throw new Error("后端任务没有返回音频");
+                const taskId = Array.from(boundTaskIds)[0];
+                if (!taskId) throw new Error("生成任务缺少稳定任务标识");
+                const task = completedCreationGenerationTask(runtime, { taskId, task: boundTasks.get(taskId), mode: "audio", prompt: expandedPrompt, result, conversationId: activeConversation.id, messageId: assistantMessage.id });
+                await runtime.consumeGenerationTaskMessage(
+                    task,
+                    assistantMessage.id,
+                    async ({ resultUrls, resultStorageKeys, effectKey }) => {
+                        await updateOriginAssistant(
+                            (item) => runtime.applyGenerationConsumerEffect(item, effectKey, (current) => ({ ...current, status: "done" as const, content: "音乐已生成", resultUrls, ...(resultStorageKeys.length ? { resultStorageKeys } : {}) })).value,
+                        );
+                    },
+                    { signal: requestLifecycle.signal },
+                );
             } else if (mode === "text") {
                 const result = await runtime.runGenerationOperationOnce(retryContext?.clientOperationId, () =>
                     runtime.runBackendGenerationTask({
@@ -1388,7 +1353,14 @@ export default function CreatePage() {
         imageProfile,
         videoProfile,
         config: generationConfig,
-        onModelChange: (value: string) => updateConfig(mode === "text" ? "textModel" : mode === "image" ? "imageModel" : "videoModel", value),
+        onModelChange: (value: string) => {
+            if (mode === "music") {
+                setMusicModel(value);
+                updateConfig("audioModel", value);
+            } else {
+                updateConfig(mode === "text" ? "textModel" : mode === "image" ? "imageModel" : "videoModel", value);
+            }
+        },
         ratio,
         setRatio: setComposerRatio,
         seconds,

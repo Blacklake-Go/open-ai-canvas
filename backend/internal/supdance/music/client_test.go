@@ -18,7 +18,7 @@ func (f roundTripFunc) RoundTrip(req *http.Request) (*http.Response, error) {
 	return f(req)
 }
 
-func TestKoyosimBaseURLImmutability(t *testing.T) {
+func TestClientBaseURLDefaultAndOption(t *testing.T) {
 	client, err := music.NewClient("koyo_sec_live_9988aabbccddee0011223344")
 	if err != nil {
 		t.Fatalf("failed to create client: %v", err)
@@ -29,6 +29,14 @@ func TestKoyosimBaseURLImmutability(t *testing.T) {
 	}
 	if client.APIKey() != "koyo_sec_live_9988aabbccddee0011223344" {
 		t.Fatalf("expected APIKey to match, got %q", client.APIKey())
+	}
+
+	customClient, err := music.NewClient("koyo_sec_live_9988aabbccddee0011223344", music.WithBaseURL("https://api.openai.com/v1"))
+	if err != nil {
+		t.Fatalf("failed to create custom client: %v", err)
+	}
+	if customClient.BaseURL() != "https://api.openai.com/v1" {
+		t.Fatalf("expected custom BaseURL %q, got %q", "https://api.openai.com/v1", customClient.BaseURL())
 	}
 }
 

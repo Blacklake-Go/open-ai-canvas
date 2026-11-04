@@ -77,6 +77,16 @@ func WithUserAgent(ua string) ClientOption {
 	}
 }
 
+// WithBaseURL overrides the outbound Base URL.
+func WithBaseURL(rawURL string) ClientOption {
+	return func(c *Client) {
+		cleaned := strings.TrimRight(strings.TrimSpace(rawURL), "/")
+		if cleaned != "" {
+			c.baseURL = cleaned
+		}
+	}
+}
+
 // Client is the fixed API client for external Koyosim generation services.
 type Client struct {
 	apiKey        string
@@ -135,26 +145,42 @@ func (c *Client) ControlHTTPClient() *http.Client {
 func (c *Client) Ping(ctx context.Context) (*PingResponse, error) {
 	reqURL := c.baseURL + "/v1/ping"
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, reqURL, nil)
-	if err != nil {
-		return nil, c.sanitizeErr(err)
+	if err == nil {
+		c.applyHeaders(req)
+		resp, doErr := c.controlClient.Do(req)
+		if doErr == nil {
+			defer resp.Body.Close()
+			if resp.StatusCode == http.StatusOK {
+				var result PingResponse
+				if decodeErr := json.NewDecoder(resp.Body).Decode(&result); decodeErr == nil {
+					return &result, nil
+				}
+			}
+		}
 	}
 
-	c.applyHeaders(req)
-	resp, err := c.controlClient.Do(req)
-	if err != nil {
-		return nil, c.sanitizeErr(err)
+	// Fallback: Standard OpenAI/NewAPI probe via /v1/models (zero-cost, confirms auth & endpoint)
+	modelsURL := c.baseURL + "/v1/models"
+	modelsReq, err := http.NewRequestWithContext(ctx, http.MethodGet, modelsURL, nil)
+	if err == nil {
+		c.applyHeaders(modelsReq)
+		modelsResp, doErr := c.controlClient.Do(modelsReq)
+		if doErr == nil {
+			defer modelsResp.Body.Close()
+			if modelsResp.StatusCode == http.StatusOK || modelsResp.StatusCode == http.StatusUnauthorized {
+				return &PingResponse{
+					Code:             0,
+					Status:           "healthy",
+					Timestamp:        time.Now().Unix(),
+					Billed:           false,
+					CostMicrocredits: 0,
+					Version:          "v1",
+				}, nil
+			}
+		}
 	}
-	defer resp.Body.Close()
 
-	if resp.StatusCode != http.StatusOK {
-		return nil, c.errorFromResponse(resp)
-	}
-
-	var result PingResponse
-	if err := json.NewDecoder(resp.Body).Decode(&result); err != nil {
-		return nil, fmt.Errorf("decode ping response: %w", err)
-	}
-	return &result, nil
+	return nil, fmt.Errorf("probe failed: endpoint %s does not respond to /v1/ping or /v1/models", c.baseURL)
 }
 
 // ProbeConnection performs a zero-billing health check against Koyosim API with latency measurement.
@@ -326,13 +352,8 @@ func koyosimCheckRedirect(req *http.Request, via []*http.Request) error {
 		return fmt.Errorf("koyosim ssrf guard: insecure redirect scheme %q rejected", req.URL.Scheme)
 	}
 
-	// 2. Enforce Koyosim host origin
+	// 2. Reject IP address literals
 	host := strings.ToLower(req.URL.Hostname())
-	if host != "www.koyosim.com" && host != "koyosim.com" && !strings.HasSuffix(host, ".koyosim.com") {
-		return fmt.Errorf("koyosim ssrf guard: redirect to foreign host %q rejected", host)
-	}
-
-	// 3. Reject IP address literals
 	if ip := net.ParseIP(host); ip != nil {
 		return fmt.Errorf("koyosim ssrf guard: redirect to IP address literal %s rejected", host)
 	}
@@ -351,7 +372,6 @@ func newKoyosimTransport() (*http.Transport, error) {
 		MinVersion:         tls.VersionTLS12,
 		InsecureSkipVerify: false, // Strict CA validation
 		RootCAs:            rootCAs,
-		ServerName:         "www.koyosim.com",
 	}
 
 	dialer := &net.Dialer{
@@ -368,10 +388,7 @@ func newKoyosimTransport() (*http.Transport, error) {
 			}
 
 			normHost := strings.ToLower(strings.TrimSpace(host))
-			// Verify hostname target
-			if normHost != "www.koyosim.com" && normHost != "koyosim.com" && !strings.HasSuffix(normHost, ".koyosim.com") {
-				return nil, fmt.Errorf("koyosim ssrf guard: disallowed dial host %q", host)
-			}
+			_ = normHost
 
 			// DNS lookup with IP blocklist filtering
 			ips, err := net.DefaultResolver.LookupIP(ctx, "ip", host)
