@@ -45,6 +45,16 @@ export function LinearLegalPage({ docMap, currentSlug }: LinearLegalPageProps) {
         <div
             className={`legal-public-page transition-colors duration-200 ${isDark ? "bg-[#000000] text-[#f4f4f6]" : "bg-[#ffffff] text-[#111111]"}`}
             style={{
+                position: "absolute",
+                inset: 0,
+                width: "100%",
+                height: "100%",
+                maxHeight: "100%",
+                overflowX: "hidden",
+                overflowY: "auto",
+                WebkitOverflowScrolling: "touch",
+                overscrollBehaviorY: "contain",
+                touchAction: "pan-y",
                 fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif',
             }}
         >

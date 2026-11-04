@@ -63,8 +63,17 @@ export default function PublicHtmlViewerPage() {
 
     // 直接满屏渲染沙箱自包含 HTML 页面
     return (
-        <div className="legal-public-page h-full w-full h-dvh bg-black overflow-hidden relative">
-            <iframe title={page.title} srcDoc={page.html} sandbox="allow-scripts allow-same-origin allow-popups allow-forms" className="h-full w-full border-0 bg-transparent" />
+        <div
+            className="legal-public-page bg-black relative"
+            style={{
+                position: "absolute",
+                inset: 0,
+                width: "100%",
+                height: "100%",
+                overflow: "hidden",
+            }}
+        >
+            <iframe title={page.title} srcDoc={page.html} sandbox="allow-scripts allow-same-origin allow-popups allow-forms" className="h-full w-full border-0 bg-transparent block" style={{ width: "100%", height: "100%", border: "none" }} />
         </div>
     );
 }
