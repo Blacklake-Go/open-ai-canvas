@@ -114,6 +114,9 @@ async function launchChrome(chromePath, cdpPort, profileDir) {
         `--user-data-dir=${profileDir}`,
         "--no-first-run",
         "--no-default-browser-check",
+        "--disable-background-timer-throttling",
+        "--disable-backgrounding-occluded-windows",
+        "--disable-renderer-backgrounding",
         "--window-size=1440,1000",
         // 保留 WebGL：不要 --disable-gpu。SwiftShader 提供确定性软件渲染。
         "--enable-unsafe-swiftshader",
@@ -241,6 +244,7 @@ async function connectCdp(cdpPort) {
 
     await send("Runtime.enable");
     await send("Page.enable");
+    await send("Page.bringToFront");
     await send("Log.enable");
     await send("Network.enable");
 
@@ -320,6 +324,21 @@ async function connectCdp(cdpPort) {
         }
         if (!box) {
             console.log(`      (click target not interactable: ${label})`);
+            console.log(
+                JSON.stringify(
+                    await evaluate(`(() => {
+                const element = (${locatorExpression});
+                if (!element) return { missing: true };
+                const rect = element.getBoundingClientRect();
+                const ancestors = [];
+                for (let current = element; current; current = current.parentElement) {
+                    const style = getComputedStyle(current);
+                    ancestors.push({ tag: current.tagName, className: current.className, opacity: style.opacity, display: style.display, visibility: style.visibility, animations: current.getAnimations().map((animation) => ({ state: animation.playState, pending: animation.pending, frames: animation.effect?.getKeyframes() })) });
+                }
+                return { visibility: document.visibilityState, focused: document.hasFocus(), rect: rect.toJSON(), disabled: element.matches(':disabled'), hit: document.elementFromPoint(rect.left + rect.width / 2, rect.top + rect.height / 2)?.outerHTML.slice(0, 500), ancestors };
+            })()`),
+                ),
+            );
             return false;
         }
         const point = { x: box.x, y: box.y, button: "left", pointerType: "mouse" };
