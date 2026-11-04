@@ -2,6 +2,8 @@ import { MUSIC_SITE_I18N_ENTRIES } from "../music-site";
 
 const pack: Record<string, string> = {
     ...Object.fromEntries(MUSIC_SITE_I18N_ENTRIES.map((entry) => [entry.key, entry.translations["en-US"]])),
+    "legal.scroll_to_bottom": "Scroll to bottom",
+    "legal.back_to_top": "Back to top",
     "admin.social_auth.icon_upload_hint": "Upload light and dark brand icons separately (128×128 PNG/WebP recommended, up to 5MB). Icons follow the interface theme; clearing restores the default.",
     "admin.visual_motion.enable": "Enable site transitions",
     "admin.visual_motion.description":

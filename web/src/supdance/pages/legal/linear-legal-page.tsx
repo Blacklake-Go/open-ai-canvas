@@ -24,6 +24,7 @@ export function LinearLegalPage({ docMap, currentSlug }: LinearLegalPageProps) {
     const location = useLocation();
     const isDark = useThemeStore((state) => state.theme === "dark");
     const locale = useLocaleStore((state) => state.locale);
+    const { t } = useI18n();
     const lang: SupportedLegalLanguage = locale === "zh-CN" ? locale : locale === "ja-JP" ? "ja" : locale === "ko-KR" ? "ko" : "en";
     // 挂载时解除画布 fixed 视口锁定，赋予法务长文 100% 原生 Window 下拉滚动体验
     // 物理级滚轮与键盘全响应支持：确保在任何浏览器与操作系统中，鼠标滚轮、触控板与按键均能顺畅向下滑动
@@ -207,8 +208,8 @@ export function LinearLegalPage({ docMap, currentSlug }: LinearLegalPageProps) {
                             if (el) el.scrollTo({ top: el.scrollHeight, behavior: "smooth" });
                         }}
                         className="flex size-10 items-center justify-center rounded-full border border-black/10 bg-white/95 text-black shadow-lg backdrop-blur-md transition-all hover:scale-110 active:scale-95 dark:border-white/15 dark:bg-black/95 dark:text-white"
-                        title="滑动直达底部"
-                        aria-label="滑动直达底部"
+                        title={t("legal.scroll_to_bottom")}
+                        aria-label={t("legal.scroll_to_bottom")}
                     >
                         <ArrowDown className="size-4" />
                     </button>
@@ -220,8 +221,8 @@ export function LinearLegalPage({ docMap, currentSlug }: LinearLegalPageProps) {
                             if (el) el.scrollTo({ top: 0, behavior: "smooth" });
                         }}
                         className="flex size-10 items-center justify-center rounded-full border border-black/10 bg-white/95 text-black shadow-lg backdrop-blur-md transition-all hover:scale-110 active:scale-95 dark:border-white/15 dark:bg-black/95 dark:text-white"
-                        title="返回页面顶部"
-                        aria-label="返回页面顶部"
+                        title={t("legal.back_to_top")}
+                        aria-label={t("legal.back_to_top")}
                     >
                         <ArrowUp className="size-4" />
                     </button>
