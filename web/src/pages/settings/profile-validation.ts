@@ -1,3 +1,5 @@
+import { translate } from "@/i18n";
+
 export const PROFILE_AVATAR_MAX_BYTES = 5 * 1024 * 1024;
 
 export function profileAvatarError(file: Pick<File, "type" | "size">, t?: (key: string, params?: any, fallback?: string) => string): string | undefined {

@@ -4,6 +4,7 @@ import { Tooltip } from "@/components/ui/base/tooltip";
 import { History, Maximize2, PenLine } from "lucide-react";
 import { AnimatePresence, motion, useReducedMotion } from "motion/react";
 import { useNavigate } from "react-router";
+import { useTranslation } from "react-i18next";
 
 import type { AssetLibraryPickerItem } from "@/components/assets/asset-library-picker-modal";
 import { generationErrorCode, generationErrorMessage } from "@/lib/generation-error";
@@ -470,7 +471,7 @@ export default function CreatePage() {
             console.warn("创作任务状态同步失败", error);
             if (!taskSyncWarningRef.current) {
                 taskSyncWarningRef.current = true;
-                toast.warning("任务状态暂时无法同步，请稍后刷新");
+                toast.warning(t("create.page.taskSyncFailed"));
             }
         };
         let applyChain = Promise.resolve();
@@ -522,13 +523,13 @@ export default function CreatePage() {
             setConversations((current) => reconcileCreationTaskMessages(runtime, current, persistedTasks, { reviveMessageIds: new Set([item.id]) }));
             if (tasks.some((task) => task.status === "queued" || task.status === "running")) {
                 setRecoveryEpoch((value) => value + 1);
-                toast.info("任务仍在生成，完成后会自动显示");
+                toast.info(t("create.page.taskStillRunning"));
             } else if (persistedTasks.some((task) => task.status === "succeeded" && !task.creationResultUrls?.length && !task.creationResultStorageKeys?.length)) {
-                toast.warning("作品已生成，但暂时无法载入，请稍后再试");
+                toast.warning(t("create.page.resultNotLoaded"));
             }
         } catch (error) {
             if (refresh.signal.aborted || scope !== getActiveUserScope()) return;
-            toast.error(`暂时无法获取结果：${generationErrorMessage(error)}`);
+            toast.error(t("create.page.resultFetchFailed", { reason: generationErrorMessage(error) }));
         } finally {
             refresh.finish();
         }
@@ -546,7 +547,7 @@ export default function CreatePage() {
             const recovered = await Promise.allSettled(taskIds.map((id) => runtime.recoverGenerationTaskMedia(id)));
             if (!recovered.some((entry) => entry.status === "fulfilled")) {
                 const rejected = recovered.find((entry): entry is PromiseRejectedResult => entry.status === "rejected");
-                throw rejected?.reason instanceof Error ? rejected.reason : new Error("作品暂时无法重新保存");
+                throw rejected?.reason instanceof Error ? rejected.reason : new Error(t("create.page.resaveUnavailable"));
             }
             const tasks = await Promise.all(taskIds.map((id) => runtime.queryGenerationTask(id, { signal: refresh.signal })));
             if (refresh.signal.aborted || scope !== getActiveUserScope()) return;
@@ -556,7 +557,7 @@ export default function CreatePage() {
             setRecoveryEpoch((value) => value + 1);
         } catch (error) {
             if (refresh.signal.aborted || scope !== getActiveUserScope()) return;
-            toast.error(`重新保存失败：${generationErrorMessage(error)}`);
+            toast.error(t("create.page.resaveFailed", { reason: generationErrorMessage(error) }));
         } finally {
             refresh.finish();
         }
@@ -661,8 +662,8 @@ export default function CreatePage() {
         );
         const assetIds = settled.flatMap((entry) => (entry.status === "fulfilled" && entry.value ? [entry.value] : []));
         const failed = settled.filter((entry) => entry.status === "rejected");
-        if (assetIds.length) toast.success(`${assetIds.length} 个素材已上传到素材库并自动选中`);
-        if (failed.length) toast.error(`${failed.length} 个素材上传失败，请重试`);
+        if (assetIds.length) toast.success(t("create.page.uploadSucceeded", { count: assetIds.length }));
+        if (failed.length) toast.error(t("create.page.uploadFailed", { count: failed.length }));
         return assetIds;
     };
 
@@ -712,8 +713,8 @@ export default function CreatePage() {
     const replaceAttachmentReference = useCallback((targetAttachmentId: string, replacement: CreationAttachment) => {
         const currentAttachments = attachmentsRef.current;
         const target = currentAttachments.find((attachment) => attachment.id === targetAttachmentId);
-        if (!target) throw new Error("要替换的参考图不存在");
-        if (creationAttachmentKind(target) !== "image" || creationAttachmentKind(replacement) !== "image") throw new Error("目前只支持替换提示词中的图片引用");
+        if (!target) throw new Error(t("create.page.replaceTargetMissing"));
+        if (creationAttachmentKind(target) !== "image" || creationAttachmentKind(replacement) !== "image") throw new Error(t("create.page.replaceImageOnly"));
         if (target.id === replacement.id) return false;
 
         const result = replaceCreationAttachmentReference(promptRef.current, currentAttachments, targetAttachmentId, replacement);
@@ -766,7 +767,7 @@ export default function CreatePage() {
         if (!submitToken) {
             // 以前这里是静默返回：上一条还在生成时点发送毫无反应，只能靠猜。
             releaseRetryLock();
-            toast.warning("上一条还在提交中，稍等片刻再发送");
+            toast.warning(t("create.page.submitInProgress"));
             return;
         }
         const releaseSubmitGate = () => submitGateRef.current.release(submitToken);
@@ -783,20 +784,20 @@ export default function CreatePage() {
             return;
         }
         if (!selectedModel) {
-            toast.warning(`请先在设置中配置${modeLabels[mode]}模型`);
+            toast.warning(t("create.page.configureModel", { mode: modeLabels[mode] }));
             releaseRetryLock();
             releaseSubmitGate();
             return;
         }
         if (mode === "video" && !videoDurationAllowed(videoProfile, Number(seconds))) {
-            toast.error("当前模型不支持所选视频时长，请重新选择");
+            toast.error(t("create.page.durationUnsupported"));
             releaseRetryLock();
             releaseSubmitGate();
             return;
         }
         const reconciledAttachments = mode === "video" && videoReferenceLimits ? reconcileCreationAttachmentLimits(attachments, mentionReferences, videoReferenceLimits) : reconcileCreationAttachmentLimit(attachments, mentionReferences, maxReferences);
         if (reconciledAttachments.attachments !== attachments) {
-            toast.warning("参考内容正在按当前模型能力调整，请稍后重试");
+            toast.warning(t("create.page.referencesAdjusting"));
             releaseRetryLock();
             releaseSubmitGate();
             return;
@@ -817,7 +818,7 @@ export default function CreatePage() {
         try {
             runtime = await loadCreationRuntime();
         } catch (error) {
-            toast.error(error instanceof Error ? error.message : "生成运行时加载失败");
+            toast.error(error instanceof Error ? error.message : t("create.page.runtimeLoadFailed"));
             releaseRetryLock();
             releaseSubmitGate();
             return;
@@ -831,7 +832,7 @@ export default function CreatePage() {
                 selectedSkillIds: skillReferences.map((skill) => skill.skillId),
             });
         } catch (error) {
-            toast.error(error instanceof Error ? error.message : "技能上下文加载失败");
+            toast.error(error instanceof Error ? error.message : t("create.page.skillContextFailed"));
             releaseRetryLock();
             releaseSubmitGate();
             return;
@@ -1029,10 +1030,10 @@ export default function CreatePage() {
                     // 只要有一张图是“页面没跟上”而不是后端确认失败，就交给恢复监听继续跟进，而不是整条判失败。
                     const reasons = [...taskFailures, ...resourceFailures].map((entry) => entry.reason);
                     const reason = reasons.find((candidate) => !runtime.isGenerationTaskTerminalError(candidate)) ?? reasons[0];
-                    throw reason instanceof Error ? reason : new Error("后端任务没有返回图片");
+                    throw reason instanceof Error ? reason : new Error(t("create.page.noImageResult"));
                 }
-                if (failedCount) toast.warning(`${resultUrls.length} 张图片已生成，${failedCount} 张生成失败`);
-                updateOriginAssistant((item) => ({ ...item, content: failedCount ? `${resultUrls.length} 张图片已生成，${failedCount} 张失败` : "图片已生成" }));
+                if (failedCount) toast.warning(t("create.page.imagesPartiallyGenerated", { done: resultUrls.length, failed: failedCount }));
+                updateOriginAssistant((item) => ({ ...item, content: failedCount ? t("create.status.imagesPartiallyGenerated", { done: resultUrls.length, failed: failedCount }) : t("create.status.imageGenerated") }));
             } else {
                 const result = await runtime.runGenerationOperationOnce(retryContext?.clientOperationId, () =>
                     runtime.runBackendGenerationTask({
@@ -1050,7 +1051,7 @@ export default function CreatePage() {
                 );
                 if (!result.video?.dataUrl) throw new Error("后端任务没有返回视频");
                 const taskId = Array.from(boundTaskIds)[0];
-                if (!taskId) throw new Error("生成任务缺少稳定任务标识");
+                if (!taskId) throw new Error(t("create.page.missingTaskId"));
                 const task = completedCreationGenerationTask(runtime, { taskId, task: boundTasks.get(taskId), mode: "video", prompt: expandedPrompt, result, conversationId: activeConversation.id, messageId: assistantMessage.id });
                 const materialized = await runtime.consumeGenerationTaskMessage(
                     task,
@@ -1067,7 +1068,7 @@ export default function CreatePage() {
             updateOriginAssistant((item) => ({ ...item, status: "done" }));
         } catch (error) {
             if (runtime.isGenerationTaskCancelled(error, requestLifecycle.signal)) {
-                updateOriginAssistant((item) => ({ ...item, status: "cancelled", content: "已停止" }));
+                updateOriginAssistant((item) => ({ ...item, status: "cancelled", content: t("create.status.stopped") }));
                 return;
             }
             if (boundTaskIds.size && !runtime.isGenerationTaskTerminalError(error)) {
@@ -1090,7 +1091,7 @@ export default function CreatePage() {
                 generationErrorCode: item.generationErrorCode || generationErrorCode(error),
                 generationOperation: item.generationOperation || (mode === "video" ? videoOperation : mode),
                 createdAt: assistantMessage.createdAt,
-                content: "生成失败",
+                content: t("create.status.failed"),
             }));
         } finally {
             for (const taskId of boundTaskIds) activeGenerationTaskIdsRef.current.delete(taskId);
@@ -1153,7 +1154,7 @@ export default function CreatePage() {
             setConversations(next);
             await saveCreationConversations(next);
             if (scope !== getActiveUserScope()) return;
-            if (result.syncError) toast.warning("会话已保存在本机，云端同步尚未完成。");
+            if (result.syncError) toast.warning(t("create.page.handoffSyncPending"));
             const params = new URLSearchParams({ conversation: result.sessionId });
             if (assetIds.length) {
                 params.set("mode", "handoff");
@@ -1178,15 +1179,15 @@ export default function CreatePage() {
     };
 
     const confirmDeleteConversation = (conversation: CreationConversation) => {
-        const title = conversation.title.trim() || "新创作";
+        const title = conversation.title.trim() || t("create.conversation.untitled");
         const label = title.length > 32 ? `${title.slice(0, 32)}...` : title;
         modal.confirm({
             className: "workspace-modal workspace-modal-compact",
-            title: "删除历史对话？",
-            content: `确定删除「${label}」吗？这只会删除历史对话记录，不会删除已上传或生成的任何素材。此操作不可撤销。`,
-            okText: "删除对话",
+            title: t("create.page.deleteTitle"),
+            content: t("create.page.deleteContent", { title: label }),
+            okText: t("create.history.delete"),
             okButtonProps: { danger: true },
-            cancelText: "保留",
+            cancelText: t("create.page.deleteKeep"),
             onOk: async () => {
                 try {
                     const remaining = removeCreationConversationSnapshot(conversationsRef.current, conversation.id);
@@ -1204,9 +1205,9 @@ export default function CreatePage() {
                         setAttachments([]);
                         setDraftReferences([]);
                     }
-                    toast.success("历史对话已删除，素材仍保留");
+                    toast.success(t("create.page.deleted"));
                 } catch (error) {
-                    toast.error(error instanceof Error ? error.message : "历史对话删除失败");
+                    toast.error(error instanceof Error ? error.message : t("create.page.deleteFailed"));
                     throw error;
                 }
             },
@@ -1219,7 +1220,7 @@ export default function CreatePage() {
         const next = updateCreationConversationSnapshot(conversationsRef.current, conversation.id, (item) => ({ ...item, title: nextTitle }));
         conversationsRef.current = next;
         setConversations(next);
-        void saveCreationConversations(next).catch((error) => toast.error(error instanceof Error ? error.message : "对话重命名保存失败"));
+        void saveCreationConversations(next).catch((error) => toast.error(error instanceof Error ? error.message : t("create.page.renameFailed")));
     };
 
     const restoreMessageDraft = (item: CreationMessage) => {
@@ -1251,7 +1252,7 @@ export default function CreatePage() {
             updateActive((conversation) => {
                 const messages = conversation.messages.filter((message) => !removedIds.has(message.id));
                 const firstPrompt = messages.find((message) => message.role === "user")?.content.trim();
-                return { ...conversation, title: firstPrompt ? firstPrompt.slice(0, 24) : "新创作", updatedAt: new Date().toISOString(), messages };
+                return { ...conversation, title: firstPrompt ? firstPrompt.slice(0, 24) : t("create.conversation.untitled"), updatedAt: new Date().toISOString(), messages };
             });
         };
         if (!retryOf) {
@@ -1284,10 +1285,10 @@ export default function CreatePage() {
         }
         modal.confirm({
             className: "workspace-modal workspace-modal-compact",
-            title: "作品可能已经生成",
-            content: "页面只是没有及时拿到结果，建议先点「重新获取结果」。重新生成会提交新任务并再次扣费。",
-            okText: "仍要重新生成",
-            cancelText: "先不",
+            title: t("create.page.regenerateTitle"),
+            content: t("create.page.regenerateContent"),
+            okText: t("create.page.regenerateConfirm"),
+            cancelText: t("create.page.regenerateCancel"),
             onOk: () => retryFailedMessage(item, index),
         });
     };

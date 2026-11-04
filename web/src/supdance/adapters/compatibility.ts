@@ -8,7 +8,7 @@ import type { PluginHostContext, PluginManifest, PluginManifestV2, RegisteredPlu
 import { getRegisteredPlugin, registerPlugin, unregisterPlugin } from "@/lib/plugins/plugin-registry";
 
 export const SUPDANCE_HOST_VERSION = "1.7.3.5" as const;
-export const SUPDANCE_SCHEMA_BASELINE = 79 as const;
+export const SUPDANCE_SCHEMA_BASELINE = 81 as const;
 
 export type UpstreamPatchRecord = {
     id: string;
@@ -79,6 +79,7 @@ export const SUPDANCE_UPSTREAM_PATCH_REGISTRY: readonly UpstreamPatchRecord[] = 
         feature: "站点多语言插件 (supdance-i18n)：右上角六国语言切换图标、响应式词条引擎、后台语言管理设置与在线字段修改页面",
         coupledUpstreamFiles: [
             ".github/workflows/quality.yml",
+            "web/src/i18n/index.ts",
             ".github/workflows/supdance-upstream-sync.yml",
             "scripts/verify-before-push.mjs",
             "web/package.json",
@@ -125,6 +126,7 @@ export const SUPDANCE_UPSTREAM_PATCH_REGISTRY: readonly UpstreamPatchRecord[] = 
             "web/src/supdance/plugins/i18n/types.ts",
             "web/src/supdance/plugins/i18n/api.ts",
             "web/src/supdance/plugins/i18n/store.ts",
+            "web/src/supdance/adapters/upstream-i18n.ts",
             "web/src/supdance/plugins/i18n/locales/index.ts",
             "web/src/supdance/plugins/i18n/engine/translator.ts",
             "web/src/supdance/plugins/i18n/engine/dom-observer.ts",

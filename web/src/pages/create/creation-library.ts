@@ -1,3 +1,4 @@
+import { translate } from "@/i18n";
 import type { AssetLibraryPickerItem } from "@/components/assets/asset-library-picker-modal";
 import type { CreationMode } from "@/lib/creation-mode";
 import type { CreationReferenceLimits } from "./creation-references";
@@ -11,23 +12,22 @@ export function creationLibraryDisabledReason(mode: CreationMode, kind: string |
 
     const maximum = kind === "image" ? videoLimits?.maxImages : kind === "video" ? videoLimits?.maxVideos : videoLimits?.maxAudios;
     if ((maximum || 0) > 0) return undefined;
-    const label = kind === "video" ? "视频" : kind === "audio" ? "音频" : "图片";
-    return `当前视频模型不支持参考${label}`;
+    return kind === "video" ? translate("create.library.videoModelNoVideo") : kind === "audio" ? translate("create.library.videoModelNoAudio") : translate("create.library.videoModelNoImage");
 }
 
 export function creationLibrarySelectionToAttachments(ids: string[], items: AssetLibraryPickerItem[], mode: CreationMode, videoLimits?: CreationReferenceLimits): CreationAttachment[] {
     const itemsById = new Map(items.map((item) => [item.id, item]));
     return ids.map((id) => {
         const item = itemsById.get(id);
-        if (!item) throw new Error("所选素材已不存在，请重新选择");
+        if (!item) throw new Error(translate("create.library.selectionMissing"));
         const kind = item.external?.item.kind || item.asset?.kind;
         const disabledReason = item.disabledReason || creationLibraryDisabledReason(mode, kind, videoLimits);
-        if (disabledReason) throw new Error(`“${item.title}”：${disabledReason}`);
+        if (disabledReason) throw new Error(translate("create.library.itemDisabled", { title: item.title, reason: disabledReason }));
         if (item.external) return creationAttachmentFromExternalAsset(item.external);
         const asset = item.asset;
         if (asset?.kind === "image") return creationAttachmentFromAsset(asset);
         if (asset?.kind === "video") return creationAttachmentFromVideoAsset(asset);
         if (asset?.kind === "audio") return creationAttachmentFromAudioAsset(asset);
-        throw new Error("所选素材已不存在，请重新选择");
+        throw new Error(translate("create.library.selectionMissing"));
     });
 }

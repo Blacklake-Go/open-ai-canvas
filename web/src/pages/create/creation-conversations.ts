@@ -1,3 +1,4 @@
+import { translate } from "@/i18n";
 import { createClientId } from "@/lib/client-id";
 import { generationErrorMessage } from "@/lib/generation-error";
 import type { BackendGenerationResult } from "@/services/api/generation-task";
@@ -9,7 +10,7 @@ type CreationRuntime = typeof import("./creation-runtime");
 export type PersistedCreationTask = GenerationTask & { creationResultUrls?: string[]; creationResultStorageKeys?: string[]; creationError?: string };
 
 export function newConversation(): CreationConversation {
-    return { id: createClientId(), title: "新创作", updatedAt: new Date().toISOString(), messages: [] };
+    return { id: createClientId(), title: translate("create.conversation.untitled"), updatedAt: new Date().toISOString(), messages: [] };
 }
 
 export function newMessage(role: CreationMessage["role"], content: string, extra: Partial<CreationMessage> = {}): CreationMessage {
@@ -202,7 +203,7 @@ export function reconcileCreationTaskMessages(runtime: CreationRuntime, conversa
                 };
             }
             if (matches.every((task) => task.status === "cancelled")) {
-                return { ...message, ...clearedCreationSyncState, status: "cancelled" as const, content: "已停止", error: undefined, generationStatus: "cancelled" as const, taskIds: nextTaskIds };
+                return { ...message, ...clearedCreationSyncState, status: "cancelled" as const, content: translate("create.status.stopped"), error: undefined, generationStatus: "cancelled" as const, taskIds: nextTaskIds };
             }
             // 任务成功但结果没能载入（资源化失败）不是生成失败：保留“重新获取结果”，不引导重新付费生成。
             const unavailable = succeeded.find((task) => task.creationError) || succeeded[0];
@@ -223,10 +224,10 @@ export function reconcileCreationTaskMessages(runtime: CreationRuntime, conversa
                 ...message,
                 ...clearedCreationSyncState,
                 status: "error" as const,
-                content: "生成失败",
+                content: translate("create.status.failed"),
                 errorKind: "task" as const,
                 mediaRecoverable: matches.some((task) => task.status === "failed" && task.canRecoverMedia) || undefined,
-                error: generationErrorMessage(failed?.error || "任务已结束，但没有返回结果"),
+                error: generationErrorMessage(failed?.error || translate("create.conversation.noResult")),
                 generationStatus: failed ? ("failed" as const) : message.generationStatus,
                 generationMediaStage: failed?.mediaStage,
                 taskIds: nextTaskIds,

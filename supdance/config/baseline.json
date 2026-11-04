@@ -3,14 +3,17 @@
   "upstreamRepository": "https://github.com/ddcat-ai/open-ai-canvas",
   "forkRepository": "https://github.com/Blacklake-Go/open-ai-canvas",
   "upstreamBaseline": {
-    "tag": "v1.7.3.5",
-    "commit": "7c14ffdd8c5480eefc29e6f1ab7da4ef25da2856",
-    "schemaVersion": 79
+    "tag": "main@8de0a239",
+    "releaseTag": "v1.7.3.5",
+    "releaseCommit": "7c14ffdd8c5480eefc29e6f1ab7da4ef25da2856",
+    "commit": "8de0a23953dba67493d5a80bf9ee5e913d289622",
+    "schemaVersion": 81
   },
-  "integrationCandidate": {
-    "version": "v1.7.4-supdance.6+upstream-stage2",
+  "integrationRelease": {
+    "version": "v1.7.4-supdance.7",
     "baseCommit": "eadb3622f302ade2b51c244ac6b7c6c9903a85a2",
-    "status": "uncommitted-not-deployed"
+    "sourceBranch": "main",
+    "deploymentEvidence": "docs/supdance/STAGED_UPSTREAM_CANDIDATE.md"
   },
   "supdanceRelease": {
     "tag": "supdance/v2026.10.28.2",
@@ -18,6 +21,7 @@
     "baseCommit": "259e7e3fba0b6f70ac3cfd65941c3ca345d60249"
   },
   "coupledUpstreamFiles": [
+    "web/src/i18n/index.ts",
     "web/src/components/canvas/canvas-cloud-agent-panel-parts.tsx",
     "web/src/components/canvas/canvas-cloud-agent.css",
     ".github/workflows/quality.yml",
@@ -70,6 +74,7 @@
     "web/src/stores/use-plugin-store.ts"
   ],
   "supdanceExtensionFiles": [
+    "web/src/supdance/adapters/upstream-i18n.ts",
     "web/src/components/canvas/use-codex-connector.ts",
     "web/src/services/api/codex-connector.ts",
     "web/src/supdance/index.ts",

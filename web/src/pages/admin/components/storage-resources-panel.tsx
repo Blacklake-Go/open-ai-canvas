@@ -21,7 +21,7 @@ export default function StorageResourcesPanel() {
     const keyword = searchParams.get("filter") || "";
     const kind = normalizeOption(searchParams.get("kind"), ["image", "video", "audio", "file", "live2d"]);
     const status = normalizeOption(searchParams.get("status"), ["pending", "ready", "failed", "deleted"]);
-    const provider = normalizeOption(searchParams.get("provider"), ["local", "aliyun", "tencent", "qiniu", "s3"]);
+    const provider = normalizeOption(searchParams.get("provider"), ["local", "aliyun", "tencent", "qiniu", "volcengine", "s3"]);
     const userQuery = searchParams.get("user") || searchParams.get("userId") || "";
     const page = positiveInt(searchParams.get("page"), 1);
     const pageSize = normalizePageSize(searchParams.get("pageSize"));
@@ -214,7 +214,15 @@ export default function StorageResourcesPanel() {
                             placeholder="资源 ID 或对象路径"
                             onValueChange={(value) => updateUrl({ filter: value, page: 1 }, true)}
                         />
-                        <AdminSearchInput aria-label="按用户名、昵称、邮箱或用户 ID 筛选" autoComplete="off" allowClear className="w-64" value={userQuery} placeholder="用户名 / 昵称 / 邮箱 / 用户 ID" onValueChange={(value) => updateUrl({ user: value, userId: "", page: 1 }, true)} />
+                        <AdminSearchInput
+                            aria-label="按用户名、昵称、邮箱或用户 ID 筛选"
+                            autoComplete="off"
+                            allowClear
+                            className="w-64"
+                            value={userQuery}
+                            placeholder="用户名 / 昵称 / 邮箱 / 用户 ID"
+                            onValueChange={(value) => updateUrl({ user: value, userId: "", page: 1 }, true)}
+                        />
                         <Select aria-label="筛选资源类型" className="w-32" value={kind} onChange={(value) => updateUrl({ kind: value, page: 1 })} options={kindOptions} />
                         <Select aria-label="筛选资源状态" className="w-32" value={status} onChange={(value) => updateUrl({ status: value, page: 1 })} options={statusOptions} />
                         <Select aria-label="筛选存储类型" className="w-36" value={provider} onChange={(value) => updateUrl({ provider: value, page: 1 })} options={providerOptions} />
@@ -337,6 +345,7 @@ const providerOptions = [
     { label: "阿里云 OSS", value: "aliyun" },
     { label: "腾讯云 COS", value: "tencent" },
     { label: "七牛云 Kodo", value: "qiniu" },
+    { label: "火山引擎 TOS", value: "volcengine" },
     { label: "S3", value: "s3" },
 ];
 
@@ -364,7 +373,7 @@ function statusTone(status: string): "neutral" | "success" | "warning" | "error"
     return status === "ready" ? "success" : status === "pending" ? "warning" : status === "failed" ? "error" : "neutral";
 }
 function providerLabel(provider: string) {
-    return ({ local: "本地", aliyun: "阿里云 OSS", tencent: "腾讯云 COS", qiniu: "七牛云 Kodo", s3: "S3" } as Record<string, string>)[provider] || provider || "本地";
+    return ({ local: "本地", aliyun: "阿里云 OSS", tencent: "腾讯云 COS", qiniu: "七牛云 Kodo", volcengine: "火山引擎 TOS", s3: "S3" } as Record<string, string>)[provider] || provider || "本地";
 }
 function formatBytes(bytes: number) {
     if (!Number.isFinite(bytes) || bytes <= 0) return "0 B";

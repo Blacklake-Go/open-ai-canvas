@@ -1,6 +1,7 @@
 import { motion, useReducedMotion } from "motion/react";
 import { ScrollText } from "lucide-react";
 import ReactMarkdown from "react-markdown";
+import { useTranslation } from "react-i18next";
 
 import { AppModal } from "@/components/ui/product/app-modal/app-modal";
 import { aceternityMotion } from "@/lib/aceternity-motion";

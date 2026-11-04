@@ -1,5 +1,6 @@
 import { ScrollText } from "lucide-react";
 import { lazy, Suspense, useState, type CSSProperties, type ReactNode } from "react";
+import { useTranslation } from "react-i18next";
 import { useAppearanceStore } from "@/stores/use-appearance-store";
 import { updateAnnouncementVersion } from "@/lib/update-announcement";
 import { refreshPublicAppearance } from "@/services/appearance-bootstrap";

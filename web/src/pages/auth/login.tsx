@@ -2,6 +2,7 @@ import { type FormEvent, useEffect, useState, type ReactNode } from "react";
 import { App, Button, Divider, Input, Segmented } from "antd";
 import { ArrowRight, LockKeyhole, UserRound } from "lucide-react";
 import { Link, useNavigate, useSearchParams } from "react-router";
+import { useTranslation } from "react-i18next";
 
 import { getAuthSession, getAuthSettings, linuxDOLoginURL, login } from "@/services/api/auth";
 import { useUserStore } from "@/stores/use-user-store";
@@ -14,6 +15,7 @@ export default function LoginPage() {
     const navigate = useNavigate();
     const [params] = useSearchParams();
     const { message } = App.useApp();
+    const { t } = useTranslation();
     const [username, setUsername] = useState("");
     const [password, setPassword] = useState("");
     const [submitting, setSubmitting] = useState(false);
@@ -55,15 +57,15 @@ export default function LoginPage() {
         try {
             if (method === "password") await login({ username, password });
             else {
-                if (!verification.ticket) throw new Error("请先获取本次登录验证码");
+                if (!verification.ticket) throw new Error(t("auth.login.needCode"));
                 await loginVerification(verification);
             }
             const { applyUserSession } = await import("@/lib/user-session");
             await applyUserSession(await getAuthSession());
-            message.success("登录成功");
+            message.success(t("auth.login.success"));
             navigate(next, { replace: true });
         } catch (error) {
-            message.error(error instanceof Error ? error.message : "登录失败");
+            message.error(error instanceof Error ? error.message : t("auth.login.failed"));
         } finally {
             setSubmitting(false);
         }
@@ -114,15 +116,15 @@ export default function LoginPage() {
                 </>
             )}
             <Button type="primary" htmlType="submit" size="large" block loading={submitting} icon={<ArrowRight className="size-4" />} iconPlacement="end">
-                登录
+                {t("auth.login.submit")}
             </Button>
             {linuxdoEnabled ? (
                 <>
                     <Divider plain className="auth-scene-divider">
-                        或
+                        {t("common.or")}
                     </Divider>
                     <Button size="large" block icon={<LinuxDOIcon />} href={linuxDOLoginURL(next)}>
-                        使用 Linux.do 登录
+                        {t("auth.login.linuxdo")}
                     </Button>
                 </>
             ) : null}

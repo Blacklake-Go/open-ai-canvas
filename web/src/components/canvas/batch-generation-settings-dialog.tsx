@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { Button } from "antd";
 import { AppModal } from "@/components/ui/product/app-modal";
 import { X, Play } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 import { ImageSettingsPanel } from "@/components/image-settings-panel";
 import { ModelPicker } from "@/components/model-picker";
@@ -24,6 +25,7 @@ type BatchGenerationSettingsDialogProps = {
 };
 
 export function BatchGenerationSettingsDialog({ open, config, rowCount, concurrency, onClose, onConfirm }: BatchGenerationSettingsDialogProps) {
+    const { t } = useTranslation();
     const theme = canvasThemes[useActiveTheme()];
     const [generationConfig, setGenerationConfig] = useState<AiConfig>(config);
     const [cameraControl, setCameraControl] = useState<CameraControlOptions | undefined>(undefined);
@@ -46,72 +48,52 @@ export function BatchGenerationSettingsDialog({ open, config, rowCount, concurre
     const imageModel = generationConfig.imageModel || generationConfig.model;
 
     return (
-        <AppModal
-            open={open}
-            onCancel={onClose}
-            footer={null}
-            centered
-            destroyOnHidden
-            width={480}
-            title="批量生成设置"
-        >
+        <AppModal open={open} onCancel={onClose} footer={null} centered destroyOnHidden width={480} title={t("canvasA.batchSettings.title")}>
             <div className="flex flex-col gap-4 py-2">
                 <div className="rounded-lg bg-black/5 px-3 py-2 text-sm dark:bg-white/[0.04]">
-                    共 <span className="font-semibold">{rowCount}</span> 个任务（每行 1 张） · 并发上限 <span className="font-semibold">{concurrency}</span>
-                    <div className="mt-1 text-xs opacity-75">确认后将提交生成任务，可能消耗积分或产生外部模型费用。</div>
+                    {t("canvasA.batchSettings.summary", { count: rowCount, concurrency })}
+                    <div className="mt-1 text-xs opacity-75">{t("canvasA.batchSettings.costNote")}</div>
                 </div>
 
                 <div className="space-y-2">
-                    <div className="text-sm font-medium opacity-75">生成模型</div>
-                    <ModelPicker
-                        config={generationConfig}
-                        value={imageModel}
-                        capability="image"
-                        fullWidth
-                        showSelectedPrice={false}
-                        onChange={handleModelChange}
-                    />
+                    <div className="text-sm font-medium opacity-75">{t("canvasA.approval.model")}</div>
+                    <ModelPicker config={generationConfig} value={imageModel} capability="image" fullWidth showSelectedPrice={false} onChange={handleModelChange} />
                 </div>
 
                 <div className="border-t pt-3" style={{ borderColor: theme.node.stroke }}>
-                    <ImageSettingsPanel
-                        config={generationConfig}
-                        onConfigChange={handleConfigChange}
-                        theme={theme}
-                        showTitle={false}
-                        showCount={false}
-                        quickCount={4}
-                        maxCount={10}
-                        className="w-full space-y-3"
-                    />
+                    <ImageSettingsPanel config={generationConfig} onConfigChange={handleConfigChange} theme={theme} showTitle={false} showCount={false} quickCount={4} maxCount={10} className="w-full space-y-3" />
                 </div>
 
                 <div className="flex items-center justify-between border-t pt-3" style={{ borderColor: theme.node.stroke }}>
                     <div>
-                        <div className="text-sm font-medium">摄像机控制</div>
-                        <div className="mt-1 text-xs opacity-60">为本批次统一应用镜头、焦段和光圈设置</div>
+                        <div className="text-sm font-medium">{t("canvasA.camera.label")}</div>
+                        <div className="mt-1 text-xs opacity-60">{t("canvasA.batchSettings.cameraHint")}</div>
                     </div>
                     <CanvasCameraControlPopover cameraControl={cameraControl} onCameraControlChange={setCameraControl} theme={theme} compact />
                 </div>
 
                 <div className="mt-2 flex justify-end gap-2">
-                    <Button icon={<X className="size-4" />} onClick={onClose}>取消</Button>
+                    <Button icon={<X className="size-4" />} onClick={onClose}>
+                        {t("common.cancel")}
+                    </Button>
                     <Button
                         type="primary"
                         icon={<Play className="size-4" />}
-                        onClick={() => onConfirm({
-                            model: generationConfig.model,
-                            imageModel: generationConfig.imageModel,
-                            imageResolution: generationConfig.imageResolution,
-                            imageParameters: generationConfig.imageParameters,
-                            quality: generationConfig.quality,
-                            size: generationConfig.size,
-                            transparentBackground: generationConfig.transparentBackground,
-                            count: "1",
-                            cameraControl,
-                        })}
+                        onClick={() =>
+                            onConfirm({
+                                model: generationConfig.model,
+                                imageModel: generationConfig.imageModel,
+                                imageResolution: generationConfig.imageResolution,
+                                imageParameters: generationConfig.imageParameters,
+                                quality: generationConfig.quality,
+                                size: generationConfig.size,
+                                transparentBackground: generationConfig.transparentBackground,
+                                count: "1",
+                                cameraControl,
+                            })
+                        }
                     >
-                        开始生成 {rowCount} 个任务
+                        {t("canvasA.batchSettings.start", { count: rowCount })}
                     </Button>
                 </div>
             </div>

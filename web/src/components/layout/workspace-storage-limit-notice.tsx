@@ -4,6 +4,7 @@ import axios from "axios";
 import { useEffect, useRef } from "react";
 import { useNavigate } from "react-router";
 
+import { translate } from "@/i18n";
 import { accountFileStorageUsageQueryKey } from "@/lib/account-storage-usage";
 import { openStoragePurchase, STORAGE_LIMIT_REASONS } from "@/lib/workspace-storage";
 import { apiClient } from "@/services/api/request";

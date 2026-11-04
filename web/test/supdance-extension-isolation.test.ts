@@ -253,11 +253,11 @@ describe("SupDance route & patch registry guards", () => {
             }
         }
         const baselineConfig = JSON.parse(readFileSync(resolve(repoRoot, "supdance/config/baseline.json"), "utf8")) as {
-            upstreamBaseline: { tag: string; schemaVersion: number };
+            upstreamBaseline: { tag: string; releaseTag: string; schemaVersion: number };
             coupledUpstreamFiles: string[];
         };
         expect([...registryCoupled].sort()).toEqual([...baselineConfig.coupledUpstreamFiles].sort());
-        expect(baselineConfig.upstreamBaseline.tag).toBe(`v${SUPDANCE_HOST_VERSION}`);
+        expect(baselineConfig.upstreamBaseline.releaseTag).toBe(`v${SUPDANCE_HOST_VERSION}`);
         expect(baselineConfig.upstreamBaseline.schemaVersion).toBe(SUPDANCE_SCHEMA_BASELINE);
     });
 });

@@ -1,5 +1,6 @@
 import { Button, Skeleton } from "antd";
 import type { ReactNode } from "react";
+import { useTranslation } from "react-i18next";
 import { WorkspaceSignalIcon, type WorkspaceSignalIconVariant } from "@/components/ui/aceternity/workspace-signal-icon";
 import { cn } from "@/lib/utils";
 import { useI18n } from "@/supdance/plugins/i18n";
@@ -39,11 +40,7 @@ export function WorkspaceState({
         <section
             data-kind={kind}
             role={kind === "error" ? "alert" : undefined}
-            className={cn(
-                "workspace-state grid w-full justify-items-center text-center",
-                compact ? "min-h-44 content-center py-8" : "min-h-[360px] grid-rows-[2fr_auto_3fr] py-12",
-                className,
-            )}
+            className={cn("workspace-state grid w-full justify-items-center text-center", compact ? "min-h-44 content-center py-8" : "min-h-[360px] grid-rows-[2fr_auto_3fr] py-12", className)}
         >
             {compact ? null : <span aria-hidden />}
             <div className="flex max-w-[44ch] flex-col items-center">
@@ -83,65 +80,23 @@ export function WorkspaceNoResultsState({
     const { t } = useI18n();
     const keyword = query?.trim();
     const resolvedClearLabel = clearLabel ?? t("common.clear_filter", undefined, "清除筛选");
-    const defaultTitle = keyword
-        ? t("common.no_results_keyword", { keyword }, `没有找到与“${keyword}”相关的内容`)
-        : t("common.no_results_filter", undefined, "没有符合筛选条件的内容");
+    const defaultTitle = keyword ? t("common.no_results_keyword", { keyword }, `没有找到与“${keyword}”相关的内容`) : t("common.no_results_filter", undefined, "没有符合筛选条件的内容");
     const defaultDesc = t("common.no_results_hint", undefined, "换一个关键词，或清除筛选后查看全部。");
 
-    return (
-        <WorkspaceState
-            kind="no-results"
-            icon={icon}
-            compact={compact}
-            title={title || defaultTitle}
-            description={description ?? defaultDesc}
-            action={onClear ? <Button onClick={onClear}>{resolvedClearLabel}</Button> : undefined}
-        />
-    );
+    return <WorkspaceState kind="no-results" icon={icon} compact={compact} title={title || defaultTitle} description={description ?? defaultDesc} action={onClear ? <Button onClick={onClear}>{resolvedClearLabel}</Button> : undefined} />;
 }
 
-export function WorkspaceErrorState({
-    title,
-    description,
-    actionLabel,
-    onRetry,
-    compact = false,
-}: {
-    title?: string;
-    description?: ReactNode;
-    actionLabel?: string;
-    onRetry?: () => void;
-    compact?: boolean;
-}) {
+export function WorkspaceErrorState({ title, description, actionLabel, onRetry, compact = false }: { title?: string; description?: ReactNode; actionLabel?: string; onRetry?: () => void; compact?: boolean }) {
     const { t } = useI18n();
     const resolvedTitle = title || t("common.load_failed_temp", undefined, "暂时无法加载");
     const resolvedDesc = description ?? t("common.check_network_retry", undefined, "请检查网络连接后重试，当前内容不会被覆盖。");
     const resolvedAction = actionLabel || t("common.reload", undefined, "重新加载");
 
-    return (
-        <WorkspaceState
-            kind="error"
-            icon="error"
-            title={resolvedTitle}
-            description={resolvedDesc}
-            compact={compact}
-            action={onRetry ? <Button onClick={onRetry}>{resolvedAction}</Button> : undefined}
-        />
-    );
+    return <WorkspaceState kind="error" icon="error" title={resolvedTitle} description={resolvedDesc} compact={compact} action={onRetry ? <Button onClick={onRetry}>{resolvedAction}</Button> : undefined} />;
 }
 
 /** 没有权限：说明原因，给出返回或申请的出口，不展示内容结构。 */
-export function WorkspaceForbiddenState({
-    title,
-    description,
-    action,
-    compact = false,
-}: {
-    title?: string;
-    description?: ReactNode;
-    action?: ReactNode;
-    compact?: boolean;
-}) {
+export function WorkspaceForbiddenState({ title, description, action, compact = false }: { title?: string; description?: ReactNode; action?: ReactNode; compact?: boolean }) {
     const { t } = useI18n();
     const resolvedTitle = title || t("common.forbidden_title", undefined, "没有访问权限");
     const resolvedDesc = description ?? t("common.forbidden_desc", undefined, "当前账号无法查看这里的内容。如需使用，请联系管理员开通。");
@@ -149,17 +104,7 @@ export function WorkspaceForbiddenState({
     return <WorkspaceState kind="forbidden" icon="settings" title={resolvedTitle} description={resolvedDesc} compact={compact} action={action} />;
 }
 
-export function WorkspaceLoadingState({
-    label,
-    detail,
-    rows = 3,
-    className,
-}: {
-    label?: string;
-    detail?: string;
-    rows?: number;
-    className?: string;
-}) {
+export function WorkspaceLoadingState({ label, detail, rows = 3, className }: { label?: string; detail?: string; rows?: number; className?: string }) {
     const { t } = useI18n();
     const resolvedLabel = label || t("common.loading_content", undefined, "正在加载内容");
 

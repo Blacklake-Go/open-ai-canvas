@@ -1,6 +1,7 @@
 import { App } from "antd";
 import { useState } from "react";
 import { Gift, LoaderCircle } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 import { formatCredits } from "@/constant/credits";
 import { useWalletBalance } from "@/hooks/use-wallet-balance";

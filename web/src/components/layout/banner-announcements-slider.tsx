@@ -3,13 +3,10 @@ import { X } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useNavigate } from "react-router";
+import { useTranslation } from "react-i18next";
 
 import { getActiveBanners, type BannerAnnouncement } from "@/services/api/announcements";
-import {
-    BannerAnnouncementLinkHint,
-    BannerAnnouncementTitle,
-    bannerAnnouncementBarStyle,
-} from "@/components/layout/banner-announcement-content";
+import { BannerAnnouncementLinkHint, BannerAnnouncementTitle, bannerAnnouncementBarStyle } from "@/components/layout/banner-announcement-content";
 import { useUserStore } from "@/stores/use-user-store";
 import { useI18n } from "@/supdance/plugins/i18n";
 
@@ -75,10 +72,7 @@ export function BannerAnnouncementsSlider() {
 
     // 底色随每条通知的类型切换：加过渡让不同风格的条目轮播时平滑换色，与标题动画节奏一致。
     return (
-        <div
-            className="relative flex min-h-10 w-full shrink-0 items-center justify-center px-4 py-2 text-white transition-colors duration-200 ease-out"
-            style={bannerAnnouncementBarStyle(currentBanner.noticeType)}
-        >
+        <div className="relative flex min-h-10 w-full shrink-0 items-center justify-center px-4 py-2 text-white transition-colors duration-200 ease-out" style={bannerAnnouncementBarStyle(currentBanner.noticeType)}>
             <button
                 type="button"
                 onClick={handleClick}

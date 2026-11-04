@@ -1,4 +1,5 @@
 import { HardDrive } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 import { useAccountFileStorageUsage } from "@/hooks/use-account-file-storage-usage";
 import { accountFileStorageUsageQueryKey, accountStorageMeter, accountStorageStateMessage, formatStorageBytes } from "@/lib/account-storage-usage";

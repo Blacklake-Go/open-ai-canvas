@@ -14,6 +14,7 @@
 // 慢的那几张只剩一块空面板，观感就是"右边出来了左边还空着"。
 
 import { useCallback, useEffect, useMemo, useRef, useState, type CSSProperties } from "react";
+import { useTranslation } from "react-i18next";
 import { ArrowUp, ChevronLeft, ChevronRight } from "lucide-react";
 import { useReducedMotion } from "motion/react";
 

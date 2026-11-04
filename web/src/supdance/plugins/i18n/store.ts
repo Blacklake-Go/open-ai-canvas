@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { create } from "zustand";
+import { i18n } from "@/i18n";
 import type { Locale } from "antd/es/locale";
 import { usePluginStore } from "@/stores/use-plugin-store";
 import { getAntdLocaleForCode, loadAntdLocale } from "./engine/antd-locale";
@@ -453,12 +454,13 @@ export function useI18n() {
         return (keyOrText: string, params?: Record<string, string | number>, fallbackText?: string): string => {
             if (!enabled) {
                 // 插件停用时要退回简中原文，而不是把 auth.login 这类技术键名直接吐到界面上。
-                return translateByKey(dictionary, keyOrText, "zh-CN", "zh-CN", params, fallbackText) || fallbackText || keyOrText;
+                if (dictionary.byKey.has(keyOrText)) return translateByKey(dictionary, keyOrText, "zh-CN", "zh-CN", params, fallbackText);
+                return i18n.exists(keyOrText) ? i18n.getFixedT("zh-CN")(keyOrText, { ...params, postProcess: [] }) : fallbackText || keyOrText;
             }
             if (dictionary.byKey.has(keyOrText)) {
                 return translateByKey(dictionary, keyOrText, effectiveLocale, settings.fallbackLocale, params, fallbackText);
             }
-            return translateSourceText(dictionary, keyOrText, effectiveLocale, settings.fallbackLocale) ?? fallbackText ?? keyOrText;
+            return translateSourceText(dictionary, keyOrText, effectiveLocale, settings.fallbackLocale) ?? (i18n.exists(keyOrText) ? i18n.t(keyOrText, params) : (fallbackText ?? keyOrText));
         };
     }, [dictionary, effectiveLocale, enabled, settings.fallbackLocale]);
 

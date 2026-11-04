@@ -1,13 +1,14 @@
 # SupDance Canvas — 独立改造与定制代码清单 (CUSTOMIZATIONS.md)
 
-## 第二阶段正式版隔离集成候选
+## 完整上游同步：正式版与 main
 
-- 候选为 `v1.7.4-supdance.6+upstream-stage2`，自 `eadb3622` 合并正式版 `7c14ffdd`，保持 detached、未提交、未推送、未部署。第一阶段已由用户确认上线及中英、明暗浏览器验收；本候选不整体复制第一阶段补丁。
+- 版本 `v1.7.4-supdance.7` 自 `eadb3622` 顺序合并正式版 `7c14ffdd` 和 `main@8de0a239`；保留两个上游祖先及自有插件提交，实际部署以 [完整集成记录](./STAGED_UPSTREAM_CANDIDATE.md) 为准。
 - 九个冲突按语义处理：设置仓储同时保留 `LockSystemSetting` 与 `SystemSettingsWithPrefix`；OpenAPI 按完整端点保留视觉引擎与电商请求体及响应；侧栏保留 SupDance `t()`、音乐开关、账号菜单；审批测试外层 30 秒保留大于子进程 20 秒的期限。版本、变更日志及三篇文档保留双方内容。
-- 补丁 `supdance-upstream-stage2` 仅参考 `e1f8b8c9` 的电商侧栏条件，复用 `workbench.ecommerce` 六语词条。未引入开发分支的新 i18n、易支付或 TOS 存储。
+- 电商侧栏使用后台功能条件和既有六语词条；同步 main 的支付/币种和 TOS 表单协议，避免保留旧 UI 却调用新后端合同。
 - 保留已上线第一阶段：正式版自带 `b0d56dea` 分页，再精确带入 `common.load_more`、令牌、焦点与 44px 触控适配；移植 `338b75c8` 品牌与第二屏修复、相关测试及 E2E 调用参数。`supdance-agent-history-pagination` registry 与 baseline 两个路径同步保留；第一阶段文档不整体覆盖候选。
-- 候选包含正式版 Schema 79、积分默认零奖励与取消登录补发，以及通用素材恢复。音乐插件独立素材桥接、RunningHub 真实结果和多标签恢复仍需分别验收；不把静态合并视为业务闭环通过。
-- 迁移只允许先在备份恢复副本演练；旧 Schema 78 程序拒绝连接 Schema 79，回退需要匹配数据库恢复。尚未进行生产迁移或生产操作。
+- 集成包含 Schema 81、积分默认零奖励与取消登录补发，以及通用素材恢复。音乐插件独立素材桥接、RunningHub 真实结果和多标签恢复仍需分别验收；不把静态合并视为业务闭环通过。
+- 新适配器 `web/src/supdance/adapters/upstream-i18n.ts` 将上游 `web/src/i18n/index.ts` 的翻译后处理接入 SupDance 词库。插件语言、管理员词条和停用控制优先；仅保留一个语言选择器和 AntD locale 配置。新增耦合点已登记 compatibility registry 与 baseline。英文、西班牙语、繁体中文及停用回退有真实 React 渲染回归。
+- 迁移先在 PostgreSQL 备份恢复副本演练；旧 Schema 78 程序拒绝连接 Schema 81，回退必须恢复匹配数据库。源码元数据不能替代生产迁移证据。
 
 本文件记录 SupDance Canvas 相对上游 `ddcat-ai/open-ai-canvas` 的每一项定制改造、耦合边界及升级处理方式。
 

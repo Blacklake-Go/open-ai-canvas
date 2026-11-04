@@ -2,6 +2,14 @@ import type { ReactNode } from "react";
 import { lazy, Suspense, useEffect, useLayoutEffect } from "react";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { ConfigProvider } from "antd";
+import "dayjs/locale/de";
+import "dayjs/locale/fr";
+import "dayjs/locale/ja";
+import "dayjs/locale/ko";
+import "dayjs/locale/zh-cn";
+import { I18nextProvider, useTranslation } from "react-i18next";
+import { i18n } from "@/i18n";
+import { useSupDanceUpstreamI18n } from "@/supdance/adapters/upstream-i18n";
 
 import { AuthSessionHydrator } from "@/components/auth/auth-session-hydrator";
 import { AppFeedbackProvider } from "@/components/layout/app-feedback";
@@ -25,15 +33,17 @@ const ClientRootInit = lazy(() => import("@/components/layout/client-root-init")
 
 function ClientRootBoundary({ children }: { children: ReactNode }) {
     const authenticated = useUserStore((state) => Boolean(state.user));
+    const { t } = useTranslation();
     if (!authenticated) return children;
     return (
-        <Suspense fallback={<WorkspaceRecoveryBoundary phase="syncing" fallback={<FullScreenLoader label="正在准备创作环境" detail="连接本地能力与模型配置" />} />}>
+        <Suspense fallback={<WorkspaceRecoveryBoundary phase="syncing" fallback={<FullScreenLoader label={t("shell.preparing")} detail={t("shell.preparingDetail")} />} />}>
             <ClientRootInit>{children}</ClientRootInit>
         </Suspense>
     );
 }
 
 export function AppProviders({ children, extensions }: { children: ReactNode; extensions?: ReactNode }) {
+    useSupDanceUpstreamI18n();
     const hostTheme = useActiveTheme();
     const appearance = useAppearanceStore((state) => state.appearance);
     const visualAdapter = useVisualEngineHostAdapter(hostTheme, appearance.activeSkin);
@@ -68,25 +78,27 @@ export function AppProviders({ children, extensions }: { children: ReactNode; ex
 
     return (
         // 两个汉字的按钮（取消、确定）不再被 antd 拉开字距，与其他按钮的文字节奏一致。
-        <ConfigProvider locale={antdLocale} theme={visualAdapter.theme} wave={{ disabled: true }} button={{ autoInsertSpace: false }}>
-            <AppFeedbackProvider>
-                <QueryClientProvider client={appQueryClient}>
-                    {isolateDevRepro ? (
-                        children
-                    ) : (
-                        <>
-                            <SupDancePluginRuntimeSync />
-                            <SupDanceI18nRuntimeHost />
-                            <SocialOnboardingModal />
-                            <UserProfileModalHost />
-                            {extensions}
-                            <AuthSessionHydrator fallback={<WorkspaceRecoveryBoundary fallback={<FullScreenLoader />} />}>
-                                <ClientRootBoundary>{children}</ClientRootBoundary>
-                            </AuthSessionHydrator>
-                        </>
-                    )}
-                </QueryClientProvider>
-            </AppFeedbackProvider>
-        </ConfigProvider>
+        <I18nextProvider i18n={i18n}>
+            <ConfigProvider locale={antdLocale} theme={visualAdapter.theme} wave={{ disabled: true }} button={{ autoInsertSpace: false }}>
+                <AppFeedbackProvider>
+                    <QueryClientProvider client={appQueryClient}>
+                        {isolateDevRepro ? (
+                            children
+                        ) : (
+                            <>
+                                <SupDancePluginRuntimeSync />
+                                <SupDanceI18nRuntimeHost />
+                                <SocialOnboardingModal />
+                                <UserProfileModalHost />
+                                {extensions}
+                                <AuthSessionHydrator fallback={<WorkspaceRecoveryBoundary fallback={<FullScreenLoader />} />}>
+                                    <ClientRootBoundary>{children}</ClientRootBoundary>
+                                </AuthSessionHydrator>
+                            </>
+                        )}
+                    </QueryClientProvider>
+                </AppFeedbackProvider>
+            </ConfigProvider>
+        </I18nextProvider>
     );
 }

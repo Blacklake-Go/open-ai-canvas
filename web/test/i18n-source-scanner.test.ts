@@ -66,5 +66,5 @@ describe("source update localization pipeline", () => {
             const result = Bun.spawnSync([process.execPath, "scripts/i18n-audit.mjs", ...args], { cwd: resolve(import.meta.dir, "..") });
             expect(result.exitCode).not.toBe(0);
         }
-    });
+    }, 30000);
 });

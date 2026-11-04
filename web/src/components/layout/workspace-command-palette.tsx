@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next";
 import { Bot, Command, Home, Search, X } from "lucide-react";
 import { useGlobalAgentStore } from "@/stores/use-global-agent-store";
 import { useEffect, useMemo, useRef, useState, type ComponentType } from "react";
@@ -26,7 +27,7 @@ export function WorkspaceCommandPalette({ open, onClose }: { open: boolean; onCl
     const [query, setQuery] = useState("");
     const [highlight, setHighlight] = useState(0);
     const inputRef = useRef<HTMLInputElement>(null);
-
+    const { i18n } = useTranslation();
     const entries = useMemo<PaletteEntry[]>(() => {
         const titleMap: Record<string, string> = {
             create: t("nav.create"),
@@ -52,7 +53,7 @@ export function WorkspaceCommandPalette({ open, onClose }: { open: boolean; onCl
             ...(features.creditsEnabled ? [{ ...toolEntry("wallet"), run: () => openWorkspaceWallet() }] : []),
             toolEntry("settings", "/settings"),
             // 与 ⌘/Ctrl+J 相同：打开平台 Agent 面板。
-            { id: "agent", title: "打开 Agent（⌘/Ctrl+J）", icon: Bot, run: () => useGlobalAgentStore.getState().openAgent() },
+            { id: "agent", title: t("shell.palette.agent"), icon: Bot, run: () => useGlobalAgentStore.getState().openAgent() },
         ];
     }, [features, t]);
 

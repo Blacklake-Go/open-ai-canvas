@@ -2,6 +2,8 @@ import { Button } from "antd";
 import { ChevronLeft, ChevronRight, ListFilter, RotateCcw } from "lucide-react";
 import type { ReactNode } from "react";
 import { useEffect, useState } from "react";
+import { Trans, useTranslation } from "react-i18next";
+import { currentLocale } from "@/i18n";
 
 import { cn } from "@/lib/utils";
 import { Select } from "@/components/ui/base/select";
@@ -66,7 +68,8 @@ export function ListToolbar({
                     <>
                         {!filtersAlwaysVisible ? (
                             <Button type="default" className="admin-filter-toggle" aria-expanded={filtersOpen} icon={<ListFilter className="size-3.5" />} onClick={() => setFiltersOpen((open) => !open)}>
-                                {t("common.filter")}{active ? <span className="admin-filter-active-dot" aria-label={t("common.filter_active_aria")} /> : null}
+                                {t("common.filter")}
+                                {active ? <span className="admin-filter-active-dot" aria-label={t("common.filter_active_aria")} /> : null}
                             </Button>
                         ) : null}
                         <div className={cn("admin-list-toolbar-filters flex flex-wrap items-center gap-2", (filtersAlwaysVisible || filtersOpen) && "is-open")}>{filters}</div>
@@ -91,7 +94,11 @@ export function TableSurface({ children, className }: { children: ReactNode; cla
 }
 
 export function CollectionGrid({ children, className, style }: { children: ReactNode; className?: string; style?: React.CSSProperties }) {
-    return <div className={cn("mt-4 grid grid-cols-1 gap-4 sm:grid-cols-[repeat(auto-fill,minmax(248px,1fr))]", className)} style={style}>{children}</div>;
+    return (
+        <div className={cn("mt-4 grid grid-cols-1 gap-4 sm:grid-cols-[repeat(auto-fill,minmax(248px,1fr))]", className)} style={style}>
+            {children}
+        </div>
+    );
 }
 
 /* 自研轻量分页：总数 + 胶囊页码组 + 跳页 + 每页条数。用户端和后台共用，外观集中在 globals.css 的 app-pagination-*。 */
@@ -124,6 +131,7 @@ export function PaginationBar({
     const { t, locale } = useI18n();
     const effectiveLabel = itemLabel ?? t("common.items_unit");
     const [jump, setJump] = useState("");
+    const item = itemLabel ?? t("account.layout.pagination.item");
     if (!alwaysShow && total <= pageSize && current === 1) return null;
     const pages = Math.max(1, Math.ceil(total / pageSize));
     const start = total === 0 ? 0 : (current - 1) * pageSize + 1;
@@ -142,7 +150,10 @@ export function PaginationBar({
                     <>{t("common.totalCount", { count: 0 })}</>
                 ) : (
                     <>
-                        <b>{start}–{end}</b> / <b>{total.toLocaleString(locale)}</b> {effectiveLabel}
+                        <b>
+                            {start}–{end}
+                        </b>{" "}
+                        / <b>{total.toLocaleString(locale)}</b> {effectiveLabel}
                     </>
                 )}
             </span>
@@ -168,14 +179,34 @@ export function PaginationBar({
                 </div>
                 {pages > 7 ? (
                     <label className="app-pagination-jump">
-                        <input inputMode="numeric" value={jump} placeholder={String(current)} aria-label={t("common.page_jump_placeholder")} onChange={(event) => setJump(event.target.value.replace(/\D/g, "").slice(0, 6))} onKeyDown={(event) => { if (event.key === "Enter") submitJump(); }} onBlur={() => { if (jump) submitJump(); }} />
+                        <input
+                            inputMode="numeric"
+                            value={jump}
+                            placeholder={String(current)}
+                            aria-label={t("common.page_jump_placeholder")}
+                            onChange={(event) => setJump(event.target.value.replace(/\D/g, "").slice(0, 6))}
+                            onKeyDown={(event) => {
+                                if (event.key === "Enter") submitJump();
+                            }}
+                            onBlur={() => {
+                                if (jump) submitJump();
+                            }}
+                        />
                         <button type="button" onClick={submitJump} className="app-pagination-btn px-2 text-xs">
                             {t("common.page_jump_btn")}
                         </button>
                     </label>
                 ) : null}
                 {pageSizeOptions.length > 1 ? (
-                    <Select size="small" value={pageSize} className="app-pagination-size" popupMatchSelectWidth={false} ariaLabel={t("common.page_size_suffix")} options={pageSizeOptions.map((size) => ({ value: size, label: `${size} ${t("common.page_size_suffix")}` }))} onChange={(value) => onChange(1, Number(value))} />
+                    <Select
+                        size="small"
+                        value={pageSize}
+                        className="app-pagination-size"
+                        popupMatchSelectWidth={false}
+                        ariaLabel={t("common.page_size_suffix")}
+                        options={pageSizeOptions.map((size) => ({ value: size, label: `${size} ${t("common.page_size_suffix")}` }))}
+                        onChange={(value) => onChange(1, Number(value))}
+                    />
                 ) : null}
             </div>
         </nav>

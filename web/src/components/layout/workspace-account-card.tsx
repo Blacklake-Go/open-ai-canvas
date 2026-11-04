@@ -1,6 +1,8 @@
 import { Button } from "antd";
 import { ArrowUpRight, Coins, Gift, LogOut, RefreshCw, Settings, ShieldCheck, UserRound } from "lucide-react";
 import { Link } from "react-router";
+import { useTranslation } from "react-i18next";
+import { currentLocale } from "@/i18n";
 import { useWalletBalance } from "@/hooks/use-wallet-balance";
 import { useWorkspaceLogout } from "@/hooks/use-workspace-logout";
 import { useUserStore } from "@/stores/use-user-store";
@@ -16,6 +18,7 @@ export function WorkspaceAccountCard({ onWallet, onNavigate }: { onWallet: () =>
     const referralAvailable = useUserStore((state) => state.referralAvailable);
     const { availableMicrocredits, refreshing, refresh } = useWalletBalance(user?.id, creditsEnabled);
     const { handleLogout, loggingOut } = useWorkspaceLogout();
+    const { t } = useTranslation();
     if (!user) return null;
     return (
         <section className="workspace-account-card" aria-label="我的账户">

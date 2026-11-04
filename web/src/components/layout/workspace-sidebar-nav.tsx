@@ -3,6 +3,8 @@ import { ChevronDown, ChevronRight, CircleUserRound, History as HistoryIcon, Ima
 import { LayoutGroup, motion, useReducedMotion } from "motion/react";
 import { useEffect, useMemo, useRef, useState, type ComponentType, type CSSProperties } from "react";
 import { Link, useLocation, useNavigate, useSearchParams } from "react-router";
+import { useTranslation } from "react-i18next";
+import type { TFunction } from "i18next";
 
 import { BrandLogoFrame } from "@/components/brand/brand-logo";
 import { UserAvatar } from "@/components/layout/user-avatar";
@@ -43,19 +45,30 @@ type WorkspaceNavGroup = {
     items: WorkspaceNavItem[];
 };
 
-function toolItem(slug: NavigationToolSlug, to: string): WorkspaceNavItem {
+// 收起侧栏时只显示短名称。
+const COLLAPSED_TITLE_KEYS: Record<string, string> = {
+    home: "nav.collapsed.home",
+    projects: "nav.collapsed.projects",
+    canvas: "nav.collapsed.canvas",
+    assets: "nav.collapsed.assets",
+    skills: "nav.collapsed.skills",
+    plugins: "nav.collapsed.plugins",
+    tasks: "nav.collapsed.tasks",
+};
+
+function toolItem(slug: NavigationToolSlug, to: string, t: (key: string) => string): WorkspaceNavItem {
     const tool = navigationTools.find((item) => item.slug === slug);
-    return { id: slug, title: tool?.label ?? slug, icon: tool?.icon, to };
+    return { id: slug, title: tool ? t(tool.labelKey) : slug, icon: tool?.icon, to };
 }
 
 export function buildNav(features: FeatureAvailability, t: (key: string) => string, musicPluginActive = true): { groups: WorkspaceNavGroup[]; footer: WorkspaceNavItem[] } {
     const groups: WorkspaceNavGroup[] = [
         {
             items: [
-                { ...toolItem("create", "/"), id: "home", title: t("nav.create") },
-                ...(features.shortDramaEnabled ? [{ ...toolItem("projects", "/projects"), title: t("nav.projects") }] : []),
+                { ...toolItem("create", "/", t), id: "home", title: t("nav.create") },
+                ...(features.shortDramaEnabled ? [{ ...toolItem("projects", "/projects", t), title: t("nav.projects") }] : []),
                 ...(features.ecommerceEnabled ? [{ id: "ecommerce", title: `${t("workbench.ecommerce")} Agent`, icon: ShoppingBag, to: "/ecommerce" }] : []),
-                { ...toolItem("canvas", "/canvas"), title: t("nav.canvas") },
+                { ...toolItem("canvas", "/canvas", t), title: t("nav.canvas") },
             ],
         },
         {
@@ -64,13 +77,13 @@ export function buildNav(features: FeatureAvailability, t: (key: string) => stri
                 ...(features.imageWorkbenchEnabled ? [{ id: "toolbox-image", title: t("nav.image_gen"), icon: ImageIcon, to: "/toolbox/image" }] : []),
                 ...(features.videoWorkbenchEnabled ? [{ id: "toolbox-video", title: t("nav.video_gen"), icon: Video, to: "/toolbox/video" }] : []),
                 ...(musicPluginActive ? [{ id: "toolbox-music", title: t("music.nav_music_gen"), icon: Music, to: "/toolbox/music" }] : []),
-                { ...toolItem("skills", "/skills"), title: t("nav.skills") },
-                ...(features.pluginCenterEnabled ? [{ ...toolItem("plugins", "/plugins"), title: t("nav.plugins") }] : []),
+                { ...toolItem("skills", "/skills", t), title: t("nav.skills") },
+                ...(features.pluginCenterEnabled ? [{ ...toolItem("plugins", "/plugins", t), title: t("nav.plugins") }] : []),
             ],
         },
         {
             heading: t("nav.assets_history"),
-            items: [{ ...toolItem("assets", "/assets"), title: t("nav.assets") }, ...(features.taskCenterEnabled ? [{ id: "tasks", title: t("nav.tasks"), icon: ImageIcon, to: "/tasks" }] : [])],
+            items: [{ ...toolItem("assets", "/assets", t), title: t("nav.assets") }, ...(features.taskCenterEnabled ? [{ id: "tasks", title: t("nav.tasks"), icon: ImageIcon, to: "/tasks" }] : [])],
         },
     ];
 
@@ -142,7 +155,6 @@ function WorkspaceSidebarProfile({ collapsed, user, onExpand, onCollapse }: { co
 function WorkspaceSwitcher({ collapsed, onNavigate }: { collapsed: boolean; onNavigate: () => void; onExpand: () => void; onCollapse: () => void }) {
     const { t } = useI18n();
     const appearance = useAppearanceStore((state) => state.appearance);
-
     if (collapsed) {
         return (
             <div className="app-workspace-sidebar-brand-row relative shrink-0 flex items-center justify-center px-3 pt-3">

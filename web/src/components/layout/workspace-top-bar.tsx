@@ -1,5 +1,7 @@
 import { PanelLeftClose, PanelLeftOpen } from "lucide-react";
 import { Link, useLocation } from "react-router";
+import { useTranslation } from "react-i18next";
+import { currentLocale } from "@/i18n";
 
 import { TopbarFeedbackButton } from "@/components/feedback/topbar-feedback-button";
 import { SystemAnnouncementCenter } from "@/components/layout/system-announcement-center";
@@ -7,6 +9,7 @@ import { WorkspaceAccountMenu } from "@/components/layout/workspace-account-menu
 import { WorkspaceCreditGiftMark } from "@/components/layout/workspace-credit-gift-mark";
 import { WorkspaceTopBarExtensionSlot } from "@/components/layout/workspace-top-bar-extension";
 import { AnimatedThemeToggler } from "@/components/ui/animated-theme-toggler";
+import { LanguageMenu } from "@/components/layout/language-menu";
 import { useThemeStore } from "@/stores/use-theme-store";
 import { useUserStore } from "@/stores/use-user-store";
 import { useAppearanceStore } from "@/stores/use-appearance-store";
@@ -25,10 +28,9 @@ const PAGE_TITLE_KEYS: Record<string, string> = {
     plugins: "nav.plugins",
     settings: "nav.settings",
 };
-
-const TOOLBOX_TITLES: Record<string, string> = {
-    image: "图片生成",
-    video: "视频生成",
+const TOOLBOX_TITLE_KEYS: Record<string, string> = {
+    image: "nav.pageTitles.toolboxImage",
+    video: "nav.pageTitles.toolboxVideo",
 };
 
 export function WorkspaceTopBar({ sidebarOpen, onToggleSidebar }: { sidebarOpen: boolean; onToggleSidebar: () => void }) {
@@ -42,7 +44,8 @@ export function WorkspaceTopBar({ sidebarOpen, onToggleSidebar }: { sidebarOpen:
     const { pathname } = useLocation();
     const [slug, subSlug] = pathname.split("/").filter(Boolean);
     const pageTitleKey = slug ? PAGE_TITLE_KEYS[slug] : PAGE_TITLE_KEYS.home;
-    const pageTitle = slug === "toolbox" ? TOOLBOX_TITLES[subSlug ?? ""] || brandName : pageTitleKey ? t(pageTitleKey) : brandName;
+    const toolboxTitleKey = TOOLBOX_TITLE_KEYS[subSlug ?? ""];
+    const pageTitle = slug === "toolbox" ? (toolboxTitleKey ? t(toolboxTitleKey) : brandName) : pageTitleKey ? t(pageTitleKey) : brandName;
     const balance = availableMicrocredits === null ? "--" : (availableMicrocredits / 1_000_000).toLocaleString("zh-CN", { maximumFractionDigits: 2 });
 
     return (

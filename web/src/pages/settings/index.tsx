@@ -3,6 +3,8 @@ import { SettingsRow } from "@/components/ui/product/settings-row";
 import { ArrowLeft, Boxes, Bug, Cloud, Inbox, MessageSquareText, RadioTower, SlidersHorizontal, UserRound, Workflow, BookMarked } from "lucide-react";
 import { useEffect, useMemo, useState, type ReactNode } from "react";
 import { useNavigate, useSearchParams } from "react-router";
+import { useTranslation } from "react-i18next";
+import { LanguageOptionGrid } from "@/components/layout/language-menu";
 
 import { UserOSSSettingsForm } from "@/components/layout/user-oss-settings-form";
 import { refreshSystemChannels } from "@/lib/user-session";
@@ -25,17 +27,18 @@ import { UserProfileModal } from "@/components/layout/user-profile-modal";
 
 type ConfigSectionKey = "profile" | "channels" | "models" | "runninghub" | "preferences" | "prompts" | "agent-memory" | "storage" | "diagnostics" | "feedbacks";
 
-const configSections: Array<{ key: ConfigSectionKey; label: string; description: string; icon: ReactNode }> = [
-    { key: "profile", label: "个人信息", description: "头像、密码与邮箱", icon: <UserRound className="size-4" /> },
-    { key: "channels", label: "个人渠道", description: "模型服务与个人工作流", icon: <RadioTower className="size-4" /> },
-    { key: "runninghub", label: "RunningHub 工作流", description: "个人渠道的云端工作流配置", icon: <Workflow className="size-4" /> },
-    { key: "models", label: "模型选择", description: "按领域选择默认模型", icon: <Boxes className="size-4" /> },
-    { key: "preferences", label: "生成偏好", description: "画布生成默认值", icon: <SlidersHorizontal className="size-4" /> },
-    { key: "prompts", label: "提示词偏好", description: "按任务定制平台模板", icon: <MessageSquareText className="size-4" /> },
-    { key: "agent-memory", label: "Agent 记忆", description: "批准、添加、导出导入、压缩", icon: <BookMarked className="size-4" /> },
-    { key: "storage", label: "我的对象存储", description: "管理个人媒体存储", icon: <Cloud className="size-4" /> },
-    { key: "diagnostics", label: "问题诊断", description: "导出日志协助排查", icon: <Bug className="size-4" /> },
-    { key: "feedbacks", label: "我的反馈", description: "提交问题、建议与官方答复", icon: <Inbox className="size-4" /> },
+/** 分类名称与说明在公共目录 settings.sections.<key> 中。 */
+const configSections: Array<{ key: ConfigSectionKey; icon: ReactNode }> = [
+    { key: "profile", icon: <UserRound className="size-4" /> },
+    { key: "channels", icon: <RadioTower className="size-4" /> },
+    { key: "runninghub", icon: <Workflow className="size-4" /> },
+    { key: "models", icon: <Boxes className="size-4" /> },
+    { key: "preferences", icon: <SlidersHorizontal className="size-4" /> },
+    { key: "prompts", icon: <MessageSquareText className="size-4" /> },
+    { key: "agent-memory", icon: <BookMarked className="size-4" /> },
+    { key: "storage", icon: <Cloud className="size-4" /> },
+    { key: "diagnostics", icon: <Bug className="size-4" /> },
+    { key: "feedbacks", icon: <Inbox className="size-4" /> },
 ];
 
 const sectionKeyMap: Record<ConfigSectionKey, { labelKey: string; descKey: string }> = {
@@ -273,8 +276,8 @@ export default function SettingsPage() {
                         {visibleConfigSections.map((item) => {
                             const selected = item.key === activeTab;
                             const sectionMeta = sectionKeyMap[item.key];
-                            const label = sectionMeta ? t(sectionMeta.labelKey, undefined, item.label) : item.label;
-                            const description = sectionMeta ? t(sectionMeta.descKey, undefined, item.description) : item.description;
+                            const label = t(sectionMeta.labelKey);
+                            const description = t(sectionMeta.descKey);
                             return (
                                 <button
                                     key={item.key}

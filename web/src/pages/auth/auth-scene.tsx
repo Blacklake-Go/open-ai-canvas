@@ -3,6 +3,9 @@ import { Tabs } from "antd";
 import { ArrowLeft, Play } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { Link, Outlet, useLocation, useNavigate } from "react-router";
+import { useTranslation } from "react-i18next";
+
+import { LanguageMenu } from "@/components/layout/language-menu";
 
 import { BrandLogo } from "@/components/brand/brand-logo";
 import { SiteComplianceFooter } from "@/components/layout/site-compliance-footer";

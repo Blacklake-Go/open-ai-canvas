@@ -7,12 +7,15 @@ import { App, Button, Popover } from "antd";
 import { Cable, MessageSquarePlus, PlugZap, Unplug, X } from "lucide-react";
 import type { ReactNode } from "react";
 import { useState } from "react";
+import { useI18n } from "@/supdance/plugins/i18n";
 import { Tooltip } from "@/components/ui/base/tooltip";
 import "./canvas-cloud-agent-connectors.css";
 
 type AgentConnector = {
     id: string;
     name: string;
+    /** 需要按界面语言显示的名称（i18n 键）；没有时直接显示 name。 */
+    nameKey?: string;
     icon: ReactNode;
 };
 
@@ -126,16 +129,17 @@ function SlackIcon() {
 
 const AGENT_CONNECTORS: AgentConnector[] = [
     { id: "notion", name: "Notion", icon: <NotionIcon /> },
-    { id: "feishu", name: "飞书", icon: <FeishuIcon /> },
+    { id: "feishu", name: "Feishu", nameKey: "canvasA.connectors.feishu", icon: <FeishuIcon /> },
     { id: "basecamp", name: "Basecamp", icon: <BasecampIcon /> },
     { id: "obsidian", name: "Obsidian", icon: <ObsidianIcon /> },
     { id: "github", name: "GitHub", icon: <GitHubIcon /> },
-    { id: "tencent-docs", name: "腾讯文档", icon: <TencentDocsIcon /> },
+    { id: "tencent-docs", name: "Tencent Docs", nameKey: "canvasA.connectors.tencentDocs", icon: <TencentDocsIcon /> },
     { id: "slack", name: "Slack", icon: <SlackIcon /> },
 ];
 
 /** 输入框底部的连接器条，流光溢彩背景，紧凑图标阵列。 */
 export function AgentConnectorsBar({ onClose, codex, onConnectCodex, onNewCodexThread, onDisconnectCodex }: { onClose?: () => void; codex: CodexConnectorBarState; onConnectCodex: () => void; onNewCodexThread: () => void; onDisconnectCodex: () => void }) {
+    const { t } = useI18n();
     const { message } = App.useApp();
     const [codexMenuOpen, setCodexMenuOpen] = useState(false);
     const connected = codex.status === "connected";
@@ -189,10 +193,10 @@ export function AgentConnectorsBar({ onClose, codex, onConnectCodex, onNewCodexT
         </div>
     );
     return (
-        <div className="agent-connectors" role="group" aria-label="连接器">
+        <div className="agent-connectors" role="group" aria-label={t("canvasA.connectors.label")}>
             <div className="agent-connectors-label">
                 <Cable />
-                <span>连接器</span>
+                <span>{t("canvasA.connectors.label")}</span>
             </div>
             <div className="agent-connectors-list">
                 {connected ? (
@@ -213,7 +217,7 @@ export function AgentConnectorsBar({ onClose, codex, onConnectCodex, onNewCodexT
                 ))}
             </div>
             {onClose ? (
-                <button type="button" className="agent-connectors-close" aria-label="收起连接器" onClick={onClose}>
+                <button type="button" className="agent-connectors-close" aria-label={t("canvasA.connectors.collapse")} onClick={onClose}>
                     <X />
                 </button>
             ) : null}
