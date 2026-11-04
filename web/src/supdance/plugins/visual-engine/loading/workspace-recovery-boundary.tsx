@@ -5,6 +5,7 @@ import { resolvePageVisualPolicy } from "../page-rules/page-rules-engine";
 import type { WorkspaceRecoveryStage } from "../types";
 
 import { matchPathPattern } from "../page-rules/rule-matcher";
+import { WorkspaceRouteLoader } from "@/components/ui/aceternity/full-screen-loader";
 const Animator = lazy(() => import("./workspace-recovery-animator").then((module) => ({ default: module.WorkspaceRecoveryAnimator })));
 function diagnosticStage(code: string | undefined): WorkspaceRecoveryStage | undefined {
     if (code === "startup.auth_session_started") return "init";
@@ -28,6 +29,12 @@ export function WorkspaceRecoveryBoundary({ fallback, phase }: { fallback: React
         [],
     );
     const policy = resolvePageVisualPolicy(path, config, config.themeMode === "light" ? "light" : "dark");
+    if (enabled && !config.motion.enabled)
+        return (
+            <div className="fixed inset-0">
+                <WorkspaceRouteLoader />
+            </div>
+        );
     if (!enabled || !policy.recoveryEnabled || !config.workspaceRecovery.paths.some((pattern) => matchPathPattern(pattern, path)) || path.startsWith("/admin") || config.activePreset === "native") return fallback;
     return (
         <Suspense fallback={fallback}>

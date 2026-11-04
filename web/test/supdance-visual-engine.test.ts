@@ -8,6 +8,7 @@ import { getNextRecoveryStage, getStageCopy } from "@/supdance/plugins/visual-en
 import { matchPathPattern, findMatchingPageRule } from "@/supdance/plugins/visual-engine/page-rules/rule-matcher";
 import { MOTION_DURATIONS } from "@/supdance/plugins/visual-engine/motion/motion-constants";
 import { supdanceVisualEngineManifest } from "@/supdance/plugins/visual-engine/index";
+import { resolvePageVisualPolicy } from "@/supdance/plugins/visual-engine/page-rules/page-rules-engine";
 
 describe("SupDance Visual Engine V2.0", () => {
     it("ships four built-in presets including a native host baseline", () => {
@@ -35,8 +36,23 @@ describe("SupDance Visual Engine V2.0", () => {
         expect(darkVars["--primary"]).toBe(DEFAULT_VISUAL_ENGINE_CONFIG.tokens.dark.primary);
         expect(lightVars["--primary"]).toBe(DEFAULT_VISUAL_ENGINE_CONFIG.tokens.light.primary);
         expect(darkVars["--canvas"]).not.toBe(lightVars["--canvas"]);
-        expect(darkVars["--motion-quick"]).toBe("150ms");
+        expect(darkVars["--motion-quick"]).toBe("0ms");
         expect(MOTION_DURATIONS.quick).toBe(0.15);
+    });
+
+    it("keeps page overrides below the global motion switch", () => {
+        const config = structuredClone(DEFAULT_VISUAL_ENGINE_CONFIG);
+        expect(config.motion.enabled).toBe(false);
+        for (const mode of ["light", "dark"] as const) {
+            const disabled = resolvePageVisualPolicy("/create/image", config, mode);
+            expect(disabled.motionEnabled).toBe(false);
+            expect(disabled.recoveryEnabled).toBe(false);
+            config.motion.enabled = true;
+            const enabled = resolvePageVisualPolicy("/create/image", config, mode);
+            expect(enabled.motionEnabled).toBe(true);
+            expect(enabled.recoveryEnabled).toBe(true);
+            config.motion.enabled = false;
+        }
     });
 
     it("rejects malformed configs during schema validation", () => {

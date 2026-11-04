@@ -1,6 +1,12 @@
 # 动效引擎
-默认快速反馈 150ms、下拉进入 200ms/退出 150ms、Modal 200ms、Drawer 250ms、Tabs 200ms。所有曲线限定安全 CSS easing，cubic-bezier 必须有 4 个有限数字，横坐标位于 0–1。服务端拒绝非法曲线、任意 CSS 和超限参数。
+视觉控制台「动效中心」复用 `motion.enabled` 作为「启用全站过渡动效」总开关，新配置默认关闭。关闭后，通过插件生命周期管理的 `data-ve-motion="off"` 限定 CSS 过渡与动画，并使用现有 Motion 库的 `MotionGlobalConfig.skipAnimations` 跳过脚本动效。后台、Native 与自定义皮肤也执行该总开关，但不改变它们的主题配置。停用或卸载插件时恢复宿主状态。
 
-页面过渡使用 WAAPI，只动画 opacity/transform，可配置 fade/slide/scale、时长、延迟、位移、缩放、透明度、方向、路径及模块范围。page 覆盖普通路由，workspace 覆盖 projects，generation 覆盖 create；overlay 的时长由组件适配器和 Motion 配置控制。路由订阅来自宿主 Router，不覆盖 history。新过渡取消旧动画；不支持 WAAPI 或参数失败时保持即时可用。
+关闭时仅保留上游 `WorkspaceRouteLoader`（Logo、三点、正在打开页面），启动恢复入口也复用它，跳过插件的轨道与浮卡恢复动画。页面规则不能重新打开被总开关关闭的动效或恢复动画。CSS 使用极短时长保留浮层依赖的结束事件；加载组件仍遵守上游的系统减少动效规则。该覆盖仅在插件启用且总开关关闭时生效。
+
+对比上游 `ddcat-ai/open-ai-canvas` 的 `main` 提交 `7c3068da`：`full-screen-loader.tsx` 与本仓库一致；`application.tsx` 使用 `RouterProvider useTransitions={false}`，没有整页路由渐入。保持上游组件，不新增路由动画或独立加载实现。开启总开关只恢复已有动效。
+
+已保存的配置保留原值，不自动覆盖服务端发布记录。现有部署需管理员在动效中心关闭开关并按既有发布流程发布；无需数据库迁移。回滚可重新开启开关、回滚配置版本或停用插件。
+
+开启后沿用快速反馈 150ms、下拉进入 200ms/退出 150ms、Modal 200ms、Drawer 250ms、Tabs 200ms。所有曲线限定安全 CSS easing，cubic-bezier 必须有 4 个有限数字，横坐标位于 0–1。服务端拒绝非法曲线、任意 CSS 和超限参数。
 
 低性能模式禁用微交互和页面过渡。系统减少动效通过 matchMedia 外部存储订阅实时响应，恢复动画停止轨道、缩放与跳动；可手动暂停。减少动效策略提供即时或短淡入，画布拖动、滑杆与实时输入不引入缓动。连续任务状态仍由宿主真实状态决定，不生成假百分比。

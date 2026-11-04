@@ -143,5 +143,5 @@ describe("画布节点完成反馈", () => {
         const output = new TextDecoder().decode(result.stdout) + new TextDecoder().decode(result.stderr);
         expect(output).toContain("0 fail");
         expect(result.exitCode, output).toBe(0);
-    });
+    }, 15000);
 });

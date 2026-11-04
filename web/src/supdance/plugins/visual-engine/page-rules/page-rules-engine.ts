@@ -28,7 +28,7 @@ export function resolvePageVisualPolicy(pathname: string, config: VisualEngineCo
             activeTokens = { ...activeTokens, ...rule.customTokens };
         }
         if (rule.motionEnabledOverride !== undefined) {
-            motionEnabled = rule.motionEnabledOverride;
+            motionEnabled = config.motion.enabled && rule.motionEnabledOverride;
         }
         if (rule.recoveryEnabledOverride !== undefined) {
             recoveryEnabled = rule.recoveryEnabledOverride;
@@ -40,6 +40,6 @@ export function resolvePageVisualPolicy(pathname: string, config: VisualEngineCo
         activeThemeMode: systemMode,
         activeTokens,
         motionEnabled,
-        recoveryEnabled,
+        recoveryEnabled: recoveryEnabled && config.motion.enabled,
     };
 }

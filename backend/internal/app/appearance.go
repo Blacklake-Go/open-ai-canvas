@@ -382,7 +382,7 @@ func (s *Service) PrepareAppearanceAssetDelivery(slot string, options ResourceAc
 }
 
 func (s *Service) appearanceResourceReferences(resourceIDs []string) map[string][]AdminResourceReferenceView {
-	result := make(map[string][]AdminResourceReferenceView)
+	result := s.socialBrandIconReferences(resourceIDs)
 	_, value, err := s.readAppearance()
 	if err != nil {
 		// Invalid appearance JSON must fail closed for deletion. The caller turns

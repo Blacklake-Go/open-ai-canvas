@@ -2,12 +2,11 @@ import { useRef, useState } from "react";
 import { App, Button } from "antd";
 import { Eraser, ImageIcon, MoonStar, Sun, UploadCloud } from "lucide-react";
 
-import { uploadResourceFile } from "@/services/api/resources";
 import { useI18n } from "@/supdance/plugins/i18n";
 import { AdminModal } from "@/pages/admin/ui/overlays";
 import { Callout } from "@/pages/admin/ui/controls";
 
-import { updateAdminSocialAuthSettings } from "../api";
+import { updateAdminSocialAuthSettings, uploadSocialBrandIcon } from "../api";
 import { SocialProviderBrandIcon } from "../components/social-provider-icons";
 import type { AdminSettingsView, SocialAuthProviderAdmin } from "../types";
 
@@ -17,7 +16,7 @@ export interface ProviderIconModalProps {
     onSaved: (payload: { view: AdminSettingsView; providerId: string }) => void;
 }
 
-const ACCEPTED_ICON_TYPES = "image/png,image/jpeg,image/webp,image/svg+xml";
+const ACCEPTED_ICON_TYPES = "image/png,image/jpeg,image/webp";
 
 export function ProviderIconModal({ provider, onClose, onSaved }: ProviderIconModalProps) {
     const { t } = useI18n();
@@ -36,8 +35,7 @@ export function ProviderIconModal({ provider, onClose, onSaved }: ProviderIconMo
         setUploadingSlot(slot);
         setNotice("");
         try {
-            const resource = await uploadResourceFile(file, "image", { fileName: `social-${provider.id}-${slot}-${file.name}` });
-            const url = resource.publicUrl || `/api/resources/${resource.id}/raw`;
+            const { url } = await uploadSocialBrandIcon(file);
             if (slot === "light") setIconLightUrl(url);
             else setIconDarkUrl(url);
         } catch (err) {
@@ -77,7 +75,7 @@ export function ProviderIconModal({ provider, onClose, onSaved }: ProviderIconMo
     };
 
     const renderSlot = (slot: "light" | "dark") => {
-        const url = slot === "light" ? iconLightUrl : iconDarkUrl;
+        const url = (slot === "light" ? iconLightUrl : iconDarkUrl).replace("/api/auth/social/brand-icons/", "/api/admin/social-auth/brand-icons/");
         const inputRef = slot === "light" ? lightInputRef : darkInputRef;
         const isUploading = uploadingSlot === slot;
         const IconLabel = slot === "light" ? Sun : MoonStar;
@@ -135,10 +133,10 @@ export function ProviderIconModal({ provider, onClose, onSaved }: ProviderIconMo
             onOk={() => void submit()}
             okText={t("admin.social_auth.icon_save", undefined, "保存图标")}
             cancelText={t("common.cancel", undefined, "取消")}
-            okButtonProps={{ loading: busy, disabled: !dirty }}
+            okButtonProps={{ loading: busy, disabled: !dirty || uploadingSlot !== null }}
         >
             <div className="flex flex-col gap-4 py-2 text-xs">
-                <p className="text-[var(--admin-text-secondary)]">{t("admin.social_auth.icon_hint", undefined, "分别上传亮色与暗色两版品牌图标（建议 128×128 PNG/SVG）；登录页与管理台会按界面明暗自动切换，清除后恢复默认图标。")}</p>
+                <p className="text-[var(--admin-text-secondary)]">{t("admin.social_auth.icon_upload_hint", undefined, "分别上传亮色与暗色两版品牌图标（建议 128×128 PNG/WebP，最大 5MB）；登录页与管理台会按界面明暗自动切换，清除后恢复默认图标。")}</p>
                 <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
                     {renderSlot("light")}
                     {renderSlot("dark")}

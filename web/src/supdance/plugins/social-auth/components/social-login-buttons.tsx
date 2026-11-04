@@ -73,7 +73,7 @@ export function SocialLoginButtons({ variant = "light-card", next = "/", accepte
 
     if (isLoading && !data) {
         return (
-            <div data-plugin-scope="social-auth" className="flex items-center justify-center py-2.5" role="status" aria-label="正在加载第三方登录渠道">
+            <div data-plugin-scope="social-auth" className="flex items-center justify-center py-2.5" role="status" aria-label={t("common.loading")}>
                 <span className="inline-block size-4 animate-spin rounded-full border-2 border-primary/20 border-t-primary" />
             </div>
         );

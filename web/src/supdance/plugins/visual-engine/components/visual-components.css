@@ -1,3 +1,27 @@
+/* Plugin-owned switch: keep upstream route loading dots, finish other CSS motion immediately.
+   A short duration preserves animationend/transitionend used by overlay lifecycles. */
+html[data-ve-motion="off"],
+html[data-ve-motion="off"] *,
+html[data-ve-motion="off"] *::before,
+html[data-ve-motion="off"] *::after {
+    transition-duration: 0.01ms !important;
+    transition-delay: 0s !important;
+    scroll-behavior: auto !important;
+}
+html[data-ve-motion="off"] *:not([data-workspace-route-loader], [data-workspace-route-loader] *),
+html[data-ve-motion="off"] *:not([data-workspace-route-loader], [data-workspace-route-loader] *)::before,
+html[data-ve-motion="off"] *:not([data-workspace-route-loader], [data-workspace-route-loader] *)::after {
+    animation-duration: 0.01ms !important;
+    animation-delay: 0s !important;
+    animation-iteration-count: 1 !important;
+}
+html[data-ve-motion="off"] :where(button):active {
+    scale: none;
+}
+html[data-ve-motion="off"] :where([data-visual-component="card"]):hover {
+    translate: none;
+}
+
 html[data-visual-engine-theme] body {
     font-family: var(--ve-font-sans);
     font-size: var(--ve-type-body-size);

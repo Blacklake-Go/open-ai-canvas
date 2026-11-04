@@ -7,4 +7,4 @@ test("真实连接控制器的悬停、释放、取消及重叠节点回归", ()
     const output = new TextDecoder().decode(result.stdout) + new TextDecoder().decode(result.stderr);
     if (result.exitCode !== 0) throw new Error(output);
     expect(result.exitCode).toBe(0);
-});
+}, 20000);

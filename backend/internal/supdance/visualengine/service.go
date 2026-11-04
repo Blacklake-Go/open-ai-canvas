@@ -100,7 +100,7 @@ func DefaultConfig() Config {
 			EnableTextProtectionGradient: true,
 		},
 		Motion: MotionConfig{
-			Enabled:               true,
+			Enabled:               false,
 			DurationQuick:         150,
 			DurationDropdownEnter: 200,
 			DurationDropdownExit:  150,

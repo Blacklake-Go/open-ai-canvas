@@ -31,6 +31,12 @@ export async function updateAdminSocialAuthSettings(req: UpdateSettingsRequest) 
     return http.put<AdminSettingsView>("/admin/social-auth/settings", req);
 }
 
+export async function uploadSocialBrandIcon(file: File) {
+    const form = new FormData();
+    form.append("file", file);
+    return http.post<{ url: string }>("/admin/social-auth/brand-icons", form);
+}
+
 export async function testSocialAuthProvider(providerId: string) {
     return http.post<ProviderTestResult>(`/admin/social-auth/test/${encodeURIComponent(providerId)}`);
 }

@@ -111,3 +111,8 @@
   - 新增后台「语言管理设置」页面 (`/admin/i18n/settings`) 与「多语言词条与字段修改」页面 (`/admin/i18n/entries`)，支持随时在线编辑或新增六语词条并实时热生效，支持 JSON 词库导入导出。
 - **维护文档体系 (`docs/supdance/`)**：
   - 建立 `INITIAL_AUDIT.md`、`WORKSPACE.md`、`ARCHITECTURE.md`、`UPSTREAM_BASELINE.md`、`UPSTREAM_SYNC.md`、`CUSTOMIZATIONS.md`、`PLUGIN_COMPATIBILITY.md`、`DEPLOYMENT.md`、`RECOVERY.md` 与 `CHANGELOG.md`。
+# 全站过渡动效开关
+
+- 补全视觉引擎现有 `motion.enabled` 总开关，新配置默认关闭；覆盖 CSS 与现有 Motion 库，停用插件时清理，页面规则不能重新开启。
+- 关闭时复用上游 Logo、三点与「正在打开页面」加载组件，跳过插件额外恢复动画；未新增上游没有的路由动画。
+- 保留已有发布配置，无数据库迁移；实际页面与服务器发布仍待验收，详见待测试清单。

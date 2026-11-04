@@ -16,6 +16,7 @@ import (
 
 // RegisterSocialAuthRoutes mounts all public and administrative social auth endpoints.
 func RegisterSocialAuthRoutes(api *gin.RouterGroup, svc *service.Service) {
+	registerSocialBrandIconRoutes(api, svc)
 	// 1. Public endpoints
 	api.GET("/auth/social/providers", func(c *gin.Context) {
 		res, err := svc.PublicSocialAuthProviders(c.Request)

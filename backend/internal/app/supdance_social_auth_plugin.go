@@ -96,6 +96,9 @@ func (s *Service) UpdateSocialAuthAdminSettings(r *http.Request, actor *model.Us
 	if err := s.RequireAdmin(actor); err != nil {
 		return nil, err
 	}
+	if err := s.validateSocialBrandIconSettings(actor, req); err != nil {
+		return nil, err
+	}
 	view, err := s.socialAuthService().UpdateAdminSettings(r, actor, req)
 	if err != nil {
 		return nil, err

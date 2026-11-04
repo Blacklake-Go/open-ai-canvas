@@ -1,6 +1,8 @@
 import { useVisualEngineStore } from "../../storage/visual-engine-store";
 import { NumberField, TextField, ChoiceField, ToggleField } from "../components/config-fields";
+import { useI18n } from "@/supdance/plugins/i18n/store";
 export function MotionPane() {
+    const { t } = useI18n();
     const motion = useVisualEngineStore((state) => state.draftConfig.motion);
     const update = useVisualEngineStore((state) => state.updateDraft);
     const durations = [
@@ -15,7 +17,7 @@ export function MotionPane() {
         <div className="space-y-6">
             <h2 className="text-xl font-bold">动效中心</h2>
             <ToggleField
-                label="启用动效"
+                label={t("admin.visual_motion.enable", undefined, "启用全站过渡动效")}
                 value={motion.enabled}
                 onChange={(value) =>
                     update((draft) => {
@@ -23,6 +25,7 @@ export function MotionPane() {
                     })
                 }
             />
+            <p className="text-sm text-foreground/70">{t("admin.visual_motion.description", undefined, "默认关闭。关闭后仅保留上游的 Logo、三点与页面加载提示，跳过额外恢复动画；页面规则不能覆盖总开关。开启后恢复现有动效，不新增上游没有的路由动画。")}</p>
             <div className="grid gap-4 sm:grid-cols-2">
                 {durations.map(([key, label]) => (
                     <NumberField

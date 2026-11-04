@@ -74,7 +74,7 @@ export const DEFAULT_VISUAL_ENGINE_CONFIG: VisualEngineConfig = {
         enableTextProtectionGradient: true,
     },
     motion: {
-        enabled: true,
+        enabled: false,
         durationQuick: 150,
         durationDropdownEnter: 200,
         durationDropdownExit: 150,

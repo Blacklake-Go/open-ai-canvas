@@ -103,7 +103,9 @@ func entry(key, ns, zhCN, enUS, zhTW, jaJP, koKR, esES, desc string) Entry {
 // BuiltinEntries 由 web/scripts/i18n-sync-backend.mjs 从前端词典生成，不要手工编辑词条体。
 func BuiltinEntries() []Entry {
 	return []Entry{
-		// ==================== admin: 管理后台与运维 (83) ====================
+		// ==================== admin: 管理后台与运维 (94) ====================
+		entry("admin.visual_motion.enable", "admin", "启用全站过渡动效", "Enable site transitions", "啟用全站過渡動效", "サイト全体のトランジションを有効にする", "사이트 전체 전환 효과 사용", "Activar transiciones del sitio", ""),
+		entry("admin.visual_motion.description", "admin", "默认关闭。关闭后仅保留上游的 Logo、三点与页面加载提示，跳过额外恢复动画；页面规则不能覆盖总开关。开启后恢复现有动效，不新增上游没有的路由动画。", "Off by default. Keep the upstream logo, dots and page loading message, and skip extra recovery animations. Page rules cannot override this switch. Turning it on restores existing motion without adding route animations absent upstream.", "預設關閉。關閉後僅保留上游的 Logo、三點與頁面載入提示，略過額外恢復動畫；頁面規則不能覆寫總開關。開啟後恢復既有動效，不新增上游沒有的路由動畫。", "初期設定はオフです。上流のロゴ、3つの点、読み込み表示を残し、追加の復元アニメーションを省略します。ページルールでこの設定は上書きできません。オンにすると既存の動きを復元し、上流にない画面遷移は追加しません。", "기본값은 꺼짐입니다. 업스트림 로고, 점 3개와 페이지 로딩 안내를 유지하고 추가 복구 애니메이션은 건너뜁니다. 페이지 규칙은 이 설정을 재정의할 수 없습니다. 켜면 기존 효과만 복원하며 업스트림에 없는 화면 전환은 추가하지 않습니다.", "Desactivadas por defecto. Conserva el logotipo, los tres puntos y el aviso de carga originales y omite las animaciones de recuperación adicionales. Las reglas de página no pueden anular este control. Al activarlo se restaura el movimiento existente sin añadir transiciones ausentes en el código original.", ""),
 		entry("admin.i18n_workflow.stale", "admin", "源文已变化，请复核人工覆盖译文", "Source changed: review manual overrides", "原文已變更，請複核人工覆寫譯文", "原文が変更されました。手動翻訳を再確認してください", "원문이 변경되었습니다. 수동 번역을 검토하세요", "El origen cambió: revisa las traducciones manuales", "源文变化提醒"),
 		entry("admin.i18n_workflow.load_failed", "admin", "语言包加载失败，已恢复简体中文，请重试。", "Language pack failed to load. Restored Simplified Chinese. Please retry.", "語言套件載入失敗，已還原簡體中文，請重試。", "言語パックを読み込めませんでした。簡体字中国語に戻しました。再試行してください。", "언어 팩을 불러오지 못해 중국어 간체로 복원했습니다. 다시 시도하세요.", "No se pudo cargar el idioma. Se restauró el chino simplificado. Inténtalo de nuevo.", "语言包加载错误"),
 		entry("admin.i18n_workflow.title", "admin", "翻译更新中心", "Translation updates", "翻譯更新中心", "翻訳更新センター", "번역 업데이트 센터", "Centro de traducciones", "翻译更新中心"),
@@ -168,6 +170,7 @@ func BuiltinEntries() []Entry {
 		entry("admin.social_auth.icon_save_failed", "admin", "品牌图标保存失败", "Failed to save brand icon", "品牌圖標儲存失敗", "ブランドアイコンの保存に失敗しました", "브랜드 아이콘 저장 실패", "Error al guardar el icono de marca", "品牌图标保存失败提示"),
 		entry("admin.social_auth.icon_upload_failed", "admin", "图标上传失败", "Icon upload failed", "圖標上傳失敗", "アイコンのアップロードに失敗しました", "아이콘 업로드 실패", "Error al subir el icono", "品牌图标上传失败提示"),
 		entry("admin.social_auth.icon_hint", "admin", "分别上传亮色与暗色两版品牌图标（建议 128×128 PNG/SVG）；登录页与管理台会按界面明暗自动切换，清除后恢复默认图标。", "Upload separate light and dark brand icon variants (128×128 PNG/SVG recommended). The login page and admin console switch automatically with the interface theme; clearing restores the default icon.", "分別上傳亮色與暗色兩版品牌圖標（建議 128×128 PNG/SVG）；登入頁與管理台會按介面明暗自動切換，清除後恢復預設圖標。", "ライト用とダーク用のブランドアイコンをそれぞれアップロードしてください（128×128 の PNG/SVG 推奨）。ログインページと管理コンソールはテーマに応じて自動で切り替わり、クリアするとデフォルトに戻ります。", "라이트용과 다크용 브랜드 아이콘을 각각 업로드하세요(128×128 PNG/SVG 권장). 로그인 페이지와 관리 콘솔은 테마에 따라 자동으로 전환되며, 지우면 기본 아이콘으로 복원됩니다.", "Suba variantes claras y oscuras del icono de marca (se recomienda PNG/SVG de 128×128). La página de inicio de sesión y la consola de administración cambian automáticamente según el tema; al borrar se restaura el icono predeterminado.", "品牌图标设置说明"),
+		entry("admin.social_auth.icon_upload_hint", "admin", "分别上传亮色与暗色两版品牌图标（建议 128×128 PNG/WebP，最大 5MB）；登录页与管理台会按界面明暗自动切换，清除后恢复默认图标。", "Upload light and dark brand icons separately (128×128 PNG/WebP recommended, up to 5MB). Icons follow the interface theme; clearing restores the default.", "分別上傳亮色與暗色兩版品牌圖示（建議 128×128 PNG/WebP，最大 5MB）；依介面主題自動切換，清除後恢復預設圖示。", "ライト用とダーク用のアイコンをアップロードしてください（128×128 PNG/WebP 推奨、最大5MB）。テーマに合わせて切り替わり、クリアすると既定に戻ります。", "밝은 테마와 어두운 테마 아이콘을 각각 업로드하세요(128×128 PNG/WebP 권장, 최대 5MB). 테마에 따라 전환되며 지우면 기본 아이콘으로 복원됩니다.", "Sube iconos claros y oscuros por separado (PNG/WebP de 128×128 recomendado, hasta 5MB). Siguen el tema de la interfaz; al borrarlos se restaura el icono predeterminado.", "品牌图标安全上传说明"),
 		entry("admin.social_auth.icon_notice_title", "admin", "提示", "Notice", "提示", "注意", "알림", "Aviso", "品牌图标弹窗提示标题"),
 		entry("admin.failed_status", "admin", "失败", "Failed", "失敗", "失敗", "실패", "Fallido", "表格失败状态"),
 		entry("admin.user_entity", "admin", "用户", "User", "使用者", "ユーザー", "사용자", "Usuario", "用户实体"),
@@ -187,7 +190,15 @@ func BuiltinEntries() []Entry {
 		entry("admin.user_groups", "admin", "用户分组", "User Groups", "使用者分組", "ユーザーグループ", "사용자 그룹", "Grupos de usuarios", "后台管理：用户分组"),
 		entry("admin.user_group_manage", "admin", "分组管理", "Group Management", "分組管理", "グループ管理", "그룹 관리", "Gestión de grupos", "后台管理：分组管理"),
 		entry("admin.user_group_badge", "admin", "会员徽章", "Membership Badge", "會員徽章", "会員バッジ", "멤버십 배지", "Insignia de membresía", "用户分组徽章展示"),
-		// ==================== common: 通用与基础控件 (136) ====================
+		entry("admin.social_auth.copy_success", "admin", "已复制{label}到剪贴板", "{label} copied to clipboard", "已複製{label}到剪貼簿", "{label} をクリップボードにコピーしました", "{label}이(가) 클립보드에 복사되었습니다", "{label} copiado al portapapeles", "社交登录配置项复制成功"),
+		entry("admin.music_generation", "admin", "音乐配置", "Music Settings", "音樂配置", "音楽設定", "음악 설정", "Configuración de Música", "管理侧栏：音乐配置"),
+		entry("admin.html_pages", "admin", "HTML 页面", "HTML Pages", "HTML 頁面", "HTML ページ", "HTML 페이지", "Páginas HTML", "管理侧栏：HTML 页面"),
+		entry("admin.skill_curation", "admin", "技能分类", "Skill Curation", "技能分類", "スキル分類", "스킬 분류", "Clasificación de Habilidades", "管理侧栏：技能分类"),
+		entry("admin.group_system", "admin", "系统设置", "System Settings", "系統設定", "システム設定", "시스템 설정", "Configuración del Sistema", "管理侧栏：系统设置分组"),
+		entry("admin.social_auth_config", "admin", "社交登录配置", "Social Login Settings", "社交登入配置", "ソーシャルログイン設定", "소셜 로그인 설정", "Configuración de Inicio de Sesión Social", "管理侧栏：社交登录配置"),
+		entry("admin.login_and_registration", "admin", "登录与注册", "Login & Registration", "登入與註冊", "ログインと登録", "로그인 및 회원가입", "Inicio de Sesión y Registro", "管理侧栏：登录与注册"),
+		entry("admin.email_service", "admin", "邮件服务", "Email Service", "郵件服務", "メールサービス", "이메일 서비스", "Servicio de Correo", "管理侧栏：邮件服务"),
+		// ==================== common: 通用与基础控件 (147) ====================
 		entry("common.confirm", "common", "确认", "Confirm", "確認", "確認", "확인", "Confirmar", "通用确认按钮"),
 		entry("common.cancel", "common", "取消", "Cancel", "取消", "キャンセル", "취소", "Cancelar", "通用取消按钮"),
 		entry("common.save", "common", "保存", "Save", "儲存", "保存", "저장", "Guardar", "通用保存按钮"),
@@ -324,6 +335,17 @@ func BuiltinEntries() []Entry {
 		entry("legal.privacy", "common", "隐私政策", "Privacy Policy", "隱私政策", "プライバシーポリシー", "개인정보 처리방침", "Política de Privacidad", "法务文档：隐私政策"),
 		entry("legal.aup", "common", "AUP 使用政策", "Acceptable Use Policy (AUP)", "AUP 使用政策", "利用許諾方針 (AUP)", "이용 허용 정책 (AUP)", "Política de Uso Aceptable (AUP)", "法务文档：AUP 政策"),
 		entry("common.legal_aup", "common", "AUP", "AUP", "AUP", "AUP", "AUP", "AUP", "页脚法务文档链接：AUP"),
+		entry("common.back_home", "common", "返回首页", "Back to Home", "返回首頁", "ホームへ戻る", "홈으로 돌아가기", "Volver al Inicio", "通用返回首页操作"),
+		entry("common.prev", "common", "上一页", "Previous Page", "上一頁", "前のページ", "이전 페이지", "Página Anterior", "分页上一页操作"),
+		entry("common.next", "common", "下一页", "Next Page", "下一頁", "次のページ", "다음 페이지", "Página Siguiente", "分页下一页操作"),
+		entry("common.enable", "common", "启用", "Enable", "啟用", "有効化", "활성화", "Habilitar", "通用启用开关"),
+		entry("common.disable", "common", "停用", "Disable", "停用", "無効化", "비활성화", "Deshabilitar", "通用停用开关"),
+		entry("legal.doc_nav_aria", "common", "法务文档导航", "Legal documents navigation", "法務文檔導覽", "法的文書ナビゲーション", "법적 문서 탐색", "Navegación de documentos legales", "法务文档顶栏无障碍标签"),
+		entry("legal.pending_notice", "common", "待补充通知", "Pending notice", "待補充通知", "確認待ち通知", "보충 대기 알림", "Aviso pendiente", "法务文档待补充通知提示"),
+		entry("legal.toc_aria", "common", "目录导航", "Table of contents navigation", "目錄導覽", "目次ナビゲーション", "목차 탐색", "Navegación de tabla de contenido", "法务文档目录无障碍标签"),
+		entry("legal.contents", "common", "目录", "Contents", "目錄", "目次", "목차", "Contenido", "法务文档目录标题"),
+		entry("legal.version", "common", "版本：{version}", "Version: {version}", "版本：{version}", "バージョン: {version}", "버전: {version}", "Versión: {version}", "法务文档版本展示"),
+		entry("legal.effective_date", "common", "生效日期：{date}", "Effective Date: {date}", "生效日期：{date}", "発効日: {date}", "시행일: {date}", "Fecha de Entrada en Vigor: {date}", "法务文档生效日期展示"),
 		// ==================== nav: 顶栏与侧栏导航 (94) ====================
 		entry("nav.workspace", "nav", "创作工作台", "Creative Studio", "創作工作台", "制作スタジオ", "크리에이티브 스튜디오", "Estudio Creativo", "侧栏品牌副标题"),
 		entry("nav.create", "nav", "创作", "Create", "創作", "制作", "창작", "Crear", "主导航：创作工作台"),
@@ -419,7 +441,7 @@ func BuiltinEntries() []Entry {
 		entry("nav.storage_state_msg_grace_time", "nav", "已超出容量，暂停上传和生成。{time} 后将进入只读状态。", "Storage capacity exceeded. Uploads and generation are paused. Enters read-only mode after {time}.", "已超出容量，暫停上傳和生成。{time} 後將進入唯讀狀態。", "容量を超過したため、アップロードと生成を停止しました。{time} 後に読み取り専用になります。", "용량을 초과하여 업로드 및 생성이 일시 중단되었습니다. {time} 후 읽기 전용으로 전환됩니다.", "Capacidad superada. Subidas y generación pausadas. Pasará a solo lectura tras {time}.", "存储超额含截止时间宽限期提示说明"),
 		entry("nav.storage_state_msg_grace", "nav", "已超出容量，暂停上传和生成。宽限期结束后将进入只读状态。", "Storage capacity exceeded. Uploads and generation are paused. Enters read-only mode after the grace period ends.", "已超出容量，暫停上傳和生成。寬限期結束後將進入唯讀狀態。", "容量を超過したため、アップロードと生成を停止しました。猶予期間終了後に読み取り専用になります。", "용량을 초과하여 업로드 및 생성이 일시 중단되었습니다. 유예 기간 종료 후 읽기 전용으로 전환됩니다.", "Capacidad superada. Subidas y generación pausadas. Pasará a solo lectura tras finalizar el período de gracia.", "存储超额宽限期提示说明"),
 		entry("nav.storage_state_msg_full", "nav", "容量已满，暂停上传和生成。", "Storage full. Uploads and generation are paused.", "容量已滿，暫停上傳和生成。", "容量が満杯です。アップロードと生成を停止しました。", "용량이 가득 찼습니다. 업로드 및 생성이 일시 중단되었습니다.", "Almacenamiento lleno. Subidas y generación pausadas.", "存储容量已满提示说明"),
-		// ==================== auth: 登录与注册认证 (82) ====================
+		// ==================== auth: 登录与注册认证 (88) ====================
 		entry("auth.login", "auth", "登录", "Log In", "登入", "ログイン", "로그인", "Iniciar sesión", "登录按钮/标签"),
 		entry("auth.register", "auth", "注册", "Sign Up", "註冊", "新規登録", "회원가입", "Registrarse", "注册按钮/标签"),
 		entry("auth.enter_studio", "auth", "进入创作现场", "Enter the Creative Studio", "進入創作現場", "制作スタジオへ入る", "크리에이티브 스튜디오 입장", "Entrar al Estudio Creativo", "登录页主标题"),
@@ -502,7 +524,13 @@ func BuiltinEntries() []Entry {
 		entry("auth.onboarding.terms_service", "auth", "《用户服务协议》", "Terms of Service", "《用戶服務協議》", "利用規約", "이용약관", "Términos de servicio", "服务协议链接文案"),
 		entry("auth.onboarding.terms_and", "auth", "与", "and", "與", "および", "및", "y la", "协议链接之间的连接词"),
 		entry("auth.onboarding.terms_privacy", "auth", "《隐私政策》", "Privacy Policy", "《隱私政策》", "プライバシーポリシー", "개인정보 처리방침", "Política de privacidad", "隐私政策链接文案"),
-		// ==================== create: 首页创作工作台 (49) ====================
+		entry("auth.accept_terms_required", "auth", "请先勾选并同意服务协议与隐私政策", "Please check and agree to the Terms of Service and Privacy Policy", "請先勾選並同意服務協議與隱私政策", "利用規約およびプライバシーポリシーに同意してください", "서비스 이용약관 및 개인정보 처리방침에 동의해 주세요", "Marque la casilla para aceptar los Términos del Servicio y la Política de Privacidad", "登录页未同意协议提示"),
+		entry("auth.social_login_group", "auth", "快捷社交登录方式", "Quick Social Login Options", "快捷社交登入方式", "ソーシャルログイン方法", "소셜 간편 로그인 방법", "Opciones de Inicio de Sesión Social", "快捷社交登录分组标签"),
+		entry("auth.social_login_action", "auth", "登录", "Sign In", "登入", "ログイン", "로그인", "Iniciar Sesión", "社交登录动作按钮文案"),
+		entry("auth.agree_terms_first", "auth", "请先勾选同意服务协议与隐私条款", "Please agree to the Terms of Service and Privacy Policy first", "請先勾選同意服務協議與隱私條款", "先に利用規約とプライバシーポリシーに同意してください", "먼저 서비스 이용약관 및 개인정보 처리방침에 동의해 주세요", "Primero acepte los Términos del Servicio y la Política de Privacidad", "入站模态未同意协议警告"),
+		entry("auth.password_min_length", "auth", "设置密码长度至少需为 6 位", "Password must be at least 6 characters", "設定密碼長度至少需為 6 位", "パスワードは6文字以上にする必要があります", "비밀번호는 최소 6자 이상이어야 합니다", "La contraseña debe tener al menos 6 caracteres", "入站模态密码长度校验"),
+		entry("auth.password_mismatch", "auth", "两次输入的密码不一致", "Passwords do not match", "兩次輸入的密碼不一致", "入力されたパスワードが一致しません", "비밀번호가 일치하지 않습니다", "Las contraseñas no coinciden", "入站模态密码不一致校验"),
+		// ==================== create: 首页创作工作台 (50) ====================
 		entry("create.recent_canvases", "create", "最近画布", "Recent Canvases", "最近畫布", "最近のキャンバス", "최근 캔버스", "Lienzos recientes", "创作页：最近画布"),
 		entry("create.new_canvas", "create", "新建画布", "New Canvas", "新建畫布", "新規キャンバス", "새 캔버스", "Nuevo lienzo", "创作页：新建画布"),
 		entry("create.inspiration", "create", "灵感广场", "Inspiration Gallery", "靈感廣場", "インスピレーション", "영감 갤러리", "Galería de Inspiración", "创作页：灵感广场"),
@@ -552,6 +580,7 @@ func BuiltinEntries() []Entry {
 		entry("create.suggest_first_shot_prompt", "create", "雨夜天台，镜头缓缓推近霓虹灯牌下的主角，她回眸看向镜头，强对比电影感布光", "A rooftop on a rainy night. The camera slowly pushes toward the protagonist under a neon sign. She turns to look into the camera, with high-contrast cinematic lighting.", "雨夜天台，鏡頭緩緩推近霓虹燈牌下的主角，她回眸看向鏡頭，強對比電影感布光", "雨の夜の屋上。ネオン看板の下の主人公へゆっくり寄るカメラ。彼女が振り返り、カメラを見る。コントラストの強い映画的照明。", "비 오는 밤 옥상. 네온 간판 아래 주인공에게 카메라가 천천히 다가간다. 그녀가 돌아보며 카메라를 바라본다. 강한 대비의 영화적 조명.", "Azotea en una noche lluviosa. La cámara se acerca lentamente a la protagonista bajo un letrero de neón. Ella se gira hacia la cámara, con iluminación cinematográfica de alto contraste.", "创作工作区词条"),
 		entry("create.suggest_continue_story_prompt", "create", "帮我续写一个短剧故事，先聊聊剧情走向：", "Help me continue a short drama story. Let us discuss the plot direction:", "幫我續寫一個短劇故事，先聊聊劇情走向：", "短編ドラマの続きを手伝ってください。まず展開を相談しましょう：", "짧은 드라마 이야기를 이어 쓰도록 도와주세요. 먼저 줄거리 방향을 이야기해 봅시다:", "Ayúdame a continuar un drama corto. Primero hablemos del rumbo de la trama:", "创作工作区词条"),
 		entry("create.suggest_skills_prompt", "create", "调用分镜技能，帮我规划这个镜头的拍摄方案：", "Use storyboarding skills to plan how to shoot this scene:", "調用分鏡技能，幫我規劃這個鏡頭的拍攝方案：", "絵コンテスキルを使い、このショットの撮影計画を作ってください：", "스토리보드 스킬로 이 장면의 촬영 계획을 세워주세요:", "Usa las habilidades de guion gráfico para planificar el rodaje de esta toma:", "创作工作区词条"),
+		entry("create.max_references_reached", "create", "已达到当前模型的参考内容上限（{max} 个）", "Maximum reference inputs reached for current model ({max})", "已達到當前模型的參考內容上限（{max} 個）", "現在のモデルの参照上限に達しました（{max} 件）", "현재 모델의 최대 참조 수에 도달했습니다({max}개)", "Se alcanzó el límite de referencias para el modelo actual ({max})", "参考素材数量超限提示"),
 		// ==================== canvas: 自由画布与节点 (132) ====================
 		entry("canvas.my_canvases", "canvas", "我的画布", "My Canvases", "我的畫布", "マイキャンバス", "내 캔버스", "Mis lienzos", "画布列表标题"),
 		entry("canvas.create_project", "canvas", "新建画布项目", "New Canvas Project", "新建畫布專案", "新規キャンバスプロジェクト", "새 캔버스 프로젝트", "Nuevo proyecto de lienzo", "新建画布项目"),
@@ -731,7 +760,7 @@ func BuiltinEntries() []Entry {
 		entry("assets.no_voice_bound", "assets", "未绑定声音", "No Voice Bound", "未綁定聲音", "音声未割り当て", "음성 연결 안 됨", "Sin voz vinculada", "角色无音色状态"),
 		entry("assets.add_asset", "assets", "新增素材", "Add Asset", "新增素材", "素材を追加", "소재 추가", "Añadir recurso", "新增素材按钮"),
 		entry("assets.my_categories", "assets", "我的分类", "My Categories", "我的分類", "マイカテゴリ", "내 카테고리", "Mis categorías", "用户自定义分类"),
-		// ==================== skills: 技能广场与编排 (18) ====================
+		// ==================== skills: 技能广场与编排 (19) ====================
 		entry("skills.title", "skills", "技能广场", "Skills Marketplace", "技能廣場", "スキルマーケット", "스킬 마켓", "Mercado de Habilidades", "技能广场标题"),
 		entry("skills.my_skills", "skills", "我的技能", "My Skills", "我的技能", "マイスキル", "내 스킬", "Mis habilidades", "我的技能"),
 		entry("skills.create_skill", "skills", "创建技能", "Create Skill", "建立技能", "スキルを作成", "스킬 만들기", "Crear habilidad", "创建技能按钮"),
@@ -750,7 +779,8 @@ func BuiltinEntries() []Entry {
 		entry("skills.open_raw_file", "skills", "打开原始文件", "Open Raw File", "開啟原始檔案", "ソースファイルを開く", "원본 파일 열기", "Abrir archivo fuente", "查看代码/Markdown"),
 		entry("skills.new_file", "skills", "新建文件", "New File", "新建檔案", "新規ファイル", "새 파일", "Nuevo archivo", "工作台新建文件"),
 		entry("skills.recommend_install", "skills", "技能推荐安装", "Recommended Skills", "技能推薦安裝", "おすすめスキルのインストール", "추천 스킬 설치", "Instalación de habilidades recomendadas", "云端Agent：技能推荐安装"),
-		// ==================== plugins: 插件中心与扩展 (88) ====================
+		entry("skills.tab_favorites", "skills", "收藏", "Favorites", "收藏", "お気に入り", "즐겨찾기", "Favoritos", "灵感与技能收藏标签"),
+		// ==================== plugins: 插件中心与扩展 (89) ====================
 		entry("plugins.center_title", "plugins", "插件中心", "Plugin Center", "外掛中心", "プラグインセンター", "플러그인 센터", "Centro de Complementos", "插件中心标题"),
 		entry("plugins.upload_plugin", "plugins", "上传插件", "Upload Plugin", "上傳外掛", "プラグインをアップロード", "플러그인 업로드", "Subir complemento", "上传插件按钮"),
 		entry("plugins.all_plugins", "plugins", "全部插件", "All Plugins", "全部外掛", "すべてのプラグイン", "전체 플러그인", "Todos los complementos", "全部插件统计"),
@@ -839,7 +869,8 @@ func BuiltinEntries() []Entry {
 		entry("plugins.view_dev_guide", "plugins", "查看《开发与打包规范说明》", "View Development & Packaging Guide", "查看《開發與打包規範說明》", "「開発およびパッケージング仕様書」を表示", "개발 및 패키징 가이드 보기", "Ver Guía de desarrollo y empaquetado", "查看开发指南链接"),
 		entry("plugins.copy_manifest_example", "plugins", "复制开发规范中的 manifest.json 配置示例", "Copy manifest.json example", "複製開發規範中的 manifest.json 設定範例", "仕様書のmanifest.json設定例をコピー", "사양의 manifest.json 예제 복사", "Copiar ejemplo de manifest.json", "复制清单模板"),
 		entry("plugins.optimizer_no_auto_overwrite", "plugins", "插件不会自动覆盖原提示词，只有点击“采用”后才会回填到当前输入框。", "Prompts are not overwritten automatically; click \"Apply\" to insert the optimized prompt.", "外掛不會自動覆蓋原提示詞，只有點擊「採用」後才會回填至目前輸入框。", "プロンプトは自動上書きされません。「適用」をクリックすると現在の入力欄に反映されます。", "프롬프트가 자동으로 덮어쓰이지 않으며, \"적용\"을 클릭해야 입력창에 반영됩니다.", "La extensión no sobrescribe el prompt original; haga clic en \"Aplicar\" para rellenarlo.", "提示词优化器采纳说明"),
-		// ==================== settings: 个人设置与积分 (684) ====================
+		entry("visual_engine.system_reduce_motion", "plugins", "系统减少动效偏好", "System Reduced Motion Preference", "系統減少動效偏好", "システムの視覚効果を減らす設定", "시스템 동작 줄이기 설정", "Preferencia de Reducción de Movimiento del Sistema", "视觉引擎减弱动效偏好标签"),
+		// ==================== settings: 个人设置与积分 (702) ====================
 		entry("settings.profile", "settings", "个人资料", "Profile", "個人資料", "プロフィール", "프로필", "Perfil", "设置：个人资料"),
 		entry("settings.channels", "settings", "模型渠道", "Model Channels", "模型渠道", "モデルチャネル", "모델 채널", "Canales de modelo", "设置：模型渠道"),
 		entry("settings.storage", "settings", "存储配置", "Storage Settings", "儲存配置", "ストレージ設定", "스토리지 설정", "Configuración de almacenamiento", "设置：存储配置"),
@@ -1524,6 +1555,24 @@ func BuiltinEntries() []Entry {
 		entry("settings.social.no_password_tip", "settings", "提示：您尚未设置独立密码，建议前往【基本资料与安全】设置密码以保障多渠道访问。", "Tip: You have not set an independent password yet. We recommend setting one in Security settings.", "提示：您尚未設定獨立密碼，建議前往【基本資料與安全】設定密碼以保障多渠道存取。", "ヒント: ログインパスワードが未設定です。「プロフィールとセキュリティ」で設定することをお勧めします。", "알림: 독립 비밀번호가 설정되어 있지 않습니다. [기본 프로필 및 보안]에서 비밀번호를 설정하세요.", "Aviso: No ha configurado una contraseña independiente. Le recomendamos configurarla en Seguridad.", "未设置密码警告提示"),
 		entry("settings.social.account_label", "settings", "账号", "Account", "帳號", "アカウント", "계정", "Cuenta", "社交绑定账号标签"),
 		entry("settings.social.unbind_failed", "settings", "解绑失败，请稍后重试", "Failed to unlink account. Please try again later.", "解綁失敗，請稍後重試", "連携解除に失敗しました。しばらくしてから再試行してください。", "연동 해제에 실패했습니다. 잠시 후 다시 시도해 주세요.", "Error al desvincular. Inténtelo de nuevo más tarde.", "解绑失败提示"),
+		entry("settings.wallet_no_records", "settings", "还没有积分记录", "No credit records yet", "還沒有積分記錄", "クレジット履歴がありません", "아직 크레딧 내역이 없습니다", "Sin registros de créditos aún", "积分明细空状态标题"),
+		entry("settings.wallet_no_records_desc", "settings", "完成充值、兑换或生成任务后，记录会显示在这里。", "Records will appear here after top-ups, redemptions, or generation tasks.", "完成儲值、兌換或生成任務後，記錄會顯示在這裡。", "チャージ、引き換え、生成タスクの完了後、履歴がここに表示されます。", "충전, 교환 또는 생성 작업을 완료하면 내역이 여기에 표시됩니다.", "Los registros aparecerán aquí después de recargas, canjes o tareas de generación.", "积分明细空状态描述"),
+		entry("settings.wallet_page_info", "settings", "第 {page} 页 / 共 {total} 页", "Page {page} of {total}", "第 {page} 頁 / 共 {total} 頁", "{page} / {total} ページ", "{page} / {total} 페이지", "Página {page} de {total}", "积分明细分页信息"),
+		entry("settings.wallet_entry_change", "settings", "积分账户变动", "Balance Change", "積分帳戶變動", "クレジット残高変動", "크레딧 잔액 변동", "Cambio de Saldo", "积分流水变动类型兜底"),
+		entry("settings.wallet_clean_assets", "settings", "清理素材", "Clean Media Assets", "清理素材", "メディア素材を整理", "미디어 정리", "Limpiar Archivos Multimedia", "超额存储快捷清理按钮"),
+		entry("settings.wallet_select_plan_hint", "settings", "选择一个套餐", "Select a package plan", "選擇一個方案", "プランを選択してください", "패키지 요금제를 선택하세요", "Seleccionar un plan", "套餐选择引导说明"),
+		entry("settings.wallet_payment_methods", "settings", "支付方式", "Payment Methods", "支付方式", "お支払い方法", "결제 수단", "Métodos de Pago", "支付渠道选择标题"),
+		entry("settings.wallet_no_providers", "settings", "暂无可用支付渠道，请联系管理员", "No payment providers available. Please contact administrator.", "暫無可用支付渠道，請聯絡管理員", "利用可能な決済方法がありません。管理者に連絡してください。", "사용 가능한 결제 수단이 없습니다. 관리자에게 문의하세요.", "No hay métodos de pago disponibles. Contacte al administrador.", "支付渠道缺失提示"),
+		entry("settings.wallet_pay_now", "settings", "立即支付", "Pay Now", "立即支付", "今すぐ支払う", "지금 결제하기", "Pagar Ahora", "立即支付主操作按钮"),
+		entry("settings.wallet_topup_unavailable", "settings", "在线充值暂不可用", "Online top-up is currently unavailable", "線上儲值暫不可用", "オンラインチャージは現在利用できません", "온라인 충전을 일시적으로 이용할 수 없습니다", "La recarga en línea no está disponible temporalmente", "在线充值不可用标题"),
+		entry("settings.wallet_topup_unavailable_desc", "settings", "当前没有已上架的套餐，请使用兑换码或联系管理员。", "There are no packages listed currently. Please use redemption codes or contact administrator.", "目前沒有已上架的方案，請使用兌換碼或聯絡管理員。", "現在販売中のプランはありません。引き換えコードをご利用いただくか、管理者へお問い合わせください。", "현재 등록된 요금제가 없습니다. 교환 코드를 사용하거나 관리자에게 문의하세요.", "Actualmente no hay planes disponibles. Use un código de canje o contacte al administrador.", "在线充值不可用说明"),
+		entry("settings.prompts_customized", "settings", "已定制", "Customized", "已客製", "カスタマイズ済み", "맞춤설정됨", "Personalizado", "提示词已定制徽章"),
+		entry("settings.prompts_server_readonly", "settings", "服务端只读", "Server Read-Only", "服務端唯讀", "サーバー読み取り専用", "서버 읽기 전용", "Solo Lectura del Servidor", "提示词服务端只读标记"),
+		entry("settings.prompts_creative_strategy", "settings", "创作策略", "Creative Strategy", "創作策略", "制作戦略", "창작 전략", "Estrategia Creativa", "提示词改写策略小节"),
+		entry("settings.prompts_not_filled", "settings", "尚未填写", "Not filled yet", "尚未填寫", "未入力", "아직 작성되지 않음", "No completado aún", "提示词未填写占位说明"),
+		entry("settings.prompts_runtime_enforced", "settings", "运行时强制追加", "Runtime Enforced", "執行時強制追加", "実行時に強制追加", "실행 시 강제 추가", "Añadido Obligatorio en Ejecución", "提示词运行时注入规则"),
+		entry("settings.prompts_runtime_desc", "settings", "当前剧情、项目画风、当前角色版本、画布资产与受保护输出契约。", "Current plot, project style, active character version, canvas assets, and output contract.", "當前劇情、專案畫風、當前角色版本、畫布資產與受保護輸出契約。", "現在のプロット、プロジェクト画風、キャラクターバージョン、キャンバス資産、保護された出力規約。", "현재 스토리, 프로젝트 스타일, 캐릭터 버전, 캔버스 자산 및 보호된 출력 계약.", "Trama actual, estilo del proyecto, versión del personaje, activos del lienzo y contrato de salida.", "提示词注入变量说明"),
+		entry("settings.social.unbind_success", "settings", "已成功解除与 {name} 的绑定", "Successfully unlinked {name}", "已成功解除與 {name} 的綁定", "{name} の連携を解除しました", "{name} 연동이 성공적으로 해제되었습니다", "Se desvinculó {name} con éxito", "解绑社交账号成功提示"),
 		// ==================== referral: 推广返佣与收益 (19) ====================
 		entry("referral.my_link", "referral", "我的推广链接", "My Referral Link", "我的推廣連結", "マイ紹介リンク", "내 추천 링크", "Mi enlace de referencia", "个人推广链接标题"),
 		entry("referral.no_users_yet", "referral", "还没有用户通过你的链接注册", "No users have registered via your link yet", "還沒有使用者透過你的連結註冊", "あなたの紹介リンクから登録したユーザーはまだいません", "아직 링크를 통해 가입한 사용자가 없습니다", "Aún no hay usuarios registrados a través de tu enlace", "无被邀请用户空状态"),
@@ -1912,7 +1961,7 @@ func BuiltinEntries() []Entry {
 		entry("workbench.refs_adjusting", "workbench", "参考内容正在按当前模型能力调整，请稍后重试", "Adjusting references to match model capabilities, please wait", "參考內容正在按目前模型能力調整，請稍後重試", "モデルの機能に合わせて参照を調整中です。しばらくお待ちください", "모델 기능에 맞게 참조를 조정하는 중입니다", "Ajustando referencias a las capacidades del modelo, espere", "参考规格调整中"),
 		entry("workbench.session_local_saved", "workbench", "会话已保存在本机，云端同步尚未完成。", "Conversation saved locally. Cloud sync pending.", "會話已儲存在本機，雲端同步尚未完成。", "会話はローカルに保存されました。クラウド同期は未完了です。", "대화가 로컬에 저장되었습니다. 클라우드 동기화 대기 중.", "Conversación guardada localmente. Sincronización en la nube pendiente.", "本地离线会话提示"),
 		entry("workbench.history_deleted_keep_assets", "workbench", "历史对话已删除，素材仍保留", "Conversation history deleted, assets retained", "歷史對話已刪除，素材仍保留", "会話履歴は削除されましたが、素材は保持されています", "대화 내역이 삭제되었으나 에셋은 유지됩니다", "Historial de conversaciones eliminado, materiales conservados", "删除历史会话反馈"),
-		// ==================== music: AI 音乐生成岛 (45) ====================
+		// ==================== music: AI 音乐生成岛 (51) ====================
 		entry("music.nav_music_gen", "music", "音乐生成", "AI Music", "音樂生成", "音楽生成", "음악 생성", "Generación de música", "导航：音乐生成"),
 		entry("music.studio_title", "music", "AI 音乐创作岛 (Music Studio)", "AI Music Studio", "AI 音樂創作島 (Music Studio)", "AI 音楽スタジオ", "AI 음악 스튜디오", "Estudio de Música AI", "音乐岛标题"),
 		entry("music.studio_desc", "music", "集成 Mureka V9.5、Suno v6、Google Lyria 3.5 与 Eleven Music v2.5 前沿音频大模型", "Integrated with Mureka V9.5, Suno v6, Google Lyria 3.5, and Eleven Music v2.5 frontier models", "整合 Mureka V9.5、Suno v6、Google Lyria 3.5 與 Eleven Music v2.5 前沿音訊大模型", "Mureka V9.5、Suno v6、Google Lyria 3.5、Eleven Music v2.5 などの最先端モデルを統合", "Mureka V9.5, Suno v6, Google Lyria 3.5 및 Eleven Music v2.5 최첨단 모델 통합", "Integrado con modelos de vanguardia Mureka V9.5, Suno v6, Google Lyria 3.5 y Eleven Music v2.5", "音乐岛副标题说明"),
@@ -1958,6 +2007,12 @@ func BuiltinEntries() []Entry {
 		entry("music.test_connection", "music", "测试连接", "Test Connection", "測試連線", "接続テスト", "연결 테스트", "Probar conexión", "测试连接按钮"),
 		entry("music.save_config", "music", "保存配置", "Save Configuration", "儲存設定", "設定を保存", "설정 저장", "Guardar configuración", "保存配置按钮"),
 		entry("music.submitting", "music", "提交中...", "Submitting...", "提交中...", "送信中...", "제출 중...", "Enviando...", "提交中提示"),
+		entry("music.send_canvas_success", "music", "已创建新画布并导入音频，正在打开...", "New canvas created with audio imported. Opening...", "已建立新畫布並匯入音訊，正在開啟...", "新しいキャンバスを作成し音声をインポートしました。開いています...", "새 캔버스를 생성하고 오디오를 가져왔습니다. 여는 중...", "Nuevo lienzo creado con audio importado. Abriendo...", "送入画布成功提示"),
+		entry("music.send_canvas_failed", "music", "送入画布失败，请重试", "Failed to send audio to canvas. Please try again.", "送入畫布失敗，請重試", "キャンバスへの転送に失敗しました。再試行してください。", "캔버스로 전송하지 못했습니다. 다시 시도해 주세요.", "Error al enviar al lienzo. Inténtelo de nuevo.", "送入画布失败提示"),
+		entry("music.params_reused", "music", "已回填创作参数至左侧表单", "Creation parameters filled into the form", "已填回創作參數至左側表單", "作成パラメータをフォームに適用しました", "제작 매개변수가 양식에 채워졌습니다", "Parámetros de creación aplicados al formulario", "音乐参数重用提示"),
+		entry("music.stage_empty_title", "music", "母带监听与制作大舞台", "Mastering & Music Production Stage", "母帶監聽與製作大舞台", "マスタリング＆音楽制作ステージ", "마스터링 및 음악 제작 스테이지", "Escenario de Masterización y Producción Musical", "音乐制作舞台空态标题"),
+		entry("music.stage_empty_desc", "music", "在右侧选择任意历史作品收听，或在左侧配置参数生成全新的 AI 影视与短剧配乐。", "Select any past track on the right to listen, or configure parameters on the left to create new AI music.", "在右側選擇任意歷史作品收聽，或在左側配置參數生成全新的 AI 影視與短劇配樂。", "右側のリストから過去の楽曲を選択して試聴するか、左側でパラメータを設定してAI音楽を生成します。", "오른쪽에서 이전 작품을 선택해 감상하거나, 왼쪽에서 매개변수를 구성하여 새로운 AI 음악을 생성하세요.", "Seleccione cualquier pista a la derecha para escucharla, o configure parámetros a la izquierda para crear música con IA.", "音乐制作舞台空态说明"),
+		entry("music.player_progress", "music", "音频播放进度", "Playback Progress", "音訊播放進度", "再生プログレス", "재생 진행률", "Progreso de Reproducción", "音频播放器进度无障碍标签"),
 		// ==================== inspiration: 灵感大厅与创意目录 (78) ====================
 		entry("inspiration.fashion_editorial", "inspiration", "时尚编辑", "Fashion Editorial", "時尚編輯", "ファッションエディトリアル", "패션 에디토리얼", "Editorial de moda", "灵感分类：时尚编辑"),
 		entry("inspiration.hall_title", "inspiration", "灵感大厅", "Inspiration Hall", "靈感大廳", "インスピレーションホール", "영감 홀", "Sala de inspiración", "灵感大厅页面主标题"),

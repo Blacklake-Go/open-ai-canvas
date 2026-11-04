@@ -14,6 +14,7 @@ import { applyVisualEngineTheme, removeVisualEngineTheme } from "../themes/theme
 import { resolvePageVisualPolicy } from "../page-rules/page-rules-engine";
 import { useActiveTheme } from "@/stores/canvas/use-canvas-theme-store";
 import { fetchVisualEnginePublicBundle } from "../api/visual-engine-api";
+import { MotionGlobalConfig } from "motion/react";
 
 import { usePluginStore } from "@/stores/use-plugin-store";
 import { synchronizeVisualEngineRegistration } from "../lifecycle/registration";
@@ -88,6 +89,18 @@ function ActiveVisualEngineRuntime({ navigation }: { navigation: NavigationSourc
     const enabled = useVisualEngineStore((state) => state.enabled);
     const config = useVisualEngineStore((state) => state.config);
     const theme = useActiveTheme();
+    useLayoutEffect(() => {
+        if (config.motion.enabled) return;
+        const previous = MotionGlobalConfig.skipAnimations;
+        const previousAttribute = document.documentElement.getAttribute("data-ve-motion");
+        MotionGlobalConfig.skipAnimations = true;
+        document.documentElement.dataset.veMotion = "off";
+        return () => {
+            MotionGlobalConfig.skipAnimations = previous;
+            if (previousAttribute === null) delete document.documentElement.dataset.veMotion;
+            else document.documentElement.setAttribute("data-ve-motion", previousAttribute);
+        };
+    }, [config.motion.enabled]);
     useLayoutEffect(() => {
         const mode = config.themeMode === "system" ? theme : config.themeMode;
         const policy = resolvePageVisualPolicy(pathname, config, mode);
