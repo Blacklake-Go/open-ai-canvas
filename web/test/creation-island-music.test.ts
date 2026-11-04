@@ -2,7 +2,6 @@ import { describe, expect, it } from "bun:test";
 import { modeLabels, shotScriptLabels, type CreationMode } from "@/pages/create/creation-types";
 import { creationUploadAccept, creationFileAccepted } from "@/pages/create/creation-assets";
 import { creationMusicEmptySuggestions } from "@/pages/create/creation-workspace-empty";
-import { MUSIC_MODELS } from "@/pages/create/creation-workspace";
 import { thinkingFor } from "@/pages/create/creation-workspace-messages";
 import { creationLibraryDisabledReason } from "@/pages/create/creation-library";
 import { completedCreationGenerationTask } from "@/pages/create/creation-conversations";
@@ -15,21 +14,6 @@ describe("Creation Island Music Integration Suite", () => {
         const musicMode: CreationMode = "music";
         expect(modeLabels[musicMode]).toBe("音乐");
         expect(shotScriptLabels[musicMode]).toBe("音乐提示");
-    });
-
-    it("MUSIC_MODELS declares all 4 target models with valid constraints", () => {
-        expect(MUSIC_MODELS).toHaveLength(4);
-        const ids = MUSIC_MODELS.map((m) => m.id);
-        expect(ids).toContain("mureka-9.5");
-        expect(ids).toContain("suno-v6");
-        expect(ids).toContain("lyria-3.5");
-        expect(ids).toContain("music_v2_5");
-
-        MUSIC_MODELS.forEach((model) => {
-            expect(model.credits).toBeGreaterThan(0);
-            expect(model.maxDuration).toBeGreaterThanOrEqual(180);
-            expect(model.tag.length).toBeGreaterThan(0);
-        });
     });
 
     it("Music upload and file filters restrict attachments appropriately", () => {

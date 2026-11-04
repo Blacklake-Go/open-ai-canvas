@@ -1,9 +1,11 @@
 # RunningHub Standard Model 接口字段
 
+Suno 音乐结果同时包含音频、封面与文本。1.1.1 仅将有 URL 的非图片结果交给音频持久化，保留每首歌曲的原始地址，避免封面下载触发音频类型校验失败。
+
 ## 协议身份
 
 - 插件 ID：`runninghub-standard`。
-- Provider ID：`runninghub-standard-image` / `runninghub-standard-video` / `runninghub-standard-video-kling` / `runninghub-standard-audio`。
+- Provider ID：`runninghub-standard-image` / `runninghub-standard-video` / `runninghub-standard-video-kling` / `runninghub-standard-audio` / `runninghub-standard-audio-suno` / `runninghub-standard-audio-mureka` / `runninghub-standard-audio-minimax-music`。
 - 能力：`image` / `video` / `audio`。
 - 默认 Base URL：`https://www.runninghub.ai`。
 - 鉴权驱动：`bearer`。
@@ -80,6 +82,18 @@
 
 标准模型各端点的参数集合不同（例如 gpt-image 端点要求 `quality`，可灵端点要求 `firstImageUrl`）。模板统一携带通用字段并省略空值，端点会忽略与其无关的字段；模型特有参数通过渠道模型的参数默认值或 `providerOptions.runninghub-standard.*` 传入。上游官方文档声明标准模型 API 仅支持企业级-共享 API Key。
 
+## 音乐 Provider 字段映射
+
+通用 `runninghub-standard-audio` 模板面向 TTS 端点（`text` 必填）。音乐端点的必填字段不同，因此拆分出三个专用 provider；创建/查询/响应映射与通用 audio provider 一致。
+
+| Provider | 适用端点 | 上游字段映射 |
+| --- | --- | --- |
+| `runninghub-standard-audio-suno` | `rhart-audio/suno-v6/single`、`rhart-audio/suno-v5.5/single` 等 Suno single 端点 | `description` ← `request.prompt`；`title` ← `request.extra.title`（空省略）；`make_instrumental` ← `request.extra.instrumental`（布尔转 `"true"`，假值省略）；`variety` ← `providerOptions.runninghub-standard-audio-suno.variety` |
+| `runninghub-standard-audio-mureka` | `mureka-ai/mureka-v9/generate-song`、`mureka-ai/mureka-v7.6/generate-song` 等 | `lyrics` ← `request.extra.lyrics`，为空回落 `request.prompt`；`n` ← `providerOptions...n`，默认 `1`（按生成数量计费）；`prompt/referenceId/vocalId/melodyId` ← `providerOptions...` |
+| `runninghub-standard-audio-minimax-music` | `minimax/music-2.6`、`rhart-audio/text-to-audio/music-2.5` | `prompt` ← `request.prompt`（空省略）；`lyrics` ← `request.extra.lyrics`；`isInstrumental` ← `request.extra.instrumental`（布尔化）；`sampleRate/bitrate/format` ← `providerOptions...` |
+
+创作页音乐模式的 `music: { lyrics, instrumental, duration }` 会进入 `request.extra`；Suno/Mureka/MiniMax Music 的歌词与纯音乐开关来自该映射。
+
 <!-- YINGCE_MANIFEST_CONTRACT_START -->
 ## Manifest 完整接口定义
 
@@ -90,7 +104,7 @@
   "apiVersion": "yingce.plugin/v2",
   "id": "runninghub-standard",
   "name": "RunningHub Standard Model",
-  "version": "1.0.0",
+  "version": "1.1.1",
   "author": "RunningHub / 影策",
   "description": "RunningHub 标准模型 API 独立请求协议插件。",
   "permissions": [
@@ -2898,6 +2912,480 @@
             "quality": {
               "$omitEmpty": {
                 "$ref": "request.quality"
+              }
+            }
+          },
+          "originPath": true
+        },
+        "poll": {
+          "method": "POST",
+          "path": "/openapi/v2/query",
+          "contentType": "application/json",
+          "body": {
+            "taskId": {
+              "$ref": "taskId"
+            }
+          },
+          "originPath": true
+        },
+        "response": {
+          "taskId": {
+            "$coalesce": [
+              {
+                "$ref": "response.taskId"
+              },
+              {
+                "$ref": "taskId"
+              }
+            ]
+          },
+          "status": {
+            "$coalesce": [
+              {
+                "$ref": "response.status"
+              },
+              "pending"
+            ]
+          },
+          "message": {
+            "$coalesce": [
+              {
+                "$ref": "response.errorMessage"
+              },
+              {
+                "$ref": "response.errorCode"
+              }
+            ]
+          },
+          "audios": {
+            "$ref": "response.results"
+          },
+          "errorPaths": [
+            "errorCode"
+          ],
+          "messagePaths": [
+            "errorMessage"
+          ],
+          "resultEphemeral": true,
+          "usage": {
+            "$ref": "response.usage"
+          }
+        }
+      },
+      {
+        "id": "runninghub-standard-audio-suno",
+        "label": "RunningHub Standard Audio (Suno)",
+        "capabilities": [
+          "audio"
+        ],
+        "scopes": [
+          "admin.system-channel",
+          "user.custom-channel",
+          "canvas",
+          "creation",
+          "agent"
+        ],
+        "baseUrl": "https://www.runninghub.ai",
+        "requiresPublicMediaUrls": false,
+        "auth": {
+          "type": "bearer",
+          "field": "apiKey"
+        },
+        "parameters": [
+          {
+            "name": "model",
+            "type": "string",
+            "required": true,
+            "mapping": "create path",
+            "description": "RunningHub Suno 端点，如 rhart-audio/suno-v6/single、rhart-audio/suno-v5.5/single。"
+          },
+          {
+            "name": "prompt",
+            "type": "string",
+            "required": true,
+            "mapping": "description",
+            "description": "音乐风格/情绪/场景描述，上游字段 description。"
+          },
+          {
+            "name": "providerOptions",
+            "type": "object",
+            "required": false,
+            "mapping": "provider-specific fields",
+            "description": "扩展字段：variety。"
+          }
+        ],
+        "create": {
+          "method": "POST",
+          "path": "/openapi/v2/{{request.model}}",
+          "contentType": "application/json",
+          "body": {
+            "description": {
+              "$ref": "request.prompt"
+            },
+            "title": {
+              "$omitEmpty": {
+                "$ref": "request.extra.title"
+              }
+            },
+            "make_instrumental": {
+              "$omitEmpty": {
+                "$if": {
+                  "condition": {
+                    "$ref": "request.extra.instrumental"
+                  },
+                  "then": "true",
+                  "else": ""
+                }
+              }
+            },
+            "variety": {
+              "$omitEmpty": {
+                "$ref": "request.providerOptions.runninghub-standard-audio-suno.variety"
+              }
+            }
+          },
+          "originPath": true
+        },
+        "poll": {
+          "method": "POST",
+          "path": "/openapi/v2/query",
+          "contentType": "application/json",
+          "body": {
+            "taskId": {
+              "$ref": "taskId"
+            }
+          },
+          "originPath": true
+        },
+        "response": {
+          "taskId": {
+            "$coalesce": [
+              {
+                "$ref": "response.taskId"
+              },
+              {
+                "$ref": "taskId"
+              }
+            ]
+          },
+          "status": {
+            "$coalesce": [
+              {
+                "$ref": "response.status"
+              },
+              "pending"
+            ]
+          },
+          "message": {
+            "$coalesce": [
+              {
+                "$ref": "response.errorMessage"
+              },
+              {
+                "$ref": "response.errorCode"
+              }
+            ]
+          },
+          "audios": {
+            "$filter": {
+              "from": {
+                "$ref": "response.results"
+              },
+              "as": "item",
+              "where": {
+                "$and": [
+                  {
+                    "$ref": "item.url"
+                  },
+                  {
+                    "$not": {
+                      "$in": [
+                        {
+                          "$lower": {
+                            "$last": {
+                              "$split": [
+                                {
+                                  "$first": {
+                                    "$split": [
+                                      {
+                                        "$ref": "item.url"
+                                      },
+                                      "?"
+                                    ]
+                                  }
+                                },
+                                "."
+                              ]
+                            }
+                          }
+                        },
+                        [
+                          "jpg",
+                          "jpeg",
+                          "png",
+                          "webp",
+                          "gif",
+                          "avif"
+                        ]
+                      ]
+                    }
+                  }
+                ]
+              }
+            }
+          },
+          "errorPaths": [
+            "errorCode"
+          ],
+          "messagePaths": [
+            "errorMessage"
+          ],
+          "resultEphemeral": true,
+          "usage": {
+            "$ref": "response.usage"
+          }
+        }
+      },
+      {
+        "id": "runninghub-standard-audio-mureka",
+        "label": "RunningHub Standard Audio (Mureka)",
+        "capabilities": [
+          "audio"
+        ],
+        "scopes": [
+          "admin.system-channel",
+          "user.custom-channel",
+          "canvas",
+          "creation",
+          "agent"
+        ],
+        "baseUrl": "https://www.runninghub.ai",
+        "requiresPublicMediaUrls": false,
+        "auth": {
+          "type": "bearer",
+          "field": "apiKey"
+        },
+        "parameters": [
+          {
+            "name": "model",
+            "type": "string",
+            "required": true,
+            "mapping": "create path",
+            "description": "RunningHub Mureka 端点，如 mureka-ai/mureka-v9/generate-song。"
+          },
+          {
+            "name": "prompt",
+            "type": "string",
+            "required": true,
+            "mapping": "lyrics",
+            "description": "歌词或音乐描述；创作页歌词优先，缺省回落到提示词。"
+          },
+          {
+            "name": "providerOptions",
+            "type": "object",
+            "required": false,
+            "mapping": "provider-specific fields",
+            "description": "扩展字段：n/prompt/referenceId/vocalId/melodyId。"
+          }
+        ],
+        "create": {
+          "method": "POST",
+          "path": "/openapi/v2/{{request.model}}",
+          "contentType": "application/json",
+          "body": {
+            "lyrics": {
+              "$coalesce": [
+                {
+                  "$omitEmpty": {
+                    "$ref": "request.extra.lyrics"
+                  }
+                },
+                {
+                  "$ref": "request.prompt"
+                }
+              ]
+            },
+            "n": {
+              "$coalesce": [
+                {
+                  "$omitEmpty": {
+                    "$omitEmpty": {
+                      "$ref": "request.providerOptions.runninghub-standard-audio-mureka.n"
+                    }
+                  }
+                },
+                1
+              ]
+            },
+            "prompt": {
+              "$omitEmpty": {
+                "$omitEmpty": {
+                  "$ref": "request.providerOptions.runninghub-standard-audio-mureka.prompt"
+                }
+              }
+            },
+            "referenceId": {
+              "$omitEmpty": {
+                "$omitEmpty": {
+                  "$ref": "request.providerOptions.runninghub-standard-audio-mureka.referenceId"
+                }
+              }
+            },
+            "vocalId": {
+              "$omitEmpty": {
+                "$omitEmpty": {
+                  "$ref": "request.providerOptions.runninghub-standard-audio-mureka.vocalId"
+                }
+              }
+            },
+            "melodyId": {
+              "$omitEmpty": {
+                "$omitEmpty": {
+                  "$ref": "request.providerOptions.runninghub-standard-audio-mureka.melodyId"
+                }
+              }
+            }
+          },
+          "originPath": true
+        },
+        "poll": {
+          "method": "POST",
+          "path": "/openapi/v2/query",
+          "contentType": "application/json",
+          "body": {
+            "taskId": {
+              "$ref": "taskId"
+            }
+          },
+          "originPath": true
+        },
+        "response": {
+          "taskId": {
+            "$coalesce": [
+              {
+                "$ref": "response.taskId"
+              },
+              {
+                "$ref": "taskId"
+              }
+            ]
+          },
+          "status": {
+            "$coalesce": [
+              {
+                "$ref": "response.status"
+              },
+              "pending"
+            ]
+          },
+          "message": {
+            "$coalesce": [
+              {
+                "$ref": "response.errorMessage"
+              },
+              {
+                "$ref": "response.errorCode"
+              }
+            ]
+          },
+          "audios": {
+            "$ref": "response.results"
+          },
+          "errorPaths": [
+            "errorCode"
+          ],
+          "messagePaths": [
+            "errorMessage"
+          ],
+          "resultEphemeral": true,
+          "usage": {
+            "$ref": "response.usage"
+          }
+        }
+      },
+      {
+        "id": "runninghub-standard-audio-minimax-music",
+        "label": "RunningHub Standard Audio (MiniMax Music)",
+        "capabilities": [
+          "audio"
+        ],
+        "scopes": [
+          "admin.system-channel",
+          "user.custom-channel",
+          "canvas",
+          "creation",
+          "agent"
+        ],
+        "baseUrl": "https://www.runninghub.ai",
+        "requiresPublicMediaUrls": false,
+        "auth": {
+          "type": "bearer",
+          "field": "apiKey"
+        },
+        "parameters": [
+          {
+            "name": "model",
+            "type": "string",
+            "required": true,
+            "mapping": "create path",
+            "description": "RunningHub MiniMax Music 端点，如 minimax/music-2.6、rhart-audio/text-to-audio/music-2.5。"
+          },
+          {
+            "name": "prompt",
+            "type": "string",
+            "required": false,
+            "mapping": "prompt",
+            "description": "音乐描述；纯音乐必填。"
+          },
+          {
+            "name": "providerOptions",
+            "type": "object",
+            "required": false,
+            "mapping": "provider-specific fields",
+            "description": "扩展字段：sampleRate/bitrate/format。"
+          }
+        ],
+        "create": {
+          "method": "POST",
+          "path": "/openapi/v2/{{request.model}}",
+          "contentType": "application/json",
+          "body": {
+            "prompt": {
+              "$omitEmpty": {
+                "$ref": "request.prompt"
+              }
+            },
+            "lyrics": {
+              "$omitEmpty": {
+                "$ref": "request.extra.lyrics"
+              }
+            },
+            "isInstrumental": {
+              "$omitEmpty": {
+                "$toBool": {
+                  "$ref": "request.extra.instrumental"
+                }
+              }
+            },
+            "sampleRate": {
+              "$omitEmpty": {
+                "$omitEmpty": {
+                  "$ref": "request.providerOptions.runninghub-standard-audio-minimax-music.sampleRate"
+                }
+              }
+            },
+            "bitrate": {
+              "$omitEmpty": {
+                "$omitEmpty": {
+                  "$ref": "request.providerOptions.runninghub-standard-audio-minimax-music.bitrate"
+                }
+              }
+            },
+            "format": {
+              "$omitEmpty": {
+                "$omitEmpty": {
+                  "$ref": "request.providerOptions.runninghub-standard-audio-minimax-music.format"
+                }
               }
             }
           },

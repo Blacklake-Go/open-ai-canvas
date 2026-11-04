@@ -1,5 +1,11 @@
 # SupDance Canvas — 独立改造与定制代码清单 (CUSTOMIZATIONS.md)
 
+## 音乐工作台统一渠道补丁
+
+- 创作页模型分组、目标时长与音乐结果组件保留最小适配，业务协议在 `plugin-packages/runninghub-standard/`，独立工作台适配在 `web/src/supdance/plugins/music-generation/services/music-site-api.ts`。
+- 复用平台模型目录、报价、`canvas_audio` 任务和资源访问 API，不增加账本、用户或数据表；新文案通过 `supdance-i18n` 六语词条模块提供。
+- 上游更新需保留 RunningHub 1.1.1 源清单与发行包，避免启动时旧官方包覆盖音乐接口；创作页、工作台、失败退款与账号切换需共同回归。
+
 ## 完整上游同步：正式版与 main
 
 - 版本 `v1.7.4-supdance.7` 自 `eadb3622` 顺序合并正式版 `7c14ffdd` 和 `main@8de0a239`；保留两个上游祖先及自有插件提交，实际部署以 [完整集成记录](./STAGED_UPSTREAM_CANDIDATE.md) 为准。

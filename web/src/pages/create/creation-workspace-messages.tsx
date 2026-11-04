@@ -52,6 +52,8 @@ import { Button } from "antd";
 import { CanvasImagePreview } from "@/components/canvas/canvas-image-preview";
 import { AppModal } from "@/components/ui/product/app-modal";
 import { creationResultEntries } from "./creation-result-urls";
+import { useI18n } from "@/supdance/plugins/i18n";
+import "./creation-music.css";
 
 const WaveformPlayer = lazy(() =>
     import("@/supdance/plugins/music-generation/components/waveform-player").then((m) => ({
@@ -83,6 +85,7 @@ export function CreationMessageView({
     openingCanvas: boolean;
 }) {
     const brandName = useAppearanceStore((state) => state.appearance.brandName);
+    const { t } = useI18n();
     if (item.role === "user") return <CreationUserMessage item={item} shotNumber={shotNumber} onEditUserMessage={onEditUserMessage} />;
     const mode = item.mode || "text";
     const messageState = creationMessageState(item);
@@ -96,11 +99,9 @@ export function CreationMessageView({
         mode !== "text" ? (
             <>
                 {shotNumber > 0 ? <span className="creation-shot-badge">镜 {shotNumber}</span> : null}
-                <span className="creation-message-mark">
-                    <Orbit />
-                </span>
-                <strong>{mode === "image" ? "图像生成" : "视频生成"}</strong>
-                {item.status === "done" ? <span className="creation-message-progress-copy">你的{mode === "video" ? "视频" : "图像"}已创建</span> : null}
+                <span className="creation-message-mark">{mode === "music" ? <Music /> : <Orbit />}</span>
+                <strong>{mode === "music" ? t("music.message_generation", undefined, "音乐生成") : mode === "image" ? "图像生成" : "视频生成"}</strong>
+                {item.status === "done" ? <span className="creation-message-progress-copy">{mode === "music" ? t("music.message_created", undefined, "音乐已生成") : `你的${mode === "video" ? "视频" : "图像"}已创建`}</span> : null}
                 {item.status === "done" ? (
                     <button type="button" className="creation-message-variant-action" onClick={onCreateVariant}>
                         <RefreshCw />
@@ -289,10 +290,11 @@ export function CreationUserMessage({ item, shotNumber, onEditUserMessage }: { i
 }
 
 function CreationMusicResult({ item, url, onRetry }: { item: CreationMessage; url: string; onRetry: () => void }) {
+    const { t } = useI18n();
     const taskId = item.taskIds?.[0] || item.id;
     const title = (item.settings as any)?.title || item.content.slice(0, 40) || "AI 生成音乐";
     const duration = Number((item.settings as any)?.duration || item.settings?.seconds) || 120;
-    const model = item.model || (item.settings as any)?.model || "mureka-9.5";
+    const model = item.model || (item.settings as any)?.model || "";
     const isInstrumental = Boolean((item.settings as any)?.instrumental);
 
     const handleDownload = (format: "mp3" | "wav" | "flac" = "mp3") => {
@@ -306,15 +308,17 @@ function CreationMusicResult({ item, url, onRetry }: { item: CreationMessage; ur
 
     return (
         <div className="creation-music-result flex flex-col gap-3 w-full rounded-2xl border border-border/70 bg-card/70 p-4 shadow-sm backdrop-blur-md my-1">
-            <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
+            <div className="creation-music-result-heading">
+                <div className="creation-music-result-identity">
                     <span className="flex size-7 items-center justify-center rounded-lg bg-emerald-500/10 text-emerald-500">
                         <Music className="size-4" />
                     </span>
-                    <span className="text-sm font-semibold text-foreground/90 truncate max-w-[280px]" title={title}>
+                    <span className="creation-music-result-title" title={title}>
                         {title}
                     </span>
-                    <span className="rounded-md bg-muted px-1.5 py-0.5 text-[11px] font-medium text-muted-foreground uppercase">{model}</span>
+                    <span className="creation-music-result-model" title={model}>
+                        {model}
+                    </span>
                     {isInstrumental ? <span className="rounded-md bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 px-1.5 py-0.5 text-[11px] font-medium">纯音乐</span> : null}
                 </div>
                 <div className="flex items-center gap-2">
@@ -330,7 +334,7 @@ function CreationMusicResult({ item, url, onRetry }: { item: CreationMessage; ur
             </Suspense>
 
             <div className="flex items-center justify-between pt-1 border-t border-border/40 text-xs text-muted-foreground">
-                <span>音频时长：约 {duration} 秒</span>
+                <span>{t("music.target_duration_hint", { seconds: duration }, "目标时长 {seconds} 秒，实际时长以音频为准")}</span>
                 <div className="flex items-center gap-2">
                     <button type="button" onClick={() => handleDownload("mp3")} className="inline-flex items-center gap-1 rounded-md px-2 py-1 bg-muted/60 hover:bg-muted text-foreground transition-colors cursor-pointer">
                         <Download className="size-3.5" />
@@ -361,6 +365,7 @@ export function MediaResult({
     onContinueCanvas: (ids?: string[]) => void;
     openingCanvas: boolean;
 }) {
+    const { t } = useI18n();
     const [previewUrl, setPreviewUrl] = useState("");
     const [previewType, setPreviewType] = useState<"image" | "video">("image");
     const assets = useAssetStore((state) => state.assets);
@@ -399,7 +404,7 @@ export function MediaResult({
             };
         }
         // 历史记录只把 URL 当作短期 hint；真正恢复依赖稳定 storageKey，展示 URL 由访问缓存按需续签。
-        const resolver = item.mode === "video" ? resolveMediaUrl : resolveImageUrl;
+        const resolver = item.mode === "video" || item.mode === "music" ? resolveMediaUrl : resolveImageUrl;
         void Promise.all(
             resultStorageKeys.map(async (storageKey, index) => {
                 if (resourceIdFromStorageKey(storageKey)) {
@@ -540,7 +545,7 @@ export function MediaResult({
                 </div>
             )}
             <div className="creation-media-actions">
-                <span>{isVideo ? "视频结果" : `${displayResultUrls.length} 张图片`}</span>
+                <span>{isMusic ? t("music.result_count", { count: displayResultUrls.length }, "{count} 个音频结果") : isVideo ? "视频结果" : `${displayResultUrls.length} 张图片`}</span>
                 <Button type="link" size="small" loading={openingCanvas} disabled={!canContinueWithResults} title={canContinueWithResults ? undefined : "素材保存完成后才能转入画布"} onClick={() => onContinueCanvas(resultAssetIds)}>
                     添加到画布
                 </Button>

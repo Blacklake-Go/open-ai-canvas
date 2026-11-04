@@ -10,12 +10,14 @@ import { useMusicStore } from "../stores/use-music-store";
 import { MusicForm } from "../components/music-form";
 import { MusicMasterStage } from "../components/music-master-stage";
 import { TaskCard } from "../components/task-card";
+import { useEffectiveConfig } from "@/stores/use-config-store";
 import "../styles/music-workbench.css";
 
 export default function MusicWorkbenchPage() {
     const { t } = useI18n();
     const user = useUserStore((state) => state.user);
-    const userId = user?.id || "guest";
+    const userId = user?.id || "";
+    const config = useEffectiveConfig();
     const topBarMount = useWorkspaceTopBarMount();
 
     const [mobileTab, setMobileTab] = useState<"generate" | "master" | "tasks">("generate");
@@ -25,14 +27,20 @@ export default function MusicWorkbenchPage() {
     const loadUserDraft = useMusicStore((s) => s.loadUserDraft);
     const tasks = useMusicStore((s) => s.tasks);
     const loadingTasks = useMusicStore((s) => s.loadingTasks);
+    const loadError = useMusicStore((s) => s.loadError);
+    const resetUser = useMusicStore((s) => s.resetUser);
+
+    useEffect(() => {
+        resetUser();
+        if (!userId) return;
+        void loadUserDraft(userId).then(() => loadCapabilities());
+        void loadTasks();
+        return resetUser;
+    }, [userId, resetUser, loadCapabilities, loadTasks, loadUserDraft]);
 
     useEffect(() => {
         void loadCapabilities();
-        void loadTasks();
-        if (userId) {
-            void loadUserDraft(userId);
-        }
-    }, [userId]);
+    }, [config, loadCapabilities]);
 
     // 全站顶栏右侧挂载动作按钮（零内部 Header 规范）
     const topBarAction = (
@@ -54,6 +62,7 @@ export default function MusicWorkbenchPage() {
     return (
         <WorkspacePage fluid scroll={false} className="workbench-page music-workbench-page">
             {topBarMount ? createPortal(topBarAction, topBarMount) : null}
+            {loadError ? <p role="alert">{loadError}</p> : null}
 
             <div className="music-workbench-shell">
                 {/* 移动端视图切换 Tabs */}

@@ -1,5 +1,5 @@
 import { beforeAll, beforeEach, afterEach, describe, expect, test } from "bun:test";
-import { STATIC_MODEL_CAPABILITIES, useMusicStore } from "../src/supdance/plugins/music-generation/stores/use-music-store";
+import { useMusicStore } from "../src/supdance/plugins/music-generation/stores/use-music-store";
 import { BUILTIN_SUPDANCE_I18N_ENTRIES, SUPPORTED_LOCALE_CODES, loadAllLocalePacks } from "../src/supdance/plugins/i18n/locales";
 import { readFileSync, readdirSync } from "node:fs";
 import { join } from "node:path";
@@ -15,48 +15,35 @@ describe("SupDance Music Plugin — Real Store & Controller Integration Suite", 
         await loadAllLocalePacks();
     });
 
-    test("Static model capabilities contains all 4 required models with valid constraints", () => {
-        expect(STATIC_MODEL_CAPABILITIES.length).toBe(4);
-
-        const mureka = STATIC_MODEL_CAPABILITIES.find((m) => m.id === "mureka-9.5");
-        expect(mureka).toBeDefined();
-        expect(mureka?.formats).toContain("flac");
-        expect(mureka?.formats).toContain("mp3");
-        expect(mureka?.vocalGenders).toContain("male");
-
-        const suno = STATIC_MODEL_CAPABILITIES.find((m) => m.id === "suno-v6");
-        expect(suno).toBeDefined();
-        expect(suno?.formats).not.toContain("flac"); // Suno strictly forbids FLAC
-        expect(suno?.formats).toContain("mp3");
-        expect(suno?.formats).toContain("wav");
-
-        const lyria = STATIC_MODEL_CAPABILITIES.find((m) => m.id === "lyria-3.5");
-        expect(lyria).toBeDefined();
-        expect(lyria?.tempoBpmRange).toEqual([40, 240]);
-        expect(lyria?.synthIdWatermarking).toBe(true);
-
-        const eleven = STATIC_MODEL_CAPABILITIES.find((m) => m.id === "music_v2_5");
-        expect(eleven).toBeDefined();
-        expect(eleven?.modes).toEqual(["custom"]); // Eleven Music is custom mode only
-        expect(eleven?.stemSeparation).toBe(true);
-        expect(eleven?.supportedStems).toContain("vocals");
+    test("starts without invented models or prices", () => {
+        expect(useMusicStore.getState().capabilities).toEqual([]);
+        expect(useMusicStore.getState().draft.model).toBe("");
     });
 
-    test("useMusicStore setModel automatically clamps duration and adjusts mode", () => {
-        const store = useMusicStore.getState();
-
-        // Switch to Eleven Music which is custom-only
-        store.setModel("music_v2_5");
-        expect(useMusicStore.getState().draft.model).toBe("music_v2_5");
+    test("configured capabilities clamp duration and restrict creation modes", () => {
+        useMusicStore.setState({
+            capabilities: [
+                {
+                    id: "configured-music",
+                    name: "Configured",
+                    version: "",
+                    modes: ["custom"],
+                    minDuration: 30,
+                    maxDuration: 180,
+                    formats: ["mp3"],
+                    maxPromptChars: 1500,
+                    maxLyricsChars: 3000,
+                    costPerSecondMicrocredits: 0,
+                    stemSeparation: false,
+                    available: true,
+                },
+            ],
+        });
+        useMusicStore.getState().setDraftField("duration", 240);
+        useMusicStore.getState().setModel("configured-music");
         expect(useMusicStore.getState().draft.mode).toBe("custom");
-
-        // Switch to Lyria 3.5 which has maxDuration 180
-        store.setDraftField("duration", 240);
-        store.setModel("lyria-3.5");
-        expect(useMusicStore.getState().draft.model).toBe("lyria-3.5");
-        expect(useMusicStore.getState().draft.duration).toBeLessThanOrEqual(180);
+        expect(useMusicStore.getState().draft.duration).toBe(180);
     });
-
     test("Single-instance playback controller controls and synchronizes audio state", () => {
         const store = useMusicStore.getState();
 

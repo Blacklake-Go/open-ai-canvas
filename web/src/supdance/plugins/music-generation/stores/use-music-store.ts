@@ -33,7 +33,7 @@ export type MusicDraft = {
 };
 
 const DEFAULT_DRAFT: MusicDraft = {
-    model: "suno-v6",
+    model: "",
     mode: "simple",
     prompt: "",
     title: "",
@@ -49,77 +49,13 @@ const DEFAULT_DRAFT: MusicDraft = {
     stems: [],
 };
 
-export const STATIC_MODEL_CAPABILITIES: ModelCapabilities[] = [
-    {
-        id: "mureka-9.5",
-        name: "Mureka V9.5",
-        version: "9.5.2",
-        modes: ["simple", "custom"],
-        minDuration: 30,
-        maxDuration: 300,
-        formats: ["mp3", "wav", "flac"] as AudioFormat[],
-        maxPromptChars: 2000,
-        maxLyricsChars: 5000,
-        costPerSecondMicrocredits: 50,
-        vocalGenders: ["male", "female", "auto"],
-        stemSeparation: false,
-        available: true,
-    },
-    {
-        id: "suno-v6",
-        name: "Suno v6",
-        version: "6.0.1",
-        modes: ["simple", "custom"],
-        minDuration: 15,
-        maxDuration: 240,
-        formats: ["mp3", "wav"] as AudioFormat[],
-        maxPromptChars: 1500,
-        maxLyricsChars: 3000,
-        costPerSecondMicrocredits: 60,
-        continuationSupported: true,
-        stemSeparation: false,
-        available: true,
-    },
-    {
-        id: "lyria-3.5",
-        name: "Google Lyria 3.5",
-        version: "3.5.0",
-        modes: ["simple", "custom"],
-        minDuration: 10,
-        maxDuration: 180,
-        formats: ["mp3", "wav", "flac"] as AudioFormat[],
-        maxPromptChars: 1000,
-        maxLyricsChars: 2000,
-        costPerSecondMicrocredits: 80,
-        tempoBpmRange: [40, 240],
-        keySignatures: ["C", "C#", "D", "Eb", "E", "F", "F#", "G", "Ab", "A", "Bb", "B", "F# Minor", "A Minor", "D Minor"],
-        synthIdWatermarking: true,
-        stemSeparation: false,
-        available: true,
-    },
-    {
-        id: "music_v2_5",
-        name: "Eleven Music v2.5",
-        version: "2.5.4",
-        modes: ["custom"],
-        minDuration: 30,
-        maxDuration: 240,
-        formats: ["mp3", "wav", "flac"] as AudioFormat[],
-        maxPromptChars: 1000,
-        maxLyricsChars: 4000,
-        costPerSecondMicrocredits: 100,
-        highFidelityVocal: true,
-        stemSeparation: true,
-        supportedStems: ["vocals", "drums", "bass", "other"],
-        available: true,
-    },
-];
-
 type MusicState = {
     // Form & Draft
     draft: MusicDraft;
     capabilities: ModelCapabilities[];
     loadingCaps: boolean;
+    loadError: string;
+    resetUser: () => void;
     submitting: boolean;
 
     // Task & History
@@ -157,11 +93,28 @@ type MusicState = {
 };
 
 let pollInterval: ReturnType<typeof setInterval> | null = null;
+let userScopeSequence = 0;
 
 export const useMusicStore = create<MusicState>((set, get) => ({
     draft: { ...DEFAULT_DRAFT },
-    capabilities: [...STATIC_MODEL_CAPABILITIES],
+    capabilities: [],
     loadingCaps: false,
+    loadError: "",
+    resetUser: () => {
+        userScopeSequence += 1;
+        if (pollInterval) clearInterval(pollInterval);
+        pollInterval = null;
+        get().pauseAudio();
+        const audio = get().audioElement;
+        if (audio) {
+            audio.ontimeupdate = null;
+            audio.onloadedmetadata = null;
+            audio.onended = null;
+            audio.onerror = null;
+            audio.src = "";
+        }
+        set({ draft: { ...DEFAULT_DRAFT }, capabilities: [], tasks: [], activeTaskIds: new Set(), activeTrack: null, activeTrackId: null, playingTaskId: null, audioElement: null, currentTime: 0, submitting: false, loadingTasks: false, loadError: "" });
+    },
     submitting: false,
     tasks: [],
     loadingTasks: false,
@@ -218,9 +171,10 @@ export const useMusicStore = create<MusicState>((set, get) => ({
 
     loadUserDraft: async (userId: string) => {
         if (!userId) return;
+        const sequence = userScopeSequence;
         try {
             const saved = await getDraftStorage().getItem<MusicDraft>(`draft_${userId}`);
-            if (saved) {
+            if (saved && sequence === userScopeSequence) {
                 set({ draft: { ...DEFAULT_DRAFT, ...saved } });
             }
         } catch {
@@ -232,16 +186,20 @@ export const useMusicStore = create<MusicState>((set, get) => ({
         set({ loadingCaps: true });
         try {
             const caps = await fetchMusicCapabilities();
-            set({ capabilities: caps, loadingCaps: false });
-        } catch {
-            set({ loadingCaps: false });
+            set({ capabilities: caps, loadingCaps: false, loadError: "" });
+            const model = caps.find((item) => item.id === get().draft.model && item.available) || caps.find((item) => item.available);
+            if (model) get().setModel(model.id);
+        } catch (error) {
+            set({ capabilities: [], loadingCaps: false, loadError: error instanceof Error ? error.message : String(error) });
         }
     },
 
     loadTasks: async () => {
+        const sequence = userScopeSequence;
         set({ loadingTasks: true });
         try {
             const res = await listUserMusicTasks(1, 50);
+            if (sequence !== userScopeSequence) return;
             const activeIds = new Set<string>();
             res.items.forEach((t) => {
                 if (t.status === "submitted" || t.status === "queued" || t.status === "generating" || t.status === "transcoding") {
@@ -255,7 +213,7 @@ export const useMusicStore = create<MusicState>((set, get) => ({
 
             const currentActiveTrack = get().activeTrack;
             // 若当前未选定播放曲目，默认载入最新一条完成作品（或第一条作品）
-            let nextActiveTrack = currentActiveTrack;
+            let nextActiveTrack = res.items.find((item) => item.taskId === currentActiveTrack?.taskId) || null;
             if (!nextActiveTrack && res.items.length > 0) {
                 nextActiveTrack = res.items.find((item) => item.status === "completed" && item.resultAudioUrl) || res.items[0];
             }
@@ -289,6 +247,7 @@ export const useMusicStore = create<MusicState>((set, get) => ({
                     currentActive.forEach(async (tid) => {
                         try {
                             const updated = await queryMusicTask(tid);
+                            if (sequence !== userScopeSequence) return;
                             if (updated.status === "completed" && updated.resultAudioUrl) {
                                 syncMusicTaskToAssetStore(updated);
                             }
@@ -307,19 +266,21 @@ export const useMusicStore = create<MusicState>((set, get) => ({
                                     activeTrackId: isCur ? updated.taskId || updated.id : state.activeTrackId,
                                 };
                             });
-                        } catch {
-                            // ignore transient polling error
+                        } catch (error) {
+                            if (sequence === userScopeSequence) set({ loadError: error instanceof Error ? error.message : String(error) });
                         }
                     });
                 }, 2000);
             }
-        } catch {
-            set({ loadingTasks: false });
+        } catch (error) {
+            if (sequence === userScopeSequence) set({ loadingTasks: false, loadError: error instanceof Error ? error.message : String(error) });
         }
     },
 
     submitGeneration: async (userId: string) => {
+        const sequence = userScopeSequence;
         const { draft, submitting } = get();
+        if (!userId) throw new Error("Login is required to generate music");
         if (submitting || !draft.prompt.trim()) return null;
 
         set({ submitting: true });
@@ -344,6 +305,7 @@ export const useMusicStore = create<MusicState>((set, get) => ({
             };
 
             const result = await submitMusicTask(payload);
+            if (sequence !== userScopeSequence) return null;
             set({ submitting: false });
 
             // Refresh tasks list

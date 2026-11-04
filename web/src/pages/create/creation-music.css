@@ -1,0 +1,41 @@
+.creation-home .creation-music-result {
+    min-width: 0;
+    max-width: 100%;
+}
+.creation-home .creation-music-result-heading {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-2);
+    min-width: 0;
+}
+.creation-home .creation-music-result-identity {
+    display: flex;
+    flex: 1 1 auto;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--space-2);
+    min-width: 0;
+}
+.creation-home .creation-music-result-title {
+    min-width: 0;
+    flex: 1 1 50%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-size: var(--fs-body);
+    font-weight: 600;
+    color: var(--user-ink);
+}
+.creation-home .creation-music-result-model {
+    max-width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    padding: var(--space-1);
+    border-radius: var(--user-radius-button-sm);
+    background: var(--user-surface-muted);
+    color: var(--user-ink-muted);
+    font-size: var(--fs-caption);
+}

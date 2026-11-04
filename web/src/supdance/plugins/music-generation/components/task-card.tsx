@@ -4,7 +4,7 @@ import { useI18n } from "@/supdance/plugins/i18n";
 import { startBrowserDownload } from "@/services/browser-download";
 import { useMusicStore } from "../stores/use-music-store";
 import { WaveformPlayer } from "./waveform-player";
-import { getAudioDownloadUrl, type AudioFormat, type MusicTask } from "../services/music-api";
+import { type AudioFormat, type MusicTask } from "../services/music-api";
 
 interface TaskCardProps {
     task: MusicTask;
@@ -24,7 +24,8 @@ export function TaskCard({ task }: TaskCardProps) {
 
     const handleDownload = (fmt: AudioFormat) => {
         setDownloadingFormat(fmt);
-        const url = getAudioDownloadUrl(task.taskId || task.id, fmt);
+        const url = task.resultAudioUrl;
+        if (!url) return;
         const fileName = `${task.title || task.taskId || "track"}.${fmt}`;
         startBrowserDownload(url, fileName);
         setTimeout(() => setDownloadingFormat(null), 1000);
@@ -96,10 +97,10 @@ export function TaskCard({ task }: TaskCardProps) {
             )}
 
             {/* Error Message */}
-            {task.status === "failed" && task.errorMessage && (
+            {task.errorMessage && (
                 <div className="rounded-lg bg-destructive/5 p-3 text-xs text-destructive">
                     <p className="font-medium">错误信息：{task.errorMessage}</p>
-                    <p className="mt-1 text-muted-foreground">{t("music.refund_tip", undefined, "已为您安全原路退回预留积分。")}</p>
+                    {task.billingStatus === "refunded" ? <p className="mt-1 text-muted-foreground">{t("music.refund_tip", undefined, "已为您安全原路退回预留积分。")}</p> : null}
                 </div>
             )}
 
@@ -109,9 +110,9 @@ export function TaskCard({ task }: TaskCardProps) {
                     <WaveformPlayer taskId={task.taskId || task.id} audioUrl={task.resultAudioUrl} durationSeconds={task.resultDurationMs ? Math.round(task.resultDurationMs / 1000) : task.durationTargetSeconds} title={task.title} />
 
                     <div className="flex items-center justify-between border-t border-border/40 pt-2 text-xs">
-                        <span className="text-muted-foreground">{t("music.lossless_download", undefined, "无损转码下载:")}</span>
+                        <span className="text-muted-foreground">{t("music.original_download", undefined, "下载原始音频")}</span>
                         <div className="flex items-center gap-1.5">
-                            {(["mp3", "wav", "flac"] as AudioFormat[]).map((fmt) => (
+                            {([task.format || "mp3"] as AudioFormat[]).map((fmt) => (
                                 <button
                                     key={fmt}
                                     type="button"

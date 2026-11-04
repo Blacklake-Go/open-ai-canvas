@@ -1,7 +1,11 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Sparkles, Coins, AlertCircle } from "lucide-react";
 import { useI18n } from "@/supdance/plugins/i18n";
-import { STATIC_MODEL_CAPABILITIES, useMusicStore } from "../stores/use-music-store";
+import { useMusicStore } from "../stores/use-music-store";
+import { useEffectiveConfig } from "@/stores/use-config-store";
+import { ModelPicker } from "@/components/model-picker";
+import type { LogicalModelQuote } from "@/services/api/logical-models";
+import { siteMusicQuote } from "../services/music-site-api";
 import { LyricsEditor } from "./lyrics-editor";
 
 interface MusicFormProps {
@@ -20,16 +24,32 @@ export function MusicForm({ userId, onSubmitted }: MusicFormProps) {
     const setDraftField = useMusicStore((s) => s.setDraftField);
     const setModel = useMusicStore((s) => s.setModel);
     const submitGeneration = useMusicStore((s) => s.submitGeneration);
+    const config = useEffectiveConfig();
+    const [quote, setQuote] = useState<LogicalModelQuote | null>(null);
+    const [quoteError, setQuoteError] = useState("");
 
-    const selectedModelCap = capabilities.find((c) => c.id === draft.model) || STATIC_MODEL_CAPABILITIES.find((c) => c.id === draft.model) || STATIC_MODEL_CAPABILITIES[1];
+    const selectedModelCap = capabilities.find((c) => c.id === draft.model);
+    useEffect(() => {
+        const controller = new AbortController();
+        setQuote(null);
+        setQuoteError("");
+        if (selectedModelCap?.available) {
+            siteMusicQuote(draft.model, draft.duration, controller.signal)
+                .then(setQuote)
+                .catch((error: unknown) => {
+                    if (!controller.signal.aborted) setQuoteError(error instanceof Error ? error.message : String(error));
+                });
+        }
+        return () => controller.abort();
+    }, [config, draft.model, draft.duration, selectedModelCap?.available]);
 
     const isCustomMode = draft.mode === "custom";
-    const estimatedCost = draft.duration * (selectedModelCap.costPerSecondMicrocredits || 60);
+    const estimatedCost = quote ? quote.amountMicrocredits / 1_000_000 : null;
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         setSubmitError(null);
-        if (!draft.prompt.trim() || submitting) return;
+        if (!draft.prompt.trim() || submitting || !quote || quoteError) return;
 
         try {
             const res = await submitGeneration(userId);
@@ -41,12 +61,14 @@ export function MusicForm({ userId, onSubmitted }: MusicFormProps) {
         }
     };
 
+    if (!selectedModelCap) return <p role="status">{t(loadingCaps ? "common.loading" : "music.no_models", undefined, loadingCaps ? "加载中…" : "暂无可用音乐模型，请在后台配置音乐渠道。")}</p>;
+
     return (
         <form onSubmit={handleSubmit} className="plugin-music-form flex flex-col gap-6">
-            {submitError && (
+            {(submitError || quoteError) && (
                 <div className="flex items-center gap-2 rounded-xl border border-destructive/30 bg-destructive/10 p-3 text-xs text-destructive">
                     <AlertCircle className="size-4 shrink-0" />
-                    <span>{submitError}</span>
+                    <span>{submitError || quoteError}</span>
                 </div>
             )}
 
@@ -56,39 +78,7 @@ export function MusicForm({ userId, onSubmitted }: MusicFormProps) {
                     <span>{t("music.select_model", undefined, "选择生成模型")}</span>
                     {loadingCaps && <span className="text-xs text-muted-foreground">正在同步模型状态...</span>}
                 </label>
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
-                    {capabilities.map((model) => {
-                        const isSelected = draft.model === model.id;
-                        return (
-                            <button
-                                key={model.id}
-                                type="button"
-                                disabled={!model.available}
-                                onClick={() => setModel(model.id, userId)}
-                                className={`relative flex flex-col justify-between rounded-xl border p-3.5 text-left transition-all ${
-                                    isSelected ? "border-primary bg-primary/5 shadow-xs ring-1 ring-primary" : "border-border/60 bg-card hover:border-border hover:bg-muted/30"
-                                } ${!model.available ? "opacity-50 cursor-not-allowed" : "cursor-pointer"}`}
-                            >
-                                <div>
-                                    <div className="flex items-center justify-between gap-1">
-                                        <span className="font-semibold text-sm text-foreground">{model.name}</span>
-                                        {!model.available && <span className="rounded-sm bg-destructive/10 px-1.5 py-0.5 text-xs text-destructive">维护中</span>}
-                                    </div>
-                                    <p className="mt-1 text-xs text-muted-foreground line-clamp-2">
-                                        {model.id === "mureka-9.5" && "高表现力旋律与男女声乐控制，支持无损 FLAC"}
-                                        {model.id === "suno-v6" && "强大的流行曲风与歌曲续写，丰富的结构标签"}
-                                        {model.id === "lyria-3.5" && "精准的 BPM 节奏与调性控制，SynthID 水印保护"}
-                                        {model.id === "music_v2_5" && "专业级人声高保真创作，支持人声/伴奏多音轨分离"}
-                                    </p>
-                                </div>
-                                <div className="mt-3 flex items-center justify-between border-t border-border/40 pt-2 text-xs text-muted-foreground">
-                                    <span>{model.costPerSecondMicrocredits} 积分/秒</span>
-                                    <span>最高 {model.maxDuration}s</span>
-                                </div>
-                            </button>
-                        );
-                    })}
-                </div>
+                <ModelPicker config={config} value={draft.model} capability="audio" onChange={(model) => setModel(model, userId)} modelFilter={(model) => capabilities.some((item) => item.id === model)} fullWidth showSelectedPrice showOptionPrices />
             </div>
 
             {/* Mode Switcher (Simple vs Custom) */}
@@ -250,7 +240,8 @@ export function MusicForm({ userId, onSubmitted }: MusicFormProps) {
                         type="range"
                         min={selectedModelCap.minDuration}
                         max={selectedModelCap.maxDuration}
-                        step={5}
+                        step={1}
+                        aria-label={t("music.duration_seconds", undefined, "目标音频时长 (秒)")}
                         value={draft.duration}
                         onChange={(e) => setDraftField("duration", parseInt(e.target.value, 10), userId)}
                         className="cursor-pointer accent-primary"
@@ -281,13 +272,13 @@ export function MusicForm({ userId, onSubmitted }: MusicFormProps) {
                 <div className="flex items-center gap-2 text-sm text-muted-foreground">
                     <Coins className="size-4 text-amber-500" />
                     <span>{t("music.estimated_credits", undefined, "预估消耗积分:")}</span>
-                    <span className="font-semibold text-foreground">{estimatedCost}</span>
-                    <span className="text-xs text-muted-foreground/70">{t("music.settle_tip", undefined, "(实际结算以最终音频秒数精确计费)")}</span>
+                    <span className="font-semibold text-foreground">{estimatedCost === null ? "—" : estimatedCost.toLocaleString(undefined, { maximumFractionDigits: 6 })}</span>
+                    <span className="text-xs text-muted-foreground/70">{t("music.site_billing_tip", undefined, "以平台实时报价及最终账单为准")}</span>
                 </div>
 
                 <button
                     type="submit"
-                    disabled={submitting || !draft.prompt.trim() || !selectedModelCap.available}
+                    disabled={submitting || !draft.prompt.trim() || !selectedModelCap.available || !quote || Boolean(quoteError)}
                     className="flex min-w-32 items-center justify-center gap-2 rounded-xl bg-primary px-6 py-3 font-semibold text-primary-foreground shadow-md transition-all hover:bg-primary/90 active:scale-98 disabled:opacity-50 disabled:pointer-events-none"
                 >
                     {submitting ? (

@@ -76,10 +76,10 @@ export function WaveformPlayer({ taskId, audioUrl, durationSeconds = 180, title 
     const progressRatio = duration > 0 ? currentTime / duration : 0;
 
     return (
-        <div className="plugin-music-player flex flex-col gap-3 rounded-xl border border-border/60 bg-card/60 p-4 shadow-sm backdrop-blur-sm transition-all hover:border-border">
-            <div className="flex items-center justify-between text-sm font-medium">
-                <span className="truncate text-foreground/90">{title || t("music.default_track_title", undefined, "AI 生成音乐")}</span>
-                <span className="font-mono text-xs text-muted-foreground">
+        <div className="plugin-music-player flex min-w-0 flex-col gap-3 rounded-xl border border-border/60 bg-card/60 p-4 shadow-sm backdrop-blur-sm transition-all hover:border-border">
+            <div className="flex min-w-0 items-center justify-between gap-2 text-sm font-medium">
+                <span className="min-w-0 flex-1 truncate text-foreground/90">{title || t("music.default_track_title", undefined, "AI 生成音乐")}</span>
+                <span className="shrink-0 whitespace-nowrap font-mono text-xs text-muted-foreground">
                     {formatTime(currentTime)} / {formatTime(duration)}
                 </span>
             </div>

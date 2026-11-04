@@ -1,4 +1,6 @@
 import { http } from "@/services/api/request";
+import { listSiteMusicTasks, querySiteMusicTask, siteMusicModels, submitSiteMusicTask } from "./music-site-api";
+import { useConfigStore } from "@/stores/use-config-store";
 
 export type AudioFormat = "mp3" | "wav" | "flac";
 
@@ -41,11 +43,14 @@ export type MusicTask = {
     status: "submitted" | "queued" | "generating" | "transcoding" | "completed" | "failed" | "cancelled";
     stage: string;
     resultAudioUrl?: string;
+    resultStorageKey?: string;
     resultDurationMs?: number;
     format?: AudioFormat;
     stemsJson?: string;
     billingOrderId?: string;
     microcreditsCost?: number;
+    billingStatus?: string;
+    refundedMicrocredits?: number;
     errorMessage?: string;
     createdAt: string;
     updatedAt: string;
@@ -91,21 +96,19 @@ export type MusicLifecycleInfo = {
 
 // Client API functions
 export async function fetchMusicCapabilities(): Promise<ModelCapabilities[]> {
-    return http.get<ModelCapabilities[]>("/v1/supdance/music/capabilities");
+    return siteMusicModels(useConfigStore.getState().config);
 }
 
 export async function submitMusicTask(payload: SubmitMusicTaskPayload): Promise<{ taskId: string; status: string }> {
-    return http.post<{ taskId: string; status: string }>("/v1/supdance/music/tasks", payload);
+    return submitSiteMusicTask(payload);
 }
 
 export async function queryMusicTask(taskId: string): Promise<MusicTask> {
-    return http.get<MusicTask>(`/v1/supdance/music/tasks/${encodeURIComponent(taskId)}`);
+    return querySiteMusicTask(taskId);
 }
 
 export async function listUserMusicTasks(page = 1, pageSize = 20): Promise<{ items: MusicTask[]; total: number; page: number; pageSize: number }> {
-    return http.get<{ items: MusicTask[]; total: number; page: number; pageSize: number }>("/v1/supdance/music/tasks", {
-        params: { page, pageSize },
-    });
+    return listSiteMusicTasks(page, pageSize);
 }
 
 export function getAudioDownloadUrl(taskId: string, format: AudioFormat = "mp3"): string {

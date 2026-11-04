@@ -1,4 +1,5 @@
 import type { SupDanceI18nEntry, SupDanceI18nSettings, SupDanceLanguageItem, SupDanceLocaleCode } from "../types";
+import { MUSIC_SITE_I18N_ENTRIES } from "./music-site";
 
 export const SUPPORTED_LOCALE_CODES: readonly SupDanceLocaleCode[] = ["zh-CN", "en-US", "zh-TW", "ja-JP", "ko-KR", "es-ES"] as const;
 
@@ -64,6 +65,7 @@ function e(key: string, namespace: string, zhCN: string, description = ""): SupD
 }
 
 export const BUILTIN_SUPDANCE_I18N_ENTRIES: readonly SupDanceI18nEntry[] = [
+    ...MUSIC_SITE_I18N_ENTRIES,
     e("admin.visual_motion.enable", "admin", "启用全站过渡动效"),
     e("admin.visual_motion.description", "admin", "默认关闭。关闭后仅保留上游的 Logo、三点与页面加载提示，跳过额外恢复动画；页面规则不能覆盖总开关。开启后恢复现有动效，不新增上游没有的路由动画。"),
     e("admin.i18n_workflow.stale", "admin", "源文已变化，请复核人工覆盖译文", "源文变化提醒"),

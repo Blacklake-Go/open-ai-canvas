@@ -28,7 +28,10 @@ export function syncMusicTaskToAssetStore(task: MusicTask): string | null {
     const assetStore = useAssetStore.getState();
 
     // 检查素材库中是否已存在该任务对应的资产
-    const exists = assetStore.assets.some((asset) => asset.kind === "audio" && (("metadata" in asset && (asset.metadata as Record<string, unknown>)?.musicTaskId === taskId) || asset.data?.url === task.resultAudioUrl));
+    const exists = assetStore.assets.some(
+        (asset) =>
+            asset.kind === "audio" && ((task.resultStorageKey && asset.data.storageKey === task.resultStorageKey) || ("metadata" in asset && (asset.metadata as Record<string, unknown>)?.musicTaskId === taskId) || asset.data?.url === task.resultAudioUrl),
+    );
 
     if (exists) {
         syncedTaskIds.add(taskId);
@@ -50,6 +53,7 @@ export function syncMusicTaskToAssetStore(task: MusicTask): string | null {
         status: "confirmed",
         data: {
             url: task.resultAudioUrl,
+            storageKey: task.resultStorageKey,
             durationMs: durationSeconds * 1000,
             bytes: 0,
             mimeType,

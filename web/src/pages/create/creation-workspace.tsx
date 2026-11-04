@@ -233,64 +233,6 @@ type ComposerProps = {
 
 type CreationReferenceFilter = "all" | "image" | "video" | "audio" | "file";
 
-export const MUSIC_MODELS = [
-    { id: "mureka-9.5", name: "Mureka V9.5", tag: "高保真声乐", credits: 10, maxDuration: 300, minDuration: 30 },
-    { id: "suno-v6", name: "Suno v6", tag: "全能旋律", credits: 12, maxDuration: 240, minDuration: 15 },
-    { id: "lyria-3.5", name: "Google Lyria 3.5", tag: "氛围 BGM", credits: 8, maxDuration: 180, minDuration: 10 },
-    { id: "music_v2_5", name: "Eleven Music v2.5", tag: "专业分轨", credits: 15, maxDuration: 240, minDuration: 30 },
-];
-
-function MusicModelPicker({ value, onChange, disabled }: { value: string; onChange: (model: string) => void; disabled?: boolean }) {
-    const [open, setOpen] = useState(false);
-    const active = MUSIC_MODELS.find((item) => item.id === value) || MUSIC_MODELS[0];
-    const content = (
-        <div className="flex flex-col gap-1 p-1 min-w-[220px]">
-            <div className="px-2 py-1 text-xs font-semibold text-muted-foreground border-b border-border/40">AI 音乐生成模型</div>
-            {MUSIC_MODELS.map((item) => (
-                <button
-                    key={item.id}
-                    type="button"
-                    onClick={() => {
-                        onChange(item.id);
-                        setOpen(false);
-                    }}
-                    className={`flex items-center justify-between rounded-lg px-2.5 py-2 text-left text-xs transition-colors cursor-pointer ${item.id === active.id ? "bg-primary/10 text-primary font-medium" : "hover:bg-muted text-foreground"}`}
-                >
-                    <div className="flex flex-col">
-                        <span className="font-semibold">{item.name}</span>
-                        <span className="text-[11px] text-muted-foreground">
-                            {item.tag} · 上限 {item.maxDuration}s
-                        </span>
-                    </div>
-                    <span className="rounded-full bg-muted px-2 py-0.5 text-[10px] font-mono font-medium text-foreground">{item.credits} 积分</span>
-                </button>
-            ))}
-        </div>
-    );
-
-    return (
-        <Popover
-            open={open}
-            onOpenChange={setOpen}
-            trigger="click"
-            placement="bottom"
-            arrow={false}
-            classNames={{
-                root: "creation-control-popover",
-                container: "creation-control-popover-surface",
-                content: "creation-control-popover-content",
-            }}
-            content={content}
-        >
-            <button type="button" className="creation-chat-control" disabled={disabled} aria-label={`选择音乐模型：当前为 ${active.name}`}>
-                <Music className="size-3.5 text-emerald-400" />
-                <span>{active.name}</span>
-                <ChevronDown className={open ? "is-open size-3 opacity-60" : "size-3 opacity-60"} />
-            </button>
-        </Popover>
-    );
-}
-
 function MusicDurationMenu({ duration, maxDuration, onChange, disabled }: { duration: number; maxDuration: number; onChange: (sec: number) => void; disabled?: boolean }) {
     const { t } = useI18n();
     const [open, setOpen] = useState(false);
@@ -431,7 +373,6 @@ export function CreationComposer(props: ComposerProps) {
     const [routeQuote, setRouteQuote] = useState<LogicalModelQuote | null>(null);
     const canOptimizePrompt = Boolean(props.promptOptimizerProvider) && (props.mode === "image" || props.mode === "video");
     const optimizerReferences = props.references.filter((reference) => reference.active && reference.kind !== "skill");
-    const activeMusicModel = MUSIC_MODELS.find((m) => m.id === (props.musicModel || "mureka-9.5")) || MUSIC_MODELS[0];
     const credits =
         props.mode === "music"
             ? null
