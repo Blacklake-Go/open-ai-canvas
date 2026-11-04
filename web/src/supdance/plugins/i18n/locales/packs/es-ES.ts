@@ -1974,6 +1974,20 @@ const pack: Record<string, string> = {
     "admin.login_and_registration": "Inicio de Sesión y Registro",
     "admin.email_service": "Servicio de Correo",
     "visual_engine.system_reduce_motion": "Preferencia de Reducción de Movimiento del Sistema",
+    "common.copied": "Copiado",
+    "common.keep": "Mantener",
+    "common.title": "Título",
+    "common.aspect_ratio": "Relación de aspecto",
+    "inspiration.delete_confirm_title": "¿Eliminar esta inspiración?",
+    "inspiration.hide_confirm_title": "¿Ocultar esta inspiración de la biblioteca?",
+    "inspiration.delete_confirm_custom": "「{title}」se eliminará de la biblioteca local y no se puede deshacer.",
+    "inspiration.hide_confirm_builtin": '「{title}」proviene del catálogo externo y no se puede eliminar por completo. Puedes restaurarlo desde la vista "Ocultos".',
+    "inspiration.deleted": "Eliminado",
+    "inspiration.hidden": "Oculto",
+    "inspiration.import_success": "Importación completada: {created} agregadas, {updated} actualizadas",
+    "inspiration.count_total": "Total {count}",
+    "inspiration.filter_by_source": "Filtrar inspiraciones por fuente",
+    "inspiration.filter_by_category": "Filtrar inspiraciones por categoría",
 };
 
 export default pack;

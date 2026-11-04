@@ -1,5 +1,5 @@
 import { App, Button, Dropdown, Input } from "antd";
-import { ChevronDown, Download, Heart, Import, MoreHorizontal, Pencil, Plus, RotateCcw, Search, SlidersHorizontal, Trash2 } from "lucide-react";
+import { ChevronDown, Download, ExternalLink, Heart, Import, MoreHorizontal, Pencil, Plus, RotateCcw, Search, SlidersHorizontal, Trash2 } from "lucide-react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 import { PaginationBar } from "@/components/layout/workspace-page";
@@ -121,7 +121,7 @@ export function InspirationHall({ onUse }: { onUse: (item: CreationInspiration) 
                 if (!cancelled) setCatalog(loaded);
             })
             .catch((error) => {
-                if (!cancelled) setLoadError(error instanceof Error ? error.message : "灵感目录加载失败");
+                if (!cancelled) setLoadError(error instanceof Error ? error.message : t("inspiration.catalog_load_failed", undefined, "灵感目录加载失败"));
             });
         return () => {
             cancelled = true;
@@ -161,10 +161,10 @@ export function InspirationHall({ onUse }: { onUse: (item: CreationInspiration) 
     const categoryLabel = useCallback(
         (item: CreationInspiration) => {
             const code = item.category?.trim();
-            if (!code) return "未分类";
+            if (!code) return t("inspiration.uncategorized", undefined, "未分类");
             return categoryLabels.get(item.sourceId ?? "original")?.get(code) ?? code;
         },
-        [categoryLabels],
+        [categoryLabels, t],
     );
 
     /** 搜索命中面额外带上简中原名：切到外语后用户仍能用中文关键词搜到同一条灵感。 */
@@ -232,7 +232,7 @@ export function InspirationHall({ onUse }: { onUse: (item: CreationInspiration) 
                         {catalog ? <span className="inspiration-mode-count app-segmented-count">{modeCounts[option.value].toLocaleString("zh-CN")}</span> : null}
                     </>
                 ),
-                title: catalog ? `${option.label} ${modeCounts[option.value]} 条` : option.label,
+                title: catalog ? `${option.label} ${modeCounts[option.value]}` : option.label,
             })),
         [catalog, modeCounts, t],
     );
@@ -297,8 +297,8 @@ export function InspirationHall({ onUse }: { onUse: (item: CreationInspiration) 
     const handleCopy = useCallback(
         (text: string, label: string) => {
             void navigator.clipboard.writeText(text).then(
-                () => message.success(`${label}已复制`),
-                () => message.error("复制失败，请手动选中文本"),
+                () => message.success(`${label} ${t("common.copied", undefined, "已复制")}`),
+                () => message.error(t("inspiration.copy_failed_manual", undefined, "复制失败，请手动选中文本")),
             );
         },
         [message],
@@ -310,15 +310,17 @@ export function InspirationHall({ onUse }: { onUse: (item: CreationInspiration) 
             const isCustom = isCustomInspiration(id);
             modal.confirm({
                 className: "workspace-modal workspace-modal-compact",
-                title: isCustom ? "删除这条灵感？" : "从库中隐藏这条灵感？",
-                content: isCustom ? `「${item.title}」会从本地灵感库移除，此操作不可撤销。` : `「${item.title}」来自外部目录，不能真正删除；隐藏后可用「已隐藏」视图恢复，重新导入外部目录也不会让它复现。`,
-                okText: isCustom ? "删除" : "隐藏",
+                title: isCustom ? t("inspiration.delete_confirm_title", undefined, "删除这条灵感？") : t("inspiration.hide_confirm_title", undefined, "从库中隐藏这条灵感？"),
+                content: isCustom
+                    ? t("inspiration.delete_confirm_custom", { title: item.title }, `「${item.title}」会从本地灵感库移除，此操作不可撤销。`)
+                    : t("inspiration.hide_confirm_builtin", { title: item.title }, `「${item.title}」来自外部目录，不能真正删除；隐藏后可用「已隐藏」视图恢复，重新导入外部目录也不会让它复现。`),
+                okText: isCustom ? t("common.delete", undefined, "删除") : t("inspiration.hide", undefined, "隐藏"),
                 okButtonProps: { danger: true },
-                cancelText: "保留",
+                cancelText: t("common.keep", undefined, "保留"),
                 onOk: () => {
                     removeEntry(id);
                     if (detail && catalogIdOf(detail) === id) setDetail(null);
-                    message.success(isCustom ? "已删除" : "已隐藏");
+                    message.success(isCustom ? t("inspiration.deleted", undefined, "已删除") : t("inspiration.hidden", undefined, "已隐藏"));
                 },
             });
         },
@@ -329,7 +331,7 @@ export function InspirationHall({ onUse }: { onUse: (item: CreationInspiration) 
         (draft: Parameters<typeof createEntry>[0]) => {
             if (editing) {
                 updateEntry(catalogIdOf(editing), draft);
-                message.success("已保存修改");
+                message.success(t("inspiration.saved_changes", undefined, "已保存修改"));
                 setDetail((current) => (current && catalogIdOf(current) === catalogIdOf(editing) ? { ...current, ...draft } : current));
                 setEditing(null);
                 return;
@@ -344,23 +346,23 @@ export function InspirationHall({ onUse }: { onUse: (item: CreationInspiration) 
             setSort("default");
             setSearch("");
             setPage(1);
-            message.success("灵感已创建");
+            message.success(t("inspiration.created", undefined, "灵感已创建"));
         },
         [createEntry, editing, message, updateEntry],
     );
 
     const handleExport = useCallback(() => {
         downloadText(exportPayload(), exportFileName());
-        message.success("已导出本地改动（自建条目 / 改写 / 隐藏 / 收藏）");
+        message.success(t("inspiration.exported_local", undefined, "已导出本地改动（自建条目 / 改写 / 隐藏 / 收藏）"));
     }, [exportPayload, message]);
 
     const handleImportFile = useCallback(
         async (file: File) => {
             try {
                 const result = importPayload(await file.text());
-                message.success(`导入完成：新增 ${result.created}，覆盖 ${result.updated}${result.skipped ? `，跳过 ${result.skipped} 条无效数据` : ""}`);
+                message.success(t("inspiration.import_success", { created: result.created, updated: result.updated }, `导入完成：新增 ${result.created}，覆盖 ${result.updated}${result.skipped ? `，跳过 ${result.skipped} 条无效数据` : ""}`));
             } catch (error) {
-                message.error(error instanceof Error ? error.message : "导入失败");
+                message.error(error instanceof Error ? error.message : t("inspiration.import_failed", undefined, "导入失败"));
             }
         },
         [importPayload, message],
@@ -381,8 +383,8 @@ export function InspirationHall({ onUse }: { onUse: (item: CreationInspiration) 
         <section ref={sectionRef} id="creation-inspirations" className="inspiration-hall" aria-labelledby="inspiration-hall-title">
             <header className="inspiration-hall-header">
                 <div>
-                    <h2 id="inspiration-hall-title">灵感大厅</h2>
-                    <p>点开查看完整提示词，用喜欢的创意继续创作。</p>
+                    <h2 id="inspiration-hall-title">{t("inspiration.hall_title", undefined, "灵感大厅")}</h2>
+                    <p>{t("inspiration.hall_subtitle", undefined, "点开查看完整提示词，用喜欢的创意继续创作。")}</p>
                 </div>
                 <div className="inspiration-hall-actions">
                     <Button
@@ -393,15 +395,15 @@ export function InspirationHall({ onUse }: { onUse: (item: CreationInspiration) 
                             setEditorOpen(true);
                         }}
                     >
-                        新建灵感
+                        {t("inspiration.new_inspiration", undefined, "新建灵感")}
                     </Button>
                     <Dropdown
                         trigger={["click"]}
                         placement="bottomRight"
                         menu={{
                             items: [
-                                { key: "import", label: "导入灵感", icon: <Import className="size-4" />, disabled: !hydrated },
-                                { key: "export", label: "导出本地灵感", icon: <Download className="size-4" />, disabled: !hydrated },
+                                { key: "import", label: t("inspiration.import", undefined, "导入灵感"), icon: <Import className="size-4" />, disabled: !hydrated },
+                                { key: "export", label: t("inspiration.export", undefined, "导出本地灵感"), icon: <Download className="size-4" />, disabled: !hydrated },
                             ],
                             onClick: ({ key }) => {
                                 if (key === "import") importRef.current?.click();
@@ -409,28 +411,37 @@ export function InspirationHall({ onUse }: { onUse: (item: CreationInspiration) 
                             },
                         }}
                     >
-                        <Button type="text" icon={<MoreHorizontal className="size-4" />} aria-label="更多灵感管理操作" title="更多操作" />
+                        <Button type="text" icon={<MoreHorizontal className="size-4" />} aria-label={t("inspiration.more_ops", undefined, "更多灵感管理操作")} title={t("inspiration.more_ops_title", undefined, "更多操作")} />
                     </Dropdown>
                 </div>
             </header>
 
             <div className="inspiration-hall-toolbar">
-                <SegmentedControl options={modeOptions} value={modeFilter} onChange={(value) => setModeFilter(value as ModeFilter)} ariaLabel="按创作类型筛选灵感" className="inspiration-hall-modes" />
-                <Input allowClear prefix={<Search className="size-4" />} placeholder="搜索标题、描述或标签" aria-label="搜索灵感" value={search} onChange={(event) => setSearch(event.target.value)} className="inspiration-hall-search" />
+                <SegmentedControl options={modeOptions} value={modeFilter} onChange={(value) => setModeFilter(value as ModeFilter)} ariaLabel={t("inspiration.modes_aria", undefined, "按创作类型筛选灵感")} className="inspiration-hall-modes" />
+                <Input
+                    allowClear
+                    prefix={<Search className="size-4" />}
+                    placeholder={t("inspiration.search_placeholder", undefined, "搜索标题、描述或标签")}
+                    aria-label={t("inspiration.search_aria", undefined, "搜索灵感")}
+                    value={search}
+                    onChange={(event) => setSearch(event.target.value)}
+                    className="inspiration-hall-search"
+                />
                 <Button type="text" icon={<SlidersHorizontal className="size-4" />} aria-expanded={filtersOpen} aria-controls="inspiration-hall-filters" onClick={() => setFiltersOpen((open) => !open)} className="inspiration-hall-filter-toggle">
-                    更多筛选{advancedFilterCount ? ` · ${advancedFilterCount}` : ""}
+                    {t("inspiration.more_filters", undefined, "更多筛选")}
+                    {advancedFilterCount ? ` · ${advancedFilterCount}` : ""}
                     <ChevronDown className={filtersOpen ? "is-open" : undefined} aria-hidden="true" />
                 </Button>
                 <span className="inspiration-hall-count" role="status">
-                    {catalog && hydrated ? `共 ${visible.length.toLocaleString("zh-CN")} 条` : ""}
+                    {catalog && hydrated ? t("inspiration.count_total", { count: visible.length }, `共 ${visible.length} 条`) : ""}
                 </span>
             </div>
 
             {filtersOpen ? (
-                <div id="inspiration-hall-filters" className="inspiration-hall-filters" role="group" aria-label="灵感进阶筛选">
+                <div id="inspiration-hall-filters" className="inspiration-hall-filters" role="group" aria-label={t("inspiration.advanced_filters", undefined, "灵感进阶筛选")}>
                     <div className="inspiration-hall-field">
                         <span>{t("inspiration.browse_scope", undefined, "浏览范围")}</span>
-                        <Select options={viewOptions} value={view} onChange={(value) => setView(value as ViewFilter)} ariaLabel="按全部、收藏或隐藏状态筛选灵感" />
+                        <Select options={viewOptions} value={view} onChange={(value) => setView(value as ViewFilter)} ariaLabel={t("inspiration.filter_by_state", undefined, "按全部、收藏或隐藏状态筛选灵感")} />
                     </div>
                     {inspirationSourcesVisible ? (
                         <div className="inspiration-hall-field">
@@ -439,7 +450,7 @@ export function InspirationHall({ onUse }: { onUse: (item: CreationInspiration) 
                                 options={[
                                     { label: t("inspiration.all_sources", undefined, "全部来源"), value: "all" },
                                     ...SOURCE_ORDER.filter((key) => (sourceCounts.get(key) ?? 0) > 0).map((key) => ({
-                                        label: `${inspirationSources[key].name ?? inspirationSources[key].label} (${sourceCounts.get(key) ?? 0})`,
+                                        label: `${t(inspirationSources[key].label, undefined, inspirationSources[key].name ?? inspirationSources[key].label)} (${sourceCounts.get(key) ?? 0})`,
                                         value: key,
                                     })),
                                 ]}
@@ -448,7 +459,7 @@ export function InspirationHall({ onUse }: { onUse: (item: CreationInspiration) 
                                     setSource(value as SourceFilter);
                                     setCategory("all");
                                 }}
-                                ariaLabel="按来源筛选灵感"
+                                ariaLabel={t("inspiration.filter_by_source", undefined, "按来源筛选灵感")}
                             />
                         </div>
                     ) : null}
@@ -460,12 +471,12 @@ export function InspirationHall({ onUse }: { onUse: (item: CreationInspiration) 
                             options={[{ label: t("inspiration.all_categories", undefined, "全部分类"), value: "all" }, ...categoryChoices.map((choice) => ({ value: choice.value, label: `${choice.label} (${choice.count})` }))]}
                             value={category}
                             onChange={setCategory}
-                            ariaLabel="按分类筛选灵感"
+                            ariaLabel={t("inspiration.filter_by_category", undefined, "按分类筛选灵感")}
                         />
                     </div>
                     <div className="inspiration-hall-field">
                         <span>{t("common.sort", undefined, "排序")}</span>
-                        <Select options={sortOptions} value={sort} onChange={(value) => setSort(value as SortKey)} ariaLabel="灵感排序" />
+                        <Select options={sortOptions} value={sort} onChange={(value) => setSort(value as SortKey)} ariaLabel={t("inspiration.sort", undefined, "灵感排序")} />
                     </div>
                     {hasFilters ? (
                         <Button type="text" icon={<RotateCcw className="size-4" />} onClick={resetFilters} className="inspiration-hall-reset">
@@ -479,9 +490,9 @@ export function InspirationHall({ onUse }: { onUse: (item: CreationInspiration) 
                 {!shouldLoadCatalog ? (
                     <div className="inspiration-hall-deferred" aria-hidden="true" />
                 ) : loadError ? (
-                    <WorkspaceErrorState title="灵感目录加载失败" description={loadError} onRetry={() => setReloadKey((key) => key + 1)} />
+                    <WorkspaceErrorState title={t("inspiration.catalog_load_failed", undefined, "灵感目录加载失败")} description={loadError} onRetry={() => setReloadKey((key) => key + 1)} />
                 ) : !catalog || !hydrated ? (
-                    <WorkspaceLoadingState label="正在准备灵感" rows={3} />
+                    <WorkspaceLoadingState label={t("inspiration.preparing", undefined, "正在准备灵感")} rows={3} />
                 ) : paged.length ? (
                     <>
                         <div className="inspiration-gallery">
@@ -518,7 +529,7 @@ export function InspirationHall({ onUse }: { onUse: (item: CreationInspiration) 
                         kind={hasFilters ? "no-results" : "first-use"}
                         title={hasFilters && search.trim() ? `没有找到与“${search.trim()}”相关的灵感` : view === "favorites" ? "还没有收藏" : view === "hidden" ? "没有隐藏的条目" : "没有符合条件的灵感"}
                         description={view === "favorites" ? "点卡片右上角的爱心，把喜欢的创意留在这里。" : "试试其他类型、分类或关键词。"}
-                        action={hasFilters ? <Button onClick={resetFilters}>清除筛选</Button> : undefined}
+                        action={hasFilters ? <Button onClick={resetFilters}>{t("common.clear_filter", undefined, "清除筛选")}</Button> : undefined}
                     />
                 )}
             </div>
@@ -589,12 +600,15 @@ function InspirationCard({
     const { t } = useI18n();
     const [menuOpen, setMenuOpen] = useState(false);
     const favoriteLabel = favorite ? t("inspiration.unfavorite_aria", undefined, "取消收藏灵感") : t("inspiration.favorite_aria", undefined, "收藏灵感");
+    const source = inspirationSourceOf(item);
+    const sourceLabel =
+        source?.name ?? (item.sourceId && item.sourceId !== "original" ? t(source?.label ?? "未标注来源", undefined, source?.label ?? t("inspiration.source_unlabeled", undefined, "未标注来源")) : t("inspiration.source_original", undefined, "原创"));
     return (
         <article className="inspiration-card">
             <button type="button" className="inspiration-card-open" aria-label={`${t("inspiration.view_aria", undefined, "查看灵感")}：${item.title}`} aria-haspopup="dialog" onClick={onOpen}>
                 <span className="inspiration-card-cover">
                     <InspirationCover key={item.image} image={item.image} />
-                    {showSources ? <span className="inspiration-card-source">{inspirationSourceOf(item)?.label ?? "未标注来源"}</span> : null}
+                    {showSources ? <span className="inspiration-card-source">{sourceLabel}</span> : null}
                 </span>
                 <span className="inspiration-card-body">
                     <strong className="inspiration-card-title">{item.title}</strong>
@@ -607,6 +621,23 @@ function InspirationCard({
                 </span>
             </button>
             <div className={`inspiration-card-actions${favorite || menuOpen ? " is-visible" : ""}`}>
+                {item.sourceUrl ? (
+                    <Tooltip title={t("inspiration.view_upstream_content", undefined, "查看上游内容")}>
+                        <a
+                            href={item.sourceUrl}
+                            target="_blank"
+                            rel="noreferrer"
+                            data-icon-only
+                            className="inspiration-card-action"
+                            aria-label={`${t("inspiration.view_upstream_content", undefined, "查看上游内容")}：${item.title}`}
+                            onClick={(e) => e.stopPropagation()}
+                        >
+                            <span aria-hidden="true">
+                                <ExternalLink className="size-3.5" />
+                            </span>
+                        </a>
+                    </Tooltip>
+                ) : null}
                 <Tooltip title={favoriteLabel}>
                     <button type="button" data-icon-only className="inspiration-card-action" aria-label={`${favoriteLabel}：${item.title}`} aria-pressed={favorite} onClick={onToggleFavorite}>
                         <span aria-hidden="true">
@@ -630,12 +661,22 @@ function InspirationCard({
                         onOpenChange={setMenuOpen}
                         menu={{
                             items: [
+                                ...(item.sourceUrl
+                                    ? [
+                                          {
+                                              key: "upstream",
+                                              icon: <ExternalLink className="size-3.5" />,
+                                              label: t("inspiration.view_upstream_content", undefined, "查看上游内容"),
+                                              onClick: () => window.open(item.sourceUrl, "_blank", "noreferrer"),
+                                          },
+                                      ]
+                                    : []),
                                 { key: "edit", icon: <Pencil className="size-3.5" />, label: t("common.edit", undefined, "编辑"), onClick: onEdit },
                                 { key: "delete", icon: <Trash2 className="size-3.5" />, label: isCustomInspiration(catalogIdOf(item)) ? t("common.delete", undefined, "删除") : t("inspiration.hide", undefined, "隐藏"), danger: true, onClick: onDelete },
                             ],
                         }}
                     >
-                        <button type="button" data-icon-only className="inspiration-card-action" aria-label={`更多灵感操作：${item.title}`} aria-haspopup="menu" aria-expanded={menuOpen}>
+                        <button type="button" data-icon-only className="inspiration-card-action" aria-label={`${t("inspiration.more_actions", undefined, "更多灵感操作")}：${item.title}`} aria-haspopup="menu" aria-expanded={menuOpen}>
                             <span aria-hidden="true">
                                 <MoreHorizontal className="size-3.5" />
                             </span>

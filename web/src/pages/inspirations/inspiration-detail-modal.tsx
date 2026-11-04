@@ -6,7 +6,7 @@ import { Tooltip } from "@/components/ui/base/tooltip";
 import { AppModal } from "@/components/ui/product/app-modal";
 import { MediaPlaceholder } from "@/components/ui/product/media-placeholder";
 import { catalogIdOf, inspirationSourceOf, type CreationInspiration } from "@/lib/inspirations/catalog";
-import { resolveInspirationItem } from "@/lib/inspirations/inspiration-i18n";
+import { useLocalizedInspiration } from "@/lib/inspirations/inspiration-i18n";
 import { isCustomInspiration } from "@/lib/inspirations/resolve";
 import { modeLabels } from "@/pages/create/creation-types";
 import { useUserStore } from "@/stores/use-user-store";
@@ -46,7 +46,7 @@ export function InspirationDetailModal({
     const { t, locale } = useI18n();
     const showSources = useUserStore((state) => state.features.inspirationSourcesVisible);
     const [usingPrompt, setUsingPrompt] = useState(false);
-    const localizedItem = useMemo(() => (item ? resolveInspirationItem(item, locale) : null), [item, locale]);
+    const localizedItem = useLocalizedInspiration(item, locale);
     const source = localizedItem ? inspirationSourceOf(localizedItem) : null;
     const custom = localizedItem ? isCustomInspiration(catalogIdOf(localizedItem)) : false;
 
@@ -116,7 +116,15 @@ export function InspirationDetailModal({
                         <div className="flex flex-col gap-2">
                             {showSources ? (
                                 <MetaRow label={t("inspiration.field_source", undefined, "来源")}>
-                                    {source?.name ?? (localizedItem.sourceId && localizedItem.sourceId !== "original" ? (source?.label ?? t("inspiration.source_unlabeled", undefined, "未标注来源")) : t("inspiration.source_original", undefined, "原创"))}
+                                    {source?.name ? (
+                                        <a href={source.repository} target="_blank" rel="noreferrer" className="hover:underline">
+                                            {source.name}
+                                        </a>
+                                    ) : localizedItem.sourceId && localizedItem.sourceId !== "original" ? (
+                                        t(source?.label ?? "未标注来源", undefined, source?.label ?? t("inspiration.source_unlabeled", undefined, "未标注来源"))
+                                    ) : (
+                                        t("inspiration.source_original", undefined, "原创")
+                                    )}
                                     {localizedItem.credit ? ` · ${localizedItem.credit}` : ""}
                                 </MetaRow>
                             ) : null}
@@ -146,14 +154,14 @@ export function InspirationDetailModal({
                             ) : null}
                         </div>
 
-                        <PromptSection
-                            label={localizedItem.promptZh ? t("inspiration.prompt_zh_label", undefined, "提示词 · 中文") : t("workbench.prompt_label", undefined, "提示词")}
-                            text={localizedItem.promptZh || localizedItem.prompt}
-                            onCopy={onCopy}
-                            copyText={t("common.copy", undefined, "复制")}
-                        />
-                        {localizedItem.promptZh && localizedItem.prompt !== localizedItem.promptZh ? (
-                            <PromptSection label={t("inspiration.prompt_source_label", undefined, "提示词 · 原文")} text={localizedItem.prompt} onCopy={onCopy} copyText={t("common.copy", undefined, "复制")} />
+                        <PromptSection label={t("workbench.prompt_label", undefined, "提示词")} text={localizedItem.prompt} onCopy={onCopy} copyText={t("common.copy", undefined, "复制")} />
+                        {item && item.prompt && item.prompt !== localizedItem.prompt ? (
+                            <PromptSection
+                                label={locale === "zh-CN" ? t("inspiration.prompt_source_label", undefined, "提示词 · 原文") : t("inspiration.prompt_zh_label", undefined, "提示词 · 中文")}
+                                text={item.prompt}
+                                onCopy={onCopy}
+                                copyText={t("common.copy", undefined, "复制")}
+                            />
                         ) : null}
                     </div>
 

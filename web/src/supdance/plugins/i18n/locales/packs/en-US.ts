@@ -1973,6 +1973,20 @@ const pack: Record<string, string> = {
     "admin.login_and_registration": "Login & Registration",
     "admin.email_service": "Email Service",
     "visual_engine.system_reduce_motion": "System Reduced Motion Preference",
+    "common.copied": "Copied",
+    "common.keep": "Keep",
+    "common.title": "Title",
+    "common.aspect_ratio": "Aspect Ratio",
+    "inspiration.delete_confirm_title": "Delete this inspiration?",
+    "inspiration.hide_confirm_title": "Hide this inspiration from library?",
+    "inspiration.delete_confirm_custom": "「{title}」will be removed from your local library, which cannot be undone.",
+    "inspiration.hide_confirm_builtin": '「{title}」is from an external catalog and cannot be permanently deleted. Once hidden, you can restore it from the "Hidden" view.',
+    "inspiration.deleted": "Deleted",
+    "inspiration.hidden": "Hidden",
+    "inspiration.import_success": "Import completed: {created} added, {updated} updated",
+    "inspiration.count_total": "{count} items",
+    "inspiration.filter_by_source": "Filter inspirations by source",
+    "inspiration.filter_by_category": "Filter inspirations by category",
 };
 
 export default pack;

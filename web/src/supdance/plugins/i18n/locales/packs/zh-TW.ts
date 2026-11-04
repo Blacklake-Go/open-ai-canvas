@@ -1972,6 +1972,20 @@ const pack: Record<string, string> = {
     "admin.login_and_registration": "登入與註冊",
     "admin.email_service": "郵件服務",
     "visual_engine.system_reduce_motion": "系統減少動效偏好",
+    "common.copied": "已複製",
+    "common.keep": "保留",
+    "common.title": "標題",
+    "common.aspect_ratio": "畫面比例",
+    "inspiration.delete_confirm_title": "刪除這條靈感？",
+    "inspiration.hide_confirm_title": "從庫中隱藏這條靈感？",
+    "inspiration.delete_confirm_custom": "「{title}」會從本地靈感庫移除，此操作不可撤銷。",
+    "inspiration.hide_confirm_builtin": "「{title}」來自外部目錄，不能真正刪除；隱藏後可用「已隱藏」視圖恢復，重新匯入外部目錄也不會讓它復現。",
+    "inspiration.deleted": "已刪除",
+    "inspiration.hidden": "已隱藏",
+    "inspiration.import_success": "匯入完成：新增 {created}，覆蓋 {updated}",
+    "inspiration.count_total": "共 {count} 條",
+    "inspiration.filter_by_source": "按來源篩選靈感",
+    "inspiration.filter_by_category": "按分類篩選靈感",
 };
 
 export default pack;

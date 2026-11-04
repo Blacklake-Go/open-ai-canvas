@@ -198,7 +198,7 @@ func BuiltinEntries() []Entry {
 		entry("admin.social_auth_config", "admin", "社交登录配置", "Social Login Settings", "社交登入配置", "ソーシャルログイン設定", "소셜 로그인 설정", "Configuración de Inicio de Sesión Social", "管理侧栏：社交登录配置"),
 		entry("admin.login_and_registration", "admin", "登录与注册", "Login & Registration", "登入與註冊", "ログインと登録", "로그인 및 회원가입", "Inicio de Sesión y Registro", "管理侧栏：登录与注册"),
 		entry("admin.email_service", "admin", "邮件服务", "Email Service", "郵件服務", "メールサービス", "이메일 서비스", "Servicio de Correo", "管理侧栏：邮件服务"),
-		// ==================== common: 通用与基础控件 (147) ====================
+		// ==================== common: 通用与基础控件 (151) ====================
 		entry("common.confirm", "common", "确认", "Confirm", "確認", "確認", "확인", "Confirmar", "通用确认按钮"),
 		entry("common.cancel", "common", "取消", "Cancel", "取消", "キャンセル", "취소", "Cancelar", "通用取消按钮"),
 		entry("common.save", "common", "保存", "Save", "儲存", "保存", "저장", "Guardar", "通用保存按钮"),
@@ -346,6 +346,10 @@ func BuiltinEntries() []Entry {
 		entry("legal.contents", "common", "目录", "Contents", "目錄", "目次", "목차", "Contenido", "法务文档目录标题"),
 		entry("legal.version", "common", "版本：{version}", "Version: {version}", "版本：{version}", "バージョン: {version}", "버전: {version}", "Versión: {version}", "法务文档版本展示"),
 		entry("legal.effective_date", "common", "生效日期：{date}", "Effective Date: {date}", "生效日期：{date}", "発効日: {date}", "시행일: {date}", "Fecha de Entrada en Vigor: {date}", "法务文档生效日期展示"),
+		entry("common.copied", "common", "已复制", "Copied", "已複製", "コピーしました", "복사됨", "Copiado", "复制操作成功提示"),
+		entry("common.keep", "common", "保留", "Keep", "保留", "保持する", "유지", "Mantener", "保留操作按钮"),
+		entry("common.title", "common", "标题", "Title", "標題", "タイトル", "제목", "Título", "通用标题标签"),
+		entry("common.aspect_ratio", "common", "画面比例", "Aspect Ratio", "畫面比例", "アスペクト比", "화면 비율", "Relación de aspecto", "画面比例配置标签"),
 		// ==================== nav: 顶栏与侧栏导航 (94) ====================
 		entry("nav.workspace", "nav", "创作工作台", "Creative Studio", "創作工作台", "制作スタジオ", "크리에이티브 스튜디오", "Estudio Creativo", "侧栏品牌副标题"),
 		entry("nav.create", "nav", "创作", "Create", "創作", "制作", "창작", "Crear", "主导航：创作工作台"),
@@ -2013,7 +2017,7 @@ func BuiltinEntries() []Entry {
 		entry("music.stage_empty_title", "music", "母带监听与制作大舞台", "Mastering & Music Production Stage", "母帶監聽與製作大舞台", "マスタリング＆音楽制作ステージ", "마스터링 및 음악 제작 스테이지", "Escenario de Masterización y Producción Musical", "音乐制作舞台空态标题"),
 		entry("music.stage_empty_desc", "music", "在右侧选择任意历史作品收听，或在左侧配置参数生成全新的 AI 影视与短剧配乐。", "Select any past track on the right to listen, or configure parameters on the left to create new AI music.", "在右側選擇任意歷史作品收聽，或在左側配置參數生成全新的 AI 影視與短劇配樂。", "右側のリストから過去の楽曲を選択して試聴するか、左側でパラメータを設定してAI音楽を生成します。", "오른쪽에서 이전 작품을 선택해 감상하거나, 왼쪽에서 매개변수를 구성하여 새로운 AI 음악을 생성하세요.", "Seleccione cualquier pista a la derecha para escucharla, o configure parámetros a la izquierda para crear música con IA.", "音乐制作舞台空态说明"),
 		entry("music.player_progress", "music", "音频播放进度", "Playback Progress", "音訊播放進度", "再生プログレス", "재생 진행률", "Progreso de Reproducción", "音频播放器进度无障碍标签"),
-		// ==================== inspiration: 灵感大厅与创意目录 (78) ====================
+		// ==================== inspiration: 灵感大厅与创意目录 (88) ====================
 		entry("inspiration.fashion_editorial", "inspiration", "时尚编辑", "Fashion Editorial", "時尚編輯", "ファッションエディトリアル", "패션 에디토리얼", "Editorial de moda", "灵感分类：时尚编辑"),
 		entry("inspiration.hall_title", "inspiration", "灵感大厅", "Inspiration Hall", "靈感大廳", "インスピレーションホール", "영감 홀", "Sala de inspiración", "灵感大厅页面主标题"),
 		entry("inspiration.field_source", "inspiration", "来源", "Source", "來源", "出典", "출처", "Fuente", "灵感详情：来源字段标签"),
@@ -2092,5 +2096,15 @@ func BuiltinEntries() []Entry {
 		entry("inspiration.more_ops_title", "inspiration", "更多操作", "More actions", "更多操作", "その他の操作", "더 많은 작업", "Más acciones", "创作工作区词条"),
 		entry("inspiration.modes_aria", "inspiration", "按创作类型筛选灵感", "Filter inspirations by creation type", "依創作類型篩選靈感", "制作タイプでインスピレーションを絞り込む", "창작 유형별 영감 필터링", "Filtrar inspiraciones por tipo de creación", "创作工作区词条"),
 		entry("inspiration.search_aria", "inspiration", "搜索灵感", "Search inspirations", "搜尋靈感", "インスピレーションを検索", "영감 검색", "Buscar inspiraciones", "创作工作区词条"),
+		entry("inspiration.delete_confirm_title", "inspiration", "删除这条灵感？", "Delete this inspiration?", "刪除這條靈感？", "このインスピレーションを削除しますか？", "이 영감을 삭제하시겠습니까?", "¿Eliminar esta inspiración?", "灵感删除确认弹窗标题"),
+		entry("inspiration.hide_confirm_title", "inspiration", "从库中隐藏这条灵感？", "Hide this inspiration from library?", "從庫中隱藏這條靈感？", "ライブラリからこのインスピレーションを非表示にしますか？", "라이브러리에서 이 영감을 숨기시겠습니까?", "¿Ocultar esta inspiración de la biblioteca?", "灵感隐藏确认弹窗标题"),
+		entry("inspiration.delete_confirm_custom", "inspiration", "「{title}」会从本地灵感库移除，此操作不可撤销。", "「{title}」will be removed from your local library, which cannot be undone.", "「{title}」會從本地靈感庫移除，此操作不可撤銷。", "「{title}」はローカルライブラリから削除され、元に戻せません。", "「{title}」이(가) 로컬 라이브러리에서 제거되며 취소할 수 없습니다.", "「{title}」se eliminará de la biblioteca local y no se puede deshacer.", "自定义灵感删除确认提示"),
+		entry("inspiration.hide_confirm_builtin", "inspiration", "「{title}」来自外部目录，不能真正删除；隐藏后可用「已隐藏」视图恢复，重新导入外部目录也不会让它复现。", "「{title}」is from an external catalog and cannot be permanently deleted. Once hidden, you can restore it from the \"Hidden\" view.", "「{title}」來自外部目錄，不能真正刪除；隱藏後可用「已隱藏」視圖恢復，重新匯入外部目錄也不會讓它復現。", "「{title}」は外部カタログのアイテムのため完全削除できません。非表示にした後「非表示」ビューから復元できます。", "「{title}」은(는) 외부 카탈로그 항목이므로 영구 삭제할 수 없습니다. 숨긴 후 숨김 뷰에서 복원할 수 있습니다.", "「{title}」proviene del catálogo externo y no se puede eliminar por completo. Puedes restaurarlo desde la vista \"Ocultos\".", "内置灵感隐藏确认提示"),
+		entry("inspiration.deleted", "inspiration", "已删除", "Deleted", "已刪除", "削除しました", "삭제됨", "Eliminado", "灵感已删除轻提示"),
+		entry("inspiration.hidden", "inspiration", "已隐藏", "Hidden", "已隱藏", "非表示にしました", "숨김 처리됨", "Oculto", "灵感已隐藏轻提示"),
+		entry("inspiration.import_success", "inspiration", "导入完成：新增 {created}，覆盖 {updated}", "Import completed: {created} added, {updated} updated", "匯入完成：新增 {created}，覆蓋 {updated}", "インポート完了：{created} 件追加、{updated} 件更新", "가져오기 완료: {created}개 추가, {updated}개 업데이트", "Importación completada: {created} agregadas, {updated} actualizadas", "灵感导入成功通知"),
+		entry("inspiration.count_total", "inspiration", "共 {count} 条", "{count} items", "共 {count} 條", "合計 {count} 件", "총 {count}개", "Total {count}", "灵感总数统计标签"),
+		entry("inspiration.filter_by_source", "inspiration", "按来源筛选灵感", "Filter inspirations by source", "按來源篩選靈感", "ソースでインスピレーションを絞り込む", "출처별 영감 필터링", "Filtrar inspiraciones por fuente", "按来源筛选无障碍标签"),
+		entry("inspiration.filter_by_category", "inspiration", "按分类筛选灵感", "Filter inspirations by category", "按分類篩選靈感", "カテゴリでインスピレーションを絞り込む", "카테고리별 영감 필터링", "Filtrar inspiraciones por categoría", "按分类筛选无障碍标签"),
 	}
 }

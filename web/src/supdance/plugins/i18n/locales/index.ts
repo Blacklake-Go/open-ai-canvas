@@ -2038,6 +2038,20 @@ export const BUILTIN_SUPDANCE_I18N_ENTRIES: readonly SupDanceI18nEntry[] = [
     e("admin.login_and_registration", "admin", "登录与注册", "管理侧栏：登录与注册"),
     e("admin.email_service", "admin", "邮件服务", "管理侧栏：邮件服务"),
     e("visual_engine.system_reduce_motion", "plugins", "系统减少动效偏好", "视觉引擎减弱动效偏好标签"),
+    e("common.copied", "common", "已复制", "复制操作成功提示"),
+    e("common.keep", "common", "保留", "保留操作按钮"),
+    e("common.title", "common", "标题", "通用标题标签"),
+    e("common.aspect_ratio", "common", "画面比例", "画面比例配置标签"),
+    e("inspiration.delete_confirm_title", "inspiration", "删除这条灵感？", "灵感删除确认弹窗标题"),
+    e("inspiration.hide_confirm_title", "inspiration", "从库中隐藏这条灵感？", "灵感隐藏确认弹窗标题"),
+    e("inspiration.delete_confirm_custom", "inspiration", "「{title}」会从本地灵感库移除，此操作不可撤销。", "自定义灵感删除确认提示"),
+    e("inspiration.hide_confirm_builtin", "inspiration", "「{title}」来自外部目录，不能真正删除；隐藏后可用「已隐藏」视图恢复，重新导入外部目录也不会让它复现。", "内置灵感隐藏确认提示"),
+    e("inspiration.deleted", "inspiration", "已删除", "灵感已删除轻提示"),
+    e("inspiration.hidden", "inspiration", "已隐藏", "灵感已隐藏轻提示"),
+    e("inspiration.import_success", "inspiration", "导入完成：新增 {created}，覆盖 {updated}", "灵感导入成功通知"),
+    e("inspiration.count_total", "inspiration", "共 {count} 条", "灵感总数统计标签"),
+    e("inspiration.filter_by_source", "inspiration", "按来源筛选灵感", "按来源筛选无障碍标签"),
+    e("inspiration.filter_by_category", "inspiration", "按分类筛选灵感", "按分类筛选无障碍标签"),
 ];
 
 export const packLoaders: Record<Exclude<SupDanceLocaleCode, "zh-CN">, () => Promise<{ default: Record<string, string> }>> = {

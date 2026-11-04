@@ -1972,6 +1972,20 @@ const pack: Record<string, string> = {
     "admin.login_and_registration": "ログインと登録",
     "admin.email_service": "メールサービス",
     "visual_engine.system_reduce_motion": "システムの視覚効果を減らす設定",
+    "common.copied": "コピーしました",
+    "common.keep": "保持する",
+    "common.title": "タイトル",
+    "common.aspect_ratio": "アスペクト比",
+    "inspiration.delete_confirm_title": "このインスピレーションを削除しますか？",
+    "inspiration.hide_confirm_title": "ライブラリからこのインスピレーションを非表示にしますか？",
+    "inspiration.delete_confirm_custom": "「{title}」はローカルライブラリから削除され、元に戻せません。",
+    "inspiration.hide_confirm_builtin": "「{title}」は外部カタログのアイテムのため完全削除できません。非表示にした後「非表示」ビューから復元できます。",
+    "inspiration.deleted": "削除しました",
+    "inspiration.hidden": "非表示にしました",
+    "inspiration.import_success": "インポート完了：{created} 件追加、{updated} 件更新",
+    "inspiration.count_total": "合計 {count} 件",
+    "inspiration.filter_by_source": "ソースでインスピレーションを絞り込む",
+    "inspiration.filter_by_category": "カテゴリでインスピレーションを絞り込む",
 };
 
 export default pack;

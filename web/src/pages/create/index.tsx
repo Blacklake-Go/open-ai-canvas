@@ -1512,7 +1512,7 @@ export default function CreatePage() {
                             {inspirationSourcesVisible ? (
                                 <div className="creation-source-notice">
                                     <details>
-                                        <summary>素材来源</summary>
+                                        <summary>{t("inspiration.field_source", undefined, "素材来源")}</summary>
                                         {declaredInspirationSources().map((source) => (
                                             <p key={source.name ?? source.label}>
                                                 {source.notice}

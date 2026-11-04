@@ -1973,6 +1973,20 @@ const pack: Record<string, string> = {
     "admin.login_and_registration": "로그인 및 회원가입",
     "admin.email_service": "이메일 서비스",
     "visual_engine.system_reduce_motion": "시스템 동작 줄이기 설정",
+    "common.copied": "복사됨",
+    "common.keep": "유지",
+    "common.title": "제목",
+    "common.aspect_ratio": "화면 비율",
+    "inspiration.delete_confirm_title": "이 영감을 삭제하시겠습니까?",
+    "inspiration.hide_confirm_title": "라이브러리에서 이 영감을 숨기시겠습니까?",
+    "inspiration.delete_confirm_custom": "「{title}」이(가) 로컬 라이브러리에서 제거되며 취소할 수 없습니다.",
+    "inspiration.hide_confirm_builtin": "「{title}」은(는) 외부 카탈로그 항목이므로 영구 삭제할 수 없습니다. 숨긴 후 숨김 뷰에서 복원할 수 있습니다.",
+    "inspiration.deleted": "삭제됨",
+    "inspiration.hidden": "숨김 처리됨",
+    "inspiration.import_success": "가져오기 완료: {created}개 추가, {updated}개 업데이트",
+    "inspiration.count_total": "총 {count}개",
+    "inspiration.filter_by_source": "출처별 영감 필터링",
+    "inspiration.filter_by_category": "카테고리별 영감 필터링",
 };
 
 export default pack;
