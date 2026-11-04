@@ -3,9 +3,14 @@
   "upstreamRepository": "https://github.com/ddcat-ai/open-ai-canvas",
   "forkRepository": "https://github.com/Blacklake-Go/open-ai-canvas",
   "upstreamBaseline": {
-    "tag": "v1.7.3.4",
-    "commit": "dc035d51311925e48ab1542df094bd1e2b07ba7f",
-    "schemaVersion": 78
+    "tag": "v1.7.3.5",
+    "commit": "7c14ffdd8c5480eefc29e6f1ab7da4ef25da2856",
+    "schemaVersion": 79
+  },
+  "integrationCandidate": {
+    "version": "v1.7.4-supdance.6+upstream-stage2",
+    "baseCommit": "eadb3622f302ade2b51c244ac6b7c6c9903a85a2",
+    "status": "uncommitted-not-deployed"
   },
   "supdanceRelease": {
     "tag": "supdance/v2026.10.28.2",
@@ -13,6 +18,8 @@
     "baseCommit": "259e7e3fba0b6f70ac3cfd65941c3ca345d60249"
   },
   "coupledUpstreamFiles": [
+    "web/src/components/canvas/canvas-cloud-agent-panel-parts.tsx",
+    "web/src/components/canvas/canvas-cloud-agent.css",
     ".github/workflows/quality.yml",
     ".github/workflows/supdance-upstream-sync.yml",
     "scripts/verify-before-push.mjs",

@@ -1,5 +1,11 @@
 # SupDance Canvas — 上游基线记录 (UPSTREAM_BASELINE.md)
 
+## 第二阶段源码候选（未部署）
+
+`v1.7.4-supdance.6+upstream-stage2` 自 `eadb3622` 集成正式版 `v1.7.3.5`（`7c14ffdd8c5480eefc29e6f1ab7da4ef25da2856`），源码要求 Schema 79。前端宿主版本、后端领域元数据及 `supdance/config/baseline.json` 已按候选对齐；不表示线上已迁移。第一阶段前端已由用户确认上线验收，线上数据库仍按 Schema 78 边界处理，本轮未连接线上数据库。
+
+候选同步方式、实际验证与未完成验收见 [第二阶段隔离集成](./UPSTREAM_STAGE2.md)。下方为候选之前的历史基线，不作为本候选的部署结果。
+
 ## 1. 当前集成的上游版本基线
 
 | 维度 | 值 |

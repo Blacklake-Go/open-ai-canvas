@@ -7,7 +7,8 @@ import type { RouteObject } from "react-router";
 import type { PluginHostContext, PluginManifest, PluginManifestV2, RegisteredPlugin } from "@/lib/plugins/plugin-types";
 import { getRegisteredPlugin, registerPlugin, unregisterPlugin } from "@/lib/plugins/plugin-registry";
 
-export const SUPDANCE_HOST_VERSION = "1.7.3.4" as const;
+export const SUPDANCE_HOST_VERSION = "1.7.3.5" as const;
+export const SUPDANCE_SCHEMA_BASELINE = 79 as const;
 
 export type UpstreamPatchRecord = {
     id: string;
@@ -24,6 +25,24 @@ export type UpstreamPatchRecord = {
  * 新增核心文件修改时必须同步登记，并由架构回归测试与 baseline.json 对齐校验。
  */
 export const SUPDANCE_UPSTREAM_PATCH_REGISTRY: readonly UpstreamPatchRecord[] = [
+    {
+        id: "supdance-agent-history-pagination",
+        upstreamBaseline: "v1.7.3.5",
+        feature: "Agent 历史分页的多语言与设计令牌适配",
+        coupledUpstreamFiles: ["web/src/components/canvas/canvas-cloud-agent-panel-parts.tsx", "web/src/components/canvas/canvas-cloud-agent.css"],
+        files: ["web/src/components/canvas/canvas-cloud-agent-panel-parts.tsx", "web/src/components/canvas/canvas-cloud-agent.css"],
+        reason: "复用 SupDance common.load_more 词条与现有令牌，保留上游按 80 段展开历史的性能修复。",
+        upgradeRisk: "LOW",
+    },
+    {
+        id: "supdance-upstream-stage2",
+        upstreamBaseline: "v1.7.3.5",
+        feature: "正式版隔离集成候选的电商侧栏准入与插件导航保留",
+        coupledUpstreamFiles: ["web/src/components/layout/workspace-sidebar-nav.tsx"],
+        files: ["web/src/components/layout/workspace-sidebar-nav.tsx", "web/test/music-hotplug-lifecycle.test.ts"],
+        reason: "只参考 e1f8b8c9 的侧栏开关条件，使用现有 SupDance 词条，并保留音乐插件入口与登录守卫。",
+        upgradeRisk: "MEDIUM",
+    },
     {
         id: "supdance-codex-agent-connector",
         upstreamBaseline: "v1.7.3",

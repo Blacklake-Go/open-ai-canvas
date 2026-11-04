@@ -7,6 +7,7 @@ import {
     BellRing,
     BookOpenText,
     BookMarked,
+    Bot,
     ChevronDown,
     CloudUpload,
     Coins,
@@ -130,6 +131,14 @@ const adminNavigation: AdminNavigationGroup[] = [
             { path: "/admin/plugins/html-pages", label: "HTML 页面", shortLabel: "页面", icon: <FileCode className="size-4" /> },
             { path: "/admin/skill-curation", label: "技能分类", shortLabel: "技能", icon: <Sparkles className="size-4" /> },
             { path: "/admin/resources", label: "存储资源", shortLabel: "资源", icon: <Database className="size-4" /> },
+        ],
+    },
+    {
+        key: "ecommerce-agent",
+        label: "电商 Agent",
+        items: [
+            { path: "/admin/ecommerce/agent", label: "电商 Agent 配置", shortLabel: "配置", icon: <Bot className="size-4" /> },
+            { path: "/admin/ecommerce/library", label: "知识与技能", shortLabel: "知识", icon: <Database className="size-4" /> },
         ],
     },
     {

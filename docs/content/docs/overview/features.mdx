@@ -5,6 +5,8 @@ description: 当前项目已实现的核心工作台能力与使用入口
 
 # 功能清单
 
+电商 Agent 支持SHEIN（希音）及逐平台风格、风险资料与生成文案检查；资料覆盖范围及尚待核实的上架条件见[电商平台风格与图片规则](/docs/overview/ecommerce-platform-rules)。
+
 ## 国际化更新中心
 
 `supdance-i18n` 1.2.0 在后台词条页提供扫描草稿导入、六语种编辑、审核发布、人工锁定和十次历史回滚。源码与上游 Release 自动扫描新增/变更文案，CI 校验缺失引用、源文变化后的失效译文与前后端词库一致性。可选模型补译在受控 CLI 配置服务和字符预算后生成草稿，不默认调用付费服务。详见 [国际化扫描与翻译更新](../backend/supdance-i18n)。
@@ -200,6 +202,12 @@ AutoDL 视频模型的上游模型 ID 原样透传为 ComfyUI 工作流 ID，上
 - `web/src/components/layout/banner-announcements-slider.tsx`：首页顶部滚动通知条。
 - `web/src/pages/admin/components/admin-banner-announcements-panel.tsx`：后台配置面板。
 - `GET /api/banner-announcements` 与 `/api/admin/banner-announcements`：公开生效列表与管理 CRUD。
+
+## 注册与签到积分赠送
+
+注册和签到奖励默认均为 0；管理员在「积分运营」页首可直接查看当前额度、打开「注册与签到赠送」或停止两项赠送。正数奖励保存前确认具体额度及持续发放影响。注册奖励只在新建账号时发放，已有账号登录不补发；关闭赠送后的后续请求读取最新数据库策略。
+
+已保存的配置需主动关闭，修改默认值不覆盖运营配置，也不扣减历史余额。线上止赠步骤、旧版本缓存处理和只读账本核查见[注册与签到积分赠送](../backend/credit-rewards)。
 
 ## 工作区签到加油站
 
@@ -625,6 +633,8 @@ SEO 标题、描述、可选关键词会投影到浏览器 metadata、Open Graph
 - `web/scripts/import-inspirations.mjs`：外部来源同步、缩略图生成与目录落盘。
 
 ## 画布外观预设
+
+电商创作入口 `/ecommerce` 提供商品分析、创意方向、逐页策划、图片生成与结果画布；后台“电商 Agent”包含知识库、Skills、行业与子品类，提供 KB01–KB19、阶段模型、61 个内置方法包和完整中英文分类字典。知识数据升级时自动初始化；小夜形象、UI 动效和助手配置同步交付，见 [电商 Agent 与知识库](../backend/ecommerce-agent)。
 
 顶部保留浅色、深色和自定义三个入口。浅深切换恢复该色调最近的预设或微调；自定义仅展开、收起当前色调的设置，切换浅深不会改变展开状态。浅色提供经典浅灰、粉色、米色、浅绿，深色提供经典深色和柔和深灰；可调整明亮度、网格强度，并在“更多颜色”中修改背景和网格颜色。
 

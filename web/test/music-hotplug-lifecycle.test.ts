@@ -1,9 +1,10 @@
 import { describe, expect, it } from "bun:test";
 import { buildNav } from "@/components/layout/workspace-sidebar-nav";
-import type { FeatureAvailability } from "@/stores/use-user-store";
+import { defaultFeatureAvailability, type FeatureAvailability } from "@/stores/use-user-store";
 
 describe("Music Hotplug Lifecycle & Defenses Suite", () => {
     const dummyFeatures: FeatureAvailability = {
+        ...defaultFeatureAvailability,
         shortDramaEnabled: true,
         canvasEnabled: true,
         imageWorkbenchEnabled: true,
@@ -15,6 +16,15 @@ describe("Music Hotplug Lifecycle & Defenses Suite", () => {
     };
 
     const mockT = (k: string) => k;
+
+    it("keeps ecommerce closed by default and translates its entry only when enabled", () => {
+        const items = (features: FeatureAvailability) => buildNav(features, mockT, true).groups.flatMap((group) => group.items);
+        expect(items(defaultFeatureAvailability).some((item) => item.to === "/ecommerce")).toBe(false);
+        const enabled = items({ ...defaultFeatureAvailability, ecommerceEnabled: true });
+        expect(enabled.find((item) => item.id === "ecommerce")?.title).toBe("workbench.ecommerce Agent");
+        expect(enabled.findIndex((item) => item.id === "ecommerce")).toBeLessThan(enabled.findIndex((item) => item.to === "/canvas"));
+        expect(enabled.some((item) => item.to === "/toolbox/music")).toBe(true);
+    });
 
     it("includes toolbox-music in sidebar navigation when musicPluginActive is true", () => {
         const { groups } = buildNav(dummyFeatures, mockT, true);

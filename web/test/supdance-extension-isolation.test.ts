@@ -15,6 +15,8 @@ import {
     mergeSupDanceRoutes,
     registerSupDancePlugin,
     SUPDANCE_BRAND_DEFAULTS,
+    SUPDANCE_HOST_VERSION,
+    SUPDANCE_SCHEMA_BASELINE,
     SUPDANCE_RESERVED_PLUGIN_PREFIX,
     SUPDANCE_SKIN_ID,
     SUPDANCE_UPSTREAM_PATCH_REGISTRY,
@@ -251,8 +253,11 @@ describe("SupDance route & patch registry guards", () => {
             }
         }
         const baselineConfig = JSON.parse(readFileSync(resolve(repoRoot, "supdance/config/baseline.json"), "utf8")) as {
+            upstreamBaseline: { tag: string; schemaVersion: number };
             coupledUpstreamFiles: string[];
         };
         expect([...registryCoupled].sort()).toEqual([...baselineConfig.coupledUpstreamFiles].sort());
+        expect(baselineConfig.upstreamBaseline.tag).toBe(`v${SUPDANCE_HOST_VERSION}`);
+        expect(baselineConfig.upstreamBaseline.schemaVersion).toBe(SUPDANCE_SCHEMA_BASELINE);
     });
 });

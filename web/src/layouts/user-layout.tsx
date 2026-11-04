@@ -13,6 +13,7 @@ import { useAppearanceStore } from "@/stores/use-appearance-store";
 import { useVisualEngineHostAdapter } from "@/supdance/plugins/visual-engine/adapters/antd-theme";
 import "@/styles/workspace-product.css";
 import "@/styles/workspace-menus.css";
+import { YoruWidget } from "@/components/layout/yoru-widget";
 
 const workspaceTheme = getWorkspaceAntThemeConfig();
 // 平台唯一的 Agent 面板按需加载，不拖慢首屏；画布编辑器只发布画布上下文，不再自己渲染面板。
@@ -73,6 +74,7 @@ export default function UserLayout({ children }: { children: ReactNode }) {
             >
                 <AppWorkspaceShell>{children}</AppWorkspaceShell>
             </div>
+            <YoruWidget />
             {globalAgent}
         </ConfigProvider>
     );

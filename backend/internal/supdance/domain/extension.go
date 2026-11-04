@@ -24,12 +24,12 @@ type ExtensionMetadata struct {
 	Features         []string `json:"features"`
 }
 
-// DefaultMetadata returns the verified baseline metadata for SupDance Canvas.
+// DefaultMetadata returns the source integration baseline, not a production deployment claim.
 func DefaultMetadata() ExtensionMetadata {
 	return ExtensionMetadata{
 		Namespace:        "supdance",
-		UpstreamBaseline: "v1.7.3.4",
-		SchemaBaseline:   78,
+		UpstreamBaseline: "v1.7.3.5",
+		SchemaBaseline:   79,
 		Features: []string{
 			"codex-agent-connector",
 			"supdance-studio-theme",
