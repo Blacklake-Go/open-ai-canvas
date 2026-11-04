@@ -228,7 +228,7 @@ export function SocialProviderIcon({ provider, className = "size-5" }: { provide
  * 自动切换（复用画布主题的 `dark:` 类语义）；未上传时回退到内置品牌 SVG。
  */
 export function SocialProviderBrandIcon({ provider, iconLightUrl, iconDarkUrl, className = "size-5", alt = "" }: { provider: string; iconLightUrl?: string; iconDarkUrl?: string; className?: string; alt?: string }) {
-    const lightUrl = iconLightUrl?.trim();
+    const lightUrl = iconLightUrl?.trim() || iconDarkUrl?.trim();
     const darkUrl = (iconDarkUrl?.trim() || lightUrl) ?? "";
     if (!lightUrl) {
         return <SocialProviderIcon provider={provider} className={className} />;
