@@ -96,9 +96,11 @@ v1.3.3 将授权后入站票据从单进程内存迁移至共享 Redis（键前�
   1. `web/src/components/auth/require-plugin.tsx`
   2. `web/src/pages/create/creation-workspace.tsx`
   3. `web/src/stores/use-plugin-store.ts`
+  4. `web/src/lib/model-picker-groups.ts`
 - **修改原因**：上游路由守卫 (`RequirePlugin`) 与创作岛模式药丸原先优先读取本地安装记录（`ensurePlugin` 新建记录默认 `enabled=false`）或别名 id `music-generation`（服务端无对应状态记录），会把服务端 `effectiveEnabled=true` 的插件误判为停用（`/toolbox/music` 曾因此整页拦截）。现将判定收敛为 `use-plugin-store` 导出的 `selectPluginEffectivelyEnabled`（服务端 states → 运行时 statuses → 本地安装记录），插件 id 一律使用清单 id `supdance-music-generation`，与后端 `CheckMusicTaskAdmission` 的准入判定保持一致。
 - **上游基线**：`v1.7.3`
 - **升级风险与回归保障**：`LOW`，仅调整插件生效判定的读取顺序与 id 常量来源，不改变任何路由、权限或业务逻辑；已纳入 `coupledUpstreamFiles` 与 `SUPDANCE_UPSTREAM_PATCH_REGISTRY` 自动对齐校验，并由 `web/test/supdance-extension-isolation.test.ts` 校验注册表与 `supdance/config/baseline.json` 对齐。
+- **完整上游合并后的并行补丁收敛**：保留音乐配置任务已部署的 Suno / Mureka / MiniMax 品牌分组、选项去重与整数秒时长滑条。分组只影响显示，不合并渠道身份，不改变模型选择、报价或收费。滑条复用 AntD 和既有国际化词条，预设按钮同步禁用态与 `aria-pressed`。模型分组、渠道身份与报价回归位于 `web/test/model-picker-groups.test.ts`，后续更新须同时保留这些控件改动。
 
 ### 补丁 ID：`supdance-visual-engine`
 - 动效总开关复用 `motion.enabled`，新配置默认关闭；插件生命周期内控制全站 CSS 与现有 Motion 库，页面规则不能越过总开关。关闭时复用上游 `WorkspaceRouteLoader`，不新增加载或路由动画、不新增宿主补丁点；既有发布配置需管理员关闭开关后发布。上游比对依据与回滚方式见 `visual-engine/MOTION_ENGINE.md`。
