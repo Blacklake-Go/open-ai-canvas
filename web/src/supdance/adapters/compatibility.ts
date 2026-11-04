@@ -26,6 +26,15 @@ export type UpstreamPatchRecord = {
  */
 export const SUPDANCE_UPSTREAM_PATCH_REGISTRY: readonly UpstreamPatchRecord[] = [
     {
+        id: "supdance-agent-snapshot-throttle",
+        upstreamBaseline: "main@8de0a239",
+        feature: "Agent 画布快照实际请求的最短刷新间隔",
+        coupledUpstreamFiles: ["web/src/services/agent-canvas-sync.ts"],
+        files: ["web/src/services/agent-canvas-sync.ts", "web/test/agent-canvas-sync.test.ts"],
+        reason: "刷新函数同步准备之后再记录节流时间，避免准备耗时侵占实际请求之间的最短间隔；保留批量增量与单个在途请求约束。",
+        upgradeRisk: "LOW",
+    },
+    {
         id: "supdance-agent-cancellation-cleanup",
         upstreamBaseline: "main@8de0a239",
         feature: "Agent 取消后的并发清理重试",

@@ -41,8 +41,9 @@ export function createAgentCanvasSync(options: Options) {
             }
             if (!disposed && needsRefresh && Date.now() - lastRefresh >= (options.refreshIntervalMs ?? 1000)) {
                 needsRefresh = false;
+                const refresh = options.refresh();
                 lastRefresh = Date.now();
-                await options.refresh();
+                await refresh;
             }
         } catch (error) {
             if (!disposed) options.onError(error);
