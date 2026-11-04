@@ -54,19 +54,7 @@ export function LinearLegalPage({ docMap, currentSlug }: LinearLegalPageProps) {
     return (
         <div
             className={`legal-public-page transition-colors duration-200 ${isDark ? "bg-[#000000] text-[#f4f4f6]" : "bg-[#ffffff] text-[#111111]"}`}
-            style={{
-                position: "absolute",
-                inset: 0,
-                width: "100%",
-                height: "100%",
-                maxHeight: "100%",
-                overflowX: "hidden",
-                overflowY: "auto",
-                WebkitOverflowScrolling: "touch",
-                overscrollBehaviorY: "contain",
-                touchAction: "pan-y",
-                fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif',
-            }}
+            style={{ fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif' }}
         >
             {/* 顶部 Sticky Header (Linear 风格) */}
             <header className="legal-public-header flex h-16 w-full items-center justify-between px-6 sm:px-12 transition-colors">
