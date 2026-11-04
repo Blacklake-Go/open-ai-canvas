@@ -1,9 +1,9 @@
-import { Check, ChevronDown, Globe } from "lucide-react";
-import { useEffect, useState } from "react";
+import { TopbarLanguageSwitcher, useI18n } from "@/supdance/plugins/i18n";
+import { useEffect } from "react";
 import { Link, useLocation } from "react-router";
 
 import { useThemeStore } from "@/stores/use-theme-store";
-import { LEGAL_LANGUAGE_LABELS, LEGAL_OPERATOR_CONFIG, type LocalizedLegalDoc, type SupportedLegalLanguage } from "./legal-i18n-content";
+import { LEGAL_OPERATOR_CONFIG, type LocalizedLegalDoc, type SupportedLegalLanguage } from "./legal-i18n-content";
 import { LegalThemeToggler } from "./legal-theme-toggler";
 
 interface LinearLegalPageProps {
@@ -18,26 +18,13 @@ interface LinearLegalPageProps {
 export function LinearLegalPage({ docMap, currentSlug }: LinearLegalPageProps) {
     const location = useLocation();
     const isDark = useThemeStore((state) => state.theme === "dark");
-    const [lang, setLang] = useState<SupportedLegalLanguage>(() => {
-        const searchParams = new URLSearchParams(window.location.search);
-        const paramLang = searchParams.get("lang") as SupportedLegalLanguage;
-        if (paramLang && paramLang in docMap) return paramLang;
-        const stored = localStorage.getItem("supdance-legal-lang") as SupportedLegalLanguage;
-        if (stored && stored in docMap) return stored;
-        return "en"; // 根语言默认为 English
-    });
-
-    const [langDropdownOpen, setLangDropdownOpen] = useState(false);
-
-    // 切换语言
-    const handleSelectLang = (selected: SupportedLegalLanguage) => {
-        setLang(selected);
-        localStorage.setItem("supdance-legal-lang", selected);
-        setLangDropdownOpen(false);
-        const url = new URL(window.location.href);
-        url.searchParams.set("lang", selected);
-        window.history.replaceState({}, "", url.toString());
-    };
+    const { locale, setLocale } = useI18n();
+    const lang: SupportedLegalLanguage = locale === "zh-CN" || locale === "zh-TW" ? locale : locale.startsWith("ja") ? "ja" : locale.startsWith("ko") ? "ko" : locale.startsWith("es") ? "es" : "en";
+    useEffect(() => {
+        const requested = new URLSearchParams(location.search).get("lang");
+        const locales = { en: "en-US", "zh-CN": "zh-CN", "zh-TW": "zh-TW", ja: "ja-JP", ko: "ko-KR", es: "es-ES" } as const;
+        if (requested && requested in locales) setLocale(locales[requested as SupportedLegalLanguage]);
+    }, [location.search, setLocale]);
 
     // 处理 hash 锚点滚动（如 #content-standards, #enforcement-actions, #reporting）
     useEffect(() => {
@@ -56,7 +43,7 @@ export function LinearLegalPage({ docMap, currentSlug }: LinearLegalPageProps) {
 
     return (
         <div
-            className={`legal-public-page min-h-screen w-full transition-colors duration-200 ${isDark ? "bg-[#000000] text-[#f4f4f6]" : "bg-[#ffffff] text-[#111111]"}`}
+            className={`legal-public-page transition-colors duration-200 ${isDark ? "bg-[#000000] text-[#f4f4f6]" : "bg-[#ffffff] text-[#111111]"}`}
             style={{
                 fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif',
             }}
@@ -94,42 +81,7 @@ export function LinearLegalPage({ docMap, currentSlug }: LinearLegalPageProps) {
 
                 {/* 右侧：多语言切换器 + 明暗切换 */}
                 <div className="flex items-center gap-3">
-                    {/* 语言切换下拉框 */}
-                    <div className="relative">
-                        <button
-                            type="button"
-                            onClick={() => setLangDropdownOpen(!langDropdownOpen)}
-                            className={`flex items-center gap-1.5 rounded-full border px-3 py-1 text-xs transition-colors ${
-                                isDark ? "border-white/15 bg-white/5 text-white/90 hover:border-white/30" : "border-black/15 bg-black/5 text-black/90 hover:border-black/30"
-                            }`}
-                            aria-expanded={langDropdownOpen}
-                        >
-                            <Globe className="size-3.5" />
-                            <span className="font-mono">{LEGAL_LANGUAGE_LABELS[lang].code}</span>
-                            <ChevronDown className="size-3 opacity-60" />
-                        </button>
-
-                        {langDropdownOpen && (
-                            <div className={`absolute right-0 mt-2 w-56 rounded-xl border p-1 shadow-2xl z-50 ${isDark ? "bg-[#141418] border-white/10" : "bg-white border-black/10"}`}>
-                                {(Object.keys(LEGAL_LANGUAGE_LABELS) as SupportedLegalLanguage[]).map((code) => {
-                                    const active = lang === code;
-                                    return (
-                                        <button
-                                            key={code}
-                                            type="button"
-                                            onClick={() => handleSelectLang(code)}
-                                            className={`flex w-full items-center justify-between rounded-lg px-3 py-2 text-left text-xs transition-colors ${
-                                                active ? (isDark ? "bg-white/10 text-white font-medium" : "bg-black/5 text-black font-medium") : isDark ? "text-white/70 hover:bg-white/5 hover:text-white" : "text-black/70 hover:bg-black/5 hover:text-black"
-                                            }`}
-                                        >
-                                            <span>{LEGAL_LANGUAGE_LABELS[code].label}</span>
-                                            {active && <Check className="size-3 text-sky-400" />}
-                                        </button>
-                                    );
-                                })}
-                            </div>
-                        )}
-                    </div>
+                    <TopbarLanguageSwitcher surface="legal" className="min-h-11 min-w-11 rounded-full border border-border px-3 text-foreground" />
 
                     {/* 明暗模式切换 */}
                     <LegalThemeToggler />

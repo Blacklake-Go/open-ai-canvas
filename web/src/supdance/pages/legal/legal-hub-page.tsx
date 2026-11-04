@@ -1,3 +1,4 @@
+import { TopbarLanguageSwitcher } from "@/supdance/plugins/i18n";
 import { ArrowRight, FileText, Globe, Shield } from "lucide-react";
 import { useState } from "react";
 import { Link } from "react-router";
@@ -11,7 +12,7 @@ export default function LegalHubPage() {
 
     return (
         <div
-            className={`legal-public-page min-h-screen w-full transition-colors duration-200 ${isDark ? "bg-[#000000] text-[#f4f4f6]" : "bg-[#ffffff] text-[#111111]"}`}
+            className={`legal-public-page transition-colors duration-200 ${isDark ? "bg-[#000000] text-[#f4f4f6]" : "bg-[#ffffff] text-[#111111]"}`}
             style={{
                 fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif',
             }}
@@ -28,6 +29,7 @@ export default function LegalHubPage() {
                     <Link to="/" className={`text-xs font-medium no-underline transition-colors ${isDark ? "text-white/60 hover:text-white" : "text-black/60 hover:text-black"}`}>
                         返回创作台 &rarr;
                     </Link>
+                    <TopbarLanguageSwitcher surface="legal" className="min-h-11 min-w-11 rounded-full border border-border px-3 text-foreground" />
                     <LegalThemeToggler />
                 </div>
             </header>

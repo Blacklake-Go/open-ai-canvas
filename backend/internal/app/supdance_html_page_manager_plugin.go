@@ -283,6 +283,7 @@ const defaultLinearTermsHtml = `<!DOCTYPE html>
       --accent: #5e6ad2;
     }
     * { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body { width: 100%; min-height: 100%; overflow-y: auto; -webkit-overflow-scrolling: touch; overscroll-behavior-y: contain; }
     body {
       background-color: var(--bg);
       color: var(--fg);
@@ -609,6 +610,7 @@ const defaultLinearAupHtml = `<!DOCTYPE html>
       --accent: #5e6ad2;
     }
     * { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body { width: 100%; min-height: 100%; overflow-y: auto; -webkit-overflow-scrolling: touch; overscroll-behavior-y: contain; }
     body {
       background-color: var(--bg);
       color: var(--fg);
@@ -944,6 +946,7 @@ const defaultVercelPrivacyHtml = `<!DOCTYPE html>
       --accent: #0070f3;
     }
     * { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body { width: 100%; min-height: 100%; overflow-y: auto; -webkit-overflow-scrolling: touch; overscroll-behavior-y: contain; }
     body {
       background: var(--bg);
       color: var(--fg);
@@ -1299,6 +1302,7 @@ const defaultAnthropicLegalHubHtml = `<!DOCTYPE html>
       --accent: #d97706;
     }
     * { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body { width: 100%; min-height: 100%; overflow-y: auto; -webkit-overflow-scrolling: touch; overscroll-behavior-y: contain; }
     body {
       background: var(--bg);
       color: var(--fg);
@@ -1615,6 +1619,7 @@ const defaultSupabaseRefundHtml = `<!DOCTYPE html>
       --accent: #24b47e;
     }
     * { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body { width: 100%; min-height: 100%; overflow-y: auto; -webkit-overflow-scrolling: touch; overscroll-behavior-y: contain; }
     body {
       background: var(--bg);
       color: var(--fg);

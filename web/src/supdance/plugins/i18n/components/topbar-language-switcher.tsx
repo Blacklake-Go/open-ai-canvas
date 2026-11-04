@@ -4,7 +4,7 @@ import { cn } from "@/lib/utils";
 import { useI18n } from "../store";
 import type { SupDanceLocaleCode } from "../types";
 
-export type LanguageSwitcherSurface = "workspace" | "auth" | "canvas" | "admin";
+export type LanguageSwitcherSurface = "workspace" | "auth" | "canvas" | "admin" | "legal";
 
 export function TopbarLanguageSwitcher({ surface = "workspace", className }: { surface?: LanguageSwitcherSurface; className?: string }) {
     const { enabled, locale, currentLanguage, enabledLanguages, settings, setLocale, t } = useI18n();
