@@ -1,6 +1,6 @@
 import { TopbarLanguageSwitcher } from "@/supdance/plugins/i18n";
 import { ArrowRight, FileText, Globe, Shield } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Link } from "react-router";
 
 import { useThemeStore } from "@/stores/use-theme-store";
@@ -8,6 +8,15 @@ import { LEGAL_OPERATOR_CONFIG } from "./legal-i18n-content";
 import { LegalThemeToggler } from "./legal-theme-toggler";
 
 export default function LegalHubPage() {
+    useEffect(() => {
+        document.documentElement.classList.add("is-legal-doc-page");
+        document.body.classList.add("is-legal-doc-page");
+        return () => {
+            document.documentElement.classList.remove("is-legal-doc-page");
+            document.body.classList.remove("is-legal-doc-page");
+        };
+    }, []);
+
     const isDark = useThemeStore((state) => state.theme === "dark");
 
     return (

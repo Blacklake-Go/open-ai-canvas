@@ -20,6 +20,16 @@ export function LinearLegalPage({ docMap, currentSlug }: LinearLegalPageProps) {
     const isDark = useThemeStore((state) => state.theme === "dark");
     const { locale, setLocale } = useI18n();
     const lang: SupportedLegalLanguage = locale === "zh-CN" || locale === "zh-TW" ? locale : locale.startsWith("ja") ? "ja" : locale.startsWith("ko") ? "ko" : locale.startsWith("es") ? "es" : "en";
+    // 挂载时解除画布 fixed 视口锁定，赋予法务长文 100% 原生 Window 下拉滚动体验
+    useEffect(() => {
+        document.documentElement.classList.add("is-legal-doc-page");
+        document.body.classList.add("is-legal-doc-page");
+        return () => {
+            document.documentElement.classList.remove("is-legal-doc-page");
+            document.body.classList.remove("is-legal-doc-page");
+        };
+    }, []);
+
     useEffect(() => {
         const requested = new URLSearchParams(location.search).get("lang");
         const locales = { en: "en-US", "zh-CN": "zh-CN", "zh-TW": "zh-TW", ja: "ja-JP", ko: "ko-KR", es: "es-ES" } as const;
