@@ -60,12 +60,8 @@ export function LinearLegalPage({ docMap, currentSlug }: LinearLegalPageProps) {
         >
             {/* 顶部 Sticky Header (Linear 风格) */}
             <header
-                className={`sticky top-0 z-40 flex h-16 w-full items-center justify-between px-6 sm:px-12 transition-colors ${isDark ? "bg-[#000000] border-b border-white/10" : "bg-[#ffffff] border-b border-black/10"}`}
-                style={{
-                    backgroundColor: isDark ? "rgba(0, 0, 0, 0.96)" : "rgba(255, 255, 255, 0.96)",
-                    backdropFilter: "blur(16px)",
-                    WebkitBackdropFilter: "blur(16px)",
-                }}
+                className={`legal-public-header sticky top-0 z-50 flex h-16 w-full items-center justify-between px-6 sm:px-12 border-b shadow-xs transition-colors ${isDark ? "bg-[#000000] border-white/10" : "bg-[#ffffff] border-black/10"}`}
+                style={{ backgroundColor: isDark ? "#000000" : "#ffffff", opacity: 1 }}
             >
                 {/* 左侧：Logo 与品牌 */}
                 <Link to="/" className="flex items-center gap-2.5 text-base font-semibold tracking-tight no-underline group">

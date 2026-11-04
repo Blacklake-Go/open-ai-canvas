@@ -726,6 +726,16 @@
 }
 
 /* 法务公共页面独立滚动容器：由于 #root 与 .ant-app 设置了 overflow: hidden，法务页必须作为滚动宿主独占 100dvh 视口高度并启用平滑纵向滚动。 */
+.legal-public-header {
+    position: sticky !important;
+    top: 0 !important;
+    z-index: 50 !important;
+    background-color: #ffffff !important;
+}
+html.dark .legal-public-header {
+    background-color: #000000 !important;
+}
+
 .legal-public-page {
     position: absolute !important;
     inset: 0 !important;
