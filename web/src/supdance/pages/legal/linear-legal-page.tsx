@@ -70,8 +70,8 @@ export function LinearLegalPage({ docMap, currentSlug }: LinearLegalPageProps) {
         >
             {/* 顶部 Sticky Header (Linear 风格) */}
             <header
-                className={`legal-public-header sticky top-0 z-50 flex h-16 w-full items-center justify-between px-6 sm:px-12 border-b shadow-xs transition-colors ${isDark ? "bg-[#000000] border-white/10" : "bg-[#ffffff] border-black/10"}`}
-                style={{ backgroundColor: isDark ? "#000000" : "#ffffff", opacity: 1 }}
+                className={`legal-public-header fixed top-0 left-0 right-0 z-50 flex h-16 w-full items-center justify-between px-6 sm:px-12 border-b transition-colors ${isDark ? "bg-[#000000] border-white/10" : "bg-[#ffffff] border-black/10"}`}
+                style={{ backgroundColor: isDark ? "#000000" : "#ffffff" }}
             >
                 {/* 左侧：Logo 与品牌 */}
                 <Link to="/" className="flex items-center gap-2.5 text-base font-semibold tracking-tight no-underline group">
@@ -112,7 +112,7 @@ export function LinearLegalPage({ docMap, currentSlug }: LinearLegalPageProps) {
             </header>
 
             {/* 主文本区：严格对标 Linear 极简黑夜大气质感 */}
-            <main className="mx-auto max-w-[760px] px-6 py-12 sm:py-20 lg:py-24">
+            <main className="mx-auto max-w-[760px] px-6 pt-24 pb-16 sm:pt-28 sm:pb-24 lg:pt-32 lg:pb-32">
                 {/* 大标题 */}
                 <h1 className={`text-4xl sm:text-5xl lg:text-[58px] font-semibold tracking-[-0.035em] leading-[1.08] mb-4 ${isDark ? "text-white" : "text-[#111111]"}`}>{currentDoc.title}</h1>
 
