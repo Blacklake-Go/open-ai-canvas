@@ -28,7 +28,14 @@ export default function LegalHubPage() {
             }}
         >
             {/* 顶栏 */}
-            <header className={`sticky top-0 z-40 flex h-16 w-full items-center justify-between px-6 sm:px-12 backdrop-blur-md transition-colors ${isDark ? "bg-black/85 border-b border-white/10" : "bg-white/85 border-b border-black/10"}`}>
+            <header
+                className={`sticky top-0 z-40 flex h-16 w-full items-center justify-between px-6 sm:px-12 transition-colors ${isDark ? "bg-[#000000] border-b border-white/10" : "bg-[#ffffff] border-b border-black/10"}`}
+                style={{
+                    backgroundColor: isDark ? "rgba(0, 0, 0, 0.96)" : "rgba(255, 255, 255, 0.96)",
+                    backdropFilter: "blur(16px)",
+                    WebkitBackdropFilter: "blur(16px)",
+                }}
+            >
                 <Link to="/" className="flex items-center gap-2.5 text-base font-semibold tracking-tight no-underline">
                     <span className={`size-6 rounded-full flex items-center justify-center font-bold text-xs ${isDark ? "bg-white text-black" : "bg-black text-white"}`}>S</span>
                     <span className={isDark ? "text-white" : "text-black"}>{LEGAL_OPERATOR_CONFIG.tradeName}</span>
