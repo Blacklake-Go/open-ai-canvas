@@ -84,11 +84,11 @@ jobs:
       - name: Install Pi Agent runtime dependencies
         working-directory: backend/agent-runtime/pi
         run: npm ci --omit=dev --ignore-scripts
-      - name: Install redis-server for integration tests
+      - name: Install Redis and FFmpeg for integration tests
         # 用例自己拉起临时 redis-server（unix socket），所以需要的是可执行文件而不是 redis 服务。
         run: |
           sudo apt-get update -qq
-          sudo apt-get install -y -qq redis-server
+          sudo apt-get install -y -qq redis-server ffmpeg
           sudo systemctl stop redis-server || true
       - name: Check formatting
         if: matrix.shard == 'rest'
