@@ -8,6 +8,35 @@ import { LEGAL_OPERATOR_CONFIG } from "./legal-i18n-content";
 import { LegalThemeToggler } from "./legal-theme-toggler";
 
 export default function LegalHubPage() {
+    // 物理级滚轮与键盘全响应支持：确保在任何浏览器与操作系统中，鼠标滚轮、触控板与按键均能顺畅向下滑动
+    useEffect(() => {
+        const handleWheel = (e: WheelEvent) => {
+            window.scrollBy({ top: e.deltaY, behavior: "auto" });
+            const el = document.querySelector(".legal-public-page");
+            if (el && el !== document.documentElement) {
+                el.scrollTop += e.deltaY;
+            }
+        };
+
+        const handleKeyDown = (e: KeyboardEvent) => {
+            if (e.key === "ArrowDown" || e.key === "PageDown") {
+                window.scrollBy({ top: e.key === "PageDown" ? 600 : 150, behavior: "smooth" });
+            } else if (e.key === "ArrowUp" || e.key === "PageUp") {
+                window.scrollBy({ top: e.key === "PageUp" ? -600 : -150, behavior: "smooth" });
+            } else if (e.key === " " && (e.target as HTMLElement)?.tagName !== "INPUT" && (e.target as HTMLElement)?.tagName !== "TEXTAREA") {
+                e.preventDefault();
+                window.scrollBy({ top: e.shiftKey ? -600 : 600, behavior: "smooth" });
+            }
+        };
+
+        window.addEventListener("wheel", handleWheel, { passive: true });
+        window.addEventListener("keydown", handleKeyDown);
+        return () => {
+            window.removeEventListener("wheel", handleWheel);
+            window.removeEventListener("keydown", handleKeyDown);
+        };
+    }, []);
+
     useEffect(() => {
         document.documentElement.classList.add("is-legal-doc-page");
         document.body.classList.add("is-legal-doc-page");
