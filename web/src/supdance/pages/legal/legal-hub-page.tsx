@@ -37,18 +37,15 @@ export default function LegalHubPage() {
             }}
         >
             {/* 顶栏 */}
-            <header
-                className={`legal-public-header fixed top-0 left-0 right-0 z-50 flex h-16 w-full items-center justify-between px-6 sm:px-12 border-b transition-colors ${isDark ? "bg-[#000000] border-white/10" : "bg-[#ffffff] border-black/10"}`}
-                style={{ backgroundColor: isDark ? "#000000" : "#ffffff" }}
-            >
+            <header className="legal-public-header flex h-16 w-full items-center justify-between px-6 sm:px-12 transition-colors">
                 <Link to="/" className="flex items-center gap-2.5 text-base font-semibold tracking-tight no-underline">
-                    <span className={`size-6 rounded-full flex items-center justify-center font-bold text-xs ${isDark ? "bg-white text-black" : "bg-black text-white"}`}>S</span>
-                    <span className={isDark ? "text-white" : "text-black"}>{LEGAL_OPERATOR_CONFIG.tradeName}</span>
-                    <span className={`text-[11px] font-mono tracking-widest uppercase px-1.5 py-0.5 rounded ${isDark ? "bg-white/10 text-white/60" : "bg-black/5 text-black/60"}`}>LEGAL HUB</span>
+                    <span className="size-6 rounded-full flex items-center justify-center font-bold text-xs bg-black text-white dark:bg-white dark:text-black">S</span>
+                    <span className="text-black dark:text-white font-semibold">{LEGAL_OPERATOR_CONFIG.tradeName}</span>
+                    <span className="text-[11px] font-mono tracking-widest uppercase px-1.5 py-0.5 rounded bg-black/5 text-black/60 dark:bg-white/10 dark:text-white/60">LEGAL HUB</span>
                 </Link>
 
                 <div className="flex items-center gap-4">
-                    <Link to="/" className={`text-xs font-medium no-underline transition-colors ${isDark ? "text-white/60 hover:text-white" : "text-black/60 hover:text-black"}`}>
+                    <Link to="/" className="text-xs font-medium no-underline transition-colors text-black/60 hover:text-black dark:text-white/60 dark:hover:text-white">
                         返回创作台 &rarr;
                     </Link>
                     <TopbarLanguageSwitcher surface="legal" className="min-h-11 min-w-11 rounded-full border border-border px-3 text-foreground" />
