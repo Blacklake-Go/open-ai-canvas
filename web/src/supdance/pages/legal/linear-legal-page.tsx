@@ -1,5 +1,6 @@
 import { TopbarLanguageSwitcher, useI18n } from "@/supdance/plugins/i18n";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
+import { ArrowDown, ArrowUp } from "lucide-react";
 import { Link, useLocation } from "react-router";
 
 import { useThemeStore } from "@/stores/use-theme-store";
@@ -185,6 +186,36 @@ export function LinearLegalPage({ docMap, currentSlug }: LinearLegalPageProps) {
                         </a>
                     </div>
                 </footer>
+
+                {/* 快速滑动与导航浮动按钮组（右下角） */}
+                <div className="fixed bottom-8 right-8 z-50 flex flex-col items-center gap-2">
+                    <button
+                        type="button"
+                        onClick={() => {
+                            window.scrollTo({ top: document.documentElement.scrollHeight, behavior: "smooth" });
+                            const el = document.querySelector(".legal-public-page");
+                            if (el) el.scrollTo({ top: el.scrollHeight, behavior: "smooth" });
+                        }}
+                        className="flex size-10 items-center justify-center rounded-full border border-black/10 bg-white/95 text-black shadow-lg backdrop-blur-md transition-all hover:scale-110 active:scale-95 dark:border-white/15 dark:bg-black/95 dark:text-white"
+                        title="滑动直达底部"
+                        aria-label="滑动直达底部"
+                    >
+                        <ArrowDown className="size-4" />
+                    </button>
+                    <button
+                        type="button"
+                        onClick={() => {
+                            window.scrollTo({ top: 0, behavior: "smooth" });
+                            const el = document.querySelector(".legal-public-page");
+                            if (el) el.scrollTo({ top: 0, behavior: "smooth" });
+                        }}
+                        className="flex size-10 items-center justify-center rounded-full border border-black/10 bg-white/95 text-black shadow-lg backdrop-blur-md transition-all hover:scale-110 active:scale-95 dark:border-white/15 dark:bg-black/95 dark:text-white"
+                        title="返回页面顶部"
+                        aria-label="返回页面顶部"
+                    >
+                        <ArrowUp className="size-4" />
+                    </button>
+                </div>
             </main>
         </div>
     );
