@@ -8,7 +8,7 @@
  */
 import { useEffect, useMemo, useState } from "react";
 import type { SupDanceLocaleCode } from "@/supdance/plugins/i18n/types";
-import type { CreationInspiration } from "./catalog";
+import { catalogIdOf, type CreationInspiration } from "./catalog";
 
 export type LocalizedInspirationData = {
     title?: string;
@@ -79,8 +79,8 @@ export function resolveInspirationItem(item: CreationInspiration, locale: SupDan
         void loadInspirationTranslations(locale);
     }
     const pack = translationCache.get(locale);
-    const key = item.id ?? item.title;
-    const localized = pack?.[key];
+    const idKey = catalogIdOf(item);
+    const localized = pack?.[idKey] || (item.id ? pack?.[item.id] : undefined) || pack?.[item.title];
     if (!localized) return item;
 
     return {
@@ -92,7 +92,7 @@ export function resolveInspirationItem(item: CreationInspiration, locale: SupDan
 }
 
 export function useLocalizedInspirations(entries: CreationInspiration[], locale: SupDanceLocaleCode): CreationInspiration[] {
-    const [, setTick] = useState(0);
+    const [tick, setTick] = useState(0);
     useEffect(() => {
         if (locale === "zh-CN") return;
         void loadInspirationTranslations(locale);
@@ -102,5 +102,19 @@ export function useLocalizedInspirations(entries: CreationInspiration[], locale:
     return useMemo(() => {
         if (locale === "zh-CN") return entries;
         return entries.map((item) => resolveInspirationItem(item, locale));
-    }, [entries, locale]);
+    }, [entries, locale, tick]);
+}
+
+export function useLocalizedInspiration(item: CreationInspiration | null, locale: SupDanceLocaleCode): CreationInspiration | null {
+    const [tick, setTick] = useState(0);
+    useEffect(() => {
+        if (locale === "zh-CN") return;
+        void loadInspirationTranslations(locale);
+        return subscribeInspirationTranslations(() => setTick((v) => v + 1));
+    }, [locale]);
+
+    return useMemo(() => {
+        if (!item || locale === "zh-CN") return item;
+        return resolveInspirationItem(item, locale);
+    }, [item, locale, tick]);
 }
