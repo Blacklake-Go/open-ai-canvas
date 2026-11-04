@@ -853,9 +853,21 @@ func (s *Service) CancelCloudAgent(ctx context.Context, userID, id string) error
 	if errors.Is(err, repository.ErrCreationConflict) {
 		return err
 	}
-	latest, err := s.repo.CloudAgent(userID, id)
-	if err != nil {
-		return err
+	for attempt := 0; attempt < 8; attempt++ {
+		if err := ctx.Err(); err != nil {
+			return err
+		}
+		if attempt > 0 {
+			time.Sleep(time.Duration(attempt) * 20 * time.Millisecond)
+		}
+		latest, readErr := s.repo.CloudAgent(userID, id)
+		if readErr != nil {
+			return readErr
+		}
+		err = s.finishCloudAgentCleanup(ctx, latest)
+		if !errors.Is(err, repository.ErrCreationConflict) {
+			return err
+		}
 	}
-	return s.finishCloudAgentCleanup(ctx, latest)
+	return err
 }

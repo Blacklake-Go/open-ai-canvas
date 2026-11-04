@@ -21,6 +21,7 @@
     "baseCommit": "259e7e3fba0b6f70ac3cfd65941c3ca345d60249"
   },
   "coupledUpstreamFiles": [
+    "backend/internal/app/cloud_agent_runtime_media.go",
     "web/src/pages/create/index.tsx",
     "web/src/styles/globals.css",
     "web/src/pages/create/creation-product.css",

@@ -26,6 +26,15 @@ export type UpstreamPatchRecord = {
  */
 export const SUPDANCE_UPSTREAM_PATCH_REGISTRY: readonly UpstreamPatchRecord[] = [
     {
+        id: "supdance-agent-cancellation-cleanup",
+        upstreamBaseline: "main@8de0a239",
+        feature: "Agent 取消后的并发清理重试",
+        coupledUpstreamFiles: ["backend/internal/app/cloud_agent_runtime_media.go"],
+        files: ["backend/internal/app/cloud_agent_runtime_media.go", "backend/internal/app/cloud_agent_diagnostics_test.go"],
+        reason: "取消意图持久化后，清理与调度器的 revision 冲突须重读重试，保留已提交媒体任务和幂等取消事件。",
+        upgradeRisk: "MEDIUM",
+    },
+    {
         id: "supdance-agent-history-pagination",
         upstreamBaseline: "v1.7.3.5",
         feature: "Agent 历史分页的多语言与设计令牌适配",
