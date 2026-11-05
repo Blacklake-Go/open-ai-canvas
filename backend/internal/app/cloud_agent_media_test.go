@@ -84,6 +84,9 @@ func agentMediaRun(t *testing.T, s *Service, a cloudAgentMediaArgs, permission s
 
 func approveAgentMediaDraft(t *testing.T, s *Service, runID string) {
 	t.Helper()
+	// These fixtures advance media tasks explicitly. Stop and join the background
+	// approval waiter so it cannot race those steps for the same state revision.
+	s.closeApprovedCloudAgentMediaWaiters()
 	run, err := s.CloudAgentRun("user", runID)
 	if err != nil {
 		t.Fatal(err)
