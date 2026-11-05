@@ -5,6 +5,20 @@ description: 影策后端核心持久化表与状态边界
 
 # 后端数据库
 
+## 文本 Token 缓存写入价（Schema 82）
+
+版本 82 `token_cache_write_price` 只补列，全部为 `NOT NULL DEFAULT 0`，旧价格档和旧账单的结算结果不变：
+
+| 表 / 列 | 用途 | 关键边界 |
+| --- | --- | --- |
+| `channel_models.cache_write_token_price_microcredits` / `channel_model_price_tiers.cache_write_token_price_microcredits` | 文本 Token 售价的缓存写入单价（每百万 Token 微积分） | 默认 0 表示缓存写入不单独收费；视频 Token 必须为 0；上限与其他 Token 单价相同 |
+| `channel_model_price_tiers.cost_cache_write_token_price_microcredits` | 管理员成本价的缓存写入单价 | 只用于成本核算，不进入用户目录 |
+| `logical_models.cache_write_price_microcredits` | 统一定价前台模型的缓存写入单价 | 跟随渠道价格时为 0 |
+| `billing_orders.cache_write_token_price_microcredits` / `cost_cache_write_token_price_microcredits` | 下单时的售价与成本价快照 | 结算只读快照，不反查当前价格 |
+| `billing_orders.cache_write_tokens` / `api_call_logs.cache_write_tokens` | 本次写入提示词缓存的输入 Token | 已计入 `input_tokens`；结算时普通输入 = `input_tokens - cached_tokens - cache_write_tokens` |
+
+调用日志把各协议 usage 归一为同一口径：`input_tokens` 含缓存命中和缓存写入。Anthropic 原生 usage 的 `input_tokens` 不含 `cache_read_input_tokens` 与 `cache_creation_input_tokens`，写日志时补齐为总输入；百炼与 OpenRouter 的缓存写入分别读 `prompt_tokens_details.cache_creation_input_tokens` 和 `cache_write_tokens`。Token 预授权按输入价与缓存写入价中较高者估算全部输入 Token。
+
 ## 视觉引擎配置与版本
 
 复用 `system_settings`，不增加表或结构迁移。`supdance_visual_engine_config` 保存完整 Schema 2 生效配置；`supdance_visual_engine_snapshots` 保存版本快照数组；`supdance_visual_engine_audit` 保存发布与回滚审计数组。配置写入事务先创建或锁定配置行，然后在同一事务中读旧配置并保存三项记录；任何写入失败均回滚。
@@ -185,6 +199,10 @@ Schema 53 新增 `login_logs`，新库初始化、既有库升级和 SQLite → 
 
 失败登录保留逐条事件，识别不了用户时 `user_id=null`；邮件/手机号尝试账号脱敏，内部错误只记固定分类。密码、验证码、OAuth state/code、Cookie、Token 不进入日志。请求校验/频控拒绝也尝试记录失败，记录失败会输出明确的服务端诊断；原请求仍维持失败状态。不把刷新、重新核验个人身份或自然过期当作登录/主动退出，不补造历史，不自动删除日志。
 
+
+## 注册与登录配置
+`system_settings` 的 `registration` 键保存注册开关与服务协议：`enabled`、`agreementTitle`、`agreementContent`，以及登录注册打开方式 `loginMode`（`modal` 弹窗 / `page` 独立页面）。`loginMode` 缺失时按 `modal` 读取，旧记录无需迁移；不新增结构迁移，不改变全局 schema 版本。
+
 ## 分片上传预留
 
 Schema 45 新增 `upload_reservations`：`id`、`user_id`、`size`、`day`、`expires_at`。创建会话时在数据库事务内检查并行会话数、现有资源容量、未到期预留和每日上传用量，更新既有 `user_daily_upload_usages` 后插入预留。SQLite 先取得写锁，PostgreSQL 使用账号级事务 advisory lock。
@@ -210,6 +228,8 @@ Schema 45 新增 `upload_reservations`：`id`、`user_id`、`size`、`day`、`ex
 资源引用快照同时读取素材表现的 `resource_id` 和 `metadata_json`（包括嵌套资源字段）；不能先按 `resource_id` 过滤表现记录，否则仅在 metadata 中引用的共享资源会漏检。素材批量删除保留其他素材仍引用的资源；管理员删除也复用这一引用边界。
 
 短剧表直接持有的资源不在任何 JSON 文档里，单独查询并记为 `短剧` 引用：`drama_casts.image_resource_id`、`drama_segments.video_resource_id` / `tail_frame_resource_id`、`drama_episodes.final_resource_id` 与 `drama_takes.resource_id`（只看当前用户的作品）。素材“彻底删除”和 24 小时孤儿资源清理都保留这些资源；此前它们未纳入引用快照，上传的参考图与段视频尾帧可能被误清理。
+
+反馈附件只记录在 `user_feedbacks.attachments` JSON 中，引用快照按提交者读取并记为 `用户反馈` 文档引用；孤儿清理在删除事务内也会再次检查该字段，管理员删除资源时显示为阻塞引用。此前附件未纳入快照，提交 24 小时后会被当作孤儿删除。已上传但未提交反馈的附件仍按孤儿规则清理。
 
 ## 结构迁移与版本
 
@@ -250,7 +270,7 @@ Schema 45 新增 `upload_reservations`：`id`、`user_id`、`size`、`day`、`ex
 
 历史迁移说明：版本 2 为 `schema_migrations.applied_at` 增加 `idx_schema_migrations_applied_at` 索引；版本 3 `asset_taxonomy_candidate_identity` 为资产候选增加规范化名称和来源，收敛资产分类，并为待确认候选建立项目内部分唯一索引；版本 4 `resource_upload_key` 为资源上传幂等补充 `resources.upload_key` 列和用户维度唯一索引；版本 5 `payment_topup` 创建积分充值、支付通知和对账所需结构；版本 6 `resource_playback_variant` 增加资源播放副本状态；版本 7 `asset_library_folders` 增加用户素材自定义分类及 `assets.folder_id`；版本 8 `logical_model_active_code` 将前台模型 code 的唯一约束限定为未归档记录；版本 9 `channel_presentation` 为渠道添加 `public_alias`（默认空字符串）与 `sort_order`（默认 0），为渠道模型添加 `sort_order`（默认 0），不重写既有凭据、价格或能力配置；版本 10 `creation_runtime` 创建创作运行与提交表，并为任务增加可空且唯一的 `creation_submission_id`，旧任务无需伪造提交标识即可继续使用；版本 11 `cloud_agent_runtime` 创建 `cloud_agent_executions`；版本 12 `agent_token_charge_limit` 为账单增加 Agent Token 收费上限；版本 13 `cloud_agent_canvas_mutation` 持久化 Agent 画布变更；版本 14 `cloud_agent_recovery_control` 增加运行恢复控制字段和旧运行回填；版本 15 `agent_profiles` 创建常驻偏好表；版本 16 `agent_lessons` 创建用户记忆表（含分类、路线 JSON、注入/查阅计数）；版本 17 `agent_lessons_owner_index` 为 `(author_user_id, status)` 增加复合索引；版本 18 `agent_memory_settings` 创建按用户隔离的压缩周期与最近一次压缩任务状态；版本 19 `payment_plugin_version` 为已有 `payment_provider_configs` 和 `payment_orders` 补上 `plugin_version`，用于把配置和订单钉在具体插件版本上；版本 20 `banner_announcements` 创建首页常驻滚动通知表；版本 21 `banner_announcement_title_runs` 为通知标题增加样式分段；版本 22 `banner_announcement_notice_type` 增加通知类型底色；版本 23 `canvas_revision_history` 为既有画布回填 `revision = 1` 并新增历史快照与资源引用表。版本 24 `channel_model_label` 为渠道模型增加 `channel_label`（最长 80 字、非空、默认空字符串），不重写模型标识、上游 ID、价格或能力；版本 25 `video_token_formula_snapshot` 为账单增加视频公式用量及用量来源快照。版本 26 `channel_model_description` 为渠道模型增加 `description`（最长 500 字、非空、默认空字符串），供二级选项展示使用说明，不重写身份或价格。版本 27 `channel_credit_cost` 为价格档添加管理员积分成本，并在账单保存执行线路的成本快照；成本不进入普通用户 API。已发布版本的实现和校验和不得修改。
 
-渠道模型的文本能力 JSON 还可声明 `contextWindowTokens` 与 `maxOutputTokens`。这两个字段是模型能力合同，不是数据库或 Agent checkpoint 的容量配置；旧记录读取时补 128K / 16K 默认值。运行状态、journal 和 transcript 的持久化边界仍由既有 runtime 表及其 512KB checkpoint 校验负责，本阶段没有通过扩大 checkpoint 绕过模型上下文限制。
+渠道模型的文本能力 JSON 还可声明 `contextWindowTokens` 与 `maxOutputTokens`。这两个字段是模型能力合同，不是数据库或 Agent checkpoint 的容量配置；旧记录读取时补 128K / 16K 默认值。运行状态、journal 和 transcript 的持久化边界仍由既有 runtime 表及其 512KB checkpoint 校验负责，本阶段没有通过扩大 checkpoint 绕过模型上下文限制。文本能力的 `references.maxImages` 是最多识别图片数（0 = 不支持识图），`references.maxVideos` 是最多识别视频数：后台「支持视频识别」勾选框只读写这个值（不勾选 = 0，默认关闭），不另存布尔字段，也不需要 SQL 迁移；模型下拉据此显示「图×N · 视×N」。
 
 历史发布曾使用版本 51 `workbench_tools_and_presets`，后续版本将个人资料安全、头像预设和登录日志依次固定为 51–53，并将工作台迁移规范为 54。迁移器仅在版本 51 的名称为 `workbench_tools_and_presets` 且校验和精确为 `sha256:workbench-tools-presets-v51-20261014`、不存在更高迁移记录、且工作台表完整时，将该已成功应用记录在同一事务中归一到规范版本 54，然后继续应用 51–53；既有应用时间保留。其他未知名称、校验和或部分迁移状态仍拒绝启动，不通过删除、改名或伪造记录绕过检查。
 

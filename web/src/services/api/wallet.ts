@@ -1,6 +1,6 @@
 import { http } from "@/services/api/request";
 import type { ModelTag } from "@/lib/model-tags";
-
+import type { AuthLoginMode } from "@/services/api/auth";
 
 export type CreditAccount = {
     userId: string;
@@ -65,6 +65,7 @@ export type ChannelModel = {
     inputTokenPriceMicrocredits: number;
     outputTokenPriceMicrocredits: number;
     cachedTokenPriceMicrocredits: number;
+    cacheWriteTokenPriceMicrocredits: number;
     priceConfigured: boolean;
     enabled: boolean;
     priceVersion: number;
@@ -92,6 +93,7 @@ export type ChannelModelPriceTier = {
     inputTokenPriceMicrocredits: number;
     outputTokenPriceMicrocredits: number;
     cachedTokenPriceMicrocredits: number;
+    cacheWriteTokenPriceMicrocredits: number;
     priceConfigured: boolean;
     enabled: boolean;
     priceVersion: number;
@@ -105,6 +107,7 @@ export type CreditCostPricing = {
     inputTokenPriceMicrocredits: number;
     outputTokenPriceMicrocredits: number;
     cachedTokenPriceMicrocredits: number;
+    cacheWriteTokenPriceMicrocredits: number;
 };
 
 // 系统渠道模型的写入合同。标量价格只用于兼容旧管理请求；新的后台界面只提交 priceTiers。
@@ -127,6 +130,7 @@ export type ChannelModelMutation = {
     inputTokenPriceMicrocredits?: number;
     outputTokenPriceMicrocredits?: number;
     cachedTokenPriceMicrocredits?: number;
+    cacheWriteTokenPriceMicrocredits?: number;
     priceConfigured?: boolean;
 };
 
@@ -153,6 +157,8 @@ export type RegistrationSetting = {
     enabled: boolean;
     agreementTitle?: string;
     agreementContent?: string;
+    /** 旧服务端未返回时按弹窗处理。 */
+    loginMode?: AuthLoginMode;
     updatedBy?: string;
     createdAt?: string;
     updatedAt?: string;
@@ -235,9 +241,11 @@ export type BillingOrder = {
     inputTokenPriceMicrocredits: number;
     outputTokenPriceMicrocredits: number;
     cachedTokenPriceMicrocredits: number;
+    cacheWriteTokenPriceMicrocredits?: number;
     inputTokens: number;
     outputTokens: number;
     cachedTokens: number;
+    cacheWriteTokens?: number;
     usageAvailable: boolean;
     videoFormulaTokens?: number;
     usageSource?: "provider" | "video_formula";
@@ -292,7 +300,7 @@ export function getAdminRegistrationSetting() {
     return http.get<{ setting: RegistrationSetting }>("/admin/settings/registration");
 }
 
-export function updateAdminRegistrationSetting(input: { enabled: boolean; agreementTitle?: string; agreementContent?: string } | boolean) {
+export function updateAdminRegistrationSetting(input: { enabled: boolean; agreementTitle?: string; agreementContent?: string; loginMode?: AuthLoginMode } | boolean) {
     const payload = typeof input === "boolean" ? { enabled: input } : input;
     return http.patch<{ setting: RegistrationSetting }>("/admin/settings/registration", payload);
 }
@@ -378,7 +386,7 @@ export function deleteAdminChannelModels(channelId: string, modelIds: string[]) 
 export type ChannelModelRepriceInput = {
     modelId: string;
     priceVersion: number;
-    priceTiers: { id: string; priceVersion: number; prices: Partial<Record<"unitPriceMicrocredits" | "inputTokenPriceMicrocredits" | "outputTokenPriceMicrocredits" | "cachedTokenPriceMicrocredits", number>> }[];
+    priceTiers: { id: string; priceVersion: number; prices: Partial<Record<"unitPriceMicrocredits" | "inputTokenPriceMicrocredits" | "outputTokenPriceMicrocredits" | "cachedTokenPriceMicrocredits" | "cacheWriteTokenPriceMicrocredits", number>> }[];
 };
 
 export function repriceAdminChannelModels(channelId: string, models: ChannelModelRepriceInput[]) {

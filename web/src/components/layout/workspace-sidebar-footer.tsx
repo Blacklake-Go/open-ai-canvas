@@ -1,22 +1,24 @@
 import { App, Popover } from "antd";
 import { Switch } from "@/components/ui/base/switch";
-import { ChevronRight, LogIn, LogOut, Moon, Settings, ShieldCheck, Sun, UserRound } from "lucide-react";
+import { ChevronRight, LogIn, LogOut, Moon, ShieldCheck, Sun } from "lucide-react";
 import { useState, type ReactNode } from "react";
-import { useI18n } from "@/supdance/plugins/i18n";
-import { Link, useNavigate } from "react-router";
+import { Link } from "react-router";
 
+import { AuthLoginLink } from "@/components/auth/auth-login-link";
 import { AppChangelogButton } from "@/components/layout/app-changelog-modal";
 import { IdentityProviderBadge } from "@/components/layout/identity-provider-badge";
 import { UserAvatar } from "@/components/layout/user-avatar";
 import { UserGroupBadge } from "@/components/layout/user-group-badge";
 import { SystemAnnouncementCenter } from "@/components/layout/system-announcement-center";
+import { useAuthEntry } from "@/hooks/use-auth-entry";
 import { useWalletBalance } from "@/hooks/use-wallet-balance";
 import { applyUserSession } from "@/lib/user-session";
 import { cn } from "@/lib/utils";
 import { logout } from "@/services/api/auth";
 import { useThemeStore } from "@/stores/use-theme-store";
 import { useUserStore, type LocalUser } from "@/stores/use-user-store";
-import { openUserProfileModal } from "@/stores/use-user-profile-modal-store";
+import { useTranslation } from "react-i18next";
+import { currentLocale } from "@/i18n";
 
 type WorkspaceSidebarFooterProps = {
     expandedClassName: string;
@@ -31,12 +33,12 @@ export function WorkspaceSidebarFooter({ expandedClassName, collapsedClassName, 
     const user = useUserStore((state) => state.user);
     const hydrated = useUserStore((state) => state.hydrated);
     const creditsEnabled = useUserStore((state) => state.features.creditsEnabled);
-    const navigate = useNavigate();
+    const { showLoginAfterSignOut } = useAuthEntry();
     const { message } = App.useApp();
     const [menuOpen, setMenuOpen] = useState(false);
-    const { t } = useI18n();
+    const { t } = useTranslation();
     const { availableMicrocredits } = useWalletBalance(user?.id, creditsEnabled);
-    const balance = availableMicrocredits === null ? "--" : (availableMicrocredits / 1_000_000).toLocaleString("zh-CN", { maximumFractionDigits: 2 });
+    const balance = availableMicrocredits === null ? "--" : (availableMicrocredits / 1_000_000).toLocaleString(currentLocale(), { maximumFractionDigits: 2 });
 
     const handleLogout = async () => {
         try {
@@ -44,7 +46,7 @@ export function WorkspaceSidebarFooter({ expandedClassName, collapsedClassName, 
             await applyUserSession({ user: null });
             setMenuOpen(false);
             message.success(t("account.layout.footerMenu.loggedOut"));
-            navigate("/login", { replace: true });
+            showLoginAfterSignOut();
         } catch (error) {
             message.error(error instanceof Error ? error.message : t("account.layout.footerMenu.logoutFailed"));
         }
@@ -79,29 +81,13 @@ export function WorkspaceSidebarFooter({ expandedClassName, collapsedClassName, 
                                         <UserGroupBadge />
                                         <IdentityProviderBadge user={user} />
                                     </div>
-                                    {creditsEnabled ? <div className="mt-0.5 truncate text-[var(--fs-label)] tabular-nums text-foreground/45">可用 {balance} 积分</div> : null}
+                                    {creditsEnabled ? <div className="mt-0.5 truncate text-[var(--fs-label)] tabular-nums text-foreground/45">{t("shell.account.availableBalance", { balance })}</div> : null}
                                 </div>
                             </div>
 
-                            <div className="py-2 space-y-1">
-                                <button
-                                    type="button"
-                                    className="flex h-9 w-full items-center gap-2 rounded px-2 text-xs text-foreground/62 hover:bg-surface-hover hover:text-foreground [&_svg]:size-3.5 [&_svg]:shrink-0"
-                                    onClick={() => {
-                                        setMenuOpen(false);
-                                        openUserProfileModal("profile");
-                                    }}
-                                >
-                                    <UserRound className="size-3.5 shrink-0" />
-                                    <span className="flex-1 text-left">个人中心与资料</span>
-                                    <ChevronRight className="!size-3 text-foreground/25" />
-                                </button>
-                                <MenuLink to="/settings?section=models" icon={<Settings />} label="工作区设置" onNavigate={() => setMenuOpen(false)} />
-                            </div>
-
                             {user.role === "admin" ? (
-                                <nav className="pb-2" aria-label="管理工具">
-                                    <MenuLink to="/admin" icon={<ShieldCheck />} label="管理员后台" onNavigate={() => setMenuOpen(false)} />
+                                <nav className="py-2" aria-label={t("shell.account.adminTools")}>
+                                    <MenuLink to="/admin" icon={<ShieldCheck />} label={t("shell.account.adminConsole")} onNavigate={() => setMenuOpen(false)} />
                                 </nav>
                             ) : null}
 
@@ -121,7 +107,7 @@ export function WorkspaceSidebarFooter({ expandedClassName, collapsedClassName, 
                             </div>
                             <button type="button" className="flex h-9 w-full items-center gap-2 rounded px-2 text-xs text-foreground/55 hover:bg-surface-hover hover:text-foreground" onClick={() => void handleLogout()}>
                                 <LogOut className="size-3.5" />
-                                退出登录
+                                {t("shell.account.logout")}
                             </button>
                         </div>
                     }
@@ -129,7 +115,7 @@ export function WorkspaceSidebarFooter({ expandedClassName, collapsedClassName, 
                     <button
                         type="button"
                         className={cn("app-workspace-account-button flex min-h-10 w-full min-w-0 items-center overflow-hidden rounded-md text-left transition-colors hover:bg-surface-hover", accountClassName)}
-                        title={creditsEnabled ? `${user.displayName || user.username} · ${balance} 积分` : user.displayName || user.username}
+                        title={creditsEnabled ? `${user.displayName || user.username} · ${t("shell.account.balance", { balance })}` : user.displayName || user.username}
                     >
                         <SidebarUserAvatar user={user} className="size-7" />
                         <span className={cn("min-w-0 flex-1 flex-col", expandedClassName)}>
@@ -137,16 +123,16 @@ export function WorkspaceSidebarFooter({ expandedClassName, collapsedClassName, 
                                 <span className="truncate text-xs font-medium">{user.displayName || user.username}</span>
                                 <UserGroupBadge compact />
                             </span>
-                            {creditsEnabled ? <span className="mt-0.5 block truncate text-[var(--fs-micro)] tabular-nums text-foreground/42">{balance} 积分</span> : null}
+                            {creditsEnabled ? <span className="mt-0.5 block truncate text-[var(--fs-micro)] tabular-nums text-foreground/42">{t("shell.account.balance", { balance })}</span> : null}
                         </span>
                         <ChevronRight className={cn("size-3.5 shrink-0 text-foreground/30", expandedClassName)} />
                     </button>
                 </Popover>
             ) : (
-                <Link to="/login" className={cn("flex h-10 items-center rounded-md text-xs text-foreground/65 hover:bg-surface-hover hover:text-foreground", collapsedClassName)} title="登录">
+                <AuthLoginLink className={cn("flex h-10 items-center rounded-md text-xs text-foreground/65 hover:bg-surface-hover hover:text-foreground", collapsedClassName)} title={t("shell.login")}>
                     <LogIn className="size-4 shrink-0" />
-                    <span className={expandedClassName}>登录</span>
-                </Link>
+                    <span className={expandedClassName}>{t("shell.login")}</span>
+                </AuthLoginLink>
             )}
         </div>
     );

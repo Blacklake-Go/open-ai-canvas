@@ -3,17 +3,17 @@
   "upstreamRepository": "https://github.com/ddcat-ai/open-ai-canvas",
   "forkRepository": "https://github.com/Blacklake-Go/open-ai-canvas",
   "upstreamBaseline": {
-    "tag": "main@8de0a239",
-    "releaseTag": "v1.7.3.5",
-    "releaseCommit": "7c14ffdd8c5480eefc29e6f1ab7da4ef25da2856",
-    "commit": "8de0a23953dba67493d5a80bf9ee5e913d289622",
-    "schemaVersion": 81
+    "tag": "v1.7.3.7",
+    "releaseTag": "v1.7.3.7",
+    "releaseCommit": "878b515b7d45ab4fe4a64c07043ad95028e4ac3b",
+    "commit": "878b515b7d45ab4fe4a64c07043ad95028e4ac3b",
+    "schemaVersion": 82
   },
   "integrationRelease": {
-    "version": "v1.7.4-supdance.7",
-    "baseCommit": "eadb3622f302ade2b51c244ac6b7c6c9903a85a2",
-    "sourceBranch": "main",
-    "deploymentEvidence": "docs/supdance/STAGED_UPSTREAM_CANDIDATE.md"
+    "version": "v1.7.4-supdance.8",
+    "baseCommit": "83b6cacb4c7614327c5d7aaa6967eaa2cadd45a2",
+    "sourceBranch": "integration/upstream-v1.7.3.7-native-i18n",
+    "deploymentEvidence": "docs/supdance/NATIVE_I18N_UPSTREAM_SYNC.md"
   },
   "supdanceRelease": {
     "tag": "supdance/v2026.10.28.2",
@@ -77,7 +77,9 @@
     "web/src/router.tsx",
     "web/src/services/diagnostics/client-diagnostics.ts",
     "web/src/stores/canvas/use-canvas-theme-store.ts",
-    "web/src/stores/use-plugin-store.ts"
+    "web/src/stores/use-plugin-store.ts",
+    "web/src/components/auth/auth-login-form.tsx",
+    "web/src/components/auth/auth-register-form.tsx"
   ],
   "supdanceExtensionFiles": [
     "web/src/supdance/adapters/upstream-i18n.ts",

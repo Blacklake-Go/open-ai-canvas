@@ -13,7 +13,7 @@ import { selectPluginEffectivelyEnabled, usePluginStore } from "@/stores/use-plu
 import { useThemeStore } from "@/stores/use-theme-store";
 import { useUserStore } from "@/stores/use-user-store";
 import { useUserProfileModalStore, type UserProfileModalTab, USER_PROFILE_MODAL_EVENT } from "@/stores/use-user-profile-modal-store";
-import { useSupDanceI18nStore } from "@/supdance/plugins/i18n/store";
+import { LanguageOptionGrid } from "@/components/layout/language-menu";
 import { useI18n } from "@/supdance/plugins/i18n";
 import { SocialAccountBindings } from "@/supdance/plugins/social-auth/components/social-account-bindings";
 
@@ -146,10 +146,6 @@ export function UserProfileModal({ open, activeTab, onTabChange, onClose, search
         media.addEventListener("change", updateTheme);
         return () => media.removeEventListener("change", updateTheme);
     }, [themeMode, setTheme]);
-
-    const i18nLocale = useSupDanceI18nStore((state) => state.locale);
-    const setI18nLocale = useSupDanceI18nStore((state) => state.setLocale);
-    const i18nSettings = useSupDanceI18nStore((state) => state.settings);
 
     const currentTab = activeTab === "security" ? "profile" : activeTab;
 
@@ -431,29 +427,7 @@ export function UserProfileModal({ open, activeTab, onTabChange, onClose, search
                                             <div className="text-[var(--fs-label)] text-foreground/50">{t("settings.preferences.i18n_desc", undefined, "全站界面与文案实时多语言切换")}</div>
                                         </div>
                                     </div>
-                                    <div className="grid grid-cols-2 gap-2 pt-1">
-                                        {i18nSettings.languages
-                                            .filter((lang: any) => lang.enabled)
-                                            .map((lang: any) => {
-                                                const isSelected = i18nLocale === lang.code;
-                                                return (
-                                                    <button
-                                                        key={lang.code}
-                                                        type="button"
-                                                        onClick={() => {
-                                                            setI18nLocale(lang.code as any);
-                                                            message.success(t("settings.preferences.locale_switched", { name: lang.name }, `已切换为 ${lang.name}`));
-                                                        }}
-                                                        className={`flex items-center justify-between rounded-xl border p-3 text-left transition-all ${
-                                                            isSelected ? "border-primary/40 bg-primary/10 text-primary font-medium" : "border-border bg-card text-foreground/75 hover:border-border hover:bg-surface-hover hover:text-foreground"
-                                                        }`}
-                                                    >
-                                                        <span className="text-xs font-medium">{lang.name}</span>
-                                                        {isSelected && <CheckCircle2 className="size-4 text-primary" />}
-                                                    </button>
-                                                );
-                                            })}
-                                    </div>
+                                    <LanguageOptionGrid />
                                 </div>
                             </div>
                         )}

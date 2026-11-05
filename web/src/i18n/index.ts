@@ -1,4 +1,4 @@
-import i18next, { type Resource, type TOptions } from "i18next";
+import i18next, { type Resource } from "i18next";
 import { initReactI18next } from "react-i18next";
 
 import { useLocaleStore } from "@/stores/use-locale-store";
@@ -23,25 +23,15 @@ function buildResources(): Resource {
  * 缺失的键回退到简体中文，保证未翻译的页面仍可用。资源随包内联，初始化同步完成。
  */
 export const i18n = i18next.createInstance();
-type TranslationOverride = (value: string, keys: string | string[], options: TOptions) => string;
-let translationOverride: TranslationOverride | undefined;
 
-export function setTranslationOverride(override: TranslationOverride) {
-    translationOverride = override;
-}
-
-void i18n
-    .use({ type: "postProcessor", name: "supdance", process: (value: string, keys: string | string[], options: TOptions) => translationOverride?.(value, keys, options) ?? value })
-    .use(initReactI18next)
-    .init({
-        resources: buildResources(),
-        lng: useLocaleStore.getState().locale,
-        fallbackLng: DEFAULT_LOCALE,
-        initAsync: false,
-        returnNull: false,
-        postProcess: ["supdance"],
-        interpolation: { escapeValue: false },
-    });
+void i18n.use(initReactI18next).init({
+    resources: buildResources(),
+    lng: useLocaleStore.getState().locale,
+    fallbackLng: DEFAULT_LOCALE,
+    initAsync: false,
+    returnNull: false,
+    interpolation: { escapeValue: false },
+});
 
 useLocaleStore.subscribe((state, previous) => {
     if (state.locale !== previous.locale) void i18n.changeLanguage(state.locale);

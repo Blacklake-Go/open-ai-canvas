@@ -96,12 +96,28 @@ export function modelQuoteDescription(quote: LogicalModelQuote) {
     return descriptions.join("；");
 }
 
+/**
+ * 通用入口的报价请求：直连系统渠道的文本 / 图片模型在前端按价格档位直接算价，不发服务端报价；
+ * 逻辑模型和直连视频模型（Token / 时长计费）才需要服务端报价。
+ */
 export function modelQuoteRequest(config: AiConfig, value: string, capability?: ModelCapability, requirements?: ModelRequirements): ModelQuoteRequest | undefined {
+    if (!capability || !value) return undefined;
+    const channel = resolveModelChannel(config, value);
+    const cost = channel.modelCosts?.find((item) => item.model === modelOptionName(value));
+    if (channel.scope === "system" && cost && !cost.logicalModelId && capability !== "video") return undefined;
+    return systemModelQuoteRequest(config, value, capability, requirements);
+}
+
+/**
+ * 任意系统模型（逻辑模型或直连渠道模型、任意能力）的服务端报价请求。
+ * 必须先拿到服务端报价才允许提交的流程（例如电商 Agent 的分析与整套出图）用这个入口。
+ */
+export function systemModelQuoteRequest(config: AiConfig, value: string, capability?: ModelCapability, requirements?: ModelRequirements): ModelQuoteRequest | undefined {
     if (!capability || !value) return undefined;
     const channel = resolveModelChannel(config, value);
     if (channel.scope !== "system") return undefined;
     const cost = channel.modelCosts?.find((item) => item.model === modelOptionName(value));
-    if (!cost || (!cost.logicalModelId && capability !== "video" && capability !== "audio")) return undefined;
+    if (!cost) return undefined;
     const input = requirements?.input;
     const intent: ModelRequestIntent = {
         capability,

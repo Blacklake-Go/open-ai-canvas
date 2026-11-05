@@ -1,5 +1,10 @@
 # SupDance Canvas — 独立改造与定制代码清单 (CUSTOMIZATIONS.md)
 
+## 原生多语言接管
+
+界面语言以 `web/src/i18n` 与 `useLocaleStore` 为唯一来源；旧 DOM 翻译和上游目录 postprocessor 退出。扩展 key 在 `web/src/supdance/adapters/upstream-i18n.ts` 注册独立 namespace，所有语言入口与设置复用上游组件。登录共用表单保留社交登录和协议强校验。下方旧语言入口及 DOM 引擎描述为历史实现，现行合同见 [原生多语言集成](./NATIVE_I18N_UPSTREAM_SYNC.md)。
+
+
 ## 音乐工作台统一渠道补丁
 
 - 平台音频任务的规范素材由后端 `registerRecoveredMediaAssets` 按任务和输出序号生成稳定 ID；音乐工作台只读任务及资源，不再在载入历史或轮询完成时调用前端 `addAsset`。移除仅内存去重的旧桥接，避免目录未 hydration 或刷新后产生随机副本。历史重载、账号状态重置和轮询完成共用真实 store 回归；既有素材不自动删除。

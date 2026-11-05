@@ -6,6 +6,7 @@ import { Link, useLocation, useNavigate, useSearchParams } from "react-router";
 import { useTranslation } from "react-i18next";
 import type { TFunction } from "i18next";
 
+import { AuthLoginLink } from "@/components/auth/auth-login-link";
 import { BrandLogoFrame } from "@/components/brand/brand-logo";
 import { UserAvatar } from "@/components/layout/user-avatar";
 import { UserGroupAvatarRing, UserGroupBadge } from "@/components/layout/user-group-badge";
@@ -65,27 +66,27 @@ export function buildNav(features: FeatureAvailability, t: (key: string) => stri
     const groups: WorkspaceNavGroup[] = [
         {
             items: [
-                { ...toolItem("create", "/", t), id: "home", title: t("nav.create") },
-                ...(features.shortDramaEnabled ? [{ ...toolItem("projects", "/projects", t), title: t("nav.projects") }] : []),
-                ...(features.ecommerceEnabled ? [{ id: "ecommerce", title: `${t("workbench.ecommerce")} Agent`, icon: ShoppingBag, to: "/ecommerce" }] : []),
-                { ...toolItem("canvas", "/canvas", t), title: t("nav.canvas") },
+                { ...toolItem("create", "/", t), id: "home", title: t("nav.sidebar.home") },
+                ...(features.shortDramaEnabled ? [{ ...toolItem("projects", "/projects", t), title: t("nav.sidebar.projects") }] : []),
+                ...(features.ecommerceEnabled ? [{ id: "ecommerce", title: t("nav.sidebar.ecommerce"), icon: ShoppingBag, to: "/ecommerce" }] : []),
+                { ...toolItem("canvas", "/canvas", t), title: t("nav.sidebar.canvas") },
             ],
         },
         {
-            heading: t("nav.resources_tools"),
+            heading: t("nav.sidebar.headingTools"),
             items: [
-                ...(features.imageWorkbenchEnabled ? [{ id: "toolbox-image", title: t("nav.image_gen"), icon: ImageIcon, to: "/toolbox/image" }] : []),
-                ...(features.videoWorkbenchEnabled ? [{ id: "toolbox-video", title: t("nav.video_gen"), icon: Video, to: "/toolbox/video" }] : []),
+                ...(features.imageWorkbenchEnabled ? [{ id: "toolbox-image", title: t("nav.sidebar.toolboxImage"), icon: ImageIcon, to: "/toolbox/image" }] : []),
+                ...(features.videoWorkbenchEnabled ? [{ id: "toolbox-video", title: t("nav.sidebar.toolboxVideo"), icon: Video, to: "/toolbox/video" }] : []),
                 ...(musicPluginActive ? [{ id: "toolbox-music", title: t("music.nav_music_gen"), icon: Music, to: "/toolbox/music" }] : []),
-                { ...toolItem("skills", "/skills", t), title: t("nav.skills") },
-                ...(features.pluginCenterEnabled ? [{ ...toolItem("plugins", "/plugins", t), title: t("nav.plugins") }] : []),
+                { ...toolItem("skills", "/skills", t), title: t("nav.sidebar.skills") },
+                ...(features.pluginCenterEnabled ? [{ ...toolItem("plugins", "/plugins", t), title: t("nav.sidebar.plugins") }] : []),
             ],
         },
         {
-            heading: t("nav.assets_history"),
+            heading: t("nav.sidebar.headingAssets"),
             items: [
-                { ...toolItem("assets", "/assets", t), title: t("nav.assets") },
-                ...(features.taskCenterEnabled ? [{ id: "tasks", title: t("nav.tasks"), icon: ImageIcon, to: "/tasks" }] : []),
+                { ...toolItem("assets", "/assets", t), title: t("nav.sidebar.assets") },
+                ...(features.taskCenterEnabled ? [{ id: "tasks", title: t("nav.sidebar.history"), icon: ImageIcon, to: "/tasks" }] : []),
                 { id: "pricing", title: t("nav.pricing"), icon: CircleDollarSign, to: "/pricing.html" },
             ],
         },
@@ -100,16 +101,16 @@ function WorkspaceSidebarProfile({ collapsed, user, onExpand, onCollapse }: { co
     const { t } = useI18n();
     const [menuOpen, setMenuOpen] = useState(false);
     const userGroup = useUserStore((state) => state.userGroup);
-    const profileName = user?.displayName || user?.username || t("nav.guest", undefined, "未登录");
+    const profileName = user?.displayName || user?.username || t("shell.guestShort", undefined, "未登录");
 
     if (!user) {
         return (
-            <Link to="/login" className={cn("app-workspace-sidebar-profile", collapsed && "is-collapsed")} aria-label={t("auth.login")} title={t("auth.login")}>
+            <AuthLoginLink className={cn("app-workspace-sidebar-profile", collapsed && "is-collapsed")} aria-label={t("shell.login")} title={t("shell.login")}>
                 <span className="app-workspace-sidebar-profile-avatar">
                     <CircleUserRound aria-hidden />
                 </span>
-                {!collapsed ? <span>{t("nav.guest_mode")}</span> : null}
-            </Link>
+                {!collapsed ? <span>{t("shell.guest")}</span> : null}
+            </AuthLoginLink>
         );
     }
 
@@ -136,19 +137,19 @@ function WorkspaceSidebarProfile({ collapsed, user, onExpand, onCollapse }: { co
                         {!collapsed ? (
                             <span className="app-workspace-sidebar-profile-copy">
                                 <strong>{profileName}</strong>
-                                {userGroup?.badgeStyle === "vip" || userGroup?.badgeStyle === "svip" ? <UserGroupBadge className="self-start" /> : <span>{t("nav.workspace", undefined, "创作工作台")}</span>}
+                                {userGroup?.badgeStyle === "vip" || userGroup?.badgeStyle === "svip" ? <UserGroupBadge className="self-start" /> : <span>{t("shell.workbench", undefined, "创作工作台")}</span>}
                             </span>
                         ) : null}
                     </button>
                 </Popover>
                 {!collapsed ? (
-                    <button type="button" className="app-workspace-sidebar-collapse-toggle" aria-label={t("nav.collapse_sidebar")} title={t("nav.collapse_sidebar")} onClick={onCollapse}>
+                    <button type="button" className="app-workspace-sidebar-collapse-toggle" aria-label={t("shell.collapseSidebar")} title={t("shell.collapseSidebar")} onClick={onCollapse}>
                         <PanelLeftClose className="size-4" strokeWidth={1.7} />
                     </button>
                 ) : null}
             </div>
             {collapsed ? (
-                <button type="button" className="app-workspace-sidebar-collapse-toggle is-collapsed" aria-label={t("nav.expand_sidebar")} title={t("nav.expand_sidebar")} onClick={onExpand}>
+                <button type="button" className="app-workspace-sidebar-collapse-toggle is-collapsed" aria-label={t("shell.expandSidebarMenu")} title={t("shell.expandSidebarMenu")} onClick={onExpand}>
                     <PanelLeftOpen className="size-4" strokeWidth={1.7} />
                 </button>
             ) : null}
@@ -162,7 +163,7 @@ function WorkspaceSwitcher({ collapsed, onNavigate }: { collapsed: boolean; onNa
     if (collapsed) {
         return (
             <div className="app-workspace-sidebar-brand-row relative shrink-0 flex items-center justify-center px-3 pt-3">
-                <Link to="/" onClick={onNavigate} className="app-workspace-sidebar-brand-button group" aria-label={`${appearance.brandName} ${t("nav.create")}`}>
+                <Link to="/" onClick={onNavigate} className="app-workspace-sidebar-brand-button group" aria-label={`${appearance.brandName} ${t("nav.sidebar.home")}`}>
                     <BrandLogoFrame
                         className="app-workspace-brand-mark grid size-8 shrink-0 place-items-center rounded-[var(--r-sm)] shadow-sm"
                         logoClassName="size-5 object-contain"
@@ -176,7 +177,7 @@ function WorkspaceSwitcher({ collapsed, onNavigate }: { collapsed: boolean; onNa
 
     return (
         <div className="app-workspace-sidebar-brand-row relative shrink-0 px-3 pt-3">
-            <Link to="/" onClick={onNavigate} className="app-workspace-sidebar-brand-button group" aria-label={`${appearance.brandName} ${t("nav.create")}`}>
+            <Link to="/" onClick={onNavigate} className="app-workspace-sidebar-brand-button group" aria-label={`${appearance.brandName} ${t("nav.sidebar.home")}`}>
                 <span className="flex min-w-0 items-center gap-2">
                     <BrandLogoFrame
                         className="app-workspace-brand-mark grid size-8 shrink-0 place-items-center rounded-[var(--r-sm)] shadow-sm"
@@ -186,7 +187,7 @@ function WorkspaceSwitcher({ collapsed, onNavigate }: { collapsed: boolean; onNa
                     />
                     <span className="flex min-w-0 flex-col">
                         <span className="app-workspace-brand-wordmark truncate text-[var(--fs-body)] leading-none font-semibold">{appearance.brandName}</span>
-                        <span className="mt-1 truncate text-[var(--fs-label)] leading-none text-foreground/60">{t("nav.workspace")}</span>
+                        <span className="mt-1 truncate text-[var(--fs-label)] leading-none text-foreground/60">{t("shell.workbench")}</span>
                     </span>
                 </span>
             </Link>
@@ -227,17 +228,17 @@ function NavItem({
 
     const collapsedTitle =
         item.id === "home"
-            ? t("nav.create")
+            ? t("nav.sidebar.home")
             : item.id === "projects"
               ? t("nav.projects_short")
               : item.id === "canvas"
                 ? t("nav.canvas_short")
                 : item.id === "assets"
-                  ? t("nav.assets")
+                  ? t("nav.sidebar.assets")
                   : item.id === "skills"
-                    ? t("nav.skills")
+                    ? t("nav.sidebar.skills")
                     : item.id === "plugins"
-                      ? t("nav.plugins")
+                      ? t("nav.sidebar.plugins")
                       : item.id === "tasks"
                         ? t("nav.tasks_short")
                         : item.title.slice(0, 2);

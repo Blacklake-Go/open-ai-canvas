@@ -100,6 +100,7 @@ export type ApiCallLog = {
     inputTokens: number;
     outputTokens: number;
     cachedTokens: number;
+    cacheWriteTokens?: number;
     usageAvailable: boolean;
     mediaCount: number;
     mediaPreviewUrl?: string;
@@ -415,20 +416,24 @@ export type RuntimePolicySetting = {
     updatedAt?: string;
 };
 
+/** 登录注册打开方式：modal 在当前页面弹窗，page 跳转独立的 /login 页面。 */
+export type AuthLoginMode = "modal" | "page";
+
+export type AuthSettings = VerificationPolicy & {
+    firstUser: boolean;
+    registrationEnabled: boolean;
+    linuxdoEnabled: boolean;
+    emailEnabled: boolean;
+    emailCodeRequired: boolean;
+    smsBindingAvailable: boolean;
+    emailBindingAvailable: boolean;
+    agreementTitle?: string;
+    agreementContent?: string;
+    loginMode: AuthLoginMode;
+};
+
 export function getAuthSettings() {
-    return http.get<
-        VerificationPolicy & {
-            firstUser: boolean;
-            registrationEnabled: boolean;
-            linuxdoEnabled: boolean;
-            emailEnabled: boolean;
-            emailCodeRequired: boolean;
-            smsBindingAvailable: boolean;
-            emailBindingAvailable: boolean;
-            agreementTitle?: string;
-            agreementContent?: string;
-        }
-    >("/auth/settings");
+    return http.get<AuthSettings>("/auth/settings");
 }
 
 export function linuxDOLoginURL(next: string, acceptedTerms?: boolean) {
@@ -482,7 +487,6 @@ export function updateAdminFeatureAvailability(
             | "videoWorkbenchEnabled"
             | "ecommerceEnabled"
             | "ecommerceVideoEnabled"
-            | "siteAssistantEnabled"
         >
     >,
 ) {

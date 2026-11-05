@@ -2,9 +2,9 @@ import { Popover } from "antd";
 import { Switch } from "@/components/ui/base/switch";
 import { CircleUserRound, Moon, Sun } from "lucide-react";
 import { useState } from "react";
-import { Link } from "react-router";
 import { useTranslation } from "react-i18next";
 
+import { AuthLoginLink } from "@/components/auth/auth-login-link";
 import { AppChangelogButton } from "@/components/layout/app-changelog-modal";
 import { WorkspaceAccountCard } from "./workspace-account-card";
 import { UserAvatar } from "./user-avatar";
@@ -12,16 +12,15 @@ import { UserGroupAvatarRing } from "./user-group-badge";
 import { openWorkspaceWallet } from "@/lib/workspace-wallet";
 import { useThemeStore } from "@/stores/use-theme-store";
 import { useUserStore } from "@/stores/use-user-store";
-import { useI18n } from "@/supdance/plugins/i18n";
 
 /** 顶部与侧栏复用同一账户卡片；顶部额外保留版本和主题偏好。 */
 export function WorkspaceAccountMenu() {
-    const { t } = useI18n();
     const theme = useThemeStore((state) => state.theme);
     const setTheme = useThemeStore((state) => state.setTheme);
     const user = useUserStore((state) => state.user);
     const hydrated = useUserStore((state) => state.hydrated);
     const [menuOpen, setMenuOpen] = useState(false);
+    const { t } = useTranslation();
     if (!hydrated) {
         return <span className="size-9 animate-pulse rounded-[var(--r-md)] bg-foreground/[.06]" aria-hidden />;
     }
@@ -56,13 +55,13 @@ export function WorkspaceAccountMenu() {
 
                         <div className="workspace-topbar-account-theme">
                             {theme === "dark" ? <Moon className="size-3.5 text-foreground/45" /> : <Sun className="size-3.5 text-foreground/45" />}
-                            <span className="ml-2 flex-1 text-xs text-foreground/65">{t("nav.dark_mode")}</span>
-                            <Switch size="sm" checked={theme === "dark"} onChange={(checked) => setTheme(checked ? "dark" : "light")} aria-label={t("nav.dark_mode")} />
+                            <span className="ml-2 flex-1 text-xs text-foreground/65">{t("shell.darkMode")}</span>
+                            <Switch size="sm" checked={theme === "dark"} onChange={(checked) => setTheme(checked ? "dark" : "light")} aria-label={t("shell.darkMode")} />
                         </div>
                     </div>
                 }
             >
-                <button type="button" className="app-workspace-topbar-icon-button app-workspace-account-trigger" aria-label={t("nav.account_menu")} title={user.displayName || user.username}>
+                <button type="button" className="app-workspace-topbar-icon-button app-workspace-account-trigger" aria-label={t("shell.accountMenu")} title={user.displayName || user.username}>
                     <UserGroupAvatarRing>
                         <UserAvatar user={user} className="size-6" />
                     </UserGroupAvatarRing>
@@ -70,9 +69,9 @@ export function WorkspaceAccountMenu() {
             </Popover>
         </>
     ) : (
-        <Link to="/login" className="inline-flex items-center gap-2 px-2 text-xs text-foreground/55" aria-label={t("auth.login")} title={t("auth.login")}>
+        <AuthLoginLink className="inline-flex items-center gap-2 px-2 text-xs text-foreground/55" aria-label={t("shell.login")} title={t("shell.login")}>
             <CircleUserRound className="size-5" />
-            <span className="hidden sm:inline">{t("nav.guest")}</span>
-        </Link>
+            <span className="hidden sm:inline">{t("shell.guestShort")}</span>
+        </AuthLoginLink>
     );
 }

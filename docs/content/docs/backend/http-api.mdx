@@ -121,7 +121,7 @@ Bilibili 授权使用当前网页入口及 `gourl` 回调参数，令牌交换�
 | `POST /api/feedbacks` | `{ type, title, content, contact?, attachments?, environment? }`；类型为 `bug/feature/improvement/other`，标题最多 200 个 UTF-8 字节、正文最多 10000 个 UTF-8 字节。附件和环境字段是 JSON 字符串；返回 `data` 反馈记录 |
 | `GET /api/feedbacks/my` | 返回当前账号自己的反馈列表，按创建时间倒序，包含处理状态、管理员答复与归档标志 |
 | `POST /api/feedbacks/attachments` | multipart 字段 `file`；支持 PNG/JPG/JPEG/WebP/GIF/BMP 与 MP4/WebM/MOV/AVI/MKV，单文件最大 50 MiB，请求体最大 55 MiB；文件通过现有资源服务保存，返回附件元数据 |
-| `GET /api/admin/feedbacks` | 支持 `type`、`status`、`keyword`、`archived`、`page`、`pageSize`；默认每页 20 条，`pageSize` 超过 100 时使用默认值。返回 `data={list,total,page,limit}`，按创建时间倒序 |
+| `GET /api/admin/feedbacks` | 支持 `type`、`status`、`keyword`、`archived`、`page`、`pageSize`；默认每页 20 条，`pageSize` 超过 100 时使用默认值。返回 `data={list,total,page,limit}`，按创建时间倒序。附件 `url` 是提交者本人的 `/api/resources/{id}/file`，管理员读取会被资源归属校验拒绝；后台收件箱按附件 `id` 改用 `GET /api/admin/resources/{id}/file` 预览 |
 | `PATCH /api/admin/feedbacks/{id}` | 可更新 `status=pending/processing/resolved/closed`、`adminReply`、`archived`；返回更新后的反馈记录 |
 | `POST /api/admin/feedbacks/{id}/archive`、`POST /api/admin/feedbacks/{id}/unarchive` | 归档或恢复历史反馈，返回更新后的反馈记录 |
 | `DELETE /api/admin/feedbacks/{id}` | 删除反馈记录，返回 `data={ok:true}` |
@@ -310,6 +310,12 @@ CANVAS_BACKEND_DATA_DIR=/明确的数据目录 ./migrate-schema repair-canvas-re
 读取注册配置失败（如 JSON 损坏）时，`RegistrationAgreement` 返回空标题而不是品牌名兜底标题，注册页据此隐藏协议入口并提示可重新读取，避免展示后台并不存在的协议名称；此时错误提示统一回落为“请先同意服务协议”。
 
 `PATCH /admin/settings/registration` 的两个协议字段为可选指针语义：不提交表示保留已保存内容，提交空串表示明确清空。注册开关与协议正文可以分开保存，单独切换 `enabled` 不会覆盖协议。当前只校验本次注册的同意标志，不保存长期协议版本或签署凭证。前后端需一起更新，旧客户端缺少同意标志时无法注册。
+
+## 登录与注册打开方式
+
+`PATCH /admin/settings/registration` 可选提交 `loginMode`：`modal`（默认，在当前页面弹出登录框）或 `page`（跳转 `/login` 独立页面）。与协议字段相同，不提交表示保留已保存值；其他值返回 HTTP 400。`GET /admin/settings/registration` 与公开的 `GET /auth/settings` 都返回 `loginMode`，未配置或旧记录缺少该字段时为 `modal`，尚无账号时同样下发。
+
+前端站内登录入口、受保护页面的未登录跳转与退出登录后的去向按 `loginMode` 分发。弹窗模式下直达 `/login`、`/register`、`/forgot-password`（推广链接 `?ref=`、Linux.do 回跳 `?oauth_error=`、书签）会回到可公开访问的页面并打开对应视图，登录成功后进入 `next`。读取 `/auth/settings` 失败时前端退回独立页面。首页创作输入框的未发送内容只在内存中，该入口在两种模式下都使用弹窗。
 ## 站点皮肤主按钮
 
 ### 画布配置、更新公告、状态动画包与 Live2D（外观合同版本 11）
@@ -353,7 +359,7 @@ CANVAS_BACKEND_DATA_DIR=/明确的数据目录 ./migrate-schema repair-canvas-re
 
 弹窗一行一个模型，列为模型展示名、渠道展示名（上游模型 ID）、规格、成本价和销售价输入框；多个规格在模型行内纵向对齐。利润率沿用财务口径：`(销售价 − 成本价) / 销售价 × 100%`，并非成本加价率。目标利润率为 0–99.99%，最多两位小数；售价按 `成本价 / (1 − 目标利润率)` 计算，按所选 0–6 位积分小数四舍五入（默认 2 位）。成本 1 积分、目标 20%、保留 2 位时售价为 1.25 积分。修改比例或精度实时计算，也可点击「重新计算」按当前参数覆盖全部手动售价；随后允许逐规格手动修改，保存以最终输入值为准。舍入和手动修改可能使实际利润率偏离目标；售价为零时利润率显示 `—`。
 
-每个模型必须提交全部已启用规格（模型本身可停用），且每个规格只提交当前计费方式需要的完整 `prices` 字段：按次/秒为 `unitPriceMicrocredits`；文本 Token 为 `inputTokenPriceMicrocredits`、`outputTokenPriceMicrocredits`、`cachedTokenPriceMicrocredits`；视频 Token 仅为 `outputTokenPriceMicrocredits`。缺失、多余、重复、停用规格、null、负数或非整数价格均拒绝。成本和售价配置必须已保存；成本及 Token 售价上限为 1,000,000 积分，按次/秒售价不得超出 JavaScript 安全整数微积分范围。
+每个模型必须提交全部已启用规格（模型本身可停用），且每个规格只提交当前计费方式需要的完整 `prices` 字段：按次/秒为 `unitPriceMicrocredits`；文本 Token 为 `inputTokenPriceMicrocredits`、`outputTokenPriceMicrocredits`、`cachedTokenPriceMicrocredits`、`cacheWriteTokenPriceMicrocredits`（缓存写入，默认 0 表示不单独收费）；视频 Token 仅为 `outputTokenPriceMicrocredits`。缺失、多余、重复、停用规格、null、负数或非整数价格均拒绝。成本和售价配置必须已保存；成本及 Token 售价上限为 1,000,000 积分，按次/秒售价不得超出 JavaScript 安全整数微积分范围。
 
 服务端校验最终售价和模型/规格版本，不重新计算覆盖手工价格。价格快照过期必须刷新后重试。所有模型与价格档在单事务中更新，增加价格版本、失效目录缓存；无效配置、归属错误、超限或并发版本冲突均不部分提交。不改变成本、规格、计费方式和启停状态；未启用规格保持原值。此接口不新增数据表或迁移，不追溯修改已下单的计费快照。
 
@@ -408,7 +414,7 @@ Token 报价的 `estimated` 为 `true`，`quantity` 是预留 Token 数。参考
 
 ## 管理员积分成本
 
-`GET/POST /admin/channels/:id/models` 与 `PATCH /admin/channels/:id/models/:modelId` 的 `priceTiers[]` 增加 `costPricing`：`configured`、`unitPriceMicrocredits`、`inputTokenPriceMicrocredits`、`outputTokenPriceMicrocredits`、`cachedTokenPriceMicrocredits`。成本沿用该价格档的计费方式；按次/秒使用单位价，文本 Token 按输入/输出/缓存分别定价，视频 Token 只使用输出价。价格为整数微积分，范围为 0 到 1000000000000；`configured=false` 表示未配置，`true` 且价格为 0 表示显式零成本。
+`GET/POST /admin/channels/:id/models` 与 `PATCH /admin/channels/:id/models/:modelId` 的 `priceTiers[]` 增加 `costPricing`：`configured`、`unitPriceMicrocredits`、`inputTokenPriceMicrocredits`、`outputTokenPriceMicrocredits`、`cachedTokenPriceMicrocredits`、`cacheWriteTokenPriceMicrocredits`。成本沿用该价格档的计费方式；按次/秒使用单位价，文本 Token 按输入/输出/缓存命中/缓存写入分别定价（缓存写入默认 0），视频 Token 只使用输出价。价格档售价同样新增 `cacheWriteTokenPriceMicrocredits`，公开模型目录随价格档返回。价格为整数微积分，范围为 0 到 1000000000000；`configured=false` 表示未配置，`true` 且价格为 0 表示显式零成本。
 
 成本保存到下单时的内部账单快照，不受售价倍率或扣费上限影响，后续改价不重算旧订单。历史逻辑模型任务切换备用线路时，成本更新为实际执行线路的快照，独立于用户售价策略。管理员请求列表、详情与 CSV 分列展示预授权、实收及成本金额；JSON 返回 `billingReservedMicrocredits`（订单预授权额）、可选 `billingSettledMicrocredits`（仅已结算订单返回实收）、`creditCostConfigured` 和可选 `creditCostMicrocredits`。预授权、待核对和已退回订单不返回实收，不能把预授权额当作扣费额；CSV 对应列为“预授权(微积分)”“实收(微积分)”。成功结算后按实际计费数量、Token 用量或视频公式快照核算；未结算、已退回、历史无快照或缺少有效用量时不编造成本金额。
 
@@ -442,6 +448,8 @@ Token 报价的 `estimated` 为 `true`，`quantity` 是预留 Token 数。参考
 视频任务时长不在模型范围内时仍返回 `durationSeconds` / `unsupported_value`，`msg` 带上请求值与允许范围，例如「视频时长 4 秒不在当前模型支持范围内（5–30 秒，步长 1）」或「（可选 5、10 秒）」。短剧切段的最短时长取作品设置与视频模型最短时长的较大值；提交前再次核对，失败返回「第 N 段需要 X 秒，所选模型只支持 …」。
 
 文字任务带参考图、而所选文字模型未声明图片输入（`text.references.maxImages <= 0`）时，在预授权扣费前返回 `referenceNodeIds` / `unsupported_value`「当前文字模型不支持图片输入，请选择支持看图的文字模型」。系统渠道直连路径在模型选择阶段已用通用提示「所选模型不支持当前请求」拒绝。
+
+文字任务带参考视频时同样在预授权前校验：模型未开启视频识别（`text.references.maxVideos <= 0`，后台「支持视频识别」未勾选）返回 `referenceNodeIds` / `unsupported_value`「当前文字模型未开启视频识别，请选择支持视频识别的文字模型」；视频数超过 `maxVideos` 返回 `item_count`；单个视频超过 `maxVideoBytes` 返回 `unsupported_value`。自定义渠道只在请求附带文字能力配置时校验。Claude Messages 协议没有视频内容块，带参考视频时任务失败并说明原因，不再静默丢弃视频。
 
 ## 时间线渲染规格与来源标识
 

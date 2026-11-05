@@ -1,5 +1,5 @@
 import { lazy, Suspense, useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
-import { App, Spin } from "antd";
+import { App, Button, Spin } from "antd";
 import { Tooltip } from "@/components/ui/base/tooltip";
 import { History, Maximize2, PenLine } from "lucide-react";
 import { AnimatePresence, motion, useReducedMotion } from "motion/react";
@@ -12,6 +12,7 @@ import { imageParameterRequest, normalizeImageParameters } from "@/lib/image-par
 import { creationResultAssetIds } from "@/lib/canvas/canvas-asset-handoff";
 import { getActiveUserScope } from "@/lib/user-scope";
 import { continueCreationConversationOnCanvas } from "@/services/creation-canvas-conversation";
+import { useAuthEntry } from "@/hooks/use-auth-entry";
 import { useExternalAssetSources } from "@/hooks/use-external-asset-sources";
 import { modelCapabilityConfigFor, normalizeImageValue, normalizeVideoValue, videoDurationAllowed, videoDurationOptions } from "@/lib/model-capabilities";
 import { inferVideoOperation, modelGroupReferenceLimits, resolveCompatibleModel, mergedImageCapabilityConfig, type ModelRequirements } from "@/lib/model-selection";
@@ -19,6 +20,7 @@ import type { BackendGenerationResult } from "@/services/api/generation-task";
 import type { Skill } from "@/services/api/skills";
 import type { GenerationTask, TaskStatus } from "@/services/api/task-center";
 import { loadCreationConversations, pendingCreationTaskIds, removeCreationConversationSnapshot, saveCreationConversations, updateCreationConversationSnapshot } from "@/services/creation-conversation-store";
+import { clearCreationConversationSnapshot, mergeCreationConversationSnapshot, readCreationConversationSnapshot, writeCreationConversationSnapshot } from "@/services/creation-conversation-snapshot";
 import { resolveModelChannel, resolveModelRequestConfig, selectableModelsByCapability, useConfigStore, useEffectiveConfig } from "@/stores/use-config-store";
 import { useCreationPreferencesStore } from "@/stores/use-creation-preferences-store";
 import { useAssetStore, type Asset } from "@/stores/use-asset-store";
@@ -80,8 +82,6 @@ import { CreationRecentCanvases } from "./creation-recent-canvases";
 import { CreationAgentEntry } from "./creation-agent-entry";
 import { createCreationSubmitGate } from "./creation-submit-gate";
 import { creationVideoConfig } from "./creation-generation-config";
-import { CreationLoginDialog } from "./creation-login-dialog";
-import { useI18n } from "@/supdance/plugins/i18n";
 
 const AssetLibraryPickerModal = lazy(() => import("@/components/assets/asset-library-picker-modal").then((module) => ({ default: module.AssetLibraryPickerModal })));
 const InspirationHall = lazy(() => import("@/pages/inspirations"));
@@ -108,13 +108,13 @@ function writeComposerPref(key: string, value: boolean) {
 }
 
 export default function CreatePage() {
+    const { t } = useTranslation();
     const [agentMode, setAgentMode] = useState(false);
     const { message: toast, modal } = App.useApp();
     const navigate = useNavigate();
     const [openingCanvas, setOpeningCanvas] = useState(false);
     const openingCanvasRef = useRef(false);
     const brandName = useAppearanceStore((state) => state.appearance.brandName);
-    const { t } = useI18n();
     const config = useEffectiveConfig();
     const composerPreferencesHydrated = useCreationPreferencesStore((state) => state.hydrated);
     const rememberMode = useCreationPreferencesStore((state) => state.rememberMode);
@@ -130,15 +130,20 @@ export default function CreatePage() {
     const updateConfig = useConfigStore((state) => state.updateConfig);
     const assets = useAssetStore((state) => state.assets);
     const addAsset = useAssetStore((state) => state.addAsset);
-    const [conversations, setConversations] = useState<CreationConversation[]>([]);
-    const conversationsRef = useRef<CreationConversation[]>([]);
-    const [activeId, setActiveId] = useState("");
-    const activeIdRef = useRef("");
-    const [hydrated, setHydrated] = useState(false);
     const userId = useUserStore((state) => state.user?.id || null);
     const userSessionHydrated = useUserStore((state) => state.hydrated);
+    const activeConversationScope = getActiveUserScope();
+    const initialConversationSnapshot = userSessionHydrated ? readCreationConversationSnapshot<CreationConversation>(activeConversationScope) : null;
+    const [conversations, setConversations] = useState<CreationConversation[]>(() => initialConversationSnapshot || []);
+    const conversationsRef = useRef<CreationConversation[]>(initialConversationSnapshot || []);
+    const [activeId, setActiveId] = useState(() => initialConversationSnapshot?.[0]?.id || "");
+    const activeIdRef = useRef(activeId);
+    const [hydrated, setHydrated] = useState(() => Boolean(initialConversationSnapshot?.length));
+    const [conversationStorageReady, setConversationStorageReady] = useState(false);
+    const [conversationStorageError, setConversationStorageError] = useState("");
+    const [conversationLoadAttempt, setConversationLoadAttempt] = useState(0);
     const inspirationSourcesVisible = useUserStore((state) => state.features.inspirationSourcesVisible);
-    const [conversationScope, setConversationScope] = useState<string | null>(null);
+    const [conversationScope, setConversationScope] = useState<string | null>(() => (initialConversationSnapshot ? activeConversationScope : null));
     const [mode, setMode] = useState<CreationMode>(() => initialComposerPreferences.mode || defaultCreationMode);
     const [prompt, setPrompt] = useState("");
     const [attachments, setAttachments] = useState<CreationAttachment[]>([]);
@@ -163,7 +168,7 @@ export default function CreatePage() {
     const [busy, setBusy] = useState(false);
     const [referenceReplacementBusy, setReferenceReplacementBusy] = useState(false);
     const [historyOpen, setHistoryOpen] = useState(false);
-    const [loginDialogOpen, setLoginDialogOpen] = useState(false);
+    const { openAuth } = useAuthEntry();
     const [libraryOpen, setLibraryOpen] = useState(false);
     const externalAssetSources = useExternalAssetSources(libraryOpen);
     const abortRef = useRef<AbortController | null>(null);
@@ -188,7 +193,7 @@ export default function CreatePage() {
     promptRef.current = prompt;
     attachmentsRef.current = attachments;
 
-    const activeConversation = useMemo(() => conversations.find((item) => item.id === activeId) || conversations[0], [activeId, conversations]);
+    const activeConversation = useMemo(() => (conversationScope === activeConversationScope ? conversations.find((item) => item.id === activeId) || conversations[0] : undefined), [activeConversationScope, activeId, conversationScope, conversations]);
     const historyConversations = useMemo(
         () => conversations.filter((conversation) => conversation.id === activeId || conversation.messages.length > 0).sort((left, right) => conversationTimestamp(right.updatedAt) - conversationTimestamp(left.updatedAt)),
         [activeId, conversations],
@@ -324,22 +329,44 @@ export default function CreatePage() {
         if (!userSessionHydrated) return;
         let cancelled = false;
         const scope = getActiveUserScope();
-        setHydrated(false);
-        setConversationScope(null);
-        void loadCreationConversations<CreationConversation>().then((stored) => {
-            if (cancelled || getActiveUserScope() !== scope || (useUserStore.getState().user?.id || null) !== userId) return;
-            const next = stored?.length ? stored : [newConversation()];
-            conversationsRef.current = next;
-            setConversations(next);
-            setActiveId(next[0].id);
+        const cached = readCreationConversationSnapshot<CreationConversation>(scope);
+        setConversationStorageReady(false);
+        setConversationStorageError("");
+        if (cached?.length) {
+            conversationsRef.current = cached;
+            setConversations(cached);
+            setActiveId((current) => (cached.some((item) => item.id === current) ? current : cached[0].id));
             setConversationScope(scope);
+            setConversationStorageError("");
             setHydrated(true);
-        });
+        } else {
+            setHydrated(false);
+            setConversationScope(null);
+            setConversations([]);
+            setActiveId("");
+        }
+        void loadCreationConversations<CreationConversation>()
+            .then((stored) => {
+                if (cancelled || getActiveUserScope() !== scope || (useUserStore.getState().user?.id || null) !== userId) return;
+                const next = cached?.length ? mergeCreationConversationSnapshot(cached, stored || []) : stored?.length ? stored : [newConversation()];
+                conversationsRef.current = next;
+                writeCreationConversationSnapshot(scope, next);
+                setConversations(next);
+                setActiveId((current) => (next.some((item) => item.id === current) ? current : next[0].id));
+                setConversationScope(scope);
+                setConversationStorageError("");
+                setConversationStorageReady(true);
+                setHydrated(true);
+            })
+            .catch((error: unknown) => {
+                if (cancelled || getActiveUserScope() !== scope || (useUserStore.getState().user?.id || null) !== userId) return;
+                setConversationStorageError(error instanceof Error ? error.message : "读取本地创作记录失败");
+                if (!cached?.length) setHydrated(true);
+            });
         return () => {
             cancelled = true;
-            // 页面卸载只停止当前页面的状态更新，后台任务由任务中心继续执行，返回页面后再恢复状态。
         };
-    }, [userId, userSessionHydrated]);
+    }, [userId, userSessionHydrated, conversationLoadAttempt]);
 
     useEffect(() => () => abortRef.current?.abort(), []);
 
@@ -349,7 +376,11 @@ export default function CreatePage() {
 
     useEffect(() => {
         conversationsRef.current = conversations;
-        if (hydrated && userSessionHydrated && conversationScope === getActiveUserScope()) void saveCreationConversations(conversations);
+        if (!userSessionHydrated || !hydrated || !conversationStorageReady || conversationScope !== getActiveUserScope()) return;
+        writeCreationConversationSnapshot(conversationScope, conversations);
+        void saveCreationConversations(conversations).catch((error) => {
+            console.warn("创作会话持久化失败；当前会话仍保留在内存快照", error);
+        });
     }, [conversations, conversationScope, hydrated, userSessionHydrated]);
 
     useEffect(
@@ -778,7 +809,8 @@ export default function CreatePage() {
             return;
         }
         if (!useUserStore.getState().user) {
-            setLoginDialogOpen(true);
+            // 未发送的提示词只保存在本页内存里，跳转登录页会丢失；两种登录模式都改用弹窗。
+            openAuth({ preferDialog: true });
             releaseRetryLock();
             releaseSubmitGate();
             return;
@@ -1299,6 +1331,25 @@ export default function CreatePage() {
         restoreMessageDraft(previous);
     };
 
+    if ((!hydrated || !activeConversation) && conversationStorageError) {
+        return (
+            <div className="grid h-full place-items-center">
+                <div className="text-center">
+                    <p role="alert" className="mb-3 text-sm text-foreground/65">
+                        创作记录读取失败：{conversationStorageError}
+                    </p>
+                    <Button
+                        onClick={() => {
+                            setConversationStorageError("");
+                            setConversationLoadAttempt((attempt) => attempt + 1);
+                        }}
+                    >
+                        重试
+                    </Button>
+                </div>
+            </div>
+        );
+    }
     if (!hydrated || !activeConversation)
         return (
             <div className="grid h-full place-items-center">
@@ -1401,6 +1452,21 @@ export default function CreatePage() {
     return (
         <>
             <div className="creation-home relative flex h-full min-h-0 flex-col overflow-hidden">
+                {conversationStorageError ? (
+                    <p role="status" className="mx-auto mb-3 max-w-3xl px-4 text-xs text-foreground/55">
+                        本地历史读取失败，当前会话仍保留。 {conversationStorageError}{" "}
+                        <button
+                            type="button"
+                            className="underline underline-offset-2"
+                            onClick={() => {
+                                setConversationStorageError("");
+                                setConversationLoadAttempt((attempt) => attempt + 1);
+                            }}
+                        >
+                            重试
+                        </button>
+                    </p>
+                ) : null}
                 {isEmpty ? (
                     <>
                         <AnimatePresence>
@@ -1415,11 +1481,11 @@ export default function CreatePage() {
                                     transition={reducedMotion ? { duration: 0 } : { type: "spring", stiffness: 360, damping: 32, mass: 0.8 }}
                                 >
                                     <PenLine aria-hidden="true" />
-                                    <input aria-label="快捷编辑提示词" placeholder="继续描述你的创作想法…" value={prompt} disabled={busy || referenceReplacementBusy} onChange={(event) => setPrompt(event.target.value)} />
-                                    <Tooltip title="展开完整创作区">
+                                    <input aria-label={t("create.page.quickEditLabel")} placeholder={t("create.page.quickEditPlaceholder")} value={prompt} disabled={busy || referenceReplacementBusy} onChange={(event) => setPrompt(event.target.value)} />
+                                    <Tooltip title={t("create.page.expandComposer")}>
                                         <button
                                             type="button"
-                                            aria-label="展开完整创作区"
+                                            aria-label={t("create.page.expandComposer")}
                                             onClick={() => {
                                                 threadScrollRef.current?.scrollTo({ top: 0, behavior: reducedMotion ? "auto" : "smooth" });
                                                 composerFocusRef.current?.focus({ preventScroll: true });
@@ -1432,22 +1498,16 @@ export default function CreatePage() {
                             ) : null}
                         </AnimatePresence>
                         <main ref={threadScrollRef} onScroll={handleThreadScroll} className="creation-home-scroll creation-scrollbar">
-                            <section ref={launchpadRef} className="creation-launchpad" aria-label="开始创作">
+                            <section ref={launchpadRef} className="creation-launchpad" aria-label={t("create.page.launchpadLabel")}>
                                 <header className="creation-start-heading">
                                     <div>
-                                        {/* 整句一次插值：JSX 里拆成兄弟节点会让 DOM 观察者只看到“和”“聊聊创作想法”，词典匹配不上。 */}
-                                        <h1>{t("create.hero_chat_title", { brand: brandName }, `和${brandName}聊聊创作想法`)}</h1>
-                                        <p>从一个画面、一个角色或一句话开始。</p>
+                                        <h1>{t("create.page.heading", { brand: brandName })}</h1>
+                                        <p>{t("create.page.subheading")}</p>
                                     </div>
-                                    <div className="creation-start-actions">
-                                        <a href="/pricing.html" className="creation-pricing-entry">
-                                            {t("nav.pricing")}
-                                        </a>
-                                        <button type="button" className="creation-history-entry" aria-label="查看历史对话" aria-expanded={historyOpen} onClick={() => setHistoryOpen(true)}>
-                                            <History aria-hidden="true" />
-                                            <span>历史对话</span>
-                                        </button>
-                                    </div>
+                                    <button type="button" className="creation-history-entry" aria-label={t("create.page.viewHistory")} aria-expanded={historyOpen} onClick={() => setHistoryOpen(true)}>
+                                        <History aria-hidden="true" />
+                                        <span>{t("create.history.title")}</span>
+                                    </button>
                                 </header>
                                 <div className={cn("creation-composer-stage is-home-mode", agentMode && "is-agent-mode")}>
                                     <CreationModeTabs
@@ -1468,7 +1528,6 @@ export default function CreatePage() {
                                     )}
                                 </div>
                                 <CreationEmptySuggest
-                                    mode={mode}
                                     onStartPrompt={startPrompt}
                                     onOpenLibrary={() => {
                                         setAgentMode(false);
@@ -1477,11 +1536,11 @@ export default function CreatePage() {
                                     }}
                                 />
                             </section>
-                            <CreationRecentCanvases onRequireLogin={() => setLoginDialogOpen(true)} />
+                            <CreationRecentCanvases onRequireLogin={() => openAuth()} />
                             <Suspense
                                 fallback={
                                     <div className="creation-hall-loading" role="status">
-                                        正在准备灵感大厅…
+                                        {t("create.page.hallLoading")}
                                     </div>
                                 }
                             >
@@ -1490,7 +1549,7 @@ export default function CreatePage() {
                             {inspirationSourcesVisible ? (
                                 <div className="creation-source-notice">
                                     <details>
-                                        <summary>{t("inspiration.field_source", undefined, "素材来源")}</summary>
+                                        <summary>{t("create.page.sourcesSummary")}</summary>
                                         {declaredInspirationSources().map((source) => (
                                             <p key={source.name ?? source.label}>
                                                 {source.notice}
@@ -1560,7 +1619,6 @@ export default function CreatePage() {
                 onDelete={confirmDeleteConversation}
                 onRename={renameConversationTitle}
             />
-            <CreationLoginDialog open={loginDialogOpen} onClose={() => setLoginDialogOpen(false)} />
             {libraryOpen ? (
                 <Suspense fallback={null}>
                     <AssetLibraryPickerModal
@@ -1576,7 +1634,7 @@ export default function CreatePage() {
                             accept: creationUploadAccept(mode),
                             description: mode === "text" ? t("create.page.uploadHintText") : mode === "video" ? t("create.page.uploadHintVideo") : t("create.page.uploadHintImage"),
                             onUpload: uploadLibraryAssets,
-                            external: { accept: "image/*", description: "写入当前 Eagle 文件夹；Eagle 当前支持图片文件", onUpload: (files, folderId) => externalAssetSources.uploadExternalFiles(files, folderId) },
+                            external: { accept: "image/*", description: t("create.page.uploadHintEagle"), onUpload: (files, folderId) => externalAssetSources.uploadExternalFiles(files, folderId) },
                         }}
                         onClose={() => setLibraryOpen(false)}
                         onConfirm={handleLibrarySelect}

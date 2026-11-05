@@ -9,7 +9,16 @@ import "dayjs/locale/ko";
 import "dayjs/locale/zh-cn";
 import { I18nextProvider, useTranslation } from "react-i18next";
 import { i18n } from "@/i18n";
-import { useSupDanceUpstreamI18n } from "@/supdance/adapters/upstream-i18n";
+import type { AppLocale } from "@/i18n/locales";
+import { useLocaleStore } from "@/stores/use-locale-store";
+import type { Locale as AntdLocale } from "antd/es/locale";
+import deDE from "antd/locale/de_DE";
+import enUS from "antd/locale/en_US";
+import frFR from "antd/locale/fr_FR";
+import jaJP from "antd/locale/ja_JP";
+import koKR from "antd/locale/ko_KR";
+import zhCN from "antd/locale/zh_CN";
+import dayjs from "dayjs";
 
 import { AuthSessionHydrator } from "@/components/auth/auth-session-hydrator";
 import { AppFeedbackProvider } from "@/components/layout/app-feedback";
@@ -22,12 +31,16 @@ import { useActiveTheme } from "@/stores/canvas/use-canvas-theme-store";
 import { applyAppearanceMetadata, useAppearanceStore } from "@/stores/use-appearance-store";
 import { useUserStore } from "@/stores/use-user-store";
 import { refreshPublicAppearance } from "@/services/appearance-bootstrap";
-import { SupDanceI18nRuntimeHost, useSupDanceAntdLocale } from "@/supdance/plugins/i18n";
+import { SupDanceI18nRuntimeHost } from "@/supdance/plugins/i18n";
 import { SupDancePluginRuntimeSync } from "@/supdance/adapters/plugin-runtime-sync";
 import { SocialOnboardingModal } from "@/supdance/plugins/social-auth";
 import { UserProfileModalHost } from "@/components/layout/user-profile-modal";
 import { useVisualEngineHostAdapter } from "@/supdance/plugins/visual-engine/adapters/antd-theme";
 import { WorkspaceRecoveryBoundary } from "@/supdance/plugins/visual-engine/loading/workspace-recovery-boundary";
+
+// antd 组件内置文案与 dayjs 日期格式随界面语言切换。
+const ANTD_LOCALES: Record<AppLocale, AntdLocale> = { "zh-CN": zhCN, "en-US": enUS, "fr-FR": frFR, "de-DE": deDE, "ja-JP": jaJP, "ko-KR": koKR };
+const DAYJS_LOCALES: Record<AppLocale, string> = { "zh-CN": "zh-cn", "en-US": "en", "fr-FR": "fr", "de-DE": "de", "ja-JP": "ja", "ko-KR": "ko" };
 
 const ClientRootInit = lazy(() => import("@/components/layout/client-root-init").then((module) => ({ default: module.ClientRootInit })));
 
@@ -43,13 +56,17 @@ function ClientRootBoundary({ children }: { children: ReactNode }) {
 }
 
 export function AppProviders({ children, extensions }: { children: ReactNode; extensions?: ReactNode }) {
-    useSupDanceUpstreamI18n();
     const hostTheme = useActiveTheme();
     const appearance = useAppearanceStore((state) => state.appearance);
     const visualAdapter = useVisualEngineHostAdapter(hostTheme, appearance.activeSkin);
     const theme = visualAdapter.mode;
     const dark = theme === "dark";
-    const antdLocale = useSupDanceAntdLocale();
+    const locale = useLocaleStore((state) => state.locale);
+
+    useLayoutEffect(() => {
+        document.documentElement.lang = locale;
+        dayjs.locale(DAYJS_LOCALES[locale]);
+    }, [locale]);
 
     useLayoutEffect(() => {
         document.documentElement.classList.toggle("dark", dark);
@@ -79,7 +96,7 @@ export function AppProviders({ children, extensions }: { children: ReactNode; ex
     return (
         // 两个汉字的按钮（取消、确定）不再被 antd 拉开字距，与其他按钮的文字节奏一致。
         <I18nextProvider i18n={i18n}>
-            <ConfigProvider locale={antdLocale} theme={visualAdapter.theme} wave={{ disabled: true }} button={{ autoInsertSpace: false }}>
+            <ConfigProvider locale={ANTD_LOCALES[locale]} theme={visualAdapter.theme} wave={{ disabled: true }} button={{ autoInsertSpace: false }}>
                 <AppFeedbackProvider>
                     <QueryClientProvider client={appQueryClient}>
                         {isolateDevRepro ? (

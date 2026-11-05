@@ -1,6 +1,8 @@
-import { TopbarLanguageSwitcher, useI18n } from "@/supdance/plugins/i18n";
+import { TopbarLanguageSwitcher } from "@/supdance/plugins/i18n";
 import { useEffect, useState } from "react";
 import { ArrowDown, ArrowUp } from "lucide-react";
+import { useLocaleStore } from "@/stores/use-locale-store";
+import { matchAppLocale } from "@/i18n/locales";
 import { Link, useLocation } from "react-router";
 
 import { useThemeStore } from "@/stores/use-theme-store";
@@ -21,8 +23,8 @@ interface LinearLegalPageProps {
 export function LinearLegalPage({ docMap, currentSlug }: LinearLegalPageProps) {
     const location = useLocation();
     const isDark = useThemeStore((state) => state.theme === "dark");
-    const { locale, setLocale } = useI18n();
-    const lang: SupportedLegalLanguage = locale === "zh-CN" || locale === "zh-TW" ? locale : locale.startsWith("ja") ? "ja" : locale.startsWith("ko") ? "ko" : locale.startsWith("es") ? "es" : "en";
+    const locale = useLocaleStore((state) => state.locale);
+    const lang: SupportedLegalLanguage = locale === "zh-CN" ? locale : locale === "ja-JP" ? "ja" : locale === "ko-KR" ? "ko" : "en";
     // 挂载时解除画布 fixed 视口锁定，赋予法务长文 100% 原生 Window 下拉滚动体验
     // 物理级滚轮与键盘全响应支持：确保在任何浏览器与操作系统中，鼠标滚轮、触控板与按键均能顺畅向下滑动
     useEffect(() => {
@@ -64,9 +66,9 @@ export function LinearLegalPage({ docMap, currentSlug }: LinearLegalPageProps) {
 
     useEffect(() => {
         const requested = new URLSearchParams(location.search).get("lang");
-        const locales = { en: "en-US", "zh-CN": "zh-CN", "zh-TW": "zh-TW", ja: "ja-JP", ko: "ko-KR", es: "es-ES" } as const;
-        if (requested && requested in locales) setLocale(locales[requested as SupportedLegalLanguage]);
-    }, [location.search, setLocale]);
+        const next = matchAppLocale(requested);
+        if (next) useLocaleStore.getState().setLocale(next);
+    }, [location.search]);
 
     // 处理 hash 锚点滚动（如 #content-standards, #enforcement-actions, #reporting）
     useEffect(() => {

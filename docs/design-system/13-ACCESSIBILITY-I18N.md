@@ -1,5 +1,10 @@
 # 13 — 国际化与无障碍设计规范 (Accessibility & i18n Specification)
 
+## 原生多语言优先规则
+
+当前按用户要求直接使用上游中英法德日韩六语言、i18next、设备偏好和切换组件。新增上游页面使用原生 `useTranslation`；SupDance 专属显式 key 使用同一实例独立 namespace，不覆盖原生目录、不修改全页 DOM。下方旧插件六语言及实时切换说明为历史规范，现行行为见 `docs/supdance/NATIVE_I18N_UPSTREAM_SYNC.md`。
+
+
 > **设计层级**：Layer 1 — Global Foundation  
 > **适用范围**：全站所有交互组件、表单、提示、数据报表与导航系统。  
 > **标准基准**：对齐 **WCAG 2.2 AA** 国际标准与 SupDance **六国语言**实时国际化系统。

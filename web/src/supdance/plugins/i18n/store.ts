@@ -1,9 +1,10 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo } from "react";
 import { create } from "zustand";
 import { i18n } from "@/i18n";
-import type { Locale } from "antd/es/locale";
+import { useTranslation } from "react-i18next";
+import { useLocaleStore } from "@/stores/use-locale-store";
+import { registerSupDanceTranslations, SUPDANCE_TRANSLATION_NAMESPACE } from "@/supdance/adapters/upstream-i18n";
 import { usePluginStore } from "@/stores/use-plugin-store";
-import { getAntdLocaleForCode, loadAntdLocale } from "./engine/antd-locale";
 import { compileI18nDictionary, isCandidateUntranslatedChinese, translateByKey, translateSourceText, type CompiledI18nDictionary } from "./engine/translator";
 import { BUILTIN_I18N_ENTRIES, DEFAULT_SUPDANCE_I18N_SETTINGS, loadLocalePack, mergeI18nEntries, SUPPORTED_LOCALE_CODES } from "./locales";
 import { SUPDANCE_I18N_PLUGIN_ID, type SupDanceDiscoveredTextItem, type SupDanceI18nEntry, type SupDanceI18nPublicBundle, type SupDanceI18nSettings, type SupDanceLanguageItem, type SupDanceLocaleCode } from "./types";
@@ -395,83 +396,45 @@ export function useSupDanceI18nEnabled(): boolean {
 }
 
 /**
- * Hook returning the active Ant Design Locale object.
- * Automatically falls back to zh-CN when the plugin is disabled.
- */
-export function useSupDanceAntdLocale() {
-    const enabled = useSupDanceI18nEnabled();
-    const locale = useSupDanceI18nStore((s) => s.locale);
-    const effectiveLocale: SupDanceLocaleCode = enabled ? locale : "zh-CN";
-    const [antdLocale, setAntdLocale] = useState<Locale>(() => getAntdLocaleForCode(effectiveLocale));
-
-    useEffect(() => {
-        let active = true;
-        if (effectiveLocale === "zh-CN") {
-            setAntdLocale(getAntdLocaleForCode("zh-CN"));
-            return;
-        }
-        void loadAntdLocale(effectiveLocale).then((loaded) => {
-            if (active) setAntdLocale(loaded);
-        });
-        return () => {
-            active = false;
-        };
-    }, [effectiveLocale]);
-
-    return antdLocale;
-}
-
-/**
  * Main i18n hook for components that want explicit key/text translation and locale switching.
  */
+const extensionLocaleLoads = new Map<SupDanceLocaleCode, Promise<void>>();
+
+function ensureExtensionLocale(locale: SupDanceLocaleCode): Promise<void> {
+    const pending = extensionLocaleLoads.get(locale);
+    if (pending) return pending;
+    const loading = loadLocalePack(locale)
+        .then(() => {
+            const entries = mergeI18nEntries(useSupDanceI18nStore.getState().customEntries);
+            useSupDanceI18nStore.setState({ entries, dictionary: compileI18nDictionary(entries) });
+        })
+        .catch((error) => {
+            extensionLocaleLoads.delete(locale);
+            throw error;
+        });
+    extensionLocaleLoads.set(locale, loading);
+    return loading;
+}
+
 export function useI18n() {
-    const enabled = useSupDanceI18nEnabled();
-    const locale = useSupDanceI18nStore((s) => s.locale);
-    const settings = useSupDanceI18nStore((s) => s.settings);
-    const dictionary = useSupDanceI18nStore((s) => s.dictionary);
-    const setLocale = useSupDanceI18nStore((s) => s.setLocale);
-
-    const effectiveLocale: SupDanceLocaleCode = enabled ? locale : "zh-CN";
-
-    const enabledLanguages = useMemo(() => [...settings.languages].filter((item) => item.enabled).sort((a, b) => a.sortOrder - b.sortOrder), [settings.languages]);
-
-    const currentLanguage = useMemo(
+    const { t: nativeT } = useTranslation();
+    const nativeLocale = useLocaleStore((state) => state.locale);
+    const entries = useSupDanceI18nStore((state) => state.entries);
+    const dictionary = useSupDanceI18nStore((state) => state.dictionary);
+    const settings = useSupDanceI18nStore((state) => state.settings);
+    // Legacy content pages have no French/German copy yet; preserve their source fallback.
+    const locale: SupDanceLocaleCode = nativeLocale === "fr-FR" || nativeLocale === "de-DE" ? "zh-CN" : nativeLocale;
+    useMemo(() => registerSupDanceTranslations(entries), [entries]);
+    useEffect(() => {
+        if (locale !== "zh-CN") void ensureExtensionLocale(locale).catch((error) => console.warn("Could not load extension translations", error));
+    }, [locale]);
+    const t = useMemo(
         () =>
-            settings.languages.find((item) => item.code === effectiveLocale) ??
-            settings.languages[0] ?? {
-                code: "zh-CN" as const,
-                name: "简体中文",
-                nativeName: "简体中文",
-                badge: "中",
-                direction: "ltr" as const,
-                enabled: true,
-                sortOrder: 1,
+            (key: string, params?: Record<string, string | number>, fallbackText?: string): string => {
+                if (dictionary.byKey.has(key)) return i18n.t(key, { ...params, ns: SUPDANCE_TRANSLATION_NAMESPACE, keySeparator: false, lng: nativeLocale, defaultValue: fallbackText ?? key }) as string;
+                return i18n.exists(key) ? (nativeT(key, params) as string) : (fallbackText ?? key);
             },
-        [effectiveLocale, settings.languages],
+        [dictionary, nativeLocale, nativeT],
     );
-
-    const t = useMemo(() => {
-        return (keyOrText: string, params?: Record<string, string | number>, fallbackText?: string): string => {
-            if (!enabled) {
-                // 插件停用时要退回简中原文，而不是把 auth.login 这类技术键名直接吐到界面上。
-                if (dictionary.byKey.has(keyOrText)) return translateByKey(dictionary, keyOrText, "zh-CN", "zh-CN", params, fallbackText);
-                return i18n.exists(keyOrText) ? i18n.getFixedT("zh-CN")(keyOrText, { ...params, postProcess: [] }) : fallbackText || keyOrText;
-            }
-            if (dictionary.byKey.has(keyOrText)) {
-                return translateByKey(dictionary, keyOrText, effectiveLocale, settings.fallbackLocale, params, fallbackText);
-            }
-            return translateSourceText(dictionary, keyOrText, effectiveLocale, settings.fallbackLocale) ?? (i18n.exists(keyOrText) ? i18n.t(keyOrText, params) : (fallbackText ?? keyOrText));
-        };
-    }, [dictionary, effectiveLocale, enabled, settings.fallbackLocale]);
-
-    return {
-        enabled,
-        locale: effectiveLocale,
-        currentLanguage,
-        enabledLanguages,
-        settings,
-        setLocale,
-        t,
-        builtinCount: BUILTIN_I18N_ENTRIES.length,
-    };
+    return { enabled: true, locale, settings, t, builtinCount: BUILTIN_I18N_ENTRIES.length };
 }

@@ -94,10 +94,9 @@ export const SUPDANCE_UPSTREAM_PATCH_REGISTRY: readonly UpstreamPatchRecord[] = 
     {
         id: "supdance-i18n-plugin",
         upstreamBaseline: "v1.7.3",
-        feature: "站点多语言插件 (supdance-i18n)：右上角六国语言切换图标、响应式词条引擎、后台语言管理设置与在线字段修改页面",
+        feature: "上游原生六语言与 SupDance 扩展词条：独立命名空间、共享语言菜单及后台词条编辑",
         coupledUpstreamFiles: [
             ".github/workflows/quality.yml",
-            "web/src/i18n/index.ts",
             "web/src/pages/create/index.tsx",
             ".github/workflows/supdance-upstream-sync.yml",
             "scripts/verify-before-push.mjs",
@@ -155,8 +154,17 @@ export const SUPDANCE_UPSTREAM_PATCH_REGISTRY: readonly UpstreamPatchRecord[] = 
             "web/src/supdance/plugins/i18n/admin/i18n-settings-page.tsx",
             "web/src/supdance/plugins/i18n/admin/i18n-entries-page.tsx",
         ],
-        reason: "以可热插拔插件形式挂载右上角语言切换器、AntD 动态 Locale 与后台语言管理/词条修改路由，所有业务逻辑位于独立 supdance/i18n 扩展包内。",
+        reason: "上游原生语言菜单、设备偏好与 AntD locale 接管界面；保留扩展词条 namespace 与审核发布接口，停止 DOM 翻译和上游词条覆盖。",
         upgradeRisk: "LOW",
+    },
+    {
+        id: "supdance-native-auth-social-entry",
+        upstreamBaseline: "v1.7.3.7",
+        feature: "上游共用登录面板保留 SupDance 社交登录与协议确认",
+        coupledUpstreamFiles: ["web/src/components/auth/auth-login-form.tsx", "web/src/components/auth/auth-register-form.tsx"],
+        files: ["web/src/components/auth/auth-login-form.tsx", "web/src/components/auth/auth-register-form.tsx"],
+        reason: "社交登录挂载点随上游登录/注册共用面板迁移，注册继续要求协议同意，不复制旧登录流程。",
+        upgradeRisk: "MEDIUM",
     },
     {
         id: "supdance-music-plugin-gates",

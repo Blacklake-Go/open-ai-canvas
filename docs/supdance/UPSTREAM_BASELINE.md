@@ -1,5 +1,8 @@
 # SupDance Canvas — 上游基线记录 (UPSTREAM_BASELINE.md)
 
+当前正式基线为 `v1.7.3.7`（`878b515b`），自有版本 `v1.7.4-supdance.8`，要求 Schema 82。界面语言直接使用上游六语言。以下为历史记录，现行范围与验证见 [原生多语言集成](./NATIVE_I18N_UPSTREAM_SYNC.md)。
+
+
 ## 本次完整集成基线
 
 `v1.7.4-supdance.7` 自 `eadb3622` 集成正式版 `v1.7.3.5`（`7c14ffdd8c5480eefc29e6f1ab7da4ef25da2856`）及其后的上游 `main`（`8de0a23953dba67493d5a80bf9ee5e913d289622`），源码要求 Schema 81。正式 Release 与开发分支提交分别记录，不能将 main 冒充正式标签。实际验证、迁移与部署证据见 [完整集成记录](./STAGED_UPSTREAM_CANDIDATE.md)，下方保留历史记录。

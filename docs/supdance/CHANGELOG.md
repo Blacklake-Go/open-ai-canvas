@@ -1,5 +1,10 @@
 # SupDance Canvas — 定制维护变更日志 (CHANGELOG.md)
 
+## v1.7.4-supdance.8
+
+完整合并上游 v1.7.3.7 与 Schema 82；使用原生中英法德日韩语言、共用登录面板。移除旧全页 DOM 翻译与上游词条覆盖，扩展词条使用原生 i18next 独立 namespace。保留音乐、社交登录、品牌、法务与视觉引擎。验证及发布边界见 `NATIVE_I18N_UPSTREAM_SYNC.md`。
+
+
 本文件专用于记录 SupDance 二次开发架构、扩展模块、自定义插件与上游版本同步记录。上游核心功能变更请查阅仓库根目录 [`CHANGELOG.md`](../../CHANGELOG.md)。
 
 ---

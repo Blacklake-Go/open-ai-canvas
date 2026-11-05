@@ -3,8 +3,10 @@ import { createBrowserRouter, Navigate, Outlet, useLocation } from "react-router
 import { lazyAdminPage } from "@/pages/admin/admin-page-loader";
 
 import { RequireAuth } from "@/components/auth/require-auth";
+// 功能开关守卫包在页面 Suspense 之外，懒加载会让整个工作区退回全屏加载页；体积很小，直接静态引入。
+import { RequireFeature } from "@/components/auth/require-feature";
 import { FullScreenLoader, WorkspaceRouteLoader } from "@/components/ui/aceternity/full-screen-loader";
-import { loadAssetsPage, loadCanvasPage, loadCanvasProjectPage, loadCreatePage, loadProjectCreatePage, loadProjectDetailPage, loadProjectsPage, loadSkillWorkbenchPage } from "@/lib/workspace-route-modules";
+import { workspaceRoutePages } from "@/lib/workspace-route-modules";
 import { CanvasRefreshShell } from "@/pages/canvas/canvas-refresh-shell";
 import { AuthScene } from "@/pages/auth/auth-scene";
 import RouteErrorPage from "@/pages/route-error";
@@ -13,7 +15,6 @@ import { isGuestWorkspacePath } from "@/lib/guest-workspace";
 import { SUPDANCE_MUSIC_PLUGIN_ID } from "@/supdance/plugins/music-generation/types";
 
 const AdminPage = lazy(() => import("@/pages/admin"));
-const EcommercePage = lazy(() => import("@/pages/ecommerce"));
 const EcommerceManagementPage = lazyAdminPage(() => import("@/pages/admin/ecommerce-management-page"));
 const EcommerceAgentConfigPage = lazyAdminPage(() => import("@/pages/admin/ecommerce-agent-config-page"));
 const AnalyticsPage = lazyAdminPage(() => import("@/pages/admin/admin-route-pages").then((module) => ({ default: module.AnalyticsPage })));
@@ -61,31 +62,31 @@ const PrivacyPage = lazy(() => import("@/supdance/pages/legal/privacy-page"));
 const AupPage = lazy(() => import("@/supdance/pages/legal/aup-page"));
 const LegalHubPage = lazy(() => import("@/supdance/pages/legal/legal-hub-page"));
 const PublicHtmlViewerPage = lazy(() => import("@/supdance/pages/html-viewer/public-html-page"));
-const AssetsPage = lazy(loadAssetsPage);
+const AssetsPage = workspaceRoutePages.assets;
 const LoginPage = lazy(() => import("@/pages/auth/login"));
 const RegisterPage = lazy(() => import("@/pages/auth/register"));
 const ForgotPasswordPage = lazy(() => import("@/pages/auth/forgot-password"));
-const CanvasPage = lazy(loadCanvasPage);
-const CanvasProjectPage = lazy(loadCanvasProjectPage);
+const CanvasPage = workspaceRoutePages.canvas;
+const CanvasProjectPage = workspaceRoutePages.canvasProject;
 const SharedCanvasPage = lazy(() => import("@/pages/canvas/shared"));
-const CreatePage = lazy(loadCreatePage);
-const ImageWorkbenchPage = lazy(() => import("@/pages/workbench/image-workbench-route"));
-const VideoWorkbenchPage = lazy(() => import("@/pages/workbench/video-workbench-page"));
+const CreatePage = workspaceRoutePages.create;
+const EcommercePage = workspaceRoutePages.ecommerce;
+const ImageWorkbenchPage = workspaceRoutePages.imageWorkbench;
+const VideoWorkbenchPage = workspaceRoutePages.videoWorkbench;
 const NotFound = lazy(() => import("@/pages/not-found"));
-const SkillsPage = lazy(() => import("@/pages/skills"));
-const SkillWorkbenchPage = lazy(loadSkillWorkbenchPage);
-const PluginsPage = lazy(() => import("@/pages/plugins"));
-const EagleLibraryPage = lazy(() => import("@/pages/plugins/eagle"));
-const TasksPage = lazy(() => import("@/pages/tasks"));
-const ProjectsPage = lazy(loadProjectsPage);
-const ProjectDetailPage = lazy(loadProjectDetailPage);
-const ProjectCreatePage = lazy(loadProjectCreatePage);
-const SettingsPage = lazy(() => import("@/pages/settings"));
-const ReferralPage = lazy(() => import("@/pages/referral"));
+const SkillsPage = workspaceRoutePages.skills;
+const SkillWorkbenchPage = workspaceRoutePages.skillWorkbench;
+const PluginsPage = workspaceRoutePages.plugins;
+const EagleLibraryPage = workspaceRoutePages.eagleLibrary;
+const TasksPage = workspaceRoutePages.tasks;
+const ProjectsPage = workspaceRoutePages.projects;
+const ProjectDetailPage = workspaceRoutePages.projectDetail;
+const ProjectCreatePage = workspaceRoutePages.projectCreate;
+const SettingsPage = workspaceRoutePages.settings;
+const ReferralPage = workspaceRoutePages.referral;
 const AdminReferralPage = lazyAdminPage(() => import("@/pages/admin/referral/referral-admin-page"));
 const TestVoiceRecording = lazy(() => import("@/pages/test-voice-recording"));
 const UserLayout = lazy(() => import("@/layouts/user-layout"));
-const RequireFeature = lazy(() => import("@/components/auth/require-feature").then((module) => ({ default: module.RequireFeature })));
 const RequirePlugin = lazy(() => import("@/components/auth/require-plugin").then((module) => ({ default: module.RequirePlugin })));
 
 function deferred(element: ReactNode) {
@@ -302,7 +303,6 @@ export const router = createBrowserRouter([
                     { path: "redemption-codes", element: <RedemptionCodesPage /> },
                     { path: "referral", element: <AdminReferralPage /> },
                     { path: "logs", element: <LogsPage /> },
-                    { path: "settings/yoru", element: <Navigate to="/admin/ecommerce/agent" replace /> },
                     { path: "settings", element: <Navigate to="runtime-policy" replace /> },
                     { path: "settings/appearance", element: <AppearanceSettingsPage /> },
                     { path: "settings/drawing-engine", element: <DrawingEngineSettingsPage /> },
