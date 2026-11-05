@@ -7,7 +7,7 @@ description: 从产品功能快速定位主要代码入口
 
 ## 生成前提示词筛查
 
-- 领域协议：`backend/internal/contentsafety/` 处理商户签名、判定与有界重试。
+- 领域协议：`backend/internal/supdance/contentsafety/` 处理商户签名、判定与有界重试。
 - 组合入口：`app/prompt_screening.go`、`app/provider.go` 在普通／工作流上游创建前检查；`model_router_attempts.go` 禁止筛查失败后切换供应商，`handler/custom_proxy.go` 阻止原始 relay 创建绕过。
 - 默认关闭，无数据库变更。配置、隐私授权、入口影响与待验收边界见 `docs/supdance/PROMPT_SCREENING.md`。
 

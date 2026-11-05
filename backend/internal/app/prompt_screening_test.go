@@ -8,10 +8,10 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	"yingce/backend/internal/contentsafety"
 	"yingce/backend/internal/kernel"
 	"yingce/backend/internal/model"
 	"yingce/backend/internal/repository"
+	"yingce/backend/internal/supdance/contentsafety"
 )
 
 type promptScreenerFunc func(context.Context, string) error

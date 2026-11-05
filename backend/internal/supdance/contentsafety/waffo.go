@@ -1,4 +1,4 @@
-// Package contentsafety checks prompts before generation and keeps merchant
+// Package contentsafety checks SupDance prompts before generation and keeps merchant
 // authentication and vendor responses outside the provider protocols.
 package contentsafety
 

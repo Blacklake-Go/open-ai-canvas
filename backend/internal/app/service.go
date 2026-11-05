@@ -13,7 +13,6 @@ import (
 
 	"yingce/backend/internal/auth"
 	"yingce/backend/internal/canvas"
-	"yingce/backend/internal/contentsafety"
 	"yingce/backend/internal/kernel"
 	"yingce/backend/internal/model"
 	"yingce/backend/internal/payment"
@@ -23,6 +22,7 @@ import (
 	"yingce/backend/internal/repository"
 	"yingce/backend/internal/skills"
 	"yingce/backend/internal/sms"
+	"yingce/backend/internal/supdance/contentsafety"
 	"yingce/backend/internal/tools"
 	"yingce/backend/internal/workbench"
 )

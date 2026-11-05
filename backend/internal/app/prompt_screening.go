@@ -5,8 +5,8 @@ import (
 	"errors"
 	"net/http"
 
-	"yingce/backend/internal/contentsafety"
 	"yingce/backend/internal/kernel"
+	"yingce/backend/internal/supdance/contentsafety"
 )
 
 // ScreenGenerationPrompt is applied after prompt expansion and before any image

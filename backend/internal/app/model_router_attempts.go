@@ -15,9 +15,9 @@ import (
 	"strings"
 	"time"
 
-	"yingce/backend/internal/contentsafety"
 	"yingce/backend/internal/model"
 	"yingce/backend/internal/repository"
+	"yingce/backend/internal/supdance/contentsafety"
 )
 
 func (s *Service) createRouteAttempt(task *model.Task, routed *RoutedModel, attemptNumber int) (*model.RouteAttempt, error) {

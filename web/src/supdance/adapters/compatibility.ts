@@ -57,7 +57,7 @@ export const SUPDANCE_UPSTREAM_PATCH_REGISTRY: readonly UpstreamPatchRecord[] = 
         upstreamBaseline: "main@b2c8b2e8",
         feature: "图片视频生成前提示词筛查",
         coupledUpstreamFiles: [".env.example", "backend/internal/app/service.go", "backend/internal/app/provider.go", "backend/internal/app/model_router_attempts.go", "backend/internal/handler/custom_proxy.go"],
-        files: ["backend/internal/contentsafety/waffo.go", "backend/internal/contentsafety/waffo_test.go", "backend/internal/app/prompt_screening.go", "backend/internal/app/prompt_screening_test.go", "docs/supdance/PROMPT_SCREENING.md"],
+        files: ["backend/internal/supdance/contentsafety/waffo.go", "backend/internal/supdance/contentsafety/waffo_test.go", "backend/internal/app/prompt_screening.go", "backend/internal/app/prompt_screening_test.go", "docs/supdance/PROMPT_SCREENING.md"],
         reason: "隔离商户签名和第三方协议；仅允许明确通过的图片视频提示词，拒绝筛查失败后的供应商切换和原始 relay 创建绕过。默认关闭，启用须完成配置与外发授权。",
         upgradeRisk: "HIGH",
     },
