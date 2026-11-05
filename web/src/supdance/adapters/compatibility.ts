@@ -7,8 +7,8 @@ import type { RouteObject } from "react-router";
 import type { PluginHostContext, PluginManifest, PluginManifestV2, RegisteredPlugin } from "@/lib/plugins/plugin-types";
 import { getRegisteredPlugin, registerPlugin, unregisterPlugin } from "@/lib/plugins/plugin-registry";
 
-export const SUPDANCE_HOST_VERSION = "1.7.4" as const;
-export const SUPDANCE_SCHEMA_BASELINE = 82 as const;
+export const SUPDANCE_HOST_VERSION = "1.8.0" as const;
+export const SUPDANCE_SCHEMA_BASELINE = 87 as const;
 
 export type UpstreamPatchRecord = {
     id: string;
@@ -25,6 +25,15 @@ export type UpstreamPatchRecord = {
  * 新增核心文件修改时必须同步登记，并由架构回归测试与 baseline.json 对齐校验。
  */
 export const SUPDANCE_UPSTREAM_PATCH_REGISTRY: readonly UpstreamPatchRecord[] = [
+    {
+        id: "supdance-upstream-1.8-pricing-and-title",
+        upstreamBaseline: "v1.8.0@2fe3ca13",
+        feature: "上游新界面国际化与计价接缝",
+        coupledUpstreamFiles: ["web/src/lib/model-pricing.ts", "web/src/lib/workspace-page-title.ts", "web/src/pages/projects/studio/asset-transfer.tsx", "web/src/pages/projects/studio/episode-delete-modal.tsx"],
+        files: ["web/src/lib/model-pricing.ts", "web/src/lib/workspace-page-title.ts", "web/src/pages/projects/studio/asset-transfer.tsx", "web/src/pages/projects/studio/episode-delete-modal.tsx"],
+        reason: "保留既有上下文售价区间，合并上游分时规则并显式国际化；顶栏与标签页共用标题入口保留音乐。数据库83历史与计费快照沿已有接缝保留。",
+        upgradeRisk: "HIGH",
+    },
     {
         id: "supdance-postgres-test-isolation",
         upstreamBaseline: "main@b2c8b2e8",

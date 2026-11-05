@@ -44,6 +44,10 @@ docs/content/docs/progress/*
 !docs/content/docs/progress/music-generation-changelog.mdx
 !docs/content/docs/progress/todo.mdx
 !docs/content/docs/progress/pending-test.mdx
+# Keep the pose library operator guide versioned without unignoring generated docs.
+!docs/content/docs/canvas/
+docs/content/docs/canvas/*
+!docs/content/docs/canvas/pose-library.mdx
 # Keep the creative Agent design versioned without unignoring generated docs.
 !docs/content/docs/overview/
 docs/content/docs/overview/*

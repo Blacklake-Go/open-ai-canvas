@@ -62,19 +62,46 @@ export function priceTierSummaryLabel(tiers: ModelPriceTier[], capability?: Mode
             .filter((value) => Number.isFinite(value) && value >= 0);
     const fixedRequestValues = unitPrices("fixed_request");
     const perSecondValues = unitPrices("per_second");
-    const tokenValues = tiers
-        .filter((tier) => tier.billingMode === "token")
-        .flatMap((tier) => (tier.tokenPriceBands?.length ? tier.tokenPriceBands : [tier]).map((band) => band.outputTokenPriceMicrocredits / 1_000_000))
+    // 分时与上下文规则也计入输出价区间，用户看到的是可能被收取的全部输出单价。
+    const tokenTiers = tiers.filter((tier) => tier.billingMode === "token");
+    const tokenValues = tokenTiers
+        .flatMap((tier) => [...(tier.tokenPriceBands?.length ? tier.tokenPriceBands : [tier]), ...(tier.tokenPriceRules || [])].map((price) => price.outputTokenPriceMicrocredits))
+        .map((value) => value / 1_000_000)
         .filter((value) => Number.isFinite(value) && value >= 0);
+    const timeBased = tokenTiers.some((tier) => tier.tokenPriceRules?.length);
     return (
         [
             fixedRequestValues.length ? formatPriceRange(fixedRequestValues, i18n.t("tokenPricing.credits")) : "",
             perSecondValues.length ? formatPriceRange(perSecondValues, i18n.t("tokenPricing.perSecond")) : "",
-            tokenValues.length ? (capability === "video" ? formatPriceRange(tokenValues, i18n.t("tokenPricing.perMillionVideo")) : i18n.t("tokenPricing.output", { price: formatPriceRange(tokenValues, i18n.t("tokenPricing.perMillion")) })) : "",
+            tokenValues.length
+                ? `${capability === "video" ? formatPriceRange(tokenValues, i18n.t("tokenPricing.perMillionVideo")) : i18n.t("tokenPricing.output", { price: formatPriceRange(tokenValues, i18n.t("tokenPricing.perMillion")) })}${timeBased ? ` · ${i18n.t("upstreamSync.timeBased")}` : ""}`
+                : "",
         ]
             .filter(Boolean)
             .join(" · ") || i18n.t("tokenPricing.unconfigured")
     );
+}
+
+/** 一条分时与上下文规则的用户可读说明，例如「周一至周五 00:30–08:30 · 输入 ≥ 32,000 Token：输入 1 / 输出 2 积分/百万 Token」。 */
+export function tokenPriceRuleDescription(rule: NonNullable<ModelPriceTier["tokenPriceRules"]>[number]) {
+    const days = [...(rule.weekdays || [])].sort((a, b) => a - b);
+    const contiguous = days.length > 2 && days.every((day, index) => index === 0 || day === days[index - 1] + 1);
+    const locale = i18n.resolvedLanguage || "zh-CN";
+    const weekday = new Intl.DateTimeFormat(locale, { weekday: "short", timeZone: "UTC" });
+    const label = (day: number) => weekday.format(new Date(Date.UTC(2024, 0, 7 + day)));
+    const dayLabel = days.length === 7 ? i18n.t("upstreamSync.everyDay") : contiguous ? i18n.t("upstreamSync.dayRange", { start: label(days[0]), end: label(days[days.length - 1]) }) : days.map(label).join(i18n.t("upstreamSync.daySeparator"));
+    const format = (value: number) => value.toLocaleString(locale);
+    const context =
+        rule.maxInputTokens > 0 ? i18n.t("upstreamSync.inputRange", { min: format(rule.minInputTokens), max: format(rule.maxInputTokens) }) : rule.minInputTokens > 0 ? i18n.t("upstreamSync.inputMinimum", { min: format(rule.minInputTokens) }) : "";
+    const price = (value: number) => (value / 1_000_000).toLocaleString(locale, { maximumFractionDigits: 6 });
+    return i18n.t("upstreamSync.ruleDescription", {
+        period: [`${dayLabel} ${rule.start}–${rule.end}`, context].filter(Boolean).join(" · "),
+        input: price(rule.inputTokenPriceMicrocredits),
+        output: price(rule.outputTokenPriceMicrocredits),
+        cached: price(rule.cachedTokenPriceMicrocredits),
+        write: price(rule.cacheWriteTokenPriceMicrocredits),
+        unit: i18n.t("tokenPricing.perMillion"),
+    });
 }
 
 export function formatPriceRange(values: number[], suffix: string) {

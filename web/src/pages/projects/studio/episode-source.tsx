@@ -11,7 +11,7 @@ import { addDramaEpisode, getDramaChapter, updateDramaChapter, updateDramaEpisod
 
 import { formatCount, SOURCE_FORMAT_LABEL, SourceFormatPicker } from "../drama-shared";
 
-// 逐集制作：在作品末尾追加一集，或修改某一集的原文与素材类型。原文修改后需要重新改编才会重写剧本。
+// 逐集制作：在作品末尾追加一集、插到某一集前后，或修改某一集的原文与素材类型。原文修改后需要重新改编才会重写剧本。
 
 const MAX_FILE_BYTES = 2 * 1024 * 1024;
 const TEXT_FILE = /\.(txt|md|markdown|csv|tsv)$/i;
@@ -151,10 +151,14 @@ function SourceComposer({
     );
 }
 
+/** 插入位置：放到锚点集之前或之后，新集取得的集号就是 nextNumber，后续各集顺延。 */
+export type EpisodePlacement = { anchorId: string; anchorNumber: number; position: "before" | "after" };
+
 export function AddEpisodeModal({
     open,
     projectId,
     nextNumber,
+    placement,
     defaultFormat,
     blockedReason,
     onClose,
@@ -163,6 +167,8 @@ export function AddEpisodeModal({
     open: boolean;
     projectId: string;
     nextNumber: number;
+    /** 不传时追加到末尾。 */
+    placement?: EpisodePlacement;
     defaultFormat: DramaSourceFormat;
     blockedReason?: string;
     onClose: () => void;
@@ -181,18 +187,26 @@ export function AddEpisodeModal({
     }, [defaultFormat, open]);
     const chars = sourceChars(text);
     const add = useMutation({
-        mutationFn: () => addDramaEpisode(projectId, { title: title.trim(), text, sourceFormat: format }),
+        mutationFn: () => addDramaEpisode(projectId, { title: title.trim(), text, sourceFormat: format, ...(placement ? { anchorEpisodeId: placement.anchorId, position: placement.position } : {}) }),
         onSuccess: (detail) => {
-            message.success(_creationText("creation.0bea9d02bdb4e098", { value1: detail.episode.number, value2: format === "novel" ? _creationText("creation.2698848f609303b9") : _creationText("creation.50804542fdfa68cf") }));
+            message.success(
+                placement
+                    ? _creationText("projects.insert_episode_started", { number: detail.episode.number, stage: format === "novel" ? _creationText("creation.2698848f609303b9") : _creationText("creation.50804542fdfa68cf") })
+                    : _creationText("creation.0bea9d02bdb4e098", { value1: detail.episode.number, value2: format === "novel" ? _creationText("creation.2698848f609303b9") : _creationText("creation.50804542fdfa68cf") }),
+            );
             onAdded(detail.episode.id);
         },
-        onError: (error) => message.error(error instanceof Error ? error.message : _creationText("creation.2ca15f1e2bb7d991")),
+        onError: (error) => message.error(error instanceof Error ? error.message : _creationText(placement ? "projects.insert_episode_failed" : "creation.2ca15f1e2bb7d991")),
     });
     return (
         <SourceComposer
             open={open}
-            title={_creationText("creation.7fa645eba8ead61e", { value1: nextNumber })}
-            subtitle="一次只放这一集的内容，前面已做好的集不会受影响"
+            title={
+                placement
+                    ? _creationText("projects.insert_episode_title", { number: placement.anchorNumber, position: _creationText(placement.position === "before" ? "projects.before" : "projects.after") })
+                    : _creationText("creation.7fa645eba8ead61e", { value1: nextNumber })
+            }
+            subtitle={placement ? _creationText("projects.insert_episode_subtitle", { number: nextNumber }) : _creationText("projects.append_episode_subtitle")}
             format={format}
             onFormat={setFormat}
             text={text}
@@ -221,7 +235,7 @@ export function AddEpisodeModal({
                     <span className="flex-1" />
                     <Button onClick={onClose}>{_creationText("common.cancel")}</Button>
                     <Button type="primary" loading={add.isPending} disabled={Boolean(blockedReason) || !chars || chars > EPISODE_SOURCE_CHARS} onClick={() => add.mutate()}>
-                        {format === "storyboard" ? _creationText("creation.9dd00763ec0108c2") : _creationText("creation.b3f93c38ccf1321f")}
+                        {format === "storyboard" ? _creationText("creation.9dd00763ec0108c2") : _creationText(placement ? "projects.insert_episode_action" : "creation.b3f93c38ccf1321f")}
                     </Button>
                 </>
             }

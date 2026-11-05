@@ -11,6 +11,8 @@ import { WorkspaceTopBar } from "@/components/layout/workspace-top-bar";
 import { WorkspaceTopBarExtensionProvider } from "@/components/layout/workspace-top-bar-extension";
 import { WorkspaceStorageLimitNotice } from "@/components/layout/workspace-storage-limit-notice";
 import { WorkspaceWalletHost } from "@/components/layout/workspace-wallet-modal";
+import { GenerationSuccessNotifier } from "@/components/layout/generation-success-notifier";
+import { useWorkspaceDocumentTitle } from "@/hooks/use-workspace-document-title";
 import { cn } from "@/lib/utils";
 import { isSpatialWorkbenchPath } from "@/lib/workspace-routes";
 
@@ -23,6 +25,7 @@ export function AppWorkspaceShell({ children }: { children: ReactNode }) {
     const [mobileSidebarExpanded, setMobileSidebarExpanded] = useState(false);
     const [desktopSidebarCollapsed, setDesktopSidebarCollapsed] = useState(readWorkspaceSidebarCollapsed);
     const [paletteOpen, setPaletteOpen] = useState(false);
+    useWorkspaceDocumentTitle();
 
     const hideChrome = pathname.startsWith("/admin") || /^\/canvas\/[^/]+/.test(pathname);
     const showGlobalTopBar = !hideChrome;
@@ -111,6 +114,7 @@ export function AppWorkspaceShell({ children }: { children: ReactNode }) {
             </WorkspaceTopBarExtensionProvider>
             <WorkspaceWalletHost />
             <WorkspaceStorageLimitNotice />
+            <GenerationSuccessNotifier />
             <ModelSetupGuide hidden={creationWorkspace || pathname === "/login" || pathname === "/register" || pathname.startsWith("/admin")} />
         </>
     );

@@ -10,6 +10,7 @@ import { ASSET_STORE_KEY, flushAssetStorePersistence, useAssetStore, withAssetSt
 import { CONFIG_STORE_KEY, defaultConfig, normalizeConfigSnapshot, useConfigStore, type ModelCapability, type ModelChannel } from "@/stores/use-config-store";
 import { CREATION_PREFERENCES_STORE_KEY, useCreationPreferencesStore } from "@/stores/use-creation-preferences-store";
 import { defaultModelCapabilityConfig, STANDARD_IMAGE_SIZE_VALUES, type ModelCapabilityConfig } from "@/lib/model-capabilities";
+import { isTextWire } from "@/lib/model-protocols";
 import { imageSizeConfigWithPresets } from "@/lib/image-size-presets";
 import { useUserStore } from "@/stores/use-user-store";
 import { PLUGIN_STORE_KEY, usePluginStore } from "@/stores/use-plugin-store";
@@ -224,6 +225,7 @@ export function systemChannelModelChannels(channels: PublicChannelCatalog[]): Mo
                     cachedTokenPriceMicrocredits: tier.cachedTokenPriceMicrocredits || 0,
                     cacheWriteTokenPriceMicrocredits: tier.cacheWriteTokenPriceMicrocredits || 0,
                     tokenPriceBands: tier.tokenPriceBands,
+                    ...(tier.tokenPriceRules?.length ? { tokenPriceRules: tier.tokenPriceRules } : {}),
                 }));
 
                 return {
@@ -235,6 +237,7 @@ export function systemChannelModelChannels(channels: PublicChannelCatalog[]): Mo
                     icon: model.icon || "",
                     capability: model.capability as ModelCapability,
                     protocol: model.protocol as any,
+                    textWire: isTextWire(model.textWire) ? model.textWire : undefined,
                     pricePolicy: "channel" as const,
                     billingMode: billingMode as any,
                     unitPriceMicrocredits: unitPrice,

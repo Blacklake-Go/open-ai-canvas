@@ -8,6 +8,7 @@ import { AppModal } from "@/components/ui/product/app-modal";
 import { useWorkspaceTopBarMount } from "@/components/layout/workspace-top-bar-extension";
 import { Tooltip } from "@/components/ui/base/tooltip";
 import { Reorder, LayoutGroup, motion, useReducedMotion } from "motion/react";
+import type { Transition } from "motion/react";
 import {
     ArrowUp,
     ChevronDown,
@@ -536,258 +537,264 @@ export function CreationComposer(props: ComposerProps) {
         }
         return undefined;
     };
-    const composer = (
-        <HoverBorderGradient as="div" duration={2.2} containerClassName="creation-composer-shell" className="creation-composer-shell-inner">
-            <SpotlightSurface className={`creation-chat-composer is-${props.variant}`} contentClassName="contents" spotlightColor="color-mix(in srgb, var(--user-ink) 12%, transparent)" spotlightRadius={280}>
-                <div className="creation-chat-writing-surface">
-                    <div className="creation-chat-editor">
-                        <CanvasResourceMentionTextarea
-                            ref={props.composerFocusRef}
-                            value={props.prompt}
-                            references={props.references}
-                            mentionMenuWidth={400}
-                            sendOnEnter
-                            onFocus={props.onPromptFocus}
-                            onChange={props.setPrompt}
-                            onSubmit={props.onSubmit}
-                            containerClassName="creation-chat-mention-container"
-                            className="creation-chat-mention-editor creation-scrollbar"
-                            style={{ color: "var(--creation-text)" }}
-                            placeholder={props.placeholderOverride || (props.variant === "empty" ? emptyPlaceholder : placeholder)}
-                            aria-label="创作提示词，可使用 @ 引用当前参考内容或技能；回车发送，Shift+回车换行"
-                            spellCheck
-                            disabled={interactionBusy}
-                            activeDropReferenceId={dropTargetReferenceId}
-                            onReferenceFilesDrop={(reference, files) => {
-                                const target = props.references.find((item) => item.id === reference.id);
-                                if (target?.attachmentId) props.onReplaceReferenceFiles(target.attachmentId, files);
-                            }}
-                        />
-                        {props.attachments.length ? (
-                            <div className={`creation-reference-panel${trackState.isExpanded ? " is-expanded" : ""}`} aria-busy={interactionBusy}>
-                                {trackState.isExpanded ? (
-                                    <div className="creation-reference-panel-header">
-                                        <div className="creation-reference-filter-tabs" role="group" aria-label="筛选参考内容">
-                                            {(
-                                                [
-                                                    { id: "all", label: "全部", count: props.attachments.length },
-                                                    { id: "image", label: "图片", count: referenceCounts.image },
-                                                    { id: "video", label: "视频", count: referenceCounts.video },
-                                                    { id: "audio", label: "音频", count: referenceCounts.audio },
-                                                    { id: "file", label: "文件", count: referenceCounts.file },
-                                                ] as const
-                                            ).map((filter) => (
-                                                <button key={filter.id} type="button" aria-pressed={referenceFilter === filter.id} className={referenceFilter === filter.id ? "is-active" : undefined} onClick={() => setReferenceFilter(filter.id)}>
-                                                    {filter.label}
-                                                    {filter.count ? ` (${filter.count})` : ""}
-                                                </button>
-                                            ))}
-                                        </div>
-                                        <div className="creation-reference-panel-actions">
-                                            {props.attachments.length ? (
-                                                <button type="button" onClick={props.onClearAttachments} disabled={interactionBusy}>
-                                                    清空全部素材
-                                                </button>
-                                            ) : null}
-                                            <Tooltip title="收起素材面板">
-                                                <button type="button" className="creation-reference-panel-collapse" onClick={() => setReferencePanelExpanded(false)} aria-label="收起素材面板">
-                                                    <Minimize2 aria-hidden="true" />
-                                                </button>
-                                            </Tooltip>
-                                        </div>
+    // 首页空态嵌在 CreationModeCard 里：外框、投影和悬停描边由卡片统一提供。指针高光也关掉，
+    // 否则高光停在页签下沿，会把选中页签和内容面切成两块。
+    const embedded = props.variant === "empty";
+    const surface = (
+        <SpotlightSurface className={`creation-chat-composer is-${props.variant}`} contentClassName="contents" spotlightColor={embedded ? "transparent" : "color-mix(in srgb, var(--user-ink) 12%, transparent)"} spotlightRadius={280}>
+            <div className="creation-chat-writing-surface">
+                <div className="creation-chat-editor">
+                    <CanvasResourceMentionTextarea
+                        ref={props.composerFocusRef}
+                        value={props.prompt}
+                        references={props.references}
+                        mentionMenuWidth={400}
+                        sendOnEnter
+                        onFocus={props.onPromptFocus}
+                        onChange={props.setPrompt}
+                        onSubmit={props.onSubmit}
+                        containerClassName="creation-chat-mention-container"
+                        className="creation-chat-mention-editor creation-scrollbar"
+                        style={{ color: "var(--creation-text)" }}
+                        placeholder={props.placeholderOverride || (props.variant === "empty" ? emptyPlaceholder : placeholder)}
+                        aria-label="创作提示词，可使用 @ 引用当前参考内容或技能；回车发送，Shift+回车换行"
+                        spellCheck
+                        disabled={interactionBusy}
+                        activeDropReferenceId={dropTargetReferenceId}
+                        onReferenceFilesDrop={(reference, files) => {
+                            const target = props.references.find((item) => item.id === reference.id);
+                            if (target?.attachmentId) props.onReplaceReferenceFiles(target.attachmentId, files);
+                        }}
+                    />
+                    {props.attachments.length ? (
+                        <div className={`creation-reference-panel${trackState.isExpanded ? " is-expanded" : ""}`} aria-busy={interactionBusy}>
+                            {trackState.isExpanded ? (
+                                <div className="creation-reference-panel-header">
+                                    <div className="creation-reference-filter-tabs" role="group" aria-label="筛选参考内容">
+                                        {(
+                                            [
+                                                { id: "all", label: "全部", count: props.attachments.length },
+                                                { id: "image", label: "图片", count: referenceCounts.image },
+                                                { id: "video", label: "视频", count: referenceCounts.video },
+                                                { id: "audio", label: "音频", count: referenceCounts.audio },
+                                                { id: "file", label: "文件", count: referenceCounts.file },
+                                            ] as const
+                                        ).map((filter) => (
+                                            <button key={filter.id} type="button" aria-pressed={referenceFilter === filter.id} className={referenceFilter === filter.id ? "is-active" : undefined} onClick={() => setReferenceFilter(filter.id)}>
+                                                {filter.label}
+                                                {filter.count ? ` (${filter.count})` : ""}
+                                            </button>
+                                        ))}
                                     </div>
-                                ) : null}
-                                <div className="creation-reference-track-wrapper">
-                                    <div className="creation-reference-stack-shell">
-                                        {trackState.canScrollLeft ? (
-                                            <button type="button" className="creation-reference-track-button is-left" onClick={() => scrollAttachmentTrack(-1)} aria-label="向左浏览参考内容" title="向左浏览参考内容">
-                                                <ChevronLeft aria-hidden="true" />
+                                    <div className="creation-reference-panel-actions">
+                                        {props.attachments.length ? (
+                                            <button type="button" onClick={props.onClearAttachments} disabled={interactionBusy}>
+                                                清空全部素材
                                             </button>
                                         ) : null}
-                                        <Reorder.Group<CreationAttachment[]>
-                                            as="ul"
-                                            ref={attachmentTrackRef}
-                                            className={`creation-reference-track${trackState.isExpanded ? " is-expanded" : ""}${trackState.isDragging ? " is-dragging" : ""}${visibleAttachments.length ? "" : " is-empty"}`}
-                                            axis="x"
-                                            values={visibleAttachments}
-                                            onReorder={reorderVisibleAttachments}
-                                            layoutScroll
-                                            role="list"
-                                            aria-label="参考内容轨道"
-                                            onScroll={updateTrackScrollState}
-                                        >
-                                            {visibleAttachments.map((item) => (
-                                                <Reorder.Item<CreationAttachment>
-                                                    key={item.id}
-                                                    value={item}
-                                                    layout="position"
-                                                    drag={trackState.isExpanded && canDragReferences && !interactionBusy}
-                                                    className="creation-reference-stack-card"
-                                                    onPointerDown={beginCardDrag}
-                                                    onPointerMove={moveCardDrag}
-                                                    onPointerUp={endCardDrag}
-                                                    onPointerCancel={endCardDrag}
-                                                    onDragStart={() => {
-                                                        setDropTargetReferenceId(null);
-                                                        setTrackState((current) => ({ ...current, isDragging: true, isExpanded: true }));
-                                                    }}
-                                                    onDrag={(_, info) => {
-                                                        if (creationAttachmentKind(item) !== "image") return;
-                                                        const target = imageReferenceAtPoint(info.point.x, info.point.y);
-                                                        setDropTargetReferenceId(target?.attachmentId !== item.id ? target?.id || null : null);
-                                                    }}
-                                                    onDragEnd={(_, info) => {
-                                                        const target = creationAttachmentKind(item) === "image" ? imageReferenceAtPoint(info.point.x, info.point.y) : undefined;
-                                                        setDropTargetReferenceId(null);
-                                                        setTrackState((current) => ({ ...current, isDragging: false, isExpanded: true }));
-                                                        if (target?.attachmentId && target.attachmentId !== item.id) props.onReplaceAttachment(target.attachmentId, item);
-                                                    }}
-                                                >
-                                                    <CreationAttachmentThumbnail item={item} onPreview={previewAttachment} onRemove={props.onRemoveAttachment} />
-                                                </Reorder.Item>
-                                            ))}
-                                            {!visibleAttachments.length && props.attachments.length ? <li className="creation-reference-filter-empty">该类型暂无参考内容</li> : null}
-                                            {referencesSupported ? (
-                                                <li className="creation-reference-add-slot">
-                                                    <Tooltip title={addReferenceLabel}>
-                                                        <button type="button" className="creation-reference-add-button" onClick={props.onOpenLibrary} disabled={interactionBusy || !canAddMoreReferences} aria-label={addReferenceLabel}>
-                                                            <Plus aria-hidden="true" />
-                                                            <span>参考内容</span>
-                                                        </button>
-                                                    </Tooltip>
-                                                </li>
-                                            ) : null}
-                                        </Reorder.Group>
-                                        {trackState.canScrollRight ? (
-                                            <button type="button" className="creation-reference-track-button is-right" onClick={() => scrollAttachmentTrack(1)} aria-label="向右浏览参考内容" title="向右浏览参考内容">
-                                                <ChevronRight aria-hidden="true" />
+                                        <Tooltip title="收起素材面板">
+                                            <button type="button" className="creation-reference-panel-collapse" onClick={() => setReferencePanelExpanded(false)} aria-label="收起素材面板">
+                                                <Minimize2 aria-hidden="true" />
                                             </button>
-                                        ) : null}
-                                        {!trackState.isExpanded && props.attachments.length ? (
-                                            <Tooltip title="查看全部">
-                                                <button type="button" className="creation-reference-panel-expand" onClick={() => setReferencePanelExpanded(true)} aria-label={`查看全部 ${props.attachments.length} 个参考内容`} aria-expanded="false">
-                                                    <Maximize2 aria-hidden="true" />
-                                                </button>
-                                            </Tooltip>
-                                        ) : null}
+                                        </Tooltip>
                                     </div>
                                 </div>
+                            ) : null}
+                            <div className="creation-reference-track-wrapper">
+                                <div className="creation-reference-stack-shell">
+                                    {trackState.canScrollLeft ? (
+                                        <button type="button" className="creation-reference-track-button is-left" onClick={() => scrollAttachmentTrack(-1)} aria-label="向左浏览参考内容" title="向左浏览参考内容">
+                                            <ChevronLeft aria-hidden="true" />
+                                        </button>
+                                    ) : null}
+                                    <Reorder.Group<CreationAttachment[]>
+                                        as="ul"
+                                        ref={attachmentTrackRef}
+                                        className={`creation-reference-track${trackState.isExpanded ? " is-expanded" : ""}${trackState.isDragging ? " is-dragging" : ""}${visibleAttachments.length ? "" : " is-empty"}`}
+                                        axis="x"
+                                        values={visibleAttachments}
+                                        onReorder={reorderVisibleAttachments}
+                                        layoutScroll
+                                        role="list"
+                                        aria-label="参考内容轨道"
+                                        onScroll={updateTrackScrollState}
+                                    >
+                                        {visibleAttachments.map((item) => (
+                                            <Reorder.Item<CreationAttachment>
+                                                key={item.id}
+                                                value={item}
+                                                layout="position"
+                                                drag={trackState.isExpanded && canDragReferences && !interactionBusy}
+                                                className="creation-reference-stack-card"
+                                                onPointerDown={beginCardDrag}
+                                                onPointerMove={moveCardDrag}
+                                                onPointerUp={endCardDrag}
+                                                onPointerCancel={endCardDrag}
+                                                onDragStart={() => {
+                                                    setDropTargetReferenceId(null);
+                                                    setTrackState((current) => ({ ...current, isDragging: true, isExpanded: true }));
+                                                }}
+                                                onDrag={(_, info) => {
+                                                    if (creationAttachmentKind(item) !== "image") return;
+                                                    const target = imageReferenceAtPoint(info.point.x, info.point.y);
+                                                    setDropTargetReferenceId(target?.attachmentId !== item.id ? target?.id || null : null);
+                                                }}
+                                                onDragEnd={(_, info) => {
+                                                    const target = creationAttachmentKind(item) === "image" ? imageReferenceAtPoint(info.point.x, info.point.y) : undefined;
+                                                    setDropTargetReferenceId(null);
+                                                    setTrackState((current) => ({ ...current, isDragging: false, isExpanded: true }));
+                                                    if (target?.attachmentId && target.attachmentId !== item.id) props.onReplaceAttachment(target.attachmentId, item);
+                                                }}
+                                            >
+                                                <CreationAttachmentThumbnail item={item} onPreview={previewAttachment} onRemove={props.onRemoveAttachment} />
+                                            </Reorder.Item>
+                                        ))}
+                                        {!visibleAttachments.length && props.attachments.length ? <li className="creation-reference-filter-empty">该类型暂无参考内容</li> : null}
+                                        {referencesSupported ? (
+                                            <li className="creation-reference-add-slot">
+                                                <Tooltip title={addReferenceLabel}>
+                                                    <button type="button" className="creation-reference-add-button" onClick={props.onOpenLibrary} disabled={interactionBusy || !canAddMoreReferences} aria-label={addReferenceLabel}>
+                                                        <Plus aria-hidden="true" />
+                                                        <span>参考内容</span>
+                                                    </button>
+                                                </Tooltip>
+                                            </li>
+                                        ) : null}
+                                    </Reorder.Group>
+                                    {trackState.canScrollRight ? (
+                                        <button type="button" className="creation-reference-track-button is-right" onClick={() => scrollAttachmentTrack(1)} aria-label="向右浏览参考内容" title="向右浏览参考内容">
+                                            <ChevronRight aria-hidden="true" />
+                                        </button>
+                                    ) : null}
+                                    {!trackState.isExpanded && props.attachments.length ? (
+                                        <Tooltip title="查看全部">
+                                            <button type="button" className="creation-reference-panel-expand" onClick={() => setReferencePanelExpanded(true)} aria-label={`查看全部 ${props.attachments.length} 个参考内容`} aria-expanded="false">
+                                                <Maximize2 aria-hidden="true" />
+                                            </button>
+                                        </Tooltip>
+                                    ) : null}
+                                </div>
                             </div>
-                        ) : null}
-                    </div>
+                        </div>
+                    ) : null}
                 </div>
-                <footer className="creation-chat-dock">
-                    <div className="creation-chat-controls">
-                        {props.variant === "thread" ? <ModePicker mode={props.mode} onModeChange={props.onModeChange} /> : null}
-                        {referencesSupported && !props.attachments.length ? (
-                            <Tooltip title={addReferenceLabel}>
-                                <button type="button" className="creation-chat-control" onClick={props.onOpenLibrary} disabled={interactionBusy || !canAddMoreReferences} aria-label={addReferenceLabel}>
-                                    <Plus aria-hidden="true" />
-                                    <span>参考内容</span>
+            </div>
+            <footer className="creation-chat-dock">
+                <div className="creation-chat-controls">
+                    {props.variant === "thread" ? <ModePicker mode={props.mode} onModeChange={props.onModeChange} /> : null}
+                    {referencesSupported && !props.attachments.length ? (
+                        <Tooltip title={addReferenceLabel}>
+                            <button type="button" className="creation-chat-control" onClick={props.onOpenLibrary} disabled={interactionBusy || !canAddMoreReferences} aria-label={addReferenceLabel}>
+                                <Plus aria-hidden="true" />
+                                <span>参考内容</span>
+                            </button>
+                        </Tooltip>
+                    ) : null}
+                    <VoiceRecordingButton className="creation-voice-trigger" disabled={interactionBusy} onTranscribed={(text) => props.setPrompt(props.prompt.trim() ? `${props.prompt} ${text}` : text)} />
+                    {canOptimizePrompt ? (
+                        <Tooltip title="用 AI 优化提示词">
+                            <button type="button" className="creation-chat-control" onClick={() => setPromptOptimizerOpen(true)} aria-label="优化提示词" aria-expanded={promptOptimizerOpen} aria-haspopup="dialog">
+                                <PenLine />
+                                <span>优化</span>
+                            </button>
+                        </Tooltip>
+                    ) : null}
+                    <ModelPicker
+                        config={props.config}
+                        value={props.model}
+                        onChange={props.mode === "music" ? (value) => props.onMusicModelChange?.(value) : props.onModelChange}
+                        capability={props.mode === "music" ? "audio" : props.mode}
+                        requirements={props.modelRequirements}
+                        className="creation-model-picker"
+                        placeholder={`选择${modeLabels[props.mode]}模型`}
+                        showSelectedPrice={false}
+                        showOptionPrices
+                        variant="creation"
+                    />
+                    {props.mode === "video" || (props.mode === "image" && imageSettingsSupported) ? <GenerationSettingsMenu {...props} /> : null}
+                    {props.mode === "video" ? <DurationMenu profile={props.videoProfile} seconds={props.seconds} onChange={props.setSeconds} /> : null}
+                    {props.mode === "music" ? (
+                        <>
+                            <Tooltip title={t(props.musicInstrumental ? "upstreamSync.instrumentalOn" : "upstreamSync.instrumentalEnable")}>
+                                <button type="button" className="creation-chat-control" aria-pressed={props.musicInstrumental} disabled={interactionBusy} onClick={() => props.onMusicInstrumentalChange?.(!props.musicInstrumental)}>
+                                    <Disc3 className="size-4" />
+                                    <span>{t("upstreamSync.instrumental")}</span>
+                                    {props.musicInstrumental ? <span className="size-1.5 rounded-full bg-emerald-400 shrink-0 shadow-sm" /> : null}
                                 </button>
                             </Tooltip>
-                        ) : null}
-                        <VoiceRecordingButton className="creation-voice-trigger" disabled={interactionBusy} onTranscribed={(text) => props.setPrompt(props.prompt.trim() ? `${props.prompt} ${text}` : text)} />
-                        {canOptimizePrompt ? (
-                            <Tooltip title="用 AI 优化提示词">
-                                <button type="button" className="creation-chat-control" onClick={() => setPromptOptimizerOpen(true)} aria-label="优化提示词" aria-expanded={promptOptimizerOpen} aria-haspopup="dialog">
-                                    <PenLine />
-                                    <span>优化</span>
+                            <Tooltip title={t("upstreamSync.lyricsEditor")}>
+                                <button type="button" className="creation-chat-control" disabled={interactionBusy} onClick={() => setLyricsModalOpen(true)}>
+                                    <Mic2 className="size-4" />
+                                    <span>{t("upstreamSync.lyrics")}</span>
+                                    {props.musicLyrics?.trim() ? <span className="size-1.5 rounded-full bg-blue-400 shrink-0 shadow-sm" /> : null}
                                 </button>
                             </Tooltip>
-                        ) : null}
+                            <MusicDurationMenu duration={props.musicDuration || 120} maxDuration={300} disabled={interactionBusy} onChange={(sec) => props.onMusicDurationChange?.(sec)} />
+                        </>
+                    ) : null}
+                    {props.mode === "text" ? (
+                        <>
+                            <Tooltip title={interactionBusy ? "生成中，此开关将在下次发送时生效" : props.textStreaming ? "流式输出已开启" : "流式输出已关闭"}>
+                                <button type="button" className="creation-chat-control" aria-pressed={props.textStreaming} disabled={interactionBusy} onClick={() => props.setTextStreaming(!props.textStreaming)}>
+                                    <Waves />
+                                    <span>流式</span>
+                                    {props.textStreaming ? <span className="size-1.5 rounded-full bg-blue-400 shrink-0 shadow-sm" /> : null}
+                                </button>
+                            </Tooltip>
+                            <Tooltip title={interactionBusy ? "生成中，此开关将在下次发送时生效" : props.textThinking ? "思考已开启，会展示模型返回的推理摘要" : "开启模型思考"}>
+                                <button type="button" className="creation-chat-control" aria-pressed={props.textThinking} disabled={interactionBusy} onClick={() => props.setTextThinking(!props.textThinking)}>
+                                    <Lightbulb />
+                                    <span>思考</span>
+                                    {props.textThinking ? <span className="size-1.5 rounded-full bg-current shrink-0" aria-hidden /> : null}
+                                </button>
+                            </Tooltip>
+                        </>
+                    ) : null}
+                    {props.prompt.trim() || props.attachments.length || props.references.some((reference) => reference.active) ? (
+                        <Tooltip title="清空提示词和参考内容">
+                            <button type="button" className="creation-chat-control is-clear" onClick={props.onClearComposer} disabled={interactionBusy} aria-label="清空提示词和参考内容">
+                                <Trash2 />
+                                <span>清空</span>
+                            </button>
+                        </Tooltip>
+                    ) : null}
+                </div>
+                <Button
+                    type="text"
+                    className={`creation-submit ${showCost ? "has-cost" : ""}`}
+                    disabled={interactionBusy || !canSubmit}
+                    style={
                         {
-                            <ModelPicker
-                                config={props.config}
-                                value={props.model}
-                                onChange={props.mode === "music" ? (val) => props.onMusicModelChange?.(val) : props.onModelChange}
-                                capability={props.mode === "music" ? "audio" : props.mode}
-                                requirements={props.modelRequirements}
-                                className="creation-model-picker"
-                                placeholder={`选择${modeLabels[props.mode]}模型`}
-                                showSelectedPrice={false}
-                                showOptionPrices
-                                variant="creation"
-                            />
-                        }
-                        {props.mode === "video" || (props.mode === "image" && imageSettingsSupported) ? <GenerationSettingsMenu {...props} /> : null}
-                        {props.mode === "video" ? <DurationMenu profile={props.videoProfile} seconds={props.seconds} onChange={props.setSeconds} /> : null}
-                        {props.mode === "music" ? (
-                            <>
-                                <Tooltip title={props.musicInstrumental ? "纯音乐模式已开启（无声乐演唱）" : "开启纯音乐模式（无声乐演唱）"}>
-                                    <button type="button" className="creation-chat-control" aria-pressed={props.musicInstrumental} disabled={interactionBusy} onClick={() => props.onMusicInstrumentalChange?.(!props.musicInstrumental)}>
-                                        <Disc3 className="size-4" />
-                                        <span>纯音乐</span>
-                                        {props.musicInstrumental ? <span className="size-1.5 rounded-full bg-emerald-400 shrink-0 shadow-sm" /> : null}
-                                    </button>
-                                </Tooltip>
-                                <Tooltip title="编辑/插入结构化歌词">
-                                    <button type="button" className="creation-chat-control" disabled={interactionBusy} onClick={() => setLyricsModalOpen(true)}>
-                                        <Mic2 className="size-4" />
-                                        <span>歌词</span>
-                                        {props.musicLyrics?.trim() ? <span className="size-1.5 rounded-full bg-blue-400 shrink-0 shadow-sm" /> : null}
-                                    </button>
-                                </Tooltip>
-                                <MusicDurationMenu duration={props.musicDuration || 120} maxDuration={300} disabled={interactionBusy} onChange={(sec) => props.onMusicDurationChange?.(sec)} />
-                            </>
-                        ) : null}
-                        {props.mode === "text" ? (
-                            <>
-                                <Tooltip title={interactionBusy ? "生成中，此开关将在下次发送时生效" : props.textStreaming ? "流式输出已开启" : "流式输出已关闭"}>
-                                    <button type="button" className="creation-chat-control" aria-pressed={props.textStreaming} disabled={interactionBusy} onClick={() => props.setTextStreaming(!props.textStreaming)}>
-                                        <Waves />
-                                        <span>流式</span>
-                                        {props.textStreaming ? <span className="size-1.5 rounded-full bg-blue-400 shrink-0 shadow-sm" /> : null}
-                                    </button>
-                                </Tooltip>
-                                <Tooltip title={interactionBusy ? "生成中，此开关将在下次发送时生效" : props.textThinking ? "思考已开启，会展示模型返回的推理摘要" : "开启模型思考"}>
-                                    <button type="button" className="creation-chat-control" aria-pressed={props.textThinking} disabled={interactionBusy} onClick={() => props.setTextThinking(!props.textThinking)}>
-                                        <Lightbulb />
-                                        <span>思考</span>
-                                        {props.textThinking ? <span className="size-1.5 rounded-full bg-current shrink-0" aria-hidden /> : null}
-                                    </button>
-                                </Tooltip>
-                            </>
-                        ) : null}
-                        {props.prompt.trim() || props.attachments.length || props.references.some((reference) => reference.active) ? (
-                            <Tooltip title="清空提示词和参考内容">
-                                <button type="button" className="creation-chat-control is-clear" onClick={props.onClearComposer} disabled={interactionBusy} aria-label="清空提示词和参考内容">
-                                    <Trash2 />
-                                    <span>清空</span>
-                                </button>
-                            </Tooltip>
-                        ) : null}
-                    </div>
-                    <Button
-                        type="text"
-                        className={`creation-submit ${showCost ? "has-cost" : ""}`}
-                        disabled={interactionBusy || !canSubmit}
-                        style={
-                            {
-                                position: "relative",
-                                color: "var(--user-ink)",
-                            } as CSSProperties
-                        }
-                        onClick={interactionBusy ? undefined : props.onSubmit}
-                        aria-label={actionLabel}
-                        title={!canSubmit && !interactionBusy ? "输入创作想法后即可生成" : actionLabel}
-                    >
-                        {showWorkingGlow ? <WorkingGlow active color="var(--creation-text)" radius="var(--button-radius)" /> : null}
-                        {showCost ? (
-                            <span className="creation-submit-cost" title={routeQuote ? modelQuoteDescription(routeQuote) : undefined}>
-                                <CreditSymbol />
-                                <span>{routeQuote?.estimated ? `预估:${formattedCredits}` : formattedCredits}</span>
-                            </span>
-                        ) : null}
-                        <span className="creation-submit-action" aria-hidden>
-                            {showWorkingSpinner ? <LoaderCircle className="size-4 animate-spin" /> : <ArrowUp className="size-4" />}
-                            <span>{showWorkingSpinner ? "生成中" : "开始创作"}</span>
+                            position: "relative",
+                            color: "var(--user-ink)",
+                        } as CSSProperties
+                    }
+                    onClick={interactionBusy ? undefined : props.onSubmit}
+                    aria-label={actionLabel}
+                    title={!canSubmit && !interactionBusy ? "输入创作想法后即可生成" : actionLabel}
+                >
+                    {showWorkingGlow ? <WorkingGlow active color="var(--creation-text)" radius="var(--button-radius)" /> : null}
+                    {showCost ? (
+                        <span className="creation-submit-cost" title={routeQuote ? modelQuoteDescription(routeQuote) : undefined}>
+                            <CreditSymbol />
+                            <span>{routeQuote?.estimated ? `预估:${formattedCredits}` : formattedCredits}</span>
                         </span>
-                    </Button>
-                </footer>
-                <CreationMediaPreviewModal url={previewUrl} type={previewType} onClose={() => setPreviewUrl("")} />
-                <LyricsEditorModal open={lyricsModalOpen} lyrics={props.musicLyrics || ""} onClose={() => setLyricsModalOpen(false)} onChange={(val) => props.onMusicLyricsChange?.(val)} />
-            </SpotlightSurface>
+                    ) : null}
+                    <span className="creation-submit-action" aria-hidden>
+                        {showWorkingSpinner ? <LoaderCircle className="size-4 animate-spin" /> : <ArrowUp className="size-4" />}
+                        <span>{showWorkingSpinner ? "生成中" : "开始创作"}</span>
+                    </span>
+                </Button>
+            </footer>
+            <CreationMediaPreviewModal url={previewUrl} type={previewType} onClose={() => setPreviewUrl("")} />
+            <LyricsEditorModal open={lyricsModalOpen} lyrics={props.musicLyrics || ""} onClose={() => setLyricsModalOpen(false)} onChange={(value) => props.onMusicLyricsChange?.(value)} />
+        </SpotlightSurface>
+    );
+    const composer = embedded ? (
+        surface
+    ) : (
+        <HoverBorderGradient as="div" duration={2.2} containerClassName="creation-composer-shell" className="creation-composer-shell-inner">
+            {surface}
         </HoverBorderGradient>
     );
 
@@ -814,44 +821,123 @@ export function CreationComposer(props: ComposerProps) {
     );
 }
 
-// 音乐药丸的显隐与后端准入判定共用同一插件 id（清单 id），别名查不到服务端状态会导致永久隐藏。
 const musicPluginGate = selectPluginEffectivelyEnabled(SUPDANCE_MUSIC_PLUGIN_ID, true);
+
+const creationModeItems: { mode: CreationMode; icon: ReactNode; label: string }[] = [
+    { mode: "video", icon: <Film />, label: "视频" },
+    { mode: "image", icon: <ImageIcon />, label: "图片" },
+    { mode: "music", icon: <Music />, label: "音乐" },
+    { mode: "text", icon: <MessageSquareText />, label: "文本" },
+];
+
+function useCreationModeItems() {
+    const musicPluginActive = usePluginStore(musicPluginGate);
+    const { t } = useI18n();
+    return creationModeItems.filter((item) => item.mode !== "music" || musicPluginActive).map((item) => ({ ...item, label: item.mode === "music" ? t("music.nav_music_gen", undefined, item.label) : t(`create.mode.${item.mode}`, undefined, item.label) }));
+}
+
+type CreationModeKey = CreationMode | "agent";
+
+// 首页页签的拉伸滑动：朝目标一侧的边用更硬的弹簧先到，另一侧稍后跟上，页签先拉长再收拢。
+const folderTabLeadingSpring = { type: "spring", stiffness: 540, damping: 42, mass: 0.6 } as const;
+const folderTabTrailingSpring = { type: "spring", stiffness: 280, damping: 32, mass: 0.8 } as const;
+
+/** 首页创作卡：顶部文件夹页签切换视频 / 图片 / 文本 / Agent，选中页签与下方内容面同色相连。 */
+export function CreationModeCard({ mode, agentActive, onModeChange, onAgentSelect, children }: { mode: CreationMode; agentActive: boolean; onModeChange: (mode: CreationMode) => void; onAgentSelect: () => void; children: ReactNode }) {
+    const reducedMotion = useReducedMotion();
+    const items = useCreationModeItems();
+    const { t } = useI18n();
+    const keys: CreationModeKey[] = [...items.map((item) => item.mode), "agent"];
+    const activeKey: CreationModeKey = agentActive ? "agent" : mode;
+    const activeIndex = Math.max(0, keys.indexOf(activeKey));
+    // 记住上一次的位置来判断滑动方向；在渲染期调整状态，切换当帧就拿到新方向。
+    const [slide, setSlide] = useState({ index: activeIndex, direction: 0 });
+    if (slide.index !== activeIndex) setSlide({ index: activeIndex, direction: Math.sign(activeIndex - slide.index) });
+    const step = 100 / keys.length;
+    const tabTransition: Transition = reducedMotion
+        ? { duration: 0 }
+        : {
+              left: slide.direction < 0 ? folderTabLeadingSpring : folderTabTrailingSpring,
+              right: slide.direction > 0 ? folderTabLeadingSpring : folderTabTrailingSpring,
+          };
+    return (
+        <HoverBorderGradient as="div" duration={2.2} containerClassName="creation-mode-card" className="creation-mode-card-inner">
+            <div className="creation-mode-folder" role="group" aria-label={t("upstreamSync.creationModes")} data-active-mode={activeKey} style={{ "--creation-mode-count": keys.length } as CSSProperties}>
+                <motion.span className="creation-mode-folder-tab" aria-hidden initial={false} animate={{ left: `${activeIndex * step}%`, right: `${(keys.length - 1 - activeIndex) * step}%` }} transition={tabTransition}>
+                    <CreationModeFolderWing side="start" />
+                    <CreationModeFolderWing side="end" />
+                </motion.span>
+                {items.map((item) => (
+                    <button
+                        key={item.mode}
+                        type="button"
+                        className="creation-mode-folder-button"
+                        data-mode={item.mode}
+                        aria-pressed={activeKey === item.mode}
+                        aria-label={t("upstreamSync.creationAction", { mode: item.label })}
+                        onClick={() => onModeChange(item.mode)}
+                    >
+                        {item.icon}
+                        <span>{item.label}</span>
+                    </button>
+                ))}
+                <button type="button" className="creation-mode-folder-button" data-mode="agent" aria-pressed={agentActive} onClick={onAgentSelect}>
+                    <Orbit />
+                    <span>Agent</span>
+                    <i className="creation-mode-spark" aria-hidden />
+                </button>
+            </div>
+            <div className="creation-mode-panel">{children}</div>
+        </HoverBorderGradient>
+    );
+}
+
+// 选中页签两侧的 S 形翼片：顶边水平切入、底边水平落到内容面；与页签主体重叠 1px，避免亚像素接缝。
+function CreationModeFolderWing({ side }: { side: "start" | "end" }) {
+    return (
+        <svg className={`creation-mode-folder-wing is-${side}`} viewBox="0 0 30 48" preserveAspectRatio="none" aria-hidden focusable="false">
+            <path d="M30 0H28C14 0 14 48 0 48H30Z" />
+        </svg>
+    );
+}
 
 export function CreationModeTabs({
     mode,
     onModeChange,
+    orientation = "horizontal",
     agentActive = false,
     onAgentSelect,
-    orientation = "horizontal",
 }: {
     mode: CreationMode;
     onModeChange: (mode: CreationMode) => void;
+    orientation?: "horizontal" | "vertical";
     agentActive?: boolean;
     onAgentSelect?: () => void;
-    orientation?: "horizontal" | "vertical";
 }) {
     const reducedMotion = useReducedMotion();
-    const musicPluginActive = usePluginStore(musicPluginGate);
-
-    const items: { mode: CreationMode; icon: ReactNode; label: string }[] = [
-        { mode: "video", icon: <Film />, label: "视频" },
-        { mode: "image", icon: <ImageIcon />, label: "图片" },
-        ...(musicPluginActive ? [{ mode: "music" as CreationMode, icon: <Music />, label: "音乐" }] : []),
-        { mode: "text", icon: <MessageSquareText />, label: "文本" },
-    ];
+    const items = useCreationModeItems();
+    const { t } = useI18n();
     const indicator = (pressed: boolean) => (pressed ? <motion.span layoutId={`creation-mode-indicator-${orientation}`} className="creation-mode-indicator" aria-hidden transition={reducedMotion ? { duration: 0 } : aceternityMotion.spring.dock} /> : null);
     return (
         <LayoutGroup id={`creation-mode-tabs-${orientation}`}>
             <div
                 className="creation-mode-tabs"
                 role="group"
-                aria-label="创作模式"
+                aria-label={t("upstreamSync.creationModes")}
                 data-active-mode={agentActive ? "agent" : mode}
                 data-orientation={orientation}
                 style={{ gridTemplateColumns: orientation === "vertical" ? "minmax(0, 1fr)" : `repeat(${items.length + (onAgentSelect ? 1 : 0)}, minmax(0, 1fr))` }}
             >
                 {items.map((item) => (
-                    <button key={item.mode} type="button" className="creation-mode-button" data-mode={item.mode} aria-pressed={!agentActive && item.mode === mode} aria-label={`${item.label}生成`} onClick={() => onModeChange(item.mode)}>
+                    <button
+                        key={item.mode}
+                        type="button"
+                        className="creation-mode-button"
+                        data-mode={item.mode}
+                        aria-pressed={!agentActive && item.mode === mode}
+                        aria-label={t("upstreamSync.creationAction", { mode: item.label })}
+                        onClick={() => onModeChange(item.mode)}
+                    >
                         {indicator(!agentActive && item.mode === mode)}
                         {item.icon}
                         <span>{item.label}</span>
@@ -862,7 +948,6 @@ export function CreationModeTabs({
                         {indicator(agentActive)}
                         <Orbit />
                         <span>Agent</span>
-                        <i className="creation-mode-spark" aria-hidden />
                     </button>
                 ) : null}
             </div>

@@ -29,6 +29,8 @@ const ChannelsPage = lazyAdminPage(() => import("@/pages/admin/channels/channels
 const LogicalModelsPage = lazyAdminPage(() => import("@/pages/admin/logical-models/logical-models-page"));
 const AdminPluginsPage = lazyAdminPage(() => import("@/pages/admin/plugins/plugins-page"));
 const SkillCurationPage = lazyAdminPage(() => import("@/pages/admin/skill-curation-page"));
+const AdminSkillsPage = lazyAdminPage(() => import("@/pages/admin/skills/skills-page"));
+const AdminSkillWorkbenchPage = lazyAdminPage(() => import("@/pages/admin/skills/admin-skill-workbench-page"));
 const AdminPaymentsPage = lazyAdminPage(() => import("@/pages/admin/payments/payments-page"));
 const LogsPage = lazyAdminPage(() => import("@/pages/admin/logs/logs-page"));
 const LoginLogsPage = lazyAdminPage(() => import("@/pages/admin/login-logs/login-logs-page"));
@@ -41,6 +43,7 @@ const ArkPrivateAssetsSettingsPage = lazyAdminPage(() => import("@/pages/admin/s
 const ResponseInterceptionSettingsPage = lazyAdminPage(() => import("@/pages/admin/settings/response-interception-settings-page"));
 const ThirdPartySettingsPage = lazyAdminPage(() => import("@/pages/admin/settings/libtv-settings-page"));
 const WorkbenchToolsPage = lazyAdminPage(() => import("@/pages/admin/workbench-tools/workbench-tools-page"));
+const PoseLibraryAdminPage = lazyAdminPage(() => import("@/pages/admin/pose-library/pose-library-page"));
 const SystemUpdatePage = lazyAdminPage(() => import("@/pages/admin/settings/system-update-page"));
 const SystemPerformancePage = lazyAdminPage(() => import("@/pages/admin/settings/system-performance-page"));
 const StoryboardPromptsPage = lazyAdminPage(() => import("@/pages/admin/storyboard-prompts/storyboard-prompts-page"));
@@ -68,6 +71,7 @@ const ForgotPasswordPage = lazy(() => import("@/pages/auth/forgot-password"));
 const CanvasPage = workspaceRoutePages.canvas;
 const CanvasProjectPage = workspaceRoutePages.canvasProject;
 const SharedCanvasPage = lazy(() => import("@/pages/canvas/shared"));
+const ArkPortraitResultPage = lazy(() => import("@/pages/ark-portrait-result"));
 const CreatePage = workspaceRoutePages.create;
 const EcommercePage = workspaceRoutePages.ecommerce;
 const ImageWorkbenchPage = workspaceRoutePages.imageWorkbench;
@@ -147,6 +151,8 @@ export const router = createBrowserRouter([
     { path: "/p/:slug", element: fullScreenDeferred(<PublicHtmlViewerPage />), errorElement: <RouteErrorPage /> },
     { path: "/html/:slug", element: fullScreenDeferred(<PublicHtmlViewerPage />), errorElement: <RouteErrorPage /> },
     { path: "/share/canvas/:token", element: fullScreenDeferred(<SharedCanvasPage />), errorElement: <RouteErrorPage /> },
+    // H5 真人认证回跳页：多在未登录的手机上打开，不进入工作区登录守卫。
+    { path: "/ark-portrait/result", element: fullScreenDeferred(<ArkPortraitResultPage />), errorElement: <RouteErrorPage /> },
     ...(import.meta.env.DEV ? devRoutes() : []),
     {
         element: <AuthenticatedWorkspaceLayout />,
@@ -284,6 +290,9 @@ export const router = createBrowserRouter([
                     { path: "plugins/html-pages", element: <HtmlPageManager /> },
                     { path: "html-pages", element: <Navigate to="/admin/plugins/html-pages" replace /> },
                     { path: "workbench-tools", element: <WorkbenchToolsPage /> },
+                    { path: "pose-library", element: <PoseLibraryAdminPage /> },
+                    { path: "skills", element: <AdminSkillsPage /> },
+                    { path: "skills/:skillId/edit", element: <AdminSkillWorkbenchPage /> },
                     { path: "skill-curation", element: <SkillCurationPage /> },
                     { path: "payments", element: <AdminPaymentsPage /> },
                     { path: "prompt-templates", element: <StoryboardPromptsPage /> },

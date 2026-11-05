@@ -1,15 +1,17 @@
 import { creationText as _creationText, useCreationLocale as _useCreationLocale } from "@/supdance/plugins/i18n/creation-text";
-import { useRef } from "react";
+import { useRef, useState } from "react";
 import { App, Button } from "antd";
-import { Download, Film, Scissors } from "lucide-react";
+import { Clapperboard, Download, Film, Scissors } from "lucide-react";
 
 import type { DramaEpisodeDetail } from "@/services/api/drama";
 
 import { aspectRatioValue, downloadResource, formatDuration, MediaThumb, STAGE_LABEL, useResourceMediaUrl } from "../drama-shared";
+import { JianyingDraftModal } from "./asset-transfer";
 import { secondsLabel } from "./segment-parts";
 
 /** 成片：各剧情段视频按顺序拼接，保留视频模型生成的对白与音效。片段条可跳到对应段并打开该段详情。 */
 export function FinalView({
+    projectId,
     title,
     detail,
     aspectRatio,
@@ -17,6 +19,7 @@ export function FinalView({
     onOpenCut,
     cutOpening,
 }: {
+    projectId: string;
     title: string;
     detail: DramaEpisodeDetail;
     aspectRatio: string;
@@ -28,6 +31,7 @@ export function FinalView({
     _useCreationLocale();
     const { episode, segments } = detail;
     const { message } = App.useApp();
+    const [exportingDraft, setExportingDraft] = useState(false);
     const videoRef = useRef<HTMLVideoElement>(null);
     const url = useResourceMediaUrl(episode.finalResourceId, "playback");
     const readySegments = segments.filter((segment) => segment.videoResourceId && (segment.videoStatus === "ready" || segment.videoStatus === "stale")).length;
@@ -93,8 +97,12 @@ export function FinalView({
                 <Button icon={<Scissors className="size-4" />} disabled={!readySegments} loading={cutOpening} onClick={onOpenCut}>
                     {_creationText("creation.cdb1d5eb1abd3cb0")}
                 </Button>
-                {readySegments ? <p className="drama-editor-note">{_creationText("creation.3bd66442c816e893", { value1: readySegments })}</p> : null}
+                <Button icon={<Clapperboard className="size-4" />} disabled={!readySegments} onClick={() => setExportingDraft(true)} title={_creationText(readySegments ? "projects.export_draft_hint" : "projects.no_segment_video")}>
+                    {_creationText("projects.export_draft")}
+                </Button>
+                {readySegments ? <p className="drama-editor-note">{_creationText("projects.editor_export_note", { count: readySegments })}</p> : null}
             </aside>
+            {exportingDraft ? <JianyingDraftModal open projectId={projectId} episodeId={episode.id} episodeLabel={`第 ${episode.number} 集`} readySegments={readySegments} onClose={() => setExportingDraft(false)} /> : null}
         </div>
     );
 }

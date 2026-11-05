@@ -1,12 +1,12 @@
 import { App, Button, Form, Input, Popconfirm, Segmented } from "antd";
 import { AntTooltip as Tooltip } from "@/components/ui/base/tooltip/ant-tooltip";
 import { Pencil, Plus, RefreshCw, Trash2, Workflow } from "lucide-react";
-import { useState, type ReactNode } from "react";
-import { useTranslation } from "react-i18next";
+import { useMemo, useState, type ReactNode } from "react";
 
 import { ModelEditorModal } from "@/components/model-editor-modal";
 import { ChannelHeadersEditor, validateChannelHeaders } from "@/components/channel-headers-editor";
 import { WorkspaceState } from "@/components/layout/workspace-state";
+import { secretKeyProtocolIds, useUserProtocolCatalog } from "@/hooks/use-user-protocol-catalog";
 import { translate } from "@/i18n";
 import { mergeFetchedChannelModelCosts } from "@/lib/channel-model-catalog";
 import { fetchChannelModels } from "@/services/api/image";
@@ -24,6 +24,9 @@ type ChannelSettingsPaneProps = {
 export function ChannelSettingsPane({ onOpenModels, onOpenRunningHub }: ChannelSettingsPaneProps) {
     const { t } = useI18n();
     const { message } = App.useApp();
+    const protocolCatalog = useUserProtocolCatalog();
+    const secretKeyProtocols = useMemo(() => secretKeyProtocolIds(protocolCatalog), [protocolCatalog]);
+    const channelConnectionError = (channel: ModelChannel) => channelConnectionErrorFor(channel, secretKeyProtocols);
     const config = useConfigStore((state) => state.config);
     const replaceConfig = useConfigStore((state) => state.replaceConfig);
     const [loadingChannelIds, setLoadingChannelIds] = useState<string[]>([]);
@@ -85,7 +88,7 @@ export function ChannelSettingsPane({ onOpenModels, onOpenRunningHub }: ChannelS
     };
 
     const refreshChannelModels = async (channel: ModelChannel) => {
-        const connectionError = channelConnectionError(channel, t);
+        const connectionError = channelConnectionError(channel);
         if (connectionError) {
             message.error(`${channel.name || t("settings.channel_current", undefined, "当前渠道")}：${connectionError}`);
             return;
@@ -117,10 +120,10 @@ export function ChannelSettingsPane({ onOpenModels, onOpenRunningHub }: ChannelS
     };
 
     const refreshAllModels = async () => {
-        const runnable = userChannels.filter((channel) => !channelConnectionError(channel, t));
-        const skipped = userChannels.filter((channel) => channelConnectionError(channel, t));
+        const runnable = userChannels.filter((channel) => !channelConnectionError(channel));
+        const skipped = userChannels.filter((channel) => channelConnectionError(channel));
         if (!runnable.length) {
-            const detail = skipped.map((channel) => `${channel.name || t("settings.unnamed_channel", undefined, "未命名渠道")}：${channelConnectionError(channel, t)}`).join("；");
+            const detail = skipped.map((channel) => `${channel.name || t("settings.unnamed_channel", undefined, "未命名渠道")}：${channelConnectionError(channel)}`).join("；");
             message.error(detail || t("settings.channel_no_available_to_fetch", undefined, "没有可拉取的个人模型渠道，请先填写有效 Base URL 和 API Key"));
             return;
         }
@@ -160,7 +163,7 @@ export function ChannelSettingsPane({ onOpenModels, onOpenRunningHub }: ChannelS
             const warnings = [
                 ...failed.map((item) => `${item.channel.name || t("settings.unnamed_channel", undefined, "未命名渠道")}：${item.error || t("settings.channel_no_models_returned", undefined, "未返回模型")}`),
                 ...stale.map((item) => `${item.channel.name || t("settings.unnamed_channel", undefined, "未命名渠道")}：${t("settings.channel_config_changed_ignore_old", undefined, "连接配置已改变，已忽略旧结果")}`),
-                ...skipped.map((channel) => `${channel.name || t("settings.unnamed_channel", undefined, "未命名渠道")}：${channelConnectionError(channel, t)}`),
+                ...skipped.map((channel) => `${channel.name || t("settings.unnamed_channel", undefined, "未命名渠道")}：${channelConnectionError(channel)}`),
             ];
             if (warnings.length) message.warning(`${warnings.join("；")}。${t("settings.channel_models_not_updated_keep_old", undefined, "未更新的渠道已保留原有模型列表")}`);
         } catch (error) {
@@ -229,8 +232,8 @@ export function ChannelSettingsPane({ onOpenModels, onOpenRunningHub }: ChannelS
                                             {channel.name || t("settings.unnamed_channel", undefined, "未命名渠道")}
                                         </h3>
                                         <div className="mt-1 flex flex-wrap items-center gap-2 text-xs text-foreground/55">
-                                            {channelProtocolLabel(channel, t)} · {t("settings.channel_saved_models_count", { count: channel.models.length }, `已保存 ${channel.models.length} 个模型`)}
-                                            <ChannelStatus channel={channel} />
+                                            {t("account.settings.channels.summary", { protocol: channelProtocolLabel(channel, t), count: channel.models.length })}
+                                            <ChannelStatus channel={channel} secretKeyProtocols={secretKeyProtocols} />
                                         </div>
                                     </div>
                                     <div className="flex w-full justify-end gap-2 sm:w-auto sm:shrink-0">
@@ -433,17 +436,18 @@ function WorkflowChannelEntry({ icon, title, description, status, ready, onOpen 
     );
 }
 
-export function channelValidationError(channel: ModelChannel, t?: (keyOrText: string, params?: Record<string, string | number>, fallbackText?: string) => string) {
-    return channelConnectionError(channel, t) || validateChannelHeaders(channel.headers) || (!channel.models.length ? (t ? t("settings.configure_channel_first", undefined, "请添加至少一个模型") : "请添加至少一个模型") : "");
+// secretKeyProtocols 来自插件目录（见 secretKeyProtocolIds）：是否需要 Secret Key 只看插件 auth 声明。
+export function channelValidationError(channel: ModelChannel, secretKeyProtocols: ReadonlySet<string>) {
+    return channelConnectionErrorFor(channel, secretKeyProtocols) || validateChannelHeaders(channel.headers) || (!channel.models.length ? translate("account.settings.channels.needModel") : "");
 }
 
-export function isChannelReady(channel: ModelChannel) {
-    return !channelValidationError(channel);
+export function isChannelReady(channel: ModelChannel, secretKeyProtocols: ReadonlySet<string>) {
+    return !channelValidationError(channel, secretKeyProtocols);
 }
 
-export function focusInvalidChannelField(channel: ModelChannel) {
-    const baseUrlError = channelConnectionError({ ...channel, apiKey: "valid", secretKey: "valid" });
-    const field = baseUrlError ? "base-url" : !channel.apiKey.trim() ? "api-key" : requiresSecretKey(channel) && !channel.secretKey?.trim() ? "secret-key" : "models";
+export function focusInvalidChannelField(channel: ModelChannel, secretKeyProtocols: ReadonlySet<string>) {
+    const baseUrlError = channelConnectionErrorFor({ ...channel, apiKey: "valid", secretKey: "valid" }, secretKeyProtocols);
+    const field = baseUrlError ? "base-url" : !channel.apiKey.trim() ? "api-key" : requiresSecretKey(channel, secretKeyProtocols) && !channel.secretKey?.trim() ? "secret-key" : "models";
     requestAnimationFrame(() => {
         const element = document.getElementById(`channel-${channel.id}-${field}`);
         element?.scrollIntoView({ behavior: "smooth", block: "center" });
@@ -451,9 +455,9 @@ export function focusInvalidChannelField(channel: ModelChannel) {
     });
 }
 
-function ChannelStatus({ channel }: { channel: ModelChannel }) {
+function ChannelStatus({ channel, secretKeyProtocols }: { channel: ModelChannel; secretKeyProtocols: ReadonlySet<string> }) {
     const { t } = useI18n();
-    const error = channelValidationError(channel, t);
+    const error = channelValidationError(channel, secretKeyProtocols);
     return (
         <span className={`settings-channel-status ${error ? "is-warning" : "is-ready"}`}>
             <i aria-hidden="true" />
@@ -505,17 +509,17 @@ function channelConnectionMode(channel: ModelChannel): UserChannelConnection {
     return channel.apiFormat === "gemini" ? "gemini" : "openai";
 }
 
-function channelConnectionError(channel: ModelChannel, t?: (keyOrText: string, params?: Record<string, string | number>, fallbackText?: string) => string) {
+function channelConnectionErrorFor(channel: ModelChannel, secretKeyProtocols: ReadonlySet<string>) {
     const baseUrl = channel.baseUrl.trim();
-    if (!baseUrl) return t ? t("settings.channel_err_fill_base_url", undefined, "请填写 Base URL") : "请填写 Base URL";
+    if (!baseUrl) return translate("account.settings.channels.baseUrlRequired");
     try {
         const parsed = new URL(baseUrl);
-        if (parsed.protocol !== "http:" && parsed.protocol !== "https:") return t ? t("settings.channel_err_http_https_only", undefined, "Base URL 只支持 HTTP 或 HTTPS") : "Base URL 只支持 HTTP 或 HTTPS";
+        if (parsed.protocol !== "http:" && parsed.protocol !== "https:") return translate("account.settings.channels.baseUrlProtocol");
     } catch {
-        return t ? t("settings.channel_err_base_url_format", undefined, "Base URL 格式不正确") : "Base URL 格式不正确";
+        return translate("account.settings.channels.baseUrlInvalid");
     }
-    if (!channel.apiKey.trim()) return t ? t("settings.channel_err_fill_api_key", undefined, "请填写 API Key / Access Key") : "请填写 API Key / Access Key";
-    if (requiresSecretKey(channel) && !channel.secretKey?.trim()) return t ? t("settings.channel_err_requires_secret_key", undefined, "当前协议需要填写 Secret Key") : "当前协议需要填写 Secret Key";
+    if (!channel.apiKey.trim()) return translate("account.settings.channels.apiKeyRequired");
+    if (requiresSecretKey(channel, secretKeyProtocols) && !channel.secretKey?.trim()) return translate("account.settings.channels.secretKeyRequired");
     return "";
 }
 
@@ -533,6 +537,6 @@ function isKnownDefaultBaseUrl(value: string) {
     return [defaultBaseUrlForApiFormat("openai"), defaultBaseUrlForApiFormat("gemini")].some((candidate) => candidate.replace(/\/+$/, "") === normalized);
 }
 
-function requiresSecretKey(channel: ModelChannel) {
-    return channel.modelCosts?.some((item) => item.protocol?.startsWith("volcengine-jimeng-")) === true;
+function requiresSecretKey(channel: ModelChannel, secretKeyProtocols: ReadonlySet<string>) {
+    return channel.modelCosts?.some((item) => Boolean(item.protocol && secretKeyProtocols.has(item.protocol))) === true;
 }

@@ -1,3 +1,5 @@
+import { i18n } from "@/i18n";
+import { useTranslation } from "react-i18next";
 import { ConfigProvider, Dropdown } from "antd";
 import type { MenuProps } from "antd";
 import {
@@ -34,6 +36,7 @@ import {
     Palette,
     PanelLeftClose,
     PanelLeftOpen,
+    PersonStanding,
     PlugZap,
     RadioTower,
     RefreshCw,
@@ -48,6 +51,7 @@ import {
     TicketCheck,
     ToggleLeft,
     UsersRound,
+    Wand2,
 } from "lucide-react";
 import { Suspense, useEffect, useState, type ReactNode } from "react";
 import { Link, NavLink, Outlet, useLocation } from "react-router";
@@ -123,13 +127,29 @@ const adminNavigation: AdminNavigationGroup[] = [
         items: [
             { path: "/admin/workbench-tools", label: "工作台工具", shortLabel: "工具", icon: <Shapes className="size-4" /> },
             { path: "/admin/prompt-templates", label: "提示词模板", shortLabel: "模板", icon: <MessageSquareText className="size-4" /> },
+            { path: "/admin/pose-library", label: "姿势库", shortLabel: "姿势", icon: <PersonStanding className="size-4" /> },
             { path: "/admin/settings/drawing-engine", label: "绘图工具", shortLabel: "绘图", icon: <Paintbrush className="size-4" /> },
-            { path: "/admin/i18n/settings", label: "语言管理", shortLabel: "语言", icon: <Languages className="size-4" /> },
-            { path: "/admin/i18n/entries", label: "词条修改", shortLabel: "词条", icon: <BookOpenText className="size-4" /> },
+            {
+                path: "/admin/i18n/settings",
+                get label() {
+                    return i18n.t("upstreamSync.languageManagement");
+                },
+                shortLabel: "语言",
+                icon: <Languages className="size-4" />,
+            },
+            {
+                path: "/admin/i18n/entries",
+                get label() {
+                    return i18n.t("upstreamSync.translationEditing");
+                },
+                shortLabel: "词条",
+                icon: <BookOpenText className="size-4" />,
+            },
             { path: "/admin/plugins", label: "插件管理", shortLabel: "插件", icon: <PlugZap className="size-4" /> },
             { path: "/admin/plugins/music-generation", label: "音乐配置", shortLabel: "音乐", icon: <Music className="size-4" /> },
             { path: "/admin/plugins/html-pages", label: "HTML 页面", shortLabel: "页面", icon: <FileCode className="size-4" /> },
-            { path: "/admin/skill-curation", label: "技能分类", shortLabel: "技能", icon: <Sparkles className="size-4" /> },
+            { path: "/admin/skills", label: "技能管理", shortLabel: "技能", icon: <Wand2 className="size-4" /> },
+            { path: "/admin/skill-curation", label: "技能分类", shortLabel: "分类", icon: <Sparkles className="size-4" /> },
             { path: "/admin/resources", label: "存储资源", shortLabel: "资源", icon: <Database className="size-4" /> },
         ],
     },
@@ -217,6 +237,7 @@ function adminPopupContainer(node?: HTMLElement) {
 }
 
 export function AdminShell() {
+    useTranslation();
     const userId = useUserStore((state) => state.user?.id);
     return (
         <AdminDensityProvider key={userId || "anonymous"} userId={userId}>

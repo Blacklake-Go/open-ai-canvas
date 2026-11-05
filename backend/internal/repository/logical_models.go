@@ -386,6 +386,7 @@ func (r *Repository) SwitchTaskLogicalRoute(taskID string, expectedRouteID strin
 				return err
 			}
 			updates["token_price_bands"] = string(replacementBands)
+			updates["token_price_rules_json"] = replacement.TokenPriceRulesJSON
 		}
 		billingUpdated := tx.Model(&model.BillingOrder{}).
 			Where("id = ? AND task_id = ? AND status IN ?", billingOrderID, taskID, []model.BillingStatus{model.BillingStatusReserved, model.BillingStatusRunning}).

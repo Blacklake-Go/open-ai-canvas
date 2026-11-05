@@ -3,6 +3,7 @@ import { resolve, relative, dirname } from "node:path";
 import { BUILTIN_SUPDANCE_I18N_ENTRIES } from "../src/supdance/plugins/i18n/locales/index.ts";
 import { scanSource, compareManifests, hashText } from "./i18n/source-scanner.mjs";
 import { i18n } from "../src/i18n/index.ts";
+import { CREATION_UI_SOURCES } from "../src/supdance/plugins/i18n/locales/creation-sources.ts";
 
 const root = resolve(import.meta.dir, "..");
 const args = process.argv.slice(2);
@@ -25,6 +26,23 @@ for (let i = 0; i < args.length; i++) {
 const entries = [...BUILTIN_SUPDANCE_I18N_ENTRIES];
 const bySource = new Map();
 for (const entry of entries) bySource.set(entry.sourceText, [...(bySource.get(entry.sourceText) ?? []), entry]);
+// The host and creation namespaces own their catalogs independently of legacy packs.
+// Index their real source entries so upstream native labels do not become duplicate
+// extension drafts. This only classifies the inventory; it never rewrites UI text.
+const nativeBySource = new Map();
+function indexNativeSources(value, prefix = "") {
+    for (const [name, item] of Object.entries(value ?? {})) {
+        const key = prefix ? `${prefix}.${name}` : name;
+        if (typeof item === "string") {
+            const source = item.replace(/\{\{\s*([^{}]+?)\s*\}\}/g, "{$1}");
+            if (!nativeBySource.has(source)) nativeBySource.set(source, { key, namespace: "native" });
+        } else if (item && typeof item === "object") indexNativeSources(item, key);
+    }
+}
+indexNativeSources(i18n.getResourceBundle("zh-CN", "translation"));
+for (const [key, source] of Object.entries(CREATION_UI_SOURCES)) {
+    if (!nativeBySource.has(source)) nativeBySource.set(source, { key, namespace: "supdance-creation" });
+}
 const items = [],
     references = [],
     diagnostics = [];
@@ -45,9 +63,15 @@ walk(sourceRoot);
 for (const item of items) {
     item.anchor = hashText(item.context).slice(0, 16);
     const matches = bySource.get(item.sourceText) ?? [];
+    const native = nativeBySource.get(item.sourceText);
     item.key = matches.length === 1 ? matches[0].key : `custom.scan_${item.id}`;
     item.namespace = matches.length === 1 ? matches[0].namespace : "custom";
     item.status = matches.length > 1 ? "ambiguous" : matches.length === 1 ? "known" : item.dynamic ? "needs_context" : "new";
+    if (native && matches.length !== 1) {
+        item.key = native.key;
+        item.namespace = native.namespace;
+        item.status = "known";
+    }
 }
 const knownKeys = new Set(entries.map((e) => e.key));
 const missingKeys = references.filter((r) => !knownKeys.has(r.key) && !i18n.exists(r.key, { lng: "zh-CN" }));

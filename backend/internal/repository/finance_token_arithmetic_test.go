@@ -71,7 +71,7 @@ func TestTokenUsageAmountUsesExactArithmetic(t *testing.T) {
 		},
 	} {
 		t.Run(test.name, func(t *testing.T) {
-			amount, err := tokenUsageAmount(test.order, &test.usage)
+			amount, _, err := tokenUsageAmount(test.order, &test.usage)
 			if err != nil || amount != test.want {
 				t.Fatalf("tokenUsageAmount() = %d, %v; want %d", amount, err, test.want)
 			}
@@ -89,7 +89,7 @@ func TestTokenUsageContextBandUsesProviderUsageAndFrozenPrices(t *testing.T) {
 	for _, check := range []struct{ input, cached, want int64 }{
 		{272000, 0, 729_750_000}, {272001, 0, 1_451_630_250}, {300000, 200000, 601_125_000},
 	} {
-		actual, err := tokenUsageAmount(order, &BillingUsage{InputTokens: check.input, CachedTokens: check.cached, OutputTokens: 1000})
+		actual, _, err := tokenUsageAmount(order, &BillingUsage{InputTokens: check.input, CachedTokens: check.cached, OutputTokens: 1000})
 		if err != nil || actual != check.want {
 			t.Fatalf("input %d cached %d: got %d, %v; want %d", check.input, check.cached, actual, err, check.want)
 		}
@@ -104,17 +104,34 @@ func TestTokenUsageSplitsFiveMinuteAndOneHourCacheWrites(t *testing.T) {
 	base := model.TokenPriceBand{MinInputTokens: 0, InputTokenPriceMicrocredits: 1_000_000, OutputTokenPriceMicrocredits: 2_000_000, CachedTokenPriceMicrocredits: 100_000, CacheWriteTokenPriceMicrocredits: 1_250_000, CacheWrite1hTokenPriceMicrocredits: &oneHourPrice}
 	order := model.BillingOrder{Capability: "text", MultiplierBasisPoints: 10_000, TokenPriceBands: []model.TokenPriceBand{base}}
 	usage := &BillingUsage{InputTokens: 3_000_000, OutputTokens: 1_000_000, CachedTokens: 1_000_000, CacheWriteTokens: 1_000_000, CacheWrite1hTokens: 600_000}
-	actual, err := tokenUsageAmount(order, usage)
+	actual, _, err := tokenUsageAmount(order, usage)
 	if err != nil || actual != 4_800_000 {
 		t.Fatalf("mixed cache writes: got %d, %v; want 4800000", actual, err)
 	}
 	order.TokenPriceBands[0].CacheWrite1hTokenPriceMicrocredits = nil
-	if _, err := tokenUsageAmount(order, usage); !errors.Is(err, ErrBillingUsageUnavailable) {
+	if _, _, err := tokenUsageAmount(order, usage); !errors.Is(err, ErrBillingUsageUnavailable) {
 		t.Fatalf("unpriced one-hour writes were accepted: %v", err)
 	}
 	usage.CacheWrite1hTokens = usage.CacheWriteTokens + 1
-	if _, err := tokenUsageAmount(order, usage); err == nil {
+	if _, _, err := tokenUsageAmount(order, usage); err == nil {
 		t.Fatal("one-hour subset larger than total cache writes was accepted")
+	}
+}
+
+func TestTokenUsageMergePreservesNativeRulesAndRejectsMixedSnapshots(t *testing.T) {
+	rules, err := model.EncodeBillingTokenPriceRules([]model.BillingTokenPriceRule{{Rule: 1, Input: 1_000_000, Output: 2_000_000}})
+	if err != nil {
+		t.Fatal(err)
+	}
+	order := model.BillingOrder{Capability: "text", MultiplierBasisPoints: 10_000, TokenPriceRulesJSON: rules}
+	usage := &BillingUsage{InputTokens: 1000, OutputTokens: 10}
+	amount, rule, err := tokenUsageAmount(order, usage)
+	if err != nil || amount != 1020 || rule != 1 {
+		t.Fatalf("native time/context rule was lost: amount=%d rule=%d err=%v", amount, rule, err)
+	}
+	order.TokenPriceBands = []model.TokenPriceBand{{InputTokenPriceMicrocredits: 1_000_000, OutputTokenPriceMicrocredits: 2_000_000}}
+	if _, _, err := tokenUsageAmount(order, usage); err == nil {
+		t.Fatal("ambiguous frozen sale policies were silently combined")
 	}
 }
 
@@ -151,7 +168,7 @@ func TestTokenUsageAmountRejectsInvalidArithmetic(t *testing.T) {
 		},
 	} {
 		t.Run(test.name, func(t *testing.T) {
-			if amount, err := tokenUsageAmount(test.order, &test.usage); amount != 0 || err == nil {
+			if amount, _, err := tokenUsageAmount(test.order, &test.usage); amount != 0 || err == nil {
 				t.Fatalf("invalid usage billed %d, %v", amount, err)
 			}
 		})

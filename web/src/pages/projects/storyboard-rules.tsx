@@ -8,11 +8,15 @@ import { ChevronDown, Film, TriangleAlert } from "lucide-react";
 import {
     averageShotSeconds,
     clampEpisodeSeconds,
+    DIALOGUE_LIMITS,
+    DIALOGUE_PRESETS,
+    dialogueRule,
     DIRECTION_LEVEL_MAX,
     DIRECTION_LEVEL_MIN,
     EPISODE_PRESETS,
     formatEpisodeSeconds,
     lineTarget,
+    longestLineSeconds,
     MAX_EPISODE_SECONDS,
     MAX_SEGMENT_SECONDS,
     MIN_EPISODE_SECONDS,
@@ -24,9 +28,10 @@ import {
     segmentTargetSeconds,
     shotTarget,
     TRANSITION_LABEL,
+    type DialogueRule,
     type SegmentLimits,
 } from "@/lib/drama/storyboard";
-import type { DramaPacing, DramaSegmentMode, DramaStoryboardSettings } from "@/services/api/drama";
+import type { DramaDialogue, DramaPacing, DramaSegmentMode, DramaStoryboardSettings } from "@/services/api/drama";
 
 /** 单集时长：可直接输入“5分钟 / 300 / 2:30”，也可点右侧从常用时长里选。 */
 export function EpisodeDurationInput({ value, onChange }: { value: number; onChange: (seconds: number) => void }) {
@@ -115,11 +120,18 @@ const PACING: Array<{ value: DramaPacing; label: string; detail: string }> = [
     { value: "relaxed", label: "舒缓", detail: "3–6 秒为主，情绪戏可到 8 秒" },
     { value: "slow", label: "慢", detail: "4–8 秒长镜，可用空镜营造情绪" },
 ];
-const DIALOGUE: Array<{ value: DramaStoryboardSettings["dialogue"]; label: string; detail: string }> = [
-    { value: "dense", label: "密集", detail: "约每 3 秒一句台词或旁白，单句不超过 12 字，适合爽剧、对手戏" },
-    { value: "standard", label: "标准", detail: "约每 4.5 秒一句，单句不超过 16 字" },
-    { value: "sparse", label: "克制", detail: "约每 7 秒一句，单句不超过 20 字，留给动作与氛围" },
+/** 具体数值由 dialogueRule 给出，这里只写适用场景。 */
+const DIALOGUE: Array<{ value: DramaDialogue; label: string; detail: string }> = [
+    { value: "dense", label: "密集", detail: "适合爽剧、对手戏" },
+    { value: "standard", label: "标准", detail: "适合多数剧情" },
+    { value: "sparse", label: "克制", detail: "留给动作与氛围" },
+    { value: "custom", label: "自定义", detail: "自己设定语速、每句间隔、单句字数和气口，全剧统一口径" },
 ];
+
+/** 对白参数的一句话说明：直接写出语速，回答“这一档说多快”。 */
+function dialogueRuleText(rule: DialogueRule) {
+    return _creationText("projects.dialogue_summary", { interval: rule.lineSeconds, max: rule.lineMaxRunes, rate: rule.speechRate, pause: rule.linePauseMs / 1000 });
+}
 /** 1–10 档按五段说明，与后端 production.performanceBands / cameraBands 同一口径：1–2、3–4、5–6、7–8、9–10。 */
 type LevelBand = { label: string; detail: string };
 const PERFORMANCE_BANDS: LevelBand[] = [
@@ -241,6 +253,31 @@ export function StoryboardRules({
     _useCreationLocale();
     const rules = normalizeStoryboard(value);
     const set = (patch: Partial<DramaStoryboardSettings>) => onChange(normalizeStoryboard({ ...rules, ...patch }));
+    const dialogue = dialogueRule(rules);
+    const longest = longestLineSeconds(dialogue);
+    // 第一次切到自定义时从当前档位的数值起步；填过的自定义值保留。
+    const chooseDialogue = (next: DramaDialogue) => {
+        if (next !== "custom" || rules.dialogue === "custom") return set({ dialogue: next });
+        const base = DIALOGUE_PRESETS[rules.dialogue];
+        set({ dialogue: next, speechRate: rules.speechRate || base.speechRate, lineSeconds: rules.lineSeconds || base.lineSeconds, lineMaxRunes: rules.lineMaxRunes || base.lineMaxRunes, linePauseMs: rules.linePauseMs || base.linePauseMs });
+    };
+    const dialogueNumber = (key: keyof DialogueRule, label: string, prefix: string, suffix: string, step: number, precision: number) => (
+        <InputNumber
+            className="drama-sbrules-number is-wide"
+            size="small"
+            min={DIALOGUE_LIMITS[key].min}
+            max={DIALOGUE_LIMITS[key].max}
+            step={step}
+            precision={precision}
+            value={dialogue[key]}
+            prefix={prefix}
+            suffix={suffix}
+            aria-label={label}
+            onChange={(next) => {
+                if (typeof next === "number") set({ [key]: next } as Partial<DramaStoryboardSettings>);
+            }}
+        />
+    );
     const limits = segmentLimits(rules, maxVideoSeconds);
     const target = segmentTargetSeconds(limits);
     const modelName = videoModelLabel || "视频模型";
@@ -299,8 +336,36 @@ export function StoryboardRules({
             </div>
             <div className="drama-sbrules-row">
                 <span className="drama-sbrules-label">{_creationText("creation.6234ad6d635acbbe")}</span>
-                <Segmented label={_creationText("creation.6234ad6d635acbbe")} value={rules.dialogue} options={_creationOptions(DIALOGUE)} onChange={(dialogue) => set({ dialogue })} />
+                <div className="drama-sbrules-segment">
+                    <Segmented label={_creationText("creation.6234ad6d635acbbe")} value={rules.dialogue} options={_creationOptions(DIALOGUE)} onChange={chooseDialogue} />
+                    {rules.dialogue === "custom" ? (
+                        <>
+                            {dialogueNumber("speechRate", _creationText("projects.speech_rate_label"), _creationText("projects.speech_rate_short"), _creationText("projects.chars_per_second"), 0.1, 1)}
+                            {dialogueNumber("lineSeconds", _creationText("projects.line_spacing_label"), _creationText("projects.every_short"), _creationText("projects.seconds_per_line"), 0.5, 1)}
+                            {dialogueNumber("lineMaxRunes", _creationText("projects.line_max_label"), _creationText("projects.line_short"), _creationText("projects.chars_limit"), 1, 0)}
+                            {dialogueNumber("linePauseMs", _creationText("projects.pause_label"), _creationText("projects.pause_short"), _creationText("projects.milliseconds"), 50, 0)}
+                        </>
+                    ) : null}
+                    <span className="drama-sbrules-hint">
+                        {_creationOptions(DIALOGUE).find((item) => item.value === rules.dialogue)?.label}：{dialogueRuleText(dialogue)}
+                        {rules.dialogue === "custom" ? `；${_creationText("projects.dialogue_longest", { seconds: longest })}` : `，${_creationOptions(DIALOGUE).find((item) => item.value === rules.dialogue)?.detail}`}
+                    </span>
+                </div>
             </div>
+            {rules.dialogue === "custom" && longest > dialogue.lineSeconds ? (
+                <p className="drama-sbrules-warn">
+                    <TriangleAlert className="size-3.5 shrink-0" />
+                    {_creationText("projects.line_short")}
+                    {dialogue.lineMaxRunes}
+                    {_creationText("creation.ccb887da3b283388")}
+                    {dialogue.speechRate}
+                    {_creationText("creation.40e22546e7f7b0da")}
+                    {longest}
+                    {_creationText("creation.f4ed70ca8de78739")}
+                    {dialogue.lineSeconds}
+                    {_creationText("creation.35e089b8fc6813d5")}
+                </p>
+            ) : null}
             <div className="drama-sbrules-row">
                 <span className="drama-sbrules-label">{_creationText("creation.b0afd784193e783b")}</span>
                 <LevelSlider label={_creationText("creation.b0afd784193e783b")} value={rules.performance} bands={PERFORMANCE_BANDS} onChange={(performance) => set({ performance })} />
