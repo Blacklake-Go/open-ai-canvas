@@ -21,7 +21,7 @@ export function WorkspaceAccountCard({ onWallet, onNavigate }: { onWallet: () =>
     const { t } = useTranslation();
     if (!user) return null;
     return (
-        <section className="workspace-account-card" aria-label={t("shell.account.title")}>
+        <section className="workspace-account-card" aria-label={t("shell.account.region")}>
             <header className="workspace-account-card-identity">
                 <UserGroupAvatarRing>
                     <UserAvatar user={user} className="workspace-account-card-avatar" />

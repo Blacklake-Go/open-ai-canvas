@@ -18,7 +18,10 @@ for (const [key, value] of Object.entries({
     HTMLElement: dom.HTMLElement,
     Element: dom.Element,
     Node: dom.Node,
+    Event: dom.Event,
+    CustomEvent: dom.CustomEvent,
     SVGElement: dom.SVGElement,
+    ResizeObserver: dom.ResizeObserver,
     getComputedStyle: dom.getComputedStyle.bind(dom),
     IS_REACT_ACT_ENVIRONMENT: true,
 })) {

@@ -1766,7 +1766,6 @@ export const BUILTIN_SUPDANCE_I18N_ENTRIES: readonly SupDanceI18nEntry[] = [
     e("music.structure_tags", "music", "结构标签:", "歌词结构标签"),
     e("music.lossless_download", "music", "无损转码下载:", "无损转码下载提示"),
     e("music.refund_tip", "music", "已为您安全原路退回预留积分。", "积分退款说明"),
-    e("music.admin_title", "music", "AI 音乐生成插件管理中心", "后台管理中心标题"),
     e("music.admin_desc", "music", "固定 KoyoSIM 外部网关（https://www.koyosim.com）集成、模型定价与全生命周期状态控制", "后台管理中心副标题"),
     e("music.test_connection", "music", "测试连接", "测试连接按钮"),
     e("music.save_config", "music", "保存配置", "保存配置按钮"),

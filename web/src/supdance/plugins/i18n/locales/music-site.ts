@@ -3,6 +3,15 @@ import type { SupDanceI18nEntry } from "../types";
 export const MUSIC_SITE_DESCRIPTION = "音乐工作台使用后台配置的平台音乐模型、统一音频生成任务与实时报价，提供简单和歌词创作、目标时长、原始 MP3 播放下载及共享任务历史。模型与版本由渠道配置决定。";
 
 const definitions = [
+    [
+        "music.plugin_description",
+        MUSIC_SITE_DESCRIPTION,
+        "The music studio uses platform models, unified audio tasks and live quotes for simple and lyrics-based creation, target duration, original MP3 playback and downloads, and shared task history. Models and versions follow channel configuration.",
+        "音樂工作台使用後台配置的平台音樂模型、統一音訊生成任務與即時報價，提供簡單和歌詞創作、目標時長、原始 MP3 播放下載及共享任務歷史。模型與版本由渠道配置決定。",
+        "音楽スタジオは管理設定のプラットフォームモデル、統一音声タスク、リアルタイム見積もりを使用し、簡単な説明や歌詞による制作、目標時間、元の MP3 の再生・ダウンロード、共有履歴を提供します。モデルとバージョンはチャネル設定に従います。",
+        "음악 스튜디오는 관리자가 설정한 플랫폼 모델, 통합 오디오 작업과 실시간 견적을 사용하며 간단한 설명과 가사 기반 제작, 목표 길이, 원본 MP3 재생·다운로드 및 공유 작업 기록을 제공합니다. 모델과 버전은 채널 설정을 따릅니다.",
+        "El estudio de música utiliza modelos de plataforma, tareas de audio unificadas y presupuestos en tiempo real para crear a partir de descripciones o letras, con duración objetivo, reproducción y descarga del MP3 original e historial compartido. Los modelos y versiones dependen de la configuración del canal.",
+    ],
     ["image_created", "你的图像已创建", "Your image is ready", "你的圖像已建立", "画像が生成されました", "이미지가 생성되었습니다", "Tu imagen está lista"],
     ["video_created", "你的视频已创建", "Your video is ready", "你的影片已建立", "動画が生成されました", "동영상이 생성되었습니다", "Tu vídeo está listo"],
     ["video_results", "视频结果", "Video results", "影片結果", "動画の結果", "동영상 결과", "Resultados de vídeo"],

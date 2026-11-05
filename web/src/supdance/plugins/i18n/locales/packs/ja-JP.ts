@@ -1687,7 +1687,6 @@ const pack: Record<string, string> = {
     "music.structure_tags": "構成タグ:",
     "music.lossless_download": "トランスコードダウンロード:",
     "music.refund_tip": "予約されたクレジットはアカウントに安全に返金されました。",
-    "music.admin_title": "AI 音楽プラグイン管理センター",
     "music.admin_desc": "固定 KoyoSIM 外部ゲートウェイ（https://www.koyosim.com）統合、モデル価格設定、およびフルライフサイクル制御",
     "music.test_connection": "接続テスト",
     "music.save_config": "設定を保存",

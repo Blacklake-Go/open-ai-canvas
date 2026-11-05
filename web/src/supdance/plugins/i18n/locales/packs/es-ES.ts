@@ -1688,7 +1688,6 @@ const pack: Record<string, string> = {
     "music.structure_tags": "Etiquetas de estructura:",
     "music.lossless_download": "Descarga transcodificada:",
     "music.refund_tip": "Los créditos reservados han sido reembolsados de forma segura a su cuenta.",
-    "music.admin_title": "Centro de Administración del Plugin de Música AI",
     "music.admin_desc": "Integración de puerta de enlace fija KoyoSIM (https://www.koyosim.com), precios de modelos y control de ciclo de vida completo",
     "music.test_connection": "Probar conexión",
     "music.save_config": "Guardar configuración",

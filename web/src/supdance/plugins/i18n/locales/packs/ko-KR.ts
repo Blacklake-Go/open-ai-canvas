@@ -1688,7 +1688,6 @@ const pack: Record<string, string> = {
     "music.structure_tags": "구조 태그:",
     "music.lossless_download": "무손실 트랜스코딩 다운로드:",
     "music.refund_tip": "예치된 크레딧이 안전하게 환불되었습니다。",
-    "music.admin_title": "AI 음악 플러그인 관리 센터",
     "music.admin_desc": "고정 KoyoSIM 게이트웨이(https://www.koyosim.com) 연동, 모델 가격 책정 및 전체 라이프사이클 제어",
     "music.test_connection": "연결 테스트",
     "music.save_config": "설정 저장",

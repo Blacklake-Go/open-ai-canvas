@@ -187,13 +187,13 @@ func TestChallenger2_AssetAndHistoryRetentionAcrossAllLifecycleStates(t *testing
 		t.Fatalf("expected state %s, got %s", MusicLifecycleUninstalled, info.State)
 	}
 
-	// Verify plugin platform state was removed from DB
+	// Keep an unavailable tombstone so default discovery cannot re-enable it.
 	platState, err := svc.repo.PluginPlatformState(PluginSupDanceMusicGeneration)
 	if err != nil {
 		t.Fatalf("unexpected error reading platform state: %v", err)
 	}
-	if platState != nil {
-		t.Fatalf("expected platform state to be deleted on uninstall, found: %+v", platState)
+	if platState == nil || platState.Available {
+		t.Fatalf("expected unavailable platform state after uninstall, found: %+v", platState)
 	}
 
 	// Empirical check: CRITICAL assertion that supdance_music_generations and model.Resource are STILL INTACT!
