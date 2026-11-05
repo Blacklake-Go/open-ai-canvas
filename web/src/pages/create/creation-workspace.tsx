@@ -833,7 +833,9 @@ const creationModeItems: { mode: CreationMode; icon: ReactNode; label: string }[
 function useCreationModeItems() {
     const musicPluginActive = usePluginStore(musicPluginGate);
     const { t } = useI18n();
-    return creationModeItems.filter((item) => item.mode !== "music" || musicPluginActive).map((item) => ({ ...item, label: item.mode === "music" ? t("music.nav_music_gen", undefined, item.label) : t(`create.mode.${item.mode}`, undefined, item.label) }));
+    return creationModeItems
+        .filter((item) => item.mode !== "music" || musicPluginActive)
+        .map((item) => ({ ...item, label: item.mode === "music" ? t("upstream.creation.musicMode", undefined, item.label) : t(`create.mode.${item.mode}`, undefined, item.label) }));
 }
 
 type CreationModeKey = CreationMode | "agent";

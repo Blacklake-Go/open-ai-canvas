@@ -11,7 +11,7 @@ const PAGE_TITLE_KEYS: Record<string, string> = {
     referral: "shell.account.referral",
 };
 const TOOLBOX_TITLE_KEYS: Record<string, string> = {
-    music: "music.nav_music_gen",
+    music: "upstream.creation.musicNavigation",
     image: "nav.pageTitles.toolboxImage",
     video: "nav.pageTitles.toolboxVideo",
 };

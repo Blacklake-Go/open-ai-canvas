@@ -1,6 +1,6 @@
 # SupDance Canvas — 上游基线记录 (UPSTREAM_BASELINE.md)
 
-当前集成上游 `v1.8.0`（`2fe3ca13c27e46a786af6597938a0e5328df6723`），自有版本 `v1.8.0-supdance.1`。上游 Schema 87；本站保留既有 Schema 83，将新增上游迁移顺延为 84–88，目标 Schema 88。验证与源码部署过程见 [本次合并记录](./UPSTREAM_V1_8_SOURCE_MERGE.md)。下方保留历史记录，不代表本次线上状态。
+当前集成上游 `v1.8.0`（`2fe3ca13c27e46a786af6597938a0e5328df6723`），自有源码候选版本 `v1.8.0-supdance.2`。上游 Schema 87；本站保留既有 Schema 83，将新增上游迁移顺延为 84–88，目标 Schema 88。`.1` 已完成源码镜像上线；`.2` 的账户路由与原生文案验收见 [网站维护记录](./SITE_CLOSURE.md)。验证与源码部署过程见 [本次合并记录](./UPSTREAM_V1_8_SOURCE_MERGE.md)。下方保留历史记录，不代表本次线上状态。
 
 
 ## 本次完整集成基线

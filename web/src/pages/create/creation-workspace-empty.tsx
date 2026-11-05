@@ -101,19 +101,60 @@ export const creationEmptySuggestions: Array<{ mode: CreationMode; icon: typeof 
 ];
 
 export const creationMusicEmptySuggestions: Array<{ mode: CreationMode; icon: typeof Music; title: string; hint: string; prompt: string }> = [
-    { mode: "music", icon: Music, title: "创作流行歌曲", hint: "夏日海滩、浪漫轻快的男女声对唱", prompt: "一首节奏明快的流行舞曲，关于夏日海滩与浪漫邂逅，男声主唱，带清脆吉他分解" },
-    { mode: "music", icon: Disc3, title: "影视配乐 (BGM)", hint: "情绪舒缓宏大的管弦乐氛围", prompt: "电影级管弦乐氛围背景音乐，情绪舒缓宏大，钢琴与大提琴交织，适合故事叙述，纯音乐" },
-    { mode: "music", icon: Sparkles, title: "未来感电子乐", hint: "强劲低音与赛博朋克合成器音色", prompt: "128 BPM 现代合成波电子舞曲，强劲低音与未来感合成器音色，纯音乐" },
-    { mode: "music", icon: Mic2, title: "古风国潮乐曲", hint: "古筝、竹笛与现代鼓点融合", prompt: "轻柔悠扬的古风国潮乐曲，古筝、竹笛与现代鼓点融合，女声吟唱" },
+    {
+        mode: "music",
+        icon: Music,
+        get title() {
+            return translate("upstream.creation.popTitle");
+        },
+        get hint() {
+            return translate("upstream.creation.popHint");
+        },
+        prompt: "一首节奏明快的流行舞曲，关于夏日海滩与浪漫邂逅，男声主唱，带清脆吉他分解",
+    },
+    {
+        mode: "music",
+        icon: Disc3,
+        get title() {
+            return translate("upstream.creation.bgmTitle");
+        },
+        get hint() {
+            return translate("upstream.creation.bgmHint");
+        },
+        prompt: "电影级管弦乐氛围背景音乐，情绪舒缓宏大，钢琴与大提琴交织，适合故事叙述，纯音乐",
+    },
+    {
+        mode: "music",
+        icon: Sparkles,
+        get title() {
+            return translate("upstream.creation.electronicTitle");
+        },
+        get hint() {
+            return translate("upstream.creation.electronicHint");
+        },
+        prompt: "128 BPM 现代合成波电子舞曲，强劲低音与未来感合成器音色，纯音乐",
+    },
+    {
+        mode: "music",
+        icon: Mic2,
+        get title() {
+            return translate("upstream.creation.chineseTitle");
+        },
+        get hint() {
+            return translate("upstream.creation.chineseHint");
+        },
+        prompt: "轻柔悠扬的古风国潮乐曲，古筝、竹笛与现代鼓点融合，女声吟唱",
+    },
 ];
 
 export function CreationEmptySuggest({ mode, onStartPrompt, onOpenLibrary }: { mode?: CreationMode; onStartPrompt: (mode: CreationMode, prompt: string) => void; onOpenLibrary: () => void }) {
+    const { t } = useTranslation();
     const reducedMotion = useReducedMotion();
     const [hovered, setHovered] = useState<string | null>(null);
     const suggestions = mode === "music" ? creationMusicEmptySuggestions : creationEmptySuggestions;
     return (
         <LayoutGroup id="creation-empty-suggest">
-            <div className="creation-empty-suggest" aria-label="快捷创作入口">
+            <div className="creation-empty-suggest" aria-label={t("upstream.creation.quickActions")}>
                 {suggestions.map((item) => {
                     const Icon = item.icon;
                     const start = () => {

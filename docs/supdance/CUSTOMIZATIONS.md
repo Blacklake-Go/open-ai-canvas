@@ -54,6 +54,13 @@
 
 本文件记录 SupDance Canvas 相对上游 `ddcat-ai/open-ai-canvas` 的每一项定制改造、耦合边界及升级处理方式。
 
+## v1.8.0 账户宿主与原生界面接入
+
+- `supdance-profile-router-host`：账户浮窗的 `ProfilePane` 已使用 `useAuthEntry`、`useSearchParams`。全局 Provider 只管理通用上下文；账户宿主放在所有路由共享的 `SupDanceRouteHosts`，与 `Outlet` 共用 Router，跨页面保持窗口身份。不要重新把账户宿主挂到 `RouterProvider` 外，也不要用孤立的 MemoryRouter 绕过生产导航。真实资料窗口有独立 DOM 回归。
+- `supdance-native-upstream-ui`：画布 HUD、批量进度、Token 规则与音乐建议使用宿主 `upstream` 区域六语目录。星期用当前语言的 `Intl` 标签，保存的星期编号、上海时段、价格字段和上下文阈值不变；音乐建议仅翻译标题和说明，点击发送的原提示词不变。面包屑与侧栏音乐名称读取原生词条。
+- 外层反代若保留历史 `/api/v1/` 入口，必须让 `/api/v1/supdance/music/` 更长前缀指向当前应用，并沿用当前应用的 Cookie 隔离和转发头。仅容器健康检查不能发现这种错误；认证后的能力、报价、作品列表和原音频访问需一起验收。
+- 本批不改变 Schema 88、模型价格、赠金、返佣、用户权限或已保存内容；其余上游文案继续保留明确的待译状态。
+
 ## 统一社交登录插件：`supdance-social-auth` v1.4.0
 
 补丁 ID：`supdance-social-auth`

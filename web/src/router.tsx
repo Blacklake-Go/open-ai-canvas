@@ -1,5 +1,5 @@
 import { lazy, Suspense, type ReactNode } from "react";
-import { createBrowserRouter, Navigate, Outlet, useLocation } from "react-router";
+import { createBrowserRouter, Navigate, Outlet, useLocation, type RouteObject } from "react-router";
 import { lazyAdminPage } from "@/pages/admin/admin-page-loader";
 
 import { RequireAuth } from "@/components/auth/require-auth";
@@ -11,6 +11,7 @@ import { CanvasRefreshShell } from "@/pages/canvas/canvas-refresh-shell";
 import { AuthScene } from "@/pages/auth/auth-scene";
 import RouteErrorPage from "@/pages/route-error";
 import { isGuestWorkspacePath } from "@/lib/guest-workspace";
+import { SupDanceRouteHosts } from "@/supdance/adapters/router-hosts";
 // 仅引入常量模块，不触发插件运行时注册；插件 id 必须与清单 id 一致，后端准入判定同样以该 id 为准。
 
 const AdminPage = lazy(() => import("@/pages/admin"));
@@ -132,7 +133,7 @@ function devRoutes() {
     ];
 }
 
-export const router = createBrowserRouter([
+const routes: RouteObject[] = [
     {
         element: <AuthScene />,
         errorElement: <RouteErrorPage />,
@@ -328,4 +329,6 @@ export const router = createBrowserRouter([
         ],
     },
     { path: "*", element: fullScreenDeferred(<NotFound />) },
-]);
+];
+
+export const router = createBrowserRouter([{ element: <SupDanceRouteHosts />, errorElement: <RouteErrorPage />, children: routes }]);

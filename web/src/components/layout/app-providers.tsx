@@ -34,7 +34,6 @@ import { refreshPublicAppearance } from "@/services/appearance-bootstrap";
 import { SupDanceI18nRuntimeHost } from "@/supdance/plugins/i18n";
 import { SupDancePluginRuntimeSync } from "@/supdance/adapters/plugin-runtime-sync";
 import { SocialOnboardingModal } from "@/supdance/plugins/social-auth";
-import { UserProfileModalHost } from "@/components/layout/user-profile-modal";
 import { useVisualEngineHostAdapter } from "@/supdance/plugins/visual-engine/adapters/antd-theme";
 import { WorkspaceRecoveryBoundary } from "@/supdance/plugins/visual-engine/loading/workspace-recovery-boundary";
 
@@ -106,7 +105,6 @@ export function AppProviders({ children, extensions }: { children: ReactNode; ex
                                 <SupDancePluginRuntimeSync />
                                 <SupDanceI18nRuntimeHost />
                                 <SocialOnboardingModal />
-                                <UserProfileModalHost />
                                 {extensions}
                                 <AuthSessionHydrator fallback={<WorkspaceRecoveryBoundary fallback={<FullScreenLoader />} />}>
                                     <ClientRootBoundary>{children}</ClientRootBoundary>

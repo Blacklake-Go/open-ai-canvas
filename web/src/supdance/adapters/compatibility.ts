@@ -26,6 +26,39 @@ export type UpstreamPatchRecord = {
  */
 export const SUPDANCE_UPSTREAM_PATCH_REGISTRY: readonly UpstreamPatchRecord[] = [
     {
+        id: "supdance-profile-router-host",
+        upstreamBaseline: "v1.8.0@2fe3ca13",
+        feature: "全局账户浮窗的路由上下文与跨页面持久挂载",
+        coupledUpstreamFiles: ["web/src/components/layout/app-providers.tsx", "web/src/router.tsx"],
+        files: ["web/src/components/layout/app-providers.tsx", "web/src/router.tsx", "web/src/supdance/adapters/router-hosts.tsx", "web/test/profile-router-host.test.ts"],
+        reason: "上游资料面板使用路由导航与查询参数；账户浮窗移到统一路由根节点，避免全局 Provider 外挂载导致打开账户时整页崩溃。",
+        upgradeRisk: "MEDIUM",
+    },
+    {
+        id: "supdance-native-upstream-ui",
+        upstreamBaseline: "v1.8.0@2fe3ca13",
+        feature: "上游扩展界面原生六语补齐",
+        coupledUpstreamFiles: [
+            "web/src/i18n/areas.ts",
+            "web/src/components/canvas/canvas-agent-hud.tsx",
+            "web/src/components/canvas/canvas-cloud-agent-media-batch-bar.tsx",
+            "web/src/pages/admin/components/channel-model-token-rules.tsx",
+            "web/src/pages/create/creation-workspace-empty.tsx",
+            "web/src/pages/create/creation-workspace.tsx",
+        ],
+        files: [
+            "web/src/i18n/areas.ts",
+            "web/src/i18n/messages/areas/upstream/index.ts",
+            "web/src/components/canvas/canvas-agent-hud.tsx",
+            "web/src/components/canvas/canvas-cloud-agent-media-batch-bar.tsx",
+            "web/src/pages/admin/components/channel-model-token-rules.tsx",
+            "web/src/pages/create/creation-workspace-empty.tsx",
+            "web/test/upstream-native-i18n.test.tsx",
+        ],
+        reason: "使用宿主同一 i18next 实例与六语区域目录，显式翻译界面、状态与无障碍名称；任务枚举、计价字段、规则取值、用户内容与提示词保持原值。",
+        upgradeRisk: "MEDIUM",
+    },
+    {
         id: "supdance-upstream-1.8-pricing-and-title",
         upstreamBaseline: "v1.8.0@2fe3ca13",
         feature: "上游新界面国际化与计价接缝",

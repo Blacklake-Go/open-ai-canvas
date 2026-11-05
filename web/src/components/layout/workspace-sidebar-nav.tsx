@@ -77,7 +77,7 @@ export function buildNav(features: FeatureAvailability, t: (key: string) => stri
             items: [
                 ...(features.imageWorkbenchEnabled ? [{ id: "toolbox-image", title: t("nav.sidebar.toolboxImage"), icon: ImageIcon, to: "/toolbox/image" }] : []),
                 ...(features.videoWorkbenchEnabled ? [{ id: "toolbox-video", title: t("nav.sidebar.toolboxVideo"), icon: Video, to: "/toolbox/video" }] : []),
-                ...(musicPluginActive ? [{ id: "toolbox-music", title: t("music.nav_music_gen"), icon: Music, to: "/toolbox/music" }] : []),
+                ...(musicPluginActive ? [{ id: "toolbox-music", title: t("upstream.creation.musicNavigation"), icon: Music, to: "/toolbox/music" }] : []),
                 { ...toolItem("skills", "/skills", t), title: t("nav.sidebar.skills") },
                 ...(features.pluginCenterEnabled ? [{ ...toolItem("plugins", "/plugins", t), title: t("nav.sidebar.plugins") }] : []),
             ],

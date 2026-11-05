@@ -11,9 +11,9 @@
   },
   "integrationRelease": {
     "schemaVersion": 88,
-    "version": "v1.8.0-supdance.1",
+    "version": "v1.8.0-supdance.2",
     "baseCommit": "c7a322b253bc228db0f978ad2335140bb816b45f",
-    "sourceBranch": "codex/upstream-v1.8.0-20261106",
+    "sourceBranch": "codex/site-closure-v180-20261106",
     "deploymentEvidence": "docs/supdance/UPSTREAM_V1_8_SOURCE_MERGE.md"
   },
   "supdanceRelease": {
@@ -22,6 +22,11 @@
     "baseCommit": "259e7e3fba0b6f70ac3cfd65941c3ca345d60249"
   },
   "coupledUpstreamFiles": [
+    "web/src/i18n/areas.ts",
+    "web/src/components/canvas/canvas-agent-hud.tsx",
+    "web/src/components/canvas/canvas-cloud-agent-media-batch-bar.tsx",
+    "web/src/pages/admin/components/channel-model-token-rules.tsx",
+    "web/src/pages/create/creation-workspace-empty.tsx",
     ".env.example",
     "backend/internal/app/service.go",
     "backend/internal/app/model_router_attempts.go",
