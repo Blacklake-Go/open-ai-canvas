@@ -26,6 +26,15 @@ export type UpstreamPatchRecord = {
  */
 export const SUPDANCE_UPSTREAM_PATCH_REGISTRY: readonly UpstreamPatchRecord[] = [
     {
+        id: "supdance-postgres-test-isolation",
+        upstreamBaseline: "main@b2c8b2e8",
+        feature: "并行PostgreSQL测试库隔离",
+        coupledUpstreamFiles: [],
+        files: ["backend/internal/app/project_name_conflict_test.go"],
+        reason: "临时schema使用强随机标识，避免并行子测试在同一时钟粒度内创建同名schema；生产路径不变。",
+        upgradeRisk: "LOW",
+    },
+    {
         id: "supdance-existing-legal-template-brand",
         upstreamBaseline: "main@b2c8b2e8",
         feature: "保留既有法律模板品牌标识",

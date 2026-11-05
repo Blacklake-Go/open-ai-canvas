@@ -1,13 +1,13 @@
 package app
 
 import (
+	"crypto/rand"
+	"encoding/hex"
 	"errors"
-	"fmt"
 	"net/http"
 	"net/url"
 	"os"
 	"testing"
-	"time"
 
 	"yingce/backend/internal/model"
 	"yingce/backend/internal/repository"
@@ -96,7 +96,11 @@ func newProjectNameConflictPostgresService(t *testing.T) (*Service, *gorm.DB) {
 		t.Fatal(err)
 	}
 	t.Cleanup(func() { _ = adminSQL.Close() })
-	schema := fmt.Sprintf("project_name_conflict_app_%d", time.Now().UnixNano())
+	var unique [16]byte
+	if _, err := rand.Read(unique[:]); err != nil {
+		t.Fatal(err)
+	}
+	schema := "project_name_conflict_app_" + hex.EncodeToString(unique[:])
 	if err := admin.Exec("CREATE SCHEMA " + schema).Error; err != nil {
 		t.Fatal(err)
 	}
