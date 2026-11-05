@@ -1,86 +1,68 @@
-import { configuredModelDisplayName } from "@/lib/model-selection";
-import { modelQuoteRequest } from "@/lib/model-pricing";
-import { quoteModel } from "@/services/api/logical-models";
-import { parseBackendGenerationResult, submitBackendGenerationTask } from "@/services/api/generation-task";
-import { listGenerationTasks, queryGenerationTask, type GenerationTask } from "@/services/api/task-center";
+import { parseBackendGenerationResult } from "@/services/api/generation-task";
+import type { GenerationTask } from "@/services/api/task-center";
 import { getResourceAccess, resolveResourceAccessURL, resolveResourceUrl } from "@/services/api/resources";
-import { modelOptionName, resolveModelChannel, selectableModelsByCapability, useConfigStore, type AiConfig } from "@/stores/use-config-store";
-import type { ModelCapabilities, MusicTask, SubmitMusicTaskPayload } from "./music-api";
+import { http, apiBaseURL } from "@/services/api/request";
+import type { LogicalModelQuote } from "@/services/api/logical-models";
+import type { MusicTask } from "./music-api";
+import type { MusicOutput } from "./music-api";
+import { downloadBrowserMedia } from "@/services/browser-download";
+import { startBrowserDownload } from "@/services/browser-download";
+import { adminResourceFileUrl } from "@/services/api/admin-storage";
+import { resourceIdFromStorageKey } from "@/services/api/resources";
 
-export function siteMusicModels(config: AiConfig): ModelCapabilities[] {
-    return [...new Set(selectableModelsByCapability(config, "audio"))].flatMap((id) => {
-        const channel = resolveModelChannel(config, id);
-        const cost = channel.modelCosts?.find((item) => item.model === modelOptionName(id));
-        if (channel.scope !== "system" || !cost || !/suno|mureka|music/i.test(`${cost.displayName} ${cost.model} ${cost.protocol}`) || /speech|tts/i.test(cost.model)) return [];
-        return [
-            {
-                id,
-                name: configuredModelDisplayName(config, id),
-                version: "",
-                modes: cost.protocol === "runninghub-standard-audio-mureka" || cost.protocol === "runninghub-standard-audio-minimax-music" ? ["simple", "custom"] : ["simple"],
-                instrumentalSupported: cost.protocol === "runninghub-standard-audio-suno" || cost.protocol === "runninghub-standard-audio-minimax-music",
-                minDuration: 30,
-                maxDuration: 300,
-                formats: ["mp3"],
-                maxPromptChars: 1500,
-                maxLyricsChars: 3000,
-                costPerSecondMicrocredits: 0,
-                stemSeparation: false,
-                available: cost.available !== false,
-            },
-        ];
-    });
+export async function downloadMusicOutput(output: MusicOutput, title: string) {
+    const format = output.format || (output.mimeType?.split(";")[0] === "audio/mpeg" ? "mp3" : undefined);
+    if (output.adminResourceId) {
+        startBrowserDownload(adminResourceFileUrl(output.adminResourceId, true), title + (format ? "." + format : ""));
+        return;
+    }
+    return downloadBrowserMedia({ storageKey: output.storageKey, url: output.audioUrl, fileName: title + (format ? "." + format : "") });
 }
 
-export async function siteMusicQuote(model: string, duration: number, signal?: AbortSignal) {
-    const request = modelQuoteRequest(useConfigStore.getState().config, model, "audio", { options: { duration }, videoSeconds: String(duration) });
-    if (!request) throw new Error("Music model is not configured for platform billing");
-    return (await quoteModel(request, signal)).quote;
-}
-
-export async function submitSiteMusicTask(payload: SubmitMusicTaskPayload, dependencies = { config: useConfigStore.getState().config, submitTask: submitBackendGenerationTask }) {
-    const config = dependencies.config;
-    const model = siteMusicModels(config).find((item) => item.id === payload.model && item.available);
-    if (!model) throw new Error("Music model is unavailable");
-    if (!model.modes.includes(payload.mode)) throw new Error("Music mode is unsupported by this model");
-    const instrumental = model.instrumentalSupported && payload.instrumental === true;
-    const task = await dependencies.submitTask({
-        mode: "audio",
-        prompt: [payload.prompt, payload.tags].filter(Boolean).join("\n"),
-        config: { ...config, model: payload.model, audioModel: payload.model, audioFormat: "mp3" },
-        clientOperationId: payload.idempotencyNonce,
-        metadata: {
-            source: "music-workbench",
-            music: { title: payload.title, ...(payload.mode === "custom" && !instrumental ? { lyrics: payload.lyrics || "" } : {}), ...(model.instrumentalSupported ? { instrumental } : {}), duration: payload.duration },
-        },
-    });
-    return { taskId: task.id, status: task.status };
+export async function siteMusicQuote(model: string, _duration = 0, signal?: AbortSignal) {
+    return http.post<LogicalModelQuote>("/v1/supdance/music/quote", { model }, { signal });
 }
 
 export function projectSiteMusicTask(task: GenerationTask): MusicTask {
     const input = task.inputJson ? JSON.parse(task.inputJson) : {};
     const music = input.metadata?.music || {};
-    const result = task.status === "succeeded" ? parseBackendGenerationResult(task) : undefined;
+    const result = task.resultJson ? parseBackendGenerationResult(task) : undefined;
     const audio = result?.audio || result?.audios?.[0];
+    const outputs = (result?.audios || (result?.audio ? [result.audio] : [])).map((item, index) => ({
+        id: `${task.id}:${index}`,
+        outputIndex: index,
+        audioUrl: resolveResourceUrl(item.storageKey, item.dataUrl),
+        storageKey: item.storageKey,
+        durationMs: item.durationMs,
+        bytes: item.bytes,
+        mimeType: item.mimeType,
+        format: (item.format || (item.mimeType?.split(";")[0] === "audio/mpeg" ? "mp3" : undefined)) as MusicTask["format"],
+    }));
     return {
+        outputs,
+        upstreamTaskId: task.providerRequestId,
+        mediaStage: task.mediaStage,
+        canRecoverMedia: task.canRecoverMedia,
         id: task.id,
         taskId: task.id,
         userId: "",
         model: task.model || "",
-        mode: music.lyrics ? "custom" : "simple",
+        mode: music.mode || (music.lyrics ? "custom" : "simple"),
         prompt: task.prompt,
         title: music.title || task.prompt.slice(0, 30),
         lyrics: music.lyrics,
+        tags: music.style,
+        songLanguage: music.songLanguage,
         instrumental: music.instrumental === true,
         durationTargetSeconds: Number(music.duration) || 0,
-        format: "mp3",
+        format: outputs[0]?.format,
         resultAudioUrl: audio ? resolveResourceUrl(audio.storageKey, audio.dataUrl) : undefined,
         resultStorageKey: audio?.storageKey,
         resultDurationMs: audio?.durationMs,
         status: task.status === "succeeded" ? "completed" : task.status === "running" ? "generating" : task.status,
         stage: task.stage || "",
         microcreditsCost: task.billing?.chargedMicrocredits,
-        billingStatus: task.billing?.status,
+        billingStatus: task.billing?.status || (music.billingOrigin === "legacy-admin-test" ? "legacy_admin_test" : undefined),
         refundedMicrocredits: task.billing?.refundedMicrocredits,
         errorMessage: task.error,
         createdAt: task.createdAt,
@@ -88,27 +70,60 @@ export function projectSiteMusicTask(task: GenerationTask): MusicTask {
     };
 }
 
-async function accessibleMusicTask(task: GenerationTask) {
-    const projected = projectSiteMusicTask(task);
-    if (projected.resultStorageKey) {
-        try {
-            const access = await getResourceAccess(projected.resultStorageKey, "display");
-            projected.resultAudioUrl = resolveResourceAccessURL(access.url);
-        } catch {
-            projected.resultAudioUrl = undefined;
-            projected.errorMessage = "Audio resource is unavailable";
-            console.warn("Music resource access unavailable", task.id);
-        }
+export function projectMusicTask(task: GenerationTask | MusicTask): MusicTask {
+    if ("type" in task) return projectSiteMusicTask(task);
+    const legacy = { ...task };
+    if (!legacy.outputs?.length && legacy.resultAudioUrl && legacy.status === "completed") {
+        legacy.outputs = [
+            {
+                id: `${legacy.taskId}:0`,
+                outputIndex: 0,
+                durationMs: legacy.resultDurationMs,
+                format: legacy.format,
+                audioUrl: `${apiBaseURL}/v1/supdance/music/tasks/${encodeURIComponent(legacy.taskId)}/download?format=${encodeURIComponent(legacy.format || "mp3")}`,
+            },
+        ];
     }
+    return legacy;
+}
+
+export function projectAdminMusicTask(task: GenerationTask | MusicTask): MusicTask {
+    const projected = projectMusicTask(task);
+    projected.outputs = (projected.outputs || []).map((output) => {
+        const id = resourceIdFromStorageKey(output.storageKey);
+        return id ? { ...output, adminResourceId: id, audioUrl: adminResourceFileUrl(id) } : { ...output };
+    });
+    projected.resultAudioUrl = projected.outputs?.[0]?.audioUrl;
     return projected;
 }
 
-export async function querySiteMusicTask(taskId: string) {
-    return accessibleMusicTask(await queryGenerationTask(taskId));
+async function accessibleMusicTask(task: GenerationTask | MusicTask) {
+    const projected = projectMusicTask(task);
+    await Promise.all(
+        (projected.outputs || []).map(async (output) => {
+            if (!output.storageKey) return;
+            try {
+                const access = await getResourceAccess(output.storageKey, "display");
+                output.audioUrl = resolveResourceAccessURL(access.url);
+            } catch {
+                output.audioUrl = undefined;
+                projected.errorMessage = "Audio resource is unavailable";
+                console.warn("Music resource access unavailable", task.id);
+            }
+        }),
+    );
+    projected.resultAudioUrl = projected.outputs?.[0]?.audioUrl;
+    return projected;
 }
 
-export async function listSiteMusicTasks(page: number, pageSize: number, dependencies = { listTasks: listGenerationTasks, queryTask: queryGenerationTask }) {
-    const tasks = (await dependencies.listTasks(1000)).filter((task) => task.type === "canvas_audio" && /suno|mureka|music/i.test(task.model || ""));
-    const items = await Promise.all(tasks.slice((page - 1) * pageSize, page * pageSize).map(async (summary) => accessibleMusicTask({ ...(await dependencies.queryTask(summary.id)), billing: summary.billing })));
-    return { items, total: tasks.length, page, pageSize };
+export async function querySiteMusicTask(taskId: string, admin = false) {
+    const task = await http.get<GenerationTask | MusicTask>(`/v1/supdance/music/tasks/${encodeURIComponent(taskId)}`);
+    return admin ? projectAdminMusicTask(task) : accessibleMusicTask(task);
+}
+
+export async function listSiteMusicTasks(page: number, pageSize: number) {
+    const response = await http.get<{ items: GenerationTask[]; legacyItems?: MusicTask[]; total: number }>("/v1/supdance/music/tasks", { params: { page, pageSize } });
+    const items = await Promise.all([...response.items, ...(response.legacyItems || [])].map(accessibleMusicTask));
+    items.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+    return { items, total: response.total, page, pageSize };
 }

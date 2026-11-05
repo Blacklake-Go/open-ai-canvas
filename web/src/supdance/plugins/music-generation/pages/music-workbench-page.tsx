@@ -1,138 +1,133 @@
-import React, { useEffect, useState } from "react";
-import { createPortal } from "react-dom";
-import { Music, RefreshCw, History, Disc3, Sparkles } from "lucide-react";
-import { Segmented, Tooltip } from "antd";
-import { useUserStore } from "@/stores/use-user-store";
-import { useI18n } from "@/supdance/plugins/i18n";
+import { useEffect, useState } from "react";
 import { WorkspacePage } from "@/components/layout/workspace-page";
-import { useWorkspaceTopBarMount } from "@/components/layout/workspace-top-bar-extension";
+import { AppDrawer } from "@/components/ui/product/app-drawer";
+import { useUserStore } from "@/stores/use-user-store";
+import { selectPluginEffectivelyEnabled, usePluginStore } from "@/stores/use-plugin-store";
+import { useI18n } from "@/supdance/plugins/i18n";
 import { useMusicStore } from "../stores/use-music-store";
+import { SUPDANCE_MUSIC_PLUGIN_ID } from "../types";
 import { MusicForm } from "../components/music-form";
-import { MusicMasterStage } from "../components/music-master-stage";
 import { TaskCard } from "../components/task-card";
-import { useEffectiveConfig } from "@/stores/use-config-store";
+import { WaveformPlayer } from "../components/waveform-player";
+import { MusicTaskDetails } from "../components/music-task-details";
 import "../styles/music-workbench.css";
 
+const musicEnabled = selectPluginEffectivelyEnabled(SUPDANCE_MUSIC_PLUGIN_ID);
 export default function MusicWorkbenchPage() {
     const { t } = useI18n();
-    const user = useUserStore((state) => state.user);
-    const userId = user?.id || "";
-    const config = useEffectiveConfig();
-    const topBarMount = useWorkspaceTopBarMount();
-
-    const [mobileTab, setMobileTab] = useState<"generate" | "master" | "tasks">("generate");
-
-    const loadCapabilities = useMusicStore((s) => s.loadCapabilities);
-    const loadTasks = useMusicStore((s) => s.loadTasks);
-    const loadUserDraft = useMusicStore((s) => s.loadUserDraft);
+    const userId = useUserStore((s) => s.user?.id);
+    const enabled = usePluginStore(musicEnabled);
     const tasks = useMusicStore((s) => s.tasks);
-    const loadingTasks = useMusicStore((s) => s.loadingTasks);
+    const historyPage = useMusicStore((s) => s.historyPage);
+    const historyTotal = useMusicStore((s) => s.historyTotal);
+    const loading = useMusicStore((s) => s.loadingTasks);
     const loadError = useMusicStore((s) => s.loadError);
-    const resetUser = useMusicStore((s) => s.resetUser);
-
+    const loadTasks = useMusicStore((s) => s.loadTasks);
+    const selected = useMusicStore((s) => s.activeTrack);
+    const playingId = useMusicStore((s) => s.playingTaskId);
+    const [mobile, setMobile] = useState("create");
+    const [filter, setFilter] = useState("all");
+    const [search, setSearch] = useState("");
+    const [detailId, setDetailId] = useState<string | null>(null);
     useEffect(() => {
-        resetUser();
-        if (!userId) return;
-        void loadUserDraft(userId).then(() => loadCapabilities());
-        void loadTasks();
-        return resetUser;
-    }, [userId, resetUser, loadCapabilities, loadTasks, loadUserDraft]);
-
-    useEffect(() => {
-        void loadCapabilities();
-    }, [config, loadCapabilities]);
-
-    // 全站顶栏右侧挂载动作按钮（零内部 Header 规范）
-    const topBarAction = (
-        <div className="flex items-center gap-2">
-            <Tooltip title={t("music.refresh_works", undefined, "刷新音乐作品列表")}>
-                <button
-                    type="button"
-                    onClick={() => void loadTasks()}
-                    className="flex items-center gap-1.5 h-8 px-3 rounded-lg border border-border/60 bg-background/80 hover:bg-muted text-xs font-medium text-foreground transition-colors"
-                    aria-label="刷新作品"
-                >
-                    <RefreshCw className={`size-3.5 ${loadingTasks ? "animate-spin" : ""}`} />
-                    <span className="hidden sm:inline">{t("music.refresh_works", undefined, "刷新作品")}</span>
-                </button>
-            </Tooltip>
-        </div>
-    );
-
+        const store = useMusicStore.getState();
+        store.resetUser();
+        if (userId) {
+            void store.loadUserDraft(userId).then(() => useMusicStore.getState().loadCapabilities());
+            void store.loadTasks();
+        }
+        return () => useMusicStore.getState().resetUser();
+    }, [userId]);
+    const visible = tasks.filter((task) => {
+        const status = ["submitted", "queued", "generating", "transcoding"].includes(task.status) ? "generating" : task.status;
+        return (filter === "all" || filter === status) && (task.title + " " + task.prompt + " " + task.model).toLowerCase().includes(search.toLowerCase());
+    });
+    const queue = tasks.flatMap((task) => (task.outputs || []).map((output) => ({ task, output })));
+    const track = queue.find((item) => item.output.id === playingId) || queue.find((item) => item.task.taskId === selected?.taskId && item.output.audioUrl);
+    const detail = tasks.find((task) => task.taskId === detailId);
+    const reuse = () => {
+        if (!detail || !userId) return;
+        const store = useMusicStore.getState();
+        const cap = store.capabilities.find((item) => item.modelKey === detail.model || item.id === detail.model);
+        if (cap) store.setModel(cap.id, userId);
+        if (cap?.modes.includes(detail.mode)) store.setDraftField("mode", detail.mode, userId);
+        store.setDraftField("prompt", detail.prompt, userId);
+        store.setDraftField("lyrics", detail.lyrics || "", userId);
+        store.setDraftField("title", detail.title || "", userId);
+        store.setDraftField("tags", detail.tags || "", userId);
+        store.setDraftField("songLanguage", detail.songLanguage || "", userId);
+        store.setDraftField("instrumental", detail.instrumental, userId);
+        setMobile("create");
+        setDetailId(null);
+    };
     return (
-        <WorkspacePage fluid scroll={false} className="workbench-page music-workbench-page">
-            {topBarMount ? createPortal(topBarAction, topBarMount) : null}
-            {loadError ? <p role="alert">{loadError}</p> : null}
-
-            <div className="music-workbench-shell">
-                {/* 移动端视图切换 Tabs */}
-                <div className="music-mobile-tabs">
-                    <Segmented
-                        block
-                        value={mobileTab}
-                        onChange={(val) => setMobileTab(val as "generate" | "master" | "tasks")}
-                        options={[
-                            { label: "创作参数", value: "generate" },
-                            { label: "母带舞台", value: "master" },
-                            { label: `历史作品 (${tasks.length})`, value: "tasks" },
-                        ]}
-                    />
+        <WorkspacePage fluid scroll={false} className="plugin-music-generation music-workbench-page">
+            <div className="music-studio-shell" translate="no" data-i18n-ignore="true">
+                <div className="music-mobile-tabs" role="group" aria-label={t("music.studio_title")}>
+                    {["create", "library"].map((tab) => (
+                        <button type="button" key={tab} aria-pressed={mobile === tab} onClick={() => setMobile(tab)}>
+                            {t(tab === "create" ? "music.create_music" : "music.my_works")}
+                        </button>
+                    ))}
                 </div>
-
-                {/* 标准三栏工作台架构 */}
-                <div className="music-workbench-columns">
-                    {/* 第一栏：左侧参数生成配置 */}
-                    <section className={`music-input-column ${mobileTab === "generate" ? "is-mobile-active" : ""}`} aria-label="创作参数">
-                        <div className="music-composer-panel">
-                            <div className="music-panel-head">
-                                <div className="music-panel-title">
-                                    <Sparkles className="size-4 text-emerald-500" />
-                                    <span>{t("music.create_new", undefined, "创作新音乐")}</span>
-                                </div>
-                                <span className="text-xs text-muted-foreground">{t("music.auto_save_tip", undefined, "草稿自动加密暂存")}</span>
-                            </div>
-
-                            <MusicForm userId={userId} />
-                        </div>
+                <div className="music-studio-columns">
+                    <section className={`music-composer ${mobile === "create" ? "is-mobile-active" : ""}`}>
+                        <h1>{t("music.studio_title")}</h1>
+                        {enabled && userId ? (
+                            <MusicForm userId={userId} onSubmitted={() => setMobile("library")} />
+                        ) : (
+                            <p role="status">{t("music.generation_disabled", undefined, "New music generation is disabled. Your tasks and saved works remain available.")}</p>
+                        )}
                     </section>
-
-                    {/* 第二栏：中央母带大舞台 */}
-                    <div className={mobileTab === "master" ? "is-mobile-active" : ""}>
-                        <MusicMasterStage />
-                    </div>
-
-                    {/* 第三栏：右侧历史作品抽屉 */}
-                    <aside className={`music-task-column ${mobileTab === "tasks" ? "is-mobile-active" : ""}`} aria-label="我的作品与历史">
-                        <div className="music-history-panel">
-                            <div className="music-panel-head">
-                                <div className="music-panel-title">
-                                    <History className="size-4 text-primary" />
-                                    <span>{t("music.my_works", undefined, "我的音乐作品")}</span>
-                                </div>
-                                <span className="text-xs text-muted-foreground tabular-nums">共 {tasks.length} 首</span>
-                            </div>
-
-                            {loadingTasks && tasks.length === 0 ? (
-                                <div className="flex flex-col items-center justify-center rounded-2xl border border-dashed border-border/60 p-12 text-center text-muted-foreground my-auto">
-                                    <Disc3 className="size-8 animate-spin opacity-40 mb-2" />
-                                    <p className="text-sm">正在加载创作历史...</p>
-                                </div>
-                            ) : tasks.length === 0 ? (
-                                <div className="flex flex-col items-center justify-center rounded-2xl border border-dashed border-border/60 p-12 text-center text-muted-foreground my-auto">
-                                    <Music className="size-10 opacity-30 mb-2" />
-                                    <p className="text-sm font-medium">暂无生成的音乐作品</p>
-                                    <p className="text-xs text-muted-foreground/80 mt-1">在左侧表单中输入描述并点击“立即生成音乐”开启创作</p>
-                                </div>
+                    <section className={`music-library ${mobile === "library" ? "is-mobile-active" : ""}`} aria-label={t("music.my_works")}>
+                        <div className="music-library-header">
+                            <h2>{t("music.my_works")}</h2>
+                            <button type="button" onClick={() => void loadTasks()} disabled={loading}>
+                                {t("music.refresh_works")}
+                            </button>
+                        </div>
+                        <label className="music-search">
+                            <span className="sr-only">{t("music.search_works", undefined, "Search works")}</span>
+                            <input type="search" value={search} onChange={(event) => setSearch(event.target.value)} placeholder={t("music.search_works", undefined, "Search works")} />
+                        </label>
+                        <div className="music-filters" role="group" aria-label={t("music.filter_works", undefined, "Filter works")}>
+                            {["all", "generating", "completed", "failed"].map((status) => (
+                                <button type="button" key={status} aria-pressed={filter === status} onClick={() => setFilter(status)}>
+                                    {t("music.filter_" + status, undefined, status)}
+                                </button>
+                            ))}
+                        </div>
+                        {loadError && (
+                            <p role="alert" className="text-destructive">
+                                {loadError}
+                            </p>
+                        )}
+                        <div className="music-work-list">
+                            {loading && !tasks.length ? (
+                                <p role="status">{t("common.loading")}</p>
+                            ) : visible.length ? (
+                                visible.map((task) => <TaskCard key={task.taskId} task={task} onDetails={() => setDetailId(task.taskId)} />)
                             ) : (
-                                <div className="music-history-list">
-                                    {tasks.map((task) => (
-                                        <TaskCard key={task.taskId || task.id} task={task} />
-                                    ))}
-                                </div>
+                                <p className="music-empty">
+                                    {t(
+                                        search || filter !== "all" ? "music.no_matching_works" : "music.empty_works",
+                                        undefined,
+                                        search || filter !== "all" ? "No works match this search." : "Your music will appear here. Start with a description or your own lyrics.",
+                                    )}
+                                </p>
                             )}
                         </div>
-                    </aside>
+                        {tasks.length < historyTotal && (
+                            <button type="button" className="min-h-11 rounded-lg border border-border px-4" disabled={loading} onClick={() => void loadTasks(historyPage + 1)}>
+                                {t("music.load_more_works")}
+                            </button>
+                        )}
+                    </section>
                 </div>
+                {track?.output.audioUrl && <WaveformPlayer taskId={track.output.id} audioUrl={track.output.audioUrl} title={track.task.title} durationSeconds={(track.output.durationMs || 0) / 1000} output={track.output} />}
+                <AppDrawer rootClassName="plugin-music-generation" open={Boolean(detail)} onClose={() => setDetailId(null)} title={detail?.title || t("music.default_track_title")}>
+                    {detail && <MusicTaskDetails task={detail} onReuse={reuse} />}
+                </AppDrawer>
             </div>
         </WorkspacePage>
     );

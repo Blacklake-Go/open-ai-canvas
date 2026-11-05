@@ -436,6 +436,13 @@ func recordProviderRequest(req *http.Request, startedAt time.Time, statusCode in
 		ErrorCode: errorCode, Error: errorText, ConcurrencyLimit: metadata.ConcurrencyLimit, UpstreamURL: req.URL.Scheme + "://" + req.URL.Host + req.URL.Path,
 		ProviderRequestID: metadata.ProviderRequestID, RequestContentType: req.Header.Get("Content-Type"), RequestBody: requestPayloadForLog(req), ResponseBody: SanitizeAPICallPayload(responseBody, ""),
 	}
+	if callLog.ProviderRequestID == "" && (requestKind == "create" || requestKind == "poll") {
+		// A queued response is still a receipt. Keep its ID even for admin tests
+		// that have no internal task or billing order yet.
+		if id, err := extractProviderTaskID(responseBody); err == nil {
+			callLog.ProviderRequestID = id
+		}
+	}
 	channelSlotFailure := false
 	if code, message := ChannelSlotFailureDetails(requestErr); code != "" {
 		channelSlotFailure = true

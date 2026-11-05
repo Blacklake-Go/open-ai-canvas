@@ -31,14 +31,16 @@ const (
 
 // MusicGenerationRequest is the unified internal request struct for music generation tasks.
 type MusicGenerationRequest struct {
+	QuotedMicrocredits *int64   `json:"quotedMicrocredits,omitempty"`
 	UserID             string   `json:"userId,omitempty"`
 	TaskID             string   `json:"taskId,omitempty"`
 	Model              string   `json:"model" binding:"required"`
 	Mode               string   `json:"mode" binding:"required,oneof=simple custom"`
-	Prompt             string   `json:"prompt" binding:"required"`
+	Prompt             string   `json:"prompt"`
 	Title              string   `json:"title,omitempty"`
 	Lyrics             string   `json:"lyrics,omitempty"`
 	Tags               string   `json:"tags,omitempty"`
+	SongLanguage       string   `json:"songLanguage,omitempty"`
 	Instrumental       bool     `json:"instrumental"`
 	DurationSeconds    int      `json:"duration,omitempty"`
 	Format             string   `json:"format,omitempty"`
@@ -71,6 +73,15 @@ type MusicGenerationResponse struct {
 
 // ModelCapabilities encapsulates dynamic model capabilities, parameters, and availability.
 type ModelCapabilities struct {
+	ChannelID                 string   `json:"channelId,omitempty"`
+	ModelKey                  string   `json:"modelKey,omitempty"`
+	LyricsSupported           bool     `json:"lyricsSupported"`
+	InstrumentalSupported     bool     `json:"instrumentalSupported"`
+	TitleSupported            bool     `json:"titleSupported"`
+	StyleSupported            bool     `json:"styleSupported"`
+	DurationSupported         bool     `json:"durationSupported"`
+	OutputCount               int      `json:"outputCount"`
+	BillingMode               string   `json:"billingMode,omitempty"`
 	ID                        string   `json:"id"`
 	Name                      string   `json:"name"`
 	Version                   string   `json:"version"`

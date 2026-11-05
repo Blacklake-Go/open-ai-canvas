@@ -1,315 +1,294 @@
-import React, { useEffect, useState } from "react";
-import { App } from "antd";
-import { ShieldCheck, Lock, Radio, Sparkles, CheckCircle2, XCircle, Save, Activity, Clock } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
+import { Link, useSearchParams } from "react-router";
 import { useI18n } from "@/supdance/plugins/i18n";
-import { fetchMusicAdminConfig, fetchMusicAdminOverview, listAdminMusicTasks, setMusicPluginLifecycle, testMusicConnection, updateMusicAdminConfig, type AdminMusicConfig, type MusicLifecycleInfo, type MusicTask } from "../services/music-api";
-import "../styles/music-generation.css";
+import { useUserStore } from "@/stores/use-user-store";
+import { MusicForm } from "../components/music-form";
+import { AppDrawer } from "@/components/ui/product/app-drawer";
+import { MusicTaskDetails } from "../components/music-task-details";
+import { TaskCard } from "../components/task-card";
+import { WaveformPlayer } from "../components/waveform-player";
+import { useMusicStore } from "../stores/use-music-store";
+import { siteMusicQuote } from "../services/music-site-api";
+import {
+    fetchMusicCapabilities,
+    fetchMusicAdminOverview,
+    listAdminMusicTasks,
+    queryAdminMusicTask,
+    recoverMusicAdminTest,
+    setMusicPluginLifecycle,
+    testMusicConnection,
+    type ModelCapabilities,
+    type MusicLifecycleInfo,
+    type MusicTask,
+} from "../services/music-api";
+import type { LogicalModelQuote } from "@/services/api/logical-models";
+import "../styles/music-workbench.css";
 
 export default function MusicAdminSettingsPage() {
-    const { message, modal } = App.useApp();
     const { t } = useI18n();
-
-    const [config, setConfig] = useState<AdminMusicConfig | null>(null);
+    const [params] = useSearchParams();
+    const userId = useUserStore((s) => s.user?.id);
+    const sequence = useRef(0);
+    const sharedTasks = useMusicStore((s) => s.tasks);
+    const playingId = useMusicStore((s) => s.playingTaskId);
+    const selectedTrack = useMusicStore((s) => s.activeTrack);
+    const queue = sharedTasks.flatMap((task) => (task.outputs || []).map((output) => ({ task, output })));
+    const track = queue.find((item) => item.output.id === playingId) || queue.find((item) => item.task.taskId === selectedTrack?.taskId && item.output.audioUrl);
+    const [tab, setTab] = useState(params.get("tab") === "test" ? "test" : "overview");
     const [lifecycle, setLifecycle] = useState<MusicLifecycleInfo | null>(null);
+    const [models, setModels] = useState<ModelCapabilities[]>([]);
+    const [quotes, setQuotes] = useState<Record<string, LogicalModelQuote | string>>({});
     const [tasks, setTasks] = useState<MusicTask[]>([]);
-    const [loading, setLoading] = useState(true);
-    const [saving, setSaving] = useState(false);
-
-    // Form inputs
-    const [baseUrl, setBaseUrl] = useState("");
-    const [apiKey, setApiKey] = useState("");
-    const [webhookSecret, setWebhookSecret] = useState("");
-    const [defaultModel, setDefaultModel] = useState("suno-v6");
-
-    // Test probe state
-    const [testingProbe, setTestingProbe] = useState(false);
-    const [probeResult, setProbeResult] = useState<{ status: string; message: string; billed: boolean } | null>(null);
-
-    const loadData = async () => {
+    const [error, setError] = useState("");
+    const [loading, setLoading] = useState(false);
+    const [probe, setProbe] = useState(false);
+    const [tracked, setTracked] = useState<MusicTask | null>(null);
+    const [receiptId, setReceiptId] = useState<string | null>(null);
+    const [logId, setLogId] = useState("");
+    const [page, setPage] = useState(1);
+    const [total, setTotal] = useState(0);
+    const [detailId, setDetailId] = useState<string | null>(null);
+    const detail = tasks.find((task) => task.taskId === detailId) || (tracked?.taskId === detailId ? tracked : null);
+    const load = async (nextPage = 1) => {
+        const current = ++sequence.current;
+        setLoading(true);
+        setError("");
+        try {
+            const [state, caps, result] = await Promise.all([fetchMusicAdminOverview(), fetchMusicCapabilities(), listAdminMusicTasks(undefined, nextPage, 50)]);
+            if (current !== sequence.current) return;
+            setLifecycle(state);
+            setModels(caps);
+            setPage(nextPage);
+            setTotal(result.total);
+            const merge = (previous: MusicTask[]) => (nextPage > 1 ? [...new Map([...previous, ...result.items].map((task) => [task.taskId, task])).values()] : result.items);
+            setTasks(merge);
+            useMusicStore.setState((state) => ({ capabilities: caps, tasks: merge(state.tasks) }));
+            const requestedModel = params.get("model") || useMusicStore.getState().draft.model;
+            const selected = caps.find((cap) => cap.id === requestedModel) || caps.find((cap) => cap.available);
+            if (selected) useMusicStore.getState().setModel(selected.id);
+            const amounts = await Promise.all(
+                caps.map(async (cap) => {
+                    try {
+                        return [cap.id, await siteMusicQuote(cap.id)] as const;
+                    } catch (cause) {
+                        return [cap.id, cause instanceof Error ? cause.message : String(cause)] as const;
+                    }
+                }),
+            );
+            if (current === sequence.current) setQuotes(Object.fromEntries(amounts));
+        } catch (cause) {
+            if (current === sequence.current) setError(cause instanceof Error ? cause.message : String(cause));
+        } finally {
+            if (current === sequence.current) setLoading(false);
+        }
+    };
+    useEffect(() => {
+        let active = true;
+        useMusicStore.getState().resetUser();
+        setTasks([]);
+        setTracked(null);
+        setReceiptId(null);
+        if (userId) {
+            void useMusicStore
+                .getState()
+                .loadUserDraft(userId)
+                .then(() => {
+                    if (active) void load();
+                });
+        }
+        return () => {
+            active = false;
+            sequence.current += 1;
+            useMusicStore.getState().resetUser();
+        };
+    }, [userId]);
+    useEffect(() => {
+        if (!receiptId) return;
+        let active = true;
+        let querying = false;
+        const timer = setInterval(() => {
+            if (querying) return;
+            querying = true;
+            void queryAdminMusicTask(receiptId)
+                .then((task) => {
+                    if (!active) return;
+                    setTracked(task);
+                    useMusicStore.setState((state) => ({ tasks: [task, ...state.tasks.filter((item) => item.taskId !== task.taskId)] }));
+                    if (["completed", "failed", "cancelled"].includes(task.status)) clearInterval(timer);
+                })
+                .catch((cause: unknown) => {
+                    if (active) setError(cause instanceof Error ? cause.message : String(cause));
+                })
+                .finally(() => {
+                    querying = false;
+                });
+        }, 4000);
+        return () => {
+            active = false;
+            clearInterval(timer);
+        };
+    }, [receiptId, userId]);
+    const changeLifecycle = async (state: MusicLifecycleInfo["state"]) => {
+        setError("");
         setLoading(true);
         try {
-            const [cfg, life, taskList] = await Promise.all([fetchMusicAdminConfig(), fetchMusicAdminOverview(), listAdminMusicTasks("", 1, 20)]);
-            setConfig(cfg);
-            setLifecycle(life);
-            setTasks(taskList.items);
-            setDefaultModel(cfg.defaultModel || "suno-v6");
-            setBaseUrl(cfg.baseUrl || "https://www.koyosim.com");
-        } catch (err: any) {
-            message.error(err.message || "读取音乐插件管理数据失败");
+            setLifecycle(await setMusicPluginLifecycle(state));
+        } catch (cause) {
+            setError(cause instanceof Error ? cause.message : String(cause));
         } finally {
             setLoading(false);
         }
     };
-
-    useEffect(() => {
-        void loadData();
-    }, []);
-
-    const handleSaveConfig = async (e: React.FormEvent) => {
-        e.preventDefault();
-        setSaving(true);
-        try {
-            const updated = await updateMusicAdminConfig({
-                baseUrl: baseUrl.trim() || undefined,
-                apiKey: apiKey.trim() || undefined,
-                webhookSecret: webhookSecret.trim() || undefined,
-                defaultModel,
-            });
-            setConfig(updated);
-            setApiKey("");
-            setWebhookSecret("");
-            message.success(t("common.save_success", undefined, "配置保存成功！"));
-        } catch (err: any) {
-            message.error(err.message || t("common.save_failed", undefined, "保存配置失败"));
-        } finally {
-            setSaving(false);
-        }
-    };
-
-    const handleTestProbe = async () => {
-        setTestingProbe(true);
-        setProbeResult(null);
-        try {
-            const res = await testMusicConnection(apiKey.trim() || undefined);
-            setProbeResult({
-                status: res.status,
-                message: res.message || "连接正常 (零计费探测)",
-                billed: res.billed,
-            });
-            if (res.status === "ok") {
-                message.success("连通性验证成功：上游网络正常，未发生扣费");
-            } else {
-                message.warning(res.message || "连接测试未就绪");
-            }
-        } catch (err: any) {
-            setProbeResult({
-                status: "error",
-                message: err.message || "连接探测失败",
-                billed: false,
-            });
-            message.error(err.message || "连接探测失败");
-        } finally {
-            setTestingProbe(false);
-        }
-    };
-
-    const handleLifecycleTransition = (targetState: MusicLifecycleInfo["state"]) => {
-        modal.confirm({
-            title: "切换生命周期状态",
-            content: `确定将音乐生成插件生命周期切换为 [${targetState}] 吗？`,
-            onOk: async () => {
-                try {
-                    const updated = await setMusicPluginLifecycle(targetState);
-                    setLifecycle(updated);
-                    message.success(`生命周期已切换为: ${targetState}`);
-                } catch (err: any) {
-                    message.error(err.message || "切换生命周期状态失败");
-                }
-            },
-        });
-    };
-
-    if (loading && !config) {
-        return (
-            <div className="plugin-music-generation flex min-h-[400px] items-center justify-center">
-                <div className="size-8 animate-spin rounded-full border-3 border-primary border-t-transparent" />
-            </div>
-        );
-    }
-
     return (
-        <div className="plugin-music-generation space-y-8 p-6 max-w-6xl mx-auto">
-            {/* Header */}
-            <div className="flex flex-wrap items-center justify-between gap-4 border-b border-border/60 pb-5">
-                <div>
-                    <h1 className="text-xl font-bold tracking-tight text-foreground flex items-center gap-2">
-                        <Sparkles className="size-5 text-primary" />
-                        <span>{t("music.admin_title", undefined, "AI 音乐生成插件管理中心")}</span>
-                    </h1>
-                    <p className="text-sm text-muted-foreground mt-1">{t("music.admin_desc", undefined, "AI 音乐生成网关接口、模型定价与全生命周期状态控制。支持与系统渠道、生图生视频统一协议接入。")}</p>
-                </div>
-
-                {lifecycle && (
-                    <div className="flex items-center gap-2">
-                        <span className="text-xs text-muted-foreground">当前运行状态:</span>
-                        <span
-                            className={`rounded-full px-3 py-1 text-xs font-semibold uppercase ${
-                                lifecycle.state === "enabled" ? "bg-emerald-500/10 text-emerald-500" : lifecycle.state === "draining" ? "bg-amber-500/10 text-amber-500" : "bg-muted text-muted-foreground"
-                            }`}
-                        >
-                            {lifecycle.state}
-                        </span>
-                        {lifecycle.activeTasks > 0 && <span className="rounded-full bg-blue-500/10 px-2 py-0.5 text-xs text-blue-500 font-medium">活动任务: {lifecycle.activeTasks}</span>}
-                    </div>
-                )}
+        <div className="plugin-music-generation flex flex-col gap-5" translate="no" data-i18n-ignore="true">
+            <div className="flex flex-wrap items-center justify-between gap-3">
+                <h1 className="text-xl font-semibold">{t("music.admin_title", undefined, "Music generation")}</h1>
+                <button type="button" onClick={() => void load()} disabled={loading} className="min-h-11 rounded-lg border border-border px-4">
+                    {t("music.refresh_works")}
+                </button>
             </div>
-
-            {/* Lifecycle Control Panel */}
-            <section className="rounded-xl border border-border/60 bg-card p-5 shadow-xs space-y-4">
-                <div className="flex items-center gap-2">
-                    <Activity className="size-4 text-primary" />
-                    <h2 className="text-base font-semibold text-foreground">插件全生命周期操作 (7 状态机)</h2>
+            <nav className="flex flex-wrap gap-2" aria-label={t("music.admin_title", undefined, "Music generation")}>
+                {["overview", "models", "pricing", "tasks", "test", "settings"].map((key) => (
+                    <button type="button" key={key} aria-pressed={tab === key} onClick={() => setTab(key)} className="min-h-11 rounded-lg border border-border px-4">
+                        {t("music.admin_tab_" + key, undefined, key)}
+                    </button>
+                ))}
+            </nav>
+            {error && (
+                <p role="alert" className="text-destructive">
+                    {error}
+                </p>
+            )}
+            <Link to="/admin/channels" className="text-primary underline">
+                {t("music.manage_site_channels", undefined, "Manage models, credentials and prices in site channels")}
+            </Link>
+            {tab === "overview" && (
+                <div className="flex flex-col gap-4 rounded-xl border border-border bg-card p-5">
+                    <p>
+                        {t("music.admin_plugin_state", undefined, "Plugin state")}: {lifecycle ? t("music.lifecycle_" + lifecycle.state) : "—"}
+                    </p>
+                    <p>
+                        {t("music.admin_available_models", undefined, "Available models")}: {models.filter((model) => model.available).length}
+                    </p>
+                    <p>{t("music.admin_credentials_hint", undefined, "A configured model does not prove that provider credentials work. A completed real task verifies generation.")}</p>
+                    <p>{t("music.admin_saving_hint", undefined, "Accepted, generated, saved and settled are separate task states.")}</p>
                 </div>
-                <div className="flex flex-wrap items-center gap-3">
-                    <button type="button" onClick={() => handleLifecycleTransition("enabled")} className="rounded-lg bg-emerald-600 px-4 py-2 text-xs font-medium text-white hover:bg-emerald-700 transition-colors">
-                        启用插件 (Enabled)
-                    </button>
-                    <button type="button" onClick={() => handleLifecycleTransition("draining")} className="rounded-lg bg-amber-600 px-4 py-2 text-xs font-medium text-white hover:bg-amber-700 transition-colors">
-                        温和排空 (Draining - 拒新任保进行)
-                    </button>
-                    <button type="button" onClick={() => handleLifecycleTransition("disabled")} className="rounded-lg bg-zinc-600 px-4 py-2 text-xs font-medium text-white hover:bg-zinc-700 transition-colors">
-                        停用插件 (Disabled)
-                    </button>
-                    <button type="button" onClick={() => handleLifecycleTransition("updating")} className="rounded-lg bg-blue-600 px-4 py-2 text-xs font-medium text-white hover:bg-blue-700 transition-colors">
-                        标记升级中 (Updating)
-                    </button>
-                    <button type="button" onClick={() => handleLifecycleTransition("uninstalled")} className="rounded-lg bg-destructive px-4 py-2 text-xs font-medium text-white hover:bg-destructive/90 transition-colors">
-                        卸载插件 (Uninstalled - 保留用户资产)
-                    </button>
+            )}
+            {(tab === "models" || tab === "pricing") && (
+                <div className="flex flex-col gap-3">
+                    {models.map((model) => {
+                        const quote = quotes[model.id];
+                        return (
+                            <article key={model.id} className="flex flex-col gap-2 rounded-xl border border-border bg-card p-4">
+                                <strong translate="no">
+                                    {model.name} · {model.modelKey}
+                                </strong>
+                                <p>{model.modes.map((mode) => t("music.mode_" + mode)).join(" / ")} · MP3</p>
+                                {typeof quote === "string" ? (
+                                    <p className="text-destructive">{quote}</p>
+                                ) : (
+                                    quote && (
+                                        <p>
+                                            {(quote.amountMicrocredits / 1_000_000).toLocaleString()} · {t("music.billing_" + quote.billingMode)} × {quote.quantity}
+                                        </p>
+                                    )
+                                )}
+                                <p>{t(model.instrumentalSupported ? "music.instrumental_label" : model.lyricsSupported ? "music.lyrics_editor" : "music.prompt_label")}</p>
+                            </article>
+                        );
+                    })}
                 </div>
-            </section>
-
-            {/* Fixed API Source & Vault Settings */}
-            <form onSubmit={handleSaveConfig} className="rounded-xl border border-border/60 bg-card p-5 shadow-xs space-y-6">
-                <div className="flex items-center gap-2 border-b border-border/40 pb-3">
-                    <Lock className="size-4 text-primary" />
-                    <h2 className="text-base font-semibold text-foreground">API 网关与凭据设置</h2>
+            )}
+            {tab === "tasks" && (
+                <div className="flex flex-col gap-3">
+                    {tasks.map((task) => (
+                        <TaskCard key={task.taskId} task={task} onDetails={() => setDetailId(task.taskId)} />
+                    ))}
+                    {!tasks.length && <p>{t("music.empty_works")}</p>}
+                    {tasks.length < total && (
+                        <button type="button" disabled={loading} onClick={() => void load(page + 1)} className="min-h-11 rounded-lg border border-border px-4">
+                            {t("music.load_more_works")}
+                        </button>
+                    )}
                 </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    {/* Configurable API Base URL Input */}
-                    <div className="flex flex-col gap-2">
-                        <label className="text-xs font-medium text-foreground flex items-center justify-between">
-                            <span>API 网关 Base URL</span>
-                            <span className="text-xs text-muted-foreground">支持兼容端点</span>
-                        </label>
-                        <input
-                            type="text"
-                            value={baseUrl}
-                            onChange={(e) => setBaseUrl(e.target.value)}
-                            placeholder="https://www.koyosim.com 或其他兼容网关"
-                            className="rounded-lg border border-border/60 bg-background px-3 py-2 text-sm text-foreground focus:border-primary focus:outline-hidden"
-                        />
-                        <p className="text-xs text-muted-foreground">支持兼容 OpenAI / NewAPI 格式的音频网关。所有外部流量均执行防 SSRF 与 TLS 安全校验。</p>
-                    </div>
-
-                    {/* Masked Secret API Key Input */}
-                    <div className="flex flex-col gap-2">
-                        <label className="text-xs font-medium text-foreground flex items-center justify-between">
-                            <span>Koyosim API 密钥</span>
-                            <span className="text-xs text-muted-foreground font-mono">{config?.hasApiKey ? `已配置: ${config.maskedApiKey}` : "未配置"}</span>
-                        </label>
-                        <input
-                            type="password"
-                            value={apiKey}
-                            onChange={(e) => setApiKey(e.target.value)}
-                            placeholder={config?.hasApiKey ? "•••••••••••••••• (留空保持原密钥)" : "请输入 koyo_sec_... 密钥"}
-                            className="rounded-lg border border-border/60 bg-background px-3 py-2 text-sm text-foreground focus:border-primary focus:outline-hidden"
-                        />
-                    </div>
-
-                    {/* Webhook Secret */}
-                    <div className="flex flex-col gap-2">
-                        <label className="text-xs font-medium text-foreground flex items-center justify-between">
-                            <span>Webhook 回调验签密钥</span>
-                            <span className="text-xs text-muted-foreground">{config?.hasWebhookSecret ? "已配置" : "未配置"}</span>
-                        </label>
-                        <input
-                            type="password"
-                            value={webhookSecret}
-                            onChange={(e) => setWebhookSecret(e.target.value)}
-                            placeholder="HMAC SHA-256 签名密钥..."
-                            className="rounded-lg border border-border/60 bg-background px-3 py-2 text-sm text-foreground focus:border-primary focus:outline-hidden"
-                        />
-                    </div>
-
-                    {/* Default Model */}
-                    <div className="flex flex-col gap-2">
-                        <label className="text-xs font-medium text-foreground">默认首选模型</label>
-                        <select value={defaultModel} onChange={(e) => setDefaultModel(e.target.value)} className="rounded-lg border border-border/60 bg-background px-3 py-2 text-sm text-foreground">
-                            <option value="suno-v6">Suno v6 (流行曲风与歌曲生成)</option>
-                            <option value="mureka-9.5">Mureka V9.5 (高表现力声乐)</option>
-                            <option value="lyria-3.5">Google Lyria 3.5 (高精度 BPM 调性)</option>
-                            <option value="music_v2_5">Eleven Music v2.5 (高保真人声 & 分轨)</option>
-                        </select>
-                    </div>
-                </div>
-
-                {/* Connection Probe & Save Actions */}
-                <div className="flex flex-wrap items-center justify-between gap-4 border-t border-border/40 pt-4">
-                    <div className="flex items-center gap-3">
+            )}
+            {tab === "test" && (
+                <div className="grid gap-5 lg:grid-cols-2">
+                    <section className="flex flex-col gap-4 rounded-xl border border-border bg-card p-5">
                         <button
                             type="button"
-                            disabled={testingProbe}
-                            onClick={handleTestProbe}
-                            className="flex items-center gap-1.5 rounded-lg border border-border/60 bg-muted/60 px-4 py-2 text-xs font-medium text-foreground hover:bg-muted transition-colors disabled:opacity-50"
+                            className="min-h-11 rounded-lg border border-border px-4"
+                            onClick={async () => {
+                                try {
+                                    await testMusicConnection();
+                                    setProbe(true);
+                                } catch (cause) {
+                                    setError(cause instanceof Error ? cause.message : String(cause));
+                                }
+                            }}
                         >
-                            <Radio className={`size-3.5 ${testingProbe ? "animate-pulse" : ""}`} />
-                            <span>{testingProbe ? "探测中..." : t("music.test_connection", undefined, "测试安全连通性 (零计费探测)")}</span>
+                            {t("music.admin_check_configuration", undefined, "Check configuration · no generation charge")}
                         </button>
-
-                        {probeResult && (
-                            <span className={`flex items-center gap-1 text-xs font-medium ${probeResult.status === "ok" ? "text-emerald-500" : "text-destructive"}`}>
-                                {probeResult.status === "ok" ? <CheckCircle2 className="size-3.5" /> : <XCircle className="size-3.5" />}
-                                <span>{probeResult.message}</span>
-                            </span>
+                        {probe && <p role="status">{t("music.admin_credentials_hint")}</p>}
+                        <p>{t("music.admin_paid_test", undefined, "Creating a test is a real paid generation. Review the model, inputs, current price and balance before submitting.")}</p>
+                        {userId && lifecycle?.state === "enabled" && <MusicForm userId={userId} onSubmitted={setReceiptId} />}
+                    </section>
+                    <section className="flex min-w-0 flex-col gap-4">
+                        <form
+                            className="flex flex-col gap-3 rounded-xl border border-border bg-card p-5"
+                            onSubmit={async (event) => {
+                                event.preventDefault();
+                                if (!logId.trim() || loading) return;
+                                setLoading(true);
+                                setError("");
+                                try {
+                                    const task = await recoverMusicAdminTest(logId.trim());
+                                    setReceiptId(task.taskId);
+                                    setTracked(task);
+                                } catch (cause) {
+                                    setError(cause instanceof Error ? cause.message : String(cause));
+                                } finally {
+                                    setLoading(false);
+                                }
+                            }}
+                        >
+                            <label className="flex flex-col gap-2 text-sm">
+                                {t("music.original_log_id")}
+                                <input value={logId} maxLength={80} onChange={(event) => setLogId(event.target.value)} className="min-h-11 min-w-0 rounded-lg border border-border bg-background px-3" />
+                            </label>
+                            <button type="submit" disabled={loading || !logId.trim()} className="min-h-11 rounded-lg border border-border px-4">
+                                {t("music.recover_test_receipt")}
+                            </button>
+                            <Link to="/admin/logs" className="text-primary underline">
+                                {t("music.original_log_id")}
+                            </Link>
+                        </form>
+                        {receiptId && (
+                            <p className="break-all">
+                                {t("music.task_id")}: {receiptId}
+                            </p>
                         )}
+                        {tracked ? <TaskCard task={tracked} onDetails={() => setDetailId(tracked.taskId)} /> : <p>{t("music.admin_test_history")}</p>}
+                    </section>
+                </div>
+            )}
+            {track?.output.audioUrl && <WaveformPlayer taskId={track.output.id} audioUrl={track.output.audioUrl} title={track.task.title} durationSeconds={(track.output.durationMs || 0) / 1000} output={track.output} />}
+            {tab === "settings" && (
+                <div className="flex flex-col gap-4 rounded-xl border border-border bg-card p-5">
+                    <p>{t("music.admin_lifecycle_hint", undefined, "Disabling blocks new tasks. Existing tasks continue, and history and ledger entries are retained.")}</p>
+                    <div className="flex flex-wrap gap-3">
+                        {(["enabled", "draining"] as const).map((state) => (
+                            <button type="button" disabled={loading} key={state} onClick={() => void changeLifecycle(state)} className="min-h-11 rounded-lg border border-border px-4">
+                                {t("music.lifecycle_" + state, undefined, state)}
+                            </button>
+                        ))}
                     </div>
-
-                    <button type="submit" disabled={saving} className="flex items-center gap-1.5 rounded-lg bg-primary px-5 py-2 text-xs font-semibold text-primary-foreground shadow-xs hover:bg-primary/90 transition-colors disabled:opacity-50">
-                        <Save className="size-3.5" />
-                        <span>{saving ? "保存中..." : t("music.save_config", undefined, "保存网关设置")}</span>
-                    </button>
+                    <p>{t("music.admin_upgrade_hint", undefined, "Configuration switches apply at runtime. Upgrading this implementation and its protocol package requires a host build and restart.")}</p>
                 </div>
-            </form>
-
-            {/* Task Monitor */}
-            <section className="rounded-xl border border-border/60 bg-card p-5 shadow-xs space-y-4">
-                <div className="flex items-center justify-between border-b border-border/40 pb-3">
-                    <div className="flex items-center gap-2">
-                        <Clock className="size-4 text-primary" />
-                        <h2 className="text-base font-semibold text-foreground">在线生成任务监控</h2>
-                    </div>
-                    <span className="text-xs text-muted-foreground">最近活动任务</span>
-                </div>
-
-                <div className="overflow-x-auto">
-                    <table className="w-full text-left text-xs">
-                        <thead className="border-b border-border/40 text-muted-foreground">
-                            <tr>
-                                <th className="py-2 font-medium">任务 ID</th>
-                                <th className="py-2 font-medium">模型</th>
-                                <th className="py-2 font-medium">状态</th>
-                                <th className="py-2 font-medium">时长</th>
-                                <th className="py-2 font-medium">用户</th>
-                                <th className="py-2 font-medium">创建时间</th>
-                            </tr>
-                        </thead>
-                        <tbody className="divide-y divide-border/30">
-                            {tasks.length === 0 ? (
-                                <tr>
-                                    <td colSpan={6} className="py-6 text-center text-muted-foreground">
-                                        暂无活动任务
-                                    </td>
-                                </tr>
-                            ) : (
-                                tasks.map((t) => (
-                                    <tr key={t.taskId || t.id}>
-                                        <td className="py-2 font-mono">{t.taskId || t.id}</td>
-                                        <td className="py-2">{t.model}</td>
-                                        <td className="py-2">
-                                            <span className="capitalize">{t.stage || t.status}</span>
-                                        </td>
-                                        <td className="py-2">{t.durationTargetSeconds}s</td>
-                                        <td className="py-2 font-mono">{t.userId.slice(0, 8)}</td>
-                                        <td className="py-2">{new Date(t.createdAt).toLocaleTimeString()}</td>
-                                    </tr>
-                                ))
-                            )}
-                        </tbody>
-                    </table>
-                </div>
-            </section>
+            )}
+            <AppDrawer rootClassName="plugin-music-generation" open={Boolean(detail)} onClose={() => setDetailId(null)} title={<span translate="no">{detail?.title || t("music.default_track_title")}</span>}>
+                {detail && <MusicTaskDetails task={detail} />}
+            </AppDrawer>
         </div>
     );
 }

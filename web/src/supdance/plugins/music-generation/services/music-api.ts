@@ -1,15 +1,23 @@
 import { http } from "@/services/api/request";
-import { listSiteMusicTasks, querySiteMusicTask, siteMusicModels, submitSiteMusicTask } from "./music-site-api";
-import { useConfigStore } from "@/stores/use-config-store";
+import { listSiteMusicTasks, querySiteMusicTask, projectMusicTask, projectAdminMusicTask } from "./music-site-api";
+import type { GenerationTask } from "@/services/api/task-center";
 
 export type AudioFormat = "mp3" | "wav" | "flac";
 
 export type ModelCapabilities = {
+    channelId?: string;
+    modelKey?: string;
+    lyricsSupported?: boolean;
+    instrumentalSupported?: boolean;
+    titleSupported?: boolean;
+    styleSupported?: boolean;
+    durationSupported?: boolean;
+    outputCount?: number;
+    billingMode?: string;
     id: string;
     name: string;
     version: string;
     modes: ("simple" | "custom")[];
-    instrumentalSupported?: boolean;
     minDuration: number;
     maxDuration: number;
     formats: AudioFormat[];
@@ -29,6 +37,9 @@ export type ModelCapabilities = {
 };
 
 export type MusicTask = {
+    outputs?: MusicOutput[];
+    mediaStage?: string;
+    canRecoverMedia?: boolean;
     id: string;
     userId: string;
     taskId: string;
@@ -39,6 +50,7 @@ export type MusicTask = {
     title?: string;
     lyrics?: string;
     tags?: string;
+    songLanguage?: string;
     instrumental: boolean;
     durationTargetSeconds: number;
     status: "submitted" | "queued" | "generating" | "transcoding" | "completed" | "failed" | "cancelled";
@@ -57,13 +69,27 @@ export type MusicTask = {
     updatedAt: string;
 };
 
+export type MusicOutput = {
+    id: string;
+    outputIndex: number;
+    audioUrl?: string;
+    storageKey?: string;
+    adminResourceId?: string;
+    durationMs?: number;
+    bytes?: number;
+    mimeType?: string;
+    format?: AudioFormat;
+};
+
 export type SubmitMusicTaskPayload = {
+    quotedMicrocredits?: number;
     model: string;
     mode: "simple" | "custom";
     prompt: string;
     title?: string;
     lyrics?: string;
     tags?: string;
+    songLanguage?: string;
     instrumental?: boolean;
     duration?: number;
     format?: AudioFormat;
@@ -97,15 +123,19 @@ export type MusicLifecycleInfo = {
 
 // Client API functions
 export async function fetchMusicCapabilities(): Promise<ModelCapabilities[]> {
-    return siteMusicModels(useConfigStore.getState().config);
+    return http.get<ModelCapabilities[]>("/v1/supdance/music/capabilities");
 }
 
 export async function submitMusicTask(payload: SubmitMusicTaskPayload): Promise<{ taskId: string; status: string }> {
-    return submitSiteMusicTask(payload);
+    return http.post<{ taskId: string; status: string }>("/v1/supdance/music/tasks", payload);
 }
 
 export async function queryMusicTask(taskId: string): Promise<MusicTask> {
     return querySiteMusicTask(taskId);
+}
+
+export async function queryAdminMusicTask(taskId: string): Promise<MusicTask> {
+    return querySiteMusicTask(taskId, true);
 }
 
 export async function listUserMusicTasks(page = 1, pageSize = 20): Promise<{ items: MusicTask[]; total: number; page: number; pageSize: number }> {
@@ -120,6 +150,11 @@ export function getAudioDownloadUrl(taskId: string, format: AudioFormat = "mp3")
 // Admin API functions
 export async function fetchMusicAdminOverview(): Promise<MusicLifecycleInfo> {
     return http.get<MusicLifecycleInfo>("/admin/plugins/music-generation/overview");
+}
+
+export async function recoverMusicAdminTest(logId: string): Promise<MusicTask> {
+    const task = await http.post<GenerationTask>("/admin/plugins/music-generation/tasks/recover", { logId });
+    return projectMusicTask(task);
 }
 
 export async function setMusicPluginLifecycle(state: MusicLifecycleInfo["state"]): Promise<MusicLifecycleInfo> {
@@ -139,7 +174,8 @@ export async function testMusicConnection(apiKey?: string): Promise<{ status: st
 }
 
 export async function listAdminMusicTasks(status?: string, page = 1, pageSize = 20): Promise<{ items: MusicTask[]; total: number; page: number; pageSize: number }> {
-    return http.get<{ items: MusicTask[]; total: number; page: number; pageSize: number }>("/admin/plugins/music-generation/tasks", {
+    const result = await http.get<{ items: GenerationTask[]; legacyItems?: MusicTask[]; total: number }>("/admin/plugins/music-generation/tasks", {
         params: { status, page, pageSize },
     });
+    return { items: [...result.items, ...(result.legacyItems || [])].map(projectAdminMusicTask), total: result.total, page, pageSize };
 }

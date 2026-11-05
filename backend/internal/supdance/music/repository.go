@@ -106,13 +106,24 @@ func (r *GormRepository) CompleteFailure(ctx context.Context, id string, errorMs
 }
 
 func (r *GormRepository) ListByUserID(ctx context.Context, userID string, offset int, limit int) ([]*SupDanceMusicGeneration, int64, error) {
+	return r.ListHistory(ctx, userID, "", offset, limit)
+}
+
+// An empty userID is reserved for a caller that has already verified admin access.
+func (r *GormRepository) ListHistory(ctx context.Context, userID, status string, offset, limit int) ([]*SupDanceMusicGeneration, int64, error) {
 	var items []*SupDanceMusicGeneration
 	var total int64
-	query := r.db.WithContext(ctx).Model(&SupDanceMusicGeneration{}).Where("user_id = ?", userID)
+	query := r.db.WithContext(ctx).Model(&SupDanceMusicGeneration{})
+	if userID != "" {
+		query = query.Where("user_id = ?", userID)
+	}
+	if status != "" {
+		query = query.Where("status = ?", status)
+	}
 	if err := query.Count(&total).Error; err != nil {
 		return nil, 0, err
 	}
-	if err := query.Order("created_at desc").Offset(offset).Limit(limit).Find(&items).Error; err != nil {
+	if err := query.Order("created_at desc, id desc").Offset(offset).Limit(limit).Find(&items).Error; err != nil {
 		return nil, 0, err
 	}
 	return items, total, nil

@@ -1,7 +1,10 @@
 import { useEffect, useRef, useState, type KeyboardEvent, type MouseEvent, type PointerEvent } from "react";
 import { AGENT_LAUNCHER_POSITION_KEY, clampAgentLauncherPosition, moveAgentLauncher, restoreAgentLauncherPosition, type AgentLauncherGesture, type AgentLauncherPosition } from "@/lib/canvas/agent-launcher-position";
 
-const viewport = () => ({ width: window.innerWidth, height: window.innerHeight });
+const viewport = () => {
+    const bottomBar = document.querySelector<HTMLElement>("[data-workspace-bottom-bar]");
+    return { width: window.innerWidth, height: window.innerHeight, bottomInset: Math.max(0, window.innerHeight - (bottomBar?.getBoundingClientRect().top ?? window.innerHeight)) };
+};
 
 /**
  * 入口的拖拽、点击与键盘移动。指针处理器（onPointer*）可以挂在入口按钮上，也可以挂在按钮内的身体热区上
@@ -33,7 +36,11 @@ export function useAgentLauncherPosition(onOpen: () => void, width = 76, height 
         const resize = () => setPosition((current) => clampAgentLauncherPosition(current, viewport(), size));
         resize();
         window.addEventListener("resize", resize);
-        return () => window.removeEventListener("resize", resize);
+        window.addEventListener("workspace-bottom-bar-change", resize);
+        return () => {
+            window.removeEventListener("resize", resize);
+            window.removeEventListener("workspace-bottom-bar-change", resize);
+        };
     }, [width, height]);
 
     const onPointerDown = (event: PointerEvent<HTMLElement>) => {

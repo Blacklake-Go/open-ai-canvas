@@ -130,6 +130,14 @@ func (s *Service) CreateTask(userID string, req CreateTaskRequest) (*model.Task,
 		}
 		return nil, errors.New("视频任务缺少可执行的模型配置")
 	}
+	if taskType == "canvas_audio" {
+		config, _ := normalizedInput["config"].(map[string]any)
+		if _, _, wired := musicProtocolProfile(stringValue(config["interfaceType"]), stringValue(config["model"])); wired {
+			if err := s.CheckMusicTaskAdmission(userID); err != nil {
+				return nil, err
+			}
+		}
+	}
 	// 前端自管的文本持久化任务：直连模型生成、增量上报 text-deltas，不排入 worker 队列生成。
 	if isTextReplayTaskRequest(normalizedInput) {
 		return s.createTextReplayTask(userID, req, normalizedInput)

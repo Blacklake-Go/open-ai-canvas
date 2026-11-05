@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"strings"
 	"time"
 
 	"gorm.io/gorm"
@@ -69,6 +70,12 @@ func generationMediaAssetID(taskID string, index int) string {
 // Uses the same effect key and ID as browser materialization, so reconnecting
 // the canvas cannot create a second asset for a server-delivered output.
 func (s *Service) registerRecoveredMediaAssets(task model.Task) error {
+	var input canvasGenerationInput
+	if task.InputJSON != "" {
+		if err := json.Unmarshal([]byte(task.InputJSON), &input); err != nil {
+			return err
+		}
+	}
 	projectID, err := s.mediaTaskProject(&task)
 	if err != nil {
 		return err
@@ -121,6 +128,14 @@ func (s *Service) registerRecoveredMediaAssets(task model.Task) error {
 		}
 		title := map[string]string{"image": "生成图片", "video": "生成视频", "audio": "生成音频"}[checkpoint.Mode]
 		metadata := map[string]any{"source": "generation-task", "generationEffectKey": effectKey, "taskId": task.ID, "outputIndex": index}
+		if music, ok := input.Metadata["music"].(map[string]any); ok {
+			metadata["music"], metadata["model"], metadata["providerTaskId"] = music, task.Model, task.ProviderRequestID
+			musicTitle, _ := music["title"].(string)
+			title = firstNonEmpty(strings.TrimSpace(musicTitle), truncateRunes(task.Prompt, 60), "Music")
+			if len(checkpoint.Items) > 1 {
+				title += fmt.Sprintf(" · %d", index+1)
+			}
+		}
 		if projectID != "" {
 			metadata["projectIds"] = []string{projectID}
 		}

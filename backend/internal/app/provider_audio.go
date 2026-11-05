@@ -17,6 +17,16 @@ import (
 )
 
 func runAudioTask(ctx context.Context, input canvasGenerationInput) (map[string]interface{}, error) {
+	if recoveryOnly, _ := input.Metadata["musicRecoveryOnly"].(bool); recoveryOnly && resumedProviderRequestID(ctx) == "" {
+		return nil, errors.New("Music recovery requires the original provider task ID")
+	}
+	if _, protocolID, wired := musicProtocolProfile(input.Config.InterfaceType, input.Config.Model); wired {
+		adapter, ok := declarativeProtocolAdapterForContext(ctx, protocolID)
+		if !ok {
+			return nil, errors.New("Music protocol upgrade is required on the server")
+		}
+		return runProtocolAdapterTask(ctx, input, adapter)
+	}
 	if _, ok := declarativeProtocolAdapterForContext(ctx, input.Config.InterfaceType); ok {
 		return runDeclarativeProtocolTask(ctx, input)
 	}

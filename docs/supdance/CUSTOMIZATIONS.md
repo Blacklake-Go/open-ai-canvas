@@ -11,6 +11,13 @@
 - 创作页模型分组、目标时长与音乐结果组件保留最小适配，业务协议在 `plugin-packages/runninghub-standard/`，独立工作台适配在 `web/src/supdance/plugins/music-generation/services/music-site-api.ts`。
 - 复用平台模型目录、报价、`canvas_audio` 任务和资源访问 API，不增加账本、用户或数据表；新文案通过 `supdance-i18n` 六语词条模块提供。
 - 上游更新需保留 RunningHub 1.1.1 源清单与发行包，避免启动时旧官方包覆盖音乐接口；创作页、工作台、失败退款与账号切换需共同回归。
+## 音乐工作台统一渠道补丁
+
+- 创作页模型分组与音乐结果组件保留最小适配；音乐工作台通过主站配置读取模型、能力和报价，不展示没有接通的时长、人声与格式参数。
+- 复用平台模型目录、报价、`canvas_audio` 任务和资源访问 API，不增加账本、用户或数据表；新文案通过 `supdance-i18n` 六语词条模块提供。
+- 音乐模块版本为 1.3.0、最低宿主版本 1.7.4，RunningHub 协议包为 1.1.2。源码与发行包必须一起升级并重启，不能只改插件数据库版本。
+- 音频沿宿主分离轮询、媒体 checkpoint、稳定资产 ID 和账务状态机；恢复旧后台测试只回查原上游 ID，不创建任务到供应商、不补扣历史账目。生命周期状态、准入与管理员审计原子提交，卸载保留配置和用户偏好。
+- 宿主接缝登记于 `supdance-music-host-tasks`、`supdance-music-player-docking`、`supdance-music-original-asset-titles` compatibility registry 与 `supdance/config/baseline.json`。实现、迁移与风险见 [音乐实现说明](music-studio/IMPLEMENTATION.md)，实测范围见 [音乐验收记录](music-studio/VERIFICATION.md)。
 
 ## 完整上游同步：正式版与 main
 

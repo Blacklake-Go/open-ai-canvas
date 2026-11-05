@@ -64,6 +64,13 @@ func protocolRequestFromInput(input canvasGenerationInput) protocol.GenerationRe
 		for k, v := range music {
 			request.Extra[k] = v
 		}
+		if language, ok := music["songLanguage"].(string); ok && strings.TrimSpace(language) != "" {
+			style, _ := music["style"].(string)
+			request.Extra["style"] = strings.TrimSpace(style + "\nSong language preference: " + language)
+		}
+		if style, ok := music["style"].(string); ok && style != "" {
+			request.Extra["musicStyle"] = style
+		}
 		if d, ok := music["duration"].(int); ok && d > 0 {
 			request.Duration = d
 		} else if dFloat, ok := music["duration"].(float64); ok && dFloat > 0 {

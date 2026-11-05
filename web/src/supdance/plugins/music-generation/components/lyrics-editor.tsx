@@ -67,7 +67,7 @@ export function LyricsEditor({ value, onChange, maxChars, disabled }: LyricsEdit
                             type="button"
                             disabled={disabled}
                             onClick={() => handleInsertTag(tag)}
-                            className="rounded-md border border-border/60 bg-muted/50 px-2 py-1 text-xs text-foreground/80 transition-colors hover:bg-muted hover:text-foreground disabled:opacity-50"
+                            className="min-h-11 rounded-md border border-border/60 bg-muted/50 px-2 py-1 text-xs text-foreground/80 transition-colors hover:bg-muted hover:text-foreground disabled:opacity-50"
                         >
                             {label}
                         </button>
@@ -79,10 +79,10 @@ export function LyricsEditor({ value, onChange, maxChars, disabled }: LyricsEdit
                     disabled={disabled || !value}
                     onClick={handleClear}
                     className={`flex items-center gap-1 rounded-sm px-1.5 py-0.5 text-xs transition-colors disabled:opacity-40 ${confirmingClear ? "bg-destructive/15 text-destructive font-medium" : "text-muted-foreground hover:text-destructive"}`}
-                    title={confirmingClear ? "再次点击确认清空" : t("music.lyrics_clear", undefined, "清空歌词")}
+                    title={confirmingClear ? t("music.confirm_clear", undefined, "Click again to clear") : t("music.lyrics_clear")}
                 >
                     <Trash2 className="size-3.5" />
-                    <span>{confirmingClear ? "确认清空?" : t("music.lyrics_clear", undefined, "清空")}</span>
+                    <span>{confirmingClear ? t("music.confirm_clear", undefined, "Click again to clear") : t("music.lyrics_clear")}</span>
                 </button>
             </div>
 
@@ -91,14 +91,15 @@ export function LyricsEditor({ value, onChange, maxChars, disabled }: LyricsEdit
                 value={value}
                 onChange={(e) => onChange(e.target.value)}
                 disabled={disabled}
-                placeholder="在此输入自定义歌词或使用上方结构标签进行段落规划...&#10;例如：&#10;[Verse 1]&#10;夜幕降临，霓虹初上&#10;[Chorus]&#10;让我们随音乐起舞"
+                aria-label={t("music.lyrics_editor")}
+                placeholder={t("music.lyrics_hint", undefined, "Write your original lyrics. Use section tags to organize verses and choruses.")}
                 rows={7}
                 className="w-full resize-y rounded-lg bg-transparent p-2 text-sm text-foreground placeholder:text-muted-foreground/60 focus:outline-hidden"
             />
 
             <div className="flex items-center justify-end border-t border-border/40 pt-2 text-xs">
                 <span className={isExceeded ? "font-bold text-destructive" : "text-muted-foreground"}>
-                    {charCount} / {maxChars} 字
+                    {charCount} / {maxChars}
                 </span>
             </div>
         </div>

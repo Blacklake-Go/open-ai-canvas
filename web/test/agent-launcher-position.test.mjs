@@ -59,6 +59,8 @@ function harness() {
     let opens = 0;
     const stored = new Map();
     const listeners = new Map();
+    let bottomBarTop = null;
+    const document = { querySelector: () => (bottomBarTop === null ? null : { getBoundingClientRect: () => ({ top: bottomBarTop }) }) };
     const window = { innerWidth: 1280, innerHeight: 800, addEventListener: (name, fn) => listeners.set(name, fn), removeEventListener: (name) => listeners.delete(name) };
     const module = { exports: {} };
     const hooks = {
@@ -84,7 +86,7 @@ function harness() {
             }
         },
     };
-    runInNewContext(source, { module, exports: module.exports, hooks, window, localStorage: { getItem: (key) => stored.get(key) ?? null, setItem: (key, value) => stored.set(key, value) }, console });
+    runInNewContext(source, { module, exports: module.exports, hooks, window, document, localStorage: { getItem: (key) => stored.get(key) ?? null, setItem: (key, value) => stored.set(key, value) }, console });
     const render = () => {
         cursor = 0;
         return module.exports.useAgentLauncherPosition(() => opens++);
@@ -112,6 +114,11 @@ function harness() {
             listeners.get("resize")();
             current = render();
         },
+        bottomBar(top) {
+            bottomBarTop = top;
+            listeners.get("workspace-bottom-bar-change")();
+            current = render();
+        },
         get state() {
             return current;
         },
@@ -126,6 +133,17 @@ function harness() {
         },
     };
 }
+
+test("workspace bottom controls remain clear when the launcher is resized or moved", () => {
+    const h = harness();
+    h.bottomBar(680);
+    expect(h.state.position).toEqual({ right: 20, bottom: 140 });
+    h.fire("onKeyDown", { key: "ArrowDown", shiftKey: true });
+    expect(h.state.position.bottom).toBe(140);
+    h.bottomBar(null);
+    h.fire("onKeyDown", { key: "ArrowDown", shiftKey: true });
+    expect(h.state.position.bottom).toBe(100);
+});
 
 test("production handlers preserve click and suppress drag-release activation", () => {
     const h = harness();

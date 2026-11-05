@@ -243,7 +243,9 @@ export function AssetDrawer({ asset, onClose, onCopy, onDownload }: { asset: Lib
                             <KindIcon />
                         </span>
                         <div className="min-w-0">
-                            <h2 className="asset-archive-title">{asset.title}</h2>
+                            <h2 translate="no" data-i18n-ignore="true" className="asset-archive-title">
+                                {asset.title}
+                            </h2>
                             <p className="asset-archive-subtitle">
                                 {assetCategoryLabel(asset.category)} · {formatAssetDateTime(asset.createdAt)} 创建
                             </p>

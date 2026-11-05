@@ -18,12 +18,38 @@ func RegisterSupDanceMusicRoutes(r *gin.RouterGroup, svc *service.Service) {
 	musicGroup := r.Group("/v1/supdance/music")
 	{
 		musicGroup.GET("/capabilities", func(c *gin.Context) {
-			caps, err := svc.MusicCapabilities(c.Request.Context())
+			user, err := currentUser(c, svc)
+			if err != nil {
+				failService(c, err)
+				return
+			}
+			caps, err := svc.MusicCapabilitiesForUser(c.Request.Context(), user.ID)
 			if err != nil {
 				failService(c, err)
 				return
 			}
 			ok(c, caps)
+		})
+
+		musicGroup.POST("/quote", func(c *gin.Context) {
+			user, err := currentUser(c, svc)
+			if err != nil {
+				failService(c, err)
+				return
+			}
+			var req struct {
+				Model string `json:"model" binding:"required"`
+			}
+			if err := c.ShouldBindJSON(&req); err != nil {
+				fail(c, http.StatusBadRequest, err)
+				return
+			}
+			quote, err := svc.QuoteMusicTask(user.ID, req.Model)
+			if err != nil {
+				failService(c, err)
+				return
+			}
+			ok(c, quote)
 		})
 
 		musicGroup.POST("/tasks", func(c *gin.Context) {
@@ -52,7 +78,7 @@ func RegisterSupDanceMusicRoutes(r *gin.RouterGroup, svc *service.Service) {
 				return
 			}
 			taskID := strings.TrimSpace(c.Param("id"))
-			task, err := svc.GetMusicTask(c.Request.Context(), user, taskID)
+			task, err := svc.MusicTaskView(c.Request.Context(), user, taskID)
 			if err != nil {
 				failService(c, err)
 				return
@@ -76,17 +102,12 @@ func RegisterSupDanceMusicRoutes(r *gin.RouterGroup, svc *service.Service) {
 			}
 			offset := (page - 1) * pageSize
 
-			tasks, total, err := svc.ListUserMusicTasks(c.Request.Context(), user.ID, offset, pageSize)
+			pageResult, err := svc.MusicTaskPage(c.Request.Context(), user, "", offset, pageSize, false)
 			if err != nil {
 				failService(c, err)
 				return
 			}
-			ok(c, gin.H{
-				"items":    tasks,
-				"total":    total,
-				"page":     page,
-				"pageSize": pageSize,
-			})
+			ok(c, pageResult)
 		})
 
 		musicGroup.GET("/tasks/:id/download", func(c *gin.Context) {
@@ -215,6 +236,27 @@ func RegisterSupDanceMusicRoutes(r *gin.RouterGroup, svc *service.Service) {
 			ok(c, res)
 		})
 
+		adminGroup.POST("/tasks/recover", func(c *gin.Context) {
+			user, err := currentUser(c, svc)
+			if err != nil {
+				failService(c, err)
+				return
+			}
+			var req struct {
+				LogID string `json:"logId" binding:"required"`
+			}
+			if err := c.ShouldBindJSON(&req); err != nil {
+				fail(c, http.StatusBadRequest, err)
+				return
+			}
+			task, err := svc.RecoverMusicAdminTest(c.Request.Context(), user, req.LogID)
+			if err != nil {
+				failService(c, err)
+				return
+			}
+			ok(c, task)
+		})
+
 		adminGroup.GET("/tasks", func(c *gin.Context) {
 			user, err := currentUser(c, svc)
 			if err != nil {
@@ -232,17 +274,12 @@ func RegisterSupDanceMusicRoutes(r *gin.RouterGroup, svc *service.Service) {
 			}
 			offset := (page - 1) * pageSize
 
-			tasks, total, err := svc.ListAdminMusicTasks(c.Request.Context(), user, status, offset, pageSize)
+			pageResult, err := svc.MusicTaskPage(c.Request.Context(), user, status, offset, pageSize, true)
 			if err != nil {
 				failService(c, err)
 				return
 			}
-			ok(c, gin.H{
-				"items":    tasks,
-				"total":    total,
-				"page":     page,
-				"pageSize": pageSize,
-			})
+			ok(c, pageResult)
 		})
 	}
 }

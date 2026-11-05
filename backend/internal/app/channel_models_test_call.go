@@ -6,6 +6,7 @@ import (
 	"context"
 	"errors"
 	"net/http"
+	"net/url"
 	"strings"
 	"time"
 
@@ -23,6 +24,16 @@ func (s *Service) TestAdminChannelModel(ctx context.Context, actor *model.User, 
 	modelKey, providerModelKey, capability, protocol, err := s.normalizeChannelModelContract(channel, req)
 	if err != nil {
 		return nil, err
+	}
+	if capability == "audio" {
+		if _, _, wired := musicProtocolProfile(string(protocol), providerModelKey); wired {
+			// Music tests need a quote, explicit inputs, a durable host task and
+			// settlement. Never run another detached, unbilled music request.
+			failure := NewAppError(http.StatusConflict, "Open the music test center to review inputs, price and balance before generation.")
+			failure.Reason = "music_test_requires_workbench"
+			failure.Details = map[string]any{"musicWorkbenchUrl": "/admin/plugins/music-generation?tab=test&model=" + url.QueryEscape(channelID+"::"+modelKey)}
+			return nil, failure
+		}
 	}
 	if capability == "text" || capability == "image" || capability == "video" {
 		if _, err := NormalizeModelCapabilityConfigForModel(capability, string(protocol), providerModelKey, req.CapabilityConfig, s.protocolRegistry()); err != nil {

@@ -104,7 +104,7 @@ Suno 音乐结果同时包含音频、封面与文本。1.1.1 仅将有 URL 的�
   "apiVersion": "yingce.plugin/v2",
   "id": "runninghub-standard",
   "name": "RunningHub Standard Model",
-  "version": "1.1.1",
+  "version": "1.1.2",
   "author": "RunningHub / 影策",
   "description": "RunningHub 标准模型 API 独立请求协议插件。",
   "permissions": [
@@ -2975,6 +2975,7 @@ Suno 音乐结果同时包含音频、封面与文本。1.1.1 仅将有 URL 的�
       {
         "id": "runninghub-standard-audio-suno",
         "label": "RunningHub Standard Audio (Suno)",
+        "detachedPolling": true,
         "capabilities": [
           "audio"
         ],
@@ -3021,11 +3022,6 @@ Suno 音乐结果同时包含音频、封面与文本。1.1.1 仅将有 URL 的�
           "body": {
             "description": {
               "$ref": "request.prompt"
-            },
-            "title": {
-              "$omitEmpty": {
-                "$ref": "request.extra.title"
-              }
             },
             "make_instrumental": {
               "$omitEmpty": {
@@ -3149,6 +3145,7 @@ Suno 音乐结果同时包含音频、封面与文本。1.1.1 仅将有 URL 的�
       {
         "id": "runninghub-standard-audio-mureka",
         "label": "RunningHub Standard Audio (Mureka)",
+        "detachedPolling": true,
         "capabilities": [
           "audio"
         ],
@@ -3220,7 +3217,16 @@ Suno 音乐结果同时包含音频、封面与文本。1.1.1 仅将有 URL 的�
             "prompt": {
               "$omitEmpty": {
                 "$omitEmpty": {
-                  "$ref": "request.providerOptions.runninghub-standard-audio-mureka.prompt"
+                  "$coalesce": [
+                    {
+                      "$omitEmpty": {
+                        "$ref": "request.extra.style"
+                      }
+                    },
+                    {
+                      "$ref": "request.providerOptions.runninghub-standard-audio-mureka.prompt"
+                    }
+                  ]
                 }
               }
             },

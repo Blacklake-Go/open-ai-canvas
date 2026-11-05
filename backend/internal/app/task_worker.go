@@ -480,7 +480,13 @@ func (s *Service) shouldDeferProviderTask(task model.Task, decryptedInput string
 	if resolveErr != nil {
 		return false
 	}
-	if s.protocolDetachedPolling(resolved.InterfaceType) {
+	resolvedProtocol := resolved.InterfaceType
+	if input.Mode == "audio" {
+		if _, musicProtocol, wired := musicProtocolProfile(resolved.InterfaceType, resolved.Model); wired {
+			resolvedProtocol = musicProtocol
+		}
+	}
+	if s.protocolDetachedPolling(resolvedProtocol) {
 		// 分离式回查只看总等待时长：上游候车/出片中按间隔回查，超过上限才交给失败处理。
 		return task.StartedAt == nil || time.Since(*task.StartedAt) < detachedProviderTaskMaxAge
 	}

@@ -1,4 +1,6 @@
 import { useRef, useState } from "react";
+import { useNavigate } from "react-router";
+import { ApiError } from "@/services/api/request";
 import { Alert, App, AutoComplete, Button, Form, Input, Segmented, Switch, Tabs } from "antd";
 import { useAdminContext } from "../admin-context";
 import { AdminModal } from "@/pages/admin/ui/overlays";
@@ -50,6 +52,7 @@ export function ChannelModelEditor({
     onSaved: () => Promise<void>;
 }) {
     const { message, modal } = App.useApp();
+    const navigate = useNavigate();
     const { references } = useAdminContext();
     const displayNameOptions = [...new Set(["未分类", ...references.channels.flatMap((item) => item.modelDisplayNames ?? [])])].sort((a, b) => a.localeCompare(b, "zh-CN")).map((value) => ({ value }));
     const [groupSearch, setGroupSearch] = useState("");
@@ -185,6 +188,11 @@ export function ChannelModelEditor({
             });
             message.success(`模型测试通过，耗时 ${(result.durationMs / 1000).toFixed(2)} 秒`);
         } catch (error) {
+            if (error instanceof ApiError && error.reason === "music_test_requires_workbench" && typeof error.details?.musicWorkbenchUrl === "string" && error.details.musicWorkbenchUrl.startsWith("/admin/plugins/music-generation?")) {
+                onClose();
+                navigate(error.details.musicWorkbenchUrl);
+                return;
+            }
             message.error(error instanceof Error ? error.message : "模型测试失败");
         } finally {
             busyRef.current = false;

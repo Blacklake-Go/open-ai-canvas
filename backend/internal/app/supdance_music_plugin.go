@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"log/slog"
 	"strings"
 	"sync"
 	"sync/atomic"
@@ -11,7 +12,10 @@ import (
 
 	"yingce/backend/internal/kernel"
 	"yingce/backend/internal/model"
+	"yingce/backend/internal/repository"
 	"yingce/backend/internal/supdance/music"
+
+	"gorm.io/gorm"
 )
 
 const (
@@ -20,6 +24,8 @@ const (
 )
 
 type MusicPluginLifecycleState string
+
+var musicLifecycleTransitionMu sync.Mutex
 
 const (
 	MusicLifecycleInstalled   MusicPluginLifecycleState = "installed"
@@ -266,7 +272,15 @@ func (s *Service) IsMusicPluginDraining() bool {
 
 // ActiveMusicTaskCount returns the number of active music generation tasks in flight.
 func (s *Service) ActiveMusicTaskCount() int64 {
-	return musicLifecycleManager().ActiveTaskCount()
+	count := musicLifecycleManager().ActiveTaskCount()
+	if s.repo != nil && s.repo.DB().Migrator().HasTable(&model.Task{}) {
+		host, err := s.repo.ActiveMusicTaskCount()
+		if err != nil {
+			return count + 1
+		} // Fail closed for upgrade/uninstall gates.
+		count += host
+	}
+	return count
 }
 
 // syncLifecycleStateFromDB restores the lifecycle state from database after server restart.
@@ -329,18 +343,8 @@ func (s *Service) TrackMusicTaskExecution() func() {
 	var once sync.Once
 	return func() {
 		once.Do(func() {
-			remaining := mgr.DecrementActiveTasks()
-			if remaining <= 0 && mgr.GetState() == MusicLifecycleDraining {
-				mgr.SetState(MusicLifecycleDisabled)
-				if s.repo != nil {
-					_ = s.repo.SavePluginPlatformState(&model.PluginPlatformState{
-						PluginID:  PluginSupDanceMusicGeneration,
-						Available: false,
-						UpdatedBy: "system:drain-complete",
-						UpdatedAt: time.Now().UTC(),
-					})
-				}
-			}
+			mgr.DecrementActiveTasks()
+			s.completeMusicDrain()
 		})
 	}
 }
@@ -350,101 +354,90 @@ func (s *Service) SetMusicPluginLifecycle(actor *model.User, targetState MusicPl
 	if err := s.RequireAdmin(actor); err != nil {
 		return nil, err
 	}
+	musicLifecycleTransitionMu.Lock()
+	defer musicLifecycleTransitionMu.Unlock()
+	s.syncLifecycleStateFromDB()
 	mgr := musicLifecycleManager()
 	currentState := mgr.GetState()
-	activeTasks := mgr.ActiveTaskCount()
+	activeTasks := s.ActiveMusicTaskCount()
 
 	if err := ValidateMusicLifecycleTransition(currentState, targetState, activeTasks); err != nil {
 		return nil, &AppError{Status: 400, Code: 400, Message: err.Error()}
 	}
 
-	now := time.Now().UTC()
-	switch targetState {
-	case MusicLifecycleEnabled:
-		mgr.SetState(MusicLifecycleEnabled)
-		if s.repo != nil {
-			_ = s.repo.SavePluginPlatformState(&model.PluginPlatformState{
-				PluginID:  PluginSupDanceMusicGeneration,
-				Available: true,
-				UpdatedBy: actor.ID,
-				UpdatedAt: now,
-			})
-		}
-	case MusicLifecycleDraining:
-		actualState, currentTasks := mgr.TransitionToDraining()
-		targetState = actualState
-		activeTasks = currentTasks
-		if actualState == MusicLifecycleDisabled && s.repo != nil {
-			_ = s.repo.SavePluginPlatformState(&model.PluginPlatformState{
-				PluginID:  PluginSupDanceMusicGeneration,
-				Available: false,
-				UpdatedBy: actor.ID,
-				UpdatedAt: now,
-			})
-		}
-	case MusicLifecycleDisabled:
-		mgr.SetState(MusicLifecycleDisabled)
-		if s.repo != nil {
-			_ = s.repo.SavePluginPlatformState(&model.PluginPlatformState{
-				PluginID:  PluginSupDanceMusicGeneration,
-				Available: false,
-				UpdatedBy: actor.ID,
-				UpdatedAt: now,
-			})
-		}
-	case MusicLifecycleUpdating:
-		mgr.SetState(MusicLifecycleUpdating)
-	case MusicLifecycleError:
-		mgr.SetState(MusicLifecycleError)
-		if s.repo != nil {
-			_ = s.repo.SavePluginPlatformState(&model.PluginPlatformState{
-				PluginID:  PluginSupDanceMusicGeneration,
-				Available: false,
-				UpdatedBy: actor.ID,
-				UpdatedAt: now,
-			})
-		}
-	case MusicLifecycleUninstalled:
-		mgr.SetState(MusicLifecycleUninstalled)
-		if s.repo != nil {
-			_ = s.repo.DeletePluginPlatformState(PluginSupDanceMusicGeneration)
-			_ = s.repo.DeleteUserPluginStates(PluginSupDanceMusicGeneration)
-			_ = s.repo.DeleteSystemSetting(MusicLifecycleSettingKey)
-			// 注意：绝对不清理 supdance_music_generations 表与 model.Resource 资产
-		}
+	if targetState == MusicLifecycleDraining && activeTasks == 0 {
+		targetState = MusicLifecycleDisabled
 	}
-
-	if s.repo != nil && targetState != MusicLifecycleUninstalled {
-		stateBytes, _ := json.Marshal(string(targetState))
-		_ = s.repo.SaveSystemSetting(&model.SystemSetting{
-			Key:       MusicLifecycleSettingKey,
-			ValueJSON: string(stateBytes),
-			UpdatedAt: now,
-		})
-	}
-
-	_ = s.appendAdminAudit(actor, "plugin.lifecycle.update", "plugin", PluginSupDanceMusicGeneration, "更新音乐插件生命周期状态", map[string]any{
+	event, err := newAdminAuditEvent(actor, "plugin.lifecycle.update", "plugin", PluginSupDanceMusicGeneration, "更新音乐插件生命周期状态", map[string]any{
 		"fromState":   currentState,
 		"toState":     targetState,
 		"activeTasks": activeTasks,
 	})
+	if err != nil {
+		return nil, err
+	}
+	if err := s.persistMusicLifecycleState(targetState, actor.ID, event); err != nil {
+		return nil, err
+	}
+	mgr.SetState(targetState)
 
 	return &MusicLifecycleInfo{
 		State:       targetState,
-		ActiveTasks: mgr.ActiveTaskCount(),
+		ActiveTasks: s.ActiveMusicTaskCount(),
 		IsDraining:  mgr.IsDraining(),
-		UpdatedAt:   now,
+		UpdatedAt:   time.Now().UTC(),
 		UpdatedBy:   actor.ID,
 	}, nil
+}
+
+// Persist admission, lifecycle and audit together before changing process state.
+// Uninstall retains configuration, user preferences, tasks, assets and ledger.
+func (s *Service) persistMusicLifecycleState(state MusicPluginLifecycleState, actorID string, event *model.AdminAuditEvent) error {
+	if s.repo == nil {
+		return fmt.Errorf("music lifecycle persistence unavailable")
+	}
+	now := time.Now().UTC()
+	raw, err := json.Marshal(string(state))
+	if err != nil {
+		return err
+	}
+	return s.repo.DB().Transaction(func(tx *gorm.DB) error {
+		repo := repository.New(tx)
+		if err := repo.SavePluginPlatformState(&model.PluginPlatformState{PluginID: PluginSupDanceMusicGeneration, Available: state == MusicLifecycleEnabled, UpdatedBy: actorID, UpdatedAt: now}); err != nil {
+			return err
+		}
+		if err := repo.SaveSystemSetting(&model.SystemSetting{Key: MusicLifecycleSettingKey, ValueJSON: string(raw), UpdatedAt: now}); err != nil {
+			return err
+		}
+		if event != nil {
+			return repo.AppendAdminAudit(event)
+		}
+		return nil
+	})
+}
+
+func (s *Service) completeMusicDrain() {
+	musicLifecycleTransitionMu.Lock()
+	defer musicLifecycleTransitionMu.Unlock()
+	mgr := musicLifecycleManager()
+	if mgr.GetState() != MusicLifecycleDraining || s.ActiveMusicTaskCount() != 0 {
+		return
+	}
+	if err := s.persistMusicLifecycleState(MusicLifecycleDisabled, "system:drain-complete", nil); err != nil {
+		slog.Error("music drain state could not be saved")
+		return
+	}
+	mgr.SetState(MusicLifecycleDisabled)
 }
 
 // GetMusicPluginLifecycle returns the current lifecycle status view.
 func (s *Service) GetMusicPluginLifecycle() *MusicLifecycleInfo {
 	s.syncLifecycleStateFromDB()
+	s.completeMusicDrain()
 	mgr := musicLifecycleManager()
 	return &MusicLifecycleInfo{
 		State:       mgr.GetState(),
-		ActiveTasks: mgr.ActiveTaskCount(),
+		ActiveTasks: s.ActiveMusicTaskCount(),
 		IsDraining:  mgr.IsDraining(),
 		UpdatedAt:   time.Now().UTC(),
 	}
@@ -493,15 +486,10 @@ func (h *musicLifecycleHost) TrackMusicTaskExecution() func() {
 	return h.svc.TrackMusicTaskExecution()
 }
 
-var musicDBMigrateOnce sync.Once
-
 func (s *Service) MusicService() *music.Service {
 	var repo music.Repository
 	if s.repo != nil && s.repo.DB() != nil {
 		gormRepo := music.NewRepository(s.repo.DB())
-		musicDBMigrateOnce.Do(func() {
-			_ = gormRepo.AutoMigrate(context.Background())
-		})
 		repo = gormRepo
 	}
 	return music.NewService(
@@ -524,6 +512,9 @@ func (s *Service) UpdateMusicAdminConfig(actor *model.User, req music.UpdateMusi
 	if err := s.RequireAdmin(actor); err != nil {
 		return nil, err
 	}
+	if req.APIKey != "" || req.BaseURL != "" || req.WebhookSecret != "" || req.ModelPricing != nil {
+		return nil, BadAuthRequest("Manage music credentials and prices in site channels. Legacy music configuration is retained as a backup.")
+	}
 	view, err := s.MusicService().UpdateAdminConfig(context.Background(), actor.ID, req)
 	if err != nil {
 		return nil, err
@@ -539,23 +530,48 @@ func (s *Service) TestMusicConnection(actor *model.User, apiKey string) (map[str
 	if err := s.RequireAdmin(actor); err != nil {
 		return nil, err
 	}
-	return s.MusicService().TestConnection(context.Background(), apiKey)
+	if strings.TrimSpace(apiKey) != "" {
+		return nil, BadAuthRequest("Use the credentials configured in site channels.")
+	}
+	caps, err := s.siteMusicCapabilities(actor.ID)
+	if err != nil {
+		return nil, err
+	}
+	available := 0
+	for _, cap := range caps {
+		if cap.Available {
+			available++
+		}
+	}
+	if available == 0 {
+		return nil, InvalidModelSelection("No available music models are configured.")
+	}
+	return map[string]any{"status": "configuration_checked", "code": 0, "message": "Configuration checked; provider credentials require a real task to verify.", "endpoint": "site-channels", "billed": false, "availableModels": available, "credentialsVerified": false}, nil
 }
 
 func (s *Service) MusicCapabilities(ctx context.Context) ([]music.ModelCapabilities, error) {
-	return s.MusicService().GetCapabilities(ctx)
+	return s.siteMusicCapabilities("")
 }
 
 func (s *Service) SubmitMusicTask(ctx context.Context, userID string, req music.MusicGenerationRequest) (*music.MusicGenerationResponse, error) {
-	return s.MusicService().SubmitTask(ctx, userID, req)
+	return s.submitSiteMusicTask(ctx, userID, req)
 }
 
 func (s *Service) GetMusicTask(ctx context.Context, actor *model.User, taskID string) (*music.SupDanceMusicGeneration, error) {
+	if actor == nil {
+		return nil, Unauthorized("Login is required")
+	}
+	if !s.repo.DB().Migrator().HasTable(&music.SupDanceMusicGeneration{}) {
+		return nil, NotFound("Music task not found")
+	}
 	isAdmin := s.RequireAdmin(actor) == nil
 	return s.MusicService().GetTask(ctx, actor.ID, taskID, isAdmin)
 }
 
 func (s *Service) ListUserMusicTasks(ctx context.Context, userID string, offset, limit int) ([]*music.SupDanceMusicGeneration, int64, error) {
+	if !s.repo.DB().Migrator().HasTable(&music.SupDanceMusicGeneration{}) {
+		return []*music.SupDanceMusicGeneration{}, 0, nil
+	}
 	return s.MusicService().ListUserTasks(ctx, userID, offset, limit)
 }
 
@@ -571,6 +587,9 @@ func (s *Service) HandleMusicWebhook(ctx context.Context, signature string, payl
 func (s *Service) ListAdminMusicTasks(ctx context.Context, actor *model.User, status string, offset, limit int) ([]*music.SupDanceMusicGeneration, int64, error) {
 	if err := s.RequireAdmin(actor); err != nil {
 		return nil, 0, err
+	}
+	if !s.repo.DB().Migrator().HasTable(&music.SupDanceMusicGeneration{}) {
+		return []*music.SupDanceMusicGeneration{}, 0, nil
 	}
 	return s.MusicService().ListAdminTasks(ctx, status, offset, limit)
 }

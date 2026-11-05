@@ -407,7 +407,12 @@ func (s *Service) resolveProviderConfig(config providerConfig) (providerConfig, 
 			return providerConfig{}, errors.New("当前模型规格价格档已更新，请重新创建任务")
 		}
 	} else if modelKey != "" && requestedModel != "" && modelKey != requestedModel {
-		return providerConfig{}, errors.New("系统渠道模型标识不一致")
+		// Archiving resolves an already-resolved configuration again. Accept
+		// only the exact persisted SKU, while retaining the channel alias.
+		canonical := strings.TrimPrefix(strings.TrimSpace(channelModel.ProviderModelKey), "models/")
+		if canonical == "" || requestedModel != canonical || providerModelKey != canonical {
+			return providerConfig{}, errors.New("系统渠道模型标识不一致")
+		}
 	}
 	config.InterfaceType = string(channelModel.Protocol)
 	config.APIFormat = channelAPIFormatForProtocol(channel.APIFormat, channelModel.Protocol)
@@ -419,8 +424,8 @@ func (s *Service) resolveProviderConfig(config providerConfig) (providerConfig, 
 		return providerConfig{}, err
 	}
 	config.ChannelModelKey = modelKey
-	config.ProviderModelKey = providerModelKey
-	config.Model = firstNonEmpty(providerModelKey, channelModel.ProviderModelKey, modelKey)
+	config.ProviderModelKey = firstNonEmpty(providerModelKey, channelModel.ProviderModelKey, modelKey)
+	config.Model = config.ProviderModelKey
 	return config, nil
 }
 

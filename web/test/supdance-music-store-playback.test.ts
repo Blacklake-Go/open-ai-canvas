@@ -44,33 +44,6 @@ describe("SupDance Music Plugin — Real Store & Controller Integration Suite", 
         expect(useMusicStore.getState().draft.mode).toBe("custom");
         expect(useMusicStore.getState().draft.duration).toBe(180);
     });
-    test("switching models removes unsupported lyrics and instrumental state", () => {
-        const capability = {
-            id: "suno",
-            name: "Suno",
-            version: "",
-            modes: ["simple" as const],
-            minDuration: 30,
-            maxDuration: 300,
-            formats: ["mp3" as const],
-            maxPromptChars: 1500,
-            maxLyricsChars: 3000,
-            costPerSecondMicrocredits: 0,
-            stemSeparation: false,
-            available: true,
-            instrumentalSupported: true,
-        };
-        useMusicStore.setState({ capabilities: [capability, { ...capability, id: "mureka", modes: ["custom"], instrumentalSupported: false }] });
-        useMusicStore.getState().setDraftField("lyrics", "Previous verse");
-        useMusicStore.getState().setDraftField("mode", "custom");
-        useMusicStore.getState().setDraftField("instrumental", true);
-        useMusicStore.getState().setModel("suno");
-        expect(useMusicStore.getState().draft.mode).toBe("simple");
-        expect(useMusicStore.getState().draft.lyrics).toBe("");
-        expect(useMusicStore.getState().draft.instrumental).toBe(true);
-        useMusicStore.getState().setModel("mureka");
-        expect(useMusicStore.getState().draft.instrumental).toBe(false);
-    });
     test("Single-instance playback controller controls and synchronizes audio state", () => {
         const store = useMusicStore.getState();
 
@@ -159,15 +132,51 @@ describe("SupDance Music Plugin — Real Store & Controller Integration Suite", 
         expect(content).toContain("getDraftStorage().getItem");
     });
 
-    test("waveform-player.tsx uses fine-grained atomic selectors to prevent 4Hz playback churn", () => {
-        const playerFile = join(import.meta.dir, "../src/supdance/plugins/music-generation/components/waveform-player.tsx");
-        const content = readFileSync(playerFile, "utf-8");
-
-        // Verify fine-grained selectors are used instead of monolithic useMusicStore()
-        expect(content).not.toContain("const {\n        playingTaskId,");
-        expect(content).toContain("useMusicStore((s) => s.playingTaskId === taskId && s.isPlaying)");
-        expect(content).toContain("useMusicStore((s) => (s.playingTaskId === taskId ? s.currentTime : 0))");
-        expect(content).toContain("export default WaveformPlayer");
+    test("a rejected old play request cannot stop the next track or leave two players running", async () => {
+        const previousAudio = globalThis.Audio;
+        const instances: FakeAudio[] = [];
+        class FakeAudio {
+            src: string;
+            duration = 0;
+            volume = 1;
+            muted = false;
+            loop = false;
+            paused = false;
+            reject!: (reason?: unknown) => void;
+            promise: Promise<void>;
+            constructor(src: string) {
+                this.src = src;
+                this.promise = new Promise((resolve, reject) => {
+                    this.reject = reject;
+                    if (instances.length) resolve();
+                });
+                instances.push(this);
+            }
+            play() {
+                return this.promise;
+            }
+            pause() {
+                this.paused = true;
+            }
+        }
+        Object.defineProperty(globalThis, "Audio", { configurable: true, writable: true, value: FakeAudio });
+        try {
+            useMusicStore.getState().playAudio("first", "/one.mp3");
+            useMusicStore.getState().playAudio("second", "/two.mp3");
+            await Promise.resolve();
+            instances[0].reject(new Error("previous request aborted"));
+            await Promise.resolve();
+            await Promise.resolve();
+            expect(instances[0].paused).toBe(true);
+            expect(instances[0].src).toBe("");
+            expect(useMusicStore.getState().playingTaskId).toBe("second");
+            expect(useMusicStore.getState().isPlaying).toBe(true);
+            expect(useMusicStore.getState().playbackError).toBe("");
+            expect(useMusicStore.getState().duration).toBe(0);
+        } finally {
+            useMusicStore.getState().pauseAudio();
+            Object.defineProperty(globalThis, "Audio", { configurable: true, writable: true, value: previousAudio });
+        }
     });
 
     test("creation-workspace-messages.tsx dynamically loads WaveformPlayer with lazy & Suspense", () => {

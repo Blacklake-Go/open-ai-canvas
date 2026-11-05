@@ -130,6 +130,11 @@ func runProtocolAdapterTaskWithPolicy(ctx context.Context, input canvasGeneratio
 		}
 		body, err := executeProtocolRequest(withProviderRequestKind(ctx, "poll"), input.Config, spec)
 		if err != nil {
+			if detached && input.Mode == "audio" {
+				if retry, _ := retryableVideoPollError(ctx, err); retry {
+					return videoPollOutcome{}, detachedProtocolPending(taskID, "", -1)
+				}
+			}
 			return videoPollOutcome{}, err
 		}
 		state, err := adapter.ParsePoll(ctx, protocol.PollContext{BaseURL: input.Config.BaseURL, Model: request.Model, Request: request, TaskID: taskID}, body)

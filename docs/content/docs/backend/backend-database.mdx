@@ -18,6 +18,11 @@ description: 影策后端核心持久化表与状态边界
 | `billing_orders.cache_write_tokens` / `api_call_logs.cache_write_tokens` | 本次写入提示词缓存的输入 Token | 已计入 `input_tokens`；结算时普通输入 = `input_tokens - cached_tokens - cache_write_tokens` |
 
 调用日志把各协议 usage 归一为同一口径：`input_tokens` 含缓存命中和缓存写入。Anthropic 原生 usage 的 `input_tokens` 不含 `cache_read_input_tokens` 与 `cache_creation_input_tokens`，写日志时补齐为总输入；百炼与 OpenRouter 的缓存写入分别读 `prompt_tokens_details.cache_creation_input_tokens` 和 `cache_write_tokens`。Token 预授权按输入价与缓存写入价中较高者估算全部输入 Token。
+## 音乐工作岛候选
+
+音乐模块没有新增表、字段或 Schema 版本；本次集成随上游采用 Schema 82。新音乐任务复用 `tasks`、`billing_orders`、`credit_accounts`、`credit_ledger_entries`、`resources`、`assets` 及既有审计/配置表。用户/nonce 确定内部任务 ID；供应商回执写入任务和调用日志，输出序号参与稳定资产键。
+
+旧音乐表保持历史读取，查询不再 AutoMigrate。旧配置不覆盖主站渠道，拒绝新增独立密钥、网关和价格写入。卸载保留配置与用户偏好。生命周期、准入和审计同事务提交。原无用户收费的后台测试恢复不补扣历史账目；归档重试复用原任务及 checkpoint。回滚不得删除新增资源或账目，数据库恢复需另核对备份后业务。
 
 ## 视觉引擎配置与版本
 

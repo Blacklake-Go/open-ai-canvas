@@ -2,6 +2,7 @@ package app
 
 import (
 	"context"
+	"errors"
 	"net/http"
 	"testing"
 	"time"
@@ -14,6 +15,58 @@ import (
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
 )
+
+func TestMusicLifecycleWriteFailureDoesNotChangeAdmission(t *testing.T) {
+	svc, db := setupMusicTestService(t)
+	if err := db.Create(&model.PluginPlatformState{PluginID: PluginSupDanceMusicGeneration, Available: true}).Error; err != nil {
+		t.Fatal(err)
+	}
+	if err := db.Callback().Create().Before("gorm:create").Register("music_lifecycle_failure", func(tx *gorm.DB) {
+		if tx.Statement.Table == "system_settings" {
+			tx.AddError(errors.New("test persistence unavailable"))
+		}
+	}); err != nil {
+		t.Fatal(err)
+	}
+	defer db.Callback().Create().Remove("music_lifecycle_failure")
+	if _, err := svc.SetMusicPluginLifecycle(&model.User{ID: "admin", Role: model.UserRoleAdmin}, MusicLifecycleDisabled); err == nil {
+		t.Fatal("failed write reported success")
+	}
+	available, err := svc.MusicPluginPlatformAvailable()
+	if err != nil || !available || musicLifecycleManager().GetState() != MusicLifecycleEnabled {
+		t.Fatalf("failed transaction changed admission: %v %v", available, err)
+	}
+}
+
+func TestMusicHostTasksDrainAndPersistWithoutDeletingHistory(t *testing.T) {
+	svc, db := newMediaRecoveryTestService(t)
+	ResetMusicLifecycleManagerForTest(MusicLifecycleEnabled)
+	defer ResetMusicLifecycleManagerForTest(MusicLifecycleEnabled)
+	task := model.Task{ID: "music-drain-host", UserID: "music-owner", Type: "canvas_audio", Status: model.TaskStatusQueued, InputJSON: `{"metadata":{"source":"music-workbench"}}`}
+	if err := db.Create(&task).Error; err != nil {
+		t.Fatal(err)
+	}
+	state, err := svc.SetMusicPluginLifecycle(&model.User{ID: "admin", Role: model.UserRoleAdmin}, MusicLifecycleDraining)
+	if err != nil || state.State != MusicLifecycleDraining || state.ActiveTasks != 1 {
+		t.Fatalf("drain did not retain host task: %+v %v", state, err)
+	}
+	if err := svc.CheckMusicTaskAdmission(task.UserID); err == nil {
+		t.Fatal("draining admitted new task")
+	}
+	if err := db.Model(&task).Update("status", model.TaskStatusSucceeded).Error; err != nil {
+		t.Fatal(err)
+	}
+	if state := svc.GetMusicPluginLifecycle(); state.State != MusicLifecycleDisabled {
+		t.Fatalf("drain did not settle: %+v", state)
+	}
+	ResetMusicLifecycleManagerForTest(MusicLifecycleInstalled)
+	if state := svc.GetMusicPluginLifecycle(); state.State != MusicLifecycleDisabled {
+		t.Fatalf("drain did not survive restart: %+v", state)
+	}
+	if _, err := svc.repo.Task(task.ID); err != nil {
+		t.Fatal("drain deleted task", err)
+	}
+}
 
 func setupMusicTestService(t *testing.T) (*Service, *gorm.DB) {
 	db, err := gorm.Open(sqlite.Open("file:"+newID()+"?mode=memory&cache=shared"), &gorm.Config{})
@@ -298,6 +351,9 @@ func TestMusicPluginUninstallPreservesGenerationsAndAssets(t *testing.T) {
 	svc, db := setupMusicTestService(t)
 	admin := &model.User{ID: "adm_eve", Role: model.UserRoleAdmin}
 	musicRepo := music.NewRepository(db)
+	if err := db.Create(&model.UserPluginState{UserID: "usr_alice", PluginID: PluginSupDanceMusicGeneration, Enabled: false}).Error; err != nil {
+		t.Fatal(err)
+	}
 
 	// 1. Setup sample generation record and physical resource
 	gen := &music.SupDanceMusicGeneration{
@@ -339,11 +395,19 @@ func TestMusicPluginUninstallPreservesGenerationsAndAssets(t *testing.T) {
 		t.Fatalf("expected uninstalled state, got: %s", info.State)
 	}
 
-	// 3. Verify platform and user states were purged
+	// 3. Keep the disabled platform record as a configuration/admission backup.
 	var platState model.PluginPlatformState
 	err = db.First(&platState, "plugin_id = ?", PluginSupDanceMusicGeneration).Error
-	if err != gorm.ErrRecordNotFound {
-		t.Fatalf("expected platform state to be deleted, got err: %v", err)
+	if err != nil || platState.Available {
+		t.Fatalf("expected retained disabled platform state, got %+v err: %v", platState, err)
+	}
+	var preference model.UserPluginState
+	if err := db.First(&preference, "user_id = ? AND plugin_id = ?", "usr_alice", PluginSupDanceMusicGeneration).Error; err != nil || preference.Enabled {
+		t.Fatalf("uninstall lost user preference: %+v %v", preference, err)
+	}
+	ResetMusicLifecycleManagerForTest(MusicLifecycleInstalled)
+	if got := svc.GetMusicPluginLifecycle().State; got != MusicLifecycleUninstalled {
+		t.Fatalf("uninstalled state did not survive restart: %s", got)
 	}
 
 	// 4. CRITICAL INVARIANT: Generation record and Resource record must be 100% retained

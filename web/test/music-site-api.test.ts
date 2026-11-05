@@ -1,24 +1,7 @@
 import { describe, expect, test } from "bun:test";
-import { siteMusicModels, projectSiteMusicTask, listSiteMusicTasks, submitSiteMusicTask } from "@/supdance/plugins/music-generation/services/music-site-api";
-import { defaultConfig, type AiConfig } from "@/stores/use-config-store";
+import { projectSiteMusicTask, projectMusicTask, projectAdminMusicTask } from "@/supdance/plugins/music-generation/services/music-site-api";
+import { musicCreationAllowed } from "@/supdance/plugins/music-generation/components/music-form";
 import type { GenerationTask } from "@/services/api/task-center";
-
-const config: AiConfig = {
-    ...defaultConfig,
-    channels: [
-        {
-            ...defaultConfig.channels[0],
-            id: "music",
-            scope: "system",
-            models: ["suno-v6", "mureka-v9", "speech-tts"],
-            modelCosts: [
-                { model: "suno-v6", displayName: "Suno v6", capability: "audio", protocol: "runninghub-standard-audio-suno", billingMode: "fixed_request", unitPriceMicrocredits: 13100000, available: true },
-                { model: "mureka-v9", displayName: "Mureka v9", capability: "audio", protocol: "runninghub-standard-audio-mureka", billingMode: "fixed_request", unitPriceMicrocredits: 8200000, available: false },
-                { model: "speech-tts", displayName: "Music Speech", capability: "audio", protocol: "openai-audio", billingMode: "fixed_request", unitPriceMicrocredits: 1000000, available: true },
-            ],
-        },
-    ],
-};
 
 function task(overrides: Partial<GenerationTask> = {}): GenerationTask {
     return {
@@ -37,84 +20,41 @@ function task(overrides: Partial<GenerationTask> = {}): GenerationTask {
 }
 
 describe("music workbench platform integration", () => {
-    test("Suno rejects custom lyrics mode before submitting a paid task", async () => {
-        let submitted = false;
-        await expect(
-            submitSiteMusicTask(
-                { model: "music::suno-v6", mode: "custom", prompt: "Piano", lyrics: "Verse", idempotencyNonce: "test" },
-                {
-                    config,
-                    submitTask: async () => {
-                        submitted = true;
-                        return task();
-                    },
-                },
-            ),
-        ).rejects.toThrow("unsupported");
-        expect(submitted).toBe(false);
-        expect(siteMusicModels(config)[0].modes).toEqual(["simple"]);
+    test("admin playback uses the existing admin resource route and ordinary playback keeps user authorization", () => {
+        const ordinary = projectSiteMusicTask(task());
+        const admin = projectAdminMusicTask(task());
+        expect(ordinary.outputs?.[0].audioUrl).not.toContain("/admin/");
+        expect(admin.outputs?.[0]).toMatchObject({ adminResourceId: "music-audio", audioUrl: "/api/admin/resources/music-audio/file" });
     });
-    test("Mureka drops unsupported instrumental while keeping custom lyrics", async () => {
-        const enabledConfig = { ...config, channels: config.channels.map((channel) => ({ ...channel, modelCosts: channel.modelCosts?.map((cost) => ({ ...cost, available: true })) })) };
-        await submitSiteMusicTask(
-            { model: "music::mureka-v9", mode: "custom", prompt: "Piano", lyrics: "Verse", instrumental: true, idempotencyNonce: "test" },
-            {
-                config: enabledConfig,
-                submitTask: async (input) => {
-                    expect(input.metadata?.music).toEqual({ title: undefined, lyrics: "Verse", duration: undefined });
-                    return task();
-                },
-            },
+    test("preserves the actual archived MIME type and infers the MP3 file extension", () => {
+        const result = projectSiteMusicTask(task({ resultJson: JSON.stringify({ mode: "audio", audios: [{ storageKey: "resource:actual-audio", mimeType: "audio/mpeg", durationMs: 152830, bytes: 4892674 }] }) }));
+        expect(result.outputs?.[0]).toMatchObject({ format: "mp3", mimeType: "audio/mpeg", durationMs: 152830, bytes: 4892674 });
+    });
+    test("blocks a 1500-credit quote with 194.76 credits available, and blocks unknown balances", () => {
+        const quote = { logicalModelId: "", billingMode: "fixed_request", quantity: 1, amountMicrocredits: 1500000000, estimated: false };
+        expect(musicCreationAllowed(quote, 194760000)).toBe(false);
+        expect(musicCreationAllowed(quote, undefined)).toBe(false);
+        expect(musicCreationAllowed(quote, 1500000000)).toBe(true);
+        expect(musicCreationAllowed(null, 2000000000)).toBe(false);
+    });
+    test("keeps every real output grouped with its task and preserves millisecond durations", () => {
+        const result = projectSiteMusicTask(
+            task({
+                resultJson: JSON.stringify({
+                    mode: "audio",
+                    audios: [
+                        { dataUrl: "/one.mp3", format: "mp3", durationMs: 207600, bytes: 4883001 },
+                        { dataUrl: "/two.mp3", format: "mp3", durationMs: 209200, bytes: 4743657 },
+                    ],
+                }),
+            }),
         );
-    });
-    test("MiniMax preserves vocal lyrics and instrumental requests separately", async () => {
-        const minimaxConfig = { ...config, channels: config.channels.map((channel) => ({ ...channel, models: ["minimax-music"], modelCosts: [{ ...channel.modelCosts![0], model: "minimax-music", protocol: "runninghub-standard-audio-minimax-music" }] })) };
-        expect(siteMusicModels(minimaxConfig)[0].instrumentalSupported).toBe(true);
-        for (const instrumental of [false, true]) {
-            await submitSiteMusicTask(
-                { model: "music::minimax-music", mode: "custom", prompt: "Piano", lyrics: "Verse", instrumental, idempotencyNonce: "test" },
-                {
-                    config: minimaxConfig,
-                    submitTask: async (input) => {
-                        expect(input.metadata?.music).toEqual({ title: undefined, ...(instrumental ? {} : { lyrics: "Verse" }), instrumental, duration: undefined });
-                        return task();
-                    },
-                },
-            );
-        }
-    });
-    test("loads owned task details because task summaries intentionally omit media and music metadata", async () => {
-        const queried: string[] = [];
-        const result = await listSiteMusicTasks(1, 50, {
-            listTasks: async () => [task({ inputJson: undefined, resultJson: undefined, billing: { amountMicrocredits: 13100000, reservedMicrocredits: 13100000, chargedMicrocredits: 13100000, refundedMicrocredits: 0, status: "settled" } })],
-            queryTask: async (id) => {
-                queried.push(id);
-                return task({ resultJson: JSON.stringify({ mode: "audio", audio: { dataUrl: "/saved-song.mp3", durationMs: 31000 } }) });
-            },
-        });
-        expect(queried).toEqual(["music-task"]);
-        expect(result.items[0].resultAudioUrl).toBe("/saved-song.mp3");
-        expect(result.items[0].durationTargetSeconds).toBe(30);
-        expect(result.items[0].billingStatus).toBe("settled");
-        expect(result.items[0].microcreditsCost).toBe(13100000);
-    });
-    test("does not invent a catalog when backend channels are empty", () => {
-        expect(siteMusicModels({ ...defaultConfig, channels: [] })).toEqual([]);
-    });
-
-    test("uses channel identities and preserves disabled models without exposing TTS as music", () => {
-        const models = siteMusicModels(config);
-        expect(models.map((model) => [model.id, model.available])).toEqual([
-            ["music::suno-v6", true],
-            ["music::mureka-v9", false],
+        expect(result.outputs?.map((output) => [output.id, output.durationMs])).toEqual([
+            ["music-task:0", 207600],
+            ["music-task:1", 209200],
         ]);
-        expect(models.every((model) => model.formats.join() === "mp3")).toBe(true);
+        expect(projectMusicTask(result).outputs).toEqual(result.outputs);
     });
-
-    test("does not include personal channels in platform billed music", () => {
-        expect(siteMusicModels({ ...config, channels: config.channels.map((channel) => ({ ...channel, scope: "user" })) })).toEqual([]);
-    });
-
     test("recovers stable audio references, target duration and actual duration separately", () => {
         const result = projectSiteMusicTask(task());
         expect(result.status).toBe("completed");

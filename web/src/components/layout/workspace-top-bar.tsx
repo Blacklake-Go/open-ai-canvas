@@ -28,6 +28,7 @@ const PAGE_TITLE_KEYS: Record<string, string> = {
     settings: "nav.pageTitles.settings",
 };
 const TOOLBOX_TITLE_KEYS: Record<string, string> = {
+    music: "music.nav_music_gen",
     image: "nav.pageTitles.toolboxImage",
     video: "nav.pageTitles.toolboxVideo",
 };

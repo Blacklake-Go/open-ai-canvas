@@ -7,6 +7,14 @@ description: 信封、错误码与 OpenAPI
 
 视觉引擎的预览、草稿保存和发布入口要求完整的 Schema 2 配置；缺失字段、显式 null、未知结构字段及非法阴影返回 400。正式发布沿用 `expectedRevision` 并发保护，冲突返回 409；版本使用服务端 UUID，配置与快照的发布人使用当前用户 ID，配置、快照和审计仍在同一事务提交。
 
+## 音乐工作岛
+
+复用 `GET /api/v1/supdance/music/capabilities`、`POST /api/v1/supdance/music/quote`、`POST /api/v1/supdance/music/tasks` 与查询/历史接口。能力引用当前用户的主站渠道；创建要求 `quotedMicrocredits` 和 `idempotencyNonce`。服务端重验报价、余额及参数，价格变化返回 `reason: music_quote_changed`；QUEUED 仅表示受理。
+
+`POST /api/admin/plugins/music-generation/tasks/recover` 接受原日志 `logId`，仅管理员可恢复原供应商回执，不新增上游 create 或用户收费。原通用音乐测试入口返回 409、`reason: music_test_requires_workbench`，前端导航至显示报价的统一测试中心。
+
+`POST /api/tasks/:id/recover-media` 复用宿主归档恢复。停用不阻断已有任务查询，私有资源通过归属校验及授权接口访问；查询、播放、下载和回执恢复不产生新生成账单。
+
 ## SupDance 社交登录与入站
 
 `GET /api/auth/social/providers` 仅返回当前区域已启用、配置有效且具备真实令牌交换适配的渠道；空结果为 `providers: []`。历史 Mock 凭据不构成有效配置，公开请求不能通过 `simulate_region` 切换准入区域。

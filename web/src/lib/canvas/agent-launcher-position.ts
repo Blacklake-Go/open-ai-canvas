@@ -1,5 +1,5 @@
 export type AgentLauncherPosition = { right: number; bottom: number };
-export type AgentLauncherViewport = { width: number; height: number };
+export type AgentLauncherViewport = { width: number; height: number; bottomInset?: number };
 export type AgentLauncherGesture = { x: number; y: number; start: AgentLauncherPosition; dragged: boolean };
 
 export const AGENT_LAUNCHER_POSITION_KEY = "canvas:agent-launcher-position:v1";
@@ -21,7 +21,8 @@ export function clampAgentLauncherPosition(position: AgentLauncherPosition, view
         const margin = Math.min(MARGIN, available / 2);
         return Math.min(Math.max(value, margin), available - margin);
     };
-    return { right: clamp(position.right, viewport.width, size.width), bottom: clamp(position.bottom, viewport.height, size.height) };
+    const bottomInset = Math.max(0, Math.min(viewport.bottomInset || 0, viewport.height - size.height));
+    return { right: clamp(position.right, viewport.width, size.width), bottom: bottomInset + clamp(position.bottom - bottomInset, viewport.height - bottomInset, size.height) };
 }
 
 export function restoreAgentLauncherPosition(raw: string | null, viewport: AgentLauncherViewport, size?: AgentLauncherViewport): AgentLauncherPosition {

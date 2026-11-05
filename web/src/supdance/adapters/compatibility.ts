@@ -7,7 +7,7 @@ import type { RouteObject } from "react-router";
 import type { PluginHostContext, PluginManifest, PluginManifestV2, RegisteredPlugin } from "@/lib/plugins/plugin-types";
 import { getRegisteredPlugin, registerPlugin, unregisterPlugin } from "@/lib/plugins/plugin-registry";
 
-export const SUPDANCE_HOST_VERSION = "1.7.3.7" as const;
+export const SUPDANCE_HOST_VERSION = "1.7.4" as const;
 export const SUPDANCE_SCHEMA_BASELINE = 82 as const;
 
 export type UpstreamPatchRecord = {
@@ -42,6 +42,56 @@ export const SUPDANCE_UPSTREAM_PATCH_REGISTRY: readonly UpstreamPatchRecord[] = 
         files: ["backend/internal/app/cloud_agent_runtime_media.go", "backend/internal/app/cloud_agent_diagnostics_test.go"],
         reason: "取消意图持久化后，清理与调度器的 revision 冲突须重读重试，保留已提交媒体任务和幂等取消事件。",
         upgradeRisk: "MEDIUM",
+    },
+    {
+        id: "supdance-music-original-asset-titles",
+        upstreamBaseline: "v1.7.3.5",
+        feature: "共享资产卡片和详情保留用户标题原文",
+        coupledUpstreamFiles: ["web/src/pages/assets/asset-library-cards.tsx", "web/src/pages/assets/asset-library-panels.tsx"],
+        files: ["web/src/pages/assets/asset-library-cards.tsx", "web/src/pages/assets/asset-library-panels.tsx"],
+        reason: "阻止界面或浏览器的 DOM 翻译改写音乐及其他用户作品标题，不改变资产查询与操作。",
+        upgradeRisk: "LOW",
+    },
+    {
+        id: "supdance-music-player-docking",
+        upstreamBaseline: "v1.7.3.5",
+        feature: "宿主浮动助手避让音乐底部播放器",
+        coupledUpstreamFiles: ["web/src/components/canvas/use-agent-launcher-position.ts", "web/src/lib/canvas/agent-launcher-position.ts"],
+        files: ["web/src/components/canvas/use-agent-launcher-position.ts", "web/src/lib/canvas/agent-launcher-position.ts", "web/src/supdance/plugins/music-generation/components/waveform-player.tsx", "web/test/agent-launcher-position.test.mjs"],
+        reason: "以通用底部工具栏标记及尺寸事件约束助手停靠，不导入音乐业务；保留用户拖拽与键盘控制。",
+        upgradeRisk: "MEDIUM",
+    },
+    {
+        id: "supdance-music-host-tasks",
+        upstreamBaseline: "v1.7.3.5",
+        feature: "音乐主站渠道、持久任务、归档和账务闭环",
+        coupledUpstreamFiles: [
+            "backend/internal/app/channel_models_test_call.go",
+            "backend/internal/app/provider.go",
+            "backend/internal/app/provider_audio.go",
+            "backend/internal/app/provider_http_client.go",
+            "backend/internal/app/provider_protocol.go",
+            "backend/internal/app/provider_protocol_async.go",
+            "backend/internal/app/provider_protocol_request.go",
+            "backend/internal/app/task_creation.go",
+            "backend/internal/app/task_media_assets.go",
+            "backend/internal/app/task_worker.go",
+            "web/src/components/layout/workspace-top-bar.tsx",
+            "web/src/pages/admin/components/channel-model-editor.tsx",
+            "web/src/pages/create/creation-workspace-messages.tsx",
+            "web/src/pages/create/creation-workspace.tsx",
+            "web/src/router.tsx",
+            "web/src/stores/use-locale-store.ts",
+        ],
+        files: [
+            "backend/internal/app/supdance_music_site.go",
+            "backend/internal/app/supdance_music_reads.go",
+            "backend/internal/app/supdance_music_recovery.go",
+            "web/src/supdance/plugins/music-generation/services/music-site-api.ts",
+            "plugin-packages/runninghub-standard/manifest.json",
+        ],
+        reason: "音乐业务保持 SupDance 模块隔离；宿主只扩展音频分离轮询、回执记录、稳定资产与既有模型测试入口。",
+        upgradeRisk: "HIGH",
     },
     {
         id: "supdance-agent-history-pagination",

@@ -27,7 +27,7 @@ const detachedProviderPollDelay = 15 * time.Second
 const idempotentCreateAttempts = 3
 
 func protocolDetachedPolling(adapter protocol.Adapter, mode string) bool {
-	return adapter != nil && adapter.Metadata().DetachedPolling && (mode == "video" || mode == "image")
+	return adapter != nil && adapter.Metadata().DetachedPolling && (mode == "video" || mode == "image" || mode == "audio")
 }
 
 // uploadProtocolMedia 按清单 upload 步骤把输入媒体逐个上传到上游，并把返回的素材 ID

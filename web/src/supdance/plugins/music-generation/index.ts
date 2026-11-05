@@ -1,18 +1,17 @@
 import { PLUGIN_API_VERSION_V2, type RegisteredPlugin } from "@/lib/plugins/plugin-types";
 import { registerSupDancePlugin, type SupDancePluginManifest } from "@/supdance/adapters/compatibility";
 import { SUPDANCE_MUSIC_PLUGIN_ID } from "./types";
-import { MUSIC_SITE_DESCRIPTION } from "../i18n/locales/music-site";
 
 export const supdanceMusicManifest: SupDancePluginManifest = {
     apiVersion: PLUGIN_API_VERSION_V2,
     id: SUPDANCE_MUSIC_PLUGIN_ID,
     name: "Supdance音乐音频生成",
-    version: "1.2.1",
+    version: "1.3.0",
     publishedAt: "2026-10-29",
     updatedAt: "2026-10-31",
-    minHostVersion: "1.7.1",
+    minHostVersion: "1.7.4",
     author: "SupDance Team",
-    description: MUSIC_SITE_DESCRIPTION,
+    description: "音乐工作台复用平台渠道、实时报价、统一任务与共享资产，按服务端能力提供描述或歌词创作、多结果管理与统一播放。宿主实现升级需要构建并重启；配置启停不删除历史或账目。",
     surfaces: ["fullscreen", "settings", "hybrid"],
     permissions: ["canvas.read", "canvas.write", "asset.read", "asset.upload", "generation.run", "ai.text", "media.read"],
     trusted: true,
