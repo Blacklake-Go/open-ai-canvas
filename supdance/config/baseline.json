@@ -62,6 +62,7 @@
     "web/src/layouts/user-layout.tsx",
     "web/src/lib/canvas-theme.ts",
     "web/src/lib/model-picker-groups.ts",
+    "web/src/lib/model-pricing.ts",
     "web/src/lib/plugins/builtin/index.ts",
     "web/src/lib/skin-themes.ts",
     "web/src/pages/admin/components/admin-shell.tsx",
