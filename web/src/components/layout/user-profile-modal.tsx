@@ -4,6 +4,7 @@ import { BookMarked, Boxes, Bug, CheckCircle2, Cloud, Globe, Inbox, Link2, Messa
 
 import { AppModal } from "@/components/ui/product/app-modal";
 import { Switch } from "@/components/ui/base/switch";
+import { Select } from "@/components/ui/base/select";
 import { SettingsRow } from "@/components/ui/product/settings-row";
 import { UserAvatar } from "@/components/layout/user-avatar";
 import { UserOSSSettingsForm } from "@/components/layout/user-oss-settings-form";
@@ -267,7 +268,7 @@ export function UserProfileModal({ open, activeTab, onTabChange, onClose, search
                 }}
             >
                 {/* Left Navigation Sidebar */}
-                <aside className="flex w-72 shrink-0 flex-col border-r border-border bg-surface-subtle/40 p-4 sm:p-5">
+                <aside className="hidden w-72 shrink-0 flex-col border-r border-border bg-surface-subtle/40 p-4 sm:p-5 lg:flex">
                     {/* Header Branding */}
                     <div className="mb-5 flex items-center gap-3 px-2 pt-1">
                         <div className="flex size-9 items-center justify-center rounded-xl bg-primary/10 text-primary ring-1 ring-primary/20">
@@ -321,25 +322,42 @@ export function UserProfileModal({ open, activeTab, onTabChange, onClose, search
                 </aside>
 
                 {/* Right Content Pane */}
-                <main className="flex flex-1 flex-col overflow-hidden">
+                <main className="flex min-w-0 flex-1 flex-col overflow-hidden">
                     {/* Header Bar */}
-                    <header className="flex h-16 shrink-0 items-center justify-between border-b border-border bg-surface-subtle/30 px-8">
-                        <div>
-                            <h2 className="text-base font-semibold text-foreground">{currentMeta?.label}</h2>
-                            <p className="mt-0.5 text-xs text-foreground/50">{currentMeta?.description}</p>
+                    <header className="flex shrink-0 flex-col gap-3 border-b border-border bg-surface-subtle/30 px-4 py-3 sm:px-6 lg:px-8">
+                        <div className="flex min-w-0 items-center justify-between gap-3">
+                            <div className="min-w-0">
+                                <h2 className="text-base font-semibold text-foreground">{currentMeta?.label}</h2>
+                                <p className="mt-0.5 text-xs text-foreground/50">{currentMeta?.description}</p>
+                            </div>
+                            <button
+                                type="button"
+                                onClick={onClose}
+                                className="flex size-11 shrink-0 items-center justify-center rounded-lg text-foreground/40 transition-colors hover:bg-surface-hover hover:text-foreground focus-visible:outline focus-visible:outline-2 focus-visible:outline-primary"
+                                aria-label={t("settings.close_modal_aria", undefined, "关闭设置浮窗")}
+                            >
+                                <X className="size-4" />
+                            </button>
                         </div>
-                        <button
-                            type="button"
-                            onClick={onClose}
-                            className="flex size-8 items-center justify-center rounded-lg text-foreground/40 transition-colors hover:bg-surface-hover hover:text-foreground"
-                            aria-label={t("settings.close_modal_aria", undefined, "关闭设置浮窗")}
-                        >
-                            <X className="size-4" />
-                        </button>
+                        <div className="lg:hidden">
+                            <Select<UserProfileModalTab>
+                                ariaLabel={t("settings.nav_aria", undefined, "设置导航")}
+                                value={currentTab}
+                                onChange={onTabChange}
+                                size="large"
+                                className="min-h-11 w-full"
+                                virtual={false}
+                                styles={{ popup: { listItem: { minHeight: "calc(var(--spacing) * 11)" } } }}
+                                options={navSections.map((section) => ({
+                                    label: section.group,
+                                    options: section.items.map((item) => ({ value: item.key, label: item.label })),
+                                }))}
+                            />
+                        </div>
                     </header>
 
                     {/* Content Body */}
-                    <div className="thin-scrollbar flex-1 overflow-y-auto p-8">
+                    <div className="thin-scrollbar min-h-0 flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8">
                         {currentTab === "profile" && <ProfilePane key={currentUser?.id} />}
                         {currentTab === "social" && socialAuthPluginEnabled && <SocialAccountBindings />}
                         {currentTab === "models" && <ModelDefaultGrid config={effectiveConfig} onChange={(key, model) => updateConfig(key, model)} />}

@@ -8,6 +8,8 @@ for (const [key, value] of Object.entries({
     navigator: dom.navigator,
     localStorage: dom.localStorage,
     HTMLElement: dom.HTMLElement,
+    HTMLBodyElement: dom.HTMLBodyElement,
+    HTMLHtmlElement: dom.HTMLHtmlElement,
     Element: dom.Element,
     Node: dom.Node,
     SVGElement: dom.SVGElement,
@@ -81,6 +83,18 @@ test("the real account window opens and survives page navigation with working pr
         expect(document.querySelector('[role="dialog"]')).toBe(profileWindow);
         expect(useUserProfileModalStore.getState().isOpen).toBe(true);
         expect(useUserStore.getState().user).toEqual(user);
+        const navigation = document.querySelector<HTMLElement>('[role="combobox"][aria-label="设置导航"]');
+        expect(navigation).not.toBeNull();
+        await act(async () => navigation!.dispatchEvent(new dom.MouseEvent("mousedown", { bubbles: true })));
+        const options = Array.from(document.querySelectorAll<HTMLElement>(".ant-select-item-option"));
+        expect(options.some((option) => option.textContent?.includes("第三方账号"))).toBe(false);
+        const preferences = options.find((option) => option.textContent === "个性偏好");
+        expect(preferences).toBeDefined();
+        await act(async () => preferences!.click());
+        expect(useUserProfileModalStore.getState().activeTab).toBe("preferences");
+        expect(document.querySelector('[role="dialog"]')).toBe(profileWindow);
+        expect(useUserStore.getState().user).toEqual(user);
+        expect(reads).toEqual(["/auth/profile"]);
         await act(async () => useUserProfileModalStore.getState().closeModal());
         expect(useUserProfileModalStore.getState().isOpen).toBe(false);
     } finally {
