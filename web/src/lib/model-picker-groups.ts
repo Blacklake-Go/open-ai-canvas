@@ -1,4 +1,4 @@
-import { groupModelsByDisplayName, isDirectSystemModel, type DisplayModelGroup } from "@/lib/model-selection";
+import { groupModelsByDisplayName, isDirectSystemModel, modelCompatibilityError, type DisplayModelGroup, type ModelRequirements } from "@/lib/model-selection";
 import { modelIcon, modelOptionName, PUBLIC_MODEL_CATALOG_ID, resolveModelChannel, type AiConfig } from "@/stores/use-config-store";
 
 export type ModelPickerGroup = {
@@ -20,10 +20,11 @@ export function modelChannelLabel(config: AiConfig, value: string) {
 }
 
 // 一级按已设置的模型展示名跨渠道聚合，空值归入未分类；二级保留独立调用与售价。
-export function groupModelsForPicker(config: AiConfig, options: string[]): ModelPickerGroup[] {
+export function groupModelsForPicker(config: AiConfig, options: string[], requirements?: ModelRequirements): ModelPickerGroup[] {
+    const visibleOptions = requirements?.capability === "video" ? options.filter((value) => !modelCompatibilityError(config, value, requirements)) : options;
     const groups = new Map<string, ModelPickerGroup>();
     for (const channel of config.channels) {
-        const models = [...new Set(options)].filter((value) => resolveModelChannel(config, value).id === channel.id);
+        const models = [...new Set(visibleOptions)].filter((value) => resolveModelChannel(config, value).id === channel.id);
         const directModels = models.filter((value) => isDirectSystemModel(config, value));
         for (const value of directModels) {
             const cost = channel.modelCosts?.find((item) => item.model === modelOptionName(value));

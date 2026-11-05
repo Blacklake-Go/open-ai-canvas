@@ -6,6 +6,8 @@
 - 共享 `workspace-guest-actions` 为侧栏和顶栏提供登录／注册药丸；`SitePolicyLinks` 同时用于工作区与独立 welcome 入口。移动端法务链接横向换行，保留 44px 触控目标；账户菜单清理重复设置入口。
 - 文本模型的上下文分档、五分钟／一小时缓存用量沿既有订单和成本快照实现，Schema 83 只增列；目录和管理表单传递完整售价分档，用户目录不公开成本。保留现有赠金、返佣及余额。
 - 上游接缝完整登记于 `supdance-site-closure-interfaces` 和 `supdance/config/baseline.json`。这是涉及计费的高风险候选，必须通过本地推送门禁、CI、备份恢复演练及线上验收后才可视为已交付。
+- 公开价目表复用原生六语与 `yingce:locale`，对页面完整静态文案显式翻译，不翻译模型标识和金额单元格；真实 HTML 的六语及回切测试保护此合同。
+- `supdance-model-brand-mode-preservation` 保留原工作区既有 Mureka 图标及 ID；视频菜单只过滤当前输入不适用的型号，不全局下架模型，也不改变图生视频能力或后台启用状态。
 
 ## 原生多语言接管
 

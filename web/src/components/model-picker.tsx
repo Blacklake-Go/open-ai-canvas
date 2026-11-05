@@ -73,10 +73,10 @@ export function ModelPicker({
         setInSpatialWorkspace(Boolean(triggerRef.current?.closest(".app-spatial-workspace")));
     }, []);
     const options = useMemo(() => Array.from(new Set(selectableModelsByCapability(config, capability).filter((model) => Boolean(model) && (!modelFilter || modelFilter(model))))), [capability, config, modelFilter]);
-    const optionGroups = useMemo(() => groupModelsForPicker(config, options), [config, options]);
     const storedCurrent = value?.trim() || "";
     // 参数档位会在选中模型后由调用方归一到其能力配置，不能因为旧模型留下的参数而禁止切换。
-    const selectionRequirements = requirements ? { ...requirements, videoSeconds: undefined, imageSize: undefined, options: undefined } : undefined;
+    const selectionRequirements = useMemo(() => (requirements ? { ...requirements, videoSeconds: undefined, imageSize: undefined, options: undefined } : undefined), [requirements]);
+    const optionGroups = useMemo(() => groupModelsForPicker(config, options, selectionRequirements), [config, options, selectionRequirements]);
     const resolvedCurrent = isDirectSystemModel(config, storedCurrent) ? storedCurrent : resolveCompatibleModel(config, storedCurrent, selectionRequirements) || storedCurrent;
     // 旧画布可能保存过已下架或前端历史内置模型；它们不能重新进入当前可选目录。
     const current = options.includes(resolvedCurrent) ? resolvedCurrent : "";

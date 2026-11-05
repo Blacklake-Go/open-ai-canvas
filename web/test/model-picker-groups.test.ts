@@ -182,6 +182,13 @@ test("each channel keeps its own capability restrictions", () => {
     expect(modelCompatibilityError(config, "a::seedance-2.0", requirements)).not.toBe("");
     expect(modelCompatibilityError(config, "b::seedance-2.0", requirements)).toBe("");
     expect(groupModelsForPicker(config, selectableModelsByCapability(config, "video"))[0].models).toHaveLength(3);
+    const options = selectableModelsByCapability(config, "video");
+    const visible = (imageCount: number) => groupModelsForPicker(config, options, { ...requirements, input: { ...requirements.input, imageCount } }).flatMap((group) => group.models.flatMap((model) => model.models));
+    expect(visible(1)).toContain("b::seedance-2.0");
+    expect(visible(1)).not.toContain("a::seedance-2.0");
+    expect(visible(0)).not.toContain("b::seedance-2.0");
+    expect(options).toContain("a::seedance-2.0");
+    expect(options).toContain("b::seedance-2.0");
 });
 
 test("managed logical models and personal channels never become system product routes", () => {

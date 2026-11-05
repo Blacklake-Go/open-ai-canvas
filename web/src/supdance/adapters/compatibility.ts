@@ -26,6 +26,22 @@ export type UpstreamPatchRecord = {
  */
 export const SUPDANCE_UPSTREAM_PATCH_REGISTRY: readonly UpstreamPatchRecord[] = [
     {
+        id: "supdance-model-brand-mode-preservation",
+        upstreamBaseline: "main@b2c8b2e8",
+        feature: "保留模型品牌与当前视频输入过滤",
+        coupledUpstreamFiles: ["web/src/components/model-logo.tsx", "web/src/components/model-picker.tsx", "web/src/lib/model-picker-groups.ts"],
+        files: [
+            "web/src/components/model-logo.tsx",
+            "web/src/components/model-picker.tsx",
+            "web/src/lib/model-picker-groups.ts",
+            "web/src/supdance/brand/model-logo-extensions.ts",
+            "web/src/supdance/brand/mureka.png",
+            "web/test/model-picker-groups.test.ts",
+        ],
+        reason: "保留既有 Mureka 品牌图标，按当前视频输入过滤选项，保留模型启用状态及图生视频能力。",
+        upgradeRisk: "LOW",
+    },
+    {
         id: "supdance-site-closure-interfaces",
         upstreamBaseline: "main@b2c8b2e8",
         feature: "网站六语、访客入口与文本上下文计费",

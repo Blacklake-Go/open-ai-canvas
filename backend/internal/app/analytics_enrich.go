@@ -181,8 +181,13 @@ func applyTextTokenUsage(log *model.ApiCallLog, usage map[string]any) {
 		}
 	}
 	_, hasPromptTokens := usage["prompt_tokens"]
-	written, hasWrite := firstInt64Value(usage, "cache_creation_input_tokens")
+	written, hasWrite := firstInt64Value(usage, "cache_creation_input_tokens", "cache_write_tokens")
+	if hasWrite {
+		log.CacheWriteTokens = written
+	}
 	read, hasRead := firstInt64Value(usage, "cache_read_input_tokens")
+	_, hasNativeWrite := usage["cache_creation_input_tokens"]
+	_, hasNativeBreakdown := usage["cache_creation"]
 	for _, details := range []map[string]any{usage, inputDetails, promptDetails} {
 		creation, ok := details["cache_creation"].(map[string]any)
 		if !ok {
@@ -203,7 +208,7 @@ func applyTextTokenUsage(log *model.ApiCallLog, usage map[string]any) {
 	}
 	// 只有带 Anthropic 缓存字段、且没有 OpenAI prompt_tokens / input_tokens_details 的 usage 才按“不含缓存”补齐，
 	// LiteLLM 等网关把 cache_creation_input_tokens 放在 prompt_tokens 旁时是否已计入并不一致，保持原口径。
-	if inputAvailable && !hasPromptTokens && !hasInputDetails && (hasWrite || hasRead) {
+	if inputAvailable && !hasPromptTokens && !hasInputDetails && (hasNativeWrite || hasNativeBreakdown || hasRead) {
 		log.CachedTokens, log.CacheWriteTokens = read, written
 		inputTokens += read + written
 	}
