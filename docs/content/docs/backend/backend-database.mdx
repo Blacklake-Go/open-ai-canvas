@@ -5,6 +5,16 @@ description: 影策后端核心持久化表与状态边界
 
 # 后端数据库
 
+## 文本上下文分档与缓存时长（Schema 83）
+
+版本 83 `token_context_price_bands` 为 `channel_model_price_tiers`、`billing_orders` 增加 `token_price_bands` 与 `cost_token_price_bands`（JSON serializer、默认 `[]`），并为 `billing_orders`、`api_call_logs` 增加 `cache_write1h_tokens`（默认 0）。迁移只补列，不重算历史账单、不更改余额与赠金。
+
+每档从 `minInputTokens` 开始，首档为 0，与标量输入、输出、缓存命中及缓存写入单价相同，后续阈值严格递增。按供应商真实的总输入（含缓存命中及写入）选择一档，对整次请求的输入和输出同时应用该档费率；不是只对超过阈值的部分加价。可选 `cacheWrite1hTokenPriceMicrocredits` 区分一小时写入与普通写入；显式 0 表示免费，缺失不表示免费。
+
+下单冻结全部售价分档及独立成本分档。售价按用户分组换算，成本不套用销售倍率。目录只公开售价分档。结算使用订单快照和真实用量，修改当前模型不会改变在途订单。`cache_write1h_tokens` 是 `cache_write_tokens` 的子集，五分钟写入量为两者差值，不重复计算输入；缺少一小时售价时进入用量不可结算路径，缺少成本时成本保持未知。
+
+升级前备份数据库并在副本演练；先运行同一发布版本的 `migrate-schema up` 再启动后端。已在生产 Schema 81 备份副本完成 81→82→83，141 张原有业务表的原列指纹保持一致。新增列可以保留，但旧二进制无法校验新版 Schema；回退需要恢复匹配版本的备份并核对备份之后的任务、资源和账务，不能直接删除迁移记录。
+
 ## 文本 Token 缓存写入价（Schema 82）
 
 版本 82 `token_cache_write_price` 只补列，全部为 `NOT NULL DEFAULT 0`，旧价格档和旧账单的结算结果不变：
@@ -20,7 +30,7 @@ description: 影策后端核心持久化表与状态边界
 调用日志把各协议 usage 归一为同一口径：`input_tokens` 含缓存命中和缓存写入。Anthropic 原生 usage 的 `input_tokens` 不含 `cache_read_input_tokens` 与 `cache_creation_input_tokens`，写日志时补齐为总输入；百炼与 OpenRouter 的缓存写入分别读 `prompt_tokens_details.cache_creation_input_tokens` 和 `cache_write_tokens`。Token 预授权按输入价与缓存写入价中较高者估算全部输入 Token。
 ## 音乐工作岛候选
 
-音乐模块没有新增表、字段或 Schema 版本；本次集成随上游采用 Schema 82。新音乐任务复用 `tasks`、`billing_orders`、`credit_accounts`、`credit_ledger_entries`、`resources`、`assets` 及既有审计/配置表。用户/nonce 确定内部任务 ID；供应商回执写入任务和调用日志，输出序号参与稳定资产键。
+音乐模块没有新增表、字段或独立 Schema 版本；本次集成同时包含文本定价的 Schema 83。新音乐任务复用 `tasks`、`billing_orders`、`credit_accounts`、`credit_ledger_entries`、`resources`、`assets` 及既有审计/配置表。用户/nonce 确定内部任务 ID；供应商回执写入任务和调用日志，输出序号参与稳定资产键。
 
 旧音乐表保持历史读取，查询不再 AutoMigrate。旧配置不覆盖主站渠道，拒绝新增独立密钥、网关和价格写入。卸载保留配置与用户偏好。生命周期、准入和审计同事务提交。原无用户收费的后台测试恢复不补扣历史账目；归档重试复用原任务及 checkpoint。回滚不得删除新增资源或账目，数据库恢复需另核对备份后业务。
 

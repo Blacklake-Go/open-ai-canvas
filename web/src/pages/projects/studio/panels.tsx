@@ -1,3 +1,5 @@
+import { creationLabel as _creationLabel, creationOptions as _creationOptions } from "@/supdance/plugins/i18n/creation-text";
+import { creationText as _creationText, useCreationLocale as _useCreationLocale } from "@/supdance/plugins/i18n/creation-text";
 import { useEffect, useMemo, useRef, useState, type CSSProperties, type ReactNode } from "react";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { App, Button, Checkbox, Input, InputNumber, Select, Switch } from "antd";
@@ -58,11 +60,11 @@ function castRatio(kind: DramaCastKind, ratios: CastRatios) {
 
 export type CastRatios = { character: string };
 
-const castImageLoading = <span className="drama-cast-media-state is-loading" role="status" aria-label="参考图加载中" />;
+const castImageLoading = <span className="drama-cast-media-state is-loading" role="status" aria-label={_creationText("creation.4a655cc3a794f39a")} />;
 const castImageFailed = (
     <span className="drama-cast-media-state">
         <AlertCircle className="size-3.5" />
-        图片加载失败
+        {_creationText("creation.572993f5820a55ba")}
     </span>
 );
 
@@ -97,6 +99,7 @@ export function CastPanel({
     /** 正在打开画布的设定 ID。 */
     canvasOpening?: string;
 }) {
+    _useCreationLocale();
     const [kind, setKind] = useState<DramaCastKind>("character");
     const [filter, setFilter] = useState<CastFilter>("all");
     const focused = cast.find((item) => item.id === focusId);
@@ -126,7 +129,7 @@ export function CastPanel({
         <div className="drama-view drama-cast-layout">
             <section className="drama-view-main">
                 <div className="drama-view-head">
-                    <div className="drama-tabs" role="tablist" aria-label="设定类型">
+                    <div className="drama-tabs" role="tablist" aria-label={_creationText("creation.abb13611a5fca572")}>
                         {CAST_KINDS.map((value) => (
                             <button key={value} type="button" role="tab" className="drama-tab" aria-selected={kind === value} onClick={() => setKind(value)}>
                                 {CAST_KIND_LABEL[value]}
@@ -134,17 +137,17 @@ export function CastPanel({
                             </button>
                         ))}
                     </div>
-                    <div className="drama-filters" role="group" aria-label="筛选">
+                    <div className="drama-filters" role="group" aria-label={_creationText("common.filter")}>
                         {filters.map(([key, label, value]) => (
                             <button key={key} type="button" className={`drama-filter ${key === "failed" && value ? "is-alert" : ""}`} aria-pressed={filter === key} onClick={() => setFilter(key)}>
-                                {label}
+                                {_creationLabel(label)}
                                 <b>{value}</b>
                             </button>
                         ))}
                     </div>
                     {failed ? (
                         <Button className="!ml-auto" icon={<RotateCcw className="size-4" />} loading={retrying} onClick={onRetry}>
-                            重试失败的 {failed} 个
+                            {_creationText("creation.d3b272c957bbc419", { value1: failed })}
                         </Button>
                     ) : null}
                 </div>
@@ -153,11 +156,11 @@ export function CastPanel({
                         <div className="drama-banner is-ready is-flush">
                             <Clapperboard className="size-5 shrink-0 text-[var(--workspace-accent)]" />
                             <div className="drama-banner-text">
-                                <strong>参考图还没有生成</strong>
-                                <span>先核对角色、道具与场景的名称和外观描述，满意后再生成参考图；也可以在右侧单独生成某一个。参考图会随剧情段视频请求一起发送，保持人物和道具一致。</span>
+                                <strong>{_creationText("creation.7ae9f813db8d0f0f")}</strong>
+                                <span>{_creationText("creation.ae9f792e4e34c774")}</span>
                             </div>
                             <Button type="primary" icon={<Play className="size-4" />} loading={releasing} onClick={onReleaseAssets}>
-                                生成全部参考图
+                                {_creationText("creation.3301c5c72d199284")}
                             </Button>
                         </div>
                     ) : null}
@@ -171,10 +174,10 @@ export function CastPanel({
                                             {item.imageStatus === "failed" ? (
                                                 <span className="drama-cast-card-failed">
                                                     <AlertCircle className="size-3.5" />
-                                                    生成失败
+                                                    {_creationText("music.status_failed")}
                                                 </span>
                                             ) : item.imageResourceId ? (
-                                                "更新中…"
+                                                _creationText("creation.a0bacec44f47968a")
                                             ) : (
                                                 CAST_KIND_ICON[item.kind]
                                             )}
@@ -189,7 +192,7 @@ export function CastPanel({
                                     ) : null}
                                 </div>
                                 <div className="drama-cast-card-body">
-                                    <strong>{item.name}</strong>
+                                    <strong data-i18n-user-content>{item.name}</strong>
                                     <span>{item.role || parseList(item.aliasesJson).join("、") || item.description || "—"}</span>
                                 </div>
                             </button>
@@ -198,7 +201,7 @@ export function CastPanel({
                     {!list.length ? (
                         <div className="drama-empty">
                             <UserRound className="size-7" />
-                            <span>{ofKind.length ? "没有符合筛选的设定" : `作品圣经建立后，${CAST_KIND_LABEL[kind]}会出现在这里`}</span>
+                            <span>{ofKind.length ? _creationText("creation.c6d39fdd74dc6351") : _creationText("creation.8f395dbcb3178688", { value1: CAST_KIND_LABEL[kind] })}</span>
                         </div>
                     ) : null}
                 </div>
@@ -217,7 +220,7 @@ export function CastPanel({
                     />
                 ) : (
                     <div className="drama-empty is-compact">
-                        <span>选择一个设定查看详情</span>
+                        <span>{_creationText("creation.76e0b8e671117d7e")}</span>
                     </div>
                 )}
             </aside>
@@ -226,6 +229,7 @@ export function CastPanel({
 }
 
 function CastEditor({ projectId, cast, looks, ratios, onChanged, onOpenCanvas, canvasOpening }: { projectId: string; cast: DramaCast; looks: DramaCast[]; ratios: CastRatios; onChanged: () => void; onOpenCanvas: () => void; canvasOpening: boolean }) {
+    _useCreationLocale();
     const { message } = App.useApp();
     const [previewing, setPreviewing] = useState(false);
     const [name, setName] = useState(cast.name);
@@ -239,10 +243,10 @@ function CastEditor({ projectId, cast, looks, ratios, onChanged, onOpenCanvas, c
     const save = useMutation({
         mutationFn: () => updateDramaCast(projectId, cast.id, fields),
         onSuccess: () => {
-            message.success("设定已保存");
+            message.success(_creationText("creation.1ca65987ba9bb56a"));
             onChanged();
         },
-        onError: (error) => message.error(error instanceof Error ? error.message : "保存失败"),
+        onError: (error) => message.error(error instanceof Error ? error.message : _creationText("common.save_failed")),
     });
     const lock = useMutation({ mutationFn: (locked: boolean) => updateDramaCast(projectId, cast.id, { locked }), onSuccess: onChanged });
     const regenerate = useMutation({
@@ -251,17 +255,17 @@ function CastEditor({ projectId, cast, looks, ratios, onChanged, onOpenCanvas, c
             return regenerateDramaCast(projectId, cast.id, restyle);
         },
         onSuccess: (result) => {
-            message.success(result.affectedSegments ? `正在重新生成参考图；${result.affectedSegments} 个剧情段的视频需重新生成` : "正在重新生成参考图");
+            message.success(result.affectedSegments ? _creationText("creation.eb3d4a93ef0c3e58", { value1: result.affectedSegments }) : _creationText("creation.716da7a97f92262d"));
             onChanged();
         },
-        onError: (error) => message.error(error instanceof Error ? error.message : "操作失败"),
+        onError: (error) => message.error(error instanceof Error ? error.message : _creationText("creation.0c3b4cf7aa259edb")),
     });
     // 上传或从素材库选的形象图直接成为参考图并锁定：不会被重新生成覆盖，剧情段视频按这张图生成。
     const fileRef = useRef<HTMLInputElement>(null);
     const [libraryOpen, setLibraryOpen] = useState(false);
     const imageAdopted = (result: Awaited<ReturnType<typeof setDramaCastImage>>) => {
-        if (result.unchanged) message.info("已在使用这张图");
-        else message.success(result.affectedSegments ? `已替换并锁定形象；${result.affectedSegments} 个剧情段的视频需重新生成` : "已替换并锁定形象，之后的剧情段视频按这张图生成");
+        if (result.unchanged) message.info(_creationText("creation.164f9f2456eada1a"));
+        else message.success(result.affectedSegments ? _creationText("creation.4bc8654aed260b6f", { value1: result.affectedSegments }) : _creationText("creation.362b68e98062540d"));
         onChanged();
     };
     const upload = useMutation({
@@ -270,7 +274,7 @@ function CastEditor({ projectId, cast, looks, ratios, onChanged, onOpenCanvas, c
             return setDramaCastImage(projectId, cast.id, resource.id, restyle);
         },
         onSuccess: imageAdopted,
-        onError: (error) => message.error(error instanceof Error ? error.message : "上传失败"),
+        onError: (error) => message.error(error instanceof Error ? error.message : _creationText("workbench.upload_failed")),
     });
     // 素材库选图的失败由选择弹窗内联显示，这里只处理成功。
     const adoptLibraryImage = async (resourceId: string) => imageAdopted(await setDramaCastImage(projectId, cast.id, resourceId, restyle));
@@ -282,7 +286,7 @@ function CastEditor({ projectId, cast, looks, ratios, onChanged, onOpenCanvas, c
             <div className="drama-cast-hero" style={castRatio(cast.kind, ratios).style}>
                 {cast.imageResourceId ? <MediaThumb resourceId={cast.imageResourceId} alt={cast.name} loading={castImageLoading} failed={castImageFailed} /> : null}
                 {cast.imageResourceId ? (
-                    <button type="button" className="drama-cast-hero-zoom" aria-label={`放大查看${cast.name}的参考图`} title="点击放大查看" onClick={() => setPreviewing(true)}>
+                    <button type="button" className="drama-cast-hero-zoom" aria-label={_creationText("creation.e6ec139e5619b480", { value1: cast.name })} title={_creationText("creation.771c680268c7d738")} onClick={() => setPreviewing(true)}>
                         <span className="drama-cast-hero-zoom-hint" aria-hidden="true">
                             <Maximize2 className="size-3.5" />
                         </span>
@@ -293,65 +297,71 @@ function CastEditor({ projectId, cast, looks, ratios, onChanged, onOpenCanvas, c
                         {cast.imageStatus === "failed" ? (
                             <span className="drama-cast-card-failed">
                                 <AlertCircle className="size-4" />
-                                参考图生成失败
+                                {_creationText("creation.97a3666c8b9c2ccd")}
                             </span>
                         ) : mediaBusy(cast.imageStatus) ? (
-                            "参考图生成中…"
+                            _creationText("creation.faf0e15acbcc4fb3")
                         ) : (
-                            "尚未生成参考图：确认描述后点下方生成，或上传已有的形象图"
+                            _creationText("creation.d53abcb6f23d1e22")
                         )}
                     </div>
                 ) : null}
             </div>
             <div className="drama-editor-row">
-                <span className="drama-eyebrow">{kindLabel}设定</span>
+                <span className="drama-eyebrow">{_creationText("creation.855d1b2cb22a7cb0", { value1: kindLabel })}</span>
                 <label className="drama-switch-label">
                     <Lock className="size-3.5" />
-                    锁定形象
+                    {_creationText("creation.2f03b0c4244f8c20")}
                     <Switch size="small" checked={cast.locked} loading={lock.isPending} onChange={(checked) => lock.mutate(checked)} />
                 </label>
             </div>
-            <Field label="名称">
-                <Input value={name} maxLength={60} onChange={(event) => setName(event.target.value)} aria-label="名称" />
+            <Field label={_creationText("creation.d44e9b3d3b31d37b")}>
+                <Input value={name} maxLength={60} onChange={(event) => setName(event.target.value)} aria-label={_creationText("creation.d44e9b3d3b31d37b")} />
             </Field>
             {isCharacter ? (
-                <Field label="别名与称呼" hint="剧本里这些称呼都会归到此角色">
-                    <Select mode="tags" className="w-full" value={aliases} onChange={setAliases} tokenSeparators={[",", "，", "、"]} placeholder="输入后回车" open={false} suffixIcon={null} aria-label="别名与称呼" />
+                <Field label={_creationText("creation.65f3f0a1a0d8c522")} hint={_creationText("creation.abe41d97aab8d366")}>
+                    <Select
+                        mode="tags"
+                        className="w-full"
+                        value={aliases}
+                        onChange={setAliases}
+                        tokenSeparators={[",", "，", "、"]}
+                        placeholder={_creationText("creation.254fb43985f568b3")}
+                        open={false}
+                        suffixIcon={null}
+                        aria-label={_creationText("creation.65f3f0a1a0d8c522")}
+                    />
                 </Field>
             ) : null}
-            <Field label={APPEARANCE_LABEL[cast.kind]} hint="用于参考图与剧情段视频提示词">
+            <Field label={APPEARANCE_LABEL[cast.kind]} hint={_creationText("creation.2b6552dffd47cce8")}>
                 <Input.TextArea value={appearance} autoSize={{ minRows: 4, maxRows: 10 }} onChange={(event) => setAppearance(event.target.value)} aria-label={APPEARANCE_LABEL[cast.kind]} />
             </Field>
             {isCharacter ? (
-                <Field label="声线" hint="写进视频提示词，由视频模型生成对白">
-                    <Input value={voiceInstructions} placeholder="少年音，坚毅，语速偏快" onChange={(event) => setVoiceInstructions(event.target.value)} aria-label="声线" />
+                <Field label={_creationText("creation.53b7be078bbefcf1")} hint={_creationText("creation.279df4f25f8bfecc")}>
+                    <Input value={voiceInstructions} placeholder={_creationText("creation.d09d1f813cd82f9e")} onChange={(event) => setVoiceInstructions(event.target.value)} aria-label={_creationText("creation.53b7be078bbefcf1")} />
                 </Field>
             ) : null}
             {isCharacter ? (
-                <Field label="声音样本" hint="支持参考音频的视频模型会在该角色开口的剧情段带上这段声音">
+                <Field label={_creationText("creation.ab2d94db28b7e97c")} hint={_creationText("creation.a0af67be8579e0a9")}>
                     <CastVoiceField projectId={projectId} cast={cast} restyle={restyle} onChanged={onChanged} />
                 </Field>
             ) : null}
             {isCharacter ? <CastLooks projectId={projectId} character={cast} looks={looks} restyle={restyle} onChanged={onChanged} /> : null}
             <div className="drama-editor-impact">
                 <Checkbox checked={restyle} onChange={(event) => setRestyle(event.target.checked)}>
-                    让引用它的剧情段视频重新生成
+                    {_creationText("creation.89c9fbb40d0616fe")}
                 </Checkbox>
-                {impact ? (
-                    <span>
-                        {impact.episodes} 集 · {impact.segments} 段
-                    </span>
-                ) : null}
+                {impact ? <span>{_creationText("creation.930589baef623377", { value1: impact.episodes, value2: impact.segments })}</span> : null}
             </div>
             <div className="drama-editor-actions">
                 <Button disabled={!dirty} loading={save.isPending} onClick={() => save.mutate()}>
-                    保存设定
+                    {_creationText("creation.8d6347cdac37b628")}
                 </Button>
                 <Button icon={<Upload className="size-4" />} loading={upload.isPending} onClick={() => fileRef.current?.click()}>
-                    上传形象图
+                    {_creationText("creation.0698efef6d10c4de")}
                 </Button>
                 <Button className="drama-editor-wide" icon={<FolderOpen className="size-4" />} onClick={() => setLibraryOpen(true)}>
-                    从素材库选择
+                    {_creationText("creation.c76d0fc89f481fdd")}
                 </Button>
                 {libraryOpen ? <CastLibraryPicker open={libraryOpen} cast={cast} onClose={() => setLibraryOpen(false)} onPick={adoptLibraryImage} /> : null}
                 <input
@@ -359,32 +369,34 @@ function CastEditor({ projectId, cast, looks, ratios, onChanged, onOpenCanvas, c
                     type="file"
                     accept="image/png,image/jpeg,image/webp"
                     className="hidden"
-                    aria-label={`上传${cast.name}的形象图`}
+                    aria-label={_creationText("creation.383f9609302244fd", { value1: cast.name })}
                     onChange={(event) => {
                         const file = event.target.files?.[0];
                         event.target.value = "";
                         if (!file) return;
                         if (!file.type.startsWith("image/")) {
-                            message.warning("请选择 PNG、JPG 或 WebP 图片");
+                            message.warning(_creationText("creation.96316e8a10485c7d"));
                             return;
                         }
                         if (file.size > 20 * 1024 * 1024) {
-                            message.warning("图片不超过 20MB");
+                            message.warning(_creationText("creation.97ec82181469f64a"));
                             return;
                         }
                         upload.mutate(file);
                     }}
                 />
                 <Button type="primary" className="drama-editor-wide" icon={<RefreshCw className="size-4" />} disabled={cast.locked || mediaBusy(cast.imageStatus)} loading={regenerate.isPending} onClick={() => regenerate.mutate()}>
-                    {cast.imageResourceId ? (dirty ? "保存并重新生成" : "重新生成") : dirty ? "保存并生成参考图" : "生成参考图"}
+                    {cast.imageResourceId ? (dirty ? _creationText("creation.ba2c1b372a9d8492") : _creationText("workbench.regenerate")) : dirty ? _creationText("creation.331c7d136dcc01a9") : _creationText("creation.7327923f6dbc62b4")}
                 </Button>
                 <Button className="drama-editor-wide" icon={<Brush className="size-4" />} loading={canvasOpening} onClick={onOpenCanvas}>
-                    在画布中精修
+                    {_creationText("creation.64422cd9b4ac9f19")}
                 </Button>
             </div>
-            <p className="drama-editor-note">旧版本保留在版本记录中；锁定后参考图不会被重新生成。上传或从画布采用的形象图会自动锁定，生成剧情段视频时随请求发送，并要求外貌、发型与服装以它为准。</p>
+            <p className="drama-editor-note">{_creationText("creation.08e9304bcb7c8493")}</p>
             <DramaTakeList projectId={projectId} ownerId={cast.id} kind="cast" />
-            {previewing && cast.imageResourceId ? <CanvasImagePreview storageKey={`resource:${cast.imageResourceId}`} alt={`${cast.name} · ${kindLabel}参考图`} onClose={() => setPreviewing(false)} /> : null}
+            {previewing && cast.imageResourceId ? (
+                <CanvasImagePreview storageKey={`resource:${cast.imageResourceId}`} alt={_creationText("creation.3e17e15a839a5231", { value1: cast.name, value2: kindLabel })} onClose={() => setPreviewing(false)} />
+            ) : null}
         </div>
     );
 }
@@ -392,10 +404,11 @@ function CastEditor({ projectId, cast, looks, ratios, onChanged, onOpenCanvas, c
 const APPEARANCE_LABEL: Record<DramaCastKind, string> = { character: "外貌描述", prop: "外形描述", scene: "环境描述" };
 
 function Field({ label, hint, children }: { label: string; hint?: string; children: ReactNode }) {
+    _useCreationLocale();
     return (
         <div className="drama-field">
             <div className="drama-field-label">
-                <span>{label}</span>
+                <span>{_creationLabel(label)}</span>
                 {hint ? <small>{hint}</small> : null}
             </div>
             {children}
@@ -479,6 +492,7 @@ export function InboxPanel({
     releasing: boolean;
     onReleaseAll: () => void;
 }) {
+    _useCreationLocale();
     const groups = useMemo(() => groupInbox(items), [items]);
     const failures = items.filter((item) => item.severity === "error").length;
     const reviews = items.filter((item) => item.kind === "review").length;
@@ -486,27 +500,29 @@ export function InboxPanel({
         <div className="drama-view">
             <section className="drama-view-main">
                 <div className="drama-view-head">
-                    <h2 className="drama-view-title">待处理</h2>
+                    <h2 className="drama-view-title">{_creationText("settings.feedback_status_pending")}</h2>
                     {items.length ? (
                         <div className="drama-inbox-summary">
                             {failures ? (
                                 <span className="is-err">
                                     <AlertCircle className="size-3.5" />
-                                    {failures} 项失败
+                                    {failures}
+                                    {_creationText("creation.11301f0dc0cd415b")}
                                 </span>
                             ) : null}
                             {reviews ? (
                                 <span className="is-info">
                                     <CheckCheck className="size-3.5" />
-                                    {reviews} 集待审阅
+                                    {reviews}
+                                    {_creationText("creation.e8d93af2614e9726")}
                                 </span>
                             ) : null}
-                            <span>共 {groups.length} 类</span>
+                            <span>{_creationText("creation.3b0b2528954f27f3", { value1: groups.length })}</span>
                         </div>
                     ) : null}
                     {failures ? (
                         <Button className="!ml-auto" icon={<RotateCcw className="size-4" />} loading={retrying} onClick={onRetryAll}>
-                            全部重试
+                            {_creationText("creation.57e91697264062af")}
                         </Button>
                     ) : null}
                 </div>
@@ -522,9 +538,9 @@ export function InboxPanel({
                                             <div className="min-w-0 flex-1">
                                                 <h3>{group.title}</h3>
                                                 {group.kind === "review" ? (
-                                                    <p>核对各段视频提示词与参考图后继续生成视频</p>
+                                                    <p>{_creationText("creation.ec63b0611e6c15f7")}</p>
                                                 ) : group.kind === "cast_failed" ? (
-                                                    <p>可修改外观描述后重新生成，或直接重试</p>
+                                                    <p>{_creationText("creation.b9c7823cb9985282")}</p>
                                                 ) : group.kind === "media_ready" ? (
                                                     <p>{group.items[0].detail}</p>
                                                 ) : null}
@@ -532,22 +548,23 @@ export function InboxPanel({
                                             <div className="drama-inbox-card-actions">
                                                 {group.kind === "paused" ? (
                                                     <Button size="small" onClick={onOpenSettings}>
-                                                        去设置
+                                                        {_creationText("creation.93112c231d6a7c6b")}
                                                     </Button>
                                                 ) : null}
                                                 {group.kind === "media_ready" ? (
                                                     <Button size="small" type="primary" icon={<Play className="size-3.5" />} loading={releasing} onClick={onReleaseAll}>
-                                                        全部开始生成
+                                                        {_creationText("creation.fad1c77d45383acc")}
                                                     </Button>
                                                 ) : null}
                                                 {retryable ? (
                                                     <Button size="small" icon={<RotateCcw className="size-3.5" />} loading={retryingGroup === group.key} onClick={() => onRetryGroup(group.key, group.items)}>
-                                                        重试{group.items.length > 1 ? ` ${group.items.length} 项` : ""}
+                                                        {_creationText("common.retry")}
+                                                        {group.items.length > 1 ? _creationText("creation.e76a147f7ee93417", { value1: group.items.length }) : ""}
                                                     </Button>
                                                 ) : null}
                                                 {group.items.length === 1 && group.kind !== "paused" && group.kind !== "media_ready" ? (
                                                     <Button size="small" type={group.kind === "review" ? "primary" : "default"} onClick={() => onOpen(group.items[0])}>
-                                                        {group.kind === "review" ? "去审阅" : "查看"}
+                                                        {group.kind === "review" ? _creationText("creation.fffa3770d4a69a57") : _creationText("projects.view")}
                                                         <ArrowRight className="size-3.5" />
                                                     </Button>
                                                 ) : null}
@@ -555,7 +572,7 @@ export function InboxPanel({
                                         </header>
                                         {group.reason && group.kind !== "media_ready" ? (
                                             <div className="drama-inbox-reason" title={group.reason}>
-                                                <span>原因</span>
+                                                <span>{_creationText("creation.f029d9cb4a7614ef")}</span>
                                                 <code>{group.reason}</code>
                                             </div>
                                         ) : null}
@@ -564,7 +581,7 @@ export function InboxPanel({
                                                 {group.items.slice(0, CHIP_LIMIT).map((item) => (
                                                     <InboxChip key={item.id} item={item} cast={item.castId ? castById.get(item.castId) : undefined} onOpen={onOpen} />
                                                 ))}
-                                                {group.items.length > CHIP_LIMIT ? <span className="drama-inbox-more">另有 {group.items.length - CHIP_LIMIT} 项</span> : null}
+                                                {group.items.length > CHIP_LIMIT ? <span className="drama-inbox-more">{_creationText("creation.1404aaa7bbff9c58", { value1: group.items.length - CHIP_LIMIT })}</span> : null}
                                             </div>
                                         ) : null}
                                     </article>
@@ -574,8 +591,8 @@ export function InboxPanel({
                     ) : (
                         <div className="drama-empty is-tall">
                             <Inbox className="size-8" />
-                            <strong>一切顺利</strong>
-                            <span>没有需要你处理的事项，流水线会在需要确认或出错时提醒你。</span>
+                            <strong>{_creationText("creation.f00400ffc98ef3fc")}</strong>
+                            <span>{_creationText("creation.b6b6ae0bb048898b")}</span>
                         </div>
                     )}
                 </div>
@@ -585,6 +602,7 @@ export function InboxPanel({
 }
 
 function InboxChip({ item, cast, onOpen }: { item: DramaInboxItem; cast?: DramaCast; onOpen: (item: DramaInboxItem) => void }) {
+    _useCreationLocale();
     let content: ReactNode;
     if (item.kind === "cast_failed") {
         content = (
@@ -596,7 +614,12 @@ function InboxChip({ item, cast, onOpen }: { item: DramaInboxItem; cast?: DramaC
     } else if (item.kind === "segment_failed") {
         content = (
             <>
-                {item.media ? MEDIA_ICON[item.media] : null}第 {item.episodeNumber} 集 · 第 {item.segmentIndex + 1} 段
+                {item.media ? MEDIA_ICON[item.media] : null}
+                {_creationText("creation.af50a0fe2a50a3d1")}
+                {item.episodeNumber}
+                {_creationText("creation.355a2c8cd7808a99")}
+                {item.segmentIndex + 1}
+                {_creationText("creation.0477dbbdee99b5b3")}
             </>
         );
     } else if (item.kind === "review") {
@@ -631,6 +654,7 @@ const REVIEW_LABEL: Record<DramaReviewMode, { title: string; detail: string }> =
 const CONCURRENCY = [2, 4, 6, 8, 12, 16];
 
 export function SettingsPanel({ projectId, summary, cast, onChanged }: { projectId: string; summary: DramaSummary; cast: DramaCast[]; onChanged: () => void }) {
+    _useCreationLocale();
     const { message, modal } = App.useApp();
     const current = summary.production.settings;
     const [settings, setSettings] = useState(current);
@@ -643,19 +667,26 @@ export function SettingsPanel({ projectId, summary, cast, onChanged }: { project
     const save = useMutation({
         mutationFn: () => updateDramaSettings(projectId, { settings, budgetMicrocredits: Math.max(0, Math.round((budget || 0) * 1_000_000)) }),
         onSuccess: () => {
-            message.success("设置已保存，新任务会使用新配置");
+            message.success(_creationText("creation.f42f813a44bff987"));
             onChanged();
         },
-        onError: (error) => message.error(error instanceof Error ? error.message : "保存失败"),
+        onError: (error) => message.error(error instanceof Error ? error.message : _creationText("common.save_failed")),
     });
     const [restyleSegments, setRestyleSegments] = useState(true);
     const regenerateAll = useMutation({
         mutationFn: (kind: DramaCastKind) => regenerateDramaCasts(projectId, kind, restyleSegments),
         onSuccess: (result, kind) => {
-            message.success(`已按当前方案重做 ${result.queued} 个${CAST_KIND_LABEL[kind]}参考图${result.skipped ? `，${result.skipped} 个已锁定或正在生成` : ""}${result.affectedSegments ? `，${result.affectedSegments} 个剧情段需重新生成` : ""}`);
+            message.success(
+                _creationText("creation.c85e1b45ce28bf95", {
+                    value1: result.queued,
+                    value2: CAST_KIND_LABEL[kind],
+                    value3: result.skipped ? _creationText("creation.b65aec57e06c4fc6", { value1: result.skipped }) : "",
+                    value4: result.affectedSegments ? _creationText("creation.1a7e3387eb6cb5e6", { value1: result.affectedSegments }) : "",
+                }),
+            );
             onChanged();
         },
-        onError: (error) => message.error(error instanceof Error ? error.message : "操作失败"),
+        onError: (error) => message.error(error instanceof Error ? error.message : _creationText("creation.0c3b4cf7aa259edb")),
     });
     const catalogQuery = useDramaModelCatalog();
     const videoOption = catalogQuery.data?.options.video?.find((option) => dramaChoiceKey(option.choice) === dramaChoiceKey(settings.models.video));
@@ -677,8 +708,8 @@ export function SettingsPanel({ projectId, summary, cast, onChanged }: { project
         <div className="drama-view">
             <section className="drama-view-main">
                 <div className="drama-view-head">
-                    <h2 className="drama-view-title">制作设置</h2>
-                    <span className="drama-view-sub">{dirty ? "有未保存的修改" : "修改只影响之后新开始的任务"}</span>
+                    <h2 className="drama-view-title">{_creationText("creation.ebdce5c268341e78")}</h2>
+                    <span className="drama-view-sub">{dirty ? _creationText("creation.c2277872cdcec9e0") : _creationText("creation.92033cc506709923")}</span>
                     <div className="ml-auto flex gap-2">
                         <Button
                             disabled={!dirty}
@@ -687,10 +718,10 @@ export function SettingsPanel({ projectId, summary, cast, onChanged }: { project
                                 setBudget(summary.production.budgetMicrocredits / 1_000_000);
                             }}
                         >
-                            还原
+                            {_creationText("creation.ddde08946298195d")}
                         </Button>
                         <Button type="primary" disabled={!dirty} loading={save.isPending} onClick={() => save.mutate()}>
-                            保存设置
+                            {_creationText("creation.c8550237ba701f64")}
                         </Button>
                     </div>
                 </div>
@@ -699,7 +730,7 @@ export function SettingsPanel({ projectId, summary, cast, onChanged }: { project
                         <div className="drama-cfg-main">
                             <EpisodeModeCard summary={summary} settings={settings} onChange={(patch) => setSettings({ ...settings, ...patch })} />
                             <section className="drama-cfg-card">
-                                <SettingsTitle title="分镜规则" detail="对之后改编的集生效；已改编的集可在剧本页“重新改编”" icon={<Clapperboard className="size-4" />} />
+                                <SettingsTitle title={_creationText("creation.cff64d1df754bb51")} detail={_creationText("creation.94adfce0fb793871")} icon={<Clapperboard className="size-4" />} />
                                 <StoryboardRules
                                     value={settings.storyboard}
                                     onChange={(storyboard) => setSettings({ ...settings, storyboard })}
@@ -711,7 +742,7 @@ export function SettingsPanel({ projectId, summary, cast, onChanged }: { project
                                 />
                             </section>
                             <section className="drama-cfg-card">
-                                <SettingsTitle title="文字步骤" detail="每一步可以单独选文本模型和写作技能；不选就用默认文本模型和内置写法，对之后执行的步骤生效" icon={<ScrollText className="size-4" />} />
+                                <SettingsTitle title={_creationText("creation.f074a508d31551f1")} detail={_creationText("creation.489d45728bd1d958")} icon={<ScrollText className="size-4" />} />
                                 <DramaTextSteps
                                     models={settings.models}
                                     onModelsChange={setModels}
@@ -720,7 +751,7 @@ export function SettingsPanel({ projectId, summary, cast, onChanged }: { project
                                 />
                             </section>
                             <section className="drama-cfg-card">
-                                <SettingsTitle title="参考图" detail="参考图随剧情段视频请求一起发送，是人物与道具保持一致的锚点；角色、道具、场景可以用不同的图片模型与分辨率，修改只影响之后生成的参考图" icon={<UsersRound className="size-4" />} />
+                                <SettingsTitle title={_creationText("workbench.ref_image_short")} detail={_creationText("creation.9a41d8cdac1b275f")} icon={<UsersRound className="size-4" />} />
                                 <DramaAssetImageModels models={settings.models} onModelsChange={setModels} assets={settings.assets} onAssetsChange={(assets) => setSettings({ ...settings, assets })} />
                                 <AssetSchemePicker
                                     value={settings.assets}
@@ -730,13 +761,15 @@ export function SettingsPanel({ projectId, summary, cast, onChanged }: { project
                                 />
                                 <div className="drama-settings-regen">
                                     <div>
-                                        <strong>按当前方案重做已有参考图</strong>
+                                        <strong>{_creationText("creation.569ea8a53600cee6")}</strong>
                                         <span>
-                                            {CAST_KINDS.map((kind) => `${countOf(kind)} 个${CAST_KIND_LABEL[kind]}`).join(" · ")}；锁定的设定不会变。{dirty ? "请先保存设置。" : ""}
+                                            {CAST_KINDS.map((kind) => `${countOf(kind)} 个${CAST_KIND_LABEL[kind]}`).join(" · ")}
+                                            {_creationText("creation.46875ba1878920dd")}
+                                            {dirty ? _creationText("creation.4787b74531850e81") : ""}
                                         </span>
                                     </div>
                                     <Checkbox checked={restyleSegments} onChange={(event) => setRestyleSegments(event.target.checked)}>
-                                        同时让引用它们的剧情段视频重新生成
+                                        {_creationText("creation.d330e64ec1e2dbee")}
                                     </Checkbox>
                                     {CAST_KINDS.map((kind) => (
                                         <Button
@@ -754,18 +787,18 @@ export function SettingsPanel({ projectId, summary, cast, onChanged }: { project
                                                 })
                                             }
                                         >
-                                            重做{CAST_KIND_LABEL[kind]}
+                                            {_creationText("creation.b94053f10124b226", { value1: CAST_KIND_LABEL[kind] })}
                                         </Button>
                                     ))}
                                 </div>
                             </section>
                             <section className="drama-cfg-card">
-                                <SettingsTitle title="制作模型" detail="只列出平台可无人值守执行的模型" icon={<Cpu className="size-4" />} />
+                                <SettingsTitle title={_creationText("creation.3909481ae334f9fd")} detail={_creationText("creation.99d61ed946b573c8")} icon={<Cpu className="size-4" />} />
                                 <div className="drama-cfg-models">
                                     {(Object.keys(CAPABILITY_META) as DramaCapability[]).map((capability) => (
                                         <div key={capability} className="drama-cfg-model">
                                             <div className="drama-cfg-model-label">
-                                                <strong>{CAPABILITY_META[capability].label}</strong>
+                                                <strong>{_creationLabel(CAPABILITY_META[capability].label)}</strong>
                                                 <small>{CAPABILITY_META[capability].hint}</small>
                                             </div>
                                             <DramaModelPicker
@@ -773,74 +806,77 @@ export function SettingsPanel({ projectId, summary, cast, onChanged }: { project
                                                 value={settings.models[capability]}
                                                 aspectRatio={current.aspectRatio}
                                                 videoResolution={settings.videoResolution}
-                                                placeholder={`选择${CAPABILITY_META[capability].label}模型`}
+                                                placeholder={_creationText("creation.d6e0385d73f38b9b", { value1: CAPABILITY_META[capability].label })}
                                                 onChange={(choice) => setModels({ [capability]: choice })}
                                             />
                                         </div>
                                     ))}
                                     <div className="drama-cfg-model">
                                         <div className="drama-cfg-model-label">
-                                            <strong>视频分辨率</strong>
-                                            <small>对之后提交的剧情段视频生效</small>
+                                            <strong>{_creationText("creation.458920ec58f79783")}</strong>
+                                            <small>{_creationText("creation.633af44b4f6f7b9c")}</small>
                                         </div>
                                         <VideoResolutionField option={videoOption} value={settings.videoResolution} onChange={(videoResolution) => setSettings({ ...settings, videoResolution })} />
                                     </div>
                                 </div>
-                                {videoRatioProblem ? <p className="drama-cfg-note">当前视频模型{videoRatioProblem}，剧情段视频无法提交，请换模型。</p> : null}
-                                {videoOption?.generateAudio === false ? <p className="drama-cfg-note">当前视频模型不同步生成声音，剧情段视频没有对白与音效。</p> : null}
+                                {videoRatioProblem ? <p className="drama-cfg-note">{_creationText("creation.acd26c3d800d911c", { value1: videoRatioProblem })}</p> : null}
+                                {videoOption?.generateAudio === false ? <p className="drama-cfg-note">{_creationText("creation.7675c15706918653")}</p> : null}
                             </section>
                         </div>
                         <aside className="drama-cfg-side">
                             <section className="drama-cfg-card">
-                                <SettingsTitle title="作品" detail="开工时确定" />
+                                <SettingsTitle title={_creationText("creation.37a3a796866b0433")} detail={_creationText("creation.87b903a2d82f44a0")} />
                                 <dl className="drama-cfg-kv">
                                     <div>
-                                        <dt>画幅</dt>
+                                        <dt>{_creationText("creation.9b7a0bf8b5258a13")}</dt>
                                         <dd>{current.aspectRatio}</dd>
                                     </div>
                                     <div>
-                                        <dt>视觉风格</dt>
+                                        <dt>{_creationText("creation.106de8b95d0277cb")}</dt>
                                         <dd title={current.styleName}>{current.styleName || "—"}</dd>
                                     </div>
                                     <div>
-                                        <dt>对白语言</dt>
+                                        <dt>{_creationText("creation.f195d8a2459126bc")}</dt>
                                         <dd>{current.language}</dd>
                                     </div>
                                 </dl>
                             </section>
                             <section className="drama-cfg-card">
-                                <SettingsTitle title="审阅方式" detail="只在关键点打断你" />
+                                <SettingsTitle title={_creationText("projects.review_mode")} detail={_creationText("creation.abf9efda2936ce45")} />
                                 <CompactRadios
-                                    label="审阅方式"
+                                    label={_creationText("projects.review_mode")}
                                     value={settings.reviewMode}
-                                    options={(Object.keys(REVIEW_LABEL) as DramaReviewMode[]).map((mode) => ({ value: mode, ...REVIEW_LABEL[mode] }))}
+                                    options={_creationOptions((Object.keys(REVIEW_LABEL) as DramaReviewMode[]).map((mode) => ({ value: mode, ...REVIEW_LABEL[mode] })))}
                                     onChange={(reviewMode) => setSettings({ ...settings, reviewMode })}
                                 />
                             </section>
                             <section className="drama-cfg-card">
-                                <SettingsTitle title="生成节奏" detail={settings.mediaMode === "manual" ? `${summary.episodes.filter((episode) => episode.awaitingMedia).length} 集等待生成视频` : undefined} />
+                                <SettingsTitle
+                                    title={_creationText("projects.generation_pacing")}
+                                    detail={settings.mediaMode === "manual" ? _creationText("creation.9b6db063239479bf", { value1: summary.episodes.filter((episode) => episode.awaitingMedia).length }) : undefined}
+                                />
                                 <CompactRadios
-                                    label="生成节奏"
+                                    label={_creationText("projects.generation_pacing")}
                                     value={settings.mediaMode}
-                                    options={(Object.keys(MEDIA_MODE_LABEL) as DramaMediaMode[]).map((mode) => ({ value: mode, ...MEDIA_MODE_LABEL[mode] }))}
+                                    options={_creationOptions((Object.keys(MEDIA_MODE_LABEL) as DramaMediaMode[]).map((mode) => ({ value: mode, ...MEDIA_MODE_LABEL[mode] })))}
                                     onChange={(mediaMode) => setSettings({ ...settings, mediaMode })}
                                 />
-                                {settings.mediaMode !== current.mediaMode && settings.mediaMode === "manual" ? <p className="drama-cfg-note">改为手动后，未放行的集停在当前阶段，已提交的任务会做完。</p> : null}
+                                {settings.mediaMode !== current.mediaMode && settings.mediaMode === "manual" ? <p className="drama-cfg-note">{_creationText("creation.dc0f4ef322c93333")}</p> : null}
                             </section>
                             <section className="drama-cfg-card">
-                                <SettingsTitle title="段落衔接" detail="决定同一集的剧情段能否同时生成" />
+                                <SettingsTitle title={_creationText("creation.3656248ae83b8212")} detail={_creationText("creation.f2c46b9045e657e7")} />
                                 <CompactRadios
-                                    label="段落衔接"
+                                    label={_creationText("creation.3656248ae83b8212")}
                                     value={continuity}
-                                    options={(Object.keys(VIDEO_CONTINUITY_LABEL) as DramaVideoContinuity[]).map((mode) => ({ value: mode, ...VIDEO_CONTINUITY_LABEL[mode] }))}
+                                    options={_creationOptions((Object.keys(VIDEO_CONTINUITY_LABEL) as DramaVideoContinuity[]).map((mode) => ({ value: mode, ...VIDEO_CONTINUITY_LABEL[mode] })))}
                                     onChange={(videoContinuity) => setSettings({ ...settings, videoContinuity })}
                                 />
-                                {continuity === "tail_frame" && videoOption && !videoOption.tailFrameChain ? <p className="drama-cfg-note">当前视频模型不支持图生视频，无法尾帧续接，请改用并行出片或换模型。</p> : null}
-                                {continuity !== (current.videoContinuity || "tail_frame") ? <p className="drama-cfg-note">已写好的段视频提示词按原方式撰写，切换后可在剧情段里重新撰写；已提交的视频会做完。</p> : null}
+                                {continuity === "tail_frame" && videoOption && !videoOption.tailFrameChain ? <p className="drama-cfg-note">{_creationText("creation.73ae5805a664da63")}</p> : null}
+                                {continuity !== (current.videoContinuity || "tail_frame") ? <p className="drama-cfg-note">{_creationText("creation.f908ad23bb533e84")}</p> : null}
                             </section>
                             <section className="drama-cfg-card">
-                                <SettingsTitle title="同时生成数" detail="文字、参考图、段视频分别计算，受账号并发上限约束" />
-                                <div className="drama-tabs drama-cfg-seg" role="radiogroup" aria-label="同时生成数">
+                                <SettingsTitle title={_creationText("creation.122ea1aa134cfad3")} detail={_creationText("creation.799e06fc7f30696e")} />
+                                <div className="drama-tabs drama-cfg-seg" role="radiogroup" aria-label={_creationText("creation.122ea1aa134cfad3")}>
                                     {CONCURRENCY.map((value) => (
                                         <button key={value} type="button" role="radio" className="drama-tab" aria-checked={settings.concurrency === value} onClick={() => setSettings({ ...settings, concurrency: value })}>
                                             {value}
@@ -849,26 +885,36 @@ export function SettingsPanel({ projectId, summary, cast, onChanged }: { project
                                 </div>
                             </section>
                             <section className="drama-cfg-card">
-                                <SettingsTitle title="每段最多参考图" detail="自动取参考图时的上限，人物优先；0 为按视频模型上限" />
-                                <InputNumber className="!w-full" min={0} max={20} precision={0} value={settings.referenceLimit || 0} onChange={(value) => setSettings({ ...settings, referenceLimit: value || 0 })} suffix="张" aria-label="每段最多参考图" />
-                                <p className="drama-cfg-note">超出的设定按文字描述生成，不附图。个别段需要更多参考图时，在剧情段弹窗里手动指定，只受模型上限约束。</p>
+                                <SettingsTitle title={_creationText("creation.441c04f4f2ba2358")} detail={_creationText("creation.8d8d4a761c64d2ca")} />
+                                <InputNumber
+                                    className="!w-full"
+                                    min={0}
+                                    max={20}
+                                    precision={0}
+                                    value={settings.referenceLimit || 0}
+                                    onChange={(value) => setSettings({ ...settings, referenceLimit: value || 0 })}
+                                    suffix="张"
+                                    aria-label={_creationText("creation.441c04f4f2ba2358")}
+                                />
+                                <p className="drama-cfg-note">{_creationText("creation.717116c8bb4cb83e")}</p>
                             </section>
                             <section className="drama-cfg-card">
-                                <SettingsTitle title="预算上限" detail="0 表示不限，含精修画布花费；达到后暂停，画布上也不能再生成" />
-                                <InputNumber className="!w-full" min={0} precision={0} value={budget} onChange={(value) => setBudget(value || 0)} suffix="积分" aria-label="预算上限" />
+                                <SettingsTitle title={_creationText("projects.budget_cap")} detail={_creationText("creation.07e438b0c255f5d2")} />
+                                <InputNumber className="!w-full" min={0} precision={0} value={budget} onChange={(value) => setBudget(value || 0)} suffix="积分" aria-label={_creationText("projects.budget_cap")} />
                                 <div className="drama-budget-meter">
                                     <div className="drama-budget-track">
                                         <span className={usage >= 0.9 ? "is-warn" : ""} style={progressFillStyle(budgetMicro ? Math.max(usage * 100, spent + held ? 2 : 0) : 0)} />
                                     </div>
                                     <span>
-                                        已花费 <b>{formatCredits(spent)}</b>
-                                        {held > 0 ? ` · 冻结中 ${formatCredits(held)}` : ""}
-                                        {budgetMicro ? ` / ${formatCredits(budgetMicro)}` : " · 不限预算"}
+                                        {_creationText("creation.c84b431ed39c4a70")}
+                                        <b>{formatCredits(spent)}</b>
+                                        {held > 0 ? _creationText("creation.9ef5e9f7cf16e542", { value1: formatCredits(held) }) : ""}
+                                        {budgetMicro ? ` / ${formatCredits(budgetMicro)}` : _creationText("creation.edb850356eb73e6b")}
                                     </span>
                                 </div>
                                 {summary.production.canvasSpentMicrocredits > 0 ? (
                                     <p className="drama-cfg-note">
-                                        其中流水线 {formatCredits(Math.max(0, spent - summary.production.canvasSpentMicrocredits))}，精修画布 {formatCredits(summary.production.canvasSpentMicrocredits)}。
+                                        {_creationText("creation.558545b54e8c85f5", { value1: formatCredits(Math.max(0, spent - summary.production.canvasSpentMicrocredits)), value2: formatCredits(summary.production.canvasSpentMicrocredits) })}
                                     </p>
                                 ) : null}
                             </section>
@@ -890,6 +936,7 @@ const EPISODE_MODE_OPTIONS: Array<{ value: DramaEpisodeMode; title: string; deta
  * 之后用“逐集追加”继续；剧本与分镜作品总是每章一集。
  */
 function EpisodeModeCard({ summary, settings, onChange }: { summary: DramaSummary; settings: DramaSettings; onChange: (patch: Pick<DramaSettings, "episodeMode" | "chaptersPerEpisode">) => void }) {
+    _useCreationLocale();
     const { production, episodes } = summary;
     const novel = (summary.project.sourceType || "novel") === "novel";
     const editable = novel && !production.planDone;
@@ -898,21 +945,20 @@ function EpisodeModeCard({ summary, settings, onChange }: { summary: DramaSummar
     const current = !novel ? "每章一集（剧本与分镜按标题分集）" : settings.episodeMode === "chapter" ? (perEpisode > 1 ? `按章分集 · 每 ${perEpisode} 章一集` : "按章分集 · 每章一集") : settings.episodeMode === "auto" ? "模型自动分集" : "已分集";
     return (
         <section className="drama-cfg-card">
-            <SettingsTitle title="分集方式" detail={editable ? "只影响还没分集的章节，保存后下一轮调度生效" : "分集已完成，不能再调整；之后可在制作台逐集追加新的一集"} icon={<Film className="size-4" />} />
+            <SettingsTitle title={_creationText("projects.drama_episode_split")} detail={editable ? _creationText("creation.9d9edbf21cfccf5b") : _creationText("creation.65c687c0b965cda9")} icon={<Film className="size-4" />} />
             {editable ? (
                 <div className="grid gap-3">
-                    <CompactRadios label="分集方式" value={mode || "auto"} options={EPISODE_MODE_OPTIONS} onChange={(value) => onChange({ episodeMode: value, chaptersPerEpisode: value === "chapter" ? perEpisode : undefined })} />
+                    <CompactRadios
+                        label={_creationText("projects.drama_episode_split")}
+                        value={mode || "auto"}
+                        options={_creationOptions(EPISODE_MODE_OPTIONS)}
+                        onChange={(value) => onChange({ episodeMode: value, chaptersPerEpisode: value === "chapter" ? perEpisode : undefined })}
+                    />
                     {mode === "chapter" ? <EpisodeGroupField value={perEpisode} onChange={(value) => onChange({ episodeMode: "chapter", chaptersPerEpisode: value })} chapterCount={Math.max(0, production.chapterCount - production.planCursor)} /> : null}
-                    {production.planCursor > 0 ? (
-                        <p className="drama-cfg-note">
-                            前 {production.planCursor} 章已分成 {episodes.length} 集，保持不变。
-                        </p>
-                    ) : null}
+                    {production.planCursor > 0 ? <p className="drama-cfg-note">{_creationText("creation.751c882829f8a6ba", { value1: production.planCursor, value2: episodes.length })}</p> : null}
                 </div>
             ) : (
-                <p className="drama-cfg-note">
-                    {current} · 共 {production.chapterCount} 章 {episodes.length} 集
-                </p>
+                <p className="drama-cfg-note">{_creationText("creation.0f73932d3912e9c3", { value1: current, value2: production.chapterCount, value3: episodes.length })}</p>
             )}
         </section>
     );
@@ -920,6 +966,7 @@ function EpisodeModeCard({ summary, settings, onChange }: { summary: DramaSummar
 
 /** 侧栏里的紧凑单选列表：一行标题，说明作为次要文字，选中态只改边框和底色。 */
 function CompactRadios<V extends string>({ label, value, options, onChange }: { label: string; value: V; options: Array<{ value: V; title: string; detail: string }>; onChange: (value: V) => void }) {
+    _useCreationLocale();
     return (
         <div className="drama-cfg-radios" role="radiogroup" aria-label={label}>
             {options.map((option) => (
@@ -936,6 +983,7 @@ function CompactRadios<V extends string>({ label, value, options, onChange }: { 
 }
 
 function SettingsTitle({ title, detail, icon }: { title: string; detail?: string; icon?: ReactNode }) {
+    _useCreationLocale();
     return (
         <div className="drama-settings-title">
             <h3>

@@ -1,3 +1,5 @@
+import { creationSource as _creationSource, creationLabel as _creationLabel } from "@/supdance/plugins/i18n/creation-text";
+import { creationText as _creationText, useCreationLocale as _useCreationLocale } from "@/supdance/plugins/i18n/creation-text";
 import { App, Modal } from "antd";
 import { Images, MoreHorizontal, Trash2 } from "lucide-react";
 import { HistoryIcon } from "@/components/ui/ecommerce-icons";
@@ -35,6 +37,7 @@ export function CompactEcommerceHistory({
     onShowAll: () => void;
 }) {
     const { message } = App.useApp();
+    _useCreationLocale();
     const root = useRef<HTMLDivElement>(null);
     const [projects, setProjects] = useState<EcommerceProject[]>([]);
     const [total, setTotal] = useState(0);
@@ -61,7 +64,7 @@ export function CompactEcommerceHistory({
                 }
             })
             .catch((cause) => {
-                if (!cancelled) setError(cause instanceof Error ? cause.message : "历史记录加载失败");
+                if (!cancelled) setError(cause instanceof Error ? cause.message : _creationSource("creation.bc20eef4a9ff86da"));
             })
             .finally(() => {
                 if (!cancelled) setLoading(false);
@@ -95,11 +98,11 @@ export function CompactEcommerceHistory({
             setDeleteTarget(null);
             setMenuId(null);
             setRevision((value) => value + 1);
-            message.success("项目已删除");
+            message.success(_creationText("creation.dd35672e3b9dfdb2"));
         } catch (cause) {
             setDeleteTarget(null);
             setRevision((value) => value + 1);
-            message.error(cause instanceof Error ? cause.message : "删除失败，请重试");
+            message.error(cause instanceof Error ? cause.message : _creationText("creation.2026b0d30e913b13"));
         } finally {
             setDeleting(false);
         }
@@ -107,20 +110,20 @@ export function CompactEcommerceHistory({
     if (!open) return null;
     let previousGroup = "";
     return (
-        <div className="commerce-compact-history" ref={root} role="dialog" aria-label="历史记录">
+        <div className="commerce-compact-history" ref={root} role="dialog" aria-label={_creationText("creation.5467922dce50a319")}>
             <div className="commerce-compact-history-heading">
                 <HistoryIcon size={15} />
-                <strong>历史记录</strong>
-                <span>{total ? `${total} 个项目` : ""}</span>
+                <strong>{_creationText("creation.5467922dce50a319")}</strong>
+                <span>{total ? _creationText("creation.62cceec4a0237b98", { value1: total }) : ""}</span>
             </div>
             <div className="commerce-compact-history-list" data-canvas-wheel-scroll>
                 {loading ? (
-                    <p role="status">正在加载历史记录…</p>
+                    <p role="status">{_creationText("creation.3cfa1cf6b1a1758c")}</p>
                 ) : error ? (
                     <p role="alert">
-                        {error}
+                        {_creationLabel(error)}
                         <button type="button" onClick={() => setRevision((value) => value + 1)}>
-                            重试
+                            {_creationText("common.retry")}
                         </button>
                     </p>
                 ) : projects.length ? (
@@ -135,7 +138,7 @@ export function CompactEcommerceHistory({
                             <div className="commerce-compact-history-entry" key={project.id}>
                                 {showGroup ? <div className="commerce-compact-history-date">{group}</div> : null}
                                 <div className={`commerce-compact-history-row${project.id === activeId ? " is-current" : ""}`}>
-                                    <button type="button" className="commerce-compact-history-open" disabled={disabled} onClick={() => onOpen(project)} aria-label={`打开项目：${title}`}>
+                                    <button type="button" className="commerce-compact-history-open" disabled={disabled} onClick={() => onOpen(project)} aria-label={_creationText("creation.3ef75d6edeed0eb6", { value1: title })}>
                                         <span className="commerce-compact-history-cover">
                                             {cover ? (
                                                 <CachedResourceImage storageKey={resourceStorageKey(cover.resourceId)} alt="" loading="lazy" decoding="async" fallback={<Images size={18} />} loadingFallback={<Images size={18} />} />
@@ -143,13 +146,15 @@ export function CompactEcommerceHistory({
                                                 <Images size={18} />
                                             )}
                                         </span>
-                                        <span title={title}>{title}</span>
+                                        <span title={title} data-i18n-user-content>
+                                            {title}
+                                        </span>
                                     </button>
                                     <button
                                         type="button"
                                         className="commerce-compact-history-more"
                                         disabled={disabled}
-                                        aria-label={`${title}的更多操作`}
+                                        aria-label={_creationText("creation.f474cde8fc06b48f", { value1: title })}
                                         aria-expanded={menuId === project.id}
                                         onClick={() => setMenuId((value) => (value === project.id ? null : project.id))}
                                     >
@@ -165,7 +170,7 @@ export function CompactEcommerceHistory({
                                             }}
                                         >
                                             <Trash2 size={13} />
-                                            删除
+                                            {_creationText("common.delete")}
                                         </button>
                                     ) : null}
                                 </div>
@@ -173,27 +178,31 @@ export function CompactEcommerceHistory({
                         );
                     })
                 ) : (
-                    <p>暂无历史项目，开始创作后会显示在这里。</p>
+                    <p>{_creationText("creation.f1e56b35700768b4")}</p>
                 )}
             </div>
             {total > 20 ? (
                 <button type="button" className="commerce-compact-history-all" onClick={onShowAll}>
-                    查看全部 {total} 个项目
+                    {_creationText("creation.5b9e2a1016f04af6", { value1: total })}
                 </button>
             ) : null}
             <Modal
-                title="删除这个项目？"
+                title={_creationText("creation.70ee599f5e2114e4")}
                 open={Boolean(deleteTarget)}
                 centered
-                okText="确认删除"
+                okText={_creationText("common.confirm_delete")}
                 okButtonProps={{ danger: true, loading: deleting }}
-                cancelText="取消"
+                cancelText={_creationText("common.cancel")}
                 onOk={() => void remove()}
                 onCancel={() => {
                     if (!deleting) setDeleteTarget(null);
                 }}
             >
-                <p>将删除「{deleteTarget?.name?.trim() || "未命名商品"}」。删除后项目无法恢复，已生成的图片仍保留在资产库。</p>
+                <p>
+                    {_creationText("creation.fbc9178f86b779b7")}
+                    {deleteTarget?.name?.trim() || _creationText("creation.54e0d8e8d65ee7ca")}
+                    {_creationText("creation.1e1a9aac7a7b1277")}
+                </p>
             </Modal>
         </div>
     );

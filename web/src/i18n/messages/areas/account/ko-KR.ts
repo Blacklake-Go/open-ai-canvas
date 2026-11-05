@@ -24,6 +24,10 @@ export const koKR: DeepStringRecord<typeof zhCN> = {
             loadFailed: "공지를 불러오지 못했습니다",
         },
         footer: {
+            terms: "서비스 이용약관",
+            privacy: "개인정보 처리방침",
+            aup: "허용되는 이용 정책",
+            support: "고객지원",
             label: "사이트 저작권 및 등록 정보",
             icpLink: "{{number}}, 공업정보화부 ICP 등록 관리 시스템에서 조회",
         },

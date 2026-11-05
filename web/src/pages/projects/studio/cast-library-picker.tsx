@@ -1,3 +1,4 @@
+import { creationText as _creationText, useCreationLocale as _useCreationLocale } from "@/supdance/plugins/i18n/creation-text";
 import { useMemo } from "react";
 
 import { AssetLibraryPickerModal, type AssetLibraryPickerItem } from "@/components/assets/asset-library-picker-modal";
@@ -52,6 +53,7 @@ function uploadedResourceId(uploaded: Awaited<ReturnType<typeof uploadImage>>) {
 
 /** 从素材库挑一张图作为设定参考图；选中后与上传形象图一样直接替换并锁定。 */
 export function CastLibraryPicker({ open, cast, onClose, onPick }: { open: boolean; cast: DramaCast; onClose: () => void; onPick: (resourceId: string) => Promise<unknown> }) {
+    _useCreationLocale();
     const assets = useAssetStore((state) => state.assets);
     const externalAssetSources = useExternalAssetSources(open);
     const character = cast.kind === "character";
@@ -87,7 +89,7 @@ export function CastLibraryPicker({ open, cast, onClose, onPick }: { open: boole
             items={items}
             categoryLabels={{ ...CATEGORY_LABELS, ...externalAssetSources.categoryLabels }}
             folders={externalAssetSources.folders}
-            title={`选择「${cast.name}」的${CAST_KIND_LABEL[cast.kind]}参考图`}
+            title={_creationText("creation.3aff084a218f70e4", { value1: cast.name, value2: CAST_KIND_LABEL[cast.kind] })}
             eyebrow="短剧设定"
             confirmLabel={() => "用作参考图并锁定"}
             emptyDescription={character ? "先在素材库中添加图片或角色卡。" : "先在素材库中添加图片。"}

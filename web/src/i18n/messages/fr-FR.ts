@@ -2,6 +2,19 @@ import type { Messages } from "./zh-CN";
 
 // Traduction automatique initiale : à relire par un locuteur natif.
 export const frFR: Messages = {
+    tokenPricing: {
+        credits: "crédits",
+        perSecond: "crédits/s",
+        perMillion: "crédits/million de tokens",
+        perMillionVideo: "crédits/million de tokens vidéo",
+        output: "Sortie {{price}}",
+        unconfigured: "Non configuré",
+        heading: "Paliers de prix du contexte",
+        sale: "Paliers de vente JSON",
+        cost: "Paliers de coût JSON",
+        invalid: "Saisissez des paliers valides par nombre minimal de tokens d’entrée croissant.",
+        help: "Le premier minInputTokens vaut 0 et correspond aux tarifs standard. Les prix sont exprimés en millionièmes de l’unité tarifaire.",
+    },
     common: {
         cancel: "Annuler",
         confirm: "OK",

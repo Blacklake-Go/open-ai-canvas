@@ -1,6 +1,7 @@
 package repository
 
 import (
+	"encoding/json"
 	"errors"
 	"time"
 
@@ -304,6 +305,11 @@ func (r *Repository) SwitchTaskLogicalRoute(taskID string, expectedRouteID strin
 		updates["cost_output_token_price_microcredits"] = cost.CostPricing.OutputTokenPriceMicrocredits
 		updates["cost_cached_token_price_microcredits"] = cost.CostPricing.CachedTokenPriceMicrocredits
 		updates["cost_cache_write_token_price_microcredits"] = cost.CostPricing.CacheWriteTokenPriceMicrocredits
+		costBands, err := json.Marshal(cost.CostPricing.TokenPriceBands)
+		if err != nil {
+			return err
+		}
+		updates["cost_token_price_bands"] = string(costBands)
 		updates["cost_billing_mode"] = cost.CostBillingMode
 		updates["cost_quantity"] = cost.CostQuantity
 		updates["cost_video_formula_tokens"] = cost.CostVideoFormulaTokens
@@ -375,6 +381,11 @@ func (r *Repository) SwitchTaskLogicalRoute(taskID string, expectedRouteID strin
 			updates["output_token_price_microcredits"] = replacement.OutputTokenPriceMicrocredits
 			updates["cached_token_price_microcredits"] = replacement.CachedTokenPriceMicrocredits
 			updates["cache_write_token_price_microcredits"] = replacement.CacheWriteTokenPriceMicrocredits
+			replacementBands, err := json.Marshal(replacement.TokenPriceBands)
+			if err != nil {
+				return err
+			}
+			updates["token_price_bands"] = string(replacementBands)
 		}
 		billingUpdated := tx.Model(&model.BillingOrder{}).
 			Where("id = ? AND task_id = ? AND status IN ?", billingOrderID, taskID, []model.BillingStatus{model.BillingStatusReserved, model.BillingStatusRunning}).

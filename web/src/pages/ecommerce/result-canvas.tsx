@@ -1,3 +1,5 @@
+import { creationLabel as _creationLabel } from "@/supdance/plugins/i18n/creation-text";
+import { creationText as _creationText, useCreationLocale as _useCreationLocale } from "@/supdance/plugins/i18n/creation-text";
 import { createClientUUID } from "@/lib/client-id";
 import { Tooltip } from "antd";
 import { motion, useReducedMotion } from "motion/react";
@@ -79,6 +81,7 @@ export function EcommerceResultCanvas({
     onExportSelection?: () => void;
     onInspectResult?: (id: string) => void;
 }) {
+    _useCreationLocale();
     const reducedMotion = useReducedMotion();
     const root = useRef<HTMLElement>(null);
     const container = useRef<HTMLDivElement>(null);
@@ -660,7 +663,7 @@ export function EcommerceResultCanvas({
         </Tooltip>
     );
     return (
-        <section ref={root} tabIndex={-1} className="commerce-result-canvas" data-layers-open={layersOpen} data-canvas-tool={tool} data-arranging={arranging || undefined} aria-label="商品图片画布">
+        <section ref={root} tabIndex={-1} className="commerce-result-canvas" data-layers-open={layersOpen} data-canvas-tool={tool} data-arranging={arranging || undefined} aria-label={_creationText("creation.152514f4387c0637")}>
             <CanvasViewport containerRef={container} viewport={viewport} onViewportChange={userNavigate} boxSelectEnabled={tool !== "hand"} panOverNodes={tool === "hand"} onCanvasMouseDown={addText}>
                 <div
                     ref={content}
@@ -698,11 +701,11 @@ export function EcommerceResultCanvas({
                                 }}
                             >
                                 {layer.type === "image" ? (
-                                    <img src={resolveResourceVariantUrl(resourceStorageKey(layer.resourceId!), "thumbnail")} alt="画布上传图片" draggable={false} />
+                                    <img src={resolveResourceVariantUrl(resourceStorageKey(layer.resourceId!), "thumbnail")} alt={_creationText("creation.3fdf76bf2dfbe86e")} draggable={false} />
                                 ) : editingId === layer.id ? (
                                     <textarea
                                         autoFocus
-                                        aria-label="编辑画布文字"
+                                        aria-label={_creationText("creation.a28904c97ed128d0")}
                                         value={editingText}
                                         onChange={(event) => setEditingText(event.target.value)}
                                         onBlur={finishEdit}
@@ -721,7 +724,7 @@ export function EcommerceResultCanvas({
                                         {layer.type === "text" ? (
                                             <button
                                                 type="button"
-                                                aria-label="编辑选中文字"
+                                                aria-label={_creationText("creation.95e9bfe39a947d44")}
                                                 onPointerDown={(event) => event.stopPropagation()}
                                                 onClick={() => {
                                                     setEditingId(layer.id);
@@ -733,7 +736,7 @@ export function EcommerceResultCanvas({
                                         ) : null}
                                         <button
                                             type="button"
-                                            aria-label="删除选中元素"
+                                            aria-label={_creationText("creation.c5f10bfa22114c2c")}
                                             onPointerDown={(event) => event.stopPropagation()}
                                             onClick={() => {
                                                 commit(history.present.filter((item) => item.id !== layer.id));
@@ -784,19 +787,19 @@ export function EcommerceResultCanvas({
             <div className="commerce-canvas-actions" data-canvas-no-zoom>
                 {actions}
             </div>
-            <aside className="commerce-canvas-layers" aria-label="画布图层" aria-hidden={!layersOpen} inert={!layersOpen} data-canvas-no-zoom data-canvas-wheel-scroll>
+            <aside className="commerce-canvas-layers" aria-label={_creationText("creation.21480a7674aedd3c")} aria-hidden={!layersOpen} inert={!layersOpen} data-canvas-no-zoom data-canvas-wheel-scroll>
                 <header>
                     <strong>
                         <LayersIcon size={16} />
-                        图层
+                        {_creationText("canvas.layers")}
                         {resultLayers.length ? (
-                            <span className="commerce-count-badge is-neutral" aria-label={`共 ${resultLayers.length} 张`}>
+                            <span className="commerce-count-badge is-neutral" aria-label={_creationText("creation.6b9f0807d5672769", { value1: resultLayers.length })}>
                                 {resultLayers.length}
                             </span>
                         ) : null}
                     </strong>
                     <button type="button" onClick={onSelectAll} disabled={!resultLayers.some((item) => item.ready)}>
-                        全选
+                        {_creationText("creation.3a5040b68abf75f9")}
                     </button>
                 </header>
                 <div className="commerce-canvas-layer-list">
@@ -807,19 +810,19 @@ export function EcommerceResultCanvas({
                                     {selectedResults.has(item.id) ? <Check size={11} strokeWidth={3} /> : null}
                                 </span>
                                 {item.src ? <img src={item.src} alt="" /> : <span className="commerce-canvas-layer-thumb" />}
-                                <span className="commerce-canvas-layer-name">{item.label}</span>
+                                <span className="commerce-canvas-layer-name">{_creationLabel(item.label)}</span>
                                 <Eye size={15} />
                             </button>
                         ))
                     ) : (
-                        <p>生成后的图片会显示在这里</p>
+                        <p>{_creationText("creation.f0ec518c8b62b86f")}</p>
                     )}
                     {history.present
                         .filter((item) => item.type !== "result")
                         .map((item) => (
                             <button type="button" key={item.id} onClick={() => setSelectedId(item.id)}>
                                 {item.type === "image" ? <ImagePlusIcon size={17} /> : <TextToolIcon size={17} />}
-                                <span className="commerce-canvas-layer-name">{item.type === "text" ? item.text : "上传图片"}</span>
+                                <span className="commerce-canvas-layer-name">{item.type === "text" ? item.text : _creationText("settings.upload_avatar_tab")}</span>
                             </button>
                         ))}
                 </div>
@@ -827,12 +830,12 @@ export function EcommerceResultCanvas({
             <div ref={layerToggleRef} className="commerce-canvas-layer-toggle" data-canvas-no-zoom>
                 <button type="button" aria-expanded={layersOpen} onClick={() => setLayersOpen((open) => !open)}>
                     <LayersIcon size={16} />
-                    图层
+                    {_creationText("canvas.layers")}
                 </button>
                 <Tooltip
                     title={
                         <span className="commerce-tool-hint">
-                            <span>全选已完成的图片</span>
+                            <span>{_creationText("creation.25c6f2f07c5f1146")}</span>
                             <kbd>Ctrl A</kbd>
                         </span>
                     }
@@ -840,7 +843,7 @@ export function EcommerceResultCanvas({
                     mouseEnterDelay={0.12}
                 >
                     <button type="button" onClick={onSelectAll} disabled={!resultLayers.some((item) => item.ready)}>
-                        全选
+                        {_creationText("creation.3a5040b68abf75f9")}
                     </button>
                 </Tooltip>
             </div>
@@ -850,13 +853,13 @@ export function EcommerceResultCanvas({
                 accept="image/png,image/jpeg,image/webp"
                 multiple
                 className="commerce-canvas-file-input"
-                aria-label="上传图片到画布"
+                aria-label={_creationText("creation.9d01d064713d19bf")}
                 onChange={(event) => {
                     void uploadImage(event.target.files);
                     event.target.value = "";
                 }}
             />
-            <div ref={toolbarRef} className="commerce-canvas-toolbar" role="toolbar" aria-label="画布操作" data-canvas-no-zoom>
+            <div ref={toolbarRef} className="commerce-canvas-toolbar" role="toolbar" aria-label={_creationText("creation.006c3685e304ca6c")} data-canvas-no-zoom>
                 {toolButton("选择", "选择与移动，拖动时自动吸附对齐（按住 Ctrl 关闭）", "V", <PointerIcon size={19} />, () => setTool("select"), tool === "select")}
                 {toolButton("抓手", "拖动画布", "H", <HandIcon size={19} />, () => setTool("hand"), tool === "hand")}
                 {toolButton("上传图片", "添加图片", "", <ImagePlusIcon size={19} />, () => uploadInput.current?.click(), false, uploading)}

@@ -1,3 +1,4 @@
+import { creationText as _creationText, useCreationLocale as _useCreationLocale } from "@/supdance/plugins/i18n/creation-text";
 import { useEffect, useState, type CSSProperties, type ReactNode } from "react";
 import { InputNumber } from "antd";
 import { AlertTriangle } from "lucide-react";
@@ -63,16 +64,13 @@ export const SOURCE_FORMAT_LABEL: Record<DramaSourceFormat, { title: string; det
 
 /** 每集章数：1 为每章一集；集数随章数实时换算。新建页与设置页共用。 */
 export function EpisodeGroupField({ value, onChange, chapterCount, error, disabled }: { value: number; onChange: (value: number) => void; chapterCount?: number; error?: string; disabled?: boolean }) {
+    _useCreationLocale();
     return (
         <div className="drama-episode-group">
-            <span>每</span>
-            <InputNumber size="small" min={1} max={12} precision={0} value={value} disabled={disabled} onChange={(next) => onChange(Math.max(1, Math.min(12, Number(next) || 1)))} aria-label="每集章数" />
-            <span>章一集</span>
-            {chapterCount ? (
-                <small>
-                    共 {chapterCount} 章 → {Math.ceil(chapterCount / value)} 集
-                </small>
-            ) : null}
+            <span>{_creationText("creation.d8b82d5765fa2fb4")}</span>
+            <InputNumber size="small" min={1} max={12} precision={0} value={value} disabled={disabled} onChange={(next) => onChange(Math.max(1, Math.min(12, Number(next) || 1)))} aria-label={_creationText("creation.18991ca6a0aa2fcd")} />
+            <span>{_creationText("creation.c2e98e5ccfd3ad6e")}</span>
+            {chapterCount ? <small>{_creationText("creation.523f5cc6b42cd5ac", { value1: chapterCount, value2: Math.ceil(chapterCount / value) })}</small> : null}
             {error ? (
                 <p className="drama-episode-group-error" role="alert">
                     <AlertTriangle className="size-3.5" aria-hidden />
@@ -88,8 +86,9 @@ export function sourceFormatOf(value: string | undefined): DramaSourceFormat {
 }
 
 export function SourceFormatPicker({ value, onChange, disabled, row }: { value: DramaSourceFormat; onChange: (value: DramaSourceFormat) => void; disabled?: boolean; row?: boolean }) {
+    _useCreationLocale();
     return (
-        <div className={`drama-media-modes ${row ? "is-row" : ""}`} role="radiogroup" aria-label="素材类型">
+        <div className={`drama-media-modes ${row ? "is-row" : ""}`} role="radiogroup" aria-label={_creationText("creation.3be96f8eb83d1a15")}>
             {(Object.keys(SOURCE_FORMAT_LABEL) as DramaSourceFormat[]).map((format) => (
                 <button key={format} type="button" role="radio" aria-checked={value === format} className="drama-media-mode" disabled={disabled} onClick={() => onChange(format)}>
                     <span className="drama-radio" />
@@ -144,6 +143,7 @@ export function stepProgress(episode: DramaEpisodeRow, step: (typeof PIPELINE_ST
 }
 
 export function StagePips({ episode, size = "sm" }: { episode: DramaEpisodeRow; size?: "sm" | "md" }) {
+    _useCreationLocale();
     const tone = episodeTone(episode);
     return (
         <span className={`drama-pips is-${size} is-${tone}`} aria-hidden>
@@ -192,6 +192,7 @@ const THUMB_RETRY_DELAYS_MS = [1500, 5000];
  * loading 是加载中的占位（缺省为 fallback）。
  */
 export function MediaThumb({ resourceId, alt, className, fallback, loading, failed }: { resourceId?: string; alt: string; className?: string; fallback?: ReactNode; loading?: ReactNode; failed?: ReactNode }) {
+    _useCreationLocale();
     const [retry, setRetry] = useState({ resourceId, attempt: 0 });
     const attempt = retry.resourceId === resourceId ? retry.attempt : 0;
     if (!resourceId) return <>{fallback ?? null}</>;
@@ -209,6 +210,7 @@ export function MediaThumb({ resourceId, alt, className, fallback, loading, fail
 }
 
 function ThumbRetry({ delayMs, onRetry, children }: { delayMs: number; onRetry: () => void; children: ReactNode }) {
+    _useCreationLocale();
     const [handler] = useState(() => onRetry);
     useEffect(() => {
         const timer = window.setTimeout(handler, delayMs);

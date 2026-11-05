@@ -2,6 +2,19 @@ import type { Messages } from "./zh-CN";
 
 // 初回は機械翻訳です。ネイティブ話者によるレビューが必要です。
 export const jaJP: Messages = {
+    tokenPricing: {
+        credits: "クレジット",
+        perSecond: "クレジット/秒",
+        perMillion: "クレジット/100万トークン",
+        perMillionVideo: "クレジット/100万動画トークン",
+        output: "出力 {{price}}",
+        unconfigured: "未設定",
+        heading: "コンテキスト別の料金区分",
+        sale: "販売料金区分 JSON",
+        cost: "原価区分 JSON",
+        invalid: "最小入力トークン数の昇順で有効な料金区分を入力してください。",
+        help: "最初の minInputTokens は 0 とし、通常料金と一致させます。価格は料金単位の100万分の1で指定します。",
+    },
     common: {
         cancel: "キャンセル",
         confirm: "OK",

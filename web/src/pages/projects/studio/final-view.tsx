@@ -1,3 +1,4 @@
+import { creationText as _creationText, useCreationLocale as _useCreationLocale } from "@/supdance/plugins/i18n/creation-text";
 import { useRef } from "react";
 import { App, Button } from "antd";
 import { Download, Film, Scissors } from "lucide-react";
@@ -24,6 +25,7 @@ export function FinalView({
     onOpenCut: () => void;
     cutOpening: boolean;
 }) {
+    _useCreationLocale();
     const { episode, segments } = detail;
     const { message } = App.useApp();
     const videoRef = useRef<HTMLVideoElement>(null);
@@ -36,7 +38,7 @@ export function FinalView({
     }, 0);
     const download = () => {
         if (!episode.finalResourceId) return;
-        void downloadResource(episode.finalResourceId, `${title}-第${episode.number}集.mp4`).catch((error) => message.error(error instanceof Error ? error.message : "下载失败"));
+        void downloadResource(episode.finalResourceId, `${title}-第${episode.number}集.mp4`).catch((error) => message.error(error instanceof Error ? error.message : _creationText("creation.8a03e35ad323e387")));
     };
     return (
         <div className="drama-finalv">
@@ -47,7 +49,7 @@ export function FinalView({
                     ) : (
                         <div className="drama-finalv-empty">
                             <Film className="size-6" aria-hidden />
-                            <span>{STAGE_LABEL[episode.stage]} · 全部段视频生成后自动合成</span>
+                            <span>{_creationText("creation.2beb59ff97110693", { value1: STAGE_LABEL[episode.stage] })}</span>
                         </div>
                     )}
                 </div>
@@ -65,31 +67,33 @@ export function FinalView({
                         >
                             <MediaThumb resourceId={segment.tailFrameResourceId} alt={segment.title} fallback={<span className="drama-filmstrip-empty" />} />
                             <span>
-                                第 {segment.index + 1} 段 · {secondsLabel(segment.durationMs)}
+                                {_creationText("creation.af50a0fe2a50a3d1")}
+                                {segment.index + 1}
+                                {_creationText("creation.5061056bb842bfbd")}
+                                {secondsLabel(segment.durationMs)}
                             </span>
                         </button>
                     ))}
                 </div>
             </div>
             <aside className="drama-finalv-side">
-                <h2>
-                    第 {episode.number} 集 · {episode.title}
-                </h2>
+                <h2>{_creationText("creation.34ac7cbd8058f89f", { value1: episode.number, value2: episode.title })}</h2>
                 <p>
-                    {formatDuration(episode.durationMs)} · {segments.length} 个剧情段 · 对白与音效来自视频模型
+                    {formatDuration(episode.durationMs)} · {segments.length}
+                    {_creationText("creation.563dcc5b90795320")}
                 </p>
                 {episode.finalStale ? (
                     <p className="drama-finalv-stale" role="status">
-                        内容已修改，当前成片是修改前的版本，相关段重新生成后会自动重新合成。
+                        {_creationText("creation.c1d89610837b527b")}
                     </p>
                 ) : null}
                 <Button icon={<Download className="size-4" />} disabled={!episode.finalResourceId} onClick={download}>
-                    下载成片
+                    {_creationText("creation.a926ee400ac9108e")}
                 </Button>
                 <Button icon={<Scissors className="size-4" />} disabled={!readySegments} loading={cutOpening} onClick={onOpenCut}>
-                    到画布精剪
+                    {_creationText("creation.cdb1d5eb1abd3cb0")}
                 </Button>
-                {readySegments ? <p className="drama-editor-note">按成片顺序把 {readySegments} 段视频载入精修画布的时间线；剪辑结果导出为画布上的新视频，不会替换这里的成片。</p> : null}
+                {readySegments ? <p className="drama-editor-note">{_creationText("creation.3bd66442c816e893", { value1: readySegments })}</p> : null}
             </aside>
         </div>
     );

@@ -1,3 +1,4 @@
+import { creationText as _creationText } from "@/supdance/plugins/i18n/creation-text";
 import { useCallback, useMemo, useRef, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { App } from "antd";
@@ -81,7 +82,7 @@ export function useOpenDramaCanvas(summary: DramaSummary | undefined) {
             try {
                 navigate(await openDramaCanvasPath({ id, name }, focus));
             } catch (error) {
-                message.error(error instanceof Error && error.message ? error.message : "打开精修画布失败");
+                message.error(error instanceof Error && error.message ? error.message : _creationText("creation.e89cb31145ebf765"));
             } finally {
                 openingRef.current = false;
                 setOpening(null);

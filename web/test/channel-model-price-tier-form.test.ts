@@ -1,10 +1,21 @@
 import { describe, expect, test } from "bun:test";
 
-import { defaultPriceTier, priceTierPayloadFromForm, priceTierResolutionFromForm, priceTierToForm, priceTierVideoSecondsFromForm, skuSelectorFromForm } from "../src/pages/admin/components/channel-model-price-tier-form";
+import { defaultPriceTier, parseTokenPriceBands, priceTierPayloadFromForm, priceTierResolutionFromForm, priceTierToForm, priceTierVideoSecondsFromForm, skuSelectorFromForm } from "../src/pages/admin/components/channel-model-price-tier-form";
 import type { ChannelModelPriceTier } from "../src/services/api/wallet";
 import { validateChannelModelPrices } from "../src/pages/admin/components/channel-model-editor-form";
 
 describe("channel model price tier defaults", () => {
+    test("editing a model preserves distinct context sale and cost bands and rejects invalid JSON", () => {
+        const base = { minInputTokens: 0, inputTokenPriceMicrocredits: 10, outputTokenPriceMicrocredits: 20, cachedTokenPriceMicrocredits: 1, cacheWriteTokenPriceMicrocredits: 12 };
+        const tokenPriceBands = [base, { ...base, minInputTokens: 272001, inputTokenPriceMicrocredits: 20, outputTokenPriceMicrocredits: 30 }];
+        const costBands = tokenPriceBands.map((band) => ({ ...band, inputTokenPriceMicrocredits: band.inputTokenPriceMicrocredits / 2 }));
+        const raw = { ...priceTierPayloadFromForm("text", { ...defaultPriceTier(), billingMode: "token" }, "pro"), tokenPriceBands, costPricing: { configured: true, tokenPriceBands: costBands } } as ChannelModelPriceTier;
+        const form = priceTierToForm(raw);
+        const roundTrip = priceTierPayloadFromForm("text", form, "pro");
+        expect(roundTrip.tokenPriceBands).toEqual(tokenPriceBands);
+        expect(roundTrip.costPricing.tokenPriceBands).toEqual(costBands);
+        for (const bad of ["{", "{}", '[{"minInputTokens":0}]', JSON.stringify([{ ...base, minInputTokens: 1 }]), JSON.stringify([base, base])]) expect(() => parseTokenPriceBands(bad)).toThrow();
+    });
     test("cost edit payload preserves independent sale and cost prices including explicit zero", () => {
         const tier = { ...defaultPriceTier(), unitPrice: 0.09, costConfigured: true, costUnitPrice: 0.035678 };
         const payload = priceTierPayloadFromForm("video", tier, "MiniMax-H3");

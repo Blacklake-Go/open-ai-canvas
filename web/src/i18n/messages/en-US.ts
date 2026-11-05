@@ -1,6 +1,19 @@
 import type { Messages } from "./zh-CN";
 
 export const enUS: Messages = {
+    tokenPricing: {
+        credits: "credits",
+        perSecond: "credits/s",
+        perMillion: "credits/million tokens",
+        perMillionVideo: "credits/million video tokens",
+        output: "Output {{price}}",
+        unconfigured: "Not configured",
+        heading: "Context price bands",
+        sale: "Sale price bands JSON",
+        cost: "Cost price bands JSON",
+        invalid: "Enter valid price bands in increasing order of minimum input tokens.",
+        help: "The first minInputTokens is 0 and matches standard rates. Prices use millionths of the pricing unit.",
+    },
     common: {
         cancel: "Cancel",
         confirm: "OK",

@@ -1,3 +1,5 @@
+import { creationOptions as _creationOptions } from "@/supdance/plugins/i18n/creation-text";
+import { creationText as _creationText, useCreationLocale as _useCreationLocale } from "@/supdance/plugins/i18n/creation-text";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useMutation } from "@tanstack/react-query";
 import { App, Button } from "antd";
@@ -51,6 +53,7 @@ type Tab = "board" | "script" | "final";
 type StudioView = "production" | "cast" | "inbox" | "settings";
 
 export default function DramaStudioPage() {
+    _useCreationLocale();
     const { projectId = "", episodeId: routeEpisodeId = "" } = useParams();
     const navigate = useNavigate();
     const { message, modal } = App.useApp();
@@ -121,7 +124,7 @@ export default function DramaStudioPage() {
         mutationFn: () => (running ? pauseDrama(projectId) : startDrama(projectId)),
         onSuccess: () => {
             invalidate(episodeId);
-            message.success(running ? "已暂停，正在运行的任务完成后停止" : "已继续制作");
+            message.success(running ? _creationText("creation.c18dbd76a4c43c5c") : _creationText("creation.000c29ef3ac7223d"));
         },
         onError: (error) => errorMessage(error, "操作失败"),
     });
@@ -129,7 +132,7 @@ export default function DramaStudioPage() {
         mutationFn: ({ shot, patch }: { shot: DramaShot; patch: DramaShotPatch }) => updateDramaShot(projectId, shot.id, patch),
         onSuccess: () => {
             invalidate(episodeId);
-            message.success("已保存，本段提示词与视频已标记过期，请重新确认");
+            message.success(_creationText("creation.591c3be011a664c3"));
         },
         onError: (error) => errorMessage(error, "保存失败"),
     });
@@ -138,7 +141,7 @@ export default function DramaStudioPage() {
         onSuccess: ({ shot }) => {
             invalidate(episodeId);
             setParams({ shot: shot.id });
-            message.success("已插入空镜头，填写动作或台词后本段提示词需重新撰写");
+            message.success(_creationText("creation.4c8edd9326f14dcf"));
         },
         onError: (error) => errorMessage(error, "插入失败"),
     });
@@ -147,7 +150,7 @@ export default function DramaStudioPage() {
         onSuccess: () => {
             invalidate(episodeId);
             setParams({ shot: null });
-            message.success("已删除镜头，本段提示词与视频已标记过期");
+            message.success(_creationText("creation.00acc11119b2a87b"));
         },
         onError: (error) => errorMessage(error, "删除失败"),
     });
@@ -155,7 +158,7 @@ export default function DramaStudioPage() {
         mutationFn: ({ segment, override }: { segment: DramaSegment; override: string }) => updateDramaSegment(projectId, episodeId, segment.index, override),
         onSuccess: (_, { override }) => {
             invalidate(episodeId);
-            message.success(override ? "已保存完整视频提示词" : "已恢复模型撰写的版本");
+            message.success(override ? _creationText("creation.a3c99723b6084e26") : _creationText("creation.5878e42bbd841215"));
         },
         onError: (error) => errorMessage(error, "保存失败"),
     });
@@ -163,7 +166,7 @@ export default function DramaStudioPage() {
         mutationFn: ({ segment, castIds }: { segment: DramaSegment; castIds: string[] | null }) => updateDramaSegmentReferences(projectId, episodeId, segment.index, castIds),
         onSuccess: (_, { castIds }) => {
             invalidate(episodeId);
-            message.success(castIds ? "已更新本段参考图；参考图编号变了，请重新撰写视频提示词" : "已恢复按镜头自动取参考图");
+            message.success(castIds ? _creationText("creation.31864034e3a22b8f") : _creationText("creation.8cba434805ad3291"));
         },
         onError: (error) => errorMessage(error, "保存失败"),
     });
@@ -171,7 +174,7 @@ export default function DramaStudioPage() {
         mutationFn: (indexes: number[]) => writeDramaSegmentPrompts(projectId, episodeId, indexes),
         onSuccess: (result) => {
             invalidate(episodeId);
-            message.success(`已开始撰写 ${result.queued} 段视频提示词`);
+            message.success(_creationText("creation.c18f8550115561b0", { value1: result.queued }));
         },
         onError: (error) => errorMessage(error, "操作失败"),
     });
@@ -179,7 +182,7 @@ export default function DramaStudioPage() {
         mutationFn: () => approveDramaEpisode(projectId, episodeId),
         onSuccess: () => {
             invalidate(episodeId);
-            message.success(episodeRow?.number === 1 && summary?.production.settings.reviewMode === "sample" ? "样片已确认，全剧开始自动制作" : "已通过，开始生成视频");
+            message.success(episodeRow?.number === 1 && summary?.production.settings.reviewMode === "sample" ? _creationText("creation.9b89fd709429bf11") : _creationText("creation.2b16aad724e5d068"));
         },
         onError: (error) => errorMessage(error, "操作失败"),
     });
@@ -188,7 +191,7 @@ export default function DramaStudioPage() {
         onSuccess: (result, { segments }) => {
             invalidate(episodeId);
             const label = segments.length > 1 ? `${segments.length} 段` : `第 ${segments[0] + 1} 段`;
-            message.success(`${label}已加入队列，共 ${result.queued} 个段视频`);
+            message.success(_creationText("creation.f2e56799fc4eac04", { value1: label, value2: result.queued }));
         },
         onError: (error) => errorMessage(error, "生成失败"),
     });
@@ -196,7 +199,7 @@ export default function DramaStudioPage() {
         mutationFn: (segmentIndex: number) => reprocessDramaSegmentVideo(projectId, episodeId, segmentIndex),
         onSuccess: (_, segmentIndex) => {
             invalidate(episodeId);
-            message.success(`正在重新处理第 ${segmentIndex + 1} 段视频`);
+            message.success(_creationText("creation.7be58ed25251db60", { value1: segmentIndex + 1 }));
         },
         onError: (error) => {
             invalidate(episodeId);
@@ -208,7 +211,7 @@ export default function DramaStudioPage() {
         onSuccess: () => {
             invalidate(episodeId);
             setParams({ shot: null, segment: null });
-            message.success(running ? "正在重新改编本集" : "已继续制作，正在重新改编本集");
+            message.success(running ? _creationText("creation.a60222297eb24d7a") : _creationText("creation.78c397c6bd7f25df"));
         },
         // 剧本已重置但恢复制作被拒（如预算或模型不可用）时，也要刷新到真实状态。
         onError: (error) => {
@@ -220,7 +223,7 @@ export default function DramaStudioPage() {
         mutationFn: () => retryFailedDrama(projectId),
         onSuccess: (result) => {
             invalidate(episodeId);
-            message.success(`已重新排队 ${result.segments + result.casts} 项`);
+            message.success(_creationText("creation.72d2a20cfa330fda", { value1: result.segments + result.casts }));
         },
         onError: (error) => errorMessage(error, "重试失败"),
     });
@@ -237,7 +240,7 @@ export default function DramaStudioPage() {
         onSettled: () => setRetryingGroup(""),
         onSuccess: (count) => {
             invalidate(episodeId);
-            message.success(`已重新排队 ${count} 项`);
+            message.success(_creationText("creation.72d2a20cfa330fda", { value1: count }));
         },
         onError: (error) => errorMessage(error, "重试失败"),
     });
@@ -246,7 +249,7 @@ export default function DramaStudioPage() {
         mutationFn: ({ target, episodeIds }: { target: "assets" | "episodes" | "all"; episodeIds?: string[] }) => releaseDramaMedia(projectId, target, episodeIds),
         onSuccess: (_, { target }) => {
             invalidate(episodeId);
-            message.success(target === "assets" ? "开始生成角色、道具与场景参考图" : target === "all" ? "全部集开始生成参考图与段视频" : "本集开始生成参考图与段视频");
+            message.success(target === "assets" ? _creationText("creation.0b024666cc11fa15") : target === "all" ? _creationText("creation.fc61679f4d368ca0") : _creationText("creation.912754eea9e14536"));
         },
         onError: (error) => errorMessage(error, "操作失败"),
     });
@@ -287,13 +290,13 @@ export default function DramaStudioPage() {
     if (summaryQuery.isLoading)
         return (
             <WorkspacePage>
-                <WorkspaceLoadingState label="正在打开制作台" />
+                <WorkspaceLoadingState label={_creationText("creation.ceafc9be1eef0b9c")} />
             </WorkspacePage>
         );
     if (summaryQuery.isError || !summary)
         return (
             <WorkspacePage>
-                <WorkspaceErrorState title="作品不可用" description="作品不存在、已被删除，或当前账号没有访问权限。" actionLabel="返回作品列表" onRetry={() => navigate("/projects")} />
+                <WorkspaceErrorState title={_creationText("creation.a3fb9d6ca86ded68")} description={_creationText("creation.d497819dbe69f948")} actionLabel="返回作品列表" onRetry={() => navigate("/projects")} />
             </WorkspacePage>
         );
 
@@ -314,7 +317,7 @@ export default function DramaStudioPage() {
               active: false,
               action: (
                   <Button type="primary" loading={rescript.isPending} onClick={() => rescript.mutate()}>
-                      重新改编本集
+                      {_creationText("creation.bc2922519bc01dc4")}
                   </Button>
               ),
           }
@@ -325,7 +328,7 @@ export default function DramaStudioPage() {
                 active: false,
                 action: (
                     <Button type="primary" icon={<Play className="size-4" />} loading={toggleRun.isPending} onClick={() => toggleRun.mutate()}>
-                        继续制作
+                        {_creationText("creation.435090558c77f044")}
                     </Button>
                 ),
             }
@@ -341,14 +344,14 @@ export default function DramaStudioPage() {
             <div className="drama-root drama-studio">
                 <header className="drama-topbar">
                     <Link to="/projects">
-                        <Button type="text" shape="circle" icon={<ArrowLeft className="size-4" />} aria-label="返回作品列表" />
+                        <Button type="text" shape="circle" icon={<ArrowLeft className="size-4" />} aria-label={_creationText("projects.return_to_list")} />
                     </Link>
                     <div className="drama-topbar-title">
                         <h1 title={summary.project.name}>{summary.project.name}</h1>
                         {waitingForMedia ? (
                             <span className="drama-chip is-ready">
                                 <span className="drama-dot" />
-                                剧本就绪 · 待生成视频
+                                {_creationText("creation.fcdd0f7f9d99463f")}
                             </span>
                         ) : (
                             <span className={`drama-chip is-${production.status}`}>
@@ -359,48 +362,53 @@ export default function DramaStudioPage() {
                     </div>
                     {episodes.length ? (
                         <div className="drama-topbar-progress">
-                            <span className="drama-meter" aria-label={`成片进度 ${Math.round(progress * 100)}%`}>
+                            <span className="drama-meter" aria-label={_creationText("creation.a1053edb1e18bbbf", { value1: Math.round(progress * 100) })}>
                                 <span style={progressFillStyle(Math.max(progress * 100, 2))} />
                             </span>
                             <span>
-                                {doneEpisodes}/{episodes.length} 集成片{production.planDone ? "" : " · 分集中"}
+                                {doneEpisodes}/{episodes.length}
+                                {_creationText("creation.d314a62017e00fb1")}
+                                {production.planDone ? "" : _creationText("creation.9889863744900cf9")}
                             </span>
-                            <span>· {formatCount(production.chapterCount)} 章原文</span>
+                            <span>{_creationText("creation.f249f74d7a9fd339", { value1: formatCount(production.chapterCount) })}</span>
                         </div>
                     ) : null}
-                    <nav className="drama-nav" aria-label="制作台视图">
+                    <nav className="drama-nav" aria-label={_creationText("creation.ea27380990aecfe2")}>
                         <button type="button" className="drama-nav-item" aria-current={view === "production" ? "page" : undefined} onClick={() => openView("production")}>
                             <Clapperboard className="size-4" />
-                            制作
+                            {_creationText("creation.da2dadcd3ff9c5bc")}
                         </button>
                         <button type="button" className="drama-nav-item" aria-current={view === "cast" ? "page" : undefined} onClick={() => openView("cast")}>
                             <UsersRound className="size-4" />
-                            设定{summary.castCount ? <span className="drama-nav-count">{summary.castCount}</span> : null}
+                            {_creationText("creation.f6a7a5a5030ea436")}
+                            {summary.castCount ? <span className="drama-nav-count">{summary.castCount}</span> : null}
                         </button>
                         <button type="button" className="drama-nav-item" aria-current={view === "inbox" ? "page" : undefined} onClick={() => openView("inbox")}>
                             <Inbox className="size-4" />
-                            待处理{summary.inbox.length ? <span className="drama-nav-count is-alert">{summary.inbox.length > 99 ? "99+" : summary.inbox.length}</span> : null}
+                            {_creationText("settings.feedback_status_pending")}
+                            {summary.inbox.length ? <span className="drama-nav-count is-alert">{summary.inbox.length > 99 ? "99+" : summary.inbox.length}</span> : null}
                         </button>
                         <button type="button" className="drama-nav-item" aria-current={view === "settings" ? "page" : undefined} onClick={() => openView("settings")}>
                             <Settings2 className="size-4" />
-                            设置
+                            {_creationText("nav.settings")}
                         </button>
                     </nav>
                     {/* 窄屏只保留图标（全部生成保留集数），文字由 aria-label 与 title 提供。 */}
                     <div className="drama-topbar-actions">
-                        <Button icon={<Brush className="size-4" />} loading={canvas.opening === "canvas"} onClick={() => void canvas.open()} aria-label="精修画布" title="打开这部短剧的精修画布：投送设定、剧情段或成片，精修后采用回短剧">
-                            <span className="drama-topbar-action-label">精修画布</span>
+                        <Button icon={<Brush className="size-4" />} loading={canvas.opening === "canvas"} onClick={() => void canvas.open()} aria-label={_creationText("projects.drama_refine_canvas")} title={_creationText("creation.a16487c1271d0f6d")}>
+                            <span className="drama-topbar-action-label">{_creationText("projects.drama_refine_canvas")}</span>
                         </Button>
                         {awaitingCount ? (
                             <Button
                                 icon={<Play className="size-4" />}
                                 loading={release.isPending && release.variables?.target === "all"}
                                 onClick={confirmReleaseAll}
-                                aria-label={`全部生成视频 · ${awaitingCount} 集`}
-                                title={`全部生成视频 · ${awaitingCount} 集`}
+                                aria-label={_creationText("creation.bd02e1ca5ef0ec9e", { value1: awaitingCount })}
+                                title={_creationText("creation.bd02e1ca5ef0ec9e", { value1: awaitingCount })}
                             >
-                                <span className="drama-topbar-action-label">全部生成视频 · </span>
-                                {awaitingCount} 集
+                                <span className="drama-topbar-action-label">{_creationText("creation.61920c9e610b90bb")}</span>
+                                {awaitingCount}
+                                {_creationText("creation.5bbadd8f8c4f781d")}
                             </Button>
                         ) : null}
                         {production.status !== "completed" ? (
@@ -453,10 +461,10 @@ export default function DramaStudioPage() {
                                 ariaLabel="切换集列表与制作区"
                                 value={mobilePane}
                                 onChange={setMobilePane}
-                                options={[
+                                options={_creationOptions([
                                     { label: `剧集 · ${episodes.length}`, value: "episodes" },
                                     { label: "制作", value: "production" },
-                                ]}
+                                ])}
                             />
                         </div>
                         <EpisodeRail
@@ -475,9 +483,7 @@ export default function DramaStudioPage() {
                             {episodeRow ? (
                                 <div className="drama-ep-header">
                                     <div className="drama-ep-heading">
-                                        <div className="drama-eyebrow">
-                                            第 {episodeRow.number} 集 · {STAGE_LABEL[episodeRow.stage]}
-                                        </div>
+                                        <div className="drama-eyebrow">{_creationText("creation.34ac7cbd8058f89f", { value1: episodeRow.number, value2: STAGE_LABEL[episodeRow.stage] })}</div>
                                         {renaming ? (
                                             <div className="drama-title-editor">
                                                 <input
@@ -485,7 +491,7 @@ export default function DramaStudioPage() {
                                                     autoFocus
                                                     defaultValue={episodeRow.title}
                                                     maxLength={60}
-                                                    aria-label="集标题"
+                                                    aria-label={_creationText("creation.1dec31ee573df5ab")}
                                                     disabled={rename.isPending}
                                                     onFocus={(event) => event.currentTarget.select()}
                                                     onBlur={(event) => {
@@ -498,34 +504,34 @@ export default function DramaStudioPage() {
                                                         if (event.key === "Escape") setRenaming(false);
                                                     }}
                                                 />
-                                                <span className="drama-title-hint">回车保存 · Esc 取消</span>
+                                                <span className="drama-title-hint">{_creationText("creation.e934df4caf67d2d8")}</span>
                                             </div>
                                         ) : (
                                             <h2 title={episodeRow.title}>
                                                 {episodeRow.title}
-                                                <button type="button" className="drama-title-edit" aria-label="重命名本集" onClick={() => setRenaming(true)}>
+                                                <button type="button" className="drama-title-edit" aria-label={_creationText("creation.bd0163f3f0040c96")} onClick={() => setRenaming(true)}>
                                                     <Pencil className="size-3.5" />
                                                 </button>
                                             </h2>
                                         )}
                                         <p>
-                                            <span>{episodeRow.shotCount} 镜</span>
+                                            <span>{_creationText("creation.9f657219677fbf0b", { value1: episodeRow.shotCount })}</span>
                                             {episodeRow.durationMs ? <span>{formatDuration(episodeRow.durationMs)}</span> : null}
                                             <StagePips episode={episodeRow} size="md" />
                                         </p>
                                     </div>
-                                    <div className="drama-tabs" role="tablist" aria-label="视图">
+                                    <div className="drama-tabs" role="tablist" aria-label={_creationText("creation.1c5c067138704dda")}>
                                         <button type="button" role="tab" className="drama-tab" aria-selected={tab === "script"} onClick={() => setParams({ tab: "script" })}>
                                             <ScrollText className="size-3.5" />
-                                            剧本
+                                            {_creationText("creation.0f83503407ff90db")}
                                         </button>
                                         <button type="button" role="tab" className="drama-tab" aria-selected={tab === "board"} onClick={() => setParams({ tab: null })}>
                                             <Clapperboard className="size-3.5" />
-                                            分镜
+                                            {_creationText("creation.c6b1d5264c01a261")}
                                         </button>
                                         <button type="button" role="tab" className="drama-tab" aria-selected={tab === "final"} onClick={() => setParams({ tab: "final" })}>
                                             <Film className="size-3.5" />
-                                            成片
+                                            {_creationText("projects.final_cut")}
                                         </button>
                                     </div>
                                     <Button
@@ -534,9 +540,9 @@ export default function DramaStudioPage() {
                                         disabled={!episodeRow.stats.segments}
                                         loading={canvas.opening === `episode:${episodeRow.id}`}
                                         onClick={() => void canvas.open({ kind: "episode", episodeId: episodeRow.id })}
-                                        title={episodeRow.stats.segments ? "把本集全部剧情段投送到精修画布" : "本集还没有剧情段"}
+                                        title={episodeRow.stats.segments ? _creationText("creation.4cf6c0db4a24adc4") : _creationText("creation.64d184dca9f4c0af")}
                                     >
-                                        在画布中打开本集
+                                        {_creationText("creation.6a68e5fc9eada311")}
                                     </Button>
                                 </div>
                             ) : null}
@@ -544,11 +550,11 @@ export default function DramaStudioPage() {
                                 {production.status === "paused" ? (
                                     <div className="drama-banner">
                                         <div className="drama-banner-text">
-                                            <strong>制作已暂停</strong>
-                                            <span title={production.pauseReason || undefined}>{production.pauseReason || "不会再派发新的生成任务；重新改编、生成视频或重试会自动继续制作。"}</span>
+                                            <strong>{_creationText("creation.2719c5ce5ad43e3e")}</strong>
+                                            <span title={production.pauseReason || undefined}>{production.pauseReason || _creationText("creation.787aa15152948963")}</span>
                                         </div>
                                         <Button size="small" type="primary" icon={<Play className="size-3.5" />} loading={toggleRun.isPending} onClick={() => toggleRun.mutate()}>
-                                            继续制作
+                                            {_creationText("creation.435090558c77f044")}
                                         </Button>
                                     </div>
                                 ) : null}
@@ -556,18 +562,18 @@ export default function DramaStudioPage() {
                                     <div className="drama-banner is-ready">
                                         <Clapperboard className="size-5 shrink-0 text-[var(--workspace-accent)]" />
                                         <div className="drama-banner-text">
-                                            <strong>剧本与视频提示词已就绪，还没有生成视频</strong>
-                                            <span>先看看剧情、镜头拆分、设定和各段视频提示词是否合适；可以改台词、动作、外观或直接改提示词，确认后再生成本集的参考图与段视频。</span>
+                                            <strong>{_creationText("creation.5590cf532f00cb81")}</strong>
+                                            <span>{_creationText("creation.8cf04a4fb9d01439")}</span>
                                         </div>
                                         <div className="flex shrink-0 gap-2">
-                                            {tab !== "script" ? <Button onClick={() => setParams({ tab: "script" })}>看剧本与原文</Button> : null}
+                                            {tab !== "script" ? <Button onClick={() => setParams({ tab: "script" })}>{_creationText("creation.83bfe8f721354a3c")}</Button> : null}
                                             <Button
                                                 type="primary"
                                                 icon={<Play className="size-4" />}
                                                 loading={release.isPending && release.variables?.target === "episodes"}
                                                 onClick={() => release.mutate({ target: "episodes", episodeIds: [episodeRow.id] })}
                                             >
-                                                生成本集视频
+                                                {_creationText("creation.dd6f07b1153e2da6")}
                                             </Button>
                                         </div>
                                     </div>
@@ -576,38 +582,38 @@ export default function DramaStudioPage() {
                                     <div className="drama-banner is-info">
                                         <CheckCheck className="size-5 shrink-0 text-[var(--workspace-accent)]" />
                                         <div className="drama-banner-text">
-                                            <strong>{sampleReview ? "第 1 集样片已完成，确认画风与角色形象" : "本集视频提示词已就绪，等待你的确认"}</strong>
-                                            <span>{sampleReview ? "在成片页看样片；满意后确认，其余各集会全自动跑完。" : "核对各段提示词与参考图，可改镜头脚本或直接改提示词；确认后按剧情段顺序生成视频。"}</span>
+                                            <strong>{sampleReview ? _creationText("creation.ef65437fc29b3b61") : _creationText("creation.368d22095311244d")}</strong>
+                                            <span>{sampleReview ? _creationText("creation.1f352a4392d7c2b5") : _creationText("creation.b2c16661ed820cc4")}</span>
                                         </div>
                                         <Button type="primary" loading={approve.isPending} onClick={() => approve.mutate()}>
-                                            {sampleReview ? "确认样片，继续全剧" : "确认，生成视频"}
+                                            {sampleReview ? _creationText("creation.9f4de94e8cffd9a9") : _creationText("creation.4d41f608fa6c8a36")}
                                         </Button>
                                     </div>
                                 ) : null}
                                 {sampleWaiting ? (
                                     <div className="drama-banner is-info">
                                         <div className="drama-banner-text">
-                                            <strong>剧本已就绪，等待样片确认</strong>
-                                            <span>第 1 集样片确认后，本集会按剧情段顺序生成视频。</span>
+                                            <strong>{_creationText("creation.0f50203c0c05fa63")}</strong>
+                                            <span>{_creationText("creation.268788604b4155a5")}</span>
                                         </div>
                                         <Button size="small" onClick={() => selectEpisode(episodes[0].id)}>
-                                            去看样片
+                                            {_creationText("creation.4151f893a74e38c2")}
                                         </Button>
                                     </div>
                                 ) : null}
                                 {detail?.episode.error ? (
                                     <div className="drama-banner is-error">
                                         <div className="drama-banner-text">
-                                            <strong>本集遇到问题</strong>
+                                            <strong>{_creationText("creation.f85556bd5b3cb471")}</strong>
                                             <span>{detail.episode.error}</span>
                                         </div>
-                                        <span className="text-[var(--fs-tiny)] text-foreground/50">可在底部队列“全部重试”</span>
+                                        <span className="text-[var(--fs-tiny)] text-foreground/50">{_creationText("creation.fde964c276bee204")}</span>
                                     </div>
                                 ) : null}
                             </div>
                             <div className="drama-scroll thin-scrollbar">
                                 {!detail ? (
-                                    <WorkspaceLoadingState label="正在读取本集" rows={2} />
+                                    <WorkspaceLoadingState label={_creationText("creation.6b56261341c13187")} rows={2} />
                                 ) : tab === "board" ? (
                                     <Storyboard
                                         shots={shots}

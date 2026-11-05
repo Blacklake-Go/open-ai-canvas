@@ -1,3 +1,5 @@
+import { creationSource as _creationSource, creationLabel as _creationLabel } from "@/supdance/plugins/i18n/creation-text";
+import { creationText as _creationText, useCreationLocale as _useCreationLocale } from "@/supdance/plugins/i18n/creation-text";
 import { Button, Modal } from "antd";
 import { useRef, useState } from "react";
 import type { EcommerceDraft, EcommercePlan } from "@/services/api/ecommerce";
@@ -21,6 +23,7 @@ export function GenerationConfirmation({
     onConfirm: (reviewed: EcommercePlan) => Promise<void>;
     onSupplement: (value: string) => void;
 }) {
+    _useCreationLocale();
     const [open, setOpen] = useState(false);
     const [confirming, setConfirming] = useState(false);
     const [error, setError] = useState("");
@@ -37,7 +40,7 @@ export function GenerationConfirmation({
             await onConfirm(reviewed);
             setOpen(false);
         } catch (cause) {
-            setError(cause instanceof Error ? cause.message : "提交失败，请检查方案后重试");
+            setError(cause instanceof Error ? cause.message : _creationSource("creation.dbd0897dd53a6d98"));
         } finally {
             locked.current = false;
             setConfirming(false);
@@ -47,10 +50,10 @@ export function GenerationConfirmation({
         <>
             {error ? (
                 <p className="ecommerce-confirmation-note" role="alert">
-                    {error}
+                    {_creationLabel(error)}
                 </p>
             ) : null}
-            {!completed && plan.uncertainFacts.length ? <p className="ecommerce-confirmation-note">有 {plan.uncertainFacts.length} 项商品信息待核实。点击下方按钮，可补充资料或明确排除未核实内容后继续。</p> : null}
+            {!completed && plan.uncertainFacts.length ? <p className="ecommerce-confirmation-note">{_creationText("creation.622e0ba51534339f", { value1: plan.uncertainFacts.length })}</p> : null}
             <Button
                 type="primary"
                 block
@@ -68,10 +71,11 @@ export function GenerationConfirmation({
                     else void submit(plan);
                 }}
             >
-                {label || (completed ? "图片任务已提交" : remaining < plan.images.length ? `继续生成剩余 ${remaining} 张` : `确认并生成 ${plan.images.length} 张`)}
+                {label ||
+                    (completed ? _creationText("creation.ea1044031e628098") : remaining < plan.images.length ? _creationText("creation.b1f4e5832f275057", { value1: remaining }) : _creationText("creation.a37ae81f86b20a91", { value1: plan.images.length }))}
             </Button>
             <Modal
-                title="生成前，核对商品信息"
+                title={_creationText("creation.219004c1c9e86529")}
                 open={open}
                 footer={null}
                 onCancel={() => {
@@ -80,10 +84,10 @@ export function GenerationConfirmation({
                 closable={!confirming}
                 maskClosable={!confirming}
             >
-                <p>以下内容尚未核实，不会自动成为商品事实。你可以补充真实资料后重新策划，或将这些内容作为禁止主张逐张提交。</p>
+                <p>{_creationText("creation.bcd5671f4d68545b")}</p>
                 {error ? (
                     <p className="ecommerce-confirmation-note" role="alert">
-                        {error}
+                        {_creationLabel(error)}
                     </p>
                 ) : null}
                 <div inert={confirming}>
@@ -97,7 +101,7 @@ export function GenerationConfirmation({
                         excludeLabel="排除未核实主张并开始生成"
                     />
                 </div>
-                {confirming ? <p role="status">正在保存已审阅方案并提交图片任务…</p> : null}
+                {confirming ? <p role="status">{_creationText("creation.9ce9f7db2016c391")}</p> : null}
             </Modal>
         </>
     );

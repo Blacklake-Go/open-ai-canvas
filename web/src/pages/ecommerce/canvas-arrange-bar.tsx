@@ -1,3 +1,4 @@
+import { creationText as _creationText, useCreationLocale as _useCreationLocale } from "@/supdance/plugins/i18n/creation-text";
 import { Dropdown, type MenuProps } from "antd";
 import { ChevronDown, Crop, Download, Images, Maximize2, Scissors, X } from "lucide-react";
 import { useLayoutEffect, useRef, useState } from "react";
@@ -63,6 +64,7 @@ export function CommerceArrangeMenu({
     onDownload?: () => void;
     onClear?: () => void;
 }) {
+    _useCreationLocale();
     const bar = useRef<HTMLDivElement>(null);
     const [size, setSize] = useState({ width: 120, height: 34 });
     useLayoutEffect(() => {
@@ -91,33 +93,35 @@ export function CommerceArrangeMenu({
     ];
     const available = frame.width - leftInset - rightInset - EDGE * 2;
     return (
-        <div ref={bar} className="commerce-arrange-bar" role="group" aria-label="多图操作" data-compact={available < 620 || undefined} data-canvas-no-zoom style={{ left: center, top, maxWidth: Math.max(180, available) }}>
-            <span className="commerce-selection-count">已选 {count} 张</span>
+        <div ref={bar} className="commerce-arrange-bar" role="group" aria-label={_creationText("creation.4140fc743ee5db99")} data-compact={available < 620 || undefined} data-canvas-no-zoom style={{ left: center, top, maxWidth: Math.max(180, available) }}>
+            <span className="commerce-selection-count">{_creationText("creation.74cf72d8c752f564", { value1: count })}</span>
             <Dropdown trigger={["click"]} placement="bottom" menu={{ items, onClick: ({ key }) => onArrange(key as CommerceArrangeAction) }}>
-                <button type="button" aria-haspopup="menu" aria-label={`对齐排布已选的 ${count} 张图片`}>
-                    对齐排布
+                <button type="button" aria-haspopup="menu" aria-label={_creationText("creation.b0c975c44adac2b3", { value1: count })}>
+                    {_creationText("creation.8286175f5e68a238")}
                     <ChevronDown size={13} aria-hidden="true" />
                 </button>
             </Dropdown>
             <button type="button" onClick={onDownload} disabled={!onDownload}>
                 <Download size={14} />
-                导出 ZIP
+                {_creationText("creation.226c75227d0d17ca")}
             </button>
-            {[
-                ["裁剪", Crop],
-                ["多图融合", Images],
-                ["AI 抠图", Scissors],
-                ["智能延展", Maximize2],
-            ].map(([label, Icon]) => {
+            {(
+                [
+                    ["裁剪", Crop],
+                    ["多图融合", Images],
+                    ["AI 抠图", Scissors],
+                    ["智能延展", Maximize2],
+                ] as const
+            ).map(([label, Icon]) => {
                 const ToolIcon = Icon as typeof Crop;
                 return (
-                    <button key={label as string} type="button" disabled title={`${label}功能即将开放`}>
+                    <button key={label as string} type="button" disabled title={_creationText("creation.e11fb0e0f2957920", { value1: label })}>
                         <ToolIcon size={14} />
                         <span>{label as string}</span>
                     </button>
                 );
             })}
-            <button type="button" onClick={onClear} aria-label="取消选择" title="取消选择">
+            <button type="button" onClick={onClear} aria-label={_creationText("creation.74966e20df2ea9fd")} title={_creationText("creation.74966e20df2ea9fd")}>
                 <X size={14} />
             </button>
         </div>

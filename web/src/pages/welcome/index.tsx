@@ -4,6 +4,7 @@ import { ArrowDown, ArrowRight, ArrowUpRight, Code2, Menu, Pause, Play, X } from
 import { useTranslation } from "react-i18next";
 
 import { BrandLogo } from "@/components/brand/brand-logo";
+import { SitePolicyLinks } from "@/components/layout/site-compliance-footer";
 import { IconButton } from "@/components/ui/base/buttons";
 import { getAntThemeConfig } from "@/lib/app-theme";
 import { useAppearanceStore } from "@/stores/use-appearance-store";
@@ -251,6 +252,9 @@ function WelcomeExperience({ look, brandName, onLookChange }: { look: WelcomeLoo
             <footer className="welcome-footer">
                 <a href="/welcome">{brandName}</a>
                 <span>{t("account.welcome.footer")}</span>
+                <nav className="welcome-policy-links" aria-label={t("account.layout.footer.label")}>
+                    <SitePolicyLinks />
+                </nav>
                 <a href={`${github}/blob/main/LICENSE`} target="_blank" rel="noreferrer">
                     Open Source · MIT License
                     <ArrowUpRight size={12} />

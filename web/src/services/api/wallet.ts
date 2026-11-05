@@ -79,6 +79,7 @@ export type ChannelModel = {
 };
 
 export type ChannelModelPriceTier = {
+    tokenPriceBands?: TokenPriceBand[];
     /** 仅管理员模型编辑接口返回，不能复制到用户模型目录。 */
     costPricing?: CreditCostPricing;
     id: string;
@@ -102,12 +103,22 @@ export type ChannelModelPriceTier = {
 };
 
 export type CreditCostPricing = {
+    tokenPriceBands?: TokenPriceBand[];
     configured: boolean;
     unitPriceMicrocredits: number;
     inputTokenPriceMicrocredits: number;
     outputTokenPriceMicrocredits: number;
     cachedTokenPriceMicrocredits: number;
     cacheWriteTokenPriceMicrocredits: number;
+};
+
+export type TokenPriceBand = {
+    minInputTokens: number;
+    inputTokenPriceMicrocredits: number;
+    outputTokenPriceMicrocredits: number;
+    cachedTokenPriceMicrocredits: number;
+    cacheWriteTokenPriceMicrocredits: number;
+    cacheWrite1hTokenPriceMicrocredits?: number;
 };
 
 // 系统渠道模型的写入合同。标量价格只用于兼容旧管理请求；新的后台界面只提交 priceTiers。

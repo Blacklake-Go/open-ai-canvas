@@ -1,3 +1,5 @@
+import { creationOptions as _creationOptions, creationLabel as _creationLabel } from "@/supdance/plugins/i18n/creation-text";
+import { creationText as _creationText, useCreationLocale as _useCreationLocale } from "@/supdance/plugins/i18n/creation-text";
 import { useEffect, useMemo, useState, type ReactNode } from "react";
 import { App, Button, Input, InputNumber, Select } from "antd";
 import { AntTooltip as Tooltip } from "@/components/ui/base/tooltip/ant-tooltip";
@@ -99,6 +101,7 @@ export function SegmentDialog({
     onOpenCanvas,
     canvasOpening,
 }: Props) {
+    _useCreationLocale();
     const segments = detail?.segments || [];
     const position = segments.findIndex((item) => item.index === segmentIndex);
     const segment = position >= 0 ? segments[position] : undefined;
@@ -114,32 +117,40 @@ export function SegmentDialog({
             centered
             width="min(1360px, calc(100vw - 48px))"
             rootClassName="drama-root drama-sd-root"
-            aria-label={segment ? `第 ${segment.index + 1} 段` : "剧情段"}
+            aria-label={segment ? _creationText("creation.83db323ec59ca39a", { value1: segment.index + 1 }) : _creationText("creation.7c4175f6609bc3c7")}
         >
             {segment && detail ? (
                 <div className="drama-sd">
                     <header className="drama-sd-head">
                         <div className="min-w-0">
                             <div className="drama-eyebrow">
-                                第 {detail.episode.number} 集 · 第 {segment.index + 1} / {segments.length} 段 · 镜头 {shots.length ? `${shots[0].position + 1}–${shots[shots.length - 1].position + 1}` : "—"}
+                                {_creationText("creation.af50a0fe2a50a3d1")}
+                                {detail.episode.number}
+                                {_creationText("creation.355a2c8cd7808a99")}
+                                {segment.index + 1} / {segments.length}
+                                {_creationText("creation.c74bcc4f599c8549")}
+                                {shots.length ? `${shots[0].position + 1}–${shots[shots.length - 1].position + 1}` : "—"}
                             </div>
                             <div className="drama-sd-title">
-                                <h2>{segment.title}</h2>
-                                <span className="drama-sdx-total">总时长 {secondsLabel(segment.durationMs)}</span>
+                                <h2 data-i18n-user-content>{segment.title}</h2>
+                                <span className="drama-sdx-total">
+                                    {_creationText("creation.9b1830480c8008b8")}
+                                    {secondsLabel(segment.durationMs)}
+                                </span>
                                 <SegmentStatus segment={segment} />
                             </div>
                         </div>
                         <div className="drama-sd-nav">
                             <Button icon={<Brush className="size-4" />} loading={canvasOpening} onClick={() => onOpenCanvas(segment)}>
-                                在画布中精修
+                                {_creationText("creation.64422cd9b4ac9f19")}
                             </Button>
-                            <Tooltip title="上一段">
-                                <Button icon={<ChevronLeft className="size-4" />} aria-label="上一段" disabled={position <= 0} onClick={() => onNavigate(segments[position - 1].index)} />
+                            <Tooltip title={_creationText("creation.5c73eb92d825f81f")}>
+                                <Button icon={<ChevronLeft className="size-4" />} aria-label={_creationText("creation.5c73eb92d825f81f")} disabled={position <= 0} onClick={() => onNavigate(segments[position - 1].index)} />
                             </Tooltip>
-                            <Tooltip title="下一段">
-                                <Button icon={<ChevronRight className="size-4" />} aria-label="下一段" disabled={position >= segments.length - 1} onClick={() => onNavigate(segments[position + 1].index)} />
+                            <Tooltip title={_creationText("creation.4cd4dc1f03d6dce3")}>
+                                <Button icon={<ChevronRight className="size-4" />} aria-label={_creationText("creation.4cd4dc1f03d6dce3")} disabled={position >= segments.length - 1} onClick={() => onNavigate(segments[position + 1].index)} />
                             </Tooltip>
-                            <Button type="text" icon={<X className="size-4" />} aria-label="关闭" onClick={onClose} />
+                            <Button type="text" icon={<X className="size-4" />} aria-label={_creationText("common.close")} onClick={onClose} />
                         </div>
                     </header>
                     <div className="drama-sdx-body">
@@ -158,10 +169,10 @@ export function SegmentDialog({
                             <SegmentPrompt segment={segment} castById={castById} writing={writing} onSave={(override) => onSavePrompt(segment, override)} onWrite={() => onWritePrompt(segment)} />
                             <ReferenceBoard segment={segment} shots={shots} castById={castById} busy={busy} onChange={(ids) => onSaveReferences(segment, ids)} onOpenCast={onOpenCast} />
                             <SegmentReceipt segment={segment} />
-                            <section className="drama-sdx-section" aria-label="本段镜头">
+                            <section className="drama-sdx-section" aria-label={_creationText("creation.5327351b5844372b")}>
                                 <div className="drama-sdx-section-head">
-                                    <strong>本段镜头</strong>
-                                    <small>改动镜头后本段提示词与视频需要重新生成</small>
+                                    <strong>{_creationText("creation.5327351b5844372b")}</strong>
+                                    <small>{_creationText("creation.2f9969e4bb0b79bd")}</small>
                                 </div>
                                 <ol className="drama-sdx-shots">
                                     {shots.map((item, index) => (
@@ -183,22 +194,22 @@ export function SegmentDialog({
                                 </ol>
                             </section>
                         </main>
-                        <aside className="drama-sdx-side thin-scrollbar" aria-label="本段视频">
+                        <aside className="drama-sdx-side thin-scrollbar" aria-label={_creationText("creation.44bd0fc799b223fa")}>
                             <div className="drama-sdx-side-head">
-                                <strong>第 {segment.index + 1} 段视频</strong>
+                                <strong>{_creationText("creation.5ecbd1b33b344e52", { value1: segment.index + 1 })}</strong>
                                 <SegmentStatus segment={segment} />
                             </div>
                             <SegmentVideo segment={segment} aspectRatio={aspectRatio} />
                             {segment.videoStatus === "failed" && segment.videoError ? (
                                 <div className="drama-sd-error">
-                                    <strong>{segment.videoReprocessable ? "视频已生成，后处理失败" : "视频生成失败"}</strong>
+                                    <strong>{segment.videoReprocessable ? _creationText("creation.cb5dcb93c12ddbc4") : _creationText("creation.5a586025ef2c7f6f")}</strong>
                                     <span>{segment.videoError}</span>
                                     {segment.videoReprocessable ? (
                                         <>
-                                            <span>重新处理只针对这条已生成的视频，不会重新生成或扣费。</span>
+                                            <span>{_creationText("creation.17322000f7ee7616")}</span>
                                             <div className="drama-sd-error-actions">
                                                 <Button size="small" icon={<RotateCcw className="size-3.5" />} loading={reprocessing} disabled={busy} onClick={() => onReprocess(segment)}>
-                                                    重新处理视频
+                                                    {_creationText("creation.1c6614af61520f96")}
                                                 </Button>
                                             </div>
                                         </>
@@ -207,18 +218,18 @@ export function SegmentDialog({
                             ) : null}
                             {segment.videoStatus === "queued" && segment.videoWait ? (
                                 <div className="drama-sd-error is-wait" role="status">
-                                    <strong>视频尚未提交</strong>
+                                    <strong>{_creationText("creation.25e00a4083c8d52c")}</strong>
                                     <span>{segment.videoWait}</span>
                                 </div>
                             ) : null}
                             <dl className="drama-sdx-facts">
                                 <div>
-                                    <dt>进入成片</dt>
-                                    <dd>{segment.videoSeconds ? `${segment.videoSeconds} 秒` : "—"}</dd>
+                                    <dt>{_creationText("creation.3f94f7b4263e5b00")}</dt>
+                                    <dd>{segment.videoSeconds ? _creationText("creation.8e9c8e4d3e4205c7", { value1: segment.videoSeconds }) : "—"}</dd>
                                 </div>
                                 <div>
-                                    <dt>上次花费</dt>
-                                    <dd>{segment.videoJob ? `${formatCredits(segment.videoJob.costMicrocredits)} 积分` : "—"}</dd>
+                                    <dt>{_creationText("creation.ae7c2a86010c6eeb")}</dt>
+                                    <dd>{segment.videoJob ? _creationText("creation.d901f70479c8f61f", { value1: formatCredits(segment.videoJob.costMicrocredits) }) : "—"}</dd>
                                 </div>
                             </dl>
                             <DramaTakeList projectId={detail.episode.projectId} ownerId={segment.id} kind="video" />
@@ -250,6 +261,7 @@ function SegmentToolbar({
     onGenerate: (model?: DramaModelChoice) => void;
     onWritePrompt: () => void;
 }) {
+    _useCreationLocale();
     const { message } = App.useApp();
     const baseline = segment.videoModel?.logicalModelId || segment.videoModel?.modelKey ? segment.videoModel : defaultVideoModel;
     const [choice, setChoice] = useState<DramaModelChoice>(baseline);
@@ -271,20 +283,20 @@ function SegmentToolbar({
           ? "重新生成视频"
           : "生成本段视频";
     return (
-        <section className="drama-sdx-toolbar" aria-label="生成设置">
+        <section className="drama-sdx-toolbar" aria-label={_creationText("workbench.generation_settings")}>
             <div className="drama-sdx-toolbar-row">
-                <DramaModelPicker capability="video" size="sm" value={choice} onChange={setChoice} placeholder="视频模型" className="drama-sdx-model" aspectRatio={aspectRatio} videoResolution={videoResolution} />
-                <Tooltip title={segment.request.maxVideoSeconds ? `按本段镜头时长生成；模型单次最长 ${segment.request.maxVideoSeconds} 秒` : "按本段镜头时长生成"}>
+                <DramaModelPicker capability="video" size="sm" value={choice} onChange={setChoice} placeholder={_creationText("creation.a0afda31af337fd1")} className="drama-sdx-model" aspectRatio={aspectRatio} videoResolution={videoResolution} />
+                <Tooltip title={segment.request.maxVideoSeconds ? _creationText("creation.6b0bff4f372e6c4f", { value1: segment.request.maxVideoSeconds }) : _creationText("creation.e69b906d413df03e")}>
                     <span className="drama-sdx-chip">{segment.request.seconds ? `${segment.request.seconds}s` : secondsLabel(segment.durationMs)}</span>
                 </Tooltip>
-                <Tooltip title="画幅随作品设置，开工后不能修改">
+                <Tooltip title={_creationText("creation.a2a5967203246f06")}>
                     <span className="drama-sdx-chip">{aspectRatio}</span>
                 </Tooltip>
-                {changed ? <span className="drama-sdx-chip is-accent">本段换模型</span> : null}
+                {changed ? <span className="drama-sdx-chip is-accent">{_creationText("creation.f1644c09a4ca6f70")}</span> : null}
             </div>
             <div className="drama-sdx-toolbar-row">
                 <Button size="small" icon={<PenLine className="size-3.5" />} loading={writing} disabled={busy || writingNow} onClick={onWritePrompt}>
-                    {segment.promptStatus === "none" ? "撰写提示词" : "重新撰写提示词"}
+                    {segment.promptStatus === "none" ? _creationText("creation.ae924664cacd3732") : _creationText("creation.8bf26df8f7981efa")}
                 </Button>
                 <Button
                     size="small"
@@ -292,12 +304,12 @@ function SegmentToolbar({
                     disabled={!segment.videoPrompt}
                     onClick={() =>
                         void navigator.clipboard.writeText(sent).then(
-                            () => message.success("已复制发送全文"),
-                            () => message.error("复制失败"),
+                            () => message.success(_creationText("creation.f0839b18103409c7")),
+                            () => message.error(_creationText("creation.753d8bb0da9913ce")),
                         )
                     }
                 >
-                    复制发送全文
+                    {_creationText("creation.c36f24e737314811")}
                 </Button>
                 <span className="drama-sdx-spacer" />
                 <Button
@@ -310,9 +322,15 @@ function SegmentToolbar({
                     {generateLabel}
                 </Button>
             </div>
-            {!promptReady(segment) && !running ? <p className="drama-sdx-hint">提示词就绪后才能生成视频</p> : null}
+            {!promptReady(segment) && !running ? <p className="drama-sdx-hint">{_creationText("creation.6180f55293c362ec")}</p> : null}
             {quoteMissing && !running ? <p className="drama-sdx-hint is-error">{SEGMENT_NO_QUOTE_HINT}</p> : null}
-            {segment.request.unknownReferences?.length ? <p className="drama-sdx-hint is-error">提示词里的 {segment.request.unknownReferences.join("、")} 不是本段的参考图，改正编号后才能生成视频</p> : null}
+            {segment.request.unknownReferences?.length ? (
+                <p className="drama-sdx-hint is-error">
+                    {_creationText("creation.83c942cfc6b026ac")}
+                    {segment.request.unknownReferences.join("、")}
+                    {_creationText("creation.24f95068a48ae791")}
+                </p>
+            ) : null}
         </section>
     );
 }
@@ -332,6 +350,7 @@ function moveItem(ids: string[], from: number, to: number) {
  * 改动后参考图编号变化，模型撰写的提示词标记过期，需要重新撰写。
  */
 function ReferenceBoard({ segment, shots, castById, busy, onChange, onOpenCast }: { segment: DramaSegment; shots: DramaShot[]; castById: Map<string, DramaCast>; busy: boolean; onChange: (ids: string[] | null) => void; onOpenCast: (id: string) => void }) {
+    _useCreationLocale();
     const { request } = segment;
     const ids = request.references.map((ref) => ref.castId);
     const sent = request.references.filter((ref) => ref.sent).length;
@@ -363,27 +382,38 @@ function ReferenceBoard({ segment, shots, castById, busy, onChange, onOpenCast }
     }, [castById, candidates, ids.join("|")]);
     const first = segment.index === 0 && !request.firstFrameResourceId && !request.firstFramePending;
     return (
-        <section className="drama-sdx-section" aria-label="本段参考资产">
+        <section className="drama-sdx-section" aria-label={_creationText("creation.b0332e8d02818c80")}>
             <div className="drama-sdx-section-head">
-                <span className="drama-sdx-count">
-                    本段参考 {sent}/{request.references.length}
-                </span>
+                <span className="drama-sdx-count">{_creationText("creation.f76f0672d7ae2e60", { value1: sent, value2: request.references.length })}</span>
                 <small>
-                    {custom ? "手动指定" : "按镜头自动取"} · 本段最多发送 {request.referenceCapacity} 张{request.modelMaxImages ? ` · 模型上限 ${request.modelMaxImages} 张（含首帧）` : ""}；勾选决定本段生成时用哪些参考图
+                    {custom ? _creationText("creation.3fafbd5dffd185e4") : _creationText("creation.0edb541a6e6c7ee7")}
+                    {_creationText("creation.baa0677523f2553b")}
+                    {request.referenceCapacity}
+                    {_creationText("creation.f56a049fcc23f1eb")}
+                    {request.modelMaxImages ? _creationText("creation.6439c5d4a4c22061", { value1: request.modelMaxImages }) : ""}
+                    {_creationText("creation.b7ef31fad1a9d61f")}
                 </small>
                 {custom ? (
                     <Button size="small" type="text" icon={<RotateCcw className="size-3.5" />} disabled={busy} onClick={() => onChange(null)}>
-                        恢复自动
+                        {_creationText("creation.8836276c613cabfc")}
                     </Button>
                 ) : null}
             </div>
             <div className="drama-sdx-assets">
-                <Tooltip title={first ? "开场段：按提示词与参考图生成，没有首帧" : request.firstFrameResourceId ? `首帧：第 ${segment.index} 段视频最后一帧` : `首帧：等第 ${segment.index} 段视频生成后取最后一帧`}>
+                <Tooltip
+                    title={first ? _creationText("creation.a9fffae29863dd09") : request.firstFrameResourceId ? _creationText("creation.c9f67b3cd042e9dc", { value1: segment.index }) : _creationText("creation.38403b6bfefdd8c9", { value1: segment.index })}
+                >
                     <div className="drama-sdx-asset is-frame">
-                        <span className="drama-sdx-asset-thumb">{request.firstFrameResourceId ? <MediaThumb resourceId={request.firstFrameResourceId} alt="上一段最后一帧" /> : <span>{first ? "开场" : "等待"}</span>}</span>
+                        <span className="drama-sdx-asset-thumb">
+                            {request.firstFrameResourceId ? (
+                                <MediaThumb resourceId={request.firstFrameResourceId} alt={_creationText("creation.64e647790eec1dcf")} />
+                            ) : (
+                                <span>{first ? _creationText("creation.fd0d4b7258c28a99") : _creationText("creation.251bc40e7027dfc0")}</span>
+                            )}
+                        </span>
                         <span className="drama-sdx-asset-text">
-                            <b>首帧</b>
-                            <small>{first ? "开场段" : request.firstFrameResourceId ? `第 ${segment.index} 段尾帧` : "等待上一段"}</small>
+                            <b>{_creationText("workbench.first_frame")}</b>
+                            <small>{first ? _creationText("creation.3aceab88c79d7f8e") : request.firstFrameResourceId ? _creationText("creation.d5524f2fe0218866", { value1: segment.index }) : _creationText("creation.0f8378c4c0979af2")}</small>
                         </span>
                     </div>
                 </Tooltip>
@@ -422,11 +452,11 @@ function ReferenceBoard({ segment, shots, castById, busy, onChange, onOpenCast }
                 ))}
             </div>
             {request.audioReferences?.length ? (
-                <div className="drama-sdx-voices" aria-label="本段参考音频">
+                <div className="drama-sdx-voices" aria-label={_creationText("creation.aa25b784c6d82083")}>
                     {request.audioReferences.map((voice) => (
-                        <span key={voice.castId} className={`drama-sdx-voice ${voice.sent ? "" : "is-missing"}`} title={voice.sent ? `${voice.label}：${voice.name}的声音，随请求发送` : voice.note}>
+                        <span key={voice.castId} className={`drama-sdx-voice ${voice.sent ? "" : "is-missing"}`} title={voice.sent ? _creationText("creation.b3aa043fdced04da", { value1: voice.label, value2: voice.name }) : voice.note}>
                             <Mic className="size-3" />
-                            <b>{voice.sent ? voice.label?.replace("参考音频", "音") : "未发"}</b>
+                            <b>{voice.sent ? voice.label?.replace("参考音频", "音") : _creationText("creation.3640cefb57fe209e")}</b>
                             {voice.name}
                             {voice.sent ? null : <small>{voice.note}</small>}
                         </span>
@@ -439,17 +469,17 @@ function ReferenceBoard({ segment, shots, castById, busy, onChange, onOpenCast }
                     size="small"
                     showSearch
                     value={null}
-                    placeholder="添加其他设定作参考图"
+                    placeholder={_creationText("creation.1f4f71839eacb8cb")}
                     optionFilterProp="label"
-                    options={options}
+                    options={_creationOptions(options)}
                     disabled={busy || !options.length}
-                    aria-label="添加参考图"
+                    aria-label={_creationText("creation.bc35022a3a307eaf")}
                     suffixIcon={<Plus className="size-3.5" />}
                     onChange={(id: string | null) => {
                         if (id) onChange([...ids, id]);
                     }}
                 />
-                <small>参考图编号会随勾选与顺序变化，模型撰写的提示词需要重新撰写；手写的提示词请自行核对编号。</small>
+                <small>{_creationText("creation.6c46ece5ea3be4a1")}</small>
             </div>
         </section>
     );
@@ -481,6 +511,7 @@ function AssetChip({
     onOpen: () => void;
     onRaise?: () => void;
 }) {
+    _useCreationLocale();
     const preview = cast?.imageResourceId ? (
         <span className="drama-sdx-preview">
             <MediaThumb resourceId={cast.imageResourceId} alt={name} />
@@ -490,22 +521,29 @@ function AssetChip({
     );
     return (
         <div className={`drama-sdx-asset ${checked ? "is-checked" : ""} ${missing ? "is-missing" : ""}`}>
-            <input type="checkbox" className="drama-sdx-asset-check" checked={checked} disabled={disabled} aria-label={checked ? `不再把${name}作为本段参考图` : `把${name}作为本段参考图`} onChange={onToggle} />
+            <input
+                type="checkbox"
+                className="drama-sdx-asset-check"
+                checked={checked}
+                disabled={disabled}
+                aria-label={checked ? _creationText("creation.995ee04601b9bb2e", { value1: name }) : _creationText("creation.151156d733787563", { value1: name })}
+                onChange={onToggle}
+            />
             <Tooltip title={preview} placement="right" mouseEnterDelay={0.25} styles={{ root: { maxWidth: 360 } }}>
                 <span className="drama-sdx-asset-thumb">
                     {cast?.imageResourceId ? <MediaThumb resourceId={cast.imageResourceId} alt={name} /> : <span>{kindLabel}</span>}
                     {badge ? <em>{badge}</em> : null}
                 </span>
             </Tooltip>
-            <button type="button" className="drama-sdx-asset-text" onClick={onOpen} title={`查看${name}设定`}>
+            <button type="button" className="drama-sdx-asset-text" onClick={onOpen} title={_creationText("creation.dad73495280c07b2", { value1: name })}>
                 <b>{name}</b>
                 <small>
                     {kindLabel} · {note}
                 </small>
             </button>
             {onRaise ? (
-                <Tooltip title="提前（优先发送）">
-                    <button type="button" className="drama-sdx-asset-raise" aria-label={`提前${name}`} disabled={disabled} onClick={onRaise}>
+                <Tooltip title={_creationText("creation.ffc2ff6f8e60d6f8")}>
+                    <button type="button" className="drama-sdx-asset-raise" aria-label={_creationText("creation.f8d42d0770297166", { value1: name })} disabled={disabled} onClick={onRaise}>
                         <ArrowLeft className="size-3" />
                     </button>
                 </Tooltip>
@@ -518,6 +556,7 @@ type ReceiptRow = { tone: "ok" | "warn" | "info"; label: string; value: ReactNod
 
 /** 生成依据回执：本段实际会发送什么、按什么方式生成；与提交时同一函数计算。 */
 function SegmentReceipt({ segment }: { segment: DramaSegment }) {
+    _useCreationLocale();
     const { request } = segment;
     const references = request.references.length;
     const sent = request.references.filter((ref) => ref.sent).length;
@@ -544,13 +583,13 @@ function SegmentReceipt({ segment }: { segment: DramaSegment }) {
         { tone: promptReady(segment) ? "ok" : "warn", label: "提示词", value: promptText },
     ];
     return (
-        <section className="drama-sdx-receipt" aria-label="生成依据回执">
-            <strong>生成依据回执</strong>
+        <section className="drama-sdx-receipt" aria-label={_creationText("creation.056ff5e9562a293c")}>
+            <strong>{_creationText("creation.056ff5e9562a293c")}</strong>
             <ul>
                 {rows.map((row) => (
                     <li key={row.label} className={`is-${row.tone}`}>
                         {row.tone === "ok" ? <Check className="size-3.5" aria-hidden /> : row.tone === "warn" ? <AlertTriangle className="size-3.5" aria-hidden /> : <Info className="size-3.5" aria-hidden />}
-                        <span>{row.label}：</span>
+                        <span>{_creationLabel(row.label)}：</span>
                         <b>{row.value}</b>
                     </li>
                 ))}
@@ -567,6 +606,7 @@ function SegmentReceipt({ segment }: { segment: DramaSegment }) {
 
 /** 文本里出现的设定名高亮显示，方便核对镜头里的人物、道具与场景。 */
 function HighlightCast({ text, names }: { text: string; names: string[] }) {
+    _useCreationLocale();
     if (!text || !names.length) return <>{text}</>;
     const pattern = new RegExp(`(${names.map((name) => name.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")).join("|")})`, "g");
     return (
@@ -610,6 +650,7 @@ function ShotCard({
     onInsert?: (where: "before" | "after") => void;
     onDelete?: () => void;
 }) {
+    _useCreationLocale();
     const { modal } = App.useApp();
     const names = useMemo(
         () =>
@@ -631,25 +672,27 @@ function ShotCard({
         <li className={`drama-sdx-shot ${editing ? "is-editing" : ""}`}>
             <div className="drama-sdx-shot-head">
                 <b className="drama-sdx-shot-index">{number}</b>
-                <span className="drama-sdx-chip">{shot.dialogue ? "对话镜头" : "动作镜头"}</span>
+                <span data-i18n-user-content className="drama-sdx-chip">
+                    {shot.dialogue ? _creationText("creation.271f256b3cb9cd3b") : _creationText("creation.e58e8ce8ad3025ac")}
+                </span>
                 <span className="drama-sdx-shot-time">
                     {secondsLabel(startMs)}–{secondsLabel(startMs + shot.durationMs)}
                 </span>
                 <span className="drama-sdx-shot-duration">{secondsLabel(shot.durationMs)}</span>
                 <span className="drama-sdx-spacer" />
                 {onInsert ? (
-                    <Tooltip title="在后面插入空镜头">
+                    <Tooltip title={_creationText("creation.fbc909b7baa01d67")}>
                         <Button size="small" icon={<Plus className="size-3.5" />} disabled={busy} onClick={() => onInsert("after")}>
-                            镜
+                            {_creationText("creation.601e41f3ade62c01")}
                         </Button>
                     </Tooltip>
                 ) : null}
                 {onDelete ? (
-                    <Tooltip title={deletable ? "删除镜头" : "剧情段唯一的镜头不能删"}>
+                    <Tooltip title={deletable ? _creationText("creation.382c8d6e426ce8cd") : _creationText("creation.563407e151db7ecc")}>
                         <Button
                             size="small"
                             icon={<Trash2 className="size-3.5" />}
-                            aria-label="删除镜头"
+                            aria-label={_creationText("creation.382c8d6e426ce8cd")}
                             disabled={busy || !deletable}
                             onClick={() =>
                                 modal.confirm({
@@ -666,7 +709,7 @@ function ShotCard({
                     </Tooltip>
                 ) : null}
                 <Button size="small" type={editing ? "primary" : "default"} icon={<Pencil className="size-3.5" />} aria-pressed={editing} onClick={onEdit}>
-                    {editing ? "完成" : "编辑"}
+                    {editing ? _creationText("settings.channel_complete_btn") : _creationText("common.edit")}
                 </Button>
             </div>
             {editing ? (
@@ -677,7 +720,7 @@ function ShotCard({
                         .filter(([, value]) => value)
                         .map(([label, value]) => (
                             <div key={label}>
-                                <dt>{label}</dt>
+                                <dt>{_creationLabel(label)}</dt>
                                 <dd>
                                     <HighlightCast text={value} names={names} />
                                 </dd>
@@ -712,6 +755,7 @@ const PROMPT_EDITOR_MAX = 560;
  * 提交时系统在正文前追加参考图对应说明（上方列出），视频模型靠同一个“参考图N”把名称与图片对上。
  */
 function SegmentPrompt({ segment, castById, writing, onSave, onWrite }: { segment: DramaSegment; castById: Map<string, DramaCast>; writing: boolean; onSave: (override: string) => void; onWrite: () => void }) {
+    _useCreationLocale();
     const [draft, setDraft] = useState(segment.videoPrompt);
     const [editorHeight, setEditorHeight] = useState(PROMPT_EDITOR_MIN);
     const [showHeader, setShowHeader] = useState(false);
@@ -752,38 +796,38 @@ function SegmentPrompt({ segment, castById, writing, onSave, onWrite }: { segmen
         onSave(next === segment.generated.trim() ? "" : next);
     };
     return (
-        <section className="drama-sdx-section drama-sdx-prompt" aria-label="完整视频提示词">
+        <section className="drama-sdx-section drama-sdx-prompt" aria-label={_creationText("creation.c9667afc7e406330")}>
             <div className="drama-sdx-section-head">
-                <strong>完整视频提示词</strong>
-                {segment.custom ? <span className="drama-sdx-chip is-accent">已手动改写</span> : null}
-                <small>正文里的“参考图N”对应本段参考图；输入 @ 插入参考图，双击引用放大查看</small>
+                <strong>{_creationText("creation.c9667afc7e406330")}</strong>
+                {segment.custom ? <span className="drama-sdx-chip is-accent">{_creationText("creation.bf4dd6b2a365d439")}</span> : null}
+                <small>{_creationText("creation.1d5e4b75f52d7fbb")}</small>
                 {segment.custom ? (
                     <Button size="small" type="text" icon={<RotateCcw className="size-3.5" />} onClick={() => onSave("")}>
-                        恢复模型版本
+                        {_creationText("creation.4d2e5ee624a18410")}
                     </Button>
                 ) : null}
             </div>
             {notice && segment.videoPrompt ? <PromptNotice segment={segment} text={notice} /> : null}
             {request.header ? (
-                <div className="drama-sdx-prefix" aria-label="提交时加在开头的参考图说明">
+                <div className="drama-sdx-prefix" aria-label={_creationText("creation.baf62892393711ae")}>
                     <div className="drama-sdx-prefix-head">
-                        <span>提交时自动加在开头</span>
+                        <span>{_creationText("creation.4693268e02fbc877")}</span>
                         <button type="button" className="drama-sdx-link" aria-expanded={showHeader} onClick={() => setShowHeader((value) => !value)}>
-                            {showHeader ? "收起原文" : "查看原文"}
+                            {showHeader ? _creationText("creation.b5269ef5aea2bd68") : _creationText("creation.e8952ea03f9173f3")}
                         </button>
                     </div>
                     <div className="drama-sdx-prefix-refs">
-                        {segment.index > 0 ? <span className="drama-sdx-prefix-ref is-frame">首帧 · 上一段最后一帧（不占编号）</span> : null}
+                        {segment.index > 0 ? <span className="drama-sdx-prefix-ref is-frame">{_creationText("creation.859b4d5247209e00")}</span> : null}
                         {request.references.map((ref, index) => {
                             const resourceId = ref.resourceId || castById.get(ref.castId)?.imageResourceId;
                             return (
                                 <span
                                     key={ref.castId}
                                     className={`drama-sdx-prefix-ref ${ref.sent ? "" : "is-missing"} ${usage.used.has(index + 1) ? "" : "is-unused"}`}
-                                    title={ref.sent ? `${ref.label}：${ref.name}` : `${ref.label}（${ref.name}）未附图，按文字设定生成`}
+                                    title={ref.sent ? `${ref.label}：${ref.name}` : _creationText("creation.c49a9c572b790440", { value1: ref.label, value2: ref.name })}
                                 >
                                     <span className="drama-sdx-prefix-thumb">{resourceId ? <MediaThumb resourceId={resourceId} alt="" /> : null}</span>
-                                    <b>{ref.label}</b>
+                                    <b>{_creationLabel(ref.label)}</b>
                                     {ref.name}
                                 </span>
                             );
@@ -799,7 +843,7 @@ function SegmentPrompt({ segment, castById, writing, onSave, onWrite }: { segmen
                         {segment.promptStatus === "failed" && segment.promptError ? `：${segment.promptError}` : ""}
                     </span>
                     <Button size="small" type="primary" icon={<PenLine className="size-3.5" />} loading={writing} onClick={onWrite}>
-                        {segment.promptStatus === "none" ? "让模型撰写" : "重新撰写"}
+                        {segment.promptStatus === "none" ? _creationText("creation.81baad7cfd5f89c7") : _creationText("creation.a952766ec558060d")}
                     </Button>
                 </div>
             ) : null}
@@ -817,8 +861,8 @@ function SegmentPrompt({ segment, castById, writing, onSave, onWrite }: { segmen
                         mentionMenuLabels={{ connected: "本段参考图" }}
                         className="drama-sdx-editor-input thin-scrollbar"
                         style={{ color: "var(--foreground)" }}
-                        aria-label="完整视频提示词"
-                        placeholder="也可以直接在这里手写本段完整视频提示词；输入 @ 引用参考图，失焦保存。开头的参考图说明由系统自动追加。"
+                        aria-label={_creationText("creation.c9667afc7e406330")}
+                        placeholder={_creationText("creation.db91c75e3a824387")}
                         onBlur={commit}
                         onKeyDown={(event) => {
                             if (event.key === "Escape" && dirty) {
@@ -832,27 +876,41 @@ function SegmentPrompt({ segment, castById, writing, onSave, onWrite }: { segmen
                 <div className="drama-sd-empty">
                     <Loader2 className="size-5 animate-spin" aria-hidden />
                     <span>{notice}</span>
-                    <small>写好后自动显示</small>
+                    <small>{_creationText("creation.1bd6362fa0c985b2")}</small>
                 </div>
             )}
             {usage.unknown.length ? (
                 <p className="drama-sg-note is-error" role="alert">
-                    正文里的 {usage.unknown.join("、")} 不是本段的参考图（本段共 {request.references.length} 张），生成视频前请改成正确的编号或用 @ 重新插入。
+                    {_creationText("creation.810303952c181221")}
+                    {usage.unknown.join("、")}
+                    {_creationText("creation.9c7e89bfc92072c8")}
+                    {request.references.length}
+                    {_creationText("creation.c62d39d8f0d80d86")}
                 </p>
             ) : draft && unmentioned.length ? (
-                <p className="drama-sg-note">正文还没有引用 {unmentioned.map((ref) => `${ref.label}（${ref.name}）`).join("、")}；参考图仍会随请求发送，在正文里写明谁是谁，视频模型才不会认错。</p>
+                <p className="drama-sg-note">
+                    {_creationText("creation.2c19bd763a63f329")}
+                    {unmentioned.map((ref) => `${ref.label}（${ref.name}）`).join("、")}
+                    {_creationText("creation.d16c1fbaf89b5b36")}
+                </p>
             ) : null}
             {overLimit ? (
                 <p className="drama-sg-note is-error" role="alert">
-                    连同开头的参考图说明共 {sentChars} 个字符，超过视频模型上限 {request.promptMaxChars} 个字符。
-                    {segment.custom ? "手动改写的版本需要精简后才能生成视频。" : "生成视频时会按上限自动重新撰写，不会截断。"}
+                    {_creationText("creation.a5e03fe42d1b25dd")}
+                    {sentChars}
+                    {_creationText("creation.7b7a2dab242c167c")}
+                    {request.promptMaxChars}
+                    {_creationText("creation.4667c13f0417dac6")}
+                    {segment.custom ? _creationText("creation.4db7952c5b59ee6f") : _creationText("creation.5a1c6e12dcfb51a8")}
                 </p>
             ) : null}
             <div className="drama-sd-pane-foot">
-                {dirty ? <span className="is-dirty">未保存 · 失焦或 ⌘↵ 保存，Esc 放弃</span> : <span>直接修改正文，失焦自动保存</span>}
-                <span className={overLimit ? "is-over" : undefined} title="与视频模型校验口径一致：开头的参考图说明 + 正文">
-                    发送全文 {sentChars}
-                    {request.promptMaxChars ? ` / ${request.promptMaxChars}` : ""} 字
+                {dirty ? <span className="is-dirty">{_creationText("creation.da8f43267001c38b")}</span> : <span>{_creationText("creation.01170d728a5fe595")}</span>}
+                <span className={overLimit ? "is-over" : undefined} title={_creationText("creation.3ee6bf03176e4a13")}>
+                    {_creationText("creation.093c8e41624b1c08")}
+                    {sentChars}
+                    {request.promptMaxChars ? ` / ${request.promptMaxChars}` : ""}
+                    {_creationText("creation.c55038b272b109b8")}
                 </span>
             </div>
         </section>
@@ -860,6 +918,7 @@ function SegmentPrompt({ segment, castById, writing, onSave, onWrite }: { segmen
 }
 
 function PromptNotice({ segment, text }: { segment: DramaSegment; text: ReactNode }) {
+    _useCreationLocale();
     const busy = segment.promptStatus === "queued" || segment.promptStatus === "running";
     return (
         <div className={`drama-sd-notice is-${segment.promptStatus}`}>
@@ -874,19 +933,20 @@ function PromptNotice({ segment, text }: { segment: DramaSegment; text: ReactNod
 
 /** 单个镜头的剧本内容；镜头是撰写段提示词的素材，不再单独生成媒体。 */
 export function ShotEditor({ shot, onPatch }: { shot: DramaShot; onPatch: (patch: DramaShotPatch) => void }) {
+    _useCreationLocale();
     return (
         <div className="drama-sd-form">
-            <FieldText label="台词" value={shot.dialogue} placeholder="无台词" onSave={(value) => onPatch({ dialogue: value })} />
+            <FieldText label={_creationText("creation.e7447595378ab413")} value={shot.dialogue} placeholder={_creationText("creation.f993fa0eaff535b8")} onSave={(value) => onPatch({ dialogue: value })} />
             <div className="drama-sd-row">
                 <label className="drama-sd-field">
                     <span className="drama-sd-label">
-                        <span>说话人</span>
+                        <span>{_creationText("creation.0ac45e5afa719ca6")}</span>
                     </span>
                     <Input
                         defaultValue={shot.speaker}
                         key={`${shot.id}-speaker-${shot.speaker}`}
-                        placeholder="旁白"
-                        aria-label="说话人"
+                        placeholder={_creationText("projects.narration")}
+                        aria-label={_creationText("creation.0ac45e5afa719ca6")}
                         onBlur={(event) => {
                             if (event.target.value.trim() !== shot.speaker) onPatch({ speaker: event.target.value });
                         }}
@@ -894,7 +954,7 @@ export function ShotEditor({ shot, onPatch }: { shot: DramaShot; onPatch: (patch
                 </label>
                 <label className="drama-sd-field">
                     <span className="drama-sd-label">
-                        <span>时长</span>
+                        <span>{_creationText("workbench.duration")}</span>
                     </span>
                     <InputNumber
                         key={`${shot.id}-${shot.durationMs}`}
@@ -905,7 +965,7 @@ export function ShotEditor({ shot, onPatch }: { shot: DramaShot; onPatch: (patch
                         precision={1}
                         defaultValue={shot.durationMs / 1000}
                         suffix="秒"
-                        aria-label="镜头时长"
+                        aria-label={_creationText("creation.bbec874fe996c5df")}
                         onBlur={(event) => {
                             const seconds = Number(event.target.value);
                             if (Number.isFinite(seconds) && Math.abs(seconds * 1000 - shot.durationMs) >= 50) onPatch({ durationSeconds: seconds });
@@ -917,38 +977,52 @@ export function ShotEditor({ shot, onPatch }: { shot: DramaShot; onPatch: (patch
             <div className="drama-sd-row is-three">
                 <label className="drama-sd-field">
                     <span className="drama-sd-label">
-                        <span>景别</span>
+                        <span>{_creationText("canvas.shot_scale")}</span>
                     </span>
-                    <Select className="w-full" value={shot.shotSize || undefined} placeholder="自动" aria-label="景别" options={SHOT_SIZES.map((value) => ({ value, label: value }))} onChange={(value) => onPatch({ shotSize: value })} />
+                    <Select
+                        className="w-full"
+                        value={shot.shotSize || undefined}
+                        placeholder={_creationText("settings.oss_path_style_auto")}
+                        aria-label={_creationText("canvas.shot_scale")}
+                        options={_creationOptions(SHOT_SIZES.map((value) => ({ value, label: value })))}
+                        onChange={(value) => onPatch({ shotSize: value })}
+                    />
                 </label>
                 <label className="drama-sd-field">
                     <span className="drama-sd-label">
-                        <span>运镜</span>
+                        <span>{_creationText("canvas.camera_movement")}</span>
                     </span>
-                    <Select className="w-full" value={shot.camera || undefined} placeholder="自动" aria-label="运镜" options={CAMERAS.map((value) => ({ value, label: value }))} onChange={(value) => onPatch({ camera: value })} />
+                    <Select
+                        className="w-full"
+                        value={shot.camera || undefined}
+                        placeholder={_creationText("settings.oss_path_style_auto")}
+                        aria-label={_creationText("canvas.camera_movement")}
+                        options={_creationOptions(CAMERAS.map((value) => ({ value, label: value })))}
+                        onChange={(value) => onPatch({ camera: value })}
+                    />
                 </label>
                 <label className="drama-sd-field">
                     <span className="drama-sd-label">
-                        <span>转场</span>
+                        <span>{_creationText("creation.12bb64579c1966c4")}</span>
                     </span>
                     <Select
                         className="w-full"
                         value={(shot.transition || "cut") as DramaTransition}
-                        aria-label="转场"
-                        options={(Object.keys(TRANSITION_LABEL) as DramaTransition[]).map((value) => ({ value, label: TRANSITION_LABEL[value] }))}
+                        aria-label={_creationText("creation.12bb64579c1966c4")}
+                        options={_creationOptions((Object.keys(TRANSITION_LABEL) as DramaTransition[]).map((value) => ({ value, label: TRANSITION_LABEL[value] })))}
                         disabled={shot.position === 0}
                         onChange={(value) => onPatch({ transition: value })}
                     />
                 </label>
             </div>
-            <FieldText label="动作" value={shot.action} rows={2} onSave={(value) => onPatch({ action: value })} />
-            <FieldText label="起幅画面" value={shot.imagePrompt} rows={2} onSave={(value) => onPatch({ imagePrompt: value })} />
+            <FieldText label={_creationText("creation.be37d84119d6b71f")} value={shot.action} rows={2} onSave={(value) => onPatch({ action: value })} />
+            <FieldText label={_creationText("creation.f877fd93b5ecbd6a")} value={shot.imagePrompt} rows={2} onSave={(value) => onPatch({ imagePrompt: value })} />
             {shot.sourceQuote ? (
-                <div className="drama-sd-quote">
+                <div className="drama-sd-quote" data-i18n-user-content>
                     <span className="drama-sd-label">
-                        <span>原文</span>
+                        <span>{_creationText("creation.354b28c853334568")}</span>
                     </span>
-                    <p>「{shot.sourceQuote}」</p>
+                    <p data-i18n-user-content>「{shot.sourceQuote}」</p>
                 </div>
             ) : null}
         </div>
@@ -956,13 +1030,14 @@ export function ShotEditor({ shot, onPatch }: { shot: DramaShot; onPatch: (patch
 }
 
 function FieldText({ label, value, placeholder, rows = 1, onSave }: { label: string; value: string; placeholder?: string; rows?: number; onSave: (value: string) => void }) {
+    _useCreationLocale();
     const [draft, setDraft] = useState(value);
     useEffect(() => setDraft(value), [value]);
     return (
         <label className="drama-sd-field">
             <span className="drama-sd-label">
-                <span>{label}</span>
-                {draft !== value ? <small className="is-dirty">未保存</small> : null}
+                <span>{_creationLabel(label)}</span>
+                {draft !== value ? <small className="is-dirty">{_creationText("settings.prompts_unsaved")}</small> : null}
             </span>
             <Input.TextArea
                 value={draft}

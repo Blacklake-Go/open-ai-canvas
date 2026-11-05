@@ -12,7 +12,7 @@ import (
 	"gorm.io/gorm"
 )
 
-const CurrentSchemaVersion int64 = 82
+const CurrentSchemaVersion int64 = 83
 
 const baselineSchemaChecksum = "sha256:open-ai-canvas-schema-v1-20260830"
 const schemaMigrationAppliedAtIndexChecksum = "sha256:schema-migrations-applied-at-index-v2-20260830"
@@ -282,6 +282,30 @@ var schemaMigrations = []migration{
 		return tx.AutoMigrate(&model.ArkPortraitSession{}, &model.ArkPortraitGroup{}, &model.ArkPortraitAsset{})
 	}},
 	{version: 82, name: "token_cache_write_price", checksum: "sha256:token-cache-write-price-v82-20261105", apply: migrateTokenCacheWritePrice},
+	{version: 83, name: "token_context_price_bands", checksum: "sha256:token-context-price-bands-v83-20261106", apply: migrateTokenContextPriceBands},
+}
+
+func migrateTokenContextPriceBands(tx *gorm.DB) error {
+	for _, entity := range []any{&model.ChannelModelPriceTier{}, &model.BillingOrder{}} {
+		if !tx.Migrator().HasTable(entity) {
+			continue
+		}
+		for _, column := range []string{"token_price_bands", "cost_token_price_bands"} {
+			if !tx.Migrator().HasColumn(entity, column) {
+				if err := tx.Migrator().AddColumn(entity, column); err != nil {
+					return err
+				}
+			}
+		}
+	}
+	for _, entity := range []any{&model.BillingOrder{}, &model.ApiCallLog{}} {
+		if tx.Migrator().HasTable(entity) && !tx.Migrator().HasColumn(entity, "cache_write1h_tokens") {
+			if err := tx.Migrator().AddColumn(entity, "cache_write1h_tokens"); err != nil {
+				return err
+			}
+		}
+	}
+	return nil
 }
 
 // migrateTokenCacheWritePrice 为文本 Token 定价增加缓存写入单价，为调用日志和账单增加缓存写入用量。

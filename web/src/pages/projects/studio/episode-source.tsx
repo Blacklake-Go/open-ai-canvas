@@ -1,3 +1,4 @@
+import { creationText as _creationText, useCreationLocale as _useCreationLocale } from "@/supdance/plugins/i18n/creation-text";
 import { useEffect, useRef, useState, type DragEvent, type ReactNode } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { App, Button, Checkbox, Input } from "antd";
@@ -20,11 +21,11 @@ function useTextFile(onText: (text: string, fileName: string) => void) {
     const inputRef = useRef<HTMLInputElement>(null);
     const read = async (file: File) => {
         if (!TEXT_FILE.test(file.name)) {
-            message.warning("支持 TXT、Markdown、CSV、TSV 文本文件");
+            message.warning(_creationText("creation.599797a91aac7b1d"));
             return;
         }
         if (file.size > MAX_FILE_BYTES) {
-            message.warning("单集文件不超过 2MB");
+            message.warning(_creationText("creation.71a1990345864f54"));
             return;
         }
         onText(decodeNovelText(await file.arrayBuffer()), file.name);
@@ -46,10 +47,13 @@ function useTextFile(onText: (text: string, fileName: string) => void) {
 }
 
 function CharCounter({ chars, limit }: { chars: number; limit: number }) {
+    _useCreationLocale();
     const over = chars > limit;
     return (
         <span className={`drama-composer-count ${over ? "is-over" : ""}`}>
-            {formatCount(chars)} / {formatCount(limit)} 字{over ? " · 超出部分会丢台词，请拆成多集" : ""}
+            {formatCount(chars)} / {formatCount(limit)}
+            {_creationText("creation.c55038b272b109b8")}
+            {over ? _creationText("creation.8b8c6488f9e6ce9c") : ""}
         </span>
     );
 }
@@ -82,6 +86,7 @@ function SourceComposer({
     footer: ReactNode;
     onClose: () => void;
 }) {
+    _useCreationLocale();
     const [dragOver, setDragOver] = useState(false);
     const file = useTextFile(onText);
     const onDrop = (event: DragEvent<HTMLElement>) => {
@@ -98,17 +103,17 @@ function SourceComposer({
                         <strong>{title}</strong>
                         <span>{subtitle}</span>
                     </div>
-                    <Button type="text" icon={<X className="size-4" />} aria-label="关闭" onClick={onClose} />
+                    <Button type="text" icon={<X className="size-4" />} aria-label={_creationText("common.close")} onClick={onClose} />
                 </header>
                 <div className="drama-composer-body">
                     <aside className="drama-composer-side thin-scrollbar">
                         {side}
                         <div className="drama-composer-field">
-                            <span className="drama-composer-label">素材类型</span>
+                            <span className="drama-composer-label">{_creationText("creation.3be96f8eb83d1a15")}</span>
                             <SourceFormatPicker value={format} onChange={onFormat} />
                         </div>
                         <div className="drama-composer-guide">
-                            <span className="drama-composer-label">{SOURCE_FORMAT_LABEL[format].title}怎么写</span>
+                            <span className="drama-composer-label">{_creationText("creation.cd3aa44f1398935c", { value1: SOURCE_FORMAT_LABEL[format].title })}</span>
                             <ul>
                                 {SOURCE_FORMAT_LABEL[format].guide.map((line) => (
                                     <li key={line}>{line}</li>
@@ -116,7 +121,7 @@ function SourceComposer({
                             </ul>
                         </div>
                         <Button block icon={<FileUp className="size-4" />} onClick={file.open}>
-                            从文件导入
+                            {_creationText("creation.3cee1d8c9c03fb5f")}
                         </Button>
                         {file.input}
                     </aside>
@@ -134,8 +139,8 @@ function SourceComposer({
                             className="drama-composer-text thin-scrollbar"
                             value={loading ? "" : text}
                             disabled={loading}
-                            placeholder={loading ? "正在读取原文…" : `${SOURCE_FORMAT_LABEL[format].placeholder}\n\n也可以把 TXT / Markdown 文件拖到这里。`}
-                            aria-label="本集原文"
+                            placeholder={loading ? _creationText("creation.4e8dbea41eda1af7") : _creationText("creation.aef00d508315c0d4", { value1: SOURCE_FORMAT_LABEL[format].placeholder })}
+                            aria-label={_creationText("creation.c6003b87469ef2dd")}
                             onChange={(event) => onText(event.target.value)}
                         />
                     </section>
@@ -163,6 +168,7 @@ export function AddEpisodeModal({
     onClose: () => void;
     onAdded: (episodeId: string) => void;
 }) {
+    _useCreationLocale();
     const { message } = App.useApp();
     const [title, setTitle] = useState("");
     const [format, setFormat] = useState<DramaSourceFormat>(defaultFormat);
@@ -177,15 +183,15 @@ export function AddEpisodeModal({
     const add = useMutation({
         mutationFn: () => addDramaEpisode(projectId, { title: title.trim(), text, sourceFormat: format }),
         onSuccess: (detail) => {
-            message.success(`已添加第 ${detail.episode.number} 集，开始${format === "novel" ? "改编" : "拆镜"}`);
+            message.success(_creationText("creation.0bea9d02bdb4e098", { value1: detail.episode.number, value2: format === "novel" ? _creationText("creation.2698848f609303b9") : _creationText("creation.50804542fdfa68cf") }));
             onAdded(detail.episode.id);
         },
-        onError: (error) => message.error(error instanceof Error ? error.message : "添加失败"),
+        onError: (error) => message.error(error instanceof Error ? error.message : _creationText("creation.2ca15f1e2bb7d991")),
     });
     return (
         <SourceComposer
             open={open}
-            title={`添加第 ${nextNumber} 集`}
+            title={_creationText("creation.7fa645eba8ead61e", { value1: nextNumber })}
             subtitle="一次只放这一集的内容，前面已做好的集不会受影响"
             format={format}
             onFormat={setFormat}
@@ -197,8 +203,8 @@ export function AddEpisodeModal({
             onClose={onClose}
             side={
                 <label className="drama-composer-field">
-                    <span className="drama-composer-label">集标题</span>
-                    <Input value={title} maxLength={60} placeholder={`留空为“第 ${nextNumber} 集”`} aria-label="集标题" onChange={(event) => setTitle(event.target.value)} />
+                    <span className="drama-composer-label">{_creationText("creation.1dec31ee573df5ab")}</span>
+                    <Input value={title} maxLength={60} placeholder={_creationText("creation.660a9d9774bf60d3", { value1: nextNumber })} aria-label={_creationText("creation.1dec31ee573df5ab")} onChange={(event) => setTitle(event.target.value)} />
                 </label>
             }
             notice={
@@ -213,9 +219,9 @@ export function AddEpisodeModal({
                 <>
                     <CharCounter chars={chars} limit={EPISODE_SOURCE_CHARS} />
                     <span className="flex-1" />
-                    <Button onClick={onClose}>取消</Button>
+                    <Button onClick={onClose}>{_creationText("common.cancel")}</Button>
                     <Button type="primary" loading={add.isPending} disabled={Boolean(blockedReason) || !chars || chars > EPISODE_SOURCE_CHARS} onClick={() => add.mutate()}>
-                        {format === "storyboard" ? "导入这一集" : "添加并开始拆镜"}
+                        {format === "storyboard" ? _creationText("creation.9dd00763ec0108c2") : _creationText("creation.b3f93c38ccf1321f")}
                     </Button>
                 </>
             }
@@ -240,6 +246,7 @@ export function SourceEditModal({
     onClose: () => void;
     onSaved: (rescript: boolean) => void;
 }) {
+    _useCreationLocale();
     const { message } = App.useApp();
     const queryClient = useQueryClient();
     const queryKey = ["drama", projectId, "chapter", chapter?.id || ""];
@@ -264,15 +271,15 @@ export function SourceEditModal({
         },
         onSuccess: () => {
             void queryClient.invalidateQueries({ queryKey });
-            message.success(rescript ? "原文已保存，正在按新原文重新改编" : "原文已保存，点“重新改编”后生效");
+            message.success(rescript ? _creationText("creation.28e04e2468d53421") : _creationText("creation.0f2096428cf59caf"));
             onSaved(rescript);
         },
-        onError: (error) => message.error(error instanceof Error ? error.message : "保存失败"),
+        onError: (error) => message.error(error instanceof Error ? error.message : _creationText("common.save_failed")),
     });
     return (
         <SourceComposer
             open={open}
-            title={chapter ? `编辑原文 · ${chapter.title}` : "编辑原文"}
+            title={chapter ? _creationText("creation.10fa8bf52767883e", { value1: chapter.title }) : _creationText("creation.edd6fd715398dd82")}
             subtitle="改的是这一章的原文；已写好的剧本保持不变，重新改编后才按新原文重写"
             format={format}
             onFormat={setFormat}
@@ -283,13 +290,13 @@ export function SourceEditModal({
             footer={
                 <>
                     <Checkbox checked={rescript} onChange={(event) => setRescript(event.target.checked)}>
-                        保存后重新改编本集
+                        {_creationText("creation.4797e3e4aaaf280e")}
                     </Checkbox>
                     <CharCounter chars={chars} limit={limit} />
                     <span className="flex-1" />
-                    <Button onClick={onClose}>取消</Button>
+                    <Button onClick={onClose}>{_creationText("common.cancel")}</Button>
                     <Button type="primary" loading={save.isPending} disabled={!changed || !chars || chars > limit || query.isLoading} onClick={() => save.mutate()}>
-                        {rescript ? "保存并重新改编" : "保存原文"}
+                        {rescript ? _creationText("creation.86ac776c9608ef9b") : _creationText("creation.a70eff2e9bbd86dd")}
                     </Button>
                 </>
             }

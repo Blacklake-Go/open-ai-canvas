@@ -145,6 +145,7 @@ func (s *Service) normalizeChannelModelPriceTiers(req ChannelModelRequest, capab
 		}
 		enabled := input.Enabled == nil || *input.Enabled
 		result = append(result, model.ChannelModelPriceTier{
+			TokenPriceBands:                  model.CloneTokenPriceBands(input.TokenPriceBands),
 			CostPricing:                      input.CostPricing,
 			ID:                               id,
 			SelectorKey:                      key,
@@ -309,6 +310,9 @@ func normalizeChannelModelTierSelector(capability string, input ChannelModelPric
 }
 
 func validateChannelModelTierPricing(capability string, protocol model.ChannelInterfaceType, billingMode string, input ChannelModelPriceTierRequest) error {
+	if err := validateTierTokenBands(capability, billingMode, input.InputTokenPriceMicrocredits, input.OutputTokenPriceMicrocredits, input.CachedTokenPriceMicrocredits, input.CacheWriteTokenPriceMicrocredits, input.TokenPriceBands); err != nil {
+		return err
+	}
 	if err := validateCreditCostPricing(capability, billingMode, input.CostPricing); err != nil {
 		return err
 	}

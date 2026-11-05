@@ -84,6 +84,7 @@ type ChannelModel struct {
 // SelectorKey 是规范化 JSON，用于 PostgreSQL 的活动规格唯一约束。旧的 Resolution / VideoSeconds
 // 仅保留给历史 API 与升级回填，不能再作为 SKU 唯一性依据。
 type ChannelModelPriceTier struct {
+	TokenPriceBands                  []TokenPriceBand  `json:"tokenPriceBands,omitempty" gorm:"serializer:json;type:text;not null;default:'[]'"`
 	CostPricing                      CreditCostPricing `json:"-" gorm:"embedded;embeddedPrefix:cost_"`
 	ID                               string            `json:"id" gorm:"primaryKey;size:36"`
 	ChannelModelID                   string            `json:"channelModelId" gorm:"size:36;index;uniqueIndex:idx_channel_model_price_tier_active,priority:1,where:deleted_at IS NULL"`
@@ -145,6 +146,7 @@ type ApiCallLog struct {
 	CachedTokens           int64         `json:"cachedTokens"`
 	// CacheWriteTokens 是本次写入提示词缓存的输入 Token，已计入 InputTokens。
 	CacheWriteTokens    int64     `json:"cacheWriteTokens" gorm:"not null;default:0"`
+	CacheWrite1hTokens  int64     `json:"cacheWrite1hTokens" gorm:"not null;default:0"`
 	UsageAvailable      bool      `json:"usageAvailable"`
 	MediaCount          int       `json:"mediaCount"`
 	MediaPreviewURL     string    `json:"mediaPreviewUrl,omitempty" gorm:"-"`

@@ -1,3 +1,4 @@
+import { creationText as _creationText, useCreationLocale as _useCreationLocale } from "@/supdance/plugins/i18n/creation-text";
 import { useRef, useState } from "react";
 import { useVirtualizer } from "@tanstack/react-virtual";
 import { Button, Checkbox, InputNumber } from "antd";
@@ -40,6 +41,7 @@ export function ChapterPickList({
     quickLabel?: string;
     className?: string;
 }) {
+    _useCreationLocale();
     const listRef = useRef<HTMLDivElement>(null);
     const anchorRef = useRef<number | null>(null);
     const [quickCount, setQuickCount] = useState(DEFAULT_SELECTED_CHAPTERS);
@@ -64,25 +66,30 @@ export function ChapterPickList({
         <div className={`drama-chapter-pick ${className}`}>
             <div className="drama-chapter-pick-bar">
                 <span className="drama-chapter-pick-count" aria-live="polite">
-                    已选 <b>{formatCount(selected.size)}</b> / {formatCount(selectable.length)} 章 · {formatCount(pickedWords)} 字
+                    {_creationText("creation.7ecf1cde648680d2")}
+                    <b>{formatCount(selected.size)}</b> / {formatCount(selectable.length)}
+                    {_creationText("creation.c82963b09face483")}
+                    {formatCount(pickedWords)}
+                    {_creationText("creation.c55038b272b109b8")}
                 </span>
                 <span className="drama-chapter-pick-quick">
                     {quickLabel}
-                    <InputNumber size="small" min={1} max={Math.max(1, selectable.length)} precision={0} value={quickCount} onChange={(value) => setQuickCount(value || 1)} aria-label={`${quickLabel}几章`} />章
+                    <InputNumber size="small" min={1} max={Math.max(1, selectable.length)} precision={0} value={quickCount} onChange={(value) => setQuickCount(value || 1)} aria-label={_creationText("creation.e16e66e85eb45408", { value1: quickLabel })} />
+                    {_creationText("creation.7b5a5d75887b3717")}
                     <Button size="small" disabled={!selectable.length} onClick={() => onChange(new Set(selectable.slice(0, quickCount)))}>
-                        选取
+                        {_creationText("creation.638da724f459aad1")}
                     </Button>
                 </span>
                 <span className="drama-chapter-pick-actions">
                     <Button size="small" type="text" disabled={selected.size === selectable.length} onClick={() => onChange(new Set(selectable))}>
-                        全选
+                        {_creationText("creation.3a5040b68abf75f9")}
                     </Button>
                     <Button size="small" type="text" disabled={!selected.size} onClick={() => onChange(new Set())}>
-                        清空
+                        {_creationText("workbench.clear")}
                     </Button>
                 </span>
             </div>
-            <div ref={listRef} className="drama-chapter-list thin-scrollbar" aria-label="章节">
+            <div ref={listRef} className="drama-chapter-list thin-scrollbar" aria-label={_creationText("creation.f12d1c90df4de378")}>
                 <div className="relative w-full" style={{ height: virtualizer.getTotalSize() }}>
                     {virtualizer.getVirtualItems().map((row) => {
                         const item = items[row.index];
@@ -92,7 +99,7 @@ export function ChapterPickList({
                                 <Checkbox
                                     checked={selected.has(index)}
                                     disabled={item.disabled}
-                                    aria-label={`选择 ${item.title}`}
+                                    aria-label={_creationText("creation.ddcc6630e01708fa", { value1: item.title })}
                                     onChange={(event) => toggle(index, event.target.checked, Boolean((event.nativeEvent as MouseEvent | undefined)?.shiftKey))}
                                 />
                                 <button type="button" className={`drama-chapter-row ${item.warn ? "is-warn" : ""}`} aria-current={previewIndex === index ? "true" : undefined} onClick={() => onPreview?.(index)}>

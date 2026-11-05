@@ -1,3 +1,6 @@
+import { creationSource as _creationSource } from "@/supdance/plugins/i18n/creation-text";
+import { creationLabel as _creationLabel, creationOptions as _creationOptions } from "@/supdance/plugins/i18n/creation-text";
+import { creationText as _creationText, useCreationLocale as _useCreationLocale } from "@/supdance/plugins/i18n/creation-text";
 import { useEffect, useState } from "react";
 import { Dropdown, Input, InputNumber, Slider } from "antd";
 import { ChevronDown, Film, TriangleAlert } from "lucide-react";
@@ -27,6 +30,7 @@ import type { DramaPacing, DramaSegmentMode, DramaStoryboardSettings } from "@/s
 
 /** 单集时长：可直接输入“5分钟 / 300 / 2:30”，也可点右侧从常用时长里选。 */
 export function EpisodeDurationInput({ value, onChange }: { value: number; onChange: (seconds: number) => void }) {
+    _useCreationLocale();
     const [text, setText] = useState(formatEpisodeSeconds(value));
     const [error, setError] = useState("");
     const [open, setOpen] = useState(false);
@@ -34,12 +38,12 @@ export function EpisodeDurationInput({ value, onChange }: { value: number; onCha
     const commit = (raw: string) => {
         const parsed = parseEpisodeSeconds(raw);
         if (parsed === null) {
-            setError("可输入 90、5分钟、2:30");
+            setError(_creationSource("creation.378bfda8671aff67"));
             setText(formatEpisodeSeconds(value));
             return;
         }
         const seconds = clampEpisodeSeconds(parsed);
-        setError(seconds !== parsed ? `单集时长需在 ${formatEpisodeSeconds(MIN_EPISODE_SECONDS)}–${formatEpisodeSeconds(MAX_EPISODE_SECONDS)} 之间，已调整` : "");
+        setError(seconds !== parsed ? _creationSource("creation.15d2620ccac82a32", { value1: formatEpisodeSeconds(MIN_EPISODE_SECONDS), value2: formatEpisodeSeconds(MAX_EPISODE_SECONDS) }) : "");
         onChange(seconds);
         setText(formatEpisodeSeconds(seconds));
     };
@@ -58,7 +62,7 @@ export function EpisodeDurationInput({ value, onChange }: { value: number; onCha
                         label: (
                             <span className="drama-duration-option">
                                 <span>{formatEpisodeSeconds(seconds)}</span>
-                                <small>{seconds} 秒</small>
+                                <small>{_creationText("creation.8e9c8e4d3e4205c7", { value1: seconds })}</small>
                             </span>
                         ),
                     })),
@@ -71,8 +75,8 @@ export function EpisodeDurationInput({ value, onChange }: { value: number; onCha
             >
                 <Input
                     value={text}
-                    placeholder="如 90、5分钟、2:30"
-                    aria-label="单集时长"
+                    placeholder={_creationText("creation.fa6540c1e4a33dd8")}
+                    aria-label={_creationText("creation.e2880b26fb73cac1")}
                     onChange={(event) => {
                         setText(event.target.value);
                         setError("");
@@ -86,7 +90,7 @@ export function EpisodeDurationInput({ value, onChange }: { value: number; onCha
                     suffix={<ChevronDown className={`size-3.5 opacity-50 transition-transform ${open ? "rotate-180" : ""}`} aria-hidden />}
                 />
             </Dropdown>
-            {error ? <small className="drama-field-error">{error}</small> : <small className="drama-field-hint">约 {Math.round((value / 60) * 10) / 10} 分钟 · 也可直接输入</small>}
+            {error ? <small className="drama-field-error">{_creationLabel(error)}</small> : <small className="drama-field-hint">{_creationText("creation.740b3c31696c4f69", { value1: Math.round((value / 60) * 10) / 10 })}</small>}
         </div>
     );
 }
@@ -141,6 +145,7 @@ const TRANSITIONS: Array<{ value: DramaStoryboardSettings["transition"]; label: 
 
 /** 有限档位滑杆：每档一个刻度，只能停在刻度上，下方说明当前档位。 */
 function ChoiceSlider<V extends string>({ label, value, options, onChange }: { label: string; value: V; options: Array<{ value: V; label: string; detail: string }>; onChange: (value: V) => void }) {
+    _useCreationLocale();
     const index = Math.max(
         0,
         options.findIndex((item) => item.value === value),
@@ -161,7 +166,7 @@ function ChoiceSlider<V extends string>({ label, value, options, onChange }: { l
                 onChange={(next) => onChange(options[Number(next)]?.value ?? current.value)}
             />
             <span className="drama-sbrules-hint">
-                {current.label}：{current.detail}
+                {_creationLabel(current.label)}：{current.detail}
             </span>
         </div>
     );
@@ -169,6 +174,7 @@ function ChoiceSlider<V extends string>({ label, value, options, onChange }: { l
 
 /** 1–10 档滑杆：刻度标出五段名称，右侧显示当前档位，下方说明这一段在提示词里意味着什么。 */
 function LevelSlider({ label, value, bands, onChange }: { label: string; value: number; bands: LevelBand[]; onChange: (value: number) => void }) {
+    _useCreationLocale();
     const band = bands[Math.min(bands.length - 1, Math.floor((value - DIRECTION_LEVEL_MIN) / 2))];
     const marks = Object.fromEntries(bands.map((item, index) => [DIRECTION_LEVEL_MIN + index * 2 + (index === bands.length - 1 ? 1 : 0), item.label]));
     return (
@@ -192,18 +198,19 @@ function LevelSlider({ label, value, bands, onChange }: { label: string; value: 
                 </b>
             </div>
             <span className="drama-sbrules-hint">
-                {band.label}：{band.detail}
+                {_creationLabel(band.label)}：{band.detail}
             </span>
         </div>
     );
 }
 
 function Segmented<V extends string | number>({ label, value, options, onChange }: { label: string; value: V; options: Array<{ value: V; label: string; detail?: string }>; onChange: (value: V) => void }) {
+    _useCreationLocale();
     return (
         <div className="drama-tabs is-block" role="radiogroup" aria-label={label}>
             {options.map((item) => (
                 <button key={String(item.value)} type="button" role="radio" className="drama-tab" aria-checked={value === item.value} title={item.detail} onClick={() => onChange(item.value)}>
-                    {item.label}
+                    {_creationLabel(item.label)}
                 </button>
             ))}
         </div>
@@ -231,6 +238,7 @@ export function StoryboardRules({
     videoModelLabel?: string;
     bare?: boolean;
 }) {
+    _useCreationLocale();
     const rules = normalizeStoryboard(value);
     const set = (patch: Partial<DramaStoryboardSettings>) => onChange(normalizeStoryboard({ ...rules, ...patch }));
     const limits = segmentLimits(rules, maxVideoSeconds);
@@ -258,68 +266,84 @@ export function StoryboardRules({
         <div className={`drama-sbrules ${bare ? "is-bare" : ""}`}>
             {onEpisodeSecondsChange ? (
                 <div className="drama-sbrules-row">
-                    <span className="drama-sbrules-label">单集时长</span>
+                    <span className="drama-sbrules-label">{_creationText("creation.e2880b26fb73cac1")}</span>
                     <div className="drama-sbrules-duration">
                         <EpisodeDurationInput value={episodeSeconds} onChange={onEpisodeSecondsChange} />
                     </div>
                 </div>
             ) : null}
             <div className="drama-sbrules-row">
-                <span className="drama-sbrules-label">剧情段</span>
+                <span className="drama-sbrules-label">{_creationText("creation.7c4175f6609bc3c7")}</span>
                 <div className="drama-sbrules-segment">
-                    <Segmented label="剧情段切分" value={rules.segmentMode} options={SEGMENT_MODES} onChange={(segmentMode) => set({ segmentMode })} />
+                    <Segmented label={_creationText("creation.ee80c1e84582b0c9")} value={rules.segmentMode} options={_creationOptions(SEGMENT_MODES)} onChange={(segmentMode) => set({ segmentMode })} />
                     {rules.segmentMode === "fixed" ? number(rules.segmentSeconds, (segmentSeconds) => set({ segmentSeconds }), "每段时长", { min: MIN_SEGMENT_SECONDS, max: MAX_SEGMENT_SECONDS }) : null}
                     {rules.segmentMode === "range" ? (
                         <>
                             {number(rules.segmentMinSeconds, (segmentMinSeconds) => set({ segmentMinSeconds }), "每段最短", { min: MIN_SEGMENT_SECONDS, max: rules.segmentMaxSeconds })}
-                            <span className="drama-sbrules-dash">至</span>
+                            <span className="drama-sbrules-dash">{_creationText("creation.65edbf9f1c677e70")}</span>
                             {number(rules.segmentMaxSeconds, (segmentMaxSeconds) => set({ segmentMaxSeconds }), "每段最长", { min: rules.segmentMinSeconds, max: MAX_SEGMENT_SECONDS })}
                         </>
                     ) : null}
                     <span className="drama-sbrules-hint">
                         {rules.segmentMode === "auto"
                             ? maxVideoSeconds
-                                ? `按场景与冲突切段，单段不超过 ${maxVideoSeconds} 秒（${modelName}上限）`
-                                : "按场景与冲突切段，单段不超过视频模型单次上限"
+                                ? _creationText("creation.c32392b5ba9cd90c", { value1: maxVideoSeconds, value2: modelName })
+                                : _creationText("creation.2a5545c48755ba5e")
                             : SEGMENT_MODES.find((item) => item.value === rules.segmentMode)?.detail}
                     </span>
                 </div>
             </div>
             <div className="drama-sbrules-row">
-                <span className="drama-sbrules-label">镜头节奏</span>
-                <ChoiceSlider label="镜头节奏" value={rules.pacing} options={PACING} onChange={(pacing) => set({ pacing })} />
+                <span className="drama-sbrules-label">{_creationText("creation.71625b31c36dff00")}</span>
+                <ChoiceSlider label={_creationText("creation.71625b31c36dff00")} value={rules.pacing} options={_creationOptions(PACING)} onChange={(pacing) => set({ pacing })} />
             </div>
             <div className="drama-sbrules-row">
-                <span className="drama-sbrules-label">对白密度</span>
-                <Segmented label="对白密度" value={rules.dialogue} options={DIALOGUE} onChange={(dialogue) => set({ dialogue })} />
+                <span className="drama-sbrules-label">{_creationText("creation.6234ad6d635acbbe")}</span>
+                <Segmented label={_creationText("creation.6234ad6d635acbbe")} value={rules.dialogue} options={_creationOptions(DIALOGUE)} onChange={(dialogue) => set({ dialogue })} />
             </div>
             <div className="drama-sbrules-row">
-                <span className="drama-sbrules-label">表演强度</span>
-                <LevelSlider label="表演强度" value={rules.performance} bands={PERFORMANCE_BANDS} onChange={(performance) => set({ performance })} />
+                <span className="drama-sbrules-label">{_creationText("creation.b0afd784193e783b")}</span>
+                <LevelSlider label={_creationText("creation.b0afd784193e783b")} value={rules.performance} bands={PERFORMANCE_BANDS} onChange={(performance) => set({ performance })} />
             </div>
             <div className="drama-sbrules-row">
-                <span className="drama-sbrules-label">运镜动感</span>
-                <LevelSlider label="运镜动感" value={rules.cameraMotion} bands={CAMERA_BANDS} onChange={(cameraMotion) => set({ cameraMotion })} />
+                <span className="drama-sbrules-label">{_creationText("creation.99a9e3c565e03953")}</span>
+                <LevelSlider label={_creationText("creation.99a9e3c565e03953")} value={rules.cameraMotion} bands={CAMERA_BANDS} onChange={(cameraMotion) => set({ cameraMotion })} />
             </div>
             <div className="drama-sbrules-row">
-                <span className="drama-sbrules-label">转场</span>
-                <Segmented label="镜头转场" value={rules.transition} options={TRANSITIONS} onChange={(transition) => set({ transition })} />
+                <span className="drama-sbrules-label">{_creationText("creation.12bb64579c1966c4")}</span>
+                <Segmented label={_creationText("creation.a4ecb36c204523fe")} value={rules.transition} options={_creationOptions(TRANSITIONS)} onChange={(transition) => set({ transition })} />
             </div>
             {rules.transition !== "cut" ? (
                 <div className="drama-sbrules-row">
-                    <span className="drama-sbrules-label">转场时长</span>
-                    <InputNumber className="drama-sbrules-number" min={MIN_TRANSITION_MS} max={1500} step={50} value={rules.transitionMs} onChange={(next) => set({ transitionMs: next || MIN_TRANSITION_MS })} suffix="毫秒" aria-label="转场时长" />
+                    <span className="drama-sbrules-label">{_creationText("creation.92ef24b9fb16b919")}</span>
+                    <InputNumber
+                        className="drama-sbrules-number"
+                        min={MIN_TRANSITION_MS}
+                        max={1500}
+                        step={50}
+                        value={rules.transitionMs}
+                        onChange={(next) => set({ transitionMs: next || MIN_TRANSITION_MS })}
+                        suffix="毫秒"
+                        aria-label={_creationText("creation.92ef24b9fb16b919")}
+                    />
                     <span className="drama-sbrules-hint">{TRANSITIONS.find((item) => item.value === rules.transition)?.detail}</span>
                 </div>
             ) : null}
             <div className="drama-sbrules-summary">
                 <Film className="size-3.5" />
                 <span>
-                    每集约 <b>{shotTarget(rules, episodeSeconds)}</b> 个镜头、至少 <b>{lineTarget(rules, episodeSeconds)}</b> 句台词
+                    {_creationText("creation.a883fc832fe0715f")}
+                    <b>{shotTarget(rules, episodeSeconds)}</b>
+                    {_creationText("creation.0dc04899cd12d5b2")}
+                    <b>{lineTarget(rules, episodeSeconds)}</b>
+                    {_creationText("creation.97a4ad25d989e3ca")}
                     {target ? (
                         <>
                             {" "}
-                            · {segmentRuleLabel(limits)}，{limits.mode === "auto" ? "至少" : "约"} <b>{Math.max(1, Math.ceil(episodeSeconds / target))}</b> 段 · 每段约 <b>{Math.max(1, Math.round(target / averageShotSeconds(rules)))}</b> 镜
+                            · {segmentRuleLabel(limits)}，{limits.mode === "auto" ? _creationText("creation.7ef93a55e5a12905") : _creationText("creation.5890c084b9317bb1")} <b>{Math.max(1, Math.ceil(episodeSeconds / target))}</b>
+                            {_creationText("creation.31ccad0a64c8e958")}
+                            <b>{Math.max(1, Math.round(target / averageShotSeconds(rules)))}</b>
+                            {_creationText("creation.601e41f3ade62c01")}
                         </>
                     ) : null}
                 </span>
@@ -327,7 +351,11 @@ export function StoryboardRules({
             {capped ? (
                 <p className="drama-sbrules-warn">
                     <TriangleAlert className="size-3.5 shrink-0" />
-                    {modelName}单次最长 {maxVideoSeconds} 秒，{rules.segmentMode === "fixed" ? `剧情段按 ${maxVideoSeconds} 秒切分` : `剧情段上限按 ${maxVideoSeconds} 秒执行`}。
+                    {modelName}
+                    {_creationText("creation.330efd08001dc9c3")}
+                    {maxVideoSeconds}
+                    {_creationText("creation.bd795ea89bffe55b")}
+                    {rules.segmentMode === "fixed" ? _creationText("creation.6ff23715b1292767", { value1: maxVideoSeconds }) : _creationText("creation.19e93eba6a8ffeb9", { value1: maxVideoSeconds })}。
                 </p>
             ) : null}
         </div>

@@ -693,6 +693,21 @@ body:has(.welcome-page) {
     gap: 4px;
     align-items: center;
 }
+.welcome-policy-links {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: calc(var(--welcome-gutter) / 4);
+}
+.welcome-policy-links a {
+    display: inline-flex;
+    min-height: 44px;
+    align-items: center;
+}
+.welcome-policy-links a:focus-visible {
+    outline: 2px solid var(--welcome-paper);
+    outline-offset: 4px;
+}
 .welcome-film-dialog {
     border: 0;
     padding: 0;

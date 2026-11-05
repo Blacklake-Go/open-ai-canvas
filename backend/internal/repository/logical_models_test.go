@@ -2,6 +2,7 @@ package repository
 
 import (
 	"errors"
+	"reflect"
 	"testing"
 	"time"
 
@@ -37,7 +38,7 @@ func TestSwitchTaskLogicalRouteUpdatesCostWithoutChangingUnifiedSales(t *testing
 	if err := db.First(&saved, "id = ?", order.ID).Error; err != nil {
 		t.Fatal(err)
 	}
-	if saved.BillingCostSnapshot != cost || saved.ChannelID != "new-channel" || saved.AmountMicrocredits != 900_000 || saved.ReservedAmountMicrocredits != 900_000 || saved.UnitPriceMicrocredits != 900_000 {
+	if !reflect.DeepEqual(saved.BillingCostSnapshot, cost) || saved.ChannelID != "new-channel" || saved.AmountMicrocredits != 900_000 || saved.ReservedAmountMicrocredits != 900_000 || saved.UnitPriceMicrocredits != 900_000 {
 		t.Fatalf("wrong route snapshot: %#v", saved)
 	}
 	// A route without configured costs must clear the previous route's snapshot.
@@ -47,7 +48,7 @@ func TestSwitchTaskLogicalRouteUpdatesCostWithoutChangingUnifiedSales(t *testing
 	if err := db.First(&saved, "id = ?", order.ID).Error; err != nil {
 		t.Fatal(err)
 	}
-	if saved.BillingCostSnapshot != (model.BillingCostSnapshot{}) || saved.AmountMicrocredits != 900_000 {
+	if !reflect.DeepEqual(saved.BillingCostSnapshot, model.BillingCostSnapshot{}) || saved.AmountMicrocredits != 900_000 {
 		t.Fatalf("stale cost after route switch: %#v", saved)
 	}
 }

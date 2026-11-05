@@ -2,6 +2,19 @@ import type { Messages } from "./zh-CN";
 
 // Erste maschinelle Übersetzung: bitte von Muttersprachlern prüfen lassen.
 export const deDE: Messages = {
+    tokenPricing: {
+        credits: "Credits",
+        perSecond: "Credits/s",
+        perMillion: "Credits/Million Tokens",
+        perMillionVideo: "Credits/Million Video-Tokens",
+        output: "Ausgabe {{price}}",
+        unconfigured: "Nicht konfiguriert",
+        heading: "Kontextpreisstufen",
+        sale: "Verkaufspreisstufen als JSON",
+        cost: "Kostenstufen als JSON",
+        invalid: "Geben Sie gültige Preisstufen mit aufsteigender Mindestanzahl an Eingabe-Tokens ein.",
+        help: "Der erste minInputTokens-Wert ist 0 und entspricht dem Standardtarif. Preise werden in Millionsteln der Preiseinheit angegeben.",
+    },
     common: {
         cancel: "Abbrechen",
         confirm: "OK",

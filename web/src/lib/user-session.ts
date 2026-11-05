@@ -223,6 +223,7 @@ export function systemChannelModelChannels(channels: PublicChannelCatalog[]): Mo
                     outputTokenPriceMicrocredits: tier.outputTokenPriceMicrocredits || 0,
                     cachedTokenPriceMicrocredits: tier.cachedTokenPriceMicrocredits || 0,
                     cacheWriteTokenPriceMicrocredits: tier.cacheWriteTokenPriceMicrocredits || 0,
+                    tokenPriceBands: tier.tokenPriceBands,
                 }));
 
                 return {

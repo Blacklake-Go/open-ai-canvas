@@ -1,16 +1,23 @@
 # SupDance Canvas — 独立改造与定制代码清单 (CUSTOMIZATIONS.md)
 
+## 网站集成候选：六语、访客入口与文本定价
+
+- 电商及小说改编页面显式接入 `supdance-creation` i18next namespace，使用宿主原生中英法德日韩。保留用户输入、模型 ID、请求参数与服务状态原文，不恢复 DOM 扫描翻译。
+- 共享 `workspace-guest-actions` 为侧栏和顶栏提供登录／注册药丸；`SitePolicyLinks` 同时用于工作区与独立 welcome 入口。移动端法务链接横向换行，保留 44px 触控目标；账户菜单清理重复设置入口。
+- 文本模型的上下文分档、五分钟／一小时缓存用量沿既有订单和成本快照实现，Schema 83 只增列；目录和管理表单传递完整售价分档，用户目录不公开成本。保留现有赠金、返佣及余额。
+- 上游接缝完整登记于 `supdance-site-closure-interfaces` 和 `supdance/config/baseline.json`。这是涉及计费的高风险候选，必须通过本地推送门禁、CI、备份恢复演练及线上验收后才可视为已交付。
+
 ## 原生多语言接管
 
 界面语言以 `web/src/i18n` 与 `useLocaleStore` 为唯一来源；旧 DOM 翻译和上游目录 postprocessor 退出。扩展 key 在 `web/src/supdance/adapters/upstream-i18n.ts` 注册独立 namespace，所有语言入口与设置复用上游组件。登录共用表单保留社交登录和协议强校验。下方旧语言入口及 DOM 引擎描述为历史实现，现行合同见 [原生多语言集成](./NATIVE_I18N_UPSTREAM_SYNC.md)。
 
 
-## 音乐工作台统一渠道补丁
+## 音乐素材写入边界
 
 - 平台音频任务的规范素材由后端 `registerRecoveredMediaAssets` 按任务和输出序号生成稳定 ID；音乐工作台只读任务及资源，不再在载入历史或轮询完成时调用前端 `addAsset`。移除仅内存去重的旧桥接，避免目录未 hydration 或刷新后产生随机副本。历史重载、账号状态重置和轮询完成共用真实 store 回归；既有素材不自动删除。
 - 创作页模型分组、目标时长与音乐结果组件保留最小适配，业务协议在 `plugin-packages/runninghub-standard/`，独立工作台适配在 `web/src/supdance/plugins/music-generation/services/music-site-api.ts`。
 - 复用平台模型目录、报价、`canvas_audio` 任务和资源访问 API，不增加账本、用户或数据表；新文案通过 `supdance-i18n` 六语词条模块提供。
-- 上游更新需保留 RunningHub 1.1.1 源清单与发行包，避免启动时旧官方包覆盖音乐接口；创作页、工作台、失败退款与账号切换需共同回归。
+- 上游更新需保留 RunningHub 1.1.2 源清单与发行包，避免启动时旧官方包覆盖音乐接口；创作页、工作台、失败退款与账号切换需共同回归。
 ## 音乐工作台统一渠道补丁
 
 - 创作页模型分组与音乐结果组件保留最小适配；音乐工作台通过主站配置读取模型、能力和报价，不展示没有接通的时长、人声与格式参数。

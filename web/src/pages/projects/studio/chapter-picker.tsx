@@ -1,3 +1,4 @@
+import { creationText as _creationText, useCreationLocale as _useCreationLocale } from "@/supdance/plugins/i18n/creation-text";
 import { useMemo, useState } from "react";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { App, Button, InputNumber } from "antd";
@@ -33,6 +34,7 @@ export function ChapterPickerModal({
     onClose: () => void;
     onProduced: (episodeIds: string[]) => void;
 }) {
+    _useCreationLocale();
     const { message } = App.useApp();
     const chaptersQuery = useQuery({ queryKey: dramaKeys.chapters(projectId), queryFn: ({ signal }) => listDramaChapters(projectId, signal), enabled: open });
     const chapters = useMemo(() => chaptersQuery.data?.chapters || [], [chaptersQuery.data]);
@@ -85,32 +87,32 @@ export function ChapterPickerModal({
     const produce = useMutation({
         mutationFn: () => produceDramaChapters(projectId, { chapterIds: chosen.map((index) => chapters[index].id), chaptersPerEpisode: size }),
         onSuccess: (result) => {
-            message.success(`已加入 ${chosen.length} 章，新建 ${result.episodeIds.length} 集，开始改编`);
+            message.success(_creationText("creation.8959cf46f69649c5", { value1: chosen.length, value2: result.episodeIds.length }));
             setPicked(null);
             onProduced(result.episodeIds);
         },
-        onError: (error) => message.error(error instanceof Error ? error.message : "加入制作失败"),
+        onError: (error) => message.error(error instanceof Error ? error.message : _creationText("creation.961901af283c45da")),
     });
 
     return (
-        <AppModal open={open} onCancel={onClose} footer={null} title={null} closable={false} flush centered width="min(1120px, calc(100vw - 48px))" rootClassName="drama-root" aria-label="原著章节">
+        <AppModal open={open} onCancel={onClose} footer={null} title={null} closable={false} flush centered width="min(1120px, calc(100vw - 48px))" rootClassName="drama-root" aria-label={_creationText("creation.5b050d133cce9443")}>
             <div className="drama-composer">
                 <header className="drama-composer-head">
                     <div className="min-w-0">
-                        <strong>原著章节</strong>
-                        <span>勾选导入时未加入制作的章节，按章节顺序建成新的集追加在末尾；已做好的集不受影响</span>
+                        <strong>{_creationText("creation.5b050d133cce9443")}</strong>
+                        <span>{_creationText("creation.389959df2355472b")}</span>
                     </div>
-                    <Button type="text" icon={<X className="size-4" />} aria-label="关闭" onClick={onClose} />
+                    <Button type="text" icon={<X className="size-4" />} aria-label={_creationText("common.close")} onClick={onClose} />
                 </header>
                 <div className="drama-composer-body drama-chapter-picker-body">
                     <aside className="drama-chapter-picker-side">
                         {chaptersQuery.isLoading ? (
-                            <div className="drama-empty is-compact">正在读取原著目录…</div>
+                            <div className="drama-empty is-compact">{_creationText("creation.6008a465c8380aa8")}</div>
                         ) : chaptersQuery.isError ? (
                             <div className="drama-empty is-compact">
-                                原著目录读取失败
+                                {_creationText("creation.8ca34f465ac4440b")}
                                 <Button size="small" onClick={() => void chaptersQuery.refetch()}>
-                                    重试
+                                    {_creationText("common.retry")}
                                 </Button>
                             </div>
                         ) : (
@@ -124,33 +126,38 @@ export function ChapterPickerModal({
                                 {problem}
                             </div>
                         ) : null}
-                        <div className="drama-chapter-picker-preview thin-scrollbar" aria-label="原文预览">
+                        <div className="drama-chapter-picker-preview thin-scrollbar" aria-label={_creationText("creation.a2d63a1a3abd73bc")}>
                             {preview ? (
                                 <>
                                     <h3>
                                         {preview.title}
                                         <small>
-                                            {formatCount(preview.wordCount)} 字{preview.reserved ? " · 未加入制作" : preview.episodeNumber ? ` · 第 ${preview.episodeNumber} 集` : ""}
+                                            {formatCount(preview.wordCount)}
+                                            {_creationText("creation.c55038b272b109b8")}
+                                            {preview.reserved ? _creationText("creation.5b2c771ebe4e63b6") : preview.episodeNumber ? _creationText("creation.7e7dd997ce76e46c", { value1: preview.episodeNumber }) : ""}
                                         </small>
                                     </h3>
-                                    <p>{previewQuery.isLoading ? "正在读取原文…" : previewQuery.isError ? "原文读取失败" : (previewQuery.data?.chapter.sourceText || "").slice(0, 8000)}</p>
+                                    <p>{previewQuery.isLoading ? _creationText("creation.4e8dbea41eda1af7") : previewQuery.isError ? _creationText("creation.d523c90ef0098ca5") : (previewQuery.data?.chapter.sourceText || "").slice(0, 8000)}</p>
                                 </>
                             ) : (
-                                <p>没有原著章节</p>
+                                <p>{_creationText("creation.47e11b730ce5538d")}</p>
                             )}
                         </div>
                     </section>
                 </div>
                 <footer className="drama-composer-foot">
                     <span className="drama-chapter-picker-size">
-                        每集
-                        <InputNumber size="small" min={1} max={MAX_CHAPTERS_PER_EPISODE} precision={0} value={size} onChange={(value) => setPerEpisode(value || 1)} aria-label="每集章数" />章
+                        {_creationText("creation.f518f38409737537")}
+                        <InputNumber size="small" min={1} max={MAX_CHAPTERS_PER_EPISODE} precision={0} value={size} onChange={(value) => setPerEpisode(value || 1)} aria-label={_creationText("creation.18991ca6a0aa2fcd")} />
+                        {_creationText("creation.7b5a5d75887b3717")}
                     </span>
-                    <span className="drama-composer-count">{reservedCount ? `未加入制作 ${formatCount(reservedCount)} 章 · 选中 ${formatCount(chosen.length)} 章将建成 ${formatCount(groups.length)} 集` : "原著章节已全部加入制作"}</span>
+                    <span className="drama-composer-count">
+                        {reservedCount ? _creationText("creation.31792191edf17cf7", { value1: formatCount(reservedCount), value2: formatCount(chosen.length), value3: formatCount(groups.length) }) : _creationText("creation.a8c5ad34e5b1d01d")}
+                    </span>
                     <span className="flex-1" />
-                    <Button onClick={onClose}>取消</Button>
+                    <Button onClick={onClose}>{_creationText("common.cancel")}</Button>
                     <Button type="primary" disabled={!chosen.length || Boolean(problem)} loading={produce.isPending} onClick={() => produce.mutate()}>
-                        加入制作
+                        {_creationText("creation.5fcbfab9158d47a2")}
                     </Button>
                 </footer>
             </div>

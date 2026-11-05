@@ -5,6 +5,8 @@ description: 信封、错误码与 OpenAPI
 
 # HTTP API 合同
 
+文本 Token 价格档支持 `tokenPriceBands`；管理员成本快照通过 `costPricing.tokenPriceBands` 独立配置。每档字段为 `minInputTokens`、`inputTokenPriceMicrocredits`、`outputTokenPriceMicrocredits`、`cachedTokenPriceMicrocredits`、`cacheWriteTokenPriceMicrocredits`，可选 `cacheWrite1hTokenPriceMicrocredits`。首档阈值为 0 且与基础价格一致，最多 16 档，仅适用于文本 Token 模型；公开模型目录只返回销售分档。分档整次应用于包含缓存的总输入，订单冻结分档后按实际用量结算。带分档模型的批量标量调价会被拒绝，需保存完整配置，避免遗漏长上下文价格。数据库语义与回退见「后端数据库」的 Schema 83 节。
+
 视觉引擎的预览、草稿保存和发布入口要求完整的 Schema 2 配置；缺失字段、显式 null、未知结构字段及非法阴影返回 400。正式发布沿用 `expectedRevision` 并发保护，冲突返回 409；版本使用服务端 UUID，配置与快照的发布人使用当前用户 ID，配置、快照和审计仍在同一事务提交。
 
 ## 音乐工作岛

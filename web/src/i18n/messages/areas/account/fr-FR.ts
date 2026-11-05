@@ -24,6 +24,10 @@ export const frFR: DeepStringRecord<typeof zhCN> = {
             loadFailed: "Échec du chargement des annonces",
         },
         footer: {
+            terms: "Conditions d’utilisation",
+            privacy: "Politique de confidentialité",
+            aup: "Politique d’utilisation acceptable",
+            support: "Contacter l’assistance",
             label: "Droits d'auteur et informations d'enregistrement du site",
             icpLink: "{{number}}, consulter le système d'enregistrement ICP du MIIT",
         },

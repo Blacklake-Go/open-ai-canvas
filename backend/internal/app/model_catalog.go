@@ -87,16 +87,17 @@ type PublicChannelModel struct {
 
 // PublicChannelModelPriceTier 公开的渠道模型价格档（脱敏）
 type PublicChannelModelPriceTier struct {
-	ID                               string            `json:"id"`
-	Selector                         map[string]string `json:"selector,omitempty"`
-	Resolution                       string            `json:"resolution"`
-	VideoSeconds                     int               `json:"videoSeconds"`
-	BillingMode                      string            `json:"billingMode"`
-	UnitPriceMicrocredits            int64             `json:"unitPriceMicrocredits"`
-	InputTokenPriceMicrocredits      int64             `json:"inputTokenPriceMicrocredits"`
-	OutputTokenPriceMicrocredits     int64             `json:"outputTokenPriceMicrocredits"`
-	CachedTokenPriceMicrocredits     int64             `json:"cachedTokenPriceMicrocredits"`
-	CacheWriteTokenPriceMicrocredits int64             `json:"cacheWriteTokenPriceMicrocredits"`
+	TokenPriceBands                  []model.TokenPriceBand `json:"tokenPriceBands,omitempty"`
+	ID                               string                 `json:"id"`
+	Selector                         map[string]string      `json:"selector,omitempty"`
+	Resolution                       string                 `json:"resolution"`
+	VideoSeconds                     int                    `json:"videoSeconds"`
+	BillingMode                      string                 `json:"billingMode"`
+	UnitPriceMicrocredits            int64                  `json:"unitPriceMicrocredits"`
+	InputTokenPriceMicrocredits      int64                  `json:"inputTokenPriceMicrocredits"`
+	OutputTokenPriceMicrocredits     int64                  `json:"outputTokenPriceMicrocredits"`
+	CachedTokenPriceMicrocredits     int64                  `json:"cachedTokenPriceMicrocredits"`
+	CacheWriteTokenPriceMicrocredits int64                  `json:"cacheWriteTokenPriceMicrocredits"`
 }
 
 // ModelCatalog 的创作端目录始终来自系统渠道模型，不反查逻辑模型或路由。
@@ -221,6 +222,7 @@ func (s *Service) sanitizeChannelModel(cm *model.ChannelModel) (PublicChannelMod
 			}
 		}
 		publicTiers = append(publicTiers, PublicChannelModelPriceTier{
+			TokenPriceBands:                  model.CloneTokenPriceBands(tier.TokenPriceBands),
 			ID:                               tier.ID,
 			Selector:                         model.DecodeSKUSelector(tier.SelectorJSON),
 			Resolution:                       tier.Resolution,
@@ -283,6 +285,7 @@ func (s *Service) applyGroupCatalogPricing(policy CreditPolicy, access *userGrou
 	for index := range publicModel.PriceTiers {
 		tier := &publicModel.PriceTiers[index]
 		pricing, prices, err := groupTierPricesWithPolicy(policy, access, cm, &model.ChannelModelPriceTier{
+			TokenPriceBands:       tier.TokenPriceBands,
 			UnitPriceMicrocredits: tier.UnitPriceMicrocredits, InputTokenPriceMicrocredits: tier.InputTokenPriceMicrocredits,
 			OutputTokenPriceMicrocredits: tier.OutputTokenPriceMicrocredits, CachedTokenPriceMicrocredits: tier.CachedTokenPriceMicrocredits,
 			CacheWriteTokenPriceMicrocredits: tier.CacheWriteTokenPriceMicrocredits,
@@ -295,6 +298,16 @@ func (s *Service) applyGroupCatalogPricing(policy CreditPolicy, access *userGrou
 		tier.OutputTokenPriceMicrocredits = effectiveCatalogPrice(prices.Output, pricing.MultiplierBPS)
 		tier.CachedTokenPriceMicrocredits = effectiveCatalogPrice(prices.Cached, pricing.MultiplierBPS)
 		tier.CacheWriteTokenPriceMicrocredits = effectiveCatalogPrice(prices.CacheWrite, pricing.MultiplierBPS)
+		tier.TokenPriceBands = prices.Bands
+		for bandIndex := range tier.TokenPriceBands {
+			band := &tier.TokenPriceBands[bandIndex]
+			for _, value := range []*int64{&band.InputTokenPriceMicrocredits, &band.OutputTokenPriceMicrocredits, &band.CachedTokenPriceMicrocredits, &band.CacheWriteTokenPriceMicrocredits} {
+				*value = effectiveCatalogPrice(*value, pricing.MultiplierBPS)
+			}
+			if band.CacheWrite1hTokenPriceMicrocredits != nil {
+				*band.CacheWrite1hTokenPriceMicrocredits = effectiveCatalogPrice(*band.CacheWrite1hTokenPriceMicrocredits, pricing.MultiplierBPS)
+			}
+		}
 	}
 	publicModel.PricingMode, publicModel.DisplayPrice, publicModel.PriceLabel = computeChannelModelPriceDisplay(cm, publicModel.PriceTiers)
 	return nil

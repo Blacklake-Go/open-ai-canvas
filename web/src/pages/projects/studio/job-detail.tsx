@@ -1,3 +1,5 @@
+import { creationLabel as _creationLabel } from "@/supdance/plugins/i18n/creation-text";
+import { creationText as _creationText, useCreationLocale as _useCreationLocale } from "@/supdance/plugins/i18n/creation-text";
 import { useQuery } from "@tanstack/react-query";
 import { App, Button } from "antd";
 import { AntTooltip as Tooltip } from "@/components/ui/base/tooltip/ant-tooltip";
@@ -29,6 +31,7 @@ export const JOB_STATUS_LABEL: Record<string, string> = {
 };
 
 export function JobStatusIcon({ status }: { status: string }) {
+    _useCreationLocale();
     if (status === "running") return <Loader2 className="size-3.5 animate-spin text-[var(--workspace-accent)]" />;
     if (status === "succeeded") return <CheckCircle2 className="size-3.5 text-[var(--status-success)]" />;
     if (status === "failed" || status === "rejected") return <XCircle className="size-3.5 text-[var(--status-error)]" />;
@@ -64,6 +67,7 @@ const PARAM_LABEL: Record<string, string> = {
 };
 
 export function JobDetailModal({ projectId, job, onClose, onLocate }: { projectId: string; job?: DramaJob; onClose: () => void; onLocate: (job: DramaJob) => void }) {
+    _useCreationLocale();
     const query = useQuery({
         queryKey: ["drama", projectId, "job", job?.id],
         queryFn: ({ signal }) => getDramaJob(projectId, job!.id, signal),
@@ -82,7 +86,7 @@ export function JobDetailModal({ projectId, job, onClose, onLocate }: { projectI
                             {JOB_STATUS_LABEL[current.status]}
                         </span>
                         <div className="min-w-0 flex-1">
-                            <h3 title={current.label}>{current.label}</h3>
+                            <h3 title={current.label}>{_creationLabel(current.label)}</h3>
                             <p>
                                 {JOB_KIND_LABEL[current.kind]}
                                 {detail?.target ? ` · ${detail.target}` : ""}
@@ -97,37 +101,42 @@ export function JobDetailModal({ projectId, job, onClose, onLocate }: { projectI
                                     onClose();
                                 }}
                             >
-                                定位到镜头
+                                {_creationText("creation.c3e70928bbc3c609")}
                             </Button>
                         ) : null}
                     </header>
                     <dl className="drama-jobd-facts">
                         <div>
-                            <dt>加入队列</dt>
+                            <dt>{_creationText("creation.bc3b684c04f87170")}</dt>
                             <dd>{formatJobTime(current.createdAt)}</dd>
                         </div>
                         <div>
-                            <dt>开始</dt>
+                            <dt>{_creationText("creation.d2bb025a2e51c410")}</dt>
                             <dd>{formatJobTime(current.startedAt)}</dd>
                         </div>
                         <div>
-                            <dt>结束</dt>
+                            <dt>{_creationText("creation.c7b24e7997e96eaa")}</dt>
                             <dd>
                                 {formatJobTime(current.finishedAt)}
-                                {elapsed(current.startedAt, current.finishedAt) ? <small>用时 {elapsed(current.startedAt, current.finishedAt)}</small> : null}
+                                {elapsed(current.startedAt, current.finishedAt) ? (
+                                    <small>
+                                        {_creationText("creation.8d6d315ea308f36c")}
+                                        {elapsed(current.startedAt, current.finishedAt)}
+                                    </small>
+                                ) : null}
                             </dd>
                         </div>
                         <div>
-                            <dt>花费</dt>
+                            <dt>{_creationText("creation.311fd2d94ce8c2eb")}</dt>
                             <dd>
-                                {current.costMicrocredits ? `${formatCredits(current.costMicrocredits)} 积分` : "0"}
-                                <small>重试 {current.attempt} 次</small>
+                                {current.costMicrocredits ? _creationText("creation.d901f70479c8f61f", { value1: formatCredits(current.costMicrocredits) }) : "0"}
+                                <small>{_creationText("creation.d5c72cb04b34fd7a", { value1: current.attempt })}</small>
                             </dd>
                         </div>
                     </dl>
                     <div className="drama-jobd-body thin-scrollbar">
-                        {query.isLoading ? <div className="drama-jobd-empty">正在读取请求记录…</div> : null}
-                        {detail && !detail.attempts.length ? <div className="drama-jobd-empty">还没有提交过请求，正在排队。</div> : null}
+                        {query.isLoading ? <div className="drama-jobd-empty">{_creationText("creation.0058735de85b540a")}</div> : null}
+                        {detail && !detail.attempts.length ? <div className="drama-jobd-empty">{_creationText("creation.663058c5c748fb23")}</div> : null}
                         {detail?.attempts.map((attempt, index) => (
                             <AttemptCard key={`${attempt.taskId || "rejected"}-${attempt.at}`} attempt={attempt} index={detail.attempts.length - index} latest={index === 0} />
                         ))}
@@ -139,17 +148,18 @@ export function JobDetailModal({ projectId, job, onClose, onLocate }: { projectI
 }
 
 function AttemptCard({ attempt, index, latest }: { attempt: DramaJobAttempt; index: number; latest: boolean }) {
+    _useCreationLocale();
     const { message } = App.useApp();
     const task = attempt.task;
     const copy = (text: string) =>
         void navigator.clipboard.writeText(text).then(
-            () => message.success("已复制"),
-            () => message.error("复制失败"),
+            () => message.success(_creationText("common.copied")),
+            () => message.error(_creationText("creation.753d8bb0da9913ce")),
         );
     return (
         <article className={`drama-jobd-attempt ${latest ? "is-latest" : ""}`}>
             <header>
-                <span className="drama-jobd-attempt-index">第 {index} 次</span>
+                <span className="drama-jobd-attempt-index">{_creationText("creation.0fec4f6dc54741d6", { value1: index })}</span>
                 <JobStatusIcon status={attempt.status} />
                 <strong>{JOB_STATUS_LABEL[attempt.status] || attempt.status}</strong>
                 {task?.stage && attempt.status !== "succeeded" ? <span className="drama-jobd-muted">{task.stage}</span> : null}
@@ -160,11 +170,11 @@ function AttemptCard({ attempt, index, latest }: { attempt: DramaJobAttempt; ind
             </header>
             <dl className="drama-jobd-grid">
                 <div>
-                    <dt>模型</dt>
+                    <dt>{_creationText("tasks.model")}</dt>
                     <dd title={task?.model}>{task?.modelLabel || "—"}</dd>
                 </div>
                 <div>
-                    <dt>积分</dt>
+                    <dt>{_creationText("nav.checkin_credits_suffix")}</dt>
                     <dd>{attempt.costMicrocredits ? formatCredits(attempt.costMicrocredits) : "0"}</dd>
                 </div>
                 {task
@@ -180,21 +190,22 @@ function AttemptCard({ attempt, index, latest }: { attempt: DramaJobAttempt; ind
                 <div className="drama-jobd-error">
                     <AlertCircle className="size-4 shrink-0" />
                     <p>{attempt.error}</p>
-                    <Tooltip title="复制错误信息">
-                        <Button size="small" type="text" icon={<Copy className="size-3.5" />} aria-label="复制错误信息" onClick={() => copy(attempt.error!)} />
+                    <Tooltip title={_creationText("creation.786e47d1be6b581d")}>
+                        <Button size="small" type="text" icon={<Copy className="size-3.5" />} aria-label={_creationText("creation.786e47d1be6b581d")} onClick={() => copy(attempt.error!)} />
                     </Tooltip>
                 </div>
             ) : null}
             {task?.prompt ? (
                 <details className="drama-disclosure">
                     <summary>
-                        提示词<span className="drama-jobd-muted">{task.prompt.length} 字</span>
+                        {_creationText("workbench.prompt_label")}
+                        <span className="drama-jobd-muted">{_creationText("creation.70ba18ac7f256cd6", { value1: task.prompt.length })}</span>
                         <Button
                             size="small"
                             type="text"
                             className="!ml-auto"
                             icon={<Copy className="size-3.5" />}
-                            aria-label="复制提示词"
+                            aria-label={_creationText("workbench.copy_prompt")}
                             onClick={(event) => {
                                 event.preventDefault();
                                 copy(task.prompt);
@@ -210,18 +221,20 @@ function AttemptCard({ attempt, index, latest }: { attempt: DramaJobAttempt; ind
 }
 
 function AttemptResult({ task }: { task: DramaJobTask }) {
+    _useCreationLocale();
     const ids = task.resourceIds || [];
     if (task.resultText) {
         return (
             <details className="drama-disclosure">
                 <summary>
-                    返回结果<span className="drama-jobd-muted">{task.resultText.length} 字</span>
+                    {_creationText("creation.1d0f87003fefac72")}
+                    <span className="drama-jobd-muted">{_creationText("creation.70ba18ac7f256cd6", { value1: task.resultText.length })}</span>
                 </summary>
                 <pre className="drama-jobd-pre thin-scrollbar">{task.resultText}</pre>
             </details>
         );
     }
-    if (!ids.length) return task.mediaStage ? <p className="drama-jobd-muted">结果保存阶段：{task.mediaStage}</p> : null;
+    if (!ids.length) return task.mediaStage ? <p className="drama-jobd-muted">{_creationText("creation.652837694187a1a2", { value1: task.mediaStage })}</p> : null;
     return (
         <div className="drama-jobd-results">
             {ids.map((id) =>
@@ -229,7 +242,7 @@ function AttemptResult({ task }: { task: DramaJobTask }) {
                     <ResultVideo key={id} id={id} />
                 ) : (
                     <div key={id} className="drama-jobd-thumb">
-                        <MediaThumb resourceId={id} alt="生成结果" />
+                        <MediaThumb resourceId={id} alt={_creationText("workbench.generation_results")} />
                     </div>
                 ),
             )}
@@ -238,6 +251,7 @@ function AttemptResult({ task }: { task: DramaJobTask }) {
 }
 
 function ResultVideo({ id }: { id: string }) {
+    _useCreationLocale();
     const url = useResourceMediaUrl(id, "playback");
     return <div className="drama-jobd-thumb is-video">{url ? <video src={url} controls playsInline preload="metadata" /> : null}</div>;
 }

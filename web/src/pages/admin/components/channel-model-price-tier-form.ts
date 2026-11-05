@@ -1,7 +1,7 @@
 import type { ModelCapabilityChoice } from "@/components/model-protocol-picker";
 import type { ModelCapabilityConfig } from "@/lib/model-capabilities";
 import type { ImageCapabilityConfig } from "@/lib/model-capabilities";
-import type { ChannelModel, ChannelModelPriceTier } from "@/services/api/wallet";
+import type { ChannelModel, ChannelModelPriceTier, TokenPriceBand } from "@/services/api/wallet";
 
 export type PriceTierMatchMode = "default" | "advanced";
 
@@ -13,6 +13,8 @@ export function normalizeUpstreamModelKey(value: unknown): string {
 }
 
 export type PriceTierFormValues = {
+    tokenPriceBandsJSON?: string;
+    costTokenPriceBandsJSON?: string;
     imageSelector?: Record<string, string>;
     matchMode: PriceTierMatchMode;
     operation: string;
@@ -87,6 +89,8 @@ export function priceTierToForm(tier: ChannelModelPriceTier, image?: ImageCapabi
     const candidates = image?.parameters ? Object.values(selector) : [selector.operation, selector.imageResolution, selector.quality, selector.resolution, selector.size, selector.fpsBand];
     const hasSpecificMatch = candidates.some((value) => value && value !== "*") || (tier.resolution && tier.resolution !== "*");
     return {
+        tokenPriceBandsJSON: JSON.stringify(tier.tokenPriceBands || [], null, 2),
+        costTokenPriceBandsJSON: JSON.stringify(tier.costPricing?.tokenPriceBands || [], null, 2),
         matchMode: hasSpecificMatch ? "advanced" : "default",
         operation: selector.operation || "*",
         imageSelector: Object.fromEntries(Object.entries(selector).filter(([name]) => name !== "operation")),
@@ -175,6 +179,7 @@ export function priceTierVideoSecondsFromForm(capability: ModelCapabilityChoice,
 export function priceTierPayloadFromForm(capability: ModelCapabilityChoice, tier: PriceTierFormValues, upstreamModel: string, capabilityConfig?: ModelCapabilityConfig) {
     const videoTokens = capability === "video" && tier.billingMode === "token";
     return {
+        tokenPriceBands: capability === "text" && tier.billingMode === "token" ? parseTokenPriceBands(tier.tokenPriceBandsJSON) : [],
         selector: skuSelectorFromForm(capability, tier, capabilityConfig),
         resolution: priceTierResolutionFromForm(capability, tier),
         videoSeconds: priceTierVideoSecondsFromForm(capability, tier),
@@ -186,6 +191,7 @@ export function priceTierPayloadFromForm(capability: ModelCapabilityChoice, tier
         cachedTokenPriceMicrocredits: videoTokens ? 0 : Math.round((tier.cachedTokenPrice || 0) * 1_000_000),
         cacheWriteTokenPriceMicrocredits: videoTokens ? 0 : Math.round((tier.cacheWriteTokenPrice || 0) * 1_000_000),
         costPricing: {
+            tokenPriceBands: capability === "text" && tier.billingMode === "token" ? parseTokenPriceBands(tier.costTokenPriceBandsJSON) : [],
             configured: tier.costConfigured,
             unitPriceMicrocredits: Math.round(tier.costUnitPrice * 1_000_000),
             inputTokenPriceMicrocredits: videoTokens ? 0 : Math.round(tier.costInputTokenPrice * 1_000_000),
@@ -196,4 +202,19 @@ export function priceTierPayloadFromForm(capability: ModelCapabilityChoice, tier
         priceConfigured: tier.priceConfigured !== false,
         enabled: tier.enabled !== false,
     };
+}
+
+export function parseTokenPriceBands(value?: string): TokenPriceBand[] {
+    const bands: unknown = JSON.parse(value?.trim() || "[]");
+    if (!Array.isArray(bands) || bands.length > 16) throw new Error("Invalid token price bands");
+    let previous = -1;
+    for (const band of bands) {
+        const fields = ["minInputTokens", "inputTokenPriceMicrocredits", "outputTokenPriceMicrocredits", "cachedTokenPriceMicrocredits", "cacheWriteTokenPriceMicrocredits"];
+        if (!band || typeof band !== "object" || Object.keys(band).some((key) => !fields.includes(key) && key !== "cacheWrite1hTokenPriceMicrocredits") || fields.some((key) => !Number.isSafeInteger(band[key]) || band[key] < 0))
+            throw new Error("Invalid token price band values");
+        if (band.cacheWrite1hTokenPriceMicrocredits !== undefined && (!Number.isSafeInteger(band.cacheWrite1hTokenPriceMicrocredits) || band.cacheWrite1hTokenPriceMicrocredits < 0)) throw new Error("Invalid one-hour cache write price");
+        if ((previous === -1 && band.minInputTokens !== 0) || band.minInputTokens <= previous) throw new Error("Invalid token price band thresholds");
+        previous = band.minInputTokens;
+    }
+    return bands as TokenPriceBand[];
 }

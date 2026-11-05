@@ -1,3 +1,6 @@
+import { creationSource as _creationSource, creationLabel as _creationLabel } from "@/supdance/plugins/i18n/creation-text";
+import { creationOptions as _creationOptions } from "@/supdance/plugins/i18n/creation-text";
+import { creationText as _creationText, useCreationLocale as _useCreationLocale } from "@/supdance/plugins/i18n/creation-text";
 import { Plus, X } from "lucide-react";
 import { Popover, Select } from "antd";
 import { useRef, useState } from "react";
@@ -35,6 +38,7 @@ export function ReferenceUploader({
     onTransfer: (source: CommerceImageTransfer) => void | Promise<void>;
     onChange: (references: EcommerceReference[]) => void;
 }) {
+    _useCreationLocale();
     const [dragging, setDragging] = useState(false);
     const [pending, setPending] = useState(false);
     const [previews, setPreviews] = useState<Array<{ name: string; url: string }>>([]);
@@ -45,11 +49,11 @@ export function ReferenceUploader({
     const full = references.length >= maxReferences;
     const run = async (action: () => void | Promise<void>, files: File[] = []) => {
         if (uploading || lock.current) {
-            setError("图片正在上传，请完成后再添加");
+            setError(_creationSource("creation.585b353aacad2ffa"));
             return;
         }
         if (full) {
-            setError("参考图片已达上限，请先移除部分图片");
+            setError(_creationSource("creation.27a987e5b3615d23"));
             return;
         }
         lock.current = true;
@@ -60,7 +64,7 @@ export function ReferenceUploader({
         try {
             await action();
         } catch (cause) {
-            setError(cause instanceof Error ? cause.message : "图片添加失败，请重试");
+            setError(cause instanceof Error ? cause.message : _creationSource("creation.3e54faa0442c241e"));
         } finally {
             lock.current = false;
             setPending(false);
@@ -72,17 +76,17 @@ export function ReferenceUploader({
         const thumbnail = (
             <CachedResourceImage
                 storageKey={resourceStorageKey(ref.resourceId)}
-                alt={ref.name || "商品参考图"}
+                alt={ref.name || _creationText("creation.cf7b6e13d4ecaecd")}
                 loading="lazy"
                 decoding="async"
                 draggable
                 onDragStart={(event) => writeCommerceImageTransfer(event.dataTransfer, { resourceId: ref.resourceId, name: ref.name || "商品参考图", url: resourceFileUrl(ref.resourceId) })}
-                fallback={<span className="commerce-reference-item-image-fallback" aria-label="图片暂不可用" />}
-                loadingFallback={<span className="commerce-reference-item-image-fallback" aria-label="正在读取图片" />}
+                fallback={<span className="commerce-reference-item-image-fallback" aria-label={_creationText("creation.62cab5ebabfe9c33")} />}
+                loadingFallback={<span className="commerce-reference-item-image-fallback" aria-label={_creationText("creation.df1d3ca46a0479b0")} />}
             />
         );
         return (
-            <div className="commerce-reference-item" key={`${ref.resourceId}-${index}`} title={compact ? undefined : ref.name || `商品参考图 ${index + 1}`}>
+            <div className="commerce-reference-item" key={`${ref.resourceId}-${index}`} title={compact ? undefined : ref.name || _creationText("creation.4c61b585b81f81b8", { value1: index + 1 })}>
                 {/* 紧凑模式缩略图很小，悬停时放大预览，便于确认上传的是哪张商品图。 */}
                 {compact ? (
                     <Popover
@@ -92,8 +96,8 @@ export function ReferenceUploader({
                         classNames={{ root: "commerce-reference-preview-popover" }}
                         content={
                             <figure className="commerce-reference-preview">
-                                <CachedResourceImage storageKey={resourceStorageKey(ref.resourceId)} alt={ref.name || "商品参考图预览"} decoding="async" />
-                                <figcaption>{ref.name || `商品参考图 ${index + 1}`}</figcaption>
+                                <CachedResourceImage storageKey={resourceStorageKey(ref.resourceId)} alt={ref.name || _creationText("creation.929d5f299fc6db73")} decoding="async" />
+                                <figcaption>{ref.name || _creationText("creation.4c61b585b81f81b8", { value1: index + 1 })}</figcaption>
                             </figure>
                         }
                     >
@@ -105,17 +109,17 @@ export function ReferenceUploader({
                 <div className="commerce-reference-item-actions">
                     {!compact ? (
                         <Select
-                            aria-label={`第 ${index + 1} 张素材角色`}
+                            aria-label={_creationText("creation.4a0f689945622286", { value1: index + 1 })}
                             size="small"
                             value={ref.role}
-                            options={referenceRoleOptions}
+                            options={_creationOptions(referenceRoleOptions)}
                             disabled={busy}
                             popupMatchSelectWidth={180}
                             onChange={(role: EcommerceReferenceRole) => onChange(references.map((item, i) => (i === index ? { ...item, role } : item)))}
                         />
                     ) : null}
-                    <CommerceHint text="从本次创作中移除这张商品参考图。">
-                        <button className="commerce-reference-remove" type="button" aria-label={`移除第 ${index + 1} 张参考图`} disabled={busy} onClick={() => onChange(references.filter((_, i) => i !== index))}>
+                    <CommerceHint text={_creationText("creation.c5e70c1fb406d5e5")}>
+                        <button className="commerce-reference-remove" type="button" aria-label={_creationText("creation.efb4eee3221b49ea", { value1: index + 1 })} disabled={busy} onClick={() => onChange(references.filter((_, i) => i !== index))}>
                             <X size={13} />
                         </button>
                     </CommerceHint>
@@ -124,13 +128,25 @@ export function ReferenceUploader({
         );
     });
     const addTile = (
-        <CommerceHint text="上传本地商品主图或细节图，支持一次添加多张，也可直接拖入或粘贴。">
+        <CommerceHint text={_creationText("creation.e3188cf705ce33bd")}>
             <label className={`commerce-reference-add ${busy ? "is-uploading" : ""}`}>
                 {busy ? <span className="commerce-reference-spinner" aria-hidden="true" /> : <Plus size={25} strokeWidth={1.5} aria-hidden="true" />}
-                <span>{busy ? "上传中…" : full ? "参考图已满" : dragging ? "松开添加" : references.length ? "继续添加" : compact ? "商品图" : "上传或拖入商品图"}</span>
+                <span>
+                    {busy
+                        ? _creationText("creation.ce1c9d61565f624b")
+                        : full
+                          ? _creationText("creation.127831b7aeebf843")
+                          : dragging
+                            ? _creationText("creation.76b28755012dc03f")
+                            : references.length
+                              ? _creationText("creation.1f1167a9f7b50b27")
+                              : compact
+                                ? _creationText("creation.2b05cc6bb7876585")
+                                : _creationText("creation.4bac9633636ccc85")}
+                </span>
                 <input
                     type="file"
-                    aria-label="添加商品参考图"
+                    aria-label={_creationText("creation.6c85890723f199cf")}
                     accept={COMMERCE_IMAGE_ACCEPT}
                     multiple
                     disabled={busy || full}
@@ -146,7 +162,7 @@ export function ReferenceUploader({
     return (
         <section
             className={`commerce-reference-dropzone${dragging ? " is-dragging" : ""}${compact ? " is-compact" : ""}`}
-            aria-label="商品参考图片上传区"
+            aria-label={_creationText("creation.caaa9f6cf6de2d87")}
             tabIndex={0}
             aria-busy={busy}
             aria-describedby="commerce-reference-help"
@@ -186,32 +202,32 @@ export function ReferenceUploader({
             {/* 紧凑模式由外层区块提供标题与说明，这里不再重复。 */}
             {compact ? null : (
                 <>
-                    <strong>自己的商品图</strong>
-                    <p className="commerce-reference-help">上传你的商品主图、细节、包装或 Logo，可一次添加多张。需要借鉴的风格与排版图片请放在下方。</p>
+                    <strong>{_creationText("creation.2be75d9968af021a")}</strong>
+                    <p className="commerce-reference-help">{_creationText("creation.5147a1f77f9e95c2")}</p>
                 </>
             )}
-            <div className="commerce-reference-list" aria-label="商品参考图片">
+            <div className="commerce-reference-list" aria-label={_creationText("creation.bdfe0a56a07022bc")}>
                 {compact ? addTile : null}
                 {tiles}
                 {previews.map((item, index) => (
                     <div className="commerce-reference-item is-pending" key={`${item.url}-${index}`}>
-                        <img src={item.url} alt={`正在上传 ${item.name}`} />
+                        <img src={item.url} alt={_creationText("creation.c59b602c7eb9b13e", { value1: item.name })} />
                         <span className="commerce-reference-pending-pulse" aria-hidden="true" />
                     </div>
                 ))}
                 {!compact ? addTile : null}
             </div>
             <p id="commerce-reference-help" className={compact ? "sr-only" : "commerce-reference-help"}>
-                可拖入微信、电脑、网页图片，或把右侧生成图拖到这里。点击此区域后按 Ctrl+V 粘贴图片。
+                {_creationText("creation.62fd1ef953a19b4f")}
             </p>
             {busy ? (
                 <p className="commerce-reference-status" role="status">
-                    {uploadProgress || "正在添加图片…"}
+                    {uploadProgress || _creationText("creation.ebbeec0c9eff4ec6")}
                 </p>
             ) : null}
             {error ? (
                 <p className="commerce-reference-error" role="alert">
-                    {error}
+                    {_creationLabel(error)}
                 </p>
             ) : null}
         </section>

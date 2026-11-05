@@ -1,10 +1,10 @@
 import { Popover } from "antd";
 import { Switch } from "@/components/ui/base/switch";
-import { CircleUserRound, Moon, Sun } from "lucide-react";
+import { Moon, Sun } from "lucide-react";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 
-import { AuthLoginLink } from "@/components/auth/auth-login-link";
+import { WorkspaceGuestActions } from "./workspace-guest-actions";
 import { AppChangelogButton } from "@/components/layout/app-changelog-modal";
 import { WorkspaceAccountCard } from "./workspace-account-card";
 import { UserAvatar } from "./user-avatar";
@@ -69,9 +69,6 @@ export function WorkspaceAccountMenu() {
             </Popover>
         </>
     ) : (
-        <AuthLoginLink className="inline-flex items-center gap-2 px-2 text-xs text-foreground/55" aria-label={t("shell.login")} title={t("shell.login")}>
-            <CircleUserRound className="size-5" />
-            <span className="hidden sm:inline">{t("shell.guestShort")}</span>
-        </AuthLoginLink>
+        <WorkspaceGuestActions />
     );
 }

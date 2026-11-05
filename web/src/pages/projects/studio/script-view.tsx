@@ -1,3 +1,4 @@
+import { creationText as _creationText, useCreationLocale as _useCreationLocale } from "@/supdance/plugins/i18n/creation-text";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { App, Button } from "antd";
@@ -69,6 +70,7 @@ export function ScriptView({
     onSourceSaved: (rescript: boolean) => void;
     empty: EpisodeEmpty;
 }) {
+    _useCreationLocale();
     const [processOpen, setProcessOpen] = useState(false);
     const [editingChapterId, setEditingChapterId] = useState("");
     const { modal } = App.useApp();
@@ -107,47 +109,51 @@ export function ScriptView({
             <div className="drama-scriptv-main thin-scrollbar">
                 <section className="drama-scriptv-brief">
                     <div className="drama-scriptv-brief-head">
-                        <span className="drama-eyebrow">本集梗概</span>
+                        <span className="drama-eyebrow">{_creationText("creation.fd719fc2daf89445")}</span>
                         <span className="drama-scriptv-format" title={SOURCE_FORMAT_LABEL[format].detail}>
-                            素材：{SOURCE_FORMAT_LABEL[format].title}
+                            {_creationText("creation.617fb9d0622d0a12", { value1: SOURCE_FORMAT_LABEL[format].title })}
                         </span>
                         <div className="ml-auto flex items-center gap-2">
                             {detail.scriptJob ? (
                                 <Button size="small" type="text" icon={<ScanSearch className="size-3.5" />} onClick={() => setProcessOpen(true)}>
-                                    改编过程
+                                    {_creationText("creation.fb3a79385e7b3c94")}
                                 </Button>
                             ) : null}
                             <Button size="small" type="text" icon={<PenLine className="size-3.5" />} disabled={busy} onClick={confirmRescript}>
-                                重新改编
+                                {_creationText("creation.774aa195509424f8")}
                             </Button>
-                            <Tooltip title={sourceOpen ? "收起原文" : "对照原文"}>
+                            <Tooltip title={sourceOpen ? _creationText("creation.b5269ef5aea2bd68") : _creationText("creation.61139b7a82e1618e")}>
                                 <Button
                                     size="small"
                                     type="text"
                                     icon={sourceOpen ? <PanelRightClose className="size-3.5" /> : <PanelRightOpen className="size-3.5" />}
                                     aria-pressed={sourceOpen}
-                                    aria-label={sourceOpen ? "收起原文" : "对照原文"}
+                                    aria-label={sourceOpen ? _creationText("creation.b5269ef5aea2bd68") : _creationText("creation.61139b7a82e1618e")}
                                     onClick={() => setSourceOpen((open) => !open)}
                                 />
                             </Tooltip>
                         </div>
                     </div>
-                    <p className="drama-scriptv-synopsis">{episode.synopsis || "改编完成后显示本集梗概。"}</p>
+                    <p className="drama-scriptv-synopsis">{episode.synopsis || _creationText("creation.fdb2b92ef8f9defe")}</p>
                     <div className="drama-scriptv-beats">
                         <div>
-                            <span>开场钩子</span>
+                            <span>{_creationText("creation.eb7bc873c8cdd4ba")}</span>
                             <p>{episode.hook || "—"}</p>
                         </div>
                         <div>
-                            <span>结尾悬念</span>
+                            <span>{_creationText("creation.0a98808b97b5b5b8")}</span>
                             <p>{episode.cliffhanger || "—"}</p>
                         </div>
                     </div>
                     <div className="drama-scriptv-rules">
-                        <span>分镜规则</span>
+                        <span>{_creationText("creation.cff64d1df754bb51")}</span>
                         <b>{storyboardSummary(storyboard)}</b>
                         <span>
-                            · 实际 {shots.length} 镜 · {(shots.reduce((sum, shot) => sum + shot.durationMs, 0) / 1000).toFixed(0)} 秒
+                            {_creationText("creation.8785492f19434a54")}
+                            {shots.length}
+                            {_creationText("creation.14509635198632ee")}
+                            {(shots.reduce((sum, shot) => sum + shot.durationMs, 0) / 1000).toFixed(0)}
+                            {_creationText("settings.per_second")}
                         </span>
                     </div>
                     {detail.dialogueCheck ? <DialogueCheckNotice check={detail.dialogueCheck} busy={busy} onRescript={confirmRescript} /> : null}
@@ -158,10 +164,13 @@ export function ScriptView({
                         {scenes.map((group, sceneIndex) => (
                             <section key={group.key} className="drama-screenplay-scene">
                                 <header>
-                                    <span className="drama-screenplay-scene-no">场 {sceneIndex + 1}</span>
-                                    <strong>{group.scene || "未命名场景"}</strong>
+                                    <span className="drama-screenplay-scene-no">{_creationText("creation.cc631e375294e61e", { value1: sceneIndex + 1 })}</span>
+                                    <strong>{group.scene || _creationText("creation.e5bd38f46b7cd54f")}</strong>
                                     <span className="drama-screenplay-scene-meta">
-                                        {group.shots.length} 镜 · {(group.shots.reduce((sum, shot) => sum + shot.durationMs, 0) / 1000).toFixed(0)} 秒
+                                        {group.shots.length}
+                                        {_creationText("creation.14509635198632ee")}
+                                        {(group.shots.reduce((sum, shot) => sum + shot.durationMs, 0) / 1000).toFixed(0)}
+                                        {_creationText("settings.per_second")}
                                     </span>
                                 </header>
                                 {group.shots.map((shot) => (
@@ -189,11 +198,13 @@ export function ScriptView({
                                                 {shot.shotSize ? <span>{shot.shotSize}</span> : null}
                                                 {shot.camera && shot.camera !== "固定" ? <span>{shot.camera}</span> : null}
                                                 <span>{(shot.durationMs / 1000).toFixed(1)}s</span>
-                                                {shot.transition && shot.transition !== "cut" ? <span className="is-transition">{TRANSITION_LABEL[shot.transition as keyof typeof TRANSITION_LABEL]}进入</span> : null}
+                                                {shot.transition && shot.transition !== "cut" ? (
+                                                    <span className="is-transition">{_creationText("creation.f9814666c1cb8e41", { value1: TRANSITION_LABEL[shot.transition as keyof typeof TRANSITION_LABEL] })}</span>
+                                                ) : null}
                                                 {shot.sourceQuote ? (
                                                     <span className="is-source">
                                                         <Quote className="size-3" />
-                                                        有原文出处
+                                                        {_creationText("creation.5c123575d14bceda")}
                                                     </span>
                                                 ) : null}
                                             </div>
@@ -203,29 +214,33 @@ export function ScriptView({
                                                     <ShotEditor shot={shot} onPatch={(patch) => onPatchShot(shot, patch)} />
                                                     <div className="drama-screenplay-editor-actions">
                                                         <Button size="small" icon={<ArrowUpToLine className="size-3.5" />} disabled={busy} onClick={() => onInsertShot(shot, "before")}>
-                                                            在前面插入镜头
+                                                            {_creationText("creation.94aedb3d0955fa72")}
                                                         </Button>
                                                         <Button size="small" icon={<ArrowDownToLine className="size-3.5" />} disabled={busy} onClick={() => onInsertShot(shot, "after")}>
-                                                            在后面插入镜头
+                                                            {_creationText("creation.3509718974ebc276")}
                                                         </Button>
                                                         <span className="flex-1" />
-                                                        <Tooltip title={(segmentSizes.get(shot.segmentIndex) || 0) <= 1 ? "这是本剧情段唯一的镜头，删除会改变分段；可以改写内容或重新改编本集" : ""}>
+                                                        <Tooltip title={(segmentSizes.get(shot.segmentIndex) || 0) <= 1 ? _creationText("creation.43c4180b71b0d196") : ""}>
                                                             <Button size="small" danger type="text" icon={<Trash2 className="size-3.5" />} disabled={busy || (segmentSizes.get(shot.segmentIndex) || 0) <= 1} onClick={() => confirmDelete(shot)}>
-                                                                删除镜头
+                                                                {_creationText("creation.382c8d6e426ce8cd")}
                                                             </Button>
                                                         </Tooltip>
                                                     </div>
                                                 </div>
                                             ) : (
                                                 <>
-                                                    {shot.action ? <p className="drama-screenplay-action">{shot.action}</p> : null}
+                                                    {shot.action ? (
+                                                        <p data-i18n-user-content className="drama-screenplay-action">
+                                                            {shot.action}
+                                                        </p>
+                                                    ) : null}
                                                     {shot.dialogue ? (
-                                                        <div className="drama-screenplay-line">
-                                                            <b>{shot.speaker || "旁白"}</b>
-                                                            <p>{shot.dialogue}</p>
+                                                        <div className="drama-screenplay-line" data-i18n-user-content>
+                                                            <b>{shot.speaker || _creationText("projects.narration")}</b>
+                                                            <p data-i18n-user-content>{shot.dialogue}</p>
                                                         </div>
                                                     ) : null}
-                                                    {!shot.action && !shot.dialogue ? <p className="drama-screenplay-action is-empty">空镜头，点击填写动作或台词</p> : null}
+                                                    {!shot.action && !shot.dialogue ? <p className="drama-screenplay-action is-empty">{_creationText("creation.c8c6ecd775ce984e")}</p> : null}
                                                 </>
                                             )}
                                         </div>
@@ -238,7 +253,7 @@ export function ScriptView({
                     <div className="drama-scriptv-pending">
                         <Clapperboard className="size-7" />
                         <strong>{empty.title}</strong>
-                        <span>{empty.text} 右侧可以先读本集对应的小说原文。</span>
+                        <span>{_creationText("creation.dd2b66dab9507be4", { value1: empty.text })}</span>
                         {empty.action}
                     </div>
                 )}
@@ -263,13 +278,16 @@ export function ScriptView({
 
 /** 原文台词逐句核对：列出没有逐字出现在镜头台词里的原文台词（被删或被改写）。 */
 function DialogueCheckNotice({ check, busy, onRescript }: { check: DramaDialogueCheck; busy: boolean; onRescript: () => void }) {
+    _useCreationLocale();
     const [expanded, setExpanded] = useState(false);
     if (!check.sourceLines) return null;
     if (!check.missingCount) {
         return (
             <div className="drama-dialogue-check is-ok">
                 <CheckCircle2 className="size-3.5 shrink-0" />
-                原文 {check.sourceLines} 句台词都已逐字保留在镜头里
+                {_creationText("creation.354b28c853334568")}
+                {check.sourceLines}
+                {_creationText("creation.a2cfcf04b04ffcc4")}
             </div>
         );
     }
@@ -278,15 +296,13 @@ function DialogueCheckNotice({ check, busy, onRescript }: { check: DramaDialogue
         <div className="drama-dialogue-check" role="status">
             <div className="drama-dialogue-check-head">
                 <AlertTriangle className="size-4 shrink-0" />
-                <strong>
-                    原文 {check.sourceLines} 句台词中有 {check.missingCount} 句没有逐字出现在镜头里
-                </strong>
+                <strong>{_creationText("creation.c4c4185e3ed7ae0a", { value1: check.sourceLines, value2: check.missingCount })}</strong>
                 <span className="flex-1" />
                 <Button size="small" disabled={busy} onClick={onRescript}>
-                    重新改编
+                    {_creationText("creation.774aa195509424f8")}
                 </Button>
             </div>
-            <span className="drama-dialogue-check-hint">可能被删掉或改写了。可以点镜头直接改台词、插入镜头补上，或重新改编本集。</span>
+            <span className="drama-dialogue-check-hint">{_creationText("creation.93ee25e462f02aee")}</span>
             <ul>
                 {shown.map((line) => (
                     <li key={line}>「{line}」</li>
@@ -294,7 +310,7 @@ function DialogueCheckNotice({ check, busy, onRescript }: { check: DramaDialogue
             </ul>
             {check.missing.length > 3 ? (
                 <button type="button" className="drama-link" onClick={() => setExpanded((value) => !value)}>
-                    {expanded ? "收起" : `展开全部${check.missingCount > check.missing.length ? `（显示前 ${check.missing.length} 句）` : ""}`}
+                    {expanded ? _creationText("projects.collapse") : _creationText("creation.8f69a4ac83d3e2e6", { value1: check.missingCount > check.missing.length ? _creationText("creation.6095b0424ae42d79", { value1: check.missing.length }) : "" })}
                 </button>
             ) : null}
         </div>
@@ -302,6 +318,7 @@ function DialogueCheckNotice({ check, busy, onRescript }: { check: DramaDialogue
 }
 
 function SourcePane({ projectId, chapters, quote, onEdit }: { projectId: string; chapters: DramaEpisodeDetail["chapters"]; quote: string; onEdit: (chapterId: string) => void }) {
+    _useCreationLocale();
     const [chapterId, setChapterId] = useState(chapters[0]?.id || "");
     const activeId = chapters.some((chapter) => chapter.id === chapterId) ? chapterId : chapters[0]?.id || "";
     const query = useQuery({ queryKey: ["drama", projectId, "chapter", activeId], queryFn: ({ signal }) => getDramaChapter(projectId, activeId, signal), enabled: Boolean(activeId), staleTime: 300_000 });
@@ -319,37 +336,37 @@ function SourcePane({ projectId, chapters, quote, onEdit }: { projectId: string;
             <aside className="drama-source">
                 <div className="drama-source-empty">
                     <BookOpenText className="size-6" />
-                    本集还没有关联原文章节
+                    {_creationText("creation.80577e0dc40f48cf")}
                 </div>
             </aside>
         );
     }
     return (
-        <aside className="drama-source" aria-label="小说原文">
+        <aside className="drama-source" aria-label={_creationText("creation.bf238681c6939d0d")}>
             <header className="drama-source-head">
                 <div className="drama-source-title">
                     <span className="drama-eyebrow">
                         <BookOpen className="size-3.5" />
-                        原文对照
+                        {_creationText("creation.e1cb0e32ebb65425")}
                     </span>
                     {activeId ? (
                         <Button size="small" type="text" icon={<Pencil className="size-3.5" />} onClick={() => onEdit(activeId)}>
-                            编辑原文
+                            {_creationText("creation.edd6fd715398dd82")}
                         </Button>
                     ) : null}
                 </div>
-                <div className="drama-source-tabs thin-scrollbar" role="tablist" aria-label="原文章节">
+                <div className="drama-source-tabs thin-scrollbar" role="tablist" aria-label={_creationText("creation.0b85432cb0316afa")}>
                     {chapters.map((chapter) => (
                         <button key={chapter.id} type="button" role="tab" aria-selected={chapter.id === activeId} onClick={() => setChapterId(chapter.id)}>
                             {chapter.title}
-                            <span>{formatCount(chapter.wordCount)} 字</span>
+                            <span>{_creationText("creation.70ba18ac7f256cd6", { value1: formatCount(chapter.wordCount) })}</span>
                         </button>
                     ))}
                 </div>
             </header>
-            <div className="drama-source-text thin-scrollbar">
+            <div className="drama-source-text thin-scrollbar" data-i18n-user-content>
                 {query.isLoading ? (
-                    <div className="drama-source-empty">正在读取原文…</div>
+                    <div className="drama-source-empty">{_creationText("creation.4e8dbea41eda1af7")}</div>
                 ) : hit >= 0 ? (
                     <>
                         {text.slice(0, hit)}
@@ -361,11 +378,11 @@ function SourcePane({ projectId, chapters, quote, onEdit }: { projectId: string;
                 )}
             </div>
             {quote && hit < 0 && text ? (
-                <footer className="drama-source-foot">当前镜头的出处不在这一章，可切换章节查看</footer>
+                <footer className="drama-source-foot">{_creationText("creation.bf28f88d36f7833d")}</footer>
             ) : quote ? (
-                <footer className="drama-source-foot is-hit">已高亮当前镜头的原文出处</footer>
+                <footer className="drama-source-foot is-hit">{_creationText("creation.de2185316ea0b1cf")}</footer>
             ) : (
-                <footer className="drama-source-foot">点选左侧镜头，自动定位对应原文</footer>
+                <footer className="drama-source-foot">{_creationText("creation.2b166706286a1011")}</footer>
             )}
         </aside>
     );

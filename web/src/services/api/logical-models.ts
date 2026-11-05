@@ -1,4 +1,5 @@
 import { http } from "@/services/api/request";
+import type { TokenPriceBand } from "@/services/api/wallet";
 import type { ModelTag } from "@/lib/model-tags";
 import type { ImageResolutionOption } from "@/lib/image-resolution-tiers";
 
@@ -51,6 +52,7 @@ export type PublicLogicalModel = {
 };
 
 export type PublicLogicalModelPriceTier = {
+    tokenPriceBands?: TokenPriceBand[];
     selector: Record<string, string>;
     resolution: string;
     videoSeconds: number;
@@ -201,6 +203,7 @@ export type PublicChannelModelAvailabilityDay = {
 };
 
 export type PublicChannelModelPriceTier = {
+    tokenPriceBands?: TokenPriceBand[];
     id: string;
     selector?: Record<string, string>;
     resolution: string;

@@ -1,3 +1,5 @@
+import { creationLabel as _creationLabel } from "@/supdance/plugins/i18n/creation-text";
+import { creationText as _creationText, useCreationLocale as _useCreationLocale } from "@/supdance/plugins/i18n/creation-text";
 import { ArrowUpRight, Check, PencilLine, Sparkles, X } from "lucide-react";
 import { useEffect, useState } from "react";
 import { NavCreateIcon, RefreshIcon, StyleLibraryIcon } from "@/components/ui/ecommerce-icons";
@@ -49,18 +51,31 @@ function directionSpecs(direction: EcommerceCreativeDirection) {
 
 /** Inline editor for one style: its name and its description. */
 export function DirectionEditor({ index, value, className, onChange, onCancel, onSave }: { index: number; value: EcommerceStyleRewrite; className: string; onChange: (value: EcommerceStyleRewrite) => void; onCancel: () => void; onSave: () => void }) {
+    _useCreationLocale();
     return (
         <div className={className}>
-            <input aria-label={`第 ${index + 1} 个风格名称`} value={value.name} maxLength={40} placeholder="风格名称，例如：电音派对" onChange={(event) => onChange({ ...value, name: event.target.value })} />
-            <textarea aria-label={`第 ${index + 1} 个风格描述`} value={value.description} maxLength={500} placeholder="描述布景、配色、光线与字体，小夜会按它重做整套视觉" onChange={(event) => onChange({ ...value, description: event.target.value })} />
+            <input
+                aria-label={_creationText("creation.c0391ede55c89463", { value1: index + 1 })}
+                value={value.name}
+                maxLength={40}
+                placeholder={_creationText("creation.cc6cd8c0abc2d827")}
+                onChange={(event) => onChange({ ...value, name: event.target.value })}
+            />
+            <textarea
+                aria-label={_creationText("creation.fc381993bbdda739", { value1: index + 1 })}
+                value={value.description}
+                maxLength={500}
+                placeholder={_creationText("creation.a73fda6f5927b7ef")}
+                onChange={(event) => onChange({ ...value, description: event.target.value })}
+            />
             <div className="commerce-direction-edit-actions">
                 <button type="button" onClick={onCancel}>
                     <X size={14} />
-                    取消
+                    {_creationText("common.cancel")}
                 </button>
                 <button type="button" disabled={!value.name.trim() && !value.description.trim()} onClick={onSave}>
                     <Check size={14} />
-                    保存
+                    {_creationText("common.save")}
                 </button>
             </div>
         </div>
@@ -68,6 +83,7 @@ export function DirectionEditor({ index, value, className, onChange, onCancel, o
 }
 
 function DirectionCard({ direction, index, chosen, disabled, onSelect }: { direction: EcommerceCreativeDirection; index: number; chosen: boolean; disabled: boolean; onSelect: () => void }) {
+    _useCreationLocale();
     const swatches = directionSwatches(direction);
     const colored = swatches.filter((swatch) => swatch.color);
     const specs = directionSpecs(direction);
@@ -81,16 +97,18 @@ function DirectionCard({ direction, index, chosen, disabled, onSelect }: { direc
                     <span className="commerce-direction-number" aria-hidden="true">
                         {String(index + 1).padStart(2, "0")}
                     </span>
-                    <strong>{direction.name}</strong>
+                    <strong data-i18n-user-content>{direction.name}</strong>
                     {chosen ? <Check size={15} className="commerce-direction-check" /> : null}
                 </span>
-                <span className="commerce-direction-description">{directionDescription(direction)}</span>
+                <span className="commerce-direction-description" data-i18n-user-content>
+                    {directionDescription(direction)}
+                </span>
                 {specs.length ? (
                     <span className="commerce-direction-specs">
                         {specs.map(([label, value]) => (
                             <span key={label}>
-                                <em>{label}</em>
-                                <span>{value}</span>
+                                <em>{_creationLabel(label)}</em>
+                                <span data-i18n-user-content>{value}</span>
                             </span>
                         ))}
                     </span>
@@ -105,7 +123,11 @@ function DirectionCard({ direction, index, chosen, disabled, onSelect }: { direc
                         ))}
                     </span>
                 ) : null}
-                {direction.visual?.why ? <span className="commerce-direction-why">{direction.visual.why}</span> : null}
+                {direction.visual?.why ? (
+                    <span className="commerce-direction-why" data-i18n-user-content>
+                        {direction.visual.why}
+                    </span>
+                ) : null}
             </span>
         </button>
     );
@@ -132,6 +154,7 @@ export function CommerceDirectionCards({
     onRefresh: () => void;
     onOpenLibrary?: () => void;
 }) {
+    _useCreationLocale();
     const [items, setItems] = useState(directions);
     const [editing, setEditing] = useState<{ id: string; value: EcommerceStyleRewrite }>();
     const [selectedId, setSelectedId] = useState<string>();
@@ -147,7 +170,7 @@ export function CommerceDirectionCards({
         setEditing(undefined);
     };
     return (
-        <section className={`flylep-directions-stage commerce-direction-message${followup ? " is-followup" : ""}`} aria-label={followup ? "为你推荐" : "为你的商品推荐四个设计方向"}>
+        <section className={`flylep-directions-stage commerce-direction-message${followup ? " is-followup" : ""}`} aria-label={followup ? _creationText("creation.1795a8edfa43630c") : _creationText("creation.cd5879deabb8149c")}>
             <header className="commerce-direction-header">
                 <span className="commerce-direction-symbol">
                     <Sparkles size={18} aria-hidden="true" />
@@ -156,28 +179,29 @@ export function CommerceDirectionCards({
                     {followup ? (
                         <>
                             <NavCreateIcon size={16} />
-                            为你推荐
+                            {_creationText("creation.1795a8edfa43630c")}
                         </>
                     ) : (
-                        "选择视觉方向"
+                        _creationText("creation.451d259b2b422cf4")
                     )}
                 </h2>
                 {onOpenLibrary ? (
-                    <button type="button" className="commerce-direction-library" aria-label="打开风格库" title="按分类挑选更多风格，或写下你自己的风格" disabled={disabled || degraded || outdated} onClick={onOpenLibrary}>
+                    <button
+                        type="button"
+                        className="commerce-direction-library"
+                        aria-label={_creationText("creation.0fae2602bf1d9809")}
+                        title={_creationText("creation.bf1916e1dfcc7a59")}
+                        disabled={disabled || degraded || outdated}
+                        onClick={onOpenLibrary}
+                    >
                         <StyleLibraryIcon size={15} />
-                        <span>风格库</span>
+                        <span>{_creationText("creation.7062b2c214ad5cdc")}</span>
                         {libraryCount ? <span className="commerce-count-badge is-neutral">{libraryCount + items.length}</span> : null}
                     </button>
                 ) : null}
             </header>
             <p className="commerce-direction-intro">
-                {outdated
-                    ? "这是上一轮的推荐。商品资料已更新，可发送新需求或换一组方向。"
-                    : degraded
-                      ? "知识检索暂不可用，请稍后重新推荐。"
-                      : followup
-                        ? "这一套已完成。换一种视觉语言，继续探索商品的另一面。"
-                        : "根据商品外观与品类，准备了四套反差鲜明的视觉方案。点右上角铅笔可以改写风格，选定后配色、布景与光线将贯穿整套图片。"}
+                {outdated ? _creationText("creation.9058998c6eeff080") : degraded ? _creationText("creation.8d6e92df4bcee248") : followup ? _creationText("creation.ec005387bd1c72fc") : _creationText("creation.8a3dfe6ff941295c")}
             </p>
             <div className="flylep-directions-grid">
                 {items.map((direction, index) =>
@@ -197,8 +221,8 @@ export function CommerceDirectionCards({
                             <button
                                 type="button"
                                 className="commerce-direction-edit"
-                                aria-label={`编辑第 ${index + 1} 个风格`}
-                                title="改写这个风格"
+                                aria-label={_creationText("creation.9ff47b1a7acdd946", { value1: index + 1 })}
+                                title={_creationText("creation.a2c333402e074293")}
                                 disabled={disabled || degraded || outdated}
                                 onClick={() => setEditing({ id: direction.id, value: { name: direction.name, description: directionDescription(direction) } })}
                             >
@@ -211,7 +235,7 @@ export function CommerceDirectionCards({
             <footer>
                 <button type="button" onClick={onRefresh} disabled={disabled}>
                     <RefreshIcon size={15} />
-                    换一组方向
+                    {_creationText("creation.e0bd6be7d005be51")}
                 </button>
                 <button
                     type="button"
@@ -222,7 +246,7 @@ export function CommerceDirectionCards({
                         if (item) onChoose(item);
                     }}
                 >
-                    {degraded ? "请重新推荐" : !selectedId ? "先选择一个方向" : "按此风格生成"}
+                    {degraded ? _creationText("creation.dda5dbec3628ae92") : !selectedId ? _creationText("creation.1a91072a5f978c8a") : _creationText("creation.aa5c29cff1ceb9fa")}
                     <ArrowUpRight size={14} />
                 </button>
             </footer>

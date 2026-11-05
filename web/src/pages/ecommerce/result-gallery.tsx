@@ -1,3 +1,6 @@
+import { creationSource as _creationSource } from "@/supdance/plugins/i18n/creation-text";
+import { creationOptions as _creationOptions, creationLabel as _creationLabel } from "@/supdance/plugins/i18n/creation-text";
+import { creationText as _creationText, useCreationLocale as _useCreationLocale } from "@/supdance/plugins/i18n/creation-text";
 import { Button, Input, Popconfirm, Popover, Select } from "antd";
 import { ArrowDownToLine, Crop, Images, Languages, Layers3, Maximize2, Paintbrush2, RotateCcw, RotateCw, Scissors, Sparkles, Trash2, Type, X } from "lucide-react";
 import { useEffect, useRef, useState, type KeyboardEvent as ReactKeyboardEvent, type PointerEvent as ReactPointerEvent } from "react";
@@ -51,6 +54,7 @@ export function SingleImageEditor({
     onClose: () => void;
     onGenerate: (image: EcommercePlanImage) => Promise<void>;
 }) {
+    _useCreationLocale();
     const [edited, setEdited] = useState<EcommercePlanImage>(() => ({
         ...image,
         copy: "",
@@ -84,27 +88,27 @@ export function SingleImageEditor({
                     if (!controller.signal.aborted) setCost(value.quote.amountMicrocredits / 1_000_000);
                 })
                 .catch((cause) => {
-                    if (!controller.signal.aborted) setError(cause instanceof Error ? cause.message : "报价失败");
+                    if (!controller.signal.aborted) setError(cause instanceof Error ? cause.message : _creationSource("creation.57e73d133f5fdbbb"));
                 });
-        else setError("当前模型无法使用这些参数，请重新选择");
+        else setError(_creationSource("creation.ed896598373e81c6"));
         return () => controller.abort();
     }, [config, edited.imageModel, quotedRatio, edited.resolution, refs.length]);
     return (
-        <section className="ecommerce-image-editor" aria-label="单张图片 AI 编辑">
+        <section className="ecommerce-image-editor" aria-label={_creationText("creation.22845f845f147940")}>
             <header>
                 <div>
                     <Sparkles size={17} />
-                    <strong>重新编辑这张图片</strong>
+                    <strong>{_creationText("creation.e52afda12c21ff0a")}</strong>
                 </div>
-                <Button type="text" aria-label="关闭图片编辑" icon={<X size={17} />} onClick={onClose} disabled={busy} />
+                <Button type="text" aria-label={_creationText("creation.08d672e6df168b30")} icon={<X size={17} />} onClick={onClose} disabled={busy} />
             </header>
-            <p>写下想调整的画面、文字或布局，让这张作品更贴近你的想法。</p>
+            <p>{_creationText("creation.468b9686569e3fc2")}</p>
             <label className="ecommerce-field">
-                <span>修改要求</span>
-                <Input.TextArea aria-label="图片修改要求" placeholder="例如：标题分成两行，留白再多一些，保留商品原有颜色" autoSize={{ minRows: 4, maxRows: 8 }} value={request} onChange={(event) => setRequest(event.target.value)} />
+                <span>{_creationText("creation.28c29060ccc30899")}</span>
+                <Input.TextArea aria-label={_creationText("creation.f54287590bfaa4eb")} placeholder={_creationText("creation.8f65c5113d4c4748")} autoSize={{ minRows: 4, maxRows: 8 }} value={request} onChange={(event) => setRequest(event.target.value)} />
             </label>
             <label className="ecommerce-field">
-                <span>图片模型</span>
+                <span>{_creationText("creation.48156e412e6b80bf")}</span>
                 <ModelPicker
                     config={config}
                     capability="image"
@@ -121,25 +125,31 @@ export function SingleImageEditor({
             </label>
             <div className="ecommerce-image-editor-parameters">
                 <label className="ecommerce-field">
-                    <span>图片比例</span>
-                    <Select aria-label="单图图片比例" value={edited.ratio} options={profile?.size.values.map((value) => ({ value, label: imageSizeLabel(value) }))} onChange={(ratio) => setEdited({ ...edited, ratio })} />
+                    <span>{_creationText("creation.f69028ee0d49a448")}</span>
+                    <Select
+                        aria-label={_creationText("creation.a9708836bf654a32")}
+                        value={edited.ratio}
+                        options={_creationOptions(profile?.size.values.map((value) => ({ value, label: imageSizeLabel(value) })))}
+                        onChange={(ratio) => setEdited({ ...edited, ratio })}
+                    />
                 </label>
                 <label className="ecommerce-field">
-                    <span>分辨率 / 画质</span>
+                    <span>{_creationText("creation.3074f9433e3c7a48")}</span>
                     <Select
-                        aria-label="单图分辨率"
+                        aria-label={_creationText("creation.5bcd95a2223274bb")}
                         value={edited.resolution}
-                        options={(profile?.resolution.supported ? profile.resolution.values : [profile?.quality.default || "auto"]).map((value) => ({ value, label: value.toUpperCase() }))}
+                        options={_creationOptions((profile?.resolution.supported ? profile.resolution.values : [profile?.quality.default || "auto"]).map((value) => ({ value, label: value.toUpperCase() })))}
                         onChange={(resolution) => setEdited({ ...edited, resolution })}
                     />
                 </label>
             </div>
-            {error ? <p role="alert">{error}</p> : null}
+            {error ? <p role="alert">{_creationLabel(error)}</p> : null}
             <footer>
                 <span>
-                    1 张 · {cost == null ? "正在计算积分" : "预计 "}
+                    {_creationText("creation.97a1cfb03b99f24f")}
+                    {cost == null ? _creationText("workbench.calculating_credits") : _creationText("creation.7055463fb9b7d458")}
                     <RollingCreditAmount value={cost ?? null} />
-                    {cost == null ? null : " 积分"}
+                    {cost == null ? null : _creationText("creation.32ded95d61e3f532")}
                 </span>
                 <Button
                     type="primary"
@@ -155,14 +165,14 @@ export function SingleImageEditor({
                             await onGenerate({ ...edited, prompt: `${edited.prompt}\n\n用户本轮修改要求（优先于原方案）：${request.trim()}` });
                             onClose();
                         } catch (cause) {
-                            setError(cause instanceof Error ? cause.message : "重新生成失败");
+                            setError(cause instanceof Error ? cause.message : _creationSource("creation.7f8f9593f5c4a4bf"));
                         } finally {
                             lock.current = false;
                             setBusy(false);
                         }
                     }}
                 >
-                    重新生成
+                    {_creationText("workbench.regenerate")}
                 </Button>
             </footer>
         </section>
@@ -211,6 +221,7 @@ export function EcommerceResultGallery({
     onRegenerate: (image: EcommercePlanImage) => Promise<void>;
     onRetry: (image: EcommercePlanImage) => void;
 }) {
+    _useCreationLocale();
     const [editing, setEditing] = useState<string>();
     const [rotations, setRotations] = useState<Record<string, number>>({});
     const [dimensions, setDimensions] = useState<Record<string, string>>({});
@@ -283,16 +294,16 @@ export function EcommerceResultGallery({
                             data-resized={Boolean(frameSize)}
                             style={frameSize ? { width: frameSize.width, height: frameSize.height, left: frameSize.left, top: frameSize.top } : undefined}
                             className={`ecommerce-result${selected.has(image.id) ? " is-selected" : ""}${focused === image.id ? " is-focused" : ""}${editing === image.id ? " is-editing" : ""}${working ? " is-generating" : ""}`}
-                            aria-label={`第 ${index + 1} 张 · ${labelOf(imageTypes, image.imageType)}`}
+                            aria-label={_creationText("creation.13a64d41c44e4667", { value1: index + 1, value2: labelOf(imageTypes, image.imageType) })}
                         >
                             <div className="ecommerce-result-media">
                                 {displaySrc ? (
                                     <button
                                         type="button"
                                         className="ecommerce-result-open"
-                                        aria-label={`选中第 ${index + 1} 张图片`}
+                                        aria-label={_creationText("creation.acfddbf80bdbaaaf", { value1: index + 1 })}
                                         aria-pressed={focused === image.id}
-                                        title="拖动可自由移动图片；按住 Alt 拖到商品参考区可继续创作"
+                                        title={_creationText("creation.b6dae462990f3657")}
                                         onClick={(event) => {
                                             if (event.shiftKey || event.ctrlKey || event.metaKey) onSelect(image.id);
                                             else onFocus(focused === image.id ? undefined : image.id);
@@ -302,7 +313,7 @@ export function EcommerceResultGallery({
                                             key={displaySrc}
                                             ratio={commerceCanvasAspect(image.ratio)}
                                             src={displaySrc}
-                                            alt={`第${index + 1}张生成结果`}
+                                            alt={_creationText("creation.3499c78b636a69ea", { value1: index + 1 })}
                                             rotation={rotations[image.id] || 0}
                                             frameRatio={frameSize ? frameSize.width / frameSize.height : undefined}
                                             draggable={false}
@@ -321,21 +332,29 @@ export function EcommerceResultGallery({
                                     <div className="ecommerce-result-placeholder commerce-branded-placeholder" style={{ aspectRatio: commerceCanvasAspect(image.ratio) }} role="status">
                                         <div className="commerce-placeholder-brand">
                                             <img src="/commerce/agent-mark.svg" alt="" />
-                                            <span>电商 Agent</span>
+                                            <span>{_creationText("creation.b932b2906738d571")}</span>
                                         </div>
                                         {working ? <CommerceGeneratingArtwork queued={!image.taskId || task?.status === "queued"} label={`${String(index + 1).padStart(2, "0")} · ${labelOf(imageTypes, image.imageType)}`} /> : <Images size={27} />}
                                         {!working ? (
-                                            <strong>{task?.status === "failed" && task.canRecoverMedia ? "作品已生成，保存未完成" : task?.status === "failed" ? "生成失败" : task?.status === "cancelled" ? "任务已取消" : "等待确认生成"}</strong>
+                                            <strong>
+                                                {task?.status === "failed" && task.canRecoverMedia
+                                                    ? _creationText("creation.57c925f72601ea9e")
+                                                    : task?.status === "failed"
+                                                      ? _creationText("music.status_failed")
+                                                      : task?.status === "cancelled"
+                                                        ? _creationText("canvas.task_cancelled_msg")
+                                                        : _creationText("creation.6b63c92e5494efa2")}
+                                            </strong>
                                         ) : null}
                                         {!working ? (
                                             <span>
-                                                {String(index + 1).padStart(2, "0")} · {labelOf(imageTypes, image.imageType)}
+                                                {String(index + 1).padStart(2, "0")} · {_creationLabel(labelOf(imageTypes, image.imageType))}
                                             </span>
                                         ) : null}
                                         {task?.error ? <p>{task.error}</p> : null}
                                         {task && ["failed", "cancelled"].includes(task.status) ? (
                                             <Button size="small" onClick={() => onRetry(image)}>
-                                                {task.canRecoverMedia ? "重新保存（不扣费）" : "重试这张图片"}
+                                                {task.canRecoverMedia ? _creationText("creation.f4d0e43e083c1b75") : _creationText("creation.353ec6bf7bb1d356")}
                                             </Button>
                                         ) : null}
                                     </div>
@@ -349,7 +368,7 @@ export function EcommerceResultGallery({
                                             <span
                                                 key={direction}
                                                 role="slider"
-                                                aria-label={`拉伸第 ${index + 1} 张图片${direction}`}
+                                                aria-label={_creationText("creation.6c04d44d5ed67325", { value1: index + 1, value2: direction })}
                                                 aria-valuemin={120}
                                                 aria-valuemax={vertical ? 1600 : 1200}
                                                 aria-valuenow={vertical ? frameSize?.height || Math.round(260 / commerceCanvasAspect(image.ratio)) : frameSize?.width || 260}
@@ -367,31 +386,37 @@ export function EcommerceResultGallery({
                                     <button
                                         type="button"
                                         className="commerce-selection-rotate"
-                                        title="顺时针旋转 90° 预览"
-                                        aria-label="顺时针旋转图片预览"
+                                        title={_creationText("creation.81ace10251ac1435")}
+                                        aria-label={_creationText("creation.dbdf59795cc87188")}
                                         onClick={() => setRotations((current) => ({ ...current, [image.id]: ((current[image.id] || 0) + 90) % 360 }))}
                                     >
                                         <RotateCw size={15} />
                                     </button>
-                                    <div className="commerce-selected-tools" role="group" aria-label="图片编辑功能" data-canvas-no-zoom>
+                                    <div className="commerce-selected-tools" role="group" aria-label={_creationText("creation.3c568ab678945517")} data-canvas-no-zoom>
                                         <div className="commerce-selected-tools-cost">
-                                            图片编辑<small>功能即将开放</small>
+                                            {_creationText("workbench.image_editing")}
+                                            <small>{_creationText("creation.ffa2268976277632")}</small>
                                         </div>
                                         {pendingImageTools.map(({ label, icon: Icon }) => (
-                                            <button type="button" key={label} disabled title={`${label}功能将在 API 接入后开放`}>
+                                            <button type="button" key={label} disabled title={_creationText("creation.1cfc38a90c8eec95", { value1: label })}>
                                                 <Icon size={15} strokeWidth={1.8} />
-                                                <span>{label}</span>
-                                                <small>99 积分</small>
+                                                <span>{_creationLabel(label)}</span>
+                                                <small>{_creationText("creation.2126dc0b0c251d10")}</small>
                                             </button>
                                         ))}
                                         <div className="commerce-selected-tools-divider" />
-                                        <button type="button" disabled={!assetId} title={rotations[image.id] ? "下载原图；旋转仅用于预览" : "下载这张图片"} onClick={() => assetId && onDownload({ image, index, assetId })}>
+                                        <button
+                                            type="button"
+                                            disabled={!assetId}
+                                            title={rotations[image.id] ? _creationText("creation.8960a816885e13c3") : _creationText("creation.480575b14b0ed0e0")}
+                                            onClick={() => assetId && onDownload({ image, index, assetId })}
+                                        >
                                             <ArrowDownToLine size={15} />
-                                            <span>下载原图</span>
+                                            <span>{_creationText("creation.833d680fe5a99443")}</span>
                                         </button>
                                         <button type="button" disabled={!assetId} onClick={() => assetId && onCanvas([assetId])}>
                                             <Images size={15} />
-                                            <span>导入画布</span>
+                                            <span>{_creationText("creation.d430af0b12ad6ca1")}</span>
                                         </button>
                                         <Popover
                                             open={editing === image.id}
@@ -413,13 +438,13 @@ export function EcommerceResultGallery({
                                         >
                                             <button type="button" onClick={() => setEditing(image.id)}>
                                                 <RotateCcw size={15} />
-                                                <span>重新生成</span>
+                                                <span>{_creationText("workbench.regenerate")}</span>
                                             </button>
                                         </Popover>
-                                        <Popconfirm title="从结果区移除这张图片？" description="原图片仍保留在资产库与任务历史中。" onConfirm={() => onRemove(image)}>
+                                        <Popconfirm title={_creationText("creation.bb284f538eb6a980")} description={_creationText("creation.be35c35e34895aac")} onConfirm={() => onRemove(image)}>
                                             <button type="button">
                                                 <Trash2 size={15} />
-                                                <span>移除图片</span>
+                                                <span>{_creationText("creation.86d72aaba84d724e")}</span>
                                             </button>
                                         </Popconfirm>
                                     </div>
@@ -428,13 +453,14 @@ export function EcommerceResultGallery({
                             {displaySrc && working ? (
                                 <div className="ecommerce-result-regenerating" role="status">
                                     <img src="/commerce/agent-mark.svg" alt="" />
-                                    <strong>电商 Agent 正在生成中</strong>
-                                    <span>新图片完成后自动更新</span>
+                                    <strong>{_creationText("creation.fac1a7bdbc89ac02")}</strong>
+                                    <span>{_creationText("creation.f38171e036d4cad0")}</span>
                                 </div>
                             ) : null}
                             {assetId && qualityIssues?.[assetId]?.length ? (
                                 <div className="ecommerce-quality-warning" role="status" title={qualityIssues[assetId].join("；")}>
-                                    技术质检：{qualityIssues[assetId].join("；")}
+                                    {_creationText("creation.ae3c13f390dbe797")}
+                                    {qualityIssues[assetId].join("；")}
                                 </div>
                             ) : null}
                         </article>

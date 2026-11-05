@@ -1,3 +1,5 @@
+import { creationSource as _creationSource, creationLabel as _creationLabel } from "@/supdance/plugins/i18n/creation-text";
+import { creationText as _creationText, useCreationLocale as _useCreationLocale } from "@/supdance/plugins/i18n/creation-text";
 import { App, Modal } from "antd";
 import { ArrowUpRight, Check, ChevronLeft, ChevronRight, FolderOpen, Images, Trash2, X } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
@@ -60,6 +62,7 @@ function ProjectCard({
     onSelect: (id: string) => void;
     onDelete: (project: EcommerceProject) => void;
 }) {
+    _useCreationLocale();
     const [failed, setFailed] = useState<string[]>([]);
     const candidates = useMemo(() => ecommerceHistoryCovers(project, tasks), [project, tasks]);
     const cover = candidates.find((candidate) => !failed.includes(candidate));
@@ -74,26 +77,30 @@ function ProjectCard({
                 style={{ animationDelay: `${Math.min(index, 11) * 32}ms` }}
                 aria-current={active ? "true" : undefined}
                 aria-pressed={selecting ? selected : undefined}
-                aria-label={selecting ? `${selected ? "取消选择" : "选择"}项目：${title}` : `打开项目：${title}`}
+                aria-label={
+                    selecting
+                        ? _creationText("creation.8f669b98dfe6dc04", { value1: selected ? _creationText("creation.74966e20df2ea9fd") : _creationText("creation.c11330b85234f9c0"), value2: title })
+                        : _creationText("creation.3ef75d6edeed0eb6", { value1: title })
+                }
                 disabled={disabled}
                 onClick={() => (selecting ? onSelect(project.id) : onOpen(project))}
             >
                 <span className="ecommerce-project-cover">
                     {cover ? (
-                        <img src={cover} alt={`${title}项目封面`} loading="lazy" decoding="async" onError={() => setFailed((values) => [...values, cover])} />
+                        <img src={cover} alt={_creationText("creation.546e2626ba33ea25", { value1: title })} loading="lazy" decoding="async" onError={() => setFailed((values) => [...values, cover])} />
                     ) : (
                         <span className="ecommerce-project-cover-empty">
                             <Images size={27} strokeWidth={1.5} />
-                            <span>{candidates.length ? "封面暂不可用" : "暂无商品图片"}</span>
+                            <span>{candidates.length ? _creationText("creation.cf9029feede1d9bf") : _creationText("creation.74c1cf5d718a2782")}</span>
                         </span>
                     )}
                 </span>
                 <span className="ecommerce-project-card-body">
-                    <span className="ecommerce-project-title" title={title}>
+                    <span className="ecommerce-project-title" title={title} data-i18n-user-content>
                         {title}
                     </span>
                     <span className="ecommerce-project-meta">
-                        <span className={`ecommerce-project-status ecommerce-project-status-${project.status}`}>{statusLabels[project.status] || "已保存"}</span>
+                        <span className={`ecommerce-project-status ecommerce-project-status-${project.status}`}>{statusLabels[project.status] || _creationText("settings.saved_badge")}</span>
                         {updated ? (
                             <time dateTime={project.updatedAt} title={date.toLocaleString("zh-CN")}>
                                 {updated}
@@ -110,7 +117,7 @@ function ProjectCard({
                 )}
             </button>
             {!selecting ? (
-                <button type="button" className="ecommerce-project-delete" aria-label={`删除项目：${title}`} title="删除项目" disabled={disabled} onClick={() => onDelete(project)}>
+                <button type="button" className="ecommerce-project-delete" aria-label={_creationText("creation.59467c43d9553e96", { value1: title })} title={_creationText("creation.f6dc6a110d09321f")} disabled={disabled} onClick={() => onDelete(project)}>
                     <Trash2 size={15} strokeWidth={1.8} />
                 </button>
             ) : null}
@@ -138,6 +145,7 @@ export function EcommerceProjectHistory({
     onDeleted: (ids: string[], all: boolean) => void;
 }) {
     const { message } = App.useApp();
+    _useCreationLocale();
     const [projects, setProjects] = useState<EcommerceProject[]>([]);
     const [total, setTotal] = useState(0);
     const [page, setPage] = useState(1);
@@ -174,7 +182,7 @@ export function EcommerceProjectHistory({
                 if (result.total > 0 && page > Math.ceil(result.total / pageSize)) setPage(Math.ceil(result.total / pageSize));
             })
             .catch((cause) => {
-                if (!cancelled) setError(cause instanceof Error ? cause.message : "项目加载失败，请重试");
+                if (!cancelled) setError(cause instanceof Error ? cause.message : _creationSource("creation.f304ae050447c64c"));
             })
             .finally(() => {
                 if (!cancelled) setLoading(false);
@@ -215,11 +223,11 @@ export function EcommerceProjectHistory({
             setSelected(new Set());
             setSelecting(false);
             setRetry((value) => value + 1);
-            message.success(`已删除 ${result.deleted} 个项目`);
+            message.success(_creationText("creation.37409ecfd730cf30", { value1: result.deleted }));
         } catch (cause) {
             setDeleteTarget(null);
             setRetry((value) => value + 1);
-            message.error(cause instanceof Error ? cause.message : "删除失败，请刷新后重试");
+            message.error(cause instanceof Error ? cause.message : _creationText("creation.b576310441a5f527"));
         } finally {
             setDeleting(false);
         }
@@ -240,26 +248,27 @@ export function EcommerceProjectHistory({
             className="ecommerce-history-modal"
             transitionName="ecommerce-history-motion"
             maskTransitionName="ecommerce-history-mask"
-            aria-label="历史项目"
+            aria-label={_creationText("creation.96f17ac431a84c02")}
         >
-            <section className="ecommerce-history" aria-label="我的电商项目">
+            <section className="ecommerce-history" aria-label={_creationText("creation.a74bc790efe9453d")}>
                 <header className="ecommerce-history-heading">
                     <div className="ecommerce-history-emblem">
                         <FolderOpen size={23} strokeWidth={1.55} />
                     </div>
                     <div className="ecommerce-history-heading-copy">
                         <span>COMMERCE / PROJECT LIBRARY</span>
-                        <h2>我的电商项目</h2>
-                        <p>选择一个项目，继续上次的创作。</p>
+                        <h2>{_creationText("creation.a74bc790efe9453d")}</h2>
+                        <p>{_creationText("creation.039a654ed00df082")}</p>
                     </div>
-                    <button type="button" className="ecommerce-history-close" aria-label="关闭历史项目" disabled={deleting} onClick={onClose}>
+                    <button type="button" className="ecommerce-history-close" aria-label={_creationText("creation.211de1220a6c41bb")} disabled={deleting} onClick={onClose}>
                         <X size={19} />
                     </button>
                 </header>
                 <div className="ecommerce-history-controls">
                     <div className="ecommerce-history-actions">
                         <span className="ecommerce-history-count">
-                            <strong>{total}</strong> 个项目
+                            <strong>{total}</strong>
+                            {_creationText("creation.5e7e88508a0922e2")}
                         </span>
                         {total > 0 ? (
                             <button
@@ -271,26 +280,26 @@ export function EcommerceProjectHistory({
                                     setSelected(new Set());
                                 }}
                             >
-                                {selecting ? "完成管理" : "多选管理"}
+                                {selecting ? _creationText("creation.08b5788a41a8e796") : _creationText("creation.04e9e1b949acaae3")}
                             </button>
                         ) : null}
                         {selecting ? (
                             <>
-                                <span className="ecommerce-history-selected">已选 {selected.size}</span>
+                                <span className="ecommerce-history-selected">{_creationText("creation.bb370c51551f57bd", { value1: selected.size })}</span>
                                 <button type="button" className="ecommerce-history-action" disabled={loading || deleting || !projects.length} onClick={togglePage}>
-                                    {pageSelected ? "取消本页" : "全选本页"}
+                                    {pageSelected ? _creationText("creation.4379693cbf2f2c06") : _creationText("creation.4cabaad3579bdbdd")}
                                 </button>
                                 <button type="button" className="ecommerce-history-action ecommerce-history-danger" disabled={deleting || !selected.size} onClick={() => setDeleteTarget({ kind: "selected", ids: [...selected], count: selected.size })}>
-                                    删除所选
+                                    {_creationText("creation.435bf8a234fde6f2")}
                                 </button>
                             </>
                         ) : null}
                     </div>
                     <div className="ecommerce-history-actions">
                         <label className="ecommerce-history-page-size">
-                            每页显示{" "}
+                            {_creationText("creation.3be014d778139529")}{" "}
                             <select
-                                aria-label="每页项目数"
+                                aria-label={_creationText("creation.26f341c1a30993da")}
                                 value={pageSize}
                                 disabled={loading || deleting}
                                 onChange={(event) => {
@@ -302,11 +311,11 @@ export function EcommerceProjectHistory({
                                 <option value={50}>50</option>
                                 <option value={100}>100</option>
                             </select>{" "}
-                            个
+                            {_creationText("creation.3a116815bc9da10d")}
                         </label>
                         {total > 0 ? (
                             <button type="button" className="ecommerce-history-action ecommerce-history-danger" disabled={loading || deleting || deletionDisabled} onClick={() => setDeleteTarget({ kind: "all", ids: [], count: total })}>
-                                删除全部
+                                {_creationText("creation.c1d9d09298bb9499")}
                             </button>
                         ) : null}
                     </div>
@@ -315,14 +324,14 @@ export function EcommerceProjectHistory({
                     {loading ? (
                         <div className="ecommerce-history-message" role="status">
                             <span className="ecommerce-history-loader" />
-                            正在整理项目档案…
+                            {_creationText("creation.510ee21c7a5a32e3")}
                         </div>
                     ) : error ? (
                         <div className="ecommerce-history-message" role="alert">
-                            <strong>项目加载失败</strong>
-                            <span>{error}</span>
+                            <strong>{_creationText("creation.b6dad97986bc0517")}</strong>
+                            <span>{_creationLabel(error)}</span>
                             <button type="button" onClick={() => setRetry((value) => value + 1)}>
-                                重新加载
+                                {_creationText("common.reload")}
                             </button>
                         </div>
                     ) : projects.length ? (
@@ -346,26 +355,27 @@ export function EcommerceProjectHistory({
                     ) : (
                         <div className="ecommerce-history-message">
                             <FolderOpen size={32} strokeWidth={1.3} />
-                            <strong>还没有历史项目</strong>
-                            <span>保存商品资料或开始策划后，项目会显示在这里。</span>
+                            <strong>{_creationText("creation.385ddda451af9cf9")}</strong>
+                            <span>{_creationText("creation.549e944dc0a5b20a")}</span>
                         </div>
                     )}
                 </div>
                 <footer className="ecommerce-history-footer">
                     <span>
-                        显示 {first}–{last} / {total}
-                        {selecting && selected.size ? ` · 跨页已选 ${selected.size}` : ""}
+                        {_creationText("creation.4e1449e7d5e50593")}
+                        {first}–{last} / {total}
+                        {selecting && selected.size ? _creationText("creation.2d42e874417d6c45", { value1: selected.size }) : ""}
                     </span>
-                    <nav className="ecommerce-history-pagination" aria-label="项目分页">
-                        <button type="button" aria-label="上一页" disabled={page <= 1 || loading || deleting} onClick={() => setPage((value) => value - 1)}>
+                    <nav className="ecommerce-history-pagination" aria-label={_creationText("creation.66cc26ecc47b816e")}>
+                        <button type="button" aria-label={_creationText("common.prev")} disabled={page <= 1 || loading || deleting} onClick={() => setPage((value) => value - 1)}>
                             <ChevronLeft size={17} />
                         </button>
                         {pages.map((number) => (
-                            <button key={number} type="button" aria-label={`第 ${number} 页`} aria-current={page === number ? "page" : undefined} disabled={loading || deleting} onClick={() => setPage(number)}>
+                            <button key={number} type="button" aria-label={_creationText("creation.bee11b0726bf134f", { value1: number })} aria-current={page === number ? "page" : undefined} disabled={loading || deleting} onClick={() => setPage(number)}>
                                 {number}
                             </button>
                         ))}
-                        <button type="button" aria-label="下一页" disabled={page >= pageCount || loading || deleting} onClick={() => setPage((value) => value + 1)}>
+                        <button type="button" aria-label={_creationText("common.next")} disabled={page >= pageCount || loading || deleting} onClick={() => setPage((value) => value + 1)}>
                             <ChevronRight size={17} />
                         </button>
                     </nav>
@@ -374,11 +384,13 @@ export function EcommerceProjectHistory({
             <Modal
                 className="ecommerce-delete-confirm"
                 open={Boolean(deleteTarget)}
-                title={deleteTarget?.kind === "all" ? "删除全部电商项目？" : deleteTarget?.kind === "one" ? "删除这个项目？" : `删除所选 ${deleteTarget?.count || 0} 个项目？`}
+                title={
+                    deleteTarget?.kind === "all" ? _creationText("creation.1e1fa5236fda89b3") : deleteTarget?.kind === "one" ? _creationText("creation.70ee599f5e2114e4") : _creationText("creation.924698620e0d7176", { value1: deleteTarget?.count || 0 })
+                }
                 centered
-                okText={deleting ? "正在删除…" : "确认删除"}
+                okText={deleting ? _creationText("creation.4fd4f40094d40891") : _creationText("common.confirm_delete")}
                 okButtonProps={{ danger: true, loading: deleting }}
-                cancelText="取消"
+                cancelText={_creationText("common.cancel")}
                 cancelButtonProps={{ disabled: deleting }}
                 closable={!deleting}
                 mask={{ closable: !deleting }}
@@ -390,12 +402,12 @@ export function EcommerceProjectHistory({
             >
                 <p>
                     {deleteTarget?.kind === "all"
-                        ? `将删除你账号中的全部 ${deleteTarget.count} 个电商项目，包括其他分页中的项目。`
+                        ? _creationText("creation.640c6023a81968b0", { value1: deleteTarget.count })
                         : deleteTarget?.kind === "one"
-                          ? `将删除「${deleteTarget.name}」。`
-                          : `将删除跨页选中的 ${deleteTarget?.count || 0} 个电商项目。`}
+                          ? _creationText("creation.7558d3860d42ed03", { value1: deleteTarget.name })
+                          : _creationText("creation.9046f7067d426c0f", { value1: deleteTarget?.count || 0 })}
                 </p>
-                <p>删除后项目无法恢复；已生成的图片仍保留在资产库，正在运行的任务不会因此取消。</p>
+                <p>{_creationText("creation.2b48ab3883f83e58")}</p>
             </Modal>
         </AppModal>
     );

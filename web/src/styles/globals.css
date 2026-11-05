@@ -623,10 +623,20 @@
     justify-content: center;
     gap: var(--space-3);
     padding: var(--space-3) var(--space-4);
-    color: color-mix(in srgb, var(--foreground) 48%, transparent);
+    color: var(--muted-foreground);
     font-size: var(--fs-label);
     line-height: 1.6;
     text-align: center;
+}
+
+.site-compliance-footer.is-workspace {
+    flex-direction: row;
+    flex-wrap: wrap;
+    padding-block: var(--space-1);
+}
+
+.site-compliance-footer.is-workspace a {
+    min-height: 44px;
 }
 
 .site-compliance-footer > span {

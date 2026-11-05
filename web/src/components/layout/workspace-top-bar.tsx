@@ -64,7 +64,7 @@ export function WorkspaceTopBar({ sidebarOpen, onToggleSidebar }: { sidebarOpen:
             <div className="app-workspace-topbar-actions">
                 <LanguageMenu />
                 {user ? <TopbarFeedbackButton /> : null}
-                {creditsEnabled ? (
+                {user && creditsEnabled ? (
                     <button type="button" className="app-workspace-topbar-credit-pill" aria-label={t("shell.openWallet", { balance })} onClick={() => openWorkspaceWallet()}>
                         <WorkspaceCreditGiftMark />
                         <span>{t("shell.credits")}</span>

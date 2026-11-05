@@ -1,3 +1,5 @@
+import { creationLabel as _creationLabel } from "@/supdance/plugins/i18n/creation-text";
+import { creationText as _creationText, useCreationLocale as _useCreationLocale } from "@/supdance/plugins/i18n/creation-text";
 import { CachedResourceImage } from "@/components/cached-resource-image";
 import { projectDraft, type EcommerceDraft, type EcommercePlan, type EcommerceProject } from "@/services/api/ecommerce";
 import { resourceFileUrl, resourceStorageKey } from "@/services/api/resources";
@@ -17,13 +19,16 @@ export function restoreSubmittedCommerceRequest(project: EcommerceProject | null
 
 /** A sent message reads its accepted snapshot, never the next composer draft. */
 export function CommerceSubmittedRequest({ draft }: { draft: EcommerceDraft | null }) {
+    _useCreationLocale();
     if (!draft || (!draft.instruction && !draft.references.length)) return null;
     const references = draft.references.filter((ref) => ref.role !== "model");
     const count = draft.imageType === "sku" ? draft.skus.reduce((sum, sku) => sum + sku.count, 0) : draft.count;
     return (
-        <div className="commerce-request-message" aria-label="已发送的商品需求">
+        <div className="commerce-request-message" aria-label={_creationText("creation.4d4cc71925d833ad")}>
             <small>
-                特惠通道 · {labelOf(languages, draft.language)} · {labelOf(platforms, draft.platform)} · {modelOptionName(draft.imageModel)} · {draft.resolution.toUpperCase()} · {imageSizeLabel(draft.ratio)} · {count} 张
+                {_creationText("creation.e0d41626f54a1653")}
+                {_creationLabel(labelOf(languages, draft.language))} · {_creationLabel(labelOf(platforms, draft.platform))} · {modelOptionName(draft.imageModel)} · {draft.resolution.toUpperCase()} · {imageSizeLabel(draft.ratio)} · {count}
+                {_creationText("creation.f56a049fcc23f1eb")}
             </small>
             {draft.instruction ? <div className="commerce-request-bubble">{draft.instruction}</div> : null}
             {references.length ? (
@@ -32,7 +37,7 @@ export function CommerceSubmittedRequest({ draft }: { draft: EcommerceDraft | nu
                         <CachedResourceImage
                             key={`${ref.resourceId}-${index}`}
                             storageKey={resourceStorageKey(ref.resourceId)}
-                            alt={`第 ${index + 1} 张商品参考图`}
+                            alt={_creationText("creation.a873e25d9c5a7c26", { value1: index + 1 })}
                             loading="lazy"
                             decoding="async"
                             draggable

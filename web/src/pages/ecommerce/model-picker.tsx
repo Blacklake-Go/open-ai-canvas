@@ -1,3 +1,5 @@
+import { creationOptions as _creationOptions } from "@/supdance/plugins/i18n/creation-text";
+import { creationText as _creationText, useCreationLocale as _useCreationLocale } from "@/supdance/plugins/i18n/creation-text";
 import { App, Button, Modal, Select, Switch } from "antd";
 import { Check, Images, Search, Trash2, ZoomIn } from "lucide-react";
 import { useState } from "react";
@@ -21,6 +23,7 @@ type Props = {
 
 export function EcommerceModelPicker({ enabled, references, primaryId, uploading, onEnabledChange, onUpload, onAddCatalog, onRemove, onPrimary }: Props) {
     const { message } = App.useApp();
+    _useCreationLocale();
     const [open, setOpen] = useState(false);
     const [preview, setPreview] = useState<CommerceModelProfile | null>(null);
     const [kind, setKind] = useState("all");
@@ -34,51 +37,57 @@ export function EcommerceModelPicker({ enabled, references, primaryId, uploading
         setAdding(profile.id);
         try {
             await onAddCatalog(profile);
-            message.success(`已添加 ${profile.name}`);
+            message.success(_creationText("creation.d1ce43a656bdb349", { value1: profile.name }));
         } catch (cause) {
-            message.error(cause instanceof Error ? cause.message : "添加模特失败");
+            message.error(cause instanceof Error ? cause.message : _creationText("creation.c71d226055cfe7bf"));
         } finally {
             setAdding("");
         }
     };
     return (
-        <section className="ecommerce-model-picker" aria-label="模特参考图">
+        <section className="ecommerce-model-picker" aria-label={_creationText("creation.d1f951b44b0552e2")}>
             <div className="ecommerce-model-heading">
-                <strong>模特参考图</strong>
+                <strong>{_creationText("creation.d1f951b44b0552e2")}</strong>
                 <div>
-                    <span>启用模特</span>
-                    <Switch aria-label="启用模特" checked={enabled} onChange={onEnabledChange} />
+                    <span>{_creationText("creation.5e9986b3000e0796")}</span>
+                    <Switch aria-label={_creationText("creation.5e9986b3000e0796")} checked={enabled} onChange={onEnabledChange} />
                     <Button size="small" icon={<Images size={14} />} onClick={() => setOpen(true)}>
-                        案例库
+                        {_creationText("creation.7fec76336a340f5a")}
                     </Button>
                 </div>
             </div>
             {enabled ? (
                 <>
-                    <p className="ecommerce-model-hint">可上传真人或假人，也可从案例库选择。未选择时 Agent 会在需要人物的图片提示词中设计合适模特；白底、规格、材质等图片不强制出现人物。</p>
+                    <p className="ecommerce-model-hint">{_creationText("creation.756d92495edcfd46")}</p>
                     <div className="ecommerce-model-refs">
                         {references.map((ref) => (
                             <div className="ecommerce-model-ref" key={ref.resourceId}>
                                 <CachedResourceImage
                                     storageKey={resourceStorageKey(ref.resourceId)}
-                                    alt={ref.name || "模特参考图"}
+                                    alt={ref.name || _creationText("creation.d1f951b44b0552e2")}
                                     loading="lazy"
                                     decoding="async"
-                                    fallback={<span className="ecommerce-model-ref-image-fallback" aria-label="图片暂不可用" />}
-                                    loadingFallback={<span className="ecommerce-model-ref-image-fallback" aria-label="正在读取图片" />}
+                                    fallback={<span className="ecommerce-model-ref-image-fallback" aria-label={_creationText("creation.62cab5ebabfe9c33")} />}
+                                    loadingFallback={<span className="ecommerce-model-ref-image-fallback" aria-label={_creationText("creation.df1d3ca46a0479b0")} />}
                                 />
                                 <div>
-                                    <strong>{ref.name || commerceModelById(ref.catalogId)?.name || "自定义模特"}</strong>
-                                    <Button type="text" size="small" aria-label={`移除 ${ref.name || "模特"}`} icon={<Trash2 size={13} />} onClick={() => onRemove(ref.resourceId)} />
+                                    <strong>{ref.name || commerceModelById(ref.catalogId)?.name || _creationText("creation.29a998dc64e0b176")}</strong>
+                                    <Button
+                                        type="text"
+                                        size="small"
+                                        aria-label={_creationText("creation.2afa105648800787", { value1: ref.name || _creationText("workbench.model_person") })}
+                                        icon={<Trash2 size={13} />}
+                                        onClick={() => onRemove(ref.resourceId)}
+                                    />
                                 </div>
                                 <Select
                                     size="small"
-                                    aria-label={`${ref.name || "模特"}的角色`}
+                                    aria-label={_creationText("creation.dd0c8119a6747bef", { value1: ref.name || _creationText("workbench.model_person") })}
                                     value={primaryId === ref.resourceId ? "primary" : "support"}
-                                    options={[
+                                    options={_creationOptions([
                                         { value: "primary", label: "主模特 · 全套贯穿" },
                                         { value: "support", label: "辅助模特 · 仅多人画面" },
-                                    ]}
+                                    ])}
                                     onChange={(value) => {
                                         if (value === "primary") onPrimary(ref.resourceId);
                                         else if (primaryId === ref.resourceId) onPrimary(references.find((item) => item.resourceId !== ref.resourceId)?.resourceId || ref.resourceId);
@@ -88,10 +97,10 @@ export function EcommerceModelPicker({ enabled, references, primaryId, uploading
                         ))}
                     </div>
                     <label className="ecommerce-model-upload">
-                        {uploading ? "上传中…" : "+ 上传模特参考图"}
+                        {uploading ? _creationText("creation.ce1c9d61565f624b") : _creationText("creation.4a6acdd65ba5d485")}
                         <input
                             type="file"
-                            aria-label="上传模特参考图"
+                            aria-label={_creationText("creation.50ef78f781e534ab")}
                             accept="image/png,image/jpeg,image/webp"
                             multiple
                             disabled={uploading}
@@ -103,43 +112,48 @@ export function EcommerceModelPicker({ enabled, references, primaryId, uploading
                     </label>
                 </>
             ) : (
-                <p className="ecommerce-model-hint">关闭时，策划与生成均不使用模特参考图。</p>
+                <p className="ecommerce-model-hint">{_creationText("creation.2b3c064647a7ab91")}</p>
             )}
-            <Modal title="模特案例库 · 三视图与细节" open={open} onCancel={() => setOpen(false)} footer={<Button onClick={() => setOpen(false)}>完成</Button>} width={1000} destroyOnHidden>
-                <p className="ecommerce-model-hint">首批覆盖中国、美国、印度、日本和欧洲市场。每张 16:9 角色卡包含正面、侧面、斜侧或背面与细节，可多选。</p>
+            <Modal title={_creationText("creation.ec594a29ea4bac26")} open={open} onCancel={() => setOpen(false)} footer={<Button onClick={() => setOpen(false)}>{_creationText("settings.channel_complete_btn")}</Button>} width={1000} destroyOnHidden>
+                <p className="ecommerce-model-hint">{_creationText("creation.e9e2191b507a0d81")}</p>
                 <div className="ecommerce-model-filters">
                     <Select
-                        aria-label="角色类型"
+                        aria-label={_creationText("creation.342175d9c517819e")}
                         value={kind}
                         onChange={setKind}
-                        options={[
+                        options={_creationOptions([
                             { value: "all", label: "真人与假人" },
                             { value: "person", label: "真人模特" },
                             { value: "mannequin", label: "服装假人" },
-                        ]}
+                        ])}
                     />
                     <Select
-                        aria-label="性别"
+                        aria-label={_creationText("creation.a752a7d8c127ff15")}
                         value={gender}
                         onChange={setGender}
-                        options={[
+                        options={_creationOptions([
                             { value: "all", label: "不限性别" },
                             { value: "female", label: "女" },
                             { value: "male", label: "男" },
-                        ]}
+                        ])}
                     />
                     <Select
-                        aria-label="年龄"
+                        aria-label={_creationText("creation.9ee831fcb82d7223")}
                         value={age}
                         onChange={setAge}
-                        options={[
+                        options={_creationOptions([
                             { value: "all", label: "不限年龄" },
                             { value: "child", label: "儿童" },
                             { value: "adult", label: "成人" },
                             { value: "mature", label: "银发" },
-                        ]}
+                        ])}
                     />
-                    <Select aria-label="国家和地区" value={country} onChange={setCountry} options={[{ value: "all", label: "全部市场" }, ...[...new Set(commerceModelCatalog.map((item) => item.country))].map((value) => ({ value, label: value }))]} />
+                    <Select
+                        aria-label={_creationText("creation.ac003e6249916516")}
+                        value={country}
+                        onChange={setCountry}
+                        options={_creationOptions([{ value: "all", label: "全部市场" }, ...[...new Set(commerceModelCatalog.map((item) => item.country))].map((value) => ({ value, label: value }))])}
+                    />
                 </div>
                 <div className="ecommerce-model-grid">
                     {visible.map((item) => {
@@ -147,15 +161,15 @@ export function EcommerceModelPicker({ enabled, references, primaryId, uploading
                         return (
                             <article className="ecommerce-model-card" key={item.id}>
                                 <div className="ecommerce-model-card-image">
-                                    <button type="button" className="ecommerce-model-image-open" aria-label={`放大查看 ${item.name}`} onClick={() => setPreview(item)}>
-                                        <img src={item.image} alt={`${item.name}三视图及细节`} loading="lazy" />
+                                    <button type="button" className="ecommerce-model-image-open" aria-label={_creationText("creation.e801fe38e4d099ae", { value1: item.name })} onClick={() => setPreview(item)}>
+                                        <img src={item.image} alt={_creationText("creation.f0801523caa6861f", { value1: item.name })} loading="lazy" />
                                     </button>
                                     <div className="ecommerce-model-card-actions">
                                         <Button icon={<ZoomIn size={14} />} onClick={() => setPreview(item)}>
-                                            放大
+                                            {_creationText("assets.zoom_in")}
                                         </Button>
                                         <Button type={selected ? "default" : "primary"} icon={selected ? <Check size={14} /> : <Search size={14} />} loading={adding === item.id} disabled={selected || Boolean(adding)} onClick={() => void add(item)}>
-                                            {selected ? "已选定" : "选定"}
+                                            {selected ? _creationText("creation.8f5e05481beaf43d") : _creationText("creation.ea18760322ebd3f0")}
                                         </Button>
                                     </div>
                                 </div>
@@ -167,19 +181,19 @@ export function EcommerceModelPicker({ enabled, references, primaryId, uploading
                 </div>
             </Modal>
             <Modal
-                title={preview?.name || "模特预览"}
+                title={preview?.name || _creationText("creation.3e6247e7b8f807fb")}
                 open={Boolean(preview)}
                 onCancel={() => setPreview(null)}
                 footer={
                     preview ? (
                         <Button type="primary" disabled={references.some((ref) => ref.catalogId === preview.id)} loading={adding === preview.id} onClick={() => void add(preview)}>
-                            {references.some((ref) => ref.catalogId === preview.id) ? "已选定" : "选定此模特"}
+                            {references.some((ref) => ref.catalogId === preview.id) ? _creationText("creation.8f5e05481beaf43d") : _creationText("creation.0fe812d4e3b0cad5")}
                         </Button>
                     ) : null
                 }
                 width={1120}
             >
-                {preview ? <img className="ecommerce-model-preview" src={preview.image} alt={`${preview.name}正面、侧面、斜侧和细节`} /> : null}
+                {preview ? <img className="ecommerce-model-preview" src={preview.image} alt={_creationText("creation.25f4ec74c344650f", { value1: preview.name })} /> : null}
             </Modal>
         </section>
     );

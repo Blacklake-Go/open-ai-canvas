@@ -24,6 +24,10 @@ export const jaJP: DeepStringRecord<typeof zhCN> = {
             loadFailed: "お知らせの読み込みに失敗しました",
         },
         footer: {
+            terms: "利用規約",
+            privacy: "プライバシーポリシー",
+            aup: "利用ポリシー",
+            support: "サポートに連絡",
             label: "サイトの著作権および登録情報",
             icpLink: "{{number}}、工業情報化部の ICP 登録管理システムで確認",
         },

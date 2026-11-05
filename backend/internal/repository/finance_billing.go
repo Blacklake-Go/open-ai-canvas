@@ -168,7 +168,8 @@ type BillingUsage struct {
 	OutputTokens int64
 	CachedTokens int64
 	// CacheWriteTokens 已计入 InputTokens。
-	CacheWriteTokens int64
+	CacheWriteTokens   int64
+	CacheWrite1hTokens int64
 }
 
 func (r *Repository) BillingUsage(orderID string) (*BillingUsage, error) {
@@ -187,7 +188,7 @@ func billingUsage(db *gorm.DB, orderID string) (*BillingUsage, error) {
 	if err != nil {
 		return nil, err
 	}
-	return &BillingUsage{InputTokens: log.InputTokens, OutputTokens: log.OutputTokens, CachedTokens: log.CachedTokens, CacheWriteTokens: log.CacheWriteTokens}, nil
+	return &BillingUsage{InputTokens: log.InputTokens, OutputTokens: log.OutputTokens, CachedTokens: log.CachedTokens, CacheWriteTokens: log.CacheWriteTokens, CacheWrite1hTokens: log.CacheWrite1hTokens}, nil
 }
 
 const (
@@ -331,7 +332,7 @@ func (r *Repository) settleBillingOrder(id string, providerRequestID string, aud
 			now := time.Now()
 			updates := map[string]any{"status": model.BillingStatusSettled, "settled_at": &now, "updated_at": now,
 				"actual_amount_microcredits": actual, "refunded_amount_microcredits": refund,
-				"input_tokens": usage.InputTokens, "output_tokens": usage.OutputTokens, "cached_tokens": usage.CachedTokens, "cache_write_tokens": usage.CacheWriteTokens,
+				"input_tokens": usage.InputTokens, "output_tokens": usage.OutputTokens, "cached_tokens": usage.CachedTokens, "cache_write_tokens": usage.CacheWriteTokens, "cache_write1h_tokens": usage.CacheWrite1hTokens,
 				"usage_available": usageSource == billingUsageSourceProvider, "usage_source": usageSource}
 			if providerRequestID != "" {
 				updates["provider_request_id"] = providerRequestID
@@ -486,7 +487,7 @@ func (r *Repository) settleBillingOrder(id string, providerRequestID string, aud
 		// 即使账户状态异常导致回滚，也保留结算依据并标明来源，供用户和管理员核对。
 		updates := map[string]any{
 			"input_tokens": observedUsage.InputTokens, "output_tokens": observedUsage.OutputTokens,
-			"cached_tokens": observedUsage.CachedTokens, "cache_write_tokens": observedUsage.CacheWriteTokens, "usage_available": observedUsageSource == billingUsageSourceProvider,
+			"cached_tokens": observedUsage.CachedTokens, "cache_write_tokens": observedUsage.CacheWriteTokens, "cache_write1h_tokens": observedUsage.CacheWrite1hTokens, "usage_available": observedUsageSource == billingUsageSourceProvider,
 			"usage_source": observedUsageSource, "updated_at": time.Now(),
 		}
 		if observedActualAvailable {
@@ -607,6 +608,7 @@ func (r *Repository) RestoreRefundedBillingOrder(id string, providerRequestID st
 			orderUpdates["output_tokens"] = usage.OutputTokens
 			orderUpdates["cached_tokens"] = usage.CachedTokens
 			orderUpdates["cache_write_tokens"] = usage.CacheWriteTokens
+			orderUpdates["cache_write1h_tokens"] = usage.CacheWrite1hTokens
 			orderUpdates["usage_available"] = usageSource == billingUsageSourceProvider
 			orderUpdates["usage_source"] = usageSource
 		}
@@ -712,8 +714,29 @@ func tokenUsageAmount(order model.BillingOrder, usage *BillingUsage) (int64, err
 	if usage.InputTokens < 0 || usage.OutputTokens < 0 || usage.CachedTokens < 0 || usage.CacheWriteTokens < 0 {
 		return 0, errors.New("invalid token usage amount")
 	}
+	if usage.CacheWrite1hTokens < 0 || usage.CacheWrite1hTokens > usage.CacheWriteTokens {
+		return 0, errors.New("invalid one-hour cache write usage")
+	}
+	var cacheWrite1hPrice int64
 	if order.Capability == "video" && usage.OutputTokens <= 0 {
 		return 0, ErrBillingUsageUnavailable
+	}
+	if order.Capability != "video" {
+		prices, err := model.SelectTokenPriceBand(usage.InputTokens, model.TokenPriceBand{
+			InputTokenPriceMicrocredits: order.InputTokenPriceMicrocredits, OutputTokenPriceMicrocredits: order.OutputTokenPriceMicrocredits,
+			CachedTokenPriceMicrocredits: order.CachedTokenPriceMicrocredits, CacheWriteTokenPriceMicrocredits: order.CacheWriteTokenPriceMicrocredits,
+		}, order.TokenPriceBands)
+		if err != nil {
+			return 0, err
+		}
+		if usage.CacheWrite1hTokens > 0 {
+			if prices.CacheWrite1hTokenPriceMicrocredits == nil {
+				return 0, ErrBillingUsageUnavailable
+			}
+			cacheWrite1hPrice = *prices.CacheWrite1hTokenPriceMicrocredits
+		}
+		order.InputTokenPriceMicrocredits, order.OutputTokenPriceMicrocredits = prices.InputTokenPriceMicrocredits, prices.OutputTokenPriceMicrocredits
+		order.CachedTokenPriceMicrocredits, order.CacheWriteTokenPriceMicrocredits = prices.CachedTokenPriceMicrocredits, prices.CacheWriteTokenPriceMicrocredits
 	}
 	terms := []kernel.TokenBillingTerm{
 		{Tokens: usage.OutputTokens, PriceMicrocredits: order.OutputTokenPriceMicrocredits},
@@ -721,10 +744,13 @@ func tokenUsageAmount(order model.BillingOrder, usage *BillingUsage) (int64, err
 	// 视频 Token 总用量已由供应商 completion_tokens 表达，不再叠加文本输入和缓存费用。
 	if order.Capability != "video" {
 		input := max(usage.InputTokens-usage.CachedTokens-usage.CacheWriteTokens, 0)
+		shortWrites := usage.CacheWriteTokens
+		shortWrites -= usage.CacheWrite1hTokens
 		terms = append(terms,
 			kernel.TokenBillingTerm{Tokens: input, PriceMicrocredits: order.InputTokenPriceMicrocredits},
 			kernel.TokenBillingTerm{Tokens: usage.CachedTokens, PriceMicrocredits: order.CachedTokenPriceMicrocredits},
-			kernel.TokenBillingTerm{Tokens: usage.CacheWriteTokens, PriceMicrocredits: order.CacheWriteTokenPriceMicrocredits},
+			kernel.TokenBillingTerm{Tokens: shortWrites, PriceMicrocredits: order.CacheWriteTokenPriceMicrocredits},
+			kernel.TokenBillingTerm{Tokens: usage.CacheWrite1hTokens, PriceMicrocredits: cacheWrite1hPrice},
 		)
 	}
 	amount, err := kernel.TokenBillingAmount(order.MultiplierBasisPoints, terms...)

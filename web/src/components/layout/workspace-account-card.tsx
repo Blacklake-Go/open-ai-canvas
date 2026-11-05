@@ -1,5 +1,5 @@
 import { Button } from "antd";
-import { ArrowUpRight, Coins, Gift, LogOut, RefreshCw, Settings, ShieldCheck, UserRound } from "lucide-react";
+import { ArrowUpRight, Coins, Gift, LogOut, RefreshCw, ShieldCheck, UserRound } from "lucide-react";
 import { Link } from "react-router";
 import { useTranslation } from "react-i18next";
 import { currentLocale } from "@/i18n";
@@ -21,7 +21,7 @@ export function WorkspaceAccountCard({ onWallet, onNavigate }: { onWallet: () =>
     const { t } = useTranslation();
     if (!user) return null;
     return (
-        <section className="workspace-account-card" aria-label="我的账户">
+        <section className="workspace-account-card" aria-label={t("shell.account.title")}>
             <header className="workspace-account-card-identity">
                 <UserGroupAvatarRing>
                     <UserAvatar user={user} className="workspace-account-card-avatar" />
@@ -33,30 +33,30 @@ export function WorkspaceAccountCard({ onWallet, onNavigate }: { onWallet: () =>
                     </strong>
                     <span>@{user.username}</span>
                 </div>
-                <em>{user.role === "admin" ? "管理员" : "创作者"}</em>
+                <em>{t(user.role === "admin" ? "shell.account.admin" : "shell.account.creator")}</em>
             </header>
             {creditsEnabled ? (
                 <div className="workspace-account-card-wallet">
                     <div className="workspace-account-card-balance">
                         <span>
                             <Coins />
-                            可用积分
+                            {t("shell.account.availableCredits")}
                         </span>
-                        <strong>{availableMicrocredits === null ? "—" : (availableMicrocredits / 1_000_000).toLocaleString("zh-CN", { maximumFractionDigits: 2 })}</strong>
+                        <strong>{availableMicrocredits === null ? "—" : (availableMicrocredits / 1_000_000).toLocaleString(currentLocale(), { maximumFractionDigits: 2 })}</strong>
                     </div>
                     {availableMicrocredits === null ? (
                         <Button size="small" loading={refreshing} icon={<RefreshCw />} onClick={() => void refresh()}>
-                            刷新余额
+                            {t("shell.account.refreshBalance")}
                         </Button>
                     ) : (
                         <button type="button" onClick={onWallet}>
-                            充值 / 兑换
+                            {t("shell.account.topup")}
                             <ArrowUpRight />
                         </button>
                     )}
                 </div>
             ) : null}
-            <nav className="workspace-account-card-actions" aria-label="账户操作">
+            <nav className="workspace-account-card-actions" aria-label={t("shell.account.actions")}>
                 <button
                     type="button"
                     onClick={() => {
@@ -65,30 +65,25 @@ export function WorkspaceAccountCard({ onWallet, onNavigate }: { onWallet: () =>
                     }}
                 >
                     <UserRound />
-                    <span>个人中心与资料</span>
+                    <span>{t("shell.account.settings")}</span>
                     <ArrowUpRight />
                 </button>
-                <Link to="/settings?section=models" onClick={onNavigate}>
-                    <Settings />
-                    <span>工作区设置</span>
-                    <ArrowUpRight />
-                </Link>
                 {referralAvailable ? (
                     <Link to="/referral" onClick={onNavigate}>
                         <Gift />
-                        <span>推广中心</span>
+                        <span>{t("shell.account.referral")}</span>
                         <ArrowUpRight />
                     </Link>
                 ) : null}
                 {user.role === "admin" ? (
                     <Link to="/admin" onClick={onNavigate}>
                         <ShieldCheck />
-                        <span>管理员后台</span>
+                        <span>{t("shell.account.adminConsole")}</span>
                         <ArrowUpRight />
                     </Link>
                 ) : null}
                 <Button danger type="text" icon={<LogOut />} loading={loggingOut} onClick={() => void handleLogout()}>
-                    退出登录
+                    {t("shell.account.logout")}
                 </Button>
             </nav>
         </section>

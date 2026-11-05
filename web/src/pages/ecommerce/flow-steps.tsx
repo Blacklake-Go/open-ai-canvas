@@ -1,3 +1,4 @@
+import { creationText as _creationText } from "@/supdance/plugins/i18n/creation-text";
 import { Check, LoaderCircle } from "lucide-react";
 import type { CommerceFlowStep } from "./flow";
 
@@ -5,7 +6,7 @@ import type { CommerceFlowStep } from "./flow";
 export function CommerceFlowSteps({ steps }: { steps: CommerceFlowStep[] }) {
     const current = steps.find((step) => step.status === "current");
     return (
-        <nav className="commerce-flow" aria-label="创作流程">
+        <nav className="commerce-flow" aria-label={_creationText("creation.a23a87f3eb4ca8af")}>
             <ol>
                 {steps.map((step, index) => (
                     <li key={step.key} className={`commerce-flow-step is-${step.status}`} aria-current={step.status === "current" ? "step" : undefined}>

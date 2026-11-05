@@ -1,3 +1,5 @@
+import { creationLabel as _creationLabel } from "@/supdance/plugins/i18n/creation-text";
+import { creationText as _creationText, useCreationLocale as _useCreationLocale } from "@/supdance/plugins/i18n/creation-text";
 import { Button, Popover } from "antd";
 import { Check, Images, LoaderCircle, RotateCcw, Sparkles } from "lucide-react";
 import { useState } from "react";
@@ -47,6 +49,7 @@ export function EcommerceAgentFeed({
     onRetry: (image: EcommercePlanImage) => void;
     onFocus: (id: string) => void;
 }) {
+    _useCreationLocale();
     const [editing, setEditing] = useState<string>();
     const [expanded, setExpanded] = useState<string>();
     const complete = plan?.images.filter((image) => image.taskId && imageSource(tasks[image.taskId])).length || 0;
@@ -57,33 +60,33 @@ export function EcommerceAgentFeed({
         <div className="commerce-agent-feed">
             {direction ? (
                 <div className="commerce-direction-choice">
-                    <small>已选择创意方向</small>
-                    <strong>{direction.name}</strong>
-                    <span>{direction.summary.split(" 知识约束：{")[0]}</span>
+                    <small>{_creationText("creation.205081e8ec7f361c")}</small>
+                    <strong data-i18n-user-content>{direction.name}</strong>
+                    <span data-i18n-user-content>{direction.summary.split(" 知识约束：{")[0]}</span>
                 </div>
             ) : null}
             {plan && active ? (
-                <section className="commerce-generation-message" role="status" aria-label="图片生成进度">
+                <section className="commerce-generation-message" role="status" aria-label={_creationText("creation.17cd00dc4279e2b1")}>
                     <header>
                         <span className="commerce-generation-glyph">
                             <Sparkles size={17} />
                         </span>
-                        <strong>AI 生成中</strong>
+                        <strong>{_creationText("creation.2f98e1405bc55307")}</strong>
                         <span>
                             {complete} / {total}
                         </span>
                     </header>
                     <div className="commerce-generation-visual">
                         <span className="commerce-yoru-glow" />
-                        <Sparkles size={34} aria-label="正在创作" />
+                        <Sparkles size={34} aria-label={_creationText("creation.e3e53287386be15a")} />
                         <span className="commerce-generation-particles" aria-hidden="true" />
                     </div>
-                    <div className="commerce-generation-track" aria-label={`已完成 ${complete} 张，共 ${total} 张`}>
+                    <div className="commerce-generation-track" aria-label={_creationText("creation.dcd092b51591256a", { value1: complete, value2: total })}>
                         <span style={{ width: `${total ? (complete / total) * 100 : 0}%` }} />
                     </div>
                     <p>
                         <LoaderCircle size={14} className="commerce-planning-spin" />
-                        小夜正在创作，完成的图片会依次出现在这里和画布上
+                        {_creationText("creation.d51fce0ff15359dc")}
                     </p>
                 </section>
             ) : null}
@@ -103,32 +106,37 @@ export function EcommerceAgentFeed({
                                 <span className="commerce-generation-glyph">
                                     <Images size={16} />
                                 </span>
-                                <strong>第 {index + 1} 张未完成</strong>
+                                <strong>{_creationText("creation.7ac2ce454e355662", { value1: index + 1 })}</strong>
                             </header>
-                            <p>{task.error || "任务未能完成，可重试这张图片。"}</p>
+                            <p>{task.error || _creationText("creation.d3da3bae81110c4d")}</p>
                             <Button size="small" onClick={() => onRetry(image)}>
-                                {task.canRecoverMedia ? "重新保存（不扣费）" : "重试这张图片"}
+                                {task.canRecoverMedia ? _creationText("creation.f4d0e43e083c1b75") : _creationText("creation.353ec6bf7bb1d356")}
                             </Button>
                         </section>
                     );
                 if (!src) return null;
                 return (
-                    <section className="commerce-generated-card" key={`${image.id}:${image.taskId}`} aria-label={`第 ${index + 1} 张生成结果`}>
+                    <section className="commerce-generated-card" key={`${image.id}:${image.taskId}`} aria-label={_creationText("creation.76048fed25289692", { value1: index + 1 })}>
                         <header>
                             <span className="commerce-generation-glyph">
                                 <Check size={16} />
                             </span>
-                            <strong>生成图片</strong>
+                            <strong>{_creationText("workbench.generate_image_action")}</strong>
                             <small>
                                 {String(index + 1).padStart(2, "0")} / {String(total).padStart(2, "0")}
                             </small>
                         </header>
                         <p>
-                            {labelOf(imageTypes, image.imageType)}
+                            {_creationLabel(labelOf(imageTypes, image.imageType))}
                             <span> · {image.ratio}</span>
                         </p>
-                        <button type="button" className="commerce-generated-preview" onClick={() => onFocus(image.id)} aria-label={`在画布中选择第 ${index + 1} 张图片`}>
-                            <img src={src} alt={`第 ${index + 1} 张商品图片`} draggable onDragStart={(event) => writeCommerceImageTransfer(event.dataTransfer, { resourceId, name: `第 ${index + 1} 张生成结果`, url: src })} />
+                        <button type="button" className="commerce-generated-preview" onClick={() => onFocus(image.id)} aria-label={_creationText("creation.271257809c5b19b6", { value1: index + 1 })}>
+                            <img
+                                src={src}
+                                alt={_creationText("creation.b889e911d73c1bdb", { value1: index + 1 })}
+                                draggable
+                                onDragStart={(event) => writeCommerceImageTransfer(event.dataTransfer, { resourceId, name: `第 ${index + 1} 张生成结果`, url: src })}
+                            />
                         </button>
                         <footer>
                             <Popover
@@ -140,21 +148,22 @@ export function EcommerceAgentFeed({
                                 content={<SingleImageEditor key={`${image.id}:${image.taskId}`} config={config} draft={image.sourceDraft || draft} image={image} imageModels={imageModels} onClose={() => setEditing(undefined)} onGenerate={onRegenerate} />}
                             >
                                 <Button size="small" icon={<RotateCcw size={14} />} onClick={() => setEditing(image.id)}>
-                                    重新生成{imageCost == null ? "" : `（约 ${imageCost.toLocaleString("zh-CN", { maximumFractionDigits: 3 })} 积分）`}
+                                    {_creationText("workbench.regenerate")}
+                                    {imageCost == null ? "" : _creationText("creation.beec15b34b40a70e", { value1: imageCost.toLocaleString("zh-CN", { maximumFractionDigits: 3 }) })}
                                 </Button>
                             </Popover>
                             <Button size="small" icon={<Images size={14} />} onClick={() => setExpanded((id) => (id === image.id ? undefined : image.id))} aria-expanded={expanded === image.id}>
-                                查看文案
+                                {_creationText("creation.02fa591634a73800")}
                             </Button>
                         </footer>
                         {expanded === image.id ? (
                             <div className="commerce-generated-plan">
-                                <strong>性能 / 体验策划</strong>
-                                <p>{image.performanceAngle || "围绕可见结构与实际使用动作组织体验表达；具体性能参数待核验"}</p>
-                                <strong>信息组件</strong>
-                                <p>{image.informationComponent || "按本页内容安排标题、细节放大窗或场景注释，保持移动端可读"}</p>
-                                <strong>画面文案</strong>
-                                <p style={{ whiteSpace: "pre-line", overflowWrap: "anywhere" }}>{!image.copy || commerceCopyHasDirections(image.copy) ? "在重新生成中描述你希望呈现的文字。" : image.copy}</p>
+                                <strong>{_creationText("creation.5882ccf9684d82c6")}</strong>
+                                <p>{image.performanceAngle || _creationText("creation.cf4ba1e7dedc36d9")}</p>
+                                <strong>{_creationText("creation.0a9fbf9514a93869")}</strong>
+                                <p>{image.informationComponent || _creationText("creation.f1eb8b8b996d3d39")}</p>
+                                <strong>{_creationText("creation.be203d842d9d0490")}</strong>
+                                <p style={{ whiteSpace: "pre-line", overflowWrap: "anywhere" }}>{!image.copy || commerceCopyHasDirections(image.copy) ? _creationText("creation.d954abe0b8828357") : image.copy}</p>
                             </div>
                         ) : null}
                     </section>

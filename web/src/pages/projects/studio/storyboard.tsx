@@ -1,3 +1,4 @@
+import { creationText as _creationText, useCreationLocale as _useCreationLocale } from "@/supdance/plugins/i18n/creation-text";
 import { memo, useEffect, useMemo, useRef, useState, type MouseEvent, type ReactNode, type RefObject } from "react";
 import { Button, Checkbox } from "antd";
 import { AntTooltip as Tooltip } from "@/components/ui/base/tooltip/ant-tooltip";
@@ -49,6 +50,7 @@ function hasVideo(segment: DramaSegment) {
 
 /** 还没有尾帧缩略图时，用视频本身的开头画面作封面。 */
 function CoverVideo({ resourceId }: { resourceId: string }) {
+    _useCreationLocale();
     const url = useResourceMediaUrl(resourceId, "playback");
     if (!url) return <span className="drama-sg-cover-empty is-busy" aria-hidden />;
     return <video className="drama-sg-cover-media" src={`${url}#t=0.1`} muted playsInline preload="metadata" aria-hidden tabIndex={-1} />;
@@ -88,6 +90,7 @@ type CardProps = {
  * 低配电脑上打开弹窗或轮询时不再整页重绘全部卡片。回调经 actions 引用读取，props 保持稳定。
  */
 const SegmentCard = memo(function SegmentCard({ segment, segmentShots, aspectRatio, castById, isSelected, focused, busy, reprocessing, defaultModelLabel, actions }: CardProps) {
+    _useCreationLocale();
     const state = segmentState(segment);
     const error = segment.promptStatus === "failed" ? segment.promptError : segment.videoStatus === "failed" ? segment.videoError : "";
     const act = () => actions.current;
@@ -97,7 +100,7 @@ const SegmentCard = memo(function SegmentCard({ segment, segmentShots, aspectRat
             role="option"
             aria-selected={isSelected}
             aria-current={focused}
-            aria-label={`第 ${segment.index + 1} 段 ${segment.title}，${state.label}`}
+            aria-label={_creationText("creation.a2c6a9f39e5606a3", { value1: segment.index + 1, value2: segment.title, value3: state.label })}
             className={`drama-sg is-${state.tone} ${isSelected ? "is-selected" : ""} ${focused ? "is-focused" : ""}`}
             onClick={(event) => act().handleCardClick(event, segment.index)}
             onDoubleClick={(event) => {
@@ -115,24 +118,24 @@ const SegmentCard = memo(function SegmentCard({ segment, segmentShots, aspectRat
                             act().selectRange(anchor, segment.index, true);
                         }
                     }}
-                    aria-label={`选择第 ${segment.index + 1} 段`}
+                    aria-label={_creationText("creation.53d1e286cc37980c", { value1: segment.index + 1 })}
                 />
                 <span className="drama-seg-num">{segment.index + 1}</span>
-                <button type="button" className="drama-sg-title" title={segment.title} onClick={() => act().onOpen(segment.index)}>
+                <button data-i18n-user-content type="button" className="drama-sg-title" title={segment.title} onClick={() => act().onOpen(segment.index)}>
                     {segment.title}
                 </button>
                 {error ? (
                     <Tooltip title={error}>
-                        <AlertCircle className="size-3.5 flex-none text-[var(--drama-err)]" aria-label="失败原因" />
+                        <AlertCircle className="size-3.5 flex-none text-[var(--drama-err)]" aria-label={_creationText("creation.bb8c4e5583b44624")} />
                     </Tooltip>
                 ) : segment.request.warning ? (
                     <Tooltip title={segment.request.warning}>
-                        <TriangleAlert className="size-3.5 flex-none text-[var(--drama-warn)]" aria-label="提示" />
+                        <TriangleAlert className="size-3.5 flex-none text-[var(--drama-warn)]" aria-label={_creationText("admin.social_auth.icon_notice_title")} />
                     </Tooltip>
                 ) : null}
             </header>
             <div className="drama-sg-body">
-                <button type="button" className="drama-sg-cover" style={{ aspectRatio: aspectRatioValue(aspectRatio) }} onClick={() => act().onOpen(segment.index)} aria-label={`打开第 ${segment.index + 1} 段`}>
+                <button type="button" className="drama-sg-cover" style={{ aspectRatio: aspectRatioValue(aspectRatio) }} onClick={() => act().onOpen(segment.index)} aria-label={_creationText("creation.3d7a40ae5b076fcb", { value1: segment.index + 1 })}>
                     {segment.tailFrameResourceId && segment.videoResourceId ? (
                         <MediaThumb resourceId={segment.tailFrameResourceId} alt="" />
                     ) : segment.videoResourceId && hasVideo(segment) ? (
@@ -153,16 +156,18 @@ const SegmentCard = memo(function SegmentCard({ segment, segmentShots, aspectRat
                     <div className="drama-sg-meta">
                         <SegmentStatus segment={segment} />
                         <span>
-                            {segmentShots.length} 镜{segment.request.maxVideoSeconds ? ` · 上限 ${segment.request.maxVideoSeconds}s` : ""}
+                            {segmentShots.length}
+                            {_creationText("creation.601e41f3ade62c01")}
+                            {segment.request.maxVideoSeconds ? _creationText("creation.06da6cc20a0ac3f0", { value1: segment.request.maxVideoSeconds }) : ""}
                         </span>
                     </div>
                     <SegmentInputs segment={segment} castById={castById} compact />
                     {segmentShots.length === 1 ? (
                         <button type="button" className="drama-sg-single" onClick={() => act().onOpen(segment.index, segmentShots[0].id)}>
-                            <span className="drama-sg-single-action">{segmentShots[0].action || segmentShots[0].imagePrompt || "未描述画面"}</span>
+                            <span className="drama-sg-single-action">{segmentShots[0].action || segmentShots[0].imagePrompt || _creationText("creation.dc8dde6388085f48")}</span>
                             {segmentShots[0].dialogue ? (
                                 <span className="drama-sg-single-line">
-                                    <em>{segmentShots[0].speaker || "旁白"}</em>
+                                    <em>{segmentShots[0].speaker || _creationText("projects.narration")}</em>
                                     {segmentShots[0].dialogue}
                                 </span>
                             ) : null}
@@ -171,34 +176,34 @@ const SegmentCard = memo(function SegmentCard({ segment, segmentShots, aspectRat
                         <ol className="drama-sg-shots">
                             {segmentShots.slice(0, SHOT_PREVIEW).map((shot) => (
                                 <li key={shot.id}>
-                                    <button type="button" onClick={() => act().onOpen(segment.index, shot.id)} title={shot.dialogue ? `${shot.speaker || "旁白"}：${shot.dialogue}` : shot.action}>
+                                    <button type="button" onClick={() => act().onOpen(segment.index, shot.id)} title={shot.dialogue ? `${shot.speaker || _creationText("projects.narration")}：${shot.dialogue}` : shot.action}>
                                         <b>{shot.position + 1}</b>
-                                        <span>
+                                        <span data-i18n-user-content>
                                             {shot.dialogue ? (
                                                 <>
-                                                    <em>{shot.speaker || "旁白"}</em>
+                                                    <em>{shot.speaker || _creationText("projects.narration")}</em>
                                                     {shot.dialogue}
                                                 </>
                                             ) : (
-                                                shot.action || shot.imagePrompt || "未描述画面"
+                                                shot.action || shot.imagePrompt || _creationText("creation.dc8dde6388085f48")
                                             )}
                                         </span>
                                     </button>
                                 </li>
                             ))}
-                            {segmentShots.length > SHOT_PREVIEW ? <li className="drama-sg-more">还有 {segmentShots.length - SHOT_PREVIEW} 镜</li> : null}
+                            {segmentShots.length > SHOT_PREVIEW ? <li className="drama-sg-more">{_creationText("creation.eb751d2693f30ba2", { value1: segmentShots.length - SHOT_PREVIEW })}</li> : null}
                         </ol>
                     )}
                 </div>
             </div>
             <footer className="drama-sg-foot">
                 <span className="drama-sg-model" title={segment.videoModel?.label}>
-                    {segment.videoModel?.label || defaultModelLabel || "默认视频模型"}
+                    {segment.videoModel?.label || defaultModelLabel || _creationText("settings.default_video_model")}
                 </span>
                 <span className="drama-sg-actions">
                     {segment.videoReprocessable ? (
-                        <Button size="small" type="primary" icon={<RotateCcw className="size-3" />} disabled={busy} loading={reprocessing} title="只重新处理已生成的视频，不重新生成、不扣费" onClick={() => act().onReprocess(segment.index)}>
-                            重新处理
+                        <Button size="small" type="primary" icon={<RotateCcw className="size-3" />} disabled={busy} loading={reprocessing} title={_creationText("creation.8f516eb045eaa897")} onClick={() => act().onReprocess(segment.index)}>
+                            {_creationText("creation.ec981a4aedf0bd3e")}
                         </Button>
                     ) : null}
                     <Button
@@ -206,10 +211,18 @@ const SegmentCard = memo(function SegmentCard({ segment, segmentShots, aspectRat
                         type={generatable(segment) && !hasVideo(segment) ? "primary" : "default"}
                         icon={<Play className="size-3" />}
                         disabled={busy || !generatable(segment)}
-                        title={!promptReady(segment) ? "先撰写或确认本段视频提示词" : hasVideo(segment) ? "重新调用视频模型生成本段，会产生新的费用" : undefined}
+                        title={!promptReady(segment) ? _creationText("creation.7566985909053644") : hasVideo(segment) ? _creationText("creation.f53e52384d6f3547") : undefined}
                         onClick={() => act().onGenerate([segment.index])}
                     >
-                        {mediaBusy(segment.videoStatus) ? (segment.videoStatus === "queued" && segment.videoWait ? "等待中" : segment.request.firstFramePending ? "等上一段" : "生成中") : hasVideo(segment) ? "重新生成" : "生成"}
+                        {mediaBusy(segment.videoStatus)
+                            ? segment.videoStatus === "queued" && segment.videoWait
+                                ? _creationText("creation.26c8cfcbf763073f")
+                                : segment.request.firstFramePending
+                                  ? _creationText("creation.5406b764674d3dad")
+                                  : _creationText("settings.memory_proposal_generating")
+                            : hasVideo(segment)
+                              ? _creationText("workbench.regenerate")
+                              : _creationText("creation.1ad1463fe16fc2a6")}
                     </Button>
                 </span>
             </footer>
@@ -223,6 +236,7 @@ const SegmentCard = memo(function SegmentCard({ segment, segmentShots, aspectRat
  * 选择：单击聚焦，⌘/Ctrl 单击切换选择，Shift 单击连选；快捷键见底部提示。
  */
 export function Storyboard({ shots, segments, aspectRatio, castById, defaultVideoModel, videoResolution, busy, keyboardEnabled, onOpen, onGenerate, onReprocess, reprocessing, onWritePrompts, empty }: Props) {
+    _useCreationLocale();
     const [selected, setSelected] = useState<Set<number>>(new Set());
     const [focused, setFocused] = useState<number>();
     const [anchor, setAnchor] = useState<number>();
@@ -360,11 +374,19 @@ export function Storyboard({ shots, segments, aspectRatio, castById, defaultVide
             <div className={`drama-board-toolbar ${selected.size ? "is-selecting" : ""}`}>
                 {selected.size ? (
                     <>
-                        <b className="text-[var(--fs-label)]">已选 {selected.size} 段</b>
+                        <b className="text-[var(--fs-label)]">{_creationText("creation.0ea801426801dedf", { value1: selected.size })}</b>
                         <div className="drama-board-model">
-                            <DramaModelPicker capability="video" size="sm" value={batchModel || defaultVideoModel} onChange={setBatchModel} placeholder="视频模型" aspectRatio={aspectRatio} videoResolution={videoResolution} />
+                            <DramaModelPicker
+                                capability="video"
+                                size="sm"
+                                value={batchModel || defaultVideoModel}
+                                onChange={setBatchModel}
+                                placeholder={_creationText("creation.a0afda31af337fd1")}
+                                aspectRatio={aspectRatio}
+                                videoResolution={videoResolution}
+                            />
                         </div>
-                        <Tooltip title={toGenerate.length < selected.size ? `${selected.size - toGenerate.length} 段提示词未就绪或正在生成，会跳过` : undefined}>
+                        <Tooltip title={toGenerate.length < selected.size ? _creationText("creation.4f8cdb7da01a9e6f", { value1: selected.size - toGenerate.length }) : undefined}>
                             <Button
                                 size="small"
                                 type="primary"
@@ -375,7 +397,7 @@ export function Storyboard({ shots, segments, aspectRatio, castById, defaultVide
                                     setSelected(new Set());
                                 }}
                             >
-                                生成视频 · {toGenerate.length} 段
+                                {_creationText("creation.06fdddbce72b50bb", { value1: toGenerate.length })}
                             </Button>
                         </Tooltip>
                         <Button
@@ -387,28 +409,31 @@ export function Storyboard({ shots, segments, aspectRatio, castById, defaultVide
                                 setSelected(new Set());
                             }}
                         >
-                            重新撰写提示词 · {toWrite.length} 段
+                            {_creationText("creation.885eb75ec5e51c39", { value1: toWrite.length })}
                         </Button>
                         <Button size="small" type="text" onClick={() => setSelected(new Set(order))}>
-                            全选
+                            {_creationText("creation.3a5040b68abf75f9")}
                         </Button>
                         <Button size="small" type="text" icon={<X className="size-3.5" />} className="!ml-auto" onClick={() => setSelected(new Set())}>
-                            取消选择
+                            {_creationText("creation.74966e20df2ea9fd")}
                         </Button>
                     </>
                 ) : (
                     <>
                         <span className="drama-board-stat">
-                            <b>{segments.length}</b>段
+                            <b>{segments.length}</b>
+                            {_creationText("creation.0477dbbdee99b5b3")}
                         </span>
                         <span className="drama-board-stat">
-                            <b>{shots.length}</b>镜
+                            <b>{shots.length}</b>
+                            {_creationText("creation.601e41f3ade62c01")}
                         </span>
                         <span className="drama-board-stat">
-                            <b>{formatClock(totals.durationMs)}</b>时长
+                            <b>{formatClock(totals.durationMs)}</b>
+                            {_creationText("workbench.duration")}
                         </span>
-                        <span className="drama-board-meter" aria-label={`提示词 ${totals.prompts}/${segments.length}`}>
-                            提示词
+                        <span className="drama-board-meter" aria-label={_creationText("creation.b9545515a714cfb2", { value1: totals.prompts, value2: segments.length })}>
+                            {_creationText("workbench.prompt_label")}
                             <i>
                                 <em style={progressFillStyle((totals.prompts / Math.max(segments.length, 1)) * 100)} />
                             </i>
@@ -416,8 +441,8 @@ export function Storyboard({ shots, segments, aspectRatio, castById, defaultVide
                                 {totals.prompts}/{segments.length}
                             </b>
                         </span>
-                        <span className="drama-board-meter is-video" aria-label={`视频 ${totals.videos}/${segments.length}`}>
-                            视频
+                        <span className="drama-board-meter is-video" aria-label={_creationText("creation.a2dd701b37297058", { value1: totals.videos, value2: segments.length })}>
+                            {_creationText("create.mode_video")}
                             <i>
                                 <em style={progressFillStyle((totals.videos / Math.max(segments.length, 1)) * 100)} />
                             </i>
@@ -425,11 +450,11 @@ export function Storyboard({ shots, segments, aspectRatio, castById, defaultVide
                                 {totals.videos}/{segments.length}
                             </b>
                         </span>
-                        <span className="ml-auto drama-board-hint">段按顺序生成，第 2 段起以上一段最后一帧为首帧</span>
+                        <span className="ml-auto drama-board-hint">{_creationText("creation.92ae60561f8dc471")}</span>
                     </>
                 )}
             </div>
-            <div ref={gridRef} className={`drama-sg-grid ${aspectRatio === "16:9" || aspectRatio === "4:3" ? "is-landscape" : ""}`} role="listbox" aria-multiselectable aria-label="剧情段">
+            <div ref={gridRef} className={`drama-sg-grid ${aspectRatio === "16:9" || aspectRatio === "4:3" ? "is-landscape" : ""}`} role="listbox" aria-multiselectable aria-label={_creationText("creation.7c4175f6609bc3c7")}>
                 {segments.map((segment) => (
                     <SegmentCard
                         key={segment.id || segment.index}
@@ -446,31 +471,40 @@ export function Storyboard({ shots, segments, aspectRatio, castById, defaultVide
                     />
                 ))}
             </div>
-            <div className="drama-kbd-hint" aria-label="键盘快捷键">
+            <div className="drama-kbd-hint" aria-label={_creationText("creation.89ce481a4b23d2a4")}>
                 <span>
                     <kbd>⌘</kbd>
-                    <kbd>A</kbd>全选
+                    <kbd>A</kbd>
+                    {_creationText("creation.3a5040b68abf75f9")}
                 </span>
                 <span>
-                    <kbd>⌘</kbd>单击 多选
+                    <kbd>⌘</kbd>
+                    {_creationText("creation.6d965596c92f294c")}
                 </span>
                 <span>
-                    <kbd>⇧</kbd>单击 / <kbd>⇧</kbd>
+                    <kbd>⇧</kbd>
+                    {_creationText("creation.550cb0f92cc09fed")}
+                    <kbd>⇧</kbd>
                     <kbd>←</kbd>
-                    <kbd>→</kbd> 连选
+                    <kbd>→</kbd>
+                    {_creationText("creation.9ae465eb2cf1d8bd")}
                 </span>
                 <span>
-                    <kbd>X</kbd>/<kbd>空格</kbd>选中当前
+                    <kbd>X</kbd>/<kbd>{_creationText("creation.bfa4a6e0fe42ac28")}</kbd>
+                    {_creationText("creation.4172693f0f03ab2d")}
                 </span>
                 <span>
                     <kbd>J</kbd>
-                    <kbd>K</kbd>/方向键 切换
+                    <kbd>K</kbd>
+                    {_creationText("creation.d96a48dd7c84f036")}
                 </span>
                 <span>
-                    <kbd>Enter</kbd>打开
+                    <kbd>Enter</kbd>
+                    {_creationText("creation.c771248e511fbf93")}
                 </span>
                 <span>
-                    <kbd>Esc</kbd>取消选择
+                    <kbd>Esc</kbd>
+                    {_creationText("creation.74966e20df2ea9fd")}
                 </span>
             </div>
         </div>

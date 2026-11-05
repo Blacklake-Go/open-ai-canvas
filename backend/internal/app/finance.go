@@ -679,7 +679,14 @@ func (s *Service) newBillingOrderWithPriceTier(userID string, taskID string, ide
 	}
 	multiplierBPS := pricing.MultiplierBPS
 	if tier.BillingMode == "token" {
-		amount, err = tokenEstimateAmount(&model.ChannelModel{InputTokenPriceMicrocredits: prices.Input, OutputTokenPriceMicrocredits: prices.Output, CachedTokenPriceMicrocredits: prices.Cached, CacheWriteTokenPriceMicrocredits: prices.CacheWrite}, tokenEstimate, multiplierBPS)
+		selected, selectErr := model.SelectTokenPriceBand(tokenEstimate.InputTokens, model.TokenPriceBand{InputTokenPriceMicrocredits: prices.Input, OutputTokenPriceMicrocredits: prices.Output, CachedTokenPriceMicrocredits: prices.Cached, CacheWriteTokenPriceMicrocredits: prices.CacheWrite}, prices.Bands)
+		if selectErr != nil {
+			return nil, selectErr
+		}
+		if selected.CacheWrite1hTokenPriceMicrocredits != nil {
+			selected.CacheWriteTokenPriceMicrocredits = max(selected.CacheWriteTokenPriceMicrocredits, *selected.CacheWrite1hTokenPriceMicrocredits)
+		}
+		amount, err = tokenEstimateAmount(&model.ChannelModel{InputTokenPriceMicrocredits: selected.InputTokenPriceMicrocredits, OutputTokenPriceMicrocredits: selected.OutputTokenPriceMicrocredits, CachedTokenPriceMicrocredits: selected.CachedTokenPriceMicrocredits, CacheWriteTokenPriceMicrocredits: selected.CacheWriteTokenPriceMicrocredits}, tokenEstimate, multiplierBPS)
 	} else {
 		amount, err = creditAmount(prices.Unit, quantity, multiplierBPS)
 	}
@@ -692,7 +699,8 @@ func (s *Service) newBillingOrderWithPriceTier(userID string, taskID string, ide
 	}
 	order := &model.BillingOrder{
 		ID: newID(), UserID: userID, IdempotencyKey: idempotencyKey, TaskID: taskID,
-		ChannelID: channelID, ChannelModelID: item.ID, PriceTierID: tier.ID, PriceTierVersion: tier.PriceVersion, PriceSelectorJSON: tier.SelectorJSON, Model: modelKey, Capability: capability,
+		TokenPriceBands: model.CloneTokenPriceBands(prices.Bands),
+		ChannelID:       channelID, ChannelModelID: item.ID, PriceTierID: tier.ID, PriceTierVersion: tier.PriceVersion, PriceSelectorJSON: tier.SelectorJSON, Model: modelKey, Capability: capability,
 		Scene: truncateRunes(scene, 80), BillingMode: tier.BillingMode, PriceVersion: item.PriceVersion,
 		UnitPriceMicrocredits: prices.Unit, MultiplierBasisPoints: multiplierBPS, Quantity: quantity, AmountMicrocredits: amount,
 		ReservedAmountMicrocredits: amount, InputTokenPriceMicrocredits: prices.Input,
@@ -708,6 +716,7 @@ func (s *Service) newBillingOrderWithPriceTier(userID string, taskID string, ide
 // tierCreditPrices 是换算为微积分后的价格档单价。
 type tierCreditPrices struct {
 	Unit, Input, Output, Cached, CacheWrite int64
+	Bands                                   []model.TokenPriceBand
 }
 
 // groupTierPrices 把价格档按模型计价货币和用户分组换算成微积分，并合成全局积分策略倍率与分组倍率。
@@ -746,6 +755,27 @@ func groupTierPricesWithPolicy(policy CreditPolicy, access *userGroupAccess, ite
 			return groupPricing{}, tierCreditPrices{}, convertErr
 		}
 		*pair.target = converted
+	}
+	if err := model.ValidateTokenPriceBands(tier.TokenPriceBands); err != nil {
+		return groupPricing{}, tierCreditPrices{}, err
+	}
+	prices.Bands = model.CloneTokenPriceBands(tier.TokenPriceBands)
+	for index := range prices.Bands {
+		band := &prices.Bands[index]
+		for _, value := range []*int64{&band.InputTokenPriceMicrocredits, &band.OutputTokenPriceMicrocredits, &band.CachedTokenPriceMicrocredits, &band.CacheWriteTokenPriceMicrocredits} {
+			converted, convertErr := pricing.convertPrice(*value)
+			if convertErr != nil {
+				return groupPricing{}, tierCreditPrices{}, convertErr
+			}
+			*value = converted
+		}
+		if band.CacheWrite1hTokenPriceMicrocredits != nil {
+			converted, convertErr := pricing.convertPrice(*band.CacheWrite1hTokenPriceMicrocredits)
+			if convertErr != nil {
+				return groupPricing{}, tierCreditPrices{}, convertErr
+			}
+			band.CacheWrite1hTokenPriceMicrocredits = &converted
+		}
 	}
 	return pricing, prices, nil
 }

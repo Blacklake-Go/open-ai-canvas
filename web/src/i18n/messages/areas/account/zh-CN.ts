@@ -22,6 +22,10 @@ export const zhCN = {
             loadFailed: "读取公告失败",
         },
         footer: {
+            terms: "服务条款",
+            privacy: "隐私政策",
+            aup: "可接受使用政策",
+            support: "联系客服",
             label: "站点版权与备案信息",
             icpLink: "{{number}}，前往工业和信息化部备案管理系统查询",
         },

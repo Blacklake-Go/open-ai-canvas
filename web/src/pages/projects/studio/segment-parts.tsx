@@ -1,3 +1,5 @@
+import { creationLabel as _creationLabel } from "@/supdance/plugins/i18n/creation-text";
+import { creationText as _creationText, useCreationLocale as _useCreationLocale } from "@/supdance/plugins/i18n/creation-text";
 import { AntTooltip as Tooltip } from "@/components/ui/base/tooltip/ant-tooltip";
 import { AlertCircle, Check, Film, Loader2 } from "lucide-react";
 
@@ -49,6 +51,7 @@ export function promptReady(segment: DramaSegment) {
 }
 
 export function SegmentStatus({ segment }: { segment: DramaSegment }) {
+    _useCreationLocale();
     const state = segmentState(segment);
     return (
         <span className={`drama-sg-status is-${state.tone}`} title={state.detail}>
@@ -61,12 +64,13 @@ export function SegmentStatus({ segment }: { segment: DramaSegment }) {
             ) : (
                 <i aria-hidden />
             )}
-            {state.label}
+            {_creationLabel(state.label)}
         </span>
     );
 }
 
 export function SegmentVideo({ segment, aspectRatio, className = "" }: { segment: DramaSegment; aspectRatio: string; className?: string }) {
+    _useCreationLocale();
     const viewable = segment.videoStatus === "ready" || segment.videoStatus === "stale" || segment.videoStatus === "failed";
     const url = useResourceMediaUrl(viewable ? segment.videoResourceId : undefined, "playback");
     const state = segmentState(segment);
@@ -77,8 +81,11 @@ export function SegmentVideo({ segment, aspectRatio, className = "" }: { segment
             ) : (
                 <span className={`drama-sg-video-empty ${state.tone === "busy" ? "is-busy" : ""}`}>
                     <Film className="size-5" aria-hidden />
-                    <span>{state.label}</span>
-                    <small>{secondsLabel(segment.durationMs)} · 对白与音效由视频模型生成</small>
+                    <span>{_creationLabel(state.label)}</span>
+                    <small>
+                        {secondsLabel(segment.durationMs)}
+                        {_creationText("creation.dd95af8ef1034d36")}
+                    </small>
                 </span>
             )}
         </div>
@@ -99,20 +106,36 @@ export function referenceMissingReason(segment: DramaSegment, cast: DramaCast | 
 }
 
 export function SegmentInputs({ segment, castById, compact = false, frameOnly = false, onOpenCast }: { segment: DramaSegment; castById: Map<string, DramaCast>; compact?: boolean; frameOnly?: boolean; onOpenCast?: (id: string) => void }) {
+    _useCreationLocale();
     const { request } = segment;
     const first = segment.index === 0 && !request.firstFrameResourceId && !request.firstFramePending;
     return (
         <div className={`drama-sg-inputs ${compact ? "is-compact" : ""}`}>
-            <Tooltip title={`首帧：${first ? "开场段，按提示词与参考图生成" : request.firstFrameResourceId ? `第 ${segment.index} 段视频最后一帧` : `等第 ${segment.index} 段视频生成后取最后一帧`}`} mouseEnterDelay={0.3}>
+            <Tooltip
+                title={_creationText("creation.0bc52e528c019cc0", {
+                    value1: first ? _creationText("creation.b49ab8abf92f68e2") : request.firstFrameResourceId ? _creationText("creation.a932f4da7bc101ba", { value1: segment.index }) : _creationText("creation.95cfa4d2b8826add", { value1: segment.index }),
+                })}
+                mouseEnterDelay={0.3}
+            >
                 <div className="drama-sg-input is-frame">
                     <span className="drama-sg-thumb is-frame">
-                        {request.firstFrameResourceId ? <MediaThumb resourceId={request.firstFrameResourceId} alt="上一段最后一帧" /> : <span className="drama-sg-thumb-empty">{first ? "开场" : "等待"}</span>}
-                        <em>首帧</em>
+                        {request.firstFrameResourceId ? (
+                            <MediaThumb resourceId={request.firstFrameResourceId} alt={_creationText("creation.64e647790eec1dcf")} />
+                        ) : (
+                            <span className="drama-sg-thumb-empty">{first ? _creationText("creation.fd0d4b7258c28a99") : _creationText("creation.251bc40e7027dfc0")}</span>
+                        )}
+                        <em>{_creationText("workbench.first_frame")}</em>
                     </span>
                     {compact ? null : (
                         <span className="drama-sg-input-text">
-                            <b>首帧</b>
-                            <small>{first ? "开场段，按提示词生成" : request.firstFrameResourceId ? `第 ${segment.index} 段最后一帧` : `等第 ${segment.index} 段视频生成`}</small>
+                            <b>{_creationText("workbench.first_frame")}</b>
+                            <small>
+                                {first
+                                    ? _creationText("creation.a6b5c993a5d1d1bf")
+                                    : request.firstFrameResourceId
+                                      ? _creationText("creation.ca297505560ce0ef", { value1: segment.index })
+                                      : _creationText("creation.d02d1848637deaca", { value1: segment.index })}
+                            </small>
                         </span>
                     )}
                 </div>
@@ -130,14 +153,14 @@ export function SegmentInputs({ segment, castById, compact = false, frameOnly = 
                             <span className="drama-sg-input-text">
                                 <b>{ref.name}</b>
                                 <small>
-                                    {CAST_KIND_LABEL[ref.kind]} · {ref.sent ? "随请求发送" : `未附图：${reason}`}
+                                    {CAST_KIND_LABEL[ref.kind]} · {ref.sent ? _creationText("creation.af8c2506f22459d0") : _creationText("creation.a2e57aa084835a47", { value1: reason })}
                                 </small>
                             </span>
                         )}
                     </>
                 );
                 return (
-                    <Tooltip key={ref.castId} title={`${ref.label} · ${CAST_KIND_LABEL[ref.kind]} · ${ref.name}${ref.sent ? "" : `（未附图：${reason}，按文字设定生成）`}`} mouseEnterDelay={0.3}>
+                    <Tooltip key={ref.castId} title={`${ref.label} · ${CAST_KIND_LABEL[ref.kind]} · ${ref.name}${ref.sent ? "" : _creationText("creation.69bfcdcb7c617979", { value1: reason })}`} mouseEnterDelay={0.3}>
                         {onOpenCast ? (
                             <button type="button" className={`drama-sg-input ${ref.sent ? "" : "is-missing"}`} onClick={() => onOpenCast(ref.castId)}>
                                 {body}

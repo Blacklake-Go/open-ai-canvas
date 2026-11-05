@@ -1,3 +1,5 @@
+import { creationOptions as _creationOptions } from "@/supdance/plugins/i18n/creation-text";
+import { creationText as _creationText, useCreationLocale as _useCreationLocale } from "@/supdance/plugins/i18n/creation-text";
 import { useEffect, useRef, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { App, Button, Select } from "antd";
@@ -47,6 +49,7 @@ function useSamplePlayer(resourceId: string) {
  * 该角色开口的剧情段会带上这段样本；不支持时按声线描述生成。造型沿用所属角色的声音。
  */
 export function CastVoiceField({ projectId, cast, restyle, onChanged }: { projectId: string; cast: DramaCast; restyle: boolean; onChanged: () => void }) {
+    _useCreationLocale();
     const { message } = App.useApp();
     const queryClient = useQueryClient();
     const fileRef = useRef<HTMLInputElement>(null);
@@ -60,14 +63,14 @@ export function CastVoiceField({ projectId, cast, restyle, onChanged }: { projec
     const recorder = useVoiceRecording({ maxDuration: MAX_RECORD_SECONDS * 20 });
     const finishingRef = useRef(false);
     const done = (result: { affectedSegments: number }, text: string) => {
-        message.success(result.affectedSegments ? `${text}；${result.affectedSegments} 个剧情段的视频需重新生成` : text);
+        message.success(result.affectedSegments ? _creationText("creation.a0e033aeda422328", { value1: text, value2: result.affectedSegments }) : text);
         void queryClient.invalidateQueries({ queryKey: VOICE_PROFILES_KEY });
         onChanged();
     };
     const bind = useMutation({
         mutationFn: (input: { voiceProfileId?: string; sampleResourceId?: string; voiceName?: string }) => setDramaCastVoice(projectId, cast.id, { ...input, restyleSegments: restyle }),
         onSuccess: (result) => done(result, "已指定角色声音"),
-        onError: (error) => message.error(error instanceof Error ? error.message : "指定声音失败"),
+        onError: (error) => message.error(error instanceof Error ? error.message : _creationText("creation.4f2e8764f6a34415")),
     });
     const upload = useMutation({
         mutationFn: async ({ file, name }: { file: Blob; name: string }) => {
@@ -75,12 +78,12 @@ export function CastVoiceField({ projectId, cast, restyle, onChanged }: { projec
             return setDramaCastVoice(projectId, cast.id, { sampleResourceId: resource.id, voiceName: name.replace(/\.[^.]+$/, "").slice(0, 60), restyleSegments: restyle });
         },
         onSuccess: (result) => done(result, "已上传并指定角色声音"),
-        onError: (error) => message.error(error instanceof Error ? error.message : "上传失败"),
+        onError: (error) => message.error(error instanceof Error ? error.message : _creationText("workbench.upload_failed")),
     });
     const clear = useMutation({
         mutationFn: () => clearDramaCastVoice(projectId, cast.id, restyle),
         onSuccess: (result) => done(result, "已清除角色声音，按声线描述生成"),
-        onError: (error) => message.error(error instanceof Error ? error.message : "清除失败"),
+        onError: (error) => message.error(error instanceof Error ? error.message : _creationText("creation.2952f485318530a1")),
     });
     const busy = bind.isPending || upload.isPending || clear.isPending;
     const recording = recorder.state !== "idle";
@@ -90,7 +93,7 @@ export function CastVoiceField({ projectId, cast, restyle, onChanged }: { projec
         try {
             const blob = await recorder.stop();
             if (!blob || !blob.size) {
-                message.warning("没有录到声音，请重试");
+                message.warning(_creationText("creation.be6854322e9c5981"));
                 return;
             }
             const extension = blob.type.includes("ogg") ? "ogg" : blob.type.includes("mp4") ? "m4a" : "webm";
@@ -107,22 +110,32 @@ export function CastVoiceField({ projectId, cast, restyle, onChanged }: { projec
     return (
         <div className="drama-voice">
             <div className="drama-voice-current">
-                <button type="button" className="drama-voice-play" disabled={!sampleId} aria-label={sampleId ? `${player.playing ? "暂停" : "试听"}${cast.name}的声音` : "未指定声音样本"} onClick={() => void player.toggle()}>
+                <button
+                    type="button"
+                    className="drama-voice-play"
+                    disabled={!sampleId}
+                    aria-label={
+                        sampleId ? _creationText("creation.06ed4c79d7485872", { value1: player.playing ? _creationText("projects.pause") : _creationText("creation.7f0a0fda741c6220"), value2: cast.name }) : _creationText("creation.2e9c1c59a0117016")
+                    }
+                    onClick={() => void player.toggle()}
+                >
                     {player.playing ? <Pause className="size-3.5" /> : sampleId ? <Play className="size-3.5" /> : <Mic className="size-3.5" />}
                 </button>
-                <span className="min-w-0 flex-1 truncate">{sampleId ? current?.name || "已指定声音样本" : "未指定声音样本，按声线描述生成"}</span>
-                {sampleId ? <Button size="small" type="text" icon={<X className="size-3.5" />} loading={clear.isPending} disabled={busy && !clear.isPending} aria-label="清除角色声音" onClick={() => clear.mutate()} /> : null}
+                <span className="min-w-0 flex-1 truncate">{sampleId ? current?.name || _creationText("creation.486393489a67f8a6") : _creationText("creation.d5d118f45b2b4ef9")}</span>
+                {sampleId ? <Button size="small" type="text" icon={<X className="size-3.5" />} loading={clear.isPending} disabled={busy && !clear.isPending} aria-label={_creationText("creation.14fae34ebb044e6b")} onClick={() => clear.mutate()} /> : null}
             </div>
             {recording ? (
                 <div className="drama-voice-recording" role="status">
                     <span className="drama-voice-dot" aria-hidden="true" />
-                    正在录音 {Math.floor(recorder.duration)} / {MAX_RECORD_SECONDS} 秒
+                    {_creationText("creation.5254d30be60fcb12")}
+                    {Math.floor(recorder.duration)} / {MAX_RECORD_SECONDS}
+                    {_creationText("settings.per_second")}
                     <span className="flex-1" />
                     <Button size="small" onClick={() => recorder.cancel()}>
-                        取消
+                        {_creationText("common.cancel")}
                     </Button>
                     <Button size="small" type="primary" icon={<Square className="size-3" />} onClick={() => void finishRecording()}>
-                        完成
+                        {_creationText("settings.channel_complete_btn")}
                     </Button>
                 </div>
             ) : (
@@ -131,18 +144,18 @@ export function CastVoiceField({ projectId, cast, restyle, onChanged }: { projec
                         size="small"
                         className="min-w-0 flex-1"
                         value={current?.id ?? null}
-                        placeholder={profilesQuery.isLoading ? "正在读取声音库…" : profiles.length ? "从声音库选择" : "声音库里还没有样本"}
-                        options={profiles.map((profile) => ({ value: profile.id, label: profile.name }))}
+                        placeholder={profilesQuery.isLoading ? _creationText("creation.4170a7cf98224ef9") : profiles.length ? _creationText("creation.18adb3e9a3baa419") : _creationText("creation.9a2281147703ccf2")}
+                        options={_creationOptions(profiles.map((profile) => ({ value: profile.id, label: profile.name })))}
                         disabled={busy || !profiles.length}
                         showSearch
                         optionFilterProp="label"
-                        aria-label="从声音库选择"
+                        aria-label={_creationText("creation.18adb3e9a3baa419")}
                         onChange={(id: string | null) => {
                             if (id && id !== cast.voiceProfileId) bind.mutate({ voiceProfileId: id });
                         }}
                     />
                     <Button size="small" icon={<Upload className="size-3.5" />} loading={upload.isPending} disabled={busy && !upload.isPending} onClick={() => fileRef.current?.click()}>
-                        上传
+                        {_creationText("common.upload")}
                     </Button>
                     <Button
                         size="small"
@@ -150,11 +163,11 @@ export function CastVoiceField({ projectId, cast, restyle, onChanged }: { projec
                         disabled={busy}
                         onClick={() =>
                             void recorder.start().catch(() => {
-                                message.error("无法使用麦克风，请检查浏览器权限");
+                                message.error(_creationText("creation.6b451de440652e5a"));
                             })
                         }
                     >
-                        录制
+                        {_creationText("creation.4b6ef790032f7a87")}
                     </Button>
                 </div>
             )}
@@ -164,13 +177,13 @@ export function CastVoiceField({ projectId, cast, restyle, onChanged }: { projec
                 type="file"
                 accept={AUDIO_ACCEPT}
                 className="hidden"
-                aria-label={`上传${cast.name}的声音样本`}
+                aria-label={_creationText("creation.e338829ea31a64b1", { value1: cast.name })}
                 onChange={(event) => {
                     const file = event.target.files?.[0];
                     event.target.value = "";
                     if (!file) return;
                     if (file.size > MAX_SAMPLE_BYTES) {
-                        message.warning("声音样本不超过 20MB，建议 5–15 秒");
+                        message.warning(_creationText("creation.4264cd4d15f156cc"));
                         return;
                     }
                     upload.mutate({ file, name: file.name });

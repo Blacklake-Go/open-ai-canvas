@@ -1,6 +1,7 @@
 package repository
 
 import (
+	"errors"
 	"math"
 	"testing"
 
@@ -75,6 +76,45 @@ func TestTokenUsageAmountUsesExactArithmetic(t *testing.T) {
 				t.Fatalf("tokenUsageAmount() = %d, %v; want %d", amount, err, test.want)
 			}
 		})
+	}
+}
+
+func TestTokenUsageContextBandUsesProviderUsageAndFrozenPrices(t *testing.T) {
+	order := model.BillingOrder{Capability: "text", MultiplierBasisPoints: 10_000,
+		InputTokenPriceMicrocredits: 2_625_000_000, OutputTokenPriceMicrocredits: 15_750_000_000, CachedTokenPriceMicrocredits: 262_500_000,
+		TokenPriceBands: []model.TokenPriceBand{
+			{MinInputTokens: 0, InputTokenPriceMicrocredits: 2_625_000_000, OutputTokenPriceMicrocredits: 15_750_000_000, CachedTokenPriceMicrocredits: 262_500_000},
+			{MinInputTokens: 272001, InputTokenPriceMicrocredits: 5_250_000_000, OutputTokenPriceMicrocredits: 23_625_000_000, CachedTokenPriceMicrocredits: 262_500_000},
+		}}
+	for _, check := range []struct{ input, cached, want int64 }{
+		{272000, 0, 729_750_000}, {272001, 0, 1_451_630_250}, {300000, 200000, 601_125_000},
+	} {
+		actual, err := tokenUsageAmount(order, &BillingUsage{InputTokens: check.input, CachedTokens: check.cached, OutputTokens: 1000})
+		if err != nil || actual != check.want {
+			t.Fatalf("input %d cached %d: got %d, %v; want %d", check.input, check.cached, actual, err, check.want)
+		}
+	}
+	if order.InputTokenPriceMicrocredits != 2_625_000_000 {
+		t.Fatal("settlement mutated the frozen base price")
+	}
+}
+
+func TestTokenUsageSplitsFiveMinuteAndOneHourCacheWrites(t *testing.T) {
+	oneHourPrice := int64(2_000_000)
+	base := model.TokenPriceBand{MinInputTokens: 0, InputTokenPriceMicrocredits: 1_000_000, OutputTokenPriceMicrocredits: 2_000_000, CachedTokenPriceMicrocredits: 100_000, CacheWriteTokenPriceMicrocredits: 1_250_000, CacheWrite1hTokenPriceMicrocredits: &oneHourPrice}
+	order := model.BillingOrder{Capability: "text", MultiplierBasisPoints: 10_000, TokenPriceBands: []model.TokenPriceBand{base}}
+	usage := &BillingUsage{InputTokens: 3_000_000, OutputTokens: 1_000_000, CachedTokens: 1_000_000, CacheWriteTokens: 1_000_000, CacheWrite1hTokens: 600_000}
+	actual, err := tokenUsageAmount(order, usage)
+	if err != nil || actual != 4_800_000 {
+		t.Fatalf("mixed cache writes: got %d, %v; want 4800000", actual, err)
+	}
+	order.TokenPriceBands[0].CacheWrite1hTokenPriceMicrocredits = nil
+	if _, err := tokenUsageAmount(order, usage); !errors.Is(err, ErrBillingUsageUnavailable) {
+		t.Fatalf("unpriced one-hour writes were accepted: %v", err)
+	}
+	usage.CacheWrite1hTokens = usage.CacheWriteTokens + 1
+	if _, err := tokenUsageAmount(order, usage); err == nil {
+		t.Fatal("one-hour subset larger than total cache writes was accepted")
 	}
 }
 

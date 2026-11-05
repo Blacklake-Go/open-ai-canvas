@@ -49,7 +49,35 @@ func ValidatePriceTierPrice(tier *model.ChannelModelPriceTier, capability string
 	if tier == nil {
 		return false
 	}
+	if validateTierTokenBands(capability, tier.BillingMode, tier.InputTokenPriceMicrocredits, tier.OutputTokenPriceMicrocredits, tier.CachedTokenPriceMicrocredits, tier.CacheWriteTokenPriceMicrocredits, tier.TokenPriceBands) != nil {
+		return false
+	}
 	return ValidateChannelModelPrice(tier.BillingMode, capability, protocol, tier.UnitPriceMicrocredits, tier.InputTokenPriceMicrocredits, tier.OutputTokenPriceMicrocredits, tier.CachedTokenPriceMicrocredits, tier.CacheWriteTokenPriceMicrocredits)
+}
+
+func validateTierTokenBands(capability, billingMode string, input, output, cached, write int64, bands []model.TokenPriceBand) error {
+	if len(bands) == 0 {
+		return nil
+	}
+	if capability != "text" || billingMode != "token" {
+		return BadAuthRequest("上下文价格分档仅适用于文本 Token 计费")
+	}
+	if err := model.ValidateTokenPriceBands(bands); err != nil {
+		return BadAuthRequest("上下文价格分档须从 0 开始严格递增，且所有价格有效")
+	}
+	for _, band := range bands {
+		if err := validateTokenPrices(capability, band.InputTokenPriceMicrocredits, band.OutputTokenPriceMicrocredits, band.CachedTokenPriceMicrocredits, band.CacheWriteTokenPriceMicrocredits); err != nil {
+			return err
+		}
+		if band.CacheWrite1hTokenPriceMicrocredits != nil && *band.CacheWrite1hTokenPriceMicrocredits > maxChannelModelTokenPriceMicrocredits {
+			return BadAuthRequest("一小时缓存写入价格超过上限")
+		}
+	}
+	base := bands[0]
+	if base.InputTokenPriceMicrocredits != input || base.OutputTokenPriceMicrocredits != output || base.CachedTokenPriceMicrocredits != cached || base.CacheWriteTokenPriceMicrocredits != write {
+		return BadAuthRequest("上下文基础档必须与模型普通 Token 价格一致")
+	}
+	return nil
 }
 
 // ComputePriceConfigured 根据价格内容计算 PriceConfigured 标志

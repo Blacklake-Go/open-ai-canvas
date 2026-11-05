@@ -98,6 +98,9 @@ func (s *Service) RepriceAdminChannelModels(actor *model.User, channelID string,
 }
 
 func applyChannelModelTierPrices(tier *model.ChannelModelPriceTier, capability string, protocol model.ChannelInterfaceType, prices map[string]*int64) error {
+	if len(tier.TokenPriceBands) > 0 {
+		return BadAuthRequest("此模型包含上下文价格分档，请通过完整模型配置同步修改各档价格")
+	}
 	if tier.ID == "" || !tier.PriceConfigured || !tier.CostPricing.Configured {
 		return BadAuthRequest("请先保存完整的规格成本价和销售价配置")
 	}

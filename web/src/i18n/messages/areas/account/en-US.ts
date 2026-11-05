@@ -24,6 +24,10 @@ export const enUS: DeepStringRecord<typeof zhCN> = {
             loadFailed: "Failed to load announcements",
         },
         footer: {
+            terms: "Terms of Service",
+            privacy: "Privacy Policy",
+            aup: "Acceptable Use Policy",
+            support: "Contact Support",
             label: "Site copyright and registration information",
             icpLink: "{{number}}, look up on the MIIT ICP filing system",
         },

@@ -2,6 +2,19 @@ import type { Messages } from "./zh-CN";
 
 // 초기 기계 번역입니다. 원어민 검토가 필요합니다.
 export const koKR: Messages = {
+    tokenPricing: {
+        credits: "크레딧",
+        perSecond: "크레딧/초",
+        perMillion: "크레딧/백만 토큰",
+        perMillionVideo: "크레딧/백만 동영상 토큰",
+        output: "출력 {{price}}",
+        unconfigured: "미설정",
+        heading: "컨텍스트별 요금 구간",
+        sale: "판매 요금 구간 JSON",
+        cost: "원가 구간 JSON",
+        invalid: "최소 입력 토큰 수의 오름차순으로 올바른 요금 구간을 입력하세요.",
+        help: "첫 minInputTokens는 0이며 기본 요금과 같아야 합니다. 가격은 요금 단위의 백만분의 일로 표시합니다.",
+    },
     common: {
         cancel: "취소",
         confirm: "확인",

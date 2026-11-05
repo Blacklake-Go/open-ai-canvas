@@ -33,6 +33,7 @@ type CreditLedgerEntry struct {
 }
 
 type BillingOrder struct {
+	TokenPriceBands     []TokenPriceBand `json:"tokenPriceBands,omitempty" gorm:"serializer:json;type:text;not null;default:'[]'"`
 	BillingCostSnapshot `json:"-" gorm:"embedded"`
 	ID                  string `json:"id" gorm:"primaryKey;size:36"`
 	UserID              string `json:"userId" gorm:"size:36;index;uniqueIndex:idx_billing_user_idempotency,priority:1"`
@@ -77,6 +78,8 @@ type BillingOrder struct {
 	OutputTokens     int64 `json:"outputTokens"`
 	CachedTokens     int64 `json:"cachedTokens"`
 	CacheWriteTokens int64 `json:"cacheWriteTokens" gorm:"not null;default:0"`
+	// One-hour writes are a subset of CacheWriteTokens, not additional input.
+	CacheWrite1hTokens int64 `json:"cacheWrite1hTokens" gorm:"not null;default:0"`
 	// VideoFormulaTokens 固化提交时的视频公式用量，不含预授权余量；旧订单保持 0，不反推历史用量。
 	VideoFormulaTokens int64         `json:"videoFormulaTokens" gorm:"not null;default:0"`
 	UsageSource        string        `json:"usageSource,omitempty" gorm:"size:32;not null;default:''"`

@@ -1,4 +1,5 @@
 import { modelRequestOptions, resolveVideoOperation, type ModelRequirements } from "@/lib/model-selection";
+import { i18n } from "@/i18n";
 import { videoResolutionComparisonKey } from "@/lib/video-generation-options";
 import { imagePriceSelector, normalizeImagePriceSelector } from "@/lib/image-pricing";
 import { modelCapabilityConfigFor } from "@/lib/model-capabilities";
@@ -63,22 +64,22 @@ export function priceTierSummaryLabel(tiers: ModelPriceTier[], capability?: Mode
     const perSecondValues = unitPrices("per_second");
     const tokenValues = tiers
         .filter((tier) => tier.billingMode === "token")
-        .map((tier) => tier.outputTokenPriceMicrocredits / 1_000_000)
+        .flatMap((tier) => (tier.tokenPriceBands?.length ? tier.tokenPriceBands : [tier]).map((band) => band.outputTokenPriceMicrocredits / 1_000_000))
         .filter((value) => Number.isFinite(value) && value >= 0);
     return (
         [
-            fixedRequestValues.length ? formatPriceRange(fixedRequestValues, "积分") : "",
-            perSecondValues.length ? formatPriceRange(perSecondValues, "积分/秒") : "",
-            tokenValues.length ? `${capability === "video" ? "" : "输出 "}${formatPriceRange(tokenValues, capability === "video" ? "积分/百万视频 Token" : "积分/百万 Token")}` : "",
+            fixedRequestValues.length ? formatPriceRange(fixedRequestValues, i18n.t("tokenPricing.credits")) : "",
+            perSecondValues.length ? formatPriceRange(perSecondValues, i18n.t("tokenPricing.perSecond")) : "",
+            tokenValues.length ? (capability === "video" ? formatPriceRange(tokenValues, i18n.t("tokenPricing.perMillionVideo")) : i18n.t("tokenPricing.output", { price: formatPriceRange(tokenValues, i18n.t("tokenPricing.perMillion")) })) : "",
         ]
             .filter(Boolean)
-            .join(" · ") || "未配置"
+            .join(" · ") || i18n.t("tokenPricing.unconfigured")
     );
 }
 
 export function formatPriceRange(values: number[], suffix: string) {
     const unique = Array.from(new Set(values)).sort((left, right) => left - right);
-    const format = (value: number) => value.toLocaleString("zh-CN", { maximumFractionDigits: 6 });
+    const format = (value: number) => value.toLocaleString(i18n.resolvedLanguage || "zh-CN", { maximumFractionDigits: 6 });
     return unique.length === 1 ? `${format(unique[0])} ${suffix}` : `${format(unique[0])}-${format(unique[unique.length - 1])} ${suffix}`;
 }
 

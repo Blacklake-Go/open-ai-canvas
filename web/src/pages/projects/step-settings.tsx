@@ -1,3 +1,5 @@
+import { creationLabel as _creationLabel } from "@/supdance/plugins/i18n/creation-text";
+import { creationText as _creationText, useCreationLocale as _useCreationLocale } from "@/supdance/plugins/i18n/creation-text";
 import { Button } from "antd";
 import { TriangleAlert } from "lucide-react";
 
@@ -38,12 +40,13 @@ function tierLabel(tier: string) {
 
 /** 一行里的模型选择：未单独指定时占位显示默认模型，指定后可一键恢复跟随默认。 */
 function OverridePicker({ capability, value, fallback, onChange }: { capability: "text" | "image"; value?: DramaModelChoice; fallback?: DramaModelChoice; onChange: (choice?: DramaModelChoice) => void }) {
+    _useCreationLocale();
     return (
         <div className="drama-step-model">
-            <DramaModelPicker capability={capability} size="sm" showPrice={false} value={value} placeholder={`跟随默认${fallback?.label ? ` · ${fallback.label}` : ""}`} onChange={onChange} />
+            <DramaModelPicker capability={capability} size="sm" showPrice={false} value={value} placeholder={_creationText("creation.4e91c2981d902055", { value1: fallback?.label ? ` · ${fallback.label}` : "" })} onChange={onChange} />
             {value ? (
                 <Button size="small" type="text" onClick={() => onChange(undefined)}>
-                    跟随默认
+                    {_creationText("creation.a44f9f9fcaca2f42")}
                 </Button>
             ) : null}
         </div>
@@ -62,20 +65,21 @@ export function DramaTextSteps({
     skills: DramaStepSkills;
     onSkillChange: (step: DramaSkillStep, value?: DramaSkillRef) => void;
 }) {
+    _useCreationLocale();
     return (
-        <div className="drama-steps" role="list" aria-label="文字步骤">
+        <div className="drama-steps" role="list" aria-label={_creationText("creation.f074a508d31551f1")}>
             {TEXT_STEPS.map((item) => (
                 <div key={item.step} className="drama-step-row" role="listitem">
                     <div className="drama-step-label">
-                        <strong>{item.label}</strong>
+                        <strong>{_creationLabel(item.label)}</strong>
                         <small>{item.hint}</small>
                     </div>
                     <div className="drama-step-field">
-                        <span className="drama-step-caption">文本模型</span>
+                        <span className="drama-step-caption">{_creationText("creation.d027815844af8e27")}</span>
                         <OverridePicker capability="text" value={overrideOf(models, item.override)} fallback={models?.text} onChange={(choice) => onModelsChange({ [item.override]: choice || {} })} />
                     </div>
                     <div className="drama-step-field">
-                        <span className="drama-step-caption">技能</span>
+                        <span className="drama-step-caption">{_creationText("nav.skills")}</span>
                         <PromptSkillField compact step={item.step} value={skills[SKILL_FIELD[item.step]]} onChange={(value) => onSkillChange(item.step, value)} />
                     </div>
                 </div>
@@ -96,10 +100,11 @@ export function DramaAssetImageModels({
     assets?: DramaAssetSettings;
     onAssetsChange: (assets: DramaAssetSettings) => void;
 }) {
+    _useCreationLocale();
     const catalog = useDramaModelCatalog().data;
     const optionFor = (choice?: DramaModelChoice) => catalog?.options.image?.find((option) => dramaChoiceKey(option.choice) === dramaChoiceKey(choice));
     return (
-        <div className="drama-steps" role="list" aria-label="参考图模型与分辨率">
+        <div className="drama-steps" role="list" aria-label={_creationText("creation.e3b7e2e088c01958")}>
             {IMAGE_KINDS.map((item) => {
                 const override = overrideOf(models, item.override);
                 const option = optionFor(override || models?.image);
@@ -108,21 +113,22 @@ export function DramaAssetImageModels({
                 return (
                     <div key={item.kind} className="drama-step-row is-image" role="listitem">
                         <div className="drama-step-label">
-                            <strong>{item.label}</strong>
+                            <strong>{_creationLabel(item.label)}</strong>
                             <small>{item.hint}</small>
                         </div>
                         <div className="drama-step-field">
-                            <span className="drama-step-caption">图片模型</span>
+                            <span className="drama-step-caption">{_creationText("creation.48156e412e6b80bf")}</span>
                             <OverridePicker capability="image" value={override} fallback={models?.image} onChange={(choice) => onModelsChange({ [item.override]: choice || {} })} />
                         </div>
                         <div className="drama-step-field">
-                            <span className="drama-step-caption">分辨率</span>
+                            <span className="drama-step-caption">{_creationText("canvas.resolution")}</span>
                             {!option ? (
-                                <small className="drama-step-note">选好图片模型后可选</small>
+                                <small className="drama-step-note">{_creationText("creation.63db60c10986de50")}</small>
                             ) : tiers.length ? (
-                                <div className="drama-tabs drama-res-tabs" role="radiogroup" aria-label={`${item.label}参考图分辨率`}>
+                                <div className="drama-tabs drama-res-tabs" role="radiogroup" aria-label={_creationText("creation.7995487c33c2ffa1", { value1: item.label })}>
                                     <button type="button" role="radio" className="drama-tab" aria-checked={!value} disabled={!assets} onClick={() => assets && onAssetsChange({ ...assets, [item.resolution]: undefined })}>
-                                        默认{option.defaultImageResolution ? ` · ${tierLabel(option.defaultImageResolution)}` : ""}
+                                        {_creationText("projects.default_preset")}
+                                        {option.defaultImageResolution ? ` · ${tierLabel(option.defaultImageResolution)}` : ""}
                                     </button>
                                     {tiers.map((tier) => (
                                         <button key={tier} type="button" role="radio" className="drama-tab" aria-checked={value === tier} disabled={!assets} onClick={() => assets && onAssetsChange({ ...assets, [item.resolution]: tier })}>
@@ -131,12 +137,14 @@ export function DramaAssetImageModels({
                                     ))}
                                 </div>
                             ) : (
-                                <small className="drama-step-note">该模型不提供分辨率档位，按默认尺寸出图</small>
+                                <small className="drama-step-note">{_creationText("creation.c55b97ea31e18b58")}</small>
                             )}
                             {value && option && !tiers.includes(value) ? (
                                 <p className="drama-step-warn" role="alert">
                                     <TriangleAlert className="size-3.5" />
-                                    该模型不支持 {tierLabel(value)}，保存时会被拒绝，请改选
+                                    {_creationText("creation.0444e91b43d2f7ed")}
+                                    {tierLabel(value)}
+                                    {_creationText("creation.5e59b5b93383e7ab")}
                                 </p>
                             ) : null}
                         </div>
@@ -149,26 +157,31 @@ export function DramaAssetImageModels({
 
 /** 剧情段视频分辨率：取自视频模型声明的档位；“模型默认”不发分辨率，由模型按默认档位出片。 */
 export function VideoResolutionField({ option, value, onChange }: { option?: DramaModelOption; value?: string; onChange: (value?: string) => void }) {
+    _useCreationLocale();
     if (!option) {
         return value ? (
             <div className="drama-step-model">
-                <small className="drama-step-note">已指定 {formatVideoResolutionLabel(value)}</small>
+                <small className="drama-step-note">
+                    {_creationText("creation.76a5e558f85e688f")}
+                    {formatVideoResolutionLabel(value)}
+                </small>
                 <Button size="small" type="text" onClick={() => onChange(undefined)}>
-                    改回默认
+                    {_creationText("creation.278671b0b5fe13b4")}
                 </Button>
             </div>
         ) : (
-            <small className="drama-step-note">选好视频模型后可选</small>
+            <small className="drama-step-note">{_creationText("creation.e84358361c72791e")}</small>
         );
     }
     const values = option.videoResolutions || [];
     const issue = dramaVideoResolutionIssue(option, value);
-    if (!values.length && !value) return <small className="drama-step-note">该模型不提供可选分辨率，按默认出片</small>;
+    if (!values.length && !value) return <small className="drama-step-note">{_creationText("creation.7cb6760f579b3959")}</small>;
     return (
         <div className="drama-step-field">
-            <div className="drama-tabs drama-res-tabs" role="radiogroup" aria-label="视频分辨率">
+            <div className="drama-tabs drama-res-tabs" role="radiogroup" aria-label={_creationText("creation.458920ec58f79783")}>
                 <button type="button" role="radio" className="drama-tab" aria-checked={!value} onClick={() => onChange(undefined)}>
-                    默认{option.defaultVideoResolution ? ` · ${formatVideoResolutionLabel(option.defaultVideoResolution)}` : ""}
+                    {_creationText("projects.default_preset")}
+                    {option.defaultVideoResolution ? ` · ${formatVideoResolutionLabel(option.defaultVideoResolution)}` : ""}
                 </button>
                 {values.map((item) => (
                     <button key={item} type="button" role="radio" className="drama-tab" aria-checked={Boolean(value) && videoResolutionComparisonKey(value) === videoResolutionComparisonKey(item)} onClick={() => onChange(item)}>
@@ -179,10 +192,12 @@ export function VideoResolutionField({ option, value, onChange }: { option?: Dra
             {issue ? (
                 <p className="drama-step-warn" role="alert">
                     <TriangleAlert className="size-3.5" />
-                    当前视频模型{issue}，保存时会被拒绝，请改选
+                    {_creationText("creation.e7e533183789a009")}
+                    {issue}
+                    {_creationText("creation.5e59b5b93383e7ab")}
                 </p>
             ) : (
-                <small className="drama-step-note">分辨率越高越清晰，单段越贵；横竖由作品画幅决定</small>
+                <small className="drama-step-note">{_creationText("creation.43c6912a7a2118c7")}</small>
             )}
         </div>
     );

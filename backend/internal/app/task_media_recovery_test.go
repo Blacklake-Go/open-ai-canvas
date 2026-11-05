@@ -9,6 +9,7 @@ import (
 	"image/png"
 	"net/http"
 	"net/http/httptest"
+	"net/url"
 	"os"
 	"path/filepath"
 	"strings"
@@ -25,11 +26,52 @@ import (
 
 func newMediaRecoveryTestService(t *testing.T) (*Service, *gorm.DB) {
 	t.Helper()
-	db := newSQLiteTestDB(t)
+	db := mediaRecoveryTestDB(t)
 	if err := database.MigrateSchema(db); err != nil {
 		t.Fatal(err)
 	}
 	return &Service{repo: repository.New(db), dataDir: t.TempDir(), activeCancels: make(map[string]context.CancelFunc)}, db
+}
+
+func mediaRecoveryTestDB(t *testing.T) *gorm.DB {
+	t.Helper()
+	dsn := strings.TrimSpace(os.Getenv("CANVAS_TEST_POSTGRES_DSN"))
+	if dsn == "" {
+		return newSQLiteTestDB(t)
+	}
+	base, err := database.Open(database.Config{Driver: "postgres", DSN: dsn})
+	if err != nil {
+		t.Fatal(err)
+	}
+	schema := "media_recovery_" + strings.ReplaceAll(newID(), "-", "")
+	if err := base.Exec(`CREATE SCHEMA "` + schema + `"`).Error; err != nil {
+		t.Fatal(err)
+	}
+	t.Cleanup(func() {
+		if err := base.Exec(`DROP SCHEMA "` + schema + `" CASCADE`).Error; err != nil {
+			t.Error(err)
+		}
+		if connection, err := base.DB(); err == nil {
+			_ = connection.Close()
+		}
+	})
+	parsed, err := url.Parse(dsn)
+	if err != nil {
+		t.Fatal(err)
+	}
+	query := parsed.Query()
+	query.Set("search_path", schema)
+	parsed.RawQuery = query.Encode()
+	db, err := database.Open(database.Config{Driver: "postgres", DSN: parsed.String()})
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Cleanup(func() {
+		if connection, err := db.DB(); err == nil {
+			_ = connection.Close()
+		}
+	})
+	return db
 }
 
 func mediaTestPNG(t *testing.T) []byte {
@@ -207,7 +249,16 @@ func TestMediaRecoveryRegistrationRollbackAndRetryWithoutDownload(t *testing.T) 
 		t.Fatalf("staging copy was not released after resource persistence: %v", err)
 	}
 	encoded, _ := json.Marshal(output)
-	if err := db.Exec(`CREATE TRIGGER reject_media_asset BEFORE INSERT ON assets BEGIN SELECT RAISE(ABORT, 'injected asset failure'); END`).Error; err != nil {
+	createTrigger := `CREATE TRIGGER reject_media_asset BEFORE INSERT ON assets BEGIN SELECT RAISE(ABORT, 'injected asset failure'); END`
+	dropTrigger := `DROP TRIGGER reject_media_asset`
+	if db.Dialector.Name() == "postgres" {
+		if err := db.Exec(`CREATE FUNCTION reject_media_asset_fn() RETURNS trigger AS $$ BEGIN RAISE EXCEPTION 'injected asset failure'; END; $$ LANGUAGE plpgsql`).Error; err != nil {
+			t.Fatal(err)
+		}
+		createTrigger = `CREATE TRIGGER reject_media_asset BEFORE INSERT ON assets FOR EACH ROW EXECUTE FUNCTION reject_media_asset_fn()`
+		dropTrigger = `DROP TRIGGER reject_media_asset ON assets`
+	}
+	if err := db.Exec(createTrigger).Error; err != nil {
 		t.Fatal(err)
 	}
 	if err := s.saveTaskCompletionWithinStorageQuota(task, encoded, nil, false); err == nil {
@@ -217,7 +268,7 @@ func TestMediaRecoveryRegistrationRollbackAndRetryWithoutDownload(t *testing.T) 
 	if saved.Status != model.TaskStatusRunning || saved.ResultJSON != "" {
 		t.Fatal("false succeeded task escaped transaction")
 	}
-	if err := db.Exec(`DROP TRIGGER reject_media_asset`).Error; err != nil {
+	if err := db.Exec(dropTrigger).Error; err != nil {
 		t.Fatal(err)
 	}
 	output, err = s.resumeTaskMedia(context.Background(), saved)

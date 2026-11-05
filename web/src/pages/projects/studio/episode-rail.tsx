@@ -1,3 +1,5 @@
+import { creationLabel as _creationLabel } from "@/supdance/plugins/i18n/creation-text";
+import { creationText as _creationText, useCreationLocale as _useCreationLocale } from "@/supdance/plugins/i18n/creation-text";
 import { useDeferredValue, useEffect, useMemo, useRef, useState } from "react";
 import { useVirtualizer } from "@tanstack/react-virtual";
 import { AntTooltip as Tooltip } from "@/components/ui/base/tooltip/ant-tooltip";
@@ -44,6 +46,7 @@ export function EpisodeRail({
     onAdd: () => void;
     onPickChapters?: () => void;
 }) {
+    _useCreationLocale();
     const nextNumber = (episodes[episodes.length - 1]?.number || 0) + 1;
     const [filter, setFilter] = useState<Filter>("all");
     const [query, setQuery] = useState("");
@@ -73,7 +76,7 @@ export function EpisodeRail({
     }, [currentId, matrix, virtualizer, visible]);
 
     return (
-        <aside className="drama-rail" aria-label="分集">
+        <aside className="drama-rail" aria-label={_creationText("creation.dea789c82d1d71bb")}>
             <div className="drama-rail-head">
                 <div className="flex items-center gap-2">
                     <label className="drama-search flex-1">
@@ -84,37 +87,37 @@ export function EpisodeRail({
                             onKeyDown={(event) => {
                                 if (event.key === "Enter" && visible[0]) onSelect(visible[0].id);
                             }}
-                            placeholder="集号或标题"
-                            aria-label="搜索分集"
+                            placeholder={_creationText("creation.0ac28e1a289c8bd9")}
+                            aria-label={_creationText("creation.339375e61da5a097")}
                         />
                         {query ? (
-                            <button type="button" onClick={() => setQuery("")} aria-label="清空搜索">
+                            <button type="button" onClick={() => setQuery("")} aria-label={_creationText("canvas.clear_search")}>
                                 <X className="size-3.5 opacity-40" />
                             </button>
                         ) : null}
                     </label>
-                    <Tooltip title={`添加第 ${nextNumber} 集：粘贴或导入下一集的原文、剧本或分镜`}>
-                        <button type="button" className="drama-title-edit !h-8 !w-8" aria-label={`添加第 ${nextNumber} 集`} onClick={onAdd}>
+                    <Tooltip title={_creationText("creation.e9a99e0649fe9bbc", { value1: nextNumber })}>
+                        <button type="button" className="drama-title-edit !h-8 !w-8" aria-label={_creationText("creation.7fa645eba8ead61e", { value1: nextNumber })} onClick={onAdd}>
                             <Plus className="size-4" />
                         </button>
                     </Tooltip>
                     {onPickChapters ? (
-                        <Tooltip title={reservedChapters > 0 ? `原著章节：还有 ${reservedChapters} 章未加入制作，勾选后建成新的集` : "原著章节：查看全部章节与所在集"}>
-                            <button type="button" className="drama-title-edit !h-8 !w-8" aria-label="原著章节" onClick={onPickChapters}>
+                        <Tooltip title={reservedChapters > 0 ? _creationText("creation.3876fa1092ce2912", { value1: reservedChapters }) : _creationText("creation.5e938948885dece7")}>
+                            <button type="button" className="drama-title-edit !h-8 !w-8" aria-label={_creationText("creation.5b050d133cce9443")} onClick={onPickChapters}>
                                 <BookOpenText className="size-4" />
                             </button>
                         </Tooltip>
                     ) : null}
-                    <Tooltip title={matrix ? "列表视图" : "矩阵视图：一屏看清全剧进度"}>
-                        <button type="button" className="drama-title-edit !h-8 !w-8" aria-pressed={matrix} aria-label="切换矩阵视图" onClick={() => setMatrix((value) => !value)}>
+                    <Tooltip title={matrix ? _creationText("tasks.list_view") : _creationText("creation.fbf3ed4dde1ea8cc")}>
+                        <button type="button" className="drama-title-edit !h-8 !w-8" aria-pressed={matrix} aria-label={_creationText("creation.d9846df13b29f683")} onClick={() => setMatrix((value) => !value)}>
                             {matrix ? <List className="size-4" /> : <Grid3x3 className="size-4" />}
                         </button>
                     </Tooltip>
                 </div>
-                <div className="drama-filters" role="group" aria-label="筛选分集">
+                <div className="drama-filters" role="group" aria-label={_creationText("creation.a692d07dfab0281f")}>
                     {FILTERS.filter((item) => item.key !== "ready" || counts.ready || filter === "ready").map((item) => (
                         <button key={item.key} type="button" className={`drama-filter ${item.key === "attention" && counts.attention ? "is-alert" : ""}`} aria-pressed={filter === item.key} onClick={() => setFilter(item.key)}>
-                            {item.label}
+                            {_creationLabel(item.label)}
                             <b>{counts[item.key]}</b>
                         </button>
                     ))}
@@ -126,33 +129,33 @@ export function EpisodeRail({
                         <div className="drama-matrix-legend">
                             <span>
                                 <i style={{ background: "var(--status-success)" }} />
-                                完成
+                                {_creationText("settings.channel_complete_btn")}
                             </span>
                             <span>
                                 <i style={{ background: "var(--workspace-accent)" }} />
-                                制作中
+                                {_creationText("creation.3af7842f0a6561ef")}
                             </span>
                             <span>
                                 <i className="is-ready" />
-                                待生成
+                                {_creationText("creation.49933a1953501c0a")}
                             </span>
                             <span>
                                 <i style={{ background: "var(--status-warning)" }} />
-                                待审阅
+                                {_creationText("creation.b92b1ce488db924d")}
                             </span>
                             <span>
                                 <i style={{ background: "var(--status-error)" }} />
-                                失败
+                                {_creationText("admin.failed_status")}
                             </span>
                         </div>
                         <div className="drama-matrix-grid">
                             {visible.map((episode) => (
-                                <Tooltip key={episode.id} title={`第 ${episode.number} 集 · ${episode.title} · ${episodeStatusText(episode)}`} mouseEnterDelay={0.25}>
+                                <Tooltip key={episode.id} title={_creationText("creation.7699c6d40eeb56a4", { value1: episode.number, value2: episode.title, value3: episodeStatusText(episode) })} mouseEnterDelay={0.25}>
                                     <button
                                         type="button"
                                         className={`drama-cell is-${episodeTone(episode)}`}
                                         aria-current={episode.id === currentId}
-                                        aria-label={`第 ${episode.number} 集 ${STAGE_LABEL[episode.stage]}`}
+                                        aria-label={_creationText("creation.14cd1c9a694b7d72", { value1: episode.number, value2: STAGE_LABEL[episode.stage] })}
                                         onClick={() => onSelect(episode.id)}
                                     >
                                         {episode.number}
@@ -174,7 +177,7 @@ export function EpisodeRail({
                                         <button type="button" className={`drama-ep is-${tone}`} aria-current={episode.id === currentId} onClick={() => onSelect(episode.id)}>
                                             <span className="drama-ep-num">{String(episode.number).padStart(episodes.length >= 100 ? 3 : 2, "0")}</span>
                                             <span className="min-w-0">
-                                                <span className="drama-ep-title block" title={episode.title}>
+                                                <span data-i18n-user-content className="drama-ep-title block" title={episode.title}>
                                                     {episode.title}
                                                 </span>
                                                 <span className="drama-ep-meta">
@@ -188,19 +191,23 @@ export function EpisodeRail({
                             })}
                         </div>
                     ) : (
-                        <div className="px-3 py-10 text-center text-[var(--fs-tiny)] text-foreground/40">没有符合条件的分集</div>
+                        <div className="px-3 py-10 text-center text-[var(--fs-tiny)] text-foreground/40">{_creationText("creation.f7e6d42698ee15ce")}</div>
                     )}
-                    {planning ? <div className="px-3 py-3 text-center text-[var(--fs-micro)] text-foreground/40">后续章节正在分集…</div> : null}
+                    {planning ? <div className="px-3 py-3 text-center text-[var(--fs-micro)] text-foreground/40">{_creationText("creation.558b5ee4d2af4616")}</div> : null}
                     {!planning && filter === "all" && !deferredQuery && reservedChapters > 0 && onPickChapters ? (
                         <button type="button" className="drama-rail-add is-accent" onClick={onPickChapters}>
                             <BookOpenText className="size-3.5" />
-                            原著还有 {reservedChapters} 章 · 继续选章
+                            {_creationText("creation.3c850afd04016045")}
+                            {reservedChapters}
+                            {_creationText("creation.1fa359d2e60bdcb1")}
                         </button>
                     ) : null}
                     {!planning && filter === "all" && !deferredQuery ? (
                         <button type="button" className="drama-rail-add" onClick={onAdd}>
                             <Plus className="size-3.5" />
-                            添加第 {nextNumber} 集
+                            {_creationText("creation.e9ad46ccd1ad4a8f")}
+                            {nextNumber}
+                            {_creationText("creation.5bbadd8f8c4f781d")}
                         </button>
                     ) : null}
                 </div>

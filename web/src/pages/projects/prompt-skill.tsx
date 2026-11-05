@@ -1,3 +1,4 @@
+import { creationText as _creationText, useCreationLocale as _useCreationLocale } from "@/supdance/plugins/i18n/creation-text";
 import { useEffect, useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Button, Input } from "antd";
@@ -37,6 +38,7 @@ const STEP_COPY: Record<DramaSkillStep, { title: string; detail: string; empty: 
  * 保存的是技能与文件引用，在技能库里修改自己的技能后，下一次执行就会读到新内容。
  */
 export function PromptSkillField({ value, onChange, step = "prompt", compact }: { value?: DramaSkillRef; onChange: (value?: DramaSkillRef) => void; step?: DramaSkillStep; compact?: boolean }) {
+    _useCreationLocale();
     const [open, setOpen] = useState(false);
     const copy = STEP_COPY[step];
     return (
@@ -48,19 +50,19 @@ export function PromptSkillField({ value, onChange, step = "prompt", compact }: 
                         <strong>{value.skillName || value.skillId}</strong>
                         <span title={value.path}>{value.path}</span>
                     </div>
-                    <Link to={`/skills/${encodeURIComponent(value.skillId)}/edit`} target="_blank" rel="noreferrer" className="drama-pskill-edit" aria-label="在技能库打开，自己的技能可以直接修改" title="在技能库打开，自己的技能可以直接修改">
+                    <Link to={`/skills/${encodeURIComponent(value.skillId)}/edit`} target="_blank" rel="noreferrer" className="drama-pskill-edit" aria-label={_creationText("creation.905ddbd8bd8905ce")} title={_creationText("creation.905ddbd8bd8905ce")}>
                         <PenLine className="size-3.5" />
                     </Link>
                     <Button size="small" onClick={() => setOpen(true)}>
-                        更换
+                        {_creationText("creation.916afcd85322d732")}
                     </Button>
-                    <Button size="small" type="text" icon={<X className="size-3.5" />} aria-label="不使用技能" onClick={() => onChange(undefined)} />
+                    <Button size="small" type="text" icon={<X className="size-3.5" />} aria-label={_creationText("creation.52eb0fd1e0bf7017")} onClick={() => onChange(undefined)} />
                 </div>
             ) : (
                 <div className="drama-pskill-current is-empty">
-                    <span>{compact ? "内置规则" : copy.empty}</span>
+                    <span>{compact ? _creationText("creation.1451caf902f89208") : copy.empty}</span>
                     <Button size="small" icon={<BookMarked className="size-3.5" />} onClick={() => setOpen(true)}>
-                        选择技能
+                        {_creationText("creation.4837281070584444")}
                     </Button>
                 </div>
             )}
@@ -79,6 +81,7 @@ export function PromptSkillField({ value, onChange, step = "prompt", compact }: 
 }
 
 function PromptSkillModal({ open, step, initial, onClose, onPick }: { open: boolean; step: DramaSkillStep; initial?: DramaSkillRef; onClose: () => void; onPick: (value: DramaSkillRef) => void }) {
+    _useCreationLocale();
     const copy = STEP_COPY[step];
     const [keyword, setKeyword] = useState("");
     const [skillId, setSkillId] = useState(initial?.skillId || "");
@@ -111,7 +114,7 @@ function PromptSkillModal({ open, step, initial, onClose, onPick }: { open: bool
                 </header>
                 <div className="drama-skill-import-body">
                     <aside>
-                        <Input size="small" prefix={<Search className="size-3.5" />} allowClear placeholder="搜索已添加的技能" value={keyword} onChange={(event) => setKeyword(event.target.value)} />
+                        <Input size="small" prefix={<Search className="size-3.5" />} allowClear placeholder={_creationText("creation.a255b288069164f8")} value={keyword} onChange={(event) => setKeyword(event.target.value)} />
                         <div className="drama-skill-import-list thin-scrollbar">
                             {skills.map((item) => (
                                 <button
@@ -127,11 +130,11 @@ function PromptSkillModal({ open, step, initial, onClose, onPick }: { open: bool
                                     <span>{item.description || "—"}</span>
                                 </button>
                             ))}
-                            {!skillsQuery.isLoading && !skills.length ? <div className="drama-skill-import-empty">还没有添加技能，可在「技能」页面添加后再选择。</div> : null}
+                            {!skillsQuery.isLoading && !skills.length ? <div className="drama-skill-import-empty">{_creationText("creation.ae5b3d0bcf73b5e5")}</div> : null}
                         </div>
                     </aside>
                     <aside>
-                        <div className="drama-skill-import-caption">{skill ? `${skill.skillName} · ${files.length} 份文本` : "文件"}</div>
+                        <div className="drama-skill-import-caption">{skill ? _creationText("creation.439a89e75e6605d2", { value1: skill.skillName, value2: files.length }) : _creationText("creation.39932f24fe11a6ba")}</div>
                         <div className="drama-skill-import-list thin-scrollbar">
                             {files.map((file) => (
                                 <button key={file.path} type="button" className="is-file" aria-pressed={file.path === path} onClick={() => setPath(file.path)}>
@@ -139,27 +142,29 @@ function PromptSkillModal({ open, step, initial, onClose, onPick }: { open: bool
                                     <span title={file.path}>{file.path}</span>
                                 </button>
                             ))}
-                            {skillId && !filesQuery.isLoading && !files.length ? <div className="drama-skill-import-empty">这个技能没有文本文件。</div> : null}
-                            {!skillId ? <div className="drama-skill-import-empty">先在左侧选择技能</div> : null}
+                            {skillId && !filesQuery.isLoading && !files.length ? <div className="drama-skill-import-empty">{_creationText("creation.ad1f89877f21e8d3")}</div> : null}
+                            {!skillId ? <div className="drama-skill-import-empty">{_creationText("creation.46559a5ec45ad140")}</div> : null}
                         </div>
                     </aside>
                     <section>
                         <div className="drama-skill-import-caption">
-                            {path || "原文"}
+                            {path || _creationText("creation.354b28c853334568")}
                             {content ? (
                                 <span>
-                                    {content.length.toLocaleString("zh-CN")} 字{content.length > 16000 ? " · 超过 16000 字的部分不会发送" : ""}
+                                    {content.length.toLocaleString("zh-CN")}
+                                    {_creationText("creation.c55038b272b109b8")}
+                                    {content.length > 16000 ? _creationText("creation.ce011b8cff690136") : ""}
                                 </span>
                             ) : null}
                         </div>
-                        <pre className="drama-skill-import-content thin-scrollbar">{fileQuery.isLoading ? "正在读取…" : content || "选择文件后在这里查看全文。"}</pre>
+                        <pre className="drama-skill-import-content thin-scrollbar">{fileQuery.isLoading ? _creationText("creation.86b6d0d63062ba81") : content || _creationText("creation.8317fad9b4e9cf9d")}</pre>
                     </section>
                 </div>
                 <footer className="drama-skill-import-foot">
                     <span>{copy.foot}</span>
-                    <Button onClick={onClose}>取消</Button>
+                    <Button onClick={onClose}>{_creationText("common.cancel")}</Button>
                     <Button type="primary" disabled={!skill || !path || !content} onClick={() => skill && onPick({ skillId: skill.skillId, skillName: skill.skillName, path })}>
-                        使用这个文件
+                        {_creationText("creation.8fefe0c260f21fdf")}
                     </Button>
                 </footer>
             </div>

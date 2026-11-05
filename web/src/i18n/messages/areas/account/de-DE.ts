@@ -24,6 +24,10 @@ export const deDE: DeepStringRecord<typeof zhCN> = {
             loadFailed: "Ankündigungen konnten nicht geladen werden",
         },
         footer: {
+            terms: "Nutzungsbedingungen",
+            privacy: "Datenschutzerklärung",
+            aup: "Richtlinie zur zulässigen Nutzung",
+            support: "Support kontaktieren",
             label: "Urheberrechts- und Registrierungsinformationen der Website",
             icpLink: "{{number}}, im ICP-Registrierungssystem des MIIT nachschlagen",
         },

@@ -1,3 +1,6 @@
+import { creationLabel as _creationLabel } from "@/supdance/plugins/i18n/creation-text";
+import { creationOptions as _creationOptions } from "@/supdance/plugins/i18n/creation-text";
+import { creationText as _creationText, useCreationLocale as _useCreationLocale } from "@/supdance/plugins/i18n/creation-text";
 import { Button, Popover, Progress, Segmented, Spin } from "antd";
 import { CheckCircle2, Clock3 } from "lucide-react";
 import { QueueIcon } from "@/components/ui/ecommerce-icons";
@@ -24,6 +27,7 @@ function taskThumbnail(task?: GenerationTask) {
 
 /** activeCount：当前项目正在生成的图片数，按钮角标实时显示，不必先打开面板。 */
 export function EcommerceTaskQueue({ onView, activeCount = 0 }: { onView: (project: EcommerceProject, imageId: string) => void; activeCount?: number }) {
+    _useCreationLocale();
     const [open, setOpen] = useState(false);
     const [tab, setTab] = useState<"active" | "completed">("active");
     const [rows, setRows] = useState<QueueRow[]>([]);
@@ -68,11 +72,11 @@ export function EcommerceTaskQueue({ onView, activeCount = 0 }: { onView: (proje
                 <div className="commerce-queue-panel">
                     <header>
                         <div>
-                            <strong>队列任务</strong>
-                            <span>最近 50 个项目的图片进度</span>
+                            <strong>{_creationText("creation.58415d9d2c4e6e96")}</strong>
+                            <span>{_creationText("creation.f9dc7d950c822f09")}</span>
                         </div>
                         <Button size="small" onClick={() => void refresh()} loading={loading}>
-                            刷新
+                            {_creationText("common.refresh")}
                         </Button>
                     </header>
                     <Segmented
@@ -80,11 +84,12 @@ export function EcommerceTaskQueue({ onView, activeCount = 0 }: { onView: (proje
                         size="small"
                         value={tab}
                         onChange={(value) => setTab(value as "active" | "completed")}
-                        options={[
+                        options={_creationOptions([
                             {
                                 label: (
                                     <span className="commerce-queue-tab">
-                                        进行中<span className="commerce-count-badge is-neutral">{active.length}</span>
+                                        {_creationText("creation.dc9591e56d502b43")}
+                                        <span className="commerce-count-badge is-neutral">{active.length}</span>
                                     </span>
                                 ),
                                 value: "active",
@@ -92,16 +97,17 @@ export function EcommerceTaskQueue({ onView, activeCount = 0 }: { onView: (proje
                             {
                                 label: (
                                     <span className="commerce-queue-tab">
-                                        已完成<span className="commerce-count-badge is-neutral">{completed.length}</span>
+                                        {_creationText("workbench.completed_state")}
+                                        <span className="commerce-count-badge is-neutral">{completed.length}</span>
                                     </span>
                                 ),
                                 value: "completed",
                             },
-                        ]}
+                        ])}
                     />
                     <div className="commerce-queue-list" aria-live="polite">
                         {error ? (
-                            <p role="alert">{error}</p>
+                            <p role="alert">{_creationLabel(error)}</p>
                         ) : visible.length ? (
                             visible.map((row) => (
                                 <div className="commerce-queue-row" key={`${row.project.id}:${row.imageId}`}>
@@ -110,9 +116,16 @@ export function EcommerceTaskQueue({ onView, activeCount = 0 }: { onView: (proje
                                     </div>
                                     <div className="commerce-queue-detail">
                                         <strong>
-                                            {row.project.name || "电商项目"} · 第 {row.index + 1} 张
+                                            {row.project.name || _creationText("creation.3cf6dd14a326b542")}
+                                            {_creationText("creation.ca0b53cf6fe34fff")}
+                                            {row.index + 1}
+                                            {_creationText("creation.f56a049fcc23f1eb")}
                                         </strong>
-                                        <span>{finished(row.task) ? "图片生成成功" : row.task?.stage || (row.task?.status === "queued" ? "排队中" : "生成中")}</span>
+                                        <span>
+                                            {finished(row.task)
+                                                ? _creationText("creation.cd52d362bfc47066")
+                                                : row.task?.stage || (row.task?.status === "queued" ? _creationText("music.status_queued") : _creationText("settings.memory_proposal_generating"))}
+                                        </span>
                                         {!finished(row.task) ? <Progress percent={Math.max(0, Math.min(100, Math.round(row.task?.progress || 0)))} size="small" showInfo={false} /> : null}
                                     </div>
                                     <Button
@@ -122,19 +135,19 @@ export function EcommerceTaskQueue({ onView, activeCount = 0 }: { onView: (proje
                                             onView(row.project, row.imageId);
                                         }}
                                     >
-                                        查看
+                                        {_creationText("projects.view")}
                                     </Button>
                                 </div>
                             ))
                         ) : (
-                            <div className="commerce-queue-empty">{loading ? <Spin size="small" /> : tab === "active" ? "目前没有进行中的图片" : "暂无已完成图片"}</div>
+                            <div className="commerce-queue-empty">{loading ? <Spin size="small" /> : tab === "active" ? _creationText("creation.559b9ef071927684") : _creationText("creation.4459758d255a03fd")}</div>
                         )}
                     </div>
                 </div>
             }
         >
-            <Button className="commerce-queue-trigger" icon={<QueueIcon size={16} />} aria-label={badge ? `队列任务，${badge} 张图片生成中` : "队列任务"}>
-                队列任务
+            <Button className="commerce-queue-trigger" icon={<QueueIcon size={16} />} aria-label={badge ? _creationText("creation.5f847a7e3a4522f1", { value1: badge }) : _creationText("creation.58415d9d2c4e6e96")}>
+                {_creationText("creation.58415d9d2c4e6e96")}
                 {badge ? (
                     <span key={badge} className="commerce-queue-badge" aria-hidden="true">
                         {badge > 99 ? "99+" : badge}

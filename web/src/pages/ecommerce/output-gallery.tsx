@@ -1,3 +1,5 @@
+import { creationLabel as _creationLabel } from "@/supdance/plugins/i18n/creation-text";
+import { creationText as _creationText, useCreationLocale as _useCreationLocale } from "@/supdance/plugins/i18n/creation-text";
 import { useState, type ReactNode } from "react";
 import { Button, Checkbox, Typography } from "antd";
 import { ArrowDownToLine, Clapperboard, Image as ImageIcon, RotateCcw, Trash2 } from "lucide-react";
@@ -79,6 +81,7 @@ export function EcommerceOutputGallery({
     /** 开放商品视频时：把这张图带到视频生成做首帧。 */
     onMakeVideo?: (resourceId: string) => void;
 }) {
+    _useCreationLocale();
     const [preview, setPreview] = useState<OutputImage | null>(null);
     const [editing, setEditing] = useState<string | null>(null);
     const [filter, setFilter] = useState<OutputFilter>("all");
@@ -124,21 +127,23 @@ export function EcommerceOutputGallery({
     const previous = (plan?.previousImages || []).map((image, index) => ({ image, index })).filter(({ image }) => visible(image, false));
 
     return (
-        <section className="commerce-output-gallery" aria-label="商品作品">
+        <section className="commerce-output-gallery" aria-label={_creationText("creation.9ea5fb9199d003ee")}>
             <header className="commerce-output-gallery-header">
                 <div className="commerce-output-title">
-                    <h2>方案与作品</h2>
+                    <h2>{_creationText("creation.19469bb61390b8b7")}</h2>
                     <span>
-                        {counts.done} 张完成{counts.active ? ` · ${counts.active} 张进行中` : ""}
-                        {counts.failed ? ` · ${counts.failed} 张失败` : ""}
+                        {counts.done}
+                        {_creationText("creation.acd71b2835e9415b")}
+                        {counts.active ? _creationText("creation.3021a4eb5fbb0b26", { value1: counts.active }) : ""}
+                        {counts.failed ? _creationText("creation.f3aac2ae16b7a6f6", { value1: counts.failed }) : ""}
                     </span>
                 </div>
                 <div className="commerce-output-tools">
                     {images.length ? (
-                        <div className="commerce-output-filters" role="group" aria-label="按状态筛选作品">
+                        <div className="commerce-output-filters" role="group" aria-label={_creationText("creation.ebaa19a690990495")}>
                             {filters.map(([value, label]) => (
                                 <button type="button" key={value} aria-pressed={filter === value} onClick={() => setFilter(value)}>
-                                    {label}
+                                    {_creationLabel(label)}
                                     {value !== "all" && counts[value] ? <span>{counts[value]}</span> : null}
                                 </button>
                             ))}
@@ -146,12 +151,12 @@ export function EcommerceOutputGallery({
                     ) : null}
                     {preparedDownload ? (
                         <Button size="small" href={preparedDownload.url} download={preparedDownload.fileName}>
-                            下载已打包文件
+                            {_creationText("creation.5141476ed7e71c36")}
                         </Button>
                     ) : null}
                     {onExport ? (
-                        <Button size="small" icon={<ArrowDownToLine size={14} />} disabled={!exportCount || exportDisabled} onClick={onExport} aria-label={`导出图片，共 ${exportCount} 张`}>
-                            {selected.size ? `导出已选 ${exportCount}` : exportCount > 1 ? `导出全部 ${exportCount}` : "导出"}
+                        <Button size="small" icon={<ArrowDownToLine size={14} />} disabled={!exportCount || exportDisabled} onClick={onExport} aria-label={_creationText("creation.0f2808c079d8dc4a", { value1: exportCount })}>
+                            {selected.size ? _creationText("creation.b4dd1b2e03b60e19", { value1: exportCount }) : exportCount > 1 ? _creationText("creation.9660a933fec0fb77", { value1: exportCount }) : _creationText("common.export")}
                         </Button>
                     ) : null}
                 </div>
@@ -165,52 +170,54 @@ export function EcommerceOutputGallery({
                             <span className="commerce-output-empty-mark" aria-hidden="true">
                                 <ImageIcon size={22} strokeWidth={1.6} />
                             </span>
-                            <strong>这一轮的方案和作品会出现在这里</strong>
-                            <span>{nextStep || "在右侧选好场景、添加商品图，再描述想要的画面。"}</span>
+                            <strong>{_creationText("creation.36d68d7970fd6ef0")}</strong>
+                            <span>{nextStep || _creationText("creation.81a922f0adb63011")}</span>
                         </div>
                     )
                 ) : (
                     <div className="commerce-output-batches">
                         {current.length ? (
-                            <section className="commerce-output-batch" aria-label="当前创作批次">
+                            <section className="commerce-output-batch" aria-label={_creationText("creation.8b905c8fcee819cb")}>
                                 <header>
-                                    <strong>{plan!.images.length > 1 ? "本轮作品" : "本次创作"}</strong>
-                                    <span>{plan!.images.length} 张</span>
+                                    <strong>{plan!.images.length > 1 ? _creationText("creation.c1fbd1df4a238769") : _creationText("creation.c4580d00c18eba56")}</strong>
+                                    <span>{_creationText("creation.dc62d72cc7077723", { value1: plan!.images.length })}</span>
                                 </header>
                                 <div className="commerce-output-grid">{current.map(({ image, index }) => card(image, index, generationPending))}</div>
                             </section>
                         ) : null}
                         {previous.length ? (
-                            <section className="commerce-output-batch" aria-label="之前的商品作品">
+                            <section className="commerce-output-batch" aria-label={_creationText("creation.4cda9aaf8adcfbe7")}>
                                 <header>
-                                    <strong>之前的作品</strong>
-                                    <span>{plan!.previousImages!.length} 张</span>
+                                    <strong>{_creationText("creation.af3959ecabe7318e")}</strong>
+                                    <span>{_creationText("creation.dc62d72cc7077723", { value1: plan!.previousImages!.length })}</span>
                                 </header>
                                 <div className="commerce-output-grid">{previous.map(({ image, index }) => card(image, index, false))}</div>
                             </section>
                         ) : null}
-                        {!current.length && !previous.length ? <p className="commerce-output-filter-empty">没有{filters.find(([value]) => value === filter)?.[1]}的作品。</p> : null}
+                        {!current.length && !previous.length ? <p className="commerce-output-filter-empty">{_creationText("creation.cd5694fc2807e79a", { value1: filters.find(([value]) => value === filter)?.[1] })}</p> : null}
                     </div>
                 )}
             </div>
             {preview ? (
                 <AppModal open onCancel={() => setPreview(null)} footer={null} width="min(1120px, calc(100vw - 32px))" title={`${String(preview.index + 1).padStart(2, "0")} · ${labelOf(imageTypes, preview.image.imageType)}`}>
                     <div className="commerce-output-preview">
-                        <CommerceResultImage ratio={commerceCanvasAspect(preview.image.ratio)} src={preview.src || ""} alt={`第 ${preview.index + 1} 张商品图片预览`} />
+                        <CommerceResultImage ratio={commerceCanvasAspect(preview.image.ratio)} src={preview.src || ""} alt={_creationText("creation.e837417e4b8c673f", { value1: preview.index + 1 })} />
                         <section>
                             {preview.image.copy ? <p>{preview.image.copy}</p> : null}
-                            <Typography.Text type="secondary">{preview.image.prompt}</Typography.Text>
+                            <Typography.Text type="secondary" data-i18n-user-content>
+                                {preview.image.prompt}
+                            </Typography.Text>
                             <dl>
                                 <div>
-                                    <dt>用途</dt>
-                                    <dd>{labelOf(imageTypes, preview.image.imageType)}</dd>
+                                    <dt>{_creationText("creation.05b36669c4ad9a73")}</dt>
+                                    <dd>{_creationLabel(labelOf(imageTypes, preview.image.imageType))}</dd>
                                 </div>
                                 <div>
-                                    <dt>模型</dt>
+                                    <dt>{_creationText("tasks.model")}</dt>
                                     <dd>{preview.image.imageModel}</dd>
                                 </div>
                                 <div>
-                                    <dt>尺寸</dt>
+                                    <dt>{_creationText("plugins.dimensions")}</dt>
                                     <dd>
                                         {preview.image.ratio} · {preview.image.resolution}
                                     </dd>
@@ -218,7 +225,7 @@ export function EcommerceOutputGallery({
                             </dl>
                             {preview.assetId ? (
                                 <Button type="primary" icon={<ArrowDownToLine size={14} />} onClick={() => onDownload({ image: preview.image, index: preview.index, assetId: preview.assetId!, resourceId: preview.resourceId })}>
-                                    下载原图
+                                    {_creationText("creation.833d680fe5a99443")}
                                 </Button>
                             ) : null}
                         </section>
@@ -230,7 +237,7 @@ export function EcommerceOutputGallery({
                       const image = images.find((item) => item.id === editing);
                       if (!image) return null;
                       return (
-                          <AppModal open onCancel={() => setEditing(null)} footer={null} width="min(600px, calc(100vw - 32px))" title={`修改第 ${images.indexOf(image) + 1} 张`}>
+                          <AppModal open onCancel={() => setEditing(null)} footer={null} width="min(600px, calc(100vw - 32px))" title={_creationText("creation.4158a3e095d16237", { value1: images.indexOf(image) + 1 })}>
                               <SingleImageEditor config={config} draft={image.sourceDraft || draft} image={image} imageModels={imageModels} onClose={() => setEditing(null)} onGenerate={onRegenerate} />
                           </AppModal>
                       );
@@ -275,6 +282,7 @@ function OutputCard({
     onRemove: () => void;
     onMakeVideo?: (resourceId: string) => void;
 }) {
+    _useCreationLocale();
     const failed = Boolean(task && ["failed", "cancelled"].includes(task.status));
     const status =
         task?.status === "succeeded"
@@ -294,17 +302,17 @@ function OutputCard({
     return (
         <article className={`commerce-output-card${selected ? " is-selected" : ""}`} data-ecommerce-image-id={image.id} data-status={failed ? "failed" : working ? "working" : status === "已完成" ? "done" : "idle"}>
             <div className="commerce-output-card-frame">
-                <button type="button" className="commerce-output-card-media" disabled={!src} onClick={() => src && onPreview({ image, index, src, assetId, resourceId })} aria-label={`预览第 ${index + 1} 张图片`}>
+                <button type="button" className="commerce-output-card-media" disabled={!src} onClick={() => src && onPreview({ image, index, src, assetId, resourceId })} aria-label={_creationText("creation.b9f6b27477a1d548", { value1: index + 1 })}>
                     {src ? (
-                        <CommerceResultImage ratio={commerceCanvasAspect(image.ratio)} src={src} alt={`${labelOf(imageTypes, image.imageType)}生成结果`} loading="lazy" />
+                        <CommerceResultImage ratio={commerceCanvasAspect(image.ratio)} src={src} alt={_creationText("creation.dec4868d02732135", { value1: labelOf(imageTypes, image.imageType) })} loading="lazy" />
                     ) : working ? (
                         <CommerceGeneratingArtwork queued={!image.taskId || task?.status === "queued"} label={String(index + 1).padStart(2, "0")} />
                     ) : (
-                        <span className="commerce-output-empty-card">{task?.error || "等待生成"}</span>
+                        <span className="commerce-output-empty-card">{task?.error || _creationText("creation.1b130189d1a91ff1")}</span>
                     )}
                 </button>
                 <span className="commerce-output-card-check">
-                    <Checkbox checked={selected} onChange={onSelect} aria-label={`选择第 ${index + 1} 张图片`} />
+                    <Checkbox checked={selected} onChange={onSelect} aria-label={_creationText("creation.2ffe42fe72c6a4c8", { value1: index + 1 })} />
                 </span>
             </div>
             <div className="commerce-output-card-meta">
@@ -315,23 +323,30 @@ function OutputCard({
                 <span className="commerce-output-status">{status}</span>
             </div>
             {image.copy ? <p className="commerce-output-card-copy">{image.copy}</p> : null}
-            {issues?.length ? <p className="commerce-output-issue">需要检查：{issues.join("；")}</p> : null}
+            {issues?.length ? (
+                <p className="commerce-output-issue">
+                    {_creationText("creation.77d6bcc5c7f58c5a")}
+                    {issues.join("；")}
+                </p>
+            ) : null}
             <footer>
                 {failed ? (
                     <Button size="small" onClick={onRetry}>
-                        {task!.canRecoverMedia ? "重新保存" : "重试"}
+                        {task!.canRecoverMedia ? _creationText("creation.e188062da724b515") : _creationText("common.retry")}
                     </Button>
                 ) : null}
                 <Button size="small" type="text" icon={<RotateCcw size={14} />} onClick={onEdit}>
-                    修改这张
+                    {_creationText("creation.9ad86cd01d8c3a17")}
                 </Button>
                 {assetId && resourceId && onMakeVideo ? (
                     <Button size="small" type="text" icon={<Clapperboard size={14} />} onClick={() => onMakeVideo(resourceId)}>
-                        做成视频
+                        {_creationText("creation.2d3668cdd3a4ad43")}
                     </Button>
                 ) : null}
-                {assetId && resourceId ? <Button size="small" type="text" icon={<ArrowDownToLine size={14} />} aria-label={`下载第 ${index + 1} 张`} onClick={() => onDownload({ image, index, assetId, resourceId })} /> : null}
-                <Button size="small" type="text" icon={<Trash2 size={14} />} aria-label={`从本轮移除第 ${index + 1} 张`} onClick={onRemove} />
+                {assetId && resourceId ? (
+                    <Button size="small" type="text" icon={<ArrowDownToLine size={14} />} aria-label={_creationText("creation.460fb38cf2936b3b", { value1: index + 1 })} onClick={() => onDownload({ image, index, assetId, resourceId })} />
+                ) : null}
+                <Button size="small" type="text" icon={<Trash2 size={14} />} aria-label={_creationText("creation.44622278bd60f961", { value1: index + 1 })} onClick={onRemove} />
             </footer>
         </article>
     );

@@ -1,3 +1,4 @@
+import { creationText as _creationText, useCreationLocale as _useCreationLocale } from "@/supdance/plugins/i18n/creation-text";
 import { useCallback, useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 
@@ -38,6 +39,7 @@ export function DramaModelPicker({
     showPrice?: boolean;
     className?: string;
 }) {
+    _useCreationLocale();
     const config = useEffectiveConfig();
     const catalogQuery = useDramaModelCatalog();
     const allowed = useMemo(() => {
@@ -78,7 +80,7 @@ export function DramaModelPicker({
             showOptionPrices
             modelDisabledReason={modelDisabledReason}
             className={cn("drama-model-picker", size === "sm" && "is-sm", className)}
-            placeholder={current ? placeholder || "选择模型" : value?.label || placeholder || "选择模型"}
+            placeholder={current ? placeholder || _creationText("creation.1afed6a81a2512d2") : value?.label || placeholder || _creationText("creation.1afed6a81a2512d2")}
             onChange={(model) => {
                 const choice = modelToDramaChoice(config, model);
                 if (!choice) return;

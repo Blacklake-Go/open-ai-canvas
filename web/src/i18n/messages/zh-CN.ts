@@ -3,6 +3,19 @@
  * 插值使用 i18next 的 {{name}} 语法；不要把后端协议值或提示词放进这里。
  */
 export const zhCN = {
+    tokenPricing: {
+        credits: "积分",
+        perSecond: "积分/秒",
+        perMillion: "积分/百万 Token",
+        perMillionVideo: "积分/百万视频 Token",
+        output: "输出 {{price}}",
+        unconfigured: "未配置",
+        heading: "上下文价格分档",
+        sale: "销售价分档 JSON",
+        cost: "成本价分档 JSON",
+        invalid: "请输入有效且按起始输入 Token 数递增的价格分档数组。",
+        help: "首档 minInputTokens 为 0，并与普通价格一致；价格以百万分之一计价单位表示。",
+    },
     common: {
         cancel: "取消",
         confirm: "确定",

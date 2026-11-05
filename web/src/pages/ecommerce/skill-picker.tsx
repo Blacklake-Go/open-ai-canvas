@@ -1,3 +1,5 @@
+import { creationOptions as _creationOptions } from "@/supdance/plugins/i18n/creation-text";
+import { creationText as _creationText, useCreationLocale as _useCreationLocale } from "@/supdance/plugins/i18n/creation-text";
 import { App, Button, Checkbox, Input, Modal, Segmented } from "antd";
 import { BookOpen, RefreshCw, Search, Upload } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
@@ -10,6 +12,7 @@ type Props = { selected: string[]; onChange: (ids: string[]) => void; disabled?:
 
 export function EcommerceSkillPicker({ selected, onChange, disabled }: Props) {
     const { message } = App.useApp();
+    _useCreationLocale();
     const [open, setOpen] = useState(false);
     const [tab, setTab] = useState<"mine" | "public">("mine");
     const [query, setQuery] = useState("");
@@ -44,7 +47,7 @@ export function EcommerceSkillPicker({ selected, onChange, disabled }: Props) {
     useEffect(() => {
         if (!open) return;
         void refresh().catch((cause) => {
-            if (isCurrent()) message.error(cause instanceof Error ? cause.message : "技能库加载失败");
+            if (isCurrent()) message.error(cause instanceof Error ? cause.message : _creationText("creation.81b7339ecb82c522"));
         });
     }, [open, refresh, isCurrent]);
     useEffect(() => {
@@ -61,7 +64,7 @@ export function EcommerceSkillPicker({ selected, onChange, disabled }: Props) {
                     setHasMore(result.hasMore);
                 })
                 .catch((cause) => {
-                    if (active && isCurrent()) message.error(cause instanceof Error ? cause.message : "公开技能加载失败");
+                    if (active && isCurrent()) message.error(cause instanceof Error ? cause.message : _creationText("creation.0a451ba8ef0503d4"));
                 })
                 .finally(() => {
                     if (active && isCurrent()) setLoading(false);
@@ -87,7 +90,7 @@ export function EcommerceSkillPicker({ selected, onChange, disabled }: Props) {
         const current = selection.current;
         if (current.includes(id)) onChange(current.filter((value) => value !== id));
         else if (current.length < 8) onChange([...current, id]);
-        else message.warning("每轮最多选择 8 个 Skills");
+        else message.warning(_creationText("creation.17997feb6152571b"));
     };
     const install = async (skill: Skill) => {
         if (!isCurrent()) return;
@@ -98,9 +101,9 @@ export function EcommerceSkillPicker({ selected, onChange, disabled }: Props) {
             await refresh();
             if (!isCurrent()) return;
             toggle(skill.skillId);
-            message.success(`已加入并选择 ${skill.skillName}`);
+            message.success(_creationText("creation.062509d6a6f93878", { value1: skill.skillName }));
         } catch (cause) {
-            if (isCurrent()) message.error(cause instanceof Error ? cause.message : "安装技能失败");
+            if (isCurrent()) message.error(cause instanceof Error ? cause.message : _creationText("creation.5af119dcf4133102"));
         } finally {
             if (isCurrent()) setInstalling("");
         }
@@ -115,7 +118,7 @@ export function EcommerceSkillPicker({ selected, onChange, disabled }: Props) {
             setOffset(result.nextOffset);
             setHasMore(result.hasMore);
         } catch (cause) {
-            if (isCurrent()) message.error(cause instanceof Error ? cause.message : "加载更多技能失败");
+            if (isCurrent()) message.error(cause instanceof Error ? cause.message : _creationText("creation.c0fc326fadc1f322"));
         } finally {
             if (isCurrent()) setLoading(false);
         }
@@ -123,15 +126,15 @@ export function EcommerceSkillPicker({ selected, onChange, disabled }: Props) {
     const upload = async (file: File) => {
         if (uploadLock.current || disabled || !isCurrent()) return;
         if (!/\.(md|markdown|zip)$/i.test(file.name)) {
-            message.error("请上传 Markdown 文件或 ZIP 技能包");
+            message.error(_creationText("creation.3afbdcf076eb10b4"));
             return;
         }
         if (file.size > 20 * 1024 * 1024) {
-            message.error("技能文件不能超过 20 MB");
+            message.error(_creationText("creation.364481e1c9a09b99"));
             return;
         }
         if (selection.current.length >= 8) {
-            message.warning("每轮最多选择 8 个 Skills，请先取消一个");
+            message.warning(_creationText("creation.e99cebd988ac1928"));
             return;
         }
         uploadLock.current = true;
@@ -146,9 +149,9 @@ export function EcommerceSkillPicker({ selected, onChange, disabled }: Props) {
             setTab("mine");
             setQuery("");
             setCategory("");
-            message.success(canSelect ? "Skill 已上传并加入本轮策划" : "Skill 已保存到个人库，本轮已选满，请取消一个后再选择");
+            message.success(canSelect ? _creationText("creation.067806d4d1c69503") : _creationText("creation.975822b551739b2b"));
         } catch (cause) {
-            if (isCurrent()) message.error(cause instanceof Error ? cause.message : "技能上传失败");
+            if (isCurrent()) message.error(cause instanceof Error ? cause.message : _creationText("creation.8c6f6357ed81c4dd"));
         } finally {
             uploadLock.current = false;
             if (isCurrent()) setUploading(false);
@@ -156,16 +159,16 @@ export function EcommerceSkillPicker({ selected, onChange, disabled }: Props) {
     };
     return (
         <div className="ecommerce-field">
-            <span>Skills · 策划方法</span>
+            <span>{_creationText("creation.335f433e0f3e030f")}</span>
             <Button block icon={<BookOpen size={15} />} disabled={disabled} onClick={() => setOpen(true)}>
-                {selected.length ? `已选择 ${selected.length} 个 Skills` : "选择 Skills"}
+                {selected.length ? _creationText("creation.2b4f4f19c077bd10", { value1: selected.length }) : _creationText("creation.4b274f4643051a57")}
             </Button>
             <input
                 ref={fileInput}
                 type="file"
                 accept=".md,.markdown,.zip"
                 hidden
-                aria-label="上传策划 Skill 文件"
+                aria-label={_creationText("creation.b7245147574caf62")}
                 onChange={(event) => {
                     const file = event.target.files?.[0];
                     event.target.value = "";
@@ -173,29 +176,29 @@ export function EcommerceSkillPicker({ selected, onChange, disabled }: Props) {
                 }}
             />
             <Button block icon={<Upload size={15} />} disabled={disabled || selected.length >= 8} loading={uploading} onClick={() => fileInput.current?.click()}>
-                上传 Skills
+                {_creationText("creation.cc2d1eb6e9051590")}
             </Button>
-            <small className="ecommerce-model-note">支持 Markdown / ZIP，保存到个人技能库。Agent 读取所选技能后策划，生成前可逐张修改文案与提示词。</small>
-            {selected.length ? <small className="ecommerce-model-note">策划将按所选技能编写图片方案与提示词；修改后需重新策划。</small> : null}
-            <Modal title="选择策划 Skills" open={open} onCancel={() => setOpen(false)} footer={<Button onClick={() => setOpen(false)}>完成</Button>} width={780} destroyOnHidden>
+            <small className="ecommerce-model-note">{_creationText("creation.60dff9a3f21ece71")}</small>
+            {selected.length ? <small className="ecommerce-model-note">{_creationText("creation.b9a564c2c1240627")}</small> : null}
+            <Modal title={_creationText("creation.24f92e8b35c127ff")} open={open} onCancel={() => setOpen(false)} footer={<Button onClick={() => setOpen(false)}>{_creationText("settings.channel_complete_btn")}</Button>} width={780} destroyOnHidden>
                 <div className="ecommerce-skill-controls">
                     <Segmented
                         value={tab}
-                        options={[
+                        options={_creationOptions([
                             { label: `我的技能 (${installed.length})`, value: "mine" },
                             { label: "公开技能", value: "public" },
-                        ]}
+                        ])}
                         onChange={(value) => {
                             setTab(value as "mine" | "public");
                             setQuery("");
                         }}
                     />
-                    <Button aria-label="刷新已安装 Skills" icon={<RefreshCw size={14} />} onClick={() => void refresh()} />
+                    <Button aria-label={_creationText("creation.ef6c99d110631b93")} icon={<RefreshCw size={14} />} onClick={() => void refresh()} />
                 </div>
                 <Input
                     prefix={<Search size={15} />}
-                    aria-label="搜索 Skills"
-                    placeholder="搜索技能名称或说明"
+                    aria-label={_creationText("creation.4ce2f89fe6fba475")}
+                    placeholder={_creationText("creation.72342e2d0071e5ee")}
                     value={query}
                     onChange={(event) => {
                         setQuery(event.target.value);
@@ -204,14 +207,14 @@ export function EcommerceSkillPicker({ selected, onChange, disabled }: Props) {
                 />
                 {curationError ? (
                     <Button type="link" onClick={retryCuration}>
-                        分类加载失败，重试
+                        {_creationText("creation.277019fae4cca3d4")}
                     </Button>
                 ) : null}
                 <div className="ecommerce-skill-browser">
-                    <nav className="ecommerce-skill-categories" aria-label="技能分类">
-                        <strong>技能分类</strong>
+                    <nav className="ecommerce-skill-categories" aria-label={_creationText("admin.skill_curation")}>
+                        <strong>{_creationText("admin.skill_curation")}</strong>
                         <button type="button" aria-pressed={!category} onClick={() => setCategory("")}>
-                            全部技能
+                            {_creationText("creation.e7b1605b49420055")}
                         </button>
                         {categories.map((item) => (
                             <button
@@ -235,11 +238,11 @@ export function EcommerceSkillPicker({ selected, onChange, disabled }: Props) {
                                   .map((id) => (
                                       <div className="ecommerce-skill-row" key={id}>
                                           <div>
-                                              <strong>已失效的 Skill</strong>
-                                              <small>该技能已移除或不可用，请取消选择。</small>
+                                              <strong>{_creationText("creation.3f92359b419cffcb")}</strong>
+                                              <small>{_creationText("creation.44dfd62087fe3e4d")}</small>
                                           </div>
                                           <Button size="small" onClick={() => toggle(id)}>
-                                              移除
+                                              {_creationText("creation.6135d4159e892541")}
                                           </Button>
                                       </div>
                                   ))
@@ -248,28 +251,28 @@ export function EcommerceSkillPicker({ selected, onChange, disabled }: Props) {
                             <div className="ecommerce-skill-row" key={skill.skillId}>
                                 <div>
                                     <strong>{skill.skillName}</strong>
-                                    <small>{skill.description || "暂无说明"}</small>
+                                    <small>{skill.description || _creationText("creation.71083097a94f44f7")}</small>
                                 </div>
                                 {installed.some((item) => item.skillId === skill.skillId) ? (
                                     <Checkbox checked={selected.includes(skill.skillId)} disabled={!selected.includes(skill.skillId) && selected.length >= 8} onChange={() => toggle(skill.skillId)}>
-                                        使用
+                                        {_creationText("creation.cdfd0b34e4918648")}
                                     </Checkbox>
                                 ) : (
                                     <Button size="small" loading={installing === skill.skillId} disabled={selected.length >= 8} onClick={() => void install(skill)}>
-                                        加入并使用
+                                        {_creationText("creation.d92dfc4e9b0b193f")}
                                     </Button>
                                 )}
                             </div>
                         ))}
-                        {!filtered.length && !loading ? <p className="ecommerce-skill-empty">{tab === "mine" ? "技能库暂无匹配项，可从公开技能中加入。" : "没有匹配的公开技能。"}</p> : null}
+                        {!filtered.length && !loading ? <p className="ecommerce-skill-empty">{tab === "mine" ? _creationText("creation.a50965847c1d63d6") : _creationText("creation.1e3e493d0d9a226a")}</p> : null}
                     </div>
                 </div>
                 {tab === "public" && hasMore ? (
                     <Button block loading={loading} onClick={() => void loadMore()}>
-                        加载更多
+                        {_creationText("common.load_more")}
                     </Button>
                 ) : null}
-                <p className="ecommerce-skill-count">本轮使用 {selected.length} / 8 个 Skills</p>
+                <p className="ecommerce-skill-count">{_creationText("creation.d98610e2350ba7fd", { value1: selected.length })}</p>
             </Modal>
         </div>
     );

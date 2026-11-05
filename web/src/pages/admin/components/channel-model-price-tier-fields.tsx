@@ -1,10 +1,11 @@
 import { Alert, Button, Form, Input, InputNumber, Segmented, Switch, type FormInstance } from "antd";
 import { Trash2 } from "lucide-react";
+import { useTranslation } from "react-i18next";
 import type { ModelCapabilityConfig } from "@/lib/model-capabilities";
 import { modelProtocolSupportsTokenBilling, type ModelProtocol } from "@/lib/model-protocols";
 import type { ModelCapabilityChoice as EditableCapability } from "@/components/model-protocol-picker";
 import type { ChannelModelFormValues as FormValues } from "./channel-model-editor-form";
-import { normalizeUpstreamModelKey } from "./channel-model-price-tier-form";
+import { normalizeUpstreamModelKey, parseTokenPriceBands } from "./channel-model-price-tier-form";
 import { CreditCostFields } from "./credit-cost-fields";
 import { priceCurrencyUnit } from "@/services/api/user-groups";
 import { Select } from "@/components/ui/base/select";
@@ -34,6 +35,7 @@ export function PriceTierFields({
     onDirty: () => void;
     onRemove: () => void;
 }) {
+    const { t } = useTranslation();
     const billingMode = Form.useWatch(["priceTiers", index, "billingMode"], form) || "fixed_request";
     const priceUnit = priceCurrencyUnit(Form.useWatch("priceCurrency", form));
     const matchMode = Form.useWatch(["priceTiers", index, "matchMode"], form) || "default";
@@ -225,6 +227,32 @@ export function PriceTierFields({
                             </div>
                         ) : null}
                         <CreditCostFields index={index} form={form} billingMode={billingMode} isVideo={isVideo} />
+                        {capability === "text" && billingMode === "token" ? (
+                            <details>
+                                <summary>{t("tokenPricing.heading")}</summary>
+                                <p className="text-muted-foreground">{t("tokenPricing.help")}</p>
+                                {(["tokenPriceBandsJSON", "costTokenPriceBandsJSON"] as const).map((field, policyIndex) => (
+                                    <Form.Item
+                                        key={field}
+                                        name={[index, field]}
+                                        label={t(policyIndex === 0 ? "tokenPricing.sale" : "tokenPricing.cost")}
+                                        rules={[
+                                            {
+                                                validator: async (_, value) => {
+                                                    try {
+                                                        parseTokenPriceBands(value);
+                                                    } catch {
+                                                        throw new Error(t("tokenPricing.invalid"));
+                                                    }
+                                                },
+                                            },
+                                        ]}
+                                    >
+                                        <Input.TextArea autoSize={{ minRows: 3, maxRows: 12 }} onChange={onDirty} />
+                                    </Form.Item>
+                                ))}
+                            </details>
+                        ) : null}
                     </section>
                 </div>
                 {staleTierUpstream ? (

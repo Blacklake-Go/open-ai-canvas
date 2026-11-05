@@ -109,6 +109,7 @@ func (s *Service) enrichAPICallLogPayload(log *model.ApiCallLog, payload map[str
 	}
 	if log.Capability == "video" {
 		log.InputTokens, log.CachedTokens, log.CacheWriteTokens = 0, 0, 0
+		log.CacheWrite1hTokens = 0
 		log.OutputTokens, log.UsageAvailable = videoCompletionTokens(payload, arkVideo)
 	} else if usage != nil {
 		applyTextTokenUsage(log, usage)
@@ -182,6 +183,24 @@ func applyTextTokenUsage(log *model.ApiCallLog, usage map[string]any) {
 	_, hasPromptTokens := usage["prompt_tokens"]
 	written, hasWrite := firstInt64Value(usage, "cache_creation_input_tokens")
 	read, hasRead := firstInt64Value(usage, "cache_read_input_tokens")
+	for _, details := range []map[string]any{usage, inputDetails, promptDetails} {
+		creation, ok := details["cache_creation"].(map[string]any)
+		if !ok {
+			continue
+		}
+		oneHour, hasHour := firstInt64Value(creation, "ephemeral_1h_input_tokens")
+		fiveMinutes, hasFive := firstInt64Value(creation, "ephemeral_5m_input_tokens")
+		if hasHour {
+			log.CacheWrite1hTokens = oneHour
+		}
+		if hasHour || hasFive {
+			if !hasWrite && log.CacheWriteTokens == 0 {
+				written, hasWrite = oneHour+fiveMinutes, true
+				log.CacheWriteTokens = written
+			}
+			break
+		}
+	}
 	// 只有带 Anthropic 缓存字段、且没有 OpenAI prompt_tokens / input_tokens_details 的 usage 才按“不含缓存”补齐，
 	// LiteLLM 等网关把 cache_creation_input_tokens 放在 prompt_tokens 旁时是否已计入并不一致，保持原口径。
 	if inputAvailable && !hasPromptTokens && !hasInputDetails && (hasWrite || hasRead) {
