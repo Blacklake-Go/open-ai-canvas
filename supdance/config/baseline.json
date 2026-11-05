@@ -22,6 +22,10 @@
     "baseCommit": "259e7e3fba0b6f70ac3cfd65941c3ca345d60249"
   },
   "coupledUpstreamFiles": [
+    ".env.example",
+    "backend/internal/app/service.go",
+    "backend/internal/app/model_router_attempts.go",
+    "backend/internal/handler/custom_proxy.go",
     "web/src/components/model-logo.tsx",
     "web/src/components/model-picker.tsx",
     "backend/internal/app/analytics_enrich.go",

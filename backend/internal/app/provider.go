@@ -200,6 +200,9 @@ func (s *Service) processCanvasGenerationTask(ctx context.Context, userID string
 			return nil, err
 		}
 		// 工作流参数由工作流字段定义校验，普通模型能力配置不能覆盖它们。
+		if err := s.ScreenGenerationPrompt(ctx, input.Mode, input.Prompt); err != nil {
+			return nil, err
+		}
 		if resumedProviderRequestID(ctx) == "" {
 			if err := s.hydrateGenerationMedia(userID, &input, providerMediaHydrationPolicy{}); err != nil {
 				return nil, err
@@ -211,6 +214,9 @@ func (s *Service) processCanvasGenerationTask(ctx context.Context, userID string
 		if err := s.applyGenerationStyleProfile(userID, taskProjectID, &input); err != nil {
 			return nil, err
 		}
+	}
+	if err := s.ScreenGenerationPrompt(ctx, input.Mode, input.Prompt); err != nil {
+		return nil, err
 	}
 	if input.Config.APIFormat == "gemini" && input.Config.InterfaceType != string(model.ChannelInterfaceGeminiVeo) && input.Config.InterfaceType != string(model.ChannelInterfaceGeminiImage) {
 		_, hasDeclarativeAgent := agentProtocolAdapterForContext(ctx, input.Config.InterfaceType)

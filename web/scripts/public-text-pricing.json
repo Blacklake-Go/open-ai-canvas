@@ -1,0 +1,14 @@
+[
+    { "name": "Claude Fable 5", "spec": "1M 上下文 · 输出上限 32K", "bands": [{ "input": "700", "output": "3500", "cached": "70", "write": "875", "write1h": "1400" }] },
+    {
+        "name": "GPT-5.5 Pro",
+        "spec": "1.05M 上下文 · ≤272K 输入档",
+        "bands": [
+            { "input": "2625", "output": "15750", "cached": "262.5", "write": "2625" },
+            { "spec": "1.05M 上下文 · >272K 输入档", "input": "5250", "output": "23625", "cached": "262.5", "write": "5250" }
+        ]
+    },
+    { "name": "Gemini 4 Argon", "spec": "1M 上下文 · 输出上限 32K", "bands": [{ "input": "87.5", "output": "437.5", "cached": "4.375", "write": "87.5" }] },
+    { "name": "GLM 5.3 Flash", "spec": "256K 上下文 · 平价档", "bands": [{ "input": "10.5", "output": "35", "cached": "2.1", "write": "10.5" }] },
+    { "name": "Doubao Seed 2.1 Lite", "spec": "1M 上下文 · 平价档", "bands": [{ "input": "7.2275", "output": "24.3775", "cached": "1.47", "write": "7.2275" }] }
+]

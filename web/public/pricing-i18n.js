@@ -244,6 +244,10 @@
         ["页面导航", "Page navigation", "Navigation de la page", "Seitennavigation", "ページナビゲーション", "페이지 탐색"],
         ["语言", "Language", "Langue", "Sprache", "言語", "언어"],
         ["切换明暗主题", "Toggle light and dark theme", "Basculer le thème clair/sombre", "Hell-/Dunkeldesign umschalten", "明暗テーマを切り替え", "밝은/어두운 테마 전환"],
+        ["缓存读取 Token", "Cached input tokens", "Tokens lus en cache", "Cache-Lese-Tokens", "キャッシュ読み取りトークン", "캐시 읽기 토큰"],
+        ["缓存写入 Token", "Cache write tokens", "Tokens écrits en cache", "Cache-Schreib-Tokens", "キャッシュ書き込みトークン", "캐시 쓰기 토큰"],
+        ["缓存写入 Token（1小时）", "Cache write tokens (1 hour)", "Tokens écrits en cache (1 heure)", "Cache-Schreib-Tokens (1 Stunde)", "キャッシュ書き込みトークン（1時間）", "캐시 쓰기 토큰 (1시간)"],
+        ["1.05M 上下文 · >272K 输入档", "1.05M context · >272K input tier", "1,05 M de contexte · niveau d'entrée >272K", "1,05 M Kontext · >272K Eingangsstufe", "1.05M コンテキスト · >272K 入力区分", "1.05M 컨텍스트 · >272K 입력 구간"],
     ];
     const root = document.documentElement;
     const selector = document.getElementById("language-select");
@@ -262,6 +266,11 @@
     function translate(source, index) {
         if (index === 0) return source;
         const text = source.trim();
+        const credits = /^([\d,]+(?:\.\d+)?) 积分\/百万Token$/.exec(text);
+        if (credits) {
+            const units = ["积分/百万Token", "credits/1M tokens", "crédits/million de tokens", "Credits/Million Token", "クレジット/100万トークン", "크레딧/백만 토큰"];
+            return source.replace(text, () => `${credits[1]} ${units[index]}`);
+        }
         const translated = translations.get(text)?.[index];
         return translated ? source.replace(text, () => translated) : source;
     }

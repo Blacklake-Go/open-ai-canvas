@@ -55,6 +55,12 @@ func proxyCustomRelayRequest(c *gin.Context, policy service.RuntimeRequestPolicy
 }
 
 func proxyCustomRelayRequestWithService(c *gin.Context, policy service.RuntimeRequestPolicy, svc *service.Service) {
+	if svc != nil {
+		if err := svc.AuthorizeCustomRelayScreening(c.Request.Method); err != nil {
+			failService(c, err)
+			return
+		}
+	}
 	target, err := service.ValidateCustomRelayURL(c.GetHeader("X-Canvas-Upstream-URL"))
 	if err != nil {
 		failService(c, err)

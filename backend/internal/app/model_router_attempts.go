@@ -15,6 +15,7 @@ import (
 	"strings"
 	"time"
 
+	"yingce/backend/internal/contentsafety"
 	"yingce/backend/internal/model"
 	"yingce/backend/internal/repository"
 )
@@ -315,6 +316,10 @@ func (s *Service) nextRouteAttemptAfterFailure(task *model.Task, attempt *model.
 		return nil, nil
 	}
 	if errors.Is(taskErr, context.Canceled) || errors.Is(taskErr, context.DeadlineExceeded) {
+		return nil, nil
+	}
+	var screeningFailure *contentsafety.Error
+	if errors.As(taskErr, &screeningFailure) {
 		return nil, nil
 	}
 	s.blockLogicalRouteForFailure(attempt, taskErr)

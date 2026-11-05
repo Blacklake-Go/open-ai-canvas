@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Generate the public pricing HTML snapshot from the reviewed Lark document."""
+"""Generate the public snapshot and its versioned text-model sale schedule."""
 
 import html
 import json
@@ -16,6 +16,22 @@ PRIVATE = re.compile(r"内部|上游|成本|毛利|返佣|IMPORTRANGE|SECRET_")
 USD_CNY_RATE = Decimal("6.67421")
 RATE_TIMESTAMP = "2026-11-04 18:27 UTC"
 RATE_SOURCE = "https://www.xe.com/en-us/currencyconverter/convert/?Amount=1&From=USD&To=CNY"
+
+
+def text_price_rows():
+    policy = json.loads(Path(__file__).with_name("public-text-pricing.json").read_text())
+    labels = {"input": "文本输入 Token", "output": "文本输出 Token", "cached": "缓存读取 Token",
+              "write": "缓存写入 Token", "write1h": "缓存写入 Token（1小时）"}
+    rows = []
+    for model in policy:
+        for band in model["bands"]:
+            for key, label in labels.items():
+                if key not in band:
+                    continue
+                credits = Decimal(band[key])
+                rows.append([model["name"], label, band.get("spec", model["spec"]),
+                             f"{credits:,f} 积分/百万Token", f"¥{credits / 10:f}"])
+    return rows
 
 
 def usd_price(cell, precision):
@@ -73,6 +89,8 @@ def render_content(markdown):
                 index += 1
             if len(rows) < 2 or any(len(row) != len(rows[0]) for row in rows):
                 raise ValueError("Malformed pricing table")
+            if table_count == 5:
+                rows = [rows[0], *text_price_rows()]
             price_column = len(rows[0]) - 1
             if "售价" not in rows[0][price_column] and "参考价" not in rows[0][price_column]:
                 raise ValueError("Expected a public price column")

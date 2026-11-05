@@ -26,6 +26,33 @@ export type UpstreamPatchRecord = {
  */
 export const SUPDANCE_UPSTREAM_PATCH_REGISTRY: readonly UpstreamPatchRecord[] = [
     {
+        id: "supdance-existing-legal-template-brand",
+        upstreamBaseline: "main@b2c8b2e8",
+        feature: "保留既有法律模板品牌标识",
+        coupledUpstreamFiles: [],
+        files: ["web/src/supdance/plugins/html-page-manager/templates/index.ts", "web/public/supdance-mark.png"],
+        reason: "保留原工作区条款与AUP默认模板的品牌图片。独立HTML沿用已有品牌黑底与标识边界，不覆盖用户已保存的页面内容。",
+        upgradeRisk: "LOW",
+    },
+    {
+        id: "supdance-social-icon-resource-regression",
+        upstreamBaseline: "main@b2c8b2e8",
+        feature: "保留登录品牌图标资源权限回归",
+        coupledUpstreamFiles: [],
+        files: ["backend/internal/app/social_brand_icons_test.go", "backend/internal/handler/social_brand_icons_test.go"],
+        reason: "保留原工作区待提交的公开图标字节、管理员访问边界与取消配置后不可读取的回归证据。",
+        upgradeRisk: "LOW",
+    },
+    {
+        id: "supdance-generation-prompt-screening",
+        upstreamBaseline: "main@b2c8b2e8",
+        feature: "图片视频生成前提示词筛查",
+        coupledUpstreamFiles: [".env.example", "backend/internal/app/service.go", "backend/internal/app/provider.go", "backend/internal/app/model_router_attempts.go", "backend/internal/handler/custom_proxy.go"],
+        files: ["backend/internal/contentsafety/waffo.go", "backend/internal/contentsafety/waffo_test.go", "backend/internal/app/prompt_screening.go", "backend/internal/app/prompt_screening_test.go", "docs/supdance/PROMPT_SCREENING.md"],
+        reason: "隔离商户签名和第三方协议；仅允许明确通过的图片视频提示词，拒绝筛查失败后的供应商切换和原始 relay 创建绕过。默认关闭，启用须完成配置与外发授权。",
+        upgradeRisk: "HIGH",
+    },
+    {
         id: "supdance-model-brand-mode-preservation",
         upstreamBaseline: "main@b2c8b2e8",
         feature: "保留模型品牌与当前视频输入过滤",

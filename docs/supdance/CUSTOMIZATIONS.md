@@ -156,3 +156,11 @@ v1.3.3 将授权后入站票据从单进程内存迁移至共享 Redis（键前�
 - **修改原因**：以独立插件形式挂载双入口 Visual Console、主题/浮层扩展、恢复动画边界和插件生命周期控制；业务配置、权限、审计、发布与回滚集中在 `web/src/supdance/plugins/visual-engine/` 和 `backend/internal/supdance/visualengine/`。
 - **上游基线**：`v1.7.3`
 - **升级风险与回归保障**：`LOW`，所有耦合点已纳入 `SUPDANCE_UPSTREAM_PATCH_REGISTRY`、`supdance/config/baseline.json` 与扩展隔离测试；配置热插拔、失败回退、停用清理和发布/回滚已有专项测试，但独立安装包闭环仍待完成。
+
+## 法律页默认模板品牌标识
+
+原工作区法律页默认模板的站点标识一并保留。独立 HTML 模板沿用既有黑底品牌和 32px 容器／27px 图像，不继承宿主设计 token；这是现有品牌图像的局部例外，只影响默认条款与 AUP 模板，不覆盖用户已保存页面。
+
+## 网站生成前提示词筛查
+
+独立 `backend/internal/contentsafety/` 负责 Waffo 签名、判定和有界重试。组合根仅初始化开关并在普通／工作流生成前调用；路由尝试拒绝针对筛查失败切换供应商。自定义 relay 的创建路径在启用时关闭，读取保留，避免任意 payload 绕过最终提示词检查。默认关闭，启用依赖商户配置、提示词外发授权与真实任务验收。没有数据库变更。配置、回退与影响见 [PROMPT_SCREENING.md](PROMPT_SCREENING.md)。
