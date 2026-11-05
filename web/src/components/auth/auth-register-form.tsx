@@ -16,6 +16,7 @@ export function AuthRegisterForm({ settings, settingsFailed, onReloadSettings, n
     const { message } = App.useApp();
     const { t } = useTranslation();
     const tabsId = useId();
+    const [hasSocialProviders, setHasSocialProviders] = useState(false);
     const [username, setUsername] = useState("");
     const [email, setEmail] = useState("");
     const [verification, setVerification] = useState({ ...emptyVerification });
@@ -188,9 +189,15 @@ export function AuthRegisterForm({ settings, settingsFailed, onReloadSettings, n
                     </Button>
                 </>
             ) : null}
+            {hasSocialProviders ? (
+                <Divider plain className="auth-scene-divider auth-form-divider">
+                    {t("common.or")}
+                </Divider>
+            ) : null}
             <SocialLoginButtons
                 variant="light-card"
                 next={next}
+                onProvidersChange={(providers) => setHasSocialProviders(providers.length > 0)}
                 acceptedTerms={agreementAccepted}
                 onRequireAcceptTerms={() => {
                     if (agreementAccepted) return true;

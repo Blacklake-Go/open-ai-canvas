@@ -65,7 +65,7 @@ describe("workspace route loading", () => {
         expect(router).toMatch(/path: "\/canvas\/:id",\s+element: \(\s+<RequireAuth>\s+<CanvasProjectPage \/>\s+<\/RequireAuth>\s+\),/);
         expect(router).not.toContain('path: "/home"');
         expect(router).not.toContain("HomePage");
-        expect(navigation).toContain('{ ...toolItem("create", "/", t), id: "home", title: t("nav.create") }');
+        expect(navigation).toContain('{ ...toolItem("create", "/", t), id: "home", title: t("nav.sidebar.home") }');
         expect(navigation).not.toContain('to: "/create"');
         expect(navigation).not.toContain('to: "/home"');
     });
@@ -95,7 +95,7 @@ describe("workspace route loading", () => {
         expect(detail).not.toContain("AppDrawer");
         expect(layout).not.toContain("useCanvasUiStore");
         expect(layout).not.toContain("CanvasDeleteProjectsDialog");
-        expect(canvas).toContain("deleteDialogOpen ? <Suspense");
+        expect(canvas).toMatch(/deleteDialogOpen\s*\?\s*\(?\s*<Suspense/);
     });
 
     test("does not poll wallet balance from permanent workspace chrome", () => {

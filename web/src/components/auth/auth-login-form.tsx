@@ -23,6 +23,7 @@ export function AuthLoginForm({ settings, next, onAuthenticated, onViewChange }:
     const { message } = App.useApp();
     const { t } = useTranslation();
     const tabsId = useId();
+    const [hasSocialProviders, setHasSocialProviders] = useState(false);
     const [username, setUsername] = useState("");
     const [password, setPassword] = useState("");
     const [submitting, setSubmitting] = useState(false);
@@ -107,7 +108,12 @@ export function AuthLoginForm({ settings, next, onAuthenticated, onViewChange }:
                     </Button>
                 </>
             ) : null}
-            <SocialLoginButtons variant="light-card" next={next} />
+            {hasSocialProviders ? (
+                <Divider plain className="auth-scene-divider auth-form-divider">
+                    {t("common.or")}
+                </Divider>
+            ) : null}
+            <SocialLoginButtons variant="light-card" next={next} onProvidersChange={(providers) => setHasSocialProviders(providers.length > 0)} />
             {canRegister ? <AuthSwitchPrompt prompt={t("auth.login.noAccount")} action={t("auth.login.toRegister")} onClick={() => onViewChange("register")} /> : null}
             {settings ? (
                 <p className="auth-form-legal">
