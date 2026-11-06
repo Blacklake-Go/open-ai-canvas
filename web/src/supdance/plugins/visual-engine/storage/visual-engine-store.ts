@@ -19,6 +19,7 @@ type VisualEngineState = {
     enabled: boolean;
     config: VisualEngineConfig;
     draftConfig: VisualEngineConfig;
+    publishedRevision: string;
     revision: string;
     snapshots: VisualEngineSnapshot[];
     auditLogs: AuditLogEntry[];
@@ -46,7 +47,7 @@ type VisualEngineState = {
 export const useVisualEngineStore = create<VisualEngineState>((set, get) => ({
     resetSession: () => {
         sessionEpoch++;
-        set({ permissions: [], snapshots: [], auditLogs: [], draftConfig: structuredClone(get().config), isDraftDirty: false, isSaving: false, isPublishing: false });
+        set({ permissions: [], snapshots: [], auditLogs: [], draftConfig: structuredClone(get().config), revision: get().publishedRevision, isDraftDirty: false, isSaving: false, isPublishing: false });
     },
     permissions: [],
     setPermissions: (permissions) => set({ permissions }),
@@ -56,6 +57,7 @@ export const useVisualEngineStore = create<VisualEngineState>((set, get) => ({
     enabled: false,
     config: structuredClone(DEFAULT_VISUAL_ENGINE_CONFIG),
     draftConfig: structuredClone(DEFAULT_VISUAL_ENGINE_CONFIG),
+    publishedRevision: "",
     revision: "",
     snapshots: [],
     auditLogs: [],
@@ -73,7 +75,7 @@ export const useVisualEngineStore = create<VisualEngineState>((set, get) => ({
         const draft = structuredClone(get().draftConfig);
         set({ draftConfig: updater(draft) || draft, isDraftDirty: true });
     },
-    resetDraft: () => set({ draftConfig: structuredClone(get().config), isDraftDirty: false }),
+    resetDraft: () => set({ draftConfig: structuredClone(get().config), revision: get().publishedRevision, isDraftDirty: false }),
     switchPreset: (presetId) => {
         const preset = [...BUILTIN_THEME_PRESETS, ...get().draftConfig.customPresets].find((item) => item.id === presetId);
         if (!preset) return;
@@ -137,12 +139,15 @@ export const useVisualEngineStore = create<VisualEngineState>((set, get) => ({
         }
     },
     acceptBundle: (bundle) => {
+        const current = get();
+        if (bundle.revision && bundle.revision === current.publishedRevision && bundle.enabled === current.enabled) return;
         const validation = validateVisualEngineConfig(bundle.config);
         if (!validation.valid) throw new Error(validation.errors.join("；"));
         set((state) => ({
             installation: bundle.installation ?? state.installation,
             enabled: bundle.enabled,
             config: validation.config,
+            publishedRevision: bundle.revision,
             revision: state.isDraftDirty ? state.revision : bundle.revision,
             ...(state.isDraftDirty ? {} : { draftConfig: structuredClone(validation.config) }),
         }));

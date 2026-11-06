@@ -1,6 +1,6 @@
 import { Drawer, type DrawerProps } from "antd";
 import type { CSSProperties } from "react";
-import { resolveOverlayExtensionStyles } from "@/lib/overlay-extensions";
+import { resolveOverlayExtensionStyles, useOverlayExtensionRevision } from "@/lib/overlay-extensions";
 
 // 用途：产品侧栏壳。消费 token 由内容自己负责。默认 destroyOnHidden，可选 flush 去内边距。
 export type AppDrawerProps = DrawerProps & {
@@ -8,6 +8,7 @@ export type AppDrawerProps = DrawerProps & {
 };
 
 export function AppDrawer({ flush = false, destroyOnHidden = true, styles, className, rootClassName, ...props }: AppDrawerProps) {
+    useOverlayExtensionRevision();
     const mergeResolvedStyles = (resolved: unknown) => {
         const base = resolveOverlayExtensionStyles("drawer", resolved);
         if (!flush) return base;

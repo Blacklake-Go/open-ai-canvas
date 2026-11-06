@@ -179,6 +179,7 @@
     "web/src/components/ui/product/app-drawer/app-drawer.tsx",
     "web/src/components/ui/product/app-modal/app-modal.tsx",
     "web/src/layouts/user-layout.tsx",
+    "web/src/lib/overlay-extensions.ts",
     "web/src/lib/canvas-theme.ts",
     "web/src/lib/model-picker-groups.ts",
     "web/src/lib/model-pricing.ts",

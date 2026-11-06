@@ -6,6 +6,7 @@ import type { WorkspaceRecoveryStage } from "../types";
 
 import { matchPathPattern } from "../page-rules/rule-matcher";
 import { WorkspaceRouteLoader } from "@/components/ui/aceternity/full-screen-loader";
+import { allowsVisualTheme, useVisualEngineActive } from "../runtime/visual-engine-activation";
 const Animator = lazy(() => import("./workspace-recovery-animator").then((module) => ({ default: module.WorkspaceRecoveryAnimator })));
 function diagnosticStage(code: string | undefined): WorkspaceRecoveryStage | undefined {
     if (code === "startup.auth_session_started") return "init";
@@ -16,7 +17,7 @@ function diagnosticStage(code: string | undefined): WorkspaceRecoveryStage | und
     return undefined;
 }
 export function WorkspaceRecoveryBoundary({ fallback, phase }: { fallback: ReactNode; phase?: WorkspaceRecoveryStage }) {
-    const enabled = useVisualEngineStore((state) => state.enabled);
+    const enabled = useVisualEngineActive();
     const config = useVisualEngineStore((state) => state.config);
     const path = useVisualEngineStore((state) => state.runtimePath);
     const [stage, setStage] = useState<WorkspaceRecoveryStage>(() => getClientDiagnosticEvents().reduce<WorkspaceRecoveryStage>((current, event) => diagnosticStage(event.code) ?? current, "init"));
@@ -35,7 +36,7 @@ export function WorkspaceRecoveryBoundary({ fallback, phase }: { fallback: React
                 <WorkspaceRouteLoader />
             </div>
         );
-    if (!enabled || !policy.recoveryEnabled || !config.workspaceRecovery.paths.some((pattern) => matchPathPattern(pattern, path)) || path.startsWith("/admin") || config.activePreset === "native") return fallback;
+    if (!enabled || !policy.recoveryEnabled || !allowsVisualTheme(path, config, policy) || !config.workspaceRecovery.paths.some((pattern) => matchPathPattern(pattern, path))) return fallback;
     return (
         <Suspense fallback={fallback}>
             <Animator

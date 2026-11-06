@@ -31,7 +31,6 @@ export function detectHostCompatibility(overrides: Partial<Record<"theme" | "ove
         .map(([name]) => "缺少扩展接口：" + name);
     if (!features.cssCustomProperties) missingExtensions.push("缺少 CSS Custom Properties");
     if (!features.reducedMotionQuery) missingExtensions.push("缺少减少动效查询");
-    if (!/^v?1\.(?:7\.[34]|8\.0)(?:[.-]|$)/.test(hostVersion)) missingExtensions.push("宿主版本未在 1.7.3/1.7.4/1.8.0 兼容范围内");
     return {
         hostVersion,
         compatible: missingExtensions.length === 0,

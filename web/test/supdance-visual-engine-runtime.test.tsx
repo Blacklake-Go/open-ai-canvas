@@ -7,6 +7,8 @@ import { applyVisualEngineTheme, removeVisualEngineTheme } from "../src/supdance
 import { applySkinTheme, DEFAULT_CLASSIC_SKIN } from "../src/lib/skin-themes";
 import { detectHostCompatibility } from "../src/supdance/plugins/visual-engine/diagnostics/host-compatibility";
 import { MotionGlobalConfig } from "motion/react";
+import { resolveOverlayExtensionStyles, useOverlayExtensionRevision } from "../src/lib/overlay-extensions";
+import { createSupDanceSkinDefinition } from "../src/supdance/theme/supdance-skin";
 
 const dom = new Window({ url: "http://localhost/" });
 const originals = new Map<string, PropertyDescriptor | undefined>();
@@ -19,21 +21,48 @@ const { createRoot } = await import("react-dom/client");
 const { VisualEngineRuntimeHost } = await import("../src/supdance/plugins/visual-engine/runtime/visual-engine-runtime-host");
 const { useVisualEngineStore } = await import("../src/supdance/plugins/visual-engine/storage/visual-engine-store");
 const { WorkspaceRecoveryBoundary } = await import("../src/supdance/plugins/visual-engine/loading/workspace-recovery-boundary");
+const { createVisualEngineAntTheme, useVisualEngineHostAdapter } = await import("../src/supdance/plugins/visual-engine/adapters/antd-theme");
 const originalRequest = apiClient.request;
-test("missing host extensions and unknown upstream versions fall back safely", () => {
+test("compatible extensions survive an upstream release and missing extensions still fail closed", () => {
     expect(detectHostCompatibility().compatible).toBe(true);
     expect(detectHostCompatibility({ overlay: false }).compatible).toBe(false);
     const runtime = globalThis as typeof globalThis & { __APP_VERSION__: string };
     try {
-        for (const version of ["1.7.3.4", "1.7.4-supdance.2", "1.8.0"]) {
+        for (const version of ["1.7.3.4", "1.7.4-supdance.2", "1.8.0", "1.8.1", "v1.8.2"]) {
             runtime.__APP_VERSION__ = version;
             expect(detectHostCompatibility().compatible).toBe(true);
         }
-        runtime.__APP_VERSION__ = "1.8.1";
-        expect(detectHostCompatibility().compatible).toBe(false);
     } finally {
         runtime.__APP_VERSION__ = "v1.8.0-supdance.3";
     }
+});
+
+test("an uninstalled visual engine leaves both host AntD and host loader in control", async () => {
+    const previous = useVisualEngineStore.getState();
+    const base = { components: { Button: { primaryShadow: "none" } } };
+    const host = document.createElement("div");
+    const root = createRoot(host);
+    function HostConsumer() {
+        const adapter = useVisualEngineHostAdapter("light", DEFAULT_CLASSIC_SKIN, base);
+        return <WorkspaceRecoveryBoundary fallback={<span data-native={adapter.theme === base} />} />;
+    }
+    try {
+        useVisualEngineStore.setState({ enabled: true, installation: { ...previous.installation, installed: false }, config: DEFAULT_VISUAL_ENGINE_CONFIG });
+        await act(async () => root.render(<HostConsumer />));
+        expect(host.querySelector("[data-native]")?.getAttribute("data-native")).toBe("true");
+    } finally {
+        await act(async () => root.unmount());
+        useVisualEngineStore.setState(previous);
+    }
+});
+
+test("AntD preserves host component options while applying a page motion override", () => {
+    const config = structuredClone(DEFAULT_VISUAL_ENGINE_CONFIG);
+    config.motion.enabled = true;
+    config.pageRules = [{ ...config.pageRules[0], pathPattern: "/", motionEnabledOverride: false }];
+    const theme = createVisualEngineAntTheme(config, "light", "/", { components: { Button: { primaryShadow: "none" } } });
+    expect(theme.components?.Button?.primaryShadow).toBe("none");
+    expect(theme.token?.motion).toBe(false);
 });
 afterAll(() => {
     apiClient.request = originalRequest;
@@ -76,10 +105,16 @@ test("real runtime mounts outside Router and cleans navigation subscriptions und
     const errors: unknown[] = [];
     const root = createRoot(host, { onUncaughtError: (error) => errors.push(error) });
     const originalPush = window.history.pushState;
+    function OpenOverlay() {
+        useOverlayExtensionRevision();
+        const mask = resolveOverlayExtensionStyles("modal", {}).mask;
+        return <span data-mask={mask?.backdropFilter} />;
+    }
     await act(async () => {
         root.render(
             <StrictMode>
                 <VisualEngineRuntimeHost navigation={navigation} />
+                <OpenOverlay />
             </StrictMode>,
         );
     });
@@ -94,11 +129,34 @@ test("real runtime mounts outside Router and cleans navigation subscriptions und
     expect(document.documentElement.style.getPropertyValue("--primary")).toBe(DEFAULT_VISUAL_ENGINE_CONFIG.tokens.light.primary);
     expect(document.documentElement.dataset.visualEngineTheme).toBe("studio");
     expect(canvasThemes.light.accent.primary).toBe(DEFAULT_VISUAL_ENGINE_CONFIG.tokens.light.primary);
+    expect(host.querySelector("span")?.getAttribute("data-mask")).toBe("blur(8px)");
+    await act(async () => {
+        applySkinTheme(createSupDanceSkinDefinition(), "light", document);
+    });
+    expect(document.documentElement.dataset.skin).toBe("supdance-studio");
+    expect(document.documentElement.dataset.visualEngineTheme).toBeUndefined();
+    expect(host.querySelector("span")?.getAttribute("data-mask")).toBeNull();
+    await act(async () => {
+        applySkinTheme(DEFAULT_CLASSIC_SKIN, "light", document);
+    });
+    expect(host.querySelector("span")?.getAttribute("data-mask")).toBe("blur(8px)");
+    await act(async () => {
+        useVisualEngineStore.setState({ enabled: false });
+    });
+    expect(host.querySelector("span")?.getAttribute("data-mask")).toBeNull();
+    expect(document.documentElement.dataset.visualEngineTheme).toBeUndefined();
+    expect(document.documentElement.dataset.veMotion).toBeUndefined();
+    expect(listeners.size).toBe(0);
+    await act(async () => {
+        useVisualEngineStore.setState({ enabled: true });
+    });
+    expect(host.querySelector("span")?.getAttribute("data-mask")).toBe("blur(8px)");
     await act(async () => {
         navigation.state.location.pathname = "/admin/plugins";
         for (const listener of listeners) listener();
     });
     expect(document.documentElement.dataset.visualEngineTheme).toBeUndefined();
+    expect(host.querySelector("span")?.getAttribute("data-mask")).toBeNull();
     expect(document.documentElement.dataset.veMotion).toBe("off");
     await act(async () => {
         useVisualEngineStore.setState({ config: { ...DEFAULT_VISUAL_ENGINE_CONFIG, motion: { ...DEFAULT_VISUAL_ENGINE_CONFIG.motion, enabled: true } } });

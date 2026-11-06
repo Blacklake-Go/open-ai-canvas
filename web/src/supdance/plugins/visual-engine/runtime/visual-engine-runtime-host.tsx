@@ -2,9 +2,9 @@ import { startPluginStateSync } from "@/supdance/adapters/plugin-state-sync";
 import { useCallback, useEffect, useLayoutEffect, useRef, useSyncExternalStore } from "react";
 import { registerCanvasThemeExtension, refreshCanvasThemeExtensions } from "@/lib/canvas-theme";
 import { createVisualEngineCanvasTheme } from "../adapters/canvas-theme";
-import { registerOverlayExtension } from "@/lib/overlay-extensions";
+import { refreshOverlayExtensions, registerOverlayExtension } from "@/lib/overlay-extensions";
 import { createVisualEngineOverlayStyles } from "../adapters/overlay-theme";
-import { detectHostCompatibility } from "../diagnostics/host-compatibility";
+import { allowsVisualTheme, useVisualEngineActive } from "./visual-engine-activation";
 import { registerThemeExtension } from "@/lib/theme-extensions";
 import "../components/visual-components.css";
 import { useUserStore } from "@/stores/use-user-store";
@@ -25,18 +25,16 @@ type NavigationSource = {
 };
 
 export function VisualEngineRuntimeHost({ navigation }: { navigation: NavigationSource }) {
-    const enabled = useVisualEngineStore((state) => state.enabled);
-    const installed = useVisualEngineStore((state) => state.installation.installed);
+    const active = useVisualEngineActive();
     return (
         <>
             <VisualEngineMetadataHost />
-            {enabled && installed && detectHostCompatibility().compatible ? <ActiveVisualEngineRuntime navigation={navigation} /> : null}
+            {active ? <ActiveVisualEngineRuntime navigation={navigation} /> : null}
         </>
     );
 }
 
 function VisualEngineMetadataHost() {
-    const enabled = useVisualEngineStore((state) => state.enabled);
     const installed = useVisualEngineStore((state) => state.installation.installed);
     const platform = usePluginStore((state) => state.pluginStates["supdance-visual-engine"]?.platformAvailable);
     const user = useUserStore((state) => state.user);
@@ -62,12 +60,13 @@ function VisualEngineMetadataHost() {
     useEffect(
         () =>
             startPluginStateSync(async (signal) => {
-                const revision = useVisualEngineStore.getState().revision;
+                const revision = useVisualEngineStore.getState().publishedRevision;
                 try {
                     const bundle = await fetchVisualEnginePublicBundle(signal);
-                    if (!signal.aborted && (useVisualEngineStore.getState().revision === revision || useVisualEngineStore.getState().revision === bundle.revision)) useVisualEngineStore.getState().acceptBundle(bundle);
+                    const current = useVisualEngineStore.getState();
+                    if (!signal.aborted && (current.publishedRevision === revision || current.publishedRevision === bundle.revision)) current.acceptBundle(bundle);
                 } catch (error) {
-                    if (!signal.aborted) {
+                    if (!signal.aborted && useVisualEngineStore.getState().publishedRevision === revision) {
                         useVisualEngineStore.getState().setEnabled(false);
                         useVisualEngineStore.getState().setPermissions([]);
                         console.warn("视觉引擎配置读取失败，已恢复宿主样式", error);
@@ -86,7 +85,6 @@ function ActiveVisualEngineRuntime({ navigation }: { navigation: NavigationSourc
     useLayoutEffect(() => {
         useVisualEngineStore.getState().setRuntimePath(pathname);
     }, [pathname]);
-    const enabled = useVisualEngineStore((state) => state.enabled);
     const config = useVisualEngineStore((state) => state.config);
     const theme = useActiveTheme();
     useLayoutEffect(() => {
@@ -104,7 +102,7 @@ function ActiveVisualEngineRuntime({ navigation }: { navigation: NavigationSourc
     useLayoutEffect(() => {
         const mode = config.themeMode === "system" ? theme : config.themeMode;
         const policy = resolvePageVisualPolicy(pathname, config, mode);
-        if (!enabled || pathname.startsWith("/admin") || config.activePreset === "native" || policy.matchedRule?.themePresetOverride === "native") {
+        if (!allowsVisualTheme(pathname, config, policy)) {
             removeVisualEngineTheme();
             return;
         }
@@ -139,8 +137,10 @@ function ActiveVisualEngineRuntime({ navigation }: { navigation: NavigationSourc
         const unregister = registerThemeExtension({
             beforeApply: ({ document }) => removeVisualEngineTheme({ targetDocument: document }),
             afterApply: ({ skin, document }) => {
-                if (document === window.document && skin.id === "classic") apply();
+                if (document !== window.document) return;
+                if (skin.id === "classic") apply();
                 refreshCanvasThemeExtensions();
+                refreshOverlayExtensions();
             },
         });
         if (document.documentElement.dataset.skin === undefined || document.documentElement.dataset.skin === "classic") apply();
@@ -150,7 +150,7 @@ function ActiveVisualEngineRuntime({ navigation }: { navigation: NavigationSourc
             unregisterCanvas();
             removeVisualEngineTheme();
         };
-    }, [config, enabled, theme, pathname]);
+    }, [config, theme, pathname]);
 
     return null;
 }

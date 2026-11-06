@@ -1,11 +1,28 @@
-import type { CSSProperties } from "react";
+import { useSyncExternalStore, type CSSProperties } from "react";
 export type OverlayKind = "modal" | "drawer";
 export type OverlayStyles = Record<string, CSSProperties>;
 const extensions = new Set<(kind: OverlayKind) => OverlayStyles>();
+const listeners = new Set<() => void>();
+let revision = 0;
+const getRevision = () => revision;
+function subscribe(listener: () => void) {
+    listeners.add(listener);
+    return () => {
+        listeners.delete(listener);
+    };
+}
+export function useOverlayExtensionRevision() {
+    useSyncExternalStore(subscribe, getRevision, () => 0);
+}
+export function refreshOverlayExtensions() {
+    revision++;
+    for (const listener of listeners) listener();
+}
 export function registerOverlayExtension(extension: (kind: OverlayKind) => OverlayStyles) {
     extensions.add(extension);
+    refreshOverlayExtensions();
     return () => {
-        extensions.delete(extension);
+        if (extensions.delete(extension)) refreshOverlayExtensions();
     };
 }
 export function resolveOverlayExtensionStyles(kind: OverlayKind, input: unknown): OverlayStyles {

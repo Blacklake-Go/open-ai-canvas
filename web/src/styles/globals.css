@@ -2009,7 +2009,7 @@ html[data-magicui-theme-vt="active"] .legal-public-page * {
     }
 
     body.app-spatial-overlays :where(.ant-modal-mask, .ant-drawer-mask) {
-        background: rgba(0, 0, 0, 0.48) !important;
+        background: var(--ve-overlay-mask, rgba(0, 0, 0, 0.48)) !important;
         backdrop-filter: blur(7px);
         -webkit-backdrop-filter: blur(7px);
     }
