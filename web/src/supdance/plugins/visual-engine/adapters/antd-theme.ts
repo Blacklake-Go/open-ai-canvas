@@ -24,6 +24,7 @@ export function createVisualEngineAntTheme(config: VisualEngineConfig, mode: "li
     const resolved = resolvePageVisualPolicy(path, config, mode);
     const tokens = resolved.activeTokens;
     const component = resolved.matchedRule?.components ?? config.components;
+    const elevations = resolved.matchedRule?.elevations ?? config.elevations;
     const interaction = config.interactions;
     const font = config.typography.scales;
     const check = mode === "dark" ? interaction.checkboxDark : interaction.checkboxLight;
@@ -53,7 +54,7 @@ export function createVisualEngineAntTheme(config: VisualEngineConfig, mode: "li
             controlHeight: component.inputHeight,
             controlHeightSM: component.buttonHeightCompact,
             controlOutlineWidth: interaction.focusWidth,
-            boxShadowSecondary: config.elevations.E2[mode === "dark" ? "shadowDark" : "shadowLight"],
+            boxShadowSecondary: elevations.E2[mode === "dark" ? "shadowDark" : "shadowLight"],
             motion: resolved.motionEnabled && (resolved.matchedRule?.performanceMode ?? interaction.performanceMode) !== "low" && !reducedMotion,
             motionDurationFast: config.motion.durationQuick / 1000 + "s",
             motionDurationMid: config.motion.durationModal / 1000 + "s",

@@ -88,7 +88,7 @@ jobs:
         working-directory: web
         run: |
           bun install --frozen-lockfile
-          bun test test/supdance-extension-isolation.test.ts test/supdance-visual-engine-runtime.test.tsx
+          bun test test/supdance-extension-isolation.test.ts test/site-appearance-and-skins.test.ts test/supdance-visual-engine*.test.*
           bun scripts/i18n-scan.mjs --check
           bun scripts/i18n-sync-backend.mjs --check
 

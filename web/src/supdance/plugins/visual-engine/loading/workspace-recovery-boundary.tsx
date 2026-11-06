@@ -1,8 +1,9 @@
 import { lazy, Suspense, useEffect, useState, type ReactNode } from "react";
 import { getClientDiagnosticEvents, subscribeClientDiagnostics } from "@/services/diagnostics/client-diagnostics";
+import { useAppearanceStore } from "@/stores/use-appearance-store";
 import { useVisualEngineStore } from "../storage/visual-engine-store";
 import { resolvePageVisualPolicy } from "../page-rules/page-rules-engine";
-import type { WorkspaceRecoveryStage } from "../types";
+import type { VisualEngineConfig, WorkspaceRecoveryStage } from "../types";
 
 import { matchPathPattern } from "../page-rules/rule-matcher";
 import { WorkspaceRouteLoader } from "@/components/ui/aceternity/full-screen-loader";
@@ -20,6 +21,20 @@ export function WorkspaceRecoveryBoundary({ fallback, phase }: { fallback: React
     const enabled = useVisualEngineActive();
     const config = useVisualEngineStore((state) => state.config);
     const path = useVisualEngineStore((state) => state.runtimePath);
+    const skinId = useAppearanceStore((state) => state.appearance.activeSkin.id);
+    const policy = resolvePageVisualPolicy(path, config, config.themeMode === "light" ? "light" : "dark");
+    if (!enabled || skinId !== "classic" || !allowsVisualTheme(path, config, policy)) return fallback;
+    if (!policy.motionEnabled)
+        return (
+            <div className="fixed inset-0">
+                <WorkspaceRouteLoader />
+            </div>
+        );
+    if (!policy.recoveryEnabled || !config.workspaceRecovery.paths.some((pattern) => matchPathPattern(pattern, path))) return fallback;
+    return <ActiveRecovery config={config} fallback={fallback} phase={phase} />;
+}
+
+function ActiveRecovery({ config, fallback, phase }: { config: VisualEngineConfig; fallback: ReactNode; phase?: WorkspaceRecoveryStage }) {
     const [stage, setStage] = useState<WorkspaceRecoveryStage>(() => getClientDiagnosticEvents().reduce<WorkspaceRecoveryStage>((current, event) => diagnosticStage(event.code) ?? current, "init"));
     useEffect(
         () =>
@@ -29,23 +44,9 @@ export function WorkspaceRecoveryBoundary({ fallback, phase }: { fallback: React
             }),
         [],
     );
-    const policy = resolvePageVisualPolicy(path, config, config.themeMode === "light" ? "light" : "dark");
-    if (enabled && !config.motion.enabled)
-        return (
-            <div className="fixed inset-0">
-                <WorkspaceRouteLoader />
-            </div>
-        );
-    if (!enabled || !policy.recoveryEnabled || !allowsVisualTheme(path, config, policy) || !config.workspaceRecovery.paths.some((pattern) => matchPathPattern(pattern, path))) return fallback;
     return (
         <Suspense fallback={fallback}>
-            <Animator
-                forceReducedMotion={!config.motion.enabled || config.interactions.performanceMode === "low"}
-                config={config.workspaceRecovery}
-                activeStage={stage === "failed" ? "failed" : (phase ?? stage)}
-                onStageChange={setStage}
-                onRetry={() => window.location.reload()}
-            />
+            <Animator forceReducedMotion={config.interactions.performanceMode === "low"} config={config.workspaceRecovery} activeStage={stage === "failed" ? "failed" : (phase ?? stage)} onStageChange={setStage} onRetry={() => window.location.reload()} />
         </Suspense>
     );
 }

@@ -22,6 +22,7 @@ const { VisualEngineRuntimeHost } = await import("../src/supdance/plugins/visual
 const { useVisualEngineStore } = await import("../src/supdance/plugins/visual-engine/storage/visual-engine-store");
 const { WorkspaceRecoveryBoundary } = await import("../src/supdance/plugins/visual-engine/loading/workspace-recovery-boundary");
 const { createVisualEngineAntTheme, useVisualEngineHostAdapter } = await import("../src/supdance/plugins/visual-engine/adapters/antd-theme");
+const { useAppearanceStore } = await import("../src/stores/use-appearance-store");
 const originalRequest = apiClient.request;
 test("compatible extensions survive an upstream release and missing extensions still fail closed", () => {
     expect(detectHostCompatibility().compatible).toBe(true);
@@ -59,10 +60,11 @@ test("an uninstalled visual engine leaves both host AntD and host loader in cont
 test("AntD preserves host component options while applying a page motion override", () => {
     const config = structuredClone(DEFAULT_VISUAL_ENGINE_CONFIG);
     config.motion.enabled = true;
-    config.pageRules = [{ ...config.pageRules[0], pathPattern: "/", motionEnabledOverride: false }];
+    config.pageRules = [{ ...config.pageRules[1], pathPattern: "/", motionEnabledOverride: false, elevations: { ...config.elevations, E2: { ...config.elevations.E2, shadowLight: "0 1px 2px #000" } } }];
     const theme = createVisualEngineAntTheme(config, "light", "/", { components: { Button: { primaryShadow: "none" } } });
     expect(theme.components?.Button?.primaryShadow).toBe("none");
     expect(theme.token?.motion).toBe(false);
+    expect(theme.token?.boxShadowSecondary).toBe("0 1px 2px #000");
 });
 afterAll(() => {
     apiClient.request = originalRequest;
@@ -151,6 +153,16 @@ test("real runtime mounts outside Router and cleans navigation subscriptions und
         useVisualEngineStore.setState({ enabled: true });
     });
     expect(host.querySelector("span")?.getAttribute("data-mask")).toBe("blur(8px)");
+    const published = structuredClone(DEFAULT_VISUAL_ENGINE_CONFIG);
+    published.tokens.light.primary = "#215d85";
+    await act(async () => {
+        useVisualEngineStore.setState({ config: published });
+        navigation.state.location.pathname = "/create";
+        for (const listener of listeners) listener();
+    });
+    expect(document.documentElement.style.getPropertyValue("--primary")).toBe("#215d85");
+    expect(canvasThemes.light.accent.primary).toBe("#215d85");
+    expect(createVisualEngineAntTheme(published, "light", "/create").token?.colorPrimary).toBe("#215d85");
     await act(async () => {
         navigation.state.location.pathname = "/admin/plugins";
         for (const listener of listeners) listener();
@@ -179,7 +191,7 @@ test("real runtime mounts outside Router and cleans navigation subscriptions und
 
 test("motion off renders the upstream route loader instead of recovery or host animation", async () => {
     const previous = useVisualEngineStore.getState();
-    useVisualEngineStore.setState({ enabled: true, config: DEFAULT_VISUAL_ENGINE_CONFIG });
+    useVisualEngineStore.setState({ enabled: true, config: DEFAULT_VISUAL_ENGINE_CONFIG, runtimePath: "/" });
     const host = document.createElement("div");
     const root = createRoot(host);
     try {
@@ -206,9 +218,57 @@ test("model picker simplified dataset adheres to hot-plug lifecycle on DOM", () 
     expect(target.dataset.veHideTelemetry).toBe("true");
     expect(target.dataset.veCleanCardLayout).toBe("true");
 
+    config.modelPicker.simplified = false;
+    applyVisualEngineTheme(config, "dark", { isolationScope: target });
+    expect(target.dataset.veHideChannelMeta).toBeUndefined();
+    expect(target.dataset.veHideTelemetry).toBeUndefined();
+    expect(target.dataset.veCleanCardLayout).toBeUndefined();
+
+    config.modelPicker = { simplified: true, hideChannelMeta: false, hideTelemetry: false, cleanCardLayout: false };
+    applyVisualEngineTheme(config, "dark", { isolationScope: target });
+    expect(target.dataset.veSimplifiedModelPicker).toBe("true");
+    expect(target.dataset.veHideChannelMeta).toBeUndefined();
+    expect(target.dataset.veHideTelemetry).toBeUndefined();
+    expect(target.dataset.veCleanCardLayout).toBeUndefined();
+
     removeVisualEngineTheme({ isolationScope: target });
     expect(target.dataset.veSimplifiedModelPicker).toBeUndefined();
     expect(target.dataset.veHideChannelMeta).toBeUndefined();
     expect(target.dataset.veHideTelemetry).toBeUndefined();
     expect(target.dataset.veCleanCardLayout).toBeUndefined();
+});
+
+test("startup loader honors route motion, native appearance, and admin isolation", async () => {
+    const previous = useVisualEngineStore.getState();
+    const appearance = useAppearanceStore.getState().appearance;
+    const config = structuredClone(DEFAULT_VISUAL_ENGINE_CONFIG);
+    const host = document.createElement("div");
+    const root = createRoot(host);
+    try {
+        await act(async () => {
+            useVisualEngineStore.setState({ enabled: true, config, runtimePath: "/admin/plugins" });
+            root.render(<WorkspaceRecoveryBoundary fallback={<span data-host-fallback />} />);
+        });
+        expect(host.querySelector("[data-host-fallback]")).not.toBeNull();
+        await act(async () => {
+            useVisualEngineStore.setState({ runtimePath: "/create", config: { ...config, activePreset: "native" } });
+        });
+        expect(host.querySelector("[data-host-fallback]")).not.toBeNull();
+        await act(async () => {
+            useVisualEngineStore.setState({ config });
+            useAppearanceStore.setState({ appearance: { ...appearance, activeSkin: createSupDanceSkinDefinition() } });
+        });
+        expect(host.querySelector("[data-host-fallback]")).not.toBeNull();
+        await act(async () => {
+            useAppearanceStore.setState({ appearance });
+            useVisualEngineStore.setState({
+                config: { ...config, motion: { ...config.motion, enabled: true }, pageRules: [{ ...config.pageRules[1], pathPattern: "/create", motionEnabledOverride: false }] },
+            });
+        });
+        expect(host.querySelector("[data-workspace-route-loader]")).not.toBeNull();
+    } finally {
+        await act(async () => root.unmount());
+        useAppearanceStore.setState({ appearance });
+        useVisualEngineStore.setState(previous);
+    }
 });
