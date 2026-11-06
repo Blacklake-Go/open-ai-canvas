@@ -155,6 +155,7 @@ v1.3.3 将授权后入站票据从单进程内存迁移至共享 Redis（键前�
 - **完整上游合并后的并行补丁收敛**：保留音乐配置任务已部署的 Suno / Mureka / MiniMax 品牌分组、选项去重与整数秒时长滑条。分组只影响显示，不合并渠道身份，不改变模型选择、报价或收费。滑条复用 AntD 和既有国际化词条，预设按钮同步禁用态与 `aria-pressed`。模型分组、渠道身份与报价回归位于 `web/test/model-picker-groups.test.ts`，后续更新须同时保留这些控件改动。
 
 ### 补丁 ID：`supdance-visual-engine`
+- 运行时兼容检查纳入 1.8.0 系列，继续校验宿主扩展并使用已发布配置。运行态验收和上游 UI 差异见 [宿主兼容性](visual-engine/HOST_COMPATIBILITY.md)。
 - 动效总开关复用 `motion.enabled`，新配置默认关闭；插件生命周期内控制全站 CSS 与现有 Motion 库，页面规则不能越过总开关。关闭时复用上游 `WorkspaceRouteLoader`，不新增加载或路由动画、不新增宿主补丁点；既有发布配置需管理员关闭开关后发布。上游比对依据与回滚方式见 `visual-engine/MOTION_ENGINE.md`。
 - **被修改的上游文件**：
   1. `backend/internal/app/plugin_management.go`

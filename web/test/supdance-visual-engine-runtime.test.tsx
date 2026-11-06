@@ -10,7 +10,7 @@ import { MotionGlobalConfig } from "motion/react";
 
 const dom = new Window({ url: "http://localhost/" });
 const originals = new Map<string, PropertyDescriptor | undefined>();
-for (const [name, value] of Object.entries({ __APP_VERSION__: "1.7.4-supdance.2", window: dom, document: dom.document, navigator: dom.navigator, HTMLElement: dom.HTMLElement, Element: dom.Element, Node: dom.Node, IS_REACT_ACT_ENVIRONMENT: true })) {
+for (const [name, value] of Object.entries({ __APP_VERSION__: "v1.8.0-supdance.3", window: dom, document: dom.document, navigator: dom.navigator, HTMLElement: dom.HTMLElement, Element: dom.Element, Node: dom.Node, IS_REACT_ACT_ENVIRONMENT: true })) {
     originals.set(name, Object.getOwnPropertyDescriptor(globalThis, name));
     Object.defineProperty(globalThis, name, { configurable: true, writable: true, value });
 }
@@ -24,9 +24,16 @@ test("missing host extensions and unknown upstream versions fall back safely", (
     expect(detectHostCompatibility().compatible).toBe(true);
     expect(detectHostCompatibility({ overlay: false }).compatible).toBe(false);
     const runtime = globalThis as typeof globalThis & { __APP_VERSION__: string };
-    runtime.__APP_VERSION__ = "1.8.0";
-    expect(detectHostCompatibility().compatible).toBe(false);
-    runtime.__APP_VERSION__ = "1.7.4-supdance.2";
+    try {
+        for (const version of ["1.7.3.4", "1.7.4-supdance.2", "1.8.0"]) {
+            runtime.__APP_VERSION__ = version;
+            expect(detectHostCompatibility().compatible).toBe(true);
+        }
+        runtime.__APP_VERSION__ = "1.8.1";
+        expect(detectHostCompatibility().compatible).toBe(false);
+    } finally {
+        runtime.__APP_VERSION__ = "v1.8.0-supdance.3";
+    }
 });
 afterAll(() => {
     apiClient.request = originalRequest;
