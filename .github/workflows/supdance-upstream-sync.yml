@@ -44,7 +44,7 @@ jobs:
       - name: Checkout repository with full history
         uses: actions/checkout@v4
         with:
-          ref: ${{ github.event_name == 'pull_request' && '' || github.event.repository.default_branch }}
+          ref: ${{ github.event_name == 'pull_request' && github.sha || github.event.repository.default_branch }}
           fetch-depth: 0
 
       - name: Set up Go
@@ -77,6 +77,13 @@ jobs:
             --output UPSTREAM_UPDATE_REPORT.md \
             --json-output "$RUNNER_TEMP/upstream-analysis.json"
 
+      - name: Install FFmpeg for SupDance audio tests
+        run: |
+          if ! command -v ffmpeg >/dev/null; then
+            sudo apt-get -o Acquire::Retries=2 -o Acquire::http::Timeout=20 update -qq
+            sudo apt-get -o Acquire::Retries=2 -o Acquire::http::Timeout=20 install -y -qq --no-install-recommends ffmpeg
+          fi
+
       - name: Run SupDance backend isolation tests
         working-directory: backend
         run: go test -v ./internal/supdance/...
@@ -85,7 +92,7 @@ jobs:
         working-directory: web
         run: |
           bun install --frozen-lockfile
-          bun test test/supdance-extension-isolation.test.ts
+          bun test test/supdance-extension-isolation.test.ts test/supdance-visual-engine-runtime.test.tsx
           bun scripts/i18n-scan.mjs --check
           bun scripts/i18n-sync-backend.mjs --check
 
