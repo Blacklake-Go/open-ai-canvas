@@ -106,6 +106,10 @@ v1.3.3 将授权后入站票据从单进程内存迁移至共享 Redis（键前�
 
 ## 2. 不可避免的上游核心文件补丁登记
 
+### 资产页方舟认证角标
+
+- `web/src/pages/assets/asset-library-cards.tsx` 为认证角标保留稳定的文案元素。合并上游时保留该结构，避免浏览器翻译包裹文本后，审核轮询替换图标触发 DOM 插入异常。
+
 所有对上游文件的直接修改均同步登记在 [`web/src/supdance/adapters/compatibility.ts`](../../web/src/supdance/adapters/compatibility.ts) 的 `SUPDANCE_UPSTREAM_PATCH_REGISTRY` 与 [`supdance/config/baseline.json`](../../supdance/config/baseline.json) 中：
 
 ### 补丁 ID：`supdance-codex-agent-connector`
