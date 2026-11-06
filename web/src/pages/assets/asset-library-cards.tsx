@@ -222,13 +222,14 @@ export function AssetCover({
 
 /** 方舟认证角标：已认证显示认证类型（授权过期单独标出）；认证进行中或未通过时显示进度。 */
 function ArkCoverBadge({ asset, progress }: { asset: LibraryAsset; progress?: ArkLibraryProgress }) {
+    // 图标会随审核状态替换，固定文案元素可避免浏览器翻译移动文本后破坏 React 的插入位置。
     const certification = asset.arkCertification;
     if (certification) {
         const expired = arkCertificationExpired(certification);
         return (
             <span className="assets-cover-badge is-ark" data-tone={expired ? "warning" : "success"}>
                 {expired ? <ShieldAlert aria-hidden /> : <ShieldCheck aria-hidden />}
-                {translate(arkCertificationBadgeKey(certification))}
+                <span>{translate(arkCertificationBadgeKey(certification))}</span>
             </span>
         );
     }
@@ -238,7 +239,7 @@ function ArkCoverBadge({ asset, progress }: { asset: LibraryAsset; progress?: Ar
     return (
         <span className="assets-cover-badge is-ark" data-tone={tone}>
             <Icon aria-hidden />
-            {translate(`library.ark.badge.${progress.status}`)}
+            <span>{translate(`library.ark.badge.${progress.status}`)}</span>
         </span>
     );
 }

@@ -1,4 +1,5 @@
 import { describe, expect, mock, test } from "bun:test";
+import { Window } from "happy-dom";
 import type { MouseEvent } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import { AssetCard, AssetCover } from "@/pages/assets/asset-library-cards";
@@ -76,5 +77,15 @@ describe("素材库分页多选", () => {
         expect(empty.match(/disabled=""/g)).toHaveLength(3);
         const busy = renderToStaticMarkup(<AssetsBatchBar {...props} count={3} busy />);
         expect(busy.match(/disabled=""/g)).toHaveLength(5);
+    });
+
+    test.each(["processing", "failed"] as const)("方舟状态 %s 的角标文字有稳定的插入锚点", (status) => {
+        const dom = new Window();
+        const progress = { status, kind: "virtual" as const, groupId: "group-1", groupName: "测试组", portraitAssetId: "ark-1", resourceId: "resource-1", createdAt: asset.createdAt };
+        dom.document.body.innerHTML = renderToStaticMarkup(<AssetCover asset={asset} selected={false} onSelect={() => {}} onOpen={() => {}} menuItems={[]} arkProgress={progress} />);
+        const badge = dom.document.querySelector(".assets-cover-badge.is-ark");
+        expect(badge?.firstElementChild?.localName).toBe("svg");
+        expect(badge?.firstElementChild?.nextSibling?.nodeName).toBe("SPAN");
+        expect(badge?.lastElementChild?.textContent).toBeTruthy();
     });
 });

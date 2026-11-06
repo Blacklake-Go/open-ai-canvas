@@ -3,6 +3,11 @@ import { expect, test } from "bun:test";
 import { appearanceLogoURL, normalizePublicAppearance } from "../src/stores/use-appearance-store";
 import { moduleGroupSource } from "./helpers/module-group-source";
 
+test("the SPA opts out of browser translation before React mounts", async () => {
+    const html = await Bun.file(new URL("../index.html", import.meta.url)).text();
+    expect(html).toMatch(/<html\b[^>]*\btranslate="no"/);
+});
+
 test("initial HTML retains SupDance search metadata before public appearance takes over", async () => {
     const [html, mainSource] = await Promise.all([Bun.file(new URL("../index.html", import.meta.url)).text(), Bun.file(new URL("../src/main.tsx", import.meta.url)).text()]);
 
