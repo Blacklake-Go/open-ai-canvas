@@ -4,6 +4,8 @@ import { Button } from "antd";
 import { BookMarked, ChevronDown, LibraryBig, Music2, SlidersHorizontal, WandSparkles } from "lucide-react";
 import { SegmentedControl } from "@/components/ui/base/segmented-control";
 import { Select } from "@/components/ui/base/select";
+import { ModelPicker } from "@/components/model-picker";
+import { useConfigStore } from "@/stores/use-config-store";
 import { Switch } from "@/components/ui/base/switch";
 import { useI18n } from "@/supdance/plugins/i18n";
 import { getWallet } from "@/services/api/wallet";
@@ -23,6 +25,7 @@ export function musicCreationAllowed(quote: LogicalModelQuote | null, available:
 
 export function MusicForm({ userId, onSubmitted }: { userId: string; onSubmitted?: (taskId: string) => void }) {
     const { t } = useI18n();
+    const config = useConfigStore((s) => s.config);
     const draft = useMusicStore((s) => s.draft);
     const capabilities = useMusicStore((s) => s.capabilities).filter((cap) => !cap.operations?.length);
     const loading = useMusicStore((s) => s.loadingCaps);
@@ -150,18 +153,31 @@ export function MusicForm({ userId, onSubmitted }: { userId: string; onSubmitted
                     options={(["simple", "custom"] as const).map((mode) => ({ value: mode, label: t(mode === "simple" ? "music.mode_description" : "music.mode_lyrics"), disabled: !capabilities.some((c) => c.available && c.modes.includes(mode)) }))}
                     onChange={changeMode}
                 />
-                <Select
-                    value={selected?.id}
-                    ariaLabel={t("music.select_model")}
-                    placeholder={t(loading ? "common.loading" : "music.no_models")}
-                    disabled={loading || submitting || !capabilities.length}
-                    onChange={(v) => {
-                        setNotice("");
-                        setError("");
-                        setModel(v, userId);
-                    }}
-                    options={capabilities.map((cap) => ({ value: cap.id, disabled: !cap.available, label: cap.name || cap.modelKey, title: cap.modelKey }))}
-                />
+                <div className="music-model-picker-field">
+                    <ModelPicker
+                        fullWidth
+                        config={config}
+                        value={selected?.id}
+                        placeholder={t(loading ? "common.loading" : capabilities.length ? "music.select_model" : "music.no_models")}
+                        disabled={loading || submitting || !capabilities.length}
+                        capability="audio"
+                        className="music-model-picker"
+                        showSelectedPrice={false}
+                        showOptionPrices
+                        showConfiguredModelName
+                        modelFilter={(model) => capabilities.some((cap) => cap.id === model)}
+                        modelDisabledReason={(model) => {
+                            const cap = capabilities.find((item) => item.id === model);
+                            return cap?.available ? "" : cap?.unavailableReason || t("music.no_models");
+                        }}
+                        onChange={(v) => {
+                            if (loading || submitting || !capabilities.some((cap) => cap.id === v && cap.available)) return;
+                            setNotice("");
+                            setError("");
+                            setModel(v, userId);
+                        }}
+                    />
+                </div>
             </div>
             {draft.mode === "simple" && (
                 <section className="music-composer-panel">

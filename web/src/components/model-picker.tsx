@@ -38,6 +38,7 @@ type ModelPickerProps = {
     modelFilter?: (model: string) => boolean;
     /** 调用方额外的不可选原因（例如短剧只能用平台模型）；返回非空串时选项置灰并显示原因。 */
     modelDisabledReason?: (model: string) => string;
+    disabled?: boolean;
 };
 
 export function ModelPicker({
@@ -57,6 +58,7 @@ export function ModelPicker({
     showConfiguredModelName = false,
     modelFilter,
     modelDisabledReason,
+    disabled = false,
 }: ModelPickerProps) {
     const creditsEnabled = useUserStore((state) => state.features.creditsEnabled);
     const pickerId = useId();
@@ -64,6 +66,9 @@ export function ModelPicker({
     const rawTheme = useActiveTheme();
     const theme = (canvasThemes[rawTheme as keyof typeof canvasThemes] ?? canvasThemes.dark) as CanvasTheme;
     const [open, setOpen] = useState(false);
+    useEffect(() => {
+        if (disabled) setOpen(false);
+    }, [disabled]);
     const compact = useCompactPickerSettings(open);
     const popoverRef = usePopoverAnchorAlign(open);
     const [availableHeight, setAvailableHeight] = useState(0);
@@ -146,6 +151,7 @@ export function ModelPicker({
     }, [open]);
 
     const setPickerOpen = (nextOpen: boolean) => {
+        if (nextOpen && disabled) return;
         if (nextOpen && !options.length) onMissingConfig?.();
         if (nextOpen) window.dispatchEvent(new CustomEvent("model-picker-open", { detail: pickerId }));
         if (nextOpen) {
@@ -376,6 +382,7 @@ export function ModelPicker({
                     type="button"
                     className={cn("canvas-composer-model-picker", fullWidth ? "w-full" : "min-w-36 max-w-full", className)}
                     aria-haspopup="listbox"
+                    disabled={disabled}
                     aria-expanded={open}
                     aria-label={placeholder}
                     title={current ? pickerModelOptionLabel(config, current, showConfiguredModelName) : placeholder}

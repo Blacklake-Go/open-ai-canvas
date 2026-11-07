@@ -40,6 +40,7 @@ export const SUPDANCE_UPSTREAM_PATCH_REGISTRY: readonly UpstreamPatchRecord[] = 
         feature: "模型选择器及其独立管理面板",
         coupledUpstreamFiles: [
             "web/src/components/model-picker.tsx",
+            "web/src/styles/workspace-product.css",
             "web/src/router.tsx",
             "web/src/i18n/areas.ts",
             "web/src/lib/plugins/builtin/index.ts",
@@ -56,6 +57,8 @@ export const SUPDANCE_UPSTREAM_PATCH_REGISTRY: readonly UpstreamPatchRecord[] = 
             "backend/internal/supdance/compactpicker/settings.go",
             "supdance/plugins/supdance-compact-model-picker/manifest.json",
             "web/test/fixtures/compact-model-picker.harness.tsx",
+            "web/test/fixtures/compact-picker-music-case.tsx",
+            "web/src/supdance/plugins/music-generation/components/music-form.tsx",
         ],
         reason: "上游同步后验证工作台仍加载品牌与模型双栏，控制面板可保存配置，停用后恢复宿主选择器。",
         upgradeRisk: "MEDIUM",

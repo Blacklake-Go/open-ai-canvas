@@ -18,10 +18,14 @@
 .plugin-music-form .music-composer-toolbar {
     flex-wrap: wrap;
 }
-.plugin-music-form .music-composer-toolbar .app-unified-select {
-    min-width: 7rem;
+.plugin-music-form .music-model-picker-field {
+    min-width: 0;
     max-width: 100%;
-    flex: 1;
+    flex: 1 1 12rem;
+}
+.plugin-music-form .music-model-picker {
+    width: 100%;
+    min-height: 44px;
 }
 .plugin-music-form .music-composer-panel,
 .plugin-music-form .music-composer-setting,

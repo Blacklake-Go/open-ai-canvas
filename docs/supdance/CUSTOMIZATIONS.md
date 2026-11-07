@@ -1,5 +1,11 @@
 # SupDance Canvas — 独立改造与定制代码清单 (CUSTOMIZATIONS.md)
 
+## 简洁模型选择器的手机布局与音乐工作台接入
+
+- `workspace-product.css` 的旧菜单列宽及手机单列规则仅匹配非简洁菜单，简洁插件自行管理双栏和窄屏换行，避免手机品牌入口消失。
+- 独立音乐工作台直接复用共享 `ModelPicker`，用音乐能力目录限定可选型号；名称、简介和报价沿平台模型目录显示。下架型号禁选，加载及提交期间禁用菜单。
+- 草稿仍由音乐 store 管理，实时询价及提交仍走原音乐接口，不修改模型 ID、价格、支付插件或生成合同。组件回归拒绝生成请求；设备及上线验收边界见待测试清单。
+
 ## Waffo 企业版沙盒
 
 独立扩展在 `backend/internal/supdance/waffopayment/`，可安装包在 `supdance/plugins/supdance-payment-waffo-enterprise/`。宿主支付 SDK、通知 handler、支付服务与仓储增加最小接缝：真实买家字段、指定测试用户限制、动态签名应答、下单交易号绑定及未知状态保留。无数据库迁移；复用已有积分账本与通知收件箱。范围与验收限制见 [企业版接入](./WAFFO_ENTERPRISE.md)。
