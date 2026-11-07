@@ -1,5 +1,11 @@
 # SupDance Canvas — 独立改造与定制代码清单 (CUSTOMIZATIONS.md)
 
+## 分阶段上游修复：Agent 历史分页
+
+第一阶段基于宿主 `eadb3622` 选择应用上游 `b0d56dea`（长对话 DOM 数量控制）和 `338b75c8`（预演台品牌与监看标题）。加载历史按钮复用 `common.load_more` 六语词条、现有令牌和键盘焦点状态；按 80 段展开，不删除历史、不改变发送与审批协议。接缝登记为 `supdance-agent-history-pagination`，真实 React 交互回归覆盖明暗主题和逐页展开。
+
+上游 `0236022b` 的测试时钟修复不重复应用：宿主已有 `taskTickerSnapshot()` 同源时钟方案。完整上游基线仍为 v1.7.3.4，不能将选择性修复标为已完整升级 v1.7.3.5。电商 Agent、Schema 79、积分政策、支付、TOS 和上游另一套 i18n 留待后续集成与验收。
+
 本文件记录 SupDance Canvas 相对上游 `ddcat-ai/open-ai-canvas` 的每一项定制改造、耦合边界及升级处理方式。
 
 ## 统一社交登录插件：`supdance-social-auth` v1.4.0
