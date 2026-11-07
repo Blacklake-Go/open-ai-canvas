@@ -407,6 +407,30 @@ async function addProp(cdp, name, label) {
     if (!(await cdp.poll(`!!document.querySelector(${JSON.stringify(`[aria-label="删除 ${name}"]`)})`, `${label} prop row`, 20000))) throw new Error(`${label}: ${name} row did not appear`);
 }
 
+async function brandWorkbench(cdp, baseUrl) {
+    await cdp.navigateFresh(`${baseUrl}/dev/previs-repro`);
+    assert(await cdp.click('[data-testid="toggle-workbench"]'), "brand workbench opens");
+    await openUnifiedWorkbench(cdp, "brand");
+    for (const theme of ["light", "dark"]) {
+        const brand = `SupDance <Studio> ${theme} ${"长品牌".repeat(12)}`;
+        await cdp.evaluate(`(async () => {
+            const {useAppearanceStore}=await import('/src/stores/use-appearance-store.ts');
+            const {useThemeStore}=await import('/src/stores/use-theme-store.ts');
+            useThemeStore.getState().setTheme(${JSON.stringify(theme)});
+            useAppearanceStore.setState({appearance:{...useAppearanceStore.getState().appearance,brandName:${JSON.stringify(brand)}}});
+        })()`);
+        assert(await cdp.poll(`document.querySelector('.previs-desk-logo')?.textContent === ${JSON.stringify(brand)}`, "brand update"), `${theme} custom brand renders`);
+        const metrics = await cdp.evaluate(`(() => {
+            const logo=document.querySelector('.previs-desk-logo');
+            return {title:logo.title,width:logo.getBoundingClientRect().width,scrollWidth:logo.scrollWidth,clientWidth:logo.clientWidth,children:logo.children.length};
+        })()`);
+        assert(metrics.title === brand && metrics.children === 0, `${theme} brand escapes markup and keeps full title`);
+        assert(metrics.width <= 160 && metrics.scrollWidth > metrics.clientWidth, `${theme} long brand truncates within its bound`, JSON.stringify(metrics));
+        assert(await cdp.evaluate(`!!document.querySelector('[aria-label="添加到场景"]')`), `${theme} viewport controls remain available`);
+    }
+    assert(cdp.problems.length === 0, "brand route has no browser errors", JSON.stringify(cdp.problems));
+}
+
 async function smokeWorkbench(cdp, baseUrl) {
     console.log("\n=== A. workbench smoke ===");
     await cdp.navigateFresh(`${baseUrl}/dev/previs-repro`);
@@ -896,8 +920,8 @@ async function shotOutputs(cdp, baseUrl) {
     const reused = await cdp.evaluate(`(async () => {
         const {openPrevisMonitorWindow}=await import('/src/components/canvas/previs/previs-monitor-window.ts');
         let firstClosed=0,secondClosed=0;
-        const first=openPrevisMonitorWindow({renderFrame:()=>null,onClosed:()=>firstClosed++});
-        const second=openPrevisMonitorWindow({renderFrame:()=>null,onClosed:()=>secondClosed++});
+        const first=openPrevisMonitorWindow({brandName:'监看测试',renderFrame:()=>null,onClosed:()=>firstClosed++});
+        const second=openPrevisMonitorWindow({brandName:'监看测试',renderFrame:()=>null,onClosed:()=>secondClosed++});
         const count=window.__previsPopup.document.querySelectorAll('canvas').length;
         first.close();const live=!second.closed();second.close();
         return {count,live,firstClosed,secondClosed};
@@ -933,7 +957,7 @@ async function main() {
         console.log("      CDP connected (Runtime, Page, Log, Network enabled)");
 
         // 故意保存失败的场景最后运行：它保留 beforeunload 保护，后续导航会被浏览器拦住。
-        const scenarios = [smokeWorkbench, localModel, missingRetry, deleteWhileLoading, webglLossRestore, shotOutputs, saveFailureCloseGuard];
+        const scenarios = [brandWorkbench, smokeWorkbench, localModel, missingRetry, deleteWhileLoading, webglLossRestore, shotOutputs, saveFailureCloseGuard];
         const selected = process.env.PREVIS_E2E_SCENARIO;
         if (selected && !scenarios.some((scenario) => scenario.name === selected)) throw new Error(`Unknown scenario: ${selected}`);
         for (const scenario of scenarios.filter((scenario) => !selected || scenario.name === selected)) {

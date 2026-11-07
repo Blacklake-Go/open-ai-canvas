@@ -366,6 +366,7 @@ func BuiltinEntries() []Entry {
 		entry("nav.assets", "nav", "资产", "Assets", "資產", "アセット", "자산", "Activos", "主导航：资产"),
 		entry("nav.tasks", "nav", "创作历史", "Creation History", "創作歷史", "制作履歴", "창작 기록", "Historial de Creación", "主导航：创作历史"),
 		entry("nav.tasks_short", "nav", "历史", "History", "歷史", "履歴", "기록", "Historial", "折叠侧栏：历史"),
+		entry("nav.pricing", "nav", "定价表", "Pricing", "定價表", "料金表", "요금표", "Precios", "主导航：公开价目表"),
 		entry("nav.settings", "nav", "设置", "Settings", "設定", "設定", "설정", "Configuración", "导航：设置"),
 		entry("nav.feedback", "nav", "反馈", "Feedback", "回饋", "フィードバック", "피드백", "Comentarios", "顶栏：反馈按钮"),
 		entry("nav.feedback_title", "nav", "意见与问题反馈", "Feedback & Bug Report", "意見與問題回饋", "フィードバックとバグ報告", "의견 및 문제 피드백", "Comentarios y Reporte de Errores", "顶栏：反馈提示"),

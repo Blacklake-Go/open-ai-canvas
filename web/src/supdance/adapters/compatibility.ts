@@ -25,6 +25,15 @@ export type UpstreamPatchRecord = {
  */
 export const SUPDANCE_UPSTREAM_PATCH_REGISTRY: readonly UpstreamPatchRecord[] = [
     {
+        id: "supdance-agent-history-pagination",
+        upstreamBaseline: "v1.7.3.5",
+        feature: "Agent 历史分页的多语言与设计令牌适配",
+        coupledUpstreamFiles: ["web/src/components/canvas/canvas-cloud-agent-panel-parts.tsx", "web/src/components/canvas/canvas-cloud-agent.css"],
+        files: ["web/src/components/canvas/canvas-cloud-agent-panel-parts.tsx", "web/src/components/canvas/canvas-cloud-agent.css"],
+        reason: "复用 SupDance common.load_more 词条与现有令牌，保留上游按 80 段展开历史的性能修复。",
+        upgradeRisk: "LOW",
+    },
+    {
         id: "supdance-codex-agent-connector",
         upstreamBaseline: "v1.7.3",
         feature: "本机 SupDance Canvas Agent (Codex) 连接器发现、配对、SSE 与对话转发",

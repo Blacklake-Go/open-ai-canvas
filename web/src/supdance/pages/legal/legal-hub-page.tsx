@@ -6,6 +6,7 @@ import { Link } from "react-router";
 import { useThemeStore } from "@/stores/use-theme-store";
 import { LEGAL_OPERATOR_CONFIG } from "./legal-i18n-content";
 import { LegalThemeToggler } from "./legal-theme-toggler";
+import { LegalBrand } from "./legal-brand";
 
 export default function LegalHubPage() {
     // 物理级滚轮与键盘全响应支持：确保在任何浏览器与操作系统中，鼠标滚轮、触控板与按键均能顺畅向下滑动
@@ -55,11 +56,7 @@ export default function LegalHubPage() {
         >
             {/* 顶栏 */}
             <header className="legal-public-header flex h-16 w-full items-center justify-between px-6 sm:px-12 transition-colors">
-                <Link to="/" className="flex items-center gap-2.5 text-base font-semibold tracking-tight no-underline">
-                    <span className="size-6 rounded-full flex items-center justify-center font-bold text-xs bg-black text-white dark:bg-white dark:text-black">S</span>
-                    <span className="text-black dark:text-white font-semibold">{LEGAL_OPERATOR_CONFIG.tradeName}</span>
-                    <span className="text-[11px] font-mono tracking-widest uppercase px-1.5 py-0.5 rounded bg-black/5 text-black/60 dark:bg-white/10 dark:text-white/60">LEGAL HUB</span>
-                </Link>
+                <LegalBrand badge="LEGAL HUB" />
 
                 <div className="flex items-center gap-4">
                     <Link to="/" className="text-xs font-medium no-underline transition-colors text-black/60 hover:text-black dark:text-white/60 dark:hover:text-white">

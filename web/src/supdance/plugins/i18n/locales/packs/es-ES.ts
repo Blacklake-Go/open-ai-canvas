@@ -80,6 +80,7 @@ const pack: Record<string, string> = {
     "nav.assets": "Activos",
     "nav.tasks": "Historial de Creación",
     "nav.tasks_short": "Historial",
+    "nav.pricing": "Precios",
     "nav.settings": "Configuración",
     "nav.feedback": "Comentarios",
     "nav.feedback_title": "Comentarios y Reporte de Errores",
