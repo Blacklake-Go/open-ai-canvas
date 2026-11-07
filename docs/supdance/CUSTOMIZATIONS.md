@@ -106,6 +106,10 @@ v1.3.3 将授权后入站票据从单进程内存迁移至共享 Redis（键前�
 
 ## 2. 不可避免的上游核心文件补丁登记
 
+### 补丁 ID：`supdance-asset-form-viewport`
+
+- `web/src/pages/assets/index.tsx` 仅限制新增和编辑素材共用弹窗的高度，让正文独立滚动并保留可见的底部操作区。上游合并时核对弹窗正文与操作区的布局。
+
 ### 资产页方舟认证角标与浏览器翻译
 
 - `web/src/pages/assets/asset-library-cards.tsx` 为认证状态保留独立文案元素。上游合并时保留此结构及 `web/index.html` 的 `translate="no"`，由站内国际化提供界面语言。自动测试覆盖入口声明与审核角标结构。

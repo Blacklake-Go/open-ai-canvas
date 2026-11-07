@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
+import { Button } from "antd";
 import { useI18n } from "@/supdance/plugins/i18n";
 import { getWallet } from "@/services/api/wallet";
 import { ApiError } from "@/services/api/request";
@@ -186,13 +187,9 @@ export function MusicForm({ userId, onSubmitted }: { userId: string; onSubmitted
                     {quote ? ` · ${t("music.billing_" + quote.billingMode)} × ${quote.quantity}` : ""}
                 </p>
             </div>
-            <button
-                type="submit"
-                disabled={!valid || !enough || submitting}
-                className="min-h-11 rounded-xl bg-primary px-5 py-3 font-semibold text-primary-foreground focus-visible:outline-2 focus-visible:outline-ring disabled:cursor-not-allowed disabled:opacity-50"
-            >
+            <Button type="primary" htmlType="submit" disabled={!valid || !enough || submitting} className="min-h-11">
                 {t(submitting ? "music.submitting" : "music.create_music", undefined, submitting ? "Submitting…" : "Create music")}
-            </button>
+            </Button>
         </form>
     );
 }
