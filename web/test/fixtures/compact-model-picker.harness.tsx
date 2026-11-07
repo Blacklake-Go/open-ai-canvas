@@ -321,3 +321,4 @@ afterAll(async () => {
 
 await import("./compact-picker-admin-case");
 await import("./compact-picker-music-case");
+await import("./site-compliance-footer-case");
