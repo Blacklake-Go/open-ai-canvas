@@ -37,6 +37,7 @@ type NotificationResponse struct {
 	Status      int
 	ContentType string
 	Body        string
+	Signature   string `json:"signature,omitempty"`
 }
 
 // CreateRequest 的 AmountFen / Currency 是渠道实收金额与结算货币：商品货币不同时宿主已按汇率换算。
@@ -51,12 +52,16 @@ type CreateRequest struct {
 	ExpiresAt       time.Time
 	NotifyURL       string
 	ReturnURL       string
+	UserID          string `json:",omitempty"`
+	UserEmail       string `json:",omitempty"`
+	ProductID       string `json:",omitempty"`
 }
 
 type Checkout struct {
-	Mode      string
-	Value     string
-	ExpiresAt time.Time
+	Mode            string
+	Value           string
+	ExpiresAt       time.Time
+	ProviderTradeNo string `json:",omitempty"`
 }
 
 type QueryRequest struct{ MerchantOrderNo string }
@@ -74,7 +79,8 @@ type Result struct {
 }
 
 type Notification struct {
-	EventID string `json:"eventId"`
+	EventID  string                `json:"eventId"`
+	Response *NotificationResponse `json:"response,omitempty"`
 	Result
 }
 

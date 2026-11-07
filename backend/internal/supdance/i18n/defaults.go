@@ -12,6 +12,7 @@ var SupportedLocaleCodes = []string{
 
 // NamespaceLabels maps internal namespace identifiers to human-readable Chinese labels.
 var NamespaceLabels = map[string]string{
+	"legal":       "法务页面",
 	"common":      "通用与基础控件",
 	"nav":         "顶栏与侧栏导航",
 	"auth":        "登录与注册认证",
@@ -35,6 +36,7 @@ var NamespaceLabels = map[string]string{
 var NamespaceOrder = []string{
 	"music",
 	"admin",
+	"legal",
 	"common",
 	"nav",
 	"auth",
@@ -486,6 +488,9 @@ func BuiltinEntries() []Entry {
 		entry("admin.social_auth_config", "admin", "社交登录配置", "Social Login Settings", "社交登入配置", "ソーシャルログイン設定", "소셜 로그인 설정", "Configuración de Inicio de Sesión Social", "管理侧栏：社交登录配置"),
 		entry("admin.login_and_registration", "admin", "登录与注册", "Login & Registration", "登入與註冊", "ログインと登録", "로그인 및 회원가입", "Inicio de Sesión y Registro", "管理侧栏：登录与注册"),
 		entry("admin.email_service", "admin", "邮件服务", "Email Service", "郵件服務", "メールサービス", "이메일 서비스", "Servicio de Correo", "管理侧栏：邮件服务"),
+		// ==================== legal: 法务页面 (2) ====================
+		entry("legal.scroll_to_bottom", "legal", "滑动直达底部", "Scroll to bottom", "捲動至底部", "一番下へスクロール", "맨 아래로 스크롤", "Ir al final de la página", "法务页面直达底部按钮"),
+		entry("legal.back_to_top", "legal", "返回页面顶部", "Back to top", "返回頁面頂部", "ページの先頭へ戻る", "페이지 맨 위로", "Volver al inicio", "法务页面返回顶部按钮"),
 		// ==================== common: 通用与基础控件 (151) ====================
 		entry("common.confirm", "common", "确认", "Confirm", "確認", "確認", "확인", "Confirmar", "通用确认按钮"),
 		entry("common.cancel", "common", "取消", "Cancel", "取消", "キャンセル", "취소", "Cancelar", "通用取消按钮"),

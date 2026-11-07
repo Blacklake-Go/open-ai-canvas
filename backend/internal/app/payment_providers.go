@@ -78,6 +78,9 @@ func (s *Service) PaymentProviders(actor *model.User) ([]PaymentProviderView, er
 		if err != nil {
 			return nil, err
 		}
+		if allowed := strings.TrimSpace(values["allowedUserId"]); allowed != "" && allowed != actor.ID {
+			continue
+		}
 		options, err := s.paymentProviderOptions(descriptor.ID, values)
 		if err != nil {
 			// 保存时已严格校验；读到无效配置（如手工改库）时只隐藏该渠道，不影响其他渠道充值。

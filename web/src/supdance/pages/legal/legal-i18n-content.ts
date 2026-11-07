@@ -27,7 +27,6 @@ export interface LocalizedLegalDoc {
     summary: string;
     effectiveDate: string;
     version: string;
-    authoritativeNotice: string;
     sections: LegalSectionItem[];
 }
 
@@ -63,7 +62,6 @@ export const AUP_DOC_MAP: Record<SupportedLegalLanguage, LocalizedLegalDoc> = {
         summary: "Standards, monitoring, reporting channels, and enforcement actions for AI-generated content across the Supdance platform.",
         effectiveDate: LEGAL_OPERATOR_CONFIG.effectiveDate,
         version: LEGAL_OPERATOR_CONFIG.version,
-        authoritativeNotice: "Authoritative English Version. In the event of any discrepancies or conflicting interpretations between translations and this English text, the English version shall prevail.",
         sections: [
             {
                 id: "scope",
@@ -149,7 +147,6 @@ export const AUP_DOC_MAP: Record<SupportedLegalLanguage, LocalizedLegalDoc> = {
         summary: "Supdance 平台针对 AI 生成内容制定的内容标准、审核机制、举报途径及违规处置行动。",
         effectiveDate: "2026年11月04日",
         version: LEGAL_OPERATOR_CONFIG.version,
-        authoritativeNotice: "本文为中文参考译本。如不同语言版本之间存在任何歧义或冲突，均以英文原版（Authoritative English Version）为准。",
         sections: [
             {
                 id: "scope",
@@ -225,7 +222,6 @@ export const AUP_DOC_MAP: Record<SupportedLegalLanguage, LocalizedLegalDoc> = {
         summary: "Supdance 針對 AI 生成內容所制定的內容標準、審核機制、舉報途徑與違規處置規範。",
         effectiveDate: "2026年11月04日",
         version: LEGAL_OPERATOR_CONFIG.version,
-        authoritativeNotice: "本文為繁體中文參考譯本。如不同語言版本之間存在任何歧異或衝突，均以英文原版（Authoritative English Version）為準。",
         sections: [
             {
                 id: "scope",
@@ -301,7 +297,6 @@ export const AUP_DOC_MAP: Record<SupportedLegalLanguage, LocalizedLegalDoc> = {
         summary: "Supdance プラットフォームにおける AI 生成コンテンツの安全基準、監視体制、通報窓口および違反執行措置。",
         effectiveDate: "2026年11月04日",
         version: LEGAL_OPERATOR_CONFIG.version,
-        authoritativeNotice: "本文は日本語参考訳です。翻訳と英語原文の間に不一致がある場合は、英語原文（Authoritative English Version）が優先されます。",
         sections: [
             {
                 id: "scope",
@@ -383,7 +378,6 @@ export const AUP_DOC_MAP: Record<SupportedLegalLanguage, LocalizedLegalDoc> = {
         summary: "Supdance 플랫폼의 AI 생성 콘텐츠에 대한 안전 표준, 모니터링, 신고 접수 및 위반 제재 조치.",
         effectiveDate: "2026년 11월 04일",
         version: LEGAL_OPERATOR_CONFIG.version,
-        authoritativeNotice: "본 문서는 한국어 번역본입니다. 번역본과 영어 원문 간에 불일치가 발생하는 경우 영어 원문(Authoritative English Version)이 우선합니다.",
         sections: [
             {
                 id: "scope",
@@ -468,7 +462,6 @@ export const AUP_DOC_MAP: Record<SupportedLegalLanguage, LocalizedLegalDoc> = {
         summary: "Estándares de contenido, moderación, canales de denuncia y medidas disciplinarias para creaciones con IA en Supdance.",
         effectiveDate: "4 de noviembre de 2026",
         version: LEGAL_OPERATOR_CONFIG.version,
-        authoritativeNotice: "Versión en español para fines informativos. En caso de discrepancia, prevalecerá la versión oficial en inglés (Authoritative English Version).",
         sections: [
             {
                 id: "scope",
@@ -560,7 +553,6 @@ export const TOS_DOC_MAP: Record<SupportedLegalLanguage, LocalizedLegalDoc> = {
         summary: "Legally binding agreement governing account usage, digital instant delivery of credits, PCI-DSS billing, and AI asset ownership.",
         effectiveDate: LEGAL_OPERATOR_CONFIG.effectiveDate,
         version: LEGAL_OPERATOR_CONFIG.version,
-        authoritativeNotice: "Authoritative English Version. In the event of any discrepancies or conflicting interpretations between translations and this English text, the English version shall prevail.",
         sections: [
             {
                 id: "acceptance",
@@ -660,7 +652,6 @@ export const TOS_DOC_MAP: Record<SupportedLegalLanguage, LocalizedLegalDoc> = {
         summary: "约定账号使用、积分数字即时交付、PCI-DSS 安全支付、退款保障与 AI 创作资产归属的具有法律约束力的协议。",
         effectiveDate: "2026年11月04日",
         version: LEGAL_OPERATOR_CONFIG.version,
-        authoritativeNotice: "本文为中文参考译本。如不同语言版本之间存在任何歧义或冲突，均以英文原版（Authoritative English Version）为准。",
         sections: [
             {
                 id: "acceptance",
@@ -748,7 +739,6 @@ export const TOS_DOC_MAP: Record<SupportedLegalLanguage, LocalizedLegalDoc> = {
         summary: "約定帳號使用、積分數位即時交付、PCI-DSS 安全支付、退款保障與 AI 創作資產歸屬的具有法律約束力的協議。",
         effectiveDate: "2026年11月04日",
         version: LEGAL_OPERATOR_CONFIG.version,
-        authoritativeNotice: "本文為繁體中文參考譯本。如不同語言版本之間存在任何歧異或衝突，均以英文原版（Authoritative English Version）為準。",
         sections: [
             {
                 id: "acceptance",
@@ -836,7 +826,6 @@ export const TOS_DOC_MAP: Record<SupportedLegalLanguage, LocalizedLegalDoc> = {
         summary: "アカウントの利用、デジタル即時提供、PCI-DSS 安全決済、返金保証、および AI 創作資産の帰属を定める法的合意文書。",
         effectiveDate: "2026年11月04日",
         version: LEGAL_OPERATOR_CONFIG.version,
-        authoritativeNotice: "本文は日本語参考訳です。翻訳と英語原文の間に不一致がある場合は、英語原文（Authoritative English Version）が優先されます。",
         sections: [
             {
                 id: "acceptance",
@@ -935,7 +924,6 @@ export const TOS_DOC_MAP: Record<SupportedLegalLanguage, LocalizedLegalDoc> = {
         summary: "계정 이용, 디지털 크레딧의 즉시 제공, PCI-DSS 보안 결제, 7일 환불 정책 및 AI 창작물 지적 재산권 귀속에 관한 법적 계약.",
         effectiveDate: "2026년 11월 04일",
         version: LEGAL_OPERATOR_CONFIG.version,
-        authoritativeNotice: "본 문서는 한국어 번역본입니다. 번역본과 영어 원문 간에 불일치가 발생하는 경우 영어 원문(Authoritative English Version)이 우선합니다.",
         sections: [
             {
                 id: "acceptance",
@@ -1032,7 +1020,6 @@ export const TOS_DOC_MAP: Record<SupportedLegalLanguage, LocalizedLegalDoc> = {
         summary: "Contrato legal vinculante que regula el uso de cuentas, la entrega digital instantánea, facturación segura PCI-DSS y propiedad de activos de IA.",
         effectiveDate: "4 de noviembre de 2026",
         version: LEGAL_OPERATOR_CONFIG.version,
-        authoritativeNotice: "Versión en español para fines informativos. En caso de discrepancia, prevalecerá la versión oficial en inglés (Authoritative English Version).",
         sections: [
             {
                 id: "acceptance",
@@ -1137,7 +1124,6 @@ export const PRIVACY_DOC_MAP: Record<SupportedLegalLanguage, LocalizedLegalDoc> 
         summary: "How Supdance collects, isolates, secures, and handles personal data, payment information, and your creative AI assets.",
         effectiveDate: LEGAL_OPERATOR_CONFIG.effectiveDate,
         version: LEGAL_OPERATOR_CONFIG.version,
-        authoritativeNotice: "Authoritative English Version. In the event of any discrepancies or conflicting interpretations between translations and this English text, the English version shall prevail.",
         sections: [
             {
                 id: "controller",
@@ -1181,6 +1167,7 @@ export const PRIVACY_DOC_MAP: Record<SupportedLegalLanguage, LocalizedLegalDoc> 
                 paragraphs: ["We only share data with trusted infrastructure providers bound by strict confidentiality and data processing agreements:"],
                 bullets: [
                     `Payment Processing: ${LEGAL_OPERATOR_CONFIG.paymentProcessor} (PCI-DSS Level 1 compliant Merchant of Record).`,
+                    "Generation safety screening: Before creating an image or video, we send its expanded text prompt to Waffo Pancake over HTTPS to screen for restricted content. We proceed only after an allow decision. Reference media, account identifiers and model credentials are excluded from this screening request. Waffo documents this endpoint as stateless and states that it does not retain the raw prompt after returning the result.",
                     "AI Model Upstreams: Reputable, enterprise-grade model inference providers (e.g., text, image, and video synthesis APIs). Data transmitted to model endpoints is processed solely in-flight for generation and is not utilized for unauthorized public foundation model training.",
                     "Cloud Infrastructure: Certified cloud hosting and CDN partners for encrypted storage and fast asset delivery.",
                 ],
@@ -1226,7 +1213,6 @@ export const PRIVACY_DOC_MAP: Record<SupportedLegalLanguage, LocalizedLegalDoc> 
         summary: "详尽说明 Supdance 如何收集、隔离、加密保护您的个人数据、支付信息与 AI 影视创作资产。",
         effectiveDate: "2026年11月04日",
         version: LEGAL_OPERATOR_CONFIG.version,
-        authoritativeNotice: "本文为中文参考译本。如不同语言版本之间存在任何歧义或冲突，均以英文原版（Authoritative English Version）为准。",
         sections: [
             {
                 id: "controller",
@@ -1270,6 +1256,7 @@ export const PRIVACY_DOC_MAP: Record<SupportedLegalLanguage, LocalizedLegalDoc> 
                 paragraphs: ["我们仅在必要范围内与受保密协议及数据处理协议约束的可信第三方服务商共享数据："],
                 bullets: [
                     `支付处理方：${LEGAL_OPERATOR_CONFIG.paymentProcessor}（具备 PCI-DSS Level 1 国际认证资质的合规记录商户）。`,
+                    "生成前安全筛查：创建图片或视频前，我们通过 HTTPS 将展开后的文本提示词发送给 Waffo Pancake，检查受限内容，仅在返回允许结果时继续生成。该筛查请求不包含参考媒体、账号标识或模型凭据。Waffo 文档说明该接口无状态，返回结果后不留存提示词原文。",
                     "主流 AI 模型供应商：业界合规的企业级大模型推理通道。系统仅传输生成必需的提示词，绝不将您的私有数据用于任何未经授权的公众大模型预训练。",
                     "云存储与 CDN 加速节点：用于加密存储素材并提供全球低延迟访问。",
                 ],
@@ -1315,7 +1302,6 @@ export const PRIVACY_DOC_MAP: Record<SupportedLegalLanguage, LocalizedLegalDoc> 
         summary: "詳盡說明 Supdance 如何收集、隔離、加密保護您的個人資料、支付資訊與 AI 影視創作資產。",
         effectiveDate: "2026年11月04日",
         version: LEGAL_OPERATOR_CONFIG.version,
-        authoritativeNotice: "本文為繁體中文參考譯本。如不同語言版本之間存在任何歧異或衝突，均以英文原版（Authoritative English Version）為準。",
         sections: [
             {
                 id: "controller",
@@ -1359,6 +1345,7 @@ export const PRIVACY_DOC_MAP: Record<SupportedLegalLanguage, LocalizedLegalDoc> 
                 paragraphs: ["我們僅在必要範圍內與受保密協議及資料處理協議約束的可信第三方服務商共享資料："],
                 bullets: [
                     `支付處理方：${LEGAL_OPERATOR_CONFIG.paymentProcessor}（具備 PCI-DSS Level 1 國際認證資質的合規記錄商戶）。`,
+                    "生成前安全篩查：建立圖片或影片前，我們透過 HTTPS 將展開後的文字提示詞傳送給 Waffo Pancake，檢查受限內容，僅在回傳允許結果時繼續生成。該篩查請求不包含參考媒體、帳號識別碼或模型憑證。Waffo 文件說明該介面無狀態，回傳結果後不保留提示詞原文。",
                     "主流 AI 模型供應商：業界合規的企業級大模型推理通道。系統僅傳輸生成必需的提示詞，絕不將您的私有資料用於任何未經授權的公眾大模型預訓練。",
                     "雲端儲存與 CDN 加速節點：用於加密儲存素材並提供全球低延遲存取。",
                 ],
@@ -1404,7 +1391,6 @@ export const PRIVACY_DOC_MAP: Record<SupportedLegalLanguage, LocalizedLegalDoc> 
         summary: "Supdance がお客様の個人データ、決済情報、および AI 創作プロジェクト資産をどのように収集、隔離、暗号化保護しているかを詳述します。",
         effectiveDate: "2026年11月04日",
         version: LEGAL_OPERATOR_CONFIG.version,
-        authoritativeNotice: "本文は日本語参考訳です。翻訳と英語原文の間に不一致がある場合は、英語原文（Authoritative English Version）が優先されます。",
         sections: [
             {
                 id: "controller",
@@ -1448,6 +1434,7 @@ export const PRIVACY_DOC_MAP: Record<SupportedLegalLanguage, LocalizedLegalDoc> 
                 paragraphs: ["当社は、守秘義務契約およびデータ処理契約（DPA）を締結した信頼できるインフラ事業者との間でのみデータを共有します："],
                 bullets: [
                     `決済処理事業者: ${LEGAL_OPERATOR_CONFIG.paymentProcessor}（PCI-DSS レベル 1 認証済みの合規 MOR パートナー）。`,
+                    "生成前の安全性検査：画像や動画を作成する前に、展開済みのテキストプロンプトを HTTPS 経由で Waffo Pancake に送信し、制限対象の内容を検査します。許可された場合にのみ生成を続行します。この検査リクエストには参照メディア、アカウント識別子、モデルの認証情報を含めません。Waffo の文書では、この API はステートレスで、結果の返却後にプロンプト原文を保持しないと説明されています。",
                     "主要 AI モデルプロバイダー：エンタープライズ水準の公式推論 API。生成に必要なプロンプトのみが転送され、無許可の一般モデル事前学習には利用されません。",
                     "クラウドインフラおよび CDN：暗号化された安全なストレージと低遅延配信を提供。",
                 ],
@@ -1493,7 +1480,6 @@ export const PRIVACY_DOC_MAP: Record<SupportedLegalLanguage, LocalizedLegalDoc> 
         summary: "Supdance가 사용자의 개인정보, 결제 데이터 및 AI 프로젝트 자산을 수집, 격리, 암호화하여 보호하는 방법에 대한 안내.",
         effectiveDate: "2026년 11월 04일",
         version: LEGAL_OPERATOR_CONFIG.version,
-        authoritativeNotice: "본 문서는 한국어 번역본입니다. 번역본과 영어 원문 간에 불일치가 발생하는 경우 영어 원문(Authoritative English Version)이 우선합니다.",
         sections: [
             {
                 id: "controller",
@@ -1537,6 +1523,7 @@ export const PRIVACY_DOC_MAP: Record<SupportedLegalLanguage, LocalizedLegalDoc> 
                 paragraphs: ["당사는 엄격한 비밀유지계약 및 데이터처리계약(DPA)을 체결한 신뢰할 수 있는 파트너에 한해서만 데이터를 공유합니다:"],
                 bullets: [
                     `결제 처리 대행사: ${LEGAL_OPERATOR_CONFIG.paymentProcessor}(PCI-DSS 레벨 1 인증을 취득한 공인 MOR 파트너).`,
+                    "생성 전 안전 검사: 이미지나 동영상을 생성하기 전에 확장된 텍스트 프롬프트를 HTTPS를 통해 Waffo Pancake에 전송하여 제한된 콘텐츠를 검사합니다. 허용 결과를 받은 경우에만 생성을 진행합니다. 이 검사 요청에는 참조 미디어, 계정 식별자 또는 모델 인증 정보를 포함하지 않습니다. Waffo 문서는 이 API가 상태를 저장하지 않으며 결과 반환 후 프롬프트 원문을 보관하지 않는다고 설명합니다.",
                     "엔터프라이즈 AI 모델 공급사: 정식 기업용 추론 API를 통해서만 프롬프트를 전송하며, 미승인 일반 기초 모델의 사전 학습에 사용되지 않습니다.",
                     "클라우드 스토리지 및 CDN: 암호화된 저장 공간과 전 세계 저지연 전송 제공.",
                 ],
@@ -1582,7 +1569,6 @@ export const PRIVACY_DOC_MAP: Record<SupportedLegalLanguage, LocalizedLegalDoc> 
         summary: "Detalles sobre cómo Supdance recopila, aísla, cifra y protege sus datos personales, información de pago y activos de creación de IA.",
         effectiveDate: "4 de noviembre de 2026",
         version: LEGAL_OPERATOR_CONFIG.version,
-        authoritativeNotice: "Versión en español para fines informativos. En caso de discrepancia, prevalecerá la versión oficial en inglés (Authoritative English Version).",
         sections: [
             {
                 id: "controller",
@@ -1626,6 +1612,7 @@ export const PRIVACY_DOC_MAP: Record<SupportedLegalLanguage, LocalizedLegalDoc> 
                 paragraphs: ["Solo compartimos datos con proveedores de infraestructura tecnológica vinculados por acuerdos estrictos de protección de datos (DPA):"],
                 bullets: [
                     `Procesamiento de pagos: ${LEGAL_OPERATOR_CONFIG.paymentProcessor} (Merchant of Record certificado con PCI-DSS Nivel 1).`,
+                    "Control de seguridad antes de generar: Antes de crear una imagen o un vídeo, enviamos el texto ampliado de la instrucción a Waffo Pancake mediante HTTPS para detectar contenido restringido. Solo continuamos cuando la decisión permite generar. Esta solicitud no incluye medios de referencia, identificadores de cuenta ni credenciales del modelo. La documentación de Waffo describe este servicio como sin estado e indica que no conserva la instrucción original después de devolver el resultado.",
                     "Proveedores de modelos de IA: Canales oficiales de inferencia de modelos empresariales. Los prompts se procesan en tránsito y no se destinan al entrenamiento público no autorizado de modelos.",
                     "Infraestructura en la nube y CDN: Almacenamiento seguro cifrado y distribución global de baja latencia.",
                 ],

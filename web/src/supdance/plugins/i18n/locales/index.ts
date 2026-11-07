@@ -4,6 +4,7 @@ import { MUSIC_SITE_I18N_ENTRIES } from "./music-site";
 export const SUPPORTED_LOCALE_CODES: readonly SupDanceLocaleCode[] = ["zh-CN", "en-US", "zh-TW", "ja-JP", "ko-KR", "es-ES"] as const;
 
 export const NAMESPACE_LABELS: Record<string, string> = {
+    legal: "法务页面",
     common: "通用与基础控件",
     nav: "顶栏与侧栏导航",
     auth: "登录与注册认证",
@@ -97,6 +98,8 @@ export const BUILTIN_SUPDANCE_I18N_ENTRIES: readonly SupDanceI18nEntry[] = [
     e("admin.i18n_workflow.json", "admin", "粘贴扫描工具生成的 drafts.json", "翻译更新中心"),
     e("admin.i18n_workflow.invalid", "admin", "草稿文件格式不正确", "翻译更新中心"),
     e("admin.i18n_workflow.version", "admin", "插件版本 {version} · 工作流修订 {revision}", "翻译更新中心"),
+    e("legal.scroll_to_bottom", "legal", "滑动直达底部", "法务页面直达底部按钮"),
+    e("legal.back_to_top", "legal", "返回页面顶部", "法务页面返回顶部按钮"),
     e("common.confirm", "common", "确认", "通用确认按钮"),
     e("common.cancel", "common", "取消", "通用取消按钮"),
     e("common.save", "common", "保存", "通用保存按钮"),

@@ -26,6 +26,15 @@ export type UpstreamPatchRecord = {
  */
 export const SUPDANCE_UPSTREAM_PATCH_REGISTRY: readonly UpstreamPatchRecord[] = [
     {
+        id: "supdance-waffo-enterprise-payment",
+        upstreamBaseline: "v1.8.0@2fe3ca13",
+        feature: "Waffo 企业版沙盒宿主支付合同",
+        coupledUpstreamFiles: ["backend/payment-sdk/types.go", "backend/internal/app/payment.go", "backend/internal/app/payment_providers.go", "backend/internal/handler/payment.go", "backend/internal/repository/payment.go"],
+        files: ["backend/internal/supdance/waffopayment/provider.go", "supdance/plugins/supdance-payment-waffo-enterprise/manifest.json"],
+        reason: "真实买家字段、指定测试用户、签名应答及下单交易号绑定复用宿主账本",
+        upgradeRisk: "HIGH",
+    },
+    {
         id: "supdance-profile-router-host",
         upstreamBaseline: "v1.8.0@2fe3ca13",
         feature: "全局账户浮窗的路由上下文与跨页面持久挂载",
@@ -548,6 +557,8 @@ export const SUPDANCE_UPSTREAM_PATCH_REGISTRY: readonly UpstreamPatchRecord[] = 
         feature: "全站视觉与交互引擎 (supdance-visual-engine)：集中管理三层 Token、E0–E4 深度阴影、Motion 动效、图 1 工作区恢复动画及后台专属控制台",
         coupledUpstreamFiles: [
             "web/src/lib/canvas-theme.ts",
+            "web/src/lib/overlay-extensions.ts",
+            "web/src/styles/globals.css",
             "web/src/stores/canvas/use-canvas-theme-store.ts",
             "backend/internal/app/plugin_management.go",
             "backend/internal/handler/api.go",

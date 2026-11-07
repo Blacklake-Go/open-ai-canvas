@@ -2,6 +2,8 @@ import { MUSIC_SITE_I18N_ENTRIES } from "../music-site";
 
 const pack: Record<string, string> = {
     ...Object.fromEntries(MUSIC_SITE_I18N_ENTRIES.map((entry) => [entry.key, entry.translations["ko-KR"]])),
+    "legal.scroll_to_bottom": "맨 아래로 스크롤",
+    "legal.back_to_top": "페이지 맨 위로",
     "admin.social_auth.icon_upload_hint": "밝은 테마와 어두운 테마 아이콘을 각각 업로드하세요(128×128 PNG/WebP 권장, 최대 5MB). 테마에 따라 전환되며 지우면 기본 아이콘으로 복원됩니다.",
     "admin.visual_motion.enable": "사이트 전체 전환 효과 사용",
     "admin.visual_motion.description":
