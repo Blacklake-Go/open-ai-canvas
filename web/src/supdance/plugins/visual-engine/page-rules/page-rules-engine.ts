@@ -18,7 +18,7 @@ export function resolvePageVisualPolicy(pathname: string, config: VisualEngineCo
     let recoveryEnabled = config.workspaceRecovery.enabled;
 
     if (rule) {
-        if (rule.themePresetOverride) {
+        if (rule.themePresetOverride && rule.themePresetOverride !== config.activePreset) {
             const preset = [...BUILTIN_THEME_PRESETS, ...config.customPresets].find((p) => p.id === rule.themePresetOverride);
             if (preset) {
                 activeTokens = { ...preset.tokens[systemMode] };
@@ -40,6 +40,6 @@ export function resolvePageVisualPolicy(pathname: string, config: VisualEngineCo
         activeThemeMode: systemMode,
         activeTokens,
         motionEnabled,
-        recoveryEnabled: recoveryEnabled && config.motion.enabled,
+        recoveryEnabled: recoveryEnabled && motionEnabled,
     };
 }

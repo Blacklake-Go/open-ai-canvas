@@ -249,6 +249,10 @@ describe("SupDance route & patch registry guards", () => {
         expect(source("components/ui/product/app-modal/app-modal.tsx")).toContain('resolveOverlayExtensionStyles("modal"');
         expect(source("components/ui/product/app-drawer/app-drawer.tsx")).toContain('resolveOverlayExtensionStyles("drawer"');
         expect(source("styles/globals.css")).toContain("var(--ve-overlay-mask,");
+        const modelPicker = source("components/model-picker.tsx");
+        for (const hook of ["canvas-model-picker-brand-subtext", "canvas-model-picker-option", "canvas-model-picker-description", "model-picker-availability-track", "model-picker-availability-popover", "model-picker-price"]) {
+            expect(modelPicker).toContain(hook);
+        }
     });
 
     test("verifies all registered upstream patch files exist on disk and align with supdance/config/baseline.json", () => {

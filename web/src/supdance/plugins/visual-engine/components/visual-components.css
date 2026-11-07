@@ -113,33 +113,26 @@ html[data-visual-engine-theme] :where(.asset-library-card .library-card-media)::
 /* ---------------------------------------------------- */
 
 /* 1. 隐藏左侧品牌栏渠道数与平台服务（图 1 标记项） */
-html[data-visual-engine-theme][data-ve-simplified-model-picker="true"] .canvas-model-picker-brand-meta,
-html[data-visual-engine-theme][data-ve-hide-channel-meta="true"] .canvas-model-picker-brand-meta {
+html[data-visual-engine-theme][data-ve-hide-channel-meta="true"] .canvas-model-picker-brand-subtext,
+html[data-visual-engine-theme][data-ve-hide-channel-meta="true"][data-ve-hide-telemetry="true"] .canvas-model-picker-brand-meta {
     display: none !important;
 }
 
-html[data-visual-engine-theme][data-ve-simplified-model-picker="true"] .canvas-model-picker-brand,
-html[data-visual-engine-theme][data-ve-hide-channel-meta="true"] .canvas-model-picker-brand {
+html[data-visual-engine-theme][data-ve-clean-card-layout="true"] .canvas-model-picker-brand {
     min-height: 44px;
     padding: 8px 12px;
     border-radius: 8px;
     gap: 10px;
 }
 
-html[data-visual-engine-theme][data-ve-simplified-model-picker="true"] .canvas-model-picker-brand-copy strong,
-html[data-visual-engine-theme][data-ve-hide-channel-meta="true"] .canvas-model-picker-brand-copy strong {
+html[data-visual-engine-theme][data-ve-clean-card-layout="true"] .canvas-model-picker-brand-copy strong {
     font-size: 13px;
     font-weight: 500;
 }
 
-html[data-visual-engine-theme][data-ve-simplified-model-picker="true"] .canvas-model-picker-two-pane {
-    grid-template-columns: 210px minmax(0, 1fr) !important;
-}
-
 /* 2. 隐藏模型调用采样统计浮窗与状态指示（图 3 标记项，仅隐藏不删除底层 DOM/组件） */
-html[data-visual-engine-theme][data-ve-simplified-model-picker="true"] .model-picker-availability,
 html[data-visual-engine-theme][data-ve-hide-telemetry="true"] .model-picker-availability,
-html[data-visual-engine-theme][data-ve-simplified-model-picker="true"] .model-picker-availability-popover,
+html[data-visual-engine-theme][data-ve-hide-telemetry="true"] .model-picker-availability-track,
 html[data-visual-engine-theme][data-ve-hide-telemetry="true"] .model-picker-availability-popover {
     display: none !important;
     pointer-events: none !important;
@@ -151,7 +144,7 @@ html[data-visual-engine-theme][data-ve-simplified-model-picker="true"] .canvas-m
 }
 
 /* 4. 右侧具体品牌模型列表：参考图 2 音乐模型卡片风格 */
-html[data-visual-engine-theme][data-ve-simplified-model-picker="true"] .canvas-model-picker-option {
+html[data-visual-engine-theme][data-ve-clean-card-layout="true"] .canvas-model-picker-option {
     min-height: 48px;
     border-radius: 8px;
     padding: 8px 12px;
@@ -161,16 +154,16 @@ html[data-visual-engine-theme][data-ve-simplified-model-picker="true"] .canvas-m
         color 150ms ease;
 }
 
-html[data-visual-engine-theme][data-ve-simplified-model-picker="true"] .canvas-model-picker-option:hover {
+html[data-visual-engine-theme][data-ve-clean-card-layout="true"] .canvas-model-picker-option:hover {
     background: color-mix(in srgb, currentColor 6%, transparent) !important;
 }
 
-html[data-visual-engine-theme][data-ve-simplified-model-picker="true"] .canvas-model-picker-option[aria-selected="true"] {
+html[data-visual-engine-theme][data-ve-clean-card-layout="true"] .canvas-model-picker-option[aria-selected="true"] {
     background: color-mix(in srgb, var(--primary, #e11d48) 12%, transparent) !important;
     color: var(--primary, #e11d48) !important;
 }
 
-html[data-visual-engine-theme][data-ve-simplified-model-picker="true"] .canvas-model-picker-option-heading {
+html[data-visual-engine-theme][data-ve-clean-card-layout="true"] .canvas-model-picker-option-heading {
     display: flex;
     align-items: center;
     justify-content: space-between;
@@ -178,14 +171,14 @@ html[data-visual-engine-theme][data-ve-simplified-model-picker="true"] .canvas-m
     gap: 10px;
 }
 
-html[data-visual-engine-theme][data-ve-simplified-model-picker="true"] .canvas-model-picker-option-name {
+html[data-visual-engine-theme][data-ve-clean-card-layout="true"] .canvas-model-picker-option-name {
     font-size: 13px;
     font-weight: 600;
     line-height: 1.3;
 }
 
 /* 5. 原积分区间药丸 Badge：参考图 2 右侧药丸样式，保留原计费区间文字 */
-html[data-visual-engine-theme][data-ve-simplified-model-picker="true"] .canvas-model-picker-option .model-picker-price {
+html[data-visual-engine-theme][data-ve-clean-card-layout="true"] .canvas-model-picker-option .model-picker-price {
     display: inline-flex;
     align-items: center;
     gap: 4px;
@@ -201,7 +194,7 @@ html[data-visual-engine-theme][data-ve-simplified-model-picker="true"] .canvas-m
     overflow-wrap: normal !important;
 }
 
-html[data-visual-engine-theme][data-ve-simplified-model-picker="true"] .canvas-model-picker-option .model-picker-price .model-picker-price-icon {
+html[data-visual-engine-theme][data-ve-clean-card-layout="true"] .canvas-model-picker-option .model-picker-price .model-picker-price-icon {
     width: 12px;
     height: 12px;
     opacity: 0.85;

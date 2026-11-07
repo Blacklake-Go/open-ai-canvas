@@ -123,6 +123,9 @@ v1.3.3 将授权后入站票据从单进程内存迁移至共享 Redis（键前�
 ### 资产页方舟认证角标与浏览器翻译
 
 - `web/src/pages/assets/asset-library-cards.tsx` 为认证状态保留独立文案元素。上游合并时保留此结构及 `web/index.html` 的 `translate="no"`，由站内国际化提供界面语言。自动测试覆盖入口声明与审核角标结构。
+### 资产页方舟认证角标
+
+- `web/src/pages/assets/asset-library-cards.tsx` 为认证角标保留稳定的文案元素。合并上游时保留该结构，避免浏览器翻译包裹文本后，审核轮询替换图标触发 DOM 插入异常。
 
 所有对上游文件的直接修改均同步登记在 [`web/src/supdance/adapters/compatibility.ts`](../../web/src/supdance/adapters/compatibility.ts) 的 `SUPDANCE_UPSTREAM_PATCH_REGISTRY` 与 [`supdance/config/baseline.json`](../../supdance/config/baseline.json) 中：
 
@@ -173,6 +176,8 @@ v1.3.3 将授权后入站票据从单进程内存迁移至共享 Redis（键前�
 - **完整上游合并后的并行补丁收敛**：保留音乐配置任务已部署的 Suno / Mureka / MiniMax 品牌分组、选项去重与整数秒时长滑条。分组只影响显示，不合并渠道身份，不改变模型选择、报价或收费。滑条复用 AntD 和既有国际化词条，预设按钮同步禁用态与 `aria-pressed`。模型分组、渠道身份与报价回归位于 `web/test/model-picker-groups.test.ts`，后续更新须同时保留这些控件改动。
 
 ### 补丁 ID：`supdance-visual-engine`
+
+- 页面规则、加载回退与模型选择器精简样式在插件目录内生效。上游升级时保留既有主题与浮层扩展接入点，合并候选由 `supdance-upstream-sync.yml` 运行扩展隔离、宿主皮肤及视觉引擎专项回归。
 - 运行时按宿主扩展能力启停，复用服务端发布包。应用挂载、Router、皮肤及浮层扩展由升级门禁检查。运行态验收和上游 UI 差异见 [宿主兼容性](visual-engine/HOST_COMPATIBILITY.md)。
 - 动效总开关复用 `motion.enabled`，新配置默认关闭；插件生命周期内控制全站 CSS 与现有 Motion 库，页面规则不能越过总开关。关闭时复用上游 `WorkspaceRouteLoader`，不新增加载或路由动画、不新增宿主补丁点；既有发布配置需管理员关闭开关后发布。上游比对依据与回滚方式见 `visual-engine/MOTION_ENGINE.md`。
 - **被修改的上游文件**：
