@@ -2266,13 +2266,13 @@
     flex: 1 1 auto;
 }
 
-.creation-model-picker-surface .creation-model-picker-menu.is-model-list .canvas-model-picker-two-pane {
+.creation-model-picker-surface .creation-model-picker-menu.is-model-list:not(.sd-compact-picker) .canvas-model-picker-two-pane {
     display: grid;
     grid-template-columns: 272px minmax(0, 1fr);
     gap: 12px;
     min-height: 0;
 }
-.creation-model-picker-surface .creation-model-picker-menu.is-model-list .canvas-model-picker-brand-rail {
+.creation-model-picker-surface .creation-model-picker-menu.is-model-list:not(.sd-compact-picker) .canvas-model-picker-brand-rail {
     display: grid;
     align-content: start;
     gap: 4px;
@@ -2305,11 +2305,11 @@
         height: 40px;
         flex-basis: 40px;
     }
-    .creation-model-picker-surface .creation-model-picker-menu.is-model-list .canvas-model-picker-two-pane {
+    .creation-model-picker-surface .creation-model-picker-menu.is-model-list:not(.sd-compact-picker) .canvas-model-picker-two-pane {
         grid-template-columns: minmax(0, 1fr);
         min-height: 0;
     }
-    .creation-model-picker-surface .creation-model-picker-menu.is-model-list .canvas-model-picker-brand-rail {
+    .creation-model-picker-surface .creation-model-picker-menu.is-model-list:not(.sd-compact-picker) .canvas-model-picker-brand-rail {
         display: none;
     }
     .app-user-workspace .creation-chat-composer.is-thread .creation-chat-dock .creation-mode-tabs {

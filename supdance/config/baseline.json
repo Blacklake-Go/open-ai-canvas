@@ -38,6 +38,7 @@
     "backend/internal/handler/custom_proxy.go",
     "web/src/components/model-logo.tsx",
     "web/src/components/model-picker.tsx",
+    "web/src/styles/workspace-product.css",
     "backend/internal/app/analytics_enrich.go",
     "backend/internal/app/channel_model_pricing.go",
     "backend/internal/app/channel_models.go",

@@ -60,6 +60,8 @@
 .sd-picker-copy strong {
     font-size: var(--fs-body, 14px);
     font-weight: 600;
+    white-space: normal;
+    overflow-wrap: anywhere;
 }
 .sd-picker-copy small {
     color: var(--muted-foreground);
@@ -100,6 +102,12 @@
     }
     .sd-compact-picker .sd-picker-row {
         gap: 4px;
+        flex-direction: column;
+        align-items: stretch;
+    }
+    .sd-compact-picker .sd-picker-price {
+        max-width: 100%;
+        align-self: flex-start;
     }
     .sd-compact-picker .sd-picker-price > span {
         padding-inline: 5px;

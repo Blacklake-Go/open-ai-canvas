@@ -205,3 +205,4 @@ afterAll(async () => {
 });
 
 await import("./compact-picker-admin-case");
+await import("./compact-picker-music-case");
