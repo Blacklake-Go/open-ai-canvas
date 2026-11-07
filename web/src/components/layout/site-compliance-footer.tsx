@@ -1,10 +1,12 @@
-import { ExternalLink } from "lucide-react";
+import { ExternalLink, X } from "lucide-react";
+import { useState } from "react";
 import { useTranslation } from "react-i18next";
 
 import { cn } from "@/lib/utils";
 import { useAppearanceStore } from "@/stores/use-appearance-store";
 
 const MIIT_FILING_URL = "https://beian.miit.gov.cn/";
+const WORKSPACE_FOOTER_DISMISSED_KEY = "supdance:legal-footer:dismissed:v1";
 
 /** Anchors also work in the standalone welcome entry, which has no Router. */
 export function SitePolicyLinks() {
@@ -29,16 +31,45 @@ export function SiteComplianceFooter({ className, variant = "default" }: { class
     const appearance = useAppearanceStore((state) => state.appearance);
     const { t } = useTranslation();
 
+    const [dismissed, setDismissed] = useState(() => {
+        if (variant !== "workspace") return false;
+        try {
+            return localStorage.getItem(WORKSPACE_FOOTER_DISMISSED_KEY) === "true";
+        } catch {
+            console.warn("Unable to read the legal footer display preference");
+            return false;
+        }
+    });
+
+    if (variant === "workspace" && dismissed) return null;
+
     return (
         <footer className={cn("site-compliance-footer", variant === "auth" && "is-auth", variant === "workspace" && "is-workspace", className)} aria-label={t("account.layout.footer.label")}>
             {variant !== "workspace" ? <span>{appearance.footerCopyright}</span> : null}
-            {/* 收单机构与 GDPR 都要求政策页在未登录状态下从任意页面可达，因此挂在通用页脚而不是只放在登录页。 */}
             <SitePolicyLinks />
             {appearance.icpFilingEnabled && appearance.icpFilingNumber ? (
                 <a href={MIIT_FILING_URL} target="_blank" rel="noopener noreferrer" aria-label={t("account.layout.footer.icpLink", { number: appearance.icpFilingNumber })}>
                     {appearance.icpFilingNumber}
                     <ExternalLink aria-hidden="true" />
                 </a>
+            ) : null}
+            {variant === "workspace" ? (
+                <button
+                    type="button"
+                    className="site-compliance-footer-dismiss"
+                    aria-label={t("account.layout.footer.dismiss")}
+                    title={t("account.layout.footer.dismiss")}
+                    onClick={() => {
+                        setDismissed(true);
+                        try {
+                            localStorage.setItem(WORKSPACE_FOOTER_DISMISSED_KEY, "true");
+                        } catch {
+                            console.warn("Unable to persist the legal footer display preference");
+                        }
+                    }}
+                >
+                    <X aria-hidden="true" />
+                </button>
             ) : null}
         </footer>
     );

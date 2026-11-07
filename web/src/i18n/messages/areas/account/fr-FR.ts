@@ -24,6 +24,7 @@ export const frFR: DeepStringRecord<typeof zhCN> = {
             loadFailed: "Échec du chargement des annonces",
         },
         footer: {
+            dismiss: "Fermer les informations légales",
             terms: "Conditions d’utilisation",
             privacy: "Politique de confidentialité",
             aup: "Politique d’utilisation acceptable",

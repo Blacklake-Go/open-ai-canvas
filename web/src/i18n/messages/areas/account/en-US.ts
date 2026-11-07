@@ -24,6 +24,7 @@ export const enUS: DeepStringRecord<typeof zhCN> = {
             loadFailed: "Failed to load announcements",
         },
         footer: {
+            dismiss: "Dismiss legal notice",
             terms: "Terms of Service",
             privacy: "Privacy Policy",
             aup: "Acceptable Use Policy",

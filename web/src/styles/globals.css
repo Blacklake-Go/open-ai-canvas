@@ -630,9 +630,42 @@
 }
 
 .site-compliance-footer.is-workspace {
+    position: relative;
     flex-direction: row;
     flex-wrap: wrap;
     padding-block: var(--space-1);
+    padding-inline-end: calc(var(--space-4) + 44px);
+}
+
+.site-compliance-footer .site-compliance-footer-dismiss {
+    position: absolute;
+    inset-block-start: var(--space-1);
+    inset-inline-end: var(--space-1);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 44px;
+    height: 44px;
+    border: 0;
+    border-radius: var(--button-radius);
+    background: transparent;
+    color: inherit;
+    cursor: pointer;
+}
+
+.site-compliance-footer .site-compliance-footer-dismiss:hover {
+    background: var(--muted);
+    color: var(--foreground);
+}
+
+.site-compliance-footer .site-compliance-footer-dismiss:focus-visible {
+    outline: 2px solid var(--ring);
+    outline-offset: -2px;
+}
+
+.site-compliance-footer .site-compliance-footer-dismiss svg {
+    width: var(--space-4);
+    height: var(--space-4);
 }
 
 .site-compliance-footer.is-workspace a {
