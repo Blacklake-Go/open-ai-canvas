@@ -27,7 +27,6 @@ export interface LocalizedLegalDoc {
     summary: string;
     effectiveDate: string;
     version: string;
-    authoritativeNotice: string;
     sections: LegalSectionItem[];
 }
 
@@ -63,7 +62,6 @@ export const AUP_DOC_MAP: Record<SupportedLegalLanguage, LocalizedLegalDoc> = {
         summary: "Standards, monitoring, reporting channels, and enforcement actions for AI-generated content across the Supdance platform.",
         effectiveDate: LEGAL_OPERATOR_CONFIG.effectiveDate,
         version: LEGAL_OPERATOR_CONFIG.version,
-        authoritativeNotice: "Authoritative English Version. In the event of any discrepancies or conflicting interpretations between translations and this English text, the English version shall prevail.",
         sections: [
             {
                 id: "scope",
@@ -149,7 +147,6 @@ export const AUP_DOC_MAP: Record<SupportedLegalLanguage, LocalizedLegalDoc> = {
         summary: "Supdance 平台针对 AI 生成内容制定的内容标准、审核机制、举报途径及违规处置行动。",
         effectiveDate: "2026年11月04日",
         version: LEGAL_OPERATOR_CONFIG.version,
-        authoritativeNotice: "本文为中文参考译本。如不同语言版本之间存在任何歧义或冲突，均以英文原版（Authoritative English Version）为准。",
         sections: [
             {
                 id: "scope",
@@ -225,7 +222,6 @@ export const AUP_DOC_MAP: Record<SupportedLegalLanguage, LocalizedLegalDoc> = {
         summary: "Supdance 針對 AI 生成內容所制定的內容標準、審核機制、舉報途徑與違規處置規範。",
         effectiveDate: "2026年11月04日",
         version: LEGAL_OPERATOR_CONFIG.version,
-        authoritativeNotice: "本文為繁體中文參考譯本。如不同語言版本之間存在任何歧異或衝突，均以英文原版（Authoritative English Version）為準。",
         sections: [
             {
                 id: "scope",
@@ -301,7 +297,6 @@ export const AUP_DOC_MAP: Record<SupportedLegalLanguage, LocalizedLegalDoc> = {
         summary: "Supdance プラットフォームにおける AI 生成コンテンツの安全基準、監視体制、通報窓口および違反執行措置。",
         effectiveDate: "2026年11月04日",
         version: LEGAL_OPERATOR_CONFIG.version,
-        authoritativeNotice: "本文は日本語参考訳です。翻訳と英語原文の間に不一致がある場合は、英語原文（Authoritative English Version）が優先されます。",
         sections: [
             {
                 id: "scope",
@@ -383,7 +378,6 @@ export const AUP_DOC_MAP: Record<SupportedLegalLanguage, LocalizedLegalDoc> = {
         summary: "Supdance 플랫폼의 AI 생성 콘텐츠에 대한 안전 표준, 모니터링, 신고 접수 및 위반 제재 조치.",
         effectiveDate: "2026년 11월 04일",
         version: LEGAL_OPERATOR_CONFIG.version,
-        authoritativeNotice: "본 문서는 한국어 번역본입니다. 번역본과 영어 원문 간에 불일치가 발생하는 경우 영어 원문(Authoritative English Version)이 우선합니다.",
         sections: [
             {
                 id: "scope",
@@ -468,7 +462,6 @@ export const AUP_DOC_MAP: Record<SupportedLegalLanguage, LocalizedLegalDoc> = {
         summary: "Estándares de contenido, moderación, canales de denuncia y medidas disciplinarias para creaciones con IA en Supdance.",
         effectiveDate: "4 de noviembre de 2026",
         version: LEGAL_OPERATOR_CONFIG.version,
-        authoritativeNotice: "Versión en español para fines informativos. En caso de discrepancia, prevalecerá la versión oficial en inglés (Authoritative English Version).",
         sections: [
             {
                 id: "scope",
@@ -560,7 +553,6 @@ export const TOS_DOC_MAP: Record<SupportedLegalLanguage, LocalizedLegalDoc> = {
         summary: "Legally binding agreement governing account usage, digital instant delivery of credits, PCI-DSS billing, and AI asset ownership.",
         effectiveDate: LEGAL_OPERATOR_CONFIG.effectiveDate,
         version: LEGAL_OPERATOR_CONFIG.version,
-        authoritativeNotice: "Authoritative English Version. In the event of any discrepancies or conflicting interpretations between translations and this English text, the English version shall prevail.",
         sections: [
             {
                 id: "acceptance",
@@ -660,7 +652,6 @@ export const TOS_DOC_MAP: Record<SupportedLegalLanguage, LocalizedLegalDoc> = {
         summary: "约定账号使用、积分数字即时交付、PCI-DSS 安全支付、退款保障与 AI 创作资产归属的具有法律约束力的协议。",
         effectiveDate: "2026年11月04日",
         version: LEGAL_OPERATOR_CONFIG.version,
-        authoritativeNotice: "本文为中文参考译本。如不同语言版本之间存在任何歧义或冲突，均以英文原版（Authoritative English Version）为准。",
         sections: [
             {
                 id: "acceptance",
@@ -748,7 +739,6 @@ export const TOS_DOC_MAP: Record<SupportedLegalLanguage, LocalizedLegalDoc> = {
         summary: "約定帳號使用、積分數位即時交付、PCI-DSS 安全支付、退款保障與 AI 創作資產歸屬的具有法律約束力的協議。",
         effectiveDate: "2026年11月04日",
         version: LEGAL_OPERATOR_CONFIG.version,
-        authoritativeNotice: "本文為繁體中文參考譯本。如不同語言版本之間存在任何歧異或衝突，均以英文原版（Authoritative English Version）為準。",
         sections: [
             {
                 id: "acceptance",
@@ -836,7 +826,6 @@ export const TOS_DOC_MAP: Record<SupportedLegalLanguage, LocalizedLegalDoc> = {
         summary: "アカウントの利用、デジタル即時提供、PCI-DSS 安全決済、返金保証、および AI 創作資産の帰属を定める法的合意文書。",
         effectiveDate: "2026年11月04日",
         version: LEGAL_OPERATOR_CONFIG.version,
-        authoritativeNotice: "本文は日本語参考訳です。翻訳と英語原文の間に不一致がある場合は、英語原文（Authoritative English Version）が優先されます。",
         sections: [
             {
                 id: "acceptance",
@@ -935,7 +924,6 @@ export const TOS_DOC_MAP: Record<SupportedLegalLanguage, LocalizedLegalDoc> = {
         summary: "계정 이용, 디지털 크레딧의 즉시 제공, PCI-DSS 보안 결제, 7일 환불 정책 및 AI 창작물 지적 재산권 귀속에 관한 법적 계약.",
         effectiveDate: "2026년 11월 04일",
         version: LEGAL_OPERATOR_CONFIG.version,
-        authoritativeNotice: "본 문서는 한국어 번역본입니다. 번역본과 영어 원문 간에 불일치가 발생하는 경우 영어 원문(Authoritative English Version)이 우선합니다.",
         sections: [
             {
                 id: "acceptance",
@@ -1032,7 +1020,6 @@ export const TOS_DOC_MAP: Record<SupportedLegalLanguage, LocalizedLegalDoc> = {
         summary: "Contrato legal vinculante que regula el uso de cuentas, la entrega digital instantánea, facturación segura PCI-DSS y propiedad de activos de IA.",
         effectiveDate: "4 de noviembre de 2026",
         version: LEGAL_OPERATOR_CONFIG.version,
-        authoritativeNotice: "Versión en español para fines informativos. En caso de discrepancia, prevalecerá la versión oficial en inglés (Authoritative English Version).",
         sections: [
             {
                 id: "acceptance",
@@ -1137,7 +1124,6 @@ export const PRIVACY_DOC_MAP: Record<SupportedLegalLanguage, LocalizedLegalDoc> 
         summary: "How Supdance collects, isolates, secures, and handles personal data, payment information, and your creative AI assets.",
         effectiveDate: LEGAL_OPERATOR_CONFIG.effectiveDate,
         version: LEGAL_OPERATOR_CONFIG.version,
-        authoritativeNotice: "Authoritative English Version. In the event of any discrepancies or conflicting interpretations between translations and this English text, the English version shall prevail.",
         sections: [
             {
                 id: "controller",
@@ -1227,7 +1213,6 @@ export const PRIVACY_DOC_MAP: Record<SupportedLegalLanguage, LocalizedLegalDoc> 
         summary: "详尽说明 Supdance 如何收集、隔离、加密保护您的个人数据、支付信息与 AI 影视创作资产。",
         effectiveDate: "2026年11月04日",
         version: LEGAL_OPERATOR_CONFIG.version,
-        authoritativeNotice: "本文为中文参考译本。如不同语言版本之间存在任何歧义或冲突，均以英文原版（Authoritative English Version）为准。",
         sections: [
             {
                 id: "controller",
@@ -1317,7 +1302,6 @@ export const PRIVACY_DOC_MAP: Record<SupportedLegalLanguage, LocalizedLegalDoc> 
         summary: "詳盡說明 Supdance 如何收集、隔離、加密保護您的個人資料、支付資訊與 AI 影視創作資產。",
         effectiveDate: "2026年11月04日",
         version: LEGAL_OPERATOR_CONFIG.version,
-        authoritativeNotice: "本文為繁體中文參考譯本。如不同語言版本之間存在任何歧異或衝突，均以英文原版（Authoritative English Version）為準。",
         sections: [
             {
                 id: "controller",
@@ -1407,7 +1391,6 @@ export const PRIVACY_DOC_MAP: Record<SupportedLegalLanguage, LocalizedLegalDoc> 
         summary: "Supdance がお客様の個人データ、決済情報、および AI 創作プロジェクト資産をどのように収集、隔離、暗号化保護しているかを詳述します。",
         effectiveDate: "2026年11月04日",
         version: LEGAL_OPERATOR_CONFIG.version,
-        authoritativeNotice: "本文は日本語参考訳です。翻訳と英語原文の間に不一致がある場合は、英語原文（Authoritative English Version）が優先されます。",
         sections: [
             {
                 id: "controller",
@@ -1497,7 +1480,6 @@ export const PRIVACY_DOC_MAP: Record<SupportedLegalLanguage, LocalizedLegalDoc> 
         summary: "Supdance가 사용자의 개인정보, 결제 데이터 및 AI 프로젝트 자산을 수집, 격리, 암호화하여 보호하는 방법에 대한 안내.",
         effectiveDate: "2026년 11월 04일",
         version: LEGAL_OPERATOR_CONFIG.version,
-        authoritativeNotice: "본 문서는 한국어 번역본입니다. 번역본과 영어 원문 간에 불일치가 발생하는 경우 영어 원문(Authoritative English Version)이 우선합니다.",
         sections: [
             {
                 id: "controller",
@@ -1587,7 +1569,6 @@ export const PRIVACY_DOC_MAP: Record<SupportedLegalLanguage, LocalizedLegalDoc> 
         summary: "Detalles sobre cómo Supdance recopila, aísla, cifra y protege sus datos personales, información de pago y activos de creación de IA.",
         effectiveDate: "4 de noviembre de 2026",
         version: LEGAL_OPERATOR_CONFIG.version,
-        authoritativeNotice: "Versión en español para fines informativos. En caso de discrepancia, prevalecerá la versión oficial en inglés (Authoritative English Version).",
         sections: [
             {
                 id: "controller",
