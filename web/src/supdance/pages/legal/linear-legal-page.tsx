@@ -1,4 +1,4 @@
-import { TopbarLanguageSwitcher } from "@/supdance/plugins/i18n";
+import { TopbarLanguageSwitcher, useI18n } from "@/supdance/plugins/i18n";
 import { useEffect, useState } from "react";
 import { ArrowDown, ArrowUp } from "lucide-react";
 import { useLocaleStore } from "@/stores/use-locale-store";
