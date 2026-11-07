@@ -24,6 +24,7 @@ export const jaJP: DeepStringRecord<typeof zhCN> = {
             loadFailed: "お知らせの読み込みに失敗しました",
         },
         footer: {
+            dismiss: "法的情報の案内を閉じる",
             terms: "利用規約",
             privacy: "プライバシーポリシー",
             aup: "利用ポリシー",

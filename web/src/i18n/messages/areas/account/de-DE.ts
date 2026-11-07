@@ -24,6 +24,7 @@ export const deDE: DeepStringRecord<typeof zhCN> = {
             loadFailed: "Ankündigungen konnten nicht geladen werden",
         },
         footer: {
+            dismiss: "Rechtliche Hinweise schließen",
             terms: "Nutzungsbedingungen",
             privacy: "Datenschutzerklärung",
             aup: "Richtlinie zur zulässigen Nutzung",
