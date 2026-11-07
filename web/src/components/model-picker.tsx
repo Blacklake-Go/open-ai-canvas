@@ -1,6 +1,7 @@
 import { useEffect, useId, useLayoutEffect, useMemo, useRef, useState, type CSSProperties, type KeyboardEvent } from "react";
 import { Check, ChevronDown, Coins } from "lucide-react";
 import { Popover } from "antd";
+import { useTranslation } from "react-i18next";
 import { usePopoverAnchorAlign } from "@/hooks/use-popover-anchor-align";
 import { useCompactPickerSettings, type CompactPickerSettings } from "@/supdance/plugins/compact-model-picker/settings";
 import { CompactModelRow } from "@/supdance/plugins/compact-model-picker/model-row";
@@ -60,6 +61,7 @@ export function ModelPicker({
     modelDisabledReason,
     disabled = false,
 }: ModelPickerProps) {
+    const { t } = useTranslation();
     const creditsEnabled = useUserStore((state) => state.features.creditsEnabled);
     const pickerId = useId();
     // 双保险：即使 store merge 写出非法 theme，这里也兜底到 dark，避免 "reading 'node'" 崩溃
@@ -69,7 +71,7 @@ export function ModelPicker({
     useEffect(() => {
         if (disabled) setOpen(false);
     }, [disabled]);
-    const compact = useCompactPickerSettings(open);
+    const compact = useCompactPickerSettings();
     const popoverRef = usePopoverAnchorAlign(open);
     const [availableHeight, setAvailableHeight] = useState(0);
     const [activeGroupKey, setActiveGroupKey] = useState<string | null>(null);
@@ -204,12 +206,22 @@ export function ModelPicker({
             className={cn("canvas-model-picker-menu creation-model-picker-menu max-w-[calc(100vw-24px)]", visibleGroupKey === null ? "is-brand-list" : "is-model-list", compact.enabled && "sd-compact-picker")}
             style={{ "--canvas-model-picker-available-height": `${availableHeight}px` } as CSSProperties}
             role="listbox"
+            aria-busy={compact.status === "loading"}
             aria-label={placeholder}
             onKeyDown={handleMenuKeyDown}
             onMouseDown={(event) => event.stopPropagation()}
             onPointerDown={(event) => event.stopPropagation()}
         >
-            {optionGroups.length ? (
+            {compact.status !== "ready" ? (
+                <div className="canvas-model-picker-empty" role={compact.status === "error" ? "alert" : "status"}>
+                    {t(compact.status === "error" ? "compactPicker.readError" : "compactPicker.loading")}
+                    {compact.status === "error" && (
+                        <button type="button" className="sd-picker-retry" onClick={compact.reload}>
+                            {t("compactPicker.retry")}
+                        </button>
+                    )}
+                </div>
+            ) : optionGroups.length ? (
                 visibleGroupKey === null ? (
                     <div className="canvas-model-picker-brands" aria-label="选择产品模型">
                         {optionGroups.map((group) => {
