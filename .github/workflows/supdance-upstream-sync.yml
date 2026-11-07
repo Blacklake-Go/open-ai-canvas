@@ -31,11 +31,7 @@ permissions:
   pull-requests: write
 
 jobs:
-  # 复用上游已有完整质量检查（Go 测试、Agent 架构、支付插件、Web formatting/typecheck/lint/unit/E2E）
-  upstream-quality:
-    if: github.event_name == 'pull_request'
-    uses: ./.github/workflows/quality.yml
-
+  # quality.yml 已监听每个 PR，重复调用会使同一 PR 的两套检查互相取消。
   supdance-gate:
     name: SupDance Extension & Upstream Compatibility Gate
     runs-on: ubuntu-latest
