@@ -36,6 +36,37 @@ tags:
   - name: pose-library
     description: 站点姿势库：浏览、选用，管理员导入与图片同步
 paths:
+  /supdance/compact-model-picker/settings:
+    get:
+      tags: [meta]
+      security: []
+      summary: 读取模型选择器的显示配置
+      responses:
+        "200": {$ref: "#/components/responses/CompactPickerSettings"}
+        "500": {$ref: "#/components/responses/Error"}
+  /admin/supdance/compact-model-picker/settings:
+    get:
+      tags: [admin]
+      summary: 管理员读取模型选择器设置
+      responses:
+        "200": {$ref: "#/components/responses/CompactPickerSettings"}
+        "401": {$ref: "#/components/responses/Error"}
+        "403": {$ref: "#/components/responses/Error"}
+        "500": {$ref: "#/components/responses/Error"}
+    put:
+      tags: [admin]
+      summary: 管理员保存模型选择器平台开关与显示选项
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: {$ref: "#/components/schemas/CompactPickerSettings"}
+      responses:
+        "200": {$ref: "#/components/responses/CompactPickerSettings"}
+        "400": {$ref: "#/components/responses/Error"}
+        "401": {$ref: "#/components/responses/Error"}
+        "403": {$ref: "#/components/responses/Error"}
+        "500": {$ref: "#/components/responses/Error"}
   /plugins/supdance-visual-engine/bundle:
     get:
       tags: [meta]
@@ -3538,6 +3569,14 @@ components:
       in: cookie
       name: open_ai_canvas_session
   schemas:
+    CompactPickerSettings:
+      type: object
+      additionalProperties: false
+      required: [enabled, showDescription, showPrice]
+      properties:
+        enabled: {type: boolean, default: true}
+        showDescription: {type: boolean, default: true}
+        showPrice: {type: boolean, default: true}
     EcommerceAgentRequest:
       type: object
       description: 对应 ecommerceagent.Request；分析、推荐、报价与生成复用此请求，具体操作的业务校验由服务端执行。
@@ -4206,6 +4245,17 @@ components:
                 - model_catalog_mismatch
                 - invalid_model_selection
   responses:
+    CompactPickerSettings:
+      description: 当前生效的模型选择器配置
+      content:
+        application/json:
+          schema:
+            type: object
+            required: [code, data, msg]
+            properties:
+              code: {type: integer, enum: [0]}
+              data: {$ref: "#/components/schemas/CompactPickerSettings"}
+              msg: {type: string}
     ModelQuote:
       description: 当前参数对应的费用报价，位于信封 data.quote
       content:

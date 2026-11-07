@@ -26,6 +26,32 @@ export type UpstreamPatchRecord = {
  */
 export const SUPDANCE_UPSTREAM_PATCH_REGISTRY: readonly UpstreamPatchRecord[] = [
     {
+        id: "supdance-compact-model-picker",
+        upstreamBaseline: "v1.8.0@2fe3ca13",
+        feature: "模型选择器及其独立管理面板",
+        coupledUpstreamFiles: [
+            "web/src/components/model-picker.tsx",
+            "web/src/router.tsx",
+            "web/src/i18n/areas.ts",
+            "web/src/lib/plugins/builtin/index.ts",
+            "web/src/pages/admin/components/admin-shell.tsx",
+            "web/src/pages/admin/plugins/plugins-page.tsx",
+            "backend/internal/handler/api.go",
+            "backend/internal/handler/openapi.yaml",
+        ],
+        files: [
+            "web/src/supdance/plugins/compact-model-picker/settings.ts",
+            "web/src/supdance/plugins/compact-model-picker/admin.tsx",
+            "backend/internal/handler/supdance_compact_picker.go",
+            "backend/internal/app/supdance_compact_picker.go",
+            "backend/internal/supdance/compactpicker/settings.go",
+            "supdance/plugins/supdance-compact-model-picker/manifest.json",
+            "web/test/fixtures/compact-model-picker.harness.tsx",
+        ],
+        reason: "上游同步后验证工作台仍加载品牌与模型双栏，控制面板可保存配置，停用后恢复宿主选择器。",
+        upgradeRisk: "MEDIUM",
+    },
+    {
         id: "supdance-profile-router-host",
         upstreamBaseline: "v1.8.0@2fe3ca13",
         feature: "全局账户浮窗的路由上下文与跨页面持久挂载",

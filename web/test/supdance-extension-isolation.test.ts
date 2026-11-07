@@ -27,6 +27,16 @@ import {
 
 const TEST_PLUGIN_ID = "supdance-test-extension";
 
+test("upstream integration retains the compact picker and its administrator controls", () => {
+    const result = Bun.spawnSync([process.execPath, "test", "./test/fixtures/compact-model-picker.harness.tsx"], {
+        cwd: resolve(import.meta.dir, ".."),
+        stdout: "pipe",
+        stderr: "pipe",
+    });
+    if (result.exitCode) console.error(result.stdout.toString(), result.stderr.toString());
+    expect(result.exitCode).toBe(0);
+}, 30_000);
+
 function createMockHostContext(manifest: PluginManifestV2): PluginHostContext {
     return {
         manifest,
