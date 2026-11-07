@@ -152,7 +152,7 @@ func TestEcommerceWorkbenchAnalysisModelsAreFixedByAdministrator(t *testing.T) {
 	svc, db, _, _ := ecommerceCreationTestService(t)
 	t.Setenv("AI_MODE", "live")
 	t.Setenv("TEXT_API_KEY", "")
-	if err := db.Model(&model.ModelChannel{}).Where("id = ?", "channel").Updates(map[string]any{"base_url": "https://example.com/v1", "api_key": "server-owned"}).Error; err != nil {
+	if err := db.Model(&model.ModelChannel{}).Where("id = ?", "channel").Updates(map[string]any{"base_url": ecommerceConfigOnlyEndpoint(t), "api_key": "server-owned"}).Error; err != nil {
 		t.Fatal(err)
 	}
 	for _, key := range []string{"planner-test", "vision-test"} {

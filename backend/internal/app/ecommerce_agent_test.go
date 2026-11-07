@@ -138,11 +138,23 @@ func TestEcommerceAgentLiveTextUsesAdminChannelWithoutEnvKey(t *testing.T) {
 	}
 }
 
+// These tests resolve channel configuration without issuing a model request.
+func ecommerceConfigOnlyEndpoint(t *testing.T) string {
+	t.Helper()
+	t.Setenv("CANVAS_ALLOWED_PRIVATE_UPSTREAM_HOSTS", "127.0.0.1")
+	upstream := httptest.NewTLSServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		t.Errorf("resolving a channel unexpectedly called %s %s", r.Method, r.URL.Path)
+		w.WriteHeader(http.StatusServiceUnavailable)
+	}))
+	t.Cleanup(upstream.Close)
+	return upstream.URL + "/v1"
+}
+
 func TestEcommerceAgentLiveImageUsesConfiguredChannelModel(t *testing.T) {
 	svc, db := mockEcommerceAgentService(t)
 	t.Setenv("AI_MODE", "live")
 	t.Setenv("ECOMMERCE_PROMOTION_CHANNEL_ID", "image-channel")
-	channel := model.ModelChannel{ID: "image-channel", Scope: model.ChannelScopeSystem, Enabled: true, Name: "Image fixture", BaseURL: "https://example.com/v1", APIKey: "fixture-key", APIFormat: "openai"}
+	channel := model.ModelChannel{ID: "image-channel", Scope: model.ChannelScopeSystem, Enabled: true, Name: "Image fixture", BaseURL: ecommerceConfigOnlyEndpoint(t), APIKey: "fixture-key", APIFormat: "openai"}
 	selected := model.ChannelModel{ID: "image-model", ChannelID: channel.ID, ModelKey: "gpt-image-2", ProviderModelKey: "gpt-image-2", Capability: "image", Protocol: model.ChannelInterfaceOpenAIImage, Enabled: true, PriceConfigured: true}
 	profile := DefaultModelCapabilityConfigForModel(string(selected.Protocol), selected.ModelKey)
 	encodedProfile, err := json.Marshal(profile)
