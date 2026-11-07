@@ -231,7 +231,8 @@ export const useMusicStore = create<MusicState>((set, get) => ({
             const caps = await fetchMusicCapabilities();
             if (sequence !== userScopeSequence) return;
             set({ capabilities: caps, loadingCaps: false, loadError: "" });
-            const model = caps.find((item) => item.id === get().draft.model && item.available) || caps.find((item) => item.available);
+            const models = caps.filter((item) => !item.operations?.length);
+            const model = models.find((item) => item.id === get().draft.model && item.available) || models.find((item) => item.available);
             if (model) get().setModel(model.id);
         } catch (error) {
             if (sequence === userScopeSequence) set({ capabilities: [], loadingCaps: false, loadError: error instanceof Error ? error.message : String(error) });

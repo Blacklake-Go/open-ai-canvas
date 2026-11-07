@@ -11,7 +11,9 @@ import { assertEditableAudio, encodeTrimWav, previewWindow, trimFrames, waveform
 import "../styles/music-trim.css";
 
 export type MusicTrimResult = { blob: Blob; start: number; end: number; title: string };
-type Props = { url: string | Blob; storageKey?: string; title: string; returnFocusTo?: HTMLElement | null; onClose: () => void; onPreviewStart?: () => void; onSave: (result: MusicTrimResult) => Promise<void> | void };
+type Props = { url: string | Blob; storageKey?: string; title: string; initialRangeMs?: readonly [number, number]; returnFocusTo?: HTMLElement | null; onClose: () => void; onPreviewStart?: () => void } & (
+    { onSave: (result: MusicTrimResult) => Promise<void> | void; onSelectRange?: never } | { onSelectRange: (startMs: number, endMs: number) => void; onSave?: never }
+);
 const edges = ["start", "end"] as const;
 const time = (s: number) => {
     const cs = Math.round(s * 100);
@@ -43,8 +45,9 @@ function TimeField({ label, seconds, min, max, commit }: { label: string; second
     );
 }
 
-export function MusicTrimDialog({ url, storageKey, title, returnFocusTo, onClose, onPreviewStart, onSave }: Props) {
+export function MusicTrimDialog({ url, storageKey, title, initialRangeMs, returnFocusTo, onClose, onPreviewStart, onSave, onSelectRange }: Props) {
     const { t } = useI18n();
+    const [initialRange] = useState(initialRangeMs);
     const [opener] = useState(() => (document.activeElement instanceof HTMLElement ? document.activeElement : null));
     function dismiss() {
         onClose();
@@ -113,7 +116,12 @@ export function MusicTrimDialog({ url, storageKey, title, returnFocusTo, onClose
                 const audio = await ctx.decodeAudioData(bytes);
                 if (abort.signal.aborted) return;
                 assertEditableAudio(audio);
-                setRange([0, audio.length]);
+                const left = initialRange ? Math.round((initialRange[0] * audio.sampleRate) / 1000) : 0;
+                const right = initialRange ? Math.round((initialRange[1] * audio.sampleRate) / 1000) : audio.length;
+                if (left >= 0 && right <= audio.length && right > left) {
+                    setRange([left, right]);
+                    setCursor(left);
+                } else setRange([0, audio.length]);
                 setBuffer(audio);
             } catch (e) {
                 if (!abort.signal.aborted) setError(e instanceof RangeError ? "music.trim_large_error" : reason);
@@ -126,7 +134,7 @@ export function MusicTrimDialog({ url, storageKey, title, returnFocusTo, onClose
             if (context.current) void context.current.close().catch(() => {});
             context.current = null;
         };
-    }, [url, storageKey, attempt]);
+    }, [url, storageKey, attempt, initialRange]);
     const path = useMemo(() => {
         if (!buffer) return "";
         const peaks = waveformPeaks(buffer);
@@ -202,8 +210,12 @@ export function MusicTrimDialog({ url, storageKey, title, returnFocusTo, onClose
         savePending.current = true;
         setSaving(true);
         try {
-            const blob = encodeTrimWav(buffer, range[0], range[1]);
-            await onSave({ blob, start: range[0] / buffer.sampleRate, end: range[1] / buffer.sampleRate, title: t("music.trim_copy_name", { title }) });
+            if (onSelectRange) {
+                onSelectRange(Math.round((1000 * range[0]) / buffer.sampleRate), Math.round((1000 * range[1]) / buffer.sampleRate));
+            } else {
+                const blob = encodeTrimWav(buffer, range[0], range[1]);
+                await onSave({ blob, start: range[0] / buffer.sampleRate, end: range[1] / buffer.sampleRate, title: t("music.trim_copy_name", { title }) });
+            }
             if (context.current === ctx) dismiss();
         } catch {
             if (context.current === ctx) setError("music.trim_save_error");
@@ -223,7 +235,7 @@ export function MusicTrimDialog({ url, storageKey, title, returnFocusTo, onClose
             width={740}
             title={
                 <span translate="no" data-i18n-ignore="true">
-                    {t("music.trim_title")}
+                    {t(onSelectRange ? "music.adv_region" : "music.trim_title")}
                 </span>
             }
             onCancel={() => {
@@ -231,9 +243,9 @@ export function MusicTrimDialog({ url, storageKey, title, returnFocusTo, onClose
             }}
             onOk={() => void save()}
             cancelText={t("common.cancel")}
-            okText={t("music.trim_save")}
+            okText={t(onSelectRange ? "music.adv_choose" : "music.trim_save")}
             confirmLoading={saving}
-            okButtonProps={{ disabled: !buffer || (range[0] === 0 && range[1] === length) }}
+            okButtonProps={{ disabled: !buffer || (onSelectRange ? range[1] - range[0] < 3 * rate : range[0] === 0 && range[1] === length) }}
             cancelButtonProps={{ disabled: saving }}
             keyboard={!saving}
             closable={!saving}

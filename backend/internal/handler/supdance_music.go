@@ -38,13 +38,14 @@ func RegisterSupDanceMusicRoutes(r *gin.RouterGroup, svc *service.Service) {
 				return
 			}
 			var req struct {
-				Model string `json:"model" binding:"required"`
+				Model     string `json:"model" binding:"required"`
+				Operation string `json:"operation,omitempty"`
 			}
 			if err := c.ShouldBindJSON(&req); err != nil {
 				fail(c, http.StatusBadRequest, err)
 				return
 			}
-			quote, err := svc.QuoteMusicTask(user.ID, req.Model)
+			quote, err := svc.QuoteMusicOperation(user.ID, req.Model, req.Operation)
 			if err != nil {
 				failService(c, err)
 				return

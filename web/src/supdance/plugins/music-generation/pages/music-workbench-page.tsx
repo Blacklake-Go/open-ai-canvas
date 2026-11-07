@@ -1,6 +1,9 @@
 import { useEffect, useMemo, useRef, useState } from "react";
+import { Button } from "antd";
+import { MusicAdvancedDialog } from "../components/music-advanced-dialog";
+import { musicOutputLabel, trackSource, type MusicSource } from "../services/music-tools";
 import { Link, useNavigate } from "react-router";
-import { ArrowDownUp, Check, Disc3, FolderOpen, RefreshCw, Search } from "lucide-react";
+import { ArrowDownUp, Check, Disc3, FolderOpen, RefreshCw, Search, SlidersHorizontal } from "lucide-react";
 import { TrackList } from "../components/track-list";
 import { MusicTrimDialog } from "../components/music-trim-dialog";
 import { getMusicAssetHref, saveMusicClip } from "../services/music-assets";
@@ -50,6 +53,13 @@ function MusicStudio({ userId }: { userId?: string }) {
     const [oldestFirst, setOldestFirst] = useState(false);
     const studio = useRef<HTMLDivElement>(null);
     const [detailOutput, setDetailOutput] = useState<string>();
+    const [advanced, setAdvanced] = useState<{ source?: MusicSource; lyrics?: string } | null>(null);
+    function showSubmitted() {
+        setSearch("");
+        setFilter("all");
+        setOldestFirst(false);
+        setMobile("library");
+    }
     const [trim, setTrim] = useState<{ task: MusicTask; output: MusicOutput } | null>(null);
     const [savedHref, setSavedHref] = useState("");
     const openTrim = (task: MusicTask, output: MusicOutput) => {
@@ -111,20 +121,15 @@ function MusicStudio({ userId }: { userId?: string }) {
                 </div>
                 <div className="music-studio-columns">
                     <section className={`music-composer ${mobile === "create" ? "is-mobile-active" : ""}`}>
-                        <h1>{t("music.compose_heading")}</h1>
-                        {enabled && userId ? (
-                            <MusicForm
-                                userId={userId}
-                                onSubmitted={() => {
-                                    setSearch("");
-                                    setFilter("all");
-                                    setOldestFirst(false);
-                                    setMobile("library");
-                                }}
-                            />
-                        ) : (
-                            <p role="status">{t("music.generation_disabled", undefined, "New music generation is disabled. Your tasks and saved works remain available.")}</p>
-                        )}
+                        <div className="music-composer-heading">
+                            <h1>{t("music.compose_heading")}</h1>
+                            {enabled && userId && (
+                                <Button htmlType="button" icon={<SlidersHorizontal size={15} />} onClick={() => setAdvanced({})}>
+                                    {t("music.adv_tools")}
+                                </Button>
+                            )}
+                        </div>
+                        {enabled && userId ? <MusicForm userId={userId} onSubmitted={showSubmitted} /> : <p role="status">{t("music.generation_disabled", undefined, "New music generation is disabled. Your tasks and saved works remain available.")}</p>}
                     </section>
                     <section className={`music-library ${mobile === "library" ? "is-mobile-active" : ""}`} aria-label={t("music.my_works")}>
                         <div className="music-library-header">
@@ -186,6 +191,7 @@ function MusicStudio({ userId }: { userId?: string }) {
                                                     setDetailId(task.taskId);
                                                     setDetailOutput(output?.id);
                                                 }}
+                                                onAdvanced={enabled && userId ? (output) => setAdvanced({ source: trackSource(task, output, musicOutputLabel(output, t)), lyrics: task.lyrics }) : undefined}
                                                 onTrim={(output) => openTrim(task, output)}
                                                 onAsset={async (output) => {
                                                     void navigate(await getMusicAssetHref(task, output));
@@ -216,7 +222,7 @@ function MusicStudio({ userId }: { userId?: string }) {
                     <WaveformPlayer
                         taskId={track.output.id}
                         audioUrl={track.output.audioUrl}
-                        title={[track.task.title, t("music.track_number", { number: track.output.outputIndex + 1 })].filter(Boolean).join(" · ")}
+                        title={[track.task.title, musicOutputLabel(track.output, t)].filter(Boolean).join(" · ")}
                         durationSeconds={(track.output.durationMs || 0) / 1000}
                         output={track.output}
                     />
@@ -234,12 +240,25 @@ function MusicStudio({ userId }: { userId?: string }) {
                         />
                     )}
                 </AppDrawer>
+                {advanced && enabled && userId && (
+                    <MusicAdvancedDialog
+                        userId={userId}
+                        initialSource={advanced.source}
+                        initialOp={advanced.source ? "remix" : "reference"}
+                        initialLyrics={advanced.lyrics}
+                        onClose={() => setAdvanced(null)}
+                        onSubmitted={() => {
+                            setAdvanced(null);
+                            showSubmitted();
+                        }}
+                    />
+                )}
                 {trim && (
                     <MusicTrimDialog
                         returnFocusTo={studio.current?.querySelector<HTMLButtonElement>('[data-output-id="' + CSS.escape(trim.output.id) + '"] .music-trim-trigger')}
                         url={trim.output.audioUrl || ""}
                         storageKey={trim.output.storageKey}
-                        title={[trim.task.title || t("music.default_track_title"), t("music.track_number", { number: trim.output.outputIndex + 1 })].join(" · ")}
+                        title={[trim.task.title || t("music.default_track_title"), musicOutputLabel(trim.output, t)].join(" · ")}
                         onClose={() => setTrim(null)}
                         onPreviewStart={() => useMusicStore.getState().pauseAudio()}
                         onSave={async ({ blob, start, end }) => {

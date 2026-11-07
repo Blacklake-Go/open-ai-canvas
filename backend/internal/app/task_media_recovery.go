@@ -19,12 +19,14 @@ import (
 
 // Recovery is keyed by the task, not a second generation or billing order.
 type mediaCheckpoint struct {
-	Mode           string                `json:"mode"`
-	Items          []mediaCheckpointItem `json:"items"`
-	StartedAt      time.Time             `json:"startedAt"`
-	Attempts       int                   `json:"attempts"`
-	ManualAttempts int                   `json:"manualAttempts"`
-	LastManualAt   time.Time             `json:"lastManualAt"`
+	MurekaOperation string                `json:"murekaOperation,omitempty"`
+	StemArchiveURL  string                `json:"stemArchiveUrl,omitempty"`
+	Mode            string                `json:"mode"`
+	Items           []mediaCheckpointItem `json:"items"`
+	StartedAt       time.Time             `json:"startedAt"`
+	Attempts        int                   `json:"attempts"`
+	ManualAttempts  int                   `json:"manualAttempts"`
+	LastManualAt    time.Time             `json:"lastManualAt"`
 	// RefundedBilling 是管理员恢复已退款订单时的计费决定：charge 补扣，waive 免除。
 	// 为空时，已退款订单交付成功后也不会自动补扣。
 	RefundedBilling string `json:"refundedBilling,omitempty"`
@@ -36,6 +38,7 @@ const (
 )
 
 type mediaCheckpointItem struct {
+	StemName   string                  `json:"stemName,omitempty"`
 	Reference  protocol.MediaReference `json:"reference"`
 	TempName   string                  `json:"tempName,omitempty"`
 	MIMEType   string                  `json:"mimeType,omitempty"`
@@ -85,6 +88,12 @@ func (s *Service) decodeMediaCheckpoint(task *model.Task) (*mediaCheckpoint, err
 	if err := json.Unmarshal([]byte(plain), &checkpoint); err != nil {
 		return nil, err
 	}
+	if checkpoint.StemArchiveURL != "" {
+		if checkpoint.Mode != "audio" || len(checkpoint.Items) != 0 || !murekaOutputURL(checkpoint.StemArchiveURL) {
+			return nil, errors.New("invalid stem recovery receipt")
+		}
+		return &checkpoint, nil
+	}
 	if len(checkpoint.Items) == 0 || len(checkpoint.Items) > 32 || (checkpoint.Mode != "image" && checkpoint.Mode != "video" && checkpoint.Mode != "audio") {
 		return nil, errors.New("作品恢复信息无效")
 	}
@@ -127,6 +136,9 @@ func recoverProtocolMedia(ctx context.Context, config providerConfig, mode strin
 		return result, true, err
 	}
 	checkpoint := &mediaCheckpoint{Mode: mode, StartedAt: time.Now()}
+	if config.InterfaceType == "mureka-music-tools" {
+		checkpoint.MurekaOperation = strings.TrimPrefix(config.Model, "mureka/")
+	}
 	for _, reference := range references {
 		if len(reference.URL) > 16_384 {
 			return nil, true, &mediaRecoveryError{stage: "checkpoint", cause: errors.New("上游媒体地址过长")}
@@ -178,6 +190,9 @@ func (s *Service) resumeTaskMedia(ctx context.Context, task *model.Task) (map[st
 }
 
 func (s *Service) materializeTaskMedia(ctx context.Context, task *model.Task, config providerConfig, checkpoint *mediaCheckpoint) (result map[string]interface{}, err error) {
+	if checkpoint.MurekaOperation != "" {
+		ctx = context.WithValue(ctx, murekaPrivateRequestKey{}, true)
+	}
 	defer func() {
 		var failure *mediaRecoveryError
 		if err != nil && !errors.As(err, &failure) {
@@ -193,6 +208,11 @@ func (s *Service) materializeTaskMedia(ctx context.Context, task *model.Task, co
 	}
 	if _, err := s.mediaTaskProject(task); err != nil {
 		return nil, &mediaRecoveryError{stage: "register", cause: err}
+	}
+	if checkpoint.StemArchiveURL != "" {
+		if err := s.stageMurekaStems(ctx, task, config, checkpoint); err != nil {
+			return nil, err
+		}
 	}
 	items := make([]interface{}, 0, len(checkpoint.Items))
 	for index := range checkpoint.Items {
@@ -214,13 +234,27 @@ func (s *Service) materializeTaskMedia(ctx context.Context, task *model.Task, co
 				if err := s.saveMediaCheckpoint(task, checkpoint, "download"); err != nil {
 					return nil, err
 				}
-				config, err = s.resolveProviderConfig(config)
-				if err != nil {
-					return nil, &mediaRecoveryError{stage: "download", cause: err}
+				if checkpoint.MurekaOperation == "" {
+					config, err = s.resolveProviderConfig(config)
+					if err != nil {
+						return nil, &mediaRecoveryError{stage: "download", cause: err}
+					}
+				} else {
+					// These URLs are signed output receipts. They survive channel aliases and key changes.
+					config = providerConfig{InterfaceType: "mureka-music-tools"}
 				}
 				item.TempName, item.MIMEType, err = s.downloadTaskMedia(ctx, config, item.Reference.URL, checkpoint.Mode)
 				if err != nil {
 					return nil, &mediaRecoveryError{stage: "download", retryable: retryableMediaRecovery(err), cause: err}
+				}
+				if checkpoint.MurekaOperation == "region" {
+					raw := item.TempName
+					item.TempName, err = s.preserveMurekaRegion(ctx, task, s.mediaTempPath(raw), item.MIMEType)
+					os.Remove(s.mediaTempPath(raw))
+					if err != nil {
+						return nil, &mediaRecoveryError{stage: "local_save", cause: err}
+					}
+					item.MIMEType = "audio/wav"
 				}
 				path = s.mediaTempPath(item.TempName)
 				if err := s.saveMediaCheckpoint(task, checkpoint, "download"); err != nil {
@@ -266,7 +300,11 @@ func (s *Service) materializeTaskMedia(ctx context.Context, task *model.Task, co
 			}
 		}
 		url := resourceFileURL(resource.ID)
-		items = append(items, map[string]interface{}{"dataUrl": url, "url": url, "resourceId": resource.ID, "storageKey": "resource:" + resource.ID, "mimeType": resource.MimeType, "bytes": resource.Size, "width": resource.Width, "height": resource.Height, "durationMs": resource.DurationMs})
+		resultItem := map[string]interface{}{"dataUrl": url, "url": url, "resourceId": resource.ID, "storageKey": "resource:" + resource.ID, "mimeType": resource.MimeType, "bytes": resource.Size, "width": resource.Width, "height": resource.Height, "durationMs": resource.DurationMs}
+		if item.StemName != "" {
+			resultItem["stemName"] = item.StemName
+		}
+		items = append(items, resultItem)
 	}
 	result = map[string]interface{}{"mode": checkpoint.Mode}
 	if checkpoint.Mode == "image" {

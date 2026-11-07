@@ -4,6 +4,7 @@ import { getResourceAccess, resolveResourceAccessURL, resolveResourceUrl } from 
 import { http, apiBaseURL } from "@/services/api/request";
 import type { LogicalModelQuote } from "@/services/api/logical-models";
 import type { MusicTask } from "./music-api";
+import type { MusicOperation } from "./music-tools";
 import type { MusicOutput } from "./music-api";
 import { downloadBrowserMedia } from "@/services/browser-download";
 import { startBrowserDownload } from "@/services/browser-download";
@@ -19,8 +20,8 @@ export async function downloadMusicOutput(output: MusicOutput, title: string) {
     return downloadBrowserMedia({ storageKey: output.storageKey, url: output.audioUrl, fileName: title + (format ? "." + format : "") });
 }
 
-export async function siteMusicQuote(model: string, _duration = 0, signal?: AbortSignal) {
-    return http.post<LogicalModelQuote>("/v1/supdance/music/quote", { model }, { signal });
+export async function siteMusicQuote(model: string, _duration = 0, signal?: AbortSignal, operation?: MusicOperation) {
+    return http.post<LogicalModelQuote>("/v1/supdance/music/quote", { model, operation }, { signal });
 }
 
 export function projectSiteMusicTask(task: GenerationTask): MusicTask {
@@ -31,6 +32,7 @@ export function projectSiteMusicTask(task: GenerationTask): MusicTask {
     const outputs = (result?.audios || (result?.audio ? [result.audio] : [])).map((item, index) => ({
         id: `${task.id}:${index}`,
         outputIndex: index,
+        stemName: "stemName" in item && typeof item.stemName === "string" ? item.stemName : undefined,
         audioUrl: resolveResourceUrl(item.storageKey, item.dataUrl),
         storageKey: item.storageKey,
         durationMs: item.durationMs,

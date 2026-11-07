@@ -188,7 +188,7 @@ func getProviderExternalBinary(ctx context.Context, config providerConfig, rawUR
 	if err != nil {
 		return nil, "", err
 	}
-	if sameProviderOrigin(config.BaseURL, rawURL) {
+	if config.InterfaceType != "mureka-music-tools" && sameProviderOrigin(config.BaseURL, rawURL) {
 		applyProviderAuth(req, config)
 		ApplyOutboundHeaders(req, config.Headers)
 	}
@@ -305,8 +305,18 @@ func doBinaryWithConsumer(req *http.Request, onChunk func(string, []byte)) ([]by
 	}
 	ApplyDefaultOutboundHeaders(req)
 	client := OutboundHTTPClientWithProxy(requestTimeout, channelProxyURL)
+	if murekaPrivateRequest(req) && req.Header.Get("Authorization") != "" {
+		// Official control endpoints must answer directly. A 307/308 can replay the uploaded clip.
+		client.CheckRedirect = func(*http.Request, []*http.Request) error { return http.ErrUseLastResponse }
+	}
 	resp, err := client.Do(req)
 	if err != nil {
+		if murekaPrivateRequest(req) {
+			var urlErr *url.Error
+			if errors.As(err, &urlErr) {
+				err = urlErr.Err
+			}
+		}
 		err = providerConnectionError(err)
 		if runtimeService != nil && !cacheManagementRequest {
 			_ = runtimeService.RecordChannelResult(req.Context(), channelID, !errors.Is(err, context.Canceled))
@@ -357,6 +367,9 @@ func doBinaryWithConsumer(req *http.Request, onChunk func(string, []byte)) ([]by
 			_ = runtimeService.RecordChannelResult(req.Context(), channelID, resp.StatusCode >= 500)
 		}
 		httpErr := providerHTTPError{StatusCode: resp.StatusCode, Status: resp.Status, Body: string(data), RetryAfter: parseRetryAfter(resp.Header.Get("Retry-After"), time.Now())}
+		if murekaPrivateRequest(req) {
+			httpErr.Body = ""
+		}
 		recordProviderRequest(req, startedAt, resp.StatusCode, data, httpErr)
 		return nil, "", httpErr
 	}
@@ -434,14 +447,20 @@ func recordProviderRequest(req *http.Request, startedAt time.Time, statusCode in
 		APIFormat: apiFormat, Method: req.Method, Path: req.URL.Path, Model: metadata.Model,
 		Status: status, StatusCode: statusCode, DurationMs: time.Since(startedAt).Milliseconds(),
 		ErrorCode: errorCode, Error: errorText, ConcurrencyLimit: metadata.ConcurrencyLimit, UpstreamURL: req.URL.Scheme + "://" + req.URL.Host + req.URL.Path,
-		ProviderRequestID: metadata.ProviderRequestID, RequestContentType: req.Header.Get("Content-Type"), RequestBody: requestPayloadForLog(req), ResponseBody: SanitizeAPICallPayload(responseBody, ""),
+		ProviderRequestID: metadata.ProviderRequestID, RequestContentType: req.Header.Get("Content-Type"),
 	}
 	if callLog.ProviderRequestID == "" && (requestKind == "create" || requestKind == "poll") {
 		// A queued response is still a receipt. Keep its ID even for admin tests
 		// that have no internal task or billing order yet.
-		if id, err := extractProviderTaskID(responseBody); err == nil {
+		if id, err := extractProviderTaskID(responseBody); err == nil && (!murekaPrivateRequest(req) || murekaID(id)) {
 			callLog.ProviderRequestID = id
 		}
+	}
+	if !murekaPrivateRequest(req) {
+		callLog.RequestBody, callLog.ResponseBody = requestPayloadForLog(req), SanitizeAPICallPayload(responseBody, "")
+	} else if requestKind == "download" {
+		callLog.Path = "/task-media"
+		callLog.UpstreamURL = req.URL.Scheme + "://" + req.URL.Host + "/task-media"
 	}
 	channelSlotFailure := false
 	if code, message := ChannelSlotFailureDetails(requestErr); code != "" {

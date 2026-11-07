@@ -128,6 +128,10 @@ func (s *Service) ModelCatalog(access *userGroupAccess, intent *ModelRequestInte
 // publicSystemChannelCatalog 组装普通用户可见的系统渠道读模型，不暴露密钥、Base URL 等执行凭证。
 // 这是读展示路径：单个损坏模型被隔离并记录诊断；仓储查询失败仍整体返回错误，避免伪装成空目录。
 func (s *Service) publicSystemChannelCatalog(access *userGroupAccess, intent *ModelRequestIntent) ([]PublicChannelCatalog, error) {
+	return s.systemChannelCatalog(access, intent, false)
+}
+
+func (s *Service) systemChannelCatalog(access *userGroupAccess, intent *ModelRequestIntent, includeMusicTools bool) ([]PublicChannelCatalog, error) {
 	if access == nil {
 		return nil, Unauthorized("请先登录")
 	}
@@ -153,7 +157,7 @@ func (s *Service) publicSystemChannelCatalog(access *userGroupAccess, intent *Mo
 
 		publicModels := make([]PublicChannelModel, 0, len(channelModels))
 		for _, cm := range channelModels {
-			if !cm.Enabled {
+			if !cm.Enabled || (!includeMusicTools && cm.Protocol == "mureka-music-tools") {
 				continue
 			}
 

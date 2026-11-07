@@ -16,12 +16,13 @@ import (
 // Internal admission constraints are not JSON fields. Callers cannot select a
 // task ID or bypass the quoted-charge ceiling through the public tasks API.
 type taskAdmission struct {
-	ID           string
-	MaxCharge    int64
-	AgentRunID   string
-	GenerationID string
-	ApprovalID   string
-	NonBillable  bool
+	ID             string
+	MaxCharge      int64
+	MusicOperation string
+	AgentRunID     string
+	GenerationID   string
+	ApprovalID     string
+	NonBillable    bool
 }
 
 // CreateTask 收敛任务进入系统前的 admission 流程：输入标准化、逻辑模型路由、
@@ -130,8 +131,14 @@ func (s *Service) CreateTask(userID string, req CreateTaskRequest) (*model.Task,
 		}
 		return nil, errors.New("视频任务缺少可执行的模型配置")
 	}
+	config, _ := normalizedInput["config"].(map[string]any)
+	if stringValue(config["interfaceType"]) == "mureka-music-tools" || req.admission != nil && req.admission.MusicOperation != "" {
+		if taskType != "canvas_audio" || req.admission == nil || req.admission.MusicOperation == "" || stringValue(config["interfaceType"]) != "mureka-music-tools" ||
+			stringValue(config["providerModelKey"]) != "mureka/"+req.admission.MusicOperation {
+			return nil, BadAuthRequest("Submit music tools through their dedicated operation and quote.")
+		}
+	}
 	if taskType == "canvas_audio" {
-		config, _ := normalizedInput["config"].(map[string]any)
 		if _, _, wired := musicProtocolProfile(stringValue(config["interfaceType"]), stringValue(config["model"])); wired {
 			if err := s.CheckMusicTaskAdmission(userID); err != nil {
 				return nil, err
@@ -219,6 +226,10 @@ func (s *Service) CreateTask(userID string, req CreateTaskRequest) (*model.Task,
 	billingOrder, err := s.taskBillingOrder(userID, &task, normalizedInput)
 	if err != nil {
 		return nil, err
+	}
+	if req.admission != nil && req.admission.MusicOperation != "" && (billingOrder == nil && req.admission.MaxCharge != 0 || billingOrder != nil &&
+		(billingOrder.BillingMode != "fixed_request" || billingOrder.Quantity != 1 || billingOrder.AmountMicrocredits != req.admission.MaxCharge)) {
+		return nil, BadAuthRequest("The music tool price changed. Refresh the operation quote.")
 	}
 	if req.admission != nil && billingOrder != nil {
 		if billingOrder.AmountMicrocredits > req.admission.MaxCharge {

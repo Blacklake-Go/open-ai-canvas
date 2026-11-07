@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useI18n } from "@/supdance/plugins/i18n";
 import type { MusicOutput, MusicTask } from "../services/music-api";
+import { musicOutputLabel } from "../services/music-tools";
 import { canLocateMusicAsset } from "../services/music-assets";
 import { downloadMusicOutput } from "../services/music-site-api";
 import { useMusicStore } from "../stores/use-music-store";
@@ -41,8 +42,7 @@ export function MusicTaskDetails({ task, onReuse, onTrim, onAsset, selectedOutpu
                 .map((output) => (
                     <section key={output.id} className="flex flex-col gap-3 rounded-lg border border-border p-3">
                         <p>
-                            {t("music.track_number", { number: output.outputIndex + 1 })} · {output.format || output.mimeType || "—"} · {output.durationMs ? (output.durationMs / 1000).toFixed(1) + "s" : "—"} ·{" "}
-                            {output.bytes ? (output.bytes / 1024 / 1024).toFixed(2) + " MB" : "—"}
+                            {musicOutputLabel(output, t)} · {output.format || output.mimeType || "—"} · {output.durationMs ? (output.durationMs / 1000).toFixed(1) + "s" : "—"} · {output.bytes ? (output.bytes / 1024 / 1024).toFixed(2) + " MB" : "—"}
                         </p>
                         {output.audioUrl && (
                             <div className="flex flex-wrap gap-2">

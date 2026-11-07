@@ -2,9 +2,12 @@ import { http } from "@/services/api/request";
 import { listSiteMusicTasks, querySiteMusicTask, projectMusicTask, projectAdminMusicTask } from "./music-site-api";
 import type { GenerationTask } from "@/services/api/task-center";
 
+import type { MusicOperation } from "./music-tools";
+
 export type AudioFormat = "mp3" | "wav" | "flac";
 
 export type ModelCapabilities = {
+    operations?: MusicOperation[];
     channelId?: string;
     modelKey?: string;
     lyricsSupported?: boolean;
@@ -70,6 +73,7 @@ export type MusicTask = {
 };
 
 export type MusicOutput = {
+    stemName?: string;
     id: string;
     outputIndex: number;
     audioUrl?: string;
@@ -82,6 +86,10 @@ export type MusicOutput = {
 };
 
 export type SubmitMusicTaskPayload = {
+    operation?: MusicOperation;
+    sourceResourceId?: string;
+    editStartMs?: number;
+    editEndMs?: number;
     quotedMicrocredits?: number;
     model: string;
     mode: "simple" | "custom";

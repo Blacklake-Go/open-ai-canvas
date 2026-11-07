@@ -24,7 +24,7 @@ export function musicCreationAllowed(quote: LogicalModelQuote | null, available:
 export function MusicForm({ userId, onSubmitted }: { userId: string; onSubmitted?: (taskId: string) => void }) {
     const { t } = useI18n();
     const draft = useMusicStore((s) => s.draft);
-    const capabilities = useMusicStore((s) => s.capabilities);
+    const capabilities = useMusicStore((s) => s.capabilities).filter((cap) => !cap.operations?.length);
     const loading = useMusicStore((s) => s.loadingCaps);
     const submitting = useMusicStore((s) => s.submitting);
     const setField = useMusicStore((s) => s.setDraftField);

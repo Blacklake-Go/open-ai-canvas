@@ -17,6 +17,9 @@ import (
 )
 
 func runAudioTask(ctx context.Context, input canvasGenerationInput) (map[string]interface{}, error) {
+	if input.Config.InterfaceType == "mureka-music-tools" {
+		return runMurekaMusic(ctx, input)
+	}
 	if recoveryOnly, _ := input.Metadata["musicRecoveryOnly"].(bool); recoveryOnly && resumedProviderRequestID(ctx) == "" {
 		return nil, errors.New("Music recovery requires the original provider task ID")
 	}

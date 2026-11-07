@@ -1,8 +1,9 @@
 import { useState } from "react";
 import { recoverGenerationTaskMedia } from "@/services/api/task-center";
-import { Disc3, Download, FolderOpen, Heart, Music2, Pause, Play, Scissors } from "lucide-react";
+import { Disc3, Download, FolderOpen, Heart, Music2, Pause, Play, Scissors, SlidersHorizontal } from "lucide-react";
 import { useI18n } from "@/supdance/plugins/i18n";
 import { useMusicStore } from "../stores/use-music-store";
+import { musicOutputLabel } from "../services/music-tools";
 import { canLocateMusicAsset } from "../services/music-assets";
 import { downloadMusicOutput } from "../services/music-site-api";
 import type { MusicTask, MusicOutput } from "../services/music-api";
@@ -20,10 +21,11 @@ type Props = {
     onFavorite: (output: MusicOutput) => void;
     onDetails: (output?: MusicOutput) => void;
     onTrim: (output: MusicOutput) => void;
+    onAdvanced?: (output: MusicOutput) => void;
     onAsset: (output: MusicOutput) => Promise<void>;
 };
 
-export function TrackList({ task, favorites, onlyFavorites, onFavorite, onDetails, onTrim, onAsset }: Props) {
+export function TrackList({ task, favorites, onlyFavorites, onFavorite, onDetails, onTrim, onAsset, onAdvanced }: Props) {
     const { t } = useI18n();
     const currentlyPlaying = useMusicStore((s) => (s.isPlaying ? s.playingTaskId : null));
     const toggle = useMusicStore((s) => s.togglePlayback);
@@ -49,7 +51,7 @@ export function TrackList({ task, favorites, onlyFavorites, onFavorite, onDetail
                 .filter((output) => !onlyFavorites || favorites.has(output.id))
                 .map((output) => {
                     const number = output.outputIndex + 1;
-                    const variant = t("music.track_number", { number });
+                    const variant = musicOutputLabel(output, t);
                     const active = currentlyPlaying === output.id;
                     const liked = favorites.has(output.id);
                     const canOpen = canLocateMusicAsset(output);
@@ -82,6 +84,11 @@ export function TrackList({ task, favorites, onlyFavorites, onFavorite, onDetail
                                 <button type="button" aria-pressed={liked} title={t("music.favorite_local")} aria-label={t("music.favorite_local")} onClick={() => onFavorite(output)}>
                                     <Heart size={16} fill={liked ? "currentColor" : "none"} />
                                 </button>
+                                {onAdvanced && (
+                                    <button type="button" aria-label={t("music.adv_tools")} title={t("music.adv_tools")} disabled={!canOpen} onClick={() => onAdvanced(output)}>
+                                        <SlidersHorizontal size={16} />
+                                    </button>
+                                )}
                                 <button type="button" className="music-trim-trigger" disabled={!output.audioUrl && !output.storageKey} aria-label={t("music.trim_track")} title={t("music.trim_track")} onClick={() => onTrim(output)}>
                                     <Scissors size={16} />
                                 </button>

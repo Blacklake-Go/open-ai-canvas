@@ -1,12 +1,14 @@
 import type { SupDanceI18nEntry } from "../types";
 import { musicTrimDefinitions } from "./music-trim";
 import { composerDefinitions } from "./music-composer";
+import { advancedMusicDefinitions } from "./music-advanced";
 
 export const MUSIC_SITE_DESCRIPTION = "音乐工作台使用后台配置的平台音乐模型、统一音频生成任务与实时报价，提供简单和歌词创作、目标时长、原始 MP3 播放下载及共享任务历史。模型与版本由渠道配置决定。";
 
 const definitions = [
     ...musicTrimDefinitions,
     ...composerDefinitions,
+    ...advancedMusicDefinitions,
     [
         "music.plugin_description",
         MUSIC_SITE_DESCRIPTION,

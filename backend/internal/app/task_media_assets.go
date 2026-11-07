@@ -138,7 +138,10 @@ func (s *Service) registerRecoveredMediaAssets(task model.Task) error {
 			metadata["music"], metadata["model"], metadata["providerTaskId"] = music, task.Model, task.ProviderRequestID
 			musicTitle, _ := music["title"].(string)
 			title = firstNonEmpty(strings.TrimSpace(musicTitle), truncateRunes(task.Prompt, 60), "Music")
-			if len(checkpoint.Items) > 1 {
+			if item.StemName != "" {
+				metadata["stemName"] = item.StemName
+				title += " · " + item.StemName
+			} else if len(checkpoint.Items) > 1 {
 				title += fmt.Sprintf(" · %d", index+1)
 			}
 		}
