@@ -22,6 +22,7 @@ export const zhCN = {
             loadFailed: "读取公告失败",
         },
         footer: {
+            dismiss: "关闭法务提示条",
             terms: "服务条款",
             privacy: "隐私政策",
             aup: "可接受使用政策",

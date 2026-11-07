@@ -24,6 +24,7 @@ export const koKR: DeepStringRecord<typeof zhCN> = {
             loadFailed: "공지를 불러오지 못했습니다",
         },
         footer: {
+            dismiss: "법적 고지 닫기",
             terms: "서비스 이용약관",
             privacy: "개인정보 처리방침",
             aup: "허용되는 이용 정책",
