@@ -6,6 +6,7 @@ for (const [key, value] of Object.entries({
     window: dom,
     document: dom.document,
     navigator: dom.navigator,
+    localStorage: dom.localStorage,
     HTMLElement: dom.HTMLElement,
     SVGElement: dom.SVGElement,
     Element: dom.Element,
@@ -23,6 +24,12 @@ for (const [key, value] of Object.entries({
 
 const { act } = await import("react");
 const { createRoot } = await import("react-dom/client");
+const { apiClient } = await import("../../src/services/api/request");
+const originalAdapter = apiClient.defaults.adapter;
+apiClient.defaults.adapter = async (request) => {
+    if (request.method !== "get" || request.url !== "/supdance/compact-model-picker/settings") throw new Error(`Unexpected approval request: ${request.method} ${request.url}`);
+    return { data: { code: 0, data: { enabled: true, showDescription: true, showPrice: true } }, status: 200, statusText: "OK", headers: {}, config: request };
+};
 const { ApprovalCard } = await import("../../src/components/canvas/canvas-cloud-agent-panel-parts");
 const { canvasThemes } = await import("../../src/lib/canvas-theme");
 const { defaultImageCapabilityConfig } = await import("../../src/lib/model-capabilities");
@@ -63,7 +70,10 @@ const channel = createModelChannel({
 });
 const config = normalizeConfigSnapshot({ config: { ...defaultConfig, channels: [channel] } }).config;
 useConfigStore.setState({ config });
-afterAll(() => dom.happyDOM.abort());
+afterAll(() => {
+    apiClient.defaults.adapter = originalAdapter;
+    dom.happyDOM.abort();
+});
 
 test("真实图片审批卡片可切换比例、分辨率、质量，提交值与界面一致", async () => {
     const host = document.createElement("div");
@@ -141,6 +151,7 @@ test("真实图片审批卡片可切换比例、分辨率、质量，提交值�
         });
         const alternative = [...document.querySelectorAll<HTMLButtonElement>('[role="option"]')].find((item) => item.textContent?.includes("gpt-image-2.5"));
         expect(alternative).toBeDefined();
+        expect(alternative!.classList.contains("sd-picker-option")).toBe(true);
         await act(async () => alternative!.click());
         await press("同意执行");
         expect(submitted).toMatchObject({ channelId: channel.id, channelModelKey: "gpt-image-2.5", size: imagePresetForRatio("4k", "9:16").size, imageResolution: "4k", quality: "high" });
