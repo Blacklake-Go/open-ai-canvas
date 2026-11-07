@@ -21,7 +21,7 @@ test("Agent 对话和设置复用创作页模型选择器，并且只展示文�
     expect(css).toContain(".agent-model-picker-popover");
     expect(css).toContain("z-index: calc(var(--z-modal-overlay) + 1000)");
 
-    const twoPane = pickerCss.match(/\.creation-model-picker-menu\.is-model-list \.canvas-model-picker-two-pane \{[^}]+\}/)?.[0] || "";
+    const twoPane = pickerCss.match(/\.creation-model-picker-menu\.is-model-list:not\(\.sd-compact-picker\) \.canvas-model-picker-two-pane \{[^}]+\}/)?.[0] || "";
     expect(twoPane).toContain("min-height: 0");
     // 双栏继承共享样式的拉伸布局，不能恢复按内容撑高的顶部对齐。
     expect(twoPane).not.toMatch(/align-items:\s*(?:start|flex-start)/);
