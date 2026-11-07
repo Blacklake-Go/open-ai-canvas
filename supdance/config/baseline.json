@@ -22,6 +22,7 @@
     "baseCommit": "259e7e3fba0b6f70ac3cfd65941c3ca345d60249"
   },
   "coupledUpstreamFiles": [
+    "web/src/components/payment/use-payment-order-flow.tsx",
     "backend/payment-sdk/types.go",
     "backend/internal/app/payment.go",
     "backend/internal/app/payment_providers.go",

@@ -26,6 +26,15 @@ export type UpstreamPatchRecord = {
  */
 export const SUPDANCE_UPSTREAM_PATCH_REGISTRY: readonly UpstreamPatchRecord[] = [
     {
+        id: "supdance-x-purchase-measurement",
+        upstreamBaseline: "v1.8.0@2fe3ca13",
+        feature: "用户同意后的 X 付款成功衡量",
+        coupledUpstreamFiles: ["web/src/application.tsx", "web/src/components/payment/use-payment-order-flow.tsx"],
+        files: ["web/src/supdance/marketing/x-purchase.ts", "web/src/supdance/marketing/consent.tsx"],
+        reason: "从已确认入账订单发送真实金额和币种，沙盒及历史订单不发送，广告失败不影响支付。",
+        upgradeRisk: "MEDIUM",
+    },
+    {
         id: "supdance-waffo-enterprise-payment",
         upstreamBaseline: "v1.8.0@2fe3ca13",
         feature: "Waffo 企业版沙盒宿主支付合同",

@@ -11,6 +11,7 @@ import { AuthDialogHost } from "@/components/auth/auth-dialog-host";
 import { AppProviders } from "@/components/layout/app-providers";
 import { router } from "@/router";
 import { VisualEngineRuntimeHost } from "@/supdance/plugins/visual-engine/runtime/visual-engine-runtime-host";
+import { MarketingConsentHost } from "@/supdance/marketing/consent";
 
 // 登录弹窗渲染在路由之外（分享页等路由也要能打开），导航直接交给 router。
 const navigateFromAuthDialog = (to: string) => void router.navigate(to);
@@ -22,6 +23,7 @@ createRoot(document.getElementById("root")!).render(
         <AppProviders extensions={<VisualEngineRuntimeHost navigation={router} />}>
             <RouterProvider router={router} useTransitions={false} />
             <AuthDialogHost navigate={navigateFromAuthDialog} />
+            <MarketingConsentHost navigation={router} />
         </AppProviders>
     </React.StrictMode>,
 );
