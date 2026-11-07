@@ -13,9 +13,29 @@ from pathlib import Path
 DOCUMENT_ID = "TDGPdDZwZooWnHxqha7juh3gpHJ"
 OUTPUT = Path(__file__).resolve().parents[1] / "public" / "pricing.html"
 PRIVATE = re.compile(r"内部|上游|成本|毛利|返佣|IMPORTRANGE|SECRET_")
-USD_CNY_RATE = Decimal("6.67421")
-RATE_TIMESTAMP = "2026-11-04 18:27 UTC"
-RATE_SOURCE = "https://www.xe.com/en-us/currencyconverter/convert/?Amount=1&From=USD&To=CNY"
+LEGACY_MODEL_USD_CNY_RATE = Decimal("6.67421")
+UPDATED = "美元价目更新于 2026-11-07。结账时可查看实际支付金额。"
+USD_NOTE = "充值和存储套餐以美元定价。1 美元购买 100 基础积分，套餐赠分另计。下方模型积分与美元金额为 11 月 5 日的历史参考，实际用量和扣费请查看生成页。"
+CREDIT_PACKS = {
+    "尝鲜包": (10, 1000),
+    "轻量包 · 赠 6%": (50, 5300),
+    "进阶包 · 赠 10%": (100, 11000),
+    "标准包 · 赠 14%": (300, 34200),
+    "专业包 · 赠 17%": (600, 70200),
+    "工作室包 · 赠 20%": (1000, 120000),
+    "团队包 · 赠 22%": (2000, 244000),
+    "企业旗舰包 · 赠 24%": (3000, 372000),
+}
+STORAGE_PRICES = {
+    "轻量扩容包": "2.68",
+    "标准扩容包": "4.77",
+    "专业扩容包": "8.64",
+    "进阶扩容包": "12.51",
+    "工作室扩容包": "19.06",
+    "企业扩容包": "36.93",
+    "团队云盘包": "71.17",
+    "尊享云盘包": "103.92",
+}
 
 
 def text_price_rows():
@@ -40,7 +60,7 @@ def usd_price(cell, precision):
         raise ValueError(f"Expected a CNY price: {cell}")
     cny = Decimal(match.group(1).replace(",", ""))
     quantum = Decimal("1").scaleb(-precision)
-    usd = (cny / USD_CNY_RATE).quantize(quantum, rounding=ROUND_HALF_UP)
+    usd = (cny / LEGACY_MODEL_USD_CNY_RATE).quantize(quantum, rounding=ROUND_HALF_UP)
     return f"${usd:,.{precision}f}"
 
 
@@ -74,10 +94,8 @@ def render_content(markdown):
             if table_count:
                 sections[-1] = "</section>" + sections[-1]
         elif line.startswith("> "):
-            sections.append('<p class="meta">' + html.escape(line[2:]) + "</p>")
-            sections.append('<p class="rate-note">美元参考换算：1 USD = ' + str(USD_CNY_RATE) +
-                            ' CNY（<a href="' + RATE_SOURCE + '" rel="noopener noreferrer">Xe 中间价</a>，' +
-                            RATE_TIMESTAMP + '）。套餐金额保留 2 位、模型参考价保留 3 位小数；最终支付金额以结账页为准。</p>')
+            sections.append('<p class="meta">' + html.escape(UPDATED) + '</p>')
+            sections.append('<p class="rate-note">' + html.escape(USD_NOTE) + '</p>')
         elif line.startswith("| "):
             rows = []
             while index < len(lines) and lines[index].strip().startswith("|"):
@@ -95,8 +113,20 @@ def render_content(markdown):
             if "售价" not in rows[0][price_column] and "参考价" not in rows[0][price_column]:
                 raise ValueError("Expected a public price column")
             rows[0][price_column] += " (USD)"
+            if table_count < 2:
+                catalog = CREDIT_PACKS if table_count == 0 else STORAGE_PRICES
+                names = [row[0] for row in rows[1:]]
+                if len(names) != len(catalog) or set(names) != set(catalog):
+                    raise ValueError("Public package names do not match the USD catalog")
             for row in rows[1:]:
-                row[price_column] = usd_price(row[price_column], 2 if table_count < 2 else 3)
+                if table_count == 0:
+                    amount, credits = CREDIT_PACKS[row[0]]
+                    row[1] = f"{credits:,} 积分"
+                    row[price_column] = f"${amount:,.2f}"
+                elif table_count == 1:
+                    row[price_column] = "$" + STORAGE_PRICES[row[0]]
+                else:
+                    row[price_column] = usd_price(row[price_column], 3)
             rows = [[html.escape(cell) for cell in row] for row in rows]
             head = "<thead><tr>" + "".join("<th scope=\"col\">" + cell + "</th>" for cell in rows[0]) + "</tr></thead>"
             body = "<tbody>" + "".join("<tr>" + "".join("<td>" + cell + "</td>" for cell in row) + "</tr>" for row in rows[1:]) + "</tbody>"
