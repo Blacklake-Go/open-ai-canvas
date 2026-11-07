@@ -15,6 +15,15 @@ const definitions = [
     ["decline", "拒绝 / 撤回同意", "Decline / withdraw consent", "拒絕 / 撤回同意", "拒否・同意を撤回", "거절 / 동의 철회", "Rechazar / retirar consentimiento"],
     ["privacy", "隐私政策", "Privacy policy", "隱私政策", "プライバシーポリシー", "개인정보 처리방침", "Política de privacidad"],
     ["manage", "管理广告衡量偏好", "Manage advertising preferences", "管理廣告衡量偏好", "広告測定の設定を管理", "광고 측정 설정 관리", "Gestionar preferencias publicitarias"],
+    [
+        "storageDescription",
+        "必要存储用于维持服务；可选广告存储仅在你同意后使用。广告衡量同意保存在本机，付款去重编号最多保存 200 条；撤回后停止新事件并卸载广告衡量运行环境。X 可使用其广告 Cookie，请参阅（https://x.com/en/privacy）。",
+        "Essential storage maintains the service; optional advertising storage is used only with your consent. Advertising consent is saved on this device, with up to 200 purchase deduplication identifiers. Withdrawal stops new events and unloads advertising measurement. X may use advertising cookies; see (https://x.com/en/privacy).",
+        "必要儲存用於維持服務；選用廣告儲存僅在你同意後使用。廣告衡量同意儲存在本機，付款去重編號最多儲存 200 筆；撤回後停止新事件並卸載廣告衡量執行環境。X 可使用其廣告 Cookie，請參閱（https://x.com/en/privacy）。",
+        "必須ストレージはサービス維持に使用し、任意の広告ストレージは同意後のみ使用します。広告測定の同意はこの端末に保存され、購入の重複排除 ID は最大 200 件保存されます。同意を撤回すると新しいイベントを停止し、広告測定環境を終了します。X は広告 Cookie を使用する場合があります。（https://x.com/en/privacy）を参照してください。",
+        "필수 저장소는 서비스 유지에 사용하며 선택적 광고 저장소는 동의한 경우에만 사용합니다. 광고 측정 동의는 이 기기에 저장되고 구매 중복 제거 ID는 최대 200개까지 저장됩니다. 동의를 철회하면 새 이벤트 전송을 중단하고 광고 측정 환경을 종료합니다. X는 광고 쿠키를 사용할 수 있습니다. (https://x.com/en/privacy)를 참조하세요.",
+        "El almacenamiento esencial mantiene el servicio; el almacenamiento publicitario opcional solo se utiliza con su consentimiento. El consentimiento se guarda en este dispositivo, con un máximo de 200 identificadores de deduplicación de compras. Retirarlo detiene nuevos eventos y cierra el entorno de medición. X puede usar cookies publicitarias; consulte (https://x.com/en/privacy).",
+    ],
 ] as const;
 
 export const MARKETING_I18N_ENTRIES: SupDanceI18nEntry[] = definitions.map(([key, zh, en, tw, ja, ko, es]) => ({

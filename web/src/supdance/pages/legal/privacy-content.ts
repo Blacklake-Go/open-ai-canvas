@@ -149,7 +149,7 @@ export const PRIVACY_DOCUMENT: LegalDocument = {
             id: "cookies",
             title: "7. Cookie 与浏览器本地存储",
             blocks: [
-                { kind: "p", text: "必要存储用于维持服务；可选广告存储仅在你同意后使用。广告衡量同意保存在本机，付款去重编号最多保存 200 条；撤回后停止新事件并卸载广告衡量运行环境。X 可使用其广告 Cookie，请参阅 https://x.com/en/privacy。" },
+                { kind: "p", text: "必要存储用于维持服务；可选广告存储仅在你同意后使用。广告衡量同意保存在本机，付款去重编号最多保存 200 条；撤回后停止新事件并卸载广告衡量运行环境。X 可使用其广告 Cookie，请参阅（https://x.com/en/privacy）。" },
                 {
                     kind: "table",
                     head: ["名称 / 位置", "类型", "用途", "存续期"],

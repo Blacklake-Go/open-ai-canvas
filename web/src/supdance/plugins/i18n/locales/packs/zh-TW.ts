@@ -1,6 +1,8 @@
 import { MUSIC_SITE_I18N_ENTRIES } from "../music-site";
+import { MARKETING_I18N_ENTRIES } from "@/supdance/marketing/translations";
 
 const pack: Record<string, string> = {
+    ...Object.fromEntries(MARKETING_I18N_ENTRIES.map((entry) => [entry.key, entry.translations["zh-TW"]])),
     ...Object.fromEntries(MUSIC_SITE_I18N_ENTRIES.map((entry) => [entry.key, entry.translations["zh-TW"]])),
     "legal.scroll_to_bottom": "捲動至底部",
     "legal.back_to_top": "返回頁面頂部",
