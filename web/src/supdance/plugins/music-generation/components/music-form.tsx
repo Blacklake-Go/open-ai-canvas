@@ -1,6 +1,10 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Button } from "antd";
+import { BookMarked, ChevronDown, LibraryBig, Music2, SlidersHorizontal, WandSparkles } from "lucide-react";
+import { SegmentedControl } from "@/components/ui/base/segmented-control";
+import { Select } from "@/components/ui/base/select";
+import { Switch } from "@/components/ui/base/switch";
 import { useI18n } from "@/supdance/plugins/i18n";
 import { getWallet } from "@/services/api/wallet";
 import { ApiError } from "@/services/api/request";
@@ -9,6 +13,9 @@ import type { LogicalModelQuote } from "@/services/api/logical-models";
 import { useMusicStore } from "../stores/use-music-store";
 import { siteMusicQuote } from "../services/music-site-api";
 import { LyricsEditor } from "./lyrics-editor";
+import { PromptBuilder, SavedPrompts, StyleTemplates } from "./style-templates";
+import { appendStyle } from "./composer-patterns";
+import "../styles/music-composer.css";
 
 export function musicCreationAllowed(quote: LogicalModelQuote | null, available: number | undefined) {
     return Boolean(quote && available !== undefined && available >= quote.amountMicrocredits);
@@ -24,7 +31,12 @@ export function MusicForm({ userId, onSubmitted }: { userId: string; onSubmitted
     const setModel = useMusicStore((s) => s.setModel);
     const submit = useMusicStore((s) => s.submitGeneration);
     const selected = capabilities.find((cap) => cap.id === draft.model);
-    const [quote, setQuote] = useState<LogicalModelQuote | null>(null);
+    const [pricing, setPricing] = useState<{ model: string; user: string; quote: LogicalModelQuote } | null>(null);
+    const quote = pricing?.model === selected?.id && pricing?.user === userId ? pricing.quote : null;
+    const [panel, setPanel] = useState<"templates" | "saved" | "builder" | null>(null);
+    const opener = useRef<HTMLButtonElement | null>(null);
+    const [notice, setNotice] = useState("");
+    const [quoteError, setQuoteError] = useState("");
     const [error, setError] = useState("");
     const [quoteRevision, setQuoteRevision] = useState(0);
     const creditsEnabled = useUserStore((s) => s.features.creditsEnabled);
@@ -32,28 +44,89 @@ export function MusicForm({ userId, onSubmitted }: { userId: string; onSubmitted
 
     useEffect(() => {
         const controller = new AbortController();
-        setQuote(null);
-        setError("");
+        setPricing(null);
+        setQuoteError("");
         if (selected?.available) {
             void siteMusicQuote(selected.id, 0, controller.signal)
                 .then((value) => {
-                    if (!controller.signal.aborted) setQuote(value);
+                    if (!controller.signal.aborted) setPricing({ model: selected.id, user: userId, quote: value });
                 })
                 .catch((cause: unknown) => {
-                    if (!controller.signal.aborted) setError(cause instanceof Error ? cause.message : String(cause));
+                    if (!controller.signal.aborted) setQuoteError(cause instanceof Error ? cause.message : String(cause));
                 });
         }
         return () => controller.abort();
     }, [selected?.id, selected?.available, userId, quoteRevision]);
 
     const enough = creditsEnabled ? musicCreationAllowed(quote, wallet.data?.account.availableMicrocredits) : Boolean(quote);
-    const valid = selected?.available && selected.modes.includes(draft.mode) && (draft.mode === "custom" ? draft.lyrics.trim() : draft.prompt.trim());
-    const fieldClass = "min-h-11 w-full rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground focus-visible:outline-2 focus-visible:outline-primary";
-    const labelClass = "flex flex-col gap-2 text-sm font-medium text-foreground";
+    const mainField = draft.mode === "simple" ? "prompt" : "tags";
+    const input = draft.mode === "simple" ? draft.prompt : draft.lyrics;
+    const limit = draft.mode === "simple" ? selected?.maxPromptChars : selected?.maxLyricsChars;
+    const valid = selected?.available && selected.modes.includes(draft.mode) && input.trim() && Array.from(input).length <= (limit ?? 0) && (!selected.styleSupported || Array.from(draft.tags).length <= selected.maxPromptChars);
+    const canUseStyles = Boolean(selected?.available && (draft.mode === "simple" || selected.styleSupported));
+    function addStyle(style: string) {
+        if (!selected || !canUseStyles) return false;
+        const updated = appendStyle(draft[mainField], style, selected.maxPromptChars);
+        if (updated === null) return false;
+        setField(mainField, updated, userId);
+        setNotice(t("music.pattern_applied"));
+        return true;
+    }
+    function changeMode(mode: "simple" | "custom") {
+        const model = selected?.available && selected.modes.includes(mode) ? selected : capabilities.find((c) => c.available && c.modes.includes(mode));
+        if (!model) return;
+        setNotice("");
+        setError("");
+        if (selected?.id !== model.id) setModel(model.id, userId);
+        setField("mode", mode, userId);
+    }
+    function closePanel() {
+        setPanel(null);
+        requestAnimationFrame(() => {
+            if (opener.current?.isConnected) opener.current.focus({ preventScroll: true });
+        });
+    }
+    const styleActions = (
+        <div className="music-composer-tools">
+            <Button
+                htmlType="button"
+                icon={<WandSparkles size={15} />}
+                disabled={!canUseStyles}
+                onClick={(e) => {
+                    opener.current = e.currentTarget as HTMLButtonElement;
+                    setPanel("builder");
+                }}
+            >
+                {t("music.prompt_builder")}
+            </Button>
+            <Button
+                htmlType="button"
+                icon={<LibraryBig size={15} />}
+                disabled={!canUseStyles}
+                onClick={(e) => {
+                    opener.current = e.currentTarget as HTMLButtonElement;
+                    setPanel("templates");
+                }}
+            >
+                {t("music.pattern_library")}
+            </Button>
+            <Button
+                htmlType="button"
+                icon={<BookMarked size={15} />}
+                disabled={!canUseStyles}
+                onClick={(e) => {
+                    opener.current = e.currentTarget as HTMLButtonElement;
+                    setPanel("saved");
+                }}
+            >
+                {t("music.saved_styles")}
+            </Button>
+        </div>
+    );
 
     return (
         <form
-            className="plugin-music-form flex flex-col gap-5"
+            className="plugin-music-form"
             onSubmit={async (event) => {
                 event.preventDefault();
                 if (!valid || !enough || !quote || submitting) return;
@@ -69,92 +142,140 @@ export function MusicForm({ userId, onSubmitted }: { userId: string; onSubmitted
                 }
             }}
         >
-            <div className="flex gap-2" role="group" aria-label={t("music.creation_mode", undefined, "Creation mode")}>
-                {(["simple", "custom"] as const).map((mode) => (
-                    <button
-                        key={mode}
-                        type="button"
-                        aria-pressed={draft.mode === mode}
-                        disabled={!selected?.modes.includes(mode)}
-                        onClick={() => setField("mode", mode, userId)}
-                        className={`min-h-11 flex-1 rounded-lg border px-3 text-sm disabled:opacity-40 ${draft.mode === mode ? "border-primary bg-primary/10 text-primary" : "border-border bg-card text-foreground"}`}
-                    >
-                        {t(`music.mode_${mode}`)}
-                    </button>
-                ))}
+            <div className="music-composer-toolbar">
+                <SegmentedControl
+                    value={draft.mode}
+                    ariaLabel={t("music.creation_mode")}
+                    disabled={submitting}
+                    options={(["simple", "custom"] as const).map((mode) => ({ value: mode, label: t(mode === "simple" ? "music.mode_description" : "music.mode_lyrics"), disabled: !capabilities.some((c) => c.available && c.modes.includes(mode)) }))}
+                    onChange={changeMode}
+                />
+                <Select
+                    value={selected?.id}
+                    ariaLabel={t("music.select_model")}
+                    placeholder={t(loading ? "common.loading" : "music.no_models")}
+                    disabled={loading || submitting || !capabilities.length}
+                    onChange={(v) => {
+                        setNotice("");
+                        setError("");
+                        setModel(v, userId);
+                    }}
+                    options={capabilities.map((cap) => ({ value: cap.id, disabled: !cap.available, label: cap.name || cap.modelKey, title: cap.modelKey }))}
+                />
             </div>
             {draft.mode === "simple" && (
-                <label className={labelClass}>
-                    {t("music.prompt_label")}
+                <section className="music-composer-panel">
+                    <div className="music-composer-heading">
+                        <label htmlFor="music-song-description">{t("music.prompt_label")}</label>
+                        {selected && (
+                            <span>
+                                {Array.from(draft.prompt).length} / {selected.maxPromptChars}
+                            </span>
+                        )}
+                    </div>
                     <textarea
-                        className={fieldClass}
+                        id="music-song-description"
                         rows={5}
                         value={draft.prompt}
-                        maxLength={selected?.maxPromptChars}
-                        onChange={(event) => setField("prompt", event.target.value, userId)}
-                        placeholder={t("music.description_hint", undefined, "Describe the purpose, mood, genre, instruments and rhythm.")}
+                        aria-invalid={!!selected && Array.from(draft.prompt).length > selected.maxPromptChars}
+                        onChange={(e) => {
+                            setField("prompt", e.target.value, userId);
+                            setNotice("");
+                        }}
+                        placeholder={t("music.description_hint")}
                     />
-                </label>
+                    {selected && Array.from(draft.prompt).length > selected.maxPromptChars && (
+                        <p role="alert" className="text-xs text-destructive">
+                            {t("music.limit_hint")}
+                        </p>
+                    )}
+                    {styleActions}
+                </section>
             )}
-            {draft.mode === "simple" && (
-                <div className="flex flex-wrap gap-2">
-                    {["calm_piano", "film", "focus"].map((scene) => (
-                        <button key={scene} type="button" className="min-h-11 rounded-lg border border-border px-3 text-xs" onClick={() => setField("prompt", [draft.prompt, t("music.scene_" + scene)].filter(Boolean).join(", "), userId)}>
-                            {t("music.scene_" + scene)}
-                        </button>
-                    ))}
-                </div>
-            )}
-            {selected?.titleSupported && (
-                <label className={labelClass}>
-                    {t("music.song_title")}
-                    <input className={fieldClass} value={draft.title} maxLength={200} onChange={(event) => setField("title", event.target.value, userId)} />
-                </label>
-            )}
-            {draft.mode === "custom" && selected?.lyricsSupported && (
-                <div className={labelClass}>
-                    <span>{t("music.lyrics_editor")}</span>
-                    <LyricsEditor value={draft.lyrics} onChange={(value) => setField("lyrics", value, userId)} maxChars={selected.maxLyricsChars} />
-                </div>
-            )}
+            {draft.mode === "custom" && selected?.lyricsSupported && <LyricsEditor value={draft.lyrics} onChange={(value) => setField("lyrics", value, userId)} maxChars={selected.maxLyricsChars} />}
             {selected?.styleSupported && (
-                <label className={labelClass}>
-                    {t("music.style_language", undefined, "Music style and song language")}
-                    <textarea className={fieldClass} rows={3} value={draft.tags} onChange={(event) => setField("tags", event.target.value, userId)} placeholder={t("music.style_hint", undefined, "Warm piano pop, gentle vocals, English lyrics")} />
-                </label>
+                <section className="music-composer-panel">
+                    <div className="music-composer-heading">
+                        <label htmlFor="music-style-field">{t("music.style_field")}</label>
+                        <span>
+                            {Array.from(draft.tags).length} / {selected.maxPromptChars}
+                        </span>
+                    </div>
+                    <textarea
+                        id="music-style-field"
+                        rows={3}
+                        value={draft.tags}
+                        aria-invalid={Array.from(draft.tags).length > selected.maxPromptChars}
+                        onChange={(e) => {
+                            setField("tags", e.target.value, userId);
+                            setNotice("");
+                        }}
+                        placeholder={t("music.style_hint")}
+                    />
+                    {Array.from(draft.tags).length > selected.maxPromptChars && (
+                        <p role="alert" className="text-xs text-destructive">
+                            {t("music.limit_hint")}
+                        </p>
+                    )}
+                    {draft.mode === "custom" && styleActions}
+                </section>
             )}
-            {selected?.styleSupported && (
-                <label className={labelClass}>
-                    {t("music.song_language")}
-                    <input className={fieldClass} maxLength={80} value={draft.songLanguage} onChange={(event) => setField("songLanguage", event.target.value, userId)} />
-                    <span className="text-xs font-normal text-muted-foreground">{t("music.language_preference_hint")}</span>
-                </label>
+            {notice && (
+                <p role="status" className="text-xs text-muted-foreground">
+                    {notice}
+                </p>
             )}
             {selected?.instrumentalSupported && (
-                <label className="flex min-h-11 items-center justify-between gap-3 text-sm text-foreground">
-                    <span>{t("music.instrumental_label", undefined, "Instrumental · no vocals")}</span>
-                    <input type="checkbox" checked={draft.instrumental} onChange={(event) => setField("instrumental", event.target.checked, userId)} className="size-5 accent-primary" />
-                </label>
+                <div className="music-composer-setting">
+                    <label htmlFor="music-instrumental">{t("music.instrumental_label")}</label>
+                    <Switch id="music-instrumental" checked={draft.instrumental} onChange={(v) => setField("instrumental", v, userId)} />
+                </div>
             )}
-            <label className={labelClass}>
-                {t("music.select_model")}
-                <select className={fieldClass} value={draft.model} disabled={loading} onChange={(event) => setModel(event.target.value, userId)}>
-                    {!selected && <option value="">{t(loading ? "common.loading" : "music.no_models")}</option>}
-                    {capabilities.map((cap) => (
-                        <option value={cap.id} key={cap.id} disabled={!cap.available}>
-                            {cap.name === cap.modelKey ? cap.name : `${cap.name} · ${cap.modelKey}`}
-                        </option>
-                    ))}
-                </select>
-            </label>
-            <p className="text-xs text-muted-foreground">{t("music.native_output_hint", undefined, "MP3 output. Duration is determined by the model. Each task may return a different number of tracks.")}</p>
+            <details className="music-composer-options">
+                <summary>
+                    <SlidersHorizontal size={16} />
+                    {t("music.composer_options")}
+                    <ChevronDown size={15} />
+                </summary>
+                <div>
+                    {selected?.titleSupported && (
+                        <label>
+                            {t("music.song_title")}
+                            <input value={draft.title} maxLength={200} onChange={(e) => setField("title", e.target.value, userId)} />
+                        </label>
+                    )}
+                    {selected?.styleSupported && (
+                        <label>
+                            {t("music.song_language")}
+                            <input maxLength={80} value={draft.songLanguage} onChange={(e) => setField("songLanguage", e.target.value, userId)} />
+                            <small>{t("music.language_preference_hint")}</small>
+                        </label>
+                    )}
+                    <p className="text-xs text-muted-foreground">{t("music.native_output_hint")}</p>
+                </div>
+            </details>
+            {panel === "templates" && <StyleTemplates onClose={closePanel} onApply={addStyle} />}
+            {panel === "builder" && <PromptBuilder onClose={closePanel} onApply={addStyle} />}
+            {panel === "saved" && <SavedPrompts key={userId} userId={userId} current={draft[mainField]} onClose={closePanel} onApply={addStyle} />}
+            {quoteError && (
+                <p role="alert" className="text-sm text-destructive">
+                    {quoteError}
+                </p>
+            )}
             {error && (
                 <p role="alert" className="text-sm text-destructive">
                     {error}
                 </p>
             )}
-            {!quote && selected?.available && (
-                <button type="button" className="min-h-11 rounded-lg border border-border px-3" onClick={() => setQuoteRevision((value) => value + 1)}>
+            {(quoteError || wallet.isError) && selected?.available && (
+                <button
+                    type="button"
+                    className="min-h-11 rounded-lg border border-border px-3"
+                    onClick={() => {
+                        setQuoteRevision((value) => value + 1);
+                        void wallet.refetch();
+                    }}
+                >
                     {t("music.refresh_quote")}
                 </button>
             )}
@@ -163,33 +284,35 @@ export function MusicForm({ userId, onSubmitted }: { userId: string; onSubmitted
                     {t("music.no_models")}
                 </p>
             )}
-            <div className="flex flex-col gap-2 border-t border-border pt-4 text-sm">
-                <div className="flex flex-wrap justify-between gap-2">
-                    <span>{t("music.estimated_credits")}</span>
-                    <strong>{quote ? (quote.amountMicrocredits / 1_000_000).toLocaleString(undefined, { maximumFractionDigits: 6 }) : "—"}</strong>
-                </div>
-                <div className="flex flex-wrap justify-between gap-2 text-muted-foreground">
-                    <span>{t("music.available_balance", undefined, "Available credits")}</span>
-                    <span>{wallet.data ? (wallet.data.account.availableMicrocredits / 1_000_000).toLocaleString() : "—"}</span>
+            <div className="music-create-footer">
+                <div className="music-quote-line">
+                    <span>
+                        {t("music.estimated_credits")} <strong>{quote ? (quote.amountMicrocredits / 1_000_000).toLocaleString(undefined, { maximumFractionDigits: 6 }) : "—"}</strong>
+                    </span>
+                    {creditsEnabled && (
+                        <span>
+                            {t("music.available_balance")} {wallet.data ? (wallet.data.account.availableMicrocredits / 1_000_000).toLocaleString() : "—"}
+                        </span>
+                    )}
                 </div>
                 {quote && wallet.data && !enough && (
-                    <p role="alert" className="text-destructive">
-                        {t("music.insufficient_balance", undefined, "Not enough credits for this quote.")}
+                    <p role="alert" className="text-sm text-destructive">
+                        {t("music.insufficient_balance")}
                     </p>
                 )}
-                {wallet.isError && (
-                    <p role="alert" className="text-destructive">
-                        {t("music.wallet_unavailable", undefined, "Balance unavailable. Refresh before creating music.")}
+                {wallet.isError && creditsEnabled && (
+                    <p role="alert" className="text-sm text-destructive">
+                        {t("music.wallet_unavailable")}
                     </p>
                 )}
+                <Button type="primary" htmlType="submit" loading={submitting} icon={<Music2 size={18} />} disabled={!valid || !enough || submitting} className="music-create-button">
+                    {t(submitting ? "music.submitting" : "music.create_music")}
+                </Button>
                 <p className="text-xs text-muted-foreground">
                     {t("music.site_billing_tip")}
                     {quote ? ` · ${t("music.billing_" + quote.billingMode)} × ${quote.quantity}` : ""}
                 </p>
             </div>
-            <Button type="primary" htmlType="submit" disabled={!valid || !enough || submitting} className="min-h-11">
-                {t(submitting ? "music.submitting" : "music.create_music", undefined, submitting ? "Submitting…" : "Create music")}
-            </Button>
         </form>
     );
 }

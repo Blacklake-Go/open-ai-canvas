@@ -1,8 +1,12 @@
 import type { SupDanceI18nEntry } from "../types";
+import { musicTrimDefinitions } from "./music-trim";
+import { composerDefinitions } from "./music-composer";
 
 export const MUSIC_SITE_DESCRIPTION = "音乐工作台使用后台配置的平台音乐模型、统一音频生成任务与实时报价，提供简单和歌词创作、目标时长、原始 MP3 播放下载及共享任务历史。模型与版本由渠道配置决定。";
 
 const definitions = [
+    ...musicTrimDefinitions,
+    ...composerDefinitions,
     [
         "music.plugin_description",
         MUSIC_SITE_DESCRIPTION,
@@ -69,6 +73,17 @@ const definitions = [
         "Prueba anterior de administración · sin cargo al usuario",
     ],
     ["load_more_works", "加载更多作品", "Load more works", "載入更多作品", "作品をさらに読み込む", "작품 더 불러오기", "Cargar más obras"],
+    ["compose_heading", "音乐创作", "Create music", "音樂創作", "音楽を作成", "음악 만들기", "Crear música"],
+    ["assets_heading", "资产库", "Assets", "資產庫", "素材", "자산", "Recursos"],
+    ["order_new", "最新优先", "Newest first", "最新優先", "新しい順", "최신순", "Más recientes"],
+    ["order_old", "最早优先", "Oldest first", "最早優先", "古い順", "오래된순", "Más antiguas"],
+    ["filter_instrumental", "纯音乐", "Instrumental", "純音樂", "インスト", "연주곡", "Instrumental"],
+    ["filter_favorites", "收藏", "Favorites", "收藏", "お気に入り", "즐겨찾기", "Favoritas"],
+    ["favorite_local", "收藏到此设备", "Favorite on this device", "收藏至此裝置", "この端末のお気に入り", "이 기기에서 즐겨찾기", "Guardar en favoritos en este dispositivo"],
+    ["trim_track", "修剪音轨", "Trim track", "修剪音軌", "トラックをトリミング", "트랙 자르기", "Recortar pista"],
+    ["asset_unavailable", "此音轨尚无法定位到资产库", "This track has no linked asset yet", "此音軌尚無法定位至資產庫", "このトラックに対応する素材はまだありません", "아직 연결된 자산이 없습니다", "Esta pista aún no tiene un recurso vinculado"],
+    ["clip_saved", "修剪版本已保存", "Trimmed version saved", "修剪版本已儲存", "トリミング版を保存しました", "자른 버전이 저장되었습니다", "Versión recortada guardada"],
+    ["loop_one", "单曲循环", "Repeat track", "單曲循環", "1曲リピート", "한 곡 반복", "Repetir pista"],
     ["refresh_quote", "刷新费用与余额", "Refresh price and balance", "重新整理費用與餘額", "料金と残高を更新", "요금 및 잔액 새로고침", "Actualizar precio y saldo"],
     [
         "quote_changed",

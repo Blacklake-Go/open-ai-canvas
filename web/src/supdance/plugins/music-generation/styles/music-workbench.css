@@ -251,3 +251,227 @@
         flex-basis: 30%;
     }
 }
+
+/* The studio owns its panels; appearance and density follow the workspace skin. */
+.music-workbench-page .music-library {
+    gap: 12px;
+}
+.music-workbench-page .music-composer h1,
+.music-workbench-page .music-library h2 {
+    font-size: clamp(1.125rem, 1.45vw, 1.5rem);
+    letter-spacing: -0.035em;
+    line-height: 1.25;
+}
+.music-workbench-page .music-day h3 {
+    margin: 16px 0 6px;
+    font-size: 0.78rem;
+    color: var(--muted-foreground);
+    font-weight: 600;
+}
+.music-workbench-page .music-header-actions,
+.music-workbench-page .music-asset-link,
+.music-workbench-page .music-sort,
+.music-workbench-page .music-tools,
+.music-workbench-page .music-record-actions,
+.music-workbench-page .music-saved-clip {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+.music-workbench-page .music-header-actions button,
+.music-workbench-page .music-asset-link,
+.music-workbench-page .music-sort {
+    min-height: 40px;
+    background: transparent;
+    color: var(--muted-foreground);
+    padding: 0 10px;
+    border: 1px solid var(--border);
+    border-radius: var(--user-radius-control, var(--radius));
+    font-size: 0.8rem;
+    white-space: nowrap;
+}
+.music-workbench-page .music-header-actions button {
+    display: grid;
+    place-items: center;
+    min-width: 40px;
+}
+.music-workbench-page .music-search {
+    position: relative;
+    display: flex;
+    flex: 1;
+    min-width: 0;
+    align-items: center;
+}
+.music-workbench-page .music-search svg {
+    position: absolute;
+    left: 12px;
+    color: var(--muted-foreground);
+    pointer-events: none;
+}
+.music-workbench-page .music-search input {
+    padding-left: 38px;
+    min-height: 40px;
+    background: var(--muted);
+    border-radius: 999px;
+    border-color: transparent;
+}
+.music-workbench-page .music-filters {
+    gap: 4px;
+}
+.music-workbench-page .music-filters button {
+    min-height: 36px;
+    padding: 3px 12px;
+    border-radius: 999px;
+    font-size: 0.78rem;
+    border-color: transparent;
+    color: var(--muted-foreground);
+}
+.music-workbench-page .music-filters button[aria-pressed="true"] {
+    background: var(--foreground);
+    color: var(--background);
+}
+.music-workbench-page .music-record {
+    display: grid;
+    grid-template-columns: 48px minmax(0, 1fr) auto auto;
+    align-items: center;
+    gap: 12px;
+    min-height: 78px;
+    padding: 8px 6px;
+    border-bottom: 1px solid var(--border);
+}
+.music-workbench-page .music-record:is(:hover, :focus-within, .is-playing) {
+    background: var(--accent);
+    border-radius: var(--user-radius-control, var(--radius));
+}
+.music-workbench-page .music-cover {
+    display: grid;
+    position: relative;
+    place-items: center;
+    width: 48px;
+    height: 48px;
+    flex: none;
+    border-radius: var(--radius);
+    background: var(--muted);
+    color: var(--muted-foreground);
+    border: 1px solid var(--border);
+}
+.music-workbench-page .music-disc {
+    opacity: 0.72;
+}
+.music-workbench-page .music-cover-control {
+    position: absolute;
+    bottom: 2px;
+    right: 2px;
+    width: 22px;
+    height: 22px;
+    display: grid;
+    place-items: center;
+    background: var(--foreground);
+    color: var(--background);
+    border-radius: 50%;
+}
+.music-workbench-page .music-record-title {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: 4px;
+    min-width: 0;
+    min-height: 44px;
+    text-align: start;
+}
+.music-workbench-page .music-record-title strong {
+    font-size: 0.93rem;
+    font-weight: 600;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    width: 100%;
+}
+.music-workbench-page .music-record-title span {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    color: var(--muted-foreground);
+    font-size: 0.76rem;
+}
+.music-workbench-page .music-record-title i {
+    font-style: normal;
+}
+.music-workbench-page .music-record-length {
+    color: var(--muted-foreground);
+    font-variant-numeric: tabular-nums;
+    font-size: 0.82rem;
+}
+.music-workbench-page .music-record-actions {
+    gap: 0;
+}
+.music-workbench-page .music-record-actions button {
+    display: grid;
+    place-items: center;
+    width: 44px;
+    height: 44px;
+    border-radius: var(--radius);
+    color: var(--muted-foreground);
+}
+.music-workbench-page .music-record-actions button:is(:hover, [aria-pressed="true"]) {
+    background: var(--muted);
+    color: var(--foreground);
+}
+.music-workbench-page .music-saved-clip {
+    flex-wrap: wrap;
+    font-size: 0.85rem;
+    padding: 10px;
+    background: var(--muted);
+    border-radius: var(--radius);
+}
+.music-workbench-page .music-saved-clip a {
+    text-decoration: underline;
+}
+.music-workbench-page .music-list-error {
+    color: var(--destructive);
+}
+.music-workbench-page .music-empty {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+    gap: 16px;
+}
+.music-workbench-page .music-player-controls .music-main-play {
+    border-radius: 50%;
+    background: var(--foreground);
+    color: var(--background);
+}
+.music-workbench-page .music-player-controls .music-main-play:hover {
+    background: var(--foreground);
+    opacity: 0.85;
+}
+@media (min-width: 901px) and (max-width: 1199px), (max-width: 580px) {
+    .music-workbench-page .music-record {
+        grid-template-columns: 44px minmax(0, 1fr) auto;
+        gap: 2px 10px;
+    }
+    .music-workbench-page .music-cover {
+        width: 44px;
+        height: 44px;
+    }
+    .music-workbench-page .music-record-actions {
+        grid-column: 2 / -1;
+        justify-self: start;
+    }
+    .music-workbench-page .music-header-actions,
+    .music-workbench-page .music-record-actions {
+        gap: 0;
+    }
+}
+@media (max-width: 580px) {
+    .music-workbench-page .music-library {
+        padding: 12px;
+    }
+    .music-workbench-page .music-header-actions {
+        gap: 4px;
+    }
+    .music-workbench-page .music-filters button {
+        min-height: 44px;
+    }
+}

@@ -18,7 +18,7 @@ import { assetGridCardMinWidth, type AssetGridDensity, assetGridDensityOptions, 
 import { useEffect, useMemo, useRef, useState } from "react";
 import { keepPreviousData, useQuery, useQueryClient } from "@tanstack/react-query";
 import { App, Form, Popconfirm, Button, Dropdown, Input, Modal, Space, Tag, Typography, Progress } from "antd";
-import { useNavigate } from "react-router";
+import { useNavigate, useSearchParams } from "react-router";
 import { useTranslation } from "react-i18next";
 import { translate } from "@/i18n";
 import { ArkCertifyModal } from "./ark-certify-modal";
@@ -27,12 +27,13 @@ import { useArkLibraryReconcile } from "@/hooks/use-ark-library-reconcile";
 import { useCopyText } from "@/hooks/use-copy-text";
 import { useDebouncedValue } from "@/hooks/use-debounced-value";
 import { arkLibraryProgressMap } from "@/lib/ark-assets";
+import { parseAssetRecord } from "@/lib/asset-record";
 import { ARK_ASSET_CATEGORY, ASSET_ASSIGNABLE_CATEGORY_OPTIONS, ASSET_CATEGORY_LABELS, ASSET_CATEGORY_OPTIONS, defaultAssetCategoryForKind, normalizeAssetCategory } from "@/lib/asset-category";
 import { downloadBrowserMedia } from "@/services/browser-download";
 import { flushAssetStorePersistence, useAssetStore, type AssetCategory, type AssetKind, type ImageAsset } from "@/stores/use-asset-store";
 import { loadAssetLibraryPage, loadAssetsForUse, saveRemoteUserDataNow, localSavedRemotePendingMessage, deleteAssetsWithRemoteSync, deleteAssetWithRemoteSync } from "@/services/user-data-sync";
 import { useUserStore } from "@/stores/use-user-store";
-import { createAssetFolder, deleteAssetFolder, listAssetFolders, listRemoteAssetsPage, updateAssetFolder, type AssetFolder, moveRemoteAssetsToFolder } from "@/services/api/user-data";
+import { createAssetFolder, deleteAssetFolder, getRemoteAsset, listAssetFolders, listRemoteAssetsPage, updateAssetFolder, type AssetFolder, moveRemoteAssetsToFolder } from "@/services/api/user-data";
 import { assetCountMap, assetSearchText, readAssetGridDensity, assetKindIcons, assetCategoryIcons } from "./asset-library-format";
 import { ASSET_GRID_DENSITY_KEY, type LibraryAsset } from "./asset-library-format";
 import { selectAssetIds } from "./asset-library-selection";
@@ -153,7 +154,31 @@ export default function AssetsPage() {
     const [gridDensity, setGridDensity] = useState<AssetGridDensity>(readAssetGridDensity);
     const [editingAsset, setEditingAsset] = useState<LibraryAsset | null>(null);
     const [isAssetOpen, setIsAssetOpen] = useState(false);
-    const [previewAsset, setPreviewAsset] = useState<LibraryAsset | null>(null);
+    const [localPreview, setPreviewAsset] = useState<LibraryAsset | null>(null);
+    const [searchParams, setSearchParams] = useSearchParams();
+    const linkedId = searchParams.get("assetId") || "";
+    const linkedAsset = useQuery({
+        queryKey: ["asset-detail", userId, linkedId],
+        queryFn: async () => {
+            const { asset } = await getRemoteAsset(linkedId);
+            if (asset.id !== linkedId) throw new Error(t("library.assets.detailFailed"));
+            return parseAssetRecord(asset);
+        },
+        enabled: Boolean(linkedId && userId),
+        staleTime: 0,
+    });
+    const previewAsset = linkedId ? (linkedAsset.isSuccess ? linkedAsset.data : null) : localPreview;
+    const clearLinkedAsset = () => {
+        if (linkedId)
+            setSearchParams(
+                (params) => {
+                    const next = new URLSearchParams(params);
+                    next.delete("assetId");
+                    return next;
+                },
+                { replace: true },
+            );
+    };
     const [deletingAsset, setDeletingAsset] = useState<LibraryAsset | null>(null);
     const [archivingAsset, setArchivingAsset] = useState<LibraryAsset | null>(null);
     const [selectedIds, setSelectedIds] = useState<string[]>([]);
@@ -662,6 +687,13 @@ export default function AssetsPage() {
     return (
         <>
             <WorkspacePage grid className="library-page assets-library-page canvas-library-page">
+                {linkedId && linkedAsset.isError && (
+                    <div role="alert" className="flex items-center gap-3">
+                        {t("library.assets.detailFailed")}
+                        <Button onClick={() => void linkedAsset.refetch()}>{t("common.retry")}</Button>
+                        <Button onClick={clearLinkedAsset}>{t("common.close")}</Button>
+                    </div>
+                )}
                 <div className="studio-band">
                     <PageHeader
                         title={viewMode === "trash" ? t("library.assets.page.trashTitle") : t("library.assets.page.title")}
@@ -960,7 +992,10 @@ export default function AssetsPage() {
                                                     isTrash={viewMode === "trash"}
                                                     retentionDays={retentionDays}
                                                     onSelect={(selected, range) => selectAsset(asset.id, selected, range)}
-                                                    onOpen={() => setPreviewAsset(asset)}
+                                                    onOpen={() => {
+                                                        clearLinkedAsset();
+                                                        setPreviewAsset(asset);
+                                                    }}
                                                     onEdit={() => void openEdit(asset)}
                                                     onCopy={copyAssetText}
                                                     onDownload={downloadImage}
@@ -1151,7 +1186,10 @@ export default function AssetsPage() {
 
             <AssetDrawer
                 asset={previewAsset}
-                onClose={() => setPreviewAsset(null)}
+                onClose={() => {
+                    clearLinkedAsset();
+                    setPreviewAsset(null);
+                }}
                 onCopy={copyAssetText}
                 onDownload={downloadImage}
                 ark={

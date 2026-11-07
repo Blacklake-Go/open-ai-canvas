@@ -45,7 +45,7 @@ export function projectSiteMusicTask(task: GenerationTask): MusicTask {
         canRecoverMedia: task.canRecoverMedia,
         id: task.id,
         taskId: task.id,
-        userId: "",
+        userId: task.userId || "",
         model: task.model || "",
         mode: music.mode || (music.lyrics ? "custom" : "simple"),
         prompt: task.prompt,
