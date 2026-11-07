@@ -162,6 +162,7 @@
     "AGENTS.md",
     "backend/internal/app/plugin_management.go",
     "backend/internal/handler/api.go",
+    "backend/internal/handler/openapi.yaml",
     "web/src/application.tsx",
     "web/src/components/auth/auth-session-hydrator.tsx",
     "web/src/components/auth/require-plugin.tsx",
@@ -211,6 +212,9 @@
     "web/src/pages/projects/studio/episode-delete-modal.tsx"
   ],
   "supdanceExtensionFiles": [
+    "web/src/supdance/plugins/compact-model-picker/admin.tsx",
+    "web/src/supdance/plugins/compact-model-picker/settings.ts",
+    "supdance/plugins/supdance-compact-model-picker/manifest.json",
     "web/src/supdance/adapters/upstream-i18n.ts",
     "web/src/components/canvas/use-codex-connector.ts",
     "web/src/services/api/codex-connector.ts",

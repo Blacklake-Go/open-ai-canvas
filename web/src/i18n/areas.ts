@@ -10,6 +10,7 @@ import { catalog as canvasC } from "./messages/areas/canvasC";
 import { catalog as drama } from "./messages/areas/drama";
 import { catalog as ecommerce } from "./messages/areas/ecommerce";
 import { catalog as upstream } from "./messages/areas/upstream";
+import { compactPickerLocales as compactPicker } from "./messages/areas/compact-picker";
 
 export const AREA_CATALOGS = {
     create,
@@ -22,4 +23,5 @@ export const AREA_CATALOGS = {
     drama,
     ecommerce,
     upstream,
+    compactPicker,
 };

@@ -19,10 +19,11 @@ func RegisterSupDanceI18nRoutes(r *gin.RouterGroup, svc *service.Service) {
 		c.Header("Cache-Control", "no-store")
 		availability := make(map[string]bool)
 		for id, read := range map[string]func() (bool, error){
-			"supdance-i18n":             svc.SupDanceI18nPluginAvailable,
-			"supdance-social-auth":      svc.SocialAuthPluginAvailable,
-			"supdance-music-generation": svc.MusicPluginPlatformAvailable,
-			"supdance-visual-engine":    svc.VisualEnginePluginAvailable,
+			"supdance-i18n":                 svc.SupDanceI18nPluginAvailable,
+			"supdance-social-auth":          svc.SocialAuthPluginAvailable,
+			"supdance-music-generation":     svc.MusicPluginPlatformAvailable,
+			"supdance-visual-engine":        svc.VisualEnginePluginAvailable,
+			"supdance-compact-model-picker": svc.CompactPickerPluginAvailable,
 		} {
 			enabled, err := read()
 			if err != nil {

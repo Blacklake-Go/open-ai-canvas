@@ -57,6 +57,7 @@ const SocialAuthSettingsPage = lazyAdminPage(() => import("@/supdance/plugins/so
 const SocialAuthOperationsPage = lazyAdminPage(() => import("@/supdance/plugins/social-auth/admin/social-auth-operations-page"));
 const MusicWorkbenchPage = lazy(() => import("@/supdance/plugins/music-generation/pages/music-workbench-page"));
 const MusicAdminSettingsPage = lazyAdminPage(() => import("@/supdance/plugins/music-generation/admin/music-admin-settings-page"));
+const CompactPickerAdmin = lazyAdminPage(() => import("@/supdance/plugins/compact-model-picker/admin"));
 const DarkLoginPage = lazy(() => import("@/supdance/pages/dark-login-page"));
 const VisualConsole = lazyAdminPage(() => import("@/supdance/plugins/visual-engine/admin/VisualConsole"));
 const HtmlPageManager = lazyAdminPage(() => import("@/supdance/plugins/html-page-manager/admin/html-page-manager"));
@@ -283,6 +284,7 @@ const routes: RouteObject[] = [
                     { path: "ecommerce-categories", element: <Navigate to="/admin/ecommerce/library/categories" replace /> },
                     { path: "plugins", element: <AdminPluginsPage /> },
                     { path: "plugins/music-generation", element: <MusicAdminSettingsPage /> },
+                    { path: "plugins/compact-model-picker", element: <CompactPickerAdmin /> },
                     { path: "i18n", element: <Navigate to="/admin/i18n/settings" replace /> },
                     { path: "i18n/settings", element: <SupDanceI18nSettingsPage /> },
                     { path: "i18n/entries", element: <SupDanceI18nEntriesPage /> },

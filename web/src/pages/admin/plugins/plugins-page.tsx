@@ -28,6 +28,9 @@ import { useVisualEngineStore } from "@/supdance/plugins/visual-engine/storage/v
 import { VisualEnginePluginControls } from "@/supdance/plugins/visual-engine/admin/components/plugin-controls";
 import { supdanceVisualEnginePlugin } from "@/supdance/plugins/visual-engine";
 import { AdminPluginDetailModal, type AdminPluginDetail } from "./plugin-detail-modal";
+import { i18n } from "@/i18n";
+import { appQueryClient } from "@/lib/query-client";
+import { COMPACT_PICKER_ID, COMPACT_PICKER_ADMIN_ROUTE, compactAdminKey, compactPublicKey } from "@/supdance/plugins/compact-model-picker/settings";
 
 type AdminPluginItem = AdminPluginDetail;
 
@@ -105,6 +108,10 @@ export default function AdminPluginsPage() {
                 };
             }
             setStates((current) => ({ ...current, [item.manifest.id]: state }));
+            if (item.manifest.id === COMPACT_PICKER_ID) {
+                void appQueryClient.invalidateQueries({ queryKey: compactPublicKey });
+                void appQueryClient.invalidateQueries({ queryKey: compactAdminKey });
+            }
             if (item.manifest.id === SUPDANCE_VISUAL_ENGINE_PLUGIN_ID) {
                 useVisualEngineStore.getState().setEnabled(state.platformAvailable);
             }
@@ -213,6 +220,11 @@ export default function AdminPluginsPage() {
                                     <Settings2 className="size-3" /> 社交登录配置中心
                                 </Link>
                             </div>
+                        ) : null}
+                        {item.manifest.id === COMPACT_PICKER_ID ? (
+                            <Link to={COMPACT_PICKER_ADMIN_ROUTE} className="mt-1.5 inline-flex items-center gap-1 text-xs font-medium text-primary hover:underline">
+                                <Settings2 className="size-3" /> {i18n.t("compactPicker.title")}
+                            </Link>
                         ) : null}
                         {item.manifest.id === SUPDANCE_MUSIC_PLUGIN_ID ? (
                             <div className="mt-1.5 flex flex-wrap items-center gap-2 text-xs">
@@ -508,7 +520,8 @@ function mergePlugins(remote: BackendPlugin[]): AdminPluginItem[] {
         const isSupDanceSocialAuth = plugin.manifest.id === SUPDANCE_SOCIAL_AUTH_PLUGIN_ID;
         const isSupDanceMusic = plugin.manifest.id === SUPDANCE_MUSIC_PLUGIN_ID;
         const isVisualEngine = plugin.manifest.id === SUPDANCE_VISUAL_ENGINE_PLUGIN_ID;
-        const application = isOfficialApplicationPluginId(plugin.manifest.id) || isSupDanceI18n || isSupDanceSocialAuth || isSupDanceMusic || isVisualEngine;
+        const systemApplication = isSupDanceI18n || isSupDanceSocialAuth || isSupDanceMusic || isVisualEngine || plugin.manifest.id === COMPACT_PICKER_ID;
+        const application = isOfficialApplicationPluginId(plugin.manifest.id) || systemApplication;
         byId.set(plugin.manifest.id, {
             manifest: plugin.manifest,
             source: plugin.source || "bundled",
@@ -516,9 +529,8 @@ function mergePlugins(remote: BackendPlugin[]): AdminPluginItem[] {
             management: {
                 origin: "official",
                 kind: application ? "application" : "protocol",
-                activationScope: isSupDanceI18n || isSupDanceSocialAuth || isSupDanceMusic || isVisualEngine ? "system" : application ? "user" : "system",
-                configurationScope:
-                    isSupDanceI18n || isSupDanceSocialAuth || isSupDanceMusic || isVisualEngine ? "system" : application ? (plugin.manifest.id === EAGLE_PLUGIN_ID || plugin.manifest.id === RUNNINGHUB_PLUGIN_ID ? "user" : "none") : "system",
+                activationScope: systemApplication ? "system" : application ? "user" : "system",
+                configurationScope: systemApplication ? "system" : application ? (plugin.manifest.id === EAGLE_PLUGIN_ID || plugin.manifest.id === RUNNINGHUB_PLUGIN_ID ? "user" : "none") : "system",
             },
         });
     }
