@@ -1,4 +1,4 @@
-import { groupModelsByDisplayName, isDirectSystemModel, type DisplayModelGroup } from "@/lib/model-selection";
+import { groupModelsByDisplayName, isDirectSystemModel, modelCompatibilityError, type DisplayModelGroup, type ModelRequirements } from "@/lib/model-selection";
 import { modelIcon, modelOptionName, PUBLIC_MODEL_CATALOG_ID, resolveModelChannel, type AiConfig } from "@/stores/use-config-store";
 
 export type ModelPickerGroup = {
@@ -20,21 +20,25 @@ export function modelChannelLabel(config: AiConfig, value: string) {
 }
 
 // 一级按已设置的模型展示名跨渠道聚合，空值归入未分类；二级保留独立调用与售价。
-export function groupModelsForPicker(config: AiConfig, options: string[]): ModelPickerGroup[] {
+export function groupModelsForPicker(config: AiConfig, options: string[], requirements?: ModelRequirements): ModelPickerGroup[] {
+    // 只隐藏当前视频输入不适用的选项；目录、模型启用状态和实际能力保持由后台管理。
+    const visibleOptions = requirements?.capability === "video" ? options.filter((value) => !modelCompatibilityError(config, value, requirements)) : options;
     const groups = new Map<string, ModelPickerGroup>();
     for (const channel of config.channels) {
-        const models = options.filter((value) => resolveModelChannel(config, value).id === channel.id);
+        const models = [...new Set(visibleOptions)].filter((value) => resolveModelChannel(config, value).id === channel.id);
         const directModels = models.filter((value) => isDirectSystemModel(config, value));
         for (const value of directModels) {
             const cost = channel.modelCosts?.find((item) => item.model === modelOptionName(value));
-            const label = cost?.displayName?.trim() || "未分类";
+            const displayName = cost?.displayName?.trim() || "未分类";
+            const musicBrand = cost?.capability === "audio" && !/speech|tts/i.test(modelOptionName(value)) ? /^(Suno|Mureka|MiniMax)(?:\s|[-/])/i.exec(displayName)?.[1] : undefined;
+            const label = musicBrand || displayName;
             const key = JSON.stringify(["product", label]);
             let group = groups.get(key);
             if (!group) {
                 group = { key, label, icon: modelIcon(config, value), scope: "平台服务", kind: "product", models: [] };
                 groups.set(key, group);
             }
-            group.models.push({ key: value, label: modelChannelLabel(config, value), models: [value] });
+            group.models.push({ key: value, label: musicBrand ? displayName : modelChannelLabel(config, value), models: [value] });
         }
         const otherModels = models.filter((value) => !isDirectSystemModel(config, value));
         if (otherModels.length) {

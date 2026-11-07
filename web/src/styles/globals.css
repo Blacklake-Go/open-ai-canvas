@@ -698,6 +698,46 @@
         transform 0.18s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
+.legal-header-nav {
+    display: flex;
+    align-items: center;
+    gap: 18px;
+    min-width: 0;
+    overflow-x: auto;
+    white-space: nowrap;
+    scrollbar-width: none;
+}
+
+.legal-header-nav a {
+    color: color-mix(in srgb, var(--foreground) 62%, transparent);
+    font-size: 13px;
+    font-weight: 500;
+    text-decoration: none;
+}
+
+.legal-header-nav a:hover,
+.legal-header-nav a:focus-visible,
+.legal-header-nav a[aria-current="page"] {
+    color: var(--foreground);
+}
+
+@media (max-width: 900px) {
+    .legal-header-nav {
+        position: absolute;
+        top: 64px;
+        left: 0;
+        right: 0;
+        height: 44px;
+        padding: 0 24px;
+        background: inherit;
+        border-bottom: 1px solid color-mix(in srgb, var(--foreground) 8%, transparent);
+    }
+
+    .legal-public-page main {
+        padding-top: 120px;
+    }
+}
+
 .legal-theme-toggler > svg {
     width: 18px;
     height: 18px;

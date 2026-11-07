@@ -117,7 +117,7 @@ export function AppWorkspaceShell({ children }: { children: ReactNode }) {
             </WorkspaceTopBarExtensionProvider>
             <WorkspaceWalletHost />
             <WorkspaceStorageLimitNotice />
-            <ModelSetupGuide hidden={pathname === "/login" || pathname === "/register" || pathname.startsWith("/admin")} />
+            <ModelSetupGuide hidden={creationWorkspace || pathname === "/login" || pathname === "/register" || pathname.startsWith("/admin")} />
         </>
     );
 }

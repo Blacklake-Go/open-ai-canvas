@@ -43,6 +43,20 @@ v1.3.3 将授权后入站票据从单进程内存迁移至共享 Redis（键前�
 
 ## 2. 不可避免的上游核心文件补丁登记
 
+### 补丁 ID：`supdance-model-brand-icons`
+
+- 专属实现：`web/src/supdance/brand/model-logo-extensions.ts` 与本地 `mureka.png`。图标来自 Mureka 官方站公开静态资源，不依赖运行时第三方热链。
+- 核心接缝：`web/src/components/model-logo.tsx` 将扩展 ID 接入原有大小写解析、前台渲染和后台 Logo 选择器；现有图标库及懒加载策略继续复用。`model-picker.tsx` 向 `model-picker-groups.ts` 传递当前输入要求，复用能力校验在分组前过滤不适用的视频型号；空品牌自然隐藏。
+- 品牌分组、版本名称和图标 ID 维护在后台渠道模型配置中，不新增按音乐品牌猜测分组的业务代码。视频模型仅在当前输入不适用时隐藏，加入参考图后图生视频型号自动恢复显示；后台启用状态与历史任务不变。
+- 创作入口的参考素材容量取已启用视频型号的能力并集，避免当前选中文生视频型号时入口消失、或添加参考图后被旧型号容量清除。提交时仍按实际选中型号强校验。
+- 不修改模型调用 ID、上游 ID、能力协议、成本或售价；无 schema 迁移。扩展已登记到兼容适配器和 baseline 文件。
+
+### 补丁 ID：`supdance-social-brand-icons`
+
+- 专属实现：`backend/internal/app/social_brand_icons.go`、`backend/internal/handler/social_brand_icons.go` 与社交登录插件上传客户端。
+- 核心接缝：`resource_store.go` 为强制本地上传保留专用资源类型；`appearance.go` 将社交图标引用并入现有管理员删除及清理保护。普通资源权限与站点 Logo 配置不变。
+- 持久化沿用资源表和社交插件设置，无 schema 迁移；上传限额、MIME 检测及本地存储复用现有能力。公开读取逐次验证配置引用，未保存文件只允许管理员预览。
+
 所有对上游文件的直接修改均同步登记在 [`web/src/supdance/adapters/compatibility.ts`](../../web/src/supdance/adapters/compatibility.ts) 的 `SUPDANCE_UPSTREAM_PATCH_REGISTRY` 与 [`supdance/config/baseline.json`](../../supdance/config/baseline.json) 中：
 
 ### 补丁 ID：`supdance-codex-agent-connector`

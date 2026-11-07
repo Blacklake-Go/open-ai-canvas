@@ -1,8 +1,7 @@
 import { Popover } from "antd";
 import { Switch } from "@/components/ui/base/switch";
-import { CircleUserRound, Moon, Sun } from "lucide-react";
+import { Moon, Sun } from "lucide-react";
 import { useState } from "react";
-import { Link } from "react-router";
 
 import { AppChangelogButton } from "@/components/layout/app-changelog-modal";
 import { WorkspaceAccountCard } from "./workspace-account-card";
@@ -12,6 +11,7 @@ import { openWorkspaceWallet } from "@/lib/workspace-wallet";
 import { useThemeStore } from "@/stores/use-theme-store";
 import { useUserStore } from "@/stores/use-user-store";
 import { useI18n } from "@/supdance/plugins/i18n";
+import { GuestAuthActions } from "@/supdance/components/guest-auth-actions";
 
 /** 顶部与侧栏复用同一账户卡片；顶部额外保留版本和主题偏好。 */
 export function WorkspaceAccountMenu() {
@@ -54,5 +54,5 @@ export function WorkspaceAccountMenu() {
                 <UserGroupAvatarRing><UserAvatar user={user} className="size-6" /></UserGroupAvatarRing>
             </button>
         </Popover></>
-    ) : <Link to="/login" className="inline-flex items-center gap-2 px-2 text-xs text-foreground/55" aria-label={t("auth.login")} title={t("auth.login")}><CircleUserRound className="size-5" /><span className="hidden sm:inline">{t("nav.guest")}</span></Link>;
+    ) : <GuestAuthActions />;
 }

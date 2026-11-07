@@ -2,6 +2,7 @@ package app
 
 import (
 	"bytes"
+	"io"
 	"net/http/httptest"
 	"strings"
 	"testing"
@@ -36,6 +37,17 @@ func TestSocialBrandIconLifecycle(t *testing.T) {
 	delivery, err := svc.PrepareSocialBrandIconDelivery(nil, id, ResourceAccessOptions{}, "")
 	if err != nil || delivery == nil {
 		t.Fatalf("configured icon unavailable: %v", err)
+	}
+	if delivery.Stream == nil {
+		t.Fatal("expected local stream")
+	}
+	defer delivery.Stream.Body.Close()
+	content, err := io.ReadAll(delivery.Stream.Body)
+	if err != nil || !bytes.Equal(content, image) {
+		t.Fatalf("public bytes changed: %v", err)
+	}
+	if _, err := svc.PrepareResourceDelivery(user.ID, id, ResourceAccessOptions{}, ""); err == nil {
+		t.Fatal("ordinary resource authorization bypassed")
 	}
 	if len(svc.appearanceResourceReferences([]string{id})[id]) == 0 {
 		t.Fatal("configured icon not protected from deletion")

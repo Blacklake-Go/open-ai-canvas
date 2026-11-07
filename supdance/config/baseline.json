@@ -13,6 +13,10 @@
     "baseCommit": "259e7e3fba0b6f70ac3cfd65941c3ca345d60249"
   },
   "coupledUpstreamFiles": [
+    "web/src/components/model-logo.tsx",
+    "web/src/components/model-picker.tsx",
+    "web/src/lib/model-picker-groups.ts",
+    "web/src/pages/create/index.tsx",
     ".github/workflows/quality.yml",
     ".github/workflows/supdance-upstream-sync.yml",
     "scripts/verify-before-push.mjs",

@@ -145,6 +145,7 @@ export const BUILTIN_SUPDANCE_I18N_ENTRIES: readonly SupDanceI18nEntry[] = [
     e("nav.assets", "nav", "资产", "主导航：资产"),
     e("nav.tasks", "nav", "创作历史", "主导航：创作历史"),
     e("nav.tasks_short", "nav", "历史", "折叠侧栏：历史"),
+    e("nav.pricing", "nav", "定价表", "主导航：公开价目表"),
     e("nav.settings", "nav", "设置", "导航：设置"),
     e("nav.feedback", "nav", "反馈", "顶栏：反馈按钮"),
     e("nav.feedback_title", "nav", "意见与问题反馈", "顶栏：反馈提示"),

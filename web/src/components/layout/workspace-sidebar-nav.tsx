@@ -1,5 +1,5 @@
 import { Popover } from "antd";
-import { ChevronDown, ChevronRight, CircleUserRound, History as HistoryIcon, Image as ImageIcon, Infinity as InfinityIcon, Music, PanelLeftClose, PanelLeftOpen, Plus, Video } from "lucide-react";
+import { ChevronDown, ChevronRight, CircleDollarSign, History as HistoryIcon, Image as ImageIcon, Infinity as InfinityIcon, Music, PanelLeftClose, PanelLeftOpen, Plus, Video } from "lucide-react";
 import { LayoutGroup, motion, useReducedMotion } from "motion/react";
 import { useEffect, useMemo, useRef, useState, type ComponentType, type CSSProperties } from "react";
 import { Link, useLocation, useNavigate, useSearchParams } from "react-router";
@@ -22,6 +22,7 @@ import { WorkspaceSidebarStorageMeter } from "./workspace-sidebar-storage-meter"
 import { openWorkspaceWallet } from "@/lib/workspace-wallet";
 import { useI18n } from "@/supdance/plugins/i18n";
 import { SUPDANCE_MUSIC_PLUGIN_ID } from "@/supdance/plugins/music-generation/types";
+import { GuestAuthActions } from "@/supdance/components/guest-auth-actions";
 
 // 音乐岛入口的显隐必须与后端准入判定使用同一插件 id（清单 id），
 // 不能用别名，否则服务端状态查不到对应记录而永久隐藏入口。
@@ -72,6 +73,7 @@ export function buildNav(features: FeatureAvailability, t: (key: string) => stri
             items: [
                 { ...toolItem("assets", "/assets"), title: t("nav.assets") },
                 ...(features.taskCenterEnabled ? [{ id: "tasks", title: t("nav.tasks"), icon: ImageIcon, to: "/tasks" }] : []),
+                { id: "pricing", title: t("nav.pricing"), icon: CircleDollarSign, to: "/pricing.html" },
             ],
         },
     ];
@@ -88,14 +90,7 @@ function WorkspaceSidebarProfile({ collapsed, user, onExpand, onCollapse }: { co
     const profileName = user?.displayName || user?.username || t("nav.guest", undefined, "未登录");
 
     if (!user) {
-        return (
-            <Link to="/login" className={cn("app-workspace-sidebar-profile", collapsed && "is-collapsed")} aria-label={t("auth.login")} title={t("auth.login")}>
-                <span className="app-workspace-sidebar-profile-avatar">
-                    <CircleUserRound aria-hidden />
-                </span>
-                {!collapsed ? <span>{t("nav.guest_mode")}</span> : null}
-            </Link>
-        );
+        return <GuestAuthActions collapsed={collapsed} />;
     }
 
     const content = (
@@ -115,7 +110,9 @@ function WorkspaceSidebarProfile({ collapsed, user, onExpand, onCollapse }: { co
             <div className={cn("app-workspace-sidebar-profile-row", collapsed && "is-collapsed")}>
                 <Popover open={menuOpen} onOpenChange={setMenuOpen} trigger="click" placement="topLeft" arrow={false} rootClassName="workspace-account-popover" content={content}>
                     <button type="button" className={cn("app-workspace-sidebar-profile", collapsed && "is-collapsed")} aria-label={t("nav.account_menu", undefined, "打开账户菜单")} title={profileName}>
-                        <UserGroupAvatarRing><UserAvatar user={user} className="app-workspace-sidebar-profile-avatar" /></UserGroupAvatarRing>
+                        <UserGroupAvatarRing>
+                            <UserAvatar user={user} className="app-workspace-sidebar-profile-avatar" />
+                        </UserGroupAvatarRing>
                         {!collapsed ? (
                             <span className="app-workspace-sidebar-profile-copy">
                                 <strong>{profileName}</strong>
@@ -276,6 +273,7 @@ function NavItem({
             {linkTo ? (
                 <Link
                     to={linkTo}
+                    reloadDocument={linkTo.endsWith(".html")}
                     className={rowClassName}
                     data-nav-id={item.id}
                     style={rowStyle}

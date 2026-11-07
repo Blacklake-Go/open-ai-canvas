@@ -11,6 +11,10 @@ description: 信封、错误码与 OpenAPI
 
 `GET /api/auth/social/providers` 仅返回当前区域已启用、配置有效且具备真实令牌交换适配的渠道；空结果为 `providers: []`。历史 Mock 凭据不构成有效配置，公开请求不能通过 `simulate_region` 切换准入区域。
 
+品牌图标通过管理员 `POST /api/admin/social-auth/brand-icons` 上传（multipart `file`），返回 `{ url }`，由原有设置接口保存到 `iconLightUrl` / `iconDarkUrl`。复用站点 Logo 的真实 MIME 检测、5MB 上限和持久本地资源存储，支持 PNG/JPEG/WebP，拒绝 SVG 与伪造图片，不修改站点 Logo。新引用必须属于当前管理员上传的专用图标；已配置图标允许其他管理员保留。普通资源 ID 不能转为公开图标。
+
+`GET /api/admin/social-auth/brand-icons/:id` 仅供管理员预览；`GET /api/auth/social/brand-icons/:id` 无需登录，但每次校验当前社交配置是否引用该专用图标，未保存、被替换或清除后返回失败。响应不缓存，不依赖过期签名；普通资源访问权限保持原合同。已引用图标纳入资源删除保护，配置读取失败时阻止删除。无数据库 schema 迁移，文件沿用持久数据目录备份；回滚宿主前应清除新图标配置或保留本版本读取路由。
+
 `GET /api/auth/social/:provider/start` 创建一次性 state，并设置 HttpOnly、Secure、SameSite=Lax 的浏览器绑定 Cookie。回调必须同时匹配 Cookie 与 state，X 使用 S256 PKCE。登录与绑定分别发起，绑定回调要求原发起用户仍处于登录状态。插件或渠道停用后不能继续授权。
 
 新用户授权成功后仅签发短期入站票据，不创建账号或会话。`GET /api/auth/social/onboarding/profile?ticket=...` 与 `POST /api/auth/social/onboarding/complete` 同时要求对应入站 Cookie。完成请求包含 `ticketId`（现有 `ticket` 别名保留）、`username`、`displayName`、可选 `email`/`password` 和必填的 `acceptedTerms: true`。用户名为 3–30 位字母、数字、下划线或短横线。校验失败可重试；成功建号后票据不可重放。手填邮箱保持未验证状态，服务商明确已验证的邮箱才可自动绑定。

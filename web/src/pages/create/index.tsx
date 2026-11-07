@@ -13,7 +13,7 @@ import { getActiveUserScope } from "@/lib/user-scope";
 import { continueCreationConversationOnCanvas } from "@/services/creation-canvas-conversation";
 import { useExternalAssetSources } from "@/hooks/use-external-asset-sources";
 import { modelCapabilityConfigFor, normalizeImageValue, normalizeVideoValue, videoDurationAllowed, videoDurationOptions } from "@/lib/model-capabilities";
-import { inferVideoOperation, modelGroupReferenceLimits, resolveCompatibleModel, mergedImageCapabilityConfig, type ModelRequirements } from "@/lib/model-selection";
+import { inferVideoOperation, maxModelInputCapacity, resolveCompatibleModel, mergedImageCapabilityConfig, type ModelRequirements } from "@/lib/model-selection";
 import type { BackendGenerationResult } from "@/services/api/generation-task";
 import type { Skill } from "@/services/api/skills";
 import type { GenerationTask, TaskStatus } from "@/services/api/task-center";
@@ -225,9 +225,12 @@ export default function CreatePage() {
     const generationConfig = useMemo(() => (mode === "video" ? creationVideoConfig(config, selectedModel, { ratio, seconds, videoQuality }) : config), [config, mode, ratio, seconds, selectedModel, videoQuality]);
     const imageProfile = useMemo(() => modelCapabilityConfigFor(config, selectedModel).image!, [config, selectedModel]);
     const videoProfile = useMemo(() => modelCapabilityConfigFor(config, selectedModel).video!, [config, selectedModel]);
-    // 同名逻辑模型可能把文生视频、图生视频和全模态参考拆到不同路由。
-    // 入口需要展示整个模型组的引用能力，添加素材后再由兼容路由选择具体模型。
-    const videoReferenceLimits = useMemo(() => (mode === "video" ? modelGroupReferenceLimits(config, preferredModel || selectedModel, "video") || { maxImages: 0, maxVideos: 0, maxAudios: 0 } : undefined), [config, mode, preferredModel, selectedModel]);
+    // 参考入口使用已启用视频模型的能力并集，允许从文生视频切到图生视频。
+    // 实际生成仍由选中模型的能力合同校验，不能因当前型号不接图而移除用户参考图。
+    const videoReferenceLimits = useMemo(
+        () => (mode === "video" ? { maxImages: maxModelInputCapacity(config, "video", "image") ?? 0, maxVideos: maxModelInputCapacity(config, "video", "video") ?? 0, maxAudios: maxModelInputCapacity(config, "video", "audio") ?? 0 } : undefined),
+        [config, mode],
+    );
     const maxReferences = mode === "video" ? (videoReferenceLimits?.maxImages || 0) + (videoReferenceLimits?.maxVideos || 0) + (videoReferenceLimits?.maxAudios || 0) : mode === "image" ? imageProfile.references.maxImages : 6;
     const referenceImageSize = useMemo(() => {
         const imageAttachments = attachments.filter(isImageAttachment);
@@ -1438,10 +1441,15 @@ export default function CreatePage() {
                                         <h1>{t("create.hero_chat_title", { brand: brandName }, `和${brandName}聊聊创作想法`)}</h1>
                                         <p>从一个画面、一个角色或一句话开始。</p>
                                     </div>
-                                    <button type="button" className="creation-history-entry" aria-label="查看历史对话" aria-expanded={historyOpen} onClick={() => setHistoryOpen(true)}>
-                                        <History aria-hidden="true" />
-                                        <span>历史对话</span>
-                                    </button>
+                                    <div className="creation-start-actions">
+                                        <a href="/pricing.html" className="creation-pricing-entry">
+                                            {t("nav.pricing")}
+                                        </a>
+                                        <button type="button" className="creation-history-entry" aria-label="查看历史对话" aria-expanded={historyOpen} onClick={() => setHistoryOpen(true)}>
+                                            <History aria-hidden="true" />
+                                            <span>历史对话</span>
+                                        </button>
+                                    </div>
                                 </header>
                                 <div className={cn("creation-composer-stage is-home-mode", agentMode && "is-agent-mode")}>
                                     <CreationModeTabs

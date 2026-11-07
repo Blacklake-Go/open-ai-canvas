@@ -3,7 +3,7 @@ import { ImageParameterFields } from "@/components/image-parameter-fields";
 import { imageResolutionUsesQuality, imageSizePresets } from "@/lib/image-size-presets";
 import { createPortal } from "react-dom";
 import { lazy, Suspense, useCallback, useEffect, useMemo, useRef, useState, type CSSProperties, type PointerEvent, type ReactNode, type RefObject } from "react";
-import { Button, Popover } from "antd";
+import { Button, Popover, Slider } from "antd";
 import { AppModal } from "@/components/ui/product/app-modal";
 import { useWorkspaceTopBarMount } from "@/components/layout/workspace-top-bar-extension";
 import { Tooltip } from "@/components/ui/base/tooltip";
@@ -292,6 +292,7 @@ function MusicModelPicker({ value, onChange, disabled }: { value: string; onChan
 }
 
 function MusicDurationMenu({ duration, maxDuration, onChange, disabled }: { duration: number; maxDuration: number; onChange: (sec: number) => void; disabled?: boolean }) {
+    const { t } = useI18n();
     const [open, setOpen] = useState(false);
     const presets = [30, 60, 120, 180, 240, 300].filter((sec) => sec <= maxDuration);
     const fallbackPresets = presets.length > 0 ? presets : [maxDuration];
@@ -299,14 +300,17 @@ function MusicDurationMenu({ duration, maxDuration, onChange, disabled }: { dura
     const content = (
         <div className="flex flex-col gap-2 p-2 min-w-[160px]">
             <div className="flex items-center justify-between text-xs font-semibold text-muted-foreground pb-1 border-b border-border/40">
-                <span>音乐时长</span>
-                <strong className="text-foreground">{duration} 秒</strong>
+                <span>{t("music.duration_seconds", undefined, "目标音频时长 (秒)")}</span>
+                <strong className="text-foreground">{duration}s</strong>
             </div>
+            <Slider min={Math.min(30, maxDuration)} max={maxDuration} step={1} value={duration} disabled={disabled} onChange={onChange} aria-label={t("music.duration_seconds", undefined, "目标音频时长 (秒)")} />
             <div className="grid grid-cols-3 gap-1.5 pt-1">
                 {fallbackPresets.map((sec) => (
                     <button
                         key={sec}
                         type="button"
+                        disabled={disabled}
+                        aria-pressed={duration === sec}
                         onClick={() => {
                             onChange(sec);
                             setOpen(false);

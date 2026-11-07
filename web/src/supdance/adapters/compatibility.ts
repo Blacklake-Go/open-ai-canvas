@@ -25,6 +25,15 @@ export type UpstreamPatchRecord = {
  */
 export const SUPDANCE_UPSTREAM_PATCH_REGISTRY: readonly UpstreamPatchRecord[] = [
     {
+        id: "supdance-model-brand-icons",
+        upstreamBaseline: "v1.7.4",
+        feature: "后台可选的 Mureka 官方图标与视频模型按当前输入筛选",
+        coupledUpstreamFiles: ["web/src/components/model-logo.tsx", "web/src/components/model-picker.tsx", "web/src/lib/model-picker-groups.ts", "web/src/pages/create/index.tsx"],
+        files: ["web/src/components/model-logo.tsx", "web/src/components/model-picker.tsx", "web/src/lib/model-picker-groups.ts", "web/src/pages/create/index.tsx", "web/src/supdance/brand/model-logo-extensions.ts", "web/src/supdance/brand/mureka.png"],
+        reason: "图标库缺少 Mureka；独立扩展补充图标，视频选择器复用能力校验隐藏当前输入不适用的型号，后台启用状态与能力不变。品牌、名称和图标选择继续由后台维护。",
+        upgradeRisk: "LOW",
+    },
+    {
         id: "supdance-codex-agent-connector",
         upstreamBaseline: "v1.7.3",
         feature: "本机 SupDance Canvas Agent (Codex) 连接器发现、配对、SSE 与对话转发",

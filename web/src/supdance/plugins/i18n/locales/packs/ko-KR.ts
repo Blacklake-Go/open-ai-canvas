@@ -80,6 +80,7 @@ const pack: Record<string, string> = {
     "nav.assets": "자산",
     "nav.tasks": "창작 기록",
     "nav.tasks_short": "기록",
+    "nav.pricing": "요금표",
     "nav.settings": "설정",
     "nav.feedback": "피드백",
     "nav.feedback_title": "의견 및 문제 피드백",

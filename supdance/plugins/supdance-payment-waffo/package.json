@@ -1,0 +1,8 @@
+{
+  "name": "supdance-payment-waffo",
+  "private": true,
+  "type": "module",
+  "dependencies": {
+    "@waffo/pancake-ts": "0.28.0"
+  }
+}
