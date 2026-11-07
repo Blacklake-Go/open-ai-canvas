@@ -125,6 +125,7 @@
     "web/src/services/api/wallet.ts",
     "web/src/services/agent-canvas-sync.ts",
     "backend/internal/app/cloud_agent_runtime_media.go",
+    "web/src/pages/assets/index.tsx",
     "web/src/pages/assets/asset-library-cards.tsx",
     "web/src/pages/assets/asset-library-panels.tsx",
     "web/src/components/canvas/use-agent-launcher-position.ts",

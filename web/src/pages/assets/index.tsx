@@ -994,6 +994,13 @@ export default function AssetsPage() {
             <ArkCertifyModal asset={certifyingAsset} onClose={() => setCertifyingAsset(null)} />
             <Modal
                 className="workspace-modal workspace-modal-wide library-modal"
+                centered
+                styles={{
+                    container: { display: "flex", flexDirection: "column", maxHeight: "calc(100dvh - var(--space-6))" },
+                    header: { flexShrink: 0 },
+                    body: { minHeight: 0, overflowY: "auto", overscrollBehaviorY: "contain" },
+                    footer: { flexShrink: 0 },
+                }}
                 title={editingAsset ? t("library.assets.form.editTitle") : t("library.assets.page.create")}
                 open={isAssetOpen}
                 onCancel={() => {
@@ -1003,7 +1010,8 @@ export default function AssetsPage() {
                 okText={imageUploading ? t("library.assets.form.uploading") : t("common.save")}
                 cancelText={t("common.cancel")}
                 confirmLoading={imageUploading}
-                cancelButtonProps={{ disabled: imageUploading }}
+                cancelButtonProps={{ disabled: imageUploading, className: "min-h-11" }}
+                okButtonProps={{ className: "min-h-11" }}
                 closable={!imageUploading}
                 destroyOnHidden
             >

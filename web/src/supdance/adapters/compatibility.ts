@@ -336,6 +336,15 @@ export const SUPDANCE_UPSTREAM_PATCH_REGISTRY: readonly UpstreamPatchRecord[] = 
         upgradeRisk: "MEDIUM",
     },
     {
+        id: "supdance-asset-form-viewport",
+        upstreamBaseline: "v1.8.0",
+        feature: "素材编辑弹窗保留可见操作区",
+        coupledUpstreamFiles: ["web/src/pages/assets/index.tsx"],
+        files: ["web/src/pages/assets/index.tsx"],
+        reason: "限定弹窗高度并让表单正文独立滚动，使矮窗口和手机上仍能直接保存或取消。",
+        upgradeRisk: "LOW",
+    },
+    {
         id: "supdance-music-original-asset-titles",
         upstreamBaseline: "v1.7.3.5",
         feature: "共享资产卡片和详情保留用户标题原文",
