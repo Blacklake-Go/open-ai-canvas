@@ -1,0 +1,138 @@
+.canvas-model-picker-menu.sd-compact-picker.is-model-list {
+    width: min(648px, calc(100vw - 24px));
+}
+.sd-compact-picker .canvas-model-picker-two-pane {
+    display: grid;
+    grid-template-columns: minmax(110px, 30%) minmax(0, 1fr);
+    min-height: 0;
+}
+.canvas-model-picker-menu.sd-compact-picker.is-model-list .canvas-model-picker-brand-rail {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+    padding-inline-end: 6px;
+}
+.sd-compact-picker .canvas-model-picker-brand-meta,
+.sd-compact-picker .canvas-model-picker-brand-arrow {
+    display: none;
+}
+.sd-compact-picker .sd-picker-option {
+    display: flex;
+    align-items: center;
+    width: 100%;
+    min-width: 0;
+    min-height: 48px;
+    padding: 8px 10px;
+    text-align: start;
+    border-radius: 8px;
+}
+.sd-compact-picker .sd-picker-option[aria-selected="true"] {
+    background: color-mix(in srgb, var(--primary) 12%, var(--model-picker-surface, var(--popover)));
+}
+.sd-compact-picker .sd-picker-option:enabled:hover,
+.sd-compact-picker .canvas-model-picker-brand:hover {
+    background: var(--user-surface-hover, var(--muted));
+}
+.sd-compact-picker button:focus-visible {
+    outline: 2px solid var(--ring);
+    outline-offset: -2px;
+}
+.sd-picker-row {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+}
+.sd-picker-copy {
+    display: grid;
+    flex: 1;
+    min-width: 0;
+    gap: 2px;
+}
+.sd-picker-copy strong,
+.sd-picker-copy small {
+    display: block;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+.sd-picker-copy strong {
+    font-size: var(--fs-body, 14px);
+    font-weight: 600;
+}
+.sd-picker-copy small {
+    color: var(--muted-foreground);
+    font-size: var(--fs-label, 12px);
+}
+.sd-picker-price {
+    flex-shrink: 0;
+    max-width: 55%;
+}
+.sd-picker-price:empty {
+    display: none;
+}
+.sd-compact-picker .sd-picker-price > span {
+    display: inline-block;
+    max-width: 100%;
+    padding: 3px 8px;
+    border: 0;
+    border-radius: 999px;
+    background: var(--user-surface-muted, var(--muted));
+    color: var(--model-picker-ink, var(--foreground));
+    font-size: var(--fs-label, 12px);
+    white-space: normal;
+}
+.sd-picker-price .model-picker-price-icon {
+    display: none;
+}
+@media (max-width: 520px) {
+    .sd-picker-copy strong {
+        white-space: normal;
+        overflow-wrap: anywhere;
+    }
+    .sd-compact-picker .canvas-model-picker-two-pane {
+        grid-template-columns: minmax(80px, 29%) minmax(0, 1fr);
+    }
+    .sd-compact-picker .canvas-model-picker-brand {
+        gap: 4px;
+        padding-inline: 4px;
+    }
+    .sd-compact-picker .sd-picker-row {
+        gap: 4px;
+    }
+    .sd-compact-picker .sd-picker-price > span {
+        padding-inline: 5px;
+        word-break: keep-all;
+    }
+}
+@media (max-width: 420px) {
+    .sd-compact-picker .canvas-model-picker-brand-rail .canvas-model-picker-brand {
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        gap: 2px;
+        padding: 4px 2px;
+    }
+    .sd-compact-picker .canvas-model-picker-brand-copy {
+        max-width: 100%;
+    }
+}
+@media (max-width: 360px) {
+    .sd-compact-picker .canvas-model-picker-brand-copy strong {
+        white-space: normal;
+        line-height: 1.15;
+        text-align: center;
+    }
+    .sd-compact-picker .sd-picker-row {
+        flex-wrap: wrap;
+    }
+    .sd-compact-picker .sd-picker-copy {
+        flex-basis: 95px;
+    }
+    .sd-compact-picker .sd-picker-price {
+        margin-inline-start: auto;
+        max-width: 100%;
+    }
+}

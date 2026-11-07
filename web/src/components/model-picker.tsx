@@ -2,6 +2,8 @@ import { useEffect, useId, useLayoutEffect, useMemo, useRef, useState, type CSSP
 import { Check, ChevronDown, Coins } from "lucide-react";
 import { Popover } from "antd";
 import { usePopoverAnchorAlign } from "@/hooks/use-popover-anchor-align";
+import { useCompactPickerSettings, type CompactPickerSettings } from "@/supdance/plugins/compact-model-picker/settings";
+import { CompactModelRow } from "@/supdance/plugins/compact-model-picker/model-row";
 
 import { imageQualityLabel } from "@/lib/image-quality";
 import { canvasThemes, type CanvasTheme } from "@/lib/canvas-theme";
@@ -62,6 +64,7 @@ export function ModelPicker({
     const rawTheme = useActiveTheme();
     const theme = (canvasThemes[rawTheme as keyof typeof canvasThemes] ?? canvasThemes.dark) as CanvasTheme;
     const [open, setOpen] = useState(false);
+    const compact = useCompactPickerSettings(open);
     const popoverRef = usePopoverAnchorAlign(open);
     const [availableHeight, setAvailableHeight] = useState(0);
     const [activeGroupKey, setActiveGroupKey] = useState<string | null>(null);
@@ -77,12 +80,14 @@ export function ModelPicker({
     // 参数档位会在选中模型后由调用方归一到其能力配置，不能因为旧模型留下的参数而禁止切换。
     const selectionRequirements = useMemo(() => (requirements ? { ...requirements, videoSeconds: undefined, imageSize: undefined, options: undefined } : undefined), [requirements]);
     const optionGroups = useMemo(() => groupModelsForPicker(config, options, selectionRequirements), [config, options, selectionRequirements]);
+    const visibleGroupKey = compact.enabled ? (optionGroups.find((group) => group.key === activeGroupKey)?.key ?? optionGroups[0]?.key ?? null) : activeGroupKey;
     const resolvedCurrent = isDirectSystemModel(config, storedCurrent) ? storedCurrent : resolveCompatibleModel(config, storedCurrent, selectionRequirements) || storedCurrent;
     // 旧画布可能保存过已下架或前端历史内置模型；它们不能重新进入当前可选目录。
     const current = options.includes(resolvedCurrent) ? resolvedCurrent : "";
     const currentPrice = modelMenuPrice(config, current, capability, false, requirements);
     const quoteRequest = useMemo(() => modelQuoteRequest(config, current, capability, requirements), [capability, config, current, requirements]);
-    const [routeQuote, setRouteQuote] = useState<LogicalModelQuote | undefined>();
+    const [quoted, setQuoted] = useState<{ request: NonNullable<typeof quoteRequest>; quote: LogicalModelQuote }>();
+    const routeQuote = quoted?.request === quoteRequest ? quoted?.quote : undefined;
     const creationVariant = variant === "creation";
     const currentChannel = current ? resolveModelChannel(config, current) : undefined;
     const isCurrentCustomChannel = Boolean(current && currentChannel && currentChannel.scope !== "system");
@@ -102,20 +107,22 @@ export function ModelPicker({
         };
     }, [open]);
 
+    const needQuote = creditsEnabled && (showSelectedPrice || (open && compact.enabled && compact.showPrice && showOptionPrices && Boolean(requirements)));
     useEffect(() => {
-        if (!showSelectedPrice || !creditsEnabled || !quoteRequest) {
-            setRouteQuote(undefined);
+        if (!needQuote || !quoteRequest) {
+            setQuoted(undefined);
             return;
         }
         const controller = new AbortController();
-        setRouteQuote(undefined);
         quoteModel(quoteRequest, controller.signal)
-            .then((payload) => setRouteQuote(payload.quote))
+            .then((payload) => {
+                if (!controller.signal.aborted) setQuoted({ request: quoteRequest, quote: payload.quote });
+            })
             .catch(() => {
-                if (!controller.signal.aborted) setRouteQuote(undefined);
+                if (!controller.signal.aborted) setQuoted(undefined);
             });
         return () => controller.abort();
-    }, [creditsEnabled, quoteRequest, showSelectedPrice]);
+    }, [needQuote, quoteRequest]);
 
     useEffect(() => {
         const closeOtherPicker = (event: Event) => {
@@ -168,6 +175,10 @@ export function ModelPicker({
         }
         if (event.key === "ArrowLeft" && activeGroupKey !== null) {
             event.preventDefault();
+            if (compact.enabled) {
+                menuRef.current?.querySelector<HTMLButtonElement>('.canvas-model-picker-brand[aria-pressed="true"]')?.focus({ preventScroll: true });
+                return;
+            }
             setActiveGroupKey(null);
             focusMenuOption();
             return;
@@ -184,7 +195,7 @@ export function ModelPicker({
         <div
             ref={menuRef}
             data-canvas-no-zoom
-            className={cn("canvas-model-picker-menu creation-model-picker-menu max-w-[calc(100vw-24px)]", activeGroupKey === null ? "is-brand-list" : "is-model-list")}
+            className={cn("canvas-model-picker-menu creation-model-picker-menu max-w-[calc(100vw-24px)]", visibleGroupKey === null ? "is-brand-list" : "is-model-list", compact.enabled && "sd-compact-picker")}
             style={{ "--canvas-model-picker-available-height": `${availableHeight}px` } as CSSProperties}
             role="listbox"
             aria-label={placeholder}
@@ -193,7 +204,7 @@ export function ModelPicker({
             onPointerDown={(event) => event.stopPropagation()}
         >
             {optionGroups.length ? (
-                activeGroupKey === null ? (
+                visibleGroupKey === null ? (
                     <div className="canvas-model-picker-brands" aria-label="选择产品模型">
                         {optionGroups.map((group) => {
                             const groupCurrent = group.models.find((item) => item.models.includes(current));
@@ -237,7 +248,7 @@ export function ModelPicker({
                         <div className="canvas-model-picker-brand-rail" aria-label="产品模型">
                             {optionGroups.map((group) => {
                                 return (
-                                    <button key={group.key} type="button" className={cn("canvas-model-picker-brand", activeGroupKey === group.key && "is-active")} aria-pressed={activeGroupKey === group.key} onClick={() => setActiveGroupKey(group.key)}>
+                                    <button key={group.key} type="button" className={cn("canvas-model-picker-brand", visibleGroupKey === group.key && "is-active")} aria-pressed={visibleGroupKey === group.key} onClick={() => setActiveGroupKey(group.key)}>
                                         <span className="canvas-model-picker-brand-icon">
                                             <ModelLogo icon={group.icon} size={22} />
                                         </span>
@@ -262,7 +273,7 @@ export function ModelPicker({
                             })}
                         </div>
                         {optionGroups
-                            .filter((group) => group.key === activeGroupKey)
+                            .filter((group) => group.key === visibleGroupKey)
                             .map((group) => (
                                 <section key={group.key} className="canvas-model-picker-group canvas-model-picker-model-pane min-w-0">
                                     <div className="grid min-w-0 gap-1">
@@ -285,11 +296,15 @@ export function ModelPicker({
                                                     aria-selected={selected}
                                                     aria-disabled={Boolean(disabledReason)}
                                                     disabled={Boolean(disabledReason)}
-                                                    className="canvas-model-picker-option disabled:cursor-not-allowed disabled:opacity-45"
-                                                    style={{ background: selected ? theme.toolbar.activeBg : "transparent", color: theme.node.text }}
+                                                    className={cn(compact.enabled ? "sd-picker-option" : "canvas-model-picker-option", "disabled:cursor-not-allowed disabled:opacity-45")}
+                                                    style={compact.enabled ? undefined : { background: selected ? theme.toolbar.activeBg : "transparent", color: theme.node.text }}
                                                     onClick={() => {
                                                         if (!model) return;
                                                         onChange(model);
+                                                        if (compact.enabled) {
+                                                            setPickerOpen(false);
+                                                            triggerRef.current?.focus({ preventScroll: true });
+                                                        }
                                                     }}
                                                 >
                                                     <ModelLabel
@@ -304,10 +319,14 @@ export function ModelPicker({
                                                         showPrice={showOptionPrices && creditsEnabled}
                                                         disabledReason={disabledReason}
                                                         showDescription
+                                                        compactSettings={compact.enabled ? compact : undefined}
+                                                        quote={displayModel === current ? routeQuote : undefined}
                                                     />
-                                                    <span className="canvas-model-picker-option-check ml-1 shrink-0" aria-hidden="true">
-                                                        {selected ? <Check className="size-full" style={{ color: theme.node.activeStroke }} /> : null}
-                                                    </span>
+                                                    {!compact.enabled && (
+                                                        <span className="canvas-model-picker-option-check ml-1 shrink-0" aria-hidden="true">
+                                                            {selected ? <Check className="size-full" style={{ color: theme.node.activeStroke }} /> : null}
+                                                        </span>
+                                                    )}
                                                 </button>
                                             );
                                         })}
@@ -408,6 +427,8 @@ export function ModelLabel({
     showPrice,
     disabledReason,
     showDescription,
+    compactSettings,
+    quote,
 }: {
     config: AiConfig;
     model: string;
@@ -420,6 +441,8 @@ export function ModelLabel({
     showPrice: boolean;
     disabledReason?: string;
     showDescription: boolean;
+    compactSettings?: CompactPickerSettings;
+    quote?: LogicalModelQuote;
 }) {
     const meta = modelMenuMeta(model, capability);
     const channel = resolveModelChannel(config, model);
@@ -432,6 +455,15 @@ export function ModelLabel({
     const capabilityTag = referenceCapabilityTag(videoProfile?.references ?? textReferences);
     const modelTags = capabilityTag ? [capabilityTag, ...(logicalCost?.tags || [])] : logicalCost?.tags;
     const capabilitySummary = disabledReason || logicalCost?.description?.trim() || (isDirectSystemModel(config, model) ? "" : logicalSpec ? logicalCapabilitySummary(logicalSpec) : videoProfile ? videoSummary : meta.description);
+    if (compactSettings) {
+        return (
+            <CompactModelRow
+                name={label || pickerModelDisplayName(config, model, showConfiguredModelName)}
+                description={disabledReason || (compactSettings.showDescription ? capabilitySummary : undefined)}
+                price={showPrice && compactSettings.showPrice ? <ModelPrice price={modelMenuPrice(config, model, capability, true, requirements)} quote={quote} /> : undefined}
+            />
+        );
+    }
     return (
         <span className="flex w-full min-w-0 items-center gap-2 overflow-hidden py-0">
             <span className="canvas-model-picker-option-logo grid size-6 shrink-0 place-items-center">

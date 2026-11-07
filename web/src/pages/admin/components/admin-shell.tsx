@@ -147,6 +147,16 @@ const adminNavigation: AdminNavigationGroup[] = [
             },
             { path: "/admin/plugins", label: "插件管理", shortLabel: "插件", icon: <PlugZap className="size-4" /> },
             { path: "/admin/plugins/music-generation", label: "音乐配置", shortLabel: "音乐", icon: <Music className="size-4" /> },
+            {
+                path: "/admin/plugins/compact-model-picker",
+                get label() {
+                    return i18n.t("compactPicker.title");
+                },
+                get shortLabel() {
+                    return this.label;
+                },
+                icon: <Layers3 className="size-4" />,
+            },
             { path: "/admin/plugins/html-pages", label: "HTML 页面", shortLabel: "页面", icon: <FileCode className="size-4" /> },
             { path: "/admin/skills", label: "技能管理", shortLabel: "技能", icon: <Wand2 className="size-4" /> },
             { path: "/admin/skill-curation", label: "技能分类", shortLabel: "分类", icon: <Sparkles className="size-4" /> },
