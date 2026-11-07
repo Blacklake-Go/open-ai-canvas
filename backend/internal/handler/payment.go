@@ -154,7 +154,7 @@ func RegisterPaymentRoutes(r *gin.RouterGroup, svc *service.Service) {
 		if len(rawBody) == 0 && c.Request.URL.RawQuery != "" {
 			rawBody = []byte(c.Request.URL.RawQuery)
 		}
-		err = svc.AcceptPaymentNotification(c.Request.Context(), c.Param("providerId"), c.Param("configId"), c.Request.Header.Clone(), rawBody)
+		response, err := svc.AcceptPaymentNotificationWithResponse(c.Request.Context(), c.Param("providerId"), c.Param("configId"), c.Request.Header.Clone(), rawBody)
 		if err != nil {
 			status := http.StatusInternalServerError
 			var appErr *service.AppError
@@ -162,6 +162,11 @@ func RegisterPaymentRoutes(r *gin.RouterGroup, svc *service.Service) {
 				status = http.StatusBadRequest
 			}
 			writePaymentNotificationFailure(c, svc, c.Param("providerId"), status)
+			return
+		}
+		if response != nil {
+			c.Header("X-SIGNATURE", response.Signature)
+			c.Data(response.Status, response.ContentType, []byte(response.Body))
 			return
 		}
 		status, contentType, body := svc.PaymentNotificationResponse(c.Param("providerId"), true)

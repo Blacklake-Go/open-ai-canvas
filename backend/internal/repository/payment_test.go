@@ -59,6 +59,29 @@ func TestCompletePaymentOrderGrantsCreditsExactlyOnce(t *testing.T) {
 	}
 }
 
+func TestPaymentCheckoutPinsTradeBeforeGrant(t *testing.T) {
+	db := openPaymentTestDB(t)
+	repo := New(db)
+	order := model.PaymentOrder{ID: "pinned", UserID: "user", IdempotencyKey: "pinned", MerchantOrderNo: "pinned", ProviderID: "waffo-enterprise", Status: model.PaymentOrderCreated, AmountFen: 100, ChargeAmountFen: 143, ChargeCurrency: "USD", CreditsMicrocredits: 1000000}
+	if err := db.Create(&order).Error; err != nil {
+		t.Fatal(err)
+	}
+	if err := repo.SetPaymentOrderCheckout(order.ID, "redirect", "https://checkout.example", time.Now().Add(time.Hour), "acquiring-1"); err != nil {
+		t.Fatal(err)
+	}
+	if err := repo.SetPaymentOrderCheckout(order.ID, "redirect", "https://checkout.example", time.Now().Add(time.Hour), "acquiring-2"); !errors.Is(err, ErrPaymentOrderStateConflict) {
+		t.Fatalf("replacement trade = %v", err)
+	}
+	evidence := PaymentEvidence{ProviderTradeNo: "acquiring-2", AmountFen: 143, Currency: "USD"}
+	if _, granted, err := repo.CompletePaymentOrder(order.ProviderID, order.MerchantOrderNo, evidence); !errors.Is(err, ErrPaymentEvidenceMismatch) || granted {
+		t.Fatalf("conflicting grant = %v, %v", granted, err)
+	}
+	evidence.ProviderTradeNo = "acquiring-1"
+	if _, granted, err := repo.CompletePaymentOrder(order.ProviderID, order.MerchantOrderNo, evidence); err != nil || !granted {
+		t.Fatalf("matching grant = %v, %v", granted, err)
+	}
+}
+
 func TestActivePaymentOrderCountForPluginScopesVersionAndState(t *testing.T) {
 	db := openPaymentTestDB(t)
 	repo := New(db)

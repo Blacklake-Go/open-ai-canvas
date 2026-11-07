@@ -240,6 +240,17 @@ describe("SupDance route & patch registry guards", () => {
         expect(merged).toHaveLength(3);
     });
 
+    test("preserves the visual engine host hooks when updating upstream", () => {
+        const source = (path: string) => readFileSync(resolve(import.meta.dir, "../src", path), "utf8");
+        expect(source("application.tsx")).toContain("<VisualEngineRuntimeHost navigation={router}");
+        expect(source("components/layout/app-providers.tsx")).toContain("{extensions}");
+        expect(source("lib/skin-themes.ts")).toContain('runThemeExtensions("afterApply", context)');
+        expect(source("router.tsx")).toContain('path: "plugins/visual-engine"');
+        expect(source("components/ui/product/app-modal/app-modal.tsx")).toContain('resolveOverlayExtensionStyles("modal"');
+        expect(source("components/ui/product/app-drawer/app-drawer.tsx")).toContain('resolveOverlayExtensionStyles("drawer"');
+        expect(source("styles/globals.css")).toContain("var(--ve-overlay-mask,");
+    });
+
     test("verifies all registered upstream patch files exist on disk and align with supdance/config/baseline.json", () => {
         const repoRoot = resolve(import.meta.dir, "../..");
         expect(SUPDANCE_UPSTREAM_PATCH_REGISTRY.length).toBeGreaterThan(0);

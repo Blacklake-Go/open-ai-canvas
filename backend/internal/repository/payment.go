@@ -179,13 +179,19 @@ func (r *Repository) CreatePaymentOrderWithProductReservation(order *model.Payme
 	return order, true, nil
 }
 
-func (r *Repository) SetPaymentOrderCheckout(id string, checkoutMode, checkoutValue string, checkoutExpiresAt time.Time) error {
-	updated := r.db.Model(&model.PaymentOrder{}).
-		Where("id = ? AND status IN ?", id, []model.PaymentOrderStatus{model.PaymentOrderCreated, model.PaymentOrderCreateFailed, model.PaymentOrderPending}).
-		Updates(map[string]any{
-			"status": model.PaymentOrderPending, "checkout_mode": checkoutMode, "checkout_value": checkoutValue,
-			"checkout_expires_at": &checkoutExpiresAt, "last_error": "", "updated_at": time.Now(),
-		})
+func (r *Repository) SetPaymentOrderCheckout(id string, checkoutMode, checkoutValue string, checkoutExpiresAt time.Time, providerTradeNo ...string) error {
+	query := r.db.Model(&model.PaymentOrder{}).
+		Where("id = ? AND status IN ?", id, []model.PaymentOrderStatus{model.PaymentOrderCreated, model.PaymentOrderCreateFailed, model.PaymentOrderPending})
+	values := map[string]any{
+		"status": model.PaymentOrderPending, "checkout_mode": checkoutMode, "checkout_value": checkoutValue,
+		"checkout_expires_at": &checkoutExpiresAt, "last_error": "", "updated_at": time.Now(),
+	}
+	if len(providerTradeNo) > 0 && strings.TrimSpace(providerTradeNo[0]) != "" {
+		tradeNo := strings.TrimSpace(providerTradeNo[0])
+		query = query.Where("(provider_trade_no IS NULL OR provider_trade_no = '' OR provider_trade_no = ?)", tradeNo)
+		values["provider_trade_no"] = tradeNo
+	}
+	updated := query.Updates(values)
 	if updated.Error != nil {
 		return updated.Error
 	}
@@ -297,6 +303,9 @@ func (r *Repository) CompletePaymentOrder(providerID, merchantOrderNo string, ev
 		}
 		// 渠道凭据只证明实收金额；商品金额可能经过汇率换算，不能拿来比对。
 		if order.ChargeAmountFen != evidence.AmountFen || order.ChargeCurrency != evidence.Currency || strings.TrimSpace(evidence.ProviderTradeNo) == "" {
+			return ErrPaymentEvidenceMismatch
+		}
+		if order.ProviderTradeNo != nil && strings.TrimSpace(*order.ProviderTradeNo) != "" && strings.TrimSpace(*order.ProviderTradeNo) != strings.TrimSpace(evidence.ProviderTradeNo) {
 			return ErrPaymentEvidenceMismatch
 		}
 		storageOrder := order.ProductKind == model.TopupProductKindStorage

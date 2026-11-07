@@ -7,13 +7,42 @@ import type { VisualEngineAdminOverview } from "../src/supdance/plugins/visual-e
 const originalRequest = apiClient.request;
 const baseline = structuredClone(DEFAULT_VISUAL_ENGINE_CONFIG);
 function overview(config = baseline): VisualEngineAdminOverview {
-    return { bundle: { pluginId: "supdance-visual-engine", enabled: true, version: config.publishedVersion, config, revision: "server-revision" }, snapshots: [], auditLogs: [], draft: null, canPublish: true, canRollback: false };
+    return {
+        bundle: { pluginId: "supdance-visual-engine", enabled: true, version: config.publishedVersion, config, revision: config === baseline ? "server-revision" : config.publishedVersion },
+        snapshots: [],
+        auditLogs: [],
+        draft: null,
+        canPublish: true,
+        canRollback: false,
+    };
 }
 afterEach(() => {
     apiClient.request = originalRequest;
 });
 
 describe("visual engine server persistence", () => {
+    test("unchanged public polls preserve runtime config identity and discarding a draft adopts the latest revision", () => {
+        const store = useVisualEngineStore.getState();
+        const first = overview();
+        store.acceptOverview(first);
+        const config = useVisualEngineStore.getState().config;
+        store.acceptBundle(structuredClone(first.bundle));
+        expect(useVisualEngineStore.getState().config).toBe(config);
+
+        store.updateDraft((draft) => {
+            draft.components.buttonRadius = 18;
+        });
+        const updated = structuredClone(first.bundle);
+        updated.revision = "updated-revision";
+        updated.config.components.buttonRadius = 20;
+        store.acceptBundle(updated);
+        expect(useVisualEngineStore.getState().revision).toBe(first.bundle.revision);
+        expect(useVisualEngineStore.getState().draftConfig.components.buttonRadius).toBe(18);
+        store.resetDraft();
+        expect(useVisualEngineStore.getState().revision).toBe(updated.revision);
+        expect(useVisualEngineStore.getState().draftConfig.components.buttonRadius).toBe(20);
+    });
+
     test("account reset rejects a late publication response", async () => {
         useVisualEngineStore.getState().acceptOverview(overview());
         let resolveRequest!: (value: unknown) => void;

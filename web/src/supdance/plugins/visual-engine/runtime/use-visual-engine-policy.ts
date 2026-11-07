@@ -4,6 +4,7 @@ import { useActiveTheme, useCanvasThemeStore } from "@/stores/canvas/use-canvas-
 import { usePluginStore } from "@/stores/use-plugin-store";
 import { useVisualEngineStore } from "../storage/visual-engine-store";
 import { resolvePageVisualPolicy } from "../page-rules/page-rules-engine";
+import { useVisualEngineActive } from "./visual-engine-activation";
 
 const reducedQuery = "(prefers-reduced-motion: reduce)";
 const darkQuery = "(prefers-color-scheme: dark)";
@@ -25,7 +26,7 @@ export function useSystemReducedMotion() {
 export function useVisualEnginePolicy() {
     const { pathname } = useLocation();
     const config = useVisualEngineStore((state) => state.config);
-    const enabled = useVisualEngineStore((state) => state.enabled);
+    const enabled = useVisualEngineActive();
     const platformEnabled = usePluginStore((state) => state.pluginStates["supdance-visual-engine"]?.effectiveEnabled);
     const hostMode = useActiveTheme();
     const canvasActive = useCanvasThemeStore((state) => state.active);

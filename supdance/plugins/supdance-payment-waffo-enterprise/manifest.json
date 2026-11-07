@@ -1,0 +1,41 @@
+{
+  "apiVersion": "yingce.plugin/v1",
+  "id": "supdance-payment-waffo-enterprise",
+  "name": "Waffo Enterprise Sandbox",
+  "version": "1.0.1",
+  "minHostVersion": "1.8.0",
+  "author": "SupDance",
+  "description": "Waffo enterprise hosted checkout, isolated to an assigned sandbox reviewer.",
+  "enabled": true,
+  "installable": true,
+  "runtime": { "backend": "rpc", "backendEntry": "backend/provider" },
+  "surfaces": ["wallet", "settings"],
+  "permissions": ["payment.create", "payment.query", "payment.close"],
+  "configuration": {
+    "fields": [
+      { "name": "publicBaseUrl", "type": "url", "label": "Public HTTPS URL", "required": true },
+      { "name": "merchantId", "type": "string", "label": "Enterprise merchant ID", "required": true },
+      { "name": "apiKey", "type": "string", "label": "Pay-in API key", "required": true, "secret": true },
+      { "name": "privateKey", "type": "textarea", "label": "Merchant RSA private key", "required": true, "secret": true },
+      { "name": "waffoPublicKey", "type": "textarea", "label": "Waffo verification public key", "required": true, "secret": true },
+      { "name": "environment", "type": "string", "label": "Environment", "required": true, "default": "SANDBOX" },
+      { "name": "settlementCurrency", "type": "string", "label": "Settlement currency (CNY / USD)", "required": true, "default": "USD" },
+      { "name": "goodsUrl", "type": "url", "label": "Public product or pricing URL", "required": true },
+      { "name": "allowedUserId", "type": "string", "label": "Allowed reviewer user ID", "required": true }
+    ]
+  },
+  "contributes": {
+    "paymentProviders": [
+      {
+        "id": "waffo-enterprise",
+        "label": "Waffo Enterprise Sandbox",
+        "icon": "CreditCard",
+        "checkoutMode": "redirect",
+        "identityFields": ["merchantId", "environment", "allowedUserId"],
+        "expiryPolicy": { "defaultMinutes": 30, "minMinutes": 5, "maxMinutes": 1440 },
+        "notificationSuccess": { "status": 200, "contentType": "application/json", "body": "{\"message\":\"success\"}" },
+        "notificationFailure": { "status": 400, "contentType": "application/json", "body": "{\"message\":\"failure\"}" }
+      }
+    ]
+  }
+}

@@ -115,12 +115,6 @@ export function LinearLegalPage({ docMap, currentSlug }: LinearLegalPageProps) {
                     EFFECTIVE DATE: {currentDoc.effectiveDate.toUpperCase()} · VERSION {currentDoc.version.toUpperCase()}
                 </div>
 
-                {/* 权威根语言说明声明框（Authoritative Notice） */}
-                <div className={`rounded-lg p-3.5 mb-8 text-xs font-mono border leading-relaxed ${isDark ? "bg-white/[0.03] border-white/10 text-white/80" : "bg-black/[0.02] border-black/10 text-black/80"}`}>
-                    <strong>AUTHORITATIVE NOTICE: </strong>
-                    {currentDoc.authoritativeNotice}
-                </div>
-
                 {/* 文档导语段落 */}
                 <div className={`text-base sm:text-[17px] leading-[1.8] mb-12 ${isDark ? "text-[#e6e6e6]" : "text-[#222222]"}`}>{currentDoc.summary}</div>
 
