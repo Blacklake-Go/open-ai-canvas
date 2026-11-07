@@ -13,7 +13,7 @@ import { defaultConfig, useConfigStore, useEffectiveConfig } from "@/stores/use-
 import { selectPluginEffectivelyEnabled, usePluginStore } from "@/stores/use-plugin-store";
 import { useThemeStore } from "@/stores/use-theme-store";
 import { useUserStore } from "@/stores/use-user-store";
-import { useUserProfileModalStore, type UserProfileModalTab, USER_PROFILE_MODAL_EVENT } from "@/stores/use-user-profile-modal-store";
+import { useUserProfileModalStore, restoreUserProfileModalFocus, type UserProfileModalTab, USER_PROFILE_MODAL_EVENT } from "@/stores/use-user-profile-modal-store";
 import { LanguageOptionGrid } from "@/components/layout/language-menu";
 import { useI18n } from "@/supdance/plugins/i18n";
 import { SocialAccountBindings } from "@/supdance/plugins/social-auth/components/social-account-bindings";
@@ -260,7 +260,7 @@ export function UserProfileModal({ open, activeTab, onTabChange, onClose, search
     const currentMeta = allItems.find((item) => item.key === currentTab) || allItems[0];
 
     return (
-        <AppModal open={open} flush closable={false} footer={null} width={1240} centered onCancel={onClose}>
+        <AppModal open={open} flush closable={false} footer={null} width={1240} centered onCancel={onClose} afterClose={restoreUserProfileModalFocus}>
             <div
                 className="relative flex h-[850px] max-h-[92vh] w-full overflow-hidden rounded-2xl border border-border bg-card text-foreground shadow-2xl backdrop-blur-2xl"
                 style={{

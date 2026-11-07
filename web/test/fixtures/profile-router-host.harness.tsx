@@ -58,6 +58,14 @@ test("the real account window opens and survives page navigation with working pr
     );
     const container = document.createElement("div");
     document.body.append(container);
+    const trigger = document.createElement("button");
+    const popup = document.createElement("div");
+    popup.id = "account-popover";
+    popup.setAttribute("role", "tooltip");
+    trigger.setAttribute("aria-describedby", popup.id);
+    const entry = document.createElement("button");
+    popup.append(entry);
+    document.body.append(trigger, popup);
     const root = createRoot(container);
     try {
         await act(async () =>
@@ -69,7 +77,9 @@ test("the real account window opens and survives page navigation with working pr
                 </App>,
             ),
         );
+        entry.focus();
         await act(async () => useUserProfileModalStore.getState().openModal("profile"));
+        popup.remove();
         await act(async () => {
             await new Promise((resolve) => setTimeout(resolve, 25));
         });
@@ -97,12 +107,15 @@ test("the real account window opens and survives page navigation with working pr
         expect(reads).toEqual(["/auth/profile"]);
         await act(async () => useUserProfileModalStore.getState().closeModal());
         expect(useUserProfileModalStore.getState().isOpen).toBe(false);
+        expect(document.activeElement).toBe(trigger);
     } finally {
         await act(async () => root.unmount());
         router.dispose();
         client.clear();
         apiClient.request = originalRequest;
         container.remove();
+        trigger.remove();
+        popup.remove();
         useUserStore.getState().setUser(null);
     }
 });
