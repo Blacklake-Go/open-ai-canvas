@@ -8,7 +8,11 @@ const OPEN_PREFERENCES = "supdance:marketing-preferences";
 
 export function MarketingPreferencesButton() {
     const { t } = useI18n();
-    return <Button onClick={() => window.dispatchEvent(new Event(OPEN_PREFERENCES))}>{t("marketing.manage")}</Button>;
+    return (
+        <Button className="min-h-11" onClick={() => window.dispatchEvent(new Event(OPEN_PREFERENCES))}>
+            {t("marketing.manage")}
+        </Button>
+    );
 }
 
 export function MarketingConsentHost({ navigation }: { navigation: { subscribe: (callback: () => void) => () => void } }) {
@@ -44,14 +48,16 @@ export function MarketingConsentHost({ navigation }: { navigation: { subscribe: 
             open={open}
             title={t("marketing.title")}
             onCancel={() => choose(false)}
-            footer={[
-                <Button key="decline" size="large" onClick={() => choose(false)}>
-                    {t("marketing.decline")}
-                </Button>,
-                <Button key="accept" size="large" type="primary" onClick={() => choose(true)}>
-                    {t("marketing.accept")}
-                </Button>,
-            ]}
+            footer={
+                <div className="flex flex-col gap-2 sm:flex-row sm:justify-end">
+                    <Button className="min-h-11" size="large" onClick={() => choose(false)}>
+                        {t("marketing.decline")}
+                    </Button>
+                    <Button className="min-h-11" size="large" type="primary" onClick={() => choose(true)}>
+                        {t("marketing.accept")}
+                    </Button>
+                </div>
+            }
         >
             <p>{t("marketing.description")}</p>
             <a href="/privacy">{t("marketing.privacy")}</a>
