@@ -24,7 +24,7 @@ for (const [key, value] of Object.entries({
 const { act } = await import("react");
 const { createRoot } = await import("react-dom/client");
 const { createMemoryRouter, RouterProvider } = await import("react-router");
-const { App } = await import("antd");
+const { App, ConfigProvider } = await import("antd");
 const { QueryClient, QueryClientProvider } = await import("@tanstack/react-query");
 const { SupDanceRouteHosts } = await import("../../src/supdance/adapters/router-hosts");
 const { useUserProfileModalStore } = await import("../../src/stores/use-user-profile-modal-store");
@@ -70,11 +70,13 @@ test("the real account window opens and survives page navigation with working pr
     try {
         await act(async () =>
             root.render(
-                <App>
-                    <QueryClientProvider client={client}>
-                        <RouterProvider router={router} />
-                    </QueryClientProvider>
-                </App>,
+                <ConfigProvider theme={{ token: { motion: false } }}>
+                    <App>
+                        <QueryClientProvider client={client}>
+                            <RouterProvider router={router} />
+                        </QueryClientProvider>
+                    </App>
+                </ConfigProvider>,
             ),
         );
         entry.focus();
@@ -106,8 +108,11 @@ test("the real account window opens and survives page navigation with working pr
         expect(useUserStore.getState().user).toEqual(user);
         expect(reads).toEqual(["/auth/profile"]);
         await act(async () => useUserProfileModalStore.getState().closeModal());
+        await act(async () => {
+            await new Promise((resolve) => setTimeout(resolve, 350));
+        });
         expect(useUserProfileModalStore.getState().isOpen).toBe(false);
-        expect(document.activeElement).toBe(trigger);
+        expect(document.activeElement === trigger).toBe(true);
     } finally {
         await act(async () => root.unmount());
         router.dispose();
