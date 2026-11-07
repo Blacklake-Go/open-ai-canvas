@@ -1,5 +1,9 @@
 # SupDance Canvas — 独立改造与定制代码清单 (CUSTOMIZATIONS.md)
 
+## Waffo 企业版沙盒
+
+独立扩展在 `backend/internal/supdance/waffopayment/`，可安装包在 `supdance/plugins/supdance-payment-waffo-enterprise/`。宿主支付 SDK、通知 handler、支付服务与仓储增加最小接缝：真实买家字段、指定测试用户限制、动态签名应答、下单交易号绑定及未知状态保留。无数据库迁移；复用已有积分账本与通知收件箱。范围与验收限制见 [企业版接入](./WAFFO_ENTERPRISE.md)。
+
 ## Waffo 商户重审整改
 
 - 复用既有 `contentsafety` 与生成任务筛查入口，通过生产 Compose 透传商户 ID、开关和私钥文件路径。密钥继续保存在服务器受限文件中。默认关闭，没有数据库迁移。

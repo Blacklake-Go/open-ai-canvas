@@ -1,0 +1,405 @@
+{
+  "schemaVersion": 2,
+  "skillVersion": "1.7.0",
+  "features": [
+    "order"
+  ],
+  "decisions": [
+    {
+      "id": "paymentSourceOfTruth",
+      "status": "CONFIRMED_BY_HUMAN",
+      "value": "Signed notification or inquiry success; exactly-once credit",
+      "evidence": {
+        "source": "user_message",
+        "quote": "确认，按建议接入沙盒"
+      }
+    },
+    {
+      "id": "unknownStatusHandling",
+      "status": "CONFIRMED_BY_HUMAN",
+      "value": "Inquiry with original persisted request ID; never create a replacement order",
+      "evidence": {
+        "source": "user_message",
+        "quote": "确认，按建议接入沙盒"
+      }
+    },
+    {
+      "id": "userTerminal",
+      "status": "CONFIRMED_BY_HUMAN",
+      "value": "WEB",
+      "evidence": {
+        "source": "user_message",
+        "quote": "确认，按建议接入沙盒"
+      }
+    },
+    {
+      "id": "checkoutOwnership",
+      "status": "CONFIRMED_BY_HUMAN",
+      "value": "Waffo full-page hosted checkout",
+      "evidence": {
+        "source": "user_message",
+        "quote": "确认，按建议接入沙盒"
+      }
+    },
+    {
+      "id": "currencyMode",
+      "status": "CONFIRMED_BY_HUMAN",
+      "value": "Server order CNY/USD snapshot; contracted sandbox settlement USD",
+      "evidence": {
+        "source": "user_message",
+        "quote": "确认，按建议接入沙盒"
+      }
+    },
+    {
+      "id": "iframeDeviceWalletHandling",
+      "status": "CONFIRMED_BY_HUMAN",
+      "value": "Full-page redirect; device wallets subject to device acceptance",
+      "evidence": {
+        "source": "user_message",
+        "quote": "确认，按建议接入沙盒"
+      }
+    },
+    {
+      "id": "redirectBehavior",
+      "status": "CONFIRMED_BY_HUMAN",
+      "value": "Return displays status only and never grants benefits",
+      "evidence": {
+        "source": "user_message",
+        "quote": "确认，按建议接入沙盒"
+      }
+    },
+    {
+      "id": "onPaymentBusinessLogic",
+      "status": "CONFIRMED_BY_HUMAN",
+      "value": "ONE_TIME_PAYMENT for assigned reviewer; matched amount/currency; one ledger grant",
+      "evidence": {
+        "source": "user_message",
+        "quote": "确认，按建议接入沙盒"
+      }
+    },
+    {
+      "id": "complianceExemption",
+      "status": "CONFIRMED_BY_HUMAN",
+      "value": "No exemption; public pricing goodsUrl provided",
+      "evidence": {
+        "source": "user_message",
+        "quote": "确认，按建议接入沙盒"
+      }
+    },
+    {
+      "id": "goLiveQ1",
+      "status": "UNRESOLVED",
+      "value": "Production outside confirmed sandbox scope"
+    },
+    {
+      "id": "goLiveQ2",
+      "status": "UNRESOLVED",
+      "value": "Production outside confirmed sandbox scope"
+    },
+    {
+      "id": "goLiveQ3",
+      "status": "UNRESOLVED",
+      "value": "Production outside confirmed sandbox scope"
+    },
+    {
+      "id": "goLiveQ4",
+      "status": "UNRESOLVED",
+      "value": "Production outside confirmed sandbox scope"
+    },
+    {
+      "id": "goLiveQ5",
+      "status": "UNRESOLVED",
+      "value": "Production outside confirmed sandbox scope"
+    },
+    {
+      "id": "goLiveQ6",
+      "status": "UNRESOLVED",
+      "value": "Production outside confirmed sandbox scope"
+    },
+    {
+      "id": "goLiveQ7",
+      "status": "UNRESOLVED",
+      "value": "Production outside confirmed sandbox scope"
+    },
+    {
+      "id": "goLiveQ8",
+      "status": "UNRESOLVED",
+      "value": "Production outside confirmed sandbox scope"
+    },
+    {
+      "id": "sandboxExchangeRate",
+      "status": "CONFIRMED_BY_HUMAN",
+      "value": "1 USD = 7 CNY for sandbox; production requires separate review",
+      "evidence": {
+        "source": "user_message",
+        "quote": "按 7 配置并继续沙盒测试"
+      }
+    }
+  ],
+  "currentRunId": "sandbox-enterprise-20261107",
+  "evidence": [
+    {
+      "id": "sdk-tests",
+      "runId": "sandbox-enterprise-20261107",
+      "kind": "test_log",
+      "summary": "Official SDK signed transport, webhook and repository tests in .local/waffo/verification.log",
+      "capturedAt": "2026-11-07T03:26:41.758735+00:00"
+    },
+    {
+      "id": "methods",
+      "runId": "sandbox-enterprise-20261107",
+      "kind": "api_response",
+      "summary": "Live sandbox SDK PayMethodConfig.Inquiry signed response; .local/waffo/payment-methods.json",
+      "capturedAt": "2026-11-07T03:26:41.758735+00:00"
+    },
+    {
+      "id": "deployment",
+      "runId": "sandbox-enterprise-20261107",
+      "kind": "health_response",
+      "summary": "Incremental backend deployed; PostgreSQL Schema 88 ready; no migration; encrypted sandbox config v2 enabled",
+      "capturedAt": "2026-11-07T03:37:16.179436+00:00"
+    },
+    {
+      "id": "account-isolation",
+      "runId": "sandbox-enterprise-20261107",
+      "kind": "browser_and_api",
+      "summary": "Reviewer providers API lists enterprise; different account recharge dialog excludes it. Local screenshots retained.",
+      "capturedAt": "2026-11-07T03:37:16.179436+00:00"
+    },
+    {
+      "id": "missing-rate",
+      "runId": "sandbox-enterprise-20261107",
+      "kind": "project_api_response",
+      "summary": "POST /api/payments/orders rejected CNY to USD because rate missing, before external payment; user confirmation pending",
+      "capturedAt": "2026-11-07T03:37:16.179436+00:00"
+    },
+    {
+      "id": "host-tests",
+      "runId": "sandbox-enterprise-20261107",
+      "kind": "test_log",
+      "summary": "SDK/payment/repository/handler packages passed. App package initial five Agent tests lacked undici; npm ci and exact five rechecks passed. Dedicated payment app tests passed.",
+      "capturedAt": "2026-11-07T03:37:16.179436+00:00"
+    },
+    {
+      "id": "extension-tests",
+      "runId": "sandbox-enterprise-20261107",
+      "kind": "test_log",
+      "summary": "Bun 1.3.9 extension isolation: 10 passed, 0 failed. Host min version manifest corrected; patch registry paths verified.",
+      "capturedAt": "2026-11-07T03:38:45.161068+00:00"
+    },
+    {
+      "id": "project-smoke",
+      "runId": "sandbox-enterprise-20261107",
+      "kind": "project_api_browser_and_database",
+      "summary": "Live project API: create/idempotency/query/cancel; hosted Visa success/failure; vendor portal NOTIFY_SUCCESS HTTP200; Postgres successful ledger 1, failed ledger 0. Files and screenshots in .local/waffo.",
+      "capturedAt": "2026-11-07T03:45:43.583171+00:00"
+    }
+  ],
+  "phases": {
+    "A": {
+      "status": "PARTIAL",
+      "evidenceIds": [
+        "project-smoke",
+        "sdk-tests"
+      ],
+      "reason": "Core live paths passed; vendor error and live webhook replay remain"
+    },
+    "B1": {
+      "status": "PARTIAL",
+      "evidenceIds": [
+        "project-smoke"
+      ],
+      "reason": "CC_VISA passed; remaining contracted card methods not executed"
+    },
+    "B2": {
+      "status": "MANUAL",
+      "reason": "Apple Pay / Google Pay need appropriate real device acceptance"
+    },
+    "C1": {
+      "status": "N/A",
+      "reason": "Refund and subscription are outside confirmed scope"
+    },
+    "C2": {
+      "status": "N/A",
+      "reason": "Refund and subscription are outside confirmed scope"
+    },
+    "D": {
+      "status": "PARTIAL",
+      "evidenceIds": [
+        "sdk-tests",
+        "host-tests",
+        "extension-tests"
+      ],
+      "reason": "Core checks passed; production go-live decisions remain outside sandbox scope"
+    }
+  },
+  "tests": [
+    {
+      "id": "order-create",
+      "status": "PASS",
+      "identifiers": {
+        "paymentRequestId": "e0ee9cc289ef6bcfbcf87559e19af706",
+        "acquiringOrderId": "A202611070339471457612"
+      },
+      "evidenceIds": [
+        "project-smoke"
+      ],
+      "details": "CNY1000 cents converted to USD143 cents; persisted acquiring ID; repeated idempotency key returned same order"
+    },
+    {
+      "id": "order-create-error",
+      "status": "PARTIAL",
+      "evidenceIds": [
+        "missing-rate",
+        "sdk-tests"
+      ],
+      "details": "Missing FX rejected before upstream; invalid reviewer rejected in SDK tests; no live upstream rejection case"
+    },
+    {
+      "id": "payment-success",
+      "status": "PASS",
+      "identifiers": {
+        "paymentRequestId": "e0ee9cc289ef6bcfbcf87559e19af706",
+        "acquiringOrderId": "A202611070339471457612"
+      },
+      "evidenceIds": [
+        "project-smoke"
+      ],
+      "details": "Visa CC_VISA sandbox succeeded; genuine signed notification credited 100 credits, one ledger entry"
+    },
+    {
+      "id": "payment-failure",
+      "status": "PASS",
+      "identifiers": {
+        "paymentRequestId": "ff6b9e2790d3c471c512d748bd9769a5",
+        "acquiringOrderId": "A202611070342068367618"
+      },
+      "evidenceIds": [
+        "project-smoke"
+      ],
+      "details": "Visa rejected; ORDER_CLOSE and zero ledger entries"
+    },
+    {
+      "id": "webhook-idempotency",
+      "status": "PARTIAL",
+      "identifiers": {
+        "paymentRequestId": "e0ee9cc289ef6bcfbcf87559e19af706",
+        "acquiringOrderId": "A202611070339471457612"
+      },
+      "evidenceIds": [
+        "sdk-tests",
+        "project-smoke"
+      ],
+      "details": "Repository duplicate-evidence grant once and genuine notification processed; live replay not executed"
+    },
+    {
+      "id": "order-cancel",
+      "status": "PASS",
+      "identifiers": {
+        "paymentRequestId": "225daae4b7751ca00711237119e28fbe",
+        "acquiringOrderId": "A202611070344120417620"
+      },
+      "evidenceIds": [
+        "project-smoke"
+      ],
+      "details": "Project close endpoint inquired first and confirmed ORDER_CLOSE; no benefits"
+    }
+  ],
+  "payMethodInquiry": {
+    "status": "PASS",
+    "evidenceIds": [
+      "methods"
+    ],
+    "activeMethods": [
+      {
+        "id": "CC_VISA"
+      },
+      {
+        "id": "CC_MASTERCARD"
+      },
+      {
+        "id": "DC_VISA"
+      },
+      {
+        "id": "DC_MASTERCARD"
+      },
+      {
+        "id": "APPLEPAY"
+      },
+      {
+        "id": "GOOGLEPAY"
+      }
+    ]
+  },
+  "payMethodCoverage": [
+    {
+      "methodId": "CC_VISA",
+      "country": "GLB",
+      "type": "CREDITCARD",
+      "status": "PASS",
+      "reason": "Live sandbox success and failure",
+      "identifiers": {
+        "paymentRequestId": "e0ee9cc289ef6bcfbcf87559e19af706",
+        "acquiringOrderId": "A202611070339471457612"
+      },
+      "evidenceIds": [
+        "project-smoke"
+      ]
+    },
+    {
+      "methodId": "CC_MASTERCARD",
+      "country": "GLB",
+      "type": "CREDITCARD",
+      "status": "MANUAL",
+      "reason": "Contracted method not yet accepted on device"
+    },
+    {
+      "methodId": "DC_VISA",
+      "country": "GLB",
+      "type": "DEBITCARD",
+      "status": "MANUAL",
+      "reason": "Contracted method not yet accepted on device"
+    },
+    {
+      "methodId": "DC_MASTERCARD",
+      "country": "GLB",
+      "type": "DEBITCARD",
+      "status": "MANUAL",
+      "reason": "Contracted method not yet accepted on device"
+    },
+    {
+      "methodId": "APPLEPAY",
+      "country": "GLB",
+      "type": "APPLEPAY",
+      "status": "MANUAL",
+      "reason": "Contracted method not yet accepted on device"
+    },
+    {
+      "methodId": "GOOGLEPAY",
+      "country": "GLB",
+      "type": "GOOGLEPAY",
+      "status": "MANUAL",
+      "reason": "Contracted method not yet accepted on device"
+    }
+  ],
+  "qualityFindings": [],
+  "blockers": [
+    {
+      "id": "production-questions",
+      "status": "OPEN",
+      "reason": "Production disabled until separately confirmed"
+    },
+    {
+      "id": "sandbox-acceptance",
+      "status": "OPEN",
+      "reason": "Remaining card methods, device wallets and live notification replay not fully accepted; sandbox core ready for user testing"
+    },
+    {
+      "id": "settlement-rate",
+      "status": "RESOLVED",
+      "reason": "User confirmed sandbox rate 7; saved through admin settings"
+    }
+  ],
+  "mustFix": [],
+  "outcome": "INCOMPLETE"
+}

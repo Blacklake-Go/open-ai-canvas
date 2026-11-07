@@ -3,6 +3,7 @@ package app
 import (
 	"context"
 	"crypto/sha256"
+	"encoding/base64"
 	"encoding/hex"
 	"encoding/json"
 	"errors"
@@ -194,6 +195,9 @@ func (s *Service) CreatePaymentOrder(ctx context.Context, actor *model.User, req
 	if err != nil {
 		return nil, err
 	}
+	if allowed := strings.TrimSpace(values["allowedUserId"]); allowed != "" && allowed != actor.ID {
+		return nil, Forbidden("该支付渠道仅开放给指定测试账号")
+	}
 	options, err := s.paymentProviderOptions(provider.Descriptor().ID, values)
 	if err != nil {
 		return nil, err
@@ -243,12 +247,17 @@ func (s *Service) CreatePaymentOrder(ctx context.Context, actor *model.User, req
 		view := paymentOrderView(*order)
 		return &view, nil
 	}
-	checkout, err := provider.CreateOrder(ctx, values, paymentCreateRequest(order, product.Name, values, config.ID))
+	createRequest := paymentCreateRequest(order, product.Name, values, config.ID)
+	createRequest.UserEmail = actor.Email
+	checkout, err := provider.CreateOrder(ctx, values, createRequest)
 	if err != nil {
-		_ = s.repo.SetPaymentOrderCreateFailure(order.ID, safePaymentError(err))
+		var providerErr *payment.ProviderError
+		if !errors.As(err, &providerErr) || providerErr.Code != "payment_status_unknown" {
+			_ = s.repo.SetPaymentOrderCreateFailure(order.ID, safePaymentError(err))
+		}
 		return nil, WrapAppError(http.StatusBadGateway, "支付渠道下单失败，请稍后重试", err)
 	}
-	if err := s.repo.SetPaymentOrderCheckout(order.ID, checkout.Mode, checkout.Value, checkout.ExpiresAt); err != nil {
+	if err := s.repo.SetPaymentOrderCheckout(order.ID, checkout.Mode, checkout.Value, checkout.ExpiresAt, checkout.ProviderTradeNo); err != nil {
 		_ = s.repo.SetPaymentOrderCreateFailure(order.ID, safePaymentError(err))
 		return nil, err
 	}
@@ -291,6 +300,7 @@ func paymentCreateRequest(order *model.PaymentOrder, description string, values 
 		Currency: order.ChargeCurrency, Method: order.PaymentMethod, ExpiresAt: order.ExpiresAt,
 		NotifyURL: baseURL + "/api/payments/notify/" + url.PathEscape(order.ProviderID) + "/" + url.PathEscape(configID),
 		ReturnURL: baseURL + "/api/payments/return/" + url.PathEscape(order.ProviderID) + "?orderId=" + url.QueryEscape(order.ID),
+		UserID:    order.UserID, ProductID: order.ProductID,
 	}
 }
 
@@ -355,11 +365,13 @@ func (s *Service) RefreshPaymentCheckout(ctx context.Context, actor *model.User,
 	} else if !errors.Is(queryErr, payment.ErrOrderNotFound) {
 		return nil, WrapAppError(http.StatusBadGateway, "刷新支付收银台前查单失败，请稍后重试", queryErr)
 	}
-	checkout, err := provider.CreateOrder(ctx, values, paymentCreateRequest(order, order.ProductName, values, config.ID))
+	createRequest := paymentCreateRequest(order, order.ProductName, values, config.ID)
+	createRequest.UserEmail = actor.Email
+	checkout, err := provider.CreateOrder(ctx, values, createRequest)
 	if err != nil {
 		return nil, WrapAppError(http.StatusBadGateway, "刷新支付收银台失败，请稍后重试", err)
 	}
-	if err := s.repo.SetPaymentOrderCheckout(order.ID, checkout.Mode, checkout.Value, checkout.ExpiresAt); err != nil {
+	if err := s.repo.SetPaymentOrderCheckout(order.ID, checkout.Mode, checkout.Value, checkout.ExpiresAt, checkout.ProviderTradeNo); err != nil {
 		return nil, err
 	}
 	order, err = s.repo.PaymentOrder(order.ID)
@@ -421,33 +433,46 @@ func (s *Service) ClosePaymentOrder(ctx context.Context, actor *model.User, id s
 }
 
 func (s *Service) AcceptPaymentNotification(ctx context.Context, providerID, configID string, headers http.Header, rawBody []byte) error {
+	_, err := s.AcceptPaymentNotificationWithResponse(ctx, providerID, configID, headers, rawBody)
+	return err
+}
+
+func (s *Service) AcceptPaymentNotificationWithResponse(ctx context.Context, providerID, configID string, headers http.Header, rawBody []byte) (*payment.NotificationResponse, error) {
 	provider, ok := s.paymentRegistry.Get(providerID)
 	if !ok {
-		return BadAuthRequest("未知支付通知渠道")
+		return nil, BadAuthRequest("未知支付通知渠道")
 	}
 	config, err := s.repo.PaymentProviderConfig(configID)
 	if err != nil || config.ProviderID != providerID {
-		return BadAuthRequest("支付通知配置版本不存在")
+		return nil, BadAuthRequest("支付通知配置版本不存在")
 	}
 	values, err := s.decryptPaymentConfig(config)
 	if err != nil {
-		return err
+		return nil, err
 	}
 	notification, err := provider.VerifyNotification(ctx, values, headers, rawBody)
 	if err != nil {
-		return BadAuthRequest("支付通知验签失败")
+		return nil, BadAuthRequest("支付通知验签失败")
+	}
+	if response := notification.Response; response != nil {
+		if response.Status != http.StatusOK || response.ContentType != "application/json" || response.Body != `{"message":"success"}` || len(response.Signature) > 4096 {
+			return nil, BadAuthRequest("支付插件应答格式无效")
+		}
+		if decoded, decodeErr := base64.StdEncoding.DecodeString(response.Signature); decodeErr != nil || len(decoded) < 256 {
+			return nil, BadAuthRequest("支付插件应答签名无效")
+		}
 	}
 	order, err := s.repo.PaymentOrderByMerchant(providerID, notification.MerchantOrderNo)
 	if err != nil || order.ProviderConfigID != config.ID {
-		return BadAuthRequest("支付通知订单不存在或配置版本不匹配")
+		return nil, BadAuthRequest("支付通知订单不存在或配置版本不匹配")
 	}
 	normalized, err := json.Marshal(notification.Result)
 	if err != nil {
-		return err
+		return nil, err
 	}
 	payloadCipher, err := s.encryptSettingSecret(string(rawBody))
 	if err != nil {
-		return err
+		return nil, err
 	}
 	digest := sha256.Sum256(rawBody)
 	inbox := &model.PaymentNotification{
@@ -458,14 +483,14 @@ func (s *Service) AcceptPaymentNotification(ctx context.Context, providerID, con
 	}
 	created, err := s.repo.SaveVerifiedPaymentNotification(inbox)
 	if err != nil || !created {
-		return err
+		return notification.Response, err
 	}
 	// Keep the callback path fast but try once immediately. A durable inbox row
 	// remains for the worker if the credit transaction cannot complete now.
 	if err := s.processPaymentNotification(inbox); err != nil {
 		_ = s.repo.RetryPaymentNotification(inbox.ID, safePaymentError(err), time.Now().Add(5*time.Second))
 	}
-	return nil
+	return notification.Response, nil
 }
 
 func (s *Service) processPaymentNotification(notification *model.PaymentNotification) error {
@@ -473,7 +498,7 @@ func (s *Service) processPaymentNotification(notification *model.PaymentNotifica
 	if err := json.Unmarshal([]byte(notification.NormalizedJSON), &result); err != nil {
 		return err
 	}
-	if !result.Paid {
+	if !result.Paid && !result.Closed {
 		return errors.New("支付通知不是成功状态")
 	}
 	if _, err := s.applyPaymentResult(notification.ProviderID, result); err != nil {

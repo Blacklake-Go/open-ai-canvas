@@ -22,6 +22,11 @@
     "baseCommit": "259e7e3fba0b6f70ac3cfd65941c3ca345d60249"
   },
   "coupledUpstreamFiles": [
+    "backend/payment-sdk/types.go",
+    "backend/internal/app/payment.go",
+    "backend/internal/app/payment_providers.go",
+    "backend/internal/handler/payment.go",
+    "backend/internal/repository/payment.go",
     "web/src/i18n/areas.ts",
     "web/src/components/canvas/canvas-agent-hud.tsx",
     "web/src/components/canvas/canvas-cloud-agent-media-batch-bar.tsx",
