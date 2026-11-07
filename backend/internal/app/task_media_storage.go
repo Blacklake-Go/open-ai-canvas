@@ -189,7 +189,7 @@ func (s *Service) downloadTaskMedia(ctx context.Context, config providerConfig, 
 	if _, err = ValidateOutboundURL(url); err != nil {
 		return "", "", err
 	}
-	if sameProviderOrigin(config.BaseURL, url) {
+	if config.InterfaceType != "mureka-music-tools" && sameProviderOrigin(config.BaseURL, url) {
 		applyProviderAuth(req, config)
 		ApplyOutboundHeaders(req, config.Headers)
 	}

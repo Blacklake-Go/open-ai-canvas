@@ -1,0 +1,192 @@
+.music-trim-overlay .music-trim-editor {
+    color: var(--foreground);
+    min-width: 0;
+    padding-block: 4px 8px;
+    font-variant-numeric: tabular-nums;
+}
+.music-trim-editor fieldset {
+    min-width: 0;
+    margin: 0;
+    padding: 0;
+    border: 0;
+}
+.music-trim-editor .music-trim-track,
+.music-trim-editor .music-trim-ruler,
+.music-trim-editor .music-trim-actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+.music-trim-editor .music-trim-track {
+    margin: 0 0 20px;
+    color: var(--muted-foreground);
+}
+.music-trim-track svg {
+    flex: none;
+}
+.music-trim-track span {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+.music-trim-editor .music-trim-ruler {
+    justify-content: space-between;
+    color: var(--muted-foreground);
+    margin-bottom: 8px;
+}
+.music-trim-editor .music-trim-ruler b {
+    color: var(--foreground);
+}
+.music-trim-editor .music-trim-wave {
+    position: relative;
+    height: clamp(80px, 13vh, 112px);
+    margin-inline: 12px;
+    border-radius: var(--radius);
+    background: var(--muted);
+    touch-action: manipulation;
+    cursor: crosshair;
+}
+.music-trim-editor .music-trim-wave svg {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    stroke: var(--muted-foreground);
+    stroke-width: 2;
+    fill: none;
+    pointer-events: none;
+}
+.music-trim-editor .music-trim-peaks {
+    stroke: var(--primary);
+    clip-path: inset(0 var(--trim-tail) 0 var(--trim-start));
+}
+.music-trim-editor .music-trim-selection {
+    position: absolute;
+    inset: 0 var(--trim-tail) 0 var(--trim-start);
+    border: 1px solid var(--primary);
+    border-radius: var(--radius);
+    background: color-mix(in srgb, var(--primary) 9%, transparent);
+    pointer-events: none;
+}
+.music-trim-editor .music-trim-cursor {
+    position: absolute;
+    inset-block: 0;
+    width: 2px;
+    background: var(--foreground);
+    pointer-events: none;
+}
+.music-trim-editor .music-trim-handle {
+    position: absolute;
+    inset-block: 0;
+    width: 24px;
+    padding: 0;
+    transform: translateX(-50%);
+    border: 0;
+    background: transparent;
+    color: var(--primary);
+    cursor: ew-resize;
+    touch-action: none;
+}
+.music-trim-editor .music-trim-handle::before {
+    content: "";
+    position: absolute;
+    inset-block: 0;
+    left: 50%;
+    width: 10px;
+    transform: translateX(-50%);
+    background: var(--primary);
+    border-radius: var(--radius);
+}
+.music-trim-editor .music-trim-handle::after {
+    content: "";
+    position: absolute;
+    inset-block: 35%;
+    left: 50%;
+    width: 2px;
+    transform: translateX(-50%);
+    background: var(--primary-foreground);
+}
+.music-trim-editor .music-trim-handle:focus-visible,
+.music-trim-editor input:focus-visible {
+    outline: 2px solid var(--ring);
+    outline-offset: 2px;
+}
+.music-trim-editor .music-trim-help {
+    margin: 12px 0 20px;
+    color: var(--muted-foreground);
+    font-size: var(--font-size-sm, 0.875rem);
+}
+.music-trim-editor .music-trim-values {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 12px;
+}
+.music-trim-values label,
+.music-trim-values > div {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 4px;
+}
+.music-trim-values span {
+    color: var(--muted-foreground);
+    overflow-wrap: anywhere;
+}
+.music-trim-values input {
+    width: 100%;
+    min-width: 0;
+    min-height: 44px;
+    padding: 6px 10px;
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    color: var(--foreground);
+    background: var(--background);
+}
+.music-trim-values strong {
+    display: flex;
+    align-items: center;
+    min-height: 44px;
+}
+.music-trim-editor .music-trim-actions {
+    margin-top: 16px;
+    flex-wrap: wrap;
+}
+.music-trim-actions > :first-child {
+    margin-inline-end: auto;
+}
+.music-trim-overlay .ant-btn {
+    min-height: 44px;
+    height: auto;
+    white-space: normal;
+}
+.music-trim-editor .music-trim-error {
+    color: var(--destructive);
+}
+@media (pointer: coarse) {
+    .music-trim-editor .music-trim-wave {
+        margin-inline: 22px;
+    }
+    .music-trim-editor .music-trim-handle {
+        width: 44px;
+    }
+}
+@media (max-width: 480px) {
+    .music-trim-editor .music-trim-values {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+    .music-trim-values > div {
+        grid-column: 1 / -1;
+        flex-direction: row;
+        align-items: baseline;
+        justify-content: space-between;
+    }
+    .music-trim-values strong {
+        min-height: 0;
+    }
+    .music-trim-editor .music-trim-actions {
+        gap: 4px;
+    }
+    .music-trim-actions .ant-btn {
+        padding-inline: 8px;
+    }
+}

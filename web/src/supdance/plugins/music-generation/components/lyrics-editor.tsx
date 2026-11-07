@@ -1,6 +1,9 @@
-import React, { useRef, useState } from "react";
-import { Tag, Trash2 } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
+import { ListMusic, Trash2 } from "lucide-react";
+import { Button } from "antd";
+import { Select } from "@/components/ui/base/select";
 import { useI18n } from "@/supdance/plugins/i18n";
+import { insertLyricSection, lyricSections, songOutline } from "./composer-patterns";
 
 interface LyricsEditorProps {
     value: string;
@@ -9,99 +12,91 @@ interface LyricsEditorProps {
     disabled?: boolean;
 }
 
-const SECTION_TAGS = [
-    { label: "[Verse 1]", tag: "[Verse 1]\n" },
-    { label: "[Chorus]", tag: "[Chorus]\n" },
-    { label: "[Verse 2]", tag: "[Verse 2]\n" },
-    { label: "[Bridge]", tag: "[Bridge]\n" },
-    { label: "[Outro]", tag: "[Outro]\n" },
-    { label: "[Instrumental]", tag: "[Instrumental]\n" },
-];
-
 export function LyricsEditor({ value, onChange, maxChars, disabled }: LyricsEditorProps) {
     const { t } = useI18n();
-    const textareaRef = useRef<HTMLTextAreaElement | null>(null);
+    const textarea = useRef<HTMLTextAreaElement>(null);
     const [confirmingClear, setConfirmingClear] = useState(false);
+    const [limitHit, setLimitHit] = useState(false);
+    const charCount = Array.from(value).length;
 
-    const handleInsertTag = (tag: string) => {
-        if (!textareaRef.current || disabled) return;
-        const textarea = textareaRef.current;
-        const start = textarea.selectionStart;
-        const end = textarea.selectionEnd;
-        const current = value;
+    useEffect(() => {
+        if (!confirmingClear) return;
+        const timer = setTimeout(() => setConfirmingClear(false), 3000);
+        return () => clearTimeout(timer);
+    }, [confirmingClear]);
 
-        const nextValue = current.substring(0, start) + tag + current.substring(end);
-        onChange(nextValue);
-
-        setTimeout(() => {
-            textarea.focus();
-            textarea.selectionStart = textarea.selectionEnd = start + tag.length;
-        }, 10);
-    };
-
-    const handleClear = () => {
-        if (disabled || !value) return;
-        if (!confirmingClear) {
-            setConfirmingClear(true);
-            setTimeout(() => setConfirmingClear(false), 3000);
-            return;
-        }
-        onChange("");
-        setConfirmingClear(false);
-    };
-
-    const charCount = value.length;
-    const isExceeded = charCount > maxChars;
+    function insert(section: string) {
+        const field = textarea.current;
+        if (!field || disabled) return;
+        const next = insertLyricSection(value, field.selectionStart, field.selectionEnd, section, maxChars);
+        setLimitHit(!next);
+        if (!next) return;
+        onChange(next.lyrics);
+        requestAnimationFrame(() => {
+            if (field.isConnected) {
+                field.focus();
+                field.setSelectionRange(next.caret, next.caret);
+            }
+        });
+    }
 
     return (
-        <div className="plugin-lyrics-editor flex flex-col gap-2 rounded-xl border border-border/60 bg-card p-3 shadow-xs">
-            <div className="flex flex-wrap items-center justify-between gap-2 border-b border-border/40 pb-2">
-                <div className="flex flex-wrap items-center gap-1.5">
-                    <span className="flex items-center gap-1 text-xs font-medium text-muted-foreground mr-1">
-                        <Tag className="size-3.5" />
-                        <span>{t("music.structure_tags", undefined, "结构标签:")}</span>
-                    </span>
-                    {SECTION_TAGS.map(({ label, tag }) => (
-                        <button
-                            key={label}
-                            type="button"
-                            disabled={disabled}
-                            onClick={() => handleInsertTag(tag)}
-                            className="min-h-11 rounded-md border border-border/60 bg-muted/50 px-2 py-1 text-xs text-foreground/80 transition-colors hover:bg-muted hover:text-foreground disabled:opacity-50"
-                        >
-                            {label}
-                        </button>
-                    ))}
-                </div>
-
-                <button
-                    type="button"
-                    disabled={disabled || !value}
-                    onClick={handleClear}
-                    className={`flex items-center gap-1 rounded-sm px-1.5 py-0.5 text-xs transition-colors disabled:opacity-40 ${confirmingClear ? "bg-destructive/15 text-destructive font-medium" : "text-muted-foreground hover:text-destructive"}`}
-                    title={confirmingClear ? t("music.confirm_clear", undefined, "Click again to clear") : t("music.lyrics_clear")}
-                >
-                    <Trash2 className="size-3.5" />
-                    <span>{confirmingClear ? t("music.confirm_clear", undefined, "Click again to clear") : t("music.lyrics_clear")}</span>
-                </button>
-            </div>
-
-            <textarea
-                ref={textareaRef}
-                value={value}
-                onChange={(e) => onChange(e.target.value)}
-                disabled={disabled}
-                aria-label={t("music.lyrics_editor")}
-                placeholder={t("music.lyrics_hint", undefined, "Write your original lyrics. Use section tags to organize verses and choruses.")}
-                rows={7}
-                className="w-full resize-y rounded-lg bg-transparent p-2 text-sm text-foreground placeholder:text-muted-foreground/60 focus:outline-hidden"
-            />
-
-            <div className="flex items-center justify-end border-t border-border/40 pt-2 text-xs">
-                <span className={isExceeded ? "font-bold text-destructive" : "text-muted-foreground"}>
+        <section className="music-composer-panel">
+            <div className="music-composer-heading">
+                <label htmlFor="music-lyrics">{t("music.lyrics_editor")}</label>
+                <span>
                     {charCount} / {maxChars}
                 </span>
             </div>
-        </div>
+            <textarea
+                id="music-lyrics"
+                ref={textarea}
+                rows={6}
+                value={value}
+                disabled={disabled}
+                aria-invalid={charCount > maxChars}
+                onChange={(e) => {
+                    onChange(e.target.value);
+                    setConfirmingClear(false);
+                    setLimitHit(false);
+                }}
+                placeholder={t("music.lyrics_hint")}
+            />
+            <div className="music-composer-tools">
+                <Select
+                    ariaLabel={t("music.lyric_structure")}
+                    placeholder={t("music.lyric_structure")}
+                    value={null}
+                    disabled={disabled}
+                    onChange={(key) => insert("[" + key + "]\n")}
+                    options={lyricSections.map((key) => ({ value: key, label: "[" + key + "]" }))}
+                />
+                <Button htmlType="button" disabled={disabled} icon={<ListMusic size={15} />} onClick={() => insert(songOutline)}>
+                    {t("music.lyric_outline")}
+                </Button>
+                <Button
+                    htmlType="button"
+                    type="text"
+                    disabled={disabled || !value}
+                    danger={confirmingClear}
+                    aria-label={t(confirmingClear ? "music.confirm_clear" : "music.lyrics_clear")}
+                    title={t(confirmingClear ? "music.confirm_clear" : "music.lyrics_clear")}
+                    icon={<Trash2 size={15} />}
+                    onClick={() => {
+                        if (confirmingClear) {
+                            onChange("");
+                            setConfirmingClear(false);
+                        } else setConfirmingClear(true);
+                    }}
+                >
+                    {confirmingClear && t("music.confirm_clear")}
+                </Button>
+            </div>
+            {(limitHit || charCount > maxChars) && (
+                <p role="alert" className="text-xs text-destructive">
+                    {t("music.limit_hint")}
+                </p>
+            )}
+        </section>
     );
 }

@@ -6,6 +6,7 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"errors"
+	"os/exec"
 	"slices"
 	"strings"
 	"unicode/utf8"
@@ -21,6 +22,8 @@ import (
 func musicProtocolProfile(protocol, upstream string) (music.ModelCapabilities, string, bool) {
 	profile := music.ModelCapabilities{Formats: []string{"mp3"}, MaxPromptChars: 1500, MaxLyricsChars: 3000, OutputCount: 1}
 	switch {
+	case protocol == "mureka-music-tools":
+		return musicToolProfile(upstream)
 	case protocol == "runninghub-standard-audio-suno" || protocol == "runninghub-standard-audio" && strings.HasPrefix(upstream, "rhart-audio/suno-") && strings.HasSuffix(upstream, "/single"):
 		profile.Modes = []string{"simple"}
 		profile.InstrumentalSupported = true
@@ -44,12 +47,13 @@ func (s *Service) siteMusicCapabilities(userID string) ([]music.ModelCapabilitie
 			return nil, err
 		}
 	}
-	catalog, err := s.ModelCatalog(access, nil)
+	channels, err := s.systemChannelCatalog(access, nil, true)
 	if err != nil {
 		return nil, err
 	}
 	result := []music.ModelCapabilities{}
-	for _, channel := range catalog.Channels {
+	for _, channel := range channels {
+		var toolChannel *model.ModelChannel
 		for _, item := range channel.Models {
 			if item.Capability != "audio" {
 				continue
@@ -65,6 +69,22 @@ func (s *Service) siteMusicCapabilities(userID string) ([]music.ModelCapabilitie
 			caps.ID = channel.ID + "::" + item.ModelKey
 			caps.ChannelID, caps.ModelKey = channel.ID, item.ModelKey
 			caps.Name, caps.Available, caps.BillingMode = item.DisplayName, item.Available, item.PricingMode
+			if len(caps.Operations) != 0 {
+				if toolChannel == nil {
+					toolChannel, err = s.repo.SystemChannel(channel.ID)
+					if err != nil {
+						return nil, err
+					}
+				}
+				_, registered := s.protocolRegistry().Resolve("mureka-music-tools")
+				baseURL := strings.TrimRight(strings.TrimSpace(toolChannel.BaseURL), "/")
+				caps.Available = caps.Available && registered && strings.TrimSpace(toolChannel.APIKey) != "" &&
+					(baseURL == murekaAPIOrigin || baseURL == murekaAPIOrigin+"/v1") && mediaProbeAvailable() && hasDedicatedMusicToolPrice(stored, caps.Operations[0])
+				if caps.Available && caps.Operations[0] == "region" {
+					_, err := exec.LookPath("ffmpeg")
+					caps.Available = err == nil
+				}
+			}
 			if caps.Name == "" {
 				caps.Name = item.ModelKey
 			}
@@ -79,13 +99,28 @@ func (s *Service) MusicCapabilitiesForUser(ctx context.Context, userID string) (
 }
 
 func (s *Service) QuoteMusicTask(userID, modelID string) (*LogicalModelQuote, error) {
+	return s.QuoteMusicOperation(userID, modelID, "")
+}
+
+func (s *Service) QuoteMusicOperation(userID, modelID, operation string) (*LogicalModelQuote, error) {
 	caps, err := s.siteMusicCapabilities(userID)
 	if err != nil {
 		return nil, err
 	}
 	for _, cap := range caps {
 		if cap.ID == modelID && cap.Available {
-			return s.QuoteChannelModel(userID, ChannelModelQuoteRequest{ChannelID: cap.ChannelID, ModelKey: cap.ModelKey, Intent: ModelRequestIntent{Capability: "audio", Operation: "audio"}})
+			if !musicOperationMatches(cap, operation) {
+				return nil, InvalidModelSelection("The selected model does not price this music operation.")
+			}
+			intent := ModelRequestIntent{Capability: "audio", Operation: "audio"}
+			if operation != "" {
+				intent.Inputs = map[string]int{"audio": 1}
+			}
+			quote, err := s.QuoteChannelModel(userID, ChannelModelQuoteRequest{ChannelID: cap.ChannelID, ModelKey: cap.ModelKey, Intent: intent})
+			if err == nil && operation != "" && (quote.BillingMode != "fixed_request" || quote.Estimated || quote.Quantity != 1) {
+				return nil, InvalidModelSelection("The music operation requires an explicit fixed price per request.")
+			}
+			return quote, err
 		}
 	}
 	return nil, InvalidModelSelection("Music model is unavailable. Refresh the model catalog.")
@@ -94,6 +129,15 @@ func (s *Service) QuoteMusicTask(userID, modelID string) (*LogicalModelQuote, er
 func validateSiteMusicRequest(req music.MusicGenerationRequest, cap music.ModelCapabilities) error {
 	if !cap.Available || !slices.Contains(cap.Modes, req.Mode) {
 		return BadAuthRequest("The selected model does not support this creation mode.")
+	}
+	if !musicOperationMatches(cap, req.Operation) {
+		return InvalidModelSelection("The selected model cannot perform this music operation.")
+	}
+	if req.Operation != "" {
+		return validateMusicToolFields(req, cap)
+	}
+	if req.SourceResourceID != "" || req.EditStartMs != 0 || req.EditEndMs != 0 {
+		return BadAuthRequest("Source audio and edit ranges require a music tool.")
 	}
 	if utf8.RuneCountInString(req.Prompt) > cap.MaxPromptChars || utf8.RuneCountInString(req.Lyrics) > cap.MaxLyricsChars {
 		return BadAuthRequest("Music input exceeds the model limit.")
@@ -167,7 +211,14 @@ func (s *Service) submitSiteMusicTask(ctx context.Context, userID string, req mu
 	if err := validateSiteMusicRequest(req, *selected); err != nil {
 		return nil, err
 	}
-	quote, err := s.QuoteMusicTask(userID, req.Model)
+	var source *model.Resource
+	if req.Operation != "" {
+		source, err = s.musicToolSource(userID, req)
+		if err != nil {
+			return nil, err
+		}
+	}
+	quote, err := s.QuoteMusicOperation(userID, req.Model, req.Operation)
 	if err != nil {
 		return nil, err
 	}
@@ -176,14 +227,31 @@ func (s *Service) submitSiteMusicTask(ctx context.Context, userID string, req mu
 		failure.Reason = "music_quote_changed"
 		return nil, failure
 	}
+	if source != nil {
+		if err := s.verifyMusicSourceAudio(ctx, req, source); err != nil {
+			return nil, err
+		}
+	}
 	prompt := req.Prompt
 	if strings.TrimSpace(prompt) == "" {
 		prompt = req.Lyrics
 	}
-	metadata := map[string]any{"source": "music-workbench", "musicFingerprint": fingerprint, "music": map[string]any{"mode": req.Mode, "title": req.Title, "lyrics": req.Lyrics, "style": req.Tags, "songLanguage": req.SongLanguage, "instrumental": req.Instrumental}}
+	options := map[string]any{"mode": req.Mode, "title": req.Title, "lyrics": req.Lyrics, "style": req.Tags, "songLanguage": req.SongLanguage, "instrumental": req.Instrumental}
+	metadata := map[string]any{"source": "music-workbench", "musicFingerprint": fingerprint, "music": options}
+	input := map[string]any{"mode": "audio", "config": map[string]any{"channelId": selected.ChannelID, "model": selected.ModelKey, "audioFormat": selected.Formats[0]}, "metadata": metadata}
+	if source != nil {
+		options["operation"], options["sourceResourceId"] = req.Operation, source.ID
+		options["editStartMs"], options["editEndMs"] = req.EditStartMs, req.EditEndMs
+		options["style"] = firstNonEmpty(req.Tags, req.Prompt)
+		input["referenceAudios"] = []any{map[string]any{"id": source.ID, "storageKey": "resource:" + source.ID, "mimeType": source.MimeType}}
+		if strings.TrimSpace(prompt) == "" {
+			prompt = req.Operation
+		}
+	}
+	input["prompt"] = prompt
 	task, err := s.CreateTask(userID, CreateTaskRequest{Type: "canvas_audio", Operation: "audio", Model: selected.ModelKey, Prompt: prompt,
-		admission: &taskAdmission{ID: id, MaxCharge: *req.QuotedMicrocredits},
-		Input:     map[string]any{"mode": "audio", "prompt": prompt, "config": map[string]any{"channelId": selected.ChannelID, "model": selected.ModelKey, "audioFormat": "mp3"}, "metadata": metadata},
+		admission: &taskAdmission{ID: id, MaxCharge: *req.QuotedMicrocredits, MusicOperation: req.Operation},
+		Input:     input,
 	})
 	if err != nil {
 		// The host transaction rolls back duplicate task IDs and their reservation together.

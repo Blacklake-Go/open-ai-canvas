@@ -70,6 +70,7 @@ type MusicState = {
 
     // Audio Playback Controller (Single Instance Guard & Zero Autoplay)
     playingTaskId: string | null;
+    playingWork: MusicTask | null;
     audioElement: HTMLAudioElement | null;
     isPlaying: boolean;
     buffering: boolean;
@@ -101,6 +102,11 @@ let pollInterval: ReturnType<typeof setInterval> | null = null;
 let userScopeSequence = 0;
 let pendingSubmission: { fingerprint: string; nonce: string } | null = null;
 const pollingTasks = new Set<string>();
+
+export function selectPlayerWork(state: MusicState) {
+    if (!state.playingTaskId) return state.activeTrack;
+    return state.tasks.find((task) => task.outputs?.some((output) => output.id === state.playingTaskId && output.audioUrl)) ?? state.playingWork;
+}
 
 export const useMusicStore = create<MusicState>((set, get) => ({
     draft: { ...DEFAULT_DRAFT },
@@ -135,6 +141,7 @@ export const useMusicStore = create<MusicState>((set, get) => ({
             activeTrack: null,
             activeTrackId: null,
             playingTaskId: null,
+            playingWork: null,
             audioElement: null,
             currentTime: 0,
             duration: 0,
@@ -155,6 +162,7 @@ export const useMusicStore = create<MusicState>((set, get) => ({
     activeTrack: null,
 
     playingTaskId: null,
+    playingWork: null,
     audioElement: null,
     isPlaying: false,
     buffering: false,
@@ -223,7 +231,8 @@ export const useMusicStore = create<MusicState>((set, get) => ({
             const caps = await fetchMusicCapabilities();
             if (sequence !== userScopeSequence) return;
             set({ capabilities: caps, loadingCaps: false, loadError: "" });
-            const model = caps.find((item) => item.id === get().draft.model && item.available) || caps.find((item) => item.available);
+            const models = caps.filter((item) => !item.operations?.length);
+            const model = models.find((item) => item.id === get().draft.model && item.available) || models.find((item) => item.available);
             if (model) get().setModel(model.id);
         } catch (error) {
             if (sequence === userScopeSequence) set({ capabilities: [], loadingCaps: false, loadError: error instanceof Error ? error.message : String(error) });
@@ -330,7 +339,7 @@ export const useMusicStore = create<MusicState>((set, get) => ({
                 quotedMicrocredits,
                 model: draft.model,
                 mode: draft.mode,
-                prompt: draft.prompt.trim(),
+                prompt: draft.mode === "simple" ? draft.prompt.trim() : "",
                 title: cap.titleSupported ? draft.title.trim() || undefined : undefined,
                 lyrics: cap.lyricsSupported && draft.mode === "custom" ? draft.lyrics : undefined,
                 tags: cap.styleSupported ? draft.tags.trim() || undefined : undefined,
@@ -341,14 +350,15 @@ export const useMusicStore = create<MusicState>((set, get) => ({
             };
 
             const result = await submitMusicTask(payload);
-            pendingSubmission = null;
             if (sequence !== userScopeSequence) return null;
+            pendingSubmission = null;
             set({ submitting: false });
 
             // Refresh tasks list
             void get().loadTasks();
             return result;
         } catch (error) {
+            if (sequence !== userScopeSequence) return null;
             set({ submitting: false });
             throw error;
         }
@@ -398,8 +408,10 @@ export const useMusicStore = create<MusicState>((set, get) => ({
             if (get().audioElement === audio) set({ buffering: false, isPlaying: true });
         };
 
+        const task = get().tasks.find((item) => item.outputs?.some((output) => output.id === taskId));
         set({
             playingTaskId: taskId,
+            playingWork: task ?? (get().playingTaskId === taskId ? get().playingWork : null),
             audioElement: audio,
             isPlaying: false,
             buffering: true,
@@ -407,7 +419,6 @@ export const useMusicStore = create<MusicState>((set, get) => ({
             currentTime: 0,
             duration: Number.isFinite(audio.duration) ? audio.duration : 0,
         });
-        const task = get().tasks.find((item) => item.outputs?.some((output) => output.id === taskId));
         if (task) get().setActiveTrack(task);
         void audio
             .play()

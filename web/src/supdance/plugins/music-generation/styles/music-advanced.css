@@ -1,0 +1,85 @@
+.music-advanced {
+    display: grid;
+    gap: 12px;
+    color: var(--foreground);
+    max-height: min(72dvh, 700px);
+    overflow: auto;
+    overscroll-behavior: contain;
+    padding: 2px;
+}
+.music-advanced fieldset,
+.music-advanced label,
+.music-tool-source {
+    display: grid;
+    gap: 7px;
+    min-width: 0;
+}
+.music-advanced fieldset {
+    border: 0;
+    margin: 0;
+    padding: 0;
+    gap: 14px;
+}
+.music-advanced label,
+.music-tool-source strong,
+.music-tool-footer {
+    font-size: 0.875rem;
+}
+.music-advanced textarea,
+.music-advanced label > input:not([type="checkbox"]):not([type="file"]) {
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 8px 10px;
+    min-height: 40px;
+    min-width: 0;
+    background: var(--background);
+    width: 100%;
+    color: var(--foreground);
+}
+.music-tool-help,
+.music-tool-source span,
+.music-tool-note {
+    color: var(--muted-foreground);
+    font-size: 0.83rem;
+    overflow-wrap: anywhere;
+}
+.music-tool-actions,
+.music-tool-footer,
+.music-advanced .music-tool-rights {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+.music-tool-actions {
+    margin-top: 5px;
+}
+.music-tool-range {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+}
+.music-tool-range button {
+    grid-column: 1/-1;
+    justify-self: start;
+}
+.music-tool-footer {
+    position: sticky;
+    bottom: 0;
+    z-index: 1;
+    background: var(--popover, var(--card));
+    padding-bottom: 4px;
+    justify-content: space-between;
+    border-top: 1px solid var(--border);
+    padding-top: 12px;
+}
+.music-workbench-page .music-composer-heading {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    margin-bottom: 16px;
+}
+.music-workbench-page .music-composer-heading h1 {
+    margin: 0;
+}

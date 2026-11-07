@@ -1,21 +1,73 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { Button } from "antd";
+import { MusicAdvancedDialog } from "../components/music-advanced-dialog";
+import { musicOutputLabel, trackSource, type MusicSource } from "../services/music-tools";
+import { Link, useNavigate } from "react-router";
+import { ArrowDownUp, Check, Disc3, FolderOpen, RefreshCw, Search, SlidersHorizontal } from "lucide-react";
+import { TrackList } from "../components/track-list";
+import { MusicTrimDialog } from "../components/music-trim-dialog";
+import { getMusicAssetHref, saveMusicClip } from "../services/music-assets";
+import { groupMusicHistory } from "../services/workspace-list";
+import type { MusicTask, MusicOutput } from "../services/music-api";
 import { WorkspacePage } from "@/components/layout/workspace-page";
 import { AppDrawer } from "@/components/ui/product/app-drawer";
 import { useUserStore } from "@/stores/use-user-store";
 import { selectPluginEffectivelyEnabled, usePluginStore } from "@/stores/use-plugin-store";
 import { useI18n } from "@/supdance/plugins/i18n";
-import { useMusicStore } from "../stores/use-music-store";
+import { selectPlayerWork, useMusicStore } from "../stores/use-music-store";
 import { SUPDANCE_MUSIC_PLUGIN_ID } from "../types";
 import { MusicForm } from "../components/music-form";
-import { TaskCard } from "../components/task-card";
 import { WaveformPlayer } from "../components/waveform-player";
 import { MusicTaskDetails } from "../components/music-task-details";
 import "../styles/music-workbench.css";
 
 const musicEnabled = selectPluginEffectivelyEnabled(SUPDANCE_MUSIC_PLUGIN_ID);
 export default function MusicWorkbenchPage() {
-    const { t } = useI18n();
     const userId = useUserStore((s) => s.user?.id);
+    return <MusicStudio key={userId || "guest"} userId={userId} />;
+}
+
+function MusicStudio({ userId }: { userId?: string }) {
+    const { t, locale } = useI18n();
+    const navigate = useNavigate();
+    const favoriteKey = "supdance:music:favorites:" + userId;
+    const [favorites, setFavorites] = useState<Set<string>>(() => {
+        try {
+            const stored: unknown = JSON.parse(localStorage.getItem(favoriteKey) || "[]");
+            return new Set(Array.isArray(stored) ? stored.filter((id) => typeof id === "string") : []);
+        } catch {
+            return new Set();
+        }
+    });
+    const favorite = (output: MusicOutput) => {
+        const next = new Set(favorites);
+        if (next.has(output.id)) next.delete(output.id);
+        else next.add(output.id);
+        setFavorites(next);
+        try {
+            localStorage.setItem(favoriteKey, JSON.stringify([...next]));
+        } catch {
+            /* Keep session favorites in private browsing. */
+        }
+    };
+    const [oldestFirst, setOldestFirst] = useState(false);
+    const studio = useRef<HTMLDivElement>(null);
+    const [detailOutput, setDetailOutput] = useState<string>();
+    const [advanced, setAdvanced] = useState<{ source?: MusicSource; lyrics?: string } | null>(null);
+    function showSubmitted() {
+        setSearch("");
+        setFilter("all");
+        setOldestFirst(false);
+        setMobile("library");
+    }
+    const [trim, setTrim] = useState<{ task: MusicTask; output: MusicOutput } | null>(null);
+    const [savedHref, setSavedHref] = useState("");
+    const openTrim = (task: MusicTask, output: MusicOutput) => {
+        useMusicStore.getState().pauseAudio();
+        setDetailId(null);
+        setSavedHref("");
+        setTrim({ task, output });
+    };
     const enabled = usePluginStore(musicEnabled);
     const tasks = useMusicStore((s) => s.tasks);
     const historyPage = useMusicStore((s) => s.historyPage);
@@ -23,7 +75,7 @@ export default function MusicWorkbenchPage() {
     const loading = useMusicStore((s) => s.loadingTasks);
     const loadError = useMusicStore((s) => s.loadError);
     const loadTasks = useMusicStore((s) => s.loadTasks);
-    const selected = useMusicStore((s) => s.activeTrack);
+    const selected = useMusicStore(selectPlayerWork);
     const playingId = useMusicStore((s) => s.playingTaskId);
     const [mobile, setMobile] = useState("create");
     const [filter, setFilter] = useState("all");
@@ -38,12 +90,9 @@ export default function MusicWorkbenchPage() {
         }
         return () => useMusicStore.getState().resetUser();
     }, [userId]);
-    const visible = tasks.filter((task) => {
-        const status = ["submitted", "queued", "generating", "transcoding"].includes(task.status) ? "generating" : task.status;
-        return (filter === "all" || filter === status) && (task.title + " " + task.prompt + " " + task.model).toLowerCase().includes(search.toLowerCase());
-    });
-    const queue = tasks.flatMap((task) => (task.outputs || []).map((output) => ({ task, output })));
-    const track = queue.find((item) => item.output.id === playingId) || queue.find((item) => item.task.taskId === selected?.taskId && item.output.audioUrl);
+    const days = useMemo(() => groupMusicHistory(tasks, search, filter, oldestFirst, favorites, locale), [tasks, search, filter, oldestFirst, favorites, locale]);
+    const output = selected?.outputs?.find((item) => (playingId ? item.id === playingId : item.audioUrl));
+    const track = selected && output ? { task: selected, output } : null;
     const detail = tasks.find((task) => task.taskId === detailId);
     const reuse = () => {
         if (!detail || !userId) return;
@@ -62,7 +111,7 @@ export default function MusicWorkbenchPage() {
     };
     return (
         <WorkspacePage fluid scroll={false} className="plugin-music-generation music-workbench-page">
-            <div className="music-studio-shell" translate="no" data-i18n-ignore="true">
+            <div ref={studio} className="music-studio-shell" translate="no" data-i18n-ignore="true">
                 <div className="music-mobile-tabs" role="group" aria-label={t("music.studio_title")}>
                     {["create", "library"].map((tab) => (
                         <button type="button" key={tab} aria-pressed={mobile === tab} onClick={() => setMobile(tab)}>
@@ -72,31 +121,53 @@ export default function MusicWorkbenchPage() {
                 </div>
                 <div className="music-studio-columns">
                     <section className={`music-composer ${mobile === "create" ? "is-mobile-active" : ""}`}>
-                        <h1>{t("music.studio_title")}</h1>
-                        {enabled && userId ? (
-                            <MusicForm userId={userId} onSubmitted={() => setMobile("library")} />
-                        ) : (
-                            <p role="status">{t("music.generation_disabled", undefined, "New music generation is disabled. Your tasks and saved works remain available.")}</p>
-                        )}
+                        <div className="music-composer-heading">
+                            <h1>{t("music.compose_heading")}</h1>
+                            {enabled && userId && (
+                                <Button htmlType="button" icon={<SlidersHorizontal size={15} />} onClick={() => setAdvanced({})}>
+                                    {t("music.adv_tools")}
+                                </Button>
+                            )}
+                        </div>
+                        {enabled && userId ? <MusicForm userId={userId} onSubmitted={showSubmitted} /> : <p role="status">{t("music.generation_disabled", undefined, "New music generation is disabled. Your tasks and saved works remain available.")}</p>}
                     </section>
                     <section className={`music-library ${mobile === "library" ? "is-mobile-active" : ""}`} aria-label={t("music.my_works")}>
                         <div className="music-library-header">
                             <h2>{t("music.my_works")}</h2>
-                            <button type="button" onClick={() => void loadTasks()} disabled={loading}>
-                                {t("music.refresh_works")}
+                            <div className="music-header-actions">
+                                <Link to="/assets" className="music-asset-link">
+                                    <FolderOpen size={16} />
+                                    {t("music.assets_heading")}
+                                </Link>
+                                <button type="button" title={t("music.refresh_works")} aria-label={t("music.refresh_works")} onClick={() => void loadTasks()} disabled={loading}>
+                                    <RefreshCw size={16} />
+                                </button>
+                            </div>
+                        </div>
+                        <div className="music-tools">
+                            <label className="music-search">
+                                <Search size={16} aria-hidden />
+                                <input type="search" aria-label={t("music.search_works")} value={search} onChange={(event) => setSearch(event.target.value)} placeholder={t("music.search_works")} />
+                            </label>
+                            <button className="music-sort" type="button" onClick={() => setOldestFirst(!oldestFirst)}>
+                                <ArrowDownUp size={15} />
+                                {t(oldestFirst ? "music.order_old" : "music.order_new")}
                             </button>
                         </div>
-                        <label className="music-search">
-                            <span className="sr-only">{t("music.search_works", undefined, "Search works")}</span>
-                            <input type="search" value={search} onChange={(event) => setSearch(event.target.value)} placeholder={t("music.search_works", undefined, "Search works")} />
-                        </label>
-                        <div className="music-filters" role="group" aria-label={t("music.filter_works", undefined, "Filter works")}>
-                            {["all", "generating", "completed", "failed"].map((status) => (
+                        <div className="music-filters" role="group" aria-label={t("music.filter_works")}>
+                            {["all", "favorites", "instrumental", "generating", "completed", "failed"].map((status) => (
                                 <button type="button" key={status} aria-pressed={filter === status} onClick={() => setFilter(status)}>
-                                    {t("music.filter_" + status, undefined, status)}
+                                    {t("music.filter_" + status)}
                                 </button>
                             ))}
                         </div>
+                        {savedHref && (
+                            <div className="music-saved-clip" role="status">
+                                <Check size={16} />
+                                {t("music.clip_saved")}
+                                <Link to={savedHref}>{t("music.manage_in_assets")}</Link>
+                            </div>
+                        )}
                         {loadError && (
                             <p role="alert" className="text-destructive">
                                 {loadError}
@@ -105,10 +176,33 @@ export default function MusicWorkbenchPage() {
                         <div className="music-work-list">
                             {loading && !tasks.length ? (
                                 <p role="status">{t("common.loading")}</p>
-                            ) : visible.length ? (
-                                visible.map((task) => <TaskCard key={task.taskId} task={task} onDetails={() => setDetailId(task.taskId)} />)
+                            ) : days.size ? (
+                                [...days].map(([day, list]) => (
+                                    <section key={day} className="music-day">
+                                        <h3>{day}</h3>
+                                        {list.map((task) => (
+                                            <TrackList
+                                                key={task.taskId}
+                                                task={task}
+                                                favorites={favorites}
+                                                onlyFavorites={filter === "favorites"}
+                                                onFavorite={favorite}
+                                                onDetails={(output) => {
+                                                    setDetailId(task.taskId);
+                                                    setDetailOutput(output?.id);
+                                                }}
+                                                onAdvanced={enabled && userId ? (output) => setAdvanced({ source: trackSource(task, output, musicOutputLabel(output, t)), lyrics: task.lyrics }) : undefined}
+                                                onTrim={(output) => openTrim(task, output)}
+                                                onAsset={async (output) => {
+                                                    void navigate(await getMusicAssetHref(task, output));
+                                                }}
+                                            />
+                                        ))}
+                                    </section>
+                                ))
                             ) : (
                                 <p className="music-empty">
+                                    <Disc3 size={36} aria-hidden />
                                     {t(
                                         search || filter !== "all" ? "music.no_matching_works" : "music.empty_works",
                                         undefined,
@@ -124,10 +218,55 @@ export default function MusicWorkbenchPage() {
                         )}
                     </section>
                 </div>
-                {track?.output.audioUrl && <WaveformPlayer taskId={track.output.id} audioUrl={track.output.audioUrl} title={track.task.title} durationSeconds={(track.output.durationMs || 0) / 1000} output={track.output} />}
+                {track?.output.audioUrl && (
+                    <WaveformPlayer
+                        taskId={track.output.id}
+                        audioUrl={track.output.audioUrl}
+                        title={[track.task.title, musicOutputLabel(track.output, t)].filter(Boolean).join(" · ")}
+                        durationSeconds={(track.output.durationMs || 0) / 1000}
+                        output={track.output}
+                    />
+                )}
                 <AppDrawer rootClassName="plugin-music-generation" open={Boolean(detail)} onClose={() => setDetailId(null)} title={detail?.title || t("music.default_track_title")}>
-                    {detail && <MusicTaskDetails task={detail} onReuse={reuse} />}
+                    {detail && (
+                        <MusicTaskDetails
+                            task={detail}
+                            selectedOutputId={detailOutput}
+                            onReuse={reuse}
+                            onTrim={(output) => openTrim(detail, output)}
+                            onAsset={async (output) => {
+                                void navigate(await getMusicAssetHref(detail, output));
+                            }}
+                        />
+                    )}
                 </AppDrawer>
+                {advanced && enabled && userId && (
+                    <MusicAdvancedDialog
+                        userId={userId}
+                        initialSource={advanced.source}
+                        initialOp={advanced.source ? "remix" : "reference"}
+                        initialLyrics={advanced.lyrics}
+                        onClose={() => setAdvanced(null)}
+                        onSubmitted={() => {
+                            setAdvanced(null);
+                            showSubmitted();
+                        }}
+                    />
+                )}
+                {trim && (
+                    <MusicTrimDialog
+                        returnFocusTo={studio.current?.querySelector<HTMLButtonElement>('[data-output-id="' + CSS.escape(trim.output.id) + '"] .music-trim-trigger')}
+                        url={trim.output.audioUrl || ""}
+                        storageKey={trim.output.storageKey}
+                        title={[trim.task.title || t("music.default_track_title"), musicOutputLabel(trim.output, t)].join(" · ")}
+                        onClose={() => setTrim(null)}
+                        onPreviewStart={() => useMusicStore.getState().pauseAudio()}
+                        onSave={async ({ blob, start, end }) => {
+                            const asset = await saveMusicClip(trim.task, trim.output, blob, { start, end });
+                            setSavedHref(asset.href);
+                        }}
+                    />
+                )}
             </div>
         </WorkspacePage>
     );

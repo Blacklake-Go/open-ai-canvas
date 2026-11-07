@@ -1,5 +1,6 @@
-import { beforeAll, beforeEach, afterEach, describe, expect, test } from "bun:test";
-import { useMusicStore } from "../src/supdance/plugins/music-generation/stores/use-music-store";
+import { beforeAll, beforeEach, afterEach, describe, expect, spyOn, test } from "bun:test";
+import { selectPlayerWork, useMusicStore } from "../src/supdance/plugins/music-generation/stores/use-music-store";
+import * as musicApi from "../src/supdance/plugins/music-generation/services/music-api";
 import { BUILTIN_SUPDANCE_I18N_ENTRIES, SUPPORTED_LOCALE_CODES, loadAllLocalePacks } from "../src/supdance/plugins/i18n/locales";
 import { readFileSync, readdirSync } from "node:fs";
 import { join } from "node:path";
@@ -18,6 +19,54 @@ describe("SupDance Music Plugin — Real Store & Controller Integration Suite", 
     test("starts without invented models or prices", () => {
         expect(useMusicStore.getState().capabilities).toEqual([]);
         expect(useMusicStore.getState().draft.model).toBe("");
+    });
+
+    test.each(["success", "failure"])("a previous account's %s cannot unlock a submission or clear its retry nonce", async (settlement) => {
+        type Receipt = Awaited<ReturnType<typeof musicApi.submitMusicTask>>;
+        const a = Promise.withResolvers<Receipt>();
+        const b = Promise.withResolvers<Receipt>();
+        const api = spyOn(musicApi, "submitMusicTask").mockReturnValueOnce(a.promise).mockReturnValueOnce(b.promise).mockRejectedValueOnce(new Error("offline"));
+        const enterAccount = () => {
+            useMusicStore.getState().resetUser();
+            const capability: musicApi.ModelCapabilities = {
+                id: "model",
+                name: "Model",
+                version: "",
+                modes: ["simple"],
+                minDuration: 0,
+                maxDuration: 0,
+                formats: ["mp3"],
+                maxPromptChars: 100,
+                maxLyricsChars: 0,
+                costPerSecondMicrocredits: 0,
+                stemSeparation: false,
+                available: true,
+            };
+            useMusicStore.setState({ capabilities: [capability] });
+            useMusicStore.getState().setModel("model");
+            useMusicStore.getState().setDraftField("prompt", "piano");
+        };
+        try {
+            enterAccount();
+            const old = useMusicStore.getState().submitGeneration("a", 10);
+            enterAccount();
+            const current = useMusicStore.getState().submitGeneration("b", 10);
+            if (settlement === "success") a.resolve({ taskId: "old", status: "queued" });
+            else a.reject(new Error("old network error"));
+            await expect(old).resolves.toBeNull();
+            expect(useMusicStore.getState().submitting).toBe(true);
+            await expect(useMusicStore.getState().submitGeneration("b", 10)).resolves.toBeNull();
+            b.reject(new Error("unknown outcome"));
+            await expect(current).rejects.toThrow("unknown outcome");
+            await expect(useMusicStore.getState().submitGeneration("b", 10)).rejects.toThrow("offline");
+            const nonces = api.mock.calls.map(([payload]) => payload.idempotencyNonce);
+            expect(nonces).toHaveLength(3);
+            expect(nonces[1]).not.toBe(nonces[0]);
+            expect(nonces[2]).toBe(nonces[1]);
+        } finally {
+            api.mockRestore();
+            useMusicStore.getState().resetUser();
+        }
     });
 
     test("configured capabilities clamp duration and restrict creation modes", () => {
@@ -176,6 +225,60 @@ describe("SupDance Music Plugin — Real Store & Controller Integration Suite", 
         } finally {
             useMusicStore.getState().pauseAudio();
             Object.defineProperty(globalThis, "Audio", { configurable: true, writable: true, value: previousAudio });
+        }
+    });
+
+    test("refreshing page one preserves the player and selected second take from an older page", async () => {
+        const original = Object.getOwnPropertyDescriptor(globalThis, "Audio");
+        class FakeAudio {
+            duration = 180;
+            constructor(public src: string) {}
+            async play() {}
+            pause() {}
+        }
+        Object.defineProperty(globalThis, "Audio", { configurable: true, value: FakeAudio });
+        const makeTask = (id: string): musicApi.MusicTask => ({
+            id,
+            taskId: id,
+            userId: "owner",
+            title: id,
+            model: "music",
+            mode: "simple",
+            prompt: "piano",
+            instrumental: false,
+            durationTargetSeconds: 0,
+            status: "completed",
+            stage: "",
+            createdAt: "",
+            updatedAt: "",
+            resultAudioUrl: "/" + id + "-0.mp3",
+            outputs: [0, 1].map((index) => ({ id: id + ":" + index, outputIndex: index, audioUrl: "/" + id + "-" + index + ".mp3" })),
+        });
+        const old = makeTask("older");
+        const recent = makeTask("recent");
+        const list = spyOn(musicApi, "listUserMusicTasks")
+            .mockResolvedValueOnce({ items: [old], page: 2, pageSize: 50, total: 52 })
+            .mockResolvedValueOnce({ items: [recent], page: 1, pageSize: 50, total: 52 });
+        try {
+            await useMusicStore.getState().loadTasks(2);
+            const take = old.outputs![1];
+            useMusicStore.getState().playAudio(take.id, take.audioUrl!);
+            await Promise.resolve();
+            const player = useMusicStore.getState().audioElement;
+            await useMusicStore.getState().loadTasks();
+            const state = useMusicStore.getState();
+            expect(state.tasks).toEqual([recent]);
+            expect(selectPlayerWork(state)).toBe(old);
+            expect(selectPlayerWork(state)?.outputs?.find((output) => output.id === state.playingTaskId)).toBe(take);
+            expect(state.audioElement).toBe(player);
+            expect(state.audioElement?.src).toBe(take.audioUrl!);
+            expect(state.isPlaying).toBe(true);
+            state.resetUser();
+            expect(selectPlayerWork(useMusicStore.getState())).toBeNull();
+        } finally {
+            list.mockRestore();
+            if (original) Object.defineProperty(globalThis, "Audio", original);
+            else Reflect.deleteProperty(globalThis, "Audio");
         }
     });
 

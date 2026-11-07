@@ -31,11 +31,7 @@ permissions:
   pull-requests: write
 
 jobs:
-  # 复用上游已有完整质量检查（Go 测试、Agent 架构、支付插件、Web formatting/typecheck/lint/unit/E2E）
-  upstream-quality:
-    if: github.event_name == 'pull_request'
-    uses: ./.github/workflows/quality.yml
-
+  # quality.yml 已监听每个 PR，重复调用会使同一 PR 的两套检查互相取消。
   supdance-gate:
     name: SupDance Extension & Upstream Compatibility Gate
     runs-on: ubuntu-latest
@@ -76,6 +72,11 @@ jobs:
           python3 tools/supdance/check_upstream.py "${args[@]}" \
             --output UPSTREAM_UPDATE_REPORT.md \
             --json-output "$RUNNER_TEMP/upstream-analysis.json"
+
+      - name: Install FFmpeg for music transcoding tests
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq ffmpeg
 
       - name: Run SupDance backend isolation tests
         working-directory: backend

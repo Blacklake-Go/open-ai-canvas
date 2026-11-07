@@ -21,6 +21,7 @@ export type GenerationTaskOutput = {
 
 export type GenerationTask = {
     id: string;
+    userId?: string;
     clientOperationId?: string;
     retryOf?: string;
     attemptGroupId?: string;

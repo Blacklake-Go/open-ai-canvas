@@ -31,6 +31,10 @@ const (
 
 // MusicGenerationRequest is the unified internal request struct for music generation tasks.
 type MusicGenerationRequest struct {
+	Operation          string   `json:"operation,omitempty"`
+	SourceResourceID   string   `json:"sourceResourceId,omitempty"`
+	EditStartMs        int64    `json:"editStartMs,omitempty"`
+	EditEndMs          int64    `json:"editEndMs,omitempty"`
 	QuotedMicrocredits *int64   `json:"quotedMicrocredits,omitempty"`
 	UserID             string   `json:"userId,omitempty"`
 	TaskID             string   `json:"taskId,omitempty"`
@@ -73,6 +77,7 @@ type MusicGenerationResponse struct {
 
 // ModelCapabilities encapsulates dynamic model capabilities, parameters, and availability.
 type ModelCapabilities struct {
+	Operations                []string `json:"operations,omitempty"`
 	ChannelID                 string   `json:"channelId,omitempty"`
 	ModelKey                  string   `json:"modelKey,omitempty"`
 	LyricsSupported           bool     `json:"lyricsSupported"`

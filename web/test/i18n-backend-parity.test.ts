@@ -9,6 +9,7 @@ import esESPack from "../src/supdance/plugins/i18n/locales/packs/es-ES";
 import jaJPPack from "../src/supdance/plugins/i18n/locales/packs/ja-JP";
 import koKRPack from "../src/supdance/plugins/i18n/locales/packs/ko-KR";
 import zhTWPack from "../src/supdance/plugins/i18n/locales/packs/zh-TW";
+import { musicOperations } from "../src/supdance/plugins/music-generation/services/music-tools";
 
 /**
  * 后端 defaults.go 是后台词条中心和公开 bundle 的数据源，前端词典是浏览器渲染源。
@@ -66,6 +67,14 @@ describe("i18n frontend dictionary is the single source for the backend dictiona
         const missing = frontendKeys.filter((key) => !backendByKey.has(key));
         if (missing.length) console.error("[FAIL] backend missing keys:", missing.slice(0, 20));
         expect(missing).toEqual([]);
+    });
+
+    test("each selectable music tool has both a localized label and instructions", () => {
+        const keys = new Set(frontendKeys);
+        for (const op of musicOperations) {
+            expect(keys.has(`music.adv_${op}`)).toBe(true);
+            expect(keys.has(`music.adv_${op}_help`)).toBe(true);
+        }
     });
 
     test("backend has no orphan entries that the frontend dropped", () => {

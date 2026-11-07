@@ -43,6 +43,8 @@ type mediaProbeInfo struct {
 	Height     int
 	DurationMs int64
 	Tags       map[string]string
+	hasAudio   bool
+	hasVideo   bool
 }
 
 func mediaProbeAvailable() bool {
@@ -52,6 +54,10 @@ func mediaProbeAvailable() bool {
 
 // probeMediaFile 运行一次 ffprobe。ctx 取消或超过 mediaProbeTimeout 时终止子进程。
 func probeMediaFile(ctx context.Context, path string) (mediaProbeInfo, error) {
+	return probeMediaFileAs(ctx, path, "")
+}
+
+func probeMediaFileAs(ctx context.Context, path, audioDemuxer string) (mediaProbeInfo, error) {
 	if strings.TrimSpace(path) == "" {
 		return mediaProbeInfo{}, errors.New("媒体路径为空")
 	}
@@ -64,10 +70,12 @@ func probeMediaFile(ctx context.Context, path string) (mediaProbeInfo, error) {
 	}
 	ctx, cancel := context.WithTimeout(ctx, mediaProbeTimeout)
 	defer cancel()
-	output, err := exec.CommandContext(ctx, bin,
-		"-v", "error", "-select_streams", "v:0",
-		"-show_entries", "stream=width,height:stream_side_data=rotation:format=duration:format_tags",
-		"-of", "json", path).Output()
+	args := []string{"-v", "error", "-select_streams", "v:0", "-show_entries", "stream=width,height:stream_side_data=rotation:format=duration:format_tags"}
+	if audioDemuxer != "" {
+		// Treat input as the supported audio container only. No playlist or network resolution is permitted.
+		args = []string{"-v", "error", "-protocol_whitelist", "file", "-f", audioDemuxer, "-show_entries", "stream=codec_type:stream_disposition=attached_pic:format=duration"}
+	}
+	output, err := exec.CommandContext(ctx, bin, append(args, "-of", "json", path)...).Output()
 	if err != nil {
 		return mediaProbeInfo{}, fmt.Errorf("媒体探测失败：%w", err)
 	}
@@ -79,6 +87,10 @@ func probeMediaFile(ctx context.Context, path string) (mediaProbeInfo, error) {
 func parseMediaProbeOutput(raw []byte) (mediaProbeInfo, error) {
 	var document struct {
 		Streams []struct {
+			CodecType   string `json:"codec_type"`
+			Disposition struct {
+				AttachedPic int `json:"attached_pic"`
+			} `json:"disposition"`
 			Width        int `json:"width"`
 			Height       int `json:"height"`
 			SideDataList []struct {
@@ -94,6 +106,10 @@ func parseMediaProbeOutput(raw []byte) (mediaProbeInfo, error) {
 		return mediaProbeInfo{}, fmt.Errorf("媒体探测结果无效：%w", err)
 	}
 	info := mediaProbeInfo{Tags: document.Format.Tags}
+	for _, stream := range document.Streams {
+		info.hasAudio = info.hasAudio || stream.CodecType == "audio"
+		info.hasVideo = info.hasVideo || stream.CodecType == "video" && stream.Disposition.AttachedPic == 0
+	}
 	if len(document.Streams) > 0 {
 		stream := document.Streams[0]
 		if stream.Width > 0 && stream.Height > 0 && stream.Width <= mediaProbeMaxDimension && stream.Height <= mediaProbeMaxDimension {
@@ -137,6 +153,10 @@ func mediaProbeTag(tags map[string]string, key string) string {
 // probeStoredResourceMedia 探测已保存资源：本地存储直接读文件；对象存储只下载文件头
 // （mediaProbeRemoteHeadBytes），并在读取卡住时由看门狗关闭读取流。
 func (s *Service) probeStoredResourceMedia(ctx context.Context, resource *model.Resource) (mediaProbeInfo, error) {
+	return s.probeStoredMedia(ctx, resource, mediaProbeRemoteHeadBytes, "")
+}
+
+func (s *Service) probeStoredMedia(ctx context.Context, resource *model.Resource, maxBytes int64, audioDemuxer string) (mediaProbeInfo, error) {
 	if resource == nil || resource.Status != model.ResourceStatusReady || strings.TrimSpace(resource.ObjectKey) == "" {
 		return mediaProbeInfo{}, errors.New("资源未就绪")
 	}
@@ -144,9 +164,9 @@ func (s *Service) probeStoredResourceMedia(ctx context.Context, resource *model.
 		return mediaProbeInfo{}, errMediaProbeUnavailable
 	}
 	if resource.Provider == "local" {
-		return probeMediaFile(ctx, filepath.Join(s.dataDir, "resources", filepath.FromSlash(resource.ObjectKey)))
+		return probeMediaFileAs(ctx, filepath.Join(s.dataDir, "resources", filepath.FromSlash(resource.ObjectKey)), audioDemuxer)
 	}
-	stream, err := s.openResourceRange(resource.UserID, resource, fmt.Sprintf("bytes=0-%d", mediaProbeRemoteHeadBytes-1))
+	stream, err := s.openResourceRange(resource.UserID, resource, fmt.Sprintf("bytes=0-%d", maxBytes-1))
 	if err != nil {
 		return mediaProbeInfo{}, err
 	}
@@ -162,7 +182,7 @@ func (s *Service) probeStoredResourceMedia(ctx context.Context, resource *model.
 		return mediaProbeInfo{}, err
 	}
 	defer os.Remove(file.Name())
-	_, copyErr := io.Copy(file, io.LimitReader(stream.Body, mediaProbeRemoteHeadBytes))
+	_, copyErr := io.Copy(file, io.LimitReader(stream.Body, maxBytes))
 	closeErr := file.Close()
 	if copyErr != nil {
 		if stalled.Load() {
@@ -173,5 +193,5 @@ func (s *Service) probeStoredResourceMedia(ctx context.Context, resource *model.
 	if closeErr != nil {
 		return mediaProbeInfo{}, closeErr
 	}
-	return probeMediaFile(ctx, file.Name())
+	return probeMediaFileAs(ctx, file.Name(), audioDemuxer)
 }
