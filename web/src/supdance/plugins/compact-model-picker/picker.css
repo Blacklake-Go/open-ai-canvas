@@ -1,11 +1,16 @@
 .canvas-model-picker-menu.sd-compact-picker.is-model-list {
-    --sd-picker-brand-width: clamp(88px, 22%, 152px);
-    width: min(720px, calc(100vw - 24px));
+    --sd-picker-brand-width: clamp(88px, 28%, 144px);
+    width: min(560px, calc(100vw - 24px));
 }
 .sd-compact-picker .canvas-model-picker-two-pane {
     display: grid;
     grid-template-columns: var(--sd-picker-brand-width) minmax(0, 1fr);
+    gap: 8px;
     min-height: 0;
+}
+.canvas-model-picker-menu.sd-compact-picker .canvas-model-picker-brand {
+    min-height: 44px;
+    padding-block: 6px;
 }
 .canvas-model-picker-menu.sd-compact-picker.is-model-list .canvas-model-picker-brand-rail {
     display: flex;
@@ -22,8 +27,8 @@
     align-items: center;
     width: 100%;
     min-width: 0;
-    min-height: 48px;
-    padding: 8px 10px;
+    min-height: 44px;
+    padding: 6px 8px;
     text-align: start;
     border-radius: 8px;
 }

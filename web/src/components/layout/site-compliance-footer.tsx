@@ -1,5 +1,5 @@
 import { ExternalLink, X } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 
 import { cn } from "@/lib/utils";
@@ -7,6 +7,7 @@ import { useAppearanceStore } from "@/stores/use-appearance-store";
 
 const MIIT_FILING_URL = "https://beian.miit.gov.cn/";
 const WORKSPACE_FOOTER_DISMISSED_KEY = "supdance:legal-footer:dismissed:v1";
+const WORKSPACE_FOOTER_SEEN_KEY = "supdance:legal-footer:seen:v1";
 
 /** Anchors also work in the standalone welcome entry, which has no Router. */
 export function SitePolicyLinks() {
@@ -34,12 +35,22 @@ export function SiteComplianceFooter({ className, variant = "default" }: { class
     const [dismissed, setDismissed] = useState(() => {
         if (variant !== "workspace") return false;
         try {
-            return localStorage.getItem(WORKSPACE_FOOTER_DISMISSED_KEY) === "true";
+            return localStorage.getItem(WORKSPACE_FOOTER_DISMISSED_KEY) === "true" || localStorage.getItem(WORKSPACE_FOOTER_SEEN_KEY) === "true";
         } catch {
             console.warn("Unable to read the legal footer display preference");
             return false;
         }
     });
+
+    useEffect(() => {
+        if (variant !== "workspace") return;
+        // Keep the first view visible; later mounts and reloads stay hidden.
+        try {
+            localStorage.setItem(WORKSPACE_FOOTER_SEEN_KEY, "true");
+        } catch {
+            console.warn("Unable to persist the legal footer first-visit preference");
+        }
+    }, [variant]);
 
     if (variant === "workspace" && dismissed) return null;
 
