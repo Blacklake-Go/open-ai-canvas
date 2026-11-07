@@ -77,6 +77,11 @@ jobs:
             --output UPSTREAM_UPDATE_REPORT.md \
             --json-output "$RUNNER_TEMP/upstream-analysis.json"
 
+      - name: Install FFmpeg for music transcoding tests
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq ffmpeg
+
       - name: Run SupDance backend isolation tests
         working-directory: backend
         run: go test -v ./internal/supdance/...
