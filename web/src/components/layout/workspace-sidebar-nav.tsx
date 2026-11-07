@@ -1,5 +1,5 @@
 import { Popover } from "antd";
-import { ChevronDown, ChevronRight, CircleUserRound, History as HistoryIcon, Image as ImageIcon, Infinity as InfinityIcon, Music, PanelLeftClose, PanelLeftOpen, Plus, ShoppingBag, Video } from "lucide-react";
+import { ChevronDown, ChevronRight, CircleDollarSign, CircleUserRound, History as HistoryIcon, Image as ImageIcon, Infinity as InfinityIcon, Music, PanelLeftClose, PanelLeftOpen, Plus, ShoppingBag, Video } from "lucide-react";
 import { LayoutGroup, motion, useReducedMotion } from "motion/react";
 import { useEffect, useMemo, useRef, useState, type ComponentType, type CSSProperties } from "react";
 import { Link, useLocation, useNavigate, useSearchParams } from "react-router";
@@ -83,7 +83,11 @@ export function buildNav(features: FeatureAvailability, t: (key: string) => stri
         },
         {
             heading: t("nav.assets_history"),
-            items: [{ ...toolItem("assets", "/assets", t), title: t("nav.assets") }, ...(features.taskCenterEnabled ? [{ id: "tasks", title: t("nav.tasks"), icon: ImageIcon, to: "/tasks" }] : [])],
+            items: [
+                { ...toolItem("assets", "/assets", t), title: t("nav.assets") },
+                ...(features.taskCenterEnabled ? [{ id: "tasks", title: t("nav.tasks"), icon: ImageIcon, to: "/tasks" }] : []),
+                { id: "pricing", title: t("nav.pricing"), icon: CircleDollarSign, to: "/pricing.html" },
+            ],
         },
     ];
 
@@ -285,7 +289,12 @@ function NavItem({
 
     return (
         <div className="flex w-full flex-col">
-            {linkTo ? (
+            {item.id === "pricing" && linkTo ? (
+                <a href={linkTo} className={rowClassName} data-nav-id={item.id} style={rowStyle} aria-label={collapsed ? item.title : undefined} title={collapsed ? item.title : undefined} onClick={handleClick}>
+                    {activePill}
+                    {rowContent}
+                </a>
+            ) : linkTo ? (
                 <Link
                     to={linkTo}
                     className={rowClassName}

@@ -78,6 +78,7 @@ const pack: Record<string, string> = {
     "nav.assets_history": "アセットと履歴",
     "nav.assets": "アセット",
     "nav.tasks": "制作履歴",
+    "nav.pricing": "料金表",
     "nav.tasks_short": "履歴",
     "nav.settings": "設定",
     "nav.feedback": "フィードバック",

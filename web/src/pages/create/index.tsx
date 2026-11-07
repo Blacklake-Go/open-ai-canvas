@@ -1439,10 +1439,15 @@ export default function CreatePage() {
                                         <h1>{t("create.hero_chat_title", { brand: brandName }, `和${brandName}聊聊创作想法`)}</h1>
                                         <p>从一个画面、一个角色或一句话开始。</p>
                                     </div>
-                                    <button type="button" className="creation-history-entry" aria-label="查看历史对话" aria-expanded={historyOpen} onClick={() => setHistoryOpen(true)}>
-                                        <History aria-hidden="true" />
-                                        <span>历史对话</span>
-                                    </button>
+                                    <div className="creation-start-actions">
+                                        <a href="/pricing.html" className="creation-pricing-entry">
+                                            {t("nav.pricing")}
+                                        </a>
+                                        <button type="button" className="creation-history-entry" aria-label="查看历史对话" aria-expanded={historyOpen} onClick={() => setHistoryOpen(true)}>
+                                            <History aria-hidden="true" />
+                                            <span>历史对话</span>
+                                        </button>
+                                    </div>
                                 </header>
                                 <div className={cn("creation-composer-stage is-home-mode", agentMode && "is-agent-mode")}>
                                     <CreationModeTabs
