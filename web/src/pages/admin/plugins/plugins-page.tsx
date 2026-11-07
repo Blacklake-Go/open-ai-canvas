@@ -30,7 +30,7 @@ import { supdanceVisualEnginePlugin } from "@/supdance/plugins/visual-engine";
 import { AdminPluginDetailModal, type AdminPluginDetail } from "./plugin-detail-modal";
 import { i18n } from "@/i18n";
 import { appQueryClient } from "@/lib/query-client";
-import { COMPACT_PICKER_ID, COMPACT_PICKER_ADMIN_ROUTE, compactAdminKey, compactPublicKey } from "@/supdance/plugins/compact-model-picker/settings";
+import { COMPACT_PICKER_ID, COMPACT_PICKER_ADMIN_ROUTE, compactAdminKey, applyCompactPickerAvailability } from "@/supdance/plugins/compact-model-picker/settings";
 
 type AdminPluginItem = AdminPluginDetail;
 
@@ -109,7 +109,7 @@ export default function AdminPluginsPage() {
             }
             setStates((current) => ({ ...current, [item.manifest.id]: state }));
             if (item.manifest.id === COMPACT_PICKER_ID) {
-                void appQueryClient.invalidateQueries({ queryKey: compactPublicKey });
+                await applyCompactPickerAvailability(state.platformAvailable);
                 void appQueryClient.invalidateQueries({ queryKey: compactAdminKey });
             }
             if (item.manifest.id === SUPDANCE_VISUAL_ENGINE_PLUGIN_ID) {

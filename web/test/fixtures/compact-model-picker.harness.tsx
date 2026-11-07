@@ -39,7 +39,7 @@ const { apiClient } = await import("../../src/services/api/request");
 const { defaultConfig, normalizeConfigSnapshot } = await import("../../src/stores/use-config-store");
 const { defaultModelCapabilityConfig } = await import("../../src/lib/model-capabilities");
 const { systemChannelModelChannels } = await import("../../src/lib/user-session");
-const { compactPublicKey } = await import("../../src/supdance/plugins/compact-model-picker/settings");
+const { compactPublicKey, compactSettingsStorageKey, applyCompactPickerAvailability } = await import("../../src/supdance/plugins/compact-model-picker/settings");
 
 function videoModel(displayName: string, modelKey: string, channelLabel: string): PublicChannelModel {
     return {
@@ -85,7 +85,50 @@ const settle = () =>
         await new Promise((resolve) => setTimeout(resolve, 20));
     });
 
-async function withPicker(run: (changed: string[]) => Promise<void>, readFails = false, quoteCurrent = false) {
+for (const cachedEnabled of [undefined, false, true])
+    test(`a cold open never paints native rows while the enabled policy is still loading (cache=${cachedEnabled})`, async () => {
+        appQueryClient.clear();
+        localStorage.removeItem(compactSettingsStorageKey);
+        if (cachedEnabled !== undefined) localStorage.setItem(compactSettingsStorageKey, JSON.stringify({ ...settings, enabled: cachedEnabled }));
+        let resolveSettings!: (value: unknown) => void;
+        const response = new Promise((resolve) => {
+            resolveSettings = resolve;
+        });
+        const original = apiClient.request;
+        apiClient.request = (() => response) as typeof apiClient.request;
+        const host = document.createElement("div");
+        document.body.append(host);
+        const root = createRoot(host);
+        const paints: boolean[] = [];
+        const observer = new MutationObserver(() => {
+            const menu = document.querySelector('[role="listbox"]');
+            if (menu) paints.push(menu.classList.contains("sd-compact-picker"));
+        });
+        observer.observe(document.body, { childList: true, subtree: true, attributes: true });
+        try {
+            await act(async () => root.render(<ModelPicker config={config} value="video::pix" onChange={() => {}} capability="video" showSelectedPrice={false} showOptionPrices />));
+            await act(async () => host.querySelector<HTMLButtonElement>('button[aria-haspopup="listbox"]')!.click());
+            await settle();
+            expect(document.querySelectorAll(".canvas-model-picker-option")).toHaveLength(0);
+            expect(document.querySelector(".sd-compact-picker")).not.toBeNull();
+            await act(async () => resolveSettings({ status: 200, data: { code: 0, data: settings } }));
+            await settle();
+            expect(document.querySelectorAll(".sd-picker-option").length).toBeGreaterThan(0);
+            expect(paints.length).toBeGreaterThan(0);
+            expect(paints.every(Boolean)).toBe(true);
+        } finally {
+            observer.disconnect();
+            resolveSettings({ status: 200, data: { code: 0, data: settings } });
+            await act(async () => root.unmount());
+            host.remove();
+            apiClient.request = original;
+            appQueryClient.clear();
+        }
+    });
+
+async function withPicker(run: (changed: string[]) => Promise<void>, readFails: boolean | "once" = false, quoteCurrent = false, cached?: typeof settings) {
+    localStorage.removeItem(compactSettingsStorageKey);
+    if (cached) localStorage.setItem(compactSettingsStorageKey, JSON.stringify(cached));
     const host = document.createElement("div");
     document.body.append(host);
     const root = createRoot(host);
@@ -99,7 +142,7 @@ async function withPicker(run: (changed: string[]) => Promise<void>, readFails =
             expect(request.data?.modelKey).toBe("pix");
             return { status: 200, data: { code: 0, msg: "", data: { quote: { amountMicrocredits: 24_500_000, estimated: true } } } };
         }
-        if (readFails || url !== "GET /supdance/compact-model-picker/settings") throw new Error("Settings unavailable");
+        if (readFails === true || (readFails === "once" && reads.length === 1) || url !== "GET /supdance/compact-model-picker/settings") throw new Error("Settings unavailable");
         return { status: 200, data: { code: 0, data: settings, msg: "ok" } };
     }) as typeof apiClient.request;
     try {
@@ -121,7 +164,13 @@ async function withPicker(run: (changed: string[]) => Promise<void>, readFails =
         await act(async () => buttons('[aria-haspopup="listbox"]')[0].click());
         await settle();
         await run(changed);
-        expect(reads).toEqual(quoteCurrent ? ["GET /supdance/compact-model-picker/settings", "POST /model-catalog/quote"] : ["GET /supdance/compact-model-picker/settings"]);
+        expect(reads).toEqual(
+            quoteCurrent
+                ? ["GET /supdance/compact-model-picker/settings", "POST /model-catalog/quote"]
+                : readFails === "once"
+                  ? ["GET /supdance/compact-model-picker/settings", "GET /supdance/compact-model-picker/settings"]
+                  : ["GET /supdance/compact-model-picker/settings"],
+        );
     } finally {
         await act(async () => root.unmount());
         apiClient.request = original;
@@ -190,14 +239,80 @@ test("only the selected model receives the exact quote for current inputs", asyn
     );
 });
 
-test("settings failure keeps the native model selector usable", async () => {
-    await withPicker(async (changed) => {
-        const option = buttons('[role="option"]')[0];
-        expect(option.textContent).toContain("最具性价比");
-        await act(async () => buttons(".canvas-model-picker-brand-rail button")[1].click());
-        await act(async () => buttons('[role="option"]')[0].click());
-        expect(changed).toEqual(["video::sora"]);
-    }, true);
+test("a confirmed enabled picker survives a fresh query cache and a failed refresh", async () => {
+    await withPicker(
+        async (changed) => {
+            const option = buttons('[role="option"]')[0];
+            expect(option.textContent).toContain("PixVerse 6 文生视频");
+            expect(document.querySelectorAll(".canvas-model-picker-option")).toHaveLength(0);
+            await act(async () => buttons(".canvas-model-picker-brand-rail button")[1].click());
+            await act(async () => buttons('[role="option"]')[0].click());
+            expect(changed).toEqual(["video::sora"]);
+        },
+        true,
+        false,
+        settings,
+    );
+});
+
+test("an unknown configuration failure exposes retry instead of native mode", async () => {
+    await withPicker(async () => {
+        expect(document.querySelector('[role="alert"]')).not.toBeNull();
+        expect(document.querySelectorAll(".canvas-model-picker-option")).toHaveLength(0);
+        expect(document.querySelectorAll(".sd-picker-option")).toHaveLength(0);
+        await act(async () => document.querySelector<HTMLButtonElement>('[role="alert"] button')!.click());
+        await settle();
+        expect(document.querySelectorAll(".sd-picker-option").length).toBeGreaterThan(0);
+        expect(document.querySelectorAll(".canvas-model-picker-option")).toHaveLength(0);
+    }, "once");
+});
+
+test("an acknowledged enablement cannot be overwritten by an older pending disabled read", async () => {
+    appQueryClient.clear();
+    localStorage.removeItem(compactSettingsStorageKey);
+    let resolve!: (value: unknown) => void;
+    const pending = new Promise((r) => {
+        resolve = r;
+    });
+    const original = apiClient.request;
+    apiClient.request = (() => pending) as typeof apiClient.request;
+    const host = document.createElement("div");
+    document.body.append(host);
+    const root = createRoot(host);
+    try {
+        await act(async () => root.render(<ModelPicker config={config} value="video::pix" onChange={() => {}} capability="video" showSelectedPrice={false} />));
+        await settle();
+        await act(async () => applyCompactPickerAvailability(true));
+        await act(async () => resolve({ status: 200, data: { code: 0, data: { ...settings, enabled: false } } }));
+        await settle();
+        expect(appQueryClient.getQueryData<typeof settings>(compactPublicKey)?.enabled).toBe(true);
+        expect(JSON.parse(localStorage.getItem(compactSettingsStorageKey)!).enabled).toBe(true);
+        await act(async () => host.querySelector<HTMLButtonElement>('button[aria-haspopup="listbox"]')!.click());
+        await settle();
+        expect(document.querySelector(".sd-compact-picker")).not.toBeNull();
+        expect(document.querySelectorAll(".canvas-model-picker-option")).toHaveLength(0);
+    } finally {
+        resolve({ status: 200, data: { code: 0, data: settings } });
+        await act(async () => root.unmount());
+        host.remove();
+        apiClient.request = original;
+        appQueryClient.clear();
+    }
+});
+
+test("platform toggles persist immediately and synchronize acknowledged settings across tabs", async () => {
+    await withPicker(async () => {
+        await act(async () => applyCompactPickerAvailability(false));
+        await settle();
+        expect(document.querySelectorAll(".canvas-model-picker-option").length).toBeGreaterThan(0);
+        await act(async () => applyCompactPickerAvailability(true));
+        await settle();
+        expect(document.querySelectorAll(".canvas-model-picker-option")).toHaveLength(0);
+        expect(JSON.parse(localStorage.getItem(compactSettingsStorageKey)!).enabled).toBe(true);
+        await act(async () => window.dispatchEvent(new dom.StorageEvent("storage", { key: compactSettingsStorageKey, newValue: JSON.stringify({ ...settings, showPrice: false }) })));
+        await settle();
+        expect(document.querySelector(".sd-picker-option")?.textContent).not.toContain("积分");
+    });
 });
 
 afterAll(async () => {
