@@ -8,6 +8,7 @@ import { cn } from "@/lib/utils";
 import { createModelLogoResolver } from "@/lib/model-logo-id";
 import { createModelLogoOption, MODEL_LOGO_CATEGORIES, MODEL_LOGO_FEATURED, type ModelLogoCategory } from "@/lib/model-logo-catalog";
 import { AppModal } from "@/components/ui/product/app-modal";
+import { SUPDANCE_MODEL_LOGOS } from "@/supdance/brand/model-logo-extensions";
 
 type LobeIconComponent = ComponentType<SVGProps<SVGSVGElement> & { size?: number | string }>;
 
@@ -20,13 +21,16 @@ const iconLoaders = Object.fromEntries(
         .map(([path, loader]) => [path.match(/\/([^/]+)\/components\/(?:Mono|Color)\.js$/)?.[1], loader])
         .filter((entry): entry is [string, () => Promise<LobeIconComponent>] => Boolean(entry[0] && entry[1])),
 ) as Record<string, () => Promise<LobeIconComponent>>;
-const resolveIconId = createModelLogoResolver(Object.keys(iconLoaders));
+const resolveIconId = createModelLogoResolver([...Object.keys(iconLoaders), ...SUPDANCE_MODEL_LOGOS.map((item) => item.id)]);
 const iconRegistry = new Map<string, LobeIconComponent>();
 const iconLoadPromises = new Map<string, Promise<LobeIconComponent | undefined>>();
-const iconOptions = toc
-    .filter((item) => item.group === "model" || item.group === "provider" || item.group === "application")
-    .map(createModelLogoOption)
-    .filter((item) => Boolean(iconLoaders[item.id]));
+const iconOptions = [
+    ...toc
+        .filter((item) => item.group === "model" || item.group === "provider" || item.group === "application")
+        .map(createModelLogoOption)
+        .filter((item) => Boolean(iconLoaders[item.id])),
+    ...SUPDANCE_MODEL_LOGOS,
+];
 
 const logoFilters = [{ id: "all", label: "全部" } as const, ...MODEL_LOGO_CATEGORIES];
 type ModelLogoFilter = ModelLogoCategory | "all";
@@ -69,6 +73,8 @@ export function ModelLogo({ icon: rawIcon, size = 18, className }: { icon?: stri
             cancelled = true;
         };
     }, [icon]);
+    const customLogo = SUPDANCE_MODEL_LOGOS.find((item) => item.id === icon);
+    if (customLogo) return <img src={customLogo.src} width={size} height={size} className={cn("shrink-0 object-contain", className)} alt="" aria-hidden />;
     if (!Icon) return <Cpu className={cn("shrink-0 text-foreground/45", className)} size={size} aria-hidden />;
     return <Icon size={size} className={cn("shrink-0", className)} aria-hidden />;
 }

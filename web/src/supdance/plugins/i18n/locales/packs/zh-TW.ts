@@ -78,6 +78,7 @@ const pack: Record<string, string> = {
     "nav.assets_history": "資產與歷史",
     "nav.assets": "資產",
     "nav.tasks": "創作歷史",
+    "nav.pricing": "價目表",
     "nav.tasks_short": "歷史",
     "nav.settings": "設定",
     "nav.feedback": "回饋",
