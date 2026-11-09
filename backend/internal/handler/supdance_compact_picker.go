@@ -48,9 +48,10 @@ func RegisterSupDanceCompactPickerRoutes(r *gin.RouterGroup, svc *service.Servic
 			return
 		}
 		var body struct {
-			Enabled         *bool `json:"enabled"`
-			ShowDescription *bool `json:"showDescription"`
-			ShowPrice       *bool `json:"showPrice"`
+			Enabled          *bool `json:"enabled"`
+			ShowDescription  *bool `json:"showDescription"`
+			ShowPrice        *bool `json:"showPrice"`
+			ShowInspirations *bool `json:"showInspirations"`
 		}
 		decoder := json.NewDecoder(http.MaxBytesReader(c.Writer, c.Request.Body, 4096))
 		decoder.DisallowUnknownFields()
@@ -62,8 +63,16 @@ func RegisterSupDanceCompactPickerRoutes(r *gin.RouterGroup, svc *service.Servic
 			fail(c, http.StatusBadRequest, errors.New("请提供完整的模型选择器开关配置"))
 			return
 		}
+		showInspirations := false
+		if body.ShowInspirations != nil {
+			showInspirations = *body.ShowInspirations
+		}
 		settings, err := svc.SaveAdminCompactPickerSettings(user, compactpicker.Settings{
-			Enabled: *body.Enabled, Display: compactpicker.Display{ShowDescription: *body.ShowDescription, ShowPrice: *body.ShowPrice},
+			Enabled: *body.Enabled, Display: compactpicker.Display{
+				ShowDescription:  *body.ShowDescription,
+				ShowPrice:        *body.ShowPrice,
+				ShowInspirations: showInspirations,
+			},
 		})
 		if err != nil {
 			failService(c, err)

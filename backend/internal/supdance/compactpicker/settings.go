@@ -14,8 +14,9 @@ const PluginID = "supdance-compact-model-picker"
 const settingKey = "plugin." + PluginID + ".display"
 
 type Display struct {
-	ShowDescription bool `json:"showDescription"`
-	ShowPrice       bool `json:"showPrice"`
+	ShowDescription  bool `json:"showDescription"`
+	ShowPrice        bool `json:"showPrice"`
+	ShowInspirations bool `json:"showInspirations"`
 }
 
 type Settings struct {
@@ -39,7 +40,7 @@ func Read(repo *repository.Repository) (Settings, error) {
 	if err != nil {
 		return Settings{}, err
 	}
-	display := &Display{ShowDescription: true, ShowPrice: true}
+	display := &Display{ShowDescription: true, ShowPrice: true, ShowInspirations: false}
 	stored, err := repo.SystemSettingOptional(settingKey)
 	if err != nil {
 		return Settings{}, err

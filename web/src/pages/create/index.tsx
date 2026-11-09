@@ -84,6 +84,7 @@ import { CreationRecentCanvases } from "./creation-recent-canvases";
 import { CreationAgentEntry } from "./creation-agent-entry";
 import { createCreationSubmitGate } from "./creation-submit-gate";
 import { creationVideoConfig } from "./creation-generation-config";
+import { useCompactPickerSettings } from "@/supdance/plugins/compact-model-picker/settings";
 
 const AssetLibraryPickerModal = lazy(() => import("@/components/assets/asset-library-picker-modal").then((module) => ({ default: module.AssetLibraryPickerModal })));
 const InspirationHall = lazy(() => import("@/pages/inspirations"));
@@ -163,6 +164,7 @@ export default function CreatePage() {
     const [conversationStorageError, setConversationStorageError] = useState("");
     const [conversationLoadAttempt, setConversationLoadAttempt] = useState(0);
     const inspirationSourcesVisible = useUserStore((state) => state.features.inspirationSourcesVisible);
+    const { showInspirations } = useCompactPickerSettings();
     const [conversationScope, setConversationScope] = useState<string | null>(() => (initialConversationSnapshot ? activeConversationScope : null));
     const [mode, setMode] = useState<CreationMode>(() => initialComposerPreferences.mode || defaultCreationMode);
     const [prompt, setPrompt] = useState("");
@@ -1582,34 +1584,38 @@ export default function CreatePage() {
                                 />
                             </section>
                             <CreationRecentCanvases onRequireLogin={() => openAuth()} />
-                            <Suspense
-                                fallback={
-                                    <div className="creation-hall-loading" role="status">
-                                        {t("create.page.hallLoading")}
-                                    </div>
-                                }
-                            >
-                                <InspirationHall onUse={(item) => startPrompt(item.mode, fillablePrompt(item))} />
-                            </Suspense>
-                            {inspirationSourcesVisible ? (
-                                <div className="creation-source-notice">
-                                    <details>
-                                        <summary>{t("create.page.sourcesSummary")}</summary>
-                                        {declaredInspirationSources().map((source) => (
-                                            <p key={source.name ?? source.label}>
-                                                {source.notice}
-                                                {source.repository ? (
-                                                    <>
-                                                        {" "}
-                                                        <a href={source.repository} target="_blank" rel="noreferrer">
-                                                            {source.name} · {source.license}
-                                                        </a>
-                                                    </>
-                                                ) : null}
-                                            </p>
-                                        ))}
-                                    </details>
-                                </div>
+                            {showInspirations ? (
+                                <>
+                                    <Suspense
+                                        fallback={
+                                            <div className="creation-hall-loading" role="status">
+                                                {t("create.page.hallLoading")}
+                                            </div>
+                                        }
+                                    >
+                                        <InspirationHall onUse={(item) => startPrompt(item.mode, fillablePrompt(item))} />
+                                    </Suspense>
+                                    {inspirationSourcesVisible ? (
+                                        <div className="creation-source-notice">
+                                            <details>
+                                                <summary>{t("create.page.sourcesSummary")}</summary>
+                                                {declaredInspirationSources().map((source) => (
+                                                    <p key={source.name ?? source.label}>
+                                                        {source.notice}
+                                                        {source.repository ? (
+                                                            <>
+                                                                {" "}
+                                                                <a href={source.repository} target="_blank" rel="noreferrer">
+                                                                    {source.name} · {source.license}
+                                                                </a>
+                                                            </>
+                                                        ) : null}
+                                                    </p>
+                                                ))}
+                                            </details>
+                                        </div>
+                                    ) : null}
+                                </>
                             ) : null}
                         </main>
                     </>

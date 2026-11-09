@@ -69,7 +69,7 @@ test("music workbench shares versioned brand rows, preserves draft IDs and refus
     apiClient.request = (async (request: { method?: string; url?: string; data?: { model?: string } }) => {
         const path = `${request.method?.toUpperCase()} ${request.url}`;
         requests.push(path);
-        if (path === "GET /supdance/compact-model-picker/settings") return { status: 200, data: { code: 0, data: { enabled: true, showDescription: true, showPrice: true } } };
+        if (path === "GET /supdance/compact-model-picker/settings") return { status: 200, data: { code: 0, data: { enabled: true, showDescription: true, showPrice: true, showInspirations: false } } };
         if (path === "POST /v1/supdance/music/quote") return { status: 200, data: { code: 0, data: { amountMicrocredits: models.find((m) => request.data?.model === `music::${m.key}`)?.price, quantity: 1, billingMode: "fixed_request" } } };
         throw new Error(`Unexpected request: ${path}`);
     }) as typeof apiClient.request;

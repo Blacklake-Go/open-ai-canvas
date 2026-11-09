@@ -3715,6 +3715,7 @@ components:
         enabled: {type: boolean, default: true}
         showDescription: {type: boolean, default: true}
         showPrice: {type: boolean, default: true}
+        showInspirations: {type: boolean, default: false}
     EcommerceAgentRequest:
       type: object
       description: 对应 ecommerceagent.Request；分析、推荐、报价与生成复用此请求，具体操作的业务校验由服务端执行。

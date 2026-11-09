@@ -78,7 +78,7 @@ const channels = systemChannelModelChannels([
     },
 ]);
 const config = normalizeConfigSnapshot({ config: { ...defaultConfig, channels, model: "video::pix", videoModel: "video::pix" } }).config;
-const settings = { enabled: true, showDescription: true, showPrice: true };
+const settings = { enabled: true, showDescription: true, showPrice: true, showInspirations: false };
 const buttons = (selector: string) => Array.from(document.querySelectorAll<HTMLButtonElement>(selector));
 const settle = () =>
     act(async () => {

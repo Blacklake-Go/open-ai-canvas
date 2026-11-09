@@ -78,14 +78,14 @@ func TestSupDanceCompactPickerHTTP(t *testing.T) {
 			t.Fatalf("%s %s %s: want %d, got %d %s", tc.method, tc.path, tc.body, tc.status, rec.Code, rec.Body)
 		}
 	}
-	check := func(method, path, body, cookie string, enabled, description, price bool) {
+	check := func(method, path, body, cookie string, enabled, description, price, inspirations bool) {
 		t.Helper()
 		rec := profileRequest(router, method, path, body, cookie)
 		var result struct {
 			Code int             `json:"code"`
 			Data map[string]bool `json:"data"`
 		}
-		want := map[string]bool{"enabled": enabled, "showDescription": description, "showPrice": price}
+		want := map[string]bool{"enabled": enabled, "showDescription": description, "showPrice": price, "showInspirations": inspirations}
 		if rec.Code != 200 || json.Unmarshal(rec.Body.Bytes(), &result) != nil || result.Code != 0 || !reflect.DeepEqual(result.Data, want) {
 			t.Fatalf("%s %s: got %d %s, want %v", method, path, rec.Code, rec.Body, want)
 		}
@@ -93,9 +93,9 @@ func TestSupDanceCompactPickerHTTP(t *testing.T) {
 			t.Fatal("settings GET must be revalidated after an administrator changes them")
 		}
 	}
-	check("GET", public, "", "", true, true, true)
-	check("GET", admin, "", adminCookie, true, true, true)
-	check("PUT", admin, saved, adminCookie, false, true, false)
+	check("GET", public, "", "", true, true, true, false)
+	check("GET", admin, "", adminCookie, true, true, true, false)
+	check("PUT", admin, saved, adminCookie, false, true, false, false)
 	rec := profileRequest(router, "GET", "/api/admin/plugins", "", adminCookie)
 	var listing struct {
 		Data struct {
@@ -112,17 +112,19 @@ func TestSupDanceCompactPickerHTTP(t *testing.T) {
 		t.Fatalf("plugin center did not see the disabled plugin: %+v", state)
 	}
 	router = newRouter()
-	check("GET", public, "", "", false, true, false)
+	check("GET", public, "", "", false, true, false, false)
 	if rec := profileRequest(router, "PUT", toggle, `{"available":true}`, adminCookie); rec.Code != 200 {
 		t.Fatalf("plugin center toggle failed: %s", rec.Body)
 	}
-	check("GET", public, "", "", true, true, false)
-	check("GET", admin, "", adminCookie, true, true, false)
+	check("GET", public, "", "", true, true, false, false)
+	check("GET", admin, "", adminCookie, true, true, false, false)
+	check("PUT", admin, `{"enabled":true,"showDescription":true,"showPrice":true,"showInspirations":true}`, adminCookie, true, true, true, true)
+	check("GET", public, "", "", true, true, true, true)
 	if err := db.Exec("CREATE TRIGGER reject_picker_audit BEFORE INSERT ON admin_audit_events BEGIN SELECT RAISE(ABORT, 'audit unavailable'); END;").Error; err != nil {
 		t.Fatal(err)
 	}
 	if rec := profileRequest(router, "PUT", admin, `{"enabled":false,"showDescription":false,"showPrice":true}`, adminCookie); rec.Code != 500 {
 		t.Fatalf("audit failure must abort the save: %d %s", rec.Code, rec.Body)
 	}
-	check("GET", public, "", "", true, true, false)
+	check("GET", public, "", "", true, true, true, true)
 }

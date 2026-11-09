@@ -14,6 +14,7 @@ const fields = [
     ["enabled", "enabledHint"],
     ["showDescription", "descriptionHint"],
     ["showPrice", "priceHint"],
+    ["showInspirations", "inspirationsHint"],
 ] as const;
 
 export default function CompactPickerAdmin() {
@@ -55,7 +56,12 @@ export default function CompactPickerAdmin() {
                                 <strong>{t(`compactPicker.${key}`)}</strong>
                                 <p className="text-sm text-[var(--admin-text-muted)]">{t(`compactPicker.${hint}`)}</p>
                             </div>
-                            <AdminSwitch checked={draft[key]} disabled={save.isPending || (key !== "enabled" && !draft.enabled)} aria-label={t(`compactPicker.${key}`)} onChange={(checked) => setEdits((current) => ({ ...current, [key]: checked }))} />
+                            <AdminSwitch
+                                checked={Boolean(draft[key])}
+                                disabled={save.isPending || (key !== "enabled" && key !== "showInspirations" && !draft.enabled)}
+                                aria-label={t(`compactPicker.${key}`)}
+                                onChange={(checked) => setEdits((current) => ({ ...current, [key]: checked }))}
+                            />
                         </div>
                     ))}
                     {save.isError && <Alert role="alert" type="error" showIcon title={save.error.message} />}

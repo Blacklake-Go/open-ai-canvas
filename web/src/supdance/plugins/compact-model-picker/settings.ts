@@ -3,7 +3,7 @@ import { appQueryClient } from "@/lib/query-client";
 import { http } from "@/services/api/request";
 import { PLUGIN_STATE_CHANGED_EVENT, PLUGIN_STATE_REVISION_KEY } from "@/supdance/adapters/plugin-state-sync";
 
-export type CompactPickerSettings = { enabled: boolean; showDescription: boolean; showPrice: boolean };
+export type CompactPickerSettings = { enabled: boolean; showDescription: boolean; showPrice: boolean; showInspirations: boolean };
 export const COMPACT_PICKER_ID = "supdance-compact-model-picker";
 export const COMPACT_PICKER_ADMIN_ROUTE = "/admin/plugins/compact-model-picker";
 export const compactPublicKey = [COMPACT_PICKER_ID, "public"] as const;
@@ -11,13 +11,14 @@ export const compactAdminKey = [COMPACT_PICKER_ID, "admin"] as const;
 const publicPath = "/supdance/compact-model-picker/settings";
 const adminPath = "/admin" + publicPath;
 export const compactSettingsStorageKey = "supdance:compact-picker:settings:v1";
-const compactDefaults: CompactPickerSettings = { enabled: true, showDescription: true, showPrice: true };
+const compactDefaults: CompactPickerSettings = { enabled: true, showDescription: true, showPrice: true, showInspirations: false };
 
 function parseSettings(value: unknown): CompactPickerSettings {
     if (!value || typeof value !== "object" || !("enabled" in value) || !("showDescription" in value) || !("showPrice" in value) || typeof value.enabled !== "boolean" || typeof value.showDescription !== "boolean" || typeof value.showPrice !== "boolean") {
         throw new Error("Invalid model picker display settings");
     }
-    return { enabled: value.enabled, showDescription: value.showDescription, showPrice: value.showPrice };
+    const showInspirations = "showInspirations" in value && typeof value.showInspirations === "boolean" ? value.showInspirations : false;
+    return { enabled: value.enabled, showDescription: value.showDescription, showPrice: value.showPrice, showInspirations };
 }
 
 function cachedSettings() {

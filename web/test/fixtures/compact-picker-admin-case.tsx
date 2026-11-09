@@ -12,7 +12,7 @@ import { COMPACT_PICKER_ADMIN_ROUTE, compactPublicKey, type CompactPickerSetting
 
 test("admin changes remain drafts until accepted by the server; failed saves are retryable", async () => {
     const path = "/admin/supdance/compact-model-picker/settings";
-    let persisted: CompactPickerSettings = { enabled: true, showDescription: true, showPrice: true };
+    let persisted: CompactPickerSettings = { enabled: true, showDescription: true, showPrice: true, showInspirations: false };
     let allowSave = false;
     const requests: string[] = [];
     const original = apiClient.request;
@@ -52,6 +52,7 @@ test("admin changes remain drafts until accepted by the server; failed saves are
         await act(async () => toggle("showPrice").click());
         await act(async () => toggle("enabled").click());
         expect(toggle("showPrice").disabled).toBe(true);
+        expect(toggle("showInspirations").disabled).toBe(false);
         expect(persisted.enabled).toBe(true);
         await act(async () => save().click());
         await flush();
@@ -61,9 +62,16 @@ test("admin changes remain drafts until accepted by the server; failed saves are
         allowSave = true;
         await act(async () => save().click());
         await flush();
-        expect(persisted).toEqual({ enabled: false, showDescription: true, showPrice: false });
+        expect(persisted).toEqual({ enabled: false, showDescription: true, showPrice: false, showInspirations: false });
         expect(appQueryClient.getQueryData(compactPublicKey)).toEqual(persisted);
-        expect(requests).toEqual(["get", "put", "put"]);
+        expect(save().disabled).toBe(true);
+        await act(async () => toggle("showInspirations").click());
+        expect(save().disabled).toBe(false);
+        await act(async () => save().click());
+        await flush();
+        expect(persisted).toEqual({ enabled: false, showDescription: true, showPrice: false, showInspirations: true });
+        expect(appQueryClient.getQueryData(compactPublicKey)).toEqual(persisted);
+        expect(requests).toEqual(["get", "put", "put", "put"]);
         expect(save().disabled).toBe(true);
     } finally {
         await act(async () => root.unmount());
