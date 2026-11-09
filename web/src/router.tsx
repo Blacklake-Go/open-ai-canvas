@@ -67,6 +67,7 @@ const PrivacyPage = lazy(() => import("@/supdance/pages/legal/privacy-page"));
 const AupPage = lazy(() => import("@/supdance/pages/legal/aup-page"));
 const LegalHubPage = lazy(() => import("@/supdance/pages/legal/legal-hub-page"));
 const PublicHtmlViewerPage = lazy(() => import("@/supdance/pages/html-viewer/public-html-page"));
+const McpPage = lazy(() => import("@/supdance/pages/mcp/mcp-page"));
 const AssetsPage = workspaceRoutePages.assets;
 const LoginPage = lazy(() => import("@/pages/auth/login"));
 const RegisterPage = lazy(() => import("@/pages/auth/register"));
@@ -151,6 +152,7 @@ const routes: RouteObject[] = [
     { path: "/aup", element: fullScreenDeferred(<AupPage />), errorElement: <RouteErrorPage /> },
     { path: "/acceptable-use", element: <Navigate to="/aup" replace /> },
     { path: "/legal", element: fullScreenDeferred(<LegalHubPage />), errorElement: <RouteErrorPage /> },
+    { path: "/mcp", element: fullScreenDeferred(<McpPage />), errorElement: <RouteErrorPage /> },
     { path: "/p/:slug", element: fullScreenDeferred(<PublicHtmlViewerPage />), errorElement: <RouteErrorPage /> },
     { path: "/html/:slug", element: fullScreenDeferred(<PublicHtmlViewerPage />), errorElement: <RouteErrorPage /> },
     { path: "/share/canvas/:token", element: fullScreenDeferred(<SharedCanvasPage />), errorElement: <RouteErrorPage /> },
