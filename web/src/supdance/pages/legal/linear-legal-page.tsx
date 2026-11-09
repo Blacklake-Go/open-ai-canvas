@@ -1,5 +1,5 @@
 import { TopbarLanguageSwitcher, useI18n } from "@/supdance/plugins/i18n";
-import { useEffect, useState } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 import { ArrowDown, ArrowUp } from "lucide-react";
 import { useLocaleStore } from "@/stores/use-locale-store";
 import { matchAppLocale } from "@/i18n/locales";
@@ -12,6 +12,7 @@ import { LegalBrand } from "./legal-brand";
 import { LegalHeaderNav } from "./legal-header-nav";
 
 interface LinearLegalPageProps {
+    children?: ReactNode;
     docMap: Record<SupportedLegalLanguage, LocalizedLegalDoc>;
     currentSlug: "terms" | "privacy" | "aup";
 }
@@ -20,7 +21,7 @@ interface LinearLegalPageProps {
  * 完全基于用户指定参考图（Linear Dark Elegance）打造的法务条款页面。
  * 默认深黑 (#000000) 极简奢雅排版，以英语为根语言（Authoritative），内置 6 国语言逐字对照切换。
  */
-export function LinearLegalPage({ docMap, currentSlug }: LinearLegalPageProps) {
+export function LinearLegalPage({ docMap, currentSlug, children }: LinearLegalPageProps) {
     const location = useLocation();
     const isDark = useThemeStore((state) => state.theme === "dark");
     const locale = useLocaleStore((state) => state.locale);
@@ -182,6 +183,7 @@ export function LinearLegalPage({ docMap, currentSlug }: LinearLegalPageProps) {
                         </section>
                     ))}
                 </article>
+                {children}
 
                 {/* 页面底部签署与链接 */}
                 <footer className={`mt-20 pt-8 border-t flex flex-wrap items-center justify-between gap-4 text-xs font-mono ${isDark ? "border-white/10 text-white/50" : "border-black/10 text-black/50"}`}>

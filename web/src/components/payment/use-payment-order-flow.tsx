@@ -8,6 +8,7 @@ import { AppModal } from "@/components/ui/product/app-modal";
 import { translate } from "@/i18n";
 import { createClientUUID } from "@/lib/client-id";
 import { paymentOrderGrantLabel } from "@/lib/payment-order-grant";
+import { trackXPurchase } from "@/supdance/marketing/x-purchase";
 import { closePaymentOrder, createPaymentOrder, formatPaymentAmount, getPaymentOrder, queryPaymentOrder, refreshPaymentCheckout, type PaymentOrder } from "@/services/api/payments";
 
 function grantedText(order: PaymentOrder) {
@@ -38,6 +39,7 @@ export function usePaymentOrderFlow({ onGranted }: { onGranted: (order: PaymentO
     const settle = async (next: PaymentOrder) => {
         if (next.status !== "credited" || grantedOrderId.current === next.id) return;
         grantedOrderId.current = next.id;
+        void trackXPurchase(next);
         await onGrantedRef.current(next);
     };
 

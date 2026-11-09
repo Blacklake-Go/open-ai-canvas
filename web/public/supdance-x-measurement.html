@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8" />
+        <meta name="referrer" content="no-referrer" />
+        <title>SupDance measurement</title>
+    </head>
+    <body>
+        <script>
+            // A dedicated document keeps private workspace URLs/titles out of automatic
+            // vendor metadata. Only the consented parent can initialize or send a purchase.
+            (() => {
+                if (location.hostname !== "www.supdance.com" || parent === window) return;
+                let ready = false;
+                const reply = (type) => parent.postMessage({ source: "supdance-x-pixel", type }, location.origin);
+                window.addEventListener("message", (event) => {
+                    if (event.origin !== location.origin || event.source !== parent || event.data?.source !== "supdance-marketing") return;
+                    if (event.data.type === "purchase" && ready) {
+                        const value = event.data.value;
+                        const currency = event.data.currency;
+                        const conversionId = event.data.conversion_id;
+                        if (!Number.isFinite(value) || value <= 0 || !["CNY", "USD"].includes(currency) || !/^[a-f0-9]{64}$/.test(conversionId)) return;
+                        twq("event", "tw-rinhf-rinl3", { value, currency, conversion_id: conversionId });
+                    }
+                });
+                const pixel = (window.twq = function () {
+                    pixel.exe ? pixel.exe.apply(pixel, arguments) : pixel.queue.push(arguments);
+                });
+                pixel.version = "1.1";
+                pixel.queue = [];
+                const script = document.createElement("script");
+                script.src = "https://static.ads-twitter.com/uwt.js";
+                script.async = true;
+                script.referrerPolicy = "no-referrer";
+                script.onload = () => {
+                    pixel("config", "rinhf");
+                    ready = true;
+                    reply("ready");
+                };
+                script.onerror = () => reply("error");
+                document.head.append(script);
+            })();
+        </script>
+    </body>
+</html>
