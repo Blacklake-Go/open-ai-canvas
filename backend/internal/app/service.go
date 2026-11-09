@@ -38,6 +38,7 @@ type Service struct {
 	registrationMu           sync.Mutex
 	emailCodeMu              sync.Mutex
 	redeemBatchMu            sync.Mutex
+	billingAutoRefund        billingAutoRefundScan
 	storageMu                sync.Mutex
 	storageTestMu            sync.Mutex
 	workerRuntimeMu          sync.Mutex
@@ -219,6 +220,7 @@ func (s *Service) StartWorker() {
 	s.startArkPortraitWorker()
 	s.startDramaScheduler()
 	s.startInspirationFeedWorker()
+	s.startConsumptionReportWorker()
 	go s.syncAgentSessionLimit()
 	s.runWorkerLoop(func(ctx context.Context) {
 		ticker := time.NewTicker(3 * time.Second)

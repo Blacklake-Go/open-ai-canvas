@@ -1,6 +1,6 @@
 import { describe, expect, it } from "bun:test";
 
-import { batchCellSourcesError, batchConnectionRejectReason, buildBatchConnectionCreateRequest, hasBatchConnectionCandidate, planBatchConnections } from "@/lib/canvas/canvas-batch-connection";
+import { batchCellSourcesError, batchConnectionRejectReason, buildBatchConnectionCreateRequest, expandBatchSourceNodeIds, hasBatchConnectionCandidate, planBatchConnections } from "@/lib/canvas/canvas-batch-connection";
 import { batchCellConnectionError, batchCellHandle } from "@/lib/canvas/canvas-batch-references";
 import { createBatchRow } from "@/lib/canvas/canvas-batch-table";
 import { canvasConnectionError } from "@/lib/canvas/canvas-connection-policy";
@@ -295,5 +295,26 @@ describe("batchConnectionRejectReason", () => {
             expect(result, `seed ${seed} ${JSON.stringify({ sources, target })}`).toBe(expected);
             expect(result.length, `seed ${seed}`).toBeGreaterThan(0);
         }
+    });
+});
+
+describe("expandBatchSourceNodeIds", () => {
+    const framed: CanvasNodeData[] = [
+        { id: "board", type: CanvasNodeType.Frame, title: "背板", position: { x: 0, y: 0 }, width: 800, height: 600 },
+        { id: "in-a", type: CanvasNodeType.Image, title: "A", position: { x: 20, y: 60 }, width: 200, height: 200, parentId: "board" },
+        { id: "in-b", type: CanvasNodeType.Image, title: "B", position: { x: 260, y: 60 }, width: 200, height: 200, parentId: "board" },
+        { id: "outside", type: CanvasNodeType.Text, title: "外部", position: { x: 900, y: 0 }, width: 200, height: 120 },
+    ];
+
+    it("uses a selected backdrop's child assets as connection sources", () => {
+        expect(expandBatchSourceNodeIds(["board"], framed)).toEqual(["in-a", "in-b"]);
+    });
+
+    it("keeps selection order and removes duplicates when children are also selected", () => {
+        expect(expandBatchSourceNodeIds(["outside", "in-b", "board"], framed)).toEqual(["outside", "in-b", "in-a"]);
+    });
+
+    it("returns nothing for an empty backdrop", () => {
+        expect(expandBatchSourceNodeIds(["frame"], nodes)).toEqual([]);
     });
 });

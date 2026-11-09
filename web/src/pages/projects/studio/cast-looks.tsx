@@ -1,14 +1,17 @@
 import { creationText as _creationText, useCreationLocale as _useCreationLocale } from "@/supdance/plugins/i18n/creation-text";
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { useMutation } from "@tanstack/react-query";
 import { App, Button, Input, InputNumber } from "antd";
-import { AlertCircle, Check, Pencil, Plus, Shirt, Trash2, X } from "lucide-react";
+import { AlertCircle, Check, Pencil, Plus, Shirt, Trash2, X, Play, Upload, Library } from "lucide-react";
 
-import { addDramaCastLook, deleteDramaCastLook, updateDramaCastLook, type DramaCast } from "@/services/api/drama";
+import { addDramaCastLook, deleteDramaCastLook, updateDramaCastLook, regenerateDramaCast, setDramaCastImage, updateDramaCast, type DramaCast } from "@/services/api/drama";
+import { uploadResourceFile } from "@/services/api/resources";
+import { CastLibraryPicker } from "./cast-library-picker";
 
 import { mediaBusy, MediaThumb } from "../drama-shared";
 
 const MAX_LOOKS = 6;
+type LookInput = { lookName: string; appearance: string; imagePrompt: string; fromChapter?: number; toChapter?: number };
 
 function chapterLabel(from?: number, to?: number) {
     if (from && to) return `第 ${from}–${to} 章`;
@@ -18,10 +21,11 @@ function chapterLabel(from?: number, to?: number) {
 }
 
 /** 一套造型的编辑表单（新增或修改共用）。 */
-function LookForm({ initial, submitting, onCancel, onSubmit }: { initial?: DramaCast; submitting: boolean; onCancel: () => void; onSubmit: (value: { lookName: string; appearance: string; fromChapter?: number; toChapter?: number }) => void }) {
+function LookForm({ initial, submitting, onCancel, onSubmit }: { initial?: DramaCast; submitting: boolean; onCancel: () => void; onSubmit: (value: LookInput) => void }) {
     _useCreationLocale();
     const [name, setName] = useState(initial?.lookName || "");
     const [appearance, setAppearance] = useState(initial?.appearance || "");
+    const [imagePrompt, setImagePrompt] = useState(initial?.imagePrompt || "");
     const [from, setFrom] = useState<number | null>(initial?.lookFromChapter || null);
     const [to, setTo] = useState<number | null>(initial?.lookToChapter || null);
     const valid = name.trim() && appearance.trim();
@@ -30,11 +34,22 @@ function LookForm({ initial, submitting, onCancel, onSubmit }: { initial?: Drama
             <Input value={name} maxLength={60} placeholder={_creationText("creation.b112a3329a5b8770")} aria-label={_creationText("creation.6c1622f1d7915c66")} onChange={(event) => setName(event.target.value)} />
             <Input.TextArea
                 value={appearance}
+                maxLength={1000}
                 autoSize={{ minRows: 2, maxRows: 5 }}
                 placeholder={_creationText("creation.53e192ade07f0417")}
                 aria-label={_creationText("creation.956d263c09612b3c")}
                 onChange={(event) => setAppearance(event.target.value)}
             />
+            <label className="drama-field-label">{_creationText("creation.d9b6db3002cda526")}</label>
+            <Input.TextArea
+                value={imagePrompt}
+                maxLength={12000}
+                autoSize={{ minRows: 3, maxRows: 8 }}
+                placeholder={_creationText("creation.79dc449b50d569b7")}
+                aria-label={_creationText("creation.d9b6db3002cda526")}
+                onChange={(event) => setImagePrompt(event.target.value)}
+            />
+            <small>{_creationText("creation.9266b550bf4ee51e")}</small>
             <div className="drama-look-form-range">
                 <span>{_creationText("creation.2d4d8c540ceb37fc")}</span>
                 <InputNumber size="small" min={0} precision={0} value={from} placeholder={_creationText("creation.0d7a3e72696addf7")} aria-label={_creationText("creation.0d7a3e72696addf7")} onChange={(value) => setFrom(value)} />
@@ -52,9 +67,9 @@ function LookForm({ initial, submitting, onCancel, onSubmit }: { initial?: Drama
                     icon={<Check className="size-3.5" />}
                     loading={submitting}
                     disabled={!valid}
-                    onClick={() => onSubmit({ lookName: name.trim(), appearance: appearance.trim(), fromChapter: from ?? 0, toChapter: to ?? 0 })}
+                    onClick={() => onSubmit({ lookName: name.trim(), appearance: appearance.trim(), imagePrompt: imagePrompt.trim(), fromChapter: from ?? 0, toChapter: to ?? 0 })}
                 >
-                    {_creationText("common.save")}
+                    {_creationText("creation.4a1edb18155e988e")}
                 </Button>
             </div>
         </div>
@@ -67,9 +82,12 @@ function LookForm({ initial, submitting, onCancel, onSubmit }: { initial?: Drama
  */
 export function CastLooks({ projectId, character, looks, restyle, onChanged }: { projectId: string; character: DramaCast; looks: DramaCast[]; restyle: boolean; onChanged: () => void }) {
     _useCreationLocale();
-    const { message } = App.useApp();
+    const { message, modal } = App.useApp();
     const [adding, setAdding] = useState(false);
     const [editingId, setEditingId] = useState<string>();
+    const [libraryLook, setLibraryLook] = useState<DramaCast>();
+    const fileRef = useRef<HTMLInputElement>(null);
+    const uploadLookRef = useRef<DramaCast | undefined>(undefined);
     const done = (text: string, affected?: number) => {
         message.success(affected ? _creationText("creation.a0e033aeda422328", { value1: text, value2: affected }) : text);
         setAdding(false);
@@ -77,46 +95,115 @@ export function CastLooks({ projectId, character, looks, restyle, onChanged }: {
         onChanged();
     };
     const add = useMutation({
-        mutationFn: (value: { lookName: string; appearance: string; fromChapter?: number; toChapter?: number }) => addDramaCastLook(projectId, character.id, value),
-        onSuccess: () => done("已添加造型，正在以角色形象为底图生成参考图"),
+        mutationFn: (value: LookInput) => addDramaCastLook(projectId, character.id, value),
+        onSuccess: () => done(_creationText("creation.b62e81b387439575")),
         onError: (error) => message.error(error instanceof Error ? error.message : _creationText("creation.2ca15f1e2bb7d991")),
     });
     const update = useMutation({
-        mutationFn: ({ id, value }: { id: string; value: { lookName: string; appearance: string; fromChapter?: number; toChapter?: number } }) => updateDramaCastLook(projectId, id, { ...value, restyleSegments: restyle }),
-        onSuccess: (result) => done("已更新造型", result.affectedSegments),
+        mutationFn: ({ id, value }: { id: string; value: LookInput }) => updateDramaCastLook(projectId, id, { ...value, restyleSegments: restyle }),
+        onSuccess: (result) => done(_creationText("creation.f66508cf521b940b"), result.affectedSegments),
         onError: (error) => message.error(error instanceof Error ? error.message : _creationText("creation.ec99e5c45d648fd6")),
     });
     const remove = useMutation({
         mutationFn: (id: string) => deleteDramaCastLook(projectId, id, restyle),
-        onSuccess: (result) => done("已删除造型，引用它的镜头回到角色本体", result.affectedSegments),
+        onSuccess: (result) => done(_creationText("creation.f8291b06fb4dda08"), result.affectedSegments),
         onError: (error) => message.error(error instanceof Error ? error.message : _creationText("creation.c228558cf257fc49")),
     });
-    const busy = add.isPending || update.isPending || remove.isPending;
+    const generate = useMutation({
+        mutationFn: async (look: DramaCast) => {
+            if (look.locked) await updateDramaCast(projectId, look.id, { locked: false });
+            return regenerateDramaCast(projectId, look.id, restyle);
+        },
+        onSuccess: (result) => done(_creationText("creation.e0ea9be2559fbeb7"), result.affectedSegments),
+        onError: (error) => message.error(error instanceof Error ? error.message : _creationText("music.status_failed")),
+    });
+    const upload = useMutation({
+        mutationFn: async ({ look, file }: { look: DramaCast; file: File }) => {
+            const resource = await uploadResourceFile(file, "image", { fileName: file.name });
+            return setDramaCastImage(projectId, look.id, resource.id, restyle);
+        },
+        onSuccess: (result) => done(_creationText("creation.243287ec79c595b2"), result.affectedSegments),
+        onError: (error) => message.error(error instanceof Error ? error.message : _creationText("workbench.upload_failed")),
+    });
+    const busy = add.isPending || update.isPending || remove.isPending || generate.isPending || upload.isPending;
     return (
         <div className="drama-field">
             <div className="drama-field-label">
                 <span>{_creationText("creation.e02a055a1d86b349")}</span>
-                <small>{_creationText("creation.3d77b9b4c73eef19", { value1: MAX_LOOKS, value2: looks.length, value3: MAX_LOOKS })}</small>
+                <small>{_creationText("creation.e87b6034fdc7e614", { value1: MAX_LOOKS, value2: looks.length, value3: MAX_LOOKS })}</small>
             </div>
             <div className="drama-looks">
                 {looks.map((look) =>
                     editingId === look.id ? (
                         <LookForm key={look.id} initial={look} submitting={update.isPending} onCancel={() => setEditingId(undefined)} onSubmit={(value) => update.mutate({ id: look.id, value })} />
                     ) : (
-                        <div key={look.id} className="drama-look">
-                            <span className="drama-look-thumb">
-                                {look.imageResourceId ? <MediaThumb resourceId={look.imageResourceId} alt={look.lookName || _creationText("creation.345897933b2d1a83")} /> : <Shirt className="size-4 opacity-40" />}
-                                {mediaBusy(look.imageStatus) ? <span className="drama-look-busy" aria-label={_creationText("creation.8ffe34dc84c3db06")} /> : null}
-                                {look.imageStatus === "failed" ? <AlertCircle className="size-3.5 text-[var(--status-error)]" aria-label={_creationText("creation.97a3666c8b9c2ccd")} /> : null}
-                            </span>
-                            <span className="drama-look-body">
-                                <b className="truncate">{look.lookName || _creationText("creation.50ef161256d9798a")}</b>
-                                <small>{chapterLabel(look.lookFromChapter, look.lookToChapter)}</small>
-                            </span>
-                            <span className="drama-look-actions">
-                                <Button size="small" type="text" icon={<Pencil className="size-3.5" />} aria-label={_creationText("creation.ef6d1adeddb93d63", { value1: look.lookName })} disabled={busy} onClick={() => setEditingId(look.id)} />
-                                <Button size="small" type="text" icon={<Trash2 className="size-3.5" />} aria-label={_creationText("creation.fa7c47ccf656c344", { value1: look.lookName })} disabled={busy} onClick={() => remove.mutate(look.id)} />
-                            </span>
+                        <div key={look.id} className="drama-look-item">
+                            <div className="drama-look">
+                                <span className="drama-look-thumb">
+                                    {look.imageResourceId ? <MediaThumb resourceId={look.imageResourceId} alt={look.lookName || _creationText("creation.345897933b2d1a83")} /> : <Shirt className="size-4 opacity-40" />}
+                                    {mediaBusy(look.imageStatus) ? <span className="drama-look-busy" aria-label={_creationText("creation.8ffe34dc84c3db06")} /> : null}
+                                    {look.imageStatus === "failed" ? <AlertCircle className="size-3.5 text-[var(--status-error)]" aria-label={_creationText("creation.97a3666c8b9c2ccd")} /> : null}
+                                </span>
+                                <span className="drama-look-body">
+                                    <b className="truncate">{look.lookName || _creationText("creation.50ef161256d9798a")}</b>
+                                    <small>{chapterLabel(look.lookFromChapter, look.lookToChapter)}</small>
+                                    <small>
+                                        {look.imageStatus === "draft"
+                                            ? _creationText("creation.79820fd6496eff3f")
+                                            : look.locked
+                                              ? _creationText("creation.d39c736ffb2c949b")
+                                              : look.imagePrompt
+                                                ? _creationText("creation.f1d3720d98f16b61")
+                                                : _creationText("creation.3cce46b0732460a5")}
+                                    </small>
+                                </span>
+                                <span className="drama-look-actions">
+                                    <Button
+                                        size="small"
+                                        type="text"
+                                        icon={<Pencil className="size-3.5" />}
+                                        aria-label={_creationText("creation.ef6d1adeddb93d63", { value1: look.lookName })}
+                                        disabled={busy || mediaBusy(look.imageStatus)}
+                                        onClick={() => setEditingId(look.id)}
+                                    />
+                                    <Button size="small" type="text" icon={<Trash2 className="size-3.5" />} aria-label={_creationText("creation.fa7c47ccf656c344", { value1: look.lookName })} disabled={busy} onClick={() => remove.mutate(look.id)} />
+                                </span>
+                            </div>
+                            <div className="drama-look-form-actions">
+                                <Button size="small" icon={<Library className="size-3.5" />} disabled={busy || mediaBusy(look.imageStatus)} onClick={() => setLibraryLook(look)}>
+                                    {_creationText("creation.89e906481e9ff575")}
+                                </Button>
+                                <Button
+                                    size="small"
+                                    icon={<Upload className="size-3.5" />}
+                                    disabled={busy || mediaBusy(look.imageStatus)}
+                                    onClick={() => {
+                                        uploadLookRef.current = look;
+                                        fileRef.current?.click();
+                                    }}
+                                >
+                                    {_creationText("creation.1ff0930980561d5a")}
+                                </Button>
+                                <Button
+                                    size="small"
+                                    icon={<Play className="size-3.5" />}
+                                    disabled={busy || mediaBusy(look.imageStatus) || character.imageStatus !== "ready" || !character.imageResourceId}
+                                    title={!character.imageResourceId ? _creationText("creation.1d6e01cd275f4db9") : undefined}
+                                    onClick={() => {
+                                        if (look.locked)
+                                            modal.confirm({
+                                                title: _creationText("creation.c153f16433fea828"),
+                                                content: _creationText("creation.dad6b867fe3b3bc2"),
+                                                okText: _creationText("creation.20f0e5c849ca56f4"),
+                                                cancelText: _creationText("common.cancel"),
+                                                onOk: () => generate.mutateAsync(look),
+                                            });
+                                        else generate.mutate(look);
+                                    }}
+                                >
+                                    {look.imageResourceId ? _creationText("workbench.regenerate") : _creationText("creation.cf3b516f73cfe527")}
+                                </Button>
+                            </div>
                         </div>
                     ),
                 )}
@@ -128,6 +215,40 @@ export function CastLooks({ projectId, character, looks, restyle, onChanged }: {
                     </Button>
                 ) : null}
             </div>
+            <input
+                ref={fileRef}
+                type="file"
+                accept="image/*"
+                hidden
+                onChange={(event) => {
+                    const file = event.target.files?.[0];
+                    event.target.value = "";
+                    const look = uploadLookRef.current;
+                    if (!file || !look) return;
+                    if (!file.type.startsWith("image/") || file.size > 20 * 1024 * 1024) {
+                        message.error(_creationText("creation.b184df5bf195296f"));
+                        return;
+                    }
+                    modal.confirm({
+                        title: _creationText("creation.7519d42214a669d6", { value1: look.lookName }),
+                        content: _creationText("creation.6e873e54f20df07c"),
+                        okText: "确认保存",
+                        cancelText: _creationText("common.cancel"),
+                        onOk: () => upload.mutateAsync({ look, file }),
+                    });
+                }}
+            />
+            {libraryLook ? (
+                <CastLibraryPicker
+                    open
+                    cast={libraryLook}
+                    onClose={() => setLibraryLook(undefined)}
+                    onPick={async (resourceId) => {
+                        const result = await setDramaCastImage(projectId, libraryLook.id, resourceId, restyle);
+                        done(_creationText("creation.243287ec79c595b2"), result.affectedSegments);
+                    }}
+                />
+            ) : null}
         </div>
     );
 }

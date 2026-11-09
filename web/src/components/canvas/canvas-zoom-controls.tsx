@@ -52,7 +52,8 @@ export function CanvasZoomControls({ scale, onScaleChange, onFitContent, onAutoA
         // On the same row this bar has no surface and is shorter than the main toolbar, so align it to the toolbar's middle line.
         const measure = () => {
             const container = shell.offsetParent?.getBoundingClientRect();
-            const controls = root.getBoundingClientRect();
+            // Include the sibling node counter and follow toggle in the collision bounds.
+            const controls = shell.getBoundingClientRect();
             const bar = dock.getBoundingClientRect();
             if (!container || !bar.width || !bar.height) return;
             // The gap to these controls equals the row's own inset, so both sides of the main toolbar get the same space.
@@ -65,7 +66,7 @@ export function CanvasZoomControls({ scale, onScaleChange, onFitContent, onAutoA
             else toolbar.style.removeProperty(MAIN_TOOLBAR_SHIFT);
         };
         const resize = new ResizeObserver(measure);
-        for (const element of [root, main, toolbar, dock, ...main.querySelectorAll(".canvas-workspace-shell,.canvas-project-sidebar")]) resize.observe(element);
+        for (const element of [shell, main, toolbar, dock, ...main.querySelectorAll(".canvas-workspace-shell,.canvas-project-sidebar")]) resize.observe(element);
         const state = new MutationObserver(measure);
         state.observe(main, { attributes: true, attributeFilter: ["class"] });
         if (workspace) state.observe(workspace, { attributes: true, attributeFilter: ["data-agent-docked"] });

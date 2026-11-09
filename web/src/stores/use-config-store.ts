@@ -71,6 +71,7 @@ export type WorkflowGraphPreview = {
 export const PUBLIC_MODEL_CATALOG_ID = "managed";
 
 export type ModelChannel = {
+    mediaTransport?: import("@/lib/media-transport").ReferenceMediaTransport;
     id: string;
     name: string;
     sortOrder?: number;
@@ -117,6 +118,8 @@ export type ModelChannel = {
         defaultOptions?: Record<string, unknown>;
         availability?: PublicChannelModelAvailability;
         available?: boolean;
+        /** 仅视频模型：挂参考视频的请求是否另计费；用户侧据此标注“参考视频另计费 / 不计费”。 */
+        referenceVideoBilling?: boolean;
         /** 系统目录里的渠道模型行 ID 与路由键：后台按行 ID 保存配置，前台据此找回对应的可选模型。 */
         channelModelId?: string;
         channelId?: string;

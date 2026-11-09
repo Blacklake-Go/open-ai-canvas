@@ -61,16 +61,10 @@ describe("三方登录药丸按钮与官网标准图标规范 (Pill-shaped Butto
         expect(btnSrc).toContain("group-hover:scale-110");
     });
 
-    test("共用登录与注册表单 实现分割线与三方登录联动防悬空", () => {
-        const loginSrc = readFileSync(resolve(webRoot, "src/components/auth/auth-login-form.tsx"), "utf-8");
-        const regSrc = readFileSync(resolve(webRoot, "src/components/auth/auth-register-form.tsx"), "utf-8");
-
-        // login.tsx 必须受控于 hasSocialProviders 状态
-        expect(loginSrc).toContain("hasSocialProviders");
-        expect(loginSrc).toContain("onProvidersChange={(providers) => setHasSocialProviders(providers.length > 0)}");
-
-        // register.tsx 必须受控于 hasSocialProviders 状态
-        expect(regSrc).toContain("hasSocialProviders");
-        expect(regSrc).toContain("onProvidersChange={(providers) => setHasSocialProviders(providers.length > 0)}");
+    test("统一登录注册表单按可用渠道显示社交登录并传递真实协议状态", () => {
+        const source = readFileSync(resolve(webRoot, "src/components/auth/auth-login-form.tsx"), "utf-8");
+        expect(source).toContain("!pending && hasSocialProviders");
+        expect(source).toContain("onProvidersChange={(providers) => setHasSocialProviders(providers.length > 0)}");
+        expect(source).toContain("acceptedTerms={agreementAccepted}");
     });
 });

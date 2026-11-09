@@ -3,18 +3,18 @@
   "upstreamRepository": "https://github.com/ddcat-ai/open-ai-canvas",
   "forkRepository": "https://github.com/Blacklake-Go/open-ai-canvas",
   "upstreamBaseline": {
-    "tag": "v1.8.0",
-    "releaseTag": "v1.8.0",
-    "releaseCommit": "2fe3ca13c27e46a786af6597938a0e5328df6723",
-    "commit": "2fe3ca13c27e46a786af6597938a0e5328df6723",
-    "schemaVersion": 87
+    "tag": "v1.8.3",
+    "releaseTag": "v1.8.3",
+    "releaseCommit": "ee6c0ee201b8b711aee0554280e169c0115dc144",
+    "commit": "ee6c0ee201b8b711aee0554280e169c0115dc144",
+    "schemaVersion": 92
   },
   "integrationRelease": {
-    "schemaVersion": 88,
-    "version": "v1.8.0-supdance.2",
-    "baseCommit": "c7a322b253bc228db0f978ad2335140bb816b45f",
-    "sourceBranch": "codex/site-closure-v180-20261106",
-    "deploymentEvidence": "docs/supdance/UPSTREAM_V1_8_SOURCE_MERGE.md"
+    "schemaVersion": 93,
+    "version": "v1.8.3-supdance.1",
+    "baseCommit": "c318a9cf44c6740a3a3c72c774011f971a35273c",
+    "sourceBranch": "integration/upstream-v1.8.3",
+    "deploymentEvidence": "docs/supdance/UPSTREAM_V1_8_3_SOURCE_MERGE.md"
   },
   "supdanceRelease": {
     "tag": "supdance/v2026.10.28.2",
@@ -208,7 +208,6 @@
     "web/src/stores/canvas/use-canvas-theme-store.ts",
     "web/src/stores/use-plugin-store.ts",
     "web/src/components/auth/auth-login-form.tsx",
-    "web/src/components/auth/auth-register-form.tsx",
     "web/src/lib/workspace-page-title.ts",
     "web/src/pages/projects/studio/asset-transfer.tsx",
     "web/src/pages/projects/studio/episode-delete-modal.tsx"

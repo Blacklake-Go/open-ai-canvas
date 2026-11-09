@@ -4,7 +4,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { useMutation } from "@tanstack/react-query";
 import { App, Button, Dropdown } from "antd";
 import { ArrowLeft, Brush, CheckCheck, Clapperboard, FileDown, FileUp, Film, Inbox, Package, Pause, Pencil, Play, ScrollText, Settings2, UsersRound } from "lucide-react";
-import { Link, useNavigate, useParams, useSearchParams } from "react-router";
+import { Link, Navigate, useNavigate, useParams, useSearchParams } from "react-router";
 
 import { WorkspacePage } from "@/components/layout/workspace-page";
 import { SegmentedControl } from "@/components/ui/base/segmented-control";
@@ -176,10 +176,11 @@ export default function DramaStudioPage() {
         onError: (error) => errorMessage(error, "保存失败"),
     });
     const saveReferences = useMutation({
-        mutationFn: ({ segment, castIds }: { segment: DramaSegment; castIds: string[] | null }) => updateDramaSegmentReferences(projectId, episodeId, segment.index, castIds),
-        onSuccess: (_, { castIds }) => {
-            invalidate(episodeId);
-            message.success(castIds ? _creationText("creation.31864034e3a22b8f") : _creationText("creation.8cba434805ad3291"));
+        mutationFn: ({ segment, patch }: { segment: DramaSegment; patch: Parameters<typeof updateDramaSegmentReferences>[3] }) => updateDramaSegmentReferences(projectId, episodeId, segment.index, patch),
+        onSuccess: async () => {
+            // 二级菜单支持连续添加；等服务端选择刷新后再允许下一次修改。
+            await invalidate(episodeId);
+            message.success(_creationText("creation.94931582a8baac9c"));
         },
         onError: (error) => errorMessage(error, "保存失败"),
     });
@@ -300,6 +301,8 @@ export default function DramaStudioPage() {
         if (job.episodeId) navigate({ pathname: `/projects/${projectId}/e/${job.episodeId}`, search: "" });
     };
 
+    // 直接打开草稿的制作台地址时回到创建页，草稿参数都在那里编辑。
+    if (summary?.production.hasDraftForm) return <Navigate to={`/projects/new?draft=${encodeURIComponent(summary.project.id)}`} replace />;
     if (summaryQuery.isLoading)
         return (
             <WorkspacePage>
@@ -717,7 +720,7 @@ export default function DramaStudioPage() {
                             onInsertShot={(shot, position) => insertShot.mutate({ shot, position })}
                             onDeleteShot={(shot) => removeShot.mutate(shot)}
                             onSavePrompt={(segment, override) => saveSegment.mutate({ segment, override })}
-                            onSaveReferences={(segment, castIds) => saveReferences.mutate({ segment, castIds })}
+                            onSaveReferences={(segment, patch) => saveReferences.mutateAsync({ segment, patch })}
                             onWritePrompt={(segment) => writeSegment.mutate([segment.index])}
                             onGenerate={(segment, videoModel) => generateSegments.mutate({ segments: [segment.index], videoModel })}
                             reprocessing={reprocessSegment.isPending}

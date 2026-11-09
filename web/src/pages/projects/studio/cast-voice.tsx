@@ -3,7 +3,7 @@ import { creationText as _creationText, useCreationLocale as _useCreationLocale 
 import { useEffect, useRef, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { App, Button, Select } from "antd";
-import { Mic, Pause, Play, Square, Upload, X } from "lucide-react";
+import { Mic, MicOff, Pause, Play, Square, Upload, X } from "lucide-react";
 
 import { useVoiceRecording } from "@/hooks/use-voice-recording";
 import { clearDramaCastVoice, setDramaCastVoice, type DramaCast } from "@/services/api/drama";
@@ -17,16 +17,22 @@ const AUDIO_ACCEPT = "audio/mpeg,audio/mp3,audio/wav,audio/x-wav,audio/mp4,audio
 
 /** 试听服务端的声音样本；换样本或卸载时停止播放。 */
 function useSamplePlayer(resourceId: string) {
+    const { message } = App.useApp();
     const audioRef = useRef<HTMLAudioElement | null>(null);
+    const requestRef = useRef(0);
     const [playing, setPlaying] = useState(false);
-    useEffect(() => () => audioRef.current?.pause(), []);
     useEffect(() => {
-        audioRef.current?.pause();
         setPlaying(false);
+        return () => {
+            requestRef.current++;
+            audioRef.current?.pause();
+            audioRef.current = null;
+        };
     }, [resourceId]);
     const toggle = async () => {
         if (!resourceId) return;
         const audio = audioRef.current || (audioRef.current = new Audio());
+        const version = ++requestRef.current;
         if (playing) {
             audio.pause();
             setPlaying(false);
@@ -34,14 +40,45 @@ function useSamplePlayer(resourceId: string) {
         }
         setPlaying(true);
         try {
-            audio.src = resolveResourceAccessURL((await getResourceAccess(resourceStorageKey(resourceId), "display", "playback")).url);
+            const access = await getResourceAccess(resourceStorageKey(resourceId), "display", "playback");
+            if (version !== requestRef.current) return;
+            audio.src = resolveResourceAccessURL(access.url);
             audio.onended = () => setPlaying(false);
+            audio.onerror = () => {
+                setPlaying(false);
+                message.error(_creationText("creation.5e721a7e6073307a"));
+            };
             await audio.play();
-        } catch {
+            if (version !== requestRef.current) audio.pause();
+        } catch (error) {
+            if (version !== requestRef.current) return;
             setPlaying(false);
+            message.error(error instanceof Error ? error.message : _creationText("creation.308bdcc1a7f1827d"));
         }
     };
     return { playing, toggle };
+}
+
+/** 卡片与参考面板共用声音状态和试听入口。 */
+export function CastVoicePreview({ resourceId, name }: { resourceId?: string; name: string }) {
+    const player = useSamplePlayer(resourceId || "");
+    return (
+        <button
+            type="button"
+            className="drama-voice-preview"
+            disabled={!resourceId}
+            aria-label={
+                resourceId ? _creationText("creation.de37d8817d25d1c1", { value1: player.playing ? _creationText("projects.pause") : _creationText("creation.7f0a0fda741c6220"), value2: name }) : _creationText("creation.080de6fd59f18343", { value1: name })
+            }
+            onClick={(event) => {
+                event.stopPropagation();
+                void player.toggle();
+            }}
+        >
+            {player.playing ? <Pause className="size-3.5" /> : resourceId ? <Play className="size-3.5" /> : <MicOff className="size-3.5" />}
+            {resourceId ? (player.playing ? _creationText("creation.879f568f3b36a9f9") : _creationText("creation.e14f78a1604c6cc8")) : _creationText("creation.32040fae72c0e09a")}
+        </button>
+    );
 }
 
 /**

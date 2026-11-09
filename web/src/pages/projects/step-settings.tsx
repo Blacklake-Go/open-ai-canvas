@@ -1,11 +1,12 @@
 import { creationLabel as _creationLabel } from "@/supdance/plugins/i18n/creation-text";
 import { creationText as _creationText, useCreationLocale as _useCreationLocale } from "@/supdance/plugins/i18n/creation-text";
-import { Button } from "antd";
+import { Button, Select } from "antd";
 import { TriangleAlert } from "lucide-react";
 
 import { dramaChoiceKey, dramaVideoResolutionIssue } from "@/lib/drama/model-choice";
 import { formatVideoResolutionLabel, videoResolutionComparisonKey } from "@/lib/video-generation-options";
-import type { DramaAssetSettings, DramaCastKind, DramaModelChoice, DramaModelOption, DramaModelOverride, DramaModels, DramaSkillRef } from "@/services/api/drama";
+import type { DramaAssetSettings, DramaCastKind, DramaModelChoice, DramaModelOption, DramaModelOverride, DramaModels, DramaSkillRef, DramaTextThinking } from "@/services/api/drama";
+import { THINKING_REQUEST_OPTIONS, type ThinkingRequest } from "@/lib/text-thinking";
 
 import { DramaModelPicker, useDramaModelCatalog } from "./drama-model-picker";
 import { PromptSkillField, type DramaSkillStep } from "./prompt-skill";
@@ -26,6 +27,7 @@ const IMAGE_KINDS: Array<{ kind: DramaCastKind; override: DramaModelOverride; re
 ];
 
 export type DramaStepSkills = { bible?: DramaSkillRef; script?: DramaSkillRef; prompt?: DramaSkillRef };
+type DramaTextStep = keyof NonNullable<DramaTextThinking>;
 
 const SKILL_FIELD: Record<DramaSkillStep, keyof DramaStepSkills> = { bible: "bible", script: "script", prompt: "prompt" };
 
@@ -59,15 +61,40 @@ export function DramaTextSteps({
     onModelsChange,
     skills,
     onSkillChange,
+    textThinking,
+    onThinkingChange,
 }: {
     models?: Partial<DramaModels>;
     onModelsChange: (patch: Partial<DramaModels>) => void;
     skills: DramaStepSkills;
     onSkillChange: (step: DramaSkillStep, value?: DramaSkillRef) => void;
+    textThinking: DramaTextThinking;
+    onThinkingChange: (step: DramaTextStep, value: ThinkingRequest) => void;
 }) {
     _useCreationLocale();
     return (
         <div className="drama-steps" role="list" aria-label={_creationText("creation.f074a508d31551f1")}>
+            <div className="drama-step-row" role="listitem">
+                <div className="drama-step-label">
+                    <strong>{_creationText("creation.ea9cc0590e2b3b82")}</strong>
+                    <small>{_creationText("creation.820f28522f34d271")}</small>
+                </div>
+                <div className="drama-step-field">
+                    <span className="drama-step-caption">{_creationText("creation.d027815844af8e27")}</span>
+                    <small className="drama-step-note">
+                        {_creationText("creation.03f1ed062a800e91")}
+                        {models?.text?.label ? ` · ${models.text.label}` : ""}
+                    </small>
+                </div>
+                <div className="drama-step-field">
+                    <span className="drama-step-caption">{_creationText("nav.skills")}</span>
+                    <small className="drama-step-note">{_creationText("creation.9866388fd74ef110")}</small>
+                </div>
+                <div className="drama-step-field">
+                    <span className="drama-step-caption">{_creationText("creation.a431bcd0ae892523")}</span>
+                    <Select aria-label={_creationText("creation.2dc50a9b8d8508d9")} value={textThinking.plan || "auto"} options={THINKING_REQUEST_OPTIONS} onChange={(value) => onThinkingChange("plan", value)} />
+                </div>
+            </div>
             {TEXT_STEPS.map((item) => (
                 <div key={item.step} className="drama-step-row" role="listitem">
                     <div className="drama-step-label">
@@ -81,6 +108,10 @@ export function DramaTextSteps({
                     <div className="drama-step-field">
                         <span className="drama-step-caption">{_creationText("nav.skills")}</span>
                         <PromptSkillField compact step={item.step} value={skills[SKILL_FIELD[item.step]]} onChange={(value) => onSkillChange(item.step, value)} />
+                    </div>
+                    <div className="drama-step-field">
+                        <span className="drama-step-caption">{_creationText("creation.a431bcd0ae892523")}</span>
+                        <Select aria-label={_creationText("creation.2cca8acf81fc70be", { value1: item.label })} value={textThinking[item.step] || "auto"} options={THINKING_REQUEST_OPTIONS} onChange={(value) => onThinkingChange(item.step, value)} />
                     </div>
                 </div>
             ))}

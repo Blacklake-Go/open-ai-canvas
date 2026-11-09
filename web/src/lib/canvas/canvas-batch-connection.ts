@@ -164,6 +164,26 @@ export function batchConnectionRejectReason({
     return plan.skipped[0]?.reason || NO_BATCH_CONNECTION;
 }
 
+/**
+ * 把当前选择展开成批量连接源：选中的背板用其内部素材代替，背板本身不能作连接源。
+ * 保持选择顺序，背板子节点按画布顺序紧随其后，重复的节点只保留一次。
+ */
+export function expandBatchSourceNodeIds(selectedNodeIds: Iterable<string>, nodes: CanvasNodeData[]) {
+    const result: string[] = [];
+    const seen = new Set<string>();
+    const push = (node: CanvasNodeData | undefined) => {
+        if (!node || seen.has(node.id) || batchSourceRestriction(node)) return;
+        seen.add(node.id);
+        result.push(node.id);
+    };
+    for (const id of selectedNodeIds) {
+        const node = nodes.find((item) => item.id === id);
+        if (node?.type === CanvasNodeType.Frame) nodes.filter((item) => item.parentId === node.id).forEach(push);
+        else push(node);
+    }
+    return result;
+}
+
 export function batchSourceRestriction(node: CanvasNodeData) {
     if (node.type === CanvasNodeType.Frame) return "背板不能作为连接源";
     if (node.type === CanvasNodeType.Script) return "分镜脚本需要按行连接";

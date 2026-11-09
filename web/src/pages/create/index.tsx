@@ -15,6 +15,7 @@ import { getActiveUserScope } from "@/lib/user-scope";
 import { continueCreationConversationOnCanvas } from "@/services/creation-canvas-conversation";
 import { useAuthEntry } from "@/hooks/use-auth-entry";
 import { useExternalAssetSources } from "@/hooks/use-external-asset-sources";
+import { LEGACY_TEXT_THINKING_CONFIG, isThinkingLevel, resolveThinkingLevel, thinkingLevelsFor, type ThinkingLevel, type ThinkingRequest } from "@/lib/text-thinking";
 import { modelCapabilityConfigFor, normalizeImageValue, normalizeVideoValue, videoDurationAllowed, videoDurationOptions } from "@/lib/model-capabilities";
 import { inferVideoOperation, modelGroupReferenceLimits, resolveCompatibleModel, mergedImageCapabilityConfig, type ModelRequirements } from "@/lib/model-selection";
 import type { BackendGenerationResult } from "@/services/api/generation-task";
@@ -90,7 +91,25 @@ const loadCreationRuntime = () => import("./creation-runtime");
 type CreationRuntime = Awaited<ReturnType<typeof loadCreationRuntime>>;
 
 const TEXT_STREAMING_PREF_KEY = "creation.composer.text-streaming";
-const TEXT_THINKING_PREF_KEY = "creation.composer.text-thinking";
+// 思考档位按模型分别记住：{ [model]: level }。只存小型 UI 偏好。
+const TEXT_THINKING_LEVELS_PREF_KEY = "creation.composer.text-thinking-levels";
+
+function readThinkingLevelPrefs(): Record<string, ThinkingLevel> {
+    try {
+        const parsed = JSON.parse(window.localStorage.getItem(TEXT_THINKING_LEVELS_PREF_KEY) || "{}") as Record<string, unknown>;
+        return Object.fromEntries(Object.entries(parsed).filter((entry): entry is [string, ThinkingLevel] => isThinkingLevel(entry[1])));
+    } catch {
+        return {};
+    }
+}
+
+function writeThinkingLevelPrefs(value: Record<string, ThinkingLevel>) {
+    try {
+        window.localStorage.setItem(TEXT_THINKING_LEVELS_PREF_KEY, JSON.stringify(value));
+    } catch {
+        // 存储不可用：仅当前会话生效
+    }
+}
 
 function readComposerPref(key: string, fallback: boolean): boolean {
     try {
@@ -165,7 +184,7 @@ export default function CreatePage() {
     const [musicInstrumental, setMusicInstrumental] = useState(false);
     const [musicLyrics, setMusicLyrics] = useState("");
     const [textStreaming, setTextStreaming] = useState(() => readComposerPref(TEXT_STREAMING_PREF_KEY, true));
-    const [textThinking, setTextThinking] = useState(() => readComposerPref(TEXT_THINKING_PREF_KEY, false));
+    const [textThinkingPrefs, setTextThinkingPrefs] = useState(readThinkingLevelPrefs);
     const [busy, setBusy] = useState(false);
     const [referenceReplacementBusy, setReferenceReplacementBusy] = useState(false);
     const [historyOpen, setHistoryOpen] = useState(false);
@@ -232,6 +251,20 @@ export default function CreatePage() {
     const generationConfig = useMemo(() => (mode === "video" ? creationVideoConfig(config, selectedModel, { ratio, seconds, videoQuality }) : config), [config, mode, ratio, seconds, selectedModel, videoQuality]);
     const imageProfile = useMemo(() => modelCapabilityConfigFor(config, selectedModel).image!, [config, selectedModel]);
     const videoProfile = useMemo(() => modelCapabilityConfigFor(config, selectedModel).video!, [config, selectedModel]);
+    const textThinkingConfig = useMemo(() => (mode === "text" ? modelCapabilityConfigFor(config, selectedModel).text?.thinking || LEGACY_TEXT_THINKING_CONFIG : undefined), [config, mode, selectedModel]);
+    const textThinkingLevels = useMemo(() => thinkingLevelsFor(textThinkingConfig), [textThinkingConfig]);
+    // 记住的档位已不被模型支持时按后端同一规则就近取档；没记住时用模型默认值。
+    const textThinkingLevel = resolveThinkingLevel(textThinkingConfig, textThinkingPrefs[selectedModel] || "auto");
+    const textThinkingRequest = textThinkingPrefs[selectedModel] || "auto";
+    const setTextThinkingLevel = (level: ThinkingRequest) => {
+        setTextThinkingPrefs((current) => {
+            const next = { ...current };
+            if (isThinkingLevel(level)) next[selectedModel] = level;
+            else delete next[selectedModel];
+            writeThinkingLevelPrefs(next);
+            return next;
+        });
+    };
     // 同名逻辑模型可能把文生视频、图生视频和全模态参考拆到不同路由。
     // 入口需要展示整个模型组的引用能力，添加素材后再由兼容路由选择具体模型。
     const videoReferenceLimits = useMemo(() => (mode === "video" ? modelGroupReferenceLimits(config, preferredModel || selectedModel, "video") || { maxImages: 0, maxVideos: 0, maxAudios: 0 } : undefined), [config, mode, preferredModel, selectedModel]);
@@ -267,8 +300,7 @@ export default function CreatePage() {
 
     useEffect(() => {
         writeComposerPref(TEXT_STREAMING_PREF_KEY, textStreaming);
-        writeComposerPref(TEXT_THINKING_PREF_KEY, textThinking);
-    }, [textStreaming, textThinking]);
+    }, [textStreaming]);
     useEffect(() => {
         if (!composerPreferencesHydrated || composerPreferencesInitialized) return;
         const saved = useCreationPreferencesStore.getState().preferences;
@@ -458,7 +490,7 @@ export default function CreatePage() {
                                     runtime.applyGenerationConsumerEffect(item, effectKey, (current) => ({
                                         ...current,
                                         status: "done" as const,
-                                        content: current.mode === "video" ? "视频已生成" : "图片已生成",
+                                        content: current.mode === "video" ? t("create.status.videoGenerated") : t("create.status.imageGenerated"),
                                         error: undefined,
                                         errorKind: undefined,
                                         syncInterrupted: undefined,
@@ -648,7 +680,7 @@ export default function CreatePage() {
                     id: asset.id,
                     title: asset.title,
                     category: asset.category || "other",
-                    kindLabel: asset.kind === "video" ? "视频" : asset.kind === "audio" ? "音频" : "图片",
+                    kindLabel: asset.kind === "video" ? t("create.kind.video") : asset.kind === "audio" ? t("create.kind.audio") : t("create.kind.image"),
                     asset,
                     searchText: (asset.tags || []).join(" "),
                     disabledReason: creationLibraryDisabledReason(mode, asset.kind, videoReferenceLimits),
@@ -709,7 +741,7 @@ export default function CreatePage() {
         setAttachments((current) => {
             const candidates = [...current.filter((item) => !next.some((candidate) => candidate.id === item.id)), ...next];
             const reconciled = mode === "video" && videoReferenceLimits ? reconcileCreationAttachmentLimits(candidates, [], videoReferenceLimits) : reconcileCreationAttachmentLimit(candidates, [], maxReferences);
-            if (reconciled.attachments.length < candidates.length) toast.warning("部分素材超出当前模型的参考内容上限，未添加到创作中");
+            if (reconciled.attachments.length < candidates.length) toast.warning(t("create.page.referenceLimitExceeded"));
             return reconciled.attachments;
         });
         setLibraryOpen(false);
@@ -760,9 +792,9 @@ export default function CreatePage() {
     const replaceReferenceFromTrack = useCallback(
         (targetAttachmentId: string, replacement: CreationAttachment) => {
             try {
-                if (replaceAttachmentReference(targetAttachmentId, replacement)) toast.success("参考图已替换，槽位不变，提示词无需修改");
+                if (replaceAttachmentReference(targetAttachmentId, replacement)) toast.success(t("create.page.referenceReplaced"));
             } catch (error) {
-                toast.error(error instanceof Error ? error.message : "参考图替换失败");
+                toast.error(error instanceof Error ? error.message : t("create.page.replaceFailed"));
             }
         },
         [replaceAttachmentReference, toast],
@@ -773,17 +805,17 @@ export default function CreatePage() {
             if (busy || referenceReplacementBusy) return;
             const file = files.find((item) => item.type.startsWith("image/"));
             if (!file) {
-                toast.warning("请拖入图片文件进行替换");
+                toast.warning(t("create.page.dropImageToReplace"));
                 return;
             }
             setReferenceReplacementBusy(true);
             try {
                 const { asset, attachment } = await uploadCreationAsset(file);
-                if (creationAttachmentKind(attachment) !== "image") throw new Error("上传结果不是可用图片");
+                if (creationAttachmentKind(attachment) !== "image") throw new Error(t("create.page.uploadNotImage"));
                 if (asset) addAsset(asset);
-                if (replaceAttachmentReference(targetAttachmentId, attachment)) toast.success("参考图已替换，槽位不变，提示词无需修改");
+                if (replaceAttachmentReference(targetAttachmentId, attachment)) toast.success(t("create.page.referenceReplaced"));
             } catch (error) {
-                toast.error(error instanceof Error ? error.message : "参考图上传或替换失败");
+                toast.error(error instanceof Error ? error.message : t("create.page.uploadReplaceFailed"));
             } finally {
                 setReferenceReplacementBusy(false);
             }
@@ -985,12 +1017,12 @@ export default function CreatePage() {
                         metadata: { source: "create-page", conversationId: activeConversation.id, messageId: assistantMessage.id, ...referenceMetadata },
                         onTaskUpdate: bindTask,
                         streamText: textStreaming,
-                        enableThinking: textThinking,
+                        thinkingLevel: textThinkingRequest,
                         onTextDelta: textStreaming ? (value) => updateOriginAssistant((item) => ({ ...item, content: value })) : undefined,
                         ...retryContext,
                     }),
                 );
-                if (!result.text?.trim()) throw new Error("后端任务没有返回文本");
+                if (!result.text?.trim()) throw new Error(t("create.page.noTextResult"));
                 updateOriginAssistant((item) => ({ ...item, content: result.text || "", reasoning: result.reasoning }));
             } else if (mode === "image") {
                 const taskCount = Math.max(1, Math.min(imageProfile.maxOutputs, Math.floor(Number(count) || 1)));
@@ -1022,7 +1054,7 @@ export default function CreatePage() {
                 const taskFailures = settled.filter((entry): entry is PromiseRejectedResult => entry.status === "rejected");
                 const storedImages = await Promise.allSettled(
                     generatedTasks.map(async ({ result, taskId, batchIndex }) => {
-                        if (!taskId) throw new Error("生成任务缺少稳定任务标识");
+                        if (!taskId) throw new Error(t("create.page.missingTaskId"));
                         const task = completedCreationGenerationTask(runtime, {
                             taskId,
                             task: boundTasks.get(taskId),
@@ -1043,7 +1075,7 @@ export default function CreatePage() {
                                         runtime.applyGenerationConsumerEffect(item, effectKey, (current) => ({
                                             ...current,
                                             status: "done" as const,
-                                            content: "图片已生成",
+                                            content: t("create.status.imageGenerated"),
                                             ...(resultUrls.length ? { resultUrls: Array.from(new Set([...(current.resultUrls || []), ...resultUrls])) } : {}),
                                             ...(resultStorageKeys.length ? { resultStorageKeys: Array.from(new Set([...(current.resultStorageKeys || []), ...resultStorageKeys])) } : {}),
                                         })).value,
@@ -1052,7 +1084,7 @@ export default function CreatePage() {
                             { signal: requestLifecycle.signal },
                         );
                         const urls = runtime.generationTaskMaterializedUrls(materialized);
-                        if (!urls.length) throw new Error("图片结果资源不可用");
+                        if (!urls.length) throw new Error(t("create.page.imageResultUnavailable"));
                         return urls;
                     }),
                 );
@@ -1082,7 +1114,7 @@ export default function CreatePage() {
                         ...retryContext,
                     }),
                 );
-                if (!result.video?.dataUrl) throw new Error("后端任务没有返回视频");
+                if (!result.video?.dataUrl) throw new Error(t("create.page.noVideoResult"));
                 const taskId = Array.from(boundTaskIds)[0];
                 if (!taskId) throw new Error(t("create.page.missingTaskId"));
                 const task = completedCreationGenerationTask(runtime, { taskId, task: boundTasks.get(taskId), mode: "video", prompt: expandedPrompt, result, conversationId: activeConversation.id, messageId: assistantMessage.id });
@@ -1091,12 +1123,19 @@ export default function CreatePage() {
                     assistantMessage.id,
                     async ({ resultUrls, resultStorageKeys, effectKey }) => {
                         await updateOriginAssistant(
-                            (item) => runtime.applyGenerationConsumerEffect(item, effectKey, (current) => ({ ...current, status: "done" as const, content: "视频已生成", resultUrls, ...(resultStorageKeys.length ? { resultStorageKeys } : {}) })).value,
+                            (item) =>
+                                runtime.applyGenerationConsumerEffect(item, effectKey, (current) => ({
+                                    ...current,
+                                    status: "done" as const,
+                                    content: t("create.status.videoGenerated"),
+                                    resultUrls,
+                                    ...(resultStorageKeys.length ? { resultStorageKeys } : {}),
+                                })).value,
                         );
                     },
                     { signal: requestLifecycle.signal },
                 );
-                if (!runtime.generationTaskMaterializedUrls(materialized)[0]) throw new Error("视频结果资源不可用");
+                if (!runtime.generationTaskMaterializedUrls(materialized)[0]) throw new Error(t("create.page.videoResultUnavailable"));
             }
             updateOriginAssistant((item) => ({ ...item, status: "done" }));
         } catch (error) {
@@ -1173,7 +1212,7 @@ export default function CreatePage() {
                     const resultUrls = item.resultUrls || [];
                     if (!resultStorageKeys.length && !resultUrls.length) return [];
                     const ids = creationResultAssetIds(assets, { messageId: item.id, taskIds: item.taskIds || [], resultUrls, resultStorageKeys });
-                    if (ids.length !== Math.max(resultStorageKeys.length, resultUrls.length)) throw new Error("部分生成素材还未保存完成，请稍后转入画布。");
+                    if (ids.length !== Math.max(resultStorageKeys.length, resultUrls.length)) throw new Error(t("create.page.handoffAssetsPending"));
                     return ids;
                 });
             const referenceKeys = new Set(source.messages.flatMap((item) => (item.attachments || []).map((attachment) => attachment.storageKey).filter(Boolean)));
@@ -1195,7 +1234,7 @@ export default function CreatePage() {
             }
             navigate(`/canvas/${result.id}?${params.toString()}`);
         } catch (cause) {
-            if (scope === getActiveUserScope()) toast.error(cause instanceof Error ? cause.message : "转入画布失败，原会话已保留");
+            if (scope === getActiveUserScope()) toast.error(cause instanceof Error ? cause.message : t("create.page.handoffFailed"));
         } finally {
             openingCanvasRef.current = false;
             setOpeningCanvas(false);
@@ -1436,8 +1475,10 @@ export default function CreatePage() {
         setCount: setComposerCount,
         textStreaming,
         setTextStreaming,
-        textThinking,
-        setTextThinking,
+        textThinkingLevels,
+        textThinkingLevel,
+        textThinkingRequest,
+        setTextThinkingLevel,
         promptOptimizerProvider,
         composerFocusRef,
         onPromptFocus: loadAddedSkills,

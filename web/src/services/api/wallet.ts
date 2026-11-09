@@ -71,6 +71,8 @@ export type ChannelModel = {
     priceVersion: number;
     /** 价格档售价单位；USD/CNY 下单时按用户分组兑换比例换算成积分。 */
     priceCurrency?: import("@/services/api/user-groups").PriceCurrency;
+    /** 仅视频模型：开启后挂参考视频的请求按价格档的带参考视频价格另计费。 */
+    referenceVideoBilling?: boolean;
     capabilityVersion?: number;
     capabilityConfig?: import("@/lib/model-capabilities").ModelCapabilityConfig;
     priceTiers: ChannelModelPriceTier[];
@@ -98,6 +100,9 @@ export type ChannelModelPriceTier = {
     /** 文本 Token 档的分时与上下文价格开关；关闭时规则保留但不参与计费。 */
     tokenPriceRulesEnabled?: boolean;
     tokenPriceRules?: TokenPriceRule[] | null;
+    /** 带参考视频价格：按秒档使用每秒价，视频 Token 档使用 Token 价；模型未开启参考视频计费时不生效。 */
+    referenceVideoUnitPriceMicrocredits?: number;
+    referenceVideoOutputTokenPriceMicrocredits?: number;
     priceConfigured: boolean;
     enabled: boolean;
     priceVersion: number;
@@ -135,6 +140,9 @@ export type CreditCostPricing = {
     outputTokenPriceMicrocredits: number;
     cachedTokenPriceMicrocredits: number;
     cacheWriteTokenPriceMicrocredits: number;
+    /** 带参考视频的成本价：按秒档为每秒成本，视频 Token 档为 Token 成本；模型未开启参考视频计费时不生效。 */
+    referenceVideoUnitPriceMicrocredits?: number;
+    referenceVideoOutputTokenPriceMicrocredits?: number;
 };
 
 export type TokenPriceBand = {
@@ -159,6 +167,7 @@ export type ChannelModelMutation = {
     protocol?: ChannelModel["protocol"];
     enabled?: boolean;
     priceCurrency?: ChannelModel["priceCurrency"];
+    referenceVideoBilling?: boolean;
     capabilityConfig?: ChannelModel["capabilityConfig"];
     priceTiers?: Array<Omit<ChannelModelPriceTier, "id" | "channelModelId" | "selectorKey" | "priceVersion" | "createdAt" | "updatedAt">>;
     billingMode?: ChannelModel["billingMode"];
@@ -195,6 +204,10 @@ export type RegistrationSetting = {
     agreementContent?: string;
     /** 旧服务端未返回时按弹窗处理。 */
     loginMode?: AuthLoginMode;
+    /** 注册必须填写邮箱。 */
+    emailRequired?: boolean;
+    /** 注册必须先通过验证码；关闭后邮箱按未验证保存，用户可在账号设置中验证。 */
+    emailVerificationRequired?: boolean;
     updatedBy?: string;
     createdAt?: string;
     updatedAt?: string;
@@ -336,7 +349,7 @@ export function getAdminRegistrationSetting() {
     return http.get<{ setting: RegistrationSetting }>("/admin/settings/registration");
 }
 
-export function updateAdminRegistrationSetting(input: { enabled: boolean; agreementTitle?: string; agreementContent?: string; loginMode?: AuthLoginMode } | boolean) {
+export function updateAdminRegistrationSetting(input: { enabled: boolean; agreementTitle?: string; agreementContent?: string; loginMode?: AuthLoginMode; emailRequired?: boolean; emailVerificationRequired?: boolean } | boolean) {
     const payload = typeof input === "boolean" ? { enabled: input } : input;
     return http.patch<{ setting: RegistrationSetting }>("/admin/settings/registration", payload);
 }
@@ -427,6 +440,21 @@ export type ChannelModelRepriceInput = {
 
 export function repriceAdminChannelModels(channelId: string, models: ChannelModelRepriceInput[]) {
     return http.post<{ updated: number }>(`/admin/channels/${encodeURIComponent(channelId)}/models/batch-reprice`, { models });
+}
+
+/** 跨渠道统一调价：所选模型可来自不同系统渠道，结构同单渠道调价。 */
+export function repriceAdminAllChannelModels(models: ChannelModelRepriceInput[]) {
+    return http.post<{ updated: number }>("/admin/channel-models/batch-reprice", { models });
+}
+
+/** 跨渠道批量切换调用协议：所选模型可来自不同系统渠道，规则同单渠道批量切换。 */
+export function updateAdminAllChannelModelsProtocol(modelIds: string[], protocol: string) {
+    return http.post<{ updated: number }>("/admin/channel-models/batch-protocol", { modelIds, protocol });
+}
+
+/** 批量切换同一系统渠道内模型的调用协议；能力配置和价格档保留，任一模型不兼容时整批拒绝。 */
+export function updateAdminChannelModelsProtocol(channelId: string, modelIds: string[], protocol: string) {
+    return http.post<{ updated: number }>(`/admin/channels/${encodeURIComponent(channelId)}/models/batch-protocol`, { modelIds, protocol });
 }
 
 export type AdminFinanceListParams = { keyword?: string; status?: string; validity?: string; page?: number; pageSize?: number };

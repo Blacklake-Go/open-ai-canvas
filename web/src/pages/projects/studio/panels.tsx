@@ -24,6 +24,7 @@ import {
     type DramaMediaMode,
     type DramaReviewMode,
     type DramaSummary,
+    type DramaTextThinking,
     type DramaVideoContinuity,
 } from "@/services/api/drama";
 
@@ -36,7 +37,7 @@ import { progressFillStyle } from "@/lib/progress-fill";
 import { uploadResourceFile } from "@/services/api/resources";
 import { DramaTakeList } from "./take-list";
 import { CastLibraryPicker } from "./cast-library-picker";
-import { CastVoiceField } from "./cast-voice";
+import { CastVoiceField, CastVoicePreview } from "./cast-voice";
 import { CastLooks } from "./cast-looks";
 
 // 制作台的三个整页视图：设定（角色 / 道具 / 场景）、待处理、制作设置。都在主区域内展示，不使用抽屉遮挡。
@@ -166,36 +167,43 @@ export function CastPanel({
                     ) : null}
                     <div className={`drama-cast-grid ${kindRatio.orientation}`}>
                         {list.map((item) => (
-                            <button key={item.id} type="button" className="drama-cast-card" aria-current={item.id === active?.id} onClick={() => onFocus(item.id)}>
-                                <div className="drama-cast-card-media" style={kindRatio.style}>
-                                    {item.imageResourceId ? <MediaThumb resourceId={item.imageResourceId} alt={item.name} loading={castImageLoading} failed={castImageFailed} /> : null}
-                                    {!item.imageResourceId || mediaBusy(item.imageStatus) || item.imageStatus === "failed" || item.imageStatus === "" ? (
-                                        <div className={`drama-shot-placeholder ${mediaBusy(item.imageStatus) ? "is-busy" : ""}`}>
-                                            {item.imageStatus === "failed" ? (
-                                                <span className="drama-cast-card-failed">
-                                                    <AlertCircle className="size-3.5" />
-                                                    {_creationText("music.status_failed")}
+                            <div key={item.id} className="drama-cast-card" aria-current={item.id === active?.id}>
+                                <button type="button" className="block w-full text-left" aria-label={_creationText("creation.93a2783e87f75289", { value1: item.name })} onClick={() => onFocus(item.id)}>
+                                    <div className="drama-cast-card-media" style={kindRatio.style}>
+                                        {item.imageResourceId ? <MediaThumb resourceId={item.imageResourceId} alt={item.name} loading={castImageLoading} failed={castImageFailed} /> : null}
+                                        {!item.imageResourceId || mediaBusy(item.imageStatus) || item.imageStatus === "failed" || item.imageStatus === "" ? (
+                                            <div className={`drama-shot-placeholder ${mediaBusy(item.imageStatus) ? "is-busy" : ""}`}>
+                                                {item.imageStatus === "failed" ? (
+                                                    <span className="drama-cast-card-failed">
+                                                        <AlertCircle className="size-3.5" />
+                                                        {_creationText("music.status_failed")}
+                                                    </span>
+                                                ) : item.imageResourceId ? (
+                                                    _creationText("creation.a0bacec44f47968a")
+                                                ) : (
+                                                    CAST_KIND_ICON[item.kind]
+                                                )}
+                                            </div>
+                                        ) : null}
+                                        {item.locked ? (
+                                            <span className="drama-shot-flags">
+                                                <span className="drama-flag is-lock">
+                                                    <Lock className="size-3" />
                                                 </span>
-                                            ) : item.imageResourceId ? (
-                                                _creationText("creation.a0bacec44f47968a")
-                                            ) : (
-                                                CAST_KIND_ICON[item.kind]
-                                            )}
-                                        </div>
-                                    ) : null}
-                                    {item.locked ? (
-                                        <span className="drama-shot-flags">
-                                            <span className="drama-flag is-lock">
-                                                <Lock className="size-3" />
                                             </span>
-                                        </span>
-                                    ) : null}
-                                </div>
-                                <div className="drama-cast-card-body">
-                                    <strong data-i18n-user-content>{item.name}</strong>
-                                    <span>{item.role || parseList(item.aliasesJson).join("、") || item.description || "—"}</span>
-                                </div>
-                            </button>
+                                        ) : null}
+                                    </div>
+                                    <div className="drama-cast-card-body">
+                                        <strong>{item.name}</strong>
+                                        <span>{item.role || parseList(item.aliasesJson).join("、") || item.description || "—"}</span>
+                                    </div>
+                                </button>
+                                {item.kind === "character" ? (
+                                    <div className="px-2 pb-2">
+                                        <CastVoicePreview resourceId={item.voiceSampleResourceId} name={item.name} />
+                                    </div>
+                                ) : null}
+                            </div>
                         ))}
                     </div>
                     {!list.length ? (
@@ -742,12 +750,14 @@ export function SettingsPanel({ projectId, summary, cast, onChanged }: { project
                                 />
                             </section>
                             <section className="drama-cfg-card">
-                                <SettingsTitle title={_creationText("creation.f074a508d31551f1")} detail={_creationText("creation.489d45728bd1d958")} icon={<ScrollText className="size-4" />} />
+                                <SettingsTitle title={_creationText("creation.f074a508d31551f1")} detail={_creationText("creation.53479b16e74ae0f0")} icon={<ScrollText className="size-4" />} />
                                 <DramaTextSteps
                                     models={settings.models}
                                     onModelsChange={setModels}
                                     skills={{ bible: settings.bibleSkill, script: settings.scriptSkill, prompt: settings.promptSkill }}
                                     onSkillChange={(step, value) => setSettings({ ...settings, [step === "bible" ? "bibleSkill" : step === "script" ? "scriptSkill" : "promptSkill"]: value })}
+                                    textThinking={settings.textThinking || {}}
+                                    onThinkingChange={(step, level) => setSettings({ ...settings, textThinking: { ...settings.textThinking, [step]: level === "auto" ? undefined : level } as DramaTextThinking })}
                                 />
                             </section>
                             <section className="drama-cfg-card">

@@ -27,7 +27,18 @@ func TestSupDanceAppliedSchema83SurvivesUpstreamUpgrade(t *testing.T) {
 	if preserved.Name != legacy.Name || preserved.Checksum != legacy.Checksum || !preserved.AppliedAt.Equal(legacy.AppliedAt) {
 		t.Fatalf("applied schema 83 was rewritten: %#v", preserved)
 	}
-	for version, name := range map[int64]string{84: "skill_admin_edits", 85: "token_price_rules", 86: "pose_library", 87: "ark_asset_groups", 88: "inspiration_feed"} {
+	for version, name := range map[int64]string{
+		84: "skill_admin_edits",
+		85: "token_price_rules",
+		86: "pose_library",
+		87: "ark_asset_groups",
+		88: "inspiration_feed",
+		89: "reference_video_billing",
+		90: "reference_video_cost_price",
+		91: "drama_draft_form",
+		92: "email_logs_and_notifications",
+		93: "drama_reference_controls",
+	} {
 		var record schemaMigration
 		if err := db.First(&record, "version = ?", version).Error; err != nil || record.Name != name {
 			t.Fatalf("upstream migration %s was not applied at %d: %#v, %v", name, version, record, err)

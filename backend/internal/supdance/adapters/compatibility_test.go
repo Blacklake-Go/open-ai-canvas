@@ -12,7 +12,7 @@ func TestSupDanceDomainAndAdapterIsolation(t *testing.T) {
 	if meta.Namespace != "supdance" {
 		t.Fatalf("unexpected namespace: %s", meta.Namespace)
 	}
-	if meta.UpstreamBaseline != "main@8de0a239" || meta.SchemaBaseline != 81 {
+	if meta.UpstreamBaseline != "v1.8.3@ee6c0ee2" || meta.SchemaBaseline != 93 {
 		t.Fatalf("unexpected baseline: %+v", meta)
 	}
 
@@ -40,11 +40,11 @@ func TestSupDanceDomainAndAdapterIsolation(t *testing.T) {
 		t.Fatal("expected rejection for unsupported apiVersion")
 	}
 
-	if err := adapters.VerifyBaselineSchema(81); err != nil {
-		t.Fatalf("expected valid schema baseline 81, got: %v", err)
+	if err := adapters.VerifyBaselineSchema(93); err != nil {
+		t.Fatalf("expected valid schema baseline 93, got: %v", err)
 	}
-	if err := adapters.VerifyBaselineSchema(78); err == nil {
-		t.Fatal("expected error for outdated schema version 78")
+	if err := adapters.VerifyBaselineSchema(88); err == nil {
+		t.Fatal("expected error for outdated schema version 88")
 	}
 
 	reg := adapters.NewRegistry()

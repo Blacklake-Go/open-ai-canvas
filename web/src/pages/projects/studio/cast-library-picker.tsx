@@ -52,7 +52,7 @@ function uploadedResourceId(uploaded: Awaited<ReturnType<typeof uploadImage>>) {
 }
 
 /** 从素材库挑一张图作为设定参考图；选中后与上传形象图一样直接替换并锁定。 */
-export function CastLibraryPicker({ open, cast, onClose, onPick }: { open: boolean; cast: DramaCast; onClose: () => void; onPick: (resourceId: string) => Promise<unknown> }) {
+export function CastLibraryPicker({ open, cast, onClose, onPick, segment = false }: { open: boolean; cast: Pick<DramaCast, "kind" | "name">; onClose: () => void; onPick: (resourceId: string, name: string) => Promise<unknown>; segment?: boolean }) {
     _useCreationLocale();
     const assets = useAssetStore((state) => state.assets);
     const externalAssetSources = useExternalAssetSources(open);
@@ -89,17 +89,17 @@ export function CastLibraryPicker({ open, cast, onClose, onPick }: { open: boole
             items={items}
             categoryLabels={{ ...CATEGORY_LABELS, ...externalAssetSources.categoryLabels }}
             folders={externalAssetSources.folders}
-            title={_creationText("creation.3aff084a218f70e4", { value1: cast.name, value2: CAST_KIND_LABEL[cast.kind] })}
-            eyebrow="短剧设定"
-            confirmLabel={() => "用作参考图并锁定"}
-            emptyDescription={character ? "先在素材库中添加图片或角色卡。" : "先在素材库中添加图片。"}
-            footerNote={externalAssetSources.error || "选中的图片会替换当前参考图并锁定，之后不会被重新生成覆盖"}
+            title={segment ? _creationText("creation.9c072411103f1079") : _creationText("creation.3aff084a218f70e4", { value1: cast.name, value2: CAST_KIND_LABEL[cast.kind] })}
+            eyebrow={_creationText("creation.f2af59c940606c08")}
+            confirmLabel={() => (segment ? _creationText("creation.f103167958526db8") : _creationText("creation.6c30024fbb77b48f"))}
+            emptyDescription={character ? _creationText("creation.2a249ba1b4406921") : _creationText("creation.5a7aa1419d9a6bf2")}
+            footerNote={externalAssetSources.error || (segment ? _creationText("creation.c5b3011f7d69c213") : _creationText("creation.b68c35bf109a88bb"))}
             onClose={onClose}
             onConfirm={async (ids, pickedItems) => {
                 const pool = new Map([...items, ...(pickedItems || [])].map((item) => [item.id, item]));
                 const item = ids[0] ? pool.get(ids[0]) : undefined;
-                if (!item) throw new Error("请选择一张图片");
-                await onPick(await pickedImageResourceId(item));
+                if (!item) throw new Error(_creationText("creation.7b40e0c4ce10d6c6"));
+                await onPick(await pickedImageResourceId(item), item.title);
                 onClose();
             }}
         />

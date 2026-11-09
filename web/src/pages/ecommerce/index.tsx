@@ -1756,6 +1756,9 @@ function EcommerceWorkspace({ scope }: { scope: string }) {
             }
             return assetId && (!selectedExportIds.size || selectedExportIds.has(image.id)) ? [{ image, assetId, index, resourceId }] : [];
         }) || [];
+    // 长图是一套连续画面：没勾选时只拼本轮作品，不混入之前几轮；勾选了就按勾选拼。
+    const roundImageIds = new Set(plan?.images.map((image) => image.id));
+    const longImageItems = selectedExportIds.size ? exportItems : exportItems.filter((item) => roundImageIds.has(item.image.id));
     const runExport = (kind: "zip" | "long") => {
         if (kind === "zip" && startEcommerceDownload(exportItems)) {
             setDownloadError("");
@@ -1763,7 +1766,7 @@ function EcommerceWorkspace({ scope }: { scope: string }) {
         }
         setBusy(true);
         setDownloadError("");
-        const action = kind === "zip" ? (exportItems.length === 1 ? downloadEcommerceImage(exportItems[0]) : exportEcommerceZip(draft.productName, exportItems)) : exportEcommerceLongImage(draft.productName, exportItems);
+        const action = kind === "zip" ? (exportItems.length === 1 ? downloadEcommerceImage(exportItems[0]) : exportEcommerceZip(draft.productName, exportItems)) : exportEcommerceLongImage(draft.productName, longImageItems);
         void action
             .then(downloadReady)
             .catch(downloadFailed)
@@ -2043,7 +2046,7 @@ function EcommerceWorkspace({ scope }: { scope: string }) {
                         <Button type="primary" icon={<ArrowDownToLine size={14} />} disabled={busy || !exportItems.length} onClick={() => runExport("zip")}>
                             {selectedExportIds.size ? _creationText("creation.818852550be7ef93", { value1: exportItems.length }) : _creationText("creation.4e44a4e1410b9729", { value1: exportItems.length })}
                         </Button>
-                        {exportItems.length > 1 ? (
+                        {longImageItems.length > 1 ? (
                             <Button disabled={busy} onClick={() => runExport("long")}>
                                 {_creationText("creation.94e775efbbbc67e5")}
                             </Button>

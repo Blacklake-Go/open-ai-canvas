@@ -7,8 +7,8 @@ import type { RouteObject } from "react-router";
 import type { PluginHostContext, PluginManifest, PluginManifestV2, RegisteredPlugin } from "@/lib/plugins/plugin-types";
 import { getRegisteredPlugin, registerPlugin, unregisterPlugin } from "@/lib/plugins/plugin-registry";
 
-export const SUPDANCE_HOST_VERSION = "1.8.0" as const;
-export const SUPDANCE_SCHEMA_BASELINE = 87 as const;
+export const SUPDANCE_HOST_VERSION = "1.8.3" as const;
+export const SUPDANCE_SCHEMA_BASELINE = 92 as const;
 
 export type UpstreamPatchRecord = {
     id: string;
@@ -559,8 +559,8 @@ export const SUPDANCE_UPSTREAM_PATCH_REGISTRY: readonly UpstreamPatchRecord[] = 
         id: "supdance-native-auth-social-entry",
         upstreamBaseline: "v1.7.3.7",
         feature: "上游共用登录面板保留 SupDance 社交登录与协议确认",
-        coupledUpstreamFiles: ["web/src/components/auth/auth-login-form.tsx", "web/src/components/auth/auth-register-form.tsx"],
-        files: ["web/src/components/auth/auth-login-form.tsx", "web/src/components/auth/auth-register-form.tsx"],
+        coupledUpstreamFiles: ["web/src/components/auth/auth-login-form.tsx"],
+        files: ["web/src/components/auth/auth-login-form.tsx"],
         reason: "社交登录挂载点随上游登录/注册共用面板迁移，注册继续要求协议同意，不复制旧登录流程。",
         upgradeRisk: "MEDIUM",
     },

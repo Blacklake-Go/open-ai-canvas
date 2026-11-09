@@ -3,7 +3,7 @@ import { consumeTaskTextStream, createTaskTextStreamParser } from "@/services/ap
 import { getActiveUserScope } from "@/lib/user-scope";
 
 export type AgentPermissionMode = "read_only" | "auto" | "request_approval";
-export type AgentReasoningMode = "off" | "auto" | "deep";
+export type AgentReasoningMode = import("@/lib/text-thinking").ThinkingRequest;
 export type AgentMediaSettings = {
     logicalModelId?: string;
     channelId?: string;
