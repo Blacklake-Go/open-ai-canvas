@@ -1,4 +1,9 @@
 # CHANGELOG
+## v1.8.3-supdance.3
+- 新增 `/mcp` 插件与扩展中心主页，支持 macOS、Linux、Windows、Node.js 与 Python CLI 快速接入，提供 Cursor / Claude Desktop MCP 配置一键复制。
+- 引入生态插件集市，收录官方 MCP Server、ComfyUI 桥接、即梦与 Seedance 影视动力学连接器、MusicGen 音乐岛与开源仓库入口。
+- 创作页灵感大厅支持在后台模型选择器中显隐控制，默认隐藏配合上线审核。
+
 ## v1.8.3-supdance.2
 - 修复个人资料三方账号绑定回跳，读回已绑定身份后确认成功。
 - 加固三方登录插件启停、解绑、入站票据、注册准入、邮箱验证及后台并发配置保存。前后端同步更新，数据库 Schema 保持 93。
