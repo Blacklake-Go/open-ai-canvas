@@ -23,13 +23,17 @@ description: 信封、错误码与 OpenAPI
 
 `GET /api/auth/social/providers` 仅返回当前区域已启用、配置有效且具备真实令牌交换适配的渠道；空结果为 `providers: []`。历史 Mock 凭据不构成有效配置，公开请求不能通过 `simulate_region` 切换准入区域。
 
-`GET /api/auth/social/:provider/start` 创建一次性 state，并设置 HttpOnly、Secure、SameSite=Lax 的浏览器绑定 Cookie。回调必须同时匹配 Cookie 与 state，X 使用 S256 PKCE。登录与绑定分别发起，绑定回调要求原发起用户仍处于登录状态。插件或渠道停用后不能继续授权。
+`GET /api/auth/social/:provider/start` 创建一次性 state，并设置 HttpOnly、Secure、SameSite=Lax 的浏览器绑定 Cookie。回调必须同时匹配 Cookie 与 state，X 使用 S256 PKCE。已有第三方账号登录时，签发会话前会在事务中再次核对原身份记录。
 
-新用户授权成功后仅签发短期入站票据，不创建账号或会话。`GET /api/auth/social/onboarding/profile?ticket=...` 与 `POST /api/auth/social/onboarding/complete` 同时要求对应入站 Cookie。完成请求包含 `ticketId`（现有 `ticket` 别名保留）、`username`、`displayName`、可选 `email`/`password` 和必填的 `acceptedTerms: true`。用户名为 3–30 位字母、数字、下划线或短横线。校验失败可重试；成功建号后票据不可重放。手填邮箱保持未验证状态，服务商明确已验证的邮箱才可自动绑定。
+`GET /api/auth/social/:provider/bind?next=...` 记录发起会话和站内返回路径。回调须沿用原会话，身份写入后返回 `bind_success`。授权取消、会话变化或绑定失败返回 `bind_error`。前端读取 `GET /api/auth/social/identities` 确认写入结果。`GET /api/auth/social/:provider/reauth` 核验当前账号已绑定的同一身份，写入原会话的五分钟复验状态，供无密码用户设置密码或验证、更换邮箱。`POST /api/auth/social/:provider/unbind` 在确认剩余可用登录凭据后执行，成功的 `data` 为 `null`。
 
-后台 `/api/admin/social-auth/operations/*` 要求管理员权限。查询及日志始终返回数组，空结果不返回 `null`。新用户准入与邮箱必填策略在后端执行；防孤立解绑保护固定开启，注册奖励使用宿主统一积分策略。渠道探测仅检查固定授权端点可达，不发送 Client Secret，不生成账号，也不代表真实授权通过。
+新用户授权成功后重定向到 `/?onboarding=1`，30 分钟入站票据仅保存在 `__Host-supdance-social-onboarding` Cookie。`GET /api/auth/social/onboarding/profile`、`POST /api/auth/social/onboarding/email-code` 和 `POST /api/auth/social/onboarding/complete` 均从该 Cookie 读取票据。新用户继续入站须通过插件、渠道、宿主注册开关与验证策略。服务商已验证的邮箱可自动绑定，手填邮箱须先请求邮件验证码。完成请求包含 `username`、`displayName`、可选 `email`、`emailTicket`、`emailCode`、`password` 和 `acceptedTerms: true`。用户名为 3–30 位字母、数字、下划线或短横线。提交成功返回 `{ user, next }`，会话凭据通过 HttpOnly Cookie 下发。
 
-当前入站票据保存在单后端进程内，重启会过期；多副本部署前须改为共享存储。
+完成表单校验后，服务端原子消费入站票据，再创建账号或签发会话。共享 Redis 领取失败会中止写入，单进程内存存储用于未配置 Redis 的本地实例。票据已消费后若账号或会话写入失败，需要重新授权。升级前已经打开的入站表单需要重新发起授权。
+
+后台 `/api/admin/social-auth/operations/*` 要求管理员权限。渠道设置及运营策略读接口返回 `revision`，写入携带原版本，配置已变化时返回 HTTP 409。保存过程中也会校验数据库快照。防孤立解绑保护固定开启，注册奖励使用宿主统一积分策略。渠道探测仅检查固定授权端点可达。保留的系统应用 ID 拒绝同名包安装，卸载历史同名包会保留系统应用开关。
+
+已有第三方身份的账号须使用已验证邮箱找回密码。遗留未验证邮箱可通过已登录的个人资料重新核验。
 
 Bilibili 授权使用当前网页入口及 `gourl` 回调参数，令牌交换遵循服务商的 URL 参数 POST 合同；请求 URL 含凭据，不记录到日志。用户资料请求执行 2.0 版本 HMAC-SHA256 签名，并要求已获得 USER_INFO 权限。缺少权限、身份或服务商返回错误时拒绝登录。首次保存 Bilibili 凭据保持停用，管理员需另行启用。
 

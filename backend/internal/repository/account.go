@@ -30,6 +30,14 @@ func lockProfileUser(tx *gorm.DB, userID string) error {
 // Serialize session issuance with credential changes so a login validated
 // before revocation cannot insert an authenticated session afterwards.
 func (r *Repository) CreateAuthSessionForUser(expected *model.User, session *model.AuthSession, events ...*model.LoginLog) error {
+	return r.createAuthSessionForUser(expected, nil, session, events)
+}
+
+func (r *Repository) CreateAuthSessionForOAuthIdentity(expected *model.User, identity *model.UserIdentity, session *model.AuthSession, event *model.LoginLog) error {
+	return r.createAuthSessionForUser(expected, identity, session, []*model.LoginLog{event})
+}
+
+func (r *Repository) createAuthSessionForUser(expected *model.User, identity *model.UserIdentity, session *model.AuthSession, events []*model.LoginLog) error {
 	return r.db.Transaction(func(tx *gorm.DB) error {
 		if session.UserID != expected.ID {
 			return ErrProfileAuthorization
@@ -44,8 +52,23 @@ func (r *Repository) CreateAuthSessionForUser(expected *model.User, session *mod
 		if current.Status != model.UserStatusActive || current.PasswordHash != expected.PasswordHash || current.Email != expected.Email {
 			return ErrProfileAuthorization
 		}
+		if identity != nil {
+			var count int64
+			if err := tx.Model(&model.UserIdentity{}).Where("id = ? AND user_id = ? AND provider = ? AND subject = ?", identity.ID, current.ID, identity.Provider, identity.Subject).Count(&count).Error; err != nil {
+				return err
+			}
+			if count != 1 {
+				return ErrProfileAuthorization
+			}
+		}
 		if err := tx.Create(session).Error; err != nil {
 			return err
+		}
+		if identity != nil && expected.LastLoginAt != nil {
+			if err := tx.Model(&model.User{}).Where("id = ? AND (last_login_at IS NULL OR last_login_at < ?)", current.ID, expected.LastLoginAt).
+				UpdateColumn("last_login_at", expected.LastLoginAt).Error; err != nil {
+				return err
+			}
 		}
 		for _, event := range events {
 			if event.UserID == nil || *event.UserID != expected.ID || event.Event != "login" || event.Result != "success" {
@@ -136,6 +159,10 @@ func (r *Repository) ChangeProfileEmail(expected *model.User, session *model.Aut
 }
 
 func (r *Repository) ReauthenticateLinuxDOSession(expected *model.User, session *model.AuthSession, subject string, now time.Time) error {
+	return r.ReauthenticateOAuthSession(expected, session, "linuxdo", subject, now)
+}
+
+func (r *Repository) ReauthenticateOAuthSession(expected *model.User, session *model.AuthSession, provider, subject string, now time.Time) error {
 	return r.db.Transaction(func(tx *gorm.DB) error {
 		if err := lockProfileUser(tx, expected.ID); err != nil {
 			return err
@@ -144,7 +171,7 @@ func (r *Repository) ReauthenticateLinuxDOSession(expected *model.User, session 
 			return err
 		}
 		var count int64
-		if err := tx.Model(&model.UserIdentity{}).Where("provider = ? AND subject = ? AND user_id = ?", "linuxdo", subject, expected.ID).Count(&count).Error; err != nil {
+		if err := tx.Model(&model.UserIdentity{}).Where("provider = ? AND subject = ? AND user_id = ?", provider, subject, expected.ID).Count(&count).Error; err != nil {
 			return err
 		}
 		if count != 1 {

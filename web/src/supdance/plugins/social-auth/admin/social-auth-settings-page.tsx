@@ -105,6 +105,7 @@ export default function SocialAuthSettingsPage() {
 
     // Instant toggle Switch handler
     const handleToggleEnable = async (provider: SocialAuthProviderAdmin, checked: boolean) => {
+        if (!data) return;
         if (!provider.hasCredentials && checked) {
             message.warning("请先配置密钥后再启用该渠道");
             return;
@@ -113,10 +114,13 @@ export default function SocialAuthSettingsPage() {
         setTogglingProviderId(provider.id);
         try {
             const res = await updateAdminSocialAuthSettings({
+                revision: data.revision,
                 providers: {
                     [provider.id]: {
                         enabled: checked,
                         customRedirectUrl: provider.customRedirectUrl,
+                        iconLightUrl: provider.iconLightUrl,
+                        iconDarkUrl: provider.iconDarkUrl,
                     },
                 },
             });
@@ -131,8 +135,10 @@ export default function SocialAuthSettingsPage() {
     };
 
     const handleFallbackRegionChange = async (value: SocialAuthRegion) => {
+        if (!data) return;
         try {
             const res = await updateAdminSocialAuthSettings({
+                revision: data.revision,
                 defaultFallbackRegion: value,
                 providers: {},
             });
@@ -338,9 +344,10 @@ export default function SocialAuthSettingsPage() {
                 </div>
 
                 {/* Credential Modal */}
-                {credentialProvider && modalDraft ? (
+                {data && credentialProvider && modalDraft ? (
                     <ProviderCredentialModal
                         provider={credentialProvider}
+                        revision={data.revision}
                         draft={modalDraft}
                         onDraftChange={(patch) => setModalDraft((prev) => (prev ? { ...prev, ...patch } : prev))}
                         onClose={() => {
@@ -352,7 +359,7 @@ export default function SocialAuthSettingsPage() {
                     />
                 ) : null}
 
-                {iconProvider ? <ProviderIconModal provider={iconProvider} onClose={() => setIconProviderId(null)} onSaved={({ view }) => handleIconSaved(view)} /> : null}
+                {data && iconProvider ? <ProviderIconModal provider={iconProvider} revision={data.revision} onClose={() => setIconProviderId(null)} onSaved={({ view }) => handleIconSaved(view)} /> : null}
             </div>
         </AdminPageFrame>
     );

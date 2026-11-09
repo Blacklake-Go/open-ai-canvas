@@ -1,7 +1,6 @@
 package socialauth
 
 import (
-	"net/http/httptest"
 	"testing"
 	"time"
 
@@ -11,6 +10,7 @@ import (
 func TestSocialAuthOnboardingAndAutoEmailBinding(t *testing.T) {
 	repo := newTestRepo(t)
 	svc := NewService(repo, &testHost{})
+	seedChannel(t, svc, ProviderGoogle, "client_id", "client_secret", false)
 
 	// 1. Manually mint an OnboardingTicket simulating Google OAuth returning an email
 	ticketID := "onboard_" + RandomToken()
@@ -47,7 +47,7 @@ func TestSocialAuthOnboardingAndAutoEmailBinding(t *testing.T) {
 		Email:       "dancer@gmail.com",
 		Password:    "SecurePass123!",
 	}
-	user, session, err := svc.CompleteOnboarding(completeReq)
+	user, identity, err := svc.CompleteOnboarding(completeReq)
 	if err != nil {
 		t.Fatalf("CompleteOnboarding failed: %v", err)
 	}
@@ -63,8 +63,8 @@ func TestSocialAuthOnboardingAndAutoEmailBinding(t *testing.T) {
 	if user.PasswordHash == "" {
 		t.Fatalf("expected PasswordHash to be set")
 	}
-	if session == nil || session.TokenHash == "" {
-		t.Fatalf("expected valid auth session")
+	if identity == nil || identity.UserID != user.ID || identity.Provider != ProviderGoogle {
+		t.Fatalf("expected a persisted login identity")
 	}
 
 	// 4. Ticket must be consumed (single-use)
@@ -136,7 +136,11 @@ func TestSocialAuthIdentitiesAndUnbindSafetyGuard(t *testing.T) {
 		t.Fatalf("UpsertUserIdentity failed: %v", err)
 	}
 
-	// 5. Now user has 2 identities: unbinding WeChat must succeed!
+	if err := svc.Unbind(user, ProviderWeChat); err == nil {
+		t.Fatal("a disabled alternative must not permit unbinding the only usable identity")
+	}
+	seedChannel(t, svc, ProviderGoogle, "client_id", "client_secret", false)
+	// The remaining identity is now usable.
 	if err := svc.Unbind(user, ProviderWeChat); err != nil {
 		t.Fatalf("expected unbind to succeed with 2 identities: %v", err)
 	}
@@ -171,9 +175,8 @@ func TestBeginBindGeneratesCorrectState(t *testing.T) {
 		t.Fatalf("SaveSettings failed: %v", err)
 	}
 
-	user := &model.User{ID: "user_dancer_99"}
-	req := httptest.NewRequest("GET", "https://www.supdance.com/", nil)
-	bindURL, err := svc.BeginBind(req, user, ProviderGoogle)
+	session := &model.AuthSession{ID: "session_dancer_99", UserID: "user_dancer_99"}
+	bindURL, err := svc.BeginBind(session, ProviderGoogle, "", false)
 	if err != nil {
 		t.Fatalf("BeginBind failed: %v", err)
 	}
@@ -185,6 +188,7 @@ func TestBeginBindGeneratesCorrectState(t *testing.T) {
 func TestSocialAuthOnboardingTicketSharedAcrossServiceInstances(t *testing.T) {
 	repo := newTestRepo(t)
 	svc1 := NewService(repo, &testHost{})
+	seedChannel(t, svc1, ProviderGoogle, "client_id", "client_secret", false)
 
 	ticketID := "onboard_" + RandomToken()
 	ticket := &OnboardingTicket{

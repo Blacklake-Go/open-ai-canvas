@@ -57,6 +57,14 @@ func (s *Service) SendPasswordResetEmailCode(rawEmail string) error {
 		s.recordSkippedEmail(EmailPurposePasswordReset, user.ID, email, "账号未设置密码（第三方登录或验证码注册），请用原方式登录后在账号设置中设置密码")
 		return nil
 	}
+	eligible, err := s.repo.PasswordResetEmailEligible(user)
+	if err != nil {
+		return err
+	}
+	if !eligible {
+		s.recordSkippedEmail(EmailPurposePasswordReset, user.ID, email, "第三方登录账号的邮箱尚未验证")
+		return nil
+	}
 	if latest, latestErr := s.repo.LatestEmailVerificationCode(email, passwordResetEmailPurpose); latestErr == nil && time.Since(latest.CreatedAt) < time.Minute {
 		s.recordSkippedEmail(EmailPurposePasswordReset, user.ID, email, "60 秒内已发送过验证码，本次未重复发送")
 		return nil
@@ -121,7 +129,11 @@ func (s *Service) ResetPassword(req PasswordResetRequest) error {
 		}
 		return err
 	}
-	if user.Status != model.UserStatusActive || strings.TrimSpace(user.PasswordHash) == "" {
+	eligible, err := s.repo.PasswordResetEmailEligible(user)
+	if err != nil {
+		return err
+	}
+	if !eligible {
 		return invalidPasswordResetCode()
 	}
 	record, err := s.repo.LatestEmailVerificationCode(email, passwordResetEmailPurpose)

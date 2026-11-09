@@ -149,6 +149,17 @@ func (r *Repository) SaveSystemSetting(setting *model.SystemSetting) error {
 	return r.db.Save(setting).Error
 }
 
+func (r *Repository) SaveSystemSettingIfUnchanged(setting, previous *model.SystemSetting) (bool, error) {
+	if previous == nil {
+		result := r.db.Clauses(clause.OnConflict{DoNothing: true}).Create(setting)
+		return result.RowsAffected == 1, result.Error
+	}
+	result := r.db.Model(&model.SystemSetting{}).
+		Where("key = ? AND value_json = ?", setting.Key, previous.ValueJSON).
+		Updates(map[string]any{"value_json": setting.ValueJSON, "updated_by": setting.UpdatedBy, "updated_at": setting.UpdatedAt})
+	return result.RowsAffected == 1, result.Error
+}
+
 func (r *Repository) LockSystemSetting(key string, initialJSON string) error {
 	setting := model.SystemSetting{Key: key, ValueJSON: initialJSON, UpdatedAt: time.Now()}
 	if err := r.db.Clauses(clause.OnConflict{DoNothing: true}).Create(&setting).Error; err != nil {

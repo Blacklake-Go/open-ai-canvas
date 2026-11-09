@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"gorm.io/gorm"
+	"gorm.io/gorm/clause"
 	"yingce/backend/internal/model"
 )
 
@@ -174,8 +175,34 @@ func (r *Repository) CreateUserWithEmailVerification(user *model.User, verificat
 	})
 }
 
+func (r *Repository) PasswordResetEmailEligible(user *model.User) (bool, error) {
+	if user.Status != model.UserStatusActive || strings.TrimSpace(user.PasswordHash) == "" {
+		return false, nil
+	}
+	if user.EmailVerifiedAt != nil {
+		return true, nil
+	}
+	var count int64
+	err := r.db.Model(&model.UserIdentity{}).Where("user_id = ?", user.ID).Count(&count).Error
+	return count == 0, err
+}
+
 func (r *Repository) ResetUserPasswordWithEmailVerification(userID string, email string, purpose string, verificationCodeID string, passwordHash string, usedAt time.Time) error {
 	return r.db.Transaction(func(tx *gorm.DB) error {
+		if err := lockProfileUser(tx, userID); err != nil {
+			return err
+		}
+		var user model.User
+		if err := tx.Clauses(clause.Locking{Strength: "UPDATE"}).First(&user, "id = ?", userID).Error; err != nil {
+			return err
+		}
+		eligible, err := New(tx).PasswordResetEmailEligible(&user)
+		if err != nil {
+			return err
+		}
+		if !eligible {
+			return ErrEmailVerificationCodeInvalid
+		}
 		codeResult := tx.Model(&model.EmailVerificationCode{}).
 			Where("id = ? AND email = ? AND purpose = ? AND used_at IS NULL AND expires_at > ?", verificationCodeID, email, purpose, usedAt).
 			Update("used_at", usedAt)

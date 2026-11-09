@@ -43,6 +43,7 @@ describe("Social Auth UX & Onboarding Improvements", () => {
         "settings.social.qq_account_label",
         "settings.social.qq_privacy_note",
         "settings.social.bind_success",
+        "settings.social.bind_failed",
         "settings.social.unbind_confirm_title",
         "settings.preferences.theme_title",
         "settings.preferences.theme_desc",
@@ -106,7 +107,7 @@ describe("Social Auth UX & Onboarding Improvements", () => {
         expect(source).toContain('selectPluginEffectivelyEnabled("supdance-social-auth"');
         expect(source).toContain("function accountManagementItems(socialAuthEnabled: boolean)");
         expect(source).toContain('items.filter((item) => item.key !== "social")');
-        expect(source).toContain('currentTab === "social" && socialAuthPluginEnabled && <SocialAccountBindings />');
+        expect(source).toContain('currentTab === "social" && (socialAuthPluginEnabled || hasSocialReturn)');
     });
 
     it("blocks the identities read path on the backend when the plugin is disabled", () => {

@@ -27,20 +27,20 @@ import (
 type Repository interface {
 	SystemSetting(key string) (*model.SystemSetting, error)
 	SaveSystemSetting(setting *model.SystemSetting) error
+	SaveSystemSettingIfUnchanged(setting, previous *model.SystemSetting) (bool, error)
 	UserIdentity(provider string, subject string) (*model.UserIdentity, error)
 	UserIdentityForUser(userID string, provider string) (*model.UserIdentity, error)
 	UserIdentitiesForUser(userID string) ([]model.UserIdentity, error)
-	DeleteUserIdentity(userID string, provider string) error
-	UpsertUserIdentity(identity *model.UserIdentity) error
+	DeleteOAuthIdentitySafely(userID, provider string, usableProviders []string) error
+	UpdateOAuthIdentityProfile(identity *model.UserIdentity) error
+	BindOAuthIdentity(identity *model.UserIdentity, session *model.AuthSession) error
+	ReauthenticateOAuthSession(user *model.User, session *model.AuthSession, provider, subject string, now time.Time) error
 	CreateOAuthState(state *model.OAuthState) error
 	ConsumeOAuthState(provider string, stateHash string) (*model.OAuthState, error)
-	CreateOAuthUser(user *model.User, identity *model.UserIdentity) error
+	CreateOAuthUserWithVerification(user *model.User, identity *model.UserIdentity, verificationID string) error
 	User(id string) (*model.User, error)
 	UserByUsername(username string) (*model.User, error)
-	UserByEmail(email string) (*model.User, error)
 	CheckEmailAvailable(email string, excludeUserID string) error
-	UpdateUserLoginTime(userID string, t time.Time) error
-	Save(entity any) error
 	UserIdentitiesCountByProvider() (map[string]int64, error)
 	SocialLoginLogs(limit int) ([]model.LoginLog, error)
 	RecentSocialLoginLogs(since time.Time) ([]model.LoginLog, error)
@@ -54,40 +54,45 @@ type Host interface {
 	BrandName() string
 	RequireAdmin(actor *model.User) error
 	EnsureSignupBonus(userID string) error
+	Available() (bool, error)
+	SocialRegistrationEmailRequired() (bool, error)
+	ValidateOnboardingEmail(email string) error
+	VerifyOnboardingEmail(email, binding, ticket, code string) (string, error)
+	LinuxDOEnabled() bool
 }
 
 type Service struct {
-	repo      Repository
-	host      Host
-	ticketsMu sync.RWMutex
-	tickets   map[string]*OnboardingTicket
+	repo Repository
+	host Host
 }
 
 func NewService(repo Repository, host Host) *Service {
 	return &Service{
-		repo:    repo,
-		host:    host,
-		tickets: make(map[string]*OnboardingTicket),
+		repo: repo,
+		host: host,
 	}
 }
 
 // readRawSettings loads social auth settings from storage without decrypting secrets.
-func (s *Service) readRawSettings() (StoredSettings, error) {
+func (s *Service) readRawSettings() (StoredSettings, *model.SystemSetting, error) {
 	defaults := DefaultInitialSettings()
 	if s.repo == nil {
-		return defaults, nil
+		return defaults, nil, nil
 	}
 	setting, err := s.repo.SystemSetting(ConfigSettingKey)
-	if errors.Is(err, gorm.ErrRecordNotFound) || setting == nil || strings.TrimSpace(setting.ValueJSON) == "" {
-		return defaults, nil
+	if errors.Is(err, gorm.ErrRecordNotFound) {
+		return defaults, nil, nil
 	}
 	if err != nil {
-		return defaults, err
+		return defaults, nil, err
+	}
+	if setting == nil || strings.TrimSpace(setting.ValueJSON) == "" {
+		return defaults, setting, nil
 	}
 
 	var stored StoredSettings
 	if err := json.Unmarshal([]byte(setting.ValueJSON), &stored); err != nil {
-		return defaults, err
+		return defaults, nil, err
 	}
 	if stored.Providers == nil {
 		stored.Providers = make(map[string]ProviderConfig)
@@ -109,44 +114,77 @@ func (s *Service) readRawSettings() (StoredSettings, error) {
 	stored.Policies.OrphanAccountSafety = true
 	stored.UpdatedAt = setting.UpdatedAt
 	stored.UpdatedBy = setting.UpdatedBy
-	return stored, nil
+	return stored, setting, nil
 }
 
 // ReadSettings loads and decrypts social auth settings from storage.
 func (s *Service) ReadSettings() (StoredSettings, error) {
-	stored, err := s.readRawSettings()
+	stored, _, err := s.readRawSettings()
 	if err != nil {
 		return stored, err
 	}
 
-	// Decrypt secrets for administrative and callback flows
-	if s.host != nil {
-		for id, cfg := range stored.Providers {
-			if cfg.ClientSecret != "" {
-				decrypted, decErr := s.host.DecryptSecret(cfg.ClientSecret)
-				if decErr != nil {
-					cfg.ClientSecret = ""
-					cfg.Enabled = false
-					stored.Providers[id] = cfg
-					continue
-				}
-				cfg.ClientSecret = decrypted
-				stored.Providers[id] = cfg
-			}
-		}
+	for id, cfg := range stored.Providers {
+		stored.Providers[id] = s.decryptedProvider(cfg)
 	}
 	return stored, nil
 }
 
+func (s *Service) decryptedProvider(cfg ProviderConfig) ProviderConfig {
+	if cfg.ClientSecret != "" && s.host != nil {
+		secret, err := s.host.DecryptSecret(cfg.ClientSecret)
+		cfg.ClientSecret = secret
+		if err != nil {
+			cfg.ClientSecret = ""
+			cfg.Enabled = false
+		}
+	}
+	return cfg
+}
+
 // SaveSettings encrypts secrets and persists settings into SystemSetting.
 func (s *Service) SaveSettings(actor *model.User, next StoredSettings) error {
+	setting, err := s.encodeSettings(actor, next)
+	if err != nil {
+		return err
+	}
+	return s.repo.SaveSystemSetting(setting)
+}
+
+func (s *Service) saveSettingsIfUnchanged(actor *model.User, next StoredSettings, previous *model.SystemSetting) error {
+	setting, err := s.encodeSettings(actor, next)
+	if err != nil {
+		return err
+	}
+	saved, err := s.repo.SaveSystemSettingIfUnchanged(setting, previous)
+	if err != nil {
+		return err
+	}
+	if !saved {
+		return settingsConflict()
+	}
+	return nil
+}
+
+func settingsConflict() error {
+	return kernel.NewAppError(http.StatusConflict, "社交登录配置已更新，请刷新页面后重试")
+}
+
+func settingsRevision(setting *model.SystemSetting) string {
+	if setting == nil {
+		return HashToken("")
+	}
+	return HashToken(setting.ValueJSON)
+}
+
+func (s *Service) encodeSettings(actor *model.User, next StoredSettings) (*model.SystemSetting, error) {
 	if s.host != nil {
 		if err := s.host.RequireAdmin(actor); err != nil {
-			return err
+			return nil, err
 		}
 	}
 	if s.repo == nil {
-		return errors.New("repository not initialized")
+		return nil, errors.New("repository not initialized")
 	}
 
 	actorID := ""
@@ -171,7 +209,7 @@ func (s *Service) SaveSettings(actor *model.User, next StoredSettings) error {
 			} else {
 				encrypted, encErr := s.host.EncryptSecret(cfg.ClientSecret)
 				if encErr != nil {
-					return fmt.Errorf("加密 %s 密钥失败: %w", id, encErr)
+					return nil, fmt.Errorf("加密 %s 密钥失败: %w", id, encErr)
 				}
 				storedCfg.ClientSecret = encrypted
 			}
@@ -181,16 +219,15 @@ func (s *Service) SaveSettings(actor *model.User, next StoredSettings) error {
 
 	data, err := json.Marshal(toStore)
 	if err != nil {
-		return err
+		return nil, err
 	}
 	now := time.Now()
-	setting := &model.SystemSetting{
+	return &model.SystemSetting{
 		Key:       ConfigSettingKey,
 		ValueJSON: string(data),
 		UpdatedBy: actorID,
 		UpdatedAt: now,
-	}
-	return s.repo.SaveSystemSetting(setting)
+	}, nil
 }
 
 // GetAdminSettings produces the complete Admin Social Login Config Center view matching Figure 3.
@@ -200,7 +237,7 @@ func (s *Service) GetAdminSettings(r *http.Request, actor *model.User) (*AdminSe
 			return nil, err
 		}
 	}
-	settings, err := s.ReadSettings()
+	settings, previous, err := s.readRawSettings()
 	if err != nil {
 		return nil, err
 	}
@@ -215,7 +252,7 @@ func (s *Service) GetAdminSettings(r *http.Request, actor *model.User) (*AdminSe
 		if !ok {
 			continue
 		}
-		cfg := settings.Providers[id]
+		cfg := s.decryptedProvider(settings.Providers[id])
 
 		status := StatusUnconfigured
 		statusLabel := "未配置"
@@ -292,6 +329,7 @@ func (s *Service) GetAdminSettings(r *http.Request, actor *model.User) (*AdminSe
 	}
 
 	return &AdminSettingsView{
+		Revision:              settingsRevision(previous),
 		ClientIP:              ipLoc.ClientIP,
 		DetectedRegion:        ipLoc.Region,
 		DetectedRegionLabel:   ipLoc.RegionLabel,
@@ -309,9 +347,17 @@ func (s *Service) GetAdminSettings(r *http.Request, actor *model.User) (*AdminSe
 
 // UpdateAdminSettings updates provider configurations and partition settings.
 func (s *Service) UpdateAdminSettings(r *http.Request, actor *model.User, req UpdateSettingsRequest) (*AdminSettingsView, error) {
-	current, err := s.ReadSettings()
+	if s.host != nil {
+		if err := s.host.RequireAdmin(actor); err != nil {
+			return nil, err
+		}
+	}
+	current, previous, err := s.readRawSettings()
 	if err != nil {
 		return nil, err
+	}
+	if req.Revision != "" && req.Revision != settingsRevision(previous) {
+		return nil, settingsConflict()
 	}
 
 	if req.DefaultFallbackRegion == RegionCN || req.DefaultFallbackRegion == RegionIntl {
@@ -323,7 +369,7 @@ func (s *Service) UpdateAdminSettings(r *http.Request, actor *model.User, req Up
 			return nil, kernel.BadAuthRequest("未知社交登录渠道")
 		}
 		cfg := current.Providers[id]
-		previouslyReady := channelAdvertisable(id, cfg)
+		previouslyReady := channelAdvertisable(id, s.decryptedProvider(cfg))
 		if strings.TrimSpace(input.ClientID) != "" && !strings.Contains(input.ClientID, "*") && !providerClientIDValid(id, strings.TrimSpace(input.ClientID)) {
 			return nil, kernel.BadAuthRequest("QQ App ID 必须是开放平台提供的数字，不能使用邮箱或账号名")
 		}
@@ -337,7 +383,7 @@ func (s *Service) UpdateAdminSettings(r *http.Request, actor *model.User, req Up
 		if id == ProviderBilibili && !previouslyReady && (strings.TrimSpace(input.ClientID) != "" || strings.TrimSpace(input.ClientSecret) != "") {
 			input.Enabled = false
 		}
-		if input.Enabled && !channelAdvertisable(id, cfg) {
+		if input.Enabled && !channelAdvertisable(id, s.decryptedProvider(cfg)) {
 			return nil, kernel.BadAuthRequest(fmt.Sprintf("渠道 %s 尚未配置完整密钥，无法启用", id))
 		}
 		cfg.Enabled = input.Enabled
@@ -356,7 +402,7 @@ func (s *Service) UpdateAdminSettings(r *http.Request, actor *model.User, req Up
 		current.Providers[id] = cfg
 	}
 
-	if err := s.SaveSettings(actor, current); err != nil {
+	if err := s.saveSettingsIfUnchanged(actor, current, previous); err != nil {
 		return nil, err
 	}
 	return s.GetAdminSettings(r, actor)
@@ -484,7 +530,6 @@ func resolveCallbackURL(cfg ProviderConfig, meta ProviderMeta) string {
 }
 
 // GetPublicProviders returns public providers filtered by the caller's dynamic IP geo-partition.
-// It uses readRawSettings to completely eliminate AES secret decryption for public requests.
 func (s *Service) GetPublicProviders(r *http.Request) (*PublicProvidersResponse, error) {
 	settings, err := s.ReadSettings()
 	if err != nil {
@@ -623,183 +668,167 @@ func buildAuthorizeURL(providerID string, cfg ProviderConfig, callbackURL string
 	}
 }
 
-// SocialAuthCallbackResult contains user session and redirect target on success.
+// SocialAuthCallbackResult carries the verified identity to the host for session issuance.
 type SocialAuthCallbackResult struct {
-	Session          *model.AuthSession
 	User             *model.User
+	Identity         *model.UserIdentity
 	Next             string
-	IsNew            bool
 	OnboardingTicket string
 }
 
-// CompleteAuth processes the OAuth callback code, authenticates or creates user, and returns user session.
-func (s *Service) CompleteAuth(r *http.Request, providerID string, stateToken string, code string, currentUserID string) (*SocialAuthCallbackResult, error) {
-	if strings.TrimSpace(stateToken) == "" || strings.TrimSpace(code) == "" {
-		return nil, kernel.BadAuthRequest("社交登录回调缺少必要参数")
+// AccountAuthorizationError carries a return path from a consumed OAuth state.
+type AccountAuthorizationError struct {
+	Next string
+	Err  error
+}
+
+func (e *AccountAuthorizationError) Error() string { return e.Err.Error() }
+func (e *AccountAuthorizationError) Unwrap() error { return e.Err }
+
+func (s *Service) requireAvailable() error {
+	if s.host != nil {
+		available, err := s.host.Available()
+		if err != nil {
+			return err
+		}
+		if !available {
+			return kernel.Forbidden("第三方社交登录插件已被系统管理员停用")
+		}
+	}
+	return nil
+}
+
+func (s *Service) channelSettings(provider string) (StoredSettings, error) {
+	if err := s.requireAvailable(); err != nil {
+		return StoredSettings{}, err
+	}
+	settings, err := s.ReadSettings()
+	if err != nil {
+		return StoredSettings{}, err
+	}
+	cfg := settings.Providers[provider]
+	if !cfg.Enabled || !channelAdvertisable(provider, cfg) {
+		return StoredSettings{}, kernel.Forbidden("该第三方登录渠道已停用或未配置")
+	}
+	return settings, nil
+}
+
+func (s *Service) CompleteAuth(r *http.Request, providerID, stateToken, code string, session *model.AuthSession) (_ *SocialAuthCallbackResult, err error) {
+	if strings.TrimSpace(stateToken) == "" || s.repo == nil {
+		return nil, kernel.BadAuthRequest("社交登录回调缺少有效授权状态")
 	}
 	cookie, cookieErr := r.Cookie(OAuthBindingCookie)
 	if cookieErr != nil || subtle.ConstantTimeCompare([]byte(cookie.Value), []byte(HashToken(stateToken))) != 1 {
 		return nil, kernel.BadAuthRequest("授权浏览器不匹配，请从当前浏览器重新登录")
 	}
-
-	stateHash := HashToken(stateToken)
-	var state *model.OAuthState
-	var err error
-
-	if s.repo != nil {
-		state, err = s.repo.ConsumeOAuthState(providerID, stateHash)
-		if errors.Is(err, gorm.ErrRecordNotFound) || state == nil {
-			return nil, kernel.BadAuthRequest("登录授权状态已过期或已使用，请重新登录")
+	state, err := s.repo.ConsumeOAuthState(providerID, HashToken(stateToken))
+	if errors.Is(err, gorm.ErrRecordNotFound) {
+		return nil, kernel.BadAuthRequest("登录授权状态已过期或已使用，请重新登录")
+	}
+	if err != nil {
+		return nil, err
+	}
+	if state.ReauthUserID != "" {
+		defer func() {
+			if err != nil {
+				next := accountAuthorizationNext(state.NextPath, "bind_error", "1")
+				if strings.HasPrefix(state.NextPath, reauthPathPrefix) {
+					next = accountAuthorizationNext(state.NextPath, "reauth", "error")
+				}
+				err = &AccountAuthorizationError{Next: next, Err: err}
+			}
+		}()
+		if session == nil || session.UserID != state.ReauthUserID || session.ID != state.ReauthSessionID {
+			return nil, kernel.Forbidden("绑定账号的登录会话已变化，请重新发起授权")
 		}
-		if err != nil {
-			return nil, err
-		}
-	} else {
-		state = &model.OAuthState{NextPath: "/create"}
 	}
-
-	// Recheck lifecycle and credentials after the user returns from the provider.
-	var cfg ProviderConfig
-	if s.repo != nil {
-		settings, settingsErr := s.ReadSettings()
-		if settingsErr != nil {
-			return nil, settingsErr
-		}
-		cfg = settings.Providers[providerID]
+	if strings.TrimSpace(code) == "" {
+		return nil, kernel.BadAuthRequest("第三方未完成授权，请重试")
 	}
-	if !cfg.Enabled || !channelAdvertisable(providerID, cfg) {
-		return nil, kernel.Forbidden("该第三方登录渠道已停用或未配置")
+	settings, err := s.channelSettings(providerID)
+	if err != nil {
+		return nil, err
 	}
-	if time.Now().After(state.ExpiresAt) {
-		return nil, kernel.BadAuthRequest("登录授权状态已过期")
-	}
+	cfg := settings.Providers[providerID]
 	meta := ProviderRegistry[providerID]
 	profile, err := s.resolveUserProfile(r.Context(), providerID, code, state.CodeVerifier, cfg, resolveCallbackURL(cfg, meta))
 	if err != nil {
 		return nil, err
 	}
-
-	// Determine if this is a logged-in account linking operation
-	bindingUserID := state.ReauthUserID
-	if bindingUserID != "" && bindingUserID != currentUserID {
-		return nil, kernel.Forbidden("绑定账号的登录会话已变化，请重新发起绑定")
+	// Settings may have changed during the provider's token exchange.
+	settings, err = s.channelSettings(providerID)
+	if err != nil {
+		return nil, err
 	}
-
-	// 1. Check if identity already bound
-	var user *model.User
-	var identity *model.UserIdentity
-	var ticketID string
-	isNew := false
-
-	if s.repo != nil {
-		identity, err = s.repo.UserIdentity(providerID, profile.Subject)
-		if err == nil && identity != nil {
-			if bindingUserID != "" && identity.UserID != bindingUserID {
-				return nil, kernel.BadAuthRequest("该第三方账号已被其他 SupDance 账号绑定，无法重复绑定")
-			}
-			// Identity exists -> fetch existing user
-			user, err = s.repo.User(identity.UserID)
-			if err != nil {
-				return nil, err
-			}
-			// Update avatar or username if changed
-			identity.ProviderUsername = profile.Username
-			identity.AvatarURL = profile.AvatarURL
-			identity.UpdatedAt = time.Now()
-			_ = s.repo.Save(identity)
-
-			if bindingUserID != "" {
-				return &SocialAuthCallbackResult{
-					User:  user,
-					Next:  "/?bind_success=" + url.QueryEscape(providerID),
-					IsNew: false,
-				}, nil
-			}
-		} else if errors.Is(err, gorm.ErrRecordNotFound) || identity == nil {
-			// Account Linking for logged-in user vs First-time Onboarding
-			if bindingUserID != "" {
-				identity = &model.UserIdentity{
-					ID:               kernel.NewID(),
-					UserID:           bindingUserID,
-					Provider:         providerID,
-					Subject:          profile.Subject,
-					ProviderUsername: profile.Username,
-					AvatarURL:        profile.AvatarURL,
-					CreatedAt:        time.Now(),
-					UpdatedAt:        time.Now(),
-				}
-				if err := s.repo.UpsertUserIdentity(identity); err != nil {
-					return nil, fmt.Errorf("绑定社交账号失败：%w", err)
-				}
-				user, err = s.repo.User(bindingUserID)
-				if err != nil {
-					return nil, err
-				}
-				return &SocialAuthCallbackResult{
-					User:  user,
-					Next:  "/?bind_success=" + url.QueryEscape(providerID),
-					IsNew: false,
-				}, nil
-			} else {
-				settings, err := s.ReadSettings()
-				if err != nil {
-					return nil, err
-				}
-				if !settings.Policies.AutoDirectRegistration {
-					return nil, kernel.Forbidden("当前暂停第三方新用户注册")
-				}
-				// Keep the verified profile pending until onboarding succeeds.
-				isNew = true
-
-				ticketID = "onboard_" + RandomToken()
-				t := &OnboardingTicket{
-					TicketID:         ticketID,
-					Provider:         providerID,
-					ProviderName:     meta.Name,
-					Subject:          profile.Subject,
-					ProviderUsername: profile.Username,
-					DisplayName:      profile.DisplayName,
-					Email:            profile.Email,
-					AvatarURL:        profile.AvatarURL,
-					ExpiresAt:        time.Now().Add(30 * time.Minute),
-				}
-				s.saveTicket(t)
-				return &SocialAuthCallbackResult{IsNew: true, OnboardingTicket: ticketID, Next: "/?onboarding=1&ticket=" + url.QueryEscape(ticketID)}, nil
-			}
-		} else {
+	identity, err := s.repo.UserIdentity(providerID, profile.Subject)
+	if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
+		return nil, err
+	}
+	if errors.Is(err, gorm.ErrRecordNotFound) {
+		identity = nil
+	}
+	if session != nil && state.ReauthUserID != "" {
+		return s.completeAccountAuthorization(state, session, providerID, identity, profile)
+	}
+	if identity != nil {
+		user, err := s.repo.User(identity.UserID)
+		if err != nil {
 			return nil, err
 		}
-
-		now := time.Now()
-		user.LastLoginAt = &now
-		_ = s.repo.UpdateUserLoginTime(user.ID, now)
-	} else {
-		user = &model.User{ID: kernel.NewID(), Username: profile.Username, DisplayName: profile.DisplayName}
+		if user.Status != model.UserStatusActive {
+			return nil, kernel.Forbidden("该账号已被禁用")
+		}
+		identity.ProviderUsername, identity.AvatarURL = profile.Username, profile.AvatarURL
+		if err := s.repo.UpdateOAuthIdentityProfile(identity); err != nil {
+			return nil, err
+		}
+		return &SocialAuthCallbackResult{User: user, Identity: identity, Next: SafeOAuthNext(state.NextPath)}, nil
 	}
 
-	// Create AuthSession
-	rawToken := RandomToken()
-	session := &model.AuthSession{
-		ID:        kernel.NewID(),
-		UserID:    user.ID,
-		TokenHash: HashToken(rawToken),
-		ExpiresAt: time.Now().Add(30 * 24 * time.Hour),
-		CreatedAt: time.Now(),
-		UpdatedAt: time.Now(),
+	if _, err := s.registrationEmailRequired(settings); err != nil {
+		return nil, err
 	}
-
-	nextPath := SafeOAuthNext(state.NextPath)
-	if isNew && ticketID != "" {
-		nextPath = "/?onboarding=1&ticket=" + url.QueryEscape(ticketID)
+	ticket := &OnboardingTicket{
+		TicketID:         OnboardingTicketPrefix + RandomToken(),
+		Provider:         providerID,
+		ProviderName:     meta.Name,
+		Subject:          profile.Subject,
+		ProviderUsername: profile.Username,
+		DisplayName:      profile.DisplayName,
+		Email:            profile.Email,
+		AvatarURL:        profile.AvatarURL,
+		ExpiresAt:        time.Now().Add(30 * time.Minute),
 	}
+	if err := s.saveTicket(ticket); err != nil {
+		return nil, err
+	}
+	return &SocialAuthCallbackResult{OnboardingTicket: ticket.TicketID, Next: "/?onboarding=1"}, nil
+}
 
-	return &SocialAuthCallbackResult{
-		Session:          session,
-		User:             user,
-		Next:             nextPath,
-		IsNew:            isNew,
-		OnboardingTicket: ticketID,
-	}, nil
+func (s *Service) completeAccountAuthorization(state *model.OAuthState, session *model.AuthSession, provider string, identity *model.UserIdentity, profile *socialProfile) (*SocialAuthCallbackResult, error) {
+	if identity != nil && identity.UserID != session.UserID {
+		return nil, kernel.BadAuthRequest("该第三方账号已被其他账号绑定")
+	}
+	if strings.HasPrefix(state.NextPath, reauthPathPrefix) {
+		if identity == nil {
+			return nil, kernel.Forbidden("请选择当前账号已绑定的第三方身份")
+		}
+		user, err := s.repo.User(session.UserID)
+		if err != nil {
+			return nil, err
+		}
+		if err := s.repo.ReauthenticateOAuthSession(user, session, provider, identity.Subject, time.Now()); err != nil {
+			return nil, err
+		}
+		return &SocialAuthCallbackResult{Next: accountAuthorizationNext(state.NextPath, "reauth", "success")}, nil
+	}
+	if err := s.repo.BindOAuthIdentity(&model.UserIdentity{
+		ID: kernel.NewID(), UserID: session.UserID, Provider: provider, Subject: profile.Subject,
+		ProviderUsername: profile.Username, AvatarURL: profile.AvatarURL,
+	}, session); err != nil {
+		return nil, err
+	}
+	return &SocialAuthCallbackResult{Next: accountAuthorizationNext(state.NextPath, "bind_success", provider)}, nil
 }
 
 type socialProfile struct {
@@ -819,48 +848,6 @@ func (s *Service) resolveUserProfile(ctx context.Context, providerID string, cod
 	return redeemCode(ctx, providerID, cfg, code, verifier, redirectURI)
 }
 
-func (s *Service) buildNewSocialUser(providerID string, profile *socialProfile) (*model.User, *model.UserIdentity) {
-	baseUsername := strings.ToLower(providerID) + "_" + profile.Subject
-	if len(baseUsername) > 24 {
-		baseUsername = baseUsername[:24]
-	}
-	candidateUsername := baseUsername
-	if s.repo != nil {
-		if existing, err := s.repo.UserByUsername(candidateUsername); err == nil && existing != nil {
-			candidateUsername = kernel.TruncateRunes(baseUsername, 18) + "_" + RandomToken()[:5]
-		}
-	}
-	email := profile.Email
-	if s.repo != nil && email != "" {
-		if err := s.repo.CheckEmailAvailable(email, ""); err != nil {
-			// Third-party returned email is already occupied; clear email on user record so it can be resolved during onboarding
-			email = ""
-		}
-	}
-	userID := kernel.NewID()
-	user := &model.User{
-		ID:          userID,
-		Username:    candidateUsername,
-		DisplayName: profile.DisplayName,
-		Email:       email,
-		Role:        model.UserRoleUser,
-		Status:      model.UserStatusActive,
-		CreatedAt:   time.Now(),
-		UpdatedAt:   time.Now(),
-	}
-	identity := &model.UserIdentity{
-		ID:               kernel.NewID(),
-		UserID:           userID,
-		Provider:         providerID,
-		Subject:          profile.Subject,
-		ProviderUsername: profile.Username,
-		AvatarURL:        profile.AvatarURL,
-		CreatedAt:        time.Now(),
-		UpdatedAt:        time.Now(),
-	}
-	return user, identity
-}
-
 func RandomToken() string {
 	var b [32]byte
 	_, _ = rand.Read(b[:])
@@ -875,28 +862,22 @@ func HashToken(token string) string {
 func SafeOAuthNext(value string) string {
 	value = strings.TrimSpace(value)
 	parsed, err := url.Parse(value)
-	if value == "" || err != nil || parsed.IsAbs() || parsed.Host != "" || !strings.HasPrefix(parsed.Path, "/") || strings.HasPrefix(value, "//") || strings.Contains(value, "\\") {
+	if value == "" || err != nil || parsed.IsAbs() || parsed.Host != "" || !strings.HasPrefix(parsed.Path, "/") || strings.HasPrefix(parsed.Path, "//") || strings.Contains(parsed.Path, "\\") {
 		return "/create"
 	}
-	return parsed.RequestURI()
+	return parsed.String()
 }
 
 var (
 	globalTicketsMu sync.RWMutex
 	globalTickets   = make(map[string]*OnboardingTicket)
-	onboardingMu    sync.Mutex
-	identityMu      sync.Mutex
 )
 
-func (s *Service) saveTicket(t *OnboardingTicket) {
+func (s *Service) saveTicket(t *OnboardingTicket) error {
 	if store := currentTicketStore(); store != nil {
 		ctx, cancel := ticketStoreContext()
 		defer cancel()
-		if err := store.SaveTicket(ctx, t); err == nil {
-			return
-		}
-		// Shared store unavailable: keep this replica able to finish onboarding
-		// from local memory until the store recovers.
+		return store.SaveTicket(ctx, t)
 	}
 	globalTicketsMu.Lock()
 	defer globalTicketsMu.Unlock()
@@ -907,15 +888,14 @@ func (s *Service) saveTicket(t *OnboardingTicket) {
 		}
 	}
 	globalTickets[t.TicketID] = t
+	return nil
 }
 
 func (s *Service) getTicket(ticketID string) (*OnboardingTicket, error) {
 	if store := currentTicketStore(); store != nil {
 		ctx, cancel := ticketStoreContext()
 		defer cancel()
-		if ticket, err := store.GetTicket(ctx, ticketID); err == nil {
-			return ticket, nil
-		}
+		return store.GetTicket(ctx, ticketID)
 	}
 	globalTicketsMu.RLock()
 	defer globalTicketsMu.RUnlock()
@@ -930,9 +910,7 @@ func (s *Service) consumeTicket(ticketID string) (*OnboardingTicket, error) {
 	if store := currentTicketStore(); store != nil {
 		ctx, cancel := ticketStoreContext()
 		defer cancel()
-		if ticket, err := store.ConsumeTicket(ctx, ticketID); err == nil {
-			return ticket, nil
-		}
+		return store.ConsumeTicket(ctx, ticketID)
 	}
 	globalTicketsMu.Lock()
 	defer globalTicketsMu.Unlock()
@@ -944,125 +922,114 @@ func (s *Service) consumeTicket(ticketID string) (*OnboardingTicket, error) {
 	return t, nil
 }
 
-// GetOnboardingProfile returns the initial user profile carried by the verified OAuth onboarding ticket.
+func (s *Service) registrationEmailRequired(settings StoredSettings) (bool, error) {
+	if !settings.Policies.AutoDirectRegistration {
+		return false, kernel.Forbidden("当前暂停第三方新用户注册")
+	}
+	if s.host == nil {
+		return false, errors.New("社交登录宿主未初始化")
+	}
+	required, err := s.host.SocialRegistrationEmailRequired()
+	return required || settings.Policies.MandatoryEmailOnboarding, err
+}
+
 func (s *Service) GetOnboardingProfile(ticketID string) (*OnboardingProfileView, error) {
-	t, err := s.getTicket(ticketID)
+	ticket, err := s.getTicket(ticketID)
+	if err != nil {
+		return nil, err
+	}
+	settings, err := s.channelSettings(ticket.Provider)
+	if err != nil {
+		return nil, err
+	}
+	required, err := s.registrationEmailRequired(settings)
 	if err != nil {
 		return nil, err
 	}
 	return &OnboardingProfileView{
-		TicketID:         t.TicketID,
-		Provider:         t.Provider,
-		ProviderName:     t.ProviderName,
-		ProviderUsername: t.ProviderUsername,
-		DisplayName:      t.DisplayName,
-		Email:            t.Email,
-		AvatarURL:        t.AvatarURL,
-		EmailAutoBound:   t.Email != "",
+		Provider:         ticket.Provider,
+		ProviderName:     ticket.ProviderName,
+		ProviderUsername: ticket.ProviderUsername,
+		DisplayName:      ticket.DisplayName,
+		Email:            ticket.Email,
+		EmailAutoBound:   ticket.Email != "",
+		EmailRequired:    required,
+		AvatarURL:        ticket.AvatarURL,
 	}, nil
 }
 
-// CompleteOnboarding registers a new user with custom username, auto-bound/confirmed email and optional password.
-func (s *Service) CompleteOnboarding(req CompleteOnboardingRequest) (*model.User, *model.AuthSession, error) {
-	// Serialize ticket completion so validation can be retried without allowing replay.
-	onboardingMu.Lock()
-	defer onboardingMu.Unlock()
+func (s *Service) CompleteOnboarding(req CompleteOnboardingRequest) (*model.User, *model.UserIdentity, error) {
 	ticketID := strings.TrimSpace(req.TicketID)
-	if ticketID == "" {
-		ticketID = strings.TrimSpace(req.Ticket)
-	}
-	t, err := s.getTicket(ticketID)
+	ticket, err := s.getTicket(ticketID)
 	if err != nil {
 		return nil, nil, err
 	}
-	if s.repo == nil {
-		return nil, nil, errors.New("存储未初始化")
+	if s.repo == nil || ticket.UserID != "" {
+		return nil, nil, ticketExpiredError()
 	}
 	if !req.AcceptedTerms {
 		return nil, nil, kernel.BadAuthRequest("请先同意服务协议与隐私条款")
 	}
-	if t.UserID == "" {
-		identity, err := s.repo.UserIdentity(t.Provider, t.Subject)
-		if err == nil && identity != nil {
-			user, err := s.repo.User(identity.UserID)
-			if err != nil {
-				return nil, nil, err
-			}
-			if user.Status != model.UserStatusActive {
-				return nil, nil, kernel.Forbidden("该账号已被禁用")
-			}
-			// Another verified ticket already created or bound this identity.
-			// Reuse the account; stale form fields must never change its password.
-			_, _ = s.consumeTicket(ticketID)
-			return user, nil, nil
-		}
-		if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
-			return nil, nil, err
-		}
-	}
-	settings, err := s.ReadSettings()
+	settings, err := s.channelSettings(ticket.Provider)
 	if err != nil {
 		return nil, nil, err
 	}
-	if !settings.Policies.AutoDirectRegistration {
-		return nil, nil, kernel.Forbidden("当前暂停第三方新用户注册")
+	identity, err := s.repo.UserIdentity(ticket.Provider, ticket.Subject)
+	if err == nil && identity != nil {
+		user, err := s.repo.User(identity.UserID)
+		if err != nil {
+			return nil, nil, err
+		}
+		if user.Status != model.UserStatusActive {
+			return nil, nil, kernel.Forbidden("该账号已被禁用")
+		}
+		if _, err := s.consumeTicket(ticketID); err != nil {
+			return nil, nil, err
+		}
+		return user, identity, nil
 	}
-
+	if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
+		return nil, nil, err
+	}
+	required, err := s.registrationEmailRequired(settings)
+	if err != nil {
+		return nil, nil, err
+	}
 	username := strings.TrimSpace(req.Username)
 	if len(username) < 3 || len(username) > 30 || strings.IndexFunc(username, func(r rune) bool {
 		return !(r >= 'a' && r <= 'z' || r >= 'A' && r <= 'Z' || r >= '0' && r <= '9' || r == '_' || r == '-')
 	}) >= 0 {
 		return nil, nil, kernel.BadAuthRequest("用户名需为 3-30 位字母、数字、下划线或短横线")
 	}
-	email := strings.TrimSpace(req.Email)
-	if t.Email != "" && email == "" {
-		email = t.Email
+	if existing, err := s.repo.UserByUsername(username); err == nil && existing != nil {
+		return nil, nil, kernel.BadAuthRequest("该用户名已被占用，请尝试其他用户名")
+	} else if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
+		return nil, nil, err
 	}
-	if settings.Policies.MandatoryEmailOnboarding && email == "" {
-		return nil, nil, kernel.BadAuthRequest("请填写联系邮箱")
+
+	email := strings.ToLower(strings.TrimSpace(req.Email))
+	if email == "" {
+		email = strings.ToLower(strings.TrimSpace(ticket.Email))
+	}
+	if required && email == "" {
+		return nil, nil, kernel.BadAuthRequest("请验证邮箱后完成注册")
 	}
 	if email != "" {
 		parsed, err := mail.ParseAddress(email)
-		if err != nil || parsed.Address != email {
+		if err != nil || parsed.Address != email || len(email) > 160 {
 			return nil, nil, kernel.BadAuthRequest("请输入有效邮箱")
 		}
-	}
-
-	var user *model.User
-	if t.UserID != "" {
-		user, err = s.repo.User(t.UserID)
-		if err != nil {
-			return nil, nil, fmt.Errorf("找不到对应用户：%w", err)
+		if err := s.host.ValidateOnboardingEmail(email); err != nil {
+			return nil, nil, err
+		}
+		if err := s.repo.CheckEmailAvailable(email, ""); err != nil {
+			return nil, nil, err
 		}
 	}
-
-	if username != "" && (user == nil || username != user.Username) {
-		if len(username) < 3 || len(username) > 40 {
-			return nil, nil, kernel.BadAuthRequest("用户名长度须在 3 到 40 个字符之间")
-		}
-		excludeID := ""
-		if user != nil {
-			excludeID = user.ID
-		}
-		if existing, err := s.repo.UserByUsername(username); err == nil && existing != nil && existing.ID != excludeID {
-			return nil, nil, kernel.BadAuthRequest("该用户名已被占用，请尝试其他用户名")
-		}
-	}
-
-	if email != "" && (user == nil || email != user.Email) {
-		excludeID := ""
-		if user != nil {
-			excludeID = user.ID
-		}
-		if err := s.repo.CheckEmailAvailable(email, excludeID); err != nil {
-			return nil, nil, kernel.BadAuthRequest("该邮箱已被其他账号使用：" + err.Error())
-		}
-	}
-
 	var passwordHash string
 	if password := strings.TrimSpace(req.Password); password != "" {
-		if len(password) < 6 {
-			return nil, nil, kernel.BadAuthRequest("密码长度至少为 6 个字符")
+		if len(password) < 6 || len(password) > 72 {
+			return nil, nil, kernel.BadAuthRequest("密码长度需为 6 至 72 字节")
 		}
 		hash, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
 		if err != nil {
@@ -1070,96 +1037,55 @@ func (s *Service) CompleteOnboarding(req CompleteOnboardingRequest) (*model.User
 		}
 		passwordHash = string(hash)
 	}
-
-	displayName := strings.TrimSpace(req.DisplayName)
-	if displayName == "" {
-		displayName = strings.TrimSpace(req.Nickname)
-	}
-	if displayName == "" {
-		displayName = t.DisplayName
-	}
-	if displayName == "" {
-		displayName = username
-	}
-
+	displayName := kernel.FirstNonEmpty(strings.TrimSpace(req.DisplayName), strings.TrimSpace(req.Nickname), ticket.DisplayName, username)
 	now := time.Now()
-	var emailVerifiedAt *time.Time
-	if email != "" && t.Email != "" && strings.EqualFold(email, t.Email) {
-		emailVerifiedAt = &now
-	}
-
-	if user != nil {
-		if username != "" {
-			user.Username = username
-		}
-		if displayName != "" {
-			user.DisplayName = displayName
-		}
-		if email != "" {
-			user.Email = email
-			if emailVerifiedAt != nil {
-				user.EmailVerifiedAt = emailVerifiedAt
+	var verifiedAt *time.Time
+	var verificationID string
+	if email != "" {
+		if !strings.EqualFold(email, ticket.Email) {
+			if req.EmailTicket == "" || req.EmailCode == "" {
+				return nil, nil, kernel.BadAuthRequest("请先验证邮箱")
+			}
+			verificationID, err = s.host.VerifyOnboardingEmail(email, HashToken(ticketID), req.EmailTicket, req.EmailCode)
+			if err != nil {
+				return nil, nil, err
 			}
 		}
-		if passwordHash != "" {
-			user.PasswordHash = passwordHash
-		}
-		user.UpdatedAt = now
-		if err := s.repo.Save(user); err != nil {
-			return nil, nil, fmt.Errorf("更新用户信息失败：%w", err)
-		}
-	} else {
-		userID := kernel.NewID()
-		user = &model.User{
-			ID:              userID,
-			Username:        username,
-			DisplayName:     displayName,
-			Email:           email,
-			EmailVerifiedAt: emailVerifiedAt,
-			PasswordHash:    passwordHash,
-			Role:            model.UserRoleUser,
-			Status:          model.UserStatusActive,
-			CreatedAt:       now,
-			UpdatedAt:       now,
-		}
-
-		identity := &model.UserIdentity{
-			ID:               kernel.NewID(),
-			UserID:           userID,
-			Provider:         t.Provider,
-			Subject:          t.Subject,
-			ProviderUsername: t.ProviderUsername,
-			AvatarURL:        t.AvatarURL,
-			CreatedAt:        now,
-			UpdatedAt:        now,
-		}
-
-		if err := s.repo.CreateOAuthUser(user, identity); err != nil {
-			return nil, nil, fmt.Errorf("创建用户失败：%w", err)
-		}
-		if s.host != nil {
-			_ = s.host.EnsureSignupBonus(user.ID)
-		}
+		verifiedAt = &now
 	}
 
-	rawToken := RandomToken()
-	session := &model.AuthSession{
-		ID:        kernel.NewID(),
-		UserID:    user.ID,
-		TokenHash: HashToken(rawToken),
-		ExpiresAt: time.Now().Add(30 * 24 * time.Hour),
-		CreatedAt: time.Now(),
-		UpdatedAt: time.Now(),
+	// Validate the form first, then claim the ticket before any account or
+	// session is written. A Redis error is never treated as a successful claim.
+	if _, err := s.consumeTicket(ticketID); err != nil {
+		return nil, nil, err
 	}
-
-	_, _ = s.consumeTicket(ticketID)
-	return user, session, nil
+	user := &model.User{
+		ID: kernel.NewID(), Username: username, DisplayName: displayName, Email: email,
+		EmailVerifiedAt: verifiedAt, PasswordHash: passwordHash, Role: model.UserRoleUser,
+		Status: model.UserStatusActive, CreatedAt: now, UpdatedAt: now,
+	}
+	identity = &model.UserIdentity{
+		ID: kernel.NewID(), UserID: user.ID, Provider: ticket.Provider, Subject: ticket.Subject,
+		ProviderUsername: ticket.ProviderUsername, AvatarURL: ticket.AvatarURL,
+		CreatedAt: now, UpdatedAt: now,
+	}
+	if err := s.repo.CreateOAuthUserWithVerification(user, identity, verificationID); err != nil {
+		return nil, nil, fmt.Errorf("创建用户失败：%w", err)
+	}
+	if s.host != nil {
+		_ = s.host.EnsureSignupBonus(user.ID)
+	}
+	return user, identity, nil
 }
 
 // GetUserIdentities returns connected social accounts and password state for account management.
 func (s *Service) GetUserIdentities(actor *model.User) (*UserIdentitiesView, error) {
 	if actor == nil {
 		return nil, kernel.Unauthorized("未登录")
+	}
+	settings, err := s.ReadSettings()
+	if err != nil {
+		return nil, err
 	}
 	var boundMap = make(map[string]model.UserIdentity)
 	if s.repo != nil {
@@ -1185,6 +1111,7 @@ func (s *Service) GetUserIdentities(actor *model.User) (*UserIdentitiesView, err
 		item := UserIdentityItem{
 			Provider:     pid,
 			ProviderName: meta.Name,
+			Available:    settings.Providers[pid].Enabled && channelAdvertisable(pid, settings.Providers[pid]),
 		}
 		if ident, found := boundMap[pid]; found {
 			item.Bound = true
@@ -1202,105 +1129,112 @@ func (s *Service) GetUserIdentities(actor *model.User) (*UserIdentitiesView, err
 	}, nil
 }
 
-// BeginBind initiates OAuth flow bound to an existing logged in user account.
-func (s *Service) BeginBind(r *http.Request, actor *model.User, providerID string, nextPath ...string) (string, error) {
-	if actor == nil {
-		return "", kernel.Unauthorized("未登录")
+const reauthPathPrefix = "reauth:"
+
+func accountAuthorizationNext(next, key, value string) string {
+	next = strings.TrimPrefix(next, reauthPathPrefix)
+	if next == "" {
+		next = "/settings?section=profile"
 	}
-	settings, err := s.ReadSettings()
+	safe := SafeOAuthNext(next)
+	if safe == "/create" && strings.TrimSpace(next) != "/create" {
+		safe = "/settings?section=profile"
+	}
+	target, _ := url.Parse(safe)
+	query := target.Query()
+	query.Del("bind_success")
+	query.Del("bind_error")
+	query.Del("bind_provider")
+	query.Del("oauth_error")
+	query.Del("reauth")
+	if key != "" {
+		query.Set(key, value)
+	}
+	target.RawQuery = query.Encode()
+	return target.String()
+}
+
+// BeginBind binds the pending authorization to the exact authenticated session.
+func (s *Service) BeginBind(session *model.AuthSession, providerID, next string, reauthenticate bool) (string, error) {
+	if session == nil || session.UserID == "" || session.ID == "" {
+		return "", kernel.Unauthorized("请先登录")
+	}
+	settings, err := s.channelSettings(providerID)
 	if err != nil {
 		return "", err
 	}
-	cfg, exists := settings.Providers[providerID]
-	if !exists || !cfg.Enabled || !channelAdvertisable(providerID, cfg) {
-		return "", kernel.Forbidden("该第三方登录渠道未开放或未配置")
+	if reauthenticate {
+		if _, err := s.repo.UserIdentityForUser(session.UserID, providerID); err != nil {
+			if errors.Is(err, gorm.ErrRecordNotFound) {
+				return "", kernel.Forbidden("请选择当前账号已绑定的第三方身份")
+			}
+			return "", err
+		}
+		next = reauthPathPrefix + "/settings?section=profile"
+	} else {
+		next = accountAuthorizationNext(next, "", "")
 	}
-	meta := ProviderRegistry[providerID]
 
 	stateToken := RandomToken()
 	codeVerifier := RandomToken()
-
-	resolvedNext := "/?open_settings=social&bind_success=" + url.QueryEscape(providerID)
-	if len(nextPath) > 0 && strings.TrimSpace(nextPath[0]) != "" {
-		raw := SafeOAuthNext(nextPath[0])
-		if !strings.Contains(raw, "bind_success=") {
-			sep := "?"
-			if strings.Contains(raw, "?") {
-				sep = "&"
-			}
-			raw += sep + "bind_success=" + url.QueryEscape(providerID)
-		}
-		if !strings.Contains(raw, "open_settings=") {
-			sep := "?"
-			if strings.Contains(raw, "?") {
-				sep = "&"
-			}
-			raw += sep + "open_settings=social"
-		}
-		resolvedNext = raw
-	}
-
+	now := time.Now()
 	record := &model.OAuthState{
-		ID:            kernel.NewID(),
-		Provider:      providerID,
-		StateHash:     HashToken(stateToken),
-		CodeVerifier:  codeVerifier,
-		NextPath:      resolvedNext,
-		ReauthUserID:  actor.ID,
-		AcceptedTerms: true,
-		ExpiresAt:     time.Now().Add(10 * time.Minute),
-		CreatedAt:     time.Now(),
+		ID: kernel.NewID(), Provider: providerID, StateHash: HashToken(stateToken),
+		CodeVerifier: codeVerifier, NextPath: next, ReauthUserID: session.UserID, ReauthSessionID: session.ID,
+		ExpiresAt: now.Add(10 * time.Minute), CreatedAt: now,
 	}
-	if s.repo != nil {
-		if err := s.repo.CreateOAuthState(record); err != nil {
-			return "", err
-		}
+	if err := s.repo.CreateOAuthState(record); err != nil {
+		return "", err
 	}
-
-	callbackURL := resolveCallbackURL(cfg, meta)
-	return buildAuthorizeURL(providerID, cfg, callbackURL, stateToken, codeVerifier), nil
+	cfg := settings.Providers[providerID]
+	return buildAuthorizeURL(providerID, cfg, resolveCallbackURL(cfg, ProviderRegistry[providerID]), stateToken, codeVerifier), nil
 }
 
-// Unbind safely removes a connected third-party identity, preventing orphaned accounts.
-func (s *Service) Unbind(actor *model.User, providerID string) error {
-	identityMu.Lock()
-	defer identityMu.Unlock()
+func (s *Service) Unbind(actor *model.User, providerID string, requests ...*http.Request) error {
 	if actor == nil {
 		return kernel.Unauthorized("未登录")
 	}
-	if s.repo == nil {
-		return nil
+	var request *http.Request
+	if len(requests) > 0 {
+		request = requests[0]
 	}
-	identities, err := s.repo.UserIdentitiesForUser(actor.ID)
+	return s.unbindIdentity(actor.ID, providerID, true, request)
+}
+
+func (s *Service) unbindIdentity(userID, providerID string, selfService bool, request *http.Request) error {
+	if _, known := ProviderRegistry[providerID]; !known {
+		return kernel.BadAuthRequest("未知社交登录渠道")
+	}
+	settings, err := s.ReadSettings()
 	if err != nil {
 		return err
 	}
-	var targetFound bool
-	for _, ident := range identities {
-		if ident.Provider == providerID {
-			targetFound = true
-			break
+	available := true
+	if s.host != nil {
+		available, err = s.host.Available()
+		if err != nil {
+			return err
 		}
 	}
-	if !targetFound {
-		return kernel.BadAuthRequest("未找到已绑定的该渠道账号")
+	if selfService && !available {
+		return kernel.Forbidden("第三方社交登录插件已被系统管理员停用")
 	}
-
-	settings, err := s.ReadSettings()
-	orphanSafety := true
-	if err == nil {
-		orphanSafety = settings.Policies.OrphanAccountSafety
+	region := ""
+	if request != nil {
+		region = ResolveIPRegion(request, settings.DefaultFallbackRegion).Region
 	}
-
-	// Security Guard Check: Prevent user from being locked out without password or other login methods
-	if orphanSafety {
-		hasPassword := actor.PasswordHash != ""
-		if !hasPassword && len(identities) <= 1 {
-			return kernel.BadAuthRequest("无法解绑唯一的登录凭证。请先在安全设置中设置独立登录密码，或绑定其他第三方账号。")
+	usable := make([]string, 0, len(settings.Providers)+1)
+	if available {
+		for id, cfg := range settings.Providers {
+			if cfg.Enabled && channelAdvertisable(id, cfg) && (region == "" || ProviderRegistry[id].Region == region) {
+				usable = append(usable, id)
+			}
 		}
 	}
-
-	return s.repo.DeleteUserIdentity(actor.ID, providerID)
+	if s.host != nil && s.host.LinuxDOEnabled() {
+		usable = append(usable, "linuxdo")
+	}
+	return s.repo.DeleteOAuthIdentitySafely(userID, providerID, usable)
 }
 
 // GetOperationsOverview returns operational dashboard statistics and current policies.
@@ -1308,7 +1242,7 @@ func (s *Service) GetOperationsOverview(r *http.Request, actor *model.User) (*Op
 	if err := s.host.RequireAdmin(actor); err != nil {
 		return nil, err
 	}
-	settings, err := s.ReadSettings()
+	settings, previous, err := s.readRawSettings()
 	if err != nil {
 		return nil, err
 	}
@@ -1356,6 +1290,7 @@ func (s *Service) GetOperationsOverview(r *http.Request, actor *model.User) (*Op
 	}
 
 	return &OperationsOverview{
+		Revision:             settingsRevision(previous),
 		Policies:             settings.Policies,
 		ProviderDistribution: dist,
 		TotalBindings:        totalBindings,
@@ -1365,19 +1300,22 @@ func (s *Service) GetOperationsOverview(r *http.Request, actor *model.User) (*Op
 }
 
 // UpdatePolicies updates global operational policies.
-func (s *Service) UpdatePolicies(actor *model.User, policies OperationalPolicies) (*OperationsOverview, error) {
+func (s *Service) UpdatePolicies(actor *model.User, policies OperationalPolicies, revisions ...string) (*OperationsOverview, error) {
 	if err := s.host.RequireAdmin(actor); err != nil {
 		return nil, err
 	}
-	settings, err := s.ReadSettings()
+	settings, previous, err := s.readRawSettings()
 	if err != nil {
 		return nil, err
+	}
+	if len(revisions) > 0 && revisions[0] != "" && revisions[0] != settingsRevision(previous) {
+		return nil, settingsConflict()
 	}
 	// Login recovery protection is mandatory; credits use the host's central policy.
 	policies.OrphanAccountSafety = true
 	policies.SignupBonusCredits = settings.Policies.SignupBonusCredits
 	settings.Policies = policies
-	if err := s.SaveSettings(actor, settings); err != nil {
+	if err := s.saveSettingsIfUnchanged(actor, settings, previous); err != nil {
 		return nil, err
 	}
 	return s.GetOperationsOverview(nil, actor)
@@ -1424,37 +1362,10 @@ func (s *Service) SearchUsers(actor *model.User, query string) ([]UserSocialBind
 
 // AdminUnbindUser unbinds a social identity for any user by administrator.
 func (s *Service) AdminUnbindUser(actor *model.User, targetUserID string, providerID string) error {
-	identityMu.Lock()
-	defer identityMu.Unlock()
 	if err := s.host.RequireAdmin(actor); err != nil {
 		return err
 	}
-	settings, err := s.ReadSettings()
-	if err != nil {
-		return err
-	}
-	targetUser, err := s.repo.User(targetUserID)
-	if err != nil {
-		return err
-	}
-	identities, err := s.repo.UserIdentitiesForUser(targetUserID)
-	if err != nil {
-		return err
-	}
-	var targetFound bool
-	for _, ident := range identities {
-		if ident.Provider == providerID {
-			targetFound = true
-			break
-		}
-	}
-	if !targetFound {
-		return kernel.BadAuthRequest("未找到该用户绑定的该渠道账号")
-	}
-	if settings.Policies.OrphanAccountSafety && targetUser.PasswordHash == "" && len(identities) <= 1 {
-		return kernel.BadAuthRequest("目标用户未设置独立密码且仅剩此唯一登录凭据，已触发防孤立安全拦截")
-	}
-	return s.repo.DeleteUserIdentity(targetUserID, providerID)
+	return s.unbindIdentity(targetUserID, providerID, false, nil)
 }
 
 // GetLoginLogs returns social authentication login logs.

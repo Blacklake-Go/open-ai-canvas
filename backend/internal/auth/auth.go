@@ -417,31 +417,36 @@ func (s *Service) Logout(cookieValue string, contexts ...LoginContext) (err erro
 }
 
 func (s *Service) CurrentUser(cookieValue string) (*model.User, error) {
+	user, _, err := s.CurrentUserAndSession(cookieValue)
+	return user, err
+}
+
+func (s *Service) CurrentUserAndSession(cookieValue string) (*model.User, *model.AuthSession, error) {
 	sessionID, token := parseSessionCookie(cookieValue)
 	if sessionID == "" || token == "" {
-		return nil, kernel.Unauthorized("请先登录")
+		return nil, nil, kernel.Unauthorized("请先登录")
 	}
 	session, err := s.repo.AuthSession(sessionID)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return nil, kernel.Unauthorized("登录状态已失效")
+			return nil, nil, kernel.Unauthorized("登录状态已失效")
 		}
-		return nil, err
+		return nil, nil, err
 	}
 	if time.Now().After(session.ExpiresAt) || session.TokenHash != HashToken(token) {
 		if cleanupErr := s.repo.DeleteAuthSession(sessionID); cleanupErr != nil {
 			log.Printf("expired auth session cleanup failed: session_id=%s error=%v", sessionID, cleanupErr)
 		}
-		return nil, kernel.Unauthorized("登录状态已失效")
+		return nil, nil, kernel.Unauthorized("登录状态已失效")
 	}
 	user, err := s.repo.User(session.UserID)
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 	if user.Status != model.UserStatusActive {
-		return nil, kernel.Forbidden("该账号已被禁用")
+		return nil, nil, kernel.Forbidden("该账号已被禁用")
 	}
-	return user, nil
+	return user, session, nil
 }
 
 // 认证响应只补充当前用户自己的第三方公开身份，不把身份表或密钥字段暴露给其他列表接口。
@@ -470,7 +475,18 @@ func (s *Service) CreateAuthSession(user *model.User, event *model.LoginLog) (*A
 	return s.createAuthSession(user, event)
 }
 
+func (s *Service) CreateOAuthAuthSession(user *model.User, identity *model.UserIdentity, event *model.LoginLog) (*AuthSessionResult, error) {
+	if identity == nil {
+		return nil, kernel.Unauthorized("第三方身份绑定已失效，请重新授权")
+	}
+	return s.issueAuthSession(user, identity, event)
+}
+
 func (s *Service) createAuthSession(user *model.User, event *model.LoginLog) (*AuthSessionResult, error) {
+	return s.issueAuthSession(user, nil, event)
+}
+
+func (s *Service) issueAuthSession(user *model.User, identity *model.UserIdentity, event *model.LoginLog) (*AuthSessionResult, error) {
 	loginLogUser(event, user)
 	publicUser, err := s.PublicAuthUser(user)
 	if err != nil {
@@ -488,7 +504,12 @@ func (s *Service) createAuthSession(user *model.User, event *model.LoginLog) (*A
 	}
 	event.SessionRef = HashToken(session.ID)
 	event.CreatedAt = now.UTC()
-	if err := s.repo.CreateAuthSessionForUser(user, &session, event); err != nil {
+	if identity != nil {
+		err = s.repo.CreateAuthSessionForOAuthIdentity(user, identity, &session, event)
+	} else {
+		err = s.repo.CreateAuthSessionForUser(user, &session, event)
+	}
+	if err != nil {
 		return nil, profileWriteError(err)
 	}
 	s.host.RecordActivity(user.ID, "login", 1)

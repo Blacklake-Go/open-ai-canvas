@@ -58,9 +58,10 @@ export default function SocialAuthOperationsPage() {
     }, []);
 
     const handleSavePolicies = async () => {
+        if (!overview) return;
         setSavingPolicies(true);
         try {
-            const updated = await updateSocialAuthPolicies(policies);
+            const updated = await updateSocialAuthPolicies(policies, overview.revision);
             if (updated.policies) {
                 setPolicies(updated.policies);
                 setOverview(updated);

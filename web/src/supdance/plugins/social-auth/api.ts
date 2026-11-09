@@ -1,4 +1,5 @@
 import { compactApiParams, http } from "@/services/api/request";
+import type { LocalUser } from "@/services/api/auth";
 import type {
     AdminSettingsView,
     CompleteOnboardingRequest,
@@ -61,8 +62,8 @@ export async function getSocialAuthOperationsOverview(signal?: AbortSignal) {
     return http.get<OperationsOverview>("/admin/social-auth/operations/overview", { signal });
 }
 
-export async function updateSocialAuthPolicies(policies: OperationalPolicies) {
-    return http.put<OperationsOverview>("/admin/social-auth/operations/policies", policies);
+export async function updateSocialAuthPolicies(policies: OperationalPolicies, revision: string) {
+    return http.put<OperationsOverview>("/admin/social-auth/operations/policies", { ...policies, revision });
 }
 
 export async function searchSocialAuthUsers(query?: string, limit?: number, signal?: AbortSignal) {
@@ -83,15 +84,18 @@ export async function getSocialAuthLoginLogs(limit?: number, signal?: AbortSigna
     });
 }
 
-export async function getSocialOnboardingProfile(ticket: string, signal?: AbortSignal) {
+export async function getSocialOnboardingProfile(signal?: AbortSignal) {
     return http.get<OnboardingProfileView>("/auth/social/onboarding/profile", {
-        params: { ticket },
         signal,
     });
 }
 
+export function sendSocialOnboardingEmailCode(email: string) {
+    return http.post<{ ticket: string; expiresIn: number; retryAfter: number }>("/auth/social/onboarding/email-code", { email });
+}
+
 export async function completeSocialOnboarding(req: CompleteOnboardingRequest) {
-    return http.post<{ user: any; next: string }>("/auth/social/onboarding/complete", req);
+    return http.post<{ user: LocalUser; next: string }>("/auth/social/onboarding/complete", req);
 }
 
 export async function getUserSocialIdentities(signal?: AbortSignal) {
@@ -106,5 +110,9 @@ export function buildSocialAuthBindUrl(providerId: string, next?: string) {
 }
 
 export async function unbindSocialIdentity(providerId: string) {
-    return http.post<UserIdentitiesView>(`/auth/social/${encodeURIComponent(providerId)}/unbind`);
+    return http.post<null>(`/auth/social/${encodeURIComponent(providerId)}/unbind`);
+}
+
+export function buildSocialAuthReauthUrl(providerId: string) {
+    return `/api/auth/social/${encodeURIComponent(providerId)}/reauth`;
 }

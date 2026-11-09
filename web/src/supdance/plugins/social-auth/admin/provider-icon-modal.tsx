@@ -12,16 +12,18 @@ import type { AdminSettingsView, SocialAuthProviderAdmin } from "../types";
 
 export interface ProviderIconModalProps {
     provider: SocialAuthProviderAdmin;
+    revision: string;
     onClose: () => void;
     onSaved: (payload: { view: AdminSettingsView; providerId: string }) => void;
 }
 
 const ACCEPTED_ICON_TYPES = "image/png,image/jpeg,image/webp";
 
-export function ProviderIconModal({ provider, onClose, onSaved }: ProviderIconModalProps) {
+export function ProviderIconModal({ provider, revision, onClose, onSaved }: ProviderIconModalProps) {
     const { t } = useI18n();
     const { message } = App.useApp();
     const [busy, setBusy] = useState(false);
+    const [editRevision] = useState(revision);
     const [uploadingSlot, setUploadingSlot] = useState<"light" | "dark" | null>(null);
     const [notice, setNotice] = useState("");
     const [iconLightUrl, setIconLightUrl] = useState(provider.iconLightUrl || "");
@@ -56,6 +58,7 @@ export function ProviderIconModal({ provider, onClose, onSaved }: ProviderIconMo
         setNotice("");
         try {
             const view = await updateAdminSocialAuthSettings({
+                revision: editRevision,
                 providers: {
                     [provider.id]: {
                         enabled: provider.enabled,

@@ -1,6 +1,7 @@
 package auth
 
 import (
+	"context"
 	"encoding/json"
 	"errors"
 	"strings"
@@ -123,6 +124,84 @@ func TestPasswordResetSendDoesNotRevealAccountEligibility(t *testing.T) {
 	}
 	if codeCount != 0 {
 		t.Fatalf("verification code count = %d, want 0", codeCount)
+	}
+}
+
+func TestPasswordResetRejectsUnverifiedEmailOnOAuthAccount(t *testing.T) {
+	svc, db := newPasswordResetTestService(t)
+	hash, err := HashPassword("original-password")
+	if err != nil {
+		t.Fatal(err)
+	}
+	user := model.User{ID: "linked", Username: "linked-user", Email: "unverified@example.com", Status: model.UserStatusActive, PasswordHash: hash}
+	if err := db.Create(&user).Error; err != nil {
+		t.Fatal(err)
+	}
+	var deliveredCode string
+	svc.SetMailSender(func(_ EmailSettingValue, _, _ string, body string) error {
+		deliveredCode = codeFromEmailBody(body)
+		return nil
+	})
+	if err := svc.SendPasswordResetEmailCode(user.Email); err != nil || deliveredCode == "" {
+		t.Fatalf("legacy password-only account did not receive a code: %v", err)
+	}
+	identity := model.UserIdentity{ID: "linked-qq", UserID: user.ID, Provider: "qq", Subject: "linked-subject"}
+	if err := db.Create(&identity).Error; err != nil {
+		t.Fatal(err)
+	}
+	if err := svc.ResetPassword(PasswordResetRequest{Email: user.Email, EmailCode: deliveredCode, Password: "changed-password"}); !isInvalidPasswordResetError(err) {
+		t.Fatalf("unverified OAuth email reused a prior reset code: %v", err)
+	}
+	if err := db.Model(&model.EmailVerificationCode{}).Where("email = ?", user.Email).Delete(&model.EmailVerificationCode{}).Error; err != nil {
+		t.Fatal(err)
+	}
+	deliveredCode = ""
+	if err := svc.SendPasswordResetEmailCode(user.Email); err != nil || deliveredCode != "" {
+		t.Fatalf("unverified OAuth email received a reset code or a revealing error: %v", err)
+	}
+}
+
+func TestSocialOnboardingEmailProofBindsToBrowserTicketAndAddress(t *testing.T) {
+	svc, db := newPasswordResetTestService(t)
+	svc.host = profileTestHost{}
+	if err := db.AutoMigrate(&model.AuthVerification{}, &model.NotificationQuota{}); err != nil {
+		t.Fatal(err)
+	}
+	if err := db.Create(&model.SystemSetting{Key: registrationSettingKey, ValueJSON: `{"enabled":true}`}).Error; err != nil {
+		t.Fatal(err)
+	}
+	var deliveredCode string
+	svc.SetMailSender(func(_ EmailSettingValue, _, _ string, body string) error {
+		deliveredCode = codeFromEmailBody(body)
+		return nil
+	})
+	const email = "creator@example.com"
+	binding := HashToken("onboarding-browser-ticket")
+	proof, err := svc.StartSocialOnboardingEmail(context.Background(), email, binding)
+	if err != nil || len(deliveredCode) != 6 {
+		t.Fatalf("email proof was not delivered: %v", err)
+	}
+	if _, err := svc.VerifySocialOnboardingEmail(email, HashToken("other-browser-ticket"), proof.Ticket, deliveredCode); err == nil {
+		t.Fatal("proof was accepted for a different browser onboarding")
+	}
+	if _, err := svc.VerifySocialOnboardingEmail("other@example.com", binding, proof.Ticket, deliveredCode); err == nil {
+		t.Fatal("proof was accepted for a different email address")
+	}
+	verificationID, err := svc.VerifySocialOnboardingEmail(email, binding, proof.Ticket, deliveredCode)
+	if err != nil {
+		t.Fatal(err)
+	}
+	now := time.Now()
+	user := &model.User{ID: "onboard-email-user", Username: "onboard_email_user", Email: email, EmailVerifiedAt: &now, Status: model.UserStatusActive}
+	identity := &model.UserIdentity{ID: "onboard-email-identity", UserID: user.ID, Provider: "qq", Subject: "verified-email-subject"}
+	if err := db.AutoMigrate(&model.CreditAccount{}); err != nil {
+		t.Fatal(err)
+	}
+	if err := svc.repo.CreateOAuthUserWithVerification(user, identity, verificationID); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := svc.VerifySocialOnboardingEmail(email, binding, proof.Ticket, deliveredCode); err == nil {
+		t.Fatal("email proof was replayed after account creation")
 	}
 }
 
@@ -274,7 +353,7 @@ func newPasswordResetTestService(t *testing.T) (*Service, *gorm.DB) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if err := db.AutoMigrate(&model.User{}, &model.AuthSession{}, &model.LoginLog{}, &model.EmailVerificationCode{}, &model.SystemSetting{}, &model.EmailLog{}); err != nil {
+	if err := db.AutoMigrate(&model.User{}, &model.UserIdentity{}, &model.AuthSession{}, &model.LoginLog{}, &model.EmailVerificationCode{}, &model.SystemSetting{}, &model.EmailLog{}); err != nil {
 		t.Fatal(err)
 	}
 	settingJSON, err := json.Marshal(EmailSettingValue{Enabled: true, Host: "smtp.example.com", Port: 587, Encryption: "starttls", FromEmail: "noreply@example.com", FromName: "影策", RegistrationAllowedDomains: []string{"example.com"}})

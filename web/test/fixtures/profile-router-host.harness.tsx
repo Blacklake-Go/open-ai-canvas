@@ -32,6 +32,67 @@ const { useUserStore } = await import("../../src/stores/use-user-store");
 const { usePluginStore } = await import("../../src/stores/use-plugin-store");
 const { apiClient } = await import("../../src/services/api/request");
 
+test("the OAuth return reopens the account tab and reports success only after identity readback", async () => {
+    const user = { id: "binding-return-user", username: "binding-return-user", displayName: "Binding fixture", role: "user" as const, status: "active" as const };
+    const originalRequest = apiClient.request;
+    const authData = (data: unknown) => ({ status: 200, data: { code: 0, msg: "", data } });
+    const readback = Promise.withResolvers<ReturnType<typeof authData>>();
+    apiClient.request = (async ({ url }: { url?: string }) => {
+        if (url === "/auth/social/identities") return readback.promise;
+        if (url === "/auth/social/providers") return authData({ providers: [{ id: "qq", name: "QQ 登录" }] });
+        throw new Error(`Unexpected request: ${url}`);
+    }) as typeof apiClient.request;
+    useUserStore.getState().setUser(user);
+    usePluginStore.setState({ runtimeStatuses: { "supdance-social-auth": "enabled" } });
+    const client = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+    const router = createMemoryRouter([{ element: <SupDanceRouteHosts />, children: [{ path: "/toolbox/music", element: <div>Original workspace</div> }] }], {
+        initialEntries: ["/toolbox/music?filter=recent&open_settings=social&bind_success=qq#accounts"],
+    });
+    const container = document.createElement("div");
+    document.body.append(container);
+    const root = createRoot(container);
+    const waitForUpdates = async () => {
+        await act(async () => {
+            await new Promise((resolve) => setTimeout(resolve, 30));
+        });
+    };
+    try {
+        await act(async () =>
+            root.render(
+                <ConfigProvider theme={{ token: { motion: false } }}>
+                    <App>
+                        <QueryClientProvider client={client}>
+                            <RouterProvider router={router} />
+                        </QueryClientProvider>
+                    </App>
+                </ConfigProvider>,
+            ),
+        );
+        await waitForUpdates();
+        expect(useUserProfileModalStore.getState().activeTab).toBe("social");
+        expect(document.querySelector('[role="dialog"]')).not.toBeNull();
+        expect(document.body.textContent).not.toContain("成功绑定");
+        expect(router.state.location.search).toContain("bind_success=qq");
+
+        readback.resolve(authData({ hasPassword: true, identities: [{ provider: "qq", providerName: "QQ 登录", providerUsername: "Fixture creator", bound: true, available: true }] }));
+        await waitForUpdates();
+        expect(document.body.textContent).toContain("成功绑定 QQ 登录");
+        expect(document.body.textContent).toContain("Fixture creator");
+        expect(router.state.location.pathname).toBe("/toolbox/music");
+        expect(router.state.location.search).toBe("?filter=recent");
+        expect(router.state.location.hash).toBe("#accounts");
+        expect(useUserProfileModalStore.getState().activeTab).toBe("social");
+    } finally {
+        await act(async () => root.unmount());
+        router.dispose();
+        client.clear();
+        apiClient.request = originalRequest;
+        container.remove();
+        useUserProfileModalStore.getState().closeModal();
+        useUserStore.getState().setUser(null);
+    }
+});
+
 test("the real account window opens and survives page navigation with working profile router hooks", async () => {
     const user = { id: "router-host-user", username: "original-user", displayName: "Original name / 用户原文", role: "user" as const, status: "active" as const, avatarMode: "default" as const, avatarPreset: "person" };
     const originalRequest = apiClient.request;

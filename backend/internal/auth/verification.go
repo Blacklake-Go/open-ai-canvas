@@ -49,6 +49,10 @@ func (s *Service) verificationHash(value string) (string, error) {
 	return hex.EncodeToString(h.Sum(nil)), nil
 }
 func (s *Service) checkVerificationPolicy(p VerificationPolicy, purpose, method string) error {
+	if purpose == socialOnboardingEmailPurpose && method == "email" {
+		_, err := s.checkOAuthRegistration(p)
+		return err
+	}
 	if !p.allows(purpose, method) {
 		return kernel.Forbidden("此验证方式未开启，请刷新页面")
 	}
@@ -64,6 +68,33 @@ func (s *Service) checkVerificationPolicy(p VerificationPolicy, purpose, method 
 	return nil
 }
 func (s *Service) StartVerification(ctx context.Context, actor *model.User, req VerificationRequest) (*VerificationTicket, error) {
+	if req.Purpose == socialOnboardingEmailPurpose {
+		return nil, kernel.Forbidden("请从三方入站页面发起验证")
+	}
+	return s.startVerification(ctx, actor, req, "")
+}
+
+const socialOnboardingEmailPurpose = "social_onboarding"
+
+func (s *Service) StartSocialOnboardingEmail(ctx context.Context, email, binding string) (*VerificationTicket, error) {
+	if binding == "" {
+		return nil, invalidVerification()
+	}
+	return s.startVerification(ctx, nil, VerificationRequest{Purpose: socialOnboardingEmailPurpose, Method: "email", Email: email}, binding)
+}
+
+func (s *Service) VerifySocialOnboardingEmail(email, binding, ticket, code string) (string, error) {
+	v, err := s.verifyTicket(socialOnboardingEmailPurpose, VerificationConfirm{Ticket: ticket, EmailCode: code})
+	if err != nil {
+		return "", err
+	}
+	if binding == "" || v.CredentialHash != binding || v.Email != NormalizeEmail(email) {
+		return "", invalidVerification()
+	}
+	return v.ID, nil
+}
+
+func (s *Service) startVerification(ctx context.Context, actor *model.User, req VerificationRequest, binding string) (*VerificationTicket, error) {
 	p, err := s.verificationPolicy()
 	if err != nil {
 		return nil, err
@@ -84,7 +115,7 @@ func (s *Service) StartVerification(ctx context.Context, actor *model.User, req 
 		if !enabled {
 			return nil, kernel.NewAppError(503, "邮件服务未启用")
 		}
-		if req.Purpose == "register" {
+		if req.Purpose == "register" || req.Purpose == socialOnboardingEmailPurpose {
 			if err := s.validateRegistrationEmailDomain(email); err != nil {
 				return nil, err
 			}
@@ -139,7 +170,7 @@ func (s *Service) StartVerification(ctx context.Context, actor *model.User, req 
 		return nil, err
 	}
 	now := time.Now()
-	v := &model.AuthVerification{ID: kernel.NewID(), TokenHash: HashToken(hex.EncodeToString(secret)), Purpose: req.Purpose, Method: req.Method, UserID: userID, Email: email, Phone: phone, PolicyHash: p.hash(), CreatedAt: now, ExpiresAt: now.Add(10 * time.Minute)}
+	v := &model.AuthVerification{ID: kernel.NewID(), TokenHash: HashToken(hex.EncodeToString(secret)), Purpose: req.Purpose, Method: req.Method, UserID: userID, Email: email, Phone: phone, PolicyHash: p.hash(), CredentialHash: binding, CreatedAt: now, ExpiresAt: now.Add(10 * time.Minute)}
 	var emailCode, smsCode string
 	if email != "" {
 		emailCode, err = randomNumericCode(6)
@@ -352,7 +383,7 @@ func verificationHeading(purpose string) string {
 	switch purpose {
 	case "login":
 		return "登录"
-	case "register":
+	case "register", socialOnboardingEmailPurpose:
 		return "注册"
 	case "bind":
 		return "绑定邮箱"

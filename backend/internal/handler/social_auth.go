@@ -1,18 +1,34 @@
 package handler
 
 import (
-	"crypto/subtle"
+	"errors"
 	"fmt"
 	"net/http"
 	"net/url"
 	"strings"
 	"time"
-	"yingce/backend/internal/supdance/socialauth"
 
 	"yingce/backend/internal/service"
+	"yingce/backend/internal/supdance/socialauth"
 
 	"github.com/gin-gonic/gin"
 )
+
+const socialOnboardingCookie = "__Host-supdance-social-onboarding"
+
+func setSocialOnboardingCookie(c *gin.Context, value string, maxAge int) {
+	http.SetCookie(c.Writer, &http.Cookie{Name: socialOnboardingCookie, Value: value, Path: "/", HttpOnly: true, Secure: true, SameSite: http.SameSiteLaxMode, MaxAge: maxAge})
+}
+
+func socialOnboardingTicket(c *gin.Context) (string, bool) {
+	c.Header("Cache-Control", "no-store")
+	value, _ := c.Cookie(socialOnboardingCookie)
+	if !strings.HasPrefix(value, socialauth.OnboardingTicketPrefix) || len(value) != len(socialauth.OnboardingTicketPrefix)+64 {
+		fail(c, http.StatusBadRequest, fmt.Errorf("入站授权已过期，请重新登录"))
+		return "", false
+	}
+	return value, true
+}
 
 // RegisterSocialAuthRoutes mounts all public and administrative social auth endpoints.
 func RegisterSocialAuthRoutes(api *gin.RouterGroup, svc *service.Service) {
@@ -62,9 +78,20 @@ func RegisterSocialAuthRoutes(api *gin.RouterGroup, svc *service.Service) {
 
 		result, err := svc.CompleteSocialAuth(c.Request, provider, state, code, sessionCookie(c), loginRequestContext(c))
 		if err != nil {
-			redirectTarget := "/login?oauth_error=" + url.QueryEscape(err.Error())
+			var accountErr *socialauth.AccountAuthorizationError
+			if errors.As(err, &accountErr) {
+				http.SetCookie(c.Writer, &http.Cookie{Name: socialauth.OAuthBindingCookie, Value: "", Path: "/api/auth", HttpOnly: true, Secure: true, SameSite: http.SameSiteLaxMode, MaxAge: -1})
+				c.Redirect(http.StatusFound, accountErr.Next)
+				return
+			}
+			message := "第三方授权失败，请重新登录"
+			var appErr *service.AppError
+			if errors.As(err, &appErr) && appErr.Status < 500 {
+				message = appErr.Message
+			}
+			redirectTarget := "/login?oauth_error=" + url.QueryEscape(message)
 			if c.Query("lang") == "zh" || c.GetHeader("Referer") != "" && urlContains(c.GetHeader("Referer"), "/zh/login") {
-				redirectTarget = "/zh/login?oauth_error=" + url.QueryEscape(err.Error())
+				redirectTarget = "/zh/login?oauth_error=" + url.QueryEscape(message)
 			}
 			c.Redirect(http.StatusFound, redirectTarget)
 			return
@@ -72,36 +99,21 @@ func RegisterSocialAuthRoutes(api *gin.RouterGroup, svc *service.Service) {
 
 		http.SetCookie(c.Writer, &http.Cookie{Name: socialauth.OAuthBindingCookie, Value: "", Path: "/api/auth", HttpOnly: true, Secure: true, SameSite: http.SameSiteLaxMode, MaxAge: -1})
 
-		// 1. If new user awaiting onboarding confirmation
 		if result.OnboardingTicket != "" {
-			http.SetCookie(c.Writer, &http.Cookie{Name: "supdance_social_onboarding", Value: socialauth.HashToken(result.OnboardingTicket), Path: "/api/auth/social", HttpOnly: true, Secure: true, SameSite: http.SameSiteLaxMode, MaxAge: 1800})
-			if result.Session != nil {
-				setSessionCookie(c, result.Session.Session, result.Session.MaxAgeSecs)
-			}
+			setSocialOnboardingCookie(c, result.OnboardingTicket, 1800)
 			c.Redirect(http.StatusFound, result.Next)
 			return
 		}
 
-		// 2. Normal login or account bind
 		if result.Session != nil {
 			setSessionCookie(c, result.Session.Session, result.Session.MaxAgeSecs)
 		}
 		c.Redirect(http.StatusFound, result.Next)
 	}
 
-	// 2. Onboarding endpoints
-	validOnboardingBrowser := func(c *gin.Context, ticket string) bool {
-		cookie, err := c.Request.Cookie("supdance_social_onboarding")
-		return err == nil && subtle.ConstantTimeCompare([]byte(cookie.Value), []byte(socialauth.HashToken(ticket))) == 1
-	}
 	api.GET("/auth/social/onboarding/profile", func(c *gin.Context) {
-		ticket := c.Query("ticket")
-		if !validOnboardingBrowser(c, ticket) {
-			fail(c, http.StatusBadRequest, fmt.Errorf("入站浏览器校验失败，请重新登录"))
-			return
-		}
-		if strings.TrimSpace(ticket) == "" {
-			fail(c, http.StatusBadRequest, fmt.Errorf("缺少入站凭证"))
+		ticket, okTicket := socialOnboardingTicket(c)
+		if !okTicket {
 			return
 		}
 		profile, err := svc.SocialAuthOnboardingProfile(ticket)
@@ -109,34 +121,48 @@ func RegisterSocialAuthRoutes(api *gin.RouterGroup, svc *service.Service) {
 			failService(c, err)
 			return
 		}
-		c.Header("Cache-Control", "no-store")
 		ok(c, profile)
 	})
 
+	api.POST("/auth/social/onboarding/email-code", func(c *gin.Context) {
+		ticket, okTicket := socialOnboardingTicket(c)
+		if !okTicket || !enforceRateLimit(c, "social-onboarding-email:"+c.ClientIP(), 20, 10*time.Minute) {
+			return
+		}
+		var req struct {
+			Email string `json:"email"`
+		}
+		if err := c.ShouldBindJSON(&req); err != nil {
+			fail(c, http.StatusBadRequest, err)
+			return
+		}
+		result, err := svc.SendSocialOnboardingEmail(c.Request, ticket, req.Email)
+		if err != nil {
+			failService(c, err)
+			return
+		}
+		ok(c, result)
+	})
+
 	api.POST("/auth/social/onboarding/complete", func(c *gin.Context) {
+		ticket, okTicket := socialOnboardingTicket(c)
+		if !okTicket || !enforceRateLimit(c, "social-onboarding-complete:"+c.ClientIP(), 40, 10*time.Minute) {
+			return
+		}
 		var req service.SocialAuthCompleteOnboardingRequest
 		if err := c.ShouldBindJSON(&req); err != nil {
 			fail(c, http.StatusBadRequest, err)
 			return
 		}
-		ticket := req.TicketID
-		if ticket == "" {
-			ticket = req.Ticket
-		}
-		if !validOnboardingBrowser(c, ticket) {
-			fail(c, http.StatusBadRequest, fmt.Errorf("入站浏览器校验失败，请重新登录"))
-			return
-		}
+		req.TicketID = ticket
 		result, err := svc.CompleteSocialAuthOnboarding(c.Request, req, loginRequestContext(c))
 		if err != nil {
 			failService(c, err)
 			return
 		}
-		if result.Session != nil {
-			setSessionCookie(c, result.Session.Session, result.Session.MaxAgeSecs)
-		}
-		http.SetCookie(c.Writer, &http.Cookie{Name: "supdance_social_onboarding", Value: "", Path: "/api/auth/social", HttpOnly: true, Secure: true, SameSite: http.SameSiteLaxMode, MaxAge: -1})
-		ok(c, result)
+		setSessionCookie(c, result.Session.Session, result.Session.MaxAgeSecs)
+		setSocialOnboardingCookie(c, "", -1)
+		ok(c, gin.H{"user": result.Session.User, "next": result.Next})
 	})
 
 	// 3. User account connected identities and unbind/bind endpoints
@@ -155,28 +181,29 @@ func RegisterSocialAuthRoutes(api *gin.RouterGroup, svc *service.Service) {
 		ok(c, view)
 	})
 
-	api.GET("/auth/social/:provider/bind", func(c *gin.Context) {
-		actor, err := currentUser(c, svc)
-		if err != nil {
-			failService(c, err)
-			return
+	beginAccountAuthorization := func(reauthenticate bool) gin.HandlerFunc {
+		return func(c *gin.Context) {
+			provider := c.Param("provider")
+			if !enforceRateLimit(c, "social-bind:"+provider+":"+c.ClientIP(), 30, 10*time.Minute) {
+				return
+			}
+			target, err := svc.BeginSocialAuthBind(sessionCookie(c), provider, c.Query("next"), reauthenticate)
+			if err != nil {
+				failService(c, err)
+				return
+			}
+			parsed, err := url.Parse(target)
+			if err != nil || parsed.Query().Get("state") == "" {
+				fail(c, http.StatusBadGateway, fmt.Errorf("授权服务返回无效状态"))
+				return
+			}
+			http.SetCookie(c.Writer, &http.Cookie{Name: socialauth.OAuthBindingCookie, Value: socialauth.HashToken(parsed.Query().Get("state")), Path: "/api/auth", HttpOnly: true, Secure: true, SameSite: http.SameSiteLaxMode, MaxAge: 600})
+			c.Header("Cache-Control", "no-store")
+			c.Redirect(http.StatusFound, target)
 		}
-		provider := c.Param("provider")
-		next := c.Query("next")
-		target, err := svc.BeginSocialAuthBind(c.Request, actor, provider, next)
-		if err != nil {
-			failService(c, err)
-			return
-		}
-		parsed, err := url.Parse(target)
-		if err != nil || parsed.Query().Get("state") == "" {
-			fail(c, http.StatusBadGateway, fmt.Errorf("授权服务返回无效状态"))
-			return
-		}
-		http.SetCookie(c.Writer, &http.Cookie{Name: socialauth.OAuthBindingCookie, Value: socialauth.HashToken(parsed.Query().Get("state")), Path: "/api/auth", HttpOnly: true, Secure: true, SameSite: http.SameSiteLaxMode, MaxAge: 600})
-		c.Header("Cache-Control", "no-store")
-		c.Redirect(http.StatusFound, target)
-	})
+	}
+	api.GET("/auth/social/:provider/bind", beginAccountAuthorization(false))
+	api.GET("/auth/social/:provider/reauth", beginAccountAuthorization(true))
 
 	api.POST("/auth/social/:provider/unbind", func(c *gin.Context) {
 		actor, err := currentUser(c, svc)
@@ -185,16 +212,11 @@ func RegisterSocialAuthRoutes(api *gin.RouterGroup, svc *service.Service) {
 			return
 		}
 		provider := c.Param("provider")
-		if err := svc.UnbindSocialAuth(actor, provider); err != nil {
+		if err := svc.UnbindSocialAuth(actor, provider, c.Request); err != nil {
 			failService(c, err)
 			return
 		}
-		view, err := svc.UserSocialIdentities(actor)
-		if err != nil {
-			failService(c, err)
-			return
-		}
-		ok(c, view)
+		ok(c, nil)
 	})
 
 	api.GET("/auth/social/:provider/callback", func(c *gin.Context) {
@@ -243,6 +265,10 @@ func RegisterSocialAuthRoutes(api *gin.RouterGroup, svc *service.Service) {
 				fail(c, http.StatusBadRequest, err)
 				return
 			}
+			if strings.TrimSpace(req.Revision) == "" {
+				fail(c, http.StatusBadRequest, fmt.Errorf("请刷新社交登录配置后再保存"))
+				return
+			}
 			view, err := svc.UpdateSocialAuthAdminSettings(c.Request, actor, req)
 			if err != nil {
 				failService(c, err)
@@ -286,12 +312,19 @@ func RegisterSocialAuthRoutes(api *gin.RouterGroup, svc *service.Service) {
 				failService(c, err)
 				return
 			}
-			var policies service.SocialAuthOperationalPolicies
-			if err := c.ShouldBindJSON(&policies); err != nil {
+			var req struct {
+				service.SocialAuthOperationalPolicies
+				Revision string `json:"revision"`
+			}
+			if err := c.ShouldBindJSON(&req); err != nil {
 				fail(c, http.StatusBadRequest, err)
 				return
 			}
-			overview, err := svc.UpdateSocialAuthPolicies(actor, policies)
+			if strings.TrimSpace(req.Revision) == "" {
+				fail(c, http.StatusBadRequest, fmt.Errorf("请刷新社交登录运营策略后再保存"))
+				return
+			}
+			overview, err := svc.UpdateSocialAuthPolicies(actor, req.SocialAuthOperationalPolicies, req.Revision)
 			if err != nil {
 				failService(c, err)
 				return

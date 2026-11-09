@@ -1,12 +1,15 @@
 package repository
 
 import (
+	"errors"
 	"strings"
 	"time"
 
+	"yingce/backend/internal/kernel"
 	"yingce/backend/internal/model"
 
 	"gorm.io/gorm"
+	"gorm.io/gorm/clause"
 )
 
 func (r *Repository) UserIdentity(provider string, subject string) (*model.UserIdentity, error) {
@@ -50,12 +53,21 @@ func (r *Repository) ConsumeOAuthState(provider string, stateHash string) (*mode
 }
 
 func (r *Repository) CreateOAuthUser(user *model.User, identity *model.UserIdentity) error {
+	return r.CreateOAuthUserWithVerification(user, identity, "")
+}
+
+func (r *Repository) CreateOAuthUserWithVerification(user *model.User, identity *model.UserIdentity, verificationID string) error {
 	return r.db.Transaction(func(tx *gorm.DB) error {
 		if err := lockRegistrationEmail(tx, user.Email); err != nil {
 			return err
 		}
 		if err := New(tx).CheckEmailAvailable(user.Email, ""); err != nil {
 			return err
+		}
+		if verificationID != "" {
+			if err := consumeVerification(tx, verificationID, time.Now()); err != nil {
+				return err
+			}
 		}
 		if err := tx.Create(user).Error; err != nil {
 			return err
@@ -79,15 +91,76 @@ func (r *Repository) DeleteUserIdentity(userID string, provider string) error {
 	return r.db.Delete(&model.UserIdentity{}, "user_id = ? AND provider = ?", userID, provider).Error
 }
 
+func (r *Repository) DeleteOAuthIdentitySafely(userID, provider string, usableProviders []string) error {
+	return r.db.Transaction(func(tx *gorm.DB) error {
+		if err := lockProfileUser(tx, userID); err != nil {
+			return err
+		}
+		var user model.User
+		if err := tx.Clauses(clause.Locking{Strength: "UPDATE"}).First(&user, "id = ?", userID).Error; err != nil {
+			return err
+		}
+		if user.PasswordHash == "" {
+			var remaining int64
+			if err := tx.Model(&model.UserIdentity{}).Where("user_id = ? AND provider <> ? AND provider IN ?", userID, provider, usableProviders).Count(&remaining).Error; err != nil {
+				return err
+			}
+			if remaining == 0 {
+				return kernel.BadAuthRequest("无法解绑唯一可用的登录方式，请先设置密码或绑定其他可用渠道")
+			}
+		}
+		result := tx.Delete(&model.UserIdentity{}, "user_id = ? AND provider = ?", userID, provider)
+		if result.Error != nil {
+			return result.Error
+		}
+		if result.RowsAffected == 0 {
+			return kernel.BadAuthRequest("未找到已绑定的该渠道账号")
+		}
+		return nil
+	})
+}
+
+func (r *Repository) UpdateOAuthIdentityProfile(identity *model.UserIdentity) error {
+	result := r.db.Model(&model.UserIdentity{}).
+		Where("id = ? AND user_id = ? AND provider = ? AND subject = ?", identity.ID, identity.UserID, identity.Provider, identity.Subject).
+		Updates(map[string]any{"provider_username": identity.ProviderUsername, "avatar_url": identity.AvatarURL, "updated_at": time.Now()})
+	if result.Error != nil {
+		return result.Error
+	}
+	if result.RowsAffected != 1 {
+		return gorm.ErrRecordNotFound
+	}
+	return nil
+}
+
+func (r *Repository) BindOAuthIdentity(identity *model.UserIdentity, session *model.AuthSession) error {
+	return r.db.Transaction(func(tx *gorm.DB) error {
+		if err := lockProfileUser(tx, identity.UserID); err != nil {
+			return err
+		}
+		var user model.User
+		if err := tx.Clauses(clause.Locking{Strength: "UPDATE"}).First(&user, "id = ?", identity.UserID).Error; err != nil {
+			return err
+		}
+		if session == nil {
+			return ErrProfileAuthorization
+		}
+		if err := profileAuthorization(tx, &user, session, time.Now(), false); err != nil {
+			return err
+		}
+		return New(tx).UpsertUserIdentity(identity)
+	})
+}
+
 func (r *Repository) UpsertUserIdentity(identity *model.UserIdentity) error {
 	var existing model.UserIdentity
 	err := r.db.First(&existing, "user_id = ? AND provider = ?", identity.UserID, identity.Provider).Error
 	if err == nil {
-		existing.Subject = identity.Subject
-		existing.ProviderUsername = identity.ProviderUsername
-		existing.AvatarURL = identity.AvatarURL
-		existing.UpdatedAt = time.Now()
-		return r.db.Save(&existing).Error
+		return r.db.Model(&model.UserIdentity{}).Where("id = ?", existing.ID).
+			Updates(map[string]any{"subject": identity.Subject, "provider_username": identity.ProviderUsername, "avatar_url": identity.AvatarURL, "updated_at": time.Now()}).Error
+	}
+	if !errors.Is(err, gorm.ErrRecordNotFound) {
+		return err
 	}
 	return r.db.Create(identity).Error
 }

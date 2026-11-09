@@ -9,7 +9,8 @@ const (
 
 	ConfigSettingKey = "supdance_social_auth"
 
-	OAuthBindingCookie = "supdance_social_oauth"
+	OAuthBindingCookie     = "supdance_social_oauth"
+	OnboardingTicketPrefix = "onboard_v2_"
 
 	RegionCN   = "cn"   // 中国大陆渠道
 	RegionIntl = "intl" // 海外及港澳台渠道
@@ -114,6 +115,7 @@ type ProviderAdminView struct {
 
 // AdminSettingsView is the full view for the Admin Social Login Config Center.
 type AdminSettingsView struct {
+	Revision              string                       `json:"revision"`
 	ClientIP              string                       `json:"clientIp"`
 	DetectedRegion        string                       `json:"detectedRegion"` // "cn" or "intl"
 	DetectedRegionLabel   string                       `json:"detectedRegionLabel"`
@@ -166,12 +168,14 @@ type UpdateProviderInput struct {
 
 // UpdateSettingsRequest is the payload for PUT /api/admin/social-auth/settings.
 type UpdateSettingsRequest struct {
+	Revision              string                         `json:"revision,omitempty"`
 	DefaultFallbackRegion string                         `json:"defaultFallbackRegion,omitempty"`
 	Providers             map[string]UpdateProviderInput `json:"providers"`
 }
 
 // OperationsOverview represents the dashboard and policy state for operations.
 type OperationsOverview struct {
+	Revision             string              `json:"revision"`
 	Policies             OperationalPolicies `json:"policies"`
 	ProviderDistribution map[string]int64    `json:"providerDistribution"`
 	TotalBindings        int64               `json:"totalBindings"`
@@ -237,12 +241,12 @@ type OnboardingTicket struct {
 
 // OnboardingProfileView is returned by GET /api/auth/social/onboarding/profile.
 type OnboardingProfileView struct {
-	TicketID         string `json:"ticketId"`
 	Provider         string `json:"provider"`
 	ProviderName     string `json:"providerName"`
 	ProviderUsername string `json:"providerUsername"`
 	DisplayName      string `json:"displayName"`
 	Email            string `json:"email"`
+	EmailRequired    bool   `json:"emailRequired"`
 	AvatarURL        string `json:"avatarUrl"`
 	EmailAutoBound   bool   `json:"emailAutoBound"`
 }
@@ -250,12 +254,13 @@ type OnboardingProfileView struct {
 // CompleteOnboardingRequest is the payload for POST /api/auth/social/onboarding/complete.
 type CompleteOnboardingRequest struct {
 	AcceptedTerms bool   `json:"acceptedTerms"`
-	TicketID      string `json:"ticketId"`
-	Ticket        string `json:"ticket"`
+	TicketID      string `json:"-"`
 	Username      string `json:"username"`
 	DisplayName   string `json:"displayName"`
 	Nickname      string `json:"nickname"`
 	Email         string `json:"email"`
+	EmailTicket   string `json:"emailTicket"`
+	EmailCode     string `json:"emailCode"`
 	Password      string `json:"password"`
 }
 
@@ -264,6 +269,7 @@ type UserIdentityItem struct {
 	Provider         string     `json:"provider"`
 	ProviderName     string     `json:"providerName"`
 	Bound            bool       `json:"bound"`
+	Available        bool       `json:"available"`
 	ProviderUsername string     `json:"providerUsername"`
 	AvatarURL        string     `json:"avatarUrl"`
 	BoundAt          *time.Time `json:"boundAt"`

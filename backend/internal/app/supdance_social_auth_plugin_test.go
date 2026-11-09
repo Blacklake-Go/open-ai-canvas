@@ -1,8 +1,11 @@
 package app
 
 import (
+	"archive/zip"
+	"bytes"
 	"net/http"
 	"net/http/httptest"
+	"strings"
 	"testing"
 
 	"yingce/backend/internal/model"
@@ -12,6 +15,51 @@ import (
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
 )
+
+func TestSocialAuthReservedPluginIDPreservesPlatformState(t *testing.T) {
+	db, err := gorm.Open(sqlite.Open("file:"+newID()+"?mode=memory&cache=shared"), &gorm.Config{})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err := db.AutoMigrate(&model.PluginPlatformState{}, &model.UserPluginState{}, &model.AdminAuditEvent{}); err != nil {
+		t.Fatal(err)
+	}
+	center, err := newPluginRuntime(t.TempDir())
+	if err != nil {
+		t.Fatal(err)
+	}
+	svc := &Service{repo: repository.New(db), pluginRuntime: center, dataDir: t.TempDir()}
+	admin := &model.User{ID: "admin", Role: model.UserRoleAdmin}
+	if _, err := svc.SetPluginPlatformAvailability(admin, PluginSupDanceSocialAuth, false); err != nil {
+		t.Fatal(err)
+	}
+	var buf bytes.Buffer
+	archive := zip.NewWriter(&buf)
+	entry, err := archive.Create("manifest.json")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if _, err := entry.Write([]byte(`{"apiVersion":"yingce.plugin/v1","id":"supdance-social-auth","name":"Fixture","version":"1.0.0","enabled":true,"contributes":{"commands":[{"id":"supdance-social-auth/admin","label":"Settings"}]}}`)); err != nil {
+		t.Fatal(err)
+	}
+	if err := archive.Close(); err != nil {
+		t.Fatal(err)
+	}
+	const fileName = "supdance-social-auth.yingce-plugin"
+	if _, err := svc.InstallPluginForAdmin(admin, buf.Bytes(), fileName); err == nil || !strings.Contains(err.Error(), "保留") {
+		t.Fatalf("reserved ID was not rejected: %v", err)
+	}
+	// Insert a package accepted by the previous runtime and remove it through the admin route.
+	if _, err := center.install(buf.Bytes(), fileName); err != nil {
+		t.Fatal(err)
+	}
+	if err := svc.UninstallPluginForAdmin(admin, PluginSupDanceSocialAuth); err != nil {
+		t.Fatal(err)
+	}
+	if available, err := svc.SocialAuthPluginAvailable(); err != nil || available {
+		t.Fatalf("package uninstall changed the disabled platform state: %v, %v", available, err)
+	}
+}
 
 func TestSupDanceSocialAuthPluginLifecycleAndAdminOperations(t *testing.T) {
 	db, err := gorm.Open(sqlite.Open("file:"+newID()+"?mode=memory&cache=shared"), &gorm.Config{})

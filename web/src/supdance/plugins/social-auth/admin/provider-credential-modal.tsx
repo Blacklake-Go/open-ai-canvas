@@ -13,6 +13,7 @@ import { credentialKeyLabels, draftFromProvider, isMaskedPreview, maskedClientId
 
 export interface ProviderCredentialModalProps {
     provider: SocialAuthProviderAdmin;
+    revision: string;
     draft?: ProviderDraftState;
     onDraftChange?: (patch: Partial<ProviderDraftState>) => void;
     onClose: () => void;
@@ -20,9 +21,10 @@ export interface ProviderCredentialModalProps {
     onCopy: (text: string, label?: string) => void;
 }
 
-export function ProviderCredentialModal({ provider, draft: draftProp, onDraftChange, onClose, onSaved, onCopy }: ProviderCredentialModalProps) {
+export function ProviderCredentialModal({ provider, revision, draft: draftProp, onDraftChange, onClose, onSaved, onCopy }: ProviderCredentialModalProps) {
     const { message } = App.useApp();
     const [busy, setBusy] = useState(false);
+    const [editRevision] = useState(revision);
     const [notice, setNotice] = useState("");
     const [copied, setCopied] = useState(false);
     const [internalDraft, setInternalDraft] = useState<ProviderDraftState>(() => draftProp || draftFromProvider(provider));
@@ -71,6 +73,8 @@ export function ProviderCredentialModal({ provider, draft: draftProp, onDraftCha
         const payload: ProviderUpdateInput = {
             enabled: draft.enabled,
             customRedirectUrl: draft.customRedirectUrl.trim(),
+            iconLightUrl: provider.iconLightUrl,
+            iconDarkUrl: provider.iconDarkUrl,
         };
         if (sendsId) payload.clientId = clientId;
         if (sendsSecret) payload.clientSecret = clientSecret;
@@ -78,7 +82,7 @@ export function ProviderCredentialModal({ provider, draft: draftProp, onDraftCha
         setBusy(true);
         setNotice("");
         try {
-            const view = await updateAdminSocialAuthSettings({ providers: { [provider.id]: payload } });
+            const view = await updateAdminSocialAuthSettings({ revision: editRevision, providers: { [provider.id]: payload } });
             const credentialsWritten = sendsId || sendsSecret;
             message.success(credentialsWritten ? `${provider.name} 凭证已加密存盘` : `${provider.name} 配置已保存`);
             onSaved({ view, providerId: provider.id, credentialsWritten });

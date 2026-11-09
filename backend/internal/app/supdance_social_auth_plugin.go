@@ -79,6 +79,26 @@ func (h *socialAuthHost) EnsureSignupBonus(userID string) error {
 	return h.svc.ensureSignupBonus(userID)
 }
 
+func (h *socialAuthHost) Available() (bool, error) {
+	return h.svc.SocialAuthPluginAvailable()
+}
+
+func (h *socialAuthHost) SocialRegistrationEmailRequired() (bool, error) {
+	return h.svc.authDomain().SocialRegistrationEmailRequired()
+}
+
+func (h *socialAuthHost) VerifyOnboardingEmail(email, binding, ticket, code string) (string, error) {
+	return h.svc.authDomain().VerifySocialOnboardingEmail(email, binding, ticket, code)
+}
+
+func (h *socialAuthHost) LinuxDOEnabled() bool {
+	return h.svc.authDomain().LinuxDOEnabled()
+}
+
+func (h *socialAuthHost) ValidateOnboardingEmail(email string) error {
+	return h.svc.authDomain().ValidateSocialRegistrationEmail(email)
+}
+
 func (s *Service) socialAuthService() *socialauth.Service {
 	return socialauth.NewService(s.repo, &socialAuthHost{svc: s})
 }
@@ -162,37 +182,27 @@ func (s *Service) BeginSocialAuth(r *http.Request, providerID string, nextPath s
 
 // SocialAuthLoginResult combines social auth callback with session creation and login logging.
 type SocialAuthLoginResult struct {
-	Session          *AuthSessionResult `json:"session,omitempty"`
+	Session          *AuthSessionResult `json:"-"`
 	Next             string             `json:"next"`
 	IsNew            bool               `json:"isNew"`
 	User             *model.User        `json:"user,omitempty"`
-	OnboardingTicket string             `json:"onboardingTicket,omitempty"`
+	OnboardingTicket string             `json:"-"`
 }
 
 // CompleteSocialAuth completes social login, binds user, or initiates onboarding ticket.
 func (s *Service) CompleteSocialAuth(r *http.Request, providerID string, state string, code string, cookie string, contexts ...LoginContext) (*SocialAuthLoginResult, error) {
-	available, err := s.SocialAuthPluginAvailable()
-	if err != nil {
-		return nil, err
-	}
-	if !available {
-		return nil, kernel.Forbidden("第三方社交登录插件已被系统管理员停用")
-	}
-
 	var context LoginContext
 	if len(contexts) > 0 {
 		context = contexts[0]
 	}
 	event := auth.NewLoginLog("social_"+providerID, "login", context)
 
-	currentUserID := ""
+	var currentSession *model.AuthSession
 	if cookie != "" {
-		if u, err := s.CurrentUser(cookie); err == nil && u != nil {
-			currentUserID = u.ID
-		}
+		_, currentSession, _ = s.authDomain().CurrentUserAndSession(cookie)
 	}
 
-	result, err := s.socialAuthService().CompleteAuth(r, providerID, state, code, currentUserID)
+	result, err := s.socialAuthService().CompleteAuth(r, providerID, state, code, currentSession)
 	if err != nil {
 		_ = s.authDomain().RecordLoginFailure(event, err)
 		return nil, err
@@ -211,9 +221,8 @@ func (s *Service) CompleteSocialAuth(r *http.Request, providerID string, state s
 		auth.LoginLogUser(event, result.User)
 		now := time.Now()
 		result.User.LastLoginAt = &now
-		_ = s.repo.UpdateUserLoginTime(result.User.ID, now)
 
-		session, err := s.authDomain().CreateAuthSession(result.User, event)
+		session, err := s.authDomain().CreateOAuthAuthSession(result.User, result.Identity, event)
 		if err != nil {
 			return nil, err
 		}
@@ -221,20 +230,25 @@ func (s *Service) CompleteSocialAuth(r *http.Request, providerID string, state s
 		return &SocialAuthLoginResult{
 			Session: session,
 			Next:    result.Next,
-			IsNew:   result.IsNew,
 			User:    result.User,
 		}, nil
 	}
 
 	return &SocialAuthLoginResult{
-		Next:  result.Next,
-		IsNew: result.IsNew,
+		Next: result.Next,
 	}, nil
 }
 
 // SocialAuthOnboardingProfile returns the profile info for the onboarding modal.
 func (s *Service) SocialAuthOnboardingProfile(ticket string) (*socialauth.OnboardingProfileView, error) {
 	return s.socialAuthService().GetOnboardingProfile(ticket)
+}
+
+func (s *Service) SendSocialOnboardingEmail(r *http.Request, ticket, email string) (*auth.VerificationTicket, error) {
+	if _, err := s.SocialAuthOnboardingProfile(ticket); err != nil {
+		return nil, err
+	}
+	return s.authDomain().StartSocialOnboardingEmail(r.Context(), email, socialauth.HashToken(ticket))
 }
 
 // CompleteSocialAuthOnboarding creates the user and signs them in after onboarding modal confirmation.
@@ -246,7 +260,7 @@ func (s *Service) CompleteSocialAuthOnboarding(r *http.Request, req socialauth.C
 	if !available {
 		return nil, kernel.Forbidden("第三方社交登录插件已被系统管理员停用")
 	}
-	user, session, err := s.socialAuthService().CompleteOnboarding(req)
+	user, identity, err := s.socialAuthService().CompleteOnboarding(req)
 	if err != nil {
 		return nil, err
 	}
@@ -259,13 +273,11 @@ func (s *Service) CompleteSocialAuthOnboarding(r *http.Request, req socialauth.C
 	auth.LoginLogUser(event, user)
 	now := time.Now()
 	user.LastLoginAt = &now
-	_ = s.repo.UpdateUserLoginTime(user.ID, now)
 
-	authSession, err := s.authDomain().CreateAuthSession(user, event)
+	authSession, err := s.authDomain().CreateOAuthAuthSession(user, identity, event)
 	if err != nil {
 		return nil, err
 	}
-	_ = session
 
 	return &SocialAuthLoginResult{
 		Session: authSession,
@@ -289,20 +301,17 @@ func (s *Service) UserSocialIdentities(actor *model.User) (*socialauth.UserIdent
 }
 
 // BeginSocialAuthBind starts the OAuth flow to bind a provider to the logged in user.
-func (s *Service) BeginSocialAuthBind(r *http.Request, actor *model.User, providerID string, nextPath ...string) (string, error) {
-	available, err := s.SocialAuthPluginAvailable()
+func (s *Service) BeginSocialAuthBind(cookie, providerID, next string, reauthenticate bool) (string, error) {
+	_, session, err := s.authDomain().CurrentUserAndSession(cookie)
 	if err != nil {
 		return "", err
 	}
-	if !available {
-		return "", kernel.Forbidden("第三方社交登录插件已被系统管理员停用")
-	}
-	return s.socialAuthService().BeginBind(r, actor, providerID, nextPath...)
+	return s.socialAuthService().BeginBind(session, providerID, next, reauthenticate)
 }
 
 // UnbindSocialAuth disconnects a social identity while guarding against orphaned accounts.
-func (s *Service) UnbindSocialAuth(actor *model.User, providerID string) error {
-	return s.socialAuthService().Unbind(actor, providerID)
+func (s *Service) UnbindSocialAuth(actor *model.User, providerID string, requests ...*http.Request) error {
+	return s.socialAuthService().Unbind(actor, providerID, requests...)
 }
 
 // SocialAuthOperationsOverview returns operational dashboard statistics and current policies.
@@ -311,8 +320,8 @@ func (s *Service) SocialAuthOperationsOverview(r *http.Request, actor *model.Use
 }
 
 // UpdateSocialAuthPolicies updates global operational policies.
-func (s *Service) UpdateSocialAuthPolicies(actor *model.User, policies socialauth.OperationalPolicies) (*socialauth.OperationsOverview, error) {
-	view, err := s.socialAuthService().UpdatePolicies(actor, policies)
+func (s *Service) UpdateSocialAuthPolicies(actor *model.User, policies socialauth.OperationalPolicies, revisions ...string) (*socialauth.OperationsOverview, error) {
+	view, err := s.socialAuthService().UpdatePolicies(actor, policies, revisions...)
 	if err != nil {
 		return nil, err
 	}

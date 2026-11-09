@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState, type ReactNode } from "react";
+import { useLocation } from "react-router";
 import { App, InputNumber } from "antd";
 import { BookMarked, Boxes, Bug, CheckCircle2, Cloud, Globe, Inbox, Link2, MessageSquareText, Moon, RadioTower, SlidersHorizontal, Sparkles, Sun, UserRound, Workflow, X, Laptop } from "lucide-react";
 
@@ -68,6 +69,7 @@ export function UserProfileModalHost() {
     const closeModal = useUserProfileModalStore((state) => state.closeModal);
     const openModal = useUserProfileModalStore((state) => state.openModal);
     const currentUser = useUserStore((state) => state.user);
+    const { search } = useLocation();
 
     useEffect(() => {
         const handler = (e: Event) => {
@@ -79,15 +81,9 @@ export function UserProfileModalHost() {
     }, [openModal]);
 
     useEffect(() => {
-        const checkUrlParams = () => {
-            const params = new URLSearchParams(window.location.search);
-            const openSettings = params.get("open_settings");
-            if (openSettings) {
-                openModal((openSettings as UserProfileModalTab) || "social");
-            }
-        };
-        checkUrlParams();
-    }, [openModal]);
+        const openSettings = new URLSearchParams(search).get("open_settings");
+        if (openSettings) openModal(openSettings as UserProfileModalTab);
+    }, [openModal, search]);
 
     if (!currentUser) return null;
 
@@ -110,6 +106,8 @@ export function UserProfileModal({ open, activeTab, onTabChange, onClose, search
     const runtimeStatuses = usePluginStore((state) => state.runtimeStatuses);
     const runningHubPluginEnabled = runtimeStatuses[RUNNINGHUB_PLUGIN_ID] === "enabled";
     const socialAuthPluginEnabled = usePluginStore(selectPluginEffectivelyEnabled("supdance-social-auth", true));
+    const returnParams = new URLSearchParams(useLocation().search);
+    const hasSocialReturn = returnParams.has("bind_success") || returnParams.has("bind_error");
 
     const config = useConfigStore((state) => state.config);
     const effectiveConfig = useEffectiveConfig();
@@ -358,8 +356,8 @@ export function UserProfileModal({ open, activeTab, onTabChange, onClose, search
 
                     {/* Content Body */}
                     <div className="thin-scrollbar min-h-0 flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8">
-                        {currentTab === "profile" && <ProfilePane key={currentUser?.id} />}
-                        {currentTab === "social" && socialAuthPluginEnabled && <SocialAccountBindings />}
+                        {currentTab === "profile" && <ProfilePane key={currentUser?.id} returnToModal={!searchParams} />}
+                        {currentTab === "social" && (socialAuthPluginEnabled || hasSocialReturn) && <SocialAccountBindings returnToModal={!searchParams} />}
                         {currentTab === "models" && <ModelDefaultGrid config={effectiveConfig} onChange={(key, model) => updateConfig(key, model)} />}
                         {currentTab === "channels" && <ChannelSettingsPane onOpenModels={() => onTabChange("models")} onOpenRunningHub={runningHubPluginEnabled ? () => onTabChange("runninghub") : undefined} />}
                         {currentTab === "runninghub" && <RunningHubSettingsPane />}

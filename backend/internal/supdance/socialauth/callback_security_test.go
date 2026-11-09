@@ -87,7 +87,7 @@ func TestGoogleLiveExchangeUsesUpstreamProfile(t *testing.T) {
 	if err != nil || identity == nil {
 		t.Fatalf("expected upstream subject google_sub_sub-777 to be persisted: %v", err)
 	}
-	if res.Session == nil {
+	if res.Identity == nil {
 		t.Fatalf("expected a session")
 	}
 	if got := atomic.LoadInt32(&hits); got < 2 {
@@ -151,7 +151,7 @@ func TestQQLiveExchangeUsesUpstreamProfile(t *testing.T) {
 	if err != nil || identity == nil {
 		t.Fatalf("expected upstream subject qq_openid_7F8A9B0C1D2E3F40 to be persisted: %v", err)
 	}
-	if res.User == nil || res.Session == nil {
+	if res.User == nil || res.Identity == nil {
 		t.Fatalf("expected user and session")
 	}
 	if res.User.DisplayName != "星尘编剧" {
@@ -192,7 +192,7 @@ func TestDouyinLiveExchangeUsesUpstreamProfile(t *testing.T) {
 	if err != nil || identity == nil {
 		t.Fatalf("expected upstream subject douyin_openid_aad3-bbbb-cccc-dddd: %v", err)
 	}
-	if res.Session == nil {
+	if res.Identity == nil {
 		t.Fatalf("expected a session")
 	}
 

@@ -76,7 +76,7 @@ func authorizeProfileChange(user *model.User, session *model.AuthSession, passwo
 	}
 	now := time.Now()
 	if session.ReauthenticatedAt == nil || session.ReauthenticatedAt.After(now) || !session.ReauthenticatedAt.Add(repository.ProfileReauthenticationTTL).After(now) {
-		return kernel.Unauthorized("请先通过 Linux.do 重新验证身份")
+		return kernel.Unauthorized("请先通过已绑定的第三方账号重新验证身份")
 	}
 	return nil
 }
@@ -167,7 +167,7 @@ func (s *Service) SendProfileEmailCode(ctx context.Context, actor *model.User, c
 	if err := ValidateEmail(email); err != nil {
 		return nil, err
 	}
-	// 未验证的邮箱（关闭注册验证时填写）允许原样提交一次验证，作为后续绑定邮箱的入口。
+	// 未验证的邮箱可通过当前账号凭据和邮箱验证码补验。
 	if email == NormalizeEmail(user.Email) && user.EmailVerifiedAt != nil {
 		return nil, kernel.BadAuthRequest("请输入与当前邮箱不同的新邮箱")
 	}

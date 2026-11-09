@@ -28,18 +28,18 @@ func stubProbeClient(t *testing.T) {
 }
 
 // Existing provider fixtures now exercise the browser-bound callback AND onboarding.
-func completeBoundTestAuth(t *testing.T, svc *Service, r *http.Request, provider, state, code, userID string) (*SocialAuthCallbackResult, error) {
+func completeBoundTestAuth(t *testing.T, svc *Service, r *http.Request, provider, state, code, _ string) (*SocialAuthCallbackResult, error) {
 	t.Helper()
 	r.AddCookie(&http.Cookie{Name: OAuthBindingCookie, Value: HashToken(state)})
-	result, err := svc.CompleteAuth(r, provider, state, code, userID)
+	result, err := svc.CompleteAuth(r, provider, state, code, nil)
 	if err != nil || result.OnboardingTicket == "" {
 		return result, err
 	}
-	user, session, err := svc.CompleteOnboarding(CompleteOnboardingRequest{AcceptedTerms: true, TicketID: result.OnboardingTicket, Username: "creator_" + RandomToken()[:8]})
+	user, identity, err := svc.CompleteOnboarding(CompleteOnboardingRequest{AcceptedTerms: true, TicketID: result.OnboardingTicket, Username: "creator_" + RandomToken()[:8]})
 	if err != nil {
 		return nil, err
 	}
-	result.User, result.Session = user, session
+	result.User, result.Identity = user, identity
 	return result, nil
 }
 
@@ -59,7 +59,7 @@ func TestUnifiedCallbackRejectsMissingBrowserBinding(t *testing.T) {
 	old := googleTokenURL
 	googleTokenURL = server.URL
 	t.Cleanup(func() { googleTokenURL = old })
-	_, err := svc.CompleteAuth(intlRequest("/callback"), ProviderGoogle, mintState(t, repo, ProviderGoogle), "provider_code", "")
+	_, err := svc.CompleteAuth(intlRequest("/callback"), ProviderGoogle, mintState(t, repo, ProviderGoogle), "provider_code", nil)
 	if err == nil || hits != 0 || !strings.Contains(err.Error(), "浏览器") {
 		t.Fatalf("callback without browser binding reached token exchange: hits=%d err=%v", hits, err)
 	}
@@ -99,6 +99,7 @@ func TestUnifiedLegacyMockCredentialsCannotBeAdvertised(t *testing.T) {
 
 func TestUnifiedOnboardingValidationCanBeRetried(t *testing.T) {
 	_, svc := newSecurityTestService(t)
+	seedChannel(t, svc, ProviderGoogle, "client_id", "client_secret", false)
 	id := "onboard_" + RandomToken()
 	svc.saveTicket(&OnboardingTicket{TicketID: id, Provider: ProviderGoogle, Subject: "retry-subject", ExpiresAt: time.Now().Add(time.Minute)})
 	if _, _, err := svc.CompleteOnboarding(CompleteOnboardingRequest{AcceptedTerms: true, TicketID: id, Username: "x"}); err == nil {
@@ -117,13 +118,13 @@ func TestUnifiedNoAccountOrSessionBeforeOnboarding(t *testing.T) {
 	state := mintState(t, repo, ProviderGoogle)
 	r := intlRequest("/callback")
 	r.AddCookie(&http.Cookie{Name: OAuthBindingCookie, Value: HashToken(state)})
-	result, err := svc.CompleteAuth(r, ProviderGoogle, state, "provider_code", "")
+	result, err := svc.CompleteAuth(r, ProviderGoogle, state, "provider_code", nil)
 	if err != nil {
 		t.Fatal(err)
 	}
 	var users int64
 	repo.db.Model(&model.User{}).Count(&users)
-	if users != 0 || result.User != nil || result.Session != nil || result.OnboardingTicket == "" {
+	if users != 0 || result.User != nil || result.Identity != nil || result.OnboardingTicket == "" {
 		t.Fatalf("account created before onboarding: users=%d result=%+v", users, result)
 	}
 	req := CompleteOnboardingRequest{TicketID: result.OnboardingTicket, Username: "confirmed_user", AcceptedTerms: true}

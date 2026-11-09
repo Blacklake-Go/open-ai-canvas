@@ -140,6 +140,35 @@ func (s *Service) RegistrationEnabled() (bool, error) {
 	return value.Enabled, err
 }
 
+func (s *Service) SocialRegistrationEmailRequired() (bool, error) {
+	policy, err := s.verificationPolicy()
+	if err != nil {
+		return false, err
+	}
+	return s.checkOAuthRegistration(policy)
+}
+
+func (s *Service) ValidateSocialRegistrationEmail(email string) error {
+	return s.validateRegistrationEmailDomain(email)
+}
+
+func (s *Service) checkOAuthRegistration(policy VerificationPolicy) (bool, error) {
+	_, registration, err := s.readRegistrationSetting()
+	if err != nil {
+		return false, err
+	}
+	if !registration.Enabled {
+		return false, kernel.Forbidden("管理员未开放新用户注册")
+	}
+	if !registration.verificationRequired() {
+		return registration.emailRequired(), nil
+	}
+	if policy.SMSAndEmailRegistration || !policy.EmailRegistration {
+		return false, kernel.Forbidden("请先通过注册页面完成站点要求的验证，再绑定第三方账号")
+	}
+	return true, nil
+}
+
 // AgreementTitleForMessage 只用于错误提示。协议读取失败时不再返回品牌名兜底标题，
 // 否则用户会被要求同意一个后台并不存在的协议名称。
 func (s *Service) AgreementTitleForMessage() string {

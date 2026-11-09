@@ -58,6 +58,7 @@ export interface SocialAuthProviderAdmin {
 }
 
 export interface AdminSettingsView {
+    revision: string;
     clientIp: string;
     detectedRegion: SocialAuthRegion;
     detectedRegionLabel?: string;
@@ -100,6 +101,7 @@ export interface DailyLoginCount {
 }
 
 export interface OperationsOverview {
+    revision: string;
     policies: OperationalPolicies;
     providerDistribution: Record<string, number>;
     totalBindings: number;
@@ -131,6 +133,7 @@ export interface SocialLoginLogItem {
 }
 
 export interface UpdateSettingsRequest {
+    revision: string;
     defaultFallbackRegion?: SocialAuthRegion;
     providers?: Record<string, ProviderUpdateInput>;
 }
@@ -146,24 +149,24 @@ export interface ProviderTestResult {
 }
 
 export interface OnboardingProfileView {
-    ticketId: string;
     provider: string;
     providerName: string;
     providerUsername: string;
     displayName: string;
     email: string;
+    emailAutoBound: boolean;
+    emailRequired: boolean;
     avatarUrl: string;
-    expiresAt: string;
 }
 
 export interface CompleteOnboardingRequest {
     acceptedTerms: boolean;
-    ticket?: string;
-    ticketId?: string;
     username: string;
     displayName?: string;
     nickname?: string;
     email?: string;
+    emailTicket?: string;
+    emailCode?: string;
     password?: string;
 }
 
@@ -176,10 +179,10 @@ export interface UserIdentityItem {
     avatarUrl?: string;
     boundAt?: string | null;
     bound?: boolean;
+    available: boolean;
 }
 
 export interface UserIdentitiesView {
     hasPassword: boolean;
     identities: UserIdentityItem[];
-    count: number;
 }

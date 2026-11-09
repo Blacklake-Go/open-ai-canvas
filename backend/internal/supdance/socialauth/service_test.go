@@ -1,19 +1,22 @@
 package socialauth
 
 import (
+	"encoding/json"
 	"errors"
 	"net/http"
 	"net/http/httptest"
 	"strings"
 	"testing"
-	"time"
 
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
+	"yingce/backend/internal/kernel"
 	"yingce/backend/internal/model"
+	"yingce/backend/internal/repository"
 )
 
 type testRepo struct {
+	*repository.Repository
 	db *gorm.DB
 }
 
@@ -28,161 +31,13 @@ func newTestRepo(t *testing.T) *testRepo {
 		&model.UserIdentity{},
 		&model.OAuthState{},
 		&model.AuthSession{},
+		&model.AuthVerification{},
 		&model.CreditAccount{},
+		&model.LoginLog{},
 	); err != nil {
 		t.Fatalf("failed to auto migrate: %v", err)
 	}
-	return &testRepo{db: db}
-}
-
-func (r *testRepo) SystemSetting(key string) (*model.SystemSetting, error) {
-	var s model.SystemSetting
-	err := r.db.First(&s, "key = ?", key).Error
-	return &s, err
-}
-
-func (r *testRepo) SaveSystemSetting(setting *model.SystemSetting) error {
-	var existing model.SystemSetting
-	if err := r.db.First(&existing, "key = ?", setting.Key).Error; err == nil {
-		existing.ValueJSON = setting.ValueJSON
-		existing.UpdatedAt = time.Now()
-		return r.db.Save(&existing).Error
-	}
-	return r.db.Create(setting).Error
-}
-
-func (r *testRepo) UserIdentity(provider string, subject string) (*model.UserIdentity, error) {
-	var id model.UserIdentity
-	err := r.db.First(&id, "provider = ? AND subject = ?", provider, subject).Error
-	return &id, err
-}
-
-func (r *testRepo) UserIdentityForUser(userID string, provider string) (*model.UserIdentity, error) {
-	var id model.UserIdentity
-	err := r.db.First(&id, "user_id = ? AND provider = ?", userID, provider).Error
-	return &id, err
-}
-
-func (r *testRepo) CreateOAuthState(state *model.OAuthState) error {
-	return r.db.Create(state).Error
-}
-
-func (r *testRepo) ConsumeOAuthState(provider string, stateHash string) (*model.OAuthState, error) {
-	var state model.OAuthState
-	err := r.db.First(&state, "provider = ? AND state_hash = ? AND used_at IS NULL", provider, stateHash).Error
-	if err != nil {
-		return nil, err
-	}
-	now := time.Now()
-	state.UsedAt = &now
-	r.db.Save(&state)
-	return &state, nil
-}
-
-func (r *testRepo) CreateOAuthUser(user *model.User, identity *model.UserIdentity) error {
-	return r.db.Transaction(func(tx *gorm.DB) error {
-		if err := tx.Create(user).Error; err != nil {
-			return err
-		}
-		if err := tx.Create(identity).Error; err != nil {
-			return err
-		}
-		return tx.Create(&model.CreditAccount{UserID: user.ID}).Error
-	})
-}
-
-func (r *testRepo) User(id string) (*model.User, error) {
-	var u model.User
-	err := r.db.First(&u, "id = ?", id).Error
-	return &u, err
-}
-
-func (r *testRepo) UserByUsername(username string) (*model.User, error) {
-	var u model.User
-	err := r.db.First(&u, "username = ?", username).Error
-	return &u, err
-}
-
-func (r *testRepo) UserByEmail(email string) (*model.User, error) {
-	var u model.User
-	err := r.db.First(&u, "email = ?", email).Error
-	return &u, err
-}
-
-func (r *testRepo) UpdateUserLoginTime(userID string, t time.Time) error {
-	return r.db.Model(&model.User{}).Where("id = ?", userID).Update("last_login_at", t).Error
-}
-
-func (r *testRepo) CreateAuthSession(session *model.AuthSession) error {
-	return r.db.Create(session).Error
-}
-
-func (r *testRepo) Save(entity any) error {
-	return r.db.Save(entity).Error
-}
-
-func (r *testRepo) CheckEmailAvailable(email string, excludeUserID string) error {
-	var count int64
-	query := r.db.Model(&model.User{}).Where("email = ?", email)
-	if excludeUserID != "" {
-		query = query.Where("id != ?", excludeUserID)
-	}
-	query.Count(&count)
-	if count > 0 {
-		return errors.New("email already taken")
-	}
-	return nil
-}
-
-func (r *testRepo) UserIdentitiesForUser(userID string) ([]model.UserIdentity, error) {
-	var list []model.UserIdentity
-	err := r.db.Find(&list, "user_id = ?", userID).Error
-	return list, err
-}
-
-func (r *testRepo) DeleteUserIdentity(userID string, provider string) error {
-	return r.db.Delete(&model.UserIdentity{}, "user_id = ? AND provider = ?", userID, provider).Error
-}
-
-func (r *testRepo) UpsertUserIdentity(identity *model.UserIdentity) error {
-	var existing model.UserIdentity
-	err := r.db.First(&existing, "user_id = ? AND provider = ?", identity.UserID, identity.Provider).Error
-	if err == nil {
-		existing.Subject = identity.Subject
-		existing.ProviderUsername = identity.ProviderUsername
-		existing.AvatarURL = identity.AvatarURL
-		existing.UpdatedAt = time.Now()
-		return r.db.Save(&existing).Error
-	}
-	return r.db.Create(identity).Error
-}
-
-func (r *testRepo) UserIdentitiesCountByProvider() (map[string]int64, error) {
-	type Result struct {
-		Provider string
-		Count    int64
-	}
-	var results []Result
-	if err := r.db.Model(&model.UserIdentity{}).Select("provider, count(*) as count").Group("provider").Scan(&results).Error; err != nil {
-		return nil, err
-	}
-	m := make(map[string]int64)
-	for _, res := range results {
-		m[res.Provider] = res.Count
-	}
-	return m, nil
-}
-
-func (r *testRepo) SocialLoginLogs(limit int) ([]model.LoginLog, error) {
-	return nil, nil
-}
-
-func (r *testRepo) RecentSocialLoginLogs(since time.Time) ([]model.LoginLog, error) {
-	return nil, nil
-}
-
-func (r *testRepo) SearchUsersWithSocialIdentities(query string, limit int) ([]model.User, map[string][]model.UserIdentity, error) {
-	return nil, nil, nil
+	return &testRepo{Repository: repository.New(db), db: db}
 }
 
 type testHost struct{}
@@ -199,9 +54,69 @@ func (h *testHost) DecryptSecret(c string) (string, error) {
 	}
 	return strings.TrimPrefix(c, "enc:"), nil
 }
-func (h *testHost) BrandName() string                { return "SupDance" }
-func (h *testHost) RequireAdmin(u *model.User) error { return nil }
-func (h *testHost) EnsureSignupBonus(u string) error { return nil }
+func (h *testHost) BrandName() string                              { return "SupDance" }
+func (h *testHost) RequireAdmin(u *model.User) error               { return nil }
+func (h *testHost) EnsureSignupBonus(u string) error               { return nil }
+func (h *testHost) Available() (bool, error)                       { return true, nil }
+func (h *testHost) SocialRegistrationEmailRequired() (bool, error) { return false, nil }
+func (h *testHost) LinuxDOEnabled() bool                           { return false }
+func (h *testHost) ValidateOnboardingEmail(email string) error     { return nil }
+func (h *testHost) VerifyOnboardingEmail(email, binding, ticket, code string) (string, error) {
+	return "", errors.New("missing email proof")
+}
+
+type unavailableSecretHost struct{ testHost }
+
+func (h *unavailableSecretHost) DecryptSecret(string) (string, error) {
+	return "", errors.New("key unavailable")
+}
+
+func TestAdminSocialAuthRevisionRejectsStaleCredentialAndPolicyUpdates(t *testing.T) {
+	repo := newTestRepo(t)
+	svc := NewService(repo, &unavailableSecretHost{})
+	admin := &model.User{ID: "admin"}
+	settings := DefaultInitialSettings()
+	settings.Providers[ProviderQQ] = ProviderConfig{Enabled: true, ClientID: "1000520", ClientSecret: "enc:v1:unreadable"}
+	if err := svc.SaveSettings(admin, settings); err != nil {
+		t.Fatal(err)
+	}
+	req := httptest.NewRequest(http.MethodPut, "/", nil)
+	previous, err := svc.GetAdminSettings(req, admin)
+	if err != nil {
+		t.Fatal(err)
+	}
+	policy := settings.Policies
+	policy.AutoDirectRegistration = false
+	closed, err := svc.UpdatePolicies(admin, policy, previous.Revision)
+	if err != nil {
+		t.Fatal(err)
+	}
+	assertConflict := func(err error) {
+		t.Helper()
+		var appErr *kernel.AppError
+		if !errors.As(err, &appErr) || appErr.Status != http.StatusConflict {
+			t.Fatalf("stale update returned %v", err)
+		}
+	}
+	_, err = svc.UpdateAdminSettings(req, admin, UpdateSettingsRequest{Revision: previous.Revision, Providers: map[string]UpdateProviderInput{ProviderQQ: {ClientSecret: "rotated-secret"}}})
+	assertConflict(err)
+	_, err = svc.UpdatePolicies(admin, settings.Policies, previous.Revision)
+	assertConflict(err)
+	if _, err := svc.UpdateAdminSettings(req, admin, UpdateSettingsRequest{Revision: closed.Revision, DefaultFallbackRegion: RegionIntl}); err != nil {
+		t.Fatal(err)
+	}
+	row, err := repo.SystemSetting(ConfigSettingKey)
+	if err != nil {
+		t.Fatal(err)
+	}
+	var persisted StoredSettings
+	if err := json.Unmarshal([]byte(row.ValueJSON), &persisted); err != nil {
+		t.Fatal(err)
+	}
+	if persisted.Policies.AutoDirectRegistration || persisted.Providers[ProviderQQ].ClientSecret != "enc:v1:unreadable" {
+		t.Fatal("unrelated settings update changed the registration lock or the encrypted secret")
+	}
+}
 
 func TestGeoIPPartitioning(t *testing.T) {
 	// 1. Test Mainland China IPv4 allocations (Telecom, Unicom, Mobile, CERNET, DNS)

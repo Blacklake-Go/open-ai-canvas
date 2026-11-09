@@ -7,13 +7,16 @@ import (
 	"sync"
 	"testing"
 	"time"
+
+	"yingce/backend/internal/model"
 )
 
 type fakeTicketStore struct {
-	mu      sync.Mutex
-	tickets map[string]*OnboardingTicket
-	fail    bool
-	saved   int
+	mu          sync.Mutex
+	tickets     map[string]*OnboardingTicket
+	fail        bool
+	failConsume bool
+	saved       int
 }
 
 func newFakeTicketStore(fail bool) *fakeTicketStore {
@@ -47,7 +50,7 @@ func (f *fakeTicketStore) GetTicket(_ context.Context, ticketID string) (*Onboar
 func (f *fakeTicketStore) ConsumeTicket(_ context.Context, ticketID string) (*OnboardingTicket, error) {
 	f.mu.Lock()
 	defer f.mu.Unlock()
-	if f.fail {
+	if f.fail || f.failConsume {
 		return nil, errors.New("shared store unavailable")
 	}
 	ticket, ok := f.tickets[ticketID]
@@ -113,26 +116,39 @@ func TestOnboardingTicketSurvivesServiceRestartViaSharedStore(t *testing.T) {
 	}
 }
 
-func TestOnboardingTicketFallsBackToMemoryWhenSharedStoreFails(t *testing.T) {
+func TestOnboardingTicketRequiresAtomicSharedStoreClaim(t *testing.T) {
 	resetTicketStoreState(t)
-	UseTicketStore(newFakeTicketStore(true))
+	store := newFakeTicketStore(false)
+	UseTicketStore(store)
+	repo, svc := newSecurityTestService(t)
+	seedChannel(t, svc, ProviderBilibili, "client_id", "client_secret", false)
 
-	svc := NewService(nil, nil)
-	ticket := ticketStoreTestTicket("onboard_store_fallback")
-	svc.saveTicket(ticket)
-
-	got, err := svc.getTicket(ticket.TicketID)
-	if err != nil {
-		t.Fatalf("memory fallback should keep onboarding alive: %v", err)
+	ticket := ticketStoreTestTicket("onboard_store_claim")
+	if err := svc.saveTicket(ticket); err != nil {
+		t.Fatal(err)
 	}
-	if got.TicketID != ticket.TicketID {
-		t.Fatalf("fallback returned wrong ticket: %+v", got)
+	store.failConsume = true
+	req := CompleteOnboardingRequest{TicketID: ticket.TicketID, Username: "claim_test", AcceptedTerms: true}
+	if _, _, err := svc.CompleteOnboarding(req); err == nil {
+		t.Fatal("onboarding accepted a ticket that could not be atomically consumed")
 	}
-	if _, err := svc.consumeTicket(ticket.TicketID); err != nil {
-		t.Fatalf("memory fallback consume should succeed: %v", err)
+	var users int64
+	if err := repo.db.Model(&model.User{}).Count(&users).Error; err != nil || users != 0 {
+		t.Fatalf("account write occurred before ticket consumption: users=%d err=%v", users, err)
 	}
-	if _, err := svc.consumeTicket(ticket.TicketID); err == nil {
-		t.Fatal("memory fallback must not replay a consumed ticket")
+	store.failConsume = false
+	if _, _, err := svc.CompleteOnboarding(req); err != nil {
+		t.Fatal(err)
+	}
+	if _, _, err := svc.CompleteOnboarding(req); err == nil {
+		t.Fatal("consumed onboarding ticket was accepted a second time")
+	}
+	store.fail = true
+	if err := svc.saveTicket(ticket); err == nil {
+		t.Fatal("shared store write failure was ignored")
+	}
+	if _, err := svc.getTicket(ticket.TicketID); err == nil {
+		t.Fatal("ticket lookup fell back to memory during shared store failure")
 	}
 }
 

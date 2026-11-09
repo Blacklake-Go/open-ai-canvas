@@ -2,26 +2,29 @@ import { useEffect, useMemo, useState } from "react";
 import { App, Button, Checkbox, Input, Skeleton } from "antd";
 import { CheckCircle2, Eye, EyeOff, Lock, Mail, ShieldCheck, Sparkles, User, UserCheck, X } from "lucide-react";
 import { AppModal } from "@/components/ui/product/app-modal";
-import { completeSocialOnboarding, getSocialOnboardingProfile } from "../api";
+import { completeSocialOnboarding, getSocialOnboardingProfile, sendSocialOnboardingEmailCode } from "../api";
 import { SocialProviderIcon } from "./social-provider-icons";
 import type { OnboardingProfileView } from "../types";
-import { applyUserSession } from "@/lib/user-session";
-import { useUserStore } from "@/stores/use-user-store";
 import { useAppearanceStore } from "@/stores/use-appearance-store";
 import { usePluginStore, selectPluginEffectivelyEnabled } from "@/stores/use-plugin-store";
 import { useI18n } from "@/supdance/plugins/i18n";
 
 const USERNAME_REGEX = /^[a-zA-Z0-9_-]{3,30}$/;
 
+function cleanupUrl() {
+    const url = new URL(window.location.href);
+    url.searchParams.delete("onboarding");
+    url.searchParams.delete("ticket");
+    window.history.replaceState(window.history.state, "", url.pathname + url.search + url.hash);
+}
+
 export function SocialOnboardingModal() {
     const { message, modal } = App.useApp();
     const { t } = useI18n();
-    const currentUser = useUserStore((state) => state.user);
     const brandName = useAppearanceStore((state) => state.appearance.brandName);
     const active = usePluginStore(selectPluginEffectivelyEnabled("supdance-social-auth", true));
 
     const [open, setOpen] = useState(false);
-    const [ticket, setTicket] = useState<string | null>(null);
     const [loading, setLoading] = useState(false);
     const [submitting, setSubmitting] = useState(false);
     const [profile, setProfile] = useState<OnboardingProfileView | null>(null);
@@ -30,44 +33,35 @@ export function SocialOnboardingModal() {
     const [username, setUsername] = useState("");
     const [nickname, setNickname] = useState("");
     const [email, setEmail] = useState("");
+    const [emailProof, setEmailProof] = useState<{ email: string; ticket: string } | null>(null);
+    const [emailCode, setEmailCode] = useState("");
+    const [sendingEmail, setSendingEmail] = useState(false);
+    const [emailRetryAt, setEmailRetryAt] = useState(0);
     const [password, setPassword] = useState("");
     const [confirmPassword, setConfirmPassword] = useState("");
     const [showPassword, setShowPassword] = useState(false);
     const [acceptedTerms, setAcceptedTerms] = useState(false);
 
     useEffect(() => {
-        if (!active) setOpen(false);
-    }, [active]);
-
-    // Check URL parameters for onboarding ticket on mount and on history changes
-    useEffect(() => {
-        const checkUrlTicket = () => {
+        const checkUrl = () => {
             const params = new URLSearchParams(window.location.search);
-            const isOnboarding = params.get("onboarding") === "1";
-            const ticketParam = params.get("ticket");
-
-            if (isOnboarding && ticketParam) {
-                setTicket(ticketParam);
-                setOpen(true);
-                cleanupUrl();
-            }
+            setOpen(active && params.get("onboarding") === "1");
         };
 
-        checkUrlTicket();
-        window.addEventListener("popstate", checkUrlTicket);
-        return () => window.removeEventListener("popstate", checkUrlTicket);
-    }, []);
+        checkUrl();
+        window.addEventListener("popstate", checkUrl);
+        return () => window.removeEventListener("popstate", checkUrl);
+    }, [active]);
 
-    // Load onboarding profile when ticket changes
     useEffect(() => {
-        if (!ticket || !open) return;
+        if (!open) return;
 
-        let cancelled = false;
+        const controller = new AbortController();
         setLoading(true);
 
-        getSocialOnboardingProfile(ticket)
+        getSocialOnboardingProfile(controller.signal)
             .then((data) => {
-                if (cancelled) return;
+                if (controller.signal.aborted) return;
                 setProfile(data);
                 // Pre-fill username: clean up providerUsername or displayName to alphanumeric
                 const baseCandidate = (data.providerUsername?.split("@")[0] || data.displayName || "creator").replace(/[^a-zA-Z0-9_-]/g, "").toLowerCase();
@@ -78,7 +72,7 @@ export function SocialOnboardingModal() {
                 setEmail(data.email || "");
             })
             .catch((err) => {
-                if (cancelled) return;
+                if (controller.signal.aborted) return;
                 const msg = err instanceof Error ? err.message : "获取授权入站信息失败，票据可能已过期";
                 message.error(msg);
                 // Clean up invalid parameters
@@ -86,22 +80,17 @@ export function SocialOnboardingModal() {
                 setOpen(false);
             })
             .finally(() => {
-                if (!cancelled) setLoading(false);
+                if (!controller.signal.aborted) setLoading(false);
             });
 
-        return () => {
-            cancelled = true;
-        };
-    }, [ticket, open, message]);
+        return () => controller.abort();
+    }, [open, message]);
 
-    const cleanupUrl = () => {
-        const url = new URL(window.location.href);
-        url.searchParams.delete("onboarding");
-        url.searchParams.delete("ticket");
-        const nextQuery = url.searchParams.toString();
-        const nextUrl = url.pathname + (nextQuery ? `?${nextQuery}` : "") + url.hash;
-        window.history.replaceState({}, "", nextUrl);
-    };
+    useEffect(() => {
+        if (!emailRetryAt) return;
+        const timeout = window.setTimeout(() => setEmailRetryAt(0), Math.max(0, emailRetryAt - Date.now()));
+        return () => window.clearTimeout(timeout);
+    }, [emailRetryAt]);
 
     const isUsernameValid = useMemo(() => USERNAME_REGEX.test(username.trim()), [username]);
     const isPasswordValid = useMemo(() => {
@@ -113,7 +102,26 @@ export function SocialOnboardingModal() {
         return password === confirmPassword;
     }, [password, confirmPassword]);
 
-    const hasProviderEmail = Boolean(profile?.email && profile.email.trim().length > 0);
+    const hasProviderEmail = !!profile?.emailAutoBound;
+    const normalizedEmail = email.trim().toLowerCase();
+    const needsEmailProof = !hasProviderEmail && (Boolean(normalizedEmail) || !!profile?.emailRequired);
+    const validEmailProof = emailProof?.email === normalizedEmail && /^\d{6}$/.test(emailCode);
+
+    const sendEmailCode = async () => {
+        if (!normalizedEmail || sendingEmail || emailRetryAt) return;
+        setSendingEmail(true);
+        try {
+            const result = await sendSocialOnboardingEmailCode(normalizedEmail);
+            setEmailProof({ email: normalizedEmail, ticket: result.ticket });
+            setEmailCode("");
+            setEmailRetryAt(Date.now() + result.retryAfter * 1000);
+            message.success(t("settings.code_sent_minutes", { minutes: Math.ceil(result.expiresIn / 60) }));
+        } catch (err) {
+            message.error(err instanceof Error ? err.message : t("settings.send_code_failed"));
+        } finally {
+            setSendingEmail(false);
+        }
+    };
 
     const handleExit = () => {
         modal.confirm({
@@ -131,7 +139,7 @@ export function SocialOnboardingModal() {
     };
 
     const handleSubmit = async () => {
-        if (!ticket) return;
+        if (!profile || (needsEmailProof && !validEmailProof)) return;
         if (!isUsernameValid) {
             message.warning(t("auth.onboarding.creator_id_placeholder", {}, "用户名需为 3-30 位字母、数字、下划线或短横线"));
             return;
@@ -153,39 +161,16 @@ export function SocialOnboardingModal() {
             setSubmitting(true);
             const res = await completeSocialOnboarding({
                 acceptedTerms,
-                ticket,
-                ticketId: ticket,
                 username: username.trim(),
                 displayName: nickname.trim() || undefined,
                 nickname: nickname.trim() || undefined,
-                email: email.trim() || undefined,
+                email: normalizedEmail || undefined,
+                emailTicket: needsEmailProof ? emailProof?.ticket : undefined,
+                emailCode: needsEmailProof ? emailCode : undefined,
                 password: password ? password : undefined,
             });
 
-            const resolvedUser = res.user || (res as any).User || (res as any).session?.user || (res as any).Session?.user;
-            const resolvedNext = res.next || (res as any).Next || "/";
-
-            message.success({
-                content: `欢迎来到 SupDance 影策，${resolvedUser?.displayName || resolvedUser?.username || "创作者"}！`,
-                icon: <Sparkles className="size-4 text-[#00f5d4]" />,
-            });
-
-            const { getAuthSession } = await import("@/services/api/auth");
-            try {
-                const sessionPayload = await getAuthSession();
-                await applyUserSession(sessionPayload);
-            } catch {
-                if (resolvedUser) {
-                    await applyUserSession({ user: resolvedUser });
-                }
-            }
-
-            cleanupUrl();
-            setOpen(false);
-
-            if (resolvedNext && resolvedNext !== window.location.pathname) {
-                window.location.href = resolvedNext;
-            }
+            window.location.replace(res.next);
         } catch (err) {
             message.error(err instanceof Error ? err.message : "入站配置保存失败，请重试");
         } finally {
@@ -203,7 +188,7 @@ export function SocialOnboardingModal() {
                     backgroundImage: "radial-gradient(ellipse 90% 50% at 50% -20%, rgba(var(--primary-rgb, 0, 245, 212), 0.08), transparent)",
                 }}
             >
-                {/* Top-right Exit Button (Reference Image 3) */}
+                {/* Exit button */}
                 <button
                     type="button"
                     onClick={handleExit}
@@ -269,12 +254,36 @@ export function SocialOnboardingModal() {
 
                             <Input
                                 value={email}
-                                onChange={(e) => setEmail(e.target.value)}
+                                onChange={(e) => {
+                                    setEmail(e.target.value);
+                                    setEmailProof(null);
+                                    setEmailCode("");
+                                }}
                                 disabled={hasProviderEmail}
-                                placeholder={t("auth.onboarding.email_placeholder", {}, "输入您的邮箱（可选）")}
+                                type="email"
+                                autoComplete="email"
+                                aria-label={t("auth.onboarding.bind_email")}
+                                aria-required={profile?.emailRequired}
+                                placeholder={profile?.emailRequired ? t("auth.onboarding.bind_email") : t("auth.onboarding.email_placeholder")}
                                 prefix={<Mail className="size-3.5 text-foreground/40" />}
                                 className={`h-10 rounded-lg border border-border bg-surface-subtle text-sm text-foreground placeholder:text-foreground/35 ${hasProviderEmail ? "cursor-not-allowed opacity-80" : ""}`}
                             />
+                            {needsEmailProof && (
+                                <div className="mt-2 flex flex-wrap items-center gap-2">
+                                    <Input
+                                        value={emailCode}
+                                        onChange={(e) => setEmailCode(e.target.value.replace(/\D/g, "").slice(0, 6))}
+                                        aria-label={t("settings.email_code")}
+                                        placeholder={t("settings.email_code")}
+                                        inputMode="numeric"
+                                        autoComplete="one-time-code"
+                                        className="min-h-11 min-w-32 flex-1"
+                                    />
+                                    <Button className="min-h-11" onClick={() => void sendEmailCode()} disabled={!normalizedEmail || !!emailRetryAt} loading={sendingEmail}>
+                                        {t("settings.send_code")}
+                                    </Button>
+                                </div>
+                            )}
                         </div>
 
                         {/* Username and Nickname Section */}
@@ -362,7 +371,7 @@ export function SocialOnboardingModal() {
                             <Button
                                 type="primary"
                                 loading={submitting}
-                                disabled={!isUsernameValid || (Boolean(password) && (!isPasswordValid || !isPasswordMatch)) || !acceptedTerms}
+                                disabled={!profile || !isUsernameValid || (Boolean(password) && (!isPasswordValid || !isPasswordMatch)) || (needsEmailProof && !validEmailProof) || !acceptedTerms}
                                 onClick={handleSubmit}
                                 className="h-11 flex-1 rounded-xl font-bold active:scale-[0.98] border-none shadow-sm !bg-primary !text-primary-foreground hover:opacity-90"
                             >

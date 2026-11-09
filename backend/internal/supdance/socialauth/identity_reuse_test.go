@@ -57,6 +57,7 @@ func TestVerifiedSocialIdentityReusedAcrossDifferentAuthorizationCodes(t *testin
 
 func TestPendingOnboardingTicketsForSameIdentityReuseAccountWithoutOverwritingCredentials(t *testing.T) {
 	repo, svc := newSecurityTestService(t)
+	seedChannel(t, svc, ProviderQQ, "1000520", "client_secret", false)
 	tickets := []string{"onboard_" + RandomToken(), "onboard_" + RandomToken()}
 	for _, id := range tickets {
 		svc.saveTicket(&OnboardingTicket{TicketID: id, Provider: ProviderQQ, Subject: "qq_openid_same-user", ExpiresAt: time.Now().Add(time.Minute)})

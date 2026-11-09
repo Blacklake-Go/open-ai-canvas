@@ -1,111 +1,66 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useLocation, useNavigate } from "react-router";
 import { App, Button, Skeleton } from "antd";
-import { AlertCircle, ArrowRightLeft, CheckCircle2, Link2, ShieldAlert, ShieldCheck, Unlink } from "lucide-react";
-import { buildSocialAuthBindUrl, getPublicSocialAuthProviders, getUserSocialIdentities, unbindSocialIdentity } from "../api";
+import { AlertCircle, ArrowRightLeft, Link2, ShieldCheck, Unlink } from "lucide-react";
+import { buildSocialAuthBindUrl, buildSocialAuthReauthUrl, getPublicSocialAuthProviders, getUserSocialIdentities, unbindSocialIdentity } from "../api";
 import { SocialProviderIcon } from "./social-provider-icons";
-import type { SocialAuthProviderPublic, UserIdentitiesView, UserIdentityItem } from "../types";
+import type { UserIdentityItem } from "../types";
 import { useI18n } from "@/supdance/plugins/i18n";
+import { useUserStore } from "@/stores/use-user-store";
 
-export function SocialAccountBindings({ onNavigateSecurity }: { onNavigateSecurity?: () => void }) {
+export function SocialAccountBindings({ returnToModal = false }: { returnToModal?: boolean }) {
     const { message, modal } = App.useApp();
     const { t } = useI18n();
-    const [loading, setLoading] = useState(true);
-    const [identitiesView, setIdentitiesView] = useState<UserIdentitiesView>({
-        hasPassword: true,
-        identities: [],
-        count: 0,
-    });
-    const [providers, setProviders] = useState<SocialAuthProviderPublic[]>([]);
+    const location = useLocation();
+    const navigate = useNavigate();
+    const userId = useUserStore((state) => state.user?.id);
+    const queryClient = useQueryClient();
+    const identitiesKey = ["social-identities", userId];
+    const identities = useQuery({ queryKey: identitiesKey, queryFn: ({ signal }) => getUserSocialIdentities(signal), retry: false });
+    const publicProviders = useQuery({ queryKey: ["social-auth-providers"], queryFn: ({ signal }) => getPublicSocialAuthProviders(undefined, signal), retry: false });
     const [unbindingId, setUnbindingId] = useState<string | null>(null);
+    const handledResult = useRef("");
 
-    const loadData = async (signal?: AbortSignal) => {
-        try {
-            setLoading(true);
-            const [identRes, provRes] = await Promise.all([getUserSocialIdentities(signal), getPublicSocialAuthProviders(undefined, signal)]);
-            setIdentitiesView(identRes);
-            setProviders(provRes.providers || []);
-        } catch (err) {
-            console.error("加载第三方绑定信息失败", err);
-        } finally {
-            setLoading(false);
-        }
-    };
-
-    useEffect(() => {
-        const controller = new AbortController();
-        void loadData(controller.signal);
-        return () => controller.abort();
-    }, []);
-
-    // Helper map of bound identities by provider
-    const boundMap = new Map<string, UserIdentityItem>();
-    if (identitiesView?.identities) {
-        for (const item of identitiesView.identities) {
-            if (item.bound) {
-                boundMap.set(item.provider.toLowerCase(), item);
-            }
+    const boundMap = new Map(identities.data?.identities.filter((item) => item.bound).map((item) => [item.provider, item]));
+    const providers = (publicProviders.data?.providers ?? []).map(({ id, name }) => ({ id, name, available: true }));
+    for (const [id, identity] of boundMap) {
+        if (!providers.some((provider) => provider.id === id)) {
+            providers.push({ id, name: identity.providerName, available: identity.available });
         }
     }
 
     const handleBind = (providerId: string) => {
-        const returnTarget = `${window.location.pathname}?open_settings=social&bind_provider=${encodeURIComponent(providerId)}`;
-        const bindUrl = buildSocialAuthBindUrl(providerId, returnTarget);
-        window.location.href = bindUrl;
+        const params = new URLSearchParams(location.search);
+        if (returnToModal) params.set("open_settings", "social");
+        else params.delete("open_settings");
+        const query = params.toString();
+        const next = location.pathname + (query ? `?${query}` : "") + location.hash;
+        window.location.assign(buildSocialAuthBindUrl(providerId, next));
     };
 
-    // Handle redirect returns from OAuth callback
     useEffect(() => {
-        const params = new URLSearchParams(window.location.search);
+        const params = new URLSearchParams(location.search);
+        if (returnToModal !== (params.get("open_settings") === "social")) return;
         const bindSuccess = params.get("bind_success");
-        const bindError = params.get("bind_error") || params.get("oauth_error");
-        if (bindSuccess) {
-            const providerMeta = providers.find((p) => p.id.toLowerCase() === bindSuccess.toLowerCase());
-            const providerName = providerMeta?.name || bindSuccess.toUpperCase();
-            message.success(t("settings.social.bind_success", { name: providerName }, `成功绑定 ${providerName} 账号！`));
-            const url = new URL(window.location.href);
-            url.searchParams.delete("bind_success");
-            url.searchParams.delete("bind_provider");
-            url.searchParams.delete("open_settings");
-            const nextQuery = url.searchParams.toString();
-            window.history.replaceState({}, "", url.pathname + (nextQuery ? `?${nextQuery}` : "") + url.hash);
-            void loadData();
-        } else if (bindError) {
-            message.error(bindError);
-            const url = new URL(window.location.href);
-            url.searchParams.delete("bind_error");
-            url.searchParams.delete("oauth_error");
-            url.searchParams.delete("bind_provider");
-            url.searchParams.delete("open_settings");
-            const nextQuery = url.searchParams.toString();
-            window.history.replaceState({}, "", url.pathname + (nextQuery ? `?${nextQuery}` : "") + url.hash);
-        }
-    }, [providers, t, message]);
-
-    const handleUnbind = (provider: SocialAuthProviderPublic, identity: UserIdentityItem) => {
-        // Anti-orphan guard: check if user has password or multiple identities
-        if (!identitiesView.hasPassword && boundMap.size <= 1) {
-            modal.confirm({
-                title: t("settings.social.unbind_forbidden_title", {}, "无法解除绑定"),
-                icon: <ShieldAlert className="size-5 text-amber-400" />,
-                content: (
-                    <div className="py-2 text-xs leading-relaxed text-foreground/80">
-                        <p className="mb-2">
-                            {t("settings.social.unbind_forbidden_content", { name: provider.name }, `您当前尚未设置独立登录密码，且仅绑定了 ${provider.name} 这一种登录方式。若现在解除绑定，您将失去进入此账号的唯一凭证，导致账号无法再次登录。`)}
-                        </p>
-                    </div>
-                ),
-                okText: t("settings.social.go_to_security", {}, "前往设置登录密码"),
-                cancelText: t("common.cancel", {}, "取消"),
-                centered: true,
-                onOk: () => {
-                    if (onNavigateSecurity) {
-                        onNavigateSecurity();
-                    }
-                },
-            });
+        const bindError = params.has("bind_error");
+        if (!bindSuccess && !bindError) {
+            handledResult.current = "";
             return;
         }
+        if (handledResult.current === location.search || (!bindError && (!identities.isFetchedAfterMount || !identities.isSuccess || identities.isFetching))) return;
+        handledResult.current = location.search;
+        const confirmed = identities.data?.identities.find((item) => item.provider === bindSuccess && item.bound);
+        if (confirmed && !bindError) {
+            message.success(t("settings.social.bind_success", { name: confirmed.providerName }));
+        } else {
+            message.error(t("settings.social.bind_failed", undefined, "绑定未完成，请确认登录的是发起绑定的账号，并重新授权。"));
+        }
+        for (const key of ["bind_success", "bind_error", "bind_provider", "open_settings"]) params.delete(key);
+        navigate({ pathname: location.pathname, search: params.toString(), hash: location.hash }, { replace: true, state: location.state });
+    }, [identities.data, identities.isFetchedAfterMount, identities.isFetching, identities.isSuccess, location, message, navigate, returnToModal, t]);
 
+    const handleUnbind = (provider: { id: string; name: string }, identity: UserIdentityItem) => {
         modal.confirm({
             title: t("settings.social.unbind_confirm_title", { name: provider.name }, `解除 ${provider.name} 绑定`),
             icon: <Unlink className="size-5 text-rose-400" />,
@@ -124,12 +79,8 @@ export function SocialAccountBindings({ onNavigateSecurity }: { onNavigateSecuri
             onOk: async () => {
                 try {
                     setUnbindingId(provider.id);
-                    const updated = await unbindSocialIdentity(provider.id);
-                    if (updated && Array.isArray(updated.identities)) {
-                        setIdentitiesView(updated);
-                    } else {
-                        await loadData();
-                    }
+                    await unbindSocialIdentity(provider.id);
+                    await queryClient.invalidateQueries({ queryKey: identitiesKey });
                     message.success(t("settings.social.unbind_success", { name: provider.name }, `已成功解除与 ${provider.name} 的绑定`));
                 } catch (err) {
                     message.error(err instanceof Error ? err.message : t("settings.social.unbind_failed", {}, "解绑失败，请稍后重试"));
@@ -140,10 +91,19 @@ export function SocialAccountBindings({ onNavigateSecurity }: { onNavigateSecuri
         });
     };
 
-    if (loading) {
+    if (identities.isPending || publicProviders.isPending) {
         return (
             <div className="space-y-3 py-2">
                 <Skeleton active paragraph={{ rows: 4 }} />
+            </div>
+        );
+    }
+    if (identities.isError || publicProviders.isError) {
+        const error = identities.error || publicProviders.error;
+        return (
+            <div role="alert" className="flex flex-wrap items-center justify-between gap-3 py-2">
+                <p className="text-sm text-foreground/80">{error?.message}</p>
+                <Button onClick={() => void Promise.all([identities.refetch(), publicProviders.refetch()])}>{t("common.retry")}</Button>
             </div>
         );
     }
@@ -175,7 +135,7 @@ export function SocialAccountBindings({ onNavigateSecurity }: { onNavigateSecuri
                     <div className="space-y-1">
                         <div className="font-medium text-foreground">{t("settings.social.banner_title", {}, "多渠道统一入站与安全凭证")}</div>
                         <p className="text-foreground/60 leading-relaxed">{t("settings.social.banner_desc", {}, "绑定第三方平台后，即可使用对应账号一键免密登录 SupDance。若第三方授权包含邮箱，系统已自动同步为绑定邮箱。")}</p>
-                        {!identitiesView.hasPassword && (
+                        {!identities.data?.hasPassword && (
                             <p className="flex items-center gap-1 text-amber-400">
                                 <AlertCircle className="size-3.5" />
                                 {t("settings.social.no_password_tip", {}, "提示：您尚未设置独立密码，建议前往【密码与安全】设置密码以保障多渠道访问。")}
@@ -229,13 +189,19 @@ export function SocialAccountBindings({ onNavigateSecurity }: { onNavigateSecuri
                             </div>
 
                             {/* Action Buttons */}
-                            <div className="flex items-center gap-2 shrink-0">
+                            <div className="flex flex-wrap items-center justify-end gap-2">
                                 {bound ? (
                                     <>
+                                        {!identities.data?.hasPassword && provider.available && (
+                                            <Button className="min-h-11" onClick={() => window.location.assign(buildSocialAuthReauthUrl(provider.id))}>
+                                                {t("settings.reverify")}
+                                            </Button>
+                                        )}
                                         <Button
                                             size="small"
                                             icon={<ArrowRightLeft className="size-3.5" />}
                                             onClick={() => handleBind(provider.id)}
+                                            disabled={!provider.available}
                                             className="h-8 rounded-lg border-border bg-surface-raised text-xs text-foreground/80 hover:!border-border hover:!text-foreground active:scale-[0.98]"
                                         >
                                             {t("settings.social.rebind_action", {}, "换绑")}

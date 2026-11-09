@@ -123,9 +123,9 @@ export default function SettingsPage() {
         };
     }, [message, userId, t]);
 
-    const selectSection = (section: ConfigSectionKey) => {
+    const selectSection = (section: ConfigSectionKey | "social") => {
         if (section === "runninghub" && !runningHubPluginEnabled) return;
-        setActiveTab(section);
+        if (section !== "social") setActiveTab(section);
         const next = new URLSearchParams(searchParams);
         next.set("section", section);
         setSearchParams(next, { replace: true });
@@ -160,10 +160,9 @@ export default function SettingsPage() {
             <div className="fixed inset-0 z-40 flex items-center justify-center p-4 bg-black/60 backdrop-blur-md animate-in fade-in duration-200">
                 <UserProfileModal
                     open={true}
-                    activeTab={(activeTab === "preferences" ? "generation" : activeTab) as any}
+                    activeTab={requestedSection === "social" ? "social" : activeTab === "preferences" ? "generation" : activeTab === "ark-assets" ? "profile" : activeTab}
                     onTabChange={(tab) => {
-                        const targetSection = tab === "generation" ? "preferences" : tab;
-                        selectSection(targetSection as any);
+                        selectSection(tab === "generation" ? "preferences" : tab === "security" ? "profile" : tab);
                     }}
                     onClose={() => {
                         if (window.history.length > 1) {

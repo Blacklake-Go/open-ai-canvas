@@ -184,6 +184,9 @@ func (s *Service) InstallPlugin(data []byte, fileName string) (PluginView, error
 	if err != nil {
 		return PluginView{}, err
 	}
+	if isSupDanceSystemApplicationPluginID(parsed.Manifest.Metadata.ID) {
+		return PluginView{}, fmt.Errorf("插件 ID %q 由系统应用保留", parsed.Manifest.Metadata.ID)
+	}
 	if err := s.ensurePaymentPluginLifecycle(parsed.Manifest); err != nil {
 		return PluginView{}, err
 	}
@@ -343,6 +346,11 @@ func (s *Service) UninstallPluginForAdmin(actor *model.User, id string) error {
 	}
 	if err := s.UninstallPlugin(id); err != nil {
 		return err
+	}
+	// Old releases allowed uploaded packages to shadow bundled applications.
+	// Removing such a package must preserve the application's kill switch.
+	if isSupDanceSystemApplicationPluginID(id) {
+		return s.appendAdminAudit(actor, "plugin.uninstall", "plugin", id, "卸载同名历史插件包", nil)
 	}
 	if err := s.repo.DeleteUserPluginStates(id); err != nil {
 		return fmt.Errorf("清理用户插件状态：%w", err)

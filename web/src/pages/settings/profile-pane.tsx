@@ -21,7 +21,9 @@ import { ApiError } from "@/services/api/request";
 import { getNotificationSettings, updateNotificationSettings } from "@/services/api/email";
 import { Switch } from "@/components/ui/base/switch";
 import { useUserStore } from "@/stores/use-user-store";
+import { selectPluginEffectivelyEnabled, usePluginStore } from "@/stores/use-plugin-store";
 import { SocialAccountBindings } from "@/supdance/plugins/social-auth";
+import { useI18n } from "@/supdance/plugins/i18n";
 import { profileAvatarError, profilePasswordError, profileReauthReady, profileSecondsRemaining } from "./profile-validation";
 
 import "./profile-pane.css";
@@ -34,11 +36,14 @@ type EmailTicket = { value: string; expiresAt: number };
 
 const errorMessage = (error: unknown, fallback: string) => (error instanceof Error ? error.message : fallback);
 
-export function ProfilePane() {
+export function ProfilePane({ returnToModal = false }: { returnToModal?: boolean }) {
     const { t } = useTranslation();
+    const { t: tPlugin } = useI18n();
     const { message } = App.useApp();
     const { showLoginAfterSignOut } = useAuthEntry();
     const [searchParams, setSearchParams] = useSearchParams();
+    const socialAuthEnabled = usePluginStore(selectPluginEffectivelyEnabled("supdance-social-auth", true));
+    const showSocialAccounts = socialAuthEnabled || searchParams.has("bind_success") || searchParams.has("bind_error");
     const queryClient = useQueryClient();
     const userId = useUserStore((state) => state.user?.id);
     const queryKey = ["user-profile", userId];
@@ -363,10 +368,12 @@ export function ProfilePane() {
                                 ? t("account.settings.profile.verified", { seconds: profileSecondsRemaining(Date.parse(profile.reauthenticatedUntil!), now) })
                                 : profile.linuxdoEnabled
                                   ? t("account.settings.profile.verifyHint")
-                                  : t("account.settings.profile.verifyUnavailable")}
+                                  : socialAuthEnabled
+                                    ? tPlugin("settings.social.reauth_hint")
+                                    : t("account.settings.profile.verifyUnavailable")}
                             {reauthResult === "error" && !reauthReady ? (
                                 <p className="profile-reauth-error" role="alert">
-                                    {t("account.settings.profile.verifyFailed")}
+                                    {tPlugin("settings.social.reauth_failed")}
                                 </p>
                             ) : null}
                         </Callout>
@@ -529,15 +536,16 @@ export function ProfilePane() {
                             )}
                         </section>
 
-                        <section className="profile-section" aria-labelledby="profile-social-title">
-                            <div className="profile-section-heading">
-                                <h3 id="profile-social-title">第三方账号绑定</h3>
-                                <p>绑定主流平台账号后支持免密快捷登录，若授权提供邮箱将自动绑定为登录邮箱。</p>
-                            </div>
-                            <div className="pt-2">
-                                <SocialAccountBindings />
-                            </div>
-                        </section>
+                        {showSocialAccounts && (
+                            <section className="profile-section" aria-labelledby="profile-social-title">
+                                <div className="profile-section-heading">
+                                    <h3 id="profile-social-title">{tPlugin("settings.social.title", undefined, "第三方账号绑定")}</h3>
+                                </div>
+                                <div className="pt-2">
+                                    <SocialAccountBindings returnToModal={returnToModal} />
+                                </div>
+                            </section>
+                        )}
 
                         <ConsumptionReportCard />
                     </div>
