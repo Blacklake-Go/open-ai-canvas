@@ -31,8 +31,8 @@ func TestSupdanceOpenAIReviewTextRejectsQuoteAboveCap(t *testing.T) {
 			t.Fatal(err)
 		}
 	}
-	zero := int64(0)
-	input := SupdanceOpenAITextRequest{Skill: "chat", Language: "en", Brief: "Write a brief test scene.", MaxCredits: &zero}
+	oneCredit := int64(CreditScale)
+	input := SupdanceOpenAITextRequest{Skill: "chat", Language: "en", Brief: "Write a brief test scene.", MaxCredits: &oneCredit}
 	_, err = svc.SupdanceOpenAIReviewText(context.Background(), "review-user", item.ID, input)
 	if err == nil || !strings.Contains(err.Error(), "积分上限") {
 		t.Fatalf("model quote should exceed the credit cap, got %v", err)

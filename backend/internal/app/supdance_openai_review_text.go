@@ -39,7 +39,7 @@ func (s *Service) SupdanceOpenAIReviewModels(modelID string) ([]SupdanceOpenAIRe
 }
 
 func (s *Service) SupdanceOpenAIReviewText(ctx context.Context, userID, modelID string, input SupdanceOpenAITextRequest) (string, error) {
-	if input.MaxCredits == nil || *input.MaxCredits != 0 || (input.Model != "" && input.Model != modelID) ||
+	if input.MaxCredits == nil || *input.MaxCredits != CreditScale || (input.Model != "" && input.Model != modelID) ||
 		(input.Language != "en" && input.Language != "zh-CN") || strings.TrimSpace(input.Brief) == "" ||
 		len(input.Brief)+len(input.Context) > 16000 || len(input.Instructions) > 12000 || len(input.Schema) > 18000 {
 		return "", BadAuthRequest("Invalid or oversized Supdance review request")
