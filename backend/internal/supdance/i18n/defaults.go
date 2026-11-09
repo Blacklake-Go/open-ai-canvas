@@ -1175,7 +1175,7 @@ func BuiltinEntries() []Entry {
 		entry("plugins.copy_manifest_example", "plugins", "复制开发规范中的 manifest.json 配置示例", "Copy manifest.json example", "複製開發規範中的 manifest.json 設定範例", "仕様書のmanifest.json設定例をコピー", "사양의 manifest.json 예제 복사", "Copiar ejemplo de manifest.json", "复制清单模板"),
 		entry("plugins.optimizer_no_auto_overwrite", "plugins", "插件不会自动覆盖原提示词，只有点击“采用”后才会回填到当前输入框。", "Prompts are not overwritten automatically; click \"Apply\" to insert the optimized prompt.", "外掛不會自動覆蓋原提示詞，只有點擊「採用」後才會回填至目前輸入框。", "プロンプトは自動上書きされません。「適用」をクリックすると現在の入力欄に反映されます。", "프롬프트가 자동으로 덮어쓰이지 않으며, \"적용\"을 클릭해야 입력창에 반영됩니다.", "La extensión no sobrescribe el prompt original; haga clic en \"Aplicar\" para rellenarlo.", "提示词优化器采纳说明"),
 		entry("visual_engine.system_reduce_motion", "plugins", "系统减少动效偏好", "System Reduced Motion Preference", "系統減少動效偏好", "システムの視覚効果を減らす設定", "시스템 동작 줄이기 설정", "Preferencia de Reducción de Movimiento del Sistema", "视觉引擎减弱动效偏好标签"),
-		// ==================== settings: 个人设置与积分 (702) ====================
+		// ==================== settings: 个人设置与积分 (705) ====================
 		entry("settings.profile", "settings", "个人资料", "Profile", "個人資料", "プロフィール", "프로필", "Perfil", "设置：个人资料"),
 		entry("settings.channels", "settings", "模型渠道", "Model Channels", "模型渠道", "モデルチャネル", "모델 채널", "Canales de modelo", "设置：模型渠道"),
 		entry("settings.storage", "settings", "存储配置", "Storage Settings", "儲存配置", "ストレージ設定", "스토리지 설정", "Configuración de almacenamiento", "设置：存储配置"),
