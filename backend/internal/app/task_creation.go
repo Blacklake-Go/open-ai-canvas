@@ -23,6 +23,7 @@ type taskAdmission struct {
 	GenerationID   string
 	ApprovalID     string
 	NonBillable    bool
+	RequireBilling bool
 }
 
 // CreateTask 收敛任务进入系统前的 admission 流程：输入标准化、逻辑模型路由、
@@ -237,6 +238,9 @@ func (s *Service) CreateTask(userID string, req CreateTaskRequest) (*model.Task,
 	billingOrder, err := s.taskBillingOrder(userID, &task, normalizedInput)
 	if err != nil {
 		return nil, err
+	}
+	if req.admission != nil && req.admission.RequireBilling && (billingOrder == nil || billingOrder.AmountMicrocredits <= 0) {
+		return nil, BadAuthRequest("未找到有效的模型预授权报价，尚未创建任务")
 	}
 	if req.admission != nil && req.admission.MusicOperation != "" && (billingOrder == nil && req.admission.MaxCharge != 0 || billingOrder != nil &&
 		(billingOrder.BillingMode != "fixed_request" || billingOrder.Quantity != 1 || billingOrder.AmountMicrocredits != req.admission.MaxCharge)) {

@@ -308,6 +308,21 @@ func (s *Service) ApplyUserCanvasOperations(userID, canvasID string, req CanvasO
 				existing = nil
 			}
 			isCreate := existing == nil
+			if strict := req.StrictWrite; strict != nil {
+				if isCreate || existing.ProjectID != strict.ProjectID {
+					return kernel.NotFound("画布不属于已授权项目")
+				}
+				project, err := tx.ProjectForUser(userID, strict.ProjectID)
+				if errors.Is(err, gorm.ErrRecordNotFound) || (err == nil && project.Status != model.ProjectStatusActive) {
+					return kernel.NotFound("已授权项目不可用")
+				}
+				if err != nil {
+					return err
+				}
+				if req.BaseRevision == nil || existing.Revision != *req.BaseRevision || !time.Now().Before(strict.ExpiresAt) {
+					return canvasMutationError("canvas_preview_stale", "画布或预览已变化，请重新确认")
+				}
+			}
 			if isCreate && (len(req.Operations) == 0 || req.Operations[0].Type != "create_canvas") {
 				return kernel.NotFound("画布不存在或已删除")
 			}
