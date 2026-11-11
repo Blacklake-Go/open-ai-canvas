@@ -310,6 +310,9 @@ export const useMusicStore = create<MusicState>((set, get) => ({
                                     activeTrackId: isCur ? updated.taskId || updated.id : state.activeTrackId,
                                 };
                             });
+                            if (updated.status === "completed" || updated.status === "failed" || updated.status === "cancelled") {
+                                if (typeof window !== "undefined") window.dispatchEvent(new CustomEvent("wallet:updated"));
+                            }
                         } catch (error) {
                             if (sequence === userScopeSequence) set({ loadError: error instanceof Error ? error.message : String(error) });
                         } finally {

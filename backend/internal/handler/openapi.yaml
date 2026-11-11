@@ -4050,56 +4050,6 @@ paths:
           $ref: "#/components/responses/Error"
         "404":
           $ref: "#/components/responses/Error"
-  /admin/plugins/supdance-visual-engine/overview:
-    get:
-      tags: [admin]
-      summary: 管理员读取视觉配置、快照、审计及操作权限
-      responses:
-        "200": {description: "标准成功信封 data={bundle,snapshots,auditLogs,canPublish,canRollback}"}
-        "401": {$ref: "#/components/responses/Error"}
-        "403": {$ref: "#/components/responses/Error"}
-        "500": {$ref: "#/components/responses/Error"}
-  /admin/plugins/supdance-visual-engine/publish:
-    post:
-      tags: [admin]
-      summary: 事务发布完整视觉配置并保留历史快照与审计
-      description: Schema 2 必须包含完整主题、组件、阴影、遮罩、动效、恢复参数和页面规则。服务端生成唯一版本号并记录登录管理员 ID，首次发布保留原生效配置。
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              type: object
-              required: [config]
-              properties:
-                config: {type: object, description: 完整 VisualEngineConfig Schema 2，按运行时规则强校验}
-                comment: {type: string, description: 最多 2000 个 UTF-8 字节}
-      responses:
-        "200": {description: 已提交，返回新的管理员 overview}
-        "400": {$ref: "#/components/responses/Error"}
-        "401": {$ref: "#/components/responses/Error"}
-        "403": {$ref: "#/components/responses/Error"}
-        "500": {$ref: "#/components/responses/Error"}
-  /admin/plugins/supdance-visual-engine/rollback:
-    post:
-      tags: [admin]
-      summary: 将历史配置内容作为新版本事务发布
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              type: object
-              required: [version]
-              properties:
-                version: {type: string, minLength: 1}
-      responses:
-        "200": {description: 已提交，返回新的管理员 overview}
-        "400": {$ref: "#/components/responses/Error"}
-        "401": {$ref: "#/components/responses/Error"}
-        "403": {$ref: "#/components/responses/Error"}
-        "404": {$ref: "#/components/responses/Error"}
-        "500": {$ref: "#/components/responses/Error"}
   /admin/supdance/compact-model-picker/settings:
     get:
       tags: [admin]
@@ -4122,16 +4072,6 @@ paths:
         "400": {$ref: "#/components/responses/Error"}
         "401": {$ref: "#/components/responses/Error"}
         "403": {$ref: "#/components/responses/Error"}
-        "500": {$ref: "#/components/responses/Error"}
-  /plugins/supdance-visual-engine/bundle:
-    get:
-      tags: [meta]
-      security: []
-      summary: 读取视觉引擎平台状态与已发布配置
-      description: 标准成功信封 data={pluginId,enabled,version,config,revision}。配置使用 Schema 2；损坏配置明确报错。返回 no-store 和 ETag。
-      responses:
-        "200": {description: 当前服务端生效配置}
-        "304": {description: If-None-Match 与当前 revision 相同}
         "500": {$ref: "#/components/responses/Error"}
   /supdance/compact-model-picker/settings:
     get:

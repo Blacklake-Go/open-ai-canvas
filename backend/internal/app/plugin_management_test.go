@@ -26,6 +26,9 @@ func TestApplicationPluginUsesUserStateUnderPlatformAvailability(t *testing.T) {
 	svc := &Service{repo: repository.New(db), pluginRuntime: center}
 	user := &model.User{ID: "user-1", Role: model.UserRoleUser}
 	admin := &model.User{ID: "admin-1", Role: model.UserRoleAdmin}
+	if err := db.Create(&model.PluginPlatformState{PluginID: "supdance-visual-engine", Available: false}).Error; err != nil {
+		t.Fatal(err)
+	}
 
 	states, err := svc.PluginStatesForUser(user)
 	if err != nil {
@@ -33,6 +36,16 @@ func TestApplicationPluginUsesUserStateUnderPlatformAvailability(t *testing.T) {
 	}
 	if _, exists := states["editor-shell"]; exists {
 		t.Fatal("retired manual editor is still offered as an application")
+	}
+	if _, exists := states["supdance-visual-engine"]; exists {
+		t.Fatal("retired visual engine was resurrected from historical platform state")
+	}
+	if _, err := svc.SetPluginPlatformAvailability(admin, "supdance-visual-engine", true); err == nil {
+		t.Fatal("retired visual engine can still be activated")
+	}
+	var retired model.PluginPlatformState
+	if err := db.First(&retired, "plugin_id = ?", "supdance-visual-engine").Error; err != nil || retired.Available {
+		t.Fatalf("historical visual engine state was changed: %+v, %v", retired, err)
 	}
 	initial := states[WorkflowPluginRunningHub]
 	if !initial.PlatformAvailable || initial.UserEnabled || initial.EffectiveEnabled || !initial.CanToggle {

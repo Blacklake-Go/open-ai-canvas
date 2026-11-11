@@ -34,6 +34,7 @@ describe("music workbench platform integration", () => {
         const quote = { logicalModelId: "", billingMode: "fixed_request", quantity: 1, amountMicrocredits: 1500000000, estimated: false };
         expect(musicCreationAllowed(quote, 194760000)).toBe(false);
         expect(musicCreationAllowed(quote, undefined)).toBe(false);
+        expect(musicCreationAllowed(quote, null)).toBe(false);
         expect(musicCreationAllowed(quote, 1500000000)).toBe(true);
         expect(musicCreationAllowed(null, 2000000000)).toBe(false);
     });

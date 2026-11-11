@@ -60,7 +60,6 @@ const MusicWorkbenchPage = lazy(() => import("@/supdance/plugins/music-generatio
 const MusicAdminSettingsPage = lazyAdminPage(() => import("@/supdance/plugins/music-generation/admin/music-admin-settings-page"));
 const CompactPickerAdmin = lazyAdminPage(() => import("@/supdance/plugins/compact-model-picker/admin"));
 const DarkLoginPage = lazy(() => import("@/supdance/pages/dark-login-page"));
-const VisualConsole = lazyAdminPage(() => import("@/supdance/plugins/visual-engine/admin/VisualConsole"));
 const HtmlPageManager = lazyAdminPage(() => import("@/supdance/plugins/html-page-manager/admin/html-page-manager"));
 const TermsPage = lazy(() => import("@/supdance/pages/legal/terms-page"));
 const PrivacyPage = lazy(() => import("@/supdance/pages/legal/privacy-page"));
@@ -292,8 +291,6 @@ const routes: RouteObject[] = [
                     { path: "i18n", element: <Navigate to="/admin/i18n/settings" replace /> },
                     { path: "i18n/settings", element: <SupDanceI18nSettingsPage /> },
                     { path: "i18n/entries", element: <SupDanceI18nEntriesPage /> },
-                    { path: "plugins/visual-engine", element: <VisualConsole /> },
-                    { path: "visual-engine", element: <Navigate to="/admin/plugins/visual-engine" replace /> },
                     { path: "plugins/html-pages", element: <HtmlPageManager /> },
                     { path: "html-pages", element: <Navigate to="/admin/plugins/html-pages" replace /> },
                     { path: "workbench-tools", element: <WorkbenchToolsPage /> },

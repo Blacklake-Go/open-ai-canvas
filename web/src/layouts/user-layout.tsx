@@ -9,9 +9,6 @@ import { isSpatialWorkbenchPath } from "@/lib/workspace-routes";
 import { getWorkspaceAntThemeConfig } from "@/lib/app-theme";
 import { useGlobalAgentStore } from "@/stores/use-global-agent-store";
 import { useUserStore } from "@/stores/use-user-store";
-import { useActiveTheme } from "@/stores/canvas/use-canvas-theme-store";
-import { useAppearanceStore } from "@/stores/use-appearance-store";
-import { useVisualEngineHostAdapter } from "@/supdance/plugins/visual-engine/adapters/antd-theme";
 import "@/styles/workspace-product.css";
 import "@/styles/workspace-menus.css";
 
@@ -20,9 +17,6 @@ const workspaceTheme = getWorkspaceAntThemeConfig();
 const GlobalAgentPanel = lazy(() => import("@/components/canvas/canvas-cloud-agent-panel").then((module) => ({ default: module.CanvasCloudAgentPanel })));
 
 export default function UserLayout({ children }: { children: ReactNode }) {
-    const hostTheme = useActiveTheme();
-    const skin = useAppearanceStore((state) => state.appearance.activeSkin);
-    const visualAdapter = useVisualEngineHostAdapter(hostTheme, skin);
     const { pathname } = useLocation();
     const adminWorkspace = pathname === "/admin" || pathname.startsWith("/admin/");
     const spatialWorkbench = isSpatialWorkbenchPath(pathname);
@@ -71,7 +65,7 @@ export default function UserLayout({ children }: { children: ReactNode }) {
 
     return (
         <ConfigProvider
-            theme={visualAdapter.active ? visualAdapter.theme : productWorkspace ? workspaceTheme : undefined}
+            theme={productWorkspace ? workspaceTheme : undefined}
             select={productWorkspace ? { classNames: { popup: { root: "workspace-quiet-popup" } } } : undefined}
             dropdown={productWorkspace ? { classNames: { root: "workspace-quiet-popup" } } : undefined}
             popover={productWorkspace ? { classNames: { root: "workspace-quiet-popup" } } : undefined}
