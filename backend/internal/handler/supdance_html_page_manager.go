@@ -38,6 +38,15 @@ func RegisterSupDanceHtmlPageManagerRoutes(r *gin.RouterGroup, svc *service.Serv
 			}
 			ok(c, page)
 		})
+
+		publicGroup.GET("/site-footer", func(c *gin.Context) {
+			cfg, err := svc.PublicHtmlSiteFooterConfig()
+			if err != nil {
+				failService(c, err)
+				return
+			}
+			ok(c, gin.H{"siteFooter": cfg})
+		})
 	}
 
 	// 管理员后台接口
@@ -71,6 +80,41 @@ func RegisterSupDanceHtmlPageManagerRoutes(r *gin.RouterGroup, svc *service.Serv
 				return
 			}
 			overview, err := svc.AdminSaveHtmlPages(user, req.Pages)
+			if err != nil {
+				failService(c, err)
+				return
+			}
+			ok(c, overview)
+		})
+
+		adminGroup.PUT("/site-footer", func(c *gin.Context) {
+			user, err := currentUser(c, svc)
+			if err != nil {
+				failService(c, err)
+				return
+			}
+			var req struct {
+				SiteFooter app.HtmlSiteFooterConfig `json:"siteFooter"`
+			}
+			if err := c.ShouldBindJSON(&req); err != nil {
+				fail(c, http.StatusBadRequest, err)
+				return
+			}
+			overview, err := svc.AdminSaveHtmlSiteFooter(user, req.SiteFooter)
+			if err != nil {
+				failService(c, err)
+				return
+			}
+			ok(c, overview)
+		})
+
+		adminGroup.POST("/site-footer/reset", func(c *gin.Context) {
+			user, err := currentUser(c, svc)
+			if err != nil {
+				failService(c, err)
+				return
+			}
+			overview, err := svc.AdminResetHtmlSiteFooter(user)
 			if err != nil {
 				failService(c, err)
 				return

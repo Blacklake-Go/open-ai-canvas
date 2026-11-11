@@ -7,7 +7,7 @@ import { useCanvasStore } from "@/stores/canvas/use-canvas-store";
 export const DRAMA_CANVAS_PARAM = "drama";
 export const DRAMA_CANVAS_FOCUS_PARAM = "dramaFocus";
 
-/** 从制作台跳到画布时要投送或定位的对象；cut 表示把这一集的剪辑载入画布时间线。 */
+/** 从制作台跳到画布时要投送或定位的对象。 */
 export type DramaCanvasFocus = { kind: "cast"; castId: string } | { kind: "segment"; episodeId: string; segmentIndex: number } | { kind: "episode"; episodeId: string } | { kind: "final"; episodeId: string } | { kind: "cut"; episodeId: string };
 
 export function encodeDramaCanvasFocus(focus: DramaCanvasFocus) {

@@ -1,0 +1,39 @@
+{
+  "apiVersion": "yingce.plugin/v1",
+  "id": "supdance-payment-waffo",
+  "name": "Waffo Pancake",
+  "version": "1.0.0",
+  "minHostVersion": "1.8.0",
+  "author": "SupDance",
+  "description": "Waffo Pancake hosted checkout for one-time wallet purchases.",
+  "enabled": true,
+  "installable": true,
+  "runtime": { "backend": "rpc", "backendEntry": "backend/provider" },
+  "surfaces": ["wallet", "settings"],
+  "permissions": ["payment.create", "payment.query"],
+  "configuration": {
+    "fields": [
+      { "name": "publicBaseUrl", "type": "url", "label": "Public HTTPS URL", "required": true },
+      { "name": "merchantId", "type": "string", "label": "Merchant ID", "required": true },
+      { "name": "storeId", "type": "string", "label": "Store ID", "required": true },
+      { "name": "productId", "type": "string", "label": "One-time Product ID", "required": true },
+      { "name": "privateKey", "type": "textarea", "label": "Merchant private key", "required": true, "secret": true },
+      { "name": "environment", "type": "string", "label": "Environment (test / prod)", "required": true, "default": "prod" },
+      { "name": "taxCategory", "type": "string", "label": "Waffo tax category", "required": true }
+    ]
+  },
+  "contributes": {
+    "paymentProviders": [
+      {
+        "id": "waffo-pancake",
+        "label": "Waffo Pancake",
+        "icon": "CreditCard",
+        "checkoutMode": "redirect",
+        "identityFields": ["merchantId", "storeId", "environment"],
+        "expiryPolicy": { "defaultMinutes": 30, "minMinutes": 5, "maxMinutes": 1440 },
+        "notificationSuccess": { "status": 200, "contentType": "text/plain; charset=utf-8", "body": "OK" },
+        "notificationFailure": { "status": 400, "contentType": "text/plain; charset=utf-8", "body": "Invalid notification" }
+      }
+    ]
+  }
+}

@@ -123,6 +123,8 @@ export type TaskLog = {
     level: "info" | "warn" | "error";
     stage: string;
     errorCode?: string;
+    /** 后端日志里的人读文本（已剥离 stage=/error= 等结构化字段），失败原因排查靠它。 */
+    message?: string;
     provenance: "task_state" | "provider_observation" | "background_reconcile" | "manual_refresh" | "backend";
     observedAt?: string;
     createdAt: string;
@@ -350,11 +352,19 @@ export function queryTaskTextReplay(id: string, after = 0) {
 }
 
 export function retryGenerationTask(id: string) {
-    return http.post<GenerationTask>(`/tasks/${encodeURIComponent(id)}/retry`).then(observedTask);
+    // 重试会在服务端预占/结算积分，与 cancel 对齐派发钱包事件，顶栏余额才不会停留在旧值。
+    return http.post<GenerationTask>(`/tasks/${encodeURIComponent(id)}/retry`).then((task) => {
+        const observed = observedTask(task);
+        window.dispatchEvent(new CustomEvent("wallet:updated"));
+        return observed;
+    });
 }
 
 export function recoverGenerationTaskMedia(id: string) {
-    return http.post<GenerationTask>(`/tasks/${encodeURIComponent(id)}/recover-media`);
+    return http.post<GenerationTask>(`/tasks/${encodeURIComponent(id)}/recover-media`).then((task) => {
+        window.dispatchEvent(new CustomEvent("wallet:updated"));
+        return task;
+    });
 }
 
 export function cancelGenerationTask(id: string) {
@@ -384,13 +394,25 @@ export async function listTaskLogs(id: string) {
 }
 
 export function formatTaskLog(log: TaskLog) {
-    return [`stage=${log.stage}`, ...(log.errorCode ? [`error=${log.errorCode}`] : []), `provenance=${log.provenance}`, ...(log.observedAt ? [`observedAt=${log.observedAt}`] : [])].join(" ");
+    return [`stage=${log.stage}`, ...(log.errorCode ? [`error=${log.errorCode}`] : []), `provenance=${log.provenance}`, ...(log.message ? [log.message] : []), ...(log.observedAt ? [`observedAt=${log.observedAt}`] : [])].join(" ");
+}
+
+/** 剥离 key=value 结构化字段，保留人读文本；过长截断，避免日志行被 JSON 噪声淹没。 */
+function taskLogHumanMessage(raw: { message?: unknown }) {
+    if (typeof raw.message !== "string") return undefined;
+    const cleaned = raw.message
+        .replace(/(?:^|\s)[a-zA-Z_]+=(?:\S+)/g, " ")
+        .replace(/\s+/g, " ")
+        .trim();
+    if (!cleaned) return undefined;
+    return cleaned.length > 300 ? `${cleaned.slice(0, 300)}…` : cleaned;
 }
 
 export function projectBackendSafeTaskLog(taskId: string, raw: { level?: unknown; message?: unknown; payload?: unknown; createdAt?: unknown }, index: number): TaskLog {
     const text = [raw.message, raw.payload].filter((value): value is string => typeof value === "string").join(" ");
     const stage = safeTaskLogStage(text) || "backend_event";
     const errorCode = safeTaskLogErrorCode(text);
+    const message = taskLogHumanMessage(raw);
     const createdAt = typeof raw.createdAt === "string" && Number.isFinite(Date.parse(raw.createdAt)) ? raw.createdAt : "1970-01-01T00:00:00.000Z";
     return {
         id: `safe:${taskId}:${index}`,
@@ -398,6 +420,7 @@ export function projectBackendSafeTaskLog(taskId: string, raw: { level?: unknown
         level: raw.level === "error" ? "error" : raw.level === "warn" ? "warn" : "info",
         stage,
         ...(errorCode ? { errorCode } : {}),
+        ...(message ? { message } : {}),
         provenance: "backend",
         createdAt,
     };

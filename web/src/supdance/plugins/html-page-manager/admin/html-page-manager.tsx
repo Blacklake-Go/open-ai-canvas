@@ -1,7 +1,6 @@
-import { App, Button, Dropdown, Modal, Switch, Tag, Tooltip } from "antd";
+import { App, Button, Modal, Switch, Tag, Tooltip } from "antd";
 import {
     ArrowLeft,
-    Check,
     Code2,
     Columns2,
     Copy,
@@ -9,16 +8,16 @@ import {
     ExternalLink,
     Eye,
     FileCode,
-    FolderPlus,
+    Globe,
     Heading1,
     Heading2,
     Heading3,
+    LayoutPanelTop,
     List,
     ListOrdered,
-    Maximize2,
+    Monitor,
     Moon,
     Plus,
-    RefreshCw,
     RotateCcw,
     Save,
     Smartphone,
@@ -26,16 +25,16 @@ import {
     Sun,
     Table as TableIcon,
     Tablet,
-    Monitor,
     Trash2,
     Wand2,
 } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router";
 
-import { fetchAdminHtmlPagesOverview, resetAdminHtmlPages, saveAdminHtmlPages } from "../api";
+import { SupdanceAboutFooter } from "@/supdance/components/site-footer/supdance-about-footer";
+import { DEFAULT_HTML_SITE_FOOTER_CONFIG, fetchAdminHtmlPagesOverview, resetAdminHtmlPages, resetAdminHtmlSiteFooter, saveAdminHtmlPages, saveAdminHtmlSiteFooter } from "../api";
 import { BUILTIN_HTML_TEMPLATES } from "../templates";
-import type { ManagedHtmlPage } from "../types";
+import type { HtmlSiteFooterConfig, ManagedHtmlPage } from "../types";
 
 /**
  * 轻量、高效、无冗余依赖的 HTML 代码美化格式化器。
@@ -89,13 +88,18 @@ function formatHtmlCode(html: string): string {
     return result.trim() + "\n";
 }
 
+type AdminSectionMode = "editor" | "site-pages" | "footer-manager";
+
 export default function HtmlPageManager() {
     const { message, modal } = App.useApp();
     const navigate = useNavigate();
 
+    const [activeSection, setActiveSection] = useState<AdminSectionMode>("editor");
     const [loading, setLoading] = useState(true);
     const [saving, setSaving] = useState(false);
+    const [savingFooter, setSavingFooter] = useState(false);
     const [pages, setPages] = useState<ManagedHtmlPage[]>([]);
+    const [siteFooter, setSiteFooter] = useState<HtmlSiteFooterConfig>(DEFAULT_HTML_SITE_FOOTER_CONFIG);
     const [activeId, setActiveId] = useState<string>("");
     const [viewMode, setViewMode] = useState<"split" | "code" | "preview">("split");
     const [deviceViewport, setDeviceViewport] = useState<"desktop" | "tablet" | "mobile">("desktop");
@@ -119,12 +123,15 @@ export default function HtmlPageManager() {
         }
     };
 
-    // 加载页面列表
+    // 加载页面列表与页脚配置
     const loadData = async () => {
         setLoading(true);
         try {
             const res = await fetchAdminHtmlPagesOverview();
             setPages(res.pages);
+            if (res.siteFooter) {
+                setSiteFooter(res.siteFooter);
+            }
             if (res.pages.length > 0 && !activeId) {
                 setActiveId(res.pages[0].id);
             }
@@ -147,6 +154,11 @@ export default function HtmlPageManager() {
     const updateActivePage = (updater: Partial<ManagedHtmlPage>) => {
         if (!activePage) return;
         setPages((prev) => prev.map((p) => (p.id === activePage.id ? { ...p, ...updater, updatedAt: new Date().toISOString() } : p)));
+    };
+
+    // 更新页脚配置
+    const updateSiteFooter = (updater: Partial<HtmlSiteFooterConfig>) => {
+        setSiteFooter((prev) => ({ ...prev, ...updater }));
     };
 
     // 格式化当前 HTML
@@ -181,18 +193,53 @@ export default function HtmlPageManager() {
         }, 0);
     };
 
-    // 保存页面
+    // 保存 HTML 页面
     const handleSave = async () => {
         setSaving(true);
         try {
             const res = await saveAdminHtmlPages(pages);
             setPages(res.pages);
+            if (res.siteFooter) setSiteFooter(res.siteFooter);
             message.success("所有 HTML 页面已安全保存");
         } catch (err) {
             message.error(err instanceof Error ? err.message : "保存页面失败");
         } finally {
             setSaving(false);
         }
+    };
+
+    // 保存页脚与受管页面配置
+    const handleSaveSiteFooter = async () => {
+        setSavingFooter(true);
+        try {
+            const res = await saveAdminHtmlSiteFooter(siteFooter);
+            if (res.siteFooter) setSiteFooter(res.siteFooter);
+            message.success("站点页面与页脚配置已保存生效");
+        } catch (err) {
+            message.error(err instanceof Error ? err.message : "保存页脚配置失败");
+        } finally {
+            setSavingFooter(false);
+        }
+    };
+
+    // 重置页脚与受管页面配置
+    const handleResetSiteFooter = () => {
+        modal.confirm({
+            title: "重置页脚与页面管理为官方默认配置？",
+            content: "该操作将恢复 one.supdance.com/zh/about 同款黑底页脚默认文案、链接矩阵与 6 个站点页面的开启状态。",
+            okText: "确认重置",
+            okButtonProps: { danger: true },
+            cancelText: "取消",
+            onOk: async () => {
+                try {
+                    const res = await resetAdminHtmlSiteFooter();
+                    if (res.siteFooter) setSiteFooter(res.siteFooter);
+                    message.success("已恢复官方默认页脚与页面配置");
+                } catch (err) {
+                    message.error(err instanceof Error ? err.message : "重置失败");
+                }
+            },
+        });
     };
 
     // 重置页面为初始高质感模板
@@ -350,301 +397,663 @@ export default function HtmlPageManager() {
                     <div className="flex items-center gap-2">
                         <FileCode className="size-4 text-sky-400" />
                         <h1 className="text-sm font-semibold tracking-tight text-white">supdance html页面管理</h1>
-                        <Tag color="cyan" className="rounded-full text-\[10px\] px-2 border-0">
-                            法务条款 & 单页工作台
-                        </Tag>
                     </div>
-                </div>
 
-                {/* 中间：视图分栏与设备切换 */}
-                <div className="flex items-center gap-1.5 rounded-lg border border-white/10 bg-black/40 p-1">
-                    <button
-                        type="button"
-                        onClick={() => setViewMode("code")}
-                        className={`flex items-center gap-1 rounded px-2.5 py-1 text-xs transition-colors ${viewMode === "code" ? "bg-white/15 text-white font-medium" : "text-[#8a8f98] hover:text-white"}`}
-                        title="仅源码模式"
-                    >
-                        <Code2 className="size-3.5" />
-                        源码
-                    </button>
-                    <button
-                        type="button"
-                        onClick={() => setViewMode("split")}
-                        className={`flex items-center gap-1 rounded px-2.5 py-1 text-xs transition-colors ${viewMode === "split" ? "bg-white/15 text-white font-medium" : "text-[#8a8f98] hover:text-white"}`}
-                        title="分栏实时对照"
-                    >
-                        <Columns2 className="size-3.5" />
-                        双栏
-                    </button>
-                    <button
-                        type="button"
-                        onClick={() => setViewMode("preview")}
-                        className={`flex items-center gap-1 rounded px-2.5 py-1 text-xs transition-colors ${viewMode === "preview" ? "bg-white/15 text-white font-medium" : "text-[#8a8f98] hover:text-white"}`}
-                        title="纯预览模式"
-                    >
-                        <Eye className="size-3.5" />
-                        预览
-                    </button>
-
-                    {viewMode !== "code" && (
-                        <>
-                            <div className="mx-1 h-3.5 w-px bg-white/10" />
-                            <button type="button" onClick={() => setDeviceViewport("desktop")} className={`p-1 rounded transition-colors ${deviceViewport === "desktop" ? "text-white bg-white/15" : "text-[#8a8f98] hover:text-white"}`} title="桌面端 100%">
-                                <Monitor className="size-3.5" />
-                            </button>
-                            <button type="button" onClick={() => setDeviceViewport("tablet")} className={`p-1 rounded transition-colors ${deviceViewport === "tablet" ? "text-white bg-white/15" : "text-[#8a8f98] hover:text-white"}`} title="平板端 768px">
-                                <Tablet className="size-3.5" />
-                            </button>
-                            <button type="button" onClick={() => setDeviceViewport("mobile")} className={`p-1 rounded transition-colors ${deviceViewport === "mobile" ? "text-white bg-white/15" : "text-[#8a8f98] hover:text-white"}`} title="手机端 375px">
-                                <Smartphone className="size-3.5" />
-                            </button>
-                            <div className="mx-1 h-3.5 w-px bg-white/10" />
-                            <button
-                                type="button"
-                                onClick={togglePreviewTheme}
-                                className={`flex items-center gap-1 rounded px-2 py-0.5 text-xs transition-transform active:scale-90 hover:scale-105 ${
-                                    previewTheme === "light" ? "text-amber-400 bg-white/10 font-medium" : "text-sky-400 bg-white/10 font-medium"
-                                }`}
-                                title={previewTheme === "light" ? "当前预览: 白昼 (点击切换为黑夜)" : "当前预览: 黑夜 (点击切换为白昼)"}
-                            >
-                                {previewTheme === "light" ? <Sun className="size-3.5" /> : <Moon className="size-3.5" />}
-                                <span className="font-mono text-xs uppercase">{previewTheme === "light" ? "Light" : "Dark"}</span>
-                            </button>
-                        </>
-                    )}
-                </div>
-
-                {/* 右侧：保存、导出与功能操作 */}
-                <div className="flex items-center gap-2">
-                    <Button size="small" icon={<Sparkles className="size-3.5 text-amber-300" />} onClick={() => setTemplateModalOpen(true)} className="border-white/15 text-xs bg-white/5 hover:bg-white/10">
-                        套用模版
-                    </Button>
-                    <Tooltip title="一键格式化与整洁排版">
-                        <Button size="small" icon={<Wand2 className="size-3.5" />} onClick={handleBeautify} className="border-white/15 text-xs bg-white/5">
-                            排版美化
-                        </Button>
-                    </Tooltip>
-                    <Tooltip title={`复制在线预览链接 (/p/${activePage?.slug})`}>
-                        <Button size="small" icon={<Copy className="size-3.5 text-sky-400" />} onClick={() => void handleCopyPreviewLink()} className="border-white/15 text-xs bg-white/5">
-                            预览链接
-                        </Button>
-                    </Tooltip>
-                    <Tooltip title="下载独立单文件 HTML">
-                        <Button size="small" icon={<Download className="size-3.5" />} onClick={handleDownloadHtml} className="border-white/15 text-xs bg-white/5" />
-                    </Tooltip>
-                    <Tooltip title="在新标签页全屏独立打开">
-                        <Button size="small" icon={<ExternalLink className="size-3.5" />} onClick={handleOpenInNewTab} className="border-white/15 text-xs bg-white/5" />
-                    </Tooltip>
-                    <Button type="primary" size="small" icon={<Save className="size-3.5" />} loading={saving} onClick={() => void handleSave()} className="bg-sky-500 hover:bg-sky-400 font-medium text-xs px-3">
-                        保存页面
-                    </Button>
-                </div>
-            </header>
-
-            {/* 主工作区 */}
-            <div className="flex flex-1 min-h-0 overflow-hidden">
-                {/* 左栏：页面抽屉/列表 */}
-                <aside className="w-64 shrink-0 flex flex-col border-r border-white/10 bg-[#121215]">
-                    <div className="flex items-center justify-between border-b border-white/10 p-3">
-                        <span className="text-xs font-medium text-[#8a8f98] uppercase tracking-wider">页面清单 ({pages.length})</span>
-                        <button type="button" onClick={() => setNewPageModalOpen(true)} className="flex items-center gap-1 rounded px-2 py-0.5 text-xs text-sky-400 hover:bg-sky-500/10 transition-colors">
-                            <Plus className="size-3" />
-                            新建
+                    {/* 模块切换导航 */}
+                    <div className="ml-2 flex items-center gap-1 rounded-lg border border-white/10 bg-black/40 p-1">
+                        <button
+                            type="button"
+                            onClick={() => setActiveSection("editor")}
+                            className={`flex items-center gap-1.5 rounded px-2.5 py-1 text-xs transition-colors ${activeSection === "editor" ? "bg-sky-500/20 text-sky-300 border border-sky-500/30 font-medium" : "text-[#8a8f98] hover:text-white"}`}
+                        >
+                            <Code2 className="size-3.5" />
+                            HTML 模板工作台
+                        </button>
+                        <button
+                            type="button"
+                            onClick={() => setActiveSection("site-pages")}
+                            className={`flex items-center gap-1.5 rounded px-2.5 py-1 text-xs transition-colors ${activeSection === "site-pages" ? "bg-sky-500/20 text-sky-300 border border-sky-500/30 font-medium" : "text-[#8a8f98] hover:text-white"}`}
+                        >
+                            <Globe className="size-3.5" />
+                            页面管理
+                        </button>
+                        <button
+                            type="button"
+                            onClick={() => setActiveSection("footer-manager")}
+                            className={`flex items-center gap-1.5 rounded px-2.5 py-1 text-xs transition-colors ${activeSection === "footer-manager" ? "bg-sky-500/20 text-sky-300 border border-sky-500/30 font-medium" : "text-[#8a8f98] hover:text-white"}`}
+                        >
+                            <LayoutPanelTop className="size-3.5" />
+                            页脚管理器
                         </button>
                     </div>
+                </div>
 
-                    <div className="flex-1 overflow-y-auto p-2 space-y-1">
-                        {pages.map((p) => {
-                            const isCurrent = p.id === activePage?.id;
-                            return (
-                                <div
-                                    key={p.id}
-                                    onClick={() => setActiveId(p.id)}
-                                    className={`group flex items-center justify-between rounded-lg p-2.5 cursor-pointer text-xs transition-colors ${
-                                        isCurrent ? "bg-white/10 text-white font-medium border border-white/15" : "text-[#a2a2ad] hover:bg-white/5 hover:text-white"
-                                    }`}
+                {/* 中间：仅在 HTML 编辑器模式下展示视图分栏与设备切换 */}
+                {activeSection === "editor" ? (
+                    <div className="flex items-center gap-1.5 rounded-lg border border-white/10 bg-black/40 p-1">
+                        <button
+                            type="button"
+                            onClick={() => setViewMode("code")}
+                            className={`flex items-center gap-1 rounded px-2.5 py-1 text-xs transition-colors ${viewMode === "code" ? "bg-white/15 text-white font-medium" : "text-[#8a8f98] hover:text-white"}`}
+                            title="仅源码模式"
+                        >
+                            <Code2 className="size-3.5" />
+                            源码
+                        </button>
+                        <button
+                            type="button"
+                            onClick={() => setViewMode("split")}
+                            className={`flex items-center gap-1 rounded px-2.5 py-1 text-xs transition-colors ${viewMode === "split" ? "bg-white/15 text-white font-medium" : "text-[#8a8f98] hover:text-white"}`}
+                            title="分栏实时对照"
+                        >
+                            <Columns2 className="size-3.5" />
+                            双栏
+                        </button>
+                        <button
+                            type="button"
+                            onClick={() => setViewMode("preview")}
+                            className={`flex items-center gap-1 rounded px-2.5 py-1 text-xs transition-colors ${viewMode === "preview" ? "bg-white/15 text-white font-medium" : "text-[#8a8f98] hover:text-white"}`}
+                            title="纯预览模式"
+                        >
+                            <Eye className="size-3.5" />
+                            预览
+                        </button>
+
+                        {viewMode !== "code" && (
+                            <>
+                                <div className="mx-1 h-3.5 w-px bg-white/10" />
+                                <button
+                                    type="button"
+                                    onClick={() => setDeviceViewport("desktop")}
+                                    className={`p-1 rounded transition-colors ${deviceViewport === "desktop" ? "text-white bg-white/15" : "text-[#8a8f98] hover:text-white"}`}
+                                    title="桌面端 100%"
                                 >
-                                    <div className="min-w-0 flex-1 pr-2">
-                                        <div className="flex items-center gap-1.5 truncate">
-                                            <span className="truncate">{p.title}</span>
-                                            {p.isPublished ? <span className="size-1.5 rounded-full bg-emerald-400 shrink-0" title="已发布" /> : <span className="size-1.5 rounded-full bg-amber-400 shrink-0" title="草稿" />}
-                                        </div>
-                                        <div className="font-mono text-xs text-[#6a6a75] truncate mt-0.5">/{p.slug}</div>
-                                    </div>
-                                    <span className="text-\[10px\] text-[#555] group-hover:text-[#888] font-mono shrink-0">{p.templateId ? p.templateId.replace("-", " ") : "html"}</span>
-                                </div>
-                            );
-                        })}
+                                    <Monitor className="size-3.5" />
+                                </button>
+                                <button
+                                    type="button"
+                                    onClick={() => setDeviceViewport("tablet")}
+                                    className={`p-1 rounded transition-colors ${deviceViewport === "tablet" ? "text-white bg-white/15" : "text-[#8a8f98] hover:text-white"}`}
+                                    title="平板端 768px"
+                                >
+                                    <Tablet className="size-3.5" />
+                                </button>
+                                <button
+                                    type="button"
+                                    onClick={() => setDeviceViewport("mobile")}
+                                    className={`p-1 rounded transition-colors ${deviceViewport === "mobile" ? "text-white bg-white/15" : "text-[#8a8f98] hover:text-white"}`}
+                                    title="手机端 375px"
+                                >
+                                    <Smartphone className="size-3.5" />
+                                </button>
+                                <div className="mx-1 h-3.5 w-px bg-white/10" />
+                                <button
+                                    type="button"
+                                    onClick={togglePreviewTheme}
+                                    className={`flex items-center gap-1 rounded px-2 py-0.5 text-xs transition-transform active:scale-90 hover:scale-105 ${
+                                        previewTheme === "light" ? "text-amber-400 bg-white/10 font-medium" : "text-sky-400 bg-white/10 font-medium"
+                                    }`}
+                                    title={previewTheme === "light" ? "当前预览: 白昼 (点击切换为黑夜)" : "当前预览: 黑夜 (点击切换为白昼)"}
+                                >
+                                    {previewTheme === "light" ? <Sun className="size-3.5" /> : <Moon className="size-3.5" />}
+                                    <span className="font-mono text-xs uppercase">{previewTheme === "light" ? "Light" : "Dark"}</span>
+                                </button>
+                            </>
+                        )}
                     </div>
+                ) : (
+                    <div className="text-xs text-[#8a8f98] font-mono">{activeSection === "site-pages" ? "管理全站法务与公开页面的页脚挂载策略" : "可视化配置黑夜极光页脚文案、导航与合规备案"}</div>
+                )}
 
-                    {/* 左侧底栏：页面属性快速编辑与重置 */}
-                    {activePage && (
-                        <div className="border-t border-white/10 p-3 space-y-2.5 bg-black/30">
-                            <div className="space-y-1">
-                                <label className="text-xs text-[#7c7c88]">页面标题</label>
-                                <input
-                                    type="text"
-                                    value={activePage.title}
-                                    onChange={(e) => updateActivePage({ title: e.target.value })}
-                                    className="w-full rounded border border-white/10 bg-black/50 px-2 py-1 text-xs text-white focus:outline-none focus:border-sky-500"
-                                />
-                            </div>
-                            <div className="space-y-1">
-                                <label className="text-xs text-[#7c7c88]">访问路径 (Slug)</label>
-                                <input
-                                    type="text"
-                                    value={activePage.slug}
-                                    onChange={(e) => updateActivePage({ slug: e.target.value.toLowerCase().replace(/[^a-z0-9-_]/g, "") })}
-                                    className="w-full rounded border border-white/10 bg-black/50 px-2 py-1 text-xs font-mono text-white focus:outline-none focus:border-sky-500"
-                                />
-                            </div>
-                            <div className="flex items-center justify-between pt-1">
-                                <span className="text-xs text-[#a2a2ad]">公开访问</span>
-                                <Switch size="small" checked={activePage.isPublished} onChange={(checked) => updateActivePage({ isPublished: checked })} />
-                            </div>
-                            <div className="flex items-center justify-between pt-2 border-t border-white/10">
-                                <button type="button" onClick={handleDeleteCurrentPage} className="inline-flex items-center gap-1 text-xs text-red-400 hover:text-red-300">
-                                    <Trash2 className="size-3" />
-                                    删除此页
-                                </button>
-                                <button type="button" onClick={handleReset} className="inline-flex items-center gap-1 text-xs text-[#7c7c88] hover:text-white" title="恢复默认官方条款">
-                                    <RotateCcw className="size-3" />
-                                    重置
-                                </button>
-                            </div>
-                        </div>
-                    )}
-                </aside>
+                {/* 右侧：保存、导出与功能操作 */}
+                {activeSection === "editor" ? (
+                    <div className="flex items-center gap-2">
+                        <Button size="small" icon={<Sparkles className="size-3.5 text-amber-300" />} onClick={() => setTemplateModalOpen(true)} className="border-white/15 text-xs bg-white/5 hover:bg-white/10">
+                            套用模版
+                        </Button>
+                        <Tooltip title="一键格式化与整洁排版">
+                            <Button size="small" icon={<Wand2 className="size-3.5" />} onClick={handleBeautify} className="border-white/15 text-xs bg-white/5">
+                                排版美化
+                            </Button>
+                        </Tooltip>
+                        <Tooltip title={`复制在线预览链接 (/p/${activePage?.slug})`}>
+                            <Button size="small" icon={<Copy className="size-3.5 text-sky-400" />} onClick={() => void handleCopyPreviewLink()} className="border-white/15 text-xs bg-white/5">
+                                预览链接
+                            </Button>
+                        </Tooltip>
+                        <Tooltip title="下载独立单文件 HTML">
+                            <Button size="small" icon={<Download className="size-3.5" />} onClick={handleDownloadHtml} className="border-white/15 text-xs bg-white/5" />
+                        </Tooltip>
+                        <Tooltip title="在新标签页全屏独立打开">
+                            <Button size="small" icon={<ExternalLink className="size-3.5" />} onClick={handleOpenInNewTab} className="border-white/15 text-xs bg-white/5" />
+                        </Tooltip>
+                        <Button type="primary" size="small" icon={<Save className="size-3.5" />} loading={saving} onClick={() => void handleSave()} className="bg-sky-500 hover:bg-sky-400 font-medium text-xs px-3">
+                            保存页面
+                        </Button>
+                    </div>
+                ) : (
+                    <div className="flex items-center gap-2">
+                        <Button size="small" icon={<RotateCcw className="size-3.5" />} onClick={handleResetSiteFooter} className="border-white/15 text-xs bg-white/5 hover:bg-white/10">
+                            恢复默认配置
+                        </Button>
+                        <Button type="primary" size="small" icon={<Save className="size-3.5" />} loading={savingFooter} onClick={() => void handleSaveSiteFooter()} className="bg-sky-500 hover:bg-sky-400 font-medium text-xs px-3">
+                            保存页脚与页面设置
+                        </Button>
+                    </div>
+                )}
+            </header>
 
-                {/* 编辑器主舞台 */}
-                <div className="flex flex-1 flex-col min-w-0 bg-[#0c0c0e]">
-                    {/* 排版快捷工具栏 */}
-                    {viewMode !== "preview" && (
-                        <div className="flex items-center gap-1 overflow-x-auto border-b border-white/10 px-3 py-1.5 bg-[#121215] text-xs">
-                            <span className="text-xs font-mono text-[#666] mr-2 shrink-0">排版快捷元素:</span>
-                            <button type="button" onClick={() => insertSnippet((s) => `<h1>${s || "大标题"}</h1>\n`)} className="rounded px-2 py-1 text-[#a2a2ad] hover:bg-white/10 hover:text-white" title="插入一级大标题">
-                                <Heading1 className="size-3.5" />
-                            </button>
-                            <button type="button" onClick={() => insertSnippet((s) => `<h2>${s || "1. 章节条款"}</h2>\n`)} className="rounded px-2 py-1 text-[#a2a2ad] hover:bg-white/10 hover:text-white" title="插入二级章节标题">
-                                <Heading2 className="size-3.5" />
-                            </button>
-                            <button type="button" onClick={() => insertSnippet((s) => `<h3>${s || "1.1 详细条款"}</h3>\n`)} className="rounded px-2 py-1 text-[#a2a2ad] hover:bg-white/10 hover:text-white" title="插入三级条款标题">
-                                <Heading3 className="size-3.5" />
-                            </button>
-                            <div className="h-3 w-px bg-white/15 mx-1" />
-                            <button type="button" onClick={() => insertSnippet((s) => `<p>${s || "请输入正文段落说明..."}</p>\n`)} className="rounded px-2 py-1 text-[#a2a2ad] hover:bg-white/10 hover:text-white font-mono text-xs" title="插入段落 <p>">
-                                P
-                            </button>
-                            <button type="button" onClick={() => insertSnippet((s) => `<strong>${s || "重点条款"}</strong>`)} className="rounded px-2 py-1 text-[#a2a2ad] hover:bg-white/10 hover:text-white font-bold text-xs" title="粗体 <strong>">
-                                B
-                            </button>
-                            <button type="button" onClick={() => insertSnippet((s) => `<em>${s || "强调内容"}</em>`)} className="rounded px-2 py-1 text-[#a2a2ad] hover:bg-white/10 hover:text-white italic text-xs" title="斜体 <em>">
-                                I
-                            </button>
-                            <div className="h-3 w-px bg-white/15 mx-1" />
-                            <button type="button" onClick={() => insertSnippet(`<ul>\n  <li>条款清单项 1</li>\n  <li>条款清单项 2</li>\n</ul>\n`)} className="rounded px-2 py-1 text-[#a2a2ad] hover:bg-white/10 hover:text-white" title="插入无序列表 <ul>">
-                                <List className="size-3.5" />
-                            </button>
-                            <button type="button" onClick={() => insertSnippet(`<ol>\n  <li>序号步骤 1</li>\n  <li>序号步骤 2</li>\n</ol>\n`)} className="rounded px-2 py-1 text-[#a2a2ad] hover:bg-white/10 hover:text-white" title="插入有序列表 <ol>">
-                                <ListOrdered className="size-3.5" />
-                            </button>
-                            <button
-                                type="button"
-                                onClick={() =>
-                                    insertSnippet(
-                                        `<table>\n  <thead>\n    <tr><th>类别</th><th>收集内容</th><th>合法用途</th></tr>\n  </thead>\n  <tbody>\n    <tr><td>账号凭据</td><td>手机号/邮箱</td><td>身份鉴权与安全防护</td></tr>\n  </tbody>\n</table>\n`,
-                                    )
-                                }
-                                className="rounded px-2 py-1 text-[#a2a2ad] hover:bg-white/10 hover:text-white"
-                                title="插入法务合规表格 <table>"
-                            >
-                                <TableIcon className="size-3.5" />
-                            </button>
-                            <button
-                                type="button"
-                                onClick={() => insertSnippet((s) => `<div class="callout">\n  <strong>特别提醒：</strong>${s || "本条款涉及您的核心退款与数据所有权益，请仔细审阅。"}\n</div>\n`)}
-                                className="rounded px-2 py-1 text-amber-300/80 hover:bg-white/10 hover:text-amber-200 text-xs"
-                                title="插入高亮重点声明框"
-                            >
-                                Callout
-                            </button>
-                            <button
-                                type="button"
-                                onClick={() => insertSnippet(`<hr style="border:0;border-top:1px solid var(--border,#333);margin:32px 0;" />\n`)}
-                                className="rounded px-2 py-1 text-[#a2a2ad] hover:bg-white/10 hover:text-white text-xs font-mono"
-                                title="插入水平分割线 <hr>"
-                            >
-                                HR
-                            </button>
-                            <div className="flex-1" />
-                            <button type="button" onClick={handleCopyHtml} className="flex items-center gap-1 text-xs text-[#a2a2ad] hover:text-white px-2 py-1 rounded hover:bg-white/5" title="复制全文代码">
-                                <Copy className="size-3" />
-                                复制代码
+            {/* 主工作区：根据 activeSection 切换 */}
+            {activeSection === "editor" && (
+                <div className="flex flex-1 min-h-0 overflow-hidden">
+                    {/* 左栏：页面抽屉/列表 */}
+                    <aside className="w-64 shrink-0 flex flex-col border-r border-white/10 bg-[#121215]">
+                        <div className="flex items-center justify-between border-b border-white/10 p-3">
+                            <span className="text-xs font-medium text-[#8a8f98] uppercase tracking-wider">页面清单 ({pages.length})</span>
+                            <button type="button" onClick={() => setNewPageModalOpen(true)} className="flex items-center gap-1 rounded px-2 py-0.5 text-xs text-sky-400 hover:bg-sky-500/10 transition-colors">
+                                <Plus className="size-3" />
+                                新建
                             </button>
                         </div>
-                    )}
 
-                    {/* 编辑与预览分屏主体 */}
-                    <div className="flex flex-1 min-h-0 min-w-0">
-                        {/* 左：代码编辑器 */}
-                        {viewMode !== "preview" && (
-                            <div className={`flex flex-col min-w-0 ${viewMode === "split" ? "w-1/2 border-r border-white/10" : "w-full"}`}>
-                                <textarea
-                                    ref={textareaRef}
-                                    value={activePage?.html || ""}
-                                    onChange={(e) => updateActivePage({ html: e.target.value })}
-                                    placeholder="在此输入或粘贴完整自包含 HTML 页面代码..."
-                                    spellCheck={false}
-                                    className="flex-1 w-full resize-none bg-[#09090b] p-4 font-mono text-sm leading-relaxed text-[#e2e2e8] focus:outline-none selection:bg-sky-500/30"
-                                />
-                                <div className="flex items-center justify-between border-t border-white/5 bg-[#0a0a0c] px-3 py-1 text-xs text-[#666] font-mono">
-                                    <span>字数: {activePage?.html.length || 0} 字符</span>
-                                    <span>模板类型: {activePage?.templateId || "custom"}</span>
+                        <div className="flex-1 overflow-y-auto p-2 space-y-1">
+                            {pages.map((p) => {
+                                const isCurrent = p.id === activePage?.id;
+                                return (
+                                    <div
+                                        key={p.id}
+                                        onClick={() => setActiveId(p.id)}
+                                        className={`group flex items-center justify-between rounded-lg p-2.5 cursor-pointer text-xs transition-colors ${
+                                            isCurrent ? "bg-white/10 text-white font-medium border border-white/15" : "text-[#a2a2ad] hover:bg-white/5 hover:text-white"
+                                        }`}
+                                    >
+                                        <div className="min-w-0 flex-1 pr-2">
+                                            <div className="flex items-center gap-1.5 truncate">
+                                                <span className="truncate">{p.title}</span>
+                                                {p.isPublished ? <span className="size-1.5 rounded-full bg-emerald-400 shrink-0" title="已发布" /> : <span className="size-1.5 rounded-full bg-amber-400 shrink-0" title="草稿" />}
+                                            </div>
+                                            <div className="font-mono text-xs text-[#6a6a75] truncate mt-0.5">/{p.slug}</div>
+                                        </div>
+                                        <span className="text-xs text-[#555] group-hover:text-[#888] font-mono shrink-0">{p.templateId ? p.templateId.replace("-", " ") : "html"}</span>
+                                    </div>
+                                );
+                            })}
+                        </div>
+
+                        {/* 左侧底栏：页面属性快速编辑与重置 */}
+                        {activePage && (
+                            <div className="border-t border-white/10 p-3 space-y-2.5 bg-black/30">
+                                <div className="space-y-1">
+                                    <label className="text-xs text-[#7c7c88]">页面标题</label>
+                                    <input
+                                        type="text"
+                                        value={activePage.title}
+                                        onChange={(e) => updateActivePage({ title: e.target.value })}
+                                        className="w-full rounded border border-white/10 bg-black/50 px-2 py-1 text-xs text-white focus:outline-none focus:border-sky-500"
+                                    />
+                                </div>
+                                <div className="space-y-1">
+                                    <label className="text-xs text-[#7c7c88]">访问路径 (Slug)</label>
+                                    <input
+                                        type="text"
+                                        value={activePage.slug}
+                                        onChange={(e) => updateActivePage({ slug: e.target.value.toLowerCase().replace(/[^a-z0-9-_]/g, "") })}
+                                        className="w-full rounded border border-white/10 bg-black/50 px-2 py-1 text-xs font-mono text-white focus:outline-none focus:border-sky-500"
+                                    />
+                                </div>
+                                <div className="flex items-center justify-between pt-1">
+                                    <span className="text-xs text-[#a2a2ad]">公开访问</span>
+                                    <Switch size="small" checked={activePage.isPublished} onChange={(checked) => updateActivePage({ isPublished: checked })} />
+                                </div>
+                                <div className="flex items-center justify-between pt-2 border-t border-white/10">
+                                    <button type="button" onClick={handleDeleteCurrentPage} className="inline-flex items-center gap-1 text-xs text-red-400 hover:text-red-300">
+                                        <Trash2 className="size-3" />
+                                        删除此页
+                                    </button>
+                                    <button type="button" onClick={handleReset} className="inline-flex items-center gap-1 text-xs text-[#7c7c88] hover:text-white" title="恢复默认官方条款">
+                                        <RotateCcw className="size-3" />
+                                        重置
+                                    </button>
                                 </div>
                             </div>
                         )}
+                    </aside>
 
-                        {/* 右：实时沙箱预览 */}
-                        {viewMode !== "code" && (
-                            <div className={`flex flex-col min-w-0 bg-[#16161a] overflow-hidden ${viewMode === "split" ? "w-1/2" : "w-full"}`}>
-                                <div className="flex items-center justify-between border-b border-white/10 bg-[#111114] px-4 py-1 text-xs text-[#8a8f98]">
-                                    <div className="flex items-center gap-2">
-                                        <span className="size-2 rounded-full bg-emerald-500 animate-pulse" />
-                                        <span className="font-mono text-xs">实时沙箱预览</span>
-                                        <span className="text-xs text-[#666]">/p/{activePage?.slug}</span>
-                                    </div>
-                                    <div className="flex items-center gap-3 font-mono text-xs text-[#666]">
-                                        <span>视口: {viewportWidthStyle}</span>
-                                        <button type="button" onClick={() => void handleCopyPreviewLink()} className="text-sky-400 hover:text-sky-300 flex items-center gap-1" title="复制预览地址">
-                                            <Copy className="size-3" />
-                                            复制链接
-                                        </button>
+                    {/* 编辑器主舞台 */}
+                    <div className="flex flex-1 flex-col min-w-0 bg-[#0c0c0e]">
+                        {/* 排版快捷工具栏 */}
+                        {viewMode !== "preview" && (
+                            <div className="flex items-center gap-1 overflow-x-auto border-b border-white/10 px-3 py-1.5 bg-[#121215] text-xs">
+                                <span className="text-xs font-mono text-[#666] mr-2 shrink-0">排版快捷元素:</span>
+                                <button type="button" onClick={() => insertSnippet((s) => `<h1>${s || "大标题"}</h1>\n`)} className="rounded px-2 py-1 text-[#a2a2ad] hover:bg-white/10 hover:text-white" title="插入一级大标题">
+                                    <Heading1 className="size-3.5" />
+                                </button>
+                                <button type="button" onClick={() => insertSnippet((s) => `<h2>${s || "1. 章节条款"}</h2>\n`)} className="rounded px-2 py-1 text-[#a2a2ad] hover:bg-white/10 hover:text-white" title="插入二级章节标题">
+                                    <Heading2 className="size-3.5" />
+                                </button>
+                                <button type="button" onClick={() => insertSnippet((s) => `<h3>${s || "1.1 详细条款"}</h3>\n`)} className="rounded px-2 py-1 text-[#a2a2ad] hover:bg-white/10 hover:text-white" title="插入三级条款标题">
+                                    <Heading3 className="size-3.5" />
+                                </button>
+                                <div className="h-3 w-px bg-white/15 mx-1" />
+                                <button type="button" onClick={() => insertSnippet((s) => `<p>${s || "请输入正文段落说明..."}</p>\n`)} className="rounded px-2 py-1 text-[#a2a2ad] hover:bg-white/10 hover:text-white font-mono text-xs" title="插入段落 <p>">
+                                    P
+                                </button>
+                                <button type="button" onClick={() => insertSnippet((s) => `<strong>${s || "重点条款"}</strong>`)} className="rounded px-2 py-1 text-[#a2a2ad] hover:bg-white/10 hover:text-white font-bold text-xs" title="粗体 <strong>">
+                                    B
+                                </button>
+                                <button type="button" onClick={() => insertSnippet((s) => `<em>${s || "强调内容"}</em>`)} className="rounded px-2 py-1 text-[#a2a2ad] hover:bg-white/10 hover:text-white italic text-xs" title="斜体 <em>">
+                                    I
+                                </button>
+                                <div className="h-3 w-px bg-white/15 mx-1" />
+                                <button
+                                    type="button"
+                                    onClick={() => insertSnippet(`<ul>\n  <li>条款清单项 1</li>\n  <li>条款清单项 2</li>\n</ul>\n`)}
+                                    className="rounded px-2 py-1 text-[#a2a2ad] hover:bg-white/10 hover:text-white"
+                                    title="插入无序列表 <ul>"
+                                >
+                                    <List className="size-3.5" />
+                                </button>
+                                <button type="button" onClick={() => insertSnippet(`<ol>\n  <li>序号步骤 1</li>\n  <li>序号步骤 2</li>\n</ol>\n`)} className="rounded px-2 py-1 text-[#a2a2ad] hover:bg-white/10 hover:text-white" title="插入有序列表 <ol>">
+                                    <ListOrdered className="size-3.5" />
+                                </button>
+                                <button
+                                    type="button"
+                                    onClick={() =>
+                                        insertSnippet(
+                                            `<table>\n  <thead>\n    <tr><th>类别</th><th>收集内容</th><th>合法用途</th></tr>\n  </thead>\n  <tbody>\n    <tr><td>账号凭据</td><td>手机号/邮箱</td><td>身份鉴权与安全防护</td></tr>\n  </tbody>\n</table>\n`,
+                                        )
+                                    }
+                                    className="rounded px-2 py-1 text-[#a2a2ad] hover:bg-white/10 hover:text-white"
+                                    title="插入法务合规表格 <table>"
+                                >
+                                    <TableIcon className="size-3.5" />
+                                </button>
+                                <button
+                                    type="button"
+                                    onClick={() => insertSnippet((s) => `<div class="callout">\n  <strong>特别提醒：</strong>${s || "本条款涉及您的核心退款与数据所有权益，请仔细审阅。"}\n</div>\n`)}
+                                    className="rounded px-2 py-1 text-amber-300/80 hover:bg-white/10 hover:text-amber-200 text-xs"
+                                    title="插入高亮重点声明框"
+                                >
+                                    Callout
+                                </button>
+                                <button
+                                    type="button"
+                                    onClick={() => insertSnippet(`<hr style="border:0;border-top:1px solid var(--border,#333);margin:32px 0;" />\n`)}
+                                    className="rounded px-2 py-1 text-[#a2a2ad] hover:bg-white/10 hover:text-white text-xs font-mono"
+                                    title="插入水平分割线 <hr>"
+                                >
+                                    HR
+                                </button>
+                                <div className="flex-1" />
+                                <button type="button" onClick={handleCopyHtml} className="flex items-center gap-1 text-xs text-[#a2a2ad] hover:text-white px-2 py-1 rounded hover:bg-white/5" title="复制全文代码">
+                                    <Copy className="size-3" />
+                                    复制代码
+                                </button>
+                            </div>
+                        )}
+
+                        {/* 编辑与预览分屏主体 */}
+                        <div className="flex flex-1 min-h-0 min-w-0">
+                            {/* 左：代码编辑器 */}
+                            {viewMode !== "preview" && (
+                                <div className={`flex flex-col min-w-0 ${viewMode === "split" ? "w-1/2 border-r border-white/10" : "w-full"}`}>
+                                    <textarea
+                                        ref={textareaRef}
+                                        value={activePage?.html || ""}
+                                        onChange={(e) => updateActivePage({ html: e.target.value })}
+                                        placeholder="在此输入或粘贴完整自包含 HTML 页面代码..."
+                                        spellCheck={false}
+                                        className="flex-1 w-full resize-none bg-[#09090b] p-4 font-mono text-sm leading-relaxed text-[#e2e2e8] focus:outline-none selection:bg-sky-500/30"
+                                    />
+                                    <div className="flex items-center justify-between border-t border-white/5 bg-[#0a0a0c] px-3 py-1 text-xs text-[#666] font-mono">
+                                        <span>字数: {activePage?.html.length || 0} 字符</span>
+                                        <span>模板类型: {activePage?.templateId || "custom"}</span>
                                     </div>
                                 </div>
+                            )}
 
-                                <div className="flex flex-1 items-center justify-center overflow-auto p-4 bg-[#0a0a0c]/60">
-                                    <div style={{ width: viewportWidthStyle, height: "100%" }} className="h-full rounded-lg shadow-2xl overflow-hidden border border-white/10 bg-black transition-all duration-200">
-                                        <iframe
-                                            ref={iframeRef}
-                                            title="HTML Page Live Preview"
-                                            srcDoc={activePage?.html || "<p>无预览内容</p>"}
-                                            sandbox="allow-scripts allow-same-origin"
-                                            className="h-full w-full border-0 bg-transparent"
-                                            onLoad={() => {
-                                                if (iframeRef.current?.contentDocument) {
-                                                    const doc = iframeRef.current.contentDocument;
-                                                    doc.documentElement.setAttribute("data-theme", previewTheme);
-                                                    doc.documentElement.style.colorScheme = previewTheme;
-                                                }
+                            {/* 右：实时沙箱预览 */}
+                            {viewMode !== "code" && (
+                                <div className={`flex flex-col min-w-0 bg-[#16161a] overflow-hidden ${viewMode === "split" ? "w-1/2" : "w-full"}`}>
+                                    <div className="flex items-center justify-between border-b border-white/10 bg-[#111114] px-4 py-1 text-xs text-[#8a8f98]">
+                                        <div className="flex items-center gap-2">
+                                            <span className="size-2 rounded-full bg-emerald-500 animate-pulse" />
+                                            <span className="font-mono text-xs">实时沙箱预览</span>
+                                            <span className="text-xs text-[#666]">/p/{activePage?.slug}</span>
+                                        </div>
+                                        <div className="flex items-center gap-3 font-mono text-xs text-[#666]">
+                                            <span>视口: {viewportWidthStyle}</span>
+                                            <button type="button" onClick={() => void handleCopyPreviewLink()} className="text-sky-400 hover:text-sky-300 flex items-center gap-1" title="复制预览地址">
+                                                <Copy className="size-3" />
+                                                复制链接
+                                            </button>
+                                        </div>
+                                    </div>
+
+                                    <div className="flex flex-1 items-center justify-center overflow-auto p-4 bg-[#0a0a0c]/60">
+                                        <div style={{ width: viewportWidthStyle, height: "100%" }} className="h-full rounded-lg shadow-2xl overflow-hidden border border-white/10 bg-black transition-all duration-200">
+                                            <iframe
+                                                ref={iframeRef}
+                                                title="HTML Page Live Preview"
+                                                srcDoc={activePage?.html || "<p>无预览内容</p>"}
+                                                sandbox="allow-scripts allow-same-origin"
+                                                className="h-full w-full border-0 bg-transparent"
+                                                onLoad={() => {
+                                                    if (iframeRef.current?.contentDocument) {
+                                                        const doc = iframeRef.current.contentDocument;
+                                                        doc.documentElement.setAttribute("data-theme", previewTheme);
+                                                        doc.documentElement.style.colorScheme = previewTheme;
+                                                    }
+                                                }}
+                                            />
+                                        </div>
+                                    </div>
+                                </div>
+                            )}
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* 页面管理视图 */}
+            {activeSection === "site-pages" && (
+                <div className="flex-1 overflow-y-auto p-6">
+                    <div className="mx-auto max-w-5xl space-y-6">
+                        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 rounded-2xl border border-white/10 bg-[#141418] p-5">
+                            <div>
+                                <h2 className="text-base font-semibold text-white">全站法务与公开页面管理</h2>
+                                <p className="mt-1 text-xs text-[#8a8f98]">
+                                    统一管理 <code className="text-sky-400">/terms</code>、<code className="text-sky-400">/privacy</code>、<code className="text-sky-400">/aup</code>、<code className="text-sky-400">/legal</code>、
+                                    <code className="text-sky-400">/mcp</code> 与 <code className="text-sky-400">/pricing.html</code> 底部是否展示黑夜极光页脚。修改后点击右上角「保存页脚与页面设置」立即生效。
+                                </p>
+                            </div>
+                            <div className="flex items-center gap-3 shrink-0">
+                                <span className="text-xs text-[#a2a2ad]">全局启用页脚</span>
+                                <Switch checked={siteFooter.enabled} onChange={(checked) => updateSiteFooter({ enabled: checked })} />
+                            </div>
+                        </div>
+
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            {siteFooter.sitePages.map((sp, idx) => (
+                                <div key={sp.path} className="flex flex-col justify-between rounded-xl border border-white/10 bg-[#121216] p-4 hover:border-white/20 transition-colors">
+                                    <div className="space-y-2">
+                                        <div className="flex items-center justify-between gap-2">
+                                            <div className="flex items-center gap-2">
+                                                <span className="font-mono text-xs font-semibold text-sky-400 bg-sky-500/10 border border-sky-500/20 px-2 py-0.5 rounded">{sp.path}</span>
+                                                <Tag color={sp.pageType === "static-html" ? "purple" : "blue"} className="m-0 text-xs border-0">
+                                                    {sp.pageType === "static-html" ? "静态 HTML" : "SPA 路由"}
+                                                </Tag>
+                                            </div>
+                                            <a href={sp.path} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 text-xs text-[#8a8f98] hover:text-white no-underline">
+                                                <span>打开页面</span>
+                                                <ExternalLink className="size-3" />
+                                            </a>
+                                        </div>
+
+                                        <div>
+                                            <label className="text-xs text-[#7c7c88] block mb-1">页面名称</label>
+                                            <input
+                                                type="text"
+                                                value={sp.title}
+                                                onChange={(e) => {
+                                                    const next = [...siteFooter.sitePages];
+                                                    next[idx] = { ...sp, title: e.target.value };
+                                                    updateSiteFooter({ sitePages: next });
+                                                }}
+                                                className="w-full rounded border border-white/10 bg-black/50 px-2.5 py-1.5 text-xs text-white focus:outline-none focus:border-sky-500"
+                                            />
+                                        </div>
+
+                                        <div>
+                                            <label className="text-xs text-[#7c7c88] block mb-1">说明备注</label>
+                                            <input
+                                                type="text"
+                                                value={sp.description}
+                                                onChange={(e) => {
+                                                    const next = [...sitePagesClone(siteFooter)];
+                                                    next[idx] = { ...sp, description: e.target.value };
+                                                    updateSiteFooter({ sitePages: next });
+                                                }}
+                                                className="w-full rounded border border-white/10 bg-black/50 px-2.5 py-1.5 text-xs text-[#a2a2ad] focus:outline-none focus:border-sky-500"
+                                            />
+                                        </div>
+                                    </div>
+
+                                    <div className="mt-4 pt-3 border-t border-white/10 flex items-center justify-between">
+                                        <span className="text-xs text-[#a2a2ad]">在页面底部挂载黑底页脚</span>
+                                        <Switch
+                                            size="small"
+                                            checked={sp.showFooter}
+                                            onChange={(checked) => {
+                                                const next = [...siteFooter.sitePages];
+                                                next[idx] = { ...sp, showFooter: checked };
+                                                updateSiteFooter({ sitePages: next });
                                             }}
                                         />
                                     </div>
                                 </div>
-                            </div>
-                        )}
+                            ))}
+                        </div>
                     </div>
                 </div>
-            </div>
+            )}
+
+            {/* 页脚管理器视图 */}
+            {activeSection === "footer-manager" && (
+                <div className="flex-1 overflow-y-auto p-6">
+                    <div className="mx-auto max-w-6xl space-y-6">
+                        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                            {/* 左侧：品牌、社交与订阅卡片设置 */}
+                            <div className="space-y-5 rounded-2xl border border-white/10 bg-[#141418] p-5">
+                                <h3 className="text-sm font-semibold text-white border-b border-white/10 pb-3">1. 品牌标识、简介与官方社交</h3>
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                    <div>
+                                        <label className="text-xs text-[#8a8f98] block mb-1">品牌名称</label>
+                                        <input type="text" value={siteFooter.brandName} onChange={(e) => updateSiteFooter({ brandName: e.target.value })} className="w-full rounded border border-white/10 bg-black/50 px-3 py-1.5 text-xs text-white" />
+                                    </div>
+                                    <div>
+                                        <label className="text-xs text-[#8a8f98] block mb-1">副标题 Slogan</label>
+                                        <input type="text" value={siteFooter.brandSlogan} onChange={(e) => updateSiteFooter({ brandSlogan: e.target.value })} className="w-full rounded border border-white/10 bg-black/50 px-3 py-1.5 text-xs text-white" />
+                                    </div>
+                                </div>
+
+                                <div>
+                                    <label className="text-xs text-[#8a8f98] block mb-1">品牌愿景介绍</label>
+                                    <textarea
+                                        rows={2}
+                                        value={siteFooter.brandVision}
+                                        onChange={(e) => updateSiteFooter({ brandVision: e.target.value })}
+                                        className="w-full rounded border border-white/10 bg-black/50 px-3 py-1.5 text-xs text-white resize-none"
+                                    />
+                                </div>
+
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                    <div>
+                                        <label className="text-xs text-[#8a8f98] block mb-1">官方联系邮箱</label>
+                                        <input
+                                            type="text"
+                                            value={siteFooter.supportEmail}
+                                            onChange={(e) => updateSiteFooter({ supportEmail: e.target.value })}
+                                            className="w-full rounded border border-white/10 bg-black/50 px-3 py-1.5 text-xs font-mono text-white"
+                                        />
+                                    </div>
+                                    <div>
+                                        <label className="text-xs text-[#8a8f98] block mb-1">社交矩阵标题</label>
+                                        <input
+                                            type="text"
+                                            value={siteFooter.officialChannelsText}
+                                            onChange={(e) => updateSiteFooter({ officialChannelsText: e.target.value })}
+                                            className="w-full rounded border border-white/10 bg-black/50 px-3 py-1.5 text-xs text-white"
+                                        />
+                                    </div>
+                                </div>
+
+                                <div className="space-y-2 pt-2">
+                                    <label className="text-xs text-[#8a8f98] block">社交媒体链接 (X / YouTube / Instagram / 小红书 / QQ)</label>
+                                    {siteFooter.socialLinks.map((soc, sIdx) => (
+                                        <div key={soc.id} className="grid grid-cols-12 gap-2 items-center">
+                                            <span className="col-span-3 font-mono text-xs text-[#a2a2ad] truncate">{soc.name}</span>
+                                            <input
+                                                type="text"
+                                                value={soc.handle}
+                                                placeholder="账号名"
+                                                onChange={(e) => {
+                                                    const next = [...siteFooter.socialLinks];
+                                                    next[sIdx] = { ...soc, handle: e.target.value };
+                                                    updateSiteFooter({ socialLinks: next });
+                                                }}
+                                                className="col-span-3 rounded border border-white/10 bg-black/50 px-2 py-1 text-xs text-white"
+                                            />
+                                            <input
+                                                type="text"
+                                                value={soc.href}
+                                                placeholder="跳转 URL"
+                                                onChange={(e) => {
+                                                    const next = [...siteFooter.socialLinks];
+                                                    next[sIdx] = { ...soc, href: e.target.value };
+                                                    updateSiteFooter({ socialLinks: next });
+                                                }}
+                                                className="col-span-6 rounded border border-white/10 bg-black/50 px-2 py-1 text-xs font-mono text-white"
+                                            />
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+
+                            {/* 右侧：导航列、技术周刊与底部备案版权 */}
+                            <div className="space-y-5 rounded-2xl border border-white/10 bg-[#141418] p-5">
+                                <h3 className="text-sm font-semibold text-white border-b border-white/10 pb-3">2. 导航列、技术周刊卡片与底部版权备案</h3>
+
+                                {siteFooter.columns.map((col, cIdx) => (
+                                    <div key={cIdx} className="space-y-2 rounded-xl border border-white/10 bg-black/30 p-3">
+                                        <div className="flex items-center justify-between gap-2">
+                                            <span className="text-xs font-mono text-sky-400">第 {cIdx + 1} 列标题</span>
+                                            <input
+                                                type="text"
+                                                value={col.title}
+                                                onChange={(e) => {
+                                                    const next = [...siteFooter.columns];
+                                                    next[cIdx] = { ...col, title: e.target.value };
+                                                    updateSiteFooter({ columns: next });
+                                                }}
+                                                className="rounded border border-white/10 bg-black/60 px-2.5 py-1 text-xs text-white"
+                                            />
+                                        </div>
+                                        <div className="space-y-1.5">
+                                            {col.links.map((lnk, lIdx) => (
+                                                <div key={lIdx} className="grid grid-cols-12 gap-2">
+                                                    <input
+                                                        type="text"
+                                                        value={lnk.label}
+                                                        onChange={(e) => {
+                                                            const nextCols = [...siteFooter.columns];
+                                                            const nextLinks = [...col.links];
+                                                            nextLinks[lIdx] = { ...lnk, label: e.target.value };
+                                                            nextCols[cIdx] = { ...col, links: nextLinks };
+                                                            updateSiteFooter({ columns: nextCols });
+                                                        }}
+                                                        className="col-span-5 rounded border border-white/10 bg-black/50 px-2 py-1 text-xs text-white"
+                                                    />
+                                                    <input
+                                                        type="text"
+                                                        value={lnk.href}
+                                                        onChange={(e) => {
+                                                            const nextCols = [...siteFooter.columns];
+                                                            const nextLinks = [...col.links];
+                                                            nextLinks[lIdx] = { ...lnk, href: e.target.value };
+                                                            nextCols[cIdx] = { ...col, links: nextLinks };
+                                                            updateSiteFooter({ columns: nextCols });
+                                                        }}
+                                                        className="col-span-7 rounded border border-white/10 bg-black/50 px-2 py-1 text-xs font-mono text-[#a2a2ad]"
+                                                    />
+                                                </div>
+                                            ))}
+                                        </div>
+                                    </div>
+                                ))}
+
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                    <div>
+                                        <label className="text-xs text-[#8a8f98] block mb-1">订阅栏标题</label>
+                                        <input
+                                            type="text"
+                                            value={siteFooter.newsletterHeading}
+                                            onChange={(e) => updateSiteFooter({ newsletterHeading: e.target.value })}
+                                            className="w-full rounded border border-white/10 bg-black/50 px-2.5 py-1 text-xs text-white"
+                                        />
+                                    </div>
+                                    <div>
+                                        <label className="text-xs text-[#8a8f98] block mb-1">卡片主标题</label>
+                                        <input
+                                            type="text"
+                                            value={siteFooter.newsletterCardTitle}
+                                            onChange={(e) => updateSiteFooter({ newsletterCardTitle: e.target.value })}
+                                            className="w-full rounded border border-white/10 bg-black/50 px-2.5 py-1 text-xs text-white"
+                                        />
+                                    </div>
+                                </div>
+
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                    <div>
+                                        <label className="text-xs text-[#8a8f98] block mb-1">版权声明</label>
+                                        <input
+                                            type="text"
+                                            value={siteFooter.copyrightText}
+                                            onChange={(e) => updateSiteFooter({ copyrightText: e.target.value })}
+                                            className="w-full rounded border border-white/10 bg-black/50 px-2.5 py-1 text-xs text-white"
+                                        />
+                                    </div>
+                                    <div>
+                                        <label className="text-xs text-[#8a8f98] block mb-1">ICP 备案号</label>
+                                        <input type="text" value={siteFooter.icpNumber} onChange={(e) => updateSiteFooter({ icpNumber: e.target.value })} className="w-full rounded border border-white/10 bg-black/50 px-2.5 py-1 text-xs text-white" />
+                                    </div>
+                                </div>
+
+                                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                                    <div>
+                                        <label className="text-xs text-[#8a8f98] block mb-1">系统标识文案</label>
+                                        <input
+                                            type="text"
+                                            value={siteFooter.operatingSystemText}
+                                            onChange={(e) => updateSiteFooter({ operatingSystemText: e.target.value })}
+                                            className="w-full rounded border border-white/10 bg-black/50 px-2.5 py-1 text-xs text-white"
+                                        />
+                                    </div>
+                                    <div>
+                                        <label className="text-xs text-[#8a8f98] block mb-1">右侧状态 1</label>
+                                        <input
+                                            type="text"
+                                            value={siteFooter.statusPrimaryText}
+                                            onChange={(e) => updateSiteFooter({ statusPrimaryText: e.target.value })}
+                                            className="w-full rounded border border-white/10 bg-black/50 px-2.5 py-1 text-xs text-white"
+                                        />
+                                    </div>
+                                    <div>
+                                        <label className="text-xs text-[#8a8f98] block mb-1">右侧状态 2</label>
+                                        <input
+                                            type="text"
+                                            value={siteFooter.statusSecondaryText}
+                                            onChange={(e) => updateSiteFooter({ statusSecondaryText: e.target.value })}
+                                            className="w-full rounded border border-white/10 bg-black/50 px-2.5 py-1 text-xs text-white"
+                                        />
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* 底部实时预览 */}
+                        <div className="rounded-2xl border border-white/10 bg-[#07080c] overflow-hidden">
+                            <div className="flex items-center justify-between border-b border-white/10 bg-[#121216] px-4 py-2 text-xs text-[#8a8f98]">
+                                <span className="font-mono">页脚实时渲染预览 (1:1 复刻 one.supdance.com/zh/about 红框区域)</span>
+                                <span className="text-emerald-400 font-mono">Dark #07080c</span>
+                            </div>
+                            <div className="[&>footer]:mt-0">
+                                <SupdanceAboutFooter configOverride={siteFooter} forceShow />
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )}
 
             {/* 模版库弹窗 */}
             <Modal title="选择法务条款精美开源 HTML 模版" open={templateModalOpen} onCancel={() => setTemplateModalOpen(false)} footer={null} width={840} className="html-template-modal">
@@ -656,7 +1065,7 @@ export default function HtmlPageManager() {
                                 <div>
                                     <div className="flex items-center justify-between gap-2 mb-2">
                                         <h3 className="font-semibold text-sm group-hover:text-primary transition-colors">{tpl.name}</h3>
-                                        <Tag color={tpl.theme === "dark" ? "default" : "blue"} className="text-\[10px\]">
+                                        <Tag color={tpl.theme === "dark" ? "default" : "blue"} className="text-xs">
                                             {tpl.badge}
                                         </Tag>
                                     </div>
@@ -712,4 +1121,8 @@ export default function HtmlPageManager() {
             </Modal>
         </div>
     );
+}
+
+function sitePagesClone(siteFooter: HtmlSiteFooterConfig) {
+    return siteFooter.sitePages;
 }

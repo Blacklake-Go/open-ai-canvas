@@ -8,6 +8,8 @@ import { AppModal } from "@/components/ui/product/app-modal";
 import { useAppearanceStore } from "@/stores/use-appearance-store";
 import { dramaKeys } from "@/lib/drama/drama-query-keys";
 import type { DramaEpisodeRow } from "@/services/api/drama";
+import { previewDramaJianyingDraft, type JianyingDraftPreview } from "@/services/api/drama-export";
+import { formatBytes } from "@/lib/image-utils";
 import { applyDramaAssetImport, openDramaAssetPackage, planDramaAssetImport, type DramaAssetImportOptions, type DramaAssetImportPlan, type DramaAssetImportResult, type DramaAssetPackage } from "@/services/drama-asset-import";
 import { defaultJianyingDraftRoot, exportDramaAssetPackage, exportDramaJianyingDraft, jianyingDraftRootProblem, savedJianyingDraftRoot, saveJianyingDraftRoot } from "@/services/drama-export";
 
@@ -310,53 +312,236 @@ export function AssetImportModal({ open, projectId, onClose }: { open: boolean; 
     );
 }
 
-/** 导出剪映草稿：素材按用户本机的剪映草稿目录写成绝对路径，解压到该目录后剪映首页即可打开。 */
-export function JianyingDraftModal({ open, projectId, episodeId, episodeLabel, readySegments, onClose }: { open: boolean; projectId: string; episodeId: string; episodeLabel: string; readySegments: number; onClose: () => void }) {
+/** 先检查媒体与导入目录，再交给浏览器流式下载；页面无法观察附件下载完成。 */
+export function JianyingDraftModal({ open, projectId, episodeId, episodeLabel, onClose }: { open: boolean; projectId: string; episodeId: string; episodeLabel: string; onClose: () => void }) {
     _useCreationLocale();
-    const { message } = App.useApp();
     const [root, setRoot] = useState(() => savedJianyingDraftRoot() || defaultJianyingDraftRoot());
     const [captions, setCaptions] = useState(true);
+    const [preview, setPreview] = useState<JianyingDraftPreview | null>(null);
+    const [checking, setChecking] = useState(false);
+    const [requested, setRequested] = useState(false);
+    const [error, setError] = useState("");
+    const [allowIncomplete, setAllowIncomplete] = useState(false);
+    const [allowStale, setAllowStale] = useState(false);
+    const lock = useRef(false);
+    const submitted = useRef(false);
+    const request = useRef<AbortController | null>(null);
+    const download = useRef<ReturnType<typeof exportDramaJianyingDraft> | null>(null);
+    const alive = useRef(true);
+    useEffect(() => {
+        alive.current = true;
+        setPreview(null);
+        setRequested(false);
+        setChecking(false);
+        setError("");
+        lock.current = false;
+        submitted.current = false;
+        return () => {
+            alive.current = false;
+            request.current?.abort();
+            download.current?.stopObserving();
+        };
+    }, [projectId, episodeId, open]);
     const problem = jianyingDraftRootProblem(root);
+    const invalidate = () => {
+        submitted.current = false;
+        setPreview(null);
+        setRequested(false);
+        setError("");
+        setAllowIncomplete(false);
+        setAllowStale(false);
+    };
+    const inspect = async () => {
+        if (problem || lock.current) return;
+        lock.current = true;
+        setChecking(true);
+        invalidate();
+        download.current?.stopObserving();
+        const controller = new AbortController();
+        request.current?.abort();
+        request.current = controller;
+        try {
+            const result = await previewDramaJianyingDraft(projectId, episodeId, { draftRoot: root.trim(), captions }, controller.signal);
+            if (controller.signal.aborted || !alive.current) return;
+            setRoot(result.draftRoot);
+            setPreview(result);
+        } catch (cause) {
+            if (!controller.signal.aborted && alive.current) setError(cause instanceof Error ? cause.message : _creationText("creation.jianying.checkFailed"));
+        } finally {
+            if (request.current === controller) {
+                lock.current = false;
+                if (alive.current) setChecking(false);
+            }
+        }
+    };
+    const canDownload = Boolean(preview?.availableSegments && (!preview.missingSegments || allowIncomplete) && (!preview.staleSegments || allowStale));
     const submit = () => {
-        if (problem) return;
+        if (problem || !preview || !canDownload || submitted.current || lock.current) return;
+        lock.current = true;
+        submitted.current = true;
+        setRequested(true);
+        setError("");
         saveJianyingDraftRoot(root);
-        exportDramaJianyingDraft(projectId, episodeId, { draftRoot: root, captions }, (text) => message.error(text));
-        message.info(_creationText("creation.3bea86a43b5aeea9"));
-        onClose();
+        const fail = (text: string) => {
+            if (!alive.current) return;
+            setError(text);
+            setRequested(false);
+            setPreview(null);
+            lock.current = false;
+            submitted.current = false;
+        };
+        try {
+            download.current = exportDramaJianyingDraft(projectId, episodeId, { draftRoot: preview.draftRoot, captions, revision: preview.revision, allowIncomplete, allowStale }, fail);
+        } catch (cause) {
+            fail(cause instanceof Error ? cause.message : _creationText("creation.jianying.submitFailed"));
+        } finally {
+            lock.current = false;
+        }
     };
     return (
-        <AppModal open={open} onCancel={onClose} footer={null} title={null} closable={false} flush centered width="min(640px, calc(100vw - 32px))" rootClassName="drama-root" aria-label={_creationText("projects.export_draft")}>
+        <AppModal open={open} onCancel={onClose} footer={null} title={null} closable={false} flush centered width="min(720px, calc(100vw - 32px))" rootClassName="drama-root" aria-label={_creationText("projects.export_draft")}>
             <div className="drama-composer drama-transfer">
                 <header className="drama-composer-head">
                     <div className="min-w-0">
                         <strong>{_creationText("creation.3115e0921d5d71aa", { value1: episodeLabel })}</strong>
-                        <span>{_creationText("creation.2327935cbc88b6a4", { value1: readySegments })}</span>
+                        <span>{_creationText("creation.jianying.subtitle")}</span>
                     </div>
                     <Button type="text" icon={<X className="size-4" />} aria-label={_creationText("common.close")} onClick={onClose} />
                 </header>
                 <div className="drama-transfer-body thin-scrollbar">
                     <label className="drama-composer-field">
                         <span className="drama-composer-label">{_creationText("creation.0b9effef94991935")}</span>
-                        <Input value={root} onChange={(event) => setRoot(event.target.value)} status={problem ? "warning" : undefined} spellCheck={false} />
-                        <span className={problem ? "drama-transfer-problem" : "drama-transfer-note"}>{problem || _creationText("creation.86cd1f42a9e8b0f2")}</span>
+                        <Input
+                            aria-label={_creationText("creation.0b9effef94991935")}
+                            value={root}
+                            disabled={checking || requested}
+                            onChange={(event) => {
+                                setRoot(event.target.value);
+                                invalidate();
+                            }}
+                            status={problem ? "warning" : undefined}
+                            spellCheck={false}
+                        />
+                        <span className={problem ? "drama-transfer-problem" : "drama-transfer-note"}>{problem || _creationText("creation.jianying.pathPrivacy")}</span>
                     </label>
+                    <div className="flex flex-wrap gap-2">
+                        <Button
+                            size="small"
+                            disabled={checking || requested}
+                            onClick={() => {
+                                setRoot(defaultJianyingDraftRoot("windows"));
+                                invalidate();
+                            }}
+                        >
+                            {_creationText("creation.jianying.windowsExample")}
+                        </Button>
+                        <Button
+                            size="small"
+                            disabled={checking || requested}
+                            onClick={() => {
+                                setRoot(defaultJianyingDraftRoot("macos"));
+                                invalidate();
+                            }}
+                        >
+                            {_creationText("creation.jianying.macosExample")}
+                        </Button>
+                    </div>
                     <div className="drama-transfer-options">
-                        <Checkbox checked={captions} onChange={(event) => setCaptions(event.target.checked)}>
+                        <Checkbox
+                            checked={captions}
+                            disabled={checking || requested}
+                            onChange={(event) => {
+                                setCaptions(event.target.checked);
+                                invalidate();
+                            }}
+                        >
                             {_creationText("creation.1b5aa162b70d4cb6")}
                         </Checkbox>
                     </div>
+                    {error ? (
+                        <p className="drama-transfer-problem" role="alert">
+                            {error}
+                        </p>
+                    ) : null}
+                    {preview ? (
+                        <div className="drama-transfer-plan" role="status">
+                            <strong>
+                                {_creationText("creation.jianying.previewSummary", {
+                                    available: preview.availableSegments,
+                                    total: preview.totalSegments,
+                                    duration: (preview.durationMs / 1000).toFixed(1),
+                                    size: formatBytes(preview.mediaBytes),
+                                })}
+                            </strong>
+                            {!preview.availableSegments ? <p className="drama-transfer-problem">{_creationText("creation.jianying.noAvailable")}</p> : null}
+                            {preview.warnings.length ? (
+                                <ul>
+                                    {preview.warnings.map((warning) => (
+                                        <li key={warning}>{warning}</li>
+                                    ))}
+                                </ul>
+                            ) : (
+                                <p>{_creationText("creation.jianying.checked")}</p>
+                            )}
+                            <details open={preview.missingSegments > 0 || preview.staleSegments > 0}>
+                                <summary>{_creationText("creation.jianying.segmentList")}</summary>
+                                <ul>
+                                    {preview.segments.map((segment) => (
+                                        <li key={segment.index}>
+                                            {_creationText("creation.jianying.segment", { index: segment.index + 1, title: segment.title })}
+                                            {segment.included
+                                                ? _creationText("creation.jianying.segmentIncluded", {
+                                                      duration: (segment.durationMs / 1000).toFixed(1),
+                                                      stale: segment.stale ? _creationText("creation.jianying.stale") : "",
+                                                      estimated: segment.durationEstimated ? _creationText("creation.jianying.estimated") : "",
+                                                  })
+                                                : segment.reason}
+                                        </li>
+                                    ))}
+                                </ul>
+                            </details>
+                            <div className="drama-transfer-options">
+                                {preview.missingSegments > 0 ? (
+                                    <Checkbox checked={allowIncomplete} disabled={requested} onChange={(event) => setAllowIncomplete(event.target.checked)}>
+                                        {_creationText("creation.jianying.skipIncomplete", { count: preview.missingSegments })}
+                                    </Checkbox>
+                                ) : null}
+                                {preview.staleSegments > 0 ? (
+                                    <Checkbox checked={allowStale} disabled={requested} onChange={(event) => setAllowStale(event.target.checked)}>
+                                        {_creationText("creation.jianying.useStale", { count: preview.staleSegments })}
+                                    </Checkbox>
+                                ) : null}
+                            </div>
+                        </div>
+                    ) : null}
+                    {requested ? (
+                        <p className="drama-transfer-note" role="status">
+                            {_creationText("creation.jianying.downloadRequested")}
+                        </p>
+                    ) : null}
                     <ol className="drama-transfer-steps">
-                        <li>{_creationText("creation.7d759716d6f7a13e")}</li>
-                        <li>{_creationText("creation.f3f547ebc402257d")}</li>
-                        <li>{_creationText("creation.e0ae3a2bb84fcfcd")}</li>
+                        <li>{_creationText("creation.jianying.step1")}</li>
+                        <li>{_creationText("creation.jianying.step2")}</li>
+                        <li>{_creationText("creation.jianying.step3")}</li>
                     </ol>
                 </div>
                 <footer className="drama-composer-foot">
                     <span className="flex-1" />
-                    <Button onClick={onClose}>{_creationText("common.cancel")}</Button>
-                    <Button type="primary" disabled={Boolean(problem) || !readySegments} onClick={submit}>
-                        {_creationText("creation.9d43037aecb7951d")}
-                    </Button>
+                    <Button onClick={onClose}>{requested ? _creationText("common.close") : _creationText("common.cancel")}</Button>
+                    {requested ? (
+                        <Button onClick={() => void inspect()}>{_creationText("creation.jianying.retryCheck")}</Button>
+                    ) : preview ? (
+                        <>
+                            <Button onClick={() => void inspect()}>{_creationText("creation.jianying.recheck")}</Button>
+                            <Button type="primary" disabled={!canDownload} onClick={submit}>
+                                {_creationText("creation.jianying.confirmDownload")}
+                            </Button>
+                        </>
+                    ) : (
+                        <Button type="primary" loading={checking} disabled={Boolean(problem)} onClick={() => void inspect()}>
+                            {_creationText("creation.jianying.inspect")}
+                        </Button>
+                    )}
                 </footer>
             </div>
         </AppModal>

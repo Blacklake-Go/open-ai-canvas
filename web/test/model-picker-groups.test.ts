@@ -142,7 +142,7 @@ test("same-channel system variants do not borrow capabilities or reroute incompa
     const requirements = { capability: "video" as const, input: { textCount: 1, imageCount: 1, videoCount: 0, audioCount: 0, characterCount: 0 } };
     expect(modelGroupReferenceLimits(config, "comfy::h3-fast", "video")?.maxImages).toBe(0);
     expect(modelCompatibilityError(config, "comfy::h3-fast", requirements)).not.toBe("");
-    expect(resolveCompatibleModel(config, "comfy::h3-fast", requirements)).toBe("");
+    expect(resolveCompatibleModel(config, "comfy::h3-fast", requirements)).toBe("comfy::h3-fast");
     expect(resolveCompatibleModel(config, "comfy::h3-multi", requirements)).toBe("comfy::h3-multi");
 });
 

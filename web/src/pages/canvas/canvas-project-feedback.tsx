@@ -74,17 +74,6 @@ export function CanvasUploadStatusToast({ status, theme }: { status: CanvasUploa
     );
 }
 
-export function TaskDetailItem({ label, value }: { label: string; value: string }) {
-    return (
-        <div className="min-w-0">
-            <div className="text-[var(--fs-tiny)] opacity-50">{label}</div>
-            <div className="mt-1 truncate text-xs font-medium" title={value}>
-                {value}
-            </div>
-        </div>
-    );
-}
-
 export function CanvasMergeStatusToast({ progress, theme }: { progress: MergeVideoProgress; theme: CanvasTheme }) {
     const { t } = useTranslation();
     const detail = progress.phase === "loading" ? t("canvasPage.feedback.mergeLoading") : progress.phase === "reading" ? t("canvasPage.feedback.mergeReading") : t("canvasPage.feedback.mergeEncoding");
@@ -112,6 +101,17 @@ export function CanvasMergeStatusToast({ progress, theme }: { progress: MergeVid
             </div>
             <div className="mt-2 h-1 overflow-hidden rounded-full" style={{ background: theme.toolbar.itemHover }}>
                 <div className="h-full rounded-full transition-all duration-300" style={{ width: `${percent}%`, background: theme.node.activeStroke }} />
+            </div>
+        </div>
+    );
+}
+
+export function TaskDetailItem({ label, value }: { label: string; value: string }) {
+    return (
+        <div className="min-w-0">
+            <div className="text-[var(--fs-tiny)] opacity-50">{label}</div>
+            <div className="mt-1 truncate text-xs font-medium" title={value}>
+                {value}
             </div>
         </div>
     );

@@ -18,6 +18,7 @@ import { defaultToolbarPrefs, readToolbarPrefs, resolveToolbarEntries, type Tool
 import { useActiveTheme } from "@/stores/canvas/use-canvas-theme-store";
 import { useTranslation } from "react-i18next";
 import type { CanvasNodeTypeId, CanvasToolMode, CanvasWorkspaceMode } from "@/types/canvas";
+import "./canvas-bottom-toolbar.css";
 
 export function CanvasToolbar({
     selectedCount,
@@ -106,7 +107,7 @@ export function CanvasToolbar({
     const [addOpen, setAddOpen] = useState(false);
     const [appearanceOpen, setAppearanceOpen] = useState(false);
     const [settingsOpen, setSettingsOpen] = useState(false);
-    const [panelX, setPanelX] = useState(0);
+    const [panelX, setPanelX] = useState("50%");
     const [prefs, setPrefs] = useState<ToolbarPrefs | null>(() => readToolbarPrefs("main"));
 
     useEffect(() => {
@@ -118,7 +119,7 @@ export function CanvasToolbar({
         if (!settingsOpen) setPrefs(readToolbarPrefs("main"));
     }, [settingsOpen]);
 
-    const placePanel = (event: ReactMouseEvent<HTMLElement>) => setPanelX(getPanelX(dockRef.current, event.currentTarget));
+    const placePanel = (event: ReactMouseEvent<HTMLElement>, width: number) => setPanelX(getPanelX(dockRef.current, event.currentTarget, width));
     const runAddAction = (action: () => void) => {
         action();
         setAddOpen(false);
@@ -136,7 +137,16 @@ export function CanvasToolbar({
             setAppearanceOpen(false);
         };
         document.addEventListener("pointerdown", closeFloatingPanels, true);
-        return () => document.removeEventListener("pointerdown", closeFloatingPanels, true);
+        const closeOnEscape = (event: KeyboardEvent) => {
+            if (event.key !== "Escape") return;
+            setAddOpen(false);
+            setAppearanceOpen(false);
+        };
+        document.addEventListener("keydown", closeOnEscape, true);
+        return () => {
+            document.removeEventListener("pointerdown", closeFloatingPanels, true);
+            document.removeEventListener("keydown", closeOnEscape, true);
+        };
     }, [addOpen, appearanceOpen]);
 
     // 构建 handlers（主工具栏只需要部分回调，其余用 no-op 占位满足类型）
@@ -166,13 +176,13 @@ export function CanvasToolbar({
         onBackgroundModeChange,
         onShowImageInfoChange,
         onToggleAddPanel: (event: ReactMouseEvent<HTMLElement>) => {
-            placePanel(event);
+            placePanel(event, 420);
             setAppearanceOpen(false);
             setSettingsOpen(false);
             setAddOpen((value) => !value);
         },
         onToggleAppearancePanel: (event: ReactMouseEvent<HTMLElement>) => {
-            placePanel(event);
+            placePanel(event, 296);
             setAddOpen(false);
             setSettingsOpen(false);
             setAppearanceOpen((value) => !value);
@@ -189,7 +199,6 @@ export function CanvasToolbar({
         onCreateStoryboard: () => {},
         onCreateReferenceGroup: () => {},
         onBatchConnect: () => {},
-        onMergeVideos: () => {},
         onSendSelectionToAgent: () => {},
         onNodeInfo: () => {},
         onNodeDelete: () => {},
@@ -261,7 +270,14 @@ export function CanvasToolbar({
             <AnimatePresence>{addOpen ? <AddNodeMenu x={panelX} theme={theme} commands={createCommands} /> : null}</AnimatePresence>
 
             {/* canvas-zoom-controls 按底部同排规则（canvasBottomRowLayout）写入 --canvas-main-toolbar-shift。 */}
-            <FloatingDock ref={dockRef} items={items} size={compact ? "compact" : "default"} className="canvas-floating-dock pointer-events-auto relative left-[var(--canvas-main-toolbar-shift,0px)] max-w-full" style={canvasDockStyle(theme)} />
+            <FloatingDock
+                ref={dockRef}
+                items={items}
+                variant="toolbar"
+                size={compact ? "compact" : "default"}
+                className="canvas-floating-dock canvas-bottom-dock pointer-events-auto relative left-[var(--canvas-main-toolbar-shift,0px)]"
+                style={canvasDockStyle(theme)}
+            />
 
             <AnimatePresence>
                 {appearanceOpen ? (
@@ -314,7 +330,7 @@ export function CanvasToolbar({
     );
 }
 
-function AddNodeMenu({ x, theme, commands }: { x: number; theme: CanvasTheme; commands: CanvasCreateCommand[] }) {
+function AddNodeMenu({ x, theme, commands }: { x: string; theme: CanvasTheme; commands: CanvasCreateCommand[] }) {
     return (
         <motion.div
             initial={{ opacity: 0, scaleY: 0.9, y: 8 }}
@@ -358,9 +374,11 @@ function PanelHeading({ icon, title, subtitle, theme }: { icon: ReactNode; title
     );
 }
 
-function getPanelX(dock: HTMLDivElement | null, target: HTMLElement) {
-    if (!dock) return 0;
+function getPanelX(dock: HTMLDivElement | null, target: HTMLElement, panelWidth: number) {
+    if (!dock) return "50%";
     const rootBox = dock.parentElement?.getBoundingClientRect() || dock.getBoundingClientRect();
     const box = target.getBoundingClientRect();
-    return box.left - rootBox.left + box.width / 2;
+    const center = box.left - rootBox.left + box.width / 2;
+    // CSS keeps the anchor in bounds when the Agent or viewport resizes an open panel.
+    return `clamp(min(50%, ${panelWidth / 2}px), ${center}px, max(50%, calc(100% - ${panelWidth / 2}px)))`;
 }

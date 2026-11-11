@@ -13,8 +13,8 @@ import (
 	"gorm.io/gorm"
 )
 
-// SupDance retains its already-applied schema 83; upstream 83–92 map to 84–93.
-const CurrentSchemaVersion int64 = 93
+// SupDance retains its already-applied schema 83; upstream 83–98 map to 84–99.
+const CurrentSchemaVersion int64 = 99
 
 const baselineSchemaChecksum = "sha256:open-ai-canvas-schema-v1-20260830"
 const schemaMigrationAppliedAtIndexChecksum = "sha256:schema-migrations-applied-at-index-v2-20260830"
@@ -330,6 +330,26 @@ var schemaMigrations = []migration{
 		}
 		return nil
 	}},
+	{version: 94, name: "ecommerce_round_history", checksum: "sha256:ecommerce-round-history-v93-20261109", apply: func(tx *gorm.DB) error {
+		// Additive only: a new table plus a nullable pointer column. Existing
+		// projects stay readable and are converted lazily on their next save.
+		if err := tx.AutoMigrate(&model.EcommerceProject{}, &model.EcommerceRound{}); err != nil {
+			return err
+		}
+		return nil
+	}},
+	{version: 95, name: "drama_cast_styles_import", checksum: "sha256:drama-cast-styles-import-v94", apply: migrateDramaCastStylesImport},
+	{version: 96, name: "ark_private_asset_binding_identity", checksum: "sha256:ark-private-asset-binding-identity-v95", apply: migrateArkPrivateAssetBindingIdentity},
+	{version: 97, name: "canvas_unified_text_nodes", checksum: canvasNodeModelChecksum, apply: migrateCanvasNodeModel},
+	{version: 98, name: "channel_websites", checksum: "sha256:channel-websites-v97-20261110", apply: migrateChannelWebsites},
+	{version: 99, name: "api_log_generation_content", checksum: "sha256:api-log-generation-content-v98", apply: migrateAPILogGenerationContent},
+}
+
+func migrateAPILogGenerationContent(tx *gorm.DB) error {
+	if !tx.Migrator().HasTable(&model.ApiCallLog{}) || tx.Migrator().HasColumn(&model.ApiCallLog{}, "GenerationContentJSON") {
+		return nil
+	}
+	return tx.Migrator().AddColumn(&model.ApiCallLog{}, "GenerationContentJSON")
 }
 
 // migrateReferenceVideoCostPrice 为价格档成本和账单成本快照增加带参考视频的成本价。

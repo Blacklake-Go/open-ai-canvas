@@ -4,14 +4,16 @@ import { useMutation } from "@tanstack/react-query";
 import { App, Button, Input, InputNumber } from "antd";
 import { AlertCircle, Check, Pencil, Plus, Shirt, Trash2, X, Play, Upload, Library } from "lucide-react";
 
-import { addDramaCastLook, deleteDramaCastLook, updateDramaCastLook, regenerateDramaCast, setDramaCastImage, updateDramaCast, type DramaCast } from "@/services/api/drama";
+import { addDramaCastLook, deleteDramaCastLook, updateDramaCastLook, regenerateDramaCast, setDramaCastImage, updateDramaCast, type DramaCast, type DramaCastImageStyle } from "@/services/api/drama";
+import { CanvasImagePreview } from "@/components/canvas/canvas-image-preview";
+import { CastImageFields, type CastImageFieldsValue } from "./cast-image-fields";
 import { uploadResourceFile } from "@/services/api/resources";
 import { CastLibraryPicker } from "./cast-library-picker";
 
 import { mediaBusy, MediaThumb } from "../drama-shared";
 
 const MAX_LOOKS = 6;
-type LookInput = { lookName: string; appearance: string; imagePrompt: string; fromChapter?: number; toChapter?: number };
+type LookInput = DramaCastImageStyle & { lookName: string; appearance: string; imagePrompt: string; fromChapter?: number; toChapter?: number };
 
 function chapterLabel(from?: number, to?: number) {
     if (from && to) return `第 ${from}–${to} 章`;
@@ -21,11 +23,16 @@ function chapterLabel(from?: number, to?: number) {
 }
 
 /** 一套造型的编辑表单（新增或修改共用）。 */
-function LookForm({ initial, submitting, onCancel, onSubmit }: { initial?: DramaCast; submitting: boolean; onCancel: () => void; onSubmit: (value: LookInput) => void }) {
+function LookForm({ projectId, initial, submitting, onCancel, onSubmit }: { projectId: string; initial?: DramaCast; submitting: boolean; onCancel: () => void; onSubmit: (value: LookInput) => void }) {
     _useCreationLocale();
     const [name, setName] = useState(initial?.lookName || "");
     const [appearance, setAppearance] = useState(initial?.appearance || "");
-    const [imagePrompt, setImagePrompt] = useState(initial?.imagePrompt || "");
+    const [imageFields, setImageFields] = useState<CastImageFieldsValue>({
+        imagePrompt: initial?.imagePrompt || "",
+        imageStyleId: initial?.imageStyleId || "",
+        imageStyleName: initial?.imageStyleName || "",
+        imageStylePrompt: initial?.imageStylePrompt || "",
+    });
     const [from, setFrom] = useState<number | null>(initial?.lookFromChapter || null);
     const [to, setTo] = useState<number | null>(initial?.lookToChapter || null);
     const valid = name.trim() && appearance.trim();
@@ -40,16 +47,7 @@ function LookForm({ initial, submitting, onCancel, onSubmit }: { initial?: Drama
                 aria-label={_creationText("creation.956d263c09612b3c")}
                 onChange={(event) => setAppearance(event.target.value)}
             />
-            <label className="drama-field-label">{_creationText("creation.d9b6db3002cda526")}</label>
-            <Input.TextArea
-                value={imagePrompt}
-                maxLength={12000}
-                autoSize={{ minRows: 3, maxRows: 8 }}
-                placeholder={_creationText("creation.79dc449b50d569b7")}
-                aria-label={_creationText("creation.d9b6db3002cda526")}
-                onChange={(event) => setImagePrompt(event.target.value)}
-            />
-            <small>{_creationText("creation.9266b550bf4ee51e")}</small>
+            <CastImageFields projectId={projectId} castId={initial?.id} appearance={appearance} value={imageFields} disabled={submitting} onChange={(patch) => setImageFields((current) => ({ ...current, ...patch }))} />
             <div className="drama-look-form-range">
                 <span>{_creationText("creation.2d4d8c540ceb37fc")}</span>
                 <InputNumber size="small" min={0} precision={0} value={from} placeholder={_creationText("creation.0d7a3e72696addf7")} aria-label={_creationText("creation.0d7a3e72696addf7")} onChange={(value) => setFrom(value)} />
@@ -67,7 +65,7 @@ function LookForm({ initial, submitting, onCancel, onSubmit }: { initial?: Drama
                     icon={<Check className="size-3.5" />}
                     loading={submitting}
                     disabled={!valid}
-                    onClick={() => onSubmit({ lookName: name.trim(), appearance: appearance.trim(), imagePrompt: imagePrompt.trim(), fromChapter: from ?? 0, toChapter: to ?? 0 })}
+                    onClick={() => onSubmit({ ...imageFields, lookName: name.trim(), appearance: appearance.trim(), imagePrompt: (imageFields.imagePrompt || "").trim(), fromChapter: from ?? 0, toChapter: to ?? 0 })}
                 >
                     {_creationText("creation.4a1edb18155e988e")}
                 </Button>
@@ -86,6 +84,7 @@ export function CastLooks({ projectId, character, looks, restyle, onChanged }: {
     const [adding, setAdding] = useState(false);
     const [editingId, setEditingId] = useState<string>();
     const [libraryLook, setLibraryLook] = useState<DramaCast>();
+    const [previewLook, setPreviewLook] = useState<DramaCast>();
     const fileRef = useRef<HTMLInputElement>(null);
     const uploadLookRef = useRef<DramaCast | undefined>(undefined);
     const done = (text: string, affected?: number) => {
@@ -135,15 +134,21 @@ export function CastLooks({ projectId, character, looks, restyle, onChanged }: {
             <div className="drama-looks">
                 {looks.map((look) =>
                     editingId === look.id ? (
-                        <LookForm key={look.id} initial={look} submitting={update.isPending} onCancel={() => setEditingId(undefined)} onSubmit={(value) => update.mutate({ id: look.id, value })} />
+                        <LookForm projectId={projectId} key={look.id} initial={look} submitting={update.isPending} onCancel={() => setEditingId(undefined)} onSubmit={(value) => update.mutate({ id: look.id, value })} />
                     ) : (
                         <div key={look.id} className="drama-look-item">
                             <div className="drama-look">
-                                <span className="drama-look-thumb">
+                                <button
+                                    type="button"
+                                    className="drama-look-thumb"
+                                    disabled={!look.imageResourceId}
+                                    aria-label={_creationText("creation.look.previewReference", { name: look.lookName || _creationText("creation.345897933b2d1a83") })}
+                                    onClick={() => setPreviewLook(look)}
+                                >
                                     {look.imageResourceId ? <MediaThumb resourceId={look.imageResourceId} alt={look.lookName || _creationText("creation.345897933b2d1a83")} /> : <Shirt className="size-4 opacity-40" />}
                                     {mediaBusy(look.imageStatus) ? <span className="drama-look-busy" aria-label={_creationText("creation.8ffe34dc84c3db06")} /> : null}
                                     {look.imageStatus === "failed" ? <AlertCircle className="size-3.5 text-[var(--status-error)]" aria-label={_creationText("creation.97a3666c8b9c2ccd")} /> : null}
-                                </span>
+                                </button>
                                 <span className="drama-look-body">
                                     <b className="truncate">{look.lookName || _creationText("creation.50ef161256d9798a")}</b>
                                     <small>{chapterLabel(look.lookFromChapter, look.lookToChapter)}</small>
@@ -208,7 +213,7 @@ export function CastLooks({ projectId, character, looks, restyle, onChanged }: {
                     ),
                 )}
                 {adding ? (
-                    <LookForm submitting={add.isPending} onCancel={() => setAdding(false)} onSubmit={(value) => add.mutate(value)} />
+                    <LookForm projectId={projectId} submitting={add.isPending} onCancel={() => setAdding(false)} onSubmit={(value) => add.mutate(value)} />
                 ) : looks.length < MAX_LOOKS ? (
                     <Button size="small" icon={<Plus className="size-3.5" />} disabled={busy} onClick={() => setAdding(true)}>
                         {_creationText("creation.959cb9de4e4b63cd")}
@@ -238,6 +243,7 @@ export function CastLooks({ projectId, character, looks, restyle, onChanged }: {
                     });
                 }}
             />
+            {previewLook?.imageResourceId ? <CanvasImagePreview storageKey={`resource:${previewLook.imageResourceId}`} alt={previewLook.lookName || "造型"} onClose={() => setPreviewLook(undefined)} /> : null}
             {libraryLook ? (
                 <CastLibraryPicker
                     open

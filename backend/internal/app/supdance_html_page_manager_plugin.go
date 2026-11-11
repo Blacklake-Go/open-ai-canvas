@@ -14,6 +14,7 @@ import (
 const (
 	PluginSupDanceHtmlPageManager = "supdance-html-page-manager"
 	HtmlPagesSettingKey           = "plugin.supdance-html-page-manager.pages"
+	HtmlSiteFooterSettingKey      = "plugin.supdance-html-page-manager.site_footer"
 )
 
 func init() {
@@ -37,6 +38,60 @@ type HtmlPageItem struct {
 	UpdatedAt   time.Time `json:"updatedAt"`
 }
 
+// HtmlManagedSitePage 代表一个受管的站点法务/公开路由页面及页脚开关
+type HtmlManagedSitePage struct {
+	Path        string `json:"path"`
+	Title       string `json:"title"`
+	Description string `json:"description"`
+	PageType    string `json:"pageType"` // "spa" | "static-html"
+	ShowFooter  bool   `json:"showFooter"`
+}
+
+type HtmlFooterSocialLink struct {
+	ID     string `json:"id"`
+	Name   string `json:"name"`
+	Handle string `json:"handle"`
+	Href   string `json:"href"`
+}
+
+type HtmlFooterLinkItem struct {
+	Label string `json:"label"`
+	Href  string `json:"href"`
+}
+
+type HtmlFooterLinkColumn struct {
+	Title string               `json:"title"`
+	Links []HtmlFooterLinkItem `json:"links"`
+}
+
+// HtmlSiteFooterConfig 代表页脚管理器与页面管理的持久化配置
+type HtmlSiteFooterConfig struct {
+	Enabled              bool                   `json:"enabled"`
+	BrandName            string                 `json:"brandName"`
+	BrandSlogan          string                 `json:"brandSlogan"`
+	BrandVision          string                 `json:"brandVision"`
+	SupportEmail         string                 `json:"supportEmail"`
+	OfficialChannelsText string                 `json:"officialChannelsText"`
+	SocialLinks          []HtmlFooterSocialLink `json:"socialLinks"`
+	Columns              []HtmlFooterLinkColumn `json:"columns"`
+	NewsletterHeading    string                 `json:"newsletterHeading"`
+	NewsletterDesc       string                 `json:"newsletterDesc"`
+	NewsletterCardTitle  string                 `json:"newsletterCardTitle"`
+	NewsletterCardDesc   string                 `json:"newsletterCardDesc"`
+	NewsletterActionText string                 `json:"newsletterActionText"`
+	NewsletterActionHref string                 `json:"newsletterActionHref"`
+	LegalLinks           []HtmlFooterLinkItem   `json:"legalLinks"`
+	CopyrightText        string                 `json:"copyrightText"`
+	IcpNumber            string                 `json:"icpNumber"`
+	IcpHref              string                 `json:"icpHref"`
+	OperatingSystemText  string                 `json:"operatingSystemText"`
+	StatusPrimaryText    string                 `json:"statusPrimaryText"`
+	StatusSecondaryText  string                 `json:"statusSecondaryText"`
+	SitePages            []HtmlManagedSitePage  `json:"sitePages"`
+	UpdatedAt            time.Time              `json:"updatedAt"`
+	UpdatedBy            string                 `json:"updatedBy,omitempty"`
+}
+
 type HtmlPagesStorePayload struct {
 	Pages     []HtmlPageItem `json:"pages"`
 	UpdatedAt time.Time      `json:"updatedAt"`
@@ -44,10 +99,11 @@ type HtmlPagesStorePayload struct {
 }
 
 type HtmlPagesAdminOverview struct {
-	PluginID  string         `json:"pluginId"`
-	Available bool           `json:"available"`
-	Pages     []HtmlPageItem `json:"pages"`
-	UpdatedAt time.Time      `json:"updatedAt"`
+	PluginID   string               `json:"pluginId"`
+	Available  bool                 `json:"available"`
+	Pages      []HtmlPageItem       `json:"pages"`
+	SiteFooter HtmlSiteFooterConfig `json:"siteFooter"`
+	UpdatedAt  time.Time            `json:"updatedAt"`
 }
 
 var defaultPagesMutex sync.RWMutex
@@ -101,6 +157,16 @@ func (s *Service) PublicHtmlPageBySlug(slug string) (*HtmlPageItem, error) {
 	return nil, fmt.Errorf("页面 %s 不存在或未发布", slug)
 }
 
+// PublicHtmlSiteFooterConfig 获取公开的页脚与受管页面配置（免登录，读展示路径降级兜底）
+func (s *Service) PublicHtmlSiteFooterConfig() (*HtmlSiteFooterConfig, error) {
+	cfg, err := s.readStoredSiteFooterConfig()
+	if err != nil {
+		fallback := DefaultHtmlSiteFooterConfig()
+		return &fallback, nil
+	}
+	return &cfg, nil
+}
+
 // AdminHtmlPagesOverview 获取管理总览（需要管理员权限）
 func (s *Service) AdminHtmlPagesOverview(actor *model.User) (*HtmlPagesAdminOverview, error) {
 	if err := s.RequireAdmin(actor); err != nil {
@@ -114,12 +180,212 @@ func (s *Service) AdminHtmlPagesOverview(actor *model.User) (*HtmlPagesAdminOver
 	if err != nil {
 		return nil, err
 	}
+	siteFooter, err := s.readStoredSiteFooterConfig()
+	if err != nil {
+		siteFooter = DefaultHtmlSiteFooterConfig()
+	}
 	return &HtmlPagesAdminOverview{
-		PluginID:  PluginSupDanceHtmlPageManager,
-		Available: available,
-		Pages:     pages,
-		UpdatedAt: time.Now(),
+		PluginID:   PluginSupDanceHtmlPageManager,
+		Available:  available,
+		Pages:      pages,
+		SiteFooter: siteFooter,
+		UpdatedAt:  time.Now(),
 	}, nil
+}
+
+// AdminSaveHtmlSiteFooter 保存或更新页脚与站点页面配置（需要管理员权限）
+func (s *Service) AdminSaveHtmlSiteFooter(actor *model.User, cfg HtmlSiteFooterConfig) (*HtmlPagesAdminOverview, error) {
+	if err := s.RequireAdmin(actor); err != nil {
+		return nil, err
+	}
+	if s.repo == nil {
+		return nil, errors.New("存储不可用")
+	}
+
+	now := time.Now()
+	normalized := normalizeHtmlSiteFooterConfig(cfg)
+	normalized.UpdatedAt = now
+	normalized.UpdatedBy = actor.ID
+
+	val, err := json.Marshal(normalized)
+	if err != nil {
+		return nil, fmt.Errorf("序列化页脚配置失败: %w", err)
+	}
+
+	setting := &model.SystemSetting{
+		Key:       HtmlSiteFooterSettingKey,
+		ValueJSON: string(val),
+		UpdatedBy: actor.ID,
+		UpdatedAt: now,
+	}
+	if err := s.repo.SaveSystemSetting(setting); err != nil {
+		return nil, fmt.Errorf("保存页脚配置失败: %w", err)
+	}
+
+	return s.AdminHtmlPagesOverview(actor)
+}
+
+// AdminResetHtmlSiteFooter 重置页脚与站点页面配置为官方默认
+func (s *Service) AdminResetHtmlSiteFooter(actor *model.User) (*HtmlPagesAdminOverview, error) {
+	if err := s.RequireAdmin(actor); err != nil {
+		return nil, err
+	}
+	defaults := DefaultHtmlSiteFooterConfig()
+	return s.AdminSaveHtmlSiteFooter(actor, defaults)
+}
+
+func (s *Service) readStoredSiteFooterConfig() (HtmlSiteFooterConfig, error) {
+	if s.repo == nil {
+		return DefaultHtmlSiteFooterConfig(), nil
+	}
+	setting, err := s.repo.SystemSettingOptional(HtmlSiteFooterSettingKey)
+	if err != nil {
+		return DefaultHtmlSiteFooterConfig(), err
+	}
+	if setting == nil || strings.TrimSpace(setting.ValueJSON) == "" {
+		return DefaultHtmlSiteFooterConfig(), nil
+	}
+	var cfg HtmlSiteFooterConfig
+	if err := json.Unmarshal([]byte(setting.ValueJSON), &cfg); err != nil {
+		return DefaultHtmlSiteFooterConfig(), nil
+	}
+	return normalizeHtmlSiteFooterConfig(cfg), nil
+}
+
+func normalizeHtmlSiteFooterConfig(cfg HtmlSiteFooterConfig) HtmlSiteFooterConfig {
+	def := DefaultHtmlSiteFooterConfig()
+	if strings.TrimSpace(cfg.BrandName) == "" {
+		cfg.BrandName = def.BrandName
+	}
+	if strings.TrimSpace(cfg.BrandSlogan) == "" {
+		cfg.BrandSlogan = def.BrandSlogan
+	}
+	if strings.TrimSpace(cfg.BrandVision) == "" {
+		cfg.BrandVision = def.BrandVision
+	}
+	if strings.TrimSpace(cfg.SupportEmail) == "" {
+		cfg.SupportEmail = def.SupportEmail
+	}
+	if strings.TrimSpace(cfg.OfficialChannelsText) == "" {
+		cfg.OfficialChannelsText = def.OfficialChannelsText
+	}
+	if len(cfg.SocialLinks) == 0 {
+		cfg.SocialLinks = def.SocialLinks
+	}
+	if len(cfg.Columns) == 0 {
+		cfg.Columns = def.Columns
+	}
+	if strings.TrimSpace(cfg.NewsletterHeading) == "" {
+		cfg.NewsletterHeading = def.NewsletterHeading
+	}
+	if strings.TrimSpace(cfg.NewsletterDesc) == "" {
+		cfg.NewsletterDesc = def.NewsletterDesc
+	}
+	if strings.TrimSpace(cfg.NewsletterCardTitle) == "" {
+		cfg.NewsletterCardTitle = def.NewsletterCardTitle
+	}
+	if strings.TrimSpace(cfg.NewsletterCardDesc) == "" {
+		cfg.NewsletterCardDesc = def.NewsletterCardDesc
+	}
+	if strings.TrimSpace(cfg.NewsletterActionText) == "" {
+		cfg.NewsletterActionText = def.NewsletterActionText
+	}
+	if strings.TrimSpace(cfg.NewsletterActionHref) == "" {
+		cfg.NewsletterActionHref = def.NewsletterActionHref
+	}
+	if len(cfg.LegalLinks) == 0 {
+		cfg.LegalLinks = def.LegalLinks
+	}
+	if strings.TrimSpace(cfg.CopyrightText) == "" {
+		cfg.CopyrightText = def.CopyrightText
+	}
+	if strings.TrimSpace(cfg.IcpNumber) == "" {
+		cfg.IcpNumber = def.IcpNumber
+	}
+	if strings.TrimSpace(cfg.IcpHref) == "" {
+		cfg.IcpHref = def.IcpHref
+	}
+	if strings.TrimSpace(cfg.OperatingSystemText) == "" {
+		cfg.OperatingSystemText = def.OperatingSystemText
+	}
+	if strings.TrimSpace(cfg.StatusPrimaryText) == "" {
+		cfg.StatusPrimaryText = def.StatusPrimaryText
+	}
+	if strings.TrimSpace(cfg.StatusSecondaryText) == "" {
+		cfg.StatusSecondaryText = def.StatusSecondaryText
+	}
+	if len(cfg.SitePages) == 0 {
+		cfg.SitePages = def.SitePages
+	}
+	return cfg
+}
+
+// DefaultHtmlSiteFooterConfig 提供与 one.supdance.com/zh/about 红框页脚完全对齐的默认配置
+func DefaultHtmlSiteFooterConfig() HtmlSiteFooterConfig {
+	now := time.Now()
+	return HtmlSiteFooterConfig{
+		Enabled:              true,
+		BrandName:            "supdance",
+		BrandSlogan:          "AI 创意工作室",
+		BrandVision:          "面向创作者、独立工作室与团队的专业生成式 AI 创作工作台与模型接入层，支持模型发现、生成与工作流协作。",
+		SupportEmail:         "support@supdance.com",
+		OfficialChannelsText: "官方社交媒体与社区",
+		SocialLinks: []HtmlFooterSocialLink{
+			{ID: "x", Name: "X (Twitter)", Handle: "@supdance_ai", Href: "https://x.com/supdance_ai"},
+			{ID: "youtube", Name: "YouTube", Handle: "SupDance AI", Href: "https://www.youtube.com/channel/UCOoro6d-vr6M-1UIpP5POew"},
+			{ID: "instagram", Name: "Instagram", Handle: "@supdance_com", Href: "https://www.instagram.com/supdance_com/"},
+			{ID: "xiaohongshu", Name: "小红书 (RED)", Handle: "SupDance", Href: "https://www.xiaohongshu.com/search_result?keyword=SupDance"},
+			{ID: "qq", Name: "QQ 交流群", Handle: "SupDance 官方群", Href: "https://qm.qq.com/q/e8alJlLDuE"},
+		},
+		Columns: []HtmlFooterLinkColumn{
+			{
+				Title: "创意工作台",
+				Links: []HtmlFooterLinkItem{
+					{Label: "图像生图工坊", Href: "https://one.supdance.com/zh/studio?tab=image"},
+					{Label: "视频运镜导演台", Href: "https://one.supdance.com/zh/studio?tab=video"},
+					{Label: "音频音乐工作台", Href: "https://one.supdance.com/zh/studio?tab=audio"},
+					{Label: "节点式工作流", Href: "https://one.supdance.com/zh/workflow"},
+					{Label: "会员订阅方案", Href: "https://one.supdance.com/zh/pricing"},
+				},
+			},
+			{
+				Title: "开发者与遥测",
+				Links: []HtmlFooterLinkItem{
+					{Label: "开放平台（筹备中）", Href: "https://one.supdance.com/zh/call-api"},
+					{Label: "模型目录与真实调用", Href: "https://one.supdance.com/zh/about#models"},
+					{Label: "创作者案例广场", Href: "https://one.supdance.com/zh/community"},
+					{Label: "创作者算力权益", Href: "https://one.supdance.com/zh/benefits"},
+				},
+			},
+		},
+		NewsletterHeading:    "模型技术周刊与通知",
+		NewsletterDesc:       "订阅 supdance 技术周报，第一时间获取模型与产品更新公告。",
+		NewsletterCardTitle:  "邮件订阅即将开放",
+		NewsletterCardDesc:   "目前还没有可用的邮件订阅服务。欢迎先加入社区获取模型与产品更新。",
+		NewsletterActionText: "前往社区",
+		NewsletterActionHref: "https://one.supdance.com/zh/community",
+		LegalLinks: []HtmlFooterLinkItem{
+			{Label: "隐私政策", Href: "/privacy"},
+			{Label: "服务条款", Href: "/terms"},
+			{Label: "退款准则", Href: "/aup"},
+			{Label: "内容安全", Href: "/legal"},
+		},
+		CopyrightText:       "© 2026 supdance (supdance.com). 保留所有权利。",
+		IcpNumber:           "备案编号：沪ICP备2026050086号",
+		IcpHref:             "https://beian.miit.gov.cn/",
+		OperatingSystemText: "新一代生成式 AI 创意工作系统",
+		StatusPrimaryText:   "高精创作画布内核",
+		StatusSecondaryText: "模型网关中枢",
+		SitePages: []HtmlManagedSitePage{
+			{Path: "/terms", Title: "服务条款 (Terms of Service)", Description: "平台服务协议、积分即时交付与退款保障条款", PageType: "spa", ShowFooter: true},
+			{Path: "/privacy", Title: "隐私政策 (Privacy Policy)", Description: "个人信息收集范围、GDPR/CCPA 与数据安全保护", PageType: "spa", ShowFooter: true},
+			{Path: "/aup", Title: "可接受使用政策 (Acceptable Use Policy)", Description: "AI 生成内容合规底线、举报机制与安全处置", PageType: "spa", ShowFooter: true},
+			{Path: "/legal", Title: "法务与合规中心 (Legal Hub)", Description: "法律协议总览入口与经营主体公示", PageType: "spa", ShowFooter: true},
+			{Path: "/mcp", Title: "MCP 协议与插件生态 (MCP Center)", Description: "开源 MCP 工具清单、CLI 安装指南与插件市场", PageType: "spa", ShowFooter: true},
+			{Path: "/pricing.html", Title: "公开价目表 (Pricing HTML)", Description: "积分套餐、云存储与全量 AI 模型参考价目表", PageType: "static-html", ShowFooter: true},
+		},
+		UpdatedAt: now,
+	}
 }
 
 // AdminSaveHtmlPages 保存或更新页面列表（需要管理员权限）

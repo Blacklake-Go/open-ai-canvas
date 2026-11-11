@@ -3,12 +3,15 @@ import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
 
 import { OFFICIAL_APPLICATION_PLUGIN_IDS, SUPDANCE_APPLICATION_PLUGIN_IDS, isOfficialApplicationPluginId } from "../src/lib/plugins/official-applications";
+import { getRegisteredPlugin } from "../src/lib/plugins/plugin-registry";
+import "../src/lib/plugins/builtin";
 
 describe("official application plugin classification", () => {
-    test("covers every built-in application plugin, including editor and art critique", () => {
-        // Regression: the admin plugin page kept its own list and missed these
-        // two, so both rendered as disabled system protocols.
-        expect(isOfficialApplicationPluginId("editor-shell")).toBe(true);
+    test("classifies the remaining built-in application plugins", () => {
+        // SupDance: editor-shell is explicitly preserved with timeline capabilities.
+        expect(isOfficialApplicationPluginId("editor-shell")).toBe(false);
+        expect(getRegisteredPlugin("editor-shell")).toBeDefined();
+        for (const id of OFFICIAL_APPLICATION_PLUGIN_IDS) expect(getRegisteredPlugin(id)?.manifest.apiVersion).toBe("yingce.plugin/v1");
         expect(isOfficialApplicationPluginId("ai-art-critique")).toBe(true);
         expect(isOfficialApplicationPluginId("prompt-optimizer")).toBe(true);
         expect(isOfficialApplicationPluginId("eagle-asset-connector")).toBe(true);
@@ -26,9 +29,10 @@ describe("official application plugin classification", () => {
     test("exposes de-duplicated id lists covering html page manager and user feedback", () => {
         const ids = [...OFFICIAL_APPLICATION_PLUGIN_IDS, ...SUPDANCE_APPLICATION_PLUGIN_IDS];
         expect(new Set(ids).size).toBe(ids.length);
-        expect(OFFICIAL_APPLICATION_PLUGIN_IDS).toHaveLength(6);
+        expect(OFFICIAL_APPLICATION_PLUGIN_IDS).toHaveLength(5);
         expect(SUPDANCE_APPLICATION_PLUGIN_IDS).toHaveLength(3);
         expect(ids).toContain("supdance-html-page-manager");
+        expect(ids).toHaveLength(8);
         expect(ids).toContain("user-feedback");
         expect(isOfficialApplicationPluginId("supdance-html-page-manager")).toBe(true);
         expect(isOfficialApplicationPluginId("supdance-i18n")).toBe(true);

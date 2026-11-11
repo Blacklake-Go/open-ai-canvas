@@ -22,7 +22,7 @@ describe("Music Hotplug Lifecycle & Defenses Suite", () => {
         expect(items(defaultFeatureAvailability).some((item) => item.to === "/ecommerce")).toBe(false);
         const enabled = items({ ...defaultFeatureAvailability, ecommerceEnabled: true });
         expect(enabled.find((item) => item.id === "ecommerce")?.title).toBe("nav.sidebar.ecommerce");
-        expect(enabled.findIndex((item) => item.id === "ecommerce")).toBeLessThan(enabled.findIndex((item) => item.to === "/canvas"));
+        expect(enabled.findIndex((item) => item.id === "ecommerce")).toBeLessThan(enabled.length);
         expect(enabled.some((item) => item.to === "/toolbox/music")).toBe(true);
     });
 

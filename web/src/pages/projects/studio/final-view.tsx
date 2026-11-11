@@ -29,7 +29,8 @@ export function FinalView({
     cutOpening: boolean;
 }) {
     _useCreationLocale();
-    const { episode, segments } = detail;
+    const { episode } = detail;
+    const segments = [...detail.segments].sort((left, right) => left.index - right.index);
     const { message } = App.useApp();
     const [exportingDraft, setExportingDraft] = useState(false);
     const videoRef = useRef<HTMLVideoElement>(null);
@@ -38,7 +39,7 @@ export function FinalView({
     const starts: number[] = [];
     segments.reduce((cursor, segment) => {
         starts.push(cursor);
-        return cursor + (segment.request.seconds || segment.durationMs / 1000);
+        return cursor + (segment.videoSeconds || segment.request.seconds || segment.durationMs / 1000);
     }, 0);
     const download = () => {
         if (!episode.finalResourceId) return;
@@ -97,12 +98,12 @@ export function FinalView({
                 <Button icon={<Scissors className="size-4" />} disabled={!readySegments} loading={cutOpening} onClick={onOpenCut}>
                     {_creationText("creation.cdb1d5eb1abd3cb0")}
                 </Button>
-                <Button icon={<Clapperboard className="size-4" />} disabled={!readySegments} onClick={() => setExportingDraft(true)} title={_creationText(readySegments ? "projects.export_draft_hint" : "projects.no_segment_video")}>
+                <Button icon={<Clapperboard className="size-4" />} disabled={!segments.length} onClick={() => setExportingDraft(true)} title={_creationText("creation.jianying.subtitle")}>
                     {_creationText("projects.export_draft")}
                 </Button>
                 {readySegments ? <p className="drama-editor-note">{_creationText("projects.editor_export_note", { count: readySegments })}</p> : null}
             </aside>
-            {exportingDraft ? <JianyingDraftModal open projectId={projectId} episodeId={episode.id} episodeLabel={`第 ${episode.number} 集`} readySegments={readySegments} onClose={() => setExportingDraft(false)} /> : null}
+            {exportingDraft ? <JianyingDraftModal open projectId={projectId} episodeId={episode.id} episodeLabel={_creationText("creation.4d7de35611db4bda", { value1: episode.number })} onClose={() => setExportingDraft(false)} /> : null}
         </div>
     );
 }

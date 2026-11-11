@@ -1,9 +1,10 @@
+import { useMemo } from "react";
 import { creationLabel as _creationLabel } from "@/supdance/plugins/i18n/creation-text";
 import { creationText as _creationText, useCreationLocale as _useCreationLocale } from "@/supdance/plugins/i18n/creation-text";
 import { Button, Select } from "antd";
 import { TriangleAlert } from "lucide-react";
 
-import { dramaChoiceKey, dramaVideoResolutionIssue } from "@/lib/drama/model-choice";
+import { dramaChoiceKey, dramaVideoResolutionTiers, dramaVideoResolutionValue } from "@/lib/drama/model-choice";
 import { formatVideoResolutionLabel, videoResolutionComparisonKey } from "@/lib/video-generation-options";
 import type { DramaAssetSettings, DramaCastKind, DramaModelChoice, DramaModelOption, DramaModelOverride, DramaModels, DramaSkillRef, DramaTextThinking } from "@/services/api/drama";
 import { THINKING_REQUEST_OPTIONS, type ThinkingRequest } from "@/lib/text-thinking";
@@ -186,11 +187,20 @@ export function DramaAssetImageModels({
     );
 }
 
-/** 剧情段视频分辨率：取自视频模型声明的档位；“模型默认”不发分辨率，由模型按默认档位出片。 */
-export function VideoResolutionField({ option, value, onChange }: { option?: DramaModelOption; value?: string; onChange: (value?: string) => void }) {
+/**
+ * 剧情段视频分辨率：候选档位取当前作用域所有视频模型声明档位的并集，当前模型给不出的置灰。
+ * 换模型不需要先改分辨率；“模型默认”不发分辨率，由模型按默认档位出片。
+ */
+export function VideoResolutionField({ option, value, onChange, options }: { option?: DramaModelOption; value?: string; onChange: (value?: string) => void; options?: DramaModelOption[] }) {
     _useCreationLocale();
-    if (!option) {
-        return value ? (
+    const catalog = useDramaModelCatalog().data;
+    const scope = options || catalog?.options.video || [];
+    const tiers = useMemo(() => dramaVideoResolutionTiers(scope, value), [scope, value]);
+    const fallback = option?.defaultVideoResolution || "";
+    const supported = dramaVideoResolutionValue(option, value);
+    const ignored = Boolean(value) && Boolean(option) && !supported;
+    if (!option && value) {
+        return (
             <div className="drama-step-model">
                 <small className="drama-step-note">
                     {_creationText("creation.76a5e558f85e688f")}
@@ -200,33 +210,47 @@ export function VideoResolutionField({ option, value, onChange }: { option?: Dra
                     {_creationText("creation.278671b0b5fe13b4")}
                 </Button>
             </div>
-        ) : (
-            <small className="drama-step-note">{_creationText("creation.e84358361c72791e")}</small>
         );
     }
-    const values = option.videoResolutions || [];
-    const issue = dramaVideoResolutionIssue(option, value);
-    if (!values.length && !value) return <small className="drama-step-note">{_creationText("creation.7cb6760f579b3959")}</small>;
     return (
         <div className="drama-step-field">
             <div className="drama-tabs drama-res-tabs" role="radiogroup" aria-label={_creationText("creation.458920ec58f79783")}>
-                <button type="button" role="radio" className="drama-tab" aria-checked={!value} onClick={() => onChange(undefined)}>
+                <button type="button" role="radio" className="drama-tab" aria-checked={!value || ignored} onClick={() => onChange(undefined)}>
                     {_creationText("projects.default_preset")}
-                    {option.defaultVideoResolution ? ` · ${formatVideoResolutionLabel(option.defaultVideoResolution)}` : ""}
+                    {fallback ? ` · ${formatVideoResolutionLabel(fallback)}` : ""}
                 </button>
-                {values.map((item) => (
-                    <button key={item} type="button" role="radio" className="drama-tab" aria-checked={Boolean(value) && videoResolutionComparisonKey(value) === videoResolutionComparisonKey(item)} onClick={() => onChange(item)}>
-                        {formatVideoResolutionLabel(item)}
-                    </button>
-                ))}
+                {tiers.map((tier) => {
+                    const actual = dramaVideoResolutionValue(option, tier);
+                    const active = Boolean(value) && Boolean(supported) && videoResolutionComparisonKey(value) === videoResolutionComparisonKey(tier);
+                    return (
+                        <button
+                            key={tier}
+                            type="button"
+                            role="radio"
+                            className="drama-tab"
+                            aria-checked={active}
+                            disabled={!option || !actual}
+                            title={!option ? _creationText("creation.e84358361c72791e") : !actual ? _creationText("creation.upstream_v1841_resolutionUnsupported") : undefined}
+                            onClick={() => actual && onChange(actual)}
+                        >
+                            {formatVideoResolutionLabel(tier)}
+                        </button>
+                    );
+                })}
             </div>
-            {issue ? (
+            {!option ? (
+                <small className="drama-step-note">
+                    {_creationText("creation.e84358361c72791e")}；{_creationText("creation.upstream_v1841_resolutionCatalogHint")}
+                </small>
+            ) : ignored ? (
                 <p className="drama-step-warn" role="alert">
                     <TriangleAlert className="size-3.5" />
-                    {_creationText("creation.e7e533183789a009")}
-                    {issue}
-                    {_creationText("creation.5e59b5b93383e7ab")}
+                    {_creationText("creation.upstream_v1841_resolutionFallback")}
                 </p>
+            ) : !(option.videoResolutions || []).length ? (
+                <small className="drama-step-note">{_creationText("creation.7cb6760f579b3959")}</small>
+            ) : !fallback ? (
+                <small className="drama-step-note">{_creationText("creation.upstream_v1841_resolutionDefaultUnspecified")}</small>
             ) : (
                 <small className="drama-step-note">{_creationText("creation.43c6912a7a2118c7")}</small>
             )}

@@ -16,6 +16,9 @@ import (
 // Models 是应用持久化表的唯一清单，服务启动和跨数据库迁移必须共用它。
 func Models() []any {
 	return []any{
+		&model.ChannelWebsite{},
+		&model.ChannelCatalogSnapshot{},
+		&model.ChannelProtocolSelection{},
 		&model.CloudAgentExecution{},
 		&model.UploadReservation{},
 		&model.CloudAgentPiSession{},
@@ -157,6 +160,7 @@ func Models() []any {
 		&model.DramaTake{},
 		&model.DramaSegment{},
 		&model.DramaJob{},
+		&model.EcommerceRound{},
 	}
 }
 

@@ -6,13 +6,8 @@ import { SUPDANCE_I18N_PLUGIN_ID } from "@/supdance/plugins/i18n/types";
 import { SUPDANCE_SOCIAL_AUTH_PLUGIN_ID } from "@/supdance/plugins/social-auth/types";
 import { SUPDANCE_HTML_PAGE_MANAGER_PLUGIN_ID } from "@/supdance/plugins/html-page-manager/types";
 
-import { EDITOR_SHELL_PLUGIN_ID } from "./builtin/editor/editor-shell";
-
-/**
- * 官方“应用型”插件清单：这些插件在管理页和插件中心按官方应用展示。
- */
-export const OFFICIAL_APPLICATION_PLUGIN_IDS = [RUNNINGHUB_PLUGIN_ID, EAGLE_PLUGIN_ID, PROMPT_OPTIMIZER_PLUGIN_ID, ART_CRITIQUE_PLUGIN_ID, EDITOR_SHELL_PLUGIN_ID, "user-feedback"] as const;
-
+/** 用户页与管理页共用的官方应用清单；应用由用户自主启停，区别于系统协议。 */
+export const OFFICIAL_APPLICATION_PLUGIN_IDS = [RUNNINGHUB_PLUGIN_ID, EAGLE_PLUGIN_ID, PROMPT_OPTIMIZER_PLUGIN_ID, ART_CRITIQUE_PLUGIN_ID, "user-feedback"] as const;
 export const SUPDANCE_APPLICATION_PLUGIN_IDS = [SUPDANCE_I18N_PLUGIN_ID, SUPDANCE_SOCIAL_AUTH_PLUGIN_ID, SUPDANCE_HTML_PAGE_MANAGER_PLUGIN_ID] as const;
 
 const officialApplicationIdSet = new Set<string>(OFFICIAL_APPLICATION_PLUGIN_IDS);

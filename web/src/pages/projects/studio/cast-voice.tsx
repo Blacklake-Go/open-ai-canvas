@@ -25,7 +25,14 @@ function useSamplePlayer(resourceId: string) {
         setPlaying(false);
         return () => {
             requestRef.current++;
-            audioRef.current?.pause();
+            const audio = audioRef.current;
+            if (audio) {
+                audio.onended = null;
+                audio.onerror = null;
+                audio.pause();
+                audio.removeAttribute("src");
+                audio.load();
+            }
             audioRef.current = null;
         };
     }, [resourceId]);
@@ -96,9 +103,6 @@ export function CastVoiceField({ projectId, cast, restyle, onChanged }: { projec
     const current = profiles.find((profile) => profile.id === cast.voiceProfileId);
     const sampleId = cast.voiceSampleResourceId || "";
     const player = useSamplePlayer(sampleId);
-    // 录音 Hook 到达上限时只停止录制、不交出音频，所以上限由这里在录音仍在进行时主动结束（见下方 effect）。
-    const recorder = useVoiceRecording({ maxDuration: MAX_RECORD_SECONDS * 20 });
-    const finishingRef = useRef(false);
     const done = (result: { affectedSegments: number }, text: string) => {
         message.success(result.affectedSegments ? _creationText("creation.a0e033aeda422328", { value1: text, value2: result.affectedSegments }) : text);
         void queryClient.invalidateQueries({ queryKey: VOICE_PROFILES_KEY });
@@ -106,7 +110,7 @@ export function CastVoiceField({ projectId, cast, restyle, onChanged }: { projec
     };
     const bind = useMutation({
         mutationFn: (input: { voiceProfileId?: string; sampleResourceId?: string; voiceName?: string }) => setDramaCastVoice(projectId, cast.id, { ...input, restyleSegments: restyle }),
-        onSuccess: (result) => done(result, "已指定角色声音"),
+        onSuccess: (result) => done(result, _creationText("creation.01c8369f8f370620")),
         onError: (error) => message.error(error instanceof Error ? error.message : _creationText("creation.4f2e8764f6a34415")),
     });
     const upload = useMutation({
@@ -114,36 +118,25 @@ export function CastVoiceField({ projectId, cast, restyle, onChanged }: { projec
             const resource = await uploadResourceFile(file, "audio", { fileName: name });
             return setDramaCastVoice(projectId, cast.id, { sampleResourceId: resource.id, voiceName: name.replace(/\.[^.]+$/, "").slice(0, 60), restyleSegments: restyle });
         },
-        onSuccess: (result) => done(result, "已上传并指定角色声音"),
+        onSuccess: (result) => done(result, _creationText("creation.9208028c20f1abf2")),
         onError: (error) => message.error(error instanceof Error ? error.message : _creationText("workbench.upload_failed")),
     });
     const clear = useMutation({
         mutationFn: () => clearDramaCastVoice(projectId, cast.id, restyle),
-        onSuccess: (result) => done(result, "已清除角色声音，按声线描述生成"),
+        onSuccess: (result) => done(result, _creationText("creation.08a441380fe36476")),
         onError: (error) => message.error(error instanceof Error ? error.message : _creationText("creation.2952f485318530a1")),
     });
     const busy = bind.isPending || upload.isPending || clear.isPending;
-    const recording = recorder.state !== "idle";
-    const finishRecording = async () => {
-        if (finishingRef.current) return;
-        finishingRef.current = true;
-        try {
-            const blob = await recorder.stop();
-            if (!blob || !blob.size) {
-                message.warning(_creationText("creation.be6854322e9c5981"));
-                return;
-            }
+    const recorder = useVoiceRecording({
+        maxDuration: MAX_RECORD_SECONDS,
+        onComplete: (blob) => {
             const extension = blob.type.includes("ogg") ? "ogg" : blob.type.includes("mp4") ? "m4a" : "webm";
             upload.mutate({ file: blob, name: `${cast.name}录音.${extension}` });
-        } finally {
-            finishingRef.current = false;
-        }
-    };
-    useEffect(() => {
-        if (recorder.state === "recording" && recorder.duration >= MAX_RECORD_SECONDS) void finishRecording();
-        // finishRecording 每次渲染都是新函数；只在时长到达上限时触发一次。
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [recorder.duration, recorder.state]);
+        },
+    });
+    useEffect(() => recorder.cancel, [projectId, cast.id, recorder.cancel]);
+    const recording = recorder.state !== "idle";
+    const finishRecording = () => recorder.stop();
     return (
         <div className="drama-voice">
             <div className="drama-voice-current">
@@ -197,7 +190,8 @@ export function CastVoiceField({ projectId, cast, restyle, onChanged }: { projec
                     <Button
                         size="small"
                         icon={<Mic className="size-3.5" />}
-                        disabled={busy}
+                        disabled={busy || recorder.starting}
+                        loading={recorder.starting}
                         onClick={() =>
                             void recorder.start().catch(() => {
                                 message.error(_creationText("creation.6b451de440652e5a"));

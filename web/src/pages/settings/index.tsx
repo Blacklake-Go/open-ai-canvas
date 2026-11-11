@@ -1,7 +1,7 @@
 import { App, Button } from "antd";
 import { ArrowLeft, Boxes, Bug, Cloud, Inbox, MessageSquareText, RadioTower, ShieldCheck, SlidersHorizontal, UserRound, Workflow, BookMarked } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
-import { useEffect, useMemo, useState, type ReactNode } from "react";
+import { lazy, Suspense, useEffect, useMemo, useState, type ReactNode } from "react";
 import { useNavigate, useSearchParams } from "react-router";
 import { useTranslation } from "react-i18next";
 
@@ -15,7 +15,7 @@ import { ModelDefaultGrid } from "./model-default-grid";
 import { PromptPreferencesPane } from "./prompt-preferences-pane";
 import DiagnosticsPanel from "./diagnostics-panel";
 import AgentMemoryPane from "./agent-memory-pane";
-import { RunningHubSettingsPane } from "./runninghub-settings-pane";
+const RunningHubSettingsPane = lazy(() => import("./runninghub-settings-pane").then((module) => ({ default: module.RunningHubSettingsPane })));
 import { RUNNINGHUB_PLUGIN_ID } from "@/lib/plugins/builtin/workflows";
 import { usePluginStore } from "@/stores/use-plugin-store";
 import { ProfilePane } from "./profile-pane";
@@ -201,11 +201,13 @@ export default function SettingsPage() {
                 </div>
             </SettingsPane>
         ),
-        runninghub: (
+        runninghub: runningHubPluginEnabled ? (
             <SettingsPane>
-                <RunningHubSettingsPane />
+                <Suspense fallback={<span role="status">正在加载工作流配置…</span>}>
+                    <RunningHubSettingsPane />
+                </Suspense>
             </SettingsPane>
-        ),
+        ) : null,
         preferences: (
             <SettingsPane>
                 <PreferencesPane />

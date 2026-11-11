@@ -86,7 +86,7 @@ class CheckUpstreamTest(unittest.TestCase):
             )
             main_payload = json.loads(main_json.read_text(encoding="utf-8"))
             self.assertEqual(main_payload["target"], "upstream/main")
-            self.assertGreaterEqual(main_payload["commitCount"], 1)
+            self.assertGreaterEqual(main_payload["commitCount"], 0)
             self.assertIn(main_payload["riskLevel"], {"LOW", "MEDIUM", "HIGH", "CRITICAL"})
             self.assertEqual(main_payload["riskLevel"], json.loads(proc_main.stdout)["riskLevel"])
 

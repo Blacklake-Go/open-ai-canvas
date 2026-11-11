@@ -1,3 +1,4 @@
+import { migrateCanvasNodeModel } from "@/lib/canvas/migrate-canvas-node-model";
 import { lazy, Suspense, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router";
 import { keepPreviousData, useInfiniteQuery, useQuery } from "@tanstack/react-query";
@@ -16,12 +17,12 @@ import { CanvasFolderCard } from "@/components/canvas/canvas-folder-card";
 import { CanvasHistoryDrawer } from "@/components/canvas/canvas-history-drawer";
 import type { CanvasExportFile } from "@/types/canvas-export";
 import { CanvasNodeType, type CanvasNodeData } from "@/types/canvas";
-import { flushCanvasStorePersistence, useCanvasStore } from "@/stores/canvas/use-canvas-store";
+import { canvasDraftNavigationState, flushCanvasStorePersistence, useCanvasStore } from "@/stores/canvas/use-canvas-store";
 import { useCanvasUiStore } from "@/stores/canvas/use-canvas-ui-store";
 import { exportCanvasProjects } from "@/lib/canvas/canvas-export";
 import { resetGenerationTaskMetadata } from "@/lib/canvas/canvas-task-state";
 import { saveCanvasDrawing, type CanvasDrawingRenderDraft } from "@/lib/canvas/canvas-drawing-storage";
-import { createCanvasProjectWithRemoteSync, hasRemoteUserDataSyncSession, loadCanvasProjectForEditing, saveRemoteUserDataNow, scheduleRemoteUserDataSync } from "@/services/user-data-sync";
+import { hasRemoteUserDataSyncSession, loadCanvasProjectForEditing, saveRemoteUserDataNow, scheduleRemoteUserDataSync } from "@/services/user-data-sync";
 import { listRemoteCanvasProjectsPage, type CanvasLibrarySummary } from "@/services/api/user-data";
 import { useUserStore } from "@/stores/use-user-store";
 import { listProjects } from "@/services/api/projects";
@@ -96,15 +97,13 @@ export default function CanvasPage() {
             openingProjectIdRef.current = id;
             setOpeningProjectId(id);
             preloadProject();
-            window.requestAnimationFrame(() => navigate(`/canvas/${id}${forwardedQuery}`));
+            window.requestAnimationFrame(() => navigate(`/canvas/${id}${forwardedQuery}`, { state: canvasDraftNavigationState(id) }));
         },
         [forwardedQuery, navigate, preloadProject],
     );
     const createAndEnter = () => {
-        void createCanvasProjectWithRemoteSync(`自由画布 ${projects.length + 1}`).then(({ id, syncError }) => {
-            if (syncError) message.warning(syncError instanceof Error ? `画布已在本地创建，云端同步失败：${syncError.message}` : "画布已在本地创建，云端同步失败");
-            enterProject(id);
-        });
+        const id = useCanvasStore.getState().createDraftProject(`自由画布 ${projects.length + 1}`);
+        enterProject(id);
     };
     const filteredProjects = useMemo(() => {
         if (userId) return projects;
@@ -180,6 +179,7 @@ export default function CanvasPage() {
             const data = JSON.parse(await projectFile.text()) as CanvasExportFile;
             if (!Array.isArray(data.projects)) throw new Error("projects.json 中缺少画布列表");
             for (const item of data.projects) {
+                item.project = migrateCanvasNodeModel(item.project);
                 if (!Array.isArray(item.files)) throw new Error(`画布「${item.project?.title || "未命名画布"}」的媒体清单无效`);
                 const missing = item.files.find((entry) => !zip.get(entry.path));
                 if (missing) throw new Error(`压缩包缺少媒体文件：${missing.path}`);
@@ -427,10 +427,8 @@ export default function CanvasPage() {
             enterProject(projects[0].id);
             return;
         }
-        void createCanvasProjectWithRemoteSync(`自由画布 ${projects.length + 1}`).then(({ id, syncError }) => {
-            if (syncError) message.warning(syncError instanceof Error ? `画布已在本地创建，云端同步失败：${syncError.message}` : "画布已在本地创建，云端同步失败");
-            enterProject(id);
-        });
+        const id = useCanvasStore.getState().createDraftProject(`自由画布 ${projects.length + 1}`);
+        enterProject(id);
     }, [hydrated, message, mode, projects, sessionHydrated, userId, libraryQuery.isSuccess]);
 
     if (hydrated && !libraryQuery.isError && (mode === "new" || mode === "recent" || mode === "handoff")) return <main className="flex h-full items-center justify-center bg-background text-sm text-stone-500">正在打开画布...</main>;

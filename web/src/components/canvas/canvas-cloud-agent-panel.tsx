@@ -589,19 +589,21 @@ export const CanvasCloudAgentPanel = memo(function CanvasCloudAgentPanel() {
                   : "Codex 已连接"
               : status === "waiting_approval"
                 ? "等待审批"
-                : status === "queued"
-                  ? "等待启动"
-                  : status === "running"
-                    ? "运行中"
-                    : status === "completed"
-                      ? "已完成"
-                      : status === "failed"
-                        ? "异常"
-                        : status === "cancelled"
-                          ? "已停止"
-                          : status === "rejected"
-                            ? "已拒绝"
-                            : "待命";
+                : pendingQuestion
+                  ? "等待回答"
+                  : status === "queued"
+                    ? "等待启动"
+                    : status === "running"
+                      ? "运行中"
+                      : status === "completed"
+                        ? "已完成"
+                        : status === "failed"
+                          ? "异常"
+                          : status === "cancelled"
+                            ? "已停止"
+                            : status === "rejected"
+                              ? "已拒绝"
+                              : "待命";
     const statusColor =
         codex.status === "connecting"
             ? "var(--status-warning)"
@@ -611,13 +613,11 @@ export const CanvasCloudAgentPanel = memo(function CanvasCloudAgentPanel() {
                   : theme.node.muted
               : status === "failed"
                 ? "var(--status-error)"
-                : status === "rejected" || status === "cancelled"
-                  ? theme.node.muted
-                  : status === "waiting_approval"
-                    ? "var(--status-warning)"
-                    : status === "running" || status === "queued"
-                      ? "var(--status-success)"
-                      : theme.node.muted;
+                : status === "waiting_approval"
+                  ? "var(--status-warning)"
+                  : status === "running" || status === "queued"
+                    ? "var(--status-success)"
+                    : theme.node.muted;
 
     useEffect(() => {
         // 画布页卸载后预填撤回；新画布页的编号从 1 重新开始，不能被上一页的编号挡住。
@@ -2584,7 +2584,7 @@ export const CanvasCloudAgentPanel = memo(function CanvasCloudAgentPanel() {
                                         statusLabel={statusLabel}
                                         statusColor={statusColor}
                                         live={running}
-                                        nodeCount={canvasId ? nodeCount : null}
+                                        conversationTitle={conversations.find((conversation) => conversation.id === activeConversationId)?.title}
                                         onNew={newConversation}
                                         onHistory={() => setView("history")}
                                         exporting={exporting}
@@ -2645,20 +2645,19 @@ export const CanvasCloudAgentPanel = memo(function CanvasCloudAgentPanel() {
                                         key={activeConversationId}
                                         theme={theme}
                                         messages={messages}
+                                        nodeCount={canvasId ? nodeCount : null}
+                                        onChooseSkill={() => setSkillsOpen(true)}
+                                        onDraftPrompt={historyHydrated && pendingHydrated && !cloudOpeningId && (!canvasId || cloudHistoryReady) ? (draft) => setPrompt((current) => (current.trim() ? `${current}\n\n${draft}` : draft)) : undefined}
                                         onFocusNode={onFocusNode}
                                         onUndo={busy || running || otherAgentRunning ? undefined : (target) => void undoCanvasStep(target)}
                                         undoStates={undoStates}
                                         references={conversationReferences}
                                         busy={busy || running}
+                                        activity={stopping ? "stopping" : busy ? "submitting" : status === "queued" ? "queued" : "running"}
                                         approval={approval}
                                         approvalTargetGenerating={approvalTargetGenerating}
-                                        nodeCount={canvasId ? nodeCount : null}
-                                        installedSkillCount={skillCatalogReady ? installedSkills.length : null}
                                         approvalSubmitting={approvalSubmitting}
                                         approvalBlockedReason={approvalBlockedReason}
-                                        onChooseSkill={() => setSkillsOpen(true)}
-                                        onOpenSkillRecommendations={() => setSkillRecommendationsOpen(true)}
-                                        onDraftPrompt={(draft) => setPrompt((current) => (current.trim() ? `${current}\n\n${draft}` : draft))}
                                         onApprovalReasonChange={(reason) => setApproval((current) => (current ? { ...current, reason } : current))}
                                         onApprove={(settings) => void submitApproval("approve", settings)}
                                         onReject={() => void submitApproval("reject")}
@@ -2812,6 +2811,20 @@ export const CanvasCloudAgentPanel = memo(function CanvasCloudAgentPanel() {
                 }}
                 open={skillsOpen}
                 theme={theme}
+                presets={
+                    skillsOpen && sceneBuckets.some((bucket) => bucket.presets.length || bucket.skills.length) ? (
+                        <div className="agent-skill-presets" style={{ "--agent-ink": theme.node.text, "--agent-caption": theme.node.muted, "--agent-focus-ring": theme.accent.primary } as CSSProperties}>
+                            <AgentSceneCapsules
+                                buckets={sceneBuckets}
+                                installedIds={installedSkillIds}
+                                theme={theme}
+                                disabled={otherAgentRunning || busy || running || !historyHydrated || !pendingHydrated || Boolean(presetApplyingId)}
+                                onPick={(preset) => void applyScenePreset(preset)}
+                                onPickSkill={(skill) => void applySingleSkill(skill)}
+                            />
+                        </div>
+                    ) : null
+                }
                 installedSkills={installedSkills}
                 marketSkills={marketSkills}
                 selectedSkillIds={selectedSkillIds}

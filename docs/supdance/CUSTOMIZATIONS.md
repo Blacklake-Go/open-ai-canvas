@@ -1,5 +1,13 @@
 # SupDance Canvas — 独立改造与定制代码清单 (CUSTOMIZATIONS.md)
 
+## 上游 v1.8.4.1 合并接缝
+
+- 集成候选 `v1.8.4.1-supdance.1` 以 Schema 99 为目标；本地已应用迁移 1–93 保持原记录，上游新增迁移 93–98 顺延为本地 94–99，逐项保留名称、checksum、实现和顺序。
+- 保留既有 SupDance 插件、支付扩展、音乐工作台、社交登录、视觉引擎、Codex 连接器、法务与六语系统。新增短剧造型与角色图片词条继续使用 `supdance-creation` 六语来源，不翻译用户输入或生成参数。
+- 画布多段媒体剪辑与选中视频合并继续作为本地能力；适配上游串行 FFmpeg 队列，并保留上游图片对比工具。核心文件登记于 `supdance-canvas-video-merge` 和 `supdance-drama-style-i18n`。
+- 时间线编辑器、字幕、短剧精剪和内置 editor 插件按要求保留，不接受上游删除；扩展节点 Markdown、HTML、SVG、图表、对比保持原注册。登记于 `supdance-canvas-timeline-editor`。
+- 这是源码集成候选，不代表数据库迁移、发布或生产验收完成。逐项处理和验证边界见[源码合并记录](./UPSTREAM_V1_8_4_1_SOURCE_MERGE.md)。
+
 ## 上游 v1.8.3 合并接缝
 
 保留紧凑模型选择器、工作区法务条、音乐、视觉引擎、Waffo 及 X 付款衡量。上游登录注册合并为一个表单后，社交入口与协议状态一同迁入共用表单。创作岛保留音乐参数及原有生成入口并接入思考档位，模型价格保留 SupDance 上下文分档与上游参考视频价，后台搜索共用包含本站定制入口的导航目录。Schema 映射、语言覆盖及验证见[源码合并记录](./UPSTREAM_V1_8_3_SOURCE_MERGE.md)。

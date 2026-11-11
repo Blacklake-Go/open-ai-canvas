@@ -379,7 +379,7 @@ export function useCanvasDrama(input: UseCanvasDramaInput) {
         [buildFinal, focus, nodesRef, run, setNodes],
     );
 
-    /** 把一集的剧情段视频按成片顺序载入画布时间线，在画布里精剪；时间线只有一条，已有内容需确认后替换。 */
+    /** Load an episode's current segment videos into the canvas timeline for editing. */
     const openEpisodeCut = useCallback(
         (episodeId: string) =>
             run(`cut:${episodeId}`, "载入剪辑失败", async () => {

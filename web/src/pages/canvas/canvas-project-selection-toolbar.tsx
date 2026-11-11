@@ -20,7 +20,8 @@ type CanvasProjectSelectionToolbarProps = {
     onCreateStoryboard: () => void;
     onCreateReferenceGroup: () => void;
     onBatchConnect: () => void;
-    onMergeVideos: () => void;
+    onMergeVideos?: () => void;
+    onCompareImages?: () => void;
     onSendSelectionToAgent: () => void;
 };
 
@@ -36,6 +37,7 @@ export function CanvasProjectSelectionToolbar({
     onCreateReferenceGroup,
     onBatchConnect,
     onMergeVideos,
+    onCompareImages,
     onSendSelectionToAgent,
 }: CanvasProjectSelectionToolbarProps) {
     const { t } = useTranslation();
@@ -48,6 +50,7 @@ export function CanvasProjectSelectionToolbar({
         onCreateReferenceGroup,
         onBatchConnect,
         onMergeVideos,
+        onCompareImages,
         onSendSelectionToAgent,
     } as Partial<ToolbarHandlers> as ToolbarHandlers;
 

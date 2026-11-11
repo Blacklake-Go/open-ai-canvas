@@ -4,7 +4,7 @@ import { App, Button } from "antd";
 import { Check, ChevronLeft, ChevronRight, Copy, Flame, X } from "lucide-react";
 
 import { AppModal } from "@/components/ui/product/app-modal";
-import { DRAMA_STYLE_CATEGORIES, findDramaStyle, styleCoverBackground } from "@/lib/drama/drama-styles";
+import { DRAMA_STYLE_CATEGORIES, DRAMA_STYLE_FORMS, findDramaStyle, parseDramaStyleId, styleCoverBackground } from "@/lib/drama/drama-styles";
 
 const DETAIL_ROWS = [
     { key: "medium", label: "画面媒介" },
@@ -22,6 +22,7 @@ export function DramaStyleDetailModal({
     onNavigate,
     onUse,
     onClose,
+    disabled = false,
 }: {
     styleId: string | null;
     selectedId: string;
@@ -29,6 +30,7 @@ export function DramaStyleDetailModal({
     onNavigate: (id: string) => void;
     onUse: (id: string) => void;
     onClose: () => void;
+    disabled?: boolean;
 }) {
     _useCreationLocale();
     const { message } = App.useApp();
@@ -59,7 +61,8 @@ export function DramaStyleDetailModal({
     };
 
     const active = style?.id === selectedId;
-    const categoryLabel = style ? DRAMA_STYLE_CATEGORIES.find((item) => item.key === style.category)?.label : "";
+    const composition = style ? parseDramaStyleId(style.id) : undefined;
+    const categoryLabel = composition ? `${DRAMA_STYLE_FORMS.find((form) => form.id === composition.formId)?.name} · 自由组合` : style ? DRAMA_STYLE_CATEGORIES.find((item) => item.key === style.category)?.label : "";
 
     return (
         <AppModal open={Boolean(style)} onCancel={onClose} footer={null} title={null} closable={false} flush centered width="min(880px, calc(100vw - 48px))" rootClassName="drama-root" aria-label={_creationText("creation.8218914b51125fc1")}>
@@ -131,7 +134,7 @@ export function DramaStyleDetailModal({
                             <Button icon={<ChevronRight className="size-4" />} disabled={!nextId} onClick={() => nextId && onNavigate(nextId)} aria-label={_creationText("creation.a37b8e3472cab2e0")} />
                             <span className="flex-1" />
                             <Button onClick={onClose}>{_creationText("common.close")}</Button>
-                            <Button type="primary" icon={active ? <Check className="size-4" /> : undefined} disabled={active} onClick={() => onUse(style.id)}>
+                            <Button type="primary" icon={active ? <Check className="size-4" /> : undefined} disabled={active || disabled} onClick={() => onUse(style.id)}>
                                 {active ? _creationText("creation.6266b6f08df55835") : _creationText("creation.beed03981f91ab6e")}
                             </Button>
                         </footer>

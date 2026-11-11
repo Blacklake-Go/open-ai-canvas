@@ -42,6 +42,7 @@ type CanvasNodeToolbarProps = {
     onGenerateImage: (node: CanvasNodeData) => void;
     onUpload: (node: CanvasNodeData) => void;
     onDownload: (node: CanvasNodeData) => void;
+    onDownloadSubtitles?: (node: CanvasNodeData) => void;
     onSaveAsset: (node: CanvasNodeData) => void;
     onRegionEdit: (node: CanvasNodeData) => void;
     onRemoveBackground: (node: CanvasNodeData) => void;
@@ -116,6 +117,7 @@ export function CanvasNodeToolbar({
     onGenerateImage,
     onUpload,
     onDownload,
+    onDownloadSubtitles,
     onSaveAsset,
     onRegionEdit,
     onRemoveBackground,
@@ -341,6 +343,7 @@ export function CanvasNodeToolbar({
         onNodeToggleFreeResize: onToggleFreeResize,
         onNodeSubtitles: onSubtitles,
         onNodeTimeline: onTimeline,
+        onNodeDownloadSubtitles: onDownloadSubtitles,
         onNodeVersions: onVersions,
         onNodeToggleLocked: onToggleLocked,
         onNodeCopyPrompt: copyImagePrompt,

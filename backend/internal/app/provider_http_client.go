@@ -235,6 +235,8 @@ func doJSON(req *http.Request, target interface{}) error {
 	return nil
 }
 
+type providerProxyURLKey struct{}
+
 func doBinary(req *http.Request) ([]byte, string, error) {
 	return doBinaryWithConsumer(req, nil)
 }
@@ -257,7 +259,7 @@ func doBinaryWithConsumer(req *http.Request, onChunk func(string, []byte)) ([]by
 	cacheManagementRequest := requestKind == "cache-create" || requestKind == "cache-delete"
 	responseLimit := maxProviderResponseBytes
 	channelID := ""
-	channelProxyURL := ""
+	channelProxyURL, _ := req.Context().Value(providerProxyURLKey{}).(string)
 	if metadata, ok := req.Context().Value(providerAnalyticsKey{}).(providerAnalyticsContext); ok && metadata.Service != nil {
 		runtimeService = metadata.Service
 		coordinator = metadata.Service.coordinator
@@ -461,6 +463,9 @@ func recordProviderRequest(req *http.Request, startedAt time.Time, statusCode in
 	} else if requestKind == "download" {
 		callLog.Path = "/task-media"
 		callLog.UpstreamURL = req.URL.Scheme + "://" + req.URL.Host + "/task-media"
+	}
+	if requestKind == "create" {
+		callLog.GenerationContentJSON = metadata.GenerationContentJSON
 	}
 	channelSlotFailure := false
 	if code, message := ChannelSlotFailureDetails(requestErr); code != "" {

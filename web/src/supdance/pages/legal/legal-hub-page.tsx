@@ -8,6 +8,7 @@ import { LEGAL_OPERATOR_CONFIG } from "./legal-i18n-content";
 import { LegalThemeToggler } from "./legal-theme-toggler";
 import { LegalBrand } from "./legal-brand";
 import { LegalHeaderNav } from "./legal-header-nav";
+import { SupdanceAboutFooter } from "@/supdance/components/site-footer/supdance-about-footer";
 
 export default function LegalHubPage() {
     // 物理级滚轮与键盘全响应支持：确保在任何浏览器与操作系统中，鼠标滚轮、触控板与按键均能顺畅向下滑动
@@ -167,6 +168,8 @@ export default function LegalHubPage() {
                     </div>
                 </section>
             </main>
+
+            <SupdanceAboutFooter pagePath="/legal" />
         </div>
     );
 }

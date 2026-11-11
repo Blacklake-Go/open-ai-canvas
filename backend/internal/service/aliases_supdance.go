@@ -53,6 +53,11 @@ type (
 	SupDanceMusicGeneration   = app.SupDanceMusicGeneration
 
 	HtmlPageItem           = app.HtmlPageItem
+	HtmlManagedSitePage    = app.HtmlManagedSitePage
+	HtmlFooterSocialLink   = app.HtmlFooterSocialLink
+	HtmlFooterLinkItem     = app.HtmlFooterLinkItem
+	HtmlFooterLinkColumn   = app.HtmlFooterLinkColumn
+	HtmlSiteFooterConfig   = app.HtmlSiteFooterConfig
 	HtmlPagesAdminOverview = app.HtmlPagesAdminOverview
 	HtmlPagesStorePayload  = app.HtmlPagesStorePayload
 )
@@ -60,4 +65,5 @@ type (
 var (
 	ValidateMusicLifecycleTransition  = app.ValidateMusicLifecycleTransition
 	ResetMusicLifecycleManagerForTest = app.ResetMusicLifecycleManagerForTest
+	DefaultHtmlSiteFooterConfig       = app.DefaultHtmlSiteFooterConfig
 )

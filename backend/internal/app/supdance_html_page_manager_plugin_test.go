@@ -57,3 +57,45 @@ func TestHtmlPageManagerPolicies(t *testing.T) {
 		t.Errorf("预期激活作用域为 system，实际为 %v", policy.ActivationScope)
 	}
 }
+
+func TestDefaultHtmlSiteFooterConfig(t *testing.T) {
+	cfg := DefaultHtmlSiteFooterConfig()
+	if !cfg.Enabled {
+		t.Fatal("预期默认页脚为启用状态")
+	}
+	if cfg.SupportEmail != "support@supdance.com" {
+		t.Errorf("预期默认支持邮箱为 support@supdance.com，实际为 %s", cfg.SupportEmail)
+	}
+	if len(cfg.SocialLinks) < 5 {
+		t.Errorf("预期至少包含 5 个官方社交入口，实际 %d", len(cfg.SocialLinks))
+	}
+	if len(cfg.Columns) < 2 {
+		t.Errorf("预期至少包含 2 列链接组，实际 %d", len(cfg.Columns))
+	}
+	expectedPaths := map[string]bool{
+		"/terms":        false,
+		"/privacy":      false,
+		"/aup":          false,
+		"/legal":        false,
+		"/mcp":          false,
+		"/pricing.html": false,
+	}
+	for _, p := range cfg.SitePages {
+		if _, ok := expectedPaths[p.Path]; ok {
+			expectedPaths[p.Path] = true
+			if !p.ShowFooter {
+				t.Errorf("预期默认站点页面 %s 开启页脚显示", p.Path)
+			}
+		}
+	}
+	for path, found := range expectedPaths {
+		if !found {
+			t.Errorf("默认受管页面列表缺少: %s", path)
+		}
+	}
+
+	normalized := normalizeHtmlSiteFooterConfig(HtmlSiteFooterConfig{Enabled: true})
+	if normalized.BrandName == "" || len(normalized.SitePages) != len(cfg.SitePages) {
+		t.Errorf("normalizeHtmlSiteFooterConfig 未正确填充默认字段")
+	}
+}

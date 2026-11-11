@@ -6,9 +6,12 @@ import { AlertCircle, Film, Play, RotateCcw, TriangleAlert, X, PenLine } from "l
 
 import type { DramaCast, DramaModelChoice, DramaSegment, DramaShot } from "@/services/api/drama";
 
-import { DramaModelPicker } from "../drama-model-picker";
+import { DramaModelPicker, useDramaModelCatalog } from "../drama-model-picker";
+import { dramaVideoResolutionValue } from "@/lib/drama/model-choice";
+import { formatVideoResolutionLabel } from "@/lib/video-generation-options";
 import { aspectRatioValue, formatClock, mediaBusy, MediaThumb, useResourceMediaUrl } from "../drama-shared";
 import { promptReady, secondsLabel, SegmentInputs, SegmentStatus, segmentState } from "./segment-parts";
+import { dramaVideoOptionFor } from "./segment-quote";
 import { isTypingTarget } from "./use-studio";
 import { progressFillStyle } from "@/lib/progress-fill";
 
@@ -18,7 +21,7 @@ type Props = {
     aspectRatio: string;
     castById: Map<string, DramaCast>;
     defaultVideoModel: DramaModelChoice;
-    /** 作品指定的视频分辨率；批量换模型时给不出的置灰。 */
+    /** 作品指定的视频分辨率；批量换模型时新模型给不出就按它自己的默认档出片。 */
     videoResolution?: string;
     busy: boolean;
     /** 剧情段弹窗打开时暂停分镜页快捷键，避免和弹窗内的输入冲突。 */
@@ -241,6 +244,9 @@ export function Storyboard({ shots, segments, aspectRatio, castById, defaultVide
     const [focused, setFocused] = useState<number>();
     const [anchor, setAnchor] = useState<number>();
     const [batchModel, setBatchModel] = useState<DramaModelChoice>();
+    const catalog = useDramaModelCatalog().data;
+    const batchOption = dramaVideoOptionFor(catalog?.options.video, batchModel || defaultVideoModel);
+    const batchFallback = Boolean(videoResolution && batchOption && !dramaVideoResolutionValue(batchOption, videoResolution));
     const gridRef = useRef<HTMLDivElement>(null);
     const episodeId = shots[0]?.episodeId;
     useEffect(() => {
@@ -386,6 +392,14 @@ export function Storyboard({ shots, segments, aspectRatio, castById, defaultVide
                                 videoResolution={videoResolution}
                             />
                         </div>
+                        {batchFallback ? (
+                            <span className="drama-sdx-hint w-full">
+                                {_creationText("creation.drama.segmentResolutionFallback", {
+                                    requested: videoResolution ? formatVideoResolutionLabel(videoResolution) : _creationText("creation.drama.modelDefaultResolution"),
+                                    actual: batchOption?.defaultVideoResolution ? formatVideoResolutionLabel(batchOption.defaultVideoResolution) : _creationText("creation.drama.modelDefaultResolution"),
+                                })}
+                            </span>
+                        ) : null}
                         <Tooltip title={toGenerate.length < selected.size ? _creationText("creation.4f8cdb7da01a9e6f", { value1: selected.size - toGenerate.length }) : undefined}>
                             <Button
                                 size="small"

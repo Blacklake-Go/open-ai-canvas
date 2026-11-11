@@ -61,7 +61,8 @@ export type ToolbarHandlers = {
     onCreateStoryboard: () => void;
     onCreateReferenceGroup: () => void;
     onBatchConnect: () => void;
-    onMergeVideos: () => void;
+    onMergeVideos?: () => void;
+    onCompareImages?: () => void;
     onSendSelectionToAgent: () => void;
     // 节点悬停工具栏——节点操作（均接收当前节点）
     onNodeInfo: (node: CanvasNodeData) => void;
@@ -96,6 +97,7 @@ export type ToolbarHandlers = {
     onNodeEnhanceVideo?: (node: CanvasNodeData) => void;
     onNodeSubtitles: (node: CanvasNodeData) => void;
     onNodeTimeline: (node: CanvasNodeData) => void;
+    onNodeDownloadSubtitles?: (node: CanvasNodeData) => void;
     /** 打开媒体版本面板；只读分享页不提供。 */
     onNodeVersions?: (node: CanvasNodeData) => void;
     /** 采用到短剧（设定参考图或剧情段视频）；只在关联短剧的精修画布上提供。 */

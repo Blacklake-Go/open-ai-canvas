@@ -20,17 +20,6 @@ export type EditorSlotContribution = {
 
 export type EditorPluginPermission = "timeline.read" | "timeline.command" | "export.run";
 
-export type PluginContributionsV2 = PluginContributions & {
-    editorSlots?: EditorSlotContribution[];
-};
-
-// 注意：必须把 permissions 一并 Omit 掉再完全替换，否则数组交叉类型会被归约为 v1 的 PluginPermission[]，v2 权限字面量无法赋值。
-export type PluginManifestV2 = Omit<PluginManifest, "apiVersion" | "contributes" | "permissions"> & {
-    apiVersion: typeof PLUGIN_API_VERSION_V2;
-    permissions: Array<PluginPermission | EditorPluginPermission>;
-    contributes: PluginContributionsV2;
-};
-
 export type PluginContributionKind = "provider" | "payment-provider" | "workflow" | "canvas-node" | "transform" | "command" | "asset-source" | "usage-observer" | "ai-capability" | "agent" | "import-export";
 export type PluginSurface = "node" | "fullscreen" | "hybrid" | "asset-source" | "settings" | "wallet";
 export type ProtocolCapability = "text" | "image" | "video" | "audio";
@@ -128,6 +117,12 @@ export type PluginContributions = {
     aiCapabilities?: string[];
     agents?: string[];
     importExport?: string[];
+    /** Editor slot contributions are available to trusted v2 plugins. */
+    editorSlots?: EditorSlotContribution[];
+};
+
+export type PluginContributionsV2 = PluginContributions & {
+    editorSlots?: EditorSlotContribution[];
 };
 export type PluginPermission =
     | "canvas.read"
@@ -147,7 +142,7 @@ export type PluginPermission =
     | "external.open";
 
 export type PluginManifest = {
-    apiVersion: typeof PLUGIN_API_VERSION;
+    apiVersion: typeof PLUGIN_API_VERSION | typeof PLUGIN_API_VERSION_V2;
     id: string;
     name: string;
     version: string;
@@ -158,11 +153,17 @@ export type PluginManifest = {
     author?: string;
     entry?: string;
     surfaces?: PluginSurface[];
-    permissions: PluginPermission[];
+    permissions: Array<PluginPermission | EditorPluginPermission>;
     trusted?: boolean;
     configuration?: { fields: PluginField[] };
     runtime?: { backend?: PluginRuntime; web?: PluginRuntime };
-    contributes: PluginContributions;
+    contributes: PluginContributionsV2;
+};
+
+// Keep the common manifest type broad so v2 manifests stay usable at existing
+// plugin call sites; this subtype still makes v2 declarations explicit.
+export type PluginManifestV2 = Omit<PluginManifest, "apiVersion"> & {
+    apiVersion: typeof PLUGIN_API_VERSION_V2;
 };
 
 export type PluginStorage = {
@@ -226,7 +227,7 @@ export type PluginHostServices = {
 };
 
 export type PluginHostContext = {
-    manifest: PluginManifest | PluginManifestV2;
+    manifest: PluginManifest;
     permissions: ReadonlySet<PluginPermission | EditorPluginPermission>;
     storage: PluginStorage;
     config: Readonly<PluginInstallation["config"]>;
@@ -329,20 +330,19 @@ export type RegisteredPlugin = {
     agentActions?: PluginAgentAction[];
     /** Pure, bounded projection: never return embedded media or provider credentials. */
     readAgentNode?: (node: import("@/types/canvas").CanvasNodeData, snapshot: import("@/lib/canvas/canvas-operation-contract").CanvasSnapshot) => Record<string, unknown>;
-    /** v1 或 v2 插件清单；v2 清单结构为 v1 超集（含 editorSlots 声明）。 */
-    manifest: PluginManifest | PluginManifestV2;
+    /** v1 and v2 manifests; v2 can declare editor slots. */
+    manifest: PluginManifest;
     source?: "bundled" | "uploaded" | string;
     activate?: (context: PluginHostContext) => Promise<void> | void;
     deactivate?: (context: PluginHostContext) => Promise<void> | void;
     createAssetSource?: (context: PluginHostContext) => AssetSourceProvider;
     createPromptOptimizer?: (context: PluginHostContext) => PromptOptimizerProvider;
-    /** v2 插件由注册器从 manifest 提取的编辑器插槽声明（v1 插件无此字段）。 */
+    /** v2 plugin editor slots extracted by the registry. */
     editorSlots?: EditorSlotContribution[];
-    /** v2 插件 UI 插槽的实际渲染函数由插件 activate() 阶段经 registerEditorSlot 提供。 */
 };
 
 export type PluginInstallation = {
-    manifest: PluginManifest | PluginManifestV2;
+    manifest: PluginManifest;
     enabled: boolean;
     config: Record<string, string | number | boolean>;
     installedAt: string;

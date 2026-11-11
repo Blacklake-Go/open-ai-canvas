@@ -5,7 +5,8 @@ import { App } from "antd";
 
 import { NODE_DEFAULT_SIZE } from "@/constant/canvas";
 import { FOLDER_COLLAPSED_HEIGHT, FOLDER_COLLAPSED_WIDTH, FRAME_COLLAPSED_HEIGHT, FRAME_COLLAPSED_WIDTH, getFrameChildIds, isCanvasFolderNode, isFrameNode } from "@/lib/canvas/canvas-frame";
-import { buildCanvasMediaDownloadFileName, canDownloadCanvasNodeMedia, isCanvasMediaCompositePending } from "@/lib/canvas/canvas-media-download";
+import { buildCanvasMediaDownloadFileName, canDownloadCanvasNodeMedia, canvasMediaFileExtension, downloadImageConvertedToFormat, isCanvasMediaCompositePending, preferredImageDownloadFormat, withFileExtension } from "@/lib/canvas/canvas-media-download";
+import { resourceIdFromStorageKey, resourceFileUrl } from "@/services/api/resources";
 import { writeCanvasNodePrompt } from "@/lib/canvas/canvas-node-prompt";
 import { applyBatchPrimaryImage, applyNodeConfigPatch } from "@/lib/canvas/canvas-project-domain";
 import { resetGenerationTaskMetadata } from "@/lib/canvas/canvas-project-generation";
@@ -13,12 +14,14 @@ import { CONTENT_MODERATION_ERROR_CODE, isContentModerationError } from "@/lib/g
 import { downloadBrowserMedia, resolveBrowserMediaDownloadHref, startBrowserDownload } from "@/services/browser-download";
 import { ensureCanvasNodeAsset } from "@/services/project-asset-sync";
 import { canvasEditLeases } from "@/services/canvas-edit-leases";
+import type { AiConfig } from "@/stores/use-config-store";
 import { CanvasNodeType, type CanvasFolderStyle, type CanvasFolderTheme, type CanvasNodeData, type CanvasNodeMetadata, type Position } from "@/types/canvas";
 
 // Chrome 对同一页面连续触发的下载会先询问一次「下载多个文件」，间隔过短时后续点击可能被丢弃。
 const BATCH_DOWNLOAD_INTERVAL_MS = 400;
 
 type UseCanvasNodeEditorOptions = {
+    config: AiConfig;
     canvasId: string;
     canvasTitle: string;
     domainProjectId?: string;
@@ -31,7 +34,7 @@ type UseCanvasNodeEditorOptions = {
     setHoveredNodeId: Dispatch<SetStateAction<string | null>>;
 };
 
-export function useCanvasNodeEditor({ canvasId, canvasTitle, domainProjectId, nodesRef, setNodes, setSelectedNodeIds, setSelectedConnectionId, setDialogNodeId, setToolbarNodeId, setHoveredNodeId }: UseCanvasNodeEditorOptions) {
+export function useCanvasNodeEditor({ config, canvasId, canvasTitle, domainProjectId, nodesRef, setNodes, setSelectedNodeIds, setSelectedConnectionId, setDialogNodeId, setToolbarNodeId, setHoveredNodeId }: UseCanvasNodeEditorOptions) {
     const { message } = App.useApp();
     const queryClient = useQueryClient();
     const [collapsingBatchIds, setCollapsingBatchIds] = useState<Set<string>>(new Set());
@@ -237,7 +240,7 @@ export function useCanvasNodeEditor({ canvasId, canvasTitle, domainProjectId, no
             const changesPrompt = (["prompt", "composerContent"] as const).some((key) => Object.hasOwn(patch, key) && patch[key] !== target.metadata?.[key]);
             if (changesPrompt && (target.metadata?.locked || !canvasEditLeases.input(canvasId, nodeId))) return false;
             setNodes((current) => {
-                const next = current.map((node) => (node.id === nodeId ? applyNodeConfigPatch(node, patch) : node));
+                const next = current.map((node) => (node.id === nodeId ? applyNodeConfigPatch(node, patch, config) : node));
                 // 生成入口读取 nodesRef；同步写入，避免刚修改工作流比例就立即生成时仍提交旧值。
                 nodesRef.current = next;
                 return next;
@@ -245,7 +248,7 @@ export function useCanvasNodeEditor({ canvasId, canvasTitle, domainProjectId, no
             if (!patch.assetCategory) return true;
             const node = nodesRef.current.find((item) => item.id === nodeId);
             if (!node?.metadata?.content?.trim()) return true;
-            const updatedNode = applyNodeConfigPatch(node, patch);
+            const updatedNode = applyNodeConfigPatch(node, patch, config);
             void ensureCanvasNodeAsset({ canvasId, domainProjectId, node: updatedNode, source: "canvas-manual", category: patch.assetCategory })
                 .then(async (result) => {
                     setNodes((current) => current.map((item) => (item.id === nodeId ? { ...item, metadata: { ...item.metadata, assetId: result.assetId } } : item)));
@@ -255,7 +258,7 @@ export function useCanvasNodeEditor({ canvasId, canvasTitle, domainProjectId, no
                 .catch((error) => message.error(error instanceof Error ? error.message : translate("canvasPage.nodeEditor.assetCategoryFailed")));
             return true;
         },
-        [canvasId, domainProjectId, message, nodesRef, queryClient, setNodes],
+        [canvasId, config, domainProjectId, message, nodesRef, queryClient, setNodes],
     );
 
     const downloadNodeImage = useCallback(
@@ -270,6 +273,27 @@ export function useCanvasNodeEditor({ canvasId, canvasTitle, domainProjectId, no
             if (!supported || (!content && !storageKey)) return;
             try {
                 const downloadName = buildCanvasMediaDownloadFileName(canvasTitle, node);
+                // 兑现图像设置里的输出格式：模型/渠道可能忽略 output_format 仍返回 PNG。
+                const targetFormat = preferredImageDownloadFormat(node);
+                const currentExtension = canvasMediaFileExtension(node);
+                const needsConversion = Boolean(targetFormat && currentExtension !== targetFormat && currentExtension !== (targetFormat === "jpeg" ? "jpg" : targetFormat));
+                if (targetFormat && needsConversion) {
+                    // jpeg：平台端转码（/file?format=jpeg 同源输出，<a download> 可命名，无跨域限制）。
+                    if (targetFormat === "jpeg" && storageKey) {
+                        const resourceId = resourceIdFromStorageKey(storageKey);
+                        if (resourceId) {
+                            startBrowserDownload(`${resourceFileUrl(resourceId)}?format=jpeg`, withFileExtension(downloadName, "jpg"));
+                            return;
+                        }
+                    }
+                    // webp：客户端转码，能读到字节时生效；失败回退原图直下。
+                    try {
+                        await downloadImageConvertedToFormat({ storageKey, url: content, fileName: downloadName, format: targetFormat });
+                        return;
+                    } catch {
+                        // 落到原图下载，保证下载永远可用。
+                    }
+                }
                 await downloadBrowserMedia({ storageKey, url: content, fileName: downloadName });
             } catch (error) {
                 message.error(error instanceof Error ? error.message : translate("canvasPage.nodeEditor.downloadFailed"));

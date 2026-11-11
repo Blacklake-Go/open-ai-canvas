@@ -2,7 +2,7 @@
 // 复用 canvas-video-merge.ts 的 loadFFmpeg（本地同源加载 core/wasm），媒体读写与清理逻辑保持一致。
 import { fetchFile } from "@ffmpeg/util";
 
-import { loadFFmpeg } from "@/lib/canvas/canvas-video-merge";
+import { runFFmpegTask } from "@/lib/canvas/canvas-video-merge";
 import { getMediaBlob } from "@/services/file-storage";
 import type { TimelineProject } from "@/types/timeline";
 import { runTimelineRenderPlan, type TimelineExportProgress, type TimelineExportResult } from "./timeline-export-runner";
@@ -32,10 +32,18 @@ async function fetchSourceBlob(source: TimelineRenderSource): Promise<Blob> {
 export async function exportTimelineToMp4(timeline: TimelineProject, sources: TimelineRenderSource[], options: TimelineExportOptions = {}): Promise<TimelineExportResult> {
     const { onProgress, context } = options;
     onProgress?.({ phase: "loading", percent: 0, detail: "加载 FFmpeg" });
-    const ffmpeg = await loadFFmpeg(({ phase, progress }) => onProgress?.({ phase: phase === "loading" ? "loading" : "reading", percent: progress, detail: phase === "loading" ? "加载 FFmpeg" : "读取素材" }));
     const plan = buildTimelineRenderPlan(timeline, sources, context);
-    return runTimelineRenderPlan(ffmpeg, timeline, sources, plan, {
-        readSource: async (source) => fetchFile(await fetchSourceBlob(source)),
-        onProgress,
-    });
+    return runFFmpegTask(
+        (ffmpeg) =>
+            runTimelineRenderPlan(ffmpeg, timeline, sources, plan, {
+                readSource: async (source) => fetchFile(await fetchSourceBlob(source)),
+                onProgress,
+            }),
+        ({ phase, progress }) =>
+            onProgress?.({
+                phase,
+                percent: progress,
+                detail: phase === "loading" ? "加载 FFmpeg" : phase === "reading" ? "读取素材" : "导出视频",
+            }),
+    );
 }

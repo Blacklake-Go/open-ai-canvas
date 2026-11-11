@@ -95,7 +95,10 @@ export function creationSurfaceFiles(webRoot) {
         for (const entry of readdirSync(dir, { withFileTypes: true }).sort((a, b) => a.name.localeCompare(b.name))) {
             const path = resolve(dir, entry.name);
             if (entry.isDirectory()) walk(path);
-            else if (/\.tsx?$/.test(entry.name)) files.push({ path, file: relative(webRoot, path).replaceAll("\\", "/"), source: readFileSync(path, "utf8") });
+            else if (/\.tsx?$/.test(entry.name)) {
+                const source = readFileSync(path, "utf8");
+                if (source.includes("creation-text") || /novel-parse|drama-format/.test(entry.name)) files.push({ path, file: relative(webRoot, path).replaceAll("\\", "/"), source });
+            }
         }
     }
     CREATION_SURFACE_ROOTS.forEach((root) => {

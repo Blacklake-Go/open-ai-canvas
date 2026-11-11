@@ -4,7 +4,8 @@ import { ImageSettingsPanel } from "@/components/image-settings-panel";
 import { ModelPicker } from "@/components/model-picker";
 import type { CanvasTheme } from "@/lib/canvas-theme";
 import { agentApprovalModel, agentApprovalModelSelection, agentMediaSettings, type AgentImageApproval } from "@/lib/canvas/agent-media-approval";
-import { modelCapabilityConfigFor, normalizeImageValue } from "@/lib/model-capabilities";
+import { modelCapabilityConfigFor } from "@/lib/model-capabilities";
+import { preserveImageSettings } from "@/lib/media-settings";
 import { parseImageParameters } from "@/lib/image-parameters";
 import { resolveCompatibleModel, type ModelRequirements } from "@/lib/model-selection";
 import type { AgentMediaSettings } from "@/services/api/agent";
@@ -12,7 +13,14 @@ import { PUBLIC_MODEL_CATALOG_ID, resolveModelRequestConfig, useEffectiveConfig 
 
 // 可编辑规格只使用顶层字段，扩展 JSON 保留其他已授权参数。
 function approvalImageParameters(value?: string) {
-    return value === undefined ? undefined : JSON.stringify(Object.fromEntries(Object.entries(parseImageParameters(value)).filter(([name]) => !["size", "imageResolution", "quality"].includes(name))));
+    if (value === undefined) return undefined;
+    try {
+        const parsed = JSON.parse(value);
+        if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) return value;
+        return JSON.stringify(Object.fromEntries(Object.entries(parsed).filter(([name]) => !["size", "imageResolution", "quality"].includes(name))));
+    } catch {
+        return value;
+    }
 }
 
 export function CanvasAgentImageApprovalSettings({
@@ -43,14 +51,29 @@ export function CanvasAgentImageApprovalSettings({
         if (disabled) return;
         const profile = modelCapabilityConfigFor(config, next).image;
         if (!profile) return;
-        const normalized = normalizeImageValue(profile, settings, resolveModelRequestConfig(config, next).interfaceType);
-        onChange({
-            ...agentApprovalModelSelection(config, next),
-            size: normalized.size,
-            imageResolution: normalized.imageResolution,
-            imageParameters: approvalImageParameters(normalized.imageParameters),
-            quality: profile.quality.supported ? normalized.quality : "",
-        });
+        // AgentMediaSettings carries these hidden controls only in JSON. Promote
+        // them before adaptation, then restore the target model's typed values.
+        const hidden = parseImageParameters(settings.imageParameters);
+        const normalized = preserveImageSettings(
+            profile,
+            { ...settings, count: hidden.count === undefined ? undefined : String(hidden.count), transparentBackground: hidden.transparentBackground === undefined ? undefined : String(hidden.transparentBackground) },
+            resolveModelRequestConfig(config, next).interfaceType,
+        );
+        let imageParameters = approvalImageParameters(normalized.imageParameters);
+        try {
+            const parameters = JSON.parse(imageParameters || "{}");
+            if (parameters && typeof parameters === "object" && !Array.isArray(parameters)) {
+                for (const name of ["count", "transparentBackground"] as const) {
+                    const field = profile.parameters?.find((item) => item.name === name && item.enabled !== false);
+                    // Malformed typed mirrors remain intact for strict validation.
+                    if (field && !Object.hasOwn(parameters, name)) parameters[name] = name === "count" ? Number(normalized.count) : normalized.transparentBackground === "true";
+                }
+                imageParameters = JSON.stringify(parameters);
+            }
+        } catch {
+            // Preserve invalid JSON so submission validation can report it.
+        }
+        onChange({ ...agentApprovalModelSelection(config, next), size: normalized.size, imageResolution: normalized.imageResolution, imageParameters, quality: profile.quality.supported ? normalized.quality : "" });
     };
     const changeOption = (key: "quality" | "imageResolution" | "imageParameters" | "size" | "transparentBackground" | "count", next: string) => {
         if (disabled || (key !== "size" && key !== "quality" && key !== "imageResolution" && key !== "imageParameters")) return;
@@ -61,8 +84,7 @@ export function CanvasAgentImageApprovalSettings({
             if (key === "imageParameters") return { ...current, imageParameters };
             const options = { size: current.size, imageResolution: current.imageResolution, quality: current.quality, [key]: next };
             const selected = resolveCompatibleModel(config, agentApprovalModel(config, current), { ...requirements, imageSize: options.size, options: { ...options, count: 1 } });
-            if (!selected) return previous;
-            return { ...agentApprovalModelSelection(config, selected), ...options, imageParameters };
+            return { ...agentApprovalModelSelection(config, selected || agentApprovalModel(config, current)), ...options, imageParameters };
         });
     };
     return (

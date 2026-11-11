@@ -86,6 +86,7 @@ export type ImageCapabilityConfig = {
         allowCustom: boolean;
         presets?: ImageResolutionOption[];
         defaultTier?: string;
+        defaultRatio?: string;
     };
     resolution: { supported: boolean; values: string[]; default: string };
     quality: {
@@ -569,6 +570,7 @@ export function pluginWorkflowCapabilityConfig(protocol: ModelProtocol, workflow
 }
 
 export function modelCapabilityConfigFor(config: { channels: Array<{ id: string; models: string[]; modelCosts?: Array<{ model: string; capabilityConfig?: ModelCapabilityConfig; protocol?: ModelProtocol }> }> }, model: string) {
+    if (!model) return defaultModelCapabilityConfig();
     const separator = model.indexOf("::");
     const channelId = separator >= 0 ? model.slice(0, separator) : "";
     const modelName = separator >= 0 ? model.slice(separator + 2) : model;

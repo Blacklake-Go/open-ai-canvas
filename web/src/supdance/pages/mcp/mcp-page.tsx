@@ -1,6 +1,5 @@
 import { useEffect } from "react";
-import { Link } from "react-router";
-import { Sparkles, Terminal, Layers, ArrowUpRight, ShieldCheck, Heart, Wrench, HelpCircle } from "lucide-react";
+import { Sparkles, Terminal, Layers, ArrowUpRight, ShieldCheck, Wrench } from "lucide-react";
 import { GitHubIcon } from "./github-icon";
 import { McpHeader } from "./mcp-header";
 import { McpCliSection } from "./mcp-cli-section";
@@ -8,6 +7,7 @@ import { McpPluginGrid } from "./mcp-plugin-grid";
 import { McpToolsSection } from "./mcp-tools-section";
 import { McpFaqSection } from "./mcp-faq-section";
 import { OFFICIAL_REPO_URL } from "./mcp-plugin-list";
+import { SupdanceAboutFooter } from "@/supdance/components/site-footer/supdance-about-footer";
 
 export default function McpPage() {
     useEffect(() => {
@@ -124,42 +124,7 @@ export default function McpPage() {
             </div>
 
             {/* Footer */}
-            <footer className="mt-28 border-t border-zinc-200 bg-white py-12 text-xs text-zinc-500 dark:border-white/10 dark:bg-[#050507] dark:text-zinc-400">
-                <div className="mx-auto flex max-w-7xl flex-col items-center justify-between gap-6 px-4 sm:flex-row sm:px-6">
-                    <div className="flex items-center gap-3">
-                        <img src="/supdance-mark.png" alt="" className="size-6 object-contain" />
-                        <span className="font-semibold text-zinc-900 dark:text-white">SupDance Creative Platform</span>
-                        <span className="text-zinc-300 dark:text-zinc-600">|</span>
-                        <span>Open Source AI Ecosystem</span>
-                    </div>
-
-                    <div className="flex flex-wrap items-center gap-6">
-                        <Link to="/terms" className="hover:text-rose-500 dark:hover:text-white transition-colors">
-                            服务条款
-                        </Link>
-                        <Link to="/privacy" className="hover:text-rose-500 dark:hover:text-white transition-colors">
-                            隐私政策
-                        </Link>
-                        <Link to="/aup" className="hover:text-rose-500 dark:hover:text-white transition-colors">
-                            使用准则
-                        </Link>
-                        <Link to="/legal" className="hover:text-rose-500 dark:hover:text-white transition-colors">
-                            法律中心
-                        </Link>
-                        <a href="/pricing.html" className="hover:text-rose-500 dark:hover:text-white transition-colors">
-                            定价说明
-                        </a>
-                        <a href={OFFICIAL_REPO_URL} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1.5 hover:text-rose-500 dark:hover:text-white transition-colors">
-                            <GitHubIcon className="size-3.5" />
-                            <span>GitHub</span>
-                        </a>
-                    </div>
-                </div>
-
-                <div className="mx-auto mt-6 max-w-7xl px-4 text-center sm:px-6 text-[11px] text-zinc-400">
-                    Built with <Heart className="inline size-3 text-rose-500 fill-rose-500" /> by Blacklake-Go team for AI creators worldwide.
-                </div>
-            </footer>
+            <SupdanceAboutFooter pagePath="/mcp" />
         </div>
     );
 }

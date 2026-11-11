@@ -10,7 +10,8 @@ import { AppModal } from "@/components/ui/product/app-modal";
 import { TRANSITION_LABEL } from "@/lib/drama/storyboard";
 import type { DramaCast, DramaEpisodeDetail, DramaModelChoice, DramaSegment, DramaSegmentReferencePatch, DramaShot, DramaShotPatch, DramaTransition } from "@/services/api/drama";
 import { ReferenceBoard } from "./segment-references";
-import { dramaChoiceKey } from "@/lib/drama/model-choice";
+import { dramaChoiceKey, dramaVideoResolutionValue } from "@/lib/drama/model-choice";
+import { formatVideoResolutionLabel } from "@/lib/video-generation-options";
 
 import { DramaModelPicker, useDramaModelCatalog } from "../drama-model-picker";
 import { useEffectiveConfig } from "@/stores/use-config-store";
@@ -273,7 +274,12 @@ function SegmentToolbar({
     const catalogQuery = useDramaModelCatalog();
     const chosenOption = dramaVideoOptionFor(catalogQuery.data?.options.video, choice);
     const chosenAudioLimit = changed ? chosenOption?.maxAudios : segment.request.modelMaxAudios;
-    const quoteMissing = creditsEnabled && dramaSegmentQuoteMissing(config, choice, dramaSegmentVideoRequirements(segment.request, dramaVideoOptionFor(catalogQuery.data?.options.video, choice), changed, videoResolution));
+    // 本段实际出片分辨率：没换模型用服务端预演结果；换了模型且新模型给不出作品分辨率时，按模型默认。
+    const supportedResolution = dramaVideoResolutionValue(chosenOption, videoResolution);
+    const effectiveResolution = changed ? supportedResolution || chosenOption?.defaultVideoResolution || "" : segment.request.resolution || supportedResolution || chosenOption?.defaultVideoResolution || "";
+    const resolutionFallback = Boolean(changed && videoResolution && chosenOption && !supportedResolution);
+    const requirements = dramaSegmentVideoRequirements(segment.request, chosenOption, changed, videoResolution);
+    const quoteMissing = creditsEnabled && dramaSegmentQuoteMissing(config, choice, requirements);
     const running = mediaBusy(segment.videoStatus);
     const writingNow = segment.promptStatus === "queued" || segment.promptStatus === "running";
     const sent = [segment.request.header, segment.videoPrompt.trim()].filter(Boolean).join("\n\n");
@@ -289,7 +295,17 @@ function SegmentToolbar({
     return (
         <section className="drama-sdx-toolbar" aria-label={_creationText("workbench.generation_settings")}>
             <div className="drama-sdx-toolbar-row">
-                <DramaModelPicker capability="video" size="sm" value={choice} onChange={setChoice} placeholder={_creationText("creation.a0afda31af337fd1")} className="drama-sdx-model" aspectRatio={aspectRatio} videoResolution={videoResolution} />
+                <DramaModelPicker
+                    capability="video"
+                    size="sm"
+                    value={choice}
+                    onChange={setChoice}
+                    placeholder={_creationText("creation.a0afda31af337fd1")}
+                    className="drama-sdx-model"
+                    aspectRatio={aspectRatio}
+                    videoResolution={videoResolution}
+                    requirements={requirements}
+                />
                 <Tooltip title={segment.request.maxVideoSeconds ? _creationText("creation.6b0bff4f372e6c4f", { value1: segment.request.maxVideoSeconds }) : _creationText("creation.e69b906d413df03e")}>
                     <span className="drama-sdx-chip">{segment.request.seconds ? `${segment.request.seconds}s` : secondsLabel(segment.durationMs)}</span>
                 </Tooltip>
@@ -297,6 +313,9 @@ function SegmentToolbar({
                     <span className="drama-sdx-chip">{aspectRatio}</span>
                 </Tooltip>
                 {changed ? <span className="drama-sdx-chip is-accent">{_creationText("creation.f1644c09a4ca6f70")}</span> : null}
+                <Tooltip title={_creationText("creation.drama.effectiveResolutionTitle")}>
+                    <span className="drama-sdx-chip">{effectiveResolution ? formatVideoResolutionLabel(effectiveResolution) : _creationText("creation.drama.modelDefaultResolution")}</span>
+                </Tooltip>
             </div>
             <div className="drama-sdx-toolbar-row">
                 <Button size="small" icon={<PenLine className="size-3.5" />} loading={writing} disabled={busy || writingNow} onClick={onWritePrompt}>
@@ -332,6 +351,14 @@ function SegmentToolbar({
                     {_creationText("creation.75fdd01c2979146c")}
                     {chosenAudioLimit ? _creationText("creation.17c83b5ba7bf3685", { value1: chosenAudioLimit }) : _creationText("creation.cbbbc5550af11ffb")}
                     {_creationText("creation.a2140bfd2ccf8ad6")}
+                </p>
+            ) : null}
+            {resolutionFallback ? (
+                <p className="drama-sdx-hint">
+                    {_creationText("creation.drama.segmentResolutionFallback", {
+                        requested: videoResolution ? formatVideoResolutionLabel(videoResolution) : _creationText("creation.drama.modelDefaultResolution"),
+                        actual: chosenOption?.defaultVideoResolution ? formatVideoResolutionLabel(chosenOption.defaultVideoResolution) : _creationText("creation.drama.modelDefaultResolution"),
+                    })}
                 </p>
             ) : null}
             {quoteMissing && !running ? <p className="drama-sdx-hint is-error">{SEGMENT_NO_QUOTE_HINT}</p> : null}

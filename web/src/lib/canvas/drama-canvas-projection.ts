@@ -9,7 +9,7 @@ import type { DramaCast, DramaCastKind, DramaEpisode, DramaSegment, DramaShot, D
 import { CanvasNodeType, type CanvasConnection, type CanvasDramaRef, type CanvasMediaVersion, type CanvasNodeData, type CanvasVideoEditOperation, type Position, type StoryboardColumn, type StoryboardRow } from "@/types/canvas";
 import type { TimelineClip, TimelineProject } from "@/types/timeline";
 
-// 短剧 → 精修画布的投送：纯函数，只负责把短剧对象排成节点、连线与时间线；
+// 短剧 → 精修画布的投送：纯函数，只负责把短剧对象排成节点与连线；
 // 素材登记、写入画布和网络请求由调用方完成。节点通过 metadata.dramaRef 回指短剧对象。
 
 const DRAMA_CAST_ASSET_CATEGORY: Record<DramaCastKind, "character" | "prop" | "environment"> = { character: "character", prop: "prop", scene: "environment" };
@@ -372,8 +372,8 @@ export function buildDramaFinalNode(input: {
 }
 
 /**
- * 一集的剪辑时间线：各剧情段当前视频按顺序首尾相接，时长与成片合成一致（videoSeconds）。
- * 没有视频的段跳过并返回段号，由调用方提示。
+ * Build an episode timeline from its current segment videos in episode order.
+ * Missing or stale video media is skipped and reported by segment number.
  */
 export function buildDramaEpisodeTimeline(input: { episode: Pick<DramaEpisode, "number">; segments: DramaSegment[]; media: DramaProjectionMedia }): { timeline: TimelineProject; skipped: number[]; resourceIds: string[] } {
     const clips: TimelineClip[] = [];

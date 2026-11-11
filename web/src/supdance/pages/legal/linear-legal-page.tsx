@@ -10,6 +10,7 @@ import { LEGAL_OPERATOR_CONFIG, type LocalizedLegalDoc, type SupportedLegalLangu
 import { LegalThemeToggler } from "./legal-theme-toggler";
 import { LegalBrand } from "./legal-brand";
 import { LegalHeaderNav } from "./legal-header-nav";
+import { SupdanceAboutFooter } from "@/supdance/components/site-footer/supdance-about-footer";
 
 interface LinearLegalPageProps {
     children?: ReactNode;
@@ -230,6 +231,8 @@ export function LinearLegalPage({ docMap, currentSlug, children }: LinearLegalPa
                     </button>
                 </div>
             </main>
+
+            <SupdanceAboutFooter pagePath={`/${currentSlug}`} />
         </div>
     );
 }

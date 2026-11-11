@@ -3,10 +3,38 @@ import { creationText as _creationText, useCreationLocale as _useCreationLocale 
 import { useEffect, useMemo, useRef, useState, type CSSProperties, type ReactNode } from "react";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { App, Button, Checkbox, Input, InputNumber, Select, Switch } from "antd";
-import { AlertCircle, ArrowRight, Brush, CheckCheck, Clapperboard, Film, FolderOpen, Gem, Inbox, Lock, MapPinned, Maximize2, PauseCircle, RefreshCw, RotateCcw, ScrollText, Upload, UserRound, UsersRound, Cpu, PackageCheck, Play } from "lucide-react";
+import {
+    AlertCircle,
+    ArrowRight,
+    Brush,
+    CheckCheck,
+    Clapperboard,
+    Film,
+    FolderOpen,
+    Gem,
+    Inbox,
+    Lock,
+    MapPinned,
+    Maximize2,
+    PauseCircle,
+    RefreshCw,
+    RotateCcw,
+    ScrollText,
+    Upload,
+    UserRound,
+    UsersRound,
+    Cpu,
+    PackageCheck,
+    Play,
+    Plus,
+    Link2,
+    Shirt,
+    Trash2,
+} from "lucide-react";
 
 import { CanvasImagePreview } from "@/components/canvas/canvas-image-preview";
-import { dramaChoiceKey, dramaVideoRatioIssue } from "@/lib/drama/model-choice";
+import { dramaChoiceKey, dramaResolutionAfterModelChange, dramaVideoRatioIssue, dramaVideoResolutionIssue } from "@/lib/drama/model-choice";
+import { formatVideoResolutionLabel } from "@/lib/video-generation-options";
 import { dramaKeys } from "@/lib/drama/drama-query-keys";
 import {
     getDramaCastImpact,
@@ -14,6 +42,8 @@ import {
     regenerateDramaCasts,
     setDramaCastImage,
     updateDramaCast,
+    updateDramaCastLook,
+    deleteDramaCastLook,
     updateDramaSettings,
     type DramaCapability,
     type DramaCast,
@@ -22,6 +52,7 @@ import {
     type DramaSettings,
     type DramaInboxItem,
     type DramaMediaMode,
+    type DramaModelChoice,
     type DramaReviewMode,
     type DramaSummary,
     type DramaTextThinking,
@@ -39,6 +70,9 @@ import { DramaTakeList } from "./take-list";
 import { CastLibraryPicker } from "./cast-library-picker";
 import { CastVoiceField, CastVoicePreview } from "./cast-voice";
 import { CastLooks } from "./cast-looks";
+import { CastImageFields, type CastImageFieldsValue } from "./cast-image-fields";
+import { CastCreateDialog } from "./cast-create-dialog";
+import { CastProjectImport } from "./cast-project-import";
 
 // 制作台的三个整页视图：设定（角色 / 道具 / 场景）、待处理、制作设置。都在主区域内展示，不使用抽屉遮挡。
 
@@ -46,6 +80,8 @@ import { CastLooks } from "./cast-looks";
 
 const CAST_KIND_ICON: Record<DramaCastKind, ReactNode> = { character: <UserRound className="size-6 opacity-30" />, prop: <Gem className="size-6 opacity-30" />, scene: <MapPinned className="size-6 opacity-30" /> };
 const CAST_KINDS: DramaCastKind[] = ["character", "prop", "scene"];
+const CAST_TABS = ["character", "look", "prop", "scene"] as const;
+type CastTab = (typeof CAST_TABS)[number];
 
 type CastFilter = "all" | "failed" | "busy" | "locked";
 
@@ -101,16 +137,19 @@ export function CastPanel({
     canvasOpening?: string;
 }) {
     _useCreationLocale();
-    const [kind, setKind] = useState<DramaCastKind>("character");
+    const [kind, setKind] = useState<CastTab>("character");
     const [filter, setFilter] = useState<CastFilter>("all");
+    const [creating, setCreating] = useState(false);
+    const [importing, setImporting] = useState(false);
     const focused = cast.find((item) => item.id === focusId);
+    const focusedKind = focused?.kind;
+    const focusedParent = focused?.parentId;
     useEffect(() => {
-        if (focused) setKind(focused.kind);
-    }, [focused]);
-    // 造型行（parentId 非空）不在顶层设定列表里单独成卡，而是归到所属角色的详情里。
+        if (focusedKind) setKind((current) => (focusedParent ? (current === "character" ? current : "look") : focusedKind));
+    }, [focusId, focusedKind, focusedParent]);
     const bases = cast.filter((item) => !item.parentId);
-    const ofKind = bases.filter((item) => item.kind === kind);
-    const failed = bases.filter((item) => item.imageStatus === "failed").length;
+    const ofKind = kind === "look" ? cast.filter((item) => item.parentId) : bases.filter((item) => item.kind === kind);
+    const failed = cast.filter((item) => item.imageStatus === "failed").length;
     const count = (predicate: (item: DramaCast) => boolean) => ofKind.filter(predicate).length;
     const filters: Array<[CastFilter, string, number]> = [
         ["all", "全部", ofKind.length],
@@ -124,17 +163,45 @@ export function CastPanel({
         if (filter === "locked") return item.locked;
         return true;
     });
-    const active = focused && focused.kind === kind ? focused : list[0];
-    const kindRatio = castRatio(kind, ratios);
+    const active = focused && (kind === "look" ? focused.parentId : focused.kind === kind) ? focused : list[0];
+    const kindRatio = castRatio(kind === "look" ? "character" : kind, ratios);
+    const tabLabel = (value: CastTab) => (value === "look" ? _creationLabel("造型") : _creationLabel(CAST_KIND_LABEL[value]));
+    // 导入或外部保存后回填新设定；媒体轮询和锁定状态变化不打断正在输入的表单。
+    const activeFormKey = active
+        ? JSON.stringify([
+              active.id,
+              active.name,
+              active.lookName,
+              active.appearance,
+              active.aliasesJson,
+              active.voiceInstructions,
+              active.imagePrompt,
+              active.imageStyleId,
+              active.imageStyleName,
+              active.imageStylePrompt,
+              active.lookFromChapter,
+              active.lookToChapter,
+          ])
+        : "";
     return (
         <div className="drama-view drama-cast-layout">
             <section className="drama-view-main">
                 <div className="drama-view-head">
                     <div className="drama-tabs" role="tablist" aria-label={_creationText("creation.abb13611a5fca572")}>
-                        {CAST_KINDS.map((value) => (
-                            <button key={value} type="button" role="tab" className="drama-tab" aria-selected={kind === value} onClick={() => setKind(value)}>
-                                {CAST_KIND_LABEL[value]}
-                                <span className="drama-tab-count">{bases.filter((item) => item.kind === value).length}</span>
+                        {CAST_TABS.map((value) => (
+                            <button
+                                key={value}
+                                type="button"
+                                role="tab"
+                                className="drama-tab"
+                                aria-selected={kind === value}
+                                onClick={() => {
+                                    setKind(value);
+                                    setFilter("all");
+                                }}
+                            >
+                                {tabLabel(value)}
+                                <span className="drama-tab-count">{value === "look" ? cast.filter((item) => item.parentId).length : bases.filter((item) => item.kind === value).length}</span>
                             </button>
                         ))}
                     </div>
@@ -145,6 +212,14 @@ export function CastPanel({
                                 <b>{value}</b>
                             </button>
                         ))}
+                    </div>
+                    <div className="drama-cast-toolbar">
+                        <Button icon={<Link2 className="size-4" />} onClick={() => setImporting(true)}>
+                            关联已有作品素材
+                        </Button>
+                        <Button icon={<Plus className="size-4" />} onClick={() => setCreating(true)}>
+                            新增设定
+                        </Button>
                     </div>
                     {failed ? (
                         <Button className="!ml-auto" icon={<RotateCcw className="size-4" />} loading={retrying} onClick={onRetry}>
@@ -167,8 +242,8 @@ export function CastPanel({
                     ) : null}
                     <div className={`drama-cast-grid ${kindRatio.orientation}`}>
                         {list.map((item) => (
-                            <div key={item.id} className="drama-cast-card" aria-current={item.id === active?.id}>
-                                <button type="button" className="block w-full text-left" aria-label={_creationText("creation.93a2783e87f75289", { value1: item.name })} onClick={() => onFocus(item.id)}>
+                            <div key={item.id} className="drama-cast-card" aria-current={item.id === active?.id || item.id === active?.parentId}>
+                                <button type="button" className="block w-full text-left" aria-label={_creationText("creation.93a2783e87f75289", { value1: item.lookName || item.name })} onClick={() => onFocus(item.id)}>
                                     <div className="drama-cast-card-media" style={kindRatio.style}>
                                         {item.imageResourceId ? <MediaThumb resourceId={item.imageResourceId} alt={item.name} loading={castImageLoading} failed={castImageFailed} /> : null}
                                         {!item.imageResourceId || mediaBusy(item.imageStatus) || item.imageStatus === "failed" || item.imageStatus === "" ? (
@@ -194,11 +269,24 @@ export function CastPanel({
                                         ) : null}
                                     </div>
                                     <div className="drama-cast-card-body">
-                                        <strong>{item.name}</strong>
-                                        <span>{item.role || parseList(item.aliasesJson).join("、") || item.description || "—"}</span>
+                                        <strong>{item.lookName || item.name}</strong>
+                                        <span>
+                                            {item.parentId
+                                                ? `${cast.find((base) => base.id === item.parentId)?.name || item.name} · ${item.imageStyleName || _creationLabel("沿用作品风格")}`
+                                                : item.role || parseList(item.aliasesJson).join("、") || item.description || "—"}
+                                        </span>
                                     </div>
                                 </button>
-                                {item.kind === "character" ? (
+                                {item.kind === "character" && !item.parentId && cast.some((look) => look.parentId === item.id) ? (
+                                    <div className="drama-cast-look-switcher" role="group" aria-label={_creationText("creation.look.switcherLabel", { name: item.name })}>
+                                        {[item, ...cast.filter((look) => look.parentId === item.id)].map((look) => (
+                                            <button type="button" key={look.id} aria-label={`切换到${look.lookName || "基础造型"}`} title={look.lookName || "基础造型"} aria-pressed={look.id === active?.id} onClick={() => onFocus(look.id)}>
+                                                {look.imageResourceId ? <MediaThumb resourceId={look.imageResourceId} alt={look.lookName || _creationText("creation.50ef161256d9798a")} /> : <Shirt className="size-4 opacity-40" />}
+                                            </button>
+                                        ))}
+                                    </div>
+                                ) : null}
+                                {item.kind === "character" && !item.parentId ? (
                                     <div className="px-2 pb-2">
                                         <CastVoicePreview resourceId={item.voiceSampleResourceId} name={item.name} />
                                     </div>
@@ -209,7 +297,7 @@ export function CastPanel({
                     {!list.length ? (
                         <div className="drama-empty">
                             <UserRound className="size-7" />
-                            <span>{ofKind.length ? _creationText("creation.c6d39fdd74dc6351") : _creationText("creation.8f395dbcb3178688", { value1: CAST_KIND_LABEL[kind] })}</span>
+                            <span>{ofKind.length ? _creationText("creation.c6d39fdd74dc6351") : kind === "look" ? _creationText("creation.look.empty") : _creationText("creation.8f395dbcb3178688", { value1: _creationLabel(CAST_KIND_LABEL[kind]) })}</span>
                         </div>
                     ) : null}
                 </div>
@@ -217,9 +305,10 @@ export function CastPanel({
             <aside className="drama-view-side thin-scrollbar">
                 {active ? (
                     <CastEditor
-                        key={active.id}
+                        key={activeFormKey}
                         projectId={projectId}
                         cast={active}
+                        parent={active.parentId ? cast.find((item) => item.id === active.parentId) : undefined}
                         looks={cast.filter((item) => item.parentId === active.id)}
                         ratios={ratios}
                         onChanged={onChanged}
@@ -232,24 +321,69 @@ export function CastPanel({
                     </div>
                 )}
             </aside>
+            {creating ? (
+                <CastCreateDialog
+                    projectId={projectId}
+                    initialKind={kind === "look" ? "character" : kind}
+                    onClose={() => setCreating(false)}
+                    onCreated={(item) => {
+                        setKind(item.kind);
+                        onFocus(item.id);
+                        onChanged();
+                    }}
+                />
+            ) : null}
+            {importing ? <CastProjectImport projectId={projectId} currentCast={cast} onClose={() => setImporting(false)} onImported={onChanged} /> : null}
         </div>
     );
 }
 
-function CastEditor({ projectId, cast, looks, ratios, onChanged, onOpenCanvas, canvasOpening }: { projectId: string; cast: DramaCast; looks: DramaCast[]; ratios: CastRatios; onChanged: () => void; onOpenCanvas: () => void; canvasOpening: boolean }) {
+function CastEditor({
+    projectId,
+    cast,
+    parent,
+    looks,
+    ratios,
+    onChanged,
+    onOpenCanvas,
+    canvasOpening,
+}: {
+    projectId: string;
+    cast: DramaCast;
+    parent?: DramaCast;
+    looks: DramaCast[];
+    ratios: CastRatios;
+    onChanged: () => void;
+    onOpenCanvas: () => void;
+    canvasOpening: boolean;
+}) {
     _useCreationLocale();
-    const { message } = App.useApp();
+    const { message, modal } = App.useApp();
     const [previewing, setPreviewing] = useState(false);
-    const [name, setName] = useState(cast.name);
+    const [name, setName] = useState(cast.lookName || cast.name);
     const [aliases, setAliases] = useState(parseList(cast.aliasesJson));
     const [appearance, setAppearance] = useState(cast.appearance);
     const [voiceInstructions, setVoiceInstructions] = useState(cast.voiceInstructions);
+    const [imageFields, setImageFields] = useState<CastImageFieldsValue>({ imagePrompt: cast.imagePrompt || "", imageStyleId: cast.imageStyleId || "", imageStyleName: cast.imageStyleName || "", imageStylePrompt: cast.imageStylePrompt || "" });
+    const [from, setFrom] = useState<number | null>(cast.lookFromChapter || null);
+    const [to, setTo] = useState<number | null>(cast.lookToChapter || null);
     const [restyle, setRestyle] = useState(true);
+    const isLook = Boolean(cast.parentId);
     const impactQuery = useQuery({ queryKey: dramaKeys.castImpact(projectId, cast.id), queryFn: ({ signal }) => getDramaCastImpact(projectId, cast.id, signal) });
-    const dirty = name !== cast.name || appearance !== cast.appearance || voiceInstructions !== cast.voiceInstructions || aliases.join("|") !== parseList(cast.aliasesJson).join("|");
-    const fields = { name, aliases, appearance, voiceInstructions };
+    const imageDirty = (["imagePrompt", "imageStyleId", "imageStyleName", "imageStylePrompt"] as const).some((key) => (imageFields[key] || "") !== (cast[key] || ""));
+    const dirty =
+        imageDirty ||
+        name !== (cast.lookName || cast.name) ||
+        appearance !== cast.appearance ||
+        voiceInstructions !== cast.voiceInstructions ||
+        aliases.join("|") !== parseList(cast.aliasesJson).join("|") ||
+        (isLook && ((from || 0) !== (cast.lookFromChapter || 0) || (to || 0) !== (cast.lookToChapter || 0)));
+    const fields = { name, aliases, appearance, voiceInstructions, ...imageFields };
+    const saveFields = () => (isLook ? updateDramaCastLook(projectId, cast.id, { lookName: name, appearance, ...imageFields, fromChapter: from || 0, toChapter: to || 0, restyleSegments: restyle }) : updateDramaCast(projectId, cast.id, fields));
     const save = useMutation({
-        mutationFn: () => updateDramaCast(projectId, cast.id, fields),
+        mutationFn: async () => {
+            await saveFields();
+        },
         onSuccess: () => {
             message.success(_creationText("creation.1ca65987ba9bb56a"));
             onChanged();
@@ -259,7 +393,7 @@ function CastEditor({ projectId, cast, looks, ratios, onChanged, onOpenCanvas, c
     const lock = useMutation({ mutationFn: (locked: boolean) => updateDramaCast(projectId, cast.id, { locked }), onSuccess: onChanged });
     const regenerate = useMutation({
         mutationFn: async () => {
-            if (dirty) await updateDramaCast(projectId, cast.id, fields);
+            if (dirty) await saveFields();
             return regenerateDramaCast(projectId, cast.id, restyle);
         },
         onSuccess: (result) => {
@@ -287,14 +421,22 @@ function CastEditor({ projectId, cast, looks, ratios, onChanged, onOpenCanvas, c
     // 素材库选图的失败由选择弹窗内联显示，这里只处理成功。
     const adoptLibraryImage = async (resourceId: string) => imageAdopted(await setDramaCastImage(projectId, cast.id, resourceId, restyle));
     const impact = impactQuery.data;
-    const isCharacter = cast.kind === "character";
-    const kindLabel = CAST_KIND_LABEL[cast.kind];
+    const isCharacter = cast.kind === "character" && !isLook;
+    const kindLabel = isLook ? "造型" : CAST_KIND_LABEL[cast.kind];
+    const busy = save.isPending || regenerate.isPending || upload.isPending || mediaBusy(cast.imageStatus);
+    const parentReady = !isLook || (parent?.imageStatus === "ready" && Boolean(parent.imageResourceId));
     return (
         <div className="drama-editor">
             <div className="drama-cast-hero" style={castRatio(cast.kind, ratios).style}>
                 {cast.imageResourceId ? <MediaThumb resourceId={cast.imageResourceId} alt={cast.name} loading={castImageLoading} failed={castImageFailed} /> : null}
                 {cast.imageResourceId ? (
-                    <button type="button" className="drama-cast-hero-zoom" aria-label={_creationText("creation.e6ec139e5619b480", { value1: cast.name })} title={_creationText("creation.771c680268c7d738")} onClick={() => setPreviewing(true)}>
+                    <button
+                        type="button"
+                        className="drama-cast-hero-zoom"
+                        aria-label={_creationText("creation.e6ec139e5619b480", { value1: cast.lookName || cast.name })}
+                        title={_creationText("creation.771c680268c7d738")}
+                        onClick={() => setPreviewing(true)}
+                    >
                         <span className="drama-cast-hero-zoom-hint" aria-hidden="true">
                             <Maximize2 className="size-3.5" />
                         </span>
@@ -323,8 +465,14 @@ function CastEditor({ projectId, cast, looks, ratios, onChanged, onOpenCanvas, c
                     <Switch size="small" checked={cast.locked} loading={lock.isPending} onChange={(checked) => lock.mutate(checked)} />
                 </label>
             </div>
-            <Field label={_creationText("creation.d44e9b3d3b31d37b")}>
-                <Input value={name} maxLength={60} onChange={(event) => setName(event.target.value)} aria-label={_creationText("creation.d44e9b3d3b31d37b")} />
+            {isLook ? <p className="drama-editor-note">{_creationText("creation.look.parentNote", { name: parent?.name || cast.name })}</p> : null}
+            {cast.sourceProjectId ? (
+                <p className="drama-editor-note">
+                    <Link2 className="inline size-3.5" /> {_creationText("creation.look.linkedProjectNote")}
+                </p>
+            ) : null}
+            <Field label={isLook ? "造型名称" : _creationText("creation.d44e9b3d3b31d37b")}>
+                <Input value={name} maxLength={60} disabled={busy} onChange={(event) => setName(event.target.value)} aria-label={isLook ? "造型名称" : _creationText("creation.d44e9b3d3b31d37b")} />
             </Field>
             {isCharacter ? (
                 <Field label={_creationText("creation.65f3f0a1a0d8c522")} hint={_creationText("creation.abe41d97aab8d366")}>
@@ -341,9 +489,19 @@ function CastEditor({ projectId, cast, looks, ratios, onChanged, onOpenCanvas, c
                     />
                 </Field>
             ) : null}
-            <Field label={APPEARANCE_LABEL[cast.kind]} hint={_creationText("creation.2b6552dffd47cce8")}>
-                <Input.TextArea value={appearance} autoSize={{ minRows: 4, maxRows: 10 }} onChange={(event) => setAppearance(event.target.value)} aria-label={APPEARANCE_LABEL[cast.kind]} />
+            <Field label={_creationLabel(APPEARANCE_LABEL[cast.kind])} hint={_creationText("creation.2b6552dffd47cce8")}>
+                <Input.TextArea value={appearance} maxLength={1000} disabled={busy} autoSize={{ minRows: 4, maxRows: 10 }} onChange={(event) => setAppearance(event.target.value)} aria-label={_creationLabel(APPEARANCE_LABEL[cast.kind])} />
             </Field>
+            <CastImageFields projectId={projectId} castId={cast.id} appearance={appearance} value={imageFields} disabled={busy} onChange={(patch) => setImageFields((current) => ({ ...current, ...patch }))} />
+            {isLook ? (
+                <Field label={_creationText("creation.look.chapterRange")} hint={_creationText("creation.look.chapterRangeHint")}>
+                    <div className="drama-look-form-range">
+                        <InputNumber aria-label={_creationText("creation.0d7a3e72696addf7")} min={0} precision={0} value={from} placeholder={_creationText("creation.0d7a3e72696addf7")} disabled={busy} onChange={setFrom} />
+                        <span>{_creationText("creation.65edbf9f1c677e70")}</span>
+                        <InputNumber aria-label={_creationText("creation.64ca7b6d0bc78870")} min={0} precision={0} value={to} placeholder={_creationText("creation.64ca7b6d0bc78870")} disabled={busy} onChange={setTo} />
+                    </div>
+                </Field>
+            ) : null}
             {isCharacter ? (
                 <Field label={_creationText("creation.53b7be078bbefcf1")} hint={_creationText("creation.279df4f25f8bfecc")}>
                     <Input value={voiceInstructions} placeholder={_creationText("creation.d09d1f813cd82f9e")} onChange={(event) => setVoiceInstructions(event.target.value)} aria-label={_creationText("creation.53b7be078bbefcf1")} />
@@ -362,7 +520,7 @@ function CastEditor({ projectId, cast, looks, ratios, onChanged, onOpenCanvas, c
                 {impact ? <span>{_creationText("creation.930589baef623377", { value1: impact.episodes, value2: impact.segments })}</span> : null}
             </div>
             <div className="drama-editor-actions">
-                <Button disabled={!dirty} loading={save.isPending} onClick={() => save.mutate()}>
+                <Button disabled={!dirty || busy || !name.trim() || !appearance.trim()} loading={save.isPending} onClick={() => save.mutate()}>
                     {_creationText("creation.8d6347cdac37b628")}
                 </Button>
                 <Button icon={<Upload className="size-4" />} loading={upload.isPending} onClick={() => fileRef.current?.click()}>
@@ -393,17 +551,47 @@ function CastEditor({ projectId, cast, looks, ratios, onChanged, onOpenCanvas, c
                         upload.mutate(file);
                     }}
                 />
-                <Button type="primary" className="drama-editor-wide" icon={<RefreshCw className="size-4" />} disabled={cast.locked || mediaBusy(cast.imageStatus)} loading={regenerate.isPending} onClick={() => regenerate.mutate()}>
+                <Button
+                    type="primary"
+                    className="drama-editor-wide"
+                    icon={<RefreshCw className="size-4" />}
+                    disabled={cast.locked || busy || !parentReady || !name.trim() || !appearance.trim()}
+                    title={!parentReady ? _creationText("creation.1d6e01cd275f4db9") : undefined}
+                    loading={regenerate.isPending}
+                    onClick={() => regenerate.mutate()}
+                >
                     {cast.imageResourceId ? (dirty ? _creationText("creation.ba2c1b372a9d8492") : _creationText("workbench.regenerate")) : dirty ? _creationText("creation.331c7d136dcc01a9") : _creationText("creation.7327923f6dbc62b4")}
                 </Button>
                 <Button className="drama-editor-wide" icon={<Brush className="size-4" />} loading={canvasOpening} onClick={onOpenCanvas}>
                     {_creationText("creation.64422cd9b4ac9f19")}
                 </Button>
+                {isLook ? (
+                    <Button
+                        danger
+                        className="drama-editor-wide"
+                        icon={<Trash2 className="size-4" />}
+                        disabled={busy}
+                        onClick={() =>
+                            modal.confirm({
+                                title: _creationText("creation.look.deleteTitle", { name: cast.lookName }),
+                                content: _creationText("creation.look.deleteContent"),
+                                okText: _creationText("creation.look.deleteConfirm"),
+                                cancelText: _creationText("common.cancel"),
+                                onOk: async () => {
+                                    await deleteDramaCastLook(projectId, cast.id, restyle);
+                                    onChanged();
+                                },
+                            })
+                        }
+                    >
+                        {_creationText("creation.look.deleteConfirm")}
+                    </Button>
+                ) : null}
             </div>
             <p className="drama-editor-note">{_creationText("creation.08e9304bcb7c8493")}</p>
             <DramaTakeList projectId={projectId} ownerId={cast.id} kind="cast" />
             {previewing && cast.imageResourceId ? (
-                <CanvasImagePreview storageKey={`resource:${cast.imageResourceId}`} alt={_creationText("creation.3e17e15a839a5231", { value1: cast.name, value2: kindLabel })} onClose={() => setPreviewing(false)} />
+                <CanvasImagePreview storageKey={`resource:${cast.imageResourceId}`} alt={_creationText("creation.3e17e15a839a5231", { value1: cast.lookName || cast.name, value2: kindLabel })} onClose={() => setPreviewing(false)} />
             ) : null}
         </div>
     );
@@ -697,12 +885,23 @@ export function SettingsPanel({ projectId, summary, cast, onChanged }: { project
         onError: (error) => message.error(error instanceof Error ? error.message : _creationText("creation.0c3b4cf7aa259edb")),
     });
     const catalogQuery = useDramaModelCatalog();
-    const videoOption = catalogQuery.data?.options.video?.find((option) => dramaChoiceKey(option.choice) === dramaChoiceKey(settings.models.video));
+    const videoOptionFor = (choice?: DramaModelChoice) => catalogQuery.data?.options.video?.find((option) => dramaChoiceKey(option.choice) === dramaChoiceKey(choice));
+    const videoOption = videoOptionFor(settings.models.video);
     // 角色参考图用单独指定的模型，没有就用默认图片模型；参考图方案按它检查角色画幅。
     const characterImage = dramaChoiceKey(settings.models.characterImage) ? settings.models.characterImage : settings.models.image;
     const imageOption = catalogQuery.data?.options.image?.find((option) => dramaChoiceKey(option.choice) === dramaChoiceKey(characterImage));
     const videoRatioProblem = dramaVideoRatioIssue(videoOption, current.aspectRatio);
+    const videoResolutionProblem = dramaVideoResolutionIssue(videoOption, settings.videoResolution);
     const setModels = (patch: Partial<DramaSettings["models"]>) => setSettings({ ...settings, models: { ...settings.models, ...patch } });
+    const setModelChoice = (capability: DramaCapability, choice: DramaModelChoice) => {
+        if (capability !== "video") {
+            setModels({ [capability]: choice });
+            return;
+        }
+        // 视频模型与分辨率一起更新：新模型支持就保留，不支持就清空，按新模型默认档出片。
+        const next = videoOptionFor(choice);
+        setSettings({ ...settings, models: { ...settings.models, video: choice }, ...(next ? { videoResolution: dramaResolutionAfterModelChange(next, settings.videoResolution) } : {}) });
+    };
     const continuity: DramaVideoContinuity = settings.videoContinuity || "tail_frame";
     const sampleCharacter = cast.find((item) => item.kind === "character" && item.appearance);
     const sampleScene = cast.find((item) => item.kind === "scene" && item.appearance);
@@ -817,7 +1016,7 @@ export function SettingsPanel({ projectId, summary, cast, onChanged }: { project
                                                 aspectRatio={current.aspectRatio}
                                                 videoResolution={settings.videoResolution}
                                                 placeholder={_creationText("creation.d6e0385d73f38b9b", { value1: CAPABILITY_META[capability].label })}
-                                                onChange={(choice) => setModels({ [capability]: choice })}
+                                                onChange={(choice) => setModelChoice(capability, choice)}
                                             />
                                         </div>
                                     ))}
@@ -831,6 +1030,14 @@ export function SettingsPanel({ projectId, summary, cast, onChanged }: { project
                                 </div>
                                 {videoRatioProblem ? <p className="drama-cfg-note">{_creationText("creation.acd26c3d800d911c", { value1: videoRatioProblem })}</p> : null}
                                 {videoOption?.generateAudio === false ? <p className="drama-cfg-note">{_creationText("creation.7675c15706918653")}</p> : null}
+                                {videoResolutionProblem ? (
+                                    <p className="drama-cfg-note">
+                                        {_creationText("creation.drama.videoResolutionFallback", {
+                                            problem: videoResolutionProblem,
+                                            resolution: videoOption?.defaultVideoResolution ? formatVideoResolutionLabel(videoOption.defaultVideoResolution) : _creationText("creation.drama.modelDefaultResolution"),
+                                        })}
+                                    </p>
+                                ) : null}
                             </section>
                         </div>
                         <aside className="drama-cfg-side">
