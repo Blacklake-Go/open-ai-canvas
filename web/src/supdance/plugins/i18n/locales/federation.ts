@@ -63,10 +63,68 @@ const definitions = [
     ],
     ["append", "添加到当前提示词", "Add to current prompt", "新增至目前提示詞", "現在のプロンプトに追加", "현재 프롬프트에 추가", "Añadir a la indicación actual"],
 ] as const;
+const nativeTranslations: Record<string, Record<string, string>> = {
+    title: {
+        "fr-FR": "Connecter votre compte créateur ONE",
+        "de-DE": "ONE-Kreativkonto verbinden",
+    },
+    intro: {
+        "fr-FR": "Vérifiez les deux comptes. Les nouvelles créations utilisent le portefeuille principal ; les anciens crédits et transactions ONE conservent leur valeur et leur expiration.",
+        "de-DE": "Prüfen Sie beide Konten. Neue Erstellungen nutzen das Hauptguthaben; bisherige ONE-Credits und Transaktionen behalten ihren Wert und Ablauf.",
+    },
+    one: {
+        "fr-FR": "Compte ONE",
+        "de-DE": "ONE-Konto",
+    },
+    main: {
+        "fr-FR": "Compte principal",
+        "de-DE": "Hauptkonto",
+    },
+    password: {
+        "fr-FR": "Mot de passe actuel du site principal",
+        "de-DE": "Aktuelles Passwort der Hauptseite",
+    },
+    passwordHint: {
+        "fr-FR": "Sans mot de passe, vérifiez d’abord votre méthode de connexion dans les paramètres de sécurité.",
+        "de-DE": "Ohne Passwort bestätigen Sie zuerst Ihre bestehende Anmeldemethode in den Sicherheitseinstellungen.",
+    },
+    confirm: {
+        "fr-FR": "Vérifier et connecter",
+        "de-DE": "Bestätigen und verbinden",
+    },
+    cancel: {
+        "fr-FR": "Retour à la création",
+        "de-DE": "Zurück zur Erstellung",
+    },
+    missing: {
+        "fr-FR": "La demande manque. Recommencez depuis votre compte ONE.",
+        "de-DE": "Die Anfrage fehlt. Starten Sie erneut in Ihrem ONE-Konto.",
+    },
+    failed: {
+        "fr-FR": "Échec de la connexion. Recommencez ou réessayez plus tard.",
+        "de-DE": "Verbindung fehlgeschlagen. Starten Sie erneut oder versuchen Sie es später.",
+    },
+    loginIntro: {
+        "fr-FR": "메인 계정으로 ONE에 로그인합니다. 기존 ONE 계정이 있으면 먼저 기존 방식으로 로그인한 뒤 연결하여 기존 자료를 유지하세요.",
+        "de-DE": "메인 계정으로 ONE에 로그인합니다. 기존 ONE 계정이 있으면 먼저 기존 방식으로 로그인한 뒤 연결하여 기존 자료를 유지하세요.",
+    },
+    continueLogin: {
+        "fr-FR": "ONE으로 계속",
+        "de-DE": "ONE으로 계속",
+    },
+    handoff: {
+        "fr-FR": "Une invite communautaire de ONE. Vérifiez le modèle, les paramètres et le prix.",
+        "de-DE": "Ein Community-Prompt aus ONE. Prüfen Sie Modell, Einstellungen und Preis.",
+    },
+    append: {
+        "fr-FR": "Ajouter à l’invite actuelle",
+        "de-DE": "Zum aktuellen Prompt hinzufügen",
+    },
+};
 export const FEDERATION_I18N_ENTRIES: SupDanceI18nEntry[] = definitions.map(([key, zh, en, tw, ja, ko, es]) => ({
     key: `federation.${key}`,
     namespace: "auth",
     sourceText: zh,
     origin: "builtin",
-    translations: { "zh-CN": zh, "en-US": en, "zh-TW": tw, "ja-JP": ja, "ko-KR": ko, "es-ES": es },
+    translations: { "zh-CN": zh, "en-US": en, "zh-TW": tw, "ja-JP": ja, "ko-KR": ko, "es-ES": es, ...nativeTranslations[key] },
 }));
