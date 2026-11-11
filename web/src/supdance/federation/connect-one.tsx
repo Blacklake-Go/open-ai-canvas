@@ -1,10 +1,10 @@
 import { useEffect, useState } from "react";
 import { Alert, Button, Card, Form, Input, Typography } from "antd";
-import { useTranslation } from "react-i18next";
+import { useI18n } from "@/supdance/plugins/i18n";
 import { http } from "@/services/api/request";
 
 export default function ConnectOnePage() {
-    const { t } = useTranslation();
+    const { t } = useI18n();
     const [request] = useState(() => new URLSearchParams(window.location.hash.slice(1)).get("request") || "");
     const [accounts, setAccounts] = useState<{ oneUserId: string; mainUserId: string; mainDisplayName: string; purpose: string }>();
     const [error, setError] = useState("");

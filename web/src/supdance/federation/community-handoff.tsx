@@ -1,11 +1,11 @@
 import { useEffect, useState } from "react";
 import { Alert, Button } from "antd";
-import { useTranslation } from "react-i18next";
+import { useI18n } from "@/supdance/plugins/i18n";
 
 // URL text is untrusted input. It is never executed, submitted automatically,
 // persisted as an account identity, or allowed to select a paid model.
 export function CommunityHandoff({ onAppend }: { onAppend: (prompt: string) => void }) {
-    const { t } = useTranslation();
+    const { t } = useI18n();
     const [prompt, setPrompt] = useState(() => (new URLSearchParams(window.location.hash.slice(1)).get("communityPrompt") || "").slice(0, 8000));
     useEffect(() => {
         const fragment = new URLSearchParams(window.location.hash.slice(1));
