@@ -13,7 +13,7 @@ export function RequireAuth({ children, allowAnonymous = false }: { children: Re
     const user = useUserStore((state) => state.user);
 
     if (!hydrated) return <FullScreenLoader />;
-    if (!user && !allowAnonymous) return <LoginRequired next={location.pathname + location.search} />;
+    if (!user && !allowAnonymous) return <LoginRequired next={location.pathname + location.search + location.hash} />;
     return children;
 }
 

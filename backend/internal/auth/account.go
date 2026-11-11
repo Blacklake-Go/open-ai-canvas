@@ -81,6 +81,21 @@ func authorizeProfileChange(user *model.User, session *model.AuthSession, passwo
 	return nil
 }
 
+// VerifyProfileOwnership reuses the same-session proof required for changes to
+// login methods. Federation cannot treat an arbitrary existing cookie as proof.
+func (s *Service) VerifyProfileOwnership(actor *model.User, cookie, password string) error {
+	user, session, err := s.profileSession(actor, cookie)
+	if err != nil {
+		return err
+	}
+	return authorizeProfileChange(user, session, password)
+}
+
+func (s *Service) VerifyProfileSession(actor *model.User, cookie string) error {
+	_, _, err := s.profileSession(actor, cookie)
+	return err
+}
+
 func profileWriteError(err error) error {
 	if errors.Is(err, repository.ErrProfileAuthorization) {
 		return kernel.Unauthorized("账号或身份验证状态已变化，请重新登录或验证")

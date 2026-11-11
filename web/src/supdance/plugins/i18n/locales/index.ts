@@ -1,3 +1,4 @@
+import { FEDERATION_I18N_ENTRIES } from "./federation";
 import type { SupDanceI18nEntry, SupDanceI18nSettings, SupDanceLanguageItem, SupDanceLocaleCode } from "../types";
 import { MUSIC_SITE_I18N_ENTRIES } from "./music-site";
 import { MARKETING_I18N_ENTRIES } from "@/supdance/marketing/translations";
@@ -67,6 +68,7 @@ function e(key: string, namespace: string, zhCN: string, description = ""): SupD
 }
 
 export const BUILTIN_SUPDANCE_I18N_ENTRIES: readonly SupDanceI18nEntry[] = [
+    ...FEDERATION_I18N_ENTRIES,
     ...MARKETING_I18N_ENTRIES,
     ...MUSIC_SITE_I18N_ENTRIES,
     e("admin.visual_motion.enable", "admin", "启用全站过渡动效"),
