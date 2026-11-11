@@ -1,5 +1,4 @@
 import { useEffect, useRef, useState } from "react";
-import { useQuery } from "@tanstack/react-query";
 import { Button } from "antd";
 import { BookMarked, ChevronDown, LibraryBig, Music2, SlidersHorizontal, WandSparkles } from "lucide-react";
 import { SegmentedControl } from "@/components/ui/base/segmented-control";
@@ -8,7 +7,8 @@ import { ModelPicker } from "@/components/model-picker";
 import { useConfigStore } from "@/stores/use-config-store";
 import { Switch } from "@/components/ui/base/switch";
 import { useI18n } from "@/supdance/plugins/i18n";
-import { getWallet } from "@/services/api/wallet";
+import { useWalletBalance } from "@/hooks/use-wallet-balance";
+import { currentLocale } from "@/i18n";
 import { ApiError } from "@/services/api/request";
 import { useUserStore } from "@/stores/use-user-store";
 import type { LogicalModelQuote } from "@/services/api/logical-models";
@@ -19,8 +19,8 @@ import { PromptBuilder, SavedPrompts, StyleTemplates } from "./style-templates";
 import { appendStyle } from "./composer-patterns";
 import "../styles/music-composer.css";
 
-export function musicCreationAllowed(quote: LogicalModelQuote | null, available: number | undefined) {
-    return Boolean(quote && available !== undefined && available >= quote.amountMicrocredits);
+export function musicCreationAllowed(quote: LogicalModelQuote | null, available: number | null | undefined) {
+    return Boolean(quote && available != null && available >= quote.amountMicrocredits);
 }
 
 export function MusicForm({ userId, onSubmitted }: { userId: string; onSubmitted?: (taskId: string) => void }) {
@@ -43,7 +43,7 @@ export function MusicForm({ userId, onSubmitted }: { userId: string; onSubmitted
     const [error, setError] = useState("");
     const [quoteRevision, setQuoteRevision] = useState(0);
     const creditsEnabled = useUserStore((s) => s.features.creditsEnabled);
-    const wallet = useQuery({ queryKey: ["music-wallet", userId], queryFn: () => getWallet(1, 1), enabled: Boolean(userId), refetchOnWindowFocus: true });
+    const wallet = useWalletBalance(userId, creditsEnabled);
 
     useEffect(() => {
         const controller = new AbortController();
@@ -61,7 +61,7 @@ export function MusicForm({ userId, onSubmitted }: { userId: string; onSubmitted
         return () => controller.abort();
     }, [selected?.id, selected?.available, userId, quoteRevision]);
 
-    const enough = creditsEnabled ? musicCreationAllowed(quote, wallet.data?.account.availableMicrocredits) : Boolean(quote);
+    const enough = creditsEnabled ? musicCreationAllowed(quote, wallet.availableMicrocredits) : Boolean(quote);
     const mainField = draft.mode === "simple" ? "prompt" : "tags";
     const input = draft.mode === "simple" ? draft.prompt : draft.lyrics;
     const limit = draft.mode === "simple" ? selected?.maxPromptChars : selected?.maxLyricsChars;
@@ -137,11 +137,11 @@ export function MusicForm({ userId, onSubmitted }: { userId: string; onSubmitted
                 try {
                     const result = await submit(userId, quote.amountMicrocredits);
                     if (result) onSubmitted?.(result.taskId);
-                    await wallet.refetch();
+                    if (creditsEnabled) await wallet.refresh();
                 } catch (cause) {
                     setError(cause instanceof ApiError && cause.reason === "music_quote_changed" ? t("music.quote_changed") : cause instanceof Error ? cause.message : String(cause));
                     if (cause instanceof ApiError && cause.reason === "music_quote_changed") setQuoteRevision((value) => value + 1);
-                    await wallet.refetch();
+                    if (creditsEnabled) await wallet.refresh();
                 }
             }}
         >
@@ -289,7 +289,7 @@ export function MusicForm({ userId, onSubmitted }: { userId: string; onSubmitted
                     className="min-h-11 rounded-lg border border-border px-3"
                     onClick={() => {
                         setQuoteRevision((value) => value + 1);
-                        void wallet.refetch();
+                        if (creditsEnabled) void wallet.refresh();
                     }}
                 >
                     {t("music.refresh_quote")}
@@ -307,11 +307,11 @@ export function MusicForm({ userId, onSubmitted }: { userId: string; onSubmitted
                     </span>
                     {creditsEnabled && (
                         <span>
-                            {t("music.available_balance")} {wallet.data ? (wallet.data.account.availableMicrocredits / 1_000_000).toLocaleString() : "—"}
+                            {t("music.available_balance")} {wallet.availableMicrocredits === null ? "—" : (wallet.availableMicrocredits / 1_000_000).toLocaleString(currentLocale(), { maximumFractionDigits: 2 })}
                         </span>
                     )}
                 </div>
-                {quote && wallet.data && !enough && (
+                {quote && wallet.availableMicrocredits !== null && !enough && (
                     <p role="alert" className="text-sm text-destructive">
                         {t("music.insufficient_balance")}
                     </p>

@@ -34,8 +34,8 @@ describe("authentication follows the application theme", () => {
         expect(scene.match(/<main className="([^"]+)"/)?.[1]).not.toContain("text-white");
         expect(scene).toContain("auth-scene-hero");
         expect(scene).toContain("<BrandLogo theme={theme}");
-        expect(source("components/layout/app-providers.tsx")).toContain("useVisualEngineHostAdapter(hostTheme, appearance.activeSkin)");
-        expect(source("components/layout/app-providers.tsx")).toContain("theme={visualAdapter.theme}");
+        expect(source("components/layout/app-providers.tsx")).toContain("getAntThemeConfig(dark, appearance.activeSkin)");
+        expect(source("components/layout/app-providers.tsx")).not.toContain("visual-engine");
     });
 
     test("form links, tabs and notices do not assume white text", () => {

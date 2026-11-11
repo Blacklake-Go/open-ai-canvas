@@ -8,7 +8,7 @@ import { AssetLibraryPickerModal } from "@/components/assets/asset-library-picke
 import { probeMediaDurationMs } from "@/lib/media-metadata";
 import { getResource, resourceIdFromStorageKey, resourceStorageKey, uploadResourceFile } from "@/services/api/resources";
 import { ApiError } from "@/services/api/request";
-import { getWallet } from "@/services/api/wallet";
+import { useWalletBalance } from "@/hooks/use-wallet-balance";
 import { useI18n } from "@/supdance/plugins/i18n";
 import { useUserStore } from "@/stores/use-user-store";
 import { submitMusicTask, type SubmitMusicTaskPayload } from "../services/music-api";
@@ -76,12 +76,12 @@ export function MusicAdvancedDialog({
     const candidates = caps.filter((c) => c.available && c.operations?.includes(op));
     const model = candidates.find((c) => c.id === modelId) || candidates[0];
     const quote = useQuery({ queryKey: ["music-tool-quote", userId, model?.id, op], queryFn: ({ signal }) => siteMusicQuote(model!.id, 0, signal, op), enabled: Boolean(model), retry: false, staleTime: 0 });
-    const wallet = useQuery({ queryKey: ["music-wallet", userId], queryFn: () => getWallet(1, 1), enabled: creditsEnabled });
+    const wallet = useWalletBalance(userId, creditsEnabled);
     const price = quote.data?.amountMicrocredits;
     const startMs = start.trim() === "" ? NaN : Math.round(Number(start) * 1000),
         endMs = end.trim() === "" ? NaN : Math.round(Number(end) * 1000);
     const inputError = musicToolInputError(op, source, prompt, lyrics, startMs, endMs);
-    const enough = price !== undefined && (!creditsEnabled || (wallet.data?.account.availableMicrocredits ?? -1) >= price);
+    const enough = price !== undefined && (!creditsEnabled || (wallet.availableMicrocredits ?? -1) >= price);
     function chooseSource(next: MusicSource) {
         setSource(next);
         setStart("0");
@@ -154,7 +154,6 @@ export function MusicAdvancedDialog({
             receipt.clear();
             if (current()) {
                 void useMusicStore.getState().loadTasks();
-                void client.invalidateQueries({ queryKey: ["music-wallet", userId] });
                 void client.invalidateQueries({ queryKey: ["wallet-balance", userId] });
                 onSubmitted();
             }
@@ -164,7 +163,7 @@ export function MusicAdvancedDialog({
                     setMessage(t("music.quote_changed"));
                     void quote.refetch();
                 } else setMessage(e instanceof Error ? e.message : t("music.adv_retry_same"));
-                if (creditsEnabled) void wallet.refetch();
+                if (creditsEnabled) void wallet.refresh();
             }
         } finally {
             lock.current = false;

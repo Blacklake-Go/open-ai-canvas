@@ -74,7 +74,6 @@ import { preloadAdminPages } from "../admin-page-loader";
 import "@/styles/admin-ui.css";
 import "../theme/admin-tokens.css";
 import "../theme/admin-chrome.css";
-import { useVisualEngineStore } from "@/supdance/plugins/visual-engine";
 
 type AdminNavigationItem = {
     path: string;
@@ -194,21 +193,8 @@ const adminNavigation: AdminNavigationGroup[] = [
     },
 ];
 
-export function getAdminNavigation(visualEngineEnabled = useVisualEngineStore.getState().enabled && useVisualEngineStore.getState().permissions.includes("view")): AdminNavigationGroup[] {
-    return adminNavigation.map((group) => {
-        if (group.key !== "creation" || !visualEngineEnabled) return group;
-        const hasVisualEngine = group.items.some((item) => item.path === "/admin/plugins/visual-engine");
-        if (hasVisualEngine) return group;
-        const nextItems = [...group.items];
-        const pluginsIndex = nextItems.findIndex((item) => item.path === "/admin/plugins");
-        nextItems.splice(pluginsIndex >= 0 ? pluginsIndex + 1 : nextItems.length, 0, {
-            path: "/admin/plugins/visual-engine",
-            label: "视觉引擎",
-            shortLabel: "视觉",
-            icon: <Sparkles className="size-4 text-sky-400" />,
-        });
-        return { ...group, items: nextItems };
-    });
+export function getAdminNavigation(): AdminNavigationGroup[] {
+    return adminNavigation;
 }
 
 function isAdminNavigationPath(pathname: string, navigationPath: string) {
@@ -218,7 +204,7 @@ function isAdminNavigationPath(pathname: string, navigationPath: string) {
     return pathname === navigationPath || pathname.startsWith(`${navigationPath}/`);
 }
 
-function findAdminNavigation(pathname: string, visualEngineEnabled = useVisualEngineStore.getState().enabled && useVisualEngineStore.getState().permissions.includes("view")) {
+function findAdminNavigation(pathname: string) {
     for (const group of getAdminNavigation()) {
         const item = group.items.find((candidate) => isAdminNavigationPath(pathname, candidate.path));
         if (item) return { group, item };
@@ -226,7 +212,7 @@ function findAdminNavigation(pathname: string, visualEngineEnabled = useVisualEn
     return undefined;
 }
 
-function visibleNavigationGroups(features: Partial<Record<"frontendModelsEnabled", boolean>>, visualEngineEnabled = useVisualEngineStore.getState().enabled && useVisualEngineStore.getState().permissions.includes("view")) {
+function visibleNavigationGroups(features: Partial<Record<"frontendModelsEnabled", boolean>>) {
     return getAdminNavigation()
         .map((group) => ({ ...group, items: group.items.filter((item) => !item.requireFeature || features[item.requireFeature]) }))
         .filter((group) => group.items.length > 0);
@@ -350,9 +336,8 @@ function AdminShellLayout() {
 }
 
 export function AdminPageFrame({ title, description, actions, back, scroll = false, children }: { title: string; description?: string; actions?: ReactNode; back?: { label: string; onClick: () => void }; scroll?: boolean; children: ReactNode }) {
-    const visualEngineEnabled = useVisualEngineStore((state) => state.enabled && state.permissions.includes("view"));
     const location = useLocation();
-    const current = findAdminNavigation(location.pathname, visualEngineEnabled);
+    const current = findAdminNavigation(location.pathname);
 
     return (
         <div className={cn("admin-page-root", scroll && "admin-page-root-scrollable")}>
@@ -427,14 +412,11 @@ function AdminThemeButton() {
 }
 
 function MobileAdminNavigation() {
-    useVisualEngineStore((state) => state.enabled);
-    useVisualEngineStore((state) => state.permissions);
     const features = useUserStore((state) => state.features);
     const location = useLocation();
-    const visualEngineEnabled = useVisualEngineStore((state) => state.enabled && state.permissions.includes("view"));
-    const visibleGroups = visibleNavigationGroups(features, visualEngineEnabled);
+    const visibleGroups = visibleNavigationGroups(features);
     // 与桌面侧栏同一规则按前缀匹配；当前页可能因功能关闭而不在菜单里但仍可直达。
-    const current = findAdminNavigation(location.pathname, visualEngineEnabled);
+    const current = findAdminNavigation(location.pathname);
     const currentItem = current?.item;
     const menuItems: MenuProps["items"] = visibleGroups.map((group) => ({
         type: "group",
@@ -476,11 +458,10 @@ function MobileAdminNavigation() {
 }
 
 function AdminNavigation({ collapsed }: { collapsed: boolean }) {
-    const visualEngineEnabled = useVisualEngineStore((state) => state.enabled && state.permissions.includes("view"));
     const features = useUserStore((state) => state.features);
     const location = useLocation();
-    const groups = visibleNavigationGroups(features, visualEngineEnabled);
-    const currentGroupKey = findAdminNavigation(location.pathname, visualEngineEnabled)?.group.key;
+    const groups = visibleNavigationGroups(features);
+    const currentGroupKey = findAdminNavigation(location.pathname)?.group.key;
     const [expandedGroups, setExpandedGroups] = useState(() => readExpandedGroups(currentGroupKey));
 
     // 进入某个分组的页面时自动展开该组，避免当前页藏在折叠分组里。

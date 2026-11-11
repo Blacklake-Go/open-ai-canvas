@@ -3,7 +3,7 @@ import { Switch } from "@/pages/admin/ui/controls";
 import { AlipayCircleFilled, WechatFilled } from "@ant-design/icons";
 import { ZHIFUFM_LOGO_SRC } from "@/components/payment-brand-icons";
 import type { ColumnsType } from "antd/es/table";
-import { BookOpenText, CloudUpload, FileCode, FileText, Languages, Music, PlugZap, RefreshCw, Search, Settings2, Share2, Sparkles, Trash2, UsersRound } from "lucide-react";
+import { BookOpenText, CloudUpload, FileCode, FileText, Languages, Music, PlugZap, RefreshCw, Search, Settings2, Share2, Trash2, UsersRound } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router";
 
@@ -23,10 +23,6 @@ import { usePluginStore } from "@/stores/use-plugin-store";
 import { SUPDANCE_I18N_PLUGIN_ID, useSupDanceI18nStore } from "@/supdance/plugins/i18n";
 import { SUPDANCE_SOCIAL_AUTH_PLUGIN_ID } from "@/supdance/plugins/social-auth/types";
 import { SUPDANCE_MUSIC_PLUGIN_ID } from "@/supdance/plugins/music-generation/types";
-import { SUPDANCE_VISUAL_ENGINE_PLUGIN_ID } from "@/supdance/plugins/visual-engine/types";
-import { useVisualEngineStore } from "@/supdance/plugins/visual-engine/storage/visual-engine-store";
-import { VisualEnginePluginControls } from "@/supdance/plugins/visual-engine/admin/components/plugin-controls";
-import { supdanceVisualEnginePlugin } from "@/supdance/plugins/visual-engine";
 import { AdminPluginDetailModal, type AdminPluginDetail } from "./plugin-detail-modal";
 import { i18n } from "@/i18n";
 import { appQueryClient } from "@/lib/query-client";
@@ -35,7 +31,6 @@ import { COMPACT_PICKER_ID, COMPACT_PICKER_ADMIN_ROUTE, compactAdminKey, applyCo
 type AdminPluginItem = AdminPluginDetail;
 
 export default function AdminPluginsPage() {
-    const visualPermissions = useVisualEngineStore((state) => state.permissions);
     const { message, modal } = App.useApp();
     const [plugins, setPlugins] = useState<BackendPlugin[]>([]);
     const [states, setStates] = useState<Record<string, AdminPluginState>>({});
@@ -111,9 +106,6 @@ export default function AdminPluginsPage() {
             if (item.manifest.id === COMPACT_PICKER_ID) {
                 await applyCompactPickerAvailability(state.platformAvailable);
                 void appQueryClient.invalidateQueries({ queryKey: compactAdminKey });
-            }
-            if (item.manifest.id === SUPDANCE_VISUAL_ENGINE_PLUGIN_ID) {
-                useVisualEngineStore.getState().setEnabled(state.platformAvailable);
             }
             usePluginStore.setState((storeState) => ({
                 pluginStates: {
@@ -291,7 +283,6 @@ export default function AdminPluginsPage() {
                     <div className="flex items-center justify-center gap-3">
                         <AdminStatusBadge label={available ? "已开放" : "已停用"} tone={available ? "success" : "neutral"} />
                         <Switch
-                            disabled={item.manifest.id === SUPDANCE_VISUAL_ENGINE_PLUGIN_ID && !visualPermissions.includes("lifecycle")}
                             className="plugin-state-switch"
                             loading={savingId === item.manifest.id}
                             checked={available}
@@ -309,9 +300,7 @@ export default function AdminPluginsPage() {
             align: "center",
             render: (_, item) => (
                 <div className="flex items-center justify-center gap-1">
-                    {item.manifest.id === "supdance-visual-engine" ? (
-                        <VisualEnginePluginControls onChanged={reload} />
-                    ) : item.manifest.id === "supdance-html-page-manager" ? (
+                    {item.manifest.id === "supdance-html-page-manager" ? (
                         <Link to="/admin/plugins/html-pages">
                             <FileCode className="size-3.5" aria-hidden />
                             编辑页面
@@ -469,13 +458,6 @@ function PluginBrandIcon({ pluginId }: { pluginId: string }) {
             </span>
         );
     }
-    if (pluginId === "supdance-visual-engine") {
-        return (
-            <span className="grid size-9 shrink-0 place-items-center rounded-lg bg-sky-500/15 text-sky-400">
-                <Sparkles className="size-4" aria-hidden />
-            </span>
-        );
-    }
     if (pluginId === "supdance-html-page-manager") {
         return (
             <span className="grid size-9 shrink-0 place-items-center rounded-lg bg-emerald-500/15 text-emerald-400">
@@ -514,13 +496,11 @@ function PluginBrandIcon({ pluginId }: { pluginId: string }) {
 function mergePlugins(remote: BackendPlugin[]): AdminPluginItem[] {
     const byId = new Map<string, AdminPluginItem>();
     const catalog = listRegisteredPlugins();
-    if (!catalog.some((plugin) => plugin.manifest.id === SUPDANCE_VISUAL_ENGINE_PLUGIN_ID)) catalog.push(supdanceVisualEnginePlugin);
     for (const plugin of catalog) {
         const isSupDanceI18n = plugin.manifest.id === SUPDANCE_I18N_PLUGIN_ID;
         const isSupDanceSocialAuth = plugin.manifest.id === SUPDANCE_SOCIAL_AUTH_PLUGIN_ID;
         const isSupDanceMusic = plugin.manifest.id === SUPDANCE_MUSIC_PLUGIN_ID;
-        const isVisualEngine = plugin.manifest.id === SUPDANCE_VISUAL_ENGINE_PLUGIN_ID;
-        const systemApplication = isSupDanceI18n || isSupDanceSocialAuth || isSupDanceMusic || isVisualEngine || plugin.manifest.id === COMPACT_PICKER_ID;
+        const systemApplication = isSupDanceI18n || isSupDanceSocialAuth || isSupDanceMusic || plugin.manifest.id === COMPACT_PICKER_ID;
         const application = isOfficialApplicationPluginId(plugin.manifest.id) || systemApplication;
         byId.set(plugin.manifest.id, {
             manifest: plugin.manifest,

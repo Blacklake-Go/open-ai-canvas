@@ -46,6 +46,7 @@ export function useWalletBalance(userId?: string, enabled = true) {
         availableMicrocredits: query.data?.availableMicrocredits ?? null,
         policy: query.data?.policy ?? null,
         refreshing: query.isFetching,
+        isError: query.isError,
         refresh: query.refetch,
     };
 }

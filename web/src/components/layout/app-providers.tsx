@@ -34,8 +34,6 @@ import { refreshPublicAppearance } from "@/services/appearance-bootstrap";
 import { SupDanceI18nRuntimeHost } from "@/supdance/plugins/i18n";
 import { SupDancePluginRuntimeSync } from "@/supdance/adapters/plugin-runtime-sync";
 import { SocialOnboardingModal } from "@/supdance/plugins/social-auth";
-import { useVisualEngineHostAdapter } from "@/supdance/plugins/visual-engine/adapters/antd-theme";
-import { WorkspaceRecoveryBoundary } from "@/supdance/plugins/visual-engine/loading/workspace-recovery-boundary";
 
 // antd 组件内置文案与 dayjs 日期格式随界面语言切换。
 const ANTD_LOCALES: Record<AppLocale, AntdLocale> = { "zh-CN": zhCN, "en-US": enUS, "fr-FR": frFR, "de-DE": deDE, "ja-JP": jaJP, "ko-KR": koKR };
@@ -48,7 +46,7 @@ function ClientRootBoundary({ children }: { children: ReactNode }) {
     const { t } = useTranslation();
     if (!authenticated) return children;
     return (
-        <Suspense fallback={<WorkspaceRecoveryBoundary phase="syncing" fallback={<FullScreenLoader label={t("shell.preparing")} detail={t("shell.preparingDetail")} />} />}>
+        <Suspense fallback={<FullScreenLoader label={t("shell.preparing")} detail={t("shell.preparingDetail")} />}>
             <ClientRootInit>{children}</ClientRootInit>
         </Suspense>
     );
@@ -57,8 +55,7 @@ function ClientRootBoundary({ children }: { children: ReactNode }) {
 export function AppProviders({ children, extensions }: { children: ReactNode; extensions?: ReactNode }) {
     const hostTheme = useActiveTheme();
     const appearance = useAppearanceStore((state) => state.appearance);
-    const visualAdapter = useVisualEngineHostAdapter(hostTheme, appearance.activeSkin);
-    const theme = visualAdapter.mode;
+    const theme = hostTheme;
     const dark = theme === "dark";
     const locale = useLocaleStore((state) => state.locale);
 
@@ -95,7 +92,7 @@ export function AppProviders({ children, extensions }: { children: ReactNode; ex
     return (
         // 两个汉字的按钮（取消、确定）不再被 antd 拉开字距，与其他按钮的文字节奏一致。
         <I18nextProvider i18n={i18n}>
-            <ConfigProvider locale={ANTD_LOCALES[locale]} theme={visualAdapter.theme} wave={{ disabled: true }} button={{ autoInsertSpace: false }}>
+            <ConfigProvider locale={ANTD_LOCALES[locale]} theme={getAntThemeConfig(dark, appearance.activeSkin)} wave={{ disabled: true }} button={{ autoInsertSpace: false }}>
                 <AppFeedbackProvider>
                     <QueryClientProvider client={appQueryClient}>
                         {isolateDevRepro ? (
@@ -106,7 +103,7 @@ export function AppProviders({ children, extensions }: { children: ReactNode; ex
                                 <SupDanceI18nRuntimeHost />
                                 <SocialOnboardingModal />
                                 {extensions}
-                                <AuthSessionHydrator fallback={<WorkspaceRecoveryBoundary fallback={<FullScreenLoader />} />}>
+                                <AuthSessionHydrator fallback={<FullScreenLoader />}>
                                     <ClientRootBoundary>{children}</ClientRootBoundary>
                                 </AuthSessionHydrator>
                             </>

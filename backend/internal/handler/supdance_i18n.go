@@ -22,7 +22,6 @@ func RegisterSupDanceI18nRoutes(r *gin.RouterGroup, svc *service.Service) {
 			"supdance-i18n":                 svc.SupDanceI18nPluginAvailable,
 			"supdance-social-auth":          svc.SocialAuthPluginAvailable,
 			"supdance-music-generation":     svc.MusicPluginPlatformAvailable,
-			"supdance-visual-engine":        svc.VisualEnginePluginAvailable,
 			"supdance-compact-model-picker": svc.CompactPickerPluginAvailable,
 		} {
 			enabled, err := read()

@@ -11,7 +11,6 @@ import { RouterProvider } from "react-router";
 import { AuthDialogHost } from "@/components/auth/auth-dialog-host";
 import { AppProviders } from "@/components/layout/app-providers";
 import { router } from "@/router";
-import { VisualEngineRuntimeHost } from "@/supdance/plugins/visual-engine/runtime/visual-engine-runtime-host";
 import { MarketingConsentHost } from "@/supdance/marketing/consent";
 
 // 登录弹窗渲染在路由之外（分享页等路由也要能打开），导航直接交给 router。
@@ -21,7 +20,7 @@ document.body.style.fontFamily = '"SF Pro Display","SF Pro Text","PingFang SC","
 
 createRoot(document.getElementById("root")!).render(
     <React.StrictMode>
-        <AppProviders extensions={<VisualEngineRuntimeHost navigation={router} />}>
+        <AppProviders>
             <RouterProvider router={router} useTransitions={false} />
             <AuthDialogHost navigate={navigateFromAuthDialog} />
             <MarketingConsentHost navigation={router} />
