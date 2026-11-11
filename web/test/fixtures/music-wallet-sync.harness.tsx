@@ -19,10 +19,13 @@ test("music and header share owner-checked balance through reservation, settleme
     const client = new QueryClient({ defaultOptions: { queries: { retry: false, gcTime: 0 } } });
     let amount = 50_000_000;
     let responseOwner = "a";
-    const api = spyOn(walletAPI, "getWallet").mockImplementation(async () => ({
-        account: { userId: responseOwner, availableMicrocredits: amount },
-        policy: {},
-    }) as Awaited<ReturnType<typeof walletAPI.getWallet>>);
+    const api = spyOn(walletAPI, "getWallet").mockImplementation(
+        async () =>
+            ({
+                account: { userId: responseOwner, availableMicrocredits: amount },
+                policy: {},
+            }) as Awaited<ReturnType<typeof walletAPI.getWallet>>,
+    );
     let refresh: ReturnType<typeof useWalletBalance>["refresh"];
     function Balance({ user, position }: { user: string; position: string }) {
         const wallet = useWalletBalance(user);
@@ -32,8 +35,19 @@ test("music and header share owner-checked balance through reservation, settleme
     const container = document.createElement("div");
     document.body.append(container);
     const root = createRoot(container);
-    const settle = () => act(async () => { await new Promise((resolve) => setTimeout(resolve, 30)); });
-    const render = (user: string) => act(async () => root.render(<QueryClientProvider client={client}><Balance user={user} position="header" /><Balance user={user} position="music" /></QueryClientProvider>));
+    const settle = () =>
+        act(async () => {
+            await new Promise((resolve) => setTimeout(resolve, 30));
+        });
+    const render = (user: string) =>
+        act(async () =>
+            root.render(
+                <QueryClientProvider client={client}>
+                    <Balance user={user} position="header" />
+                    <Balance user={user} position="music" />
+                </QueryClientProvider>,
+            ),
+        );
     const values = () => Array.from(container.querySelectorAll("output"), (el) => el.textContent);
     try {
         await render("a");
@@ -41,11 +55,15 @@ test("music and header share owner-checked balance through reservation, settleme
         expect(values()).toEqual(["50000000", "50000000"]);
         expect(api).toHaveBeenCalledTimes(1);
         amount = 36_900_000;
-        await act(async () => { await refresh!(); });
+        await act(async () => {
+            await refresh!();
+        });
         await settle();
         expect(values()).toEqual(["36900000", "36900000"]);
         amount = 40_000_000;
-        await act(async () => { window.dispatchEvent(new CustomEvent("wallet:updated")); });
+        await act(async () => {
+            window.dispatchEvent(new CustomEvent("wallet:updated"));
+        });
         await settle();
         expect(values()).toEqual(["40000000", "40000000"]);
         await render("b");
@@ -53,7 +71,9 @@ test("music and header share owner-checked balance through reservation, settleme
         expect(values()).toEqual(["unknown", "unknown"]);
         responseOwner = "b";
         amount = 8_000_000;
-        await act(async () => { await refresh!(); });
+        await act(async () => {
+            await refresh!();
+        });
         await settle();
         expect(values()).toEqual(["8000000", "8000000"]);
     } finally {
