@@ -1,7 +1,9 @@
+import { FEDERATION_I18N_ENTRIES } from "../federation";
 import { MUSIC_SITE_I18N_ENTRIES } from "../music-site";
 import { MARKETING_I18N_ENTRIES } from "@/supdance/marketing/translations";
 
 const pack: Record<string, string> = {
+    ...Object.fromEntries(FEDERATION_I18N_ENTRIES.map((entry) => [entry.key, entry.translations["ja-JP"]])),
     ...Object.fromEntries(MARKETING_I18N_ENTRIES.map((entry) => [entry.key, entry.translations["ja-JP"]])),
     ...Object.fromEntries(MUSIC_SITE_I18N_ENTRIES.map((entry) => [entry.key, entry.translations["ja-JP"]])),
     "legal.scroll_to_bottom": "一番下へスクロール",
