@@ -15,6 +15,7 @@ import { creationResultAssetIds } from "@/lib/canvas/canvas-asset-handoff";
 import { getActiveUserScope } from "@/lib/user-scope";
 import { continueCreationConversationOnCanvas } from "@/services/creation-canvas-conversation";
 import { useAuthEntry } from "@/hooks/use-auth-entry";
+import { CommunityHandoff } from "@/supdance/federation/community-handoff";
 import { useExternalAssetSources } from "@/hooks/use-external-asset-sources";
 import { LEGACY_TEXT_THINKING_CONFIG, isThinkingLevel, resolveThinkingLevel, thinkingLevelsFor, type ThinkingLevel, type ThinkingRequest } from "@/lib/text-thinking";
 import { modelCapabilityConfigFor, videoDurationAllowed, videoDurationOptions } from "@/lib/model-capabilities";
@@ -1560,6 +1561,7 @@ export default function CreatePage() {
 
     return (
         <>
+            <CommunityHandoff onAppend={(text) => setPrompt((current) => (current ? `${current}\n\n${text}` : text))} />
             <div className="creation-home relative flex h-full min-h-0 flex-col overflow-hidden">
                 {conversationStorageError ? (
                     <p role="status" className="mx-auto mb-3 max-w-3xl px-4 text-xs text-foreground/55">

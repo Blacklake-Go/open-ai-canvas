@@ -26,6 +26,22 @@ export type UpstreamPatchRecord = {
  */
 export const SUPDANCE_UPSTREAM_PATCH_REGISTRY: readonly UpstreamPatchRecord[] = [
     {
+        id: "supdance-one-identity-community",
+        upstreamBaseline: "v1.8.4.1@9b1523b9",
+        feature: "ONE 身份连接与只读主站钱包、社区资产",
+        coupledUpstreamFiles: ["backend/internal/auth/account.go", "backend/internal/handler/api.go", "web/src/router.tsx", "web/src/components/auth/require-auth.tsx", "web/src/pages/create/index.tsx", "docker-compose.deploy.yml", ".env.example"],
+        files: [
+            "backend/internal/app/supdance_federation.go",
+            "backend/internal/app/supdance_federation_assets.go",
+            "backend/internal/handler/supdance_federation.go",
+            "backend/internal/supdance/federation/ticket.go",
+            "web/src/supdance/federation/connect-one.tsx",
+            "web/src/supdance/federation/community-handoff.tsx",
+        ],
+        reason: "双方独立签名密钥、短时单用途凭据、显式账户灰度；绑定复用现有身份复验。钱包和媒体只读，旧积分不换发。登录保留片段请求，社区提示词仅由用户主动追加，不改变模型或发起付费生成。",
+        upgradeRisk: "HIGH",
+    },
+    {
         id: "supdance-delivery-integrity",
         upstreamBaseline: "v1.8.4.1@ac044960",
         feature: "音乐共享宿主钱包并移除退役视觉插件",

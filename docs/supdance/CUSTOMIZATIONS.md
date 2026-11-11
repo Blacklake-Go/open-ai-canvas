@@ -249,3 +249,8 @@ v1.3.2 根据真实 QQ 授权页的 100001 错误补齐数字 App ID 校验；�
 ## 网站生成前提示词筛查
 
 独立 `backend/internal/supdance/contentsafety/` 负责 Waffo 签名、判定和有界重试。组合根仅初始化开关并在普通／工作流生成前调用；路由尝试拒绝针对筛查失败切换供应商。自定义 relay 的创建路径在启用时关闭，读取保留，避免任意 payload 绕过最终提示词检查。默认关闭，启用依赖商户配置、提示词外发授权与真实任务验收。没有数据库变更。配置、回退与影响见 [PROMPT_SCREENING.md](PROMPT_SCREENING.md)。
+## ONE identity and community bridge (2026-11-12)
+
+See [ONE federation](ONE_FEDERATION.md) for scoped ownership proofs, read-only
+canonical wallet/media, legacy accounting compatibility and rollout/rollback.
+The host seams are registered under `supdance-one-identity-community`.

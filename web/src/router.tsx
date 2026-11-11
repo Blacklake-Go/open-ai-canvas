@@ -15,6 +15,7 @@ import { SupDanceRouteHosts } from "@/supdance/adapters/router-hosts";
 // 仅引入常量模块，不触发插件运行时注册；插件 id 必须与清单 id 一致，后端准入判定同样以该 id 为准。
 
 const AdminPage = lazy(() => import("@/pages/admin"));
+const ConnectOnePage = lazy(() => import("@/supdance/federation/connect-one"));
 const EcommerceManagementPage = lazyAdminPage(() => import("@/pages/admin/ecommerce-management-page"));
 const EcommerceAgentConfigPage = lazyAdminPage(() => import("@/pages/admin/ecommerce-agent-config-page"));
 const AnalyticsPage = lazyAdminPage(() => import("@/pages/admin/admin-route-pages").then((module) => ({ default: module.AnalyticsPage })));
@@ -165,6 +166,7 @@ const routes: RouteObject[] = [
         children: [
             { path: "/", element: deferred(<CreatePage />) },
             { path: "/create", element: deferred(<CreatePage />) },
+            { path: "/connect-one", element: <RequireAuth>{deferred(<ConnectOnePage />)}</RequireAuth> },
             { path: "/ecommerce", element: <RequireAuth>{deferred(<EcommercePage />)}</RequireAuth> },
             {
                 path: "/toolbox/image",

@@ -22,6 +22,8 @@
     "baseCommit": "259e7e3fba0b6f70ac3cfd65941c3ca345d60249"
   },
   "coupledUpstreamFiles": [
+    "docker-compose.deploy.yml",
+    "web/src/components/auth/require-auth.tsx",
     "web/src/components/payment/use-payment-order-flow.tsx",
     "backend/internal/app/protocol_registry.go",
     "backend/internal/auth/account.go",
