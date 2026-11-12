@@ -42,8 +42,8 @@ export function AgentMediaBatchBar({ batch, theme, onFocusNode, onDismiss }: { b
                     type="button"
                     className="absolute right-2 top-2 grid size-6 place-items-center rounded-md opacity-60 hover:bg-foreground/10 hover:opacity-100 focus-visible:outline focus-visible:outline-2"
                     onClick={onDismiss}
-                    aria-label="关闭批量生成结果"
-                    title="关闭"
+                    aria-label={t("common.close")}
+                    title={t("common.close")}
                 >
                     <X className="size-3.5" aria-hidden="true" />
                 </button>

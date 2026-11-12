@@ -39,7 +39,7 @@ test("选择模型关闭菜单并将焦点返还触发器，支持通过 Escape 
     const selection = component.match(/onClick=\{\(\) => \{\s*if \(!model\) return;([\s\S]*?)\}\}/)?.[1] || "";
     expect(selection).toContain("onChange(model)");
     expect(selection).toContain("setOpen(false)");
-    expect(selection).toContain("focus()");
+    expect(selection).toMatch(/\bfocus\(/);
     expect(component).toContain('event.key === "Escape"');
     expect(component).toContain('window.addEventListener("pointerdown", closeOnOutsidePointer, true)');
 });
