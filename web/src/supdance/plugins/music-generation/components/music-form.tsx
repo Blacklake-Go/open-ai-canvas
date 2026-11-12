@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
-import { Button } from "antd";
+import { Button, Switch as AntSwitch } from "antd";
+import { AdminSegmented } from "@/pages/admin/ui/controls";
 import { BookMarked, ChevronDown, LibraryBig, Music2, SlidersHorizontal, WandSparkles } from "lucide-react";
 import { SegmentedControl } from "@/components/ui/base/segmented-control";
 import { Select } from "@/components/ui/base/select";
@@ -23,7 +24,9 @@ export function musicCreationAllowed(quote: LogicalModelQuote | null, available:
     return Boolean(quote && available != null && available >= quote.amountMicrocredits);
 }
 
-export function MusicForm({ userId, onSubmitted }: { userId: string; onSubmitted?: (taskId: string) => void }) {
+export function MusicForm({ userId, onSubmitted, admin = false }: { userId: string; onSubmitted?: (taskId: string) => void; admin?: boolean }) {
+    const ModeSelector = admin ? AdminSegmented : SegmentedControl;
+    const InstrumentalSwitch = admin ? AntSwitch : Switch;
     const { t } = useI18n();
     const config = useConfigStore((s) => s.config);
     const draft = useMusicStore((s) => s.draft);
@@ -146,11 +149,14 @@ export function MusicForm({ userId, onSubmitted }: { userId: string; onSubmitted
             }}
         >
             <div className="music-composer-toolbar">
-                <SegmentedControl
+                <ModeSelector
                     value={draft.mode}
                     ariaLabel={t("music.creation_mode")}
-                    disabled={submitting}
-                    options={(["simple", "custom"] as const).map((mode) => ({ value: mode, label: t(mode === "simple" ? "music.mode_description" : "music.mode_lyrics"), disabled: !capabilities.some((c) => c.available && c.modes.includes(mode)) }))}
+                    options={(["simple", "custom"] as const).map((mode) => ({
+                        value: mode,
+                        label: t(mode === "simple" ? "music.mode_description" : "music.mode_lyrics"),
+                        disabled: submitting || !capabilities.some((c) => c.available && c.modes.includes(mode)),
+                    }))}
                     onChange={changeMode}
                 />
                 <div className="music-model-picker-field">
@@ -244,7 +250,7 @@ export function MusicForm({ userId, onSubmitted }: { userId: string; onSubmitted
             {selected?.instrumentalSupported && (
                 <div className="music-composer-setting">
                     <label htmlFor="music-instrumental">{t("music.instrumental_label")}</label>
-                    <Switch id="music-instrumental" checked={draft.instrumental} onChange={(v) => setField("instrumental", v, userId)} />
+                    <InstrumentalSwitch id="music-instrumental" checked={draft.instrumental} onChange={(v) => setField("instrumental", v, userId)} />
                 </div>
             )}
             <details className="music-composer-options">
@@ -270,9 +276,9 @@ export function MusicForm({ userId, onSubmitted }: { userId: string; onSubmitted
                     <p className="text-xs text-muted-foreground">{t("music.native_output_hint")}</p>
                 </div>
             </details>
-            {panel === "templates" && <StyleTemplates onClose={closePanel} onApply={addStyle} />}
-            {panel === "builder" && <PromptBuilder onClose={closePanel} onApply={addStyle} />}
-            {panel === "saved" && <SavedPrompts key={userId} userId={userId} current={draft[mainField]} onClose={closePanel} onApply={addStyle} />}
+            {panel === "templates" && <StyleTemplates admin={admin} onClose={closePanel} onApply={addStyle} />}
+            {panel === "builder" && <PromptBuilder admin={admin} onClose={closePanel} onApply={addStyle} />}
+            {panel === "saved" && <SavedPrompts admin={admin} key={userId} userId={userId} current={draft[mainField]} onClose={closePanel} onApply={addStyle} />}
             {quoteError && (
                 <p role="alert" className="text-sm text-destructive">
                     {quoteError}

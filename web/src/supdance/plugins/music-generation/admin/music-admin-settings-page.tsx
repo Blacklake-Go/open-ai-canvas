@@ -1,9 +1,14 @@
 import { useEffect, useRef, useState } from "react";
 import { Link, useSearchParams } from "react-router";
+import { Button, Input, Skeleton } from "antd";
+import { RefreshCw, Music2, Settings2 } from "lucide-react";
+import { AdminPageFrame } from "@/pages/admin/components/admin-shell";
+import { AdminStatTile, AdminTableEmpty, SettingsSectionCard } from "@/pages/admin/components/admin-ui";
+import { AdminSegmented } from "@/pages/admin/ui/controls";
+import { AdminDrawer } from "@/pages/admin/ui/overlays";
 import { useI18n } from "@/supdance/plugins/i18n";
 import { useUserStore } from "@/stores/use-user-store";
 import { MusicForm } from "../components/music-form";
-import { AppDrawer } from "@/components/ui/product/app-drawer";
 import { MusicTaskDetails } from "../components/music-task-details";
 import { TaskCard } from "../components/task-card";
 import { WaveformPlayer } from "../components/waveform-player";
@@ -23,6 +28,7 @@ import {
 } from "../services/music-api";
 import type { LogicalModelQuote } from "@/services/api/logical-models";
 import "../styles/music-workbench.css";
+import "../styles/music-admin.css";
 
 export default function MusicAdminSettingsPage() {
     const { t } = useI18n();
@@ -140,155 +146,157 @@ export default function MusicAdminSettingsPage() {
         }
     };
     return (
-        <div className="plugin-music-generation flex flex-col gap-5" translate="no" data-i18n-ignore="true">
-            <div className="flex flex-wrap items-center justify-between gap-3">
-                <h1 className="text-xl font-semibold">{t("music.admin_title", undefined, "Music generation")}</h1>
-                <button type="button" onClick={() => void load()} disabled={loading} className="min-h-11 rounded-lg border border-border px-4">
+        <AdminPageFrame
+            title={t("music.admin_title")}
+            scroll
+            actions={
+                <Button icon={<RefreshCw size={14} />} onClick={() => void load()} loading={loading}>
                     {t("music.refresh_works")}
-                </button>
-            </div>
-            <nav className="flex flex-wrap gap-2" aria-label={t("music.admin_title", undefined, "Music generation")}>
-                {["overview", "models", "pricing", "tasks", "test", "settings"].map((key) => (
-                    <button type="button" key={key} aria-pressed={tab === key} onClick={() => setTab(key)} className="min-h-11 rounded-lg border border-border px-4">
-                        {t("music.admin_tab_" + key, undefined, key)}
-                    </button>
-                ))}
-            </nav>
-            {error && (
-                <p role="alert" className="text-destructive">
-                    {error}
-                </p>
-            )}
-            <Link to="/admin/channels" className="text-primary underline">
-                {t("music.manage_site_channels", undefined, "Manage models, credentials and prices in site channels")}
-            </Link>
-            {tab === "overview" && (
-                <div className="flex flex-col gap-4 rounded-xl border border-border bg-card p-5">
-                    <p>
-                        {t("music.admin_plugin_state", undefined, "Plugin state")}: {lifecycle ? t("music.lifecycle_" + lifecycle.state) : "—"}
+                </Button>
+            }
+        >
+            <div className="plugin-music-generation music-admin flex min-w-0 flex-col gap-4" translate="no" data-i18n-ignore="true" data-plugin-scope="supdance-music-generation">
+                <div className="music-admin-navigation">
+                    <AdminSegmented value={tab} onChange={setTab} ariaLabel={t("music.admin_title")} options={["overview", "models", "pricing", "tasks", "test", "settings"].map((key) => ({ value: key, label: t("music.admin_tab_" + key) }))} />
+                </div>
+                {error && (
+                    <p role="alert" className="text-destructive">
+                        {error}
                     </p>
-                    <p>
-                        {t("music.admin_available_models", undefined, "Available models")}: {models.filter((model) => model.available).length}
-                    </p>
-                    <p>{t("music.admin_credentials_hint", undefined, "A configured model does not prove that provider credentials work. A completed real task verifies generation.")}</p>
-                    <p>{t("music.admin_saving_hint", undefined, "Accepted, generated, saved and settled are separate task states.")}</p>
-                </div>
-            )}
-            {(tab === "models" || tab === "pricing") && (
-                <div className="flex flex-col gap-3">
-                    {models.map((model) => {
-                        const quote = quotes[model.id];
-                        return (
-                            <article key={model.id} className="flex flex-col gap-2 rounded-xl border border-border bg-card p-4">
-                                <strong translate="no">
-                                    {model.name} · {model.modelKey}
-                                </strong>
-                                <p>{model.modes.map((mode) => t("music.mode_" + mode)).join(" / ")} · MP3</p>
-                                {typeof quote === "string" ? (
-                                    <p className="text-destructive">{quote}</p>
-                                ) : (
-                                    quote && (
-                                        <p>
-                                            {(quote.amountMicrocredits / 1_000_000).toLocaleString()} · {t("music.billing_" + quote.billingMode)} × {quote.quantity}
-                                        </p>
-                                    )
-                                )}
-                                <p>{t(model.instrumentalSupported ? "music.instrumental_label" : model.lyricsSupported ? "music.lyrics_editor" : "music.prompt_label")}</p>
-                            </article>
-                        );
-                    })}
-                </div>
-            )}
-            {tab === "tasks" && (
-                <div className="flex flex-col gap-3">
-                    {tasks.map((task) => (
-                        <TaskCard key={task.taskId} task={task} onDetails={() => setDetailId(task.taskId)} />
-                    ))}
-                    {!tasks.length && <p>{t("music.empty_works")}</p>}
-                    {tasks.length < total && (
-                        <button type="button" disabled={loading} onClick={() => void load(page + 1)} className="min-h-11 rounded-lg border border-border px-4">
-                            {t("music.load_more_works")}
-                        </button>
-                    )}
-                </div>
-            )}
-            {tab === "test" && (
-                <div className="grid gap-5 lg:grid-cols-2">
-                    <section className="flex flex-col gap-4 rounded-xl border border-border bg-card p-5">
-                        <button
-                            type="button"
-                            className="min-h-11 rounded-lg border border-border px-4"
-                            onClick={async () => {
-                                try {
-                                    await testMusicConnection();
-                                    setProbe(true);
-                                } catch (cause) {
-                                    setError(cause instanceof Error ? cause.message : String(cause));
-                                }
-                            }}
-                        >
-                            {t("music.admin_check_configuration", undefined, "Check configuration · no generation charge")}
-                        </button>
-                        {probe && <p role="status">{t("music.admin_credentials_hint")}</p>}
-                        <p>{t("music.admin_paid_test", undefined, "Creating a test is a real paid generation. Review the model, inputs, current price and balance before submitting.")}</p>
-                        {userId && lifecycle?.state === "enabled" && <MusicForm userId={userId} onSubmitted={setReceiptId} />}
-                    </section>
-                    <section className="flex min-w-0 flex-col gap-4">
-                        <form
-                            className="flex flex-col gap-3 rounded-xl border border-border bg-card p-5"
-                            onSubmit={async (event) => {
-                                event.preventDefault();
-                                if (!logId.trim() || loading) return;
-                                setLoading(true);
-                                setError("");
-                                try {
-                                    const task = await recoverMusicAdminTest(logId.trim());
-                                    setReceiptId(task.taskId);
-                                    setTracked(task);
-                                } catch (cause) {
-                                    setError(cause instanceof Error ? cause.message : String(cause));
-                                } finally {
-                                    setLoading(false);
-                                }
-                            }}
-                        >
-                            <label className="flex flex-col gap-2 text-sm">
-                                {t("music.original_log_id")}
-                                <input value={logId} maxLength={80} onChange={(event) => setLogId(event.target.value)} className="min-h-11 min-w-0 rounded-lg border border-border bg-background px-3" />
-                            </label>
-                            <button type="submit" disabled={loading || !logId.trim()} className="min-h-11 rounded-lg border border-border px-4">
-                                {t("music.recover_test_receipt")}
-                            </button>
-                            <Link to="/admin/logs" className="text-primary underline">
-                                {t("music.original_log_id")}
-                            </Link>
-                        </form>
-                        {receiptId && (
-                            <p className="break-all">
-                                {t("music.task_id")}: {receiptId}
-                            </p>
+                )}
+                <Link to="/admin/channels" className="music-admin-link">
+                    {t("music.manage_site_channels", undefined, "Manage models, credentials and prices in site channels")}
+                </Link>
+                {tab === "overview" && (
+                    <SettingsSectionCard icon={<Music2 size={16} />} title={t("music.admin_tab_overview")} contentClassName="music-admin-section">
+                        {loading && !lifecycle ? (
+                            <Skeleton active paragraph={{ rows: 2 }} />
+                        ) : (
+                            <div className="music-admin-stats">
+                                <AdminStatTile label={t("music.admin_plugin_state")} value={lifecycle ? t("music.lifecycle_" + lifecycle.state) : "—"} />
+                                <AdminStatTile label={t("music.admin_available_models")} value={lifecycle ? models.filter((model) => model.available).length : "—"} />
+                            </div>
                         )}
-                        {tracked ? <TaskCard task={tracked} onDetails={() => setDetailId(tracked.taskId)} /> : <p>{t("music.admin_test_history")}</p>}
-                    </section>
-                </div>
-            )}
-            {track?.output.audioUrl && <WaveformPlayer taskId={track.output.id} audioUrl={track.output.audioUrl} title={track.task.title} durationSeconds={(track.output.durationMs || 0) / 1000} output={track.output} />}
-            {tab === "settings" && (
-                <div className="flex flex-col gap-4 rounded-xl border border-border bg-card p-5">
-                    <p>{t("music.admin_lifecycle_hint", undefined, "Disabling blocks new tasks. Existing tasks continue, and history and ledger entries are retained.")}</p>
-                    <div className="flex flex-wrap gap-3">
-                        {(["enabled", "draining"] as const).map((state) => (
-                            <button type="button" disabled={loading} key={state} onClick={() => void changeLifecycle(state)} className="min-h-11 rounded-lg border border-border px-4">
-                                {t("music.lifecycle_" + state, undefined, state)}
-                            </button>
-                        ))}
+                        <p>{t("music.admin_credentials_hint", undefined, "A configured model does not prove that provider credentials work. A completed real task verifies generation.")}</p>
+                        <p>{t("music.admin_saving_hint", undefined, "Accepted, generated, saved and settled are separate task states.")}</p>
+                    </SettingsSectionCard>
+                )}
+                {(tab === "models" || tab === "pricing") && (
+                    <div className="flex flex-col gap-3">
+                        {loading && !models.length ? <Skeleton active paragraph={{ rows: 4 }} /> : !models.length && <AdminTableEmpty title={t("music.no_models")} />}
+                        {models.map((model) => {
+                            const quote = quotes[model.id];
+                            return (
+                                <article key={model.id} className="music-admin-card flex flex-col gap-2">
+                                    <strong translate="no">
+                                        {model.name} · {model.modelKey}
+                                    </strong>
+                                    <p>{model.modes.map((mode) => t("music.mode_" + mode)).join(" / ")} · MP3</p>
+                                    {typeof quote === "string" ? (
+                                        <p className="text-destructive">{quote}</p>
+                                    ) : (
+                                        quote && (
+                                            <p>
+                                                {(quote.amountMicrocredits / 1_000_000).toLocaleString()} · {t("music.billing_" + quote.billingMode)} × {quote.quantity}
+                                            </p>
+                                        )
+                                    )}
+                                    <p>{t(model.instrumentalSupported ? "music.instrumental_label" : model.lyricsSupported ? "music.lyrics_editor" : "music.prompt_label")}</p>
+                                </article>
+                            );
+                        })}
                     </div>
-                    <p>{t("music.admin_upgrade_hint", undefined, "Configuration switches apply at runtime. Upgrading this implementation and its protocol package requires a host build and restart.")}</p>
-                </div>
-            )}
-            <AppDrawer rootClassName="plugin-music-generation" open={Boolean(detail)} onClose={() => setDetailId(null)} title={<span translate="no">{detail?.title || t("music.default_track_title")}</span>}>
-                {detail && <MusicTaskDetails task={detail} />}
-            </AppDrawer>
-        </div>
+                )}
+                {tab === "tasks" && (
+                    <div className="flex flex-col gap-3">
+                        {tasks.map((task) => (
+                            <TaskCard key={task.taskId} task={task} onDetails={() => setDetailId(task.taskId)} />
+                        ))}
+                        {loading && !tasks.length ? <Skeleton active paragraph={{ rows: 4 }} /> : !tasks.length && <AdminTableEmpty title={t("music.empty_works")} />}
+                        {tasks.length < total && (
+                            <Button loading={loading} onClick={() => void load(page + 1)}>
+                                {t("music.load_more_works")}
+                            </Button>
+                        )}
+                    </div>
+                )}
+                {tab === "test" && (
+                    <div className="grid gap-5 lg:grid-cols-2">
+                        <section className="music-admin-card flex min-w-0 flex-col gap-4">
+                            <Button
+                                className="music-admin-wrap-button"
+                                onClick={async () => {
+                                    try {
+                                        await testMusicConnection();
+                                        setProbe(true);
+                                    } catch (cause) {
+                                        setError(cause instanceof Error ? cause.message : String(cause));
+                                    }
+                                }}
+                            >
+                                {t("music.admin_check_configuration", undefined, "Check configuration · no generation charge")}
+                            </Button>
+                            {probe && <p role="status">{t("music.admin_credentials_hint")}</p>}
+                            <p>{t("music.admin_paid_test", undefined, "Creating a test is a real paid generation. Review the model, inputs, current price and balance before submitting.")}</p>
+                            {userId && lifecycle?.state === "enabled" && <MusicForm admin userId={userId} onSubmitted={setReceiptId} />}
+                        </section>
+                        <section className="flex min-w-0 flex-col gap-4">
+                            <form
+                                className="music-admin-card flex flex-col gap-3"
+                                onSubmit={async (event) => {
+                                    event.preventDefault();
+                                    if (!logId.trim() || loading) return;
+                                    setLoading(true);
+                                    setError("");
+                                    try {
+                                        const task = await recoverMusicAdminTest(logId.trim());
+                                        setReceiptId(task.taskId);
+                                        setTracked(task);
+                                    } catch (cause) {
+                                        setError(cause instanceof Error ? cause.message : String(cause));
+                                    } finally {
+                                        setLoading(false);
+                                    }
+                                }}
+                            >
+                                <label className="flex flex-col gap-2 text-sm">
+                                    {t("music.original_log_id")}
+                                    <Input value={logId} maxLength={80} onChange={(event) => setLogId(event.target.value)} />
+                                </label>
+                                <Button htmlType="submit" loading={loading} disabled={!logId.trim()}>
+                                    {t("music.recover_test_receipt")}
+                                </Button>
+                                <Link to="/admin/logs" className="music-admin-link">
+                                    {t("music.original_log_id")}
+                                </Link>
+                            </form>
+                            {receiptId && (
+                                <p className="break-all">
+                                    {t("music.task_id")}: {receiptId}
+                                </p>
+                            )}
+                            {tracked ? <TaskCard task={tracked} onDetails={() => setDetailId(tracked.taskId)} /> : <p>{t("music.admin_test_history")}</p>}
+                        </section>
+                    </div>
+                )}
+                {track?.output.audioUrl && <WaveformPlayer taskId={track.output.id} audioUrl={track.output.audioUrl} title={track.task.title} durationSeconds={(track.output.durationMs || 0) / 1000} output={track.output} />}
+                {tab === "settings" && (
+                    <SettingsSectionCard icon={<Settings2 size={16} />} title={t("music.admin_tab_settings")} contentClassName="music-admin-section">
+                        <p>{t("music.admin_lifecycle_hint", undefined, "Disabling blocks new tasks. Existing tasks continue, and history and ledger entries are retained.")}</p>
+                        <div className="flex flex-wrap gap-3">
+                            {(["enabled", "draining"] as const).map((state) => (
+                                <Button disabled={loading || !lifecycle} aria-pressed={lifecycle?.state === state} key={state} onClick={() => void changeLifecycle(state)}>
+                                    {t("music.lifecycle_" + state, undefined, state)}
+                                </Button>
+                            ))}
+                        </div>
+                        <p>{t("music.admin_upgrade_hint", undefined, "Configuration switches apply at runtime. Upgrading this implementation and its protocol package requires a host build and restart.")}</p>
+                    </SettingsSectionCard>
+                )}
+                <AdminDrawer rootClassName="plugin-music-generation music-admin" open={Boolean(detail)} onClose={() => setDetailId(null)} title={<span translate="no">{detail?.title || t("music.default_track_title")}</span>}>
+                    {detail && <MusicTaskDetails task={detail} />}
+                </AdminDrawer>
+            </div>
+        </AdminPageFrame>
     );
 }

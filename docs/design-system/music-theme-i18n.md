@@ -31,6 +31,13 @@
 
 ## 2. 全主题自适应与后台外观配置最高优先级 (Theme & Appearance Priority)
 
+### 音乐管理页与宿主后台
+
+- 音乐管理页复用 `AdminPageFrame`、`AdminSegmented`、`SettingsSectionCard`、`AdminStatTile`，沿用后台页头、语言、密度和主题切换。
+- `music-admin.css` 仅在 `.plugin-music-generation.music-admin` 内将共用音乐内容需要的表面、文字、边框、状态与圆角映射到 `--admin-*`；不修改全局变量。前台继续继承站点已发布的工作区外观。
+- 后台测试表单使用后台分段控件与 Ant Design 开关；模板、提示词构建、已保存提示词通过 `MusicForm admin` 显式选择 `AdminModal`，详情使用 `AdminDrawer`。Portal 根保留插件和后台作用域，避免弹窗脱离页面后读取前台皮肤。
+- 前台搜索、筛选、排序和作品操作复用宿主语义颜色与控件圆角；普通筛选选中态使用 `accent`，交互热区至少 44px，保留焦点与减弱动效支持。
+
 遵循全站规范 **RULE 004 — Backend Appearance Priority**：
 1. **三种模式自动同步**：无论是明亮模式（Light Mode）、暗黑模式（Dark Mode）还是随系统切换（System Mode），插件完全继承宿主当前渲染主题。
 2. **后台外观优先级**：当管理员在 `/admin/settings/appearance` 调整了全站主题色、圆角（`--radius`）或背景色调时，音乐创作岛即刻动态响应，无需刷新页面，保持视觉风格的无缝一致性。

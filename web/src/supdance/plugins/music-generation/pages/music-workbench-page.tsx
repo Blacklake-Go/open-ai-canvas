@@ -111,7 +111,7 @@ function MusicStudio({ userId }: { userId?: string }) {
     };
     return (
         <WorkspacePage fluid scroll={false} className="plugin-music-generation music-workbench-page">
-            <div ref={studio} className="music-studio-shell" translate="no" data-i18n-ignore="true">
+            <div ref={studio} className="music-studio-shell" translate="no" data-i18n-ignore="true" data-plugin-scope="supdance-music-generation">
                 <div className="music-mobile-tabs" role="group" aria-label={t("music.studio_title")}>
                     {["create", "library"].map((tab) => (
                         <button type="button" key={tab} aria-pressed={mobile === tab} onClick={() => setMobile(tab)}>

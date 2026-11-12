@@ -76,14 +76,17 @@
     border-radius: var(--radius);
     background: var(--background);
 }
-.plugin-music-generation button[aria-pressed="true"] {
+.plugin-music-generation .music-filters button[aria-pressed="true"],
+.plugin-music-generation .music-mobile-tabs button[aria-pressed="true"] {
     background: var(--accent);
     color: var(--accent-foreground);
     border-color: var(--primary);
 }
 .plugin-music-generation button:focus-visible,
+.plugin-music-generation a:focus-visible,
 .plugin-music-generation input:focus-visible,
-.plugin-music-generation textarea:focus-visible {
+.plugin-music-generation textarea:focus-visible,
+.plugin-music-generation summary:focus-visible {
     outline: 2px solid var(--ring);
     outline-offset: 2px;
 }
@@ -253,14 +256,19 @@
 }
 
 /* The studio owns its panels; appearance and density follow the workspace skin. */
+.music-workbench-page .music-composer-heading {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 20px;
+}
+.music-workbench-page .music-composer-heading h1 {
+    margin: 0;
+}
 .music-workbench-page .music-library {
     gap: 12px;
-}
-.music-workbench-page .music-composer h1,
-.music-workbench-page .music-library h2 {
-    font-size: clamp(1.125rem, 1.45vw, 1.5rem);
-    letter-spacing: -0.035em;
-    line-height: 1.25;
 }
 .music-workbench-page .music-day h3 {
     margin: 16px 0 6px;
@@ -281,19 +289,19 @@
 .music-workbench-page .music-header-actions button,
 .music-workbench-page .music-asset-link,
 .music-workbench-page .music-sort {
-    min-height: 40px;
+    min-height: 44px;
     background: transparent;
     color: var(--muted-foreground);
     padding: 0 10px;
     border: 1px solid var(--border);
     border-radius: var(--user-radius-control, var(--radius));
-    font-size: 0.8rem;
+    font-size: var(--font-size-sm, 0.875rem);
     white-space: nowrap;
 }
 .music-workbench-page .music-header-actions button {
     display: grid;
     place-items: center;
-    min-width: 40px;
+    min-width: 44px;
 }
 .music-workbench-page .music-search {
     position: relative;
@@ -310,25 +318,44 @@
 }
 .music-workbench-page .music-search input {
     padding-left: 38px;
-    min-height: 40px;
-    background: var(--muted);
-    border-radius: 999px;
-    border-color: transparent;
+    min-height: 44px;
+    background: var(--background);
+    border-radius: var(--user-radius-control, var(--radius));
+    border-color: var(--border);
 }
 .music-workbench-page .music-filters {
     gap: 4px;
 }
 .music-workbench-page .music-filters button {
-    min-height: 36px;
+    min-height: 44px;
     padding: 3px 12px;
-    border-radius: 999px;
-    font-size: 0.78rem;
+    border-radius: var(--user-radius-control, var(--radius));
+    font-size: var(--font-size-sm, 0.875rem);
     border-color: transparent;
     color: var(--muted-foreground);
 }
 .music-workbench-page .music-filters button[aria-pressed="true"] {
-    background: var(--foreground);
-    color: var(--background);
+    background: var(--accent);
+    color: var(--accent-foreground);
+    border-color: var(--border);
+}
+.music-workbench-page .music-filters button:hover,
+.music-workbench-page .music-mobile-tabs button:hover,
+.music-workbench-page .music-header-actions button:hover,
+.music-workbench-page .music-asset-link:hover,
+.music-workbench-page .music-sort:hover {
+    background: var(--accent);
+    color: var(--accent-foreground);
+}
+.music-workbench-page .music-filters button,
+.music-workbench-page .music-mobile-tabs button,
+.music-workbench-page .music-header-actions button,
+.music-workbench-page .music-asset-link,
+.music-workbench-page .music-sort {
+    transition:
+        background-color var(--motion-instant) ease,
+        color var(--motion-instant) ease,
+        border-color var(--motion-instant) ease;
 }
 .music-workbench-page .music-record {
     display: grid;
@@ -473,5 +500,21 @@
     }
     .music-workbench-page .music-filters button {
         min-height: 44px;
+    }
+    .music-workbench-page .music-library-header,
+    .music-workbench-page .music-tools {
+        flex-wrap: wrap;
+    }
+    .music-workbench-page .music-search {
+        flex-basis: 100%;
+    }
+}
+@media (prefers-reduced-motion: reduce) {
+    .music-workbench-page .music-filters button,
+    .music-workbench-page .music-mobile-tabs button,
+    .music-workbench-page .music-header-actions button,
+    .music-workbench-page .music-asset-link,
+    .music-workbench-page .music-sort {
+        transition: none;
     }
 }

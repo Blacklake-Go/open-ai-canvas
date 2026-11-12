@@ -1,0 +1,95 @@
+/* Shared music content inherits the admin palette, including portaled overlays. */
+.plugin-music-generation.music-admin {
+    --card: var(--admin-surface);
+    --background: var(--admin-surface);
+    --foreground: var(--admin-text);
+    --muted: var(--admin-surface-2);
+    --muted-foreground: var(--admin-text-secondary);
+    --surface-secondary: var(--admin-surface-2);
+    --border: var(--admin-border);
+    --accent: var(--admin-nav-active);
+    --accent-foreground: var(--admin-text);
+    --primary: var(--admin-accent);
+    --primary-foreground: var(--admin-accent-fg);
+    --destructive: var(--admin-status-error);
+    --ring: var(--admin-focus);
+    --radius: var(--admin-radius);
+    --radius-sm: var(--admin-radius-sm);
+    --user-radius-card: var(--admin-radius-lg);
+    --user-radius-control: var(--admin-radius);
+    --user-radius-button: var(--admin-radius);
+    color: var(--admin-text);
+}
+.music-admin .music-admin-navigation {
+    min-width: 0;
+    overflow-x: auto;
+    padding-block: 2px;
+}
+.music-admin .music-admin-card {
+    min-width: 0;
+    padding: 16px;
+    border: 1px solid var(--admin-border);
+    border-radius: var(--admin-radius-lg);
+    background: var(--admin-surface);
+    overflow-wrap: anywhere;
+}
+.music-admin .music-admin-section {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    padding: 16px;
+}
+.music-admin .music-admin-stats {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 12px;
+}
+.music-admin .music-admin-link {
+    align-self: flex-start;
+    color: var(--admin-text-secondary);
+    text-decoration: underline;
+    text-underline-offset: 3px;
+}
+.music-admin .music-admin-link:hover {
+    color: var(--admin-text);
+}
+.music-admin .ant-btn[aria-pressed="true"] {
+    color: var(--admin-text);
+    background: var(--admin-nav-active);
+    border-color: var(--admin-border-strong);
+}
+.music-admin .music-admin-wrap-button {
+    height: auto;
+    min-height: var(--admin-control-h);
+    white-space: normal;
+}
+.music-admin .music-work-card,
+.music-admin .music-player {
+    background: var(--admin-surface);
+}
+.music-admin .plugin-music-form .music-model-picker {
+    min-height: var(--admin-control-h);
+}
+.music-admin .plugin-music-form .music-composer-panel,
+.music-admin .plugin-music-form .music-composer-setting,
+.music-admin .plugin-music-form .music-composer-options {
+    background: var(--admin-surface-2);
+}
+.music-admin .plugin-music-form .music-create-footer {
+    background: var(--admin-surface);
+}
+@media (max-width: 640px) {
+    .music-admin .music-admin-stats {
+        grid-template-columns: minmax(0, 1fr);
+    }
+    .music-admin .ant-btn,
+    .music-admin .ant-input,
+    .music-admin .ant-segmented-item-label,
+    .music-admin .music-admin-link {
+        min-height: 44px;
+    }
+    .music-admin .music-admin-link {
+        display: inline-flex;
+        align-items: center;
+    }
+}

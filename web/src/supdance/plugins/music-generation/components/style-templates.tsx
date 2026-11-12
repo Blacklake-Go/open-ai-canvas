@@ -3,17 +3,19 @@ import { BookmarkPlus, Check, Disc3, Play, Plus, Search, Square, Trash2 } from "
 import { Button } from "antd";
 import localforage from "localforage";
 import { AppModal } from "@/components/ui/product/app-modal";
+import { AdminModal } from "@/pages/admin/ui/overlays";
 import { Select } from "@/components/ui/base/select";
 import { useI18n } from "@/supdance/plugins/i18n";
 import { useMusicStore } from "../stores/use-music-store";
 import { styleTemplates, type StyleTemplate } from "./composer-patterns";
 import { playTemplateSketch } from "./template-sketch";
 
-type DialogProps = { onClose: () => void; onApply: (style: string) => boolean };
+type DialogProps = { onClose: () => void; onApply: (style: string) => boolean; admin?: boolean };
 const genres = [...new Set(styleTemplates.map((p) => p.genre))];
 const uses = [...new Set(styleTemplates.map((p) => p.use))];
 
-export function StyleTemplates({ onClose, onApply }: DialogProps) {
+export function StyleTemplates({ onClose, onApply, admin = false }: DialogProps) {
+    const Modal = admin ? AdminModal : AppModal;
     const { t } = useI18n();
     const [query, setQuery] = useState("");
     const [genre, setGenre] = useState("");
@@ -79,7 +81,7 @@ export function StyleTemplates({ onClose, onApply }: DialogProps) {
         return (!genre || genre === p.genre) && (!use || use === p.use) && terms.every((term) => text.includes(term));
     });
     return (
-        <AppModal open centered width={848} title={t("music.pattern_library")} onCancel={onClose} footer={null}>
+        <Modal rootClassName={`plugin-music-generation${admin ? " music-admin" : ""}`} open centered width={848} title={t("music.pattern_library")} onCancel={onClose} footer={null}>
             <section className="music-pattern-dialog" aria-label={t("music.pattern_library")}>
                 <p className="text-sm text-muted-foreground">{t("music.pattern_intro")}</p>
                 <div className="music-pattern-filters">
@@ -181,7 +183,7 @@ export function StyleTemplates({ onClose, onApply }: DialogProps) {
                     )}
                 </div>
             </section>
-        </AppModal>
+        </Modal>
     );
 }
 
@@ -189,13 +191,14 @@ const promptLibrary = localforage.createInstance({ name: "supdance_music_drafts"
 
 const builderFields = ["scene", "sound", "rhythm", "vocals", "exclude"] as const;
 
-export function PromptBuilder({ onClose, onApply }: DialogProps) {
+export function PromptBuilder({ onClose, onApply, admin = false }: DialogProps) {
+    const Modal = admin ? AdminModal : AppModal;
     const { t } = useI18n();
     const [fields, setFields] = useState<Record<string, string>>({});
     const [limit, setLimit] = useState(false);
     const text = builderFields.flatMap((field) => (fields[field]?.trim() ? [t("music.builder_" + field) + " · " + fields[field].trim()] : [])).join("\n");
     return (
-        <AppModal open centered width={640} title={t("music.prompt_builder")} onCancel={onClose} footer={null}>
+        <Modal rootClassName={`plugin-music-generation${admin ? " music-admin" : ""}`} open centered width={640} title={t("music.prompt_builder")} onCancel={onClose} footer={null}>
             <section className="music-pattern-dialog">
                 <p className="text-sm text-muted-foreground">{t("music.builder_hint")}</p>
                 <div className="music-builder-fields">
@@ -237,11 +240,12 @@ export function PromptBuilder({ onClose, onApply }: DialogProps) {
                     {t("music.use_prompt")}
                 </Button>
             </section>
-        </AppModal>
+        </Modal>
     );
 }
 
-export function SavedPrompts({ userId, current, onClose, onApply }: DialogProps & { userId: string; current: string }) {
+export function SavedPrompts({ userId, current, onClose, onApply, admin = false }: DialogProps & { userId: string; current: string }) {
+    const Modal = admin ? AdminModal : AppModal;
     const { t } = useI18n();
     const [items, setItems] = useState<string[]>([]);
     const [error, setError] = useState(false);
@@ -280,7 +284,7 @@ export function SavedPrompts({ userId, current, onClose, onApply }: DialogProps 
     }
     const value = current.trim();
     return (
-        <AppModal open centered width={640} title={t("music.saved_styles")} onCancel={onClose} footer={null}>
+        <Modal rootClassName={`plugin-music-generation${admin ? " music-admin" : ""}`} open centered width={640} title={t("music.saved_styles")} onCancel={onClose} footer={null}>
             <section className="music-pattern-dialog">
                 <p className="text-sm text-muted-foreground">{t("music.saved_device")}</p>
                 <Button htmlType="button" className="self-start" icon={items.includes(value) ? <Check size={16} /> : <BookmarkPlus size={16} />} disabled={!ready || busy || !value || items.includes(value)} onClick={() => void persist([value, ...items])}>
@@ -322,6 +326,6 @@ export function SavedPrompts({ userId, current, onClose, onApply }: DialogProps 
                     ))}
                 </div>
             </section>
-        </AppModal>
+        </Modal>
     );
 }
