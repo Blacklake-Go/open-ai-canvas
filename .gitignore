@@ -120,3 +120,5 @@ __pycache__/
 *.pyc
 # Generated locally by scripts/export-theme-skins.ts.
 /web/theme-skins-install.js
+# Local design detector cache; keep the scoped review configuration in Git.
+/web/.impeccable/hook.cache.json

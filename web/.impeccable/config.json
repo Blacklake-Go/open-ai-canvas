@@ -1,17 +1,15 @@
 {
-  "detector": {
-    "ignoreRules": [],
-    "ignoreFiles": [],
-    "ignoreValues": [
-      {
-        "rule": "gradient-text",
-        "value": "*",
-        "files": [
-          "src/components/canvas/canvas-cloud-agent.css"
-        ],
-        "createdAt": "2026-11-12T05:25:40.364Z",
-        "reason": "Codex reviewed: existing upstream sheen is limited to actively running Agent operation/reasoning status, with reduced-motion handling. Preserve this meaningful progress indicator during upstream merge."
-      }
-    ]
-  }
+    "detector": {
+        "ignoreRules": [],
+        "ignoreFiles": [],
+        "ignoreValues": [
+            {
+                "rule": "gradient-text",
+                "value": "*",
+                "files": ["src/components/canvas/canvas-cloud-agent.css"],
+                "createdAt": "2026-11-12T05:25:40.364Z",
+                "reason": "Codex reviewed: existing upstream sheen is limited to actively running Agent operation/reasoning status, with reduced-motion handling. Preserve this meaningful progress indicator during upstream merge."
+            }
+        ]
+    }
 }
