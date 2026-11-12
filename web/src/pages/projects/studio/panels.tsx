@@ -50,6 +50,7 @@ import {
     type DramaCastKind,
     type DramaEpisodeMode,
     type DramaSettings,
+    formatDramaInboxCount,
     type DramaInboxItem,
     type DramaMediaMode,
     type DramaModelChoice,
@@ -215,10 +216,10 @@ export function CastPanel({
                     </div>
                     <div className="drama-cast-toolbar">
                         <Button icon={<Link2 className="size-4" />} onClick={() => setImporting(true)}>
-                            关联已有作品素材
+                            {_creationText("creation.2632b5ca05257b30")}
                         </Button>
                         <Button icon={<Plus className="size-4" />} onClick={() => setCreating(true)}>
-                            新增设定
+                            {_creationText("creation.fb65ffaaf0cb709d")}
                         </Button>
                     </div>
                     {failed ? (
@@ -228,12 +229,12 @@ export function CastPanel({
                     ) : null}
                 </div>
                 <div className="drama-view-scroll thin-scrollbar">
-                    {assetsPending && cast.some((item) => item.imageStatus === "") ? (
+                    {assetsPending && cast.some((item) => item.imageStatus === "" || item.imageStatus === "draft") ? (
                         <div className="drama-banner is-ready is-flush">
                             <Clapperboard className="size-5 shrink-0 text-[var(--workspace-accent)]" />
                             <div className="drama-banner-text">
                                 <strong>{_creationText("creation.7ae9f813db8d0f0f")}</strong>
-                                <span>{_creationText("creation.ae9f792e4e34c774")}</span>
+                                <span>{_creationText("creation.2d145ad46bff5543")}</span>
                             </div>
                             <Button type="primary" icon={<Play className="size-4" />} loading={releasing} onClick={onReleaseAssets}>
                                 {_creationText("creation.3301c5c72d199284")}
@@ -280,7 +281,14 @@ export function CastPanel({
                                 {item.kind === "character" && !item.parentId && cast.some((look) => look.parentId === item.id) ? (
                                     <div className="drama-cast-look-switcher" role="group" aria-label={_creationText("creation.look.switcherLabel", { name: item.name })}>
                                         {[item, ...cast.filter((look) => look.parentId === item.id)].map((look) => (
-                                            <button type="button" key={look.id} aria-label={`切换到${look.lookName || "基础造型"}`} title={look.lookName || "基础造型"} aria-pressed={look.id === active?.id} onClick={() => onFocus(look.id)}>
+                                            <button
+                                                type="button"
+                                                key={look.id}
+                                                aria-label={_creationText("creation.77789e196ec3f561", { value1: look.lookName || _creationText("creation.2ecf1b056bdf801d") })}
+                                                title={look.lookName || _creationText("creation.2ecf1b056bdf801d")}
+                                                aria-pressed={look.id === active?.id}
+                                                onClick={() => onFocus(look.id)}
+                                            >
                                                 {look.imageResourceId ? <MediaThumb resourceId={look.imageResourceId} alt={look.lookName || _creationText("creation.50ef161256d9798a")} /> : <Shirt className="size-4 opacity-40" />}
                                             </button>
                                         ))}
@@ -471,8 +479,8 @@ function CastEditor({
                     <Link2 className="inline size-3.5" /> {_creationText("creation.look.linkedProjectNote")}
                 </p>
             ) : null}
-            <Field label={isLook ? "造型名称" : _creationText("creation.d44e9b3d3b31d37b")}>
-                <Input value={name} maxLength={60} disabled={busy} onChange={(event) => setName(event.target.value)} aria-label={isLook ? "造型名称" : _creationText("creation.d44e9b3d3b31d37b")} />
+            <Field label={isLook ? _creationText("creation.52110dc27dc17cb6") : _creationText("creation.d44e9b3d3b31d37b")}>
+                <Input value={name} maxLength={60} disabled={busy} onChange={(event) => setName(event.target.value)} aria-label={isLook ? _creationText("creation.52110dc27dc17cb6") : _creationText("creation.d44e9b3d3b31d37b")} />
             </Field>
             {isCharacter ? (
                 <Field label={_creationText("creation.65f3f0a1a0d8c522")} hint={_creationText("creation.abe41d97aab8d366")}>
@@ -667,6 +675,7 @@ const CHIP_LIMIT = 24;
 
 export function InboxPanel({
     items,
+    failureCount,
     castById,
     retrying,
     retryingGroup,
@@ -678,6 +687,7 @@ export function InboxPanel({
     onReleaseAll,
 }: {
     items: DramaInboxItem[];
+    failureCount?: number;
     castById: Map<string, DramaCast>;
     retrying: boolean;
     retryingGroup: string;
@@ -690,7 +700,8 @@ export function InboxPanel({
 }) {
     _useCreationLocale();
     const groups = useMemo(() => groupInbox(items), [items]);
-    const failures = items.filter((item) => item.severity === "error").length;
+    const listedFailures = items.filter((item) => item.severity === "error").length;
+    const failures = failureCount ?? listedFailures;
     const reviews = items.filter((item) => item.kind === "review").length;
     return (
         <div className="drama-view">
@@ -702,7 +713,7 @@ export function InboxPanel({
                             {failures ? (
                                 <span className="is-err">
                                     <AlertCircle className="size-3.5" />
-                                    {failures}
+                                    {formatDramaInboxCount(failures)}
                                     {_creationText("creation.11301f0dc0cd415b")}
                                 </span>
                             ) : null}
@@ -714,6 +725,7 @@ export function InboxPanel({
                                 </span>
                             ) : null}
                             <span>{_creationText("creation.3b0b2528954f27f3", { value1: groups.length })}</span>
+                            {failures > listedFailures ? <span>{_creationText("creation.d5d1c10f2945613d")}</span> : null}
                         </div>
                     ) : null}
                     {failures ? (

@@ -18,6 +18,8 @@ export function FinalView({
     onOpenSegment,
     onOpenCut,
     cutOpening,
+    onCompose,
+    composing,
 }: {
     projectId: string;
     title: string;
@@ -27,6 +29,9 @@ export function FinalView({
     /** 把各段视频按成片顺序载入精修画布的时间线，在画布里精剪。 */
     onOpenCut: () => void;
     cutOpening: boolean;
+    /** 手动重新合成成品（按实测时长拼接）。 */
+    onCompose: () => void;
+    composing: boolean;
 }) {
     _useCreationLocale();
     const { episode } = detail;
@@ -36,6 +41,10 @@ export function FinalView({
     const videoRef = useRef<HTMLVideoElement>(null);
     const url = useResourceMediaUrl(episode.finalResourceId, "playback");
     const readySegments = segments.filter((segment) => segment.videoResourceId && (segment.videoStatus === "ready" || segment.videoStatus === "stale")).length;
+    // 合成要求各段为 ready（过期段需先重新生成）；与后端 timeline 校验一致。
+    const composeReady = segments.length > 0 && segments.every((segment) => segment.videoStatus === "ready" && segment.videoResourceId);
+    const rendering = episode.stage === "render";
+    const composeBusy = composing || rendering;
     const starts: number[] = [];
     segments.reduce((cursor, segment) => {
         starts.push(cursor);
@@ -54,7 +63,9 @@ export function FinalView({
                     ) : (
                         <div className="drama-finalv-empty">
                             <Film className="size-6" aria-hidden />
-                            <span>{_creationText("creation.2beb59ff97110693", { value1: STAGE_LABEL[episode.stage] })}</span>
+                            <span>
+                                {STAGE_LABEL[episode.stage]} · {rendering ? _creationText("creation.62e4b64415643c15") : _creationText("creation.b4c1014cd2247c3e")}
+                            </span>
                         </div>
                     )}
                 </div>
@@ -89,9 +100,19 @@ export function FinalView({
                 </p>
                 {episode.finalStale ? (
                     <p className="drama-finalv-stale" role="status">
-                        {_creationText("creation.c1d89610837b527b")}
+                        {rendering ? _creationText("creation.30a67692906f9a80") : _creationText("creation.c6a3004a1e11fb05")}
                     </p>
                 ) : null}
+                <Button
+                    type="primary"
+                    icon={<Film className="size-4" />}
+                    disabled={!composeReady}
+                    loading={composeBusy}
+                    onClick={onCompose}
+                    title={composeReady ? (rendering ? _creationText("creation.fb6f39e788652934") : _creationText("creation.53f33fd280413736")) : _creationText("creation.acbb867a87d8ccd7")}
+                >
+                    {_creationText("creation.a2b6fde16acf346b")}
+                </Button>
                 <Button icon={<Download className="size-4" />} disabled={!episode.finalResourceId} onClick={download}>
                     {_creationText("creation.a926ee400ac9108e")}
                 </Button>

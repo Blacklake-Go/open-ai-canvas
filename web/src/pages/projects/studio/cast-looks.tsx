@@ -155,14 +155,39 @@ export function CastLooks({ projectId, character, looks, restyle, onChanged }: {
                                     <small>
                                         {look.imageStatus === "draft"
                                             ? _creationText("creation.79820fd6496eff3f")
-                                            : look.locked
-                                              ? _creationText("creation.d39c736ffb2c949b")
-                                              : look.imagePrompt
-                                                ? _creationText("creation.f1d3720d98f16b61")
-                                                : _creationText("creation.3cce46b0732460a5")}
+                                            : look.imageStatus === ""
+                                              ? _creationText("creation.50dee6d134b09e1c")
+                                              : look.imageStatus === "failed"
+                                                ? _creationText("creation.ee58807031796a75")
+                                                : look.locked
+                                                  ? _creationText("creation.d39c736ffb2c949b")
+                                                  : look.imagePrompt
+                                                    ? _creationText("creation.f1d3720d98f16b61")
+                                                    : _creationText("creation.3cce46b0732460a5")}
                                     </small>
                                 </span>
                                 <span className="drama-look-actions">
+                                    <Button
+                                        size="small"
+                                        type="primary"
+                                        icon={<Play className="size-3.5" />}
+                                        loading={generate.isPending && generate.variables?.id === look.id}
+                                        disabled={busy || mediaBusy(look.imageStatus) || character.imageStatus !== "ready" || !character.imageResourceId}
+                                        title={
+                                            !character.imageResourceId || character.imageStatus !== "ready"
+                                                ? _creationText("creation.8784fc284e2c85e2")
+                                                : look.imageResourceId
+                                                  ? _creationText("creation.2b98bd1d8c7be621")
+                                                  : _creationText("creation.76073a1a2816bfc7")
+                                        }
+                                        aria-label={_creationText("creation.2695d95160536842", { value1: look.imageResourceId ? _creationText("workbench.regenerate") : _creationText("creation.1ad1463fe16fc2a6"), value2: look.lookName || "" })}
+                                        onClick={() => {
+                                            if (look.locked) modal.confirm({ title: "重新生成造型图？", content: "将解锁当前自定义图，并按已保存的提示词生成新图。", okText: "解锁并生成", cancelText: "取消", onOk: () => generate.mutateAsync(look) });
+                                            else generate.mutate(look);
+                                        }}
+                                    >
+                                        {look.imageResourceId ? _creationText("workbench.regenerate") : _creationText("creation.cf3b516f73cfe527")}
+                                    </Button>
                                     <Button
                                         size="small"
                                         type="text"
@@ -188,25 +213,6 @@ export function CastLooks({ projectId, character, looks, restyle, onChanged }: {
                                     }}
                                 >
                                     {_creationText("creation.1ff0930980561d5a")}
-                                </Button>
-                                <Button
-                                    size="small"
-                                    icon={<Play className="size-3.5" />}
-                                    disabled={busy || mediaBusy(look.imageStatus) || character.imageStatus !== "ready" || !character.imageResourceId}
-                                    title={!character.imageResourceId ? _creationText("creation.1d6e01cd275f4db9") : undefined}
-                                    onClick={() => {
-                                        if (look.locked)
-                                            modal.confirm({
-                                                title: _creationText("creation.c153f16433fea828"),
-                                                content: _creationText("creation.dad6b867fe3b3bc2"),
-                                                okText: _creationText("creation.20f0e5c849ca56f4"),
-                                                cancelText: _creationText("common.cancel"),
-                                                onOk: () => generate.mutateAsync(look),
-                                            });
-                                        else generate.mutate(look);
-                                    }}
-                                >
-                                    {look.imageResourceId ? _creationText("workbench.regenerate") : _creationText("creation.cf3b516f73cfe527")}
                                 </Button>
                             </div>
                         </div>
@@ -243,7 +249,7 @@ export function CastLooks({ projectId, character, looks, restyle, onChanged }: {
                     });
                 }}
             />
-            {previewLook?.imageResourceId ? <CanvasImagePreview storageKey={`resource:${previewLook.imageResourceId}`} alt={previewLook.lookName || "造型"} onClose={() => setPreviewLook(undefined)} /> : null}
+            {previewLook?.imageResourceId ? <CanvasImagePreview storageKey={`resource:${previewLook.imageResourceId}`} alt={previewLook.lookName || _creationText("creation.345897933b2d1a83")} onClose={() => setPreviewLook(undefined)} /> : null}
             {libraryLook ? (
                 <CastLibraryPicker
                     open

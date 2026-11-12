@@ -20,9 +20,10 @@ import { selectPluginEffectivelyEnabled, usePluginStore } from "@/stores/use-plu
 import { WorkspaceAccountCard } from "./workspace-account-card";
 import { WorkspaceSidebarCheckin } from "./workspace-sidebar-checkin";
 import { WorkspaceSidebarStorageMeter } from "./workspace-sidebar-storage-meter";
+import { openWorkspaceWallet } from "@/lib/workspace-wallet";
+import { trackSiteTrafficAction } from "@/services/site-traffic";
 import { WorkspaceSidebarHistory } from "./workspace-sidebar-history";
 import "./workspace-sidebar-history.css";
-import { openWorkspaceWallet } from "@/lib/workspace-wallet";
 import { useI18n } from "@/supdance/plugins/i18n";
 import { SUPDANCE_MUSIC_PLUGIN_ID } from "@/supdance/plugins/music-generation/types";
 
@@ -257,6 +258,8 @@ function NavItem({
             setIsOpen((open) => !open);
             return;
         }
+        if (item.to === "/" || item.to === "/create") trackSiteTrafficAction("open_create");
+        if (item.to === "/ecommerce") trackSiteTrafficAction("open_ecommerce");
         onSelect(item.id);
     };
 

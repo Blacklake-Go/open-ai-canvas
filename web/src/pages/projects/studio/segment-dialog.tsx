@@ -8,7 +8,7 @@ import { AlertTriangle, Brush, Check, ChevronLeft, ChevronRight, Copy, Info, Loa
 
 import { AppModal } from "@/components/ui/product/app-modal";
 import { TRANSITION_LABEL } from "@/lib/drama/storyboard";
-import type { DramaCast, DramaEpisodeDetail, DramaModelChoice, DramaSegment, DramaSegmentReferencePatch, DramaShot, DramaShotPatch, DramaTransition } from "@/services/api/drama";
+import type { DramaCast, DramaEpisodeDetail, DramaModelChoice, DramaSegment, DramaSegmentReferencePatch, DramaShot, DramaShotPatch, DramaTake, DramaTransition } from "@/services/api/drama";
 import { ReferenceBoard } from "./segment-references";
 import { dramaChoiceKey, dramaVideoResolutionValue } from "@/lib/drama/model-choice";
 import { formatVideoResolutionLabel } from "@/lib/video-generation-options";
@@ -20,7 +20,7 @@ import { dramaSegmentQuoteMissing, dramaSegmentVideoRequirements, dramaVideoOpti
 
 import { CAST_KIND_LABEL, formatCredits, mediaBusy, MediaThumb } from "../drama-shared";
 import { promptReady, secondsLabel, SegmentStatus, SegmentVideo, videoWaitLabel } from "./segment-parts";
-import { DramaTakeList } from "./take-list";
+import { DramaTakeList, shortModelName } from "./take-list";
 import { CanvasResourceMentionTextarea } from "@/components/canvas/canvas-resource-mention-textarea";
 import type { CanvasResourceReference } from "@/lib/canvas/canvas-resource-references";
 
@@ -109,6 +109,11 @@ export function SegmentDialog({
     const position = segments.findIndex((item) => item.index === segmentIndex);
     const segment = position >= 0 ? segments[position] : undefined;
     const shots = segment ? (detail?.shots || []).filter((shot) => shot.segmentIndex === segment.index) : [];
+    const [previewTake, setPreviewTake] = useState<DramaTake>();
+    useEffect(() => {
+        setPreviewTake(undefined);
+    }, [segment?.id]);
+    const previewResourceId = previewTake && segment && previewTake.resourceId !== segment.videoResourceId ? previewTake.resourceId : undefined;
     return (
         <AppModal
             open={Boolean(segment)}
@@ -202,7 +207,21 @@ export function SegmentDialog({
                                 <strong>{_creationText("creation.5ecbd1b33b344e52", { value1: segment.index + 1 })}</strong>
                                 <SegmentStatus segment={segment} />
                             </div>
-                            <SegmentVideo segment={segment} aspectRatio={aspectRatio} />
+                            <SegmentVideo segment={segment} aspectRatio={aspectRatio} previewResourceId={previewResourceId} />
+                            {previewResourceId && previewTake ? (
+                                <div className="drama-sdx-preview-banner" role="status">
+                                    <span>
+                                        {_creationText("creation.ce1c95ee12b000c9")}
+                                        {previewTake.version}
+                                        {previewTake.durationMs ? ` · ${secondsLabel(previewTake.durationMs).replace(/s$/, " 秒")}` : ""}
+                                        {previewTake.model ? ` · ${shortModelName(previewTake.model)}` : ""}
+                                        {_creationText("creation.06956123093bb0ab")}
+                                    </span>
+                                    <Button size="small" onClick={() => setPreviewTake(undefined)}>
+                                        {_creationText("creation.ed6efdb1ae8c5e3f")}
+                                    </Button>
+                                </div>
+                            ) : null}
                             {segment.videoStatus === "failed" && segment.videoError ? (
                                 <div className="drama-sd-error">
                                     <strong>{segment.videoReprocessable ? _creationText("creation.cb5dcb93c12ddbc4") : _creationText("creation.5a586025ef2c7f6f")}</strong>
@@ -235,7 +254,14 @@ export function SegmentDialog({
                                     <dd>{segment.videoJob ? _creationText("creation.d901f70479c8f61f", { value1: formatCredits(segment.videoJob.costMicrocredits) }) : "—"}</dd>
                                 </div>
                             </dl>
-                            <DramaTakeList projectId={detail.episode.projectId} ownerId={segment.id} kind="video" />
+                            <DramaTakeList
+                                projectId={detail.episode.projectId}
+                                ownerId={segment.id}
+                                kind="video"
+                                previewTakeId={previewTake?.id}
+                                onPreview={setPreviewTake}
+                                switchCurrent={{ episodeId: detail.episode.id, segmentIndex: segment.index, expectedRevision: segment.revision }}
+                            />
                         </aside>
                     </div>
                 </div>

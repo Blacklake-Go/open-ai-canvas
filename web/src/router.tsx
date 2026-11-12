@@ -19,6 +19,7 @@ const ConnectOnePage = lazy(() => import("@/supdance/federation/connect-one"));
 const EcommerceManagementPage = lazyAdminPage(() => import("@/pages/admin/ecommerce-management-page"));
 const EcommerceAgentConfigPage = lazyAdminPage(() => import("@/pages/admin/ecommerce-agent-config-page"));
 const AnalyticsPage = lazyAdminPage(() => import("@/pages/admin/admin-route-pages").then((module) => ({ default: module.AnalyticsPage })));
+const TrafficPage = lazyAdminPage(() => import("@/pages/admin/traffic/traffic-page"));
 const AnnouncementsPage = lazyAdminPage(() => import("@/pages/admin/admin-route-pages").then((module) => ({ default: module.AnnouncementsPage })));
 const BannerAnnouncementsPage = lazyAdminPage(() => import("@/pages/admin/admin-route-pages").then((module) => ({ default: module.BannerAnnouncementsPage })));
 const StorageResourcesPage = lazyAdminPage(() => import("@/pages/admin/admin-route-pages").then((module) => ({ default: module.StorageResourcesPage })));
@@ -30,6 +31,7 @@ const AgentLessonsPage = lazyAdminPage(() => import("@/pages/admin/admin-route-p
 const ChannelsPage = lazyAdminPage(() => import("@/pages/admin/channels/channels-page"));
 const LogicalModelsPage = lazyAdminPage(() => import("@/pages/admin/logical-models/logical-models-page"));
 const AdminPluginsPage = lazyAdminPage(() => import("@/pages/admin/plugins/plugins-page"));
+const AdminMCPPage = lazyAdminPage(() => import("@/pages/admin/mcp/mcp-page"));
 const SkillCurationPage = lazyAdminPage(() => import("@/pages/admin/skill-curation-page"));
 const AdminSkillsPage = lazyAdminPage(() => import("@/pages/admin/skills/skills-page"));
 const AdminSkillWorkbenchPage = lazyAdminPage(() => import("@/pages/admin/skills/admin-skill-workbench-page"));
@@ -268,6 +270,7 @@ const routes: RouteObject[] = [
                 element: <RequireAuth>{deferred(<AdminPage />)}</RequireAuth>,
                 children: [
                     { index: true, element: <AnalyticsPage /> },
+                    { path: "traffic", element: <TrafficPage /> },
                     { path: "users", element: <UsersPage /> },
                     { path: "user-groups", element: <UserGroupsPage /> },
                     { path: "login-logs", element: <LoginLogsPage /> },
@@ -295,6 +298,7 @@ const routes: RouteObject[] = [
                     { path: "i18n/entries", element: <SupDanceI18nEntriesPage /> },
                     { path: "plugins/html-pages", element: <HtmlPageManager /> },
                     { path: "html-pages", element: <Navigate to="/admin/plugins/html-pages" replace /> },
+                    { path: "mcp", element: <AdminMCPPage /> },
                     { path: "workbench-tools", element: <WorkbenchToolsPage /> },
                     { path: "pose-library", element: <PoseLibraryAdminPage /> },
                     { path: "skills", element: <AdminSkillsPage /> },
