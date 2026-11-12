@@ -3,7 +3,7 @@ import { appQueryClient } from "@/lib/query-client";
 import { http } from "@/services/api/request";
 import { PLUGIN_STATE_CHANGED_EVENT, PLUGIN_STATE_REVISION_KEY } from "@/supdance/adapters/plugin-state-sync";
 
-export type CompactPickerSettings = { enabled: boolean; showDescription: boolean; showPrice: boolean; showInspirations: boolean };
+export type CompactPickerSettings = { enabled: boolean; showDescription: boolean; showPrice: boolean; showInspirations: boolean; homepageShowcaseEnabled?: boolean; complianceLock?: boolean; updatedAt?: string; unlockConfirmed?: boolean };
 export const COMPACT_PICKER_ID = "supdance-compact-model-picker";
 export const COMPACT_PICKER_ADMIN_ROUTE = "/admin/plugins/compact-model-picker";
 export const compactPublicKey = [COMPACT_PICKER_ID, "public"] as const;
@@ -11,20 +11,29 @@ export const compactAdminKey = [COMPACT_PICKER_ID, "admin"] as const;
 const publicPath = "/supdance/compact-model-picker/settings";
 const adminPath = "/admin" + publicPath;
 export const compactSettingsStorageKey = "supdance:compact-picker:settings:v1";
-const compactDefaults: CompactPickerSettings = { enabled: true, showDescription: true, showPrice: true, showInspirations: false };
+const compactDefaults: CompactPickerSettings = { enabled: true, showDescription: true, showPrice: true, showInspirations: false, homepageShowcaseEnabled: false, complianceLock: true };
 
 function parseSettings(value: unknown): CompactPickerSettings {
     if (!value || typeof value !== "object" || !("enabled" in value) || !("showDescription" in value) || !("showPrice" in value) || typeof value.enabled !== "boolean" || typeof value.showDescription !== "boolean" || typeof value.showPrice !== "boolean") {
         throw new Error("Invalid model picker display settings");
     }
     const showInspirations = "showInspirations" in value && typeof value.showInspirations === "boolean" ? value.showInspirations : false;
-    return { enabled: value.enabled, showDescription: value.showDescription, showPrice: value.showPrice, showInspirations };
+    const policy = value as Partial<CompactPickerSettings>;
+    return {
+        enabled: value.enabled,
+        showDescription: value.showDescription,
+        showPrice: value.showPrice,
+        showInspirations,
+        homepageShowcaseEnabled: policy.homepageShowcaseEnabled === true,
+        complianceLock: policy.complianceLock !== false,
+        updatedAt: typeof policy.updatedAt === "string" ? policy.updatedAt : undefined,
+    };
 }
 
 function cachedSettings() {
     try {
         const stored = localStorage.getItem(compactSettingsStorageKey);
-        return stored ? parseSettings(JSON.parse(stored)) : undefined;
+        return stored ? { ...parseSettings(JSON.parse(stored)), showInspirations: false, homepageShowcaseEnabled: false, complianceLock: true } : undefined;
     } catch {
         console.warn("Ignoring unreadable model picker display settings");
         return undefined;
@@ -62,7 +71,9 @@ if (typeof window !== "undefined") {
         if (event.key !== compactSettingsStorageKey || !event.newValue) return;
         try {
             const settings = parseSettings(JSON.parse(event.newValue));
-            void appQueryClient.cancelQueries({ queryKey: compactPublicKey }).then(() => appQueryClient.setQueryData(compactPublicKey, settings));
+            // Appearance can synchronize across tabs. Public authorization must
+            // come from the next server read, never a browser storage event.
+            void appQueryClient.cancelQueries({ queryKey: compactPublicKey }).then(() => appQueryClient.setQueryData(compactPublicKey, { ...settings, showInspirations: false, homepageShowcaseEnabled: false, complianceLock: true }));
         } catch {
             console.warn("Ignoring invalid model picker display settings from another tab");
         }
@@ -103,6 +114,8 @@ export function useCompactPickerSettings() {
     );
     return {
         ...(result.data ?? compactDefaults),
+        showInspirations: result.isFetchedAfterMount && !result.isError && result.data?.showInspirations === true && result.data?.complianceLock === false,
+        homepageShowcaseEnabled: result.isFetchedAfterMount && !result.isError && result.data?.showInspirations === true && result.data?.complianceLock === false && result.data?.homepageShowcaseEnabled === true,
         status: result.data ? "ready" : result.isError ? "error" : "loading",
         reload: () => {
             void result.refetch();
@@ -112,7 +125,9 @@ export function useCompactPickerSettings() {
 
 export const readAdminSettings = (signal: AbortSignal) => http.get<CompactPickerSettings>(adminPath, { signal });
 export const saveAdminSettings = async (settings: CompactPickerSettings) => {
-    const saved = parseSettings(await http.put<CompactPickerSettings>(adminPath, settings));
+    const input = { ...settings };
+    delete input.updatedAt;
+    const saved = parseSettings(await http.put<CompactPickerSettings>(adminPath, input));
     await publishSettings(saved);
     return saved;
 };

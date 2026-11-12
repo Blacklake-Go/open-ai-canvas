@@ -2,9 +2,9 @@
  * 全量灵感目录的运行时加载。
  *
  * 3MB 量级的目录不打进主 JS，首页灵感大厅进入可视区域附近后按需拉取；
- * 浏览器 HTTP 缓存之外再做一层内存缓存，同一次会话只请求一遍。
+ * 只合并并发请求，每次重新进入均由服务端复验公开权限。
  */
-import { catalogIdOf, curatedInspirations, type CreationInspiration, type InspirationSourceId } from "@/lib/inspirations/catalog";
+import { catalogIdOf, type CreationInspiration, type InspirationSourceId } from "@/lib/inspirations/catalog";
 import { getPublicInspirationFeed, type InspirationFeed } from "@/services/api/inspiration-feed";
 
 /** manifest.json 里每个来源带的分类码译名表。 */
@@ -36,7 +36,7 @@ const CATALOG_SOURCES: { key: InspirationSourceId; file: string }[] = [
 let pending: Promise<InspirationCatalog> | null = null;
 
 async function fetchJson<T>(url: string): Promise<T> {
-    const response = await fetch(url, { headers: { Accept: "application/json" } });
+    const response = await fetch(url, { headers: { Accept: "application/json" }, cache: "no-store", credentials: "same-origin" });
     if (!response.ok) throw new Error(`加载灵感目录失败：${url} 返回 HTTP ${response.status}`);
     return (await response.json()) as T;
 }
@@ -106,7 +106,8 @@ async function buildCatalog(): Promise<InspirationCatalog> {
 
     const entriesBySource = new Map<InspirationSourceId, CreationInspiration[]>();
     CATALOG_SOURCES.forEach((source, index) => entriesBySource.set(source.key, [...packs[index]]));
-    entriesBySource.set("original", curatedInspirations);
+    entriesBySource.set("original", []);
+    entriesBySource.set("chatgpt-prompts", []);
     // 静态目录的分类名优先，上游新增的分类码再用上新接口带回的名称。
     const labelsOf = (sourceId: InspirationSourceId) => ({ ...(feed?.categories?.[sourceId] ?? {}), ...(manifest.sources?.[sourceId]?.categories ?? {}) });
     mergeFeed(entriesBySource, feed, labelsOf);
@@ -137,12 +138,11 @@ export function invalidateInspirationCatalog() {
     pending = null;
 }
 
-/** 同一次会话只拉一遍；失败后清空缓存，下次进入页面还能重试。 */
+/** 仅复用正在进行的请求，避免会话缓存绕过后来关闭的公开策略。 */
 export function loadInspirationCatalog(): Promise<InspirationCatalog> {
     if (!pending) {
-        pending = buildCatalog().catch((error) => {
+        pending = buildCatalog().finally(() => {
             pending = null;
-            throw error;
         });
     }
     return pending;
@@ -155,16 +155,18 @@ let galleryPool: Promise<CreationInspiration[]> | null = null;
 
 /**
  * 池子有几百条、几百 KB，是全量目录之外的单独一份，只服务画廊一处。
- * 拿不到就退回打包的原创条目——画廊宁可少几张，也不该空着。
+ * 拿不到或失去公开权限时保持空白，不恢复任何打包案例。
  */
 export function loadGalleryPool(): Promise<CreationInspiration[]> {
     if (!galleryPool) {
         galleryPool = fetchJson<unknown>(GALLERY_POOL_FILE)
-            .then((payload) => [...curatedInspirations, ...readEntries(payload, GALLERY_POOL_FILE)])
+            .then((payload) => readEntries(payload, GALLERY_POOL_FILE))
             .catch((error) => {
-                console.warn("画廊池加载失败，退回打包的原创条目", error);
+                console.warn("画廊池不可公开或加载失败", error);
+                return [];
+            })
+            .finally(() => {
                 galleryPool = null;
-                return curatedInspirations;
             });
     }
     return galleryPool;

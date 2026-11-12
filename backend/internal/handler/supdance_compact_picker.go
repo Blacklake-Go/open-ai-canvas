@@ -48,10 +48,13 @@ func RegisterSupDanceCompactPickerRoutes(r *gin.RouterGroup, svc *service.Servic
 			return
 		}
 		var body struct {
-			Enabled          *bool `json:"enabled"`
-			ShowDescription  *bool `json:"showDescription"`
-			ShowPrice        *bool `json:"showPrice"`
-			ShowInspirations *bool `json:"showInspirations"`
+			Enabled                 *bool `json:"enabled"`
+			ShowDescription         *bool `json:"showDescription"`
+			ShowPrice               *bool `json:"showPrice"`
+			ShowInspirations        *bool `json:"showInspirations"`
+			HomepageShowcaseEnabled *bool `json:"homepageShowcaseEnabled"`
+			ComplianceLock          *bool `json:"complianceLock"`
+			UnlockConfirmed         bool  `json:"unlockConfirmed"`
 		}
 		decoder := json.NewDecoder(http.MaxBytesReader(c.Writer, c.Request.Body, 4096))
 		decoder.DisallowUnknownFields()
@@ -67,11 +70,17 @@ func RegisterSupDanceCompactPickerRoutes(r *gin.RouterGroup, svc *service.Servic
 		if body.ShowInspirations != nil {
 			showInspirations = *body.ShowInspirations
 		}
+		complianceLock := true
+		if body.ComplianceLock != nil {
+			complianceLock = *body.ComplianceLock
+		}
+		homepage := body.HomepageShowcaseEnabled != nil && *body.HomepageShowcaseEnabled
 		settings, err := svc.SaveAdminCompactPickerSettings(user, compactpicker.Settings{
-			Enabled: *body.Enabled, Display: compactpicker.Display{
-				ShowDescription:  *body.ShowDescription,
-				ShowPrice:        *body.ShowPrice,
-				ShowInspirations: showInspirations,
+			Enabled: *body.Enabled, UnlockConfirmed: body.UnlockConfirmed, Display: compactpicker.Display{
+				ShowDescription:         *body.ShowDescription,
+				ShowPrice:               *body.ShowPrice,
+				ShowInspirations:        showInspirations,
+				HomepageShowcaseEnabled: homepage, ComplianceLock: complianceLock,
 			},
 		})
 		if err != nil {

@@ -182,7 +182,7 @@ export default function CreatePage() {
     const remoteHistorySnapshots = useRef(new WeakSet<CreationConversation[]>());
     const [historySync, setHistorySync] = useState<HistorySyncStatus>({ phase: "local" });
     const inspirationSourcesVisible = useUserStore((state) => state.features.inspirationSourcesVisible);
-    const { showInspirations } = useCompactPickerSettings();
+    const { homepageShowcaseEnabled: showInspirations } = useCompactPickerSettings();
     const [conversationScope, setConversationScope] = useState<string | null>(() => (initialConversationSnapshot ? activeConversationScope : null));
     const [mode, setMode] = useState<CreationMode>(() => initialComposerPreferences.mode || defaultCreationMode);
     const [prompt, setPrompt] = useState("");

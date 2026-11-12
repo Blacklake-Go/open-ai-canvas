@@ -26,6 +26,25 @@ export type UpstreamPatchRecord = {
  */
 export const SUPDANCE_UPSTREAM_PATCH_REGISTRY: readonly UpstreamPatchRecord[] = [
     {
+        id: "supdance-gallery-compliance",
+        upstreamBaseline: "v1.8.5",
+        feature: "灵感大厅统一公开隔离与授权审核",
+        coupledUpstreamFiles: [
+            "backend/internal/handler/api.go",
+            "backend/internal/handler/inspiration_feed.go",
+            "backend/internal/app/inspiration_feed_bridge.go",
+            "web/src/pages/create/index.tsx",
+            "web/src/pages/inspirations/index.tsx",
+            "web/src/services/inspiration-catalog.ts",
+            "web/src/pages/admin/components/feature-availability-panel.tsx",
+            "web/vite.config.ts",
+            "nginx.conf",
+        ],
+        files: ["backend/internal/supdance/gallery/gallery.go", "backend/internal/handler/supdance_gallery.go", "web/src/supdance/plugins/compact-model-picker/gallery-admin.tsx", "web/build/private-inspirations.ts"],
+        reason: "公开静态目录与上新接口必须共用现有后台配置及逐条审核，防止仅隐藏入口后仍泄露内容。",
+        upgradeRisk: "HIGH",
+    },
+    {
         id: "supdance-upstream-185-preservation",
         upstreamBaseline: "v1.8.5+main@bae6a36c",
         feature: "上游历史同步、MCP 与本站插件兼容",

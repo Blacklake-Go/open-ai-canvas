@@ -2089,11 +2089,67 @@ paths:
       tags: [inspirations]
       security: []
       summary: 读取灵感上新条目（匿名可读）
-      description: 后端定时从 YouMind、awesome-seedance 同步的中文条目，按首次收录时间倒序，最多 3000 条；进程内缓存 5 分钟。按 IP 每分钟 120 次。
+      description: 与受保护归档共用全局公开开关、合规锁及逐条内容摘要审核。仅返回已授权且当前内容未变化的案例；no-store，关闭时 404。按 IP 每分钟 120 次。
       responses:
-        "200": { description: "data={enabled,entries[{id,title,description,image,mode,prompt,category?,tags?,sourceId,credit?,sourceUrl?,addedAt,publishedAt?}],categories{来源:{分类码:名称}},syncedAt?}；enabled=false 时 entries 为空" }
+        "200": { description: "data={enabled:true,entries:[已授权案例],categories:{}}" }
+        "404": { $ref: "#/components/responses/Error" }
         "429": { $ref: "#/components/responses/Error" }
         "500": { $ref: "#/components/responses/Error" }
+  /public/inspirations/access:
+    get:
+      security: []
+      summary: 网关灵感页面授权检查
+      responses:
+        "204": { description: 全局公开且合规锁关闭 }
+        "403": { description: 公开隔离或配置不可用 }
+  /public/inspirations/catalog/{path}:
+    get:
+      security: []
+      summary: 受控灵感目录，仅已审核案例
+      parameters:
+        - { in: path, name: path, required: true, schema: { type: string } }
+      responses:
+        "200": { description: 已审核案例目录，no-store；首页目录还需首页开关开启 }
+        "404": { $ref: "#/components/responses/Error" }
+  /public/inspirations/media/{path}:
+    get:
+      security: []
+      summary: 已审核案例引用的归档缩略图
+      parameters:
+        - { in: path, name: path, required: true, schema: { type: string } }
+      responses:
+        "200": { description: 图片流，no-store }
+        "404": { $ref: "#/components/responses/Error" }
+  /admin/supdance/compact-model-picker/inspirations:
+    get:
+      summary: 管理员逐条案例审核检索
+      parameters:
+        - { in: query, name: q, schema: { type: string } }
+      responses:
+        "200": { description: 信封 data 为最多100条候选数组，含 entry、review、hash }
+        "401": { $ref: "#/components/responses/Error" }
+        "403": { $ref: "#/components/responses/Error" }
+    put:
+      summary: 管理员记录授权审核与可选替换封面
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              required: [id, hash, status, evidence]
+              properties:
+                id: { type: string }
+                hash: { type: string }
+                status: { type: string, enum: [approved, pending_review, restricted, archived] }
+                evidence: { type: string, maxLength: 4000 }
+                replacementImage: { type: string, maxLength: 1000 }
+      responses:
+        "200": { description: 已保存审核与审计 }
+        "400": { $ref: "#/components/responses/Error" }
+        "401": { $ref: "#/components/responses/Error" }
+        "403": { $ref: "#/components/responses/Error" }
   /admin/settings/inspiration-feed:
     get:
       tags: [inspirations, admin]
@@ -5716,6 +5772,10 @@ components:
         showDescription: {type: boolean, default: true}
         showPrice: {type: boolean, default: true}
         showInspirations: {type: boolean, default: false}
+        homepageShowcaseEnabled: {type: boolean, default: false}
+        complianceLock: {type: boolean, default: true}
+        unlockConfirmed: {type: boolean, writeOnly: true, default: false}
+        updatedAt: {type: string, format: date-time, readOnly: true}
     EcommerceAgentRequest:
       type: object
       description: 对应 ecommerceagent.Request；分析、推荐、报价与生成复用此请求，具体操作的业务校验由服务端执行。

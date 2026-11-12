@@ -20,6 +20,7 @@ import { useUserStore } from "@/stores/use-user-store";
 import { InspirationCover, InspirationDetailModal } from "./inspiration-detail-modal";
 import { InspirationEditorModal, type InspirationCategoryChoice } from "./inspiration-editor-modal";
 import "./inspirations.css";
+import { useCompactPickerSettings } from "@/supdance/plugins/compact-model-picker/settings";
 
 type SourceFilter = "all" | InspirationSourceId;
 type ViewFilter = "all" | "favorites" | "hidden";
@@ -68,7 +69,11 @@ function downloadText(text: string, fileName: string) {
     URL.revokeObjectURL(url);
 }
 
-export function InspirationHall({ onUse }: { onUse: (item: CreationInspiration) => void }) {
+function InspirationHallGate({ onUse }: { onUse: (item: CreationInspiration) => void }) {
+    const { showInspirations } = useCompactPickerSettings();
+    return showInspirations ? <InspirationHall onUse={onUse} /> : null;
+}
+function InspirationHall({ onUse }: { onUse: (item: CreationInspiration) => void }) {
     const { message, modal } = App.useApp();
     const inspirationSourcesVisible = useUserStore((state) => state.features.inspirationSourcesVisible);
     const { t, locale } = useI18n();
@@ -712,4 +717,5 @@ function InspirationCard({
     );
 }
 
-export default InspirationHall;
+export { InspirationHallGate as InspirationHall };
+export default InspirationHallGate;

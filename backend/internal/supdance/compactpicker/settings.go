@@ -14,14 +14,18 @@ const PluginID = "supdance-compact-model-picker"
 const settingKey = "plugin." + PluginID + ".display"
 
 type Display struct {
-	ShowDescription  bool `json:"showDescription"`
-	ShowPrice        bool `json:"showPrice"`
-	ShowInspirations bool `json:"showInspirations"`
+	ShowDescription         bool `json:"showDescription"`
+	ShowPrice               bool `json:"showPrice"`
+	ShowInspirations        bool `json:"showInspirations"`
+	HomepageShowcaseEnabled bool `json:"homepageShowcaseEnabled"`
+	ComplianceLock          bool `json:"complianceLock"`
 }
 
 type Settings struct {
 	Enabled bool `json:"enabled"`
 	Display
+	UpdatedAt       *time.Time `json:"updatedAt,omitempty"`
+	UnlockConfirmed bool       `json:"-"`
 }
 
 func Available(repo *repository.Repository) (bool, error) {
@@ -40,7 +44,7 @@ func Read(repo *repository.Repository) (Settings, error) {
 	if err != nil {
 		return Settings{}, err
 	}
-	display := &Display{ShowDescription: true, ShowPrice: true, ShowInspirations: false}
+	display := &Display{ShowDescription: true, ShowPrice: true, ComplianceLock: true}
 	stored, err := repo.SystemSettingOptional(settingKey)
 	if err != nil {
 		return Settings{}, err
@@ -53,8 +57,15 @@ func Read(repo *repository.Repository) (Settings, error) {
 			return Settings{}, errors.New("模型选择器配置为空")
 		}
 	}
-	return Settings{Enabled: enabled, Display: *display}, nil
+	settings := Settings{Enabled: enabled, Display: *display}
+	if stored != nil {
+		settings.UpdatedAt = &stored.UpdatedAt
+	}
+	return settings, nil
 }
+
+func (s Settings) GalleryPublic() bool  { return s.ShowInspirations && !s.ComplianceLock }
+func (s Settings) HomepagePublic() bool { return s.GalleryPublic() && s.HomepageShowcaseEnabled }
 
 // Keep the system switch in the platform's plugin state. Only presentation
 // preferences belong in this plugin's setting, even when the plugin is off.

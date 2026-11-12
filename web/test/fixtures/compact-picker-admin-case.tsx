@@ -12,7 +12,7 @@ import { COMPACT_PICKER_ADMIN_ROUTE, compactPublicKey, type CompactPickerSetting
 
 test("admin changes remain drafts until accepted by the server; failed saves are retryable", async () => {
     const path = "/admin/supdance/compact-model-picker/settings";
-    let persisted: CompactPickerSettings = { enabled: true, showDescription: true, showPrice: true, showInspirations: false };
+    let persisted: CompactPickerSettings = { enabled: true, showDescription: true, showPrice: true, showInspirations: false, homepageShowcaseEnabled: false, complianceLock: true };
     let allowSave = false;
     const requests: string[] = [];
     const original = apiClient.request;
@@ -24,7 +24,8 @@ test("admin changes remain drafts until accepted by the server; failed saves are
             if (!allowSave) throw new Error("test write rejected");
             persisted = { ...request.data };
         } else if (method !== "get") throw new Error("Unexpected method: " + method);
-        return { status: 200, data: { code: 0, msg: "", data: { ...persisted } } };
+        expect(request.data?.updatedAt).toBeUndefined();
+        return { status: 200, data: { code: 0, msg: "", data: { ...persisted, updatedAt: "2026-11-12T00:00:00Z" } } };
     }) as typeof apiClient.request;
     const host = document.createElement("div");
     document.body.append(host);
@@ -52,7 +53,9 @@ test("admin changes remain drafts until accepted by the server; failed saves are
         await act(async () => toggle("showPrice").click());
         await act(async () => toggle("enabled").click());
         expect(toggle("showPrice").disabled).toBe(true);
-        expect(toggle("showInspirations").disabled).toBe(false);
+        expect(toggle("showInspirations").disabled).toBe(true);
+        expect(toggle("homepageShowcaseEnabled").disabled).toBe(true);
+        expect(toggle("complianceLock").getAttribute("aria-checked")).toBe("true");
         expect(persisted.enabled).toBe(true);
         await act(async () => save().click());
         await flush();
@@ -62,16 +65,14 @@ test("admin changes remain drafts until accepted by the server; failed saves are
         allowSave = true;
         await act(async () => save().click());
         await flush();
-        expect(persisted).toEqual({ enabled: false, showDescription: true, showPrice: false, showInspirations: false });
-        expect(appQueryClient.getQueryData(compactPublicKey)).toEqual(persisted);
+        expect(persisted).toEqual({ enabled: false, showDescription: true, showPrice: false, showInspirations: false, homepageShowcaseEnabled: false, complianceLock: true });
+        expect(appQueryClient.getQueryData(compactPublicKey)).toMatchObject(persisted);
         expect(save().disabled).toBe(true);
         await act(async () => toggle("showInspirations").click());
-        expect(save().disabled).toBe(false);
-        await act(async () => save().click());
-        await flush();
-        expect(persisted).toEqual({ enabled: false, showDescription: true, showPrice: false, showInspirations: true });
-        expect(appQueryClient.getQueryData(compactPublicKey)).toEqual(persisted);
-        expect(requests).toEqual(["get", "put", "put", "put"]);
+        expect(save().disabled).toBe(true);
+        expect(persisted.showInspirations).toBe(false);
+        expect(appQueryClient.getQueryData(compactPublicKey)).toMatchObject(persisted);
+        expect(requests).toEqual(["get", "put", "put"]);
         expect(save().disabled).toBe(true);
     } finally {
         await act(async () => root.unmount());

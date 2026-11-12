@@ -1,6 +1,50 @@
 import type { AppLocale } from "../../locales";
 
+const galleryEn = {
+    galleryTitle: "Inspiration gallery management",
+    galleryFeed: "Upstream synchronization (does not authorize publication)",
+    homepageShowcaseEnabled: "Homepage showcase",
+    complianceLock: "Compliance review lock",
+    galleryIsolationHint: "Public pages and case APIs remain isolated while the gallery is disabled or locked. Internal data is retained. Verify each case’s authorization before restoring access.",
+    galleryUpdated: "Last saved",
+    galleryConfirm: "Confirm public content authorization",
+    galleryConfirmHint: "Confirm that the merchant review result and case authorizations have been verified. Only approved cases with unchanged content can be published. Save settings to apply switch changes.",
+    galleryReviews: "Review individual cases",
+    gallerySearch: "Search case ID, title or prompt",
+    galleryResultCount: "{{count}} results (up to 100; refine your search)",
+    galleryReviewStatus: "Review status",
+    galleryEvidence: "Verifiable authorization evidence for the depicted person and all media",
+    gallerySaveReview: "Save case review",
+    galleryReplacement: "Replacement cover URL (optional; requires verified authorization)",
+    galleryStatus_pending_review: "Pending review",
+    galleryStatus_restricted: "Restricted",
+    galleryStatus_archived: "Archived",
+    galleryStatus_approved: "Approved for publication",
+};
+const galleryZh: typeof galleryEn = {
+    galleryTitle: "灵感大厅管理",
+    galleryFeed: "案例上新同步（不代表允许公开）",
+    homepageShowcaseEnabled: "首页精选案例展示",
+    complianceLock: "合规审核锁定",
+    galleryIsolationHint: "灵感大厅关闭或锁定时，页面及公开案例 API 均处于隔离状态，后台数据保留。恢复前必须逐条完成案例与素材授权审核。",
+    galleryUpdated: "最近保存时间",
+    galleryConfirm: "确认公开内容授权",
+    galleryConfirmHint: "请确认已核对商户审核结果及案例授权。仅审核通过且内容未变更的案例可以公开。开关修改需保存设置后生效。",
+    galleryReviews: "逐条案例授权审核",
+    gallerySearch: "搜索案例 ID、标题或提示词",
+    galleryResultCount: "已返回 {{count}} 条（最多 100 条，请细化搜索）",
+    galleryReviewStatus: "案例审核状态",
+    galleryEvidence: "可核验的人物形象、图片及视频公开授权凭证或原创依据",
+    gallerySaveReview: "保存案例审核",
+    galleryReplacement: "替换封面地址（可选，必须核验公开授权）",
+    galleryStatus_pending_review: "待审核",
+    galleryStatus_restricted: "限制公开",
+    galleryStatus_archived: "内部归档",
+    galleryStatus_approved: "已审核可公开",
+};
+
 const zh = {
+    ...galleryZh,
     title: "模型选择器",
     summary: "管理创作工具中的品牌列表和模型选项。",
     appearance: "下拉菜单外观",
@@ -10,8 +54,8 @@ const zh = {
     descriptionHint: "在模型名称下方显示一行说明。",
     showPrice: "显示积分报价",
     priceHint: "使用当前模型已有的报价和计费单位。",
-    showInspirations: "显示灵感中心",
-    inspirationsHint: "在创作页展示灵感大厅与创意推荐。关闭后暂时隐藏以配合审核。",
+    showInspirations: "灵感大厅全局公开开关",
+    inspirationsHint: "统一控制公开页面、案例目录、上新 API 与案例素材。",
     save: "保存设置",
     saved: "设置已保存",
     retry: "重新加载",
@@ -22,6 +66,7 @@ type Copy = typeof zh;
 export const compactPickerLocales: Record<AppLocale, Copy> = {
     "zh-CN": zh,
     "en-US": {
+        ...galleryEn,
         title: "Model picker",
         summary: "Manage brand and model choices in creative tools.",
         appearance: "Dropdown appearance",
@@ -40,6 +85,7 @@ export const compactPickerLocales: Record<AppLocale, Copy> = {
         readError: "Could not load model picker settings",
     },
     "fr-FR": {
+        ...galleryEn,
         title: "Sélecteur de modèles",
         summary: "Gérez les marques et les modèles des outils de création.",
         appearance: "Apparence du menu",
@@ -58,6 +104,7 @@ export const compactPickerLocales: Record<AppLocale, Copy> = {
         readError: "Impossible de charger les paramètres du sélecteur",
     },
     "de-DE": {
+        ...galleryEn,
         title: "Modellauswahl",
         summary: "Marken und Modelle in den Kreativwerkzeugen verwalten.",
         appearance: "Menüdarstellung",
@@ -76,6 +123,7 @@ export const compactPickerLocales: Record<AppLocale, Copy> = {
         readError: "Einstellungen konnten nicht geladen werden",
     },
     "ja-JP": {
+        ...galleryEn,
         title: "モデル選択",
         summary: "制作ツールのブランドとモデルの表示を管理します。",
         appearance: "メニューの表示",
@@ -94,6 +142,7 @@ export const compactPickerLocales: Record<AppLocale, Copy> = {
         readError: "モデル選択の設定を読み込めません",
     },
     "ko-KR": {
+        ...galleryEn,
         title: "모델 선택기",
         summary: "창작 도구의 브랜드와 모델 표시를 관리합니다.",
         appearance: "메뉴 표시",

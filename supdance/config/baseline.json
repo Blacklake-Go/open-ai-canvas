@@ -22,6 +22,13 @@
     "baseCommit": "259e7e3fba0b6f70ac3cfd65941c3ca345d60249"
   },
   "coupledUpstreamFiles": [
+    "backend/internal/handler/inspiration_feed.go",
+    "web/src/pages/admin/components/feature-availability-panel.tsx",
+    "backend/internal/app/inspiration_feed_bridge.go",
+    "web/src/pages/inspirations/index.tsx",
+    "web/src/services/inspiration-catalog.ts",
+    "web/vite.config.ts",
+    "nginx.conf",
     "docker-compose.deploy.yml",
     "web/src/components/auth/require-auth.tsx",
     "web/src/components/payment/use-payment-order-flow.tsx",

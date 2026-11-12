@@ -9,12 +9,12 @@ import { SettingsSectionCard } from "@/pages/admin/components/admin-ui";
 import { AdminSwitch } from "@/pages/admin/ui/controls";
 import { notifyPluginStateChanged } from "@/supdance/adapters/plugin-state-sync";
 import { compactAdminKey, compactPublicKey, readAdminSettings, saveAdminSettings, type CompactPickerSettings } from "./settings";
+import { GalleryAdmin } from "./gallery-admin";
 
 const fields = [
     ["enabled", "enabledHint"],
     ["showDescription", "descriptionHint"],
     ["showPrice", "priceHint"],
-    ["showInspirations", "inspirationsHint"],
 ] as const;
 
 export default function CompactPickerAdmin() {
@@ -33,7 +33,7 @@ export default function CompactPickerAdmin() {
         },
     });
     const draft = query.data && { ...query.data, ...edits };
-    const dirty = draft && fields.some(([key]) => draft[key] !== query.data?.[key]);
+    const dirty = draft && (fields.some(([key]) => draft[key] !== query.data?.[key]) || (["showInspirations", "homepageShowcaseEnabled", "complianceLock"] as const).some((key) => draft[key] !== query.data?.[key]));
     return (
         <AdminPageFrame scroll title={t("compactPicker.title")} description={t("compactPicker.summary")}>
             {query.isError ? (
@@ -41,31 +41,34 @@ export default function CompactPickerAdmin() {
             ) : !draft ? (
                 <p role="status">{t("compactPicker.loading")}</p>
             ) : (
-                <SettingsSectionCard
-                    icon={<ListFilter />}
-                    title={t("compactPicker.appearance")}
-                    footer={
-                        <Button type="primary" disabled={!dirty} loading={save.isPending} onClick={() => save.mutate(draft)}>
-                            {t("compactPicker.save")}
-                        </Button>
-                    }
-                >
-                    {fields.map(([key, hint]) => (
-                        <div key={key} className="flex items-center justify-between gap-4 border-b border-[var(--admin-border)] px-4 py-3 last:border-b-0">
-                            <div>
-                                <strong>{t(`compactPicker.${key}`)}</strong>
-                                <p className="text-sm text-[var(--admin-text-muted)]">{t(`compactPicker.${hint}`)}</p>
+                <>
+                    <SettingsSectionCard
+                        icon={<ListFilter />}
+                        title={t("compactPicker.appearance")}
+                        footer={
+                            <Button type="primary" disabled={!dirty} loading={save.isPending} onClick={() => save.mutate(draft)}>
+                                {t("compactPicker.save")}
+                            </Button>
+                        }
+                    >
+                        {fields.map(([key, hint]) => (
+                            <div key={key} className="flex items-center justify-between gap-4 border-b border-[var(--admin-border)] px-4 py-3 last:border-b-0">
+                                <div>
+                                    <strong>{t(`compactPicker.${key}`)}</strong>
+                                    <p className="text-sm text-[var(--admin-text-muted)]">{t(`compactPicker.${hint}`)}</p>
+                                </div>
+                                <AdminSwitch
+                                    checked={Boolean(draft[key])}
+                                    disabled={save.isPending || (key !== "enabled" && !draft.enabled)}
+                                    aria-label={t(`compactPicker.${key}`)}
+                                    onChange={(checked) => setEdits((current) => ({ ...current, [key]: checked }))}
+                                />
                             </div>
-                            <AdminSwitch
-                                checked={Boolean(draft[key])}
-                                disabled={save.isPending || (key !== "enabled" && key !== "showInspirations" && !draft.enabled)}
-                                aria-label={t(`compactPicker.${key}`)}
-                                onChange={(checked) => setEdits((current) => ({ ...current, [key]: checked }))}
-                            />
-                        </div>
-                    ))}
-                    {save.isError && <Alert role="alert" type="error" showIcon title={save.error.message} />}
-                </SettingsSectionCard>
+                        ))}
+                        {save.isError && <Alert role="alert" type="error" showIcon title={save.error.message} />}
+                    </SettingsSectionCard>
+                    <GalleryAdmin draft={draft} pending={save.isPending} edit={(value) => setEdits((current) => ({ ...current, ...value }))} />
+                </>
             )}
         </AdminPageFrame>
     );

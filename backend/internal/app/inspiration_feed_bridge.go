@@ -2,6 +2,7 @@ package app
 
 import (
 	"context"
+	"encoding/json"
 	"time"
 
 	"yingce/backend/internal/inspirations"
@@ -47,7 +48,39 @@ func (s *Service) startInspirationFeedWorker() {
 }
 
 func (s *Service) InspirationFeed() (*InspirationFeed, error) {
-	return s.inspirationFeedDomain().Feed()
+	rows, err := s.InspirationGallery().Entries(false)
+	if err != nil {
+		return nil, err
+	}
+	feed, err := s.inspirationFeedDomain().Feed()
+	if err != nil {
+		return nil, err
+	}
+	feedIDs := make(map[string]bool, len(feed.Entries))
+	for _, entry := range feed.Entries {
+		feedIDs[entry.ID] = true
+	}
+	// Never mutate the domain's shared cached feed with request-specific filtering.
+	filtered := *feed
+	filtered.Entries = []inspirations.FeedEntry{}
+	for _, row := range rows {
+		id, _ := row["id"].(string)
+		if !feedIDs[id] {
+			continue
+		}
+		b, err := json.Marshal(row)
+		if err != nil {
+			return nil, err
+		}
+		var entry inspirations.FeedEntry
+		if err = json.Unmarshal(b, &entry); err != nil {
+			return nil, err
+		}
+		filtered.Entries = append(filtered.Entries, entry)
+	}
+	// Raw upstream categories are not independently authorized public content.
+	filtered.Categories = map[string]map[string]string{}
+	return &filtered, nil
 }
 
 func (s *Service) AdminInspirationFeed(actor *model.User) (*InspirationFeedAdminStatus, error) {

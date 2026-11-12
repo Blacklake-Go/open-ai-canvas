@@ -5,6 +5,14 @@ description: 信封、错误码与 OpenAPI
 
 # HTTP API 合同
 
+## SupDance 灵感公开隔离
+
+现有模型选择器配置 API 复用管理员鉴权与审计，新增 `homepageShowcaseEnabled`、`complianceLock` 和只读 `updatedAt`；解锁请求必须显式提供 `unlockConfirmed: true`，且至少有一条当前内容仍匹配的已授权案例。全局关闭会同时关闭首页展示，合规锁开启时拒绝公开开启请求。
+
+新增管理员 `GET/PUT /api/admin/supdance/compact-model-picker/inspirations` 用于逐条检索与审核。PUT 提交 `id`、当前 `hash`、`status`、`evidence` 及可选 `replacementImage`；普通用户禁止操作，批准缺少依据或摘要已变化时返回 400。
+
+`/api/public/inspirations/feed`、`catalog/*path`、`media/*path` 共用服务端过滤，只有全局开启、锁关闭且案例 approved、依据非空、内容摘要匹配时才可返回正文和素材。首页画廊还检查首页开关；关闭时返回 404，全部使用 no-store。`access` 仅供网关授权检查，禁止公开时 403。旧翻译包没有逐条审核，返回 404。边缘应急隔离返回 410，不能用 noindex 代替访问控制。
+
 启用 `CANVAS_WAFFO_PROMPT_SCREENING_ENABLED` 后，图片／视频任务在上游创建前执行提示词筛查。未通过时走失败任务与原有账务处理路径，不能通过更换供应商绕过；创建任务的异步 API 合同不变。此时 `/api/ai/custom` 的创建请求返回 403，读取保留，生成必须通过任务队列。默认关闭；启用配置与 relay 影响见仓库文档 `docs/supdance/PROMPT_SCREENING.md`。
 
 文本 Token 价格档支持 `tokenPriceBands`；管理员成本快照通过 `costPricing.tokenPriceBands` 独立配置。每档字段为 `minInputTokens`、`inputTokenPriceMicrocredits`、`outputTokenPriceMicrocredits`、`cachedTokenPriceMicrocredits`、`cacheWriteTokenPriceMicrocredits`，可选 `cacheWrite1hTokenPriceMicrocredits`。首档阈值为 0 且与基础价格一致，最多 16 档，仅适用于文本 Token 模型；公开模型目录只返回销售分档。分档整次应用于包含缓存的总输入，订单冻结分档后按实际用量结算。带分档模型的批量标量调价会被拒绝，需保存完整配置，避免遗漏长上下文价格。数据库语义与回退见「后端数据库」的 Schema 83 节。

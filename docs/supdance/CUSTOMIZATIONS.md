@@ -12,6 +12,10 @@
 
 # SupDance Canvas — 独立改造与定制代码清单 (CUSTOMIZATIONS.md)
 
+## 灵感大厅合规公开边界
+
+独立领域模块 `backend/internal/supdance/gallery` 统一执行现有模型选择器全局开关、首页开关、合规锁与内容摘要绑定的逐条授权审核，复用 system_settings 和管理员事务审计。上游接缝仅包括 API 注册、上新读取组合根、真实首页/大厅加载、受控 Nginx 路径与 Vite 私有目录构建排除。源码数据与私人资产保留，不更改支付和模型合同。后台只扩展既有模型选择器，不创建新导航或控制中心。登记为 `supdance-gallery-compliance`；部署、恢复及回滚见 [专题说明](./WAFFO_GALLERY_ISOLATION.md)。
+
 ## 2026-11-12 音乐钱包与视觉插件退役
 
 音乐基础表单及高级操作复用宿主 `useWalletBalance` 查询，包含现有用户归属校验，与顶栏共享预占、结算与退款后的余额。音乐任务到达终态后发送宿主 `wallet:updated` 事件；保持微积分账本和原始报价不变，不能用界面四舍五入代替整数积分定价迁移。

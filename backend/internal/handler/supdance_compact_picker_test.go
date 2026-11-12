@@ -3,6 +3,7 @@ package handler
 import (
 	"encoding/json"
 	"net/http"
+	"os"
 	"path/filepath"
 	"reflect"
 	"testing"
@@ -18,6 +19,7 @@ import (
 	"yingce/backend/internal/repository"
 	"yingce/backend/internal/service"
 	"yingce/backend/internal/supdance/compactpicker"
+	"yingce/backend/internal/supdance/gallery"
 )
 
 func TestSupDanceCompactPickerHTTP(t *testing.T) {
@@ -32,7 +34,7 @@ func TestSupDanceCompactPickerHTTP(t *testing.T) {
 		t.Fatal(err)
 	}
 	t.Cleanup(func() { _ = sqlDB.Close() })
-	if err := db.AutoMigrate(&model.User{}, &model.AuthSession{}, &model.PluginPlatformState{}, &model.UserPluginState{}, &model.SystemSetting{}, &model.AdminAuditEvent{}); err != nil {
+	if err := db.AutoMigrate(&model.User{}, &model.AuthSession{}, &model.PluginPlatformState{}, &model.UserPluginState{}, &model.SystemSetting{}, &model.AdminAuditEvent{}, &model.InspirationFeedEntry{}); err != nil {
 		t.Fatal(err)
 	}
 	for _, role := range []model.UserRole{model.UserRoleAdmin, model.UserRoleUser} {
@@ -46,6 +48,9 @@ func TestSupDanceCompactPickerHTTP(t *testing.T) {
 	}
 	newRouter := func() *gin.Engine {
 		svc := service.New(repository.New(db), dir)
+		previousRuntime := runtimeService
+		ConfigureRuntime(svc)
+		t.Cleanup(func() { ConfigureRuntime(previousRuntime) })
 		t.Cleanup(func() { _ = svc.Close() })
 		router := gin.New()
 		RegisterCanvasAPI(router.Group("/api"), svc)
@@ -82,11 +87,13 @@ func TestSupDanceCompactPickerHTTP(t *testing.T) {
 		t.Helper()
 		rec := profileRequest(router, method, path, body, cookie)
 		var result struct {
-			Code int             `json:"code"`
-			Data map[string]bool `json:"data"`
+			Code int            `json:"code"`
+			Data map[string]any `json:"data"`
 		}
-		want := map[string]bool{"enabled": enabled, "showDescription": description, "showPrice": price, "showInspirations": inspirations}
-		if rec.Code != 200 || json.Unmarshal(rec.Body.Bytes(), &result) != nil || result.Code != 0 || !reflect.DeepEqual(result.Data, want) {
+		want := map[string]any{"enabled": enabled, "showDescription": description, "showPrice": price, "showInspirations": inspirations, "homepageShowcaseEnabled": false, "complianceLock": true}
+		decodeErr := json.Unmarshal(rec.Body.Bytes(), &result)
+		delete(result.Data, "updatedAt")
+		if rec.Code != 200 || decodeErr != nil || result.Code != 0 || !reflect.DeepEqual(result.Data, want) {
 			t.Fatalf("%s %s: got %d %s, want %v", method, path, rec.Code, rec.Body, want)
 		}
 		if method == "GET" && rec.Header().Get("Cache-Control") != "no-store" {
@@ -118,13 +125,59 @@ func TestSupDanceCompactPickerHTTP(t *testing.T) {
 	}
 	check("GET", public, "", "", true, true, false, false)
 	check("GET", admin, "", adminCookie, true, true, false, false)
-	check("PUT", admin, `{"enabled":true,"showDescription":true,"showPrice":true,"showInspirations":true}`, adminCookie, true, true, true, true)
-	check("GET", public, "", "", true, true, true, true)
+	if rec := profileRequest(router, "PUT", admin, `{"enabled":true,"showDescription":true,"showPrice":true,"showInspirations":true}`, adminCookie); rec.Code != 400 {
+		t.Fatalf("locked gallery reopened: %d %s", rec.Code, rec.Body)
+	}
+	check("GET", public, "", "", true, true, false, false)
+	// Exercise the real HTTP routes, including anonymous reads and ordinary-user
+	// writes. Recovery runs only against this disposable database and archive.
+	archive := filepath.Join(dir, "inspiration-archive", "inspirations")
+	if err := os.MkdirAll(archive, 0700); err != nil {
+		t.Fatal(err)
+	}
+	entry := gallery.Entry{"id": "youmind:authorized", "sourceId": "youmind", "title": "Original landscape", "prompt": "original", "image": "/inspiration-thumbs/youmind/authorized.webp"}
+	for _, source := range []string{"seedance", "haohaoxue", "youmind"} {
+		entries := []gallery.Entry{}
+		if source == "youmind" {
+			entries = append(entries, entry)
+		}
+		payload, _ := json.Marshal(map[string]any{"entries": entries})
+		if err := os.WriteFile(filepath.Join(archive, source+".json"), payload, 0600); err != nil {
+			t.Fatal(err)
+		}
+	}
+	const reviews = "/api/admin/supdance/compact-model-picker/inspirations"
+	unlock := `{"enabled":true,"showDescription":true,"showPrice":false,"showInspirations":true,"homepageShowcaseEnabled":true,"complianceLock":false,"unlockConfirmed":true}`
+	reviewPayload, _ := json.Marshal(map[string]string{"id": "youmind:authorized", "status": "approved", "evidence": "Original material, signed release TEST-HTTP-001", "hash": gallery.Digest(entry)})
+	for _, tc := range []struct {
+		method, path, body, cookie string
+		status                     int
+	}{
+		{"GET", "/api/public/inspirations/feed", "", "", 404},
+		{"GET", "/api/public/inspirations/catalog/youmind.json?public=true&admin=true", "", "", 404},
+		{"GET", reviews, "", "", 401},
+		{"GET", reviews, "", userCookie, 403},
+		{"PUT", reviews, string(reviewPayload), userCookie, 403},
+		{"PUT", admin, unlock, adminCookie, 400},
+		{"PUT", reviews, string(reviewPayload), adminCookie, 200},
+		{"PUT", admin, `{"enabled":true,"showDescription":true,"showPrice":false,"complianceLock":false}`, adminCookie, 400},
+		{"PUT", admin, unlock, adminCookie, 200},
+		{"GET", "/api/public/inspirations/feed", "", "", 200},
+		{"GET", "/api/public/inspirations/catalog/youmind.json", "", "", 200},
+		{"GET", "/api/public/inspirations/media/youmind/restricted.webp", "", "", 404},
+		{"PUT", admin, `{"enabled":true,"showDescription":true,"showPrice":false,"showInspirations":false,"homepageShowcaseEnabled":true,"complianceLock":true}`, adminCookie, 200},
+		{"GET", "/api/public/inspirations/feed?enabled=true", "", "", 404},
+	} {
+		rec := profileRequest(router, tc.method, tc.path, tc.body, tc.cookie)
+		if rec.Code != tc.status {
+			t.Fatalf("gallery %s %s: want %d got %d %s", tc.method, tc.path, tc.status, rec.Code, rec.Body)
+		}
+	}
 	if err := db.Exec("CREATE TRIGGER reject_picker_audit BEFORE INSERT ON admin_audit_events BEGIN SELECT RAISE(ABORT, 'audit unavailable'); END;").Error; err != nil {
 		t.Fatal(err)
 	}
 	if rec := profileRequest(router, "PUT", admin, `{"enabled":false,"showDescription":false,"showPrice":true}`, adminCookie); rec.Code != 500 {
 		t.Fatalf("audit failure must abort the save: %d %s", rec.Code, rec.Body)
 	}
-	check("GET", public, "", "", true, true, true, true)
+	check("GET", public, "", "", true, true, false, false)
 }
