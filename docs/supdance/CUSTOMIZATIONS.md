@@ -270,3 +270,9 @@ v1.3.2 根据真实 QQ 授权页的 100001 错误补齐数字 App ID 校验；�
 See [ONE federation](ONE_FEDERATION.md) for scoped ownership proofs, read-only
 canonical wallet/media, legacy accounting compatibility and rollout/rollback.
 The host seams are registered under `supdance-one-identity-community`.
+## 音乐插件 UI 与后台主题隔离
+
+- 音乐后台复用 AdminPageFrame、AdminSegmented、SettingsSectionCard、AdminStatTile、AdminDrawer 和 AdminModal；共享音乐表单通过显式 admin 属性选择宿主后台控件。
+- `music-admin.css` 在音乐后台及其浮层根内映射后台令牌。前台继续使用站点语义令牌，触控目标、焦点态、窄屏布局及减少动效集中在音乐插件样式内；不改变报价、权限、钱包或任务协议。
+- 生产 Web 发布 `8a791236`（`supdance/v2026.11.12.2`）；复用既有 Compose，并通过只读 release 挂载和 Web 入口脚本发布。真实 Chrome 的桌面及手机明暗主题矩阵、三个辅助弹窗通过，未提交收费生成。剩余人工范围见待测试清单。
+
