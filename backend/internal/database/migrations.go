@@ -13,8 +13,8 @@ import (
 	"gorm.io/gorm"
 )
 
-// SupDance retains its already-applied schema 83; upstream 83–98 map to 84–99.
-const CurrentSchemaVersion int64 = 99
+// Preserve published SupDance schema 1–99; upstream 99–101 map to 100–102.
+const CurrentSchemaVersion int64 = 102
 
 const baselineSchemaChecksum = "sha256:open-ai-canvas-schema-v1-20260830"
 const schemaMigrationAppliedAtIndexChecksum = "sha256:schema-migrations-applied-at-index-v2-20260830"
@@ -343,6 +343,13 @@ var schemaMigrations = []migration{
 	{version: 97, name: "canvas_unified_text_nodes", checksum: canvasNodeModelChecksum, apply: migrateCanvasNodeModel},
 	{version: 98, name: "channel_websites", checksum: "sha256:channel-websites-v97-20261110", apply: migrateChannelWebsites},
 	{version: 99, name: "api_log_generation_content", checksum: "sha256:api-log-generation-content-v98", apply: migrateAPILogGenerationContent},
+	{version: 100, name: "site_traffic_events", checksum: "sha256:site-traffic-events-v99-20261111", apply: func(tx *gorm.DB) error {
+		return tx.AutoMigrate(&model.SiteTrafficEvent{})
+	}},
+	{version: 101, name: "agent_mcp_connections", checksum: "sha256:agent-mcp-connections-v100", apply: migrateAgentMCP},
+	{version: 102, name: "creation_conversation_history", checksum: "sha256:creation-conversation-history-v101", apply: func(tx *gorm.DB) error {
+		return tx.AutoMigrate(&model.CreationConversation{}, &model.CreationConversationMessage{}, &model.CreationConversationResource{})
+	}},
 }
 
 func migrateAPILogGenerationContent(tx *gorm.DB) error {

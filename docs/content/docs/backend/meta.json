@@ -5,6 +5,7 @@
   "pages": [
     "local-development",
     "canvas-agent-appearance",
+    "agent-mcp",
     "http-api",
     "supdance-i18n",
     "code-map",

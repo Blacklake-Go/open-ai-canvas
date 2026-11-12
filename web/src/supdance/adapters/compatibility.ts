@@ -7,8 +7,8 @@ import type { RouteObject } from "react-router";
 import type { PluginHostContext, PluginManifest, PluginManifestV2, RegisteredPlugin } from "@/lib/plugins/plugin-types";
 import { getRegisteredPlugin, registerPlugin, unregisterPlugin } from "@/lib/plugins/plugin-registry";
 
-export const SUPDANCE_HOST_VERSION = "1.8.4.1" as const;
-export const SUPDANCE_SCHEMA_BASELINE = 98 as const;
+export const SUPDANCE_HOST_VERSION = "1.8.5" as const;
+export const SUPDANCE_SCHEMA_BASELINE = 101 as const;
 
 export type UpstreamPatchRecord = {
     id: string;
@@ -25,6 +25,22 @@ export type UpstreamPatchRecord = {
  * 新增核心文件修改时必须同步登记，并由架构回归测试与 baseline.json 对齐校验。
  */
 export const SUPDANCE_UPSTREAM_PATCH_REGISTRY: readonly UpstreamPatchRecord[] = [
+    {
+        id: "supdance-upstream-185-preservation",
+        upstreamBaseline: "v1.8.5+main@bae6a36c",
+        feature: "上游历史同步、MCP 与本站插件兼容",
+        coupledUpstreamFiles: [
+            "backend/internal/database/migrations.go",
+            "web/src/components/canvas/canvas-cloud-agent-connectors.tsx",
+            "web/src/components/canvas/canvas-cloud-agent-panel.tsx",
+            "web/src/components/model-picker.tsx",
+            "web/src/pages/create/index.tsx",
+            "web/src/services/provider-neutral-generation-effects.ts",
+        ],
+        files: ["web/src/components/canvas/use-codex-connector.ts", "web/src/supdance/plugins/i18n/locales/creation-sources.ts", "docs/supdance/UPSTREAM_V1_8_5_SOURCE_MERGE.md"],
+        reason: "保留已发布 Schema 1–99 并将新增迁移顺延至 100–102；Codex 与真实 MCP 连接器并存，简洁选择器仍受后台设置控制。保留音乐、身份桥、时间线精修、多语言及跨标签生成副作用强互斥。",
+        upgradeRisk: "HIGH",
+    },
     {
         id: "supdance-one-identity-community",
         upstreamBaseline: "v1.8.4.1@9b1523b9",

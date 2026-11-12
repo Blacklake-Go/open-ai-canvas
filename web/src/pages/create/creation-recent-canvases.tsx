@@ -13,6 +13,7 @@ import { canvasDraftNavigationState, useCanvasStore } from "@/stores/canvas/use-
 import { useUserStore } from "@/stores/use-user-store";
 import { RelativeTime } from "@/components/ui/product/relative-time";
 import { useI18n } from "@/supdance/plugins/i18n";
+import { trackSiteTrafficAction } from "@/services/site-traffic";
 
 const RECENT_COUNT = 4;
 
@@ -51,6 +52,7 @@ export function CreationRecentCanvases({ onRequireLogin }: { onRequireLogin: () 
             return;
         }
         if (!canvasHydrated || creatingRef.current) return;
+        trackSiteTrafficAction("new_canvas");
         const scope = getActiveUserScope();
         creatingRef.current = true;
         setCreating(true);

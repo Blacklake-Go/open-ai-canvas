@@ -3,18 +3,18 @@
   "upstreamRepository": "https://github.com/ddcat-ai/open-ai-canvas",
   "forkRepository": "https://github.com/Blacklake-Go/open-ai-canvas",
   "upstreamBaseline": {
-    "tag": "v1.8.4.1",
-    "releaseTag": "v1.8.4.1",
-    "releaseCommit": "c8d274f43c92f6a3d4aa0355f775b1b14c2fbc25",
-    "commit": "c8d274f43c92f6a3d4aa0355f775b1b14c2fbc25",
-    "schemaVersion": 98
+    "tag": "v1.8.5",
+    "releaseTag": "v1.8.5",
+    "releaseCommit": "ac5e01cab55184fa9f202fe6349a5884411b4114",
+    "commit": "bae6a36c2e835733295a48087eb9c424ea619bc2",
+    "schemaVersion": 101
   },
   "integrationRelease": {
-    "schemaVersion": 99,
-    "version": "v1.8.4.1-supdance.1",
-    "baseCommit": "0f82fb3f812dbc9f254d20369eeffe0a364488fd",
-    "sourceBranch": "integration/upstream-v1.8.4.1",
-    "deploymentEvidence": "docs/supdance/UPSTREAM_V1_8_4_1_SOURCE_MERGE.md"
+    "schemaVersion": 102,
+    "version": "v1.8.5-supdance.1",
+    "baseCommit": "feda18833728e8d646b51e9ddf79df2f002e2de3",
+    "sourceBranch": "integration/upstream-v1.8.5-20261112",
+    "deploymentEvidence": "docs/supdance/UPSTREAM_V1_8_5_SOURCE_MERGE.md"
   },
   "supdanceRelease": {
     "tag": "supdance/v2026.10.28.2",
@@ -253,7 +253,8 @@
     "backend/internal/database/migration_channel_websites_postgres_test.go",
     "web/test/provider-neutral-generation-effects.test.ts",
     "backend/internal/handler/supdance_i18n.go",
-    "web/src/hooks/use-wallet-balance.ts"
+    "web/src/hooks/use-wallet-balance.ts",
+    "web/src/services/provider-neutral-generation-effects.ts"
   ],
   "supdanceExtensionFiles": [
     "web/src/supdance/plugins/compact-model-picker/admin.tsx",

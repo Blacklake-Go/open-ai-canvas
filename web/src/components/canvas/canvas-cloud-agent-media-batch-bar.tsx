@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { ChevronDown, ChevronUp, Layers } from "lucide-react";
+import { ChevronDown, ChevronUp, Layers, X } from "lucide-react";
 import { useTranslation } from "react-i18next";
 
 import type { canvasThemes } from "@/lib/canvas-theme";
@@ -9,7 +9,7 @@ import { agentMediaBatchCounts, type CloudAgentMediaBatchItemStatus, type CloudA
  * 批量生成进度条：一格对应一个条目，颜色表示状态；点格子定位到画布节点。
  * 与"本轮待办"条放在同一位置，运行结束后保留最终结果，方便回看失败原因。
  */
-export function AgentMediaBatchBar({ batch, theme, onFocusNode }: { batch: CloudAgentMediaBatchProgress; theme: (typeof canvasThemes)[keyof typeof canvasThemes]; onFocusNode?: (nodeId: string) => void }) {
+export function AgentMediaBatchBar({ batch, theme, onFocusNode, onDismiss }: { batch: CloudAgentMediaBatchProgress; theme: (typeof canvasThemes)[keyof typeof canvasThemes]; onFocusNode?: (nodeId: string) => void; onDismiss?: () => void }) {
     const { t } = useTranslation();
     const [expanded, setExpanded] = useState(false);
     const counts = agentMediaBatchCounts(batch);
@@ -20,7 +20,12 @@ export function AgentMediaBatchBar({ batch, theme, onFocusNode }: { batch: Cloud
         status === "succeeded" ? "var(--color-success, #429477)" : status === "failed" ? theme.accent.danger : status === "submitted" ? theme.accent.primary : status === "cancelled" ? theme.node.muted : theme.toolbar.itemHover;
     return (
         <section className="agent-media-batch-bar mx-3 mb-2 overflow-hidden rounded-xl" style={{ color: theme.node.text }} aria-label={t("upstream.mediaBatch.progress")}>
-            <button type="button" className="flex w-full items-center gap-2 px-3 py-2 text-left focus-visible:outline focus-visible:outline-2" aria-expanded={expanded} onClick={() => setExpanded((value) => !value)}>
+            <button
+                type="button"
+                className={`flex w-full items-center gap-2 px-3 py-2 text-left focus-visible:outline focus-visible:outline-2${batch.phase === "done" && onDismiss ? " pr-10" : ""}`}
+                aria-expanded={expanded}
+                onClick={() => setExpanded((value) => !value)}
+            >
                 <Layers className="size-3.5 shrink-0" style={{ color: theme.accent.primary }} aria-hidden="true" />
                 <span className="text-xs font-semibold">{t("upstream.mediaBatch.title")}</span>
                 <span className="text-[var(--fs-label)] tabular-nums opacity-60" aria-live="polite">
@@ -32,6 +37,17 @@ export function AgentMediaBatchBar({ batch, theme, onFocusNode }: { batch: Cloud
                 <span className="shrink-0 text-[var(--fs-label)] opacity-55">{t(`upstream.mediaBatch.phase.${batch.phase}`)}</span>
                 {expanded ? <ChevronUp className="size-3.5 shrink-0 opacity-50" aria-hidden="true" /> : <ChevronDown className="size-3.5 shrink-0 opacity-50" aria-hidden="true" />}
             </button>
+            {batch.phase === "done" && onDismiss ? (
+                <button
+                    type="button"
+                    className="absolute right-2 top-2 grid size-6 place-items-center rounded-md opacity-60 hover:bg-foreground/10 hover:opacity-100 focus-visible:outline focus-visible:outline-2"
+                    onClick={onDismiss}
+                    aria-label="关闭批量生成结果"
+                    title="关闭"
+                >
+                    <X className="size-3.5" aria-hidden="true" />
+                </button>
+            ) : null}
             <div className="px-3 pb-2">
                 <div className="h-1 overflow-hidden rounded-full" style={{ background: theme.toolbar.itemHover }} role="progressbar" aria-valuemin={0} aria-valuemax={total} aria-valuenow={finished} aria-label={t("upstream.mediaBatch.finishedItems")}>
                     <div className="agent-media-batch-progress h-full rounded-full" style={{ width: `${total ? Math.round((finished / total) * 100) : 0}%`, background: theme.accent.primary }} />

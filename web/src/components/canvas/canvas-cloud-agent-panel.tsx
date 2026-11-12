@@ -48,7 +48,6 @@ import {
     type AgentPermissionMode,
     type AgentProfileScope,
     type AgentProfileView,
-    type AgentReasoningMode,
     type AgentRun,
 } from "@/services/api/agent";
 import { agentApprovalMatchesSettings, agentApprovalTargetGenerating } from "@/lib/canvas/agent-media-approval";
@@ -107,6 +106,8 @@ import {
 import { loadCloudAgentConversation, mergeCloudAgentConversations, refreshCloudAgentConversations } from "@/services/cloud-agent-history";
 import { canvasCloudAgentConversation, cloudAgentFollowDecision } from "@/lib/canvas/cloud-agent-follow";
 import { resolveCloudAgentModel } from "@/lib/canvas/cloud-agent-model-restore";
+import { modelCapabilityConfigFor } from "@/lib/model-capabilities";
+import { LEGACY_TEXT_THINKING_CONFIG } from "@/lib/text-thinking";
 import { logicalModelIDForConfig, modelDisplayName, modelOptionName, resolveModelRequestConfig, selectableModelsByCapability, useConfigStore, useEffectiveConfig } from "@/stores/use-config-store";
 import { modelSupportsImageInspection, selectImageInspectionModel } from "@/lib/canvas/image-to-previs-agent";
 import { useActiveTheme } from "@/stores/canvas/use-canvas-theme-store";
@@ -122,13 +123,14 @@ import { AgentContextChip } from "./canvas-cloud-agent-composer";
 import { CanvasAgentSkillLibraryModal } from "./canvas-agent-skill-library-modal";
 import { useSkillCuration, curationQuery } from "@/components/skills/skill-curation-browser";
 import { CanvasCloudAgentSettings, agentPermissionLabel, type AgentContextKey } from "./canvas-cloud-agent-settings";
+import { AgentConnectorsBar, type AgentMCPDestination } from "./canvas-cloud-agent-connectors";
 import { AgentOutboxTray, type AgentOutboxPrimaryAction } from "./canvas-cloud-agent-outbox";
 import { useAgentPanelLayout } from "./use-agent-panel-layout";
 import { useAgentPanelDock } from "./use-agent-panel-dock";
+import { useAgentReasoningPreference } from "./use-agent-reasoning-preference";
 import "./canvas-cloud-agent.css";
 import { appendAgentError, appendUniqueMessage, applyAgentEvent, positiveNumber, type ApprovalState } from "./canvas-cloud-agent-events";
 import { AgentContextRing, AgentConversation, AgentHeader, AgentHistory, AgentLauncher, ComposerControls } from "./canvas-cloud-agent-panel-parts";
-import { AgentConnectorsBar } from "./canvas-cloud-agent-connectors";
 import { useCodexConnector } from "./use-codex-connector";
 import { useGlobalAgentStore, type AgentInsertedNode, type AgentPrefillRequest } from "@/stores/use-global-agent-store";
 
@@ -194,6 +196,8 @@ export const CanvasCloudAgentPanel = memo(function CanvasCloudAgentPanel() {
     const updateConfig = useConfigStore((state) => state.updateConfig);
     const reducedMotion = useReducedMotion();
     const [view, setView] = useState<AgentPanelView>("chat");
+    const [settingsSection, setSettingsSection] = useState<"mcp" | undefined>();
+    const [settingsMcpTab, setSettingsMcpTab] = useState<AgentMCPDestination>("connections");
     const [run, setRun] = useState<AgentRun | null>(null);
     const [contextUsage, setContextUsage] = useState<AgentContextUsage>(() => emptyAgentContextUsage(""));
     const [connectionStatus, setConnectionStatus] = useState<"connecting" | "connected" | "reconnecting" | "disconnected">("connecting");
@@ -215,7 +219,6 @@ export const CanvasCloudAgentPanel = memo(function CanvasCloudAgentPanel() {
     const outboxDispatchRef = useRef(false);
     const outboxRunEndRef = useRef("");
     const [escapeArmedAt, setEscapeArmedAt] = useState(0);
-    const [reasoningMode, setReasoningMode] = useState<AgentReasoningMode>("off");
     const [profileView, setProfileView] = useState<AgentProfileView | null>(null);
     const [profileLoading, setProfileLoading] = useState(false);
     const [profileSaving, setProfileSaving] = useState(false);
@@ -291,6 +294,7 @@ export const CanvasCloudAgentPanel = memo(function CanvasCloudAgentPanel() {
     const planTerminal = useMemo(() => latestAgentPlanTerminal(messages), [messages]);
     const planVisible = agentPlanVisible(planItems);
     const mediaBatch = useMemo(() => latestAgentMediaBatch(messages), [messages]);
+    const [dismissedMediaBatchId, setDismissedMediaBatchId] = useState<string | null>(null);
     const pendingQuestion = useMemo(() => pendingAgentQuestion(messages), [messages]);
     const [scenePresets, setScenePresets] = useState<SkillPreset[]>([]);
     const [presetApplyingId, setPresetApplyingId] = useState("");
@@ -436,6 +440,8 @@ export const CanvasCloudAgentPanel = memo(function CanvasCloudAgentPanel() {
         const preferred = config.textModel || config.model || "";
         return textModels.includes(preferred) ? preferred : textModels[0] || "";
     }, [config, restoredModelResolution]);
+    const thinking = useMemo(() => modelCapabilityConfigFor(config, selectedModel).text?.thinking || LEGACY_TEXT_THINKING_CONFIG, [config, selectedModel]);
+    const [reasoningMode, setReasoningMode] = useAgentReasoningPreference(userId, selectedModel, thinking);
     const installedSkills = useMemo(() => skills.filter((skill) => skill.isAdded), [skills]);
     // 消息和输入框共用的引用表：每次渲染都新建会让全部消息重新解析 Markdown。
     const conversationReferences = useMemo(() => [...references, ...buildSkillMentionReferences(installedSkills)], [references, installedSkills]);
@@ -2507,17 +2513,8 @@ export const CanvasCloudAgentPanel = memo(function CanvasCloudAgentPanel() {
                             {view === "settings" ? (
                                 <motion.div key="settings" className="flex min-h-0 flex-1" initial={{ opacity: 0, x: 18 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: 18 }} transition={{ duration: reducedMotion ? 0 : 0.18 }}>
                                     <CanvasCloudAgentSettings
-                                        connectors={
-                                            <AgentConnectorsBar
-                                                codex={{ status: codex.status, detected: codex.detected, busy: codex.busy, error: codex.error }}
-                                                onConnectCodex={() => {
-                                                    newConversation();
-                                                    void codex.connect();
-                                                }}
-                                                onNewCodexThread={newConversation}
-                                                onDisconnectCodex={() => codex.disconnect()}
-                                            />
-                                        }
+                                        initialSection={settingsSection}
+                                        initialMcpTab={settingsMcpTab}
                                         theme={theme}
                                         config={config}
                                         selectedModel={selectedModel}
@@ -2607,7 +2604,10 @@ export const CanvasCloudAgentPanel = memo(function CanvasCloudAgentPanel() {
                                                 .catch((cause) => setMessages((current) => appendAgentError(current, `export-${Date.now()}`, cause, "导出失败")))
                                                 .finally(() => setExporting(false));
                                         }}
-                                        onSettings={() => setView("settings")}
+                                        onSettings={() => {
+                                            setSettingsSection(undefined);
+                                            setView("settings");
+                                        }}
                                         onResetLayout={panelLayout.reset}
                                         docked={dock.active}
                                         onToggleDock={dock.available ? () => setDocked(!dock.active) : undefined}
@@ -2707,7 +2707,9 @@ export const CanvasCloudAgentPanel = memo(function CanvasCloudAgentPanel() {
                                             onToggle={() => setPlanMinimized((value) => !value)}
                                         />
                                     ) : null}
-                                    {mediaBatch && mediaBatch.phase !== "approval" ? <AgentMediaBatchBar batch={mediaBatch} theme={theme} onFocusNode={onFocusNode} /> : null}
+                                    {mediaBatch && mediaBatch.batchId !== dismissedMediaBatchId && mediaBatch.phase !== "approval" ? (
+                                        <AgentMediaBatchBar batch={mediaBatch} theme={theme} onFocusNode={onFocusNode} onDismiss={() => setDismissedMediaBatchId(mediaBatch.batchId)} />
+                                    ) : null}
                                     {historyHydrated && !messages.some((message) => message.role === "user" || message.role === "assistant") && !run && !codex.connected && codex.status !== "connecting" ? (
                                         <AgentSceneCapsules
                                             buckets={sceneBuckets}
@@ -2753,6 +2755,22 @@ export const CanvasCloudAgentPanel = memo(function CanvasCloudAgentPanel() {
                                         onSubmit={handleComposerSubmit}
                                         onEscape={handleComposerEscape}
                                         tray={codex.connected ? undefined : outboxTray}
+                                        footer={
+                                            <AgentConnectorsBar
+                                                codex={{ status: codex.status, detected: codex.detected, busy: codex.busy, error: codex.error }}
+                                                onConnectCodex={() => {
+                                                    newConversation();
+                                                    void codex.connect();
+                                                }}
+                                                onNewCodexThread={newConversation}
+                                                onDisconnectCodex={() => codex.disconnect()}
+                                                onOpenMCP={(destination) => {
+                                                    setSettingsSection("mcp");
+                                                    setSettingsMcpTab(destination);
+                                                    setView("settings");
+                                                }}
+                                            />
+                                        }
                                         attachments={composerAttachments}
                                         onAddFiles={addComposerFiles}
                                         onRemoveAttachment={removeDraftAttachment}
