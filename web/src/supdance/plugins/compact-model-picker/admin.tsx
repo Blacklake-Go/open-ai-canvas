@@ -41,7 +41,7 @@ export default function CompactPickerAdmin() {
             ) : !draft ? (
                 <p role="status">{t("compactPicker.loading")}</p>
             ) : (
-                <>
+                <div className="shrink-0 space-y-4">
                     <SettingsSectionCard
                         icon={<ListFilter />}
                         title={t("compactPicker.appearance")}
@@ -68,7 +68,7 @@ export default function CompactPickerAdmin() {
                         {save.isError && <Alert role="alert" type="error" showIcon title={save.error.message} />}
                     </SettingsSectionCard>
                     <GalleryAdmin draft={draft} pending={save.isPending} edit={(value) => setEdits((current) => ({ ...current, ...value }))} />
-                </>
+                </div>
             )}
         </AdminPageFrame>
     );
