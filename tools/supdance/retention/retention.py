@@ -92,9 +92,28 @@ class Retention:
     def live_ids(self):
         return sorted(c["Id"] for c in self.containers() if c["State"]["Running"])
 
+    def updater_references(self):
+        paths = []
+        for raw in self.config.get("updater_state_files", []):
+            state = Path(raw)
+            if not state.exists():
+                continue
+            value = json.loads(state.read_text())
+            phase = value.get("operation", {}).get("phase")
+            if phase in {"preflight", "backing_up", "pulling", "draining", "migrating", "switching", "verifying", "rolling_back"}:
+                raise RuntimeError("Host Updater deployment is active; cleanup stopped")
+            backup = value.get("lastBackup")
+            if backup:
+                path = Path(backup["path"])
+                if not path.is_file():
+                    raise RuntimeError("Host Updater rollback archive is missing")
+                paths.append(str(path))
+        return paths
+
     def protections(self):
         containers = self.containers()
         protected = list(self.config["protected_paths"]) + [str(self.managed), str(self.state)]
+        protected += self.updater_references()
         # Even stopped database containers and unexpired drills protect their mounts.
         protected += [m["Source"] for c in containers for m in c["Mounts"]]
         for unit in self.config["services"]:
@@ -151,6 +170,7 @@ class Retention:
                 raise RuntimeError("Running container is unhealthy")
 
     def validate_pins(self):
+        self.updater_references()
         for pin in self.config["required_files"]:
             if digest(pin["path"]) != pin["sha256"]:
                 raise RuntimeError("Pinned recovery file missing or changed")

@@ -2,6 +2,16 @@
 
 本工具在服务器执行，不依赖桌面 Codex 常驻。安装文件为 `retention.py`、`supdance-retention.service`、`supdance-retention.timer`；服务器私有策略位于 `/etc/supdance-retention/policy.json`，不提交凭据或私有连接配置。
 
+## 部署不覆盖约定
+
+从源码目录执行 `sudo python3 tools/supdance/retention/install.py`。安装器只更新独立运行程序，已有 `policy.json`、service、timer 和保护 drop-in 原样保留；缺少私有策略时拒绝安装，不生成空策略覆盖线上配置。现有配置指纹不符时，在更新运行程序前停止。
+
+首次安装会保存 `/etc/supdance-retention/deployment-protection.json`，记录策略、service、timer 和检查 drop-in 的 SHA-256。每次 systemd 清理运行前由 `ExecStartPre` 验证。校验失败时不会启动备份或清理，不自动接受或重建新指纹。
+
+这些宿主机文件在应用发布目录和容器镜像之外。当前 Compose 发布仅更新容器及挂载的 Web 路径；Host Updater 更新安装目录中的 `.env`、Compose、其自身状态和二进制，不写本工具的配置与单元。更新器还受 systemd 的 `/etc` 和 `/usr/local/lib` 只读限制约束。新发布入口不得将本工具目录纳入同步删除或把模板直接复制到已有配置之上。
+
+确需更改保留策略或时间时，由维护人员先停定时器、备份并审核配置及指纹清单，再显式重建保护基线；普通发布不做基线刷新。检测到意外变化应先恢复可信配置，不得通过刷新指纹掩盖覆盖。
+
 ## 时间和范围
 
 - 每日 03:30，明确使用 `Asia/Taipei`。先检查站点，再生成主站与 ONE 数据库备份、校验恢复材料、清理过期产物，最后再检查站点。错过的任务由 systemd 在恢复后补跑。
@@ -13,6 +23,8 @@
 ## 保护边界
 
 当前容器镜像和挂载、仍被停止容器引用的挂载、宿主服务工作目录、进程工作目录/可执行文件/打开文件，以及策略中固定的回滚目录与镜像都受保护。部署中运行容器集合变化时停止删除。数据库和 Redis 容器、所有 Docker 数据卷、数据库目录、原始历史数据库备份及用户素材目录不参与产物清理。只有本工具管理的每日数据库备份允许按上述规则轮换。
+
+策略中的 `updater_state_files` 还直接读取 Host Updater 的 `lastBackup.path`，无论年龄都保护当前回滚归档。更新器正在发布时暂停清理；回滚指针指向缺失文件时停止清理并报告，不以新归档冒充旧恢复点。人工回滚脚本的归档依赖同样登记在固定保护清单中。
 
 不执行 `docker system prune`、`volume prune`、源码清理或整棵 backups 目录删除。候选目录包含 `PG_VERSION`、数据库文件、resources、uploads 或 pgdata 时拒绝整目录清理。新出现的未知归档不根据大小或名称猜测删除资格。
 
@@ -28,6 +40,9 @@ sudo python3 /usr/local/lib/supdance-retention/retention.py
 
 # 手动运行与定时器相同的完整流程
 sudo systemctl start supdance-retention.service
+
+# 独立确认宿主配置没有被部署覆盖
+sudo python3 /usr/local/lib/supdance-retention/verify_installation.py
 
 # 登记经过审核的新演练构建文件或纯生成目录，最短 7 天
 sudo python3 /usr/local/lib/supdance-retention/retention.py \

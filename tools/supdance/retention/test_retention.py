@@ -177,6 +177,24 @@ class ServiceTests(unittest.TestCase):
                 self.service.prune_images()
                 action.assert_not_called()
 
+    def test_updater_last_backup_is_protected_regardless_of_archive_age(self):
+        backup = self.service.state / "old-rollback.zip"
+        backup.write_bytes(b"retained")
+        state = self.service.state / "updater.json"
+        state.write_text(json.dumps({"lastBackup": {"path": str(backup)}, "operation": {"phase": "succeeded"}}))
+        self.service.config["updater_state_files"] = [str(state)]
+        self.assertEqual(self.service.updater_references(), [str(backup)])
+        backup.unlink()
+        with self.assertRaisesRegex(RuntimeError, "rollback archive is missing"):
+            self.service.updater_references()
+
+    def test_active_updater_stops_cleanup_before_any_deletion(self):
+        state = self.service.state / "updater.json"
+        state.write_text(json.dumps({"operation": {"phase": "migrating"}}))
+        self.service.config["updater_state_files"] = [str(state)]
+        with self.assertRaisesRegex(RuntimeError, "deployment is active"):
+            self.service.updater_references()
+
 
 if __name__ == "__main__":
     unittest.main()
