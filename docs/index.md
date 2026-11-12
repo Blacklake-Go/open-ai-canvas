@@ -4,6 +4,8 @@
 
 ## 部署与更新入口
 
+- [SupDance 线上磁盘定期清理](supdance/SERVER_RETENTION.md)：服务器定时运行、备份轮换、部署产物回收、回滚保护与健康检查。
+
 用户要求部署服务器时，默认使用官方 Release 镜像、`docker-compose.deploy.yml` 和 Host Updater。本地 SQLite 构建与自定义 Compose 不属于后台在线更新管理范围。
 
 - [Docker 部署](content/docs/overview/docker.mdx)：默认服务器方案、Compose 选择与已有部署核对。

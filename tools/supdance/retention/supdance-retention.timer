@@ -1,0 +1,11 @@
+[Unit]
+Description=Daily SupDance retention at 03:30 Asia/Taipei
+
+[Timer]
+OnCalendar=*-*-* 03:30:00 Asia/Taipei
+AccuracySec=1min
+Persistent=true
+Unit=supdance-retention.service
+
+[Install]
+WantedBy=timers.target

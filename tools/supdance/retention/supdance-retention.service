@@ -1,0 +1,19 @@
+[Unit]
+Description=SupDance verified backup and deployment artifact retention
+After=network-online.target docker.service
+Wants=network-online.target
+Requires=docker.service
+
+[Service]
+Type=oneshot
+ExecStart=/usr/bin/python3 /usr/local/lib/supdance-retention/retention.py --apply --backup
+TimeoutStartSec=2700
+Nice=15
+IOSchedulingClass=idle
+UMask=0077
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=full
+ProtectHome=read-only
+StandardOutput=journal
+StandardError=journal
