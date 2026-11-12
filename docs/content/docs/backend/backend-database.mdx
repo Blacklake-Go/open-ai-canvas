@@ -7,7 +7,7 @@ description: 影策后端核心持久化表与状态边界
 
 ## SupDance 灵感案例合规配置（无 Schema 迁移）
 
-沿用 `system_settings`：`plugin.supdance-compact-model-picker.display` 增加 `homepageShowcaseEnabled`（默认 false）与 `complianceLock`（默认 true），原 `showInspirations` 作为全局公开开关。逐条审核使用 `plugin.supdance-compact-model-picker.inspiration-review.<ID SHA256>`，保存 `status`、`evidence`、`hash`、`reviewedBy`、`reviewedAt` 及可选 `replacementImage`。状态为 pending_review、restricted、archived 或 approved；没有记录时为 pending_review。审核、配置保存与对应 `admin_audit_events` 在同一事务提交。公开读取每次检查权威配置及当前内容摘要；不访问用户私人资产表，不修改 `inspiration_feed_entries` 结构。完整部署边界见 `docs/supdance/WAFFO_GALLERY_ISOLATION.md`。
+沿用 `system_settings`：`plugin.supdance-compact-model-picker.display` 增加 `homepageShowcaseEnabled`（默认 false）与 `complianceLock`（默认 true），原 `showInspirations` 作为全局公开开关。逐条审核使用 `supdance.ir.<ID SHA256>`（76 字符，满足 PostgreSQL varchar(80)），保存 `status`、`evidence`、`hash`、`reviewedBy`、`reviewedAt` 及可选 `replacementImage`。状态为 pending_review、restricted、archived 或 approved；没有记录时为 pending_review。审核、配置保存与对应 `admin_audit_events` 在同一事务提交。公开读取每次检查权威配置及当前内容摘要；不访问用户私人资产表，不修改 `inspiration_feed_entries` 结构。完整部署边界见 `docs/supdance/WAFFO_GALLERY_ISOLATION.md`。
 
 ## 创作对话同步（本站 Schema 102）
 

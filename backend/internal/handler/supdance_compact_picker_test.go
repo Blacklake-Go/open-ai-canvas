@@ -3,13 +3,16 @@ package handler
 import (
 	"encoding/json"
 	"net/http"
+	"net/url"
 	"os"
 	"path/filepath"
 	"reflect"
+	"strings"
 	"testing"
 	"time"
 
 	"github.com/gin-gonic/gin"
+	"gorm.io/driver/postgres"
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
 	"gorm.io/gorm/logger"
@@ -25,7 +28,15 @@ import (
 func TestSupDanceCompactPickerHTTP(t *testing.T) {
 	gin.SetMode(gin.TestMode)
 	dir := t.TempDir()
-	db, err := gorm.Open(sqlite.Open(filepath.Join(dir, "picker.db")), &gorm.Config{Logger: logger.Default.LogMode(logger.Silent)})
+	var dialector gorm.Dialector = sqlite.Open(filepath.Join(dir, "picker.db"))
+	if dsn := os.Getenv("SUPDANCE_GALLERY_TEST_POSTGRES_DSN"); dsn != "" {
+		u, err := url.Parse(dsn)
+		if err != nil || !strings.HasPrefix(u.Path, "/supdance_gallery_test_") {
+			t.Fatal("gallery PostgreSQL test requires a dedicated supdance_gallery_test_ database")
+		}
+		dialector = postgres.Open(dsn)
+	}
+	db, err := gorm.Open(dialector, &gorm.Config{Logger: logger.Default.LogMode(logger.Silent)})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -173,7 +184,11 @@ func TestSupDanceCompactPickerHTTP(t *testing.T) {
 			t.Fatalf("gallery %s %s: want %d got %d %s", tc.method, tc.path, tc.status, rec.Code, rec.Body)
 		}
 	}
-	if err := db.Exec("CREATE TRIGGER reject_picker_audit BEFORE INSERT ON admin_audit_events BEGIN SELECT RAISE(ABORT, 'audit unavailable'); END;").Error; err != nil {
+	rejectAuditSQL := "CREATE TRIGGER reject_picker_audit BEFORE INSERT ON admin_audit_events BEGIN SELECT RAISE(ABORT, 'audit unavailable'); END;"
+	if db.Dialector.Name() == "postgres" {
+		rejectAuditSQL = `CREATE FUNCTION reject_picker_audit_fn() RETURNS trigger LANGUAGE plpgsql AS $$ BEGIN RAISE EXCEPTION 'audit unavailable'; END; $$; CREATE TRIGGER reject_picker_audit BEFORE INSERT ON admin_audit_events FOR EACH ROW EXECUTE FUNCTION reject_picker_audit_fn();`
+	}
+	if err := db.Exec(rejectAuditSQL).Error; err != nil {
 		t.Fatal(err)
 	}
 	if rec := profileRequest(router, "PUT", admin, `{"enabled":false,"showDescription":false,"showPrice":true}`, adminCookie); rec.Code != 500 {

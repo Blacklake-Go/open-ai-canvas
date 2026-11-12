@@ -18,7 +18,7 @@
 - 服务器应把原始包和缩略图放在后端数据目录的 `inspiration-archive/inspirations/` 与 `inspiration-archive/inspiration-thumbs/`，不挂载到任何公开 Web 根目录。权限只允许运行后端的用户读取。
 - `backend/internal/supdance/gallery` 只读取上述归档和 `inspiration_feed_entries`；不查询、不删除用户项目、任务和个人资源。
 - 公开候选以归档包为优先，再按 ID 去重合并上新。新同步条目默认为待审核；上游署名、robots.txt 和提示词许可不视为肖像、图片或视频公开授权。
-- 审核记录复用 `system_settings`，键为 `plugin.supdance-compact-model-picker.inspiration-review.<ID 的 SHA256>`。值包含状态、授权依据、内容摘要、管理员与时间，可选替换封面。无需新增表或迁移 Schema。
+- 审核记录复用 `system_settings`，键为 `supdance.ir.<ID 的 SHA256>`，总长 76，满足 PostgreSQL 的 varchar(80) 限制。值包含状态、授权依据、内容摘要、管理员与时间，可选替换封面。无需新增表或迁移 Schema。
 - 可选替换封面仅接受不带身份凭证、查询参数或片段的 HTTPS URL，或归档内的 `/inspiration-thumbs/` 路径。替换地址与授权依据一同受管理员审计。它不会上传、删除或改写私人资产。
 
 ## 公开请求

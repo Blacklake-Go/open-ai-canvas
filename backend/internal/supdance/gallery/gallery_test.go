@@ -15,6 +15,9 @@ import (
 )
 
 func TestPublicIsolationAndReviewedRecovery(t *testing.T) {
+	if len(reviewKey("youmind:authorized")) > 80 {
+		t.Fatal("review setting key exceeds PostgreSQL varchar(80)")
+	}
 	dir := t.TempDir()
 	db, err := gorm.Open(sqlite.Open(filepath.Join(dir, "test.db")), &gorm.Config{Logger: logger.Default.LogMode(logger.Silent)})
 	if err != nil {

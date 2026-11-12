@@ -20,7 +20,9 @@ import (
 	"yingce/backend/internal/supdance/compactpicker"
 )
 
-const reviewPrefix = "plugin.supdance-compact-model-picker.inspiration-review."
+// system_settings.key is varchar(80) on PostgreSQL. Keep the full SHA256
+// with a short SupDance namespace; SQLite does not enforce this size.
+const reviewPrefix = "supdance.ir."
 
 type Entry = map[string]any
 type Review struct {

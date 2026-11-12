@@ -102,7 +102,7 @@ export function GalleryAdmin({ draft, pending, edit }: { draft: CompactPickerSet
                             <Select aria-label={t("compactPicker.galleryReviewStatus")} value={status} onChange={setStatus} options={statuses.map((value) => ({ value, label: t(`compactPicker.galleryStatus_${value}`) }))} />
                             <Input.TextArea aria-label={t("compactPicker.galleryEvidence")} placeholder={t("compactPicker.galleryEvidence")} value={evidence} maxLength={4000} onChange={(event) => setEvidence(event.target.value)} />
                             <p className="text-sm text-[var(--admin-text-muted)]">
-                                {selected.review.reviewedAt ? `${selected.review.reviewedBy} · ${new Date(selected.review.reviewedAt).toLocaleString()}` : t("compactPicker.galleryStatus_pending_review")}
+                                {selected.review.reviewedBy && selected.review.reviewedAt ? `${selected.review.reviewedBy} · ${new Date(selected.review.reviewedAt).toLocaleString()}` : t("compactPicker.galleryStatus_pending_review")}
                             </p>
                             <Button
                                 disabled={status === "approved" && evidence.trim().length < 10}
