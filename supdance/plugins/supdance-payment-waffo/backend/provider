@@ -1,0 +1,7 @@
+#!/bin/sh
+for node in /usr/local/bin/node /usr/bin/node /opt/homebrew/bin/node; do
+  if [ -x "$node" ]; then
+    exec "$node" "${0%/*}/rpc.cjs"
+  fi
+done
+printf '%s\n' '{"ok":false,"code":"runtime_missing","message":"Waffo Pancake requires Node.js 20 or newer"}'
