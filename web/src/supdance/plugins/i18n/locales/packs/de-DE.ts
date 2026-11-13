@@ -1,5 +1,8 @@
 // Generated UI translations; protected names and interpolation tokens are retained.
+import { HTML_ADMIN_I18N_ENTRIES } from "../html-admin";
+
 export default {
+    ...Object.fromEntries(HTML_ADMIN_I18N_ENTRIES.map((entry) => [entry.key, entry.translations["de-DE"]])),
     "federation.title": "ONE-Kreativkonto verbinden",
     "federation.intro": "Prüfen Sie beide Konten. Neue Erstellungen nutzen das Hauptguthaben; bisherige ONE-Credits und Transaktionen behalten ihren Wert und Ablauf.",
     "federation.one": "ONE-Konto",
