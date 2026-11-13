@@ -1,5 +1,6 @@
 # 02 — Design Tokens 变量体系与运行时映射字典 (Design Tokens Dictionary)
 
+> **版本更新声明 (V2.0)**：全站最新机器可读单一真理源字典已发布为 [`design-tokens.json`](./design-tokens.json)，全局视觉规范请查阅 [`UI-SPEC.md`](./UI-SPEC.md)。
 > **设计层级**：Layer 1 & Layer 2 — Primitive → Semantic → Component  
 > **权威原则**：禁止在业务组件或样式表中随意硬编码 Hex 色值、裸像素尺寸与随意 Z-Index。所有样式必须通过本字典中的语义变量进行消费。
 

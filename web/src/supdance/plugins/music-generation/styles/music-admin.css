@@ -1,5 +1,10 @@
-/* Shared music content inherits the admin palette, including portaled overlays. */
+/* ==========================================================================
+   SupDance Music Generation Plugin - Admin Settings Styles (UI Design System V2.0)
+   Shared music content inherits the admin palette, including portaled overlays.
+   ========================================================================== */
+
 .plugin-music-generation.music-admin {
+    /* Legacy fallbacks */
     --card: var(--admin-surface);
     --background: var(--admin-surface);
     --foreground: var(--admin-text);
@@ -18,13 +23,33 @@
     --user-radius-card: var(--admin-radius-lg);
     --user-radius-control: var(--admin-radius);
     --user-radius-button: var(--admin-radius);
+
+    /* V2.0 Design Tokens Mapping for Admin Scope */
+    --music-bg-canvas: var(--admin-surface);
+    --music-bg-surface: var(--admin-surface);
+    --music-bg-surface-raised: var(--admin-surface-2);
+    --music-bg-hover: var(--admin-nav-active);
+    --music-border-subtle: var(--admin-border);
+    --music-border-control: var(--admin-border);
+    --music-text-primary: var(--admin-text);
+    --music-text-secondary: var(--admin-text-secondary);
+    --music-primary: var(--admin-accent);
+    --music-primary-fg: var(--admin-accent-fg);
+    --music-color-error: var(--admin-status-error);
+    --music-ring: var(--admin-focus);
+    --music-radius-sm: var(--admin-radius-sm);
+    --music-radius-md: var(--admin-radius);
+    --music-radius-lg: var(--admin-radius-lg);
+
     color: var(--admin-text);
 }
+
 .music-admin .music-admin-navigation {
     min-width: 0;
     overflow-x: auto;
     padding-block: 2px;
 }
+
 .music-admin .music-admin-card {
     min-width: 0;
     padding: 16px;
@@ -33,51 +58,62 @@
     background: var(--admin-surface);
     overflow-wrap: anywhere;
 }
+
 .music-admin .music-admin-section {
     display: flex;
     flex-direction: column;
     gap: 16px;
     padding: 16px;
 }
+
 .music-admin .music-admin-stats {
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: 12px;
 }
+
 .music-admin .music-admin-link {
     align-self: flex-start;
     color: var(--admin-text-secondary);
     text-decoration: underline;
     text-underline-offset: 3px;
 }
+
 .music-admin .music-admin-link:hover {
     color: var(--admin-text);
 }
+
 .music-admin .ant-btn[aria-pressed="true"] {
     color: var(--admin-text);
     background: var(--admin-nav-active);
     border-color: var(--admin-border-strong);
 }
+
 .music-admin .music-admin-wrap-button {
     height: auto;
     min-height: var(--admin-control-h);
     white-space: normal;
 }
+
 .music-admin .music-work-card,
 .music-admin .music-player {
     background: var(--admin-surface);
 }
+
 .music-admin .plugin-music-form .music-model-picker {
     min-height: var(--admin-control-h);
 }
+
 .music-admin .plugin-music-form .music-composer-panel,
 .music-admin .plugin-music-form .music-composer-setting,
 .music-admin .plugin-music-form .music-composer-options {
     background: var(--admin-surface-2);
 }
+
 .music-admin .plugin-music-form .music-create-footer {
     background: var(--admin-surface);
 }
+
 @media (max-width: 640px) {
     .music-admin .music-admin-stats {
         grid-template-columns: minmax(0, 1fr);

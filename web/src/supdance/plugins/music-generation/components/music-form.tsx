@@ -292,7 +292,7 @@ export function MusicForm({ userId, onSubmitted, admin = false }: { userId: stri
             {(quoteError || wallet.isError) && selected?.available && (
                 <button
                     type="button"
-                    className="min-h-11 rounded-lg border border-border px-3"
+                    className="music-quote-retry min-h-11 rounded-lg border border-border px-3"
                     onClick={() => {
                         setQuoteRevision((value) => value + 1);
                         if (creditsEnabled) void wallet.refresh();

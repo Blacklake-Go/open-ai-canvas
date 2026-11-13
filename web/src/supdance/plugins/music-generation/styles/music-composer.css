@@ -1,9 +1,15 @@
+/* ==========================================================================
+   SupDance Music Generation Plugin - Composer & Pattern Styles (UI Design System V2.0)
+   Scoped to .plugin-music-form and .music-pattern-dialog
+   ========================================================================== */
+
 .plugin-music-form {
     display: flex;
     flex-direction: column;
-    gap: 0.85rem;
-    color: var(--foreground);
+    gap: 14px;
+    color: var(--music-text-primary, var(--foreground));
 }
+
 .plugin-music-form .music-composer-toolbar,
 .plugin-music-form .music-composer-heading,
 .plugin-music-form .music-composer-setting,
@@ -13,283 +19,413 @@
     display: flex;
     align-items: center;
     justify-content: space-between;
-    gap: 0.5rem;
+    gap: 8px;
 }
+
 .plugin-music-form .music-composer-toolbar {
     flex-wrap: wrap;
+    gap: 10px;
 }
+
 .plugin-music-form .music-model-picker-field {
     min-width: 0;
     max-width: 100%;
     flex: 1 1 12rem;
 }
+
 .plugin-music-form .music-model-picker {
     width: 100%;
-    min-height: 44px;
+    min-height: 40px;
 }
+
+/* Panels */
 .plugin-music-form .music-composer-panel,
 .plugin-music-form .music-composer-setting,
 .plugin-music-form .music-composer-options {
-    padding: 0.875rem;
-    border: 1px solid var(--border);
-    border-radius: var(--user-radius-card, var(--radius));
-    background: var(--surface-secondary, var(--muted));
+    padding: 14px 16px;
+    border: 1px solid var(--music-border-subtle, var(--border));
+    border-radius: var(--music-radius-lg, var(--radius));
+    background: var(--music-bg-surface-raised, var(--surface-secondary, var(--muted)));
+    box-shadow: var(--music-elevation-card, none);
 }
+
 .plugin-music-form .music-composer-heading label,
 .plugin-music-form .music-composer-setting label,
 .plugin-music-form .music-composer-options summary {
     font-size: var(--font-size-sm, 0.875rem);
     font-weight: 600;
+    color: var(--music-text-primary, var(--foreground));
 }
+
 .plugin-music-form .music-composer-heading span,
 .plugin-music-form .music-composer-options small,
 .plugin-music-form .music-quote-line,
 .music-pattern-card small {
-    color: var(--muted-foreground);
+    color: var(--music-text-secondary, var(--muted-foreground));
     font-size: var(--font-size-xs, 0.75rem);
     font-variant-numeric: tabular-nums;
 }
+
+/* Textarea input */
 .plugin-music-form textarea {
     display: block;
     width: 100%;
-    min-height: 4rem;
-    margin-block: 0.75rem;
-    padding: 0.35rem;
+    min-height: 80px;
+    margin-block: 10px;
+    padding: 8px 10px;
     resize: vertical;
-    line-height: 1.65;
+    line-height: 1.6;
     font-size: var(--font-size-sm, 0.875rem);
-    color: var(--foreground);
-    border: 0;
-    border-radius: var(--radius-sm, var(--radius));
-    background: transparent;
+    color: var(--music-text-primary, var(--foreground));
+    border: 1px solid var(--music-border-control, var(--border));
+    border-radius: var(--music-radius-md, var(--radius));
+    background: var(--music-bg-canvas, var(--background));
+    transition:
+        border-color var(--music-motion-fast, 150ms) ease,
+        box-shadow var(--music-motion-fast, 150ms) ease;
 }
+
+.plugin-music-form textarea:focus-visible {
+    outline: 2px solid var(--music-ring, var(--ring));
+    outline-offset: 2px;
+    border-color: var(--music-primary, var(--primary));
+}
+
 .plugin-music-form textarea[aria-invalid="true"] {
-    outline: 1px solid var(--destructive);
+    border-color: var(--music-color-error, var(--destructive));
+    outline-color: var(--music-color-error, var(--destructive));
 }
+
+/* Tool Buttons */
 .plugin-music-form .music-composer-tools {
     display: flex;
     flex-wrap: wrap;
     align-items: center;
-    gap: 0.375rem;
+    gap: 6px;
 }
+
 .plugin-music-form .music-composer-tools .ant-btn,
 .music-pattern-card .ant-btn {
     font-size: var(--font-size-xs, 0.75rem);
+    border-radius: var(--music-radius-sm, var(--radius));
+    min-height: 32px;
 }
+
+/* Accordion Options */
 .plugin-music-form .music-composer-options summary {
     display: flex;
     align-items: center;
-    gap: 0.5rem;
+    gap: 8px;
     cursor: pointer;
     list-style: none;
+    user-select: none;
 }
+
 .plugin-music-form .music-composer-options summary::-webkit-details-marker {
     display: none;
 }
+
 .plugin-music-form .music-composer-options summary svg:last-child {
     margin-inline-start: auto;
+    transition: transform var(--music-motion-fast, 150ms) ease;
 }
+
 .plugin-music-form .music-composer-options[open] summary svg:last-child {
     transform: rotate(180deg);
 }
+
 .plugin-music-form .music-composer-options > div,
 .plugin-music-form .music-composer-options label {
     display: flex;
     flex-direction: column;
-    gap: 0.5rem;
+    gap: 8px;
     font-size: var(--font-size-sm, 0.875rem);
 }
+
 .plugin-music-form .music-composer-options > div {
-    margin-top: 1rem;
+    margin-top: 14px;
 }
+
 .plugin-music-form .music-composer-options input,
 .music-pattern-dialog .music-pattern-search {
-    color: var(--foreground);
-    background: var(--background);
-    border-radius: var(--radius);
-    border: 1px solid var(--border);
-    padding: 0.5rem 0.75rem;
-    min-height: 2.5rem;
+    color: var(--music-text-primary, var(--foreground));
+    background: var(--music-bg-canvas, var(--background));
+    border-radius: var(--music-radius-md, var(--radius));
+    border: 1px solid var(--music-border-control, var(--border));
+    padding: 8px 12px;
+    min-height: 40px;
+    transition: border-color var(--music-motion-fast, 150ms) ease;
 }
+
+.plugin-music-form .music-composer-options input:focus-visible {
+    border-color: var(--music-primary, var(--primary));
+    outline: 2px solid var(--music-ring, var(--ring));
+    outline-offset: 2px;
+}
+
+/* Sticky Footer */
 .plugin-music-form .music-create-footer {
     position: sticky;
     bottom: 0;
     display: grid;
-    gap: 0.5rem;
-    background: var(--card);
-    padding-block: 0.875rem 0.625rem;
-    border-top: 1px solid var(--border);
+    gap: 8px;
+    background: var(--music-bg-surface, var(--card));
+    padding-block: 14px 10px;
+    border-top: 1px solid var(--music-border-subtle, var(--border));
+    z-index: 2;
 }
+
 .plugin-music-form .music-quote-line {
     flex-wrap: wrap;
 }
+
 .plugin-music-form .music-quote-line strong {
-    color: var(--foreground);
+    color: var(--music-text-primary, var(--foreground));
 }
+
+.plugin-music-form .music-quote-retry {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 40px;
+    padding: 0 16px;
+    border-radius: var(--music-radius-md, var(--radius));
+    border: 1px solid var(--music-border-control, var(--border));
+    background: var(--music-bg-surface, var(--card));
+    color: var(--music-text-primary, var(--foreground));
+    font-size: var(--font-size-sm, 0.875rem);
+    font-weight: 500;
+    cursor: pointer;
+    transition: background-color var(--music-motion-fast, 150ms) ease;
+}
+
+.plugin-music-form .music-quote-retry:hover {
+    background: var(--music-bg-hover, var(--accent));
+    border-color: var(--music-border-strong, var(--border));
+}
+
 .plugin-music-form .music-create-button {
     width: 100%;
-    min-height: 2.75rem;
+    min-height: 44px;
     font-weight: 600;
-    border-radius: var(--user-radius-button, var(--radius));
+    border-radius: var(--music-radius-md, var(--radius));
+    background: var(--music-primary, var(--primary));
+    color: var(--music-primary-fg, var(--primary-foreground));
+    border: none;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12);
+    transition: opacity var(--music-motion-fast, 150ms) ease;
 }
+
+.plugin-music-form .music-create-button:hover:not(:disabled) {
+    opacity: 0.92;
+}
+
+/* Pattern Dialog & Modals */
 .music-pattern-dialog {
     display: flex;
     flex-direction: column;
-    gap: 0.875rem;
+    gap: 14px;
     min-height: 0;
     max-height: 72dvh;
     overflow: auto;
-    color: var(--foreground);
+    color: var(--music-text-primary, var(--foreground));
 }
+
 .music-pattern-dialog .music-pattern-filters {
     display: flex;
     flex-wrap: wrap;
-    gap: 0.5rem;
+    gap: 8px;
     align-items: center;
 }
+
 .music-pattern-dialog .music-pattern-search {
     display: flex;
     flex: 1 1 14rem;
     align-items: center;
-    gap: 0.5rem;
-    color: var(--muted-foreground);
+    gap: 8px;
+    color: var(--music-text-secondary, var(--muted-foreground));
 }
+
 .music-pattern-dialog .music-pattern-search input {
     background: transparent;
-    color: var(--foreground);
+    color: var(--music-text-primary, var(--foreground));
     width: 100%;
     min-width: 0;
-}
-.music-pattern-dialog .music-pattern-search:focus-within {
-    outline: 2px solid var(--ring);
-    outline-offset: 1px;
-}
-.music-pattern-dialog .music-pattern-search input:focus {
+    border: none;
     outline: none;
 }
+
+.music-pattern-dialog .music-pattern-search:focus-within {
+    border-color: var(--music-primary, var(--primary));
+    outline: 2px solid var(--music-ring, var(--ring));
+    outline-offset: 1px;
+}
+
 .music-pattern-dialog .music-pattern-grid {
     min-height: 0;
     overflow-y: auto;
     overscroll-behavior: contain;
     display: grid;
-    gap: 0.625rem;
-    grid-template-columns: repeat(auto-fit, minmax(min(100%, 13rem), 1fr));
-    padding: 0.25rem;
+    gap: 10px;
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 14rem), 1fr));
+    padding: 4px;
 }
+
 .music-pattern-dialog .music-pattern-card,
 .music-pattern-dialog .music-pattern-empty {
-    padding: 0.875rem;
-    border: 1px solid var(--border);
-    border-radius: var(--user-radius-card, var(--radius));
-    background: var(--surface-secondary, var(--muted));
+    padding: 14px;
+    border: 1px solid var(--music-border-subtle, var(--border));
+    border-radius: var(--music-radius-lg, var(--radius));
+    background: var(--music-bg-surface-raised, var(--surface-secondary, var(--muted)));
+    box-shadow: var(--music-elevation-card, none);
 }
+
 .music-pattern-dialog .music-pattern-card {
     display: flex;
     flex-direction: column;
-    gap: 0.625rem;
+    gap: 10px;
     min-width: 0;
 }
+
 .music-pattern-dialog .music-pattern-card h3 {
     font-size: var(--font-size-base, 1rem);
-    font-weight: 650;
+    font-weight: 600;
     line-height: 1.3;
     white-space: normal;
     overflow-wrap: anywhere;
+    color: var(--music-text-primary, var(--foreground));
+    margin: 0;
 }
+
 .music-pattern-dialog .music-pattern-card header {
     justify-content: flex-start;
+    gap: 10px;
 }
+
 .music-pattern-dialog .music-pattern-card header div {
     min-width: 0;
 }
+
 .music-pattern-dialog .music-pattern-card p {
     line-height: 1.55;
     font-size: var(--font-size-sm, 0.875rem);
     overflow-wrap: anywhere;
     white-space: pre-wrap;
+    color: var(--music-text-secondary, var(--muted-foreground));
+    margin: 0;
 }
+
 .music-pattern-dialog .music-pattern-card footer {
     margin-top: auto;
     flex-wrap: wrap;
     justify-content: flex-start;
-    gap: 0.375rem;
+    gap: 6px;
 }
+
+/* Gradient Art Badges */
 .music-pattern-dialog .music-pattern-art {
     flex: 0 0 2.75rem;
     height: 2.75rem;
     display: grid;
     place-items: center;
-    border-radius: var(--radius-sm, var(--radius));
-    --art-ink: var(--primary);
-    --art-paper: var(--background);
+    border-radius: var(--music-radius-md, var(--radius));
+    --art-ink: var(--music-primary, var(--primary));
+    --art-paper: var(--music-bg-canvas, var(--background));
     color: var(--art-paper);
     background: repeating-radial-gradient(circle at 30% 70%, var(--art-ink) 0 3px, var(--art-paper) 4px 5px, var(--art-ink) 6px 11px);
 }
+
 .music-pattern-dialog .music-pattern-art svg {
-    padding: 0.25rem;
+    padding: 4px;
     width: 1.5rem;
     height: 1.5rem;
     border-radius: 50%;
     background: var(--art-ink);
 }
+
 .music-pattern-dialog .music-pattern-art-electro,
 .music-pattern-dialog .music-pattern-art-rock {
     background: repeating-linear-gradient(130deg, var(--art-ink) 0 5px, var(--art-paper) 6px 8px, var(--art-ink) 9px 14px);
 }
+
 .music-pattern-dialog .music-pattern-art-chinese,
 .music-pattern-dialog .music-pattern-art-folk {
     background: repeating-radial-gradient(ellipse at 85% 110%, var(--art-paper) 0 3px, var(--art-ink) 4px 8px);
 }
+
 .music-pattern-dialog .music-pattern-art-hiphop,
 .music-pattern-dialog .music-pattern-art-jazz {
     background: repeating-conic-gradient(from 24deg at 15% 85%, var(--art-ink) 0deg 9deg, var(--art-paper) 10deg 14deg);
 }
+
 .music-pattern-dialog .music-pattern-empty {
     grid-column: 1 / -1;
     display: grid;
-    gap: 0.75rem;
+    gap: 12px;
     justify-items: center;
     text-align: center;
 }
+
 .music-pattern-dialog .music-saved-list {
     display: grid;
-    gap: 0.5rem;
+    gap: 8px;
     overflow-y: auto;
 }
+
+/* Prompt Builder Fields */
 .music-pattern-dialog .music-builder-fields {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(min(100%, 13rem), 1fr));
-    gap: 0.75rem;
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 14rem), 1fr));
+    gap: 12px;
 }
+
 .music-pattern-dialog .music-builder-fields label {
     display: grid;
-    gap: 0.375rem;
+    gap: 6px;
     font-size: var(--font-size-sm, 0.875rem);
+    color: var(--music-text-primary, var(--foreground));
 }
+
 .music-pattern-dialog .music-builder-fields input {
     width: 100%;
-    min-height: 44px;
-    padding: 0.5rem;
-    border: 1px solid var(--border);
-    color: var(--foreground);
-    background: var(--background);
-    border-radius: var(--radius);
+    min-height: 40px;
+    padding: 8px 12px;
+    border: 1px solid var(--music-border-control, var(--border));
+    color: var(--music-text-primary, var(--foreground));
+    background: var(--music-bg-canvas, var(--background));
+    border-radius: var(--music-radius-md, var(--radius));
+    transition: border-color var(--music-motion-fast, 150ms) ease;
 }
+
+.music-pattern-dialog .music-builder-fields input:focus-visible {
+    outline: 2px solid var(--music-ring, var(--ring));
+    outline-offset: 2px;
+    border-color: var(--music-primary, var(--primary));
+}
+
 .music-pattern-dialog .music-builder-output {
-    padding: 0.75rem;
-    border-radius: var(--radius);
-    background: var(--surface-secondary, var(--muted));
+    padding: 12px 14px;
+    border-radius: var(--music-radius-md, var(--radius));
+    background: var(--music-bg-surface-raised, var(--surface-secondary, var(--muted)));
+    border: 1px solid var(--music-border-subtle, var(--border));
 }
+
 .music-pattern-dialog .music-builder-output h3 {
     font-size: var(--font-size-xs, 0.75rem);
     font-weight: 600;
+    color: var(--music-text-secondary, var(--muted-foreground));
+    margin: 0;
 }
+
 .music-pattern-dialog .music-builder-output p {
-    margin-top: 0.375rem;
+    margin-top: 6px;
     white-space: pre-wrap;
     overflow-wrap: anywhere;
     font-size: var(--font-size-sm, 0.875rem);
+    color: var(--music-text-primary, var(--foreground));
 }
+
+/* Mobile & Touch Rules */
 @media (max-width: 640px) {
     .plugin-music-form .app-segmented,
     .plugin-music-form .app-unified-select,
@@ -317,5 +453,17 @@
     }
     .music-pattern-dialog .music-pattern-grid {
         grid-template-columns: 1fr;
+    }
+}
+
+/* Motion Preference */
+@media (prefers-reduced-motion: reduce) {
+    .plugin-music-form textarea,
+    .plugin-music-form .music-composer-options summary svg:last-child,
+    .plugin-music-form .music-create-button,
+    .music-pattern-dialog .music-pattern-search,
+    .music-pattern-dialog .music-builder-fields input {
+        transition: none !important;
+        transform: none !important;
     }
 }

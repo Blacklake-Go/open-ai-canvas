@@ -1,5 +1,6 @@
 # 16 — 存量页面平滑迁移方案与实施路线图 (Phased Migration Plan)
 
+> **版本更新声明 (V2.0)**：全站分批平滑迁移计划与后台外观配置 Schema 请统一查阅权威核心文件 [`MIGRATION-AND-ADMIN.md`](./MIGRATION-AND-ADMIN.md)。
 > **设计层级**：Phase 5 — Execution Roadmap & Risk Management  
 > **实施边界**：第一阶段以建立完整设计体系规范、设计变量、组件契约和非侵入式自动化门禁为终点。后续大范围业务页面迁移必须严格遵照本方案分批、受控、可回滚地推进。
 

@@ -1,15 +1,22 @@
+/* ==========================================================================
+   SupDance Music Generation Plugin - Audio Trimming Dialog Styles (UI Design System V2.0)
+   Scoped to .music-trim-overlay and .music-trim-editor
+   ========================================================================== */
+
 .music-trim-overlay .music-trim-editor {
-    color: var(--foreground);
+    color: var(--music-text-primary, var(--foreground));
     min-width: 0;
     padding-block: 4px 8px;
     font-variant-numeric: tabular-nums;
 }
+
 .music-trim-editor fieldset {
     min-width: 0;
     margin: 0;
     padding: 0;
     border: 0;
 }
+
 .music-trim-editor .music-trim-track,
 .music-trim-editor .music-trim-ruler,
 .music-trim-editor .music-trim-actions {
@@ -17,64 +24,79 @@
     align-items: center;
     gap: 8px;
 }
+
 .music-trim-editor .music-trim-track {
     margin: 0 0 20px;
-    color: var(--muted-foreground);
+    color: var(--music-text-secondary, var(--muted-foreground));
+    font-size: var(--font-size-sm, 0.875rem);
 }
+
 .music-trim-track svg {
     flex: none;
 }
+
 .music-trim-track span {
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
 }
+
 .music-trim-editor .music-trim-ruler {
     justify-content: space-between;
-    color: var(--muted-foreground);
+    color: var(--music-text-secondary, var(--muted-foreground));
+    font-size: var(--font-size-xs, 0.75rem);
     margin-bottom: 8px;
 }
+
 .music-trim-editor .music-trim-ruler b {
-    color: var(--foreground);
+    color: var(--music-text-primary, var(--foreground));
 }
+
 .music-trim-editor .music-trim-wave {
     position: relative;
     height: clamp(80px, 13vh, 112px);
     margin-inline: 12px;
-    border-radius: var(--radius);
-    background: var(--muted);
+    border-radius: var(--music-radius-md, var(--radius));
+    background: var(--music-bg-surface-raised, var(--surface-secondary, var(--muted)));
+    border: 1px solid var(--music-border-subtle, var(--border));
     touch-action: manipulation;
     cursor: crosshair;
+    overflow: hidden;
 }
+
 .music-trim-editor .music-trim-wave svg {
     position: absolute;
     inset: 0;
     width: 100%;
     height: 100%;
-    stroke: var(--muted-foreground);
+    stroke: var(--music-text-secondary, var(--muted-foreground));
     stroke-width: 2;
     fill: none;
     pointer-events: none;
 }
+
 .music-trim-editor .music-trim-peaks {
-    stroke: var(--primary);
+    stroke: var(--music-primary, var(--primary));
     clip-path: inset(0 var(--trim-tail) 0 var(--trim-start));
 }
+
 .music-trim-editor .music-trim-selection {
     position: absolute;
     inset: 0 var(--trim-tail) 0 var(--trim-start);
-    border: 1px solid var(--primary);
-    border-radius: var(--radius);
-    background: color-mix(in srgb, var(--primary) 9%, transparent);
+    border: 1px solid var(--music-primary, var(--primary));
+    border-radius: var(--music-radius-sm, var(--radius));
+    background: color-mix(in srgb, var(--music-primary, var(--primary)) 12%, transparent);
     pointer-events: none;
 }
+
 .music-trim-editor .music-trim-cursor {
     position: absolute;
     inset-block: 0;
     width: 2px;
-    background: var(--foreground);
+    background: var(--music-text-primary, var(--foreground));
     pointer-events: none;
 }
+
 .music-trim-editor .music-trim-handle {
     position: absolute;
     inset-block: 0;
@@ -83,10 +105,11 @@
     transform: translateX(-50%);
     border: 0;
     background: transparent;
-    color: var(--primary);
+    color: var(--music-primary, var(--primary));
     cursor: ew-resize;
     touch-action: none;
 }
+
 .music-trim-editor .music-trim-handle::before {
     content: "";
     position: absolute;
@@ -94,9 +117,11 @@
     left: 50%;
     width: 10px;
     transform: translateX(-50%);
-    background: var(--primary);
-    border-radius: var(--radius);
+    background: var(--music-primary, var(--primary));
+    border-radius: var(--music-radius-sm, var(--radius));
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
 }
+
 .music-trim-editor .music-trim-handle::after {
     content: "";
     position: absolute;
@@ -104,23 +129,27 @@
     left: 50%;
     width: 2px;
     transform: translateX(-50%);
-    background: var(--primary-foreground);
+    background: var(--music-primary-fg, var(--primary-foreground));
 }
+
 .music-trim-editor .music-trim-handle:focus-visible,
 .music-trim-editor input:focus-visible {
-    outline: 2px solid var(--ring);
+    outline: 2px solid var(--music-ring, var(--ring));
     outline-offset: 2px;
 }
+
 .music-trim-editor .music-trim-help {
     margin: 12px 0 20px;
-    color: var(--muted-foreground);
+    color: var(--music-text-secondary, var(--muted-foreground));
     font-size: var(--font-size-sm, 0.875rem);
 }
+
 .music-trim-editor .music-trim-values {
     display: grid;
     grid-template-columns: repeat(3, minmax(0, 1fr));
     gap: 12px;
 }
+
 .music-trim-values label,
 .music-trim-values > div {
     display: flex;
@@ -128,40 +157,54 @@
     align-items: stretch;
     gap: 4px;
 }
+
 .music-trim-values span {
-    color: var(--muted-foreground);
+    color: var(--music-text-secondary, var(--muted-foreground));
+    font-size: var(--font-size-xs, 0.75rem);
     overflow-wrap: anywhere;
 }
+
 .music-trim-values input {
     width: 100%;
     min-width: 0;
-    min-height: 44px;
+    min-height: 40px;
     padding: 6px 10px;
-    border: 1px solid var(--border);
-    border-radius: var(--radius);
-    color: var(--foreground);
-    background: var(--background);
+    border: 1px solid var(--music-border-control, var(--border));
+    border-radius: var(--music-radius-md, var(--radius));
+    color: var(--music-text-primary, var(--foreground));
+    background: var(--music-bg-canvas, var(--background));
+    transition: border-color var(--music-motion-fast, 150ms) ease;
 }
+
 .music-trim-values strong {
     display: flex;
     align-items: center;
-    min-height: 44px;
+    min-height: 40px;
+    font-size: var(--font-size-sm, 0.875rem);
+    color: var(--music-text-primary, var(--foreground));
 }
+
 .music-trim-editor .music-trim-actions {
-    margin-top: 16px;
+    margin-top: 18px;
     flex-wrap: wrap;
+    gap: 8px;
 }
+
 .music-trim-actions > :first-child {
     margin-inline-end: auto;
 }
+
 .music-trim-overlay .ant-btn {
-    min-height: 44px;
-    height: auto;
+    min-height: 40px;
+    border-radius: var(--music-radius-md, var(--radius));
     white-space: normal;
 }
+
 .music-trim-editor .music-trim-error {
-    color: var(--destructive);
+    color: var(--music-color-error, var(--destructive));
+    font-size: var(--font-size-sm, 0.875rem);
 }
+
 @media (pointer: coarse) {
     .music-trim-editor .music-trim-wave {
         margin-inline: 22px;
@@ -170,6 +213,7 @@
         width: 44px;
     }
 }
+
 @media (max-width: 480px) {
     .music-trim-editor .music-trim-values {
         grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -184,7 +228,7 @@
         min-height: 0;
     }
     .music-trim-editor .music-trim-actions {
-        gap: 4px;
+        gap: 6px;
     }
     .music-trim-actions .ant-btn {
         padding-inline: 8px;

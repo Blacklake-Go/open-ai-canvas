@@ -1,0 +1,213 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "SupDance / Yingce Design Tokens Dictionary",
+  "version": "2.0.0",
+  "updatedAt": "2026-11-13",
+  "description": "Authoritative machine-readable design tokens for SupDance Studio, Canvas, Admin, and Plugins.",
+  "tokens": {
+    "primitive": {
+      "color": {
+        "neutral-0": { "value": "oklch(1 0 0)", "category": "color", "desc": "Pure white base" },
+        "neutral-50": { "value": "oklch(0.985 0.002 286)", "category": "color", "desc": "Light neutral tint" },
+        "neutral-100": { "value": "oklch(0.970 0.003 286)", "category": "color", "desc": "Subtle surface gray" },
+        "neutral-200": { "value": "oklch(0.922 0.004 286)", "category": "color", "desc": "Control background light" },
+        "neutral-300": { "value": "oklch(0.870 0.005 286)", "category": "color", "desc": "Border light" },
+        "neutral-400": { "value": "oklch(0.708 0.006 286)", "category": "color", "desc": "Secondary placeholder" },
+        "neutral-500": { "value": "oklch(0.556 0.007 286)", "category": "color", "desc": "Tertiary text" },
+        "neutral-600": { "value": "oklch(0.439 0.007 286)", "category": "color", "desc": "Muted icon/border" },
+        "neutral-700": { "value": "oklch(0.371 0.007 286)", "category": "color", "desc": "Dark border highlight" },
+        "neutral-800": { "value": "oklch(0.269 0.006 286)", "category": "color", "desc": "Dark surface raised" },
+        "neutral-900": { "value": "oklch(0.205 0.005 286)", "category": "color", "desc": "Dark card surface #18181b" },
+        "neutral-950": { "value": "oklch(0.145 0.005 286)", "category": "color", "desc": "Dark canvas base #0f0f11" }
+      },
+      "spacing": {
+        "space-half": { "value": 2, "unit": "px", "desc": "Micro optical offset" },
+        "space-1": { "value": 4, "unit": "px", "desc": "Icon gap, tiny padding" },
+        "space-2": { "value": 8, "unit": "px", "desc": "Tight component padding" },
+        "space-3": { "value": 12, "unit": "px", "desc": "Field padding, menu item x-pad" },
+        "space-4": { "value": 16, "unit": "px", "desc": "Card internal padding" },
+        "space-5": { "value": 20, "unit": "px", "desc": "Panel section padding" },
+        "space-6": { "value": 24, "unit": "px", "desc": "Large block gap" },
+        "space-8": { "value": 32, "unit": "px", "desc": "Major section padding" },
+        "space-12": { "value": 48, "unit": "px", "desc": "Header bar height" }
+      },
+      "radius": {
+        "r-xs": { "value": 4, "unit": "px", "desc": "Checkbox, badge, indicator" },
+        "r-sm": { "value": 6, "unit": "px", "desc": "Compact button, pill inner" },
+        "r-md": { "value": 8, "unit": "px", "desc": "Standard button, input, menu item" },
+        "r-lg": { "value": 12, "unit": "px", "desc": "Card, popover, drawer tab" },
+        "r-2xl": { "value": 16, "unit": "px", "desc": "Dialog modal, prompt container" },
+        "r-full": { "value": 9999, "unit": "px", "desc": "Full pill, avatar, round toggle" }
+      },
+      "motion": {
+        "motion-fast": { "value": 120, "unit": "ms", "easing": "cubic-bezier(0.2, 0, 0, 1)", "desc": "Button active, checkbox, toggle" },
+        "motion-normal": { "value": 180, "unit": "ms", "easing": "cubic-bezier(0.2, 0, 0, 1)", "desc": "Dropdown, popover, tab switch" },
+        "motion-slow": { "value": 250, "unit": "ms", "easing": "cubic-bezier(0, 0, 0.2, 1)", "desc": "Modal entrance, drawer slide" }
+      },
+      "zIndex": {
+        "z-canvas-base": { "value": 0, "desc": "Infinite canvas base & grid" },
+        "z-canvas-node": { "value": 10, "desc": "Canvas nodes and connections" },
+        "z-layout-shell": { "value": 20, "desc": "Sidebar, panels, workspace frame" },
+        "z-header-sticky": { "value": 40, "desc": "Sticky topbar & banner" },
+        "z-floating-dock": { "value": 50, "desc": "Floating canvas toolbar & minimap" },
+        "z-dropdown-pop": { "value": 70, "desc": "Dropdown menus, select options, popovers" },
+        "z-modal-drawer": { "value": 85, "desc": "Modal dialogs, settings drawers, backdrop" },
+        "z-global-toast": { "value": 100, "desc": "Global message notifications & offline banner" }
+      }
+    },
+    "semantic": {
+      "colors": {
+        "bg-canvas": {
+          "light": "#ffffff",
+          "dark": "#0f0f11",
+          "cssVar": "--ui-bg-canvas",
+          "desc": "Base canvas background"
+        },
+        "bg-surface": {
+          "light": "#ffffff",
+          "dark": "#18181b",
+          "cssVar": "--ui-bg-surface",
+          "desc": "Card and content container surface"
+        },
+        "bg-surface-subtle": {
+          "light": "#f7f7f7",
+          "dark": "#202020",
+          "cssVar": "--ui-bg-surface-subtle",
+          "desc": "Secondary list item and muted surface"
+        },
+        "bg-surface-raised": {
+          "light": "#ececec",
+          "dark": "#2a2a2a",
+          "cssVar": "--ui-bg-surface-raised",
+          "desc": "Hover and elevated surface"
+        },
+        "bg-overlay": {
+          "light": "#ffffff",
+          "dark": "#1f1f20",
+          "cssVar": "--ui-bg-overlay",
+          "desc": "Opaque floating popover and dropdown background"
+        },
+        "text-primary": {
+          "light": "#171717",
+          "dark": "#f5f5f5",
+          "cssVar": "--ui-text-primary",
+          "desc": "Primary headings and body text (contrast >= 10:1)"
+        },
+        "text-muted": {
+          "light": "#737373",
+          "dark": "#a3a3a3",
+          "cssVar": "--ui-text-muted",
+          "desc": "Secondary labels and placeholder text (contrast >= 4.5:1)"
+        },
+        "text-tertiary": {
+          "light": "#a3a3a3",
+          "dark": "#525252",
+          "cssVar": "--ui-text-tertiary",
+          "desc": "Disabled or read-only text (contrast >= 3.0:1)"
+        },
+        "border-subtle": {
+          "light": "rgba(17, 17, 17, 0.08)",
+          "dark": "rgba(255, 255, 255, 0.08)",
+          "cssVar": "--ui-border-subtle",
+          "desc": "Card and section separator line"
+        },
+        "border-control": {
+          "light": "rgba(17, 17, 17, 0.18)",
+          "dark": "rgba(255, 255, 255, 0.18)",
+          "cssVar": "--ui-border-control",
+          "desc": "Interactive field border line"
+        },
+        "border-focus": {
+          "light": "#171717",
+          "dark": "#f5f5f5",
+          "cssVar": "--ui-border-focus",
+          "desc": "Visible focus ring and active indicator"
+        },
+        "primary": {
+          "light": "#171717",
+          "dark": "#f5f5f5",
+          "cssVar": "--ui-primary",
+          "desc": "Brand solid action button background"
+        },
+        "primary-foreground": {
+          "light": "#ffffff",
+          "dark": "#171717",
+          "cssVar": "--ui-primary-foreground",
+          "desc": "Text on primary action button"
+        },
+        "primary-hover": {
+          "light": "#303030",
+          "dark": "#ffffff",
+          "cssVar": "--ui-primary-hover",
+          "desc": "Hover state for primary action"
+        },
+        "primary-active": {
+          "light": "#404040",
+          "dark": "#e5e5e5",
+          "cssVar": "--ui-primary-active",
+          "desc": "Pressed state for primary action"
+        },
+        "status-success": {
+          "light": "#16a34a",
+          "dark": "#4ade80",
+          "cssVar": "--ui-status-success",
+          "desc": "Task completion and positive status"
+        },
+        "status-warning": {
+          "light": "#d97706",
+          "dark": "#fbbf24",
+          "cssVar": "--ui-status-warning",
+          "desc": "Credit alert and warning badge"
+        },
+        "status-danger": {
+          "light": "#dc2626",
+          "dark": "#f87171",
+          "cssVar": "--ui-status-danger",
+          "desc": "Error state and destructive action"
+        },
+        "status-info": {
+          "light": "#2563eb",
+          "dark": "#60a5fa",
+          "cssVar": "--ui-status-info",
+          "desc": "Informational highlight and links"
+        }
+      }
+    },
+    "component": {
+      "button": {
+        "height-sm": { "value": 30, "unit": "px" },
+        "height-md": { "value": 36, "unit": "px" },
+        "height-lg": { "value": 42, "unit": "px" },
+        "radius": { "value": 8, "unit": "px" },
+        "fontWeight": { "value": 500 },
+        "paddingInline": { "value": 12, "unit": "px" },
+        "iconGap": { "value": 6, "unit": "px" }
+      },
+      "input": {
+        "height-sm": { "value": 30, "unit": "px" },
+        "height-md": { "value": 36, "unit": "px" },
+        "height-lg": { "value": 42, "unit": "px" },
+        "radius": { "value": 8, "unit": "px" },
+        "paddingInline": { "value": 12, "unit": "px" },
+        "borderWidth": { "value": 1, "unit": "px" }
+      },
+      "select": {
+        "height": { "value": 34, "unit": "px" },
+        "radius": { "value": 8, "unit": "px" },
+        "popoverMaxHeight": { "value": 320, "unit": "px" },
+        "popoverRadius": { "value": 12, "unit": "px" }
+      },
+      "modelPicker": {
+        "triggerHeight": { "value": 34, "unit": "px" },
+        "triggerRadius": { "value": 8, "unit": "px" },
+        "popoverWidth": { "value": 320, "unit": "px" },
+        "popoverRadius": { "value": 12, "unit": "px" }
+      },
+      "dialog": {
+        "radius": { "value": 16, "unit": "px" },
+        "backdropBg": { "value": "rgba(0, 0, 0, 0.45)" },
+        "backdropBlur": { "value": "5px" }
+      }
+    }
+  }
+}

@@ -4,6 +4,23 @@
 
 ---
 
+## [2.0.0] - 2026-11-13
+
+### 重大升级与废弃 (Major Updates & Deprecations)
+- **全面废弃旧版 V1.0 本地草案与第三方设计包路径**：彻底移除对外部规范包路径的依赖，统一收敛至实测站点（https://yingce.tv/）提取的高精度真实参数。
+- **发布 7 大 V2.0 权威核心交付物**：
+  - `REFERENCE-AUDIT.md`：参考站点真实多端多主题审计、实测值/观察结论/估算值/项目建议分类清单与证据库（EVD-001 ~ EVD-017）。
+  - `UI-SPEC.md`：全局视觉基础、排版阶梯、4px 栅格、阴影与暗黑 Hairline 内描边、8 级 Z-Index 天梯及 WCAG 2.2 AA 规范。
+  - `design-tokens.json`：全站机器可读单一真理源字典（Primitive → Semantic → Component 三层令牌与双模对称映射）。
+  - `COMPONENT-CATALOG.md`：全量组件契约、状态矩阵、WAI-ARIA APG 键盘交互，重点深钻下拉框与模型选择 Popover 边界避让。
+  - `PLUGIN-THEME-CONTRACT.md`：插件作用域隔离（`.plugin-scope-*`）、插槽扩展机制与防上游代码覆盖三层防线。
+  - `MIGRATION-AND-ADMIN.md`：后台外观配置 JSON Schema V2、默认兜底与四阶段平滑迁移方案。
+  - `ACCEPTANCE-REPORT.md`：第一阶段验收与测试报告（3865 测试用例 100% 通过）。
+- **新增隔离可运行交互展示页**：新增 `web/src/pages/dev/design-system-showcase.tsx`，在 `/dev/design-system` 路由提供全套组件与皮肤交互预览，生产构建自动摇树剔除。
+- **统一文档入口导航**：在 `docs/ui-design-system.md` 建立权威快速导航，彻底解决旧版入口缺失与路径漂移问题。
+
+---
+
 ## [1.0.0] - 2026-10-27
 
 ### 架构突破 (Milestones)

@@ -132,9 +132,11 @@ function devRoutes() {
     const FolderPreviewLab = lazy(() => import("@/pages/dev/folder-preview-lab"));
     const PrevisReproLab = lazy(() => import("@/pages/dev/previs-repro-lab"));
     const TestVoiceRecording = lazy(() => import("@/pages/test-voice-recording"));
+    const DesignSystemShowcase = lazy(() => import("@/pages/dev/design-system-showcase"));
     return [
         { path: "/dev/folders", element: fullScreenDeferred(<FolderPreviewLab />), errorElement: <RouteErrorPage /> },
         { path: "/dev/previs-repro", element: fullScreenDeferred(<PrevisReproLab />), errorElement: <RouteErrorPage /> },
+        { path: "/dev/design-system", element: fullScreenDeferred(<DesignSystemShowcase />), errorElement: <RouteErrorPage /> },
         { path: "/test-voice-recording", element: <RequireAuth>{fullScreenDeferred(<TestVoiceRecording />)}</RequireAuth>, errorElement: <RouteErrorPage /> },
     ];
 }

@@ -1,5 +1,6 @@
 # 12 — 插件 UI 强制兼容契约 (Plugin UI Mandatory Contract)
 
+> **版本更新声明 (V2.0)**：插件接入隔离契约、扩展插槽与防上游覆盖三层防线请统一查阅权威核心文件 [`PLUGIN-THEME-CONTRACT.md`](./PLUGIN-THEME-CONTRACT.md)。
 > **设计层级**：Layer 3 — Application Design System (Plugin Scope)  
 > **适用范围**：所有内置插件（如 `supdance-i18n`、`social-auth`）、第三方扩展插件及通过 `.yingce-plugin` 机制加载的模块。  
 > **核心原则**：插件是平台的受控客人，不是统治者。插件界面必须严格遵守 Design System 约束，严禁私自污染全局 DOM 与 CSS。

@@ -1,48 +1,71 @@
+/* ==========================================================================
+   SupDance Music Generation Plugin - Advanced Dialog Styles (UI Design System V2.0)
+   Scoped to .music-advanced and child controls
+   ========================================================================== */
+
 .music-advanced {
     display: grid;
-    gap: 12px;
-    color: var(--foreground);
+    gap: 14px;
+    color: var(--music-text-primary, var(--foreground));
     max-height: min(72dvh, 700px);
     overflow: auto;
     overscroll-behavior: contain;
-    padding: 2px;
+    padding: 4px;
 }
+
 .music-advanced fieldset,
 .music-advanced label,
 .music-tool-source {
     display: grid;
-    gap: 7px;
+    gap: 8px;
     min-width: 0;
 }
+
 .music-advanced fieldset {
     border: 0;
     margin: 0;
     padding: 0;
-    gap: 14px;
+    gap: 16px;
 }
+
 .music-advanced label,
 .music-tool-source strong,
 .music-tool-footer {
-    font-size: 0.875rem;
+    font-size: var(--font-size-sm, 0.875rem);
+    color: var(--music-text-primary, var(--foreground));
 }
+
 .music-advanced textarea,
 .music-advanced label > input:not([type="checkbox"]):not([type="file"]) {
-    border: 1px solid var(--border);
-    border-radius: var(--radius);
-    padding: 8px 10px;
+    border: 1px solid var(--music-border-control, var(--border));
+    border-radius: var(--music-radius-md, var(--radius));
+    padding: 8px 12px;
     min-height: 40px;
     min-width: 0;
-    background: var(--background);
+    background: var(--music-bg-canvas, var(--background));
     width: 100%;
-    color: var(--foreground);
+    color: var(--music-text-primary, var(--foreground));
+    font-size: var(--font-size-sm, 0.875rem);
+    transition:
+        border-color var(--music-motion-fast, 150ms) ease,
+        box-shadow var(--music-motion-fast, 150ms) ease;
 }
+
+.music-advanced textarea:focus-visible,
+.music-advanced label > input:focus-visible {
+    outline: 2px solid var(--music-ring, var(--ring));
+    outline-offset: 2px;
+    border-color: var(--music-primary, var(--primary));
+}
+
 .music-tool-help,
 .music-tool-source span,
 .music-tool-note {
-    color: var(--muted-foreground);
-    font-size: 0.83rem;
+    color: var(--music-text-secondary, var(--muted-foreground));
+    font-size: var(--font-size-xs, 0.75rem);
     overflow-wrap: anywhere;
 }
+
 .music-tool-actions,
 .music-tool-footer,
 .music-advanced .music-tool-rights {
@@ -51,35 +74,41 @@
     flex-wrap: wrap;
     gap: 8px;
 }
+
 .music-tool-actions {
-    margin-top: 5px;
+    margin-top: 6px;
 }
+
 .music-tool-range {
     display: grid;
     grid-template-columns: 1fr 1fr;
-    gap: 8px;
+    gap: 10px;
 }
+
 .music-tool-range button {
-    grid-column: 1/-1;
+    grid-column: 1 / -1;
     justify-self: start;
 }
+
 .music-tool-footer {
     position: sticky;
     bottom: 0;
-    z-index: 1;
-    background: var(--popover, var(--card));
-    padding-bottom: 4px;
+    z-index: 2;
+    background: var(--music-bg-surface, var(--card));
+    padding-bottom: 6px;
     justify-content: space-between;
-    border-top: 1px solid var(--border);
-    padding-top: 12px;
+    border-top: 1px solid var(--music-border-subtle, var(--border));
+    padding-top: 14px;
 }
+
 .music-workbench-page .music-composer-heading {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    gap: 8px;
+    gap: 10px;
     margin-bottom: 16px;
 }
+
 .music-workbench-page .music-composer-heading h1 {
     margin: 0;
 }

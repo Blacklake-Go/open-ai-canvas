@@ -212,7 +212,7 @@ function MusicStudio({ userId }: { userId?: string }) {
                             )}
                         </div>
                         {tasks.length < historyTotal && (
-                            <button type="button" className="min-h-11 rounded-lg border border-border px-4" disabled={loading} onClick={() => void loadTasks(historyPage + 1)}>
+                            <button type="button" className="music-load-more min-h-11 rounded-lg border border-border px-4" disabled={loading} onClick={() => void loadTasks(historyPage + 1)}>
                                 {t("music.load_more_works")}
                             </button>
                         )}

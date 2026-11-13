@@ -1,5 +1,6 @@
 # 07 — 核心基础组件契约规范 (Component Contracts Specification)
 
+> **版本更新声明 (V2.0)**：全量组件规范、状态矩阵与模型选择 Popover 深度契约请统一查阅权威核心文件 [`COMPONENT-CATALOG.md`](./COMPONENT-CATALOG.md)。
 > **设计层级**：Layer 4 — Component Implementation  
 > **适用范围**：全站所有基础控件与共享组件（位于 `web/src/components/ui/` 及统一封装）。  
 > **核心原则**：任何被全站复用的组件必须具备严格的参数类型定义、完整交互状态矩阵、无障碍支持与自动化测试规则，严禁组件内部私自创建任意裸值。
