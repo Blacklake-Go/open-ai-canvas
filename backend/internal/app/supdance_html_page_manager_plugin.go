@@ -4,10 +4,12 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"regexp"
 	"strings"
 	"sync"
 	"time"
 
+	"yingce/backend/internal/kernel"
 	"yingce/backend/internal/model"
 )
 
@@ -389,6 +391,28 @@ func DefaultHtmlSiteFooterConfig() HtmlSiteFooterConfig {
 }
 
 // AdminSaveHtmlPages 保存或更新页面列表（需要管理员权限）
+var htmlPageSlugPattern = regexp.MustCompile(`^[a-z0-9][a-z0-9_-]*$`)
+
+func validateHtmlPages(pages []HtmlPageItem) error {
+	ids := make(map[string]bool, len(pages))
+	slugs := make(map[string]bool, len(pages))
+	for _, page := range pages {
+		id := strings.TrimSpace(page.ID)
+		slug := strings.ToLower(strings.TrimSpace(page.Slug))
+		if id == "" || ids[id] {
+			return kernel.NewAppError(400, "页面 ID 不能为空或重复")
+		}
+		if !htmlPageSlugPattern.MatchString(slug) || slugs[slug] {
+			return kernel.NewAppError(400, "页面路径必须以字母或数字开头，只能包含字母、数字、连字符和下划线，且不能重复")
+		}
+		if strings.TrimSpace(page.Title) == "" || strings.TrimSpace(page.HTML) == "" {
+			return kernel.NewAppError(400, "页面标题与 HTML 内容不能为空")
+		}
+		ids[id], slugs[slug] = true, true
+	}
+	return nil
+}
+
 func (s *Service) AdminSaveHtmlPages(actor *model.User, pages []HtmlPageItem) (*HtmlPagesAdminOverview, error) {
 	if err := s.RequireAdmin(actor); err != nil {
 		return nil, err
@@ -396,12 +420,13 @@ func (s *Service) AdminSaveHtmlPages(actor *model.User, pages []HtmlPageItem) (*
 	if s.repo == nil {
 		return nil, errors.New("存储不可用")
 	}
+	if err := validateHtmlPages(pages); err != nil {
+		return nil, err
+	}
 
 	now := time.Now()
 	for i := range pages {
-		if strings.TrimSpace(pages[i].ID) == "" {
-			pages[i].ID = fmt.Sprintf("page-%d", now.UnixNano()+int64(i))
-		}
+		pages[i].ID = strings.TrimSpace(pages[i].ID)
 		pages[i].Slug = strings.ToLower(strings.TrimSpace(pages[i].Slug))
 		pages[i].UpdatedAt = now
 	}

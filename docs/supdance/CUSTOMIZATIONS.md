@@ -1,5 +1,13 @@
 
 
+## HTML 页面管理后台 V2 规范覆盖
+
+- 后台样式隔离于 `html-page-manager/admin/`，复用 `--admin-*`、AdminModal 和 AdminSwitch，补齐响应式、键盘操作、加载失败与未保存提醒及六语种词条。
+- iframe 保持脚本可用但移除同源权限，使用临时存储支持模板主题控件；格式化不改写原始脚本与预格式化空白。保存页面不会覆盖未保存页脚。
+- 原有组合根 `backend/internal/app/supdance_html_page_manager_plugin.go` 增加批次保存强校验，无新增宿主挂载点和数据库迁移。操作与回退见 [HTML 页面管理](HTML_PAGE_MANAGER.md)。
+
+
+
 ## 法律正文六语统一
 
 登录注册一体表单的协议名称入口统一在新标签打开 `https://www.supdance.com/terms`，包括同意勾选旁与只读说明入口；移除该表单旧的协议弹窗，不改变勾选、注册验证或同意状态传递。
