@@ -56,7 +56,7 @@ function AuthPageScene() {
     const { t } = useTranslation();
     const videoRef = useRef<HTMLVideoElement>(null);
     const [failedPosterURL, setFailedPosterURL] = useState("");
-    const videoActive = Boolean(appearance.authVideoUrl && !reducedMotion);
+    const videoActive = Boolean(appearance.authVideoUrl && appearance.authVideoAutoplay && !reducedMotion);
 
     useEffect(() => {
         const video = videoRef.current;

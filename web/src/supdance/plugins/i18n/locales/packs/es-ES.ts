@@ -18,7 +18,7 @@ const pack: Record<string, string> = {
     "admin.i18n_workflow.load_failed": "No se pudo cargar el idioma. Se restauró el chino simplificado. Inténtalo de nuevo.",
     "admin.i18n_workflow.title": "Centro de traducciones",
     "admin.i18n_workflow.open": "Centro de traducciones",
-    "admin.i18n_workflow.description": "Importa borradores, completa seis idiomas, revisa y publica. Puedes revertir los cambios.",
+    "admin.i18n_workflow.description": "Importa borradores, completa los ocho idiomas de interfaz, revisa y publica. Puedes revertir los cambios publicados.",
     "admin.i18n_workflow.import": "Importar borradores JSON",
     "admin.i18n_workflow.stage": "Guardar borrador",
     "admin.i18n_workflow.review": "Revisar selección",

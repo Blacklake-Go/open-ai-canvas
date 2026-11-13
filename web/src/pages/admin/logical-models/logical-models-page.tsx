@@ -270,8 +270,8 @@ export default function LogicalModelsPage() {
                 </div>
             ),
         },
-        { title: "用户价格", width: 160, render: (_, item) => logicalPriceLabel(item) },
-        { title: "状态", width: 130, render: (_, item) => logicalModelStatusTag(item) },
+        { title: "用户价格", width: 160, render: (_, item) => <LogicalPriceLabel item={item} /> },
+        { title: "状态", width: 130, render: (_, item) => <LogicalModelStatusTag item={item} /> },
         {
             title: "操作",
             width: 300,
@@ -670,7 +670,7 @@ function RouteFields({
     );
 }
 
-function logicalModelStatusTag(item: AdminLogicalModel) {
+function LogicalModelStatusTag({ item }: { item: AdminLogicalModel }) {
     if (!item.enabled) return <AdminStatusBadge label="已停用" tone="neutral" />;
     if (item.configurationError) return <AdminStatusBadge label="能力配置需调整" tone="warning" title={item.configurationError} />;
     if (item.availabilityError) return <AdminStatusBadge label="线路价格需调整" tone="warning" title={item.availabilityError} />;
@@ -693,7 +693,7 @@ function PricingFields() {
     return <div className="rounded-md bg-muted/20 px-3 py-3 text-xs leading-5 text-foreground/55">价格、上游 SKU 和可用规格只在“系统渠道 / 模型管理”配置。前台模型只负责展示、能力范围和故障切换，不再保存第二份价格。</div>;
 }
 
-function logicalPriceLabel(item: AdminLogicalModel) {
+function LogicalPriceLabel({ item }: { item: AdminLogicalModel }) {
     const priceTiers = item.priceTiers || [];
     if (!priceTiers.length) return <span className="text-xs text-foreground/45">待配置系统规格价格</span>;
     return <span className="text-xs">{priceTiers.length} 个系统规格档</span>;
@@ -757,12 +757,16 @@ function simulationColumns(): ColumnsType<RouteSimulationResult["candidates"][nu
         {
             title: "结果",
             width: 110,
-            render: (_, candidate) => (
-                <Tag variant="filled" color={candidate.inPool ? "success" : candidate.blocked ? "warning" : "default"}>
-                    {candidate.inPool ? "进入候选池" : candidate.blocked ? "冷却中" : candidate.matched ? "低优先级" : "不匹配"}
-                </Tag>
-            ),
+            render: (_, candidate) => <SimulationCandidateStatus candidate={candidate} />,
         },
         { title: "原因", render: (_, candidate) => candidate.reasons?.join("；") || "-" },
     ];
+}
+
+function SimulationCandidateStatus({ candidate }: { candidate: RouteSimulationResult["candidates"][number] }) {
+    return (
+        <Tag variant="filled" color={candidate.inPool ? "success" : candidate.blocked ? "warning" : "default"}>
+            {candidate.inPool ? "进入候选池" : candidate.blocked ? "冷却中" : candidate.matched ? "低优先级" : "不匹配"}
+        </Tag>
+    );
 }

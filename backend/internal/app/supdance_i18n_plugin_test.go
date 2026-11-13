@@ -47,7 +47,7 @@ func TestSupDanceI18nPluginLifecycleAndDictionaryManagement(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if len(overview.LanguageStats) != 6 || !overview.PluginEnabled {
+	if len(overview.LanguageStats) != len(supdancei18n.SupportedLocaleCodes) || !overview.PluginEnabled {
 		t.Fatalf("unexpected initial overview: %#v", overview)
 	}
 

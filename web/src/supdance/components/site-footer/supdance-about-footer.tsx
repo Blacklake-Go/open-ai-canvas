@@ -8,12 +8,14 @@ import { DEFAULT_HTML_SITE_FOOTER_CONFIG, fetchPublicHtmlSiteFooterConfig } from
 import type { HtmlSiteFooterConfig } from "@/supdance/plugins/html-page-manager/types";
 
 const footerLabels = {
-    "zh-CN": { center: "法律中心", contact: "联系我们" },
-    "en-US": { center: "Legal center", contact: "Contact us" },
-    "fr-FR": { center: "Centre juridique", contact: "Nous contacter" },
-    "de-DE": { center: "Rechtliche Informationen", contact: "Kontakt" },
-    "ja-JP": { center: "法務情報", contact: "お問い合わせ" },
-    "ko-KR": { center: "법률 정보", contact: "문의하기" },
+    "zh-TW": { title: "法律與支援", center: "法律中心", contact: "聯絡我們" },
+    "es-ES": { title: "Información legal y ayuda", center: "Centro legal", contact: "Contactar" },
+    "zh-CN": { title: "法律与支持", center: "法律中心", contact: "联系我们" },
+    "en-US": { title: "Legal & support", center: "Legal center", contact: "Contact us" },
+    "fr-FR": { title: "Informations et assistance", center: "Centre juridique", contact: "Nous contacter" },
+    "de-DE": { title: "Rechtliches & Support", center: "Rechtliche Informationen", contact: "Kontakt" },
+    "ja-JP": { title: "法務・サポート", center: "法務情報", contact: "お問い合わせ" },
+    "ko-KR": { title: "법률 및 지원", center: "법률 정보", contact: "문의하기" },
 };
 
 function SocialVectorIcon({ id }: { id: string }) {

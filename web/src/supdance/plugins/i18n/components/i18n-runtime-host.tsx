@@ -1,7 +1,7 @@
 import { useEffect } from "react";
 import { usePluginStore } from "@/stores/use-plugin-store";
-import { getPublicSupDanceI18nBundle } from "../api";
-import { SUPDANCE_I18N_CACHE_STORAGE_KEY, SUPDANCE_I18N_DISCOVERED_STORAGE_KEY, SUPDANCE_I18N_LOCALE_STORAGE_KEY, useSupDanceI18nStore } from "../store";
+import { getPublicSupDanceI18nBundle, invalidateI18nPublicReads } from "../api";
+import { SUPDANCE_I18N_CACHE_STORAGE_KEY, SUPDANCE_I18N_DISCOVERED_STORAGE_KEY, useSupDanceI18nStore } from "../store";
 import { SUPDANCE_I18N_PLUGIN_ID } from "../types";
 
 export function SupDanceI18nRuntimeHost() {
@@ -55,7 +55,8 @@ export function SupDanceI18nRuntimeHost() {
         document.addEventListener("visibilitychange", onVisible);
 
         const handleStorage = (event: StorageEvent) => {
-            if (event.key === SUPDANCE_I18N_LOCALE_STORAGE_KEY || event.key === SUPDANCE_I18N_CACHE_STORAGE_KEY || event.key === SUPDANCE_I18N_DISCOVERED_STORAGE_KEY) {
+            if (event.key === SUPDANCE_I18N_CACHE_STORAGE_KEY) invalidateI18nPublicReads();
+            if (event.key === SUPDANCE_I18N_CACHE_STORAGE_KEY || event.key === SUPDANCE_I18N_DISCOVERED_STORAGE_KEY) {
                 syncFromStorage();
             }
         };

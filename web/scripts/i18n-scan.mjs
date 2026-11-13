@@ -1,9 +1,10 @@
 import { readFileSync, readdirSync, writeFileSync, mkdirSync, existsSync } from "node:fs";
 import { resolve, relative, dirname } from "node:path";
-import { BUILTIN_SUPDANCE_I18N_ENTRIES } from "../src/supdance/plugins/i18n/locales/index.ts";
+import { BUILTIN_I18N_ENTRIES } from "../src/supdance/plugins/i18n/locales/index.ts";
 import { scanSource, compareManifests, hashText } from "./i18n/source-scanner.mjs";
 import { i18n } from "../src/i18n/index.ts";
 import { CREATION_UI_SOURCES } from "../src/supdance/plugins/i18n/locales/creation-sources.ts";
+import { SUPPORTED_LOCALES } from "../src/i18n/locales.ts";
 
 const root = resolve(import.meta.dir, "..");
 const args = process.argv.slice(2);
@@ -23,7 +24,7 @@ for (let i = 0; i < args.length; i++) {
         else output = resolve(value);
     }
 }
-const entries = [...BUILTIN_SUPDANCE_I18N_ENTRIES];
+const entries = [...BUILTIN_I18N_ENTRIES];
 const bySource = new Map();
 for (const entry of entries) bySource.set(entry.sourceText, [...(bySource.get(entry.sourceText) ?? []), entry]);
 // The host and creation namespaces own their catalogs independently of legacy packs.
@@ -82,8 +83,7 @@ const diff = compareManifests(previous.items, items);
 const oldMissing = new Set((previous.missingKeys ?? []).map((r) => `${r.file}:${r.key}`));
 const newMissingKeys = missingKeys.filter((r) => !oldMissing.has(`${r.file}:${r.key}`));
 const blockers = [...diff.added, ...diff.changed].filter((i) => i.status !== "known");
-const packs = {};
-for (const code of ["en-US", "zh-TW", "ja-JP", "ko-KR", "es-ES"]) packs[code] = (await import(`../src/supdance/plugins/i18n/locales/packs/${code}.ts`)).default;
+const packs = Object.fromEntries(SUPPORTED_LOCALES.filter(({ code }) => code !== "zh-CN").map(({ code }) => [code, Object.fromEntries(entries.map((entry) => [entry.key, entry.translations[code] ?? ""]))]));
 const catalog = entries.map((e) => ({ key: e.key, sourceHash: hashText(e.sourceText), translations: Object.fromEntries(Object.entries(packs).map(([code, pack]) => [code, hashText(pack[e.key] ?? "")])) }));
 const oldCatalog = new Map((previous.catalog ?? []).map((e) => [e.key, e]));
 const catalogChanges = catalog

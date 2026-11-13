@@ -13,7 +13,7 @@ import (
 	"time"
 )
 
-const Version = "1.2.0"
+const Version = "1.3.0"
 const WorkflowSettingKey = "supdance_i18n_workflow"
 
 var ErrWorkflowConflict = errors.New("i18n_workflow_conflict")
@@ -68,7 +68,7 @@ func builtinCatalogRevision() string {
 	return catalogHash
 }
 
-var placeholderPattern = regexp.MustCompile(`\{([a-zA-Z0-9_]+)\}`)
+var placeholderPattern = regexp.MustCompile(`\{\{[^{}]+\}\}|\{[a-zA-Z0-9_]+\}`)
 var urlPattern = regexp.MustCompile(`https?://[a-zA-Z0-9][^\s<>()（），,]*`)
 var markupPattern = regexp.MustCompile(`(?i)</?[a-z][^>]*>`)
 
@@ -84,7 +84,7 @@ func ValidateTranslation(source, translation string) error {
 	if strings.TrimSpace(translation) == "" {
 		return fmt.Errorf("%w: empty_translation", ErrInvalidTranslation)
 	}
-	if !sameTokens(placeholderPattern, source, translation) {
+	if !sameTokens(placeholderPattern, source, translation) || strings.Count(source, "{") != strings.Count(translation, "{") || strings.Count(source, "}") != strings.Count(translation, "}") {
 		return fmt.Errorf("%w: placeholder_mismatch", ErrInvalidTranslation)
 	}
 	if !sameTokens(urlPattern, source, translation) {

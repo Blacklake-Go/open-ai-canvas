@@ -1,0 +1,170 @@
+{
+    "fr": {
+        "title": "Politique d'utilisation acceptable",
+        "badge": "AUP · CONTENT STANDARDS & ENFORCEMENT",
+        "summary": "Normes, surveillance, canaux de reporting et mesures d'application pour le contenu généré par l'IA sur la plateforme Supdance.",
+        "effectiveDate": "November 04, 2026",
+        "version": "v1.0",
+        "sections": [
+            {
+                "id": "scope",
+                "title": "1. Portée et engagements fondamentaux",
+                "paragraphs": [
+                    "Supdance (exploitée par Supdance, ci-après « Plateforme », « nous », « notre » ou « notre ») se consacre à fournir un environnement créatif sûr, légal et responsable alimenté par l'IA.",
+                    "Cette politique d'utilisation acceptable (« PUA ») s'applique à toutes les modalités de contenu traitées ou générées via nos services, y compris les invites textuelles, la génération d'images, la synthèse vidéo, la génération audio/musique et les canevas de projets multipistes."
+                ]
+            },
+            {
+                "id": "content-standards",
+                "title": "2. Normes de contenu et catégories interdites",
+                "paragraphs": ["Nous interdisons strictement l'utilisation de nos services pour générer, traiter, télécharger ou diffuser du contenu dans les catégories interdites suivantes :"],
+                "bullets": [
+                    "Contenu pornographique/explicite pour adultes/NSFW : toute représentation sexuellement explicite, nudité ou matériel sexuel non consensuel.",
+                    "Images violentes et graphiques : contenu illustrant de la violence graphique, du sang, du sang, de la mutilation, de l'automutilation, de l'incitation au suicide ou de la violence physique.",
+                    "Discours de haine et harcèlement : attaques, insultes, langage déshumanisant, diffamation ou harcèlement fondé sur la race, l'origine ethnique, la religion, le handicap, le sexe, l'âge ou l'orientation sexuelle.",
+                    "Sécurité des enfants (CSAM) - Tolérance zéro : toute représentation, génération ou facilitation de matériel d'abus sexuel ou d'exploitation d'enfants. Les violations seront immédiatement signalées aux forces de l'ordre et au NCMEC.",
+                    "Deepfakes et usurpation d’identité non consensuelle : représentation synthétique réaliste de personnes vivantes réelles ou d’individus décédés sans consentement explicite vérifiable, clonage de voix frauduleux ou manipulation politique trompeuse.",
+                    "Violation de la propriété intellectuelle et des marques : génération non autorisée qui détourne des marques déposées de tiers, des présentations commerciales exclusives ou des personnages protégés par le droit d'auteur sans droit légal."
+                ],
+                "callout": "Restriction matérielle relative aux personnes réelles : si vous téléchargez de vraies photographies ou des échantillons de voix pour la personnalisation du personnage, vous déclarez et garantissez que vous détenez tous les droits légaux nécessaires et le consentement écrit explicite des personnes représentées."
+            },
+            {
+                "id": "moderation",
+                "title": "3. Modération du contenu et garanties de l'IA",
+                "paragraphs": [
+                    "Nous utilisons un pipeline de modération à plusieurs niveaux combinant un filtrage automatisé avant le vol, une inspection de sécurité en temps réel et un audit de conformité humain.",
+                    "Toutes les invites d'entrée et générations de sorties passent par des classificateurs automatisés de mots clés et de sécurité sémantique. Les générations signalées comme à haut risque seront immédiatement interceptées et ne consommeront pas de crédits informatiques."
+                ]
+            },
+            {
+                "id": "reporting",
+                "title": "4. Délais de signalement et de traitement des violations",
+                "paragraphs": ["Nous maintenons un bureau de reporting actif et surveillé par des humains pour répondre aux violations des droits, aux problèmes de sécurité et aux violations des politiques."],
+                "bullets": ["E-mail de conformité dédié : safety@supdance.com (ou service d'assistance : support@supdance.com)", "Formulaire en ligne : accessible via le centre d'aide dans le tableau de bord de votre espace de travail."],
+                "table": {
+                    "head": ["Niveau de gravité", "Réponse initiale", "Résolution finale"],
+                    "rows": [
+                        ["Niveau 1 (Sévère : CSAM, terrorisme, préjudice extrême)", "Dans les 2 heures", "Dans les 24 heures"],
+                        ["Niveau 2 (risque élevé : deepfakes, violence, usurpation d'identité)", "Dans les 24 heures", "Dans les 3 jours ouvrables"],
+                        ["Niveau 3 (Général : Litige IP, infraction modérée)", "Dans les 48 heures", "Dans les 7 jours ouvrables"]
+                    ]
+                }
+            },
+            {
+                "id": "enforcement-actions",
+                "title": "5. Mesures coercitives",
+                "paragraphs": ["En cas de violation de l'AUP, nous nous réservons le droit de prendre des mesures coercitives rapides et proportionnelles en fonction de la gravité et de l'historique des violations :"],
+                "table": {
+                    "head": ["Action", "Descriptif", "Circonstance typique"],
+                    "rows": [
+                        ["Avertissement concernant le contenu", "Notification écrite formelle nécessitant une suppression immédiate ou une modification rapide", "Premier déclenchement d'invite mineur ou par inadvertance"],
+                        ["Suppression d'actifs", "Suppression immédiate ou mise en quarantaine des actifs du projet en violation du stockage cloud", "Images, vidéos ou fichiers audio confirmant une violation des règles"],
+                        ["Restriction des fonctionnalités", "Restriction temporaire des privilèges de génération ou des points de terminaison du modèle pendant 1 à 14 jours", "Tentatives de contournement répétées ou générations à haut risque"],
+                        ["Résiliation du compte", "Interdiction permanente des identifiants de compte, confiscation des crédits restants et liste noire", "Violations graves (CSAM, fraude, génération malveillante systémique)"],
+                        ["Escalade juridique", "Conservation des journaux d'audit et saisine formelle des forces de l'ordre ou des régulateurs", "Comportement criminel, préjudice grave ou mandat légal statutaire"]
+                    ]
+                }
+            },
+            {
+                "id": "appeals",
+                "title": "6. Mécanisme d'appel",
+                "paragraphs": [
+                    "Si vous pensez qu'une mesure coercitive a été exécutée par erreur, vous pouvez déposer un appel en envoyant un e-mail à support@supdance.com dans les 14 jours calendaires suivant la réception de la notification.",
+                    "Notre comité de conformité procédera à un examen indépendant dans les 10 jours ouvrables et communiquera la décision finale par écrit."
+                ]
+            },
+            {
+                "id": "transparency",
+                "title": "7. Transparence et révisions des politiques",
+                "paragraphs": [
+                    "Nous révisons et mettons à jour périodiquement cette politique d'utilisation acceptable pour nous aligner sur l'évolution des normes de sécurité de l'IA, des directives des fournisseurs en amont et des cadres statutaires internationaux.",
+                    "Les modifications importantes seront annoncées au moins 15 jours à l'avance via les avis de la plateforme ou par courrier électronique. La poursuite de l'utilisation du service vaut acceptation pleine et entière."
+                ]
+            }
+        ]
+    },
+    "de": {
+        "title": "Richtlinien zur akzeptablen Nutzung",
+        "badge": "AUP · CONTENT STANDARDS & ENFORCEMENT",
+        "summary": "Standards, Überwachung, Meldekanäle und Durchsetzungsmaßnahmen für KI-generierte Inhalte auf der gesamten Supdance-Plattform.",
+        "effectiveDate": "November 04, 2026",
+        "version": "v1.0",
+        "sections": [
+            {
+                "id": "scope",
+                "title": "1. Umfang und Kernverpflichtungen",
+                "paragraphs": [
+                    "Supdance (betrieben von Supdance, im Folgenden „Plattform“, „wir“, „uns“ oder „unser“) ist bestrebt, eine sichere, legale und verantwortungsvolle KI-gestützte kreative Umgebung bereitzustellen.",
+                    "Diese Richtlinie zur akzeptablen Nutzung („AUP“) gilt für alle Inhaltsmodalitäten, die über unsere Dienste verarbeitet oder generiert werden, einschließlich Textaufforderungen, Bildgenerierung, Videosynthese, Audio-/Musikgenerierung und mehrspurige Projektleinwände."
+                ]
+            },
+            {
+                "id": "content-standards",
+                "title": "2. Inhaltsstandards und verbotene Kategorien",
+                "paragraphs": ["Wir verbieten strengstens die Nutzung unserer Dienste zum Generieren, Verarbeiten, Hochladen oder Verbreiten von Inhalten innerhalb der folgenden verbotenen Kategorien:"],
+                "bullets": [
+                    "Pornografischer/expliziter Inhalt für Erwachsene/NSFW: Alle sexuell expliziten Darstellungen, Nacktheit oder nicht einvernehmliches sexuelles Material.",
+                    "Gewalttätige und anschauliche Bilder: Inhalte, die anschauliche Gewalt, Blut, Blut, Verstümmelung, Selbstverletzung, Selbstmordaufforderung oder körperliche Misshandlung darstellen.",
+                    "Hassrede und Belästigung: Angriffe, Beleidigungen, entmenschlichende Sprache, Verleumdung oder Belästigung aufgrund von Rasse, ethnischer Zugehörigkeit, Religion, Behinderung, Geschlecht, Alter oder sexueller Orientierung.",
+                    "Kindersicherheit (CSAM) – Null Toleranz: Jegliche Darstellung, Erzeugung oder Förderung von Material zum sexuellen Missbrauch von Kindern oder zur Ausbeutung von Kindern. Verstöße werden unverzüglich den Strafverfolgungsbehörden und dem NCMEC gemeldet.",
+                    "Deepfakes und nicht einvernehmlicher Identitätswechsel: Realistische synthetische Darstellung realer lebender oder verstorbener Personen ohne nachweisbare ausdrückliche Zustimmung, betrügerisches Klonen von Stimmen oder irreführende politische Manipulation.",
+                    "Verletzung von geistigem Eigentum und Markenrecht: Unbefugte Generierung, die eingetragene Marken Dritter, geschützte Handelsaufmachungen oder urheberrechtlich geschützte Zeichen ohne Rechtsanspruch missbraucht."
+                ],
+                "callout": "Materialbeschränkung für reale Personen: Wenn Sie echte Fotos oder Sprachproben zur Charakteranpassung hochladen, erklären und garantieren Sie, dass Sie über alle erforderlichen gesetzlichen Rechte und die ausdrückliche schriftliche Zustimmung der abgebildeten Personen verfügen."
+            },
+            {
+                "id": "moderation",
+                "title": "3. Inhaltsmoderation und KI-Schutzmaßnahmen",
+                "paragraphs": [
+                    "Wir verwenden eine mehrschichtige Moderationspipeline, die automatisierte Filterung vor dem Flug, Sicherheitsinspektion in Echtzeit und menschliche Compliance-Prüfung kombiniert.",
+                    "Alle Eingabeaufforderungen und Ausgabegenerierungen durchlaufen automatisierte Schlüsselwort- und semantische Sicherheitsklassifikatoren. Als risikoreich gekennzeichnete Generationen werden sofort abgefangen und verbrauchen keine Rechenguthaben."
+                ]
+            },
+            {
+                "id": "reporting",
+                "title": "4. Zeitpläne für die Meldung und Bearbeitung von Verstößen",
+                "paragraphs": ["Wir unterhalten eine aktive, von Menschen überwachte Meldestelle, um auf Rechtsverletzungen, Sicherheitsbedenken und Richtlinienverstöße zu reagieren."],
+                "bullets": ["Dedizierte Compliance-E-Mail: security@supdance.com (oder Support-Desk: support@supdance.com)", "Online-Formular: Zugriff über das Hilfecenter in Ihrem Workspace-Dashboard."],
+                "table": {
+                    "head": ["Schweregrad", "Erste Antwort", "Endgültige Lösung"],
+                    "rows": [
+                        ["Stufe 1 (Schwerwiegend: CSAM, Terrorismus, extremer Schaden)", "Innerhalb von 2 Stunden", "Innerhalb von 24 Stunden"],
+                        ["Stufe 2 (Hohes Risiko: Deepfakes, Gewalt, Identitätsdiebstahl)", "Innerhalb von 24 Stunden", "Innerhalb von 3 Werktagen"],
+                        ["Stufe 3 (Allgemein: IP-Streit, mäßiger Verstoß)", "Innerhalb von 48 Stunden", "Innerhalb von 7 Werktagen"]
+                    ]
+                }
+            },
+            {
+                "id": "enforcement-actions",
+                "title": "5. Durchsetzungsmaßnahmen",
+                "paragraphs": ["Im Falle eines Verstoßes gegen die AUP behalten wir uns das volle Recht vor, je nach Schwere und Vorgeschichte der Verstöße unverzüglich verhältnismäßige Durchsetzungsmaßnahmen zu ergreifen:"],
+                "table": {
+                    "head": ["Aktion", "Beschreibung", "Typischer Umstand"],
+                    "rows": [
+                        ["Inhaltswarnung", "Formelle schriftliche Mitteilung, die eine sofortige Entfernung oder unverzügliche Änderung erfordert", "Erstmaliger geringfügiger oder unbeabsichtigter Aufforderungsauslöser"],
+                        ["Asset-Entfernung", "Sofortige Löschung oder Quarantäne verletzender Projektressourcen aus dem Cloud-Speicher", "Bestätigt, dass Bilder, Videos oder Audiodateien gegen die Richtlinien verstoßen"],
+                        ["Funktionseinschränkung", "Vorübergehende Einschränkung der Generierungsrechte oder Modellendpunkte für 1–14 Tage", "Wiederholte Umgehungsversuche oder Hochrisikogenerationen"],
+                        ["Kontoauflösung", "Dauerhafte Sperrung von Kontozugangsdaten, Verfall verbleibender Guthaben und schwarze Liste", "Schwerwiegende Verstöße (CSAM, Betrug, systemische Schadgenerierung)"],
+                        ["Rechtliche Eskalation", "Aufbewahrung von Prüfprotokollen und formelle Weiterleitung an Strafverfolgungsbehörden oder Aufsichtsbehörden", "Kriminelles Verhalten, schwerer Schaden oder gesetzliche Verpflichtung"]
+                    ]
+                }
+            },
+            {
+                "id": "appeals",
+                "title": "6. Berufungsverfahren",
+                "paragraphs": [
+                    "Wenn Sie der Meinung sind, dass eine Durchsetzungsmaßnahme irrtümlich durchgeführt wurde, können Sie innerhalb von 14 Kalendertagen nach Erhalt der Benachrichtigung Berufung einlegen, indem Sie eine E-Mail an support@supdance.com senden.",
+                    "Unser Compliance-Ausschuss wird innerhalb von 10 Werktagen eine unabhängige Prüfung durchführen und die endgültige Entscheidung schriftlich mitteilen."
+                ]
+            },
+            {
+                "id": "transparency",
+                "title": "7. Transparenz und Richtlinienänderungen",
+                "paragraphs": [
+                    "Wir überprüfen und aktualisieren diese Richtlinie zur akzeptablen Nutzung regelmäßig, um sie an sich entwickelnde KI-Sicherheitsstandards, Richtlinien für vorgelagerte Anbieter und internationale gesetzliche Rahmenbedingungen anzupassen.",
+                    "Wesentliche Änderungen werden mindestens 15 Tage im Voraus per Plattformbenachrichtigung oder E-Mail bekannt gegeben. Die weitere Nutzung des Dienstes stellt eine uneingeschränkte Akzeptanz dar."
+                ]
+            }
+        ]
+    }
+}

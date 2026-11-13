@@ -3,6 +3,8 @@ import { Link } from "react-router";
 import { useI18n } from "@/supdance/plugins/i18n";
 
 const centerLabels: Record<string, string> = {
+    "fr-FR": "Centre juridique",
+    "de-DE": "Rechtliche Informationen",
     "zh-CN": "法律中心",
     "zh-TW": "法律中心",
     "en-US": "Legal Center",
@@ -11,6 +13,8 @@ const centerLabels: Record<string, string> = {
     "ko-KR": "법률 센터",
 };
 const mcpLabels: Record<string, string> = {
+    "fr-FR": "MCP et extensions",
+    "de-DE": "MCP und Plugins",
     "zh-CN": "MCP 插件",
     "zh-TW": "MCP 外掛",
     "en-US": "MCP & Plugins",

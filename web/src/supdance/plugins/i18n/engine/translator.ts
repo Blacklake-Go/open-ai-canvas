@@ -16,7 +16,7 @@ export type CompiledI18nDictionary = {
 
 type DynamicPatternRule = {
     regex: RegExp;
-    format: Record<SupDanceLocaleCode, (...groups: string[]) => string>;
+    format: Partial<Record<SupDanceLocaleCode, (...groups: string[]) => string>>;
 };
 
 const BUILTIN_SOURCE_BY_KEY = new Map<string, string>(BUILTIN_SUPDANCE_I18N_ENTRIES.map((item) => [item.key, item.sourceText.trim()]));
@@ -319,6 +319,8 @@ export function compileI18nDictionary(entries: readonly SupDanceI18nEntry[]): Co
 
     for (const entry of entries) {
         byKey.set(entry.key, entry);
+        // Canonical UI entries use explicit i18next targets, never legacy source matching.
+        if (["upstreamUI", "creationUI", "modelUI"].includes(entry.namespace)) continue;
 
         const builtinOriginal = BUILTIN_SOURCE_BY_KEY.get(entry.key);
         if (builtinOriginal) {
@@ -392,6 +394,7 @@ export function translateSourceText(dictionary: CompiledI18nDictionary, rawText:
         const groups = core.match(rule.regex);
         if (groups) {
             const formatter = rule.format[locale] || rule.format[fallbackLocale] || rule.format["zh-CN"];
+            if (!formatter) return null;
             return `${leading}${formatter(...groups.slice(1))}${trailing}`;
         }
     }

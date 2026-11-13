@@ -4,11 +4,11 @@ import type { HtmlTemplateMeta } from "../types";
 export const BUILTIN_HTML_TEMPLATES: HtmlTemplateMeta[] = [
     {
         id: "linear-dark",
-        name: "Supdance 服务条款 · 六语正文",
+        name: "Supdance 服务条款 · 八语正文",
         category: "minimalist",
         badge: "正式条款 · 统一正文",
         theme: "adaptive",
-        description: "与站点服务条款共用正文，支持中英法德日韩语言链接，跟随系统明暗主题，无脚本且可打印。",
+        description: "与站点服务条款共用正文，支持简中、繁中、英、西、法、德、日、韩八种语言，跟随系统明暗主题，无脚本且可打印。",
         sampleHtml: renderLegalHtml("terms", "zh-CN"),
     },
     {
@@ -23,7 +23,7 @@ export const BUILTIN_HTML_TEMPLATES: HtmlTemplateMeta[] = [
     },
     {
         id: "vercel-doc",
-        name: "Supdance 隐私政策 · 六语正文",
+        name: "Supdance 隐私政策 · 八语正文",
         category: "documentation",
         badge: "隐私说明 · 统一正文",
         theme: "adaptive",

@@ -12,7 +12,7 @@ import { useUserStore } from "@/stores/use-user-store";
 const SINGLE_PAGE_OPTIONS = { maxPages: 1 } as const;
 const DRAWING_RENDER_MAX_DIMENSION = 2048;
 const DRAWING_RENDER_PADDING = 24;
-const TLDRAW_LOCALES: Record<AppLocale, string> = { "zh-CN": "zh-cn", "en-US": "en", "fr-FR": "fr", "de-DE": "de", "ja-JP": "ja", "ko-KR": "ko-kr" };
+const TLDRAW_LOCALES: Record<AppLocale, string> = { "zh-CN": "zh-cn", "en-US": "en", "fr-FR": "fr", "de-DE": "de", "ja-JP": "ja", "ko-KR": "ko-kr", "zh-TW": "zh-tw", "es-ES": "es" };
 
 export const CanvasDrawingTldrawEditor = forwardRef<CanvasDrawingEditorHandle, CanvasDrawingEditorProps>(function CanvasDrawingTldrawEditor({ snapshot, colorScheme, onReady }, ref) {
     const tldrawLicenseKey = useUserStore((state) => state.drawingEngine.tldrawLicenseKey);

@@ -112,6 +112,10 @@ const relayFields: PolicyField[] = [
     { group: "request", name: "channelCircuitOpenSeconds", label: "熔断持续时间", extra: "渠道熔断打开后拒绝请求的时间。", unit: "秒", max: 86_400 },
 ];
 
+function HotPolicyStatus() {
+    return <AdminStatusBadge label="保存后热更新" tone="info" />;
+}
+
 const policySections: PolicySectionDefinition[] = [
     { id: "policy-resource", icon: <Database className="size-4" aria-hidden="true" />, title: "资源与账号配额", shortTitle: "资源配额", description: "上传、文件容量、结构化数据和历史记录上限。", fields: resourceFields },
     {
@@ -121,7 +125,7 @@ const policySections: PolicySectionDefinition[] = [
         shortTitle: "对象存储",
         description: "对象存储传输、签名地址和上传缓冲策略。",
         fields: storageFields,
-        status: <AdminStatusBadge label="保存后热更新" tone="info" />,
+        status: <HotPolicyStatus />,
     },
     {
         id: "policy-concurrency",
@@ -130,7 +134,7 @@ const policySections: PolicySectionDefinition[] = [
         shortTitle: "任务并发",
         description: "后台任务消费、渠道调度和单账号活动任务上限。",
         fields: concurrencyFields,
-        status: <AdminStatusBadge label="保存后热更新" tone="info" />,
+        status: <HotPolicyStatus />,
     },
     { id: "policy-timeout", icon: <TimerReset className="size-4" aria-hidden="true" />, title: "任务超时", shortTitle: "任务超时", description: "不同生成类型的最长执行时间。", fields: timeoutFields },
     {
@@ -140,7 +144,7 @@ const policySections: PolicySectionDefinition[] = [
         shortTitle: "Agent 单步",
         description: "画布 Agent 每一步模型调用的输出上限与等待时限；两者一起决定单步最坏耗时。",
         fields: agentFields,
-        status: <AdminStatusBadge label="保存后热更新" tone="info" />,
+        status: <HotPolicyStatus />,
     },
     { id: "policy-rate", icon: <ShieldCheck className="size-4" aria-hidden="true" />, title: "业务频控", shortTitle: "业务频控", description: "账号与 IP 维度的固定窗口请求限制。", fields: rateFields },
     { id: "policy-relay", icon: <Network className="size-4" aria-hidden="true" />, title: "渠道中转与熔断", shortTitle: "中转与熔断", description: "请求体、响应体、并发、超时和上游故障保护。", fields: relayFields },

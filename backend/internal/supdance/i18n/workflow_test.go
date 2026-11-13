@@ -74,6 +74,9 @@ func TestTranslationValidationRejectsExtraOrLostParametersAndURLs(t *testing.T) 
 		valid               bool
 	}{
 		{"新增 {count} 项", "Added {count} items", true},
+		{"保留 {{角色描述}} 和 {{count}}", "Keep {{角色描述}} and {{count}}", true},
+		{"保留 {{角色描述}}", "Keep {{characterDescription}}", false},
+		{"保留 {{count}}", "Keep {{{count}}}", false},
 		{"完成", "Done {count}", false},
 		{"新增 {count} 项", "Added items", false},
 		{"访问 https://example.com）", "Visit https://example.com)", true},

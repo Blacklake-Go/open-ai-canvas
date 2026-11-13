@@ -22,6 +22,11 @@ const { useSupDanceI18nStore, useI18n } = await import("../../src/supdance/plugi
 const { useLocaleStore } = await import("../../src/stores/use-locale-store");
 const { SUPPORTED_LOCALES } = await import("../../src/i18n/locales");
 const { i18n } = await import("../../src/i18n");
+const { MANAGED_TRANSLATION_TARGETS } = await import("../../src/supdance/plugins/i18n/managed-catalog");
+const creationEntry = useSupDanceI18nStore.getState().entries.find((entry) => entry.namespace === "creationUI" && !entry.sourceText.includes("{"))!;
+const modelEntry = useSupDanceI18nStore.getState().entries.find((entry) => entry.namespace === "modelUI")!;
+const creationTarget = MANAGED_TRANSLATION_TARGETS.get(creationEntry.key)!;
+const modelTarget = MANAGED_TRANSLATION_TARGETS.get(modelEntry.key)!;
 
 function Fixture() {
     const { t } = useTranslation();
@@ -30,6 +35,10 @@ function Fixture() {
         <>
             <span data-core>{t("nav.tools.canvas")}</span>
             <span data-extension>{extension.t("custom.native_test", { name: "Canvas" })}</span>
+            <span data-source>{extension.t("你好 {name}", { name: "Canvas" })}</span>
+            <span data-creation>{i18n.t(creationTarget.key, { ns: creationTarget.namespace, keySeparator: false })}</span>
+            <span data-model>{i18n.t(modelTarget.key, { ns: modelTarget.namespace, keySeparator: false })}</span>
+            <input data-prompt defaultValue="用户写的提示词：保留原文" />
         </>
     );
 }
@@ -59,9 +68,11 @@ test("native locale controls all six languages independently of legacy settings 
         }
         await act(async () => useLocaleStore.getState().setLocale("en-US"));
         expect(host.querySelector("[data-extension]")?.textContent).toBe("Hello Canvas");
+        expect(host.querySelector("[data-source]")?.textContent).toBe("Hello Canvas");
         await act(async () => useSupDanceI18nStore.setState({ pluginEnabled: false, locale: "zh-CN" }));
         expect(i18n.language).toBe("en-US");
         expect(host.querySelector("[data-core]")?.textContent).toBe(nativeLabels["en-US"]);
+        expect(host.querySelector("[data-extension]")?.textContent).toBe("Hello Canvas");
         await act(async () => useLocaleStore.getState().setLocale("fr-FR"));
         await act(async () => useSupDanceI18nStore.getState().applyBundle({ pluginId: "supdance-i18n", pluginEnabled: true, settings: state.settings, customEntries: {}, revision: "legacy-update" }));
         expect(i18n.language).toBe("fr-FR");
@@ -71,5 +82,42 @@ test("native locale controls all six languages independently of legacy settings 
         await act(async () => root.unmount());
         host.remove();
         useSupDanceI18nStore.setState(state);
+    }
+});
+
+test("published management entries update the mounted native UI in all eight languages and removal restores builtin text", async () => {
+    const state = useSupDanceI18nStore.getState();
+    const originalLocale = useLocaleStore.getState().locale;
+    const host = document.createElement("div");
+    document.body.append(host);
+    const root = createRoot(host);
+    const key = "upstream.nav.tools.canvas";
+    const builtin = state.entries.find((entry) => entry.key === key)!;
+    expect(builtin).toBeDefined();
+    const translations = Object.fromEntries(SUPPORTED_LOCALES.map(({ code }) => [code, `Published ${code}`]));
+    try {
+        await act(async () => root.render(<Fixture />));
+        const input = host.querySelector("[data-prompt]") as HTMLInputElement;
+        input.value = "用户编辑后的提示词";
+        const overrides = Object.fromEntries([builtin, creationEntry, modelEntry].map((entry) => [entry.key, { ...entry, origin: "modified" as const, translations }]));
+        await act(async () => useSupDanceI18nStore.getState().applyBundle({ pluginId: "supdance-i18n", pluginEnabled: true, settings: state.settings, customEntries: overrides, revision: "published-test" }));
+        for (const { code } of SUPPORTED_LOCALES) {
+            await act(async () => useLocaleStore.getState().setLocale(code));
+            expect(host.querySelector("[data-core]")?.textContent).toBe(`Published ${code}`);
+            expect(host.querySelector("[data-creation]")?.textContent).toBe(`Published ${code}`);
+            expect(host.querySelector("[data-model]")?.textContent).toBe(`Published ${code}`);
+            expect(useSupDanceI18nStore.getState().locale).toBe(code);
+            expect(host.querySelector("[data-prompt]")).toBe(input);
+            expect(input.value).toBe("用户编辑后的提示词");
+        }
+        await act(async () => useSupDanceI18nStore.getState().applyBundle({ pluginId: "supdance-i18n", pluginEnabled: true, settings: state.settings, customEntries: {}, revision: "removed-test" }));
+        expect(host.querySelector("[data-core]")?.textContent).toBe(builtin.translations[useLocaleStore.getState().locale]);
+        expect(host.querySelector("[data-creation]")?.textContent).toBe(creationEntry.translations[useLocaleStore.getState().locale]);
+        expect(host.querySelector("[data-model]")?.textContent).toBe(modelEntry.translations[useLocaleStore.getState().locale]);
+    } finally {
+        await act(async () => root.unmount());
+        host.remove();
+        useSupDanceI18nStore.setState(state);
+        useLocaleStore.getState().setLocale(originalLocale);
     }
 });

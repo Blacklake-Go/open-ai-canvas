@@ -6,7 +6,7 @@ type LanguageSwitcherSurface = "workspace" | "auth" | "canvas" | "admin" | "lega
 export function TopbarLanguageSwitcher({ surface = "workspace", className }: { surface?: LanguageSwitcherSurface; className?: string }) {
     return (
         <span data-plugin-scope="i18n" className="inline-flex">
-            <LanguageMenu variant={surface === "auth" || surface === "legal" ? "auth" : "topbar"} className={className} />
+            <LanguageMenu variant={surface === "auth" || surface === "legal" ? "auth" : "topbar"} className={className} updateLanguageQuery={surface === "legal"} />
         </span>
     );
 }

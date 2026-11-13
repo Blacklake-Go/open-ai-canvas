@@ -95,11 +95,11 @@ export function compareManifests(previous, current) {
 export function validateTranslation(source, translation) {
     if (typeof translation !== "string" || !translation.trim()) return "empty_translation";
     const tokens = (text) =>
-        [...text.matchAll(/\{([a-zA-Z0-9_]+)\}/g)]
-            .map((m) => m[1])
+        [...text.matchAll(/\{\{[^{}]+\}\}|\{[a-zA-Z0-9_]+\}/g)]
+            .map((m) => m[0])
             .sort()
             .join("|");
-    if (tokens(source) !== tokens(translation)) return "placeholder_mismatch";
+    if (tokens(source) !== tokens(translation) || (source.match(/[{}]/g) ?? []).sort().join("") !== (translation.match(/[{}]/g) ?? []).sort().join("")) return "placeholder_mismatch";
     const urls = (text) =>
         [...text.matchAll(/https?:\/\/[a-zA-Z0-9][^\s<>()（），,]*/g)]
             .map((m) => m[0])

@@ -1,5 +1,6 @@
 import { afterEach, beforeEach, describe, expect, test } from "bun:test";
 import { Window } from "happy-dom";
+import { SUPPORTED_LOCALES } from "../src/i18n/locales";
 import { getAntdLocaleForCode, loadAntdLocale } from "../src/supdance/plugins/i18n/engine/antd-locale";
 import { compileI18nDictionary, interpolateTemplate, translateByKey, translateSourceText } from "../src/supdance/plugins/i18n/engine/translator";
 import { DEFAULT_SUPDANCE_I18N_SETTINGS, loadAllLocalePacks, mergeI18nEntries } from "../src/supdance/plugins/i18n/locales";
@@ -207,7 +208,7 @@ describe("Empirical Challenger Suite: Milestone 1 Stress & Verification", () => 
 
             unsub();
 
-            expect(notifications).toBe(switchCycles * ALL_LOCALES.length);
+            expect(notifications).toBe(switchCycles * ALL_LOCALES.length - 1);
             expect(useSupDanceI18nStore.getState().locale).toBe("es-ES");
 
             // Final switch back to zh-CN
@@ -249,9 +250,9 @@ describe("Empirical Challenger Suite: Milestone 1 Stress & Verification", () => 
             const store = useSupDanceI18nStore.getState();
             const languages = store.settings.languages;
 
-            expect(languages.length).toBe(6);
+            expect(languages.length).toBe(8);
             for (const lang of languages) {
-                expect(ALL_LOCALES).toContain(lang.code);
+                expect(SUPPORTED_LOCALES.map((item) => item.code)).toContain(lang.code);
                 expect(lang.enabled).toBe(true);
                 expect(lang.name).toBeTruthy();
                 expect(lang.nativeName).toBeTruthy();

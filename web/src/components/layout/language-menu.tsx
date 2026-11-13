@@ -13,7 +13,7 @@ import "./language-menu.css";
  * 界面语言入口。trigger 决定外观：topbar 与顶栏反馈按钮同款，auth 与登录页「返回首页」同款。
  * 选项显示各语言自称 + 英文名，切换后整页刷新（见 switchLocale）。
  */
-export function LanguageMenu({ variant = "topbar", className }: { variant?: "topbar" | "auth"; className?: string }) {
+export function LanguageMenu({ variant = "topbar", className, updateLanguageQuery = false }: { variant?: "topbar" | "auth"; className?: string; updateLanguageQuery?: boolean }) {
     const { t } = useTranslation();
     const locale = useLocaleStore((state) => state.locale);
     const current = SUPPORTED_LOCALES.find((item) => item.code === locale) ?? SUPPORTED_LOCALES[0];
@@ -36,7 +36,7 @@ export function LanguageMenu({ variant = "topbar", className }: { variant?: "top
                         </span>
                     ),
                 })),
-                onClick: ({ key }) => switchLocale(key as AppLocale),
+                onClick: ({ key }) => switchLocale(key as AppLocale, { updateLanguageQuery }),
             }}
         >
             <button

@@ -1,4 +1,4 @@
-import { useEffect, useMemo } from "react";
+import { useMemo } from "react";
 import { create } from "zustand";
 import { i18n } from "@/i18n";
 import { useTranslation } from "react-i18next";
@@ -6,7 +6,7 @@ import { useLocaleStore } from "@/stores/use-locale-store";
 import { registerSupDanceTranslations, SUPDANCE_TRANSLATION_NAMESPACE } from "@/supdance/adapters/upstream-i18n";
 import { usePluginStore } from "@/stores/use-plugin-store";
 import { compileI18nDictionary, isCandidateUntranslatedChinese, translateByKey, translateSourceText, type CompiledI18nDictionary } from "./engine/translator";
-import { BUILTIN_I18N_ENTRIES, DEFAULT_SUPDANCE_I18N_SETTINGS, loadLocalePack, mergeI18nEntries, SUPPORTED_LOCALE_CODES } from "./locales";
+import { BUILTIN_I18N_ENTRIES, DEFAULT_SUPDANCE_I18N_SETTINGS, mergeI18nEntries } from "./locales";
 import { SUPDANCE_I18N_PLUGIN_ID, type SupDanceDiscoveredTextItem, type SupDanceI18nEntry, type SupDanceI18nPublicBundle, type SupDanceI18nSettings, type SupDanceLanguageItem, type SupDanceLocaleCode } from "./types";
 
 export const SUPDANCE_I18N_LOCALE_STORAGE_KEY = "supdance:i18n:locale";
@@ -61,76 +61,6 @@ function writeStoredDiscovered(items: SupDanceDiscoveredTextItem[]): void {
     }
 }
 
-function isValidLocaleCode(value: unknown): value is SupDanceLocaleCode {
-    return typeof value === "string" && (SUPPORTED_LOCALE_CODES as readonly string[]).includes(value);
-}
-
-function matchBrowserLocale(enabledLanguages: SupDanceLanguageItem[]): SupDanceLocaleCode | null {
-    if (typeof navigator === "undefined") return null;
-    const enabledSet = new Set(enabledLanguages.filter((l) => l.enabled).map((l) => l.code));
-    const candidates = navigator.languages?.length ? navigator.languages : [navigator.language];
-    for (const raw of candidates) {
-        if (!raw) continue;
-        const normalized = raw.trim().toLowerCase();
-        if (normalized.startsWith("zh-tw") || normalized.startsWith("zh-hk") || normalized.startsWith("zh-mo") || normalized.includes("hant")) {
-            if (enabledSet.has("zh-TW")) return "zh-TW";
-        }
-        if (normalized.startsWith("zh")) {
-            if (enabledSet.has("zh-CN")) return "zh-CN";
-        }
-        if (normalized.startsWith("en")) {
-            if (enabledSet.has("en-US")) return "en-US";
-        }
-        if (normalized.startsWith("ja")) {
-            if (enabledSet.has("ja-JP")) return "ja-JP";
-        }
-        if (normalized.startsWith("ko")) {
-            if (enabledSet.has("ko-KR")) return "ko-KR";
-        }
-        if (normalized.startsWith("es")) {
-            if (enabledSet.has("es-ES")) return "es-ES";
-        }
-    }
-    return null;
-}
-
-function readStoredLocale(): SupDanceLocaleCode | null {
-    if (typeof window === "undefined") return null;
-    try {
-        const stored = window.localStorage.getItem(SUPDANCE_I18N_LOCALE_STORAGE_KEY);
-        return isValidLocaleCode(stored) ? stored : null;
-    } catch {
-        return null;
-    }
-}
-
-function writeStoredLocale(locale: SupDanceLocaleCode): void {
-    if (typeof window === "undefined") return;
-    try {
-        window.localStorage.setItem(SUPDANCE_I18N_LOCALE_STORAGE_KEY, locale);
-    } catch {
-        // Ignore storage write errors in restricted privacy contexts
-    }
-}
-
-function resolveEffectiveLocale(preferred: SupDanceLocaleCode | null, settings: SupDanceI18nSettings): SupDanceLocaleCode {
-    const enabledCodes = new Set(settings.languages.filter((item) => item.enabled).map((item) => item.code));
-    if (preferred && enabledCodes.has(preferred)) {
-        return preferred;
-    }
-    if (settings.autoDetectBrowser) {
-        const detected = matchBrowserLocale(settings.languages);
-        if (detected && enabledCodes.has(detected)) {
-            return detected;
-        }
-    }
-    if (enabledCodes.has(settings.defaultLocale)) {
-        return settings.defaultLocale;
-    }
-    const firstEnabled = settings.languages.find((item) => item.enabled)?.code;
-    return firstEnabled ?? "zh-CN";
-}
-
 function filterOutTranslatedDiscovered(discovered: SupDanceDiscoveredTextItem[], dictionary: CompiledI18nDictionary): SupDanceDiscoveredTextItem[] {
     return discovered.filter((item) => translateSourceText(dictionary, item.sourceText, "en-US", "zh-CN") === null);
 }
@@ -141,7 +71,7 @@ const initialCustomEntries = initialCache?.customEntries ?? {};
 const initialPluginEnabled = typeof initialCache?.pluginEnabled === "boolean" ? initialCache.pluginEnabled : true;
 const initialEntries = mergeI18nEntries(initialCustomEntries);
 const initialDictionary = compileI18nDictionary(initialEntries);
-const initialLocale = resolveEffectiveLocale(readStoredLocale(), initialSettings);
+const initialLocale = useLocaleStore.getState().locale;
 const initialDiscovered = filterOutTranslatedDiscovered(readStoredDiscovered(), initialDictionary);
 
 export type SupDanceI18nStoreState = {
@@ -177,22 +107,9 @@ export const useSupDanceI18nStore = create<SupDanceI18nStoreState>((set, get) =>
     revision: initialSettings.revision || DEFAULT_SUPDANCE_I18N_SETTINGS.revision,
 
     setLocale: (nextLocale) => {
-        const { settings } = get();
-        const enabledCodes = new Set(settings.languages.filter((item) => item.enabled).map((item) => item.code));
-        const resolved = enabledCodes.has(nextLocale) ? nextLocale : settings.defaultLocale;
-        writeStoredLocale(resolved);
-        set({ locale: resolved });
-        if (resolved !== "zh-CN") {
-            void loadLocalePack(resolved)
-                .then(() => {
-                    const entries = mergeI18nEntries(get().customEntries);
-                    const dictionary = compileI18nDictionary(entries);
-                    set({ entries, dictionary });
-                })
-                .catch(() => {
-                    /* Runtime host shows the load error and restores the fallback locale. */
-                });
-        }
+        useLocaleStore.getState().setLocale(nextLocale);
+        const locale = useLocaleStore.getState().locale;
+        if (get().locale !== locale) set({ locale });
     },
 
     setPluginEnabled: (enabled) => {
@@ -202,13 +119,12 @@ export const useSupDanceI18nStore = create<SupDanceI18nStoreState>((set, get) =>
     },
 
     applyBundle: (bundle) => {
-        const currentStored = readStoredLocale();
         const settings = bundle.settings ?? DEFAULT_SUPDANCE_I18N_SETTINGS;
         const customEntries = bundle.customEntries ?? {};
         const pluginEnabled = Boolean(bundle.pluginEnabled);
         const entries = mergeI18nEntries(customEntries);
         const dictionary = compileI18nDictionary(entries);
-        const nextLocale = resolveEffectiveLocale(currentStored ?? get().locale, settings);
+        const nextLocale = useLocaleStore.getState().locale;
         const discoveredUntranslated = filterOutTranslatedDiscovered(get().discoveredUntranslated, dictionary);
 
         writeStoredCache({ pluginEnabled, settings, customEntries });
@@ -224,23 +140,10 @@ export const useSupDanceI18nStore = create<SupDanceI18nStoreState>((set, get) =>
             locale: nextLocale,
             revision: bundle.revision || settings.revision || "builtin-v1",
         });
-
-        if (nextLocale !== "zh-CN") {
-            void loadLocalePack(nextLocale)
-                .then(() => {
-                    const updatedEntries = mergeI18nEntries(get().customEntries);
-                    const updatedDictionary = compileI18nDictionary(updatedEntries);
-                    set({ entries: updatedEntries, dictionary: updatedDictionary });
-                })
-                .catch(() => {
-                    /* Runtime host shows the load error and restores the fallback locale. */
-                });
-        }
     },
 
     updateLocalSettings: (settings) => {
-        const currentStored = readStoredLocale();
-        const nextLocale = resolveEffectiveLocale(currentStored ?? get().locale, settings);
+        const nextLocale = useLocaleStore.getState().locale;
         writeStoredCache({
             pluginEnabled: get().pluginEnabled,
             settings,
@@ -349,13 +252,12 @@ export const useSupDanceI18nStore = create<SupDanceI18nStoreState>((set, get) =>
 
     syncFromStorage: () => {
         const storedCache = readStoredCache();
-        const storedLocale = readStoredLocale();
         const settings = storedCache?.settings ?? get().settings;
         const customEntries = storedCache?.customEntries ?? get().customEntries;
         const pluginEnabled = typeof storedCache?.pluginEnabled === "boolean" ? storedCache.pluginEnabled : get().pluginEnabled;
         const entries = mergeI18nEntries(customEntries);
         const dictionary = compileI18nDictionary(entries);
-        const locale = resolveEffectiveLocale(storedLocale ?? get().locale, settings);
+        const locale = useLocaleStore.getState().locale;
         const discoveredUntranslated = filterOutTranslatedDiscovered(readStoredDiscovered(), dictionary);
         set({
             pluginEnabled,
@@ -369,6 +271,14 @@ export const useSupDanceI18nStore = create<SupDanceI18nStoreState>((set, get) =>
         });
     },
 }));
+
+registerSupDanceTranslations(useSupDanceI18nStore.getState().entries);
+useSupDanceI18nStore.subscribe((state, previous) => {
+    if (state.entries !== previous.entries) registerSupDanceTranslations(state.entries);
+});
+useLocaleStore.subscribe((state, previous) => {
+    if (state.locale !== previous.locale) useSupDanceI18nStore.setState({ locale: state.locale });
+});
 
 /**
  * Checks if the supdance-i18n plugin is currently active across both the global plugin store
@@ -398,40 +308,24 @@ export function useSupDanceI18nEnabled(): boolean {
 /**
  * Main i18n hook for components that want explicit key/text translation and locale switching.
  */
-const extensionLocaleLoads = new Map<SupDanceLocaleCode, Promise<void>>();
-
-function ensureExtensionLocale(locale: SupDanceLocaleCode): Promise<void> {
-    const pending = extensionLocaleLoads.get(locale);
-    if (pending) return pending;
-    const loading = loadLocalePack(locale)
-        .then(() => {
-            const entries = mergeI18nEntries(useSupDanceI18nStore.getState().customEntries);
-            useSupDanceI18nStore.setState({ entries, dictionary: compileI18nDictionary(entries) });
-        })
-        .catch((error) => {
-            extensionLocaleLoads.delete(locale);
-            throw error;
-        });
-    extensionLocaleLoads.set(locale, loading);
-    return loading;
-}
 
 export function useI18n() {
     const { t: nativeT } = useTranslation();
     const nativeLocale = useLocaleStore((state) => state.locale);
-    const entries = useSupDanceI18nStore((state) => state.entries);
     const dictionary = useSupDanceI18nStore((state) => state.dictionary);
     const settings = useSupDanceI18nStore((state) => state.settings);
-    // Legacy content pages have no French/German copy yet; preserve their source fallback.
-    const locale: SupDanceLocaleCode = nativeLocale === "fr-FR" || nativeLocale === "de-DE" ? "zh-CN" : nativeLocale;
-    useMemo(() => registerSupDanceTranslations(entries), [entries]);
-    useEffect(() => {
-        if (locale !== "zh-CN") void ensureExtensionLocale(locale).catch((error) => console.warn("Could not load extension translations", error));
-    }, [locale]);
+    const locale = nativeLocale;
     const t = useMemo(
         () =>
             (key: string, params?: Record<string, string | number>, fallbackText?: string): string => {
-                if (dictionary.byKey.has(key)) return i18n.t(key, { ...params, ns: SUPDANCE_TRANSLATION_NAMESPACE, keySeparator: false, lng: nativeLocale, defaultValue: fallbackText ?? key }) as string;
+                const entry = dictionary.byKey.get(key) ?? dictionary.bySourceText.get(key.trim());
+                if (entry) return i18n.t(entry.key, { ...params, ns: SUPDANCE_TRANSLATION_NAMESPACE, keySeparator: false, lng: nativeLocale, defaultValue: fallbackText ?? key }) as string;
+                for (const rule of dictionary.templateRules) {
+                    const match = rule.regex.exec(key.trim());
+                    if (!match) continue;
+                    const values = Object.fromEntries(rule.paramNames.map((name, index) => [name, match[index + 1]]));
+                    return i18n.t(rule.key, { ...values, ...params, ns: SUPDANCE_TRANSLATION_NAMESPACE, keySeparator: false, lng: nativeLocale, defaultValue: fallbackText ?? key }) as string;
+                }
                 return i18n.exists(key) ? (nativeT(key, params) as string) : (fallbackText ?? key);
             },
         [dictionary, nativeLocale, nativeT],

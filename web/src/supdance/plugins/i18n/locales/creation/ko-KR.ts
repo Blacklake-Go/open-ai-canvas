@@ -99,7 +99,6 @@ const pack: Record<string, string> = {
     "creation.b88848da5445012d": "사용자 지정(초당 {value1}자, {value2}초마다 한 줄)",
     "creation.5df9c07c81b0ce18": "이 구간은 아직 생성할 수 없습니다",
     "creation.11af39cf036f7c34": ", {value1}개 실패",
-
     "projects.speech_rate_label": "말하기 속도(초당 글자 수)",
     "projects.speech_rate_short": "속도",
     "projects.chars_per_second": "자/초",
@@ -115,7 +114,6 @@ const pack: Record<string, string> = {
     "projects.dialogue_summary": "약 {interval}초마다 한 줄, 최대 {max}자, 초당 {rate}자, 쉼 {pause}초",
     "projects.dialogue_longest": "가장 긴 대사는 약 {seconds}초",
     "projects.custom_dialogue_hint": "말하기 속도, 대사 간격, 글자 수 제한과 쉼을 작품 전체에 적용합니다",
-
     "projects.export_draft_hint": "초안을 내보내 Jianying Pro에서 편집을 계속합니다",
     "projects.no_segment_video": "이 에피소드에는 완성된 구간 영상이 아직 없습니다",
     "projects.export_draft": "Jianying 초안 내보내기",
@@ -132,7 +130,6 @@ const pack: Record<string, string> = {
     "projects.insert_episode_action": "삽입하고 스토리보드 시작",
     "projects.before": "앞",
     "projects.after": "뒤",
-
     "creation.205081e8ec7f361c": "크리에이티브 방향이 선택됨",
     "creation.17cd00dc4279e2b1": "사진 생성 진행",
     "creation.2f98e1405bc55307": "AI 생성",
@@ -1908,8 +1905,8 @@ const pack: Record<string, string> = {
     "creation.6be0d008df70731d": "참조 사진 레이아웃 설명:",
     "creation.87f28fc3ad2782ee": "의 내용이 {PROMPT_LIMIT} 단어를 초과하여 잘렸습니다. 자산카드와 관련된 문단만 선택하는 것을 권장합니다.",
     "creation.07632ad2a7a40343": "는 포함되어 있지 않습니다.",
-    "creation.eafda473ba2a458a": "{{캐릭터 이름}}",
-    "creation.a7e6e3a4940774f8": "{{캐릭터 설정}}",
+    "creation.eafda473ba2a458a": "{{角色名称}}",
+    "creation.a7e6e3a4940774f8": "{{角色设定}}",
     "creation.370b88e5cb43c201": ", 이 문자 정보는 가져오기 후 마지막에 자동으로 추가됩니다.",
     "creation.67c8dbc97155e7f6": "{quickLabel} 장",
     "creation.f29ee6de96303094": '선택한 {longSelected} {value2} 원본 텍스트가 {limit}를 초과합니다. "N번째 에피소드" 제목을 사용하여 구분하거나 먼저 선택을 취소하세요.',
@@ -2287,7 +2284,7 @@ const pack: Record<string, string> = {
     "creation.602c9a4772e4e4d1": "(워크바이블 생성 후 환경설명이 자동으로 채워집니다)",
     "creation.03f0d6930a930608": "실감나는 영화 느낌",
     "creation.98ccf4fad39af42a": "선택사항",
-    "creation.e4b60cf3ce813c06": "{value1}\n\n[이 캐릭터] {{캐릭터 이름}}: {{캐릭터 설정}}. 스타일: {{프로젝트 스타일}}. {{화면 규칙}}",
+    "creation.e4b60cf3ce813c06": "{value1}\n\n[이 캐릭터] {{角色名称}}: {{角色设定}}. 스타일: {{项目画风}}. {{画面规则}}",
     "creation.6044e9f095e0b5e4": "전",
     "creation.e76f1ee615ba17ce": "중국어 북경어",
     "creation.3b0aa680e2b63ff2": "광동어",

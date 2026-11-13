@@ -7,7 +7,8 @@
  * - Acceptable Use Policy (AUP - 包含 #content-standards, #enforcement-actions, #reporting 锚点)
  */
 
-export type SupportedLegalLanguage = "en" | "zh-CN" | "zh-TW" | "ja" | "ko" | "es";
+import additionalAup from "./additional-aup-locales.json";
+export type SupportedLegalLanguage = "en" | "zh-CN" | "zh-TW" | "ja" | "ko" | "es" | "fr" | "de";
 
 export interface LegalSectionItem {
     id: string; // 锚点 ID，如 content-standards, enforcement-actions, reporting
@@ -44,6 +45,8 @@ export const LEGAL_OPERATOR_CONFIG = {
 } as const;
 
 export const LEGAL_LANGUAGE_LABELS: Record<SupportedLegalLanguage, { label: string; code: string }> = {
+    fr: { label: "Français (traduction)", code: "FR" },
+    de: { label: "Deutsch (Übersetzung)", code: "DE" },
     en: { label: "English (Authoritative)", code: "EN" },
     "zh-CN": { label: "简体中文 (翻译件)", code: "简" },
     "zh-TW": { label: "繁體中文 (翻譯件)", code: "繁" },
@@ -56,6 +59,8 @@ export const LEGAL_LANGUAGE_LABELS: Record<SupportedLegalLanguage, { label: stri
 // 1. Acceptable Use Policy (AUP) - 包含 #content-standards, #enforcement-actions, #reporting
 // ==============================================================================
 export const AUP_DOC_MAP: Record<SupportedLegalLanguage, LocalizedLegalDoc> = {
+    fr: additionalAup.fr,
+    de: additionalAup.de,
     en: {
         title: "Acceptable Use Policy",
         badge: "AUP · CONTENT STANDARDS & ENFORCEMENT",

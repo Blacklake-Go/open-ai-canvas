@@ -1,4 +1,5 @@
 import { TopbarLanguageSwitcher } from "@/supdance/plugins/i18n";
+import { interfaceText } from "@/i18n/interface-text";
 import { ArrowRight, FileText, Globe, Shield } from "lucide-react";
 import { useEffect, useState } from "react";
 import { Link } from "react-router";
@@ -72,7 +73,7 @@ export default function LegalHubPage() {
                 <div className="font-mono text-[11px] uppercase tracking-[0.16em] text-sky-400 mb-3">§ OFFICIAL COMPLIANCE PORTAL</div>
                 <h1 className={`text-4xl sm:text-5xl lg:text-6xl font-semibold tracking-[-0.035em] leading-[1.08] mb-6 ${isDark ? "text-white" : "text-[#111111]"}`}>Legal & Compliance Center</h1>
                 <p className={`text-base sm:text-lg leading-relaxed mb-12 ${isDark ? "text-[#a2a2ad]" : "text-[#555555]"}`}>
-                    统一查阅 {LEGAL_OPERATOR_CONFIG.productName} 面向全球创作者的各项法律协议、隐私保护规范与内容安全标准。本文档以英语（English）为根语言权威版本，并提供中繁日韩西等五大语言对照。
+                    {interfaceText("查看 {product} 的法律协议、隐私政策与内容规则。英文为权威版本，另提供简体中文、繁体中文、西班牙语、法语、德语、日语和韩语译文。", { product: LEGAL_OPERATOR_CONFIG.productName })}
                 </p>
 
                 {/* 三大核心法务卡片 */}

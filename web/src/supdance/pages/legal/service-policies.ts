@@ -1,13 +1,14 @@
 import type { AppLocale } from "@/i18n/locales";
 import type { LocalizedLegalDoc } from "./legal-i18n-content";
+import additional from "./additional-policy-locales.json";
 
-export const LEGAL_LOCALE_MAP = { "zh-CN": "zh-CN", "en-US": "en", "fr-FR": "fr", "de-DE": "de", "ja-JP": "ja", "ko-KR": "ko" } as const satisfies Record<AppLocale, string>;
+export const LEGAL_LOCALE_MAP = { "zh-CN": "zh-CN", "en-US": "en", "fr-FR": "fr", "de-DE": "de", "ja-JP": "ja", "ko-KR": "ko", "zh-TW": "zh-TW", "es-ES": "es" } as const satisfies Record<AppLocale, string>;
 export type PolicyLanguage = (typeof LEGAL_LOCALE_MAP)[AppLocale];
 
 type Copy = { terms: string; privacy: string; termsSummary: string; privacySummary: string; termsSections: [string, string][]; privacySections: [string, string][] };
 
 // Reviewed document copy lives outside runtime translation: switching languages never translates user content.
-const copy: Record<PolicyLanguage, Copy> = {
+const copy: Record<Exclude<PolicyLanguage, "zh-TW" | "es">, Copy> = {
     en: {
         terms: "Terms of Service",
         privacy: "Privacy Policy",
@@ -550,7 +551,7 @@ const termsIds = ["acceptance", "services", "account", "billing", "refund", "int
 const privacyIds = ["controller", "collection", "purposes", "sharing", "publication", "cookies", "international-transfers", "retention", "rights", "children-updates"];
 
 function documents(kind: "terms" | "privacy"): Record<PolicyLanguage, LocalizedLegalDoc> {
-    return Object.fromEntries(
+    const base = Object.fromEntries(
         Object.entries(copy).map(([language, text]) => [
             language,
             {
@@ -566,13 +567,16 @@ function documents(kind: "terms" | "privacy"): Record<PolicyLanguage, LocalizedL
                 })),
             },
         ]),
-    ) as Record<PolicyLanguage, LocalizedLegalDoc>;
+    );
+    return { ...base, "zh-TW": additional["zh-TW"][kind], es: additional.es[kind] } as Record<PolicyLanguage, LocalizedLegalDoc>;
 }
 
 export const SERVICE_TERMS = documents("terms");
 export const SERVICE_PRIVACY = documents("privacy");
 
 export const LEGAL_PAGE_COPY: Record<PolicyLanguage, { effective: string; version: string; center: string; section: string }> = {
+    "zh-TW": additional["zh-TW"].ui,
+    es: additional.es.ui,
     en: { effective: "Revised", version: "Version", center: "Legal center", section: "Section link" },
     "zh-CN": { effective: "修订日期", version: "版本", center: "法律中心", section: "章节链接" },
     fr: { effective: "Révision", version: "Version", center: "Centre juridique", section: "Lien de section" },

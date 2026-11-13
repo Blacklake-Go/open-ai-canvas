@@ -5,4 +5,5 @@ import { deDE } from "./de-DE";
 import { jaJP } from "./ja-JP";
 import { koKR } from "./ko-KR";
 
-export const catalog = { "zh-CN": zhCN, "en-US": enUS, "fr-FR": frFR, "de-DE": deDE, "ja-JP": jaJP, "ko-KR": koKR };
+export const catalog = { ...additionalAreaCatalogs("create"), "zh-CN": zhCN, "en-US": enUS, "fr-FR": frFR, "de-DE": deDE, "ja-JP": jaJP, "ko-KR": koKR };
+import { additionalAreaCatalogs } from "../../../additional-catalogs";

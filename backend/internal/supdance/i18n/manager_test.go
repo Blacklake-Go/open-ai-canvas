@@ -1,15 +1,30 @@
 package i18n
 
 import (
+	"encoding/json"
 	"testing"
 )
 
-func TestDefaultLanguagesCoverAllSixLocales(t *testing.T) {
-	langs := DefaultLanguages()
-	if len(langs) != 6 {
-		t.Fatalf("expected 6 languages, got %d", len(langs))
+func TestDefaultCatalogFitsCompleteImportEnvelope(t *testing.T) {
+	entries := BuiltinEntries()
+	if len(entries) > MaxEntryImport {
+		t.Fatalf("default catalog has %d entries, import limit is %d", len(entries), MaxEntryImport)
 	}
-	expected := []string{LocaleZhCN, LocaleEnUS, LocaleZhTW, LocaleJaJP, LocaleKoKR, LocaleEsES}
+	data, err := json.Marshal(ExportPayload{PluginID: PluginID, Version: Version, Settings: DefaultSettings(), Entries: entries})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(data) >= 16<<20 {
+		t.Fatalf("default export requires %d bytes, exceeding the HTTP import envelope", len(data))
+	}
+}
+
+func TestDefaultLanguagesCoverAllEightLocales(t *testing.T) {
+	langs := DefaultLanguages()
+	if len(langs) != 8 {
+		t.Fatalf("expected 8 languages, got %d", len(langs))
+	}
+	expected := []string{LocaleZhCN, LocaleEnUS, LocaleZhTW, LocaleEsES, LocaleFrFR, LocaleDeDE, LocaleJaJP, LocaleKoKR}
 	for i, code := range expected {
 		if langs[i].Code != code || !langs[i].Enabled {
 			t.Fatalf("language[%d] = %#v, want code %s enabled", i, langs[i], code)
@@ -17,7 +32,7 @@ func TestDefaultLanguagesCoverAllSixLocales(t *testing.T) {
 	}
 }
 
-func TestBuiltinEntriesHaveCompleteSixLanguageTranslations(t *testing.T) {
+func TestBuiltinEntriesHaveCompleteEightLanguageTranslations(t *testing.T) {
 	entries := BuiltinEntries()
 	if len(entries) < 1600 {
 		t.Fatalf("expected rich builtin dictionary with >= 1600 entries, got %d entries", len(entries))

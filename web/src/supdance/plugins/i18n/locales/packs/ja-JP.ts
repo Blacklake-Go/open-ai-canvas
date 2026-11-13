@@ -17,7 +17,7 @@ const pack: Record<string, string> = {
     "admin.i18n_workflow.load_failed": "言語パックを読み込めませんでした。簡体字中国語に戻しました。再試行してください。",
     "admin.i18n_workflow.title": "翻訳更新センター",
     "admin.i18n_workflow.open": "翻訳更新センター",
-    "admin.i18n_workflow.description": "スキャン草稿を取り込み、6言語を補完して審査・公開します。公開後の変更は復元できます。",
+    "admin.i18n_workflow.description": "草稿を取り込み、8言語のインターフェース文言を補完して審査・公開します。公開後の変更は復元できます。",
     "admin.i18n_workflow.import": "草稿 JSON を取り込む",
     "admin.i18n_workflow.stage": "草稿を保存",
     "admin.i18n_workflow.review": "選択項目を承認",

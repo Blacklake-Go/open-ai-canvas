@@ -1,7 +1,8 @@
 import { afterEach, describe, expect, test } from "bun:test";
 
-import { i18n } from "@/i18n";
+import { i18n, switchLocale } from "@/i18n";
 import { AREA_CATALOGS } from "@/i18n/areas";
+import { NATIVE_CATALOGS } from "@/i18n/catalogs";
 import { detectBrowserLocale, matchAppLocale, SUPPORTED_LOCALES } from "@/i18n/locales";
 import { deDE } from "@/i18n/messages/de-DE";
 import { enUS } from "@/i18n/messages/en-US";
@@ -13,9 +14,10 @@ import { formatRelativeTime } from "@/lib/relative-time";
 import { localizedApiErrorMessage } from "@/services/api/error-codes";
 import { useLocaleStore } from "@/stores/use-locale-store";
 
-function flatten(value: unknown, prefix = ""): Record<string, string> {
-    if (typeof value === "string") return { [prefix]: value };
-    return Object.entries(value as Record<string, unknown>).reduce<Record<string, string>>((result, [key, child]) => ({ ...result, ...flatten(child, prefix ? `${prefix}.${key}` : key) }), {});
+function flatten(value: unknown, prefix = "", result: Record<string, string> = {}): Record<string, string> {
+    if (typeof value === "string") result[prefix] = value;
+    else for (const [key, child] of Object.entries(value as Record<string, unknown>)) flatten(child, prefix ? `${prefix}.${key}` : key, result);
+    return result;
 }
 
 const placeholders = (text: string) => [...text.matchAll(/\{\{(\w+)\}\}/g)].map((match) => match[1]).sort();
@@ -23,11 +25,39 @@ const placeholders = (text: string) => [...text.matchAll(/\{\{(\w+)\}\}/g)].map(
 afterEach(() => useLocaleStore.getState().setLocale("zh-CN"));
 
 describe("i18n catalogs", () => {
-    const source = flatten(zhCN);
-    const catalogs = { "en-US": enUS, "fr-FR": frFR, "de-DE": deDE, "ja-JP": jaJP, "ko-KR": koKR };
+    test("legal language selection updates the explicit link language and retains its other parameters and anchor", () => {
+        const original = Object.getOwnPropertyDescriptor(globalThis, "window");
+        let destination = "";
+        Object.defineProperty(globalThis, "window", {
+            configurable: true,
+            value: {
+                location: {
+                    href: "https://supdance.com/privacy?lang=fr&return=%2Fcreate#rights",
+                    assign: (value: string) => (destination = value),
+                    reload: () => {
+                        throw new Error("Legal deep link was not updated");
+                    },
+                },
+            },
+        });
+        try {
+            useLocaleStore.getState().setLocale("fr-FR");
+            switchLocale("es-ES", { updateLanguageQuery: true });
+            const url = new URL(destination);
+            expect(url.searchParams.get("lang")).toBe("es-ES");
+            expect(url.searchParams.get("return")).toBe("/create");
+            expect(url.hash).toBe("#rights");
+            expect(useLocaleStore.getState().locale).toBe("es-ES");
+        } finally {
+            if (original) Object.defineProperty(globalThis, "window", original);
+            else Reflect.deleteProperty(globalThis, "window");
+        }
+    });
+    const source = NATIVE_CATALOGS["zh-CN"];
+    const catalogs = NATIVE_CATALOGS;
 
     test("every locale is registered and has the same keys and placeholders as zh-CN", () => {
-        expect(SUPPORTED_LOCALES.map((locale) => locale.code).sort()).toEqual(["de-DE", "en-US", "fr-FR", "ja-JP", "ko-KR", "zh-CN"]);
+        expect(SUPPORTED_LOCALES.map((locale) => locale.code).sort()).toEqual(["de-DE", "en-US", "es-ES", "fr-FR", "ja-JP", "ko-KR", "zh-CN", "zh-TW"]);
         for (const [code, catalog] of Object.entries(catalogs)) {
             const flat = flatten(catalog);
             expect(Object.keys(flat).sort(), code).toEqual(Object.keys(source).sort());
@@ -59,9 +89,11 @@ describe("i18n catalogs", () => {
     test("browser languages map to supported locales", () => {
         expect(matchAppLocale("en")).toBe("en-US");
         expect(matchAppLocale("ja-jp")).toBe("ja-JP");
-        expect(matchAppLocale("zh-TW")).toBe("zh-CN");
-        expect(matchAppLocale("es-ES")).toBeUndefined();
-        expect(detectBrowserLocale(["es-ES", "de-AT"])).toBe("de-DE");
+        expect(matchAppLocale("zh-TW")).toBe("zh-TW");
+        expect(matchAppLocale("zh-Hant-HK")).toBe("zh-TW");
+        expect(matchAppLocale("zh_HK")).toBe("zh-TW");
+        expect(matchAppLocale("es-ES")).toBe("es-ES");
+        expect(detectBrowserLocale(["es-MX", "de-AT"])).toBe("es-ES");
         expect(detectBrowserLocale(["pt-BR"])).toBe("zh-CN");
         expect(detectBrowserLocale(undefined)).toBe("zh-CN");
     });

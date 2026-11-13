@@ -1,7 +1,7 @@
 export const SUPDANCE_I18N_PLUGIN_ID = "supdance-i18n" as const;
-export const SUPDANCE_I18N_VERSION = "1.2.0" as const;
+export const SUPDANCE_I18N_VERSION = "1.3.0" as const;
 
-export type SupDanceLocaleCode = "zh-CN" | "en-US" | "zh-TW" | "ja-JP" | "ko-KR" | "es-ES";
+export type SupDanceLocaleCode = import("@/i18n/locales").AppLocale;
 
 export type SupDanceSwitcherStyle = "icon_code" | "icon_only" | "icon_name";
 
@@ -46,7 +46,7 @@ export type SupDanceI18nEntry = {
     namespace: string;
     sourceText: string;
     description?: string;
-    translations: Record<SupDanceLocaleCode, string>;
+    translations: Partial<Record<SupDanceLocaleCode, string>>;
     origin: SupDanceI18nEntryOrigin;
     updatedAt?: string;
     updatedBy?: string;

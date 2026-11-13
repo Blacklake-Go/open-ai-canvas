@@ -1,0 +1,330 @@
+{
+    "zh-TW": {
+        "terms": {
+            "title": "服務條款",
+            "badge": "SUPDANCE",
+            "version": "v2.0",
+            "effectiveDate": "2026-11-13",
+            "summary": "本條款適用於你使用 https://www.supdance.com 提供的 Supdance AI 創作工具、專案工作區、媒體素材及付費服務。請結合《隱私權政策》和《可接受使用政策》閱讀。",
+            "sections": [
+                {
+                    "id": "acceptance",
+                    "title": "1. 適用範圍與接受條款",
+                    "paragraphs": ["Supdance（下稱「我們」）提供本網站服務。建立帳號或使用付費功能，即表示你接受本條款；如不同意，請停止使用。你須年滿 18 歲，並具備訂立合約的法律能力；代表組織使用時，須取得相應授權。疑問請聯絡 support@supdance.com。"]
+                },
+                {
+                    "id": "services",
+                    "title": "2. 服務內容與可用性",
+                    "paragraphs": [
+                        "工作區支援劇本、分鏡、畫布專案、圖片、影片、音樂及音訊創作，具體以目前模型與已啟用功能為準。服務均為數位交付。模型可用性、處理時間和生成品質可能變化，預計時間不構成保證。維護、容量限製或上游故障可能造成中斷。付費權益的重大變更將透過網站或帳號聯絡方式通知。"
+                    ]
+                },
+                {
+                    "id": "account",
+                    "title": "3. 帳號與安全",
+                    "paragraphs": [
+                        "請提供準確的註冊信息，妥善保管登入憑證並及時更新聯絡資訊。你應對授權使用行為負責，並採取合理措施保護帳號；發現異常存取應及時通知我們。禁止存取他人帳號、使用竊取的憑證、繞過配額或利用系統漏洞。修改帳號存取權限或處理敏感請求前，我們可能會核驗帳號歸屬。"
+                    ]
+                },
+                {
+                    "id": "billing",
+                    "title": "4. 價格、積分與支付",
+                    "paragraphs": [
+                        "購買頁及訂單確認資料載明價格、幣種、稅金、積分數量、有效期限及可能存在的周期扣款條件，請於付款前核對。訂閱須以結算頁所顯示的續費條件為準。積分僅為服務計量單位，不是貨幣、存款或可轉讓的支付工具。任務預佔與最終扣費遵循所選模型報價及結算規則。待支付狀態不表示交易成功，權益以核驗後的支付狀態為準。"
+                    ]
+                },
+                {
+                    "id": "refund",
+                    "title": "5. 退款與帳單問題",
+                    "paragraphs": [
+                        "購買積分後 7 個日曆日內，若該筆購買的積分完全未使用，可向 support@supdance.com 提供帳號及訂單編號申請全額退款。已消耗的生成資源通常不予退款，但不影響法定消費者權利。失败任务按最终状态释放或退回相应预占积分；积分退回不同于银行卡退款。預佔未退回、重複扣款或未交付時，請聯絡客服核查。核准退款在可行時原路退回，銀行到帳時間可能不同。本條不限制法定撤銷、退款及支付爭議權利。"
+                    ]
+                },
+                {
+                    "id": "intellectual-property",
+                    "title": "6. 輸入素材與產生結果的權利",
+                    "paragraphs": [
+                        "你保留對提交素材原有的權利，並須確保提示詞、媒體、肖像、聲音及個人資訊具備必要授權與合法依據。你授權我們及參與服務的供應商在交付所請求功能及維護安全所必需的範圍內處理、託管、傳輸和展示素材；該授權不賦予我們任意使用私人項目進行宣傳的權利。產生結果的權利取決於適用法律及模型條款，我們不保證其可取得著作權、唯一性、排他性或不侵犯第三方權利。商用前請自行審查結果和許可條件。"
+                    ]
+                },
+                {
+                    "id": "acceptable-use",
+                    "title": "7. 使用規範與公開分享",
+                    "paragraphs": [
+                        "禁止違法、性剝削、詐騙、威脅、侵權、非自願私密影像、誤導性冒充或惡意軟體等內容；禁止繞過安全措施、攻擊服務或擅自取得資料。請遵守 /aup 所載《可接受使用政策》。使用他人面容或聲音時依法取得同意，並依規定標註合成內容。主動發布與分享由你控制，接收方可能複製素材，訪問連結也可能被轉發。舉報濫用或侵權請向 safety@supdance.com 提供相關連結與證明。"
+                    ]
+                },
+                {
+                    "id": "termination",
+                    "title": "8. 限制、終止與申訴",
+                    "paragraphs": [
+                        "你可停止使用並透過客服申請註銷。為處理違規、詐欺、安全風險或法律要求，我們可在合理必要範圍內限制內容或存取；在可行且合法時說明原因，並提供聯絡客服覆核的機會。終止不免除已發生的付款義務，也不影響法定退款權利。刪除和依法保留資料的規則請參閱《隱私權政策》，註銷前請匯出重要作品。"
+                    ]
+                },
+                {
+                    "id": "disclaimers",
+                    "title": "9. AI 限制與責任範圍",
+                    "paragraphs": [
+                        "AI 輸出可能不準確、帶有偏見、不安全或不適用。在發布或據此作出影響他人的決定前，請獨立審查；輸出不構成法律、醫療或財務專業意見。服務依實際可用狀態提供，法律不得排除的保證除外。在法律允許範圍內，我們不承擔間接或後果性損失，累計責任以上述事件發生前 3 個月你支付的服務費為限；欺詐、故意不當行為、依法不得限制的責任及強制性消費者保護不受此限。"
+                    ]
+                },
+                {
+                    "id": "general",
+                    "title": "10. 條款變更、爭議與聯繫",
+                    "paragraphs": [
+                        "修訂將發佈於本頁並更新版本；重大變更會適當通知，依法需要同意的將另行徵求。發生爭議可先聯絡 support@supdance.com 以便調查處理。適用的強制性法律及向有管轄權的法院或監管機構尋求救濟的權利不受影響。各語言版本幫助理解，不以語言優先約定排除當地法定權利。個別條款無效時，其餘條款在合法範圍內繼續適用。"
+                    ]
+                }
+            ]
+        },
+        "privacy": {
+            "title": "隱私權政策",
+            "badge": "SUPDANCE",
+            "version": "v2.0",
+            "effectiveDate": "2026-11-13",
+            "summary": "本政策說明 Supdance 在網站、創作工作區、AI 生成及客服服務中如何處理個人信息，以及你可以作出的選擇、享有的權利和聯繫我們的方式。",
+            "sections": [
+                {
+                    "id": "controller",
+                    "title": "1. 範圍與隱私聯繫",
+                    "paragraphs": ["本政策適用於透過 https://www.supdance.com 提供的 Supdance 服務。 Supdance 是本政策使用的服務品牌。隱私請求請發送至 support@supdance.com。你選擇使用的第三方服務另有其隱私權說明，本政策不取代第三方說明。"]
+                },
+                {
+                    "id": "collection",
+                    "title": "2. 處理的訊息",
+                    "paragraphs": [
+                        "依你所使用的功能，我們處理帳號及聯絡方式、口令雜湊、第三方登入識別碼及授權資料；提示詞、劇本、上傳文件、畫布與項目資料、產生媒體及任務記錄；訂單編號、金額、支付狀態及積分帳務；以及 IP 位址、瀏覽器資訊、安全日誌和任務記錄；请勿提交无必要的敏感信息，或无合法依据处理他人资料。在支付机构页面输入的卡片信息由该机构处理；请勿向客服发送完整卡号或口令。"
+                    ]
+                },
+                {
+                    "id": "purposes",
+                    "title": "3. 用途與法律依據",
+                    "paragraphs": [
+                        "資訊用於身分認證、保存項目、執行產生、交付素材、結算訂單與積分、客服處理、防範濫用及履行法定義務。在适用时，处理依据包括履行合同、法定义务、与个人权益相权衡的合法利益，或可选功能的同意。接受條款不等於對一切資料用途的概括同意；依法需要單獨同意時另行徵求，並在基於重大新用途處理前作出說明。"
+                    ]
+                },
+                {
+                    "id": "sharing",
+                    "title": "4. AI 模型與服務供應商",
+                    "paragraphs": [
+                        "產生請求可能將提示詞、必要參考媒體及任務參數傳送至所選模型供應商，也可能已設定的路由服務轉送。托管、存储、分发、登录与支付供应商接收完成职责所必要的信息。启用生成安全筛查时，文本提示词可能发送至 Waffo Pancake，该筛查请求不包含参考媒体或模型密钥。供应商保留与训练规则取决于具体服务及条款，我们不承诺所有供应商均零留存或不训练。上传机密资料前请确认相关安排符合你的要求。"
+                    ]
+                },
+                {
+                    "id": "publication",
+                    "title": "5. 公開分享與其他揭露",
+                    "paragraphs": [
+                        "使用服務本身不代表授權我們將私人工作區用於公開宣傳。主動發布或分享後，其他人可能會存取並複製內容，超出我們的控制範圍。為遵守法律、保護權利或調查安全事件，我們可能作出合理必要的揭露。業務轉讓時，相關資訊可能在適用保障及通知要求下轉移。我們不將私人項目作為商品出售；可選廣告披露請參閱下一節。"
+                    ]
+                },
+                {
+                    "id": "cookies",
+                    "title": "6. Cookie、本地儲存與廣告",
+                    "paragraphs": [
+                        "必要 Cookie 用於維持登錄，瀏覽器儲存保存偏好，按帳號隔離的 IndexedDB 快取項目與素材。清除本機資料可能導致登出登入或遺失未同步內容。可選 X 廣告衡量僅在同意後啟用，可能發送已確認購買事件、金額、幣種及去重標識。你可用本頁廣告偏好按鈕管理或撤回同意；撤回停止新的衡量事件，但不撤銷先前合法處理。 X 政策見 https://x.com/en/privacy。你也可通过浏览器清除或阻止存储。"
+                    ]
+                },
+                {
+                    "id": "international-transfers",
+                    "title": "7. 跨境處理",
+                    "paragraphs": [
+                        "供應商可能在你所在國家或地區之外處理訊息，當地隱私規則可能不同。跨境需求取決於你所在地及接收服務，依法需要時應採用相應保障或其他合法傳輸機制。你可向客服詢問與你的任務相關的安排。介面語言不決定儲存地點，也不代表資料僅在本地處理。"
+                    ]
+                },
+                {
+                    "id": "retention",
+                    "title": "8. 保留、刪除與安全",
+                    "paragraphs": [
+                        "保留期限取決於服務目的、帳號狀態、素材引用、備援週期、法定記錄義務及爭議處理。刪除項目或註銷帳號不代表所有關聯素材、備份或交易記錄立即清除。請透過客服申請刪除，我們會說明依法保留的例外。我們採用存取控制、憑證雜湊及安全傳輸降低風險，但不存在絕對安全的系統，也不將儲存表述為端對端​​加密。發生依法須報告的資料事件時，我們將依適用法律通知監管機構及受影響者。"
+                    ]
+                },
+                {
+                    "id": "rights",
+                    "title": "9. 你的權利與選擇",
+                    "paragraphs": [
+                        "依適用法律，你可請求查閱、更正、刪除、可攜帶副本、限製或反對處理，以及撤回同意；也可能享有涉及出售或共享、定向廣告及重大自動化決策的相關權利。請聯絡 support@supdance.com，我們可能會進行適度身分核驗，但不會要求口令或完整卡號。我們以 30 個日曆日內答覆為目標，並遵守更短的法定期限；依法延期或拒絕時說明理由。匯出與請求可能由人工處理。你可向有管轄權的資料保護機構投訴，不會因依法行使而受到不利待遇。"
+                    ]
+                },
+                {
+                    "id": "children-updates",
+                    "title": "10. 未成年及政策更新",
+                    "paragraphs": [
+                        "服務針對年滿 18 歲的成年人。若你認為未成年人向我們提供了個人資訊，請聯繫客服調查並採取適當措施。處理實務或要求變更時，我們更新政策並展示修訂日期。重大變更會適當通知；依法需要同意的新處理，不僅以繼續使用作為依據。你始終可透過廣告偏好按鈕調整選擇。"
+                    ]
+                }
+            ]
+        },
+        "ui": {
+            "effective": "修訂日期",
+            "version": "Version",
+            "center": "法律中心",
+            "section": "章節鏈接"
+        }
+    },
+    "es": {
+        "terms": {
+            "title": "Términos de servicio",
+            "badge": "SUPDANCE",
+            "version": "v2.0",
+            "effectiveDate": "2026-11-13",
+            "summary": "Estos términos rigen el uso de Supdance en https://www.supdance.com,, incluidas sus herramientas creativas de IA, proyectos, activos multimedia y servicios pagos. Léalos junto con nuestra Política de Privacidad y Política de Uso Aceptable.",
+            "sections": [
+                {
+                    "id": "acceptance",
+                    "title": "1. Alcance y aceptación",
+                    "paragraphs": [
+                        "Supdance (“nosotros”, “nos”) proporciona este servicio web. Al crear una cuenta o utilizar una función paga, acepta estos términos. Si no está de acuerdo, deje de utilizar el servicio. Debe tener al menos 18 años y estar legalmente capacitado para celebrar un contrato. Si actúa en nombre de una organización, debe tener autoridad para obligarla. Las preguntas pueden enviarse a support@supdance.com."
+                    ]
+                },
+                {
+                    "id": "services",
+                    "title": "2. Servicios y disponibilidad",
+                    "paragraphs": [
+                        "Nuestro espacio de trabajo admite guiones, guiones gráficos, proyectos de lienzo, imágenes, videos, música y audio, sujeto a los modelos disponibles y las funciones habilitadas. Los servicios se entregan digitalmente. La disponibilidad del modelo, el tiempo de procesamiento y la calidad de los resultados varían; una estimación mostrada no es una garantía. El mantenimiento, los límites de capacidad o las fallas upstream pueden interrumpir el servicio. Los cambios materiales en los derechos pagados se comunicarán a través del sitio web o de los datos de contacto de la cuenta."
+                    ]
+                },
+                {
+                    "id": "account",
+                    "title": "3. Cuentas y seguridad",
+                    "paragraphs": [
+                        "Proporcione información de registro precisa, proteja sus credenciales y mantenga actualizados los datos de contacto de la cuenta. Usted es responsable de su uso autorizado y de tomar medidas razonables para asegurar el acceso. Informe cualquier sospecha de compromiso con prontitud. No acceda a la cuenta de otro usuario, no comparta credenciales robadas, evite cuotas ni aproveche errores. Podemos verificar la propiedad antes de cambiar el acceso a la cuenta o manejar solicitudes confidenciales."
+                    ]
+                },
+                {
+                    "id": "billing",
+                    "title": "4. Precios, créditos y pagos",
+                    "paragraphs": [
+                        "La página de compra y la confirmación del pedido especifican el precio, la moneda, los impuestos, los créditos, la validez y las condiciones de pago recurrentes. Verifíquelos antes de autorizar el pago; una suscripción requiere los términos de renovación que se muestran al finalizar la compra. Los créditos son unidades de servicio, no dinero, depósitos o moneda transferible. Las reservas de tareas y los cargos finales siguen las reglas de liquidación y cotización modelo aplicables. Un pago pendiente no establece una entrega exitosa; los derechos de la cuenta siguen el estado de pago verificado."
+                    ]
+                },
+                {
+                    "id": "refund",
+                    "title": "5. Reembolsos y problemas de facturación",
+                    "paragraphs": [
+                        "Puede solicitar un reembolso completo de una compra de crédito totalmente no utilizada dentro de los 7 días calendario enviando un correo electrónico a support@supdance.com con la cuenta y la referencia del pedido. Los recursos de generación consumidos generalmente no son reembolsables, sujetos a derechos obligatorios del consumidor. Las tareas fallidas liberan o revierten la reserva correspondiente según el estado final de la tarea; una reversión de crédito es diferente de un reembolso a una tarjeta bancaria. Reporte reversiones faltantes, cargos duplicados o falta de entrega para su revisión. Los reembolsos de pagos aprobados utilizan el método original cuando esté disponible; Los tiempos de procesamiento bancario varían. Nada aquí limita los derechos legales de cancelación, reembolso o disputa de pago."
+                    ]
+                },
+                {
+                    "id": "intellectual-property",
+                    "title": "6. Sus materiales y resultados de IA",
+                    "paragraphs": [
+                        "Usted conserva sus derechos sobre los materiales que envía. Debe tener los derechos y permisos necesarios para indicaciones, medios, imágenes, voces e información personal. Usted nos autoriza a nosotros y a los proveedores involucrados a procesar, alojar, transmitir y mostrar esos materiales según sea necesario para brindar las funciones solicitadas y asegurar el servicio. Esto no nos da un derecho ilimitado a anunciar con proyectos privados. Los derechos de producción dependen de la ley aplicable y de los términos específicos del modelo; No garantizamos derechos de autor, unicidad, exclusividad o ausencia de reclamaciones de terceros. Revise los resultados y las condiciones de licencia antes de su uso comercial."
+                    ]
+                },
+                {
+                    "id": "acceptable-use",
+                    "title": "7. Uso y uso compartido aceptables",
+                    "paragraphs": [
+                        "No cree ni distribuya contenido ilegal, de explotación sexual, fraudulento, amenazante o infractor, imágenes íntimas no consentidas, suplantación de identidad engañosa o malware. No eludir salvaguardas, atacar el servicio ni obtener datos no autorizados. Siga nuestra Política de uso aceptable en /aup. Obtenga el consentimiento para el rostro o la voz de una persona cuando sea necesario y divulgue contenido sintético cuando corresponda. Usted controla la publicación y el intercambio deliberados; los destinatarios pueden copiar el material y se pueden reenviar enlaces de acceso. Informe abuso o violaciones de derechos a safety@supdance.com con el URL relevante y detalles de respaldo."
+                    ]
+                },
+                {
+                    "id": "termination",
+                    "title": "8. Suspensión y rescisión",
+                    "paragraphs": [
+                        "Puede dejar de utilizar el servicio y solicitar el cierre de la cuenta a través de soporte. Podemos restringir el contenido o el acceso cuando sea razonablemente necesario para abordar violaciones, fraudes, riesgos de seguridad o requisitos legales. Cuando sea factible y legal, explicaremos el motivo y brindaremos la oportunidad de contactar al soporte para su revisión. La rescisión no borra las obligaciones de pago acumuladas ni los derechos de reembolso obligatorios. La eliminación de datos y la retención legalmente requerida se describen en la Política de Privacidad; exportar trabajos importantes antes de cerrar una cuenta."
+                    ]
+                },
+                {
+                    "id": "disclaimers",
+                    "title": "9. Limitaciones y responsabilidad de la IA",
+                    "paragraphs": [
+                        "La salida de IA puede ser inexacta, sesgada, insegura o inadecuada. Revisarlo independientemente antes de su publicación o de decisiones que afecten a otros; no es asesoramiento profesional legal, médico o financiero. Brindamos el servicio según esté disponible, sujeto a garantías no excluibles. En la medida en que lo permita la ley, excluimos las pérdidas indirectas o consecuentes, y nuestra responsabilidad total se limita a las tarifas de servicio que usted pagó en los tres meses anteriores al evento. Estos límites no se aplican al fraude, mala conducta intencional, responsabilidad que no puede limitarse legalmente ni protecciones obligatorias al consumidor."
+                    ]
+                },
+                {
+                    "id": "general",
+                    "title": "10. Cambios, disputas y contacto",
+                    "paragraphs": [
+                        "Publicamos revisiones en esta página con una versión actualizada. Los cambios materiales serán notificados apropiadamente; cuando el consentimiento sea legalmente requerido, lo solicitaremos. Comuníquese primero con support@supdance.com para que podamos investigar una disputa. La ley obligatoria aplicable y su derecho a acudir a un tribunal o regulador competente no se verán afectados. Las traducciones apoyan la comprensión local; ninguna cláusula lingüística elimina los derechos locales obligatorios. Si una disposición es inaplicable, las disposiciones restantes continúan aplicándose cuando sean legales."
+                    ]
+                }
+            ]
+        },
+        "privacy": {
+            "title": "Política de privacidad",
+            "badge": "SUPDANCE",
+            "version": "v2.0",
+            "effectiveDate": "2026-11-13",
+            "summary": "Esta política explica cómo Supdance maneja la información personal cuando utiliza nuestro sitio web, espacio de trabajo creativo, herramientas de generación de IA y soporte relacionado. También explica sus opciones y cómo contactarnos.",
+            "sections": [
+                {
+                    "id": "controller",
+                    "title": "1. Contacto de alcance y privacidad",
+                    "paragraphs": [
+                        "Esta política cubre la información manejada a través de Supdance en https://www.supdance.com. Supdance es la marca de servicio utilizada en esta política. Envíe solicitudes de privacidad a support@supdance.com. Los servicios de terceros que elija utilizar también aplican sus propios avisos de privacidad; esta política no los reemplaza."
+                    ]
+                },
+                {
+                    "id": "collection",
+                    "title": "2. Información que manejamos",
+                    "paragraphs": [
+                        "Dependiendo de las funciones que utilice, procesamos información de cuenta y contacto, hash de contraseña, identificadores de inicio de sesión de terceros e información de perfil autorizado; indicaciones, guiones, archivos cargados, datos de lienzo y de proyecto, medios generados y registros de tareas; referencias de pedidos, montos, estado de pago y asientos del libro mayor de crédito; y direcciones IP, información del navegador, registros de seguridad y correspondencia de soporte. No envíe información sensible innecesaria ni datos de otras personas sin una base legal. Los datos de la tarjeta de pago ingresados ​​en la página de un proveedor de pagos son manejados por ese proveedor; nunca envíe detalles completos de la tarjeta o contraseñas al soporte."
+                    ]
+                },
+                {
+                    "id": "purposes",
+                    "title": "3. Finalidades y fundamento jurídico",
+                    "paragraphs": [
+                        "Usamos información para autenticar usuarios, guardar proyectos, ejecutar solicitudes de generación, entregar activos, liquidar pedidos y créditos, responder al soporte, prevenir abusos y cumplir obligaciones legales. Cuando corresponda, el procesamiento se basa en la ejecución del contrato, obligaciones legales, intereses legítimos equilibrados con sus derechos o consentimiento para funciones opcionales. Aceptar los términos no es un consentimiento general para cada uso de datos. Buscamos cualquier consentimiento por separado requerido por la ley y explicamos nuevos propósitos materiales antes de procesar sobre esa base."
+                    ]
+                },
+                {
+                    "id": "sharing",
+                    "title": "4. Modelos de IA y proveedores de servicios",
+                    "paragraphs": [
+                        "Una solicitud de generación puede transmitir indicaciones, medios de referencia requeridos y parámetros de tarea al proveedor del modelo seleccionado, incluso a través de servicios de enrutamiento configurados. Los proveedores de hosting, almacenamiento, entrega, inicio de sesión y pago reciben la información necesaria para su función. Cuando la evaluación de seguridad generacional esté habilitada, se pueden enviar mensajes de texto a Waffo Pancake; esa solicitud de evaluación excluye los medios de referencia y las credenciales de modelo. Las prácticas de retención y capacitación de proveedores dependen del servicio seleccionado y sus términos; No prometemos retención universal cero ni ninguna capacitación. Evite cargar material confidencial a menos que las disposiciones aplicables satisfagan sus necesidades."
+                    ]
+                },
+                {
+                    "id": "publication",
+                    "title": "5. Publicación y otras divulgaciones",
+                    "paragraphs": [
+                        "El contenido del espacio de trabajo privado no está autorizado para promoción pública simplemente porque usted utiliza el servicio. Si publica o comparte material deliberadamente, es posible que otros puedan acceder a él y copiarlo fuera de nuestro control. Podemos divulgar información cuando sea razonablemente necesario para cumplir con la ley, proteger derechos o investigar incidentes de seguridad. En una transferencia comercial, la información relevante puede transferirse sujeta a las salvaguardias aplicables y las obligaciones de notificación. No vendemos proyectos privados como producto; Las divulgaciones publicitarias opcionales se explican por separado a continuación."
+                    ]
+                },
+                {
+                    "id": "cookies",
+                    "title": "6. Cookies, almacenamiento local y publicidad",
+                    "paragraphs": [
+                        "Las cookies necesarias mantienen la autenticación. El almacenamiento del navegador conserva las preferencias y IndexedDB con ámbito de cuenta almacena en caché los proyectos y activos. Borrar los datos locales puede cerrar sesión o eliminar el trabajo no sincronizado. La medición de publicidad X opcional se activa solo después del consentimiento y puede comunicar un evento de compra confirmado, monto, moneda y referencia de deduplicación. Gestionar o retirar ese consentimiento utilizando el control de preferencias publicitarias de esta página; el retiro detiene nuevos eventos de medición pero no deshace el procesamiento legal anterior. La política de X está disponible en https://x.com/en/privacy. Los controles del navegador también le permiten borrar o bloquear el almacenamiento."
+                    ]
+                },
+                {
+                    "id": "international-transfers",
+                    "title": "7. Tramitación internacional",
+                    "paragraphs": [
+                        "Nuestros proveedores pueden procesar información en países diferentes a donde usted vive, cuyas reglas de privacidad pueden diferir. Los requisitos de transferencia dependen de su ubicación y del servicio de recepción. Cuando sea necesario, se deben utilizar las salvaguardias aplicables u otro mecanismo de transferencia legal. Puede solicitar soporte sobre los arreglos relevantes para su tarea. No asuma que la elección de un idioma de interfaz determina la ubicación de almacenamiento o garantiza el procesamiento únicamente local."
+                    ]
+                },
+                {
+                    "id": "retention",
+                    "title": "8. Retención, eliminación y seguridad",
+                    "paragraphs": [
+                        "La retención depende del propósito del servicio, el estado de la cuenta, las referencias de activos, los ciclos de respaldo, el mantenimiento de registros legales y las disputas. Eliminar un proyecto o cuenta no necesariamente elimina inmediatamente todos los activos, copias de seguridad o registros de transacciones vinculados. Solicitar eliminación a través de soporte; explicamos cualquier excepción legal de retención. Usamos controles de acceso, hash de credenciales y transporte seguro para reducir el riesgo, pero ningún sistema es absolutamente seguro y el almacenamiento no se representa como cifrado de extremo a extremo. Cuando se produce una infracción denunciable, notificamos a las autoridades pertinentes y a las personas afectadas según lo exige la ley aplicable."
+                    ]
+                },
+                {
+                    "id": "rights",
+                    "title": "9. Tus derechos y opciones",
+                    "paragraphs": [
+                        "Dependiendo de la ley aplicable, puede solicitar acceso, corrección, eliminación, una copia portátil, restricción u objeción y retirar el consentimiento. También puede tener derechos relacionados con la venta/compartición, publicidad dirigida o decisiones automatizadas importantes. Envíe un correo electrónico a support@supdance.com; podremos solicitar una verificación de identidad proporcionada, nunca su contraseña o número completo de tarjeta de pago. Nuestro objetivo es responder dentro de los 30 días naturales y aplicar cualquier plazo legal más corto; Se explicarán las prórrogas o denegaciones legales. Las exportaciones y solicitudes pueden requerir manipulación manual. Podrá reclamar ante una autoridad competente en protección de datos y no será sancionado por ejercer derechos legítimos."
+                    ]
+                },
+                {
+                    "id": "children-updates",
+                    "title": "10. Niños y actualizaciones de políticas",
+                    "paragraphs": [
+                        "El servicio está destinado a adultos mayores de 18 años. Si cree que un niño ha proporcionado información personal, comuníquese con el soporte para que podamos investigar y tomar las medidas adecuadas. Actualizamos este aviso cuando las prácticas o requisitos cambian y mostramos la fecha de revisión. Los cambios materiales reciben la notificación adecuada; El nuevo procesamiento que requiera consentimiento no dependerá únicamente del uso continuo. El control de preferencias publicitarias permanece disponible para cambiar su elección."
+                    ]
+                }
+            ]
+        },
+        "ui": {
+            "effective": "Revisado",
+            "version": "Version",
+            "center": "Centro jurídico",
+            "section": "Enlace de sección"
+        }
+    }
+}

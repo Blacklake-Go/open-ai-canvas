@@ -21,7 +21,7 @@ interface LinearLegalPageProps {
 
 /**
  * 完全基于用户指定参考图（Linear Dark Elegance）打造的法务条款页面。
- * 默认深黑 (#000000) 极简奢雅排版，以英语为根语言（Authoritative），内置 6 国语言逐字对照切换。
+ * 以英语为权威正文，八种语言共用站点语言状态。
  */
 export function LinearLegalPage({ docMap, currentSlug, children }: LinearLegalPageProps) {
     const location = useLocation();

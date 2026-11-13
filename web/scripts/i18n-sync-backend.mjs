@@ -13,20 +13,22 @@
 import { readFileSync, writeFileSync } from "node:fs";
 import { dirname, resolve } from "node:path";
 import { spawnSync } from "node:child_process";
-import { BUILTIN_SUPDANCE_I18N_ENTRIES, NAMESPACE_LABELS } from "../src/supdance/plugins/i18n/locales/index.ts";
+import { BUILTIN_I18N_ENTRIES, NAMESPACE_LABELS, loadAllLocalePacks } from "../src/supdance/plugins/i18n/locales/index.ts";
+import { SUPPORTED_LOCALES } from "../src/i18n/locales.ts";
 import { validateTranslation } from "./i18n/source-scanner.mjs";
 
 const WEB_DIR = resolve(import.meta.dir, "..");
 const LOCALES = resolve(WEB_DIR, "src/supdance/plugins/i18n/locales");
 const TARGET = resolve(WEB_DIR, "../backend/internal/supdance/i18n/defaults.go");
-const LOCALES_CODES = ["en-US", "zh-TW", "ja-JP", "ko-KR", "es-ES"];
+const LOCALES_CODES = SUPPORTED_LOCALES.map(({ code }) => code).filter((code) => code !== "zh-CN");
 
-const entries = BUILTIN_SUPDANCE_I18N_ENTRIES.map((e) => ({ key: e.key, namespace: e.namespace, zh: e.sourceText, description: e.description ?? "" }));
+await loadAllLocalePacks();
+const entries = BUILTIN_I18N_ENTRIES.map((e) => ({ key: e.key, namespace: e.namespace, zh: e.sourceText, description: e.description ?? "" }));
 if (new Set(entries.map((e) => e.key)).size !== entries.length) throw new Error("Duplicate catalog keys");
 
 const packs = {};
 for (const code of LOCALES_CODES) {
-    packs[code] = (await import(resolve(LOCALES, "packs", `${code}.ts`))).default;
+    packs[code] = Object.fromEntries(BUILTIN_I18N_ENTRIES.map((entry) => [entry.key, entry.translations[code] ?? ""]));
 }
 
 const namespaceLabels = NAMESPACE_LABELS;
@@ -57,7 +59,9 @@ for (const ns of namespaceOrder) {
     if (!rows.length) continue;
     groups.push(`\t\t// ==================== ${ns}: ${namespaceLabels[ns]} (${rows.length}) ====================`);
     for (const row of rows) {
-        groups.push(`\t\tentry(${[row.key, row.namespace, row.zh, packs["en-US"][row.key], packs["zh-TW"][row.key], packs["ja-JP"][row.key], packs["ko-KR"][row.key], packs["es-ES"][row.key], row.description].map(goString).join(", ")}),`);
+        groups.push(
+            `\t\tentry(${[row.key, row.namespace, row.zh, packs["en-US"][row.key], packs["zh-TW"][row.key], packs["ja-JP"][row.key], packs["ko-KR"][row.key], packs["es-ES"][row.key], packs["fr-FR"][row.key], packs["de-DE"][row.key], row.description].map(goString).join(", ")}),`,
+        );
     }
 }
 
@@ -66,6 +70,13 @@ const orderLines = namespaceOrder.map((ns) => `\t${goString(ns)},`);
 
 const current = readFileSync(TARGET, "utf8");
 const replacements = [
+    { name: "SupportedLocaleCodes", re: /var SupportedLocaleCodes = \[\]string\{\n[\s\S]*?\n\}/, to: () => `var SupportedLocaleCodes = []string{\n${SUPPORTED_LOCALES.map(({ code }) => `\t${goString(code)},`).join("\n")}\n}` },
+    {
+        name: "DefaultLanguages",
+        re: /func DefaultLanguages\(\) \[\]LanguageItem \{\n[\s\S]*?\n\}/,
+        to: () =>
+            `func DefaultLanguages() []LanguageItem {\n\treturn []LanguageItem{\n${SUPPORTED_LOCALES.map((language, index) => `\t\t{Code: ${goString(language.code)}, Name: ${goString(language.label)}, NativeName: ${goString(language.label)}, Badge: ${goString(language.short)}, Direction: "ltr", Enabled: true, SortOrder: ${index + 1}},`).join("\n")}\n\t}\n}`,
+    },
     { name: "NamespaceLabels", re: /var NamespaceLabels = map\[string\]string\{\n[\s\S]*?\n\}/, to: () => `var NamespaceLabels = map[string]string{\n${labelsLines.join("\n")}\n}` },
     { name: "NamespaceOrder", re: /var NamespaceOrder = \[\]string\{\n[\s\S]*?\n\}/, to: () => `var NamespaceOrder = []string{\n${orderLines.join("\n")}\n}` },
     { name: "BuiltinEntries 生成注释", re: /(?:\/\/ BuiltinEntries[^\n]*\n)?func BuiltinEntries\(\) \[\]Entry \{/, to: () => GENERATED_NOTE + "func BuiltinEntries() []Entry {" },
@@ -83,10 +94,9 @@ generated = `${generated.slice(0, bodyStart)}func BuiltinEntries() []Entry {\n\t
 
 /** gofmt 会重排对齐，生成后必须过一遍，否则 --check 每次都会把格式化差异当成内容漂移。 */
 function formatGo(text) {
-    const result = spawnSync("gofmt", [], { input: text, encoding: "utf8" });
+    const result = spawnSync("gofmt", [], { input: text, encoding: "utf8", maxBuffer: 64 * 1024 * 1024 });
     if (result.error || result.status !== 0) {
-        console.warn(`gofmt 不可用或失败，保留未格式化输出：${result.error?.message ?? result.stderr}`);
-        return text;
+        throw new Error(`gofmt 失败，拒绝生成词典：${result.error?.message ?? result.stderr}`);
     }
     return result.stdout;
 }

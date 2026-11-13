@@ -18,7 +18,7 @@ const pack: Record<string, string> = {
     "admin.i18n_workflow.load_failed": "언어 팩을 불러오지 못해 중국어 간체로 복원했습니다. 다시 시도하세요.",
     "admin.i18n_workflow.title": "번역 업데이트 센터",
     "admin.i18n_workflow.open": "번역 업데이트 센터",
-    "admin.i18n_workflow.description": "스캔 초안을 가져와 6개 언어를 완성하고 검토 후 게시하세요. 게시한 변경은 되돌릴 수 있습니다.",
+    "admin.i18n_workflow.description": "초안을 가져와 8개 인터페이스 언어를 완성한 뒤 검토하고 게시하세요. 게시한 변경은 되돌릴 수 있습니다.",
     "admin.i18n_workflow.import": "초안 JSON 가져오기",
     "admin.i18n_workflow.stage": "초안 저장",
     "admin.i18n_workflow.review": "선택 항목 검토",

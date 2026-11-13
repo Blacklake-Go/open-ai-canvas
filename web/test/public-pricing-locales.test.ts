@@ -8,6 +8,38 @@ const html = readFileSync(new URL("../public/pricing.html", import.meta.url), "u
 const script = readFileSync(new URL("../public/pricing-i18n.js", import.meta.url), "utf8");
 
 describe("standalone pricing native languages", () => {
+    test("deep links follow language changes even when storage is restricted", async () => {
+        const window = new Window({ url: "https://example.com/pricing.html?lang=fr-FR&from=footer#models" });
+        try {
+            window.document.write(html);
+            runInNewContext(script, {
+                document: window.document,
+                NodeFilter: window.NodeFilter,
+                localStorage: {
+                    getItem() {
+                        throw new Error("blocked");
+                    },
+                    setItem() {
+                        throw new Error("blocked");
+                    },
+                },
+                URL,
+                URLSearchParams,
+                location: window.location,
+                history: window.history,
+                navigator: { languages: ["zh-CN"] },
+            });
+            expect(window.document.documentElement.lang).toBe("fr-FR");
+            const selector = window.document.getElementById("language-select") as unknown as HTMLSelectElement;
+            selector.value = "es-ES";
+            selector.dispatchEvent(new window.Event("change"));
+            expect(window.document.documentElement.lang).toBe("es-ES");
+            expect(window.location.search).toBe("?lang=es-ES&from=footer");
+            expect(window.location.hash).toBe("#models");
+        } finally {
+            await window.happyDOM.close();
+        }
+    });
     for (const { code } of SUPPORTED_LOCALES) {
         test(`${code} translates the real page without changing model identifiers or monetary cells`, async () => {
             const window = new Window({ url: "http://localhost/pricing.html" });

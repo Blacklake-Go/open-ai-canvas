@@ -2,6 +2,8 @@ import { afterEach, beforeEach, describe, expect, test } from "bun:test";
 import { createElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import { Window } from "happy-dom";
+import { detectBrowserLocale } from "../src/i18n/locales";
+import { useLocaleStore } from "../src/stores/use-locale-store";
 import { usePluginStore } from "../src/stores/use-plugin-store";
 import { getAntdLocaleForCode, loadAntdLocale } from "../src/supdance/plugins/i18n/engine/antd-locale";
 import { SupDanceDomTranslator } from "../src/supdance/plugins/i18n/engine/dom-observer";
@@ -129,9 +131,9 @@ describe("SupDance Localization 4-Tier Test Suite", () => {
             expect(useSupDanceI18nStore.getState().locale).toBe("ja-JP");
             expect(notifiedLocale).toBe("ja-JP");
 
-            // Unknown or disabled locale safely falls back to defaultLocale (zh-CN)
+            // Invalid values cannot replace the native device preference.
             useSupDanceI18nStore.getState().setLocale("invalid-locale" as any);
-            expect(useSupDanceI18nStore.getState().locale).toBe("zh-CN");
+            expect(useSupDanceI18nStore.getState().locale).toBe("ja-JP");
 
             unsubscribe();
         });
@@ -315,14 +317,14 @@ describe("SupDance Localization 4-Tier Test Suite", () => {
                         value: input[0],
                     });
 
-                    // Clear stored locale and set unknown to force auto-detection evaluation
-                    useSupDanceI18nStore.setState({ locale: "unknown" as any });
+                    expect(detectBrowserLocale(input)).toBe(expected);
+                    useLocaleStore.getState().setLocale("en-US");
                     useSupDanceI18nStore.getState().updateLocalSettings({
                         ...DEFAULT_SUPDANCE_I18N_SETTINGS,
                         autoDetectBrowser: true,
                     });
 
-                    expect(useSupDanceI18nStore.getState().locale).toBe(expected);
+                    expect(useSupDanceI18nStore.getState().locale).toBe("en-US");
                 });
             }
         });
@@ -370,14 +372,14 @@ describe("SupDance Localization 4-Tier Test Suite", () => {
     // TIER 3: Cross-Feature Combinations (Multi-Tab Sync, AntD Locale, Observer)
     // =========================================================================
     describe("Tier 3: Cross-Feature Combinations & Interactions", () => {
-        test("multi-tab synchronization updates active locale via storage sync", () => {
+        test("legacy configuration synchronization cannot replace the native locale", () => {
             withMockWindow((dom) => {
                 dom.localStorage.setItem(SUPDANCE_I18N_LOCALE_STORAGE_KEY, "es-ES");
 
                 // Trigger storage synchronization
                 useSupDanceI18nStore.getState().syncFromStorage();
 
-                expect(useSupDanceI18nStore.getState().locale).toBe("es-ES");
+                expect(useSupDanceI18nStore.getState().locale).toBe(useLocaleStore.getState().locale);
                 expect(useSupDanceI18nStore.getState().revision).toContain("storage-");
             });
         });

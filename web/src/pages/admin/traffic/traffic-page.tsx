@@ -1,8 +1,11 @@
+import { currentLocale } from "@/i18n";
+import { interfaceText } from "@/i18n/interface-text";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Alert, Button, Input, Select } from "antd";
 import type { ColumnsType } from "antd/es/table";
 import { Activity, CalendarDays, ChevronDown, Clock, Compass, Eye, Info, MousePointerClick, RefreshCw, ShieldCheck, Sparkles, Users } from "lucide-react";
-import { useEffect, useState, type FormEvent } from "react";
+import { useEffect, useMemo, useState, type FormEvent } from "react";
+import { useTranslation } from "react-i18next";
 
 import { siteTrafficActionLabels, siteTrafficPageLabels } from "@/lib/site-traffic";
 import { getSiteTrafficOverview, getSiteTrafficToday, type SiteTrafficOverview, type SiteTrafficPageEngagement } from "@/services/api/site-traffic";
@@ -20,150 +23,156 @@ type PageRow = { key: string; rank: number; page: string; pageViews: number | nu
 type ActionRow = Omit<SiteTrafficOverview["actions"][number], "page" | "action"> & { key: number; rank: number; page: string; action: string; share: number };
 type DailyRow = SiteTrafficOverview["trend"][number] & { coverageUnknown: boolean };
 
-const count = new Intl.NumberFormat("zh-CN");
-const ratio = new Intl.NumberFormat("zh-CN", { minimumFractionDigits: 1, maximumFractionDigits: 1 });
 const safeLabel = (labels: Record<string, string>, key: string, fallback: string) => (Object.hasOwn(labels, key) ? labels[key]! : fallback);
 const todayQueryKey = ["admin", "site-traffic", "today"] as const;
 
-const pageColumns: ColumnsType<PageRow> = [
-    {
-        title: "页面",
-        dataIndex: "page",
-        width: 210,
-        render: (value: string, row) => (
-            <div className="admin-traffic-rank-entity">
-                <span className="admin-traffic-rank-badge" data-top={row.rank <= 3 ? row.rank : undefined}>
-                    {row.rank}
-                </span>
-                <span className="admin-traffic-rank-name">{value}</span>
-            </div>
-        ),
-    },
-    {
-        title: "PV 浏览量",
-        dataIndex: "pageViews",
-        align: "right",
-        width: 150,
-        render: (value: number | null, row) =>
-            value === null ? (
-                <span className="admin-traffic-num">待同步</span>
-            ) : (
-                <div className="admin-traffic-metric-cell" data-accent="cyan">
-                    <div className="admin-traffic-metric-row">
-                        <strong>{count.format(value)}</strong>
-                        <span>{Math.round(row.share)}%</span>
-                    </div>
-                    <div className="admin-traffic-metric-bar" aria-hidden="true">
-                        <span style={{ width: `${Math.max(row.share, value > 0 ? 6 : 0)}%` }} />
-                    </div>
-                </div>
-            ),
-    },
-    {
-        title: "UV 访客",
-        dataIndex: "visitors",
-        align: "right",
-        width: 96,
-        render: (value: number | null) => <span className="admin-traffic-num">{value === null ? "待同步" : count.format(value)}</span>,
-    },
-    {
-        title: "会话",
-        dataIndex: "visits",
-        align: "right",
-        width: 96,
-        render: (value: number | null) => <span className="admin-traffic-num">{value === null ? "待同步" : count.format(value)}</span>,
-    },
-    {
-        title: "操作参与度",
-        key: "engagement",
-        align: "center",
-        width: 200,
-        render: (_, row) => {
-            const item = row.engagement;
-            if (!item) return <span className="admin-traffic-num">待同步</span>;
-            if (item.measurement === "unsupported")
-                return (
-                    <span className="admin-traffic-num" title="此页面未接入关键操作采集，不表示参与度为 0">
-                        N/A · 未支持操作采集
-                    </span>
-                );
-            return (
-                <div className="admin-traffic-page-engagement">
-                    <strong>{item.measurement === "mixed" ? "N/A · 部分支持操作采集" : item.visits === 0 ? "无 PV 会话" : item.rate === null ? "不可用" : `${ratio.format(item.rate * 100)}%`}</strong>
-                    <span>
-                        {item.engagedVisits === null ? "不可用" : count.format(item.engagedVisits)} / {count.format(item.visits)} 个会话
-                    </span>
-                </div>
-            );
-        },
-    },
-];
-
-const actionColumns: ColumnsType<ActionRow> = [
-    {
-        title: "关键操作",
-        dataIndex: "action",
-        width: 190,
-        render: (value: string, row) => (
-            <div className="admin-traffic-rank-entity">
-                <span className="admin-traffic-rank-badge" data-top={row.rank <= 3 ? row.rank : undefined}>
-                    {row.rank}
-                </span>
-                <span className="admin-traffic-rank-name">{value}</span>
-            </div>
-        ),
-    },
-    {
-        title: "来源页面",
-        dataIndex: "page",
-        width: 136,
-        render: (value: string) => <span className="admin-traffic-source-chip">{value}</span>,
-    },
-    {
-        title: "触发次数",
-        dataIndex: "count",
-        align: "right",
-        width: 146,
-        render: (value: number, row) => (
-            <div className="admin-traffic-metric-cell" data-accent="violet">
-                <div className="admin-traffic-metric-row">
-                    <strong>{count.format(value)}</strong>
-                    <span>{Math.round(row.share)}%</span>
-                </div>
-                <div className="admin-traffic-metric-bar" aria-hidden="true">
-                    <span style={{ width: `${Math.max(row.share, value > 0 ? 6 : 0)}%` }} />
-                </div>
-            </div>
-        ),
-    },
-    {
-        title: "操作访客",
-        dataIndex: "visitors",
-        align: "right",
-        width: 96,
-        render: (value: number) => <span className="admin-traffic-num">{count.format(value)}</span>,
-    },
-];
-
-const dailyColumns: ColumnsType<DailyRow> = [
-    {
-        title: "日期（上海）",
-        dataIndex: "date",
-        width: 260,
-        render: (date: string, row) => (
-            <span className="admin-traffic-daily-date">
-                {date}
-                {row.coverageUnknown ? <span className="admin-traffic-section-pill">历史覆盖未知</span> : null}
-            </span>
-        ),
-    },
-    { title: "PV 浏览量", dataIndex: "pageViews", align: "center", render: (value: number) => count.format(value) },
-    { title: "UV 访客", dataIndex: "visitors", align: "center", render: (value: number) => count.format(value) },
-    { title: "访问次数", dataIndex: "visits", align: "center", render: (value: number) => count.format(value) },
-    { title: "关键操作", dataIndex: "actions", align: "center", render: (value: number) => count.format(value) },
-];
-
 export default function TrafficPage() {
+    const { t } = useTranslation();
+    const locale = currentLocale();
+    const count = useMemo(() => new Intl.NumberFormat(locale), [locale]);
+    const ratio = useMemo(() => new Intl.NumberFormat(locale, { minimumFractionDigits: 1, maximumFractionDigits: 1 }), [locale]);
+    const { pageColumns, actionColumns, dailyColumns } = useMemo(() => {
+        const pageColumns: ColumnsType<PageRow> = [
+            {
+                title: interfaceText("页面", undefined, "src/pages/admin/traffic/traffic-page.tsx"),
+                dataIndex: "page",
+                width: 210,
+                render: (value: string, row) => (
+                    <div className="admin-traffic-rank-entity">
+                        <span className="admin-traffic-rank-badge" data-top={row.rank <= 3 ? row.rank : undefined}>
+                            {row.rank}
+                        </span>
+                        <span className="admin-traffic-rank-name">{value}</span>
+                    </div>
+                ),
+            },
+            {
+                title: interfaceText("PV 浏览量", undefined, "src/pages/admin/traffic/traffic-page.tsx"),
+                dataIndex: "pageViews",
+                align: "right",
+                width: 150,
+                render: (value: number | null, row) =>
+                    value === null ? (
+                        <span className="admin-traffic-num">待同步</span>
+                    ) : (
+                        <div className="admin-traffic-metric-cell" data-accent="cyan">
+                            <div className="admin-traffic-metric-row">
+                                <strong>{count.format(value)}</strong>
+                                <span>{Math.round(row.share)}%</span>
+                            </div>
+                            <div className="admin-traffic-metric-bar" aria-hidden="true">
+                                <span style={{ width: `${Math.max(row.share, value > 0 ? 6 : 0)}%` }} />
+                            </div>
+                        </div>
+                    ),
+            },
+            {
+                title: interfaceText("UV 访客", undefined, "src/pages/admin/traffic/traffic-page.tsx"),
+                dataIndex: "visitors",
+                align: "right",
+                width: 96,
+                render: (value: number | null) => <span className="admin-traffic-num">{value === null ? "待同步" : count.format(value)}</span>,
+            },
+            {
+                title: interfaceText("会话", undefined, "src/pages/admin/traffic/traffic-page.tsx"),
+                dataIndex: "visits",
+                align: "right",
+                width: 96,
+                render: (value: number | null) => <span className="admin-traffic-num">{value === null ? "待同步" : count.format(value)}</span>,
+            },
+            {
+                title: interfaceText("操作参与度", undefined, "src/pages/admin/traffic/traffic-page.tsx"),
+                key: "engagement",
+                align: "center",
+                width: 200,
+                render: (_, row) => {
+                    const item = row.engagement;
+                    if (!item) return <span className="admin-traffic-num">待同步</span>;
+                    if (item.measurement === "unsupported")
+                        return (
+                            <span className="admin-traffic-num" title="此页面未接入关键操作采集，不表示参与度为 0">
+                                N/A · 未支持操作采集
+                            </span>
+                        );
+                    return (
+                        <div className="admin-traffic-page-engagement">
+                            <strong>{item.measurement === "mixed" ? "N/A · 部分支持操作采集" : item.visits === 0 ? "无 PV 会话" : item.rate === null ? "不可用" : `${ratio.format(item.rate * 100)}%`}</strong>
+                            <span>
+                                {item.engagedVisits === null ? "不可用" : count.format(item.engagedVisits)} / {count.format(item.visits)} 个会话
+                            </span>
+                        </div>
+                    );
+                },
+            },
+        ];
+
+        const actionColumns: ColumnsType<ActionRow> = [
+            {
+                title: interfaceText("关键操作", undefined, "src/pages/admin/traffic/traffic-page.tsx"),
+                dataIndex: "action",
+                width: 190,
+                render: (value: string, row) => (
+                    <div className="admin-traffic-rank-entity">
+                        <span className="admin-traffic-rank-badge" data-top={row.rank <= 3 ? row.rank : undefined}>
+                            {row.rank}
+                        </span>
+                        <span className="admin-traffic-rank-name">{value}</span>
+                    </div>
+                ),
+            },
+            {
+                title: interfaceText("来源页面", undefined, "src/pages/admin/traffic/traffic-page.tsx"),
+                dataIndex: "page",
+                width: 136,
+                render: (value: string) => <span className="admin-traffic-source-chip">{value}</span>,
+            },
+            {
+                title: interfaceText("触发次数", undefined, "src/pages/admin/traffic/traffic-page.tsx"),
+                dataIndex: "count",
+                align: "right",
+                width: 146,
+                render: (value: number, row) => (
+                    <div className="admin-traffic-metric-cell" data-accent="violet">
+                        <div className="admin-traffic-metric-row">
+                            <strong>{count.format(value)}</strong>
+                            <span>{Math.round(row.share)}%</span>
+                        </div>
+                        <div className="admin-traffic-metric-bar" aria-hidden="true">
+                            <span style={{ width: `${Math.max(row.share, value > 0 ? 6 : 0)}%` }} />
+                        </div>
+                    </div>
+                ),
+            },
+            {
+                title: interfaceText("操作访客", undefined, "src/pages/admin/traffic/traffic-page.tsx"),
+                dataIndex: "visitors",
+                align: "right",
+                width: 96,
+                render: (value: number) => <span className="admin-traffic-num">{count.format(value)}</span>,
+            },
+        ];
+
+        const dailyColumns: ColumnsType<DailyRow> = [
+            {
+                title: interfaceText("日期（上海）", undefined, "src/pages/admin/traffic/traffic-page.tsx"),
+                dataIndex: "date",
+                width: 260,
+                render: (date: string, row) => (
+                    <span className="admin-traffic-daily-date">
+                        {date}
+                        {row.coverageUnknown ? <span className="admin-traffic-section-pill">历史覆盖未知</span> : null}
+                    </span>
+                ),
+            },
+            { title: interfaceText("PV 浏览量", undefined, "src/pages/admin/traffic/traffic-page.tsx"), dataIndex: "pageViews", align: "center", render: (value: number) => count.format(value) },
+            { title: interfaceText("UV 访客", undefined, "src/pages/admin/traffic/traffic-page.tsx"), dataIndex: "visitors", align: "center", render: (value: number) => count.format(value) },
+            { title: interfaceText("访问次数", undefined, "src/pages/admin/traffic/traffic-page.tsx"), dataIndex: "visits", align: "center", render: (value: number) => count.format(value) },
+            { title: interfaceText("关键操作", undefined, "src/pages/admin/traffic/traffic-page.tsx"), dataIndex: "actions", align: "center", render: (value: number) => count.format(value) },
+        ];
+
+        return { pageColumns, actionColumns, dailyColumns };
+    }, [count, ratio, t]);
+
     const queryClient = useQueryClient();
     const [range, setRange] = useState<TrafficDateRange>(() => trafficPresetRange(7));
     const [draft, setDraft] = useState<TrafficDateRange>(range);

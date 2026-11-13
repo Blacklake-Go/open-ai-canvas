@@ -408,10 +408,7 @@ class PrevisViewportErrorBoundary extends Component<{ children: ReactNode; onRel
     render() {
         if (!this.state.failed) return this.props.children;
         return (
-            <PrevisViewportNotice
-                title="3D 视口渲染失败"
-                description="预演台其余面板仍可使用。可重试重建视口；若持续失败请检查显卡驱动或浏览器 WebGL 支持。"
-                actionLabel="重试 3D 视口"
+            <PrevisViewportFailureNotice
                 onAction={() => {
                     this.setState({ failed: false });
                     this.props.onRetry();
@@ -419,6 +416,10 @@ class PrevisViewportErrorBoundary extends Component<{ children: ReactNode; onRel
             />
         );
     }
+}
+
+function PrevisViewportFailureNotice({ onAction }: { onAction: () => void }) {
+    return <PrevisViewportNotice title="3D 视口渲染失败" description="预演台其余面板仍可使用。可重试重建视口；若持续失败请检查显卡驱动或浏览器 WebGL 支持。" actionLabel="重试 3D 视口" onAction={onAction} />;
 }
 
 function PrevisNavigationToolbar({ navigation }: { navigation: Pick<PrevisViewportHandle, "focusSelected" | "frameScene" | "resetCamera" | "zoom"> | null }) {

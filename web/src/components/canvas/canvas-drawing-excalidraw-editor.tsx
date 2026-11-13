@@ -9,7 +9,7 @@ import type { AppLocale } from "@/i18n/locales";
 
 const DRAWING_RENDER_MAX_DIMENSION = 2048;
 const DRAWING_RENDER_PADDING = 24;
-const EXCALIDRAW_LANG_CODES: Record<AppLocale, string> = { "zh-CN": "zh-CN", "en-US": "en", "fr-FR": "fr-FR", "de-DE": "de-DE", "ja-JP": "ja-JP", "ko-KR": "ko-KR" };
+const EXCALIDRAW_LANG_CODES: Record<AppLocale, string> = { "zh-CN": "zh-CN", "en-US": "en", "fr-FR": "fr-FR", "de-DE": "de-DE", "ja-JP": "ja-JP", "ko-KR": "ko-KR", "zh-TW": "zh-TW", "es-ES": "es-ES" };
 
 export const CanvasDrawingExcalidrawEditor = forwardRef<CanvasDrawingEditorHandle, CanvasDrawingEditorProps>(function CanvasDrawingExcalidrawEditor({ snapshot, colorScheme, onReady }, ref) {
     const apiRef = useRef<ExcalidrawImperativeAPI | null>(null);

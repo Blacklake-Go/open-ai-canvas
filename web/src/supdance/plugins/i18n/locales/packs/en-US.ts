@@ -18,7 +18,7 @@ const pack: Record<string, string> = {
     "admin.i18n_workflow.load_failed": "Language pack failed to load. Restored Simplified Chinese. Please retry.",
     "admin.i18n_workflow.title": "Translation updates",
     "admin.i18n_workflow.open": "Translation updates",
-    "admin.i18n_workflow.description": "Import scan drafts, complete six languages, review and publish. Published changes can be rolled back.",
+    "admin.i18n_workflow.description": "Import scan drafts, complete all eight interface languages, review and publish. Published changes can be rolled back.",
     "admin.i18n_workflow.import": "Import draft JSON",
     "admin.i18n_workflow.stage": "Save draft",
     "admin.i18n_workflow.review": "Review selected",

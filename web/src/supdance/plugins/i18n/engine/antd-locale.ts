@@ -13,6 +13,8 @@ const antdLocaleLoaders: Record<Exclude<SupDanceLocaleCode, "zh-CN">, () => Prom
     "ja-JP": () => import("antd/locale/ja_JP"),
     "ko-KR": () => import("antd/locale/ko_KR"),
     "es-ES": () => import("antd/locale/es_ES"),
+    "fr-FR": () => import("antd/locale/fr_FR"),
+    "de-DE": () => import("antd/locale/de_DE"),
 };
 
 export async function loadAntdLocale(code: SupDanceLocaleCode): Promise<Locale> {

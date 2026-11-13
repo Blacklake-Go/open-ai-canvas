@@ -34,6 +34,10 @@
 
 ## 上游 v1.8.5 与后续 main 集成保留记录
 
+### 八语言国际化统一
+
+站点语言、资源和组件库配置统一使用上游 i18next，SupDance 保留翻译管理、审核与既有覆盖。接缝登记为 `supdance-i18n-unified-eight-locales`；命名空间、构建期静态界面文字处理、发布与导入保护见 [国际化统一说明](I18N_UNIFICATION.md)。不修改模型参数、生成提示词、价格、权限或既有审核历史。
+
 ### 简洁模型选择器 1.1.0
 
 宽度与说明排版仅修改 `web/src/supdance/plugins/compact-model-picker/picker.css`，不新增宿主补丁。92 个模型说明基线位于 `supdance/config/model-descriptions.json`；生产只更新展示说明和一项不符参数的展示名称，不修改模型键、能力、价格或启停状态。来源与发布方式见 [模型选择器说明](MODEL_PICKER_COPY.md)。
