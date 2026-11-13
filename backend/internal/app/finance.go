@@ -19,7 +19,7 @@ import (
 	"gorm.io/gorm"
 )
 
-const CreditScale int64 = 1_000_000
+const CreditScale = kernel.CreditScale
 
 type WalletSummary struct {
 	Account model.CreditAccount       `json:"account"`
