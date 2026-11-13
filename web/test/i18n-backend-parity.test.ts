@@ -3,12 +3,7 @@ import { resolve } from "node:path";
 
 import { describe, expect, test } from "bun:test";
 
-import { BUILTIN_SUPDANCE_I18N_ENTRIES, NAMESPACE_LABELS, SUPPORTED_LOCALE_CODES } from "../src/supdance/plugins/i18n/locales";
-import enUSPack from "../src/supdance/plugins/i18n/locales/packs/en-US";
-import esESPack from "../src/supdance/plugins/i18n/locales/packs/es-ES";
-import jaJPPack from "../src/supdance/plugins/i18n/locales/packs/ja-JP";
-import koKRPack from "../src/supdance/plugins/i18n/locales/packs/ko-KR";
-import zhTWPack from "../src/supdance/plugins/i18n/locales/packs/zh-TW";
+import { BUILTIN_I18N_ENTRIES as BUILTIN_SUPDANCE_I18N_ENTRIES, NAMESPACE_LABELS, SUPPORTED_LOCALE_CODES } from "../src/supdance/plugins/i18n/locales";
 import { musicOperations } from "../src/supdance/plugins/music-generation/services/music-tools";
 
 /**
@@ -23,31 +18,22 @@ type BackendEntry = { key: string; namespace: string; values: Record<string, str
 
 function parseBackendEntries(source: string): BackendEntry[] {
     const quoted = String.raw`(?:"((?:[^"\\]|\\.)*)"|'((?:[^'\\]|\\.)*)')`;
-    const re = new RegExp(`^\\s*entry\\(${quoted},\\s*${quoted},\\s*${quoted},\\s*${quoted},\\s*${quoted},\\s*${quoted},\\s*${quoted},\\s*${quoted},\\s*${quoted}\\),$`, "gm");
+    const re = new RegExp(`^\\s*entry\\(${Array(11).fill(quoted).join(",\\s*")}\\),$`, "gm");
     const unescape = (value: string | undefined) => (value ?? "").replace(/\\(["'nt\\])/g, (_all, group: string) => (group === "n" ? "\n" : group === "t" ? "\t" : group));
     const rows: BackendEntry[] = [];
     for (const match of source.matchAll(re)) {
         // 每个参数是“双引号或单引号”的二选一，所以两个捕获组只能取非空的那个。
         const args: string[] = [];
-        for (let index = 0; index < 9; index += 1) args.push(unescape(match[1 + index * 2] ?? match[2 + index * 2]));
-        rows.push({ key: args[0]!, namespace: args[1]!, values: { "zh-CN": args[2]!, "en-US": args[3]!, "zh-TW": args[4]!, "ja-JP": args[5]!, "ko-KR": args[6]!, "es-ES": args[7]! } });
+        for (let index = 0; index < 11; index += 1) args.push(unescape(match[1 + index * 2] ?? match[2 + index * 2]));
+        rows.push({ key: args[0]!, namespace: args[1]!, values: { "zh-CN": args[2]!, "en-US": args[3]!, "zh-TW": args[4]!, "ja-JP": args[5]!, "ko-KR": args[6]!, "es-ES": args[7]!, "fr-FR": args[8]!, "de-DE": args[9]! } });
     }
     return rows;
 }
 
-/** 词典条目的外语译文是按需加载后才回填的，这里直接读语言包模块，避免依赖加载顺序。 */
-const frontendValues: Record<string, Record<string, string>> = {
-    "zh-CN": {},
-    "en-US": enUSPack,
-    "zh-TW": zhTWPack,
-    "ja-JP": jaJPPack,
-    "ko-KR": koKRPack,
-    "es-ES": esESPack,
-};
-
+const frontendByKey = new Map(BUILTIN_SUPDANCE_I18N_ENTRIES.map((entry) => [entry.key, entry]));
 function frontendValue(key: string, locale: string, sourceText: string): string {
     if (locale === "zh-CN") return sourceText.trim();
-    return (frontendValues[locale]?.[key] ?? "").trim();
+    return (frontendByKey.get(key)?.translations[locale] ?? "").trim();
 }
 
 describe("i18n frontend dictionary is the single source for the backend dictionary", () => {

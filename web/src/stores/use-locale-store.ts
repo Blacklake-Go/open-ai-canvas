@@ -8,11 +8,23 @@ type LocaleStore = {
     setLocale: (locale: AppLocale) => void;
 };
 
+function initialLocale(): AppLocale {
+    try {
+        if (typeof window !== "undefined" && !window.localStorage.getItem("yingce:locale")) {
+            const legacy = window.localStorage.getItem("supdance:i18n:locale");
+            if (isAppLocale(legacy)) return legacy;
+        }
+    } catch {
+        /* Restricted browser storage still permits an in-memory locale. */
+    }
+    return detectBrowserLocale();
+}
+
 /** 界面语言是本设备的小型偏好，保存在 localStorage；首次访问按浏览器语言选择。 */
 export const useLocaleStore = create<LocaleStore>()(
     persist(
         (set) => ({
-            locale: detectBrowserLocale(),
+            locale: initialLocale(),
             // 写入前校验，防止非法值经同步或旧数据进入 i18next。
             setLocale: (next) => set((state) => (isAppLocale(next) ? { locale: next } : state)),
         }),

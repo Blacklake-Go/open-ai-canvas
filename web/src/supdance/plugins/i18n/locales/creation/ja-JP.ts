@@ -99,7 +99,6 @@ const pack: Record<string, string> = {
     "creation.b88848da5445012d": "カスタム（毎秒{value1}文字、{value2}秒ごとに1行）",
     "creation.5df9c07c81b0ce18": "このセグメントはまだ生成できません",
     "creation.11af39cf036f7c34": "、{value1}件失敗",
-
     "projects.speech_rate_label": "話速（毎秒の文字数）",
     "projects.speech_rate_short": "話速",
     "projects.chars_per_second": "文字/秒",
@@ -115,7 +114,6 @@ const pack: Record<string, string> = {
     "projects.dialogue_summary": "約 {interval} 秒ごとに1行、1行最大 {max} 文字、毎秒 {rate} 文字、間は {pause} 秒",
     "projects.dialogue_longest": "最も長いセリフは約 {seconds} 秒",
     "projects.custom_dialogue_hint": "話速、セリフ間隔、文字数上限、間を作品全体で統一します",
-
     "projects.export_draft_hint": "下書きを書き出し、Jianying Proで編集を続ける",
     "projects.no_segment_video": "この話には完成したセグメント動画がまだありません",
     "projects.export_draft": "Jianying下書きに書き出す",
@@ -132,7 +130,6 @@ const pack: Record<string, string> = {
     "projects.insert_episode_action": "挿入して絵コンテ作成を開始",
     "projects.before": "前",
     "projects.after": "後",
-
     "creation.205081e8ec7f361c": "クリエイティブの方向が選択されました",
     "creation.17cd00dc4279e2b1": "ピクチャ生成の進行状況",
     "creation.2f98e1405bc55307": "AI生成",
@@ -1910,8 +1907,8 @@ const pack: Record<string, string> = {
     "creation.6be0d008df70731d": "参考画像レイアウトの説明:",
     "creation.87f28fc3ad2782ee": "の内容は {PROMPT_LIMIT} ワードを超えているため、切り詰められています。アセットカードに関連する段落のみを選択することをお勧めします。",
     "creation.07632ad2a7a40343": "は含まれません",
-    "creation.eafda473ba2a458a": "{{キャラクター名}}",
-    "creation.a7e6e3a4940774f8": "{{キャラクター設定}}",
+    "creation.eafda473ba2a458a": "{{角色名称}}",
+    "creation.a7e6e3a4940774f8": "{{角色设定}}",
     "creation.370b88e5cb43c201": "、この文字情報はインポート後の最後に自動で追加されます。",
     "creation.67c8dbc97155e7f6": "{quickLabel} 章",
     "creation.f29ee6de96303094": "選択した {longSelected} {value2} の元のテキストが {limit} を超えています。「N 番目のエピソード」のタイトルを使用して区切るか、最初にチェックを外してください",
@@ -2289,7 +2286,7 @@ const pack: Record<string, string> = {
     "creation.602c9a4772e4e4d1": "(作品聖書の作成後に環境説明が自動的に入力されます)",
     "creation.03f0d6930a930608": "リアルな映画の雰囲気",
     "creation.98ccf4fad39af42a": "オプション",
-    "creation.e4b60cf3ce813c06": "{value1}\n\n[このキャラクター] {{キャラクター名}}: {{キャラクター設定}}。スタイル: {{プロジェクト スタイル}}。 {{画面ルール}}",
+    "creation.e4b60cf3ce813c06": "{value1}\n\n[このキャラクター] {{角色名称}}: {{角色设定}}。スタイル: {{项目画风}}。 {{画面规则}}",
     "creation.6044e9f095e0b5e4": "前",
     "creation.e76f1ee615ba17ce": "中国北京語",
     "creation.3b0aa680e2b63ff2": "広東語",

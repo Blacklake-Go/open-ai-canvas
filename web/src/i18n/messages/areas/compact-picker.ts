@@ -1,4 +1,6 @@
 import type { AppLocale } from "../../locales";
+import zhTW from "../zh-TW.json";
+import esES from "../es-ES.json";
 
 const galleryEn = {
     galleryTitle: "Inspiration gallery management",
@@ -20,6 +22,93 @@ const galleryEn = {
     galleryStatus_restricted: "Restricted",
     galleryStatus_archived: "Archived",
     galleryStatus_approved: "Approved for publication",
+};
+const galleryFr: typeof galleryEn = {
+    galleryTitle: "Gestion de la galerie d'inspiration",
+    galleryFeed: "Synchronisation amont (n'autorise pas la publication)",
+    homepageShowcaseEnabled: "Vitrine de la page d'accueil",
+    complianceLock: "Verrouillage de l'examen de conformité",
+    galleryIsolationHint: "Les pages publiques et les API de cas restent isolées lorsque la galerie est désactivée ou verrouillée. Les données internes sont conservées. Vérifiez l’autorisation de chaque cas avant de restaurer l’accès.",
+    galleryUpdated: "Dernier enregistrement",
+    galleryConfirm: "Confirmer l'autorisation de contenu public",
+    galleryConfirmHint:
+        "Confirmez que le résultat de l'examen du commerçant et les autorisations du dossier ont été vérifiés. Seuls les cas approuvés avec un contenu inchangé peuvent être publiés. Enregistrez les paramètres pour appliquer les modifications apportées aux commutateurs.",
+    galleryReviews: "Examiner les cas individuels",
+    gallerySearch: "Rechercher l'ID, le titre ou l'invite du dossier",
+    galleryResultCount: "{{count}} résultats (jusqu'à 100 ; affinez votre recherche)",
+    galleryReviewStatus: "Statut de la révision",
+    galleryEvidence: "Preuve d'autorisation vérifiable pour la personne représentée et tous les médias",
+    gallerySaveReview: "Enregistrer l'examen du cas",
+    galleryReplacement: "Couverture de remplacement URL (facultatif ; nécessite une autorisation vérifiée)",
+    galleryStatus_pending_review: "En attente d'examen",
+    galleryStatus_restricted: "Restreint",
+    galleryStatus_archived: "Archivé",
+    galleryStatus_approved: "Approuvé pour publication",
+};
+const galleryDe: typeof galleryEn = {
+    galleryTitle: "Verwaltung der Inspirationsgalerie",
+    galleryFeed: "Upstream-Synchronisation (autorisiert keine Veröffentlichung)",
+    homepageShowcaseEnabled: "Homepage-Schaufenster",
+    complianceLock: "Compliance-Überprüfungssperre",
+    galleryIsolationHint:
+        "Öffentliche Seiten und Fall-APIs bleiben isoliert, während die Galerie deaktiviert oder gesperrt ist. Interne Daten bleiben erhalten. Überprüfen Sie die Autorisierung jedes einzelnen Falls, bevor Sie den Zugriff wiederherstellen.",
+    galleryUpdated: "Zuletzt gespeichert",
+    galleryConfirm: "Bestätigen Sie die Autorisierung für öffentliche Inhalte",
+    galleryConfirmHint:
+        "Bestätigen Sie, dass das Ergebnis der Händlerüberprüfung und die Fallautorisierungen überprüft wurden. Es können nur genehmigte Fälle mit unverändertem Inhalt veröffentlicht werden. Speichern Sie die Einstellungen, um Schalteränderungen zu übernehmen.",
+    galleryReviews: "Überprüfen Sie einzelne Fälle",
+    gallerySearch: "Fall-ID, Titel oder Eingabeaufforderung suchen",
+    galleryResultCount: "{{count}} Ergebnisse (bis zu 100; verfeinern Sie Ihre Suche)",
+    galleryReviewStatus: "Überprüfungsstatus",
+    galleryEvidence: "Überprüfbarer Berechtigungsnachweis für die abgebildete Person und alle Medien",
+    gallerySaveReview: "Fallüberprüfung speichern",
+    galleryReplacement: "Ersatzbezug URL (optional; erfordert verifizierte Autorisierung)",
+    galleryStatus_pending_review: "Überprüfung steht aus",
+    galleryStatus_restricted: "Eingeschränkt",
+    galleryStatus_archived: "Archiviert",
+    galleryStatus_approved: "Zur Veröffentlichung freigegeben",
+};
+const galleryJa: typeof galleryEn = {
+    galleryTitle: "インスピレーションギャラリー運営",
+    galleryFeed: "アップストリーム同期 (公開を許可しません)",
+    homepageShowcaseEnabled: "ホームページのショーケース",
+    complianceLock: "コンプライアンスレビューロック",
+    galleryIsolationHint: "ギャラリーが無効またはロックされている間、公開ページとケース API は分離されたままになります。内部データは保持されます。アクセスを復元する前に、各ケースの承認を確認してください。",
+    galleryUpdated: "最終保存日",
+    galleryConfirm: "パブリック コンテンツの承認を確認します",
+    galleryConfirmHint: "販売者のレビュー結果とケースの承認が検証されたことを確認します。内容が変更されていない承認済みのケースのみを公開できます。設定を保存してスイッチの変更を適用します。",
+    galleryReviews: "個々のケースを確認する",
+    gallerySearch: "ケース ID、タイトル、またはプロンプトを検索します",
+    galleryResultCount: "{{count}} 結果 (最大 100 件、検索を絞り込みます)",
+    galleryReviewStatus: "レビュー状況",
+    galleryEvidence: "描かれた人物およびすべてのメディアに対する検証可能な承認の証拠",
+    gallerySaveReview: "ケースレビューを保存する",
+    galleryReplacement: "交換用カバー URL (オプション、認証の確認が必要)",
+    galleryStatus_pending_review: "審査待ち",
+    galleryStatus_restricted: "制限あり",
+    galleryStatus_archived: "アーカイブ済み",
+    galleryStatus_approved: "出版が承認されました",
+};
+const galleryKo: typeof galleryEn = {
+    galleryTitle: "영감 갤러리 관리",
+    galleryFeed: "업스트림 동기화(게시를 승인하지 않음)",
+    homepageShowcaseEnabled: "홈페이지 쇼케이스",
+    complianceLock: "규정 준수 검토 잠금",
+    galleryIsolationHint: "공개 페이지와 케이스 API는 갤러리가 비활성화되거나 잠겨 있는 동안 격리된 상태로 유지됩니다. 내부 데이터는 유지됩니다. 액세스를 복원하기 전에 각 사례의 승인을 확인하세요.",
+    galleryUpdated: "마지막 저장",
+    galleryConfirm: "공개 콘텐츠 인증 확인",
+    galleryConfirmHint: "가맹점 검토 결과 및 케이스 승인이 확인되었는지 확인하세요. 내용이 변경되지 않은 승인된 사례만 게시할 수 있습니다. 스위치 변경 사항을 적용하려면 설정을 저장하세요.",
+    galleryReviews: "개별 사례 검토",
+    gallerySearch: "케이스 ID, 제목 또는 프롬프트 검색",
+    galleryResultCount: "{{count}} 결과(최대 100개, 검색 세분화)",
+    galleryReviewStatus: "검토 상태",
+    galleryEvidence: "묘사된 인물 및 모든 미디어에 대한 검증 가능한 승인 증거",
+    gallerySaveReview: "사례 검토 저장",
+    galleryReplacement: "교체 커버 URL (선택 사항, 확인된 승인 필요)",
+    galleryStatus_pending_review: "검토 대기 중",
+    galleryStatus_restricted: "제한됨",
+    galleryStatus_archived: "보관됨",
+    galleryStatus_approved: "출판 승인됨",
 };
 const galleryZh: typeof galleryEn = {
     galleryTitle: "灵感大厅管理",
@@ -64,6 +153,16 @@ const zh = {
 };
 type Copy = typeof zh;
 export const compactPickerLocales: Record<AppLocale, Copy> = {
+    "zh-TW": Object.fromEntries(
+        Object.entries(zhTW)
+            .filter(([key]) => key.startsWith("compactPicker."))
+            .map(([key, text]) => [key.slice("compactPicker.".length), text]),
+    ) as Copy,
+    "es-ES": Object.fromEntries(
+        Object.entries(esES)
+            .filter(([key]) => key.startsWith("compactPicker."))
+            .map(([key, text]) => [key.slice("compactPicker.".length), text]),
+    ) as Copy,
     "zh-CN": zh,
     "en-US": {
         ...galleryEn,
@@ -85,7 +184,7 @@ export const compactPickerLocales: Record<AppLocale, Copy> = {
         readError: "Could not load model picker settings",
     },
     "fr-FR": {
-        ...galleryEn,
+        ...galleryFr,
         title: "Sélecteur de modèles",
         summary: "Gérez les marques et les modèles des outils de création.",
         appearance: "Apparence du menu",
@@ -104,7 +203,7 @@ export const compactPickerLocales: Record<AppLocale, Copy> = {
         readError: "Impossible de charger les paramètres du sélecteur",
     },
     "de-DE": {
-        ...galleryEn,
+        ...galleryDe,
         title: "Modellauswahl",
         summary: "Marken und Modelle in den Kreativwerkzeugen verwalten.",
         appearance: "Menüdarstellung",
@@ -123,7 +222,7 @@ export const compactPickerLocales: Record<AppLocale, Copy> = {
         readError: "Einstellungen konnten nicht geladen werden",
     },
     "ja-JP": {
-        ...galleryEn,
+        ...galleryJa,
         title: "モデル選択",
         summary: "制作ツールのブランドとモデルの表示を管理します。",
         appearance: "メニューの表示",
@@ -142,7 +241,7 @@ export const compactPickerLocales: Record<AppLocale, Copy> = {
         readError: "モデル選択の設定を読み込めません",
     },
     "ko-KR": {
-        ...galleryEn,
+        ...galleryKo,
         title: "모델 선택기",
         summary: "창작 도구의 브랜드와 모델 표시를 관리합니다.",
         appearance: "메뉴 표시",

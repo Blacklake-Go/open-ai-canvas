@@ -7,6 +7,8 @@ import "dayjs/locale/fr";
 import "dayjs/locale/ja";
 import "dayjs/locale/ko";
 import "dayjs/locale/zh-cn";
+import "dayjs/locale/zh-tw";
+import "dayjs/locale/es";
 import { I18nextProvider, useTranslation } from "react-i18next";
 import { i18n } from "@/i18n";
 import type { AppLocale } from "@/i18n/locales";
@@ -18,6 +20,8 @@ import frFR from "antd/locale/fr_FR";
 import jaJP from "antd/locale/ja_JP";
 import koKR from "antd/locale/ko_KR";
 import zhCN from "antd/locale/zh_CN";
+import zhTW from "antd/locale/zh_TW";
+import esES from "antd/locale/es_ES";
 import dayjs from "dayjs";
 
 import { AuthSessionHydrator } from "@/components/auth/auth-session-hydrator";
@@ -36,8 +40,8 @@ import { SupDancePluginRuntimeSync } from "@/supdance/adapters/plugin-runtime-sy
 import { SocialOnboardingModal } from "@/supdance/plugins/social-auth";
 
 // antd 组件内置文案与 dayjs 日期格式随界面语言切换。
-const ANTD_LOCALES: Record<AppLocale, AntdLocale> = { "zh-CN": zhCN, "en-US": enUS, "fr-FR": frFR, "de-DE": deDE, "ja-JP": jaJP, "ko-KR": koKR };
-const DAYJS_LOCALES: Record<AppLocale, string> = { "zh-CN": "zh-cn", "en-US": "en", "fr-FR": "fr", "de-DE": "de", "ja-JP": "ja", "ko-KR": "ko" };
+const ANTD_LOCALES: Record<AppLocale, AntdLocale> = { "zh-CN": zhCN, "en-US": enUS, "fr-FR": frFR, "de-DE": deDE, "ja-JP": jaJP, "ko-KR": koKR, "zh-TW": zhTW, "es-ES": esES };
+const DAYJS_LOCALES: Record<AppLocale, string> = { "zh-CN": "zh-cn", "en-US": "en", "fr-FR": "fr", "de-DE": "de", "ja-JP": "ja", "ko-KR": "ko", "zh-TW": "zh-tw", "es-ES": "es" };
 
 const ClientRootInit = lazy(() => import("@/components/layout/client-root-init").then((module) => ({ default: module.ClientRootInit })));
 

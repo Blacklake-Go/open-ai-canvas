@@ -1,12 +1,24 @@
 import { HTML_ADMIN_I18N_ENTRIES } from "./html-admin";
 import { FEDERATION_I18N_ENTRIES } from "./federation";
+import { SUPPORTED_LOCALES } from "@/i18n/locales";
+import { MANAGED_UI_ENTRIES } from "../managed-catalog";
+import enUSPack from "./packs/en-US";
+import zhTWPack from "./packs/zh-TW";
+import esESPack from "./packs/es-ES";
+import frFRPack from "./packs/fr-FR";
+import deDEPack from "./packs/de-DE";
+import jaJPPack from "./packs/ja-JP";
+import koKRPack from "./packs/ko-KR";
 import type { SupDanceI18nEntry, SupDanceI18nSettings, SupDanceLanguageItem, SupDanceLocaleCode } from "../types";
 import { MUSIC_SITE_I18N_ENTRIES } from "./music-site";
 import { MARKETING_I18N_ENTRIES } from "@/supdance/marketing/translations";
 
-export const SUPPORTED_LOCALE_CODES: readonly SupDanceLocaleCode[] = ["zh-CN", "en-US", "zh-TW", "ja-JP", "ko-KR", "es-ES"] as const;
+export const SUPPORTED_LOCALE_CODES: readonly SupDanceLocaleCode[] = SUPPORTED_LOCALES.map(({ code }) => code);
 
 export const NAMESPACE_LABELS: Record<string, string> = {
+    upstreamUI: "上游原生界面",
+    creationUI: "创作页界面",
+    modelUI: "模型显示文案",
     legal: "法务页面",
     common: "通用与基础控件",
     nav: "顶栏与侧栏导航",
@@ -27,14 +39,15 @@ export const NAMESPACE_LABELS: Record<string, string> = {
     inspiration: "灵感大厅与创意目录",
 };
 
-export const DEFAULT_SUPDANCE_LANGUAGES: SupDanceLanguageItem[] = [
-    { code: "zh-CN", name: "简体中文", nativeName: "简体中文", badge: "中", direction: "ltr", enabled: true, sortOrder: 1 },
-    { code: "en-US", name: "英语", nativeName: "English", badge: "EN", direction: "ltr", enabled: true, sortOrder: 2 },
-    { code: "zh-TW", name: "繁体中文", nativeName: "繁體中文", badge: "繁", direction: "ltr", enabled: true, sortOrder: 3 },
-    { code: "ja-JP", name: "日文", nativeName: "日本語", badge: "日", direction: "ltr", enabled: true, sortOrder: 4 },
-    { code: "ko-KR", name: "韩国语", nativeName: "한국어", badge: "韓", direction: "ltr", enabled: true, sortOrder: 5 },
-    { code: "es-ES", name: "西班牙语", nativeName: "Español", badge: "ES", direction: "ltr", enabled: true, sortOrder: 6 },
-];
+export const DEFAULT_SUPDANCE_LANGUAGES: SupDanceLanguageItem[] = SUPPORTED_LOCALES.map((language, index) => ({
+    code: language.code,
+    name: language.label,
+    nativeName: language.label,
+    badge: language.short,
+    direction: "ltr",
+    enabled: true,
+    sortOrder: index + 1,
+}));
 
 export const DEFAULT_SUPDANCE_I18N_SETTINGS: SupDanceI18nSettings = {
     defaultLocale: "zh-CN",
@@ -79,7 +92,7 @@ export const BUILTIN_SUPDANCE_I18N_ENTRIES: readonly SupDanceI18nEntry[] = [
     e("admin.i18n_workflow.load_failed", "admin", "语言包加载失败，已恢复简体中文，请重试。", "语言包加载错误"),
     e("admin.i18n_workflow.title", "admin", "翻译更新中心", "翻译更新中心"),
     e("admin.i18n_workflow.open", "admin", "翻译更新中心", "翻译更新中心"),
-    e("admin.i18n_workflow.description", "admin", "导入扫描草稿，补全六语种后审核发布；已发布版本可回滚。", "翻译更新中心"),
+    e("admin.i18n_workflow.description", "admin", "导入扫描草稿，补全八种界面语言后审核发布；已发布版本可回滚。", "翻译更新中心"),
     e("admin.i18n_workflow.import", "admin", "导入草稿 JSON", "翻译更新中心"),
     e("admin.i18n_workflow.stage", "admin", "保存草稿", "翻译更新中心"),
     e("admin.i18n_workflow.review", "admin", "审核所选", "翻译更新中心"),
@@ -2074,6 +2087,8 @@ export const packLoaders: Record<Exclude<SupDanceLocaleCode, "zh-CN">, () => Pro
     "ja-JP": () => import("./packs/ja-JP"),
     "ko-KR": () => import("./packs/ko-KR"),
     "es-ES": () => import("./packs/es-ES"),
+    "fr-FR": () => import("./packs/fr-FR"),
+    "de-DE": () => import("./packs/de-DE"),
 };
 
 const loadedPacks: Partial<Record<SupDanceLocaleCode, Record<string, string>>> = {};
@@ -2104,7 +2119,7 @@ export async function loadLocalePack(locale: SupDanceLocaleCode): Promise<Record
 }
 
 export async function loadAllLocalePacks(): Promise<void> {
-    const foreignCodes: Array<Exclude<SupDanceLocaleCode, "zh-CN">> = ["en-US", "zh-TW", "ja-JP", "ko-KR", "es-ES"];
+    const foreignCodes = SUPPORTED_LOCALE_CODES.filter((code) => code !== "zh-CN");
     await Promise.all(foreignCodes.map((code) => loadLocalePack(code)));
 }
 
@@ -2112,13 +2127,18 @@ export function isSupportedLocaleCode(value: unknown): value is SupDanceLocaleCo
     return typeof value === "string" && (SUPPORTED_LOCALE_CODES as readonly string[]).includes(value);
 }
 
-export const BUILTIN_I18N_ENTRIES = BUILTIN_SUPDANCE_I18N_ENTRIES;
+export const BUILTIN_I18N_ENTRIES = [...BUILTIN_SUPDANCE_I18N_ENTRIES, ...MANAGED_UI_ENTRIES];
+
+// Keep the active dictionary ready before React renders; no Chinese frame while a pack loads.
+for (const [code, pack] of Object.entries({ "en-US": enUSPack, "zh-TW": zhTWPack, "es-ES": esESPack, "fr-FR": frFRPack, "de-DE": deDEPack, "ja-JP": jaJPPack, "ko-KR": koKRPack })) {
+    applyPackToBuiltinEntries(code as SupDanceLocaleCode, pack);
+}
 
 export function mergeI18nEntries(customEntries: Record<string, SupDanceI18nEntry> = {}): SupDanceI18nEntry[] {
     const builtinKeySet = new Set<string>();
     const result: SupDanceI18nEntry[] = [];
 
-    for (const builtin of BUILTIN_SUPDANCE_I18N_ENTRIES) {
+    for (const builtin of BUILTIN_I18N_ENTRIES) {
         builtinKeySet.add(builtin.key);
         const override = customEntries[builtin.key];
         if (!override) {
@@ -2160,6 +2180,8 @@ export function mergeI18nEntries(customEntries: Record<string, SupDanceI18nEntry
             "ja-JP": custom.translations?.["ja-JP"]?.trim() || "",
             "ko-KR": custom.translations?.["ko-KR"]?.trim() || "",
             "es-ES": custom.translations?.["es-ES"]?.trim() || "",
+            "fr-FR": custom.translations?.["fr-FR"]?.trim() || "",
+            "de-DE": custom.translations?.["de-DE"]?.trim() || "",
         };
         result.push({
             key,

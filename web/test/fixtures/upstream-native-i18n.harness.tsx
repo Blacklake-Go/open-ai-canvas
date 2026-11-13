@@ -97,17 +97,17 @@ test("locale changes retain the real pricing fields and music generation payload
             expect([...host.querySelectorAll<HTMLInputElement>(".ant-checkbox-input")].filter((e) => e.checked).map((e) => e.value)).toEqual(["1", "3"]);
             headings.add(host.querySelector(".admin-model-editor-section h2")!.textContent!);
             weekdays.add(host.querySelector(".ant-checkbox-group")!.textContent!);
-            expect(host.textContent).not.toContain("upstream.");
+            expect(host.textContent).not.toMatch(/upstream\.[a-zA-Z0-9_.]+/);
             const buttons = [...host.querySelectorAll<HTMLButtonElement>(".creation-empty-suggest button")];
             expect(buttons).toHaveLength(4);
             await act(async () => buttons[0].click());
             expect(requests.at(-1)).toEqual(prompts[0]);
             expect(creationMusicEmptySuggestions.map(({ mode, prompt }) => ({ mode, prompt }))).toEqual(prompts);
         }
-        expect(headings.size).toBe(6);
+        expect(headings.size).toBe(8);
         expect(weekdays.size).toBeGreaterThanOrEqual(5);
         expect(dirty).toBe(0);
-        expect(requests).toHaveLength(6);
+        expect(requests).toHaveLength(8);
     } finally {
         await act(async () => root.unmount());
         host.remove();

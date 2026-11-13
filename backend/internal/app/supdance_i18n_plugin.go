@@ -13,9 +13,10 @@ import (
 
 type i18nBundleCache struct {
 	sync.RWMutex
-	bundle   supdancei18n.PublicBundle
-	cachedAt time.Time
-	valid    bool
+	bundle     supdancei18n.PublicBundle
+	cachedAt   time.Time
+	valid      bool
+	generation uint64
 }
 
 var globalI18nBundleCache i18nBundleCache
@@ -23,7 +24,21 @@ var globalI18nBundleCache i18nBundleCache
 func invalidateI18nBundleCache() {
 	globalI18nBundleCache.Lock()
 	globalI18nBundleCache.valid = false
+	globalI18nBundleCache.generation++
 	globalI18nBundleCache.Unlock()
+}
+
+// An older reader must never repopulate the cache after a committed publication.
+func (cache *i18nBundleCache) publishIfCurrent(bundle supdancei18n.PublicBundle, generation uint64) bool {
+	cache.Lock()
+	defer cache.Unlock()
+	if cache.generation != generation {
+		return false
+	}
+	cache.bundle = bundle
+	cache.cachedAt = time.Now()
+	cache.valid = true
+	return true
 }
 
 const (
@@ -142,6 +157,7 @@ func (s *Service) saveSupDanceI18nCustomEntries(actorID string, custom map[strin
 // PublicSupDanceI18nBundle returns the public i18n configuration and custom overrides for all pages.
 func (s *Service) PublicSupDanceI18nBundle() (supdancei18n.PublicBundle, error) {
 	globalI18nBundleCache.RLock()
+	generation := globalI18nBundleCache.generation
 	if globalI18nBundleCache.valid && time.Since(globalI18nBundleCache.cachedAt) < 2*time.Minute {
 		bundle := globalI18nBundleCache.bundle
 		globalI18nBundleCache.RUnlock()
@@ -184,11 +200,7 @@ func (s *Service) PublicSupDanceI18nBundle() (supdancei18n.PublicBundle, error) 
 		}
 	}
 
-	globalI18nBundleCache.Lock()
-	globalI18nBundleCache.bundle = bundle
-	globalI18nBundleCache.cachedAt = time.Now()
-	globalI18nBundleCache.valid = true
-	globalI18nBundleCache.Unlock()
+	globalI18nBundleCache.publishIfCurrent(bundle, generation)
 
 	return bundle, nil
 }
@@ -376,6 +388,9 @@ func (s *Service) ImportAdminSupDanceI18n(actor *model.User, payload supdancei18
 		overview, err := s.AdminSupDanceI18nOverview(actor)
 		return overview, 0, err
 	}
+	if len(toImport) > supdancei18n.MaxEntryImport {
+		return supdancei18n.AdminOverview{}, 0, fmt.Errorf("单次最多导入 %d 条词条", supdancei18n.MaxEntryImport)
+	}
 
 	keys := make([]string, 0, len(toImport))
 	for _, e := range toImport {
@@ -397,9 +412,17 @@ func (s *Service) ImportAdminSupDanceI18n(actor *model.User, payload supdancei18
 		if replaceAll {
 			base = map[string]supdancei18n.Entry{}
 		}
-		next, n, err := supdancei18n.UpsertEntries(base, toImport, actor.ID)
-		count = n
-		return next, err
+		next := base
+		for start := 0; start < len(toImport); start += supdancei18n.MaxEntryUpdates {
+			end := min(start+supdancei18n.MaxEntryUpdates, len(toImport))
+			updated, n, err := supdancei18n.UpsertEntries(next, toImport[start:end], actor.ID)
+			if err != nil {
+				return nil, err
+			}
+			next = updated
+			count += n
+		}
+		return next, nil
 	})
 	if err != nil {
 		return supdancei18n.AdminOverview{}, 0, err

@@ -365,7 +365,7 @@ function agentNodeIdFromHref(href?: string) {
 function createAgentMessageMarkdownComponents(references: CanvasResourceReference[], onFocusNode?: (nodeId: string) => void): Components {
     const referenceByNodeId = new Map(references.filter((reference) => reference.nodeId).map((reference) => [reference.nodeId, reference]));
     return {
-        a: ({ children, href, className, ...props }) => {
+        a: function AgentNodeLink({ children, href, className, ...props }) {
             const nodeId = agentNodeIdFromHref(href);
             if (!nodeId) {
                 return (

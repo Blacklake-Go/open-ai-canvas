@@ -14,7 +14,7 @@ import (
 
 var validKeyRegex = regexp.MustCompile(`^[a-zA-Z0-9_.:-]{1,160}$`)
 
-// IsSupportedLocale reports whether the given locale code is one of the 6 core languages.
+// IsSupportedLocale reports whether the locale belongs to the native language list.
 func IsSupportedLocale(code string) bool {
 	trimmed := strings.TrimSpace(code)
 	for _, item := range SupportedLocaleCodes {
@@ -376,12 +376,15 @@ func FilterEntries(entries []Entry, customCount, modifiedCount int, filter Entry
 	}
 }
 
+const MaxEntryUpdates = 2000
+const MaxEntryImport = 20000
+
 // UpsertEntries validates and merges one or more updated/new entries into the custom overrides map.
 func UpsertEntries(existing map[string]Entry, updates []Entry, actorID string) (map[string]Entry, int, error) {
 	if len(updates) == 0 {
 		return nil, 0, fmt.Errorf("请至少提交一条词条记录")
 	}
-	if len(updates) > 2000 {
+	if len(updates) > MaxEntryUpdates {
 		return nil, 0, fmt.Errorf("单次最多更新 2000 条词条")
 	}
 

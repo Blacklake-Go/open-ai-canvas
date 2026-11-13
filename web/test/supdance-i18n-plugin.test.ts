@@ -95,8 +95,8 @@ describe("supdance-i18n plugin architecture and engine", () => {
     });
 
     test("covers all 6 required languages with complete built-in translations", () => {
-        expect(SUPPORTED_LOCALE_CODES).toEqual(["zh-CN", "en-US", "zh-TW", "ja-JP", "ko-KR", "es-ES"]);
-        expect(DEFAULT_SUPDANCE_LANGUAGES).toHaveLength(6);
+        expect(SUPPORTED_LOCALE_CODES).toEqual(["zh-CN", "en-US", "zh-TW", "es-ES", "fr-FR", "de-DE", "ja-JP", "ko-KR"]);
+        expect(DEFAULT_SUPDANCE_LANGUAGES).toHaveLength(SUPPORTED_LOCALE_CODES.length);
         expect(BUILTIN_I18N_ENTRIES.length).toBeGreaterThanOrEqual(80);
 
         for (const entry of BUILTIN_I18N_ENTRIES) {

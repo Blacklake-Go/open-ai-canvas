@@ -2,7 +2,8 @@ import { existsSync, readFileSync, writeFileSync, mkdirSync, renameSync } from "
 import { dirname, resolve } from "node:path";
 import { validateTranslation } from "./i18n/source-scanner.mjs";
 
-const locales = ["en-US", "zh-TW", "ja-JP", "ko-KR", "es-ES"];
+import { SUPPORTED_LOCALES } from "../src/i18n/locales.ts";
+const locales = SUPPORTED_LOCALES.map(({ code }) => code).filter((code) => code !== "zh-CN");
 const args = process.argv.slice(2);
 const options = { input: "../.local/cache/i18n/scan.json", output: "../.local/cache/i18n/drafts.json", limit: 100, maxChars: 0, translate: false, backlog: false, memory: "", glossary: "../supdance/i18n/glossary.json" };
 for (let i = 0; i < args.length; i++) {

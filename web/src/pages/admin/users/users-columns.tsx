@@ -1,3 +1,4 @@
+import { interfaceText } from "@/i18n/interface-text";
 import type { ColumnsType } from "antd/es/table";
 import { Coins, Eye, Pencil, Power } from "lucide-react";
 
@@ -24,7 +25,7 @@ export const userColumnOptions: Array<{ key: UserColumnKey; label: string; locke
     { key: "actions", label: "操作", locked: true },
 ];
 
-export function createUserColumns({
+export function useUserColumns({
     actorId,
     visibleColumns,
     groups,
@@ -44,7 +45,7 @@ export function createUserColumns({
     const columns: Array<ColumnsType<AdminUser>[number] & { key: UserColumnKey }> = [
         {
             key: "user",
-            title: "用户",
+            title: interfaceText("用户", undefined, "src/pages/admin/users/users-columns.tsx"),
             dataIndex: "username",
             fixed: "left",
             width: 200,
@@ -60,10 +61,10 @@ export function createUserColumns({
                 </div>
             ),
         },
-        { key: "email", title: "邮箱", dataIndex: "email", width: 200, ellipsis: true, render: (email) => email || <span className="text-foreground/40">未填写</span> },
+        { key: "email", title: interfaceText("邮箱", undefined, "src/pages/admin/users/users-columns.tsx"), dataIndex: "email", width: 200, ellipsis: true, render: (email) => email || <span className="text-foreground/40">未填写</span> },
         {
             key: "credits",
-            title: "可用积分",
+            title: interfaceText("可用积分", undefined, "src/pages/admin/users/users-columns.tsx"),
             dataIndex: "availableMicrocredits",
             width: 120,
             align: "right",
@@ -76,7 +77,7 @@ export function createUserColumns({
         },
         {
             key: "recharged",
-            title: "累计充值",
+            title: interfaceText("累计充值", undefined, "src/pages/admin/users/users-columns.tsx"),
             dataIndex: "rechargedMicrocredits",
             width: 110,
             align: "right",
@@ -84,7 +85,7 @@ export function createUserColumns({
         },
         {
             key: "consumed",
-            title: "累计消耗",
+            title: interfaceText("累计消耗", undefined, "src/pages/admin/users/users-columns.tsx"),
             dataIndex: "consumedMicrocredits",
             width: 110,
             align: "right",
@@ -92,7 +93,7 @@ export function createUserColumns({
         },
         {
             key: "role",
-            title: "角色",
+            title: interfaceText("角色", undefined, "src/pages/admin/users/users-columns.tsx"),
             dataIndex: "role",
             width: 130,
             align: "center",
@@ -105,7 +106,7 @@ export function createUserColumns({
         },
         {
             key: "group",
-            title: "分组",
+            title: interfaceText("分组", undefined, "src/pages/admin/users/users-columns.tsx"),
             dataIndex: "userGroup",
             width: 120,
             align: "center",
@@ -120,10 +121,17 @@ export function createUserColumns({
                 );
             },
         },
-        { key: "status", title: "状态", dataIndex: "status", width: 90, align: "center", render: (status) => <AdminStatusBadge label={status === "active" ? "已启用" : "已停用"} tone={status === "active" ? "success" : "neutral"} /> },
+        {
+            key: "status",
+            title: interfaceText("状态", undefined, "src/pages/admin/users/users-columns.tsx"),
+            dataIndex: "status",
+            width: 90,
+            align: "center",
+            render: (status) => <AdminStatusBadge label={status === "active" ? "已启用" : "已停用"} tone={status === "active" ? "success" : "neutral"} />,
+        },
         {
             key: "lastLoginAt",
-            title: "最近登录",
+            title: interfaceText("最近登录", undefined, "src/pages/admin/users/users-columns.tsx"),
             dataIndex: "lastLoginAt",
             width: 112,
             align: "center",
@@ -138,7 +146,7 @@ export function createUserColumns({
         },
         {
             key: "createdAt",
-            title: "注册时间",
+            title: interfaceText("注册时间", undefined, "src/pages/admin/users/users-columns.tsx"),
             dataIndex: "createdAt",
             width: 112,
             align: "center",
@@ -150,7 +158,7 @@ export function createUserColumns({
         },
         {
             key: "actions",
-            title: "操作",
+            title: interfaceText("操作", undefined, "src/pages/admin/users/users-columns.tsx"),
             width: 268,
             align: "center",
             fixed: "right",

@@ -102,7 +102,11 @@ function deferred(element: ReactNode) {
 }
 
 function fullScreenDeferred(element: ReactNode) {
-    return <Suspense fallback={<FullScreenLoader label="正在打开创作空间" detail="准备当前页面" />}>{element}</Suspense>;
+    return <FullScreenDeferred>{element}</FullScreenDeferred>;
+}
+
+function FullScreenDeferred({ children }: { children: ReactNode }) {
+    return <Suspense fallback={<FullScreenLoader label="正在打开创作空间" detail="准备当前页面" />}>{children}</Suspense>;
 }
 
 function AuthenticatedWorkspaceLayout() {

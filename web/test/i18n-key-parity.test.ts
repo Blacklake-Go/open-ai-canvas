@@ -1,6 +1,8 @@
 import { describe, expect, test } from "bun:test";
 import { BUILTIN_SUPDANCE_I18N_ENTRIES, DEFAULT_SUPDANCE_I18N_SETTINGS, DEFAULT_SUPDANCE_LANGUAGES, NAMESPACE_LABELS, SUPPORTED_LOCALE_CODES } from "../src/supdance/plugins/i18n/locales";
 import enUSPack from "../src/supdance/plugins/i18n/locales/packs/en-US";
+import frFRPack from "../src/supdance/plugins/i18n/locales/packs/fr-FR";
+import deDEPack from "../src/supdance/plugins/i18n/locales/packs/de-DE";
 import esESPack from "../src/supdance/plugins/i18n/locales/packs/es-ES";
 import jaJPPack from "../src/supdance/plugins/i18n/locales/packs/ja-JP";
 import koKRPack from "../src/supdance/plugins/i18n/locales/packs/ko-KR";
@@ -13,6 +15,8 @@ describe("i18n Dictionary Key Parity & Catalog Integrity", () => {
     const tokenRegex = /\{([a-zA-Z0-9_]+)\}/g;
 
     const foreignPacks: Record<Exclude<SupDanceLocaleCode, "zh-CN">, Record<string, string>> = {
+        "fr-FR": frFRPack,
+        "de-DE": deDEPack,
         "en-US": enUSPack,
         "zh-TW": zhTWPack,
         "ja-JP": jaJPPack,
@@ -34,9 +38,9 @@ describe("i18n Dictionary Key Parity & Catalog Integrity", () => {
         }
     });
 
-    test("supported locale codes and language settings match 6 core locales", () => {
-        expect(SUPPORTED_LOCALE_CODES).toEqual(["zh-CN", "en-US", "zh-TW", "ja-JP", "ko-KR", "es-ES"]);
-        expect(DEFAULT_SUPDANCE_LANGUAGES.length).toBe(6);
+    test("supported locale codes and language settings match all eight native locales", () => {
+        expect(SUPPORTED_LOCALE_CODES).toEqual(["zh-CN", "en-US", "zh-TW", "es-ES", "fr-FR", "de-DE", "ja-JP", "ko-KR"]);
+        expect(DEFAULT_SUPDANCE_LANGUAGES.length).toBe(8);
         expect(DEFAULT_SUPDANCE_I18N_SETTINGS.defaultLocale).toBe("zh-CN");
         expect(DEFAULT_SUPDANCE_I18N_SETTINGS.fallbackLocale).toBe("zh-CN");
 

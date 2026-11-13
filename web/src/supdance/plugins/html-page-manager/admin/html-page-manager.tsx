@@ -31,6 +31,7 @@ import {
 } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useI18n } from "@/supdance/plugins/i18n";
+import { interfaceText } from "@/i18n/interface-text";
 import { useBlocker, useNavigate } from "react-router";
 import { AdminModal as Modal } from "@/pages/admin/ui/overlays";
 import "./html-page-manager.css";
@@ -1228,12 +1229,12 @@ export default function HtmlPageManager() {
                             >
                                 <div>
                                     <div className="flex items-center justify-between gap-2 mb-2">
-                                        <h3 className="font-semibold text-sm group-hover:text-primary transition-colors">{tpl.name}</h3>
+                                        <h3 className="font-semibold text-sm group-hover:text-primary transition-colors">{interfaceText(tpl.name, undefined, "src/supdance/plugins/html-page-manager/templates/index.ts")}</h3>
                                         <Tag color={tpl.theme === "dark" ? "default" : "blue"} className="text-xs">
-                                            {tpl.badge}
+                                            {interfaceText(tpl.badge, undefined, "src/supdance/plugins/html-page-manager/templates/index.ts")}
                                         </Tag>
                                     </div>
-                                    <p className="text-xs text-muted-foreground leading-relaxed line-clamp-3 mb-3">{tpl.description}</p>
+                                    <p className="text-xs text-muted-foreground leading-relaxed line-clamp-3 mb-3">{interfaceText(tpl.description, undefined, "src/supdance/plugins/html-page-manager/templates/index.ts")}</p>
                                 </div>
                                 <div className="flex items-center justify-between pt-3 border-t border-border/60 text-xs text-primary font-medium">
                                     <span>{t("admin.html.apply")}</span>
@@ -1287,7 +1288,7 @@ export default function HtmlPageManager() {
                             <select value={newTemplateId} onChange={(e) => setNewTemplateId(e.target.value)} className="w-full rounded-md border border-input bg-background px-3 py-1.5 text-sm focus:outline-none focus:ring-1 focus:ring-primary">
                                 {BUILTIN_HTML_TEMPLATES.map((t) => (
                                     <option key={t.id} value={t.id}>
-                                        {t.name} ({t.badge})
+                                        {interfaceText(t.name, undefined, "src/supdance/plugins/html-page-manager/templates/index.ts")} ({interfaceText(t.badge, undefined, "src/supdance/plugins/html-page-manager/templates/index.ts")})
                                     </option>
                                 ))}
                             </select>

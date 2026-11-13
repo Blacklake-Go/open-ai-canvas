@@ -256,6 +256,8 @@ jobs:
         run: |
           bun scripts/i18n-scan.mjs --check
           bun scripts/i18n-sync-backend.mjs --check
+          bun scripts/i18n-sync-pricing.mjs --check
+          bun scripts/i18n-static-ui.ts --check
       - name: Upload translation change report
         if: always()
         uses: actions/upload-artifact@v4

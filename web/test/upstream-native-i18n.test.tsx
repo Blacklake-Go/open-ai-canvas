@@ -5,7 +5,8 @@ import { createElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import { i18n } from "../src/i18n";
 import { SUPPORTED_LOCALES } from "../src/i18n/locales";
-import { catalog } from "../src/i18n/messages/areas/upstream";
+import { AREA_CATALOGS } from "../src/i18n/areas";
+const catalog = AREA_CATALOGS.upstream;
 import { CanvasAgentHud } from "../src/components/canvas/canvas-agent-hud";
 import { AgentMediaBatchBar } from "../src/components/canvas/canvas-cloud-agent-media-batch-bar";
 import type { CloudAgentMediaBatchProgress } from "../src/lib/canvas/cloud-agent-media-batch";
@@ -96,7 +97,7 @@ describe("native translations for merged upstream interfaces", () => {
                     expect(progress).toContain("Trial run complete, awaiting approval to continue");
                 }
             }
-            expect(renderedLabels.size).toBe(6);
+            expect(renderedLabels.size).toBe(SUPPORTED_LOCALES.length);
         } finally {
             await i18n.changeLanguage(originalLanguage);
         }

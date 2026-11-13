@@ -17,7 +17,7 @@ const pack: Record<string, string> = {
     "admin.i18n_workflow.load_failed": "語言套件載入失敗，已還原簡體中文，請重試。",
     "admin.i18n_workflow.title": "翻譯更新中心",
     "admin.i18n_workflow.open": "翻譯更新中心",
-    "admin.i18n_workflow.description": "匯入掃描草稿，補全六語言後審核發布；已發布版本可還原。",
+    "admin.i18n_workflow.description": "匯入掃描草稿，補全八種介面語言後審核發布；已發布版本可還原。",
     "admin.i18n_workflow.import": "匯入草稿 JSON",
     "admin.i18n_workflow.stage": "儲存草稿",
     "admin.i18n_workflow.review": "審核所選",

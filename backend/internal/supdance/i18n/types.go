@@ -21,6 +21,8 @@ const (
 	LocaleJaJP = "ja-JP"
 	LocaleKoKR = "ko-KR"
 	LocaleEsES = "es-ES"
+	LocaleFrFR = "fr-FR"
+	LocaleDeDE = "de-DE"
 )
 
 const (
@@ -72,7 +74,7 @@ type Settings struct {
 	UpdatedBy             string         `json:"updatedBy,omitempty"`
 }
 
-// Entry represents one i18n dictionary entry across all 6 supported languages.
+// Entry represents one dictionary entry across the supported native languages.
 type Entry struct {
 	BuiltinSourceHash string            `json:"builtinSourceHash,omitempty"`
 	Key               string            `json:"key"`

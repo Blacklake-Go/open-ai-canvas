@@ -1,28 +1,11 @@
 import { useTranslation } from "react-i18next";
 import { i18n } from "@/i18n";
-import { SUPPORTED_LOCALES } from "@/i18n/locales";
 import { CREATION_UI_SOURCES } from "./locales/creation-sources";
-import enUS from "./locales/creation/en-US";
-import jaJP from "./locales/creation/ja-JP";
-import koKR from "./locales/creation/ko-KR";
-import frFR from "./locales/creation/fr-FR";
-import deDE from "./locales/creation/de-DE";
+import { CREATION_NAMESPACE } from "./creation-catalogs";
+export { CREATION_CATALOGS, CREATION_NAMESPACE } from "./creation-catalogs";
 import { interpolateTemplate } from "./engine/translator";
 
 type TextParams = Record<string, string | number | boolean | null | undefined>;
-export const CREATION_NAMESPACE = "supdance-creation";
-export const CREATION_CATALOGS: Record<string, Record<string, string>> = {
-    "zh-CN": CREATION_UI_SOURCES,
-    "en-US": enUS,
-    "ja-JP": jaJP,
-    "ko-KR": koKR,
-    "fr-FR": frFR,
-    "de-DE": deDE,
-};
-for (const { code } of SUPPORTED_LOCALES) {
-    const resources = Object.fromEntries(Object.entries(CREATION_CATALOGS[code]).map(([key, text]) => [key, text.replace(/\{([a-zA-Z0-9_]+)\}/g, "{{$1}}")]));
-    i18n.addResourceBundle(code, CREATION_NAMESPACE, resources, true, true);
-}
 const sourceKeys = new Map(Object.entries(CREATION_UI_SOURCES).map(([key, source]) => [source, key]));
 const templates = Object.entries(CREATION_UI_SOURCES)
     .flatMap(([key, source]) => {
@@ -43,7 +26,7 @@ export function creationSource(key: string, params?: TextParams): string {
     return interpolateTemplate(CREATION_UI_SOURCES[key] ?? key, normalizeParams(params));
 }
 
-/** Explicit UI translations share the host i18next instance and its native six languages. */
+/** Explicit UI translations share the host i18next instance and all supported languages. */
 export function creationText(key: string, params?: TextParams): string {
     return i18n.t(key, { ...normalizeParams(params), ns: CREATION_NAMESPACE, keySeparator: false, defaultValue: creationSource(key, params) }) as string;
 }

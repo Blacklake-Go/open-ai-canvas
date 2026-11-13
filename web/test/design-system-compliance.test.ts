@@ -133,7 +133,7 @@ describe("Design System Governance & Compliance Suite", () => {
     });
 
     test("six standard i18n locales are fully supported and declared", () => {
-        expect(SUPPORTED_LOCALE_CODES).toEqual(["zh-CN", "en-US", "zh-TW", "ja-JP", "ko-KR", "es-ES"]);
+        expect(SUPPORTED_LOCALE_CODES).toEqual(["zh-CN", "en-US", "zh-TW", "es-ES", "fr-FR", "de-DE", "ja-JP", "ko-KR"]);
     });
 
     test("7 core physical architecture source assets exist on disk", () => {

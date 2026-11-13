@@ -70,7 +70,7 @@ test("native six languages update real controls and preserve drafts with the leg
             attributes.add(originalName!.getAttribute("aria-label")!);
             expect(host.textContent).not.toContain("creation.");
         }
-        expect(attributes.size).toBe(6);
+        expect(attributes.size).toBe(localeCodes.length);
         expect(changes).toBe(0);
         expect(saves).toBe(0);
         expect(excludes).toBe(0);
