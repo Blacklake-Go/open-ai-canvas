@@ -82,6 +82,7 @@ export const SUPDANCE_UPSTREAM_PATCH_REGISTRY: readonly UpstreamPatchRecord[] = 
             "web/src/pages/admin/users/users-columns.tsx",
             "web/src/pages/admin/users/users-panel.tsx",
             "web/src/pages/auth/auth-scene.tsx",
+            "web/src/pages/create/creation-workspace.tsx",
             "web/src/pages/skills/skill-install-modal.tsx",
             "web/src/router.tsx",
             "web/src/stores/use-locale-store.ts",

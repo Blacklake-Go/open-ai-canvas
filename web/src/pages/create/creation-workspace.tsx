@@ -66,7 +66,7 @@ import { useGenerationBatchLimit, batchQuoteTotal } from "@/lib/generation-batch
 import type { PromptOptimizerProvider } from "@/lib/plugins/plugin-types";
 import { type CreationReference } from "./creation-references";
 import { creationAttachmentKind, type CreationAttachment, type CreationMode } from "./creation-assets";
-import { countOptions, modeLabels, qualityOptions, resolutionOptions, type CreationShotRailEntry } from "./creation-types";
+import { countOptions, qualityOptions, resolutionOptions, type CreationShotRailEntry } from "./creation-types";
 import { creationMessageNeedsResultSync } from "./creation-conversations";
 import "./creation-product.css";
 import "./creation-scrollbars.css";
@@ -362,7 +362,7 @@ function LyricsEditorModal({ open, lyrics, onClose, onChange }: { open: boolean;
 }
 
 export function CreationComposer(props: ComposerProps) {
-    const { t } = useI18n();
+    const { t, locale } = useI18n();
     const [previewUrl, setPreviewUrl] = useState("");
     const [previewType, setPreviewType] = useState<"image" | "video">("image");
     const [promptOptimizerOpen, setPromptOptimizerOpen] = useState(false);
@@ -421,8 +421,14 @@ export function CreationComposer(props: ComposerProps) {
     }, [creditsEnabled, quoteRequest]);
     const generationCredits = routeQuote ? batchQuoteTotal(routeQuote.amountMicrocredits, props.mode === "image" ? imageTaskCount : 1) : credits;
     const showCost = creditsEnabled && generationCredits !== null && generationCredits !== undefined;
-    const formattedCredits = generationCredits?.toLocaleString("zh-CN", { maximumFractionDigits: 6 });
-    const actionLabel = props.referenceReplacementBusy ? "正在替换参考图" : interactionBusy || (props.generationActive && !canSubmit) ? "生成中" : showCost ? `${routeQuote?.estimated ? "预估" : "消耗"} ${formattedCredits} 积分，发送` : "发送";
+    const formattedCredits = generationCredits?.toLocaleString(locale, { maximumFractionDigits: 6 });
+    const actionLabel = props.referenceReplacementBusy
+        ? t("create.replacing_reference")
+        : interactionBusy || (props.generationActive && !canSubmit)
+          ? t("settings.memory_generating")
+          : showCost
+            ? `${routeQuote?.estimated ? `${t("workbench.estimated_credits")} ` : ""}${formattedCredits} ${t("nav.credits")} · ${t("create.send")}`
+            : t("create.send");
     // Send-button working state must span the WHOLE generation (not just the
     // submit-lock window): spinner + glow stay while a message is pending and
     // the composer is empty; typing a next prompt returns the arrow so the
@@ -724,7 +730,7 @@ export function CreationComposer(props: ComposerProps) {
                         capability={props.mode === "music" ? "audio" : props.mode}
                         requirements={props.modelRequirements}
                         className="creation-model-picker"
-                        placeholder={`选择${modeLabels[props.mode]}模型`}
+                        placeholder={t("create.select_model_placeholder", { mode: t(props.mode === "music" ? "common.music" : `create.mode_${props.mode}`) })}
                         showSelectedPrice={false}
                         showOptionPrices
                         variant="creation"
