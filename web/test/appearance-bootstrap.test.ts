@@ -77,7 +77,9 @@ test("auth scene consumes resolved appearance instead of hardcoded media constan
     const source = await Bun.file(new URL("../src/pages/auth/auth-scene.tsx", import.meta.url)).text();
 
     expect(source).toContain("appearance.authVideoUrl");
-    expect(source).toContain("appearance.authVideoAutoplay");
+    expect(source).toContain("appearance.authVideoUrl && !reducedMotion");
+    expect(source).toContain("autoPlay muted loop playsInline");
+    expect(source).toContain("video.play().catch");
     expect(source).toContain("appearance.authVideoPosterUrl || undefined");
     expect(source).toContain("appearance.brandName");
     expect(source).toContain("appearance.authHeroTitle");

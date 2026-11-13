@@ -838,10 +838,23 @@ html[data-magicui-theme-vt="active"] .legal-public-page * {
 
 .site-compliance-footer.is-auth {
     min-height: 54px;
-    border-top: var(--control-border-width) solid var(--border);
+    flex-direction: row;
+    flex-wrap: wrap;
+    column-gap: var(--space-4);
+    row-gap: var(--space-1);
     background: color-mix(in srgb, var(--auth-panel-bg) 88%, transparent);
     color: var(--auth-muted);
     backdrop-filter: blur(14px);
+}
+
+.site-compliance-footer.is-auth > span {
+    flex: 0 1 auto;
+}
+
+.site-compliance-footer.is-auth a {
+    flex-shrink: 0;
+    min-height: 44px;
+    white-space: nowrap;
 }
 
 .site-compliance-footer.is-auth a:hover,
@@ -850,7 +863,7 @@ html[data-magicui-theme-vt="active"] .legal-public-page * {
 }
 
 @media (max-width: 640px) {
-    .site-compliance-footer {
+    .site-compliance-footer:not(.is-auth) {
         flex-direction: column;
         gap: var(--space-1);
     }

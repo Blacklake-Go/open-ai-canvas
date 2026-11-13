@@ -1,6 +1,22 @@
 (function () {
     const locales = ["zh-CN", "en-US", "fr-FR", "de-DE", "ja-JP", "ko-KR"];
     const terms = [
+        ["资源与工具", "Resources & tools", "Ressources et outils", "Ressourcen & Werkzeuge", "リソース・ツール", "리소스 및 도구"],
+        ["创作", "Create", "Créer", "Erstellen", "制作", "창작"],
+        ["图片生成", "Image generation", "Génération d’images", "Bilderstellung", "画像生成", "이미지 생성"],
+        ["视频生成", "Video generation", "Génération vidéo", "Videoerstellung", "動画生成", "동영상 생성"],
+        ["音乐生成", "Music generation", "Génération musicale", "Musikerstellung", "音楽生成", "음악 생성"],
+        ["素材", "Assets", "Médias", "Medien", "素材", "에셋"],
+        ["技能库", "Skills", "Compétences", "Fähigkeiten", "スキル", "스킬"],
+        ["插件中心", "Plugins", "Extensions", "Plugins", "プラグイン", "플러그인"],
+        ["自由画布", "Canvas", "Canevas", "Canvas", "キャンバス", "캔버스"],
+        ["短剧制作", "Short dramas", "Séries courtes", "Kurzdramen", "ショートドラマ", "숏드라마"],
+        ["创作首页", "Create", "Créer", "Erstellen", "制作ホーム", "창작 홈"],
+        ["电商 Agent", "E-commerce Agent", "Agent e-commerce", "E-Commerce-Agent", "EC エージェント", "전자상거래 에이전트"],
+        ["任务中心", "Tasks", "Tâches", "Aufgaben", "タスク", "작업"],
+        ["法律与支持", "Legal & support", "Informations et assistance", "Rechtliches & Support", "法務・サポート", "법률 및 지원"],
+        ["定价表", "Pricing", "Tarifs", "Preise", "料金表", "요금표"],
+        ["联系我们", "Contact us", "Nous contacter", "Kontakt", "お問い合わせ", "문의하기"],
         ["价目表", "Pricing", "Grille tarifaire", "Preisliste", "料金表", "요금표"],
         [
             "Supdance 积分套餐、云存储与 AI 模型公开价目表。",
@@ -250,7 +266,7 @@
     const walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT);
     while (walker.nextNode()) {
         const node = walker.currentNode;
-        if (node.nodeValue.trim() && node.parentElement.closest("main, header") && !node.parentElement.closest("select, script, style")) nodes.push([node, node.nodeValue]);
+        if (node.nodeValue.trim() && node.parentElement.closest("main, header, .sd-link-list, .sd-col-heading") && !node.parentElement.closest("select, script, style")) nodes.push([node, node.nodeValue]);
     }
     const attributes = Array.from(document.querySelectorAll("[aria-label]"), (element) => [element, element.getAttribute("aria-label")]);
     const translations = new Map(terms.map((row) => [row[0], row]));

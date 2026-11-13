@@ -227,6 +227,14 @@ def render_page(content):
 if __name__ == "__main__":
     body = render_content(fetch_document())
     page = render_page(body)
+    # Preserve the maintained site footer when refreshing only the pricing tables.
+    existing = OUTPUT.read_text(encoding="utf-8") if OUTPUT.exists() else ""
+    if '<footer id="supdance-about-footer"' in existing:
+        footer = existing[existing.index('<footer id="supdance-about-footer"'):existing.rindex("</body>")]
+        style_start = existing.index("/* SupDance About Footer (Dark) */")
+        footer_css = existing[style_start:existing.index("</style>", style_start)]
+        page = page.replace("</style>", footer_css + "</style>", 1)
+        page = page.replace('  <script src="/pricing-i18n.js" defer></script>', footer)
     if PRIVATE.search(page):
         raise ValueError("Private pricing text found in HTML output")
     OUTPUT.write_text(page, encoding="utf-8")

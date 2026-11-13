@@ -17,7 +17,7 @@ export const PRIVACY_DOCUMENT: LegalDocument = {
     summary: `本政策说明 ${OP.legalName}（对外经营名称 ${OP.tradeName}）在提供 ${OP.product} 服务时如何收集、使用、共享与保护你的个人信息，以及你可行使的权利。`,
     lead: [
         `最近更新日期：${OP.effectiveDate}`,
-        `控制者身份：${OP.legalName}（个人商户 / 独立经营者，无注册公司实体）　送达地址：${OP.mailingAddress}　隐私联系邮箱：${OP.contactEmail}`,
+        `控制者身份：${OP.legalName}　联系渠道：${OP.mailingAddress}　隐私联系邮箱：${OP.contactEmail}`,
         `数据保护负责人（DPO）：不适用。本服务的处理规模与类型不属于依法须指定 DPO 的情形，隐私权利请求统一由上述邮箱受理。`,
     ],
     related: { slug: "terms", label: TERMS_LABEL },
@@ -283,10 +283,10 @@ export const PRIVACY_DOCUMENT: LegalDocument = {
                     kind: "table",
                     head: ["事项", "联系方式"],
                     rows: [
-                        ["个人信息控制者（法定名称）", OP.legalName],
+                        ["隐私联系品牌", OP.legalName],
                         ["对外经营名称", OP.tradeName],
-                        ["主体类型", "个人商户 / 独立经营者（无注册公司实体）"],
-                        ["送达地址", OP.mailingAddress],
+                        ["服务品牌", OP.tradeName],
+                        ["联系渠道", OP.mailingAddress],
                         ["隐私权利请求与数据保护联系邮箱", OP.contactEmail],
                         ["服务网站", OP.site],
                     ],

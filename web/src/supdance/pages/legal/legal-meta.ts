@@ -10,8 +10,8 @@
  */
 
 export const LEGAL_OPERATOR = {
-    /** 个人商户：与护照/身份证一致的法定姓名，用于账单争议与法律文书署名。 */
-    legalName: "Zhang Donghe",
+    /** 对外仅展示品牌，具体法律主体不得凭品牌推定。 */
+    legalName: "Supdance",
     /** 对外经营名称，需与信用卡账单展示名、站点品牌一致。 */
     tradeName: "Supdance",
     /** 产品全称。 */
@@ -20,12 +20,12 @@ export const LEGAL_OPERATOR = {
     site: "https://www.supdance.com",
     /** 客服与隐私权利请求共用同一个有人值守邮箱，不使用 noreply。 */
     contactEmail: "support@supdance.com",
-    /** 送达地址：个人商户无工商注册地址时，仍需提供可用于送达的实际地址。 */
-    mailingAddress: "Commercial Mail Receiver Service, Zhang Donghe / Supdance Support Desk",
+    /** 对外联系渠道；不将服务邮箱表述为实体注册地址。 */
+    mailingAddress: "support@supdance.com",
     /** 条款与政策同步发布的版本号与生效日期。 */
     version: "v1.0",
     effectiveDate: "November 04, 2026",
-    /** 正文语言版本约定：法律文本不做机器翻译，界面外壳走 i18n，正文本身保持中文。 */
+    /** 正文语言版本约定：法律文本不做机器翻译，界面外壳走 i18n，正文采用经维护的多语言版本。 */
     authoritativeLanguage: "中文",
 } as const;
 

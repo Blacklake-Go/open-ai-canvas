@@ -42,7 +42,7 @@ describe("注册服务协议", () => {
         expect(parts).toContain("settings?.agreementContent");
         expect(parts).toContain("title={title}");
         expect(parts).toContain("paragraphs.map");
-        expect(login).toContain("<AuthAgreementDialog open={agreementOpen} title={agreement.title}");
+        expect(login.match(/href="https:\/\/www\.supdance\.com\/terms"/g)).toHaveLength(2);
         // 条款留空时的占位提示；断言关键词而非整句，允许后续补充指引文案。中文源文案在 zh-CN 目录。
         const zhCatalog = read("i18n/messages/zh-CN.ts");
         expect(parts).toContain('t("auth.register.agreementEmpty")');

@@ -20,9 +20,15 @@ describe("HTML Page Manager Plugin & Template Tests", () => {
         expect(templateIds).toContain("supabase-clean");
     });
 
-    it("every template embeds dark/light switching with scaling View Transition", () => {
+    it("legal documents follow system color scheme and other templates retain theme switching", () => {
         for (const tpl of BUILTIN_HTML_TEMPLATES) {
             expect(tpl.sampleHtml).toContain("<!DOCTYPE html>");
+            if (tpl.id === "linear-dark" || tpl.id === "vercel-doc") {
+                expect(tpl.sampleHtml).toContain('name="color-scheme" content="light dark"');
+                expect(tpl.sampleHtml).toContain("background: Canvas");
+                expect(tpl.sampleHtml).not.toContain("<script");
+                continue;
+            }
             expect(tpl.sampleHtml).toContain('id="theme-toggle"');
             expect(tpl.sampleHtml).toContain("sun-icon");
             expect(tpl.sampleHtml).toContain("moon-icon");

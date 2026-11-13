@@ -3,10 +3,11 @@ import { useEffect, useState, type ReactNode } from "react";
 import { ArrowDown, ArrowUp } from "lucide-react";
 import { useLocaleStore } from "@/stores/use-locale-store";
 import { matchAppLocale } from "@/i18n/locales";
-import { Link, useLocation } from "react-router";
+import { useLocation } from "react-router";
 
 import { useThemeStore } from "@/stores/use-theme-store";
-import { LEGAL_OPERATOR_CONFIG, type LocalizedLegalDoc, type SupportedLegalLanguage } from "./legal-i18n-content";
+import { type LocalizedLegalDoc } from "./legal-i18n-content";
+import { LEGAL_LOCALE_MAP, LEGAL_PAGE_COPY, type PolicyLanguage } from "./service-policies";
 import { LegalThemeToggler } from "./legal-theme-toggler";
 import { LegalBrand } from "./legal-brand";
 import { LegalHeaderNav } from "./legal-header-nav";
@@ -14,7 +15,7 @@ import { SupdanceAboutFooter } from "@/supdance/components/site-footer/supdance-
 
 interface LinearLegalPageProps {
     children?: ReactNode;
-    docMap: Record<SupportedLegalLanguage, LocalizedLegalDoc>;
+    docMap: Partial<Record<PolicyLanguage, LocalizedLegalDoc>> & { en: LocalizedLegalDoc };
     currentSlug: "terms" | "privacy" | "aup";
 }
 
@@ -27,7 +28,8 @@ export function LinearLegalPage({ docMap, currentSlug, children }: LinearLegalPa
     const isDark = useThemeStore((state) => state.theme === "dark");
     const locale = useLocaleStore((state) => state.locale);
     const { t } = useI18n();
-    const lang: SupportedLegalLanguage = locale === "zh-CN" ? locale : locale === "ja-JP" ? "ja" : locale === "ko-KR" ? "ko" : "en";
+    const lang = LEGAL_LOCALE_MAP[locale];
+    const pageCopy = LEGAL_PAGE_COPY[lang];
     // 挂载时解除画布 fixed 视口锁定，赋予法务长文 100% 原生 Window 下拉滚动体验
     // 物理级滚轮与键盘全响应支持：确保在任何浏览器与操作系统中，鼠标滚轮、触控板与按键均能顺畅向下滑动
     useEffect(() => {
@@ -109,13 +111,13 @@ export function LinearLegalPage({ docMap, currentSlug, children }: LinearLegalPa
             </header>
 
             {/* 主文本区：严格对标 Linear 极简黑夜大气质感 */}
-            <main className="mx-auto max-w-[760px] px-6 pt-24 pb-16 sm:pt-28 sm:pb-24 lg:pt-32 lg:pb-32">
+            <main lang={locale} className="mx-auto max-w-[760px] px-6 pt-24 pb-16 sm:pt-28 sm:pb-12 lg:pt-32 lg:pb-16">
                 {/* 大标题 */}
                 <h1 className={`text-4xl sm:text-5xl lg:text-[58px] font-semibold tracking-[-0.035em] leading-[1.08] mb-4 ${isDark ? "text-white" : "text-[#111111]"}`}>{currentDoc.title}</h1>
 
                 {/* 元数据行 */}
                 <div className={`font-mono text-[11px] uppercase tracking-[0.12em] pb-6 mb-8 border-b ${isDark ? "text-[#8a8f98] border-white/10" : "text-[#666666] border-black/10"}`}>
-                    EFFECTIVE DATE: {currentDoc.effectiveDate.toUpperCase()} · VERSION {currentDoc.version.toUpperCase()}
+                    {pageCopy.effective}: {currentDoc.effectiveDate} · {pageCopy.version} {currentDoc.version}
                 </div>
 
                 {/* 文档导语段落 */}
@@ -128,7 +130,12 @@ export function LinearLegalPage({ docMap, currentSlug, children }: LinearLegalPa
                             {/* 章节标题 */}
                             <h2 className={`text-xl sm:text-[22px] font-semibold tracking-[-0.02em] mb-4 flex items-center justify-between ${isDark ? "text-white" : "text-[#111111]"}`}>
                                 <span>{section.title}</span>
-                                <a href={`#${section.id}`} className="opacity-0 hover:opacity-100 text-xs font-mono text-sky-400 font-normal transition-opacity" title="复制章节锚点链接">
+                                <a
+                                    href={`#${section.id}`}
+                                    className="opacity-0 hover:opacity-100 focus-visible:opacity-100 text-xs font-mono text-sky-400 font-normal transition-opacity"
+                                    aria-label={`${pageCopy.section}: ${section.title}`}
+                                    title={pageCopy.section}
+                                >
                                     #{section.id}
                                 </a>
                             </h2>
@@ -185,21 +192,6 @@ export function LinearLegalPage({ docMap, currentSlug, children }: LinearLegalPa
                     ))}
                 </article>
                 {children}
-
-                {/* 页面底部签署与链接 */}
-                <footer className={`mt-20 pt-8 border-t flex flex-wrap items-center justify-between gap-4 text-xs font-mono ${isDark ? "border-white/10 text-white/50" : "border-black/10 text-black/50"}`}>
-                    <div>
-                        © 2026 {LEGAL_OPERATOR_CONFIG.tradeName} ({LEGAL_OPERATOR_CONFIG.legalName}). ALL RIGHTS RESERVED.
-                    </div>
-                    <div className="flex items-center gap-4">
-                        <Link to="/legal" className={`no-underline hover:underline ${isDark ? "text-white/80" : "text-black/80"}`}>
-                            Legal Center
-                        </Link>
-                        <a href={`mailto:${LEGAL_OPERATOR_CONFIG.supportEmail}`} className={`no-underline hover:underline ${isDark ? "text-white/80" : "text-black/80"}`}>
-                            {LEGAL_OPERATOR_CONFIG.supportEmail}
-                        </a>
-                    </div>
-                </footer>
 
                 {/* 快速滑动与导航浮动按钮组（右下角） */}
                 <div className="fixed bottom-8 right-8 z-50 flex flex-col items-center gap-2">
