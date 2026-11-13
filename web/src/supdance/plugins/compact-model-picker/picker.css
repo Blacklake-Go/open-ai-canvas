@@ -1,5 +1,5 @@
 .canvas-model-picker-menu.sd-compact-picker.is-model-list {
-    --sd-picker-brand-width: clamp(88px, 27%, 128px);
+    --sd-picker-brand-width: 144px;
     width: min(480px, calc(100vw - 24px));
 }
 .sd-compact-picker .canvas-model-picker-two-pane {
