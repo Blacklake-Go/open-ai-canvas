@@ -7,7 +7,7 @@ registerSupDancePlugin({
     manifest: {
         apiVersion: PLUGIN_API_VERSION_V2,
         id: COMPACT_PICKER_ID,
-        version: "1.0.0",
+        version: "1.1.0",
         name: compactPickerLocales["zh-CN"].title,
         description: compactPickerLocales["zh-CN"].summary,
         author: "SupDance",

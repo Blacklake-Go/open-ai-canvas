@@ -1,5 +1,9 @@
 ## 上游 v1.8.5 与后续 main 集成保留记录
 
+### 简洁模型选择器 1.1.0
+
+宽度与说明排版仅修改 `web/src/supdance/plugins/compact-model-picker/picker.css`，不新增宿主补丁。92 个模型说明基线位于 `supdance/config/model-descriptions.json`；生产只更新展示说明和一项不符参数的展示名称，不修改模型键、能力、价格或启停状态。来源与发布方式见 [模型选择器说明](MODEL_PICKER_COPY.md)。
+
 - 本轮已合并上游 main `bae6a36c2e835733295a48087eb9c424ea619bc2`（含 v1.8.5），生产应用固定为 `3cb3331b923264c7a26b5981375d938a3a989e15` / `v1.8.5-supdance.1`。合并请求与云端发布检查见 [PR15](https://github.com/Blacklake-Go/open-ai-canvas/pull/15)、[发布流水线](https://github.com/Blacklake-Go/open-ai-canvas/actions/runs/43164401842)。
 - 186 个扩展源码及清单路径无缺失；音乐、身份桥源码不变，保留支付、社交登录、HTML 页面、简洁模型选择器、翻译、主题外观及 Codex。已退役视觉引擎不恢复。
 - 上游真实 MCP 列表与原有 Codex 连接操作并存；成片手动合成、版本恢复与本站时间线精修并存。生成副作用继续要求跨标签互斥，缺少 Web Locks 时拒绝不安全降级。

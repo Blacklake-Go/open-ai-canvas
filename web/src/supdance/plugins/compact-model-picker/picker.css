@@ -1,6 +1,6 @@
 .canvas-model-picker-menu.sd-compact-picker.is-model-list {
-    --sd-picker-brand-width: clamp(88px, 28%, 144px);
-    width: min(560px, calc(100vw - 24px));
+    --sd-picker-brand-width: 144px;
+    width: min(480px, calc(100vw - 24px));
 }
 .sd-compact-picker .canvas-model-picker-two-pane {
     display: grid;
@@ -83,6 +83,9 @@
 .sd-picker-copy small {
     color: var(--muted-foreground);
     font-size: var(--fs-label, 12px);
+    white-space: normal;
+    overflow-wrap: anywhere;
+    line-height: 1.5;
 }
 .sd-picker-price {
     flex-shrink: 0;
@@ -104,6 +107,29 @@
 }
 .sd-picker-price .model-picker-price-icon {
     display: none;
+}
+@media (min-width: 521px) {
+    .sd-compact-picker .sd-picker-row {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) auto;
+        gap: var(--space-1, 4px) var(--space-2, 8px);
+    }
+    .sd-compact-picker .sd-picker-copy {
+        display: contents;
+    }
+    .sd-compact-picker .sd-picker-copy strong {
+        grid-column: 1;
+        grid-row: 1;
+    }
+    .sd-compact-picker .sd-picker-copy small {
+        grid-column: 1 / -1;
+        grid-row: 2;
+    }
+    .sd-compact-picker .sd-picker-price {
+        grid-column: 2;
+        grid-row: 1;
+        max-width: none;
+    }
 }
 @media (max-width: 520px) {
     .sd-picker-copy strong {
