@@ -90,7 +90,11 @@ for (const item of replacements) {
 
 const bodyStart = generated.indexOf("func BuiltinEntries() []Entry {");
 if (bodyStart < 0) throw new Error("defaults.go 里找不到 BuiltinEntries");
-generated = `${generated.slice(0, bodyStart)}func BuiltinEntries() []Entry {\n\treturn []Entry{\n${groups.join("\n")}\n\t}\n}\n`;
+// Bound each generated function so Go's SSA construction fits small release builders.
+// Every call still creates fresh entries and translation maps in the original order.
+const batches = [];
+for (let offset = 0; offset < groups.length; offset += 256) batches.push(groups.slice(offset, offset + 256));
+generated = `${generated.slice(0, bodyStart)}func BuiltinEntries() []Entry {\n\tentries := make([]Entry, 0, ${entries.length})\n${batches.map((_, index) => `\tentries = append(entries, builtinEntryBatch${index}()...)`).join("\n")}\n\treturn entries\n}\n\n${batches.map((rows, index) => `func builtinEntryBatch${index}() []Entry {\n\treturn []Entry{\n${rows.join("\n")}\n\t}\n}`).join("\n\n")}\n`;
 
 /** gofmt 会重排对齐，生成后必须过一遍，否则 --check 每次都会把格式化差异当成内容漂移。 */
 function formatGo(text) {
