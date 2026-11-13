@@ -10,7 +10,7 @@
         "typecheck": "tsc --noEmit",
         "i18n:scan": "bun scripts/i18n-scan.mjs",
         "i18n:draft": "bun scripts/i18n-draft.mjs",
-        "i18n:check": "bun scripts/i18n-scan.mjs --check && bun scripts/i18n-sync-backend.mjs --check && bun scripts/i18n-static-ui.ts --check",
+        "i18n:check": "bun scripts/i18n-scan.mjs --check && bun scripts/i18n-sync-backend.mjs --check && bun scripts/i18n-sync-pricing.mjs --check && bun scripts/i18n-static-ui.ts --check",
         "test:canvas": "bun test test/canvas-media-performance.test.ts test/canvas-node-title-interaction.test.ts test/canvas-spatial-index.test.ts",
         "test": "bun test",
         "test:previs:e2e": "bun scripts/previs-p0-chrome-e2e.mjs",

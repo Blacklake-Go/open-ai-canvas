@@ -152,10 +152,10 @@ export function SupdanceAboutFooter({ pagePath, configOverride, forceShow = fals
                     <div className="lg:col-span-4 flex flex-col items-start space-y-4">
                         <Link to="/" className="group flex flex-col items-start gap-1.5 cursor-pointer no-underline" aria-label={`${cfg.brandName} Home`}>
                             <img src="/supdance-footer-logo.png" alt={cfg.brandName} className="supdance-footer-logo" width="1000" height="220" />
-                            <span className="text-xs font-mono tracking-wider uppercase">{cfg.brandSlogan}</span>
+                            <span className="text-xs font-mono tracking-wider uppercase">{t(cfg.brandSlogan)}</span>
                         </Link>
 
-                        <p className="text-xs text-white/60 leading-relaxed max-w-sm m-0">{cfg.brandVision}</p>
+                        <p className="text-xs text-white/60 leading-relaxed max-w-sm m-0">{t(cfg.brandVision)}</p>
 
                         <div className="pt-2 text-xs font-mono text-white/50 space-y-1">
                             <a href={`mailto:${cfg.supportEmail}`} className="text-white/50 hover:text-white transition-colors no-underline">
@@ -165,7 +165,7 @@ export function SupdanceAboutFooter({ pagePath, configOverride, forceShow = fals
 
                         {/* 品牌官方社交与社区入口 */}
                         <div className="pt-3 flex flex-col items-start gap-2.5">
-                            <span className="text-[11px] font-mono text-white/45 tracking-wider uppercase">{cfg.officialChannelsText}</span>
+                            <span className="text-[11px] font-mono text-white/45 tracking-wider uppercase">{t(cfg.officialChannelsText)}</span>
                             <div className="flex items-center flex-wrap gap-2">
                                 {cfg.socialLinks.map((item) => (
                                     <a

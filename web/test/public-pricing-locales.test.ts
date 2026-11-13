@@ -3,6 +3,7 @@ import { readFileSync } from "node:fs";
 import { runInNewContext } from "node:vm";
 import { Window } from "happy-dom";
 import { SUPPORTED_LOCALES } from "../src/i18n/locales";
+import { HTML_ADMIN_I18N_ENTRIES } from "../src/supdance/plugins/i18n/locales/html-admin";
 
 const html = readFileSync(new URL("../public/pricing.html", import.meta.url), "utf8");
 const script = readFileSync(new URL("../public/pricing-i18n.js", import.meta.url), "utf8");
@@ -60,6 +61,20 @@ describe("standalone pricing native languages", () => {
                 });
                 expect(window.document.documentElement.lang).toBe(code);
                 expect(selector.value).toBe(code);
+                expect(window.document.querySelector("h1")!.textContent).toContain("SupDance ONE");
+                for (const [id, key] of [
+                    ["sd-ft-brand-slogan", "public.footer.brand_slogan"],
+                    ["sd-ft-brand-vision", "public.footer.brand_vision"],
+                    ["sd-ft-social-label", "public.footer.official_channels"],
+                ]) {
+                    const entry = HTML_ADMIN_I18N_ENTRIES.find((item) => item.key === key)!;
+                    const element = window.document.getElementById(id)!;
+                    expect(element.textContent).toBe(entry.translations[code]);
+                    // The real page applies server footer settings after the initial render.
+                    element.textContent = entry.sourceText;
+                    window.document.dispatchEvent(new window.Event("supdance:footer-config-applied"));
+                    expect(element.textContent).toBe(entry.translations[code]);
+                }
                 for (let index = 0; index < cells.length; index++) {
                     if (/^[\x20-\x7e\s]+$/.test(original[index] || "")) expect(cells[index]?.textContent).toBe(original[index]);
                 }
@@ -75,6 +90,12 @@ describe("standalone pricing native languages", () => {
                 selector.value = "zh-CN";
                 selector.dispatchEvent(new window.Event("change"));
                 expect(cells.map((cell) => cell.textContent)).toEqual(original);
+                const customVision = "工作室自定义介绍 — preserve my wording";
+                window.document.getElementById("sd-ft-brand-vision")!.textContent = customVision;
+                window.document.dispatchEvent(new window.Event("supdance:footer-config-applied"));
+                selector.value = code;
+                selector.dispatchEvent(new window.Event("change"));
+                expect(window.document.getElementById("sd-ft-brand-vision")!.textContent).toBe(customVision);
             } finally {
                 await window.happyDOM.close();
             }

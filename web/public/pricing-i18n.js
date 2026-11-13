@@ -1,12 +1,35 @@
 (function () {
     const locales = ["zh-CN", "en-US", "zh-TW", "es-ES", "fr-FR", "de-DE", "ja-JP", "ko-KR"];
     const terms = [
+        // BEGIN SHARED FOOTER TRANSLATIONS
+        ["AI 创意工作室", "AI Creative Studio", "AI 創意工作室", "Estudio creativo de IA", "Studio de création IA", "Kreativstudio für KI", "AI クリエイティブスタジオ", "AI 크리에이티브 스튜디오"],
+        [
+            "面向创作者、独立工作室与团队的专业生成式 AI 创作工作台与模型接入层，支持模型发现、生成与工作流协作。",
+            "A creative workspace and AI model gateway for creators, independent studios and teams. Discover models, generate content and collaborate across workflows.",
+            "為創作者、獨立工作室與團隊打造的生成式 AI 創作工作台與模型接入層，支援模型探索、內容生成與工作流程協作。",
+            "Un espacio de creación y acceso a modelos de IA generativa para creadores, estudios independientes y equipos. Descubre modelos, genera contenido y colabora en tus flujos de trabajo.",
+            "Un espace de création et une passerelle vers les modèles d’IA générative pour les créateurs, studios indépendants et équipes. Découvrez des modèles, générez des contenus et collaborez sur vos workflows.",
+            "Eine Arbeitsumgebung für generative KI und Zugang zu KI-Modellen für Kreative, unabhängige Studios und Teams. Modelle entdecken, Inhalte erstellen und gemeinsam an Workflows arbeiten.",
+            "クリエイター、独立スタジオ、チーム向けの生成AI制作ワークスペースとモデル接続基盤。モデルの検索、コンテンツ生成、制作フローでの共同作業に対応します。",
+            "크리에이터, 독립 스튜디오, 팀을 위한 생성형 AI 제작 작업 공간과 모델 연결 플랫폼입니다. 모델 탐색, 콘텐츠 생성, 워크플로 공동 작업을 지원합니다.",
+        ],
+        [
+            "官方社交媒体与社区",
+            "Official social channels and community",
+            "官方社群媒體與社群",
+            "Redes sociales y comunidad oficiales",
+            "Réseaux sociaux et communauté officiels",
+            "Offizielle soziale Kanäle und Community",
+            "公式SNSとコミュニティ",
+            "공식 소셜 채널 및 커뮤니티",
+        ],
+        // END SHARED FOOTER TRANSLATIONS
         ["资源与工具", "Resources & tools", "資源與工具", "Recursos y herramientas", "Ressources et outils", "Ressourcen & Werkzeuge", "リソース・ツール", "리소스 및 도구"],
         ["创作", "Create", "創作", "Crear", "Créer", "Erstellen", "制作", "창작"],
         ["图片生成", "Image generation", "圖片生成", "Generación de imágenes", "Génération d’images", "Bilderstellung", "画像生成", "이미지 생성"],
         ["视频生成", "Video generation", "影片生成", "Generación de vídeo", "Génération vidéo", "Videoerstellung", "動画生成", "동영상 생성"],
-        ["音乐生成", "Music generation", "音樂生成", "generacion musical", "Génération musicale", "Musikerstellung", "音楽生成", "음악 생성"],
-        ["素材", "Assets", "素材", "Activos", "Médias", "Medien", "素材", "에셋"],
+        ["音乐生成", "Music generation", "音樂生成", "Generación musical", "Génération musicale", "Musikerstellung", "音楽生成", "음악 생성"],
+        ["素材", "Assets", "素材", "Recursos", "Médias", "Medien", "素材", "에셋"],
         ["技能库", "Skills", "技能庫", "Habilidades", "Compétences", "Fähigkeiten", "スキル", "스킬"],
         ["插件中心", "Plugins", "插件中心", "Complementos", "Extensions", "Plugins", "プラグイン", "플러그인"],
         ["自由画布", "Canvas", "自由畫布", "Lienzo", "Canevas", "Canvas", "キャンバス", "캔버스"],
@@ -32,7 +55,7 @@
         ["隐私政策", "Privacy Policy", "隱私權政策", "política de privacidad", "Politique de confidentialité", "Datenschutzrichtlinie", "プライバシーポリシー", "개인정보 처리방침"],
         ["可接受使用", "Acceptable Use", "可接受使用", "Uso Aceptable", "Utilisation acceptable", "Zulässige Nutzung", "許容される利用", "허용 가능한 사용"],
         ["法律中心", "Legal Center", "法律中心", "Centro Jurídico", "Centre juridique", "Rechtsbereich", "法務センター", "법률 센터"],
-        ["SupDance ONE 价目表", "SupDance ONE Pricing", "SupDance ONE 價目表", "SupDance UNO precio", "Grille tarifaire SupDance ONE", "SupDance ONE Preisliste", "SupDance ONE 料金表", "SupDance ONE 요금표"],
+        ["SupDance ONE 价目表", "SupDance ONE Pricing", "SupDance ONE 價目表", "Precios de SupDance ONE", "Grille tarifaire SupDance ONE", "SupDance ONE Preisliste", "SupDance ONE 料金表", "SupDance ONE 요금표"],
         [
             "美元价目更新于 2026-11-07。结账时可查看实际支付金额。",
             "USD pricing updated November 7, 2026. Check the amount due at checkout.",
@@ -381,6 +404,23 @@
     }
     const attributes = Array.from(document.querySelectorAll("[aria-label]"), (element) => [element, element.getAttribute("aria-label")]);
     const translations = new Map(terms.map((row) => [row[0], row]));
+    const footerSources = new Map();
+    const footerFields = ["sd-ft-brand-slogan", "sd-ft-brand-vision", "sd-ft-social-label"];
+    function translateFooter(index) {
+        for (const id of footerFields) {
+            const element = document.getElementById(id);
+            if (!element) continue;
+            if (!footerSources.has(id)) footerSources.set(id, element.textContent);
+            element.textContent = translate(footerSources.get(id), index);
+        }
+    }
+    document.addEventListener("supdance:footer-config-applied", () => {
+        for (const id of footerFields) {
+            const element = document.getElementById(id);
+            if (element) footerSources.set(id, element.textContent);
+        }
+        translateFooter(Math.max(0, locales.indexOf(root.lang)));
+    });
     function translate(source, index) {
         if (index === 0) return source;
         const text = source.trim();
@@ -398,6 +438,7 @@
         selector.value = locales[index];
         for (const [node, source] of nodes) node.nodeValue = translate(source, index);
         for (const [element, source] of attributes) element.setAttribute("aria-label", translate(source, index));
+        translateFooter(index);
         document.title = translate("价目表", index) + " · Supdance";
         try {
             localStorage.setItem("yingce:locale", JSON.stringify({ state: { locale: locales[index] }, version: 0 }));

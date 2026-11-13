@@ -1,6 +1,29 @@
 import type { SupDanceI18nEntry } from "../types";
 
 const definitions = [
+    ["public.footer.brand_slogan", "AI 创意工作室", "AI Creative Studio", "AI 創意工作室", "AI クリエイティブスタジオ", "AI 크리에이티브 스튜디오", "Estudio creativo de IA", "Studio de création IA", "Kreativstudio für KI"],
+    [
+        "public.footer.brand_vision",
+        "面向创作者、独立工作室与团队的专业生成式 AI 创作工作台与模型接入层，支持模型发现、生成与工作流协作。",
+        "A creative workspace and AI model gateway for creators, independent studios and teams. Discover models, generate content and collaborate across workflows.",
+        "為創作者、獨立工作室與團隊打造的生成式 AI 創作工作台與模型接入層，支援模型探索、內容生成與工作流程協作。",
+        "クリエイター、独立スタジオ、チーム向けの生成AI制作ワークスペースとモデル接続基盤。モデルの検索、コンテンツ生成、制作フローでの共同作業に対応します。",
+        "크리에이터, 독립 스튜디오, 팀을 위한 생성형 AI 제작 작업 공간과 모델 연결 플랫폼입니다. 모델 탐색, 콘텐츠 생성, 워크플로 공동 작업을 지원합니다.",
+        "Un espacio de creación y acceso a modelos de IA generativa para creadores, estudios independientes y equipos. Descubre modelos, genera contenido y colabora en tus flujos de trabajo.",
+        "Un espace de création et une passerelle vers les modèles d’IA générative pour les créateurs, studios indépendants et équipes. Découvrez des modèles, générez des contenus et collaborez sur vos workflows.",
+        "Eine Arbeitsumgebung für generative KI und Zugang zu KI-Modellen für Kreative, unabhängige Studios und Teams. Modelle entdecken, Inhalte erstellen und gemeinsam an Workflows arbeiten.",
+    ],
+    [
+        "public.footer.official_channels",
+        "官方社交媒体与社区",
+        "Official social channels and community",
+        "官方社群媒體與社群",
+        "公式SNSとコミュニティ",
+        "공식 소셜 채널 및 커뮤니티",
+        "Redes sociales y comunidad oficiales",
+        "Réseaux sociaux et communauté officiels",
+        "Offizielle soziale Kanäle und Community",
+    ],
     ["public.footer.legal_support", "法律与支持", "Legal & support", "法律與支援", "法務・サポート", "법률 및 지원", "Información legal y ayuda", "Informations et assistance", "Rechtliches & Support"],
     [
         "admin.html.template_terms_description",

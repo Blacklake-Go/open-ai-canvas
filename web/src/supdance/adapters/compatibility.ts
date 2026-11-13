@@ -41,6 +41,7 @@ export const SUPDANCE_UPSTREAM_PATCH_REGISTRY: readonly UpstreamPatchRecord[] = 
             "web/scripts/i18n-scan.mjs",
             "web/scripts/i18n-static-ui.ts",
             "web/scripts/i18n-sync-backend.mjs",
+            "web/scripts/i18n-sync-pricing.mjs",
             "web/scripts/i18n/source-scanner.mjs",
             "web/src/components/auth/auth-login-form.tsx",
             "web/src/components/canvas/canvas-cloud-agent-chat-ui.tsx",

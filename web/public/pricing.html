@@ -1882,6 +1882,7 @@
                             icpEl.textContent = cfg.icpNumber;
                             if (cfg.icpHref) icpEl.href = cfg.icpHref;
                         }
+                        document.dispatchEvent(new Event("supdance:footer-config-applied"));
                     })
                     .catch(function () {});
             })();
