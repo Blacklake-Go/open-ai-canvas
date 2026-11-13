@@ -30,6 +30,7 @@ export const SUPDANCE_UPSTREAM_PATCH_REGISTRY: readonly UpstreamPatchRecord[] = 
         upstreamBaseline: "v1.8.5",
         feature: "上游国际化统一八语言及翻译管理发布",
         coupledUpstreamFiles: [
+            ".github/workflows/quality.yml",
             "backend/internal/app/supdance_i18n_plugin.go",
             "backend/internal/app/supdance_i18n_plugin_test.go",
             "backend/internal/app/supdance_i18n_publication_test.go",
@@ -43,6 +44,7 @@ export const SUPDANCE_UPSTREAM_PATCH_REGISTRY: readonly UpstreamPatchRecord[] = 
             "web/scripts/i18n-sync-backend.mjs",
             "web/scripts/i18n-sync-pricing.mjs",
             "web/scripts/i18n/source-scanner.mjs",
+            "web/scripts/previs-p0-chrome-e2e.mjs",
             "web/src/components/auth/auth-login-form.tsx",
             "web/src/components/canvas/canvas-cloud-agent-chat-ui.tsx",
             "web/src/components/canvas/canvas-drawing-excalidraw-editor.tsx",

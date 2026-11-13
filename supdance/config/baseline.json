@@ -100,6 +100,7 @@
     "web/scripts/i18n-sync-backend.mjs",
     "web/scripts/i18n-sync-pricing.mjs",
     "web/scripts/i18n/source-scanner.mjs",
+    "web/scripts/previs-p0-chrome-e2e.mjs",
     "web/src/application.tsx",
     "web/src/components/auth/auth-login-form.tsx",
     "web/src/components/auth/require-auth.tsx",

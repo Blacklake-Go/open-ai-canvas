@@ -122,6 +122,8 @@ async function launchChrome(chromePath, cdpPort, profileDir) {
         "--enable-unsafe-swiftshader",
         "--use-angle=swiftshader",
     ];
+    // The isolated test profile never needs the user's macOS login keychain.
+    if (process.platform === "darwin") args.push("--use-mock-keychain");
     if (process.platform === "linux" || process.env.CI) args.push("--no-sandbox", "--disable-dev-shm-usage");
     args.push("about:blank");
 
