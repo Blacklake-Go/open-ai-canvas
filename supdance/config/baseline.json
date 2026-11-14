@@ -81,6 +81,7 @@
     "backend/internal/model/models_finance.go",
     "backend/internal/model/token_price_bands.go",
     "backend/internal/repository/account.go",
+    "backend/internal/repository/cloud_agent_lifecycle_race_test.go",
     "backend/internal/repository/finance_billing.go",
     "backend/internal/repository/logical_models.go",
     "backend/internal/repository/oauth.go",

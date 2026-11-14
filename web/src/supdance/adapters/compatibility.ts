@@ -34,6 +34,7 @@ export const SUPDANCE_UPSTREAM_PATCH_REGISTRY: readonly UpstreamPatchRecord[] = 
             "backend/internal/database/migrations.go",
             "backend/internal/database/wechat_migration_test.go",
             "backend/internal/repository/oauth.go",
+            "backend/internal/repository/cloud_agent_lifecycle_race_test.go",
             "web/src/components/canvas/canvas-script-editor.tsx",
             "web/src/components/canvas/canvas-script-editor-model.ts",
             "web/src/components/canvas/canvas-script-editor-production.tsx",

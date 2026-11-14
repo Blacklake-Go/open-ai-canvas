@@ -181,18 +181,19 @@ func TestCloudAgentAdmissionAndCanvasDeletionAcrossConnections(t *testing.T) {
 			for index := 0; index < 8; index++ {
 				canvasID := fmt.Sprintf("canvas-%d", index)
 				runID := fmt.Sprintf("run-%d", index)
-				if err := admission.db.Create(&model.CanvasProject{ID: canvasID, UserID: "user", Revision: 1, PayloadJSON: `{"nodes":[]}`}).Error; err != nil {
+				userID := fmt.Sprintf("user-%d", index)
+				if err := admission.db.Create(&model.CanvasProject{ID: canvasID, UserID: userID, Revision: 1, PayloadJSON: `{"nodes":[]}`}).Error; err != nil {
 					t.Fatal(err)
 				}
 				start := make(chan struct{})
 				admitted, deleted := make(chan error, 1), make(chan error, 1)
 				go func() {
 					<-start
-					admitted <- admission.CreateTaskWithActiveLimit(&model.Task{ID: runID, UserID: "user", ProjectID: canvasID, Operation: "cloud_agent", Status: model.TaskStatusTextReplay}, 100)
+					admitted <- admission.CreateTaskWithActiveLimit(&model.Task{ID: runID, UserID: userID, ProjectID: canvasID, Operation: "cloud_agent", Status: model.TaskStatusTextReplay}, 100)
 				}()
 				go func() {
 					<-start
-					deleted <- deletion.DeleteCanvasProject("user", canvasID)
+					deleted <- deletion.DeleteCanvasProject(userID, canvasID)
 				}()
 				close(start)
 				admitErr, deleteErr := <-admitted, <-deleted
