@@ -1,6 +1,6 @@
 #!/usr/bin/env bun
 /**
- * 推送前本地验证：按 .github/workflows/quality.yml 的口径，只检查本次改动涉及的部分，并行运行。
+ * 推送前本地验证：按 .github/workflows/quality.yml 的口径，只检查本次改动涉及的部分；Chrome E2E 独占执行，其余并行。
  *
  *   bun scripts/verify-before-push.mjs              # 按相对 origin/main 的改动自动选择 Web / 后端检查
  *   bun scripts/verify-before-push.mjs --all        # Web 与后端全部检查
@@ -245,9 +245,12 @@ let active = 0;
 await new Promise((done) => {
     const schedule = () => {
         if (interrupted) return;
+        if (running.has("web:e2e")) return;
         for (let index = 0; index < pending.length && active < options.jobs; index++) {
             const task = pending[index];
             if (task.after && !results.has(task.after)) continue;
+            // Drain other checks before browser work so host load cannot freeze UI readiness.
+            if (task.name === "web:e2e" && active > 0) break;
             pending.splice(index--, 1);
             if (task.after && !results.get(task.after).ok) {
                 results.set(task.name, { ok: false, ms: 0, reason: `依赖 ${task.after} 失败` });
@@ -261,6 +264,7 @@ await new Promise((done) => {
                 console.log(`${result.ok ? "✓" : "✗"} ${task.name} ${seconds(result.ms)}${result.ok ? "" : `（${result.reason}）`}`);
                 schedule();
             });
+            if (task.name === "web:e2e") break;
         }
         if (!pending.length && !active) done();
     };
