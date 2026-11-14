@@ -3,7 +3,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { App, Button } from "antd";
 import { AntTooltip as Tooltip } from "@/components/ui/base/tooltip/ant-tooltip";
-import { AlertTriangle, ArrowDownToLine, ArrowUpToLine, BookOpen, BookOpenText, CheckCircle2, Clapperboard, PanelRightClose, PanelRightOpen, Pencil, PenLine, Quote, ScanSearch, Trash2 } from "lucide-react";
+import { AlertTriangle, ArrowDownToLine, ArrowUpToLine, BookOpen, BookOpenText, CheckCircle2, Clapperboard, MessageCircle, PanelRightClose, PanelRightOpen, Pencil, PenLine, Quote, ScanSearch, Trash2 } from "lucide-react";
 
 import { averageShotSeconds, normalizeStoryboard, PACING_LABEL, TRANSITION_LABEL } from "@/lib/drama/storyboard";
 import { getDramaChapter, type DramaDialogueCheck, type DramaEpisodeDetail, type DramaShot, type DramaShotPatch, type DramaStoryboardSettings } from "@/services/api/drama";
@@ -54,6 +54,7 @@ export function ScriptView({
     onPatchShot,
     onInsertShot,
     onDeleteShot,
+    onDiscussShot,
     onSourceSaved,
     empty,
 }: {
@@ -67,6 +68,7 @@ export function ScriptView({
     onPatchShot: (shot: DramaShot, patch: DramaShotPatch) => void;
     onInsertShot: (shot: DramaShot, position: "before" | "after") => void;
     onDeleteShot: (shot: DramaShot) => void;
+    onDiscussShot: (shot: DramaShot) => void;
     /** 原文已保存；rescript=true 时需要按新原文重新改编。 */
     onSourceSaved: (rescript: boolean) => void;
     empty: EpisodeEmpty;
@@ -219,6 +221,9 @@ export function ScriptView({
                                                         </Button>
                                                         <Button size="small" icon={<ArrowDownToLine className="size-3.5" />} disabled={busy} onClick={() => onInsertShot(shot, "after")}>
                                                             {_creationText("creation.3509718974ebc276")}
+                                                        </Button>
+                                                        <Button size="small" type="text" icon={<MessageCircle className="size-3.5" />} disabled={busy} onClick={() => onDiscussShot(shot)}>
+                                                            {_creationText("creation.22948061b91baadc")}
                                                         </Button>
                                                         <span className="flex-1" />
                                                         <Tooltip title={(segmentSizes.get(shot.segmentIndex) || 0) <= 1 ? _creationText("creation.43c4180b71b0d196") : ""}>

@@ -204,7 +204,7 @@ export function EcommerceOutputGallery({
                         {historyHasMore && onLoadMoreHistory ? (
                             <div className="commerce-output-history-more">
                                 <Button size="small" loading={historyLoading} onClick={onLoadMoreHistory}>
-                                    加载更早的作品
+                                    {_creationText("creation.c9052977c3834021")}
                                 </Button>
                             </div>
                         ) : null}

@@ -1,0 +1,480 @@
+{
+  "upstreamCommit": "3979305c1413be231cbaef242e50afc67f553c5e",
+  "items": [
+    {
+      "id": "f11111dafedbb4309fdbdd35",
+      "sourceText": "开始恢复认证会话",
+      "sourceHash": "35ede7b10b45bf4bb78faf5537696061b255fe0c7e68566a6bf462f611013d02",
+      "context": "restore:property:message",
+      "dynamic": false,
+      "references": [
+        {
+          "file": "src/components/auth/auth-session-hydrator.tsx",
+          "line": 31,
+          "column": 123
+        }
+      ],
+      "anchor": "6da121810b7b5527",
+      "key": "custom.scan_f11111dafedbb4309fdbdd35",
+      "namespace": "custom",
+      "status": "new",
+      "review": "diagnostic event; preserve canonical log text"
+    },
+    {
+      "id": "de14aad2f1f2321020c5090f",
+      "sourceText": "认证会话已恢复",
+      "sourceHash": "ff95d8688d32c5bfa17535dc99a9d0328345a41c86bf02c16971854e8ecfb48d",
+      "context": "restore:property:message:true",
+      "dynamic": false,
+      "references": [
+        {
+          "file": "src/components/auth/auth-session-hydrator.tsx",
+          "line": 46,
+          "column": 45
+        }
+      ],
+      "anchor": "2ccc7baaade7f1a7",
+      "key": "custom.scan_de14aad2f1f2321020c5090f",
+      "namespace": "custom",
+      "status": "new",
+      "review": "diagnostic event; preserve canonical log text"
+    },
+    {
+      "id": "a21b938e349a2573e763ad90",
+      "sourceText": "匿名会话已确认",
+      "sourceHash": "2a0c576dfb73476b6e9c9b07d5a8c3d374e2e3ae8b16cef8b02f5000bab61f6e",
+      "context": "restore:property:message:false",
+      "dynamic": false,
+      "references": [
+        {
+          "file": "src/components/auth/auth-session-hydrator.tsx",
+          "line": 46,
+          "column": 57
+        }
+      ],
+      "anchor": "29636c506f4b3d2d",
+      "key": "custom.scan_a21b938e349a2573e763ad90",
+      "namespace": "custom",
+      "status": "new",
+      "review": "diagnostic event; preserve canonical log text"
+    },
+    {
+      "id": "97b43ed28c32cde1132acfb6",
+      "sourceText": "登录工作区已解除启动阻塞",
+      "sourceHash": "d5605da888ad327e79fc896c8c4169ffc3f65434d712830139faa796e9c39130",
+      "context": "restore:property:message:true",
+      "dynamic": false,
+      "references": [
+        {
+          "file": "src/components/auth/auth-session-hydrator.tsx",
+          "line": 59,
+          "column": 45
+        }
+      ],
+      "anchor": "2ccc7baaade7f1a7",
+      "key": "custom.scan_97b43ed28c32cde1132acfb6",
+      "namespace": "custom",
+      "status": "new",
+      "review": "diagnostic event; preserve canonical log text"
+    },
+    {
+      "id": "1e8170cd2d40520f57cba6bc",
+      "sourceText": "匿名页面已解除启动阻塞",
+      "sourceHash": "ad2c0cf7d288b5a8de37cc14b94de8b3e47dfe38824cb0b4b9a829845ddf5e18",
+      "context": "restore:property:message:false",
+      "dynamic": false,
+      "references": [
+        {
+          "file": "src/components/auth/auth-session-hydrator.tsx",
+          "line": 59,
+          "column": 62
+        }
+      ],
+      "anchor": "29636c506f4b3d2d",
+      "key": "custom.scan_1e8170cd2d40520f57cba6bc",
+      "namespace": "custom",
+      "status": "new",
+      "review": "diagnostic event; preserve canonical log text"
+    },
+    {
+      "id": "fbf084a8870b8c58b283c6ac",
+      "sourceText": "认证会话恢复失败，工作区已暂停，等待重试",
+      "sourceHash": "a6962a75aeee49dcd07cc4c9cae14cb78272c885256757cf3cf39698605a43f0",
+      "context": "restore:property:message",
+      "dynamic": false,
+      "references": [
+        {
+          "file": "src/components/auth/auth-session-hydrator.tsx",
+          "line": 70,
+          "column": 34
+        }
+      ],
+      "anchor": "6da121810b7b5527",
+      "key": "custom.scan_fbf084a8870b8c58b283c6ac",
+      "namespace": "custom",
+      "status": "new",
+      "review": "diagnostic event; preserve canonical log text"
+    },
+    {
+      "id": "9ce0ae39c59bab8f577250b5",
+      "sourceText": "· 用于{value1}",
+      "sourceHash": "37696474ad7e9e77e712678a84045002501832e155b2576f9f0e1cf3c955097f",
+      "context": "StoryboardShotProduction:jsx-expression:true",
+      "dynamic": true,
+      "references": [
+        {
+          "file": "src/components/canvas/canvas-script-editor-production.tsx",
+          "line": 118,
+          "column": 73
+        }
+      ],
+      "anchor": "7b6fecef97163e45",
+      "key": "custom.scan_9ce0ae39c59bab8f577250b5",
+      "namespace": "custom",
+      "status": "needs_context",
+      "review": "covered by the scoped static UI compiler and eight-locale catalog"
+    },
+    {
+      "id": "c3e3dbce30abd27249153298",
+      "sourceText": "· 未参与当前生成",
+      "sourceHash": "6c719958001bcf120f5846ba0bd8052ee47adfe4dfc7acff36e03f73e893f329",
+      "context": "StoryboardShotProduction:jsx-expression:false",
+      "dynamic": false,
+      "references": [
+        {
+          "file": "src/components/canvas/canvas-script-editor-production.tsx",
+          "line": 118,
+          "column": 113
+        }
+      ],
+      "anchor": "9c88e0536b08907d",
+      "key": "custom.scan_c3e3dbce30abd27249153298",
+      "namespace": "custom",
+      "status": "new",
+      "review": "covered by the scoped static UI compiler and eight-locale catalog"
+    },
+    {
+      "id": "984d1d2c0ab13464c92eac80",
+      "sourceText": "预览镜头 {shotNumber} {label}",
+      "sourceHash": "a50b126470b72c6962f1abfafd709c8e45381b7eb8fc3ed61fa57b8704df0655",
+      "context": "ShotOutput:attr:aria-label",
+      "dynamic": true,
+      "references": [
+        {
+          "file": "src/components/canvas/canvas-script-editor-production.tsx",
+          "line": 199,
+          "column": 145
+        }
+      ],
+      "anchor": "9fda654130f4ebeb",
+      "key": "custom.scan_984d1d2c0ab13464c92eac80",
+      "namespace": "custom",
+      "status": "needs_context",
+      "review": "covered by the scoped static UI compiler and eight-locale catalog"
+    },
+    {
+      "id": "d0f98589a6bb82e81fe34740",
+      "sourceText": "镜头 {shotNumber} 视频封面",
+      "sourceHash": "e5b77e35b003bc762e3b4224113b03b2b108e70e3ff94002d70cf81ac15f9b67",
+      "context": "ShotOutput:attr:alt",
+      "dynamic": true,
+      "references": [
+        {
+          "file": "src/components/canvas/canvas-script-editor-production.tsx",
+          "line": 204,
+          "column": 38
+        }
+      ],
+      "anchor": "f50ff42d3465e053",
+      "key": "custom.scan_d0f98589a6bb82e81fe34740",
+      "namespace": "custom",
+      "status": "needs_context",
+      "review": "covered by the scoped static UI compiler and eight-locale catalog"
+    },
+    {
+      "id": "3d94de45d1b20178b4aa002d",
+      "sourceText": "镜头 {shotNumber} {label}",
+      "sourceHash": "a940bf86b32b0784c5705fefc8b0547bf1fa37fecffff3aa0d4eaaaa32cc8315",
+      "context": "ShotOutput:attr:alt",
+      "dynamic": true,
+      "references": [
+        {
+          "file": "src/components/canvas/canvas-script-editor-production.tsx",
+          "line": 220,
+          "column": 34
+        }
+      ],
+      "anchor": "f50ff42d3465e053",
+      "key": "custom.scan_3d94de45d1b20178b4aa002d",
+      "namespace": "custom",
+      "status": "needs_context",
+      "review": "covered by the scoped static UI compiler and eight-locale catalog"
+    },
+    {
+      "id": "f9511aa3480ff3a04669f26f",
+      "sourceText": "生成{label}",
+      "sourceHash": "019a16396c2823773eb3d7cd1f6a055ce13c94d62f4d4e599f17a1c61606d97d",
+      "context": "ShotOutput:jsx-expression:false:false",
+      "dynamic": true,
+      "references": [
+        {
+          "file": "src/components/canvas/canvas-script-editor-production.tsx",
+          "line": 246,
+          "column": 81
+        }
+      ],
+      "anchor": "65b0adf7007c9cb5",
+      "key": "custom.scan_f9511aa3480ff3a04669f26f",
+      "namespace": "custom",
+      "status": "needs_context",
+      "review": "covered by the scoped static UI compiler and eight-locale catalog"
+    },
+    {
+      "id": "cd6e809e06b0e61ab083d3c0",
+      "sourceText": "请优化当前分镜脚本中的这个镜头。节点ID：{value1}；镜头行ID：{value2}。先读取最新分镜，再根据我的要求提出或执行修改。",
+      "sourceHash": "344064c16bc1472763e95639baf3e332aa35529f00f9c3bdf4fa2a7a34ae5435",
+      "context": "discussRow:property:text",
+      "dynamic": true,
+      "references": [
+        {
+          "file": "src/components/canvas/canvas-script-editor.tsx",
+          "line": 210,
+          "column": 19
+        }
+      ],
+      "anchor": "831bb84b0090fad6",
+      "key": "custom.scan_cd6e809e06b0e61ab083d3c0",
+      "namespace": "custom",
+      "status": "needs_context",
+      "review": "Agent prompt payload; preserve canonical generation input"
+    },
+    {
+      "id": "2fd1d3b3533199be8ad286ab",
+      "sourceText": "编辑镜头 {value1} {label}",
+      "sourceHash": "547e478252bc4b399ab502215be3b2851a59628910163bd7219e0f218c5fb2a4",
+      "context": "columns:attr:aria-label",
+      "dynamic": true,
+      "references": [
+        {
+          "file": "src/components/canvas/canvas-script-editor.tsx",
+          "line": 281,
+          "column": 86
+        }
+      ],
+      "anchor": "e8e36fd07e3ef336",
+      "key": "custom.scan_2fd1d3b3533199be8ad286ab",
+      "namespace": "custom",
+      "status": "needs_context",
+      "review": "covered by the scoped static UI compiler and eight-locale catalog"
+    },
+    {
+      "id": "4ec04dca2ab4f3cdb378e0ce",
+      "sourceText": "· 已有视频 {completedVideos}/{value2}",
+      "sourceHash": "1ffb848ccc08605757c706427c586c105441f56a6d98ce496664609e3098719a",
+      "context": "CanvasScriptEditor:jsx-expression:true",
+      "dynamic": true,
+      "references": [
+        {
+          "file": "src/components/canvas/canvas-script-editor.tsx",
+          "line": 321,
+          "column": 142
+        }
+      ],
+      "anchor": "199017a23054ba3a",
+      "key": "custom.scan_4ec04dca2ab4f3cdb378e0ce",
+      "namespace": "custom",
+      "status": "needs_context",
+      "review": "covered by the scoped static UI compiler and eight-locale catalog"
+    },
+    {
+      "id": "84501f131a27218dbc01783f",
+      "sourceText": "参考图1",
+      "sourceHash": "4665e4f45a57f27919a420cee2a56c27f880ffca26fbf3757b1259b524f15f92",
+      "context": "result:property:label",
+      "dynamic": false,
+      "references": [
+        {
+          "file": "src/lib/drama/asset-usage.test.ts",
+          "line": 77,
+          "column": 166
+        }
+      ],
+      "anchor": "80a0a4f5d2c1d99b",
+      "key": "custom.scan_84501f131a27218dbc01783f",
+      "namespace": "custom",
+      "status": "new",
+      "review": "test fixture; canonical reference labels"
+    },
+    {
+      "id": "cd2bccd59059f4b6a71b30e0",
+      "sourceText": "参考图1",
+      "sourceHash": "4665e4f45a57f27919a420cee2a56c27f880ffca26fbf3757b1259b524f15f92",
+      "context": "result:property:label",
+      "dynamic": false,
+      "references": [
+        {
+          "file": "src/lib/drama/asset-usage.test.ts",
+          "line": 98,
+          "column": 85
+        }
+      ],
+      "anchor": "80a0a4f5d2c1d99b",
+      "key": "custom.scan_cd2bccd59059f4b6a71b30e0",
+      "namespace": "custom",
+      "status": "new",
+      "review": "test fixture; canonical reference labels"
+    },
+    {
+      "id": "b3980f1e038c44bc80da6835",
+      "sourceText": "参考图2",
+      "sourceHash": "07db990999eb2ee7d1ce1f29bab4ef8e95b1b684a59614bfd3dd9f0f46fffa25",
+      "context": "result:property:label",
+      "dynamic": false,
+      "references": [
+        {
+          "file": "src/lib/drama/asset-usage.test.ts",
+          "line": 99,
+          "column": 73
+        }
+      ],
+      "anchor": "80a0a4f5d2c1d99b",
+      "key": "custom.scan_b3980f1e038c44bc80da6835",
+      "namespace": "custom",
+      "status": "new",
+      "review": "test fixture; canonical reference labels"
+    },
+    {
+      "id": "0d090fda870af213855a8dbb",
+      "sourceText": "参考图1",
+      "sourceHash": "4665e4f45a57f27919a420cee2a56c27f880ffca26fbf3757b1259b524f15f92",
+      "context": "result:property:label",
+      "dynamic": false,
+      "references": [
+        {
+          "file": "src/lib/drama/asset-usage.test.ts",
+          "line": 117,
+          "column": 136
+        }
+      ],
+      "anchor": "80a0a4f5d2c1d99b",
+      "key": "custom.scan_0d090fda870af213855a8dbb",
+      "namespace": "custom",
+      "status": "new",
+      "review": "test fixture; canonical reference labels"
+    },
+    {
+      "id": "201b8ca7ab55bfbed5ff4541",
+      "sourceText": "参考图1",
+      "sourceHash": "4665e4f45a57f27919a420cee2a56c27f880ffca26fbf3757b1259b524f15f92",
+      "context": "first:property:label",
+      "dynamic": false,
+      "references": [
+        {
+          "file": "src/lib/drama/asset-usage.test.ts",
+          "line": 142,
+          "column": 80
+        }
+      ],
+      "anchor": "4b828a27b68050f8",
+      "key": "custom.scan_201b8ca7ab55bfbed5ff4541",
+      "namespace": "custom",
+      "status": "new",
+      "review": "test fixture; canonical reference labels"
+    },
+    {
+      "id": "72a83dae944399abf5591faf",
+      "sourceText": "参考图2",
+      "sourceHash": "07db990999eb2ee7d1ce1f29bab4ef8e95b1b684a59614bfd3dd9f0f46fffa25",
+      "context": "second:property:label",
+      "dynamic": false,
+      "references": [
+        {
+          "file": "src/lib/drama/asset-usage.test.ts",
+          "line": 143,
+          "column": 86
+        }
+      ],
+      "anchor": "b43810a91a8a9798",
+      "key": "custom.scan_72a83dae944399abf5591faf",
+      "namespace": "custom",
+      "status": "new",
+      "review": "test fixture; canonical reference labels"
+    },
+    {
+      "id": "68fd2dbf858925e34eaa90a9",
+      "sourceText": "请优化当前短剧制作台的这个分镜。先读取最新镜头内容，再根据我的要求提出或执行修改。项目 ID：{projectId}；集 ID：{episodeId}；镜头 ID：{value3}。",
+      "sourceHash": "6dfd859ac6a67be71347b262f68a3ed5776e1400c61258a3911d809fe26a4e99",
+      "context": "discussShot:property:text",
+      "dynamic": true,
+      "references": [
+        {
+          "file": "src/pages/projects/detail.tsx",
+          "line": 146,
+          "column": 23
+        }
+      ],
+      "anchor": "0483855fffca3c54",
+      "key": "custom.scan_68fd2dbf858925e34eaa90a9",
+      "namespace": "custom",
+      "status": "needs_context",
+      "review": "Agent prompt payload; preserve canonical generation input"
+    },
+    {
+      "id": "6162451f47e3c33949f1a085",
+      "sourceText": "· 当前核查",
+      "sourceHash": "fe88c05a10af907025450f177e46182160926b7823319ea47c70a9dc0f7b8523",
+      "context": "ProjectAssetAudit:jsx-expression:true",
+      "dynamic": false,
+      "references": [
+        {
+          "file": "src/pages/projects/studio/project-asset-audit.tsx",
+          "line": 147,
+          "column": 80
+        }
+      ],
+      "anchor": "977b6ab88f1bfcaa",
+      "key": "custom.scan_6162451f47e3c33949f1a085",
+      "namespace": "custom",
+      "status": "new",
+      "review": "covered by the scoped static UI compiler and eight-locale catalog"
+    },
+    {
+      "id": "0a110b93d84957d2f5e1b510",
+      "sourceText": "· 点击查看",
+      "sourceHash": "ed2a5699360f5ea45b726157e75313d909a2bde9671d02cc100d4568a58592ba",
+      "context": "ProjectAssetAudit:jsx-expression:false",
+      "dynamic": false,
+      "references": [
+        {
+          "file": "src/pages/projects/studio/project-asset-audit.tsx",
+          "line": 147,
+          "column": 92
+        }
+      ],
+      "anchor": "2c4ee6ad2b55ca91",
+      "key": "custom.scan_0a110b93d84957d2f5e1b510",
+      "namespace": "custom",
+      "status": "new",
+      "review": "covered by the scoped static UI compiler and eight-locale catalog"
+    },
+    {
+      "id": "f7f06a2855510840717504c7",
+      "sourceText": "· {issueCount} 项待核查",
+      "sourceHash": "8743695507d960cdfa4d11bda3c7cb50e7b33dfb9701efaa377b12fa247948ef",
+      "context": "ProjectAssetAudit:jsx-expression:true",
+      "dynamic": true,
+      "references": [
+        {
+          "file": "src/pages/projects/studio/project-asset-audit.tsx",
+          "line": 203,
+          "column": 59
+        }
+      ],
+      "anchor": "977b6ab88f1bfcaa",
+      "key": "custom.scan_f7f06a2855510840717504c7",
+      "namespace": "custom",
+      "status": "needs_context",
+      "review": "covered by the scoped static UI compiler and eight-locale catalog"
+    }
+  ]
+}

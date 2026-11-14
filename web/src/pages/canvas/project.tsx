@@ -179,7 +179,7 @@ import { waitForCanvasSync } from "@/lib/canvas/sync-recovery";
 import { useCanvasRenderModel } from "./use-canvas-render-model";
 import { useCanvasSelectionController } from "./use-canvas-selection-controller";
 import { useCanvasShortDrama } from "./use-canvas-short-drama";
-import { useCanvasDrama } from "./use-canvas-drama";
+import { useCanvasDrama, type UseCanvasDramaInput } from "./use-canvas-drama";
 import { useCanvasStoryboard } from "./use-canvas-storyboard";
 import { useCanvasUpload } from "./use-canvas-upload";
 import { useCanvasTimelineAssetInsert } from "./use-canvas-timeline-asset-insert";
@@ -334,6 +334,7 @@ function CanvasViewportPage() {
     const [scriptScrollTopById, setScriptScrollTopById] = useState<Record<string, number>>({});
     const [batchScrollById, setBatchScrollById] = useState<Record<string, BatchScroll>>({});
     const [previsNodeId, setPrevisNodeId] = useState<string | null>(null);
+    const [dramaPrevisEntry, setDramaPrevisEntry] = useState<{ nodeId: string; mode: "layout" | "animate" } | null>(null);
     const [libTVImportOpen, setLibTVImportOpen] = useState(false);
     const [titleEditing, setTitleEditing] = useState(false);
     const [titleDraft, setTitleDraft] = useState("");
@@ -730,6 +731,10 @@ function CanvasViewportPage() {
     const dramaFocusRef = useRef<(nodeIds: string[]) => void>(() => {});
     const focusDramaNodes = useCallback((nodeIds: string[]) => dramaFocusRef.current(nodeIds), []);
     const saveDramaTimeline = useCallback((timeline: TimelineProject) => updateProject(projectId, { timeline }), [projectId, updateProject]);
+    const dramaPrevisRef = useRef<UseCanvasDramaInput["openPrevis"]>(async () => {
+        throw new Error("预演台尚未就绪，请稍后重试");
+    });
+    const openDramaPrevis = useCallback<UseCanvasDramaInput["openPrevis"]>((request, editor) => dramaPrevisRef.current(request, editor), []);
     const drama = useCanvasDrama({
         canvasId: projectId,
         dramaId: linkedProjectId,
@@ -742,6 +747,7 @@ function CanvasViewportPage() {
         saveTimeline: saveDramaTimeline,
         openTimeline: setTimelineNodeId,
         focusNodes: focusDramaNodes,
+        openPrevis: openDramaPrevis,
         searchParams,
         setSearchParams,
     });
@@ -1738,7 +1744,7 @@ function CanvasViewportPage() {
         setStylePickerOpen,
     });
 
-    const { addPrevisToCanvas, applyPrevisOutput, createPrevisShot, openPrevisWorkbench, savePrevisScene } = useCanvasPrevis({
+    const { addPrevisToCanvas, applyPrevisOutput, createPrevisShot, openPrevisWorkbench, prepareDramaPrevis, savePrevisScene } = useCanvasPrevis({
         projectId,
         domainProjectId: currentProject?.projectId,
         previsNodeId,
@@ -1753,6 +1759,12 @@ function CanvasViewportPage() {
         setPrevisNodeId,
         updateProject,
     });
+
+    dramaPrevisRef.current = async (request, editor) => {
+        const nodeId = await prepareDramaPrevis(request);
+        setDramaPrevisEntry({ nodeId, mode: editor === "timeline" ? "animate" : "layout" });
+        setPrevisNodeId(nodeId);
+    };
 
     const {
         activateStep: activateShortDramaStep,
@@ -3688,8 +3700,16 @@ function CanvasViewportPage() {
                             <CanvasScriptEditor
                                 node={activeScriptNode}
                                 nodes={nodes}
+                                connections={connections}
+                                batch={activeScriptNode ? visibleGenerationBatch(activeScriptNode) : undefined}
                                 open={Boolean(activeScriptNode)}
                                 onClose={() => setScriptEditorNodeId(null)}
+                                onFocusOutput={(nodeId) => {
+                                    setScriptEditorNodeId(null);
+                                    focusCanvasNode(nodeId);
+                                }}
+                                onRetryBatchItem={(batchId, itemId) => activeScriptNode && retryFailedBatchItems(activeScriptNode.id, batchId, itemId)}
+                                onStopBatch={(batchId) => activeScriptNode && stopRemainingBatchItems(activeScriptNode.id, batchId)}
                                 onUpdateRows={(rows) => activeScriptNode && replaceScriptRows(activeScriptNode.id, rows)}
                                 onEditAssets={(rowId) => activeScriptNode && setStoryboardAssetTarget({ nodeId: activeScriptNode.id, rowId })}
                                 onVisibleColumnsChange={(visibleColumns: StoryboardColumn[]) => {
@@ -3724,7 +3744,11 @@ function CanvasViewportPage() {
                                         canvasId={projectId}
                                         scene={activePrevisScene}
                                         imageNodes={nodes.filter((node) => node.type === CanvasNodeType.Image && Boolean(node.metadata?.content || node.metadata?.storageKey))}
-                                        onClose={() => setPrevisNodeId(null)}
+                                        initialMode={dramaPrevisEntry?.nodeId === previsNodeId ? dramaPrevisEntry.mode : undefined}
+                                        onClose={() => {
+                                            setPrevisNodeId(null);
+                                            setDramaPrevisEntry(null);
+                                        }}
                                         onChange={savePrevisScene}
                                         onApply={applyPrevisOutput}
                                         onAddToCanvas={addPrevisToCanvas}

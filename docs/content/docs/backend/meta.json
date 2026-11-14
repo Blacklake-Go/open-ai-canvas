@@ -8,6 +8,8 @@
     "agent-mcp",
     "http-api",
     "supdance-i18n",
+
+    "wechat-login",
     "code-map",
     "backend-database",
     "channel-configuration",

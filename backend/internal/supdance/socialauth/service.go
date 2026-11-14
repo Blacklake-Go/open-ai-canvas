@@ -33,7 +33,7 @@ type Repository interface {
 	UserIdentitiesForUser(userID string) ([]model.UserIdentity, error)
 	DeleteOAuthIdentitySafely(userID, provider string, usableProviders []string) error
 	UpdateOAuthIdentityProfile(identity *model.UserIdentity) error
-	BindOAuthIdentity(identity *model.UserIdentity, session *model.AuthSession) error
+	BindSocialOAuthIdentity(identity *model.UserIdentity, session *model.AuthSession) error
 	ReauthenticateOAuthSession(user *model.User, session *model.AuthSession, provider, subject string, now time.Time) error
 	CreateOAuthState(state *model.OAuthState) error
 	ConsumeOAuthState(provider string, stateHash string) (*model.OAuthState, error)
@@ -822,7 +822,7 @@ func (s *Service) completeAccountAuthorization(state *model.OAuthState, session 
 		}
 		return &SocialAuthCallbackResult{Next: accountAuthorizationNext(state.NextPath, "reauth", "success")}, nil
 	}
-	if err := s.repo.BindOAuthIdentity(&model.UserIdentity{
+	if err := s.repo.BindSocialOAuthIdentity(&model.UserIdentity{
 		ID: kernel.NewID(), UserID: session.UserID, Provider: provider, Subject: profile.Subject,
 		ProviderUsername: profile.Username, AvatarURL: profile.AvatarURL,
 	}, session); err != nil {

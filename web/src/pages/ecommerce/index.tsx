@@ -1739,7 +1739,7 @@ function EcommerceWorkspace({ scope }: { scope: string }) {
                 const next = plan.images.length || previousImages.length ? { ...plan, previousImages: previousImages.length ? previousImages : undefined } : null;
                 setPlan(next);
                 setSelectedExportIds((current) => new Set([...current].filter((id) => id !== image.id)));
-                message.success("已从当前画布移除，原作品与任务历史仍保留");
+                message.success(_creationText("creation.6153fa4402c42ee7"));
             } catch (cause) {
                 if (isCurrent(session)) message.error(errorText(cause));
             } finally {

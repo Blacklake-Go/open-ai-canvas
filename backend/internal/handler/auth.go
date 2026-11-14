@@ -23,6 +23,7 @@ func RegisterAuthRoutes(r *gin.RouterGroup, svc *service.Service) {
 	registerChannelOrderRoutes(r, svc)
 	registerNotificationRoutes(r, svc)
 	registerAuthProfileRoutes(r, svc)
+	registerWechatRoutes(r, svc)
 	r.GET("/auth/settings", func(c *gin.Context) {
 		settings, err := svc.PublicAuthSettings()
 		if err != nil {
@@ -159,7 +160,7 @@ func RegisterAuthRoutes(r *gin.RouterGroup, svc *service.Service) {
 	r.GET("/auth/linuxdo/callback", rejectedLoginAudit(svc, "linuxdo"), linuxDOCallbackHandler(svc))
 	registerOIDCRoutes(r, svc)
 	r.POST("/auth/logout", func(c *gin.Context) {
-		if err := svc.Logout(sessionCookie(c), loginRequestContext(c)); err != nil {
+		if err := svc.LogoutForExpectedUser(sessionCookie(c), c.GetHeader("X-Canvas-Expected-User"), loginRequestContext(c)); err != nil {
 			failService(c, err)
 			return
 		}

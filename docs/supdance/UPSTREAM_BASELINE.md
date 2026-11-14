@@ -1,5 +1,7 @@
 # SupDance Canvas — 上游基线记录 (UPSTREAM_BASELINE.md)
 
+当前源码集成候选为 `v1.8.5-supdance.6-upstream`，固定上游 main `3979305c1413be231cbaef242e50afc67f553c5e`（正式版仍为 v1.8.5）。上游 Schema 104 映射本站 Schema 105，已发布 1–102 不变。验证及生产部署状态见 [本次更新记录](UPSTREAM_20261114.md)。
+
 最新源码集成候选为 `v1.8.5-supdance.1`，包含正式标签 `v1.8.5` 及随后上游 main `bae6a36c2e835733295a48087eb9c424ea619bc2`。上游 Schema 101 对应本站 Schema 102，已发布迁移 1–99 不变。测试、迁移、部署状态分别记录于[本次合并记录](./UPSTREAM_V1_8_5_SOURCE_MERGE.md)，不能仅以源码集成推断生产已切换。以下为历史记录。
 
 当前集成上游 `v1.8.0`（`2fe3ca13c27e46a786af6597938a0e5328df6723`），自有源码候选版本 `v1.8.0-supdance.2`。上游 Schema 87；本站保留既有 Schema 83，将新增上游迁移顺延为 84–88，目标 Schema 88。`.1` 已完成源码镜像上线；`.2` 的账户路由与原生文案验收见 [网站维护记录](./SITE_CLOSURE.md)。验证与源码部署过程见 [本次合并记录](./UPSTREAM_V1_8_SOURCE_MERGE.md)。下方保留历史记录，不代表本次线上状态。

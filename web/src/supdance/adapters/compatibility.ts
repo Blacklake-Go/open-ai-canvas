@@ -8,7 +8,7 @@ import type { PluginHostContext, PluginManifest, PluginManifestV2, RegisteredPlu
 import { getRegisteredPlugin, registerPlugin, unregisterPlugin } from "@/lib/plugins/plugin-registry";
 
 export const SUPDANCE_HOST_VERSION = "1.8.5" as const;
-export const SUPDANCE_SCHEMA_BASELINE = 101 as const;
+export const SUPDANCE_SCHEMA_BASELINE = 104 as const;
 
 export type UpstreamPatchRecord = {
     id: string;
@@ -25,6 +25,25 @@ export type UpstreamPatchRecord = {
  * 新增核心文件修改时必须同步登记，并由架构回归测试与 baseline.json 对齐校验。
  */
 export const SUPDANCE_UPSTREAM_PATCH_REGISTRY: readonly UpstreamPatchRecord[] = [
+    {
+        id: "supdance-upstream-20261114-preservation",
+        upstreamBaseline: "v1.8.5+main@3979305c",
+        feature: "微信、Agent、分镜更新与 SupDance 定制共存",
+        coupledUpstreamFiles: [
+            "backend/internal/auth/auth.go",
+            "backend/internal/database/migrations.go",
+            "backend/internal/database/wechat_migration_test.go",
+            "backend/internal/repository/oauth.go",
+            "web/src/components/canvas/canvas-script-editor.tsx",
+            "web/src/components/canvas/canvas-script-editor-model.ts",
+            "web/src/components/canvas/canvas-script-editor-production.tsx",
+            "web/src/pages/projects/studio/project-asset-audit.tsx",
+            "web/src/pages/projects/studio/segment-project-images.tsx",
+        ],
+        files: ["backend/internal/supdance/socialauth/service.go", "docs/supdance/UPSTREAM_20261114.md"],
+        reason: "保留已发布 Schema 1–102 并将上游 102–104 顺延为 103–105；隔离同名 OAuth 绑定方法，保留 Codex、主题、八语言和本站生成与账务合同。",
+        upgradeRisk: "HIGH",
+    },
     {
         id: "supdance-i18n-unified-eight-locales",
         upstreamBaseline: "v1.8.5",

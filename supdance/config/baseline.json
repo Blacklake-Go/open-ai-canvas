@@ -6,15 +6,15 @@
     "tag": "v1.8.5",
     "releaseTag": "v1.8.5",
     "releaseCommit": "ac5e01cab55184fa9f202fe6349a5884411b4114",
-    "commit": "bae6a36c2e835733295a48087eb9c424ea619bc2",
-    "schemaVersion": 101
+    "commit": "3979305c1413be231cbaef242e50afc67f553c5e",
+    "schemaVersion": 104
   },
   "integrationRelease": {
-    "schemaVersion": 102,
-    "version": "v1.8.5-supdance.1",
-    "baseCommit": "feda18833728e8d646b51e9ddf79df2f002e2de3",
-    "sourceBranch": "integration/upstream-v1.8.5-20261112",
-    "deploymentEvidence": "docs/supdance/UPSTREAM_V1_8_5_SOURCE_MERGE.md"
+    "schemaVersion": 105,
+    "version": "v1.8.5-supdance.6-upstream",
+    "baseCommit": "0c0af6568cd2578402940ad55ae566df0f43a55e",
+    "sourceBranch": "codex/upstream-20261114",
+    "deploymentEvidence": "docs/supdance/UPSTREAM_20261114.md"
   },
   "supdanceRelease": {
     "tag": "supdance/v2026.10.28.2",
@@ -69,6 +69,7 @@
     "backend/internal/database/migration_channel_websites_postgres_test.go",
     "backend/internal/database/migration_channel_websites_test.go",
     "backend/internal/database/migrations.go",
+    "backend/internal/database/wechat_migration_test.go",
     "backend/internal/handler/api.go",
     "backend/internal/handler/custom_proxy.go",
     "backend/internal/handler/inspiration_feed.go",
@@ -118,6 +119,9 @@
     "web/src/components/canvas/canvas-drawing-tldraw-editor.tsx",
     "web/src/components/canvas/canvas-node-content.tsx",
     "web/src/components/canvas/canvas-node.tsx",
+    "web/src/components/canvas/canvas-script-editor-model.ts",
+    "web/src/components/canvas/canvas-script-editor-production.tsx",
+    "web/src/components/canvas/canvas-script-editor.tsx",
     "web/src/components/canvas/canvas-script-node.tsx",
     "web/src/components/canvas/previs/previs-viewport.tsx",
     "web/src/components/canvas/use-agent-launcher-position.ts",
@@ -283,10 +287,12 @@
     "web/src/pages/projects/studio/genesis.tsx",
     "web/src/pages/projects/studio/job-detail.tsx",
     "web/src/pages/projects/studio/panels.tsx",
+    "web/src/pages/projects/studio/project-asset-audit.tsx",
     "web/src/pages/projects/studio/queue-bar.tsx",
     "web/src/pages/projects/studio/script-view.tsx",
     "web/src/pages/projects/studio/segment-dialog.tsx",
     "web/src/pages/projects/studio/segment-parts.tsx",
+    "web/src/pages/projects/studio/segment-project-images.tsx",
     "web/src/pages/projects/studio/storyboard.tsx",
     "web/src/pages/projects/studio/take-list.tsx",
     "web/src/pages/projects/studio/use-studio.ts",

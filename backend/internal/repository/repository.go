@@ -45,13 +45,17 @@ func (r *Repository) DB() *gorm.DB {
 }
 
 type UserStorageUsage struct {
-	AssetCount   int64 `json:"assetCount"`
-	AssetBytes   int64 `json:"assetBytes"`
-	CanvasCount  int64 `json:"canvasCount"`
-	CanvasBytes  int64 `json:"canvasBytes"`
-	TaskCount    int64 `json:"taskCount"`
-	TaskBytes    int64 `json:"taskBytes"`
-	APICallCount int64 `json:"apiCallCount"`
+	AssetCount      int64 `json:"assetCount"`
+	AssetBytes      int64 `json:"assetBytes"`
+	CanvasCount     int64 `json:"canvasCount"`
+	CanvasBytes     int64 `json:"canvasBytes"`
+	TaskCount       int64 `json:"taskCount"`
+	TaskBytes       int64 `json:"taskBytes"`
+	APICallCount    int64 `json:"apiCallCount"`
+	AgentBytes      int64 `json:"agentBytes"`
+	AgentLimitBytes int64 `json:"agentLimitBytes"`
+	MCPBytes        int64 `json:"mcpBytes"`
+	MCPLimitBytes   int64 `json:"mcpLimitBytes"`
 }
 
 func New(db *gorm.DB) *Repository {
@@ -116,6 +120,14 @@ func (r *Repository) UserStorageUsage(userID string) (UserStorageUsage, error) {
 		query = strings.ReplaceAll(query, ", '') AS BLOB))", ", ''))")
 	}
 	err := r.db.Raw(query, userID, userID, userID, userID, userID, userID, userID, userID, userID, userID, userID).Scan(&usage).Error
+	if err != nil {
+		return usage, err
+	}
+	usage.AgentLimitBytes, usage.MCPLimitBytes = AgentStoredDataLimit, MCPStorageLimitBytes
+	if usage.AgentBytes, err = r.AgentStoredBytes(userID); err != nil {
+		return usage, err
+	}
+	usage.MCPBytes, err = r.MCPStoredBytes(userID)
 	return usage, err
 }
 

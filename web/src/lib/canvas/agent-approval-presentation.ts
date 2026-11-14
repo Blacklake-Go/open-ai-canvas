@@ -41,6 +41,7 @@ function fieldLabel(key: string, nodeType: string): string {
 }
 
 function operation(value: unknown): AgentApprovalPreviewOperation | null {
+    if (value === "update_drama_shot") return value;
     return value === "add_node" ||
         value === "update_node" ||
         value === "connect_nodes" ||
@@ -83,9 +84,10 @@ function normalizeServerPreview(value: unknown): AgentApprovalPresentation | nul
                       .filter(Boolean)
                       .slice(0, 12)
                 : undefined,
+            // 分镜预览包含最长 2000 字的修改前后值，审批必须能看完实际将保存的内容。
             details: Array.isArray(item.details)
                 ? item.details
-                      .map((detail) => text(detail, 180))
+                      .map((detail) => text(detail, op === "update_drama_shot" ? 8400 : 180))
                       .filter(Boolean)
                       .slice(0, 12)
                 : undefined,

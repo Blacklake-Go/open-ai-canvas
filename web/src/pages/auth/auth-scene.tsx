@@ -24,7 +24,9 @@ import { useUserStore } from "@/stores/use-user-store";
  */
 export function AuthScene() {
     const mode = useAuthLoginMode();
+    const [params] = useSearchParams();
     if (mode === null) return <FullScreenLoader />;
+    if (params.get("wechat_register") === "1") return <AuthPageScene />;
     if (mode === "modal") return <AuthDialogRedirect />;
     return <AuthPageScene />;
 }

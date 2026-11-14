@@ -25,7 +25,7 @@ function preserved(path: NodePath): boolean {
 }
 
 /** Only proven UI sinks qualify; event payloads and arbitrary object fields never do. */
-function isUiValue(path: NodePath): boolean {
+function isUiValue(path: NodePath, file = ""): boolean {
     if (preserved(path)) return false;
     let root = path;
     while (root.parentPath?.isConditionalExpression() || root.parentPath?.isLogicalExpression()) root = root.parentPath;
@@ -37,6 +37,8 @@ function isUiValue(path: NodePath): boolean {
         if (attributes.has(name)) return true;
         const opening = parent.parentPath;
         const tag = opening?.isJSXOpeningElement() && t.isJSXIdentifier(opening.node.name) ? opening.node.name.name : "";
+        if (name === "description" && ["WorkspaceState", "WorkspaceErrorState", "SettingsSectionCard", "Popconfirm"].includes(tag) && /(?:auth-session-hydrator|canvas-script-editor|project-asset-audit|wechat-settings-section)\.tsx$/.test(file))
+            return true;
         if (name === "content" && /(?:Tooltip|Popover|Popconfirm|Hint)$/.test(tag)) return true;
         return ["description", "detail", "help", "extra"].includes(name) && /^(?:Alert|Result|Empty|Card|AdminPageFrame|AdminSection|AdminSettingRow|AdminEmpty|FullScreenLoader|PrevisViewportNotice)$/.test(tag);
     }
@@ -45,7 +47,15 @@ function isUiValue(path: NodePath): boolean {
     if (parent.isObjectProperty()) {
         const name = t.isIdentifier(parent.node.key) ? parent.node.key.name : t.isStringLiteral(parent.node.key) ? parent.node.key.value : "";
         if (!["title", "content", "label", "okText", "cancelText", "message", "description", "detail"].includes(name)) return false;
+        const owner = parent.findParent((ancestor) => ancestor.isVariableDeclarator() || ancestor.isFunctionDeclaration());
+        if (
+            name === "label" &&
+            owner &&
+            ((owner.isVariableDeclarator() && t.isIdentifier(owner.node.id) && ["STORYBOARD_COLUMN_OPTIONS", "agentFields"].includes(owner.node.id.name)) || (owner.isFunctionDeclaration() && owner.node.id?.name === "quotaUsageItems"))
+        )
+            return true;
         const object = parent.parentPath;
+        if (name === "title" && file.endsWith("/canvas-script-editor.tsx") && owner?.isVariableDeclarator() && t.isIdentifier(owner.node.id, { name: "columns" })) return true;
         if (object?.isObjectExpression() && object.parentPath?.isCallExpression() && /^(?:modal\.confirm|notification\.(?:success|error|warning|info|open)|message\.open)$/.test(memberName(object.parentPath.node.callee))) return true;
         const attribute = parent.findParent((ancestor) => ancestor.isJSXAttribute() || ancestor.isFunction());
         return Boolean(attribute?.isJSXAttribute() && uiCollections.has(String(attribute.node.name.name)));
@@ -123,7 +133,7 @@ export function transformStaticUi(source: string, file: string, options: { colle
             },
             StringLiteral(path) {
                 if (!eligible) return;
-                if (!han.test(path.node.value) || !isUiValue(path)) return;
+                if (!han.test(path.node.value) || !isUiValue(path, file)) return;
                 const call = register(path.node.value, [], path.node.loc?.start.line ?? 0);
                 if (options.collectOnly) return;
                 markJsx(path);
@@ -133,7 +143,7 @@ export function transformStaticUi(source: string, file: string, options: { colle
             },
             TemplateLiteral(path) {
                 if (!eligible) return;
-                if (!path.node.quasis.some((part) => han.test(part.value.cooked ?? part.value.raw)) || !isUiValue(path)) return;
+                if (!path.node.quasis.some((part) => han.test(part.value.cooked ?? part.value.raw)) || !isUiValue(path, file)) return;
                 let text = path.node.quasis[0].value.cooked ?? path.node.quasis[0].value.raw;
                 const values: t.ObjectProperty[] = [];
                 path.node.expressions.forEach((expression, index) => {

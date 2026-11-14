@@ -1,10 +1,10 @@
 import { creationOptions as _creationOptions, creationLabel as _creationLabel } from "@/supdance/plugins/i18n/creation-text";
 import { creationText as _creationText, useCreationLocale as _useCreationLocale } from "@/supdance/plugins/i18n/creation-text";
 import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
-import { App, Button, Input, InputNumber, Popover, Select } from "antd";
+import { App, Button, Dropdown, Input, InputNumber, Popover, Select } from "antd";
 import { CachedResourceImage } from "@/components/cached-resource-image";
 import { AntTooltip as Tooltip } from "@/components/ui/base/tooltip/ant-tooltip";
-import { AlertTriangle, Brush, Check, ChevronLeft, ChevronRight, Copy, Info, Loader2, Pencil, Play, Plus, RotateCcw, Trash2, X, PenLine } from "lucide-react";
+import { AlertTriangle, Box, Brush, Check, ChevronDown, ChevronLeft, ChevronRight, Copy, Film, Info, Loader2, MessageCircle, Pencil, Play, Plus, RotateCcw, Trash2, X, PenLine } from "lucide-react";
 
 import { AppModal } from "@/components/ui/product/app-modal";
 import { TRANSITION_LABEL } from "@/lib/drama/storyboard";
@@ -22,7 +22,8 @@ import { CAST_KIND_LABEL, formatCredits, mediaBusy, MediaThumb } from "../drama-
 import { promptReady, secondsLabel, SegmentStatus, SegmentVideo, videoWaitLabel } from "./segment-parts";
 import { DramaTakeList, shortModelName } from "./take-list";
 import { CanvasResourceMentionTextarea } from "@/components/canvas/canvas-resource-mention-textarea";
-import type { CanvasResourceReference } from "@/lib/canvas/canvas-resource-references";
+import { buildDramaPromptReferences, DRAMA_ASSET_KIND_LABEL } from "@/lib/drama/asset-references";
+import "./asset-kind.css";
 
 const SHOT_SIZES = ["特写", "近景", "中景", "全景", "远景"];
 const CAMERAS = ["固定", "推", "拉", "摇", "跟", "环绕", "升降", "手持"];
@@ -58,6 +59,7 @@ type Props = {
     onInsertShot?: (shot: DramaShot, position: "before" | "after") => void;
     /** 删除镜头；剧情段唯一的镜头不能删。 */
     onDeleteShot?: (shot: DramaShot) => void;
+    onDiscussShot?: (shot: DramaShot) => void;
     onSavePrompt: (segment: DramaSegment, override: string) => void;
     /** 指定本段参考图；null 恢复按镜头自动取。 */
     onSaveReferences: (segment: DramaSegment, patch: DramaSegmentReferencePatch) => Promise<unknown>;
@@ -69,8 +71,9 @@ type Props = {
     /** 作品指定的视频分辨率；换模型时给不出的置灰。 */
     videoResolution?: string;
     onOpenCast: (castId: string) => void;
+    onOpenAssets: () => void;
     /** 把本段投送到精修画布（已投送则定位），在画布上换首尾帧、延长或重新生成后采用回来。 */
-    onOpenCanvas: (segment: DramaSegment) => void;
+    onOpenCanvas: (segment: DramaSegment, target?: "canvas" | "previs" | "timeline") => void;
     canvasOpening: boolean;
 };
 
@@ -95,12 +98,14 @@ export function SegmentDialog({
     onPatchShot,
     onInsertShot,
     onDeleteShot,
+    onDiscussShot,
     onSavePrompt,
     onSaveReferences,
     onWritePrompt,
     onGenerate,
     onReprocess,
     onOpenCast,
+    onOpenAssets,
     onOpenCanvas,
     canvasOpening,
 }: Props) {
@@ -149,9 +154,21 @@ export function SegmentDialog({
                             </div>
                         </div>
                         <div className="drama-sd-nav">
-                            <Button icon={<Brush className="size-4" />} loading={canvasOpening} onClick={() => onOpenCanvas(segment)}>
-                                {_creationText("creation.64422cd9b4ac9f19")}
-                            </Button>
+                            <Dropdown
+                                trigger={["click"]}
+                                menu={{
+                                    items: [
+                                        { key: "previs", label: "3D 导演台", icon: <Box className="size-4" />, onClick: () => onOpenCanvas(segment, "previs") },
+                                        { key: "timeline", label: "动画时间轴", icon: <Film className="size-4" />, onClick: () => onOpenCanvas(segment, "timeline") },
+                                        { key: "canvas", label: "自由画布", icon: <Brush className="size-4" />, onClick: () => onOpenCanvas(segment, "canvas") },
+                                    ],
+                                }}
+                            >
+                                <Button icon={<Brush className="size-4" />} loading={canvasOpening}>
+                                    {_creationText("creation.269475951c920826")}
+                                    <ChevronDown className="size-3.5" />
+                                </Button>
+                            </Dropdown>
                             <Tooltip title={_creationText("creation.5c73eb92d825f81f")}>
                                 <Button icon={<ChevronLeft className="size-4" />} aria-label={_creationText("creation.5c73eb92d825f81f")} disabled={position <= 0} onClick={() => onNavigate(segments[position - 1].index)} />
                             </Tooltip>
@@ -174,8 +191,18 @@ export function SegmentDialog({
                                 onGenerate={(model) => onGenerate(segment, model)}
                                 onWritePrompt={() => onWritePrompt(segment)}
                             />
-                            <SegmentPrompt segment={segment} castById={castById} writing={writing} onSave={(override) => onSavePrompt(segment, override)} onWrite={() => onWritePrompt(segment)} />
-                            <ReferenceBoard key={segment.id} segment={segment} shots={shots} castById={castById} busy={busy} onSave={(patch) => onSaveReferences(segment, patch)} onOpenCast={onOpenCast} />
+                            <ReferenceBoard
+                                key={segment.id}
+                                projectId={detail.episode.projectId}
+                                segment={segment}
+                                shots={shots}
+                                castById={castById}
+                                busy={busy}
+                                onSave={(patch) => onSaveReferences(segment, patch)}
+                                onOpenCast={onOpenCast}
+                                onOpenAssets={onOpenAssets}
+                            />
+                            <SegmentPrompt key={segment.id} segment={segment} castById={castById} writing={writing} onSave={(override) => onSavePrompt(segment, override)} onWrite={() => onWritePrompt(segment)} />
                             <SegmentReceipt segment={segment} />
                             <section className="drama-sdx-section" aria-label={_creationText("creation.5327351b5844372b")}>
                                 <div className="drama-sdx-section-head">
@@ -197,6 +224,7 @@ export function SegmentDialog({
                                             onPatch={(patch) => onPatchShot(item, patch)}
                                             onInsert={onInsertShot ? (where) => onInsertShot(item, where) : undefined}
                                             onDelete={onDeleteShot ? () => onDeleteShot(item) : undefined}
+                                            onDiscuss={onDiscussShot ? () => onDiscussShot(item) : undefined}
                                         />
                                     ))}
                                 </ol>
@@ -484,6 +512,7 @@ function ShotCard({
     onPatch,
     onInsert,
     onDelete,
+    onDiscuss,
 }: {
     shot: DramaShot;
     number: number;
@@ -496,6 +525,7 @@ function ShotCard({
     onPatch: (patch: DramaShotPatch) => void;
     onInsert?: (where: "before" | "after") => void;
     onDelete?: () => void;
+    onDiscuss?: () => void;
 }) {
     _useCreationLocale();
     const { modal } = App.useApp();
@@ -527,6 +557,11 @@ function ShotCard({
                 </span>
                 <span className="drama-sdx-shot-duration">{secondsLabel(shot.durationMs)}</span>
                 <span className="drama-sdx-spacer" />
+                {onDiscuss ? (
+                    <Button size="small" type="text" icon={<MessageCircle className="size-3.5" />} disabled={busy} onClick={onDiscuss}>
+                        {_creationText("creation.22948061b91baadc")}
+                    </Button>
+                ) : null}
                 {onInsert ? (
                     <Tooltip title={_creationText("creation.fbc909b7baa01d67")}>
                         <Button size="small" icon={<Plus className="size-3.5" />} disabled={busy} onClick={() => onInsert("after")}>
@@ -599,7 +634,7 @@ const PROMPT_EDITOR_MAX = 560;
 
 /**
  * 完整视频提示词：与画布视频节点的提示词面板一致，正文里的“参考图N”显示为带缩略图的引用，输入 @ 可插入本段参考图。
- * 提交时系统在正文前追加参考图对应说明（上方列出），视频模型靠同一个“参考图N”把名称与图片对上。
+ * 提交时按所选模型的实际图片顺序编译引用编号；编辑内容保留本段的资产编号。
  */
 function SegmentPrompt({ segment, castById, writing, onSave, onWrite }: { segment: DramaSegment; castById: Map<string, DramaCast>; writing: boolean; onSave: (override: string) => void; onWrite: () => void }) {
     _useCreationLocale();
@@ -611,23 +646,7 @@ function SegmentPrompt({ segment, castById, writing, onSave, onWrite }: { segmen
     const notice = segment.custom && segment.promptStatus === "stale" ? "" : PROMPT_NOTICE[segment.promptStatus];
     const dirty = draft.trim() !== segment.videoPrompt.trim();
     const { request } = segment;
-    const references = useMemo<CanvasResourceReference[]>(
-        () =>
-            request.references.map((ref) => {
-                const resourceId = ref.resourceId || castById.get(ref.castId)?.imageResourceId;
-                return {
-                    id: `drama-ref:${ref.castId || ref.resourceId}`,
-                    nodeId: "",
-                    kind: "image",
-                    label: ref.label,
-                    title: `${ref.name} · ${CAST_KIND_LABEL[ref.kind]}${ref.sent ? "" : "（未附图）"}`,
-                    storageKey: resourceId ? `resource:${resourceId}` : undefined,
-                    mentionToken: ref.label,
-                    active: true,
-                };
-            }),
-        [castById, request.references],
-    );
+    const references = useMemo(() => buildDramaPromptReferences(request.references, castById), [castById, request.references]);
     const usage = useMemo(() => referenceUsage(draft, request.references.length), [draft, request.references.length]);
     // 与服务端一致按字符（码点）计：参考图说明 + 空行 + 正文。
     const sentChars = Array.from([request.header, draft.trim()].filter(Boolean).join("\n\n")).length;
@@ -653,6 +672,14 @@ function SegmentPrompt({ segment, castById, writing, onSave, onWrite }: { segmen
                         {_creationText("creation.4d2e5ee624a18410")}
                     </Button>
                 ) : null}
+            </div>
+            <div className="drama-asset-legend" aria-label={_creationText("creation.684b6a472fda18db")}>
+                {Object.entries(DRAMA_ASSET_KIND_LABEL).map(([kind, label]) => (
+                    <span key={kind} className="drama-asset-kind" data-asset-kind={kind}>
+                        {label}
+                    </span>
+                ))}
+                <small>{_creationText("creation.d1694f8bee5cd34b")}</small>
             </div>
             {notice && segment.videoPrompt ? <PromptNotice segment={segment} text={notice} /> : null}
             {request.header ? (

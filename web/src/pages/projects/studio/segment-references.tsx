@@ -1,18 +1,24 @@
 import { creationLabel as _creationLabel, creationText as _creationText, useCreationLocale as _useCreationLocale } from "@/supdance/plugins/i18n/creation-text";
 import { useRef, useState, type ReactNode } from "react";
-import { App, Button, Input, Popover } from "antd";
-import { ArrowDown, ArrowUp, Check, Library, Plus, RotateCcw, Search, Trash2, Upload, ZoomIn } from "lucide-react";
+import { App, Button, Input } from "antd";
+import { ArrowDown, ArrowUp, Check, Library, Plus, RotateCcw, Search, Upload, ZoomIn } from "lucide-react";
+import { useQueryClient } from "@tanstack/react-query";
 
 import { CanvasImagePreview } from "@/components/canvas/canvas-image-preview";
+import { AppDrawer } from "@/components/ui/product/app-drawer";
+import { SegmentedControl } from "@/components/ui/base/segmented-control";
 import type { DramaCast, DramaSegment, DramaSegmentReferencePatch, DramaShot } from "@/services/api/drama";
 import { uploadResourceFile } from "@/services/api/resources";
+import { linkProjectAsset } from "@/services/api/projects";
 import { MediaThumb, parseList } from "../drama-shared";
 import { CastLibraryPicker } from "./cast-library-picker";
 import { CastVoicePreview } from "./cast-voice";
 import { referenceMissingReason } from "./segment-parts";
+import { EpisodeReferencePicker, ProjectReferencePicker, type ReferenceImageAsset } from "./segment-project-images";
+import "./asset-kind.css";
 
 const ASSET_KINDS = ["character", "scene", "prop"] as const;
-const KIND_LABEL = { character: "人物", scene: "场景", prop: "道具", image: "附加图片" };
+const KIND_LABEL = { character: "角色", scene: "环境", prop: "道具", image: "素材" };
 type AssetKind = keyof typeof KIND_LABEL;
 type Reference = DramaSegment["request"]["references"][number];
 
@@ -29,29 +35,37 @@ function castName(cast: DramaCast) {
 
 /** 分组只改变展示；保存的 ID 顺序仍是提示词编号和模型发送顺序。 */
 export function ReferenceBoard({
+    projectId,
     segment,
     shots,
     castById,
     busy: saving,
     onSave,
     onOpenCast,
+    onOpenAssets,
 }: {
+    projectId: string;
     segment: DramaSegment;
     shots: DramaShot[];
     castById: Map<string, DramaCast>;
     busy: boolean;
     onSave: (patch: DramaSegmentReferencePatch) => Promise<unknown>;
     onOpenCast: (id: string) => void;
+    onOpenAssets: () => void;
 }) {
     _useCreationLocale();
     const { message } = App.useApp();
+    const queryClient = useQueryClient();
     const [menuOpen, setMenuOpen] = useState(false);
     const [libraryOpen, setLibraryOpen] = useState(false);
+    const [projectSource, setProjectSource] = useState<"project" | "episode" | null>(null);
     const [uploading, setUploading] = useState(false);
+    const [addingImage, setAddingImage] = useState(false);
+    const [uploadDraft, setUploadDraft] = useState<{ resourceId: string; name: string }>();
     const [voiceDraft, setVoiceDraft] = useState<string[] | null>(null);
     const [preview, setPreview] = useState<{ resourceId: string; name: string }>();
     const fileRef = useRef<HTMLInputElement>(null);
-    const busy = saving || uploading;
+    const busy = saving || uploading || addingImage;
     const openPreview = (image: { resourceId: string; name: string }) => {
         setMenuOpen(false);
         setPreview(image);
@@ -76,12 +90,20 @@ export function ReferenceBoard({
             saveIDs(next);
         }
     };
-    const addImage = async (resourceId: string, name: string) => {
-        if (request.references.some((ref) => ref.resourceId === resourceId)) {
-            message.info(_creationText("creation.0dec0ba0aa9a36c8"));
-            return;
+    const addImage = async (resourceId: string, name: string, asset?: ReferenceImageAsset) => {
+        if (!projectId || !resourceId) throw new Error("项目或图片信息缺失，请刷新后重试");
+        setAddingImage(true);
+        try {
+            await linkProjectAsset(projectId, { assetId: asset?.assetId || resourceId, category: asset?.category || "material", title: name, source: "uploaded" });
+            void queryClient.invalidateQueries({ queryKey: ["project-asset-picker", projectId] });
+            if (request.references.some((ref) => ref.resourceId === resourceId)) {
+                message.info(_creationText("creation.0dec0ba0aa9a36c8"));
+                return;
+            }
+            await onSave({ referenceImages: [...images, { resourceId, name }] });
+        } finally {
+            setAddingImage(false);
         }
-        await onSave({ referenceImages: [...images, { resourceId, name }] });
     };
     const upload = async (file: File) => {
         if (!file.type.startsWith("image/") || file.size > 20 * 1024 * 1024) {
@@ -91,7 +113,10 @@ export function ReferenceBoard({
         setUploading(true);
         try {
             const resource = await uploadResourceFile(file, "image", { fileName: file.name });
-            await addImage(resource.id, file.name.replace(/\.[^.]+$/, ""));
+            const draft = { resourceId: resource.id, name: file.name.replace(/\.[^.]+$/, "") };
+            setUploadDraft(draft);
+            await addImage(draft.resourceId, draft.name);
+            setUploadDraft(undefined);
         } catch (error) {
             message.error(error instanceof Error ? error.message : _creationText("creation.a169bd9ab2c226f0"));
         } finally {
@@ -170,6 +195,7 @@ export function ReferenceBoard({
                 key={cast.id}
                 name={castName(cast)}
                 kind={_creationLabel(KIND_LABEL[cast.kind])}
+                assetKind={cast.kind}
                 resourceId={ref?.resourceId || cast.imageResourceId}
                 badge={ref?.label}
                 checked={Boolean(ref)}
@@ -192,6 +218,7 @@ export function ReferenceBoard({
                 key={ref.resourceId}
                 name={ref.name}
                 kind={KIND_LABEL.image}
+                assetKind="image"
                 resourceId={ref.resourceId}
                 badge={ref.label}
                 checked
@@ -235,7 +262,8 @@ export function ReferenceBoard({
     return (
         <section className="drama-sdx-section" aria-label={_creationText("creation.b0332e8d02818c80")}>
             <div className="drama-sdx-section-head">
-                <span className="drama-sdx-count">{_creationText("creation.f76f0672d7ae2e60", { value1: request.references.filter((ref) => ref.sent).length, value2: request.references.length })}</span>
+                <strong>{_creationText("creation.8bb9d2a9861d7e16")}</strong>
+                <span className="drama-sdx-count">{_creationText("creation.b9190c0ba34d4560", { value1: request.references.length, value2: request.references.filter((ref) => ref.sent).length })}</span>
                 <small>
                     {segment.referenceMode === "custom" ? _creationText("creation.3fafbd5dffd185e4") : _creationText("creation.0edb541a6e6c7ee7")}
                     {_creationText("creation.baa0677523f2553b")}
@@ -250,48 +278,113 @@ export function ReferenceBoard({
                 ) : null}
             </div>
             <div className="drama-sdx-assets-foot">
-                <Popover
-                    trigger="click"
-                    placement="bottomLeft"
-                    destroyOnHidden
+                <Button size="small" icon={<Library className="size-3.5" />} aria-expanded={menuOpen} onClick={() => setMenuOpen(true)}>
+                    {_creationText("creation.018c9425d12919aa")}
+                </Button>
+                <AppDrawer
                     open={menuOpen}
-                    onOpenChange={setMenuOpen}
-                    content={
-                        <AssetMenu
-                            casts={[...castById.values()]}
-                            images={request.references.filter((ref) => !ref.castId)}
-                            ids={ids}
-                            busy={busy}
-                            renderCast={renderCast}
-                            renderImage={renderImage}
-                            voiceActions={
-                                voiceDraft !== null ? (
-                                    <>
-                                        <small>{_creationText("creation.e0df3cd20f0ea1e2", { value1: selectedVoices.length, value2: audioLimit })}</small>
-                                        {voiceActions}
-                                    </>
-                                ) : null
-                            }
-                            onLibrary={() => {
+                    onClose={() => setMenuOpen(false)}
+                    title={_creationText("creation.1748e2818948f2e7")}
+                    size="min(1040px, 100vw)"
+                    rootClassName="drama-root drama-asset-drawer"
+                    extra={
+                        <Button
+                            onClick={() => {
                                 setMenuOpen(false);
-                                setLibraryOpen(true);
+                                onOpenAssets();
                             }}
-                            onUpload={() => fileRef.current?.click()}
-                        />
+                        >
+                            {_creationText("creation.4f7c8b3a62f96c74")}
+                        </Button>
                     }
                 >
-                    <Button size="small" icon={<Search className="size-3.5" />} aria-expanded={menuOpen}>
-                        {_creationText("creation.6e7b9999f5706078")}
-                    </Button>
-                </Popover>
+                    <AssetMenu
+                        casts={[...castById.values()]}
+                        images={request.references.filter((ref) => !ref.castId)}
+                        ids={ids}
+                        busy={busy}
+                        renderCast={renderCast}
+                        renderImage={renderImage}
+                        voiceActions={
+                            voiceDraft !== null ? (
+                                <>
+                                    <small>{_creationText("creation.e0df3cd20f0ea1e2", { value1: selectedVoices.length, value2: audioLimit })}</small>
+                                    {voiceActions}
+                                </>
+                            ) : null
+                        }
+                        onLibrary={() => {
+                            setMenuOpen(false);
+                            setLibraryOpen(true);
+                        }}
+                        onUpload={() => fileRef.current?.click()}
+                        onProject={(source) => {
+                            setMenuOpen(false);
+                            setProjectSource(source);
+                        }}
+                    />
+                </AppDrawer>
                 <Button size="small" icon={<Library className="size-3.5" />} disabled={busy} onClick={() => setLibraryOpen(true)}>
-                    {_creationText("creation.89e906481e9ff575")}
+                    {_creationText("creation.808590547f85c165")}
                 </Button>
                 <Button size="small" icon={<Upload className="size-3.5" />} loading={uploading} disabled={busy} onClick={() => fileRef.current?.click()}>
-                    {_creationText("creation.464d140c37a379a6")}
+                    {_creationText("settings.upload_avatar_tab")}
                 </Button>
-                <small>{_creationText("creation.73ae588f4056e6fd")}</small>
+                <Button size="small" type="text" onClick={onOpenAssets}>
+                    {_creationText("creation.4f7c8b3a62f96c74")}
+                </Button>
             </div>
+            {uploadDraft && !busy ? (
+                <div className="drama-sdx-assets-foot" role="status">
+                    <span>{_creationText("creation.2c5fee3674aa863c", { value1: uploadDraft.name })}</span>
+                    <Button
+                        size="small"
+                        onClick={() => {
+                            void addImage(uploadDraft.resourceId, uploadDraft.name)
+                                .then(() => setUploadDraft(undefined))
+                                .catch((error) => message.error(error instanceof Error ? error.message : _creationText("creation.a169bd9ab2c226f0")));
+                        }}
+                    >
+                        {_creationText("creation.a7db2480debabb58")}
+                    </Button>
+                    <Button size="small" type="text" onClick={() => setUploadDraft(undefined)}>
+                        {_creationText("creation.cbe76a3a3aae3cd3")}
+                    </Button>
+                </div>
+            ) : null}
+            {request.references.length ? (
+                <div className="drama-reference-strip" aria-label={_creationText("creation.5797a8453202ea77")}>
+                    {request.references.map((ref) => {
+                        const cast = castById.get(ref.castId);
+                        const resourceId = ref.resourceId || cast?.imageResourceId;
+                        const name = cast ? castName(cast) : ref.name;
+                        return (
+                            <button
+                                type="button"
+                                key={ref.castId || ref.resourceId || ref.label}
+                                className="drama-reference-tile"
+                                data-asset-kind={ref.kind}
+                                disabled={!resourceId}
+                                aria-label={`${name} · ${ref.label} · ${ref.sent ? "随请求发送" : "未附图"}`}
+                                title={ref.sent ? _creationText("creation.5c519441bda571e1", { value1: name }) : referenceMissingReason(segment, cast, ref.resourceId)}
+                                onClick={() => resourceId && openPreview({ resourceId, name })}
+                            >
+                                <span className="drama-reference-tile-image">
+                                    <MediaThumb resourceId={resourceId} alt={name} fallback={<Library className="size-5" />} />
+                                </span>
+                                <strong>{name}</strong>
+                                <span>
+                                    <span className="drama-asset-kind">{_creationLabel(KIND_LABEL[ref.kind])}</span>
+                                    <span>{ref.label}</span>
+                                </span>
+                                {!ref.sent ? <small>{_creationText("creation.0decc7cf494c19a2")}</small> : null}
+                            </button>
+                        );
+                    })}
+                </div>
+            ) : (
+                <p className="drama-sdx-hint">{_creationText("creation.617eea8a27f3b3a9")}</p>
+            )}
             <div className="drama-sdx-frame-note">
                 {request.firstFrameResourceId ? (
                     <button type="button" aria-label={_creationText("creation.0b8b197f78665824")} onClick={() => setPreview({ resourceId: request.firstFrameResourceId!, name: "上一段尾帧" })}>
@@ -302,56 +395,64 @@ export function ReferenceBoard({
                     {first ? _creationText("creation.3ffd76e271e3a941") : request.firstFrameResourceId ? _creationText("creation.b51e78db2f31b708", { value1: segment.index }) : _creationText("creation.91475a5b2a7d0bb7", { value1: segment.index })}
                 </span>
             </div>
-            {groupOrder.map((kind) => {
-                const group = [...ids.map((id) => castById.get(id)).filter((cast): cast is DramaCast => Boolean(cast)), ...[...castById.values()].filter((cast) => visible.has(cast.id) && !ids.includes(cast.id))].filter((cast) => cast.kind === kind);
-                const index = activeKinds.indexOf(kind);
-                return (
-                    <section className="drama-sdx-asset-group" aria-label={_creationText("creation.2456afb0709e5073", { value1: _creationLabel(KIND_LABEL[kind]) })} key={kind}>
-                        <div className="drama-sdx-group-head">
-                            <strong>{_creationLabel(KIND_LABEL[kind])}</strong>
-                            <small>{_creationText("creation.85671af6e41c198a", { value1: groupedIDs(kind).length })}</small>
-                            <Button
-                                size="small"
-                                type="text"
-                                disabled={busy || index <= 0}
-                                aria-label={_creationText("creation.a021b52e0612e069", { value1: _creationLabel(KIND_LABEL[kind]) })}
-                                icon={<ArrowUp className="size-3.5" />}
-                                onClick={() => moveGroup(kind, -1)}
-                            />
-                            <Button
-                                size="small"
-                                type="text"
-                                disabled={busy || index < 0 || index === activeKinds.length - 1}
-                                aria-label={_creationText("creation.af4f6d90a5e319ca", { value1: _creationLabel(KIND_LABEL[kind]) })}
-                                icon={<ArrowDown className="size-3.5" />}
-                                onClick={() => moveGroup(kind, 1)}
-                            />
-                        </div>
-                        {kind === "character" ? (
-                            <div className="drama-sdx-assets-foot">
-                                <small>
-                                    {_creationText("creation.6ab9d2bde92cea4a")}
-                                    {selectedVoices.length}/{audioLimit} · {segment.audioReferenceMode === "custom" ? _creationText("creation.187b88cd44e46d10") : _creationText("creation.1652c27d66840d47")} ·{" "}
-                                    {audioLimit ? _creationText("creation.8589df5d6fc373d0", { value1: audioLimit }) : _creationText("creation.30182f2cd1f00437")}
-                                </small>
-                                {voiceActions}
+            <details className="drama-reference-settings">
+                <summary>
+                    {_creationText("creation.9c706bfecb0eed85")}
+                    {voiceDraft !== null ? _creationText("creation.823a7dd0ec4bfe7a") : ""}
+                </summary>
+                {groupOrder.map((kind) => {
+                    const group = [...ids.map((id) => castById.get(id)).filter((cast): cast is DramaCast => Boolean(cast)), ...[...castById.values()].filter((cast) => visible.has(cast.id) && !ids.includes(cast.id))].filter((cast) => cast.kind === kind);
+                    const index = activeKinds.indexOf(kind);
+                    return (
+                        <section className="drama-sdx-asset-group" aria-label={_creationText("creation.2456afb0709e5073", { value1: _creationLabel(KIND_LABEL[kind]) })} key={kind}>
+                            <div className="drama-sdx-group-head">
+                                <strong className="drama-asset-kind" data-asset-kind={kind}>
+                                    {_creationLabel(KIND_LABEL[kind])}
+                                </strong>
+                                <small>{_creationText("creation.85671af6e41c198a", { value1: groupedIDs(kind).length })}</small>
+                                <Button
+                                    size="small"
+                                    type="text"
+                                    disabled={busy || index <= 0}
+                                    aria-label={_creationText("creation.a021b52e0612e069", { value1: _creationLabel(KIND_LABEL[kind]) })}
+                                    icon={<ArrowUp className="size-3.5" />}
+                                    onClick={() => moveGroup(kind, -1)}
+                                />
+                                <Button
+                                    size="small"
+                                    type="text"
+                                    disabled={busy || index < 0 || index === activeKinds.length - 1}
+                                    aria-label={_creationText("creation.af4f6d90a5e319ca", { value1: _creationLabel(KIND_LABEL[kind]) })}
+                                    icon={<ArrowDown className="size-3.5" />}
+                                    onClick={() => moveGroup(kind, 1)}
+                                />
                             </div>
-                        ) : null}
-                        {kind === "character" && selectedVoices.length > audioLimit ? <p className="drama-sdx-hint is-error">{_creationText("creation.ba350f7289bf89ff")}</p> : null}
-                        {group.length ? <div className="drama-sdx-assets">{group.map(renderCast)}</div> : <p className="drama-sdx-hint">{_creationText("creation.3de743ca1c037e4f", { value1: _creationLabel(KIND_LABEL[kind]) })}</p>}
+                            {kind === "character" ? (
+                                <div className="drama-sdx-assets-foot">
+                                    <small>
+                                        {_creationText("creation.6ab9d2bde92cea4a")}
+                                        {selectedVoices.length}/{audioLimit} · {segment.audioReferenceMode === "custom" ? _creationText("creation.187b88cd44e46d10") : _creationText("creation.1652c27d66840d47")} ·{" "}
+                                        {audioLimit ? _creationText("creation.8589df5d6fc373d0", { value1: audioLimit }) : _creationText("creation.30182f2cd1f00437")}
+                                    </small>
+                                    {voiceActions}
+                                </div>
+                            ) : null}
+                            {kind === "character" && selectedVoices.length > audioLimit ? <p className="drama-sdx-hint is-error">{_creationText("creation.ba350f7289bf89ff")}</p> : null}
+                            {group.length ? <div className="drama-sdx-assets">{group.map(renderCast)}</div> : <p className="drama-sdx-hint">{_creationText("creation.51c052391653268a", { value1: _creationLabel(KIND_LABEL[kind]) })}</p>}
+                        </section>
+                    );
+                })}
+                {images.length ? (
+                    <section className="drama-sdx-asset-group" aria-label={_creationText("creation.5e1740348d9beb4a")}>
+                        <div className="drama-sdx-group-head">
+                            <strong>{_creationText("creation.828cd5b24871b7ab")}</strong>
+                            <small>{_creationText("creation.720af9febe9c6016")}</small>
+                        </div>
+                        <div className="drama-sdx-assets">{request.references.filter((ref) => !ref.castId).map(renderImage)}</div>
                     </section>
-                );
-            })}
-            {images.length ? (
-                <section className="drama-sdx-asset-group" aria-label={_creationText("creation.5e1740348d9beb4a")}>
-                    <div className="drama-sdx-group-head">
-                        <strong>{_creationText("creation.828cd5b24871b7ab")}</strong>
-                        <small>{_creationText("creation.720af9febe9c6016")}</small>
-                    </div>
-                    <div className="drama-sdx-assets">{request.references.filter((ref) => !ref.castId).map(renderImage)}</div>
-                </section>
-            ) : null}
-            <small className="drama-sdx-hint">{_creationText("creation.d8de6c9c957150b3")}</small>
+                ) : null}
+                <small className="drama-sdx-hint">{_creationText("creation.d8de6c9c957150b3")}</small>
+            </details>
             <input
                 ref={fileRef}
                 type="file"
@@ -364,6 +465,8 @@ export function ReferenceBoard({
                 }}
             />
             <CastLibraryPicker open={libraryOpen} cast={{ kind: "character", name: segment.title }} segment onClose={() => setLibraryOpen(false)} onPick={addImage} />
+            {projectSource === "project" ? <ProjectReferencePicker projectId={projectId} onClose={() => setProjectSource(null)} onPick={addImage} /> : null}
+            {projectSource === "episode" ? <EpisodeReferencePicker projectId={projectId} onClose={() => setProjectSource(null)} onPick={addImage} /> : null}
             {preview ? <CanvasImagePreview storageKey={`resource:${preview.resourceId}`} alt={preview.name} onClose={() => setPreview(undefined)} /> : null}
         </section>
     );
@@ -380,6 +483,7 @@ function AssetMenu({
     voiceActions,
     onLibrary,
     onUpload,
+    onProject,
 }: {
     casts: DramaCast[];
     images: Reference[];
@@ -390,6 +494,7 @@ function AssetMenu({
     voiceActions: ReactNode;
     onLibrary: () => void;
     onUpload: () => void;
+    onProject: (source: "project" | "episode") => void;
 }) {
     const [kind, setKind] = useState<AssetKind | "all">("all");
     const [query, setQuery] = useState("");
@@ -400,13 +505,22 @@ function AssetMenu({
     return (
         <div className="drama-root drama-sdx-asset-menu" aria-label={_creationText("creation.42f7601f8df05f19")}>
             <Input allowClear value={query} prefix={<Search className="size-3.5" />} placeholder={_creationText("creation.f7d659a92a8b02bb")} aria-label={_creationText("creation.05697124c39d2e13")} onChange={(event) => setQuery(event.target.value)} />
-            <nav className="drama-sdx-asset-menu-kinds" aria-label={_creationText("creation.8e14f176fa7715ae")}>
-                {(["all", ...ASSET_KINDS, "image"] as const).map((value) => (
-                    <button key={value} type="button" aria-pressed={kind === value} onClick={() => setKind(value)}>
-                        {value === "all" ? _creationText("settings.memory_status_all") : _creationLabel(KIND_LABEL[value])}
-                    </button>
-                ))}
-            </nav>
+            <SegmentedControl<AssetKind | "all">
+                ariaLabel="资产分类"
+                value={kind}
+                onChange={setKind}
+                options={(["all", ...ASSET_KINDS, "image"] as const).map((value) => ({
+                    value,
+                    label: (
+                        <>
+                            <span data-asset-kind={value === "all" ? undefined : value} className={value === "all" ? undefined : "drama-asset-kind"}>
+                                {value === "all" ? _creationText("settings.memory_status_all") : _creationLabel(KIND_LABEL[value])}
+                            </span>
+                            <span className="app-segmented-count">{value === "all" ? casts.length + images.length : value === "image" ? images.length : casts.filter((cast) => cast.kind === value).length}</span>
+                        </>
+                    ),
+                }))}
+            />
             <div className="drama-sdx-asset-menu-results">
                 {filteredCasts.map(renderCast)}
                 {filteredImages.map(renderImage)}
@@ -414,8 +528,14 @@ function AssetMenu({
             </div>
             <div className="drama-sdx-assets-foot">
                 <small>{_creationText("creation.b20901bc6d5fd37d", { value1: ids.length + images.length })}</small>
+                <Button size="small" disabled={busy} onClick={() => onProject("project")}>
+                    {_creationText("creation.d22367c9e67c53d5")}
+                </Button>
+                <Button size="small" disabled={busy} onClick={() => onProject("episode")}>
+                    {_creationText("creation.fe7a941e3bdfc96b")}
+                </Button>
                 <Button size="small" disabled={busy} onClick={onLibrary}>
-                    {_creationText("creation.89e906481e9ff575")}
+                    {_creationText("creation.808590547f85c165")}
                 </Button>
                 <Button size="small" disabled={busy} onClick={onUpload}>
                     {_creationText("creation.464d140c37a379a6")}
@@ -429,6 +549,7 @@ function AssetMenu({
 function AssetCard({
     name,
     kind,
+    assetKind,
     resourceId,
     badge,
     checked,
@@ -443,6 +564,7 @@ function AssetCard({
 }: {
     name: string;
     kind: string;
+    assetKind: AssetKind;
     resourceId?: string;
     badge?: string;
     checked: boolean;
@@ -456,7 +578,7 @@ function AssetCard({
     children?: ReactNode;
 }) {
     return (
-        <article className={`drama-sdx-asset ${checked ? "is-checked" : ""}`} aria-label={_creationText("creation.6f976e0e70dc0a51", { value1: name })}>
+        <article className={`drama-sdx-asset ${checked ? "is-checked" : ""}`} data-asset-kind={assetKind} aria-label={_creationText("creation.6f976e0e70dc0a51", { value1: name })}>
             <button
                 type="button"
                 className="drama-sdx-asset-thumb"
@@ -466,7 +588,7 @@ function AssetCard({
                     if (resourceId) onPreview({ resourceId, name });
                 }}
             >
-                {resourceId ? <MediaThumb resourceId={resourceId} alt={name} /> : <span>{_creationText("creation.d117ed1cad63dce5", { value1: kind })}</span>}
+                <MediaThumb resourceId={resourceId} alt={name} fallback={<span>{resourceId ? _creationText("creation.62cab5ebabfe9c33") : _creationText("creation.d117ed1cad63dce5", { value1: kind })}</span>} />
                 {badge ? <em>{badge}</em> : null}
                 {resourceId ? <ZoomIn className="drama-sdx-asset-zoom size-4" /> : null}
             </button>
@@ -477,17 +599,19 @@ function AssetCard({
             ) : (
                 <strong className="drama-sdx-asset-text">{name}</strong>
             )}
+            <span className="drama-asset-kind">{kind}</span>
             <small className="drama-sdx-asset-note">{note}</small>
             <div className="drama-sdx-asset-actions">
                 <Button
                     size="small"
                     type="text"
-                    icon={checked ? <Trash2 className="size-3.5" /> : <Plus className="size-3.5" />}
+                    icon={checked ? <Check className="size-3.5" /> : <Plus className="size-3.5" />}
                     disabled={disabled}
+                    aria-pressed={checked}
                     aria-label={checked ? _creationText("creation.bd6f19e3549033d1", { value1: name }) : _creationText("creation.4d0e009671c1c2bd", { value1: name })}
                     onClick={onToggle}
                 >
-                    {checked ? _creationText("creation.6135d4159e892541") : _creationText("creation.7a8a11ead50742a2")}
+                    {checked ? _creationText("creation.bf155b9275853eb6") : _creationText("creation.0877e4e7b85ff509")}
                 </Button>
                 {checked ? (
                     <>

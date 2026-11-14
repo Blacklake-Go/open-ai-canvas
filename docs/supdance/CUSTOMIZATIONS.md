@@ -54,6 +54,10 @@
 
 # SupDance Canvas — 独立改造与定制代码清单 (CUSTOMIZATIONS.md)
 
+## 上游 main 完整更新与二开保留
+
+集成 `3979305c` 的十二项更新，保留最新八语言、HTML 后台、法律页、音乐、模型选择器、社交登录、Waffo、ONE 桥和 Codex。迁移保留已发布 1–102，上游新增映射为本站 103–105。社交插件绑定接口更名以避免与上游微信同名方法冲突，原行为保持。新分镜与权限界面的显示文案接入原生词库；生成提示词和用户内容保持原文。新接缝登记 `supdance-upstream-20261114-preservation`，具体取舍、验证和部署边界见 [更新记录](UPSTREAM_20261114.md)。
+
 ## 灵感大厅合规公开边界
 
 独立领域模块 `backend/internal/supdance/gallery` 统一执行现有模型选择器全局开关、首页开关、合规锁与内容摘要绑定的逐条授权审核，复用 system_settings 和管理员事务审计。上游接缝仅包括 API 注册、上新读取组合根、真实首页/大厅加载、受控 Nginx 路径与 Vite 私有目录构建排除。源码数据与私人资产保留，不更改支付和模型合同。后台只扩展既有模型选择器，不创建新导航或控制中心。登记为 `supdance-gallery-compliance`；部署、恢复及回滚见 [专题说明](./WAFFO_GALLERY_ISOLATION.md)。
