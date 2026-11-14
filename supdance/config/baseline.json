@@ -315,6 +315,9 @@
     "web/src/styles/workspace-product.css",
     "web/src/types/canvas.ts",
     "web/test/canvas-extension-nodes.test.ts",
+    "web/test/channel-model-templates.interaction.test.ts",
+    "web/test/editor-filmstrip-media.test.ts",
+    "web/test/fixtures/channel-model-templates.harness.tsx",
     "web/test/provider-neutral-generation-effects.test.ts",
     "web/vite.config.ts"
   ],

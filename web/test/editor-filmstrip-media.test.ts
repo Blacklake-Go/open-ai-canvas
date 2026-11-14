@@ -2,6 +2,7 @@ import { afterEach, beforeEach, expect, test } from "bun:test";
 import { spawnSync } from "node:child_process";
 import { fileURLToPath } from "node:url";
 import { readTimelineFrames } from "../src/lib/plugins/builtin/editor/editor-filmstrip-media";
+import { setActiveUserScope } from "../src/lib/user-scope";
 
 let videos: TestVideo[];
 let drawnTime = 0;
@@ -44,7 +45,15 @@ beforeEach(() => {
     videos = [];
     blocked = false;
     scope = "filmstrip-user-a";
-    stub("window", { localStorage: { getItem: () => scope } });
+    stub("window", {
+        localStorage: {
+            getItem: () => scope,
+            setItem: (key: string, value: string) => {
+                if (key === "yingce:active-user-scope") scope = value;
+            },
+        },
+    });
+    setActiveUserScope(scope);
     stub("document", {
         createElement: (tag: string) => {
             if (tag === "video") {
@@ -87,7 +96,7 @@ test("提取指定源时间的画面并缓存，结束后释放独立视频解�
     await readTimelineFrames(media, [2500], new AbortController().signal, (_, frame) => cached.push(frame));
     expect(cached).toEqual(["data:image/jpeg;base64,frame-2.5"]);
     expect(videos).toHaveLength(1);
-    scope = "filmstrip-user-b";
+    setActiveUserScope("filmstrip-user-b");
     await readTimelineFrames(media, [2500], new AbortController().signal, () => {});
     expect(videos).toHaveLength(2);
 });

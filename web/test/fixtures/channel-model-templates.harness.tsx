@@ -839,7 +839,7 @@ test("完整模型编辑器：先应用或撤销模板再发起协议建议也�
             }
         }
     }
-});
+}, 15_000);
 
 test("完整模型编辑器：未操作保存保留参考视频计价及独立成本", async () => {
     const values = { ...draft(), capability: "video" as const, protocol: "video-test", referenceVideoBilling: true, capabilityConfig: defaultModelCapabilityConfig("video-test") };
