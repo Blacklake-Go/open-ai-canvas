@@ -93,6 +93,9 @@ func DefaultSettings() Settings {
 	}
 }
 
+// Keep the shared map constructor out of thousands of generated call sites.
+//
+//go:noinline
 func entry(key, ns, zhCN, enUS, zhTW, jaJP, koKR, esES, frFR, deDE, desc string) Entry {
 	return Entry{
 		Key:         key,
