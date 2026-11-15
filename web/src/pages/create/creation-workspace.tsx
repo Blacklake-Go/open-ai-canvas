@@ -62,6 +62,8 @@ import { useI18n } from "@/supdance/plugins/i18n";
 import { useUserStore } from "@/stores/use-user-store";
 import { selectPluginEffectivelyEnabled, usePluginStore } from "@/stores/use-plugin-store";
 import { SUPDANCE_MUSIC_PLUGIN_ID } from "@/supdance/plugins/music-generation/types";
+import { LyricsIsland, type LyricAIRequest } from "@/supdance/plugins/music-generation/components/lyrics-editor";
+import { generateLyrics, isLyricsAIRuntimeConfigured } from "@/supdance/plugins/music-generation/services/lyrics-ai";
 import { useGenerationBatchLimit, batchQuoteTotal } from "@/lib/generation-batch-limit";
 import type { PromptOptimizerProvider } from "@/lib/plugins/plugin-types";
 import { type CreationReference } from "./creation-references";
@@ -299,16 +301,21 @@ function MusicDurationMenu({ duration, maxDuration, onChange, disabled }: { dura
     );
 }
 
-function LyricsEditorModal({ open, lyrics, onClose, onChange }: { open: boolean; lyrics: string; onClose: () => void; onChange: (val: string) => void }) {
+// 创作岛歌词弹窗：复用音乐插件的歌词输入岛（图 2 卡片），不再维护第二套歌词交互。
+// 弹窗内包一层 .plugin-music-generation 让 island 的 scoped 样式生效。
+const CREATION_LYRICS_SOFT_LIMIT = 5000;
+
+function LyricsEditorModal({ open, lyrics, onClose, onChange, config, instrumental }: { open: boolean; lyrics: string; onClose: () => void; onChange: (val: string) => void; config: AiConfig; instrumental?: boolean }) {
+    const { t } = useI18n();
     const [draftLyrics, setDraftLyrics] = useState(lyrics);
     useEffect(() => {
         if (open) setDraftLyrics(lyrics);
     }, [open, lyrics]);
 
-    const tags = ["[Intro]", "[Verse 1]", "[Chorus]", "[Verse 2]", "[Bridge]", "[Outro]"];
-
-    const insertTag = (tag: string) => {
-        setDraftLyrics((prev) => (prev.trim() ? `${prev}\n\n${tag}\n` : `${tag}\n`));
+    const lyricsAIEnabled = isLyricsAIRuntimeConfigured(config);
+    const runLyricsAI = async (request: LyricAIRequest) => {
+        if (!lyricsAIEnabled) throw new Error(t("music.lyric_ai_failed"));
+        return generateLyrics(request, { config });
     };
 
     return (
@@ -318,44 +325,27 @@ function LyricsEditorModal({ open, lyrics, onClose, onChange }: { open: boolean;
             title={
                 <div className="flex items-center gap-2">
                     <Mic2 className="size-4 text-primary" />
-                    <span>结构化歌词编辑</span>
+                    <span>{t("music.lyric_island_label", undefined, "歌词")}</span>
                 </div>
             }
             footer={
-                <div className="flex items-center justify-between">
-                    <span className="text-xs text-muted-foreground">{draftLyrics.length} 字</span>
-                    <div className="flex items-center gap-2">
-                        <Button onClick={onClose}>取消</Button>
-                        <Button
-                            type="primary"
-                            onClick={() => {
-                                onChange(draftLyrics);
-                                onClose();
-                            }}
-                        >
-                            保存歌词
-                        </Button>
-                    </div>
+                <div className="flex items-center justify-end gap-2">
+                    <Button onClick={onClose}>{t("common.cancel", undefined, "取消")}</Button>
+                    <Button
+                        type="primary"
+                        onClick={() => {
+                            onChange(draftLyrics);
+                            onClose();
+                        }}
+                    >
+                        {t("music.lyric_island_continue", undefined, "保存歌词")}
+                    </Button>
                 </div>
             }
-            width={520}
+            width={560}
         >
-            <div className="flex flex-col gap-3 py-2">
-                <div className="flex flex-wrap items-center gap-1.5">
-                    <span className="text-xs text-muted-foreground mr-1">快捷结构标签:</span>
-                    {tags.map((tag) => (
-                        <button key={tag} type="button" onClick={() => insertTag(tag)} className="rounded-md border border-border/60 bg-muted/50 px-2 py-0.5 text-xs text-foreground/80 hover:bg-muted hover:text-foreground transition-colors cursor-pointer">
-                            {tag}
-                        </button>
-                    ))}
-                </div>
-                <textarea
-                    rows={10}
-                    value={draftLyrics}
-                    onChange={(e) => setDraftLyrics(e.target.value)}
-                    placeholder="在这里输入歌词，支持填入段落结构标记，例如：&#10;[Verse 1]&#10;阳光穿过树梢落在大海&#10;&#10;[Chorus]&#10;风吹起思念的节拍…"
-                    className="w-full resize-none rounded-xl border border-border/80 bg-background/80 p-3 text-sm text-foreground focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
-                />
+            <div className="plugin-music-generation py-2">
+                <LyricsIsland value={draftLyrics} onChange={setDraftLyrics} maxChars={CREATION_LYRICS_SOFT_LIMIT} instrumental={instrumental} showHeading onAIAction={lyricsAIEnabled ? runLyricsAI : undefined} />
             </div>
         </AppModal>
     );
@@ -820,7 +810,7 @@ export function CreationComposer(props: ComposerProps) {
                 />
             ) : null}
             <CreationMediaPreviewModal url={previewUrl} type={previewType} onClose={() => setPreviewUrl("")} />
-            <LyricsEditorModal open={lyricsModalOpen} lyrics={props.musicLyrics || ""} onClose={() => setLyricsModalOpen(false)} onChange={(value) => props.onMusicLyricsChange?.(value)} />
+            <LyricsEditorModal open={lyricsModalOpen} lyrics={props.musicLyrics || ""} config={props.config} instrumental={props.musicInstrumental} onClose={() => setLyricsModalOpen(false)} onChange={(value) => props.onMusicLyricsChange?.(value)} />
         </SpotlightSurface>
     );
     const composer = embedded ? (

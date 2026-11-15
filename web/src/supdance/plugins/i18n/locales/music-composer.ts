@@ -57,8 +57,8 @@ export const composerDefinitions = [
     ["lyric_structure", "插入段落", "Insert section", "插入段落", "セクションを挿入", "구간 삽입", "Insertar sección"],
     ["lyric_outline", "插入歌曲结构", "Insert song structure", "插入歌曲結構", "曲の構成を挿入", "곡 구성 삽입", "Insertar estructura"],
     ["limit_hint", "已达到此模型的字数上限", "Character limit reached for this model", "已達到此模型的字數上限", "モデルの文字数上限に達しました", "모델의 글자 수 제한에 도달했어요", "Se alcanzó el límite del modelo"],
-    ["mode_description", "简易", "Simple", "簡易", "シンプル", "간편", "Simple"],
-    ["mode_lyrics", "自定义", "Custom", "自訂", "カスタム", "맞춤", "Personalizado"],
+    ["mode_description", "简单", "Simple", "簡單", "シンプル", "간단", "Simple"],
+    ["mode_lyrics", "高级", "Advanced", "進階", "詳細", "고급", "Avanzado"],
     ["saved_styles", "我的提示词", "My prompts", "我的提示詞", "保存したプロンプト", "내 프롬프트", "Mis indicaciones"],
     ["save_style", "保存当前提示词", "Save current prompt", "儲存目前提示詞", "プロンプトを保存", "현재 프롬프트 저장", "Guardar indicación actual"],
     [

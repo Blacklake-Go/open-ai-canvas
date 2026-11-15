@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { recoverGenerationTaskMedia } from "@/services/api/task-center";
-import { Disc3, Download, FolderOpen, Heart, Music2, Pause, Play, Scissors, SlidersHorizontal } from "lucide-react";
+import { Disc3, Download, FolderOpen, Heart, Music2, Pause, Play, Scissors, Share2, SlidersHorizontal } from "lucide-react";
 import { useI18n } from "@/supdance/plugins/i18n";
 import { useMusicStore } from "../stores/use-music-store";
 import { musicOutputLabel } from "../services/music-tools";
@@ -33,6 +33,21 @@ export function TrackList({ task, favorites, onlyFavorites, onFavorite, onDetail
     const [busy, setBusy] = useState<string | null>(null);
     const title = task.title || t("music.default_track_title");
     const model = task.model.split("::").at(-1);
+    const description = (task.prompt || task.lyrics || "")
+        .replace(/\[[^\]]+\]/g, "")
+        .replace(/\s+/g, " ")
+        .trim()
+        .slice(0, 140);
+    const share = async () => {
+        const url = new URL(window.location.href);
+        url.hash = task.taskId;
+        try {
+            await navigator.clipboard.writeText(url.toString());
+            setError("");
+        } catch {
+            setError(t("music.workspace_share") + " —");
+        }
+    };
     if (task.status !== "completed" || !task.outputs?.length) return <TaskCard task={task} onDetails={onDetails} />;
     const run = async (id: string, action: () => Promise<unknown>) => {
         setError("");
@@ -78,6 +93,7 @@ export function TrackList({ task, favorites, onlyFavorites, onFavorite, onDetail
                                         </>
                                     )}
                                 </span>
+                                {description && <span className="music-record-desc">{description}</span>}
                             </button>
                             <span className="music-record-length">{output.durationMs ? musicTime(output.durationMs / 1000) : "—"}</span>
                             <div className="music-record-actions">
@@ -89,6 +105,9 @@ export function TrackList({ task, favorites, onlyFavorites, onFavorite, onDetail
                                         <SlidersHorizontal size={16} />
                                     </button>
                                 )}
+                                <button type="button" aria-label={t("music.workspace_share")} title={t("music.workspace_share")} onClick={() => void share()}>
+                                    <Share2 size={16} />
+                                </button>
                                 <button type="button" className="music-trim-trigger" disabled={!output.audioUrl && !output.storageKey} aria-label={t("music.trim_track")} title={t("music.trim_track")} onClick={() => onTrim(output)}>
                                     <Scissors size={16} />
                                 </button>

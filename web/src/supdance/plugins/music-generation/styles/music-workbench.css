@@ -689,6 +689,94 @@
     display: none;
 }
 
+/* 图 3：面包屑 + 工具条 + 作品描述副行 */
+.plugin-music-generation .music-library-heading {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    min-width: 0;
+}
+
+.plugin-music-generation .music-breadcrumb {
+    font-size: var(--font-size-xs, 0.75rem);
+    color: var(--music-text-muted, #a1a1aa);
+}
+
+.plugin-music-generation .music-suno-toolbar {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px;
+}
+
+.plugin-music-generation .music-suno-toolbar-spacer {
+    flex: 1;
+    min-width: 0;
+}
+
+.plugin-music-generation .music-suno-tool {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    min-height: 36px;
+    padding: 0 12px;
+    border: 1px solid var(--music-border-control, var(--border));
+    border-radius: var(--music-radius-full, 9999px);
+    background: transparent;
+    color: var(--music-text-secondary, var(--muted-foreground));
+    font-size: var(--font-size-sm, 0.875rem);
+    cursor: pointer;
+    white-space: nowrap;
+    transition:
+        background-color var(--music-motion-fast, 150ms) ease,
+        color var(--music-motion-fast, 150ms) ease,
+        border-color var(--music-motion-fast, 150ms) ease;
+}
+
+.plugin-music-generation .music-suno-tool:hover:not(:disabled) {
+    background: var(--music-bg-hover, var(--accent));
+    color: var(--music-text-primary, var(--foreground));
+    border-color: var(--music-border-strong, var(--border));
+}
+
+.plugin-music-generation .music-suno-tool.is-primary {
+    background: var(--music-primary, var(--primary));
+    border-color: var(--music-primary, var(--primary));
+    color: var(--music-primary-fg, var(--primary-foreground));
+}
+
+.plugin-music-generation .music-suno-tool[aria-pressed="true"] {
+    outline: 2px solid var(--music-ring, var(--ring));
+    outline-offset: 1px;
+}
+
+.plugin-music-generation .music-suno-tool:disabled {
+    opacity: 0.45;
+    cursor: not-allowed;
+}
+
+.plugin-music-generation .music-suno-tool-count {
+    display: grid;
+    place-items: center;
+    min-width: 18px;
+    height: 18px;
+    padding: 0 4px;
+    border-radius: var(--music-radius-full, 9999px);
+    background: var(--music-island-accent, #f97316);
+    color: #fff;
+    font-size: 0.6875rem;
+    font-weight: 600;
+}
+
+.plugin-music-generation .music-record-desc {
+    display: -webkit-box;
+    -webkit-line-clamp: 1;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    color: var(--music-text-muted, #a1a1aa);
+    font-size: var(--font-size-xs, 0.75rem);
+}
+
 /* Responsive Rules */
 @media (max-width: 900px) {
     .plugin-music-generation .music-studio-columns {
