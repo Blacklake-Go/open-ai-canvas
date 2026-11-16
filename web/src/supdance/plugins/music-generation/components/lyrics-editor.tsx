@@ -5,6 +5,7 @@ import { Select } from "@/components/ui/base/select";
 import { useI18n } from "@/supdance/plugins/i18n";
 import { insertLyricSection, lyricSections, songOutline } from "./composer-patterns";
 import { insertLyricSkeleton, lyricAIActions, lyricTopics, songSkeletons, validateLyricStructure, buildTopicStarter, type LyricAIActionId, type LyricTopicId } from "./lyrics-tools";
+import "../styles/music-composer.css";
 
 /** AI 动作请求：由工作台 / 创作岛注入 service，组件本身不碰网络。 */
 export type LyricAIRequest = {

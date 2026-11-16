@@ -316,11 +316,18 @@
 }
 
 .plugin-music-generation .music-lyrics-card textarea {
+    display: block;
+    width: 100%;
+    box-sizing: border-box;
     margin-block: 0;
-    min-height: 110px;
+    min-height: 120px;
     padding: 4px 2px;
     border: none;
     background: transparent;
+    color: var(--music-text-primary, var(--foreground));
+    font: inherit;
+    font-size: var(--font-size-sm, 0.875rem);
+    line-height: 1.55;
     resize: vertical;
 }
 
