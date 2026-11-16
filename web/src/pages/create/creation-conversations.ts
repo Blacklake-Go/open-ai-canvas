@@ -189,7 +189,14 @@ export function reconcileCreationTaskMessages(runtime: CreationRuntime, conversa
             changed = true;
 
             if (resultUrls.length || resultStorageKeys.length) {
-                const content = message.mode === "video" ? "视频已生成" : failedCount ? `${resultStorageKeys.length || resultUrls.length} 张图片已生成，${failedCount} 张失败` : "图片已生成";
+                const content =
+                    message.mode === "video"
+                        ? translate("create.status.videoGenerated")
+                        : message.mode === "music"
+                          ? translate("create.status.audioGenerated")
+                          : failedCount
+                            ? translate("create.status.imagesPartiallyGenerated", { done: resultStorageKeys.length || resultUrls.length, failed: failedCount })
+                            : translate("create.status.imageGenerated");
                 return {
                     ...message,
                     ...clearedCreationSyncState,

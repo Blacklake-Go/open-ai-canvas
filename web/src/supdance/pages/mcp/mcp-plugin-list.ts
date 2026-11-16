@@ -232,7 +232,7 @@ export const MCP_PLUGINS: McpPluginItem[] = [
         category: "multimodal",
         categoryLabel: "影视生成模型",
         description: "影视级智能配乐与环境音效生成插件，支持根据镜头情绪标签自动编排副歌、交响管弦与节拍对齐，一键导出无损多轨分轨包。",
-        version: "v1.3.0",
+        version: "v1.4.0",
         isOfficial: true,
         isFeatured: false,
         stars: 620,
@@ -246,7 +246,7 @@ export const MCP_PLUGINS: McpPluginItem[] = [
             overview: "为短剧与视频打造量体裁衣的情感配乐岛，支持根据视频画面的时间码实现秒级节拍卡点。",
             features: ["涵盖史诗交响、悬疑氛围、赛博流行、国风古韵等 40+ 种影视曲风", "支持按秒精确卡点与段落情绪转折（起承转合）", "支持导出分轨 WAV（人声、鼓点、贝斯、管弦单独分离）"],
             requirements: ["支持浏览器前端与 CLI 端双模式操作"],
-            changelog: "v1.3.0: 引入多轨自动化响度平衡与卡点标记生成。",
+            changelog: "v1.4.0: 在生成岛内合并统一内联声波播放器与结果卡片，支持多音轨、可读模型名与明暗主题一致性。",
         },
     },
     {

@@ -3,30 +3,7 @@
 import { conversationTimeFormatter, type CreationMessage } from "./creation-types";
 import { creationMessageNeedsResultSync } from "./creation-conversations";
 import { useAppearanceStore } from "@/stores/use-appearance-store";
-import {
-    AlertCircle,
-    AlertTriangle,
-    CircleStop,
-    CloudOff,
-    Copy,
-    Download,
-    ExternalLink,
-    FileText,
-    Film,
-    Image as ImageIcon,
-    ImageOff,
-    Maximize2,
-    Music,
-    Music2,
-    Pencil,
-    RefreshCw,
-    RotateCcw,
-    UserRound,
-    X,
-    type LucideIcon,
-    Blocks,
-    Orbit,
-} from "lucide-react";
+import { AlertCircle, AlertTriangle, CircleStop, CloudOff, Copy, Download, FileText, Film, Image as ImageIcon, ImageOff, Maximize2, Music, Music2, Pencil, RefreshCw, RotateCcw, UserRound, X, type LucideIcon, Blocks, Orbit } from "lucide-react";
 import { GenerationToolCard, type GenerationToolStatus } from "@/components/ai/generation-tool-card";
 import { GenerationPhaseSteps } from "@/components/ai/generation-phase-steps";
 import { MessageReasoning } from "@/components/ai/message-reasoning";
@@ -45,7 +22,8 @@ import { type CreationAttachment, creationAttachmentKind, creationMediaAspectRat
 import { getResourceAccess, resolveResourceAccessURL, resolveResourceUrl, resourceIdFromStorageKey } from "@/services/api/resources";
 import { CachedResourceImage } from "@/components/cached-resource-image";
 import { Tooltip } from "@/components/ui/base/tooltip";
-import { useAssetStore, type Asset, type ImageAsset, type VideoAsset } from "@/stores/use-asset-store";
+import { useAssetStore, type Asset, type AudioAsset, type ImageAsset, type VideoAsset } from "@/stores/use-asset-store";
+import { modelOptionLabel, useEffectiveConfig } from "@/stores/use-config-store";
 import { creationResultAssetIds, creationResultStorageKeys } from "@/lib/canvas/canvas-asset-handoff";
 import { resolveMediaUrl } from "@/services/file-storage";
 import { resolveImageUrl } from "@/services/image-storage";
@@ -55,16 +33,16 @@ import { AppModal } from "@/components/ui/product/app-modal";
 import { creationResultEntries } from "./creation-result-urls";
 import { useI18n } from "@/supdance/plugins/i18n";
 import { translate } from "@/i18n";
-import "./creation-music.css";
 
-const WaveformPlayer = lazy(() =>
-    import("@/supdance/plugins/music-generation/components/waveform-player").then((m) => ({
-        default: m.WaveformPlayer || m.default,
+const CreationMusicCard = lazy(() =>
+    import("@/supdance/plugins/music-generation/components/creation-music-card").then((m) => ({
+        default: m.CreationMusicCard,
     })),
 );
 
 export function CreationMessageView({
     item,
+    promptMessage,
     shotNumber,
     onRetryFailure,
     onRefreshResult,
@@ -76,6 +54,7 @@ export function CreationMessageView({
     openingCanvas,
 }: {
     item: CreationMessage;
+    promptMessage?: CreationMessage;
     shotNumber: number;
     onRetryFailure: () => void;
     onRefreshResult: () => void;
@@ -155,6 +134,7 @@ export function CreationMessageView({
                 <GenerationToolCard status={toolStatus} heading={heading}>
                     <MediaResult
                         item={item}
+                        promptMessage={promptMessage}
                         onRetryFailure={onRetryFailure}
                         onRefreshResult={onRefreshResult}
                         onRecoverMedia={onRecoverMedia}
@@ -292,65 +272,33 @@ export function CreationUserMessage({ item, shotNumber, onEditUserMessage }: { i
     );
 }
 
-function CreationMusicResult({ item, url, onRetry }: { item: CreationMessage; url: string; onRetry: () => void }) {
-    const { t } = useI18n();
-    const taskId = item.taskIds?.[0] || item.id;
-    const title = (item.settings as any)?.title || item.content.slice(0, 40) || "AI 生成音乐";
-    const duration = Number((item.settings as any)?.duration || item.settings?.seconds) || 120;
-    const model = item.model || (item.settings as any)?.model || "";
-    const isInstrumental = Boolean((item.settings as any)?.instrumental);
+const STATUS_PLACEHOLDER_CONTENTS = new Set(["图片已生成", "视频已生成", "音乐已生成", "Image generated", "Video generated", "Music generated", "Your music is ready"]);
 
-    const handleDownload = (format: "mp3" | "wav" | "flac" = "mp3") => {
-        const link = document.createElement("a");
-        link.href = url;
-        link.download = `${title}.${format}`;
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-    };
+function isMusicStatusPlaceholder(value: string) {
+    const trimmed = value.trim();
+    if (!trimmed) return true;
+    return STATUS_PLACEHOLDER_CONTENTS.has(trimmed) || trimmed === translate("create.status.imageGenerated") || trimmed === translate("create.status.videoGenerated") || trimmed === translate("create.status.audioGenerated");
+}
 
-    return (
-        <div className="creation-music-result flex flex-col gap-3 w-full rounded-2xl border border-border/70 bg-card/70 p-4 shadow-sm backdrop-blur-md my-1">
-            <div className="creation-music-result-heading">
-                <div className="creation-music-result-identity">
-                    <span className="flex size-7 items-center justify-center rounded-lg bg-emerald-500/10 text-emerald-500">
-                        <Music className="size-4" />
-                    </span>
-                    <span className="creation-music-result-title" title={title}>
-                        {title}
-                    </span>
-                    <span className="creation-music-result-model" title={model}>
-                        {model}
-                    </span>
-                    {isInstrumental ? <span className="rounded-md bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 px-1.5 py-0.5 text-[11px] font-medium">纯音乐</span> : null}
-                </div>
-                <div className="flex items-center gap-2">
-                    <a href="/toolbox/music" target="_blank" rel="noreferrer" className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors" title="在音乐生成岛中打开完整工作室">
-                        <span>音乐岛</span>
-                        <ExternalLink className="size-3" />
-                    </a>
-                </div>
-            </div>
-
-            <Suspense fallback={<div className="plugin-music-player flex h-24 items-center justify-center rounded-xl border border-border/60 bg-card/60 p-4 shadow-sm animate-pulse text-xs text-muted-foreground">加载音频播放器...</div>}>
-                <WaveformPlayer taskId={taskId} audioUrl={url} durationSeconds={duration} title={title} />
-            </Suspense>
-
-            <div className="flex items-center justify-between pt-1 border-t border-border/40 text-xs text-muted-foreground">
-                <span>{t("music.target_duration_hint", { seconds: duration }, "目标时长 {seconds} 秒，实际时长以音频为准")}</span>
-                <div className="flex items-center gap-2">
-                    <button type="button" onClick={() => handleDownload("mp3")} className="inline-flex items-center gap-1 rounded-md px-2 py-1 bg-muted/60 hover:bg-muted text-foreground transition-colors cursor-pointer">
-                        <Download className="size-3.5" />
-                        <span>下载 MP3</span>
-                    </button>
-                </div>
-            </div>
-        </div>
-    );
+export function resolveCreationMusicTitle(item: CreationMessage, promptMessage: CreationMessage | undefined, fallbackTitle: string) {
+    const settingsTitle = item.settings?.title?.trim();
+    if (settingsTitle && !isMusicStatusPlaceholder(settingsTitle)) return settingsTitle;
+    if (promptMessage) {
+        const promptSummary = displayCreationPrompt(promptMessage.content, promptMessage.references || [])
+            .trim()
+            .split(/\r?\n/)[0]
+            ?.trim()
+            .slice(0, 48);
+        if (promptSummary) return promptSummary;
+    }
+    const contentTitle = item.content?.trim();
+    if (contentTitle && !isMusicStatusPlaceholder(contentTitle)) return contentTitle.slice(0, 48);
+    return fallbackTitle;
 }
 
 export function MediaResult({
     item,
+    promptMessage,
     onRetryFailure,
     onRefreshResult,
     onRecoverMedia,
@@ -360,6 +308,7 @@ export function MediaResult({
     openingCanvas,
 }: {
     item: CreationMessage;
+    promptMessage?: CreationMessage;
     onRetryFailure: () => void;
     onRefreshResult: () => void;
     onRecoverMedia: () => void;
@@ -369,6 +318,7 @@ export function MediaResult({
     openingCanvas: boolean;
 }) {
     const { t } = useI18n();
+    const effectiveConfig = useEffectiveConfig();
     const [previewUrl, setPreviewUrl] = useState("");
     const [previewType, setPreviewType] = useState<"image" | "video">("image");
     const assets = useAssetStore((state) => state.assets);
@@ -479,7 +429,19 @@ export function MediaResult({
     const videoKey = resultEntries[0]?.key || resultStorageKeys[0] || "video";
     const videoState = displayResultUrls[0] ? mediaStates[videoKey] || "loading" : "loading";
     // 远端地址还在解析的结果位先按同样尺寸占位，不让结果区塌成一行操作按钮。
-    const pendingImageKeys = !isVideo && resolving ? resultStorageKeys.filter((storageKey) => !resultEntries.some((entry) => entry.key === storageKey)) : [];
+    const pendingImageKeys = !isVideo && !isMusic && resolving ? resultStorageKeys.filter((storageKey) => !resultEntries.some((entry) => entry.key === storageKey)) : [];
+    const musicTitle = isMusic ? resolveCreationMusicTitle(item, promptMessage, t("music.default_track_title", undefined, "AI 生成音乐")) : "";
+    const rawMusicModel = isMusic ? item.model || item.settings?.model || "" : "";
+    const musicModelLabel = rawMusicModel ? modelOptionLabel(effectiveConfig, rawMusicModel) : "";
+    const musicDurationSeconds = isMusic ? Number(item.settings?.duration || item.settings?.seconds) || undefined : undefined;
+    const musicTracks = isMusic
+        ? resultEntries.map(({ key, url }) => {
+              const storageKey = resultStorageKeys.includes(key) ? key : undefined;
+              const matchedAsset = assets.find((candidate): candidate is AudioAsset => candidate.kind === "audio" && (Boolean(storageKey && candidate.data.storageKey === storageKey) || candidate.data.url === url));
+              return { key, url, storageKey, durationMs: matchedAsset?.data.durationMs };
+          })
+        : [];
+    const musicCardSkeleton = <div className="creation-music-card-skeleton" aria-busy="true" aria-label={t("music.player_title", undefined, "正在加载音乐播放器")} />;
     return (
         <div className="creation-media-result">
             {isVideo ? (
@@ -505,7 +467,23 @@ export function MediaResult({
                     </span>
                 </button>
             ) : isMusic ? (
-                <CreationMusicResult item={item} url={displayResultUrls[0]} onRetry={onRetryFailure} />
+                musicTracks.length ? (
+                    <Suspense fallback={musicCardSkeleton}>
+                        <CreationMusicCard
+                            messageId={item.id}
+                            taskIds={item.taskIds}
+                            title={musicTitle}
+                            modelLabel={musicModelLabel}
+                            targetDurationSeconds={musicDurationSeconds}
+                            instrumental={Boolean(item.settings?.instrumental)}
+                            tracks={musicTracks}
+                            onRefreshResult={item.taskIds?.length ? onRefreshResult : undefined}
+                            refreshingResult={refreshingResult}
+                        />
+                    </Suspense>
+                ) : (
+                    musicCardSkeleton
+                )
             ) : (
                 <div className="creation-image-result-grid">
                     {resultEntries.map(({ key, url }) => (
@@ -553,7 +531,7 @@ export function MediaResult({
                     添加到画布
                 </Button>
                 {displayResultUrls.map((url, index) => (
-                    <a key={`download-${index}`} href={url} download>
+                    <a key={`download-${index}`} href={url} download={isMusic ? `${musicTitle}${displayResultUrls.length > 1 ? `-${index + 1}` : ""}.mp3` : true}>
                         {displayResultUrls.length > 1 ? (
                             t("music.download_number", { number: index + 1 })
                         ) : (
@@ -587,7 +565,7 @@ export function CreationMediaPending({ item, refreshing, onRefresh, onRetry }: {
             : null;
     const elapsed = useTaskElapsed(item.createdAt);
     const hint = generationPhaseHint(phase, kind, item.generationStage);
-    const aspectRatio = mode === "music" ? "16/6" : creationMediaAspectRatio(item.settings?.ratio, mode);
+    const aspectRatio = mode === "music" ? "auto" : creationMediaAspectRatio(item.settings?.ratio, mode);
     const specs = creationPendingSpecs(item);
     const Icon = mode === "video" ? Film : mode === "music" ? Music : ImageIcon;
     return (
@@ -596,7 +574,7 @@ export function CreationMediaPending({ item, refreshing, onRefresh, onRetry }: {
             data-phase={phase}
             data-saving={phase === "saving" ? generationTaskSavingState(item.generationStage) : undefined}
             data-sync={item.syncInterrupted ? "interrupted" : undefined}
-            style={{ aspectRatio, "--creation-media-ratio": creationAspectRatioValue(aspectRatio) } as CSSProperties}
+            style={mode === "music" ? undefined : ({ aspectRatio, "--creation-media-ratio": creationAspectRatioValue(aspectRatio) } as CSSProperties)}
         >
             <span className="creation-media-pending-surface" aria-hidden="true" />
             {specs ? (
@@ -647,8 +625,8 @@ function creationPendingSpecs(item: CreationMessage) {
     const settings = item.settings;
     if (!settings) return "";
     if (item.mode === "music") {
-        const duration = (settings as any).duration || settings.seconds;
-        return ["音乐", duration ? `${duration} 秒` : "", (settings as any).instrumental ? "纯音乐" : ""].filter(Boolean).join(" · ");
+        const duration = settings.duration || settings.seconds;
+        return [translate("create.mode.music"), duration ? `${duration} 秒` : "", settings.instrumental ? translate("create.music.instrumentalBadge") : ""].filter(Boolean).join(" · ");
     }
     const ratio = settings.ratio && settings.ratio.toLowerCase() !== "auto" ? settings.ratio : "";
     if (item.mode === "video") return [ratio, settings.seconds ? `${settings.seconds} 秒` : "", settings.videoQuality ? `${settings.videoQuality.replace(/p$/i, "")}P` : ""].filter(Boolean).join(" · ");

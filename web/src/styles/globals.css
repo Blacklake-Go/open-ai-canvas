@@ -23161,6 +23161,17 @@ html:not(.dark) .creation-home .creation-user-message-copy-wrap {
     box-shadow: inset 0 0 0 1px var(--creation-border);
     padding: var(--space-3);
 }
+.creation-home .creation-media-pending.is-music {
+    width: min(620px, calc(100% - var(--space-8)));
+    min-height: 128px;
+}
+.creation-home .creation-music-card-skeleton {
+    width: min(620px, 100%);
+    height: 118px;
+    border: 1px solid var(--creation-border);
+    border-radius: var(--r-lg);
+    background: var(--creation-surface);
+}
 .creation-home .creation-media-pending[data-sync="interrupted"],
 .creation-home .creation-media-pending[data-saving="retrying"] {
     --creation-pending-accent: var(--status-warning);
@@ -23644,6 +23655,9 @@ html:not(.dark) .creation-home .creation-user-message-copy-wrap {
     .creation-home .creation-media-pending {
         width: min(var(--creation-media-pending-max-width), 100%, calc(var(--creation-media-pending-max-height) * var(--creation-media-ratio, 1)));
         margin-left: 0;
+    }
+    .creation-home .creation-media-pending.is-music {
+        width: min(620px, 100%);
     }
     .creation-home .creation-media-notice {
         width: 100%;

@@ -56,9 +56,15 @@ export const zhCN = {
     status: {
         videoGenerated: "视频已生成",
         imageGenerated: "图片已生成",
+        audioGenerated: "音乐已生成",
         imagesPartiallyGenerated: "{{done}} 张图片已生成，{{failed}} 张失败",
         stopped: "已停止",
         failed: "生成失败",
+    },
+    music: {
+        studioLink: "音乐岛",
+        studioLinkTooltip: "在音乐岛中打开完整工作室",
+        instrumentalBadge: "纯音乐",
     },
     inspiration: {
         useIdea: "使用这个创意",
@@ -101,6 +107,7 @@ export const zhCN = {
         text: "文本",
         image: "图片",
         video: "视频",
+        music: "音乐",
     },
     shotScript: {
         text: "创作思路",

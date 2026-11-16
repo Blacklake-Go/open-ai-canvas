@@ -570,7 +570,7 @@ export default function CreatePage() {
                                     runtime.applyGenerationConsumerEffect(item, effectKey, (current) => ({
                                         ...current,
                                         status: "done" as const,
-                                        content: current.mode === "video" ? t("create.status.videoGenerated") : t("create.status.imageGenerated"),
+                                        content: current.mode === "video" ? t("create.status.videoGenerated") : current.mode === "music" ? t("create.status.audioGenerated") : t("create.status.imageGenerated"),
                                         error: undefined,
                                         errorKind: undefined,
                                         syncInterrupted: undefined,
@@ -959,7 +959,20 @@ export default function CreatePage() {
             releaseSubmitGate();
             return;
         }
-        const settings = mode === "music" ? ({ duration: String(musicDuration), instrumental: musicInstrumental, model: musicModel, title: text.slice(0, 30), seconds: String(musicDuration) } as any) : { ratio, seconds, quality, videoQuality, count };
+        const settings: CreationSettings =
+            mode === "music"
+                ? {
+                      ratio: "1:1",
+                      seconds: String(musicDuration),
+                      quality: "auto",
+                      videoQuality: "720",
+                      count: "1",
+                      duration: String(musicDuration),
+                      instrumental: musicInstrumental,
+                      model: selectedModel,
+                      title: text.slice(0, 40),
+                  }
+                : { ratio, seconds, quality, videoQuality, count };
         const references = selectedCreationReferences(text, mentionReferences);
         // 后端对图片和视频使用不同的参考字段；这里先拆分，避免媒体类型在写入任务时被误判。
         const { referenceImages, referenceVideos, referenceAudios } = splitCreationAttachments(attachments);
@@ -1090,7 +1103,14 @@ export default function CreatePage() {
                     assistantMessage.id,
                     async ({ resultUrls, resultStorageKeys, effectKey }) => {
                         await updateOriginAssistant(
-                            (item) => runtime.applyGenerationConsumerEffect(item, effectKey, (current) => ({ ...current, status: "done" as const, content: "音乐已生成", resultUrls, ...(resultStorageKeys.length ? { resultStorageKeys } : {}) })).value,
+                            (item) =>
+                                runtime.applyGenerationConsumerEffect(item, effectKey, (current) => ({
+                                    ...current,
+                                    status: "done" as const,
+                                    content: t("create.status.audioGenerated"),
+                                    resultUrls,
+                                    ...(resultStorageKeys.length ? { resultStorageKeys } : {}),
+                                })).value,
                         );
                     },
                     { signal: requestLifecycle.signal },
@@ -1424,13 +1444,25 @@ export default function CreatePage() {
         setPrompt(item.content);
         setAttachments(item.attachments ? [...item.attachments] : []);
         setDraftReferences(item.references ? [...item.references] : []);
-        if (item.model) updateConfig(nextMode === "text" ? "textModel" : nextMode === "image" ? "imageModel" : "videoModel", item.model);
+        if (item.model) {
+            if (nextMode === "music") {
+                setMusicModel(item.model);
+                updateConfig("audioModel", item.model);
+            } else {
+                updateConfig(nextMode === "text" ? "textModel" : nextMode === "image" ? "imageModel" : "videoModel", item.model);
+            }
+        }
         if (!nextSettings) return;
         setRatio(nextSettings.ratio);
         setSeconds(nextSettings.seconds);
         setQuality(nextSettings.quality);
         setVideoQuality(nextSettings.videoQuality);
         setCount(nextSettings.count);
+        if (nextMode === "music") {
+            const parsedDuration = Number(nextSettings.duration || nextSettings.seconds);
+            if (Number.isFinite(parsedDuration) && parsedDuration > 0) setMusicDuration(parsedDuration);
+            if (typeof nextSettings.instrumental === "boolean") setMusicInstrumental(nextSettings.instrumental);
+        }
         if (nextMode === "image") rememberImageSettings({ ratio: nextSettings.ratio, quality: nextSettings.quality, count: nextSettings.count });
         if (nextMode === "video") rememberVideoSettings({ ratio: nextSettings.ratio, seconds: nextSettings.seconds, videoQuality: nextSettings.videoQuality });
     };
@@ -1773,6 +1805,7 @@ export default function CreatePage() {
                                         <div key={item.id} id={`creation-shot-${item.id}`} className="creation-thread-message">
                                             <CreationMessageView
                                                 item={item}
+                                                promptMessage={index > 0 && activeConversation.messages[index - 1]?.role === "user" ? activeConversation.messages[index - 1] : undefined}
                                                 shotNumber={creationVideoShotOrdinal(videoShots, item)}
                                                 onRetryFailure={() => regenerateMessage(item, index)}
                                                 onRefreshResult={() => void refreshMessageResult(item)}

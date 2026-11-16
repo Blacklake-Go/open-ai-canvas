@@ -59,9 +59,15 @@ export const deDE: DeepStringRecord<typeof zhCN> = {
     status: {
         videoGenerated: "Video generiert",
         imageGenerated: "Bild generiert",
+        audioGenerated: "Musik generiert",
         imagesPartiallyGenerated: "{{done}} Bilder generiert, {{failed}} fehlgeschlagen",
         stopped: "Gestoppt",
         failed: "Generierung fehlgeschlagen",
+    },
+    music: {
+        studioLink: "Musikstudio",
+        studioLinkTooltip: "Vollständiges Studio im Musikstudio öffnen",
+        instrumentalBadge: "Instrumental",
     },
     inspiration: {
         useIdea: "Diese Idee verwenden",
@@ -104,6 +110,7 @@ export const deDE: DeepStringRecord<typeof zhCN> = {
         text: "Text",
         image: "Bild",
         video: "Video",
+        music: "Musik",
     },
     shotScript: {
         text: "Kreative Notizen",

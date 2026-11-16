@@ -282,13 +282,13 @@ describe("SupDance Music Plugin — Real Store & Controller Integration Suite", 
         }
     });
 
-    test("creation-workspace-messages.tsx dynamically loads WaveformPlayer with lazy & Suspense", () => {
+    test("creation-workspace-messages.tsx dynamically loads CreationMusicCard with lazy & Suspense", () => {
         const messagesFile = join(import.meta.dir, "../src/pages/create/creation-workspace-messages.tsx");
         const content = readFileSync(messagesFile, "utf-8");
 
-        expect(content).not.toMatch(/^import\s*\{\s*WaveformPlayer\s*\}\s*from/m);
+        expect(content).not.toMatch(/^import\s*\{\s*CreationMusicCard\s*\}\s*from/m);
         expect(content).toContain("lazy(() =>");
-        expect(content).toContain("waveform-player");
+        expect(content).toContain("creation-music-card");
         expect(content).toContain("<Suspense");
     });
 });

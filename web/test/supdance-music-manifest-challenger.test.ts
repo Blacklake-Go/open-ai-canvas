@@ -49,7 +49,7 @@ describe("Challenger 2: Manifest V2 Adversarial Schema and Permission Conformanc
 
         expect(manifest.apiVersion).toBe("yingce.plugin/v2");
         expect(manifest.id).toBe("supdance-music-generation");
-        expect(manifest.version).toBe("1.3.0");
+        expect(manifest.version).toBe("1.4.0");
         expect(manifest.minHostVersion).toBe("1.7.4");
 
         // Surface bindings must be valid
