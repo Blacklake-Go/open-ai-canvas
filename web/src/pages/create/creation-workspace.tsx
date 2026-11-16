@@ -312,7 +312,8 @@ function LyricsEditorModal({ open, lyrics, onClose, onChange, config, instrument
         if (open) setDraftLyrics(lyrics);
     }, [open, lyrics]);
 
-    const lyricsAIEnabled = isLyricsAIRuntimeConfigured(config);
+    const signedIn = useUserStore((s) => Boolean(s.user));
+    const lyricsAIEnabled = signedIn && isLyricsAIRuntimeConfigured(config);
     const runLyricsAI = async (request: LyricAIRequest) => {
         if (!lyricsAIEnabled) throw new Error(t("music.lyric_ai_failed"));
         return generateLyrics(request, { config });
