@@ -64,6 +64,7 @@ const MusicAdminSettingsPage = lazyAdminPage(() => import("@/supdance/plugins/mu
 const CompactPickerAdmin = lazyAdminPage(() => import("@/supdance/plugins/compact-model-picker/admin"));
 const DarkLoginPage = lazy(() => import("@/supdance/pages/dark-login-page"));
 const HtmlPageManager = lazyAdminPage(() => import("@/supdance/plugins/html-page-manager/admin/html-page-manager"));
+const EmailMarketingManager = lazyAdminPage(() => import("@/supdance/plugins/email-marketing/admin/email-marketing-manager"));
 const TermsPage = lazy(() => import("@/supdance/pages/legal/terms-page"));
 const PrivacyPage = lazy(() => import("@/supdance/pages/legal/privacy-page"));
 const AupPage = lazy(() => import("@/supdance/pages/legal/aup-page"));
@@ -303,6 +304,8 @@ const routes: RouteObject[] = [
                     { path: "i18n/settings", element: <SupDanceI18nSettingsPage /> },
                     { path: "i18n/entries", element: <SupDanceI18nEntriesPage /> },
                     { path: "plugins/html-pages", element: <HtmlPageManager /> },
+                    { path: "plugins/email-marketing", element: <EmailMarketingManager /> },
+                    { path: "email-marketing", element: <Navigate to="/admin/plugins/email-marketing" replace /> },
                     { path: "html-pages", element: <Navigate to="/admin/plugins/html-pages" replace /> },
                     { path: "mcp", element: <AdminMCPPage /> },
                     { path: "workbench-tools", element: <WorkbenchToolsPage /> },

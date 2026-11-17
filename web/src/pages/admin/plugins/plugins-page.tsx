@@ -3,7 +3,7 @@ import { Switch } from "@/pages/admin/ui/controls";
 import { AlipayCircleFilled, WechatFilled } from "@ant-design/icons";
 import { ZHIFUFM_LOGO_SRC } from "@/components/payment-brand-icons";
 import type { ColumnsType } from "antd/es/table";
-import { BookOpenText, CloudUpload, FileCode, FileText, Languages, Music, PlugZap, RefreshCw, Search, Settings2, Share2, Trash2, UsersRound } from "lucide-react";
+import { BookOpenText, CloudUpload, FileCode, FileText, Languages, Mail, Music, PlugZap, RefreshCw, Search, Settings2, Share2, Trash2, UsersRound } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router";
 
@@ -306,6 +306,12 @@ export default function AdminPluginsPage() {
                             编辑页面
                         </Link>
                     ) : null}
+                    {item.manifest.id === "supdance-email-marketing" ? (
+                        <Link to="/admin/plugins/email-marketing">
+                            <Mail className="size-3.5" aria-hidden />
+                            营销模板
+                        </Link>
+                    ) : null}
                     <Button type="text" size="small" aria-label={`查看 ${item.manifest.name} 详情`} icon={<FileText className="size-3.5" aria-hidden="true" />} onClick={() => setDetailId(item.manifest.id)}>
                         详情
                     </Button>
@@ -462,6 +468,13 @@ function PluginBrandIcon({ pluginId }: { pluginId: string }) {
         return (
             <span className="grid size-9 shrink-0 place-items-center rounded-lg bg-emerald-500/15 text-emerald-400">
                 <FileCode className="size-4" aria-hidden />
+            </span>
+        );
+    }
+    if (pluginId === "supdance-email-marketing") {
+        return (
+            <span className="grid size-9 shrink-0 place-items-center rounded-lg bg-pink-500/15 text-pink-400">
+                <Mail className="size-4" aria-hidden />
             </span>
         );
     }
