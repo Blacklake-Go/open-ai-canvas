@@ -341,7 +341,9 @@
     "web/src/lib/canvas/tool-registry/tool-registry.ts",
     "web/src/components/canvas/canvas-video-segment-dialog.tsx",
     "web/src/pages/admin/official-assets-page.tsx",
-    "web/src/i18n/personal-appearance-messages.ts"
+    "web/src/i18n/personal-appearance-messages.ts",
+    "backend/agent-runtime/pi/package.json",
+    "backend/agent-runtime/pi/package-lock.json"
   ],
   "supdanceExtensionFiles": [
     "web/src/supdance/plugins/compact-model-picker/admin.tsx",
