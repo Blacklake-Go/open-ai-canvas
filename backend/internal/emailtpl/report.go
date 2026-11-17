@@ -9,6 +9,7 @@ import (
 
 // ConsumptionReport 是用户当日消费日报的展示数据；金额单位为微积分（1 积分 = 1,000,000）。
 type ConsumptionReport struct {
+	ContentOnly bool
 	Brand       string
 	UserName    string
 	Date        string // YYYY-MM-DD，东八区
@@ -254,6 +255,9 @@ func RenderConsumptionReport(report ConsumptionReport) (Rendered, error) {
 		text.WriteString("\n完整明细：" + report.WalletURL + "\n")
 	}
 	text.WriteString("\n你订阅了每日消费报告，可在账号设置中关闭。")
+	if report.ContentOnly {
+		html = string(body)
+	}
 	subject := fmt.Sprintf("%s 消费日报 · %s · 今日消费 %s 积分", report.Brand, shortDate(report.Date), view.Total)
 	return Rendered{Subject: subject, Text: text.String(), HTML: html}, nil
 }

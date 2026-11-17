@@ -5,6 +5,29 @@ description: 信封、错误码与 OpenAPI
 
 # HTTP API 合同
 
+## SupDance 邮件中心
+
+后台入口 `/admin/email-center` 与原营销、SMTP、日志入口共用数据和管理员权限。管理 API 为 `/api/admin/email-center`，旧插件 API 前缀 `/api/admin/plugins/supdance-email-marketing` 映射同一新合同。
+
+| 方法与路径 | 行为 |
+| --- | --- |
+| `GET /overview` | 继承品牌、模板草稿/发布/有效版本、历史版本、脱敏联系人与 SMTP 公共配置 |
+| `POST /initialize` | 可重入初始化模板并留存已保存旧 JSON；不重置 SMTP 或原模板设置 |
+| `POST /templates/:key/draft` | `{ document, expectedRevision }`；乐观锁失败返回 409 |
+| `POST /templates/:key/publish` | `{ revisionId, expectedRevision }`；校验归属、变量、保护模块和链接，可发布历史安全版本 |
+| `POST /templates/:key/preview` | `{ document, previewVariables? }`；同一服务端渲染器生成 HTML/纯文本，保护模块无真实凭证；样例变量只接受事件 schema 中的普通字段 |
+| `POST /templates/:key/test` | `{ document, to, previewVariables? }`；管理员、服务器白名单、每小时十次、原账户总开关；不创建认证挑战 |
+| `POST /assets` | 图片 FormData，不手工设置 boundary；最大 5MB，仅 PNG/JPEG/GIF，保存公开不可变素材 |
+| `GET/POST /campaigns` | 读取活动或创建固定发布版本的营销草稿；变量来自允许的真实内容字段 |
+| `POST /campaigns/:id/schedule` | `{ scheduleAt }`；只选择明确同意的联系人，按来源分组，最多 1000 人 |
+| `POST /campaigns/:id/pause`、`.../cancel` | 暂停/取消未提交任务，不承诺撤回 SMTP 已接受的内容 |
+| `GET /activity` | 只返回邮件操作的时间、动作和对象，避免回显历史敏感元数据 |
+| `GET /queue` | 最近 100 个任务、脱敏收件人、尝试次数及下次执行时间；不返回正文或退订令牌 |
+
+偏好 API 为 `GET/PUT /api/auth/email-center/preference`，PUT 使用 `{ marketing: boolean }`，需要已验证账号邮箱。公开图片为 `GET /api/public/email-center/brand/:hash`；退订 `GET /api/public/email-center/unsubscribe` 不执行写操作，POST 接受 `List-Unsubscribe=One-Click`，独立验证加密营销退订令牌，成功直接返回 200。
+
+邮件模板不接受认证凭证或收件人覆盖。实际发送由原认证/通知业务或受控营销 worker 发起，后台没有任意原始发信接口。原日志 API 附加 `receipts` 映射，`sent` 标记为历史 SMTP 接受，新增 `smtp_accepted` 和 `unknown`，不等同于收件方收件箱投递。
+
 ## SupDance 灵感公开隔离
 
 现有模型选择器配置 API 复用管理员鉴权与审计，新增 `homepageShowcaseEnabled`、`complianceLock` 和只读 `updatedAt`；解锁请求必须显式提供 `unlockConfirmed: true`，且至少有一条当前内容仍匹配的已授权案例。全局关闭会同时关闭首页展示，合规锁开启时拒绝公开开启请求。

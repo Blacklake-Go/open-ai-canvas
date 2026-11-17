@@ -7,6 +7,7 @@ require (
 	github.com/casdoor/go-sms-sender v0.25.0
 	github.com/coder/websocket v1.8.15
 	github.com/coreos/go-oidc/v3 v3.21.0
+	github.com/emersion/go-msgauth v0.7.0
 	github.com/gabriel-vasile/mimetype v1.4.13
 	github.com/gin-gonic/gin v1.12.0
 	github.com/google/jsonschema-go v0.4.3

@@ -6,7 +6,6 @@ import (
 	"log"
 	"strings"
 	"time"
-	"yingce/backend/internal/emailtpl"
 	"yingce/backend/internal/kernel"
 
 	"yingce/backend/internal/model"
@@ -93,11 +92,7 @@ func (s *Service) SendPasswordResetEmailCode(rawEmail string) error {
 		return err
 	}
 	setting = resolveEmailSender(setting, s.host.BrandName())
-	rendered, err := passwordResetEmail(setting.FromName, email, code)
-	if err != nil {
-		return err
-	}
-	if err := s.deliverEmail(setting, EmailDelivery{Purpose: EmailPurposePasswordReset, UserID: user.ID, Recipient: email, Mail: rendered}); err != nil {
+	if err := s.deliverEmail(setting, EmailDelivery{Purpose: EmailPurposePasswordReset, UserID: user.ID, Recipient: email, EventID: record.ID, Code: code, ExpiresAt: record.ExpiresAt}); err != nil {
 		if cleanupErr := s.repo.DeleteEmailVerificationCode(record.ID); cleanupErr != nil {
 			log.Printf("password reset email cleanup failed: recipient=%s error=%v", maskedEmail(email), cleanupErr)
 		}
@@ -168,11 +163,6 @@ func (s *Service) ResetPassword(req PasswordResetRequest) error {
 
 func invalidPasswordResetCode() *AuthError {
 	return kernel.BadAuthRequest("验证码无效或已过期")
-}
-
-func passwordResetEmail(brandName, recipient, code string) (OutgoingMail, error) {
-	return codeMail(emailtpl.CodeEmail{Brand: brandName, Heading: "重置密码", SubjectLabel: "密码重置验证码", Intro: "你正在重置" + brandName + "账号密码。请在找回密码页面输入下方验证码，然后设置新密码。", Code: code, TTLMinutes: 10, Recipient: recipient,
-		SecurityTip: "如果这不是你本人的操作，请忽略本邮件，密码不会被修改；同时建议检查邮箱账号的安全。重置成功后，所有设备上的登录会话都会退出。"})
 }
 
 func maskedEmail(email string) string {

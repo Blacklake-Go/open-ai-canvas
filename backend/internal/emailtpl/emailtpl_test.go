@@ -10,7 +10,7 @@ func TestRenderCodeEscapesAndKeepsCopyableCode(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if !strings.HasPrefix(rendered.Subject, "042517 是你的") {
+	if strings.Contains(rendered.Subject, "042517") || !strings.Contains(rendered.Subject, "注册验证码") {
 		t.Fatalf("subject = %q", rendered.Subject)
 	}
 	if strings.Contains(rendered.HTML, "<b>影策</b>") || !strings.Contains(rendered.HTML, "&lt;b&gt;") {

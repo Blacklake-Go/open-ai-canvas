@@ -6,7 +6,7 @@ import (
 	"strings"
 )
 
-// CodeEmail 是一次性验证码邮件。Code 只出现在正文与标题里，调用方不得写入日志。
+// CodeEmail 是一次性验证码邮件。Code 只出现在正文，不写入主题或预览文字。
 type CodeEmail struct {
 	Brand string
 	// Heading 是正文标题，如“重置密码”。
@@ -23,9 +23,11 @@ type CodeEmail struct {
 
 // Rendered 是一封邮件的两种正文。
 type Rendered struct {
-	Subject string
-	Text    string
-	HTML    string
+	Subject         string
+	Text            string
+	HTML            string
+	TemplateVersion string
+	BrandVersion    string
 }
 
 const codeBodyHTML = `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
@@ -55,7 +57,7 @@ const codeBodyHTML = `<table role="presentation" width="100%" cellpadding="0" ce
 
 var codeBodyTemplate = template.Must(template.New("code").Parse(codeBodyHTML))
 
-// RenderCode 生成验证码邮件。标题把验证码放在最前，通知栏和收件箱列表无需打开邮件即可看到。
+// RenderCode is the safe fallback renderer; authentication secrets stay in the body.
 func RenderCode(mail CodeEmail) (Rendered, error) {
 	if mail.TTLMinutes <= 0 {
 		mail.TTLMinutes = 10
@@ -69,7 +71,7 @@ func RenderCode(mail CodeEmail) (Rendered, error) {
 	}
 	html, err := renderLayout(layoutData{
 		Title:      mail.Heading,
-		Preheader:  mail.Code + " 是你的验证码，" + itoa(mail.TTLMinutes) + " 分钟内有效。",
+		Preheader:  mail.Heading + "身份验证，请在发起操作的页面完成验证。",
 		Brand:      mail.Brand,
 		Body:       body,
 		FooterNote: "你收到这封邮件，是因为有人在 " + mail.Brand + " 使用了这个邮箱地址。",
@@ -83,7 +85,7 @@ func RenderCode(mail CodeEmail) (Rendered, error) {
 	if label == "" {
 		label = mail.Heading + "验证码"
 	}
-	return Rendered{Subject: mail.Code + " 是你的" + mail.Brand + label, Text: text, HTML: html}, nil
+	return Rendered{Subject: mail.Brand + " · " + label, Text: text, HTML: html}, nil
 }
 
 // NoticeEmail 是不含验证码的账号通知，如邮箱变更提醒、测试邮件。

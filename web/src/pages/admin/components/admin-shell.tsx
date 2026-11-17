@@ -186,6 +186,7 @@ const adminNavigation: AdminNavigationGroup[] = [
             { path: "/admin/settings/social-auth", label: "社交登录配置", shortLabel: "社登", icon: <Share2 className="size-4" /> },
             { path: "/admin/settings/access", keywords: "登录 注册 验证码 认证", label: "登录与注册", shortLabel: "注册", icon: <ShieldCheck className="size-4" /> },
             { path: "/admin/settings/email", keywords: "邮件 SMTP 发信 邮箱", label: "邮件服务", shortLabel: "邮件", icon: <Mail className="size-4" /> },
+            { path: "/admin/email-center", keywords: "邮件 模板 营销 SMTP email", label: "邮件中心", shortLabel: "邮件", icon: <Mail className="size-4" /> },
             { path: "/admin/settings/storage", keywords: "存储 OSS S3 对象存储 上传", label: "存储服务", shortLabel: "存储", icon: <HardDrive className="size-4" /> },
             { path: "/admin/settings/runtime-policy", keywords: "资源 策略 并发 限流 配额 worker", label: "资源与策略", shortLabel: "策略", icon: <Settings2 className="size-4" /> },
             { path: "/admin/settings/ark-private-assets", keywords: "方舟 素材库 火山", label: "方舟素材库", shortLabel: "方舟", icon: <CloudUpload className="size-4" /> },

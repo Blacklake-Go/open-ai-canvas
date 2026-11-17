@@ -22,6 +22,15 @@
     "baseCommit": "259e7e3fba0b6f70ac3cfd65941c3ca345d60249"
   },
   "coupledUpstreamFiles": [
+    "backend/internal/auth/email.go",
+    "backend/internal/auth/email_admin.go",
+    "backend/internal/app/auth_bridge.go",
+    "backend/internal/app/consumption_report.go",
+    "backend/internal/database/schema.go",
+    "backend/internal/repository/email_logs.go",
+    "backend/internal/model/models_email.go",
+    "web/src/pages/admin/email-logs/email-logs-page.tsx",
+    "web/src/services/api/email.ts",
     ".env.example",
     ".github/workflows/quality.yml",
     ".github/workflows/supdance-upstream-sync.yml",

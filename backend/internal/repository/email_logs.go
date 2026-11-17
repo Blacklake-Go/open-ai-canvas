@@ -3,6 +3,7 @@ package repository
 import (
 	"time"
 
+	"gorm.io/gorm/clause"
 	"yingce/backend/internal/model"
 )
 
@@ -14,7 +15,9 @@ type EmailLogFilter struct {
 	To      *time.Time
 }
 
-func (r *Repository) AppendEmailLog(entry *model.EmailLog) error { return r.db.Create(entry).Error }
+func (r *Repository) AppendEmailLog(entry *model.EmailLog) error {
+	return r.db.Clauses(clause.OnConflict{Columns: []clause.Column{{Name: "id"}}, DoUpdates: clause.AssignmentColumns([]string{"status", "stage", "reason", "duration_ms", "subject", "smtp_host"})}).Create(entry).Error
+}
 
 func (r *Repository) EmailLogs(filter EmailLogFilter, limit, offset int) ([]model.EmailLog, int64, error) {
 	query := r.db.Model(&model.EmailLog{})

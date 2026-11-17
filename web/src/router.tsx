@@ -305,6 +305,7 @@ const routes: RouteObject[] = [
                     { path: "i18n/entries", element: <SupDanceI18nEntriesPage /> },
                     { path: "plugins/html-pages", element: <HtmlPageManager /> },
                     { path: "plugins/email-marketing", element: <EmailMarketingManager /> },
+                    { path: "email-center", element: <EmailMarketingManager /> },
                     { path: "email-marketing", element: <Navigate to="/admin/plugins/email-marketing" replace /> },
                     { path: "html-pages", element: <Navigate to="/admin/plugins/html-pages" replace /> },
                     { path: "mcp", element: <AdminMCPPage /> },

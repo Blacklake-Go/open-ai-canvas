@@ -5,6 +5,10 @@ description: 从产品功能快速定位主要代码入口
 
 # 代码功能地图
 
+## SupDance 邮件中心
+
+`internal/supdance/emailcenter` 管事件、变量、保护模块与纯渲染，`internal/auth/email*.go` 管原认证合同、SMTP 和可靠性，`internal/app/supdance_email_*` 组合后台、品牌和活动，`internal/repository/supdance_email_*` 管不可变版本、乐观锁与发送任务。前端 `supdance/plugins/email-marketing` 保留原插件 ID，复用后台 SMTP/日志组件。新增数据库结构为 Schema 106，迁移、事件覆盖与回退见 `docs/supdance/EMAIL_CENTER.md`。
+
 ## 生成前提示词筛查
 
 - 领域协议：`backend/internal/supdance/contentsafety/` 处理商户签名、判定与有界重试。

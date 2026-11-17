@@ -10,7 +10,6 @@ import (
 	"gorm.io/gorm"
 	"strings"
 	"time"
-	"yingce/backend/internal/emailtpl"
 	"yingce/backend/internal/kernel"
 	"yingce/backend/internal/model"
 	"yingce/backend/internal/repository"
@@ -225,11 +224,7 @@ func (s *Service) startVerification(ctx context.Context, actor *model.User, req 
 			return nil, err
 		}
 		setting = resolveEmailSender(setting, s.host.BrandName())
-		rendered, err := codeMail(emailtpl.CodeEmail{Brand: setting.FromName, Heading: verificationHeading(req.Purpose), Intro: "你正在" + setting.FromName + "进行" + verificationHeading(req.Purpose) + "。请在页面中输入下方验证码完成身份验证。", Code: emailCode, TTLMinutes: 10, Recipient: email})
-		if err != nil {
-			return nil, err
-		}
-		if err := s.deliverEmail(setting, EmailDelivery{Purpose: EmailPurposeVerification, UserID: userID, Recipient: email, Mail: rendered}); err != nil {
+		if err := s.deliverEmail(setting, EmailDelivery{Purpose: EmailPurposeVerification, UserID: userID, Recipient: email, EventID: v.ID, Code: emailCode, ExpiresAt: v.ExpiresAt, SecurityAction: verificationHeading(req.Purpose)}); err != nil {
 			return nil, kernel.NewAppError(503, "邮件发送失败，请稍后重试")
 		}
 	}

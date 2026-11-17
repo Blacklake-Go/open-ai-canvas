@@ -1,4 +1,5 @@
 import { HTML_ADMIN_I18N_ENTRIES } from "./html-admin";
+import { EMAIL_CENTER_I18N_ENTRIES } from "@/supdance/plugins/email-marketing/messages";
 import { FEDERATION_I18N_ENTRIES } from "./federation";
 import { SUPPORTED_LOCALES } from "@/i18n/locales";
 import { MANAGED_UI_ENTRIES } from "../managed-catalog";
@@ -83,6 +84,7 @@ function e(key: string, namespace: string, zhCN: string, description = ""): SupD
 }
 
 export const BUILTIN_SUPDANCE_I18N_ENTRIES: readonly SupDanceI18nEntry[] = [
+    ...EMAIL_CENTER_I18N_ENTRIES,
     ...PAYMENT_RECONCILIATION_I18N_ENTRIES,
     ...FEDERATION_I18N_ENTRIES,
     ...MARKETING_I18N_ENTRIES,

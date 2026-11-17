@@ -160,11 +160,12 @@ func (s *Service) sendConsumptionReport(user model.User, dayStart time.Time) err
 	if err != nil {
 		return err
 	}
+	report.ContentOnly = true
 	rendered, err := emailtpl.RenderConsumptionReport(*report)
 	if err != nil {
 		return err
 	}
-	return s.authDomain().SendSystemEmail(auth.EmailDelivery{Purpose: auth.EmailPurposeConsumptionReport, UserID: user.ID, Recipient: user.Email,
+	return s.authDomain().SendSystemEmail(auth.EmailDelivery{Purpose: auth.EmailPurposeConsumptionReport, UserID: user.ID, Recipient: user.Email, EventID: user.ID + ":" + dayStart.Format("2006-01-02"),
 		Mail: auth.OutgoingMail{Subject: rendered.Subject, Text: rendered.Text, HTML: rendered.HTML}})
 }
 
