@@ -6,9 +6,44 @@ import (
 	"io"
 	"net/http"
 	"yingce/backend/internal/service"
+	"yingce/backend/internal/supdance/maillocale"
 )
 
 func RegisterSupDanceEmailMarketingRoutes(r *gin.RouterGroup, svc *service.Service) {
+	r.GET("/auth/email-center/language", func(c *gin.Context) {
+		actor, err := currentUser(c, svc)
+		if err != nil {
+			failService(c, err)
+			return
+		}
+		locale, err := svc.UserEmailLocale(actor)
+		if err != nil {
+			failService(c, err)
+			return
+		}
+		ok(c, gin.H{"locale": locale})
+	})
+	r.PUT("/auth/email-center/language", func(c *gin.Context) {
+		c.Request.Body = http.MaxBytesReader(c.Writer, c.Request.Body, 1024)
+		actor, err := currentUser(c, svc)
+		if err != nil {
+			failService(c, err)
+			return
+		}
+		var req struct {
+			Locale string `json:"locale"`
+		}
+		if c.ShouldBindJSON(&req) != nil {
+			failService(c, service.BadAuthRequest("语言请求无效"))
+			return
+		}
+		user, err := svc.SetUserEmailLocale(actor, req.Locale)
+		if err != nil {
+			failService(c, err)
+			return
+		}
+		ok(c, gin.H{"user": user, "locale": user.PreferredLocale})
+	})
 	for _, base := range []string{"/admin/email-center", "/admin/plugins/supdance-email-marketing"} {
 		group := r.Group(base)
 		group.GET("/queue", func(c *gin.Context) {
@@ -65,13 +100,27 @@ func RegisterSupDanceEmailMarketingRoutes(r *gin.RouterGroup, svc *service.Servi
 			}
 			ok(c, gin.H{"url": assetURL})
 		})
+		group.GET("/brand", func(c *gin.Context) {
+			actor, err := currentUser(c, svc)
+			if err != nil {
+				failService(c, err)
+				return
+			}
+			brand, err := svc.AdminEmailBrand(actor)
+			if err != nil {
+				failService(c, err)
+				return
+			}
+			c.Header("Cache-Control", "no-store")
+			ok(c, brand)
+		})
 		group.GET("/overview", func(c *gin.Context) {
 			actor, err := currentUser(c, svc)
 			if err != nil {
 				failService(c, err)
 				return
 			}
-			out, err := svc.AdminEmailCenter(actor)
+			out, err := svc.AdminEmailCenter(actor, c.Query("locale"))
 			if err != nil {
 				failService(c, err)
 				return
@@ -104,7 +153,7 @@ func RegisterSupDanceEmailMarketingRoutes(r *gin.RouterGroup, svc *service.Servi
 			ok(c, out)
 		})
 		group.POST("/campaigns", func(c *gin.Context) {
-			c.Request.Body = http.MaxBytesReader(c.Writer, c.Request.Body, 32<<10)
+			c.Request.Body = http.MaxBytesReader(c.Writer, c.Request.Body, 96<<10)
 			actor, err := currentUser(c, svc)
 			if err != nil {
 				failService(c, err)
@@ -192,7 +241,9 @@ func RegisterSupDanceEmailMarketingRoutes(r *gin.RouterGroup, svc *service.Servi
 		c.Header("Cache-Control", "no-store")
 		c.Header("Referrer-Policy", "no-referrer")
 		c.Header("Content-Security-Policy", "default-src 'none'; form-action 'self'; frame-ancestors 'none'")
-		c.Data(http.StatusOK, "text/html; charset=utf-8", []byte(`<!doctype html><html lang="zh-CN"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>SupDance · 退订营销邮件</title><h1>退订营销邮件</h1><p>必要账户安全邮件不受影响。</p><form method="post"><input type="hidden" name="token" value="`+html.EscapeString(c.Query("token"))+`"><button name="List-Unsubscribe" value="One-Click">退订营销邮件 / Unsubscribe</button></form></html>`))
+		locale := maillocale.Resolve(c.Query("lang"), c.GetHeader("Accept-Language"))
+		label := html.EscapeString(maillocale.Text(locale, "unsubscribe"))
+		c.Data(http.StatusOK, "text/html; charset=utf-8", []byte(`<!doctype html><html lang="`+locale+`"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>SupDance · `+label+`</title><h1>`+label+`</h1><p>`+html.EscapeString(maillocale.Text(locale, "security_footer"))+`</p><form method="post"><input type="hidden" name="token" value="`+html.EscapeString(c.Query("token"))+`"><button name="List-Unsubscribe" value="One-Click">`+label+`</button></form></html>`))
 	})
 	r.POST("/public/email-center/unsubscribe", func(c *gin.Context) {
 		c.Request.Body = http.MaxBytesReader(c.Writer, c.Request.Body, 4096)
@@ -209,7 +260,7 @@ func RegisterSupDanceEmailMarketingRoutes(r *gin.RouterGroup, svc *service.Servi
 			return
 		}
 		c.Header("Cache-Control", "no-store")
-		c.String(http.StatusOK, "Unsubscribed / 已退订营销邮件")
+		c.String(http.StatusOK, "%s", maillocale.Text(maillocale.Resolve(c.Query("lang"), c.GetHeader("Accept-Language")), "unsubscribed"))
 	})
 	r.GET("/auth/email-center/preference", func(c *gin.Context) {
 		actor, err := currentUser(c, svc)

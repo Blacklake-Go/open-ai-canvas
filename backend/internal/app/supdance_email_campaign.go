@@ -16,14 +16,16 @@ import (
 	"yingce/backend/internal/model"
 	"yingce/backend/internal/repository"
 	"yingce/backend/internal/supdance/emailcenter"
+	"yingce/backend/internal/supdance/maillocale"
 )
 
 type EmailCampaignRequest struct {
-	Name         string            `json:"name"`
-	TemplateKey  string            `json:"templateKey"`
-	Variables    map[string]string `json:"variables"`
-	SourceFilter string            `json:"sourceFilter"`
-	ScheduleAt   time.Time         `json:"scheduleAt"`
+	VariablesByLocale map[string]map[string]string `json:"variablesByLocale"`
+	Name              string                       `json:"name"`
+	TemplateKey       string                       `json:"templateKey"`
+	Variables         map[string]string            `json:"variables"`
+	SourceFilter      string                       `json:"sourceFilter"`
+	ScheduleAt        time.Time                    `json:"scheduleAt"`
 }
 type EmailCampaignView struct {
 	model.SupDanceEmailCampaign
@@ -59,41 +61,52 @@ func (s *Service) CreateEmailCampaign(actor *model.User, req EmailCampaignReques
 	if strings.TrimSpace(req.Name) == "" || len(req.Name) > 160 || len(req.SourceFilter) > 160 {
 		return kernel.BadAuthRequest("活动名称或分组无效")
 	}
-	state, err := s.repo.EmailTemplate(e.Key, e.Locale)
-	if err != nil {
-		return err
-	}
-	doc, _, err := s.emailCenterDocument(e.Key)
-	if err != nil {
-		return err
-	}
 	brand, err := s.emailCenterBrand()
 	if err != nil {
 		return err
 	}
-	allowed := map[string]bool{}
-	for _, v := range e.Variables {
-		if !v.Protected {
-			allowed[v.Key] = true
+	for locale := range req.VariablesByLocale {
+		if !maillocale.Valid(locale) {
+			return kernel.BadAuthRequest("不支持的活动语言")
 		}
 	}
-	for key := range req.Variables {
-		if !allowed[key] {
-			return kernel.BadAuthRequest("活动包含未批准变量")
+	revisions := map[string]string{}
+	for _, locale := range maillocale.Supported() {
+		state, err := s.repo.EmailTemplate(e.Key, locale)
+		if err != nil {
+			return kernel.BadAuthRequest("请先初始化全部语言的邮件模板")
 		}
-	}
-	if _, err := emailcenter.Render(e, doc, brand, emailcenter.Payload{Variables: req.Variables, UnsubscribeURL: brand.SiteURL + "/api/public/email-center/unsubscribe?token=validation"}); err != nil {
-		return kernel.BadAuthRequest(err.Error())
+		localizedEvent, _ := emailcenter.LocalizedEvent(e.Key, locale)
+		doc, _, err := s.emailCenterDocument(e.Key, locale)
+		if err != nil {
+			return err
+		}
+		variables, err := emailCampaignVariables(localizedEvent, req.Variables, req.VariablesByLocale, locale)
+		if err != nil {
+			return kernel.BadAuthRequest(err.Error())
+		}
+		if _, err = emailcenter.Render(localizedEvent, doc, brand, emailcenter.Payload{Variables: variables, UnsubscribeURL: brand.SiteURL + "/api/public/email-center/unsubscribe?token=validation"}); err != nil {
+			return kernel.BadAuthRequest(locale + ": " + err.Error())
+		}
+		revisions[locale] = state.PublishedID
 	}
 	variables, err := json.Marshal(req.Variables)
 	if err != nil {
 		return err
 	}
-	if len(variables) > 16384 {
+	localizedJSON, err := json.Marshal(req.VariablesByLocale)
+	if err != nil {
+		return err
+	}
+	if len(variables)+len(localizedJSON) > 65536 {
 		return kernel.BadAuthRequest("活动变量过大")
 	}
+	revisionsJSON, err := json.Marshal(revisions)
+	if err != nil {
+		return err
+	}
 	now := time.Now()
-	row := model.SupDanceEmailCampaign{ID: kernel.NewID(), Name: strings.TrimSpace(req.Name), TemplateKey: e.Key, RevisionID: state.PublishedID, VariablesJSON: string(variables), SourceFilter: req.SourceFilter, Status: "draft", ScheduleAt: req.ScheduleAt, CreatedBy: actor.ID, CreatedAt: now, UpdatedAt: now}
+	row := model.SupDanceEmailCampaign{ID: kernel.NewID(), Name: strings.TrimSpace(req.Name), TemplateKey: e.Key, RevisionID: revisions[maillocale.Default], RevisionsJSON: string(revisionsJSON), LocalizedVariablesJSON: string(localizedJSON), VariablesJSON: string(variables), SourceFilter: req.SourceFilter, Status: "draft", ScheduleAt: req.ScheduleAt, CreatedBy: actor.ID, CreatedAt: now, UpdatedAt: now}
 	if err := s.repo.CreateEmailCampaign(&row); err != nil {
 		return err
 	}
@@ -160,12 +173,12 @@ func (s *Service) AdminEmailQueue(actor *model.User) ([]EmailQueueView, error) {
 	return rows, nil
 }
 
-func (s *Service) emailUnsubscribeURL(email string, brand emailcenter.Brand) (string, error) {
+func (s *Service) emailUnsubscribeURL(email string, brand emailcenter.Brand, locales ...string) (string, error) {
 	secret, err := s.encryptSettingSecret("email-marketing-unsubscribe:" + auth.NormalizeEmail(email))
 	if err != nil {
 		return "", err
 	}
-	return brand.SiteURL + "/api/public/email-center/unsubscribe?token=" + url.QueryEscape(base64.RawURLEncoding.EncodeToString([]byte(secret))), nil
+	return brand.SiteURL + "/api/public/email-center/unsubscribe?token=" + url.QueryEscape(base64.RawURLEncoding.EncodeToString([]byte(secret))) + "&lang=" + maillocale.Resolve(strings.Join(locales, ",")), nil
 }
 func (s *Service) UnsubscribeEmailCenter(token string) error {
 	if len(token) > 2048 {
@@ -252,24 +265,48 @@ func (s *Service) runEmailCenterJob(ctx context.Context, now time.Time) error {
 	if ctx.Err() != nil {
 		return finish("cancelled")
 	}
-	row, err := s.repo.EmailRevision(campaign.RevisionID)
+	locale, err := s.authDomain().ResolveEmailLocale(auth.EmailDelivery{Recipient: job.Recipient})
 	if err != nil {
 		return finish("failed")
 	}
-	e, ok := emailcenter.FindEvent(campaign.TemplateKey)
-	if !ok || e.Category != "marketing" || row.Kind == "legacy" {
+	revisions := map[string]string{}
+	if campaign.RevisionsJSON != "" {
+		if json.Unmarshal([]byte(campaign.RevisionsJSON), &revisions) != nil {
+			return finish("failed")
+		}
+	} else {
+		revisions[maillocale.Default] = campaign.RevisionID
+	}
+	id := revisions[locale]
+	if id == "" {
+		return finish("failed")
+	}
+	row, err := s.repo.EmailRevision(id)
+	if err != nil {
+		return finish("failed")
+	}
+	e, ok := emailcenter.LocalizedEvent(campaign.TemplateKey, locale)
+	if !ok || e.Category != "marketing" || row.Kind == "legacy" || row.Key != e.Key || row.Locale != locale {
 		return finish("failed")
 	}
 	var doc emailcenter.Document
-	var variables map[string]string
-	if json.Unmarshal([]byte(row.ContentJSON), &doc) != nil || json.Unmarshal([]byte(campaign.VariablesJSON), &variables) != nil {
+	var common map[string]string
+	var localized map[string]map[string]string
+	if json.Unmarshal([]byte(row.ContentJSON), &doc) != nil || json.Unmarshal([]byte(campaign.VariablesJSON), &common) != nil {
+		return finish("failed")
+	}
+	if campaign.LocalizedVariablesJSON != "" && json.Unmarshal([]byte(campaign.LocalizedVariablesJSON), &localized) != nil {
+		return finish("failed")
+	}
+	variables, err := emailCampaignVariables(e, common, localized, locale)
+	if err != nil {
 		return finish("failed")
 	}
 	brand, err := s.emailCenterBrand()
 	if err != nil {
 		return finish("failed")
 	}
-	unsubscribe, err := s.emailUnsubscribeURL(job.Recipient, brand)
+	unsubscribe, err := s.emailUnsubscribeURL(job.Recipient, brand, locale)
 	if err != nil {
 		return finish("failed")
 	}
@@ -277,7 +314,7 @@ func (s *Service) runEmailCenterJob(ctx context.Context, now time.Time) error {
 	if err != nil {
 		return finish("failed")
 	}
-	err = s.authDomain().SendSystemEmail(auth.EmailDelivery{Purpose: "marketing", EventID: job.ID, Recipient: job.Recipient, TemplateID: row.ID, TemplateKey: e.Key, BrandVersion: brand.Version, Mail: auth.OutgoingMail{Subject: rendered.Subject, HTML: rendered.HTML, Text: rendered.Text, UnsubscribeURL: unsubscribe}})
+	err = s.authDomain().SendSystemEmail(auth.EmailDelivery{Purpose: "marketing", Locale: locale, LocaleResolved: true, EventID: job.ID, Recipient: job.Recipient, TemplateID: row.ID, TemplateKey: e.Key, BrandVersion: brand.Version, Mail: auth.OutgoingMail{Subject: rendered.Subject, HTML: rendered.HTML, Text: rendered.Text, UnsubscribeURL: unsubscribe}})
 	if err == nil {
 		return finish("smtp_accepted")
 	}

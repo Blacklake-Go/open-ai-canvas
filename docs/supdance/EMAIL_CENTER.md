@@ -1,6 +1,8 @@
 # SupDance 邮件中心候选版本
 
-插件 ID 保持 `supdance-email-marketing`，显示名为「邮件中心」，候选版本 `1.1.0`。这是独立分支上的开发候选；未切换生产、未修改 DNS、未使用生产 SMTP 外发，也没有真实收件证据。
+本文保存第一阶段 `1.1.0` / Schema 106 的设计与审计记录。当前候选已推进至 `1.2.0` / Schema 107：八语言、用户语言偏好、Logo 自动同步与页面管理入口的当前合同见 [第二阶段说明](EMAIL_CENTER_LANGUAGES.md)，当前验证见 [第二阶段验证记录](EMAIL_CENTER_LANGUAGES_VALIDATION.md)。下文的单中文语言、旧主入口与 Schema 106 限制仅描述第一阶段，不代表当前候选能力。
+
+插件 ID 保持 `supdance-email-marketing`，显示名为「邮件中心」。这是独立分支上的开发候选；未切换生产、未修改 DNS、未使用生产 SMTP 外发，也没有真实收件证据。
 
 ## 部署基线与证据边界
 

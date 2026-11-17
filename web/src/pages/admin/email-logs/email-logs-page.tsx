@@ -121,6 +121,7 @@ export default function EmailLogsPage() {
                 const receipt = data?.receipts?.[log.id];
                 return receipt ? (
                     <span className="break-all font-mono text-xs" title={`${receipt.messageId}\n${receipt.brandVersion}`}>
+                        {receipt.locale ? `${receipt.locale} · ` : ""}
                         {receipt.templateId}
                     </span>
                 ) : (

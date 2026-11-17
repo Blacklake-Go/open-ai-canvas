@@ -3,6 +3,8 @@ import { useEffect, useState } from "react";
 import { useI18n } from "@/supdance/plugins/i18n";
 import { getEmailPreference, setEmailPreference } from "../api";
 
+import { UserLanguagePreference } from "../user-language";
+
 export function EmailPreferencePanel() {
     const { t } = useI18n();
     const label = (key: string) => t(`email.center.${key}`);
@@ -29,6 +31,7 @@ export function EmailPreferencePanel() {
     };
     return (
         <section className="email-center-module">
+            <UserLanguagePreference />
             <h2>{label("ownPreference")}</h2>
             {error && <Alert type="error" title={error} />}
             <p>{label(subscribed ? "optedIn" : "optedOut")}</p>

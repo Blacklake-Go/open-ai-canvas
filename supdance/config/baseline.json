@@ -22,6 +22,13 @@
     "baseCommit": "259e7e3fba0b6f70ac3cfd65941c3ca345d60249"
   },
   "coupledUpstreamFiles": [
+    "backend/internal/model/models_identity.go",
+    "backend/internal/handler/auth.go",
+    "backend/internal/handler/notifications.go",
+    "backend/internal/handler/social_auth.go",
+    "web/src/services/api/auth.ts",
+    "web/src/services/api/verification.ts",
+    "web/src/stores/use-user-store.ts",
     "backend/internal/auth/email.go",
     "backend/internal/auth/email_admin.go",
     "backend/internal/app/auth_bridge.go",

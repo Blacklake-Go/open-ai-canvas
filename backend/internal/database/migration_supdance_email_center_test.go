@@ -15,7 +15,7 @@ import (
 	"yingce/backend/internal/model"
 )
 
-func TestEmailCenter106PreservesExistingData(t *testing.T) {
+func TestEmailCenter106And107PreserveExistingData(t *testing.T) {
 	for _, driver := range []string{"sqlite", "postgres"} {
 		t.Run(driver, func(t *testing.T) {
 			var db *gorm.DB
@@ -95,6 +95,7 @@ func TestEmailCenter106PreservesExistingData(t *testing.T) {
 			if err := db.Create(&model.SupDanceEmailReceipt{ID: "receipt", BrandVersion: strings.Repeat("a", 64) + ":appearance-revision", Status: "smtp_accepted"}).Error; err != nil {
 				t.Fatal("brand metadata cannot be stored", err)
 			}
+			assertEmailLocaleMigrationPreservesData(t, db)
 			for _, table := range []string{"supdance_email_templates", "supdance_email_revisions", "supdance_email_receipts", "supdance_email_contacts", "supdance_email_brand_assets", "supdance_email_campaigns", "supdance_email_jobs"} {
 				if !db.Migrator().HasTable(table) {
 					t.Fatal("migration missing table", table)

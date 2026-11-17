@@ -33,7 +33,7 @@ export type EmailLogPage = {
     page: number;
     pageSize: number;
     last24h: Partial<Record<EmailLogStatus, number>>;
-    receipts?: Record<string, { templateId: string; brandVersion: string; messageId: string; event: string; status: string }>;
+    receipts?: Record<string, { locale?: string; templateId: string; brandVersion: string; messageId: string; event: string; status: string }>;
 };
 
 export function listAdminEmailLogs(params: EmailLogParams, signal?: AbortSignal) {

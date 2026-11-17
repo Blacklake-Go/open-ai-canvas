@@ -1,4 +1,6 @@
-import { Dropdown } from "antd";
+import { App, Dropdown } from "antd";
+import { useState } from "react";
+import { languageText } from "@/supdance/plugins/email-marketing/language-messages";
 import { Check, ChevronDown, Languages } from "lucide-react";
 import { useTranslation } from "react-i18next";
 
@@ -9,12 +11,25 @@ import { useLocaleStore } from "@/stores/use-locale-store";
 
 import "./language-menu.css";
 
+function useLanguageChange() {
+    const { message } = App.useApp();
+    const [busy, setBusy] = useState(false);
+    const change = (next: AppLocale, options?: { updateLanguageQuery?: boolean }) => {
+        setBusy(true);
+        void switchLocale(next, options)
+            .catch(() => message.error(languageText(useLocaleStore.getState().locale, "languageError")))
+            .finally(() => setBusy(false));
+    };
+    return { change, busy };
+}
+
 /**
  * 界面语言入口。trigger 决定外观：topbar 与顶栏反馈按钮同款，auth 与登录页「返回首页」同款。
  * 选项显示各语言自称 + 英文名，切换后整页刷新（见 switchLocale）。
  */
 export function LanguageMenu({ variant = "topbar", className, updateLanguageQuery = false }: { variant?: "topbar" | "auth"; className?: string; updateLanguageQuery?: boolean }) {
     const { t } = useTranslation();
+    const { change, busy } = useLanguageChange();
     const locale = useLocaleStore((state) => state.locale);
     const current = SUPPORTED_LOCALES.find((item) => item.code === locale) ?? SUPPORTED_LOCALES[0];
     return (
@@ -36,11 +51,12 @@ export function LanguageMenu({ variant = "topbar", className, updateLanguageQuer
                         </span>
                     ),
                 })),
-                onClick: ({ key }) => switchLocale(key as AppLocale, { updateLanguageQuery }),
+                onClick: ({ key }) => change(key as AppLocale, { updateLanguageQuery }),
             }}
         >
             <button
                 type="button"
+                disabled={busy}
                 className={cn(variant === "topbar" ? "app-workspace-topbar-feedback-pill" : "auth-scene-return language-menu-auth-trigger", "language-menu-trigger", className)}
                 aria-label={t("language.selectLabel")}
                 title={t("language.selectLabel")}
@@ -55,11 +71,12 @@ export function LanguageMenu({ variant = "topbar", className, updateLanguageQuer
 
 /** 设置页使用的语言卡片组：一眼看到全部语言，当前语言用 aria-pressed 标出。 */
 export function LanguageOptionGrid() {
+    const { change, busy } = useLanguageChange();
     const locale = useLocaleStore((state) => state.locale);
     return (
         <div className="language-option-grid" role="group">
             {SUPPORTED_LOCALES.map((item) => (
-                <button key={item.code} type="button" lang={item.code} className="language-option-card" aria-pressed={item.code === locale} onClick={() => switchLocale(item.code)}>
+                <button key={item.code} type="button" lang={item.code} className="language-option-card" aria-pressed={item.code === locale} disabled={busy} onClick={() => change(item.code)}>
                     <span>
                         <strong>{item.label}</strong>
                         <small>{item.english}</small>

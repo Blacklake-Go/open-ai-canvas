@@ -23,7 +23,7 @@ type PasswordResetRequest struct {
 	Password  string `json:"password"`
 }
 
-func (s *Service) SendPasswordResetEmailCode(rawEmail string) error {
+func (s *Service) SendPasswordResetEmailCode(rawEmail string, locales ...string) error {
 	email := NormalizeEmail(rawEmail)
 	if err := ValidateEmail(email); err != nil {
 		return err
@@ -92,7 +92,7 @@ func (s *Service) SendPasswordResetEmailCode(rawEmail string) error {
 		return err
 	}
 	setting = resolveEmailSender(setting, s.host.BrandName())
-	if err := s.deliverEmail(setting, EmailDelivery{Purpose: EmailPurposePasswordReset, UserID: user.ID, Recipient: email, EventID: record.ID, Code: code, ExpiresAt: record.ExpiresAt}); err != nil {
+	if err := s.deliverEmail(setting, EmailDelivery{Purpose: EmailPurposePasswordReset, UserID: user.ID, Recipient: email, EventID: record.ID, Code: code, ExpiresAt: record.ExpiresAt, Locale: strings.Join(locales, ",")}); err != nil {
 		if cleanupErr := s.repo.DeleteEmailVerificationCode(record.ID); cleanupErr != nil {
 			log.Printf("password reset email cleanup failed: recipient=%s error=%v", maskedEmail(email), cleanupErr)
 		}

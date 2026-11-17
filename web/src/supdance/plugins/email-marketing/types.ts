@@ -18,6 +18,8 @@ export type EmailTemplate = {
     history: EmailRevision[];
 };
 export type EmailCenterOverview = {
+    locale: string;
+    supportedLocales: string[];
     safeMode: boolean;
     pluginId: string;
     brand: { name: string; logoUrl: string; siteUrl: string; supportEmail: string; footer: string; color: string; version: string };
@@ -26,6 +28,19 @@ export type EmailCenterOverview = {
     marketingPaused: boolean;
     contacts: { email: string; marketing: boolean; source: string; scope: string; consentedAt?: string; unsubscribedAt?: string; suppression: string }[];
 };
-export type EmailEditRequest = { document: EmailDocument; expectedRevision?: number; revisionId?: string; to?: string; previewVariables?: Record<string, string> };
+export type EmailEditRequest = { locale?: string; document: EmailDocument; expectedRevision?: number; revisionId?: string; to?: string; previewVariables?: Record<string, string> };
 export type EmailPreview = { Subject: string; HTML: string; Text: string };
-export type EmailCampaign = { id: string; name: string; templateKey: string; revisionId: string; variablesJson: string; sourceFilter: string; status: string; scheduleAt: string; createdAt: string; stats: Record<string, number> };
+export type EmailCampaign = {
+    id: string;
+    name: string;
+    templateKey: string;
+    revisionId: string;
+    revisionsJson?: string;
+    localizedVariablesJson?: string;
+    variablesJson: string;
+    sourceFilter: string;
+    status: string;
+    scheduleAt: string;
+    createdAt: string;
+    stats: Record<string, number>;
+};

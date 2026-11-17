@@ -4,11 +4,12 @@ package emailcenter
 import (
 	"html/template"
 	"time"
+	"yingce/backend/internal/supdance/maillocale"
 )
 
 const Locale = "zh-CN"
 const PluginID = "supdance-email-marketing"
-const BuiltinVersion = "email-center-1.1.0"
+const BuiltinVersion = "email-center-1.2.0"
 
 type Variable struct {
 	Key       string `json:"key"`
@@ -88,13 +89,40 @@ func FindEvent(key string) (Event, bool) {
 	}
 	return Event{}, false
 }
+func LocalizedEvent(key, locale string) (Event, bool) {
+	if locale != "" && !maillocale.Valid(locale) {
+		return Event{}, false
+	}
+	e, ok := FindEvent(key)
+	if ok {
+		e.Locale = maillocale.Resolve(locale)
+		e.Name = maillocale.Text(e.Locale, key)
+	}
+	return e, ok
+}
+func AllEvents() []Event {
+	var all []Event
+	for _, locale := range maillocale.Supported() {
+		all = append(all, EventsForLocale(locale)...)
+	}
+	return all
+}
+func EventsForLocale(locale string) []Event {
+	events := Events()
+	for i := range events {
+		events[i], _ = LocalizedEvent(events[i].Key, locale)
+	}
+	return events
+}
 func DefaultDocument(e Event) Document {
+	e, _ = LocalizedEvent(e.Key, e.Locale)
+	t := func(key string) string { return maillocale.Text(e.Locale, key) }
 	d := Document{Subject: "{{brand_name}} · " + e.Name, Preheader: e.Name, Heading: e.Name, Blocks: []Block{}}
 	switch e.ProtectedModule {
 	case "code":
-		d.Blocks = []Block{{Type: "paragraph", Text: "请在发起操作的页面输入验证码。"}, {Type: "code"}, {Type: "notice", Text: "工作人员不会索要验证码。如果不是你本人操作，请忽略此邮件。"}}
+		d.Blocks = []Block{{Type: "paragraph", Text: t("code_intro")}, {Type: "code"}, {Type: "notice", Text: t("security_tip")}}
 		if e.Key == "registration" {
-			d.Blocks[0].Text = "你正在注册{{brand_name}}。请在注册页面输入下方验证码。"
+			d.Blocks[0].Text = t("register_intro")
 		}
 	case "notice":
 		d.Blocks = []Block{{Type: "notice"}}
@@ -104,19 +132,19 @@ func DefaultDocument(e Event) Document {
 	default:
 		switch e.Key {
 		case "welcome":
-			d.Heading = "欢迎来到 {{brand_name}}"
-			d.Blocks = []Block{{Type: "paragraph", Text: "{{name}}，从一个创作想法开始，探索图片、视频与音乐工具。"}, {Type: "steps", Items: []string{"打开创作工作台", "选择适合任务的模型", "查看并保存你的作品"}}, {Type: "button", Text: "开始创作", URL: "{{site_url}}/create"}}
+			d.Heading = t("welcome_heading")
+			d.Blocks = []Block{{Type: "paragraph", Text: t("welcome_text")}, {Type: "steps", Items: []string{t("step_open"), t("step_model"), t("step_save")}}, {Type: "button", Text: t("create"), URL: "{{site_url}}/create"}}
 		case "newsletter":
 			d.Heading = "{{update_title}}"
-			d.Blocks = []Block{{Type: "paragraph", Text: "{{update_body}}"}, {Type: "button", Text: "前往工作台", URL: "{{site_url}}/create"}}
+			d.Blocks = []Block{{Type: "paragraph", Text: "{{update_body}}"}, {Type: "button", Text: t("workbench"), URL: "{{site_url}}/create"}}
 		case "credit_alert":
-			d.Heading = "继续规划你的创作"
-			d.Blocks = []Block{{Type: "paragraph", Text: "{{name}}，你可以在账户中查看实际余额与消费明细，按创作需要选择方案。"}, {Type: "notice", Text: "余额、价格与权益以站内账户和购买页面展示为准。"}, {Type: "button", Text: "查看方案", URL: "{{site_url}}/pricing"}}
+			d.Heading = t("credit_heading")
+			d.Blocks = []Block{{Type: "paragraph", Text: t("credit_text")}, {Type: "notice", Text: t("credit_notice")}, {Type: "button", Text: t("pricing"), URL: "{{site_url}}/pricing"}}
 		case "winback":
-			d.Heading = "回来继续你的创作"
-			d.Blocks = []Block{{Type: "paragraph", Text: "{{name}}，欢迎回到工作台，继续保存的创作或开始新的尝试。"}, {Type: "button", Text: "回到工作台", URL: "{{site_url}}/create"}}
+			d.Heading = t("winback_heading")
+			d.Blocks = []Block{{Type: "paragraph", Text: t("winback_text")}, {Type: "button", Text: t("workbench"), URL: "{{site_url}}/create"}}
 		default:
-			d.Blocks = []Block{{Type: "notice", Text: "这是一封邮件中心测试邮件，不含可用于登录或账号验证的凭证。"}}
+			d.Blocks = []Block{{Type: "notice", Text: t("smtp_notice")}}
 		}
 	}
 	return d

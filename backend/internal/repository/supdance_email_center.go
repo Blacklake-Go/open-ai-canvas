@@ -65,7 +65,7 @@ func (r *Repository) PublishEmailRevision(key, locale, id string, expected int64
 func (r *Repository) ClaimEmailReceipt(row *model.SupDanceEmailReceipt) (bool, error) {
 	res := r.db.Clauses(clause.OnConflict{DoNothing: true}).Create(row)
 	if res.Error == nil && res.RowsAffected == 0 {
-		res = r.db.Model(&model.SupDanceEmailReceipt{}).Where("id = ? AND status = ?", row.ID, "retryable").Updates(map[string]any{"status": "sending", "updated_at": time.Now(), "template_id": row.TemplateID, "template_key": row.TemplateKey, "brand_version": row.BrandVersion, "message_id": row.MessageID})
+		res = r.db.Model(&model.SupDanceEmailReceipt{}).Where("id = ? AND status = ?", row.ID, "retryable").Updates(map[string]any{"status": "sending", "updated_at": time.Now(), "template_id": row.TemplateID, "template_key": row.TemplateKey, "brand_version": row.BrandVersion, "message_id": row.MessageID, "locale": row.Locale})
 	}
 	return res.RowsAffected == 1, res.Error
 }

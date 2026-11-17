@@ -149,7 +149,7 @@ func (s *Service) EmailEnabled() (bool, error) {
 	return value.Enabled && value.Host != "" && value.Port > 0 && value.FromEmail != "", nil
 }
 
-func (s *Service) SendRegistrationEmailCode(rawEmail string) error {
+func (s *Service) SendRegistrationEmailCode(rawEmail string, locales ...string) error {
 	p, err := s.verificationPolicy()
 	if err != nil {
 		return err
@@ -210,7 +210,7 @@ func (s *Service) SendRegistrationEmailCode(rawEmail string) error {
 		return err
 	}
 	setting = resolveEmailSender(setting, s.host.BrandName())
-	if err := s.deliverEmail(setting, EmailDelivery{Purpose: EmailPurposeRegistration, Recipient: email, EventID: record.ID, Code: code, ExpiresAt: record.ExpiresAt}); err != nil {
+	if err := s.deliverEmail(setting, EmailDelivery{Purpose: EmailPurposeRegistration, Recipient: email, EventID: record.ID, Code: code, ExpiresAt: record.ExpiresAt, Locale: strings.Join(locales, ",")}); err != nil {
 		cleanupErr := s.repo.DeleteEmailVerificationCode(record.ID)
 		if cleanupErr != nil {
 			return errors.Join(
@@ -618,6 +618,9 @@ const (
 
 // EmailDelivery 描述一次投递的业务上下文，用于发送记录。
 type EmailDelivery struct {
+	Locale         string
+	LocaleResolved bool
+	ChangedEmail   string
 	Purpose        string
 	UserID         string
 	Recipient      string

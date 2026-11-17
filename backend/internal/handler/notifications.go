@@ -32,6 +32,9 @@ func registerNotificationRoutes(r *gin.RouterGroup, svc *service.Service) {
 				return
 			}
 		}
+		if req.Locale == "" {
+			req.Locale = c.GetHeader("Accept-Language")
+		}
 		result, err := svc.StartVerification(c.Request.Context(), actor, req)
 		if err != nil {
 			failService(c, err)

@@ -5,13 +5,13 @@ description: 当前项目已实现功能的手工验证清单与未确认边界
 
 ## SupDance 邮件中心候选
 
-本地候选的认证回归、模板/队列专项、SQLite/PostgreSQL 增量表验证和真实后台预览分别记录在 `docs/supdance/EMAIL_CENTER_VALIDATION.md`。尚未生产部署、未真实外发，不能把浏览器预览或本地 SMTP 捕获当成实际邮件客户端通过。
+本地候选的认证回归、模板/队列专项、SQLite/PostgreSQL 增量表验证和真实后台预览分别记录在 `docs/supdance/EMAIL_CENTER_VALIDATION.md`（第一阶段）及 `docs/supdance/EMAIL_CENTER_LANGUAGES_VALIDATION.md`（八语言、品牌同步与页面管理）。尚未生产部署、未真实外发，不能把浏览器预览或本地 SMTP 捕获当成实际邮件客户端通过。
 
 - 待批准后的生产快照恢复迁移、受控事件灰度、模板初始化与回退演练。
 - 待核实腾讯企业邮箱的实际套餐、营销用途、额度及回执能力；SPF/DKIM/DMARC、From 对齐和真实 Authentication-Results 不得凭配置状态判为通过。
 - 待明确授权邮箱的真实收发与 Gmail、Outlook、Apple Mail、QQ、163 客户端验收。
 - 待外层反向代理的退订令牌日志过滤检查；候选应用和容器 Nginx 已限制相关访问日志。
-- 邮件当前保持 zh-CN；新增后台字典含英语，部分界面语言用英语回退，未完成人工语言审校。
+- 已实现八种原生邮件语言、账号语言持久化、88 个内置模板、分语言版本及活动内容校验；待原生语言人工审校和实体设备辅助技术验收。
 - 退信/投诉自动回执、打开/点击和站内转化指标未接入；复杂旅程与 A/B 测试属于后续范围。
 
 ## 待用户验证：支付下单与账单边界

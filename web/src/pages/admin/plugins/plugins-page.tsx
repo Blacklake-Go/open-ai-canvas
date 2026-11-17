@@ -302,13 +302,13 @@ export default function AdminPluginsPage() {
             render: (_, item) => (
                 <div className="flex items-center justify-center gap-1">
                     {item.manifest.id === "supdance-html-page-manager" ? (
-                        <Link to="/admin/plugins/html-pages">
+                        <Link to="/admin/plugins/page-management?page=html">
                             <FileCode className="size-3.5" aria-hidden />
                             编辑页面
                         </Link>
                     ) : null}
                     {item.manifest.id === "supdance-email-marketing" ? (
-                        <Link to="/admin/plugins/email-marketing">
+                        <Link to="/admin/plugins/page-management?page=email">
                             <Mail className="size-3.5" aria-hidden />
                             {t("email.center.title")}
                         </Link>

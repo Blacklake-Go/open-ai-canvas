@@ -18,6 +18,7 @@ import (
 	"yingce/backend/internal/model"
 	"yingce/backend/internal/repository"
 	"yingce/backend/internal/supdance/emailcenter"
+	"yingce/backend/internal/supdance/maillocale"
 )
 
 const PluginSupDanceEmailMarketing = emailcenter.PluginID
@@ -36,15 +37,18 @@ type EmailCenterTemplateView struct {
 	History             []model.SupDanceEmailRevision `json:"history"`
 }
 type EmailCenterOverview struct {
-	SafeMode        bool                         `json:"safeMode"`
-	PluginID        string                       `json:"pluginId"`
-	Brand           emailcenter.Brand            `json:"brand"`
-	Templates       []EmailCenterTemplateView    `json:"templates"`
-	SMTP            *auth.PublicEmailSetting     `json:"smtp"`
-	MarketingPaused bool                         `json:"marketingPaused"`
-	Contacts        []model.SupDanceEmailContact `json:"contacts"`
+	Locale           string                       `json:"locale"`
+	SupportedLocales []string                     `json:"supportedLocales"`
+	SafeMode         bool                         `json:"safeMode"`
+	PluginID         string                       `json:"pluginId"`
+	Brand            emailcenter.Brand            `json:"brand"`
+	Templates        []EmailCenterTemplateView    `json:"templates"`
+	SMTP             *auth.PublicEmailSetting     `json:"smtp"`
+	MarketingPaused  bool                         `json:"marketingPaused"`
+	Contacts         []model.SupDanceEmailContact `json:"contacts"`
 }
 type EmailCenterEditRequest struct {
+	Locale           string               `json:"locale"`
 	PreviewVariables map[string]string    `json:"previewVariables"`
 	Document         emailcenter.Document `json:"document"`
 	ExpectedRevision int64                `json:"expectedRevision"`
@@ -67,7 +71,7 @@ func (s *Service) InitializeEmailCenter(actor *model.User) error {
 			return kernel.BadAuthRequest("旧邮件模板损坏；迁移未覆盖数据")
 		}
 	}
-	for _, e := range emailcenter.Events() {
+	for _, e := range emailcenter.AllEvents() {
 		encoded, err := json.Marshal(emailcenter.DefaultDocument(e))
 		if err != nil {
 			return err
@@ -76,7 +80,7 @@ func (s *Service) InitializeEmailCenter(actor *model.User) error {
 		id := kernel.NewID()
 		rev := model.SupDanceEmailRevision{ID: id, Key: e.Key, Locale: e.Locale, ContentJSON: string(encoded), Kind: "builtin", ActorID: actor.ID, CreatedAt: now}
 		var old *model.SupDanceEmailRevision
-		if content, ok := legacy[e.Key]; ok {
+		if content, ok := legacy[e.Key]; ok && e.Locale == maillocale.Default {
 			old = &model.SupDanceEmailRevision{ID: kernel.NewID(), Key: e.Key, Locale: e.Locale, ContentJSON: string(content), Kind: "legacy", ActorID: actor.ID, CreatedAt: now}
 		}
 		if err := s.repo.SeedEmailTemplate(model.SupDanceEmailTemplate{Key: e.Key, Locale: e.Locale, DraftID: id, PublishedID: id, Revision: 1, UpdatedAt: now}, rev, old); err != nil {
@@ -86,8 +90,8 @@ func (s *Service) InitializeEmailCenter(actor *model.User) error {
 	return s.appendAdminAudit(actor, "email.center.initialize", "plugin", PluginSupDanceEmailMarketing, "初始化邮件中心并保留旧模板", nil)
 }
 
-func (s *Service) emailCenterDocument(key string) (emailcenter.Document, string, error) {
-	e, ok := emailcenter.FindEvent(key)
+func (s *Service) emailCenterDocument(key string, locales ...string) (emailcenter.Document, string, error) {
+	e, ok := emailcenter.LocalizedEvent(key, strings.Join(locales, ","))
 	if !ok {
 		return emailcenter.Document{}, "", kernel.BadAuthRequest("邮件事件不存在")
 	}
@@ -150,9 +154,9 @@ func (s *Service) emailCenterBrand() (emailcenter.Brand, error) {
 		if len(data) > int(appearanceLogoMaxBytes) {
 			return brand, kernel.BadAuthRequest("邮件 Logo 超出限制")
 		}
-		kind := http.DetectContentType(data)
-		if kind != "image/png" && kind != "image/jpeg" && kind != "image/gif" {
-			return brand, kernel.BadAuthRequest("邮件 Logo 需要保留真实图形的 PNG、JPEG 或 GIF")
+		data, kind, err := normalizeMailLogo(data)
+		if err != nil {
+			return brand, err
 		}
 		hash := sha256.Sum256(data)
 		id := hex.EncodeToString(hash[:])
@@ -178,11 +182,11 @@ func (s *Service) emailCenterBrand() (emailcenter.Brand, error) {
 }
 
 func (h authHost) EmailBrand() (emailcenter.Brand, error) { return h.svc.emailCenterBrand() }
-func (h authHost) EmailDocument(key string) (emailcenter.Document, string, error) {
-	if e, ok := emailcenter.FindEvent(key); ok && !emailCenterUsesPublished(key) {
+func (h authHost) EmailDocument(key, locale string) (emailcenter.Document, string, error) {
+	if e, ok := emailcenter.LocalizedEvent(key, locale); ok && !emailCenterUsesPublished(key) {
 		return emailcenter.DefaultDocument(e), emailcenter.BuiltinVersion, nil
 	}
-	return h.svc.emailCenterDocument(key)
+	return h.svc.emailCenterDocument(key, locale)
 }
 
 func emailCenterUsesPublished(key string) bool {
@@ -201,7 +205,19 @@ func emailCenterUsesPublished(key string) bool {
 	return false
 }
 
-func (s *Service) AdminEmailCenter(actor *model.User) (*EmailCenterOverview, error) {
+func (s *Service) AdminEmailBrand(actor *model.User) (emailcenter.Brand, error) {
+	if err := s.RequireAdmin(actor); err != nil {
+		return emailcenter.Brand{}, err
+	}
+	return s.emailCenterBrand()
+}
+
+func (s *Service) AdminEmailCenter(actor *model.User, locales ...string) (*EmailCenterOverview, error) {
+	requested := strings.Join(locales, ",")
+	if requested != "" && !maillocale.Valid(requested) {
+		return nil, kernel.BadAuthRequest("不支持的邮件语言")
+	}
+	locale := maillocale.Resolve(requested)
 	if err := s.RequireAdmin(actor); err != nil {
 		return nil, err
 	}
@@ -221,12 +237,12 @@ func (s *Service) AdminEmailCenter(actor *model.User) (*EmailCenterOverview, err
 	if err != nil {
 		return nil, err
 	}
-	view := &EmailCenterOverview{PluginID: PluginSupDanceEmailMarketing, Brand: brand, SMTP: smtp, MarketingPaused: !ready, Contacts: contacts, Templates: []EmailCenterTemplateView{}}
+	view := &EmailCenterOverview{Locale: locale, SupportedLocales: maillocale.Supported(), PluginID: PluginSupDanceEmailMarketing, Brand: brand, SMTP: smtp, MarketingPaused: !ready, Contacts: contacts, Templates: []EmailCenterTemplateView{}}
 	view.SafeMode = os.Getenv("CANVAS_EMAIL_CENTER_SAFE_MODE") == "true"
 	for i := range view.Contacts {
 		view.Contacts[i].Email = maskEmailForCenter(view.Contacts[i].Email)
 	}
-	for _, e := range emailcenter.Events() {
+	for _, e := range emailcenter.EventsForLocale(locale) {
 		item := EmailCenterTemplateView{Event: e, Draft: emailcenter.DefaultDocument(e), Published: emailcenter.DefaultDocument(e), History: []model.SupDanceEmailRevision{}}
 		item.EffectiveTemplateID = emailcenter.BuiltinVersion
 		state, err := s.repo.EmailTemplate(e.Key, e.Locale)
@@ -259,7 +275,7 @@ func (s *Service) AdminEmailCenter(actor *model.User) (*EmailCenterOverview, err
 				}
 			}
 			// The published pointer remains authoritative even after more than 100 drafts.
-			published, _, err := s.emailCenterDocument(e.Key)
+			published, _, err := s.emailCenterDocument(e.Key, locale)
 			if err != nil {
 				return nil, err
 			}
@@ -287,7 +303,7 @@ func (s *Service) SaveEmailCenterDraft(actor *model.User, key string, req EmailC
 	if err := s.RequireAdmin(actor); err != nil {
 		return err
 	}
-	e, ok := emailcenter.FindEvent(key)
+	e, ok := emailcenter.LocalizedEvent(key, req.Locale)
 	if !ok {
 		return kernel.BadAuthRequest("邮件事件不存在")
 	}
@@ -311,7 +327,7 @@ func (s *Service) PublishEmailCenter(actor *model.User, key string, req EmailCen
 	if err := s.RequireAdmin(actor); err != nil {
 		return err
 	}
-	e, ok := emailcenter.FindEvent(key)
+	e, ok := emailcenter.LocalizedEvent(key, req.Locale)
 	if !ok {
 		return kernel.BadAuthRequest("邮件事件不存在")
 	}
@@ -345,7 +361,7 @@ func (s *Service) PreviewEmailCenter(actor *model.User, key string, req EmailCen
 	if err := s.RequireAdmin(actor); err != nil {
 		return nil, err
 	}
-	e, ok := emailcenter.FindEvent(key)
+	e, ok := emailcenter.LocalizedEvent(key, req.Locale)
 	if !ok {
 		return nil, kernel.BadAuthRequest("邮件事件不存在")
 	}
@@ -391,7 +407,7 @@ func (s *Service) TestEmailCenter(actor *model.User, key string, req EmailCenter
 	if err := s.appendAdminAudit(actor, "email.template.test", "email_template", key, "发起白名单测试", nil); err != nil {
 		return err
 	}
-	err = s.authDomain().SendSystemEmail(auth.EmailDelivery{Purpose: "marketing_test", UserID: actor.ID, Recipient: to, TemplateID: mail.TemplateVersion, TemplateKey: key, BrandVersion: mail.BrandVersion, Mail: auth.OutgoingMail{Subject: mail.Subject, HTML: mail.HTML, Text: mail.Text}})
+	err = s.authDomain().SendSystemEmail(auth.EmailDelivery{Purpose: "marketing_test", Locale: maillocale.Resolve(req.Locale), LocaleResolved: true, UserID: actor.ID, Recipient: to, TemplateID: mail.TemplateVersion, TemplateKey: key, BrandVersion: mail.BrandVersion, Mail: auth.OutgoingMail{Subject: mail.Subject, HTML: mail.HTML, Text: mail.Text}})
 	if err != nil {
 		return kernel.NewAppError(503, "邮件测试未确认成功，请查看脱敏发送记录")
 	}

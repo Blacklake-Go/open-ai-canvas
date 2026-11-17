@@ -8,6 +8,7 @@ import (
 	"bytes"
 	"html/template"
 	"strings"
+	"yingce/backend/internal/supdance/maillocale"
 )
 
 const (
@@ -26,7 +27,7 @@ var funcs = template.FuncMap{
 }
 
 const layoutHTML = `<!DOCTYPE html>
-<html lang="zh-CN">
+<html lang="{{.Locale}}">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
@@ -60,6 +61,7 @@ const layoutHTML = `<!DOCTYPE html>
 var layoutTemplate = template.Must(template.New("layout").Funcs(funcs).Parse(layoutHTML))
 
 type layoutData struct {
+	Locale       string
 	Title        string
 	Preheader    string
 	Brand        string
@@ -73,13 +75,14 @@ type layoutData struct {
 }
 
 // Message accepts only server-rendered, escaped body fragments. Never pass operator HTML.
-type Message struct{ Brand, LogoURL, SupportEmail, Footer, Title, Preheader, Body, FooterNote string }
+type Message struct{ Locale, Brand, LogoURL, SupportEmail, Footer, Title, Preheader, Body, FooterNote string }
 
 func RenderMessage(m Message) (string, error) {
-	return renderLayout(layoutData{Brand: m.Brand, LogoURL: m.LogoURL, SupportEmail: m.SupportEmail, Footer: m.Footer, Title: m.Title, Preheader: m.Preheader, Body: template.HTML(m.Body), FooterNote: m.FooterNote, Width: 600})
+	return renderLayout(layoutData{Locale: m.Locale, Brand: m.Brand, LogoURL: m.LogoURL, SupportEmail: m.SupportEmail, Footer: m.Footer, Title: m.Title, Preheader: m.Preheader, Body: template.HTML(m.Body), FooterNote: m.FooterNote, Width: 600})
 }
 
 func renderLayout(data layoutData) (string, error) {
+	data.Locale = maillocale.Resolve(data.Locale)
 	if data.Width == 0 {
 		data.Width = 560
 	}

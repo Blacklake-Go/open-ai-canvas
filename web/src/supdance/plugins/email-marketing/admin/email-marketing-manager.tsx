@@ -5,9 +5,12 @@ import { useI18n } from "@/supdance/plugins/i18n";
 import { AdminPageFrame } from "@/pages/admin/components/admin-shell";
 import EmailSettingsPanel from "@/pages/admin/components/email-settings-panel";
 import EmailLogsPage from "@/pages/admin/email-logs/email-logs-page";
-import { editEmailTemplate, fetchEmailCenter, initializeEmailCenter, previewEmailTemplate, uploadEmailAsset } from "../api";
+import { editEmailTemplate, fetchEmailCenter, fetchEmailBrand, initializeEmailCenter, previewEmailTemplate, uploadEmailAsset } from "../api";
 import type { EmailBlock, EmailCenterOverview, EmailDocument, EmailPreview } from "../types";
 import "./email-center.css";
+import { isAppLocale, SUPPORTED_LOCALES } from "@/i18n/locales";
+import { useLocaleStore } from "@/stores/use-locale-store";
+import { useAppearanceStore } from "@/stores/use-appearance-store";
 import { EmailCampaignPanel } from "./email-campaign-panel";
 import { EmailPreferencePanel } from "./email-preference-panel";
 import { EmailActivityPanel } from "./email-activity-panel";
@@ -21,6 +24,14 @@ export default function EmailMarketingManager() {
     const label = (key: string) => t(`email.center.${key}`);
     const { message, modal } = App.useApp();
     const [params, setParams] = useSearchParams();
+    const uiLocale = useLocaleStore((state) => state.locale);
+    const requestedLocale = params.get("emailLocale");
+    const emailLocale = isAppLocale(requestedLocale) ? requestedLocale : uiLocale;
+    const appearanceRevision = useAppearanceStore((state) => state.appearance.revision);
+    const [brandRefresh, setBrandRefresh] = useState(0);
+    const [brandError, setBrandError] = useState("");
+    const brandVersion = useRef("");
+    const loadController = useRef<AbortController | null>(null);
     const section = sections.includes(params.get("section") || "") ? params.get("section")! : "overview";
     const [data, setData] = useState<EmailCenterOverview>();
     const [error, setError] = useState("");
@@ -37,7 +48,7 @@ export default function EmailMarketingManager() {
     const [previewVariables, setPreviewVariables] = useState<Record<string, string>>({});
     const [revision, setRevision] = useState("");
     const [newType, setNewType] = useState("paragraph");
-    const selected = data?.templates.find((item) => item.key === key);
+    const selected = data?.locale === emailLocale ? data.templates.find((item) => item.key === key) : undefined;
     const dirty = !!document && !!selected && JSON.stringify(document) !== JSON.stringify(selected.draft);
     const dirtyRef = useRef(dirty);
     dirtyRef.current = dirty;
@@ -56,20 +67,57 @@ export default function EmailMarketingManager() {
         return () => window.removeEventListener("beforeunload", beforeUnload);
     }, []);
     const load = useCallback(async () => {
+        loadController.current?.abort();
+        const controller = new AbortController();
+        loadController.current = controller;
         setLoading(true);
         try {
-            const result = await fetchEmailCenter();
+            const result = await fetchEmailCenter(emailLocale, controller.signal);
+            if (controller.signal.aborted) return;
+            brandVersion.current = result.brand.version;
             setData(result);
             setError("");
         } catch (err) {
-            setError(err instanceof Error ? err.message : label("failed"));
+            if (!controller.signal.aborted) setError(err instanceof Error ? err.message : label("failed"));
         } finally {
-            setLoading(false);
+            if (!controller.signal.aborted) setLoading(false);
         }
-    }, []);
+    }, [emailLocale]);
     useEffect(() => {
         void load();
+        return () => loadController.current?.abort();
     }, [load]);
+    useEffect(() => {
+        let controller: AbortController | undefined;
+        const refresh = () => {
+            if (window.document.visibilityState !== "visible") return;
+            controller?.abort();
+            const request = new AbortController();
+            controller = request;
+            void fetchEmailBrand(request.signal)
+                .then((brand) => {
+                    if (request.signal.aborted) return;
+                    setBrandError("");
+                    if (brandVersion.current === brand.version) return;
+                    brandVersion.current = brand.version;
+                    setData((previous) => (previous ? { ...previous, brand } : previous));
+                    setBrandRefresh((value) => value + 1);
+                })
+                .catch(() => {
+                    if (!request.signal.aborted) setBrandError(label("failed"));
+                });
+        };
+        refresh();
+        const timer = window.setInterval(refresh, 30000);
+        window.addEventListener("focus", refresh);
+        window.document.addEventListener("visibilitychange", refresh);
+        return () => {
+            controller?.abort();
+            window.clearInterval(timer);
+            window.removeEventListener("focus", refresh);
+            window.document.removeEventListener("visibilitychange", refresh);
+        };
+    }, [appearanceRevision]);
     useEffect(() => {
         setDocument(selected ? structuredClone(selected.draft) : undefined);
         setPreviewVariables({});
@@ -87,7 +135,7 @@ export default function EmailMarketingManager() {
         const controller = new AbortController();
         setPreviewBusy(true);
         const timer = setTimeout(() => {
-            previewEmailTemplate(key, { document, previewVariables }, controller.signal)
+            previewEmailTemplate(key, { document, previewVariables, locale: emailLocale }, controller.signal)
                 .then((result) => {
                     if (!controller.signal.aborted) {
                         setPreview(result);
@@ -108,7 +156,7 @@ export default function EmailMarketingManager() {
             clearTimeout(timer);
             controller.abort();
         };
-    }, [document, key, previewVariables]);
+    }, [document, key, previewVariables, emailLocale, brandRefresh]);
 
     const run = async (action: () => Promise<unknown>) => {
         setBusy(true);
@@ -159,7 +207,7 @@ export default function EmailMarketingManager() {
                         .filter((item) => (section === "marketing" ? item.category === "marketing" : item.category !== "marketing"))
                         .map((item) => (
                             <button key={item.key} type="button" aria-pressed={key === item.key} onClick={() => switchTemplate(item.key)}>
-                                <strong>{label(`event.${item.key}`)}</strong>
+                                <strong>{item.name}</strong>
                                 <small>
                                     {item.key} · {item.locale}
                                 </small>
@@ -168,14 +216,14 @@ export default function EmailMarketingManager() {
                 </aside>
                 <div className="email-center-editor">
                     <div className="email-center-actions">
-                        <Button loading={busy} disabled={!selected.state.revision || !dirty} onClick={() => run(() => editEmailTemplate(key, "draft", { document, expectedRevision: selected.state.revision }))}>
+                        <Button loading={busy} disabled={!selected.state.revision || !dirty} onClick={() => run(() => editEmailTemplate(key, "draft", { document, locale: emailLocale, expectedRevision: selected.state.revision }))}>
                             {label("save")}
                         </Button>
                         <Button
                             type="primary"
                             loading={busy}
                             disabled={dirty || !selected.state.draftId || selected.state.draftId === selected.state.publishedId || !!previewError}
-                            onClick={() => run(() => editEmailTemplate(key, "publish", { document, expectedRevision: selected.state.revision, revisionId: selected.state.draftId }))}
+                            onClick={() => run(() => editEmailTemplate(key, "publish", { document, locale: emailLocale, expectedRevision: selected.state.revision, revisionId: selected.state.draftId }))}
                         >
                             {label("publish")}
                         </Button>
@@ -322,7 +370,7 @@ export default function EmailMarketingManager() {
                         {label("recipient")}
                         <Input type="email" autoComplete="off" value={recipient} onChange={(e) => setRecipient(e.target.value)} />
                     </label>
-                    <Button loading={busy} disabled={!recipient || !!previewError || previewBusy} onClick={() => run(() => editEmailTemplate(key, "test", { document, to: recipient, previewVariables }))}>
+                    <Button loading={busy} disabled={!recipient || !!previewError || !!brandError || previewBusy} onClick={() => run(() => editEmailTemplate(key, "test", { document, locale: emailLocale, to: recipient, previewVariables }))}>
                         {label("test")}
                     </Button>
                 </div>
@@ -340,7 +388,17 @@ export default function EmailMarketingManager() {
                         <Button loading={loading} onClick={() => (dirty ? modal.confirm({ title: label("unsaved"), onOk: load }) : load())}>
                             {label("refresh")}
                         </Button>
-                        {data?.templates.some((item) => !item.state.revision) && (
+                        <Select
+                            aria-label={label("emailLanguage")}
+                            value={emailLocale}
+                            onChange={(next) => {
+                                const target = new URLSearchParams(params);
+                                target.set("emailLocale", next);
+                                setParams(target);
+                            }}
+                            options={SUPPORTED_LOCALES.map((item) => ({ value: item.code, label: item.label }))}
+                        />
+                        {data && (
                             <Button loading={busy} onClick={() => run(initializeEmailCenter)}>
                                 {label("initialize")}
                             </Button>
@@ -349,6 +407,7 @@ export default function EmailMarketingManager() {
                 }
             >
                 {error && <Alert type="error" title={error} />}
+                {brandError && <Alert type="error" title={brandError} />}
                 {data?.safeMode && <Alert type="warning" title={label("safeMode")} />}
                 {loading && !data ? (
                     <Spin tip={label("loading")} />
@@ -450,7 +509,7 @@ export default function EmailMarketingManager() {
                                             <Button
                                                 disabled={history.kind === "legacy" || history.id === selected?.state.publishedId || dirty}
                                                 loading={busy}
-                                                onClick={() => selected && document && run(() => editEmailTemplate(key, "publish", { document, revisionId: history.id, expectedRevision: selected.state.revision }))}
+                                                onClick={() => selected && document && run(() => editEmailTemplate(key, "publish", { document, locale: emailLocale, revisionId: history.id, expectedRevision: selected.state.revision }))}
                                             >
                                                 {label("rollback")}
                                             </Button>

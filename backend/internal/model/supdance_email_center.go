@@ -32,6 +32,7 @@ type SupDanceEmailRevision struct {
 // Receipt deliberately has no body, verification code or recipient address.
 // A claimed intent is never automatically replayed after a process crash.
 type SupDanceEmailReceipt struct {
+	Locale       string    `json:"locale" gorm:"size:16"`
 	ID           string    `json:"id" gorm:"primaryKey;size:64"`
 	LogID        string    `json:"logId" gorm:"size:36;index"`
 	Channel      string    `json:"channel" gorm:"size:16"`
@@ -48,14 +49,15 @@ type SupDanceEmailReceipt struct {
 }
 
 type SupDanceEmailContact struct {
-	Email          string     `json:"email" gorm:"primaryKey;size:160"`
-	Marketing      bool       `json:"marketing"`
-	Source         string     `json:"source" gorm:"size:160"`
-	Scope          string     `json:"scope" gorm:"size:32"`
-	ConsentedAt    *time.Time `json:"consentedAt"`
-	UnsubscribedAt *time.Time `json:"unsubscribedAt"`
-	Suppression    string     `json:"suppression" gorm:"size:32"`
-	UpdatedAt      time.Time  `json:"updatedAt"`
+	PreferredLocale string     `json:"preferredLocale" gorm:"size:16"`
+	Email           string     `json:"email" gorm:"primaryKey;size:160"`
+	Marketing       bool       `json:"marketing"`
+	Source          string     `json:"source" gorm:"size:160"`
+	Scope           string     `json:"scope" gorm:"size:32"`
+	ConsentedAt     *time.Time `json:"consentedAt"`
+	UnsubscribedAt  *time.Time `json:"unsubscribedAt"`
+	Suppression     string     `json:"suppression" gorm:"size:32"`
+	UpdatedAt       time.Time  `json:"updatedAt"`
 }
 
 // Logo bytes are snapshotted by content hash so appearance changes do not break old mail.
@@ -67,17 +69,19 @@ type SupDanceEmailBrandAsset struct {
 }
 
 type SupDanceEmailCampaign struct {
-	ID            string    `json:"id" gorm:"primaryKey;size:36"`
-	Name          string    `json:"name" gorm:"size:160"`
-	TemplateKey   string    `json:"templateKey" gorm:"size:80"`
-	RevisionID    string    `json:"revisionId" gorm:"size:36"`
-	VariablesJSON string    `json:"variablesJson" gorm:"type:text"`
-	SourceFilter  string    `json:"sourceFilter" gorm:"size:160"`
-	Status        string    `json:"status" gorm:"size:24;index"`
-	ScheduleAt    time.Time `json:"scheduleAt"`
-	CreatedBy     string    `json:"createdBy" gorm:"size:36"`
-	CreatedAt     time.Time `json:"createdAt"`
-	UpdatedAt     time.Time `json:"updatedAt"`
+	RevisionsJSON          string    `json:"revisionsJson" gorm:"type:text"`
+	LocalizedVariablesJSON string    `json:"localizedVariablesJson" gorm:"type:text"`
+	ID                     string    `json:"id" gorm:"primaryKey;size:36"`
+	Name                   string    `json:"name" gorm:"size:160"`
+	TemplateKey            string    `json:"templateKey" gorm:"size:80"`
+	RevisionID             string    `json:"revisionId" gorm:"size:36"`
+	VariablesJSON          string    `json:"variablesJson" gorm:"type:text"`
+	SourceFilter           string    `json:"sourceFilter" gorm:"size:160"`
+	Status                 string    `json:"status" gorm:"size:24;index"`
+	ScheduleAt             time.Time `json:"scheduleAt"`
+	CreatedBy              string    `json:"createdBy" gorm:"size:36"`
+	CreatedAt              time.Time `json:"createdAt"`
+	UpdatedAt              time.Time `json:"updatedAt"`
 }
 type SupDanceEmailJob struct {
 	ID            string    `json:"id" gorm:"primaryKey;size:64"`

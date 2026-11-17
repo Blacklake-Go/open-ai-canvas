@@ -1,12 +1,13 @@
 import { http } from "@/services/api/request";
 import type { EmailCenterOverview, EmailEditRequest, EmailPreview, EmailCampaign } from "./types";
 const base = "/admin/email-center";
-export const fetchEmailCenter = (signal?: AbortSignal) => http.get<EmailCenterOverview>(`${base}/overview`, { signal });
+export const fetchEmailCenter = (locale = "zh-CN", signal?: AbortSignal) => http.get<EmailCenterOverview>(`${base}/overview`, { params: { locale }, signal });
+export const fetchEmailBrand = (signal?: AbortSignal) => http.get<EmailCenterOverview["brand"]>(`${base}/brand`, { signal });
 export const initializeEmailCenter = () => http.post(`${base}/initialize`, {});
 export const editEmailTemplate = (key: string, action: "draft" | "publish" | "test", request: EmailEditRequest) => http.post(`${base}/templates/${encodeURIComponent(key)}/${action}`, request);
 export const previewEmailTemplate = (key: string, request: EmailEditRequest, signal?: AbortSignal) => http.post<EmailPreview>(`${base}/templates/${encodeURIComponent(key)}/preview`, request, { signal });
 export const listEmailCampaigns = () => http.get<EmailCampaign[]>(`${base}/campaigns`);
-export const createEmailCampaign = (request: { name: string; templateKey: string; variables: Record<string, string>; sourceFilter: string }) => http.post(`${base}/campaigns`, request);
+export const createEmailCampaign = (request: { name: string; templateKey: string; variables: Record<string, string>; variablesByLocale?: Record<string, Record<string, string>>; sourceFilter: string }) => http.post(`${base}/campaigns`, request);
 export const controlEmailCampaign = (id: string, action: "schedule" | "pause" | "cancel", scheduleAt?: string) => http.post(`${base}/campaigns/${encodeURIComponent(id)}/${action}`, { scheduleAt });
 export const uploadEmailAsset = (file: File) => {
     const body = new FormData();

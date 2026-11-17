@@ -1,6 +1,6 @@
 # 邮件中心候选验证记录
 
-本记录对应独立分支 `codex/email-center-candidate-20261117`。验证对象是实际 Go 服务、React 路由、数据库迁移和本机 SMTP 捕获器；不是独立 HTML 仿制页面。生产只做了只读审计，没有生产切换、DNS 修改、SMTP 登录或真实外发。
+本记录保存独立分支 `codex/email-center-candidate-20261117` 第一阶段提交 `26b351fc` 的验证。八语言、Schema 107 与页面管理的后续验证见 [第二阶段验证记录](EMAIL_CENTER_LANGUAGES_VALIDATION.md)，不能用本页第一阶段结果替代后续结果。验证对象是实际 Go 服务、React 路由、数据库迁移和本机 SMTP 捕获器；不是独立 HTML 仿制页面。生产只做了只读审计，没有生产切换、DNS 修改、SMTP 登录或真实外发。
 
 ## 环境与证据范围
 

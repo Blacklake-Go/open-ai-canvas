@@ -7,18 +7,19 @@ description: 信封、错误码与 OpenAPI
 
 ## SupDance 邮件中心
 
-后台入口 `/admin/email-center` 与原营销、SMTP、日志入口共用数据和管理员权限。管理 API 为 `/api/admin/email-center`，旧插件 API 前缀 `/api/admin/plugins/supdance-email-marketing` 映射同一新合同。
+后台入口 `/admin/plugins/page-management?page=email` 与模型展示、HTML 页面统一管理；旧 `/admin/email-center` 与原营销入口保留参数并跳转。SMTP、日志入口继续共用数据和管理员权限。管理 API 为 `/api/admin/email-center`，旧插件 API 前缀 `/api/admin/plugins/supdance-email-marketing` 映射同一新合同。
 
 | 方法与路径 | 行为 |
 | --- | --- |
-| `GET /overview` | 继承品牌、模板草稿/发布/有效版本、历史版本、脱敏联系人与 SMTP 公共配置 |
-| `POST /initialize` | 可重入初始化模板并留存已保存旧 JSON；不重置 SMTP 或原模板设置 |
-| `POST /templates/:key/draft` | `{ document, expectedRevision }`；乐观锁失败返回 409 |
-| `POST /templates/:key/publish` | `{ revisionId, expectedRevision }`；校验归属、变量、保护模块和链接，可发布历史安全版本 |
-| `POST /templates/:key/preview` | `{ document, previewVariables? }`；同一服务端渲染器生成 HTML/纯文本，保护模块无真实凭证；样例变量只接受事件 schema 中的普通字段 |
-| `POST /templates/:key/test` | `{ document, to, previewVariables? }`；管理员、服务器白名单、每小时十次、原账户总开关；不创建认证挑战 |
+| `GET /overview?locale=ja-JP` | 所选语言的 11 事件、`supportedLocales`、品牌、草稿/发布/历史版本、脱敏联系人与 SMTP 公共配置 |
+| `GET /brand` | 最新正式站点公开品牌元数据，管理员限定、no-store；不读取联系人或 SMTP 密钥 |
+| `POST /initialize` | 可重入初始化 11×8 个模板并留存已保存旧 JSON；不重置 SMTP 或原模板设置 |
+| `POST /templates/:key/draft` | `{ locale, document, expectedRevision }`；严格校验八种代码，乐观锁失败返回 409 |
+| `POST /templates/:key/publish` | `{ locale, revisionId, expectedRevision }`；校验事件及语言归属、变量、保护模块和链接，可发布同语言历史安全版本 |
+| `POST /templates/:key/preview` | `{ locale, document, previewVariables? }`；同一服务端渲染器生成 HTML/纯文本，保护模块无真实凭证；样例变量只接受事件 schema 中的普通字段 |
+| `POST /templates/:key/test` | `{ locale, document, to, previewVariables? }`；按明确的测试语言渲染，管理员、服务器白名单、每小时十次、原账户总开关；不创建认证挑战 |
 | `POST /assets` | 图片 FormData，不手工设置 boundary；最大 5MB，仅 PNG/JPEG/GIF，保存公开不可变素材 |
-| `GET/POST /campaigns` | 读取活动或创建固定发布版本的营销草稿；变量来自允许的真实内容字段 |
+| `GET/POST /campaigns` | 读取活动或创建固定八语言发布版本的营销草稿；`variablesByLocale` 提供真实分语言内容，newsletter 的标题/正文必须八语齐全 |
 | `POST /campaigns/:id/schedule` | `{ scheduleAt }`；只选择明确同意的联系人，按来源分组，最多 1000 人 |
 | `POST /campaigns/:id/pause`、`.../cancel` | 暂停/取消未提交任务，不承诺撤回 SMTP 已接受的内容 |
 | `GET /activity` | 只返回邮件操作的时间、动作和对象，避免回显历史敏感元数据 |
@@ -26,7 +27,9 @@ description: 信封、错误码与 OpenAPI
 
 偏好 API 为 `GET/PUT /api/auth/email-center/preference`，PUT 使用 `{ marketing: boolean }`，需要已验证账号邮箱。公开图片为 `GET /api/public/email-center/brand/:hash`；退订 `GET /api/public/email-center/unsubscribe` 不执行写操作，POST 接受 `List-Unsubscribe=One-Click`，独立验证加密营销退订令牌，成功直接返回 200。
 
-邮件模板不接受认证凭证或收件人覆盖。实际发送由原认证/通知业务或受控营销 worker 发起，后台没有任意原始发信接口。原日志 API 附加 `receipts` 映射，`sent` 标记为历史 SMTP 接受，新增 `smtp_accepted` 和 `unknown`，不等同于收件方收件箱投递。
+用户语言为 `GET/PUT /api/auth/email-center/language`，PUT 使用 `{ locale }`，仅允许当前登录用户写自己的八种原生语言代码。更新语言不更新营销同意。注册、匿名验证码和社交入站补邮箱可提供 `locale`，并读取 `Accept-Language`；已有账号以保存的用户语言为准。退订链接可携带规范 `lang`，仅改变确认页面语言，不改变令牌范围。语言、版本选择和旧活动边界见 `docs/supdance/EMAIL_CENTER_LANGUAGES.md`。
+
+邮件模板不接受认证凭证或收件人覆盖。实际发送由原认证/通知业务或受控营销 worker 发起，后台没有任意原始发信接口。原日志 API 附加 `receipts` 映射与实际渲染 `locale`，`sent` 标记为历史 SMTP 接受，新增 `smtp_accepted` 和 `unknown`，不等同于收件方收件箱投递。
 
 ## SupDance 灵感公开隔离
 

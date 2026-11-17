@@ -1,4 +1,6 @@
 import type { SupDanceI18nEntry } from "@/supdance/plugins/i18n/types";
+import { mailTranslations } from "./translations";
+import { EMAIL_LANGUAGE_ENTRIES } from "./language-messages";
 const labels = {
     previewVariables: ["预览变量（仅用于样例与测试）", "Preview variables (samples and tests only)"],
     queue: ["发送队列（最近 100 项）", "Send queue (latest 100)"],
@@ -107,11 +109,15 @@ const labels = {
     "event.credit_alert": ["额度与方案介绍", "Credits and plans"],
     "event.winback": ["回归创作邀请", "Return to creating"],
 } satisfies Record<string, [string, string]>;
-export const EMAIL_CENTER_I18N_ENTRIES: SupDanceI18nEntry[] = Object.entries(labels).map(([key, [zh, en]]) => ({
-    key: `email.center.${key}`,
-    namespace: "admin",
-    sourceText: zh,
-    description: "SupDance email center",
-    origin: "builtin",
-    translations: { "zh-CN": zh, "en-US": en, "zh-TW": zh, "ja-JP": en, "ko-KR": en, "es-ES": en },
-}));
+export type EmailLabelKey = keyof typeof labels;
+export const EMAIL_CENTER_I18N_ENTRIES: SupDanceI18nEntry[] = [
+    ...EMAIL_LANGUAGE_ENTRIES,
+    ...Object.entries(labels).map(([key, [zh, en]]): SupDanceI18nEntry => ({
+        key: `email.center.${key}`,
+        namespace: "admin",
+        sourceText: zh,
+        description: "SupDance email center",
+        origin: "builtin",
+        translations: { "zh-CN": zh, "en-US": en, ...Object.fromEntries(["zh-TW", "es-ES", "fr-FR", "de-DE", "ja-JP", "ko-KR"].map((locale, index) => [locale, mailTranslations[key as EmailLabelKey][index]])) },
+    })),
+];

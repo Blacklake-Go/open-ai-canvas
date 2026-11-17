@@ -11,14 +11,16 @@ import (
 	"regexp"
 	"strings"
 	"time"
+	"unicode/utf8"
 
 	"yingce/backend/internal/emailtpl"
+	"yingce/backend/internal/supdance/maillocale"
 )
 
 var token = regexp.MustCompile(`\{\{([a-z_][a-z_0-9]*)\}\}`)
 var color = regexp.MustCompile(`^#[0-9a-fA-F]{6}$`)
 var numericCode = regexp.MustCompile(`^[0-9]{6}$`)
-var unverifiedBenefit = regexp.MustCompile(`(?i)赠送|赠予|到账|优惠|永不过期|免费积分|回归礼|bonus\s+credits|free\s+credits|discount|gift\s+credits`)
+var unverifiedBenefit = regexp.MustCompile(`(?i)赠送|贈送|赠予|贈予|到账|到帳|优惠|優惠|永不过期|永不過期|免费积分|免費點數|回归礼|回歸禮|bonus\s+credits|free\s+credits|discount|gift\s+credits|descuento|réduction|rabatt|割引|할인|créditos\s+gratis|crédits\s+gratuits|kostenlose\s+credits|無料クレジット|무료\s*크레딧`)
 
 func SafeURL(raw string, brand Brand, image bool) bool {
 	u, err := url.Parse(raw)
@@ -44,7 +46,15 @@ func SafeURL(raw string, brand Brand, image bool) bool {
 	}
 	if !image && path == "/api/public/email-center/unsubscribe" {
 		values := u.Query()
-		return len(values) == 1 && values.Get("token") != ""
+		if values.Get("token") == "" {
+			return false
+		}
+		for key := range values {
+			if key != "token" && key != "lang" {
+				return false
+			}
+		}
+		return values.Get("lang") == "" || maillocale.Valid(values.Get("lang"))
 	}
 	if u.RawQuery != "" {
 		return false
@@ -65,7 +75,7 @@ func SafeURL(raw string, brand Brand, image bool) bool {
 }
 
 func Validate(e Event, d Document) error {
-	if strings.TrimSpace(d.Subject) == "" || strings.TrimSpace(d.Heading) == "" || len(d.Subject) > 300 || len(d.Preheader) > 400 || len(d.Blocks) > 60 {
+	if strings.TrimSpace(d.Subject) == "" || strings.TrimSpace(d.Heading) == "" || utf8.RuneCountInString(d.Subject) > 300 || utf8.RuneCountInString(d.Preheader) > 400 || len(d.Blocks) > 60 {
 		return errors.New("invalid email document")
 	}
 	if strings.ContainsAny(d.Subject+d.Preheader, "\r\n") {
@@ -126,11 +136,12 @@ func Validate(e Event, d Document) error {
 }
 
 func Samples(e Event) map[string]string {
-	v := map[string]string{"name": "预览创作者", "update_title": "产品更新标题（预览）", "update_body": "填写已经核实的产品更新、教程或创作案例。", "report_subject": "消费日报（预览，真实数据由服务端生成）"}
+	v := map[string]string{"name": maillocale.Text(e.Locale, "preview_name"), "update_title": maillocale.Text(e.Locale, "preview_title"), "update_body": maillocale.Text(e.Locale, "preview_body"), "report_subject": maillocale.Text(e.Locale, "preview_report")}
 	return v
 }
 
 func Render(e Event, d Document, b Brand, p Payload) (emailtpl.Rendered, error) {
+	t := func(key string, args ...any) string { return maillocale.Text(e.Locale, key, args...) }
 	if err := Validate(e, d); err != nil {
 		return emailtpl.Rendered{}, err
 	}
@@ -207,7 +218,7 @@ func Render(e Event, d Document, b Brand, p Payload) (emailtpl.Rendered, error) 
 		if block.Type == "code" {
 			if p.Preview {
 				block.Text = "••••••"
-				block.Title = "验证码仅在真实认证邮件正文中显示"
+				block.Title = t("preview_code")
 			} else {
 				_, recipientErr := mail.ParseAddress(p.Recipient)
 				if !numericCode.MatchString(p.Code) || !p.ExpiresAt.After(time.Now()) || recipientErr != nil {
@@ -216,20 +227,27 @@ func Render(e Event, d Document, b Brand, p Payload) (emailtpl.Rendered, error) 
 				block.Text = p.Code
 				seconds := max(1, int(time.Until(p.ExpiresAt).Seconds()))
 				action := p.Action
-				if action == "" {
-					action = e.Name
+				switch action {
+				case "login":
+					action = t("action_login")
+				case "bind":
+					action = t("action_bind")
+				case "register", "social_onboarding":
+					action = t("registration")
+				default:
+					action = t(e.Key)
 				}
-				block.Title = fmt.Sprintf("%s · %d 秒内有效，只能使用一次", action, seconds)
+				block.Title = t("code_expiry", action, seconds)
 				block.Title += " · " + p.Recipient
 			}
-			text.WriteString("验证码：" + block.Text + "\n" + block.Title + "\n")
+			text.WriteString(t("code_line", block.Text) + "\n" + block.Title + "\n")
 		} else if block.Type == "report" || (block.Type == "notice" && e.ProtectedModule == "notice" && block.Text == "") {
 			if p.ProtectedText == "" && !p.Preview {
 				return emailtpl.Rendered{}, errors.New("missing protected business content")
 			}
 			block.Text = p.ProtectedText
 			if p.Preview {
-				block.Text = "真实业务内容由服务端生成；预览不含用户数据。"
+				block.Text = t("preview_protected")
 			}
 			text.WriteString(block.Text + "\n")
 		} else {
@@ -239,6 +257,9 @@ func Render(e Event, d Document, b Brand, p Payload) (emailtpl.Rendered, error) 
 	}
 	subject := expand(d.Subject)
 	preheader := expand(d.Preheader)
+	if utf8.RuneCountInString(subject) > 300 || utf8.RuneCountInString(preheader) > 400 {
+		return emailtpl.Rendered{}, errors.New("expanded email metadata is too long")
+	}
 	if e.Category == "security" && p.Code != "" && (strings.Contains(subject, p.Code) || strings.Contains(preheader, p.Code)) {
 		return emailtpl.Rendered{}, errors.New("authentication credential cannot appear in metadata")
 	}
@@ -260,28 +281,28 @@ func Render(e Event, d Document, b Brand, p Payload) (emailtpl.Rendered, error) 
 		body.Reset()
 		body.WriteString(p.ProtectedHTML)
 	}
-	footer := "这是必要的账户邮件，不受营销退订影响。"
+	footer := t("security_footer")
 	if e.Category == "notification" {
-		footer = "你已订阅此通知，可在站内账号设置中管理。"
+		footer = t("notification_footer")
 	}
 	if e.Category == "marketing" {
-		footer = "你收到此邮件是因为订阅了品牌资讯。"
+		footer = t("marketing_footer")
 		if !p.Preview && !SafeURL(p.UnsubscribeURL, b, false) {
 			return emailtpl.Rendered{}, errors.New("marketing unsubscribe URL required")
 		}
 		if p.UnsubscribeURL != "" {
-			body.WriteString(`<p style="padding:24px;"><a href="` + html.EscapeString(p.UnsubscribeURL) + `">退订营销邮件</a></p>`)
-			text.WriteString("\n退订营销邮件：" + p.UnsubscribeURL)
+			body.WriteString(`<p style="padding:24px;"><a href="` + html.EscapeString(p.UnsubscribeURL) + `">` + html.EscapeString(t("unsubscribe")) + `</a></p>`)
+			text.WriteString("\n" + t("unsubscribe") + ": " + p.UnsubscribeURL)
 		}
 	}
 	if e.Category == "test" || p.Preview {
-		subject = "[测试] " + subject
-		footer = "此内容用于测试，不含有效的认证凭证。"
+		subject = t("test_prefix") + subject
+		footer = t("test_footer")
 	}
 	if b.LogoURL != "" && !SafeURL(b.LogoURL, b, true) {
 		return emailtpl.Rendered{}, errors.New("unsafe brand logo URL")
 	}
-	htmlBody, err := emailtpl.RenderMessage(emailtpl.Message{Brand: b.Name, LogoURL: b.LogoURL, SupportEmail: b.SupportEmail, Footer: b.Footer, Title: subject, Preheader: preheader, Body: body.String(), FooterNote: footer})
+	htmlBody, err := emailtpl.RenderMessage(emailtpl.Message{Locale: maillocale.Resolve(e.Locale), Brand: b.Name, LogoURL: b.LogoURL, SupportEmail: b.SupportEmail, Footer: b.Footer, Title: subject, Preheader: preheader, Body: body.String(), FooterNote: footer})
 	return emailtpl.Rendered{Subject: subject, HTML: htmlBody, BrandVersion: b.Version, Text: strings.TrimSpace(text.String()) + "\n\n" + footer + "\n— " + b.Name + "\n" + b.Footer + "\n" + b.SupportEmail}, err
 }
 

@@ -5,7 +5,7 @@ description: 影策后端核心持久化表与状态边界
 
 # 后端数据库
 
-## SupDance 邮件中心（Schema 106）
+## SupDance 邮件中心（Schema 106–107）
 
 增量迁移 `supdance_email_center` 保留 SMTP、原营销模板 JSON、`email_logs`、认证挑战及消费日报订阅，新增：
 
@@ -21,7 +21,9 @@ description: 影策后端核心持久化表与状态边界
 
 品牌公开字段的不可变快照复用 `system_settings` 中的 `sd.email.brand.<hash>` 键，长度符合原 80 字符限制。原 `email_logs.id` 的 36 字符宽度不变，使用 receipt.log_id 关联元数据，旧记录仍可读取。记录总量不能被解释成真实收件或送达率。
 
-只有 SMTP 明确临时拒绝或正文发送前的临时网络错误可有限重试；正文提交结果不明或进程遗留的发送中状态转为 unknown，不主动重放。回滚模板/进入安全模式不删除退订、抑制、收据或审计。旧 Schema 105 程序拒绝连接 106，不能通过删除迁移记录做数据库降级。操作说明见 [邮件中心候选文档](../../../supdance/EMAIL_CENTER.md)。
+Schema 107 `supdance_email_locales` 只增加五个字段：`users.preferred_locale`、`supdance_email_contacts.preferred_locale`、`supdance_email_receipts.locale`、`supdance_email_campaigns.revisions_json` 与 `localized_variables_json`。旧账号和联系人语言默认空，保留既有数据；不对整个 User 执行 AutoMigrate。模板以 `(key, locale)` 独立版本，内置 11×8 个组合。活动保存八语言发布版本映射及明确的运营翻译，发送时根据收件人偏好选择固定版本。旧单语言活动保持原样，缺少对应语言时拒绝发送，不静默替换或重放。
+
+只有 SMTP 明确临时拒绝或正文发送前的临时网络错误可有限重试；正文提交结果不明或进程遗留的发送中状态转为 unknown，不主动重放。回滚模板/进入安全模式不删除退订、抑制、收据或审计。旧 Schema 105/106 程序拒绝连接 107，不能通过删除迁移记录做数据库降级。回退需支持 107 的构建并保留新字段与发送历史。SQLite/PostgreSQL 增量与重复执行已验证；生产恢复迁移尚未执行。操作说明见 [邮件语言与迁移文档](../../../supdance/EMAIL_CENTER_LANGUAGES.md)。
 
 ## 微信登录（本站 Schema 103）
 

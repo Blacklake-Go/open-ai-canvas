@@ -153,7 +153,8 @@ const adminNavigation: AdminNavigationGroup[] = [
             { path: "/admin/plugins", keywords: "插件 扩展 协议 plugin", label: "插件管理", shortLabel: "插件", icon: <PlugZap className="size-4" /> },
             { path: "/admin/plugins/music-generation", label: "音乐配置", shortLabel: "音乐", icon: <Music className="size-4" /> },
             {
-                path: "/admin/plugins/compact-model-picker",
+                path: "/admin/plugins/page-management",
+                keywords: "页面 HTML 邮件 营销 模型 pages email",
                 get label() {
                     return i18n.t("compactPicker.title");
                 },
@@ -162,7 +163,6 @@ const adminNavigation: AdminNavigationGroup[] = [
                 },
                 icon: <Layers3 className="size-4" />,
             },
-            { path: "/admin/plugins/html-pages", label: "HTML 页面", shortLabel: "页面", icon: <FileCode className="size-4" /> },
             { path: "/admin/mcp", keywords: "MCP 工具 连接 市场 Agent", label: "MCP 管理", shortLabel: "MCP", icon: <PlugZap className="size-4" /> },
             { path: "/admin/skills", keywords: "技能 skill", label: "技能管理", shortLabel: "技能", icon: <Wand2 className="size-4" /> },
             { path: "/admin/skill-curation", keywords: "技能 分类 推荐", label: "技能分类", shortLabel: "分类", icon: <Sparkles className="size-4" /> },

@@ -14,18 +14,24 @@ import (
 	"yingce/backend/internal/kernel"
 	"yingce/backend/internal/model"
 	"yingce/backend/internal/supdance/emailcenter"
+	"yingce/backend/internal/supdance/maillocale"
 )
 
 type emailCenterHost interface {
 	EmailBrand() (emailcenter.Brand, error)
-	EmailDocument(string) (emailcenter.Document, string, error)
+	EmailDocument(string, string) (emailcenter.Document, string, error)
 }
 
 var securityEmailLane = make(chan struct{}, 4)
 var marketingEmailLane = make(chan struct{}, 1)
 
 func (s *Service) prepareCenterEmail(delivery *EmailDelivery) error {
-	e, ok := emailcenter.FindEvent(delivery.Purpose)
+	locale, localeErr := s.ResolveEmailLocale(*delivery)
+	if localeErr != nil {
+		return localeErr
+	}
+	delivery.Locale = locale
+	e, ok := emailcenter.LocalizedEvent(delivery.Purpose, locale)
 	if !ok {
 		return kernel.BadAuthRequest("邮件事件未注册")
 	}
@@ -43,7 +49,7 @@ func (s *Service) prepareCenterEmail(delivery *EmailDelivery) error {
 		} else {
 			brand = resolvedBrand
 		}
-		published, id, err := h.EmailDocument(e.Key)
+		published, id, err := h.EmailDocument(e.Key, locale)
 		if err == nil {
 			doc = published
 			version = id
@@ -54,6 +60,10 @@ func (s *Service) prepareCenterEmail(delivery *EmailDelivery) error {
 		}
 	}
 	payload := emailcenter.Payload{Code: delivery.Code, Action: delivery.SecurityAction, Recipient: delivery.Recipient, ExpiresAt: delivery.ExpiresAt, ProtectedText: delivery.Mail.Text, ProtectedHTML: delivery.Mail.HTML}
+	if delivery.Purpose == EmailPurposeEmailChanged && delivery.ChangedEmail != "" {
+		payload.ProtectedText = maillocale.Text(locale, "changed_notice", maskedEmail(delivery.ChangedEmail))
+		payload.ProtectedHTML = ""
+	}
 	if delivery.Purpose == EmailPurposeConsumptionReport {
 		payload.Variables = map[string]string{"report_subject": delivery.Mail.Subject}
 	}
@@ -121,7 +131,7 @@ func (s *Service) claimCenterDelivery(delivery *EmailDelivery, from string) (boo
 	if s.repo == nil {
 		return true, nil
 	}
-	return s.repo.ClaimEmailReceipt(&model.SupDanceEmailReceipt{ID: delivery.ReceiptID, LogID: delivery.ReceiptID[:32], Channel: "smtp", Event: delivery.Purpose, TemplateID: delivery.TemplateID, TemplateKey: delivery.TemplateKey, BrandVersion: delivery.BrandVersion, MessageID: delivery.Mail.MessageID, Status: "sending", CreatedAt: time.Now(), UpdatedAt: time.Now()})
+	return s.repo.ClaimEmailReceipt(&model.SupDanceEmailReceipt{Locale: delivery.Locale, ID: delivery.ReceiptID, LogID: delivery.ReceiptID[:32], Channel: "smtp", Event: delivery.Purpose, TemplateID: delivery.TemplateID, TemplateKey: delivery.TemplateKey, BrandVersion: delivery.BrandVersion, MessageID: delivery.Mail.MessageID, Status: "sending", CreatedAt: time.Now(), UpdatedAt: time.Now()})
 }
 
 type emailOutcomeError struct{ status, stage string }

@@ -178,8 +178,8 @@ func (s *Service) RegistrationEnabled() (bool, error) {
 	return s.authDomain().RegistrationEnabled()
 }
 
-func (s *Service) SendPasswordResetEmailCode(rawEmail string) error {
-	return s.authDomain().SendPasswordResetEmailCode(rawEmail)
+func (s *Service) SendPasswordResetEmailCode(rawEmail string, locales ...string) error {
+	return s.authDomain().SendPasswordResetEmailCode(rawEmail, locales...)
 }
 
 func (s *Service) ResetPassword(req PasswordResetRequest) error {
@@ -205,8 +205,8 @@ func (s *Service) EmailEnabled() (bool, error) {
 	return s.authDomain().EmailEnabled()
 }
 
-func (s *Service) SendRegistrationEmailCode(rawEmail string) error {
-	return s.authDomain().SendRegistrationEmailCode(rawEmail)
+func (s *Service) SendRegistrationEmailCode(rawEmail string, locales ...string) error {
+	return s.authDomain().SendRegistrationEmailCode(rawEmail, locales...)
 }
 
 func (s *Service) VerifyRegistrationEmailCode(email string, rawCode string) (*model.EmailVerificationCode, error) {

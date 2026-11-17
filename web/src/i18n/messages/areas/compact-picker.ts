@@ -1,3 +1,4 @@
+import { pageManagementText } from "@/supdance/plugins/compact-model-picker/page-messages";
 import type { AppLocale } from "../../locales";
 import zhTW from "../zh-TW.json";
 import esES from "../es-ES.json";
@@ -260,3 +261,7 @@ export const compactPickerLocales: Record<AppLocale, Copy> = {
         readError: "모델 선택기 설정을 불러올 수 없습니다",
     },
 };
+
+for (const code of Object.keys(compactPickerLocales) as AppLocale[]) {
+    compactPickerLocales[code] = { ...compactPickerLocales[code], title: pageManagementText(code, "title"), summary: pageManagementText(code, "summary") };
+}

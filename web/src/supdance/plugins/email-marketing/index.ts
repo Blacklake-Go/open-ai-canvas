@@ -6,7 +6,7 @@ export const supdanceEmailMarketingManifest: SupDancePluginManifest = {
     apiVersion: PLUGIN_API_VERSION_V2,
     id: SUPDANCE_EMAIL_MARKETING_PLUGIN_ID,
     name: "邮件中心",
-    version: "1.1.0",
+    version: "1.2.0",
     publishedAt: "2026-11-17",
     updatedAt: "2026-11-17",
     minHostVersion: "1.7.1",

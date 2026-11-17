@@ -4,6 +4,7 @@ import { DEFAULT_DRAWING_ENGINE, type CanvasDrawingEngineSetting } from "@/lib/c
 import type { PublicUserGroup } from "@/services/api/user-groups";
 
 export type LocalUser = {
+    preferredLocale?: string;
     id: string;
     username: string;
     email?: string;
