@@ -10,6 +10,7 @@ import esES from "./messages/es-ES.json";
 import type { AppLocale } from "./locales";
 import interfaceCatalogs from "./messages/interface.json";
 import { toI18nextTemplate } from "./interpolation";
+import { PAYMENT_RECONCILIATION_CATALOGS } from "@/supdance/plugins/i18n/locales/payment-reconciliation";
 
 import { flattenCatalog } from "./catalog-utils";
 export { flattenCatalog, expandCatalog } from "./catalog-utils";
@@ -26,5 +27,6 @@ export const NATIVE_CATALOGS: Record<AppLocale, Record<string, string>> = {
     "es-ES": esES,
 };
 for (const code of Object.keys(NATIVE_CATALOGS) as AppLocale[]) {
+    Object.assign(NATIVE_CATALOGS[code], PAYMENT_RECONCILIATION_CATALOGS[code]);
     Object.assign(NATIVE_CATALOGS[code], Object.fromEntries(Object.entries(interfaceCatalogs[code]).map(([key, text]) => [key, toI18nextTemplate(text)])));
 }

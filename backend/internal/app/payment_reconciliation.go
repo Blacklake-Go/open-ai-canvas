@@ -92,6 +92,15 @@ func (s *Service) runPaymentReconciliation(ctx context.Context, actor *model.Use
 		return s.failPaymentReconciliation(run, err)
 	}
 	records, err := provider.DownloadTradeBill(ctx, values, billDate)
+	var providerErr *payment.ProviderError
+	if errors.As(err, &providerErr) && providerErr.Code == "unsupported_operation" {
+		// A missing provider capability is not an empty bill or a completed
+		// reconciliation. Keep an explicit terminal result without granting credits.
+		if err := s.repo.SkipUnsupportedPaymentReconciliation(run.ID); err != nil {
+			return s.failPaymentReconciliation(run, err)
+		}
+		return s.repo.PaymentReconciliationRun(run.ID)
+	}
 	if errors.Is(err, payment.ErrTradeBillNotFound) && len(localCredited) == 0 {
 		candidateCount, countErr := s.repo.UnresolvedPaymentOrderCandidateCountOverlapping(providerID, start, end)
 		if countErr != nil {
@@ -351,7 +360,7 @@ func (s *Service) maybeRunDailyPaymentReconciliation(ctx context.Context) {
 		}
 		existing, err := s.repo.PaymentReconciliationRunByDate(descriptor.ID, billDate)
 		if err == nil {
-			if existing.Status == model.PaymentReconciliationCompleted || (existing.Status == model.PaymentReconciliationRunning && existing.UpdatedAt.After(time.Now().Add(-30*time.Minute))) || (existing.Status == model.PaymentReconciliationFailed && existing.UpdatedAt.After(time.Now().Add(-30*time.Minute))) {
+			if existing.Status == model.PaymentReconciliationCompleted || existing.Status == model.PaymentReconciliationUnsupported || (existing.Status == model.PaymentReconciliationRunning && existing.UpdatedAt.After(time.Now().Add(-30*time.Minute))) || (existing.Status == model.PaymentReconciliationFailed && existing.UpdatedAt.After(time.Now().Add(-30*time.Minute))) {
 				continue
 			}
 		} else if !errors.Is(err, gorm.ErrRecordNotFound) {

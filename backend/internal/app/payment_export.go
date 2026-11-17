@@ -67,7 +67,7 @@ func (q PaymentOrderQuery) filter() (repository.PaymentOrderFilter, error) {
 func (q PaymentReconciliationQuery) filter() (repository.PaymentReconciliationFilter, error) {
 	f := repository.PaymentReconciliationFilter{ProviderID: strings.TrimSpace(q.ProviderID), Status: strings.TrimSpace(q.Status), From: q.From, To: q.To}
 	switch f.Status {
-	case "", "all", "running", "completed", "failed":
+	case "", "all", "running", "completed", "failed", "unsupported":
 	default:
 		return f, BadAuthRequest("无效的对账状态")
 	}
@@ -248,6 +248,9 @@ func (s *Service) paymentExportProviderName(id string) string {
 }
 
 func paymentExportLabel(value string) string {
+	if value == "unsupported" {
+		return "不支持账单对账"
+	}
 	labels := map[string]string{"created": "创建中", "pending": "待支付", "closing": "关单中", "closed": "已关闭", "credited": "已入账", "create_failed": "下单失败", "running": "执行中", "completed": "已完成", "failed": "失败", "matched": "一致", "recovered": "已自动补发", "local_order_not_found": "本地订单缺失", "provider_record_missing": "渠道记录缺失", "amount_mismatch": "金额不一致", "trade_no_mismatch": "交易号不一致", "credit_failed": "补发失败"}
 	if label, ok := labels[value]; ok {
 		return label

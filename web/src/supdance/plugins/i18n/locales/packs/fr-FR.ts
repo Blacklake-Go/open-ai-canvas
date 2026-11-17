@@ -1,8 +1,10 @@
 // Generated UI translations; protected names and interpolation tokens are retained.
 import { HTML_ADMIN_I18N_ENTRIES } from "../html-admin";
+import { PAYMENT_RECONCILIATION_CATALOGS } from "../payment-reconciliation";
 
 export default {
     ...Object.fromEntries(HTML_ADMIN_I18N_ENTRIES.map((entry) => [entry.key, entry.translations["fr-FR"]])),
+    ...PAYMENT_RECONCILIATION_CATALOGS["fr-FR"],
     "federation.title": "Connecter votre compte créateur ONE",
     "federation.intro": "Vérifiez les deux comptes. Les nouvelles créations utilisent le portefeuille principal ; les anciens crédits et transactions ONE conservent leur valeur et leur expiration.",
     "federation.one": "Compte ONE",

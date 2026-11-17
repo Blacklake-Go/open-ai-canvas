@@ -229,9 +229,11 @@ func (r *Repository) PaymentOrderByMerchant(providerID, merchantOrderNo string) 
 
 func (r *Repository) ActivePaymentOrderCount(userID string) (int64, error) {
 	var count int64
+	// Admission counts usable checkouts, not the compensation backlog. Expired
+	// orders remain unresolved and retain their plugin, query and late-credit paths.
 	err := r.db.Model(&model.PaymentOrder{}).Where("user_id = ? AND status IN ?", userID, []model.PaymentOrderStatus{
 		model.PaymentOrderCreated, model.PaymentOrderPending, model.PaymentOrderClosing, model.PaymentOrderCreateFailed,
-	}).Count(&count).Error
+	}).Where("expires_at > ? OR expires_at IS NULL OR expires_at = ?", time.Now(), time.Time{}).Count(&count).Error
 	return count, err
 }
 
@@ -638,6 +640,20 @@ func (r *Repository) FailPaymentReconciliation(id, message string) error {
 		"status": model.PaymentReconciliationFailed, "error": message,
 		"completed_at": &now, "updated_at": now,
 	}).Error
+}
+
+func (r *Repository) SkipUnsupportedPaymentReconciliation(id string) error {
+	now := time.Now()
+	updated := r.db.Model(&model.PaymentReconciliationRun{}).
+		Where("id = ? AND status = ?", strings.TrimSpace(id), model.PaymentReconciliationRunning).
+		Updates(map[string]any{"status": model.PaymentReconciliationUnsupported, "error": "TRADE_BILL_UNSUPPORTED", "completed_at": &now, "updated_at": now})
+	if updated.Error != nil {
+		return updated.Error
+	}
+	if updated.RowsAffected != 1 {
+		return errors.New("payment reconciliation run is no longer running")
+	}
+	return nil
 }
 
 func (r *Repository) PaymentReconciliationRun(id string) (*model.PaymentReconciliationRun, error) {

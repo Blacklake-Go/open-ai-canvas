@@ -212,7 +212,7 @@ export function closeAdminPaymentOrder(id: string) {
     return http.post<{ order: PaymentOrder }>(`/admin/payments/orders/${encodeURIComponent(id)}/close`);
 }
 
-export type PaymentReconciliationStatus = "running" | "completed" | "failed";
+export type PaymentReconciliationStatus = "running" | "completed" | "failed" | "unsupported";
 
 export type PaymentReconciliationResult = "matched" | "recovered" | "local_order_not_found" | "provider_record_missing" | "amount_mismatch" | "trade_no_mismatch" | "credit_failed";
 

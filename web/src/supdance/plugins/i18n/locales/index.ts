@@ -11,6 +11,7 @@ import jaJPPack from "./packs/ja-JP";
 import koKRPack from "./packs/ko-KR";
 import type { SupDanceI18nEntry, SupDanceI18nSettings, SupDanceLanguageItem, SupDanceLocaleCode } from "../types";
 import { MUSIC_SITE_I18N_ENTRIES } from "./music-site";
+import { PAYMENT_RECONCILIATION_I18N_ENTRIES } from "./payment-reconciliation";
 import { MARKETING_I18N_ENTRIES } from "@/supdance/marketing/translations";
 
 export const SUPPORTED_LOCALE_CODES: readonly SupDanceLocaleCode[] = SUPPORTED_LOCALES.map(({ code }) => code);
@@ -82,6 +83,7 @@ function e(key: string, namespace: string, zhCN: string, description = ""): SupD
 }
 
 export const BUILTIN_SUPDANCE_I18N_ENTRIES: readonly SupDanceI18nEntry[] = [
+    ...PAYMENT_RECONCILIATION_I18N_ENTRIES,
     ...FEDERATION_I18N_ENTRIES,
     ...MARKETING_I18N_ENTRIES,
     ...MUSIC_SITE_I18N_ENTRIES,
