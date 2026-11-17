@@ -64,6 +64,7 @@ const MusicAdminSettingsPage = lazyAdminPage(() => import("@/supdance/plugins/mu
 const CompactPickerAdmin = lazyAdminPage(() => import("@/supdance/plugins/compact-model-picker/admin"));
 const DarkLoginPage = lazy(() => import("@/supdance/pages/dark-login-page"));
 const HtmlPageManager = lazyAdminPage(() => import("@/supdance/plugins/html-page-manager/admin/html-page-manager"));
+const EmailMarketingManager = lazyAdminPage(() => import("@/supdance/plugins/email-marketing/admin/email-marketing-manager"));
 const TermsPage = lazy(() => import("@/supdance/pages/legal/terms-page"));
 const PrivacyPage = lazy(() => import("@/supdance/pages/legal/privacy-page"));
 const AupPage = lazy(() => import("@/supdance/pages/legal/aup-page"));
@@ -137,10 +138,18 @@ function devRoutes() {
     const PrevisReproLab = lazy(() => import("@/pages/dev/previs-repro-lab"));
     const TestVoiceRecording = lazy(() => import("@/pages/test-voice-recording"));
     const DesignSystemShowcase = lazy(() => import("@/pages/dev/design-system-showcase"));
+    const MusicPreviewLab = lazy(() => import("@/pages/dev/music-preview-lab"));
+    const AppStorePage = lazy(() => import("@/pages/app-store"));
+    const TapTvPage = lazy(() => import("@/pages/taptv"));
     return [
+        { path: "/home/app-store", element: fullScreenDeferred(<AppStorePage />), errorElement: <RouteErrorPage /> },
+        { path: "/app-store", element: fullScreenDeferred(<AppStorePage />), errorElement: <RouteErrorPage /> },
+        { path: "/home/taptv", element: fullScreenDeferred(<TapTvPage />), errorElement: <RouteErrorPage /> },
+        { path: "/taptv", element: fullScreenDeferred(<TapTvPage />), errorElement: <RouteErrorPage /> },
         { path: "/dev/folders", element: fullScreenDeferred(<FolderPreviewLab />), errorElement: <RouteErrorPage /> },
         { path: "/dev/previs-repro", element: fullScreenDeferred(<PrevisReproLab />), errorElement: <RouteErrorPage /> },
         { path: "/dev/design-system", element: fullScreenDeferred(<DesignSystemShowcase />), errorElement: <RouteErrorPage /> },
+        { path: "/dev/music-preview", element: fullScreenDeferred(<MusicPreviewLab />), errorElement: <RouteErrorPage /> },
         { path: "/test-voice-recording", element: <RequireAuth>{fullScreenDeferred(<TestVoiceRecording />)}</RequireAuth>, errorElement: <RouteErrorPage /> },
     ];
 }
@@ -304,6 +313,8 @@ const routes: RouteObject[] = [
                     { path: "i18n/entries", element: <SupDanceI18nEntriesPage /> },
                     { path: "plugins/html-pages", element: <HtmlPageManager /> },
                     { path: "html-pages", element: <Navigate to="/admin/plugins/html-pages" replace /> },
+                    { path: "plugins/email-marketing", element: <EmailMarketingManager /> },
+                    { path: "email-marketing", element: <Navigate to="/admin/plugins/email-marketing" replace /> },
                     { path: "mcp", element: <AdminMCPPage /> },
                     { path: "workbench-tools", element: <WorkbenchToolsPage /> },
                     { path: "pose-library", element: <PoseLibraryAdminPage /> },

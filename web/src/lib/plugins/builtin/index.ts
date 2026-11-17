@@ -10,5 +10,6 @@ import "@/supdance/plugins/social-auth";
 import "@/supdance/plugins/music-generation";
 import "@/supdance/plugins/compact-model-picker";
 import "@/supdance/plugins/html-page-manager";
+import "@/supdance/plugins/email-marketing";
 
 export * from "./user-feedback";

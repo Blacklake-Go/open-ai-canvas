@@ -30,11 +30,13 @@ describe("official application plugin classification", () => {
         const ids = [...OFFICIAL_APPLICATION_PLUGIN_IDS, ...SUPDANCE_APPLICATION_PLUGIN_IDS];
         expect(new Set(ids).size).toBe(ids.length);
         expect(OFFICIAL_APPLICATION_PLUGIN_IDS).toHaveLength(5);
-        expect(SUPDANCE_APPLICATION_PLUGIN_IDS).toHaveLength(3);
+        expect(SUPDANCE_APPLICATION_PLUGIN_IDS).toHaveLength(4);
         expect(ids).toContain("supdance-html-page-manager");
-        expect(ids).toHaveLength(8);
+        expect(ids).toContain("supdance-email-marketing");
+        expect(ids).toHaveLength(9);
         expect(ids).toContain("user-feedback");
         expect(isOfficialApplicationPluginId("supdance-html-page-manager")).toBe(true);
+        expect(isOfficialApplicationPluginId("supdance-email-marketing")).toBe(true);
         expect(isOfficialApplicationPluginId("supdance-i18n")).toBe(true);
         expect(isOfficialApplicationPluginId("supdance-social-auth")).toBe(true);
     });
