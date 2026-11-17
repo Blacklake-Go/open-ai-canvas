@@ -8,10 +8,11 @@ import { AppModal } from "@/components/ui/product/app-modal";
 import { DEFAULT_SELECTED_CHAPTERS, groupChapterEpisodes } from "@/lib/drama/chapter-selection";
 import { dramaKeys } from "@/lib/drama/drama-query-keys";
 import { EPISODE_GROUP_CHARS, EPISODE_SOURCE_CHARS } from "@/lib/drama/novel-parse";
-import { getDramaChapter, listDramaChapters, produceDramaChapters, type DramaChapterRef } from "@/services/api/drama";
+import { getDramaChapter, listDramaChapters, produceDramaChapters } from "@/services/api/drama";
 
 import { ChapterPickList, type ChapterPickItem } from "../chapter-pick-list";
 import { formatCount } from "../drama-shared";
+import { ChapterRenameButton } from "./chapter-rename-button";
 
 const MAX_CHAPTERS_PER_EPISODE = 12;
 
@@ -39,12 +40,13 @@ export function ChapterPickerModal({
     const chaptersQuery = useQuery({ queryKey: dramaKeys.chapters(projectId), queryFn: ({ signal }) => listDramaChapters(projectId, signal), enabled: open });
     const chapters = useMemo(() => chaptersQuery.data?.chapters || [], [chaptersQuery.data]);
     // 默认选“接下来”的几章：从第一个预留章节起连续的预留章节。
-    const [picked, setPicked] = useState<{ source: DramaChapterRef[]; chapters: Set<number> } | null>(null);
+    const selectionSource = chapters.map((chapter) => `${chapter.id}:${Boolean(chapter.reserved)}`).join(",");
+    const [picked, setPicked] = useState<{ source: string; chapters: Set<number> } | null>(null);
     const selection = useMemo(() => {
-        if (picked?.source === chapters) return picked.chapters;
+        if (picked?.source === selectionSource) return picked.chapters;
         const reserved = chapters.flatMap((chapter, index) => (chapter.reserved ? [index] : []));
         return new Set(reserved.slice(0, DEFAULT_SELECTED_CHAPTERS));
-    }, [chapters, picked]);
+    }, [chapters, picked, selectionSource]);
     const [perEpisode, setPerEpisode] = useState<number | null>(null);
     const size = perEpisode ?? Math.max(1, defaultPerEpisode);
     const [previewIndex, setPreviewIndex] = useState<number>();
@@ -116,7 +118,7 @@ export function ChapterPickerModal({
                                 </Button>
                             </div>
                         ) : (
-                            <ChapterPickList items={items} selected={selection} onChange={(next) => setPicked({ source: chapters, chapters: next })} previewIndex={previewIndex ?? firstReserved} onPreview={setPreviewIndex} quickLabel="接下来" />
+                            <ChapterPickList items={items} selected={selection} onChange={(next) => setPicked({ source: selectionSource, chapters: next })} previewIndex={previewIndex ?? firstReserved} onPreview={setPreviewIndex} quickLabel="接下来" />
                         )}
                     </aside>
                     <section className="drama-composer-editor">
@@ -129,8 +131,9 @@ export function ChapterPickerModal({
                         <div className="drama-chapter-picker-preview thin-scrollbar" aria-label={_creationText("creation.a2d63a1a3abd73bc")}>
                             {preview ? (
                                 <>
-                                    <h3>
-                                        {preview.title}
+                                    <h3 className="flex-wrap">
+                                        <span className="min-w-0 break-words">{preview.title}</span>
+                                        <ChapterRenameButton key={preview.id} projectId={projectId} chapter={preview} />
                                         <small>
                                             {formatCount(preview.wordCount)}
                                             {_creationText("creation.c55038b272b109b8")}

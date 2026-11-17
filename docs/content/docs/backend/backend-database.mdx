@@ -5,6 +5,15 @@ description: 影策后端核心持久化表与状态边界
 
 # 后端数据库
 
+## 图片用量计费（本站 Schema 108）
+
+本站已发布主账本 1–105 保持原身份和校验和，邮件迁移占用 106–107，上游 105 图片用量计费映射为本站 108。官方素材使用独立 `yingce_schema_migrations` 四步账本；不使用上游历史编号覆盖本站迁移。旧二进制不能直接连接更高版本账本，回退需要支持 108 的构建并保留上线后新增的收据、退订和审计数据。
+
+本站版本 108 `image_usage_billing` 增加可空 JSON 文本列：`channel_model_price_tiers.image_pricing`、`cost_image_pricing`，`logical_models.image_pricing`，以及 `billing_orders.image_pricing`、`cost_image_pricing`、`image_usage`。订单另有 `image_input_images` 和 `image_max_output_images`，均为非空整数、默认 0。售价与内部成本分别保存，成本字段不向用户端序列化。
+
+迁移只添加缺少的列，支持重复执行；历史订单的图片 JSON 保持空值，不反推或重算费用。实际用量在下载前持久化，结算和退款沿用订单状态条件、余额校验和账本事务。规则和 API 合同见[图片用量计费](/docs/backend/image-usage-billing)。
+
+## 微信登录（Schema 102）
 ## SupDance 邮件中心（Schema 106–107）
 
 增量迁移 `supdance_email_center` 保留 SMTP、原营销模板 JSON、`email_logs`、认证挑战及消费日报订阅，新增：
@@ -52,6 +61,13 @@ Agent 根任务准入按用户在同一数据库事务计数；PostgreSQL 使用
 
 账本用于业务容量控制，不等于数据库物理文件大小。索引、WAL、备份、系统模板与数据库页空闲空间仍需部署监控。当前不自动删除用户历史；人工归档必须通过保持账本与幂等标记一致的维护事务，不能直接清空 MCP 执行表。升级前备份数据库和 `.settings-key`，回滚时恢复同一份备份，旧二进制不能直接使用 105 结构。
 
+## 官方素材扩展
+
+官方素材使用独立的 `yingce_schema_migrations` 四步扩展链，保留主线迁移版本与校验值。表包括 `official_assets`、`official_asset_imports` 和 `official_asset_recommendations`。角色快照及推荐授权版本、时间保存在扩展字段中。项目现有 `migrate-schema` 命令执行迁移，启动检查同时要求主线与扩展链完整。
+
+官方媒体由画布引用共享资源，不自动复制到个人库。推荐和官方快照参与资源保留检查。下架后的已有引用按用户、画布及服务端保存记录判断权限。升级前备份数据库与媒体；回滚使用匹配版本及备份，不直接删除迁移记录或共享资源。
+
+## 创作对话同步（Schema 101）
 
 ## SupDance 灵感案例合规配置（无 Schema 迁移）
 

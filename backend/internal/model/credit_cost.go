@@ -4,6 +4,7 @@ package model
 // 管理端通过专用响应投影公开，禁止随用户目录、报价或账单序列化。
 type CreditCostPricing struct {
 	TokenPriceBands                  []TokenPriceBand `json:"tokenPriceBands,omitempty" gorm:"serializer:json;type:text;not null;default:'[]'"`
+	ImagePricing                     *ImagePricing    `json:"imagePricing,omitempty" gorm:"serializer:json;type:text"`
 	Configured                       bool             `json:"configured" gorm:"not null;default:false"`
 	UnitPriceMicrocredits            int64            `json:"unitPriceMicrocredits" gorm:"not null;default:0"`
 	InputTokenPriceMicrocredits      int64            `json:"inputTokenPriceMicrocredits" gorm:"not null;default:0"`

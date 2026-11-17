@@ -91,10 +91,21 @@ func TestSupDanceFederationRequiresCurrentOwnerAndKeepsWalletReadOnly(t *testing
 		t.Fatal(err)
 	}
 	ticket.Purpose, ticket.MainUserID, ticket.ExpiresAt = "wallet-read", user.ID, now.Add(30*time.Second).Unix()
+	for _, entry := range []model.CreditLedgerEntry{
+		{ID: "bridge-reserve", UserID: user.ID, Type: "reserve", BillingOrderID: "bridge-order", CreatedAt: now},
+		{ID: "bridge-settle", UserID: user.ID, Type: "settle", BillingOrderID: "bridge-order", CreatedAt: now.Add(time.Second)},
+	} {
+		if err := db.Create(&entry).Error; err != nil {
+			t.Fatal(err)
+		}
+	}
 	proof, _ := federation.Sign(onePrivate, ticket, now)
 	wallet, err := svc.FederationWallet(proof)
 	if err != nil || wallet.Account.AvailableMicrocredits != 12_345_000 {
 		t.Fatalf("wallet read: %+v %v", wallet, err)
+	}
+	if wallet.Total != 2 || len(wallet.Entries) != 2 {
+		t.Fatal("ONE ledger rows were replaced by grouped site history")
 	}
 	resource := &model.Resource{ID: "community-resource", UserID: user.ID, Kind: "image", Status: model.ResourceStatusReady, MimeType: "image/png", ObjectKey: "private/test.png", PublicURL: "https://private.example/must-not-leak"}
 	if err := db.Create(resource).Error; err != nil {

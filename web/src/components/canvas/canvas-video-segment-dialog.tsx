@@ -107,7 +107,7 @@ export function CanvasVideoSegmentDialog({ node, nodes, connections, open, mode,
             input: { textCount: createsGenerationNodes && hasPrompt ? 1 : 0, imageCount: 0, videoCount: createsGenerationNodes ? 1 : 0, audioCount: 0, characterCount: 0 },
             videoOperation: operation,
             videoSeconds: config.videoSeconds,
-			options: modelRequestOptions(config, "video"),
+            options: modelRequestOptions(config, "video"),
         }),
         [config.videoSeconds, createsGenerationNodes, hasPrompt, operation],
     );
@@ -328,7 +328,15 @@ export function CanvasVideoSegmentDialog({ node, nodes, connections, open, mode,
                                     <div className="text-sm font-medium">截取后</div>
                                     <div className="mt-0.5 text-xs opacity-45">默认只创建片段，生成由你稍后决定。</div>
                                 </div>
-                                <Segmented size="small" value={videoAction} options={[{ label: "仅创建片段", value: "extract" }, { label: "创建生成节点", value: "create-generation-nodes" }]} onChange={(value) => setVideoAction(value as "extract" | "create-generation-nodes")} />
+                                <Segmented
+                                    size="small"
+                                    value={videoAction}
+                                    options={[
+                                        { label: "仅创建片段", value: "extract" },
+                                        { label: "创建生成节点", value: "create-generation-nodes" },
+                                    ]}
+                                    onChange={(value) => setVideoAction(value as "extract" | "create-generation-nodes")}
+                                />
                             </div>
                         </div>
 
@@ -430,6 +438,7 @@ function videoOperationLabel(operation: CanvasVideoEditOperation) {
         compare_versions: "版本对比",
         concat: "拼接成片",
         enhance: "画质增强",
+        depth: "相对深度",
     };
     return labels[operation] || operation;
 }

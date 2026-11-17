@@ -15,6 +15,7 @@ import { aceternityMotion } from "@/lib/aceternity-motion";
 import { cn } from "@/lib/utils";
 import { preloadWorkspaceRoute } from "@/lib/workspace-route-modules";
 import { useUserStore, type FeatureAvailability } from "@/stores/use-user-store";
+import { useSkillLibraryAccess } from "@/lib/skill-access";
 import { useAppearanceStore } from "@/stores/use-appearance-store";
 import { selectPluginEffectivelyEnabled, usePluginStore } from "@/stores/use-plugin-store";
 import { WorkspaceAccountCard } from "./workspace-account-card";
@@ -63,7 +64,7 @@ function toolItem(slug: NavigationToolSlug, to: string, t: (key: string) => stri
     return { id: slug, title: tool ? t(tool.labelKey) : slug, icon: tool?.icon, to };
 }
 
-export function buildNav(features: FeatureAvailability, t: (key: string) => string, musicPluginActive = true): { groups: WorkspaceNavGroup[]; footer: WorkspaceNavItem[] } {
+export function buildNav(features: FeatureAvailability, t: (key: string) => string, musicPluginActive = true, canUseSkills = true): { groups: WorkspaceNavGroup[]; footer: WorkspaceNavItem[] } {
     const groups: WorkspaceNavGroup[] = [
         {
             items: [
@@ -80,7 +81,7 @@ export function buildNav(features: FeatureAvailability, t: (key: string) => stri
                 ...(features.imageWorkbenchEnabled ? [{ id: "toolbox-image", title: t("nav.sidebar.toolboxImage"), icon: ImageIcon, to: "/toolbox/image" }] : []),
                 ...(features.videoWorkbenchEnabled ? [{ id: "toolbox-video", title: t("nav.sidebar.toolboxVideo"), icon: Video, to: "/toolbox/video" }] : []),
                 ...(musicPluginActive ? [{ id: "toolbox-music", title: t("upstream.creation.musicNavigation"), icon: Music, to: "/toolbox/music" }] : []),
-                { ...toolItem("skills", "/skills", t), title: t("nav.sidebar.skills") },
+                ...(canUseSkills ? [{ ...toolItem("skills", "/skills", t), title: t("nav.sidebar.skills") }] : []),
                 ...(features.pluginCenterEnabled ? [{ ...toolItem("plugins", "/plugins", t), title: t("nav.sidebar.plugins") }] : []),
                 ...(features.taskCenterEnabled ? [{ id: "tasks", title: t("nav.sidebar.history"), icon: HistoryIcon, to: "/tasks" }] : []),
             ],
@@ -374,7 +375,8 @@ export function WorkspaceSidebarNav({ collapsed, onNavigate, onOpenSearch, onExp
     const user = useUserStore((state) => state.user);
     const musicPluginActive = usePluginStore(musicPluginGate);
     const { handleLogout } = useWorkspaceLogout();
-    const { groups, footer } = useMemo(() => buildNav(features, t, musicPluginActive), [features, t, musicPluginActive]);
+    const canUseSkills = useSkillLibraryAccess();
+    const { groups, footer } = useMemo(() => buildNav(features, t, musicPluginActive, canUseSkills), [features, t, musicPluginActive, canUseSkills]);
 
     const activeId = workspaceNavActiveId(pathname, searchParams.get("section"));
 

@@ -1,5 +1,6 @@
 import { useEffect, useLayoutEffect, useRef, useState, type ReactNode, type RefObject } from "react";
 import { App, Button, Input, Modal, Tag } from "antd";
+import { interfaceText } from "@/i18n/interface-text";
 import { AntTooltip as Tooltip } from "@/components/ui/base/tooltip/ant-tooltip";
 import { CanvasAnchoredDropdown as Dropdown } from "./canvas-anchored-dropdown";
 import type { MenuProps } from "antd";
@@ -67,6 +68,7 @@ type CanvasNodeToolbarProps = {
     onEnhanceVideo?: (node: CanvasNodeData) => void;
     onSubtitles: (node: CanvasNodeData) => void;
     onTimeline: (node: CanvasNodeData) => void;
+    onDepthVideo?: (node: CanvasNodeData) => void;
     onVersions?: (node: CanvasNodeData) => void;
     onAdoptToDrama?: (node: CanvasNodeData) => void;
     onRefreshFromDrama?: (node: CanvasNodeData) => void;
@@ -142,6 +144,7 @@ export function CanvasNodeToolbar({
     onEnhanceVideo,
     onSubtitles,
     onTimeline,
+    onDepthVideo,
     onVersions,
     onAdoptToDrama,
     onRefreshFromDrama,
@@ -339,6 +342,7 @@ export function CanvasNodeToolbar({
         onNodeExtractAudioFromVideo: onExtractAudioFromVideo,
         onNodeTrimVideoSegments: onTrimVideoSegments,
         onNodeEnhanceVideo: onEnhanceVideo,
+        onNodeDepthVideo: onDepthVideo,
         onNodeReversePrompt: onReversePrompt,
         onNodeToggleFreeResize: onToggleFreeResize,
         onNodeSubtitles: onSubtitles,
@@ -379,12 +383,12 @@ export function CanvasNodeToolbar({
         const placement = resolveNodeToolbarPlacement(tool, nodeHoverCtx);
         return {
             id: tool.id,
-            label: tool.displayLabel ? (typeof tool.displayLabel === "function" ? tool.displayLabel(nodeHoverCtx) : tool.displayLabel) : typeof tool.label === "function" ? tool.label(nodeHoverCtx) : tool.label,
+            label: interfaceText(tool.displayLabel ? (typeof tool.displayLabel === "function" ? tool.displayLabel(nodeHoverCtx) : tool.displayLabel) : typeof tool.label === "function" ? tool.label(nodeHoverCtx) : tool.label),
             icon: typeof tool.icon === "function" ? tool.icon(nodeHoverCtx) : tool.icon,
             group: placement.group,
             order: placement.order,
             section: tool.nodeToolbar?.section,
-            description: tool.nodeToolbar?.description,
+            description: tool.nodeToolbar?.description ? interfaceText(tool.nodeToolbar.description) : undefined,
             active: tool.active?.(nodeHoverCtx),
             danger: tool.danger,
             disabled: tool.disabled?.(nodeHoverCtx),

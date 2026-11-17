@@ -37,10 +37,7 @@ function createDynamicSynthWavUrl(durationSeconds: number, baseFreq: number): st
         const beat = Math.abs(Math.sin(Math.PI * t * 1.8));
         const phrase = 0.35 + 0.65 * Math.pow(Math.sin((Math.PI * t) / durationSeconds), 0.7) * (0.45 + 0.55 * beat);
         const fade = Math.min(1, t / 0.15) * Math.min(1, (durationSeconds - t) / 0.4);
-        const tone =
-            0.5 * Math.sin(2 * Math.PI * baseFreq * t) +
-            0.3 * Math.sin(2 * Math.PI * baseFreq * 1.25 * t) +
-            0.2 * Math.sin(2 * Math.PI * baseFreq * 1.5 * t);
+        const tone = 0.5 * Math.sin(2 * Math.PI * baseFreq * t) + 0.3 * Math.sin(2 * Math.PI * baseFreq * 1.25 * t) + 0.2 * Math.sin(2 * Math.PI * baseFreq * 1.5 * t);
         const sample = Math.max(-1, Math.min(1, tone * phrase * fade * 0.45));
         view.setInt16(44 + i * 2, Math.round(sample * 32767), true);
     }

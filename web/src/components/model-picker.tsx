@@ -65,6 +65,7 @@ export function ModelPicker({
 }: ModelPickerProps) {
     const { t } = useTranslation();
     const creditsEnabled = useUserStore((state) => state.features.creditsEnabled);
+    const userId = useUserStore((state) => state.user?.id);
     const pickerId = useId();
     // 双保险：即使 store merge 写出非法 theme，这里也兜底到 dark，避免 "reading 'node'" 崩溃
     const rawTheme = useActiveTheme();
@@ -116,7 +117,7 @@ export function ModelPicker({
         };
     }, [open]);
 
-    const needQuote = creditsEnabled && (showSelectedPrice || (open && compact.enabled && compact.showPrice && showOptionPrices && Boolean(requirements)));
+    const needQuote = Boolean(userId) && creditsEnabled && (showSelectedPrice || (open && compact.enabled && compact.showPrice && showOptionPrices && Boolean(requirements)));
     useEffect(() => {
         if (!needQuote || !quoteRequest) {
             setQuoted(undefined);
@@ -131,7 +132,7 @@ export function ModelPicker({
                 if (!controller.signal.aborted) setQuoted(undefined);
             });
         return () => controller.abort();
-    }, [needQuote, quoteRequest]);
+    }, [needQuote, quoteRequest, userId]);
 
     useEffect(() => {
         const closeOtherPicker = (event: Event) => {

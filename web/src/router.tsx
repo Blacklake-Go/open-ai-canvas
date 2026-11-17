@@ -3,7 +3,9 @@ import { createBrowserRouter, Navigate, Outlet, useLocation, type RouteObject } 
 import { PageManagementRedirect } from "@/supdance/plugins/compact-model-picker/page-redirect";
 import { lazyAdminPage } from "@/pages/admin/admin-page-loader";
 
+import { AuthDialogHost } from "@/components/auth/auth-dialog-host";
 import { RequireAuth } from "@/components/auth/require-auth";
+import { RequireSkillAdmin } from "@/components/auth/require-skill-admin";
 // 功能开关守卫包在页面 Suspense 之外，懒加载会让整个工作区退回全屏加载页；体积很小，直接静态引入。
 import { RequireFeature } from "@/components/auth/require-feature";
 import { FullScreenLoader, WorkspaceRouteLoader } from "@/components/ui/aceternity/full-screen-loader";
@@ -32,6 +34,8 @@ const AgentLessonsPage = lazyAdminPage(() => import("@/pages/admin/admin-route-p
 const ChannelsPage = lazyAdminPage(() => import("@/pages/admin/channels/channels-page"));
 const LogicalModelsPage = lazyAdminPage(() => import("@/pages/admin/logical-models/logical-models-page"));
 const AdminPluginsPage = lazyAdminPage(() => import("@/pages/admin/plugins/plugins-page"));
+const AdminOfficialAssetsPage = lazyAdminPage(() => import("@/pages/admin/official-assets-page"));
+const AdminOfficialAssetRecommendationsPage = lazyAdminPage(() => import("@/pages/admin/official-asset-recommendations-page"));
 const AdminMCPPage = lazyAdminPage(() => import("@/pages/admin/mcp/mcp-page"));
 const SkillCurationPage = lazyAdminPage(() => import("@/pages/admin/skill-curation-page"));
 const AdminSkillsPage = lazyAdminPage(() => import("@/pages/admin/skills/skills-page"));
@@ -124,6 +128,15 @@ function AuthenticatedWorkspaceLayout() {
     );
 }
 
+function RootLayout() {
+    return (
+        <SupDanceRouteHosts>
+            <Outlet />
+            <AuthDialogHost />
+        </SupDanceRouteHosts>
+    );
+}
+
 /**
  * DEV 专用实验室路由。
  *
@@ -213,8 +226,8 @@ const routes: RouteObject[] = [
                 ),
             },
             { path: "/assets", element: <RequireAuth>{deferred(<AssetsPage />)}</RequireAuth> },
-            { path: "/skills", element: <RequireAuth>{deferred(<SkillsPage />)}</RequireAuth> },
-            { path: "/skills/:skillId/edit", element: <RequireAuth>{deferred(<SkillWorkbenchPage />)}</RequireAuth> },
+            { path: "/skills", element: <RequireSkillAdmin>{deferred(<SkillsPage />)}</RequireSkillAdmin> },
+            { path: "/skills/:skillId/edit", element: <RequireSkillAdmin>{deferred(<SkillWorkbenchPage />)}</RequireSkillAdmin> },
             {
                 path: "/plugins",
                 element: (
@@ -316,8 +329,8 @@ const routes: RouteObject[] = [
                     { path: "email-center", element: <PageManagementRedirect section="email" /> },
                     { path: "email-marketing", element: <Navigate to="/admin/plugins/email-marketing" replace /> },
                     { path: "html-pages", element: <Navigate to="/admin/plugins/html-pages" replace /> },
-                    { path: "plugins/email-marketing", element: <EmailMarketingManager /> },
-                    { path: "email-marketing", element: <Navigate to="/admin/plugins/email-marketing" replace /> },
+                    { path: "official-assets", element: <AdminOfficialAssetsPage /> },
+                    { path: "official-asset-recommendations", element: <AdminOfficialAssetRecommendationsPage /> },
                     { path: "mcp", element: <AdminMCPPage /> },
                     { path: "workbench-tools", element: <WorkbenchToolsPage /> },
                     { path: "pose-library", element: <PoseLibraryAdminPage /> },
@@ -360,4 +373,4 @@ const routes: RouteObject[] = [
     { path: "*", element: fullScreenDeferred(<NotFound />) },
 ];
 
-export const router = createBrowserRouter([{ element: <SupDanceRouteHosts />, errorElement: <RouteErrorPage />, children: routes }]);
+export const router = createBrowserRouter([{ element: <RootLayout />, children: routes }]);

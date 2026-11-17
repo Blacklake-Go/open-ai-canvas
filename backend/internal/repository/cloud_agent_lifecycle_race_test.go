@@ -179,6 +179,8 @@ func TestCloudAgentAdmissionAndCanvasDeletionAcrossConnections(t *testing.T) {
 		t.Run(driver, func(t *testing.T) {
 			admission, deletion := agentLifecycleRepositories(t, driver)
 			for index := 0; index < 8; index++ {
+				// Successful admissions stay active; isolate rounds from the per-user conversation limit.
+				userID := fmt.Sprintf("user-%d", index)
 				canvasID := fmt.Sprintf("canvas-%d", index)
 				runID := fmt.Sprintf("run-%d", index)
 				userID := fmt.Sprintf("user-%d", index)

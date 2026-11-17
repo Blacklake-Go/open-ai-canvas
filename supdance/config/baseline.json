@@ -3,18 +3,19 @@
   "upstreamRepository": "https://github.com/ddcat-ai/open-ai-canvas",
   "forkRepository": "https://github.com/Blacklake-Go/open-ai-canvas",
   "upstreamBaseline": {
-    "tag": "v1.8.5",
-    "releaseTag": "v1.8.5",
-    "releaseCommit": "ac5e01cab55184fa9f202fe6349a5884411b4114",
-    "commit": "3979305c1413be231cbaef242e50afc67f553c5e",
-    "schemaVersion": 104
+    "tag": "v1.8.6",
+    "releaseTag": "v1.8.6",
+    "releaseCommit": "f33c39c0dfd8853f2b2c89c7dee15028ef54bb4e",
+    "commit": "f33c39c0dfd8853f2b2c89c7dee15028ef54bb4e",
+    "schemaVersion": 105
   },
   "integrationRelease": {
-    "schemaVersion": 105,
-    "version": "v1.8.5-supdance.6-upstream",
-    "baseCommit": "0c0af6568cd2578402940ad55ae566df0f43a55e",
-    "sourceBranch": "codex/upstream-20261114",
-    "deploymentEvidence": "docs/supdance/UPSTREAM_20261114.md"
+    "schemaVersion": 108,
+    "yingceSchemaVersion": 4,
+    "version": "v1.8.6-supdance.1",
+    "baseCommit": "c7767d0992f218bc7d7609585964a3b1fca1f02f",
+    "sourceBranch": "codex/upstream-20261118",
+    "deploymentEvidence": "docs/supdance/UPSTREAM_20261118.md"
   },
   "supdanceRelease": {
     "tag": "supdance/v2026.10.28.2",
@@ -336,7 +337,11 @@
     "web/test/editor-filmstrip-media.test.ts",
     "web/test/fixtures/channel-model-templates.harness.tsx",
     "web/test/provider-neutral-generation-effects.test.ts",
-    "web/vite.config.ts"
+    "web/vite.config.ts",
+    "web/src/lib/canvas/tool-registry/tool-registry.ts",
+    "web/src/components/canvas/canvas-video-segment-dialog.tsx",
+    "web/src/pages/admin/official-assets-page.tsx",
+    "web/src/i18n/personal-appearance-messages.ts"
   ],
   "supdanceExtensionFiles": [
     "web/src/supdance/plugins/compact-model-picker/admin.tsx",

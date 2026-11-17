@@ -1,0 +1,4528 @@
+{
+  "upstreamCommit": "f33c39c0dfd8853f2b2c89c7dee15028ef54bb4e",
+  "translationStatus": "Production static UI catalog complete in eight languages; DEV prototype data is explicitly deferred, not marked translated. Dynamic inventory reviewed separately.",
+  "items": [
+    {
+      "id": "7da64f307e97a7b0d6c5fab4",
+      "sourceText": "已选 {value1} 个节点，前 {AGENT_FOCUS_NODE_LIMIT} 个作为重点",
+      "sourceHash": "ba788ceb27def375f08e890ab6ba83d16b85c871754510feb94081fc9389453b",
+      "context": "AgentChatComposer:jsx-expression:false:false:true",
+      "dynamic": true,
+      "references": [
+        {
+          "file": "src/components/canvas/canvas-cloud-agent-composer.tsx",
+          "line": 530,
+          "column": 43
+        }
+      ],
+      "anchor": "f12b95c0b88f4020",
+      "key": "custom.scan_7da64f307e97a7b0d6c5fab4",
+      "namespace": "custom",
+      "status": "needs_context",
+      "review": "Dynamic source inventory: actual UI sinks covered by scoped static UI transform; audio source descriptor preserves referenced voice names. No user content or payload rewriting."
+    },
+    {
+      "id": "8aff2924e015252e54a6fcf1",
+      "sourceText": "在输入框里插入 @{name}",
+      "sourceHash": "a92df062369ac68dd3fe0ae37c04be6bba799f88f8c7aba56e4c966ceea06245",
+      "context": "AgentChatComposer:attr:title",
+      "dynamic": true,
+      "references": [
+        {
+          "file": "src/components/canvas/canvas-cloud-agent-composer.tsx",
+          "line": 588,
+          "column": 105
+        }
+      ],
+      "anchor": "49a284154e1e95ba",
+      "key": "custom.scan_8aff2924e015252e54a6fcf1",
+      "namespace": "custom",
+      "status": "needs_context",
+      "review": "Dynamic source inventory: actual UI sinks covered by scoped static UI transform; audio source descriptor preserves referenced voice names. No user content or payload rewriting."
+    },
+    {
+      "id": "6c9d1a6805e796fba22f5a73",
+      "sourceText": "参考音色：{value1}",
+      "sourceHash": "f992655e83ef5cb60fb60ec6759cee5c83bb0e02de387d2c94e7d0f0fab71f86",
+      "context": "canvasAudioSource:property:label:true",
+      "dynamic": true,
+      "references": [
+        {
+          "file": "src/lib/audio-generation.ts",
+          "line": 123,
+          "column": 62
+        }
+      ],
+      "anchor": "31898e1a25d5d165",
+      "key": "custom.scan_6c9d1a6805e796fba22f5a73",
+      "namespace": "custom",
+      "status": "needs_context",
+      "review": "Dynamic source inventory: actual UI sinks covered by scoped static UI transform; audio source descriptor preserves referenced voice names. No user content or payload rewriting."
+    },
+    {
+      "id": "0f9dffd2e207e0ccd5de2fad",
+      "sourceText": "参考音色：{value1} 段",
+      "sourceHash": "8397bf75be4a5e676405eaeb36c4e2d5952ad75844efc37559cad75208fdf176",
+      "context": "canvasAudioSource:property:label:false",
+      "dynamic": true,
+      "references": [
+        {
+          "file": "src/lib/audio-generation.ts",
+          "line": 123,
+          "column": 93
+        }
+      ],
+      "anchor": "1fd2616702e8ce26",
+      "key": "custom.scan_0f9dffd2e207e0ccd5de2fad",
+      "namespace": "custom",
+      "status": "needs_context",
+      "review": "Dynamic source inventory: actual UI sinks covered by scoped static UI transform; audio source descriptor preserves referenced voice names. No user content or payload rewriting."
+    },
+    {
+      "id": "fa49ded92b483e40ee021f16",
+      "sourceText": "音色：{voice}",
+      "sourceHash": "beda9e606093635a0171d83e675b68a8aa66f06e21065b0afa4729d3ac7e367a",
+      "context": "canvasAudioSource:property:label:true",
+      "dynamic": true,
+      "references": [
+        {
+          "file": "src/lib/audio-generation.ts",
+          "line": 126,
+          "column": 35
+        }
+      ],
+      "anchor": "31898e1a25d5d165",
+      "key": "custom.scan_fa49ded92b483e40ee021f16",
+      "namespace": "custom",
+      "status": "needs_context",
+      "review": "Dynamic source inventory: actual UI sinks covered by scoped static UI transform; audio source descriptor preserves referenced voice names. No user content or payload rewriting."
+    },
+    {
+      "id": "a9eb734aa1e83d4f1a6be7ce",
+      "sourceText": "积分 / {unit} · 加价 {value2}",
+      "sourceHash": "871c415a9ac2bbb781077920be8520e0fc31f577dc8c7de13d7694fdb507732c",
+      "context": "PriceLabel:jsx-expression:true",
+      "dynamic": true,
+      "references": [
+        {
+          "file": "src/pages/admin/components/channel-model-cost-summary.tsx",
+          "line": 59,
+          "column": 78
+        }
+      ],
+      "anchor": "9e202ff318e4559e",
+      "key": "custom.scan_a9eb734aa1e83d4f1a6be7ce",
+      "namespace": "custom",
+      "status": "needs_context",
+      "review": "Dynamic source inventory: actual UI sinks covered by scoped static UI transform; audio source descriptor preserves referenced voice names. No user content or payload rewriting."
+    },
+    {
+      "id": "5e0fd2cec58113952566de3e",
+      "sourceText": "成本积分 / 售价 {saleUnit} · 每{unit}",
+      "sourceHash": "23f7fb3647ccdce792d2a5ab02d5632e5a0bc1ab5a3d039960649db2f94a2096",
+      "context": "PriceLabel:jsx-expression:false",
+      "dynamic": true,
+      "references": [
+        {
+          "file": "src/pages/admin/components/channel-model-cost-summary.tsx",
+          "line": 59,
+          "column": 133
+        }
+      ],
+      "anchor": "52b6c3b3cf79a190",
+      "key": "custom.scan_5e0fd2cec58113952566de3e",
+      "namespace": "custom",
+      "status": "needs_context",
+      "review": "Dynamic source inventory: actual UI sinks covered by scoped static UI transform; audio source descriptor preserves referenced voice names. No user content or payload rewriting."
+    },
+    {
+      "id": "4c91d31be20de2f2ed6735b7",
+      "sourceText": "输入图 {unit} / 张",
+      "sourceHash": "04208e9a0934ee84d119878ff6ab811f9b3445ef55a46e12cf9799f3da2c1d10",
+      "context": "ImageUsagePriceFields:attr:label",
+      "dynamic": true,
+      "references": [
+        {
+          "file": "src/pages/admin/components/image-usage-price-fields.tsx",
+          "line": 9,
+          "column": 65
+        }
+      ],
+      "anchor": "9582fbdbd8cfd1af",
+      "key": "custom.scan_4c91d31be20de2f2ed6735b7",
+      "namespace": "custom",
+      "status": "needs_context",
+      "review": "Dynamic source inventory: actual UI sinks covered by scoped static UI transform; audio source descriptor preserves referenced voice names. No user content or payload rewriting."
+    },
+    {
+      "id": "d59f6d90329980ecce8c639d",
+      "sourceText": "输出图 {unit} / 张",
+      "sourceHash": "f0aa7fade5da72d1182cc559b81afbd45537416ebfa6ccb939e13c45496d8275",
+      "context": "ImageUsagePriceFields:attr:label",
+      "dynamic": true,
+      "references": [
+        {
+          "file": "src/pages/admin/components/image-usage-price-fields.tsx",
+          "line": 23,
+          "column": 84
+        }
+      ],
+      "anchor": "9582fbdbd8cfd1af",
+      "key": "custom.scan_d59f6d90329980ecce8c639d",
+      "namespace": "custom",
+      "status": "needs_context",
+      "review": "Dynamic source inventory: actual UI sinks covered by scoped static UI transform; audio source descriptor preserves referenced voice names. No user content or payload rewriting."
+    },
+    {
+      "id": "b3820736dd08bf6e33df3101",
+      "sourceText": "来源名称，如{brandName}官方",
+      "sourceHash": "c4914fef23c623584132651bdc2c232f8a3bcee9f125c042a4aab0edaac94423",
+      "context": "AdminOfficialAssetsPage:attr:placeholder",
+      "dynamic": true,
+      "references": [
+        {
+          "file": "src/pages/admin/official-assets-page.tsx",
+          "line": 607,
+          "column": 49
+        }
+      ],
+      "anchor": "b823e7e0a8a4aa85",
+      "key": "custom.scan_b3820736dd08bf6e33df3101",
+      "namespace": "custom",
+      "status": "needs_context",
+      "review": "Dynamic source inventory: actual UI sinks covered by scoped static UI transform; audio source descriptor preserves referenced voice names. No user content or payload rewriting."
+    },
+    {
+      "id": "640a09aabb085819d18610b2",
+      "sourceText": "短剧工作坊 · 工业级影视工坊",
+      "sourceHash": "1f34c13578b1fab79cabf0cb4a0941ffed2784f6c1cf917682395fa2b084c9f6",
+      "context": "CAROUSEL_SLIDES:property:title",
+      "dynamic": false,
+      "references": [
+        {
+          "file": "src/pages/app-store/app-store-data.ts",
+          "line": 8,
+          "column": 16
+        }
+      ],
+      "anchor": "e6e5c5f245d520af",
+      "key": "custom.scan_640a09aabb085819d18610b2",
+      "namespace": "custom",
+      "status": "new",
+      "review": "DEV-only prototype source/content preserved; not a published page"
+    },
+    {
+      "id": "0cf30b98c5a7304f88f3d997",
+      "sourceText": "GPT-6 Astra Studio · 3D 视效预演",
+      "sourceHash": "0b9a5d821cd1a9f4bb98fcd8545ef6226f640bcbe7e9e793d080610baec3ffc7",
+      "context": "CAROUSEL_SLIDES:property:title",
+      "dynamic": false,
+      "references": [
+        {
+          "file": "src/pages/app-store/app-store-data.ts",
+          "line": 17,
+          "column": 16
+        }
+      ],
+      "anchor": "e6e5c5f245d520af",
+      "key": "custom.scan_0cf30b98c5a7304f88f3d997",
+      "namespace": "custom",
+      "status": "new",
+      "review": "DEV-only prototype source/content preserved; not a published page"
+    },
+    {
+      "id": "bc94f93fe273dd83176191dd",
+      "sourceText": "角色工坊 · 定制数字主角",
+      "sourceHash": "3e58d349d74d689913aabfe95a2808b2cb148d79f1820a96855a163c23ad2b37",
+      "context": "CAROUSEL_SLIDES:property:title",
+      "dynamic": false,
+      "references": [
+        {
+          "file": "src/pages/app-store/app-store-data.ts",
+          "line": 26,
+          "column": 16
+        }
+      ],
+      "anchor": "e6e5c5f245d520af",
+      "key": "custom.scan_bc94f93fe273dd83176191dd",
+      "namespace": "custom",
+      "status": "new",
+      "review": "DEV-only prototype source/content preserved; not a published page"
+    },
+    {
+      "id": "1d93559a4ce11604f705c21e",
+      "sourceText": "Seedance 2.5 视频提示词工坊",
+      "sourceHash": "305131d1b637081668fde4708de6748164a7965197e2bdc5b2bf04b3e210845a",
+      "context": "CAROUSEL_SLIDES:property:title",
+      "dynamic": false,
+      "references": [
+        {
+          "file": "src/pages/app-store/app-store-data.ts",
+          "line": 35,
+          "column": 16
+        }
+      ],
+      "anchor": "e6e5c5f245d520af",
+      "key": "custom.scan_1d93559a4ce11604f705c21e",
+      "namespace": "custom",
+      "status": "new",
+      "review": "DEV-only prototype source/content preserved; not a published page"
+    },
+    {
+      "id": "7caeacc263e403304b40214e",
+      "sourceText": "Argon Studio · 实时交互引擎",
+      "sourceHash": "87e40a60320995fa699a886c798491f8ccdd4b1343b86191c6b5d2c7ce59eb48",
+      "context": "CAROUSEL_SLIDES:property:title",
+      "dynamic": false,
+      "references": [
+        {
+          "file": "src/pages/app-store/app-store-data.ts",
+          "line": 44,
+          "column": 16
+        }
+      ],
+      "anchor": "e6e5c5f245d520af",
+      "key": "custom.scan_7caeacc263e403304b40214e",
+      "namespace": "custom",
+      "status": "new",
+      "review": "DEV-only prototype source/content preserved; not a published page"
+    },
+    {
+      "id": "91413f0a4867b0883c98e71f",
+      "sourceText": "分镜预演 · 横向连续动作控制",
+      "sourceHash": "e084a841fc744770c54b5120dd766044b1ed742a39873ff1cccc30fa805757f5",
+      "context": "CAROUSEL_SLIDES:property:title",
+      "dynamic": false,
+      "references": [
+        {
+          "file": "src/pages/app-store/app-store-data.ts",
+          "line": 53,
+          "column": 16
+        }
+      ],
+      "anchor": "e6e5c5f245d520af",
+      "key": "custom.scan_91413f0a4867b0883c98e71f",
+      "namespace": "custom",
+      "status": "new",
+      "review": "DEV-only prototype source/content preserved; not a published page"
+    },
+    {
+      "id": "5b07faeb2fedd02169296d72",
+      "sourceText": "MiniMax H3 视频生成提示词",
+      "sourceHash": "22d9186f1e8e4e7f208d63dce937cb643830fdef47fba60a8c284193fa91b381",
+      "context": "CAROUSEL_SLIDES:property:title",
+      "dynamic": false,
+      "references": [
+        {
+          "file": "src/pages/app-store/app-store-data.ts",
+          "line": 62,
+          "column": 16
+        }
+      ],
+      "anchor": "e6e5c5f245d520af",
+      "key": "custom.scan_5b07faeb2fedd02169296d72",
+      "namespace": "custom",
+      "status": "new",
+      "review": "DEV-only prototype source/content preserved; not a published page"
+    },
+    {
+      "id": "ba052c8e62f11552f5070bdb",
+      "sourceText": "Opus 5.5 Studio · 动态排版与视效",
+      "sourceHash": "b4d5ba888a2a441a9e066ee3eedc7718cd817a43930388a26b404c4bdad34d0e",
+      "context": "CAROUSEL_SLIDES:property:title",
+      "dynamic": false,
+      "references": [
+        {
+          "file": "src/pages/app-store/app-store-data.ts",
+          "line": 71,
+          "column": 16
+        }
+      ],
+      "anchor": "e6e5c5f245d520af",
+      "key": "custom.scan_ba052c8e62f11552f5070bdb",
+      "namespace": "custom",
+      "status": "new",
+      "review": "DEV-only prototype source/content preserved; not a published page"
+    },
+    {
+      "id": "14066779f7f2e9d032083475",
+      "sourceText": "照片转 3D 世界 · 空间重建",
+      "sourceHash": "3a5c7d8d7e810d4d7b3ef95ecd40a960609f47292de1869c07d6de34a707de0d",
+      "context": "CAROUSEL_SLIDES:property:title",
+      "dynamic": false,
+      "references": [
+        {
+          "file": "src/pages/app-store/app-store-data.ts",
+          "line": 80,
+          "column": 16
+        }
+      ],
+      "anchor": "e6e5c5f245d520af",
+      "key": "custom.scan_14066779f7f2e9d032083475",
+      "namespace": "custom",
+      "status": "new",
+      "review": "DEV-only prototype source/content preserved; not a published page"
+    },
+    {
+      "id": "5cce634e110ac90f5ec08a3b",
+      "sourceText": "一键电商组图 · 高转化产品视效",
+      "sourceHash": "3c02d9afd4219be679ec820993a9c058868bacaae96b94986f8f761bdad22038",
+      "context": "CAROUSEL_SLIDES:property:title",
+      "dynamic": false,
+      "references": [
+        {
+          "file": "src/pages/app-store/app-store-data.ts",
+          "line": 89,
+          "column": 16
+        }
+      ],
+      "anchor": "e6e5c5f245d520af",
+      "key": "custom.scan_5cce634e110ac90f5ec08a3b",
+      "namespace": "custom",
+      "status": "new",
+      "review": "DEV-only prototype source/content preserved; not a published page"
+    },
+    {
+      "id": "f8d040092c8b79f7c2ef7683",
+      "sourceText": "动效工作室 · 品牌动态视觉",
+      "sourceHash": "e0155fa6ce7dec8e17665f63a4b3ed5eff4f0f685c6e9038a2e28d8cab0d5f19",
+      "context": "CAROUSEL_SLIDES:property:title",
+      "dynamic": false,
+      "references": [
+        {
+          "file": "src/pages/app-store/app-store-data.ts",
+          "line": 98,
+          "column": 16
+        }
+      ],
+      "anchor": "e6e5c5f245d520af",
+      "key": "custom.scan_f8d040092c8b79f7c2ef7683",
+      "namespace": "custom",
+      "status": "new",
+      "review": "DEV-only prototype source/content preserved; not a published page"
+    },
+    {
+      "id": "bdc1e40406ace94fec46e4ec",
+      "sourceText": "Fish Audio Lab · 声音克隆与表演",
+      "sourceHash": "1dd699fa7181d9a30b3f1e5792179f882a8766587cc6281be23270a417523d01",
+      "context": "CAROUSEL_SLIDES:property:title",
+      "dynamic": false,
+      "references": [
+        {
+          "file": "src/pages/app-store/app-store-data.ts",
+          "line": 107,
+          "column": 16
+        }
+      ],
+      "anchor": "e6e5c5f245d520af",
+      "key": "custom.scan_bdc1e40406ace94fec46e4ec",
+      "namespace": "custom",
+      "status": "new",
+      "review": "DEV-only prototype source/content preserved; not a published page"
+    },
+    {
+      "id": "38a326f7be1c1f4d4f9b0da1",
+      "sourceText": "TikTok 钩子实验室 · 爆款开头",
+      "sourceHash": "b7e87914aa74ea68c9cb54b11153eeed21bd5f8da87ec4337ee1ae8672266371",
+      "context": "CAROUSEL_SLIDES:property:title",
+      "dynamic": false,
+      "references": [
+        {
+          "file": "src/pages/app-store/app-store-data.ts",
+          "line": 116,
+          "column": 16
+        }
+      ],
+      "anchor": "e6e5c5f245d520af",
+      "key": "custom.scan_38a326f7be1c1f4d4f9b0da1",
+      "namespace": "custom",
+      "status": "new",
+      "review": "DEV-only prototype source/content preserved; not a published page"
+    },
+    {
+      "id": "b49403093c1fdd359892abc3",
+      "sourceText": "草图转可玩游戏 · 创意原型",
+      "sourceHash": "d422ae12e507ce8e260e9109d87db9829c801293222279f5025aad3e03efd3f6",
+      "context": "CAROUSEL_SLIDES:property:title",
+      "dynamic": false,
+      "references": [
+        {
+          "file": "src/pages/app-store/app-store-data.ts",
+          "line": 125,
+          "column": 16
+        }
+      ],
+      "anchor": "e6e5c5f245d520af",
+      "key": "custom.scan_b49403093c1fdd359892abc3",
+      "namespace": "custom",
+      "status": "new",
+      "review": "DEV-only prototype source/content preserved; not a published page"
+    },
+    {
+      "id": "8901bbf5283d5a97fe337d2e",
+      "sourceText": "YouTube 品牌影片工作室",
+      "sourceHash": "fb40176056a13b0aabcd431d5c25a834c7c9e0a0fb992705a37d7be593f5f1cf",
+      "context": "CAROUSEL_SLIDES:property:title",
+      "dynamic": false,
+      "references": [
+        {
+          "file": "src/pages/app-store/app-store-data.ts",
+          "line": 134,
+          "column": 16
+        }
+      ],
+      "anchor": "e6e5c5f245d520af",
+      "key": "custom.scan_8901bbf5283d5a97fe337d2e",
+      "namespace": "custom",
+      "status": "new",
+      "review": "DEV-only prototype source/content preserved; not a published page"
+    },
+    {
+      "id": "20aee93f708d2b808f753dbd",
+      "sourceText": "TapNow Skrull 2.0 · 视觉变体引擎",
+      "sourceHash": "df699b497b00a2cec336841977788b6a64fa0aef2397f0f42675c86e98ab897b",
+      "context": "CAROUSEL_SLIDES:property:title",
+      "dynamic": false,
+      "references": [
+        {
+          "file": "src/pages/app-store/app-store-data.ts",
+          "line": 143,
+          "column": 16
+        }
+      ],
+      "anchor": "e6e5c5f245d520af",
+      "key": "custom.scan_20aee93f708d2b808f753dbd",
+      "namespace": "custom",
+      "status": "new",
+      "review": "DEV-only prototype source/content preserved; not a published page"
+    },
+    {
+      "id": "5a85b2c3c6edf183a3b9eac4",
+      "sourceText": "Forge Builder · 自定义技能编排",
+      "sourceHash": "972e9645b30c64b62ea5b0ba587bc4b278e494087ab86bb42438c268ff87558d",
+      "context": "CAROUSEL_SLIDES:property:title",
+      "dynamic": false,
+      "references": [
+        {
+          "file": "src/pages/app-store/app-store-data.ts",
+          "line": 152,
+          "column": 16
+        }
+      ],
+      "anchor": "e6e5c5f245d520af",
+      "key": "custom.scan_5a85b2c3c6edf183a3b9eac4",
+      "namespace": "custom",
+      "status": "new",
+      "review": "DEV-only prototype source/content preserved; not a published page"
+    },
+    {
+      "id": "47370ba35b2702ea78217c86",
+      "sourceText": "短剧工作坊｜角色三视图与连续分镜",
+      "sourceHash": "c033f23f19996dded89f87ee9ef0c55f521c2f5799c21047a59b7155bf2136eb",
+      "context": "HOT_USE_CASES:property:title",
+      "dynamic": false,
+      "references": [
+        {
+          "file": "src/pages/app-store/app-store-data.ts",
+          "line": 164,
+          "column": 16
+        }
+      ],
+      "anchor": "03a9a2570485b6cc",
+      "key": "custom.scan_47370ba35b2702ea78217c86",
+      "namespace": "custom",
+      "status": "new",
+      "review": "DEV-only prototype source/content preserved; not a published page"
+    },
+    {
+      "id": "b79cd8cc98be3b266bbbcec2",
+      "sourceText": "Astra · 白模预演",
+      "sourceHash": "c8e0ba029ca3692c65306fa3c71eb461fbb2623ee94d9ce7ce68c6a0621e9f3c",
+      "context": "HOT_USE_CASES:property:title",
+      "dynamic": false,
+      "references": [
+        {
+          "file": "src/pages/app-store/app-store-data.ts",
+          "line": 172,
+          "column": 16
+        }
+      ],
+      "anchor": "03a9a2570485b6cc",
+      "key": "custom.scan_b79cd8cc98be3b266bbbcec2",
+      "namespace": "custom",
+      "status": "new",
+      "review": "DEV-only prototype source/content preserved; not a published page"
+    },
+    {
+      "id": "80296311cc3624142b83c273",
+      "sourceText": "白模转电影｜从画面创意生成视频预演",
+      "sourceHash": "dbdcae032916cb11e28db61fe722428f4de6709599269165092617f430285c87",
+      "context": "HOT_USE_CASES:property:title",
+      "dynamic": false,
+      "references": [
+        {
+          "file": "src/pages/app-store/app-store-data.ts",
+          "line": 179,
+          "column": 16
+        }
+      ],
+      "anchor": "03a9a2570485b6cc",
+      "key": "custom.scan_80296311cc3624142b83c273",
+      "namespace": "custom",
+      "status": "new",
+      "review": "DEV-only prototype source/content preserved; not a published page"
+    },
+    {
+      "id": "c17562b45760305ec2293447",
+      "sourceText": "产品图建模｜一张商品图还原 3D 模型",
+      "sourceHash": "22f748ca612e9d94b40df4abea0f800f6a50bd8075c4230d0360844dca3e2d61",
+      "context": "HOT_USE_CASES:property:title",
+      "dynamic": false,
+      "references": [
+        {
+          "file": "src/pages/app-store/app-store-data.ts",
+          "line": 186,
+          "column": 16
+        }
+      ],
+      "anchor": "03a9a2570485b6cc",
+      "key": "custom.scan_c17562b45760305ec2293447",
+      "namespace": "custom",
+      "status": "new",
+      "review": "DEV-only prototype source/content preserved; not a published page"
+    },
+    {
+      "id": "8639628dd948fc2f95e1acc3",
+      "sourceText": "品牌设计｜做一段开场动效",
+      "sourceHash": "dd0aad5e53ffa54a81bee7d35da1ce42d0bbfed09fcbbed2441264ca45a4cb6d",
+      "context": "HOT_USE_CASES:property:title",
+      "dynamic": false,
+      "references": [
+        {
+          "file": "src/pages/app-store/app-store-data.ts",
+          "line": 193,
+          "column": 16
+        }
+      ],
+      "anchor": "03a9a2570485b6cc",
+      "key": "custom.scan_8639628dd948fc2f95e1acc3",
+      "namespace": "custom",
+      "status": "new",
+      "review": "DEV-only prototype source/content preserved; not a published page"
+    },
+    {
+      "id": "fc9dae95e2d37e28ae0b131a",
+      "sourceText": "电商新品｜从一张包装图出整套上架图",
+      "sourceHash": "97deec06b182466a1edf286ca1aa76ac4c5ff4a0a430f274091d956fbfe839ae",
+      "context": "HOT_USE_CASES:property:title",
+      "dynamic": false,
+      "references": [
+        {
+          "file": "src/pages/app-store/app-store-data.ts",
+          "line": 200,
+          "column": 16
+        }
+      ],
+      "anchor": "03a9a2570485b6cc",
+      "key": "custom.scan_fc9dae95e2d37e28ae0b131a",
+      "namespace": "custom",
+      "status": "new",
+      "review": "DEV-only prototype source/content preserved; not a published page"
+    },
+    {
+      "id": "70a81f7b521c302845e40652",
+      "sourceText": "面向影视短剧与漫剧创作的一站式生产力工坊。包含人物/面部/产品三视图、连续分镜图、多机位九宫格、场景俯视图及智能扩图超清等十大多模态核心工具。",
+      "sourceHash": "aff005b07ea9d522b0bbfbde512ae0ce2a303fed8f092207b277ad29fcf21b42",
+      "context": "ALL_APPS_LIST:property:description",
+      "dynamic": false,
+      "references": [
+        {
+          "file": "src/pages/app-store/app-store-data.ts",
+          "line": 213,
+          "column": 22
+        }
+      ],
+      "anchor": "f61679dd54378632",
+      "key": "custom.scan_70a81f7b521c302845e40652",
+      "namespace": "custom",
+      "status": "new",
+      "review": "DEV-only prototype source/content preserved; not a published page"
+    },
+    {
+      "id": "bbf62c02e8ff4e21dd84ffca",
+      "sourceText": "从人物小传到高定妆造，定制全片镜头绝不漂移的数字主角。",
+      "sourceHash": "7b0702dbd537de7dc47e00bc8d5bfa7f51c9a8dff76e3a2d4bba79fb55700824",
+      "context": "ALL_APPS_LIST:property:description",
+      "dynamic": false,
+      "references": [
+        {
+          "file": "src/pages/app-store/app-store-data.ts",
+          "line": 226,
+          "column": 22
+        }
+      ],
+      "anchor": "f61679dd54378632",
+      "key": "custom.scan_bbf62c02e8ff4e21dd84ffca",
+      "namespace": "custom",
+      "status": "new",
+      "review": "DEV-only prototype source/content preserved; not a published page"
+    },
+    {
+      "id": "1a404d8f2bbd89d274f90e41",
+      "sourceText": "从剧本、角色构想或已有资产出发，建立可复用的形象与声音。",
+      "sourceHash": "bcd1cfde93e7ca906221f66b72c3f5bd9dfd45ce3d59a5271fa068ba112387ed",
+      "context": "ALL_APPS_LIST:property:description",
+      "dynamic": false,
+      "references": [
+        {
+          "file": "src/pages/app-store/app-store-data.ts",
+          "line": 236,
+          "column": 22
+        }
+      ],
+      "anchor": "f61679dd54378632",
+      "key": "custom.scan_1a404d8f2bbd89d274f90e41",
+      "namespace": "custom",
+      "status": "new",
+      "review": "DEV-only prototype source/content preserved; not a published page"
+    },
+    {
+      "id": "29d51ed20047e370716d5ea2",
+      "sourceText": "将复杂的数据与想法转化为直观的视觉图表与交互式架构图谱。",
+      "sourceHash": "d929d6f43b174642660d29b0466d1edc01179cd0429feddfb5033bcce934e33f",
+      "context": "ALL_APPS_LIST:property:description",
+      "dynamic": false,
+      "references": [
+        {
+          "file": "src/pages/app-store/app-store-data.ts",
+          "line": 244,
+          "column": 22
+        }
+      ],
+      "anchor": "f61679dd54378632",
+      "key": "custom.scan_29d51ed20047e370716d5ea2",
+      "namespace": "custom",
+      "status": "new",
+      "review": "DEV-only prototype source/content preserved; not a published page"
+    },
+    {
+      "id": "744ec6da05fd900ffc35a6dc",
+      "sourceText": "为品牌与设计提供轻量级粒子、微交互与视频片头动效制作能力。",
+      "sourceHash": "eec2d1d240a6ebc43f8a75903757321875f138270ec605c3bf7264ff0149aeda",
+      "context": "ALL_APPS_LIST:property:description",
+      "dynamic": false,
+      "references": [
+        {
+          "file": "src/pages/app-store/app-store-data.ts",
+          "line": 252,
+          "column": 22
+        }
+      ],
+      "anchor": "f61679dd54378632",
+      "key": "custom.scan_744ec6da05fd900ffc35a6dc",
+      "namespace": "custom",
+      "status": "new",
+      "review": "DEV-only prototype source/content preserved; not a published page"
+    },
+    {
+      "id": "29e0f11a79e525fc06b27e33",
+      "sourceText": "为设计师快速生成具有 3D 深度体验与着色器特效的沉浸式 Web 页面。",
+      "sourceHash": "c9b5938e27717446a630da515359c2015a3468a6e9add9e2c305bbfde731b0f4",
+      "context": "ALL_APPS_LIST:property:description",
+      "dynamic": false,
+      "references": [
+        {
+          "file": "src/pages/app-store/app-store-data.ts",
+          "line": 260,
+          "column": 22
+        }
+      ],
+      "anchor": "f61679dd54378632",
+      "key": "custom.scan_29e0f11a79e525fc06b27e33",
+      "namespace": "custom",
+      "status": "new",
+      "review": "DEV-only prototype source/content preserved; not a published page"
+    },
+    {
+      "id": "ae627d285f41b9c070167b1f",
+      "sourceText": "汇聚数十种前沿算法艺术风格，一键套用于海报与概念视效创作。",
+      "sourceHash": "d5134b6273d8c16e60a9021695cd816e5e0b95ed4bf2a41819e3b71fa292eb05",
+      "context": "ALL_APPS_LIST:property:description",
+      "dynamic": false,
+      "references": [
+        {
+          "file": "src/pages/app-store/app-store-data.ts",
+          "line": 268,
+          "column": 22
+        }
+      ],
+      "anchor": "f61679dd54378632",
+      "key": "custom.scan_ae627d285f41b9c070167b1f",
+      "namespace": "custom",
+      "status": "new",
+      "review": "DEV-only prototype source/content preserved; not a published page"
+    },
+    {
+      "id": "9e8dcb2f2dd48842ca6063f4",
+      "sourceText": "苹果级工业硬件渲染切片与动态爆炸图拆解模版库。",
+      "sourceHash": "d4b40a87247d2d0cfda144753ed654e431ab757876316298a31eb06f87e27d6a",
+      "context": "ALL_APPS_LIST:property:description",
+      "dynamic": false,
+      "references": [
+        {
+          "file": "src/pages/app-store/app-store-data.ts",
+          "line": 276,
+          "column": 22
+        }
+      ],
+      "anchor": "f61679dd54378632",
+      "key": "custom.scan_9e8dcb2f2dd48842ca6063f4",
+      "namespace": "custom",
+      "status": "new",
+      "review": "DEV-only prototype source/content preserved; not a published page"
+    },
+    {
+      "id": "2b2a1a9fa778b7796654bf2d",
+      "sourceText": "多智能体围绕核心选题自动延展剧情分支、戏剧冲突与视觉亮点。",
+      "sourceHash": "ea21e7800fbd9ebe909ad172e7230ecde2a96550ed169be402c6aa880da6ff2d",
+      "context": "ALL_APPS_LIST:property:description",
+      "dynamic": false,
+      "references": [
+        {
+          "file": "src/pages/app-store/app-store-data.ts",
+          "line": 284,
+          "column": 22
+        }
+      ],
+      "anchor": "f61679dd54378632",
+      "key": "custom.scan_2b2a1a9fa778b7796654bf2d",
+      "namespace": "custom",
+      "status": "new",
+      "review": "DEV-only prototype source/content preserved; not a published page"
+    },
+    {
+      "id": "a9cb6926d1d8db66c03450ce",
+      "sourceText": "从商品单图生成多机位场景图、穿戴图与社媒推广素材套件。",
+      "sourceHash": "8e7cfe12b1870e137e6af92ed1351c2fb11ee4c67b59660921ebbf8cfbe4fb7e",
+      "context": "ALL_APPS_LIST:property:description",
+      "dynamic": false,
+      "references": [
+        {
+          "file": "src/pages/app-store/app-store-data.ts",
+          "line": 292,
+          "column": 22
+        }
+      ],
+      "anchor": "f61679dd54378632",
+      "key": "custom.scan_a9cb6926d1d8db66c03450ce",
+      "namespace": "custom",
+      "status": "new",
+      "review": "DEV-only prototype source/content preserved; not a published page"
+    },
+    {
+      "id": "7fa34b205a9c5b745f5d4996",
+      "sourceText": "根据剧本自动拆解镜头景别、光影与机位，生成连续故事板画面。",
+      "sourceHash": "38f94b8a348eeae71dda8708f349fbd0a3de407840839b2d0ad783e450a037e4",
+      "context": "ALL_APPS_LIST:property:description",
+      "dynamic": false,
+      "references": [
+        {
+          "file": "src/pages/app-store/app-store-data.ts",
+          "line": 300,
+          "column": 22
+        }
+      ],
+      "anchor": "f61679dd54378632",
+      "key": "custom.scan_7fa34b205a9c5b745f5d4996",
+      "namespace": "custom",
+      "status": "new",
+      "review": "DEV-only prototype source/content preserved; not a published page"
+    },
+    {
+      "id": "d8655ebcd4254ff7ad691824",
+      "sourceText": "连接客户关系数据，自动化营销流转与销售素材定向投放。",
+      "sourceHash": "ab2816dc34f9f6a58e103d53029b8f6e126dc6e51345c1941c209145626b0e4a",
+      "context": "ALL_APPS_LIST:property:description",
+      "dynamic": false,
+      "references": [
+        {
+          "file": "src/pages/app-store/app-store-data.ts",
+          "line": 308,
+          "column": 22
+        }
+      ],
+      "anchor": "f61679dd54378632",
+      "key": "custom.scan_d8655ebcd4254ff7ad691824",
+      "namespace": "custom",
+      "status": "new",
+      "review": "DEV-only prototype source/content preserved; not a published page"
+    },
+    {
+      "id": "d8bb5994df29516979c5a8bf",
+      "sourceText": "多维表格资产协同，结构化同步影视角色、道具与生成任务表。",
+      "sourceHash": "3b56d4ed5a19edc698dc32ae29a77d8ff7516b49ef7804ca38049f7a212b46c2",
+      "context": "ALL_APPS_LIST:property:description",
+      "dynamic": false,
+      "references": [
+        {
+          "file": "src/pages/app-store/app-store-data.ts",
+          "line": 316,
+          "column": 22
+        }
+      ],
+      "anchor": "f61679dd54378632",
+      "key": "custom.scan_d8bb5994df29516979c5a8bf",
+      "namespace": "custom",
+      "status": "new",
+      "review": "DEV-only prototype source/content preserved; not a published page"
+    },
+    {
+      "id": "cbe54b41b6b76bb74e34b0d1",
+      "sourceText": "将 Jira 任务看板与 Confluence 文档库无缝接入智能创作流。",
+      "sourceHash": "f87ba029852a7b6eb7218876dfda5652050a5440835de4d1d5dc3821a59018d2",
+      "context": "ALL_APPS_LIST:property:description",
+      "dynamic": false,
+      "references": [
+        {
+          "file": "src/pages/app-store/app-store-data.ts",
+          "line": 324,
+          "column": 22
+        }
+      ],
+      "anchor": "f61679dd54378632",
+      "key": "custom.scan_cbe54b41b6b76bb74e34b0d1",
+      "namespace": "custom",
+      "status": "new",
+      "review": "DEV-only prototype source/content preserved; not a published page"
+    },
+    {
+      "id": "8e5c8480415fa10fc3bdcdf1",
+      "sourceText": "同步设计与影视制作排期，追踪镜头审片意见与多版本资产。",
+      "sourceHash": "9b27cb90c607c76c9c7731570b29635d6712a17f87c3938f2af13d07ff3feb1a",
+      "context": "ALL_APPS_LIST:property:description",
+      "dynamic": false,
+      "references": [
+        {
+          "file": "src/pages/app-store/app-store-data.ts",
+          "line": 332,
+          "column": 22
+        }
+      ],
+      "anchor": "f61679dd54378632",
+      "key": "custom.scan_8e5c8480415fa10fc3bdcdf1",
+      "namespace": "custom",
+      "status": "new",
+      "review": "DEV-only prototype source/content preserved; not a published page"
+    },
+    {
+      "id": "07f0b1dbf35b991447806343",
+      "sourceText": "敏捷影视迭代与 Agent 自动化流水线任务分发调度中心。",
+      "sourceHash": "ad8d78bff45d3bd87caee7b1dfbe65aa48a320dfee39132c8cf6797a79801496",
+      "context": "ALL_APPS_LIST:property:description",
+      "dynamic": false,
+      "references": [
+        {
+          "file": "src/pages/app-store/app-store-data.ts",
+          "line": 340,
+          "column": 22
+        }
+      ],
+      "anchor": "f61679dd54378632",
+      "key": "custom.scan_07f0b1dbf35b991447806343",
+      "namespace": "custom",
+      "status": "new",
+      "review": "DEV-only prototype source/content preserved; not a published page"
+    },
+    {
+      "id": "aebada9cef681c84db75aa0a",
+      "sourceText": "在团队聊天频道中实时唤起智能体、生成预览图并完成审核审批。",
+      "sourceHash": "ec3e2901713d5707b0b458023d33c975850a675791b8fe7d31ba71826e9fc1ca",
+      "context": "ALL_APPS_LIST:property:description",
+      "dynamic": false,
+      "references": [
+        {
+          "file": "src/pages/app-store/app-store-data.ts",
+          "line": 348,
+          "column": 22
+        }
+      ],
+      "anchor": "f61679dd54378632",
+      "key": "custom.scan_aebada9cef681c84db75aa0a",
+      "namespace": "custom",
+      "status": "new",
+      "review": "DEV-only prototype source/content preserved; not a published page"
+    },
+    {
+      "id": "a7309d9af31b418413eaf66b",
+      "sourceText": "连接 Notion 知识库，自动解析大纲、小传并写入故事生成节点。",
+      "sourceHash": "95010e5c155592a9add49a5eedeb962a3dbaace00d27dc6ac369f49cf24fd48a",
+      "context": "ALL_APPS_LIST:property:description",
+      "dynamic": false,
+      "references": [
+        {
+          "file": "src/pages/app-store/app-store-data.ts",
+          "line": 356,
+          "column": 22
+        }
+      ],
+      "anchor": "f61679dd54378632",
+      "key": "custom.scan_a7309d9af31b418413eaf66b",
+      "namespace": "custom",
+      "status": "new",
+      "review": "DEV-only prototype source/content preserved; not a published page"
+    },
+    {
+      "id": "17eae3a5fa7de60642934a5f",
+      "sourceText": "深度整合飞书多维表格与云文档，实现影视制作工单自动流转。",
+      "sourceHash": "c0f5e0d51e9cab2258fb098a43b8d5f022506eca208b7a81996e064ff76d337c",
+      "context": "ALL_APPS_LIST:property:description",
+      "dynamic": false,
+      "references": [
+        {
+          "file": "src/pages/app-store/app-store-data.ts",
+          "line": 364,
+          "column": 22
+        }
+      ],
+      "anchor": "f61679dd54378632",
+      "key": "custom.scan_17eae3a5fa7de60642934a5f",
+      "namespace": "custom",
+      "status": "new",
+      "review": "DEV-only prototype source/content preserved; not a published page"
+    },
+    {
+      "id": "2548ea59615226066d1bf2ad",
+      "sourceText": "高画质云端视效成片托管、客户审阅加注与私密成片分发交付。",
+      "sourceHash": "613f72250c4d9a950155e19f3d87294b257a25a843d4166a33a14162e023b03a",
+      "context": "ALL_APPS_LIST:property:description",
+      "dynamic": false,
+      "references": [
+        {
+          "file": "src/pages/app-store/app-store-data.ts",
+          "line": 372,
+          "column": 22
+        }
+      ],
+      "anchor": "f61679dd54378632",
+      "key": "custom.scan_2548ea59615226066d1bf2ad",
+      "namespace": "custom",
+      "status": "new",
+      "review": "DEV-only prototype source/content preserved; not a published page"
+    },
+    {
+      "id": "fd561da9e41b794b35ab8782",
+      "sourceText": "影视工业标准镜头级时间码协同审阅，批注自动回传画布修正。",
+      "sourceHash": "df41d59684f192ae1299eab2ad285c2636fa9f581b238a4df69d76a9558c4ad2",
+      "context": "ALL_APPS_LIST:property:description",
+      "dynamic": false,
+      "references": [
+        {
+          "file": "src/pages/app-store/app-store-data.ts",
+          "line": 380,
+          "column": 22
+        }
+      ],
+      "anchor": "f61679dd54378632",
+      "key": "custom.scan_fd561da9e41b794b35ab8782",
+      "namespace": "custom",
+      "status": "new",
+      "review": "DEV-only prototype source/content preserved; not a published page"
+    },
+    {
+      "id": "59e9a60e485662e01ed8d16e",
+      "sourceText": "数百万商用免费高精度摄影素材即搜即用，快速垫图或构图参考。",
+      "sourceHash": "02c4c4011f944de41803788bd8fd70b7d39831fb864d8c1364b21ab0ee8dda85",
+      "context": "ALL_APPS_LIST:property:description",
+      "dynamic": false,
+      "references": [
+        {
+          "file": "src/pages/app-store/app-store-data.ts",
+          "line": 388,
+          "column": 22
+        }
+      ],
+      "anchor": "f61679dd54378632",
+      "key": "custom.scan_59e9a60e485662e01ed8d16e",
+      "namespace": "custom",
+      "status": "new",
+      "review": "DEV-only prototype source/content preserved; not a published page"
+    },
+    {
+      "id": "bdcfee59dca0b0da0ddb019d",
+      "sourceText": "包含人物锚定、光影控制、镜头运镜三套工业级核心底模约束规则。",
+      "sourceHash": "36d20376fdfe194288fab3f9aeaada0f9d93b662ac580fc75c9aced70a0bba22",
+      "context": "ALL_APPS_LIST:property:description",
+      "dynamic": false,
+      "references": [
+        {
+          "file": "src/pages/app-store/app-store-data.ts",
+          "line": 397,
+          "column": 22
+        }
+      ],
+      "anchor": "f61679dd54378632",
+      "key": "custom.scan_bdcfee59dca0b0da0ddb019d",
+      "namespace": "custom",
+      "status": "new",
+      "review": "DEV-only prototype source/content preserved; not a published page"
+    },
+    {
+      "id": "a12e07647bc6543128521663",
+      "sourceText": "将扁平提示词转化为具备明确景深、前后景层次与三维坐标的立体场景。",
+      "sourceHash": "e877aff9233afe6a205a28066c80773613df210d90e12aa0fd3d308394134625",
+      "context": "ALL_APPS_LIST:property:description",
+      "dynamic": false,
+      "references": [
+        {
+          "file": "src/pages/app-store/app-store-data.ts",
+          "line": 406,
+          "column": 22
+        }
+      ],
+      "anchor": "f61679dd54378632",
+      "key": "custom.scan_a12e07647bc6543128521663",
+      "namespace": "custom",
+      "status": "new",
+      "review": "DEV-only prototype source/content preserved; not a published page"
+    },
+    {
+      "id": "d2a4c91dfe2fdea88dcb0fd8",
+      "sourceText": "强制模型遵循光学漫反射、自然光漫透与真实重力动力学物理规则。",
+      "sourceHash": "9adf443ccdd311d9db2d5ac2f8c707cb3452ea1e1e670c73c0acef59f2e57223",
+      "context": "ALL_APPS_LIST:property:description",
+      "dynamic": false,
+      "references": [
+        {
+          "file": "src/pages/app-store/app-store-data.ts",
+          "line": 414,
+          "column": 22
+        }
+      ],
+      "anchor": "f61679dd54378632",
+      "key": "custom.scan_d2a4c91dfe2fdea88dcb0fd8",
+      "namespace": "custom",
+      "status": "new",
+      "review": "DEV-only prototype source/content preserved; not a published page"
+    },
+    {
+      "id": "476bf80643b2767010ad8ca3",
+      "sourceText": "Astra 空间视频引擎配套控制插件，精准调节白模摄像机路径。",
+      "sourceHash": "ca521acab774ca9095867a924af9b309c170205507e16c06341b0b7621e2f00c",
+      "context": "ALL_APPS_LIST:property:description",
+      "dynamic": false,
+      "references": [
+        {
+          "file": "src/pages/app-store/app-store-data.ts",
+          "line": 422,
+          "column": 22
+        }
+      ],
+      "anchor": "f61679dd54378632",
+      "key": "custom.scan_476bf80643b2767010ad8ca3",
+      "namespace": "custom",
+      "status": "new",
+      "review": "DEV-only prototype source/content preserved; not a published page"
+    },
+    {
+      "id": "cea9072848fc6b3814368a6e",
+      "sourceText": "实验性几何提取、网格重建与神经辐射场 NeRF 资产格式转换器。",
+      "sourceHash": "d2e05ccbcabe011f6579ceed8f6dc0dcc728e679e414a73721ae7da328fe39bd",
+      "context": "ALL_APPS_LIST:property:description",
+      "dynamic": false,
+      "references": [
+        {
+          "file": "src/pages/app-store/app-store-data.ts",
+          "line": 430,
+          "column": 22
+        }
+      ],
+      "anchor": "f61679dd54378632",
+      "key": "custom.scan_cea9072848fc6b3814368a6e",
+      "namespace": "custom",
+      "status": "new",
+      "review": "DEV-only prototype source/content preserved; not a published page"
+    },
+    {
+      "id": "d5be106345f8b271d2ea50d8",
+      "sourceText": "在虚拟摄影棚中自由布置主光源、辅光与轮廓光，生成精准布光图。",
+      "sourceHash": "5bfd96e0c326dd18a8d72f1e590e259e444061912d8d0ffbb16267578aead012",
+      "context": "ALL_APPS_LIST:property:description",
+      "dynamic": false,
+      "references": [
+        {
+          "file": "src/pages/app-store/app-store-data.ts",
+          "line": 438,
+          "column": 22
+        }
+      ],
+      "anchor": "f61679dd54378632",
+      "key": "custom.scan_d5be106345f8b271d2ea50d8",
+      "namespace": "custom",
+      "status": "new",
+      "review": "DEV-only prototype source/content preserved; not a published page"
+    },
+    {
+      "id": "59bc5c57bf0bb649e799404f",
+      "sourceText": "无材质简模快速跑通复杂打斗、追逐与镜头穿梭运动节奏。",
+      "sourceHash": "6cc3855d0c1c7bcea74073697e03c28c6e829da7246e33cef9e06f291932b0d0",
+      "context": "ALL_APPS_LIST:property:description",
+      "dynamic": false,
+      "references": [
+        {
+          "file": "src/pages/app-store/app-store-data.ts",
+          "line": 446,
+          "column": 22
+        }
+      ],
+      "anchor": "f61679dd54378632",
+      "key": "custom.scan_59bc5c57bf0bb649e799404f",
+      "namespace": "custom",
+      "status": "new",
+      "review": "DEV-only prototype source/content preserved; not a published page"
+    },
+    {
+      "id": "037af8a0bd84491d61488ce8",
+      "sourceText": "根据你的对话偏好与创作管线，自动提炼并打包为独立可复用 Skill。",
+      "sourceHash": "1c425f463504d91ae13c2ed76e568933ef1e091079461261593deca24d63a3b8",
+      "context": "ALL_APPS_LIST:property:description",
+      "dynamic": false,
+      "references": [
+        {
+          "file": "src/pages/app-store/app-store-data.ts",
+          "line": 454,
+          "column": 22
+        }
+      ],
+      "anchor": "f61679dd54378632",
+      "key": "custom.scan_037af8a0bd84491d61488ce8",
+      "namespace": "custom",
+      "status": "new",
+      "review": "DEV-only prototype source/content preserved; not a published page"
+    },
+    {
+      "id": "a517343ce3f464f22d0e59ae",
+      "sourceText": "针对 Seedance 2 底层动作潜空间结构化提示词翻译与强化系统。",
+      "sourceHash": "39d629950d55e0b048dd5f63e1dd9cb1e76163469dde1a179df1a28c6e7cb3d5",
+      "context": "ALL_APPS_LIST:property:description",
+      "dynamic": false,
+      "references": [
+        {
+          "file": "src/pages/app-store/app-store-data.ts",
+          "line": 462,
+          "column": 22
+        }
+      ],
+      "anchor": "f61679dd54378632",
+      "key": "custom.scan_a517343ce3f464f22d0e59ae",
+      "namespace": "custom",
+      "status": "new",
+      "review": "DEV-only prototype source/content preserved; not a published page"
+    },
+    {
+      "id": "64122202c5cfbc73bf0f92e2",
+      "sourceText": "针对 Seedance 2.5 深度优化的多镜头连贯运镜与光影细节提示词增强。",
+      "sourceHash": "39483cb44608f86ed966db34924038b2df9e178fca64d6caa4c5406138c7ad29",
+      "context": "ALL_APPS_LIST:property:description",
+      "dynamic": false,
+      "references": [
+        {
+          "file": "src/pages/app-store/app-store-data.ts",
+          "line": 470,
+          "column": 22
+        }
+      ],
+      "anchor": "f61679dd54378632",
+      "key": "custom.scan_64122202c5cfbc73bf0f92e2",
+      "namespace": "custom",
+      "status": "new",
+      "review": "DEV-only prototype source/content preserved; not a published page"
+    },
+    {
+      "id": "9676d4b7c1c122ceb6cf6d96",
+      "sourceText": "TapNow 平台全流程漫游助手，解答节点用法与最佳实践组合。",
+      "sourceHash": "10e217b96d3986a611c7c131c963f540c1edda24c5d1cd45deaf34fb04cf8b7e",
+      "context": "ALL_APPS_LIST:property:description",
+      "dynamic": false,
+      "references": [
+        {
+          "file": "src/pages/app-store/app-store-data.ts",
+          "line": 479,
+          "column": 22
+        }
+      ],
+      "anchor": "f61679dd54378632",
+      "key": "custom.scan_9676d4b7c1c122ceb6cf6d96",
+      "namespace": "custom",
+      "status": "new",
+      "review": "DEV-only prototype source/content preserved; not a published page"
+    },
+    {
+      "id": "80a1e60ab89cb8b064a97bf6",
+      "sourceText": "海螺 MiniMax H3 电影级微表情、大动态物理交互提示词专业调优。",
+      "sourceHash": "ccc0572c5e7d7f75de4bfa8c1668e9fb49a1fc535389938aa81180e8c7d51bba",
+      "context": "ALL_APPS_LIST:property:description",
+      "dynamic": false,
+      "references": [
+        {
+          "file": "src/pages/app-store/app-store-data.ts",
+          "line": 487,
+          "column": 22
+        }
+      ],
+      "anchor": "f61679dd54378632",
+      "key": "custom.scan_80a1e60ab89cb8b064a97bf6",
+      "namespace": "custom",
+      "status": "new",
+      "review": "DEV-only prototype source/content preserved; not a published page"
+    },
+    {
+      "id": "367615cd4e9b45e183c323f8",
+      "sourceText": "适配快手可灵大模型动作大幅度稳定性提示词语法规范与负向过滤。",
+      "sourceHash": "29a950e21077a8359c5382c746b69671b1c9e27791458043bb36d63b1e3dc405",
+      "context": "ALL_APPS_LIST:property:description",
+      "dynamic": false,
+      "references": [
+        {
+          "file": "src/pages/app-store/app-store-data.ts",
+          "line": 496,
+          "column": 22
+        }
+      ],
+      "anchor": "f61679dd54378632",
+      "key": "custom.scan_367615cd4e9b45e183c323f8",
+      "namespace": "custom",
+      "status": "new",
+      "review": "DEV-only prototype source/content preserved; not a published page"
+    },
+    {
+      "id": "68c9bea7f458739e562a16ae",
+      "sourceText": "将简单的概念扩展为包含精确艺术风格、渲染引擎参数的专业指令。",
+      "sourceHash": "6f5d41215eb06b89dc7d9317c60a6756ce9b56e11bbc8c4ea2f13a74f053eca5",
+      "context": "ALL_APPS_LIST:property:description",
+      "dynamic": false,
+      "references": [
+        {
+          "file": "src/pages/app-store/app-store-data.ts",
+          "line": 504,
+          "column": 22
+        }
+      ],
+      "anchor": "f61679dd54378632",
+      "key": "custom.scan_68c9bea7f458739e562a16ae",
+      "namespace": "custom",
+      "status": "new",
+      "review": "DEV-only prototype source/content preserved; not a published page"
+    },
+    {
+      "id": "37d28bb92b560f4a3915f92e",
+      "sourceText": "反向分析优秀的 AI 影视作品，解构其提示词编排、垫图方式与参数。",
+      "sourceHash": "cbcad75afee2037fda76f193b3271364c287baa671116c944dff864844e4400a",
+      "context": "ALL_APPS_LIST:property:description",
+      "dynamic": false,
+      "references": [
+        {
+          "file": "src/pages/app-store/app-store-data.ts",
+          "line": 512,
+          "column": 22
+        }
+      ],
+      "anchor": "f61679dd54378632",
+      "key": "custom.scan_37d28bb92b560f4a3915f92e",
+      "namespace": "custom",
+      "status": "new",
+      "review": "DEV-only prototype source/content preserved; not a published page"
+    },
+    {
+      "id": "e953f698b4798c22440aa82d",
+      "sourceText": "根据任务目标与成本预算，智能评估推荐最佳的模型组与工作流拓扑。",
+      "sourceHash": "deee51361b468e1edb3bda344d27fdce2564da54a61d7ec7375e029ca330e735",
+      "context": "ALL_APPS_LIST:property:description",
+      "dynamic": false,
+      "references": [
+        {
+          "file": "src/pages/app-store/app-store-data.ts",
+          "line": 520,
+          "column": 22
+        }
+      ],
+      "anchor": "f61679dd54378632",
+      "key": "custom.scan_e953f698b4798c22440aa82d",
+      "namespace": "custom",
+      "status": "new",
+      "review": "DEV-only prototype source/content preserved; not a published page"
+    },
+    {
+      "id": "6c082a6b143d78ad6ad177d1",
+      "sourceText": "轻量级快节奏幽默插画、短视频 Meme 与潮流卡通风格提示词生成。",
+      "sourceHash": "d3c2b290a58b128e8fab788bc86f9e0a4363da5d2df13218d580c872053d8317",
+      "context": "ALL_APPS_LIST:property:description",
+      "dynamic": false,
+      "references": [
+        {
+          "file": "src/pages/app-store/app-store-data.ts",
+          "line": 528,
+          "column": 22
+        }
+      ],
+      "anchor": "f61679dd54378632",
+      "key": "custom.scan_6c082a6b143d78ad6ad177d1",
+      "namespace": "custom",
+      "status": "new",
+      "review": "DEV-only prototype source/content preserved; not a published page"
+    },
+    {
+      "id": "73497f6e62d112d134415642",
+      "sourceText": "单张正视图一键解算顶点贴图，导出 GLB/OBJ 格式轻量 3D 道具资产。",
+      "sourceHash": "a3f0c3cc3cf7dd8747c3e7299ef2492fa574b66bc333bfd9952d184cabfd69cd",
+      "context": "ALL_APPS_LIST:property:description",
+      "dynamic": false,
+      "references": [
+        {
+          "file": "src/pages/app-store/app-store-data.ts",
+          "line": 536,
+          "column": 22
+        }
+      ],
+      "anchor": "f61679dd54378632",
+      "key": "custom.scan_73497f6e62d112d134415642",
+      "namespace": "custom",
+      "status": "new",
+      "review": "DEV-only prototype source/content preserved; not a published page"
+    },
+    {
+      "id": "db296b1b24379a7a5537bcc9",
+      "sourceText": "全流程剧本编剧、分镜镜头列表、配音配乐到剪辑时间线的工业化方案。",
+      "sourceHash": "1b0806344937386f0e90c3cdfbb1b4a8ac955c942294cb9f4f7b065509e871ac",
+      "context": "ALL_APPS_LIST:property:description",
+      "dynamic": false,
+      "references": [
+        {
+          "file": "src/pages/app-store/app-store-data.ts",
+          "line": 544,
+          "column": 22
+        }
+      ],
+      "anchor": "f61679dd54378632",
+      "key": "custom.scan_db296b1b24379a7a5537bcc9",
+      "namespace": "custom",
+      "status": "new",
+      "review": "DEV-only prototype source/content preserved; not a published page"
+    },
+    {
+      "id": "acfb908bbb6ef200e759eeb5",
+      "sourceText": "寓言叙事与非线性戏剧结构构建器，让故事短片充满反转与张力。",
+      "sourceHash": "f5b89fb2de577f84e3271a2f44174e7aa43b2e02dd1b84f8632ba59f94fe8567",
+      "context": "ALL_APPS_LIST:property:description",
+      "dynamic": false,
+      "references": [
+        {
+          "file": "src/pages/app-store/app-store-data.ts",
+          "line": 553,
+          "column": 22
+        }
+      ],
+      "anchor": "f61679dd54378632",
+      "key": "custom.scan_acfb908bbb6ef200e759eeb5",
+      "namespace": "custom",
+      "status": "new",
+      "review": "DEV-only prototype source/content preserved; not a published page"
+    },
+    {
+      "id": "f91499d30052ae1e100cbc7b",
+      "sourceText": "多角色群像调度与复杂剧情对白推演的专业剧作智能体。",
+      "sourceHash": "071bfc3e4558ad9db470fb9197d6e9d8696db15ced898e91c757bbadfc6c220f",
+      "context": "ALL_APPS_LIST:property:description",
+      "dynamic": false,
+      "references": [
+        {
+          "file": "src/pages/app-store/app-store-data.ts",
+          "line": 561,
+          "column": 22
+        }
+      ],
+      "anchor": "f61679dd54378632",
+      "key": "custom.scan_f91499d30052ae1e100cbc7b",
+      "namespace": "custom",
+      "status": "new",
+      "review": "DEV-only prototype source/content preserved; not a published page"
+    },
+    {
+      "id": "c21f7f7a42d198d0f41d8301",
+      "sourceText": "矢量图标微动效与 Lottie 动画一键转化，用于界面与动态包装。",
+      "sourceHash": "07188d48a7e2bd3d8a8e6c7586d950a1683e57e996998b59463617030cd4db8e",
+      "context": "ALL_APPS_LIST:property:description",
+      "dynamic": false,
+      "references": [
+        {
+          "file": "src/pages/app-store/app-store-data.ts",
+          "line": 569,
+          "column": 22
+        }
+      ],
+      "anchor": "f61679dd54378632",
+      "key": "custom.scan_c21f7f7a42d198d0f41d8301",
+      "namespace": "custom",
+      "status": "new",
+      "review": "DEV-only prototype source/content preserved; not a published page"
+    },
+    {
+      "id": "5a7078520f40186a5702cd50",
+      "sourceText": "节奏感文字飞入、冲击波变色与影视预告片级震撼花字特效排版。",
+      "sourceHash": "67695876c8c0c3198cf0a1647ae6e303e77143cc23341e8649cbbf16f485f2f9",
+      "context": "ALL_APPS_LIST:property:description",
+      "dynamic": false,
+      "references": [
+        {
+          "file": "src/pages/app-store/app-store-data.ts",
+          "line": 577,
+          "column": 22
+        }
+      ],
+      "anchor": "f61679dd54378632",
+      "key": "custom.scan_5a7078520f40186a5702cd50",
+      "namespace": "custom",
+      "status": "new",
+      "review": "DEV-only prototype source/content preserved; not a published page"
+    },
+    {
+      "id": "877bf454c9fb7ed9ceec63b5",
+      "sourceText": "适配 16:9 宽画幅的长视频结构设计、封面缩略图与片头片尾封装。",
+      "sourceHash": "0a3e5fef78a2dd5a083981da3ca7566904dd8dfc0260aebb51e4a0e02207511a",
+      "context": "ALL_APPS_LIST:property:description",
+      "dynamic": false,
+      "references": [
+        {
+          "file": "src/pages/app-store/app-store-data.ts",
+          "line": 585,
+          "column": 22
+        }
+      ],
+      "anchor": "f61679dd54378632",
+      "key": "custom.scan_877bf454c9fb7ed9ceec63b5",
+      "namespace": "custom",
+      "status": "new",
+      "review": "DEV-only prototype source/content preserved; not a published page"
+    },
+    {
+      "id": "6a8a3221da654d7b1444a7a7",
+      "sourceText": "高拟真播音员级唇形同步、微表情呼吸感与新闻背景抠像合成。",
+      "sourceHash": "bd37f465d6f50c9d34d5b476fed44f8062eb5252887405ac8481043c580c18d9",
+      "context": "ALL_APPS_LIST:property:description",
+      "dynamic": false,
+      "references": [
+        {
+          "file": "src/pages/app-store/app-store-data.ts",
+          "line": 593,
+          "column": 22
+        }
+      ],
+      "anchor": "f61679dd54378632",
+      "key": "custom.scan_6a8a3221da654d7b1444a7a7",
+      "namespace": "custom",
+      "status": "new",
+      "review": "DEV-only prototype source/content preserved; not a published page"
+    },
+    {
+      "id": "02b1b13c2cb81762feb61970",
+      "sourceText": "竖屏 9:16 短剧解说、知识分享与达人带货高情商口播文案及视频。",
+      "sourceHash": "0bec8030cf1ffe3b281da48fe60632dd078b471034a425c99d74536760d727a5",
+      "context": "ALL_APPS_LIST:property:description",
+      "dynamic": false,
+      "references": [
+        {
+          "file": "src/pages/app-store/app-store-data.ts",
+          "line": 601,
+          "column": 22
+        }
+      ],
+      "anchor": "f61679dd54378632",
+      "key": "custom.scan_02b1b13c2cb81762feb61970",
+      "namespace": "custom",
+      "status": "new",
+      "review": "DEV-only prototype source/content preserved; not a published page"
+    },
+    {
+      "id": "86d7afd76df529fd63d59cd0",
+      "sourceText": "户型图自动重建室内全景游览运镜与数字经纪人专业解说。",
+      "sourceHash": "7b0f107f31203b9b63672a412a6b2aa832c2a36c74f6f6624c09a9da7d622258",
+      "context": "ALL_APPS_LIST:property:description",
+      "dynamic": false,
+      "references": [
+        {
+          "file": "src/pages/app-store/app-store-data.ts",
+          "line": 609,
+          "column": 22
+        }
+      ],
+      "anchor": "f61679dd54378632",
+      "key": "custom.scan_86d7afd76df529fd63d59cd0",
+      "namespace": "custom",
+      "status": "new",
+      "review": "DEV-only prototype source/content preserved; not a published page"
+    },
+    {
+      "id": "d248139dae832eb95a4c8851",
+      "sourceText": "从功能亮点拆解到 3D 旋转展示、买家痛点对照的广告级成片方案。",
+      "sourceHash": "2a3bec3738034416f507b1a065a00eca61407173fb34557bd3b9057050ea9b78",
+      "context": "ALL_APPS_LIST:property:description",
+      "dynamic": false,
+      "references": [
+        {
+          "file": "src/pages/app-store/app-store-data.ts",
+          "line": 617,
+          "column": 22
+        }
+      ],
+      "anchor": "f61679dd54378632",
+      "key": "custom.scan_d248139dae832eb95a4c8851",
+      "namespace": "custom",
+      "status": "new",
+      "review": "DEV-only prototype source/content preserved; not a published page"
+    },
+    {
+      "id": "49c80fa6bac89248cf222d94",
+      "sourceText": "把晦涩难懂的技术理论拆解为动态演示图、通俗类比与科普短片。",
+      "sourceHash": "6918db6356b3ebf1d7a452ea80b2310af78495964db25f8a29d66c776413012d",
+      "context": "ALL_APPS_LIST:property:description",
+      "dynamic": false,
+      "references": [
+        {
+          "file": "src/pages/app-store/app-store-data.ts",
+          "line": 625,
+          "column": 22
+        }
+      ],
+      "anchor": "f61679dd54378632",
+      "key": "custom.scan_49c80fa6bac89248cf222d94",
+      "namespace": "custom",
+      "status": "new",
+      "review": "DEV-only prototype source/content preserved; not a published page"
+    },
+    {
+      "id": "4b9dc7e8c2f6232b793f8b34",
+      "sourceText": "标准新闻演播室场景生成、画中画图文轮播与下三分之一字幕条规范。",
+      "sourceHash": "c47962ed425e0723ad78d06a5c6b8d75672061996f5f7e545c93e0e2134829a1",
+      "context": "ALL_APPS_LIST:property:description",
+      "dynamic": false,
+      "references": [
+        {
+          "file": "src/pages/app-store/app-store-data.ts",
+          "line": 633,
+          "column": 22
+        }
+      ],
+      "anchor": "f61679dd54378632",
+      "key": "custom.scan_4b9dc7e8c2f6232b793f8b34",
+      "namespace": "custom",
+      "status": "new",
+      "review": "DEV-only prototype source/content preserved; not a published page"
+    },
+    {
+      "id": "a3b213edbacba0ac05edcfc3",
+      "sourceText": "管理与调优统一的面部高精度拓扑、发丝质感与服装可穿戴资产库。",
+      "sourceHash": "4333b4ce201ac44b11df2d292e6165e6fbf3414d332d8a8cade69644909a8d3e",
+      "context": "ALL_APPS_LIST:property:description",
+      "dynamic": false,
+      "references": [
+        {
+          "file": "src/pages/app-store/app-store-data.ts",
+          "line": 641,
+          "column": 22
+        }
+      ],
+      "anchor": "f61679dd54378632",
+      "key": "custom.scan_a3b213edbacba0ac05edcfc3",
+      "namespace": "custom",
+      "status": "new",
+      "review": "DEV-only prototype source/content preserved; not a published page"
+    },
+    {
+      "id": "cfa83295746adf90b0af1c89",
+      "sourceText": "聚焦高转化效果广告脚本，从情绪共鸣、信任背书到行动号召闭环。",
+      "sourceHash": "bc9c0fa256fd99ac7a0acc451b15eddbe71f7ec3f250db29a1bc76f7fb5eceae",
+      "context": "ALL_APPS_LIST:property:description",
+      "dynamic": false,
+      "references": [
+        {
+          "file": "src/pages/app-store/app-store-data.ts",
+          "line": 649,
+          "column": 22
+        }
+      ],
+      "anchor": "f61679dd54378632",
+      "key": "custom.scan_cfa83295746adf90b0af1c89",
+      "namespace": "custom",
+      "status": "new",
+      "review": "DEV-only prototype source/content preserved; not a published page"
+    },
+    {
+      "id": "eeceda05c17ac80e27296c1f",
+      "sourceText": "主图 800x800 爆款卖点标排版、详情页长图连贯切片与促销角标。",
+      "sourceHash": "f2b3c94403e25a552e13c9fee1f517697294ffbd4cb81ecfc81cedc03a787091",
+      "context": "ALL_APPS_LIST:property:description",
+      "dynamic": false,
+      "references": [
+        {
+          "file": "src/pages/app-store/app-store-data.ts",
+          "line": 657,
+          "column": 22
+        }
+      ],
+      "anchor": "f61679dd54378632",
+      "key": "custom.scan_eeceda05c17ac80e27296c1f",
+      "namespace": "custom",
+      "status": "new",
+      "review": "DEV-only prototype source/content preserved; not a published page"
+    },
+    {
+      "id": "e80ae1914fd5dd0d295d5549",
+      "sourceText": "一键将画面人种特征、文字招牌与文化语境适配为目标出海国家风俗。",
+      "sourceHash": "fac3f4bae8f65b00aee2255a7f7aca4d196b077adc3a610d1efe0f61958cc820",
+      "context": "ALL_APPS_LIST:property:description",
+      "dynamic": false,
+      "references": [
+        {
+          "file": "src/pages/app-store/app-store-data.ts",
+          "line": 665,
+          "column": 22
+        }
+      ],
+      "anchor": "f61679dd54378632",
+      "key": "custom.scan_e80ae1914fd5dd0d295d5549",
+      "namespace": "custom",
+      "status": "new",
+      "review": "DEV-only prototype source/content preserved; not a published page"
+    },
+    {
+      "id": "2f1edbfe66af050c2d18ddfd",
+      "sourceText": "智能主体居中重构，无损扩展 16:9、9:16、1:1、4:5 全渠道版面。",
+      "sourceHash": "909e8585782d704991f6550fc27ad04cd2be87b181046e6e06690371417d4e40",
+      "context": "ALL_APPS_LIST:property:description",
+      "dynamic": false,
+      "references": [
+        {
+          "file": "src/pages/app-store/app-store-data.ts",
+          "line": 674,
+          "column": 22
+        }
+      ],
+      "anchor": "f61679dd54378632",
+      "key": "custom.scan_2f1edbfe66af050c2d18ddfd",
+      "namespace": "custom",
+      "status": "new",
+      "review": "DEV-only prototype source/content preserved; not a published page"
+    },
+    {
+      "id": "45f26f4e3ec717ee50bac242",
+      "sourceText": "根据 AB 测试需求生成 10+ 组不同情绪诱惑力的高点击率广告文案。",
+      "sourceHash": "cb5c0830ddbb68aecae120b2666dd16d8262b4dec46e44f1d019be56aee6909e",
+      "context": "ALL_APPS_LIST:property:description",
+      "dynamic": false,
+      "references": [
+        {
+          "file": "src/pages/app-store/app-store-data.ts",
+          "line": 682,
+          "column": 22
+        }
+      ],
+      "anchor": "f61679dd54378632",
+      "key": "custom.scan_45f26f4e3ec717ee50bac242",
+      "namespace": "custom",
+      "status": "new",
+      "review": "DEV-only prototype source/content preserved; not a published page"
+    },
+    {
+      "id": "dee3b1b86e7035100aab5660",
+      "sourceText": "提取真实用户买家秀好评，直接转化为高可信度的真实推荐广告片。",
+      "sourceHash": "1499310df2e2e2cf11ca0ad6356c8f83a94ea8068cf9546bd4e13b5c3829b7d3",
+      "context": "ALL_APPS_LIST:property:description",
+      "dynamic": false,
+      "references": [
+        {
+          "file": "src/pages/app-store/app-store-data.ts",
+          "line": 690,
+          "column": 22
+        }
+      ],
+      "anchor": "f61679dd54378632",
+      "key": "custom.scan_dee3b1b86e7035100aab5660",
+      "namespace": "custom",
+      "status": "new",
+      "review": "DEV-only prototype source/content preserved; not a published page"
+    },
+    {
+      "id": "a9dc3959a1ef553425647838",
+      "sourceText": "批量生成 5 种不同视角的开场悬念片段，测试哪个版本最抓眼球。",
+      "sourceHash": "9205f3d1a4d329ba15d78331fa7403f4ca3e2be6bf2fe7aa044d0526c6cd8374",
+      "context": "ALL_APPS_LIST:property:description",
+      "dynamic": false,
+      "references": [
+        {
+          "file": "src/pages/app-store/app-store-data.ts",
+          "line": 698,
+          "column": 22
+        }
+      ],
+      "anchor": "f61679dd54378632",
+      "key": "custom.scan_a9dc3959a1ef553425647838",
+      "namespace": "custom",
+      "status": "new",
+      "review": "DEV-only prototype source/content preserved; not a published page"
+    },
+    {
+      "id": "c9893ceef1424c20c380193d",
+      "sourceText": "极具审美呼吸感与留白艺术的轻叙事画面，专为提升滑停率设计。",
+      "sourceHash": "1f003087c0d16ff8216b106cbac70e38076d444334e29422c1df0bd2f86dda7c",
+      "context": "ALL_APPS_LIST:property:description",
+      "dynamic": false,
+      "references": [
+        {
+          "file": "src/pages/app-store/app-store-data.ts",
+          "line": 706,
+          "column": 22
+        }
+      ],
+      "anchor": "f61679dd54378632",
+      "key": "custom.scan_c9893ceef1424c20c380193d",
+      "namespace": "custom",
+      "status": "new",
+      "review": "DEV-only prototype source/content preserved; not a published page"
+    },
+    {
+      "id": "f3d6d89e2df39e0296bb097e",
+      "sourceText": "运用短视频爆款视听冲突公式，打造前 3 秒强制抓眼球的开局。",
+      "sourceHash": "5ab5238592daaf36907bccd6ecda250e23857b55ee71edc09e392f2382c2fa52",
+      "context": "ALL_APPS_LIST:property:description",
+      "dynamic": false,
+      "references": [
+        {
+          "file": "src/pages/app-store/app-store-data.ts",
+          "line": 714,
+          "column": 22
+        }
+      ],
+      "anchor": "f61679dd54378632",
+      "key": "custom.scan_f3d6d89e2df39e0296bb097e",
+      "namespace": "custom",
+      "status": "new",
+      "review": "DEV-only prototype source/content preserved; not a published page"
+    },
+    {
+      "id": "5b3c583e80b0450b67228de1",
+      "sourceText": "专业职场商业洞见金句卡片、高信噪比信息图与企业领导力图文。",
+      "sourceHash": "678e8e152657a993618899cafd5e6ec3319f8305a7cd3739e31508bde4b8e09e",
+      "context": "ALL_APPS_LIST:property:description",
+      "dynamic": false,
+      "references": [
+        {
+          "file": "src/pages/app-store/app-store-data.ts",
+          "line": 723,
+          "column": 22
+        }
+      ],
+      "anchor": "f61679dd54378632",
+      "key": "custom.scan_5b3c583e80b0450b67228de1",
+      "namespace": "custom",
+      "status": "new",
+      "review": "DEV-only prototype source/content preserved; not a published page"
+    },
+    {
+      "id": "3d9d6288ae0602a3025ffc3a",
+      "sourceText": "一条核心创意自动分发为推文短句、长视频脚本、小红书图文与播客音频。",
+      "sourceHash": "70b51d45d6684937377753754c3d22c76148d7096ff80fe5f1c4c267478440ce",
+      "context": "ALL_APPS_LIST:property:description",
+      "dynamic": false,
+      "references": [
+        {
+          "file": "src/pages/app-store/app-store-data.ts",
+          "line": 731,
+          "column": 22
+        }
+      ],
+      "anchor": "f61679dd54378632",
+      "key": "custom.scan_3d9d6288ae0602a3025ffc3a",
+      "namespace": "custom",
+      "status": "new",
+      "review": "DEV-only prototype source/content preserved; not a published page"
+    },
+    {
+      "id": "000f21fb22f3c89d445dc179",
+      "sourceText": "捕捉当前社媒正在疯传的爆款梗与特效模版，一键置换为你的人物。",
+      "sourceHash": "f933a595d34377ac8291d3d4e6f0432144b8ebb3d56e246bb5be94c09a312821",
+      "context": "ALL_APPS_LIST:property:description",
+      "dynamic": false,
+      "references": [
+        {
+          "file": "src/pages/app-store/app-store-data.ts",
+          "line": 739,
+          "column": 22
+        }
+      ],
+      "anchor": "f61679dd54378632",
+      "key": "custom.scan_000f21fb22f3c89d445dc179",
+      "namespace": "custom",
+      "status": "new",
+      "review": "DEV-only prototype source/content preserved; not a published page"
+    },
+    {
+      "id": "8faf18c6091e8e1b242a409c",
+      "sourceText": "多模态万能变形与材质置换器，实现超现实材质与幻想生物合成。",
+      "sourceHash": "ad510681b109725474413303bd70f1566692c47be495c84d2b0c3a2dff01cbfb",
+      "context": "ALL_APPS_LIST:property:description",
+      "dynamic": false,
+      "references": [
+        {
+          "file": "src/pages/app-store/app-store-data.ts",
+          "line": 747,
+          "column": 22
+        }
+      ],
+      "anchor": "f61679dd54378632",
+      "key": "custom.scan_8faf18c6091e8e1b242a409c",
+      "namespace": "custom",
+      "status": "new",
+      "review": "DEV-only prototype source/content preserved; not a published page"
+    },
+    {
+      "id": "b0600fe3ffc12e449759505a",
+      "sourceText": "高频日更创作者的军火库：表情包、贴纸、动态打赏礼物一键量产。",
+      "sourceHash": "965a5cafaea7ca40e62f4bc36c8c3e5a3c7f7e635a624cc50b54e276a8ddf63b",
+      "context": "ALL_APPS_LIST:property:description",
+      "dynamic": false,
+      "references": [
+        {
+          "file": "src/pages/app-store/app-store-data.ts",
+          "line": 755,
+          "column": 22
+        }
+      ],
+      "anchor": "f61679dd54378632",
+      "key": "custom.scan_b0600fe3ffc12e449759505a",
+      "namespace": "custom",
+      "status": "new",
+      "review": "DEV-only prototype source/content preserved; not a published page"
+    },
+    {
+      "id": "ca3f00656938787838819c50",
+      "sourceText": "TapNow 早期开源内核组件引擎，支持深度二次开发与本地私有部署。",
+      "sourceHash": "9090cde2f49b0a5784579e93d39752f1856c68db2347f2d5617ab8b285029bb9",
+      "context": "ALL_APPS_LIST:property:description",
+      "dynamic": false,
+      "references": [
+        {
+          "file": "src/pages/app-store/app-store-data.ts",
+          "line": 763,
+          "column": 22
+        }
+      ],
+      "anchor": "f61679dd54378632",
+      "key": "custom.scan_ca3f00656938787838819c50",
+      "namespace": "custom",
+      "status": "new",
+      "review": "DEV-only prototype source/content preserved; not a published page"
+    },
+    {
+      "id": "a9900ea1eb91b7160ea21fd4",
+      "sourceText": "可视化流程图编排工具，连接多个模型节点与 Python 自定义逻辑。",
+      "sourceHash": "7e16547eebca07c0a1d403bee09d60195e4106d078a99156b3fc58e7cfcc4872",
+      "context": "ALL_APPS_LIST:property:description",
+      "dynamic": false,
+      "references": [
+        {
+          "file": "src/pages/app-store/app-store-data.ts",
+          "line": 771,
+          "column": 22
+        }
+      ],
+      "anchor": "f61679dd54378632",
+      "key": "custom.scan_a9900ea1eb91b7160ea21fd4",
+      "namespace": "custom",
+      "status": "new",
+      "review": "DEV-only prototype source/content preserved; not a published page"
+    },
+    {
+      "id": "8811b356c1d6381923050f49",
+      "sourceText": "长篇小说长文本情绪切分、旁白与多角色声音分离演播合成。",
+      "sourceHash": "4d2dc22596250ce84391fe5c3c6306cf969092a20b042493babeffa920445fbe",
+      "context": "ALL_APPS_LIST:property:description",
+      "dynamic": false,
+      "references": [
+        {
+          "file": "src/pages/app-store/app-store-data.ts",
+          "line": 779,
+          "column": 22
+        }
+      ],
+      "anchor": "f61679dd54378632",
+      "key": "custom.scan_8811b356c1d6381923050f49",
+      "namespace": "custom",
+      "status": "new",
+      "review": "DEV-only prototype source/content preserved; not a published page"
+    },
+    {
+      "id": "d7d31e38f447586221ccc147",
+      "sourceText": "模拟两位性格各异的常驻嘉宾对谈，自然接话、反驳与即兴笑点。",
+      "sourceHash": "cdf017dc216feefc46db763e25058d3dd9d990f4925a00fc6c49821b61c6956a",
+      "context": "ALL_APPS_LIST:property:description",
+      "dynamic": false,
+      "references": [
+        {
+          "file": "src/pages/app-store/app-store-data.ts",
+          "line": 787,
+          "column": 22
+        }
+      ],
+      "anchor": "f61679dd54378632",
+      "key": "custom.scan_d7d31e38f447586221ccc147",
+      "namespace": "custom",
+      "status": "new",
+      "review": "DEV-only prototype source/content preserved; not a published page"
+    },
+    {
+      "id": "a9df73fa61c164906bff9b7d",
+      "sourceText": "包含环境底噪、逼真脚步声、关门音效与空间混响沉浸式广播剧制作。",
+      "sourceHash": "de05e67b661310cf3978b4d8b5058b6d99a43b00fd944a1a1315ddd1bd2f2459",
+      "context": "ALL_APPS_LIST:property:description",
+      "dynamic": false,
+      "references": [
+        {
+          "file": "src/pages/app-store/app-store-data.ts",
+          "line": 795,
+          "column": 22
+        }
+      ],
+      "anchor": "f61679dd54378632",
+      "key": "custom.scan_a9df73fa61c164906bff9b7d",
+      "namespace": "custom",
+      "status": "new",
+      "review": "DEV-only prototype source/content preserved; not a published page"
+    },
+    {
+      "id": "f31cff4772f129f497f839ab",
+      "sourceText": "受击、技能释放、升级与阵亡等游戏状态全套定制角色语音台词。",
+      "sourceHash": "f8bc9eee4e99721d49cc361471f4953adc5e9f4b66c4183a3004b1e760dc99ba",
+      "context": "ALL_APPS_LIST:property:description",
+      "dynamic": false,
+      "references": [
+        {
+          "file": "src/pages/app-store/app-store-data.ts",
+          "line": 803,
+          "column": 22
+        }
+      ],
+      "anchor": "f61679dd54378632",
+      "key": "custom.scan_f31cff4772f129f497f839ab",
+      "namespace": "custom",
+      "status": "new",
+      "review": "DEV-only prototype source/content preserved; not a published page"
+    },
+    {
+      "id": "72564da2b3b13ecd0e276db8",
+      "sourceText": "精准对齐口型节奏，中英双语影视级声线保留原生音色翻配出海。",
+      "sourceHash": "7eb3d7b944b654e49d9754924f9bd3ccb7402c7aab7b06393b5deda407f3aa7d",
+      "context": "ALL_APPS_LIST:property:description",
+      "dynamic": false,
+      "references": [
+        {
+          "file": "src/pages/app-store/app-store-data.ts",
+          "line": 811,
+          "column": 22
+        }
+      ],
+      "anchor": "f61679dd54378632",
+      "key": "custom.scan_72564da2b3b13ecd0e276db8",
+      "namespace": "custom",
+      "status": "new",
+      "review": "DEV-only prototype source/content preserved; not a published page"
+    },
+    {
+      "id": "9d2ea2ffe19dd13659371374",
+      "sourceText": "解决 TTS 对生僻字姓名、多音字与复杂长数字读音不准确的特训模型。",
+      "sourceHash": "57763d53cd2c37783d5fb39de39ba1a39e5d4fe5d8f4ff1e436830ef07e371c0",
+      "context": "ALL_APPS_LIST:property:description",
+      "dynamic": false,
+      "references": [
+        {
+          "file": "src/pages/app-store/app-store-data.ts",
+          "line": 819,
+          "column": 22
+        }
+      ],
+      "anchor": "f61679dd54378632",
+      "key": "custom.scan_9d2ea2ffe19dd13659371374",
+      "namespace": "custom",
+      "status": "new",
+      "review": "DEV-only prototype source/content preserved; not a published page"
+    },
+    {
+      "id": "e3ea87a65c0481d033961ef5",
+      "sourceText": "极速秒级克隆目标声音样本，支持跨语种音色迁移与精细语气控制。",
+      "sourceHash": "ddd175d4298a4926592ebd207a9ce46286d390f54629539c9a51fb5c041b07b6",
+      "context": "ALL_APPS_LIST:property:description",
+      "dynamic": false,
+      "references": [
+        {
+          "file": "src/pages/app-store/app-store-data.ts",
+          "line": 827,
+          "column": 22
+        }
+      ],
+      "anchor": "f61679dd54378632",
+      "key": "custom.scan_e3ea87a65c0481d033961ef5",
+      "namespace": "custom",
+      "status": "new",
+      "review": "DEV-only prototype source/content preserved; not a published page"
+    },
+    {
+      "id": "2ad4e9526adbc4782f790a40",
+      "sourceText": "三维空间动态拆解机械构造、物理天体轨道与高精工程部件运转。",
+      "sourceHash": "756bfba3a6353b0bb21cb9c7210a892c2d03a1d1110fe37edb25fe9a31c7d19b",
+      "context": "ALL_APPS_LIST:property:description",
+      "dynamic": false,
+      "references": [
+        {
+          "file": "src/pages/app-store/app-store-data.ts",
+          "line": 836,
+          "column": 22
+        }
+      ],
+      "anchor": "f61679dd54378632",
+      "key": "custom.scan_2ad4e9526adbc4782f790a40",
+      "namespace": "custom",
+      "status": "new",
+      "review": "DEV-only prototype source/content preserved; not a published page"
+    },
+    {
+      "id": "ab46c82d063734b064099047",
+      "sourceText": "单张全景或室内照片，基于高斯散射快速生成可自由漫游的 3D 空间。",
+      "sourceHash": "4213c3a5d7c57bc8051f209ad0e4ec4187b47dac8aaba5cf61aeb246c079501a",
+      "context": "ALL_APPS_LIST:property:description",
+      "dynamic": false,
+      "references": [
+        {
+          "file": "src/pages/app-store/app-store-data.ts",
+          "line": 844,
+          "column": 22
+        }
+      ],
+      "anchor": "f61679dd54378632",
+      "key": "custom.scan_ab46c82d063734b064099047",
+      "namespace": "custom",
+      "status": "new",
+      "review": "DEV-only prototype source/content preserved; not a published page"
+    },
+    {
+      "id": "eadfaa7621d264db98a4dc60",
+      "sourceText": "白纸上画出关卡地形与机关障碍，直接生成可键盘操控的小游戏 Demo。",
+      "sourceHash": "a42569de0523107a1eab5b79dcf11d809d860ca6dd8eaeb7e5c73301dbbb0f54",
+      "context": "ALL_APPS_LIST:property:description",
+      "dynamic": false,
+      "references": [
+        {
+          "file": "src/pages/app-store/app-store-data.ts",
+          "line": 853,
+          "column": 22
+        }
+      ],
+      "anchor": "f61679dd54378632",
+      "key": "custom.scan_eadfaa7621d264db98a4dc60",
+      "namespace": "custom",
+      "status": "new",
+      "review": "DEV-only prototype source/content preserved; not a published page"
+    },
+    {
+      "id": "68c0c30cb864887a5277eff8",
+      "sourceText": "轻量化 Three.js 场景代码生成，支持鼠标视差滚动交互特效。",
+      "sourceHash": "18427bbdebd806db17ac3f7a6f26d1e8a46177bf61f8fb5ce0aa360ae97c4e1a",
+      "context": "ALL_APPS_LIST:property:description",
+      "dynamic": false,
+      "references": [
+        {
+          "file": "src/pages/app-store/app-store-data.ts",
+          "line": 861,
+          "column": 22
+        }
+      ],
+      "anchor": "f61679dd54378632",
+      "key": "custom.scan_68c0c30cb864887a5277eff8",
+      "namespace": "custom",
+      "status": "new",
+      "review": "DEV-only prototype source/content preserved; not a published page"
+    },
+    {
+      "id": "c47697e5941813ad23fe9381",
+      "sourceText": "首尾完美衔接的无缝 Loop 动态排版，极佳的社媒背景与现场背景。",
+      "sourceHash": "0d54ce01715c0de3cb73b8fc91d94f698e61414e78627798d35fdc1aa45cde0f",
+      "context": "ALL_APPS_LIST:property:description",
+      "dynamic": false,
+      "references": [
+        {
+          "file": "src/pages/app-store/app-store-data.ts",
+          "line": 869,
+          "column": 22
+        }
+      ],
+      "anchor": "f61679dd54378632",
+      "key": "custom.scan_c47697e5941813ad23fe9381",
+      "namespace": "custom",
+      "status": "new",
+      "review": "DEV-only prototype source/content preserved; not a published page"
+    },
+    {
+      "id": "8d343b49210affb6a2e2ff52",
+      "sourceText": "基于分形几何、流体场与赛博故障风的超清画质印刷级艺术海报生成器。",
+      "sourceHash": "ae1fea11bcaa004557cf85ba8665de1341a6ac1bc8011c113f974a797cb91632",
+      "context": "ALL_APPS_LIST:property:description",
+      "dynamic": false,
+      "references": [
+        {
+          "file": "src/pages/app-store/app-store-data.ts",
+          "line": 877,
+          "column": 22
+        }
+      ],
+      "anchor": "f61679dd54378632",
+      "key": "custom.scan_8d343b49210affb6a2e2ff52",
+      "namespace": "custom",
+      "status": "new",
+      "review": "DEV-only prototype source/content preserved; not a published page"
+    },
+    {
+      "id": "5bf1a29bd67b859fe6acdcc4",
+      "sourceText": "为下一代互动式叙事打造的实时渲染控制台与多分支情节状态机。",
+      "sourceHash": "972e4a0a8654623e6efcf57859e035cba10a715b0a305d1eb07e58cb34833fe4",
+      "context": "ALL_APPS_LIST:property:description",
+      "dynamic": false,
+      "references": [
+        {
+          "file": "src/pages/app-store/app-store-data.ts",
+          "line": 885,
+          "column": 22
+        }
+      ],
+      "anchor": "f61679dd54378632",
+      "key": "custom.scan_5bf1a29bd67b859fe6acdcc4",
+      "namespace": "custom",
+      "status": "new",
+      "review": "DEV-only prototype source/content preserved; not a published page"
+    },
+    {
+      "id": "61c56f79d32c679d3a33f34f",
+      "sourceText": "视频精细片段截取、调色、压缩优化至微信/Discord 规范表情包动图。",
+      "sourceHash": "c26c2c40aee20a59aaded262b606d30d4acdbd7e1fd01405c6f2a290573d6f50",
+      "context": "ALL_APPS_LIST:property:description",
+      "dynamic": false,
+      "references": [
+        {
+          "file": "src/pages/app-store/app-store-data.ts",
+          "line": 894,
+          "column": 22
+        }
+      ],
+      "anchor": "f61679dd54378632",
+      "key": "custom.scan_61c56f79d32c679d3a33f34f",
+      "namespace": "custom",
+      "status": "new",
+      "review": "DEV-only prototype source/content preserved; not a published page"
+    },
+    {
+      "id": "b56c1a9826c0b03e40d3a0bf",
+      "sourceText": "人物三视图",
+      "sourceHash": "84a0d1e55a07792f1565f8e46bac1e3739203200ee9ef1d4e6c9e4018f1be5d1",
+      "context": "DRAMA_WORKSHOP_DETAIL_SPEC:property:label",
+      "dynamic": false,
+      "references": [
+        {
+          "file": "src/pages/app-store/app-store-data.ts",
+          "line": 911,
+          "column": 20
+        }
+      ],
+      "anchor": "6a1ee0d027687174",
+      "key": "custom.scan_b56c1a9826c0b03e40d3a0bf",
+      "namespace": "custom",
+      "status": "new",
+      "review": "DEV-only prototype source/content preserved; not a published page"
+    },
+    {
+      "id": "b7f2769c55e5f735afee06c9",
+      "sourceText": "全身三视图生成",
+      "sourceHash": "e257fdf3a919756aa0deb40a1d83443a8b218ac69921b301cd241ca0428b13a7",
+      "context": "DRAMA_WORKSHOP_DETAIL_SPEC:property:title",
+      "dynamic": false,
+      "references": [
+        {
+          "file": "src/pages/app-store/app-store-data.ts",
+          "line": 912,
+          "column": 20
+        }
+      ],
+      "anchor": "02795df8405e87d4",
+      "key": "custom.scan_b7f2769c55e5f735afee06c9",
+      "namespace": "custom",
+      "status": "new",
+      "review": "DEV-only prototype source/content preserved; not a published page"
+    },
+    {
+      "id": "aaa635d8520cd11fdd37d8bd",
+      "sourceText": "生成正视、侧视、背视标准人体三视图，造型细节、服装纹理与身材比例在全方位视角下保持高度一致。",
+      "sourceHash": "ada4107219a6d53bc4a053b11f4ca03cbe6f2e5b367982eccc9aad8a058d6e26",
+      "context": "DRAMA_WORKSHOP_DETAIL_SPEC:property:description",
+      "dynamic": false,
+      "references": [
+        {
+          "file": "src/pages/app-store/app-store-data.ts",
+          "line": 913,
+          "column": 26
+        }
+      ],
+      "anchor": "b528b9d5b2476152",
+      "key": "custom.scan_aaa635d8520cd11fdd37d8bd",
+      "namespace": "custom",
+      "status": "new",
+      "review": "DEV-only prototype source/content preserved; not a published page"
+    },
+    {
+      "id": "afe6589ac52013c1f4e0a16e",
+      "sourceText": "面部三视图",
+      "sourceHash": "66421a106734fad6932794a555a1ae6c60a52bfa4c09f269c15defbf7c5fa2cd",
+      "context": "DRAMA_WORKSHOP_DETAIL_SPEC:property:label",
+      "dynamic": false,
+      "references": [
+        {
+          "file": "src/pages/app-store/app-store-data.ts",
+          "line": 919,
+          "column": 20
+        }
+      ],
+      "anchor": "6a1ee0d027687174",
+      "key": "custom.scan_afe6589ac52013c1f4e0a16e",
+      "namespace": "custom",
+      "status": "new",
+      "review": "DEV-only prototype source/content preserved; not a published page"
+    },
+    {
+      "id": "d9e467a990c7d89bf38443d1",
+      "sourceText": "面部特征与微表情多角度",
+      "sourceHash": "78eddca5641fb7c693e80d84a36683bbecc9cdeb9bfc47769b1b2fcccd03db45",
+      "context": "DRAMA_WORKSHOP_DETAIL_SPEC:property:title",
+      "dynamic": false,
+      "references": [
+        {
+          "file": "src/pages/app-store/app-store-data.ts",
+          "line": 920,
+          "column": 20
+        }
+      ],
+      "anchor": "02795df8405e87d4",
+      "key": "custom.scan_d9e467a990c7d89bf38443d1",
+      "namespace": "custom",
+      "status": "new",
+      "review": "DEV-only prototype source/content preserved; not a published page"
+    },
+    {
+      "id": "58d7ce795c3431885e0b2e0d",
+      "sourceText": "正面特写、45度半侧面与正侧面五官细节锁定，确保不同光影与景别下演员面孔绝不漂移。",
+      "sourceHash": "2dfc2c88b491f061f7ac387750b2fb3166e005ed9c20a7af6a6eb77fe971e41f",
+      "context": "DRAMA_WORKSHOP_DETAIL_SPEC:property:description",
+      "dynamic": false,
+      "references": [
+        {
+          "file": "src/pages/app-store/app-store-data.ts",
+          "line": 921,
+          "column": 26
+        }
+      ],
+      "anchor": "b528b9d5b2476152",
+      "key": "custom.scan_58d7ce795c3431885e0b2e0d",
+      "namespace": "custom",
+      "status": "new",
+      "review": "DEV-only prototype source/content preserved; not a published page"
+    },
+    {
+      "id": "0849e46f50af0ea3ac181723",
+      "sourceText": "连续分镜图",
+      "sourceHash": "d7bf7c24e183005ea445cd9c59df9f4ebe8bc79f7f3b1e86605539388fcec067",
+      "context": "DRAMA_WORKSHOP_DETAIL_SPEC:property:label",
+      "dynamic": false,
+      "references": [
+        {
+          "file": "src/pages/app-store/app-store-data.ts",
+          "line": 927,
+          "column": 20
+        }
+      ],
+      "anchor": "6a1ee0d027687174",
+      "key": "custom.scan_0849e46f50af0ea3ac181723",
+      "namespace": "custom",
+      "status": "new",
+      "review": "DEV-only prototype source/content preserved; not a published page"
+    },
+    {
+      "id": "7cfc31174d57ccd8fc72fb22",
+      "sourceText": "横向三格连续动作分镜",
+      "sourceHash": "197b9766097a1a5d7e4d7a1834019109517065bd31cc3104757372622d22cc54",
+      "context": "DRAMA_WORKSHOP_DETAIL_SPEC:property:title",
+      "dynamic": false,
+      "references": [
+        {
+          "file": "src/pages/app-store/app-store-data.ts",
+          "line": 928,
+          "column": 20
+        }
+      ],
+      "anchor": "02795df8405e87d4",
+      "key": "custom.scan_7cfc31174d57ccd8fc72fb22",
+      "namespace": "custom",
+      "status": "new",
+      "review": "DEV-only prototype source/content preserved; not a published page"
+    },
+    {
+      "id": "9320450c4781e90e0c219725",
+      "sourceText": "基于戏剧节拍自动生成连续分镜连贯画面，精准调度景别推拉摇移，保持环境光源与人物动作连贯。",
+      "sourceHash": "30e60da0bbe84150a5bbbc2b24e2ba8ef49ca3c4d57aad5d7cc3617227acd8ec",
+      "context": "DRAMA_WORKSHOP_DETAIL_SPEC:property:description",
+      "dynamic": false,
+      "references": [
+        {
+          "file": "src/pages/app-store/app-store-data.ts",
+          "line": 929,
+          "column": 26
+        }
+      ],
+      "anchor": "b528b9d5b2476152",
+      "key": "custom.scan_9320450c4781e90e0c219725",
+      "namespace": "custom",
+      "status": "new",
+      "review": "DEV-only prototype source/content preserved; not a published page"
+    },
+    {
+      "id": "b4ad9198287385830e252ad8",
+      "sourceText": "3×3 同一主体多机位矩阵",
+      "sourceHash": "117b391ba7b73c4aba20bd2e004a79ed88f87dd737774286602e8194d95bd5a8",
+      "context": "DRAMA_WORKSHOP_DETAIL_SPEC:property:title",
+      "dynamic": false,
+      "references": [
+        {
+          "file": "src/pages/app-store/app-store-data.ts",
+          "line": 936,
+          "column": 20
+        }
+      ],
+      "anchor": "02795df8405e87d4",
+      "key": "custom.scan_b4ad9198287385830e252ad8",
+      "namespace": "custom",
+      "status": "new",
+      "review": "DEV-only prototype source/content preserved; not a published page"
+    },
+    {
+      "id": "9a3a7087d14b33588b1bf883",
+      "sourceText": "一键渲染俯视、仰视、近景、特写、中景等 9 组机位画面，为导演提供丰富的成片剪辑候选镜头。",
+      "sourceHash": "a2a5f38e3400b3d7349d3b96dd8609e5201a9f2dba31b45d0edbff1b7d17fabd",
+      "context": "DRAMA_WORKSHOP_DETAIL_SPEC:property:description",
+      "dynamic": false,
+      "references": [
+        {
+          "file": "src/pages/app-store/app-store-data.ts",
+          "line": 937,
+          "column": 26
+        }
+      ],
+      "anchor": "b528b9d5b2476152",
+      "key": "custom.scan_9a3a7087d14b33588b1bf883",
+      "namespace": "custom",
+      "status": "new",
+      "review": "DEV-only prototype source/content preserved; not a published page"
+    },
+    {
+      "id": "cc9138283a7a2568f0977f93",
+      "sourceText": "扩图与超清",
+      "sourceHash": "bbc4642e9c91c645de614ce40b775c1095a129b6757d05f6d6ceaf91f6e76fb8",
+      "context": "DRAMA_WORKSHOP_DETAIL_SPEC:property:label",
+      "dynamic": false,
+      "references": [
+        {
+          "file": "src/pages/app-store/app-store-data.ts",
+          "line": 943,
+          "column": 20
+        }
+      ],
+      "anchor": "6a1ee0d027687174",
+      "key": "custom.scan_cc9138283a7a2568f0977f93",
+      "namespace": "custom",
+      "status": "new",
+      "review": "DEV-only prototype source/content preserved; not a published page"
+    },
+    {
+      "id": "686c6a8ab60e7b003c8cf8b4",
+      "sourceText": "智能超清与边缘画幅延展",
+      "sourceHash": "1a2e93212cb56e3ad7f87e36d70a1a8be9dbf60973aad9ae55f144cdb48aaa33",
+      "context": "DRAMA_WORKSHOP_DETAIL_SPEC:property:title",
+      "dynamic": false,
+      "references": [
+        {
+          "file": "src/pages/app-store/app-store-data.ts",
+          "line": 944,
+          "column": 20
+        }
+      ],
+      "anchor": "02795df8405e87d4",
+      "key": "custom.scan_686c6a8ab60e7b003c8cf8b4",
+      "namespace": "custom",
+      "status": "new",
+      "review": "DEV-only prototype source/content preserved; not a published page"
+    },
+    {
+      "id": "f5c30edc6a76cdc9700454f9",
+      "sourceText": "针对竖屏 9:16 或宽画幅 2.39:1 进行智能扩图修补，并配合 4K 超清算法还原细腻皮肤纹理与发丝细节。",
+      "sourceHash": "f7f2445de17a3f07ae2ac9a036a3485cbe16ebceb032ed5ce31470b96408542d",
+      "context": "DRAMA_WORKSHOP_DETAIL_SPEC:property:description",
+      "dynamic": false,
+      "references": [
+        {
+          "file": "src/pages/app-store/app-store-data.ts",
+          "line": 945,
+          "column": 26
+        }
+      ],
+      "anchor": "b528b9d5b2476152",
+      "key": "custom.scan_f5c30edc6a76cdc9700454f9",
+      "namespace": "custom",
+      "status": "new",
+      "review": "DEV-only prototype source/content preserved; not a published page"
+    },
+    {
+      "id": "83fbd55283d24b802d74c521",
+      "sourceText": "一键整理人物三视图",
+      "sourceHash": "eb402ac060da234a6243f71e6b1e4d1719a0be7ca22abef23a22563ba3f25a3d",
+      "context": "DRAMA_WORKSHOP_DETAIL_SPEC:property:title",
+      "dynamic": false,
+      "references": [
+        {
+          "file": "src/pages/app-store/app-store-data.ts",
+          "line": 953,
+          "column": 20
+        }
+      ],
+      "anchor": "02795df8405e87d4",
+      "key": "custom.scan_83fbd55283d24b802d74c521",
+      "namespace": "custom",
+      "status": "new",
+      "review": "DEV-only prototype source/content preserved; not a published page"
+    },
+    {
+      "id": "5be35f6c61ca07e6bfeae25a",
+      "sourceText": "把人物小传、角色服装与外观设定整理成可复用的正面/侧面/背面一致性数字演员档案。",
+      "sourceHash": "126a1d5f095edc23a4112dbee9823f317e8002fd4a30323009f3f4e357e84c12",
+      "context": "DRAMA_WORKSHOP_DETAIL_SPEC:property:description",
+      "dynamic": false,
+      "references": [
+        {
+          "file": "src/pages/app-store/app-store-data.ts",
+          "line": 955,
+          "column": 26
+        }
+      ],
+      "anchor": "b528b9d5b2476152",
+      "key": "custom.scan_5be35f6c61ca07e6bfeae25a",
+      "namespace": "custom",
+      "status": "new",
+      "review": "DEV-only prototype source/content preserved; not a published page"
+    },
+    {
+      "id": "8c804ccce8ee18d333e2fbf7",
+      "sourceText": "生成连续动作分镜脚本",
+      "sourceHash": "7691bd7a4ae9c1006e901abaf1854f817fdf0e1df8fa68e95f9ae224423ff4a1",
+      "context": "DRAMA_WORKSHOP_DETAIL_SPEC:property:title",
+      "dynamic": false,
+      "references": [
+        {
+          "file": "src/pages/app-store/app-store-data.ts",
+          "line": 959,
+          "column": 20
+        }
+      ],
+      "anchor": "02795df8405e87d4",
+      "key": "custom.scan_8c804ccce8ee18d333e2fbf7",
+      "namespace": "custom",
+      "status": "new",
+      "review": "DEV-only prototype source/content preserved; not a published page"
+    },
+    {
+      "id": "afd360c781f95de631c02544",
+      "sourceText": "输入剧情台词与场景动作，自动生成影视级镜头景别调度与横向三格连贯画面。",
+      "sourceHash": "840259582e411ee37578a1c936f26e9ad341e039848696b85efcdab20c4a2f0e",
+      "context": "DRAMA_WORKSHOP_DETAIL_SPEC:property:description",
+      "dynamic": false,
+      "references": [
+        {
+          "file": "src/pages/app-store/app-store-data.ts",
+          "line": 961,
+          "column": 26
+        }
+      ],
+      "anchor": "b528b9d5b2476152",
+      "key": "custom.scan_afd360c781f95de631c02544",
+      "namespace": "custom",
+      "status": "new",
+      "review": "DEV-only prototype source/content preserved; not a published page"
+    },
+    {
+      "id": "6d3ea29ee489290462821037",
+      "sourceText": "生成多机位九宫格素材库",
+      "sourceHash": "844232df25f358fe69e2db9918020c35ccdbe2024e3a00095da16b656f58ff77",
+      "context": "DRAMA_WORKSHOP_DETAIL_SPEC:property:title",
+      "dynamic": false,
+      "references": [
+        {
+          "file": "src/pages/app-store/app-store-data.ts",
+          "line": 965,
+          "column": 20
+        }
+      ],
+      "anchor": "02795df8405e87d4",
+      "key": "custom.scan_6d3ea29ee489290462821037",
+      "namespace": "custom",
+      "status": "new",
+      "review": "DEV-only prototype source/content preserved; not a published page"
+    },
+    {
+      "id": "27764e977263b345bf756c51",
+      "sourceText": "针对关键戏剧高潮镜头，一次性生成 9 种不同景别与摄像机俯仰角度，供剪辑随选。",
+      "sourceHash": "b0a9f4ba39e50935d3badd09c22d6026517046eea959272187a01b2bdba7e451",
+      "context": "DRAMA_WORKSHOP_DETAIL_SPEC:property:description",
+      "dynamic": false,
+      "references": [
+        {
+          "file": "src/pages/app-store/app-store-data.ts",
+          "line": 967,
+          "column": 26
+        }
+      ],
+      "anchor": "b528b9d5b2476152",
+      "key": "custom.scan_27764e977263b345bf756c51",
+      "namespace": "custom",
+      "status": "new",
+      "review": "DEV-only prototype source/content preserved; not a published page"
+    },
+    {
+      "id": "b33f0545d7278430e9b705c8",
+      "sourceText": "你需要提供什么",
+      "sourceHash": "c64034abc42b7e78b72cadc1dab0192b67e9b2a2022e4d2cec0ad0ba32524af1",
+      "context": "DRAMA_WORKSHOP_DETAIL_SPEC:property:title",
+      "dynamic": false,
+      "references": [
+        {
+          "file": "src/pages/app-store/app-store-data.ts",
+          "line": 972,
+          "column": 20
+        }
+      ],
+      "anchor": "02795df8405e87d4",
+      "key": "custom.scan_b33f0545d7278430e9b705c8",
+      "namespace": "custom",
+      "status": "new",
+      "review": "DEV-only prototype source/content preserved; not a published page"
+    },
+    {
+      "id": "ee5c9c1b92644f8eacad192c",
+      "sourceText": "它是如何工作的",
+      "sourceHash": "c813a460c5d7b788a256cd0efbab75a53e67633477d7d2819b934352b8548495",
+      "context": "DRAMA_WORKSHOP_DETAIL_SPEC:property:title",
+      "dynamic": false,
+      "references": [
+        {
+          "file": "src/pages/app-store/app-store-data.ts",
+          "line": 980,
+          "column": 20
+        }
+      ],
+      "anchor": "02795df8405e87d4",
+      "key": "custom.scan_ee5c9c1b92644f8eacad192c",
+      "namespace": "custom",
+      "status": "new",
+      "review": "DEV-only prototype source/content preserved; not a published page"
+    },
+    {
+      "id": "8693c728503e50bf0c5bebc1",
+      "sourceText": "你将获得什么",
+      "sourceHash": "ac34b84ffbdb596577d9ed790d8f491333503a2a68fec647bd1af5bdcdd2f62e",
+      "context": "DRAMA_WORKSHOP_DETAIL_SPEC:property:title",
+      "dynamic": false,
+      "references": [
+        {
+          "file": "src/pages/app-store/app-store-data.ts",
+          "line": 988,
+          "column": 20
+        }
+      ],
+      "anchor": "02795df8405e87d4",
+      "key": "custom.scan_8693c728503e50bf0c5bebc1",
+      "namespace": "custom",
+      "status": "new",
+      "review": "DEV-only prototype source/content preserved; not a published page"
+    },
+    {
+      "id": "99298d269c1ca404bdf53a2b",
+      "sourceText": "适用范围与边界",
+      "sourceHash": "bfd685dcc3ed7974acee3424204d86dca7a7769975393074f2afe3d6f782d9b1",
+      "context": "DRAMA_WORKSHOP_DETAIL_SPEC:property:title",
+      "dynamic": false,
+      "references": [
+        {
+          "file": "src/pages/app-store/app-store-data.ts",
+          "line": 996,
+          "column": 20
+        }
+      ],
+      "anchor": "02795df8405e87d4",
+      "key": "custom.scan_99298d269c1ca404bdf53a2b",
+      "namespace": "custom",
+      "status": "new",
+      "review": "DEV-only prototype source/content preserved; not a published page"
+    },
+    {
+      "id": "9c45641b25ff08b0c9618140",
+      "sourceText": "接下来还可以怎么做",
+      "sourceHash": "f5f35c83719a93bf7a00c0a598913769ab82c7f9853372885286677dd3095500",
+      "context": "DRAMA_WORKSHOP_DETAIL_SPEC:property:title",
+      "dynamic": false,
+      "references": [
+        {
+          "file": "src/pages/app-store/app-store-data.ts",
+          "line": 1000,
+          "column": 20
+        }
+      ],
+      "anchor": "02795df8405e87d4",
+      "key": "custom.scan_9c45641b25ff08b0c9618140",
+      "namespace": "custom",
+      "status": "new",
+      "review": "DEV-only prototype source/content preserved; not a published page"
+    },
+    {
+      "id": "46cbfc5e4259cc6b1c0ae532",
+      "sourceText": "人物定妆照",
+      "sourceHash": "89ceb90d64453c319aa3ecd01e0442879db24533310d40742f8cbba858bb75fd",
+      "context": "CASTING_ROOM_DETAIL_SPEC:property:title",
+      "dynamic": false,
+      "references": [
+        {
+          "file": "src/pages/app-store/app-store-data.ts",
+          "line": 1025,
+          "column": 20
+        }
+      ],
+      "anchor": "2d717dabc8b2b2fd",
+      "key": "custom.scan_46cbfc5e4259cc6b1c0ae532",
+      "namespace": "custom",
+      "status": "new",
+      "review": "DEV-only prototype source/content preserved; not a published page"
+    },
+    {
+      "id": "a1bb5167295845f52698efb0",
+      "sourceText": "锁定演员骨骼轮廓与标志性面容特征，确立全片核心主角基底。",
+      "sourceHash": "8d44ee82679980997b9c75e2ff4c38cf9c751d98b1e0f4035128d6867bfbfa4d",
+      "context": "CASTING_ROOM_DETAIL_SPEC:property:description",
+      "dynamic": false,
+      "references": [
+        {
+          "file": "src/pages/app-store/app-store-data.ts",
+          "line": 1026,
+          "column": 26
+        }
+      ],
+      "anchor": "2a213c137eb52d5d",
+      "key": "custom.scan_a1bb5167295845f52698efb0",
+      "namespace": "custom",
+      "status": "new",
+      "review": "DEV-only prototype source/content preserved; not a published page"
+    },
+    {
+      "id": "49ea22c2e2b52bdc96129170",
+      "sourceText": "妆造",
+      "sourceHash": "5fbfce56deb3bb13e5c1c79ec45c217109378d95b2d93be33864330a60003615",
+      "context": "CASTING_ROOM_DETAIL_SPEC:property:label",
+      "dynamic": false,
+      "references": [
+        {
+          "file": "src/pages/app-store/app-store-data.ts",
+          "line": 1032,
+          "column": 20
+        }
+      ],
+      "anchor": "7d58cccfbc513c53",
+      "key": "custom.scan_49ea22c2e2b52bdc96129170",
+      "namespace": "custom",
+      "status": "new",
+      "review": "DEV-only prototype source/content preserved; not a published page"
+    },
+    {
+      "id": "6b066f296330490c7da3b756",
+      "sourceText": "同一人物的妆造板",
+      "sourceHash": "f965b905e2c7113457fa6e340897dc512b6e7f44183318263a3d2bf535e2cc6f",
+      "context": "CASTING_ROOM_DETAIL_SPEC:property:title",
+      "dynamic": false,
+      "references": [
+        {
+          "file": "src/pages/app-store/app-store-data.ts",
+          "line": 1033,
+          "column": 20
+        }
+      ],
+      "anchor": "2d717dabc8b2b2fd",
+      "key": "custom.scan_6b066f296330490c7da3b756",
+      "namespace": "custom",
+      "status": "new",
+      "review": "DEV-only prototype source/content preserved; not a published page"
+    },
+    {
+      "id": "13b6d63f470f81a514c4012c",
+      "sourceText": "更换服饰、发型与朝代风格，主角相貌依然一眼可辨。",
+      "sourceHash": "234adde20caf1bda83f7428d3b6408841f1ee37aad4f00d9fc5fb0a65eb9d1c1",
+      "context": "CASTING_ROOM_DETAIL_SPEC:property:description",
+      "dynamic": false,
+      "references": [
+        {
+          "file": "src/pages/app-store/app-store-data.ts",
+          "line": 1034,
+          "column": 26
+        }
+      ],
+      "anchor": "2a213c137eb52d5d",
+      "key": "custom.scan_13b6d63f470f81a514c4012c",
+      "namespace": "custom",
+      "status": "new",
+      "review": "DEV-only prototype source/content preserved; not a published page"
+    },
+    {
+      "id": "3e930811a53663dfdfd5b870",
+      "sourceText": "角色专属原声音色",
+      "sourceHash": "949f2461e04bb328ecc7f6b6ba0da0da9364f004ad0fa615e727d58e9ed2e3bd",
+      "context": "CASTING_ROOM_DETAIL_SPEC:property:title",
+      "dynamic": false,
+      "references": [
+        {
+          "file": "src/pages/app-store/app-store-data.ts",
+          "line": 1041,
+          "column": 20
+        }
+      ],
+      "anchor": "2d717dabc8b2b2fd",
+      "key": "custom.scan_3e930811a53663dfdfd5b870",
+      "namespace": "custom",
+      "status": "new",
+      "review": "DEV-only prototype source/content preserved; not a published page"
+    },
+    {
+      "id": "a7b09e2dcf8a07661f7ce448",
+      "sourceText": "调优角色的声线、语速与戏剧腔调，支持长对白拟真演播。",
+      "sourceHash": "13abb4025314ddbbf3ce6a68ad43e24ccf96d85b0ed15c969ae2fb19208f216e",
+      "context": "CASTING_ROOM_DETAIL_SPEC:property:description",
+      "dynamic": false,
+      "references": [
+        {
+          "file": "src/pages/app-store/app-store-data.ts",
+          "line": 1042,
+          "column": 26
+        }
+      ],
+      "anchor": "2a213c137eb52d5d",
+      "key": "custom.scan_a7b09e2dcf8a07661f7ce448",
+      "namespace": "custom",
+      "status": "new",
+      "review": "DEV-only prototype source/content preserved; not a published page"
+    },
+    {
+      "id": "10a520ccd862741986d55350",
+      "sourceText": "试镜",
+      "sourceHash": "c5c5b789305c4a7c2a6c4c49095415f441ec8eed911b11cd7ed7e4b2235638e1",
+      "context": "CASTING_ROOM_DETAIL_SPEC:property:label",
+      "dynamic": false,
+      "references": [
+        {
+          "file": "src/pages/app-store/app-store-data.ts",
+          "line": 1048,
+          "column": 20
+        }
+      ],
+      "anchor": "7d58cccfbc513c53",
+      "key": "custom.scan_10a520ccd862741986d55350",
+      "namespace": "custom",
+      "status": "new",
+      "review": "DEV-only prototype source/content preserved; not a published page"
+    },
+    {
+      "id": "561cd00c4de1566244bb2401",
+      "sourceText": "同一人物的试镜视频",
+      "sourceHash": "1a0e774cbb6768dee9a7c06796b84219f3f430911feee00ddb4f97676b8c6126",
+      "context": "CASTING_ROOM_DETAIL_SPEC:property:title",
+      "dynamic": false,
+      "references": [
+        {
+          "file": "src/pages/app-store/app-store-data.ts",
+          "line": 1049,
+          "column": 20
+        }
+      ],
+      "anchor": "2d717dabc8b2b2fd",
+      "key": "custom.scan_561cd00c4de1566244bb2401",
+      "namespace": "custom",
+      "status": "new",
+      "review": "DEV-only prototype source/content preserved; not a published page"
+    },
+    {
+      "id": "4bec108736ae516c4661bd3a",
+      "sourceText": "赋予角色微表情与自然眨眼呼吸，完成最终数字试镜定妆片。",
+      "sourceHash": "1e8b1b3b64faaca748fc17851a1121b39924fc61c934b766ef1df7e07c5b78f7",
+      "context": "CASTING_ROOM_DETAIL_SPEC:property:description",
+      "dynamic": false,
+      "references": [
+        {
+          "file": "src/pages/app-store/app-store-data.ts",
+          "line": 1050,
+          "column": 26
+        }
+      ],
+      "anchor": "2a213c137eb52d5d",
+      "key": "custom.scan_4bec108736ae516c4661bd3a",
+      "namespace": "custom",
+      "status": "new",
+      "review": "DEV-only prototype source/content preserved; not a published page"
+    },
+    {
+      "id": "ad2553e3d41ea06bc93a0e10",
+      "sourceText": "一键整理人物妆造",
+      "sourceHash": "30a3f954974a8c8505d18b66fb864a49e30719ce6e30b2c7491156cf2bebe117",
+      "context": "CASTING_ROOM_DETAIL_SPEC:property:title",
+      "dynamic": false,
+      "references": [
+        {
+          "file": "src/pages/app-store/app-store-data.ts",
+          "line": 1058,
+          "column": 20
+        }
+      ],
+      "anchor": "2d717dabc8b2b2fd",
+      "key": "custom.scan_ad2553e3d41ea06bc93a0e10",
+      "namespace": "custom",
+      "status": "new",
+      "review": "DEV-only prototype source/content preserved; not a published page"
+    },
+    {
+      "id": "38348908fd9717dbd2932a06",
+      "sourceText": "把人物小传、外观和表演方向整理成一套可以持续使用的演员设定。",
+      "sourceHash": "d561f6a7e42f435eb663becbdd850d4ee63c11c74b45678e2cb6c22b214ed802",
+      "context": "CASTING_ROOM_DETAIL_SPEC:property:description",
+      "dynamic": false,
+      "references": [
+        {
+          "file": "src/pages/app-store/app-store-data.ts",
+          "line": 1060,
+          "column": 26
+        }
+      ],
+      "anchor": "2a213c137eb52d5d",
+      "key": "custom.scan_38348908fd9717dbd2932a06",
+      "namespace": "custom",
+      "status": "new",
+      "review": "DEV-only prototype source/content preserved; not a published page"
+    },
+    {
+      "id": "f696203d5700fdfa936079d5",
+      "sourceText": "统一角色造型与表演",
+      "sourceHash": "16b63145f0dea5c5c7445c1c8be6499491eddc179d8148f3a83f482feed7aa93",
+      "context": "CASTING_ROOM_DETAIL_SPEC:property:title",
+      "dynamic": false,
+      "references": [
+        {
+          "file": "src/pages/app-store/app-store-data.ts",
+          "line": 1064,
+          "column": 20
+        }
+      ],
+      "anchor": "2d717dabc8b2b2fd",
+      "key": "custom.scan_f696203d5700fdfa936079d5",
+      "namespace": "custom",
+      "status": "new",
+      "review": "DEV-only prototype source/content preserved; not a published page"
+    },
+    {
+      "id": "55ec3bc6e2789e9c04755be8",
+      "sourceText": "为角色建立可复用的视觉约束，减少不同素材之间的漂移。",
+      "sourceHash": "1d61397c96a7ed247cf0ec12d67073f3d13d8e0c99e39f42b16ab6b1b5ddb0a7",
+      "context": "CASTING_ROOM_DETAIL_SPEC:property:description",
+      "dynamic": false,
+      "references": [
+        {
+          "file": "src/pages/app-store/app-store-data.ts",
+          "line": 1066,
+          "column": 26
+        }
+      ],
+      "anchor": "2a213c137eb52d5d",
+      "key": "custom.scan_55ec3bc6e2789e9c04755be8",
+      "namespace": "custom",
+      "status": "new",
+      "review": "DEV-only prototype source/content preserved; not a published page"
+    },
+    {
+      "id": "3fcf2036a0c96b3cbf946b6c",
+      "sourceText": "你需要提供什么",
+      "sourceHash": "c64034abc42b7e78b72cadc1dab0192b67e9b2a2022e4d2cec0ad0ba32524af1",
+      "context": "CASTING_ROOM_DETAIL_SPEC:property:title",
+      "dynamic": false,
+      "references": [
+        {
+          "file": "src/pages/app-store/app-store-data.ts",
+          "line": 1071,
+          "column": 20
+        }
+      ],
+      "anchor": "2d717dabc8b2b2fd",
+      "key": "custom.scan_3fcf2036a0c96b3cbf946b6c",
+      "namespace": "custom",
+      "status": "new",
+      "review": "DEV-only prototype source/content preserved; not a published page"
+    },
+    {
+      "id": "a1d4c988ca9f20a8c4056c76",
+      "sourceText": "它是如何工作的",
+      "sourceHash": "c813a460c5d7b788a256cd0efbab75a53e67633477d7d2819b934352b8548495",
+      "context": "CASTING_ROOM_DETAIL_SPEC:property:title",
+      "dynamic": false,
+      "references": [
+        {
+          "file": "src/pages/app-store/app-store-data.ts",
+          "line": 1079,
+          "column": 20
+        }
+      ],
+      "anchor": "2d717dabc8b2b2fd",
+      "key": "custom.scan_a1d4c988ca9f20a8c4056c76",
+      "namespace": "custom",
+      "status": "new",
+      "review": "DEV-only prototype source/content preserved; not a published page"
+    },
+    {
+      "id": "3747c97086ec45f0817b57dc",
+      "sourceText": "你将获得什么",
+      "sourceHash": "ac34b84ffbdb596577d9ed790d8f491333503a2a68fec647bd1af5bdcdd2f62e",
+      "context": "CASTING_ROOM_DETAIL_SPEC:property:title",
+      "dynamic": false,
+      "references": [
+        {
+          "file": "src/pages/app-store/app-store-data.ts",
+          "line": 1088,
+          "column": 20
+        }
+      ],
+      "anchor": "2d717dabc8b2b2fd",
+      "key": "custom.scan_3747c97086ec45f0817b57dc",
+      "namespace": "custom",
+      "status": "new",
+      "review": "DEV-only prototype source/content preserved; not a published page"
+    },
+    {
+      "id": "2918e782a5751e076048f3a9",
+      "sourceText": "适用范围与边界",
+      "sourceHash": "bfd685dcc3ed7974acee3424204d86dca7a7769975393074f2afe3d6f782d9b1",
+      "context": "CASTING_ROOM_DETAIL_SPEC:property:title",
+      "dynamic": false,
+      "references": [
+        {
+          "file": "src/pages/app-store/app-store-data.ts",
+          "line": 1092,
+          "column": 20
+        }
+      ],
+      "anchor": "2d717dabc8b2b2fd",
+      "key": "custom.scan_2918e782a5751e076048f3a9",
+      "namespace": "custom",
+      "status": "new",
+      "review": "DEV-only prototype source/content preserved; not a published page"
+    },
+    {
+      "id": "4e7328fbc004c017b43b6920",
+      "sourceText": "接下来还可以怎么做",
+      "sourceHash": "f5f35c83719a93bf7a00c0a598913769ab82c7f9853372885286677dd3095500",
+      "context": "CASTING_ROOM_DETAIL_SPEC:property:title",
+      "dynamic": false,
+      "references": [
+        {
+          "file": "src/pages/app-store/app-store-data.ts",
+          "line": 1096,
+          "column": 20
+        }
+      ],
+      "anchor": "2d717dabc8b2b2fd",
+      "key": "custom.scan_4e7328fbc004c017b43b6920",
+      "namespace": "custom",
+      "status": "new",
+      "review": "DEV-only prototype source/content preserved; not a published page"
+    },
+    {
+      "id": "2546b9910acab53915f1b143",
+      "sourceText": "技能算子",
+      "sourceHash": "e9669c115dbf8c2fce2b57e3039a97d0672edf5b1347d3759a1235004f7e25a4",
+      "context": "currentDetailSpec:property:label:true",
+      "dynamic": false,
+      "references": [
+        {
+          "file": "src/pages/app-store/app-store-page.tsx",
+          "line": 65,
+          "column": 42
+        }
+      ],
+      "anchor": "e77a2a854a0424c8",
+      "key": "custom.scan_2546b9910acab53915f1b143",
+      "namespace": "custom",
+      "status": "new",
+      "review": "DEV-only prototype source/content preserved; not a published page"
+    },
+    {
+      "id": "c360cdd181adf8751eb96644",
+      "sourceText": "核心功能",
+      "sourceHash": "d8eaa54e5c4d05b84d31ec006d2bbe5a2ce93216e9839e063e256b06a6b8bd36",
+      "context": "currentDetailSpec:property:label:false",
+      "dynamic": false,
+      "references": [
+        {
+          "file": "src/pages/app-store/app-store-page.tsx",
+          "line": 65,
+          "column": 51
+        }
+      ],
+      "anchor": "67ca49993b39e80a",
+      "key": "custom.scan_c360cdd181adf8751eb96644",
+      "namespace": "custom",
+      "status": "new",
+      "review": "DEV-only prototype source/content preserved; not a published page"
+    },
+    {
+      "id": "15f71db82c08ba064681f77a",
+      "sourceText": "{value1} · 核心特性",
+      "sourceHash": "409949c18451e45729718ef10aba7a88c8652e560058ff2f89761ec749928cb7",
+      "context": "currentDetailSpec:property:title",
+      "dynamic": true,
+      "references": [
+        {
+          "file": "src/pages/app-store/app-store-page.tsx",
+          "line": 66,
+          "column": 32
+        }
+      ],
+      "anchor": "be03af6763e31448",
+      "key": "custom.scan_15f71db82c08ba064681f77a",
+      "namespace": "custom",
+      "status": "needs_context",
+      "review": "DEV-only prototype source/content preserved; not a published page"
+    },
+    {
+      "id": "d44ee871df6d727076df74e0",
+      "sourceText": "一键启用 {value1}",
+      "sourceHash": "d4c56a9e2e27ec4dfc9eebf64d224edef2610bb1fef1349a6beef6c1deb2af04",
+      "context": "currentDetailSpec:property:title",
+      "dynamic": true,
+      "references": [
+        {
+          "file": "src/pages/app-store/app-store-page.tsx",
+          "line": 75,
+          "column": 32
+        }
+      ],
+      "anchor": "be03af6763e31448",
+      "key": "custom.scan_d44ee871df6d727076df74e0",
+      "namespace": "custom",
+      "status": "needs_context",
+      "review": "DEV-only prototype source/content preserved; not a published page"
+    },
+    {
+      "id": "3e420124ffe600a6fd5a9f5b",
+      "sourceText": "在当前工作区智能体中调取 {value1} 预设能力进行处理。",
+      "sourceHash": "ba9a187abfbc03edaeebbf806793e0debce05b517bfb9fc04739ff9d9bd3fe16",
+      "context": "currentDetailSpec:property:description",
+      "dynamic": true,
+      "references": [
+        {
+          "file": "src/pages/app-store/app-store-page.tsx",
+          "line": 77,
+          "column": 38
+        }
+      ],
+      "anchor": "9b2b6dd8df6f0839",
+      "key": "custom.scan_3e420124ffe600a6fd5a9f5b",
+      "namespace": "custom",
+      "status": "needs_context",
+      "review": "DEV-only prototype source/content preserved; not a published page"
+    },
+    {
+      "id": "23cf7b647caf6351d3baaced",
+      "sourceText": "你需要提供什么",
+      "sourceHash": "c64034abc42b7e78b72cadc1dab0192b67e9b2a2022e4d2cec0ad0ba32524af1",
+      "context": "currentDetailSpec:property:title",
+      "dynamic": false,
+      "references": [
+        {
+          "file": "src/pages/app-store/app-store-page.tsx",
+          "line": 82,
+          "column": 32
+        }
+      ],
+      "anchor": "be03af6763e31448",
+      "key": "custom.scan_23cf7b647caf6351d3baaced",
+      "namespace": "custom",
+      "status": "new",
+      "review": "DEV-only prototype source/content preserved; not a published page"
+    },
+    {
+      "id": "81c24864cab66e240607177c",
+      "sourceText": "它是如何工作的",
+      "sourceHash": "c813a460c5d7b788a256cd0efbab75a53e67633477d7d2819b934352b8548495",
+      "context": "currentDetailSpec:property:title",
+      "dynamic": false,
+      "references": [
+        {
+          "file": "src/pages/app-store/app-store-page.tsx",
+          "line": 86,
+          "column": 32
+        }
+      ],
+      "anchor": "be03af6763e31448",
+      "key": "custom.scan_81c24864cab66e240607177c",
+      "namespace": "custom",
+      "status": "new",
+      "review": "DEV-only prototype source/content preserved; not a published page"
+    },
+    {
+      "id": "7fb1a55c6b0fc8abde077711",
+      "sourceText": "你将获得什么",
+      "sourceHash": "ac34b84ffbdb596577d9ed790d8f491333503a2a68fec647bd1af5bdcdd2f62e",
+      "context": "currentDetailSpec:property:title",
+      "dynamic": false,
+      "references": [
+        {
+          "file": "src/pages/app-store/app-store-page.tsx",
+          "line": 90,
+          "column": 32
+        }
+      ],
+      "anchor": "be03af6763e31448",
+      "key": "custom.scan_7fb1a55c6b0fc8abde077711",
+      "namespace": "custom",
+      "status": "new",
+      "review": "DEV-only prototype source/content preserved; not a published page"
+    },
+    {
+      "id": "93c4a0090a4e12660e9194b0",
+      "sourceText": "适用范围与边界",
+      "sourceHash": "bfd685dcc3ed7974acee3424204d86dca7a7769975393074f2afe3d6f782d9b1",
+      "context": "currentDetailSpec:property:title",
+      "dynamic": false,
+      "references": [
+        {
+          "file": "src/pages/app-store/app-store-page.tsx",
+          "line": 94,
+          "column": 32
+        }
+      ],
+      "anchor": "be03af6763e31448",
+      "key": "custom.scan_93c4a0090a4e12660e9194b0",
+      "namespace": "custom",
+      "status": "new",
+      "review": "DEV-only prototype source/content preserved; not a published page"
+    },
+    {
+      "id": "4ed5c50f52f5ef680c69c2af",
+      "sourceText": "接下来还可以怎么做",
+      "sourceHash": "f5f35c83719a93bf7a00c0a598913769ab82c7f9853372885286677dd3095500",
+      "context": "currentDetailSpec:property:title",
+      "dynamic": false,
+      "references": [
+        {
+          "file": "src/pages/app-store/app-store-page.tsx",
+          "line": 98,
+          "column": 32
+        }
+      ],
+      "anchor": "be03af6763e31448",
+      "key": "custom.scan_4ed5c50f52f5ef680c69c2af",
+      "namespace": "custom",
+      "status": "new",
+      "review": "DEV-only prototype source/content preserved; not a published page"
+    },
+    {
+      "id": "52088e0020171d9718107f87",
+      "sourceText": "我确认有权授权{brandName}及其用户使用此素材（包括商业用途）；版权仍归原权利人所有。",
+      "sourceHash": "6e0144133e5ed4eee1f448e023936c79508c8478bf3fa08277900e21defac894",
+      "context": "AssetsPage:jsx-expression",
+      "dynamic": true,
+      "references": [
+        {
+          "file": "src/pages/assets/index.tsx",
+          "line": 1274,
+          "column": 26
+        }
+      ],
+      "anchor": "2cd8710513d2715e",
+      "key": "custom.scan_52088e0020171d9718107f87",
+      "namespace": "custom",
+      "status": "needs_context",
+      "review": "Dynamic source inventory: actual UI sinks covered by scoped static UI transform; audio source descriptor preserves referenced voice names. No user content or payload rewriting."
+    },
+    {
+      "id": "ad2383e8221cfefb854f50ed",
+      "sourceText": "雨夜霓虹街头的 Lo-Fi 钢琴与轻爵士鼓点，柔和治愈氛围",
+      "sourceHash": "ecb6686497a6457d37d42bc66df879413eef42548e492296e6fea52393c2cfa2",
+      "context": "singlePrompt:property:content",
+      "dynamic": false,
+      "references": [
+        {
+          "file": "src/pages/dev/music-preview-lab.tsx",
+          "line": 78,
+          "column": 22
+        }
+      ],
+      "anchor": "52b014b8da0099b7",
+      "key": "custom.scan_ad2383e8221cfefb854f50ed",
+      "namespace": "custom",
+      "status": "new",
+      "review": "DEV-only prototype source/content preserved; not a published page"
+    },
+    {
+      "id": "359de2ab7fdc77a4863dbe5e",
+      "sourceText": "雨夜霓虹 Lo-Fi",
+      "sourceHash": "1483f3845ab453b08ab6ca0b5ea4e5bfc0dedb3da3658c742c0b618c3faecb04",
+      "context": "singleAssistant:property:title",
+      "dynamic": false,
+      "references": [
+        {
+          "file": "src/pages/dev/music-preview-lab.tsx",
+          "line": 97,
+          "column": 24
+        }
+      ],
+      "anchor": "74332c16fba9e316",
+      "key": "custom.scan_359de2ab7fdc77a4863dbe5e",
+      "namespace": "custom",
+      "status": "new",
+      "review": "DEV-only prototype source/content preserved; not a published page"
+    },
+    {
+      "id": "72e3a21da9c7c016c03fae8c",
+      "sourceText": "历史遗留标题修复 + 双音轨变体：赛博都市电音序曲，强节奏合成器",
+      "sourceHash": "d1713902fbb1f6f037fe8ce781394ba44b481a4266cd1195fb959d93e70be47d",
+      "context": "multiPrompt:property:content",
+      "dynamic": false,
+      "references": [
+        {
+          "file": "src/pages/dev/music-preview-lab.tsx",
+          "line": 108,
+          "column": 22
+        }
+      ],
+      "anchor": "9fd338f9189d5ef8",
+      "key": "custom.scan_72e3a21da9c7c016c03fae8c",
+      "namespace": "custom",
+      "status": "new",
+      "review": "DEV-only prototype source/content preserved; not a published page"
+    },
+    {
+      "id": "33b87d1f511065bd6801e191",
+      "sourceText": "单曲完成态（含真实解码声波与播放交互）",
+      "sourceHash": "59fbc788462f1d090d7597cac098399066203051f60622f0454920432baa01ad",
+      "context": "scenarios:property:label",
+      "dynamic": false,
+      "references": [
+        {
+          "file": "src/pages/dev/music-preview-lab.tsx",
+          "line": 155,
+          "column": 22
+        }
+      ],
+      "anchor": "cd85c6c864096eda",
+      "key": "custom.scan_33b87d1f511065bd6801e191",
+      "namespace": "custom",
+      "status": "new",
+      "review": "DEV-only prototype source/content preserved; not a published page"
+    },
+    {
+      "id": "491bd579174acd06e0dd18e3",
+      "sourceText": "多音轨完成态 + 历史「图片已生成」占位词自动清洗回退",
+      "sourceHash": "441f586f00c89d9c74c7670fd84f486045f29f48710c5f67cc2e0b1e59a0d15b",
+      "context": "scenarios:property:label",
+      "dynamic": false,
+      "references": [
+        {
+          "file": "src/pages/dev/music-preview-lab.tsx",
+          "line": 156,
+          "column": 22
+        }
+      ],
+      "anchor": "cd85c6c864096eda",
+      "key": "custom.scan_491bd579174acd06e0dd18e3",
+      "namespace": "custom",
+      "status": "new",
+      "review": "DEV-only prototype source/content preserved; not a published page"
+    },
+    {
+      "id": "5c5f185e6a03c5c5821e4531",
+      "sourceText": "音乐生成中（Pending → Done 尺寸平滑对齐）",
+      "sourceHash": "77ce6eaa00cd276958203a2df7d7546c5d2cf44240fd9c1fe675279d19694de9",
+      "context": "scenarios:property:label",
+      "dynamic": false,
+      "references": [
+        {
+          "file": "src/pages/dev/music-preview-lab.tsx",
+          "line": 157,
+          "column": 22
+        }
+      ],
+      "anchor": "cd85c6c864096eda",
+      "key": "custom.scan_5c5f185e6a03c5c5821e4531",
+      "namespace": "custom",
+      "status": "new",
+      "review": "DEV-only prototype source/content preserved; not a published page"
+    },
+    {
+      "id": "5be9f6d9ccda7bd93136980b",
+      "sourceText": "嫁给一颗星星",
+      "sourceHash": "8bfb38d5794763a11af12217ec12bc83634cb493ae5c4f3eb8afbf12bcdf6225",
+      "context": "TAPTV_VIDEOS:property:title",
+      "dynamic": false,
+      "references": [
+        {
+          "file": "src/pages/taptv/taptv-data.ts",
+          "line": 8,
+          "column": 16
+        }
+      ],
+      "anchor": "6dd918fd482bc021",
+      "key": "custom.scan_5be9f6d9ccda7bd93136980b",
+      "namespace": "custom",
+      "status": "new",
+      "review": "DEV-only prototype source/content preserved; not a published page"
+    },
+    {
+      "id": "f4d77e9227e96795098bef0a",
+      "sourceText": "No Man’s Dream 无人之梦",
+      "sourceHash": "041e49d77956944862cf335887ff1649ec4ba91f1727a2ab329600fd3685314d",
+      "context": "TAPTV_VIDEOS:property:title",
+      "dynamic": false,
+      "references": [
+        {
+          "file": "src/pages/taptv/taptv-data.ts",
+          "line": 41,
+          "column": 16
+        }
+      ],
+      "anchor": "6dd918fd482bc021",
+      "key": "custom.scan_f4d77e9227e96795098bef0a",
+      "namespace": "custom",
+      "status": "new",
+      "review": "DEV-only prototype source/content preserved; not a published page"
+    },
+    {
+      "id": "998037396231d5fb11d62aa4",
+      "sourceText": "短剧：剑破苍穹·逆天战尊",
+      "sourceHash": "af6fe55ef6e4857eab81ca6e75a092ec6611453cf847e160031a884f7fe197fa",
+      "context": "TAPTV_VIDEOS:property:title",
+      "dynamic": false,
+      "references": [
+        {
+          "file": "src/pages/taptv/taptv-data.ts",
+          "line": 105,
+          "column": 16
+        }
+      ],
+      "anchor": "6dd918fd482bc021",
+      "key": "custom.scan_998037396231d5fb11d62aa4",
+      "namespace": "custom",
+      "status": "new",
+      "review": "DEV-only prototype source/content preserved; not a published page"
+    },
+    {
+      "id": "6d229e5880e758e241ae6f4f",
+      "sourceText": "凤鸣九霄·宫墙锁红颜",
+      "sourceHash": "b7ed8314b1317df90d85ed4eaf5464b018a98eaaa5e147d5f3b2f20abe22092e",
+      "context": "TAPTV_VIDEOS:property:title",
+      "dynamic": false,
+      "references": [
+        {
+          "file": "src/pages/taptv/taptv-data.ts",
+          "line": 137,
+          "column": 16
+        }
+      ],
+      "anchor": "6dd918fd482bc021",
+      "key": "custom.scan_6d229e5880e758e241ae6f4f",
+      "namespace": "custom",
+      "status": "new",
+      "review": "DEV-only prototype source/content preserved; not a published page"
+    },
+    {
+      "id": "bf0110d1195cfba0d078b041",
+      "sourceText": "Pet Hospital 宠物医院",
+      "sourceHash": "5572943e233d7390cd64fc42b73864f7256a2c8eda097edd7ac94cef67b6201f",
+      "context": "TAPTV_VIDEOS:property:title",
+      "dynamic": false,
+      "references": [
+        {
+          "file": "src/pages/taptv/taptv-data.ts",
+          "line": 168,
+          "column": 16
+        }
+      ],
+      "anchor": "6dd918fd482bc021",
+      "key": "custom.scan_bf0110d1195cfba0d078b041",
+      "namespace": "custom",
+      "status": "new",
+      "review": "DEV-only prototype source/content preserved; not a published page"
+    },
+    {
+      "id": "81ca8fdb712ece4004a011f3",
+      "sourceText": "LAIKA 莱卡",
+      "sourceHash": "a9e6d39c91ca9c7fe19df06bc59a1957032a9ddef22c951d4f536d8be6785d42",
+      "context": "TAPTV_VIDEOS:property:title",
+      "dynamic": false,
+      "references": [
+        {
+          "file": "src/pages/taptv/taptv-data.ts",
+          "line": 199,
+          "column": 16
+        }
+      ],
+      "anchor": "6dd918fd482bc021",
+      "key": "custom.scan_81ca8fdb712ece4004a011f3",
+      "namespace": "custom",
+      "status": "new",
+      "review": "DEV-only prototype source/content preserved; not a published page"
+    },
+    {
+      "id": "750e892c39e95b14736e10eb",
+      "sourceText": "最后的问题 (The Last Question)",
+      "sourceHash": "f5f6591fb93dc94a53a1470ac455b734307b6fe6e6cb8e336979b90bb80ca116",
+      "context": "TAPTV_VIDEOS:property:title",
+      "dynamic": false,
+      "references": [
+        {
+          "file": "src/pages/taptv/taptv-data.ts",
+          "line": 229,
+          "column": 16
+        }
+      ],
+      "anchor": "6dd918fd482bc021",
+      "key": "custom.scan_750e892c39e95b14736e10eb",
+      "namespace": "custom",
+      "status": "new",
+      "review": "DEV-only prototype source/content preserved; not a published page"
+    },
+    {
+      "id": "9744403da442f3ddaa5cbfc7",
+      "sourceText": "Solfest 太阳日",
+      "sourceHash": "57bf46236204cf2ed6456f6b0e0f5bf584ba0ab63421016ad4372a9d295b3068",
+      "context": "TAPTV_VIDEOS:property:title",
+      "dynamic": false,
+      "references": [
+        {
+          "file": "src/pages/taptv/taptv-data.ts",
+          "line": 259,
+          "column": 16
+        }
+      ],
+      "anchor": "6dd918fd482bc021",
+      "key": "custom.scan_9744403da442f3ddaa5cbfc7",
+      "namespace": "custom",
+      "status": "new",
+      "review": "DEV-only prototype source/content preserved; not a published page"
+    },
+    {
+      "id": "a1370e39bde4d219f58cfbb7",
+      "sourceText": "TALK BACK -私の人形は口が悪い-",
+      "sourceHash": "75fda42de93a4c2a70628e3e2bbf730f0f53f1e5bcd116374971b35bb74fe6d6",
+      "context": "TAPTV_VIDEOS:property:title",
+      "dynamic": false,
+      "references": [
+        {
+          "file": "src/pages/taptv/taptv-data.ts",
+          "line": 291,
+          "column": 16
+        }
+      ],
+      "anchor": "6dd918fd482bc021",
+      "key": "custom.scan_a1370e39bde4d219f58cfbb7",
+      "namespace": "custom",
+      "status": "new",
+      "review": "DEV-only prototype source/content preserved; not a published page"
+    },
+    {
+      "id": "ec7fdb3f96592a2c92f42371",
+      "sourceText": "摇！就现在！摇！",
+      "sourceHash": "d6bd2b7eba79578d5e0592acaf0dfd7614d055b89722ec1b13683ccca613848c",
+      "context": "TAPTV_VIDEOS:property:title",
+      "dynamic": false,
+      "references": [
+        {
+          "file": "src/pages/taptv/taptv-data.ts",
+          "line": 321,
+          "column": 16
+        }
+      ],
+      "anchor": "6dd918fd482bc021",
+      "key": "custom.scan_ec7fdb3f96592a2c92f42371",
+      "namespace": "custom",
+      "status": "new",
+      "review": "DEV-only prototype source/content preserved; not a published page"
+    },
+    {
+      "id": "40ebaf86dd2f2735d281333e",
+      "sourceText": "MARCO_POLO 马可波罗",
+      "sourceHash": "d13c1210b2388e9d8f4dcd3d0ab78d27d9d9365578f4371590dac90b78e5b802",
+      "context": "TAPTV_VIDEOS:property:title",
+      "dynamic": false,
+      "references": [
+        {
+          "file": "src/pages/taptv/taptv-data.ts",
+          "line": 351,
+          "column": 16
+        }
+      ],
+      "anchor": "6dd918fd482bc021",
+      "key": "custom.scan_40ebaf86dd2f2735d281333e",
+      "namespace": "custom",
+      "status": "new",
+      "review": "DEV-only prototype source/content preserved; not a published page"
+    },
+    {
+      "id": "2b93f2563ffd066077f9ab03",
+      "sourceText": "Re:ROAD 重塑之路",
+      "sourceHash": "c18d89185621dd8a9426623670ae0858fd31792aa6c0fca7999611df9243d705",
+      "context": "TAPTV_VIDEOS:property:title",
+      "dynamic": false,
+      "references": [
+        {
+          "file": "src/pages/taptv/taptv-data.ts",
+          "line": 381,
+          "column": 16
+        }
+      ],
+      "anchor": "6dd918fd482bc021",
+      "key": "custom.scan_2b93f2563ffd066077f9ab03",
+      "namespace": "custom",
+      "status": "new",
+      "review": "DEV-only prototype source/content preserved; not a published page"
+    },
+    {
+      "id": "368dfd1efd516f31a370a494",
+      "sourceText": "迟响（Echo）",
+      "sourceHash": "3ec7dba2329f28a8b4ae404dca7970b5da5f7a94abedab1980cf38c850ef669c",
+      "context": "TAPTV_VIDEOS:property:title",
+      "dynamic": false,
+      "references": [
+        {
+          "file": "src/pages/taptv/taptv-data.ts",
+          "line": 411,
+          "column": 16
+        }
+      ],
+      "anchor": "6dd918fd482bc021",
+      "key": "custom.scan_368dfd1efd516f31a370a494",
+      "namespace": "custom",
+      "status": "new",
+      "review": "DEV-only prototype source/content preserved; not a published page"
+    },
+    {
+      "id": "0695a00763ac3435bff20213",
+      "sourceText": "우리 집에 외계인이 있다 (家中外星人)",
+      "sourceHash": "30be71b8c5ffbe6623d066c971844ce974790283303aaf05021da676085db9ff",
+      "context": "TAPTV_VIDEOS:property:title",
+      "dynamic": false,
+      "references": [
+        {
+          "file": "src/pages/taptv/taptv-data.ts",
+          "line": 531,
+          "column": 16
+        }
+      ],
+      "anchor": "6dd918fd482bc021",
+      "key": "custom.scan_0695a00763ac3435bff20213",
+      "namespace": "custom",
+      "status": "new",
+      "review": "DEV-only prototype source/content preserved; not a published page"
+    },
+    {
+      "id": "fdf32269c253689099850cdd",
+      "sourceText": "短剧：赛博夜行·香港1997",
+      "sourceHash": "b2a8f858ccaa16a0f97675e8e568694854942533ae0c0cf8c559033bb2171b32",
+      "context": "TAPTV_VIDEOS:property:title",
+      "dynamic": false,
+      "references": [
+        {
+          "file": "src/pages/taptv/taptv-data.ts",
+          "line": 561,
+          "column": 16
+        }
+      ],
+      "anchor": "6dd918fd482bc021",
+      "key": "custom.scan_fdf32269c253689099850cdd",
+      "namespace": "custom",
+      "status": "new",
+      "review": "DEV-only prototype source/content preserved; not a published page"
+    },
+    {
+      "id": "273c686ae0ad2883417e6a83",
+      "sourceText": "女娲补天",
+      "sourceHash": "c23cd9d7014eba2fc48cc12d7dd5705f9bd4f81d8e8fa7e37cb2cd6a7dbf4361",
+      "context": "TAPTV_VIDEOS:property:title",
+      "dynamic": false,
+      "references": [
+        {
+          "file": "src/pages/taptv/taptv-data.ts",
+          "line": 593,
+          "column": 16
+        }
+      ],
+      "anchor": "6dd918fd482bc021",
+      "key": "custom.scan_273c686ae0ad2883417e6a83",
+      "namespace": "custom",
+      "status": "new",
+      "review": "DEV-only prototype source/content preserved; not a published page"
+    },
+    {
+      "id": "097da327753c8cf501812d27",
+      "sourceText": "Cristobal Colon (哥伦布发现新大陆)",
+      "sourceHash": "7c174d96f0b8668b04ff9b4b04adaaea418497af711566b7196e959c01d1f292",
+      "context": "TAPTV_VIDEOS:property:title",
+      "dynamic": false,
+      "references": [
+        {
+          "file": "src/pages/taptv/taptv-data.ts",
+          "line": 624,
+          "column": 16
+        }
+      ],
+      "anchor": "6dd918fd482bc021",
+      "key": "custom.scan_097da327753c8cf501812d27",
+      "namespace": "custom",
+      "status": "new",
+      "review": "DEV-only prototype source/content preserved; not a published page"
+    },
+    {
+      "id": "de20a7a4de7dc6cae8922ca1",
+      "sourceText": "蜉蝣朝暮·脊骨亿年",
+      "sourceHash": "e90d56670319c8956a76bfc6db840b0eb94f1af649182bb2f26bc7909c7a18d3",
+      "context": "TAPTV_VIDEOS:property:title",
+      "dynamic": false,
+      "references": [
+        {
+          "file": "src/pages/taptv/taptv-data.ts",
+          "line": 654,
+          "column": 16
+        }
+      ],
+      "anchor": "6dd918fd482bc021",
+      "key": "custom.scan_de20a7a4de7dc6cae8922ca1",
+      "namespace": "custom",
+      "status": "new",
+      "review": "DEV-only prototype source/content preserved; not a published page"
+    },
+    {
+      "id": "2a71fecb02dd0c2204d5006f",
+      "sourceText": "光息体：Lumis",
+      "sourceHash": "103d32588604db22720ba0bbb7de4f52afda6cc54cc4151633b77e6444a20394",
+      "context": "TAPTV_VIDEOS:property:title",
+      "dynamic": false,
+      "references": [
+        {
+          "file": "src/pages/taptv/taptv-data.ts",
+          "line": 684,
+          "column": 16
+        }
+      ],
+      "anchor": "6dd918fd482bc021",
+      "key": "custom.scan_2a71fecb02dd0c2204d5006f",
+      "namespace": "custom",
+      "status": "new",
+      "review": "DEV-only prototype source/content preserved; not a published page"
+    },
+    {
+      "id": "b2bf7f83b6d1eebd1f6ac367",
+      "sourceText": "倒带 REWIND",
+      "sourceHash": "59f0c4ead79b393a38a8eaced6ff5e90583a486371b34d0a9f363bafe7620c0b",
+      "context": "TAPTV_VIDEOS:property:title",
+      "dynamic": false,
+      "references": [
+        {
+          "file": "src/pages/taptv/taptv-data.ts",
+          "line": 714,
+          "column": 16
+        }
+      ],
+      "anchor": "6dd918fd482bc021",
+      "key": "custom.scan_b2bf7f83b6d1eebd1f6ac367",
+      "namespace": "custom",
+      "status": "new",
+      "review": "DEV-only prototype source/content preserved; not a published page"
+    },
+    {
+      "id": "f9ac9a08293170efd385b61b",
+      "sourceText": "椰海幻梦 Dreams of the Sea",
+      "sourceHash": "17a3fc1938ed7f8b8d6e1fcf67745130fb1c9f8ea46bb91226a881feed32c906",
+      "context": "TAPTV_VIDEOS:property:title",
+      "dynamic": false,
+      "references": [
+        {
+          "file": "src/pages/taptv/taptv-data.ts",
+          "line": 744,
+          "column": 16
+        }
+      ],
+      "anchor": "6dd918fd482bc021",
+      "key": "custom.scan_f9ac9a08293170efd385b61b",
+      "namespace": "custom",
+      "status": "new",
+      "review": "DEV-only prototype source/content preserved; not a published page"
+    },
+    {
+      "id": "ca07718ad072244fcb72d161",
+      "sourceText": "从零开始：Sora 基础分镜与运镜拆解",
+      "sourceHash": "2966f088c5f149d761da7fb07e9c593bdf2fa65f5f31f8d3ee527b7bfa6c5a8a",
+      "context": "TAPTV_VIDEOS:property:title",
+      "dynamic": false,
+      "references": [
+        {
+          "file": "src/pages/taptv/taptv-data.ts",
+          "line": 776,
+          "column": 16
+        }
+      ],
+      "anchor": "6dd918fd482bc021",
+      "key": "custom.scan_ca07718ad072244fcb72d161",
+      "namespace": "custom",
+      "status": "new",
+      "review": "DEV-only prototype source/content preserved; not a published page"
+    },
+    {
+      "id": "0c5a145503880b2afc63aaed",
+      "sourceText": "AI 导演速成课：Midjourney 与 Kling 联动画布",
+      "sourceHash": "3c00d4bee42f232d12934130bf08b05e7857771551e043d4ea1e1c5ea36cb8cb",
+      "context": "TAPTV_VIDEOS:property:title",
+      "dynamic": false,
+      "references": [
+        {
+          "file": "src/pages/taptv/taptv-data.ts",
+          "line": 807,
+          "column": 16
+        }
+      ],
+      "anchor": "6dd918fd482bc021",
+      "key": "custom.scan_0c5a145503880b2afc63aaed",
+      "namespace": "custom",
+      "status": "new",
+      "review": "DEV-only prototype source/content preserved; not a published page"
+    },
+    {
+      "id": "7cad216d1ace94c237d62956",
+      "sourceText": "青莲剑歌·谪仙引",
+      "sourceHash": "32cc01135d1422501667949a6eadbccad8bdf1c64ab77dcd5c69960ada6ee38e",
+      "context": "TAPTV_VIDEOS:property:title",
+      "dynamic": false,
+      "references": [
+        {
+          "file": "src/pages/taptv/taptv-data.ts",
+          "line": 838,
+          "column": 16
+        }
+      ],
+      "anchor": "6dd918fd482bc021",
+      "key": "custom.scan_7cad216d1ace94c237d62956",
+      "namespace": "custom",
+      "status": "new",
+      "review": "DEV-only prototype source/content preserved; not a published page"
+    },
+    {
+      "id": "6f169435c9056b1f7d00f896",
+      "sourceText": "大漠孤烟：金戈铁马入梦来",
+      "sourceHash": "324606091992111126cbf8b7d9feec7b994f4caf9fdfa018f78e4c66adeb32f6",
+      "context": "TAPTV_VIDEOS:property:title",
+      "dynamic": false,
+      "references": [
+        {
+          "file": "src/pages/taptv/taptv-data.ts",
+          "line": 871,
+          "column": 16
+        }
+      ],
+      "anchor": "6dd918fd482bc021",
+      "key": "custom.scan_6f169435c9056b1f7d00f896",
+      "namespace": "custom",
+      "status": "new",
+      "review": "DEV-only prototype source/content preserved; not a published page"
+    },
+    {
+      "id": "a3f6f34793fc5f783d164e9f",
+      "sourceText": "LoRA 角色一致性微调完全指南",
+      "sourceHash": "df153dbd2e92d6b2621c1f5de9fcaf2c80b9bdf2348eb5e407ee240ff0d6312c",
+      "context": "TAPTV_VIDEOS:property:title",
+      "dynamic": false,
+      "references": [
+        {
+          "file": "src/pages/taptv/taptv-data.ts",
+          "line": 901,
+          "column": 16
+        }
+      ],
+      "anchor": "6dd918fd482bc021",
+      "key": "custom.scan_a3f6f34793fc5f783d164e9f",
+      "namespace": "custom",
+      "status": "new",
+      "review": "DEV-only prototype source/content preserved; not a published page"
+    },
+    {
+      "id": "0d8ace3ea8dd7add2b362f22",
+      "sourceText": "多模态 Agent 工作流与节点连接实战",
+      "sourceHash": "a7f5cbc5a24a2fca8d4fe150bcb9f8a2656b0da67674276aca5548a7fbdd79cb",
+      "context": "TAPTV_VIDEOS:property:title",
+      "dynamic": false,
+      "references": [
+        {
+          "file": "src/pages/taptv/taptv-data.ts",
+          "line": 934,
+          "column": 16
+        }
+      ],
+      "anchor": "6dd918fd482bc021",
+      "key": "custom.scan_0d8ace3ea8dd7add2b362f22",
+      "namespace": "custom",
+      "status": "new",
+      "review": "DEV-only prototype source/content preserved; not a published page"
+    },
+    {
+      "id": "70a2c795b0ec7ed88bed9631",
+      "sourceText": "未来跑鞋：Gravity Zero 全球发布会先导片",
+      "sourceHash": "2502ce90bd9eb900566d7c7aa664b5d9516fe75877b7121c342c430eb9d66df9",
+      "context": "TAPTV_VIDEOS:property:title",
+      "dynamic": false,
+      "references": [
+        {
+          "file": "src/pages/taptv/taptv-data.ts",
+          "line": 964,
+          "column": 16
+        }
+      ],
+      "anchor": "6dd918fd482bc021",
+      "key": "custom.scan_70a2c795b0ec7ed88bed9631",
+      "namespace": "custom",
+      "status": "new",
+      "review": "DEV-only prototype source/content preserved; not a published page"
+    },
+    {
+      "id": "eb282b4857bc0f0d777fa376",
+      "sourceText": "综合排序 (默认)",
+      "sourceHash": "33278b01fb5499ee9903411f0dcffe702f7e1590e33a311f9f65a0147018db3f",
+      "context": "SORT_OPTIONS:property:label",
+      "dynamic": false,
+      "references": [
+        {
+          "file": "src/pages/taptv/taptv-page.tsx",
+          "line": 17,
+          "column": 32
+        }
+      ],
+      "anchor": "284a6d42e42a1df7",
+      "key": "custom.scan_eb282b4857bc0f0d777fa376",
+      "namespace": "custom",
+      "status": "new",
+      "review": "DEV-only prototype source/content preserved; not a published page"
+    },
+    {
+      "id": "391335dd42d1767014f0acc3",
+      "sourceText": "最多收藏",
+      "sourceHash": "cfb41ceef7b6f6c83e1c81c76c27ebd34069f0224ef8f3041f8344c6ce95a580",
+      "context": "SORT_OPTIONS:property:label",
+      "dynamic": false,
+      "references": [
+        {
+          "file": "src/pages/taptv/taptv-page.tsx",
+          "line": 18,
+          "column": 28
+        }
+      ],
+      "anchor": "284a6d42e42a1df7",
+      "key": "custom.scan_391335dd42d1767014f0acc3",
+      "namespace": "custom",
+      "status": "new",
+      "review": "DEV-only prototype source/content preserved; not a published page"
+    },
+    {
+      "id": "1757885221a90cd9b4493350",
+      "sourceText": "点赞最高",
+      "sourceHash": "fc4f9938050b0a014f1c16eb51606ff5cf682a0b924d8a8b4b323e42f39579f3",
+      "context": "SORT_OPTIONS:property:label",
+      "dynamic": false,
+      "references": [
+        {
+          "file": "src/pages/taptv/taptv-page.tsx",
+          "line": 19,
+          "column": 28
+        }
+      ],
+      "anchor": "284a6d42e42a1df7",
+      "key": "custom.scan_1757885221a90cd9b4493350",
+      "namespace": "custom",
+      "status": "new",
+      "review": "DEV-only prototype source/content preserved; not a published page"
+    },
+    {
+      "id": "a31e5b67eb26351cb7bb5f58",
+      "sourceText": "编辑精选",
+      "sourceHash": "e4a4bc321d63796d5b9c4a0f84799a15279ab12a8405de18aa8d991524cd4d0d",
+      "context": "TapTvPage:property:label",
+      "dynamic": false,
+      "references": [
+        {
+          "file": "src/pages/taptv/taptv-page.tsx",
+          "line": 204,
+          "column": 54
+        }
+      ],
+      "anchor": "907a5ab9dc7bb713",
+      "key": "custom.scan_a31e5b67eb26351cb7bb5f58",
+      "namespace": "custom",
+      "status": "new",
+      "review": "DEV-only prototype source/content preserved; not a published page"
+    },
+    {
+      "id": "87b3048a3b396e5f6438f4cb",
+      "sourceText": "关注",
+      "sourceHash": "eb137dee4c0aafccd798e1c3f323fcdfcb73188ed3ebcd826eabd8f39f2a2013",
+      "context": "TapTvPage:property:label",
+      "dynamic": false,
+      "references": [
+        {
+          "file": "src/pages/taptv/taptv-page.tsx",
+          "line": 205,
+          "column": 56
+        }
+      ],
+      "anchor": "907a5ab9dc7bb713",
+      "key": "custom.scan_87b3048a3b396e5f6438f4cb",
+      "namespace": "custom",
+      "status": "new",
+      "review": "DEV-only prototype source/content preserved; not a published page"
+    },
+    {
+      "id": "4fe164367bcc1adfaee49375",
+      "sourceText": "热门推荐",
+      "sourceHash": "c6ff7b860899a54e4857bb6627de9f37ae7e914d288eb74e2dfc485ee8da0fd6",
+      "context": "TapTvPage:property:label",
+      "dynamic": false,
+      "references": [
+        {
+          "file": "src/pages/taptv/taptv-page.tsx",
+          "line": 206,
+          "column": 55
+        }
+      ],
+      "anchor": "907a5ab9dc7bb713",
+      "key": "custom.scan_4fe164367bcc1adfaee49375",
+      "namespace": "custom",
+      "status": "new",
+      "review": "DEV-only prototype source/content preserved; not a published page"
+    },
+    {
+      "id": "4669397357e48f69a1747c53",
+      "sourceText": "确立核心视效概念、分镜基调、正向与负向提示词词库构建以及电影级艺术风格锚定。",
+      "sourceHash": "6aaea79cd84d77197cd994755d765534e4ae47a25409626ae94808ba01b23cc7",
+      "context": "pipelineNodes:property:description",
+      "dynamic": false,
+      "references": [
+        {
+          "file": "src/pages/taptv/taptv-process-modal.tsx",
+          "line": 36,
+          "column": 26
+        }
+      ],
+      "anchor": "fe4b8f731ed2fc0c",
+      "key": "custom.scan_4669397357e48f69a1747c53",
+      "namespace": "custom",
+      "status": "new",
+      "review": "DEV-only prototype source/content preserved; not a published page"
+    },
+    {
+      "id": "7ff707e33cd052dde2adc6b1",
+      "sourceText": "画幅比例 (Aspect Ratio)",
+      "sourceHash": "5b8299b6d90715c7c067e6780dfe7a5e31dcd46c81a66184082c045bea3f77ef",
+      "context": "pipelineNodes:property:label",
+      "dynamic": false,
+      "references": [
+        {
+          "file": "src/pages/taptv/taptv-process-modal.tsx",
+          "line": 40,
+          "column": 26
+        }
+      ],
+      "anchor": "8b58077ac154002a",
+      "key": "custom.scan_7ff707e33cd052dde2adc6b1",
+      "namespace": "custom",
+      "status": "new",
+      "review": "DEV-only prototype source/content preserved; not a published page"
+    },
+    {
+      "id": "4ad7bde59a8375eb8ab5c400",
+      "sourceText": "语言模型",
+      "sourceHash": "dfb62ce6a43b090eccb5cae50991119cbe069f460ca19a8614fef2513d1964fa",
+      "context": "pipelineNodes:property:label",
+      "dynamic": false,
+      "references": [
+        {
+          "file": "src/pages/taptv/taptv-process-modal.tsx",
+          "line": 41,
+          "column": 26
+        }
+      ],
+      "anchor": "8b58077ac154002a",
+      "key": "custom.scan_4ad7bde59a8375eb8ab5c400",
+      "namespace": "custom",
+      "status": "new",
+      "review": "DEV-only prototype source/content preserved; not a published page"
+    },
+    {
+      "id": "ac8b784f96991a6a052621ff",
+      "sourceText": "通过推理智能体将大纲拆解为逐镜头分镜脚本，规划景别、运镜轨迹、光影变换与情感曲线。",
+      "sourceHash": "f7f75f52b8e6fd79e3f23dbffb1dcfebdfa846b1f868a7a72538c57c67d8ede5",
+      "context": "pipelineNodes:property:description",
+      "dynamic": false,
+      "references": [
+        {
+          "file": "src/pages/taptv/taptv-process-modal.tsx",
+          "line": 52,
+          "column": 26
+        }
+      ],
+      "anchor": "fe4b8f731ed2fc0c",
+      "key": "custom.scan_ac8b784f96991a6a052621ff",
+      "namespace": "custom",
+      "status": "new",
+      "review": "DEV-only prototype source/content preserved; not a published page"
+    },
+    {
+      "id": "56190f0cf4555c0f406be273",
+      "sourceText": "镜头数量 (Shots)",
+      "sourceHash": "468e4d24c6781794faafdc13ae8912097e25448c704e989cee85c7993fa51827",
+      "context": "pipelineNodes:property:label",
+      "dynamic": false,
+      "references": [
+        {
+          "file": "src/pages/taptv/taptv-process-modal.tsx",
+          "line": 55,
+          "column": 26
+        }
+      ],
+      "anchor": "8b58077ac154002a",
+      "key": "custom.scan_56190f0cf4555c0f406be273",
+      "namespace": "custom",
+      "status": "new",
+      "review": "DEV-only prototype source/content preserved; not a published page"
+    },
+    {
+      "id": "24580d2f48392316611b692b",
+      "sourceText": "运镜语法",
+      "sourceHash": "7fb8dcb0d8f1b3941b0bf3296d81ffd8ea3fe143f7951c33f79323bdb2428aaa",
+      "context": "pipelineNodes:property:label",
+      "dynamic": false,
+      "references": [
+        {
+          "file": "src/pages/taptv/taptv-process-modal.tsx",
+          "line": 56,
+          "column": 26
+        }
+      ],
+      "anchor": "8b58077ac154002a",
+      "key": "custom.scan_24580d2f48392316611b692b",
+      "namespace": "custom",
+      "status": "new",
+      "review": "DEV-only prototype source/content preserved; not a published page"
+    },
+    {
+      "id": "f2bc4b67232e7a9b638feaf7",
+      "sourceText": "连贯性策略",
+      "sourceHash": "1b08406a3c2560ce7a0b5b5ff4284845600f07b933d120d8dada81856ce07995",
+      "context": "pipelineNodes:property:label",
+      "dynamic": false,
+      "references": [
+        {
+          "file": "src/pages/taptv/taptv-process-modal.tsx",
+          "line": 57,
+          "column": 26
+        }
+      ],
+      "anchor": "8b58077ac154002a",
+      "key": "custom.scan_f2bc4b67232e7a9b638feaf7",
+      "namespace": "custom",
+      "status": "new",
+      "review": "DEV-only prototype source/content preserved; not a published page"
+    },
+    {
+      "id": "ece053eab79628a27383a653",
+      "sourceText": "生成温标 (Temp)",
+      "sourceHash": "e916b50c286ec1f18dd0854200058aed5370bc5533540f201d0856519a6f9f6b",
+      "context": "pipelineNodes:property:label",
+      "dynamic": false,
+      "references": [
+        {
+          "file": "src/pages/taptv/taptv-process-modal.tsx",
+          "line": 58,
+          "column": 26
+        }
+      ],
+      "anchor": "8b58077ac154002a",
+      "key": "custom.scan_ece053eab79628a27383a653",
+      "namespace": "custom",
+      "status": "new",
+      "review": "DEV-only prototype source/content preserved; not a published page"
+    },
+    {
+      "id": "aac62e2b523bb9c89313584e",
+      "sourceText": "输出 4K 高保真概念底图与角色首尾关键帧，锁定角色面部特征与光影质感。",
+      "sourceHash": "df0fa16fee7d5336c00036d2c7b113acd436bb274aa660cdb4aa0a5d86e7d67a",
+      "context": "pipelineNodes:property:description",
+      "dynamic": false,
+      "references": [
+        {
+          "file": "src/pages/taptv/taptv-process-modal.tsx",
+          "line": 68,
+          "column": 26
+        }
+      ],
+      "anchor": "fe4b8f731ed2fc0c",
+      "key": "custom.scan_aac62e2b523bb9c89313584e",
+      "namespace": "custom",
+      "status": "new",
+      "review": "DEV-only prototype source/content preserved; not a published page"
+    },
+    {
+      "id": "bd2ff847350fca419c3bbe59",
+      "sourceText": "采样算法 (Sampler)",
+      "sourceHash": "a53a367433840b1ea7d1e8ec4328647460e0e0e5296cf5b913dd6cc7b2b3cbcc",
+      "context": "pipelineNodes:property:label",
+      "dynamic": false,
+      "references": [
+        {
+          "file": "src/pages/taptv/taptv-process-modal.tsx",
+          "line": 73,
+          "column": 26
+        }
+      ],
+      "anchor": "8b58077ac154002a",
+      "key": "custom.scan_bd2ff847350fca419c3bbe59",
+      "namespace": "custom",
+      "status": "new",
+      "review": "DEV-only prototype source/content preserved; not a published page"
+    },
+    {
+      "id": "6f7af6e69e7bd322b8fb6df4",
+      "sourceText": "以高清图像为首帧锚点，通过运动矢量插值与物理引擎生成逼真流体、光斑与连贯动态。",
+      "sourceHash": "355879498fcf033bdf939fa02decac4e360c7ee6118b17918c761e5e947e3246",
+      "context": "pipelineNodes:property:description",
+      "dynamic": false,
+      "references": [
+        {
+          "file": "src/pages/taptv/taptv-process-modal.tsx",
+          "line": 84,
+          "column": 26
+        }
+      ],
+      "anchor": "fe4b8f731ed2fc0c",
+      "key": "custom.scan_6f7af6e69e7bd322b8fb6df4",
+      "namespace": "custom",
+      "status": "new",
+      "review": "DEV-only prototype source/content preserved; not a published page"
+    },
+    {
+      "id": "976afdf4c9e737d773627b2d",
+      "sourceText": "动态引擎",
+      "sourceHash": "099254c2f03a2a05e33051155976b44c7f6706c1ff211a4a69cb4b67f0e00fd0",
+      "context": "pipelineNodes:property:label",
+      "dynamic": false,
+      "references": [
+        {
+          "file": "src/pages/taptv/taptv-process-modal.tsx",
+          "line": 87,
+          "column": 26
+        }
+      ],
+      "anchor": "8b58077ac154002a",
+      "key": "custom.scan_976afdf4c9e737d773627b2d",
+      "namespace": "custom",
+      "status": "new",
+      "review": "DEV-only prototype source/content preserved; not a published page"
+    },
+    {
+      "id": "762abe5d494e4e1b484e0048",
+      "sourceText": "运动幅度 (Motion)",
+      "sourceHash": "8a60d5605b64d72923be3c94a248b232a9ba935280fae6096429b0b10e39ee29",
+      "context": "pipelineNodes:property:label",
+      "dynamic": false,
+      "references": [
+        {
+          "file": "src/pages/taptv/taptv-process-modal.tsx",
+          "line": 88,
+          "column": 26
+        }
+      ],
+      "anchor": "8b58077ac154002a",
+      "key": "custom.scan_762abe5d494e4e1b484e0048",
+      "namespace": "custom",
+      "status": "new",
+      "review": "DEV-only prototype source/content preserved; not a published page"
+    },
+    {
+      "id": "d7cf90153d713eb57e0375d7",
+      "sourceText": "帧率 (Frame Rate)",
+      "sourceHash": "5c9a636651453ecf2328bf9412c4fedf96cc44e1d944edbeecdf58f20ea75033",
+      "context": "pipelineNodes:property:label",
+      "dynamic": false,
+      "references": [
+        {
+          "file": "src/pages/taptv/taptv-process-modal.tsx",
+          "line": 89,
+          "column": 26
+        }
+      ],
+      "anchor": "8b58077ac154002a",
+      "key": "custom.scan_d7cf90153d713eb57e0375d7",
+      "namespace": "custom",
+      "status": "new",
+      "review": "DEV-only prototype source/content preserved; not a published page"
+    },
+    {
+      "id": "54a2f684bbff5c2800cb3b39",
+      "sourceText": "视频时长 (Duration)",
+      "sourceHash": "8d1975b4d6d120932a3397588ab4e94af51a4a66a7c60e49b91b21ec9a8e2e26",
+      "context": "pipelineNodes:property:label",
+      "dynamic": false,
+      "references": [
+        {
+          "file": "src/pages/taptv/taptv-process-modal.tsx",
+          "line": 90,
+          "column": 26
+        }
+      ],
+      "anchor": "8b58077ac154002a",
+      "key": "custom.scan_54a2f684bbff5c2800cb3b39",
+      "namespace": "custom",
+      "status": "new",
+      "review": "DEV-only prototype source/content preserved; not a published page"
+    },
+    {
+      "id": "bff15632876e4fd7b671cb8c",
+      "sourceText": "完成 4K 细节重构升格、AI 声学环境拟音与电影级胶片调色 LUT 渲染。",
+      "sourceHash": "0ef4055681dc9ccb15c10da8f0ec2bdd1eadb63cbf87af36534ba428ee5ac9ba",
+      "context": "pipelineNodes:property:description",
+      "dynamic": false,
+      "references": [
+        {
+          "file": "src/pages/taptv/taptv-process-modal.tsx",
+          "line": 100,
+          "column": 26
+        }
+      ],
+      "anchor": "fe4b8f731ed2fc0c",
+      "key": "custom.scan_bff15632876e4fd7b671cb8c",
+      "namespace": "custom",
+      "status": "new",
+      "review": "DEV-only prototype source/content preserved; not a published page"
+    },
+    {
+      "id": "7db92353f1b7e56f544c990c",
+      "sourceText": "色彩空间",
+      "sourceHash": "3c663ac9fe3f1e17a689be235c121a2695d8a8271872b4db9f08f81de7c2d636",
+      "context": "pipelineNodes:property:label",
+      "dynamic": false,
+      "references": [
+        {
+          "file": "src/pages/taptv/taptv-process-modal.tsx",
+          "line": 104,
+          "column": 26
+        }
+      ],
+      "anchor": "8b58077ac154002a",
+      "key": "custom.scan_7db92353f1b7e56f544c990c",
+      "namespace": "custom",
+      "status": "new",
+      "review": "DEV-only prototype source/content preserved; not a published page"
+    },
+    {
+      "id": "02e7e9f7557edcae34a3fa6b",
+      "sourceText": "音频通道",
+      "sourceHash": "5910f35ad7cf36d5f6e11a0ef1f14ab7fa1fe4962fa13d54e3d44e4d1ccc6bcd",
+      "context": "pipelineNodes:property:label",
+      "dynamic": false,
+      "references": [
+        {
+          "file": "src/pages/taptv/taptv-process-modal.tsx",
+          "line": 105,
+          "column": 26
+        }
+      ],
+      "anchor": "8b58077ac154002a",
+      "key": "custom.scan_02e7e9f7557edcae34a3fa6b",
+      "namespace": "custom",
+      "status": "new",
+      "review": "DEV-only prototype source/content preserved; not a published page"
+    },
+    {
+      "id": "3db40d4fafe2772a7bb0df7c",
+      "sourceText": "渲染管线状态",
+      "sourceHash": "64c800c115f2e2a05526c1bbd46cfc1c493417f6e9bd75474e99f7bbb0b5d38e",
+      "context": "pipelineNodes:property:label",
+      "dynamic": false,
+      "references": [
+        {
+          "file": "src/pages/taptv/taptv-process-modal.tsx",
+          "line": 106,
+          "column": 26
+        }
+      ],
+      "anchor": "8b58077ac154002a",
+      "key": "custom.scan_3db40d4fafe2772a7bb0df7c",
+      "namespace": "custom",
+      "status": "new",
+      "review": "DEV-only prototype source/content preserved; not a published page"
+    },
+    {
+      "id": "4b793935578901fbc501a598",
+      "sourceText": "完整镜头脚本结构化数据、正负向提示词词典与权重标注",
+      "sourceHash": "cec9b8a5c85bf97c544acaab8063cc07df19d67ffc5c8d6d48c9a993025cf5d1",
+      "context": "assetPackages:property:description",
+      "dynamic": false,
+      "references": [
+        {
+          "file": "src/pages/taptv/taptv-process-modal.tsx",
+          "line": 120,
+          "column": 26
+        }
+      ],
+      "anchor": "c62be8f1f64708a4",
+      "key": "custom.scan_4b793935578901fbc501a598",
+      "namespace": "custom",
+      "status": "new",
+      "review": "DEV-only prototype source/content preserved; not a published page"
+    },
+    {
+      "id": "a3738f8b1e9f176cf918ea11",
+      "sourceText": "主体角色面部特征、服饰细节与镜头多角度一致性微调权重",
+      "sourceHash": "efb20e9e226063d74881543056e64c340db4b976bcec5bce1a732fed37168600",
+      "context": "assetPackages:property:description",
+      "dynamic": false,
+      "references": [
+        {
+          "file": "src/pages/taptv/taptv-process-modal.tsx",
+          "line": 128,
+          "column": 26
+        }
+      ],
+      "anchor": "c62be8f1f64708a4",
+      "key": "custom.scan_a3738f8b1e9f176cf918ea11",
+      "namespace": "custom",
+      "status": "new",
+      "review": "DEV-only prototype source/content preserved; not a published page"
+    },
+    {
+      "id": "1e858b411221ded10f991d6d",
+      "sourceText": "大师级电影感冷暖对比色调与胶片颗粒色彩映射查找表",
+      "sourceHash": "436029d7d92c54ecd3220b9d1115b9b8fec9af62ed6dbb525211b24b18ad3b96",
+      "context": "assetPackages:property:description",
+      "dynamic": false,
+      "references": [
+        {
+          "file": "src/pages/taptv/taptv-process-modal.tsx",
+          "line": 136,
+          "column": 26
+        }
+      ],
+      "anchor": "c62be8f1f64708a4",
+      "key": "custom.scan_1e858b411221ded10f991d6d",
+      "namespace": "custom",
+      "status": "new",
+      "review": "DEV-only prototype source/content preserved; not a published page"
+    },
+    {
+      "id": "7bfc22e5877a81feb0676572",
+      "sourceText": "与镜头对齐的环境底噪、拟音特效与电影级配乐全轨分轨音频",
+      "sourceHash": "38fc3a67e7f74020268180d3a7ea7c44b131714365628d36e5ab50363bff99e2",
+      "context": "assetPackages:property:description",
+      "dynamic": false,
+      "references": [
+        {
+          "file": "src/pages/taptv/taptv-process-modal.tsx",
+          "line": 144,
+          "column": 26
+        }
+      ],
+      "anchor": "c62be8f1f64708a4",
+      "key": "custom.scan_7bfc22e5877a81feb0676572",
+      "namespace": "custom",
+      "status": "new",
+      "review": "DEV-only prototype source/content preserved; not a published page"
+    },
+    {
+      "id": "6e5d098b8b8ca03fa956c42a",
+      "sourceText": "已开始下载工程资产包：{assetName}",
+      "sourceHash": "66f7d3e46e9e7383bfd86b9f15067144632af2d16401431312240eec5d172889",
+      "context": "handleDownloadAsset:call:message.success",
+      "dynamic": true,
+      "references": [
+        {
+          "file": "src/pages/taptv/taptv-process-modal.tsx",
+          "line": 158,
+          "column": 25
+        }
+      ],
+      "anchor": "5eedb44138445afd",
+      "key": "custom.scan_6e5d098b8b8ca03fa956c42a",
+      "namespace": "custom",
+      "status": "needs_context",
+      "review": "DEV-only prototype source/content preserved; not a published page"
+    },
+    {
+      "id": "9dfef3faea88e2840b3b957c",
+      "sourceText": "源视频最长秒数（≤{maxProcessingSeconds}）",
+      "sourceHash": "88441d5a5bd6f74c431d9c4b24a1677586aa95925e0f8ff4b0ca177434d823fa",
+      "context": "processingFields:attr:label",
+      "dynamic": true,
+      "references": [
+        {
+          "file": "src/components/model-capability-editor.tsx",
+          "line": 120,
+          "column": 24
+        }
+      ],
+      "anchor": "f5ebc955acd14862",
+      "key": "custom.scan_9dfef3faea88e2840b3b957c",
+      "namespace": "custom",
+      "status": "needs_context",
+      "review": "Dynamic source inventory: actual UI sinks covered by scoped static UI transform; audio source descriptor preserves referenced voice names. No user content or payload rewriting."
+    },
+    {
+      "id": "ed3782d5b4f1ae9180984709",
+      "sourceText": "{label}不能超过 {max} 个字符，且不能包含控制字符",
+      "sourceHash": "73c49349f37be4bb68e5d00eaa49b09cc0b54b0e93bd13a215b83c1b05b95c1c",
+      "context": "save:call:message.error",
+      "dynamic": true,
+      "references": [
+        {
+          "file": "src/pages/admin/settings/appearance-settings-page.tsx",
+          "line": 460,
+          "column": 31
+        }
+      ],
+      "anchor": "61386b9d559f8630",
+      "key": "custom.scan_ed3782d5b4f1ae9180984709",
+      "namespace": "custom",
+      "status": "needs_context",
+      "review": "Dynamic source inventory: actual UI sinks covered by scoped static UI transform; audio source descriptor preserves referenced voice names. No user content or payload rewriting."
+    }
+  ]
+}

@@ -33,10 +33,14 @@ type CreditLedgerEntry struct {
 }
 
 type BillingOrder struct {
-	TokenPriceBands     []TokenPriceBand `json:"tokenPriceBands,omitempty" gorm:"serializer:json;type:text;not null;default:'[]'"`
-	BillingCostSnapshot `json:"-" gorm:"embedded"`
-	ID                  string `json:"id" gorm:"primaryKey;size:36"`
-	UserID              string `json:"userId" gorm:"size:36;index;uniqueIndex:idx_billing_user_idempotency,priority:1"`
+	TokenPriceBands      []TokenPriceBand   `json:"tokenPriceBands,omitempty" gorm:"serializer:json;type:text;not null;default:'[]'"`
+	ImagePricing         *ImagePricing      `json:"imagePricing,omitempty" gorm:"serializer:json;type:text"`
+	ImageUsage           *ImageBillingUsage `json:"imageUsage,omitempty" gorm:"serializer:json;type:text"`
+	ImageInputImages     int64              `json:"imageInputImages" gorm:"not null;default:0"`
+	ImageMaxOutputImages int64              `json:"imageMaxOutputImages" gorm:"not null;default:0"`
+	BillingCostSnapshot  `json:"-" gorm:"embedded"`
+	ID                   string `json:"id" gorm:"primaryKey;size:36"`
+	UserID               string `json:"userId" gorm:"size:36;index;uniqueIndex:idx_billing_user_idempotency,priority:1"`
 	// 仅管理端列表填充，不入库。
 	UserDisplayName string `json:"userDisplayName,omitempty" gorm:"-"`
 	UserAccount     string `json:"userAccount,omitempty" gorm:"-"`

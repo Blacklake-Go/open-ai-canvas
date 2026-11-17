@@ -10,6 +10,7 @@ import { getDramaChapter, type DramaDialogueCheck, type DramaEpisodeDetail, type
 
 import { formatCount, SOURCE_FORMAT_LABEL, sourceFormatOf } from "../drama-shared";
 import { SourceEditModal } from "./episode-source";
+import { ChapterRenameButton } from "./chapter-rename-button";
 import { JobDetailModal } from "./job-detail";
 import { ShotEditor } from "./segment-dialog";
 import type { EpisodeEmpty } from "./storyboard";
@@ -326,7 +327,8 @@ function DialogueCheckNotice({ check, busy, onRescript }: { check: DramaDialogue
 function SourcePane({ projectId, chapters, quote, onEdit }: { projectId: string; chapters: DramaEpisodeDetail["chapters"]; quote: string; onEdit: (chapterId: string) => void }) {
     _useCreationLocale();
     const [chapterId, setChapterId] = useState(chapters[0]?.id || "");
-    const activeId = chapters.some((chapter) => chapter.id === chapterId) ? chapterId : chapters[0]?.id || "";
+    const activeChapter = chapters.find((chapter) => chapter.id === chapterId) || chapters[0];
+    const activeId = activeChapter?.id || "";
     const query = useQuery({ queryKey: ["drama", projectId, "chapter", activeId], queryFn: ({ signal }) => getDramaChapter(projectId, activeId, signal), enabled: Boolean(activeId), staleTime: 300_000 });
     const text = query.data?.chapter.sourceText || "";
     const hit = text && quote ? locateQuote(text, quote) : -1;
@@ -355,10 +357,13 @@ function SourcePane({ projectId, chapters, quote, onEdit }: { projectId: string;
                         <BookOpen className="size-3.5" />
                         {_creationText("creation.e1cb0e32ebb65425")}
                     </span>
-                    {activeId ? (
-                        <Button size="small" type="text" icon={<Pencil className="size-3.5" />} onClick={() => onEdit(activeId)}>
-                            {_creationText("creation.edd6fd715398dd82")}
-                        </Button>
+                    {activeChapter ? (
+                        <div className="flex items-center gap-1">
+                            <ChapterRenameButton key={activeChapter.id} projectId={projectId} chapter={activeChapter} />
+                            <Button size="small" type="text" icon={<Pencil className="size-3.5" />} onClick={() => onEdit(activeId)}>
+                                {_creationText("creation.edd6fd715398dd82")}
+                            </Button>
+                        </div>
                     ) : null}
                 </div>
                 <div className="drama-source-tabs thin-scrollbar" role="tablist" aria-label={_creationText("creation.0b85432cb0316afa")}>

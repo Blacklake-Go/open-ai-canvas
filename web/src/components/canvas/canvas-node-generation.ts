@@ -20,11 +20,17 @@ import type { ModelReferenceLimits } from "@/lib/model-selection";
 import type { Asset } from "@/stores/use-asset-store";
 import { arkAssetMatchesImage } from "@/lib/ark-assets";
 import { resourceIdFromStorageKey } from "@/services/api/resources";
+import { loadOfficialCharacterForGeneration } from "@/lib/canvas/official-character-generation";
+import { applyCharacterOutfitDefinition, resolveActiveCharacterOutfit } from "@/components/canvas/character-outfits";
+import { canvasAudioVoiceBindings, compileCanvasAudioVoiceBindings } from "@/lib/canvas/canvas-audio-voice-bindings";
+import { buildOrderedCanvasResourceReferences } from "@/lib/canvas/canvas-resource-references";
 
 export type CharacterGenerationReference = {
     nodeId: string;
     assetId: string;
+    officialAssetId?: string;
     requestedVersionId?: string;
+    selectedOutfitId?: string;
 };
 
 export type ResolvedCharacterVoice = {
@@ -71,6 +77,20 @@ export type NodeGenerationInput = {
 };
 
 export function buildNodeGenerationContext(nodeId: string, nodes: CanvasNodeData[], connections: CanvasConnection[], prompt: string, assets: Asset[], promptOnly = false): NodeGenerationContext {
+    let context = buildRawNodeGenerationContext(nodeId, nodes, connections, prompt, assets, promptOnly);
+    const source = nodes.find((node) => node.id === nodeId);
+    if (source && getNodeGenerationMode(source) === "audio" && source.metadata?.audioMode !== "tts") {
+        const references = buildOrderedCanvasResourceReferences(
+            buildNodeGenerationInputs(nodeId, nodes, connections)
+                .map((input) => nodes.find((node) => node.id === input.nodeId))
+                .filter((node): node is CanvasNodeData => Boolean(node)),
+        );
+        context = { ...context, prompt: compileCanvasAudioVoiceBindings(context.prompt, canvasAudioVoiceBindings(source.metadata), references) };
+    }
+    return context;
+}
+
+function buildRawNodeGenerationContext(nodeId: string, nodes: CanvasNodeData[], connections: CanvasConnection[], prompt: string, assets: Asset[], promptOnly = false): NodeGenerationContext {
     const pendingConversion = findPendingMediaConversionInput(nodeId, nodes, connections);
     if (pendingConversion) {
         const status = pendingConversion.metadata?.mediaConversion?.status;
@@ -503,20 +523,21 @@ export async function hydrateNodeGenerationContext(
     if (!context.characterReferences.length) return { ...context, referenceImages };
     const { getCharacter } = await import("@/services/api/projects");
     const { getResource, resourceFileUrl, resourceIdFromStorageKey: getResourceIdFromStorageKey, resourceStorageKey } = await import("@/services/api/resources");
-    const details = await Promise.all(context.characterReferences.map((reference) => getCharacter(reference.assetId)));
+    const details = await Promise.all(context.characterReferences.map((reference) => (reference.officialAssetId ? loadOfficialCharacterForGeneration(reference.officialAssetId) : getCharacter(reference.assetId))));
     const remainingBudget = Math.max(0, (referenceLimits?.maxImages ?? 9) - referenceImages.length);
     const selectedEntries = details.flatMap((detail, index) => {
         const reference = context.characterReferences[index];
         if (reference.requestedVersionId && reference.requestedVersionId !== detail.character.versionId) throw new Error(`角色「${detail.asset.title}」的固定版本已变化，请重新选择角色后生成`);
-        const representation = preferredCharacterRepresentation(detail.character.representations);
+        const outfit = resolveActiveCharacterOutfit(detail.character.definition, detail.character.representations, reference.selectedOutfitId);
+        const representation = outfit ? { id: `outfit-${outfit.id}`, resourceId: outfit.resourceId, role: "primary" } : preferredCharacterRepresentation(detail.character.representations);
         if (!representation && mode !== "audio" && mode !== "text") throw new Error(`角色「${detail.asset.title}」缺少可用的主参考图，请补充形象后再生成`);
-        return representation ? [{ nodeId: reference.nodeId, representation }] : [];
+        return representation && mode !== "audio" ? [{ nodeId: reference.nodeId, representation }] : [];
     });
     if (selectedEntries.length > remainingBudget) throw new Error(`当前模型参考图容量不足：角色至少需要 ${selectedEntries.length} 张主参考图`);
     const usedResourceIds = new Set(selectedEntries.map((item) => item.representation.resourceId));
     const supplementEntries = details.flatMap((detail, index) => {
         const reference = context.characterReferences[index];
-        if (!reference) return [];
+        if (mode === "audio" || !reference || Array.isArray(detail.character.definition.outfits)) return [];
         return detail.character.representations.flatMap((representation) => {
             if (!["front", "side", "back", "turnaround_sheet"].includes(representation.role) || !representation.resourceId || usedResourceIds.has(representation.resourceId)) return [];
             usedResourceIds.add(representation.resourceId);
@@ -566,14 +587,16 @@ export async function hydrateNodeGenerationContext(
     const supplementImages = hydratedCharacterImages.slice(selectedEntries.length);
     referenceImages = [...orderedImages, ...supplementImages];
     const characterBlocks = details.map((detail, index) => {
-        const nodeId = context.characterReferences[index]?.nodeId;
+        const reference = context.characterReferences[index];
+        const nodeId = reference?.nodeId;
         const primaryLabel = nodeId ? orderedIndexByNodeId.get(nodeId) : undefined;
         const supplementLabels = nodeId ? supplementLabelsByNodeId.get(nodeId) || [] : [];
         const referenceLine = primaryLabel ? `参考图片：@${imageReferenceLabel(primaryLabel - 1)}${supplementLabels.length ? `；补充视角：${supplementLabels.join("、")}` : ""}` : "";
-        const heading = includeCharacterPrompt ? compileCharacterReferencePrompt(detail.asset.title, detail.character.definition) : `【角色卡：${detail.asset.title}】`;
+        const effectiveDefinition = applyCharacterOutfitDefinition(detail.character.definition, reference?.selectedOutfitId, detail.character.representations);
+        const heading = includeCharacterPrompt ? compileCharacterReferencePrompt(detail.asset.title, effectiveDefinition) : `【角色卡：${detail.asset.title}】`;
         return [heading, referenceLine].filter(Boolean).join("\n");
     });
-    const resolvedCharacterVersions = details.map((detail) => ({ assetId: detail.asset.id, versionId: detail.character.versionId }));
+    const resolvedCharacterVersions = details.flatMap((detail, index) => (context.characterReferences[index]?.officialAssetId ? [] : [{ assetId: detail.asset.id, versionId: detail.character.versionId }]));
     const resolvedCharacterVoices = details.flatMap((detail): ResolvedCharacterVoice[] => {
         const voice = detail.character.voice;
         if (!voice) return [];
@@ -646,12 +669,17 @@ export async function hydrateNodeGenerationContext(
 function readNodeTextInput(node: CanvasNodeData) {
     if (node.type === CanvasNodeType.Text) return node.metadata?.content || node.metadata?.prompt || "";
     if (node.type === CanvasNodeType.Skill) return readSkillInput(node);
+    if (getNodeResourceKind(node) === "text") return node.metadata?.content || node.metadata?.prompt || "";
     return nodeGenerationPrompt(node);
 }
 
 function readCharacterReference(node: CanvasNodeData): CharacterGenerationReference | null {
-    const assetId = node.metadata?.workflowKind === "character" ? node.metadata.characterAssetId?.trim() : "";
-    return assetId ? { nodeId: node.id, assetId, requestedVersionId: node.metadata?.characterVersionPolicy === "pinned" ? node.metadata.characterVersionId : undefined } : null;
+    if (node.metadata?.workflowKind !== "character") return null;
+    const officialAssetId = node.metadata.officialAssetId?.trim();
+    const assetId = node.metadata.characterAssetId?.trim() || officialAssetId;
+    return assetId
+        ? { nodeId: node.id, assetId, ...(officialAssetId ? { officialAssetId } : {}), requestedVersionId: node.metadata.characterVersionPolicy === "pinned" ? node.metadata.characterVersionId : undefined, selectedOutfitId: node.metadata.selectedOutfitId }
+        : null;
 }
 
 function preferredCharacterRepresentation(representations: Array<{ id: string; resourceId: string; role: string }>) {

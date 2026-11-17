@@ -41,7 +41,7 @@ export type PublicLogicalModel = {
     capability: CapabilitySpec["capability"];
     sortOrder: number;
     pricePolicy: "channel" | "unified";
-    billingMode: "fixed_request" | "per_second" | "token";
+    billingMode: "fixed_request" | "per_second" | "token" | "image_usage";
     unitPriceMicrocredits: number;
     inputPriceMicrocredits: number;
     outputPriceMicrocredits: number;
@@ -57,10 +57,11 @@ export type PublicLogicalModel = {
 
 export type PublicLogicalModelPriceTier = {
     tokenPriceBands?: TokenPriceBand[];
+    imagePricing?: import("./wallet").ImagePricing | null;
     selector: Record<string, string>;
     resolution: string;
     videoSeconds: number;
-    billingMode: "fixed_request" | "per_second" | "token";
+    billingMode: "fixed_request" | "per_second" | "token" | "image_usage";
     unitPriceMicrocredits: number;
     inputTokenPriceMicrocredits: number;
     outputTokenPriceMicrocredits: number;
@@ -137,6 +138,7 @@ export type RouteSimulationResult = {
 };
 
 export type LogicalModelQuote = {
+    imageUsage?: { inputImages: number; maxOutputImages: number };
     logicalModelId: string;
     billingMode: PublicLogicalModel["billingMode"];
     quantity: number;
@@ -227,6 +229,7 @@ export type PublicChannelModelAvailabilityDay = {
 
 export type PublicChannelModelPriceTier = {
     tokenPriceBands?: TokenPriceBand[];
+    imagePricing?: import("./wallet").ImagePricing | null;
     id: string;
     selector?: Record<string, string>;
     resolution: string;

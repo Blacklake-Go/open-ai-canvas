@@ -1,9 +1,6 @@
 import { describe, expect, it } from "bun:test";
 import { isOfficialApplicationPluginId, SUPDANCE_APPLICATION_PLUGIN_IDS } from "@/lib/plugins/official-applications";
-import {
-    SUPDANCE_EMAIL_MARKETING_PLUGIN_ID,
-    supdanceEmailMarketingManifest,
-} from "@/supdance/plugins/email-marketing";
+import { SUPDANCE_EMAIL_MARKETING_PLUGIN_ID, supdanceEmailMarketingManifest } from "@/supdance/plugins/email-marketing";
 
 describe("Email Marketing Plugin Tests", () => {
     it("exports valid official application manifest", () => {
@@ -20,5 +17,4 @@ describe("Email Marketing Plugin Tests", () => {
         expect(SUPDANCE_APPLICATION_PLUGIN_IDS).toContain(SUPDANCE_EMAIL_MARKETING_PLUGIN_ID);
         expect(isOfficialApplicationPluginId(SUPDANCE_EMAIL_MARKETING_PLUGIN_ID)).toBe(true);
     });
-
 });

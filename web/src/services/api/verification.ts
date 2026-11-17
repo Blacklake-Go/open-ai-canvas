@@ -27,7 +27,7 @@ export function verificationMethods(policy: VerificationPolicy, purpose: "login"
 }
 export const startVerification = (input: { purpose: VerificationPurpose; method: VerificationMethod; email?: string; phone?: string; password?: string }) =>
     http.post<{ ticket: string; expiresIn: number; retryAfter: number }>("/auth/verification", { ...input, locale: useLocaleStore.getState().locale }, input.purpose === "bind" ? undefined : { session: "public" });
-export async function loginVerification(input: VerificationDraft) {
+export async function loginVerification(input: VerificationDraft & { turnstileToken?: string }) {
     const result = await http.post<{ user: LocalUser }>("/auth/verification/login", input, { session: "public" });
     invalidateAuthSessionCache();
     return result;

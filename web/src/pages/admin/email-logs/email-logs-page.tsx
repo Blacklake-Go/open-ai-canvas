@@ -6,6 +6,7 @@ import { useEffect, useState } from "react";
 import { Link, useSearchParams } from "react-router";
 
 import { Select } from "@/components/ui/base/select";
+import { interfaceText } from "@/i18n/interface-text";
 import { useDebouncedValue } from "@/hooks/use-debounced-value";
 import { listAdminEmailLogs, type EmailLog, type EmailLogPage, type EmailLogPurpose, type EmailLogStatus } from "@/services/api/email";
 import { AdminPageFrame } from "../components/admin-shell";
@@ -100,8 +101,8 @@ export default function EmailLogsPage() {
     const columns: ColumnsType<EmailLog> = [
         { title: "时间", width: 170, render: (_, log) => <span className="font-mono text-xs">{dayjs(log.createdAt).format("YYYY-MM-DD HH:mm:ss")}</span> },
         { title: "收件人", width: 230, render: (_, log) => <span className="break-all">{log.recipient || "—"}</span> },
-        { title: "类型", width: 140, render: (_, log) => emailPurposeLabels[log.purpose] ?? log.purpose },
-        { title: "结果", width: 100, render: (_, log) => <AdminStatusBadge label={statusMeta[log.status]?.label ?? log.status} tone={statusMeta[log.status]?.tone ?? "neutral"} /> },
+        { title: "类型", width: 140, render: (_, log) => interfaceText(emailPurposeLabels[log.purpose] ?? log.purpose) },
+        { title: "结果", width: 100, render: (_, log) => <AdminStatusBadge label={interfaceText(statusMeta[log.status]?.label ?? log.status)} tone={statusMeta[log.status]?.tone ?? "neutral"} /> },
         {
             title: "原因 / 失败环节",
             render: (_, log) =>
@@ -109,7 +110,7 @@ export default function EmailLogsPage() {
                     <span className="text-foreground/40">{log.durationMs ? `用时 ${(log.durationMs / 1000).toFixed(1)} 秒` : "—"}</span>
                 ) : (
                     <div className="admin-email-log-reason" title={log.reason}>
-                        {log.stage ? <span className="admin-email-log-stage">{stageLabels[log.stage] ?? log.stage}</span> : null}
+                        {log.stage ? <span className="admin-email-log-stage">{interfaceText(stageLabels[log.stage] ?? log.stage)}</span> : null}
                         <span>{log.reason || "—"}</span>
                     </div>
                 ),
@@ -161,7 +162,7 @@ export default function EmailLogsPage() {
             <div className="admin-email-log-stats" aria-label="近 24 小时发送概况">
                 {(["smtp_accepted", "failed", "unknown", "skipped"] as const).map((key) => (
                     <button type="button" key={key} className="admin-email-log-stat" aria-pressed={status === key} onClick={() => update({ status: status === key ? "" : key, page: 1 })}>
-                        <span>近 24 小时{statusMeta[key].label}</span>
+                        <span>近 24 小时{interfaceText(statusMeta[key].label)}</span>
                         <strong data-tone={statusMeta[key].tone}>{stats[key] ?? 0}</strong>
                     </button>
                 ))}
@@ -195,13 +196,13 @@ export default function EmailLogsPage() {
                         <Select
                             ariaLabel="邮件类型"
                             value={purpose}
-                            options={[{ value: "", label: "全部类型" }, ...Object.entries(emailPurposeLabels).map(([value, label]) => ({ value, label }))]}
+                            options={[{ value: "", label: "全部类型" }, ...Object.entries(emailPurposeLabels).map(([value, label]) => ({ value, label: interfaceText(label) }))]}
                             onChange={(value) => update({ purpose: value, page: 1 })}
                         />
                         <Select
                             ariaLabel="发送结果"
                             value={status}
-                            options={[{ value: "", label: "全部结果" }, ...Object.entries(statusMeta).map(([value, meta]) => ({ value, label: meta.label }))]}
+                            options={[{ value: "", label: "全部结果" }, ...Object.entries(statusMeta).map(([value, meta]) => ({ value, label: interfaceText(meta.label) }))]}
                             onChange={(value) => update({ status: value, page: 1 })}
                         />
                         <DatePicker.RangePicker

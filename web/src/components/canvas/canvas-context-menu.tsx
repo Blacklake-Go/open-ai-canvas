@@ -225,7 +225,7 @@ export function CanvasNodeContextMenu({
                 onContextMenu={(event) => event.preventDefault()}
                 onPointerDown={(event) => event.stopPropagation()}
             >
-                <div className="thin-scrollbar min-h-0 overflow-y-auto">
+                <div className="thin-scrollbar min-h-0 space-y-1 overflow-y-auto">
                     {menu.type === "node" && isMedia && categoryOpen ? (
                         <>
                             <MenuHeader title="设置资产分类" description={node?.title || nodeTypeLabel(node)} onBack={() => setCategoryOpen(false)} />

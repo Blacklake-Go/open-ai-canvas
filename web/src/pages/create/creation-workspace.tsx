@@ -374,6 +374,7 @@ export function CreationComposer(props: ComposerProps) {
         .join("；");
     const canSubmit = (Boolean(props.prompt.trim()) || (props.mode === "music" && Boolean(props.musicLyrics?.trim()))) && !interactionBusy && !settingsError;
     const creditsEnabled = useUserStore((state) => state.features.creditsEnabled);
+    const userId = useUserStore((state) => state.user?.id);
     const priceChannel = resolveModelChannel(props.config, props.model);
     // 实际提交单数与 index.tsx 的 taskCount 同样 clamp。
     const imageTaskCount = Math.max(1, Math.min(imageBatchLimit, Math.floor(Number(props.count)) || 1));
@@ -397,7 +398,7 @@ export function CreationComposer(props: ComposerProps) {
                   requirements: props.modelRequirements,
               });
     useEffect(() => {
-        if (!creditsEnabled || !quoteRequest) {
+        if (!userId || !creditsEnabled || !quoteRequest) {
             setRouteQuote(null);
             return;
         }
@@ -409,7 +410,7 @@ export function CreationComposer(props: ComposerProps) {
                 if (!controller.signal.aborted) setRouteQuote(null);
             });
         return () => controller.abort();
-    }, [creditsEnabled, quoteRequest]);
+    }, [creditsEnabled, quoteRequest, userId]);
     const generationCredits = routeQuote ? batchQuoteTotal(routeQuote.amountMicrocredits, props.mode === "image" ? imageTaskCount : 1) : credits;
     const showCost = creditsEnabled && generationCredits !== null && generationCredits !== undefined;
     const formattedCredits = generationCredits?.toLocaleString(locale, { maximumFractionDigits: 6 });
@@ -418,7 +419,7 @@ export function CreationComposer(props: ComposerProps) {
         : interactionBusy || (props.generationActive && !canSubmit)
           ? t("settings.memory_generating")
           : showCost
-            ? `${routeQuote?.estimated ? `${t("workbench.estimated_credits")} ` : ""}${formattedCredits} ${t("nav.credits")} · ${t("create.send")}`
+            ? `${!userId || routeQuote?.estimated ? `${t("workbench.estimated_credits")} ` : ""}${formattedCredits} ${t("nav.credits")} · ${t("create.send")}`
             : t("create.send");
     // Send-button working state must span the WHOLE generation (not just the
     // submit-lock window): spinner + glow stay while a message is pending and

@@ -127,6 +127,7 @@ export async function executeVideoGeneration({
                 referenceAudios: generationContext.referenceAudios,
                 signal: controller.signal,
                 metadata: {
+                    assetTitle: videoNode.title,
                     sourceNodeId: nodeId,
                     ...taskContext,
                     resolvedCharacterVersions: generationContext.resolvedCharacterVersions,
@@ -211,7 +212,15 @@ export async function executeAudioGeneration({
                 referenceImages: generationContext.referenceImages,
                 referenceAudios: generationContext.referenceAudios,
                 signal: controller.signal,
-                metadata: { sourceNodeId: nodeId, ...taskContext, resolvedCharacterVersions: generationContext.resolvedCharacterVersions, resolvedCharacterVoiceKey: generationContext.resolvedCharacterVoices[0]?.voiceKey, ...skillMetadata },
+                metadata: {
+                    assetTitle: audioNode.title,
+                    sourceNodeId: nodeId,
+                    ...taskContext,
+                    ...(sourceNode?.metadata?.audioVoiceBindings?.length ? { audioVoiceBindings: sourceNode.metadata.audioVoiceBindings } : {}),
+                    resolvedCharacterVersions: generationContext.resolvedCharacterVersions,
+                    resolvedCharacterVoiceKey: generationContext.resolvedCharacterVoices[0]?.voiceKey,
+                    ...skillMetadata,
+                },
             },
             {
                 bindTask: (task) => bindGenerationTask(audioId, task),
@@ -224,6 +233,7 @@ export async function executeAudioGeneration({
 }
 
 function doubaoAudioPrompt(config: CanvasGenerationExecution["generationConfig"], prompt: string, audioCount: number, imageCount: number) {
+    if (config.audioMode === "tts") return prompt;
     if (!isDoubaoAudioConfig(config)) return prompt;
     // 参考图片模式的 text_prompt 只保留要合成的文本，图片走 references。
     if (imageCount > 0)

@@ -7,8 +7,8 @@ import type { RouteObject } from "react-router";
 import type { PluginHostContext, PluginManifest, PluginManifestV2, RegisteredPlugin } from "@/lib/plugins/plugin-types";
 import { getRegisteredPlugin, registerPlugin, unregisterPlugin } from "@/lib/plugins/plugin-registry";
 
-export const SUPDANCE_HOST_VERSION = "1.8.5" as const;
-export const SUPDANCE_SCHEMA_BASELINE = 104 as const;
+export const SUPDANCE_HOST_VERSION = "1.8.6" as const;
+export const SUPDANCE_SCHEMA_BASELINE = 105 as const;
 
 export type UpstreamPatchRecord = {
     id: string;
@@ -25,6 +25,15 @@ export type UpstreamPatchRecord = {
  * 新增核心文件修改时必须同步登记，并由架构回归测试与 baseline.json 对齐校验。
  */
 export const SUPDANCE_UPSTREAM_PATCH_REGISTRY: readonly UpstreamPatchRecord[] = [
+    {
+        id: "supdance-upstream-20261118-preservation",
+        upstreamBaseline: "v1.8.6",
+        feature: "上游 1.8.6 合并、八语与既有插件合同保留",
+        coupledUpstreamFiles: ["web/src/lib/canvas/tool-registry/tool-registry.ts", "web/src/components/canvas/canvas-video-segment-dialog.tsx", "web/src/pages/admin/official-assets-page.tsx", "web/src/i18n/personal-appearance-messages.ts"],
+        files: ["docs/supdance/UPSTREAM_20261118.md"],
+        reason: "保留正式站点品牌、工具栏八语和 SupDance 视频工具；迁移增量到 108，原账本与插件身份不变。",
+        upgradeRisk: "HIGH",
+    },
     {
         id: "supdance-email-center",
         upstreamBaseline: "v1.8.5",

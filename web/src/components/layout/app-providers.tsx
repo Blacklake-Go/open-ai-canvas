@@ -38,6 +38,8 @@ import { refreshPublicAppearance } from "@/services/appearance-bootstrap";
 import { SupDanceI18nRuntimeHost } from "@/supdance/plugins/i18n";
 import { SupDancePluginRuntimeSync } from "@/supdance/adapters/plugin-runtime-sync";
 import { SocialOnboardingModal } from "@/supdance/plugins/social-auth";
+import { useEffectiveSkin } from "@/stores/use-appearance-preferences-store";
+import { applyThemePackCanvas } from "@/themes/apply";
 
 // antd 组件内置文案与 dayjs 日期格式随界面语言切换。
 const ANTD_LOCALES: Record<AppLocale, AntdLocale> = { "zh-CN": zhCN, "en-US": enUS, "fr-FR": frFR, "de-DE": deDE, "ja-JP": jaJP, "ko-KR": koKR, "zh-TW": zhTW, "es-ES": esES };
@@ -63,6 +65,7 @@ export function AppProviders({ children, extensions }: { children: ReactNode; ex
     const appearance = useAppearanceStore((state) => state.appearance);
     const theme = hostTheme;
     const dark = theme === "dark";
+    const skin = useEffectiveSkin();
     const locale = useLocaleStore((state) => state.locale);
 
     useLayoutEffect(() => {
@@ -73,9 +76,10 @@ export function AppProviders({ children, extensions }: { children: ReactNode; ex
     useLayoutEffect(() => {
         document.documentElement.classList.toggle("dark", dark);
         document.documentElement.style.colorScheme = theme;
-        applySkinTheme(appearance.activeSkin, theme);
-        applyAppearanceMetadata(appearance);
-    }, [appearance, dark, theme]);
+        applyThemePackCanvas(skin.id);
+        applySkinTheme(skin, theme);
+        applyAppearanceMetadata({ ...appearance, activeSkin: skin });
+    }, [appearance, dark, theme, skin]);
 
     // DEV 复现台必须是同源本地确定性场景：AuthSessionHydrator 会打 /api/auth/session，
     // ClientRootInit 会打 /api/model-catalog，没有后端时产生真实 502，与导演台无关却会污染判据。
@@ -98,7 +102,7 @@ export function AppProviders({ children, extensions }: { children: ReactNode; ex
     return (
         // 两个汉字的按钮（取消、确定）不再被 antd 拉开字距，与其他按钮的文字节奏一致。
         <I18nextProvider i18n={i18n}>
-            <ConfigProvider locale={ANTD_LOCALES[locale]} theme={getAntThemeConfig(dark, appearance.activeSkin)} wave={{ disabled: true }} button={{ autoInsertSpace: false }}>
+            <ConfigProvider locale={ANTD_LOCALES[locale]} theme={getAntThemeConfig(dark, skin)} wave={{ disabled: true }} button={{ autoInsertSpace: false }}>
                 <AppFeedbackProvider>
                     <QueryClientProvider client={appQueryClient}>
                         {isolateDevRepro ? (

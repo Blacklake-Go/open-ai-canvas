@@ -156,6 +156,9 @@ func applyChannelModelTierPrices(tier *model.ChannelModelPriceTier, capability s
 	if len(tier.TokenPriceBands) > 0 {
 		return BadAuthRequest("此模型包含上下文价格分档，请通过完整模型配置同步修改各档价格")
 	}
+	if tier.BillingMode == "image_usage" {
+		return BadAuthRequest("图片用量价格请在模型编辑中的输入图和输出像素档位中调整")
+	}
 	if tier.ID == "" || !tier.PriceConfigured || !tier.CostPricing.Configured {
 		return BadAuthRequest("请先保存完整的规格成本价和销售价配置")
 	}
