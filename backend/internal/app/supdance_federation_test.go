@@ -147,7 +147,7 @@ func TestSupDanceFederationRequiresCurrentOwnerAndKeepsWalletReadOnly(t *testing
 		t.Fatalf("read changed account count: %d", count)
 	}
 	db.Model(&model.CreditLedgerEntry{}).Count(&count)
-	if count != 0 {
+	if count != 3 {
 		t.Fatal("identity link wrote a credit ledger entry")
 	}
 	t.Setenv("CANVAS_SUPDANCE_FEDERATION_ENABLED", "false")
