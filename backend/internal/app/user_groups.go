@@ -656,13 +656,6 @@ func (s *Service) ModelCatalogForGuest() (*ModelCatalogResponse, error) {
 
 // ModelCatalogForUser 是 HTTP 目录入口：按登录用户的分组过滤渠道并换算价格。
 func (s *Service) ModelCatalogForUser(user *model.User, intent *ModelRequestIntent) (*ModelCatalogResponse, error) {
-	if user == nil {
-		access, err := s.systemGroupAccess()
-		if err != nil {
-			return nil, err
-		}
-		return s.ModelCatalog(access, intent)
-	}
 	access, err := s.userGroupAccessForUser(user)
 	if err != nil {
 		return nil, err
@@ -672,13 +665,6 @@ func (s *Service) ModelCatalogForUser(user *model.User, intent *ModelRequestInte
 
 // PublicLogicalModelsForUser 是前台模型目录的 HTTP 入口。
 func (s *Service) PublicLogicalModelsForUser(user *model.User, intent *ModelRequestIntent) ([]PublicLogicalModel, error) {
-	if user == nil {
-		access, err := s.systemGroupAccess()
-		if err != nil {
-			return nil, err
-		}
-		return s.PublicLogicalModels(access, intent)
-	}
 	access, err := s.userGroupAccessForUser(user)
 	if err != nil {
 		return nil, err

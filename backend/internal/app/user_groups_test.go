@@ -49,6 +49,9 @@ func TestGuestModelCatalogUsesDefaultGroupVisibilityAndPricing(t *testing.T) {
 	if _, err := s.ModelCatalogForUser(nil, nil); err == nil {
 		t.Fatal("guest access must not weaken authenticated entry points")
 	}
+	if _, err := s.PublicLogicalModelsForUser(nil, nil); err == nil {
+		t.Fatal("guest access must not bypass logical model authentication")
+	}
 }
 
 // 分组 -> 渠道 -> 模型：可见性、分组折扣、模型倍率和货币换算在目录、报价与账单中必须一致。

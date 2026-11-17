@@ -13,7 +13,6 @@ description: 影策后端核心持久化表与状态边界
 
 迁移只添加缺少的列，支持重复执行；历史订单的图片 JSON 保持空值，不反推或重算费用。实际用量在下载前持久化，结算和退款沿用订单状态条件、余额校验和账本事务。规则和 API 合同见[图片用量计费](/docs/backend/image-usage-billing)。
 
-## 微信登录（Schema 102）
 ## SupDance 邮件中心（Schema 106–107）
 
 增量迁移 `supdance_email_center` 保留 SMTP、原营销模板 JSON、`email_logs`、认证挑战及消费日报订阅，新增：
@@ -32,7 +31,7 @@ description: 影策后端核心持久化表与状态边界
 
 Schema 107 `supdance_email_locales` 只增加五个字段：`users.preferred_locale`、`supdance_email_contacts.preferred_locale`、`supdance_email_receipts.locale`、`supdance_email_campaigns.revisions_json` 与 `localized_variables_json`。旧账号和联系人语言默认空，保留既有数据；不对整个 User 执行 AutoMigrate。模板以 `(key, locale)` 独立版本，内置 11×8 个组合。活动保存八语言发布版本映射及明确的运营翻译，发送时根据收件人偏好选择固定版本。旧单语言活动保持原样，缺少对应语言时拒绝发送，不静默替换或重放。
 
-只有 SMTP 明确临时拒绝或正文发送前的临时网络错误可有限重试；正文提交结果不明或进程遗留的发送中状态转为 unknown，不主动重放。回滚模板/进入安全模式不删除退订、抑制、收据或审计。旧 Schema 105/106 程序拒绝连接 107，不能通过删除迁移记录做数据库降级。回退需支持 107 的构建并保留新字段与发送历史。SQLite/PostgreSQL 增量与重复执行已验证；生产恢复迁移尚未执行。操作说明见 [邮件语言与迁移文档](../../../supdance/EMAIL_CENTER_LANGUAGES.md)。
+只有 SMTP 明确临时拒绝或正文发送前的临时网络错误可有限重试；正文提交结果不明或进程遗留的发送中状态转为 unknown，不主动重放。回滚模板/进入安全模式不删除退订、抑制、收据或审计。旧 Schema 105/106 程序拒绝连接 107，不能通过删除迁移记录做数据库降级。合并上游后的当前目标为 108，回退构建也须支持 108，并保留新字段与发送历史。SQLite/PostgreSQL 增量与重复执行已验证；生产恢复副本已完成 105→108 及重复迁移，162 张旧表原列数据摘要全部一致，正式生产切换另行记录。操作说明见 [邮件语言与迁移文档](../../../supdance/EMAIL_CENTER_LANGUAGES.md)。
 
 ## 微信登录（本站 Schema 103）
 

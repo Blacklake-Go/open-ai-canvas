@@ -92,8 +92,9 @@ func TestSupDanceFederationRequiresCurrentOwnerAndKeepsWalletReadOnly(t *testing
 	}
 	ticket.Purpose, ticket.MainUserID, ticket.ExpiresAt = "wallet-read", user.ID, now.Add(30*time.Second).Unix()
 	for _, entry := range []model.CreditLedgerEntry{
-		{ID: "bridge-reserve", UserID: user.ID, Type: "reserve", BillingOrderID: "bridge-order", CreatedAt: now},
-		{ID: "bridge-settle", UserID: user.ID, Type: "settle", BillingOrderID: "bridge-order", CreatedAt: now.Add(time.Second)},
+		{ID: "bridge-reserve", UserID: user.ID, Type: model.CreditLedgerReserve, AmountMicrocredits: -120, AvailableDeltaMicrocredits: -120, ReservedDeltaMicrocredits: 120, BillingOrderID: "bridge-order", CreatedAt: now.Add(-time.Second)},
+		{ID: "bridge-consume", UserID: user.ID, Type: model.CreditLedgerConsume, AmountMicrocredits: -100, ReservedDeltaMicrocredits: -120, BillingOrderID: "bridge-order", CreatedAt: now},
+		{ID: "bridge-refund", UserID: user.ID, Type: model.CreditLedgerRefund, AmountMicrocredits: 20, AvailableDeltaMicrocredits: 20, BillingOrderID: "bridge-order", CreatedAt: now.Add(time.Second)},
 	} {
 		if err := db.Create(&entry).Error; err != nil {
 			t.Fatal(err)
@@ -106,6 +107,9 @@ func TestSupDanceFederationRequiresCurrentOwnerAndKeepsWalletReadOnly(t *testing
 	}
 	if wallet.Total != 2 || len(wallet.Entries) != 2 {
 		t.Fatal("ONE ledger rows were replaced by grouped site history")
+	}
+	if wallet.Entries[0].ID != "bridge-refund" || wallet.Entries[1].ID != "bridge-consume" {
+		t.Fatal("ONE must preserve the original posted-ledger order and reserve exclusion")
 	}
 	resource := &model.Resource{ID: "community-resource", UserID: user.ID, Kind: "image", Status: model.ResourceStatusReady, MimeType: "image/png", ObjectKey: "private/test.png", PublicURL: "https://private.example/must-not-leak"}
 	if err := db.Create(resource).Error; err != nil {

@@ -54,7 +54,11 @@ func RegisterModelCatalogRoutes(r *gin.RouterGroup, svc *service.Service) {
 	})
 
 	r.POST("/model-catalog/available", func(c *gin.Context) {
-		user, _ := currentUser(c, svc)
+		user, err := currentUser(c, svc)
+		if err != nil {
+			failService(c, err)
+			return
+		}
 		var intent service.ModelRequestIntent
 		if err := c.ShouldBindJSON(&intent); err != nil {
 			fail(c, http.StatusBadRequest, errors.New("模型能力请求格式错误"))

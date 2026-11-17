@@ -192,6 +192,9 @@ func TestChannelCostHTTPAuthorizationAndPublicProjection(t *testing.T) {
 			t.Fatalf("guest %s must require login: %d", path, guest.Code)
 		}
 	}
+	if malformed := call("", http.MethodPost, "/api/model-catalog/available", []byte("{")); malformed.Code != http.StatusUnauthorized {
+		t.Fatalf("authentication must precede catalog payload validation: %d %s", malformed.Code, malformed.Body.String())
+	}
 	if stale := call("expired-session", http.MethodGet, "/api/model-catalog", nil); stale.Code != http.StatusUnauthorized {
 		t.Fatalf("invalid session must not become guest: %d", stale.Code)
 	}
