@@ -1,10 +1,12 @@
 import { FEDERATION_I18N_ENTRIES } from "../federation";
 import { HTML_ADMIN_I18N_ENTRIES } from "../html-admin";
+import { PAYMENT_RECONCILIATION_CATALOGS } from "../payment-reconciliation";
 import { MUSIC_SITE_I18N_ENTRIES } from "../music-site";
 import { MARKETING_I18N_ENTRIES } from "@/supdance/marketing/translations";
 
 const pack: Record<string, string> = {
     ...Object.fromEntries(HTML_ADMIN_I18N_ENTRIES.map((entry) => [entry.key, entry.translations["en-US"]])),
+    ...PAYMENT_RECONCILIATION_CATALOGS["en-US"],
     ...Object.fromEntries(FEDERATION_I18N_ENTRIES.map((entry) => [entry.key, entry.translations["en-US"]])),
     ...Object.fromEntries(MARKETING_I18N_ENTRIES.map((entry) => [entry.key, entry.translations["en-US"]])),
     ...Object.fromEntries(MUSIC_SITE_I18N_ENTRIES.map((entry) => [entry.key, entry.translations["en-US"]])),
