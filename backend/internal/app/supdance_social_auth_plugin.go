@@ -3,6 +3,7 @@ package app
 import (
 	"fmt"
 	"net/http"
+	"strings"
 	"time"
 
 	"yingce/backend/internal/auth"
@@ -244,11 +245,11 @@ func (s *Service) SocialAuthOnboardingProfile(ticket string) (*socialauth.Onboar
 	return s.socialAuthService().GetOnboardingProfile(ticket)
 }
 
-func (s *Service) SendSocialOnboardingEmail(r *http.Request, ticket, email string) (*auth.VerificationTicket, error) {
+func (s *Service) SendSocialOnboardingEmail(r *http.Request, ticket, email string, locales ...string) (*auth.VerificationTicket, error) {
 	if _, err := s.SocialAuthOnboardingProfile(ticket); err != nil {
 		return nil, err
 	}
-	return s.authDomain().StartSocialOnboardingEmail(r.Context(), email, socialauth.HashToken(ticket))
+	return s.authDomain().StartSocialOnboardingEmail(r.Context(), email, socialauth.HashToken(ticket), strings.Join(locales, ","), r.Header.Get("Accept-Language"))
 }
 
 // CompleteSocialAuthOnboarding creates the user and signs them in after onboarding modal confirmation.

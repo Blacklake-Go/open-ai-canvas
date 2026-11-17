@@ -153,7 +153,8 @@ const adminNavigation: AdminNavigationGroup[] = [
             { path: "/admin/plugins", keywords: "插件 扩展 协议 plugin", label: "插件管理", shortLabel: "插件", icon: <PlugZap className="size-4" /> },
             { path: "/admin/plugins/music-generation", label: "音乐配置", shortLabel: "音乐", icon: <Music className="size-4" /> },
             {
-                path: "/admin/plugins/compact-model-picker",
+                path: "/admin/plugins/page-management",
+                keywords: "页面 HTML 邮件 营销 模型 pages email",
                 get label() {
                     return i18n.t("compactPicker.title");
                 },
@@ -162,7 +163,6 @@ const adminNavigation: AdminNavigationGroup[] = [
                 },
                 icon: <Layers3 className="size-4" />,
             },
-            { path: "/admin/plugins/html-pages", label: "HTML 页面", shortLabel: "页面", icon: <FileCode className="size-4" /> },
             { path: "/admin/mcp", keywords: "MCP 工具 连接 市场 Agent", label: "MCP 管理", shortLabel: "MCP", icon: <PlugZap className="size-4" /> },
             { path: "/admin/skills", keywords: "技能 skill", label: "技能管理", shortLabel: "技能", icon: <Wand2 className="size-4" /> },
             { path: "/admin/skill-curation", keywords: "技能 分类 推荐", label: "技能分类", shortLabel: "分类", icon: <Sparkles className="size-4" /> },
@@ -186,6 +186,7 @@ const adminNavigation: AdminNavigationGroup[] = [
             { path: "/admin/settings/social-auth", label: "社交登录配置", shortLabel: "社登", icon: <Share2 className="size-4" /> },
             { path: "/admin/settings/access", keywords: "登录 注册 验证码 认证", label: "登录与注册", shortLabel: "注册", icon: <ShieldCheck className="size-4" /> },
             { path: "/admin/settings/email", keywords: "邮件 SMTP 发信 邮箱", label: "邮件服务", shortLabel: "邮件", icon: <Mail className="size-4" /> },
+            { path: "/admin/email-center", keywords: "邮件 模板 营销 SMTP email", label: "邮件中心", shortLabel: "邮件", icon: <Mail className="size-4" /> },
             { path: "/admin/settings/storage", keywords: "存储 OSS S3 对象存储 上传", label: "存储服务", shortLabel: "存储", icon: <HardDrive className="size-4" /> },
             { path: "/admin/settings/runtime-policy", keywords: "资源 策略 并发 限流 配额 worker", label: "资源与策略", shortLabel: "策略", icon: <Settings2 className="size-4" /> },
             { path: "/admin/settings/ark-private-assets", keywords: "方舟 素材库 火山", label: "方舟素材库", shortLabel: "方舟", icon: <CloudUpload className="size-4" /> },

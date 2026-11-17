@@ -20,7 +20,7 @@ import { AdminPageFrame } from "../components/admin-shell";
 import { AdminDataTable, AdminStatusBadge, AdminTableEmpty } from "../components/admin-ui";
 import { Select } from "@/components/ui/base/select";
 import { usePluginStore } from "@/stores/use-plugin-store";
-import { SUPDANCE_I18N_PLUGIN_ID, useSupDanceI18nStore } from "@/supdance/plugins/i18n";
+import { SUPDANCE_I18N_PLUGIN_ID, useSupDanceI18nStore, useI18n } from "@/supdance/plugins/i18n";
 import { SUPDANCE_SOCIAL_AUTH_PLUGIN_ID } from "@/supdance/plugins/social-auth/types";
 import { SUPDANCE_MUSIC_PLUGIN_ID } from "@/supdance/plugins/music-generation/types";
 import { AdminPluginDetailModal, type AdminPluginDetail } from "./plugin-detail-modal";
@@ -31,6 +31,7 @@ import { COMPACT_PICKER_ID, COMPACT_PICKER_ADMIN_ROUTE, compactAdminKey, applyCo
 type AdminPluginItem = AdminPluginDetail;
 
 export default function AdminPluginsPage() {
+    const { t } = useI18n();
     const { message, modal } = App.useApp();
     const [plugins, setPlugins] = useState<BackendPlugin[]>([]);
     const [states, setStates] = useState<Record<string, AdminPluginState>>({});
@@ -301,15 +302,15 @@ export default function AdminPluginsPage() {
             render: (_, item) => (
                 <div className="flex items-center justify-center gap-1">
                     {item.manifest.id === "supdance-html-page-manager" ? (
-                        <Link to="/admin/plugins/html-pages">
+                        <Link to="/admin/plugins/page-management?page=html">
                             <FileCode className="size-3.5" aria-hidden />
                             编辑页面
                         </Link>
                     ) : null}
                     {item.manifest.id === "supdance-email-marketing" ? (
-                        <Link to="/admin/plugins/email-marketing">
+                        <Link to="/admin/plugins/page-management?page=email">
                             <Mail className="size-3.5" aria-hidden />
-                            营销模板
+                            {t("email.center.title")}
                         </Link>
                     ) : null}
                     <Button type="text" size="small" aria-label={`查看 ${item.manifest.name} 详情`} icon={<FileText className="size-3.5" aria-hidden="true" />} onClick={() => setDetailId(item.manifest.id)}>
@@ -473,7 +474,7 @@ function PluginBrandIcon({ pluginId }: { pluginId: string }) {
     }
     if (pluginId === "supdance-email-marketing") {
         return (
-            <span className="grid size-9 shrink-0 place-items-center rounded-lg bg-pink-500/15 text-pink-400">
+            <span className="grid size-9 shrink-0 place-items-center rounded-lg bg-[var(--admin-nav-active)] text-[var(--admin-text)]">
                 <Mail className="size-4" aria-hidden />
             </span>
         );

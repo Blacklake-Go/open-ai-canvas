@@ -1,103 +1,298 @@
 package handler
 
 import (
-	"net/http"
-
-	"yingce/backend/internal/service"
-
 	"github.com/gin-gonic/gin"
+	"html"
+	"io"
+	"net/http"
+	"yingce/backend/internal/service"
+	"yingce/backend/internal/supdance/maillocale"
 )
 
-// RegisterSupDanceEmailMarketingRoutes 挂载 supdance 邮件营销插件的 API 端点
 func RegisterSupDanceEmailMarketingRoutes(r *gin.RouterGroup, svc *service.Service) {
-	adminGroup := r.Group("/admin/plugins/supdance-email-marketing")
-	{
-		// 获取插件总览与模板列表
-		adminGroup.GET("/overview", func(c *gin.Context) {
-			user, err := currentUser(c, svc)
+	r.GET("/auth/email-center/language", func(c *gin.Context) {
+		actor, err := currentUser(c, svc)
+		if err != nil {
+			failService(c, err)
+			return
+		}
+		locale, err := svc.UserEmailLocale(actor)
+		if err != nil {
+			failService(c, err)
+			return
+		}
+		ok(c, gin.H{"locale": locale})
+	})
+	r.PUT("/auth/email-center/language", func(c *gin.Context) {
+		c.Request.Body = http.MaxBytesReader(c.Writer, c.Request.Body, 1024)
+		actor, err := currentUser(c, svc)
+		if err != nil {
+			failService(c, err)
+			return
+		}
+		var req struct {
+			Locale string `json:"locale"`
+		}
+		if c.ShouldBindJSON(&req) != nil {
+			failService(c, service.BadAuthRequest("语言请求无效"))
+			return
+		}
+		user, err := svc.SetUserEmailLocale(actor, req.Locale)
+		if err != nil {
+			failService(c, err)
+			return
+		}
+		ok(c, gin.H{"user": user, "locale": user.PreferredLocale})
+	})
+	for _, base := range []string{"/admin/email-center", "/admin/plugins/supdance-email-marketing"} {
+		group := r.Group(base)
+		group.GET("/queue", func(c *gin.Context) {
+			actor, err := currentUser(c, svc)
 			if err != nil {
 				failService(c, err)
 				return
 			}
-			overview, err := svc.AdminEmailMarketingOverview(user)
+			rows, err := svc.AdminEmailQueue(actor)
 			if err != nil {
 				failService(c, err)
 				return
 			}
-			ok(c, overview)
+			ok(c, rows)
 		})
-
-		// 兼容 GET /templates 端点别名
-		adminGroup.GET("/templates", func(c *gin.Context) {
-			user, err := currentUser(c, svc)
+		group.GET("/activity", func(c *gin.Context) {
+			actor, err := currentUser(c, svc)
 			if err != nil {
 				failService(c, err)
 				return
 			}
-			overview, err := svc.AdminEmailMarketingOverview(user)
+			rows, err := svc.AdminEmailCenterActivity(actor)
 			if err != nil {
 				failService(c, err)
 				return
 			}
-			ok(c, overview)
+			ok(c, rows)
 		})
-
-		// 保存自定义营销模板
-		adminGroup.PUT("/templates", func(c *gin.Context) {
-			user, err := currentUser(c, svc)
+		group.POST("/assets", func(c *gin.Context) {
+			actor, err := currentUser(c, svc)
 			if err != nil {
 				failService(c, err)
 				return
 			}
-			var req struct {
-				Templates map[string]service.MarketingTemplate `json:"templates"`
+			c.Request.Body = http.MaxBytesReader(c.Writer, c.Request.Body, 6<<20)
+			file, _, err := c.Request.FormFile("file")
+			if c.Request.MultipartForm != nil {
+				defer c.Request.MultipartForm.RemoveAll()
 			}
+			if err != nil {
+				failService(c, service.BadAuthRequest("请提供图片文件"))
+				return
+			}
+			defer file.Close()
+			data, err := io.ReadAll(io.LimitReader(file, (5<<20)+1))
+			if err != nil {
+				failService(c, service.BadAuthRequest("读取图片失败"))
+				return
+			}
+			assetURL, err := svc.UploadEmailCenterAsset(actor, data)
+			if err != nil {
+				failService(c, err)
+				return
+			}
+			ok(c, gin.H{"url": assetURL})
+		})
+		group.GET("/brand", func(c *gin.Context) {
+			actor, err := currentUser(c, svc)
+			if err != nil {
+				failService(c, err)
+				return
+			}
+			brand, err := svc.AdminEmailBrand(actor)
+			if err != nil {
+				failService(c, err)
+				return
+			}
+			c.Header("Cache-Control", "no-store")
+			ok(c, brand)
+		})
+		group.GET("/overview", func(c *gin.Context) {
+			actor, err := currentUser(c, svc)
+			if err != nil {
+				failService(c, err)
+				return
+			}
+			out, err := svc.AdminEmailCenter(actor, c.Query("locale"))
+			if err != nil {
+				failService(c, err)
+				return
+			}
+			ok(c, out)
+		})
+		group.POST("/initialize", func(c *gin.Context) {
+			actor, err := currentUser(c, svc)
+			if err != nil {
+				failService(c, err)
+				return
+			}
+			if err := svc.InitializeEmailCenter(actor); err != nil {
+				failService(c, err)
+				return
+			}
+			ok(c, gin.H{"initialized": true})
+		})
+		group.GET("/campaigns", func(c *gin.Context) {
+			actor, err := currentUser(c, svc)
+			if err != nil {
+				failService(c, err)
+				return
+			}
+			out, err := svc.AdminEmailCampaigns(actor)
+			if err != nil {
+				failService(c, err)
+				return
+			}
+			ok(c, out)
+		})
+		group.POST("/campaigns", func(c *gin.Context) {
+			c.Request.Body = http.MaxBytesReader(c.Writer, c.Request.Body, 96<<10)
+			actor, err := currentUser(c, svc)
+			if err != nil {
+				failService(c, err)
+				return
+			}
+			var req service.EmailCampaignRequest
 			if err := c.ShouldBindJSON(&req); err != nil {
-				fail(c, http.StatusBadRequest, err)
+				failService(c, service.BadAuthRequest("活动请求无效"))
 				return
 			}
-			overview, err := svc.AdminSaveEmailMarketingTemplates(user, req.Templates)
-			if err != nil {
+			if err := svc.CreateEmailCampaign(actor, req); err != nil {
 				failService(c, err)
 				return
 			}
-			ok(c, overview)
+			ok(c, gin.H{"saved": true})
 		})
-
-		// 重置单套或全部模板为默认
-		adminGroup.POST("/templates/:key/reset", func(c *gin.Context) {
-			user, err := currentUser(c, svc)
+		group.POST("/campaigns/:id/:action", func(c *gin.Context) {
+			c.Request.Body = http.MaxBytesReader(c.Writer, c.Request.Body, 1024)
+			actor, err := currentUser(c, svc)
 			if err != nil {
 				failService(c, err)
 				return
 			}
-			key := c.Param("key")
-			overview, err := svc.AdminResetEmailMarketingTemplate(user, key)
-			if err != nil {
-				failService(c, err)
-				return
-			}
-			ok(c, overview)
-		})
-
-		// 发送营销测试邮件
-		adminGroup.POST("/test", func(c *gin.Context) {
-			user, err := currentUser(c, svc)
-			if err != nil {
-				failService(c, err)
-				return
-			}
-			var req service.EmailMarketingTestRequest
+			var req service.EmailCampaignRequest
 			if err := c.ShouldBindJSON(&req); err != nil {
-				fail(c, http.StatusBadRequest, err)
+				failService(c, service.BadAuthRequest("活动请求无效"))
 				return
 			}
-			result, err := svc.SendMarketingTestEmail(user, req)
-			if err != nil {
+			if err := svc.ControlEmailCampaign(actor, c.Param("id"), c.Param("action"), req.ScheduleAt); err != nil {
 				failService(c, err)
 				return
 			}
-			ok(c, result)
+			ok(c, gin.H{"saved": true})
 		})
+		for _, action := range []string{"draft", "publish", "preview", "test"} {
+			action := action
+			group.POST("/templates/:key/"+action, func(c *gin.Context) {
+				c.Request.Body = http.MaxBytesReader(c.Writer, c.Request.Body, 128<<10)
+				actor, err := currentUser(c, svc)
+				if err != nil {
+					failService(c, err)
+					return
+				}
+				var req service.EmailCenterEditRequest
+				if err := c.ShouldBindJSON(&req); err != nil {
+					failService(c, service.BadAuthRequest("邮件请求格式无效"))
+					return
+				}
+				key := c.Param("key")
+				switch action {
+				case "draft":
+					err = svc.SaveEmailCenterDraft(actor, key, req)
+				case "publish":
+					err = svc.PublishEmailCenter(actor, key, req)
+				case "test":
+					err = svc.TestEmailCenter(actor, key, req)
+				case "preview":
+					out, previewErr := svc.PreviewEmailCenter(actor, key, req)
+					if previewErr != nil {
+						failService(c, previewErr)
+						return
+					}
+					ok(c, out)
+					return
+				}
+				if err != nil {
+					failService(c, err)
+					return
+				}
+				ok(c, gin.H{"success": true})
+			})
+		}
 	}
+	r.GET("/public/email-center/brand/:id", func(c *gin.Context) {
+		asset, err := svc.EmailCenterBrandAsset(c.Param("id"))
+		if err != nil {
+			c.Status(http.StatusNotFound)
+			return
+		}
+		c.Header("Cache-Control", "public, max-age=31536000, immutable")
+		c.Header("X-Content-Type-Options", "nosniff")
+		c.Data(http.StatusOK, asset.ContentType, asset.Data)
+	})
+	r.GET("/public/email-center/unsubscribe", func(c *gin.Context) {
+		c.Header("Cache-Control", "no-store")
+		c.Header("Referrer-Policy", "no-referrer")
+		c.Header("Content-Security-Policy", "default-src 'none'; form-action 'self'; frame-ancestors 'none'")
+		locale := maillocale.Resolve(c.Query("lang"), c.GetHeader("Accept-Language"))
+		label := html.EscapeString(maillocale.Text(locale, "unsubscribe"))
+		c.Data(http.StatusOK, "text/html; charset=utf-8", []byte(`<!doctype html><html lang="`+locale+`"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>SupDance · `+label+`</title><h1>`+label+`</h1><p>`+html.EscapeString(maillocale.Text(locale, "security_footer"))+`</p><form method="post"><input type="hidden" name="token" value="`+html.EscapeString(c.Query("token"))+`"><button name="List-Unsubscribe" value="One-Click">`+label+`</button></form></html>`))
+	})
+	r.POST("/public/email-center/unsubscribe", func(c *gin.Context) {
+		c.Request.Body = http.MaxBytesReader(c.Writer, c.Request.Body, 4096)
+		if c.PostForm("List-Unsubscribe") != "One-Click" {
+			c.Status(http.StatusBadRequest)
+			return
+		}
+		token := c.Query("token")
+		if token == "" {
+			token = c.PostForm("token")
+		}
+		if err := svc.UnsubscribeEmailCenter(token); err != nil {
+			c.Status(http.StatusBadRequest)
+			return
+		}
+		c.Header("Cache-Control", "no-store")
+		c.String(http.StatusOK, "%s", maillocale.Text(maillocale.Resolve(c.Query("lang"), c.GetHeader("Accept-Language")), "unsubscribed"))
+	})
+	r.GET("/auth/email-center/preference", func(c *gin.Context) {
+		actor, err := currentUser(c, svc)
+		if err != nil {
+			failService(c, err)
+			return
+		}
+		subscribed, err := svc.EmailCenterPreference(actor)
+		if err != nil {
+			failService(c, err)
+			return
+		}
+		ok(c, gin.H{"marketing": subscribed})
+	})
+	r.PUT("/auth/email-center/preference", func(c *gin.Context) {
+		c.Request.Body = http.MaxBytesReader(c.Writer, c.Request.Body, 1024)
+		actor, err := currentUser(c, svc)
+		if err != nil {
+			failService(c, err)
+			return
+		}
+		var req struct {
+			Marketing *bool `json:"marketing"`
+		}
+		if err := c.ShouldBindJSON(&req); err != nil || req.Marketing == nil {
+			failService(c, service.BadAuthRequest("请提供 marketing"))
+			return
+		}
+		if err := svc.SetEmailCenterPreference(actor, *req.Marketing); err != nil {
+			failService(c, err)
+			return
+		}
+		ok(c, gin.H{"saved": true})
+	})
 }

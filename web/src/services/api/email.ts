@@ -1,7 +1,7 @@
 import { compactApiParams, http } from "./request";
 
-export type EmailLogPurpose = "registration" | "password_reset" | "verification" | "profile_email" | "email_changed" | "test" | "consumption_report";
-export type EmailLogStatus = "sent" | "failed" | "skipped";
+export type EmailLogPurpose = "registration" | "password_reset" | "verification" | "profile_email" | "email_changed" | "test" | "consumption_report" | "marketing_test" | "marketing";
+export type EmailLogStatus = "sent" | "smtp_accepted" | "failed" | "skipped" | "unknown" | "suppressed" | "cancelled";
 
 export type EmailLog = {
     id: string;
@@ -27,7 +27,14 @@ export type EmailLogParams = {
     pageSize?: number;
 };
 
-export type EmailLogPage = { logs: EmailLog[]; total: number; page: number; pageSize: number; last24h: Partial<Record<EmailLogStatus, number>> };
+export type EmailLogPage = {
+    logs: EmailLog[];
+    total: number;
+    page: number;
+    pageSize: number;
+    last24h: Partial<Record<EmailLogStatus, number>>;
+    receipts?: Record<string, { locale?: string; templateId: string; brandVersion: string; messageId: string; event: string; status: string }>;
+};
 
 export function listAdminEmailLogs(params: EmailLogParams, signal?: AbortSignal) {
     return http.get<EmailLogPage>("/admin/email-logs", { params: compactApiParams(params), signal });

@@ -10,7 +10,6 @@ import (
 	"gorm.io/gorm"
 	"strings"
 	"time"
-	"yingce/backend/internal/emailtpl"
 	"yingce/backend/internal/kernel"
 	"yingce/backend/internal/model"
 	"yingce/backend/internal/repository"
@@ -18,6 +17,7 @@ import (
 )
 
 type VerificationRequest struct {
+	Locale   string `json:"locale"`
 	Purpose  string `json:"purpose"`
 	Method   string `json:"method"`
 	Email    string `json:"email"`
@@ -76,11 +76,11 @@ func (s *Service) StartVerification(ctx context.Context, actor *model.User, req 
 
 const socialOnboardingEmailPurpose = "social_onboarding"
 
-func (s *Service) StartSocialOnboardingEmail(ctx context.Context, email, binding string) (*VerificationTicket, error) {
+func (s *Service) StartSocialOnboardingEmail(ctx context.Context, email, binding string, locales ...string) (*VerificationTicket, error) {
 	if binding == "" {
 		return nil, invalidVerification()
 	}
-	return s.startVerification(ctx, nil, VerificationRequest{Purpose: socialOnboardingEmailPurpose, Method: "email", Email: email}, binding)
+	return s.startVerification(ctx, nil, VerificationRequest{Purpose: socialOnboardingEmailPurpose, Method: "email", Email: email, Locale: strings.Join(locales, ",")}, binding)
 }
 
 func (s *Service) VerifySocialOnboardingEmail(email, binding, ticket, code string) (string, error) {
@@ -225,11 +225,7 @@ func (s *Service) startVerification(ctx context.Context, actor *model.User, req 
 			return nil, err
 		}
 		setting = resolveEmailSender(setting, s.host.BrandName())
-		rendered, err := codeMail(emailtpl.CodeEmail{Brand: setting.FromName, Heading: verificationHeading(req.Purpose), Intro: "你正在" + setting.FromName + "进行" + verificationHeading(req.Purpose) + "。请在页面中输入下方验证码完成身份验证。", Code: emailCode, TTLMinutes: 10, Recipient: email})
-		if err != nil {
-			return nil, err
-		}
-		if err := s.deliverEmail(setting, EmailDelivery{Purpose: EmailPurposeVerification, UserID: userID, Recipient: email, Mail: rendered}); err != nil {
+		if err := s.deliverEmail(setting, EmailDelivery{Purpose: EmailPurposeVerification, UserID: userID, Recipient: email, EventID: v.ID, Code: emailCode, ExpiresAt: v.ExpiresAt, SecurityAction: req.Purpose, Locale: req.Locale}); err != nil {
 			return nil, kernel.NewAppError(503, "邮件发送失败，请稍后重试")
 		}
 	}

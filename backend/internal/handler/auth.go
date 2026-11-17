@@ -55,7 +55,8 @@ func RegisterAuthRoutes(r *gin.RouterGroup, svc *service.Service) {
 	r.POST("/auth/email-code", func(c *gin.Context) {
 		c.Request.Body = http.MaxBytesReader(c.Writer, c.Request.Body, 16<<10)
 		var req struct {
-			Email string `json:"email"`
+			Email  string `json:"email"`
+			Locale string `json:"locale"`
 		}
 		if err := c.ShouldBindJSON(&req); err != nil {
 			fail(c, http.StatusBadRequest, err)
@@ -68,7 +69,7 @@ func RegisterAuthRoutes(r *gin.RouterGroup, svc *service.Service) {
 		if !enforceRateLimit(c, "registration-email-account:"+passwordResetRateLimitSubject(req.Email), 10, time.Hour) {
 			return
 		}
-		if err := svc.SendRegistrationEmailCode(req.Email); err != nil {
+		if err := svc.SendRegistrationEmailCode(req.Email, req.Locale, c.GetHeader("Accept-Language")); err != nil {
 			failService(c, err)
 			return
 		}
@@ -77,7 +78,8 @@ func RegisterAuthRoutes(r *gin.RouterGroup, svc *service.Service) {
 	r.POST("/auth/password-reset-code", func(c *gin.Context) {
 		c.Request.Body = http.MaxBytesReader(c.Writer, c.Request.Body, 16<<10)
 		var req struct {
-			Email string `json:"email"`
+			Email  string `json:"email"`
+			Locale string `json:"locale"`
 		}
 		if err := c.ShouldBindJSON(&req); err != nil {
 			fail(c, http.StatusBadRequest, err)
@@ -90,7 +92,7 @@ func RegisterAuthRoutes(r *gin.RouterGroup, svc *service.Service) {
 		if !enforceRateLimit(c, "password-reset-code-account:"+passwordResetRateLimitSubject(req.Email), policy.Request.EmailCodePerHour, time.Hour) {
 			return
 		}
-		if err := svc.SendPasswordResetEmailCode(req.Email); err != nil {
+		if err := svc.SendPasswordResetEmailCode(req.Email, req.Locale, c.GetHeader("Accept-Language")); err != nil {
 			failService(c, err)
 			return
 		}

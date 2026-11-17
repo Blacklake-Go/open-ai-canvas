@@ -56,6 +56,8 @@ function ClientRootBoundary({ children }: { children: ReactNode }) {
     );
 }
 
+import { UserLanguageSync } from "@/supdance/plugins/email-marketing/user-language";
+
 export function AppProviders({ children, extensions }: { children: ReactNode; extensions?: ReactNode }) {
     const hostTheme = useActiveTheme();
     const appearance = useAppearanceStore((state) => state.appearance);
@@ -105,6 +107,7 @@ export function AppProviders({ children, extensions }: { children: ReactNode; ex
                             <>
                                 <SupDancePluginRuntimeSync />
                                 <SupDanceI18nRuntimeHost />
+                                <UserLanguageSync />
                                 <SocialOnboardingModal />
                                 {extensions}
                                 <AuthSessionHydrator fallback={<FullScreenLoader />}>

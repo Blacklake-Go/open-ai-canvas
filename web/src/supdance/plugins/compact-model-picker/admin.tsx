@@ -9,6 +9,7 @@ import { SettingsSectionCard } from "@/pages/admin/components/admin-ui";
 import { AdminSwitch } from "@/pages/admin/ui/controls";
 import { notifyPluginStateChanged } from "@/supdance/adapters/plugin-state-sync";
 import { compactAdminKey, compactPublicKey, readAdminSettings, saveAdminSettings, type CompactPickerSettings } from "./settings";
+import { useI18n } from "@/supdance/plugins/i18n";
 import { GalleryAdmin } from "./gallery-admin";
 
 const fields = [
@@ -19,6 +20,7 @@ const fields = [
 
 export default function CompactPickerAdmin() {
     const { t } = useTranslation();
+    const { t: pageText } = useI18n();
     const { message } = App.useApp();
     const [edits, setEdits] = useState<Partial<CompactPickerSettings>>({});
     const query = useQuery({ queryKey: compactAdminKey, queryFn: ({ signal }) => readAdminSettings(signal), staleTime: 0 });
@@ -35,7 +37,7 @@ export default function CompactPickerAdmin() {
     const draft = query.data && { ...query.data, ...edits };
     const dirty = draft && (fields.some(([key]) => draft[key] !== query.data?.[key]) || (["showInspirations", "homepageShowcaseEnabled", "complianceLock"] as const).some((key) => draft[key] !== query.data?.[key]));
     return (
-        <AdminPageFrame scroll title={t("compactPicker.title")} description={t("compactPicker.summary")}>
+        <AdminPageFrame scroll title={pageText("page.management.models")} description={pageText("page.management.summary")}>
             {query.isError ? (
                 <Alert type="error" showIcon title={t("compactPicker.readError")} description={query.error.message} action={<Button onClick={() => void query.refetch()}>{t("compactPicker.retry")}</Button>} />
             ) : !draft ? (

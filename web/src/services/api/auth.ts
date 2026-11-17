@@ -1,3 +1,4 @@
+import { useLocaleStore } from "@/stores/use-locale-store";
 import type { ModelChannel } from "@/stores/use-config-store";
 import type { BillingOrder, CreditLedgerEntry } from "@/services/api/wallet";
 import type { GenerationTask, TaskStatus } from "@/services/api/task-center";
@@ -20,6 +21,7 @@ export function invalidateAuthSessionCache() {
 }
 
 export type LocalUser = {
+    preferredLocale?: string;
     id: string;
     username: string;
     email?: string;
@@ -561,11 +563,11 @@ export async function login(input: { username: string; password: string; autoReg
 }
 
 export function sendRegistrationEmailCode(email: string) {
-    return http.post<{ sent: boolean }>("/auth/email-code", { email }, { session: "public" });
+    return http.post<{ sent: boolean }>("/auth/email-code", { email, locale: useLocaleStore.getState().locale }, { session: "public" });
 }
 
 export function sendPasswordResetEmailCode(email: string) {
-    return http.post<{ sent: boolean }>("/auth/password-reset-code", { email }, { session: "public" });
+    return http.post<{ sent: boolean }>("/auth/password-reset-code", { email, locale: useLocaleStore.getState().locale }, { session: "public" });
 }
 
 export function resetPassword(input: { email: string; emailCode: string; password: string }) {
@@ -573,7 +575,7 @@ export function resetPassword(input: { email: string; emailCode: string; passwor
 }
 
 export async function register(input: { username: string; email?: string; emailCode?: string; phone?: string; smsCode?: string; ticket?: string; displayName?: string; password: string; acceptedTerms: boolean; referralCode?: string }) {
-    const result = await http.post<{ user: LocalUser }>("/auth/register", input, { session: "public" });
+    const result = await http.post<{ user: LocalUser }>("/auth/register", { ...input, preferredLocale: useLocaleStore.getState().locale }, { session: "public" });
     invalidateAuthSessionCache();
     return result;
 }

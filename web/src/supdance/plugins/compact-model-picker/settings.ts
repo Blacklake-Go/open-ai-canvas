@@ -5,7 +5,7 @@ import { PLUGIN_STATE_CHANGED_EVENT, PLUGIN_STATE_REVISION_KEY } from "@/supdanc
 
 export type CompactPickerSettings = { enabled: boolean; showDescription: boolean; showPrice: boolean; showInspirations: boolean; homepageShowcaseEnabled?: boolean; complianceLock?: boolean; updatedAt?: string; unlockConfirmed?: boolean };
 export const COMPACT_PICKER_ID = "supdance-compact-model-picker";
-export const COMPACT_PICKER_ADMIN_ROUTE = "/admin/plugins/compact-model-picker";
+export const COMPACT_PICKER_ADMIN_ROUTE = "/admin/plugins/page-management";
 export const compactPublicKey = [COMPACT_PICKER_ID, "public"] as const;
 export const compactAdminKey = [COMPACT_PICKER_ID, "admin"] as const;
 const publicPath = "/supdance/compact-model-picker/settings";

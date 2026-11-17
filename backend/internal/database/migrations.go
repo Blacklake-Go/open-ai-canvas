@@ -14,7 +14,7 @@ import (
 )
 
 // Preserve published SupDance schema 1–102; upstream 102–104 map to 103–105.
-const CurrentSchemaVersion int64 = 105
+const CurrentSchemaVersion int64 = 107
 
 const baselineSchemaChecksum = "sha256:open-ai-canvas-schema-v1-20260830"
 const schemaMigrationAppliedAtIndexChecksum = "sha256:schema-migrations-applied-at-index-v2-20260830"
@@ -365,6 +365,8 @@ var schemaMigrations = []migration{
 	}},
 	{version: 104, name: "mcp_tenant_boundaries", checksum: "sha256:mcp-tenant-boundaries-v103", apply: migrateMCPTenantBoundaries},
 	{version: 105, name: "agent_storage_limits", checksum: "sha256:agent-storage-limits-v104", apply: migrateAgentStorageLimits},
+	{version: 106, name: "supdance_email_center", checksum: "sha256:supdance-email-center-v106-1", apply: migrateSupDanceEmailCenter},
+	{version: 107, name: "email_user_locales", checksum: "sha256:email-user-locales-v107-1", apply: migrateEmailLocales},
 }
 
 func migrateAPILogGenerationContent(tx *gorm.DB) error {

@@ -178,8 +178,8 @@ func (s *Service) RegistrationEnabled() (bool, error) {
 	return s.authDomain().RegistrationEnabled()
 }
 
-func (s *Service) SendPasswordResetEmailCode(rawEmail string) error {
-	return s.authDomain().SendPasswordResetEmailCode(rawEmail)
+func (s *Service) SendPasswordResetEmailCode(rawEmail string, locales ...string) error {
+	return s.authDomain().SendPasswordResetEmailCode(rawEmail, locales...)
 }
 
 func (s *Service) ResetPassword(req PasswordResetRequest) error {
@@ -191,15 +191,22 @@ func (s *Service) AdminEmailSetting(actor *model.User) (*PublicEmailSetting, err
 }
 
 func (s *Service) UpdateEmailSetting(actor *model.User, req EmailSettingRequest) (*PublicEmailSetting, error) {
-	return s.authDomain().UpdateEmailSetting(actor, req)
+	out, err := s.authDomain().UpdateEmailSetting(actor, req)
+	if err != nil {
+		return nil, err
+	}
+	if err := s.appendAdminAudit(actor, "email.smtp.update", "system_setting", "email", "更新 SMTP 与账户邮件开关（不记录密钥）", nil); err != nil {
+		return nil, err
+	}
+	return out, nil
 }
 
 func (s *Service) EmailEnabled() (bool, error) {
 	return s.authDomain().EmailEnabled()
 }
 
-func (s *Service) SendRegistrationEmailCode(rawEmail string) error {
-	return s.authDomain().SendRegistrationEmailCode(rawEmail)
+func (s *Service) SendRegistrationEmailCode(rawEmail string, locales ...string) error {
+	return s.authDomain().SendRegistrationEmailCode(rawEmail, locales...)
 }
 
 func (s *Service) VerifyRegistrationEmailCode(email string, rawCode string) (*model.EmailVerificationCode, error) {
@@ -307,7 +314,17 @@ func randomToken() string {
 }
 
 func (s *Service) AdminEmailLogs(actor *model.User, query EmailLogQuery, page, pageSize int) (*EmailLogPage, error) {
-	return s.authDomain().AdminEmailLogs(actor, query, page, pageSize)
+	out, err := s.authDomain().AdminEmailLogs(actor, query, page, pageSize)
+	if err != nil {
+		return nil, err
+	}
+	for i := range out.Logs {
+		out.Logs[i].Recipient = maskEmailForCenter(out.Logs[i].Recipient)
+	}
+	if err := s.appendAdminAudit(actor, "email.logs.view", "email_log", "", "读取脱敏邮件记录", nil); err != nil {
+		return nil, err
+	}
+	return out, nil
 }
 
 func (s *Service) SendTestEmail(actor *model.User, recipient string) error {

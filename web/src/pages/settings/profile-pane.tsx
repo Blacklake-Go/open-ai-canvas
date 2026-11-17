@@ -28,6 +28,7 @@ import { useI18n } from "@/supdance/plugins/i18n";
 import { profileAvatarError, profilePasswordError, profileReauthReady, profileSecondsRemaining } from "./profile-validation";
 
 import "./profile-pane.css";
+import { UserLanguagePreference } from "@/supdance/plugins/email-marketing/user-language";
 
 type PasswordFields = { currentPassword: string; newPassword: string; confirmPassword: string };
 type EmailFields = { currentPassword: string; email: string; emailCode: string };
@@ -355,6 +356,7 @@ export function ProfilePane({ returnToModal = false }: { returnToModal?: boolean
                         </div>
                     </section>
 
+                    <UserLanguagePreference />
                     {profile.wechatEnabled || profile.wechatBound ? (
                         <Callout
                             title={t("auth.wechat.title")}

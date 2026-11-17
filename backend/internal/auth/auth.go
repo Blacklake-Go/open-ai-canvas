@@ -15,6 +15,7 @@ import (
 	"yingce/backend/internal/repository"
 
 	"yingce/backend/internal/model"
+	"yingce/backend/internal/supdance/maillocale"
 
 	"golang.org/x/crypto/bcrypt"
 	"gorm.io/gorm"
@@ -32,6 +33,7 @@ var usernameInvalidChars = regexp.MustCompile(`[^a-zA-Z0-9_-]+`)
 type AuthError = kernel.AppError
 
 type RegisterRequest struct {
+	PreferredLocale    string `json:"preferredLocale"`
 	wechatRegistration *model.OAuthState
 	LoginContext       LoginContext `json:"-"`
 	Username           string       `json:"username"`
@@ -254,18 +256,22 @@ func (s *Service) Register(req RegisterRequest) (*AuthSessionResult, error) {
 			return nil, err
 		}
 	}
+	if req.PreferredLocale != "" && !maillocale.Valid(req.PreferredLocale) {
+		return nil, kernel.BadAuthRequest("不支持的用户语言")
+	}
 	now := time.Now()
 	user := model.User{
-		ID:           kernel.NewID(),
-		Username:     username,
-		Email:        email,
-		Phone:        phone,
-		DisplayName:  displayName,
-		Role:         model.UserRoleUser,
-		Status:       model.UserStatusActive,
-		PasswordHash: passwordHash,
-		CreatedAt:    now,
-		UpdatedAt:    now,
+		ID:              kernel.NewID(),
+		Username:        username,
+		Email:           email,
+		Phone:           phone,
+		DisplayName:     displayName,
+		PreferredLocale: req.PreferredLocale,
+		Role:            model.UserRoleUser,
+		Status:          model.UserStatusActive,
+		PasswordHash:    passwordHash,
+		CreatedAt:       now,
+		UpdatedAt:       now,
 	}
 	if count == 0 && req.wechatRegistration == nil {
 		user.Role = model.UserRoleAdmin

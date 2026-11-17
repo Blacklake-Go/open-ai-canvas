@@ -5,6 +5,26 @@ description: 影策后端核心持久化表与状态边界
 
 # 后端数据库
 
+## SupDance 邮件中心（Schema 106–107）
+
+增量迁移 `supdance_email_center` 保留 SMTP、原营销模板 JSON、`email_logs`、认证挑战及消费日报订阅，新增：
+
+| 表 | 关键合同 |
+| --- | --- |
+| `supdance_email_templates` | `(key, locale)` 复合主键，draft/published 指针与乐观锁 revision；草稿不影响正式发送 |
+| `supdance_email_revisions` | 不可变模板 JSON、来源 kind、操作者及创建时间；legacy 版本原文留存，不直接执行 |
+| `supdance_email_receipts` | SHA-256 发送意图主键、32 字符 log_id、事件、模板 key/version、品牌版本、通道、Message-ID、结果、失败阶段与耗时；没有正文、代码或凭证 |
+| `supdance_email_contacts` | 邮箱、明确同意来源/范围/时间、退订与抑制；注册不自动订阅，退订更新不会清除抑制 |
+| `supdance_email_brand_assets` | 内容哈希主键、公开图片字节和 MIME；保存历史素材以便旧邮件继续显示 |
+| `supdance_email_campaigns` | 活动草稿、固定模板版本、允许的非认证变量、订阅来源分组、计划时间和状态 |
+| `supdance_email_jobs` | 活动/收件人/意图唯一键、独立收件人、状态、尝试次数、下次运行时间；不暂存认证正文或代码 |
+
+品牌公开字段的不可变快照复用 `system_settings` 中的 `sd.email.brand.<hash>` 键，长度符合原 80 字符限制。原 `email_logs.id` 的 36 字符宽度不变，使用 receipt.log_id 关联元数据，旧记录仍可读取。记录总量不能被解释成真实收件或送达率。
+
+Schema 107 `supdance_email_locales` 只增加五个字段：`users.preferred_locale`、`supdance_email_contacts.preferred_locale`、`supdance_email_receipts.locale`、`supdance_email_campaigns.revisions_json` 与 `localized_variables_json`。旧账号和联系人语言默认空，保留既有数据；不对整个 User 执行 AutoMigrate。模板以 `(key, locale)` 独立版本，内置 11×8 个组合。活动保存八语言发布版本映射及明确的运营翻译，发送时根据收件人偏好选择固定版本。旧单语言活动保持原样，缺少对应语言时拒绝发送，不静默替换或重放。
+
+只有 SMTP 明确临时拒绝或正文发送前的临时网络错误可有限重试；正文提交结果不明或进程遗留的发送中状态转为 unknown，不主动重放。回滚模板/进入安全模式不删除退订、抑制、收据或审计。旧 Schema 105/106 程序拒绝连接 107，不能通过删除迁移记录做数据库降级。回退需支持 107 的构建并保留新字段与发送历史。SQLite/PostgreSQL 增量与重复执行已验证；生产恢复迁移尚未执行。操作说明见 [邮件语言与迁移文档](../../../supdance/EMAIL_CENTER_LANGUAGES.md)。
+
 ## 微信登录（本站 Schema 103）
 
 版本 103 `wechat_oauth` 为 `o_auth_states` 增加 `purpose`（登录、绑定、重新核验用途）、`client_id`（发起时的网站应用 AppID）和 `profile_json`（首次微信注册的临时昵称、头像及身份标识）。旧状态的这些字段为空，不改变 Linux.do 与 OIDC 的处理。

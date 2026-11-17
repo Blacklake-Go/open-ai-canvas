@@ -13,6 +13,7 @@ import (
 	"yingce/backend/internal/auth"
 	"yingce/backend/internal/emailtpl"
 	"yingce/backend/internal/model"
+	"yingce/backend/internal/supdance/maillocale"
 )
 
 // 消费日报按东八区自然日统计，23:59 起发送；23:59 之后的消费计入次日。
@@ -160,11 +161,12 @@ func (s *Service) sendConsumptionReport(user model.User, dayStart time.Time) err
 	if err != nil {
 		return err
 	}
+	report.ContentOnly = true
 	rendered, err := emailtpl.RenderConsumptionReport(*report)
 	if err != nil {
 		return err
 	}
-	return s.authDomain().SendSystemEmail(auth.EmailDelivery{Purpose: auth.EmailPurposeConsumptionReport, UserID: user.ID, Recipient: user.Email,
+	return s.authDomain().SendSystemEmail(auth.EmailDelivery{Purpose: auth.EmailPurposeConsumptionReport, Locale: report.Locale, LocaleResolved: true, UserID: user.ID, Recipient: user.Email, EventID: user.ID + ":" + dayStart.Format("2006-01-02"),
 		Mail: auth.OutgoingMail{Subject: rendered.Subject, Text: rendered.Text, HTML: rendered.HTML}})
 }
 
@@ -178,7 +180,12 @@ func (s *Service) buildConsumptionReport(user model.User, dayStart time.Time) (*
 	if err != nil {
 		return nil, err
 	}
+	locale, localeErr := s.authDomain().ResolveEmailLocale(auth.EmailDelivery{UserID: user.ID, Recipient: user.Email})
+	if localeErr != nil {
+		return nil, localeErr
+	}
 	report := &emailtpl.ConsumptionReport{
+		Locale:      locale,
 		Brand:       s.authDomain().EmailBrandName(),
 		UserName:    firstNonEmpty(strings.TrimSpace(user.DisplayName), user.Username),
 		Date:        dayStart.Format("2006-01-02"),
@@ -205,11 +212,14 @@ func (s *Service) buildConsumptionReport(user model.User, dayStart time.Time) (*
 		if dayIndex != 6 {
 			continue
 		}
-		label := capabilityLabels[row.Capability]
-		if label == "" {
-			label = firstNonEmpty(row.Scene, "其他")
+		label := ""
+		if _, ok := capabilityLabels[row.Capability]; ok {
+			label = maillocale.Text(locale, "cap_"+row.Capability)
 		}
-		modelName := firstNonEmpty(strings.TrimSpace(row.Model), "未命名模型")
+		if label == "" {
+			label = firstNonEmpty(row.Scene, maillocale.Text(locale, "other"))
+		}
+		modelName := firstNonEmpty(strings.TrimSpace(row.Model), maillocale.Text(locale, "unnamed_model"))
 		if row.Type == model.CreditLedgerRefund {
 			report.RefundMicro += row.AmountMicrocredits
 		} else {
