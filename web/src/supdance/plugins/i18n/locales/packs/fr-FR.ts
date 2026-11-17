@@ -1,9 +1,12 @@
 // Generated UI translations; protected names and interpolation tokens are retained.
+import { EMAIL_CENTER_I18N_ENTRIES } from "@/supdance/plugins/email-marketing/messages";
+import { PAGE_MANAGEMENT_ENTRIES } from "@/supdance/plugins/compact-model-picker/page-messages";
 import { HTML_ADMIN_I18N_ENTRIES } from "../html-admin";
 import { PAYMENT_RECONCILIATION_CATALOGS } from "../payment-reconciliation";
 
 export default {
     ...Object.fromEntries(HTML_ADMIN_I18N_ENTRIES.map((entry) => [entry.key, entry.translations["fr-FR"]])),
+    ...Object.fromEntries([...EMAIL_CENTER_I18N_ENTRIES, ...PAGE_MANAGEMENT_ENTRIES].map((entry) => [entry.key, entry.translations["fr-FR"]])),
     ...PAYMENT_RECONCILIATION_CATALOGS["fr-FR"],
     "federation.title": "Connecter votre compte créateur ONE",
     "federation.intro": "Vérifiez les deux comptes. Les nouvelles créations utilisent le portefeuille principal ; les anciens crédits et transactions ONE conservent leur valeur et leur expiration.",

@@ -43,7 +43,7 @@ function EpisodeMenu({
 }) {
     _useCreationLocale();
     const items = [
-        ...(onRename ? [{ key: "rename", icon: <Pencil className="size-3.5" />, label: "修改名称", onClick: () => onRename(episode) }] : []),
+        ...(onRename ? [{ key: "rename", icon: <Pencil className="size-3.5" />, label: _creationText("creation.88f4625eade235b7"), onClick: () => onRename(episode) }] : []),
         ...(onInsert
             ? [
                   { key: "before", icon: <ArrowUpToLine className="size-3.5" />, label: "在前面插入一集", onClick: () => onInsert(episode, "before") },
@@ -234,7 +234,13 @@ export function EpisodeRail({
                                         {onRename || onInsert || onDelete ? (
                                             <div className="drama-ep-actions">
                                                 {onRename ? (
-                                                    <button type="button" className="drama-ep-more" aria-label={`修改第 ${episode.number} 集名称`} title="修改名称" onClick={() => onRename(episode)}>
+                                                    <button
+                                                        type="button"
+                                                        className="drama-ep-more"
+                                                        aria-label={_creationText("creation.1dfc5bde70de7514", { value1: episode.number })}
+                                                        title={_creationText("creation.88f4625eade235b7")}
+                                                        onClick={() => onRename(episode)}
+                                                    >
                                                         <Pencil className="size-3.5" />
                                                     </button>
                                                 ) : null}

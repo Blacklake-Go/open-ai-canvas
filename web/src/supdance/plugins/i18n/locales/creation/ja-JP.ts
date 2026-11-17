@@ -1,5 +1,9 @@
 // Native interface catalog for ecommerce and novel adaptation.
 const pack: Record<string, string> = {
+    "creation.88f4625eade235b7": "名前を変更",
+    "creation.1dfc5bde70de7514": "第{value1}話の名前を変更",
+    "creation.f42a1238b44a4858": "保存に失敗しました。もう一度お試しください。",
+    "creation.5110640086b8db25": "プロンプトを保存中…",
     "creation.a9035e0b94c777c4": "前の章の話数構成を作成中です。完了後に新しい話を{value1}できます。",
     "creation.88b62416a83e9ce5": "前の章の話数構成を作成中です。完了後に削除できます。",
     "creation.51d702b542959835": "作品には最低1話が必要です。作品全体が不要な場合は、作品一覧から削除してください。",

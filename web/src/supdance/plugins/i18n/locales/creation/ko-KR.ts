@@ -1,5 +1,9 @@
 // Native interface catalog for ecommerce and novel adaptation.
 const pack: Record<string, string> = {
+    "creation.88f4625eade235b7": "이름 변경",
+    "creation.1dfc5bde70de7514": "{value1}화 이름 변경",
+    "creation.f42a1238b44a4858": "저장하지 못했습니다. 다시 시도해 주세요.",
+    "creation.5110640086b8db25": "프롬프트 저장 중…",
     "creation.a9035e0b94c777c4": "앞쪽 장의 에피소드 구성을 기획 중입니다. 완료 후 새 에피소드를 {value1}할 수 있습니다.",
     "creation.88b62416a83e9ce5": "앞쪽 장의 에피소드 구성을 기획 중입니다. 완료 후 삭제할 수 있습니다.",
     "creation.51d702b542959835": "작품에는 최소 한 개의 에피소드가 있어야 합니다. 작품 전체가 필요 없으면 작품 목록에서 삭제하세요.",

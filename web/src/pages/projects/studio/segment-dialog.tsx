@@ -690,7 +690,7 @@ function SegmentPrompt({
             setSaving(false);
         }
     };
-    const reportSaveError = (reason: unknown) => setSaveError(reason instanceof Error ? reason.message : "保存失败，请重试");
+    const reportSaveError = (reason: unknown) => setSaveError(reason instanceof Error ? reason.message : _creationText("creation.f42a1238b44a4858"));
     const commit = () => {
         const next = draft.trim();
         if (!dirty || editingDisabled) return;
@@ -845,7 +845,7 @@ function SegmentPrompt({
                 </p>
             ) : null}
             <div className="drama-sd-pane-foot">
-                {saving ? <span role="status">正在保存提示词…</span> : dirty ? <span className="is-dirty">{_creationText("creation.da8f43267001c38b")}</span> : <span>{_creationText("creation.01170d728a5fe595")}</span>}
+                {saving ? <span role="status">{_creationText("creation.5110640086b8db25")}</span> : dirty ? <span className="is-dirty">{_creationText("creation.da8f43267001c38b")}</span> : <span>{_creationText("creation.01170d728a5fe595")}</span>}
                 <span className={overLimit ? "is-over" : undefined} title={_creationText("creation.3ee6bf03176e4a13")}>
                     {_creationText("creation.093c8e41624b1c08")}
                     {sentChars}

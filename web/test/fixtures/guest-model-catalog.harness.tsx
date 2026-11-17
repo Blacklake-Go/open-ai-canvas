@@ -69,8 +69,10 @@ for (const component of ["picker", "composer"] as const) {
         const requests: string[] = [];
         apiClient.defaults.adapter = async (request) => {
             requests.push(request.url!);
-            return { config: request, status: 200, statusText: "OK", headers: {}, data: { code: 0, data: { quote: { amountMicrocredits: 2000000, estimated: false } } } };
+            const data = request.url === "/supdance/compact-model-picker/settings" ? { enabled: true, showDescription: true, showPrice: true, showInspirations: false, complianceLock: true } : { quote: { amountMicrocredits: 2000000, estimated: false } };
+            return { config: request, status: 200, statusText: "OK", headers: {}, data: { code: 0, data } };
         };
+        const quoteRequests = () => requests.filter((url) => url !== "/supdance/compact-model-picker/settings");
         useUserStore.setState({ user: null, hydrated: true });
         const host = document.createElement("div");
         document.body.append(host);
@@ -137,14 +139,14 @@ for (const component of ["picker", "composer"] as const) {
                 ),
             );
             expect(host.textContent).toContain("游客可见视频模型");
-            expect(requests).toEqual([]);
+            expect(quoteRequests()).toEqual([]);
             if (component === "composer") expect(host.querySelector('button[aria-label^="预估"]')).not.toBeNull();
             await act(async () => useUserStore.setState({ user: { id: "member", username: "member", displayName: "会员", role: "user", status: "active" } }));
-            expect(requests.length).toBeGreaterThan(0);
-            expect(requests.every((url) => url === "/model-catalog/quote")).toBe(true);
-            const count = requests.length;
+            expect(quoteRequests().length).toBeGreaterThan(0);
+            expect(quoteRequests().every((url) => url === "/model-catalog/quote")).toBe(true);
+            const count = quoteRequests().length;
             await act(async () => useUserStore.setState({ user: null }));
-            expect(requests).toHaveLength(count);
+            expect(quoteRequests()).toHaveLength(count);
             expect(host.textContent).toContain("游客可见视频模型");
             if (component === "composer") expect(host.querySelector('button[aria-label^="预估"]')).not.toBeNull();
         } finally {

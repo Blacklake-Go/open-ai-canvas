@@ -1,9 +1,12 @@
 // Generated UI translations; protected names and interpolation tokens are retained.
+import { EMAIL_CENTER_I18N_ENTRIES } from "@/supdance/plugins/email-marketing/messages";
+import { PAGE_MANAGEMENT_ENTRIES } from "@/supdance/plugins/compact-model-picker/page-messages";
 import { HTML_ADMIN_I18N_ENTRIES } from "../html-admin";
 import { PAYMENT_RECONCILIATION_CATALOGS } from "../payment-reconciliation";
 
 export default {
     ...Object.fromEntries(HTML_ADMIN_I18N_ENTRIES.map((entry) => [entry.key, entry.translations["de-DE"]])),
+    ...Object.fromEntries([...EMAIL_CENTER_I18N_ENTRIES, ...PAGE_MANAGEMENT_ENTRIES].map((entry) => [entry.key, entry.translations["de-DE"]])),
     ...PAYMENT_RECONCILIATION_CATALOGS["de-DE"],
     "federation.title": "ONE-Kreativkonto verbinden",
     "federation.intro": "Prüfen Sie beide Konten. Neue Erstellungen nutzen das Hauptguthaben; bisherige ONE-Credits und Transaktionen behalten ihren Wert und Ablauf.",
