@@ -1,6 +1,6 @@
-import { TOS_DOC_MAP } from "./legal-i18n-content";
+import { SERVICE_TERMS } from "./service-policies";
 import { LinearLegalPage } from "./linear-legal-page";
 
 export default function TermsPage() {
-    return <LinearLegalPage docMap={TOS_DOC_MAP} currentSlug="terms" />;
+    return <LinearLegalPage docMap={SERVICE_TERMS} currentSlug="terms" />;
 }

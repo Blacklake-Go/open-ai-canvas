@@ -58,9 +58,15 @@ export const jaJP: DeepStringRecord<typeof zhCN> = {
     status: {
         videoGenerated: "動画を生成しました",
         imageGenerated: "画像を生成しました",
+        audioGenerated: "音楽を生成しました",
         imagesPartiallyGenerated: "{{done}} 枚の画像を生成、{{failed}} 枚が失敗",
         stopped: "停止しました",
         failed: "生成に失敗しました",
+    },
+    music: {
+        studioLink: "音楽スタジオ",
+        studioLinkTooltip: "音楽スタジオでフルワークスペースを開く",
+        instrumentalBadge: "インスト",
     },
     inspiration: {
         useIdea: "このアイデアを使う",
@@ -103,6 +109,7 @@ export const jaJP: DeepStringRecord<typeof zhCN> = {
         text: "テキスト",
         image: "画像",
         video: "動画",
+        music: "音楽",
     },
     shotScript: {
         text: "制作メモ",

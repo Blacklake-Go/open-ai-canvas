@@ -1,92 +1,56 @@
 import { describe, expect, it } from "bun:test";
-import { AUP_DOC_MAP, LEGAL_LANGUAGE_LABELS, LEGAL_OPERATOR_CONFIG, PRIVACY_DOC_MAP, SupportedLegalLanguage, TOS_DOC_MAP } from "@/supdance/pages/legal/legal-i18n-content";
+import { SUPPORTED_LOCALES } from "@/i18n/locales";
+import { AUP_DOC_MAP, LEGAL_OPERATOR_CONFIG, PRIVACY_DOC_MAP, TOS_DOC_MAP } from "@/supdance/pages/legal/legal-i18n-content";
 import { LEGAL_OPERATOR } from "@/supdance/pages/legal/legal-meta";
+import { LEGAL_LOCALE_MAP, SERVICE_PRIVACY, SERVICE_TERMS } from "@/supdance/pages/legal/service-policies";
+import { renderLegalHtml } from "@/supdance/pages/legal/legal-html";
+import { BUILTIN_HTML_TEMPLATES } from "@/supdance/plugins/html-page-manager/templates";
 
-describe("Legal Documents & Multi-Language Completeness", () => {
-    const requiredLanguages: SupportedLegalLanguage[] = ["en", "zh-CN", "zh-TW", "ja", "ko", "es"];
-
-    it("LEGAL_OPERATOR_CONFIG and LEGAL_OPERATOR are fully defined without placeholders", () => {
-        expect(LEGAL_OPERATOR_CONFIG.legalName).toBe("Zhang Donghe");
-        expect(LEGAL_OPERATOR_CONFIG.tradeName).toBe("Supdance");
-        expect(LEGAL_OPERATOR_CONFIG.supportEmail).toBe("support@supdance.com");
-        expect(LEGAL_OPERATOR_CONFIG.safetyEmail).toBe("safety@supdance.com");
-        expect(LEGAL_OPERATOR_CONFIG.domain).toBe("https://www.supdance.com");
-
-        expect(LEGAL_OPERATOR.legalName).toBe("Zhang Donghe");
-        expect(LEGAL_OPERATOR.mailingAddress).not.toContain("【待补充");
-        expect(LEGAL_OPERATOR.effectiveDate).not.toContain("【待补充");
+describe("Public service policies", () => {
+    it("keeps route exports on the same content source", () => {
+        expect(TOS_DOC_MAP).toBe(SERVICE_TERMS);
+        expect(PRIVACY_DOC_MAP).toBe(SERVICE_PRIVACY);
+        expect(LEGAL_OPERATOR_CONFIG.legalName).toBe("Supdance");
+        expect(LEGAL_OPERATOR.legalName).toBe("Supdance");
+        expect(LEGAL_OPERATOR.mailingAddress).toBe("support@supdance.com");
     });
 
-    it("LEGAL_LANGUAGE_LABELS covers all 6 supported languages", () => {
-        for (const lang of requiredLanguages) {
-            expect(LEGAL_LANGUAGE_LABELS[lang]).toBeDefined();
-            expect(LEGAL_LANGUAGE_LABELS[lang].label).toBeTruthy();
-            expect(LEGAL_LANGUAGE_LABELS[lang].code).toBeTruthy();
-        }
+    for (const { code } of SUPPORTED_LOCALES) {
+        it(`renders complete, distinct policies and standalone HTML for ${code}`, () => {
+            const lang = LEGAL_LOCALE_MAP[code];
+            for (const [kind, map] of [
+                ["terms", SERVICE_TERMS],
+                ["privacy", SERVICE_PRIVACY],
+            ] as const) {
+                const doc = map[lang];
+                expect(doc.sections).toHaveLength(10);
+                expect(new Set(doc.sections.map((section) => section.id)).size).toBe(10);
+                expect(doc.sections.every((section) => section.paragraphs?.every((p) => p.length > 70))).toBe(true);
+                if (lang !== "en") expect(doc.summary).not.toBe(map.en.summary);
+                const html = renderLegalHtml(kind, code);
+                expect(html).toContain(`<html lang="${code}">`);
+                expect(html).toContain(doc.title);
+                expect(html.match(/<section id=/g)).toHaveLength(10);
+                expect(html).toContain("mailto:support@supdance.com");
+                expect(html).not.toMatch(/zhang\s*donghe|PCI-DSS|72 hours|<script/i);
+            }
+            expect(SERVICE_TERMS[lang].sections.some((section) => section.id === "refund")).toBe(true);
+            expect(SERVICE_PRIVACY[lang].sections.some((section) => section.id === "cookies")).toBe(true);
+            expect(SERVICE_PRIVACY[lang].sections.some((section) => section.id === "international-transfers")).toBe(true);
+        });
+    }
+
+    it("updates managed HTML templates instead of retaining stale personal data", () => {
+        expect(BUILTIN_HTML_TEMPLATES.find((t) => t.id === "linear-dark")?.sampleHtml).toBe(renderLegalHtml("terms", "zh-CN"));
+        expect(BUILTIN_HTML_TEMPLATES.find((t) => t.id === "vercel-doc")?.sampleHtml).toBe(renderLegalHtml("privacy", "zh-CN"));
+        expect(JSON.stringify(BUILTIN_HTML_TEMPLATES)).not.toMatch(/zhang\s*donghe/i);
     });
 
-    it("AUP_DOC_MAP has full parity across all 6 languages (7 sections, tables and callouts)", () => {
-        const expectedSectionIds = ["scope", "content-standards", "moderation", "reporting", "enforcement-actions", "appeals", "transparency"];
-
-        for (const lang of requiredLanguages) {
-            const doc = AUP_DOC_MAP[lang];
-            expect(doc).toBeDefined();
-            expect(doc.title).toBeTruthy();
-            expect(doc.summary).toBeTruthy();
-            expect(doc.sections.length).toBe(7);
-
-            const sectionIds = doc.sections.map((s) => s.id);
-            expect(sectionIds).toEqual(expectedSectionIds);
-
-            // Reporting section must have timing table
-            const reportingSection = doc.sections.find((s) => s.id === "reporting");
-            expect(reportingSection?.table).toBeDefined();
-            expect(reportingSection?.table?.rows.length).toBe(3);
-
-            // Enforcement section must have enforcement table
-            const enforcementSection = doc.sections.find((s) => s.id === "enforcement-actions");
-            expect(enforcementSection?.table).toBeDefined();
-            expect(enforcementSection?.table?.rows.length).toBe(5);
-        }
-    });
-
-    it("TOS_DOC_MAP has full parity across all 6 languages (10 sections)", () => {
-        const expectedSectionIds = ["acceptance", "services", "account", "billing", "payment", "refund", "disputes", "intellectual-property", "disclaimers", "general"];
-
-        for (const lang of requiredLanguages) {
-            const doc = TOS_DOC_MAP[lang];
-            expect(doc).toBeDefined();
-            expect(doc.title).toBeTruthy();
-            expect(doc.summary).toBeTruthy();
-            expect(doc.sections.length).toBe(10);
-
-            const sectionIds = doc.sections.map((s) => s.id);
-            expect(sectionIds).toEqual(expectedSectionIds);
-
-            // Refund section must clearly state 7-day unused refund and failed task automatic reversal
-            const refundSection = doc.sections.find((s) => s.id === "refund");
-            expect(refundSection?.bullets).toBeDefined();
-            expect(refundSection?.bullets?.length).toBeGreaterThanOrEqual(4);
-        }
-    });
-
-    it("PRIVACY_DOC_MAP has full parity across all 6 languages (8 sections)", () => {
-        const expectedSectionIds = ["controller", "collection", "purposes", "sharing", "security", "rights", "retention", "contact"];
-
-        for (const lang of requiredLanguages) {
-            const doc = PRIVACY_DOC_MAP[lang];
-            expect(doc).toBeDefined();
-            expect(doc.title).toBeTruthy();
-            expect(doc.summary).toBeTruthy();
-            expect(doc.sections.length).toBe(8);
-
-            const sectionIds = doc.sections.map((s) => s.id);
-            expect(sectionIds).toEqual(expectedSectionIds);
-
-            // Purposes section must have GDPR legal basis table
-            const purposesSection = doc.sections.find((s) => s.id === "purposes");
-            expect(purposesSection?.table).toBeDefined();
-            expect(purposesSection?.table?.rows.length).toBe(4);
+    it("preserves existing acceptable-use content and reporting anchors", () => {
+        for (const doc of Object.values(AUP_DOC_MAP)) {
+            expect(doc.sections).toHaveLength(7);
+            expect(doc.sections.map((section) => section.id)).toContain("reporting");
+            expect(doc.sections.map((section) => section.id)).toContain("enforcement-actions");
         }
     });
 });

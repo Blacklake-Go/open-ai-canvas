@@ -1,9 +1,20 @@
-import { ArrowRight, Mail } from "lucide-react";
 import { useEffect, useState } from "react";
 import { Link } from "react-router";
+import { useLocaleStore } from "@/stores/use-locale-store";
+import { useI18n } from "@/supdance/plugins/i18n";
+import "./site-footer.css";
 
 import { DEFAULT_HTML_SITE_FOOTER_CONFIG, fetchPublicHtmlSiteFooterConfig } from "@/supdance/plugins/html-page-manager/api";
 import type { HtmlSiteFooterConfig } from "@/supdance/plugins/html-page-manager/types";
+
+const footerLabels = {
+    "zh-CN": { title: "法律与支持", center: "法律中心", contact: "联系我们" },
+    "en-US": { title: "Legal & support", center: "Legal center", contact: "Contact us" },
+    "fr-FR": { title: "Informations et assistance", center: "Centre juridique", contact: "Nous contacter" },
+    "de-DE": { title: "Rechtliches & Support", center: "Rechtliche Informationen", contact: "Kontakt" },
+    "ja-JP": { title: "法務・サポート", center: "法務情報", contact: "お問い合わせ" },
+    "ko-KR": { title: "법률 및 지원", center: "법률 정보", contact: "문의하기" },
+};
 
 function SocialVectorIcon({ id }: { id: string }) {
     const key = id.toLowerCase();
@@ -77,6 +88,32 @@ interface SupdanceAboutFooterProps {
 }
 
 export function SupdanceAboutFooter({ pagePath, configOverride, forceShow = false }: SupdanceAboutFooterProps) {
+    const { t } = useI18n();
+    const locale = useLocaleStore((state) => state.locale);
+    const labels = footerLabels[locale];
+    const toolColumns = [
+        {
+            title: t("nav.sidebar.headingTools"),
+            links: [
+                { label: t("nav.sidebar.toolboxImage"), href: "/toolbox/image" },
+                { label: t("nav.sidebar.toolboxVideo"), href: "/toolbox/video" },
+                { label: t("upstream.creation.musicNavigation"), href: "/toolbox/music" },
+                { label: t("nav.tools.assets"), href: "/assets" },
+                { label: t("nav.tools.skills"), href: "/skills" },
+                { label: t("nav.tools.plugins"), href: "/plugins" },
+            ],
+        },
+        {
+            title: t("nav.sidebar.home"),
+            links: [
+                { label: t("nav.sidebar.canvas"), href: "/canvas" },
+                { label: t("nav.sidebar.projects"), href: "/projects" },
+                { label: t("nav.tools.create"), href: "/create" },
+                { label: t("nav.sidebar.ecommerce"), href: "/ecommerce" },
+                { label: t("nav.tools.tasks"), href: "/tasks" },
+            ],
+        },
+    ];
     const [remoteConfig, setRemoteConfig] = useState<HtmlSiteFooterConfig>(DEFAULT_HTML_SITE_FOOTER_CONFIG);
 
     useEffect(() => {
@@ -101,7 +138,7 @@ export function SupdanceAboutFooter({ pagePath, configOverride, forceShow = fals
     }
 
     return (
-        <footer className="relative mt-20 border-t border-white/[0.08] bg-[#07080c] pt-16 pb-12 overflow-hidden select-none text-white">
+        <footer className="supdance-site-footer relative mt-20 border-t border-white/[0.08] pt-16 pb-12 overflow-hidden text-white">
             {/* 底部全景极光微光环境背光 (指针安全) */}
             <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-[1200px] h-[480px] bg-gradient-to-t from-[#e11d74]/10 via-[#3772FF]/5 to-transparent blur-[160px] pointer-events-none" />
             <div className="absolute -bottom-24 -left-20 w-[420px] h-[420px] bg-[#00f5d4]/5 blur-[130px] rounded-full pointer-events-none" />
@@ -112,13 +149,8 @@ export function SupdanceAboutFooter({ pagePath, configOverride, forceShow = fals
                     {/* 第 1 列：品牌徽标与企业愿景 (占据 4 列) */}
                     <div className="lg:col-span-4 flex flex-col items-start space-y-4">
                         <Link to="/" className="group flex flex-col items-start gap-1.5 cursor-pointer no-underline" aria-label={`${cfg.brandName} Home`}>
-                            <span className="inline-flex items-center gap-2.5">
-                                <span className="size-8 rounded-lg bg-black/80 border border-white/10 flex items-center justify-center shadow-lg group-hover:scale-105 transition-transform duration-200">
-                                    <img src="/supdance-mark.png" alt={cfg.brandName} className="size-[26px] object-contain" />
-                                </span>
-                                <span className="text-lg font-black tracking-tight text-[#e11d74] group-hover:text-[#00f5d4] transition-colors">{cfg.brandName}</span>
-                            </span>
-                            <span className="text-[10px] font-mono text-white/40 tracking-wider uppercase">{cfg.brandSlogan}</span>
+                            <img src="/supdance-footer-logo.png" alt={cfg.brandName} className="supdance-footer-logo" width="1000" height="220" />
+                            <span className="text-xs font-mono tracking-wider uppercase">{cfg.brandSlogan}</span>
                         </Link>
 
                         <p className="text-xs text-white/60 leading-relaxed max-w-sm m-0">{cfg.brandVision}</p>
@@ -151,7 +183,7 @@ export function SupdanceAboutFooter({ pagePath, configOverride, forceShow = fals
                     </div>
 
                     {/* 第 2 & 3 列：导航链接矩阵 (各占 2 列) */}
-                    {cfg.columns.slice(0, 2).map((col, idx) => (
+                    {toolColumns.map((col, idx) => (
                         <div key={`${col.title}-${idx}`} className="lg:col-span-2 space-y-3">
                             <div className="text-xs font-bold text-white uppercase tracking-wider font-mono">{col.title}</div>
                             <ul className="space-y-2 text-xs text-white/60 list-none p-0 m-0">
@@ -166,65 +198,38 @@ export function SupdanceAboutFooter({ pagePath, configOverride, forceShow = fals
                         </div>
                     ))}
 
-                    {/* 第 4 列：模型技术周刊与通知 & 合规协议行 (占据 4 列) */}
                     <div className="lg:col-span-4 space-y-3">
-                        <div className="text-xs font-bold text-white uppercase tracking-wider font-mono">{cfg.newsletterHeading}</div>
-                        <p className="text-xs text-white/50 leading-relaxed m-0">{cfg.newsletterDesc}</p>
-
-                        <div className="flex items-start gap-2.5 rounded-xl border border-white/10 bg-[#12141c] p-3.5 text-xs text-white/60">
-                            <Mail className="mt-0.5 h-4 w-4 shrink-0 text-[#00f5d4]" />
-                            <div>
-                                <p className="font-semibold text-white m-0">{cfg.newsletterCardTitle}</p>
-                                <p className="mt-1 leading-relaxed text-white/60 m-0">{cfg.newsletterCardDesc}</p>
-                                <SmartLink href={cfg.newsletterActionHref} className="mt-2 inline-flex items-center gap-1 font-semibold text-[#00f5d4] hover:text-white transition-colors no-underline">
-                                    <span>{cfg.newsletterActionText}</span>
-                                    <ArrowRight className="h-3 w-3" />
-                                </SmartLink>
-                            </div>
-                        </div>
-
-                        <div className="flex flex-wrap items-center gap-3 pt-3 text-[11px] text-white/40">
-                            {cfg.legalLinks.map((item, idx) => (
-                                <span key={`${item.label}-${idx}`} className="inline-flex items-center gap-3">
-                                    {idx > 0 && <span>·</span>}
-                                    <SmartLink href={item.href} className="text-white/40 hover:text-white transition-colors no-underline">
+                        <div className="text-xs font-bold text-white uppercase tracking-wider font-mono">{labels.title}</div>
+                        <ul className="space-y-2 text-xs text-white/60 list-none p-0 m-0">
+                            {[
+                                { label: t("legal.terms"), href: "/terms" },
+                                { label: t("legal.privacy"), href: "/privacy" },
+                                { label: t("legal.aup"), href: "/aup" },
+                                { label: labels.center, href: "/legal" },
+                                { label: t("nav.pricing"), href: "/pricing.html" },
+                                { label: "MCP", href: "/mcp" },
+                                { label: labels.contact, href: `mailto:${cfg.supportEmail}` },
+                            ].map((item) => (
+                                <li key={item.href}>
+                                    <SmartLink href={item.href} className="text-white/60 hover:text-white transition-colors no-underline">
                                         {item.label}
                                     </SmartLink>
-                                </span>
+                                </li>
                             ))}
-                        </div>
+                        </ul>
                     </div>
                 </div>
 
                 {/* TIER 4: 底部版权标识、技术底座致敬与安全状态条 */}
                 <div className="pt-8 flex flex-col md:flex-row items-center justify-between gap-4 text-[11px] font-mono text-white/40">
                     <div className="flex flex-wrap items-center gap-2">
-                        <span>{cfg.copyrightText}</span>
+                        <span>© {new Date().getFullYear()} Supdance</span>
                         {cfg.icpNumber && (
                             <>
                                 <span className="hidden sm:inline">·</span>
                                 <a href={cfg.icpHref || "https://beian.miit.gov.cn/"} target="_blank" rel="noopener noreferrer" className="text-white/40 hover:text-white transition-colors no-underline">
                                     {cfg.icpNumber}
                                 </a>
-                            </>
-                        )}
-                        {cfg.operatingSystemText && (
-                            <>
-                                <span className="hidden sm:inline">·</span>
-                                <span className="text-white/30 hidden sm:inline">{cfg.operatingSystemText}</span>
-                            </>
-                        )}
-                    </div>
-
-                    <div className="flex items-center gap-3">
-                        <span className="flex items-center gap-1.5 text-white/50">
-                            <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
-                            <span>{cfg.statusPrimaryText}</span>
-                        </span>
-                        {cfg.statusSecondaryText && (
-                            <>
-                                <span>·</span>
-                                <span>{cfg.statusSecondaryText}</span>
                             </>
                         )}
                     </div>

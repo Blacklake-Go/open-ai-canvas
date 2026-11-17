@@ -1229,6 +1229,18 @@ install 的 Base URL、协议、能力和成本全部从服务端快照读取，
 权限分 view、edit、preview、publish、rollback、lifecycle。服务端限制请求体 1 MiB，非法配置返回 400，无权限 403，旧 revision/基线或不兼容迁移返回 409。发布/回滚将配置、历史、草稿清理和审计原子提交；失败保留上一配置。插件不改认证、任务或账务接口。
 
 
+### HTML 页面管理保存校验
+
+`PUT /api/admin/plugins/supdance-html-page-manager/pages` 需要管理员登录，沿用 `{ pages: [...] }`。每项 ID 须非空且唯一，标题与 HTML 不可为空；slug 去除首尾空白并转小写后须符合 `^[a-z0-9][a-z0-9_-]*$`，且不可重复。非法批次返回 HTTP 400，整体不写入。公开接口只返回已发布内容。页脚通过独立的 `PUT /api/admin/plugins/supdance-html-page-manager/site-footer` 保存。
+
+### 邮件营销与模板管理插件 (supdance-email-marketing)
+
+- 插件接口前缀为 `/api/admin/plugins/supdance-email-marketing`，全部需要管理员身份鉴权。
+- `GET /overview` 与 `GET /templates`：返回 4 套核心模板配置（`welcome`、`newsletter`、`credit_alert`、`winback`）、SMTP 邮件服务就绪状态、每小时测试频控额度。
+- `PUT /templates`：保存自定义模板。非法模板、空标题或空 HTML 将返回 400，持久化至 `system_settings` 的 `plugin.supdance-email-marketing.templates` 键中，并记录操作审计。
+- `POST /templates/:key/reset`：重置单套或全部模板为官方默认预置配置。
+- `POST /test`：发送营销测试邮件。支持入参 `to`（严格校验邮箱格式）、`templateKey`、`subject`、`html`、`variables`。每位管理员 1 小时限发 10 封测试邮件，超限返回 429 `rate_limited`。发信由平台统一的 SMTP 设施发出，脱敏记录发信日志至 `email_logs` 并记录管理审计日志至 `admin_audit_events`。
+
 ### 系统渠道参考素材发送方式
 
 管理端创建/更新渠道的现有 JSON 请求及渠道响应支持可选 `mediaTransport`，包括独立的 `image`、`audio`、`video` 字段。渠道未提交此对象时保留原设置，提交空对象恢复协议默认。模型的同名配置位于 `capabilityConfig.mediaTransport`，支持 `inherit`（跟随渠道）、`protocol`（使用协议默认并取消渠道强制值）、`url`、`base64`。后端执行任务时重新读取管理员配置，不接受客户端任务覆盖系统渠道策略。此字段只影响参考素材输入，不改变结果 `response_format`。

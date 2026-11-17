@@ -3,6 +3,49 @@ title: 待测试
 description: 当前项目已实现功能的手工验证清单与未确认边界
 ---
 
+## TapNow 应用市场与 TapTV 灰色线性图标与主站 UI 全面统一
+
+- 依主站侧栏（创作/资产/自由画布/图片生成等）的图标语言，将两个复刻页面的全部图标收敛为**单色浅灰、线性描边、`strokeWidth 2.2` 的 Lucide 图标**：
+  - 新增 `app-store-icons.tsx` 共享模块（`resolveAppIcon` 语义映射 + `RenderAppIcon` 深灰圆角方盒图标位 + `getAppPreviewImage` 内容预览图）。
+  - 应用卡片、官方技能卡片、热门用例卡片不再把彩色 3D 摄影剧照当图标，统一为「深灰圆角方盒 + 灰色线性图标」。
+  - 顶部导航 Logo、页脚社交图标、详情页头部应用图标、声音试听图标、品牌块（原蓝色 `#0091ff` / TN 字母块）全部替换为灰色线性图标。
+  - 删除 `APP_3D_ICON_MAP`、`getApp3DIconUrl`、`iconBg`/`iconUrl`/`HotUseCase.icon` 等旧图标数据与类型字段，不保留兼容层。
+- 全页 UI 配色收敛：移除天青 / 琥珀 / 玫红 / 翠绿 / 品牌蓝等彩色强调、彩色徽章、彩色发光阴影与彩色进度条，统一为白 / 灰 / 黑中性灰阶；实色主 CTA 为白底黑字，深色底为白 / 浅灰字。内容媒体（视频封面、轮播背景、创作者头像、能力预览大图）作为内容保留彩色并叠加深色遮罩降噪。
+- 新增回归守卫：测试 `keeps every icon and accent on the neutral grayscale design system` 禁止任何彩色 token / 彩色发光 rgba 重新引入，并断言共享图标模块存在、卡片图标位不再使用 `<img>`。
+- [x] 单元测试 `test/taptv-app-store-replication.test.ts` 7/7 通过（0 渐变、0 Emoji、0 彩色 token、图标模块与渲染方式守护，共 482 个断言）。
+- [x] TypeScript 类型检查 `tsc --noEmit` 0 错误通过。
+- [x] ESLint `eslint src test` 0 错误通过。
+- [x] 生产构建 `bun run build` 通过（`✓ built in 13.09s`）。
+- [x] 真实浏览器视觉验收（本机 Google Chrome，CDP 驱动，非模拟）：对 `/home/app-store`、`?detail=app&name=drama-workshop`、`/home/taptv`、影院播放器弹窗、工程拓扑弹窗逐页等待真实根节点渲染后截图并审计。5 张截图与审计数据保存在 `browser_evidence/chrome_cdp/`：
+  - 五个视图的彩色 class 与渐变均为 **0**，console error 为 **0**；
+  - 图标计算样式 `stroke-width: 2.2px`、颜色 ≈ `oklch(0.92)` 浅灰，图标容器为半透白 5% 底 + 10% 边框；
+  - 白底主 CTA 为 `rgb(255,255,255)` 底 + `rgb(0,0,0)` 字，对比度正常；
+  - Lucide 线性图标数：App Store 80 / 详情页 28 / TapTV 105 / 播放器弹窗 14 / 拓扑弹窗 20。
+- 说明：`/browser` 子代理连续三次因 `429 exceed quota limit` 未能启动；改用本机 Chrome 无头 CDP 完成等效真实页面验收，未自行切换子代理模型。
+- [ ] 用户确认真实设备与屏幕比例下的观感（本次为 1440×913 桌面视口）。
+
+## TapNow 应用市场与 TapTV 像素级复刻（设计系统、全按钮配色、多层阴影与遮罩）
+
+- 完整复刻 TapNow 生产级应用市场（App Store）与影视展播（TapTV）：
+  - 零 CSS 渐变（坚决不使用任何 `linear-gradient` / `radial-gradient` / `conic-gradient` / `bg-gradient-*`，全部使用纯色半透高斯模糊与多层投影）。
+  - 零纯文本 Emoji（全部采用高质量摄影图片、SVG 图标与 3D Squircle 图标）。
+  - 包含 25+ 部真实影视剧集与完整元数据、拓扑管线流程与资产包。
+  - 全局按钮配色升级：所有按钮具备高对比度前景色、物理层叠背景、精细边框、`hover` 浮起态、`active:scale-95` 按压触控反馈、高清晰度 focus-visible 焦点环，以及暗色多层弥散阴影 (`shadow-sm`, `shadow-[0_2px_10px_rgba(0,0,0,0.35)]`, `shadow-[0_4px_20px_rgba(0,0,0,0.55)]` 等)。
+  - 媒体与浮层遮罩层补齐：所有悬停操作、播放浮层与拓扑弹窗均覆盖实心半透明暗色遮罩（`bg-black/80 backdrop-blur-md/xl`），彻底杜绝边缘泛白与色彩冲突。
+- [x] 单元测试 `test/taptv-app-store-replication.test.ts` 6/6 通过（包括 0 渐变检测、0 Emoji 检测、Ant Design Reset 样式穿透防护等 319 个断言）。
+- [x] TypeScript 类型检查 `tsc --noEmit` 0 错误通过。
+- [x] ESLint `eslint src test` 0 错误通过。
+- [x] 浏览器实测验收：对 `/app-store`、`/taptv`、详情页、影院播放弹窗、拓扑流程弹窗进行端到端视觉与交互截图核验，证据保存在 `browser_evidence/final_acceptance/`。
+- [ ] 用户确认真实设备与屏幕比例下的视觉观感与操作流畅度。
+
+## 法律页面六语言正文
+
+- 已实现服务条款与隐私政策共用六语正文、对应 HTML 导出、新建 HTML 模板及个人姓名移除。
+- [ ] 发布后逐一检查中英法德日韩的 `/terms`、`/privacy`、语言参数、站点语言切换、明暗主题及手机长文排版。
+- [ ] 实际浏览器确认隐私页广告偏好撤回、键盘章节导航及 HTML 打印；独立 HTML 的语言入口连接在线页面。
+- [ ] 检查线上数据库内历史自定义 HTML 是否仍含旧正文或个人信息，另行更新并验收；本次源码模板更新不追溯覆盖用户保存内容。
+- [ ] 运营确认对外法律主体披露及当前销售方案与正文一致；文本不构成已取得法律合规认证的声明。
+
 ## 线上定期备份与部署产物清理
 
 - [x] 服务器首轮 systemd 服务执行成功：数据库备份完整解析、主站和 ONE 上传文件的完整归档、指定过期纯文本产物删除、前后健康检查通过。
@@ -5728,6 +5771,10 @@ SQLite 与 HTTP recorder 已验证；PostgreSQL 16／17、前端构建及浏览�
 - 新发生的真实支付宝或微信付款，用户同意后核对 X Purchase 的实际金额、币种与去重编号；拒绝同意、沙盒和重复查询不得增加购买次数。
 - 用户自行添加广告付款卡；广告总预算保持 10 美元。基础像素接收不等于真实购买或收入增长已验收。
 
+
+## 待用户验证：HTML 页面管理后台
+
+本地代码已按 V2 规范覆盖三个后台区域与模板、新建弹窗，添加六语种词条、保存校验、预览隔离和未保存提醒。生产上线后需由管理员验收既有页面与页脚配置、公开链接，以及真实手机软键盘、触屏滚动和六语种阅读质量。重置会立即删除自建 HTML 页面，验收应使用隔离数据。本次不包含生产部署。
 
 ## 待用户验证：参考素材发送方式
 

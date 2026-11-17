@@ -16,7 +16,7 @@ export function historyMessagePayload(message: CreationMessage): Record<string, 
     for (const field of ["attachments", "references"] as const) {
         if (message[field]) payload[field] = message[field]!.map((item) => pick(item as unknown as Record<string, unknown>, referenceFields));
     }
-    if (message.settings) payload.settings = pick(message.settings, ["ratio", "seconds", "quality", "videoQuality", "count"]);
+    if (message.settings) payload.settings = pick(message.settings, ["ratio", "seconds", "quality", "videoQuality", "count", "title", "duration", "instrumental", "model"]);
     return payload;
 }
 

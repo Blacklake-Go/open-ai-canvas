@@ -35,9 +35,10 @@ const (
 	PaymentNotificationProcessed PaymentNotificationStatus = "processed"
 	PaymentNotificationFailed    PaymentNotificationStatus = "failed"
 
-	PaymentReconciliationRunning   PaymentReconciliationStatus = "running"
-	PaymentReconciliationCompleted PaymentReconciliationStatus = "completed"
-	PaymentReconciliationFailed    PaymentReconciliationStatus = "failed"
+	PaymentReconciliationRunning     PaymentReconciliationStatus = "running"
+	PaymentReconciliationCompleted   PaymentReconciliationStatus = "completed"
+	PaymentReconciliationFailed      PaymentReconciliationStatus = "failed"
+	PaymentReconciliationUnsupported PaymentReconciliationStatus = "unsupported"
 
 	PaymentReconciliationMatched               PaymentReconciliationResult = "matched"
 	PaymentReconciliationRecovered             PaymentReconciliationResult = "recovered"

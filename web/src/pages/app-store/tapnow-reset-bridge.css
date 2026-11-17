@@ -1,0 +1,23 @@
+/* 抵消 antd/dist/reset.css 未分层样式对 Tailwind v4 (@layer base / @layer utilities) 的覆盖 */
+:is(#app-store-scroll-root, #taptv-scroll-root, [data-testid="app-store-page-root"], [data-testid="taptv-page-root"]) :is(h1, h2, h3, h4, h5, h6, p, ol, ul, dl, input, button, select, optgroup, textarea) {
+    margin: revert-layer;
+    color: revert-layer;
+    font-size: revert-layer;
+    font-weight: revert-layer;
+    font-family: revert-layer;
+    line-height: revert-layer;
+    overflow: revert-layer;
+}
+
+/* 常驻深色舞台（App Store / TapTV）下的 AntD Message 浮层高对比度适配 */
+body:has(#app-store-scroll-root, #taptv-scroll-root) .ant-message-notice .ant-message-notice-content {
+    background: #18181b !important;
+    color: #fafafa !important;
+    border: 1px solid rgba(255, 255, 255, 0.16) !important;
+    box-shadow: 0 12px 36px rgba(0, 0, 0, 0.65) !important;
+}
+
+body:has(#app-store-scroll-root, #taptv-scroll-root) .ant-message-custom-content,
+body:has(#app-store-scroll-root, #taptv-scroll-root) .ant-message-custom-content > span:not(.anticon) {
+    color: #fafafa !important;
+}

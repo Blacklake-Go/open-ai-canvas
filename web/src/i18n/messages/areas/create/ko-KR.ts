@@ -58,9 +58,15 @@ export const koKR: DeepStringRecord<typeof zhCN> = {
     status: {
         videoGenerated: "영상이 생성되었습니다",
         imageGenerated: "이미지가 생성되었습니다",
+        audioGenerated: "음악이 생성되었습니다",
         imagesPartiallyGenerated: "이미지 {{done}}장 생성, {{failed}}장 실패",
         stopped: "중지됨",
         failed: "생성 실패",
+    },
+    music: {
+        studioLink: "음악 스튜디오",
+        studioLinkTooltip: "음악 스튜디오에서 전체 작업실 열기",
+        instrumentalBadge: "연주곡",
     },
     inspiration: {
         useIdea: "이 아이디어 사용",
@@ -103,6 +109,7 @@ export const koKR: DeepStringRecord<typeof zhCN> = {
         text: "텍스트",
         image: "이미지",
         video: "영상",
+        music: "음악",
     },
     shotScript: {
         text: "창작 메모",

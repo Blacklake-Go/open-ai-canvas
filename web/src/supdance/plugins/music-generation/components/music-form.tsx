@@ -15,9 +15,10 @@ import { useUserStore } from "@/stores/use-user-store";
 import type { LogicalModelQuote } from "@/services/api/logical-models";
 import { useMusicStore } from "../stores/use-music-store";
 import { siteMusicQuote } from "../services/music-site-api";
-import { LyricsEditor } from "./lyrics-editor";
+import { LyricsEditor, type LyricAIRequest } from "./lyrics-editor";
 import { PromptBuilder, SavedPrompts, StyleTemplates } from "./style-templates";
 import { appendStyle } from "./composer-patterns";
+import { generateLyrics, isLyricsAIRuntimeConfigured } from "../services/lyrics-ai";
 import "../styles/music-composer.css";
 
 export function musicCreationAllowed(quote: LogicalModelQuote | null, available: number | null | undefined) {
@@ -47,6 +48,12 @@ export function MusicForm({ userId, onSubmitted, admin = false }: { userId: stri
     const [quoteRevision, setQuoteRevision] = useState(0);
     const creditsEnabled = useUserStore((s) => s.features.creditsEnabled);
     const wallet = useWalletBalance(userId, creditsEnabled);
+    // AI 歌词助手只在文本模型协议真正配置时启用；否则话题 pill 降级为本地起手稿，不渲染必然报错的按钮。
+    const lyricsAIEnabled = isLyricsAIRuntimeConfigured(config);
+    const runLyricsAI = async (request: LyricAIRequest) => {
+        if (!lyricsAIEnabled) throw new Error(t("music.lyric_ai_failed"));
+        return generateLyrics(request, { config });
+    };
 
     useEffect(() => {
         const controller = new AbortController();
@@ -148,6 +155,11 @@ export function MusicForm({ userId, onSubmitted, admin = false }: { userId: stri
                 }
             }}
         >
+            <div className="music-suno-tabs" role="tablist" aria-label={t("music.songs_tab")}>
+                <button type="button" role="tab" aria-selected="true" className="is-active">{t("music.songs_tab")}</button>
+                <button type="button" role="tab" aria-selected="false" disabled title={t("music.speech_tab")}>{t("music.speech_tab")}</button>
+                <span className="music-suno-version">{selected?.id?.split("::").at(-1) || t("music.no_models")}</span>
+            </div>
             <div className="music-composer-toolbar">
                 <ModeSelector
                     value={draft.mode}
@@ -214,7 +226,7 @@ export function MusicForm({ userId, onSubmitted, admin = false }: { userId: stri
                     {styleActions}
                 </section>
             )}
-            {draft.mode === "custom" && selected?.lyricsSupported && <LyricsEditor value={draft.lyrics} onChange={(value) => setField("lyrics", value, userId)} maxChars={selected.maxLyricsChars} />}
+            {draft.mode === "custom" && selected?.lyricsSupported && <LyricsEditor value={draft.lyrics} onChange={(value) => setField("lyrics", value, userId)} maxChars={selected.maxLyricsChars} instrumental={selected.instrumentalSupported && draft.instrumental} language={draft.songLanguage} onAIAction={lyricsAIEnabled ? runLyricsAI : undefined} />}
             {selected?.styleSupported && (
                 <section className="music-composer-panel">
                     <div className="music-composer-heading">
@@ -327,10 +339,11 @@ export function MusicForm({ userId, onSubmitted, admin = false }: { userId: stri
                         {t("music.wallet_unavailable")}
                     </p>
                 )}
-                <Button type="primary" htmlType="submit" loading={submitting} icon={<Music2 size={18} />} disabled={!valid || !enough || submitting} className="music-create-button">
+                <Button type="primary" htmlType="submit" loading={submitting} icon={<Music2 size={18} />} disabled={!valid || !enough || submitting} className="music-create-button is-suno-gradient">
                     {t(submitting ? "music.submitting" : "music.create_music")}
                 </Button>
-                <p className="text-xs text-muted-foreground">
+                <p className="text-xs text-muted-foreground music-save-to">
+                    {t("music.save_to")} · {t("music.my_works")}
                     {t("music.site_billing_tip")}
                     {quote ? ` · ${t("music.billing_" + quote.billingMode)} × ${quote.quantity}` : ""}
                 </p>

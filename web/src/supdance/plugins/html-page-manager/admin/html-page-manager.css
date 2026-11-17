@@ -1,0 +1,176 @@
+.plugin-scope-html-admin {
+    color: var(--admin-text);
+    background: var(--admin-canvas);
+    font-family: var(--admin-font);
+    min-width: 0;
+}
+
+.plugin-html-actions,
+.plugin-html-workspace {
+    border: 0;
+    padding: 0;
+    margin: 0;
+    min-width: 0;
+}
+
+.plugin-html-workspace {
+    display: flex;
+    flex: 1;
+    min-height: 0;
+    overflow: hidden;
+}
+
+.plugin-html-header {
+    flex-wrap: wrap;
+    gap: var(--space-3);
+    padding-block: var(--space-3);
+}
+
+.plugin-html-header > div,
+.plugin-html-header > div > div {
+    flex-wrap: wrap;
+    min-width: 0;
+}
+
+.plugin-scope-html-admin :is(input, select, textarea) {
+    min-width: 0;
+    color: var(--admin-text);
+    background: var(--admin-canvas);
+    border-color: var(--admin-border-strong);
+    border-radius: var(--admin-radius);
+    font-size: inherit;
+}
+
+.plugin-scope-html-admin :is(input, select) {
+    min-height: var(--admin-control-h);
+}
+
+.plugin-scope-html-admin :is(button, [role="button"]) {
+    min-height: var(--admin-control-h);
+    border-radius: var(--admin-radius);
+    transition:
+        color var(--admin-motion),
+        background-color var(--admin-motion),
+        border-color var(--admin-motion);
+}
+
+.plugin-scope-html-admin :is(button, input, textarea, select, a, [role="button"]):focus-visible {
+    outline: 2px solid var(--admin-accent);
+    outline-offset: 2px;
+}
+
+.plugin-scope-html-admin :is(button:disabled, fieldset:disabled button) {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.plugin-scope-html-admin .ant-btn-primary {
+    color: var(--admin-accent-fg);
+    background: var(--admin-accent);
+    border-color: var(--admin-accent);
+}
+
+.plugin-html-state {
+    display: flex;
+    gap: var(--space-3);
+    align-items: center;
+    justify-content: center;
+    padding: var(--space-6);
+    color: var(--admin-text-secondary);
+}
+
+@media (max-width: 1024px) {
+    .plugin-html-editor {
+        overflow-y: auto;
+        flex-direction: column;
+    }
+
+    .plugin-html-sidebar {
+        width: 100%;
+        max-height: none;
+        border-right: 0;
+        border-bottom: 1px solid var(--admin-border);
+    }
+
+    .plugin-html-sidebar > div:nth-child(2) {
+        flex: 0 0 auto;
+        height: 10rem;
+        min-height: 10rem;
+    }
+
+    .plugin-html-sidebar > div:last-child {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: var(--space-3);
+    }
+
+    .plugin-html-sidebar > div:last-child > div {
+        min-width: 0;
+        margin: 0;
+    }
+
+    .plugin-html-editor > div {
+        flex: 1 0 36rem;
+    }
+
+    .plugin-html-panes {
+        flex-direction: column;
+        overflow: auto;
+    }
+
+    .plugin-html-panes > div {
+        width: 100%;
+        min-height: 24rem;
+        flex: 1 0 24rem;
+    }
+}
+
+@media (max-width: 640px), (pointer: coarse) {
+    .plugin-scope-html-admin :is(button, input, select, [role="button"]) {
+        min-height: 44px;
+    }
+
+    .plugin-scope-html-admin button {
+        min-width: 44px;
+    }
+
+    .plugin-html-header {
+        padding-inline: var(--space-3);
+        gap: var(--space-2);
+    }
+
+    .plugin-html-header > div {
+        width: 100%;
+        flex-wrap: nowrap;
+        overflow-x: auto;
+    }
+
+    .plugin-html-header > div:first-child {
+        flex-wrap: wrap;
+    }
+
+    .plugin-html-header > div:first-child > div:last-child {
+        width: 100%;
+        margin-left: 0;
+        flex-wrap: nowrap;
+        overflow-x: auto;
+    }
+
+    .plugin-html-header button {
+        flex-shrink: 0;
+        white-space: nowrap;
+    }
+
+    .plugin-html-header .ant-btn-primary {
+        order: -1;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .plugin-scope-html-admin *,
+    .plugin-scope-html-admin *::before,
+    .plugin-scope-html-admin *::after {
+        transition: none !important;
+        animation: none !important;
+    }
+}

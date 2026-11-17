@@ -7,6 +7,7 @@ const (
 	PluginSupDanceSocialAuth      = app.PluginSupDanceSocialAuth
 	PluginSupDanceHtmlPageManager = app.PluginSupDanceHtmlPageManager
 	PluginSupDanceMusicGeneration = app.PluginSupDanceMusicGeneration
+	PluginSupDanceEmailMarketing  = app.PluginSupDanceEmailMarketing
 
 	MusicLifecycleInstalled   = app.MusicLifecycleInstalled
 	MusicLifecycleEnabled     = app.MusicLifecycleEnabled
@@ -60,10 +61,19 @@ type (
 	HtmlSiteFooterConfig   = app.HtmlSiteFooterConfig
 	HtmlPagesAdminOverview = app.HtmlPagesAdminOverview
 	HtmlPagesStorePayload  = app.HtmlPagesStorePayload
+
+	MarketingVariable         = app.MarketingVariable
+	MarketingTemplate         = app.MarketingTemplate
+	EmailMarketingOverview    = app.EmailMarketingOverview
+	EmailMarketingTestRequest = app.EmailMarketingTestRequest
+	EmailMarketingTestResult  = app.EmailMarketingTestResult
 )
 
 var (
 	ValidateMusicLifecycleTransition  = app.ValidateMusicLifecycleTransition
 	ResetMusicLifecycleManagerForTest = app.ResetMusicLifecycleManagerForTest
 	DefaultHtmlSiteFooterConfig       = app.DefaultHtmlSiteFooterConfig
+	DefaultMarketingTemplates         = app.DefaultMarketingTemplates
+	RenderMarketingTemplate           = app.RenderMarketingTemplate
+	HtmlToPlainText                   = app.HtmlToPlainText
 )

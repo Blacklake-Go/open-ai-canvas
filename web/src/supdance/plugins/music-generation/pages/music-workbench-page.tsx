@@ -3,7 +3,7 @@ import { Button } from "antd";
 import { MusicAdvancedDialog } from "../components/music-advanced-dialog";
 import { musicOutputLabel, trackSource, type MusicSource } from "../services/music-tools";
 import { Link, useNavigate } from "react-router";
-import { ArrowDownUp, Check, Disc3, FolderOpen, RefreshCw, Search, SlidersHorizontal } from "lucide-react";
+import { ArrowDownUp, Check, ChevronDown, Disc3, FolderOpen, List, Plus, RefreshCw, Search, SlidersHorizontal, Tag, Upload, Users } from "lucide-react";
 import { TrackList } from "../components/track-list";
 import { MusicTrimDialog } from "../components/music-trim-dialog";
 import { getMusicAssetHref, saveMusicClip } from "../services/music-assets";
@@ -79,6 +79,7 @@ function MusicStudio({ userId }: { userId?: string }) {
     const playingId = useMusicStore((s) => s.playingTaskId);
     const [mobile, setMobile] = useState("create");
     const [filter, setFilter] = useState("all");
+    const [showFilters, setShowFilters] = useState(true);
     const [search, setSearch] = useState("");
     const [detailId, setDetailId] = useState<string | null>(null);
     useEffect(() => {
@@ -133,7 +134,12 @@ function MusicStudio({ userId }: { userId?: string }) {
                     </section>
                     <section className={`music-library ${mobile === "library" ? "is-mobile-active" : ""}`} aria-label={t("music.my_works")}>
                         <div className="music-library-header">
-                            <h2>{t("music.my_works")}</h2>
+                            <div className="music-library-heading">
+                                <nav className="music-breadcrumb" aria-label={t("music.workspace_breadcrumb")}>
+                                    <span>{t("music.workspace_breadcrumb")}</span>
+                                </nav>
+                                <h2>{t("music.my_works")}</h2>
+                            </div>
                             <div className="music-header-actions">
                                 <Link to="/assets" className="music-asset-link">
                                     <FolderOpen size={16} />
@@ -143,6 +149,36 @@ function MusicStudio({ userId }: { userId?: string }) {
                                     <RefreshCw size={16} />
                                 </button>
                             </div>
+                        </div>
+                        <div className="music-suno-toolbar" role="toolbar" aria-label={t("music.my_works")}>
+                            <button type="button" className="music-suno-tool is-primary" aria-pressed={showFilters} onClick={() => setShowFilters(!showFilters)}>
+                                <SlidersHorizontal size={14} />
+                                {t("music.workspace_filters")}
+                                {filter !== "all" && <span className="music-suno-tool-count">1</span>}
+                            </button>
+                            <button type="button" className="music-suno-tool" onClick={() => { setMobile("create"); setDetailId(null); }}>
+                                <Plus size={14} />
+                                {t("music.workspace_new")}
+                                <ChevronDown size={12} />
+                            </button>
+                            <button type="button" className="music-suno-tool" aria-pressed={false}>
+                                <List size={14} />
+                                {t("music.workspace_list")}
+                                <ChevronDown size={12} />
+                            </button>
+                            <span className="music-suno-toolbar-spacer" />
+                            <button type="button" className="music-suno-tool" disabled title={t("music.workspace_label")}>
+                                <Tag size={14} />
+                                {t("music.workspace_label")}
+                            </button>
+                            <button type="button" className="music-suno-tool" disabled title={t("music.workspace_public")}>
+                                <Users size={14} />
+                                {t("music.workspace_public")}
+                            </button>
+                            <button type="button" className="music-suno-tool" disabled title={t("music.workspace_uploads")}>
+                                <Upload size={14} />
+                                {t("music.workspace_uploads")}
+                            </button>
                         </div>
                         <div className="music-tools">
                             <label className="music-search">
@@ -154,13 +190,13 @@ function MusicStudio({ userId }: { userId?: string }) {
                                 {t(oldestFirst ? "music.order_old" : "music.order_new")}
                             </button>
                         </div>
-                        <div className="music-filters" role="group" aria-label={t("music.filter_works")}>
+                        {showFilters && <div className="music-filters" role="group" aria-label={t("music.filter_works")}>
                             {["all", "favorites", "instrumental", "generating", "completed", "failed"].map((status) => (
                                 <button type="button" key={status} aria-pressed={filter === status} onClick={() => setFilter(status)}>
                                     {t("music.filter_" + status)}
                                 </button>
                             ))}
-                        </div>
+                        </div>}
                         {savedHref && (
                             <div className="music-saved-clip" role="status">
                                 <Check size={16} />

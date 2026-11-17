@@ -16,7 +16,7 @@ export const TERMS_DOCUMENT: LegalDocument = {
     slug: "terms",
     title: "服务条款",
     summary: `本条款约定你与 ${OP.legalName}（对外经营名称 ${OP.tradeName}）之间就 ${OP.product} 服务的权利与义务。`,
-    lead: [`运营主体：${OP.legalName}（个人商户 / 独立经营者，无注册公司实体）　联系邮箱：${OP.contactEmail}`],
+    lead: [`运营主体：${OP.legalName}　联系邮箱：${OP.contactEmail}`],
     related: { slug: "privacy", label: "隐私政策" },
     closing: "本条款与《隐私政策》共同构成你与运营方之间的完整约定。本服务面向中国境内与境外用户提供，条款以中文文本为准；如其他语言译本与中文文本存在歧义，以中文文本为准。",
     sections: [
@@ -283,7 +283,7 @@ export const TERMS_DOCUMENT: LegalDocument = {
                     rows: [
                         ["运营方法定名称", OP.legalName],
                         ["对外经营名称", OP.tradeName],
-                        ["商户类型", "个人商户 / 独立经营者（无注册公司实体）"],
+                        ["服务品牌", OP.tradeName],
                         ["送达地址", OP.mailingAddress],
                         ["客服与账单、退款、隐私权利请求", OP.contactEmail],
                         ["服务网站", OP.site],

@@ -1,4 +1,5 @@
-import { App, Button, Modal, Switch, Tag, Tooltip } from "antd";
+import { Alert, App, Button, Spin, Tag, Tooltip } from "antd";
+import { AdminSwitch as Switch } from "@/pages/admin/ui/controls";
 import {
     ArrowLeft,
     Code2,
@@ -29,75 +30,31 @@ import {
     Wand2,
 } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
-import { useNavigate } from "react-router";
+import { useI18n } from "@/supdance/plugins/i18n";
+import { useBlocker, useNavigate } from "react-router";
+import { AdminModal as Modal } from "@/pages/admin/ui/overlays";
+import "./html-page-manager.css";
+import { buildPreviewDocument } from "./preview-document";
 
 import { SupdanceAboutFooter } from "@/supdance/components/site-footer/supdance-about-footer";
 import { DEFAULT_HTML_SITE_FOOTER_CONFIG, fetchAdminHtmlPagesOverview, resetAdminHtmlPages, resetAdminHtmlSiteFooter, saveAdminHtmlPages, saveAdminHtmlSiteFooter } from "../api";
 import { BUILTIN_HTML_TEMPLATES } from "../templates";
 import type { HtmlSiteFooterConfig, ManagedHtmlPage } from "../types";
 
-/**
- * 轻量、高效、无冗余依赖的 HTML 代码美化格式化器。
- * 能够规范标签缩进、处理换行与自闭合标签，使排版赏心悦目。
- */
-function formatHtmlCode(html: string): string {
-    const tab = "  ";
-    let result = "";
-    let indent = 0;
-
-    // 清理多余空行与两端空格
-    const tokens = html
-        .replace(/>\s*</g, "><")
-        .replace(/<!--[\s\S]*?-->/g, (m) => m) // 保留注释
-        .split(/(<[^>]+>)/g)
-        .filter((t) => t.trim().length > 0);
-
-    const voidTags = new Set(["area", "base", "br", "col", "embed", "hr", "img", "input", "link", "meta", "param", "source", "track", "wbr"]);
-
-    for (let i = 0; i < tokens.length; i++) {
-        const token = tokens[i].trim();
-        if (!token) continue;
-
-        if (token.startsWith("<!") || token.startsWith("<?")) {
-            result += token + "\n";
-            continue;
-        }
-
-        if (token.startsWith("</")) {
-            indent = Math.max(0, indent - 1);
-            result += tab.repeat(indent) + token + "\n";
-            continue;
-        }
-
-        if (token.startsWith("<") && !token.startsWith("</")) {
-            const match = token.match(/^<([a-zA-Z0-9:-]+)/);
-            const tagName = match ? match[1].toLowerCase() : "";
-            const isSelfClosing = token.endsWith("/>") || voidTags.has(tagName);
-
-            result += tab.repeat(indent) + token + "\n";
-            if (!isSelfClosing) {
-                indent++;
-            }
-            continue;
-        }
-
-        // 纯文本
-        result += tab.repeat(indent) + token + "\n";
-    }
-
-    return result.trim() + "\n";
-}
-
 type AdminSectionMode = "editor" | "site-pages" | "footer-manager";
 
 export default function HtmlPageManager() {
     const { message, modal } = App.useApp();
+    const { t } = useI18n();
     const navigate = useNavigate();
 
     const [activeSection, setActiveSection] = useState<AdminSectionMode>("editor");
     const [loading, setLoading] = useState(true);
+    const [loadError, setLoadError] = useState("");
     const [saving, setSaving] = useState(false);
     const [savingFooter, setSavingFooter] = useState(false);
+    const [savedPages, setSavedPages] = useState("");
+    const [savedFooter, setSavedFooter] = useState("");
     const [pages, setPages] = useState<ManagedHtmlPage[]>([]);
     const [siteFooter, setSiteFooter] = useState<HtmlSiteFooterConfig>(DEFAULT_HTML_SITE_FOOTER_CONFIG);
     const [activeId, setActiveId] = useState<string>("");
@@ -112,23 +69,48 @@ export default function HtmlPageManager() {
 
     const textareaRef = useRef<HTMLTextAreaElement | null>(null);
     const iframeRef = useRef<HTMLIFrameElement | null>(null);
+    const dirty = !!savedPages && (JSON.stringify(pages) !== savedPages || JSON.stringify(siteFooter) !== savedFooter);
+    const blocker = useBlocker(dirty && !saving && !savingFooter);
+
+    useEffect(() => {
+        const beforeUnload = (event: BeforeUnloadEvent) => {
+            if (dirty) event.preventDefault();
+        };
+        window.addEventListener("beforeunload", beforeUnload);
+        return () => window.removeEventListener("beforeunload", beforeUnload);
+    }, [dirty]);
+
+    useEffect(() => {
+        if (blocker.state !== "blocked") return;
+        const confirmation = modal.confirm({
+            title: t("admin.html.unsaved_title"),
+            content: t("admin.html.unsaved_description"),
+            okText: t("admin.html.leave"),
+            cancelText: t("admin.html.stay"),
+            onOk: () => blocker.proceed(),
+            onCancel: () => blocker.reset(),
+        });
+        return () => confirmation.destroy();
+    }, [blocker, modal, t]);
 
     const togglePreviewTheme = () => {
         const next = previewTheme === "light" ? "dark" : "light";
         setPreviewTheme(next);
-        const doc = iframeRef.current?.contentDocument;
-        if (doc) {
-            doc.documentElement.setAttribute("data-theme", next);
-            doc.documentElement.style.colorScheme = next;
-        }
     };
+
+    const previewDocument = useMemo(() => {
+        return buildPreviewDocument(pages.find((page) => page.id === activeId)?.html || pages[0]?.html || "", previewTheme);
+    }, [pages, activeId, previewTheme]);
 
     // 加载页面列表与页脚配置
     const loadData = async () => {
         setLoading(true);
+        setLoadError("");
         try {
             const res = await fetchAdminHtmlPagesOverview();
             setPages(res.pages);
+            setSavedPages(JSON.stringify(res.pages));
+            setSavedFooter(JSON.stringify(res.siteFooter || DEFAULT_HTML_SITE_FOOTER_CONFIG));
             if (res.siteFooter) {
                 setSiteFooter(res.siteFooter);
             }
@@ -136,7 +118,7 @@ export default function HtmlPageManager() {
                 setActiveId(res.pages[0].id);
             }
         } catch (err) {
-            message.error(err instanceof Error ? err.message : "读取页面数据失败");
+            setLoadError(err instanceof Error ? err.message : t("admin.html.load_failed"));
         } finally {
             setLoading(false);
         }
@@ -162,14 +144,17 @@ export default function HtmlPageManager() {
     };
 
     // 格式化当前 HTML
-    const handleBeautify = () => {
+    const handleBeautify = async () => {
         if (!activePage) return;
         try {
-            const formatted = formatHtmlCode(activePage.html);
-            updateActivePage({ html: formatted });
-            message.success("HTML 代码已美化排版");
+            const source = activePage.html;
+            const pageId = activePage.id;
+            const [{ format }, { default: htmlPlugin }] = await Promise.all([import("prettier/standalone"), import("prettier/plugins/html")]);
+            const formatted = await format(source, { parser: "html", plugins: [htmlPlugin], htmlWhitespaceSensitivity: "strict" });
+            setPages((prev) => prev.map((page) => (page.id === pageId && page.html === source ? { ...page, html: formatted } : page)));
+            message.success(t("admin.html.formatted"));
         } catch {
-            message.warning("HTML 格式化遇到不规则标签，已尽量规范排版");
+            message.error(t("admin.html.format_failed"));
         }
     };
 
@@ -199,10 +184,10 @@ export default function HtmlPageManager() {
         try {
             const res = await saveAdminHtmlPages(pages);
             setPages(res.pages);
-            if (res.siteFooter) setSiteFooter(res.siteFooter);
-            message.success("所有 HTML 页面已安全保存");
+            setSavedPages(JSON.stringify(res.pages));
+            message.success(t("admin.html.pages_saved"));
         } catch (err) {
-            message.error(err instanceof Error ? err.message : "保存页面失败");
+            message.error(err instanceof Error ? err.message : t("admin.html.save_failed"));
         } finally {
             setSaving(false);
         }
@@ -213,10 +198,13 @@ export default function HtmlPageManager() {
         setSavingFooter(true);
         try {
             const res = await saveAdminHtmlSiteFooter(siteFooter);
-            if (res.siteFooter) setSiteFooter(res.siteFooter);
-            message.success("站点页面与页脚配置已保存生效");
+            if (res.siteFooter) {
+                setSiteFooter(res.siteFooter);
+                setSavedFooter(JSON.stringify(res.siteFooter));
+            }
+            message.success(t("admin.html.footer_saved"));
         } catch (err) {
-            message.error(err instanceof Error ? err.message : "保存页脚配置失败");
+            message.error(err instanceof Error ? err.message : t("admin.html.footer_save_failed"));
         } finally {
             setSavingFooter(false);
         }
@@ -225,18 +213,21 @@ export default function HtmlPageManager() {
     // 重置页脚与受管页面配置
     const handleResetSiteFooter = () => {
         modal.confirm({
-            title: "重置页脚与页面管理为官方默认配置？",
-            content: "该操作将恢复 one.supdance.com/zh/about 同款黑底页脚默认文案、链接矩阵与 6 个站点页面的开启状态。",
-            okText: "确认重置",
+            title: t("admin.html.reset_footer"),
+            content: t("admin.html.reset_footer_description"),
+            okText: t("admin.html.confirm_reset"),
             okButtonProps: { danger: true },
-            cancelText: "取消",
+            cancelText: t("admin.html.cancel"),
             onOk: async () => {
                 try {
                     const res = await resetAdminHtmlSiteFooter();
-                    if (res.siteFooter) setSiteFooter(res.siteFooter);
-                    message.success("已恢复官方默认页脚与页面配置");
+                    if (res.siteFooter) {
+                        setSiteFooter(res.siteFooter);
+                        setSavedFooter(JSON.stringify(res.siteFooter));
+                    }
+                    message.success(t("admin.html.footer_reset"));
                 } catch (err) {
-                    message.error(err instanceof Error ? err.message : "重置失败");
+                    message.error(err instanceof Error ? err.message : t("admin.html.reset_failed"));
                 }
             },
         });
@@ -245,19 +236,20 @@ export default function HtmlPageManager() {
     // 重置页面为初始高质感模板
     const handleReset = () => {
         modal.confirm({
-            title: "重置所有页面为高质感默认模板？",
-            content: "该操作将恢复服务条款、隐私政策、法律中心等官方样板，您自建的未保存页面将被覆盖。",
-            okText: "确认重置",
+            title: t("admin.html.reset_pages"),
+            content: t("admin.html.reset_pages_description"),
+            okText: t("admin.html.confirm_reset"),
             okButtonProps: { danger: true },
-            cancelText: "取消",
+            cancelText: t("admin.html.cancel"),
             onOk: async () => {
                 try {
                     const res = await resetAdminHtmlPages();
                     setPages(res.pages);
+                    setSavedPages(JSON.stringify(res.pages));
                     if (res.pages[0]) setActiveId(res.pages[0].id);
-                    message.success("已恢复为初始优质法务模板");
+                    message.success(t("admin.html.pages_reset"));
                 } catch (err) {
-                    message.error(err instanceof Error ? err.message : "重置失败");
+                    message.error(err instanceof Error ? err.message : t("admin.html.reset_failed"));
                 }
             },
         });
@@ -268,9 +260,9 @@ export default function HtmlPageManager() {
         if (!activePage) return;
         try {
             await navigator.clipboard.writeText(activePage.html);
-            message.success("HTML 代码已复制到剪贴板");
+            message.success(t("admin.html.copied"));
         } catch {
-            message.error("复制失败，请手动选取复制");
+            message.error(t("admin.html.copy_failed"));
         }
     };
 
@@ -286,13 +278,13 @@ export default function HtmlPageManager() {
         a.click();
         document.body.removeChild(a);
         URL.revokeObjectURL(url);
-        message.success(`已导出 ${activePage.slug}.html 独立页面`);
+        message.success(`${t("admin.html.download")}: ${activePage.slug}.html`);
     };
 
     // 在新标签页全屏预览
     const handleOpenInNewTab = () => {
         if (!activePage) return;
-        window.open(`/p/${activePage.slug}`, "_blank");
+        window.open(`/p/${encodeURIComponent(activePage.slug)}`, "_blank", "noopener,noreferrer");
     };
 
     // 复制在线预览地址
@@ -301,20 +293,33 @@ export default function HtmlPageManager() {
         const previewUrl = `${window.location.origin}/p/${activePage.slug}`;
         try {
             await navigator.clipboard.writeText(previewUrl);
-            message.success(`已复制在线预览地址: ${previewUrl}`);
+            message.success(`${t("admin.html.copy_link")}: ${previewUrl}`);
         } catch {
-            message.info(`在线预览地址: ${previewUrl}`);
+            message.info(previewUrl);
         }
     };
 
     // 新建页面确认
     const handleCreatePage = () => {
         if (!newTitle.trim()) {
-            message.warning("请输入页面标题");
+            message.warning(t("admin.html.title_required"));
             return;
         }
-        const slug = (newSlug.trim() || newTitle.trim().toLowerCase()).replace(/\s+/g, "-").replace(/[^a-zA-Z0-9-_]/g, "");
+        const slug = (newSlug.trim() || newTitle.trim())
+            .toLowerCase()
+            .replace(/\s+/g, "-")
+            .replace(/[^a-z0-9-_]/g, "");
+        if (slug && !/^[a-z0-9][a-z0-9_-]*$/.test(slug)) {
+            message.warning(t("admin.html.invalid_slug"));
+            return;
+        }
+        if (slug && pages.some((page) => page.slug.toLowerCase() === slug.toLowerCase())) {
+            message.warning(t("admin.html.duplicate_slug"));
+            return;
+        }
         const template = BUILTIN_HTML_TEMPLATES.find((t) => t.id === newTemplateId) || BUILTIN_HTML_TEMPLATES[0];
+        const document = new DOMParser().parseFromString(template.sampleHtml, "text/html");
+        document.title = newTitle.trim();
 
         const newPage: ManagedHtmlPage = {
             id: `page-${Date.now()}`,
@@ -322,8 +327,8 @@ export default function HtmlPageManager() {
             title: newTitle.trim(),
             description: `${template.name} 模板`,
             templateId: template.id,
-            html: template.sampleHtml.replace("<title>Terms of Service · 服务条款</title>", `<title>${newTitle.trim()} · 官方文档</title>`),
-            isPublished: true,
+            html: "<!DOCTYPE html>\n" + document.documentElement.outerHTML,
+            isPublished: false,
             updatedAt: new Date().toISOString(),
         };
 
@@ -332,27 +337,27 @@ export default function HtmlPageManager() {
         setNewPageModalOpen(false);
         setNewTitle("");
         setNewSlug("");
-        message.success(`页面「${newPage.title}」创建成功`);
+        message.success(`${t("admin.html.created_draft")}: ${newPage.title}`);
     };
 
     // 删除当前页面
     const handleDeleteCurrentPage = () => {
         if (!activePage) return;
         if (pages.length <= 1) {
-            message.warning("至少保留一个页面");
+            message.warning(t("admin.html.keep_page"));
             return;
         }
         modal.confirm({
-            title: `删除页面「${activePage.title}」？`,
-            content: `路径 /${activePage.slug} 将无法访问。`,
-            okText: "确认删除",
+            title: `${t("admin.html.confirm_delete")}: ${activePage.title}`,
+            content: `${t("admin.html.delete_after_save")} /p/${activePage.slug}`,
+            okText: t("admin.html.confirm_delete"),
             okButtonProps: { danger: true },
-            cancelText: "取消",
+            cancelText: t("admin.html.cancel"),
             onOk: () => {
                 const next = pages.filter((p) => p.id !== activePage.id);
                 setPages(next);
                 setActiveId(next[0].id);
-                message.success("页面已移除");
+                message.success(t("admin.html.deleted"));
             },
         });
     };
@@ -361,17 +366,17 @@ export default function HtmlPageManager() {
     const applyTemplate = (tpl: (typeof BUILTIN_HTML_TEMPLATES)[0]) => {
         if (!activePage) return;
         modal.confirm({
-            title: `套用模版「${tpl.name}」？`,
-            content: "当前编辑器中的 HTML 将被替换为此模版的完整骨架代码，请确认已保存旧草稿。",
-            okText: "确认套用",
-            cancelText: "取消",
+            title: `${t("admin.html.templates")}: ${tpl.name}`,
+            content: t("admin.html.replace_description"),
+            okText: t("admin.html.confirm_apply"),
+            cancelText: t("admin.html.cancel"),
             onOk: () => {
                 updateActivePage({
                     templateId: tpl.id,
                     html: tpl.sampleHtml,
                 });
                 setTemplateModalOpen(false);
-                message.success(`已套用「${tpl.name}」`);
+                message.success(`${t("admin.html.apply")}: ${tpl.name}`);
             },
         });
     };
@@ -380,688 +385,847 @@ export default function HtmlPageManager() {
     const viewportWidthStyle = deviceViewport === "mobile" ? "375px" : deviceViewport === "tablet" ? "768px" : "100%";
 
     return (
-        <div className="flex h-screen w-screen flex-col bg-[#0c0c0e] text-[#f4f4f6] font-sans overflow-hidden">
+        <div className="plugin-scope-html-admin flex min-h-0 min-w-0 w-full flex-1 flex-col overflow-hidden" aria-busy={loading || saving || savingFooter}>
             {/* 顶栏 Header */}
-            <header className="flex h-14 shrink-0 items-center justify-between border-b border-white/10 px-4 bg-[#141418]">
-                <div className="flex items-center gap-3">
-                    <button
-                        type="button"
-                        onClick={() => navigate("/admin/plugins")}
-                        className="inline-flex items-center gap-1.5 rounded-lg border border-white/10 px-2.5 py-1 text-xs text-[#a2a2ad] hover:border-white/20 hover:text-white transition-colors"
-                        title="返回插件管理"
-                    >
-                        <ArrowLeft className="size-3.5" />
-                        插件列表
-                    </button>
-                    <div className="h-4 w-px bg-white/15" />
-                    <div className="flex items-center gap-2">
-                        <FileCode className="size-4 text-sky-400" />
-                        <h1 className="text-sm font-semibold tracking-tight text-white">supdance html页面管理</h1>
-                    </div>
+            <fieldset className="plugin-html-actions" disabled={loading || !!loadError || saving || savingFooter}>
+                <header className="plugin-html-header flex shrink-0 items-center justify-between border-b border-[var(--admin-border)] px-4 bg-[var(--admin-surface)]">
+                    <div className="flex items-center gap-3">
+                        <button
+                            type="button"
+                            onClick={() => navigate("/admin/plugins")}
+                            className="inline-flex items-center gap-1.5 rounded-lg border border-[var(--admin-border)] px-2.5 py-1 text-xs text-[var(--admin-text-secondary)] hover:border-[var(--admin-border)] hover:text-[var(--admin-text)] transition-colors"
+                            title={t("admin.html.back")}
+                        >
+                            <ArrowLeft className="size-3.5" />
+                            {t("admin.html.plugins")}
+                        </button>
+                        <div className="h-4 w-px bg-[var(--admin-surface-2)]" />
+                        <div className="flex items-center gap-2">
+                            <FileCode className="size-4 text-[var(--admin-text)]" />
+                            <h1 className="text-sm font-semibold tracking-tight text-[var(--admin-text)]">{t("admin.html.title")}</h1>
+                        </div>
 
-                    {/* 模块切换导航 */}
-                    <div className="ml-2 flex items-center gap-1 rounded-lg border border-white/10 bg-black/40 p-1">
-                        <button
-                            type="button"
-                            onClick={() => setActiveSection("editor")}
-                            className={`flex items-center gap-1.5 rounded px-2.5 py-1 text-xs transition-colors ${activeSection === "editor" ? "bg-sky-500/20 text-sky-300 border border-sky-500/30 font-medium" : "text-[#8a8f98] hover:text-white"}`}
-                        >
-                            <Code2 className="size-3.5" />
-                            HTML 模板工作台
-                        </button>
-                        <button
-                            type="button"
-                            onClick={() => setActiveSection("site-pages")}
-                            className={`flex items-center gap-1.5 rounded px-2.5 py-1 text-xs transition-colors ${activeSection === "site-pages" ? "bg-sky-500/20 text-sky-300 border border-sky-500/30 font-medium" : "text-[#8a8f98] hover:text-white"}`}
-                        >
-                            <Globe className="size-3.5" />
-                            页面管理
-                        </button>
-                        <button
-                            type="button"
-                            onClick={() => setActiveSection("footer-manager")}
-                            className={`flex items-center gap-1.5 rounded px-2.5 py-1 text-xs transition-colors ${activeSection === "footer-manager" ? "bg-sky-500/20 text-sky-300 border border-sky-500/30 font-medium" : "text-[#8a8f98] hover:text-white"}`}
-                        >
-                            <LayoutPanelTop className="size-3.5" />
-                            页脚管理器
-                        </button>
-                    </div>
-                </div>
-
-                {/* 中间：仅在 HTML 编辑器模式下展示视图分栏与设备切换 */}
-                {activeSection === "editor" ? (
-                    <div className="flex items-center gap-1.5 rounded-lg border border-white/10 bg-black/40 p-1">
-                        <button
-                            type="button"
-                            onClick={() => setViewMode("code")}
-                            className={`flex items-center gap-1 rounded px-2.5 py-1 text-xs transition-colors ${viewMode === "code" ? "bg-white/15 text-white font-medium" : "text-[#8a8f98] hover:text-white"}`}
-                            title="仅源码模式"
-                        >
-                            <Code2 className="size-3.5" />
-                            源码
-                        </button>
-                        <button
-                            type="button"
-                            onClick={() => setViewMode("split")}
-                            className={`flex items-center gap-1 rounded px-2.5 py-1 text-xs transition-colors ${viewMode === "split" ? "bg-white/15 text-white font-medium" : "text-[#8a8f98] hover:text-white"}`}
-                            title="分栏实时对照"
-                        >
-                            <Columns2 className="size-3.5" />
-                            双栏
-                        </button>
-                        <button
-                            type="button"
-                            onClick={() => setViewMode("preview")}
-                            className={`flex items-center gap-1 rounded px-2.5 py-1 text-xs transition-colors ${viewMode === "preview" ? "bg-white/15 text-white font-medium" : "text-[#8a8f98] hover:text-white"}`}
-                            title="纯预览模式"
-                        >
-                            <Eye className="size-3.5" />
-                            预览
-                        </button>
-
-                        {viewMode !== "code" && (
-                            <>
-                                <div className="mx-1 h-3.5 w-px bg-white/10" />
-                                <button
-                                    type="button"
-                                    onClick={() => setDeviceViewport("desktop")}
-                                    className={`p-1 rounded transition-colors ${deviceViewport === "desktop" ? "text-white bg-white/15" : "text-[#8a8f98] hover:text-white"}`}
-                                    title="桌面端 100%"
-                                >
-                                    <Monitor className="size-3.5" />
-                                </button>
-                                <button
-                                    type="button"
-                                    onClick={() => setDeviceViewport("tablet")}
-                                    className={`p-1 rounded transition-colors ${deviceViewport === "tablet" ? "text-white bg-white/15" : "text-[#8a8f98] hover:text-white"}`}
-                                    title="平板端 768px"
-                                >
-                                    <Tablet className="size-3.5" />
-                                </button>
-                                <button
-                                    type="button"
-                                    onClick={() => setDeviceViewport("mobile")}
-                                    className={`p-1 rounded transition-colors ${deviceViewport === "mobile" ? "text-white bg-white/15" : "text-[#8a8f98] hover:text-white"}`}
-                                    title="手机端 375px"
-                                >
-                                    <Smartphone className="size-3.5" />
-                                </button>
-                                <div className="mx-1 h-3.5 w-px bg-white/10" />
-                                <button
-                                    type="button"
-                                    onClick={togglePreviewTheme}
-                                    className={`flex items-center gap-1 rounded px-2 py-0.5 text-xs transition-transform active:scale-90 hover:scale-105 ${
-                                        previewTheme === "light" ? "text-amber-400 bg-white/10 font-medium" : "text-sky-400 bg-white/10 font-medium"
-                                    }`}
-                                    title={previewTheme === "light" ? "当前预览: 白昼 (点击切换为黑夜)" : "当前预览: 黑夜 (点击切换为白昼)"}
-                                >
-                                    {previewTheme === "light" ? <Sun className="size-3.5" /> : <Moon className="size-3.5" />}
-                                    <span className="font-mono text-xs uppercase">{previewTheme === "light" ? "Light" : "Dark"}</span>
-                                </button>
-                            </>
-                        )}
-                    </div>
-                ) : (
-                    <div className="text-xs text-[#8a8f98] font-mono">{activeSection === "site-pages" ? "管理全站法务与公开页面的页脚挂载策略" : "可视化配置黑夜极光页脚文案、导航与合规备案"}</div>
-                )}
-
-                {/* 右侧：保存、导出与功能操作 */}
-                {activeSection === "editor" ? (
-                    <div className="flex items-center gap-2">
-                        <Button size="small" icon={<Sparkles className="size-3.5 text-amber-300" />} onClick={() => setTemplateModalOpen(true)} className="border-white/15 text-xs bg-white/5 hover:bg-white/10">
-                            套用模版
-                        </Button>
-                        <Tooltip title="一键格式化与整洁排版">
-                            <Button size="small" icon={<Wand2 className="size-3.5" />} onClick={handleBeautify} className="border-white/15 text-xs bg-white/5">
-                                排版美化
-                            </Button>
-                        </Tooltip>
-                        <Tooltip title={`复制在线预览链接 (/p/${activePage?.slug})`}>
-                            <Button size="small" icon={<Copy className="size-3.5 text-sky-400" />} onClick={() => void handleCopyPreviewLink()} className="border-white/15 text-xs bg-white/5">
-                                预览链接
-                            </Button>
-                        </Tooltip>
-                        <Tooltip title="下载独立单文件 HTML">
-                            <Button size="small" icon={<Download className="size-3.5" />} onClick={handleDownloadHtml} className="border-white/15 text-xs bg-white/5" />
-                        </Tooltip>
-                        <Tooltip title="在新标签页全屏独立打开">
-                            <Button size="small" icon={<ExternalLink className="size-3.5" />} onClick={handleOpenInNewTab} className="border-white/15 text-xs bg-white/5" />
-                        </Tooltip>
-                        <Button type="primary" size="small" icon={<Save className="size-3.5" />} loading={saving} onClick={() => void handleSave()} className="bg-sky-500 hover:bg-sky-400 font-medium text-xs px-3">
-                            保存页面
-                        </Button>
-                    </div>
-                ) : (
-                    <div className="flex items-center gap-2">
-                        <Button size="small" icon={<RotateCcw className="size-3.5" />} onClick={handleResetSiteFooter} className="border-white/15 text-xs bg-white/5 hover:bg-white/10">
-                            恢复默认配置
-                        </Button>
-                        <Button type="primary" size="small" icon={<Save className="size-3.5" />} loading={savingFooter} onClick={() => void handleSaveSiteFooter()} className="bg-sky-500 hover:bg-sky-400 font-medium text-xs px-3">
-                            保存页脚与页面设置
-                        </Button>
-                    </div>
-                )}
-            </header>
-
-            {/* 主工作区：根据 activeSection 切换 */}
-            {activeSection === "editor" && (
-                <div className="flex flex-1 min-h-0 overflow-hidden">
-                    {/* 左栏：页面抽屉/列表 */}
-                    <aside className="w-64 shrink-0 flex flex-col border-r border-white/10 bg-[#121215]">
-                        <div className="flex items-center justify-between border-b border-white/10 p-3">
-                            <span className="text-xs font-medium text-[#8a8f98] uppercase tracking-wider">页面清单 ({pages.length})</span>
-                            <button type="button" onClick={() => setNewPageModalOpen(true)} className="flex items-center gap-1 rounded px-2 py-0.5 text-xs text-sky-400 hover:bg-sky-500/10 transition-colors">
-                                <Plus className="size-3" />
-                                新建
+                        {/* 模块切换导航 */}
+                        <div className="ml-2 flex items-center gap-1 rounded-lg border border-[var(--admin-border)] bg-[var(--admin-surface-2)] p-1">
+                            <button
+                                type="button"
+                                onClick={() => setActiveSection("editor")}
+                                className={`flex items-center gap-1.5 rounded px-2.5 py-1 text-xs transition-colors ${activeSection === "editor" ? "bg-[var(--admin-surface-2)] text-[var(--admin-text)] border border-[var(--admin-border)] font-medium" : "text-[var(--admin-text-secondary)] hover:text-[var(--admin-text)]"}`}
+                            >
+                                <Code2 className="size-3.5" />
+                                {t("admin.html.editor")}
+                            </button>
+                            <button
+                                type="button"
+                                onClick={() => setActiveSection("site-pages")}
+                                className={`flex items-center gap-1.5 rounded px-2.5 py-1 text-xs transition-colors ${activeSection === "site-pages" ? "bg-[var(--admin-surface-2)] text-[var(--admin-text)] border border-[var(--admin-border)] font-medium" : "text-[var(--admin-text-secondary)] hover:text-[var(--admin-text)]"}`}
+                            >
+                                <Globe className="size-3.5" />
+                                {t("admin.html.site_pages")}
+                            </button>
+                            <button
+                                type="button"
+                                onClick={() => setActiveSection("footer-manager")}
+                                className={`flex items-center gap-1.5 rounded px-2.5 py-1 text-xs transition-colors ${activeSection === "footer-manager" ? "bg-[var(--admin-surface-2)] text-[var(--admin-text)] border border-[var(--admin-border)] font-medium" : "text-[var(--admin-text-secondary)] hover:text-[var(--admin-text)]"}`}
+                            >
+                                <LayoutPanelTop className="size-3.5" />
+                                {t("admin.html.footer")}
                             </button>
                         </div>
+                    </div>
 
-                        <div className="flex-1 overflow-y-auto p-2 space-y-1">
-                            {pages.map((p) => {
-                                const isCurrent = p.id === activePage?.id;
-                                return (
-                                    <div
-                                        key={p.id}
-                                        onClick={() => setActiveId(p.id)}
-                                        className={`group flex items-center justify-between rounded-lg p-2.5 cursor-pointer text-xs transition-colors ${
-                                            isCurrent ? "bg-white/10 text-white font-medium border border-white/15" : "text-[#a2a2ad] hover:bg-white/5 hover:text-white"
-                                        }`}
-                                    >
-                                        <div className="min-w-0 flex-1 pr-2">
-                                            <div className="flex items-center gap-1.5 truncate">
-                                                <span className="truncate">{p.title}</span>
-                                                {p.isPublished ? <span className="size-1.5 rounded-full bg-emerald-400 shrink-0" title="已发布" /> : <span className="size-1.5 rounded-full bg-amber-400 shrink-0" title="草稿" />}
-                                            </div>
-                                            <div className="font-mono text-xs text-[#6a6a75] truncate mt-0.5">/{p.slug}</div>
-                                        </div>
-                                        <span className="text-xs text-[#555] group-hover:text-[#888] font-mono shrink-0">{p.templateId ? p.templateId.replace("-", " ") : "html"}</span>
-                                    </div>
-                                );
-                            })}
-                        </div>
+                    {/* 中间：仅在 HTML 编辑器模式下展示视图分栏与设备切换 */}
+                    {activeSection === "editor" ? (
+                        <div className="flex items-center gap-1.5 rounded-lg border border-[var(--admin-border)] bg-[var(--admin-surface-2)] p-1">
+                            <button
+                                type="button"
+                                onClick={() => setViewMode("code")}
+                                className={`flex items-center gap-1 rounded px-2.5 py-1 text-xs transition-colors ${viewMode === "code" ? "bg-[var(--admin-surface-2)] text-[var(--admin-text)] font-medium" : "text-[var(--admin-text-secondary)] hover:text-[var(--admin-text)]"}`}
+                                title={t("admin.html.code_hint")}
+                            >
+                                <Code2 className="size-3.5" />
+                                {t("admin.html.code")}
+                            </button>
+                            <button
+                                type="button"
+                                onClick={() => setViewMode("split")}
+                                className={`flex items-center gap-1 rounded px-2.5 py-1 text-xs transition-colors ${viewMode === "split" ? "bg-[var(--admin-surface-2)] text-[var(--admin-text)] font-medium" : "text-[var(--admin-text-secondary)] hover:text-[var(--admin-text)]"}`}
+                                title={t("admin.html.split_hint")}
+                            >
+                                <Columns2 className="size-3.5" />
+                                {t("admin.html.split")}
+                            </button>
+                            <button
+                                type="button"
+                                onClick={() => setViewMode("preview")}
+                                className={`flex items-center gap-1 rounded px-2.5 py-1 text-xs transition-colors ${viewMode === "preview" ? "bg-[var(--admin-surface-2)] text-[var(--admin-text)] font-medium" : "text-[var(--admin-text-secondary)] hover:text-[var(--admin-text)]"}`}
+                                title={t("admin.html.preview_hint")}
+                            >
+                                <Eye className="size-3.5" />
+                                {t("admin.html.preview")}
+                            </button>
 
-                        {/* 左侧底栏：页面属性快速编辑与重置 */}
-                        {activePage && (
-                            <div className="border-t border-white/10 p-3 space-y-2.5 bg-black/30">
-                                <div className="space-y-1">
-                                    <label className="text-xs text-[#7c7c88]">页面标题</label>
-                                    <input
-                                        type="text"
-                                        value={activePage.title}
-                                        onChange={(e) => updateActivePage({ title: e.target.value })}
-                                        className="w-full rounded border border-white/10 bg-black/50 px-2 py-1 text-xs text-white focus:outline-none focus:border-sky-500"
-                                    />
-                                </div>
-                                <div className="space-y-1">
-                                    <label className="text-xs text-[#7c7c88]">访问路径 (Slug)</label>
-                                    <input
-                                        type="text"
-                                        value={activePage.slug}
-                                        onChange={(e) => updateActivePage({ slug: e.target.value.toLowerCase().replace(/[^a-z0-9-_]/g, "") })}
-                                        className="w-full rounded border border-white/10 bg-black/50 px-2 py-1 text-xs font-mono text-white focus:outline-none focus:border-sky-500"
-                                    />
-                                </div>
-                                <div className="flex items-center justify-between pt-1">
-                                    <span className="text-xs text-[#a2a2ad]">公开访问</span>
-                                    <Switch size="small" checked={activePage.isPublished} onChange={(checked) => updateActivePage({ isPublished: checked })} />
-                                </div>
-                                <div className="flex items-center justify-between pt-2 border-t border-white/10">
-                                    <button type="button" onClick={handleDeleteCurrentPage} className="inline-flex items-center gap-1 text-xs text-red-400 hover:text-red-300">
-                                        <Trash2 className="size-3" />
-                                        删除此页
-                                    </button>
-                                    <button type="button" onClick={handleReset} className="inline-flex items-center gap-1 text-xs text-[#7c7c88] hover:text-white" title="恢复默认官方条款">
-                                        <RotateCcw className="size-3" />
-                                        重置
-                                    </button>
-                                </div>
-                            </div>
-                        )}
-                    </aside>
-
-                    {/* 编辑器主舞台 */}
-                    <div className="flex flex-1 flex-col min-w-0 bg-[#0c0c0e]">
-                        {/* 排版快捷工具栏 */}
-                        {viewMode !== "preview" && (
-                            <div className="flex items-center gap-1 overflow-x-auto border-b border-white/10 px-3 py-1.5 bg-[#121215] text-xs">
-                                <span className="text-xs font-mono text-[#666] mr-2 shrink-0">排版快捷元素:</span>
-                                <button type="button" onClick={() => insertSnippet((s) => `<h1>${s || "大标题"}</h1>\n`)} className="rounded px-2 py-1 text-[#a2a2ad] hover:bg-white/10 hover:text-white" title="插入一级大标题">
-                                    <Heading1 className="size-3.5" />
-                                </button>
-                                <button type="button" onClick={() => insertSnippet((s) => `<h2>${s || "1. 章节条款"}</h2>\n`)} className="rounded px-2 py-1 text-[#a2a2ad] hover:bg-white/10 hover:text-white" title="插入二级章节标题">
-                                    <Heading2 className="size-3.5" />
-                                </button>
-                                <button type="button" onClick={() => insertSnippet((s) => `<h3>${s || "1.1 详细条款"}</h3>\n`)} className="rounded px-2 py-1 text-[#a2a2ad] hover:bg-white/10 hover:text-white" title="插入三级条款标题">
-                                    <Heading3 className="size-3.5" />
-                                </button>
-                                <div className="h-3 w-px bg-white/15 mx-1" />
-                                <button type="button" onClick={() => insertSnippet((s) => `<p>${s || "请输入正文段落说明..."}</p>\n`)} className="rounded px-2 py-1 text-[#a2a2ad] hover:bg-white/10 hover:text-white font-mono text-xs" title="插入段落 <p>">
-                                    P
-                                </button>
-                                <button type="button" onClick={() => insertSnippet((s) => `<strong>${s || "重点条款"}</strong>`)} className="rounded px-2 py-1 text-[#a2a2ad] hover:bg-white/10 hover:text-white font-bold text-xs" title="粗体 <strong>">
-                                    B
-                                </button>
-                                <button type="button" onClick={() => insertSnippet((s) => `<em>${s || "强调内容"}</em>`)} className="rounded px-2 py-1 text-[#a2a2ad] hover:bg-white/10 hover:text-white italic text-xs" title="斜体 <em>">
-                                    I
-                                </button>
-                                <div className="h-3 w-px bg-white/15 mx-1" />
-                                <button
-                                    type="button"
-                                    onClick={() => insertSnippet(`<ul>\n  <li>条款清单项 1</li>\n  <li>条款清单项 2</li>\n</ul>\n`)}
-                                    className="rounded px-2 py-1 text-[#a2a2ad] hover:bg-white/10 hover:text-white"
-                                    title="插入无序列表 <ul>"
-                                >
-                                    <List className="size-3.5" />
-                                </button>
-                                <button type="button" onClick={() => insertSnippet(`<ol>\n  <li>序号步骤 1</li>\n  <li>序号步骤 2</li>\n</ol>\n`)} className="rounded px-2 py-1 text-[#a2a2ad] hover:bg-white/10 hover:text-white" title="插入有序列表 <ol>">
-                                    <ListOrdered className="size-3.5" />
-                                </button>
-                                <button
-                                    type="button"
-                                    onClick={() =>
-                                        insertSnippet(
-                                            `<table>\n  <thead>\n    <tr><th>类别</th><th>收集内容</th><th>合法用途</th></tr>\n  </thead>\n  <tbody>\n    <tr><td>账号凭据</td><td>手机号/邮箱</td><td>身份鉴权与安全防护</td></tr>\n  </tbody>\n</table>\n`,
-                                        )
-                                    }
-                                    className="rounded px-2 py-1 text-[#a2a2ad] hover:bg-white/10 hover:text-white"
-                                    title="插入法务合规表格 <table>"
-                                >
-                                    <TableIcon className="size-3.5" />
-                                </button>
-                                <button
-                                    type="button"
-                                    onClick={() => insertSnippet((s) => `<div class="callout">\n  <strong>特别提醒：</strong>${s || "本条款涉及您的核心退款与数据所有权益，请仔细审阅。"}\n</div>\n`)}
-                                    className="rounded px-2 py-1 text-amber-300/80 hover:bg-white/10 hover:text-amber-200 text-xs"
-                                    title="插入高亮重点声明框"
-                                >
-                                    Callout
-                                </button>
-                                <button
-                                    type="button"
-                                    onClick={() => insertSnippet(`<hr style="border:0;border-top:1px solid var(--border,#333);margin:32px 0;" />\n`)}
-                                    className="rounded px-2 py-1 text-[#a2a2ad] hover:bg-white/10 hover:text-white text-xs font-mono"
-                                    title="插入水平分割线 <hr>"
-                                >
-                                    HR
-                                </button>
-                                <div className="flex-1" />
-                                <button type="button" onClick={handleCopyHtml} className="flex items-center gap-1 text-xs text-[#a2a2ad] hover:text-white px-2 py-1 rounded hover:bg-white/5" title="复制全文代码">
-                                    <Copy className="size-3" />
-                                    复制代码
-                                </button>
-                            </div>
-                        )}
-
-                        {/* 编辑与预览分屏主体 */}
-                        <div className="flex flex-1 min-h-0 min-w-0">
-                            {/* 左：代码编辑器 */}
-                            {viewMode !== "preview" && (
-                                <div className={`flex flex-col min-w-0 ${viewMode === "split" ? "w-1/2 border-r border-white/10" : "w-full"}`}>
-                                    <textarea
-                                        ref={textareaRef}
-                                        value={activePage?.html || ""}
-                                        onChange={(e) => updateActivePage({ html: e.target.value })}
-                                        placeholder="在此输入或粘贴完整自包含 HTML 页面代码..."
-                                        spellCheck={false}
-                                        className="flex-1 w-full resize-none bg-[#09090b] p-4 font-mono text-sm leading-relaxed text-[#e2e2e8] focus:outline-none selection:bg-sky-500/30"
-                                    />
-                                    <div className="flex items-center justify-between border-t border-white/5 bg-[#0a0a0c] px-3 py-1 text-xs text-[#666] font-mono">
-                                        <span>字数: {activePage?.html.length || 0} 字符</span>
-                                        <span>模板类型: {activePage?.templateId || "custom"}</span>
-                                    </div>
-                                </div>
-                            )}
-
-                            {/* 右：实时沙箱预览 */}
                             {viewMode !== "code" && (
-                                <div className={`flex flex-col min-w-0 bg-[#16161a] overflow-hidden ${viewMode === "split" ? "w-1/2" : "w-full"}`}>
-                                    <div className="flex items-center justify-between border-b border-white/10 bg-[#111114] px-4 py-1 text-xs text-[#8a8f98]">
-                                        <div className="flex items-center gap-2">
-                                            <span className="size-2 rounded-full bg-emerald-500 animate-pulse" />
-                                            <span className="font-mono text-xs">实时沙箱预览</span>
-                                            <span className="text-xs text-[#666]">/p/{activePage?.slug}</span>
-                                        </div>
-                                        <div className="flex items-center gap-3 font-mono text-xs text-[#666]">
-                                            <span>视口: {viewportWidthStyle}</span>
-                                            <button type="button" onClick={() => void handleCopyPreviewLink()} className="text-sky-400 hover:text-sky-300 flex items-center gap-1" title="复制预览地址">
-                                                <Copy className="size-3" />
-                                                复制链接
-                                            </button>
-                                        </div>
-                                    </div>
+                                <>
+                                    <div className="mx-1 h-3.5 w-px bg-[var(--admin-surface-2)]" />
+                                    <button
+                                        type="button"
+                                        onClick={() => setDeviceViewport("desktop")}
+                                        className={`p-1 rounded transition-colors ${deviceViewport === "desktop" ? "text-[var(--admin-text)] bg-[var(--admin-surface-2)]" : "text-[var(--admin-text-secondary)] hover:text-[var(--admin-text)]"}`}
+                                        title={t("admin.html.desktop")}
+                                    >
+                                        <Monitor className="size-3.5" />
+                                    </button>
+                                    <button
+                                        type="button"
+                                        onClick={() => setDeviceViewport("tablet")}
+                                        className={`p-1 rounded transition-colors ${deviceViewport === "tablet" ? "text-[var(--admin-text)] bg-[var(--admin-surface-2)]" : "text-[var(--admin-text-secondary)] hover:text-[var(--admin-text)]"}`}
+                                        title={t("admin.html.tablet")}
+                                    >
+                                        <Tablet className="size-3.5" />
+                                    </button>
+                                    <button
+                                        type="button"
+                                        onClick={() => setDeviceViewport("mobile")}
+                                        className={`p-1 rounded transition-colors ${deviceViewport === "mobile" ? "text-[var(--admin-text)] bg-[var(--admin-surface-2)]" : "text-[var(--admin-text-secondary)] hover:text-[var(--admin-text)]"}`}
+                                        title={t("admin.html.mobile")}
+                                    >
+                                        <Smartphone className="size-3.5" />
+                                    </button>
+                                    <div className="mx-1 h-3.5 w-px bg-[var(--admin-surface-2)]" />
+                                    <button
+                                        type="button"
+                                        onClick={togglePreviewTheme}
+                                        className={`flex items-center gap-1 rounded px-2 py-0.5 text-xs transition-transform  ${
+                                            previewTheme === "light" ? "text-[var(--admin-status-warning)] bg-[var(--admin-surface-2)] font-medium" : "text-[var(--admin-text)] bg-[var(--admin-surface-2)] font-medium"
+                                        }`}
+                                        title={previewTheme === "light" ? t("admin.html.preview_light") : t("admin.html.preview_dark")}
+                                    >
+                                        {previewTheme === "light" ? <Sun className="size-3.5" /> : <Moon className="size-3.5" />}
+                                        <span className="font-mono text-xs uppercase">{previewTheme === "light" ? "Light" : "Dark"}</span>
+                                    </button>
+                                </>
+                            )}
+                        </div>
+                    ) : (
+                        <div className="text-xs text-[var(--admin-text-secondary)] font-mono">{activeSection === "site-pages" ? t("admin.html.site_description") : t("admin.html.footer_description")}</div>
+                    )}
 
-                                    <div className="flex flex-1 items-center justify-center overflow-auto p-4 bg-[#0a0a0c]/60">
-                                        <div style={{ width: viewportWidthStyle, height: "100%" }} className="h-full rounded-lg shadow-2xl overflow-hidden border border-white/10 bg-black transition-all duration-200">
-                                            <iframe
-                                                ref={iframeRef}
-                                                title="HTML Page Live Preview"
-                                                srcDoc={activePage?.html || "<p>无预览内容</p>"}
-                                                sandbox="allow-scripts allow-same-origin"
-                                                className="h-full w-full border-0 bg-transparent"
-                                                onLoad={() => {
-                                                    if (iframeRef.current?.contentDocument) {
-                                                        const doc = iframeRef.current.contentDocument;
-                                                        doc.documentElement.setAttribute("data-theme", previewTheme);
-                                                        doc.documentElement.style.colorScheme = previewTheme;
-                                                    }
-                                                }}
-                                            />
+                    {/* 右侧：保存、导出与功能操作 */}
+                    {activeSection === "editor" ? (
+                        <div className="flex items-center gap-2">
+                            <Button
+                                size="small"
+                                icon={<Sparkles className="size-3.5 text-[var(--admin-status-warning)]" />}
+                                onClick={() => setTemplateModalOpen(true)}
+                                className="border-[var(--admin-border)] text-xs bg-[var(--admin-surface-2)] hover:bg-[var(--admin-surface-2)]"
+                            >
+                                {t("admin.html.templates")}
+                            </Button>
+                            <Tooltip title={t("admin.html.format_hint")}>
+                                <Button size="small" icon={<Wand2 className="size-3.5" />} onClick={handleBeautify} className="border-[var(--admin-border)] text-xs bg-[var(--admin-surface-2)]">
+                                    {t("admin.html.format")}
+                                </Button>
+                            </Tooltip>
+                            <Tooltip title={t("admin.html.copy_link_hint")}>
+                                <Button size="small" icon={<Copy className="size-3.5 text-[var(--admin-text)]" />} onClick={() => void handleCopyPreviewLink()} className="border-[var(--admin-border)] text-xs bg-[var(--admin-surface-2)]">
+                                    {t("admin.html.preview_link")}
+                                </Button>
+                            </Tooltip>
+                            <Tooltip title={t("admin.html.download_hint")}>
+                                <Button size="small" aria-label={t("admin.html.download")} icon={<Download className="size-3.5" />} onClick={handleDownloadHtml} className="border-[var(--admin-border)] text-xs bg-[var(--admin-surface-2)]" />
+                            </Tooltip>
+                            <Tooltip title={t("admin.html.open_hint")}>
+                                <Button size="small" aria-label={t("admin.html.open_saved")} icon={<ExternalLink className="size-3.5" />} onClick={handleOpenInNewTab} className="border-[var(--admin-border)] text-xs bg-[var(--admin-surface-2)]" />
+                            </Tooltip>
+                            <Button type="primary" size="small" icon={<Save className="size-3.5" />} loading={saving} onClick={() => void handleSave()} className="bg-[var(--admin-surface-2)] hover:bg-[var(--admin-surface-2)] font-medium text-xs px-3">
+                                {t("admin.html.save_pages")}
+                            </Button>
+                        </div>
+                    ) : (
+                        <div className="flex items-center gap-2">
+                            <Button size="small" icon={<RotateCcw className="size-3.5" />} onClick={handleResetSiteFooter} className="border-[var(--admin-border)] text-xs bg-[var(--admin-surface-2)] hover:bg-[var(--admin-surface-2)]">
+                                {t("admin.html.restore_defaults")}
+                            </Button>
+                            <Button
+                                type="primary"
+                                size="small"
+                                icon={<Save className="size-3.5" />}
+                                loading={savingFooter}
+                                onClick={() => void handleSaveSiteFooter()}
+                                className="bg-[var(--admin-surface-2)] hover:bg-[var(--admin-surface-2)] font-medium text-xs px-3"
+                            >
+                                {t("admin.html.save_footer")}
+                            </Button>
+                        </div>
+                    )}
+                </header>
+            </fieldset>
+
+            {loading && (
+                <div className="plugin-html-state">
+                    <Spin />
+                    <span>{t("admin.html.loading")}</span>
+                </div>
+            )}
+            {loadError && <Alert type="error" showIcon title={loadError} action={<Button onClick={() => void loadData()}>{t("admin.html.retry")}</Button>} />}
+            <fieldset className="plugin-html-workspace" disabled={loading || !!loadError || saving || savingFooter}>
+                {/* 主工作区：根据 activeSection 切换 */}
+                {activeSection === "editor" && (
+                    <div className="plugin-html-editor flex flex-1 min-h-0 overflow-hidden">
+                        {/* 左栏：页面抽屉/列表 */}
+                        <aside className="plugin-html-sidebar w-64 shrink-0 flex flex-col border-r border-[var(--admin-border)] bg-[var(--admin-surface)]">
+                            <div className="flex items-center justify-between border-b border-[var(--admin-border)] p-3">
+                                <span className="text-xs font-medium text-[var(--admin-text-secondary)] uppercase tracking-wider">
+                                    {t("admin.html.page_list")}
+                                    {pages.length})
+                                </span>
+                                <button type="button" onClick={() => setNewPageModalOpen(true)} className="flex items-center gap-1 rounded px-2 py-0.5 text-xs text-[var(--admin-text)] hover:bg-[var(--admin-surface-2)] transition-colors">
+                                    <Plus className="size-3" />
+                                    {t("admin.html.new")}
+                                </button>
+                            </div>
+
+                            <div className="flex-1 overflow-y-auto p-2 space-y-1">
+                                {!loading && !loadError && pages.length === 0 && <p className="p-3 text-sm text-[var(--admin-text-secondary)]">{t("admin.html.no_pages")}</p>}
+                                {pages.map((p) => {
+                                    const isCurrent = p.id === activePage?.id;
+                                    return (
+                                        <div
+                                            key={p.id}
+                                            role="button"
+                                            tabIndex={0}
+                                            aria-pressed={isCurrent}
+                                            onKeyDown={(event) => {
+                                                if (event.key === "Enter" || event.key === " ") {
+                                                    event.preventDefault();
+                                                    setActiveId(p.id);
+                                                }
+                                            }}
+                                            onClick={() => setActiveId(p.id)}
+                                            className={`group flex items-center justify-between rounded-lg p-2.5 cursor-pointer text-xs transition-colors ${
+                                                isCurrent
+                                                    ? "bg-[var(--admin-surface-2)] text-[var(--admin-text)] font-medium border border-[var(--admin-border)]"
+                                                    : "text-[var(--admin-text-secondary)] hover:bg-[var(--admin-surface-2)] hover:text-[var(--admin-text)]"
+                                            }`}
+                                        >
+                                            <div className="min-w-0 flex-1 pr-2">
+                                                <div className="flex items-center gap-1.5 truncate">
+                                                    <span className="truncate">{p.title}</span>
+                                                    {p.isPublished ? (
+                                                        <span className="size-1.5 rounded-full bg-[var(--admin-status-success)] shrink-0" title={t("admin.html.published")} />
+                                                    ) : (
+                                                        <span className="size-1.5 rounded-full bg-[var(--admin-status-warning)] shrink-0" title={t("admin.html.draft")} />
+                                                    )}
+                                                </div>
+                                                <div className="font-mono text-xs text-[var(--admin-text-secondary)] truncate mt-0.5">/{p.slug}</div>
+                                            </div>
+                                            <span className="text-xs text-[var(--admin-text-secondary)] text-[var(--admin-text-secondary)] font-mono shrink-0">{p.templateId ? p.templateId.replace("-", " ") : "html"}</span>
                                         </div>
+                                    );
+                                })}
+                            </div>
+
+                            {/* 左侧底栏：页面属性快速编辑与重置 */}
+                            {activePage && (
+                                <div className="border-t border-[var(--admin-border)] p-3 space-y-2.5 bg-[var(--admin-surface-2)]">
+                                    <div className="space-y-1">
+                                        <label className="text-xs text-[var(--admin-text-secondary)]">
+                                            {t("admin.html.page_title")}
+                                            <input
+                                                type="text"
+                                                value={activePage.title}
+                                                onChange={(e) => updateActivePage({ title: e.target.value })}
+                                                className="w-full rounded border border-[var(--admin-border)] bg-[var(--admin-surface-2)] px-2 py-1 text-xs text-[var(--admin-text)] focus:outline-none focus:border-[var(--admin-border)]"
+                                            />
+                                        </label>
+                                    </div>
+                                    <div className="space-y-1">
+                                        <label className="text-xs text-[var(--admin-text-secondary)]">
+                                            {t("admin.html.slug")}
+                                            <input
+                                                type="text"
+                                                value={activePage.slug}
+                                                onChange={(e) => updateActivePage({ slug: e.target.value.toLowerCase().replace(/[^a-z0-9-_]/g, "") })}
+                                                className="w-full rounded border border-[var(--admin-border)] bg-[var(--admin-surface-2)] px-2 py-1 text-xs font-mono text-[var(--admin-text)] focus:outline-none focus:border-[var(--admin-border)]"
+                                            />
+                                        </label>
+                                    </div>
+                                    <div className="flex items-center justify-between pt-1">
+                                        <span className="text-xs text-[var(--admin-text-secondary)]">{t("admin.html.public_access")}</span>
+                                        <Switch size="sm" aria-label={t("admin.html.public_access")} checked={activePage.isPublished} onChange={(checked) => updateActivePage({ isPublished: checked })} />
+                                    </div>
+                                    <div className="flex items-center justify-between pt-2 border-t border-[var(--admin-border)]">
+                                        <button type="button" onClick={handleDeleteCurrentPage} className="inline-flex items-center gap-1 text-xs text-[var(--admin-status-error)] hover:text-[var(--admin-status-error)]">
+                                            <Trash2 className="size-3" />
+                                            {t("admin.html.delete_page")}
+                                        </button>
+                                        <button
+                                            type="button"
+                                            onClick={handleReset}
+                                            className="inline-flex items-center gap-1 text-xs text-[var(--admin-text-secondary)] hover:text-[var(--admin-text)]"
+                                            aria-label={t("admin.html.restore_hint")}
+                                            title={t("admin.html.restore_hint")}
+                                        >
+                                            <RotateCcw className="size-3" />
+                                            {t("admin.html.reset")}
+                                        </button>
                                     </div>
                                 </div>
                             )}
-                        </div>
-                    </div>
-                </div>
-            )}
+                        </aside>
 
-            {/* 页面管理视图 */}
-            {activeSection === "site-pages" && (
-                <div className="flex-1 overflow-y-auto p-6">
-                    <div className="mx-auto max-w-5xl space-y-6">
-                        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 rounded-2xl border border-white/10 bg-[#141418] p-5">
-                            <div>
-                                <h2 className="text-base font-semibold text-white">全站法务与公开页面管理</h2>
-                                <p className="mt-1 text-xs text-[#8a8f98]">
-                                    统一管理 <code className="text-sky-400">/terms</code>、<code className="text-sky-400">/privacy</code>、<code className="text-sky-400">/aup</code>、<code className="text-sky-400">/legal</code>、
-                                    <code className="text-sky-400">/mcp</code> 与 <code className="text-sky-400">/pricing.html</code> 底部是否展示黑夜极光页脚。修改后点击右上角「保存页脚与页面设置」立即生效。
-                                </p>
-                            </div>
-                            <div className="flex items-center gap-3 shrink-0">
-                                <span className="text-xs text-[#a2a2ad]">全局启用页脚</span>
-                                <Switch checked={siteFooter.enabled} onChange={(checked) => updateSiteFooter({ enabled: checked })} />
-                            </div>
-                        </div>
+                        {/* 编辑器主舞台 */}
+                        <div className="flex flex-1 flex-col min-w-0 bg-[var(--admin-surface)]">
+                            {/* 排版快捷工具栏 */}
+                            {viewMode !== "preview" && (
+                                <div className="flex items-center gap-1 overflow-x-auto border-b border-[var(--admin-border)] px-3 py-1.5 bg-[var(--admin-surface)] text-xs">
+                                    <span className="text-xs font-mono text-[var(--admin-text-secondary)] mr-2 shrink-0">{t("admin.html.snippets")}</span>
+                                    <button
+                                        type="button"
+                                        onClick={() => insertSnippet((s) => `<h1>${s || t("admin.html.snippet_heading")}</h1>\n`)}
+                                        className="rounded px-2 py-1 text-[var(--admin-text-secondary)] hover:bg-[var(--admin-surface-2)] hover:text-[var(--admin-text)]"
+                                        title={t("admin.html.insert_h1")}
+                                    >
+                                        <Heading1 className="size-3.5" />
+                                    </button>
+                                    <button
+                                        type="button"
+                                        onClick={() => insertSnippet((s) => `<h2>${s || t("admin.html.snippet_section")}</h2>\n`)}
+                                        className="rounded px-2 py-1 text-[var(--admin-text-secondary)] hover:bg-[var(--admin-surface-2)] hover:text-[var(--admin-text)]"
+                                        title={t("admin.html.insert_h2")}
+                                    >
+                                        <Heading2 className="size-3.5" />
+                                    </button>
+                                    <button
+                                        type="button"
+                                        onClick={() => insertSnippet((s) => `<h3>${s || t("admin.html.snippet_clause")}</h3>\n`)}
+                                        className="rounded px-2 py-1 text-[var(--admin-text-secondary)] hover:bg-[var(--admin-surface-2)] hover:text-[var(--admin-text)]"
+                                        title={t("admin.html.insert_h3")}
+                                    >
+                                        <Heading3 className="size-3.5" />
+                                    </button>
+                                    <div className="h-3 w-px bg-[var(--admin-surface-2)] mx-1" />
+                                    <button
+                                        type="button"
+                                        onClick={() => insertSnippet((s) => `<p>${s || t("admin.html.snippet_paragraph")}</p>\n`)}
+                                        className="rounded px-2 py-1 text-[var(--admin-text-secondary)] hover:bg-[var(--admin-surface-2)] hover:text-[var(--admin-text)] font-mono text-xs"
+                                        title={t("admin.html.insert_p")}
+                                    >
+                                        P
+                                    </button>
+                                    <button
+                                        type="button"
+                                        onClick={() => insertSnippet((s) => `<strong>${s || t("admin.html.snippet_strong")}</strong>`)}
+                                        className="rounded px-2 py-1 text-[var(--admin-text-secondary)] hover:bg-[var(--admin-surface-2)] hover:text-[var(--admin-text)] font-bold text-xs"
+                                        title={t("admin.html.insert_strong")}
+                                    >
+                                        B
+                                    </button>
+                                    <button
+                                        type="button"
+                                        onClick={() => insertSnippet((s) => `<em>${s || t("admin.html.snippet_emphasis")}</em>`)}
+                                        className="rounded px-2 py-1 text-[var(--admin-text-secondary)] hover:bg-[var(--admin-surface-2)] hover:text-[var(--admin-text)] italic text-xs"
+                                        title={t("admin.html.insert_em")}
+                                    >
+                                        I
+                                    </button>
+                                    <div className="h-3 w-px bg-[var(--admin-surface-2)] mx-1" />
+                                    <button
+                                        type="button"
+                                        onClick={() => insertSnippet(`<ul>\n  <li>条款清单项 1</li>\n  <li>条款清单项 2</li>\n</ul>\n`)}
+                                        className="rounded px-2 py-1 text-[var(--admin-text-secondary)] hover:bg-[var(--admin-surface-2)] hover:text-[var(--admin-text)]"
+                                        title={t("admin.html.insert_ul")}
+                                    >
+                                        <List className="size-3.5" />
+                                    </button>
+                                    <button
+                                        type="button"
+                                        onClick={() => insertSnippet(`<ol>\n  <li>序号步骤 1</li>\n  <li>序号步骤 2</li>\n</ol>\n`)}
+                                        className="rounded px-2 py-1 text-[var(--admin-text-secondary)] hover:bg-[var(--admin-surface-2)] hover:text-[var(--admin-text)]"
+                                        title={t("admin.html.insert_ol")}
+                                    >
+                                        <ListOrdered className="size-3.5" />
+                                    </button>
+                                    <button
+                                        type="button"
+                                        onClick={() =>
+                                            insertSnippet(
+                                                `<table>\n  <thead>\n    <tr><th>类别</th><th>收集内容</th><th>合法用途</th></tr>\n  </thead>\n  <tbody>\n    <tr><td>账号凭据</td><td>手机号/邮箱</td><td>身份鉴权与安全防护</td></tr>\n  </tbody>\n</table>\n`,
+                                            )
+                                        }
+                                        className="rounded px-2 py-1 text-[var(--admin-text-secondary)] hover:bg-[var(--admin-surface-2)] hover:text-[var(--admin-text)]"
+                                        title={t("admin.html.insert_table")}
+                                    >
+                                        <TableIcon className="size-3.5" />
+                                    </button>
+                                    <button
+                                        type="button"
+                                        onClick={() => insertSnippet((s) => `<div class="callout">\n  <strong>特别提醒：</strong>${s || t("admin.html.snippet_callout")}\n</div>\n`)}
+                                        className="rounded px-2 py-1 text-[var(--admin-status-warning)] hover:bg-[var(--admin-surface-2)] hover:text-[var(--admin-status-warning)] text-xs"
+                                        title={t("admin.html.insert_callout")}
+                                    >
+                                        Callout
+                                    </button>
+                                    <button
+                                        type="button"
+                                        onClick={() => insertSnippet(`<hr style="border:0;border-top:1px solid var(--border,#333);margin:32px 0;" />\n`)}
+                                        className="rounded px-2 py-1 text-[var(--admin-text-secondary)] hover:bg-[var(--admin-surface-2)] hover:text-[var(--admin-text)] text-xs font-mono"
+                                        title={t("admin.html.insert_hr")}
+                                    >
+                                        HR
+                                    </button>
+                                    <div className="flex-1" />
+                                    <button
+                                        type="button"
+                                        onClick={handleCopyHtml}
+                                        className="flex items-center gap-1 text-xs text-[var(--admin-text-secondary)] hover:text-[var(--admin-text)] px-2 py-1 rounded hover:bg-[var(--admin-surface-2)]"
+                                        aria-label={t("admin.html.copy_hint")}
+                                        title={t("admin.html.copy_hint")}
+                                    >
+                                        <Copy className="size-3" />
+                                        {t("admin.html.copy_code")}
+                                    </button>
+                                </div>
+                            )}
 
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            {siteFooter.sitePages.map((sp, idx) => (
-                                <div key={sp.path} className="flex flex-col justify-between rounded-xl border border-white/10 bg-[#121216] p-4 hover:border-white/20 transition-colors">
-                                    <div className="space-y-2">
-                                        <div className="flex items-center justify-between gap-2">
+                            {/* 编辑与预览分屏主体 */}
+                            <div className="plugin-html-panes flex flex-1 min-h-0 min-w-0">
+                                {/* 左：代码编辑器 */}
+                                {viewMode !== "preview" && (
+                                    <div className={`flex flex-col min-w-0 ${viewMode === "split" ? "w-1/2 border-r border-[var(--admin-border)]" : "w-full"}`}>
+                                        <textarea
+                                            ref={textareaRef}
+                                            aria-label={t("admin.html.code")}
+                                            value={activePage?.html || ""}
+                                            onChange={(e) => updateActivePage({ html: e.target.value })}
+                                            placeholder={t("admin.html.source_placeholder")}
+                                            spellCheck={false}
+                                            className="flex-1 w-full resize-none bg-[var(--admin-surface)] p-4 font-mono text-sm leading-relaxed text-[var(--admin-text-secondary)] focus:outline-none selection:bg-[var(--admin-surface-2)]"
+                                        />
+                                        <div className="flex items-center justify-between border-t border-[var(--admin-border)] bg-[var(--admin-surface)] px-3 py-1 text-xs text-[var(--admin-text-secondary)] font-mono">
+                                            <span>
+                                                {t("admin.html.character_count")}
+                                                {activePage?.html.length || 0}
+                                                {t("admin.html.characters")}
+                                            </span>
+                                            <span>
+                                                {t("admin.html.template_type")}
+                                                {activePage?.templateId || "custom"}
+                                            </span>
+                                        </div>
+                                    </div>
+                                )}
+
+                                {/* 右：实时沙箱预览 */}
+                                {viewMode !== "code" && (
+                                    <div className={`flex flex-col min-w-0 bg-[var(--admin-surface)] overflow-hidden ${viewMode === "split" ? "w-1/2" : "w-full"}`}>
+                                        <div className="flex items-center justify-between border-b border-[var(--admin-border)] bg-[var(--admin-surface)] px-4 py-1 text-xs text-[var(--admin-text-secondary)]">
                                             <div className="flex items-center gap-2">
-                                                <span className="font-mono text-xs font-semibold text-sky-400 bg-sky-500/10 border border-sky-500/20 px-2 py-0.5 rounded">{sp.path}</span>
-                                                <Tag color={sp.pageType === "static-html" ? "purple" : "blue"} className="m-0 text-xs border-0">
-                                                    {sp.pageType === "static-html" ? "静态 HTML" : "SPA 路由"}
-                                                </Tag>
+                                                <span className="size-2 rounded-full bg-[var(--admin-status-success)] animate-pulse" />
+                                                <span className="font-mono text-xs">{t("admin.html.sandbox_preview")}</span>
+                                                <span className="text-xs text-[var(--admin-text-secondary)]">/p/{activePage?.slug}</span>
                                             </div>
-                                            <a href={sp.path} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 text-xs text-[#8a8f98] hover:text-white no-underline">
-                                                <span>打开页面</span>
-                                                <ExternalLink className="size-3" />
-                                            </a>
+                                            <div className="flex items-center gap-3 font-mono text-xs text-[var(--admin-text-secondary)]">
+                                                <span>
+                                                    {t("admin.html.viewport")}
+                                                    {viewportWidthStyle}
+                                                </span>
+                                                <button type="button" onClick={() => void handleCopyPreviewLink()} className="text-[var(--admin-text)] hover:text-[var(--admin-text)] flex items-center gap-1" title={t("admin.html.copy_link_hint")}>
+                                                    <Copy className="size-3" />
+                                                    {t("admin.html.copy_link")}
+                                                </button>
+                                            </div>
                                         </div>
 
-                                        <div>
-                                            <label className="text-xs text-[#7c7c88] block mb-1">页面名称</label>
-                                            <input
-                                                type="text"
-                                                value={sp.title}
-                                                onChange={(e) => {
-                                                    const next = [...siteFooter.sitePages];
-                                                    next[idx] = { ...sp, title: e.target.value };
-                                                    updateSiteFooter({ sitePages: next });
-                                                }}
-                                                className="w-full rounded border border-white/10 bg-black/50 px-2.5 py-1.5 text-xs text-white focus:outline-none focus:border-sky-500"
-                                            />
-                                        </div>
-
-                                        <div>
-                                            <label className="text-xs text-[#7c7c88] block mb-1">说明备注</label>
-                                            <input
-                                                type="text"
-                                                value={sp.description}
-                                                onChange={(e) => {
-                                                    const next = [...sitePagesClone(siteFooter)];
-                                                    next[idx] = { ...sp, description: e.target.value };
-                                                    updateSiteFooter({ sitePages: next });
-                                                }}
-                                                className="w-full rounded border border-white/10 bg-black/50 px-2.5 py-1.5 text-xs text-[#a2a2ad] focus:outline-none focus:border-sky-500"
-                                            />
+                                        <div className="flex-1 min-h-0 overflow-auto p-4 bg-[var(--admin-surface)]">
+                                            <div style={{ width: viewportWidthStyle, height: "100%" }} className="mx-auto h-full rounded-lg shadow-none overflow-hidden bg-[var(--admin-surface-2)] transition-colors">
+                                                <iframe ref={iframeRef} title="HTML Page Live Preview" srcDoc={previewDocument} sandbox="allow-scripts" className="h-full w-full border-0 bg-transparent" />
+                                            </div>
                                         </div>
                                     </div>
-
-                                    <div className="mt-4 pt-3 border-t border-white/10 flex items-center justify-between">
-                                        <span className="text-xs text-[#a2a2ad]">在页面底部挂载黑底页脚</span>
-                                        <Switch
-                                            size="small"
-                                            checked={sp.showFooter}
-                                            onChange={(checked) => {
-                                                const next = [...siteFooter.sitePages];
-                                                next[idx] = { ...sp, showFooter: checked };
-                                                updateSiteFooter({ sitePages: next });
-                                            }}
-                                        />
-                                    </div>
-                                </div>
-                            ))}
+                                )}
+                            </div>
                         </div>
                     </div>
-                </div>
-            )}
+                )}
 
-            {/* 页脚管理器视图 */}
-            {activeSection === "footer-manager" && (
-                <div className="flex-1 overflow-y-auto p-6">
-                    <div className="mx-auto max-w-6xl space-y-6">
-                        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                            {/* 左侧：品牌、社交与订阅卡片设置 */}
-                            <div className="space-y-5 rounded-2xl border border-white/10 bg-[#141418] p-5">
-                                <h3 className="text-sm font-semibold text-white border-b border-white/10 pb-3">1. 品牌标识、简介与官方社交</h3>
-                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                                    <div>
-                                        <label className="text-xs text-[#8a8f98] block mb-1">品牌名称</label>
-                                        <input type="text" value={siteFooter.brandName} onChange={(e) => updateSiteFooter({ brandName: e.target.value })} className="w-full rounded border border-white/10 bg-black/50 px-3 py-1.5 text-xs text-white" />
-                                    </div>
-                                    <div>
-                                        <label className="text-xs text-[#8a8f98] block mb-1">副标题 Slogan</label>
-                                        <input type="text" value={siteFooter.brandSlogan} onChange={(e) => updateSiteFooter({ brandSlogan: e.target.value })} className="w-full rounded border border-white/10 bg-black/50 px-3 py-1.5 text-xs text-white" />
-                                    </div>
-                                </div>
-
+                {/* 页面管理视图 */}
+                {activeSection === "site-pages" && (
+                    <div className="flex-1 overflow-y-auto p-6">
+                        <div className="mx-auto max-w-5xl space-y-6">
+                            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 rounded-2xl border border-[var(--admin-border)] bg-[var(--admin-surface)] p-5">
                                 <div>
-                                    <label className="text-xs text-[#8a8f98] block mb-1">品牌愿景介绍</label>
-                                    <textarea
-                                        rows={2}
-                                        value={siteFooter.brandVision}
-                                        onChange={(e) => updateSiteFooter({ brandVision: e.target.value })}
-                                        className="w-full rounded border border-white/10 bg-black/50 px-3 py-1.5 text-xs text-white resize-none"
-                                    />
+                                    <h2 className="text-base font-semibold text-[var(--admin-text)]">{t("admin.html.site_heading")}</h2>
+                                    <p className="mt-1 text-xs text-[var(--admin-text-secondary)]">
+                                        {t("admin.html.manage")}
+                                        <code className="text-[var(--admin-text)]">/terms</code>、<code className="text-[var(--admin-text)]">/privacy</code>、<code className="text-[var(--admin-text)]">/aup</code>、
+                                        <code className="text-[var(--admin-text)]">/legal</code>、<code className="text-[var(--admin-text)]">/mcp</code>
+                                        {t("admin.html.and")}
+                                        <code className="text-[var(--admin-text)]">/pricing.html</code>
+                                        {t("admin.html.site_help")}
+                                    </p>
                                 </div>
-
-                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                                    <div>
-                                        <label className="text-xs text-[#8a8f98] block mb-1">官方联系邮箱</label>
-                                        <input
-                                            type="text"
-                                            value={siteFooter.supportEmail}
-                                            onChange={(e) => updateSiteFooter({ supportEmail: e.target.value })}
-                                            className="w-full rounded border border-white/10 bg-black/50 px-3 py-1.5 text-xs font-mono text-white"
-                                        />
-                                    </div>
-                                    <div>
-                                        <label className="text-xs text-[#8a8f98] block mb-1">社交矩阵标题</label>
-                                        <input
-                                            type="text"
-                                            value={siteFooter.officialChannelsText}
-                                            onChange={(e) => updateSiteFooter({ officialChannelsText: e.target.value })}
-                                            className="w-full rounded border border-white/10 bg-black/50 px-3 py-1.5 text-xs text-white"
-                                        />
-                                    </div>
-                                </div>
-
-                                <div className="space-y-2 pt-2">
-                                    <label className="text-xs text-[#8a8f98] block">社交媒体链接 (X / YouTube / Instagram / 小红书 / QQ)</label>
-                                    {siteFooter.socialLinks.map((soc, sIdx) => (
-                                        <div key={soc.id} className="grid grid-cols-12 gap-2 items-center">
-                                            <span className="col-span-3 font-mono text-xs text-[#a2a2ad] truncate">{soc.name}</span>
-                                            <input
-                                                type="text"
-                                                value={soc.handle}
-                                                placeholder="账号名"
-                                                onChange={(e) => {
-                                                    const next = [...siteFooter.socialLinks];
-                                                    next[sIdx] = { ...soc, handle: e.target.value };
-                                                    updateSiteFooter({ socialLinks: next });
-                                                }}
-                                                className="col-span-3 rounded border border-white/10 bg-black/50 px-2 py-1 text-xs text-white"
-                                            />
-                                            <input
-                                                type="text"
-                                                value={soc.href}
-                                                placeholder="跳转 URL"
-                                                onChange={(e) => {
-                                                    const next = [...siteFooter.socialLinks];
-                                                    next[sIdx] = { ...soc, href: e.target.value };
-                                                    updateSiteFooter({ socialLinks: next });
-                                                }}
-                                                className="col-span-6 rounded border border-white/10 bg-black/50 px-2 py-1 text-xs font-mono text-white"
-                                            />
-                                        </div>
-                                    ))}
+                                <div className="flex items-center gap-3 shrink-0">
+                                    <span className="text-xs text-[var(--admin-text-secondary)]">{t("admin.html.global_footer")}</span>
+                                    <Switch aria-label={t("admin.html.global_footer")} checked={siteFooter.enabled} onChange={(checked) => updateSiteFooter({ enabled: checked })} />
                                 </div>
                             </div>
 
-                            {/* 右侧：导航列、技术周刊与底部备案版权 */}
-                            <div className="space-y-5 rounded-2xl border border-white/10 bg-[#141418] p-5">
-                                <h3 className="text-sm font-semibold text-white border-b border-white/10 pb-3">2. 导航列、技术周刊卡片与底部版权备案</h3>
-
-                                {siteFooter.columns.map((col, cIdx) => (
-                                    <div key={cIdx} className="space-y-2 rounded-xl border border-white/10 bg-black/30 p-3">
-                                        <div className="flex items-center justify-between gap-2">
-                                            <span className="text-xs font-mono text-sky-400">第 {cIdx + 1} 列标题</span>
-                                            <input
-                                                type="text"
-                                                value={col.title}
-                                                onChange={(e) => {
-                                                    const next = [...siteFooter.columns];
-                                                    next[cIdx] = { ...col, title: e.target.value };
-                                                    updateSiteFooter({ columns: next });
-                                                }}
-                                                className="rounded border border-white/10 bg-black/60 px-2.5 py-1 text-xs text-white"
-                                            />
-                                        </div>
-                                        <div className="space-y-1.5">
-                                            {col.links.map((lnk, lIdx) => (
-                                                <div key={lIdx} className="grid grid-cols-12 gap-2">
-                                                    <input
-                                                        type="text"
-                                                        value={lnk.label}
-                                                        onChange={(e) => {
-                                                            const nextCols = [...siteFooter.columns];
-                                                            const nextLinks = [...col.links];
-                                                            nextLinks[lIdx] = { ...lnk, label: e.target.value };
-                                                            nextCols[cIdx] = { ...col, links: nextLinks };
-                                                            updateSiteFooter({ columns: nextCols });
-                                                        }}
-                                                        className="col-span-5 rounded border border-white/10 bg-black/50 px-2 py-1 text-xs text-white"
-                                                    />
-                                                    <input
-                                                        type="text"
-                                                        value={lnk.href}
-                                                        onChange={(e) => {
-                                                            const nextCols = [...siteFooter.columns];
-                                                            const nextLinks = [...col.links];
-                                                            nextLinks[lIdx] = { ...lnk, href: e.target.value };
-                                                            nextCols[cIdx] = { ...col, links: nextLinks };
-                                                            updateSiteFooter({ columns: nextCols });
-                                                        }}
-                                                        className="col-span-7 rounded border border-white/10 bg-black/50 px-2 py-1 text-xs font-mono text-[#a2a2ad]"
-                                                    />
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                {siteFooter.sitePages.map((sp, idx) => (
+                                    <div key={sp.path} className="flex flex-col justify-between rounded-xl border border-[var(--admin-border)] bg-[var(--admin-surface)] p-4 hover:border-[var(--admin-border)] transition-colors">
+                                        <div className="space-y-2">
+                                            <div className="flex items-center justify-between gap-2">
+                                                <div className="flex items-center gap-2">
+                                                    <span className="font-mono text-xs font-semibold text-[var(--admin-text)] bg-[var(--admin-surface-2)] border border-[var(--admin-border)] px-2 py-0.5 rounded">{sp.path}</span>
+                                                    <Tag color={sp.pageType === "static-html" ? "purple" : "blue"} className="m-0 text-xs border-0">
+                                                        {sp.pageType === "static-html" ? t("admin.html.static_html") : t("admin.html.spa")}
+                                                    </Tag>
                                                 </div>
-                                            ))}
+                                                <a href={sp.path} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 text-xs text-[var(--admin-text-secondary)] hover:text-[var(--admin-text)] no-underline">
+                                                    <span>{t("admin.html.open_page")}</span>
+                                                    <ExternalLink className="size-3" />
+                                                </a>
+                                            </div>
+
+                                            <div>
+                                                <label className="text-xs text-[var(--admin-text-secondary)] block mb-1">
+                                                    {t("admin.html.page_name")}
+                                                    <input
+                                                        type="text"
+                                                        value={sp.title}
+                                                        onChange={(e) => {
+                                                            const next = [...siteFooter.sitePages];
+                                                            next[idx] = { ...sp, title: e.target.value };
+                                                            updateSiteFooter({ sitePages: next });
+                                                        }}
+                                                        className="w-full rounded border border-[var(--admin-border)] bg-[var(--admin-surface-2)] px-2.5 py-1.5 text-xs text-[var(--admin-text)] focus:outline-none focus:border-[var(--admin-border)]"
+                                                    />
+                                                </label>
+                                            </div>
+
+                                            <div>
+                                                <label className="text-xs text-[var(--admin-text-secondary)] block mb-1">
+                                                    {t("admin.html.description")}
+                                                    <input
+                                                        type="text"
+                                                        value={sp.description}
+                                                        onChange={(e) => {
+                                                            const next = [...sitePagesClone(siteFooter)];
+                                                            next[idx] = { ...sp, description: e.target.value };
+                                                            updateSiteFooter({ sitePages: next });
+                                                        }}
+                                                        className="w-full rounded border border-[var(--admin-border)] bg-[var(--admin-surface-2)] px-2.5 py-1.5 text-xs text-[var(--admin-text-secondary)] focus:outline-none focus:border-[var(--admin-border)]"
+                                                    />
+                                                </label>
+                                            </div>
+                                        </div>
+
+                                        <div className="mt-4 pt-3 border-t border-[var(--admin-border)] flex items-center justify-between">
+                                            <span className="text-xs text-[var(--admin-text-secondary)]">{t("admin.html.show_footer")}</span>
+                                            <Switch
+                                                size="sm"
+                                                aria-label={`${t("admin.html.show_footer")} ${sp.path}`}
+                                                checked={sp.showFooter}
+                                                onChange={(checked) => {
+                                                    const next = [...siteFooter.sitePages];
+                                                    next[idx] = { ...sp, showFooter: checked };
+                                                    updateSiteFooter({ sitePages: next });
+                                                }}
+                                            />
                                         </div>
                                     </div>
                                 ))}
-
-                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                                    <div>
-                                        <label className="text-xs text-[#8a8f98] block mb-1">订阅栏标题</label>
-                                        <input
-                                            type="text"
-                                            value={siteFooter.newsletterHeading}
-                                            onChange={(e) => updateSiteFooter({ newsletterHeading: e.target.value })}
-                                            className="w-full rounded border border-white/10 bg-black/50 px-2.5 py-1 text-xs text-white"
-                                        />
-                                    </div>
-                                    <div>
-                                        <label className="text-xs text-[#8a8f98] block mb-1">卡片主标题</label>
-                                        <input
-                                            type="text"
-                                            value={siteFooter.newsletterCardTitle}
-                                            onChange={(e) => updateSiteFooter({ newsletterCardTitle: e.target.value })}
-                                            className="w-full rounded border border-white/10 bg-black/50 px-2.5 py-1 text-xs text-white"
-                                        />
-                                    </div>
-                                </div>
-
-                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                                    <div>
-                                        <label className="text-xs text-[#8a8f98] block mb-1">版权声明</label>
-                                        <input
-                                            type="text"
-                                            value={siteFooter.copyrightText}
-                                            onChange={(e) => updateSiteFooter({ copyrightText: e.target.value })}
-                                            className="w-full rounded border border-white/10 bg-black/50 px-2.5 py-1 text-xs text-white"
-                                        />
-                                    </div>
-                                    <div>
-                                        <label className="text-xs text-[#8a8f98] block mb-1">ICP 备案号</label>
-                                        <input type="text" value={siteFooter.icpNumber} onChange={(e) => updateSiteFooter({ icpNumber: e.target.value })} className="w-full rounded border border-white/10 bg-black/50 px-2.5 py-1 text-xs text-white" />
-                                    </div>
-                                </div>
-
-                                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                                    <div>
-                                        <label className="text-xs text-[#8a8f98] block mb-1">系统标识文案</label>
-                                        <input
-                                            type="text"
-                                            value={siteFooter.operatingSystemText}
-                                            onChange={(e) => updateSiteFooter({ operatingSystemText: e.target.value })}
-                                            className="w-full rounded border border-white/10 bg-black/50 px-2.5 py-1 text-xs text-white"
-                                        />
-                                    </div>
-                                    <div>
-                                        <label className="text-xs text-[#8a8f98] block mb-1">右侧状态 1</label>
-                                        <input
-                                            type="text"
-                                            value={siteFooter.statusPrimaryText}
-                                            onChange={(e) => updateSiteFooter({ statusPrimaryText: e.target.value })}
-                                            className="w-full rounded border border-white/10 bg-black/50 px-2.5 py-1 text-xs text-white"
-                                        />
-                                    </div>
-                                    <div>
-                                        <label className="text-xs text-[#8a8f98] block mb-1">右侧状态 2</label>
-                                        <input
-                                            type="text"
-                                            value={siteFooter.statusSecondaryText}
-                                            onChange={(e) => updateSiteFooter({ statusSecondaryText: e.target.value })}
-                                            className="w-full rounded border border-white/10 bg-black/50 px-2.5 py-1 text-xs text-white"
-                                        />
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-                        {/* 底部实时预览 */}
-                        <div className="rounded-2xl border border-white/10 bg-[#07080c] overflow-hidden">
-                            <div className="flex items-center justify-between border-b border-white/10 bg-[#121216] px-4 py-2 text-xs text-[#8a8f98]">
-                                <span className="font-mono">页脚实时渲染预览 (1:1 复刻 one.supdance.com/zh/about 红框区域)</span>
-                                <span className="text-emerald-400 font-mono">Dark #07080c</span>
-                            </div>
-                            <div className="[&>footer]:mt-0">
-                                <SupdanceAboutFooter configOverride={siteFooter} forceShow />
                             </div>
                         </div>
                     </div>
-                </div>
-            )}
+                )}
 
+                {/* 页脚管理器视图 */}
+                {activeSection === "footer-manager" && (
+                    <div className="flex-1 overflow-y-auto p-6">
+                        <div className="mx-auto max-w-6xl space-y-6">
+                            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                                {/* 左侧：品牌、社交与订阅卡片设置 */}
+                                <div className="space-y-5 rounded-2xl border border-[var(--admin-border)] bg-[var(--admin-surface)] p-5">
+                                    <h3 className="text-sm font-semibold text-[var(--admin-text)] border-b border-[var(--admin-border)] pb-3">{t("admin.html.brand_heading")}</h3>
+                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                        <div>
+                                            <label className="text-xs text-[var(--admin-text-secondary)] block mb-1">
+                                                {t("admin.html.brand_name")}
+                                                <input
+                                                    type="text"
+                                                    value={siteFooter.brandName}
+                                                    onChange={(e) => updateSiteFooter({ brandName: e.target.value })}
+                                                    className="w-full rounded border border-[var(--admin-border)] bg-[var(--admin-surface-2)] px-3 py-1.5 text-xs text-[var(--admin-text)]"
+                                                />
+                                            </label>
+                                        </div>
+                                        <div>
+                                            <label className="text-xs text-[var(--admin-text-secondary)] block mb-1">
+                                                {t("admin.html.slogan")}
+                                                <input
+                                                    type="text"
+                                                    value={siteFooter.brandSlogan}
+                                                    onChange={(e) => updateSiteFooter({ brandSlogan: e.target.value })}
+                                                    className="w-full rounded border border-[var(--admin-border)] bg-[var(--admin-surface-2)] px-3 py-1.5 text-xs text-[var(--admin-text)]"
+                                                />
+                                            </label>
+                                        </div>
+                                    </div>
+
+                                    <div>
+                                        <label className="text-xs text-[var(--admin-text-secondary)] block mb-1">
+                                            {t("admin.html.vision")}
+                                            <textarea
+                                                rows={2}
+                                                value={siteFooter.brandVision}
+                                                onChange={(e) => updateSiteFooter({ brandVision: e.target.value })}
+                                                className="w-full rounded border border-[var(--admin-border)] bg-[var(--admin-surface-2)] px-3 py-1.5 text-xs text-[var(--admin-text)] resize-none"
+                                            />
+                                        </label>
+                                    </div>
+
+                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                        <div>
+                                            <label className="text-xs text-[var(--admin-text-secondary)] block mb-1">
+                                                {t("admin.html.support_email")}
+                                                <input
+                                                    type="text"
+                                                    value={siteFooter.supportEmail}
+                                                    onChange={(e) => updateSiteFooter({ supportEmail: e.target.value })}
+                                                    className="w-full rounded border border-[var(--admin-border)] bg-[var(--admin-surface-2)] px-3 py-1.5 text-xs font-mono text-[var(--admin-text)]"
+                                                />
+                                            </label>
+                                        </div>
+                                        <div>
+                                            <label className="text-xs text-[var(--admin-text-secondary)] block mb-1">
+                                                {t("admin.html.social_heading")}
+                                                <input
+                                                    type="text"
+                                                    value={siteFooter.officialChannelsText}
+                                                    onChange={(e) => updateSiteFooter({ officialChannelsText: e.target.value })}
+                                                    className="w-full rounded border border-[var(--admin-border)] bg-[var(--admin-surface-2)] px-3 py-1.5 text-xs text-[var(--admin-text)]"
+                                                />
+                                            </label>
+                                        </div>
+                                    </div>
+
+                                    <div className="space-y-2 pt-2">
+                                        <label className="text-xs text-[var(--admin-text-secondary)] block">{t("admin.html.social_links")}</label>
+                                        {siteFooter.socialLinks.map((soc, sIdx) => (
+                                            <div key={soc.id} className="grid grid-cols-12 gap-2 items-center">
+                                                <span className="col-span-3 font-mono text-xs text-[var(--admin-text-secondary)] truncate">{soc.name}</span>
+                                                <input
+                                                    type="text"
+                                                    aria-label={soc.name + " " + t("admin.html.account")}
+                                                    value={soc.handle}
+                                                    placeholder={t("admin.html.account")}
+                                                    onChange={(e) => {
+                                                        const next = [...siteFooter.socialLinks];
+                                                        next[sIdx] = { ...soc, handle: e.target.value };
+                                                        updateSiteFooter({ socialLinks: next });
+                                                    }}
+                                                    className="col-span-3 rounded border border-[var(--admin-border)] bg-[var(--admin-surface-2)] px-2 py-1 text-xs text-[var(--admin-text)]"
+                                                />
+                                                <input
+                                                    type="text"
+                                                    aria-label={soc.name + " " + t("admin.html.url")}
+                                                    value={soc.href}
+                                                    placeholder={t("admin.html.url")}
+                                                    onChange={(e) => {
+                                                        const next = [...siteFooter.socialLinks];
+                                                        next[sIdx] = { ...soc, href: e.target.value };
+                                                        updateSiteFooter({ socialLinks: next });
+                                                    }}
+                                                    className="col-span-6 rounded border border-[var(--admin-border)] bg-[var(--admin-surface-2)] px-2 py-1 text-xs font-mono text-[var(--admin-text)]"
+                                                />
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
+
+                                {/* 右侧：导航列、技术周刊与底部备案版权 */}
+                                <div className="space-y-5 rounded-2xl border border-[var(--admin-border)] bg-[var(--admin-surface)] p-5">
+                                    <h3 className="text-sm font-semibold text-[var(--admin-text)] border-b border-[var(--admin-border)] pb-3">{t("admin.html.navigation_heading")}</h3>
+
+                                    {siteFooter.columns.map((col, cIdx) => (
+                                        <div key={cIdx} className="space-y-2 rounded-xl border border-[var(--admin-border)] bg-[var(--admin-surface-2)] p-3">
+                                            <div className="flex items-center justify-between gap-2">
+                                                <span className="text-xs font-mono text-[var(--admin-text)]">
+                                                    {t("admin.html.column_prefix")}
+                                                    {cIdx + 1}
+                                                    {t("admin.html.column_title")}
+                                                </span>
+                                                <input
+                                                    type="text"
+                                                    aria-label={t("admin.html.column_title")}
+                                                    value={col.title}
+                                                    onChange={(e) => {
+                                                        const next = [...siteFooter.columns];
+                                                        next[cIdx] = { ...col, title: e.target.value };
+                                                        updateSiteFooter({ columns: next });
+                                                    }}
+                                                    className="rounded border border-[var(--admin-border)] bg-[var(--admin-surface-2)] px-2.5 py-1 text-xs text-[var(--admin-text)]"
+                                                />
+                                            </div>
+                                            <div className="space-y-1.5">
+                                                {col.links.map((lnk, lIdx) => (
+                                                    <div key={lIdx} className="grid grid-cols-12 gap-2">
+                                                        <input
+                                                            type="text"
+                                                            aria-label={t("admin.html.page_name")}
+                                                            value={lnk.label}
+                                                            onChange={(e) => {
+                                                                const nextCols = [...siteFooter.columns];
+                                                                const nextLinks = [...col.links];
+                                                                nextLinks[lIdx] = { ...lnk, label: e.target.value };
+                                                                nextCols[cIdx] = { ...col, links: nextLinks };
+                                                                updateSiteFooter({ columns: nextCols });
+                                                            }}
+                                                            className="col-span-5 rounded border border-[var(--admin-border)] bg-[var(--admin-surface-2)] px-2 py-1 text-xs text-[var(--admin-text)]"
+                                                        />
+                                                        <input
+                                                            type="text"
+                                                            aria-label={t("admin.html.url")}
+                                                            value={lnk.href}
+                                                            onChange={(e) => {
+                                                                const nextCols = [...siteFooter.columns];
+                                                                const nextLinks = [...col.links];
+                                                                nextLinks[lIdx] = { ...lnk, href: e.target.value };
+                                                                nextCols[cIdx] = { ...col, links: nextLinks };
+                                                                updateSiteFooter({ columns: nextCols });
+                                                            }}
+                                                            className="col-span-7 rounded border border-[var(--admin-border)] bg-[var(--admin-surface-2)] px-2 py-1 text-xs font-mono text-[var(--admin-text-secondary)]"
+                                                        />
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        </div>
+                                    ))}
+
+                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                        <div>
+                                            <label className="text-xs text-[var(--admin-text-secondary)] block mb-1">
+                                                {t("admin.html.newsletter_heading")}
+                                                <input
+                                                    type="text"
+                                                    value={siteFooter.newsletterHeading}
+                                                    onChange={(e) => updateSiteFooter({ newsletterHeading: e.target.value })}
+                                                    className="w-full rounded border border-[var(--admin-border)] bg-[var(--admin-surface-2)] px-2.5 py-1 text-xs text-[var(--admin-text)]"
+                                                />
+                                            </label>
+                                        </div>
+                                        <div>
+                                            <label className="text-xs text-[var(--admin-text-secondary)] block mb-1">
+                                                {t("admin.html.card_title")}
+                                                <input
+                                                    type="text"
+                                                    value={siteFooter.newsletterCardTitle}
+                                                    onChange={(e) => updateSiteFooter({ newsletterCardTitle: e.target.value })}
+                                                    className="w-full rounded border border-[var(--admin-border)] bg-[var(--admin-surface-2)] px-2.5 py-1 text-xs text-[var(--admin-text)]"
+                                                />
+                                            </label>
+                                        </div>
+                                    </div>
+
+                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                        <div>
+                                            <label className="text-xs text-[var(--admin-text-secondary)] block mb-1">
+                                                {t("admin.html.copyright")}
+                                                <input
+                                                    type="text"
+                                                    value={siteFooter.copyrightText}
+                                                    onChange={(e) => updateSiteFooter({ copyrightText: e.target.value })}
+                                                    className="w-full rounded border border-[var(--admin-border)] bg-[var(--admin-surface-2)] px-2.5 py-1 text-xs text-[var(--admin-text)]"
+                                                />
+                                            </label>
+                                        </div>
+                                        <div>
+                                            <label className="text-xs text-[var(--admin-text-secondary)] block mb-1">
+                                                {t("admin.html.icp")}
+                                                <input
+                                                    type="text"
+                                                    value={siteFooter.icpNumber}
+                                                    onChange={(e) => updateSiteFooter({ icpNumber: e.target.value })}
+                                                    className="w-full rounded border border-[var(--admin-border)] bg-[var(--admin-surface-2)] px-2.5 py-1 text-xs text-[var(--admin-text)]"
+                                                />
+                                            </label>
+                                        </div>
+                                    </div>
+
+                                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                                        <div>
+                                            <label className="text-xs text-[var(--admin-text-secondary)] block mb-1">
+                                                {t("admin.html.system_label")}
+                                                <input
+                                                    type="text"
+                                                    value={siteFooter.operatingSystemText}
+                                                    onChange={(e) => updateSiteFooter({ operatingSystemText: e.target.value })}
+                                                    className="w-full rounded border border-[var(--admin-border)] bg-[var(--admin-surface-2)] px-2.5 py-1 text-xs text-[var(--admin-text)]"
+                                                />
+                                            </label>
+                                        </div>
+                                        <div>
+                                            <label className="text-xs text-[var(--admin-text-secondary)] block mb-1">
+                                                {t("admin.html.status_primary")}
+                                                <input
+                                                    type="text"
+                                                    value={siteFooter.statusPrimaryText}
+                                                    onChange={(e) => updateSiteFooter({ statusPrimaryText: e.target.value })}
+                                                    className="w-full rounded border border-[var(--admin-border)] bg-[var(--admin-surface-2)] px-2.5 py-1 text-xs text-[var(--admin-text)]"
+                                                />
+                                            </label>
+                                        </div>
+                                        <div>
+                                            <label className="text-xs text-[var(--admin-text-secondary)] block mb-1">
+                                                {t("admin.html.status_secondary")}
+                                                <input
+                                                    type="text"
+                                                    value={siteFooter.statusSecondaryText}
+                                                    onChange={(e) => updateSiteFooter({ statusSecondaryText: e.target.value })}
+                                                    className="w-full rounded border border-[var(--admin-border)] bg-[var(--admin-surface-2)] px-2.5 py-1 text-xs text-[var(--admin-text)]"
+                                                />
+                                            </label>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* 底部实时预览 */}
+                            <div className="rounded-2xl border border-[var(--admin-border)] bg-[var(--admin-surface)] overflow-hidden">
+                                <div className="flex items-center justify-between border-b border-[var(--admin-border)] bg-[var(--admin-surface)] px-4 py-2 text-xs text-[var(--admin-text-secondary)]">
+                                    <span className="font-mono">{t("admin.html.footer_preview")}</span>
+                                    <span className="text-[var(--admin-status-success)] font-mono">Dark #07080c</span>
+                                </div>
+                                <div className="[&>footer]:mt-0">
+                                    <SupdanceAboutFooter configOverride={siteFooter} forceShow />
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                )}
+            </fieldset>
             {/* 模版库弹窗 */}
-            <Modal title="选择法务条款精美开源 HTML 模版" open={templateModalOpen} onCancel={() => setTemplateModalOpen(false)} footer={null} width={840} className="html-template-modal">
+            <Modal title={t("admin.html.template_title")} open={templateModalOpen} onCancel={() => setTemplateModalOpen(false)} footer={null} width={840} rootClassName="plugin-scope-html-admin">
                 <div className="py-2">
-                    <p className="text-xs text-muted-foreground mb-4">所有模板均为自包含独立 HTML，内置针对条款阅读调优的优雅 CSS，响应式兼容手机与桌面端，可直接导出为单文件。</p>
+                    <p className="text-xs text-muted-foreground mb-4">{t("admin.html.template_description")}</p>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4 max-h-[60vh] overflow-y-auto pr-1">
                         {BUILTIN_HTML_TEMPLATES.map((tpl) => (
-                            <div key={tpl.id} className="flex flex-col justify-between rounded-xl border border-border p-4 bg-card hover:border-foreground/30 transition-all cursor-pointer group" onClick={() => applyTemplate(tpl)}>
+                            <div
+                                role="button"
+                                tabIndex={0}
+                                onKeyDown={(event) => {
+                                    if (event.key === "Enter" || event.key === " ") {
+                                        event.preventDefault();
+                                        applyTemplate(tpl);
+                                    }
+                                }}
+                                key={tpl.id}
+                                className="flex flex-col justify-between rounded-xl border border-border p-4 bg-card hover:border-foreground/30 transition-all cursor-pointer group"
+                                onClick={() => applyTemplate(tpl)}
+                            >
                                 <div>
                                     <div className="flex items-center justify-between gap-2 mb-2">
                                         <h3 className="font-semibold text-sm group-hover:text-primary transition-colors">{tpl.name}</h3>
@@ -1072,7 +1236,7 @@ export default function HtmlPageManager() {
                                     <p className="text-xs text-muted-foreground leading-relaxed line-clamp-3 mb-3">{tpl.description}</p>
                                 </div>
                                 <div className="flex items-center justify-between pt-3 border-t border-border/60 text-xs text-primary font-medium">
-                                    <span>立即套用</span>
+                                    <span>{t("admin.html.apply")}</span>
                                     <span>&rarr;</span>
                                 </div>
                             </div>
@@ -1082,25 +1246,35 @@ export default function HtmlPageManager() {
             </Modal>
 
             {/* 新建页面弹窗 */}
-            <Modal title="创建新的 HTML 页面" open={newPageModalOpen} onCancel={() => setNewPageModalOpen(false)} onOk={handleCreatePage} okText="创建页面" cancelText="取消">
+            <Modal
+                rootClassName="plugin-scope-html-admin"
+                title={t("admin.html.create_title")}
+                open={newPageModalOpen}
+                onCancel={() => setNewPageModalOpen(false)}
+                onOk={handleCreatePage}
+                okText={t("admin.html.create")}
+                cancelText={t("admin.html.cancel")}
+            >
                 <div className="space-y-4 py-2">
                     <div>
-                        <label className="text-xs font-medium text-foreground block mb-1">页面标题</label>
-                        <input
-                            type="text"
-                            placeholder="如：第三方内容披露协议"
-                            value={newTitle}
-                            onChange={(e) => setNewTitle(e.target.value)}
-                            className="w-full rounded-md border border-input bg-background px-3 py-1.5 text-sm focus:outline-none focus:ring-1 focus:ring-primary"
-                        />
+                        <label className="text-xs font-medium text-foreground block mb-1">
+                            {t("admin.html.page_title")}
+                            <input
+                                type="text"
+                                placeholder={t("admin.html.title_placeholder")}
+                                value={newTitle}
+                                onChange={(e) => setNewTitle(e.target.value)}
+                                className="w-full rounded-md border border-input bg-background px-3 py-1.5 text-sm focus:outline-none focus:ring-1 focus:ring-primary"
+                            />
+                        </label>
                     </div>
                     <div>
-                        <label className="text-xs font-medium text-foreground block mb-1">访问路径 (URL Slug)</label>
+                        <label className="text-xs font-medium text-foreground block mb-1">{t("admin.html.url_slug")}</label>
                         <div className="flex items-center gap-1 text-sm font-mono text-muted-foreground">
                             <span>/</span>
                             <input
                                 type="text"
-                                placeholder="如：third-party-license"
+                                placeholder={t("admin.html.slug_placeholder")}
                                 value={newSlug}
                                 onChange={(e) => setNewSlug(e.target.value)}
                                 className="flex-1 rounded-md border border-input bg-background px-3 py-1.5 text-sm font-mono text-foreground focus:outline-none focus:ring-1 focus:ring-primary"
@@ -1108,14 +1282,16 @@ export default function HtmlPageManager() {
                         </div>
                     </div>
                     <div>
-                        <label className="text-xs font-medium text-foreground block mb-1">初始基础模版</label>
-                        <select value={newTemplateId} onChange={(e) => setNewTemplateId(e.target.value)} className="w-full rounded-md border border-input bg-background px-3 py-1.5 text-sm focus:outline-none focus:ring-1 focus:ring-primary">
-                            {BUILTIN_HTML_TEMPLATES.map((t) => (
-                                <option key={t.id} value={t.id}>
-                                    {t.name} ({t.badge})
-                                </option>
-                            ))}
-                        </select>
+                        <label className="text-xs font-medium text-foreground block mb-1">
+                            {t("admin.html.initial_template")}
+                            <select value={newTemplateId} onChange={(e) => setNewTemplateId(e.target.value)} className="w-full rounded-md border border-input bg-background px-3 py-1.5 text-sm focus:outline-none focus:ring-1 focus:ring-primary">
+                                {BUILTIN_HTML_TEMPLATES.map((t) => (
+                                    <option key={t.id} value={t.id}>
+                                        {t.name} ({t.badge})
+                                    </option>
+                                ))}
+                            </select>
+                        </label>
                     </div>
                 </div>
             </Modal>

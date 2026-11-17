@@ -9,7 +9,7 @@ import { clearReferralCode, readReferralCode, type AuthView } from "@/lib/auth-e
 import { getAuthSession, linuxDOLoginURL, login, oidcLoginURL, register, type AuthSettings } from "@/services/api/auth";
 import { ApiError } from "@/services/api/request";
 import { emptyVerification, loginVerification, registrationVerificationRequired, verificationMethods, type VerificationMethod } from "@/services/api/verification";
-import { AuthAgreementDialog, AuthNotice, AuthTabs, LinuxDOIcon, authTabId, authTabPanelId, useAuthAgreement } from "./auth-form-parts";
+import { AuthNotice, AuthTabs, LinuxDOIcon, authTabId, authTabPanelId, useAuthAgreement } from "./auth-form-parts";
 
 type LoginMethod = "password" | VerificationMethod;
 
@@ -44,7 +44,6 @@ export function AuthLoginForm({ settings, settingsFailed, onReloadSettings, next
     const [chosenRegisterMethod, setChosenRegisterMethod] = useState<VerificationMethod | null>(null);
     const [pending, setPending] = useState<PendingRegistration | null>(null);
     const [agreementAccepted, setAgreementAccepted] = useState(false);
-    const [agreementOpen, setAgreementOpen] = useState(false);
     const [retryCountdown, setRetryCountdown] = useState(0);
     // 推广码由登录路由从 ?ref= 写入会话缓存；弹窗与独立页面都从这里读取。
     const [referralCode] = useState(readReferralCode);
@@ -276,9 +275,9 @@ export function AuthLoginForm({ settings, settingsFailed, onReloadSettings, next
                     <Checkbox checked={agreementAccepted} onChange={(event) => setAgreementAccepted(event.target.checked)}>
                         <span className="auth-agreement-label">{pending ? t("auth.register.agree") : t("auth.login.agreeForSignup")}</span>
                     </Checkbox>
-                    <button type="button" className="auth-agreement-link" onClick={() => setAgreementOpen(true)}>
+                    <a href="https://www.supdance.com/terms" target="_blank" rel="noopener noreferrer" className="auth-agreement-link">
                         《{agreement.title}》
-                    </button>
+                    </a>
                 </div>
             ) : null}
             <Button type="primary" htmlType="submit" size="large" block loading={submitting} disabled={registrationBlocked || retryCountdown > 0 || (Boolean(pending) && !agreementAccepted)}>
@@ -312,12 +311,11 @@ export function AuthLoginForm({ settings, settingsFailed, onReloadSettings, next
             {settings && !showAgreement ? (
                 <p className="auth-form-legal">
                     {t("auth.login.agreementPrefix")}
-                    <button type="button" className="auth-form-link is-strong" onClick={() => setAgreementOpen(true)}>
+                    <a href="https://www.supdance.com/terms" target="_blank" rel="noopener noreferrer" className="auth-form-link is-strong">
                         《{agreement.title}》
-                    </button>
+                    </a>
                 </p>
             ) : null}
-            <AuthAgreementDialog open={agreementOpen} title={agreement.title} paragraphs={agreement.paragraphs} onClose={() => setAgreementOpen(false)} />
         </form>
     );
 }

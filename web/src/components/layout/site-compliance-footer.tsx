@@ -56,9 +56,9 @@ export function SiteComplianceFooter({ className, variant = "default" }: { class
 
     return (
         <footer className={cn("site-compliance-footer", variant === "auth" && "is-auth", variant === "workspace" && "is-workspace", className)} aria-label={t("account.layout.footer.label")}>
-            {variant !== "workspace" ? <span>{appearance.footerCopyright}</span> : null}
+            {variant !== "workspace" ? <span>{variant === "auth" ? `© ${new Date().getFullYear()} ${appearance.brandName}` : appearance.footerCopyright}</span> : null}
             <SitePolicyLinks />
-            {appearance.icpFilingEnabled && appearance.icpFilingNumber ? (
+            {variant !== "auth" && appearance.icpFilingEnabled && appearance.icpFilingNumber ? (
                 <a href={MIIT_FILING_URL} target="_blank" rel="noopener noreferrer" aria-label={t("account.layout.footer.icpLink", { number: appearance.icpFilingNumber })}>
                     {appearance.icpFilingNumber}
                     <ExternalLink aria-hidden="true" />
