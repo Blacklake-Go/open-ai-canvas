@@ -722,6 +722,8 @@ docker compose -f docker-compose.deploy.yml up -d backend web
 | `payment_notifications` | 保存已验签的支付通知收件箱 | 以渠道事件 ID 幂等；只保存用于异步入账的标准化证据，重复通知不会重复发放积分 |
 | `payment_reconciliation_runs` / `payment_reconciliation_items` | 保存渠道账单下载和对账结果 | 账单只能作为发现线索，金额、币种和交易号仍需由插件查单确认；历史订单继续绑定原插件版本 |
 
+`payment_reconciliation_runs.status` 可为 `running`、`completed`、`failed`、`unsupported`。后者表示插件不支持账单下载，保留 `TRADE_BILL_UNSUPPORTED` 原因与结束时间，不产生对账明细或补发权益。该状态使用原有字符串列，无需 Schema 迁移。回滚旧版前端时会把新状态显示为失败，但不会改变账本；历史记录可在升级后手动重跑。
+
 支付宝、微信及后续聚合平台都只作为支付插件包提供 `yingce.payment/v1` 适配器，宿主数据库不保存平台专用字段。插件升级不会改写历史订单的 `plugin_version`；存在未完成订单时，原插件版本和配置必须继续可解析通知、查单和关单。
 
 ## 模型渠道与目录

@@ -877,7 +877,11 @@ Skills 的 `tool_completed` / `tool_failed` 事件附带 `skillId`、`skillName`
 
 ### 支付对账筛选及 CSV 导出
 
-`GET /api/admin/payments/reconciliations` 支持 `providerId`、`status`（`running` / `completed` / `failed`）、`from`、`to`（账单日期，包含起止日）、`page`、`pageSize`。`GET /api/admin/payments/reconciliations/:id/items` 支持 `result`、`page`、`pageSize`；`result=abnormal` 同时选出所有非 `matched`、非 `recovered` 明细，未指定或 `all` 表示全部。具体结果还支持 `matched`、`recovered`、`local_order_not_found`、`provider_record_missing`、`amount_mismatch`、`trade_no_mismatch`、`credit_failed`。
+`GET /api/admin/payments/reconciliations` 支持 `providerId`、`status`（`running` / `completed` / `failed` / `unsupported`）、`from`、`to`（账单日期，包含起止日）、`page`、`pageSize`。`unsupported` 表示插件尚未实现账单下载，本次没有执行账单核对，不能视为成功；手动执行返回该状态供界面明确提示，自动任务当日不反复重试。订单查单与通知独立继续运行。支付宝已验签的 `NO_BILL_DATA` 仅在账单查询中映射为无账单；有本地已入账或当日重叠未决订单时仍不能据此完成空账单对账。
+
+`GET /api/admin/payments/reconciliations/:id/items` 支持 `result`、`page`、`pageSize`；`result=abnormal` 同时选出所有非 `matched`、非 `recovered` 明细，未指定或 `all` 表示全部。具体结果还支持 `matched`、`recovered`、`local_order_not_found`、`provider_record_missing`、`amount_mismatch`、`trade_no_mismatch`、`credit_failed`。
+
+下单的每用户活动订单上限只统计未过期及缺少有效过期时间的非终态订单。过期订单释放付款名额，但不自动关闭、不删除、不释放插件依赖，继续允许查单、通知和幂等处理晚到付款。
 
 三个只读导出接口均在 service 校验管理员权限，返回 `text/csv; charset=utf-8` 附件，设置 `Cache-Control: no-store`。导出复用列表筛选条件，不受 `page`、`pageSize` 影响：
 

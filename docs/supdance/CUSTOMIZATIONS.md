@@ -1,5 +1,9 @@
 
 
+## 支付下单名额与账单能力边界
+
+`internal/repository/payment.go` 将过期非终态订单与可付款名额分离，保留旧插件依赖和晚到支付幂等路径；不通过改写订单终态解除阻塞。`payment_reconciliation.go`、model、导出及后台支付页新增明确的 `unsupported` 终态，插件未实现账单时不再作为临时失败反复重试，也不标记核对成功。支付宝适配器仅将账单查询的已验签 `NO_BILL_DATA` 映射为无账单。八语提示集中在 `supdance/plugins/i18n/locales/payment-reconciliation.ts`，复用后台 Badge 与 Callout。无数据库结构迁移，不改价格、余额、权限和支付通知验签。
+
 ## HTML 页面管理后台 V2 规范覆盖
 
 - 后台样式隔离于 `html-page-manager/admin/`，复用 `--admin-*`、AdminModal 和 AdminSwitch，补齐响应式、键盘操作、加载失败与未保存提醒及六语种词条。

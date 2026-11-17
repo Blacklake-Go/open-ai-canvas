@@ -7,6 +7,7 @@ import type { ColumnsType } from "antd/es/table";
 import dayjs, { type Dayjs } from "dayjs";
 import { Eye, Plus, RefreshCw, Search, Settings2, XCircle } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
+import { translate } from "@/i18n";
 
 import { PaginationBar } from "@/pages/admin/components/admin-ui";
 import { paymentOrderGrantLabel } from "@/lib/payment-order-grant";
@@ -421,6 +422,8 @@ export default function AdminPaymentsPage() {
             const result = await runAdminPaymentReconciliation({ providerId: billProviderId, billDate: billDate.format("YYYY-MM-DD") });
             if (result.run.status === "running") {
                 message.info("该渠道与账单日期的对账正在执行，请稍后刷新查看结果");
+            } else if (result.run.status === "unsupported") {
+                message.info(translate("admin.payment.billUnsupportedHint"));
             } else {
                 message.success(result.run.recoveredItems ? `对账完成，自动补发 ${result.run.recoveredItems} 笔` : "对账完成");
             }
@@ -682,7 +685,12 @@ export default function AdminPaymentsPage() {
             dataIndex: "status",
             width: 110,
             align: "center",
-            render: (value) => <AdminStatusBadge label={value === "completed" ? "已完成" : value === "running" ? "执行中" : "失败"} tone={value === "completed" ? "success" : value === "running" ? "info" : "error"} />,
+            render: (value) => (
+                <AdminStatusBadge
+                    label={value === "unsupported" ? translate("admin.payment.billUnsupported") : value === "completed" ? "已完成" : value === "running" ? "执行中" : "失败"}
+                    tone={value === "unsupported" ? "neutral" : value === "completed" ? "success" : value === "running" ? "info" : "error"}
+                />
+            ),
         },
         { title: "一致", dataIndex: "matchItems", width: 80, align: "right" },
         { title: "自动补发", dataIndex: "recoveredItems", width: 100, align: "right", render: (value) => <span className={value ? "font-medium text-status-success" : ""}>{value}</span> },
@@ -887,6 +895,7 @@ export default function AdminPaymentsPage() {
                                                     { value: "running", label: "执行中" },
                                                     { value: "completed", label: "已完成" },
                                                     { value: "failed", label: "失败" },
+                                                    { value: "unsupported", label: translate("admin.payment.billUnsupported") },
                                                 ]}
                                             />
                                             <DatePicker.RangePicker value={runDates} onChange={setRunDates} placeholder={["账单开始日期", "账单结束日期"]} />
@@ -1204,7 +1213,11 @@ export default function AdminPaymentsPage() {
                     setDetailItems([]);
                 }}
             >
-                {detailRun?.error ? (
+                {detailRun?.status === "unsupported" ? (
+                    <Callout className="mb-4" tone="info" title={translate("admin.payment.billUnsupported")}>
+                        {translate("admin.payment.billUnsupportedHint")}
+                    </Callout>
+                ) : detailRun?.error ? (
                     <Callout className="mb-4" tone="error" title="对账执行失败">
                         {detailRun.error}
                     </Callout>

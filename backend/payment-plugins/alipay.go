@@ -300,7 +300,7 @@ func (p *AlipayProvider) callJSON(ctx context.Context, config Config, method str
 		if status.SubCode == "ACQ.TRADE_NOT_EXIST" {
 			return fmt.Errorf("%w: %s", ErrOrderNotFound, status.SubCode)
 		}
-		if status.SubCode == "BILL_NOT_EXIST" {
+		if method == "alipay.data.dataservice.bill.downloadurl.query" && (status.SubCode == "BILL_NOT_EXIST" || status.SubCode == "NO_BILL_DATA") {
 			return fmt.Errorf("%w: %s", ErrTradeBillNotFound, status.SubCode)
 		}
 		return &ProviderError{Code: status.SubCode, Message: "支付宝业务请求失败", Temporary: false}
