@@ -4,7 +4,8 @@ import { App, Button } from "antd";
 import { Check, ChevronLeft, ChevronRight, Copy, Flame, X } from "lucide-react";
 
 import { AppModal } from "@/components/ui/product/app-modal";
-import { DRAMA_STYLE_CATEGORIES, DRAMA_STYLE_FORMS, findDramaStyle, parseDramaStyleId, styleCoverBackground } from "@/lib/drama/drama-styles";
+import { interfaceText } from "@/i18n/interface-text";
+import { dramaStyleDisplay, DRAMA_STYLE_CATEGORIES, DRAMA_STYLE_FORMS, findDramaStyle, parseDramaStyleId, styleCoverBackground } from "@/lib/drama/drama-styles";
 
 const DETAIL_ROWS = [
     { key: "medium", label: "画面媒介" },
@@ -62,16 +63,17 @@ export function DramaStyleDetailModal({
 
     const active = style?.id === selectedId;
     const composition = style ? parseDramaStyleId(style.id) : undefined;
-    const categoryLabel = composition ? `${DRAMA_STYLE_FORMS.find((form) => form.id === composition.formId)?.name} · 自由组合` : style ? DRAMA_STYLE_CATEGORIES.find((item) => item.key === style.category)?.label : "";
+    const categoryLabel = composition ? DRAMA_STYLE_FORMS.find((form) => form.id === composition.formId)?.name : DRAMA_STYLE_CATEGORIES.find((item) => item.key === style?.category)?.label;
+    const display = style && dramaStyleDisplay(style);
 
     return (
         <AppModal open={Boolean(style)} onCancel={onClose} footer={null} title={null} closable={false} flush centered width="min(880px, calc(100vw - 48px))" rootClassName="drama-root" aria-label={_creationText("creation.8218914b51125fc1")}>
-            {style ? (
+            {style && display ? (
                 <div className="drama-style-detail">
                     <div className="drama-style-detail-cover" style={{ background: styleCoverBackground(style) }}>
                         {!style.cover ? (
                             <span className="drama-style-detail-glyph" aria-hidden>
-                                {style.name.replace(/^3D\s*/, "").slice(0, 2)}
+                                {display.name.replace(/^3D\s*/, "").slice(0, 2)}
                             </span>
                         ) : null}
                         <div className="drama-style-detail-palette" aria-label={_creationText("creation.11979c5c7accd336")}>
@@ -84,7 +86,7 @@ export function DramaStyleDetailModal({
                         <header className="drama-style-detail-head">
                             <div className="min-w-0">
                                 <div className="drama-style-detail-meta">
-                                    <span>{_creationLabel(categoryLabel || "")}</span>
+                                    <span>{categoryLabel ? interfaceText(categoryLabel) : ""}{composition ? ` · ${interfaceText("自由组合")}` : null}</span>
                                     {style.hot ? (
                                         <span className="is-hot">
                                             <Flame className="size-3" />
@@ -97,14 +99,14 @@ export function DramaStyleDetailModal({
                                         </span>
                                     ) : null}
                                 </div>
-                                <h3>{style.name}</h3>
-                                <p>{style.description}</p>
+                                <h3>{display.name}</h3>
+                                <p>{display.description}</p>
                             </div>
                             <Button type="text" icon={<X className="size-4" />} aria-label={_creationText("common.close")} onClick={onClose} />
                         </header>
                         <div className="drama-style-detail-tags">
-                            {style.tags.map((tag) => (
-                                <span key={tag}>{tag}</span>
+                            {style.tags.map((tag, index) => (
+                                <span key={tag}>{display.tags[index]}</span>
                             ))}
                         </div>
                         <dl className="drama-style-detail-rows thin-scrollbar">

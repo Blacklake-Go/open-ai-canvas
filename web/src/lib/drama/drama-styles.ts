@@ -1,3 +1,4 @@
+import { interfaceText } from "@/i18n/interface-text";
 import { composeDramaStyleId, DEFAULT_DRAMA_STYLE_ID, findComposedDramaStyle, parseDramaStyleId, type DramaStyleComposition, type DramaStyleFormId, type DramaStyleThemeId } from "./style-composition";
 
 export { composeDramaStyleId, DEFAULT_DRAMA_STYLE_ID, DRAMA_STYLE_FORMS, DRAMA_STYLE_THEMES, parseDramaStyleId, type DramaStyleComposition, type DramaStyleFormId, type DramaStyleThemeId } from "./style-composition";
@@ -945,6 +946,15 @@ export function findDramaStyle(id: string): DramaStyle | undefined {
     return findComposedDramaStyle(id) || DRAMA_STYLES.find((style) => style.id === id);
 }
 
+export function dramaStyleDisplay(style: DramaStyle) {
+    const composed = parseDramaStyleId(style.id);
+    return {
+        name: composed ? style.name.split(" · ").map((part) => interfaceText(part)).join(" · ") : interfaceText(style.name),
+        description: composed ? style.description.split("；").map((part) => interfaceText(part)).join(" · ") : interfaceText(style.description),
+        tags: style.tags.map((tag) => interfaceText(tag)),
+    };
+}
+
 const PRESET_THEME_GROUPS: Array<{ themeId: DramaStyleThemeId; ids: string[] }> = [
     {
         themeId: "urban",
@@ -986,11 +996,12 @@ export function styleCoverBackground(style: Pick<DramaStyle, "cover" | "palette"
 }
 
 export function filterDramaStyles(category: "all" | "hot" | DramaStyleCategory, query: string) {
-    const keyword = query.trim();
+    const keyword = query.trim().toLocaleLowerCase();
     return DRAMA_STYLES.filter((style) => {
         if (category === "hot" && !style.hot) return false;
         if (category !== "all" && category !== "hot" && style.category !== category) return false;
         if (!keyword) return true;
-        return style.name.includes(keyword) || style.tags.some((tag) => tag.includes(keyword)) || style.description.includes(keyword);
+        const display = dramaStyleDisplay(style);
+        return [style.name, style.description, ...style.tags, display.name, display.description, ...display.tags].some((text) => text.toLocaleLowerCase().includes(keyword));
     });
 }

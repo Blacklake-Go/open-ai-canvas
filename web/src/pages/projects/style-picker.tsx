@@ -1,11 +1,14 @@
 import { useMemo, useState } from "react";
 import { Check, Flame, Info, Search, X } from "lucide-react";
+import { useTranslation } from "react-i18next";
+import { interfaceText } from "@/i18n/interface-text";
 
 import {
     DRAMA_STYLE_CATEGORIES,
     DRAMA_STYLE_FORMS,
     DRAMA_STYLE_THEMES,
     filterDramaStyles,
+    dramaStyleDisplay,
     findDramaStyle,
     getDramaStyleComposition,
     parseDramaStyleId,
@@ -24,8 +27,10 @@ export type StyleCompositionPickerProps = { value: string; onChange: (id: string
 
 /** 紧凑模式供造型编辑复用；受控值仍是可持久化的 styleId，不保存额外的轴状态。 */
 export function StyleCompositionPicker({ value, onChange, disabled = false, compact = true }: StyleCompositionPickerProps) {
+    useTranslation();
     const composition = getDramaStyleComposition(value);
     const selected = findDramaStyle(value);
+    const selectedName = selected && dramaStyleDisplay(selected).name;
     const preset = Boolean(selected && !parseDramaStyleId(value));
     const disabledReason = disabled ? "正在保存或生成，请稍候再调整风格" : undefined;
     const selectForm = (formId: DramaStyleFormId) => onChange(updateDramaStyleComposition(value, { formId }));
@@ -33,7 +38,7 @@ export function StyleCompositionPicker({ value, onChange, disabled = false, comp
 
     return (
         <div className={`drama-style-composition${compact ? " is-compact" : ""}`}>
-            {preset ? <p className="drama-style-composition-note">当前使用预设「{selected?.name}」。下方为对应的组合起点，修改任一项后应用新的自由组合。</p> : null}
+            {preset ? <p className="drama-style-composition-note">当前使用预设「{selectedName}」。下方为对应的组合起点，修改任一项后应用新的自由组合。</p> : null}
             {compact ? (
                 <div className="drama-style-composition-fields">
                     <label className="drama-style-composition-field" title={disabledReason}>
@@ -44,7 +49,7 @@ export function StyleCompositionPicker({ value, onChange, disabled = false, comp
                             </option>
                             {DRAMA_STYLE_FORMS.map((form) => (
                                 <option key={form.id} value={form.id}>
-                                    {form.name}
+                                    {interfaceText(form.name)}
                                 </option>
                             ))}
                         </select>
@@ -57,7 +62,7 @@ export function StyleCompositionPicker({ value, onChange, disabled = false, comp
                             </option>
                             {DRAMA_STYLE_THEMES.map((theme) => (
                                 <option key={theme.id} value={theme.id}>
-                                    {theme.name}
+                                    {interfaceText(theme.name)}
                                 </option>
                             ))}
                         </select>
@@ -71,9 +76,9 @@ export function StyleCompositionPicker({ value, onChange, disabled = false, comp
                         </legend>
                         <div className="drama-style-composition-forms" role="group" aria-label="表现形式">
                             {DRAMA_STYLE_FORMS.map((form) => (
-                                <button key={form.id} type="button" className="drama-style-composition-form" aria-pressed={composition?.formId === form.id} disabled={disabled} title={disabledReason || form.description} onClick={() => selectForm(form.id)}>
-                                    <strong>{form.name}</strong>
-                                    <span>{form.description}</span>
+                                <button key={form.id} type="button" className="drama-style-composition-form" aria-pressed={composition?.formId === form.id} disabled={disabled} title={disabledReason || interfaceText(form.description)} onClick={() => selectForm(form.id)}>
+                                    <strong>{interfaceText(form.name)}</strong>
+                                    <span>{interfaceText(form.description)}</span>
                                 </button>
                             ))}
                         </div>
@@ -90,10 +95,10 @@ export function StyleCompositionPicker({ value, onChange, disabled = false, comp
                                     className="drama-style-composition-theme"
                                     aria-pressed={composition?.themeId === theme.id}
                                     disabled={disabled}
-                                    title={disabledReason || theme.description}
+                                    title={disabledReason || interfaceText(theme.description)}
                                     onClick={() => selectTheme(theme.id)}
                                 >
-                                    {theme.name}
+                                    {interfaceText(theme.name)}
                                 </button>
                             ))}
                         </div>
@@ -103,7 +108,7 @@ export function StyleCompositionPicker({ value, onChange, disabled = false, comp
             <p className="drama-style-composition-selection" role="status">
                 {selected ? (
                     <>
-                        当前{preset ? "预设" : "组合"} <strong>{selected.name}</strong>
+                        当前{preset ? "预设" : "组合"} <strong>{selectedName}</strong>
                     </>
                 ) : (
                     "选择表现形式与题材，自由组合视觉风格"
@@ -115,9 +120,10 @@ export function StyleCompositionPicker({ value, onChange, disabled = false, comp
 
 /** 自由组合是主入口，预设库保留为折叠的快捷入口。 */
 export function DramaStylePicker({ value, onChange, disabled = false }: Omit<StyleCompositionPickerProps, "compact">) {
+    useTranslation();
     const [category, setCategory] = useState<CategoryKey>("hot");
     const [query, setQuery] = useState("");
-    const styles = useMemo(() => filterDramaStyles(query ? "all" : category, query), [category, query]);
+    const styles = filterDramaStyles(query ? "all" : category, query);
     const selected = findDramaStyle(value);
     const [detailId, setDetailId] = useState<string | null>(null);
     const counts = useMemo(() => Object.fromEntries(DRAMA_STYLE_CATEGORIES.map((item) => [item.key, filterDramaStyles(item.key, "").length])), []);
@@ -163,7 +169,7 @@ export function DramaStylePicker({ value, onChange, disabled = false }: Omit<Sty
                                 }}
                             >
                                 {item.key === "hot" ? <Flame className="size-3.5" /> : null}
-                                {item.label}
+                                {interfaceText(item.label)}
                                 <span>{counts[item.key]}</span>
                             </button>
                         ))}
@@ -171,13 +177,14 @@ export function DramaStylePicker({ value, onChange, disabled = false }: Omit<Sty
                     <div className="drama-style-grid thin-scrollbar" role="group" aria-label="风格预设">
                         {styles.map((style) => {
                             const active = style.id === value;
+                            const display = dramaStyleDisplay(style);
                             return (
                                 <div key={style.id} className="drama-style" data-active={active || undefined}>
-                                    <button type="button" aria-pressed={active} className="drama-style-pick" disabled={disabled} onClick={() => onChange(style.id)} title={disabled ? "正在保存，请稍候再调整风格" : style.description}>
+                                    <button type="button" aria-pressed={active} className="drama-style-pick" disabled={disabled} onClick={() => onChange(style.id)} title={disabled ? "正在保存，请稍候再调整风格" : display.description}>
                                         <span className="drama-style-swatch" style={{ background: styleCoverBackground(style) }}>
                                             {!style.cover ? (
                                                 <span className="drama-style-glyph" aria-hidden>
-                                                    {style.name.replace(/^3D\s*/, "").slice(0, 2)}
+                                                    {display.name.replace(/^3D\s*/, "").slice(0, 2)}
                                                 </span>
                                             ) : null}
                                             {style.hot ? (
@@ -191,12 +198,12 @@ export function DramaStylePicker({ value, onChange, disabled = false }: Omit<Sty
                                                 </span>
                                             ) : null}
                                             <span className="drama-style-overlay">
-                                                <span className="drama-style-name">{style.name}</span>
-                                                <span className="drama-style-tags">{style.tags.join(" · ")}</span>
+                                                <span className="drama-style-name">{display.name}</span>
+                                                <span className="drama-style-tags">{display.tags.join(" · ")}</span>
                                             </span>
                                         </span>
                                     </button>
-                                    <button type="button" className="drama-style-info" aria-label={`查看“${style.name}”详情`} title="查看详情" onClick={() => setDetailId(style.id)}>
+                                    <button type="button" className="drama-style-info" aria-label={`查看“${display.name}”详情`} title="查看详情" onClick={() => setDetailId(style.id)}>
                                         <Info className="size-3" />
                                     </button>
                                 </div>

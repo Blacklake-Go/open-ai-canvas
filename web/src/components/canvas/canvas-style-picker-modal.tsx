@@ -4,6 +4,8 @@ import { Check, Clock3, Copy, Eye, Palette, Pencil, Plus, Search, SlidersHorizon
 import { App, Button, Input } from "antd";
 import { AppModal } from "@/components/ui/product/app-modal";
 import { nanoid } from "nanoid";
+import { useTranslation } from "react-i18next";
+import { interfaceText } from "@/i18n/interface-text";
 
 import { StyleProfileEditorModal } from "@/components/canvas/style-profile-editor-modal";
 import { canvasThemes } from "@/lib/canvas-theme";
@@ -11,6 +13,9 @@ import { createStyleProfileSnapshot, parseStyleProfile, serializeStyleProfile, t
 import {
     compileCanvasStylePreset,
     customCanvasStylePreset,
+    projectStyleMedia,
+    projectStyleTones,
+    projectStyleWorlds,
     recommendedCanvasStylePresets,
     type CanvasStylePreset,
     type ProjectStyleSelection,
@@ -426,6 +431,21 @@ type UserStyleLibraryItem = { kind: "user"; preset: CanvasStylePreset; entity: U
 type StyleLibraryItem = SystemStyleLibraryItem | UserStyleLibraryItem;
 type StyleEditorState = { profile: StyleProfileSnapshot; entityId?: string };
 
+function displayCanvasStyle(preset: CanvasStylePreset) {
+    if (preset.profile && preset.profile.source !== "builtin") return preset;
+    const tags = preset.tags.map((tag) => interfaceText(tag));
+    if (!preset.selection) return { title: interfaceText(preset.title), category: interfaceText(preset.category), description: interfaceText(preset.description), tags };
+    const { world, tone, medium } = preset.selection;
+    const options = [projectStyleWorlds.find((option) => option.id === world), projectStyleTones.find((option) => option.id === tone), projectStyleMedia.find((option) => option.id === medium)];
+    const description = options.every(Boolean) ? options.map((option) => interfaceText(option!.description)).join(" ") : preset.description;
+    const [worldLabel, toneLabel, mediumLabel] = tags;
+    return { title: [worldLabel, toneLabel, mediumLabel].join(" · "), category: [worldLabel, mediumLabel].join(" / "), description, tags };
+}
+
+function displayCanvasStyleCategory(category: string) {
+    return category.split(" / ").map((part) => interfaceText(part)).join(" / ");
+}
+
 export function CanvasStylePickerModal({ open, value, currentProfile, startInEditor = false, applying = false, onClose, onSelect }: {
     open: boolean;
     value?: string;
@@ -436,6 +456,7 @@ export function CanvasStylePickerModal({ open, value, currentProfile, startInEdi
     onSelect: (preset: CanvasStylePreset) => void;
 }) {
     const { message, modal } = App.useApp();
+    const { i18n } = useTranslation();
     const queryClient = useQueryClient();
     const theme = canvasThemes[useActiveTheme()];
     const [detailPreset, setDetailPreset] = useState<CanvasStylePreset | null>(null);
@@ -477,14 +498,14 @@ export function CanvasStylePickerModal({ open, value, currentProfile, startInEdi
     }, [currentProfile, editor, open, profilesQuery.data?.profiles, profilesQuery.isError, profilesQuery.isFetched, profilesQuery.isFetching, startInEditor]);
 
     const visibleItems = useMemo(() => {
-        const keyword = query.trim().toLocaleLowerCase("zh-CN");
+        const keyword = query.trim().toLocaleLowerCase(i18n.language);
         let source: StyleLibraryItem[] = tab === "system" ? systemItems : tab === "mine" ? userItems : tab === "favorites"
             ? [...systemItems.filter((item) => systemFavoriteIds.includes(item.preset.id)), ...userItems.filter((item) => item.kind === "user" && item.entity.favorite)]
             : [...userItems.filter((item) => item.kind === "user" && item.entity.lastUsedAt).sort((a, b) => String(b.entity.lastUsedAt).localeCompare(String(a.entity.lastUsedAt))), ...recentIds.flatMap((id) => systemItems.filter((item) => item.preset.id === id))];
         if (tab === "system" && category !== "全部") source = source.filter((item) => item.preset.category === category);
-        if (keyword) source = source.filter((item) => `${item.preset.title} ${item.preset.category} ${item.preset.description} ${item.preset.tags.join(" ")}`.toLocaleLowerCase("zh-CN").includes(keyword));
+        if (keyword) source = source.filter((item) => [item.preset, displayCanvasStyle(item.preset)].some(({ title, category, description, tags }) => [title, category, description, ...tags].some((text) => text.toLocaleLowerCase(i18n.language).includes(keyword))));
         return source;
-    }, [category, query, recentIds, systemFavoriteIds, systemItems, tab, userItems]);
+    }, [category, i18n.language, query, recentIds, systemFavoriteIds, systemItems, tab, userItems]);
 
     const saveMutation = useMutation({
         mutationFn: ({ profile, apply }: { profile: StyleProfileSnapshot; apply: boolean }) => editor?.entityId
@@ -561,7 +582,7 @@ export function CanvasStylePickerModal({ open, value, currentProfile, startInEdi
                                 <div className="style-center-category-panel mt-2 border-t pt-2 lg:mt-4 lg:pt-3" style={{ borderColor: theme.node.stroke }}>
                                     <div className="hidden px-2 pb-2 text-[var(--fs-tiny)] font-medium lg:block" style={{ color: theme.node.muted }}>分类</div>
                                     <nav className="style-center-category-nav flex gap-1 lg:flex-col" aria-label="系统风格分类">
-                                        {categories.map((item) => <button key={item} type="button" aria-current={category === item ? "page" : undefined} className={`style-center-category-item h-9 shrink-0 rounded-md px-2 text-left text-xs outline-none transition-colors focus-visible:ring-2 ${category === item ? "is-active font-medium" : ""}`} onClick={() => setCategory(item)}>{item}</button>)}
+                                        {categories.map((item) => <button key={item} type="button" aria-current={category === item ? "page" : undefined} className={`style-center-category-item h-9 shrink-0 rounded-md px-2 text-left text-xs outline-none transition-colors focus-visible:ring-2 ${category === item ? "is-active font-medium" : ""}`} onClick={() => setCategory(item)}>{displayCanvasStyleCategory(item)}</button>)}
                                     </nav>
                                 </div>
                             ) : null}
@@ -611,19 +632,20 @@ function readStyleIds(key: string) {
 
 function StyleCenterCard({ item, active, applying, favorite, theme, onApply, onDetail, onFavorite, onCopy, onEdit, onDelete }: { item: StyleLibraryItem; active: boolean; applying: boolean; favorite: boolean; theme: (typeof canvasThemes)[keyof typeof canvasThemes]; onApply: () => void; onDetail: () => void; onFavorite: () => void; onCopy: () => void; onEdit?: () => void; onDelete?: () => void }) {
     const { preset } = item;
+    const display = displayCanvasStyle(preset);
     return (
         <article className={`style-center-card group flex min-w-0 flex-col overflow-hidden rounded-md border ${active ? "is-active" : ""}`} style={{ background: theme.canvas.background, borderColor: active ? theme.node.activeStroke : theme.node.stroke, boxShadow: active ? `inset 0 0 0 1px ${theme.node.activeStroke}` : undefined }}>
             <div className="relative overflow-hidden border-b" style={{ borderColor: theme.node.stroke }}>
-                <button type="button" className="style-center-card-cover block w-full overflow-hidden outline-none focus-visible:ring-2 focus-visible:ring-inset" style={{ "--tw-ring-color": theme.node.activeStroke } as CSSProperties} onClick={onDetail} aria-label={`查看${preset.title}规范`}>
-                    <img src={preset.imageUrl} width="640" height="360" alt={`${preset.title}画风示意`} className="h-full w-full object-cover transition-transform" />
+                <button type="button" className="style-center-card-cover block w-full overflow-hidden outline-none focus-visible:ring-2 focus-visible:ring-inset" style={{ "--tw-ring-color": theme.node.activeStroke } as CSSProperties} onClick={onDetail} aria-label={`查看${display.title}规范`}>
+                    <img src={preset.imageUrl} width="640" height="360" alt={`${display.title}画风示意`} className="h-full w-full object-cover transition-transform" />
                 </button>
                 <button type="button" className={`style-center-favorite-action absolute right-2 top-2 grid size-8 place-items-center rounded-md outline-none focus-visible:ring-2 ${favorite ? "is-active" : ""}`} onClick={onFavorite} aria-label={favorite ? "取消收藏" : "收藏"} title={favorite ? "取消收藏" : "收藏"}><Star className="size-3.5" fill={favorite ? "currentColor" : "none"} /></button>
             </div>
             <div className="flex min-h-0 flex-1 flex-col px-3 pt-3">
-                <div className="flex min-w-0 items-center gap-2 text-[var(--fs-tiny)]" style={{ color: theme.node.muted }}><span className="truncate">{item.kind === "user" ? "我的风格" : preset.category}</span>{active ? <span className="ml-auto flex shrink-0 items-center gap-1 font-medium" style={{ color: theme.node.activeStroke }}><Check className="size-3" />当前</span> : null}</div>
-                <h3 className="mt-2 truncate text-sm font-semibold">{preset.title}</h3>
-                <p className="mt-2 line-clamp-2 text-xs leading-5" style={{ color: theme.node.muted }}>{preset.description}</p>
-                <div className="mt-2 flex min-h-6 flex-wrap gap-1">{preset.tags.slice(0, 3).map((tag) => <span key={tag} className="rounded bg-foreground/5 px-2 py-0.5 text-[var(--fs-tiny)]" style={{ color: theme.node.muted }}>{tag}</span>)}</div>
+                <div className="flex min-w-0 items-center gap-2 text-[var(--fs-tiny)]" style={{ color: theme.node.muted }}><span className="truncate">{item.kind === "user" ? "我的风格" : display.category}</span>{active ? <span className="ml-auto flex shrink-0 items-center gap-1 font-medium" style={{ color: theme.node.activeStroke }}><Check className="size-3" />当前</span> : null}</div>
+                <h3 className="mt-2 truncate text-sm font-semibold">{display.title}</h3>
+                <p className="mt-2 line-clamp-2 text-xs leading-5" style={{ color: theme.node.muted }}>{display.description}</p>
+                <div className="mt-2 flex min-h-6 flex-wrap gap-1">{preset.tags.slice(0, 3).map((tag, index) => <span key={tag} className="rounded bg-foreground/5 px-2 py-0.5 text-[var(--fs-tiny)]" style={{ color: theme.node.muted }}>{display.tags[index]}</span>)}</div>
             </div>
             <footer className="mt-2 flex min-h-11 items-center gap-1 border-t px-2" style={{ borderColor: theme.node.stroke }}>
                 <IconAction label="查看规范" onClick={onDetail}><Eye className="size-3.5" /></IconAction>
@@ -648,7 +670,7 @@ function styleCenterViewTitle(tab: StyleCenterTab, category: string) {
     if (tab === "mine") return "我的风格";
     if (tab === "favorites") return "收藏风格";
     if (tab === "recent") return "最近使用";
-    return category === "全部" ? "全部系统风格" : category;
+    return category === "全部" ? "全部系统风格" : displayCanvasStyleCategory(category);
 }
 
 function EmptyStyleCenter({ tab, loading, failed, color, onCreate, onBrowse }: { tab: StyleCenterTab; loading: boolean; failed: boolean; color: string; onCreate: () => void; onBrowse: () => void }) {
@@ -670,18 +692,20 @@ function editableCopy(profile: StyleProfileSnapshot, entityId?: string, title?: 
 }
 
 export function CanvasStyleDetailModal({ open, preset, selected = false, onClose, onSelect }: { open: boolean; preset: CanvasStylePreset | null; selected?: boolean; onClose: () => void; onSelect?: (preset: CanvasStylePreset) => void }) {
+    useTranslation();
     const theme = canvasThemes[useActiveTheme()];
     const sections = preset ? parseStyleSections(preset.prompt) : [];
+    const display = preset && displayCanvasStyle(preset);
     return (
         <AppModal rootClassName="canvas-style-detail-modal" open={open} title={null} footer={null} centered destroyOnHidden width="min(820px, calc(100vw - 24px))" onCancel={onClose} flush>
-            {preset ? <div className="canvas-style-detail-shell flex flex-col overflow-hidden" style={{ color: theme.node.text, background: theme.node.panel }}>
+            {preset && display ? <div className="canvas-style-detail-shell flex flex-col overflow-hidden" style={{ color: theme.node.text, background: theme.node.panel }}>
                 <div className="flex h-44 shrink-0 items-center justify-center overflow-hidden border-b sm:h-52" style={{ borderColor: theme.node.stroke, background: theme.canvas.background }}>
-                    <img src={preset.imageUrl} width="960" height="540" alt={`${preset.title}画风示意`} className="h-full w-full object-contain" style={preset.id === "black-white-noir" ? { filter: "grayscale(1) contrast(1.08)" } : undefined} />
+                    <img src={preset.imageUrl} width="960" height="540" alt={`${display.title}画风示意`} className="h-full w-full object-contain" style={preset.id === "black-white-noir" ? { filter: "grayscale(1) contrast(1.08)" } : undefined} />
                 </div>
                 <header className="border-b px-4 py-3 pr-12 sm:px-5 sm:pr-12" style={{ borderColor: theme.node.stroke }}>
-                    <div className="flex items-center gap-2 text-[var(--fs-tiny)] font-medium" style={{ color: theme.node.activeStroke }}><span>{preset.category}</span><span className="flex items-center gap-1" style={{ color: theme.node.muted }}><SlidersHorizontal className="size-3" />{preset.profile?.assets.length ? `${preset.profile.assets.length} 个执行资产` : "Prompt 通用"}</span></div>
-                    <h2 className="mt-1 text-base font-semibold">{preset.title}</h2>
-                    <p className="mt-2 text-xs leading-5" style={{ color: theme.node.muted }}>{preset.description}</p>
+                    <div className="flex items-center gap-2 text-[var(--fs-tiny)] font-medium" style={{ color: theme.node.activeStroke }}><span>{display.category}</span><span className="flex items-center gap-1" style={{ color: theme.node.muted }}><SlidersHorizontal className="size-3" />{preset.profile?.assets.length ? `${preset.profile.assets.length} 个执行资产` : "Prompt 通用"}</span></div>
+                    <h2 className="mt-1 text-base font-semibold">{display.title}</h2>
+                    <p className="mt-2 text-xs leading-5" style={{ color: theme.node.muted }}>{display.description}</p>
                 </header>
                 <div className="grid shrink-0 grid-cols-3 divide-x border-b text-[var(--fs-tiny)]" style={{ borderColor: theme.node.stroke }}>
                     <StyleDetailMetric label="执行方式" value={preset.profile?.assets.length ? "组合资产" : "Prompt 通用"} muted={theme.node.muted} />

@@ -13,6 +13,8 @@ import { koKR } from "@/i18n/messages/ko-KR";
 import { zhCN } from "@/i18n/messages/zh-CN";
 import { formatRelativeTime } from "@/lib/relative-time";
 import { APERTURE_META, CAMERA_PROFILES, FOCAL_LENGTH_META, LENS_PROFILES } from "@/lib/canvas/camera-prompt-library";
+import { DRAMA_STYLE_CATEGORIES, DRAMA_STYLE_FORMS, DRAMA_STYLE_THEMES, DRAMA_STYLES } from "@/lib/drama/drama-styles";
+import { projectStyleCharacters, projectStyleMedia, projectStyleTones, projectStyleWorlds } from "@/lib/canvas/canvas-style-system";
 import { localizedApiErrorMessage } from "@/services/api/error-codes";
 import { useLocaleStore } from "@/stores/use-locale-store";
 import { useUserStore } from "@/stores/use-user-store";
@@ -28,6 +30,18 @@ const placeholders = (text: string) => [...text.matchAll(/\{\{(\w+)\}\}/g)].map(
 afterEach(() => useLocaleStore.getState().setLocale("zh-CN"));
 
 describe("i18n catalogs", () => {
+    test("rendered built-in style fields include copy for each supported locale", () => {
+        const sources = [
+            ...DRAMA_STYLE_CATEGORIES.map((item) => item.label),
+            ...[...DRAMA_STYLE_FORMS, ...DRAMA_STYLE_THEMES].flatMap((item) => [item.name, item.description]),
+            ...DRAMA_STYLES.flatMap((item) => [item.name, item.description, ...item.tags]),
+            ...[...projectStyleWorlds, ...projectStyleTones, ...projectStyleMedia, ...projectStyleCharacters].flatMap((item) => [item.label, item.description]),
+        ].filter((source) => /\p{Script=Han}/u.test(source));
+        for (const { code } of SUPPORTED_LOCALES) {
+            const messages = flatten(NATIVE_CATALOGS[code]);
+            for (const source of new Set(sources)) expect(messages[interfaceTextKey(source)], `${code}: ${source}`).toBeTruthy();
+        }
+    });
     test("camera, lens, focal-length, and aperture display copy is shipped in all eight locales", () => {
         const profiles = [...CAMERA_PROFILES, ...LENS_PROFILES, ...Object.values(FOCAL_LENGTH_META), ...Object.values(APERTURE_META)];
         for (const { code } of SUPPORTED_LOCALES) {

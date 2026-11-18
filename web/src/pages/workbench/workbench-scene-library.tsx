@@ -9,6 +9,7 @@ import type { WorkbenchKind, WorkbenchTool } from "@/services/api/workbench";
 
 import { SceneGlyph } from "./workbench-composer";
 import { filterWorkbenchTools, toolMatchesFacet, WORKBENCH_SCENE_FACETS, workbenchPageCategories, workbenchToolSubtitle } from "./workbench-presets";
+import { interfaceText } from "@/i18n/interface-text";
 
 const FACET_CATEGORIES = new Set(["all", "recommended", "ecommerce", "product"]);
 
@@ -100,7 +101,7 @@ export function SceneLibraryModal({
                                 </button>
                                 {visibleFacets.map((item) => (
                                     <button key={item.key} type="button" className="wb-chip" aria-pressed={facet?.key === item.key} onClick={() => setFacetKey(facet?.key === item.key ? "" : item.key)}>
-                                        {item.label}
+                                        {interfaceText(item.label)}
                                     </button>
                                 ))}
                             </div>
