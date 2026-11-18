@@ -59,7 +59,7 @@ export default function LegalHubPage() {
         >
             {/* 顶栏 */}
             <header className="legal-public-header flex h-16 w-full items-center justify-between px-6 sm:px-12 transition-colors">
-                <LegalBrand badge="LEGAL HUB" />
+                <LegalBrand />
                 <LegalHeaderNav currentPath="/legal" />
 
                 <div className="flex items-center gap-4">

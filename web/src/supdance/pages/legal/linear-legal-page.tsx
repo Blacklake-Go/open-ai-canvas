@@ -98,7 +98,7 @@ export function LinearLegalPage({ docMap, currentSlug, children }: LinearLegalPa
             {/* 顶部 Sticky Header (Linear 风格) */}
             <header className="legal-public-header flex h-16 w-full items-center justify-between px-6 sm:px-12 transition-colors">
                 {/* 左侧：Logo 与品牌 */}
-                <LegalBrand badge="LEGAL" />
+                <LegalBrand />
 
                 {/* 中间：协议导航链接 */}
                 <LegalHeaderNav currentPath={`/${currentSlug}`} />

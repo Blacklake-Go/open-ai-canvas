@@ -2,7 +2,7 @@ import { Link } from "react-router";
 
 import { useI18n } from "@/supdance/plugins/i18n";
 
-const centerLabels: Record<string, string> = {
+export const centerLabels: Record<string, string> = {
     "fr-FR": "Centre juridique",
     "de-DE": "Rechtliche Informationen",
     "zh-CN": "法律中心",
