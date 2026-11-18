@@ -14,6 +14,8 @@ import { useLocalizedInspirations } from "@/lib/inspirations/inspiration-i18n";
 import { isFreshInspiration, localDayKey, orderInspirationsByLatest, orderInspirationsForToday } from "@/lib/inspirations/daily-order";
 import { isCustomInspiration, resolveInspirations } from "@/lib/inspirations/resolve";
 import { loadInspirationCatalog, type InspirationCatalog } from "@/services/inspiration-catalog";
+import { PROMPT_TYPES, type FeaturedCase } from "@/supdance/plugins/inspiration-curation/api";
+import { entriesInGalleryOrder, prioritizeFeatured } from "@/supdance/plugins/inspiration-curation/order";
 import { useI18n } from "@/supdance/plugins/i18n";
 import { useInspirationStore } from "@/stores/use-inspiration-store";
 import { useUserStore } from "@/stores/use-user-store";
@@ -96,6 +98,8 @@ function InspirationHall({ onUse }: { onUse: (item: CreationInspiration) => void
     const [source, setSource] = useState<SourceFilter>("all");
     const [modeFilter, setModeFilter] = useState<ModeFilter>("all");
     const [category, setCategory] = useState("all");
+    const [style, setStyle] = useState("");
+    const [promptType, setPromptType] = useState("");
     const [view, setView] = useState<ViewFilter>("all");
     const [sort, setSort] = useState<SortKey>("daily");
     const dayKey = useLocalDayKey();
@@ -151,7 +155,7 @@ function InspirationHall({ onUse }: { onUse: (item: CreationInspiration) => void
     // 筛选条件或推荐日期一变就回第一页，否则会停在一个已经不存在的位置上。
     useEffect(() => {
         setPage(1);
-    }, [source, modeFilter, category, view, sort, debouncedSearch, pageSize, dayKey]);
+    }, [source, modeFilter, category, style, promptType, view, sort, debouncedSearch, pageSize, dayKey]);
 
     const overlay = useMemo(() => ({ custom, overrides, hidden }), [custom, hidden, overrides]);
     const rawResolved = useMemo(() => (catalog ? resolveInspirations(catalog.entries, overlay) : []), [catalog, overlay]);
@@ -264,31 +268,43 @@ function InspirationHall({ onUse }: { onUse: (item: CreationInspiration) => void
 
     const sortOptions = useMemo(
         () => [
-            { label: t("common.default_sort", undefined, "默认顺序"), value: "default" as SortKey },
+            { label: t("common.default_sort", undefined, "默认顺序"), value: "daily" as SortKey },
+            { label: t("inspiration.curation.catalogLatest"), value: "latest" as SortKey },
             { label: t("common.sort_by_title", undefined, "按标题"), value: "title" as SortKey },
         ],
         [t],
     );
 
+    const curation = catalog?.curation;
+    const styleLabels = useMemo(() => new Map(curation?.styles.map((term) => [term.id, term.label || t(`inspiration.curation.${term.id}`)])), [curation, t]);
+    const featuredByID = useMemo(() => new Map(curation?.featured.map((item) => [item.id, item])), [curation]);
     const visible = useMemo(() => {
         const pool = view === "hidden" ? hiddenItems : resolved;
         const keyword = debouncedSearch.trim().toLowerCase();
         const favoriteSet = new Set(favorites);
         const filtered = pool.filter((item) => {
-            if (view === "favorites" && !favoriteSet.has(catalogIdOf(item))) return false;
+            const id = catalogIdOf(item);
+            if (view === "favorites" && !favoriteSet.has(id)) return false;
             if (source !== "all" && (item.sourceId ?? "original") !== source) return false;
             if (modeFilter !== "all" && item.mode !== modeFilter) return false;
             if (category !== "all" && (item.category?.trim() ?? "") !== category) return false;
+            const tags = curation?.cases[id];
+            if (style && !tags?.styles.includes(style)) return false;
+            if (promptType && tags?.promptType !== promptType) return false;
             if (!keyword) return true;
-            const haystack = [item.title, item.description, item.category, categoryLabel(item), categoryLabelZh(item), ...(item.tags ?? [])].join(" ").toLowerCase();
+            const haystack = [item.title, item.description, item.prompt, item.category, categoryLabel(item), categoryLabelZh(item), featuredByID.get(id)?.title, ...(tags?.styles.map((value) => styleLabels.get(value)) ?? []), ...(item.tags ?? [])]
+                .join(" ")
+                .toLowerCase();
             return haystack.includes(keyword);
         });
         if (sort === "title") return [...filtered].sort((left, right) => left.title.localeCompare(right.title, "zh-Hans-CN"));
         // 自建条目固定在最前，刚建好的条目不会被打散到后面几页；内置条目按当天顺序轮换，上新排在前面。
         const own = filtered.filter((item) => isCustomInspiration(catalogIdOf(item)));
         const builtIn = filtered.filter((item) => !isCustomInspiration(catalogIdOf(item)));
-        return [...own, ...(sort === "latest" ? orderInspirationsByLatest(builtIn, dayKey) : orderInspirationsForToday(builtIn, dayKey, Date.now()))];
-    }, [view, resolved, hiddenItems, debouncedSearch, favorites, source, modeFilter, category, sort, categoryLabel, categoryLabelZh, dayKey]);
+        if (sort === "daily" && curation?.galleryOrder) return [...own, ...entriesInGalleryOrder(builtIn, curation.galleryOrder, catalogIdOf)];
+        const ordered = [...own, ...(sort === "latest" ? orderInspirationsByLatest(builtIn, dayKey) : orderInspirationsForToday(builtIn, dayKey, Date.now()))];
+        return curation?.featured.length && sort === "daily" && view === "all" && source === "all" && modeFilter === "all" && category === "all" && !keyword && !style && !promptType ? prioritizeFeatured(ordered, curation.featured, catalogIdOf) : ordered;
+    }, [view, resolved, hiddenItems, debouncedSearch, favorites, source, modeFilter, category, sort, categoryLabel, categoryLabelZh, dayKey, curation, style, promptType, styleLabels, featuredByID]);
     const freshCount = useMemo(() => {
         const now = Date.now();
         return visible.filter((item) => isFreshInspiration(item, now)).length;
@@ -391,12 +407,14 @@ function InspirationHall({ onUse }: { onUse: (item: CreationInspiration) => void
         [importPayload, message],
     );
 
-    const advancedFilterCount = Number(source !== "all") + Number(category !== "all") + Number(view !== "all") + Number(sort !== "daily");
+    const advancedFilterCount = Number(source !== "all") + Number(category !== "all") + Number(view !== "all") + Number(sort !== "daily") + Number(Boolean(style)) + Number(Boolean(promptType));
     const hasFilters = Boolean(advancedFilterCount || modeFilter !== "all" || search.trim());
     const resetFilters = () => {
         setSource("all");
         setModeFilter("all");
         setCategory("all");
+        setStyle("");
+        setPromptType("");
         setView("all");
         setSort("daily");
         setSearch("");
@@ -407,7 +425,7 @@ function InspirationHall({ onUse }: { onUse: (item: CreationInspiration) => void
             <header className="inspiration-hall-header">
                 <div>
                     <h2 id="inspiration-hall-title">{t("inspiration.hall_title", undefined, "灵感大厅")}</h2>
-                    <p>{t("upstreamSync.inspirationSubtitle", undefined, "点开查看完整提示词，用喜欢的创意继续创作。")}</p>
+                    <p>{curation?.galleryOrder ? t("inspiration.curation.publicGallerySubtitle") : t("upstreamSync.inspirationSubtitle", undefined, "点开查看完整提示词，用喜欢的创意继续创作。")}</p>
                 </div>
                 <div className="inspiration-hall-actions">
                     <Button
@@ -498,6 +516,19 @@ function InspirationHall({ onUse }: { onUse: (item: CreationInspiration) => void
                         />
                     </div>
                     <div className="inspiration-hall-field">
+                        <span>{t("inspiration.curation.style")}</span>
+                        <Select ariaLabel={t("inspiration.curation.style")} value={style} onChange={setStyle} options={[{ value: "", label: t("inspiration.curation.all") }, ...Array.from(styleLabels, ([value, label]) => ({ value, label }))]} />
+                    </div>
+                    <div className="inspiration-hall-field">
+                        <span>{t("inspiration.curation.prompt")}</span>
+                        <Select
+                            ariaLabel={t("inspiration.curation.prompt")}
+                            value={promptType}
+                            onChange={setPromptType}
+                            options={[{ value: "", label: t("inspiration.curation.all") }, ...PROMPT_TYPES.map((value) => ({ value, label: t(`inspiration.curation.${value}`) }))]}
+                        />
+                    </div>
+                    <div className="inspiration-hall-field">
                         <span>{t("common.sort", undefined, "排序")}</span>
                         <Select options={sortOptions} value={sort} onChange={(value) => setSort(value as SortKey)} ariaLabel={t("inspiration.sort", undefined, "灵感排序")} />
                     </div>
@@ -529,6 +560,8 @@ function InspirationHall({ onUse }: { onUse: (item: CreationInspiration) => void
                                         hidden={view === "hidden"}
                                         showSources={inspirationSourcesVisible}
                                         categoryLabel={categoryLabel(item)}
+                                        featured={featuredByID.get(id)}
+                                        mainStyle={styleLabels.get(curation?.cases[id]?.styles[0] ?? "")}
                                         onOpen={() => setDetail(item)}
                                         onToggleFavorite={() => toggleFavorite(id)}
                                         onRestore={() => {
@@ -603,6 +636,8 @@ function InspirationCard({
     hidden,
     showSources,
     categoryLabel,
+    featured,
+    mainStyle,
     onOpen,
     onToggleFavorite,
     onRestore,
@@ -614,6 +649,8 @@ function InspirationCard({
     hidden: boolean;
     showSources: boolean;
     categoryLabel: string;
+    featured?: FeaturedCase;
+    mainStyle?: string;
     onOpen: () => void;
     onToggleFavorite: () => void;
     onRestore: () => void;
@@ -626,20 +663,21 @@ function InspirationCard({
     const source = inspirationSourceOf(item);
     const sourceLabel =
         source?.name ?? (item.sourceId && item.sourceId !== "original" ? t(source?.label ?? "未标注来源", undefined, source?.label ?? t("inspiration.source_unlabeled", undefined, "未标注来源")) : t("inspiration.source_original", undefined, "原创"));
+    const title = featured?.title || item.title;
     return (
-        <article className="inspiration-card">
-            <button type="button" className="inspiration-card-open" aria-label={`${t("inspiration.view_aria", undefined, "查看灵感")}：${item.title}`} aria-haspopup="dialog" onClick={onOpen}>
+        <article className={`inspiration-card${featured ? " is-editorial" : ""}`}>
+            <button type="button" className="inspiration-card-open" aria-label={`${t("inspiration.view_aria", undefined, "查看灵感")}：${title}`} aria-haspopup="dialog" onClick={onOpen}>
                 <span className="inspiration-card-cover">
-                    <InspirationCover key={item.image} image={item.image} />
-                    {isFreshInspiration(item, Date.now()) ? <span className="inspiration-card-new">{t("upstreamSync.newBadge")}</span> : null}
+                    <InspirationCover key={item.image} image={item.image} focus={featured} />
+                    {featured ? <span className="inspiration-card-new">{t("inspiration.curation.featured")}</span> : isFreshInspiration(item, Date.now()) ? <span className="inspiration-card-new">{t("upstreamSync.newBadge")}</span> : null}
                     {showSources ? <span className="inspiration-card-source">{sourceLabel}</span> : null}
                 </span>
                 <span className="inspiration-card-body">
-                    <strong className="inspiration-card-title">{item.title}</strong>
-                    <span className="inspiration-card-desc">{item.description}</span>
+                    <strong className="inspiration-card-title">{title}</strong>
+                    {!featured && <span className="inspiration-card-desc">{item.description}</span>}
                     <span className="inspiration-card-tags">
-                        <span className="inspiration-chip">{categoryLabel}</span>
-                        {item.ratio ? <span className="inspiration-chip">{item.ratio}</span> : null}
+                        <span className="inspiration-chip">{mainStyle ?? categoryLabel}</span>
+                        {!featured && item.ratio ? <span className="inspiration-chip">{item.ratio}</span> : null}
                         {showSources && item.credit ? <span className="inspiration-chip">{item.credit}</span> : null}
                     </span>
                 </span>

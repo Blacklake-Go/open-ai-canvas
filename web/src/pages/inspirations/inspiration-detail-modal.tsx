@@ -185,9 +185,9 @@ export function InspirationDetailModal({
     );
 }
 
-export function InspirationCover({ image }: { image: string }) {
+export function InspirationCover({ image, focus }: { image: string; focus?: { focusX: number; focusY: number } }) {
     const [failed, setFailed] = useState(false);
-    return failed ? <MediaPlaceholder failed /> : <img src={image} alt="" loading="lazy" decoding="async" referrerPolicy="no-referrer" onError={() => setFailed(true)} />;
+    return failed ? <MediaPlaceholder failed /> : <img src={image} alt="" loading="lazy" decoding="async" referrerPolicy="no-referrer" style={focus ? { objectPosition: `${focus.focusX}% ${focus.focusY}%` } : undefined} onError={() => setFailed(true)} />;
 }
 
 function PromptSection({ label, text, onCopy, copyText = "复制" }: { label: string; text: string; onCopy: (text: string, label: string) => void; copyText?: string }) {

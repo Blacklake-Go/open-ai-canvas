@@ -114,8 +114,14 @@ func (s Service) Public(homepage bool) (bool, error) {
 // Candidates reads only administrator curated packs and the dedicated public feed
 // table. It has no access to projects, tasks, uploads or user asset tables.
 func (s Service) catalogEntries() ([]Entry, error) {
-	out := []Entry{}
+	out, err := originalCatalog()
+	if err != nil {
+		return nil, err
+	}
 	seen := map[string]bool{}
+	for _, entry := range out {
+		seen[ID(entry)] = true
+	}
 	for _, source := range catalogSources {
 		pack, err := s.readPack(source + ".json")
 		if err != nil {
@@ -142,19 +148,11 @@ func (s Service) candidates(public bool) ([]Entry, error) {
 		seen[ID(entry)] = true
 	}
 	if public {
-		setting, err := s.Repo.SystemSettingOptional("inspiration_feed")
+		enabled, err := s.curationFeedEnabled()
 		if err != nil {
 			return nil, err
 		}
-		config := struct {
-			Enabled bool `json:"enabled"`
-		}{Enabled: true}
-		if setting != nil {
-			if err = json.Unmarshal([]byte(setting.ValueJSON), &config); err != nil {
-				return nil, err
-			}
-		}
-		if !config.Enabled {
+		if !enabled {
 			return out, nil
 		}
 	}
@@ -181,6 +179,20 @@ func (s Service) candidates(public bool) ([]Entry, error) {
 		out = append(out, e)
 	}
 	return out, nil
+}
+
+func (s Service) curationFeedEnabled() (bool, error) {
+	setting, err := s.Repo.SystemSettingOptional("inspiration_feed")
+	if err != nil {
+		return false, err
+	}
+	config := struct {
+		Enabled bool `json:"enabled"`
+	}{Enabled: true}
+	if setting != nil {
+		err = json.Unmarshal([]byte(setting.ValueJSON), &config)
+	}
+	return config.Enabled, err
 }
 func (s Service) Find(id string) (Entry, error) {
 	rows, err := s.candidates(false)
@@ -254,10 +266,19 @@ func (s Service) SaveReview(actor *model.User, id, status, evidence, expectedHas
 		return tx.AppendAdminAudit(audit)
 	})
 }
-func (s Service) Entries(homepage bool) ([]Entry, error) {
+func (s Service) Entries(homepage bool) (entries []Entry, manuallyOrdered bool, err error) {
 	if err := s.requirePublic(homepage); err != nil {
-		return nil, err
+		return nil, false, err
 	}
+	doc, err := s.publishedCuration()
+	if err != nil {
+		return nil, false, err
+	}
+	entries, err = s.visibleEntries(doc)
+	return entries, doc != nil && doc.GalleryOrder != nil, err
+}
+
+func (s Service) visibleEntries(doc *CurationDocument) ([]Entry, error) {
 	entries, err := s.candidates(true)
 	if err != nil {
 		return nil, err
@@ -266,7 +287,7 @@ func (s Service) Entries(homepage bool) ([]Entry, error) {
 	if err != nil {
 		return nil, err
 	}
-	return filterEntries(entries, reviews), nil
+	return filterEntries(doc.applyGalleryOrder(entries), reviews), nil
 }
 
 func (s Service) requirePublic(homepage bool) error {
@@ -304,7 +325,11 @@ func (s Service) MediaPath(name string) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	for _, entry := range entries {
+	doc, err := s.publishedCuration()
+	if err != nil {
+		return "", err
+	}
+	for _, entry := range doc.applyGalleryOrder(entries) {
 		if e, ok := publicEntry(entry, reviews); ok && e["image"] == name {
 			root, err := os.OpenRoot(s.Dir)
 			if err != nil {

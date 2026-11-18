@@ -4,8 +4,9 @@
  * 3MB 量级的目录不打进主 JS，首页灵感大厅进入可视区域附近后按需拉取；
  * 只合并并发请求，每次重新进入均由服务端复验公开权限。
  */
-import { catalogIdOf, curatedInspirations, type CreationInspiration, type InspirationSourceId } from "@/lib/inspirations/catalog";
+import { catalogIdOf, type CreationInspiration, type InspirationSourceId } from "@/lib/inspirations/catalog";
 import { getPublicInspirationFeed, type InspirationFeed } from "@/services/api/inspiration-feed";
+import { readPublicCuration, type CurationDocument } from "@/supdance/plugins/inspiration-curation/api";
 
 /** manifest.json 里每个来源带的分类码译名表。 */
 type SourceManifest = { revision?: string; count?: number; categories?: Record<string, string> };
@@ -25,9 +26,11 @@ export type InspirationCatalog = {
     /** 未知分类码的兜底译名表，页面直接用 code 显示。 */
     revisions: Record<string, string>;
     loadedAt: number;
+    curation?: CurationDocument;
 };
 
 const CATALOG_SOURCES: { key: InspirationSourceId; file: string }[] = [
+    { key: "original", file: "/inspirations/original.json" },
     { key: "seedance", file: "/inspirations/seedance.json" },
     { key: "haohaoxue", file: "/inspirations/haohaoxue.json" },
     { key: "youmind", file: "/inspirations/youmind.json" },
@@ -98,19 +101,39 @@ function mergeFeed(entriesBySource: Map<InspirationSourceId, CreationInspiration
 }
 
 async function buildCatalog(): Promise<InspirationCatalog> {
-    const [manifest, feed, ...packs] = await Promise.all([
+    const [manifest, feed, curation, ...packs] = await Promise.all([
         fetchJson<CatalogManifest>("/inspirations/manifest.json").catch(() => ({ sources: {} }) as CatalogManifest),
         loadFeed(),
+        readPublicCuration().catch((error) => {
+            console.warn("Unable to load inspiration curation", error);
+            return undefined;
+        }),
         ...CATALOG_SOURCES.map((source) => fetchJson<unknown>(source.file).then((payload) => readEntries(payload, source.file))),
     ]);
 
     const entriesBySource = new Map<InspirationSourceId, CreationInspiration[]>();
     CATALOG_SOURCES.forEach((source, index) => entriesBySource.set(source.key, [...packs[index]]));
-    entriesBySource.set("original", curatedInspirations);
-    entriesBySource.set("chatgpt-prompts", []);
+    const originals = entriesBySource.get("original") ?? [];
+    entriesBySource.set(
+        "original",
+        originals.filter((item) => item.sourceId !== "chatgpt-prompts"),
+    );
+    entriesBySource.set(
+        "chatgpt-prompts",
+        originals.filter((item) => item.sourceId === "chatgpt-prompts"),
+    );
     // 静态目录的分类名优先，上游新增的分类码再用上新接口带回的名称。
     const labelsOf = (sourceId: InspirationSourceId) => ({ ...(feed?.categories?.[sourceId] ?? {}), ...(manifest.sources?.[sourceId]?.categories ?? {}) });
     mergeFeed(entriesBySource, feed, labelsOf);
+    if (curation?.galleryOrder) {
+        const allowed = new Set(curation.galleryOrder);
+        for (const [source, entries] of entriesBySource) {
+            entriesBySource.set(
+                source,
+                entries.filter((entry) => allowed.has(catalogIdOf(entry))),
+            );
+        }
+    }
 
     const categoriesBySource = {} as Record<InspirationSourceId, InspirationCategoryOption[]>;
     const revisions: Record<string, string> = {};
@@ -130,6 +153,7 @@ async function buildCatalog(): Promise<InspirationCatalog> {
         categoriesBySource,
         revisions,
         loadedAt: Date.now(),
+        curation,
     };
 }
 
@@ -160,7 +184,7 @@ let galleryPool: Promise<CreationInspiration[]> | null = null;
 export function loadGalleryPool(): Promise<CreationInspiration[]> {
     if (!galleryPool) {
         galleryPool = fetchJson<unknown>(GALLERY_POOL_FILE)
-            .then((payload) => [...curatedInspirations, ...readEntries(payload, GALLERY_POOL_FILE)])
+            .then((payload) => readEntries(payload, GALLERY_POOL_FILE))
             .catch((error) => {
                 console.warn("画廊池不可公开或加载失败", error);
                 return [];

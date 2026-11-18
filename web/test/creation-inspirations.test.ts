@@ -1,7 +1,8 @@
 import { describe, expect, test } from "bun:test";
 import { existsSync } from "node:fs";
 import { resolve } from "node:path";
-import { creationFeaturedWorks, inspirationSource } from "../src/pages/create/creation-inspirations";
+import { inspirationSource } from "../src/pages/create/creation-inspirations";
+import creationFeaturedWorks from "../../backend/internal/supdance/gallery/originals.json";
 
 describe("curated creation inspirations", () => {
     test("all templates have unique titles, usable prompts and local cover assets", () => {
@@ -14,7 +15,7 @@ describe("curated creation inspirations", () => {
         }
     });
     test("adapted prompts retain provenance and the data license", () => {
-        expect(creationFeaturedWorks.filter((item) => item.source).length).toBe(8);
+        expect(creationFeaturedWorks.filter((item) => item.sourceId === "chatgpt-prompts" && item.credit).length).toBe(8);
         expect(inspirationSource.license).toBe("CC0-1.0");
         expect(inspirationSource.revision).toMatch(/^[a-f0-9]{40}$/);
         expect(inspirationSource.notice).toContain("不代表实际生成结果");

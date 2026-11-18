@@ -1,6 +1,7 @@
 import { describe, expect, test } from "bun:test";
 import { readFileSync } from "node:fs";
-import { catalogIdOf, curatedInspirations, type CreationInspiration } from "../src/lib/inspirations/catalog";
+import { catalogIdOf, type CreationInspiration } from "../src/lib/inspirations/catalog";
+import curatedInspirations from "../../backend/internal/supdance/gallery/originals.json";
 import { resolveInspirationCategoryLabel } from "../src/lib/inspirations/category-i18n";
 import { resolveInspirationItem, setInspirationTranslations } from "../src/lib/inspirations/inspiration-i18n";
 import type { SupDanceLocaleCode } from "../src/supdance/plugins/i18n/types";
@@ -15,7 +16,7 @@ function loadCatalogData(): { all: CreationInspiration[]; seedance: CreationInsp
     const seedance = seedancePack.entries as CreationInspiration[];
     const haohaoxue = haohaoxuePack.entries as CreationInspiration[];
     const youmind = youmindPack.entries as CreationInspiration[];
-    const curated = curatedInspirations;
+    const curated = curatedInspirations as CreationInspiration[];
 
     return {
         all: [...curated, ...seedance, ...haohaoxue, ...youmind],
