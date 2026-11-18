@@ -3,6 +3,7 @@ import { afterEach, describe, expect, test } from "bun:test";
 import { i18n, switchLocale } from "@/i18n";
 import { AREA_CATALOGS } from "@/i18n/areas";
 import { NATIVE_CATALOGS } from "@/i18n/catalogs";
+import { interfaceTextKey } from "@/i18n/message-key";
 import { detectBrowserLocale, matchAppLocale, SUPPORTED_LOCALES } from "@/i18n/locales";
 import { deDE } from "@/i18n/messages/de-DE";
 import { enUS } from "@/i18n/messages/en-US";
@@ -11,6 +12,7 @@ import { jaJP } from "@/i18n/messages/ja-JP";
 import { koKR } from "@/i18n/messages/ko-KR";
 import { zhCN } from "@/i18n/messages/zh-CN";
 import { formatRelativeTime } from "@/lib/relative-time";
+import { APERTURE_META, CAMERA_PROFILES, FOCAL_LENGTH_META, LENS_PROFILES } from "@/lib/canvas/camera-prompt-library";
 import { localizedApiErrorMessage } from "@/services/api/error-codes";
 import { useLocaleStore } from "@/stores/use-locale-store";
 import { useUserStore } from "@/stores/use-user-store";
@@ -26,6 +28,17 @@ const placeholders = (text: string) => [...text.matchAll(/\{\{(\w+)\}\}/g)].map(
 afterEach(() => useLocaleStore.getState().setLocale("zh-CN"));
 
 describe("i18n catalogs", () => {
+    test("camera, lens, focal-length, and aperture display copy is shipped in all eight locales", () => {
+        const profiles = [...CAMERA_PROFILES, ...LENS_PROFILES, ...Object.values(FOCAL_LENGTH_META), ...Object.values(APERTURE_META)];
+        for (const { code } of SUPPORTED_LOCALES) {
+            const messages = flatten(NATIVE_CATALOGS[code]);
+            for (const profile of profiles) {
+                for (const source of [profile.zhName, profile.description, profile.useCase]) {
+                    if (/\p{Script=Han}/u.test(source)) expect(messages[interfaceTextKey(source)], `${code}: ${source}`).toBeTruthy();
+                }
+            }
+        }
+    });
     test("cold starts default to English and restore an explicit choice from either storage format", () => {
         // Import a fresh store for each visitor; the shared test preload selects Chinese.
         for (const [current, legacy, expected] of [

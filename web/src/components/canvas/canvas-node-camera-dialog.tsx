@@ -1,4 +1,6 @@
-import { memo, useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { memo, useCallback, useEffect, useRef, useState } from "react";
+import { useTranslation } from "react-i18next";
+import { interfaceText } from "@/i18n/interface-text";
 import { createPortal } from "react-dom";
 import { ChevronUp, ChevronDown, Camera as CameraIcon, RotateCcw, X } from "lucide-react";
 import { motion, useReducedMotion } from "motion/react";
@@ -298,12 +300,17 @@ export function CanvasNodeCameraPanel({
     const [focal, setFocal] = useState(cameraControl?.focalLength ?? 50);
     const [aperture, setAperture] = useState(cameraControl?.aperture ?? 4);
 
+    useTranslation();
     const currentCamera = CAMERA_PROFILES[cameraIdx];
     const currentLens = LENS_PROFILES[lensIdx];
     const focalMeta = FOCAL_LENGTH_META[focal];
     const apertureMeta = APERTURE_META[aperture];
 
-    const summary = useMemo(() => `${currentCamera.zhName} · ${currentLens.zhName} · ${focal}mm · f/${aperture}`, [currentCamera, currentLens, focal, aperture]);
+    const cameraName = interfaceText(currentCamera.zhName);
+    const lensName = interfaceText(currentLens.zhName);
+    const focalName = focalMeta && interfaceText(focalMeta.zhName);
+    const apertureName = apertureMeta && interfaceText(apertureMeta.zhName);
+    const summary = `${cameraName} · ${lensName} · ${focal}mm · f/${aperture}`;
 
     const cycleCamera = (dir: 1 | -1) => setCameraIdx((i) => (i + dir + CAMERA_PROFILES.length) % CAMERA_PROFILES.length);
     const cycleLens = (dir: 1 | -1) => setLensIdx((i) => (i + dir + LENS_PROFILES.length) % LENS_PROFILES.length);
@@ -376,58 +383,58 @@ export function CanvasNodeCameraPanel({
             <div className="grid grid-cols-2 gap-2 px-4 py-4 sm:grid-cols-4">
                 <CardColumn
                     label="相机"
-                    tooltipTitle={`${currentCamera.zhName} · ${currentCamera.label}`}
-                    tooltipDesc={currentCamera.description}
-                    tooltipUseCase={currentCamera.useCase}
+                    tooltipTitle={cameraName === currentCamera.label ? cameraName : `${cameraName} · ${currentCamera.label}`}
+                    tooltipDesc={interfaceText(currentCamera.description)}
+                    tooltipUseCase={interfaceText(currentCamera.useCase)}
                     visual={<CameraBodySvg profile={currentCamera} className="h-16" />}
-                    captionBelow={currentCamera.zhName}
+                    captionBelow={cameraName}
                     onPrev={() => cycleCamera(-1)}
                     onNext={() => cycleCamera(1)}
                     theme={theme}
                 />
                 <CardColumn
                     label="镜头"
-                    tooltipTitle={`${currentLens.zhName} · ${currentLens.label}`}
-                    tooltipDesc={currentLens.description}
-                    tooltipUseCase={currentLens.useCase}
+                    tooltipTitle={lensName === currentLens.label ? lensName : `${lensName} · ${currentLens.label}`}
+                    tooltipDesc={interfaceText(currentLens.description)}
+                    tooltipUseCase={interfaceText(currentLens.useCase)}
                     visual={<LensBodySvg profile={currentLens} className="h-14" />}
-                    captionBelow={currentLens.zhName}
+                    captionBelow={lensName}
                     onPrev={() => cycleLens(-1)}
                     onNext={() => cycleLens(1)}
                     theme={theme}
                 />
                 <CardColumn
                     label="焦距"
-                    tooltipTitle={`${focal}mm · ${focalMeta?.zhName ?? ""}`}
-                    tooltipDesc={focalMeta?.description}
-                    tooltipUseCase={focalMeta?.useCase}
+                    tooltipTitle={focalName ? `${focal}mm · ${focalName}` : `${focal}mm`}
+                    tooltipDesc={focalMeta && interfaceText(focalMeta.description)}
+                    tooltipUseCase={focalMeta && interfaceText(focalMeta.useCase)}
                     visual={
                         <div className="flex flex-col items-center">
                             <div className="text-[var(--fs-display)] font-normal leading-none">{focal}</div>
                             <div className="mt-1 text-[var(--fs-label)] tracking-wider" style={{ color: theme.node.faint }}>mm</div>
                         </div>
                     }
-                    cornerBadge={focalMeta?.zhName}
-                    captionBelow={focalMeta?.zhName ?? ""}
+                    cornerBadge={focalName}
+                    captionBelow={focalName ?? ""}
                     onPrev={() => cycleFocal(-1)}
                     onNext={() => cycleFocal(1)}
                     theme={theme}
                 />
                 <CardColumn
                     label="光圈"
-                    tooltipTitle={`f/${aperture} · ${apertureMeta?.zhName ?? ""}`}
-                    tooltipDesc={apertureMeta?.description}
-                    tooltipUseCase={apertureMeta?.useCase}
+                    tooltipTitle={apertureName ? `f/${aperture} · ${apertureName}` : `f/${aperture}`}
+                    tooltipDesc={apertureMeta && interfaceText(apertureMeta.description)}
+                    tooltipUseCase={apertureMeta && interfaceText(apertureMeta.useCase)}
                     visual={
                         <div className="flex flex-col items-center">
                             <div className="text-[var(--fs-display)] font-normal leading-none">
                                 <span className="text-[var(--fs-heading)]" style={{ color: theme.node.faint }}>f/</span>{aperture}
                             </div>
-                            <div className="mt-1 text-[var(--fs-label)] tracking-wider" style={{ color: theme.node.faint }}>aperture</div>
+                            <div className="mt-1 text-[var(--fs-label)] tracking-wider" style={{ color: theme.node.faint }}>{interfaceText("光圈")}</div>
                         </div>
                     }
-                    cornerBadge={apertureMeta?.zhName}
-                    captionBelow={apertureMeta?.zhName ?? ""}
+                    cornerBadge={apertureName}
+                    captionBelow={apertureName ?? ""}
                     onPrev={() => cycleAperture(-1)}
                     onNext={() => cycleAperture(1)}
                     theme={theme}

@@ -7,6 +7,7 @@ import { useSkillLibraryAccess } from "@/lib/skill-access";
 import type { CanvasTheme } from "@/lib/canvas-theme";
 import { useAppearanceStore } from "@/stores/use-appearance-store";
 import { useI18n } from "@/supdance/plugins/i18n/store";
+import { interfaceText } from "@/i18n/interface-text";
 import { useEffectiveCanvasAppearance } from "@/stores/use-appearance-preferences-store";
 import { agentAvatarClipForState, agentAvatarStateForRunStatus, agentCopy, isAgentAvatarBundleManifest, type AgentAvatarBundleManifest } from "@/lib/canvas/agent-appearance";
 import { type CSSProperties, memo, useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
@@ -286,25 +287,26 @@ export function AgentHeader({
     const appearance = useEffectiveCanvasAppearance();
     const modifierJ = agentModifierShortcut("J");
     const modifierEnter = agentModifierShortcut("Enter");
-    const title = hasMessages ? conversationTitle || agentCopy(appearance.panelTitle, appearance.agentName) : "新对话";
+    useI18n();
+    const title = hasMessages ? conversationTitle || agentCopy(appearance.panelTitle, appearance.agentName) : interfaceText("新对话");
     const moreItems = [
-        ...(onToggleDock ? [{ key: "dock", icon: docked ? <PictureInPicture2 className="size-3.5" /> : <PanelRight className="size-3.5" />, label: docked ? "改为浮动窗口" : "停靠到画布右侧", onClick: onToggleDock }] : []),
-        { key: "settings", icon: <Settings2 className="size-3.5" />, label: "Agent 设置", onClick: onSettings },
-        { key: "layout", icon: <Scaling className="size-3.5" />, label: docked ? "恢复默认宽度" : "恢复默认大小和位置", onClick: onResetLayout },
-        { key: "export", icon: <Download className="size-3.5" />, label: exporting ? "正在导出调试记录…" : "导出调试记录（分享前请检查隐私）", disabled: exporting, onClick: onExport },
+        ...(onToggleDock ? [{ key: "dock", icon: docked ? <PictureInPicture2 className="size-3.5" /> : <PanelRight className="size-3.5" />, label: docked ? interfaceText("改为浮动窗口") : interfaceText("停靠到画布右侧"), onClick: onToggleDock }] : []),
+        { key: "settings", icon: <Settings2 className="size-3.5" />, label: interfaceText("Agent 设置"), onClick: onSettings },
+        { key: "layout", icon: <Scaling className="size-3.5" />, label: docked ? interfaceText("恢复默认宽度") : interfaceText("恢复默认大小和位置"), onClick: onResetLayout },
+        { key: "export", icon: <Download className="size-3.5" />, label: exporting ? interfaceText("正在导出调试记录…") : interfaceText("导出调试记录（分享前请检查隐私）"), disabled: exporting, onClick: onExport },
         { type: "divider" as const },
         {
             key: "shortcuts",
             type: "group" as const,
-            label: "快捷键",
+            label: interfaceText("快捷键"),
             // 只是说明，不可点：左边是动作，右边是按键。
             children: [
-                ["toggle", "打开或收起 Agent", [modifierJ]],
-                ["send", "发送", ["Enter"]],
-                ["newline", "换行", ["Shift+Enter"]],
-                ["queue", "运行中排队", ["Enter"]],
-                ["interject", "运行中插话", [modifierEnter]],
-                ["stop", "停止本轮", ["Esc", "Esc"]],
+                ["toggle", interfaceText("打开或收起 Agent"), [modifierJ]],
+                ["send", interfaceText("发送"), ["Enter"]],
+                ["newline", interfaceText("换行"), ["Shift+Enter"]],
+                ["queue", interfaceText("运行中排队"), ["Enter"]],
+                ["interject", interfaceText("运行中插话"), [modifierEnter]],
+                ["stop", interfaceText("停止本轮"), ["Esc", "Esc"]],
             ].map(([key, action, keys]) => ({
                 key: `shortcut-${key as string}`,
                 disabled: true,

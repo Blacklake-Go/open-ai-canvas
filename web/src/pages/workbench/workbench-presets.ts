@@ -1,4 +1,5 @@
 import type { WorkbenchKind, WorkbenchTool } from "@/services/api/workbench";
+import { interfaceText } from "@/i18n/interface-text";
 
 import { workbenchCategoryLabel } from "./workbench-catalog";
 
@@ -38,7 +39,8 @@ function normalizedRatio(value: string) {
 
 export function workbenchRatioUsage(kind: WorkbenchKind, ratio: string): RatioUsage | undefined {
     const key = normalizedRatio(ratio);
-    return kind === "image" ? IMAGE_RATIO_USAGE[key] : VIDEO_RATIO_USAGE[key];
+    const usage = kind === "image" ? IMAGE_RATIO_USAGE[key] : VIDEO_RATIO_USAGE[key];
+    return usage && { label: interfaceText(usage.label), title: interfaceText(usage.title) };
 }
 
 export const WORKBENCH_SPEC_TIPS: Record<WorkbenchKind, string> = {

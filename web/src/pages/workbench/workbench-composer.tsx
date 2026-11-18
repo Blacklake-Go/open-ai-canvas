@@ -9,6 +9,7 @@ import type { WorkbenchKind, WorkbenchPromptPreset, WorkbenchReferenceSlot, Work
 
 import { workbenchMediaLabel } from "./workbench-catalog";
 import { workbenchRatioUsage, workbenchSceneTone, workbenchToolSubtitle, type InspirationGroup, type SceneTone } from "./workbench-presets";
+import { interfaceText } from "@/i18n/interface-text";
 
 export type WorkbenchReference = {
     id: string;
@@ -405,7 +406,7 @@ export function PromptSection({
                     <div className="wb-inspire-tabs" role="tablist" aria-label="灵感词分类">
                         {inspirations.map((item) => (
                             <button key={item.key} type="button" role="tab" aria-selected={item.key === activeGroup.key} className={item.key === activeGroup.key ? "is-active" : ""} onClick={() => setGroup(item.key)}>
-                                {item.label}
+                                {interfaceText(item.label)}
                             </button>
                         ))}
                     </div>

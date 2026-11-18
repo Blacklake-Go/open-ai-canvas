@@ -32,6 +32,7 @@ import { CanvasImagePreview } from "@/components/canvas/canvas-image-preview";
 import { AppModal } from "@/components/ui/product/app-modal";
 import { creationResultEntries } from "./creation-result-urls";
 import { useI18n } from "@/supdance/plugins/i18n";
+import { interfaceText } from "@/i18n/interface-text";
 import { translate } from "@/i18n";
 
 const CreationMusicCard = lazy(() =>
@@ -162,12 +163,12 @@ type CreationMessageStateTone = "pending" | "syncing" | "sync" | "error" | "canc
 
 // 消息头部的状态标签：区分“生成中 / 重新连接中 / 结果待同步 / 生成失败 / 已停止”，不把页面没跟上说成生成失败。
 function creationMessageState(item: CreationMessage): { tone: CreationMessageStateTone; label: string } | null {
-    if (item.status === "pending" || item.status === "streaming") return item.syncInterrupted ? { tone: "syncing", label: "重新连接中" } : item.status === "pending" ? { tone: "pending", label: "生成中" } : null;
-    if (item.status === "cancelled") return { tone: "cancelled", label: "已停止" };
+    if (item.status === "pending" || item.status === "streaming") return item.syncInterrupted ? { tone: "syncing", label: interfaceText("重新连接中") } : item.status === "pending" ? { tone: "pending", label: interfaceText("生成中") } : null;
+    if (item.status === "cancelled") return { tone: "cancelled", label: interfaceText("已停止") };
     if (item.status === "error") {
-        if (creationMessageNeedsResultSync(item)) return { tone: "sync", label: "结果待同步" };
-        if (item.mediaRecoverable) return { tone: "sync", label: "保存未完成" };
-        return isGenerationCostUncertainError(item.error) ? { tone: "sync", label: "费用待核对" } : { tone: "error", label: "生成失败" };
+        if (creationMessageNeedsResultSync(item)) return { tone: "sync", label: interfaceText("结果待同步") };
+        if (item.mediaRecoverable) return { tone: "sync", label: interfaceText("保存未完成") };
+        return isGenerationCostUncertainError(item.error) ? { tone: "sync", label: interfaceText("费用待核对") } : { tone: "error", label: interfaceText("生成失败") };
     }
     return null;
 }
