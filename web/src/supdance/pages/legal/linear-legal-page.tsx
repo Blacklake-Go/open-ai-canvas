@@ -2,7 +2,6 @@ import { TopbarLanguageSwitcher, useI18n } from "@/supdance/plugins/i18n";
 import { useEffect, useState, type ReactNode } from "react";
 import { ArrowDown, ArrowUp } from "lucide-react";
 import { useLocaleStore } from "@/stores/use-locale-store";
-import { matchAppLocale } from "@/i18n/locales";
 import { useLocation } from "react-router";
 
 import { useThemeStore } from "@/stores/use-theme-store";
@@ -69,12 +68,6 @@ export function LinearLegalPage({ docMap, currentSlug, children }: LinearLegalPa
         };
     }, []);
 
-    useEffect(() => {
-        const requested = new URLSearchParams(location.search).get("lang");
-        const next = matchAppLocale(requested);
-        if (next) useLocaleStore.getState().setLocale(next);
-    }, [location.search]);
-
     // 处理 hash 锚点滚动（如 #content-standards, #enforcement-actions, #reporting）
     useEffect(() => {
         if (location.hash) {
@@ -98,7 +91,7 @@ export function LinearLegalPage({ docMap, currentSlug, children }: LinearLegalPa
             {/* 顶部 Sticky Header (Linear 风格) */}
             <header className="legal-public-header flex h-16 w-full items-center justify-between px-6 sm:px-12 transition-colors">
                 {/* 左侧：Logo 与品牌 */}
-                <LegalBrand badge="LEGAL" />
+                <LegalBrand />
 
                 {/* 中间：协议导航链接 */}
                 <LegalHeaderNav currentPath={`/${currentSlug}`} />

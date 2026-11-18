@@ -473,14 +473,12 @@
     const requested = params.get("lang");
     let savedLocale;
     try {
-        savedLocale = JSON.parse(localStorage.getItem("yingce:locale") || "null")?.state?.locale;
+        const saved = localStorage.getItem("yingce:locale");
+        savedLocale = saved ? JSON.parse(saved)?.state?.locale : localStorage.getItem("supdance:i18n:locale");
     } catch (_) {
         savedLocale = null;
     }
-    const detected = (navigator.languages || [navigator.language])
-        .map((language) => (/^zh-(TW|HK|MO|Hant)/i.test(language) ? "zh-TW" : locales.find((locale) => locale.toLowerCase() === language.toLowerCase()) || locales.find((locale) => locale.split("-")[0] === language.split("-")[0])))
-        .find(Boolean);
-    setLocale(locales.includes(requested) ? requested : locales.includes(savedLocale) ? savedLocale : detected || "zh-CN");
+    setLocale(locales.includes(requested) ? requested : locales.includes(savedLocale) ? savedLocale : "en-US");
     selector.addEventListener("change", () => setLocale(selector.value));
     let revealing = false;
     themeButton.addEventListener("click", async () => {

@@ -1,8 +1,11 @@
-import { Link } from "react-router";
+import { useEffect } from "react";
+import { Link, useLocation } from "react-router";
+import { matchAppLocale } from "@/i18n/locales";
+import { useLocaleStore } from "@/stores/use-locale-store";
 
 import { useI18n } from "@/supdance/plugins/i18n";
 
-const centerLabels: Record<string, string> = {
+export const centerLabels: Record<string, string> = {
     "fr-FR": "Centre juridique",
     "de-DE": "Rechtliche Informationen",
     "zh-CN": "法律中心",
@@ -27,6 +30,11 @@ const keys = ["legal.terms", "legal.privacy", "legal.aup"] as const;
 
 export function LegalHeaderNav({ currentPath }: { currentPath: string }) {
     const { locale, t } = useI18n();
+    const { search } = useLocation();
+    useEffect(() => {
+        const requested = matchAppLocale(new URLSearchParams(search).get("lang"));
+        if (requested) useLocaleStore.getState().setLocale(requested);
+    }, [search]);
 
     return (
         <nav className="legal-header-nav" aria-label={t("legal.doc_nav_aria")}>

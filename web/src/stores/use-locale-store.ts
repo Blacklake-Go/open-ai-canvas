@@ -1,7 +1,7 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
 
-import { detectBrowserLocale, isAppLocale, type AppLocale } from "@/i18n/locales";
+import { DEFAULT_LOCALE, isAppLocale, type AppLocale } from "@/i18n/locales";
 
 type LocaleStore = {
     locale: AppLocale;
@@ -17,10 +17,10 @@ function initialLocale(): AppLocale {
     } catch {
         /* Restricted browser storage still permits an in-memory locale. */
     }
-    return detectBrowserLocale();
+    return DEFAULT_LOCALE;
 }
 
-/** 界面语言是本设备的小型偏好，保存在 localStorage；首次访问按浏览器语言选择。 */
+/** 首次访问使用英语，用户选择的界面语言保存在本设备。 */
 export const useLocaleStore = create<LocaleStore>()(
     persist(
         (set) => ({

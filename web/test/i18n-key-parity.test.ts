@@ -41,8 +41,9 @@ describe("i18n Dictionary Key Parity & Catalog Integrity", () => {
     test("supported locale codes and language settings match all eight native locales", () => {
         expect(SUPPORTED_LOCALE_CODES).toEqual(["zh-CN", "en-US", "zh-TW", "es-ES", "fr-FR", "de-DE", "ja-JP", "ko-KR"]);
         expect(DEFAULT_SUPDANCE_LANGUAGES.length).toBe(8);
-        expect(DEFAULT_SUPDANCE_I18N_SETTINGS.defaultLocale).toBe("zh-CN");
-        expect(DEFAULT_SUPDANCE_I18N_SETTINGS.fallbackLocale).toBe("zh-CN");
+        expect(DEFAULT_SUPDANCE_I18N_SETTINGS.defaultLocale).toBe("en-US");
+        expect(DEFAULT_SUPDANCE_I18N_SETTINGS.fallbackLocale).toBe("en-US");
+        expect(DEFAULT_SUPDANCE_I18N_SETTINGS.autoDetectBrowser).toBe(false);
 
         const codesInLanguages = DEFAULT_SUPDANCE_LANGUAGES.map((l) => l.code);
         expect(codesInLanguages).toEqual(SUPPORTED_LOCALE_CODES as unknown as SupDanceLocaleCode[]);

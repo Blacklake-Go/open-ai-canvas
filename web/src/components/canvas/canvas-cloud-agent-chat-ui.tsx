@@ -1,3 +1,4 @@
+import { interfaceText } from "@/i18n/interface-text";
 import { agentCanvasActions, agentCanvasActionLabel } from "@/lib/canvas/agent-canvas-actions";
 import { Button } from "antd";
 import { Fragment, memo, useCallback, useEffect, useId, useMemo, useRef, useState, type CSSProperties, type ReactNode, type SyntheticEvent } from "react";
@@ -1494,7 +1495,7 @@ export function AgentQuestionBar({
                                 id="agent-question-additional-notes"
                                 rows={2}
                                 value={additionalNotes}
-                                placeholder="还有需要特别说明的场景、人物、节奏或限制吗？"
+                                placeholder={interfaceText("还有需要特别说明的场景、人物、节奏或限制吗？")}
                                 disabled={disabled}
                                 className="agent-question-input agent-question-textarea"
                                 onChange={(event) => setAdditionalNotes(event.target.value)}

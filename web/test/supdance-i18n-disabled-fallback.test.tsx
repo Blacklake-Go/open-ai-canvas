@@ -4,7 +4,7 @@ import { renderToStaticMarkup } from "react-dom/server";
 import { useI18n, useSupDanceI18nStore } from "../src/supdance/plugins/i18n/store";
 import { usePluginStore } from "../src/stores/use-plugin-store";
 
-test("disabled i18n renders Chinese built-in keys instead of implementation keys", () => {
+test("disabled i18n renders default English built-in text instead of implementation keys", () => {
     const before = useSupDanceI18nStore.getState();
     const plugins = usePluginStore.getState().pluginStates;
     try {
@@ -14,8 +14,8 @@ test("disabled i18n renders Chinese built-in keys instead of implementation keys
             return createElement("span", null, `${t("auth.login")}/${t("auth.password")}/${t("nav.changelog")}`);
         };
         const html = renderToStaticMarkup(createElement(Probe));
-        expect(html).toContain("登录");
-        expect(html).toContain("密码");
+        expect(html).toContain("Log In");
+        expect(html).toContain("Password");
         expect(html).not.toContain("auth.");
         expect(html).not.toContain("nav.");
     } finally {

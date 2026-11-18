@@ -101,7 +101,7 @@ export function validateTranslation(source, translation) {
             .join("|");
     if (tokens(source) !== tokens(translation) || (source.match(/[{}]/g) ?? []).sort().join("") !== (translation.match(/[{}]/g) ?? []).sort().join("")) return "placeholder_mismatch";
     const urls = (text) =>
-        [...text.matchAll(/https?:\/\/[a-zA-Z0-9][^\s<>()（），,]*/g)]
+        [...text.matchAll(/https?:\/\/[a-zA-Z0-9](?:[^\s<>()（），,；。]*[^\s<>()（），,；。.])?/g)]
             .map((m) => m[0])
             .sort()
             .join("|");

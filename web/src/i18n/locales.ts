@@ -13,7 +13,7 @@ export const SUPPORTED_LOCALES = [
 
 export type AppLocale = (typeof SUPPORTED_LOCALES)[number]["code"];
 
-export const DEFAULT_LOCALE: AppLocale = "zh-CN";
+export const DEFAULT_LOCALE: AppLocale = "en-US";
 
 export function isAppLocale(value: unknown): value is AppLocale {
     return SUPPORTED_LOCALES.some((locale) => locale.code === value);
@@ -30,7 +30,7 @@ export function matchAppLocale(value: string | undefined | null): AppLocale | un
     return SUPPORTED_LOCALES.find((locale) => locale.code.toLowerCase().split("-")[0] === primary)?.code;
 }
 
-/** 首次访问时按浏览器语言偏好选择界面语言，都不支持时回退简体中文。 */
+/** Match an explicitly requested list of language preferences. */
 export function detectBrowserLocale(languages: readonly string[] | undefined = typeof navigator === "undefined" ? undefined : navigator.languages): AppLocale {
     for (const language of languages || []) {
         const matched = matchAppLocale(language);

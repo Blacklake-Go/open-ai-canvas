@@ -2,7 +2,7 @@ import { PAGE_MANAGEMENT_ENTRIES } from "@/supdance/plugins/compact-model-picker
 import { HTML_ADMIN_I18N_ENTRIES } from "./html-admin";
 import { EMAIL_CENTER_I18N_ENTRIES } from "@/supdance/plugins/email-marketing/messages";
 import { FEDERATION_I18N_ENTRIES } from "./federation";
-import { SUPPORTED_LOCALES } from "@/i18n/locales";
+import { DEFAULT_LOCALE, SUPPORTED_LOCALES } from "@/i18n/locales";
 import { MANAGED_UI_ENTRIES } from "../managed-catalog";
 import enUSPack from "./packs/en-US";
 import zhTWPack from "./packs/zh-TW";
@@ -53,9 +53,9 @@ export const DEFAULT_SUPDANCE_LANGUAGES: SupDanceLanguageItem[] = SUPPORTED_LOCA
 }));
 
 export const DEFAULT_SUPDANCE_I18N_SETTINGS: SupDanceI18nSettings = {
-    defaultLocale: "zh-CN",
-    fallbackLocale: "zh-CN",
-    autoDetectBrowser: true,
+    defaultLocale: DEFAULT_LOCALE,
+    fallbackLocale: DEFAULT_LOCALE,
+    autoDetectBrowser: false,
     switcherStyle: "icon_code",
     showInWorkspaceTopBar: true,
     showInAuthPage: true,

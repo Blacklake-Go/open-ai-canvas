@@ -1,3 +1,4 @@
+import { interfaceText } from "@/i18n/interface-text";
 import { CanvasWorkspacePanel } from "@/components/canvas/canvas-workspace-panel";
 import { CanvasNodeResizeMotionProvider } from "@/components/canvas/canvas-node-resize-motion";
 import "@/lib/plugins/builtin/ai-art-critique";
@@ -3602,7 +3603,7 @@ function CanvasViewportPage() {
                                 <Suspense
                                     fallback={
                                         <div className="fixed inset-0 z-[var(--z-toast)] grid place-items-center px-5" style={{ background: theme.canvas.background, color: theme.node.text }}>
-                                            <WorkspaceState icon="loading" title="正在加载绘图编辑器" description="正在准备绘图画布。" />
+                                            <WorkspaceState icon="loading" title={interfaceText("正在加载绘图编辑器")} description={interfaceText("正在准备绘图画布。")} />
                                         </div>
                                     }
                                 >
@@ -3658,7 +3659,7 @@ function CanvasViewportPage() {
                                     }
                                 }}
                                 onCopyPrompt={(prompt) => {
-                                    void navigator.clipboard?.writeText(prompt).then(() => message.success("已复制全景提示词"));
+                                    void navigator.clipboard?.writeText(prompt).then(() => message.success(interfaceText("已复制全景提示词")));
                                 }}
                                 previewImageUrl={panoramaConfigNodeId ? nodes.find((n) => n.id === panoramaConfigNodeId)?.metadata?.content : undefined}
                                 nodes={nodes}
@@ -3755,7 +3756,7 @@ function CanvasViewportPage() {
                                 <Suspense
                                     fallback={
                                         <div className="fixed inset-0 z-[var(--z-toast)] grid place-items-center px-5" style={{ background: theme.canvas.background, color: theme.node.text }}>
-                                            <WorkspaceState icon="loading" title="正在加载 3D 预演台" description="准备场景、镜头与空间控制。" />
+                                            <WorkspaceState icon="loading" title={interfaceText("正在加载 3D 预演台")} description={interfaceText("准备场景、镜头与空间控制。")} />
                                         </div>
                                     }
                                 >

@@ -40,8 +40,8 @@ describe("生成岛内联音乐结果与数据一致性", () => {
 
         expect(html).toContain("0:00 / 1:05");
         expect(html).toContain("0:00 / 1:12");
-        expect(html).toContain("作品 1");
-        expect(html).toContain("作品 2");
+        expect(html).toContain("Track 1");
+        expect(html).toContain("Track 2");
     });
 
     test("历史记录回放即使遗留了「图片已生成」占位文案，也会回退为用户提示词摘要", () => {

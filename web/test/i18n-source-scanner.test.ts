@@ -38,6 +38,8 @@ describe("source update localization pipeline", () => {
         expect(validateTranslation("共 {count} 条", "{count} {count} items")).toBe("placeholder_mismatch");
         expect(validateTranslation("共 {count} 条", "{count} items")).toBeNull();
         expect(validateTranslation("访问 https://example.com）", "Visit https://example.com)")).toBeNull();
+        expect(validateTranslation("访问 https://example.com；可留空。", "Optional. Visit https://example.com.")).toBeNull();
+        expect(validateTranslation("访问 https://example.com。", "Visit https://example.net.")).toBe("url_mismatch");
         expect(validateTranslation("访问 https://example.com", "Visit https://other.example")).toBe("url_mismatch");
     });
     test("draft generation uses no model by default and resumes verified checkpoint translations", () => {

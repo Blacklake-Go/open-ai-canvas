@@ -59,7 +59,7 @@ export default function LegalHubPage() {
         >
             {/* 顶栏 */}
             <header className="legal-public-header flex h-16 w-full items-center justify-between px-6 sm:px-12 transition-colors">
-                <LegalBrand badge="LEGAL HUB" />
+                <LegalBrand />
                 <LegalHeaderNav currentPath="/legal" />
 
                 <div className="flex items-center gap-4">
@@ -70,8 +70,8 @@ export default function LegalHubPage() {
 
             {/* 展台区 */}
             <main className="mx-auto max-w-[840px] px-6 pt-24 pb-16 sm:pt-28 sm:pb-24">
-                <div className="font-mono text-[11px] uppercase tracking-[0.16em] text-sky-400 mb-3">§ OFFICIAL COMPLIANCE PORTAL</div>
-                <h1 className={`text-4xl sm:text-5xl lg:text-6xl font-semibold tracking-[-0.035em] leading-[1.08] mb-6 ${isDark ? "text-white" : "text-[#111111]"}`}>Legal & Compliance Center</h1>
+                <div className="font-mono text-[11px] uppercase tracking-[0.16em] text-sky-400 mb-3">§ 官方合规门户</div>
+                <h1 className={`text-4xl sm:text-5xl lg:text-6xl font-semibold tracking-[-0.035em] leading-[1.08] mb-6 ${isDark ? "text-white" : "text-[#111111]"}`}>法律与合规中心</h1>
                 <p className={`text-base sm:text-lg leading-relaxed mb-12 ${isDark ? "text-[#a2a2ad]" : "text-[#555555]"}`}>
                     {interfaceText("查看 {product} 的法律协议、隐私政策与内容规则。英文为权威版本，另提供简体中文、繁体中文、西班牙语、法语、德语、日语和韩语译文。", { product: LEGAL_OPERATOR_CONFIG.productName })}
                 </p>
@@ -87,14 +87,14 @@ export default function LegalHubPage() {
                     >
                         <div>
                             <div className="flex items-center justify-between mb-4">
-                                <span className="font-mono text-[11px] uppercase tracking-wider text-sky-400 font-semibold">TOS · V2 CREDITS</span>
+                                <span className="font-mono text-[11px] uppercase tracking-wider text-sky-400 font-semibold">服务条款 · V2 积分</span>
                                 <FileText className="size-4 text-white/40 group-hover:text-sky-400 transition-colors" />
                             </div>
-                            <h2 className={`text-lg font-semibold tracking-tight mb-2 ${isDark ? "text-white" : "text-black"}`}>Terms of Service</h2>
+                            <h2 className={`text-lg font-semibold tracking-tight mb-2 ${isDark ? "text-white" : "text-black"}`}>服务条款</h2>
                             <p className={`text-xs leading-relaxed ${isDark ? "text-[#8a8f98]" : "text-[#666666]"}`}>规范账号资格、积分预付即时数字交付、Waffo Pancake PCI-DSS 安全支付、7天退款与 AI 资产所有权。</p>
                         </div>
                         <div className="flex items-center gap-1 text-xs font-mono text-sky-400 pt-6 mt-6 border-t border-white/5">
-                            <span>Read Policy</span>
+                            <span>阅读政策</span>
                             <ArrowRight className="size-3 group-hover:translate-x-1 transition-transform" />
                         </div>
                     </Link>
@@ -108,14 +108,14 @@ export default function LegalHubPage() {
                     >
                         <div>
                             <div className="flex items-center justify-between mb-4">
-                                <span className="font-mono text-[11px] uppercase tracking-wider text-emerald-400 font-semibold">PRIVACY · GDPR / CCPA</span>
+                                <span className="font-mono text-[11px] uppercase tracking-wider text-emerald-400 font-semibold">隐私 · GDPR / CCPA</span>
                                 <Shield className="size-4 text-white/40 group-hover:text-emerald-400 transition-colors" />
                             </div>
-                            <h2 className={`text-lg font-semibold tracking-tight mb-2 ${isDark ? "text-white" : "text-black"}`}>Privacy Policy</h2>
+                            <h2 className={`text-lg font-semibold tracking-tight mb-2 ${isDark ? "text-white" : "text-black"}`}>隐私政策</h2>
                             <p className={`text-xs leading-relaxed ${isDark ? "text-[#8a8f98]" : "text-[#666666]"}`}>个人信息收集范围、不存卡号承诺、不出售用户隐私承诺、主流模型推理隔离与 72h 泄露通报。</p>
                         </div>
                         <div className="flex items-center gap-1 text-xs font-mono text-emerald-400 pt-6 mt-6 border-t border-white/5">
-                            <span>Read Policy</span>
+                            <span>阅读政策</span>
                             <ArrowRight className="size-3 group-hover:translate-x-1 transition-transform" />
                         </div>
                     </Link>
@@ -129,14 +129,14 @@ export default function LegalHubPage() {
                     >
                         <div>
                             <div className="flex items-center justify-between mb-4">
-                                <span className="font-mono text-[11px] uppercase tracking-wider text-amber-400 font-semibold">AUP · CONTENT RULES</span>
+                                <span className="font-mono text-[11px] uppercase tracking-wider text-amber-400 font-semibold">AUP · 内容规则</span>
                                 <Shield className="size-4 text-white/40 group-hover:text-amber-400 transition-colors" />
                             </div>
-                            <h2 className={`text-lg font-semibold tracking-tight mb-2 ${isDark ? "text-white" : "text-black"}`}>Acceptable Use (AUP)</h2>
+                            <h2 className={`text-lg font-semibold tracking-tight mb-2 ${isDark ? "text-white" : "text-black"}`}>可接受使用政策（AUP）</h2>
                             <p className={`text-xs leading-relaxed ${isDark ? "text-[#8a8f98]" : "text-[#666666]"}`}>六大禁止类别（色情/暴力/仇恨/CSAM/深伪冒充/侵权）、真人肖像授权要求、举报时效与处置。</p>
                         </div>
                         <div className="flex items-center gap-1 text-xs font-mono text-amber-400 pt-6 mt-6 border-t border-white/5">
-                            <span>Read Policy</span>
+                            <span>阅读政策</span>
                             <ArrowRight className="size-3 group-hover:translate-x-1 transition-transform" />
                         </div>
                     </Link>

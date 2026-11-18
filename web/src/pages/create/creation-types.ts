@@ -1,7 +1,6 @@
 import type { GenerationRetryContext } from "@/lib/canvas/canvas-project-generation";
 import type { GenerationTask, TaskStatus } from "@/services/api/task-center";
 import { formatVideoResolutionLabel as videoResolutionLabel, VIDEO_RESOLUTION_OPTIONS } from "@/lib/video-generation-options";
-import { imageQualityDescription, imageQualityLabel } from "@/lib/image-quality";
 import type { CreationAttachment, CreationMode } from "./creation-assets";
 import type { CreationReference } from "./creation-references";
 import { currentLocale, translate } from "@/i18n";
@@ -101,7 +100,6 @@ export const ratioOptions = [
         },
     },
 ];
-export const qualityOptions = [...["auto", "low", "medium", "high", "xhigh", "max", "1k", "2k", "4k"].map((value) => ({ value, label: imageQualityLabel(value), description: imageQualityDescription(value) }))];
 export const resolutionOptions = VIDEO_RESOLUTION_OPTIONS.map((value) => ({ value: String(value), label: videoResolutionLabel(value) }));
 export const countOptions = ["1", "2", "3", "4"];
 export const conversationTimeFormatter = new Intl.DateTimeFormat(currentLocale(), { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit", hour12: false });

@@ -9,6 +9,24 @@ const html = readFileSync(new URL("../public/pricing.html", import.meta.url), "u
 const script = readFileSync(new URL("../public/pricing-i18n.js", import.meta.url), "utf8");
 
 describe("standalone pricing native languages", () => {
+    test("a first visit uses English even with a Chinese browser preference", async () => {
+        const window = new Window({ url: "https://example.com/pricing.html" });
+        try {
+            window.document.write(html);
+            runInNewContext(script, {
+                document: window.document,
+                NodeFilter: window.NodeFilter,
+                localStorage: window.localStorage,
+                URLSearchParams,
+                location: window.location,
+                navigator: { languages: ["zh-CN"] },
+            });
+            expect(window.document.documentElement.lang).toBe("en-US");
+            expect(window.document.title).toContain("Pricing");
+        } finally {
+            await window.happyDOM.close();
+        }
+    });
     test("deep links follow language changes even when storage is restricted", async () => {
         const window = new Window({ url: "https://example.com/pricing.html?lang=fr-FR&from=footer#models" });
         try {

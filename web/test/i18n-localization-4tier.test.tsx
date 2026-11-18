@@ -195,8 +195,8 @@ describe("SupDance Localization 4-Tier Test Suite", () => {
                 return createElement("span", null, `${t("auth.login")}/${t("auth.password")}`);
             };
             const html = renderToStaticMarkup(createElement(Probe));
-            expect(html).toContain("登录");
-            expect(html).toContain("密码");
+            expect(html).toContain("Log In");
+            expect(html).toContain("Password");
         });
 
         test("source text translation preserves leading and trailing whitespace", () => {

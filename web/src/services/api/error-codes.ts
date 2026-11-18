@@ -1,5 +1,4 @@
 import { currentLocale, translate } from "@/i18n";
-import { DEFAULT_LOCALE } from "@/i18n/locales";
 
 /**
  * 后端稳定错误原因（backend/internal/kernel/error_codes.go 的 ErrorReason）。
@@ -41,6 +40,6 @@ const LOCALIZED_REASONS = new Set<string>(["unauthorized", "forbidden", "not_fou
 
 /** 返回面向用户的错误文案：中文界面保留后端原文，其他语言对明确的 reason 使用本地化文案。 */
 export function localizedApiErrorMessage(reason: string | undefined, fallback: string): string {
-    if (!reason || currentLocale() === DEFAULT_LOCALE || !LOCALIZED_REASONS.has(reason)) return fallback;
+    if (!reason || currentLocale() === "zh-CN" || !LOCALIZED_REASONS.has(reason)) return fallback;
     return translate(`errors.reason.${reason}`);
 }

@@ -1,3 +1,4 @@
+import { interfaceText } from "@/i18n/interface-text";
 import { Fragment, useEffect, useRef, useState, type CSSProperties, type RefObject } from "react";
 import { Popover } from "antd";
 import { Link } from "react-router";
@@ -159,8 +160,8 @@ export function CanvasShortDramaEmptyState({
                     <textarea
                         value={prompt}
                         rows={2}
-                        placeholder="描述你想拍的故事…"
-                        aria-label="描述你想拍的故事"
+                        placeholder={interfaceText("描述你想拍的故事…")}
+                        aria-label={interfaceText("描述你想拍的故事")}
                         onChange={(event) => setPrompt(event.target.value)}
                         onKeyDown={(event) => {
                             if (event.key === "Enter" && !event.shiftKey && !event.nativeEvent.isComposing) {
