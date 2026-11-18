@@ -2,7 +2,6 @@ import { TopbarLanguageSwitcher, useI18n } from "@/supdance/plugins/i18n";
 import { useEffect, useState, type ReactNode } from "react";
 import { ArrowDown, ArrowUp } from "lucide-react";
 import { useLocaleStore } from "@/stores/use-locale-store";
-import { matchAppLocale } from "@/i18n/locales";
 import { useLocation } from "react-router";
 
 import { useThemeStore } from "@/stores/use-theme-store";
@@ -68,12 +67,6 @@ export function LinearLegalPage({ docMap, currentSlug, children }: LinearLegalPa
             document.body.classList.remove("is-legal-doc-page");
         };
     }, []);
-
-    useEffect(() => {
-        const requested = new URLSearchParams(location.search).get("lang");
-        const next = matchAppLocale(requested);
-        if (next) useLocaleStore.getState().setLocale(next);
-    }, [location.search]);
 
     // 处理 hash 锚点滚动（如 #content-standards, #enforcement-actions, #reporting）
     useEffect(() => {

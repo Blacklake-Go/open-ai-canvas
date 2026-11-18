@@ -54,7 +54,7 @@ import { preserveVideoSettings as normalizeVideoValue } from "@/lib/media-settin
 import { mediaSettingIssues } from "@/lib/media-settings";
 import { MediaSettingsNotice } from "@/components/media-settings-notice";
 import { mergedImageCapabilityConfig, type ModelRequirements } from "@/lib/model-selection";
-import { imageQualityLabel } from "@/lib/image-quality";
+import { imageQualityDescription, imageQualityLabel } from "@/lib/image-quality";
 import { modelQuoteDescription, modelQuoteRequest } from "@/lib/model-pricing";
 import { quoteModel, type LogicalModelQuote } from "@/services/api/logical-models";
 import { modelOptionName, resolveModelChannel, type AiConfig } from "@/stores/use-config-store";
@@ -68,7 +68,7 @@ import { useGenerationBatchLimit, batchQuoteTotal } from "@/lib/generation-batch
 import type { PromptOptimizerProvider } from "@/lib/plugins/plugin-types";
 import { type CreationReference } from "./creation-references";
 import { creationAttachmentKind, type CreationAttachment, type CreationMode } from "./creation-assets";
-import { countOptions, qualityOptions, resolutionOptions, type CreationShotRailEntry } from "./creation-types";
+import { countOptions, resolutionOptions, type CreationShotRailEntry } from "./creation-types";
 import { creationMessageNeedsResultSync } from "./creation-conversations";
 import "./creation-product.css";
 import "./creation-scrollbars.css";
@@ -990,8 +990,8 @@ function GenerationSettingsMenu(props: ComposerProps) {
     const [open, setOpen] = useState(false);
     // 张数上限与发送时的实际单数保持一致。
     const imageBatchLimit = Math.min(15, useGenerationBatchLimit());
-    const activeQualityOptions = props.imageProfile.quality.values.map((value) => qualityOptions.find((item) => item.value === value) || { value, label: imageQualityLabel(value), description: "模型支持的质量/分辨率" });
-    const qualityLabel = activeQualityOptions.find((item) => item.value === props.quality)?.label || qualityOptions.find((item) => item.value === props.quality)?.label || props.quality || "自动";
+    const activeQualityOptions = props.imageProfile.quality.values.map((value) => ({ value, label: imageQualityLabel(value), description: imageQualityDescription(value) }));
+    const qualityLabel = imageQualityLabel(props.quality || "auto");
     // 尺寸/比例/分辨率选项取同显示名分组内全部模型的并集，路由模型只决定发送参数。
     const mergedProfile = mergedImageCapabilityConfig(props.config, props.model || props.config.imageModel);
     const usesImageResolutionPicker = props.mode === "image" && supportsImageResolutionPresets(mergedProfile.size);

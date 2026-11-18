@@ -119,7 +119,7 @@ func entry(key, ns, zhCN, enUS, zhTW, jaJP, koKR, esES, frFR, deDE, desc string)
 // BuiltinEntries returns the canonical built-in dictionary covering all 6 languages.
 // BuiltinEntries 由 web/scripts/i18n-sync-backend.mjs 从前端词典生成，不要手工编辑词条体。
 func BuiltinEntries() []Entry {
-	entries := make([]Entry, 0, 19489)
+	entries := make([]Entry, 0, 19507)
 	entries = append(entries, builtinEntryBatch0()...)
 	entries = append(entries, builtinEntryBatch1()...)
 	entries = append(entries, builtinEntryBatch2()...)
@@ -2913,7 +2913,7 @@ func builtinEntryBatch10() []Entry {
 		entry("inspiration.count_total", "inspiration", "共 {count} 条", "{count} items", "共 {count} 條", "合計 {count} 件", "총 {count}개", "Total {count}", "{count} articles", "{count} Artikel", "灵感总数统计标签"),
 		entry("inspiration.filter_by_source", "inspiration", "按来源筛选灵感", "Filter inspirations by source", "按來源篩選靈感", "ソースでインスピレーションを絞り込む", "출처별 영감 필터링", "Filtrar inspiraciones por fuente", "Filtrer les inspirations par source", "Inspirationen nach Quelle filtern", "按来源筛选无障碍标签"),
 		entry("inspiration.filter_by_category", "inspiration", "按分类筛选灵感", "Filter inspirations by category", "按分類篩選靈感", "カテゴリでインスピレーションを絞り込む", "카테고리별 영감 필터링", "Filtrar inspiraciones por categoría", "Filtrer les inspirations par catégorie", "Inspirationen nach Kategorie filtern", "按分类筛选无障碍标签"),
-		// ==================== upstreamUI: 上游原生界面 (13977) ====================
+		// ==================== upstreamUI: 上游原生界面 (13995) ====================
 		entry("upstream.upstreamSync.instrumentalOn", "upstreamUI", "纯音乐模式已开启（无声乐演唱）", "Instrumental mode is on (no vocals)", "純音樂模式已開啟（無聲樂演唱）", "インストゥルメンタルが有効です（歌唱なし）", "연주곡 모드가 켜져 있습니다(보컬 없음)", "El modo instrumental está activado (sin voces)", "Mode instrumental activé (sans voix)", "Instrumentalmodus ist aktiv (ohne Gesang)", "translation: upstreamSync.instrumentalOn"),
 		entry("upstream.upstreamSync.instrumentalEnable", "upstreamUI", "开启纯音乐模式（无声乐演唱）", "Enable instrumental mode (no vocals)", "開啟純音樂模式（無聲樂演唱）", "インストゥルメンタルを有効にする（歌唱なし）", "연주곡 모드 켜기(보컬 없음)", "Habilitar modo instrumental (sin voces)", "Activer le mode instrumental (sans voix)", "Instrumentalmodus aktivieren (ohne Gesang)", "translation: upstreamSync.instrumentalEnable"),
 		entry("upstream.upstreamSync.instrumental", "upstreamUI", "纯音乐", "Instrumental", "純音樂", "歌唱なし", "연주곡", "Instrumental", "Instrumental", "Instrumental", "translation: upstreamSync.instrumental"),
@@ -17161,12 +17161,30 @@ func builtinEntryBatch64() []Entry {
 		entry("upstream.managedUi.835171a5", "upstreamUI", "输入消息，或点击实时对话按钮用语音输入...", "Type a message or select Live conversation to use your voice…", "輸入訊息，或點擊即時對話按鈕使用語音輸入…", "メッセージを入力するか、リアルタイム会話を選んで音声で入力してください…", "메시지를 입력하거나 실시간 대화 버튼을 눌러 음성으로 입력하세요…", "Escribe un mensaje o selecciona Conversación en directo para usar la voz…", "Écrivez un message ou sélectionnez Conversation en direct pour parler…", "Nachricht eingeben oder für die Spracheingabe Live-Gespräch auswählen…", "translation: managedUi.835171a5"),
 		entry("upstream.managedUi.5dcb6a1e", "upstreamUI", "正在加载绘图编辑器", "Loading the drawing editor", "正在載入繪圖編輯器", "描画エディターを読み込んでいます", "드로잉 편집기를 불러오는 중", "Cargando el editor de dibujo", "Chargement de l’éditeur de dessin", "Zeicheneditor wird geladen", "translation: managedUi.5dcb6a1e"),
 		entry("upstream.managedUi.4f47d558", "upstreamUI", "正在加载 3D 预演台", "Loading 3D previs", "正在載入 3D 預演台", "3D プリビズを読み込んでいます", "3D 프리비즈를 불러오는 중", "Cargando la previsualización 3D", "Chargement de la prévisualisation 3D", "3D-Vorvisualisierung wird geladen", "translation: managedUi.4f47d558"),
-		// ==================== creationUI: 创作页界面 (2697) ====================
+		entry("upstream.managedUi.4bed2fc8", "upstreamUI", "超高", "Very high", "超高", "非常に高い", "매우 높음", "Muy alta", "Très élevée", "Sehr hoch", "translation: managedUi.4bed2fc8"),
 	}
 }
 
 func builtinEntryBatch65() []Entry {
 	return []Entry{
+		entry("upstream.managedUi.9f4f3345", "upstreamUI", "最高", "Maximum", "最高", "最高", "최대", "Máxima", "Maximale", "Maximal", "translation: managedUi.9f4f3345"),
+		entry("upstream.managedUi.961ed3d", "upstreamUI", "由模型决定", "Let the model decide", "由模型決定", "モデルに任せる", "모델이 결정", "Dejar que decida el modelo", "Laisser le modèle choisir", "Vom Modell bestimmen lassen", "translation: managedUi.961ed3d"),
+		entry("upstream.managedUi.c9d62ecf", "upstreamUI", "更快生成", "Faster generation", "更快生成", "生成を高速化", "더 빠르게 생성", "Generación más rápida", "Génération plus rapide", "Schnellere Generierung", "translation: managedUi.c9d62ecf"),
+		entry("upstream.managedUi.9a704d9", "upstreamUI", "均衡模式", "Balanced mode", "均衡模式", "バランスモード", "균형 모드", "Modo equilibrado", "Mode équilibré", "Ausgewogener Modus", "translation: managedUi.9a704d9"),
+		entry("upstream.managedUi.6a0d37a0", "upstreamUI", "优先速度", "Prioritize speed", "優先速度", "速度を優先", "속도 우선", "Priorizar la velocidad", "Privilégier la vitesse", "Geschwindigkeit bevorzugen", "translation: managedUi.6a0d37a0"),
+		entry("upstream.managedUi.555dca00", "upstreamUI", "优先质量", "Prioritize quality", "優先品質", "品質を優先", "품질 우선", "Priorizar la calidad", "Privilégier la qualité", "Qualität bevorzugen", "translation: managedUi.555dca00"),
+		entry("upstream.managedUi.f239b259", "upstreamUI", "优先细节", "Prioritize detail", "優先細節", "細部を優先", "세부 묘사 우선", "Priorizar el detalle", "Privilégier les détails", "Details bevorzugen", "translation: managedUi.f239b259"),
+		entry("upstream.managedUi.449eb9e1", "upstreamUI", "标准清晰度", "Standard definition", "標準清晰度", "標準解像度", "표준 해상도", "Definición estándar", "Définition standard", "Standardauflösung", "translation: managedUi.449eb9e1"),
+		entry("upstream.managedUi.e6c9e1f6", "upstreamUI", "更高清晰度", "Higher definition", "更高清晰度", "高解像度", "더 높은 해상도", "Mayor definición", "Définition supérieure", "Höhere Auflösung", "translation: managedUi.e6c9e1f6"),
+		entry("upstream.managedUi.6d19d482", "upstreamUI", "最高清晰度", "Highest definition", "最高清晰度", "最高解像度", "최고 해상도", "Máxima definición", "Définition maximale", "Höchste Auflösung", "translation: managedUi.6d19d482"),
+		entry("upstream.managedUi.746cb62", "upstreamUI", "模型支持的质量/分辨率", "Quality or resolution supported by the model", "模型支援的品質或解析度", "モデルが対応する画質または解像度", "모델이 지원하는 품질 또는 해상도", "Calidad o resolución compatible con el modelo", "Qualité ou résolution prise en charge par le modèle", "Vom Modell unterstützte Qualität oder Auflösung", "translation: managedUi.746cb62"),
+		entry("upstream.managedUi.4f52eeb8", "upstreamUI", "让创意成为电影故事。", "Transform Ideas into\nCinematic Stories.", "讓創意成為電影故事。", "アイデアを映画のような物語へ。", "아이디어를 영화 같은 이야기로.", "Convierte tus ideas en historias de cine.", "Transformez vos idées en récits cinématographiques.", "Verwandle deine Ideen in filmische Geschichten.", "translation: managedUi.4f52eeb8"),
+		entry("upstream.managedUi.f6aba675", "upstreamUI", "用于视频、图像和多媒体叙事的一站式 AI 创作工作台。", "An all-in-one AI creative workspace for video, image, and multimedia storytelling.", "用於影片、圖像和多媒體敘事的一站式 AI 創作工作台。", "動画、画像、マルチメディアで物語をつくる、オールインワンの AI 制作スタジオ。", "영상, 이미지, 멀티미디어 스토리텔링을 위한 올인원 AI 창작 공간입니다.", "Un espacio creativo de IA todo en uno para contar historias con vídeo, imágenes y otros medios.", "Un espace de création IA tout-en-un pour raconter des histoires en vidéo, en images et en multimédia.", "Ein KI-Kreativstudio für Geschichten mit Video, Bildern und Multimedia.", "translation: managedUi.f6aba675"),
+		entry("upstream.managedUi.e3d822cf", "upstreamUI", "自动", "Auto", "自動", "自動", "자동", "Automático", "Auto", "Automatisch", "translation: managedUi.e3d822cf"),
+		entry("upstream.managedUi.cb5f70d1", "upstreamUI", "低", "Low", "低", "低", "낮음", "Bajo", "Faible", "Niedrig", "translation: managedUi.cb5f70d1"),
+		entry("upstream.managedUi.28619638", "upstreamUI", "中", "Medium", "中", "メディア", "중간", "Medios", "médium", "Mittel", "translation: managedUi.28619638"),
+		entry("upstream.managedUi.5c1f32a7", "upstreamUI", "高", "High", "高", "高さ", "높이", "Alto", "Élevé", "Hoch", "translation: managedUi.5c1f32a7"),
+		// ==================== creationUI: 创作页界面 (2697) ====================
 		entry("creation.creation.88f4625eade235b7", "creationUI", "修改名称", "Rename", "修改名稱", "名前を変更", "이름 변경", "Cambiar nombre", "Renommer", "Umbenennen", "supdance-creation: creation.88f4625eade235b7"),
 		entry("creation.creation.1dfc5bde70de7514", "creationUI", "修改第 {value1} 集名称", "Rename episode {value1}", "修改第 {value1} 集名稱", "第{value1}話の名前を変更", "{value1}화 이름 변경", "Cambiar el nombre del episodio {value1}", "Renommer l’épisode {value1}", "Episode {value1} umbenennen", "supdance-creation: creation.1dfc5bde70de7514"),
 		entry("creation.creation.f42a1238b44a4858", "creationUI", "保存失败，请重试", "Saving failed. Please try again.", "儲存失敗，請重試", "保存に失敗しました。もう一度お試しください。", "저장하지 못했습니다. 다시 시도해 주세요.", "No se pudo guardar. Inténtalo de nuevo.", "Échec de l’enregistrement. Réessayez.", "Speichern fehlgeschlagen. Bitte erneut versuchen.", "supdance-creation: creation.f42a1238b44a4858"),
@@ -17405,6 +17423,11 @@ func builtinEntryBatch65() []Entry {
 		entry("creation.creation.88057cc032aa7744", "creationUI", "随场景变化", "changes with the scene", "隨場景變化", "はシーンに合わせて変化", "는 장면에 따라 변경됩니다.", "cambia con la escena.", "Variable selon la scène", "Je nach Szene variierend", "supdance-creation: creation.88057cc032aa7744"),
 		entry("creation.creation.78687cb4dd2e28dc", "creationUI", "信息密度", "information density", "資訊密度", "情報密度", "정보 밀도", "densidad de información", "Densité d'information", "Informationsdichte", "supdance-creation: creation.78687cb4dd2e28dc"),
 		entry("creation.creation.f61eabb178a9f6cb", "creationUI", "智能分配", "Intelligent distribution", "智慧分配", "インテリジェントな配信", "지능형 배포", "Distribución inteligente", "Répartition intelligente", "Intelligente Verteilung", "supdance-creation: creation.f61eabb178a9f6cb"),
+	}
+}
+
+func builtinEntryBatch66() []Entry {
+	return []Entry{
 		entry("creation.creation.01d7309142c781e7", "creationUI", "留白突出", "White space highlights", "留白突出", "空白のハイライト", "공백 하이라이트", "Destacados espacios en blanco", "Espaces blancs mis en valeur", "Weißräume hervorgehoben", "supdance-creation: creation.01d7309142c781e7"),
 		entry("creation.creation.89600177c25a0446", "creationUI", "均衡易读", "balanced and easy to read", "均衡易讀", "バランスが取れていて読みやすい", "균형이 잡혀 있고 읽기 쉽습니다.", "equilibrado y fácil de leer", "Équilibré et lisible", "Ausgewogen und lesbar", "supdance-creation: creation.89600177c25a0446"),
 		entry("creation.creation.6bced7642b1c54e9", "creationUI", "详解丰富", "has rich detailed explanations", "詳解豐富", "には詳細な説明が豊富にあります", "에는 풍부한 자세한 설명이 있습니다.", "tiene ricas explicaciones detalladas.", "Explications détaillées", "Ausführliche Erläuterungen", "supdance-creation: creation.6bced7642b1c54e9"),
@@ -17423,11 +17446,6 @@ func builtinEntryBatch65() []Entry {
 		entry("creation.creation.33d989578c4e51f3", "creationUI", "详情页必须先由 Agent 完成性能、场景与逐张文案策划", "The details page must first be completed by the Agent to complete the performance, scene and copywriting planning one by one.", "詳情頁必須先由 Agent 完成效能、場景與逐張文案策劃", "エージェントは、パフォーマンス、シーン、コピーライティングの計画を 1 つずつ完了するために、まず詳細ページに入力する必要があります。", "공연, 장면 및 카피라이팅 계획을 하나씩 완료하려면 에이전트가 먼저 세부 정보 페이지를 완료해야 합니다.", "El Agente primero debe completar la página de detalles para completar la planificación de la actuación, la escena y la redacción uno por uno.", "La page de détails doit d'abord être planifiée par l'Agent : performances, scènes et textes image par image", "Die Detailseite muss zuerst vom Agenten geplant werden: Leistung, Szenen und Texte Bild für Bild", "supdance-creation: creation.33d989578c4e51f3"),
 		entry("creation.creation.0cd904331acbfe30", "creationUI", "请填写商品名称并上传商品主图", "Please fill in the product name and upload the main image of the product", "請填寫商品名稱並上傳商品主圖", "製品名を入力し、製品のメイン画像をアップロードしてください", "상품명을 입력하시고, 상품 메인 이미지를 업로드해주세요.", "Complete el nombre del producto y cargue la imagen principal del producto.", "Veuillez saisir le nom du produit et importer l'image principale du produit", "Bitte Produktnamen eingeben und Produkt-Hauptbild hochladen", "supdance-creation: creation.0cd904331acbfe30"),
 		entry("creation.creation.eed141b39a58a213", "creationUI", "请填写真实 SKU 名称及整数数量", "Please fill in the real SKU name and integer quantity", "請填寫真實 SKU 名稱及整數數量", "実際の SKU 名と整数の数量を入力してください", "실제 SKU 이름과 정수 수량을 입력하세요.", "Complete el nombre real del SKU y la cantidad entera", "Veuillez saisir un nom de SKU réel et une quantité entière", "Bitte echten SKU-Namen und ganzzahlige Menge eingeben", "supdance-creation: creation.eed141b39a58a213"),
-	}
-}
-
-func builtinEntryBatch66() []Entry {
-	return []Entry{
 		entry("creation.creation.54fab80b8fd5778b", "creationUI", "生成数量须为 1–30 张，并与 SKU 数量一致", "The generated quantity must be 1–30 sheets and consistent with the SKU quantity", "產生數量須為 1–30 張，並與 SKU 數量一致", "生成される数量は 1 ～ 30 枚であり、SKU 数量と一致している必要があります", "생성된 수량은 1~30장이어야 하며 SKU 수량과 일치해야 합니다.", "La cantidad generada debe ser de 1 a 30 hojas y coherente con la cantidad de SKU", "Le nombre à générer doit être entre 1 et 30 images et correspondre à la quantité de SKU", "Die Generierungsanzahl muss 1–30 Bilder betragen und der SKU-Menge entsprechen", "supdance-creation: creation.54fab80b8fd5778b"),
 		entry("creation.creation.c0391ede55c89463", "creationUI", "第 {value1} 个风格名称", "{value1} style name", "第 {value1} 款式名稱", "{value1} スタイル名", "{value1} 스타일 이름", "{value1} nombre de estilo", "Nom du style {value1}", "Stilname {value1}", "supdance-creation: creation.c0391ede55c89463"),
 		entry("creation.creation.cc6cd8c0abc2d827", "creationUI", "风格名称，例如：电音派对", "Style name, for example: Electronic Music Party", "風格名稱，例如：電音派對", "スタイル名、例: 電子音楽パーティー", "스타일 이름(예: Electronic Music Party)", "Nombre del estilo, por ejemplo: Electronic Music Party", "Nom du style, exemple : fête electro", "Stilname, z. B.: Elektro-Party", "supdance-creation: creation.cc6cd8c0abc2d827"),
@@ -17666,6 +17684,11 @@ func builtinEntryBatch66() []Entry {
 		entry("creation.creation.7dfb4e164ef4a436", "creationUI", "官方资料 {value1}", "Official information {value1}", "官方資料 {value1}", "公式情報 {value1}", "공식 정보 {value1}", "Información oficial {value1}", "Documentation officielle {value1}", "Offizielle Quellen {value1}", "supdance-creation: creation.7dfb4e164ef4a436"),
 		entry("creation.creation.c4e92986e80ab5b9", "creationUI", "通用风险词示例：", "Examples of common risk words:", "通用風險字詞範例：", "一般的なリスクワードの例:", "일반적인 위험 단어의 예:", "Ejemplos de palabras de riesgo comunes:", "Exemples de termes à risque génériques :", "Beispiele für allgemeine Risikobegriffe:", "supdance-creation: creation.c4e92986e80ab5b9"),
 		entry("creation.creation.508da44c129fe3b8", "creationUI", "（非完整官方禁词表）。", "(Incomplete official banned word list).", "（非完整官方禁詞表）。", "(不完全な公式禁止用語リスト)。", "(불완전한 공식 금지어 목록).", "(Lista oficial incompleta de palabras prohibidas).", "(liste officielle des mots interdits non exhaustive).", "(ke vollständige offizielle Liste verbotener Wörter).", "supdance-creation: creation.508da44c129fe3b8"),
+	}
+}
+
+func builtinEntryBatch67() []Entry {
+	return []Entry{
 		entry("creation.creation.66064880566620cf", "creationUI", "当前：", "Current:", "目前：", "現在:", "현재:", "Actual:", "Actuellement :", "Aktuell:", "supdance-creation: creation.66064880566620cf"),
 		entry("creation.settings.channel_complete_btn", "creationUI", "完成", "Done", "完成", "完了", "완료", "Listo", "Terminé", "Abgeschlossen", "supdance-creation: settings.channel_complete_btn"),
 		entry("creation.creation.d97d22cf37549b2a", "creationUI", "物料分类", "Material classification", "物料分類", "材質分類", "재료 분류", "Clasificación de materiales", "Catégorie d'assets", "Asset-Kategorie", "supdance-creation: creation.d97d22cf37549b2a"),
@@ -17684,11 +17707,6 @@ func builtinEntryBatch66() []Entry {
 		entry("creation.creation.ea639db0d43573cf", "creationUI", "将{value1}减少到 {value2} 张。", "reduces {value1} to {value2}.", "將{value1}減少到 {value2} 張。", "は、{value1} を {value2} に削減します。", "는 {value1}를 {value2}로 줄입니다.", "reduce {value1} a {value2}.", "Réduire {value1} à {value2} images.", "{value1} auf {value2} Bilder reduzieren.", "supdance-creation: creation.ea639db0d43573cf"),
 		entry("creation.creation.08fbffbf79d83f66", "creationUI", "{value1}减少一张", "{value1} One less", "{value1}減少一張", "{value1} 1 つ減りました", "{value1} 하나 적음", "{value1} Uno menos", "Réduire {value1} d'une image", "{value1} um ein Bild verringern", "supdance-creation: creation.08fbffbf79d83f66"),
 		entry("creation.creation.d603272eb97ab3b5", "creationUI", "已达到 15 张上限。", "The limit of 15 has been reached.", "已達到 15 張上限。", "制限の 15 に達しました。", "한계인 15개에 도달했습니다.", "Se ha alcanzado el límite de 15.", "Limite de 15 images atteinte.", "Obergrenze von 15 Bildern erreicht.", "supdance-creation: creation.d603272eb97ab3b5"),
-	}
-}
-
-func builtinEntryBatch67() []Entry {
-	return []Entry{
 		entry("creation.creation.a648bcc83a3978eb", "creationUI", "为{value1}增加 1 张。", "adds 1 picture to {value1}.", "為{value1}增加 1 張。", "は {value1} に写真を 1 枚追加します。", "는 {value1}에 사진 1장을 추가합니다.", "agrega 1 imagen a {value1}.", "Ajouter 1 image à {value1}.", "1 Bild zu {value1} hinzufügen.", "supdance-creation: creation.a648bcc83a3978eb"),
 		entry("creation.creation.f252917c3ef3ccf7", "creationUI", "{value1}增加一张", "{value1} adds one", "{value1}增加一張", "{value1} は 1 つ追加します", "{value1} 하나 추가", "{value1} agrega uno", "Ajouter une image à {value1}", "{value1} um ein Bild erhöhen", "supdance-creation: creation.f252917c3ef3ccf7"),
 		entry("creation.creation.9b76036e2e95f9f5", "creationUI", "{value1}自动比例 {value2}", "{value1} Automatic proportion {value2}", "{value1}自動比例 {value2}", "{value1} 自動比例 {value2}", "{value1} 자동 비율 {value2}", "{value1} Proporción automática {value2}", "Ratio automatique de {value1} {value2}", "Automatisches Verhältnis von {value1} {value2}", "supdance-creation: creation.9b76036e2e95f9f5"),
@@ -17927,6 +17945,11 @@ func builtinEntryBatch67() []Entry {
 		entry("creation.creation.95e9bfe39a947d44", "creationUI", "编辑选中文字", "Edit selected text", "編輯選取文字", "選択したテキストを編集する", "선택한 텍스트 편집", "Editar texto seleccionado", "Modifier le texte sélectionné", "Ausgewählten Text bearbeiten", "supdance-creation: creation.95e9bfe39a947d44"),
 		entry("creation.creation.c5f10bfa22114c2c", "creationUI", "删除选中元素", "Delete selected element", "刪除選取元素", "選択した要素を削除します", "선택한 요소 삭제", "Eliminar elemento seleccionado", "Supprimer l'élément sélectionné", "Ausgewähltes Element löschen", "supdance-creation: creation.c5f10bfa22114c2c"),
 		entry("creation.creation.21480a7674aedd3c", "creationUI", "画布图层", "canvas layer", "畫布圖層", "キャンバス レイヤー", "캔버스 레이어", "capa de lienzo", "Calques du canevas", "Canvas-Ebenen", "supdance-creation: creation.21480a7674aedd3c"),
+	}
+}
+
+func builtinEntryBatch68() []Entry {
+	return []Entry{
 		entry("creation.canvas.layers", "creationUI", "图层", "Layers", "圖層", "レイヤー", "레이어", "Capas", "Calques", "Ebenen", "supdance-creation: canvas.layers"),
 		entry("creation.creation.6b9f0807d5672769", "creationUI", "共 {value1} 张", "total {value1} sheets", "共 {value1} 張", "合計 {value1} 枚", "총 {value1} 시트", "total {value1} hojas", "{value1} au total", "{value1} insgesamt", "supdance-creation: creation.6b9f0807d5672769"),
 		entry("creation.creation.3a5040b68abf75f9", "creationUI", "全选", "Select all\nThe generated picture of", "全選", "すべて選択", "모두 선택", "Seleccionar todo\nLa imagen generada de", "Tout sélectionner", "Alle auswählen", "supdance-creation: creation.3a5040b68abf75f9"),
@@ -17945,11 +17968,6 @@ func builtinEntryBatch67() []Entry {
 		entry("creation.creation.4c36ef0f80dc7c37", "creationUI", "AI 超清", "AI Ultra HD", "AI 超清", "AI ウルトラ HD", "AI 울트라 HD", "IA Ultra HD", "AI Ultra HD", "KI Ultra HD", "supdance-creation: creation.4c36ef0f80dc7c37"),
 		entry("creation.creation.fe067a88a36d3644", "creationUI", "编辑文字", "Edit text", "編輯文字", "テキストを編集する", "텍스트 편집", "Editar texto", "Modifier le texte", "Text bearbeiten", "supdance-creation: creation.fe067a88a36d3644"),
 		entry("creation.creation.152412411eab7373", "creationUI", "爆款图片复刻", "hot model picture replica", "爆款圖片復刻", "ホットモデル画像レプリカ", "핫 모델 사진 복제", "réplica de imagen de modelo caliente", "Reproduire des images virales", "Vireale Bilder nachbilden", "supdance-creation: creation.152412411eab7373"),
-	}
-}
-
-func builtinEntryBatch68() []Entry {
-	return []Entry{
 		entry("creation.creation.22845f845f147940", "creationUI", "单张图片 AI 编辑", "Single picture AI editing", "單張圖片 AI 編輯", "一枚絵AI編集", "단일 사진 AI 편집", "Edición AI de una sola imagen", "Édition AI d'une seule image", "KI-Bearbeitung eines einzelnen Bildes", "supdance-creation: creation.22845f845f147940"),
 		entry("creation.creation.e52afda12c21ff0a", "creationUI", "重新编辑这张图片", "Re-edit this picture", "重新編輯這張圖片", "この画像を再編集します", "이 사진을 다시 편집하세요", "Reedita esta imagen", "Rééditer cette image", "Dieses Bild erneut bearbeiten", "supdance-creation: creation.e52afda12c21ff0a"),
 		entry("creation.creation.08d672e6df168b30", "creationUI", "关闭图片编辑", "Close picture editing", "關閉圖片編輯", "画像編集を閉じる", "사진 편집 닫기", "Cerrar edición de imagen", "Fermer l'édition d'image", "Bildbearbeitung schließen", "supdance-creation: creation.08d672e6df168b30"),
@@ -18188,6 +18206,11 @@ func builtinEntryBatch68() []Entry {
 		entry("creation.creation.409326aa20eddd2d", "creationUI", "选择技能里的规范文档，选中资产卡相关段落导入；导入后仍可编辑。", "Select the standard document in the skill and select the relevant paragraphs of the asset card to import; it can still be edited after importing.", "選擇技能裡的規格文檔，選取資產卡相關段落匯入；匯入後仍可編輯。", "スキル内の標準ドキュメントを選択し、インポートするアセット カードの関連段落を選択します。インポート後も編集できます。", "스킬에서 표준 문서를 선택하고 가져올 자산 카드의 관련 단락을 선택합니다. 가져온 후에도 편집할 수 있습니다.", "Seleccione el documento estándar en la habilidad y seleccione los párrafos relevantes de la tarjeta de activos para importar; aún se puede editar después de importarlo.", "Choisissez le document de spécification dans la compétence, sélectionnez les paragraphes liés à la carte d'asset pour les importer ; ils restent modifiables après l'importation.", "Wählen Sie das Spezifikationsdokument in der Fähigkeit aus, markieren Sie die Absätze zur Asset-Karte und importieren Sie diese; nach dem Import bleiben sie bearbeitbar.", "supdance-creation: creation.409326aa20eddd2d"),
 		entry("creation.creation.a255b288069164f8", "creationUI", "搜索已添加的技能", "Search for added skills", "搜尋已新增的技能", "追加されたスキルを検索", "추가 스킬 검색", "Búsqueda de habilidades agregadas", "Rechercher les compétences ajoutées", "Hinzugefügte Skills durchsuchen", "supdance-creation: creation.a255b288069164f8"),
 		entry("creation.creation.7288cc3f8983127a", "creationUI", "还没有添加技能，可在「技能」页面添加后再导入。", "has not added skills yet. You can add them on the \"Skills\" page and then import them.", "還沒有新增技能，可在「技能」頁面新增後再匯入。", "はまだスキルを追加していません。 「スキル」ページで追加してインポートできます。", "는 아직 스킬을 추가하지 않았습니다. \"스킬\" 페이지에서 추가한 후 가져올 수 있습니다.", "aún no ha agregado habilidades. Puede agregarlos en la página \"Habilidades\" y luego importarlos.", "Aucune compétence ajoutée pour l'instant. Vous pouvez en ajouter sur la page « Compétences » avant de les importer.", "Noch keine Skills hinzugefügt. Sie können welche auf der Seite „Skills“ hinzufügen und anschließend importieren.", "supdance-creation: creation.7288cc3f8983127a"),
+	}
+}
+
+func builtinEntryBatch69() []Entry {
+	return []Entry{
 		entry("creation.creation.439a89e75e6605d2", "creationUI", "{value1} · {value2} 份文本", "{value1} · {value2} texts", "{value1} · {value2} 份文本", "{value1} · {value2} テキスト", "{value1} · {value2} 텍스트", "{value1} · {value2} textos", "{value1} · {value2} textes", "{value1} · {value2} Texte", "supdance-creation: creation.439a89e75e6605d2"),
 		entry("creation.creation.39932f24fe11a6ba", "creationUI", "文件", "file", "文件", "ファイル", "파일", "archivo", "Fichier", "Datei", "supdance-creation: creation.39932f24fe11a6ba"),
 		entry("creation.creation.e8c1f52b2855e316", "creationUI", "这个技能没有可导入的文本文件。", "There is no importable text file for this skill.", "這個技能沒有可匯入的文字檔。", "このスキルにはインポート可能なテキスト ファイルがありません。", "이 스킬에 대해 가져올 수 있는 텍스트 파일이 없습니다.", "No hay ningún archivo de texto importable para esta habilidad.", "Cette compétence ne contient aucun fichier texte importable.", "Dieser Skill enthält keine importierbaren Textdateien.", "supdance-creation: creation.e8c1f52b2855e316"),
@@ -18206,11 +18229,6 @@ func builtinEntryBatch68() []Entry {
 		entry("creation.creation.ddcc6630e01708fa", "creationUI", "选择 {value1}", "Select {value1}", "選擇 {value1}", "{value1}を選択してください", "{value1} 선택", "Seleccione {value1}", "Sélectionner {value1}", "{value1} auswählen", "supdance-creation: creation.ddcc6630e01708fa"),
 		entry("creation.creation.c4775d30ee58ff0b", "creationUI", "竖屏 9:16", "Vertical 9:16", "垂直螢幕 9:16", "垂直 9:16", "세로 9:16", "Vertical 9:16", "Portrait 9:16", "Hochformat 9:16", "supdance-creation: creation.c4775d30ee58ff0b"),
 		entry("creation.creation.41dd299714f0276f", "creationUI", "横屏 16:9", "Horizontal 16:9", "橫屏 16:9", "水平 16:9", "가로 16:9", "Horizontal 16:9", "Paysage 16:9", "Querformat 16:9", "supdance-creation: creation.41dd299714f0276f"),
-	}
-}
-
-func builtinEntryBatch69() []Entry {
-	return []Entry{
 		entry("creation.creation.18db531f43476a79", "creationUI", "方形 1:1", "Square 1:1", "方形 1:1", "正方形 1:1", "정사각형 1:1", "Cuadrado 1:1", "Carré 1:1", "Quadratisch 1:1", "supdance-creation: creation.18db531f43476a79"),
 		entry("creation.creation.7c772029264fcddd", "creationUI", "先看样片，满意后全剧自动", "Watch the sample first, and then the whole drama will start automatically if you are satisfied", "先看樣片，滿意後全劇自動", "最初にサンプルを見て、満足したらドラマ全体が自動的に始まります", "샘플을 먼저 시청하시고, 만족하시면 자동으로 전체 드라마가 시작됩니다.", "Primero mira la muestra y luego todo el drama comenzará automáticamente si estás satisfecho.", "Voyez d'abord un extrait, puis toute la série est générée automatiquement une fois que vous êtes satisfait", "Zuerst eine Probe ansehen, nach Ihrer Zufriedenheit läuft die gesamte Serie automatisch", "supdance-creation: creation.7c772029264fcddd"),
 		entry("creation.creation.ea1962df55b41678", "creationUI", "先做完第 1 集成片，请你确认一次画风、角色和声线，之后所有集自动跑到成片。", "Finish the first episode first. Please confirm the style, characters and voice lines. After that, all episodes will be automatically uploaded to the final episode.", "先做第 1 整合片，請你確認一次畫風、角色和聲線，之後所有集自動跑到成片。", "まず最初のエピソードを終了してください。作風やキャラクター、セリフなどをご確認ください。以降、最終話まで全話自動アップロードされます。", "첫 번째 에피소드를 먼저 마무리하세요. 스타일, 캐릭터, 성우를 확인해주세요. 그 이후에는 모든 에피소드가 최종 에피소드에 자동으로 업로드됩니다.", "Termina primero el primer episodio. Confirme el estilo, los personajes y las líneas de voz. Después de eso, todos los episodios se cargarán automáticamente en el episodio final.", "Nous terminons d'abord entièrement l'épisode 1, puis vous confirmez une fois le style visuel, les personnages et les voix ; ensuite, tous les épisodes sont générés automatiquement jusqu'au produit fini.", "Zuerst wird Folge 1 komplett fertiggestellt, dann bestätigen Sie einmal Stil, Figuren und Stimmen; danach laufen alle Folgen automatisch bis zum fertigen Film.", "supdance-creation: creation.ea1962df55b41678"),
@@ -18449,6 +18467,11 @@ func builtinEntryBatch69() []Entry {
 		entry("creation.creation.4837281070584444", "creationUI", "选择技能", "Select skills", "選擇技能", "スキル選択", "스킬 선택", "Seleccionar habilidades", "Choisir une compétence", "Fähigkeit auswählen", "supdance-creation: creation.4837281070584444"),
 		entry("creation.creation.ae5b3d0bcf73b5e5", "creationUI", "还没有添加技能，可在「技能」页面添加后再选择。", "has not added skills yet. You can add them on the \"Skills\" page and then select them.", "還沒有新增技能，可在「技能」頁面新增後再選擇。", "はまだスキルを追加していません。 「スキル」ページで追加して選択できます。", "는 아직 스킬을 추가하지 않았습니다. \"스킬\" 페이지에서 추가한 후 선택할 수 있습니다.", "aún no ha agregado habilidades. Puede agregarlos en la página \"Habilidades\" y luego seleccionarlos.", "Aucune compétence n'a encore été ajoutée. Vous pouvez en ajouter sur la page « Compétences » puis la sélectionner.", "Noch keine Kompetenz hinzugefügt. Sie können eine auf der Seite « Kompetenzen » hinzufügen und dann auswählen.", "supdance-creation: creation.ae5b3d0bcf73b5e5"),
 		entry("creation.creation.ad1f89877f21e8d3", "creationUI", "这个技能没有文本文件。", "There is no text file for this skill.", "這個技能沒有文字檔。", "このスキルのテキスト ファイルはありません。", "이 스킬에 대한 텍스트 파일이 없습니다.", "No hay ningún archivo de texto para esta habilidad.", "Cette compétence n'a pas de fichier texte.", "Diese Kompetenz hat keine Textdatei.", "supdance-creation: creation.ad1f89877f21e8d3"),
+	}
+}
+
+func builtinEntryBatch70() []Entry {
+	return []Entry{
 		entry("creation.creation.ce011b8cff690136", "creationUI", " · 超过 16000 字的部分不会发送", "· Parts exceeding 16000 words will not be sent", "· 超過 16000 字的部分不會發送", "・16000ワードを超える部分は送信されません", "· 16000 단어를 초과하는 부분은 전송되지 않습니다", "· No se enviarán partes que superen las 16000 palabras", " · Au-delà de 16000 caractères, le contenu n'est pas envoyé", " · Inhalte über 16000 Zeichen hinaus werden nicht gesendet", "supdance-creation: creation.ce011b8cff690136"),
 		entry("creation.creation.8fefe0c260f21fdf", "creationUI", "使用这个文件", "Use this file", "使用這個文件", "このファイルを使用します", "이 파일을 사용하세요", "Utilice este archivo", "Utiliser ce fichier", "Diese Datei verwenden", "supdance-creation: creation.8fefe0c260f21fdf"),
 		entry("creation.creation.b1f4e6fff0a537d9", "creationUI", "资产提取", "Asset Withdrawal", "資產提取", "資産の引き出し", "자산 출금", "Retiro de Activos", "Extraction des assets", "Asset-Extraktion", "supdance-creation: creation.b1f4e6fff0a537d9"),
@@ -18467,11 +18490,6 @@ func builtinEntryBatch69() []Entry {
 		entry("creation.creation.a44f9f9fcaca2f42", "creationUI", "跟随默认", "follow default", "跟隨預設", "デフォルトに従います", "기본값을 따릅니다.", "seguir por defecto", "Suivre la valeur par défaut", "Standardwert folgen", "supdance-creation: creation.a44f9f9fcaca2f42"),
 		entry("creation.creation.d027815844af8e27", "creationUI", "文本模型", "text model", "文字模型", "テキストモデル", "텍스트 모델", "modelo de texto", "Modèle de texte", "Textmodell", "supdance-creation: creation.d027815844af8e27"),
 		entry("creation.nav.skills", "creationUI", "技能", "Skills", "技能", "スキル", "스킬", "Habilidades", "Compétences", "Fähigkeiten", "supdance-creation: nav.skills"),
-	}
-}
-
-func builtinEntryBatch70() []Entry {
-	return []Entry{
 		entry("creation.creation.e3b7e2e088c01958", "creationUI", "参考图模型与分辨率", "reference image model and resolution", "參考圖模型與分辨率", "参考画像モデルと解像度", "참조 이미지 모델 및 해상도", "modelo y resolución de imagen de referencia", "Modèle d'image de référence et résolution", "Referenzbildmodell und Auflösung", "supdance-creation: creation.e3b7e2e088c01958"),
 		entry("creation.canvas.resolution", "creationUI", "分辨率", "Resolution", "解析度", "解像度", "해상도", "Resolución", "Résolution", "Auflösung", "supdance-creation: canvas.resolution"),
 		entry("creation.creation.63db60c10986de50", "creationUI", "选好图片模型后可选", "Optional after selecting the picture model", "選好圖片模型後可選", "画像モデル選択後のオプション", "사진 모델을 선택한 후 옵션", "Opcional después de seleccionar el modelo de imagen.", "Disponible après la sélection du modèle d'image", "Nach Auswahl des Bildmodells verfügbar", "supdance-creation: creation.63db60c10986de50"),
@@ -18710,6 +18728,11 @@ func builtinEntryBatch70() []Entry {
 		entry("creation.creation.716da7a97f92262d", "creationUI", "正在重新生成参考图", "is regenerating the reference image", "正在重新產生參考圖", "は参照イメージを再生成しています", "가 참조 이미지를 재생성하는 중입니다.", "está regenerando la imagen de referencia", "Regénération des images de référence en cours", "Referenzbilder werden neu generiert", "supdance-creation: creation.716da7a97f92262d"),
 		entry("creation.creation.0c3b4cf7aa259edb", "creationUI", "操作失败", "Operation failed", "操作失敗", "操作が失敗しました", "작업 실패", "Operación fallida", "Échec de l'opération", "Vorgang fehlgeschlagen", "supdance-creation: creation.0c3b4cf7aa259edb"),
 		entry("creation.creation.164f9f2456eada1a", "creationUI", "已在使用这张图", "is already using this picture", "已在使用這張圖", "はすでにこの画像を使用しています", "는 이미 이 사진을 사용하고 있습니다.", "ya está usando esta imagen", "Cette image est déjà utilisée", "Dieses Bild wird bereits verwendet", "supdance-creation: creation.164f9f2456eada1a"),
+	}
+}
+
+func builtinEntryBatch71() []Entry {
+	return []Entry{
 		entry("creation.creation.4bc8654aed260b6f", "creationUI", "已替换并锁定形象；{value1} 个剧情段的视频需重新生成", "has replaced and locked the image; {value1} videos of plot segments need to be regenerated", "已取代並鎖定影像；{value1} 個劇情段的影片需重新生成", "はイメージを置き換えてロックしました。プロット セグメントの {value1} ビデオを再生成する必要があります", "가 이미지를 교체하고 잠갔습니다. 플롯 세그먼트의 {value1} 비디오를 재생성해야 합니다.", "ha reemplazado y bloqueado la imagen; {value1} Es necesario regenerar vídeos de segmentos de la trama.", "Apparence remplacée et verrouillée ; les vidéos de {value1} segments d'histoire doivent être regénérées", "Aussehen ersetzt und gesperrt; Videos von {value1} Storyboard-Abschnitten müssen neu generiert werden", "supdance-creation: creation.4bc8654aed260b6f"),
 		entry("creation.creation.362b68e98062540d", "creationUI", "已替换并锁定形象，之后的剧情段视频按这张图生成", "has replaced and locked the image, the subsequent plot video will be generated according to this picture", "已替換並鎖定形象，之後的劇情段影片按這張圖生成", "は画像を置き換えてロックしました。後続のプロット ビデオはこの画像に従って生成されます", "는 이미지를 대체하고 잠갔으며, 이 사진에 따라 후속 플롯 비디오가 생성됩니다.", "ha reemplazado y bloqueado la imagen, el video de la trama posterior se generará de acuerdo con esta imagen", "Apparence remplacée et verrouillée, les vidéos des segments d'histoire suivants seront générées à partir de cette image", "Aussehen ersetzt und gesperrt, Videos nachfolgender Storyboard-Abschnitte werden anhand dieses Bildes generiert", "supdance-creation: creation.362b68e98062540d"),
 		entry("creation.creation.e6ec139e5619b480", "creationUI", "放大查看{value1}的参考图", "Enlarge to view the reference picture of {value1}", "放大看{value1}的參考圖", "拡大すると{value1}の参考画像が表示されます", "{value1}의 참조 사진을 보려면 확대하세요.", "Ampliar para ver la imagen de referencia de {value1}", "Zoomer pour voir l'image de référence de {value1}", "Bild der Referenz von {value1} vergrößern", "supdance-creation: creation.e6ec139e5619b480"),
@@ -18728,11 +18751,6 @@ func builtinEntryBatch70() []Entry {
 		entry("creation.creation.d09d1f813cd82f9e", "creationUI", "少年音，坚毅，语速偏快", "Young voice, perseverance, speaking fast", "少年音，堅毅，語速偏快", "若い声、粘り強さ、早口", "젊은 목소리, 인내심, 빠른 말투", "Voz joven, perseverancia, hablar rápido.", "Voix de jeune garçon, résolue, débit rapide", "Jungenstimme, entschlossen, schnelles Tempo", "supdance-creation: creation.d09d1f813cd82f9e"),
 		entry("creation.creation.ab2d94db28b7e97c", "creationUI", "声音样本", "sound sample", "聲音範本", "サウンドサンプル", "사운드 샘플", "muestra de sonido", "Échantillon vocal", "Sprachprobe", "supdance-creation: creation.ab2d94db28b7e97c"),
 		entry("creation.creation.a0af67be8579e0a9", "creationUI", "支持参考音频的视频模型会在该角色开口的剧情段带上这段声音", "The video model that supports reference audio will bring this sound in the plot section where the character speaks.", "支援參考音訊的視訊模型會在該角色開口的劇情段帶上這段聲音", "リファレンスオーディオをサポートするビデオモデルは、キャラクターが話すプロットセクションにこのサウンドをもたらします。", "참조 오디오를 지원하는 비디오 모델은 캐릭터가 말하는 플롯 섹션에 이 사운드를 가져옵니다.", "El modelo de video que admite audio de referencia traerá este sonido en la sección de la trama donde habla el personaje.", "Les modèles vidéo prenant en charge l'audio de référence utiliseront cette voix dans les segments d'intrigue où ce personnage parle", "Videomodelle mit Referenzaudio verwenden diese Stimme in den Handlungssegmenten, in denen dieser Charakter spricht", "supdance-creation: creation.a0af67be8579e0a9"),
-	}
-}
-
-func builtinEntryBatch71() []Entry {
-	return []Entry{
 		entry("creation.creation.89c9fbb40d0616fe", "creationUI", "让引用它的剧情段视频重新生成", "allows the plot segment video that refers to it to be regenerated", "讓引用它的劇情段影片重新生成", "を使用すると、それを参照するプロット セグメント ビデオを再生成できます。", "를 사용하면 이를 참조하는 플롯 세그먼트 비디오를 다시 생성할 수 있습니다.", "permite regenerar el vídeo del segmento argumental que hace referencia al mismo", "Régénérer les segments vidéo de l'intrigue qui y font référence", "Die Handlungssegment-Videos, die darauf verweisen, neu generieren", "supdance-creation: creation.89c9fbb40d0616fe"),
 		entry("creation.creation.930589baef623377", "creationUI", "{value1} 集 · {value2} 段", "{value1} set · {value2} segment", "{value1} 集 · {value2} 段", "{value1}セット・{value2}セグメント", "{value1} 세트 · {value2} 세그먼트", "{value1} conjunto · {value2} segmento", "{value1} épisodes · {value2} segments", "{value1} Folgen · {value2} Segmente", "supdance-creation: creation.930589baef623377"),
 		entry("creation.creation.8d6347cdac37b628", "creationUI", "保存设定", "Save settings", "儲存設定", "設定の保存", "설정 저장", "Guardar configuración", "Enregistrer les réglages", "Einstellungen speichern", "supdance-creation: creation.8d6347cdac37b628"),
@@ -18971,6 +18989,11 @@ func builtinEntryBatch71() []Entry {
 		entry("creation.creation.0ac45e5afa719ca6", "creationUI", "说话人", "speaker", "說話人", "スピーカー", "스피커", "altavoz", "Interlocuteur", "Sprecher", "supdance-creation: creation.0ac45e5afa719ca6"),
 		entry("creation.projects.narration", "creationUI", "旁白", "Voiceover", "旁白", "ナレーション", "내레이션", "Narración", "Narration", "Erzähler", "supdance-creation: projects.narration"),
 		entry("creation.creation.bbec874fe996c5df", "creationUI", "镜头时长", "shot duration", "鏡頭長度", "レンズ持続時間", "렌즈 지속 시간", "duración del disparo", "Durée du plan", "Einstellungsdauer", "supdance-creation: creation.bbec874fe996c5df"),
+	}
+}
+
+func builtinEntryBatch72() []Entry {
+	return []Entry{
 		entry("creation.canvas.shot_scale", "creationUI", "景别", "Shot Scale", "景別", "ショットサイズ", "샷 크기", "Escala de plano", "Cadrage", "Einstellungsgröße", "supdance-creation: canvas.shot_scale"),
 		entry("creation.settings.oss_path_style_auto", "creationUI", "自动", "Auto", "自動", "自動", "자동", "Automático", "Auto", "Auto", "supdance-creation: settings.oss_path_style_auto"),
 		entry("creation.canvas.camera_movement", "creationUI", "运镜", "Camera Movement", "運鏡", "カメラワーク", "카메라 무빙", "Movimiento de cámara", "Mouvement de caméra", "Kamerafahrt", "supdance-creation: canvas.camera_movement"),
@@ -18989,11 +19012,6 @@ func builtinEntryBatch71() []Entry {
 		entry("creation.creation.a28f9121bb328fc9", "creationUI", "视频需重新生成", "video needs to be regenerated", "影片需重新生成", "ビデオを再生成する必要があります", "비디오를 재생성해야 합니다.", "el vídeo necesita ser regenerado", "La vidéo doit être regénérée", "Video muss neu generiert werden", "supdance-creation: creation.a28f9121bb328fc9"),
 		entry("creation.creation.87270f509ad68556", "creationUI", "待生成视频", "Video to be generated", "待生成视频", "生成されるビデオ", "생성할 비디오", "Vídeo a generar", "Vidéo en attente de génération", "Ausstehendes Video", "supdance-creation: creation.87270f509ad68556"),
 		entry("creation.creation.dd95af8ef1034d36", "creationUI", "· 对白与音效由视频模型生成", "· Dialogue and sound effects are generated by video models", "· 對白與音效由視訊模型生成", "・ダイアログと効果音はビデオモデルによって生成されます", "· 비디오 모델에 의해 대화 및 음향 효과가 생성됩니다.", "· Los diálogos y los efectos de sonido son generados por modelos de video.", "· Dialogues et effets sonores générés par le modèle vidéo", "· Dialoge und Soundeffekte werden vom Videomodell generiert", "supdance-creation: creation.dd95af8ef1034d36"),
-	}
-}
-
-func builtinEntryBatch72() []Entry {
-	return []Entry{
 		entry("creation.creation.0bc52e528c019cc0", "creationUI", "首帧：{value1}", "First frame: {value1}", "首帧：{value1}", "最初のフレーム: {value1}", "첫 번째 프레임: {value1}\n프롬프트 단어에 따라 생성된", "Primer fotograma: {value1}", "Première image : {value1}", "Erstes Bild: {value1}", "supdance-creation: creation.0bc52e528c019cc0"),
 		entry("creation.creation.a6b5c993a5d1d1bf", "creationUI", "开场段，按提示词生成", "opening segment, generated according to prompt words", "開場段，依提示詞生成", "オープニング セグメント、プロンプト ワードに従って生成", "오프닝 세그먼트", "segmento de apertura, generado según las palabras clave", "Segment d'ouverture, généré selon le prompt", "Eröffnungssegment, nach dem Prompt generiert", "supdance-creation: creation.a6b5c993a5d1d1bf"),
 		entry("creation.creation.ca297505560ce0ef", "creationUI", "第 {value1} 段最后一帧", "The last frame of segment {value1}", "第 {value1} 段最后一帧", "セグメント {value1} の最後のフレーム", "세그먼트 {value1}의 마지막 프레임", "El último fotograma del segmento {value1}", "Dernière image du segment {value1}", "Letztes Bild von Segment {value1}", "supdance-creation: creation.ca297505560ce0ef"),
@@ -19232,6 +19250,11 @@ func builtinEntryBatch72() []Entry {
 		entry("creation.creation.679140f05697f7e8", "creationUI", "母婴温馨", "Mother and baby warmth", "母嬰溫馨", "お母さんと赤ちゃんの温かさ", "엄마와 아기의 따뜻함", "Calidez madre y bebé", "Douceur maman-bébé", "Gemütliches Mama-Baby-Ambiente", "supdance-creation: creation.679140f05697f7e8"),
 		entry("creation.creation.f02bee65f61b042f", "creationUI", "科技未来", "Technology Future", "科技未來", "テクノロジーの未来", "기술의 미래", "Futuro tecnológico", "Technologie du futur", "Zukunftsorientierte Technologie", "supdance-creation: creation.f02bee65f61b042f"),
 		entry("creation.creation.23fa3e2c3db22589", "creationUI", "轻奢质感", "Light luxury texture", "輕奢質感", "軽くて高級感のある質感", "가벼운 고급스러운 질감", "Textura ligera de lujo", "Élégance discrète", "Gehobene Qualitätsanmutung", "supdance-creation: creation.23fa3e2c3db22589"),
+	}
+}
+
+func builtinEntryBatch73() []Entry {
+	return []Entry{
 		entry("creation.creation.b5d92a8980b9a8dd", "creationUI", "现代家居", "Modern Home", "現代家居", "モダンな家", "모던 홈", "Hogar Moderno", "Intérieur moderne", "Modernes Wohnambiente", "supdance-creation: creation.b5d92a8980b9a8dd"),
 		entry("creation.creation.5b3d43702ed9071a", "creationUI", "潮流年轻化", "Trendy and youthful", "潮流年輕化", "トレンディで若々しい", "트렌디하고 발랄한 느낌", "Moderno y juvenil", "Style jeune et tendance", "Jung und trendbewusst", "supdance-creation: creation.5b3d43702ed9071a"),
 		entry("creation.creation.ca858b75518d8d5e", "creationUI", "清新自然", "Fresh and natural", "清新自然", "フレッシュ＆ナチュラル", "신선하고 자연스러운", "Fresco y natural", "Fraîcheur naturelle", "Frisch und natürlich", "supdance-creation: creation.ca858b75518d8d5e"),
@@ -19250,11 +19273,6 @@ func builtinEntryBatch72() []Entry {
 		entry("creation.creation.0d50b6b5ae20b266", "creationUI", "复古印刷", "Vintage printing", "復古印刷", "ヴィンテージプリント", "빈티지 프린팅", "Impresión antigua", "Impression rétro", "Retro-Druck", "supdance-creation: creation.0d50b6b5ae20b266"),
 		entry("creation.creation.985b8f5dc9c197d3", "creationUI", "运动动势", "Movement Momentum", "運動動勢", "運動の勢い", "운동량", "Impulso del movimiento", "Dynamique sportive", "Sportliche Bewegung", "supdance-creation: creation.985b8f5dc9c197d3"),
 		entry("creation.creation.b31a57ee8a622e7a", "creationUI", "趣味可爱", "Fun and cute", "趣味可愛", "楽しくてかわいい", "재미있고 귀여워요", "Divertido y lindo", "Charmant et amusant", "Spielerisch und niedlich", "supdance-creation: creation.b31a57ee8a622e7a"),
-	}
-}
-
-func builtinEntryBatch73() []Entry {
-	return []Entry{
 		entry("creation.creation.ad7f45ac72f836f9", "creationUI", "清透美妆", "Clear beauty", "清透美妝", "透き通った美しさ", "맑은 아름다움", "Belleza clara", "Maquillage épuré", "Klares Make-up", "supdance-creation: creation.ad7f45ac72f836f9"),
 		entry("creation.creation.faa9d42098260be1", "creationUI", "食欲摄影", "Appetite Photography", "食慾攝影", "食欲の写真", "식욕사진", "Fotografía del apetito", "Photographie culinaire", "Food-Fotografie", "supdance-creation: creation.faa9d42098260be1"),
 		entry("creation.creation.410e7329d93e321d", "creationUI", "海岸度假", "Coastal vacation", "海岸度假", "海岸での休暇", "해안 휴가", "Vacaciones en la costa", "Vacances au bord de la mer", "Küstenurlaub", "supdance-creation: creation.410e7329d93e321d"),
@@ -19493,6 +19511,11 @@ func builtinEntryBatch73() []Entry {
 		entry("creation.creation.6da0a057c31f72c2", "creationUI", "未命名短剧", "Untitled short drama", "未命名短劇", "無題のショートドラマ", "제목 없는 숏폼 드라마", "Drama corto sin título", "Mini-série sans titre", "Unbenannte Kurzserie", "supdance-creation: creation.6da0a057c31f72c2"),
 		entry("creation.creation.5eb49ca5d3fe7041", "creationUI", "{value1} 万字", "{value1} 10,000 words", "{value1} 萬字", "{value1} 10,000 ワード", "{value1} 10,000 단어", "{value1} 10,000 palabras", "{value1} × 10 000 caractères", "{value1} × 10.000 Zeichen", "supdance-creation: creation.5eb49ca5d3fe7041"),
 		entry("creation.creation.9c592c7a85e17dc5", "creationUI", "导入分镜", "Import storyboard", "導入分鏡", "ストーリーボードをインポート", "스토리보드 가져오기", "Importar guión gráfico", "Importer le storyboard", "Storyboard importieren", "supdance-creation: creation.9c592c7a85e17dc5"),
+	}
+}
+
+func builtinEntryBatch74() []Entry {
+	return []Entry{
 		entry("creation.creation.6455e790de4163f5", "creationUI", "解析分集", "Analyzing Diversity", "解析分集", "多様性の分析", "다양성 분석", "Analizando la Diversidad", "Analyser les épisodes", "Episoden analysieren", "supdance-creation: creation.6455e790de4163f5"),
 		entry("creation.creation.c5e020c7a33c1a8d", "creationUI", "建立角色、道具与场景", "Create characters, props and scenes", "建立角色、道具與場景", "キャラクター、小道具、シーンを作成する", "캐릭터, 소품, 장면 만들기", "Crea personajes, accesorios y escenas.", "Créer les personnages, les accessoires et les décors", "Charaktere, Requisiten und Szenen erstellen", "supdance-creation: creation.c5e020c7a33c1a8d"),
 		entry("creation.creation.a7979a9e94b2c0b9", "creationUI", "改编剧本与段提示词", "Adapted script and paragraph prompts", "改編劇本與段落提示詞", "スクリプトと段落プロンプトを調整しました", "각색된 스크립트 및 단락 프롬프트", "Guión adaptado y indicaciones de párrafos", "Adapter le script et les prompts de segments", "Drehbuch und Segment-Prompts anpassen", "supdance-creation: creation.a7979a9e94b2c0b9"),
@@ -19511,11 +19534,6 @@ func builtinEntryBatch73() []Entry {
 		entry("creation.creation.a18ff7300d1c4cda", "creationUI", "改编剧本", "Adapted screenplay", "改編劇本", "脚色", "각색 각본", "Guión adaptado", "Adapter le scénario", "Drehbuch adaptieren", "supdance-creation: creation.a18ff7300d1c4cda"),
 		entry("creation.creation.8552841ad11aef36", "creationUI", "撰写段提示词", "Writing paragraph prompts", "撰寫段落提示詞", "段落プロンプトの作成", "단락 프롬프트 작성", "Escribir indicaciones de párrafos", "Rédiger le prompt du segment", "Segment-Prompt verfassen", "supdance-creation: creation.8552841ad11aef36"),
 		entry("creation.creation.7645cd9b0d2ec086", "creationUI", "等待审阅", "Awaiting review", "等待審閱", "レビュー待ち", "검토 대기 중", "En espera de revisión", "En attente de révision", "Wartet auf Überprüfung", "supdance-creation: creation.7645cd9b0d2ec086"),
-	}
-}
-
-func builtinEntryBatch74() []Entry {
-	return []Entry{
 		entry("creation.workbench.generate_video_action", "creationUI", "生成视频", "Generate Video", "生成影片", "動画を生成", "비디오 생성", "Generar video", "Générer la vidéo", "Video generieren", "supdance-creation: workbench.generate_video_action"),
 		entry("creation.creation.702bfa0fcb4ced5d", "creationUI", "解析章节", "Analysis Chapter", "解析章節", "分析の章", "분석장", "Capítulo de Análisis", "Analyser le chapitre", "Kapitel analysieren", "supdance-creation: creation.702bfa0fcb4ced5d"),
 		entry("creation.creation.fb940b9c2155143b", "creationUI", "分集改编与段提示词", "Episode adaptation and segment prompts", "分集改編與段落提示詞", "エピソードの適応とセグメントのプロンプト", "에피소드 각색 및 세그먼트 프롬프트", "Adaptación del episodio y indicaciones de segmentos.", "Adaptation par épisode et prompts de segments", "Episodenadaptierung und Segment-Prompts", "supdance-creation: creation.fb940b9c2155143b"),
@@ -19754,6 +19772,11 @@ func builtinEntryBatch74() []Entry {
 		entry("creation.creation.d8de6c9c957150b3", "creationUI", "顺序变化会更新参考图编号。模型撰写的提示词需重新撰写；手写提示词请核对编号。", "Changing the order renumbers the reference images. Rewrite model-generated prompts and check the numbers in prompts you wrote.", "順序變更會更新參考圖編號。模型撰寫的提示詞需重新撰寫；手寫提示詞請核對編號。", "並べ替えると参照画像の番号が変わります。モデルで作成したプロンプトは作り直し、手入力のプロンプトは番号を確認してください。", "순서를 바꾸면 참조 이미지 번호가 변경됩니다. 모델이 작성한 프롬프트는 다시 작성하고 직접 작성한 프롬프트는 번호를 확인하세요.", "Al cambiar el orden se renumeran las imágenes de referencia. Vuelva a escribir las indicaciones generadas por el modelo y verifique los números en las indicaciones que escribió.", "Modifier l’ordre renumérote les images de référence. Régénérez les prompts produits par le modèle et vérifiez les numéros dans vos propres prompts.", "Eine neue Reihenfolge ändert die Nummern der Referenzbilder. Erstellen Sie Modell-Prompts neu und prüfen Sie die Nummern in Ihren eigenen Prompts.", "supdance-creation: creation.d8de6c9c957150b3"),
 		entry("creation.creation.42f7601f8df05f19", "creationUI", "搜索参考资产", "Search reference assets", "搜尋參考資產", "参照素材を検索", "참조 에셋 검색", "Buscar activos de referencia", "Rechercher des ressources de référence", "Referenzmaterial suchen", "supdance-creation: creation.42f7601f8df05f19"),
 		entry("creation.creation.f7d659a92a8b02bb", "creationUI", "搜索人物、别名、造型、场景或道具", "Search characters, aliases, looks, scenes, or props", "搜尋人物、別名、造型、場景或道具", "人物、別名、スタイル、場面、小道具を検索", "인물, 별칭, 스타일, 장면 또는 소품 검색", "Buscar personajes, alias, looks, escenas o accesorios", "Rechercher un personnage, un alias, un look, une scène ou un accessoire", "Figuren, Aliasnamen, Looks, Szenen oder Requisiten suchen", "supdance-creation: creation.f7d659a92a8b02bb"),
+	}
+}
+
+func builtinEntryBatch75() []Entry {
+	return []Entry{
 		entry("creation.creation.05697124c39d2e13", "creationUI", "搜索资产", "Search assets", "搜尋資產", "素材を検索", "에셋 검색", "Buscar activos", "Rechercher des ressources", "Material suchen", "supdance-creation: creation.05697124c39d2e13"),
 		entry("creation.creation.8e14f176fa7715ae", "creationUI", "资产分类", "Asset categories", "資產分類", "素材カテゴリ", "에셋 분류", "Categorías de activos", "Catégories de ressources", "Materialkategorien", "supdance-creation: creation.8e14f176fa7715ae"),
 		entry("creation.creation.471ca58619d9cb77", "creationUI", "没有匹配的资产，请更换关键词或从素材库添加。", "No matching assets. Try another search or add one from the asset library.", "沒有相符的資產，請更換關鍵字或從素材庫中新增。", "一致する素材がありません。検索語を変えるか、素材ライブラリから追加してください。", "일치하는 에셋이 없습니다. 검색어를 바꾸거나 에셋 라이브러리에서 추가하세요.", "No hay activos coincidentes. Pruebe con otra búsqueda o agregue una de la biblioteca de activos.", "Aucune ressource correspondante. Essayez une autre recherche ou ajoutez une ressource de la bibliothèque.", "Kein passendes Material. Ändern Sie die Suche oder fügen Sie etwas aus der Medienbibliothek hinzu.", "supdance-creation: creation.471ca58619d9cb77"),
@@ -19772,11 +19795,6 @@ func builtinEntryBatch74() []Entry {
 		entry("creation.creation.e395dbf1c8dd4597", "creationUI", "避免出现", "Elements to avoid", "避免出現", "避ける要素", "피할 요소", "Elementos a evitar", "Éléments à éviter", "Zu vermeidende Elemente", "supdance-creation: creation.e395dbf1c8dd4597"),
 		entry("creation.creation.94f4537387031956", "creationUI", "已复制风格提示词", "Style prompt copied", "已複製風格提示詞", "スタイルプロンプトをコピーしました", "스타일 프롬프트를 복사했습니다", "Mensaje de estilo copiado", "Prompt de style copié", "Stil-Prompt kopiert", "supdance-creation: creation.94f4537387031956"),
 		entry("creation.creation.c883084221db6b02", "creationUI", "复制失败，请手动选择文本复制", "Copy failed. Select and copy the text manually.", "複製失敗，請手動選擇文字複製", "コピーできませんでした。テキストを選択して手動でコピーしてください。", "복사에 실패했습니다. 텍스트를 선택해 직접 복사하세요.", "Error en la copia. Seleccione y copie el texto manualmente.", "La copie a échoué. Sélectionnez et copiez le texte manuellement.", "Kopieren fehlgeschlagen. Wählen und kopieren Sie den Text manuell.", "supdance-creation: creation.c883084221db6b02"),
-	}
-}
-
-func builtinEntryBatch75() []Entry {
-	return []Entry{
 		entry("creation.creation.8218914b51125fc1", "creationUI", "风格详情", "Style details", "風格詳情", "スタイルの詳細", "스타일 상세 정보", "Detalles de estilo", "Détails du style", "Stildetails", "supdance-creation: creation.8218914b51125fc1"),
 		entry("creation.creation.11979c5c7accd336", "creationUI", "主色", "Primary colors", "主色", "メインカラー", "주요 색상", "Colores primarios", "Couleurs principales", "Hauptfarben", "supdance-creation: creation.11979c5c7accd336"),
 		entry("creation.creation.1ae0d6d3e41b17ba", "creationUI", "完整提示词", "Full prompt", "完整提示詞", "プロンプト全文", "전체 프롬프트", "Mensaje completo", "Prompt complet", "Vollständiger Prompt", "supdance-creation: creation.1ae0d6d3e41b17ba"),
@@ -20015,6 +20033,11 @@ func builtinEntryBatch75() []Entry {
 		entry("model.nano-banana-v1-edit.name", "modelUI", "Nano Banana 1 图像编辑", "Nano Banana 1 Image Editing", "Nano Banana 1 影像編輯", "Nano Banana 1 画像編集", "Nano Banana 1 이미지 편집", "Nano Banana 1 Edición de imágenes", "Nano Banana 1 Édition d’images", "Nano Banana 1 Bildbearbeitung", "supdance-models: nano-banana-v1-edit.name"),
 		entry("model.seedance20-i2v.description", "modelUI", "从参考素材延展动作与场景，适合短片叙事镜头。", "Extends action and scenes from reference material, suitable for short narrative shots.", "從參考素材延展動作與場景，適合短片敘事鏡頭。", "参考資料のアクションとシーンを拡張し、短い物語のショットに適しています。", "참조 자료의 액션과 장면을 확장하여 짧은 내러티브 샷에 적합합니다.", "Amplía acciones y escenas a partir de material de referencia, apto para planos narrativos cortos.", "Prolonge l'action et les scènes du matériel de référence, adapté aux courts plans narratifs.", "Erweitert Action und Szenen aus Referenzmaterial, geeignet für kurze narrative Aufnahmen.", "supdance-models: seedance20-i2v.description"),
 		entry("model.seedance20-i2v.name", "modelUI", "Seedance 2.0 图生视频", "Seedance 2.0 Image to Video", "Seedance 2.0 圖生影片", "Seedance 2.0 画像から動画", "Seedance 2.0 이미지로 동영상", "Seedance 2.0 Imagen a vídeo", "Seedance 2.0 Image vers vidéo", "Seedance 2.0 Bild zu Video", "supdance-models: seedance20-i2v.name"),
+	}
+}
+
+func builtinEntryBatch76() []Entry {
+	return []Entry{
 		entry("model.seedance20-fast-i2v.description", "modelUI", "适合比较不同动作和运镜方案，制作分镜草稿。", "Suitable for comparing different actions and camera movement plans and making draft storyboards.", "適合比較不同動作及運鏡方案，製作分鏡草稿。", "さまざまなアクションやカメラの動きのプランを比較し、絵コンテの下書きを作成するのに適しています。", "다양한 액션과 카메라 이동 계획을 비교하고 스토리보드 초안을 만드는 데 적합합니다.", "Adecuado para comparar diferentes acciones y planes de movimiento de cámara y realizar borradores de guiones gráficos.", "Convient pour comparer différents plans d'action et de mouvement de caméra et créer des projets de storyboards.", "Geeignet zum Vergleich verschiedener Aktions- und Kamerabewegungspläne und zum Erstellen von Storyboard-Entwürfen.", "supdance-models: seedance20-fast-i2v.description"),
 		entry("model.seedance20-fast-i2v.name", "modelUI", "Seedance 2.0 Fast 图生视频", "Seedance 2.0 Fast Image to Video", "Seedance 2.0 Fast 圖生影片", "Seedance 2.0 Fast 画像から動画", "Seedance 2.0 Fast 이미지로 동영상", "Seedance 2.0 Fast Imagen a vídeo", "Seedance 2.0 Fast Image vers vidéo", "Seedance 2.0 Fast Bild zu Video", "supdance-models: seedance20-fast-i2v.name"),
 		entry("model.seedance20-mini-i2v.description", "modelUI", "适合制作简短动态片段，探索参考素材的镜头表现。", "Ideal for creating short dynamic clips to explore shot performance on reference footage.", "適合製作簡短動態片段，探索參考素材的鏡頭表現。", "参考映像のショットのパフォーマンスを調べるための短いダイナミック クリップを作成するのに最適です。", "참조 영상의 샷 성능을 탐색하기 위해 짧고 역동적인 클립을 만드는 데 이상적입니다.", "Ideal para crear clips dinámicos cortos para explorar el rendimiento de la toma en material de referencia.", "Idéal pour créer de courts clips dynamiques afin d'explorer les performances des prises de vue sur des séquences de référence.", "Ideal zum Erstellen kurzer dynamischer Clips, um die Aufnahmeleistung anhand von Referenzmaterial zu erkunden.", "supdance-models: seedance20-mini-i2v.description"),
@@ -20033,11 +20056,6 @@ func builtinEntryBatch75() []Entry {
 		entry("model.skyreels-v4-i2v-fast.name", "modelUI", "SkyReels 4 图生视频 Fast", "SkyReels 4 Image to Video Fast", "SkyReels 4 圖生影片 Fast", "SkyReels 4 画像から動画 Fast", "SkyReels 4 이미지로 동영상 Fast", "SkyReels 4 Imagen a vídeo Fast", "SkyReels 4 Image vers vidéo Fast", "SkyReels 4 Bild zu Video Fast", "supdance-models: skyreels-v4-i2v-fast.name"),
 		entry("model.youchuan-v82-preview-t2i.description", "modelUI", "预览版本，适合探索人物、场景与视觉风格。", "Preview version, suitable for exploring characters, settings and visual style.", "預覽版本，適合探索人物、場景與視覺風格。", "キャラクター、設定、ビジュアル スタイルを探索するのに適したプレビュー バージョン。", "미리보기 버전으로 캐릭터, 설정 및 시각적 스타일을 탐색하는 데 적합합니다.", "Versión de vista previa, adecuada para explorar personajes, escenarios y estilo visual.", "Version d'aperçu, adaptée à l'exploration des personnages, des paramètres et du style visuel.", "Vorschauversion, geeignet zum Erkunden von Charakteren, Schauplätzen und visuellem Stil.", "supdance-models: youchuan-v82-preview-t2i.description"),
 		entry("model.youchuan-v82-preview-t2i.name", "modelUI", "Youchuan 8.2 Preview 文生图", "Youchuan 8.2 Preview Text to Image", "Youchuan 8.2 Preview 文生圖", "Youchuan 8.2 Preview テキストから画像", "Youchuan 8.2 Preview 텍스트로 이미지", "Youchuan 8.2 Preview Texto a imagen", "Youchuan 8.2 Preview Texte vers image", "Youchuan 8.2 Preview Text zu Bild", "supdance-models: youchuan-v82-preview-t2i.name"),
-	}
-}
-
-func builtinEntryBatch76() []Entry {
-	return []Entry{
 		entry("model.youchuan-v82-fast-t2i.description", "modelUI", "适合尝试多种构图与风格，再挑选方向细化。", "Suitable for trying a variety of compositions and styles, and then choosing a direction to refine.", "適合嘗試多種構圖與風格，再挑選方向細化。", "さまざまな構図やスタイルを試し、磨きをかける方向を決めるのに適しています。", "다양한 구도와 스타일을 시도한 후 다듬을 방향을 선택하는 데 적합합니다.", "Adecuado para probar una variedad de composiciones y estilos y luego elegir una dirección para refinar.", "Convient pour essayer une variété de compositions et de styles, puis choisir une direction à affiner.", "Geeignet, um verschiedene Kompositionen und Stile auszuprobieren und dann eine Richtung zur Verfeinerung auszuwählen.", "supdance-models: youchuan-v82-fast-t2i.description"),
 		entry("model.youchuan-v82-fast-t2i.name", "modelUI", "Youchuan 8.2 Fast 文生图", "Youchuan 8.2 Fast Text to Image", "Youchuan 8.2 Fast 文生圖", "Youchuan 8.2 Fast テキストから画像", "Youchuan 8.2 Fast 텍스트로 이미지", "Youchuan 8.2 Fast Texto a imagen", "Youchuan 8.2 Fast Texte vers image", "Youchuan 8.2 Fast Text zu Bild", "supdance-models: youchuan-v82-fast-t2i.name"),
 		entry("model.youchuan-v6-t2i.description", "modelUI", "适合插画、环境概念与氛围画面的创作。", "Suitable for the creation of illustrations, environmental concepts and atmospheric pictures.", "適合插畫、環境概念與氣氛畫面的創作。", "イラスト、環境コンセプト、雰囲気のある写真の作成に適しています。", "일러스트레이션, 환경 컨셉, 분위기 있는 사진 제작에 적합합니다.", "Adecuado para la creación de ilustraciones, conceptos ambientales y fotografías atmosféricas.", "Convient à la création d'illustrations, de concepts environnementaux et d'images atmosphériques.", "Geeignet für die Erstellung von Illustrationen, Umweltkonzepten und stimmungsvollen Bildern.", "supdance-models: youchuan-v6-t2i.description"),

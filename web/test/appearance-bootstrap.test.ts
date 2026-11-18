@@ -1,6 +1,7 @@
 import { expect, test } from "bun:test";
 
 import { appearanceLogoURL, normalizePublicAppearance } from "../src/stores/use-appearance-store";
+import { authHeroCopy } from "../src/components/auth/auth-hero-copy";
 import { moduleGroupSource } from "./helpers/module-group-source";
 
 test("the SPA opts out of browser translation before React mounts", async () => {
@@ -82,8 +83,9 @@ test("auth scene consumes resolved appearance instead of hardcoded media constan
     expect(source).toContain("video.play().catch");
     expect(source).toContain("appearance.authVideoPosterUrl || undefined");
     expect(source).toContain("appearance.brandName");
-    expect(source).toContain("appearance.authHeroTitle");
-    expect(source).toContain("appearance.authHeroDescription");
+    expect(source).toContain("authHeroCopy(appearance)");
+    const custom = normalizePublicAppearance({ authHeroTitle: "Our studio", authHeroDescription: "A custom introduction" });
+    expect(authHeroCopy(custom)).toEqual({ title: "Our studio", description: "A custom introduction" });
     expect(source).toContain("useThemeStore((state) => state.theme)");
     expect(source).toContain("theme={theme}");
     expect(source).not.toContain("让一个故事，");

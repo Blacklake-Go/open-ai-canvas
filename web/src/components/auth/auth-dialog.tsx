@@ -5,6 +5,7 @@ import { BrandLogo } from "@/components/brand/brand-logo";
 import { AppModal } from "@/components/ui/product/app-modal";
 import { useAuthDialogStore } from "@/stores/use-auth-dialog-store";
 import { useAppearanceStore } from "@/stores/use-appearance-store";
+import { authHeroCopy } from "./auth-hero-copy";
 import { useUserStore } from "@/stores/use-user-store";
 import { AuthPanel } from "./auth-panel";
 import "./auth-dialog.css";
@@ -67,6 +68,7 @@ export default function AuthDialog({ navigate }: { navigate: (to: string) => voi
 function AuthDialogStage() {
     const { t } = useTranslation();
     const appearance = useAppearanceStore((state) => state.appearance);
+    const hero = authHeroCopy(appearance);
     return (
         <aside className="auth-dialog-stage">
             <div className="auth-dialog-brand">
@@ -74,8 +76,8 @@ function AuthDialogStage() {
                 <span>{appearance.brandName}</span>
             </div>
             <div className="auth-dialog-stage-copy">
-                <p className="auth-dialog-stage-title">{appearance.authHeroTitle}</p>
-                <p className="auth-dialog-stage-tagline">{appearance.authHeroDescription || t("auth.panel.tagline")}</p>
+                <p className="auth-dialog-stage-title">{hero.title}</p>
+                <p className="auth-dialog-stage-tagline">{hero.description || t("auth.panel.tagline")}</p>
             </div>
             <ul className="auth-dialog-features">
                 {STAGE_FEATURES.map(({ key, icon: Icon }) => (
