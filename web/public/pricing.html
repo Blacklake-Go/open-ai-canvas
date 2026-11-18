@@ -1,11 +1,11 @@
 <!doctype html>
-<html lang="zh-CN" data-theme="dark">
+<html lang="en-US" data-theme="dark">
     <head>
         <meta charset="utf-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
         <link rel="icon" href="/supdance-mark.png" type="image/png" />
-        <title>价目表 · Supdance</title>
-        <meta name="description" content="Supdance 积分套餐、云存储与 AI 模型公开价目表。" />
+        <title>Pricing · Supdance</title>
+        <meta name="description" content="Public price list for Supdance credits plans, cloud storage, and AI models." />
         <style>
             :root,
             html[data-theme="dark"] {
@@ -641,16 +641,19 @@
     </head>
     <body>
         <header>
-            <a href="/" class="brand" aria-label="Supdance 首页"
+            <a href="/" class="brand" aria-label="Supdance home" data-pricing-aria-source="Supdance 首页"
                 ><span class="brand-mark"><img src="/supdance-mark.png" alt="" /></span><span>Supdance</span><span class="badge">PRICING</span></a
             >
-            <nav aria-label="页面导航"><a href="/terms">服务条款</a><a href="/privacy">隐私政策</a><a href="/aup">可接受使用</a><a href="/legal">法律中心</a></nav>
+            <nav aria-label="Page navigation" data-pricing-aria-source="页面导航">
+                <a href="/terms"><!--pricing-source:%E6%9C%8D%E5%8A%A1%E6%9D%A1%E6%AC%BE-->Terms of Service</a><a href="/privacy"><!--pricing-source:%E9%9A%90%E7%A7%81%E6%94%BF%E7%AD%96-->Privacy Policy</a
+                ><a href="/aup"><!--pricing-source:%E5%8F%AF%E6%8E%A5%E5%8F%97%E4%BD%BF%E7%94%A8-->Acceptable Use</a><a href="/legal"><!--pricing-source:%E6%B3%95%E5%BE%8B%E4%B8%AD%E5%BF%83-->Legal Center</a>
+            </nav>
             <div class="controls">
                 <span class="language-control"
-                    ><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="m5 8 6 6m-7 0 6-6 2-3H3m5-2v2m5 16 5-11 5 11m-8-4h6" /></svg
-                    ><select id="language-select" aria-label="语言">
+                    ><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="m5 8 6 6m-7 0 6-6 2-3H3m5-2v2m5 16 5-11 5 11m-8-4h6"></path></svg
+                    ><select id="language-select" aria-label="Language" data-pricing-aria-source="语言">
                         <option value="zh-CN">简体中文</option>
-                        <option value="en-US">English</option>
+                        <option value="en-US" selected="">English</option>
                         <option value="zh-TW">繁體中文</option>
                         <option value="es-ES">Español</option>
                         <option value="fr-FR">Français</option>
@@ -658,68 +661,74 @@
                         <option value="ja-JP">日本語</option>
                         <option value="ko-KR">한국어</option>
                     </select></span
-                ><button type="button" id="theme-toggle" aria-label="切换明暗主题">
+                ><button type="button" id="theme-toggle" aria-label="Toggle light and dark theme" data-pricing-aria-source="切换明暗主题">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                        <circle cx="12" cy="12" r="4" />
-                        <path d="M12 2v2m0 16v2M4.93 4.93l1.42 1.42m11.3 11.3 1.42 1.42M2 12h2m16 0h2M4.93 19.07l1.42-1.42m11.3-11.3 1.42-1.42" />
+                        <circle cx="12" cy="12" r="4"></circle>
+                        <path d="M12 2v2m0 16v2M4.93 4.93l1.42 1.42m11.3 11.3 1.42 1.42M2 12h2m16 0h2M4.93 19.07l1.42-1.42m11.3-11.3 1.42-1.42"></path>
                     </svg>
                 </button>
             </div>
         </header>
         <main>
-            <h1>SupDance ONE 价目表</h1>
-            <p class="meta">美元价目更新于 2026-11-07。结账时可查看实际支付金额。</p>
-            <p class="rate-note">充值和存储套餐以美元定价。1 美元购买 100 基础积分，套餐赠分另计。下方模型积分与美元金额为 11 月 5 日的历史参考，实际用量和扣费请查看生成页。</p>
+            <h1><!--pricing-source:SupDance%20ONE%20%E4%BB%B7%E7%9B%AE%E8%A1%A8-->SupDance ONE Pricing</h1>
+            <p class="meta">
+                <!--pricing-source:%E7%BE%8E%E5%85%83%E4%BB%B7%E7%9B%AE%E6%9B%B4%E6%96%B0%E4%BA%8E%202026%2D11%2D07%E3%80%82%E7%BB%93%E8%B4%A6%E6%97%B6%E5%8F%AF%E6%9F%A5%E7%9C%8B%E5%AE%9E%E9%99%85%E6%94%AF%E4%BB%98%E9%87%91%E9%A2%9D%E3%80%82-->USD pricing
+                updated November 7, 2026. Check the amount due at checkout.
+            </p>
+            <p class="rate-note">
+                <!--pricing-source:%E5%85%85%E5%80%BC%E5%92%8C%E5%AD%98%E5%82%A8%E5%A5%97%E9%A4%90%E4%BB%A5%E7%BE%8E%E5%85%83%E5%AE%9A%E4%BB%B7%E3%80%821%20%E7%BE%8E%E5%85%83%E8%B4%AD%E4%B9%B0%20100%20%E5%9F%BA%E7%A1%80%E7%A7%AF%E5%88%86%EF%BC%8C%E5%A5%97%E9%A4%90%E8%B5%A0%E5%88%86%E5%8F%A6%E8%AE%A1%E3%80%82%E4%B8%8B%E6%96%B9%E6%A8%A1%E5%9E%8B%E7%A7%AF%E5%88%86%E4%B8%8E%E7%BE%8E%E5%85%83%E9%87%91%E9%A2%9D%E4%B8%BA%2011%20%E6%9C%88%205%20%E6%97%A5%E7%9A%84%E5%8E%86%E5%8F%B2%E5%8F%82%E8%80%83%EF%BC%8C%E5%AE%9E%E9%99%85%E7%94%A8%E9%87%8F%E5%92%8C%E6%89%A3%E8%B4%B9%E8%AF%B7%E6%9F%A5%E7%9C%8B%E7%94%9F%E6%88%90%E9%A1%B5%E3%80%82-->Credit
+                packs and storage add-ons are priced in USD. USD 1 buys 100 base credits, plus any pack bonus. Model rates in credits and USD are the November 5 reference rates. Check the generation page for current usage and charges.
+            </p>
             <section id="section-1">
-                <h2>积分充值套餐</h2>
+                <h2><!--pricing-source:%E7%A7%AF%E5%88%86%E5%85%85%E5%80%BC%E5%A5%97%E9%A4%90-->Credit packs</h2>
                 <div class="table-scroll">
                     <table>
                         <thead>
                             <tr>
-                                <th scope="col">套餐</th>
-                                <th scope="col">到账积分</th>
-                                <th scope="col">售价 (USD)</th>
+                                <th scope="col"><!--pricing-source:%E5%A5%97%E9%A4%90-->Pack</th>
+                                <th scope="col"><!--pricing-source:%E5%88%B0%E8%B4%A6%E7%A7%AF%E5%88%86-->Credits received</th>
+                                <th scope="col"><!--pricing-source:%E5%94%AE%E4%BB%B7%20(USD)-->Price (USD)</th>
                             </tr>
                         </thead>
                         <tbody>
                             <tr>
-                                <td>尝鲜包</td>
-                                <td>1,000 积分</td>
+                                <td><!--pricing-source:%E5%B0%9D%E9%B2%9C%E5%8C%85-->Starter pack</td>
+                                <td><!--pricing-source:1%2C000%20%E7%A7%AF%E5%88%86-->1,000 credits</td>
                                 <td>$10.00</td>
                             </tr>
                             <tr>
-                                <td>轻量包 · 赠 6%</td>
-                                <td>5,300 积分</td>
+                                <td><!--pricing-source:%E8%BD%BB%E9%87%8F%E5%8C%85%20%C2%B7%20%E8%B5%A0%206%25-->Light pack · bonus 6%</td>
+                                <td><!--pricing-source:5%2C300%20%E7%A7%AF%E5%88%86-->5,300 credits</td>
                                 <td>$50.00</td>
                             </tr>
                             <tr>
-                                <td>进阶包 · 赠 10%</td>
-                                <td>11,000 积分</td>
+                                <td><!--pricing-source:%E8%BF%9B%E9%98%B6%E5%8C%85%20%C2%B7%20%E8%B5%A0%2010%25-->Advanced pack · bonus 10%</td>
+                                <td><!--pricing-source:11%2C000%20%E7%A7%AF%E5%88%86-->11,000 credits</td>
                                 <td>$100.00</td>
                             </tr>
                             <tr>
-                                <td>标准包 · 赠 14%</td>
-                                <td>34,200 积分</td>
+                                <td><!--pricing-source:%E6%A0%87%E5%87%86%E5%8C%85%20%C2%B7%20%E8%B5%A0%2014%25-->Standard pack · bonus 14%</td>
+                                <td><!--pricing-source:34%2C200%20%E7%A7%AF%E5%88%86-->34,200 credits</td>
                                 <td>$300.00</td>
                             </tr>
                             <tr>
-                                <td>专业包 · 赠 17%</td>
-                                <td>70,200 积分</td>
+                                <td><!--pricing-source:%E4%B8%93%E4%B8%9A%E5%8C%85%20%C2%B7%20%E8%B5%A0%2017%25-->Pro pack · bonus 17%</td>
+                                <td><!--pricing-source:70%2C200%20%E7%A7%AF%E5%88%86-->70,200 credits</td>
                                 <td>$600.00</td>
                             </tr>
                             <tr>
-                                <td>工作室包 · 赠 20%</td>
-                                <td>120,000 积分</td>
+                                <td><!--pricing-source:%E5%B7%A5%E4%BD%9C%E5%AE%A4%E5%8C%85%20%C2%B7%20%E8%B5%A0%2020%25-->Studio pack · bonus 20%</td>
+                                <td><!--pricing-source:120%2C000%20%E7%A7%AF%E5%88%86-->120,000 credits</td>
                                 <td>$1,000.00</td>
                             </tr>
                             <tr>
-                                <td>团队包 · 赠 22%</td>
-                                <td>244,000 积分</td>
+                                <td><!--pricing-source:%E5%9B%A2%E9%98%9F%E5%8C%85%20%C2%B7%20%E8%B5%A0%2022%25-->Team pack · bonus 22%</td>
+                                <td><!--pricing-source:244%2C000%20%E7%A7%AF%E5%88%86-->244,000 credits</td>
                                 <td>$2,000.00</td>
                             </tr>
                             <tr>
-                                <td>企业旗舰包 · 赠 24%</td>
-                                <td>372,000 积分</td>
+                                <td><!--pricing-source:%E4%BC%81%E4%B8%9A%E6%97%97%E8%88%B0%E5%8C%85%20%C2%B7%20%E8%B5%A0%2024%25-->Enterprise flagship pack · bonus 24%</td>
+                                <td><!--pricing-source:372%2C000%20%E7%A7%AF%E5%88%86-->372,000 credits</td>
                                 <td>$3,000.00</td>
                             </tr>
                         </tbody>
@@ -727,64 +736,64 @@
                 </div>
             </section>
             <section id="section-2">
-                <h2>云存储扩容套餐</h2>
+                <h2><!--pricing-source:%E4%BA%91%E5%AD%98%E5%82%A8%E6%89%A9%E5%AE%B9%E5%A5%97%E9%A4%90-->Cloud storage add-ons</h2>
                 <div class="table-scroll">
                     <table>
                         <thead>
                             <tr>
-                                <th scope="col">套餐</th>
-                                <th scope="col">容量</th>
-                                <th scope="col">有效期</th>
-                                <th scope="col">售价 (USD)</th>
+                                <th scope="col"><!--pricing-source:%E5%A5%97%E9%A4%90-->Pack</th>
+                                <th scope="col"><!--pricing-source:%E5%AE%B9%E9%87%8F-->Capacity</th>
+                                <th scope="col"><!--pricing-source:%E6%9C%89%E6%95%88%E6%9C%9F-->Validity</th>
+                                <th scope="col"><!--pricing-source:%E5%94%AE%E4%BB%B7%20(USD)-->Price (USD)</th>
                             </tr>
                         </thead>
                         <tbody>
                             <tr>
-                                <td>轻量扩容包</td>
+                                <td><!--pricing-source:%E8%BD%BB%E9%87%8F%E6%89%A9%E5%AE%B9%E5%8C%85-->Light storage pack</td>
                                 <td>+50 GB</td>
-                                <td>1 个月</td>
+                                <td><!--pricing-source:1%20%E4%B8%AA%E6%9C%88-->1 month</td>
                                 <td>$2.68</td>
                             </tr>
                             <tr>
-                                <td>标准扩容包</td>
+                                <td><!--pricing-source:%E6%A0%87%E5%87%86%E6%89%A9%E5%AE%B9%E5%8C%85-->Standard storage pack</td>
                                 <td>+100 GB</td>
-                                <td>1 个月</td>
+                                <td><!--pricing-source:1%20%E4%B8%AA%E6%9C%88-->1 month</td>
                                 <td>$4.77</td>
                             </tr>
                             <tr>
-                                <td>专业扩容包</td>
+                                <td><!--pricing-source:%E4%B8%93%E4%B8%9A%E6%89%A9%E5%AE%B9%E5%8C%85-->Pro storage pack</td>
                                 <td>+200 GB</td>
-                                <td>1 个月</td>
+                                <td><!--pricing-source:1%20%E4%B8%AA%E6%9C%88-->1 month</td>
                                 <td>$8.64</td>
                             </tr>
                             <tr>
-                                <td>进阶扩容包</td>
+                                <td><!--pricing-source:%E8%BF%9B%E9%98%B6%E6%89%A9%E5%AE%B9%E5%8C%85-->Advanced storage pack</td>
                                 <td>+300 GB</td>
-                                <td>1 个月</td>
+                                <td><!--pricing-source:1%20%E4%B8%AA%E6%9C%88-->1 month</td>
                                 <td>$12.51</td>
                             </tr>
                             <tr>
-                                <td>工作室扩容包</td>
+                                <td><!--pricing-source:%E5%B7%A5%E4%BD%9C%E5%AE%A4%E6%89%A9%E5%AE%B9%E5%8C%85-->Studio storage pack</td>
                                 <td>+500 GB</td>
-                                <td>1 个月</td>
+                                <td><!--pricing-source:1%20%E4%B8%AA%E6%9C%88-->1 month</td>
                                 <td>$19.06</td>
                             </tr>
                             <tr>
-                                <td>企业扩容包</td>
+                                <td><!--pricing-source:%E4%BC%81%E4%B8%9A%E6%89%A9%E5%AE%B9%E5%8C%85-->Enterprise storage pack</td>
                                 <td>+1 TB</td>
-                                <td>1 个月</td>
+                                <td><!--pricing-source:1%20%E4%B8%AA%E6%9C%88-->1 month</td>
                                 <td>$36.93</td>
                             </tr>
                             <tr>
-                                <td>团队云盘包</td>
+                                <td><!--pricing-source:%E5%9B%A2%E9%98%9F%E4%BA%91%E7%9B%98%E5%8C%85-->Team cloud pack</td>
                                 <td>+2 TB</td>
-                                <td>1 个月</td>
+                                <td><!--pricing-source:1%20%E4%B8%AA%E6%9C%88-->1 month</td>
                                 <td>$71.17</td>
                             </tr>
                             <tr>
-                                <td>尊享云盘包</td>
+                                <td><!--pricing-source:%E5%B0%8A%E4%BA%AB%E4%BA%91%E7%9B%98%E5%8C%85-->Premium cloud pack</td>
                                 <td>+3 TB</td>
-                                <td>1 个月</td>
+                                <td><!--pricing-source:1%20%E4%B8%AA%E6%9C%88-->1 month</td>
                                 <td>$103.92</td>
                             </tr>
                         </tbody>
@@ -792,290 +801,290 @@
                 </div>
             </section>
             <section id="section-3">
-                <h2>图片生成与编辑</h2>
+                <h2><!--pricing-source:%E5%9B%BE%E7%89%87%E7%94%9F%E6%88%90%E4%B8%8E%E7%BC%96%E8%BE%91-->Image generation and editing</h2>
                 <div class="table-scroll">
                     <table>
                         <thead>
                             <tr>
-                                <th scope="col">模型</th>
-                                <th scope="col">能力</th>
-                                <th scope="col">规格</th>
-                                <th scope="col">积分/张</th>
-                                <th scope="col">参考价/张 (USD)</th>
+                                <th scope="col"><!--pricing-source:%E6%A8%A1%E5%9E%8B-->Model</th>
+                                <th scope="col"><!--pricing-source:%E8%83%BD%E5%8A%9B-->Capability</th>
+                                <th scope="col"><!--pricing-source:%E8%A7%84%E6%A0%BC-->Specification</th>
+                                <th scope="col"><!--pricing-source:%E7%A7%AF%E5%88%86%2F%E5%BC%A0-->credits/image</th>
+                                <th scope="col"><!--pricing-source:%E5%8F%82%E8%80%83%E4%BB%B7%2F%E5%BC%A0%20(USD)-->Reference price / image (USD)</th>
                             </tr>
                         </thead>
                         <tbody>
                             <tr>
                                 <td>FLUX 3 Klein</td>
-                                <td>图生图</td>
+                                <td><!--pricing-source:%E5%9B%BE%E7%94%9F%E5%9B%BE-->Image to image</td>
                                 <td>1k</td>
-                                <td>1.4 积分/张</td>
+                                <td><!--pricing-source:1.4%20%E7%A7%AF%E5%88%86%2F%E5%BC%A0-->1.4 credits/image</td>
                                 <td>$0.021</td>
                             </tr>
                             <tr>
                                 <td>FLUX 3 Klein</td>
-                                <td>图生图</td>
+                                <td><!--pricing-source:%E5%9B%BE%E7%94%9F%E5%9B%BE-->Image to image</td>
                                 <td>2k</td>
-                                <td>2.3 积分/张</td>
+                                <td><!--pricing-source:2.3%20%E7%A7%AF%E5%88%86%2F%E5%BC%A0-->2.3 credits/image</td>
                                 <td>$0.034</td>
                             </tr>
                             <tr>
                                 <td>FLUX 3 Klein</td>
-                                <td>图生图</td>
+                                <td><!--pricing-source:%E5%9B%BE%E7%94%9F%E5%9B%BE-->Image to image</td>
                                 <td>4k</td>
-                                <td>5.3 积分/张</td>
+                                <td><!--pricing-source:5.3%20%E7%A7%AF%E5%88%86%2F%E5%BC%A0-->5.3 credits/image</td>
                                 <td>$0.079</td>
                             </tr>
                             <tr>
                                 <td>FLUX</td>
-                                <td>图像编辑</td>
-                                <td>默认标准</td>
-                                <td>1.8 积分/张</td>
+                                <td><!--pricing-source:%E5%9B%BE%E5%83%8F%E7%BC%96%E8%BE%91-->Image editing</td>
+                                <td><!--pricing-source:%E9%BB%98%E8%AE%A4%E6%A0%87%E5%87%86-->Default</td>
+                                <td><!--pricing-source:1.8%20%E7%A7%AF%E5%88%86%2F%E5%BC%A0-->1.8 credits/image</td>
                                 <td>$0.027</td>
                             </tr>
                             <tr>
                                 <td>FLUX</td>
-                                <td>文生图</td>
-                                <td>默认标准</td>
-                                <td>6.1 积分/张</td>
+                                <td><!--pricing-source:%E6%96%87%E7%94%9F%E5%9B%BE-->Text to image</td>
+                                <td><!--pricing-source:%E9%BB%98%E8%AE%A4%E6%A0%87%E5%87%86-->Default</td>
+                                <td><!--pricing-source:6.1%20%E7%A7%AF%E5%88%86%2F%E5%BC%A0-->6.1 credits/image</td>
                                 <td>$0.091</td>
                             </tr>
                             <tr>
                                 <td>GPT Image 2</td>
-                                <td>文生图</td>
-                                <td>1k · 低画质(low)</td>
-                                <td>1.6 积分/张</td>
+                                <td><!--pricing-source:%E6%96%87%E7%94%9F%E5%9B%BE-->Text to image</td>
+                                <td><!--pricing-source:1k%20%C2%B7%20%E4%BD%8E%E7%94%BB%E8%B4%A8(low)-->1k · Low quality(low)</td>
+                                <td><!--pricing-source:1.6%20%E7%A7%AF%E5%88%86%2F%E5%BC%A0-->1.6 credits/image</td>
                                 <td>$0.024</td>
                             </tr>
                             <tr>
                                 <td>GPT Image 2</td>
-                                <td>文生图</td>
-                                <td>2k · 低画质(low)</td>
-                                <td>3.2 积分/张</td>
+                                <td><!--pricing-source:%E6%96%87%E7%94%9F%E5%9B%BE-->Text to image</td>
+                                <td><!--pricing-source:2k%20%C2%B7%20%E4%BD%8E%E7%94%BB%E8%B4%A8(low)-->2k · Low quality(low)</td>
+                                <td><!--pricing-source:3.2%20%E7%A7%AF%E5%88%86%2F%E5%BC%A0-->3.2 credits/image</td>
                                 <td>$0.048</td>
                             </tr>
                             <tr>
                                 <td>GPT Image 2</td>
-                                <td>文生图</td>
-                                <td>4k · 低画质(low)</td>
-                                <td>4.4 积分/张</td>
+                                <td><!--pricing-source:%E6%96%87%E7%94%9F%E5%9B%BE-->Text to image</td>
+                                <td><!--pricing-source:4k%20%C2%B7%20%E4%BD%8E%E7%94%BB%E8%B4%A8(low)-->4k · Low quality(low)</td>
+                                <td><!--pricing-source:4.4%20%E7%A7%AF%E5%88%86%2F%E5%BC%A0-->4.4 credits/image</td>
                                 <td>$0.066</td>
                             </tr>
                             <tr>
                                 <td>GPT Image 2</td>
-                                <td>文生图</td>
-                                <td>1k · 标准(medium)</td>
-                                <td>8.8 积分/张</td>
+                                <td><!--pricing-source:%E6%96%87%E7%94%9F%E5%9B%BE-->Text to image</td>
+                                <td><!--pricing-source:1k%20%C2%B7%20%E6%A0%87%E5%87%86(medium)-->1k · Standard(medium)</td>
+                                <td><!--pricing-source:8.8%20%E7%A7%AF%E5%88%86%2F%E5%BC%A0-->8.8 credits/image</td>
                                 <td>$0.132</td>
                             </tr>
                             <tr>
                                 <td>GPT Image 2</td>
-                                <td>文生图</td>
-                                <td>2k · 标准(medium)</td>
-                                <td>17.6 积分/张</td>
+                                <td><!--pricing-source:%E6%96%87%E7%94%9F%E5%9B%BE-->Text to image</td>
+                                <td><!--pricing-source:2k%20%C2%B7%20%E6%A0%87%E5%87%86(medium)-->2k · Standard(medium)</td>
+                                <td><!--pricing-source:17.6%20%E7%A7%AF%E5%88%86%2F%E5%BC%A0-->17.6 credits/image</td>
                                 <td>$0.264</td>
                             </tr>
                             <tr>
                                 <td>GPT Image 2</td>
-                                <td>文生图</td>
-                                <td>4k · 标准(medium)</td>
-                                <td>25.8 积分/张</td>
+                                <td><!--pricing-source:%E6%96%87%E7%94%9F%E5%9B%BE-->Text to image</td>
+                                <td><!--pricing-source:4k%20%C2%B7%20%E6%A0%87%E5%87%86(medium)-->4k · Standard(medium)</td>
+                                <td><!--pricing-source:25.8%20%E7%A7%AF%E5%88%86%2F%E5%BC%A0-->25.8 credits/image</td>
                                 <td>$0.387</td>
                             </tr>
                             <tr>
                                 <td>GPT Image 2</td>
-                                <td>文生图</td>
-                                <td>1k · 高画质(high)</td>
-                                <td>31.5 积分/张</td>
+                                <td><!--pricing-source:%E6%96%87%E7%94%9F%E5%9B%BE-->Text to image</td>
+                                <td><!--pricing-source:1k%20%C2%B7%20%E9%AB%98%E7%94%BB%E8%B4%A8(high)-->1k · High quality(high)</td>
+                                <td><!--pricing-source:31.5%20%E7%A7%AF%E5%88%86%2F%E5%BC%A0-->31.5 credits/image</td>
                                 <td>$0.472</td>
                             </tr>
                             <tr>
                                 <td>GPT Image 2</td>
-                                <td>文生图</td>
-                                <td>2k · 高画质(high)</td>
-                                <td>63.0 积分/张</td>
+                                <td><!--pricing-source:%E6%96%87%E7%94%9F%E5%9B%BE-->Text to image</td>
+                                <td><!--pricing-source:2k%20%C2%B7%20%E9%AB%98%E7%94%BB%E8%B4%A8(high)-->2k · High quality(high)</td>
+                                <td><!--pricing-source:63.0%20%E7%A7%AF%E5%88%86%2F%E5%BC%A0-->63.0 credits/image</td>
                                 <td>$0.944</td>
                             </tr>
                             <tr>
                                 <td>GPT Image 2</td>
-                                <td>文生图</td>
-                                <td>4k · 高画质(high)</td>
-                                <td>94.5 积分/张</td>
+                                <td><!--pricing-source:%E6%96%87%E7%94%9F%E5%9B%BE-->Text to image</td>
+                                <td><!--pricing-source:4k%20%C2%B7%20%E9%AB%98%E7%94%BB%E8%B4%A8(high)-->4k · High quality(high)</td>
+                                <td><!--pricing-source:94.5%20%E7%A7%AF%E5%88%86%2F%E5%BC%A0-->94.5 credits/image</td>
                                 <td>$1.416</td>
                             </tr>
                             <tr>
-                                <td>GPT Image 2 编辑</td>
-                                <td>图生图</td>
-                                <td>默认标准</td>
-                                <td>2.7 积分/张</td>
+                                <td><!--pricing-source:GPT%20Image%202%20%E7%BC%96%E8%BE%91-->GPT Image 2 Edit</td>
+                                <td><!--pricing-source:%E5%9B%BE%E7%94%9F%E5%9B%BE-->Image to image</td>
+                                <td><!--pricing-source:%E9%BB%98%E8%AE%A4%E6%A0%87%E5%87%86-->Default</td>
+                                <td><!--pricing-source:2.7%20%E7%A7%AF%E5%88%86%2F%E5%BC%A0-->2.7 credits/image</td>
                                 <td>$0.040</td>
                             </tr>
                             <tr>
-                                <td>Grok Imagine 经济版</td>
-                                <td>文生图</td>
-                                <td>默认标准</td>
-                                <td>1.8 积分/张</td>
+                                <td><!--pricing-source:Grok%20Imagine%20%E7%BB%8F%E6%B5%8E%E7%89%88-->Grok Imagine Economy</td>
+                                <td><!--pricing-source:%E6%96%87%E7%94%9F%E5%9B%BE-->Text to image</td>
+                                <td><!--pricing-source:%E9%BB%98%E8%AE%A4%E6%A0%87%E5%87%86-->Default</td>
+                                <td><!--pricing-source:1.8%20%E7%A7%AF%E5%88%86%2F%E5%BC%A0-->1.8 credits/image</td>
                                 <td>$0.027</td>
                             </tr>
                             <tr>
                                 <td>Grok Imagine</td>
-                                <td>图像编辑</td>
-                                <td>默认标准</td>
-                                <td>10.3 积分/张</td>
+                                <td><!--pricing-source:%E5%9B%BE%E5%83%8F%E7%BC%96%E8%BE%91-->Image editing</td>
+                                <td><!--pricing-source:%E9%BB%98%E8%AE%A4%E6%A0%87%E5%87%86-->Default</td>
+                                <td><!--pricing-source:10.3%20%E7%A7%AF%E5%88%86%2F%E5%BC%A0-->10.3 credits/image</td>
                                 <td>$0.154</td>
                             </tr>
                             <tr>
                                 <td>Krea V2 Turbo</td>
-                                <td>通用生图</td>
+                                <td><!--pricing-source:%E9%80%9A%E7%94%A8%E7%94%9F%E5%9B%BE-->Image generation</td>
                                 <td>1k</td>
-                                <td>3.5 积分/张</td>
+                                <td><!--pricing-source:3.5%20%E7%A7%AF%E5%88%86%2F%E5%BC%A0-->3.5 credits/image</td>
                                 <td>$0.052</td>
                             </tr>
                             <tr>
                                 <td>Krea V2 Turbo</td>
-                                <td>通用生图</td>
+                                <td><!--pricing-source:%E9%80%9A%E7%94%A8%E7%94%9F%E5%9B%BE-->Image generation</td>
                                 <td>2k</td>
-                                <td>4.9 积分/张</td>
+                                <td><!--pricing-source:4.9%20%E7%A7%AF%E5%88%86%2F%E5%BC%A0-->4.9 credits/image</td>
                                 <td>$0.073</td>
                             </tr>
                             <tr>
                                 <td>Krea V2 Large</td>
-                                <td>文生图</td>
-                                <td>默认标准</td>
-                                <td>14.2 积分/张</td>
+                                <td><!--pricing-source:%E6%96%87%E7%94%9F%E5%9B%BE-->Text to image</td>
+                                <td><!--pricing-source:%E9%BB%98%E8%AE%A4%E6%A0%87%E5%87%86-->Default</td>
+                                <td><!--pricing-source:14.2%20%E7%A7%AF%E5%88%86%2F%E5%BC%A0-->14.2 credits/image</td>
                                 <td>$0.213</td>
                             </tr>
                             <tr>
                                 <td>Krea</td>
-                                <td>文生图</td>
-                                <td>默认标准</td>
-                                <td>7.4 积分/张</td>
+                                <td><!--pricing-source:%E6%96%87%E7%94%9F%E5%9B%BE-->Text to image</td>
+                                <td><!--pricing-source:%E9%BB%98%E8%AE%A4%E6%A0%87%E5%87%86-->Default</td>
+                                <td><!--pricing-source:7.4%20%E7%A7%AF%E5%88%86%2F%E5%BC%A0-->7.4 credits/image</td>
                                 <td>$0.111</td>
                             </tr>
                             <tr>
                                 <td>Krea</td>
-                                <td>图像编辑</td>
-                                <td>默认标准</td>
-                                <td>28.7 积分/张</td>
+                                <td><!--pricing-source:%E5%9B%BE%E5%83%8F%E7%BC%96%E8%BE%91-->Image editing</td>
+                                <td><!--pricing-source:%E9%BB%98%E8%AE%A4%E6%A0%87%E5%87%86-->Default</td>
+                                <td><!--pricing-source:28.7%20%E7%A7%AF%E5%88%86%2F%E5%BC%A0-->28.7 credits/image</td>
                                 <td>$0.430</td>
                             </tr>
                             <tr>
                                 <td>Nano Banana 2 Lite</td>
-                                <td>文生图</td>
-                                <td>默认标准</td>
-                                <td>1.8 积分/张</td>
+                                <td><!--pricing-source:%E6%96%87%E7%94%9F%E5%9B%BE-->Text to image</td>
+                                <td><!--pricing-source:%E9%BB%98%E8%AE%A4%E6%A0%87%E5%87%86-->Default</td>
+                                <td><!--pricing-source:1.8%20%E7%A7%AF%E5%88%86%2F%E5%BC%A0-->1.8 credits/image</td>
                                 <td>$0.027</td>
                             </tr>
                             <tr>
                                 <td>Nano Banana V1</td>
-                                <td>图像编辑</td>
-                                <td>默认标准</td>
-                                <td>4.9 积分/张</td>
+                                <td><!--pricing-source:%E5%9B%BE%E5%83%8F%E7%BC%96%E8%BE%91-->Image editing</td>
+                                <td><!--pricing-source:%E9%BB%98%E8%AE%A4%E6%A0%87%E5%87%86-->Default</td>
+                                <td><!--pricing-source:4.9%20%E7%A7%AF%E5%88%86%2F%E5%BC%A0-->4.9 credits/image</td>
                                 <td>$0.073</td>
                             </tr>
                             <tr>
                                 <td>Nano Banana 2.1</td>
-                                <td>文生图 / 图生图</td>
-                                <td>默认标准</td>
-                                <td>4.9 积分/张</td>
+                                <td><!--pricing-source:%E6%96%87%E7%94%9F%E5%9B%BE%20%2F%20%E5%9B%BE%E7%94%9F%E5%9B%BE-->Text to image / image to image</td>
+                                <td><!--pricing-source:%E9%BB%98%E8%AE%A4%E6%A0%87%E5%87%86-->Default</td>
+                                <td><!--pricing-source:4.9%20%E7%A7%AF%E5%88%86%2F%E5%BC%A0-->4.9 credits/image</td>
                                 <td>$0.073</td>
                             </tr>
                             <tr>
                                 <td>Nano Banana 2</td>
-                                <td>图生图</td>
+                                <td><!--pricing-source:%E5%9B%BE%E7%94%9F%E5%9B%BE-->Image to image</td>
                                 <td>1k</td>
-                                <td>11.4 积分/张</td>
+                                <td><!--pricing-source:11.4%20%E7%A7%AF%E5%88%86%2F%E5%BC%A0-->11.4 credits/image</td>
                                 <td>$0.171</td>
                             </tr>
                             <tr>
                                 <td>Nano Banana 2</td>
-                                <td>图生图</td>
+                                <td><!--pricing-source:%E5%9B%BE%E7%94%9F%E5%9B%BE-->Image to image</td>
                                 <td>2k</td>
-                                <td>18.0 积分/张</td>
+                                <td><!--pricing-source:18.0%20%E7%A7%AF%E5%88%86%2F%E5%BC%A0-->18.0 credits/image</td>
                                 <td>$0.270</td>
                             </tr>
                             <tr>
                                 <td>Nano Banana 2</td>
-                                <td>图生图</td>
+                                <td><!--pricing-source:%E5%9B%BE%E7%94%9F%E5%9B%BE-->Image to image</td>
                                 <td>4k</td>
-                                <td>22.8 积分/张</td>
+                                <td><!--pricing-source:22.8%20%E7%A7%AF%E5%88%86%2F%E5%BC%A0-->22.8 credits/image</td>
                                 <td>$0.342</td>
                             </tr>
                             <tr>
                                 <td>Nano Banana Pro</td>
-                                <td>文生图</td>
-                                <td>默认标准</td>
-                                <td>19.6 积分/张</td>
+                                <td><!--pricing-source:%E6%96%87%E7%94%9F%E5%9B%BE-->Text to image</td>
+                                <td><!--pricing-source:%E9%BB%98%E8%AE%A4%E6%A0%87%E5%87%86-->Default</td>
+                                <td><!--pricing-source:19.6%20%E7%A7%AF%E5%88%86%2F%E5%BC%A0-->19.6 credits/image</td>
                                 <td>$0.294</td>
                             </tr>
                             <tr>
                                 <td>Nano Banana Pro</td>
-                                <td>图像编辑</td>
-                                <td>默认标准</td>
-                                <td>22.8 积分/张</td>
+                                <td><!--pricing-source:%E5%9B%BE%E5%83%8F%E7%BC%96%E8%BE%91-->Image editing</td>
+                                <td><!--pricing-source:%E9%BB%98%E8%AE%A4%E6%A0%87%E5%87%86-->Default</td>
+                                <td><!--pricing-source:22.8%20%E7%A7%AF%E5%88%86%2F%E5%BC%A0-->22.8 credits/image</td>
                                 <td>$0.342</td>
                             </tr>
                             <tr>
                                 <td>Seedream (v5 Pro)</td>
-                                <td>文生图 / 图生图</td>
+                                <td><!--pricing-source:%E6%96%87%E7%94%9F%E5%9B%BE%20%2F%20%E5%9B%BE%E7%94%9F%E5%9B%BE-->Text to image / image to image</td>
                                 <td>1k</td>
-                                <td>6.6 积分/张</td>
+                                <td><!--pricing-source:6.6%20%E7%A7%AF%E5%88%86%2F%E5%BC%A0-->6.6 credits/image</td>
                                 <td>$0.099</td>
                             </tr>
                             <tr>
                                 <td>Seedream (v5 Pro)</td>
-                                <td>文生图 / 图生图</td>
+                                <td><!--pricing-source:%E6%96%87%E7%94%9F%E5%9B%BE%20%2F%20%E5%9B%BE%E7%94%9F%E5%9B%BE-->Text to image / image to image</td>
                                 <td>2k / 4k</td>
-                                <td>13.2 积分/张</td>
+                                <td><!--pricing-source:13.2%20%E7%A7%AF%E5%88%86%2F%E5%BC%A0-->13.2 credits/image</td>
                                 <td>$0.198</td>
                             </tr>
                             <tr>
                                 <td>Z-Image</td>
-                                <td>通用生图</td>
-                                <td>默认标准</td>
-                                <td>1.8 积分/张</td>
+                                <td><!--pricing-source:%E9%80%9A%E7%94%A8%E7%94%9F%E5%9B%BE-->Image generation</td>
+                                <td><!--pricing-source:%E9%BB%98%E8%AE%A4%E6%A0%87%E5%87%86-->Default</td>
+                                <td><!--pricing-source:1.8%20%E7%A7%AF%E5%88%86%2F%E5%BC%A0-->1.8 credits/image</td>
                                 <td>$0.027</td>
                             </tr>
                             <tr>
-                                <td>万相 2.5 Preview</td>
-                                <td>图生图</td>
-                                <td>默认标准</td>
-                                <td>3.5 积分/张</td>
+                                <td><!--pricing-source:%E4%B8%87%E7%9B%B8%202.5%20Preview-->Wanxiang 2.5 Preview</td>
+                                <td><!--pricing-source:%E5%9B%BE%E7%94%9F%E5%9B%BE-->Image to image</td>
+                                <td><!--pricing-source:%E9%BB%98%E8%AE%A4%E6%A0%87%E5%87%86-->Default</td>
+                                <td><!--pricing-source:3.5%20%E7%A7%AF%E5%88%86%2F%E5%BC%A0-->3.5 credits/image</td>
                                 <td>$0.052</td>
                             </tr>
                             <tr>
-                                <td>万相 (2.7 Edit Pro)</td>
-                                <td>图像编辑</td>
-                                <td>默认标准</td>
-                                <td>11.4 积分/张</td>
+                                <td><!--pricing-source:%E4%B8%87%E7%9B%B8%20(2.7%20Edit%20Pro)-->Wanxiang (2.7 Edit Pro)</td>
+                                <td><!--pricing-source:%E5%9B%BE%E5%83%8F%E7%BC%96%E8%BE%91-->Image editing</td>
+                                <td><!--pricing-source:%E9%BB%98%E8%AE%A4%E6%A0%87%E5%87%86-->Default</td>
+                                <td><!--pricing-source:11.4%20%E7%A7%AF%E5%88%86%2F%E5%BC%A0-->11.4 credits/image</td>
                                 <td>$0.171</td>
                             </tr>
                             <tr>
-                                <td>千问 2.0</td>
-                                <td>文生图 / 图像编辑</td>
-                                <td>默认标准</td>
-                                <td>3.5 积分/张</td>
+                                <td><!--pricing-source:%E5%8D%83%E9%97%AE%202.0-->Qwen 2.0</td>
+                                <td><!--pricing-source:%E6%96%87%E7%94%9F%E5%9B%BE%20%2F%20%E5%9B%BE%E5%83%8F%E7%BC%96%E8%BE%91-->Text to image / image editing</td>
+                                <td><!--pricing-source:%E9%BB%98%E8%AE%A4%E6%A0%87%E5%87%86-->Default</td>
+                                <td><!--pricing-source:3.5%20%E7%A7%AF%E5%88%86%2F%E5%BC%A0-->3.5 credits/image</td>
                                 <td>$0.052</td>
                             </tr>
                             <tr>
-                                <td>千问 3.0 图像编辑</td>
-                                <td>图像编辑</td>
-                                <td>默认标准</td>
-                                <td>8.2 积分/张</td>
+                                <td><!--pricing-source:%E5%8D%83%E9%97%AE%203.0%20%E5%9B%BE%E5%83%8F%E7%BC%96%E8%BE%91-->Qwen 3.0 Image editing</td>
+                                <td><!--pricing-source:%E5%9B%BE%E5%83%8F%E7%BC%96%E8%BE%91-->Image editing</td>
+                                <td><!--pricing-source:%E9%BB%98%E8%AE%A4%E6%A0%87%E5%87%86-->Default</td>
+                                <td><!--pricing-source:8.2%20%E7%A7%AF%E5%88%86%2F%E5%BC%A0-->8.2 credits/image</td>
                                 <td>$0.123</td>
                             </tr>
                             <tr>
-                                <td>悠船 V8.2 快速</td>
-                                <td>文生图</td>
-                                <td>默认标准</td>
-                                <td>13.1 积分/张</td>
+                                <td><!--pricing-source:%E6%82%A0%E8%88%B9%20V8.2%20%E5%BF%AB%E9%80%9F-->Midjourney V8.2 Fast</td>
+                                <td><!--pricing-source:%E6%96%87%E7%94%9F%E5%9B%BE-->Text to image</td>
+                                <td><!--pricing-source:%E9%BB%98%E8%AE%A4%E6%A0%87%E5%87%86-->Default</td>
+                                <td><!--pricing-source:13.1%20%E7%A7%AF%E5%88%86%2F%E5%BC%A0-->13.1 credits/image</td>
                                 <td>$0.196</td>
                             </tr>
                             <tr>
-                                <td>悠船 (V6 / V7 / Niji 7 / V8.1 / V8.2预览)</td>
-                                <td>文生图</td>
-                                <td>默认标准</td>
-                                <td>14.7 积分/张</td>
+                                <td><!--pricing-source:%E6%82%A0%E8%88%B9%20(V6%20%2F%20V7%20%2F%20Niji%207%20%2F%20V8.1%20%2F%20V8.2%E9%A2%84%E8%A7%88)-->Midjourney (V6 / V7 / Niji 7 / V8.1 / V8.2Preview)</td>
+                                <td><!--pricing-source:%E6%96%87%E7%94%9F%E5%9B%BE-->Text to image</td>
+                                <td><!--pricing-source:%E9%BB%98%E8%AE%A4%E6%A0%87%E5%87%86-->Default</td>
+                                <td><!--pricing-source:14.7%20%E7%A7%AF%E5%88%86%2F%E5%BC%A0-->14.7 credits/image</td>
                                 <td>$0.220</td>
                             </tr>
                         </tbody>
@@ -1083,248 +1092,248 @@
                 </div>
             </section>
             <section id="section-4">
-                <h2>视频生成（按秒）</h2>
+                <h2><!--pricing-source:%E8%A7%86%E9%A2%91%E7%94%9F%E6%88%90%EF%BC%88%E6%8C%89%E7%A7%92%EF%BC%89-->Video generation (per second)</h2>
                 <div class="table-scroll">
                     <table>
                         <thead>
                             <tr>
-                                <th scope="col">模型</th>
-                                <th scope="col">能力</th>
-                                <th scope="col">规格</th>
-                                <th scope="col">积分/秒</th>
-                                <th scope="col">参考价/秒 (USD)</th>
+                                <th scope="col"><!--pricing-source:%E6%A8%A1%E5%9E%8B-->Model</th>
+                                <th scope="col"><!--pricing-source:%E8%83%BD%E5%8A%9B-->Capability</th>
+                                <th scope="col"><!--pricing-source:%E8%A7%84%E6%A0%BC-->Specification</th>
+                                <th scope="col"><!--pricing-source:%E7%A7%AF%E5%88%86%2F%E7%A7%92-->credits/second</th>
+                                <th scope="col"><!--pricing-source:%E5%8F%82%E8%80%83%E4%BB%B7%2F%E7%A7%92%20(USD)-->Reference price / second (USD)</th>
                             </tr>
                         </thead>
                         <tbody>
                             <tr>
                                 <td>LTX (2.3)</td>
-                                <td>图生视频</td>
-                                <td>默认标准</td>
-                                <td>1.8 积分/秒</td>
+                                <td><!--pricing-source:%E5%9B%BE%E7%94%9F%E8%A7%86%E9%A2%91-->Image to video</td>
+                                <td><!--pricing-source:%E9%BB%98%E8%AE%A4%E6%A0%87%E5%87%86-->Default</td>
+                                <td><!--pricing-source:1.8%20%E7%A7%AF%E5%88%86%2F%E7%A7%92-->1.8 credits/second</td>
                                 <td>$0.027</td>
                             </tr>
                             <tr>
                                 <td>PixVerse V6</td>
-                                <td>文生 / 图生视频</td>
+                                <td><!--pricing-source:%E6%96%87%E7%94%9F%20%2F%20%E5%9B%BE%E7%94%9F%E8%A7%86%E9%A2%91-->Text / image to video</td>
                                 <td>360p</td>
-                                <td>4.9 积分/秒</td>
+                                <td><!--pricing-source:4.9%20%E7%A7%AF%E5%88%86%2F%E7%A7%92-->4.9 credits/second</td>
                                 <td>$0.073</td>
                             </tr>
                             <tr>
                                 <td>PixVerse V6</td>
-                                <td>文生 / 图生视频</td>
+                                <td><!--pricing-source:%E6%96%87%E7%94%9F%20%2F%20%E5%9B%BE%E7%94%9F%E8%A7%86%E9%A2%91-->Text / image to video</td>
                                 <td>540p</td>
-                                <td>6.6 积分/秒</td>
+                                <td><!--pricing-source:6.6%20%E7%A7%AF%E5%88%86%2F%E7%A7%92-->6.6 credits/second</td>
                                 <td>$0.099</td>
                             </tr>
                             <tr>
                                 <td>PixVerse V6</td>
-                                <td>文生 / 图生视频</td>
+                                <td><!--pricing-source:%E6%96%87%E7%94%9F%20%2F%20%E5%9B%BE%E7%94%9F%E8%A7%86%E9%A2%91-->Text / image to video</td>
                                 <td>720p</td>
-                                <td>8.2 积分/秒</td>
+                                <td><!--pricing-source:8.2%20%E7%A7%AF%E5%88%86%2F%E7%A7%92-->8.2 credits/second</td>
                                 <td>$0.123</td>
                             </tr>
                             <tr>
                                 <td>PixVerse V6</td>
-                                <td>文生 / 图生视频</td>
+                                <td><!--pricing-source:%E6%96%87%E7%94%9F%20%2F%20%E5%9B%BE%E7%94%9F%E8%A7%86%E9%A2%91-->Text / image to video</td>
                                 <td>1080p</td>
-                                <td>14.7 积分/秒</td>
+                                <td><!--pricing-source:14.7%20%E7%A7%AF%E5%88%86%2F%E7%A7%92-->14.7 credits/second</td>
                                 <td>$0.220</td>
                             </tr>
                             <tr>
                                 <td>MiniMax H3</td>
-                                <td>文生视频</td>
-                                <td>默认标准</td>
-                                <td>5.3 积分/秒</td>
+                                <td><!--pricing-source:%E6%96%87%E7%94%9F%E8%A7%86%E9%A2%91-->Text to video</td>
+                                <td><!--pricing-source:%E9%BB%98%E8%AE%A4%E6%A0%87%E5%87%86-->Default</td>
+                                <td><!--pricing-source:5.3%20%E7%A7%AF%E5%88%86%2F%E7%A7%92-->5.3 credits/second</td>
                                 <td>$0.079</td>
                             </tr>
                             <tr>
                                 <td>MiniMax H3</td>
-                                <td>图生视频</td>
-                                <td>默认标准</td>
-                                <td>12.6 积分/秒</td>
+                                <td><!--pricing-source:%E5%9B%BE%E7%94%9F%E8%A7%86%E9%A2%91-->Image to video</td>
+                                <td><!--pricing-source:%E9%BB%98%E8%AE%A4%E6%A0%87%E5%87%86-->Default</td>
+                                <td><!--pricing-source:12.6%20%E7%A7%AF%E5%88%86%2F%E7%A7%92-->12.6 credits/second</td>
                                 <td>$0.189</td>
                             </tr>
                             <tr>
                                 <td>MiniMax H3 Max Turbo</td>
-                                <td>文生视频</td>
+                                <td><!--pricing-source:%E6%96%87%E7%94%9F%E8%A7%86%E9%A2%91-->Text to video</td>
                                 <td>480p</td>
-                                <td>5.3 积分/秒</td>
+                                <td><!--pricing-source:5.3%20%E7%A7%AF%E5%88%86%2F%E7%A7%92-->5.3 credits/second</td>
                                 <td>$0.079</td>
                             </tr>
                             <tr>
                                 <td>MiniMax H3 Max Turbo</td>
-                                <td>文生视频</td>
+                                <td><!--pricing-source:%E6%96%87%E7%94%9F%E8%A7%86%E9%A2%91-->Text to video</td>
                                 <td>768p</td>
-                                <td>8.2 积分/秒</td>
+                                <td><!--pricing-source:8.2%20%E7%A7%AF%E5%88%86%2F%E7%A7%92-->8.2 credits/second</td>
                                 <td>$0.123</td>
                             </tr>
                             <tr>
                                 <td>SkyReels V4 Fast</td>
-                                <td>图生视频</td>
+                                <td><!--pricing-source:%E5%9B%BE%E7%94%9F%E8%A7%86%E9%A2%91-->Image to video</td>
                                 <td>480p</td>
-                                <td>6.6 积分/秒</td>
+                                <td><!--pricing-source:6.6%20%E7%A7%AF%E5%88%86%2F%E7%A7%92-->6.6 credits/second</td>
                                 <td>$0.099</td>
                             </tr>
                             <tr>
                                 <td>SkyReels V4 Fast</td>
-                                <td>图生视频</td>
+                                <td><!--pricing-source:%E5%9B%BE%E7%94%9F%E8%A7%86%E9%A2%91-->Image to video</td>
                                 <td>720p</td>
-                                <td>9.8 积分/秒</td>
+                                <td><!--pricing-source:9.8%20%E7%A7%AF%E5%88%86%2F%E7%A7%92-->9.8 credits/second</td>
                                 <td>$0.147</td>
                             </tr>
                             <tr>
                                 <td>SkyReels V4 Fast</td>
-                                <td>图生视频</td>
+                                <td><!--pricing-source:%E5%9B%BE%E7%94%9F%E8%A7%86%E9%A2%91-->Image to video</td>
                                 <td>1080p</td>
-                                <td>22.8 积分/秒</td>
+                                <td><!--pricing-source:22.8%20%E7%A7%AF%E5%88%86%2F%E7%A7%92-->22.8 credits/second</td>
                                 <td>$0.342</td>
                             </tr>
                             <tr>
                                 <td>SkyReels V4</td>
-                                <td>图生视频</td>
-                                <td>默认标准</td>
-                                <td>9.8 积分/秒</td>
+                                <td><!--pricing-source:%E5%9B%BE%E7%94%9F%E8%A7%86%E9%A2%91-->Image to video</td>
+                                <td><!--pricing-source:%E9%BB%98%E8%AE%A4%E6%A0%87%E5%87%86-->Default</td>
+                                <td><!--pricing-source:9.8%20%E7%A7%AF%E5%88%86%2F%E7%A7%92-->9.8 credits/second</td>
                                 <td>$0.147</td>
                             </tr>
                             <tr>
                                 <td>Seedance 2.0 Mini</td>
-                                <td>图生视频</td>
+                                <td><!--pricing-source:%E5%9B%BE%E7%94%9F%E8%A7%86%E9%A2%91-->Image to video</td>
                                 <td>480p</td>
-                                <td>8.2 积分/秒</td>
+                                <td><!--pricing-source:8.2%20%E7%A7%AF%E5%88%86%2F%E7%A7%92-->8.2 credits/second</td>
                                 <td>$0.123</td>
                             </tr>
                             <tr>
                                 <td>Seedance 2.0 Mini</td>
-                                <td>图生视频</td>
+                                <td><!--pricing-source:%E5%9B%BE%E7%94%9F%E8%A7%86%E9%A2%91-->Image to video</td>
                                 <td>720p</td>
-                                <td>16.3 积分/秒</td>
+                                <td><!--pricing-source:16.3%20%E7%A7%AF%E5%88%86%2F%E7%A7%92-->16.3 credits/second</td>
                                 <td>$0.244</td>
                             </tr>
                             <tr>
                                 <td>Seedance 2.0 Fast</td>
-                                <td>图生视频</td>
+                                <td><!--pricing-source:%E5%9B%BE%E7%94%9F%E8%A7%86%E9%A2%91-->Image to video</td>
                                 <td>480p</td>
-                                <td>13.1 积分/秒</td>
+                                <td><!--pricing-source:13.1%20%E7%A7%AF%E5%88%86%2F%E7%A7%92-->13.1 credits/second</td>
                                 <td>$0.196</td>
                             </tr>
                             <tr>
                                 <td>Seedance 2.0 Fast</td>
-                                <td>图生视频</td>
+                                <td><!--pricing-source:%E5%9B%BE%E7%94%9F%E8%A7%86%E9%A2%91-->Image to video</td>
                                 <td>720p</td>
-                                <td>25.5 积分/秒</td>
+                                <td><!--pricing-source:25.5%20%E7%A7%AF%E5%88%86%2F%E7%A7%92-->25.5 credits/second</td>
                                 <td>$0.382</td>
                             </tr>
                             <tr>
                                 <td>Seedance 2.0 Fast</td>
-                                <td>图生视频</td>
+                                <td><!--pricing-source:%E5%9B%BE%E7%94%9F%E8%A7%86%E9%A2%91-->Image to video</td>
                                 <td>1080p</td>
-                                <td>31.9 积分/秒</td>
+                                <td><!--pricing-source:31.9%20%E7%A7%AF%E5%88%86%2F%E7%A7%92-->31.9 credits/second</td>
                                 <td>$0.478</td>
                             </tr>
                             <tr>
                                 <td>Seedance 2.0</td>
-                                <td>图生视频</td>
+                                <td><!--pricing-source:%E5%9B%BE%E7%94%9F%E8%A7%86%E9%A2%91-->Image to video</td>
                                 <td>480p</td>
-                                <td>16.3 积分/秒</td>
+                                <td><!--pricing-source:16.3%20%E7%A7%AF%E5%88%86%2F%E7%A7%92-->16.3 credits/second</td>
                                 <td>$0.244</td>
                             </tr>
                             <tr>
                                 <td>Seedance 2.0</td>
-                                <td>图生视频</td>
+                                <td><!--pricing-source:%E5%9B%BE%E7%94%9F%E8%A7%86%E9%A2%91-->Image to video</td>
                                 <td>720p</td>
-                                <td>31.9 积分/秒</td>
+                                <td><!--pricing-source:31.9%20%E7%A7%AF%E5%88%86%2F%E7%A7%92-->31.9 credits/second</td>
                                 <td>$0.478</td>
                             </tr>
                             <tr>
                                 <td>Seedance 2.0</td>
-                                <td>图生视频</td>
+                                <td><!--pricing-source:%E5%9B%BE%E7%94%9F%E8%A7%86%E9%A2%91-->Image to video</td>
                                 <td>1080p</td>
-                                <td>38.2 积分/秒</td>
+                                <td><!--pricing-source:38.2%20%E7%A7%AF%E5%88%86%2F%E7%A7%92-->38.2 credits/second</td>
                                 <td>$0.572</td>
                             </tr>
                             <tr>
                                 <td>Grok Imagine / V1.5</td>
-                                <td>文生 / 图生视频</td>
-                                <td>默认 / 480p</td>
-                                <td>13.1 积分/秒</td>
+                                <td><!--pricing-source:%E6%96%87%E7%94%9F%20%2F%20%E5%9B%BE%E7%94%9F%E8%A7%86%E9%A2%91-->Text / image to video</td>
+                                <td><!--pricing-source:%E9%BB%98%E8%AE%A4%20%2F%20480p-->Default / 480p</td>
+                                <td><!--pricing-source:13.1%20%E7%A7%AF%E5%88%86%2F%E7%A7%92-->13.1 credits/second</td>
                                 <td>$0.196</td>
                             </tr>
                             <tr>
                                 <td>Grok Imagine V1.5</td>
-                                <td>图生视频</td>
+                                <td><!--pricing-source:%E5%9B%BE%E7%94%9F%E8%A7%86%E9%A2%91-->Image to video</td>
                                 <td>720p</td>
-                                <td>22.8 积分/秒</td>
+                                <td><!--pricing-source:22.8%20%E7%A7%AF%E5%88%86%2F%E7%A7%92-->22.8 credits/second</td>
                                 <td>$0.342</td>
                             </tr>
                             <tr>
                                 <td>Veo 3.1 Lite</td>
-                                <td>文生视频</td>
+                                <td><!--pricing-source:%E6%96%87%E7%94%9F%E8%A7%86%E9%A2%91-->Text to video</td>
                                 <td>720p</td>
-                                <td>8.2 积分/秒</td>
+                                <td><!--pricing-source:8.2%20%E7%A7%AF%E5%88%86%2F%E7%A7%92-->8.2 credits/second</td>
                                 <td>$0.123</td>
                             </tr>
                             <tr>
                                 <td>Veo 3.1 Lite</td>
-                                <td>文生视频</td>
+                                <td><!--pricing-source:%E6%96%87%E7%94%9F%E8%A7%86%E9%A2%91-->Text to video</td>
                                 <td>1080p</td>
-                                <td>13.1 积分/秒</td>
+                                <td><!--pricing-source:13.1%20%E7%A7%AF%E5%88%86%2F%E7%A7%92-->13.1 credits/second</td>
                                 <td>$0.196</td>
                             </tr>
                             <tr>
                                 <td>Veo 3.1 Pro</td>
-                                <td>文生 / 图生视频</td>
-                                <td>默认标准</td>
-                                <td>27.1 积分/秒</td>
+                                <td><!--pricing-source:%E6%96%87%E7%94%9F%20%2F%20%E5%9B%BE%E7%94%9F%E8%A7%86%E9%A2%91-->Text / image to video</td>
+                                <td><!--pricing-source:%E9%BB%98%E8%AE%A4%E6%A0%87%E5%87%86-->Default</td>
+                                <td><!--pricing-source:27.1%20%E7%A7%AF%E5%88%86%2F%E7%A7%92-->27.1 credits/second</td>
                                 <td>$0.406</td>
                             </tr>
                             <tr>
                                 <td>Vidu Q3</td>
-                                <td>图生视频 (Pro)</td>
-                                <td>默认标准</td>
-                                <td>8.2 积分/秒</td>
+                                <td><!--pricing-source:%E5%9B%BE%E7%94%9F%E8%A7%86%E9%A2%91%20(Pro)-->Image to video (Pro)</td>
+                                <td><!--pricing-source:%E9%BB%98%E8%AE%A4%E6%A0%87%E5%87%86-->Default</td>
+                                <td><!--pricing-source:8.2%20%E7%A7%AF%E5%88%86%2F%E7%A7%92-->8.2 credits/second</td>
                                 <td>$0.123</td>
                             </tr>
                             <tr>
                                 <td>Vidu Q3</td>
-                                <td>参考生视频 (Drama)</td>
-                                <td>默认标准</td>
-                                <td>16.3 积分/秒</td>
+                                <td><!--pricing-source:%E5%8F%82%E8%80%83%E7%94%9F%E8%A7%86%E9%A2%91%20(Drama)-->Reference to video (Drama)</td>
+                                <td><!--pricing-source:%E9%BB%98%E8%AE%A4%E6%A0%87%E5%87%86-->Default</td>
+                                <td><!--pricing-source:16.3%20%E7%A7%AF%E5%88%86%2F%E7%A7%92-->16.3 credits/second</td>
                                 <td>$0.244</td>
                             </tr>
                             <tr>
-                                <td>可灵 3.0 Pro</td>
-                                <td>图生视频</td>
-                                <td>无声</td>
-                                <td>16.3 积分/秒</td>
+                                <td><!--pricing-source:%E5%8F%AF%E7%81%B5%203.0%20Pro-->Kling 3.0 Pro</td>
+                                <td><!--pricing-source:%E5%9B%BE%E7%94%9F%E8%A7%86%E9%A2%91-->Image to video</td>
+                                <td><!--pricing-source:%E6%97%A0%E5%A3%B0-->Silent</td>
+                                <td><!--pricing-source:16.3%20%E7%A7%AF%E5%88%86%2F%E7%A7%92-->16.3 credits/second</td>
                                 <td>$0.244</td>
                             </tr>
                             <tr>
-                                <td>可灵 3.0 Pro</td>
-                                <td>图生视频</td>
-                                <td>有声</td>
-                                <td>24.5 积分/秒</td>
+                                <td><!--pricing-source:%E5%8F%AF%E7%81%B5%203.0%20Pro-->Kling 3.0 Pro</td>
+                                <td><!--pricing-source:%E5%9B%BE%E7%94%9F%E8%A7%86%E9%A2%91-->Image to video</td>
+                                <td><!--pricing-source:%E6%9C%89%E5%A3%B0-->With sound</td>
+                                <td><!--pricing-source:24.5%20%E7%A7%AF%E5%88%86%2F%E7%A7%92-->24.5 credits/second</td>
                                 <td>$0.367</td>
                             </tr>
                             <tr>
-                                <td>可灵 4.0</td>
-                                <td>文生 / 图生视频</td>
-                                <td>默认标准</td>
-                                <td>30.3 积分/秒</td>
+                                <td><!--pricing-source:%E5%8F%AF%E7%81%B5%204.0-->Kling 4.0</td>
+                                <td><!--pricing-source:%E6%96%87%E7%94%9F%20%2F%20%E5%9B%BE%E7%94%9F%E8%A7%86%E9%A2%91-->Text / image to video</td>
+                                <td><!--pricing-source:%E9%BB%98%E8%AE%A4%E6%A0%87%E5%87%86-->Default</td>
+                                <td><!--pricing-source:30.3%20%E7%A7%AF%E5%88%86%2F%E7%A7%92-->30.3 credits/second</td>
                                 <td>$0.454</td>
                             </tr>
                             <tr>
                                 <td>Sora 2 Pro</td>
-                                <td>图生视频</td>
+                                <td><!--pricing-source:%E5%9B%BE%E7%94%9F%E8%A7%86%E9%A2%91-->Image to video</td>
                                 <td>720p</td>
-                                <td>47.8 积分/秒</td>
+                                <td><!--pricing-source:47.8%20%E7%A7%AF%E5%88%86%2F%E7%A7%92-->47.8 credits/second</td>
                                 <td>$0.716</td>
                             </tr>
                             <tr>
                                 <td>Sora 2 Pro</td>
-                                <td>图生视频</td>
+                                <td><!--pricing-source:%E5%9B%BE%E7%94%9F%E8%A7%86%E9%A2%91-->Image to video</td>
                                 <td>1080p</td>
-                                <td>79.6 积分/秒</td>
+                                <td><!--pricing-source:79.6%20%E7%A7%AF%E5%88%86%2F%E7%A7%92-->79.6 credits/second</td>
                                 <td>$1.193</td>
                             </tr>
                         </tbody>
@@ -1332,220 +1341,220 @@
                 </div>
             </section>
             <section id="section-5">
-                <h2>视频生成（按条）</h2>
+                <h2><!--pricing-source:%E8%A7%86%E9%A2%91%E7%94%9F%E6%88%90%EF%BC%88%E6%8C%89%E6%9D%A1%EF%BC%89-->Video generation (per clip)</h2>
                 <div class="table-scroll">
                     <table>
                         <thead>
                             <tr>
-                                <th scope="col">模型</th>
-                                <th scope="col">能力</th>
-                                <th scope="col">规格</th>
-                                <th scope="col">积分/条</th>
-                                <th scope="col">参考价/条 (USD)</th>
+                                <th scope="col"><!--pricing-source:%E6%A8%A1%E5%9E%8B-->Model</th>
+                                <th scope="col"><!--pricing-source:%E8%83%BD%E5%8A%9B-->Capability</th>
+                                <th scope="col"><!--pricing-source:%E8%A7%84%E6%A0%BC-->Specification</th>
+                                <th scope="col"><!--pricing-source:%E7%A7%AF%E5%88%86%2F%E6%9D%A1-->credits/clip</th>
+                                <th scope="col"><!--pricing-source:%E5%8F%82%E8%80%83%E4%BB%B7%2F%E6%9D%A1%20(USD)-->Reference price / clip (USD)</th>
                             </tr>
                         </thead>
                         <tbody>
                             <tr>
                                 <td>Vidu Q2 Turbo</td>
-                                <td>图生视频</td>
+                                <td><!--pricing-source:%E5%9B%BE%E7%94%9F%E8%A7%86%E9%A2%91-->Image to video</td>
                                 <td>540p · 4s</td>
-                                <td>6.6 积分/条</td>
+                                <td><!--pricing-source:6.6%20%E7%A7%AF%E5%88%86%2F%E6%9D%A1-->6.6 credits/clip</td>
                                 <td>$0.099</td>
                             </tr>
                             <tr>
                                 <td>Vidu Q2 Turbo</td>
-                                <td>图生视频</td>
+                                <td><!--pricing-source:%E5%9B%BE%E7%94%9F%E8%A7%86%E9%A2%91-->Image to video</td>
                                 <td>540p · 8s</td>
-                                <td>11.4 积分/条</td>
+                                <td><!--pricing-source:11.4%20%E7%A7%AF%E5%88%86%2F%E6%9D%A1-->11.4 credits/clip</td>
                                 <td>$0.171</td>
                             </tr>
                             <tr>
                                 <td>Vidu Q2 Turbo</td>
-                                <td>图生视频</td>
+                                <td><!--pricing-source:%E5%9B%BE%E7%94%9F%E8%A7%86%E9%A2%91-->Image to video</td>
                                 <td>720p · 4s</td>
-                                <td>18.0 积分/条</td>
+                                <td><!--pricing-source:18.0%20%E7%A7%AF%E5%88%86%2F%E6%9D%A1-->18.0 credits/clip</td>
                                 <td>$0.270</td>
                             </tr>
                             <tr>
                                 <td>Vidu Q2 Turbo</td>
-                                <td>图生视频</td>
+                                <td><!--pricing-source:%E5%9B%BE%E7%94%9F%E8%A7%86%E9%A2%91-->Image to video</td>
                                 <td>720p · 8s</td>
-                                <td>41.4 积分/条</td>
+                                <td><!--pricing-source:41.4%20%E7%A7%AF%E5%88%86%2F%E6%9D%A1-->41.4 credits/clip</td>
                                 <td>$0.620</td>
                             </tr>
                             <tr>
                                 <td>Vidu Q2 Turbo</td>
-                                <td>图生视频</td>
+                                <td><!--pricing-source:%E5%9B%BE%E7%94%9F%E8%A7%86%E9%A2%91-->Image to video</td>
                                 <td>1080p · 4s</td>
-                                <td>38.2 积分/条</td>
+                                <td><!--pricing-source:38.2%20%E7%A7%AF%E5%88%86%2F%E6%9D%A1-->38.2 credits/clip</td>
                                 <td>$0.572</td>
                             </tr>
                             <tr>
                                 <td>Vidu Q2 Turbo</td>
-                                <td>图生视频</td>
+                                <td><!--pricing-source:%E5%9B%BE%E7%94%9F%E8%A7%86%E9%A2%91-->Image to video</td>
                                 <td>1080p · 8s</td>
-                                <td>60.5 积分/条</td>
+                                <td><!--pricing-source:60.5%20%E7%A7%AF%E5%88%86%2F%E6%9D%A1-->60.5 credits/clip</td>
                                 <td>$0.906</td>
                             </tr>
                             <tr>
                                 <td>Vidu Q2 Pro Fast</td>
-                                <td>图生视频</td>
+                                <td><!--pricing-source:%E5%9B%BE%E7%94%9F%E8%A7%86%E9%A2%91-->Image to video</td>
                                 <td>720p · 4s</td>
-                                <td>9.8 积分/条</td>
+                                <td><!--pricing-source:9.8%20%E7%A7%AF%E5%88%86%2F%E6%9D%A1-->9.8 credits/clip</td>
                                 <td>$0.147</td>
                             </tr>
                             <tr>
                                 <td>Vidu Q2 Pro Fast</td>
-                                <td>图生视频</td>
+                                <td><!--pricing-source:%E5%9B%BE%E7%94%9F%E8%A7%86%E9%A2%91-->Image to video</td>
                                 <td>720p · 8s</td>
-                                <td>16.3 积分/条</td>
+                                <td><!--pricing-source:16.3%20%E7%A7%AF%E5%88%86%2F%E6%9D%A1-->16.3 credits/clip</td>
                                 <td>$0.244</td>
                             </tr>
                             <tr>
                                 <td>Vidu Q2 Pro Fast</td>
-                                <td>图生视频</td>
+                                <td><!--pricing-source:%E5%9B%BE%E7%94%9F%E8%A7%86%E9%A2%91-->Image to video</td>
                                 <td>1080p · 4s</td>
-                                <td>19.6 积分/条</td>
+                                <td><!--pricing-source:19.6%20%E7%A7%AF%E5%88%86%2F%E6%9D%A1-->19.6 credits/clip</td>
                                 <td>$0.294</td>
                             </tr>
                             <tr>
                                 <td>Vidu Q2 Pro Fast</td>
-                                <td>图生视频</td>
+                                <td><!--pricing-source:%E5%9B%BE%E7%94%9F%E8%A7%86%E9%A2%91-->Image to video</td>
                                 <td>1080p · 8s</td>
-                                <td>31.9 积分/条</td>
+                                <td><!--pricing-source:31.9%20%E7%A7%AF%E5%88%86%2F%E6%9D%A1-->31.9 credits/clip</td>
                                 <td>$0.478</td>
                             </tr>
                             <tr>
                                 <td>Vidu Q2 Pro</td>
-                                <td>图生视频</td>
+                                <td><!--pricing-source:%E5%9B%BE%E7%94%9F%E8%A7%86%E9%A2%91-->Image to video</td>
                                 <td>540p · 4s</td>
-                                <td>11.4 积分/条</td>
+                                <td><!--pricing-source:11.4%20%E7%A7%AF%E5%88%86%2F%E6%9D%A1-->11.4 credits/clip</td>
                                 <td>$0.171</td>
                             </tr>
                             <tr>
                                 <td>Vidu Q2 Pro</td>
-                                <td>图生视频</td>
+                                <td><!--pricing-source:%E5%9B%BE%E7%94%9F%E8%A7%86%E9%A2%91-->Image to video</td>
                                 <td>540p · 8s</td>
-                                <td>24.5 积分/条</td>
+                                <td><!--pricing-source:24.5%20%E7%A7%AF%E5%88%86%2F%E6%9D%A1-->24.5 credits/clip</td>
                                 <td>$0.367</td>
                             </tr>
                             <tr>
                                 <td>Vidu Q2 Pro</td>
-                                <td>图生视频</td>
+                                <td><!--pricing-source:%E5%9B%BE%E7%94%9F%E8%A7%86%E9%A2%91-->Image to video</td>
                                 <td>720p · 4s</td>
-                                <td>25.5 积分/条</td>
+                                <td><!--pricing-source:25.5%20%E7%A7%AF%E5%88%86%2F%E6%9D%A1-->25.5 credits/clip</td>
                                 <td>$0.382</td>
                             </tr>
                             <tr>
                                 <td>Vidu Q2 Pro</td>
-                                <td>图生视频</td>
+                                <td><!--pricing-source:%E5%9B%BE%E7%94%9F%E8%A7%86%E9%A2%91-->Image to video</td>
                                 <td>720p · 8s</td>
-                                <td>49.4 积分/条</td>
+                                <td><!--pricing-source:49.4%20%E7%A7%AF%E5%88%86%2F%E6%9D%A1-->49.4 credits/clip</td>
                                 <td>$0.740</td>
                             </tr>
                             <tr>
                                 <td>Vidu Q2 Pro</td>
-                                <td>图生视频</td>
+                                <td><!--pricing-source:%E5%9B%BE%E7%94%9F%E8%A7%86%E9%A2%91-->Image to video</td>
                                 <td>1080p · 4s</td>
-                                <td>57.3 积分/条</td>
+                                <td><!--pricing-source:57.3%20%E7%A7%AF%E5%88%86%2F%E6%9D%A1-->57.3 credits/clip</td>
                                 <td>$0.859</td>
                             </tr>
                             <tr>
                                 <td>Vidu Q2 Pro</td>
-                                <td>图生视频</td>
+                                <td><!--pricing-source:%E5%9B%BE%E7%94%9F%E8%A7%86%E9%A2%91-->Image to video</td>
                                 <td>1080p · 8s</td>
-                                <td>92.3 积分/条</td>
+                                <td><!--pricing-source:92.3%20%E7%A7%AF%E5%88%86%2F%E6%9D%A1-->92.3 credits/clip</td>
                                 <td>$1.383</td>
                             </tr>
                             <tr>
-                                <td>可灵 2.6 标准版</td>
-                                <td>图生视频</td>
+                                <td><!--pricing-source:%E5%8F%AF%E7%81%B5%202.6%20%E6%A0%87%E5%87%86%E7%89%88-->Kling 2.6 Standard</td>
+                                <td><!--pricing-source:%E5%9B%BE%E7%94%9F%E8%A7%86%E9%A2%91-->Image to video</td>
                                 <td>5s</td>
-                                <td>24.5 积分/条</td>
+                                <td><!--pricing-source:24.5%20%E7%A7%AF%E5%88%86%2F%E6%9D%A1-->24.5 credits/clip</td>
                                 <td>$0.367</td>
                             </tr>
                             <tr>
-                                <td>可灵 2.6 标准版</td>
-                                <td>图生视频</td>
+                                <td><!--pricing-source:%E5%8F%AF%E7%81%B5%202.6%20%E6%A0%87%E5%87%86%E7%89%88-->Kling 2.6 Standard</td>
+                                <td><!--pricing-source:%E5%9B%BE%E7%94%9F%E8%A7%86%E9%A2%91-->Image to video</td>
                                 <td>10s</td>
-                                <td>47.8 积分/条</td>
+                                <td><!--pricing-source:47.8%20%E7%A7%AF%E5%88%86%2F%E6%9D%A1-->47.8 credits/clip</td>
                                 <td>$0.716</td>
                             </tr>
                             <tr>
-                                <td>可灵 2.5 Turbo 标准档</td>
-                                <td>文生视频</td>
+                                <td><!--pricing-source:%E5%8F%AF%E7%81%B5%202.5%20Turbo%20%E6%A0%87%E5%87%86%E6%A1%A3-->Kling 2.5 Turbo Standard tier</td>
+                                <td><!--pricing-source:%E6%96%87%E7%94%9F%E8%A7%86%E9%A2%91-->Text to video</td>
                                 <td>5s</td>
-                                <td>28.7 积分/条</td>
+                                <td><!--pricing-source:28.7%20%E7%A7%AF%E5%88%86%2F%E6%9D%A1-->28.7 credits/clip</td>
                                 <td>$0.430</td>
                             </tr>
                             <tr>
-                                <td>可灵 2.5 Turbo 标准档</td>
-                                <td>文生视频</td>
+                                <td><!--pricing-source:%E5%8F%AF%E7%81%B5%202.5%20Turbo%20%E6%A0%87%E5%87%86%E6%A1%A3-->Kling 2.5 Turbo Standard tier</td>
+                                <td><!--pricing-source:%E6%96%87%E7%94%9F%E8%A7%86%E9%A2%91-->Text to video</td>
                                 <td>10s</td>
-                                <td>55.7 积分/条</td>
+                                <td><!--pricing-source:55.7%20%E7%A7%AF%E5%88%86%2F%E6%9D%A1-->55.7 credits/clip</td>
                                 <td>$0.835</td>
                             </tr>
                             <tr>
-                                <td>悠船 图生视频</td>
-                                <td>图生视频</td>
+                                <td><!--pricing-source:%E6%82%A0%E8%88%B9%20%E5%9B%BE%E7%94%9F%E8%A7%86%E9%A2%91-->Midjourney Image to video</td>
+                                <td><!--pricing-source:%E5%9B%BE%E7%94%9F%E8%A7%86%E9%A2%91-->Image to video</td>
                                 <td>480p</td>
-                                <td>14.7 积分/条</td>
+                                <td><!--pricing-source:14.7%20%E7%A7%AF%E5%88%86%2F%E6%9D%A1-->14.7 credits/clip</td>
                                 <td>$0.220</td>
                             </tr>
                             <tr>
-                                <td>悠船 图生视频</td>
-                                <td>图生视频</td>
+                                <td><!--pricing-source:%E6%82%A0%E8%88%B9%20%E5%9B%BE%E7%94%9F%E8%A7%86%E9%A2%91-->Midjourney Image to video</td>
+                                <td><!--pricing-source:%E5%9B%BE%E7%94%9F%E8%A7%86%E9%A2%91-->Image to video</td>
                                 <td>720p</td>
-                                <td>43.0 积分/条</td>
+                                <td><!--pricing-source:43.0%20%E7%A7%AF%E5%88%86%2F%E6%9D%A1-->43.0 credits/clip</td>
                                 <td>$0.644</td>
                             </tr>
                             <tr>
                                 <td>Veo 3.1 Fast</td>
-                                <td>图生视频</td>
-                                <td>默认标准</td>
-                                <td>31.9 积分/条</td>
+                                <td><!--pricing-source:%E5%9B%BE%E7%94%9F%E8%A7%86%E9%A2%91-->Image to video</td>
+                                <td><!--pricing-source:%E9%BB%98%E8%AE%A4%E6%A0%87%E5%87%86-->Default</td>
+                                <td><!--pricing-source:31.9%20%E7%A7%AF%E5%88%86%2F%E6%9D%A1-->31.9 credits/clip</td>
                                 <td>$0.478</td>
                             </tr>
                             <tr>
-                                <td>Sora 2 经济版</td>
-                                <td>图生视频</td>
+                                <td><!--pricing-source:Sora%202%20%E7%BB%8F%E6%B5%8E%E7%89%88-->Sora 2 Economy</td>
+                                <td><!--pricing-source:%E5%9B%BE%E7%94%9F%E8%A7%86%E9%A2%91-->Image to video</td>
                                 <td>10s / 15s</td>
-                                <td>31.9 积分/条</td>
+                                <td><!--pricing-source:31.9%20%E7%A7%AF%E5%88%86%2F%E6%9D%A1-->31.9 credits/clip</td>
                                 <td>$0.478</td>
                             </tr>
                             <tr>
                                 <td>Sora 2</td>
-                                <td>文生 / 图生视频</td>
-                                <td>默认标准</td>
-                                <td>60.5 积分/条</td>
+                                <td><!--pricing-source:%E6%96%87%E7%94%9F%20%2F%20%E5%9B%BE%E7%94%9F%E8%A7%86%E9%A2%91-->Text / image to video</td>
+                                <td><!--pricing-source:%E9%BB%98%E8%AE%A4%E6%A0%87%E5%87%86-->Default</td>
+                                <td><!--pricing-source:60.5%20%E7%A7%AF%E5%88%86%2F%E6%9D%A1-->60.5 credits/clip</td>
                                 <td>$0.906</td>
                             </tr>
                             <tr>
-                                <td>Grok Imagine 视频</td>
-                                <td>图生视频</td>
+                                <td><!--pricing-source:Grok%20Imagine%20%E8%A7%86%E9%A2%91-->Grok Imagine Video</td>
+                                <td><!--pricing-source:%E5%9B%BE%E7%94%9F%E8%A7%86%E9%A2%91-->Image to video</td>
                                 <td>6s</td>
-                                <td>43.0 积分/条</td>
+                                <td><!--pricing-source:43.0%20%E7%A7%AF%E5%88%86%2F%E6%9D%A1-->43.0 credits/clip</td>
                                 <td>$0.644</td>
                             </tr>
                             <tr>
-                                <td>Grok Imagine 视频</td>
-                                <td>图生视频</td>
+                                <td><!--pricing-source:Grok%20Imagine%20%E8%A7%86%E9%A2%91-->Grok Imagine Video</td>
+                                <td><!--pricing-source:%E5%9B%BE%E7%94%9F%E8%A7%86%E9%A2%91-->Image to video</td>
                                 <td>10s</td>
-                                <td>71.6 积分/条</td>
+                                <td><!--pricing-source:71.6%20%E7%A7%AF%E5%88%86%2F%E6%9D%A1-->71.6 credits/clip</td>
                                 <td>$1.073</td>
                             </tr>
                             <tr>
-                                <td>海螺 2.3 Fast</td>
-                                <td>图生视频</td>
-                                <td>默认标准</td>
-                                <td>27.1 积分/条</td>
+                                <td><!--pricing-source:%E6%B5%B7%E8%9E%BA%202.3%20Fast-->Hailuo 2.3 Fast</td>
+                                <td><!--pricing-source:%E5%9B%BE%E7%94%9F%E8%A7%86%E9%A2%91-->Image to video</td>
+                                <td><!--pricing-source:%E9%BB%98%E8%AE%A4%E6%A0%87%E5%87%86-->Default</td>
+                                <td><!--pricing-source:27.1%20%E7%A7%AF%E5%88%86%2F%E6%9D%A1-->27.1 credits/clip</td>
                                 <td>$0.406</td>
                             </tr>
                             <tr>
-                                <td>海螺 02 Pro / 2.3 Pro</td>
-                                <td>图生视频</td>
-                                <td>默认标准</td>
-                                <td>70.0 积分/条</td>
+                                <td><!--pricing-source:%E6%B5%B7%E8%9E%BA%2002%20Pro%20%2F%202.3%20Pro-->Hailuo 02 Pro / 2.3 Pro</td>
+                                <td><!--pricing-source:%E5%9B%BE%E7%94%9F%E8%A7%86%E9%A2%91-->Image to video</td>
+                                <td><!--pricing-source:%E9%BB%98%E8%AE%A4%E6%A0%87%E5%87%86-->Default</td>
+                                <td><!--pricing-source:70.0%20%E7%A7%AF%E5%88%86%2F%E6%9D%A1-->70.0 credits/clip</td>
                                 <td>$1.049</td>
                             </tr>
                         </tbody>
@@ -1553,200 +1562,203 @@
                 </div>
             </section>
             <section id="section-6">
-                <h2>文本生成</h2>
+                <h2><!--pricing-source:%E6%96%87%E6%9C%AC%E7%94%9F%E6%88%90-->Text generation</h2>
                 <div class="table-scroll">
                     <table>
                         <thead>
                             <tr>
-                                <th scope="col">模型</th>
-                                <th scope="col">计费项目</th>
-                                <th scope="col">规格</th>
-                                <th scope="col">积分/百万 Token</th>
-                                <th scope="col">参考价/百万 Token (USD)</th>
+                                <th scope="col"><!--pricing-source:%E6%A8%A1%E5%9E%8B-->Model</th>
+                                <th scope="col"><!--pricing-source:%E8%AE%A1%E8%B4%B9%E9%A1%B9%E7%9B%AE-->Billing item</th>
+                                <th scope="col"><!--pricing-source:%E8%A7%84%E6%A0%BC-->Specification</th>
+                                <th scope="col"><!--pricing-source:%E7%A7%AF%E5%88%86%2F%E7%99%BE%E4%B8%87%20Token-->Credits / 1M tokens</th>
+                                <th scope="col"><!--pricing-source:%E5%8F%82%E8%80%83%E4%BB%B7%2F%E7%99%BE%E4%B8%87%20Token%20(USD)-->Reference price / 1M tokens (USD)</th>
                             </tr>
                         </thead>
                         <tbody>
                             <tr>
                                 <td>Claude Fable 5</td>
-                                <td>文本输入 Token</td>
-                                <td>1M 上下文 · 输出上限 32K</td>
-                                <td>700 积分/百万Token</td>
+                                <td><!--pricing-source:%E6%96%87%E6%9C%AC%E8%BE%93%E5%85%A5%20Token-->Input tokens</td>
+                                <td><!--pricing-source:1M%20%E4%B8%8A%E4%B8%8B%E6%96%87%20%C2%B7%20%E8%BE%93%E5%87%BA%E4%B8%8A%E9%99%90%2032K-->1M context · output limit 32K</td>
+                                <td><!--pricing-source:700%20%E7%A7%AF%E5%88%86%2F%E7%99%BE%E4%B8%87Token-->700 credits/1M tokens</td>
                                 <td>$10.488</td>
                             </tr>
                             <tr>
                                 <td>Claude Fable 5</td>
-                                <td>文本输出 Token</td>
-                                <td>1M 上下文 · 输出上限 32K</td>
-                                <td>3,500 积分/百万Token</td>
+                                <td><!--pricing-source:%E6%96%87%E6%9C%AC%E8%BE%93%E5%87%BA%20Token-->Output tokens</td>
+                                <td><!--pricing-source:1M%20%E4%B8%8A%E4%B8%8B%E6%96%87%20%C2%B7%20%E8%BE%93%E5%87%BA%E4%B8%8A%E9%99%90%2032K-->1M context · output limit 32K</td>
+                                <td><!--pricing-source:3%2C500%20%E7%A7%AF%E5%88%86%2F%E7%99%BE%E4%B8%87Token-->3,500 credits/1M tokens</td>
                                 <td>$52.441</td>
                             </tr>
                             <tr>
                                 <td>Claude Fable 5</td>
-                                <td>缓存读取 Token</td>
-                                <td>1M 上下文 · 输出上限 32K</td>
-                                <td>70 积分/百万Token</td>
+                                <td><!--pricing-source:%E7%BC%93%E5%AD%98%E8%AF%BB%E5%8F%96%20Token-->Cached input tokens</td>
+                                <td><!--pricing-source:1M%20%E4%B8%8A%E4%B8%8B%E6%96%87%20%C2%B7%20%E8%BE%93%E5%87%BA%E4%B8%8A%E9%99%90%2032K-->1M context · output limit 32K</td>
+                                <td><!--pricing-source:70%20%E7%A7%AF%E5%88%86%2F%E7%99%BE%E4%B8%87Token-->70 credits/1M tokens</td>
                                 <td>$1.049</td>
                             </tr>
                             <tr>
                                 <td>Claude Fable 5</td>
-                                <td>缓存写入 Token</td>
-                                <td>1M 上下文 · 输出上限 32K</td>
-                                <td>875 积分/百万Token</td>
+                                <td><!--pricing-source:%E7%BC%93%E5%AD%98%E5%86%99%E5%85%A5%20Token-->Cache write tokens</td>
+                                <td><!--pricing-source:1M%20%E4%B8%8A%E4%B8%8B%E6%96%87%20%C2%B7%20%E8%BE%93%E5%87%BA%E4%B8%8A%E9%99%90%2032K-->1M context · output limit 32K</td>
+                                <td><!--pricing-source:875%20%E7%A7%AF%E5%88%86%2F%E7%99%BE%E4%B8%87Token-->875 credits/1M tokens</td>
                                 <td>$13.110</td>
                             </tr>
                             <tr>
                                 <td>Claude Fable 5</td>
-                                <td>缓存写入 Token（1小时）</td>
-                                <td>1M 上下文 · 输出上限 32K</td>
-                                <td>1,400 积分/百万Token</td>
+                                <td><!--pricing-source:%E7%BC%93%E5%AD%98%E5%86%99%E5%85%A5%20Token%EF%BC%881%E5%B0%8F%E6%97%B6%EF%BC%89-->Cache write tokens (1 hour)</td>
+                                <td><!--pricing-source:1M%20%E4%B8%8A%E4%B8%8B%E6%96%87%20%C2%B7%20%E8%BE%93%E5%87%BA%E4%B8%8A%E9%99%90%2032K-->1M context · output limit 32K</td>
+                                <td><!--pricing-source:1%2C400%20%E7%A7%AF%E5%88%86%2F%E7%99%BE%E4%B8%87Token-->1,400 credits/1M tokens</td>
                                 <td>$20.976</td>
                             </tr>
                             <tr>
                                 <td>GPT-5.5 Pro</td>
-                                <td>文本输入 Token</td>
-                                <td>1.05M 上下文 · ≤272K 输入档</td>
-                                <td>2,625 积分/百万Token</td>
+                                <td><!--pricing-source:%E6%96%87%E6%9C%AC%E8%BE%93%E5%85%A5%20Token-->Input tokens</td>
+                                <td><!--pricing-source:1.05M%20%E4%B8%8A%E4%B8%8B%E6%96%87%20%C2%B7%20%E2%89%A4272K%20%E8%BE%93%E5%85%A5%E6%A1%A3-->1.05M context · ≤272K input tier</td>
+                                <td><!--pricing-source:2%2C625%20%E7%A7%AF%E5%88%86%2F%E7%99%BE%E4%B8%87Token-->2,625 credits/1M tokens</td>
                                 <td>$39.330</td>
                             </tr>
                             <tr>
                                 <td>GPT-5.5 Pro</td>
-                                <td>文本输出 Token</td>
-                                <td>1.05M 上下文 · ≤272K 输入档</td>
-                                <td>15,750 积分/百万Token</td>
+                                <td><!--pricing-source:%E6%96%87%E6%9C%AC%E8%BE%93%E5%87%BA%20Token-->Output tokens</td>
+                                <td><!--pricing-source:1.05M%20%E4%B8%8A%E4%B8%8B%E6%96%87%20%C2%B7%20%E2%89%A4272K%20%E8%BE%93%E5%85%A5%E6%A1%A3-->1.05M context · ≤272K input tier</td>
+                                <td><!--pricing-source:15%2C750%20%E7%A7%AF%E5%88%86%2F%E7%99%BE%E4%B8%87Token-->15,750 credits/1M tokens</td>
                                 <td>$235.983</td>
                             </tr>
                             <tr>
                                 <td>GPT-5.5 Pro</td>
-                                <td>缓存读取 Token</td>
-                                <td>1.05M 上下文 · ≤272K 输入档</td>
-                                <td>262.5 积分/百万Token</td>
+                                <td><!--pricing-source:%E7%BC%93%E5%AD%98%E8%AF%BB%E5%8F%96%20Token-->Cached input tokens</td>
+                                <td><!--pricing-source:1.05M%20%E4%B8%8A%E4%B8%8B%E6%96%87%20%C2%B7%20%E2%89%A4272K%20%E8%BE%93%E5%85%A5%E6%A1%A3-->1.05M context · ≤272K input tier</td>
+                                <td><!--pricing-source:262.5%20%E7%A7%AF%E5%88%86%2F%E7%99%BE%E4%B8%87Token-->262.5 credits/1M tokens</td>
                                 <td>$3.933</td>
                             </tr>
                             <tr>
                                 <td>GPT-5.5 Pro</td>
-                                <td>缓存写入 Token</td>
-                                <td>1.05M 上下文 · ≤272K 输入档</td>
-                                <td>2,625 积分/百万Token</td>
+                                <td><!--pricing-source:%E7%BC%93%E5%AD%98%E5%86%99%E5%85%A5%20Token-->Cache write tokens</td>
+                                <td><!--pricing-source:1.05M%20%E4%B8%8A%E4%B8%8B%E6%96%87%20%C2%B7%20%E2%89%A4272K%20%E8%BE%93%E5%85%A5%E6%A1%A3-->1.05M context · ≤272K input tier</td>
+                                <td><!--pricing-source:2%2C625%20%E7%A7%AF%E5%88%86%2F%E7%99%BE%E4%B8%87Token-->2,625 credits/1M tokens</td>
                                 <td>$39.330</td>
                             </tr>
                             <tr>
                                 <td>GPT-5.5 Pro</td>
-                                <td>文本输入 Token</td>
-                                <td>1.05M 上下文 · &gt;272K 输入档</td>
-                                <td>5,250 积分/百万Token</td>
+                                <td><!--pricing-source:%E6%96%87%E6%9C%AC%E8%BE%93%E5%85%A5%20Token-->Input tokens</td>
+                                <td><!--pricing-source:1.05M%20%E4%B8%8A%E4%B8%8B%E6%96%87%20%C2%B7%20%3E272K%20%E8%BE%93%E5%85%A5%E6%A1%A3-->1.05M context · &gt;272K input tier</td>
+                                <td><!--pricing-source:5%2C250%20%E7%A7%AF%E5%88%86%2F%E7%99%BE%E4%B8%87Token-->5,250 credits/1M tokens</td>
                                 <td>$78.661</td>
                             </tr>
                             <tr>
                                 <td>GPT-5.5 Pro</td>
-                                <td>文本输出 Token</td>
-                                <td>1.05M 上下文 · &gt;272K 输入档</td>
-                                <td>23,625 积分/百万Token</td>
+                                <td><!--pricing-source:%E6%96%87%E6%9C%AC%E8%BE%93%E5%87%BA%20Token-->Output tokens</td>
+                                <td><!--pricing-source:1.05M%20%E4%B8%8A%E4%B8%8B%E6%96%87%20%C2%B7%20%3E272K%20%E8%BE%93%E5%85%A5%E6%A1%A3-->1.05M context · &gt;272K input tier</td>
+                                <td><!--pricing-source:23%2C625%20%E7%A7%AF%E5%88%86%2F%E7%99%BE%E4%B8%87Token-->23,625 credits/1M tokens</td>
                                 <td>$353.974</td>
                             </tr>
                             <tr>
                                 <td>GPT-5.5 Pro</td>
-                                <td>缓存读取 Token</td>
-                                <td>1.05M 上下文 · &gt;272K 输入档</td>
-                                <td>262.5 积分/百万Token</td>
+                                <td><!--pricing-source:%E7%BC%93%E5%AD%98%E8%AF%BB%E5%8F%96%20Token-->Cached input tokens</td>
+                                <td><!--pricing-source:1.05M%20%E4%B8%8A%E4%B8%8B%E6%96%87%20%C2%B7%20%3E272K%20%E8%BE%93%E5%85%A5%E6%A1%A3-->1.05M context · &gt;272K input tier</td>
+                                <td><!--pricing-source:262.5%20%E7%A7%AF%E5%88%86%2F%E7%99%BE%E4%B8%87Token-->262.5 credits/1M tokens</td>
                                 <td>$3.933</td>
                             </tr>
                             <tr>
                                 <td>GPT-5.5 Pro</td>
-                                <td>缓存写入 Token</td>
-                                <td>1.05M 上下文 · &gt;272K 输入档</td>
-                                <td>5,250 积分/百万Token</td>
+                                <td><!--pricing-source:%E7%BC%93%E5%AD%98%E5%86%99%E5%85%A5%20Token-->Cache write tokens</td>
+                                <td><!--pricing-source:1.05M%20%E4%B8%8A%E4%B8%8B%E6%96%87%20%C2%B7%20%3E272K%20%E8%BE%93%E5%85%A5%E6%A1%A3-->1.05M context · &gt;272K input tier</td>
+                                <td><!--pricing-source:5%2C250%20%E7%A7%AF%E5%88%86%2F%E7%99%BE%E4%B8%87Token-->5,250 credits/1M tokens</td>
                                 <td>$78.661</td>
                             </tr>
                             <tr>
                                 <td>Gemini 4 Argon</td>
-                                <td>文本输入 Token</td>
-                                <td>1M 上下文 · 输出上限 32K</td>
-                                <td>87.5 积分/百万Token</td>
+                                <td><!--pricing-source:%E6%96%87%E6%9C%AC%E8%BE%93%E5%85%A5%20Token-->Input tokens</td>
+                                <td><!--pricing-source:1M%20%E4%B8%8A%E4%B8%8B%E6%96%87%20%C2%B7%20%E8%BE%93%E5%87%BA%E4%B8%8A%E9%99%90%2032K-->1M context · output limit 32K</td>
+                                <td><!--pricing-source:87.5%20%E7%A7%AF%E5%88%86%2F%E7%99%BE%E4%B8%87Token-->87.5 credits/1M tokens</td>
                                 <td>$1.311</td>
                             </tr>
                             <tr>
                                 <td>Gemini 4 Argon</td>
-                                <td>文本输出 Token</td>
-                                <td>1M 上下文 · 输出上限 32K</td>
-                                <td>437.5 积分/百万Token</td>
+                                <td><!--pricing-source:%E6%96%87%E6%9C%AC%E8%BE%93%E5%87%BA%20Token-->Output tokens</td>
+                                <td><!--pricing-source:1M%20%E4%B8%8A%E4%B8%8B%E6%96%87%20%C2%B7%20%E8%BE%93%E5%87%BA%E4%B8%8A%E9%99%90%2032K-->1M context · output limit 32K</td>
+                                <td><!--pricing-source:437.5%20%E7%A7%AF%E5%88%86%2F%E7%99%BE%E4%B8%87Token-->437.5 credits/1M tokens</td>
                                 <td>$6.555</td>
                             </tr>
                             <tr>
                                 <td>Gemini 4 Argon</td>
-                                <td>缓存读取 Token</td>
-                                <td>1M 上下文 · 输出上限 32K</td>
-                                <td>4.375 积分/百万Token</td>
+                                <td><!--pricing-source:%E7%BC%93%E5%AD%98%E8%AF%BB%E5%8F%96%20Token-->Cached input tokens</td>
+                                <td><!--pricing-source:1M%20%E4%B8%8A%E4%B8%8B%E6%96%87%20%C2%B7%20%E8%BE%93%E5%87%BA%E4%B8%8A%E9%99%90%2032K-->1M context · output limit 32K</td>
+                                <td><!--pricing-source:4.375%20%E7%A7%AF%E5%88%86%2F%E7%99%BE%E4%B8%87Token-->4.375 credits/1M tokens</td>
                                 <td>$0.066</td>
                             </tr>
                             <tr>
                                 <td>Gemini 4 Argon</td>
-                                <td>缓存写入 Token</td>
-                                <td>1M 上下文 · 输出上限 32K</td>
-                                <td>87.5 积分/百万Token</td>
+                                <td><!--pricing-source:%E7%BC%93%E5%AD%98%E5%86%99%E5%85%A5%20Token-->Cache write tokens</td>
+                                <td><!--pricing-source:1M%20%E4%B8%8A%E4%B8%8B%E6%96%87%20%C2%B7%20%E8%BE%93%E5%87%BA%E4%B8%8A%E9%99%90%2032K-->1M context · output limit 32K</td>
+                                <td><!--pricing-source:87.5%20%E7%A7%AF%E5%88%86%2F%E7%99%BE%E4%B8%87Token-->87.5 credits/1M tokens</td>
                                 <td>$1.311</td>
                             </tr>
                             <tr>
                                 <td>GLM 5.3 Flash</td>
-                                <td>文本输入 Token</td>
-                                <td>256K 上下文 · 平价档</td>
-                                <td>10.5 积分/百万Token</td>
+                                <td><!--pricing-source:%E6%96%87%E6%9C%AC%E8%BE%93%E5%85%A5%20Token-->Input tokens</td>
+                                <td><!--pricing-source:256K%20%E4%B8%8A%E4%B8%8B%E6%96%87%20%C2%B7%20%E5%B9%B3%E4%BB%B7%E6%A1%A3-->256K context · Budget tier</td>
+                                <td><!--pricing-source:10.5%20%E7%A7%AF%E5%88%86%2F%E7%99%BE%E4%B8%87Token-->10.5 credits/1M tokens</td>
                                 <td>$0.157</td>
                             </tr>
                             <tr>
                                 <td>GLM 5.3 Flash</td>
-                                <td>文本输出 Token</td>
-                                <td>256K 上下文 · 平价档</td>
-                                <td>35 积分/百万Token</td>
+                                <td><!--pricing-source:%E6%96%87%E6%9C%AC%E8%BE%93%E5%87%BA%20Token-->Output tokens</td>
+                                <td><!--pricing-source:256K%20%E4%B8%8A%E4%B8%8B%E6%96%87%20%C2%B7%20%E5%B9%B3%E4%BB%B7%E6%A1%A3-->256K context · Budget tier</td>
+                                <td><!--pricing-source:35%20%E7%A7%AF%E5%88%86%2F%E7%99%BE%E4%B8%87Token-->35 credits/1M tokens</td>
                                 <td>$0.524</td>
                             </tr>
                             <tr>
                                 <td>GLM 5.3 Flash</td>
-                                <td>缓存读取 Token</td>
-                                <td>256K 上下文 · 平价档</td>
-                                <td>2.1 积分/百万Token</td>
+                                <td><!--pricing-source:%E7%BC%93%E5%AD%98%E8%AF%BB%E5%8F%96%20Token-->Cached input tokens</td>
+                                <td><!--pricing-source:256K%20%E4%B8%8A%E4%B8%8B%E6%96%87%20%C2%B7%20%E5%B9%B3%E4%BB%B7%E6%A1%A3-->256K context · Budget tier</td>
+                                <td><!--pricing-source:2.1%20%E7%A7%AF%E5%88%86%2F%E7%99%BE%E4%B8%87Token-->2.1 credits/1M tokens</td>
                                 <td>$0.031</td>
                             </tr>
                             <tr>
                                 <td>GLM 5.3 Flash</td>
-                                <td>缓存写入 Token</td>
-                                <td>256K 上下文 · 平价档</td>
-                                <td>10.5 积分/百万Token</td>
+                                <td><!--pricing-source:%E7%BC%93%E5%AD%98%E5%86%99%E5%85%A5%20Token-->Cache write tokens</td>
+                                <td><!--pricing-source:256K%20%E4%B8%8A%E4%B8%8B%E6%96%87%20%C2%B7%20%E5%B9%B3%E4%BB%B7%E6%A1%A3-->256K context · Budget tier</td>
+                                <td><!--pricing-source:10.5%20%E7%A7%AF%E5%88%86%2F%E7%99%BE%E4%B8%87Token-->10.5 credits/1M tokens</td>
                                 <td>$0.157</td>
                             </tr>
                             <tr>
                                 <td>Doubao Seed 2.1 Lite</td>
-                                <td>文本输入 Token</td>
-                                <td>1M 上下文 · 平价档</td>
-                                <td>7.2275 积分/百万Token</td>
+                                <td><!--pricing-source:%E6%96%87%E6%9C%AC%E8%BE%93%E5%85%A5%20Token-->Input tokens</td>
+                                <td><!--pricing-source:1M%20%E4%B8%8A%E4%B8%8B%E6%96%87%20%C2%B7%20%E5%B9%B3%E4%BB%B7%E6%A1%A3-->1M context · Budget tier</td>
+                                <td><!--pricing-source:7.2275%20%E7%A7%AF%E5%88%86%2F%E7%99%BE%E4%B8%87Token-->7.2275 credits/1M tokens</td>
                                 <td>$0.108</td>
                             </tr>
                             <tr>
                                 <td>Doubao Seed 2.1 Lite</td>
-                                <td>文本输出 Token</td>
-                                <td>1M 上下文 · 平价档</td>
-                                <td>24.3775 积分/百万Token</td>
+                                <td><!--pricing-source:%E6%96%87%E6%9C%AC%E8%BE%93%E5%87%BA%20Token-->Output tokens</td>
+                                <td><!--pricing-source:1M%20%E4%B8%8A%E4%B8%8B%E6%96%87%20%C2%B7%20%E5%B9%B3%E4%BB%B7%E6%A1%A3-->1M context · Budget tier</td>
+                                <td><!--pricing-source:24.3775%20%E7%A7%AF%E5%88%86%2F%E7%99%BE%E4%B8%87Token-->24.3775 credits/1M tokens</td>
                                 <td>$0.365</td>
                             </tr>
                             <tr>
                                 <td>Doubao Seed 2.1 Lite</td>
-                                <td>缓存读取 Token</td>
-                                <td>1M 上下文 · 平价档</td>
-                                <td>1.47 积分/百万Token</td>
+                                <td><!--pricing-source:%E7%BC%93%E5%AD%98%E8%AF%BB%E5%8F%96%20Token-->Cached input tokens</td>
+                                <td><!--pricing-source:1M%20%E4%B8%8A%E4%B8%8B%E6%96%87%20%C2%B7%20%E5%B9%B3%E4%BB%B7%E6%A1%A3-->1M context · Budget tier</td>
+                                <td><!--pricing-source:1.47%20%E7%A7%AF%E5%88%86%2F%E7%99%BE%E4%B8%87Token-->1.47 credits/1M tokens</td>
                                 <td>$0.022</td>
                             </tr>
                             <tr>
                                 <td>Doubao Seed 2.1 Lite</td>
-                                <td>缓存写入 Token</td>
-                                <td>1M 上下文 · 平价档</td>
-                                <td>7.2275 积分/百万Token</td>
+                                <td><!--pricing-source:%E7%BC%93%E5%AD%98%E5%86%99%E5%85%A5%20Token-->Cache write tokens</td>
+                                <td><!--pricing-source:1M%20%E4%B8%8A%E4%B8%8B%E6%96%87%20%C2%B7%20%E5%B9%B3%E4%BB%B7%E6%A1%A3-->1M context · Budget tier</td>
+                                <td><!--pricing-source:7.2275%20%E7%A7%AF%E5%88%86%2F%E7%99%BE%E4%B8%87Token-->7.2275 credits/1M tokens</td>
                                 <td>$0.108</td>
                             </tr>
                         </tbody>
                     </table>
                 </div>
-                <p>具体可用模型、规格与最终扣费以产品页面为准。</p>
+                <p>
+                    <!--pricing-source:%E5%85%B7%E4%BD%93%E5%8F%AF%E7%94%A8%E6%A8%A1%E5%9E%8B%E3%80%81%E8%A7%84%E6%A0%BC%E4%B8%8E%E6%9C%80%E7%BB%88%E6%89%A3%E8%B4%B9%E4%BB%A5%E4%BA%A7%E5%93%81%E9%A1%B5%E9%9D%A2%E4%B8%BA%E5%87%86%E3%80%82-->Available
+                    models, specifications and charges are shown in the product.
+                </p>
             </section>
-            <footer>Supdance · 价格以实际购买页面为准。</footer>
+            <footer><!--pricing-source:Supdance%20%C2%B7%20%E4%BB%B7%E6%A0%BC%E4%BB%A5%E5%AE%9E%E9%99%85%E8%B4%AD%E4%B9%B0%E9%A1%B5%E9%9D%A2%E4%B8%BA%E5%87%86%E3%80%82-->Supdance · Prices shown at checkout prevail.</footer>
         </main>
 
         <footer id="supdance-about-footer" class="sd-site-footer" data-i18n-ignore="true">
@@ -1755,44 +1767,48 @@
                     <div class="sd-col-brand">
                         <a href="/" class="sd-brand-link" aria-label="supdance Home">
                             <img class="sd-footer-logo" src="/supdance-footer-logo.png" alt="Supdance" width="1000" height="220" />
-                            <span id="sd-ft-brand-slogan" class="sd-brand-slogan">AI 创意工作室</span>
+                            <span id="sd-ft-brand-slogan" class="sd-brand-slogan" data-pricing-footer-source="AI 创意工作室">AI Creative Studio</span>
                         </a>
-                        <p id="sd-ft-brand-vision" class="sd-brand-vision">面向创作者、独立工作室与团队的专业生成式 AI 创作工作台与模型接入层，支持模型发现、生成与工作流协作。</p>
+                        <p id="sd-ft-brand-vision" class="sd-brand-vision" data-pricing-footer-source="面向创作者、独立工作室与团队的专业生成式 AI 创作工作台与模型接入层，支持模型发现、生成与工作流协作。">
+                            A creative workspace and AI model gateway for creators, independent studios and teams. Discover models, generate content and collaborate across workflows.
+                        </p>
                         <div>
                             <a id="sd-ft-support-email" href="mailto:support@supdance.com" class="sd-support-email">support@supdance.com</a>
                         </div>
                         <div>
-                            <div id="sd-ft-social-label" class="sd-social-label">官方社交媒体与社区</div>
+                            <div id="sd-ft-social-label" class="sd-social-label" data-pricing-footer-source="官方社交媒体与社区">Official social channels and community</div>
                             <div id="sd-ft-social-list" class="sd-social-list" style="margin-top: 10px">
                                 <a href="https://x.com/supdance_ai" target="_blank" rel="noopener noreferrer" class="sd-social-btn" title="X (Twitter) (@supdance_ai)" aria-label="X (Twitter)">
-                                    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" /></svg>
+                                    <svg viewBox="0 0 24 24" aria-hidden="true">
+                                        <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"></path>
+                                    </svg>
                                 </a>
                                 <a href="https://www.youtube.com/channel/UCOoro6d-vr6M-1UIpP5POew" target="_blank" rel="noopener noreferrer" class="sd-social-btn" title="YouTube (SupDance AI)" aria-label="YouTube">
                                     <svg viewBox="0 0 24 24" aria-hidden="true">
                                         <path
                                             d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"
-                                        />
+                                        ></path>
                                     </svg>
                                 </a>
                                 <a href="https://www.instagram.com/supdance_com/" target="_blank" rel="noopener noreferrer" class="sd-social-btn" title="Instagram (@supdance_com)" aria-label="Instagram">
                                     <svg viewBox="0 0 24 24" aria-hidden="true">
                                         <path
                                             d="M7.0301.084c-1.2768.0602-2.1487.264-2.911.5634-.7888.3075-1.4575.72-2.1228 1.3877-.6652.6677-1.075 1.3368-1.3802 2.127-.2954.7638-.4956 1.6365-.552 2.914-.0564 1.2775-.0689 1.6882-.0626 4.947.0062 3.2586.0206 3.6671.0825 4.9473.061 1.2765.264 2.1482.5635 2.9107.308.7889.72 1.4573 1.388 2.1228.6679.6655 1.3365 1.0743 2.1285 1.38.7632.295 1.6361.4961 2.9134.552 1.2773.056 1.6884.069 4.9462.0627 3.2578-.0062 3.668-.0207 4.9478-.0814 1.28-.0607 2.147-.2652 2.9098-.5633.7889-.3086 1.4578-.72 2.1228-1.3881.665-.6682 1.0745-1.3378 1.3795-2.1284.2957-.7632.4966-1.636.552-2.9124.056-1.2809.0692-1.6898.063-4.948-.0063-3.2583-.021-3.6668-.0817-4.9465-.0607-1.2797-.264-2.1487-.5633-2.9117-.3084-.7889-.72-1.4568-1.3876-2.1228C21.2982 1.33 20.628.9208 19.8378.6165 19.074.321 18.2017.1197 16.9244.0645 15.6471.0093 15.236-.005 11.977.0014 8.718.0076 8.31.0215 7.0301.0839m.1402 21.6932c-1.17-.0509-1.8053-.2453-2.2287-.408-.5606-.216-.96-.4771-1.3819-.895-.422-.4178-.6811-.8186-.9-1.378-.1644-.4234-.3624-1.058-.4171-2.228-.0595-1.2645-.072-1.6442-.079-4.848-.007-3.2037.0053-3.583.0607-4.848.05-1.169.2456-1.805.408-2.2282.216-.5613.4762-.96.895-1.3816.4188-.4217.8184-.6814 1.3783-.9003.423-.1651 1.0575-.3614 2.227-.4171 1.2655-.06 1.6447-.072 4.848-.079 3.2033-.007 3.5835.005 4.8495.0608 1.169.0508 1.8053.2445 2.228.408.5608.216.96.4754 1.3816.895.4217.4194.6816.8176.9005 1.3787.1653.4217.3617 1.056.4169 2.2263.0602 1.2655.0739 1.645.0796 4.848.0058 3.203-.0055 3.5834-.061 4.848-.051 1.17-.245 1.8055-.408 2.2294-.216.5604-.4763.96-.8954 1.3814-.419.4215-.8181.6811-1.3783.9-.4224.1649-1.0577.3617-2.2262.4174-1.2656.0595-1.6448.072-4.8493.079-3.2045.007-3.5825-.006-4.848-.0608M16.953 5.5864A1.44 1.44 0 1 0 18.39 4.144a1.44 1.44 0 0 0-1.437 1.4424M5.8385 12.012c.0067 3.4032 2.7706 6.1557 6.173 6.1493 3.4026-.0065 6.157-2.7701 6.1506-6.1733-.0065-3.4032-2.771-6.1565-6.174-6.1498-3.403.0067-6.156 2.771-6.1496 6.1738M8 12.0077a4 4 0 1 1 4.008 3.9921A3.9996 3.9996 0 0 1 8 12.0077"
-                                        />
+                                        ></path>
                                     </svg>
                                 </a>
                                 <a href="https://www.xiaohongshu.com/search_result?keyword=SupDance" target="_blank" rel="noopener noreferrer" class="sd-social-btn" title="小红书 (RED) (SupDance)" aria-label="小红书">
                                     <svg viewBox="0 0 24 24" aria-hidden="true">
                                         <path
                                             d="M22.405 9.879c.002.016.01.02.07.019h.725a.797.797 0 0 0 .78-.972.794.794 0 0 0-.884-.618.795.795 0 0 0-.692.794c0 .101-.002.666.001.777zm-11.509 4.808c-.203.001-1.353.004-1.685.003a2.528 2.528 0 0 1-.766-.126.025.025 0 0 0-.03.014L7.7 16.127a.025.025 0 0 0 .01.032c.111.06.336.124.495.124.66.01 1.32.002 1.981 0 .01 0 .02-.006.023-.015l.712-1.545a.025.025 0 0 0-.024-.036zM.477 9.91c-.071 0-.076.002-.076.01a.834.834 0 0 0-.01.08c-.027.397-.038.495-.234 3.06-.012.24-.034.389-.135.607-.026.057-.033.042.003.112.046.092.681 1.523.787 1.74.008.015.011.02.017.02.008 0 .033-.026.047-.044.147-.187.268-.391.371-.606.306-.635.44-1.325.486-1.706.014-.11.021-.22.03-.33l.204-2.616.022-.293c.003-.029 0-.033-.03-.034zm7.203 3.757a1.427 1.427 0 0 1-.135-.607c-.004-.084-.031-.39-.235-3.06a.443.443 0 0 0-.01-.082c-.004-.011-.052-.008-.076-.008h-1.48c-.03.001-.034.005-.03.034l.021.293c.076.982.153 1.964.233 2.946.05.4.186 1.085.487 1.706.103.215.223.419.37.606.015.018.037.051.048.049.02-.003.742-1.642.804-1.765.036-.07.03-.055.003-.112zm3.861-.913h-.872a.126.126 0 0 1-.116-.178l1.178-2.625a.025.025 0 0 0-.023-.035l-1.318-.003a.148.148 0 0 1-.135-.21l.876-1.954a.025.025 0 0 0-.023-.035h-1.56c-.01 0-.02.006-.024.015l-.926 2.068c-.085.169-.314.634-.399.938a.534.534 0 0 0-.02.191.46.46 0 0 0 .23.378.981.981 0 0 0 .46.119h.59c.041 0-.688 1.482-.834 1.972a.53.53 0 0 0-.023.172.465.465 0 0 0 .23.398c.15.092.342.12.475.12l1.66-.001c.01 0 .02-.006.023-.015l.575-1.28a.025.025 0 0 0-.024-.035zm-6.93-4.937H3.1a.032.032 0 0 0-.034.033c0 1.048-.01 2.795-.01 6.829 0 .288-.269.262-.28.262h-.74c-.04.001-.044.004-.04.047.001.037.465 1.064.555 1.263.01.02.03.033.051.033.157.003.767.009.938-.014.153-.02.3-.06.438-.132.3-.156.49-.419.595-.765.052-.172.075-.353.075-.533.002-2.33 0-4.66-.007-6.991a.032.032 0 0 0-.032-.032zm11.784 6.896c0-.014-.01-.021-.024-.022h-1.465c-.048-.001-.049-.002-.05-.049v-4.66c0-.072-.005-.07.07-.07h.863c.08 0 .075.004.075-.074V8.393c0-.082.006-.076-.08-.076h-3.5c-.064 0-.075-.006-.075.073v1.445c0 .083-.006.077.08.077h.854c.075 0 .07-.004.07.07v4.624c0 .095.008.084-.085.084-.37 0-1.11-.002-1.304 0-.048.001-.06.03-.06.03l-.697 1.519s-.014.025-.008.036c.006.01.013.008.058.008 1.748.003 3.495.002 5.243.002.03-.001.034-.006.035-.033v-1.539zm4.177-3.43c0 .013-.007.023-.02.024-.346.006-.692.004-1.037.004-.014-.002-.022-.01-.022-.024-.005-.434-.007-.869-.01-1.303 0-.072-.006-.071.07-.07l.733-.003c.041 0 .081.002.12.015.093.025.16.107.165.204.006.431.002 1.153.001 1.153zm2.67.244a1.953 1.953 0 0 0-.883-.222h-.18c-.04-.001-.04-.003-.042-.04V10.21c0-.132-.007-.263-.025-.394a1.823 1.823 0 0 0-.153-.53 1.533 1.533 0 0 0-.677-.71 2.167 2.167 0 0 0-1-.258c-.153-.003-.567 0-.72 0-.07 0-.068.004-.068-.065V7.76c0-.031-.01-.041-.046-.039H17.93s-.016 0-.023.007c-.006.006-.008.012-.008.023v.546c-.008.036-.057.015-.082.022h-.95c-.022.002-.028.008-.03.032v1.481c0 .09-.004.082.082.082h.913c.082 0 .072.128.072.128V11.19s.003.117-.06.117h-1.482c-.068 0-.06.082-.06.082v1.445s-.01.068.064.068h1.457c.082 0 .076-.006.076.079v3.225c0 .088-.007.081.082.081h1.43c.09 0 .082.007.082-.08v-3.27c0-.029.006-.035.033-.035l2.323-.003c.098 0 .191.02.28.061a.46.46 0 0 1 .274.407c.008.395.003.79.003 1.185 0 .259-.107.367-.33.367h-1.218c-.023.002-.029.008-.028.033.184.437.374.871.57 1.303a.045.045 0 0 0 .04.026c.17.005.34.002.51.003.15-.002.517.004.666-.01a2.03 2.03 0 0 0 .408-.075c.59-.18.975-.698.976-1.313v-1.981c0-.128-.01-.254-.034-.38 0 .078-.029-.641-.724-.998z"
-                                        />
+                                        ></path>
                                     </svg>
                                 </a>
                                 <a href="https://qm.qq.com/q/e8alJlLDuE" target="_blank" rel="noopener noreferrer" class="sd-social-btn" title="QQ 交流群 (SupDance 官方群)" aria-label="QQ">
                                     <svg viewBox="0 0 24 24" aria-hidden="true">
                                         <path
                                             d="M21.395 15.035a40 40 0 0 0-.803-2.264l-1.079-2.695c.001-.032.014-.562.014-.836C19.526 4.632 17.351 0 12 0S4.474 4.632 4.474 9.241c0 .274.013.804.014.836l-1.08 2.695a39 39 0 0 0-.802 2.264c-1.021 3.283-.69 4.643-.438 4.673.54.065 2.103-2.472 2.103-2.472 0 1.469.756 3.387 2.394 4.771-.612.188-1.363.479-1.845.835-.434.32-.379.646-.301.778.343.578 5.883.369 7.482.189 1.6.18 7.14.389 7.483-.189.078-.132.132-.458-.301-.778-.483-.356-1.233-.646-1.846-.836 1.637-1.384 2.393-3.302 2.393-4.771 0 0 1.563 2.537 2.103 2.472.251-.03.581-1.39-.438-4.673"
-                                        />
+                                        ></path>
                                     </svg>
                                 </a>
                             </div>
@@ -1800,36 +1816,70 @@
                     </div>
 
                     <div class="sd-col-links">
-                        <div class="sd-col-heading">资源与工具</div>
+                        <div class="sd-col-heading"><!--pricing-source:%E8%B5%84%E6%BA%90%E4%B8%8E%E5%B7%A5%E5%85%B7-->Resources &amp; tools</div>
                         <ul class="sd-link-list">
-                            <li><a href="/toolbox/image">图片生成</a></li>
-                            <li><a href="/toolbox/video">视频生成</a></li>
-                            <li><a href="/toolbox/music">音乐生成</a></li>
-                            <li><a href="/assets">素材</a></li>
-                            <li><a href="/skills">技能库</a></li>
-                            <li><a href="/plugins">插件中心</a></li>
+                            <li>
+                                <a href="/toolbox/image"><!--pricing-source:%E5%9B%BE%E7%89%87%E7%94%9F%E6%88%90-->Image generation</a>
+                            </li>
+                            <li>
+                                <a href="/toolbox/video"><!--pricing-source:%E8%A7%86%E9%A2%91%E7%94%9F%E6%88%90-->Video generation</a>
+                            </li>
+                            <li>
+                                <a href="/toolbox/music"><!--pricing-source:%E9%9F%B3%E4%B9%90%E7%94%9F%E6%88%90-->Music generation</a>
+                            </li>
+                            <li>
+                                <a href="/assets"><!--pricing-source:%E7%B4%A0%E6%9D%90-->Assets</a>
+                            </li>
+                            <li>
+                                <a href="/skills"><!--pricing-source:%E6%8A%80%E8%83%BD%E5%BA%93-->Skills</a>
+                            </li>
+                            <li>
+                                <a href="/plugins"><!--pricing-source:%E6%8F%92%E4%BB%B6%E4%B8%AD%E5%BF%83-->Plugins</a>
+                            </li>
                         </ul>
                     </div>
                     <div class="sd-col-links">
-                        <div class="sd-col-heading">创作</div>
+                        <div class="sd-col-heading"><!--pricing-source:%E5%88%9B%E4%BD%9C-->Create</div>
                         <ul class="sd-link-list">
-                            <li><a href="/canvas">自由画布</a></li>
-                            <li><a href="/projects">短剧制作</a></li>
-                            <li><a href="/create">创作首页</a></li>
-                            <li><a href="/ecommerce">电商 Agent</a></li>
-                            <li><a href="/tasks">任务中心</a></li>
+                            <li>
+                                <a href="/canvas"><!--pricing-source:%E8%87%AA%E7%94%B1%E7%94%BB%E5%B8%83-->Canvas</a>
+                            </li>
+                            <li>
+                                <a href="/projects"><!--pricing-source:%E7%9F%AD%E5%89%A7%E5%88%B6%E4%BD%9C-->Short dramas</a>
+                            </li>
+                            <li>
+                                <a href="/create"><!--pricing-source:%E5%88%9B%E4%BD%9C%E9%A6%96%E9%A1%B5-->Create</a>
+                            </li>
+                            <li>
+                                <a href="/ecommerce"><!--pricing-source:%E7%94%B5%E5%95%86%20Agent-->E-commerce Agent</a>
+                            </li>
+                            <li>
+                                <a href="/tasks"><!--pricing-source:%E4%BB%BB%E5%8A%A1%E4%B8%AD%E5%BF%83-->Tasks</a>
+                            </li>
                         </ul>
                     </div>
                     <div class="sd-col-links">
-                        <div class="sd-col-heading">法律与支持</div>
+                        <div class="sd-col-heading"><!--pricing-source:%E6%B3%95%E5%BE%8B%E4%B8%8E%E6%94%AF%E6%8C%81-->Legal &amp; support</div>
                         <ul class="sd-link-list">
-                            <li><a href="/terms">服务条款</a></li>
-                            <li><a href="/privacy">隐私政策</a></li>
-                            <li><a href="/aup">可接受使用</a></li>
-                            <li><a href="/legal">法律中心</a></li>
-                            <li><a href="/pricing.html">定价表</a></li>
+                            <li>
+                                <a href="/terms"><!--pricing-source:%E6%9C%8D%E5%8A%A1%E6%9D%A1%E6%AC%BE-->Terms of Service</a>
+                            </li>
+                            <li>
+                                <a href="/privacy"><!--pricing-source:%E9%9A%90%E7%A7%81%E6%94%BF%E7%AD%96-->Privacy Policy</a>
+                            </li>
+                            <li>
+                                <a href="/aup"><!--pricing-source:%E5%8F%AF%E6%8E%A5%E5%8F%97%E4%BD%BF%E7%94%A8-->Acceptable Use</a>
+                            </li>
+                            <li>
+                                <a href="/legal"><!--pricing-source:%E6%B3%95%E5%BE%8B%E4%B8%AD%E5%BF%83-->Legal Center</a>
+                            </li>
+                            <li>
+                                <a href="/pricing.html"><!--pricing-source:%E5%AE%9A%E4%BB%B7%E8%A1%A8-->Pricing</a>
+                            </li>
                             <li><a href="/mcp">MCP</a></li>
-                            <li><a href="mailto:support@supdance.com">联系我们</a></li>
+                            <li>
+                                <a href="mailto:support@supdance.com"><!--pricing-source:%E8%81%94%E7%B3%BB%E6%88%91%E4%BB%AC-->Contact us</a>
+                            </li>
                         </ul>
                     </div>
                 </div>
@@ -1839,7 +1889,7 @@
             </div>
         </footer>
 
-        <script src="/pricing-i18n.js" defer></script>
+        <script src="/pricing-i18n.js" defer=""></script>
         <script>
             (function () {
                 fetch("/api/plugins/supdance-html-page-manager/site-footer", { credentials: "same-origin" })

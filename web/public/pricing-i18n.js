@@ -400,9 +400,14 @@
     const walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT);
     while (walker.nextNode()) {
         const node = walker.currentNode;
-        if (node.nodeValue.trim() && node.parentElement.closest("main, header, .sd-link-list, .sd-col-heading") && !node.parentElement.closest("select, script, style")) nodes.push([node, node.nodeValue]);
+        if (node.nodeValue.trim() && node.parentElement.closest("main, header, .sd-link-list, .sd-col-heading") && !node.parentElement.closest("select, script, style")) {
+            const marker = node.previousSibling;
+            const prefix = "pricing-source:";
+            const source = marker?.nodeType === 8 && marker.nodeValue.startsWith(prefix) ? decodeURIComponent(marker.nodeValue.slice(prefix.length)) : node.nodeValue;
+            nodes.push([node, source]);
+        }
     }
-    const attributes = Array.from(document.querySelectorAll("[aria-label]"), (element) => [element, element.getAttribute("aria-label")]);
+    const attributes = Array.from(document.querySelectorAll("[aria-label]"), (element) => [element, element.getAttribute("data-pricing-aria-source") ?? element.getAttribute("aria-label")]);
     const translations = new Map(terms.map((row) => [row[0], row]));
     const footerSources = new Map();
     const footerFields = ["sd-ft-brand-slogan", "sd-ft-brand-vision", "sd-ft-social-label"];
@@ -410,7 +415,7 @@
         for (const id of footerFields) {
             const element = document.getElementById(id);
             if (!element) continue;
-            if (!footerSources.has(id)) footerSources.set(id, element.textContent);
+            if (!footerSources.has(id)) footerSources.set(id, element.getAttribute("data-pricing-footer-source") ?? element.textContent);
             element.textContent = translate(footerSources.get(id), index);
         }
     }

@@ -238,4 +238,5 @@ if __name__ == "__main__":
     if PRIVATE.search(page):
         raise ValueError("Private pricing text found in HTML output")
     OUTPUT.write_text(page, encoding="utf-8")
+    subprocess.run(["bun", "scripts/i18n-sync-pricing.mjs", "--render-html"], cwd=OUTPUT.parents[1], check=True)
     print(f"Generated {OUTPUT} ({page.count('<tbody>')} tables, {page.count('<tr>') - 6} data rows)")

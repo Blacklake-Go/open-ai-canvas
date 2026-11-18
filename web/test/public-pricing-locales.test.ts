@@ -13,6 +13,10 @@ describe("standalone pricing native languages", () => {
         const window = new Window({ url: "https://example.com/pricing.html" });
         try {
             window.document.write(html);
+            expect(window.document.documentElement.lang).toBe("en-US");
+            expect(window.document.querySelector("h1")!.textContent!.trim()).toBe("SupDance ONE Pricing");
+            expect(window.document.querySelector("main")!.textContent).not.toMatch(/\p{Script=Han}/u);
+            expect((window.document.getElementById("language-select") as unknown as HTMLSelectElement).value).toBe("en-US");
             runInNewContext(script, {
                 document: window.document,
                 NodeFilter: window.NodeFilter,
@@ -68,6 +72,7 @@ describe("standalone pricing native languages", () => {
                 expect(Array.from(selector.options, (option) => option.value)).toEqual(SUPPORTED_LOCALES.map((locale) => locale.code));
                 const cells = [...window.document.querySelectorAll("td")];
                 const original = cells.map((cell) => cell.textContent);
+                const localizedCells = cells.map((cell) => cell.innerHTML.includes("<!--pricing-source:"));
                 window.localStorage.setItem("yingce:locale", JSON.stringify({ state: { locale: code }, version: 0 }));
                 runInNewContext(script, {
                     document: window.document,
@@ -94,7 +99,7 @@ describe("standalone pricing native languages", () => {
                     expect(element.textContent).toBe(entry.translations[code]);
                 }
                 for (let index = 0; index < cells.length; index++) {
-                    if (/^[\x20-\x7e\s]+$/.test(original[index] || "")) expect(cells[index]?.textContent).toBe(original[index]);
+                    if (!localizedCells[index]) expect(cells[index]?.textContent).toBe(original[index]);
                 }
                 if (["en-US", "fr-FR", "de-DE", "ko-KR"].includes(code)) {
                     const walker = window.document.createTreeWalker(window.document.body, window.NodeFilter.SHOW_TEXT);
@@ -106,6 +111,9 @@ describe("standalone pricing native languages", () => {
                     expect(leftovers).toEqual([]);
                 }
                 selector.value = "zh-CN";
+                selector.dispatchEvent(new window.Event("change"));
+                expect(window.document.querySelector("h1")!.textContent).toContain("价目表");
+                selector.value = "en-US";
                 selector.dispatchEvent(new window.Event("change"));
                 expect(cells.map((cell) => cell.textContent)).toEqual(original);
                 const customVision = "工作室自定义介绍 — preserve my wording";
