@@ -1,18 +1,27 @@
 package gallery
 
 import (
+	_ "embed"
 	"encoding/json"
 	"errors"
 	"fmt"
 	"os"
 	"path/filepath"
-	"strings"
 	"sync"
 
 	"yingce/backend/internal/kernel"
 )
 
 var catalogSources = []string{"seedance", "haohaoxue", "youmind"}
+
+//go:embed originals.json
+var originalJSON []byte
+
+func originalCatalog() ([]Entry, error) {
+	var entries []Entry
+	err := json.Unmarshal(originalJSON, &entries)
+	return entries, err
+}
 
 type cachedPack struct {
 	info    os.FileInfo
@@ -78,13 +87,23 @@ func (s Service) LegacyPack(name string) (any, error) {
 	if err != nil {
 		return nil, err
 	}
+	doc, err := s.publishedCuration()
+	if err != nil {
+		return nil, err
+	}
 	switch name {
+	case "original.json":
+		entries, err := originalCatalog()
+		if err != nil {
+			return nil, err
+		}
+		return map[string]any{"entries": filterEntries(doc.applyGalleryOrder(entries), reviews)}, nil
 	case "seedance.json", "haohaoxue.json", "youmind.json":
 		pack, err := s.readPack(name)
 		if err != nil {
 			return nil, err
 		}
-		return map[string]any{"entries": filterEntries(pack, reviews)}, nil
+		return map[string]any{"entries": filterEntries(doc.applyGalleryOrder(pack), reviews)}, nil
 	case "gallery-pool.json", "manifest.json",
 		"translations/en-US.json", "translations/zh-TW.json", "translations/ja-JP.json",
 		"translations/ko-KR.json", "translations/es-ES.json", "translations/fr-FR.json", "translations/de-DE.json":
@@ -92,10 +111,10 @@ func (s Service) LegacyPack(name string) (any, error) {
 		if err != nil {
 			return nil, err
 		}
-		visible := filterEntries(entries, reviews)
+		visible := filterEntries(doc.applyGalleryOrder(entries), reviews)
 		switch name {
 		case "gallery-pool.json":
-			return s.publicPool(visible)
+			return s.publicPool(doc, visible)
 		case "manifest.json":
 			return s.publicManifest(visible)
 		default:
@@ -106,7 +125,12 @@ func (s Service) LegacyPack(name string) (any, error) {
 	}
 }
 
-func (s Service) publicPool(visible []Entry) (map[string]any, error) {
+func (s Service) publicPool(doc *CurationDocument, visible []Entry) (map[string]any, error) {
+	if entries, err := s.editorialPool(doc); err != nil {
+		return nil, err
+	} else if entries != nil {
+		return map[string]any{"entries": entries}, nil
+	}
 	pool, err := s.readPack("gallery-pool.json")
 	if err != nil {
 		return nil, err
@@ -116,6 +140,11 @@ func (s Service) publicPool(visible []Entry) (map[string]any, error) {
 		byID[ID(e)] = e
 	}
 	out := []Entry{}
+	for _, entry := range visible {
+		if entry["sourceId"] == "original" || entry["sourceId"] == "chatgpt-prompts" {
+			out = append(out, entry)
+		}
+	}
 	for _, item := range pool {
 		if entry, ok := byID[ID(item)]; ok {
 			out = append(out, entry)
@@ -169,11 +198,6 @@ func (s Service) publicTranslations(name string, visible []Entry) (any, error) {
 	for _, entry := range visible {
 		if text, ok := pack[ID(entry)]; ok {
 			out[ID(entry)] = text
-		}
-	}
-	for key, text := range pack {
-		if strings.HasPrefix(key, "original:") {
-			out[key] = text
 		}
 	}
 	return out, nil

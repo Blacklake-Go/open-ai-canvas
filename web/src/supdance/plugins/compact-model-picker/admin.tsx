@@ -69,7 +69,9 @@ export default function CompactPickerAdmin() {
                         ))}
                         {save.isError && <Alert role="alert" type="error" showIcon title={save.error.message} />}
                     </SettingsSectionCard>
-                    <GalleryAdmin draft={draft} pending={save.isPending} edit={(value) => setEdits((current) => ({ ...current, ...value }))} />
+                    <div id="inspiration-public-controls">
+                        <GalleryAdmin draft={draft} pending={save.isPending} edit={(value) => setEdits((current) => ({ ...current, ...value }))} />
+                    </div>
                 </div>
             )}
         </AdminPageFrame>

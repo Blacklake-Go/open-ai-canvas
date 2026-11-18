@@ -4,9 +4,10 @@ import { useAppearanceStore } from "@/stores/use-appearance-store";
 import type { CreationMode } from "./creation-assets";
 import { ArrowUp, ChevronDown, Clapperboard, FileText, Image as ImageIcon, Blocks, Bookmark, Disc3, Mic2, Music, Sparkles } from "lucide-react";
 import { LayoutGroup, motion, useReducedMotion } from "motion/react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { aceternityMotion } from "@/lib/aceternity-motion";
-import { curatedInspirations, inspirationSourceOf, inspirationSources } from "@/lib/inspirations/catalog";
+import { catalogIdOf, inspirationSourceOf, inspirationSources, type CreationInspiration } from "@/lib/inspirations/catalog";
+import { loadCreationFeaturedWorks } from "./creation-inspirations";
 import { modeLabels } from "./creation-types";
 import { Button } from "antd";
 import { useTranslation } from "react-i18next";
@@ -192,18 +193,29 @@ export function CreationFeaturedWorks({ onStartPrompt }: { onStartPrompt: (mode:
     const { t } = useTranslation();
     const [filter, setFilter] = useState<"all" | CreationMode>("all");
     const [limit, setLimit] = useState(12);
-    const filtered = curatedInspirations.filter((item) => filter === "all" || item.mode === filter);
+    const [works, setWorks] = useState<CreationInspiration[]>([]);
+    useEffect(() => {
+        let mounted = true;
+        void loadCreationFeaturedWorks().then((items) => {
+            if (mounted) setWorks(items);
+        });
+        return () => {
+            mounted = false;
+        };
+    }, []);
+    const filtered = works.filter((item) => filter === "all" || item.mode === filter);
     // 只列出真正用到的外部来源；原创条目不写来源声明。
-    const declaredSources = Array.from(new Set(curatedInspirations.map((item) => item.sourceId ?? "original")))
+    const declaredSources = Array.from(new Set(works.map((item) => item.sourceId ?? "original")))
         .map((id) => inspirationSources[id])
         .filter((source) => source.notice);
+    if (!works.length) return null;
     return (
         <section className="creation-featured-works" aria-labelledby="creation-featured-title">
             <div className="creation-featured-heading">
                 <div>
                     <h2 id="creation-featured-title">{t("create.empty.featuredTitle")}</h2>
                 </div>
-                <p>{t("create.empty.featuredSummary", { count: curatedInspirations.length })}</p>
+                <p>{t("create.empty.featuredSummary", { count: works.length })}</p>
             </div>
             <div className="creation-inspiration-filters" role="group" aria-label={t("create.empty.filterLabel")}>
                 {(["all", "video", "image", "text"] as const).map((value) => (
@@ -217,13 +229,13 @@ export function CreationFeaturedWorks({ onStartPrompt }: { onStartPrompt: (mode:
                         }}
                     >
                         {value === "all" ? t("create.empty.allInspirations") : modeLabels[value]}
-                        <span>{curatedInspirations.filter((item) => value === "all" || item.mode === value).length}</span>
+                        <span>{works.filter((item) => value === "all" || item.mode === value).length}</span>
                     </button>
                 ))}
             </div>
             <div className="creation-featured-layout">
                 {filtered.slice(0, limit).map((item, index) => (
-                    <button key={item.title} type="button" className={`product-collection-card creation-featured-card ${index === 0 ? "is-featured-hero" : ""}`} onClick={() => onStartPrompt(item.mode, item.prompt)}>
+                    <button key={catalogIdOf(item)} type="button" className={`product-collection-card creation-featured-card ${index === 0 ? "is-featured-hero" : ""}`} onClick={() => onStartPrompt(item.mode, item.prompt)}>
                         <span className="creation-featured-media">
                             <img src={item.image} alt="" loading="lazy" />
                             <span className="creation-inspiration-overlay">

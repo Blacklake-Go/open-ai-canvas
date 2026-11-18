@@ -1,9 +1,4 @@
-import { curatedInspirations, inspirationSources } from "@/lib/inspirations/catalog";
-
-/** Compatibility exports for the original creation page inspiration contract. */
-export const creationFeaturedWorks = curatedInspirations.map(({ sourceId, credit, ...item }) => ({
-    ...item,
-    ...(sourceId === "chatgpt-prompts" && credit ? { source: credit } : {}),
-}));
+import { inspirationSources } from "@/lib/inspirations/catalog";
+export { loadGalleryPool as loadCreationFeaturedWorks } from "@/services/inspiration-catalog";
 
 export const inspirationSource = inspirationSources["chatgpt-prompts"];

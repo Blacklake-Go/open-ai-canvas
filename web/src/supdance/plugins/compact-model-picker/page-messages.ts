@@ -1,6 +1,7 @@
 import type { AppLocale } from "@/i18n/locales";
 import { SUPPORTED_LOCALES } from "@/i18n/locales";
 import type { SupDanceI18nEntry } from "@/supdance/plugins/i18n/types";
+import { CURATION_ENTRIES } from "@/supdance/plugins/inspiration-curation/messages";
 
 const words = {
     title: ["页面管理", "Page management", "頁面管理", "Gestión de páginas", "Gestion des pages", "Seitenverwaltung", "ページ管理", "페이지 관리"],
@@ -21,11 +22,14 @@ const words = {
 } satisfies Record<string, readonly string[]>;
 
 export const pageManagementText = (locale: AppLocale, key: keyof typeof words) => words[key][SUPPORTED_LOCALES.findIndex((item) => item.code === locale)];
-export const PAGE_MANAGEMENT_ENTRIES: SupDanceI18nEntry[] = Object.entries(words).map(([key, values]) => ({
-    key: `page.management.${key}`,
-    namespace: "admin",
-    sourceText: values[0],
-    description: "Page management plugin",
-    origin: "builtin",
-    translations: Object.fromEntries(SUPPORTED_LOCALES.map(({ code }, index) => [code, values[index]])),
-}));
+export const PAGE_MANAGEMENT_ENTRIES: SupDanceI18nEntry[] = [
+    ...Object.entries(words).map(([key, values]): SupDanceI18nEntry => ({
+        key: `page.management.${key}`,
+        namespace: "admin",
+        sourceText: values[0],
+        description: "Page management plugin",
+        origin: "builtin",
+        translations: Object.fromEntries(SUPPORTED_LOCALES.map(({ code }, index) => [code, values[index]])),
+    })),
+    ...CURATION_ENTRIES,
+];

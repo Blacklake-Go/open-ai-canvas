@@ -12,6 +12,7 @@ import (
 )
 
 func RegisterSupDanceGalleryRoutes(r *gin.RouterGroup, svc *service.Service) {
+	registerInspirationCurationRoutes(r, svc)
 	r.GET("/public/inspirations/access", func(c *gin.Context) {
 		c.Header("Cache-Control", "no-store")
 		allowed, err := svc.InspirationGallery().Public(false)

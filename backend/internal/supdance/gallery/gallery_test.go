@@ -4,6 +4,8 @@ import (
 	"encoding/json"
 	"os"
 	"path/filepath"
+	"slices"
+	"strings"
 	"testing"
 
 	"gorm.io/driver/sqlite"
@@ -59,7 +61,16 @@ func TestPublicCatalogAndExplicitRestrictions(t *testing.T) {
 		}
 	}
 	write([]Entry{good, bad, normal})
-	if rows, err := svc.Entries(false); err == nil || len(rows) > 0 {
+	external := func(rows []Entry) []Entry {
+		out := []Entry{}
+		for _, row := range rows {
+			if strings.HasPrefix(ID(row), "youmind:") {
+				out = append(out, row)
+			}
+		}
+		return out
+	}
+	if rows, _, err := svc.Entries(false); err == nil || len(rows) > 0 {
 		t.Fatal("missing config must deny public content")
 	}
 	audit := func() *model.AdminAuditEvent {
@@ -86,15 +97,16 @@ func TestPublicCatalogAndExplicitRestrictions(t *testing.T) {
 	}
 	for _, state := range []struct{ public, home, lock, want, wantHome bool }{{false, true, false, false, false}, {true, true, true, false, false}, {true, false, false, true, false}, {true, true, false, true, true}} {
 		save(state.public, state.home, state.lock)
-		rows, err := svc.Entries(false)
+		rows, _, err := svc.Entries(false)
 		if state.want {
+			rows = external(rows)
 			if err != nil || len(rows) != 2 || ID(rows[0]) != ID(good) || ID(rows[1]) != ID(normal) {
 				t.Fatalf("unexpected public catalog: %v %v", rows, err)
 			}
 		} else if err == nil || len(rows) > 0 {
 			t.Fatal("public switch/lock bypassed")
 		}
-		_, err = svc.Entries(true)
+		_, _, err = svc.Entries(true)
 		if (err == nil) != state.wantHome {
 			t.Fatal("homepage policy bypassed")
 		}
@@ -111,7 +123,23 @@ func TestPublicCatalogAndExplicitRestrictions(t *testing.T) {
 	if err = os.Mkdir(filepath.Join(dir, "inspirations", "translations"), 0700); err != nil {
 		t.Fatal(err)
 	}
-	translation := `{"youmind:good":{"title":"Good"},"youmind:restricted":{"title":"Restricted"},"youmind:normal":{"title":"Normal"}}`
+	const originalID = "original:港风天台重逢"
+	original, err := svc.Find(originalID)
+	if err != nil {
+		t.Fatal(err)
+	}
+	a.ID = "restrict-original"
+	if err = svc.SaveReview(actor, originalID, "restricted", "Fixture for moderation", Digest(original), a); err != nil {
+		t.Fatal(err)
+	}
+	containsRestrictedOriginal := func(pack any) bool {
+		return slices.ContainsFunc(pack.(map[string]any)["entries"].([]Entry), func(entry Entry) bool { return ID(entry) == originalID })
+	}
+	originalPack, err := svc.LegacyPack("original.json")
+	if err != nil || containsRestrictedOriginal(originalPack) {
+		t.Fatal("original catalog exposed a restricted case", err)
+	}
+	translation := `{"youmind:good":{"title":"Good"},"youmind:restricted":{"title":"Restricted"},"youmind:normal":{"title":"Normal"},"original:港风天台重逢":{"title":"Restricted original"}}`
 	if err = os.WriteFile(filepath.Join(dir, "inspirations", "translations", "en-US.json"), []byte(translation), 0600); err != nil {
 		t.Fatal(err)
 	}
@@ -128,7 +156,7 @@ func TestPublicCatalogAndExplicitRestrictions(t *testing.T) {
 		t.Fatal(err)
 	}
 	pack, err = svc.LegacyPack("gallery-pool.json")
-	if err != nil || len(pack.(map[string]any)["entries"].([]Entry)) != 1 || ID(pack.(map[string]any)["entries"].([]Entry)[0]) != ID(normal) {
+	if err != nil || containsRestrictedOriginal(pack) || len(external(pack.(map[string]any)["entries"].([]Entry))) != 1 || ID(external(pack.(map[string]any)["entries"].([]Entry))[0]) != ID(normal) {
 		t.Fatal("homepage pool exposed a blocked or non-curated entry", err)
 	}
 	a.ID = "invalid-replacement"
@@ -142,7 +170,8 @@ func TestPublicCatalogAndExplicitRestrictions(t *testing.T) {
 	if err = svc.SaveReview(actor, ID(good), "approved", "Licensed original replacement TEST-002", Digest(good), a, "https://example.com/authorized-cover.webp"); err != nil {
 		t.Fatal(err)
 	}
-	rows, err := svc.Entries(false)
+	rows, _, err := svc.Entries(false)
+	rows = external(rows)
 	if err != nil || len(rows) != 2 || rows[0]["image"] != "https://example.com/authorized-cover.webp" {
 		t.Fatal("approved replacement not applied")
 	}
@@ -155,7 +184,8 @@ func TestPublicCatalogAndExplicitRestrictions(t *testing.T) {
 	}
 	changed["prompt"] = "upstream changed"
 	write([]Entry{changed, bad})
-	rows, err = svc.Entries(false)
+	rows, _, err = svc.Entries(false)
+	rows = external(rows)
 	if err != nil || len(rows) != 0 {
 		t.Fatal("changed content retained approval")
 	}

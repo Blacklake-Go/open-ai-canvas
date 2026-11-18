@@ -1,5 +1,10 @@
 # SupDance Canvas — 定制维护变更日志 (CHANGELOG.md)
 
+## 灵感中心策展与公开清单
+
+- 页面管理新增灵感中心，将案例分类、首页精选与完整公开清单通过草稿、发布、历史版本管理。
+- 手动清单只发布管理员选中的案例，默认按编排顺序显示。公开开关和逐条审核继续生效。详见 [操作与回滚说明](./INSPIRATION_CURATION.md)。
+
 ## TikTok Login Kit Web
 
 - 复用社交登录的授权状态、浏览器校验和账号绑定流程。TikTok 仅申请 `user.info.basic`，读取头像和昵称，按 client key 隔离登录身份。

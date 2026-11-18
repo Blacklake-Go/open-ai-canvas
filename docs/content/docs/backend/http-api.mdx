@@ -45,6 +45,14 @@ description: 信封、错误码与 OpenAPI
 
 视觉引擎的预览、草稿保存和发布入口要求完整的 Schema 2 配置；缺失字段、显式 null、未知结构字段及非法阴影返回 400。正式发布沿用 `expectedRevision` 并发保护，冲突返回 409；版本使用服务端 UUID，配置与快照的发布人使用当前用户 ID，配置、快照和审计仍在同一事务提交。
 
+## SupDance 灵感中心策展
+
+管理员通过 `GET /api/admin/inspiration-curation` 读取草稿、当前版本和发布历史，使用 `GET /api/admin/inspiration-curation/catalog?q=` 按案例标题、提示词或来源检索。写入使用 `POST /api/admin/inspiration-curation/draft`、`/publish` 或 `/rollback`，各请求须携带 `expectedRevision`。保存提交 `document`，回滚提交 `version`。版本冲突返回 409，客户端应重新载入。
+
+`GET /api/public/inspirations/curation` 返回已发布的风格、案例分类与首页精选。读取和回滚后的展示仍检查当前全局开关、合规锁和逐条审核，精选另外检查首页开关。关闭公开时返回 404，响应设置 `Cache-Control: no-store`。
+
+草稿可提供 `document.galleryOrder`（有序案例 ID 数组）。发布后该字段限制公开来源包、上新、翻译和受保护的缩略图，仓库原始条目及后台目录查询仍可管理。公开响应仅返回当前符合公开规则的 ID。旧版本缺少字段时沿用自动目录，显式空数组表示发布为空目录。
+
 ## 音乐工作岛
 
 复用 `GET /api/v1/supdance/music/capabilities`、`POST /api/v1/supdance/music/quote`、`POST /api/v1/supdance/music/tasks` 与查询/历史接口。能力引用当前用户的主站渠道；创建要求 `quotedMicrocredits` 和 `idempotencyNonce`。服务端重验报价、余额及参数，价格变化返回 `reason: music_quote_changed`；QUEUED 仅表示受理。

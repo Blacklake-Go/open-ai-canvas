@@ -48,7 +48,7 @@ func (s *Service) startInspirationFeedWorker() {
 }
 
 func (s *Service) InspirationFeed() (*InspirationFeed, error) {
-	rows, err := s.InspirationGallery().Entries(false)
+	rows, manuallyOrdered, err := s.InspirationGallery().Entries(false)
 	if err != nil {
 		return nil, err
 	}
@@ -65,7 +65,9 @@ func (s *Service) InspirationFeed() (*InspirationFeed, error) {
 	filtered.Entries = []inspirations.FeedEntry{}
 	for _, row := range rows {
 		id, _ := row["id"].(string)
-		if !feedIDs[id] {
+		// A manual selection can include previously collected entries outside the
+		// rolling recent-feed window. addedAt is assigned to synced rows by the gallery.
+		if (!manuallyOrdered && !feedIDs[id]) || (manuallyOrdered && row["addedAt"] == nil) {
 			continue
 		}
 		b, err := json.Marshal(row)

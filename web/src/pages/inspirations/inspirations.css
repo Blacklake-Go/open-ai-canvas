@@ -209,6 +209,14 @@
     height: 100%;
     object-fit: cover;
 }
+
+.inspiration-card.is-editorial .inspiration-card-title {
+    display: -webkit-box;
+    white-space: normal;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+    overflow-wrap: anywhere;
+}
 .inspiration-card-source {
     position: absolute;
     bottom: var(--space-2);
