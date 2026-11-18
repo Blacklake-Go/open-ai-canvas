@@ -131,6 +131,7 @@ export const SUPDANCE_UPSTREAM_PATCH_REGISTRY: readonly UpstreamPatchRecord[] = 
             "web/src/pages/admin/components/access-settings-panel.tsx",
             "web/src/components/auth/auth-dialog.tsx",
             "web/src/lib/image-quality.ts",
+            "web/src/lib/audio-generation.ts",
             "web/src/lib/drama/drama-styles.ts",
             "web/src/pages/projects/style-detail-modal.tsx",
             "web/src/pages/workbench/workbench-scene-library.tsx",

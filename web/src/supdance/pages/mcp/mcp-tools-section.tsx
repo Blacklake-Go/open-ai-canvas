@@ -1,11 +1,15 @@
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
+import { interfaceText } from "@/i18n/interface-text";
 import copy from "copy-to-clipboard";
 import { Wrench, Check, Copy, Sparkles, Terminal, Code2 } from "lucide-react";
 import { OFFICIAL_MCP_TOOLS, McpToolItem } from "./mcp-plugin-list";
 
 export function McpToolsSection() {
+    useTranslation();
     const [selectedTool, setSelectedTool] = useState<McpToolItem>(OFFICIAL_MCP_TOOLS[0]);
     const [copiedPrompt, setCopiedPrompt] = useState(false);
+    const example = interfaceText(selectedTool.examplePrompt);
 
     const handleCopyPrompt = (text: string) => {
         copy(text);
@@ -45,10 +49,10 @@ export function McpToolsSection() {
                             >
                                 <div className="flex w-full items-center justify-between">
                                     <span className="font-mono text-xs font-semibold text-rose-600 dark:text-rose-400">{tool.name}</span>
-                                    <span className="rounded bg-zinc-100 px-2 py-0.5 text-[10px] text-zinc-500 dark:bg-white/5 dark:text-zinc-400">{tool.category}</span>
+                                    <span className="rounded bg-zinc-100 px-2 py-0.5 text-[10px] text-zinc-500 dark:bg-white/5 dark:text-zinc-400">{interfaceText(tool.category)}</span>
                                 </div>
-                                <div className="mt-1.5 text-sm font-semibold text-zinc-800 dark:text-zinc-100">{tool.displayName}</div>
-                                <p className="mt-1 line-clamp-2 text-xs text-zinc-500 dark:text-zinc-400">{tool.description}</p>
+                                <div className="mt-1.5 text-sm font-semibold text-zinc-800 dark:text-zinc-100">{interfaceText(tool.displayName)}</div>
+                                <p className="mt-1 line-clamp-2 text-xs text-zinc-500 dark:text-zinc-400">{interfaceText(tool.description)}</p>
                             </button>
                         );
                     })}
@@ -62,10 +66,10 @@ export function McpToolsSection() {
                             <div>
                                 <div className="flex items-center gap-2">
                                     <Wrench className="size-4 text-rose-500" />
-                                    <h3 className="text-base font-bold text-zinc-900 dark:text-white">{selectedTool.displayName}</h3>
+                                    <h3 className="text-base font-bold text-zinc-900 dark:text-white">{interfaceText(selectedTool.displayName)}</h3>
                                     <code className="rounded bg-zinc-100 px-2 py-0.5 font-mono text-xs text-rose-600 dark:bg-white/10 dark:text-rose-300">{selectedTool.name}</code>
                                 </div>
-                                <p className="mt-1 text-xs text-zinc-500 dark:text-zinc-400">{selectedTool.description}</p>
+                                <p className="mt-1 text-xs text-zinc-500 dark:text-zinc-400">{interfaceText(selectedTool.description)}</p>
                             </div>
                         </div>
 
@@ -91,7 +95,7 @@ export function McpToolsSection() {
                                                 <td className="px-3.5 py-2.5 font-bold text-zinc-800 dark:text-zinc-200">{param.name}</td>
                                                 <td className="px-3.5 py-2.5 text-purple-600 dark:text-purple-400">{param.type}</td>
                                                 <td className="px-3.5 py-2.5">{param.required ? <span className="font-semibold text-rose-500">true</span> : <span className="text-zinc-400">false</span>}</td>
-                                                <td className="px-3.5 py-2.5 font-sans text-xs text-zinc-600 dark:text-zinc-400">{param.desc}</td>
+                                                <td className="px-3.5 py-2.5 font-sans text-xs text-zinc-600 dark:text-zinc-400">{interfaceText(param.desc)}</td>
                                             </tr>
                                         ))}
                                     </tbody>
@@ -107,7 +111,7 @@ export function McpToolsSection() {
                                 <Terminal className="size-3.5" />
                                 <span>在 Cursor / Claude 中直接试用该工具 (Example Prompt)</span>
                             </span>
-                            <button type="button" onClick={() => handleCopyPrompt(selectedTool.examplePrompt)} className="flex items-center gap-1 text-xs font-medium text-rose-600 hover:text-rose-700 dark:text-rose-400 dark:hover:text-rose-300">
+                            <button type="button" onClick={() => handleCopyPrompt(example)} className="flex items-center gap-1 text-xs font-medium text-rose-600 hover:text-rose-700 dark:text-rose-400 dark:hover:text-rose-300">
                                 {copiedPrompt ? (
                                     <>
                                         <Check className="size-3 text-emerald-500" />
@@ -121,7 +125,7 @@ export function McpToolsSection() {
                                 )}
                             </button>
                         </div>
-                        <p className="mt-2 text-xs leading-relaxed text-zinc-700 dark:text-zinc-300">{selectedTool.examplePrompt}</p>
+                        <p className="mt-2 text-xs leading-relaxed text-zinc-700 dark:text-zinc-300">{example}</p>
                     </div>
                 </div>
             </div>

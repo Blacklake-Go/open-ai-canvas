@@ -1,4 +1,6 @@
 import { useState, useMemo } from "react";
+import { useTranslation } from "react-i18next";
+import { interfaceText } from "@/i18n/interface-text";
 import copy from "copy-to-clipboard";
 import { Search, Copy, Check, ExternalLink, ShieldCheck, Cpu, Terminal, Layers, Film, Music, UserCheck, FolderSync, Wrench, Sparkles, Star, DownloadCloud } from "lucide-react";
 import { GitHubIcon } from "./github-icon";
@@ -30,6 +32,8 @@ function renderPluginIcon(iconName: string) {
 }
 
 export function McpPluginGrid() {
+    const { i18n } = useTranslation();
+    const locale = i18n.resolvedLanguage;
     const [selectedCategory, setSelectedCategory] = useState<string>("all");
     const [searchQuery, setSearchQuery] = useState<string>("");
     const [copiedId, setCopiedId] = useState<string | null>(null);
@@ -50,9 +54,9 @@ export function McpPluginGrid() {
             const matchesCategory = selectedCategory === "all" || item.category === selectedCategory;
             if (!matchesCategory) return false;
             if (!query) return true;
-            return item.title.toLowerCase().includes(query) || item.description.toLowerCase().includes(query) || item.name.toLowerCase().includes(query) || item.tags.some((tag) => tag.toLowerCase().includes(query));
+            return [item.title, item.description, interfaceText(item.description), item.name, ...item.tags].some((text) => text.toLowerCase().includes(query));
         });
-    }, [selectedCategory, searchQuery]);
+    }, [selectedCategory, searchQuery, locale]);
 
     const handleCopy = (id: string, text: string) => {
         copy(text);
@@ -100,7 +104,7 @@ export function McpPluginGrid() {
                                 isActive ? "bg-rose-500 text-white shadow-sm shadow-rose-500/25" : "bg-zinc-100 text-zinc-600 hover:bg-zinc-200 hover:text-zinc-900 dark:bg-white/5 dark:text-zinc-400 dark:hover:bg-white/10 dark:hover:text-white"
                             }`}
                         >
-                            <span>{cat.label}</span>
+                            <span>{interfaceText(cat.label)}</span>
                             <span className={`rounded-full px-1.5 py-0.2 font-mono text-[10px] ${isActive ? "bg-white/20 text-white" : "bg-zinc-200 text-zinc-600 dark:bg-white/10 dark:text-zinc-400"}`}>{count}</span>
                         </button>
                     );
@@ -182,7 +186,7 @@ function PluginCard({ plugin, copied, onCopy, onOpenDetail }: { plugin: McpPlugi
                 <div className="relative mb-4 h-36 w-full overflow-hidden rounded-xl border border-zinc-100 dark:border-white/5 bg-zinc-100 dark:bg-black/30">
                     <img src={plugin.coverImage} alt={plugin.title} className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105" />
                     <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
-                    <span className="absolute bottom-2 left-2 rounded bg-black/60 px-2 py-0.5 font-mono text-[10px] text-white backdrop-blur-sm">{plugin.categoryLabel}</span>
+                    <span className="absolute bottom-2 left-2 rounded bg-black/60 px-2 py-0.5 font-mono text-[10px] text-white backdrop-blur-sm">{interfaceText(plugin.categoryLabel)}</span>
                     <span className="absolute bottom-2 right-2 rounded bg-rose-500/80 px-2 py-0.5 font-mono text-[10px] font-bold text-white backdrop-blur-sm">{plugin.version}</span>
                 </div>
 
@@ -205,7 +209,7 @@ function PluginCard({ plugin, copied, onCopy, onOpenDetail }: { plugin: McpPlugi
                 </div>
 
                 {/* 描述 */}
-                <p className="mt-3 line-clamp-2 text-xs leading-relaxed text-zinc-600 dark:text-zinc-300">{plugin.description}</p>
+                <p className="mt-3 line-clamp-2 text-xs leading-relaxed text-zinc-600 dark:text-zinc-300">{interfaceText(plugin.description)}</p>
 
                 {/* 统计指标 */}
                 <div className="mt-3.5 flex items-center gap-4 text-[11px] text-zinc-500 dark:text-zinc-400">

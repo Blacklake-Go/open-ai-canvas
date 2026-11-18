@@ -1,4 +1,5 @@
 import { doubaoAudioVoiceOptions, doubaoDefaultAudioVoice } from "@/lib/doubao-audio-voices";
+import { interfaceText } from "@/i18n/interface-text";
 import { resolveModelRequestConfig } from "@/stores/use-config-store";
 import type { AiConfig } from "@/stores/use-config-store";
 
@@ -120,10 +121,13 @@ export function audioVoiceLabelForConfig(config: AiConfig, value: string) {
 export function canvasAudioSource(config: AiConfig, referenceLabels: string[]) {
     const mode = config.audioMode === "tts" || config.audioMode === "unified_edit" ? config.audioMode : referenceLabels.length ? "unified_edit" : "tts";
     if (mode === "unified_edit" && referenceLabels.length) {
-        return { mode, label: referenceLabels.length === 1 ? `参考音色：${referenceLabels[0]}` : `参考音色：${referenceLabels.length} 段` };
+        return {
+            mode,
+            label: referenceLabels.length === 1 ? interfaceText("参考音色：{voice}", { voice: referenceLabels[0] }) : interfaceText("参考音色：{count} 段", { count: referenceLabels.length }),
+        };
     }
     const voice = audioVoiceLabelForConfig(config, config.audioVoice);
-    return { mode, label: voice ? `音色：${voice}` : mode === "tts" ? "文本朗读" : "配音待选音色" };
+    return { mode, label: voice ? interfaceText("音色：{voice}", { voice }) : mode === "tts" ? interfaceText("文本朗读") : interfaceText("配音待选音色") };
 }
 
 export function audioFormatLabelForConfig(config: AiConfig, value: string) {

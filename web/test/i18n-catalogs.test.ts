@@ -18,6 +18,7 @@ import { projectStyleCharacters, projectStyleMedia, projectStyleTones, projectSt
 import { localizedApiErrorMessage } from "@/services/api/error-codes";
 import { useLocaleStore } from "@/stores/use-locale-store";
 import { useUserStore } from "@/stores/use-user-store";
+import { MCP_CATEGORIES, MCP_FAQS, MCP_PLUGINS, OFFICIAL_MCP_TOOLS } from "@/supdance/pages/mcp/mcp-plugin-list";
 
 function flatten(value: unknown, prefix = "", result: Record<string, string> = {}): Record<string, string> {
     if (typeof value === "string") result[prefix] = value;
@@ -30,6 +31,23 @@ const placeholders = (text: string) => [...text.matchAll(/\{\{(\w+)\}\}/g)].map(
 afterEach(() => useLocaleStore.getState().setLocale("zh-CN"));
 
 describe("i18n catalogs", () => {
+    test("public MCP categories, tools, examples, and documentation are localized in all eight languages", () => {
+        const sources = [
+            ...MCP_CATEGORIES.map((item) => item.label),
+            ...MCP_FAQS.flatMap((item) => [item.question, item.answer]),
+            ...MCP_PLUGINS.flatMap((item) => [item.categoryLabel, item.description, item.detailDocs?.overview, item.detailDocs?.changelog, ...(item.detailDocs?.features ?? []), ...(item.detailDocs?.requirements ?? [])]),
+            ...OFFICIAL_MCP_TOOLS.flatMap((item) => [item.category, item.displayName, item.description, item.examplePrompt, ...item.parameters.map((parameter) => parameter.desc)]),
+        ].filter((source): source is string => Boolean(source && /\p{Script=Han}/u.test(source)));
+        for (const { code } of SUPPORTED_LOCALES) {
+            const messages = flatten(NATIVE_CATALOGS[code]);
+            for (const source of new Set(sources)) {
+                const text = messages[interfaceTextKey(source)];
+                expect(text, `${code}: ${source}`).toBeTruthy();
+                for (const command of [...source.matchAll(/`([^`]+)`/g)].map((match) => match[1])) expect(text).toContain(command);
+                if (source.startsWith("@supdance")) expect(text).toStartWith("@supdance");
+            }
+        }
+    });
     test("rendered built-in style fields include copy for each supported locale", () => {
         const sources = [
             ...DRAMA_STYLE_CATEGORIES.map((item) => item.label),

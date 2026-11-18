@@ -232,6 +232,7 @@
     "web/src/lib/inspirations/catalog.ts",
     "web/src/lib/inspirations/category-i18n.ts",
     "web/src/lib/image-quality.ts",
+    "web/src/lib/audio-generation.ts",
     "web/src/lib/drama/drama-styles.ts",
     "web/src/pages/projects/style-detail-modal.tsx",
     "web/src/pages/workbench/workbench-scene-library.tsx",

@@ -1,10 +1,13 @@
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
+import { interfaceText } from "@/i18n/interface-text";
 import copy from "copy-to-clipboard";
 import { X, Copy, Check, ExternalLink, ShieldCheck, Star, DownloadCloud } from "lucide-react";
 import { GitHubIcon } from "./github-icon";
 import { McpPluginItem } from "./mcp-plugin-list";
 
 export function McpPluginModal({ plugin, onClose }: { plugin: McpPluginItem | null; onClose: () => void }) {
+    useTranslation();
     const [copied, setCopied] = useState(false);
 
     if (!plugin) return null;
@@ -86,14 +89,14 @@ export function McpPluginModal({ plugin, onClose }: { plugin: McpPluginItem | nu
                     <div className="mt-6 space-y-4 text-xs leading-relaxed text-zinc-600 dark:text-zinc-300">
                         <div>
                             <h4 className="font-semibold text-zinc-900 dark:text-white">组件概述</h4>
-                            <p className="mt-1">{plugin.detailDocs.overview}</p>
+                            <p className="mt-1">{interfaceText(plugin.detailDocs.overview)}</p>
                         </div>
 
                         <div>
                             <h4 className="font-semibold text-zinc-900 dark:text-white">核心特性</h4>
                             <ul className="mt-1.5 list-disc space-y-1 pl-4">
                                 {plugin.detailDocs.features.map((feat) => (
-                                    <li key={feat}>{feat}</li>
+                                    <li key={feat}>{interfaceText(feat)}</li>
                                 ))}
                             </ul>
                         </div>
@@ -102,14 +105,14 @@ export function McpPluginModal({ plugin, onClose }: { plugin: McpPluginItem | nu
                             <h4 className="font-semibold text-zinc-900 dark:text-white">运行环境与依赖</h4>
                             <ul className="mt-1.5 list-disc space-y-1 pl-4">
                                 {plugin.detailDocs.requirements.map((req) => (
-                                    <li key={req}>{req}</li>
+                                    <li key={req}>{interfaceText(req)}</li>
                                 ))}
                             </ul>
                         </div>
 
                         <div>
                             <h4 className="font-semibold text-zinc-900 dark:text-white">最近版本更新</h4>
-                            <p className="mt-1 font-mono text-[11px] text-rose-600 dark:text-rose-400">{plugin.detailDocs.changelog}</p>
+                            <p className="mt-1 font-mono text-[11px] text-rose-600 dark:text-rose-400">{interfaceText(plugin.detailDocs.changelog)}</p>
                         </div>
                     </div>
                 )}

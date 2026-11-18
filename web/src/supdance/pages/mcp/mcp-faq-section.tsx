@@ -1,8 +1,11 @@
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
+import { interfaceText } from "@/i18n/interface-text";
 import { HelpCircle, ChevronDown } from "lucide-react";
 import { MCP_FAQS } from "./mcp-plugin-list";
 
 export function McpFaqSection() {
+    useTranslation();
     const [openIndex, setOpenIndex] = useState<number | null>(0);
 
     const toggle = (index: number) => {
@@ -26,11 +29,11 @@ export function McpFaqSection() {
                     return (
                         <div key={faq.question} className="overflow-hidden rounded-xl border border-zinc-200 bg-white transition-colors dark:border-white/10 dark:bg-[#121217]">
                             <button type="button" onClick={() => toggle(idx)} className="flex w-full items-center justify-between p-4.5 text-left text-sm font-semibold text-zinc-900 hover:text-rose-600 sm:px-6 dark:text-zinc-100 dark:hover:text-rose-400">
-                                <span className="pr-4">{faq.question}</span>
+                                <span className="pr-4">{interfaceText(faq.question)}</span>
                                 <ChevronDown className={`size-4 shrink-0 text-zinc-400 transition-transform duration-200 ${isOpen ? "rotate-180 text-rose-500" : ""}`} />
                             </button>
 
-                            {isOpen && <div className="border-t border-zinc-100 px-4.5 pb-5 pt-3.5 text-xs leading-relaxed text-zinc-600 sm:px-6 dark:border-white/5 dark:text-zinc-300">{faq.answer}</div>}
+                            {isOpen && <div className="border-t border-zinc-100 px-4.5 pb-5 pt-3.5 text-xs leading-relaxed text-zinc-600 sm:px-6 dark:border-white/5 dark:text-zinc-300">{interfaceText(faq.answer)}</div>}
                         </div>
                     );
                 })}
