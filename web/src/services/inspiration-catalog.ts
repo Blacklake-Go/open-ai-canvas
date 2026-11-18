@@ -4,7 +4,7 @@
  * 3MB 量级的目录不打进主 JS，首页灵感大厅进入可视区域附近后按需拉取；
  * 只合并并发请求，每次重新进入均由服务端复验公开权限。
  */
-import { catalogIdOf, type CreationInspiration, type InspirationSourceId } from "@/lib/inspirations/catalog";
+import { catalogIdOf, curatedInspirations, type CreationInspiration, type InspirationSourceId } from "@/lib/inspirations/catalog";
 import { getPublicInspirationFeed, type InspirationFeed } from "@/services/api/inspiration-feed";
 
 /** manifest.json 里每个来源带的分类码译名表。 */
@@ -106,7 +106,7 @@ async function buildCatalog(): Promise<InspirationCatalog> {
 
     const entriesBySource = new Map<InspirationSourceId, CreationInspiration[]>();
     CATALOG_SOURCES.forEach((source, index) => entriesBySource.set(source.key, [...packs[index]]));
-    entriesBySource.set("original", []);
+    entriesBySource.set("original", curatedInspirations);
     entriesBySource.set("chatgpt-prompts", []);
     // 静态目录的分类名优先，上游新增的分类码再用上新接口带回的名称。
     const labelsOf = (sourceId: InspirationSourceId) => ({ ...(feed?.categories?.[sourceId] ?? {}), ...(manifest.sources?.[sourceId]?.categories ?? {}) });
@@ -160,7 +160,7 @@ let galleryPool: Promise<CreationInspiration[]> | null = null;
 export function loadGalleryPool(): Promise<CreationInspiration[]> {
     if (!galleryPool) {
         galleryPool = fetchJson<unknown>(GALLERY_POOL_FILE)
-            .then((payload) => readEntries(payload, GALLERY_POOL_FILE))
+            .then((payload) => [...curatedInspirations, ...readEntries(payload, GALLERY_POOL_FILE)])
             .catch((error) => {
                 console.warn("画廊池不可公开或加载失败", error);
                 return [];

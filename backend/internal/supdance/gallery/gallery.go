@@ -1,13 +1,13 @@
 // Package gallery owns the public catalog boundary. Private assets and user works
-// are never queried here. Reviews bind to content hashes, so upstream changes
-// invalidate approval instead of silently publishing changed material.
+// are never queried here. Explicit restrictions and content-bound reviews apply
+// across every public representation of a catalog entry.
 package gallery
 
 import (
 	"crypto/sha256"
 	"encoding/hex"
 	"encoding/json"
-	"fmt"
+	"maps"
 	"net/url"
 	"os"
 	"path/filepath"
@@ -39,8 +39,13 @@ type Candidate struct {
 	Hash   string `json:"hash"`
 }
 type Service struct {
-	Repo *repository.Repository
-	Dir  string
+	Repo    *repository.Repository
+	Dir     string
+	archive *archiveCache
+}
+
+func New(repo *repository.Repository, root string) *Service {
+	return &Service{Repo: repo, Dir: root, archive: &archiveCache{packs: map[string]cachedPack{}}}
 }
 
 func Digest(entry Entry) string {
@@ -55,7 +60,7 @@ func reviewKey(id string) string {
 }
 
 func (s Service) Review(id string) (Review, error) {
-	r := Review{Status: "pending_review"}
+	r := Review{Status: "unreviewed"}
 	row, err := s.Repo.SystemSettingOptional(reviewKey(id))
 	if err != nil || row == nil {
 		return r, err
@@ -65,9 +70,35 @@ func (s Service) Review(id string) (Review, error) {
 	}
 	return r, nil
 }
-func (s Service) Approved(entry Entry) (bool, error) {
-	r, err := s.Review(ID(entry))
-	return err == nil && r.Status == "approved" && strings.TrimSpace(r.Evidence) != "" && r.Hash == Digest(entry), err
+func (s Service) reviews() (map[string]Review, error) {
+	rows, err := s.Repo.SystemSettingsWithPrefix(reviewPrefix, -1)
+	if err != nil {
+		return nil, err
+	}
+	reviews := make(map[string]Review, len(rows))
+	for _, row := range rows {
+		var review Review
+		if err := json.Unmarshal([]byte(row.ValueJSON), &review); err != nil {
+			return nil, err
+		}
+		reviews[row.Key] = review
+	}
+	return reviews, nil
+}
+
+func publicEntry(entry Entry, reviews map[string]Review) (Entry, bool) {
+	review, found := reviews[reviewKey(ID(entry))]
+	if !found {
+		return entry, true
+	}
+	if review.Status != "approved" || strings.TrimSpace(review.Evidence) == "" || review.Hash != Digest(entry) {
+		return nil, false
+	}
+	if review.ReplacementImage != "" {
+		entry = maps.Clone(entry)
+		entry["image"] = review.ReplacementImage
+	}
+	return entry, true
 }
 func (s Service) Public(homepage bool) (bool, error) {
 	p, err := compactpicker.Read(s.Repo)
@@ -82,30 +113,33 @@ func (s Service) Public(homepage bool) (bool, error) {
 
 // Candidates reads only administrator curated packs and the dedicated public feed
 // table. It has no access to projects, tasks, uploads or user asset tables.
-func (s Service) candidates(public bool) ([]Entry, error) {
+func (s Service) catalogEntries() ([]Entry, error) {
 	out := []Entry{}
 	seen := map[string]bool{}
-	for _, source := range []string{"seedance", "haohaoxue", "youmind"} {
-		b, err := os.ReadFile(filepath.Join(s.Dir, "inspirations", source+".json"))
+	for _, source := range catalogSources {
+		pack, err := s.readPack(source + ".json")
 		if err != nil {
 			return nil, err
 		}
-		var pack struct {
-			Entries []Entry `json:"entries"`
-		}
-		if err = json.Unmarshal(b, &pack); err != nil {
-			return nil, err
-		}
-		for _, entry := range pack.Entries {
+		for _, entry := range pack {
 			id := ID(entry)
-			if id == "" {
-				return nil, fmt.Errorf("catalog entry missing ID")
-			}
 			if !seen[id] {
 				seen[id] = true
 				out = append(out, entry)
 			}
 		}
+	}
+	return out, nil
+}
+
+func (s Service) candidates(public bool) ([]Entry, error) {
+	out, err := s.catalogEntries()
+	if err != nil {
+		return nil, err
+	}
+	seen := make(map[string]bool, len(out))
+	for _, entry := range out {
+		seen[ID(entry)] = true
 	}
 	if public {
 		setting, err := s.Repo.SystemSettingOptional("inspiration_feed")
@@ -220,86 +254,69 @@ func (s Service) SaveReview(actor *model.User, id, status, evidence, expectedHas
 		return tx.AppendAdminAudit(audit)
 	})
 }
-func (s Service) RequireUnlock() error {
+func (s Service) Entries(homepage bool) ([]Entry, error) {
+	if err := s.requirePublic(homepage); err != nil {
+		return nil, err
+	}
 	entries, err := s.candidates(true)
+	if err != nil {
+		return nil, err
+	}
+	reviews, err := s.reviews()
+	if err != nil {
+		return nil, err
+	}
+	return filterEntries(entries, reviews), nil
+}
+
+func (s Service) requirePublic(homepage bool) error {
+	allowed, err := s.Public(homepage)
 	if err != nil {
 		return err
 	}
-	for _, e := range entries {
-		approved, err := s.Approved(e)
-		if err != nil {
-			return err
-		}
-		if approved {
-			return nil
-		}
-	}
-	return kernel.BadAuthRequest("至少完成一条案例的授权核验后才能解除合规锁")
-}
-func (s Service) Entries(homepage bool) ([]Entry, error) {
-	allowed, err := s.Public(homepage)
-	if err != nil {
-		return nil, err
-	}
 	if !allowed {
-		return nil, kernel.NotFound("灵感大厅处于公开隔离状态")
+		return kernel.NotFound("灵感大厅处于公开隔离状态")
 	}
-	entries, err := s.candidates(true)
-	if err != nil {
-		return nil, err
-	}
-	out := []Entry{}
-	for _, e := range entries {
-		ok, err := s.Approved(e)
-		if err != nil {
-			return nil, err
-		}
-		if ok {
-			review, err := s.Review(ID(e))
-			if err != nil {
-				return nil, err
-			}
-			if review.ReplacementImage != "" {
-				e["image"] = review.ReplacementImage
-			}
-			out = append(out, e)
-		}
-	}
-	return out, nil
+	return nil
 }
 
-// LegacyPack replaces the former public files; it never reads arbitrary paths.
-func (s Service) LegacyPack(name string) (any, error) {
-	entries, err := s.Entries(name == "gallery-pool.json")
-	if err != nil {
-		return nil, err
-	}
-	if name == "manifest.json" {
-		return map[string]any{"sources": map[string]any{}}, nil
-	}
-	source := strings.TrimSuffix(name, ".json")
-	if source != "seedance" && source != "haohaoxue" && source != "youmind" && source != "gallery-pool" {
-		return nil, kernel.NotFound("目录不存在")
-	}
+func filterEntries(entries []Entry, reviews map[string]Review) []Entry {
 	out := []Entry{}
 	for _, e := range entries {
-		if source == "gallery-pool" || e["sourceId"] == source {
-			out = append(out, e)
+		if entry, ok := publicEntry(e, reviews); ok {
+			out = append(out, entry)
 		}
 	}
-	return map[string]any{"entries": out}, nil
+	return out
 }
 func (s Service) MediaPath(name string) (string, error) {
 	if strings.Contains(name, "..") || strings.Contains(name, "\\") || !strings.HasPrefix(name, "/inspiration-thumbs/") {
 		return "", kernel.NotFound("素材不存在")
 	}
-	entries, err := s.Entries(false)
+	if err := s.requirePublic(false); err != nil {
+		return "", err
+	}
+	reviews, err := s.reviews()
 	if err != nil {
 		return "", err
 	}
-	for _, e := range entries {
-		if e["image"] == name {
-			return filepath.Join(s.Dir, filepath.FromSlash(strings.TrimPrefix(name, "/"))), nil
+	entries, err := s.catalogEntries()
+	if err != nil {
+		return "", err
+	}
+	for _, entry := range entries {
+		if e, ok := publicEntry(entry, reviews); ok && e["image"] == name {
+			root, err := os.OpenRoot(s.Dir)
+			if err != nil {
+				return "", err
+			}
+			defer root.Close()
+			relative := filepath.FromSlash(strings.TrimPrefix(name, "/"))
+			info, err := root.Stat(relative)
+			if err != nil || !info.Mode().IsRegular() {
+				return "", kernel.NotFound("素材不存在")
+			}
+			return filepath.Join(s.Dir, relative), nil
 		}
 	}
 	return "", kernel.NotFound("素材未获公开授权")

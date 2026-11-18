@@ -183,6 +183,7 @@ const routes: RouteObject[] = [
     { path: "/acceptable-use", element: <Navigate to="/aup" replace /> },
     { path: "/legal", element: fullScreenDeferred(<LegalHubPage />), errorElement: <RouteErrorPage /> },
     { path: "/mcp", element: fullScreenDeferred(<McpPage />), errorElement: <RouteErrorPage /> },
+    { path: "/inspirations", element: <Navigate to="/create" replace /> },
     { path: "/p/:slug", element: fullScreenDeferred(<PublicHtmlViewerPage />), errorElement: <RouteErrorPage /> },
     { path: "/html/:slug", element: fullScreenDeferred(<PublicHtmlViewerPage />), errorElement: <RouteErrorPage /> },
     { path: "/share/canvas/:token", element: fullScreenDeferred(<SharedCanvasPage />), errorElement: <RouteErrorPage /> },

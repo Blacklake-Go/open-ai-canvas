@@ -14,7 +14,7 @@ import (
 	"yingce/backend/internal/supdance/compactpicker"
 )
 
-func TestPublicIsolationAndReviewedRecovery(t *testing.T) {
+func TestPublicCatalogAndExplicitRestrictions(t *testing.T) {
 	if len(reviewKey("youmind:authorized")) > 80 {
 		t.Fatal("review setting key exceeds PostgreSQL varchar(80)")
 	}
@@ -29,13 +29,22 @@ func TestPublicIsolationAndReviewedRecovery(t *testing.T) {
 		t.Fatal(err)
 	}
 	repo := repository.New(db)
-	svc := Service{repo, dir}
+	svc := New(repo, dir)
 	actor := &model.User{ID: "authorized-admin"}
 	if err = os.MkdirAll(filepath.Join(dir, "inspirations"), 0700); err != nil {
 		t.Fatal(err)
 	}
 	good := Entry{"id": "youmind:good", "sourceId": "youmind", "title": "Original abstract landscape", "prompt": "original", "image": "/inspiration-thumbs/youmind/good.webp"}
 	bad := Entry{"id": "youmind:restricted", "sourceId": "youmind", "title": "Unlicensed portrait", "prompt": "restricted", "image": "/inspiration-thumbs/youmind/bad.webp"}
+	normal := Entry{"id": "youmind:normal", "sourceId": "youmind", "title": "Regular catalog entry"}
+	if err = os.MkdirAll(filepath.Join(dir, "inspiration-thumbs", "youmind"), 0700); err != nil {
+		t.Fatal(err)
+	}
+	for _, image := range []string{"good.webp", "bad.webp"} {
+		if err = os.WriteFile(filepath.Join(dir, "inspiration-thumbs", "youmind", image), []byte("fixture"), 0600); err != nil {
+			t.Fatal(err)
+		}
+	}
 	write := func(entries []Entry) {
 		t.Helper()
 		for _, source := range []string{"youmind", "seedance", "haohaoxue"} {
@@ -49,12 +58,9 @@ func TestPublicIsolationAndReviewedRecovery(t *testing.T) {
 			}
 		}
 	}
-	write([]Entry{good, bad})
+	write([]Entry{good, bad, normal})
 	if rows, err := svc.Entries(false); err == nil || len(rows) > 0 {
 		t.Fatal("missing config must deny public content")
-	}
-	if err = svc.RequireUnlock(); err == nil {
-		t.Fatal("unreviewed gallery unlocked")
 	}
 	audit := func() *model.AdminAuditEvent {
 		return &model.AdminAuditEvent{ID: Digest(Entry{"n": t.Name(), "counter": db.RowsAffected}), ActorUserID: actor.ID, Action: "review"}
@@ -71,9 +77,6 @@ func TestPublicIsolationAndReviewedRecovery(t *testing.T) {
 	if err = svc.SaveReview(actor, ID(bad), "restricted", "Rights unverified", Digest(bad), a); err != nil {
 		t.Fatal(err)
 	}
-	if err = svc.RequireUnlock(); err != nil {
-		t.Fatal(err)
-	}
 	save := func(public, home, lock bool) {
 		t.Helper()
 		b, _ := json.Marshal(compactpicker.Display{ShowDescription: true, ShowPrice: true, ShowInspirations: public, HomepageShowcaseEnabled: home, ComplianceLock: lock})
@@ -85,7 +88,7 @@ func TestPublicIsolationAndReviewedRecovery(t *testing.T) {
 		save(state.public, state.home, state.lock)
 		rows, err := svc.Entries(false)
 		if state.want {
-			if err != nil || len(rows) != 1 || ID(rows[0]) != ID(good) {
+			if err != nil || len(rows) != 2 || ID(rows[0]) != ID(good) || ID(rows[1]) != ID(normal) {
 				t.Fatalf("unexpected public catalog: %v %v", rows, err)
 			}
 		} else if err == nil || len(rows) > 0 {
@@ -105,8 +108,28 @@ func TestPublicIsolationAndReviewedRecovery(t *testing.T) {
 	if _, err = svc.MediaPath("/inspiration-thumbs/youmind/good.webp"); err != nil {
 		t.Fatal(err)
 	}
-	if _, err = svc.LegacyPack("translations/en-US.json"); err == nil {
-		t.Fatal("unreviewed translation pack exposed")
+	if err = os.Mkdir(filepath.Join(dir, "inspirations", "translations"), 0700); err != nil {
+		t.Fatal(err)
+	}
+	translation := `{"youmind:good":{"title":"Good"},"youmind:restricted":{"title":"Restricted"},"youmind:normal":{"title":"Normal"}}`
+	if err = os.WriteFile(filepath.Join(dir, "inspirations", "translations", "en-US.json"), []byte(translation), 0600); err != nil {
+		t.Fatal(err)
+	}
+	pack, err := svc.LegacyPack("translations/en-US.json")
+	if err != nil {
+		t.Fatal(err)
+	}
+	names := pack.(map[string]json.RawMessage)
+	if len(names) != 2 || names[ID(bad)] != nil || names[ID(normal)] == nil {
+		t.Fatal("translation pack differs from public catalog")
+	}
+	pool, _ := json.Marshal(map[string]any{"entries": []Entry{bad, normal}})
+	if err = os.WriteFile(filepath.Join(dir, "inspirations", "gallery-pool.json"), pool, 0600); err != nil {
+		t.Fatal(err)
+	}
+	pack, err = svc.LegacyPack("gallery-pool.json")
+	if err != nil || len(pack.(map[string]any)["entries"].([]Entry)) != 1 || ID(pack.(map[string]any)["entries"].([]Entry)[0]) != ID(normal) {
+		t.Fatal("homepage pool exposed a blocked or non-curated entry", err)
 	}
 	a.ID = "invalid-replacement"
 	if err = svc.SaveReview(actor, ID(good), "approved", "Licensed original replacement TEST-002", Digest(good), a, "javascript:alert(1)"); err == nil {
@@ -120,7 +143,7 @@ func TestPublicIsolationAndReviewedRecovery(t *testing.T) {
 		t.Fatal(err)
 	}
 	rows, err := svc.Entries(false)
-	if err != nil || len(rows) != 1 || rows[0]["image"] != "https://example.com/authorized-cover.webp" {
+	if err != nil || len(rows) != 2 || rows[0]["image"] != "https://example.com/authorized-cover.webp" {
 		t.Fatal("approved replacement not applied")
 	}
 	if _, err = svc.MediaPath("/inspiration-thumbs/youmind/good.webp"); err == nil {

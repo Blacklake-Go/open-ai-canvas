@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"log/slog"
+	"path/filepath"
 	"strings"
 	"sync"
 	"time"
@@ -25,6 +26,7 @@ import (
 	"yingce/backend/internal/skills"
 	"yingce/backend/internal/sms"
 	"yingce/backend/internal/supdance/contentsafety"
+	"yingce/backend/internal/supdance/gallery"
 	"yingce/backend/internal/tools"
 	"yingce/backend/internal/workbench"
 )
@@ -93,6 +95,7 @@ type Service struct {
 	workbench                *workbench.Service
 	poseLibrary              *poselibrary.Service
 	inspirationFeed          *inspirations.Service
+	inspirationGallery       *gallery.Service
 	piRunnerMu               sync.Mutex
 	piRunnerWg               sync.WaitGroup
 	piRunners                map[string]context.CancelFunc
@@ -192,6 +195,7 @@ func newService(repo *repository.Repository, dataDir string) *Service {
 	service.workbench = workbench.New(service.repo, workbenchAdminGate{svc: service}, workbenchAdminGate{svc: service})
 	service.poseLibrary = poselibrary.New(service.repo, service.dataDir, poseLibraryAdminGate{svc: service})
 	service.inspirationFeed = inspirations.New(service.repo, inspirationFeedAdminGate{svc: service}, service.inspirationFeedLock, service.runWorkerLoop)
+	service.inspirationGallery = gallery.New(service.repo, filepath.Join(service.dataDir, "inspiration-archive"))
 	service.platform = platform.New(service.repo, coordinator, platformHost{svc: service})
 	return service
 }
