@@ -108,10 +108,24 @@ describe("Tier 1: Feature Coverage (F1 - F13)", () => {
             expect(assetCheck.valid).toBe(true);
         });
 
-        test("T1.3.4: image onError fallback function maps deterministically without 404s", async () => {
-            const code = await readSourceFile("src/pages/app-store/app-store-card.tsx");
-            expect(code).toContain("onError");
-            expect(code).toContain("/short-drama-styles/");
+        test("T1.3.4: vector icons and content preview fallbacks remain deterministic without image requests or 404s", async () => {
+            const [{ RenderAppIcon, resolveAppIcon, getAppPreviewImage }, { LayoutGrid, LibraryBig }, { createElement }, { renderToStaticMarkup }] = await Promise.all([
+                import("../../src/pages/app-store/app-store-icons"),
+                import("lucide-react"),
+                import("react"),
+                import("react-dom/server"),
+            ]);
+            expect(resolveAppIcon("unmapped", "z0", "app")).toBe(LayoutGrid);
+            expect(resolveAppIcon("unmapped", "z0", "skill")).toBe(LibraryBig);
+            const markup = renderToStaticMarkup(createElement(RenderAppIcon, { name: "unmapped", slug: "z0", type: "app" }));
+            expect(markup).toContain("<svg");
+            expect(markup).not.toMatch(/<(?:img|image)\b/);
+            for (const name of ["", "unmapped", "影视创作", "语音配音"]) {
+                const asset = getAppPreviewImage(name);
+                expect(getAppPreviewImage(name)).toBe(asset);
+                expect(asset.startsWith("/short-drama-styles/")).toBe(true);
+                expect(await Bun.file(new URL(`../../public${asset}`, import.meta.url)).exists()).toBe(true);
+            }
         });
 
         test("T1.3.5: verified zero ORB (Opaque Response Blocking) errors on local asset loading", () => {
