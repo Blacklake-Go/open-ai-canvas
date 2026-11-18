@@ -44,7 +44,7 @@ var (
 // anyone who first called the public /start endpoint mint accounts and sessions.
 func liveExchangeSupported(providerID string) bool {
 	switch providerID {
-	case ProviderGoogle, ProviderX, ProviderQQ, ProviderDouyin, ProviderWeChat, ProviderBilibili:
+	case ProviderGoogle, ProviderX, ProviderQQ, ProviderDouyin, ProviderWeChat, ProviderBilibili, ProviderTikTok:
 		return true
 	default:
 		return false
@@ -66,6 +66,8 @@ func redeemCode(ctx context.Context, providerID string, cfg ProviderConfig, code
 		return redeemWeChat(ctx, cfg, code)
 	case ProviderBilibili:
 		return redeemBilibili(ctx, cfg, code)
+	case ProviderTikTok:
+		return redeemTikTok(ctx, cfg, code, redirectURI)
 	default:
 		return nil, fmt.Errorf("渠道 %s 尚未接入真实授权码交换，已拒绝登录以避免伪造身份", providerID)
 	}

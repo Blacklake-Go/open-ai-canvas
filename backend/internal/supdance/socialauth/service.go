@@ -662,6 +662,15 @@ func buildAuthorizeURL(providerID string, cfg ProviderConfig, callbackURL string
 		sum := sha256.Sum256([]byte(codeVerifier))
 		return fmt.Sprintf("https://x.com/i/oauth2/authorize?response_type=code&client_id=%s&redirect_uri=%s&scope=users.read+tweet.read&state=%s&code_challenge=%s&code_challenge_method=S256",
 			url.QueryEscape(cfg.ClientID), url.QueryEscape(callbackURL), stateToken, base64.RawURLEncoding.EncodeToString(sum[:]))
+	case ProviderTikTok:
+		query := url.Values{
+			"client_key":    {cfg.ClientID},
+			"response_type": {"code"},
+			"scope":         {tikTokBasicScope},
+			"redirect_uri":  {callbackURL},
+			"state":         {stateToken},
+		}
+		return "https://www.tiktok.com/v2/auth/authorize/?" + query.Encode()
 	default:
 		return fmt.Sprintf("https://oauth.supdance.com/%s/authorize?client_id=%s&redirect_uri=%s&state=%s",
 			providerID, url.QueryEscape(cfg.ClientID), url.QueryEscape(callbackURL), stateToken)
@@ -759,6 +768,9 @@ func (s *Service) CompleteAuth(r *http.Request, providerID, stateToken, code str
 	settings, err = s.channelSettings(providerID)
 	if err != nil {
 		return nil, err
+	}
+	if providerID == ProviderTikTok && settings.Providers[providerID].ClientID != cfg.ClientID {
+		return nil, kernel.BadAuthRequest("TikTok 登录配置已变化，请重新授权")
 	}
 	identity, err := s.repo.UserIdentity(providerID, profile.Subject)
 	if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {

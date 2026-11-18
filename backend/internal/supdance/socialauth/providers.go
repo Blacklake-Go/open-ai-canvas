@@ -161,7 +161,7 @@ func DefaultInitialSettings() StoredSettings {
 				Enabled:      false,
 				ClientID:     "",
 				ClientSecret: "",
-				Scopes:       []string{"user.info.basic"},
+				Scopes:       []string{tikTokBasicScope},
 			},
 		},
 	}

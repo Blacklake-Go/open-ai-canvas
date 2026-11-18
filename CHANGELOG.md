@@ -1,4 +1,7 @@
 # CHANGELOG
+## v1.8.6-supdance.4
+- 接入 TikTok Login Kit 网页授权。权限仅包含 `user.info.basic`，沙盒与生产身份按 client key 隔离。
+
 ## v1.8.6-supdance.3
 - 修复首次进入创作首页时灵感大厅被重复的缓存判断隐藏。首页继续使用后台展示开关，目录与媒体继续由服务端核验公开权限。
 
