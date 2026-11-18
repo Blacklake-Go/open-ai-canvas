@@ -2,7 +2,7 @@
 
 ## 控制入口和权威配置
 
-复用「模型选择器」`/admin/plugins/compact-model-picker`。三个开关保存在既有 `system_settings` 的 `plugin.supdance-compact-model-picker.display`，通过既有管理员 API `/api/admin/supdance/compact-model-picker/settings` 读取与保存。模型选择器的启用、说明、价格字段保留原义。
+使用「页面管理 → 模型展示 → 灵感大厅管理」`/admin/plugins/page-management?page=models`。三个开关保存在既有 `system_settings` 的 `plugin.supdance-compact-model-picker.display`，通过既有管理员 API `/api/admin/supdance/compact-model-picker/settings` 读取与保存。模型选择器的启用、说明、价格字段保留原义。
 
 | 字段 | 含义 | 缺失时 |
 | --- | --- | --- |
@@ -17,7 +17,7 @@
 - 原始 `web/public/inspirations/` 与 `web/public/inspiration-thumbs/` 保留源码；Vite 构建移除这两个目录，禁止直接发布原始目录和翻译包。
 - 服务器应把原始包和缩略图放在后端数据目录的 `inspiration-archive/inspirations/` 与 `inspiration-archive/inspiration-thumbs/`，不挂载到任何公开 Web 根目录。权限只允许运行后端的用户读取。
 - `backend/internal/supdance/gallery` 只读取上述归档和 `inspiration_feed_entries`；不查询、不删除用户项目、任务和个人资源。
-- 公开候选以归档包为优先，再按 ID 去重合并上新。新同步条目默认为待审核；上游署名、robots.txt 和提示词许可不视为肖像、图片或视频公开授权。
+- 开启后公开归档的来源目录和已启用的上新。没有个案审核记录的条目按普通目录展示。已有的待审核、限制公开和归档记录继续隐藏，内容变更会使已批准条目失去公开资格。
 - 审核记录复用 `system_settings`，键为 `supdance.ir.<ID 的 SHA256>`，总长 76，满足 PostgreSQL 的 varchar(80) 限制。值包含状态、授权依据、内容摘要、管理员与时间，可选替换封面。无需新增表或迁移 Schema。
 - 可选替换封面仅接受不带身份凭证、查询参数或片段的 HTTPS URL，或归档内的 `/inspiration-thumbs/` 路径。替换地址与授权依据一同受管理员审计。它不会上传、删除或改写私人资产。
 
@@ -25,12 +25,12 @@
 
 | 入口 | 执行逻辑 |
 | --- | --- |
-| `/inspirations`、`/inspirations/` | Nginx `auth_request` 调用后端 access；拒绝时 403，不返回页面内容 |
-| `/inspirations/<source>.json` | 反代受控 catalog API；仅返回已审核且内容摘要匹配的案例 |
-| `/inspirations/gallery-pool.json` | 同上，并且首页开关必须开启 |
-| `/inspirations/manifest.json` | 只返回空来源元数据，不返回历史条目计数或目录正文 |
-| `/inspirations/translations/*` | 未纳入逐条审核的旧翻译包不可公开，返回 404 |
-| `/inspiration-thumbs/*` | 仅当对应案例通过当前公开策略且引用该缩略图时才返回文件 |
+| `/inspirations`、`/inspirations/` | Nginx 核验全局公开状态，通过后旧页面地址跳到已集成灵感大厅的创作首页；拒绝时 403 |
+| `/inspirations/<source>.json` | 反代受控 catalog API，返回符合当前策略的来源条目 |
+| `/inspirations/gallery-pool.json` | 按原始精选池顺序返回当前可见条目，首页开关必须开启 |
+| `/inspirations/manifest.json` | 返回来源版本、当前可见条目计数和分类标签 |
+| `/inspirations/translations/*` | 返回当前可见目录条目及内置原创的已有翻译 |
+| `/inspiration-thumbs/*` | 只有当前可见案例引用的归档缩略图可以下载 |
 | `/api/public/inspirations/feed` | 与静态目录走同一过滤规则，无公开参数或管理员参数绕过 |
 | `/api/public/inspirations/catalog/*`、`media/*` | 直接调用也执行相同策略，禁止绕过 Nginx |
 
@@ -40,7 +40,7 @@
 
 后台同页展开逐条审核区域，按 ID、标题或正文搜索（每次最多 100 条，可细化搜索）。支持 `pending_review`、`restricted`、`archived`、`approved`；批准必须填写授权或原创依据。每条审核绑定当前内容摘要，正文、标题、封面等原始条目变化会自动失去公开资格。
 
-审核通过后仍需管理员明确确认恢复：先核对 Waffo 实际结果和素材凭证；保持未授权条目为 restricted；审核原创或授权案例，在隔离测试环境验证后，确认解锁并保存，再启用全局开关，最后按需开启首页展示。服务器拒绝没有确认或没有任何有效 approved 案例的解锁请求。Waffo 审核通过不自动改变任何开关，也不自动批准历史案例。
+由管理员确认解锁、按需开启全局和首页，再保存设置。解锁无需逐个批准普通目录，仍需明确确认。已处置的条目继续按原审核记录过滤；调整开关不会改变个案审核记录。素材授权应按来源和用途独立核对。
 
 ## 发布、验证和回滚
 

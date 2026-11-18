@@ -78,8 +78,15 @@ func (s *Service) InspirationFeed() (*InspirationFeed, error) {
 		}
 		filtered.Entries = append(filtered.Entries, entry)
 	}
-	// Raw upstream categories are not independently authorized public content.
 	filtered.Categories = map[string]map[string]string{}
+	for _, entry := range filtered.Entries {
+		if label := feed.Categories[entry.SourceID][entry.Category]; label != "" {
+			if filtered.Categories[entry.SourceID] == nil {
+				filtered.Categories[entry.SourceID] = map[string]string{}
+			}
+			filtered.Categories[entry.SourceID][entry.Category] = label
+		}
+	}
 	return &filtered, nil
 }
 

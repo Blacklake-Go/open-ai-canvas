@@ -41,9 +41,6 @@ func (s *Service) SaveAdminCompactPickerSettings(actor *model.User, settings com
 		if !settings.UnlockConfirmed {
 			return compactpicker.Settings{}, BadAuthRequest("解除合规锁需要管理员明确确认")
 		}
-		if err := s.InspirationGallery().RequireUnlock(); err != nil {
-			return compactpicker.Settings{}, err
-		}
 	}
 	if settings.ShowInspirations && settings.ComplianceLock {
 		return compactpicker.Settings{}, BadAuthRequest("合规锁开启时禁止恢复公开访问")
@@ -62,6 +59,9 @@ func (s *Service) SaveAdminCompactPickerSettings(actor *model.User, settings com
 }
 
 func (s *Service) InspirationGallery() gallery.Service {
+	if s.inspirationGallery != nil {
+		return *s.inspirationGallery
+	}
 	return gallery.Service{Repo: s.repo, Dir: filepath.Join(s.dataDir, "inspiration-archive")}
 }
 

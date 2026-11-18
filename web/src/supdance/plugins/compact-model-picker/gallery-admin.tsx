@@ -87,7 +87,7 @@ export function GalleryAdmin({ draft, pending, edit }: { draft: CompactPickerSet
                         onChange={(id) => {
                             const row = candidates.data?.find((row) => row.entry.id === id) ?? null;
                             setSelected(row);
-                            setStatus(row?.review.status ?? "pending_review");
+                            setStatus(row && statuses.includes(row.review.status) ? row.review.status : "pending_review");
                             setEvidence(row?.review.evidence ?? "");
                             setReplacementImage(row?.review.replacementImage ?? "");
                             review.reset();
