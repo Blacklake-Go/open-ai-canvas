@@ -1,5 +1,9 @@
 # SupDance Canvas — 定制维护变更日志 (CHANGELOG.md)
 
+## TikTok Login Kit Web
+
+- 复用社交登录的授权状态、浏览器校验和账号绑定流程。TikTok 仅申请 `user.info.basic`，读取头像和昵称，按 client key 隔离登录身份。
+
 ## 邮件八语言与页面管理候选 1.2.0
 
 - 邮件继承正式站点 Logo，页面自动核对品牌变化并保留未保存草稿；WebP 转换为保留图形的 PNG。
