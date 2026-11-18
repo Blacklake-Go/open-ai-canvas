@@ -10347,7 +10347,18 @@
         "managedUi.3f667603": "作品可能已在后台生成，只是页面没有及时拿到。重新获取不会重新生成，也不会重复扣费。",
         "managedUi.94b2cb26": "原因：{value1}",
         "managedUi.fdaa04b6": "保存到素材库时出错。重新保存会接着上次的进度，不会重新生成，也不会重复扣费。",
-        "managedUi.2dc5656c": "这次请求可能仍在上游执行并产生费用。使用平台积分时，冻结的积分会保留到核对完成后再结算或退回；重新生成会提交新任务并再次计费。"
+        "managedUi.2dc5656c": "这次请求可能仍在上游执行并产生费用。使用平台积分时，冻结的积分会保留到核对完成后再结算或退回；重新生成会提交新任务并再次计费。",
+        "managedUi.cfd3884a": "还有需要特别说明的场景、人物、节奏或限制吗？",
+        "managedUi.3d005c5d": "简单描述你想要实现的打光效果，或者情绪风格",
+        "managedUi.db70fb08": "描述你想拍的故事…",
+        "managedUi.80f63dfe": "描述你想拍的故事",
+        "managedUi.d4833493": "任务 {row} {label}",
+        "managedUi.80321de9": "正在准备绘图画布。",
+        "managedUi.9273c889": "准备场景、镜头与空间控制。",
+        "managedUi.fe088334": "已复制全景提示词",
+        "managedUi.835171a5": "输入消息，或点击实时对话按钮用语音输入...",
+        "managedUi.5dcb6a1e": "正在加载绘图编辑器",
+        "managedUi.4f47d558": "正在加载 3D 预演台"
     },
     "en-US": {
         "managedUi.5cda34c3": "Failed to read page data",
@@ -20697,7 +20708,18 @@
         "managedUi.3f667603": "Your creation may already be ready on the server. Retrieving it does not regenerate it or charge you again.",
         "managedUi.94b2cb26": "Reason: {value1}",
         "managedUi.fdaa04b6": "Saving to the asset library failed. Retry to resume without regenerating or charging again.",
-        "managedUi.2dc5656c": "The provider may still be processing and billing this request. Held platform credits remain reserved until reconciliation, then settle or return to your balance. Generating again submits a new billable task."
+        "managedUi.2dc5656c": "The provider may still be processing and billing this request. Held platform credits remain reserved until reconciliation, then settle or return to your balance. Generating again submits a new billable task.",
+        "managedUi.cfd3884a": "Any scenes, characters, pacing or constraints to mention?",
+        "managedUi.3d005c5d": "Describe the lighting effect or mood you want",
+        "managedUi.db70fb08": "Describe the story you want to film…",
+        "managedUi.80f63dfe": "Describe the story you want to film",
+        "managedUi.d4833493": "Task {row}: {label}",
+        "managedUi.80321de9": "Preparing the drawing canvas.",
+        "managedUi.9273c889": "Preparing the scene, camera and spatial controls.",
+        "managedUi.fe088334": "Panorama prompt copied",
+        "managedUi.835171a5": "Type a message or select Live conversation to use your voice…",
+        "managedUi.5dcb6a1e": "Loading the drawing editor",
+        "managedUi.4f47d558": "Loading 3D previs"
     },
     "fr-FR": {
         "managedUi.5cda34c3": "Échec de la lecture des données de la page",
@@ -31047,7 +31069,18 @@
         "managedUi.3f667603": "La création est peut-être déjà prête sur le serveur. Récupérer le résultat ne relance pas la génération et n’entraîne aucun nouveau débit.",
         "managedUi.94b2cb26": "La raison : {value1}",
         "managedUi.fdaa04b6": "L’enregistrement dans la bibliothèque a échoué. Réessayez pour reprendre sans nouvelle génération ni nouveau débit.",
-        "managedUi.2dc5656c": "Le fournisseur traite peut-être encore cette demande et peut la facturer. Les crédits réservés restent bloqués jusqu’au rapprochement, puis sont débités ou restitués. Relancer la génération crée une nouvelle tâche facturable."
+        "managedUi.2dc5656c": "Le fournisseur traite peut-être encore cette demande et peut la facturer. Les crédits réservés restent bloqués jusqu’au rapprochement, puis sont débités ou restitués. Relancer la génération crée une nouvelle tâche facturable.",
+        "managedUi.cfd3884a": "Des scènes, personnages, rythmes ou contraintes à préciser ?",
+        "managedUi.3d005c5d": "Décrivez l’éclairage ou l’ambiance souhaitée",
+        "managedUi.db70fb08": "Décrivez l’histoire à filmer…",
+        "managedUi.80f63dfe": "Décrivez l’histoire à filmer",
+        "managedUi.d4833493": "Tâche {row} : {label}",
+        "managedUi.80321de9": "Préparation du canevas de dessin.",
+        "managedUi.9273c889": "Préparation de la scène, de la caméra et des commandes spatiales.",
+        "managedUi.fe088334": "Prompt panoramique copié",
+        "managedUi.835171a5": "Écrivez un message ou sélectionnez Conversation en direct pour parler…",
+        "managedUi.5dcb6a1e": "Chargement de l’éditeur de dessin",
+        "managedUi.4f47d558": "Chargement de la prévisualisation 3D"
     },
     "de-DE": {
         "managedUi.5cda34c3": "Seitendaten konnten nicht gelesen werden",
@@ -41397,7 +41430,18 @@
         "managedUi.3f667603": "Das Ergebnis liegt möglicherweise bereits auf dem Server. Erneutes Abrufen startet keine neue Generierung und verursacht keine weiteren Kosten.",
         "managedUi.94b2cb26": "Gründe zu: {value1}",
         "managedUi.fdaa04b6": "Speichern in der Mediathek fehlgeschlagen. Ein erneuter Versuch setzt den Speichervorgang ohne neue Generierung oder zusätzliche Kosten fort.",
-        "managedUi.2dc5656c": "Der Anbieter verarbeitet diese Anfrage möglicherweise noch und kann sie abrechnen. Reserviertes Guthaben bleibt bis zum Abgleich gesperrt und wird dann verrechnet oder freigegeben. Erneutes Generieren erstellt einen neuen kostenpflichtigen Auftrag."
+        "managedUi.2dc5656c": "Der Anbieter verarbeitet diese Anfrage möglicherweise noch und kann sie abrechnen. Reserviertes Guthaben bleibt bis zum Abgleich gesperrt und wird dann verrechnet oder freigegeben. Erneutes Generieren erstellt einen neuen kostenpflichtigen Auftrag.",
+        "managedUi.cfd3884a": "Gibt es besondere Szenen, Figuren, Tempovorgaben oder Einschränkungen?",
+        "managedUi.3d005c5d": "Beschreibe die gewünschte Beleuchtung oder Stimmung",
+        "managedUi.db70fb08": "Beschreibe die Geschichte, die du verfilmen möchtest…",
+        "managedUi.80f63dfe": "Beschreibe die Geschichte, die du verfilmen möchtest",
+        "managedUi.d4833493": "Aufgabe {row}: {label}",
+        "managedUi.80321de9": "Die Zeichenfläche wird vorbereitet.",
+        "managedUi.9273c889": "Szene, Kamera und Raumsteuerung werden vorbereitet.",
+        "managedUi.fe088334": "Panorama-Prompt kopiert",
+        "managedUi.835171a5": "Nachricht eingeben oder für die Spracheingabe Live-Gespräch auswählen…",
+        "managedUi.5dcb6a1e": "Zeicheneditor wird geladen",
+        "managedUi.4f47d558": "3D-Vorvisualisierung wird geladen"
     },
     "zh-TW": {
         "managedUi.5cda34c3": "讀取頁面資料失敗",
@@ -51747,7 +51791,18 @@
         "managedUi.3f667603": "作品可能已在後臺生成，只是頁面沒有及時拿到。重新獲取不會重新生成，也不會重複扣費。",
         "managedUi.94b2cb26": "原因：{value1}",
         "managedUi.fdaa04b6": "儲存到素材庫時出錯。重新儲存會接著上次的進度，不會重新生成，也不會重複扣費。",
-        "managedUi.2dc5656c": "這次請求可能仍在上游執行併產生費用。使用平臺積分時，凍結的積分會保留到核對完成後再結算或退回；重新生成會提交新任務並再次計費。"
+        "managedUi.2dc5656c": "這次請求可能仍在上游執行併產生費用。使用平臺積分時，凍結的積分會保留到核對完成後再結算或退回；重新生成會提交新任務並再次計費。",
+        "managedUi.cfd3884a": "還有需要特別說明的場景、人物、節奏或限制嗎？",
+        "managedUi.3d005c5d": "簡述想要的打光效果或氛圍",
+        "managedUi.db70fb08": "描述你想拍的故事…",
+        "managedUi.80f63dfe": "描述你想拍的故事",
+        "managedUi.d4833493": "任務 {row}：{label}",
+        "managedUi.80321de9": "正在準備繪圖畫布。",
+        "managedUi.9273c889": "正在準備場景、鏡頭與空間控制項。",
+        "managedUi.fe088334": "已複製全景提示詞",
+        "managedUi.835171a5": "輸入訊息，或點擊即時對話按鈕使用語音輸入…",
+        "managedUi.5dcb6a1e": "正在載入繪圖編輯器",
+        "managedUi.4f47d558": "正在載入 3D 預演台"
     },
     "es-ES": {
         "managedUi.5cda34c3": "No se pudieron leer los datos de la página",
@@ -62097,7 +62152,18 @@
         "managedUi.3f667603": "Es posible que el resultado ya esté listo en el servidor. Volver a obtenerlo no inicia otra generación ni genera otro cargo.",
         "managedUi.94b2cb26": "Razón de: {value1}",
         "managedUi.fdaa04b6": "No se pudo guardar en la biblioteca. Vuelve a intentarlo para reanudar el guardado sin generar de nuevo ni pagar otra vez.",
-        "managedUi.2dc5656c": "El proveedor puede seguir procesando y facturando esta solicitud. Los créditos retenidos se liquidarán o devolverán tras la conciliación. Volver a generar crea otra tarea facturable."
+        "managedUi.2dc5656c": "El proveedor puede seguir procesando y facturando esta solicitud. Los créditos retenidos se liquidarán o devolverán tras la conciliación. Volver a generar crea otra tarea facturable.",
+        "managedUi.cfd3884a": "¿Hay escenas, personajes, ritmos o restricciones que debamos tener en cuenta?",
+        "managedUi.3d005c5d": "Describe la iluminación o el ambiente que buscas",
+        "managedUi.db70fb08": "Describe la historia que quieres filmar…",
+        "managedUi.80f63dfe": "Describe la historia que quieres filmar",
+        "managedUi.d4833493": "Tarea {row}: {label}",
+        "managedUi.80321de9": "Preparando el lienzo de dibujo.",
+        "managedUi.9273c889": "Preparando la escena, la cámara y los controles espaciales.",
+        "managedUi.fe088334": "Prompt panorámico copiado",
+        "managedUi.835171a5": "Escribe un mensaje o selecciona Conversación en directo para usar la voz…",
+        "managedUi.5dcb6a1e": "Cargando el editor de dibujo",
+        "managedUi.4f47d558": "Cargando la previsualización 3D"
     },
     "ja-JP": {
         "managedUi.d1dba89b": "キャンセル",
@@ -72447,7 +72513,18 @@
         "managedUi.3f667603": "作品はすでに生成されている可能性があります。結果を再取得しても再生成や追加請求は発生しません。",
         "managedUi.94b2cb26": "理由: {value1}",
         "managedUi.fdaa04b6": "素材ライブラリに保存できませんでした。再試行すると途中から保存を再開します。再生成や追加請求は発生しません。",
-        "managedUi.2dc5656c": "プロバイダーで処理が続き、料金が発生する可能性があります。保留中のクレジットは照合後に精算または返還されます。再生成すると新しい課金対象のタスクが送信されます。"
+        "managedUi.2dc5656c": "プロバイダーで処理が続き、料金が発生する可能性があります。保留中のクレジットは照合後に精算または返還されます。再生成すると新しい課金対象のタスクが送信されます。",
+        "managedUi.cfd3884a": "場面、登場人物、テンポ、制約について補足はありますか？",
+        "managedUi.3d005c5d": "希望する照明効果や雰囲気を説明してください",
+        "managedUi.db70fb08": "撮影したい物語を説明してください…",
+        "managedUi.80f63dfe": "撮影したい物語を説明してください",
+        "managedUi.d4833493": "タスク {row}：{label}",
+        "managedUi.80321de9": "描画キャンバスを準備しています。",
+        "managedUi.9273c889": "シーン、カメラ、空間操作を準備しています。",
+        "managedUi.fe088334": "パノラマ用プロンプトをコピーしました",
+        "managedUi.835171a5": "メッセージを入力するか、リアルタイム会話を選んで音声で入力してください…",
+        "managedUi.5dcb6a1e": "描画エディターを読み込んでいます",
+        "managedUi.4f47d558": "3D プリビズを読み込んでいます"
     },
     "ko-KR": {
         "managedUi.d1dba89b": "취소",
@@ -82797,6 +82874,17 @@
         "managedUi.3f667603": "서버에서 이미 생성이 완료되었을 수 있습니다. 결과를 다시 가져와도 재생성되거나 추가 요금이 청구되지 않습니다.",
         "managedUi.94b2cb26": "이유 : {value1}",
         "managedUi.fdaa04b6": "소재 보관함에 저장하지 못했습니다. 다시 저장하면 중단된 지점부터 이어지며 재생성이나 추가 청구는 없습니다.",
-        "managedUi.2dc5656c": "공급자가 요청을 계속 처리하고 있어 비용이 발생할 수 있습니다. 보류된 크레딧은 대조가 끝난 뒤 정산되거나 반환됩니다. 다시 생성하면 별도의 유료 작업이 제출됩니다."
+        "managedUi.2dc5656c": "공급자가 요청을 계속 처리하고 있어 비용이 발생할 수 있습니다. 보류된 크레딧은 대조가 끝난 뒤 정산되거나 반환됩니다. 다시 생성하면 별도의 유료 작업이 제출됩니다.",
+        "managedUi.cfd3884a": "장면, 인물, 전개 속도 또는 제약에 관해 덧붙일 내용이 있나요?",
+        "managedUi.3d005c5d": "원하는 조명 효과나 분위기를 설명하세요",
+        "managedUi.db70fb08": "촬영하고 싶은 이야기를 설명하세요…",
+        "managedUi.80f63dfe": "촬영하고 싶은 이야기를 설명하세요",
+        "managedUi.d4833493": "작업 {row}: {label}",
+        "managedUi.80321de9": "드로잉 캔버스를 준비하고 있습니다.",
+        "managedUi.9273c889": "장면, 카메라 및 공간 제어 기능을 준비하고 있습니다.",
+        "managedUi.fe088334": "파노라마 프롬프트를 복사했습니다",
+        "managedUi.835171a5": "메시지를 입력하거나 실시간 대화 버튼을 눌러 음성으로 입력하세요…",
+        "managedUi.5dcb6a1e": "드로잉 편집기를 불러오는 중",
+        "managedUi.4f47d558": "3D 프리비즈를 불러오는 중"
     }
 }

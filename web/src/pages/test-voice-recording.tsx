@@ -1,3 +1,4 @@
+import { interfaceText } from "@/i18n/interface-text";
 import { useState } from "react";
 import { Button, Card, message } from "antd";
 import { Mic, Send } from "lucide-react";
@@ -34,7 +35,6 @@ export default function TestVoiceRecording() {
         }
     };
 
-
     return (
         <div className="min-h-screen p-8" style={{ background: theme.spatial.surface }}>
             <div className="mx-auto max-w-2xl">
@@ -56,7 +56,7 @@ export default function TestVoiceRecording() {
                             <textarea
                                 value={prompt}
                                 onChange={(e) => setPrompt(e.target.value)}
-                                placeholder="输入消息，或点击实时对话按钮用语音输入..."
+                                placeholder={interfaceText("输入消息，或点击实时对话按钮用语音输入...")}
                                 className="w-full rounded-lg border px-3 py-2 text-sm outline-none transition focus:border-current"
                                 style={{
                                     background: theme.node.fill,

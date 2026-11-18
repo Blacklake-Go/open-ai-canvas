@@ -1,3 +1,4 @@
+import { interfaceText } from "@/i18n/interface-text";
 import { useCallback, useEffect, useRef, useState, type PointerEvent as ReactPointerEvent } from "react";
 import { Slider } from "antd";
 
@@ -46,27 +47,9 @@ const STYLE_PRESETS = [
     { id: "nolanGrey", name: "诺兰冷灰", color: "#1a2a2a", image: "/lighting-presets/nolan-grey.png", prompt: "Christopher Nolan cinematography, IMAX quality, desaturated cold palette, teal and grey grading" },
 ];
 
-const DEFAULT_LIGHTING_PROMPT_TEMPLATE = [
-    "{{consistencyPrompt}}",
-    "{{presetPrompt}}",
-    "{{smartDesc}}",
-    "{{lightDirectionPrompt}}",
-    "{{brightnessPrompt}}",
-    "{{rimLightPrompt}}",
-    "{{lightColorPrompt}}",
-    "{{lightingMeta}}",
-].join(", ");
+const DEFAULT_LIGHTING_PROMPT_TEMPLATE = ["{{consistencyPrompt}}", "{{presetPrompt}}", "{{smartDesc}}", "{{lightDirectionPrompt}}", "{{brightnessPrompt}}", "{{rimLightPrompt}}", "{{lightColorPrompt}}", "{{lightingMeta}}"].join(", ");
 
-const LIGHTING_PROMPT_PLACEHOLDERS = [
-    "{{consistencyPrompt}}",
-    "{{presetPrompt}}",
-    "{{smartDesc}}",
-    "{{lightDirectionPrompt}}",
-    "{{brightnessPrompt}}",
-    "{{rimLightPrompt}}",
-    "{{lightColorPrompt}}",
-    "{{lightingMeta}}",
-];
+const LIGHTING_PROMPT_PLACEHOLDERS = ["{{consistencyPrompt}}", "{{presetPrompt}}", "{{smartDesc}}", "{{lightDirectionPrompt}}", "{{brightnessPrompt}}", "{{rimLightPrompt}}", "{{lightColorPrompt}}", "{{lightingMeta}}"];
 
 export function buildLightingLabel(options: CanvasImageLightingOptions) {
     const preset = STYLE_PRESETS.find((item) => item.id === options.stylePreset);
@@ -93,40 +76,27 @@ function buildLightDirectionPrompt(azimuth: number, elevation: number) {
     const azimuthDegrees = ((azimuth % 360) + 360) % 360;
     if (elevation >= 60) return "strong top-down key light from directly above";
     if (elevation <= -60) return "strong upward uplight from directly below the subject";
-    const azimuthName = azimuthDegrees >= 345 || azimuthDegrees <= 15
-        ? "coming from the front"
-        : azimuthDegrees > 15 && azimuthDegrees < 75
-            ? "coming from the front-right at 45 degrees"
-            : azimuthDegrees >= 75 && azimuthDegrees <= 105
+    const azimuthName =
+        azimuthDegrees >= 345 || azimuthDegrees <= 15
+            ? "coming from the front"
+            : azimuthDegrees > 15 && azimuthDegrees < 75
+              ? "coming from the front-right at 45 degrees"
+              : azimuthDegrees >= 75 && azimuthDegrees <= 105
                 ? "coming from the right side, pure side-light"
                 : azimuthDegrees > 105 && azimuthDegrees < 165
-                    ? "coming from the back-right, creating rim and edge light"
-                    : azimuthDegrees >= 165 && azimuthDegrees <= 195
-                        ? "coming from directly behind the subject, strong backlight and silhouette"
-                        : azimuthDegrees > 195 && azimuthDegrees < 255
-                            ? "coming from the back-left, creating rim and edge light"
-                            : azimuthDegrees >= 255 && azimuthDegrees <= 285
-                                ? "coming from the left side, pure side-light"
-                                : "coming from the front-left at 45 degrees";
-    const elevationName = elevation >= 30
-        ? ", tilted downward from above"
-        : elevation <= -30
-            ? ", tilted upward from below"
-            : "";
+                  ? "coming from the back-right, creating rim and edge light"
+                  : azimuthDegrees >= 165 && azimuthDegrees <= 195
+                    ? "coming from directly behind the subject, strong backlight and silhouette"
+                    : azimuthDegrees > 195 && azimuthDegrees < 255
+                      ? "coming from the back-left, creating rim and edge light"
+                      : azimuthDegrees >= 255 && azimuthDegrees <= 285
+                        ? "coming from the left side, pure side-light"
+                        : "coming from the front-left at 45 degrees";
+    const elevationName = elevation >= 30 ? ", tilted downward from above" : elevation <= -30 ? ", tilted upward from below" : "";
     return `main key light ${azimuthName}${elevationName}`;
 }
 
-function buildLightingPrompt(input: {
-    template: string;
-    consistencyPrompt: string;
-    presetPrompt: string;
-    smartDesc: string;
-    lightDirectionPrompt: string;
-    brightnessPrompt: string;
-    rimLightPrompt: string;
-    lightColorPrompt: string;
-    lightingMeta: string;
-}) {
+function buildLightingPrompt(input: { template: string; consistencyPrompt: string; presetPrompt: string; smartDesc: string; lightDirectionPrompt: string; brightnessPrompt: string; rimLightPrompt: string; lightColorPrompt: string; lightingMeta: string }) {
     const template = input.template.includes("{{consistencyPrompt}}") ? input.template : `{{consistencyPrompt}}, ${input.template}`;
     return applyPromptTemplate(template, {
         consistencyPrompt: input.consistencyPrompt,
@@ -153,17 +123,18 @@ export function CanvasNodeLightingPanel({ dataUrl, onClose, onConfirm }: { dataU
     const updateOption = <Key extends keyof CanvasImageLightingOptions>(key: Key, value: CanvasImageLightingOptions[Key]) => setOptions((current) => ({ ...current, [key]: value }));
 
     const buildPrompt = useCallback(() => {
-        const presetPrompt = options.stylePreset ? STYLE_PRESETS.find((preset) => preset.id === options.stylePreset)?.prompt ?? "" : "";
+        const presetPrompt = options.stylePreset ? (STYLE_PRESETS.find((preset) => preset.id === options.stylePreset)?.prompt ?? "") : "";
         const smartDescPrompt = options.smartMode ? smartDesc.trim() : "";
-        const brightnessPrompt = options.brightness >= 75
-            ? "high-key, bright and well-lit scene, lifted exposure"
-            : options.brightness <= 25
-                ? "low-key, dim and moody scene, deep shadows, reduced exposure"
-                : options.brightness === 50
+        const brightnessPrompt =
+            options.brightness >= 75
+                ? "high-key, bright and well-lit scene, lifted exposure"
+                : options.brightness <= 25
+                  ? "low-key, dim and moody scene, deep shadows, reduced exposure"
+                  : options.brightness === 50
                     ? ""
                     : options.brightness > 50
-                        ? "slightly brighter exposure"
-                        : "slightly darker exposure";
+                      ? "slightly brighter exposure"
+                      : "slightly darker exposure";
         const rimLightPrompt = options.rimLight ? "add clear rim light and edge highlight along the silhouette" : "";
         const lightColorPrompt = options.lightColor && options.lightColor.toLowerCase() !== "#ffffff" ? `key light color temperature tinted toward ${options.lightColor}` : "";
         const lightingMeta = `[lighting azimuth:${options.azimuth}° elevation:${options.elevation}° brightness:${options.brightness}%${options.rimLight ? " rim:on" : ""}]`;
@@ -212,13 +183,7 @@ export function CanvasNodeLightingPanel({ dataUrl, onClose, onConfirm }: { dataU
         >
             <div className="flex h-14 items-center justify-between border-b px-5" style={{ borderColor: theme.toolbar.border }}>
                 <h2 className="text-[var(--fs-title)] font-semibold leading-none">打光效果</h2>
-                <button
-                    type="button"
-                    aria-label="关闭打光效果"
-                    className="grid size-8 place-items-center rounded-[var(--r-md)] transition-colors hover:bg-black/5 dark:hover:bg-white/10"
-                    style={{ color: theme.node.muted }}
-                    onClick={onClose}
-                >
+                <button type="button" aria-label="关闭打光效果" className="grid size-8 place-items-center rounded-[var(--r-md)] transition-colors hover:bg-black/5 dark:hover:bg-white/10" style={{ color: theme.node.muted }} onClick={onClose}>
                     <X className="size-5" />
                 </button>
             </div>
@@ -249,13 +214,19 @@ export function CanvasNodeLightingPanel({ dataUrl, onClose, onConfirm }: { dataU
 
                 <div className="flex min-w-0 flex-1 flex-col justify-between gap-2 px-4 py-3">
                     <div className="flex items-center justify-between">
-                        <span className="text-[var(--fs-tiny)] font-medium" style={{ color: theme.node.muted }}>全局</span>
+                        <span className="text-[var(--fs-tiny)] font-medium" style={{ color: theme.node.muted }}>
+                            全局
+                        </span>
                         <PanelToggle label="智能模式" checked={options.smartMode} onChange={(checked) => updateOption("smartMode", checked)} theme={theme} />
                     </div>
 
                     <div className="flex items-center gap-2">
-                        <span className="w-8 shrink-0 text-[var(--fs-tiny)]" style={{ color: theme.node.muted }}>亮度</span>
-                        <div className="min-w-0 flex-1"><Slider min={0} max={100} value={options.brightness} onChange={(value) => updateOption("brightness", value)} tooltip={{ formatter: (value) => `${value}%` }} /></div>
+                        <span className="w-8 shrink-0 text-[var(--fs-tiny)]" style={{ color: theme.node.muted }}>
+                            亮度
+                        </span>
+                        <div className="min-w-0 flex-1">
+                            <Slider min={0} max={100} value={options.brightness} onChange={(value) => updateOption("brightness", value)} tooltip={{ formatter: (value) => `${value}%` }} />
+                        </div>
                         <div className="flex h-6 items-center gap-1 rounded-[var(--r-md)] border px-2 text-[var(--fs-label)]" style={{ borderColor: theme.toolbar.border, background: theme.toolbar.itemHover, color: theme.node.muted }}>
                             <Sun className="size-3" />
                             <span className="w-7 text-right tabular-nums">{options.brightness}%</span>
@@ -264,14 +235,18 @@ export function CanvasNodeLightingPanel({ dataUrl, onClose, onConfirm }: { dataU
 
                     <div className="flex items-center justify-between gap-3">
                         <div className="flex items-center gap-2">
-                            <span className="w-8 shrink-0 text-[var(--fs-tiny)]" style={{ color: theme.node.muted }}>颜色</span>
+                            <span className="w-8 shrink-0 text-[var(--fs-tiny)]" style={{ color: theme.node.muted }}>
+                                颜色
+                            </span>
                             <LightColorSwatch value={options.lightColor} theme={theme} onChange={(value) => updateOption("lightColor", value)} />
                         </div>
                         <PanelToggle label="轮廓光" checked={options.rimLight} onChange={(checked) => updateOption("rimLight", checked)} theme={theme} />
                     </div>
 
                     <div className="space-y-2">
-                        <span className="text-[var(--fs-tiny)] font-medium" style={{ color: theme.node.muted }}>主光源</span>
+                        <span className="text-[var(--fs-tiny)] font-medium" style={{ color: theme.node.muted }}>
+                            主光源
+                        </span>
                         <div className="grid grid-cols-3 gap-1">
                             {LIGHT_POSITIONS.map((position) => (
                                 <button
@@ -291,16 +266,20 @@ export function CanvasNodeLightingPanel({ dataUrl, onClose, onConfirm }: { dataU
             </div>
 
             <div className="flex flex-col gap-3 border-t px-4 py-3" style={{ borderColor: theme.toolbar.border }}>
-                <span className="text-[var(--fs-tiny)] font-medium" style={{ color: theme.node.muted }}>智能模式</span>
+                <span className="text-[var(--fs-tiny)] font-medium" style={{ color: theme.node.muted }}>
+                    智能模式
+                </span>
                 <textarea
                     value={smartDesc}
                     onChange={(event) => setSmartDesc(event.target.value)}
-                    placeholder="简单描述你想要实现的打光效果，或者情绪风格"
+                    placeholder={interfaceText("简单描述你想要实现的打光效果，或者情绪风格")}
                     disabled={!options.smartMode}
                     className="h-16 w-full resize-none rounded-[var(--r-lg)] border px-3 py-2 text-xs outline-none transition-colors"
                     style={{ borderColor: theme.toolbar.border, background: theme.toolbar.itemHover, color: theme.node.text, opacity: options.smartMode ? 1 : 0.55 }}
                 />
-                <span className="text-[var(--fs-tiny)] font-medium" style={{ color: theme.node.muted }}>预设</span>
+                <span className="text-[var(--fs-tiny)] font-medium" style={{ color: theme.node.muted }}>
+                    预设
+                </span>
                 <div className="grid shrink-0 auto-rows-[60px] grid-cols-4 gap-2">
                     {STYLE_PRESETS.map((preset) => (
                         <button
@@ -324,12 +303,19 @@ export function CanvasNodeLightingPanel({ dataUrl, onClose, onConfirm }: { dataU
             </div>
 
             <div className="flex h-12 items-center gap-2 border-t px-3" style={{ borderColor: theme.toolbar.border }}>
-                <button type="button" className={secondaryButtonClass} style={{ color: theme.node.muted }} onClick={handleReset}><RotateCcw className="size-3.5" />重置参数</button>
+                <button type="button" className={secondaryButtonClass} style={{ color: theme.node.muted }} onClick={handleReset}>
+                    <RotateCcw className="size-3.5" />
+                    重置参数
+                </button>
                 <span className="flex-1" />
                 <Tooltip title="复制当前生成的打光提示词">
-                    <button type="button" className={secondaryButtonClass} onClick={() => copyText(buildPrompt(), "打光提示词已复制")}>复制提示词</button>
+                    <button type="button" className={secondaryButtonClass} onClick={() => copyText(buildPrompt(), "打光提示词已复制")}>
+                        复制提示词
+                    </button>
                 </Tooltip>
-                <button type="button" className={secondaryButtonClass} onClick={() => setIsTemplateDialogOpen(true)}>设置提示词</button>
+                <button type="button" className={secondaryButtonClass} onClick={() => setIsTemplateDialogOpen(true)}>
+                    设置提示词
+                </button>
                 <motion.button
                     type="button"
                     whileHover={reducedMotion ? undefined : { y: -1 }}
@@ -338,7 +324,8 @@ export function CanvasNodeLightingPanel({ dataUrl, onClose, onConfirm }: { dataU
                     style={{ borderColor: theme.node.activeStroke, color: theme.node.activeStroke, background: "transparent" }}
                     onClick={handleApply}
                 >
-                    <Send className="size-3.5" />生成打光效果
+                    <Send className="size-3.5" />
+                    生成打光效果
                 </motion.button>
             </div>
 
@@ -364,20 +351,12 @@ function LightColorSwatch({ value, theme, onChange }: { value: string; theme: (t
             className="relative h-6 w-10 shrink-0 cursor-pointer overflow-hidden rounded border"
             style={{
                 borderColor: theme.toolbar.border,
-                background: isWhite
-                    ? "linear-gradient(45deg, #cfcfcf 25%, transparent 25%, transparent 75%, #cfcfcf 75%), linear-gradient(45deg, #cfcfcf 25%, #ffffff 25%, #ffffff 75%, #cfcfcf 75%)"
-                    : value,
+                background: isWhite ? "linear-gradient(45deg, #cfcfcf 25%, transparent 25%, transparent 75%, #cfcfcf 75%), linear-gradient(45deg, #cfcfcf 25%, #ffffff 25%, #ffffff 75%, #cfcfcf 75%)" : value,
                 backgroundSize: isWhite ? "8px 8px, 8px 8px" : undefined,
                 backgroundPosition: isWhite ? "0 0, 4px 4px" : undefined,
             }}
         >
-            <input
-                type="color"
-                aria-label="光线颜色"
-                value={value}
-                onChange={(event) => onChange(event.target.value)}
-                className="absolute inset-0 cursor-pointer opacity-0"
-            />
+            <input type="color" aria-label="光线颜色" value={value} onChange={(event) => onChange(event.target.value)} className="absolute inset-0 cursor-pointer opacity-0" />
             {isWhite ? <span className="pointer-events-none absolute inset-[-20%] m-auto h-px w-[140%] rotate-45 bg-red-500" /> : null}
         </label>
     );
@@ -386,7 +365,9 @@ function LightColorSwatch({ value, theme, onChange }: { value: string; theme: (t
 function PanelToggle({ label, checked, onChange, theme }: { label: string; checked: boolean; onChange: (checked: boolean) => void; theme: (typeof canvasThemes)[keyof typeof canvasThemes] }) {
     return (
         <div className="flex items-center gap-2">
-            <span className="text-[var(--fs-tiny)]" style={{ color: theme.node.muted }}>{label}</span>
+            <span className="text-[var(--fs-tiny)]" style={{ color: theme.node.muted }}>
+                {label}
+            </span>
             <button
                 type="button"
                 role="switch"
@@ -402,7 +383,27 @@ function PanelToggle({ label, checked, onChange, theme }: { label: string; check
     );
 }
 
-function PromptTemplateDialog({ isOpen, title, description, value, defaultValue, placeholders, theme, onClose, onChange }: { isOpen: boolean; title: string; description?: string; value: string; defaultValue: string; placeholders: string[]; theme: (typeof canvasThemes)[keyof typeof canvasThemes]; onClose: () => void; onChange: (value: string) => void }) {
+function PromptTemplateDialog({
+    isOpen,
+    title,
+    description,
+    value,
+    defaultValue,
+    placeholders,
+    theme,
+    onClose,
+    onChange,
+}: {
+    isOpen: boolean;
+    title: string;
+    description?: string;
+    value: string;
+    defaultValue: string;
+    placeholders: string[];
+    theme: (typeof canvasThemes)[keyof typeof canvasThemes];
+    onClose: () => void;
+    onChange: (value: string) => void;
+}) {
     const [draft, setDraft] = useState(value);
 
     useEffect(() => {
@@ -422,17 +423,25 @@ function PromptTemplateDialog({ isOpen, title, description, value, defaultValue,
             >
                 <div className="flex items-center justify-between border-b px-5 py-4" style={{ borderColor: theme.toolbar.border }}>
                     <span className="text-sm font-semibold">{title}</span>
-                    <button type="button" aria-label="关闭提示词设置" className="grid size-6 place-items-center rounded-[var(--r-md)] transition hover:bg-black/5 dark:hover:bg-white/10" onClick={onClose}><X className="size-4" /></button>
+                    <button type="button" aria-label="关闭提示词设置" className="grid size-6 place-items-center rounded-[var(--r-md)] transition hover:bg-black/5 dark:hover:bg-white/10" onClick={onClose}>
+                        <X className="size-4" />
+                    </button>
                 </div>
                 <div className="space-y-3 px-5 py-4">
                     {description ? (
-                        <div className="rounded-[var(--r-lg)] border px-3 py-2 text-xs leading-5" style={{ borderColor: theme.toolbar.border, background: theme.toolbar.itemHover, color: theme.node.muted }}>{description}</div>
+                        <div className="rounded-[var(--r-lg)] border px-3 py-2 text-xs leading-5" style={{ borderColor: theme.toolbar.border, background: theme.toolbar.itemHover, color: theme.node.muted }}>
+                            {description}
+                        </div>
                     ) : null}
                     <div className="rounded-[var(--r-lg)] border px-3 py-2" style={{ borderColor: theme.toolbar.border, background: theme.toolbar.itemHover }}>
-                        <div className="text-[var(--fs-label)] font-medium" style={{ color: theme.node.muted }}>可用占位符</div>
+                        <div className="text-[var(--fs-label)] font-medium" style={{ color: theme.node.muted }}>
+                            可用占位符
+                        </div>
                         <div className="mt-2 flex flex-wrap gap-2">
                             {placeholders.map((placeholder) => (
-                                <span key={placeholder} className="rounded-[var(--r-md)] px-2 py-1 text-[var(--fs-label)]" style={{ background: theme.toolbar.activeBg, color: theme.node.text }}>{placeholder}</span>
+                                <span key={placeholder} className="rounded-[var(--r-md)] px-2 py-1 text-[var(--fs-label)]" style={{ background: theme.toolbar.activeBg, color: theme.node.text }}>
+                                    {placeholder}
+                                </span>
                             ))}
                         </div>
                     </div>
@@ -464,8 +473,20 @@ function PromptTemplateDialog({ isOpen, title, description, value, defaultValue,
                         恢复默认
                     </button>
                     <div className="flex items-center gap-2">
-                        <button type="button" className="rounded-[var(--r-md)] px-3 py-2 text-xs transition hover:opacity-80" style={{ background: theme.toolbar.itemHover }} onClick={onClose}>关闭</button>
-                        <button type="button" className="rounded-[var(--r-md)] px-3 py-2 text-xs font-medium transition hover:opacity-90" style={{ background: theme.node.activeStroke, color: theme.node.panel }} onClick={() => { onChange(draft); onClose(); }}>保存</button>
+                        <button type="button" className="rounded-[var(--r-md)] px-3 py-2 text-xs transition hover:opacity-80" style={{ background: theme.toolbar.itemHover }} onClick={onClose}>
+                            关闭
+                        </button>
+                        <button
+                            type="button"
+                            className="rounded-[var(--r-md)] px-3 py-2 text-xs font-medium transition hover:opacity-90"
+                            style={{ background: theme.node.activeStroke, color: theme.node.panel }}
+                            onClick={() => {
+                                onChange(draft);
+                                onClose();
+                            }}
+                        >
+                            保存
+                        </button>
                     </div>
                 </div>
             </div>
@@ -610,7 +631,19 @@ function drawLightSphere(ctx: CanvasRenderingContext2D, width: number, height: n
     ctx.fill();
 }
 
-function LightingSphereControl({ azimuth, elevation, onAngleChange, previewImageUrl, viewMode = "perspective" }: { azimuth: number; elevation: number; onAngleChange: (azimuth: number, elevation: number) => void; previewImageUrl?: string | null; viewMode?: "perspective" | "front" }) {
+function LightingSphereControl({
+    azimuth,
+    elevation,
+    onAngleChange,
+    previewImageUrl,
+    viewMode = "perspective",
+}: {
+    azimuth: number;
+    elevation: number;
+    onAngleChange: (azimuth: number, elevation: number) => void;
+    previewImageUrl?: string | null;
+    viewMode?: "perspective" | "front";
+}) {
     const canvasRef = useRef<HTMLCanvasElement>(null);
     const isDraggingRef = useRef(false);
     const dragStartRef = useRef<{ x: number; y: number; azimuth: number; elevation: number } | null>(null);
@@ -628,23 +661,29 @@ function LightingSphereControl({ azimuth, elevation, onAngleChange, previewImage
         redraw();
     }, [redraw]);
 
-    const handlePointerDown = useCallback((event: ReactPointerEvent<HTMLCanvasElement>) => {
-        event.preventDefault();
-        event.stopPropagation();
-        isDraggingRef.current = true;
-        dragStartRef.current = { x: event.clientX, y: event.clientY, azimuth, elevation };
-        event.currentTarget.setPointerCapture(event.pointerId);
-    }, [azimuth, elevation]);
+    const handlePointerDown = useCallback(
+        (event: ReactPointerEvent<HTMLCanvasElement>) => {
+            event.preventDefault();
+            event.stopPropagation();
+            isDraggingRef.current = true;
+            dragStartRef.current = { x: event.clientX, y: event.clientY, azimuth, elevation };
+            event.currentTarget.setPointerCapture(event.pointerId);
+        },
+        [azimuth, elevation],
+    );
 
-    const handlePointerMove = useCallback((event: ReactPointerEvent<HTMLCanvasElement>) => {
-        if (!isDraggingRef.current || !dragStartRef.current) return;
-        const deltaX = event.clientX - dragStartRef.current.x;
-        const deltaY = event.clientY - dragStartRef.current.y;
-        let nextAzimuth = (dragStartRef.current.azimuth + deltaX * 1.5) % 360;
-        if (nextAzimuth < 0) nextAzimuth += 360;
-        const nextElevation = Math.max(-90, Math.min(90, dragStartRef.current.elevation - deltaY));
-        onAngleChange(Math.round(nextAzimuth), Math.round(nextElevation));
-    }, [onAngleChange]);
+    const handlePointerMove = useCallback(
+        (event: ReactPointerEvent<HTMLCanvasElement>) => {
+            if (!isDraggingRef.current || !dragStartRef.current) return;
+            const deltaX = event.clientX - dragStartRef.current.x;
+            const deltaY = event.clientY - dragStartRef.current.y;
+            let nextAzimuth = (dragStartRef.current.azimuth + deltaX * 1.5) % 360;
+            if (nextAzimuth < 0) nextAzimuth += 360;
+            const nextElevation = Math.max(-90, Math.min(90, dragStartRef.current.elevation - deltaY));
+            onAngleChange(Math.round(nextAzimuth), Math.round(nextElevation));
+        },
+        [onAngleChange],
+    );
 
     const handlePointerUp = useCallback((event: ReactPointerEvent<HTMLCanvasElement>) => {
         isDraggingRef.current = false;
