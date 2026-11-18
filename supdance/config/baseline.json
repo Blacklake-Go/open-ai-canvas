@@ -23,6 +23,7 @@
     "baseCommit": "259e7e3fba0b6f70ac3cfd65941c3ca345d60249"
   },
   "coupledUpstreamFiles": [
+    ".github/workflows/quality.yml",
     "backend/cmd/migrate-sqlite-postgres/main.go",
     "backend/cmd/migrate-sqlite-postgres/main_test.go",
     "backend/internal/model/models_identity.go",

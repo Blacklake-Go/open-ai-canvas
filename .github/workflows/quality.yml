@@ -105,7 +105,14 @@ jobs:
           echo "$RUNNER_TEMP/redis/bin" >> "$GITHUB_PATH"
           "$RUNNER_TEMP/redis/bin/redis-server" --version
       - name: Install FFmpeg for media verification
-        run: sudo apt-get update -qq && sudo apt-get install -y -qq ffmpeg
+        timeout-minutes: 5
+        run: |
+          if ! command -v ffmpeg >/dev/null || ! command -v ffprobe >/dev/null; then
+            sudo apt-get -o Acquire::Retries=2 -o Acquire::http::Timeout=20 -o Acquire::https::Timeout=20 update -qq
+            sudo env DEBIAN_FRONTEND=noninteractive apt-get -o Acquire::Retries=2 -o Acquire::http::Timeout=20 -o Acquire::https::Timeout=20 install -y -qq ffmpeg
+          fi
+          ffmpeg -version
+          ffprobe -version
       - name: Check formatting
         if: matrix.shard == 'rest'
         shell: bash

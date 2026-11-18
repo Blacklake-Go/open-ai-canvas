@@ -30,6 +30,7 @@ export const SUPDANCE_UPSTREAM_PATCH_REGISTRY: readonly UpstreamPatchRecord[] = 
         upstreamBaseline: "v1.8.6",
         feature: "上游 1.8.6 合并、八语与既有插件合同保留",
         coupledUpstreamFiles: [
+            ".github/workflows/quality.yml",
             "backend/agent-runtime/pi/package.json",
             "backend/agent-runtime/pi/package-lock.json",
             "web/src/lib/canvas/tool-registry/tool-registry.ts",
