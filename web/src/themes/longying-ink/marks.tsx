@@ -55,7 +55,7 @@ export function InkSignalArt({ path, dot, reducedMotion }: ThemeSignalArtProps) 
 /** 顶栏积分图标：一方朱印「积」。 */
 export function InkCreditMark({ className }: { className?: string }) {
     return (
-        <span className={cn("app-workspace-credit-gift is-ink-seal", className)} aria-hidden="true">
+        <span className={cn("app-workspace-credit-gift is-ink-seal", className)} aria-hidden="true" data-i18n-preserve-source>
             <svg viewBox="0 0 18 18" fill="none">
                 <g transform="rotate(-5 9 9)">
                     <rect x="1.5" y="1.5" width="15" height="15" rx="2.6" style={{ fill: "var(--ink-seal, #b0402d)" }} />

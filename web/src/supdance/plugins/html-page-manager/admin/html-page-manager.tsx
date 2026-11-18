@@ -841,7 +841,7 @@ export default function HtmlPageManager() {
 
                                         <div className="flex-1 min-h-0 overflow-auto p-4 bg-[var(--admin-surface)]">
                                             <div style={{ width: viewportWidthStyle, height: "100%" }} className="mx-auto h-full rounded-lg shadow-none overflow-hidden bg-[var(--admin-surface-2)] transition-colors">
-                                                <iframe ref={iframeRef} title="HTML Page Live Preview" srcDoc={previewDocument} sandbox="allow-scripts" className="h-full w-full border-0 bg-transparent" />
+                                                <iframe ref={iframeRef} title="HTML 页面实时预览" srcDoc={previewDocument} sandbox="allow-scripts" className="h-full w-full border-0 bg-transparent" />
                                             </div>
                                         </div>
                                     </div>

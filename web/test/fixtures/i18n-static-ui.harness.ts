@@ -15,6 +15,9 @@ test("static UI compilation translates explicit display sinks and preserves task
 });
 
 test("UI interpolation preserves expressions and message identity is scoped", () => {
+    const controls = transformStaticUi('const Panel=()=> <><ReferenceCard description="参考图数量"/><Form.Item tooltip="设置上限"/><Editor config={{description:"用户输入"}}/></>', file);
+    expect(controls.messages.map((row) => row.source)).toEqual(["参考图数量", "设置上限"]);
+    expect(controls.code).toContain('description: "用户输入"');
     const source = "const Page = () => <span>{`共 ${count} 项`}</span>";
     const first = transformStaticUi(source, file);
     expect(first.messages[0].source).toBe("共 {value1} 项");

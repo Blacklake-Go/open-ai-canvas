@@ -8,7 +8,27 @@ export type StaticUiMessage = { key: string; source: string; file: string; line:
 const han = /[\u4e00-\u9fff]/;
 const attributes = new Set(["title", "label", "placeholder", "aria-label", "aria-description", "alt", "okText", "cancelText", "emptyText", "actionLabel", "loadingText"]);
 const uiCollections = new Set(["options", "items", "menu", "columns", "actions", "primary", "secondary", "tabs"]);
+// Literal copy on these component props is rendered to the user. Properties on data objects
+// with the same names (including prompts, descriptions and model parameters) are independent.
+const displayProps: Record<string, ReadonlySet<string>> = {
+    description: new Set(["AdminTableEmpty", "AnalyticsAttentionItem", "AssetPicker", "CapabilityGroup", "CreationMediaNotice", "EcommerceLibraryPanel", "EmptyState", "FormSectionTitle", "PageHeader", "ParameterField", "Popconfirm", "PromptTemplateDialog", "ProtocolParameterCard", "ReferenceCard", "SectionHeading", "SettingsSectionCard", "WorkspaceErrorState", "WorkspaceForbiddenState", "WorkspaceNoResultsState", "WorkspaceState"]),
+    detail: new Set(["AdminStatTile", "AnalyticsHealthCard", "ArkStatCard", "CreationMediaNotice", "FlowStep", "MenuButton", "PerformanceKpi", "UpdateAlert", "WorkspaceLoadingState"]),
+    extra: new Set(["AdminDrawer", "AppDrawer", "Form.Item"]),
+    help: new Set(["ColorTokenField", "Form.Item"]),
+    tooltip: new Set(["Form.Item"]),
+    message: new Set(["Alert"]),
+    text: new Set(["MenuLabel"]),
+};
 const memberName = (node: t.Node) => (t.isMemberExpression(node) && t.isIdentifier(node.object) && t.isIdentifier(node.property) ? `${node.object.name}.${node.property.name}` : "");
+// These declarations describe controls. Sibling IDs, shortcut keys, skin definitions
+// and any strings that are submitted to a generator retain their original values.
+const displayDefinitions: Record<string, ReadonlySet<string>> = {
+    "canvas-shortcuts.ts": new Set(["CANVAS_SHORTCUT_CATEGORIES", "CANVAS_SHORTCUTS"]),
+    "previs-shortcuts.ts": new Set(["PREVIS_SHORTCUT_GUIDE"]),
+    "skin-themes.ts": new Set(["SKIN_BUTTON_COLOR_FIELDS", "SKIN_COLOR_GROUPS", "SKIN_COMPONENT_NUMBER_FIELDS"]),
+    "banner-notice.ts": new Set(["BANNER_NOTICE_TYPES", "BANNER_NOTICE_EMOJI_GROUPS"]),
+    "feature-availability-panel.tsx": new Set(["featureGroups"]),
+};
 
 function preserved(path: NodePath): boolean {
     return Boolean(
@@ -36,9 +56,9 @@ function isUiValue(path: NodePath, file = ""): boolean {
         const name = String(parent.node.name.name);
         if (attributes.has(name)) return true;
         const opening = parent.parentPath;
-        const tag = opening?.isJSXOpeningElement() && t.isJSXIdentifier(opening.node.name) ? opening.node.name.name : "";
-        if (name === "description" && ["WorkspaceState", "WorkspaceErrorState", "SettingsSectionCard", "Popconfirm"].includes(tag) && /(?:auth-session-hydrator|canvas-script-editor|project-asset-audit|wechat-settings-section)\.tsx$/.test(file))
-            return true;
+        const element = opening?.isJSXOpeningElement() ? opening.node.name : undefined;
+        const tag = t.isJSXIdentifier(element) ? element.name : t.isJSXMemberExpression(element) && t.isJSXIdentifier(element.object) ? `${element.object.name}.${element.property.name}` : "";
+        if (displayProps[name]?.has(tag)) return true;
         if (name === "content" && /(?:Tooltip|Popover|Popconfirm|Hint)$/.test(tag)) return true;
         return ["description", "detail", "help", "extra"].includes(name) && /^(?:Alert|Result|Empty|Card|AdminPageFrame|AdminSection|AdminSettingRow|AdminEmpty|FullScreenLoader|PrevisViewportNotice)$/.test(tag);
     }
@@ -46,7 +66,9 @@ function isUiValue(path: NodePath, file = ""): boolean {
     if (parent.isCallExpression() && parent.node.arguments[0] === root.node) return /^(message|notification|toast)\.(success|error|warning|info|loading)$/.test(memberName(parent.node.callee));
     if (parent.isObjectProperty()) {
         const name = t.isIdentifier(parent.node.key) ? parent.node.key.name : t.isStringLiteral(parent.node.key) ? parent.node.key.value : "";
-        if (!["title", "content", "label", "okText", "cancelText", "message", "description", "detail"].includes(name)) return false;
+        const definition = parent.findParent((ancestor) => ancestor.isVariableDeclarator() || ancestor.isFunction());
+        if (definition?.isVariableDeclarator() && t.isIdentifier(definition.node.id) && displayDefinitions[file.split("/").pop()!]?.has(definition.node.id.name) && ["title", "label", "description", "group", "help"].includes(name)) return true;
+        if (!["title", "content", "label", "okText", "cancelText", "message", "description", "detail", "extra", "unit", "shortTitle"].includes(name)) return false;
         const owner = parent.findParent((ancestor) => ancestor.isVariableDeclarator() || ancestor.isFunctionDeclaration());
         if (
             name === "label" &&
@@ -55,6 +77,13 @@ function isUiValue(path: NodePath, file = ""): boolean {
         )
             return true;
         const object = parent.parentPath;
+        if (file.endsWith(".tsx") && owner?.isVariableDeclarator() && t.isIdentifier(owner.node.id) && object?.isObjectExpression() && object.parentPath?.isArrayExpression()) {
+            const collection = owner.node.id.name;
+            if (name === "title" && /columns$/i.test(collection)) return true;
+            if (name === "label" && /options$/i.test(collection) && object.node.properties.some((p) => t.isObjectProperty(p) && t.isIdentifier(p.key, { name: "value" }))) return true;
+            if (file.endsWith("/runtime-policy-settings-page.tsx") && ["resourceFields", "storageFields", "concurrencyFields", "timeoutFields", "rateFields", "relayFields", "policySections"].includes(collection)) return true;
+        }
+        if (["extra", "unit", "shortTitle"].includes(name)) return false;
         if (name === "title" && file.endsWith("/canvas-script-editor.tsx") && owner?.isVariableDeclarator() && t.isIdentifier(owner.node.id, { name: "columns" })) return true;
         if (object?.isObjectExpression() && object.parentPath?.isCallExpression() && /^(?:modal\.confirm|notification\.(?:success|error|warning|info|open)|message\.open)$/.test(memberName(object.parentPath.node.callee))) return true;
         const attribute = parent.findParent((ancestor) => ancestor.isJSXAttribute() || ancestor.isFunction());

@@ -42,6 +42,8 @@ describe("index.html boot recovery", () => {
             const notice = dom.document.getElementById("boot-recovery")!;
             expect(notice.getAttribute("role")).toBe("alert");
             const button = notice.querySelector("button")!;
+            expect(notice.lang).toBe("en-US");
+            expect(button.textContent).toBe("Reload");
             expect(button.style.background).toBe("transparent");
             button.click();
             expect(new URL(destination).searchParams.get("mode")).toBe("recent");

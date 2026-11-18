@@ -69,7 +69,7 @@ func builtinCatalogRevision() string {
 }
 
 var placeholderPattern = regexp.MustCompile(`\{\{[^{}]+\}\}|\{[a-zA-Z0-9_]+\}`)
-var urlPattern = regexp.MustCompile(`https?://[a-zA-Z0-9][^\s<>()（），,]*`)
+var urlPattern = regexp.MustCompile(`https?://[a-zA-Z0-9]([^\s<>()（），,；。]*[^\s<>()（），,；。.])?`)
 var markupPattern = regexp.MustCompile(`(?i)</?[a-z][^>]*>`)
 
 func sameTokens(pattern *regexp.Regexp, a, b string) bool {

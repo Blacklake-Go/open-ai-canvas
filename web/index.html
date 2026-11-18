@@ -118,13 +118,32 @@
                 notice.id = "boot-recovery";
                 notice.setAttribute("role", "alert");
                 notice.style.cssText = "position:fixed;inset:0;display:grid;align-content:center;justify-items:center;gap:16px;padding:24px;background:inherit;font:16px/1.6 sans-serif;text-align:center";
+                // Keep recovery usable even if the application and its language bundles failed to load.
+                var recoveryCopy = {
+                    "en-US": ["The page is taking too long to load", "Some startup files could not be loaded. Try again. Your cached canvases will be kept.", "Reload"],
+                    "zh-CN": ["页面资源加载时间过长", "部分启动资源未能加载，请重试。此操作不会清除浏览器中的画布缓存。", "重新加载"],
+                    "zh-TW": ["頁面資源載入時間過長", "部分啟動資源無法載入，請再試一次。瀏覽器中的畫布快取會保留。", "重新載入"],
+                    "fr-FR": ["La page met trop de temps à charger", "Certains fichiers de démarrage sont indisponibles. Réessayez. Vos canevas en cache seront conservés.", "Recharger"],
+                    "de-DE": ["Das Laden der Seite dauert zu lange", "Einige Startdateien konnten nicht geladen werden. Versuchen Sie es erneut. Ihre lokal gespeicherten Leinwände bleiben erhalten.", "Neu laden"],
+                    "es-ES": ["La página tarda demasiado en cargar", "No se pudieron cargar algunos archivos de inicio. Inténtalo de nuevo. Se conservarán los lienzos en caché.", "Volver a cargar"],
+                    "ja-JP": ["ページの読み込みに時間がかかっています", "起動に必要なファイルの一部を読み込めませんでした。もう一度お試しください。保存済みのキャンバスのキャッシュは保持されます。", "再読み込み"],
+                    "ko-KR": ["페이지 로딩이 지연되고 있습니다", "일부 시작 파일을 불러올 수 없습니다. 다시 시도해 주세요. 브라우저에 캐시된 캔버스는 유지됩니다.", "새로고침"],
+                };
+                var recoveryLocale = "en-US";
+                try {
+                    var saved = localStorage.getItem("yingce:locale");
+                    var preferred = saved ? JSON.parse(saved)?.state?.locale : localStorage.getItem("supdance:i18n:locale");
+                    if (Object.hasOwn(recoveryCopy, preferred)) recoveryLocale = preferred;
+                } catch (_) {}
+                notice.lang = recoveryLocale;
+                var copy = recoveryCopy[recoveryLocale];
                 var title = document.createElement("strong");
-                title.textContent = "页面资源加载时间过长";
+                title.textContent = copy[0];
                 var detail = document.createElement("p");
-                detail.textContent = "部分启动资源未能加载，请重试。此操作不会清除浏览器中的画布缓存。";
+                detail.textContent = copy[1];
                 var retry = document.createElement("button");
                 retry.type = "button";
-                retry.textContent = "重新加载";
+                retry.textContent = copy[2];
                 retry.style.cssText = "padding:10px 24px;border:1px solid currentColor;border-radius:8px;background:transparent;color:inherit;font:inherit;cursor:pointer";
                 retry.onclick = function () {
                     var url = new URL(location.href);

@@ -23,8 +23,8 @@ function buildResources(): Resource {
 }
 
 /**
- * 应用唯一的 i18next 实例。语言来自 useLocaleStore（本设备偏好，首次按浏览器语言），
- * 缺失的键回退到简体中文，保证未翻译的页面仍可用。资源随包内联，初始化同步完成。
+ * 应用唯一的 i18next 实例。首次使用英语，之后读取本设备偏好。
+ * 资源随包内联，初始化同步完成。
  */
 export const i18n = i18next.createInstance();
 

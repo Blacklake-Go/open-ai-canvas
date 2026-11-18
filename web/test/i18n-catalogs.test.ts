@@ -26,6 +26,30 @@ const placeholders = (text: string) => [...text.matchAll(/\{\{(\w+)\}\}/g)].map(
 afterEach(() => useLocaleStore.getState().setLocale("zh-CN"));
 
 describe("i18n catalogs", () => {
+    test("cold starts default to English and restore an explicit choice from either storage format", () => {
+        // Import a fresh store for each visitor; the shared test preload selects Chinese.
+        for (const [current, legacy, expected] of [
+            [null, null, "en-US"],
+            ["invalid", null, "en-US"],
+            [null, "ja-JP", "ja-JP"],
+            ["es-ES", "ja-JP", "es-ES"],
+        ]) {
+            const setup = `
+                const items = new Map();
+                const store = { getItem: (key) => items.get(key) ?? null };
+                globalThis.window = { localStorage: store };
+                globalThis.localStorage = store;
+                Object.defineProperty(navigator, "languages", { value: ["zh-CN"] });
+                if (${JSON.stringify(current)}) items.set("yingce:locale", JSON.stringify({ state: { locale: ${JSON.stringify(current)} }, version: 0 }));
+                if (${JSON.stringify(legacy)}) items.set("supdance:i18n:locale", ${JSON.stringify(legacy)});
+                const { useLocaleStore } = await import("@/stores/use-locale-store");
+                console.log(useLocaleStore.getState().locale);
+            `;
+            const result = Bun.spawnSync([process.execPath, "-e", setup], { cwd: new URL("../", import.meta.url).pathname, stdout: "pipe", stderr: "pipe" });
+            expect(result.exitCode, result.stderr.toString()).toBe(0);
+            expect(result.stdout.toString().trim()).toBe(expected);
+        }
+    });
     test("legal language selection updates the explicit link language and retains its other parameters and anchor", async () => {
         const original = Object.getOwnPropertyDescriptor(globalThis, "window");
         const originalUser = useUserStore.getState().user;
@@ -98,8 +122,8 @@ describe("i18n catalogs", () => {
         expect(matchAppLocale("zh_HK")).toBe("zh-TW");
         expect(matchAppLocale("es-ES")).toBe("es-ES");
         expect(detectBrowserLocale(["es-MX", "de-AT"])).toBe("es-ES");
-        expect(detectBrowserLocale(["pt-BR"])).toBe("zh-CN");
-        expect(detectBrowserLocale(undefined)).toBe("zh-CN");
+        expect(detectBrowserLocale(["pt-BR"])).toBe("en-US");
+        expect(detectBrowserLocale([])).toBe("en-US");
     });
 
     test("switching locale updates i18next and rejects unsupported values", () => {

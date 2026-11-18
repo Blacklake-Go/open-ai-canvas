@@ -3,7 +3,7 @@ import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
 import { getWelcomeAvailability } from "@/services/api/welcome";
 import WelcomePage from "@/pages/welcome";
-import { translate } from "@/i18n";
+import { currentLocale, translate } from "@/i18n";
 import { installSiteTrafficCollector } from "@/services/site-traffic";
 
 let disposeTraffic: (() => void) | undefined;
@@ -15,6 +15,7 @@ if (import.meta.hot)
     });
 
 async function renderWelcome() {
+    document.documentElement.lang = currentLocale();
     try {
         const { welcomeEnabled } = await getWelcomeAvailability();
         if (disposed) return;

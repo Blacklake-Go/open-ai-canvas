@@ -12,7 +12,7 @@ import "./crane-orb.css";
  */
 export function CraneOrb({ size, state, className }: ThemeAgentOrbProps) {
     return (
-        <span className={cn("crane-orb", `is-${state}`, className)} style={{ width: size, height: size }} aria-hidden="true">
+        <span className={cn("crane-orb", `is-${state}`, className)} style={{ width: size, height: size }} aria-hidden="true" data-i18n-preserve-source>
             <svg viewBox="0 0 64 64">
                 <circle className="crane-orb-bg" cx="32" cy="32" r="29" />
                 <circle className="crane-orb-ring" cx="32" cy="32" r="29" />

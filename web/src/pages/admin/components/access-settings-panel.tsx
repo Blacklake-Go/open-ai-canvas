@@ -3,6 +3,7 @@ import { Switch } from "@/pages/admin/ui/controls";
 import { AlertTriangle, AppWindow, BadgeCheck, Check, ChevronDown, FileText, Globe2, KeyRound, LockKeyhole, Mail, MailCheck, PanelsTopLeft, RefreshCw, RotateCcw, Save, ShieldCheck, UserPlus, UsersRound } from "lucide-react";
 import { useCallback, useEffect, useRef, useState, type ReactNode } from "react";
 import { useBlocker } from "react-router";
+import { useTranslation } from "react-i18next";
 
 import { cn } from "@/lib/utils";
 import { useAppearanceStore } from "@/stores/use-appearance-store";
@@ -40,6 +41,7 @@ const DEFAULT_AGREEMENT_TEMPLATE = `一、服务说明与接受
 type LinuxDOFormValues = Omit<LinuxDOSetting, "hasClientSecret" | "updatedAt">;
 
 export default function AccessSettingsPanel() {
+    const { t } = useTranslation();
     const { message, modal } = App.useApp();
     const brandName = useAppearanceStore((state) => state.appearance.brandName) || "平台";
     const [linuxdo, setLinuxdo] = useState<LinuxDOSetting | null>(null);
@@ -532,7 +534,7 @@ export default function AccessSettingsPanel() {
                                             <Input inputMode="url" placeholder="https://connect.linux.do/api/user" />
                                         </Form.Item>
                                         <Form.Item name="redirectUrl" label="本站回调地址" extra="必须与 Linux.do OAuth 应用登记值完全一致；推荐使用 /oauth/linuxdo/callback。">
-                                            <Input inputMode="url" placeholder="https://你的域名/oauth/linuxdo/callback" />
+                                            <Input inputMode="url" placeholder="https://example.com/oauth/linuxdo/callback" />
                                         </Form.Item>
                                         <Form.Item name="scopes" label="授权范围（Scopes）" className="admin-access-form-span-full" extra="通常使用 openid、profile、email；按 Linux.do 应用实际授权范围填写。">
                                             <Select mode="tags" tokenSeparators={[",", " "]} placeholder="输入后按回车添加" />
@@ -609,7 +611,7 @@ export default function AccessSettingsPanel() {
                             <Input
                                 value={agreementTitle}
                                 maxLength={60}
-                                placeholder={`${brandName}服务协议`}
+                                placeholder={t("auth.register.defaultAgreement", { brand: brandName })}
                                 onChange={(event) => {
                                     setAgreementTitle(event.target.value);
                                     setAgreementDirty(true);
