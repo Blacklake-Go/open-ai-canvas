@@ -1,4 +1,6 @@
 import { FEDERATION_I18N_ENTRIES } from "../federation";
+import { EMAIL_CENTER_I18N_ENTRIES } from "@/supdance/plugins/email-marketing/messages";
+import { PAGE_MANAGEMENT_ENTRIES } from "@/supdance/plugins/compact-model-picker/page-messages";
 import { HTML_ADMIN_I18N_ENTRIES } from "../html-admin";
 import { PAYMENT_RECONCILIATION_CATALOGS } from "../payment-reconciliation";
 import { MUSIC_SITE_I18N_ENTRIES } from "../music-site";
@@ -6,6 +8,7 @@ import { MARKETING_I18N_ENTRIES } from "@/supdance/marketing/translations";
 
 const pack: Record<string, string> = {
     ...Object.fromEntries(HTML_ADMIN_I18N_ENTRIES.map((entry) => [entry.key, entry.translations["ja-JP"]])),
+    ...Object.fromEntries([...EMAIL_CENTER_I18N_ENTRIES, ...PAGE_MANAGEMENT_ENTRIES].map((entry) => [entry.key, entry.translations["ja-JP"]])),
     ...PAYMENT_RECONCILIATION_CATALOGS["ja-JP"],
     ...Object.fromEntries(FEDERATION_I18N_ENTRIES.map((entry) => [entry.key, entry.translations["ja-JP"]])),
     ...Object.fromEntries(MARKETING_I18N_ENTRIES.map((entry) => [entry.key, entry.translations["ja-JP"]])),

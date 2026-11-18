@@ -91,10 +91,25 @@ func TestSupDanceFederationRequiresCurrentOwnerAndKeepsWalletReadOnly(t *testing
 		t.Fatal(err)
 	}
 	ticket.Purpose, ticket.MainUserID, ticket.ExpiresAt = "wallet-read", user.ID, now.Add(30*time.Second).Unix()
+	for _, entry := range []model.CreditLedgerEntry{
+		{ID: "bridge-reserve", UserID: user.ID, Type: model.CreditLedgerReserve, AmountMicrocredits: -120, AvailableDeltaMicrocredits: -120, ReservedDeltaMicrocredits: 120, BillingOrderID: "bridge-order", CreatedAt: now.Add(-time.Second)},
+		{ID: "bridge-consume", UserID: user.ID, Type: model.CreditLedgerConsume, AmountMicrocredits: -100, ReservedDeltaMicrocredits: -120, BillingOrderID: "bridge-order", CreatedAt: now},
+		{ID: "bridge-refund", UserID: user.ID, Type: model.CreditLedgerRefund, AmountMicrocredits: 20, AvailableDeltaMicrocredits: 20, BillingOrderID: "bridge-order", CreatedAt: now.Add(time.Second)},
+	} {
+		if err := db.Create(&entry).Error; err != nil {
+			t.Fatal(err)
+		}
+	}
 	proof, _ := federation.Sign(onePrivate, ticket, now)
 	wallet, err := svc.FederationWallet(proof)
 	if err != nil || wallet.Account.AvailableMicrocredits != 12_345_000 {
 		t.Fatalf("wallet read: %+v %v", wallet, err)
+	}
+	if wallet.Total != 2 || len(wallet.Entries) != 2 {
+		t.Fatal("ONE ledger rows were replaced by grouped site history")
+	}
+	if wallet.Entries[0].ID != "bridge-refund" || wallet.Entries[1].ID != "bridge-consume" {
+		t.Fatal("ONE must preserve the original posted-ledger order and reserve exclusion")
 	}
 	resource := &model.Resource{ID: "community-resource", UserID: user.ID, Kind: "image", Status: model.ResourceStatusReady, MimeType: "image/png", ObjectKey: "private/test.png", PublicURL: "https://private.example/must-not-leak"}
 	if err := db.Create(resource).Error; err != nil {
@@ -132,7 +147,7 @@ func TestSupDanceFederationRequiresCurrentOwnerAndKeepsWalletReadOnly(t *testing
 		t.Fatalf("read changed account count: %d", count)
 	}
 	db.Model(&model.CreditLedgerEntry{}).Count(&count)
-	if count != 0 {
+	if count != 3 {
 		t.Fatal("identity link wrote a credit ledger entry")
 	}
 	t.Setenv("CANVAS_SUPDANCE_FEDERATION_ENABLED", "false")

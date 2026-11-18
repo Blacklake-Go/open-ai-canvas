@@ -105,7 +105,21 @@ jobs:
           echo "$RUNNER_TEMP/redis/bin" >> "$GITHUB_PATH"
           "$RUNNER_TEMP/redis/bin/redis-server" --version
       - name: Install FFmpeg for media verification
-        run: sudo apt-get update -qq && sudo apt-get install -y -qq ffmpeg
+        timeout-minutes: 5
+        run: |
+          if ! command -v ffmpeg >/dev/null || ! command -v ffprobe >/dev/null; then
+            # 只刷新媒体依赖所需的 Ubuntu 源，避免运行器附带的第三方源阻塞所有分片。
+            sources="$RUNNER_TEMP/ubuntu-media.sources.list"
+            printf '%s\n' \
+              'deb https://archive.ubuntu.com/ubuntu noble main universe' \
+              'deb https://archive.ubuntu.com/ubuntu noble-updates main universe' \
+              'deb https://security.ubuntu.com/ubuntu noble-security main universe' > "$sources"
+            apt_options=(-o "Dir::Etc::sourcelist=$sources" -o Dir::Etc::sourceparts=- -o Acquire::Retries=1 -o Acquire::http::Timeout=15 -o Acquire::https::Timeout=15 -o DPkg::Lock::Timeout=30)
+            sudo apt-get "${apt_options[@]}" update
+            sudo env DEBIAN_FRONTEND=noninteractive apt-get "${apt_options[@]}" install -y --no-install-recommends ffmpeg
+          fi
+          ffmpeg -version
+          ffprobe -version
       - name: Check formatting
         if: matrix.shard == 'rest'
         shell: bash

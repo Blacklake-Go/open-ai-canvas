@@ -3,6 +3,7 @@ import { i18n } from "@/i18n";
 import type { ModelCapabilityConfig } from "@/lib/model-capabilities";
 import type { ImageCapabilityConfig } from "@/lib/model-capabilities";
 import type { ChannelModel, ChannelModelPriceTier, TokenPriceBand, TokenPriceRule } from "@/services/api/wallet";
+import { imagePricingToForm, imagePricingPayload, validImagePricingForm, type ImagePricingForm } from "@/lib/image-usage-pricing";
 
 export type PriceTierMatchMode = "default" | "advanced";
 
@@ -102,6 +103,8 @@ export function normalizeUpstreamModelKey(value: unknown): string {
 export type PriceTierFormValues = {
     tokenPriceBandsJSON?: string;
     costTokenPriceBandsJSON?: string;
+    imagePricing?: ImagePricingForm;
+    costImagePricing?: ImagePricingForm;
     imageSelector?: Record<string, string>;
     matchMode: PriceTierMatchMode;
     operation: string;
@@ -194,6 +197,8 @@ export function priceTierToForm(tier: ChannelModelPriceTier, image?: ImageCapabi
     return {
         tokenPriceBandsJSON: JSON.stringify(tier.tokenPriceBands || [], null, 2),
         costTokenPriceBandsJSON: JSON.stringify(tier.costPricing?.tokenPriceBands || [], null, 2),
+        imagePricing: imagePricingToForm(tier.imagePricing),
+        costImagePricing: imagePricingToForm(tier.costPricing?.imagePricing),
         matchMode: hasSpecificMatch ? "advanced" : "default",
         operation: selector.operation || "*",
         imageSelector: Object.fromEntries(Object.entries(selector).filter(([name]) => name !== "operation")),
@@ -295,6 +300,7 @@ export function priceTierPayloadFromForm(capability: ModelCapabilityChoice, tier
     if (tier.tokenRulesEnabled && tokenPriceBands.length) throw new Error(i18n.t("upstreamSync.conflictingPrices"));
     return {
         tokenPriceBands,
+        imagePricing: tier.billingMode === "image_usage" ? imagePricingPayload(tier.imagePricing) : undefined,
         tokenPriceRulesEnabled: tokenRules.length > 0 && tier.tokenRulesEnabled === true,
         tokenPriceRules: tokenRules,
         selector: skuSelectorFromForm(capability, tier, capabilityConfig),
@@ -312,6 +318,7 @@ export function priceTierPayloadFromForm(capability: ModelCapabilityChoice, tier
         referenceVideoOutputTokenPriceMicrocredits: videoTokens ? Math.round((tier.referenceVideoOutputTokenPrice || 0) * 1_000_000) : 0,
         costPricing: {
             tokenPriceBands: capability === "text" && tier.billingMode === "token" ? parseTokenPriceBands(tier.costTokenPriceBandsJSON) : [],
+            imagePricing: tier.costConfigured && tier.billingMode === "image_usage" ? imagePricingPayload(tier.costImagePricing) : undefined,
             configured: tier.costConfigured,
             unitPriceMicrocredits: Math.round(tier.costUnitPrice * 1_000_000),
             inputTokenPriceMicrocredits: videoTokens ? 0 : Math.round(tier.costInputTokenPrice * 1_000_000),
@@ -342,6 +349,7 @@ export function parseTokenPriceBands(value?: string): TokenPriceBand[] {
 }
 
 export function priceTierAmountsComplete(capability: ModelCapabilityChoice | undefined, tier: PriceTierFormValues, referenceVideoBilling = false) {
+    if (tier.billingMode === "image_usage") return capability === "image" && validImagePricingForm(tier.imagePricing);
     const prices = tier.billingMode !== "token" ? [tier.unitPrice] : capability === "video" ? [tier.outputTokenPrice] : [tier.inputTokenPrice, tier.outputTokenPrice, tier.cachedTokenPrice, tier.cacheWriteTokenPrice];
     if (capability === "video" && referenceVideoBilling && tier.billingMode !== "fixed_request") prices.push(tier.billingMode === "token" ? tier.referenceVideoOutputTokenPrice : tier.referenceVideoUnitPrice);
     return prices.every((price) => typeof price === "number" && Number.isFinite(price) && price >= 0 && price <= 1_000_000);

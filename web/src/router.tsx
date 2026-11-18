@@ -1,8 +1,11 @@
 import { lazy, Suspense, type ReactNode } from "react";
 import { createBrowserRouter, Navigate, Outlet, useLocation, type RouteObject } from "react-router";
+import { PageManagementRedirect } from "@/supdance/plugins/compact-model-picker/page-redirect";
 import { lazyAdminPage } from "@/pages/admin/admin-page-loader";
 
+import { AuthDialogHost } from "@/components/auth/auth-dialog-host";
 import { RequireAuth } from "@/components/auth/require-auth";
+import { RequireSkillAdmin } from "@/components/auth/require-skill-admin";
 // 功能开关守卫包在页面 Suspense 之外，懒加载会让整个工作区退回全屏加载页；体积很小，直接静态引入。
 import { RequireFeature } from "@/components/auth/require-feature";
 import { FullScreenLoader, WorkspaceRouteLoader } from "@/components/ui/aceternity/full-screen-loader";
@@ -31,6 +34,8 @@ const AgentLessonsPage = lazyAdminPage(() => import("@/pages/admin/admin-route-p
 const ChannelsPage = lazyAdminPage(() => import("@/pages/admin/channels/channels-page"));
 const LogicalModelsPage = lazyAdminPage(() => import("@/pages/admin/logical-models/logical-models-page"));
 const AdminPluginsPage = lazyAdminPage(() => import("@/pages/admin/plugins/plugins-page"));
+const AdminOfficialAssetsPage = lazyAdminPage(() => import("@/pages/admin/official-assets-page"));
+const AdminOfficialAssetRecommendationsPage = lazyAdminPage(() => import("@/pages/admin/official-asset-recommendations-page"));
 const AdminMCPPage = lazyAdminPage(() => import("@/pages/admin/mcp/mcp-page"));
 const SkillCurationPage = lazyAdminPage(() => import("@/pages/admin/skill-curation-page"));
 const AdminSkillsPage = lazyAdminPage(() => import("@/pages/admin/skills/skills-page"));
@@ -61,9 +66,8 @@ const SocialAuthSettingsPage = lazyAdminPage(() => import("@/supdance/plugins/so
 const SocialAuthOperationsPage = lazyAdminPage(() => import("@/supdance/plugins/social-auth/admin/social-auth-operations-page"));
 const MusicWorkbenchPage = lazy(() => import("@/supdance/plugins/music-generation/pages/music-workbench-page"));
 const MusicAdminSettingsPage = lazyAdminPage(() => import("@/supdance/plugins/music-generation/admin/music-admin-settings-page"));
-const CompactPickerAdmin = lazyAdminPage(() => import("@/supdance/plugins/compact-model-picker/admin"));
+const PageManagement = lazyAdminPage(() => import("@/supdance/plugins/compact-model-picker/page-management"));
 const DarkLoginPage = lazy(() => import("@/supdance/pages/dark-login-page"));
-const HtmlPageManager = lazyAdminPage(() => import("@/supdance/plugins/html-page-manager/admin/html-page-manager"));
 const TermsPage = lazy(() => import("@/supdance/pages/legal/terms-page"));
 const PrivacyPage = lazy(() => import("@/supdance/pages/legal/privacy-page"));
 const AupPage = lazy(() => import("@/supdance/pages/legal/aup-page"));
@@ -124,6 +128,15 @@ function AuthenticatedWorkspaceLayout() {
     );
 }
 
+function RootLayout() {
+    return (
+        <SupDanceRouteHosts>
+            <Outlet />
+            <AuthDialogHost />
+        </SupDanceRouteHosts>
+    );
+}
+
 /**
  * DEV 专用实验室路由。
  *
@@ -137,10 +150,18 @@ function devRoutes() {
     const PrevisReproLab = lazy(() => import("@/pages/dev/previs-repro-lab"));
     const TestVoiceRecording = lazy(() => import("@/pages/test-voice-recording"));
     const DesignSystemShowcase = lazy(() => import("@/pages/dev/design-system-showcase"));
+    const MusicPreviewLab = lazy(() => import("@/pages/dev/music-preview-lab"));
+    const AppStorePage = lazy(() => import("@/pages/app-store"));
+    const TapTvPage = lazy(() => import("@/pages/taptv"));
     return [
+        { path: "/home/app-store", element: fullScreenDeferred(<AppStorePage />), errorElement: <RouteErrorPage /> },
+        { path: "/app-store", element: fullScreenDeferred(<AppStorePage />), errorElement: <RouteErrorPage /> },
+        { path: "/home/taptv", element: fullScreenDeferred(<TapTvPage />), errorElement: <RouteErrorPage /> },
+        { path: "/taptv", element: fullScreenDeferred(<TapTvPage />), errorElement: <RouteErrorPage /> },
         { path: "/dev/folders", element: fullScreenDeferred(<FolderPreviewLab />), errorElement: <RouteErrorPage /> },
         { path: "/dev/previs-repro", element: fullScreenDeferred(<PrevisReproLab />), errorElement: <RouteErrorPage /> },
         { path: "/dev/design-system", element: fullScreenDeferred(<DesignSystemShowcase />), errorElement: <RouteErrorPage /> },
+        { path: "/dev/music-preview", element: fullScreenDeferred(<MusicPreviewLab />), errorElement: <RouteErrorPage /> },
         { path: "/test-voice-recording", element: <RequireAuth>{fullScreenDeferred(<TestVoiceRecording />)}</RequireAuth>, errorElement: <RouteErrorPage /> },
     ];
 }
@@ -205,8 +226,8 @@ const routes: RouteObject[] = [
                 ),
             },
             { path: "/assets", element: <RequireAuth>{deferred(<AssetsPage />)}</RequireAuth> },
-            { path: "/skills", element: <RequireAuth>{deferred(<SkillsPage />)}</RequireAuth> },
-            { path: "/skills/:skillId/edit", element: <RequireAuth>{deferred(<SkillWorkbenchPage />)}</RequireAuth> },
+            { path: "/skills", element: <RequireSkillAdmin>{deferred(<SkillsPage />)}</RequireSkillAdmin> },
+            { path: "/skills/:skillId/edit", element: <RequireSkillAdmin>{deferred(<SkillWorkbenchPage />)}</RequireSkillAdmin> },
             {
                 path: "/plugins",
                 element: (
@@ -298,12 +319,18 @@ const routes: RouteObject[] = [
                     { path: "ecommerce-categories", element: <Navigate to="/admin/ecommerce/library/categories" replace /> },
                     { path: "plugins", element: <AdminPluginsPage /> },
                     { path: "plugins/music-generation", element: <MusicAdminSettingsPage /> },
-                    { path: "plugins/compact-model-picker", element: <CompactPickerAdmin /> },
+                    { path: "plugins/page-management", element: <PageManagement /> },
+                    { path: "plugins/compact-model-picker", element: <PageManagementRedirect section="models" /> },
                     { path: "i18n", element: <Navigate to="/admin/i18n/settings" replace /> },
                     { path: "i18n/settings", element: <SupDanceI18nSettingsPage /> },
                     { path: "i18n/entries", element: <SupDanceI18nEntriesPage /> },
-                    { path: "plugins/html-pages", element: <HtmlPageManager /> },
+                    { path: "plugins/html-pages", element: <PageManagementRedirect section="html" /> },
+                    { path: "plugins/email-marketing", element: <PageManagementRedirect section="email" /> },
+                    { path: "email-center", element: <PageManagementRedirect section="email" /> },
+                    { path: "email-marketing", element: <Navigate to="/admin/plugins/email-marketing" replace /> },
                     { path: "html-pages", element: <Navigate to="/admin/plugins/html-pages" replace /> },
+                    { path: "official-assets", element: <AdminOfficialAssetsPage /> },
+                    { path: "official-asset-recommendations", element: <AdminOfficialAssetRecommendationsPage /> },
                     { path: "mcp", element: <AdminMCPPage /> },
                     { path: "workbench-tools", element: <WorkbenchToolsPage /> },
                     { path: "pose-library", element: <PoseLibraryAdminPage /> },
@@ -346,4 +373,4 @@ const routes: RouteObject[] = [
     { path: "*", element: fullScreenDeferred(<NotFound />) },
 ];
 
-export const router = createBrowserRouter([{ element: <SupDanceRouteHosts />, errorElement: <RouteErrorPage />, children: routes }]);
+export const router = createBrowserRouter([{ element: <RootLayout />, children: routes }]);

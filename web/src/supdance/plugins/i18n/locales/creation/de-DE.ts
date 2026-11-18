@@ -1,5 +1,9 @@
 // Native interface catalog for ecommerce and novel adaptation.
 const pack: Record<string, string> = {
+    "creation.88f4625eade235b7": "Umbenennen",
+    "creation.1dfc5bde70de7514": "Episode {value1} umbenennen",
+    "creation.f42a1238b44a4858": "Speichern fehlgeschlagen. Bitte erneut versuchen.",
+    "creation.5110640086b8db25": "Prompt wird gespeichert…",
     "creation.a9035e0b94c777c4": "Die vorherigen Kapitel werden noch in Folgen aufgeteilt. {value1} einer neuen Folge ist erst danach möglich.",
     "creation.88b62416a83e9ce5": "Die vorherigen Kapitel werden noch in Folgen aufgeteilt. Löschen ist erst danach möglich.",
     "creation.51d702b542959835": "Ein Projekt muss mindestens eine Folge behalten. Das gesamte Projekt lässt sich in der Projektliste löschen.",

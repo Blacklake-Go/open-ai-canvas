@@ -2,6 +2,8 @@ import { useEffect, useState } from "react";
 import { Alert, Button, Select, Space } from "antd";
 import { useTranslation } from "react-i18next";
 import { translate } from "@/i18n";
+import { useSkillLibraryAccess } from "@/lib/skill-access";
+import { useUserStore } from "@/stores/use-user-store";
 import { getActiveUserScope } from "@/lib/user-scope";
 import { getSkillCuration, type SkillCuration } from "@/services/api/skill-curation";
 import type { Skill } from "@/services/api/skills";
@@ -27,11 +29,18 @@ export function curationQuery(data: SkillCuration | null, value: string) {
 }
 
 export function useSkillCuration(active = true) {
-    const scope = getActiveUserScope();
+    const allowed = useSkillLibraryAccess();
+    const userId = useUserStore((state) => state.user?.id);
+    const scope = `${getActiveUserScope()}:${userId || ""}`;
     const [result, setResult] = useState<{ scope: string; data: SkillCuration } | null>(null);
     const [error, setError] = useState("");
     const [reload, setReload] = useState(0);
     useEffect(() => {
+        if (!allowed) {
+            setResult(null);
+            setError("");
+            return;
+        }
         if (!active) return;
         let cancelled = false;
         setError("");
@@ -53,8 +62,8 @@ export function useSkillCuration(active = true) {
             window.removeEventListener("focus", refresh);
             window.removeEventListener("canvas-skills-changed", refresh);
         };
-    }, [active, scope, reload]);
-    return { curation: result?.scope === scope ? result.data : null, error, retry: () => setReload((value) => value + 1) };
+    }, [active, scope, reload, allowed]);
+    return { curation: allowed && result?.scope === scope ? result.data : null, error: allowed ? error : "", retry: () => setReload((value) => value + 1) };
 }
 
 export function matchesCuration(skill: Skill, data: SkillCuration | null, category: string) {

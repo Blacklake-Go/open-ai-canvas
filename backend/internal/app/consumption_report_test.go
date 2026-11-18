@@ -27,7 +27,7 @@ func newConsumptionReportTestService(t *testing.T) (*Service, *gorm.DB, *[]repor
 	}
 	sqlDB, _ := db.DB()
 	t.Cleanup(func() { _ = sqlDB.Close() })
-	if err := db.AutoMigrate(&model.User{}, &model.SystemSetting{}, &model.CreditAccount{}, &model.CreditLedgerEntry{}, &model.BillingOrder{}, &model.EmailLog{}, &model.UserNotificationSetting{}); err != nil {
+	if err := db.AutoMigrate(&model.User{}, &model.SystemSetting{}, &model.CreditAccount{}, &model.CreditLedgerEntry{}, &model.BillingOrder{}, &model.EmailLog{}, &model.UserNotificationSetting{}, &model.SupDanceEmailReceipt{}, &model.SupDanceEmailContact{}); err != nil {
 		t.Fatal(err)
 	}
 	encoded, _ := json.Marshal(auth.EmailSettingValue{Enabled: true, Host: "smtp.example.com", Port: 587, Encryption: "starttls", FromEmail: "noreply@example.com", FromName: "影策"})
@@ -98,7 +98,7 @@ func TestConsumptionReportSendsOnceAt2359ForSubscribedSpenders(t *testing.T) {
 		}
 	}
 	var log model.EmailLog
-	if err := db.First(&log, "purpose = ?", auth.EmailPurposeConsumptionReport).Error; err != nil || log.Status != "sent" || log.UserID != "spender" {
+	if err := db.First(&log, "purpose = ?", auth.EmailPurposeConsumptionReport).Error; err != nil || log.Status != "smtp_accepted" || log.UserID != "spender" {
 		t.Fatalf("report delivery must be logged: %+v %v", log, err)
 	}
 }

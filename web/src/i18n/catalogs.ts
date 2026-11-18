@@ -13,6 +13,8 @@ import { toI18nextTemplate } from "./interpolation";
 import { PAYMENT_RECONCILIATION_CATALOGS } from "@/supdance/plugins/i18n/locales/payment-reconciliation";
 
 import { flattenCatalog } from "./catalog-utils";
+import { personalAppearanceMessages } from "./personal-appearance-messages";
+import { personalAvatarMessages } from "./personal-avatar-messages";
 export { flattenCatalog, expandCatalog } from "./catalog-utils";
 
 const core = { "zh-CN": zhCN, "en-US": enUS, "fr-FR": frFR, "de-DE": deDE, "ja-JP": jaJP, "ko-KR": koKR };
@@ -27,6 +29,7 @@ export const NATIVE_CATALOGS: Record<AppLocale, Record<string, string>> = {
     "es-ES": esES,
 };
 for (const code of Object.keys(NATIVE_CATALOGS) as AppLocale[]) {
+    Object.assign(NATIVE_CATALOGS[code], flattenCatalog({ personalAppearance: personalAppearanceMessages[code], personalAvatar: personalAvatarMessages[code] }));
     Object.assign(NATIVE_CATALOGS[code], PAYMENT_RECONCILIATION_CATALOGS[code]);
     Object.assign(NATIVE_CATALOGS[code], Object.fromEntries(Object.entries(interfaceCatalogs[code]).map(([key, text]) => [key, toI18nextTemplate(text)])));
 }

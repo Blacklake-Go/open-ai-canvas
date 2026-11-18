@@ -1,4 +1,8 @@
 {
+    "creation.88f4625eade235b7": "Cambiar nombre",
+    "creation.1dfc5bde70de7514": "Cambiar el nombre del episodio {value1}",
+    "creation.f42a1238b44a4858": "No se pudo guardar. Inténtalo de nuevo.",
+    "creation.5110640086b8db25": "Guardando el prompt…",
     "creation.9b904c0e2fafe983": "Volver a seleccionar",
     "projects.export_assets": "Exportar todos los activos",
     "projects.import_assets": "Importar paquete de activos",

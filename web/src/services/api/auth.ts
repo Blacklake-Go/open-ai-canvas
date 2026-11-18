@@ -1,3 +1,4 @@
+import { useLocaleStore } from "@/stores/use-locale-store";
 import type { ModelChannel } from "@/stores/use-config-store";
 import type { BillingOrder, CreditLedgerEntry } from "@/services/api/wallet";
 import type { GenerationTask, TaskStatus } from "@/services/api/task-center";
@@ -20,6 +21,7 @@ export function invalidateAuthSessionCache() {
 }
 
 export type LocalUser = {
+    preferredLocale?: string;
     id: string;
     username: string;
     email?: string;
@@ -480,6 +482,9 @@ export type AuthSettings = VerificationPolicy & {
     agreementTitle?: string;
     agreementContent?: string;
     loginMode: AuthLoginMode;
+    /** Cloudflare Turnstile only exposes the public site key to the browser. */
+    turnstileEnabled: boolean;
+    turnstileSiteKey: string;
 };
 
 export function getAuthSettings() {
@@ -553,7 +558,7 @@ export function updateAdminFeatureAvailability(
 }
 
 /** autoRegister：一体表单在账号不存在且允许注册时收到 reason=account_not_registered，而不是“密码不正确”。 */
-export async function login(input: { username: string; password: string; autoRegister?: boolean }) {
+export async function login(input: { username: string; password: string; autoRegister?: boolean; turnstileToken?: string }) {
     const result = await http.post<{ user: LocalUser }>("/auth/login", input, { session: "public" });
     // 登录会改变服务端会话身份，不能让登录前缓存的游客 session 污染后续恢复。
     invalidateAuthSessionCache();
@@ -561,19 +566,31 @@ export async function login(input: { username: string; password: string; autoReg
 }
 
 export function sendRegistrationEmailCode(email: string) {
-    return http.post<{ sent: boolean }>("/auth/email-code", { email }, { session: "public" });
+    return http.post<{ sent: boolean }>("/auth/email-code", { email, locale: useLocaleStore.getState().locale }, { session: "public" });
 }
 
 export function sendPasswordResetEmailCode(email: string) {
-    return http.post<{ sent: boolean }>("/auth/password-reset-code", { email }, { session: "public" });
+    return http.post<{ sent: boolean }>("/auth/password-reset-code", { email, locale: useLocaleStore.getState().locale }, { session: "public" });
 }
 
 export function resetPassword(input: { email: string; emailCode: string; password: string }) {
     return http.post<{ reset: boolean }>("/auth/password-reset", input, { session: "public" });
 }
 
-export async function register(input: { username: string; email?: string; emailCode?: string; phone?: string; smsCode?: string; ticket?: string; displayName?: string; password: string; acceptedTerms: boolean; referralCode?: string }) {
-    const result = await http.post<{ user: LocalUser }>("/auth/register", input, { session: "public" });
+export async function register(input: {
+    username: string;
+    email?: string;
+    emailCode?: string;
+    phone?: string;
+    smsCode?: string;
+    ticket?: string;
+    displayName?: string;
+    password: string;
+    acceptedTerms: boolean;
+    referralCode?: string;
+    turnstileToken?: string;
+}) {
+    const result = await http.post<{ user: LocalUser }>("/auth/register", { ...input, preferredLocale: useLocaleStore.getState().locale }, { session: "public" });
     invalidateAuthSessionCache();
     return result;
 }

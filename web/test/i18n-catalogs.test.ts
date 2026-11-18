@@ -13,6 +13,7 @@ import { zhCN } from "@/i18n/messages/zh-CN";
 import { formatRelativeTime } from "@/lib/relative-time";
 import { localizedApiErrorMessage } from "@/services/api/error-codes";
 import { useLocaleStore } from "@/stores/use-locale-store";
+import { useUserStore } from "@/stores/use-user-store";
 
 function flatten(value: unknown, prefix = "", result: Record<string, string> = {}): Record<string, string> {
     if (typeof value === "string") result[prefix] = value;
@@ -25,8 +26,10 @@ const placeholders = (text: string) => [...text.matchAll(/\{\{(\w+)\}\}/g)].map(
 afterEach(() => useLocaleStore.getState().setLocale("zh-CN"));
 
 describe("i18n catalogs", () => {
-    test("legal language selection updates the explicit link language and retains its other parameters and anchor", () => {
+    test("legal language selection updates the explicit link language and retains its other parameters and anchor", async () => {
         const original = Object.getOwnPropertyDescriptor(globalThis, "window");
+        const originalUser = useUserStore.getState().user;
+        useUserStore.setState({ user: null });
         let destination = "";
         Object.defineProperty(globalThis, "window", {
             configurable: true,
@@ -42,13 +45,14 @@ describe("i18n catalogs", () => {
         });
         try {
             useLocaleStore.getState().setLocale("fr-FR");
-            switchLocale("es-ES", { updateLanguageQuery: true });
+            await switchLocale("es-ES", { updateLanguageQuery: true });
             const url = new URL(destination);
             expect(url.searchParams.get("lang")).toBe("es-ES");
             expect(url.searchParams.get("return")).toBe("/create");
             expect(url.hash).toBe("#rights");
             expect(useLocaleStore.getState().locale).toBe("es-ES");
         } finally {
+            useUserStore.setState({ user: originalUser });
             if (original) Object.defineProperty(globalThis, "window", original);
             else Reflect.deleteProperty(globalThis, "window");
         }

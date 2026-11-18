@@ -1,5 +1,17 @@
 
 
+## 邮件中心候选
+
+后续用户已授权将邮件中心候选合入上游 v1.8.6 并部署。最新集成、二开保留、迁移及验证证据统一见 [本次集成记录](UPSTREAM_20261118.md)；下列候选限制描述保留其原阶段含义。
+
+本次集成同时登记 `.github/workflows/quality.yml` 的媒体工具准备：先验证运行器现有 FFmpeg/ffprobe，缺失时才有界安装；不改变媒体用例、服务依赖检查或支付双架构门禁。
+
+当前候选 1.2.0 增加八语言纯文案域、账号偏好、88 个独立模板、活动语言映射和站点 Logo 自动核对；Schema 107 仅增量添加五个字段。复用 `supdance-compact-model-picker` 插件 ID，显示为「页面管理」，聚合模型展示、HTML 页面和邮件原组件。语言菜单、注册/统一验证/社交入站邮件参数、个人设置及路由接触点均登记同一邮件补丁；不改认证规则、画廊开关或用户营销同意。当前设计、旧入口和回退边界见 [八语言说明](EMAIL_CENTER_LANGUAGES.md)。
+
+保留 `supdance-email-marketing` 身份，以独立邮件域、原 SMTP、后台组件和原权限形成统一邮件中心。认证挑战保持原合同，保护模块接收服务端真实凭证与时效；旧模板只读存档，草稿和发布版本分离，品牌及图片按哈希保存快照。Schema 106 仅新增 `supdance_email_*` 表，日志通过独立 log_id 关联新收据，原日志主键和 90 天保留策略不变。
+
+不可避免的核心接触点登记在 `SUPDANCE_UPSTREAM_PATCH_REGISTRY` 的 `supdance-email-center`。所有现有邮件调用集中经过原认证域；营销任务有独立连接/额度、明确同意与退订检查、有限重试和未知结果终止。账户邮件不依赖用户营销插件状态。候选没有生产切换、DNS 修改或真实外发授权，基线与未测范围见 [邮件中心说明](./EMAIL_CENTER.md)。
+
 ## 支付下单名额与账单能力边界
 
 `internal/repository/payment.go` 将过期非终态订单与可付款名额分离，保留旧插件依赖和晚到支付幂等路径；不通过改写订单终态解除阻塞。`payment_reconciliation.go`、model、导出及后台支付页新增明确的 `unsupported` 终态，插件未实现账单时不再作为临时失败反复重试，也不标记核对成功。支付宝适配器仅将账单查询的已验签 `NO_BILL_DATA` 映射为无账单。八语提示集中在 `supdance/plugins/i18n/locales/payment-reconciliation.ts`，复用后台 Badge 与 Callout。无数据库结构迁移，不改价格、余额、权限和支付通知验签。

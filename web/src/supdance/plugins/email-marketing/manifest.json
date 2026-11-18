@@ -1,0 +1,27 @@
+{
+    "apiVersion": "2.0.0",
+    "id": "supdance-email-marketing",
+    "name": "邮件中心",
+    "version": "1.2.0",
+    "publishedAt": "2026-11-17",
+    "updatedAt": "2026-11-17",
+    "minHostVersion": "1.7.1",
+    "author": "SupDance Team",
+    "description": "统一管理系统邮件、营销内容、站点品牌、模板版本、订阅偏好与 SMTP 发送记录。",
+    "surfaces": ["fullscreen", "settings"],
+    "permissions": ["canvas.read"],
+    "trusted": true,
+    "runtime": {
+        "backend": "declarative",
+        "web": "declarative"
+    },
+    "contributes": {
+        "usageObservers": ["supdance-email-marketing"],
+        "commands": [
+            {
+                "id": "supdance-email-marketing.open-editor",
+                "label": "打开邮件中心"
+            }
+        ]
+    }
+}

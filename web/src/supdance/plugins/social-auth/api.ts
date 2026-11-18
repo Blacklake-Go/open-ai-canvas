@@ -1,3 +1,4 @@
+import { useLocaleStore } from "@/stores/use-locale-store";
 import { compactApiParams, http } from "@/services/api/request";
 import type { LocalUser } from "@/services/api/auth";
 import type {
@@ -91,7 +92,7 @@ export async function getSocialOnboardingProfile(signal?: AbortSignal) {
 }
 
 export function sendSocialOnboardingEmailCode(email: string) {
-    return http.post<{ ticket: string; expiresIn: number; retryAfter: number }>("/auth/social/onboarding/email-code", { email });
+    return http.post<{ ticket: string; expiresIn: number; retryAfter: number }>("/auth/social/onboarding/email-code", { email, locale: useLocaleStore.getState().locale });
 }
 
 export async function completeSocialOnboarding(req: CompleteOnboardingRequest) {

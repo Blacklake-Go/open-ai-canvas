@@ -125,6 +125,7 @@ func exportChannelModel(item model.ChannelModel) (SystemChannelExportModel, erro
 		}
 		tiers = append(tiers, ChannelModelPriceTierRequest{
 			TokenPriceBands: tier.TokenPriceBands,
+			ImagePricing:    tier.ImagePricing,
 			CostPricing:     tier.CostPricing, Selector: selector, Resolution: tier.Resolution, VideoSeconds: tier.VideoSeconds,
 			ProviderModelKey: tier.ProviderModelKey, BillingMode: tier.BillingMode, UnitPriceMicrocredits: tier.UnitPriceMicrocredits,
 			InputTokenPriceMicrocredits: tier.InputTokenPriceMicrocredits, OutputTokenPriceMicrocredits: tier.OutputTokenPriceMicrocredits,

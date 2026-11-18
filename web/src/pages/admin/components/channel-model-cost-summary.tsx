@@ -30,6 +30,22 @@ export function ChannelModelCostSummary({ item }: { item: ChannelModel }) {
 
 function PriceLabel({ tier, capability, currency }: { tier: ChannelModelPriceTier; capability: ChannelModel["capability"]; currency?: ChannelModel["priceCurrency"] }) {
     const saleUnit = priceCurrencyUnit(currency);
+    if (tier.billingMode === "image_usage" && tier.imagePricing) {
+        const pricing = tier.imagePricing;
+        return (
+            <div>
+                <div>
+                    输入 {formatModelPrice(pricing.inputPriceMicrocredits)} {saleUnit} / 张{pricing.freeInputImages ? `（前 ${pricing.freeInputImages} 张免费）` : ""}
+                </div>
+                {pricing.outputTiers.map((output, index) => (
+                    <div key={index}>
+                        输出 {output.maxPixels ? `≤ ${output.maxPixels.toLocaleString()} 像素` : "不限像素"}：{formatModelPrice(output.unitPriceMicrocredits)} {saleUnit} / 张
+                    </div>
+                ))}
+                <span className="admin-model-cost-unit">按实际用量结算 · {tier.costPricing?.configured ? "已配置独立成本" : "未配置成本"}</span>
+            </div>
+        );
+    }
     return modelPriceFields(tier, capability).map(({ key, label, unit }) => {
         const cost = tier.costPricing?.configured ? tier.costPricing[key] : undefined;
         const sale = tier.priceConfigured ? tier[key] : undefined;

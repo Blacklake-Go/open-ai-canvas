@@ -81,7 +81,7 @@ func TestPasswordResetRecordsSkipReasonsAndDeliveries(t *testing.T) {
 	}
 	expect("missing@example.com", "skipped:该邮箱未绑定任何账号", 0)
 	expect("oauth@example.com", "skipped:账号未设置密码", 0)
-	expect("member@example.com", "sent:", 0)
+	expect("member@example.com", "smtp_accepted:", 0)
 	expect("member@example.com", "skipped:60 秒内已发送过", 1)
 	expect("broken@example.com", "failed:550 mailbox unavailable", 0)
 }

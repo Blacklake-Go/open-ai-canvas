@@ -32,6 +32,9 @@ func registerNotificationRoutes(r *gin.RouterGroup, svc *service.Service) {
 				return
 			}
 		}
+		if req.Locale == "" {
+			req.Locale = c.GetHeader("Accept-Language")
+		}
 		result, err := svc.StartVerification(c.Request.Context(), actor, req)
 		if err != nil {
 			failService(c, err)
@@ -50,6 +53,7 @@ func registerNotificationRoutes(r *gin.RouterGroup, svc *service.Service) {
 			return
 		}
 		req.LoginContext = loginRequestContext(c)
+		req.Context = c.Request.Context()
 		c.Set("login_audit_handled", true)
 		result, err := svc.LoginVerification(req)
 		if err != nil {

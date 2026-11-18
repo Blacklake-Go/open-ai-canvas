@@ -3,6 +3,7 @@ package model
 import "time"
 
 type User struct {
+	PreferredLocale string     `json:"preferredLocale" gorm:"size:16;not null;default:''"`
 	ID              string     `json:"id" gorm:"primaryKey;size:36"`
 	Username        string     `json:"username" gorm:"uniqueIndex;size:80"`
 	Email           string     `json:"email,omitempty" gorm:"size:160"`

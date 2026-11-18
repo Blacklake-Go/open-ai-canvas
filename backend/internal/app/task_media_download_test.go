@@ -89,7 +89,7 @@ func TestDownloadTaskMediaStopsStalledUpstreamAsRetryable(t *testing.T) {
 		t.Fatalf("stalled download waited for the total deadline: %s", elapsed)
 	}
 	entries, err := os.ReadDir(filepath.Join(s.dataDir, "media-staging"))
-	if err != nil || len(entries) != 0 {
+	if (err != nil && !errors.Is(err, os.ErrNotExist)) || len(entries) != 0 {
 		t.Fatalf("partial staging file left behind: %d %v", len(entries), err)
 	}
 }

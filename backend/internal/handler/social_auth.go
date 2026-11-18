@@ -130,13 +130,14 @@ func RegisterSocialAuthRoutes(api *gin.RouterGroup, svc *service.Service) {
 			return
 		}
 		var req struct {
-			Email string `json:"email"`
+			Email  string `json:"email"`
+			Locale string `json:"locale"`
 		}
 		if err := c.ShouldBindJSON(&req); err != nil {
 			fail(c, http.StatusBadRequest, err)
 			return
 		}
-		result, err := svc.SendSocialOnboardingEmail(c.Request, ticket, req.Email)
+		result, err := svc.SendSocialOnboardingEmail(c.Request, ticket, req.Email, req.Locale)
 		if err != nil {
 			failService(c, err)
 			return

@@ -227,11 +227,7 @@ func (s *Service) SendProfileEmailCode(ctx context.Context, actor *model.User, c
 		}
 		return nil, err
 	}
-	rendered, err := codeMail(emailtpl.CodeEmail{Brand: setting.FromName, Heading: "更换邮箱", Intro: "你正在把" + setting.FromName + "账号的邮箱更换为 " + email + "。请在账号设置页输入下方验证码完成验证。", Code: code, TTLMinutes: 10, Recipient: email})
-	if err != nil {
-		return nil, err
-	}
-	if err := s.deliverEmail(setting, EmailDelivery{Purpose: EmailPurposeProfileEmail, UserID: user.ID, Recipient: email, Mail: rendered}); err != nil {
+	if err := s.deliverEmail(setting, EmailDelivery{Purpose: EmailPurposeProfileEmail, UserID: user.ID, Recipient: email, EventID: v.ID, Code: code, ExpiresAt: v.ExpiresAt}); err != nil {
 		return nil, kernel.NewAppError(503, "邮件发送失败，请稍后重试")
 	}
 	if err := s.repo.SetAuthVerificationReady(v.ID); err != nil {
@@ -285,7 +281,7 @@ func (s *Service) ChangeProfileEmail(actor *model.User, cookie string, req Profi
 		rendered, renderErr := noticeMail(emailtpl.NoticeEmail{Brand: setting.FromName, Subject: setting.FromName + "账号邮箱已变更", Heading: "账号邮箱已变更",
 			Lines: []string{"你的" + setting.FromName + "账号邮箱已更换为 " + maskedEmail(v.Email) + "。", "为保护账号安全，所有设备上的登录会话已退出，请使用新邮箱重新登录。"},
 			Tip:   "如果这不是你本人的操作，请立即联系管理员冻结账号。"})
-		if renderErr != nil || s.deliverEmail(setting, EmailDelivery{Purpose: EmailPurposeEmailChanged, UserID: user.ID, Recipient: user.Email, Mail: rendered}) != nil {
+		if renderErr != nil || s.deliverEmail(setting, EmailDelivery{Purpose: EmailPurposeEmailChanged, UserID: user.ID, Recipient: user.Email, Mail: rendered, EventID: v.ID, ChangedEmail: v.Email}) != nil {
 			result.NotificationStatus = "failed"
 		}
 	}

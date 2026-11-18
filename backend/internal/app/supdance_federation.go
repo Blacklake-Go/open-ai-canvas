@@ -123,7 +123,25 @@ func (s *Service) FederationWallet(proof string) (*WalletSummary, error) {
 	if len(accounts) != 1 {
 		return nil, Forbidden("主站钱包尚未建立，请先在主站打开账户")
 	}
-	return s.Wallet(user, "", 1, 30)
+	if err := s.RequireFeature(FeatureCredits); err != nil {
+		return nil, err
+	}
+	// ONE consumes the original ledger contract. The main site's grouped history
+	// must not replace individual ledger rows or change this read-only bridge.
+	entries, total, err := s.repo.CreditLedger(user.ID, "", 30, 0)
+	if err != nil {
+		return nil, err
+	}
+	for index := range entries {
+		if strings.TrimSpace(entries[index].Note) != "" {
+			entries[index].Note = userFacingTaskError(entries[index].Note)
+		}
+	}
+	policy, err := s.publicCreditPolicy(user.ID)
+	if err != nil {
+		return nil, err
+	}
+	return &WalletSummary{Account: accounts[0], Entries: entries, Total: total, Page: 1, Limit: 30, Policy: policy}, nil
 }
 
 func (s *Service) federationProofUser(proof, purpose string) (*model.User, federation.Ticket, error) {

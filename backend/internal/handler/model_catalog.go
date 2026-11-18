@@ -30,7 +30,21 @@ func RegisterModelCatalogRoutes(r *gin.RouterGroup, svc *service.Service) {
 		ok(c, gin.H{"quote": quote})
 	})
 	r.GET("/model-catalog", func(c *gin.Context) {
-		user, _ := currentUser(c, svc)
+		expectedUser := c.GetHeader("X-Canvas-Expected-User")
+		if sessionCookie(c) == "" && (expectedUser == "" || expectedUser == "guest") {
+			catalog, err := svc.ModelCatalogForGuest()
+			if err != nil {
+				failService(c, err)
+				return
+			}
+			ok(c, catalog)
+			return
+		}
+		user, err := currentUser(c, svc)
+		if err != nil {
+			failService(c, err)
+			return
+		}
 		catalog, err := svc.ModelCatalogForUser(user, nil)
 		if err != nil {
 			failService(c, err)
@@ -40,7 +54,11 @@ func RegisterModelCatalogRoutes(r *gin.RouterGroup, svc *service.Service) {
 	})
 
 	r.POST("/model-catalog/available", func(c *gin.Context) {
-		user, _ := currentUser(c, svc)
+		user, err := currentUser(c, svc)
+		if err != nil {
+			failService(c, err)
+			return
+		}
 		var intent service.ModelRequestIntent
 		if err := c.ShouldBindJSON(&intent); err != nil {
 			fail(c, http.StatusBadRequest, errors.New("模型能力请求格式错误"))

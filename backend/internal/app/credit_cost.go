@@ -3,6 +3,7 @@ package app
 import (
 	"errors"
 
+	"yingce/backend/internal/imagebilling"
 	"yingce/backend/internal/kernel"
 	"yingce/backend/internal/model"
 )
@@ -10,6 +11,14 @@ import (
 func validateCreditCostPricing(capability, billingMode string, cost model.CreditCostPricing) error {
 	if err := validateTierTokenBands(capability, billingMode, cost.InputTokenPriceMicrocredits, cost.OutputTokenPriceMicrocredits, cost.CachedTokenPriceMicrocredits, cost.CacheWriteTokenPriceMicrocredits, cost.TokenPriceBands); err != nil {
 		return err
+	}
+	if cost.Configured && billingMode == imagebilling.Mode {
+		if capability != "image" {
+			return BadAuthRequest("图片用量成本仅适用于图片模型")
+		}
+		if err := imagebilling.Validate(cost.ImagePricing); err != nil {
+			return BadAuthRequest(err.Error())
+		}
 	}
 	for _, price := range []int64{cost.UnitPriceMicrocredits, cost.InputTokenPriceMicrocredits, cost.OutputTokenPriceMicrocredits, cost.CachedTokenPriceMicrocredits, cost.CacheWriteTokenPriceMicrocredits, cost.ReferenceVideoUnitPriceMicrocredits, cost.ReferenceVideoOutputTokenPriceMicrocredits} {
 		if price < 0 || price > 1_000_000_000_000 {
@@ -62,6 +71,8 @@ func billingCreditCost(order model.BillingOrder) (*int64, error) {
 	var amount int64
 	var err error
 	switch order.CostBillingMode {
+	case imagebilling.Mode:
+		amount, err = imagebilling.Amount(cost.ImagePricing, order.ImageUsage, 10_000)
 	case "fixed_request", "per_second":
 		amount, err = creditAmount(cost.UnitPriceMicrocredits, order.CostQuantity, 10_000)
 	case "token":

@@ -1,6 +1,9 @@
-import { useMemo } from "react";
+import { useEffect, useMemo } from "react";
+import { useSkillLibraryAccess } from "@/lib/skill-access";
+import { useUserStore } from "@/stores/use-user-store";
 import { creationLabel as _creationLabel } from "@/supdance/plugins/i18n/creation-text";
 import { creationText as _creationText, useCreationLocale as _useCreationLocale } from "@/supdance/plugins/i18n/creation-text";
+
 import { Button, Select } from "antd";
 import { TriangleAlert } from "lucide-react";
 
@@ -73,6 +76,13 @@ export function DramaTextSteps({
     onThinkingChange: (step: DramaTextStep, value: ThinkingRequest) => void;
 }) {
     _useCreationLocale();
+    const canUseSkills = useSkillLibraryAccess();
+    const hydrated = useUserStore((state) => state.hydrated);
+    useEffect(() => {
+        if (!hydrated || canUseSkills) return;
+        const selected = TEXT_STEPS.find((item) => skills[SKILL_FIELD[item.step]]);
+        if (selected) onSkillChange(selected.step, undefined);
+    }, [canUseSkills, hydrated, skills, onSkillChange]);
     return (
         <div className="drama-steps" role="list" aria-label={_creationText("creation.f074a508d31551f1")}>
             <div className="drama-step-row" role="listitem">
@@ -87,10 +97,12 @@ export function DramaTextSteps({
                         {models?.text?.label ? ` · ${models.text.label}` : ""}
                     </small>
                 </div>
-                <div className="drama-step-field">
-                    <span className="drama-step-caption">{_creationText("nav.skills")}</span>
-                    <small className="drama-step-note">{_creationText("creation.9866388fd74ef110")}</small>
-                </div>
+                {canUseSkills && (
+                    <div className="drama-step-field">
+                        <span className="drama-step-caption">{_creationText("nav.skills")}</span>
+                        <small className="drama-step-note">{_creationText("creation.9866388fd74ef110")}</small>
+                    </div>
+                )}
                 <div className="drama-step-field">
                     <span className="drama-step-caption">{_creationText("creation.a431bcd0ae892523")}</span>
                     <Select aria-label={_creationText("creation.2dc50a9b8d8508d9")} value={textThinking.plan || "auto"} options={THINKING_REQUEST_OPTIONS} onChange={(value) => onThinkingChange("plan", value)} />
@@ -106,10 +118,12 @@ export function DramaTextSteps({
                         <span className="drama-step-caption">{_creationText("creation.d027815844af8e27")}</span>
                         <OverridePicker capability="text" value={overrideOf(models, item.override)} fallback={models?.text} onChange={(choice) => onModelsChange({ [item.override]: choice || {} })} />
                     </div>
-                    <div className="drama-step-field">
-                        <span className="drama-step-caption">{_creationText("nav.skills")}</span>
-                        <PromptSkillField compact step={item.step} value={skills[SKILL_FIELD[item.step]]} onChange={(value) => onSkillChange(item.step, value)} />
-                    </div>
+                    {canUseSkills && (
+                        <div className="drama-step-field">
+                            <span className="drama-step-caption">{_creationText("nav.skills")}</span>
+                            <PromptSkillField compact step={item.step} value={skills[SKILL_FIELD[item.step]]} onChange={(value) => onSkillChange(item.step, value)} />
+                        </div>
+                    )}
                     <div className="drama-step-field">
                         <span className="drama-step-caption">{_creationText("creation.a431bcd0ae892523")}</span>
                         <Select aria-label={_creationText("creation.2cca8acf81fc70be", { value1: item.label })} value={textThinking[item.step] || "auto"} options={THINKING_REQUEST_OPTIONS} onChange={(value) => onThinkingChange(item.step, value)} />

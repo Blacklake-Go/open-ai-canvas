@@ -1,6 +1,7 @@
 package auth
 
 import (
+	"context"
 	"crypto/hmac"
 	"crypto/rand"
 	"crypto/sha256"
@@ -24,6 +25,7 @@ import (
 	"time"
 	"yingce/backend/internal/emailtpl"
 	"yingce/backend/internal/kernel"
+	"yingce/backend/internal/supdance/emailcenter"
 
 	"yingce/backend/internal/model"
 
@@ -147,7 +149,7 @@ func (s *Service) EmailEnabled() (bool, error) {
 	return value.Enabled && value.Host != "" && value.Port > 0 && value.FromEmail != "", nil
 }
 
-func (s *Service) SendRegistrationEmailCode(rawEmail string) error {
+func (s *Service) SendRegistrationEmailCode(rawEmail string, locales ...string) error {
 	p, err := s.verificationPolicy()
 	if err != nil {
 		return err
@@ -208,11 +210,7 @@ func (s *Service) SendRegistrationEmailCode(rawEmail string) error {
 		return err
 	}
 	setting = resolveEmailSender(setting, s.host.BrandName())
-	rendered, err := registrationEmail(setting.FromName, email, code)
-	if err != nil {
-		return err
-	}
-	if err := s.deliverEmail(setting, EmailDelivery{Purpose: EmailPurposeRegistration, Recipient: email, Mail: rendered}); err != nil {
+	if err := s.deliverEmail(setting, EmailDelivery{Purpose: EmailPurposeRegistration, Recipient: email, EventID: record.ID, Code: code, ExpiresAt: record.ExpiresAt, Locale: strings.Join(locales, ",")}); err != nil {
 		cleanupErr := s.repo.DeleteEmailVerificationCode(record.ID)
 		if cleanupErr != nil {
 			return errors.Join(
@@ -431,6 +429,9 @@ func resolveEmailSender(value EmailSettingValue, brandName string) EmailSettingV
 	if value.FromName == "" || value.FromName == DefaultBrandName {
 		value.FromName = brandName
 	}
+	if strings.EqualFold(value.FromName, "supdance") {
+		value.FromName = "SupDance"
+	}
 	return value
 }
 
@@ -440,9 +441,11 @@ const smtpSessionTimeout = 45 * time.Second
 
 // OutgoingMail 是一封待发送的系统邮件；Text 必须完整可读，HTML 可为空。
 type OutgoingMail struct {
-	Subject string
-	Text    string
-	HTML    string
+	MessageID      string
+	UnsubscribeURL string
+	Subject        string
+	Text           string
+	HTML           string
 }
 
 type smtpStageError struct {
@@ -468,6 +471,15 @@ func sendSMTPMail(setting EmailSettingValue, recipient string, mailItem Outgoing
 			err = &smtpStageError{stage: stage, err: err}
 		}
 	}()
+	// Sign and validate before opening a connection or issuing DATA.
+	message := buildMIMEMessage(setting, recipient, mailItem, time.Now())
+	if mailItem.UnsubscribeURL != "" {
+		stage = "sign"
+		message, err = SignMarketingMIME(setting.FromEmail, message)
+		if err != nil {
+			return err
+		}
+	}
 	address := net.JoinHostPort(setting.Host, strconv.Itoa(setting.Port))
 	tlsConfig := &tls.Config{ServerName: setting.Host, MinVersion: tls.VersionTLS12}
 	dialer := &net.Dialer{Timeout: 12 * time.Second}
@@ -520,7 +532,7 @@ func sendSMTPMail(setting EmailSettingValue, recipient string, mailItem Outgoing
 		return err
 	}
 	stage = "write_body"
-	if _, err := wc.Write(buildMIMEMessage(setting, recipient, mailItem, time.Now())); err != nil {
+	if _, err := wc.Write(message); err != nil {
 		_ = wc.Close()
 		return err
 	}
@@ -528,8 +540,9 @@ func sendSMTPMail(setting EmailSettingValue, recipient string, mailItem Outgoing
 	if err := wc.Close(); err != nil {
 		return err
 	}
-	stage = "quit"
-	return client.Quit()
+	// DATA's final 250 is authoritative; failed QUIT cannot undo acceptance.
+	_ = client.Quit()
+	return nil
 }
 
 // buildMIMEMessage 生成 multipart/alternative 邮件。Date 与 Message-ID 是 RFC 5322 必填头，
@@ -546,10 +559,18 @@ func buildMIMEMessage(setting EmailSettingValue, recipient string, mailItem Outg
 	header("To", recipient)
 	header("Subject", mime.QEncoding.Encode("UTF-8", mailItem.Subject))
 	header("Date", now.Format(time.RFC1123Z))
-	header("Message-ID", "<"+kernel.NewID()+"@"+domain+">")
+	messageID := mailItem.MessageID
+	if messageID == "" {
+		messageID = "<" + kernel.NewID() + "@" + domain + ">"
+	}
+	header("Message-ID", messageID)
 	header("MIME-Version", "1.0")
 	header("Auto-Submitted", "auto-generated")
 	header("X-Auto-Response-Suppress", "All")
+	if mailItem.UnsubscribeURL != "" {
+		header("List-Unsubscribe", "<"+mailItem.UnsubscribeURL+">")
+		header("List-Unsubscribe-Post", "List-Unsubscribe=One-Click")
+	}
 	if strings.TrimSpace(mailItem.HTML) == "" {
 		header("Content-Type", "text/plain; charset=UTF-8")
 		header("Content-Transfer-Encoding", "base64")
@@ -597,13 +618,92 @@ const (
 
 // EmailDelivery 描述一次投递的业务上下文，用于发送记录。
 type EmailDelivery struct {
-	Purpose   string
-	UserID    string
-	Recipient string
-	Mail      OutgoingMail
+	Locale         string
+	LocaleResolved bool
+	ChangedEmail   string
+	Purpose        string
+	UserID         string
+	Recipient      string
+	Mail           OutgoingMail
+	EventID        string
+	Code           string
+	SecurityAction string
+	ExpiresAt      time.Time
+	TemplateID     string
+	TemplateKey    string
+	BrandVersion   string
+	ReceiptID      string
 }
 
 func (s *Service) deliverEmail(setting EmailSettingValue, delivery EmailDelivery) error {
+	if !setting.Enabled && delivery.Purpose != "" {
+		return kernel.Forbidden("邮件服务未启用")
+	}
+	// Independent sockets and quotas reserve security delivery capacity under marketing load.
+	lane := securityEmailLane
+	if delivery.Purpose == "marketing" || delivery.Purpose == "marketing_test" {
+		lane = marketingEmailLane
+	}
+	select {
+	case lane <- struct{}{}:
+		defer func() { <-lane }()
+	default:
+		return kernel.RateLimited("邮件通道繁忙，请稍后重试")
+	}
+	if s.repo != nil && delivery.Purpose != "" {
+		contact, err := s.repo.EmailContact(NormalizeEmail(delivery.Recipient))
+		if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
+			return err
+		}
+		if err == nil && (contact.Suppression == "hard_bounce" || contact.Suppression == "provider_block") {
+			return kernel.Forbidden("收件地址处于永久抑制状态")
+		}
+	}
+	if delivery.Purpose == "marketing" {
+		ready, err := s.MarketingReady()
+		if err != nil {
+			return err
+		}
+		if !ready {
+			return kernel.Forbidden("营销发送尚未启用")
+		}
+		if s.repo == nil || delivery.EventID == "" || delivery.TemplateID == "" || delivery.Mail.UnsubscribeURL == "" {
+			return kernel.Forbidden("营销发送上下文不完整")
+		}
+		contact, err := s.repo.EmailContact(NormalizeEmail(delivery.Recipient))
+		if err != nil || !contact.Marketing || contact.Scope != "marketing" || contact.Suppression != "" {
+			return kernel.Forbidden("营销订阅或抑制规则阻止发送")
+		}
+		allowed, err := s.host.AllowRequest(context.Background(), "email-center-marketing:global", 10, time.Minute)
+		if err != nil {
+			return err
+		}
+		if !allowed {
+			return kernel.RateLimited("营销发送频率超限")
+		}
+		allowed, err = s.host.AllowRequest(context.Background(), "email-center-marketing:day:"+time.Now().UTC().Format("2006-01-02"), MarketingDailyLimit(), 24*time.Hour)
+		if err != nil {
+			return err
+		}
+		if !allowed {
+			return kernel.RateLimited("营销日配额已用完；账户邮件额度保留")
+		}
+		if !MarketingDKIMConfigured(setting.FromEmail) {
+			return kernel.Forbidden("营销退订头的 DKIM 签名尚未配置")
+		}
+	}
+	if _, known := emailcenter.FindEvent(delivery.Purpose); known {
+		if err := s.prepareCenterEmail(&delivery); err != nil {
+			return err
+		}
+	}
+	claimed, claimErr := s.claimCenterDelivery(&delivery, setting.FromEmail)
+	if claimErr != nil {
+		return claimErr
+	}
+	if !claimed {
+		return kernel.NewAppError(409, "本次邮件发送意图已处理，不能重复发送")
+	}
 	started := time.Now()
 	var err error
 	if s.mailSender != nil {
@@ -611,13 +711,21 @@ func (s *Service) deliverEmail(setting EmailSettingValue, delivery EmailDelivery
 	} else {
 		err = sendSMTPMail(setting, delivery.Recipient, delivery.Mail)
 	}
-	entry := model.EmailLog{ID: kernel.NewID(), UserID: delivery.UserID, Purpose: delivery.Purpose, Recipient: delivery.Recipient, Subject: logSubject(delivery.Mail.Subject), Status: emailLogStatusSent, SMTPHost: setting.Host, DurationMS: time.Since(started).Milliseconds(), CreatedAt: started}
+	status, stage := centerDeliveryStatus(err)
+	if s.repo != nil {
+		if updateErr := s.repo.FinishEmailReceipt(delivery.ReceiptID, status, stage, time.Since(started).Milliseconds()); updateErr != nil {
+			slog.Error("email receipt update failed", "event", delivery.Purpose)
+		}
+	}
+	entry := model.EmailLog{ID: delivery.ReceiptID[:32], UserID: delivery.UserID, Purpose: delivery.Purpose, Recipient: delivery.Recipient, Subject: logSubject(delivery.Mail.Subject), Status: status, SMTPHost: setting.Host, DurationMS: time.Since(started).Milliseconds(), CreatedAt: started}
+	if status == "retryable" {
+		entry.Status = "failed"
+	}
 	if err != nil {
 		reason := smtpLogError(err, setting, delivery.Recipient, delivery.Mail.Subject, delivery.Mail.Text)
 		slog.Error("smtp email delivery failed",
 			"host", setting.Host, "port", setting.Port, "encryption", setting.Encryption,
 			"recipient", maskedEmail(delivery.Recipient), "error", reason)
-		entry.Status = emailLogStatusFailed
 		entry.Reason = truncateRunes(reason, 500)
 		var stageErr *smtpStageError
 		if errors.As(err, &stageErr) {
@@ -625,6 +733,9 @@ func (s *Service) deliverEmail(setting EmailSettingValue, delivery EmailDelivery
 		}
 	}
 	s.appendEmailLog(&entry)
+	if err != nil && delivery.Purpose != "" {
+		return &emailOutcomeError{status: status, stage: stage}
+	}
 	return err
 }
 
@@ -706,18 +817,6 @@ func randomNumericCode(length int) (string, error) {
 		return "", err
 	}
 	return fmt.Sprintf("%0*d", length, value.Int64()), nil
-}
-
-func registrationEmail(brandName, recipient, code string) (OutgoingMail, error) {
-	return codeMail(emailtpl.CodeEmail{Brand: brandName, Heading: "注册", Intro: "你正在注册" + brandName + "。请在注册页面输入下方验证码，完成邮箱验证。", Code: code, TTLMinutes: 10, Recipient: recipient})
-}
-
-func codeMail(item emailtpl.CodeEmail) (OutgoingMail, error) {
-	rendered, err := emailtpl.RenderCode(item)
-	if err != nil {
-		return OutgoingMail{}, err
-	}
-	return OutgoingMail{Subject: rendered.Subject, Text: rendered.Text, HTML: rendered.HTML}, nil
 }
 
 func noticeMail(item emailtpl.NoticeEmail) (OutgoingMail, error) {

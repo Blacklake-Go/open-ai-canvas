@@ -114,7 +114,7 @@ export const mainToolbarTools: ToolDefinition[] = [
         defaultVisible: true,
         defaultOrder: 90,
         danger: true,
-        applicable: (ctx) => ctx.selectedCount > 0,
+        disabled: (ctx) => ctx.selectedCount === 0,
         run: (ctx) => ctx.handlers.onDeleteSelected(),
     },
     {

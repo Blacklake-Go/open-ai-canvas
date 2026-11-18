@@ -221,6 +221,7 @@ func (s *Service) StartWorker() {
 	s.startDramaScheduler()
 	s.startInspirationFeedWorker()
 	s.startConsumptionReportWorker()
+	s.startEmailCenterWorker()
 	s.startFeishuFeedbackWorker()
 	go s.syncAgentSessionLimit()
 	s.runWorkerLoop(func(ctx context.Context) {

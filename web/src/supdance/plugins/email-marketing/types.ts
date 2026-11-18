@@ -1,0 +1,46 @@
+export const SUPDANCE_EMAIL_MARKETING_PLUGIN_ID = "supdance-email-marketing" as const;
+export type EmailBlock = { type: string; title?: string; text?: string; url?: string; image?: string; alt?: string; items?: string[] };
+export type EmailDocument = { subject: string; preheader: string; heading: string; blocks: EmailBlock[] };
+export type EmailRevision = { id: string; key: string; locale: string; contentJson: string; kind: string; actorId: string; createdAt: string };
+export type EmailTemplate = {
+    effectiveTemplateId: string;
+    key: string;
+    name: string;
+    category: string;
+    locale: string;
+    variables: { key: string; required: boolean; protected: boolean }[];
+    protectedModule?: string;
+    trigger: string;
+    ratePolicy: string;
+    state: { draftId: string; publishedId: string; revision: number };
+    draft: EmailDocument;
+    published: EmailDocument;
+    history: EmailRevision[];
+};
+export type EmailCenterOverview = {
+    locale: string;
+    supportedLocales: string[];
+    safeMode: boolean;
+    pluginId: string;
+    brand: { name: string; logoUrl: string; siteUrl: string; supportEmail: string; footer: string; color: string; version: string };
+    templates: EmailTemplate[];
+    smtp: { enabled: boolean; host: string; port: number; encryption: string; fromName: string };
+    marketingPaused: boolean;
+    contacts: { email: string; marketing: boolean; source: string; scope: string; consentedAt?: string; unsubscribedAt?: string; suppression: string }[];
+};
+export type EmailEditRequest = { locale?: string; document: EmailDocument; expectedRevision?: number; revisionId?: string; to?: string; previewVariables?: Record<string, string> };
+export type EmailPreview = { Subject: string; HTML: string; Text: string };
+export type EmailCampaign = {
+    id: string;
+    name: string;
+    templateKey: string;
+    revisionId: string;
+    revisionsJson?: string;
+    localizedVariablesJson?: string;
+    variablesJson: string;
+    sourceFilter: string;
+    status: string;
+    scheduleAt: string;
+    createdAt: string;
+    stats: Record<string, number>;
+};

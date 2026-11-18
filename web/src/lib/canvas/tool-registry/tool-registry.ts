@@ -1,5 +1,6 @@
 import { ScanSearch, Shapes } from "lucide-react";
 import { createElement } from "react";
+import { interfaceText } from "@/i18n/interface-text";
 
 import type { FloatingDockEntry } from "@/components/ui/aceternity/floating-dock";
 import { ART_CRITIQUE_NODE_TYPE } from "@/lib/art-critique/contracts";
@@ -107,7 +108,7 @@ export function resolveNodeToolbarPlacement(tool: ToolDefinition, ctx: ToolConte
     const placement = tool.nodeToolbar;
     return {
         group: typeof placement?.group === "function" ? placement.group(ctx) : placement?.group || "more",
-        order: typeof placement?.order === "function" ? placement.order(ctx) : placement?.order ?? tool.defaultOrder,
+        order: typeof placement?.order === "function" ? placement.order(ctx) : (placement?.order ?? tool.defaultOrder),
     };
 }
 
@@ -161,7 +162,7 @@ function toolToEntry(tool: ToolDefinition, ctx: ToolContext): FloatingDockEntry 
 }
 
 function resolveText(value: string | ((ctx: ToolContext) => string), ctx: ToolContext): string {
-    return typeof value === "function" ? value(ctx) : value;
+    return interfaceText(typeof value === "function" ? value(ctx) : value);
 }
 
 function resolveIcon(value: ToolDefinition["icon"], ctx: ToolContext) {

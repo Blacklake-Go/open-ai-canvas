@@ -36,6 +36,7 @@ const { createRoot } = await import("react-dom/client");
 const { ModelPicker } = await import("../../src/components/model-picker");
 const { appQueryClient } = await import("../../src/lib/query-client");
 const { apiClient } = await import("../../src/services/api/request");
+const { useUserStore } = await import("../../src/stores/use-user-store");
 const { defaultConfig, normalizeConfigSnapshot } = await import("../../src/stores/use-config-store");
 const { defaultModelCapabilityConfig } = await import("../../src/lib/model-capabilities");
 const { systemChannelModelChannels } = await import("../../src/lib/user-session");
@@ -127,6 +128,8 @@ for (const cachedEnabled of [undefined, false, true])
     });
 
 async function withPicker(run: (changed: string[]) => Promise<void>, readFails: boolean | "once" = false, quoteCurrent = false, cached?: typeof settings) {
+    const originalUser = useUserStore.getState().user;
+    useUserStore.setState({ user: quoteCurrent ? { id: "quote-member", username: "quote-member", displayName: "Quote member", role: "user", status: "active" } : null });
     localStorage.removeItem(compactSettingsStorageKey);
     if (cached) localStorage.setItem(compactSettingsStorageKey, JSON.stringify(cached));
     const host = document.createElement("div");
@@ -173,6 +176,7 @@ async function withPicker(run: (changed: string[]) => Promise<void>, readFails: 
         );
     } finally {
         await act(async () => root.unmount());
+        useUserStore.setState({ user: originalUser });
         apiClient.request = original;
         appQueryClient.clear();
         host.remove();

@@ -89,6 +89,7 @@ type ChannelModel struct {
 // 仅保留给历史 API 与升级回填，不能再作为 SKU 唯一性依据。
 type ChannelModelPriceTier struct {
 	TokenPriceBands                  []TokenPriceBand  `json:"tokenPriceBands,omitempty" gorm:"serializer:json;type:text;not null;default:'[]'"`
+	ImagePricing                     *ImagePricing     `json:"imagePricing,omitempty" gorm:"serializer:json;type:text"`
 	CostPricing                      CreditCostPricing `json:"-" gorm:"embedded;embeddedPrefix:cost_"`
 	ID                               string            `json:"id" gorm:"primaryKey;size:36"`
 	ChannelModelID                   string            `json:"channelModelId" gorm:"size:36;index;uniqueIndex:idx_channel_model_price_tier_active,priority:1,where:deleted_at IS NULL"`

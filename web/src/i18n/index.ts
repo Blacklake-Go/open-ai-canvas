@@ -56,7 +56,9 @@ export function translate(key: string, options?: Record<string, unknown>): strin
  * 用户切换界面语言：保存偏好后整页刷新。部分文案在模块加载或缓存数据里生成，
  * 只靠组件重渲染会出现新旧语言混排；刷新保证整页使用同一种语言。
  */
-export function switchLocale(next: AppLocale, options: { updateLanguageQuery?: boolean } = {}) {
+export async function switchLocale(next: AppLocale, options: { updateLanguageQuery?: boolean } = {}) {
+    const { savePreferredLanguage } = await import("@/supdance/plugins/email-marketing/language");
+    await savePreferredLanguage(next);
     if (next === currentLocale()) return;
     useLocaleStore.getState().setLocale(next);
     if (typeof window !== "undefined") {

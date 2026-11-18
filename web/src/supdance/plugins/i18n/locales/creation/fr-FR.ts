@@ -1,5 +1,9 @@
 // Native interface catalog for ecommerce and novel adaptation.
 const pack: Record<string, string> = {
+    "creation.88f4625eade235b7": "Renommer",
+    "creation.1dfc5bde70de7514": "Renommer l’épisode {value1}",
+    "creation.f42a1238b44a4858": "Échec de l’enregistrement. Réessayez.",
+    "creation.5110640086b8db25": "Enregistrement du prompt…",
     "creation.a9035e0b94c777c4": "La répartition des chapitres précédents en épisodes est en cours. Attendez sa fin pour {value1} un nouvel épisode.",
     "creation.88b62416a83e9ce5": "La répartition des chapitres précédents en épisodes est en cours. Attendez sa fin avant de supprimer.",
     "creation.51d702b542959835": "Un projet doit conserver au moins un épisode. Pour le supprimer entièrement, utilisez la liste des projets.",

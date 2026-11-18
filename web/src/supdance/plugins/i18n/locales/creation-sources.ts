@@ -1,5 +1,9 @@
 // UI-only sources. Never translate generation payloads or user-authored content.
 export const CREATION_UI_SOURCES: Record<string, string> = {
+    "creation.88f4625eade235b7": "修改名称",
+    "creation.1dfc5bde70de7514": "修改第 {value1} 集名称",
+    "creation.f42a1238b44a4858": "保存失败，请重试",
+    "creation.5110640086b8db25": "正在保存提示词…",
     "creation.a9035e0b94c777c4": "前面的章节还在分集规划，完成后才能{value1}新的一集。",
     "creation.88b62416a83e9ce5": "前面的章节还在分集规划，完成后才能删除。",
     "creation.51d702b542959835": "作品至少保留一集；不再需要这部作品时，可以在作品列表里删除整部作品。",

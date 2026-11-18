@@ -1,0 +1,158 @@
+.email-center {
+    color: var(--admin-text);
+    height: 100%;
+    min-height: 0;
+}
+.email-center .email-center-actions {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+.email-center .email-center-actions button {
+    min-height: 44px;
+}
+.email-center .email-center-workspace {
+    display: grid;
+    grid-template-columns: minmax(160px, 0.7fr) minmax(280px, 1.5fr) minmax(320px, 2fr);
+    gap: 16px;
+    align-items: start;
+}
+.email-center .email-center-template-list {
+    display: grid;
+    gap: 8px;
+}
+.email-center .email-center-template-list button {
+    text-align: start;
+    min-height: 60px;
+    padding: 12px;
+    background: var(--admin-surface);
+    color: var(--admin-text);
+    border: 1px solid var(--admin-border);
+    border-radius: var(--admin-radius);
+    cursor: pointer;
+}
+.email-center .email-center-template-list button[aria-pressed="true"] {
+    border-color: var(--admin-accent);
+    background: var(--admin-nav-active);
+}
+.email-center .email-center-template-list small {
+    display: block;
+    overflow-wrap: anywhere;
+    color: var(--admin-text-secondary);
+}
+.email-center .email-center-editor,
+.email-center .email-center-preview {
+    display: grid;
+    min-width: 0;
+    gap: 12px;
+}
+.email-center label {
+    display: grid;
+    gap: 4px;
+    color: var(--admin-text);
+}
+.email-center .email-center-module,
+.email-center .email-center-panel,
+.email-center .email-center-summary section {
+    padding: 16px;
+    border: 1px solid var(--admin-border);
+    border-radius: var(--admin-radius-lg);
+    background: var(--admin-surface);
+    display: grid;
+    gap: 12px;
+    min-width: 0;
+}
+.email-center .email-center-module input,
+.email-center .email-center-module textarea {
+    color: var(--admin-text);
+    background: var(--admin-surface);
+}
+.email-center .email-center-preview-scroll {
+    overflow-x: auto;
+}
+.email-center iframe {
+    display: block;
+    height: 720px;
+    border: 1px solid var(--admin-border);
+    margin-inline: auto;
+    background: var(--admin-surface);
+}
+.email-center pre {
+    max-width: 100%;
+    overflow: auto;
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+    padding: 16px;
+    background: var(--admin-surface);
+    color: var(--admin-text);
+    border: 1px solid var(--admin-border);
+}
+.email-center .email-center-source {
+    max-height: 720px;
+}
+.email-center .email-center-summary,
+.email-center .email-center-comparison {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 16px;
+}
+.email-center .email-center-summary img,
+.email-center .email-center-brand-image {
+    max-width: 180px;
+    height: auto;
+    max-height: 80px;
+    object-fit: contain;
+    background: var(--admin-surface);
+    padding: 8px;
+}
+.email-center dl {
+    display: grid;
+    gap: 8px;
+}
+.email-center dd {
+    margin: 0;
+    overflow-wrap: anywhere;
+}
+.email-center dt {
+    color: var(--admin-text-secondary);
+}
+.email-center table {
+    width: 100%;
+    border-collapse: collapse;
+}
+.email-center th,
+.email-center td {
+    text-align: start;
+    padding: 12px;
+    border-bottom: 1px solid var(--admin-border);
+    overflow-wrap: anywhere;
+}
+.email-center button:focus-visible {
+    outline: 2px solid var(--admin-accent);
+    outline-offset: 2px;
+}
+@media (max-width: 1200px) {
+    .email-center .email-center-workspace {
+        grid-template-columns: minmax(160px, 0.7fr) minmax(0, 2fr);
+    }
+    .email-center .email-center-preview {
+        grid-column: 1 / -1;
+    }
+}
+@media (max-width: 640px) {
+    .email-center button,
+    .email-center .ant-input,
+    .email-center .ant-select,
+    .email-center .ant-select-selector {
+        min-height: 44px;
+    }
+    .email-center .email-center-workspace,
+    .email-center .email-center-summary,
+    .email-center .email-center-comparison {
+        grid-template-columns: minmax(0, 1fr);
+    }
+    .email-center .email-center-template-list {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+}

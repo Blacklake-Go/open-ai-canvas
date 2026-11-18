@@ -1,5 +1,9 @@
 // Native interface catalog for ecommerce and novel adaptation.
 const pack: Record<string, string> = {
+    "creation.88f4625eade235b7": "Rename",
+    "creation.1dfc5bde70de7514": "Rename episode {value1}",
+    "creation.f42a1238b44a4858": "Saving failed. Please try again.",
+    "creation.5110640086b8db25": "Saving prompt…",
     "creation.a9035e0b94c777c4": "Previous chapters are still being planned into episodes. Wait until planning finishes before you {value1} a new episode.",
     "creation.88b62416a83e9ce5": "Previous chapters are still being planned into episodes. Wait until planning finishes before deleting.",
     "creation.51d702b542959835": "A project must keep at least one episode. To remove the entire project, delete it from the project list.",

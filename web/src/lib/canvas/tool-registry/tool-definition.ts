@@ -97,6 +97,7 @@ export type ToolbarHandlers = {
     onNodeEnhanceVideo?: (node: CanvasNodeData) => void;
     onNodeSubtitles: (node: CanvasNodeData) => void;
     onNodeTimeline: (node: CanvasNodeData) => void;
+    onNodeDepthVideo?: (node: CanvasNodeData) => void;
     onNodeDownloadSubtitles?: (node: CanvasNodeData) => void;
     /** 打开媒体版本面板；只读分享页不提供。 */
     onNodeVersions?: (node: CanvasNodeData) => void;
