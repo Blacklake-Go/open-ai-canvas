@@ -6,6 +6,8 @@ import { BadgeCheck, Coins, Plus, RefreshCw, Search, Trash2, Undo2 } from "lucid
 
 import { PaginationBar } from "@/pages/admin/components/admin-ui";
 import { formatCredits } from "@/constant/credits";
+import { currentLocale } from "@/i18n";
+import { interfaceText } from "@/i18n/interface-text";
 import { useDebouncedValue } from "@/hooks/use-debounced-value";
 import { listAdminUsers, type AdminReferenceData, type AdminUser } from "@/services/api/auth";
 import { adjustAdminUserCredits, getAdminCreditPolicy, listAdminBillingOrders, resolveAdminBillingOrder, resolveAdminBillingOrders, updateAdminCreditPolicy, type BillingOrder, type CreditPolicy } from "@/services/api/wallet";
@@ -428,10 +430,10 @@ export default function CreditOperationsPanel({ users, activeOperation, onOperat
             dataIndex: "status",
             width: 110,
             align: "center",
-            render: (value: BillingOrder["status"]) => <AdminStatusBadge label={billingStatusLabels[value]} tone={value === "settled" ? "success" : value === "refunded" ? "neutral" : "warning"} />,
+            render: (value: BillingOrder["status"]) => <AdminStatusBadge label={interfaceText(billingStatusLabels[value])} tone={value === "settled" ? "success" : value === "refunded" ? "neutral" : "warning"} />,
         },
-        { title: "上游请求", dataIndex: "providerRequestId", width: 180, ellipsis: true, render: (value) => value || "未获取" },
-        { title: "核对原因", dataIndex: "error", width: 260, ellipsis: true, render: (value) => value || "费用状态不明确" },
+        { title: "上游请求", dataIndex: "providerRequestId", width: 180, ellipsis: true, render: (value) => value || interfaceText("未获取") },
+        { title: "核对原因", dataIndex: "error", width: 260, ellipsis: true, render: (value) => value || interfaceText("费用状态不明确") },
         {
             title: "操作",
             width: 190,
@@ -979,5 +981,5 @@ function toPolicyFormValues(policy: CreditPolicy): PolicyFormValues {
 }
 
 function formatTime(value?: string) {
-    return value ? new Date(value).toLocaleString("zh-CN", { hour12: false }) : "--";
+    return value ? new Date(value).toLocaleString(currentLocale(), { hour12: false }) : "--";
 }

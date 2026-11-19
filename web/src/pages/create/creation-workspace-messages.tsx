@@ -1,6 +1,6 @@
 // 创作页消息流：用户消息、媒体结果、生成中占位、引用素材与预览。
 
-import { conversationTimeFormatter, type CreationMessage } from "./creation-types";
+import { formatCreationConversationTime, type CreationMessage } from "./creation-types";
 import { creationMessageNeedsResultSync } from "./creation-conversations";
 import { useAppearanceStore } from "@/stores/use-appearance-store";
 import { AlertCircle, AlertTriangle, CircleStop, CloudOff, Copy, Download, FileText, Film, Image as ImageIcon, ImageOff, Maximize2, Music, Music2, Pencil, RefreshCw, RotateCcw, UserRound, X, type LucideIcon, Blocks, Orbit } from "lucide-react";
@@ -861,5 +861,5 @@ export function thinkingFor(mode: CreationMode, brandName: string): CreationThin
 
 export function formatMessageTime(value: string) {
     const timestamp = new Date(value).getTime();
-    return Number.isFinite(timestamp) ? conversationTimeFormatter.format(timestamp) : "";
+    return Number.isFinite(timestamp) ? formatCreationConversationTime(timestamp) : "";
 }

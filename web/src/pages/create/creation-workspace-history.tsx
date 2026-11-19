@@ -1,6 +1,6 @@
 // 创作页历史会话抽屉、导出与时间格式化。
 
-import { conversationTimeFormatter, type CreationConversation, type CreationMessage, historyDayFormatter, modeLabels } from "./creation-types";
+import { formatCreationConversationTime, type CreationConversation, type CreationMessage, formatCreationHistoryDay, modeLabels } from "./creation-types";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useAppearanceStore } from "@/stores/use-appearance-store";
 import { useUserStore } from "@/stores/use-user-store";
@@ -325,11 +325,11 @@ export function formatHistoryRelativeTime(value: string) {
     if (hours < 24) return translate("time.hoursAgo", { count: hours });
     const days = Math.round(hours / 24);
     if (days < 7) return translate("time.daysAgo", { count: days });
-    return historyDayFormatter.format(timestamp);
+    return formatCreationHistoryDay(timestamp);
 }
 
 export function formatConversationTime(value: string) {
     const timestamp = conversationTimestamp(value);
     if (!timestamp) return translate("time.unknown");
-    return conversationTimeFormatter.format(timestamp);
+    return formatCreationConversationTime(timestamp);
 }

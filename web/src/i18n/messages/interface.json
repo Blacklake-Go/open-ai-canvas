@@ -11435,7 +11435,14 @@
         "managedUi.606c5c8e": "收起属性面板",
         "managedUi.8f102102": "打开属性面板",
         "managedUi.84758c3": "快捷键 (?)",
-        "managedUi.a443958f": "自然姿势"
+        "managedUi.a443958f": "自然姿势",
+        "managedUi.ba05943": "待核对",
+        "managedUi.ace2cc3c": "运行中",
+        "managedUi.a83d5516": "已预授权",
+        "managedUi.7505eabf": "已结算",
+        "managedUi.ae27aba3": "已退款",
+        "managedUi.bf76de38": "未获取",
+        "managedUi.45263824": "费用状态不明确"
     },
     "en-US": {
         "managedUi.5cda34c3": "Failed to read page data",
@@ -22873,7 +22880,14 @@
         "managedUi.606c5c8e": "Collapse properties panel",
         "managedUi.8f102102": "Open properties panel",
         "managedUi.84758c3": "Keyboard shortcuts (?)",
-        "managedUi.a443958f": "Neutral pose"
+        "managedUi.a443958f": "Neutral pose",
+        "managedUi.ba05943": "Needs review",
+        "managedUi.ace2cc3c": "Running",
+        "managedUi.a83d5516": "Pre-authorized",
+        "managedUi.7505eabf": "Settled",
+        "managedUi.ae27aba3": "Refunded",
+        "managedUi.bf76de38": "Unavailable",
+        "managedUi.45263824": "Billing status unknown"
     },
     "fr-FR": {
         "managedUi.5cda34c3": "Échec de la lecture des données de la page",
@@ -34311,7 +34325,14 @@
         "managedUi.606c5c8e": "Replier le panneau des propriétés",
         "managedUi.8f102102": "Ouvrir le panneau des propriétés",
         "managedUi.84758c3": "Raccourcis clavier (?)",
-        "managedUi.a443958f": "Pose neutre"
+        "managedUi.a443958f": "Pose neutre",
+        "managedUi.ba05943": "À vérifier",
+        "managedUi.ace2cc3c": "En cours",
+        "managedUi.a83d5516": "Préautorisé",
+        "managedUi.7505eabf": "Réglé",
+        "managedUi.ae27aba3": "Remboursé",
+        "managedUi.bf76de38": "Indisponible",
+        "managedUi.45263824": "État de facturation inconnu"
     },
     "de-DE": {
         "managedUi.5cda34c3": "Seitendaten konnten nicht gelesen werden",
@@ -45749,7 +45770,14 @@
         "managedUi.606c5c8e": "Eigenschaftenbereich einklappen",
         "managedUi.8f102102": "Eigenschaftenbereich öffnen",
         "managedUi.84758c3": "Tastenkürzel (?)",
-        "managedUi.a443958f": "Neutrale Pose"
+        "managedUi.a443958f": "Neutrale Pose",
+        "managedUi.ba05943": "Prüfung erforderlich",
+        "managedUi.ace2cc3c": "Läuft",
+        "managedUi.a83d5516": "Vorautorisiert",
+        "managedUi.7505eabf": "Abgerechnet",
+        "managedUi.ae27aba3": "Erstattet",
+        "managedUi.bf76de38": "Nicht verfügbar",
+        "managedUi.45263824": "Abrechnungsstatus unbekannt"
     },
     "zh-TW": {
         "managedUi.5cda34c3": "讀取頁面資料失敗",
@@ -57187,7 +57215,14 @@
         "managedUi.606c5c8e": "收合屬性面板",
         "managedUi.8f102102": "開啟屬性面板",
         "managedUi.84758c3": "快捷鍵 (?)",
-        "managedUi.a443958f": "自然姿勢"
+        "managedUi.a443958f": "自然姿勢",
+        "managedUi.ba05943": "待核對",
+        "managedUi.ace2cc3c": "執行中",
+        "managedUi.a83d5516": "已預授權",
+        "managedUi.7505eabf": "已結算",
+        "managedUi.ae27aba3": "已退款",
+        "managedUi.bf76de38": "無資料",
+        "managedUi.45263824": "費用狀態不明"
     },
     "es-ES": {
         "managedUi.5cda34c3": "No se pudieron leer los datos de la página",
@@ -68625,7 +68660,14 @@
         "managedUi.606c5c8e": "Contraer el panel de propiedades",
         "managedUi.8f102102": "Abrir el panel de propiedades",
         "managedUi.84758c3": "Atajos de teclado (?)",
-        "managedUi.a443958f": "Pose neutra"
+        "managedUi.a443958f": "Pose neutra",
+        "managedUi.ba05943": "Pendiente de revisión",
+        "managedUi.ace2cc3c": "En curso",
+        "managedUi.a83d5516": "Preautorizado",
+        "managedUi.7505eabf": "Liquidado",
+        "managedUi.ae27aba3": "Reembolsado",
+        "managedUi.bf76de38": "No disponible",
+        "managedUi.45263824": "Estado de facturación desconocido"
     },
     "ja-JP": {
         "managedUi.d1dba89b": "キャンセル",
@@ -80063,7 +80105,14 @@
         "managedUi.606c5c8e": "プロパティパネルを折りたたむ",
         "managedUi.8f102102": "プロパティパネルを開く",
         "managedUi.84758c3": "キーボードショートカット (?)",
-        "managedUi.a443958f": "ニュートラルポーズ"
+        "managedUi.a443958f": "ニュートラルポーズ",
+        "managedUi.ba05943": "要確認",
+        "managedUi.ace2cc3c": "実行中",
+        "managedUi.a83d5516": "事前承認済み",
+        "managedUi.7505eabf": "精算済み",
+        "managedUi.ae27aba3": "返金済み",
+        "managedUi.bf76de38": "取得できませんでした",
+        "managedUi.45263824": "請求ステータスが不明です"
     },
     "ko-KR": {
         "managedUi.d1dba89b": "취소",
@@ -91501,6 +91550,13 @@
         "managedUi.606c5c8e": "속성 패널 접기",
         "managedUi.8f102102": "속성 패널 열기",
         "managedUi.84758c3": "키보드 단축키 (?)",
-        "managedUi.a443958f": "중립 자세"
+        "managedUi.a443958f": "중립 자세",
+        "managedUi.ba05943": "검토 필요",
+        "managedUi.ace2cc3c": "실행 중",
+        "managedUi.a83d5516": "사전 승인됨",
+        "managedUi.7505eabf": "정산 완료",
+        "managedUi.ae27aba3": "환불 완료",
+        "managedUi.bf76de38": "정보 없음",
+        "managedUi.45263824": "청구 상태를 확인할 수 없습니다"
     }
 }

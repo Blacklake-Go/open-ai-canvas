@@ -59,7 +59,20 @@ export type CreationMessage = {
 };
 export type CreationConversation = { id: string; title: string; updatedAt: string; canvasId?: string; messages: CreationMessage[] };
 
-export const modeLabels: Record<CreationMode, string> = { text: "文本", image: "图片", video: "视频", music: "音乐" };
+export const modeLabels: Record<CreationMode, string> = {
+    get text() {
+        return translate("create.mode.text");
+    },
+    get image() {
+        return translate("create.mode.image");
+    },
+    get video() {
+        return translate("create.mode.video");
+    },
+    get music() {
+        return translate("create.mode.music");
+    },
+};
 export const defaultCreationMode: CreationMode = "image";
 export const shotScriptLabels: Record<CreationMode, string> = { text: "创作思路", image: "画面指令", video: "镜头脚本", music: "音乐提示" };
 export const ratioOptions = [
@@ -102,9 +115,12 @@ export const ratioOptions = [
 ];
 export const resolutionOptions = VIDEO_RESOLUTION_OPTIONS.map((value) => ({ value: String(value), label: videoResolutionLabel(value) }));
 export const countOptions = ["1", "2", "3", "4"];
-export const conversationTimeFormatter = new Intl.DateTimeFormat(currentLocale(), { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit", hour12: false });
-export const messageTimeFormatter = new Intl.DateTimeFormat(currentLocale(), { hour: "2-digit", minute: "2-digit", hour12: false });
+export function formatCreationConversationTime(timestamp: number) {
+    return new Date(timestamp).toLocaleString(currentLocale(), { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit", hour12: false });
+}
 
-export const historyDayFormatter = new Intl.DateTimeFormat(currentLocale(), { month: "numeric", day: "numeric" });
+export function formatCreationHistoryDay(timestamp: number) {
+    return new Date(timestamp).toLocaleDateString(currentLocale(), { month: "numeric", day: "numeric" });
+}
 
 export type CreationShotRailEntry = { key: string; ordinal: number; user: CreationMessage; result?: CreationMessage };

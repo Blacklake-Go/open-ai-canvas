@@ -19,6 +19,7 @@ import { PORTRAIT_TEXTURE_GROUPS } from "@/lib/canvas/canvas-portrait-texture";
 import { PREVIS_ACTOR_TEMPLATES, PREVIS_CAMERA_PRESETS, PREVIS_LIGHT_PRESETS } from "@/lib/canvas/previs/previs-add-catalog";
 import { PREVIS_MOTIONS } from "@/lib/canvas/previs/previs-motion";
 import { PREVIS_PROP_LIBRARY } from "@/lib/canvas/previs/previs-prop-library";
+import { formatCreationConversationTime, formatCreationHistoryDay, modeLabels } from "@/pages/create/creation-types";
 import { localizedApiErrorMessage } from "@/services/api/error-codes";
 import { useLocaleStore } from "@/stores/use-locale-store";
 import { useUserStore } from "@/stores/use-user-store";
@@ -35,6 +36,17 @@ const placeholders = (text: string) => [...text.matchAll(/\{\{(\w+)\}\}/g)].map(
 afterEach(() => useLocaleStore.getState().setLocale("zh-CN"));
 
 describe("i18n catalogs", () => {
+    test("creation history mode labels and dates follow locale changes after loading", () => {
+        const date = new Date(2026, 10, 19, 14, 30);
+        const options = { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit", hour12: false } as const;
+        for (const { code } of SUPPORTED_LOCALES) {
+            useLocaleStore.getState().setLocale(code);
+            expect(modeLabels.image).toBe(i18n.t("create.mode.image", { lng: code }));
+            expect(formatCreationConversationTime(date.getTime())).toBe(date.toLocaleString(code, options));
+            expect(formatCreationHistoryDay(date.getTime())).toBe(date.toLocaleDateString(code, { month: "numeric", day: "numeric" }));
+        }
+    });
+
     test("previsualization and portrait controls resolve the built-in display labels in all eight languages", () => {
         const sources = new Set(
             [
