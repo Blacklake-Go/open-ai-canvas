@@ -70,6 +70,7 @@ function isUiValue(path: NodePath, file = ""): boolean {
         if (definition?.isVariableDeclarator() && t.isIdentifier(definition.node.id) && displayDefinitions[file.split("/").pop()!]?.has(definition.node.id.name) && ["title", "label", "description", "group", "help"].includes(name)) return true;
         if (!["title", "content", "label", "okText", "cancelText", "message", "description", "detail", "extra", "unit", "shortTitle"].includes(name)) return false;
         const owner = parent.findParent((ancestor) => ancestor.isVariableDeclarator() || ancestor.isFunctionDeclaration());
+        if (name === "label" && file.endsWith("/previs-canvas-dock.tsx") && owner?.isVariableDeclarator() && t.isIdentifier(owner.node.id, { name: "items" })) return true;
         if (
             name === "label" &&
             owner &&
@@ -87,7 +88,13 @@ function isUiValue(path: NodePath, file = ""): boolean {
         if (name === "title" && file.endsWith("/canvas-script-editor.tsx") && owner?.isVariableDeclarator() && t.isIdentifier(owner.node.id, { name: "columns" })) return true;
         if (object?.isObjectExpression() && object.parentPath?.isCallExpression() && /^(?:modal\.confirm|notification\.(?:success|error|warning|info|open)|message\.open)$/.test(memberName(object.parentPath.node.callee))) return true;
         const attribute = parent.findParent((ancestor) => ancestor.isJSXAttribute() || ancestor.isFunction());
-        return Boolean(attribute?.isJSXAttribute() && uiCollections.has(String(attribute.node.name.name)));
+        if (!attribute?.isJSXAttribute()) return false;
+        if (name === "message" && t.isJSXIdentifier(attribute.node.name, { name: "rules" })) {
+            const opening = attribute.parentPath;
+            const tag = opening?.isJSXOpeningElement() ? opening.node.name : undefined;
+            return t.isJSXMemberExpression(tag) && t.isJSXIdentifier(tag.object, { name: "Form" }) && t.isJSXIdentifier(tag.property, { name: "Item" });
+        }
+        return uiCollections.has(String(attribute.node.name.name));
     }
     return false;
 }

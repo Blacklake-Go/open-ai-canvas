@@ -3,6 +3,7 @@ import { useEffect, useRef, useState } from "react";
 import { Camera, Check, Focus, Keyboard, Minus, MousePointer2, Move3d, PanelLeft, Plus, Rotate3d, Route, Scale3d, Scan, SlidersHorizontal, ChartGantt } from "lucide-react";
 
 import { FloatingDock, type FloatingDockEntry } from "@/components/ui/aceternity/floating-dock";
+import { interfaceText } from "@/i18n/interface-text";
 import { aceternityMotion } from "@/lib/aceternity-motion";
 import { canvasDockStyle } from "@/lib/canvas/canvas-aceternity-style";
 import type { CanvasTheme } from "@/lib/canvas-theme";
@@ -70,8 +71,9 @@ export function PrevisCanvasDock(props: PrevisCanvasDockProps) {
     }, [openMenu]);
 
     const currentView = PREVIS_VIEW_MODES.find((item) => item.mode === props.viewMode) ?? PREVIS_VIEW_MODES[0];
-    const currentAspect = previsAspectOption(props.aspectRatio);
-    const trajectoryLabel = props.trajectoryDrawing ? "结束绘制轨迹" : props.trajectoryKind === "camera" ? "画运镜路径" : "画走位";
+    const aspect = previsAspectOption(props.aspectRatio);
+    const currentAspect = { ...aspect, label: interfaceText(aspect.label) };
+    const trajectoryLabel = interfaceText(props.trajectoryDrawing ? "结束绘制轨迹" : props.trajectoryKind === "camera" ? "画运镜路径" : "画走位");
 
     const items: FloatingDockEntry[] = [
         { id: "previs-scene-panel", label: props.scenePanelOpen ? "收起场景面板" : "打开场景面板", icon: <PanelLeft />, active: props.scenePanelOpen, expands: true, onClick: props.onToggleScenePanel },
@@ -83,10 +85,10 @@ export function PrevisCanvasDock(props: PrevisCanvasDockProps) {
             value: props.transformMode,
             onChange: (value) => props.onTransformModeChange(value as TransformMode),
             options: [
-                { id: "previs-select", value: "select", label: PREVIS_TOOL_LABELS.select, icon: <MousePointer2 /> },
-                { id: "previs-translate", value: "translate", label: PREVIS_TOOL_LABELS.translate, icon: <Move3d /> },
-                { id: "previs-rotate", value: "rotate", label: PREVIS_TOOL_LABELS.rotate, icon: <Rotate3d /> },
-                { id: "previs-scale", value: "scale", label: PREVIS_TOOL_LABELS.scale, icon: <Scale3d /> },
+                { id: "previs-select", value: "select", label: interfaceText(PREVIS_TOOL_LABELS.select), icon: <MousePointer2 /> },
+                { id: "previs-translate", value: "translate", label: interfaceText(PREVIS_TOOL_LABELS.translate), icon: <Move3d /> },
+                { id: "previs-rotate", value: "rotate", label: interfaceText(PREVIS_TOOL_LABELS.rotate), icon: <Rotate3d /> },
+                { id: "previs-scale", value: "scale", label: interfaceText(PREVIS_TOOL_LABELS.scale), icon: <Scale3d /> },
             ],
         },
         { id: "previs-trajectory", label: trajectoryLabel, icon: <Route />, active: props.trajectoryDrawing, onClick: props.onToggleTrajectory },
@@ -148,14 +150,16 @@ export function PrevisCanvasDock(props: PrevisCanvasDockProps) {
                         <div className="pv-canvas-dock__aspect-grid" role="radiogroup" aria-label="画幅比例">
                             {PREVIS_ASPECT_RATIOS.map((item) => {
                                 const checked = item.value === currentAspect.value;
+                                const label = interfaceText(item.label);
+                                const hint = interfaceText(item.hint);
                                 return (
                                     <button
                                         key={item.value}
                                         type="button"
                                         role="radio"
                                         aria-checked={checked}
-                                        aria-label={`${item.label} ${item.hint}`}
-                                        title={item.hint}
+                                        aria-label={`${label} ${hint}`}
+                                        title={hint}
                                         className={checked ? "is-active" : undefined}
                                         onClick={() => {
                                             props.onAspectRatioChange(item.value);
@@ -163,7 +167,7 @@ export function PrevisCanvasDock(props: PrevisCanvasDockProps) {
                                         }}
                                     >
                                         <PrevisAspectGlyph ratio={item.ratio} large />
-                                        <span>{item.label}</span>
+                                        <span>{label}</span>
                                     </button>
                                 );
                             })}
@@ -189,14 +193,15 @@ export function PrevisCanvasDock(props: PrevisCanvasDockProps) {
                         <div className="pv-canvas-dock__view-grid" role="radiogroup" aria-label="取景模式">
                             {PREVIS_VIEW_MODES.map((item) => {
                                 const checked = item.mode === props.viewMode;
+                                const hint = interfaceText(item.hint);
                                 return (
                                     <button
                                         key={item.mode}
                                         type="button"
                                         role="radio"
                                         aria-checked={checked}
-                                        aria-label={`${item.label} ${item.hint}`}
-                                        title={item.hint}
+                                        aria-label={`${item.label} ${hint}`}
+                                        title={hint}
                                         className={checked ? "is-active" : undefined}
                                         onClick={() => {
                                             props.onViewModeChange(item.mode);
@@ -240,7 +245,7 @@ export function PrevisCanvasDock(props: PrevisCanvasDockProps) {
                     </motion.div>
                 ) : null}
             </AnimatePresence>
-            <FloatingDock items={items} className="canvas-floating-dock" style={canvasDockStyle(theme)} ariaLabel="预演台视口工具" />
+            <FloatingDock items={items} className="canvas-floating-dock" style={canvasDockStyle(theme)} ariaLabel={interfaceText("预演台视口工具")} />
         </div>
     );
 }

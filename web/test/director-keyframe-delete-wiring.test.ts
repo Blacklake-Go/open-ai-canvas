@@ -187,7 +187,7 @@ describe("三类轨道都有删除入口，概览轨保持只读", () => {
     test("展开后的 Transform 子轨与骨骼子轨都可删除", () => {
         const transformRow = slice(sequencer, 'label="Transform" icon="◇"', "</SequencerRow>");
         expect(transformRow).toContain("onDeleteKey={deleteTrackKey}");
-        const boneRow = slice(sequencer, "label={previsBoneLabel(track.bone)}", "</SequencerRow>");
+        const boneRow = slice(sequencer, "label={interfaceText(previsBoneLabel(track.bone))}", "</SequencerRow>");
         expect(boneRow).toContain("onDeleteKey={deleteTrackKey}");
     });
 

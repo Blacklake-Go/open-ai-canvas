@@ -24,6 +24,7 @@ import { dropPrevisObjectToGround, groundPrevisScene } from "@/lib/canvas/previs
 import { type PrevisObject, type PrevisLight, type PrevisShot, type PrevisHumanoidBone, type PrevisQuat, type PrevisKeyframeDeleteTarget, type PrevisKeyframeEasing, type PrevisRig, type PrevisShotSize, type PrevisActorProfile } from "@/types/previs";
 import { resolvePrevisPlacementAnchor, resolvePrevisPlacement, type PrevisGroundPoint } from "@/lib/canvas/previs/previs-placement";
 import { uploadMediaFile } from "@/services/file-storage";
+import { interfaceText } from "@/i18n/interface-text";
 import { saveRemoteUserDataNow, localSavedRemotePendingMessage } from "@/services/user-data-sync";
 import {
     Camera,
@@ -1411,19 +1412,19 @@ export function CanvasPrevisWorkbench({
                             className={`previs-mode-switch-button ${mode === item.mode ? "is-active" : ""}`}
                             aria-pressed={mode === item.mode}
                             data-mode={item.mode}
-                            title={item.hint}
+                            title={interfaceText(item.hint)}
                             onClick={(event) => {
                                 setMode(item.mode);
                                 releasePrevisFocusAfterPointer(event);
                             }}
                         >
-                            {item.label}
+                            {interfaceText(item.label)}
                         </button>
                     ))}
                 </nav>
                 <div className="previs-desk-header-spacer" />
                 <span className={`previs-desk-save ${saveStatusClass}`} aria-live="polite">
-                    {saveIndicator.label}
+                    {interfaceText(saveIndicator.label)}
                 </span>
                 {saveController.progress.status === "error" ? (
                     <button type="button" className="previs-desk-header-action" onClick={() => void saveController.retrySave()}>
@@ -1512,7 +1513,7 @@ export function CanvasPrevisWorkbench({
                         {PREVIS_ADD_BUTTONS.map((item) => (
                             <button key={item.kind} type="button" className="pv-add-row__btn" onClick={() => openAddDialog(item.kind)}>
                                 <item.icon className="size-3.5" />
-                                {item.label}
+                                {interfaceText(item.label)}
                             </button>
                         ))}
                     </div>
@@ -1538,7 +1539,7 @@ export function CanvasPrevisWorkbench({
                                             <span className="pv-entity-row__info">
                                                 <span className="pv-entity-row__name">{actor.name}</span>
                                                 <span className="pv-entity-row__meta">
-                                                    {previsActorArchetypeLabel(actor.archetype)} · {actor.pose ? previsPoseLabel(actor.pose) : "站立"}
+                                                    {interfaceText(previsActorArchetypeLabel(actor.archetype))} · {interfaceText(actor.pose === "neutral" ? "自然姿势" : previsPoseLabel(actor.pose ?? "stand"))}
                                                 </span>
                                             </span>
                                         </button>

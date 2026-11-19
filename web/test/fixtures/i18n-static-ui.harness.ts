@@ -34,6 +34,19 @@ test("collecting does not mutate input and preserved source attributes remain li
     expect(transformStaticUi(source, "/project/web/src/i18n/messages.ts").changed).toBe(false);
 });
 
+test("form validation copy is localized while validation rules and data remain intact", () => {
+    const source = 'const Page=()=> <><Form.Item name="storage" rules={[{type:"number",min:1,max:100,message:`请输入 ${min} 到 ${max} 的整数`}]}/><Editor rules={[{message:"任务内容"}]}/></>';
+    const result = transformStaticUi(source, file);
+    expect(result.messages.map((row) => row.source)).toEqual(["请输入 {value1} 到 {value2} 的整数"]);
+    expect(result.code).toContain('name="storage"');
+    expect(result.code).toContain('type: "number"');
+    expect(result.code).toContain("min: 1");
+    expect(result.code).toContain("max: 100");
+    expect(result.code).toContain("value1: min");
+    expect(result.code).toContain("value2: max");
+    expect(result.code).toContain('message: "任务内容"');
+});
+
 test("document content and event payload labels remain verbatim while notification copy is localized", () => {
     const source =
         'const Page=()=> <><RichDocument content="用户原始文档"/><Tooltip content="说明文案"/><Select options={[{label:"选项",onClick:()=>send({label:"用户标签",prompt:"用户提示词"})}]}/></>;notification.error({message:"保存失败",description:"请稍后重试"})';

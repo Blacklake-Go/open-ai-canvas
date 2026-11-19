@@ -242,8 +242,8 @@ describe("模式控件可发现、可键盘、小屏可达", () => {
     });
 
     test("有可见文字标签与 hint title，不是纯图标", () => {
-        expect(nav).toContain("{item.label}");
-        expect(nav).toContain("title={item.hint}");
+        expect(nav).toContain("{interfaceText(item.label)}");
+        expect(nav).toContain("title={interfaceText(item.hint)}");
         expect(nav).toContain('aria-label="预演台模式"');
     });
 

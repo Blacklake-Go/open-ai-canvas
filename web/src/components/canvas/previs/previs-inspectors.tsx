@@ -256,7 +256,7 @@ export function ObjectInspector({
                 <div className="previs-inspector-tabs" role="tablist" aria-label="属性分类">
                     {tabs.map((item) => (
                         <button key={item.id} type="button" role="tab" aria-selected={activeTab === item.id} className={`previs-inspector-tab ${activeTab === item.id ? "is-active" : ""}`} onClick={() => setTab(item.id)}>
-                            {item.label}
+                            {interfaceText(item.label)}
                         </button>
                     ))}
                 </div>
@@ -331,7 +331,7 @@ export function ObjectInspector({
             ) : null}
 
             {activeTab === "pose" ? (
-                <InspectorGroup title="姿势" hint={interfaceText(previsPoseLabel(object.pose || "stand"))}>
+                <InspectorGroup title="姿势" hint={interfaceText(object.pose === "neutral" ? "自然姿势" : previsPoseLabel(object.pose ?? "stand"))}>
                     <div className="previs-pose-grid">
                         {poseOptions.map((option) => (
                             <button
@@ -353,7 +353,7 @@ export function ObjectInspector({
                                 allowClear
                                 placeholder="选择身体部位"
                                 value={selectedBone || undefined}
-                                options={poseBones.map((bone) => ({ label: previsBoneLabel(bone), value: bone }))}
+                                options={poseBones.map((bone) => ({ label: interfaceText(previsBoneLabel(bone)), value: bone }))}
                                 onChange={(bone) => onSelectBone(bone || null)}
                             />
                         </Field>
@@ -387,7 +387,7 @@ export function ObjectInspector({
                                     className="w-full"
                                     size="small"
                                     value={object.archetype || "adult"}
-                                    options={PREVIS_ACTOR_ARCHETYPES.map((item) => ({ label: item.label, value: item.value }))}
+                                    options={PREVIS_ACTOR_ARCHETYPES.map((item) => ({ label: interfaceText(item.label), value: item.value }))}
                                     onChange={(archetype: PrevisActorArchetype) => onUpdate({ archetype, actorProfile: previsActorProfileForArchetype(archetype) })}
                                 />
                             </Field>
@@ -536,7 +536,7 @@ export function ShotInspector({
                             className="w-full"
                             size="small"
                             value={previsAspectOption(shot.aspectRatio).value}
-                            options={PREVIS_ASPECT_RATIOS.map((item) => ({ label: item.label, value: item.value }))}
+                            options={PREVIS_ASPECT_RATIOS.map((item) => ({ label: interfaceText(item.label), value: item.value }))}
                             onChange={(aspectRatio: PrevisAspectRatio) => onUpdateShot({ aspectRatio })}
                         />
                     </Field>

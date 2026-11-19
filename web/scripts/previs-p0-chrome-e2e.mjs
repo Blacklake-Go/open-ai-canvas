@@ -428,6 +428,9 @@ async function englishPresetLabels(cdp, baseUrl) {
     await cdp.navigateFresh(`${baseUrl}/dev/previs-repro?uiLocale=en-US`);
     if (!(await cdp.click('[data-testid="toggle-workbench"]'))) throw new Error("English preset scenario could not open the workbench");
     await openUnifiedWorkbench(cdp, "English presets");
+    assert(await cdp.poll(`document.querySelector('[data-mode="layout"]')?.textContent?.trim() === "Scene layout"`, "English layout tab"), "English workbench mode is visible");
+    assert(await cdp.poll(`document.querySelector('.previs-desk-save')?.textContent?.trim() === "Saved"`, "English save status"), "English workbench save status is visible");
+    assert(await cdp.poll(`!!document.querySelector('[aria-label="Previs viewport tools"]')`, "English viewport dock"), "English viewport dock is labeled");
     assert(await cdp.click('[aria-label="Add to scene"]'), "English add scene control opens");
     assert(await cdp.clickText("Props", '[role="tab"]'), "English prop category is selectable");
     const card = `[...document.querySelectorAll('.previs-add-dialog__card')].find((button) => button.textContent?.includes('Armchair') && button.getClientRects().length > 0)`;

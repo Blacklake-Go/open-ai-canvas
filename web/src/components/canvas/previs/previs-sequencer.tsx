@@ -1,6 +1,7 @@
 import { ChevronDown, ChevronRight, ChevronUp, KeyRound, Magnet, Pause, Play, Plus, Rows3, Trash2, ZoomIn, ZoomOut } from "lucide-react";
 import { useEffect, useMemo, useRef, useState, type CSSProperties, type ReactNode } from "react";
 
+import { interfaceText } from "@/i18n/interface-text";
 import { previsBoneLabel } from "@/lib/canvas/previs/previs-scene";
 import { releasePrevisFocusAfterPointer } from "@/lib/canvas/previs/previs-shortcuts";
 import type { PrevisCamera, PrevisKeyframeDeleteTarget, PrevisKeyframeEasing, PrevisObject, PrevisScene, PrevisShot } from "@/types/previs";
@@ -170,7 +171,7 @@ export function PrevisSequencer({ scene, shot, camera, objects, selectedObjectId
                         const isExpanded = expanded[object.id] ?? object.id === selectedObjectId;
                         const activeClip = object.motionClips?.find((clip) => clip.id === object.activeMotionClipId);
                         // 骨骼帧 id 在不同轨道间可能重复，React key 用「骨骼-帧」组合；删除目标仍指向原始帧 id。
-                        const boneTrackKeys: TrackKey[] = object.boneTracks?.flatMap((track) => track.keyframes.map((key) => ({ id: `bone-${track.bone}-${key.id}`, time: key.time, color: "#f0b36a", label: `${object.name} ${previsBoneLabel(track.bone)}`, easing: key.easing, target: { track: "object-bone" as const, objectId: object.id, bone: track.bone, keyframeId: key.id } }))) || [];
+                        const boneTrackKeys: TrackKey[] = object.boneTracks?.flatMap((track) => track.keyframes.map((key) => ({ id: `bone-${track.bone}-${key.id}`, time: key.time, color: "#f0b36a", label: `${object.name} ${interfaceText(previsBoneLabel(track.bone))}`, easing: key.easing, target: { track: "object-bone" as const, objectId: object.id, bone: track.bone, keyframeId: key.id } }))) || [];
                         const transformKeys: TrackKey[] = object.keyframes.map((key) => ({ id: `transform-${key.id}`, time: key.time, color: "#61d2ad", label: `${object.name} Transform`, easing: key.easing, target: { track: "object-transform" as const, objectId: object.id, keyframeId: key.id } }));
                         return <div key={object.id} className="contents">
                             <SequencerRow label={object.name} icon={isExpanded ? <ChevronDown className="size-3" /> : <ChevronRight className="size-3" />} selected={selectedObjectId === object.id && !selectedBone} onClick={() => { onSelectObject(object.id); onSelectBone(null); setExpanded((current) => ({ ...current, [object.id]: !isExpanded })); }}>
@@ -185,8 +186,8 @@ export function PrevisSequencer({ scene, shot, camera, objects, selectedObjectId
                                     <TrackKeys duration={duration} keys={transformKeys} selectedTarget={activeSelectedKey?.target} onSelectKey={selectTrackKey} onDeleteKey={deleteTrackKey} />
                                 </SequencerRow>
                                 {object.boneTracks?.map((track) => {
-                                    const keys: TrackKey[] = track.keyframes.map((key) => ({ id: key.id, time: key.time, color: "#f0b36a", label: `${object.name} ${previsBoneLabel(track.bone)}`, easing: key.easing, target: { track: "object-bone", objectId: object.id, bone: track.bone, keyframeId: key.id } }));
-                                    return <SequencerRow key={track.bone} label={previsBoneLabel(track.bone)} icon="◌" indent selected={selectedObjectId === object.id && selectedBone === track.bone} onClick={() => { onSelectObject(object.id); onSelectBone(track.bone); }}><TrackKeys duration={duration} keys={keys} selectedTarget={activeSelectedKey?.target} onSelectKey={selectTrackKey} onDeleteKey={deleteTrackKey} /></SequencerRow>;
+                                    const keys: TrackKey[] = track.keyframes.map((key) => ({ id: key.id, time: key.time, color: "#f0b36a", label: `${object.name} ${interfaceText(previsBoneLabel(track.bone))}`, easing: key.easing, target: { track: "object-bone", objectId: object.id, bone: track.bone, keyframeId: key.id } }));
+                                    return <SequencerRow key={track.bone} label={interfaceText(previsBoneLabel(track.bone))} icon="◌" indent selected={selectedObjectId === object.id && selectedBone === track.bone} onClick={() => { onSelectObject(object.id); onSelectBone(track.bone); }}><TrackKeys duration={duration} keys={keys} selectedTarget={activeSelectedKey?.target} onSelectKey={selectTrackKey} onDeleteKey={deleteTrackKey} /></SequencerRow>;
                                 })}
                             </> : null}
                         </div>;
