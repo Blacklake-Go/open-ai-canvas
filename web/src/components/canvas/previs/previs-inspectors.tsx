@@ -32,6 +32,8 @@ import { dropPrevisObjectToGround, isPrevisObjectOnGround } from "@/lib/canvas/p
 /** 演员色板：一行 8 个高区分度颜色，其余颜色用取色器/十六进制输入，避免两行杂乱色块。 */
 const PREVIS_ACTOR_SWATCHES: readonly string[] = ["#2f7de1", "#d84949", "#dfae3f", "#34a276", "#8b5cf6", "#f97316", "#06b6d4", "#8a93a0"];
 import { PREVIS_MOTION_IDS, PREVIS_MOTIONS, previsMotionLabel, previsMotionsOverlap } from "@/lib/canvas/previs/previs-motion";
+import { interfaceText } from "@/i18n/interface-text";
+import { useTranslation } from "react-i18next";
 import type { PrevisActorMotion, PrevisMotionId } from "@/types/previs";
 
 /**
@@ -39,6 +41,7 @@ import type { PrevisActorMotion, PrevisMotionId } from "@/types/previs";
  * 上半身动作（招手、说话…）可以叠加在走路上，整身动作同层互斥并给出冲突提示。
  */
 function ActorMotionSection({ object, playhead, onUpdate }: { object: PrevisObject; playhead: number; onUpdate: (patch: Partial<PrevisObject>) => void }) {
+    useTranslation();
     const motions = object.motions || [];
     const sorted = motions.toSorted((left, right) => left.start - right.start);
     const add = (motion: PrevisMotionId) => {
@@ -56,13 +59,13 @@ function ActorMotionSection({ object, playhead, onUpdate }: { object: PrevisObje
                         key={id}
                         type="button"
                         className="previs-pose-button"
-                        title={`${previsMotionLabel(id)}（${PREVIS_MOTIONS[id].layer === "upper" ? "上半身，可叠加走路" : "整身"}）`}
+                        title={`${interfaceText(previsMotionLabel(id))} · ${PREVIS_MOTIONS[id].layer === "upper" ? interfaceText("上半身，可叠加走路") : interfaceText("整身")}`}
                         onClick={(event) => {
                             releasePrevisFocusAfterPointer(event);
                             add(id);
                         }}
                     >
-                        {previsMotionLabel(id)}
+                        {interfaceText(previsMotionLabel(id))}
                     </button>
                 ))}
             </div>
@@ -74,13 +77,13 @@ function ActorMotionSection({ object, playhead, onUpdate }: { object: PrevisObje
                         return (
                             <li key={item.id} className={`previs-motion-row ${conflict ? "is-conflict" : ""}`}>
                                 <span className="previs-motion-row__name" title={conflict ? "与同层动作时间重叠，后添加的会覆盖前者" : undefined}>
-                                    {previsMotionLabel(item.motion)}
+                                    {interfaceText(previsMotionLabel(item.motion))}
                                     {conflict ? <TriangleAlert role="img" aria-label="动作时间重叠" className="ml-1 inline-block size-3.5 align-[-0.125em] text-[var(--status-warning)]" /> : null}
                                 </span>
                                 <InputNumber size="small" aria-label="开始秒" min={0} max={60} step={0.1} value={item.start} addonAfter="s" onChange={(start) => patch(item.id, { start: Math.max(0, Number(start) || 0) })} />
                                 <InputNumber size="small" aria-label="时长秒" min={0.2} max={60} step={0.1} value={item.duration} addonAfter="长" onChange={(duration) => patch(item.id, { duration: Math.max(0.2, Number(duration) || 0.2) })} />
                                 <Slider className="previs-motion-row__intensity" aria-label="幅度" min={0.2} max={1.6} step={0.05} value={item.intensity ?? 1} onChange={(intensity) => patch(item.id, { intensity })} />
-                                <button type="button" className="previs-motion-row__remove" aria-label={`删除动作 ${previsMotionLabel(item.motion)}`} onClick={() => remove(item.id)}>
+                                <button type="button" className="previs-motion-row__remove" aria-label={`删除动作 ${interfaceText(previsMotionLabel(item.motion))}`} onClick={() => remove(item.id)}>
                                     <Trash2 className="size-3" />
                                 </button>
                             </li>
@@ -328,11 +331,17 @@ export function ObjectInspector({
             ) : null}
 
             {activeTab === "pose" ? (
-                <InspectorGroup title="姿势" hint={previsPoseLabel(object.pose || "stand")}>
+                <InspectorGroup title="姿势" hint={interfaceText(previsPoseLabel(object.pose || "stand"))}>
                     <div className="previs-pose-grid">
                         {poseOptions.map((option) => (
-                            <button key={option.value} type="button" className={`previs-pose-button ${object.pose === option.value && !object.activeMotionClipId ? "is-active" : ""}`} title={option.label} onClick={() => applyPose(option.value)}>
-                                {option.label}
+                            <button
+                                key={option.value}
+                                type="button"
+                                className={`previs-pose-button ${object.pose === option.value && !object.activeMotionClipId ? "is-active" : ""}`}
+                                title={interfaceText(option.label)}
+                                onClick={() => applyPose(option.value)}
+                            >
+                                {interfaceText(option.label)}
                             </button>
                         ))}
                     </div>
@@ -520,7 +529,7 @@ export function ShotInspector({
                 </Field>
                 <div className="grid grid-cols-2 gap-2">
                     <Field label="景别">
-                        <Select className="w-full" size="small" value={shot.shotSize} options={shotSizeOptions} onChange={(shotSize: PrevisShotSize) => onUpdateShot({ shotSize })} />
+                        <Select className="w-full" size="small" value={shot.shotSize} options={shotSizeOptions.map((option) => ({ ...option, label: interfaceText(option.label) }))} onChange={(shotSize: PrevisShotSize) => onUpdateShot({ shotSize })} />
                     </Field>
                     <Field label="画幅">
                         <Select
@@ -577,7 +586,7 @@ export function ShotInspector({
                 </>
             ) : null}
             <InspectorGroup title="运镜" hint={capabilities.timeline ? undefined : "切到「动画」可生成运镜"}>
-                <Select className="w-full" size="small" value={shot.cameraMove} options={cameraMoveOptions} onChange={(cameraMove: PrevisCameraMove) => onUpdateShot({ cameraMove })} />
+                <Select className="w-full" size="small" value={shot.cameraMove} options={cameraMoveOptions.map((option) => ({ ...option, label: interfaceText(option.label) }))} onChange={(cameraMove: PrevisCameraMove) => onUpdateShot({ cameraMove })} />
                 {capabilities.timeline && camera ? (
                     <>
                         <div className="previs-anim-guide__actions">

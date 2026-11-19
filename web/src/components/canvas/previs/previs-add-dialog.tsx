@@ -21,6 +21,8 @@ import {
 } from "@/lib/canvas/previs/previs-add-catalog";
 import { buildPrevisMannequin, loadPrevisMannequinTemplate, resolvePrevisMannequinProfile } from "@/lib/canvas/previs/previs-mannequin";
 import { evaluatePrevisActorPose } from "@/lib/canvas/previs/previs-motion";
+import { interfaceText } from "@/i18n/interface-text";
+import { useTranslation } from "react-i18next";
 import { PREVIS_PROP_LIBRARY, formatPrevisPropSize, type PrevisPropItem } from "@/lib/canvas/previs/previs-prop-library";
 import { previsVerticalFov } from "@/lib/canvas/previs/previs-optics";
 import type { PrevisCamera, PrevisLight, PrevisObject, PrevisPose, PrevisTransform } from "@/types/previs";
@@ -63,6 +65,7 @@ export function PrevisAddDialog({
     onConfirm: (result: PrevisAddResult) => void;
     onUploadModel: () => void;
 }) {
+    useTranslation();
     const [kind, setKind] = useState<PrevisAddKind>(initialKind);
     const [actorTemplate, setActorTemplate] = useState<PrevisActorTemplate>(PREVIS_ACTOR_TEMPLATES[0]);
     const [actorColor, setActorColor] = useState(ACTOR_SWATCHES[0]);
@@ -105,7 +108,9 @@ export function PrevisAddDialog({
         else onConfirm({ kind, camera: previewCamera });
     };
 
-    const confirmLabel = kind === "actor" ? (crowd ? "加入 9 个角色" : `加入「${actorTemplate.label}」`) : kind === "prop" ? `加入「${prop.name}」` : kind === "light" ? `加入「${lightPreset.label}」` : `加入「${cameraPreset.label}」机位`;
+    const selectedLabel = kind === "actor" ? actorTemplate.label : kind === "prop" ? prop.name : kind === "light" ? lightPreset.label : cameraPreset.label;
+    const selectedName = interfaceText(selectedLabel);
+    const confirmLabel = kind === "actor" && crowd ? interfaceText("加入 9 个角色") : kind === "camera" ? interfaceText("加入「{name}」机位", { name: selectedName }) : interfaceText("加入「{name}」", { name: selectedName });
     const category = PREVIS_PROP_LIBRARY.find((item) => item.id === propCategory) ?? PREVIS_PROP_LIBRARY[0];
 
     return (
@@ -115,7 +120,7 @@ export function PrevisAddDialog({
                     {TABS.map((tab) => (
                         <button key={tab.kind} type="button" role="tab" aria-selected={kind === tab.kind} className={`previs-add-dialog__tab ${kind === tab.kind ? "is-active" : ""}`} onClick={() => setKind(tab.kind)}>
                             <tab.icon className="size-4" />
-                            {tab.label}
+                            {interfaceText(tab.label)}
                         </button>
                     ))}
                 </div>
@@ -129,8 +134,8 @@ export function PrevisAddDialog({
                                             key={template.id}
                                             variant="figure"
                                             active={actorTemplate.id === template.id}
-                                            title={template.label}
-                                            hint={template.hint}
+                                            title={interfaceText(template.label)}
+                                            hint={interfaceText(template.hint)}
                                             thumb={actorThumbnails[template.id] ? <img src={actorThumbnails[template.id]} alt="" draggable={false} /> : <UserRound className="previs-add-dialog__card-placeholder" />}
                                             onClick={() => setActorTemplate(template)}
                                         />
@@ -143,7 +148,7 @@ export function PrevisAddDialog({
                                     <div className="previs-add-dialog__chips">
                                         {poseOptions.slice(0, 12).map((option) => (
                                             <button key={option.value} type="button" className={`previs-add-dialog__chip ${actorPose === option.value ? "is-active" : ""}`} onClick={() => setActorPose(option.value)}>
-                                                {option.label}
+                                                {interfaceText(option.label)}
                                             </button>
                                         ))}
                                     </div>
@@ -163,13 +168,13 @@ export function PrevisAddDialog({
                                 <div className="previs-add-dialog__chips">
                                     {PREVIS_PROP_LIBRARY.map((item) => (
                                         <button key={item.id} type="button" className={`previs-add-dialog__chip ${propCategory === item.id ? "is-active" : ""}`} onClick={() => setPropCategory(item.id)}>
-                                            {item.label}
+                                            {interfaceText(item.label)}
                                         </button>
                                     ))}
                                 </div>
                                 <OptionGrid>
                                     {category.items.map((item) => (
-                                        <OptionCard key={item.id} active={prop.id === item.id} title={item.name} hint={formatPrevisPropSize(item.size)} thumb={<PrevisPropThumb prop={item} />} onClick={() => setProp(item)} />
+                                        <OptionCard key={item.id} active={prop.id === item.id} title={interfaceText(item.name)} hint={formatPrevisPropSize(item.size)} thumb={<PrevisPropThumb prop={item} />} onClick={() => setProp(item)} />
                                     ))}
                                 </OptionGrid>
                                 <OptionSection title="颜色">
@@ -183,13 +188,19 @@ export function PrevisAddDialog({
                         ) : kind === "light" ? (
                             <OptionGrid>
                                 {PREVIS_LIGHT_PRESETS.map((preset) => (
-                                    <OptionCard key={preset.id} active={lightPreset.id === preset.id} title={preset.label} hint={preset.hint} swatch={preset.color ?? "#ffffff"} onClick={() => setLightPreset(preset)} />
+                                    <OptionCard key={preset.id} active={lightPreset.id === preset.id} title={interfaceText(preset.label)} hint={interfaceText(preset.hint)} swatch={preset.color ?? "#ffffff"} onClick={() => setLightPreset(preset)} />
                                 ))}
                             </OptionGrid>
                         ) : (
                             <OptionGrid>
                                 {PREVIS_CAMERA_PRESETS.map((preset) => (
-                                    <OptionCard key={preset.id} active={cameraPreset.id === preset.id} title={preset.label} hint={`${preset.hint}${preset.fromCurrentView ? "" : ` · ${preset.focalLength}mm`}`} onClick={() => setCameraPreset(preset)} />
+                                    <OptionCard
+                                        key={preset.id}
+                                        active={cameraPreset.id === preset.id}
+                                        title={interfaceText(preset.label)}
+                                        hint={`${interfaceText(preset.hint)}${preset.fromCurrentView ? "" : ` · ${preset.focalLength}mm`}`}
+                                        onClick={() => setCameraPreset(preset)}
+                                    />
                                 ))}
                             </OptionGrid>
                         )}

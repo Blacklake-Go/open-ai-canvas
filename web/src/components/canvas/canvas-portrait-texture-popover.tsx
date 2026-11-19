@@ -6,6 +6,7 @@ import { usePopoverAnchorAlign } from "@/hooks/use-popover-anchor-align";
 
 import { canvasThemes } from "@/lib/canvas-theme";
 import { PORTRAIT_TEXTURE_GROUPS, normalizePortraitTextureSettings, type PortraitTextureSettingKey, type PortraitTextureSettings } from "@/lib/canvas/canvas-portrait-texture";
+import { interfaceText } from "@/i18n/interface-text";
 import { useActiveTheme } from "@/stores/canvas/use-canvas-theme-store";
 
 type CanvasPortraitTexturePopoverProps = {
@@ -35,9 +36,9 @@ export function CanvasPortraitTexturePopover({ value, placement = "topLeft", onC
                 {PORTRAIT_TEXTURE_GROUPS.map((group) => (
                     <div key={group.key} className="grid grid-cols-[60px_minmax(0,1fr)] items-center gap-2 py-1">
                         <span className="text-[var(--fs-label)]" style={{ color: theme.node.muted }}>
-                            {group.label}
+                            {interfaceText(group.label)}
                         </span>
-                        <div className="grid min-w-0 grid-cols-3 gap-1" role="radiogroup" aria-label={group.label}>
+                        <div className="grid min-w-0 grid-cols-3 gap-1" role="radiogroup" aria-label={interfaceText(group.label)}>
                             {group.options.map((option) => {
                                 const selected = settings[group.key] === option.value;
                                 return (
@@ -55,7 +56,9 @@ export function CanvasPortraitTexturePopover({ value, placement = "topLeft", onC
                                         }}
                                         onClick={() => updateSetting(group.key, option.value)}
                                     >
-                                        <span className="block truncate">{option.label}</span>
+                                        <span className="block truncate" title={interfaceText(option.label)}>
+                                            {interfaceText(option.label)}
+                                        </span>
                                     </button>
                                 );
                             })}

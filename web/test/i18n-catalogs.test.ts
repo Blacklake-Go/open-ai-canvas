@@ -15,6 +15,10 @@ import { formatRelativeTime } from "@/lib/relative-time";
 import { APERTURE_META, CAMERA_PROFILES, FOCAL_LENGTH_META, LENS_PROFILES } from "@/lib/canvas/camera-prompt-library";
 import { DRAMA_STYLE_CATEGORIES, DRAMA_STYLE_FORMS, DRAMA_STYLE_THEMES, DRAMA_STYLES } from "@/lib/drama/drama-styles";
 import { projectStyleCharacters, projectStyleMedia, projectStyleTones, projectStyleWorlds } from "@/lib/canvas/canvas-style-system";
+import { PORTRAIT_TEXTURE_GROUPS } from "@/lib/canvas/canvas-portrait-texture";
+import { PREVIS_ACTOR_TEMPLATES, PREVIS_CAMERA_PRESETS, PREVIS_LIGHT_PRESETS } from "@/lib/canvas/previs/previs-add-catalog";
+import { PREVIS_MOTIONS } from "@/lib/canvas/previs/previs-motion";
+import { PREVIS_PROP_LIBRARY } from "@/lib/canvas/previs/previs-prop-library";
 import { localizedApiErrorMessage } from "@/services/api/error-codes";
 import { useLocaleStore } from "@/stores/use-locale-store";
 import { useUserStore } from "@/stores/use-user-store";
@@ -31,6 +35,20 @@ const placeholders = (text: string) => [...text.matchAll(/\{\{(\w+)\}\}/g)].map(
 afterEach(() => useLocaleStore.getState().setLocale("zh-CN"));
 
 describe("i18n catalogs", () => {
+    test("previsualization and portrait controls resolve the built-in display labels in all eight languages", () => {
+        const sources = new Set(
+            [
+                ...PORTRAIT_TEXTURE_GROUPS.flatMap((group) => [group.label, ...group.options.map((option) => option.label)]),
+                ...[...PREVIS_ACTOR_TEMPLATES, ...PREVIS_CAMERA_PRESETS, ...PREVIS_LIGHT_PRESETS].flatMap(({ label, hint }) => [label, hint]),
+                ...Object.values(PREVIS_MOTIONS).map(({ label }) => label),
+                ...PREVIS_PROP_LIBRARY.flatMap(({ label, items }) => [label, ...items.map(({ name }) => name)]),
+            ].filter((source) => /\p{Script=Han}/u.test(source)),
+        );
+        for (const { code } of SUPPORTED_LOCALES) {
+            const messages = flatten(NATIVE_CATALOGS[code]);
+            for (const source of sources) expect(messages[interfaceTextKey(source)], `${code}: ${source}`).toBeTruthy();
+        }
+    });
     test("public MCP categories, tools, examples, and documentation are localized in all eight languages", () => {
         const sources = [
             ...MCP_CATEGORIES.map((item) => item.label),

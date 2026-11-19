@@ -251,11 +251,12 @@ async function connectCdp(cdpPort) {
     await send("Network.enable");
     // 场景 G 从 Resource Timing 里取 Vite 预构建依赖的真实 URL，才能拿到页面正在用的同一模块实例。
     // 浏览器默认只记 250 条，开发模式下应用启动加载的源码模块就能占满，之后的 three / r3f 不会被记录。
-    // These interaction assertions use Chinese labels. Pin the isolated profile's
-    // native locale before bootstrap instead of depending on the runner's OS language.
-    const localePreference = JSON.stringify({ state: { locale: "zh-CN" }, version: 0 });
+    // Pin each scenario's locale before bootstrap so assertions are independent of the runner's OS language.
     await send("Page.addScriptToEvaluateOnNewDocument", {
-        source: `performance.setResourceTimingBufferSize(10000); if (location.hostname === "127.0.0.1") localStorage.setItem("yingce:locale", ${JSON.stringify(localePreference)});`,
+        source: `performance.setResourceTimingBufferSize(10000); if (location.hostname === "127.0.0.1") {
+            const locale = new URLSearchParams(location.search).get("uiLocale") === "en-US" ? "en-US" : "zh-CN";
+            localStorage.setItem("yingce:locale", JSON.stringify({ state: { locale }, version: 0 }));
+        }`,
     });
 
     const evaluate = async (expression) => {
@@ -421,6 +422,17 @@ async function stopExact(child, name) {
 async function openUnifiedWorkbench(cdp, label) {
     const ready = await cdp.poll(`!!document.querySelector('[data-canvas-previs-workbench]') && !!document.querySelector('.pv-layout') && !!document.querySelector('.previs-viewport-shell')`, `${label} unified previs workbench`, 20000);
     if (!ready) throw new Error(`${label}: unified previs workbench did not enter layout context`);
+}
+
+async function englishPresetLabels(cdp, baseUrl) {
+    await cdp.navigateFresh(`${baseUrl}/dev/previs-repro?uiLocale=en-US`);
+    if (!(await cdp.click('[data-testid="toggle-workbench"]'))) throw new Error("English preset scenario could not open the workbench");
+    await openUnifiedWorkbench(cdp, "English presets");
+    assert(await cdp.click('[aria-label="Add to scene"]'), "English add scene control opens");
+    assert(await cdp.clickText("Props", '[role="tab"]'), "English prop category is selectable");
+    const card = `[...document.querySelectorAll('.previs-add-dialog__card')].find((button) => button.textContent?.includes('Armchair') && button.getClientRects().length > 0)`;
+    assert(await cdp.clickPoint(card, "English armchair preset"), "English armchair preset is selectable");
+    assert(await cdp.poll(`Array.from(document.querySelectorAll(".previs-add-dialog__footer button")).some((button) => button.textContent?.trim() === "Add Armchair")`, "English preset confirmation"), "English confirmation follows the selected preset");
 }
 
 /** 使用当前产品流程从预设库加入一个真实道具，不依赖旧版快捷菜单。 */
@@ -964,7 +976,7 @@ async function main() {
         console.log("      CDP connected (Runtime, Page, Log, Network enabled)");
 
         // 故意保存失败的场景最后运行：它保留 beforeunload 保护，后续导航会被浏览器拦住。
-        const scenarios = [smokeWorkbench, localModel, missingRetry, deleteWhileLoading, webglLossRestore, shotOutputs, saveFailureCloseGuard];
+        const scenarios = [smokeWorkbench, localModel, missingRetry, deleteWhileLoading, webglLossRestore, shotOutputs, englishPresetLabels, saveFailureCloseGuard];
         const selected = process.env.PREVIS_E2E_SCENARIO;
         if (selected && !scenarios.some((scenario) => scenario.name === selected)) throw new Error(`Unknown scenario: ${selected}`);
         for (const scenario of scenarios.filter((scenario) => !selected || scenario.name === selected)) {
