@@ -949,8 +949,18 @@ export function findDramaStyle(id: string): DramaStyle | undefined {
 export function dramaStyleDisplay(style: DramaStyle) {
     const composed = parseDramaStyleId(style.id);
     return {
-        name: composed ? style.name.split(" · ").map((part) => interfaceText(part)).join(" · ") : interfaceText(style.name),
-        description: composed ? style.description.split("；").map((part) => interfaceText(part)).join(" · ") : interfaceText(style.description),
+        name: composed
+            ? style.name
+                  .split(" · ")
+                  .map((part) => interfaceText(part))
+                  .join(" · ")
+            : interfaceText(style.name),
+        description: composed
+            ? style.description
+                  .split("；")
+                  .map((part) => interfaceText(part))
+                  .join(" · ")
+            : interfaceText(style.description),
         tags: style.tags.map((tag) => interfaceText(tag)),
     };
 }

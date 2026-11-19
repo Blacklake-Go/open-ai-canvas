@@ -86,7 +86,10 @@ export function DramaStyleDetailModal({
                         <header className="drama-style-detail-head">
                             <div className="min-w-0">
                                 <div className="drama-style-detail-meta">
-                                    <span>{categoryLabel ? interfaceText(categoryLabel) : ""}{composition ? ` · ${interfaceText("自由组合")}` : null}</span>
+                                    <span>
+                                        {categoryLabel ? interfaceText(categoryLabel) : ""}
+                                        {composition ? ` · ${interfaceText("自由组合")}` : null}
+                                    </span>
                                     {style.hot ? (
                                         <span className="is-hot">
                                             <Flame className="size-3" />

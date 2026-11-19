@@ -76,7 +76,15 @@ export function StyleCompositionPicker({ value, onChange, disabled = false, comp
                         </legend>
                         <div className="drama-style-composition-forms" role="group" aria-label="表现形式">
                             {DRAMA_STYLE_FORMS.map((form) => (
-                                <button key={form.id} type="button" className="drama-style-composition-form" aria-pressed={composition?.formId === form.id} disabled={disabled} title={disabledReason || interfaceText(form.description)} onClick={() => selectForm(form.id)}>
+                                <button
+                                    key={form.id}
+                                    type="button"
+                                    className="drama-style-composition-form"
+                                    aria-pressed={composition?.formId === form.id}
+                                    disabled={disabled}
+                                    title={disabledReason || interfaceText(form.description)}
+                                    onClick={() => selectForm(form.id)}
+                                >
                                     <strong>{interfaceText(form.name)}</strong>
                                     <span>{interfaceText(form.description)}</span>
                                 </button>
