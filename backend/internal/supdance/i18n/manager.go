@@ -377,7 +377,7 @@ func FilterEntries(entries []Entry, customCount, modifiedCount int, filter Entry
 }
 
 const MaxEntryUpdates = 2000
-const MaxEntryImport = 20000
+const MaxEntryImport = 24000
 
 // UpsertEntries validates and merges one or more updated/new entries into the custom overrides map.
 func UpsertEntries(existing map[string]Entry, updates []Entry, actorID string) (map[string]Entry, int, error) {
