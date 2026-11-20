@@ -117,6 +117,19 @@ describe("SupDance Music Generation Plugin Lifecycle & Manifest V2 Conformance",
         expect(getRegisteredPlugin("supdance-music-faulty")).toBeUndefined();
     });
 
+    test("keeps the installed version when its cleanup fails", async () => {
+        const installed = {
+            manifest: { ...rawManifest, version: "1.0.0" },
+            deactivate: () => {
+                throw new Error("cleanup failed");
+            },
+        };
+        registerSupDancePlugin(installed);
+        const ctx = createMockHostContext(rawManifest);
+        await expect(upgradeSupDancePlugin({ manifest: { ...rawManifest, version: "1.1.0" } }, { context: ctx })).rejects.toThrow("cleanup failed");
+        expect(getRegisteredPlugin(MUSIC_PLUGIN_ID)?.manifest.version).toBe("1.0.0");
+    });
+
     test("smoothly upgrades plugin version while retaining state", async () => {
         let oldDeactivated = false;
         const v1Plugin: RegisteredPlugin = {

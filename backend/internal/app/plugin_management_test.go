@@ -47,6 +47,18 @@ func TestApplicationPluginUsesUserStateUnderPlatformAvailability(t *testing.T) {
 	if err := db.First(&retired, "plugin_id = ?", "supdance-visual-engine").Error; err != nil || retired.Available {
 		t.Fatalf("historical visual engine state was changed: %+v, %v", retired, err)
 	}
+	for _, pluginID := range []string{PluginSupDanceHtmlPageManager, PluginSupDanceEmailMarketing} {
+		for _, available := range []bool{false, true} {
+			updated, err := svc.SetPluginPlatformAvailability(admin, pluginID, available)
+			if err != nil || updated.PlatformAvailable != available || updated.EffectiveEnabled != available {
+				t.Fatalf("host application %s availability %t: %+v, %v", pluginID, available, updated, err)
+			}
+			fetched, err := svc.PluginStatesForUser(user)
+			if err != nil || fetched[pluginID].EffectiveEnabled != available {
+				t.Fatalf("effective state for %s: %+v, %v", pluginID, fetched[pluginID], err)
+			}
+		}
+	}
 	initial := states[WorkflowPluginRunningHub]
 	if !initial.PlatformAvailable || initial.UserEnabled || initial.EffectiveEnabled || !initial.CanToggle {
 		t.Fatalf("initial RunningHub state = %#v", initial)

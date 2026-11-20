@@ -331,7 +331,8 @@ func (s *Service) SetPluginPlatformAvailability(actor *model.User, pluginID stri
 	policy := pluginManagement(pluginID, source)
 	previousRuntimeEnabled := false
 	runtimeChanged := false
-	if policy.ActivationScope == PluginScopeSystem && (hasRuntime || pluginID != PluginOfficialAssetLibrary) && !isSupDanceSystemApplicationPluginID(pluginID) {
+	// Host-provided applications can be gated by platform state alone.
+	if policy.ActivationScope == PluginScopeSystem && (hasRuntime || policy.Kind != PluginKindApplication) && !isSupDanceSystemApplicationPluginID(pluginID) {
 		if !hasRuntime {
 			return AdminPluginStateView{}, fmt.Errorf("插件 %q 缺少运行时", pluginID)
 		}

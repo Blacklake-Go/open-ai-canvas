@@ -72,6 +72,8 @@ test("native locale controls all six languages independently of legacy settings 
         await act(async () => useSupDanceI18nStore.setState({ pluginEnabled: false, locale: "zh-CN" }));
         expect(i18n.language).toBe("en-US");
         expect(host.querySelector("[data-core]")?.textContent).toBe(nativeLabels["en-US"]);
+        expect(host.querySelector("[data-extension]")?.textContent).toBe("custom.native_test");
+        await act(async () => useSupDanceI18nStore.getState().setPluginEnabled(true));
         expect(host.querySelector("[data-extension]")?.textContent).toBe("Hello Canvas");
         await act(async () => useLocaleStore.getState().setLocale("fr-FR"));
         await act(async () => useSupDanceI18nStore.getState().applyBundle({ pluginId: "supdance-i18n", pluginEnabled: true, settings: state.settings, customEntries: {}, revision: "legacy-update" }));

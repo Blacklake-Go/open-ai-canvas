@@ -70,8 +70,16 @@ const initialCache = readStoredCache();
 const initialSettings = initialCache?.settings ?? DEFAULT_SUPDANCE_I18N_SETTINGS;
 const initialCustomEntries = initialCache?.customEntries ?? {};
 const initialPluginEnabled = typeof initialCache?.pluginEnabled === "boolean" ? initialCache.pluginEnabled : true;
-const initialEntries = mergeI18nEntries(initialCustomEntries);
-const initialDictionary = compileI18nDictionary(initialEntries);
+const builtinEntries = mergeI18nEntries({});
+const builtinDictionary = compileI18nDictionary(builtinEntries);
+
+function compilePublishedEntries(custom: Record<string, SupDanceI18nEntry>) {
+    if (!Object.keys(custom).length) return { entries: builtinEntries, dictionary: builtinDictionary };
+    const entries = mergeI18nEntries(custom);
+    return { entries, dictionary: compileI18nDictionary(entries) };
+}
+
+const { entries: initialEntries, dictionary: initialDictionary } = compilePublishedEntries(initialCustomEntries);
 const initialLocale = useLocaleStore.getState().locale;
 const initialDiscovered = filterOutTranslatedDiscovered(readStoredDiscovered(), initialDictionary);
 
@@ -123,8 +131,7 @@ export const useSupDanceI18nStore = create<SupDanceI18nStoreState>((set, get) =>
         const settings = bundle.settings ?? DEFAULT_SUPDANCE_I18N_SETTINGS;
         const customEntries = bundle.customEntries ?? {};
         const pluginEnabled = Boolean(bundle.pluginEnabled);
-        const entries = mergeI18nEntries(customEntries);
-        const dictionary = compileI18nDictionary(entries);
+        const { entries, dictionary } = compilePublishedEntries(customEntries);
         const nextLocale = useLocaleStore.getState().locale;
         const discoveredUntranslated = filterOutTranslatedDiscovered(get().discoveredUntranslated, dictionary);
 
@@ -163,8 +170,7 @@ export const useSupDanceI18nStore = create<SupDanceI18nStoreState>((set, get) =>
             if (!item?.key) continue;
             nextCustom[item.key] = item;
         }
-        const entries = mergeI18nEntries(nextCustom);
-        const dictionary = compileI18nDictionary(entries);
+        const { entries, dictionary } = compilePublishedEntries(nextCustom);
         const discoveredUntranslated = filterOutTranslatedDiscovered(get().discoveredUntranslated, dictionary);
         writeStoredCache({
             pluginEnabled: get().pluginEnabled,
@@ -184,8 +190,7 @@ export const useSupDanceI18nStore = create<SupDanceI18nStoreState>((set, get) =>
     removeLocalEntry: (key) => {
         const nextCustom = { ...get().customEntries };
         delete nextCustom[key];
-        const entries = mergeI18nEntries(nextCustom);
-        const dictionary = compileI18nDictionary(entries);
+        const { entries, dictionary } = compilePublishedEntries(nextCustom);
         writeStoredCache({
             pluginEnabled: get().pluginEnabled,
             settings: get().settings,
@@ -256,8 +261,7 @@ export const useSupDanceI18nStore = create<SupDanceI18nStoreState>((set, get) =>
         const settings = storedCache?.settings ?? get().settings;
         const customEntries = storedCache?.customEntries ?? get().customEntries;
         const pluginEnabled = typeof storedCache?.pluginEnabled === "boolean" ? storedCache.pluginEnabled : get().pluginEnabled;
-        const entries = mergeI18nEntries(customEntries);
-        const dictionary = compileI18nDictionary(entries);
+        const { entries, dictionary } = compilePublishedEntries(customEntries);
         const locale = useLocaleStore.getState().locale;
         const discoveredUntranslated = filterOutTranslatedDiscovered(readStoredDiscovered(), dictionary);
         set({
@@ -273,8 +277,7 @@ export const useSupDanceI18nStore = create<SupDanceI18nStoreState>((set, get) =>
     },
 }));
 
-const builtinDictionary = compileI18nDictionary(BUILTIN_I18N_ENTRIES);
-const activeEntries = (state: SupDanceI18nStoreState) => (state.pluginEnabled ? state.entries : BUILTIN_I18N_ENTRIES);
+const activeEntries = (state: SupDanceI18nStoreState) => (state.pluginEnabled ? state.entries : builtinEntries);
 registerSupDanceTranslations(activeEntries(useSupDanceI18nStore.getState()));
 useSupDanceI18nStore.subscribe((state, previous) => {
     if (activeEntries(state) !== activeEntries(previous)) registerSupDanceTranslations(activeEntries(state));
