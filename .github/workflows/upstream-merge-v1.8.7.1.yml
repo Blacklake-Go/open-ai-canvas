@@ -1,0 +1,66 @@
+name: "Safe upstream v1.8.7.1 merge audit (no deployment)"
+
+on:
+  push:
+    branches:
+      - "integration/upstream-v1.8.7.1-20261120"
+    paths:
+      - ".github/workflows/upstream-merge-v1.8.7.1.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Audit exact baseline and fetch upstream release
+        shell: bash
+        run: |
+          set -euo pipefail
+          git merge-base --is-ancestor 0819fcee1b33c4970c110e1081997eca1eef863a HEAD
+          git remote add upstream https://github.com/ddcat-ai/open-ai-canvas.git
+          git fetch --no-tags upstream refs/tags/v1.8.7.1:refs/tags/upstream-v1.8.7.1
+          target="$(git rev-parse 'refs/tags/upstream-v1.8.7.1^{commit}')"
+          test "$target" = 882a1d1a50523fe992831e2b0da69f44b4469835
+          echo "Upstream tag verified: $target"
+      - name: Dry-run real git merge and collect precise conflict inventory
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name "SupDance Upstream Audit"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          mkdir -p /tmp/supdance-merge-audit
+          git merge --no-commit --no-ff refs/tags/upstream-v1.8.7.1 > /tmp/supdance-merge-audit/merge-output.txt 2>&1 || true
+          git status --short > /tmp/supdance-merge-audit/status.txt
+          git diff --name-only --diff-filter=U > /tmp/supdance-merge-audit/conflicts.txt
+          git ls-files -u > /tmp/supdance-merge-audit/conflict-stages.txt
+          git diff --cc > /tmp/supdance-merge-audit/conflict-markers.diff || true
+          git diff --cached --stat > /tmp/supdance-merge-audit/staged-stat.txt || true
+          num="$(wc -l < /tmp/supdance-merge-audit/conflicts.txt | tr -d ' ')"
+          echo "Conflict count: $num"
+          cat /tmp/supdance-merge-audit/conflicts.txt
+          {
+            echo "## Exact v1.8.7.1 upstream merge audit"
+            echo "- Target verified: `882a1d1a50523fe992831e2b0da69f44b4469835`"
+            echo "- Baseline: `0819fcee1b33c4970c110e1081997eca1eef863a`"
+            echo "- Conflicting paths: **$num**"
+            echo "- No changes pushed or deployed"
+            echo ""
+            echo "### Conflicting paths"
+            echo '~~~'
+            head -150 /tmp/supdance-merge-audit/conflicts.txt
+            echo '~~~'
+          } >> "$GITHUB_STEP_SUMMARY"
+      - name: Upload complete audit artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: upstream-v1.8.7.1-conflict-audit
+          path: /tmp/supdance-merge-audit/
+          if-no-files-found: error
