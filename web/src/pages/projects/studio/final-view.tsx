@@ -40,10 +40,10 @@ export function FinalView({
     const [exportingDraft, setExportingDraft] = useState(false);
     const videoRef = useRef<HTMLVideoElement>(null);
     const url = useResourceMediaUrl(episode.finalResourceId, "playback");
-    const readySegments = segments.filter((segment) => segment.videoResourceId && (segment.videoStatus === "ready" || segment.videoStatus === "stale")).length;
-    // 合成要求各段为 ready（过期段需先重新生成）；与后端 timeline 校验一致。
-    const composeReady = segments.length > 0 && segments.every((segment) => segment.videoStatus === "ready" && segment.videoResourceId);
-    const rendering = episode.stage === "render";
+    const available = segments.filter((segment) => segment.videoResourceId && (segment.videoStatus === "ready" || segment.videoStatus === "stale"));
+    const missing = segments.length - available.length;
+    const stale = available.filter((segment) => segment.videoStatus === "stale").length;
+    const rendering = detail.composeJob?.status === "queued" || detail.composeJob?.status === "running" || detail.jobs.some((job) => job.kind === "render" && job.status === "running");
     const composeBusy = composing || rendering;
     const starts: number[] = [];
     segments.reduce((cursor, segment) => {
@@ -77,7 +77,7 @@ export function FinalView({
                             className="drama-filmstrip-item"
                             title={segment.title}
                             onClick={() => {
-                                if (videoRef.current) videoRef.current.currentTime = starts[position];
+                                if (videoRef.current && !episode.finalStale) videoRef.current.currentTime = starts[position];
                                 onOpenSegment(segment.index);
                             }}
                         >
@@ -98,31 +98,45 @@ export function FinalView({
                     {formatDuration(episode.durationMs)} · {segments.length}
                     {_creationText("creation.563dcc5b90795320")}
                 </p>
-                {episode.finalStale ? (
+                {episode.finalResourceId && episode.finalStale ? (
                     <p className="drama-finalv-stale" role="status">
-                        {rendering ? _creationText("creation.30a67692906f9a80") : _creationText("creation.c6a3004a1e11fb05")}
+                        {" "}
+                        {_creationText("creation.d757a1d8a56a26a7")}
                     </p>
                 ) : null}
+                {available.length === 0 ? (
+                    <p className="drama-editor-note"> {_creationText("creation.40daf2c3452fe9ce")}</p>
+                ) : missing || stale ? (
+                    <p className="drama-finalv-stale" role="status">
+                        {" "}
+                        {_creationText("creation.487e5bf66bcaafbc")}
+                        {available.length}/{segments.length} {_creationText("creation.c24939ad7105e871")}
+                        {missing > 0 && _creationText("creation.66e75eab58c1b1bb", { value1: missing })}
+                        {stale > 0 && _creationText("creation.5699d4ee28412e2a", { value1: stale })}
+                    </p>
+                ) : null}
+                {detail.composeJob?.status === "failed" && !rendering ? <p role="alert"> {_creationText("creation.7abcaabe8f2b9420", { value1: detail.composeJob.error })}</p> : null}
                 <Button
                     type="primary"
                     icon={<Film className="size-4" />}
-                    disabled={!composeReady}
+                    disabled={!available.length || composeBusy}
                     loading={composeBusy}
                     onClick={onCompose}
-                    title={composeReady ? (rendering ? _creationText("creation.fb6f39e788652934") : _creationText("creation.53f33fd280413736")) : _creationText("creation.acbb867a87d8ccd7")}
+                    title={available.length ? _creationText("creation.f043caaabc9c3bee") : _creationText("creation.a4da5156467806de")}
                 >
                     {_creationText("creation.a2b6fde16acf346b")}
                 </Button>
                 <Button icon={<Download className="size-4" />} disabled={!episode.finalResourceId} onClick={download}>
                     {_creationText("creation.a926ee400ac9108e")}
                 </Button>
-                <Button icon={<Scissors className="size-4" />} disabled={!readySegments} loading={cutOpening} onClick={onOpenCut}>
+                <Button icon={<Scissors className="size-4" />} disabled={!available.length} loading={cutOpening} onClick={onOpenCut}>
                     {_creationText("creation.cdb1d5eb1abd3cb0")}
                 </Button>
+                {available.length ? <p className="drama-editor-note"> {_creationText("creation.391e52850ca65f79", { value1: available.length, value2: segments.length })}</p> : null}
                 <Button icon={<Clapperboard className="size-4" />} disabled={!segments.length} onClick={() => setExportingDraft(true)} title={_creationText("creation.jianying.subtitle")}>
                     {_creationText("projects.export_draft")}
                 </Button>
-                {readySegments ? <p className="drama-editor-note">{_creationText("projects.editor_export_note", { count: readySegments })}</p> : null}
+                {available.length ? <p className="drama-editor-note">{_creationText("projects.editor_export_note", { count: available.length })}</p> : null}
             </aside>
             {exportingDraft ? <JianyingDraftModal open projectId={projectId} episodeId={episode.id} episodeLabel={_creationText("creation.4d7de35611db4bda", { value1: episode.number })} onClose={() => setExportingDraft(false)} /> : null}
         </div>

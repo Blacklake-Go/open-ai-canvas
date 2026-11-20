@@ -31,7 +31,7 @@ func TestSwitchTaskLogicalRouteUpdatesCostWithoutChangingUnifiedSales(t *testing
 	}
 	repo := New(db)
 	cost := model.BillingCostSnapshot{CostPricing: model.CreditCostPricing{Configured: true, UnitPriceMicrocredits: 123_456}, CostBillingMode: "per_second", CostQuantity: 15}
-	if err := repo.SwitchTaskLogicalRoute(task.ID, "old-route", "new-route", "{}", order.ID, "new-channel", "new-model", nil, cost); err != nil {
+	if err := repo.SwitchTaskLogicalRoute(task.ID, "old-route", "new-route", "{}", order.ID, "new-channel", "new-model", nil, cost, ""); err != nil {
 		t.Fatal(err)
 	}
 	var saved model.BillingOrder
@@ -42,7 +42,7 @@ func TestSwitchTaskLogicalRouteUpdatesCostWithoutChangingUnifiedSales(t *testing
 		t.Fatalf("wrong route snapshot: %#v", saved)
 	}
 	// A route without configured costs must clear the previous route's snapshot.
-	if err := repo.SwitchTaskLogicalRoute(task.ID, "new-route", "unknown-cost-route", "{}", order.ID, "third-channel", "third-model", nil, model.BillingCostSnapshot{}); err != nil {
+	if err := repo.SwitchTaskLogicalRoute(task.ID, "new-route", "unknown-cost-route", "{}", order.ID, "third-channel", "third-model", nil, model.BillingCostSnapshot{}, ""); err != nil {
 		t.Fatal(err)
 	}
 	if err := db.First(&saved, "id = ?", order.ID).Error; err != nil {
@@ -207,7 +207,7 @@ func TestSwitchTaskLogicalRouteCarriesReferenceVideoSnapshot(t *testing.T) {
 	replacement := order
 	replacement.UnitPriceMicrocredits, replacement.Quantity, replacement.AmountMicrocredits = 2_000_000, 13, 26_000_000
 	replacement.ReferenceVideoBilled, replacement.VideoFormulaTokens = true, 432_000
-	if err := repo.SwitchTaskLogicalRoute(task.ID, "off-route", "on-route", "{}", order.ID, "channel", "model", &replacement, model.BillingCostSnapshot{}); err != nil {
+	if err := repo.SwitchTaskLogicalRoute(task.ID, "off-route", "on-route", "{}", order.ID, "channel", "model", &replacement, model.BillingCostSnapshot{}, ""); err != nil {
 		t.Fatal(err)
 	}
 	var saved model.BillingOrder

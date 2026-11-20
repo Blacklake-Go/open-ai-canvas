@@ -1,5 +1,7 @@
 # SupDance Canvas — 上游基线记录 (UPSTREAM_BASELINE.md)
 
+源码分支 `codex/upstream-20261120` 集成正式版 `v1.8.7.1`（上游 main `882a1d1a`），本站 Schema 112，独立官方素材账本仍为 4。迁移与验证范围见[本次集成记录](UPSTREAM_20261120.md)。
+
 最新源码集成为 `v1.8.6-supdance.1`，固定上游正式标签 v1.8.6 与 main `f33c39c0dfd8853f2b2c89c7dee15028ef54bb4e`。本站主账本保留 1–105，并增量到 108；官方素材采用独立四步账本。当前验证和上线状态见 [本次集成记录](UPSTREAM_20261118.md)，以下为历史记录。
 
 当前源码集成候选为 `v1.8.5-supdance.6-upstream`，固定上游 main `3979305c1413be231cbaef242e50afc67f553c5e`（正式版仍为 v1.8.5）。上游 Schema 104 映射本站 Schema 105，已发布 1–102 不变。验证及生产部署状态见 [本次更新记录](UPSTREAM_20261114.md)。

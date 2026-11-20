@@ -8,11 +8,18 @@ export const zhCN = {
         noSubtitle: "此处无字幕，点选字幕片段后在下方编辑",
     },
     toolbar: {
+        moreTools: "更多工具",
+        settings: "工具栏设置",
         appearance: "画布外观",
         appearanceSubtitle: "配色与网格",
         mediaInfo: "媒体信息",
     },
     videoPromptTools: {
+        mode: "视频参考模式",
+        textMode: "文生视频",
+        allMode: "全能参考",
+        frameMode: "首尾帧参考",
+        swap: "交换首尾帧",
         imageCount: "{{count}} 图",
         videoCount: "{{count}} 视频",
         audioCount: "{{count}} 音频",

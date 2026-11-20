@@ -9,11 +9,18 @@ export const enUS: DeepStringRecord<typeof zhCN> = {
         noSubtitle: "No subtitle here. Select a subtitle clip to edit it below.",
     },
     toolbar: {
+        moreTools: "More tools",
+        settings: "Toolbar settings",
         appearance: "Canvas appearance",
         appearanceSubtitle: "Colors and grid",
         mediaInfo: "Media info",
     },
     videoPromptTools: {
+        mode: "Video reference mode",
+        textMode: "Text to video",
+        allMode: "References",
+        frameMode: "Start/end frames",
+        swap: "Swap start and end frames",
         imageCount: "{{count}} images",
         videoCount: "{{count}} videos",
         audioCount: "{{count}} audio",

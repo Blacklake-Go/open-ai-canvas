@@ -269,16 +269,16 @@ func TestMusicResolvedChannelAliasCanArchive(t *testing.T) {
 	if err := db.Create(&cm).Error; err != nil {
 		t.Fatal(err)
 	}
-	resolved, err := s.resolveProviderConfig(providerConfig{ChannelID: channel.ID, Model: cm.ModelKey})
+	resolved, err := s.resolveProviderConfig(providerConfig{ChannelID: channel.ID, Model: cm.ModelKey}, nil)
 	if err != nil {
 		t.Fatal(err)
 	}
-	archived, err := s.resolveProviderConfig(resolved)
+	archived, err := s.resolveProviderConfig(resolved, nil)
 	if err != nil || archived.Model != cm.ProviderModelKey {
 		t.Fatalf("resolved configuration cannot be reused by archiving: %v", err)
 	}
 	resolved.Model = "another-upstream-sku"
-	if _, err := s.resolveProviderConfig(resolved); err == nil {
+	if _, err := s.resolveProviderConfig(resolved, nil); err == nil {
 		t.Fatal("a mismatched upstream SKU was accepted")
 	}
 }

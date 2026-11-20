@@ -1,7 +1,7 @@
 import { creationOptions as _creationOptions } from "@/supdance/plugins/i18n/creation-text";
 import { creationText as _creationText, useCreationLocale as _useCreationLocale } from "@/supdance/plugins/i18n/creation-text";
 import { useUserStore } from "@/stores/use-user-store";
-import { useSkillLibraryAccess } from "@/lib/skill-access";
+import { useSkillAdministrationAccess, useSkillLibraryAccess } from "@/lib/skill-access";
 import { App, Button, Checkbox, Input, Modal, Segmented } from "antd";
 import { BookOpen, RefreshCw, Search, Upload } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
@@ -19,10 +19,11 @@ export function EcommerceSkillPicker(props: Props) {
     useEffect(() => {
         if (hydrated && !allowed && props.selected.length) props.onChange([]);
     }, [allowed, hydrated, props.selected, props.onChange]);
-    return allowed ? <AdminEcommerceSkillPicker key={userId} {...props} /> : null;
+    return allowed ? <AuthorizedEcommerceSkillPicker key={userId} {...props} /> : null;
 }
 
-function AdminEcommerceSkillPicker({ selected, onChange, disabled }: Props) {
+function AuthorizedEcommerceSkillPicker({ selected, onChange, disabled }: Props) {
+    const canManage = useSkillAdministrationAccess();
     const { message } = App.useApp();
     _useCreationLocale();
     const [open, setOpen] = useState(false);
@@ -136,7 +137,7 @@ function AdminEcommerceSkillPicker({ selected, onChange, disabled }: Props) {
         }
     };
     const upload = async (file: File) => {
-        if (uploadLock.current || disabled || !isCurrent()) return;
+        if (!canManage || uploadLock.current || disabled || !isCurrent()) return;
         if (!/\.(md|markdown|zip)$/i.test(file.name)) {
             message.error(_creationText("creation.3afbdcf076eb10b4"));
             return;
@@ -175,24 +176,29 @@ function AdminEcommerceSkillPicker({ selected, onChange, disabled }: Props) {
             <Button block icon={<BookOpen size={15} />} disabled={disabled} onClick={() => setOpen(true)}>
                 {selected.length ? _creationText("creation.2b4f4f19c077bd10", { value1: selected.length }) : _creationText("creation.4b274f4643051a57")}
             </Button>
-            <input
-                ref={fileInput}
-                type="file"
-                accept=".md,.markdown,.zip"
-                hidden
-                aria-label={_creationText("creation.b7245147574caf62")}
-                onChange={(event) => {
-                    const file = event.target.files?.[0];
-                    event.target.value = "";
-                    if (file) void upload(file);
-                }}
-            />
-            <Button block icon={<Upload size={15} />} disabled={disabled || selected.length >= 8} loading={uploading} onClick={() => fileInput.current?.click()}>
-                {_creationText("creation.cc2d1eb6e9051590")}
-            </Button>
-            <small className="ecommerce-model-note">{_creationText("creation.60dff9a3f21ece71")}</small>
-            {selected.length ? <small className="ecommerce-model-note">{_creationText("creation.b9a564c2c1240627")}</small> : null}
-            <Modal title={_creationText("creation.24f92e8b35c127ff")} open={open} onCancel={() => setOpen(false)} footer={<Button onClick={() => setOpen(false)}>{_creationText("settings.channel_complete_btn")}</Button>} width={780} destroyOnHidden>
+            {canManage ? (
+                <>
+                    <input
+                        ref={fileInput}
+                        type="file"
+                        accept=".md,.markdown,.zip"
+                        hidden
+                        aria-label={_creationText("creation.b7245147574caf62")}
+                        onChange={(event) => {
+                            const file = event.target.files?.[0];
+                            event.target.value = "";
+                            if (file) void upload(file);
+                        }}
+                    />
+                    <Button block icon={<Upload size={15} />} disabled={disabled || selected.length >= 8} loading={uploading} onClick={() => fileInput.current?.click()}>
+                        {" "}
+                        {_creationText("creation.cc2d1eb6e9051590")}
+                    </Button>
+                    <small className="ecommerce-model-note"> {_creationText("creation.60dff9a3f21ece71")}</small>
+                </>
+            ) : null}
+            {selected.length ? <small className="ecommerce-model-note"> {_creationText("creation.b9a564c2c1240627")}</small> : null}
+            <Modal title={_creationText("creation.24f92e8b35c127ff")} open={open} onCancel={() => setOpen(false)} footer={<Button onClick={() => setOpen(false)}> {_creationText("creation.c0b3fbff51ccc40b")}</Button>} width={780} destroyOnHidden>
                 <div className="ecommerce-skill-controls">
                     <Segmented
                         value={tab}

@@ -14,7 +14,8 @@ function dropzone() {
 test("拖放区真正接收拖入的图片，与点击选择走同一过滤", () => {
     const zone = dropzone();
     expect(zone).toContain("onDragOver={(event) => { event.preventDefault();");
-    expect(zone).toContain("onDrop={(event) => { event.preventDefault(); setDragging(false); if (!uploading) chooseFiles(Array.from(event.dataTransfer.files)); }}");
+    expect(zone).toContain("onDrop={(event) => { event.preventDefault(); setDragging(false); chooseFiles(Array.from(event.dataTransfer.files)); }}");
+    expect(source).toContain("const chooseFiles = (files: File[]) => { if (uploadingRef.current) return;");
     expect(zone).toContain('t("library.assets.batch.chooseHint")');
     expect(libraryZh.assets.batch.chooseHint).toBe("支持拖拽或多选上传，标题默认取文件名");
     expect(source).not.toContain("支持拖拽思路的多选上传");

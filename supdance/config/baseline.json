@@ -3,19 +3,19 @@
   "upstreamRepository": "https://github.com/ddcat-ai/open-ai-canvas",
   "forkRepository": "https://github.com/Blacklake-Go/open-ai-canvas",
   "upstreamBaseline": {
-    "tag": "v1.8.6",
-    "releaseTag": "v1.8.6",
-    "releaseCommit": "f33c39c0dfd8853f2b2c89c7dee15028ef54bb4e",
-    "commit": "f33c39c0dfd8853f2b2c89c7dee15028ef54bb4e",
-    "schemaVersion": 105
+    "tag": "v1.8.7.1",
+    "releaseTag": "v1.8.7.1",
+    "releaseCommit": "882a1d1a50523fe992831e2b0da69f44b4469835",
+    "commit": "882a1d1a50523fe992831e2b0da69f44b4469835",
+    "schemaVersion": 109
   },
   "integrationRelease": {
-    "schemaVersion": 108,
+    "schemaVersion": 112,
     "yingceSchemaVersion": 4,
-    "version": "v1.8.6-supdance.1",
-    "baseCommit": "c7767d0992f218bc7d7609585964a3b1fca1f02f",
-    "sourceBranch": "codex/upstream-20261118",
-    "deploymentEvidence": "docs/supdance/UPSTREAM_20261118.md"
+    "version": "v1.8.7.1-supdance.1",
+    "baseCommit": "0819fcee1b33c4970c110e1081997eca1eef863a",
+    "sourceBranch": "codex/upstream-20261120",
+    "deploymentEvidence": "docs/supdance/UPSTREAM_20261120.md"
   },
   "supdanceRelease": {
     "tag": "supdance/v2026.10.28.2",
@@ -370,7 +370,13 @@
     "web/src/pages/admin/official-assets-page.tsx",
     "web/src/i18n/personal-appearance-messages.ts",
     "backend/agent-runtime/pi/package.json",
-    "backend/agent-runtime/pi/package-lock.json"
+    "backend/agent-runtime/pi/package-lock.json",
+    "backend/internal/app/media_probe.go",
+    "backend/internal/app/task_media_recovery.go",
+    "web/src/components/layout/workspace-page.tsx",
+    "web/src/pages/canvas/use-canvas-node-operations.ts",
+    "web/src/pages/create/creation-library.ts",
+    "web/src/services/api/user-data.ts"
   ],
   "supdanceExtensionFiles": [
     "web/src/supdance/plugins/compact-model-picker/admin.tsx",

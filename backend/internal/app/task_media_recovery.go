@@ -242,7 +242,7 @@ func (s *Service) materializeTaskMedia(ctx context.Context, task *model.Task, co
 					return nil, err
 				}
 				if checkpoint.MurekaOperation == "" {
-					config, err = s.resolveProviderConfig(config)
+					config, err = s.resolveProviderConfig(config, task)
 					if err != nil {
 						return nil, &mediaRecoveryError{stage: "download", cause: err}
 					}

@@ -26,16 +26,16 @@ test("上传成功后不再回读远端地址获取尺寸", () => {
 
 test("同步收尾抛错时仍释放上传状态", () => {
     const upload = section("const uploadBatch = async", "const close = ");
-    expect(upload).toMatch(/finally \{ setUploading\(false\); \}/);
+    expect(upload).toMatch(/finally \{ uploadingRef\.current = false; setUploading\(false\); \}/);
     expect(upload).toContain("flushAssetStorePersistence().catch(");
     expect(upload).not.toMatch(/await flushAssetStorePersistence\(\);/);
 });
 
 test("部分失败时不自动关闭弹窗，关闭时再刷新列表", () => {
     const upload = section("const uploadBatch = async", "const close = ");
-    expect(upload).toContain("if (!failed) await onComplete();");
+    expect(upload).toContain("if (!failed) { resetBatch(); await onComplete(); }");
     expect(upload).not.toMatch(/setUploading\(false\); await onComplete\(\);/);
-    const close = section("const close = ", "return ( <Modal");
+    const close = section("const close = ", "return (");
     expect(close).toContain('items.some((item) => item.status === "done")');
     expect(close).toContain("if (hasUploaded) void onComplete();");
 });

@@ -1,6 +1,6 @@
+import { lazy, Suspense, useCallback, useEffect, useMemo, useState } from "react";
 import { creationOptions as _creationOptions, creationLabel as _creationLabel } from "@/supdance/plugins/i18n/creation-text";
 import { creationText as _creationText, useCreationLocale as _useCreationLocale } from "@/supdance/plugins/i18n/creation-text";
-import { useCallback, useEffect, useMemo, useState } from "react";
 import { useMutation } from "@tanstack/react-query";
 import { App, Button, Dropdown } from "antd";
 import { ArrowLeft, Brush, CheckCheck, Clapperboard, FileDown, FileUp, Film, Inbox, Package, Pause, Pencil, Play, ScrollText, Settings2, UsersRound } from "lucide-react";
@@ -42,8 +42,7 @@ import { EpisodeDeleteModal } from "./studio/episode-delete-modal";
 import { EpisodeRail } from "./studio/episode-rail";
 import { EpisodeRenameModal } from "./studio/episode-rename-modal";
 import { AddEpisodeModal, type EpisodePlacement } from "./studio/episode-source";
-import { AssetImportModal, AssetPackageModal } from "./studio/asset-transfer";
-import { ChapterPickerModal } from "./studio/chapter-picker";
+import { StudioOpening } from "./studio/studio-opening";
 import { FinalView } from "./studio/final-view";
 import { StudioGenesis } from "./studio/genesis";
 import { SegmentDialog } from "./studio/segment-dialog";
@@ -59,6 +58,10 @@ import "./drama.css";
 
 type Tab = "board" | "script" | "final";
 type StudioView = "production" | "cast" | "inbox" | "settings";
+
+const AssetImportModal = lazy(() => import("./studio/asset-transfer").then((module) => ({ default: module.AssetImportModal })));
+const AssetPackageModal = lazy(() => import("./studio/asset-transfer").then((module) => ({ default: module.AssetPackageModal })));
+const ChapterPickerModal = lazy(() => import("./studio/chapter-picker").then((module) => ({ default: module.ChapterPickerModal })));
 
 // 提示条在单行里会截断说明，正文同时放进悬停提示。
 const AWAITING_MEDIA_BANNER = {
@@ -187,7 +190,7 @@ export default function DramaStudioPage() {
         mutationFn: ({ shot, patch }: { shot: DramaShot; patch: DramaShotPatch }) => updateDramaShot(projectId, shot.id, patch),
         onSuccess: () => {
             invalidate(episodeId);
-            message.success(_creationText("creation.591c3be011a664c3"));
+            message.success(_creationText("creation.25286eaa4453e90c"));
         },
         onError: (error) => errorMessage(error, "保存失败"),
     });
@@ -196,7 +199,7 @@ export default function DramaStudioPage() {
         onSuccess: ({ shot }) => {
             invalidate(episodeId);
             setParams({ shot: shot.id });
-            message.success(_creationText("creation.4c8edd9326f14dcf"));
+            message.success(_creationText("creation.b4b8d5c7bca28895"));
         },
         onError: (error) => errorMessage(error, "插入失败"),
     });
@@ -205,7 +208,7 @@ export default function DramaStudioPage() {
         onSuccess: () => {
             invalidate(episodeId);
             setParams({ shot: null });
-            message.success(_creationText("creation.00acc11119b2a87b"));
+            message.success(_creationText("creation.76c41e817f75017e"));
         },
         onError: (error) => errorMessage(error, "删除失败"),
     });
@@ -281,7 +284,7 @@ export default function DramaStudioPage() {
         mutationFn: () => composeDramaEpisode(projectId, episodeId),
         onSuccess: () => {
             invalidate(episodeId);
-            message.success(running ? _creationText("creation.2614e9da77193af5") : _creationText("creation.f8dcc90b4a5e86a8"));
+            message.success(_creationText("creation.f512111507e7bf8b"));
         },
         onError: (error) => {
             invalidate(episodeId);
@@ -350,12 +353,7 @@ export default function DramaStudioPage() {
 
     // 直接打开草稿的制作台地址时回到创建页，草稿参数都在那里编辑。
     if (summary?.production.hasDraftForm) return <Navigate to={`/projects/new?draft=${encodeURIComponent(summary.project.id)}`} replace />;
-    if (summaryQuery.isLoading)
-        return (
-            <WorkspacePage>
-                <WorkspaceLoadingState label={_creationText("creation.ceafc9be1eef0b9c")} />
-            </WorkspacePage>
-        );
+    if (summaryQuery.isLoading) return <StudioOpening />;
     if (summaryQuery.isError || !summary)
         return (
             <WorkspacePage>
@@ -409,8 +407,8 @@ export default function DramaStudioPage() {
         <WorkspacePage className="!overflow-hidden" fluid scroll={false}>
             <div className="drama-root drama-studio">
                 <header className="drama-topbar">
-                    <Link to="/projects">
-                        <Button type="text" shape="circle" icon={<ArrowLeft className="size-4" />} aria-label={_creationText("projects.return_to_list")} />
+                    <Link to="/projects" viewTransition className="product-icon-button" aria-label={_creationText("creation.8788e9474888682a")}>
+                        <ArrowLeft className="size-4" />
                     </Link>
                     <div className="drama-topbar-title">
                         <h1 title={summary.project.name}>{summary.project.name}</h1>
@@ -823,22 +821,31 @@ export default function DramaStudioPage() {
                         invalidate(undefined, { renumbered: true, removedEpisodeId: id });
                     }}
                 />
-                {pickingChapters ? (
-                    <ChapterPickerModal
-                        open={pickingChapters}
-                        projectId={projectId}
-                        defaultPerEpisode={production.settings.chaptersPerEpisode || 1}
-                        blockedReason={production.planDone ? undefined : "前面的章节还在分集规划，完成后才能加入新的章节。"}
-                        onClose={() => setPickingChapters(false)}
-                        onProduced={(ids) => {
-                            setPickingChapters(false);
-                            invalidate(ids[0]);
-                            if (ids[0]) selectEpisode(ids[0]);
-                        }}
-                    />
-                ) : null}
-                {assetDialog === "export" ? <AssetPackageModal open projectId={projectId} episodes={episodes} onClose={() => setAssetDialog(null)} /> : null}
-                {assetDialog === "import" ? <AssetImportModal open projectId={projectId} onClose={() => setAssetDialog(null)} /> : null}
+                <Suspense
+                    fallback={
+                        <span role="status" className="drama-dialog-loading">
+                            {" "}
+                            {_creationText("creation.b1302c8cda019126")}
+                        </span>
+                    }
+                >
+                    {pickingChapters ? (
+                        <ChapterPickerModal
+                            open={pickingChapters}
+                            projectId={projectId}
+                            defaultPerEpisode={production.settings.chaptersPerEpisode || 1}
+                            blockedReason={production.planDone ? undefined : "前面的章节还在分集规划，完成后才能加入新的章节。"}
+                            onClose={() => setPickingChapters(false)}
+                            onProduced={(ids) => {
+                                setPickingChapters(false);
+                                invalidate(ids[0]);
+                                if (ids[0]) selectEpisode(ids[0]);
+                            }}
+                        />
+                    ) : null}
+                    {assetDialog === "export" ? <AssetPackageModal open projectId={projectId} episodes={episodes} onClose={() => setAssetDialog(null)} /> : null}
+                    {assetDialog === "import" ? <AssetImportModal open projectId={projectId} onClose={() => setAssetDialog(null)} /> : null}
+                </Suspense>
             </div>
         </WorkspacePage>
     );

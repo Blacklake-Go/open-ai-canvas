@@ -1,6 +1,6 @@
 import { creationText as _creationText, useCreationLocale as _useCreationLocale } from "@/supdance/plugins/i18n/creation-text";
 import { useUserStore } from "@/stores/use-user-store";
-import { useSkillLibraryAccess } from "@/lib/skill-access";
+import { useSkillAdministrationAccess, useSkillLibraryAccess } from "@/lib/skill-access";
 import { useEffect, useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Button, Input } from "antd";
@@ -39,18 +39,18 @@ const STEP_COPY: Record<DramaSkillStep, { title: string; detail: string; empty: 
  * 文字步骤的写作技能：选一个已添加技能里的文本文件，执行该步骤时把全文交给文本模型作为写作方法。
  * 保存的是技能与文件引用，在技能库里修改自己的技能后，下一次执行就会读到新内容。
  */
-export function PromptSkillField(props: Parameters<typeof AdminPromptSkillField>[0]) {
+export function PromptSkillField(props: Parameters<typeof AuthorizedPromptSkillField>[0]) {
     const allowed = useSkillLibraryAccess();
     const hydrated = useUserStore((state) => state.hydrated);
     const userId = useUserStore((state) => state.user?.id);
     useEffect(() => {
         if (hydrated && !allowed && props.value) props.onChange(undefined);
     }, [allowed, hydrated, props.value, props.onChange]);
-    return allowed ? <AdminPromptSkillField key={userId} {...props} /> : null;
+    return allowed ? <AuthorizedPromptSkillField key={userId} {...props} /> : null;
 }
 
-function AdminPromptSkillField({ value, onChange, step = "prompt", compact }: { value?: DramaSkillRef; onChange: (value?: DramaSkillRef) => void; step?: DramaSkillStep; compact?: boolean }) {
-    _useCreationLocale();
+function AuthorizedPromptSkillField({ value, onChange, step = "prompt", compact }: { value?: DramaSkillRef; onChange: (value?: DramaSkillRef) => void; step?: DramaSkillStep; compact?: boolean }) {
+    const canManage = useSkillAdministrationAccess();
     const [open, setOpen] = useState(false);
     const copy = STEP_COPY[step];
     return (
@@ -62,9 +62,18 @@ function AdminPromptSkillField({ value, onChange, step = "prompt", compact }: { 
                         <strong>{value.skillName || value.skillId}</strong>
                         <span title={value.path}>{value.path}</span>
                     </div>
-                    <Link to={`/skills/${encodeURIComponent(value.skillId)}/edit`} target="_blank" rel="noreferrer" className="drama-pskill-edit" aria-label={_creationText("creation.905ddbd8bd8905ce")} title={_creationText("creation.905ddbd8bd8905ce")}>
-                        <PenLine className="size-3.5" />
-                    </Link>
+                    {canManage ? (
+                        <Link
+                            to={`/skills/${encodeURIComponent(value.skillId)}/edit`}
+                            target="_blank"
+                            rel="noreferrer"
+                            className="drama-pskill-edit"
+                            aria-label={_creationText("creation.2bf313f90eb0774f")}
+                            title={_creationText("creation.2bf313f90eb0774f")}
+                        >
+                            <PenLine className="size-3.5" />
+                        </Link>
+                    ) : null}
                     <Button size="small" onClick={() => setOpen(true)}>
                         {_creationText("creation.916afcd85322d732")}
                     </Button>

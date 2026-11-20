@@ -88,6 +88,7 @@ export const frFR: DeepStringRecord<typeof zhCN> = {
             filterActive: "Filtres appliqués",
             reset: "Réinitialiser",
             searchAndFilter: "Rechercher et filtrer",
+            clearSearch: "Effacer la recherche",
         },
         pagination: {
             item: "éléments",
@@ -266,6 +267,7 @@ export const frFR: DeepStringRecord<typeof zhCN> = {
             paymentSource: "Canal de recharge : {{channel}}",
             adminAdjustment: "Ajustement administratif",
             signupBonus: "Récompense d’inscription",
+            teamTransfer: "Transfert de crédits d’équipe",
             checkinBonus: "Récompense de connexion",
             actualCharge: "Coût réel : {{amount}} crédits",
             releasedDetail: "Réservation initiale de {{reserved}} ; les {{released}} non utilisés ont été libérés.",

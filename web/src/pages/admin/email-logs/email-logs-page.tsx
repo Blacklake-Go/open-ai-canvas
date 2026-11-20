@@ -77,6 +77,8 @@ export default function EmailLogsPage() {
         setSearchParams(next, { replace });
     };
 
+    const resetFilters = () => update({ keyword: "", purpose: "", status: "", from: "", to: "", page: 1 });
+
     useEffect(() => {
         const controller = new AbortController();
         setLoading(true);
@@ -182,6 +184,7 @@ export default function EmailLogsPage() {
                 />
             ) : null}
             <AdminDataTable<EmailLog>
+                onReset={resetFilters}
                 toolbar={
                     <div className="admin-email-log-filters">
                         <AdminSearchInput
@@ -213,7 +216,7 @@ export default function EmailLogsPage() {
                             placeholder={["开始时间", "结束时间"]}
                             onChange={(dates) => update({ from: dates?.[0]?.toISOString() || "", to: dates?.[1]?.toISOString() || "", page: 1 })}
                         />
-                        <Button type="text" disabled={!filtered} icon={<RotateCcw className="size-3.5" />} onClick={() => update({ keyword: "", purpose: "", status: "", from: "", to: "", page: 1 })}>
+                        <Button type="text" disabled={!filtered} icon={<RotateCcw className="size-3.5" />} onClick={resetFilters}>
                             重置
                         </Button>
                     </div>

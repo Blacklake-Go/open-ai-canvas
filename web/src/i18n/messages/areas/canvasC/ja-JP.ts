@@ -9,11 +9,18 @@ export const jaJP: DeepStringRecord<typeof zhCN> = {
         noSubtitle: "ここには字幕がありません。字幕クリップを選択すると下で編集できます",
     },
     toolbar: {
+        moreTools: "その他のツール",
+        settings: "ツールバー設定",
         appearance: "キャンバスの外観",
         appearanceSubtitle: "配色とグリッド",
         mediaInfo: "メディア情報",
     },
     videoPromptTools: {
+        mode: "動画の参照モード",
+        textMode: "テキストから動画",
+        allMode: "素材参照",
+        frameMode: "開始・終了フレーム",
+        swap: "開始・終了フレームを入れ替える",
         imageCount: "画像 {{count}}",
         videoCount: "動画 {{count}}",
         audioCount: "音声 {{count}}",

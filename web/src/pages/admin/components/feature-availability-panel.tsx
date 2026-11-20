@@ -15,6 +15,7 @@ type FeatureKey =
     | "shortDramaEnabled"
     | "taskCenterEnabled"
     | "creditsEnabled"
+    | "teamsEnabled"
     | "customChannelsEnabled"
     | "inspirationSourcesVisible"
     | "frontendModelsEnabled"
@@ -53,6 +54,7 @@ const editableFeatureKeys: FeatureKey[] = [
     "shortDramaEnabled",
     "taskCenterEnabled",
     "creditsEnabled",
+    "teamsEnabled",
     "customChannelsEnabled",
     "inspirationSourcesVisible",
     "imageWorkbenchEnabled",
@@ -71,6 +73,14 @@ const featureGroups: FeatureGroup[] = [
         description: "决定前台侧栏出现哪些创作入口",
         icon: <MonitorCog className="size-4" aria-hidden="true" />,
         rows: [
+            {
+                key: "teamsEnabled",
+                title: "团队空间",
+                location: "工作台 · 空间切换",
+                description: "开放公司、小组、成员邀请与素材共享。关闭后保留成员、积分和作品，重新开启即可继续使用。",
+                icon: <Boxes className="size-4" aria-hidden="true" />,
+                requires: [{ key: "creditsEnabled", effect: "空间积分和收费生成不可用" }],
+            },
             {
                 key: "shortDramaEnabled",
                 title: "短剧创作",
@@ -524,6 +534,7 @@ function toEditablePayload(features: FeatureAvailability) {
         shortDramaEnabled: features.shortDramaEnabled,
         taskCenterEnabled: features.taskCenterEnabled,
         creditsEnabled: features.creditsEnabled,
+        teamsEnabled: features.teamsEnabled,
         customChannelsEnabled: features.customChannelsEnabled,
         inspirationSourcesVisible: features.inspirationSourcesVisible,
         imageWorkbenchEnabled: features.imageWorkbenchEnabled,
@@ -551,6 +562,7 @@ function parseFeatureAvailability(value: unknown): FeatureAvailability {
         shortDramaEnabled: record.shortDramaEnabled as boolean,
         taskCenterEnabled: record.taskCenterEnabled as boolean,
         creditsEnabled: record.creditsEnabled as boolean,
+        teamsEnabled: record.teamsEnabled as boolean,
         customChannelsEnabled: record.customChannelsEnabled as boolean,
         inspirationSourcesVisible: record.inspirationSourcesVisible as boolean,
         imageWorkbenchEnabled: record.imageWorkbenchEnabled as boolean,

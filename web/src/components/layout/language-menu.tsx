@@ -24,7 +24,7 @@ function useLanguageChange() {
 }
 
 /**
- * 界面语言入口。trigger 决定外观：topbar 与顶栏反馈按钮同款，auth 与登录页「返回首页」同款。
+ * 界面语言入口。顶栏用图标，登录页显示当前语言。
  * 选项显示各语言自称 + 英文名，切换后整页刷新（见 switchLocale）。
  */
 export function LanguageMenu({ variant = "topbar", className, updateLanguageQuery = false }: { variant?: "topbar" | "auth"; className?: string; updateLanguageQuery?: boolean }) {
@@ -57,13 +57,17 @@ export function LanguageMenu({ variant = "topbar", className, updateLanguageQuer
             <button
                 type="button"
                 disabled={busy}
-                className={cn(variant === "topbar" ? "app-workspace-topbar-feedback-pill" : "auth-scene-return language-menu-auth-trigger", "language-menu-trigger", className)}
+                className={cn(variant === "topbar" ? "app-workspace-topbar-icon-button" : "auth-scene-return language-menu-auth-trigger", "language-menu-trigger", className)}
                 aria-label={t("language.selectLabel")}
                 title={t("language.selectLabel")}
             >
                 <Languages aria-hidden />
-                <span>{current.short}</span>
-                <ChevronDown aria-hidden className="language-menu-chevron" />
+                {variant === "auth" ? (
+                    <>
+                        <span>{current.short}</span>
+                        <ChevronDown aria-hidden className="language-menu-chevron" />
+                    </>
+                ) : null}
             </button>
         </Dropdown>
     );

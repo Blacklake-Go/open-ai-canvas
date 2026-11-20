@@ -4,9 +4,10 @@ import type { CreationMode } from "@/lib/creation-mode";
 import type { CreationReferenceLimits } from "./creation-references";
 import { creationAttachmentFromAsset, creationAttachmentFromAudioAsset, creationAttachmentFromExternalAsset, creationAttachmentFromVideoAsset, type CreationAttachment } from "./creation-assets";
 
-export function creationLibraryDisabledReason(mode: CreationMode, kind: string | undefined, videoLimits?: CreationReferenceLimits) {
-    if (kind !== "image" && kind !== "video" && kind !== "audio") return "此类型素材暂不支持作为创作参考";
-    if (mode === "image") return kind === "image" ? undefined : "图片创作仅支持参考图";
+export function creationLibraryDisabledReason(mode: CreationMode, kind: string | undefined, videoLimits?: CreationReferenceLimits, textOnly = false) {
+    if (textOnly) return kind === "text" ? undefined : "当前空间仅支持文本参考";
+    if (kind !== "image" && kind !== "video" && kind !== "audio") return translate("create.library.unsupportedKind");
+    if (mode === "image") return kind === "image" ? undefined : translate("create.library.imageOnly");
     if (mode === "music") return kind === "audio" ? undefined : "音乐创作仅支持参考音频";
     if (mode !== "video") return undefined;
 

@@ -2,7 +2,7 @@ import { useCallback, useEffect, useRef, type Dispatch, type MouseEvent, type Se
 
 import { isNodeHiddenByCollapsedFrame } from "@/lib/canvas/canvas-frame";
 import { isHiddenBatchChild } from "@/lib/canvas/canvas-project-domain";
-import { applyCanvasLiveViewport } from "@/lib/canvas/canvas-live-viewport";
+import { applyCanvasLiveViewport, setCanvasGestureActive } from "@/lib/canvas/canvas-live-viewport";
 import { getCanvasNodesBounds, viewportAtScale, viewportForBounds, type CanvasViewportSize } from "@/lib/canvas/canvas-viewport";
 import { CanvasNodeType, type CanvasNodeData, type ContextMenuState, type Position, type ViewportTransform } from "@/types/canvas";
 import { useCanvasViewportTransition } from "./use-canvas-viewport-transition";
@@ -60,7 +60,7 @@ export function useCanvasViewportController({
     const previewViewport = useCallback(
         (next: ViewportTransform) => {
             viewportRef.current = next;
-            if (containerRef.current) containerRef.current.dataset.canvasViewportInteracting = "true";
+            setCanvasGestureActive(containerRef.current, "canvasViewportInteracting", true);
             applyCanvasLiveViewport(containerRef.current, next);
         },
         [containerRef, viewportRef],
@@ -73,7 +73,7 @@ export function useCanvasViewportController({
                 commitTimerRef.current = null;
             }
             viewportRef.current = next;
-            delete containerRef.current?.dataset.canvasViewportInteracting;
+            setCanvasGestureActive(containerRef.current, "canvasViewportInteracting", false);
             setViewport((current) => (current.x === next.x && current.y === next.y && current.k === next.k ? current : next));
         },
         [containerRef, setViewport, viewportRef],
@@ -82,7 +82,7 @@ export function useCanvasViewportController({
     useEffect(
         () => () => {
             if (commitTimerRef.current) clearTimeout(commitTimerRef.current);
-            delete containerRef.current?.dataset.canvasViewportInteracting;
+            setCanvasGestureActive(containerRef.current, "canvasViewportInteracting", false);
         },
         [containerRef],
     );

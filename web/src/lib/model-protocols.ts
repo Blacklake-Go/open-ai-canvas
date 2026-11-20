@@ -4,10 +4,28 @@ export type ModelProtocolParameter = { name: string; type: string; required?: bo
 export type ModelProtocolWorkflow = { id: string; label: string; providerId: string; capability: ProtocolCapability; parameters: ModelProtocolParameter[]; defaults?: Record<string, string | number | boolean> };
 /** 后端按插件 create 路径识别的文本请求格式；识别不出（插件自定义接口）时缺省。 */
 export type TextWire = "chat-completion" | "responses" | "claude-api";
+export type VideoModelModes = Record<string, Record<string, { maxImages: number; ratios: string[]; inputRoles?: string[] | null }>>;
+export type VideoOutputLimit = { resolutions: string[]; minSeconds: number; maxSeconds: number; generateAudio?: boolean };
+export type ModelProtocolRelease = {
+    pluginId: string;
+    version: string;
+    sha256: string;
+    current: boolean;
+    create: string;
+    poll?: string;
+    imageParameters?: import("./image-parameters").ImageParameter[] | null;
+    workflows?: ModelProtocolWorkflow[];
+    videoModes?: VideoModelModes;
+    videoOutputs?: Record<string, VideoOutputLimit>;
+};
 export type ModelProtocolDefinition = {
     value: ModelProtocol;
     label: string;
     vendor?: string;
+    version?: string;
+    releases?: ModelProtocolRelease[];
+    videoModes?: VideoModelModes;
+    videoOutputs?: Record<string, VideoOutputLimit>;
     capability: ProtocolCapability;
     create: string;
     contentType: string;
@@ -22,6 +40,13 @@ export type ModelProtocolDefinition = {
     /** 插件 auth 声明了第二把密钥（Secret Key），渠道必须同时填写。 */
     requiresSecretKey?: boolean;
 };
+
+export function definitionForRelease(definition: ModelProtocolDefinition | undefined, digest?: string) {
+    const release = definition?.releases?.find((item) => item.sha256 === digest);
+    if (!definition || !digest) return definition;
+    if (!release) return undefined;
+    return { ...definition, version: release.version, create: release.create, poll: release.poll, imageParameters: release.imageParameters ?? undefined, workflows: release.workflows, videoModes: release.videoModes, videoOutputs: release.videoOutputs };
+}
 
 export function isTextWire(value: unknown): value is TextWire {
     return value === "chat-completion" || value === "responses" || value === "claude-api";

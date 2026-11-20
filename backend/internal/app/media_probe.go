@@ -75,7 +75,7 @@ func probeMediaFileAs(ctx context.Context, path, audioDemuxer string) (mediaProb
 		// Treat input as the supported audio container only. No playlist or network resolution is permitted.
 		args = []string{"-v", "error", "-protocol_whitelist", "file", "-f", audioDemuxer, "-show_entries", "stream=codec_type:stream_disposition=attached_pic:format=duration"}
 	}
-	output, err := exec.CommandContext(ctx, bin, append(args, "-of", "json", path)...).Output()
+	output, err := hideCommandWindow(exec.CommandContext(ctx, bin, append(args, "-of", "json", path)...)).Output()
 	if err != nil {
 		return mediaProbeInfo{}, fmt.Errorf("媒体探测失败：%w", err)
 	}

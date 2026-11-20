@@ -37,6 +37,7 @@ type CanvasProjectWorldLayersProps = {
     nodeById: Map<string, CanvasNodeData>;
     /** 视口内与缓冲区候选节点；屏外部分由本层分帧挂载。 */
     candidateNodes: CanvasNodeData[];
+    gestureNodes: CanvasNodeData[];
     immediateRenderNodeIds: Set<string>;
     renderViewBounds: CanvasSpatialBounds;
     nodeRenderLODById: Map<string, CanvasNodeRenderLOD>;
@@ -98,7 +99,13 @@ export const CanvasProjectWorldLayers = memo(function CanvasProjectWorldLayers(p
     useEffect(() => {
         if (activeMediaNodeId && !props.nodeById.has(activeMediaNodeId)) setActiveMediaNodeId(null);
     }, [activeMediaNodeId, props.nodeById]);
-    const visibleNodes = useCanvasProgressiveNodeMount(props.candidateNodes, props.immediateRenderNodeIds, props.renderViewBounds);
+    const mountedNodes = useCanvasProgressiveNodeMount(props.candidateNodes, props.immediateRenderNodeIds, props.renderViewBounds);
+    const gestureIds = useMemo(() => new Set(props.gestureNodes.map((node) => node.id)), [props.gestureNodes]);
+    const visibleNodes = useMemo(() => {
+        if (!props.gestureNodes.length) return mountedNodes;
+        const mountedIds = new Set(mountedNodes.map((node) => node.id));
+        return [...mountedNodes, ...props.gestureNodes.filter((node) => !mountedIds.has(node.id))];
+    }, [mountedNodes, props.gestureNodes]);
     const orderedVisibleNodes = useMemo(
         () => [
             ...visibleNodes.filter(isFrameNode),
@@ -168,7 +175,7 @@ export const CanvasProjectWorldLayers = memo(function CanvasProjectWorldLayers(p
                     <CanvasFrameNode
                         key={node.id}
                         data={node}
-                        renderLOD={props.nodeRenderLODById.get(node.id) || "full"}
+                        renderLOD={gestureIds.has(node.id) ? "preview" : props.nodeRenderLODById.get(node.id) || "full"}
                         dragOffset={props.dragPreview?.nodeIds.has(node.id) ? props.dragPreview : undefined}
                         childNodes={framePreviewNodes(node)}
                         scale={viewportScale}
@@ -186,7 +193,7 @@ export const CanvasProjectWorldLayers = memo(function CanvasProjectWorldLayers(p
                     <CanvasNode
                         key={node.id}
                         data={node}
-                        renderLOD={props.nodeRenderLODById.get(node.id) || "full"}
+                        renderLOD={gestureIds.has(node.id) ? "preview" : props.nodeRenderLODById.get(node.id) || "full"}
                         dragOffset={props.dragPreview?.nodeIds.has(node.id) ? props.dragPreview : undefined}
                         scale={viewportScale}
                         isSelected={props.selectedNodeIds.has(node.id)}

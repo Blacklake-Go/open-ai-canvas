@@ -7,8 +7,8 @@ import type { RouteObject } from "react-router";
 import type { PluginHostContext, PluginManifest, PluginManifestV2, RegisteredPlugin } from "@/lib/plugins/plugin-types";
 import { getRegisteredPlugin, registerPlugin, unregisterPlugin } from "@/lib/plugins/plugin-registry";
 
-export const SUPDANCE_HOST_VERSION = "1.8.6" as const;
-export const SUPDANCE_SCHEMA_BASELINE = 105 as const;
+export const SUPDANCE_HOST_VERSION = "1.8.7.1" as const;
+export const SUPDANCE_SCHEMA_BASELINE = 109 as const;
 
 export type UpstreamPatchRecord = {
     id: string;
@@ -25,6 +25,65 @@ export type UpstreamPatchRecord = {
  * 新增核心文件修改时必须同步登记，并由架构回归测试与 baseline.json 对齐校验。
  */
 export const SUPDANCE_UPSTREAM_PATCH_REGISTRY: readonly UpstreamPatchRecord[] = [
+    {
+        id: "supdance-upstream-20261120-preservation",
+        upstreamBaseline: "v1.8.7.1@882a1d1a",
+        feature: "集成团队空间与协议版本锁定，保留 SupDance 插件挂载、迁移账本和结算字段",
+        coupledUpstreamFiles: [
+            "VERSION",
+            "backend/internal/app/channel_models_test_call.go",
+            "backend/internal/app/media_probe.go",
+            "backend/internal/app/provider.go",
+            "backend/internal/app/provider_protocol.go",
+            "backend/internal/app/task_media_recovery.go",
+            "backend/internal/app/task_worker.go",
+            "backend/internal/database/migrations.go",
+            "backend/internal/handler/openapi.yaml",
+            "backend/internal/repository/finance_billing.go",
+            "web/src/components/canvas/canvas-cloud-agent-chat-ui.tsx",
+            "web/src/components/canvas/canvas-cloud-agent-panel-parts.tsx",
+            "web/src/components/canvas/canvas-cloud-agent-panel.tsx",
+            "web/src/components/canvas/canvas-cloud-agent.css",
+            "web/src/components/canvas/use-agent-launcher-position.ts",
+            "web/src/components/layout/app-top-nav.tsx",
+            "web/src/components/layout/language-menu.tsx",
+            "web/src/components/layout/workspace-account-card.tsx",
+            "web/src/components/layout/workspace-page.tsx",
+            "web/src/components/layout/workspace-sidebar-nav.tsx",
+            "web/src/components/layout/workspace-top-bar.tsx",
+            "web/src/components/model-picker.tsx",
+            "web/src/lib/plugins/plugin-types.ts",
+            "web/src/lib/user-session.ts",
+            "web/src/pages/admin/components/channel-model-editor.tsx",
+            "web/src/pages/assets/index.tsx",
+            "web/src/pages/canvas/canvas-project-top-bar.tsx",
+            "web/src/pages/canvas/project.tsx",
+            "web/src/pages/canvas/use-canvas-node-operations.ts",
+            "web/src/pages/create/creation-library.ts",
+            "web/src/pages/create/creation-workspace-messages.tsx",
+            "web/src/pages/create/creation-workspace.tsx",
+            "web/src/pages/create/index.tsx",
+            "web/src/pages/ecommerce/skill-picker.tsx",
+            "web/src/pages/inspirations/index.tsx",
+            "web/src/pages/inspirations/inspiration-detail-modal.tsx",
+            "web/src/pages/projects/asset-scheme.tsx",
+            "web/src/pages/projects/detail.tsx",
+            "web/src/pages/projects/index.tsx",
+            "web/src/pages/projects/prompt-skill.tsx",
+            "web/src/pages/projects/studio/final-view.tsx",
+            "web/src/pages/projects/studio/segment-dialog.tsx",
+            "web/src/pages/projects/studio/storyboard.tsx",
+            "web/src/pages/settings/profile-pane.tsx",
+            "web/src/router.tsx",
+            "web/src/services/api/user-data.ts",
+            "web/src/pages/projects/studio/panels.tsx",
+            "web/src/pages/projects/studio/job-detail.tsx",
+            "web/src/pages/projects/studio/segment-parts.tsx",
+        ],
+        files: ["docs/supdance/UPSTREAM_20261120.md"],
+        reason: "保留音乐、画布工具、页面管理、八语言、Codex、账务和素材入口，避免以旧迁移编号覆盖已发布记录。",
+        upgradeRisk: "HIGH",
+    },
     {
         id: "supdance-upstream-20261118-preservation",
         upstreamBaseline: "v1.8.6",

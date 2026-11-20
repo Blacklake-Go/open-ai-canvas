@@ -31,6 +31,7 @@ import { Button } from "antd";
 import { CanvasImagePreview } from "@/components/canvas/canvas-image-preview";
 import { AppModal } from "@/components/ui/product/app-modal";
 import { creationResultEntries } from "./creation-result-urls";
+import { CREATION_IMAGE_DRAG_TYPE } from "./creation-reference-drop";
 import { useI18n } from "@/supdance/plugins/i18n";
 import { interfaceText } from "@/i18n/interface-text";
 import { translate } from "@/i18n";
@@ -507,6 +508,15 @@ export function MediaResult({
                                 key={`${key}:${mediaAttempts[key] || 0}`}
                                 src={url}
                                 alt="生成结果"
+                                draggable={mediaStates[key] === "loaded"}
+                                onDragStart={(event) => {
+                                    if (mediaStates[key] !== "loaded") {
+                                        event.preventDefault();
+                                        return;
+                                    }
+                                    event.dataTransfer.effectAllowed = "copy";
+                                    event.dataTransfer.setData(CREATION_IMAGE_DRAG_TYPE, JSON.stringify({ messageId: item.id, resultKey: key }));
+                                }}
                                 decoding="async"
                                 onLoad={(event) => {
                                     const { naturalWidth, naturalHeight } = event.currentTarget;

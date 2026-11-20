@@ -54,7 +54,7 @@ export function InspirationDetailModal({
         <AppModal
             open={Boolean(localizedItem)}
             onCancel={onClose}
-            width={880}
+            width="min(1120px, calc(100vw - 32px))"
             title={null}
             footer={null}
             flush
@@ -69,115 +69,117 @@ export function InspirationDetailModal({
                         <InspirationCover key={localizedItem.image} image={localizedItem.image} />
                     </div>
 
-                    <div className="flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto p-5">
-                        <div className="flex flex-wrap items-start justify-between gap-3">
-                            <div className="min-w-0">
-                                <h2 className="text-[var(--fs-heading,16px)] font-semibold leading-6 text-foreground">{localizedItem.title}</h2>
-                                {localizedItem.description ? <p className="mt-1 text-xs leading-5 text-foreground/58">{localizedItem.description}</p> : null}
-                            </div>
-                            <div className="flex shrink-0 items-center gap-2">
-                                <Tooltip title={favorite ? t("inspiration.unfavorite_aria", undefined, "取消收藏灵感") : t("inspiration.favorite_aria", undefined, "收藏灵感")}>
-                                    <button
-                                        type="button"
-                                        data-icon-only
-                                        className="inspiration-icon-button"
-                                        aria-label={favorite ? t("inspiration.unfavorite_aria", undefined, "取消收藏灵感") : t("inspiration.favorite_aria", undefined, "收藏灵感")}
-                                        aria-pressed={favorite}
-                                        onClick={() => onToggleFavorite(localizedItem)}
-                                    >
-                                        <span aria-hidden="true">
-                                            <Heart className="size-4" fill={favorite ? "currentColor" : "none"} />
-                                        </span>
-                                    </button>
-                                </Tooltip>
-                                <Tooltip title={t("inspiration.edit", undefined, "编辑灵感")}>
-                                    <button type="button" data-icon-only className="inspiration-icon-button" aria-label={t("inspiration.edit", undefined, "编辑灵感")} onClick={() => onEdit(localizedItem)}>
-                                        <span aria-hidden="true">
-                                            <Pencil className="size-4" />
-                                        </span>
-                                    </button>
-                                </Tooltip>
-                                <Tooltip title={custom ? t("inspiration.delete", undefined, "删除灵感") : t("inspiration.hide_aria", undefined, "隐藏灵感")}>
-                                    <button
-                                        type="button"
-                                        data-icon-only
-                                        className="inspiration-icon-button"
-                                        aria-label={custom ? t("inspiration.delete", undefined, "删除灵感") : t("inspiration.hide_aria", undefined, "隐藏灵感")}
-                                        onClick={() => onDelete(localizedItem)}
-                                    >
-                                        <span aria-hidden="true">
-                                            <Trash2 className="size-4" />
-                                        </span>
-                                    </button>
-                                </Tooltip>
-                            </div>
-                        </div>
-
-                        <div className="flex flex-col gap-2">
-                            {showSources ? (
-                                <MetaRow label={t("inspiration.field_source", undefined, "来源")}>
-                                    {source?.name ? (
-                                        <a href={source.repository} target="_blank" rel="noreferrer" className="hover:underline">
-                                            {source.name}
-                                        </a>
-                                    ) : localizedItem.sourceId && localizedItem.sourceId !== "original" ? (
-                                        t(source?.label ?? "未标注来源", undefined, source?.label ?? t("inspiration.source_unlabeled", undefined, "未标注来源"))
-                                    ) : (
-                                        t("inspiration.source_original", undefined, "原创")
-                                    )}
-                                    {localizedItem.credit ? ` · ${localizedItem.credit}` : ""}
-                                </MetaRow>
-                            ) : null}
-                            <MetaRow label={t("common.category", undefined, "分类")}>{categoryLabel(localizedItem)}</MetaRow>
-                            <MetaRow label={t("common.type", undefined, "类型")}>
-                                {t(`common.${localizedItem.mode}`, undefined, modeLabels[localizedItem.mode])}
-                                {localizedItem.ratio ? ` · ${localizedItem.ratio}` : ""}
-                            </MetaRow>
-                            {localizedItem.tags?.length ? (
-                                <MetaRow label={t("plugins.tags", undefined, "标签")}>
-                                    <span className="flex flex-wrap gap-2">
-                                        {localizedItem.tags.map((tag) => (
-                                            <span key={tag} className="inspiration-chip">
-                                                {tag}
+                    <div className="inspiration-detail-panel">
+                        <div className="inspiration-detail-content">
+                            <div className="inspiration-detail-heading">
+                                <div className="min-w-0">
+                                    <h2 className="text-[var(--fs-heading,16px)] font-semibold leading-6 text-foreground">{localizedItem.title}</h2>
+                                    {localizedItem.description ? <p className="mt-1 text-xs leading-5 text-foreground/58">{localizedItem.description}</p> : null}
+                                </div>
+                                <div className="inspiration-detail-actions flex shrink-0 items-center gap-2">
+                                    <Tooltip title={favorite ? t("inspiration.unfavorite_aria", undefined, "取消收藏灵感") : t("inspiration.favorite_aria", undefined, "收藏灵感")}>
+                                        <button
+                                            type="button"
+                                            data-icon-only
+                                            className="inspiration-icon-button"
+                                            aria-label={favorite ? t("inspiration.unfavorite_aria", undefined, "取消收藏灵感") : t("inspiration.favorite_aria", undefined, "收藏灵感")}
+                                            aria-pressed={favorite}
+                                            onClick={() => onToggleFavorite(localizedItem)}
+                                        >
+                                            <span aria-hidden="true">
+                                                <Heart className="size-4" fill={favorite ? "currentColor" : "none"} />
                                             </span>
-                                        ))}
-                                    </span>
+                                        </button>
+                                    </Tooltip>
+                                    <Tooltip title={t("inspiration.edit", undefined, "编辑灵感")}>
+                                        <button type="button" data-icon-only className="inspiration-icon-button" aria-label={t("inspiration.edit", undefined, "编辑灵感")} onClick={() => onEdit(localizedItem)}>
+                                            <span aria-hidden="true">
+                                                <Pencil className="size-4" />
+                                            </span>
+                                        </button>
+                                    </Tooltip>
+                                    <Tooltip title={custom ? t("inspiration.delete", undefined, "删除灵感") : t("inspiration.hide_aria", undefined, "隐藏灵感")}>
+                                        <button
+                                            type="button"
+                                            data-icon-only
+                                            className="inspiration-icon-button"
+                                            aria-label={custom ? t("inspiration.delete", undefined, "删除灵感") : t("inspiration.hide_aria", undefined, "隐藏灵感")}
+                                            onClick={() => onDelete(localizedItem)}
+                                        >
+                                            <span aria-hidden="true">
+                                                <Trash2 className="size-4" />
+                                            </span>
+                                        </button>
+                                    </Tooltip>
+                                </div>
+                            </div>
+
+                            <div className="flex flex-col gap-2">
+                                {showSources ? (
+                                    <MetaRow label={t("inspiration.field_source", undefined, "来源")}>
+                                        {source?.name ? (
+                                            <a href={source.repository} target="_blank" rel="noreferrer" className="hover:underline">
+                                                {source.name}
+                                            </a>
+                                        ) : localizedItem.sourceId && localizedItem.sourceId !== "original" ? (
+                                            t(source?.label ?? "未标注来源", undefined, source?.label ?? t("inspiration.source_unlabeled", undefined, "未标注来源"))
+                                        ) : (
+                                            t("inspiration.source_original", undefined, "原创")
+                                        )}
+                                        {localizedItem.credit ? ` · ${localizedItem.credit}` : ""}
+                                    </MetaRow>
+                                ) : null}
+                                <MetaRow label={t("common.category", undefined, "分类")}>{categoryLabel(localizedItem)}</MetaRow>
+                                <MetaRow label={t("common.type", undefined, "类型")}>
+                                    {t(`common.${localizedItem.mode}`, undefined, modeLabels[localizedItem.mode])}
+                                    {localizedItem.ratio ? ` · ${localizedItem.ratio}` : ""}
                                 </MetaRow>
-                            ) : null}
-                            {/* 所有素材的原文字段与上游跳转绝对不删除，始终完整保留 */}
-                            {localizedItem.sourceUrl ? (
-                                <MetaRow label={t("inspiration.field_original_page", undefined, "原页")}>
-                                    <a className="inline-flex items-center gap-1 text-primary hover:underline" href={localizedItem.sourceUrl} target="_blank" rel="noreferrer">
-                                        {t("inspiration.view_upstream_content", undefined, "查看上游内容")} <ExternalLink className="size-3" />
-                                    </a>
-                                </MetaRow>
+                                {localizedItem.tags?.length ? (
+                                    <MetaRow label={t("plugins.tags", undefined, "标签")}>
+                                        <span className="flex flex-wrap gap-2">
+                                            {localizedItem.tags.map((tag) => (
+                                                <span key={tag} className="inspiration-chip">
+                                                    {tag}
+                                                </span>
+                                            ))}
+                                        </span>
+                                    </MetaRow>
+                                ) : null}
+                                {/* 所有素材的原文字段与上游跳转绝对不删除，始终完整保留 */}
+                                {localizedItem.sourceUrl ? (
+                                    <MetaRow label={t("inspiration.field_original_page", undefined, "原页")}>
+                                        <a className="inline-flex items-center gap-1 text-primary hover:underline" href={localizedItem.sourceUrl} target="_blank" rel="noreferrer">
+                                            {t("inspiration.view_upstream_content", undefined, "查看上游内容")} <ExternalLink className="size-3" />
+                                        </a>
+                                    </MetaRow>
+                                ) : null}
+                            </div>
+
+                            <PromptSection label={t("workbench.prompt_label", undefined, "提示词")} text={localizedItem.prompt} onCopy={onCopy} copyText={t("common.copy", undefined, "复制")} />
+                            {item && item.prompt && item.prompt !== localizedItem.prompt ? (
+                                <PromptSection
+                                    label={locale === "zh-CN" ? t("inspiration.prompt_source_label", undefined, "提示词 · 原文") : t("inspiration.prompt_zh_label", undefined, "提示词 · 中文")}
+                                    text={item.prompt}
+                                    onCopy={onCopy}
+                                    copyText={t("common.copy", undefined, "复制")}
+                                />
                             ) : null}
                         </div>
 
-                        <PromptSection label={t("workbench.prompt_label", undefined, "提示词")} text={localizedItem.prompt} onCopy={onCopy} copyText={t("common.copy", undefined, "复制")} />
-                        {item && item.prompt && item.prompt !== localizedItem.prompt ? (
-                            <PromptSection
-                                label={locale === "zh-CN" ? t("inspiration.prompt_source_label", undefined, "提示词 · 原文") : t("inspiration.prompt_zh_label", undefined, "提示词 · 中文")}
-                                text={item.prompt}
-                                onCopy={onCopy}
-                                copyText={t("common.copy", undefined, "复制")}
-                            />
-                        ) : null}
-                    </div>
-
-                    <div className="flex shrink-0 items-center justify-end gap-2 border-t border-foreground/8 px-5 py-3">
-                        <Button onClick={onClose}>{t("common.close", undefined, "关闭")}</Button>
-                        <Button
-                            type="primary"
-                            icon={<ArrowUpRight className="size-4" />}
-                            onClick={() => {
-                                setUsingPrompt(true);
-                                onClose();
-                                onUse(localizedItem);
-                            }}
-                        >
-                            {t("inspiration.create_with_this_idea", undefined, "用这个创意创作")}
-                        </Button>
+                        <div className="inspiration-detail-footer">
+                            <Button onClick={onClose}>{t("common.close", undefined, "关闭")}</Button>
+                            <Button
+                                type="primary"
+                                icon={<ArrowUpRight className="size-4" />}
+                                onClick={() => {
+                                    setUsingPrompt(true);
+                                    onClose();
+                                    onUse(localizedItem);
+                                }}
+                            >
+                                {t("inspiration.create_with_this_idea", undefined, "用这个创意创作")}
+                            </Button>
+                        </div>
                     </div>
                 </div>
             ) : null}

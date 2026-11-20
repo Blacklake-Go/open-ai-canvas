@@ -123,7 +123,7 @@ func (r *Repository) UserStorageUsage(userID string) (UserStorageUsage, error) {
 	if err != nil {
 		return usage, err
 	}
-	usage.AgentLimitBytes, usage.MCPLimitBytes = AgentStoredDataLimit, MCPStorageLimitBytes
+	usage.MCPLimitBytes = MCPStorageLimitBytes
 	if usage.AgentBytes, err = r.AgentStoredBytes(userID); err != nil {
 		return usage, err
 	}

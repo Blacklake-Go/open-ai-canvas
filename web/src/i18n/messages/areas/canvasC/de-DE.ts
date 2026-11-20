@@ -9,11 +9,18 @@ export const deDE: DeepStringRecord<typeof zhCN> = {
         noSubtitle: "Hier gibt es keinen Untertitel. Wählen Sie einen Untertitelclip aus, um ihn unten zu bearbeiten.",
     },
     toolbar: {
+        moreTools: "Weitere Werkzeuge",
+        settings: "Werkzeugleiste anpassen",
         appearance: "Canvas-Darstellung",
         appearanceSubtitle: "Farben und Raster",
         mediaInfo: "Medieninfos",
     },
     videoPromptTools: {
+        mode: "Videoreferenzmodus",
+        textMode: "Text zu Video",
+        allMode: "Referenzen",
+        frameMode: "Start-/Endbild",
+        swap: "Start- und Endbild tauschen",
         imageCount: "{{count}} Bilder",
         videoCount: "{{count}} Videos",
         audioCount: "{{count}} Audios",

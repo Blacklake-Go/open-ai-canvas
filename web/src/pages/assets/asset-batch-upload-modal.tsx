@@ -1,4 +1,4 @@
-import { useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { App, Button, Modal, Progress } from "antd";
 import { useTranslation } from "react-i18next";
 import { StatusBadge } from "@/components/ui/base/badges";
@@ -22,6 +22,8 @@ export function AssetBatchUploadModal({ open, defaultFolderId, folders, onClose,
     const [folderId, setFolderId] = useState(defaultFolderId);
     const [tags, setTags] = useState<string[]>([]);
     const [uploading, setUploading] = useState(false);
+    const uploadingRef = useRef(false);
+    const wasOpenRef = useRef(false);
     const [dragging, setDragging] = useState(false);
     const inputRef = useRef<HTMLInputElement>(null);
     const doneCount = items.filter((item) => item.status === "done").length;
@@ -29,7 +31,25 @@ export function AssetBatchUploadModal({ open, defaultFolderId, folders, onClose,
     const hasFiles = items.length > 0;
     const folderOptions = useMemo(() => [{ label: t("library.assets.uncategorized"), value: "" }, ...folders.map((folder) => ({ label: folder.name, value: folder.id }))], [folders, t]);
 
+    const resetBatch = useCallback(() => {
+        setItems([]);
+        setCategory("material");
+        setFolderId(defaultFolderId);
+        setTags([]);
+        setDragging(false);
+        if (inputRef.current) inputRef.current.value = "";
+    }, [defaultFolderId]);
+
+    useEffect(() => {
+        if (!open) wasOpenRef.current = false;
+        else if (!wasOpenRef.current && !uploading) {
+            resetBatch();
+            wasOpenRef.current = true;
+        }
+    }, [open, resetBatch, uploading]);
+
     const chooseFiles = (files: File[]) => {
+        if (uploadingRef.current) return;
         const images = files.filter((file) => file.type.startsWith("image/"));
         if (!images.length) {
             message.warning(t("library.assets.batch.chooseImages"));
@@ -39,9 +59,12 @@ export function AssetBatchUploadModal({ open, defaultFolderId, folders, onClose,
     };
 
     const uploadBatch = async () => {
+        if (uploadingRef.current) return;
         const pending = items.filter((item) => item.status === "queued" || item.status === "error");
         if (!pending.length) return;
+        uploadingRef.current = true;
         setUploading(true);
+        setDragging(false);
         let cursor = 0;
         const worker = async () => {
             while (cursor < pending.length) {
@@ -86,20 +109,22 @@ export function AssetBatchUploadModal({ open, defaultFolderId, folders, onClose,
                     syncError ??= error;
                 });
             }
+            if (syncError) message.warning(localSavedRemotePendingMessage(t("library.assets.batch.partialLocal"), syncError));
+            // 有失败项时保留队列；成功的新批次不携带旧文件和目录选择。
+            if (!failed) {
+                resetBatch();
+                await onComplete();
+            }
         } finally {
+            uploadingRef.current = false;
             setUploading(false);
         }
-        if (syncError) message.warning(localSavedRemotePendingMessage(t("library.assets.batch.partialLocal"), syncError));
-        // 有失败项时保留弹窗，失败标记与「重试失败项」仍可见；关闭时再刷新列表。
-        if (!failed) await onComplete();
     };
 
     const close = () => {
-        if (uploading) return;
+        if (uploadingRef.current) return;
         const hasUploaded = items.some((item) => item.status === "done");
-        setItems([]);
-        setTags([]);
-        setFolderId(defaultFolderId);
+        resetBatch();
         if (hasUploaded) void onComplete();
         else onClose();
     };
@@ -110,28 +135,57 @@ export function AssetBatchUploadModal({ open, defaultFolderId, folders, onClose,
                 <div className="grid gap-3 sm:grid-cols-3">
                     <label className="text-xs font-medium text-foreground/65">
                         {t("library.assets.batch.category")}
-                        <Select className="mt-1 w-full" value={category} options={ASSET_ASSIGNABLE_CATEGORY_OPTIONS} onChange={(value) => setCategory(value)} />
+                        <Select
+                            className="mt-1 w-full"
+                            value={category}
+                            options={ASSET_ASSIGNABLE_CATEGORY_OPTIONS}
+                            disabled={uploading}
+                            onChange={(value) => {
+                                if (!uploadingRef.current) setCategory(value);
+                            }}
+                        />
                     </label>
                     <label className="text-xs font-medium text-foreground/65">
                         {t("library.assets.batch.folder")}
-                        <Select className="mt-1 w-full" value={folderId} options={folderOptions} onChange={setFolderId} />
+                        <Select
+                            className="mt-1 w-full"
+                            value={folderId}
+                            options={folderOptions}
+                            disabled={uploading}
+                            onChange={(value) => {
+                                if (!uploadingRef.current) setFolderId(value);
+                            }}
+                        />
                     </label>
                     <label className="text-xs font-medium text-foreground/65">
                         {t("library.assets.batch.tags")}
-                        <Select mode="tags" className="mt-1 w-full" value={tags} tokenSeparators={[",", "，"]} onChange={setTags} placeholder={t("library.assets.batch.tagsPlaceholder")} />
+                        <Select
+                            mode="tags"
+                            className="mt-1 w-full"
+                            value={tags}
+                            tokenSeparators={[",", "，"]}
+                            disabled={uploading}
+                            onChange={(value) => {
+                                if (!uploadingRef.current) setTags(value);
+                            }}
+                            placeholder={t("library.assets.batch.tagsPlaceholder")}
+                        />
                     </label>
                 </div>
                 <button
                     type="button"
                     className={dragging ? "batch-upload-dropzone is-dragging" : "batch-upload-dropzone"}
-                    onClick={() => inputRef.current?.click()}
+                    disabled={uploading}
+                    onClick={() => {
+                        if (!uploadingRef.current) inputRef.current?.click();
+                    }}
                     onDragEnter={(event) => {
                         event.preventDefault();
-                        setDragging(true);
+                        if (!uploadingRef.current) setDragging(true);
                     }}
                     onDragOver={(event) => {
                         event.preventDefault();
-                        event.dataTransfer.dropEffect = "copy";
+                        event.dataTransfer.dropEffect = uploadingRef.current ? "none" : "copy";
                     }}
                     onDragLeave={(event) => {
                         if (!event.currentTarget.contains(event.relatedTarget as Node | null)) setDragging(false);
@@ -139,7 +193,7 @@ export function AssetBatchUploadModal({ open, defaultFolderId, folders, onClose,
                     onDrop={(event) => {
                         event.preventDefault();
                         setDragging(false);
-                        if (!uploading) chooseFiles(Array.from(event.dataTransfer.files));
+                        chooseFiles(Array.from(event.dataTransfer.files));
                     }}
                 >
                     <UploadCloud className="size-7" />
@@ -152,6 +206,7 @@ export function AssetBatchUploadModal({ open, defaultFolderId, folders, onClose,
                     hidden
                     accept="image/*"
                     multiple
+                    disabled={uploading}
                     onChange={(event) => {
                         chooseFiles(Array.from(event.target.files || []));
                         event.currentTarget.value = "";

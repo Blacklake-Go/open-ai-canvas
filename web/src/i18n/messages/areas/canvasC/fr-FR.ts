@@ -9,11 +9,18 @@ export const frFR: DeepStringRecord<typeof zhCN> = {
         noSubtitle: "Aucun sous-titre ici. Sélectionnez un clip de sous-titre pour le modifier ci-dessous.",
     },
     toolbar: {
+        moreTools: "Autres outils",
+        settings: "Personnaliser la barre d’outils",
         appearance: "Apparence du canevas",
         appearanceSubtitle: "Couleurs et grille",
         mediaInfo: "Infos média",
     },
     videoPromptTools: {
+        mode: "Mode de référence vidéo",
+        textMode: "Texte en vidéo",
+        allMode: "Références",
+        frameMode: "Début et fin",
+        swap: "Inverser les images de début et de fin",
         imageCount: "{{count}} images",
         videoCount: "{{count}} vidéos",
         audioCount: "{{count}} audios",
