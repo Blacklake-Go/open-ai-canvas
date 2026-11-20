@@ -185,6 +185,16 @@ func (r *Repository) SaveChannelModelWithPriceTiers(item *model.ChannelModel, ti
 		if err := tx.Save(item).Error; err != nil {
 			return err
 		}
+		// The saved revision is an edit token. Read back the database's timestamp
+		// precision before returning it to the next editor.
+		var saved struct {
+			CreatedAt time.Time
+			UpdatedAt time.Time
+		}
+		if err := tx.Model(&model.ChannelModel{}).Select("created_at", "updated_at").Where("id = ? AND channel_id = ?", item.ID, item.ChannelID).Take(&saved).Error; err != nil {
+			return err
+		}
+		item.CreatedAt, item.UpdatedAt = saved.CreatedAt, saved.UpdatedAt
 		return nil
 	})
 }

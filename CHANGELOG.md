@@ -1,5 +1,5 @@
 # CHANGELOG
-## v1.8.7.1-supdance.1
+## v1.8.7.1-supdance.2
 
 - 合入上游 v1.8.7.1，保留 SupDance 插件、计费和八语界面；数据库增量迁移至 Schema 112。
 
