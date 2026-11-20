@@ -108,7 +108,7 @@
   "apiVersion": "yingce.plugin/v2",
   "id": "volcengine-ark-seedance-25",
   "name": "火山方舟 Seedance 2.5 官方视频生成",
-  "version": "1.0.0",
+  "version": "1.0.1-supdance.1",
   "author": "Volcengine / 影策",
   "description": "火山方舟官方 /api/v3 视频生成接口，支持 Seedance 2.5 的文本、图片、视频和音频全模态输入。",
   "permissions": [
