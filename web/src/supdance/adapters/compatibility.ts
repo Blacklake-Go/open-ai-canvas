@@ -272,6 +272,7 @@ export const SUPDANCE_UPSTREAM_PATCH_REGISTRY: readonly UpstreamPatchRecord[] = 
         upstreamBaseline: "v1.8.5",
         feature: "灵感大厅公开控制与逐条限制",
         coupledUpstreamFiles: [
+            "web/src/components/ui/base/list-search-input.tsx",
             "backend/internal/handler/api.go",
             "backend/internal/handler/inspiration_feed.go",
             "backend/internal/app/inspiration_feed_bridge.go",

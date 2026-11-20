@@ -54,17 +54,18 @@ export function InspirationDetailModal({
         <AppModal
             open={Boolean(localizedItem)}
             onCancel={onClose}
-            width="min(1120px, calc(100vw - 32px))"
+            width="min(1120px, calc(100vw - var(--space-8)))"
             title={null}
             footer={null}
             flush
+            centered
             focusTriggerAfterClose={!usingPrompt}
             afterOpenChange={(visible) => {
                 if (visible) setUsingPrompt(false);
             }}
         >
             {localizedItem ? (
-                <div className="flex max-h-[76vh] flex-col">
+                <div className="inspiration-detail-layout">
                     <div className="inspiration-detail-cover">
                         <InspirationCover key={localizedItem.image} image={localizedItem.image} />
                     </div>
@@ -73,10 +74,10 @@ export function InspirationDetailModal({
                         <div className="inspiration-detail-content">
                             <div className="inspiration-detail-heading">
                                 <div className="min-w-0">
-                                    <h2 className="text-[var(--fs-heading,16px)] font-semibold leading-6 text-foreground">{localizedItem.title}</h2>
+                                    <h2 className="break-words text-[var(--fs-heading,16px)] font-semibold leading-6 text-foreground">{localizedItem.title}</h2>
                                     {localizedItem.description ? <p className="mt-1 text-xs leading-5 text-foreground/58">{localizedItem.description}</p> : null}
                                 </div>
-                                <div className="inspiration-detail-actions flex shrink-0 items-center gap-2">
+                                <div className="flex shrink-0 items-center gap-2">
                                     <Tooltip title={favorite ? t("inspiration.unfavorite_aria", undefined, "取消收藏灵感") : t("inspiration.favorite_aria", undefined, "收藏灵感")}>
                                         <button
                                             type="button"
