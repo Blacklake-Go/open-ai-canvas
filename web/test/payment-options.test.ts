@@ -2,6 +2,7 @@ import { describe, expect, test } from "bun:test";
 
 import { estimatePaymentCharge, parsePaymentRateMicros, paymentOptionsFromProviders } from "@/lib/payment-options";
 import type { PaymentProvider } from "@/services/api/payments";
+import { paymentBrandKey, topupCreditPresentation } from "@/supdance/wallet-presentation";
 
 const provider = (overrides: Partial<PaymentProvider>): PaymentProvider => ({
     id: "epay",
@@ -14,6 +15,34 @@ const provider = (overrides: Partial<PaymentProvider>): PaymentProvider => ({
     configured: true,
     closeAfterMinutes: 10,
     ...overrides,
+});
+
+describe("wallet checkout presentation", () => {
+    test("uses the brand without changing the provider or method identity", () => {
+        const [alipay, waffo, wxpay, custom] = paymentOptionsFromProviders([
+            provider({ id: "alipay-page-pay", name: "支付宝电脑网站支付" }),
+            provider({ id: "waffo-pancake", name: "Waffo Pancake" }),
+            provider({ methods: [{ id: "wxpay", name: "微信支付", icon: "brand:wechat-pay" }] }),
+            provider({ id: "custom-checkout", name: "Custom Checkout" }),
+        ]);
+
+        expect([alipay, waffo, wxpay, custom].map(paymentBrandKey)).toEqual(["alipay", "waffo", "wechat", undefined]);
+        expect(wxpay).toMatchObject({ key: "epay:wxpay", providerId: "epay", method: "wxpay" });
+    });
+
+    test("shows the recorded gift only when the description matches the granted total", () => {
+        const product = {
+            kind: "credits" as const,
+            name: "轻量包 · 赠 6%",
+            description: "基础 5,000 积分 + 赠送 300 积分（+6%）",
+            creditsMicrocredits: 5_300_000_000,
+        };
+
+        expect(topupCreditPresentation(product)).toEqual({ name: "轻量包", bonusMicrocredits: 300_000_000 });
+        expect(topupCreditPresentation({ ...product, creditsMicrocredits: 5_000_000_000 })).toEqual({ name: product.name, bonusMicrocredits: 0 });
+        expect(topupCreditPresentation({ ...product, kind: "storage" }).bonusMicrocredits).toBe(0);
+        expect(topupCreditPresentation({ ...product, description: undefined }).bonusMicrocredits).toBe(0);
+    });
 });
 
 describe("paymentOptionsFromProviders", () => {

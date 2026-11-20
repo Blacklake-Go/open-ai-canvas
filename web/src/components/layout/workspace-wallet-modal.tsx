@@ -1,6 +1,6 @@
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { App, Button, Input, Skeleton } from "antd";
-import { ChevronLeft, ChevronRight, CircleAlert, Coins, CreditCard, HardDrive, History, RefreshCw, TicketCheck, WalletCards } from "lucide-react";
+import { ChevronLeft, ChevronRight, CircleAlert, CreditCard, Gem, HardDrive, History, RefreshCw, TicketCheck, WalletCards } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useLocation, useNavigate } from "react-router";
 import { useTranslation } from "react-i18next";
@@ -264,7 +264,7 @@ export function WorkspaceWalletModal({
                     <header className="workspace-wallet-header">
                         <div>
                             <span className="workspace-wallet-kicker">
-                                <Coins />
+                                <Gem className="text-[var(--user-ink-muted)]" aria-hidden="true" />
                                 {creditsEnabled ? t("nav.tools.wallet") : t("account.wallet.topupCenter")}
                             </span>
                             <h2>{creditsEnabled ? t("account.wallet.title") : t("account.wallet.titleStorage")}</h2>
@@ -315,7 +315,7 @@ export function WorkspaceWalletModal({
                                     {t("account.wallet.tabRedeem")}
                                 </button>
                                 <button type="button" role="tab" aria-selected={activeTab === "income"} onClick={() => openHistory("income")}>
-                                    <Coins />
+                                    <Gem className="text-[var(--user-ink-muted)]" aria-hidden="true" />
                                     {t("account.wallet.tabIncome")}
                                 </button>
                                 <button type="button" role="tab" aria-selected={activeTab === "history"} onClick={() => openHistory("history")}>

@@ -1,7 +1,7 @@
 /* 积分中心 · 充值：按“积分 / 存储空间”分类展示，结算栏固定在底部。
    外壳沿用 .workspace-wallet-*；类型色只用于字形与图标底，不做整卡染色。 */
 .wallet-topup {
-    --wallet-topup-credits-ink: var(--status-warning);
+    --wallet-topup-credits-ink: var(--user-ink-muted);
     --wallet-topup-storage-ink: var(--status-loading);
     --wallet-topup-card-surface: var(--user-surface-muted);
     --wallet-topup-card-hover: var(--user-surface-hover);
@@ -54,6 +54,7 @@
 /* 分组不再套边框盒子：一行标题 + 网格，把高度留给商品列表。 */
 .wallet-topup-groups {
     display: grid;
+    grid-template-columns: minmax(0, 1fr);
     flex: 1;
     min-height: 0;
     align-content: start;
@@ -173,6 +174,12 @@
     color: var(--user-accent);
 }
 
+.wallet-topup-card-credits {
+    display: grid;
+    align-content: start;
+    gap: var(--space-1);
+}
+
 .wallet-topup-card-value {
     color: var(--user-ink);
     font-size: 16px;
@@ -180,6 +187,13 @@
     font-variant-numeric: tabular-nums;
     letter-spacing: -0.02em;
     line-height: 1.2;
+}
+
+.wallet-topup-card-bonus {
+    color: var(--user-ink-muted);
+    font-size: var(--fs-caption);
+    font-variant-numeric: tabular-nums;
+    line-height: 1.4;
 }
 
 .wallet-topup-card-foot {
@@ -462,12 +476,23 @@
 }
 
 @media (max-width: 720px) {
+    .wallet-topup-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .wallet-topup-checkout .workspace-wallet-providers button {
+        min-height: 44px;
+    }
+
     .workspace-wallet-stats {
         width: 100%;
     }
 
     .workspace-wallet-stats > * {
         flex: 1;
+    }
+
+    .workspace-wallet-stats .workspace-wallet-balance {
         min-width: 0;
     }
 
