@@ -23,6 +23,7 @@ import {
     SlidersHorizontal,
 } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
+import { startPluginStateSync } from "@/supdance/adapters/plugin-state-sync";
 import { useNavigate } from "react-router";
 
 import { EmptyState } from "@/components/ui/product/empty-state";
@@ -124,22 +125,27 @@ export default function PluginsPage() {
         for (const plugin of builtinPlugins) ensurePlugin(plugin.manifest);
     }, [builtinPlugins, ensurePlugin]);
 
-    const reloadBackendPlugins = async () => {
-        setBackendPluginsLoading(true);
+    const catalogRequest = useRef(0);
+    const reloadBackendPlugins = async (signal?: AbortSignal) => {
+        const request = ++catalogRequest.current;
+        const current = () => request === catalogRequest.current && !signal?.aborted;
+        if (!signal) setBackendPluginsLoading(true);
         try {
-            const result = await fetchPlugins();
+            const result = await fetchPlugins(signal);
+            if (!current()) return;
             setBackendPlugins(result.plugins);
-            setPluginStates(result.states);
         } catch (error) {
-            message.error(error instanceof Error ? error.message : "读取插件中心失败");
-            setBackendPlugins([]);
+            if (current()) message.error(error instanceof Error ? error.message : "读取插件中心失败");
         } finally {
-            setBackendPluginsLoading(false);
+            if (current()) setBackendPluginsLoading(false);
         }
     };
-
     useEffect(() => {
-        void reloadBackendPlugins();
+        const stop = startPluginStateSync(reloadBackendPlugins, 60_000);
+        return () => {
+            ++catalogRequest.current;
+            stop();
+        };
     }, [user?.id]);
 
     const remotePlugins = useMemo(() => backendPlugins.map(toRegisteredPlugin), [backendPlugins]);

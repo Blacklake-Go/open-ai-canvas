@@ -8,10 +8,12 @@ import { switchLocale } from "@/i18n";
 import { SUPPORTED_LOCALES, type AppLocale } from "@/i18n/locales";
 import { cn } from "@/lib/utils";
 import { useLocaleStore } from "@/stores/use-locale-store";
+import { useSiteLanguages } from "@/supdance/plugins/i18n/store";
 
 import "./language-menu.css";
 
 function useLanguageChange() {
+    const languages = useSiteLanguages();
     const { message } = App.useApp();
     const [busy, setBusy] = useState(false);
     const change = (next: AppLocale, options?: { updateLanguageQuery?: boolean }) => {
@@ -20,7 +22,7 @@ function useLanguageChange() {
             .catch(() => message.error(languageText(useLocaleStore.getState().locale, "languageError")))
             .finally(() => setBusy(false));
     };
-    return { change, busy };
+    return { change, busy, languages };
 }
 
 /**
@@ -29,7 +31,7 @@ function useLanguageChange() {
  */
 export function LanguageMenu({ variant = "topbar", className, updateLanguageQuery = false }: { variant?: "topbar" | "auth"; className?: string; updateLanguageQuery?: boolean }) {
     const { t } = useTranslation();
-    const { change, busy } = useLanguageChange();
+    const { change, busy, languages } = useLanguageChange();
     const locale = useLocaleStore((state) => state.locale);
     const current = SUPPORTED_LOCALES.find((item) => item.code === locale) ?? SUPPORTED_LOCALES[0];
     return (
@@ -39,7 +41,7 @@ export function LanguageMenu({ variant = "topbar", className, updateLanguageQuer
             rootClassName="language-menu-dropdown"
             menu={{
                 selectedKeys: [locale],
-                items: SUPPORTED_LOCALES.map((item) => ({
+                items: languages.map((item) => ({
                     key: item.code,
                     label: (
                         <span className="language-menu-option" lang={item.code}>
@@ -75,11 +77,11 @@ export function LanguageMenu({ variant = "topbar", className, updateLanguageQuer
 
 /** 设置页使用的语言卡片组：一眼看到全部语言，当前语言用 aria-pressed 标出。 */
 export function LanguageOptionGrid() {
-    const { change, busy } = useLanguageChange();
+    const { change, busy, languages } = useLanguageChange();
     const locale = useLocaleStore((state) => state.locale);
     return (
         <div className="language-option-grid" role="group">
-            {SUPPORTED_LOCALES.map((item) => (
+            {languages.map((item) => (
                 <button key={item.code} type="button" lang={item.code} className="language-option-card" aria-pressed={item.code === locale} disabled={busy} onClick={() => change(item.code)}>
                     <span>
                         <strong>{item.label}</strong>

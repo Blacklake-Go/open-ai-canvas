@@ -20,7 +20,7 @@ const workspaceTheme = getWorkspaceAntThemeConfig();
 const GlobalAgentPanel = lazy(() => import("@/components/canvas/canvas-cloud-agent-panel").then((module) => ({ default: module.CanvasCloudAgentPanel })));
 
 export default function UserLayout({ children }: { children: ReactNode }) {
-    const { pathname } = useLocation();
+    const { pathname, search, key } = useLocation();
     const adminWorkspace = pathname === "/admin" || pathname.startsWith("/admin/");
     const teamWorkspace = pathname.startsWith("/teams/");
     const spatialWorkbench = isSpatialWorkbenchPath(pathname);
@@ -50,17 +50,17 @@ export default function UserLayout({ children }: { children: ReactNode }) {
     const agentDock = useAgentPanelDock();
     const agentDocked = Boolean(userId) && canvasEditor && agentDock.active;
     const creationWorkspace = pathname === "/" || pathname === "/create";
-    const wasCanvasEditorRef = useRef(canvasEditor);
+    const previousLocation = useRef(key);
     useLayoutEffect(() => {
         if (teamWorkspace) useGlobalAgentStore.getState().reset();
     }, [teamWorkspace]);
     // 从画布编辑器回到创作首页时收起 Agent：画布里停靠在右侧的面板到首页会变成浮窗，挡住首页。
     // 只收起面板，对话和运行照常继续；在绘制前收起，首页不会先闪出浮窗。
     useLayoutEffect(() => {
-        const leftCanvasEditor = wasCanvasEditorRef.current && !canvasEditor;
-        wasCanvasEditorRef.current = canvasEditor;
-        if (leftCanvasEditor && creationWorkspace) useGlobalAgentStore.getState().closeAgent();
-    }, [canvasEditor, creationWorkspace]);
+        const navigated = previousLocation.current !== key;
+        previousLocation.current = key;
+        if (navigated && creationWorkspace && !new URLSearchParams(search).has("conversation")) useGlobalAgentStore.getState().closeAgent();
+    }, [key, search, creationWorkspace]);
 
     useLayoutEffect(() => {
         // Ant Design 浮层挂载在 body，必须用路由级标记隔离用户工作台与画布编辑器、运营后台。

@@ -3,6 +3,7 @@ import { usePluginStore } from "@/stores/use-plugin-store";
 import { getPublicSupDanceI18nBundle, invalidateI18nPublicReads } from "../api";
 import { SUPDANCE_I18N_CACHE_STORAGE_KEY, SUPDANCE_I18N_DISCOVERED_STORAGE_KEY, useSupDanceI18nStore } from "../store";
 import { SUPDANCE_I18N_PLUGIN_ID } from "../types";
+import { useLocaleStore } from "@/stores/use-locale-store";
 
 export function SupDanceI18nRuntimeHost() {
     const applyBundle = useSupDanceI18nStore((s) => s.applyBundle);
@@ -12,40 +13,45 @@ export function SupDanceI18nRuntimeHost() {
         if (typeof window === "undefined") return;
         const controller = new AbortController();
         let syncing = false;
+        let pending = false;
 
         const syncBundle = async () => {
-            if (syncing || controller.signal.aborted) return;
+            if (controller.signal.aborted) return;
+            if (syncing) {
+                pending = true;
+                return;
+            }
             syncing = true;
             try {
                 const bundle = await getPublicSupDanceI18nBundle(controller.signal);
                 if (!bundle) return;
+                if (controller.signal.aborted) return;
                 applyBundle(bundle);
-                const pluginStore = usePluginStore.getState();
-                const current = pluginStore.pluginStates[SUPDANCE_I18N_PLUGIN_ID];
-                if (!current || current.platformAvailable !== bundle.pluginEnabled) {
-                    usePluginStore.setState((state) => ({
-                        pluginStates: {
-                            ...state.pluginStates,
-                            [SUPDANCE_I18N_PLUGIN_ID]: {
-                                pluginId: SUPDANCE_I18N_PLUGIN_ID,
-                                platformAvailable: bundle.pluginEnabled,
-                                userEnabled: bundle.pluginEnabled,
-                                userConfigured: true,
-                                effectiveEnabled: bundle.pluginEnabled,
-                                canToggle: false,
-                                canConfigure: false,
-                            },
-                        },
-                    }));
+                if (bundle.pluginEnabled) {
+                    const { locale, setLocale } = useLocaleStore.getState();
+                    const hasPreference = window.localStorage.getItem("yingce:locale") || window.localStorage.getItem("supdance:i18n:locale") || new URLSearchParams(window.location.search).get("lang");
+                    if (locale !== bundle.settings.defaultLocale && (!hasPreference || !bundle.settings.languages.some((item) => item.enabled && item.code === locale))) setLocale(bundle.settings.defaultLocale);
                 }
             } catch {
                 // Keep built-in dictionary and local state when offline
             } finally {
                 syncing = false;
+                if (pending) {
+                    pending = false;
+                    void syncBundle();
+                }
             }
         };
 
         void syncBundle();
+        const unsubscribe = usePluginStore.subscribe((state, previous) => {
+            const enabled = state.pluginStates[SUPDANCE_I18N_PLUGIN_ID]?.effectiveEnabled;
+            if (typeof enabled === "boolean" && enabled !== previous.pluginStates[SUPDANCE_I18N_PLUGIN_ID]?.effectiveEnabled) {
+                invalidateI18nPublicReads();
+                useSupDanceI18nStore.getState().setPluginEnabled(enabled);
+                void syncBundle();
+            }
+        });
         const onVisible = () => {
             if (document.visibilityState === "visible") void syncBundle();
         };
@@ -63,6 +69,7 @@ export function SupDanceI18nRuntimeHost() {
 
         window.addEventListener("storage", handleStorage);
         return () => {
+            unsubscribe();
             controller.abort();
             window.clearInterval(interval);
             window.removeEventListener("focus", onVisible);

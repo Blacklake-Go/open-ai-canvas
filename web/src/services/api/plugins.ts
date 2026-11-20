@@ -38,8 +38,8 @@ export type PluginState = {
 
 export type AdminPluginState = PluginState & { enabledUserCount: number };
 
-export async function fetchPlugins() {
-    return http.get<{ plugins: BackendPlugin[]; states: Record<string, PluginState> }>("/plugins");
+export async function fetchPlugins(signal?: AbortSignal) {
+    return http.get<{ plugins: BackendPlugin[]; states: Record<string, PluginState> }>("/plugins", { signal });
 }
 
 export async function fetchPluginRuntimeState(signal?: AbortSignal) {
@@ -50,6 +50,7 @@ export async function uploadPlugin(file: File) {
     const body = new FormData();
     body.append("file", file);
     const result = await http.post<{ plugin: BackendPlugin }>("/plugins", body);
+    notifyPluginStateChanged();
     return result.plugin;
 }
 
@@ -59,8 +60,8 @@ export async function setUserPluginEnabled(id: string, enabled: boolean) {
     return result.state;
 }
 
-export async function fetchAdminPlugins() {
-    return http.get<{ plugins: BackendPlugin[]; states: Record<string, AdminPluginState> }>("/admin/plugins");
+export async function fetchAdminPlugins(signal?: AbortSignal) {
+    return http.get<{ plugins: BackendPlugin[]; states: Record<string, AdminPluginState> }>("/admin/plugins", { signal });
 }
 
 export async function setPluginPlatformAvailability(id: string, available: boolean) {
@@ -71,4 +72,5 @@ export async function setPluginPlatformAvailability(id: string, available: boole
 
 export async function uninstallPlugin(id: string) {
     await http.delete<{ deleted: boolean }>(`/plugins/${encodeURIComponent(id)}`);
+    notifyPluginStateChanged();
 }

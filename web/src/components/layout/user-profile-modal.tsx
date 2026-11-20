@@ -27,6 +27,7 @@ import AgentMemoryPane from "@/pages/settings/agent-memory-pane";
 import DiagnosticsPanel from "@/pages/settings/diagnostics-panel";
 import { FeedbackInboxPane } from "@/pages/settings/feedback-inbox-pane";
 import { ProfilePane } from "@/pages/settings/profile-pane";
+import "./user-profile-modal.css";
 
 function normalizeImageCount(value: string | number): string {
     const num = Math.min(Math.max(Number(value) || 1, 1), 15);
@@ -103,8 +104,7 @@ export function UserProfileModal({ open, activeTab, onTabChange, onClose, search
     const { t } = useI18n();
     const currentUser = useUserStore((state) => state.user);
     const customChannelsEnabled = useUserStore((state) => state.features.customChannelsEnabled);
-    const runtimeStatuses = usePluginStore((state) => state.runtimeStatuses);
-    const runningHubPluginEnabled = runtimeStatuses[RUNNINGHUB_PLUGIN_ID] === "enabled";
+    const runningHubPluginEnabled = usePluginStore(selectPluginEffectivelyEnabled(RUNNINGHUB_PLUGIN_ID));
     const socialAuthPluginEnabled = usePluginStore(selectPluginEffectivelyEnabled("supdance-social-auth", true));
     const returnParams = new URLSearchParams(useLocation().search);
     const hasSocialReturn = returnParams.has("bind_success") || returnParams.has("bind_error");
@@ -146,7 +146,8 @@ export function UserProfileModal({ open, activeTab, onTabChange, onClose, search
         return () => media.removeEventListener("change", updateTheme);
     }, [themeMode, setTheme]);
 
-    const currentTab = activeTab === "security" ? "profile" : activeTab;
+    const currentTab =
+        activeTab === "security" || (activeTab === "social" && !socialAuthPluginEnabled && !hasSocialReturn) || (activeTab === "runninghub" && !runningHubPluginEnabled) || (activeTab === "channels" && !customChannelsEnabled) ? "profile" : activeTab;
 
     const navSections: NavSection[] = useMemo(() => {
         const accountItems = [
@@ -259,12 +260,7 @@ export function UserProfileModal({ open, activeTab, onTabChange, onClose, search
 
     return (
         <AppModal open={open} flush closable={false} footer={null} width={1240} centered onCancel={onClose} afterClose={restoreUserProfileModalFocus}>
-            <div
-                className="relative flex h-[850px] max-h-[92vh] w-full overflow-hidden rounded-2xl border border-border bg-card text-foreground shadow-2xl backdrop-blur-2xl"
-                style={{
-                    backgroundImage: "radial-gradient(ellipse 70% 40% at 70% -10%, color-mix(in srgb, var(--primary) 8%, transparent), transparent)",
-                }}
-            >
+            <div className="user-profile-dialog relative flex h-[850px] max-h-[92vh] w-full overflow-hidden rounded-2xl border border-border bg-card text-foreground shadow-2xl">
                 {/* Left Navigation Sidebar */}
                 <aside className="hidden w-72 shrink-0 flex-col border-r border-border bg-surface-subtle/40 p-4 sm:p-5 lg:flex">
                     {/* Header Branding */}
@@ -290,6 +286,7 @@ export function UserProfileModal({ open, activeTab, onTabChange, onClose, search
                                             key={tab.key}
                                             type="button"
                                             onClick={() => onTabChange(tab.key)}
+                                            aria-pressed={isActive}
                                             className={`flex w-full items-center gap-3 rounded-xl px-3.5 py-2.5 text-left transition-all ${
                                                 isActive ? "border border-primary/30 bg-primary/10 text-primary shadow-sm font-medium" : "border border-transparent text-foreground/70 hover:bg-surface-hover hover:text-foreground"
                                             }`}

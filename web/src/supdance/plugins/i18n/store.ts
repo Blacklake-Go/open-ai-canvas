@@ -1,10 +1,11 @@
 import { useMemo } from "react";
 import { create } from "zustand";
 import { i18n } from "@/i18n";
+import { SUPPORTED_LOCALES } from "@/i18n/locales";
 import { useTranslation } from "react-i18next";
 import { useLocaleStore } from "@/stores/use-locale-store";
 import { registerSupDanceTranslations, SUPDANCE_TRANSLATION_NAMESPACE } from "@/supdance/adapters/upstream-i18n";
-import { usePluginStore } from "@/stores/use-plugin-store";
+import { usePluginStore, selectPluginEffectivelyEnabled } from "@/stores/use-plugin-store";
 import { compileI18nDictionary, isCandidateUntranslatedChinese, translateByKey, translateSourceText, type CompiledI18nDictionary } from "./engine/translator";
 import { BUILTIN_I18N_ENTRIES, DEFAULT_SUPDANCE_I18N_SETTINGS, mergeI18nEntries } from "./locales";
 import { SUPDANCE_I18N_PLUGIN_ID, type SupDanceDiscoveredTextItem, type SupDanceI18nEntry, type SupDanceI18nPublicBundle, type SupDanceI18nSettings, type SupDanceLanguageItem, type SupDanceLocaleCode } from "./types";
@@ -272,9 +273,11 @@ export const useSupDanceI18nStore = create<SupDanceI18nStoreState>((set, get) =>
     },
 }));
 
-registerSupDanceTranslations(useSupDanceI18nStore.getState().entries);
+const builtinDictionary = compileI18nDictionary(BUILTIN_I18N_ENTRIES);
+const activeEntries = (state: SupDanceI18nStoreState) => (state.pluginEnabled ? state.entries : BUILTIN_I18N_ENTRIES);
+registerSupDanceTranslations(activeEntries(useSupDanceI18nStore.getState()));
 useSupDanceI18nStore.subscribe((state, previous) => {
-    if (state.entries !== previous.entries) registerSupDanceTranslations(state.entries);
+    if (activeEntries(state) !== activeEntries(previous)) registerSupDanceTranslations(activeEntries(state));
 });
 useLocaleStore.subscribe((state, previous) => {
     if (state.locale !== previous.locale) useSupDanceI18nStore.setState({ locale: state.locale });
@@ -286,22 +289,7 @@ useLocaleStore.subscribe((state, previous) => {
  */
 export function useSupDanceI18nEnabled(): boolean {
     const storePluginEnabled = useSupDanceI18nStore((s) => s.pluginEnabled);
-    const platformAvailable = usePluginStore((state) => {
-        const pluginState = state.pluginStates[SUPDANCE_I18N_PLUGIN_ID];
-        if (pluginState) {
-            if (typeof pluginState.platformAvailable === "boolean" && !pluginState.platformAvailable) {
-                return false;
-            }
-            if (typeof pluginState.effectiveEnabled === "boolean") {
-                return pluginState.effectiveEnabled;
-            }
-        }
-        const installation = state.installations.find((item) => item.manifest.id === SUPDANCE_I18N_PLUGIN_ID);
-        if (installation && typeof installation.enabled === "boolean") {
-            return installation.enabled;
-        }
-        return true;
-    });
+    const platformAvailable = usePluginStore(selectPluginEffectivelyEnabled(SUPDANCE_I18N_PLUGIN_ID, true));
     return storePluginEnabled && platformAvailable;
 }
 
@@ -309,10 +297,26 @@ export function useSupDanceI18nEnabled(): boolean {
  * Main i18n hook for components that want explicit key/text translation and locale switching.
  */
 
+export function useSiteLanguages() {
+    const enabled = useSupDanceI18nEnabled();
+    const configured = useSupDanceI18nStore((s) => s.settings.languages);
+    return useMemo(
+        () =>
+            enabled
+                ? [...configured]
+                      .filter((item) => item.enabled)
+                      .sort((a, b) => a.sortOrder - b.sortOrder)
+                      .flatMap((item) => SUPPORTED_LOCALES.filter((language) => language.code === item.code))
+                : SUPPORTED_LOCALES,
+        [enabled, configured],
+    );
+}
+
 export function useI18n() {
     const { t: nativeT } = useTranslation();
     const nativeLocale = useLocaleStore((state) => state.locale);
-    const dictionary = useSupDanceI18nStore((state) => state.dictionary);
+    const enabled = useSupDanceI18nEnabled();
+    const dictionary = useSupDanceI18nStore((state) => (enabled ? state.dictionary : builtinDictionary));
     const settings = useSupDanceI18nStore((state) => state.settings);
     const locale = nativeLocale;
     const t = useMemo(
@@ -330,5 +334,5 @@ export function useI18n() {
             },
         [dictionary, nativeLocale, nativeT],
     );
-    return { enabled: true, locale, settings, t, builtinCount: BUILTIN_I18N_ENTRIES.length };
+    return { enabled, locale, settings, t, builtinCount: BUILTIN_I18N_ENTRIES.length };
 }

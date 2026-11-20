@@ -23,6 +23,10 @@
     "baseCommit": "259e7e3fba0b6f70ac3cfd65941c3ca345d60249"
   },
   "coupledUpstreamFiles": [
+    "web/src/components/layout/client-root-init.tsx",
+    "web/src/pages/create/use-creation-conversation-route.ts",
+    "web/src/services/api/plugins.ts",
+    "web/src/pages/plugins/index.tsx",
     "backend/cmd/migrate-sqlite-postgres/main.go",
     "backend/cmd/migrate-sqlite-postgres/main_test.go",
     "backend/internal/model/models_identity.go",

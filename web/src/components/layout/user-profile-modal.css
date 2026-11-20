@@ -1,0 +1,26 @@
+.user-profile-dialog {
+    --card: var(--color-neutral-0);
+    --foreground: var(--color-neutral-950);
+    --primary: var(--color-neutral-800);
+    --primary-foreground: var(--color-neutral-0);
+    --border: var(--color-neutral-200);
+    --surface-subtle: var(--color-neutral-50);
+    --surface-raised: var(--card);
+    --surface-hover: var(--color-neutral-100);
+    --user-surface: var(--card);
+    --user-surface-muted: var(--surface-subtle);
+    --user-ink: var(--foreground);
+    --user-ink-muted: var(--color-neutral-600);
+    --user-border: var(--border);
+    --ring: var(--primary);
+}
+.dark .user-profile-dialog {
+    --card: var(--color-neutral-900);
+    --foreground: var(--color-neutral-50);
+    --primary: var(--color-neutral-200);
+    --primary-foreground: var(--color-neutral-950);
+    --border: var(--color-neutral-700);
+    --surface-subtle: var(--color-neutral-950);
+    --surface-hover: var(--color-neutral-800);
+    --user-ink-muted: var(--color-neutral-400);
+}

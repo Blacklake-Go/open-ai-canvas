@@ -3,6 +3,7 @@ import { Spin, Tabs } from "antd";
 import { useSearchParams } from "react-router";
 import { useI18n } from "@/supdance/plugins/i18n";
 import CompactPickerAdmin from "./admin";
+import { RequirePlugin } from "@/components/auth/require-plugin";
 import "./page-management.css";
 
 const HtmlPages = lazy(() => import("@/supdance/plugins/html-page-manager/admin/html-page-manager"));
@@ -39,7 +40,9 @@ export default function PageManagement() {
                         label: t("page.management.html"),
                         children: (
                             <Suspense fallback={<Spin tip={t("page.management.loading")} />}>
-                                <HtmlPages />
+                                <RequirePlugin pluginId="supdance-html-page-manager" pluginName={t("page.management.html")}>
+                                    <HtmlPages />
+                                </RequirePlugin>
                             </Suspense>
                         ),
                     },
@@ -48,7 +51,9 @@ export default function PageManagement() {
                         label: t("page.management.email"),
                         children: (
                             <Suspense fallback={<Spin tip={t("page.management.loading")} />}>
-                                <EmailCenter />
+                                <RequirePlugin pluginId="supdance-email-marketing" pluginName={t("page.management.email")}>
+                                    <EmailCenter />
+                                </RequirePlugin>
                             </Suspense>
                         ),
                     },

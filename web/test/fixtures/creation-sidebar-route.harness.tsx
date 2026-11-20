@@ -56,6 +56,7 @@ function Page({ ready, busy }: { ready: boolean; busy: boolean }) {
             setActiveId("new-id");
             return "new-id";
         },
+        onHome: () => setActiveId("home"),
     });
     return (
         <>
@@ -63,6 +64,7 @@ function Page({ ready, busy }: { ready: boolean; busy: boolean }) {
                 {activeId}|{location.search}
             </output>
             <button onClick={() => navigate("/?conversation=video")}>video</button>
+            <button onClick={() => navigate("/")}>home</button>
             <button
                 onClick={() => {
                     setActiveId("text");
@@ -125,6 +127,17 @@ afterEach(async () => {
 });
 afterAll(() => dom.happyDOM.abort());
 
+test("返回没有对话参数的首页会退出已有对话", async () => {
+    await renderPage("/?conversation=video");
+    expect(host.querySelector("output")?.textContent).toBe("video|?conversation=video");
+    await act(async () =>
+        Array.from(host.querySelectorAll("button"))
+            .find((item) => item.textContent === "home")!
+            .click(),
+    );
+    expect(host.querySelector("output")?.textContent).toBe("home|");
+});
+
 test("真实历史 hook 读取创作记录，过滤空对话，按时间与最近模式展示", async () => {
     await renderHistory();
     await eventually(() =>
@@ -178,7 +191,11 @@ test("深链接等待首页恢复后选择正确对话，内部抽屉同步 URL"
     expect(selected).toEqual(["video"]);
     expect(host.querySelector("output")?.textContent).toBe("video|?conversation=video");
     expect(readCreationConversationNavigation("user-a")?.activeId).toBe("video");
-    await act(async () => host.querySelectorAll<HTMLButtonElement>("button")[1].click());
+    await act(async () =>
+        Array.from(host.querySelectorAll("button"))
+            .find((item) => item.textContent === "drawer")!
+            .click(),
+    );
     expect(host.querySelector("output")?.textContent).toBe("text|?conversation=text");
 });
 

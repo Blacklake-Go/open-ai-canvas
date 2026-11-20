@@ -1468,6 +1468,12 @@ export default function CreatePage() {
             if (conversation) selectConversation(conversation);
         },
         onNew: startNewConversation,
+        onHome: () => {
+            if (!activeConversation?.messages.length) return;
+            const empty = conversationsRef.current.find((item) => !item.messages.length);
+            if (empty) selectConversation(empty);
+            else startNewConversation();
+        },
     });
     const startNewConversationFromHistory = () => selectConversationRoute(startNewConversation());
     const selectConversationFromHistory = (conversation: CreationConversation) => {

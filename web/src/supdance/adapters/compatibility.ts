@@ -63,6 +63,10 @@ export const SUPDANCE_UPSTREAM_PATCH_REGISTRY: readonly UpstreamPatchRecord[] = 
             "web/src/pages/create/creation-workspace-messages.tsx",
             "web/src/pages/create/creation-workspace.tsx",
             "web/src/pages/create/index.tsx",
+            "web/src/components/layout/client-root-init.tsx",
+            "web/src/pages/create/use-creation-conversation-route.ts",
+            "web/src/services/api/plugins.ts",
+            "web/src/pages/plugins/index.tsx",
             "web/src/pages/ecommerce/skill-picker.tsx",
             "web/src/pages/inspirations/index.tsx",
             "web/src/pages/inspirations/inspiration-detail-modal.tsx",
@@ -1168,7 +1172,8 @@ export async function upgradeSupDancePlugin(nextPlugin: RegisteredPlugin, option
             throw new Error(`SupDance 插件升级版本号 (${nextPlugin.manifest.version}) 必须高于当前已安装版本 (${previousVersion})`);
         }
         if (existing.deactivate && options.context) {
-            await deactivateSupDancePluginSafely(existing.manifest.id, options.context);
+            const stopped = await deactivateSupDancePluginSafely(existing.manifest.id, options.context);
+            if (!stopped.ok) throw new Error(stopped.error);
         }
         unregisterPlugin(existing.manifest.id);
     }

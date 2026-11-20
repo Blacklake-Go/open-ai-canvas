@@ -12,6 +12,7 @@ export function useCreationConversationRoute({
     ids,
     onSelect,
     onNew,
+    onHome,
 }: {
     scope: string;
     ready: boolean;
@@ -20,13 +21,14 @@ export function useCreationConversationRoute({
     ids: readonly string[];
     onSelect: (id: string) => void;
     onNew: () => string;
+    onHome: () => void;
 }) {
     const [params, setParams] = useSearchParams();
     const { key } = useLocation();
     const requested = params.get("conversation");
     const handled = useRef("");
-    const latest = useRef({ ids, onSelect, onNew });
-    latest.current = { ids, onSelect, onNew };
+    const latest = useRef({ ids, onSelect, onNew, onHome });
+    latest.current = { ids, onSelect, onNew, onHome };
     const selectRoute = (id: string) => {
         setParams(
             (current) => {
@@ -45,10 +47,15 @@ export function useCreationConversationRoute({
     useEffect(() => () => clearCreationConversationNavigation(scope), [scope]);
 
     useEffect(() => {
-        if (!ready || !requested) return;
+        if (!ready) return;
         const identity = `${scope}:${key}:${requested}`;
         if (handled.current === identity) return;
         handled.current = identity;
+        if (!requested) {
+            if (canSelect) latest.current.onHome();
+            else selectRoute(activeId);
+            return;
+        }
         if (requested === activeId) return;
         // 忙碌时拒绝本次切换，不把它排队到生成结束后偷偷执行。
         if (!canSelect || (requested !== "new" && !latest.current.ids.includes(requested))) {

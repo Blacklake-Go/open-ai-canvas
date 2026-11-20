@@ -4,7 +4,8 @@ import { AlipayCircleFilled, WechatFilled } from "@ant-design/icons";
 import { ZHIFUFM_LOGO_SRC } from "@/components/payment-brand-icons";
 import type { ColumnsType } from "antd/es/table";
 import { BookOpenText, CloudUpload, FileCode, FileText, Languages, Mail, Music, PlugZap, RefreshCw, Search, Settings2, Share2, Trash2, UsersRound } from "lucide-react";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { startPluginStateSync } from "@/supdance/adapters/plugin-state-sync";
 import { Link } from "react-router";
 
 import { PaginationBar } from "@/pages/admin/components/admin-ui";
@@ -45,21 +46,28 @@ export default function AdminPluginsPage() {
     const [pageSize, setPageSize] = useState(20);
     const [detailId, setDetailId] = useState("");
 
-    const reload = async () => {
-        setLoading(true);
+    const catalogRequest = useRef(0);
+    const reload = async (signal?: AbortSignal) => {
+        const request = ++catalogRequest.current;
+        const current = () => request === catalogRequest.current && !signal?.aborted;
+        if (!signal) setLoading(true);
         try {
-            const result = await fetchAdminPlugins();
+            const result = await fetchAdminPlugins(signal);
+            if (!current()) return;
             setPlugins(result.plugins);
             setStates(result.states);
         } catch (error) {
-            message.error(error instanceof Error ? error.message : "读取插件管理数据失败");
+            if (current()) message.error(error instanceof Error ? error.message : "读取插件管理数据失败");
         } finally {
-            setLoading(false);
+            if (current()) setLoading(false);
         }
     };
-
     useEffect(() => {
-        void reload();
+        const stop = startPluginStateSync(reload, 60_000);
+        return () => {
+            ++catalogRequest.current;
+            stop();
+        };
     }, []);
 
     const items = useMemo(() => mergePlugins(plugins), [plugins]);
@@ -85,24 +93,7 @@ export default function AdminPluginsPage() {
     const changeAvailability = async (item: AdminPluginItem, available: boolean) => {
         setSavingId(item.manifest.id);
         try {
-            let state: AdminPluginState;
-            try {
-                state = await setPluginPlatformAvailability(item.manifest.id, available);
-            } catch (error) {
-                if (item.manifest.id !== SUPDANCE_I18N_PLUGIN_ID && item.manifest.id !== SUPDANCE_MUSIC_PLUGIN_ID) {
-                    throw error;
-                }
-                state = {
-                    pluginId: item.manifest.id,
-                    platformAvailable: available,
-                    userEnabled: available,
-                    userConfigured: true,
-                    effectiveEnabled: available,
-                    canToggle: false,
-                    canConfigure: false,
-                    enabledUserCount: 0,
-                };
-            }
+            const state = await setPluginPlatformAvailability(item.manifest.id, available);
             setStates((current) => ({ ...current, [item.manifest.id]: state }));
             if (item.manifest.id === COMPACT_PICKER_ID) {
                 await applyCompactPickerAvailability(state.platformAvailable);
