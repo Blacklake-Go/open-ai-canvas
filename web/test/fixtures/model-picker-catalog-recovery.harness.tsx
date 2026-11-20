@@ -26,6 +26,7 @@ mock.module("@/lib/user-session", () => ({
         useModelCatalogStore.setState({ status: "ready" });
     },
 }));
+const { applyCompactPickerAvailability } = await import("../../src/supdance/plugins/compact-model-picker/settings");
 const { ModelPicker } = await import("../../src/components/model-picker");
 const { createModelChannel, defaultConfig, normalizeConfigSnapshot, useConfigStore } = await import("../../src/stores/use-config-store");
 const { defaultModelCapabilityConfig } = await import("../../src/lib/model-capabilities");
@@ -49,7 +50,8 @@ const channel = createModelChannel({
 const config = normalizeConfigSnapshot({ config: { ...defaultConfig, channels: [channel], imageModel: "picker-test::image-a", imageModels: ["picker-test::image-a", "picker-test::image-b"] } }).config;
 const roots: ReturnType<typeof createRoot>[] = [];
 
-beforeEach(() => {
+beforeEach(async () => {
+    await applyCompactPickerAvailability(true);
     reloads = 0;
     missingConfigurations = 0;
     useUserStore.setState((state) => ({ user, hydrated: true, features: { ...state.features, creditsEnabled: false, customChannelsEnabled: false } }));
