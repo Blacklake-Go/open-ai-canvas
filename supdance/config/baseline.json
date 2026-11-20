@@ -376,7 +376,8 @@
     "web/src/components/layout/workspace-page.tsx",
     "web/src/pages/canvas/use-canvas-node-operations.ts",
     "web/src/pages/create/creation-library.ts",
-    "web/src/services/api/user-data.ts"
+    "web/src/services/api/user-data.ts",
+    "web/src/pages/teams/wallet.tsx"
   ],
   "supdanceExtensionFiles": [
     "web/src/supdance/plugins/compact-model-picker/admin.tsx",

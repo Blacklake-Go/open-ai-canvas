@@ -1,3 +1,4 @@
+import { interfaceText } from "@/i18n/interface-text";
 import { useState } from "react";
 import { useOutletContext } from "react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
@@ -83,7 +84,7 @@ export function TeamWalletPane() {
                     { label: "我的任务冻结", value: account?.reservedMicrocredits },
                 ].map((stat) => (
                     <div key={stat.label} className="rounded-xl border border-border bg-background p-5">
-                        <p className="text-sm text-foreground/60">{stat.label}</p>
+                        <p className="text-sm text-foreground/60">{interfaceText(stat.label)}</p>
                         <strong className="mt-2 block text-2xl tabular-nums">
                             {stat.value === undefined ? "—" : teamCredits(stat.value)}
                             <span className="ml-1 text-xs font-normal">积分</span>

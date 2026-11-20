@@ -79,6 +79,7 @@ export const SUPDANCE_UPSTREAM_PATCH_REGISTRY: readonly UpstreamPatchRecord[] = 
             "web/src/pages/projects/studio/panels.tsx",
             "web/src/pages/projects/studio/job-detail.tsx",
             "web/src/pages/projects/studio/segment-parts.tsx",
+            "web/src/pages/teams/wallet.tsx",
         ],
         files: ["docs/supdance/UPSTREAM_20261120.md"],
         reason: "保留音乐、画布工具、页面管理、八语言、Codex、账务和素材入口，避免以旧迁移编号覆盖已发布记录。",

@@ -1,0 +1,1127 @@
+{
+  "upstreamCommit": "882a1d1a50523fe992831e2b0da69f44b4469835",
+  "translationStatus": "Reviewed the remaining source scan findings against the production UI catalog. The prompt reference token is kept verbatim.",
+  "items": [
+    {
+      "id": "6993213b77d9d23e03b23151",
+      "sourceText": "已成功共享 {succeeded} 项",
+      "sourceHash": "9c1abd746344b8b49dac141847cc348e2ca6584bc925793fc16ee6f644a4bb7f",
+      "context": "TeamAssetShareModal:attr:title",
+      "dynamic": true,
+      "references": [
+        {
+          "file": "src/components/assets/team-asset-share-modal.tsx",
+          "line": 78,
+          "column": 59
+        }
+      ],
+      "anchor": "efd59c5b21d36051",
+      "key": "custom.scan_6993213b77d9d23e03b23151",
+      "namespace": "custom",
+      "status": "needs_context",
+      "review": {
+        "kind": "compiled-ui",
+        "catalogKey": "managedUi.c924af62"
+      }
+    },
+    {
+      "id": "1c42431ffc030168e4ecd2d5",
+      "sourceText": "推理强度：{thinkingLabel}",
+      "sourceHash": "72eaea8ad19a7bb6b519897a5dc5aa8cb78cd5a9974155bf30d2bc06eaeb3466",
+      "context": "ComposerControls:attr:title",
+      "dynamic": true,
+      "references": [
+        {
+          "file": "src/components/canvas/canvas-cloud-agent-panel-parts.tsx",
+          "line": 856,
+          "column": 124
+        }
+      ],
+      "anchor": "0957c0ed8cfc6ef2",
+      "key": "custom.scan_1c42431ffc030168e4ecd2d5",
+      "namespace": "custom",
+      "status": "needs_context",
+      "review": {
+        "kind": "compiled-ui",
+        "catalogKey": "managedUi.52ce0c5d"
+      }
+    },
+    {
+      "id": "5c092dc2104eacba76002e46",
+      "sourceText": "{value1}支持 {label}",
+      "sourceHash": "6a5ced51358e391e4941ff6c829e9da11f33b1a3b4710738371ff4901d568da7",
+      "context": "ImageParameterChoices:attr:aria-label",
+      "dynamic": true,
+      "references": [
+        {
+          "file": "src/components/image-parameter-fields.tsx",
+          "line": 280,
+          "column": 45
+        }
+      ],
+      "anchor": "911c8fc3c8ded40e",
+      "key": "custom.scan_5c092dc2104eacba76002e46",
+      "namespace": "custom",
+      "status": "needs_context",
+      "review": {
+        "kind": "compiled-ui",
+        "catalogKey": "managedUi.6f8c59c6"
+      }
+    },
+    {
+      "id": "237aab285b89a5606435822f",
+      "sourceText": "设{value1} {label} 为默认",
+      "sourceHash": "cd41fbd43116d6dd7d89d30233499f531e5d30a7d2042791eab8ba20bcf00883",
+      "context": "ImageParameterChoices:attr:aria-label",
+      "dynamic": true,
+      "references": [
+        {
+          "file": "src/components/image-parameter-fields.tsx",
+          "line": 291,
+          "column": 49
+        }
+      ],
+      "anchor": "911c8fc3c8ded40e",
+      "key": "custom.scan_237aab285b89a5606435822f",
+      "namespace": "custom",
+      "status": "needs_context",
+      "review": {
+        "kind": "compiled-ui",
+        "catalogKey": "managedUi.7c2d8fd4"
+      }
+    },
+    {
+      "id": "bac2e5a8b5a8390570407d35",
+      "sourceText": "设 {label} 为默认",
+      "sourceHash": "db7cad4ff6d05a6019d300e56325259e1004d5f08a2dc3fd0cb1210fb4084a9a",
+      "context": "ImageParameterChoices:attr:title",
+      "dynamic": true,
+      "references": [
+        {
+          "file": "src/components/image-parameter-fields.tsx",
+          "line": 292,
+          "column": 44
+        }
+      ],
+      "anchor": "0d19fbc7acb7d27f",
+      "key": "custom.scan_bac2e5a8b5a8390570407d35",
+      "namespace": "custom",
+      "status": "needs_context",
+      "review": {
+        "kind": "compiled-ui",
+        "catalogKey": "managedUi.cf4b2c17"
+      }
+    },
+    {
+      "id": "74d2751bdd3ad6807bd8c07d",
+      "sourceText": "{value1} {ratio} 精确像素",
+      "sourceHash": "2a047776ba69126958b78c6a0e56b95df83ac86dfec52d910ee196a4cd44b280",
+      "context": "mappings:attr:aria-label",
+      "dynamic": true,
+      "references": [
+        {
+          "file": "src/components/image-size-presets-editor.tsx",
+          "line": 170,
+          "column": 107
+        }
+      ],
+      "anchor": "115706e8438b4542",
+      "key": "custom.scan_74d2751bdd3ad6807bd8c07d",
+      "namespace": "custom",
+      "status": "needs_context",
+      "review": {
+        "kind": "compiled-ui",
+        "catalogKey": "managedUi.965ca414"
+      }
+    },
+    {
+      "id": "b183023f962f987198b4ede0",
+      "sourceText": "{value1}{ratio} 宽度像素",
+      "sourceHash": "7bde1c16edc71045d5b144bdb19fee0430b2489ff1616d98bd0d668795edf90e",
+      "context": "mappings:attr:aria-label",
+      "dynamic": true,
+      "references": [
+        {
+          "file": "src/components/image-size-presets-editor.tsx",
+          "line": 179,
+          "column": 73
+        }
+      ],
+      "anchor": "115706e8438b4542",
+      "key": "custom.scan_b183023f962f987198b4ede0",
+      "namespace": "custom",
+      "status": "needs_context",
+      "review": {
+        "kind": "compiled-ui",
+        "catalogKey": "managedUi.7ea97c4f"
+      }
+    },
+    {
+      "id": "ec276ead0ac261287f06b61c",
+      "sourceText": "{value1}{ratio} 高度像素",
+      "sourceHash": "a63fc63417dbca242ec9167c076a75c5154a0b52ce2b69339f9dc5376b813643",
+      "context": "mappings:attr:aria-label",
+      "dynamic": true,
+      "references": [
+        {
+          "file": "src/components/image-size-presets-editor.tsx",
+          "line": 192,
+          "column": 73
+        }
+      ],
+      "anchor": "115706e8438b4542",
+      "key": "custom.scan_ec276ead0ac261287f06b61c",
+      "namespace": "custom",
+      "status": "needs_context",
+      "review": {
+        "kind": "compiled-ui",
+        "catalogKey": "managedUi.45f4bdee"
+      }
+    },
+    {
+      "id": "16abefa872a25b26a9d3a54f",
+      "sourceText": "· 所有者",
+      "sourceHash": "0a2ecf5463066e4b0610c567031ad0d3524d6c56d387f4b80d7fd582ab6fc9e2",
+      "context": "SpaceRows:jsx-expression:true",
+      "dynamic": false,
+      "references": [
+        {
+          "file": "src/components/layout/team-space-directory.tsx",
+          "line": 55,
+          "column": 63
+        }
+      ],
+      "anchor": "1abb63d3ad4c0782",
+      "key": "custom.scan_16abefa872a25b26a9d3a54f",
+      "namespace": "custom",
+      "status": "new",
+      "review": {
+        "kind": "compiled-ui",
+        "catalogKey": "managedUi.f83b086"
+      }
+    },
+    {
+      "id": "7fadb19ca4eb8241bfbc2282",
+      "sourceText": "切换空间：{label}",
+      "sourceHash": "b2c2df21fdbfcef974a936661c86830e47361fc30473ea3a5f913d0b87d69f15",
+      "context": "TeamSpaceSwitcher:attr:aria-label",
+      "dynamic": true,
+      "references": [
+        {
+          "file": "src/components/layout/team-space-switcher.tsx",
+          "line": 24,
+          "column": 25
+        }
+      ],
+      "anchor": "3f006da0edf4608e",
+      "key": "custom.scan_7fadb19ca4eb8241bfbc2282",
+      "namespace": "custom",
+      "status": "needs_context",
+      "review": {
+        "kind": "compiled-ui",
+        "catalogKey": "managedUi.96117a1a"
+      }
+    },
+    {
+      "id": "19b20687ed5872478516a2b8",
+      "sourceText": "设{label}为默认模式",
+      "sourceHash": "6e06ea0dc35fac9fc83b90a0fc6913b3e5a4e659203851a771f0d80c9d300f5c",
+      "context": "VideoOperationOptions:attr:aria-label",
+      "dynamic": true,
+      "references": [
+        {
+          "file": "src/components/video-capability-options.tsx",
+          "line": 74,
+          "column": 49
+        }
+      ],
+      "anchor": "a633a879b6c012bb",
+      "key": "custom.scan_19b20687ed5872478516a2b8",
+      "namespace": "custom",
+      "status": "needs_context",
+      "review": {
+        "kind": "compiled-ui",
+        "catalogKey": "managedUi.1537a1f3"
+      }
+    },
+    {
+      "id": "a5d3e3813a75ebd4e10fde66",
+      "sourceText": "默认模式：{label}",
+      "sourceHash": "fa74f52cd19d242ee8c9fa87dd756bd7d5cc05af1820bdb9b2069f481afa5c92",
+      "context": "VideoOperationOptions:attr:title:true",
+      "dynamic": true,
+      "references": [
+        {
+          "file": "src/components/video-capability-options.tsx",
+          "line": 76,
+          "column": 56
+        }
+      ],
+      "anchor": "a4f7e3c9891c4904",
+      "key": "custom.scan_a5d3e3813a75ebd4e10fde66",
+      "namespace": "custom",
+      "status": "needs_context",
+      "review": {
+        "kind": "compiled-ui",
+        "catalogKey": "managedUi.1a14f097"
+      }
+    },
+    {
+      "id": "c9744b9e87d468efcc498cd1",
+      "sourceText": "设{label}为默认模式",
+      "sourceHash": "6e06ea0dc35fac9fc83b90a0fc6913b3e5a4e659203851a771f0d80c9d300f5c",
+      "context": "VideoOperationOptions:attr:title:false",
+      "dynamic": true,
+      "references": [
+        {
+          "file": "src/components/video-capability-options.tsx",
+          "line": 76,
+          "column": 74
+        }
+      ],
+      "anchor": "5e10e553163c3f3d",
+      "key": "custom.scan_c9744b9e87d468efcc498cd1",
+      "namespace": "custom",
+      "status": "needs_context",
+      "review": {
+        "kind": "compiled-ui",
+        "catalogKey": "managedUi.1537a1f3"
+      }
+    },
+    {
+      "id": "c2bd946e4a03cf1438f04ebb",
+      "sourceText": "设 {label} {value} 为默认",
+      "sourceHash": "6ddb83976c07ccf7af3a75c8546ff167b83c6c42149211b596600c93e173f657",
+      "context": "OptionSet:attr:aria-label",
+      "dynamic": true,
+      "references": [
+        {
+          "file": "src/components/video-capability-options.tsx",
+          "line": 143,
+          "column": 41
+        }
+      ],
+      "anchor": "3711140d99d35bc8",
+      "key": "custom.scan_c2bd946e4a03cf1438f04ebb",
+      "namespace": "custom",
+      "status": "needs_context",
+      "review": {
+        "kind": "compiled-ui",
+        "catalogKey": "managedUi.8790717a"
+      }
+    },
+    {
+      "id": "a94abceea197f65ed3fcd223",
+      "sourceText": "设 {value} 为默认",
+      "sourceHash": "8995ac3441ac29cdce0a3709475788c314c0c66e1374a9864aca9054dd5cee8c",
+      "context": "OptionSet:attr:title",
+      "dynamic": true,
+      "references": [
+        {
+          "file": "src/components/video-capability-options.tsx",
+          "line": 144,
+          "column": 36
+        }
+      ],
+      "anchor": "1b55d2925f70ec59",
+      "key": "custom.scan_a94abceea197f65ed3fcd223",
+      "namespace": "custom",
+      "status": "needs_context",
+      "review": {
+        "kind": "compiled-ui",
+        "catalogKey": "managedUi.beac51c3"
+      }
+    },
+    {
+      "id": "1e85ce29a06312d5d4780fa8",
+      "sourceText": "移除 {label} {value}",
+      "sourceHash": "1989bee8d11c0b295411087c06978731061a3f2167a67c209b19bcf66e5eb76f",
+      "context": "OptionSet:attr:aria-label",
+      "dynamic": true,
+      "references": [
+        {
+          "file": "src/components/video-capability-options.tsx",
+          "line": 156,
+          "column": 41
+        }
+      ],
+      "anchor": "3711140d99d35bc8",
+      "key": "custom.scan_1e85ce29a06312d5d4780fa8",
+      "namespace": "custom",
+      "status": "needs_context",
+      "review": {
+        "kind": "compiled-ui",
+        "catalogKey": "managedUi.49cf473b"
+      }
+    },
+    {
+      "id": "320914d361419631e1788403",
+      "sourceText": "移除 {value}",
+      "sourceHash": "a4728aeed7d371abed6ef4677b1f5417ad676af3b597ee47f28fb18c8c90173c",
+      "context": "OptionSet:attr:title",
+      "dynamic": true,
+      "references": [
+        {
+          "file": "src/components/video-capability-options.tsx",
+          "line": 157,
+          "column": 36
+        }
+      ],
+      "anchor": "1b55d2925f70ec59",
+      "key": "custom.scan_320914d361419631e1788403",
+      "namespace": "custom",
+      "status": "needs_context",
+      "review": {
+        "kind": "compiled-ui",
+        "catalogKey": "managedUi.a61bb930"
+      }
+    },
+    {
+      "id": "6637151d2fd16857578f84b7",
+      "sourceText": "新增{label}",
+      "sourceHash": "2dc9503f55388db0184289d3f41a09326d27d921cf3787b3aceec9bded6396c3",
+      "context": "OptionSet:attr:aria-label",
+      "dynamic": true,
+      "references": [
+        {
+          "file": "src/components/video-capability-options.tsx",
+          "line": 174,
+          "column": 41
+        }
+      ],
+      "anchor": "3711140d99d35bc8",
+      "key": "custom.scan_6637151d2fd16857578f84b7",
+      "namespace": "custom",
+      "status": "needs_context",
+      "review": {
+        "kind": "compiled-ui",
+        "catalogKey": "managedUi.24c8de25"
+      }
+    },
+    {
+      "id": "fc345bca84e8116037f46ed3",
+      "sourceText": "添加{label}",
+      "sourceHash": "39a4f4cdd9b6c25c1c23eddbefac4340c575783fb6d76ede8116c74f822ac974",
+      "context": "OptionSet:attr:aria-label",
+      "dynamic": true,
+      "references": [
+        {
+          "file": "src/components/video-capability-options.tsx",
+          "line": 184,
+          "column": 96
+        }
+      ],
+      "anchor": "3711140d99d35bc8",
+      "key": "custom.scan_fc345bca84e8116037f46ed3",
+      "namespace": "custom",
+      "status": "needs_context",
+      "review": {
+        "kind": "compiled-ui",
+        "catalogKey": "managedUi.d98881e4"
+      }
+    },
+    {
+      "id": "0b4e0d8784c0f597ec009b35",
+      "sourceText": "添加{label}",
+      "sourceHash": "39a4f4cdd9b6c25c1c23eddbefac4340c575783fb6d76ede8116c74f822ac974",
+      "context": "OptionSet:attr:title",
+      "dynamic": true,
+      "references": [
+        {
+          "file": "src/components/video-capability-options.tsx",
+          "line": 184,
+          "column": 117
+        }
+      ],
+      "anchor": "1b55d2925f70ec59",
+      "key": "custom.scan_0b4e0d8784c0f597ec009b35",
+      "namespace": "custom",
+      "status": "needs_context",
+      "review": {
+        "kind": "compiled-ui",
+        "catalogKey": "managedUi.d98881e4"
+      }
+    },
+    {
+      "id": "0b75d27d038855a4c32662e5",
+      "sourceText": "添加 {label} {value}",
+      "sourceHash": "817731cf1a0a5910c3fbd4a5e0f465517e4a14fafffad2727cb9e5565e843414",
+      "context": "OptionSet:attr:aria-label",
+      "dynamic": true,
+      "references": [
+        {
+          "file": "src/components/video-capability-options.tsx",
+          "line": 190,
+          "column": 168
+        }
+      ],
+      "anchor": "3711140d99d35bc8",
+      "key": "custom.scan_0b75d27d038855a4c32662e5",
+      "namespace": "custom",
+      "status": "needs_context",
+      "review": {
+        "kind": "compiled-ui",
+        "catalogKey": "managedUi.84d1b367"
+      }
+    },
+    {
+      "id": "cef6a28f9349614eac3acf08",
+      "sourceText": "@图片1",
+      "sourceHash": "c1131684a81db39d29a2ed37f81ac70b9fb5e686b60f667efabcc0c90a192045",
+      "context": "prompt:property:label",
+      "dynamic": false,
+      "references": [
+        {
+          "file": "src/lib/canvas/canvas-video-remake.ts",
+          "line": 77,
+          "column": 25
+        }
+      ],
+      "anchor": "b00baacd1098e6c2",
+      "key": "custom.scan_cef6a28f9349614eac3acf08",
+      "namespace": "custom",
+      "status": "new",
+      "review": {
+        "kind": "prompt-reference-token"
+      }
+    },
+    {
+      "id": "0142ca3260aed9a04be7324d",
+      "sourceText": "将当前媒体文件下载到设备",
+      "sourceHash": "9463a974f06e29f16d9f4a448d71c4ad83a1ce3a6820aabd060fff948740fba5",
+      "context": "nodeHoverToolbarTools:property:description",
+      "dynamic": false,
+      "references": [
+        {
+          "file": "src/lib/canvas/tool-registry/definitions/node-hover-tools.tsx",
+          "line": 275,
+          "column": 81
+        }
+      ],
+      "anchor": "5f1e1c2d2769a74e",
+      "key": "custom.scan_0142ca3260aed9a04be7324d",
+      "namespace": "custom",
+      "status": "new",
+      "review": {
+        "kind": "explicit-ui",
+        "catalogKey": "managedUi.d7f31b36"
+      }
+    },
+    {
+      "id": "667850e1ca4eca1343403231",
+      "sourceText": "打开节点的提示词与生成参数",
+      "sourceHash": "8edfd52d2f2867eb0b1d475be0d8b2115c95ed8eafa55340b8c2f59c195d4a9d",
+      "context": "nodeHoverToolbarTools:property:description",
+      "dynamic": false,
+      "references": [
+        {
+          "file": "src/lib/canvas/tool-registry/definitions/node-hover-tools.tsx",
+          "line": 288,
+          "column": 125
+        }
+      ],
+      "anchor": "5f1e1c2d2769a74e",
+      "key": "custom.scan_667850e1ca4eca1343403231",
+      "namespace": "custom",
+      "status": "new",
+      "review": {
+        "kind": "explicit-ui",
+        "catalogKey": "managedUi.347f8dc9"
+      }
+    },
+    {
+      "id": "bfac514ac9591f690798369d",
+      "sourceText": "选择本地视频作为这个节点的内容",
+      "sourceHash": "45b6f8bec5cc0bb0a2443a76b7c5bc15f2dd9e618c359c2dd4fb259cc1a8ea33",
+      "context": "nodeHoverToolbarTools:property:description",
+      "dynamic": false,
+      "references": [
+        {
+          "file": "src/lib/canvas/tool-registry/definitions/node-hover-tools.tsx",
+          "line": 379,
+          "column": 117
+        }
+      ],
+      "anchor": "5f1e1c2d2769a74e",
+      "key": "custom.scan_bfac514ac9591f690798369d",
+      "namespace": "custom",
+      "status": "new",
+      "review": {
+        "kind": "explicit-ui",
+        "catalogKey": "managedUi.403a2f50"
+      }
+    },
+    {
+      "id": "1ca72d44d4c089f4ba738d7d",
+      "sourceText": "将视频字幕导出为 SRT 文件",
+      "sourceHash": "8c900077884bd54ab5a052d4cd11f7e45dfafb05cb861b64c0901ec323350090",
+      "context": "nodeHoverToolbarTools:property:description",
+      "dynamic": false,
+      "references": [
+        {
+          "file": "src/lib/canvas/tool-registry/definitions/node-hover-tools.tsx",
+          "line": 405,
+          "column": 78
+        }
+      ],
+      "anchor": "5f1e1c2d2769a74e",
+      "key": "custom.scan_1ca72d44d4c089f4ba738d7d",
+      "namespace": "custom",
+      "status": "new",
+      "review": {
+        "kind": "explicit-ui",
+        "catalogKey": "managedUi.8f9b2bac"
+      }
+    },
+    {
+      "id": "850859e3b74e61b29abb4835",
+      "sourceText": "锁定后，拖动画布上的节点与边角都不会改变它的位置和尺寸",
+      "sourceHash": "710c31a315012b0efa386a5c8184adc311ddcd541eba7df6141f2d29c55e3ad7",
+      "context": "nodeHoverToolbarTools:property:description",
+      "dynamic": false,
+      "references": [
+        {
+          "file": "src/lib/canvas/tool-registry/definitions/node-hover-tools.tsx",
+          "line": 486,
+          "column": 81
+        }
+      ],
+      "anchor": "5f1e1c2d2769a74e",
+      "key": "custom.scan_850859e3b74e61b29abb4835",
+      "namespace": "custom",
+      "status": "new",
+      "review": {
+        "kind": "explicit-ui",
+        "catalogKey": "managedUi.b2f144a5"
+      }
+    },
+    {
+      "id": "269a38db6e91fae4d3d85679",
+      "sourceText": "本模型选择的插件发行版本",
+      "sourceHash": "d2d5200436c70d902a4f6e812721512fbe189c6e6a4bab8e86a24d8c41a168eb",
+      "context": "CapabilitySections:attr:title",
+      "dynamic": false,
+      "references": [
+        {
+          "file": "src/pages/admin/components/channel-model-editor.tsx",
+          "line": 703,
+          "column": 58
+        }
+      ],
+      "anchor": "03575dbd042248db",
+      "key": "custom.scan_269a38db6e91fae4d3d85679",
+      "namespace": "custom",
+      "status": "new",
+      "review": {
+        "kind": "explicit-ui",
+        "catalogKey": "managedUi.42bcd60a"
+      }
+    },
+    {
+      "id": "8b9d8f49741d887c9614d02a",
+      "sourceText": "· 已选 {value1}",
+      "sourceHash": "bd12905daff246e49c6794758bb24a0307b8a8bf0a44ae79e70f8ed5b4915243",
+      "context": "CanvasProjectHeading:jsx-expression:true",
+      "dynamic": true,
+      "references": [
+        {
+          "file": "src/pages/canvas/canvas-project-top-bar.tsx",
+          "line": 173,
+          "column": 61
+        }
+      ],
+      "anchor": "b6200544aa5db8e3",
+      "key": "custom.scan_8b9d8f49741d887c9614d02a",
+      "namespace": "custom",
+      "status": "needs_context",
+      "review": {
+        "kind": "compiled-ui",
+        "catalogKey": "managedUi.45dd998b"
+      }
+    },
+    {
+      "id": "8e287c0112b54735aed9c307",
+      "sourceText": "我的可用额度",
+      "sourceHash": "3b07bb521ae2dce307da2aa6b0ec3c5a04f9a8ebebea8d943a447fc11b0917c8",
+      "context": "TeamWalletPane:property:label",
+      "dynamic": false,
+      "references": [
+        {
+          "file": "src/pages/teams/wallet.tsx",
+          "line": 81,
+          "column": 30
+        }
+      ],
+      "anchor": "0968cf6149a20f75",
+      "key": "custom.scan_8e287c0112b54735aed9c307",
+      "namespace": "custom",
+      "status": "new",
+      "review": {
+        "kind": "explicit-ui",
+        "catalogKey": "managedUi.71c08cc8"
+      }
+    },
+    {
+      "id": "8c09cfb0ffb5d68043491360",
+      "sourceText": "我的任务冻结",
+      "sourceHash": "c97bcf90a61cd2b54a2119a1382b0364731b5d28cc25d5e01978bc81f7172c1e",
+      "context": "TeamWalletPane:property:label",
+      "dynamic": false,
+      "references": [
+        {
+          "file": "src/pages/teams/wallet.tsx",
+          "line": 83,
+          "column": 30
+        }
+      ],
+      "anchor": "0968cf6149a20f75",
+      "key": "custom.scan_8c09cfb0ffb5d68043491360",
+      "namespace": "custom",
+      "status": "new",
+      "review": {
+        "kind": "explicit-ui",
+        "catalogKey": "managedUi.cbcb057e"
+      }
+    },
+    {
+      "id": "7e4337b2d4ca4080b6391661",
+      "sourceText": "选择推理强度：{thinkingLabel}",
+      "sourceHash": "1450a01b1a6e82760cb0f857051624dfc59e34254a8a37b55f4fce57f68bd7e2",
+      "context": "ComposerControls:attr:aria-label",
+      "dynamic": true,
+      "references": [
+        {
+          "file": "src/components/canvas/canvas-cloud-agent-panel-parts.tsx",
+          "line": 856,
+          "column": 90
+        }
+      ],
+      "anchor": "df7a582be380258c",
+      "key": "custom.scan_7e4337b2d4ca4080b6391661",
+      "namespace": "custom",
+      "status": "needs_context",
+      "review": {
+        "kind": "compiled-ui",
+        "catalogKey": "managedUi.df6ae213"
+      }
+    },
+    {
+      "id": "1cbb8032f6be0bf03fc098ee",
+      "sourceText": "已选 {selectedCount} 个节点",
+      "sourceHash": "93166b29f6c8c328e2cc2c19bb89804efcbbb4f52e5af41689d575818a997d80",
+      "context": "CanvasNodeContextMenu:attr:title",
+      "dynamic": true,
+      "references": [
+        {
+          "file": "src/components/canvas/canvas-context-menu.tsx",
+          "line": 292,
+          "column": 48
+        }
+      ],
+      "anchor": "fca80b82195d1906",
+      "key": "custom.scan_1cbb8032f6be0bf03fc098ee",
+      "namespace": "custom",
+      "status": "needs_context",
+      "review": {
+        "kind": "compiled-ui",
+        "catalogKey": "managedUi.d61f84ef"
+      }
+    },
+    {
+      "id": "9fd0e3991d5dec984d21fa6a",
+      "sourceText": "复制 {selectedCount} 个节点",
+      "sourceHash": "af1695fd7a3c948a73c5e375bc626f41cab258e1b2c78f93ec25adf5206809c4",
+      "context": "CanvasNodeContextMenu:attr:label",
+      "dynamic": true,
+      "references": [
+        {
+          "file": "src/components/canvas/canvas-context-menu.tsx",
+          "line": 296,
+          "column": 64
+        }
+      ],
+      "anchor": "a265cbf6e63337a2",
+      "key": "custom.scan_9fd0e3991d5dec984d21fa6a",
+      "namespace": "custom",
+      "status": "needs_context",
+      "review": {
+        "kind": "compiled-ui",
+        "catalogKey": "managedUi.a30b6fb9"
+      }
+    },
+    {
+      "id": "6133eb86aeb2d13d9694a600",
+      "sourceText": "删除 {selectedCount} 个节点",
+      "sourceHash": "de82a48546f176f03e6ab88198d0aa413efe54ec10c5c2fcb5c5639d53c74306",
+      "context": "CanvasNodeContextMenu:attr:label",
+      "dynamic": true,
+      "references": [
+        {
+          "file": "src/components/canvas/canvas-context-menu.tsx",
+          "line": 299,
+          "column": 66
+        }
+      ],
+      "anchor": "a265cbf6e63337a2",
+      "key": "custom.scan_6133eb86aeb2d13d9694a600",
+      "namespace": "custom",
+      "status": "needs_context",
+      "review": {
+        "kind": "compiled-ui",
+        "catalogKey": "managedUi.77879b0"
+      }
+    },
+    {
+      "id": "e4606c898b8d0735090f2add",
+      "sourceText": "默认输出 {label} {value}",
+      "sourceHash": "735d7e630c15b8f51a0c19a8c8be1dbe6c906e6d6e40046bff11bdbf23f724d3",
+      "context": "ImageSizePresetsEditor:attr:aria-label",
+      "dynamic": true,
+      "references": [
+        {
+          "file": "src/components/image-size-presets-editor.tsx",
+          "line": 254,
+          "column": 146
+        }
+      ],
+      "anchor": "c059e7d243469338",
+      "key": "custom.scan_e4606c898b8d0735090f2add",
+      "namespace": "custom",
+      "status": "needs_context",
+      "review": {
+        "kind": "compiled-ui",
+        "catalogKey": "managedUi.c8fdd840"
+      }
+    },
+    {
+      "id": "20e2470230f9289586c2998d",
+      "sourceText": "清空画布",
+      "sourceHash": "33d09b98d41055df771b1b242c4aeed7d61dc96674ad4bb05adc77e3776737f9",
+      "context": "mainToolbarTools:property:label",
+      "dynamic": false,
+      "references": [
+        {
+          "file": "src/lib/canvas/tool-registry/definitions/main-toolbar-tools.tsx",
+          "line": 112,
+          "column": 16
+        }
+      ],
+      "anchor": "e13fa177c175b53c",
+      "key": "custom.scan_20e2470230f9289586c2998d",
+      "namespace": "custom",
+      "status": "new",
+      "review": {
+        "kind": "explicit-ui",
+        "catalogKey": "managedUi.8b607e44"
+      }
+    },
+    {
+      "id": "d1bbf745952310afa1d064a5",
+      "sourceText": "查看节点尺寸、位置与生成记录",
+      "sourceHash": "3f00e22b49763666951e824f23c727ecf8278cba1cdce01513a9d44cf0e66004",
+      "context": "nodeHoverToolbarTools:property:description",
+      "dynamic": false,
+      "references": [
+        {
+          "file": "src/lib/canvas/tool-registry/definitions/node-hover-tools.tsx",
+          "line": 140,
+          "column": 26
+        }
+      ],
+      "anchor": "5f1e1c2d2769a74e",
+      "key": "custom.scan_d1bbf745952310afa1d064a5",
+      "namespace": "custom",
+      "status": "new",
+      "review": {
+        "kind": "explicit-ui",
+        "catalogKey": "managedUi.765ea848"
+      }
+    },
+    {
+      "id": "d9d316275247144196191cc9",
+      "sourceText": "从当前画布移除这个节点及其连线",
+      "sourceHash": "65052e0ff9aebbedcd3c8386a23e7191ff5a66ee489228cec00252ebddca5fa1",
+      "context": "nodeHoverToolbarTools:property:description",
+      "dynamic": false,
+      "references": [
+        {
+          "file": "src/lib/canvas/tool-registry/definitions/node-hover-tools.tsx",
+          "line": 153,
+          "column": 82
+        }
+      ],
+      "anchor": "5f1e1c2d2769a74e",
+      "key": "custom.scan_d9d316275247144196191cc9",
+      "namespace": "custom",
+      "status": "new",
+      "review": {
+        "kind": "explicit-ui",
+        "catalogKey": "managedUi.222429bd"
+      }
+    },
+    {
+      "id": "a146b3c27a459c6b391a8979",
+      "sourceText": "选取画面，保存为图片节点",
+      "sourceHash": "c0a3f685607150bf2c183ff46abfe3e06b4f02fe89d62103c55c3b76172177c1",
+      "context": "nodeHoverToolbarTools:property:description",
+      "dynamic": false,
+      "references": [
+        {
+          "file": "src/lib/canvas/tool-registry/definitions/node-hover-tools.tsx",
+          "line": 180,
+          "column": 83
+        }
+      ],
+      "anchor": "5f1e1c2d2769a74e",
+      "key": "custom.scan_a146b3c27a459c6b391a8979",
+      "namespace": "custom",
+      "status": "new",
+      "review": {
+        "kind": "explicit-ui",
+        "catalogKey": "managedUi.767d2d08"
+      }
+    },
+    {
+      "id": "85709bb232cdc3d66ba00dc7",
+      "sourceText": "生成音频节点，保留原视频声音",
+      "sourceHash": "f719eb4bf05933cd5a97c53f6a462ebe1d9aad37ff85f2fd50609713753cb10e",
+      "context": "nodeHoverToolbarTools:property:description",
+      "dynamic": false,
+      "references": [
+        {
+          "file": "src/lib/canvas/tool-registry/definitions/node-hover-tools.tsx",
+          "line": 194,
+          "column": 83
+        }
+      ],
+      "anchor": "5f1e1c2d2769a74e",
+      "key": "custom.scan_85709bb232cdc3d66ba00dc7",
+      "namespace": "custom",
+      "status": "new",
+      "review": {
+        "kind": "explicit-ui",
+        "catalogKey": "managedUi.3c6a1f70"
+      }
+    },
+    {
+      "id": "999d07296bcf70da63e3b1ed",
+      "sourceText": "用参考图片复刻原视频的动作与运镜",
+      "sourceHash": "21d4fa289ec35f08c694c360720447a0bc1f0d8e23852f35e2f29970b731ce31",
+      "context": "nodeHoverToolbarTools:property:label",
+      "dynamic": false,
+      "references": [
+        {
+          "file": "src/lib/canvas/tool-registry/definitions/node-hover-tools.tsx",
+          "line": 203,
+          "column": 16
+        }
+      ],
+      "anchor": "288cfc0da60e5bd3",
+      "key": "custom.scan_999d07296bcf70da63e3b1ed",
+      "namespace": "custom",
+      "status": "new",
+      "review": {
+        "kind": "explicit-ui",
+        "catalogKey": "managedUi.27acfd2f"
+      }
+    },
+    {
+      "id": "7e208eb4c82f9845892fbe4b",
+      "sourceText": "连接原视频和参考图片，创建复刻草稿",
+      "sourceHash": "6766fa936b4449d3cf81130996c0166502a72c8d9d110973b41304ff22337c71",
+      "context": "nodeHoverToolbarTools:property:description",
+      "dynamic": false,
+      "references": [
+        {
+          "file": "src/lib/canvas/tool-registry/definitions/node-hover-tools.tsx",
+          "line": 208,
+          "column": 65
+        }
+      ],
+      "anchor": "5f1e1c2d2769a74e",
+      "key": "custom.scan_7e208eb4c82f9845892fbe4b",
+      "namespace": "custom",
+      "status": "new",
+      "review": {
+        "kind": "explicit-ui",
+        "catalogKey": "managedUi.1f82faa1"
+      }
+    },
+    {
+      "id": "9c1e054fc6b7fcb103416b6f",
+      "sourceText": "选择一个参考范围，创建待生成视频节点",
+      "sourceHash": "a53e01b2321fcf16d1e488827422e7ba686c6666761c37613d1a5cac2225d7ba",
+      "context": "nodeHoverToolbarTools:property:description",
+      "dynamic": false,
+      "references": [
+        {
+          "file": "src/lib/canvas/tool-registry/definitions/node-hover-tools.tsx",
+          "line": 221,
+          "column": 66
+        }
+      ],
+      "anchor": "5f1e1c2d2769a74e",
+      "key": "custom.scan_9c1e054fc6b7fcb103416b6f",
+      "namespace": "custom",
+      "status": "new",
+      "review": {
+        "kind": "explicit-ui",
+        "catalogKey": "managedUi.3f67ccae"
+      }
+    },
+    {
+      "id": "02e4d3bc49279eea36757d1c",
+      "sourceText": "画质增强：提升视频分辨率与细节，生成新视频节点",
+      "sourceHash": "9e5ddab0cdfdec540cc1ad0b4dfc7874633e9b94396947d6292845035961294c",
+      "context": "nodeHoverToolbarTools:property:label",
+      "dynamic": false,
+      "references": [
+        {
+          "file": "src/lib/canvas/tool-registry/definitions/node-hover-tools.tsx",
+          "line": 230,
+          "column": 16
+        }
+      ],
+      "anchor": "288cfc0da60e5bd3",
+      "key": "custom.scan_02e4d3bc49279eea36757d1c",
+      "namespace": "custom",
+      "status": "new",
+      "review": {
+        "kind": "explicit-ui",
+        "catalogKey": "managedUi.a8b8611a"
+      }
+    },
+    {
+      "id": "34c6810d2e86debb46001d6b",
+      "sourceText": "AI 提升清晰度，另存为新视频",
+      "sourceHash": "17b0552f4b84144634bf90ea3e5b6e2f6fa4e88b8e75b036d43f4c40a31bbb34",
+      "context": "nodeHoverToolbarTools:property:description",
+      "dynamic": false,
+      "references": [
+        {
+          "file": "src/lib/canvas/tool-registry/definitions/node-hover-tools.tsx",
+          "line": 235,
+          "column": 81
+        }
+      ],
+      "anchor": "5f1e1c2d2769a74e",
+      "key": "custom.scan_34c6810d2e86debb46001d6b",
+      "namespace": "custom",
+      "status": "new",
+      "review": {
+        "kind": "explicit-ui",
+        "catalogKey": "managedUi.13dae70a"
+      }
+    },
+    {
+      "id": "7e64779d2a713df125135b41",
+      "sourceText": "保存到我的素材库，供其他画布引用",
+      "sourceHash": "25b98ed721d3940db88ff8bebdc2f88a2e21242aeae09e5dd014d0adc03d0ed7",
+      "context": "nodeHoverToolbarTools:property:description",
+      "dynamic": false,
+      "references": [
+        {
+          "file": "src/lib/canvas/tool-registry/definitions/node-hover-tools.tsx",
+          "line": 262,
+          "column": 78
+        }
+      ],
+      "anchor": "5f1e1c2d2769a74e",
+      "key": "custom.scan_7e64779d2a713df125135b41",
+      "namespace": "custom",
+      "status": "new",
+      "review": {
+        "kind": "explicit-ui",
+        "catalogKey": "managedUi.8134ecac"
+      }
+    },
+    {
+      "id": "0cbb5d1a086f6b65d974bd18",
+      "sourceText": "创建背板",
+      "sourceHash": "a556c3be80912095d7516b884c062c025f0452b78da97c16cc20795d13aabf5a",
+      "context": "selectionToolbarTools:property:label",
+      "dynamic": false,
+      "references": [
+        {
+          "file": "src/lib/canvas/tool-registry/definitions/selection-toolbar-tools.tsx",
+          "line": 75,
+          "column": 16
+        }
+      ],
+      "anchor": "c389575cbbc37894",
+      "key": "custom.scan_0cbb5d1a086f6b65d974bd18",
+      "namespace": "custom",
+      "status": "new",
+      "review": {
+        "kind": "explicit-ui",
+        "catalogKey": "managedUi.d220ebc1"
+      }
+    },
+    {
+      "id": "2bb1e980281fa85d56b128ad",
+      "sourceText": "创建引用组",
+      "sourceHash": "9211a51a85a4308a4cf948a4878c425a5cc8f04d4994c85998614bcee156effc",
+      "context": "selectionToolbarTools:property:label",
+      "dynamic": false,
+      "references": [
+        {
+          "file": "src/lib/canvas/tool-registry/definitions/selection-toolbar-tools.tsx",
+          "line": 86,
+          "column": 16
+        }
+      ],
+      "anchor": "c389575cbbc37894",
+      "key": "custom.scan_2bb1e980281fa85d56b128ad",
+      "namespace": "custom",
+      "status": "new",
+      "review": {
+        "kind": "explicit-ui",
+        "catalogKey": "managedUi.6570bcf3"
+      }
+    },
+    {
+      "id": "433d43d2842ce55615e65d02",
+      "sourceText": "批量连接",
+      "sourceHash": "e4e161c181f53367656f5c7fd9a84526af9469c20ea98f21da34859fa5b577b4",
+      "context": "selectionToolbarTools:property:label",
+      "dynamic": false,
+      "references": [
+        {
+          "file": "src/lib/canvas/tool-registry/definitions/selection-toolbar-tools.tsx",
+          "line": 93,
+          "column": 90
+        }
+      ],
+      "anchor": "c389575cbbc37894",
+      "key": "custom.scan_433d43d2842ce55615e65d02",
+      "namespace": "custom",
+      "status": "new",
+      "review": {
+        "kind": "explicit-ui",
+        "catalogKey": "managedUi.90c62a18"
+      }
+    },
+    {
+      "id": "1925866644533d673baa3217",
+      "sourceText": "预估:{formattedCredits}",
+      "sourceHash": "7bbfab19fb073b148bc0cf2220ec5528330544afc5f5cc06d17e03f896804ec3",
+      "context": "surface:jsx-expression:true",
+      "dynamic": true,
+      "references": [
+        {
+          "file": "src/pages/create/creation-workspace.tsx",
+          "line": 843,
+          "column": 60
+        }
+      ],
+      "anchor": "4edb9daa5c8d1aa1",
+      "key": "custom.scan_1925866644533d673baa3217",
+      "namespace": "custom",
+      "status": "needs_context",
+      "review": {
+        "kind": "compiled-ui",
+        "catalogKey": "managedUi.cfbec6a6"
+      }
+    }
+  ]
+}

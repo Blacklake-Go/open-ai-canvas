@@ -738,7 +738,6 @@ function SegmentPrompt({
             ) : null}
             {segment.promptStatus === "conflict" || segment.promptStatus === "review" || (segment.promptStatus === "stale" && !segment.custom) ? (
                 <Button size="small" disabled={!draft.trim() || overLimit || usage.unknown.length > 0 || editingDisabled} onClick={() => void saveOverride(draft.trim()).catch(reportSaveError)}>
-                    {" "}
                     {_creationText("creation.1583e1d97dec15fb")}
                 </Button>
             ) : null}

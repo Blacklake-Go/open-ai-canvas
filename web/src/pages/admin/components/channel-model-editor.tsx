@@ -1,3 +1,4 @@
+import { interfaceText } from "@/i18n/interface-text";
 import { useEffect, useId, useRef, useState, type ReactNode } from "react";
 import { Alert, App, Button, Form, Input, Segmented, Select, Switch, Tabs } from "antd";
 import { useNavigate } from "react-router";
@@ -700,7 +701,7 @@ function CapabilitySections({ capability, protocol, templates, inputs, parameter
                     <span className="break-all text-xs text-foreground/65">
                         {protocol.label}
                         {protocol.version && (
-                            <code className="ml-2" title="本模型选择的插件发行版本">
+                            <code className="ml-2" title={interfaceText("本模型选择的插件发行版本")}>
                                 v{protocol.version}
                             </code>
                         )}
