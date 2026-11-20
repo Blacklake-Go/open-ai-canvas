@@ -12,7 +12,7 @@
   "integrationRelease": {
     "schemaVersion": 112,
     "yingceSchemaVersion": 4,
-    "version": "v1.8.7.1-supdance.3",
+    "version": "v1.8.7.1-supdance.4",
     "baseCommit": "0819fcee1b33c4970c110e1081997eca1eef863a",
     "sourceBranch": "codex/upstream-20261120",
     "deploymentEvidence": "docs/supdance/UPSTREAM_20261120.md"

@@ -10,6 +10,7 @@ import (
 	"mime/multipart"
 	"net/http"
 	"net/http/httptest"
+	"path/filepath"
 	"reflect"
 	"strconv"
 	"strings"
@@ -157,6 +158,14 @@ func TestProtocolRequestURLCanResolveSameOriginRootPath(t *testing.T) {
 
 func TestRunVideoTaskUsesDeclarativeAgnesJSONProtocol(t *testing.T) {
 	t.Setenv("CANVAS_ALLOW_PRIVATE_UPSTREAMS", "true")
+	packages, err := officialPluginPackageDir()
+	if err != nil {
+		t.Fatal(err)
+	}
+	official, err := inspectOfficialPluginPackage(filepath.Join(packages, "agnes-video-25.yingce-plugin"))
+	if err != nil {
+		t.Fatal(err)
+	}
 	center, err := newPluginRuntime(t.TempDir())
 	if err != nil {
 		t.Fatalf("newPluginRuntime() error = %v", err)
@@ -165,8 +174,9 @@ func TestRunVideoTaskUsesDeclarativeAgnesJSONProtocol(t *testing.T) {
 	if !ok {
 		t.Fatal("declarative Agnes adapter is missing")
 	}
-	if metadata := adapter.Metadata(); metadata.Version != "2.0.0" || metadata.Execution != "declarative" || !metadata.RequiresPublicMediaURLs {
-		t.Fatalf("Agnes runtime metadata = %#v", metadata)
+	wantVersion := official.info.Manifest.Metadata.Version
+	if metadata := adapter.Metadata(); metadata.Version != wantVersion || metadata.Execution != "declarative" || !metadata.RequiresPublicMediaURLs {
+		t.Fatalf("Agnes runtime metadata: version=%q (want %q), execution=%q, requires public URLs=%t", metadata.Version, wantVersion, metadata.Execution, metadata.RequiresPublicMediaURLs)
 	}
 
 	paths := make([]string, 0, 3)
