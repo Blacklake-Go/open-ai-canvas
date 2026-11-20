@@ -36,7 +36,7 @@ export function SupDanceI18nSettingsPage() {
                     {draft && (
                         <fieldset disabled={save.isPending} className="space-y-4">
                             <label className="flex flex-wrap items-center gap-2">
-                                {text("projects.default")} · {t("language.label")}
+                                {text("projects.default_preset")} · {t("language.label")}
                                 <select
                                     value={draft.defaultLocale}
                                     onChange={(event) => {
