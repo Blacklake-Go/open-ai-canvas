@@ -31,6 +31,7 @@ export const SUPDANCE_UPSTREAM_PATCH_REGISTRY: readonly UpstreamPatchRecord[] = 
         feature: "世界引擎场景、运镜、输出与八语界面",
         coupledUpstreamFiles: [
             "web/scripts/previs-p0-chrome-e2e.mjs",
+            "web/src/components/canvas/canvas-create-menu.tsx",
             "web/src/components/canvas/previs/canvas-previs-workbench.tsx",
             "web/src/components/canvas/previs/previs-add-dialog.tsx",
             "web/src/components/canvas/previs/previs-camera-move-section.tsx",
@@ -43,6 +44,7 @@ export const SUPDANCE_UPSTREAM_PATCH_REGISTRY: readonly UpstreamPatchRecord[] = 
             "web/src/components/canvas/previs/previs-world-panel.tsx",
             "web/src/components/canvas/previs/previs-world-toolbar.tsx",
             "web/src/i18n/messages/interface.json",
+            "web/src/lib/canvas/canvas-video-merge-args.ts",
             "web/src/lib/canvas/canvas-video-merge.ts",
             "web/src/pages/canvas/project.tsx",
         ],

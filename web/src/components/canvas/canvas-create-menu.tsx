@@ -1,6 +1,7 @@
 import type { CSSProperties, ReactNode } from "react";
 import { useTranslation } from "react-i18next";
 
+import { interfaceText } from "@/i18n/interface-text";
 import { canvasThemes } from "@/lib/canvas-theme";
 import { cn } from "@/lib/utils";
 import { useActiveTheme } from "@/stores/canvas/use-canvas-theme-store";
@@ -24,7 +25,7 @@ export function CanvasCreateMenu({ commands }: { commands: CanvasCreateCommand[]
     const theme = canvasThemes[themeKey];
     const isDark = themeKey === "dark";
     const projectCommands = commands.filter((command) => command.section === "project");
-    const nodeCommands = commands.filter((command) => command.section === "node");
+    const nodeCommands = commands.filter((command) => command.section === "node").map((command) => (command.id === "previs" ? { ...command, label: interfaceText(command.label) } : command));
     const footerCommands = [...commands.filter((command) => command.section === "workflow"), ...commands.filter((command) => command.section === "resource")];
     const vars = {
         "--create-hover": theme.toolbar.itemHover,

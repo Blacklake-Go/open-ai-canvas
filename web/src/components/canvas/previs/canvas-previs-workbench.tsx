@@ -1079,11 +1079,8 @@ export function CanvasPrevisWorkbench({
         setOutputStage(null);
     };
 
-    /** 浏览器录到的 WebM 在浏览器里转成固定帧率、裁到镜头时长的 MP4；转码进度显示在按钮上。 */
-    const recordingToMp4 = (recorded: Blob, shot: PrevisShot) =>
-        recorded.type === "video/mp4"
-            ? Promise.resolve(recorded)
-            : transcodeVideoToMp4(recorded, { fps: shot.fps, duration: shot.duration, onProgress: ({ phase, progress }) => setOutputStage(phase === "loading" ? "加载转码组件…" : `转码 ${progress}%`) });
+    /** 直播录制产生的 WebM 或 MP4 都需对齐镜头帧率和时长。 */
+    const recordingToMp4 = (recorded: Blob, shot: PrevisShot) => transcodeVideoToMp4(recorded, { fps: shot.fps, duration: shot.duration, onProgress: ({ phase, progress }) => setOutputStage(phase === "loading" ? "加载转码组件…" : `转码 ${progress}%`) });
 
     /**
      * 输出流程：先从同一快照截构图，再实时录制；录制期间场景必须不变（帧是按实时草稿渲染的）。

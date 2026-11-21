@@ -13,9 +13,9 @@ describe("buildRecordingTranscodeArgs", () => {
         expect(args).toEqual(["-i", "recording.webm", "-an", "-vf", "scale=trunc(iw/2)*2:trunc(ih/2)*2", "-c:v", "libx264", "-preset", "ultrafast", "-pix_fmt", "yuv420p", "-movflags", "+faststart", "-threads", "1", "recording-transcoded.mp4"]);
     });
 
-    test("给了镜头帧率与时长时按固定帧率重采样并裁到镜头时长", () => {
+    test("按固定帧率重采样，补齐短录制并裁到镜头时长", () => {
         const args = buildRecordingTranscodeArgs("in.webm", "out.mp4", { fps: 24, duration: 6 });
-        expect(args[args.indexOf("-vf") + 1]).toBe("fps=24,scale=trunc(iw/2)*2:trunc(ih/2)*2");
+        expect(args[args.indexOf("-vf") + 1]).toBe("fps=24,scale=trunc(iw/2)*2:trunc(ih/2)*2,tpad=stop_mode=clone:stop_duration=6");
         expect(args[args.indexOf("-t") + 1]).toBe("6");
         expect(args.indexOf("-t")).toBeLessThan(args.indexOf("-c:v"));
         expect(args.at(-1)).toBe("out.mp4");
