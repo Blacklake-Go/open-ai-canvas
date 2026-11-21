@@ -225,7 +225,7 @@ export function PrevisCanvasDock(props: PrevisCanvasDockProps) {
                                 onClick={() => props.onTransformModeChange(tool.mode)}
                             >
                                 <tool.icon aria-hidden />
-                                <span>{tool.label}</span>
+                                <span>{interfaceText(tool.label)}</span>
                             </button>
                         );
                     })}

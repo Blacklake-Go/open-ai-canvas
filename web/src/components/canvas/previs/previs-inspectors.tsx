@@ -714,7 +714,15 @@ export function ShotInspector({
                 {/* 已有运镜放在最上面：删除不必翻过下方整块添加区。 */}
                 {camera && !capabilities.timeline && (camera.moves?.length || camera.motionPath) ? <div className="previs-inspector-note">切到「动画」可添加或调整运镜，这里也能直接删除。</div> : null}
                 {camera ? <PrevisCameraMotionList camera={camera} scene={scene} onChange={onUpdateCamera} onSeek={onSeek} /> : null}
-                {(capabilities.timeline && camera) || camera?.moves?.length ? null : <Select className="w-full" size="small" value={shot.cameraMove} options={cameraMoveOptions.map((option) => ({ ...option, label: interfaceText(option.label) }))} onChange={(cameraMove: PrevisCameraMove) => onUpdateShot({ cameraMove })} />}
+                {(capabilities.timeline && camera) || camera?.moves?.length ? null : (
+                    <Select
+                        className="w-full"
+                        size="small"
+                        value={shot.cameraMove}
+                        options={cameraMoveOptions.map((option) => ({ ...option, label: interfaceText(option.label) }))}
+                        onChange={(cameraMove: PrevisCameraMove) => onUpdateShot({ cameraMove })}
+                    />
+                )}
                 {/* 动画模式的路径编辑区自带参考轨迹列表；摆场模式只在这里列出并删除。 */}
                 {capabilities.timeline && camera ? null : <PrevisSketchPathList paths={scene.paths ?? []} onDelete={onDeleteSketchPath} />}
                 {capabilities.timeline && camera ? (

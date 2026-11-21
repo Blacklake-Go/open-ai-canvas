@@ -26,6 +26,31 @@ export type UpstreamPatchRecord = {
  */
 export const SUPDANCE_UPSTREAM_PATCH_REGISTRY: readonly UpstreamPatchRecord[] = [
     {
+        id: "supdance-world-engine",
+        upstreamBaseline: "v1.8.7.1@5ca284ce",
+        feature: "世界引擎场景、运镜、输出与八语界面",
+        coupledUpstreamFiles: [
+            "web/scripts/previs-p0-chrome-e2e.mjs",
+            "web/src/components/canvas/previs/canvas-previs-workbench.tsx",
+            "web/src/components/canvas/previs/previs-add-dialog.tsx",
+            "web/src/components/canvas/previs/previs-camera-move-section.tsx",
+            "web/src/components/canvas/previs/previs-canvas-dock.tsx",
+            "web/src/components/canvas/previs/previs-inspectors.tsx",
+            "web/src/components/canvas/previs/previs-path-section.tsx",
+            "web/src/components/canvas/previs/previs-sequencer.tsx",
+            "web/src/components/canvas/previs/previs-travel-section.tsx",
+            "web/src/components/canvas/previs/previs-viewport.tsx",
+            "web/src/components/canvas/previs/previs-world-panel.tsx",
+            "web/src/components/canvas/previs/previs-world-toolbar.tsx",
+            "web/src/i18n/messages/interface.json",
+            "web/src/lib/canvas/canvas-video-merge.ts",
+            "web/src/pages/canvas/project.tsx",
+        ],
+        files: ["docs/supdance/UPSTREAM_WORLD_ENGINE.md"],
+        reason: "保留画布插件入口、词库和拼接流程，并接入上游世界与转码。",
+        upgradeRisk: "MEDIUM",
+    },
+    {
         id: "supdance-openai-plugin-bridge",
         upstreamBaseline: "v1.8.7.1@882a1d1a",
         feature: "OpenAI 插件的账号授权、分镜追加与审核文本",

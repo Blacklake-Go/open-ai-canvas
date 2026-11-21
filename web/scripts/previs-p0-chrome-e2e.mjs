@@ -430,12 +430,14 @@ async function englishPresetLabels(cdp, baseUrl) {
     await openUnifiedWorkbench(cdp, "English presets");
     assert(await cdp.poll(`document.querySelector('[data-mode="layout"]')?.textContent?.trim() === "Scene layout"`, "English layout tab"), "English workbench mode is visible");
     assert(await cdp.poll(`document.querySelector('.previs-desk-save')?.textContent?.trim() === "Saved"`, "English save status"), "English workbench save status is visible");
-    assert(await cdp.poll(`!!document.querySelector('[aria-label="Previs viewport tools"]')`, "English viewport dock"), "English viewport dock is labeled");
+    assert(await cdp.poll(`!!document.querySelector('[aria-label="World Engine viewport tools"]')`, "English viewport dock"), "English viewport dock is labeled");
+    assert(await cdp.click('[aria-label="Scene object list"]'), "English scene object list opens");
     assert(await cdp.click('[aria-label="Add to scene"]'), "English add scene control opens");
     assert(await cdp.clickText("Props", '[role="tab"]'), "English prop category is selectable");
-    const card = `[...document.querySelectorAll('.previs-add-dialog__card')].find((button) => button.textContent?.includes('Armchair') && button.getClientRects().length > 0)`;
-    assert(await cdp.clickPoint(card, "English armchair preset"), "English armchair preset is selectable");
-    assert(await cdp.poll(`Array.from(document.querySelectorAll(".previs-add-dialog__footer button")).some((button) => button.textContent?.trim() === "Add Armchair")`, "English preset confirmation"), "English confirmation follows the selected preset");
+    assert(await cdp.clickText("Indoor furniture"), "English furniture category is selectable");
+    const card = `[...document.querySelectorAll('.previs-add-dialog__card')].find((button) => button.textContent?.startsWith('Sofa') && button.getClientRects().length > 0)`;
+    assert(await cdp.clickPoint(card, "English sofa preset"), "English sofa preset is selectable");
+    assert(await cdp.poll(`Array.from(document.querySelectorAll(".previs-add-dialog__footer button")).some((button) => button.textContent?.trim() === "Add Sofa")`, "English preset confirmation"), "English confirmation follows the selected preset");
 }
 
 /** 使用当前产品流程从预设库加入一个真实道具，不依赖旧版快捷菜单。 */

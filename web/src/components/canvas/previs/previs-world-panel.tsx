@@ -1,3 +1,4 @@
+import { interfaceText } from "@/i18n/interface-text";
 import { InputNumber, Slider, Switch } from "antd";
 import { Cloud, CloudFog, CloudLightning, CloudRain, CloudSun, Globe2, Shuffle, Snowflake, Sun, type LucideIcon } from "lucide-react";
 
@@ -33,13 +34,13 @@ export function PrevisWorldPanel({ world, onChange }: { world?: PrevisWorld; onC
                         const active = Math.abs(world.timeOfDay - preset.value) < 0.3;
                         return (
                             <button key={preset.label} type="button" aria-pressed={active} className={`pv-world__chip ${active ? "is-active" : ""}`} onClick={() => patch({ timeOfDay: preset.value })}>
-                                {preset.label}
+                                {interfaceText(preset.label)}
                             </button>
                         );
                     })}
                 </div>
             </InspectorGroup>
-            <InspectorGroup title="天气" hint={PREVIS_WEATHER_OPTIONS.find((item) => item.value === world.weather)?.label}>
+            <InspectorGroup title="天气" hint={interfaceText(PREVIS_WEATHER_OPTIONS.find((item) => item.value === world.weather)?.label ?? "")}>
                 <div className="pv-world__weather" role="group" aria-label="天气">
                     {PREVIS_WEATHER_OPTIONS.map((option) => {
                         const Icon = WEATHER_ICONS[option.value];
@@ -47,20 +48,20 @@ export function PrevisWorldPanel({ world, onChange }: { world?: PrevisWorld; onC
                         return (
                             <button key={option.value} type="button" aria-pressed={active} className={`pv-world__weather-btn ${active ? "is-active" : ""}`} onClick={() => patch({ weather: option.value })}>
                                 <Icon className="size-4" aria-hidden />
-                                <span>{option.label}</span>
+                                <span>{interfaceText(option.label)}</span>
                             </button>
                         );
                     })}
                 </div>
             </InspectorGroup>
-            <InspectorGroup title="远景" hint={PREVIS_GROUND_OPTIONS.find((item) => item.value === world.ground)?.label}>
+            <InspectorGroup title="远景" hint={interfaceText(PREVIS_GROUND_OPTIONS.find((item) => item.value === world.ground)?.label ?? "")}>
                 <div className="pv-world__grounds" role="group" aria-label="远景地表">
                     {PREVIS_GROUND_OPTIONS.map((option) => {
                         const active = world.ground === option.value;
                         return (
                             <button key={option.value} type="button" aria-pressed={active} className={`pv-world__ground ${active ? "is-active" : ""}`} onClick={() => patch({ ground: option.value })}>
                                 <span className="pv-world__ground-swatch" style={{ background: `linear-gradient(180deg, ${option.far} 0%, ${option.near} 100%)` }} />
-                                <span>{option.label}</span>
+                                <span>{interfaceText(option.label)}</span>
                             </button>
                         );
                     })}
@@ -74,7 +75,7 @@ export function PrevisWorldPanel({ world, onChange }: { world?: PrevisWorld; onC
                 <div className="pv-world__segmented" role="group" aria-label="地面范围">
                     {PREVIS_GROUND_SIZES.map((option) => (
                         <button key={option.value} type="button" aria-pressed={world.groundSize === option.value} className={world.groundSize === option.value ? "is-active" : ""} onClick={() => patch({ groundSize: option.value })}>
-                            {option.label}
+                            {interfaceText(option.label)}
                         </button>
                     ))}
                 </div>
@@ -103,10 +104,10 @@ export function PrevisLayoutInspectorGroup({ object, onUpdate }: { object: Previ
                         type="button"
                         aria-pressed={layout.template === template.id}
                         className={`pv-world__chip ${layout.template === template.id ? "is-active" : ""}`}
-                        title={template.hint}
+                        title={interfaceText(template.hint)}
                         onClick={() => patch({ template: template.id, size: Math.min(template.maxSize, Math.max(template.minSize, layout.size)) })}
                     >
-                        {template.name}
+                        {interfaceText(template.name)}
                     </button>
                 ))}
             </div>
@@ -148,7 +149,7 @@ export function PrevisPropParamFields({ propId, params, onChange }: { propId?: s
             {defs.map((def) =>
                 def.type === "number" ? (
                     <div key={def.key} className="pv-world__row pv-world__row--slider">
-                        <span>{def.label}</span>
+                        <span>{interfaceText(def.label)}</span>
                         <Slider min={def.min} max={def.max} step={def.step} value={Number(values[def.key])} onChange={(value) => onChange({ ...values, [def.key]: value })} />
                         <InputNumber
                             className="pv-param-fields__number"
@@ -164,8 +165,8 @@ export function PrevisPropParamFields({ propId, params, onChange }: { propId?: s
                     </div>
                 ) : (
                     <div key={def.key} className="pv-param-fields__enum">
-                        <span>{def.label}</span>
-                        <div className="pv-world__presets" role="group" aria-label={def.label}>
+                        <span>{interfaceText(def.label)}</span>
+                        <div className="pv-world__presets" role="group" aria-label={interfaceText(def.label)}>
                             {def.options.map((option) => (
                                 <button
                                     key={option.value}
@@ -174,7 +175,7 @@ export function PrevisPropParamFields({ propId, params, onChange }: { propId?: s
                                     className={`pv-world__chip ${values[def.key] === option.value ? "is-active" : ""}`}
                                     onClick={() => onChange({ ...values, [def.key]: option.value })}
                                 >
-                                    {option.label}
+                                    {interfaceText(option.label)}
                                 </button>
                             ))}
                         </div>

@@ -1,3 +1,4 @@
+import { interfaceText } from "@/i18n/interface-text";
 import { App, Button, InputNumber, Select } from "antd";
 import { Footprints, Plus, Trash2 } from "lucide-react";
 import { useState } from "react";
@@ -233,7 +234,7 @@ export function PrevisPathSection({
                         <button
                             key={item.value}
                             type="button"
-                            title={item.hint}
+                            title={interfaceText(item.hint)}
                             aria-pressed={(path.easing ?? "linear") === item.value}
                             className={`pv-world__chip ${(path.easing ?? "linear") === item.value ? "is-active" : ""}`}
                             onClick={() => write({ ...path, easing: item.value })}
@@ -347,8 +348,14 @@ export function PrevisPathSection({
                                     onChange={setTransferActorId}
                                     aria-label="走这条轨迹的人物"
                                 />
-                                <Select size="small" value={transferMode} options={PREVIS_PATH_CAMERA_MODES.map((item) => ({ value: item.value, label: item.label, title: item.hint }))} onChange={setTransferMode} aria-label="镜头怎么跟" />
-                                <div className="previs-inspector-note">{PREVIS_PATH_CAMERA_MODES.find((item) => item.value === transferMode)?.hint}</div>
+                                <Select
+                                    size="small"
+                                    value={transferMode}
+                                    options={PREVIS_PATH_CAMERA_MODES.map((item) => ({ value: item.value, label: interfaceText(item.label), title: interfaceText(item.hint) }))}
+                                    onChange={setTransferMode}
+                                    aria-label="镜头怎么跟"
+                                />
+                                <div className="previs-inspector-note">{interfaceText(PREVIS_PATH_CAMERA_MODES.find((item) => item.value === transferMode)?.hint ?? "")}</div>
                                 <label className="previs-inspector-toggle">
                                     <span>人物按轨迹高度飞行（关闭则贴地走）</span>
                                     <Switch checked={keepHeight} onChange={setKeepHeight} />

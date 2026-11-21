@@ -1,3 +1,4 @@
+import { interfaceText } from "@/i18n/interface-text";
 import { App, Button, InputNumber, Select } from "antd";
 import { Clapperboard, Plus, Route, Trash2 } from "lucide-react";
 import { useState } from "react";
@@ -104,8 +105,8 @@ export function PrevisCameraMoveSection({
                     {PREVIS_CAMERA_RECIPES.map((recipe) => {
                         const blocked = recipe.subject === "required" && !activeSubject;
                         return (
-                            <button key={recipe.id} type="button" className="pv-world__chip" disabled={blocked} title={`${recipe.source}：${recipe.hint}${blocked ? "（先选主体）" : ""}`} onClick={() => applyRecipe(recipe)}>
-                                {recipe.label}
+                            <button key={recipe.id} type="button" className="pv-world__chip" disabled={blocked} title={`${recipe.source}：${interfaceText(recipe.hint)}${blocked ? "（先选主体）" : ""}`} onClick={() => applyRecipe(recipe)}>
+                                {interfaceText(recipe.label)}
                             </button>
                         );
                     })}
@@ -118,49 +119,49 @@ export function PrevisCameraMoveSection({
         <div className="pv-travel pv-camera-move">
             {PREVIS_CAMERA_TECHNIQUE_GROUPS.map((group) => (
                 <div key={group.id} className="pv-camera-move__group">
-                    <span className="pv-camera-move__group-label">{group.label}</span>
-                    <div className="pv-world__presets" role="group" aria-label={group.label}>
+                    <span className="pv-camera-move__group-label">{interfaceText(group.label)}</span>
+                    <div className="pv-world__presets" role="group" aria-label={interfaceText(group.label)}>
                         {PREVIS_CAMERA_TECHNIQUES.filter((item) => item.group === group.id).map((item) => (
-                            <button key={item.id} type="button" aria-pressed={technique === item.id} title={item.hint} className={`pv-world__chip ${technique === item.id ? "is-active" : ""}`} onClick={() => selectTechnique(item.id)}>
-                                {item.label}
+                            <button key={item.id} type="button" aria-pressed={technique === item.id} title={interfaceText(item.hint)} className={`pv-world__chip ${technique === item.id ? "is-active" : ""}`} onClick={() => selectTechnique(item.id)}>
+                                {interfaceText(item.label)}
                             </button>
                         ))}
                     </div>
                 </div>
             ))}
-            <div className="previs-inspector-note">{info.hint}</div>
+            <div className="previs-inspector-note">{interfaceText(info.hint)}</div>
             {info.subject !== "none" ? subjectSelect(info.subject === "required" ? { label: "主体", placeholder: "选择跟随的人物或物体", clearable: false } : { label: "围绕", placeholder: "焦点（不指定主体）", clearable: true }) : null}
             {info.params.length ? (
                 <div className="pv-camera-move__params">
                     {info.params.map((spec) =>
                         spec.kind === "side" ? (
                             <label key={spec.key} className="pv-camera-move__param">
-                                <span>{spec.label}</span>
+                                <span>{interfaceText(spec.label)}</span>
                                 <Select
                                     size="small"
                                     value={params.side ?? "behind"}
                                     onChange={(side: PrevisCameraFollowSide) => setParams((current) => ({ ...current, side }))}
-                                    options={PREVIS_CAMERA_FOLLOW_SIDES.map((item) => ({ value: item.value, label: item.label }))}
+                                    options={PREVIS_CAMERA_FOLLOW_SIDES.map((item) => ({ value: item.value, label: interfaceText(item.label) }))}
                                     aria-label="跟拍方位"
                                 />
                             </label>
                         ) : spec.kind === "shotSize" ? (
                             <label key={spec.key} className="pv-camera-move__param">
-                                <span>{spec.label}</span>
+                                <span>{interfaceText(spec.label)}</span>
                                 <Select
                                     size="small"
                                     allowClear
                                     value={params.shotSize}
                                     placeholder="按方位默认距离"
                                     onChange={(shotSize: PrevisShotSize | undefined) => setParams((current) => ({ ...current, shotSize }))}
-                                    options={PREVIS_CAMERA_FOLLOW_SHOT_SIZES.map((item) => ({ value: item.value, label: item.label }))}
+                                    options={PREVIS_CAMERA_FOLLOW_SHOT_SIZES.map((item) => ({ value: item.value, label: interfaceText(item.label) }))}
                                     aria-label="跟拍景别"
                                 />
                             </label>
                         ) : (
                             <label key={spec.key} className="pv-camera-move__param">
                                 <span>
-                                    {spec.label}
+                                    {interfaceText(spec.label)}
                                     {spec.unit ? ` · ${spec.unit}` : ""}
                                 </span>
                                 <InputNumber
@@ -171,7 +172,7 @@ export function PrevisCameraMoveSection({
                                     value={params[spec.key] ?? null}
                                     placeholder={spec.defaultValue !== undefined ? String(spec.defaultValue) : (spec.autoHint ?? "自动")}
                                     onChange={(value) => setNumber(spec.key, value)}
-                                    aria-label={spec.label}
+                                    aria-label={interfaceText(spec.label)}
                                 />
                             </label>
                         ),
@@ -183,8 +184,8 @@ export function PrevisCameraMoveSection({
                     <span className="pv-camera-move__group-label">运动规律</span>
                     <div className="pv-world__presets" role="group" aria-label="运镜运动规律">
                         {PREVIS_PATH_EASINGS.map((item) => (
-                            <button key={item.value} type="button" title={item.hint} aria-pressed={easing === item.value} className={`pv-world__chip ${easing === item.value ? "is-active" : ""}`} onClick={() => setEasing(item.value)}>
-                                {item.label}
+                            <button key={item.value} type="button" title={interfaceText(item.hint)} aria-pressed={easing === item.value} className={`pv-world__chip ${easing === item.value ? "is-active" : ""}`} onClick={() => setEasing(item.value)}>
+                                {interfaceText(item.label)}
                             </button>
                         ))}
                     </div>

@@ -1,3 +1,4 @@
+import { interfaceText } from "@/i18n/interface-text";
 import { Building2, Camera, Clapperboard, Film, Globe2, Keyboard, Layers, ListTree, Map as MapIcon, Shapes, Trees, UserRound, Video, type LucideIcon } from "lucide-react";
 
 /**
@@ -41,20 +42,20 @@ export function PrevisWorldToolbar({ active, busy, onAction }: { active: Partial
     return (
         <nav className="pv-world-toolbar" aria-label="世界引擎工具" data-canvas-no-zoom>
             {GROUPS.map((group) => (
-                <div key={group.title} className="pv-world-toolbar__group" role="group" aria-label={group.title}>
-                    <span className="pv-world-toolbar__title">{group.title}</span>
+                <div key={group.title} className="pv-world-toolbar__group" role="group" aria-label={interfaceText(group.title)}>
+                    <span className="pv-world-toolbar__title">{interfaceText(group.title)}</span>
                     {group.items.map((item) => (
                         <button
                             key={item.action}
                             type="button"
                             className={`pv-world-toolbar__item ${active[item.action] ? "is-active" : ""}`}
                             aria-pressed={active[item.action] ? true : undefined}
-                            title={item.hint}
+                            title={interfaceText(item.hint)}
                             disabled={busy && (item.action === "clay" || item.action === "depth")}
                             onClick={() => onAction(item.action)}
                         >
                             <item.icon className="size-[18px]" aria-hidden />
-                            <span>{item.label}</span>
+                            <span>{interfaceText(item.label)}</span>
                         </button>
                     ))}
                 </div>

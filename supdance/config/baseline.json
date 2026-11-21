@@ -6,16 +6,16 @@
     "tag": "v1.8.7.1",
     "releaseTag": "v1.8.7.1",
     "releaseCommit": "882a1d1a50523fe992831e2b0da69f44b4469835",
-    "commit": "882a1d1a50523fe992831e2b0da69f44b4469835",
+    "commit": "5ca284ce98c2ab6daa3ec2c5536775aa91206e63",
     "schemaVersion": 109
   },
   "integrationRelease": {
     "schemaVersion": 112,
     "yingceSchemaVersion": 4,
-    "version": "v1.8.7.1-supdance.4",
-    "baseCommit": "0819fcee1b33c4970c110e1081997eca1eef863a",
-    "sourceBranch": "codex/upstream-20261120",
-    "deploymentEvidence": "docs/supdance/UPSTREAM_20261120.md"
+    "version": "v1.8.7.1-supdance.8",
+    "baseCommit": "832831ad935aec201d09a4a292c7a842ceb5c852",
+    "sourceBranch": "codex/world-engine-20261121",
+    "deploymentEvidence": "docs/supdance/UPSTREAM_WORLD_ENGINE.md"
   },
   "supdanceRelease": {
     "tag": "supdance/v2026.10.28.2",
@@ -23,6 +23,14 @@
     "baseCommit": "259e7e3fba0b6f70ac3cfd65941c3ca345d60249"
   },
   "coupledUpstreamFiles": [
+    "web/src/components/canvas/previs/canvas-previs-workbench.tsx",
+    "web/src/components/canvas/previs/previs-camera-move-section.tsx",
+    "web/src/components/canvas/previs/previs-canvas-dock.tsx",
+    "web/src/components/canvas/previs/previs-path-section.tsx",
+    "web/src/components/canvas/previs/previs-sequencer.tsx",
+    "web/src/components/canvas/previs/previs-travel-section.tsx",
+    "web/src/components/canvas/previs/previs-world-panel.tsx",
+    "web/src/components/canvas/previs/previs-world-toolbar.tsx",
     "web/src/components/layout/client-root-init.tsx",
     "web/src/pages/create/use-creation-conversation-route.ts",
     "web/src/services/api/plugins.ts",

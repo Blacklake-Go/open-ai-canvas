@@ -257,7 +257,7 @@ export function PrevisAddDialog({
                                                             className={`pv-world__chip ${arrayPattern === item.value ? "is-active" : ""}`}
                                                             onClick={() => setArrayPattern(item.value)}
                                                         >
-                                                            {item.label}
+                                                            {interfaceText(item.label)}
                                                         </button>
                                                     ))}
                                                 </div>
@@ -294,8 +294,8 @@ export function PrevisAddDialog({
                                         <OptionCard
                                             key={template.id}
                                             active={layoutTemplate.id === template.id}
-                                            title={template.name}
-                                            hint={template.hint}
+                                            title={interfaceText(template.name)}
+                                            hint={interfaceText(template.hint)}
                                             onClick={() => {
                                                 setLayoutTemplate(template);
                                                 setLayoutSize(template.defaultSize);

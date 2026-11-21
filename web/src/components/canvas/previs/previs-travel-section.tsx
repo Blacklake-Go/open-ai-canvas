@@ -1,3 +1,4 @@
+import { interfaceText } from "@/i18n/interface-text";
 import { Button, InputNumber, Select } from "antd";
 import { Route, Trash2 } from "lucide-react";
 import { useState } from "react";
@@ -43,7 +44,7 @@ export function PrevisTravelSection({ object, markers, playhead, shotDuration, o
                     <div className="pv-world__presets" role="group" aria-label="移动方式">
                         {PREVIS_TRAVEL_STYLES.map((item) => (
                             <button key={item.value} type="button" aria-pressed={style === item.value} className={`pv-world__chip ${style === item.value ? "is-active" : ""}`} onClick={() => setStyle(item.value)}>
-                                {item.label}
+                                {interfaceText(item.label)}
                             </button>
                         ))}
                     </div>
