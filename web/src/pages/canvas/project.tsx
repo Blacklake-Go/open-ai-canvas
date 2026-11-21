@@ -71,7 +71,6 @@ import { CanvasNodeAnglePanel } from "@/components/canvas/canvas-node-angle-dial
 import { CanvasNodeLightingPanel } from "@/components/canvas/canvas-node-lighting-dialog";
 import { CanvasNodeSearchModal } from "@/components/canvas/canvas-node-search-modal";
 import { CanvasStylePickerModal } from "@/components/canvas/canvas-style-picker-modal";
-import { CanvasPrevisTemplateModal } from "@/components/canvas/previs/canvas-previs-template-modal";
 import { CanvasFileDropOverlay } from "@/components/canvas/canvas-file-drop-overlay";
 import { CanvasUploadModal } from "@/components/canvas/canvas-upload-modal";
 import { CanvasPanoramaConfigModal } from "@/components/canvas/canvas-panorama-config-modal";
@@ -327,8 +326,6 @@ function CanvasViewportPage() {
     const [stylePickerOpen, setStylePickerOpen] = useState(false);
     // 姿势库：null 表示未打开，position 为右键菜单落点，缺省插到视口中心。
     const [poseLibraryRequest, setPoseLibraryRequest] = useState<{ position?: Position } | null>(null);
-    // 新建预演台镜头必须先选模板：null 表示未在选择中，undefined position 表示用画布中心。
-    const [previsTemplateRequest, setPrevisTemplateRequest] = useState<{ position?: Position } | null>(null);
     const [infoNodeId, setInfoNodeId] = useState<string | null>(null);
     const [subtitleNodeId, setSubtitleNodeId] = useState<string | null>(null);
     const [timelineNodeId, setTimelineNodeId] = useState<string | null>(null);
@@ -2696,7 +2693,7 @@ function CanvasViewportPage() {
             onAddWorkflow: () => createNode(CanvasNodeType.Config),
             onAddExtensionNode: (type) => createNode(type),
             onChooseStyle: () => setStylePickerOpen(true),
-            onOpenPrevis: () => setPrevisTemplateRequest({}),
+            onOpenPrevis: () => createPrevisShot("empty"),
             onUpload: () => handleUploadRequest(),
             onOpenMyAssets: () => openCanvasAssetLibrary(),
             onOpenProjectCharacters: () => openCharacterLibrary(),
@@ -3106,8 +3103,6 @@ function CanvasViewportPage() {
 
                             <CanvasStylePickerModal open={stylePickerOpen} value={activeStylePresetId} applying={styleApplying} onClose={() => setStylePickerOpen(false)} onSelect={selectCanvasStyle} />
 
-                            <CanvasPrevisTemplateModal open={Boolean(previsTemplateRequest)} onClose={() => setPrevisTemplateRequest(null)} onSelect={(templateId) => createPrevisShot(templateId, previsTemplateRequest?.position)} />
-
                             <div className="relative flex min-h-0 min-w-0 flex-1">
                                 <div className="relative min-w-0 flex-1 overflow-clip">
                                     <CanvasGestureRenderWindow containerRef={containerRef} viewport={viewport} size={size} query={queryGesturePreview} connections={displayConnections} filterConnections={filterSceneConnections}>
@@ -3264,7 +3259,7 @@ function CanvasViewportPage() {
                                             onAddDrawing={() => createNode(CanvasNodeType.Drawing)}
                                             onAddExtensionNode={(type) => createNode(type)}
                                             onAddWorkflow={() => createNode(CanvasNodeType.Config)}
-                                            onOpenPrevis={() => setPrevisTemplateRequest({})}
+                                            onOpenPrevis={() => createPrevisShot("empty")}
                                             onUndo={undoCanvas}
                                             onRedo={redoCanvas}
                                             onUpload={() => handleUploadRequest()}
@@ -3531,7 +3526,7 @@ function CanvasViewportPage() {
                                 onAddNode={(type, position) => createNode(type, position)}
                                 onAddFolder={createFolder}
                                 onChooseStyle={() => setStylePickerOpen(true)}
-                                onOpenPrevis={(position) => setPrevisTemplateRequest({ position })}
+                                onOpenPrevis={(position) => createPrevisShot("empty", position)}
                                 onUpload={(nodeId, position) => handleUploadRequest(nodeId, position)}
                                 onOpenAssets={openCanvasAssetLibrary}
                                 onOpenProjectCharacters={(position) => openCharacterLibrary(position)}
@@ -3846,7 +3841,7 @@ function CanvasViewportPage() {
                                 <Suspense
                                     fallback={
                                         <div className="fixed inset-0 z-[var(--z-toast)] grid place-items-center px-5" style={{ background: theme.canvas.background, color: theme.node.text }}>
-                                            <WorkspaceState icon="loading" title={interfaceText("正在加载 3D 预演台")} description={interfaceText("准备场景、镜头与空间控制。")} />
+                                            <WorkspaceState icon="loading" title={interfaceText("正在加载世界引擎")} description={interfaceText("准备场景、镜头与空间控制。")} />
                                         </div>
                                     }
                                 >
