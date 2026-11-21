@@ -25,6 +25,13 @@ type CanvasOperationsRequest struct {
 	Operations            []CanvasOperation       `json:"operations"`
 	EditProofs            []model.CanvasEditProof `json:"editProofs,omitempty"`
 	TrustedServerMutation bool                    `json:"-"`
+	// The external Supdance adapter binds the preview to a project, revision and deadline.
+	StrictWrite *StrictCanvasWrite `json:"-"`
+}
+
+type StrictCanvasWrite struct {
+	ProjectID string
+	ExpiresAt time.Time
 }
 
 var (
@@ -49,6 +56,12 @@ func CanvasOperationsDigest(req CanvasOperationsRequest) string {
 	// A committed mutation remains replayable after its transient lease expires.
 	req.EditProofs = nil
 	raw, _ := json.Marshal(req)
+	if req.StrictWrite != nil {
+		raw, _ = json.Marshal(struct {
+			Request json.RawMessage
+			Project string
+		}{Request: raw, Project: req.StrictWrite.ProjectID})
+	}
 	sum := sha256.Sum256(raw)
 	return hex.EncodeToString(sum[:])
 }

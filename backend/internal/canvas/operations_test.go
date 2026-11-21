@@ -59,6 +59,53 @@ func TestApplyCanvasOperationsReplaysSameMutationAndRejectsDifferentPayload(t *t
 	}
 }
 
+func TestSupdanceOpenAIStrictCanvasPreview(t *testing.T) {
+	svc := newCanvasOperationTestService(t)
+	if err := svc.repo.DB().AutoMigrate(&model.Project{}); err != nil {
+		t.Fatal(err)
+	}
+	project := &model.Project{ID: "review-project", UserID: "user", Name: "Review project", Status: model.ProjectStatusActive}
+	if err := svc.repo.Create(project); err != nil {
+		t.Fatal(err)
+	}
+	if err := svc.repo.Create(&model.CanvasProject{ID: "review-canvas", ProjectID: project.ID, UserID: "user",
+		PayloadJSON: `{"nodes":[],"connections":[]}`}); err != nil {
+		t.Fatal(err)
+	}
+	revision := int64(1)
+	request := CanvasOperationsRequest{
+		MutationID: "review-write", BaseRevision: &revision,
+		StrictWrite: &StrictCanvasWrite{ProjectID: project.ID, ExpiresAt: time.Now().Add(time.Minute)},
+		Operations:  []CanvasOperation{{Type: "create_node", Node: json.RawMessage(`{"id":"shot-1","type":"text","metadata":{"content":"Shot 1"}}`)}},
+	}
+	first, err := svc.ApplyUserCanvasOperations("user", "review-canvas", request)
+	if err != nil || first.Revision != 2 {
+		t.Fatalf("approved write = %#v, %v", first, err)
+	}
+	request.StrictWrite.ExpiresAt = time.Now().Add(-time.Minute)
+	replay, err := svc.ApplyUserCanvasOperations("user", "review-canvas", request)
+	if err != nil || replay.Revision != first.Revision {
+		t.Fatalf("expired retry of committed write = %#v, %v", replay, err)
+	}
+	request.MutationID = "another-write"
+	request.Operations[0].Node = json.RawMessage(`{"id":"shot-2","type":"text"}`)
+	for _, preview := range []struct {
+		revision  int64
+		expiresAt time.Time
+	}{
+		{first.Revision, time.Now().Add(-time.Minute)},
+		{revision, time.Now().Add(time.Minute)},
+	} {
+		request.BaseRevision = &preview.revision
+		request.StrictWrite.ExpiresAt = preview.expiresAt
+		_, err := svc.ApplyUserCanvasOperations("user", "review-canvas", request)
+		var appErr *kernel.AppError
+		if !errors.As(err, &appErr) || appErr.Status != http.StatusConflict {
+			t.Fatalf("stale new write = %v, want conflict", err)
+		}
+	}
+}
+
 func TestApplyCanvasOperationsCreatesOnlyExplicitCanvas(t *testing.T) {
 	svc := newCanvasOperationTestService(t)
 	request := CanvasOperationsRequest{MutationID: "create-canvas", Operations: []CanvasOperation{

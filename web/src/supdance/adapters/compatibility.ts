@@ -26,6 +26,22 @@ export type UpstreamPatchRecord = {
  */
 export const SUPDANCE_UPSTREAM_PATCH_REGISTRY: readonly UpstreamPatchRecord[] = [
     {
+        id: "supdance-openai-plugin-bridge",
+        upstreamBaseline: "v1.8.7.1@882a1d1a",
+        feature: "OpenAI 插件的账号授权、分镜追加与审核文本",
+        coupledUpstreamFiles: [
+            "backend/internal/app/task_creation.go",
+            "backend/internal/canvas/operations.go",
+            "backend/internal/canvas/operations_test.go",
+            "backend/internal/canvas/user_data.go",
+            "backend/internal/handler/api.go",
+            "docker-compose.deploy.yml",
+        ],
+        files: ["backend/internal/app/supdance_openai_bridge.go", "backend/internal/app/supdance_openai_review_text.go", "backend/internal/handler/supdance_openai_bridge.go", "docs/supdance/OPENAI_PLUGIN_BRIDGE.md"],
+        reason: "复用项目权限、画布版本控制和现有计费队列，避免为插件另建数据和账务路径。",
+        upgradeRisk: "MEDIUM",
+    },
+    {
         id: "supdance-upstream-20261120-preservation",
         upstreamBaseline: "v1.8.7.1@882a1d1a",
         feature: "集成团队空间与协议版本锁定，保留 SupDance 插件挂载、迁移账本和结算字段",
