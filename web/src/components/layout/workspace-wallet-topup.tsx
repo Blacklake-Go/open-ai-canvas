@@ -1,5 +1,5 @@
 import { Button, Skeleton } from "antd";
-import { Check, CircleAlert, Coins, FolderOpen, HardDrive } from "lucide-react";
+import { Check, CircleAlert, FolderOpen, Gem, HardDrive } from "lucide-react";
 import { useEffect, useRef, type ReactNode } from "react";
 import { Trans, useTranslation } from "react-i18next";
 
@@ -12,14 +12,15 @@ import { cn } from "@/lib/utils";
 import { formatPaymentAmount, type TopupProduct, type TopupProductKind } from "@/services/api/payments";
 import type { AccountFileStorageUsage } from "@/services/api/resources";
 import { storageGrantActive, type UserStorageGrant } from "@/services/api/storage-grants";
+import { paymentBrandKey, topupCreditPresentation } from "@/supdance/wallet-presentation";
 
 import "./workspace-wallet-topup.css";
 
 export type TopupCategory = "all" | TopupProductKind;
 
 /** 文案保存为 account.wallet.topup.kinds 下的键前缀，渲染时翻译。 */
-const KIND_META: Record<TopupProductKind, { key: string; icon: typeof Coins }> = {
-    credits: { key: "account.wallet.topup.kinds.credits", icon: Coins },
+const KIND_META: Record<TopupProductKind, { key: string; icon: typeof Gem }> = {
+    credits: { key: "account.wallet.topup.kinds.credits", icon: Gem },
     storage: { key: "account.wallet.topup.kinds.storage", icon: HardDrive },
 };
 
@@ -41,8 +42,10 @@ export function topupProductValue(product: TopupProduct) {
 }
 
 function ProductCard({ product, selected, onSelect }: { product: TopupProduct; selected: boolean; onSelect: () => void }) {
+    const { t } = useTranslation();
     const Icon = KIND_META[product.kind].icon;
     const availability = productAvailability(product);
+    const { name, bonusMicrocredits } = topupCreditPresentation(product);
     return (
         <button
             type="button"
@@ -56,10 +59,13 @@ function ProductCard({ product, selected, onSelect }: { product: TopupProduct; s
                 <span className="wallet-topup-kind-icon is-small" aria-hidden="true">
                     <Icon />
                 </span>
-                <span className="wallet-topup-card-name">{product.name}</span>
+                <span className="wallet-topup-card-name">{name}</span>
                 {selected ? <Check className="wallet-topup-card-check" aria-hidden="true" /> : null}
             </span>
-            <span className="wallet-topup-card-value">{topupProductValue(product)}</span>
+            <span className="wallet-topup-card-credits">
+                <span className="wallet-topup-card-value">{topupProductValue(product)}</span>
+                {bonusMicrocredits > 0 ? <span className="wallet-topup-card-bonus">{t("supdance-wallet:bonusIncluded", { amount: formatCredits(bonusMicrocredits) })}</span> : null}
+            </span>
             <span className="wallet-topup-card-foot">
                 <span className="wallet-topup-card-meta">
                     {product.kind === "storage" ? <span className="wallet-topup-chip">{formatStorageDuration(product.storageDurationDays)}</span> : null}
@@ -217,6 +223,7 @@ export function WalletTopupPanel({
     const kinds = (["credits", "storage"] as const).filter((kind) => byKind[kind].length || kind === "storage");
     const selectedKind = selectedProduct ? KIND_META[selectedProduct.kind] : null;
     const SelectedIcon = selectedKind?.icon;
+    const selectedProductName = selectedProduct && topupCreditPresentation(selectedProduct).name;
     const selectedOption = paymentOptions.find((option) => option.key === selectedOptionKey);
     const chargeFor = (option: PaymentOption) => (selectedProduct ? estimatePaymentCharge(selectedProduct.amountFen, selectedProduct.currency, option.settlementCurrency, usdCnyRate) : null);
     const selectedCharge = selectedOption ? chargeFor(selectedOption) : null;
@@ -242,7 +249,7 @@ export function WalletTopupPanel({
                                     <SelectedIcon />
                                 </span>
                                 <span>
-                                    <strong>{selectedProduct.name}</strong>
+                                    <strong>{selectedProductName}</strong>
                                     <small>
                                         {topupProductValue(selectedProduct)}
                                         {selectedProduct.kind === "storage" ? ` · ${formatStorageDuration(selectedProduct.storageDurationDays)}` : ""}
@@ -264,6 +271,7 @@ export function WalletTopupPanel({
                             {paymentOptions.map((option) => {
                                 // 渠道结算货币与商品不同且未配置汇率时无法换算，入口禁用并说明原因。
                                 const unavailable = Boolean(selectedProduct && !chargeFor(option));
+                                const brand = paymentBrandKey(option);
                                 return (
                                     <button
                                         key={option.key}
@@ -275,8 +283,10 @@ export function WalletTopupPanel({
                                         title={unavailable ? t("account.wallet.topup.currencyUnsupported", { settlement: option.settlementCurrency, currency: selectedProduct?.currency }) : option.name}
                                         onClick={() => onSelectOption(option.key)}
                                     >
-                                        <PaymentBrandIcon providerId={option.providerId} icon={option.icon} compact />
-                                        {option.name}
+                                        <span aria-hidden="true">
+                                            <PaymentBrandIcon providerId={option.providerId} icon={option.icon} compact />
+                                        </span>
+                                        {brand ? t(`supdance-wallet:brand.${brand}`) : option.name}
                                     </button>
                                 );
                             })}

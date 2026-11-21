@@ -5,6 +5,7 @@ import { useLocaleStore } from "@/stores/use-locale-store";
 import { NATIVE_CATALOGS, expandCatalog } from "./catalogs";
 import { CREATION_CATALOGS, CREATION_NAMESPACE } from "@/supdance/plugins/i18n/creation-catalogs";
 import { MODEL_CATALOGS, MODEL_NAMESPACE } from "@/supdance/plugins/i18n/model-catalogs";
+import { walletCheckoutCatalog, WALLET_CHECKOUT_NAMESPACE } from "@/supdance/plugins/i18n/locales/wallet-checkout";
 import { toI18nextTemplate } from "./interpolation";
 import { DEFAULT_LOCALE, SUPPORTED_LOCALES, type AppLocale } from "./locales";
 
@@ -17,6 +18,7 @@ function buildResources(): Resource {
                 translation: expandCatalog(NATIVE_CATALOGS[code]),
                 [MODEL_NAMESPACE]: { ...MODEL_CATALOGS[code] },
                 [CREATION_NAMESPACE]: Object.fromEntries(Object.entries(CREATION_CATALOGS[code]).map(([key, text]) => [key, toI18nextTemplate(text)])),
+                [WALLET_CHECKOUT_NAMESPACE]: expandCatalog(walletCheckoutCatalog(code)),
             },
         ]),
     );

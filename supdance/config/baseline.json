@@ -176,6 +176,7 @@
     "web/src/components/layout/workspace-sidebar-nav.tsx",
     "web/src/components/layout/workspace-top-bar.tsx",
     "web/src/components/layout/workspace-wallet-modal.tsx",
+    "web/src/components/layout/workspace-wallet-topup.css",
     "web/src/components/layout/workspace-wallet-topup.tsx",
     "web/src/components/model-logo.tsx",
     "web/src/components/model-picker.tsx",

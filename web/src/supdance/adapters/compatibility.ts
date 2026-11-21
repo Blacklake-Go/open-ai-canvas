@@ -870,6 +870,15 @@ export const SUPDANCE_UPSTREAM_PATCH_REGISTRY: readonly UpstreamPatchRecord[] = 
         upgradeRisk: "LOW",
     },
     {
+        id: "supdance-wallet-checkout-presentation",
+        upstreamBaseline: "v1.8.7.1@882a1d1a",
+        feature: "积分套餐赠送明细、积分图标和支付品牌简称",
+        reason: "复用上游充值入口、结算合同和主题令牌，品牌映射及积分显示规则留在 SupDance 扩展层。",
+        coupledUpstreamFiles: ["web/src/components/layout/workspace-wallet-modal.tsx", "web/src/components/layout/workspace-wallet-topup.tsx", "web/src/components/layout/workspace-wallet-topup.css", "web/src/i18n/index.ts"],
+        files: ["web/src/supdance/wallet-presentation.ts", "web/src/supdance/plugins/i18n/locales/wallet-checkout.ts", "web/test/payment-options.test.ts"],
+        upgradeRisk: "LOW",
+    },
+    {
         id: "supdance-i18n-plugin",
         upstreamBaseline: "v1.7.3",
         feature: "上游原生六语言与 SupDance 扩展词条：独立命名空间、共享语言菜单及后台词条编辑",
