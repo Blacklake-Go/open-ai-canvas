@@ -165,7 +165,7 @@ describe("三类轨道都有删除入口，概览轨保持只读", () => {
         expect(cameraCut).toContain("<TrackKeys duration={duration} keys={cameraKeys} />");
         expect(cameraCut).not.toContain("onDeleteKey");
 
-        const cameraRow = slice(sequencer, "{camera ? <SequencerRow label={camera.name}", "</SequencerRow> : null}");
+        const cameraRow = slice(sequencer, "label={camera.name}", "</SequencerRow>");
         expect(cameraRow).toContain("onDeleteKey={deleteTrackKey}");
     });
 
@@ -179,13 +179,15 @@ describe("三类轨道都有删除入口，概览轨保持只读", () => {
     });
 
     test("折叠状态下的对象汇总轨也可删除，否则收起后就删不掉", () => {
-        const summaryRow = slice(sequencer, "<SequencerRow label={object.name} icon={isExpanded", "</SequencerRow>");
+        const summaryRow = slice(sequencer, "label={object.name}", "</SequencerRow>");
+        expect(summaryRow).toContain("icon={isExpanded");
         expect(summaryRow).toContain("keys={[...transformKeys, ...boneTrackKeys]}");
         expect(summaryRow).toContain("onDeleteKey={deleteTrackKey}");
     });
 
     test("展开后的 Transform 子轨与骨骼子轨都可删除", () => {
-        const transformRow = slice(sequencer, 'label="Transform" icon="◇"', "</SequencerRow>");
+        const transformRow = slice(sequencer, 'label="Transform"', "</SequencerRow>");
+        expect(transformRow).toContain('icon="◇"');
         expect(transformRow).toContain("onDeleteKey={deleteTrackKey}");
         const boneRow = slice(sequencer, "label={interfaceText(previsBoneLabel(track.bone))}", "</SequencerRow>");
         expect(boneRow).toContain("onDeleteKey={deleteTrackKey}");
@@ -207,7 +209,7 @@ describe("三类轨道都有删除入口，概览轨保持只读", () => {
 
     test("切换摄影机或外部删帧后清除陈旧选择，顶部控件不能误改不可见轨道", () => {
         expect(sequencer).toContain("previsKeyframeTargetExists(selectedKey.target, camera, objects)");
-        expect(sequencer).toContain("setSelectedKey((current) => current?.target && !previsKeyframeTargetExists(current.target, camera, objects) ? null : current);");
+        expect(sequencer).toMatch(/setSelectedKey\(\(current\) => \(?current\?\.target && !previsKeyframeTargetExists\(current\.target, camera, objects\) \? null : current\)?\);/);
         expect(sequencer).toContain("camera?.id === target.cameraId && camera.keyframes.some");
         expect(sequencer).toContain("object.boneTracks?.some");
     });
