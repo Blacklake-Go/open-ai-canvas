@@ -1,7 +1,9 @@
 import { Component, lazy, Suspense, useEffect, useRef, useState, type ReactNode } from "react";
 import { Button, ConfigProvider, Tabs } from "antd";
-import { ArrowDown, ArrowRight, ArrowUpRight, Code2, Menu, Pause, Play, X } from "lucide-react";
+import { ArrowDown, ArrowRight, ArrowUpRight, Menu, Pause, Play, X } from "lucide-react";
 import { useTranslation } from "react-i18next";
+
+import projectLicense from "../../../../LICENSE?url&no-inline";
 
 import { BrandLogo } from "@/components/brand/brand-logo";
 import { SitePolicyLinks } from "@/components/layout/site-compliance-footer";
@@ -9,7 +11,6 @@ import { IconButton } from "@/components/ui/base/buttons";
 import { getAntThemeConfig } from "@/lib/app-theme";
 import { useAppearanceStore } from "@/stores/use-appearance-store";
 
-import { WelcomeContributorsCard } from "./contributors-card";
 import { chapters, getWelcomeLook, showcases, welcomeLooks, type WelcomeLook } from "./story";
 // 欢迎页是独立入口、不加载 globals.css；按钮 token 单独引入，antd 主题里的 var(--button-*) 才能解析。
 import "@/styles/button-tokens.css";
@@ -17,7 +18,6 @@ import "./welcome.css";
 import { Select } from "@/components/ui/base/select";
 
 const StoryReel = lazy(() => import("./story-reel"));
-const github = "https://github.com/ddcat-ai/open-ai-canvas";
 
 export default function WelcomePage() {
     const [look, setLook] = useState(getWelcomeLook);
@@ -116,13 +116,6 @@ function WelcomeExperience({ look, brandName, onLookChange }: { look: WelcomeLoo
                 <nav className={menu ? "welcome-nav is-open" : "welcome-nav"} aria-label={t("account.welcome.nav")}>
                     <a href="#workbench" onClick={() => setMenu(false)}>
                         {t("account.welcome.navWorkbench")}
-                    </a>
-                    <a href="#contributors" onClick={() => setMenu(false)}>
-                        {t("account.welcome.navContributors")}
-                    </a>
-                    <a href={github} target="_blank" rel="noreferrer">
-                        GitHub
-                        <ArrowUpRight size={13} />
                     </a>
                 </nav>
                 <Button className="welcome-header-cta" type="primary" href="/create" icon={<ArrowUpRight size={16} />} iconPlacement="end">
@@ -246,7 +239,6 @@ function WelcomeExperience({ look, brandName, onLookChange }: { look: WelcomeLoo
                         <br />
                         {t("account.welcome.endingLine2")}
                     </h2>
-                    <WelcomeContributorsCard />
                 </section>
             </main>
             <footer className="welcome-footer">
@@ -255,7 +247,7 @@ function WelcomeExperience({ look, brandName, onLookChange }: { look: WelcomeLoo
                 <nav className="welcome-policy-links" aria-label={t("account.layout.footer.label")}>
                     <SitePolicyLinks />
                 </nav>
-                <a href={`${github}/blob/main/LICENSE`} target="_blank" rel="noreferrer">
+                <a href={projectLicense} download="LICENSE.txt">
                     Open Source · MIT License
                     <ArrowUpRight size={12} />
                 </a>

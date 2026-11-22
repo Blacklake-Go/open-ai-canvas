@@ -26,6 +26,15 @@ export type UpstreamPatchRecord = {
  */
 export const SUPDANCE_UPSTREAM_PATCH_REGISTRY: readonly UpstreamPatchRecord[] = [
     {
+        id: "supdance-maintainer-metadata",
+        upstreamBaseline: "v1.8.7.1@5ca284ce",
+        feature: "站点维护者信息与许可证入口",
+        coupledUpstreamFiles: ["web/src/components/channel-headers-editor.tsx", "web/src/pages/welcome/index.tsx", "web/src/pages/welcome/welcome.css"],
+        files: ["LICENSE", "NOTICE", "SECURITY.md"],
+        reason: "用站点维护方联系信息替换上游联系方式，停止从 README 向浏览器分发贡献者资料，并提供原始许可证下载。",
+        upgradeRisk: "LOW",
+    },
+    {
         id: "supdance-world-engine",
         upstreamBaseline: "v1.8.7.1@5ca284ce",
         feature: "世界引擎场景、运镜、输出与八语界面",

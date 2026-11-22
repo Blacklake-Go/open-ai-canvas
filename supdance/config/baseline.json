@@ -23,6 +23,7 @@
     "baseCommit": "259e7e3fba0b6f70ac3cfd65941c3ca345d60249"
   },
   "coupledUpstreamFiles": [
+    "web/src/components/channel-headers-editor.tsx",
     "web/src/components/canvas/canvas-create-menu.tsx",
     "web/src/lib/canvas/canvas-video-merge-args.ts",
     "web/src/components/canvas/previs/canvas-previs-workbench.tsx",
