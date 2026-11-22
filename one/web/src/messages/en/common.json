@@ -1,4 +1,24 @@
 {
+  "workshopProjects": {
+    "heading": "My projects",
+    "signIn": "Sign in to open projects",
+    "create": "New project",
+    "loading": "Loading projects…",
+    "empty": "You haven’t created a project yet.",
+    "previous": "Previous page",
+    "next": "Next page",
+    "close": "Close editor",
+    "title": "Project title",
+    "story": "Story draft",
+    "save": "Save project",
+    "saved": "Project saved.",
+    "discard": "Discard unsaved edits?",
+    "invalid": "Enter a title up to 160 characters and a story up to 20,000 characters.",
+    "missing": "This project is unavailable.",
+    "conflict": "A newer version was saved. Copy your draft before reopening the project.",
+    "failed": "The request failed. Please try again.",
+    "retry": "Retry"
+  },
   "tabs": {
     "image": "Image Studio",
     "headshot": "AI Headshot",

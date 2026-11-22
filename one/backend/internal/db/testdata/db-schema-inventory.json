@@ -1,0 +1,2069 @@
+{
+  "generatedFrom": "/Users/seelucency/Documents/dev/Supdance Pro",
+  "summary": {
+    "databaseEngine": "PostgreSQL (4-Schema Native)",
+    "searchPath": "ai_studio, ops_bill, auth_usr, sys_core, public",
+    "migrationsCount": 99,
+    "duplicatePrefixCount": 11,
+    "duplicatePrefixes": {
+      "003": 2,
+      "022": 2,
+      "023": 2,
+      "024": 3,
+      "031": 2,
+      "035": 2,
+      "043": 2,
+      "046": 2,
+      "071": 2,
+      "073": 2,
+      "074": 2
+    },
+    "migrationSortOrder": "JS Array.prototype.sort((a, b) => a.localeCompare(b, 'en'))",
+    "ledgerTable": "sys_core.schema_migrations",
+    "schemas": [
+      "sys_core",
+      "auth_usr",
+      "ops_bill",
+      "ai_studio"
+    ],
+    "tablesCount": 95,
+    "tablesBySchema": {
+      "sys_core": 10,
+      "auth_usr": 9,
+      "ai_studio": 43,
+      "ops_bill": 33
+    },
+    "redisInBaseline": false,
+    "rateLimiterInBaseline": "PostgreSQL sys_core.rate_limit_buckets",
+    "realtimeInBaseline": "InMemoryRealtimeEmitter (lib/ai/queue/realtimeEmitter.ts)"
+  },
+  "idFormats": {
+    "userId": {
+      "table": "auth_usr.users",
+      "ledgerTable": "auth_usr.user_id_allocations",
+      "pattern": "^[1-9][0-9]{5,63}$",
+      "minDigits": 6,
+      "maxDigits": 64,
+      "secondaryUuidColumn": "auth_usr.users.uuid (UUID DEFAULT gen_random_uuid())"
+    },
+    "prefixedHex24": {
+      "generator": "randomId(prefix) => `${prefix}_${12bytes.hex}`",
+      "examples": [
+        "order_<24hex>",
+        "gen_<24hex>",
+        "sub_<24hex>",
+        "wh_<24hex>",
+        "pay_<24hex>",
+        "fb_<24hex>",
+        "otp_<24hex>",
+        "acc_em_<24hex>"
+      ]
+    },
+    "doublePrefixedIdHex24": {
+      "generator": "`${prefix}_${randomId()}` => `${prefix}_id_${12bytes.hex}`",
+      "examples": [
+        "quote_id_<24hex>",
+        "att_id_<24hex>",
+        "cje_id_<24hex>",
+        "tx_tip_id_<24hex>",
+        "rdl_id_<24hex>",
+        "pcr_id_<24hex>",
+        "pm_id_<24hex>"
+      ]
+    },
+    "uuidV4": [
+      "ai_studio.pricing_strategy",
+      "ops_bill.seo_push_logs",
+      "ai_studio.canvas_project_shares"
+    ],
+    "bigserial": [
+      "ops_bill.banner_events"
+    ]
+  },
+  "migrations": [
+    {
+      "order": 1,
+      "fileName": "001_admin_v1.sql",
+      "version": "001_admin_v1",
+      "prefix": "001",
+      "isDuplicatePrefix": false,
+      "sha256Checksum": "6f6e5ff8c0207a37a10810d7a892597014962cf87a99f18e2aebf12c7b964058",
+      "statementsCount": 41,
+      "tablesCreated": [
+        "sys_core.schema_migrations",
+        "auth_usr.users",
+        "auth_usr.sessions",
+        "auth_usr.oauth_accounts",
+        "auth_usr.auth_accounts",
+        "sys_core.auth_verification_codes",
+        "ai_studio.models_config",
+        "ai_studio.creations",
+        "ops_bill.subscriptions",
+        "ops_bill.orders",
+        "ops_bill.webhook_events",
+        "ops_bill.credit_ledger",
+        "ops_bill.plans_config",
+        "ops_bill.admin_audit_logs",
+        "ops_bill.admin_notes",
+        "ops_bill.moderation_cases",
+        "ops_bill.provider_configs",
+        "ops_bill.provider_secrets",
+        "ops_bill.provider_health_checks",
+        "ops_bill.system_settings",
+        "ops_bill.idempotency_keys"
+      ]
+    },
+    {
+      "order": 2,
+      "fileName": "002_admin_v2.sql",
+      "version": "002_admin_v2",
+      "prefix": "002",
+      "isDuplicatePrefix": false,
+      "sha256Checksum": "9645079ec6ce5bd02b6c247b32006994edd01efff1ef6d6615438458571eeb7e",
+      "statementsCount": 2,
+      "tablesCreated": []
+    },
+    {
+      "order": 3,
+      "fileName": "003_coupons.sql",
+      "version": "003_coupons",
+      "prefix": "003",
+      "isDuplicatePrefix": true,
+      "sha256Checksum": "a37eb909093334c28001e71e0aa2a99bd0cec36a7e520b834e809c9309e9445b",
+      "statementsCount": 3,
+      "tablesCreated": [
+        "ops_bill.coupons",
+        "ops_bill.coupon_redemptions"
+      ]
+    },
+    {
+      "order": 4,
+      "fileName": "003_pg_user_system.sql",
+      "version": "003_pg_user_system",
+      "prefix": "003",
+      "isDuplicatePrefix": true,
+      "sha256Checksum": "f54e3363b7f55cf7c4b98591711e49855dd34f0d5d8cef329e182593c9d7bc0c",
+      "statementsCount": 9,
+      "tablesCreated": [
+        "auth_usr.auth_accounts",
+        "ops_bill.tags",
+        "ops_bill.user_tags"
+      ]
+    },
+    {
+      "order": 5,
+      "fileName": "004_financial_currency_and_credits.sql",
+      "version": "004_financial_currency_and_credits",
+      "prefix": "004",
+      "isDuplicatePrefix": false,
+      "sha256Checksum": "a2f2077a2ffce4843cdca40f2137de8c725970f493133815a9ceac05afb348fe",
+      "statementsCount": 10,
+      "tablesCreated": [
+        "ops_bill.currency_wallets",
+        "ops_bill.currency_journal_entries",
+        "ops_bill.currency_transfers",
+        "ops_bill.credit_wallets",
+        "ops_bill.credit_reservations",
+        "ops_bill.credit_ledger_v2"
+      ]
+    },
+    {
+      "order": 6,
+      "fileName": "005_seed_defaults.sql",
+      "version": "005_seed_defaults",
+      "prefix": "005",
+      "isDuplicatePrefix": false,
+      "sha256Checksum": "b083b8c4d1422bc2b1e47bd4133307311cd684edccf16bee89445508988e28b9",
+      "statementsCount": 5,
+      "tablesCreated": []
+    },
+    {
+      "order": 7,
+      "fileName": "006_community_and_social.sql",
+      "version": "006_community_and_social",
+      "prefix": "006",
+      "isDuplicatePrefix": false,
+      "sha256Checksum": "209632eb08b17a01f54dcff8b696a0cf70adee28cb74df3a07093aa8967bf642",
+      "statementsCount": 13,
+      "tablesCreated": [
+        "ai_studio.community_posts",
+        "ai_studio.community_likes",
+        "ai_studio.community_comments"
+      ]
+    },
+    {
+      "order": 8,
+      "fileName": "007_generation_core.sql",
+      "version": "007_generation_core",
+      "prefix": "007",
+      "isDuplicatePrefix": false,
+      "sha256Checksum": "c1b94a5034fbcbbcd2fa4e362e52c145f2342108b34e264828248ff8e6f27aea",
+      "statementsCount": 25,
+      "tablesCreated": [
+        "ai_studio.generation_events",
+        "sys_core.auth_events",
+        "sys_core.admin_roles",
+        "sys_core.admin_bootstrap_claims"
+      ]
+    },
+    {
+      "order": 9,
+      "fileName": "008_admin_operations.sql",
+      "version": "008_admin_operations",
+      "prefix": "008",
+      "isDuplicatePrefix": false,
+      "sha256Checksum": "693ff8819cf3dab249457124c17c5bf2a9843788f33216798e93d51f61bc607c",
+      "statementsCount": 3,
+      "tablesCreated": [
+        "sys_core.admin_export_jobs"
+      ]
+    },
+    {
+      "order": 10,
+      "fileName": "009_payment_provider_v2.sql",
+      "version": "009_payment_provider_v2",
+      "prefix": "009",
+      "isDuplicatePrefix": false,
+      "sha256Checksum": "0c121e0e7c948ae13c8faa5f7dc06544734c8e26169846b8ea73dbf358184c87",
+      "statementsCount": 12,
+      "tablesCreated": [
+        "ops_bill.payment_ledger",
+        "ops_bill.payment_attempts",
+        "ops_bill.provider_call_logs"
+      ]
+    },
+    {
+      "order": 11,
+      "fileName": "010_security_baseline.sql",
+      "version": "010_security_baseline",
+      "prefix": "010",
+      "isDuplicatePrefix": false,
+      "sha256Checksum": "cb5d28ac55bc5bf58c2f08b5f9fabd6376c4a3d96c6883a99da17b367fe57253",
+      "statementsCount": 2,
+      "tablesCreated": [
+        "sys_core.rate_limit_buckets"
+      ]
+    },
+    {
+      "order": 12,
+      "fileName": "011_model_catalog.sql",
+      "version": "011_model_catalog",
+      "prefix": "011",
+      "isDuplicatePrefix": false,
+      "sha256Checksum": "5ec06e85162554ba45dd806c1e8eaba3862492f5559521e5600c6b4083cc6de0",
+      "statementsCount": 2,
+      "tablesCreated": []
+    },
+    {
+      "order": 13,
+      "fileName": "012_payment_credit_refunds.sql",
+      "version": "012_payment_credit_refunds",
+      "prefix": "012",
+      "isDuplicatePrefix": false,
+      "sha256Checksum": "7b7d28e5f672fcd2616439af1fdf2dc5df884baf354486b182548213c4200f2b",
+      "statementsCount": 2,
+      "tablesCreated": [
+        "ops_bill.credit_refund_obligations"
+      ]
+    },
+    {
+      "order": 14,
+      "fileName": "013_payment_success_uniqueness.sql",
+      "version": "013_payment_success_uniqueness",
+      "prefix": "013",
+      "isDuplicatePrefix": false,
+      "sha256Checksum": "001209a51f2d08f9c4e9f04799836364aae6a91cb02c16885e311a49d94cc91e",
+      "statementsCount": 2,
+      "tablesCreated": []
+    },
+    {
+      "order": 15,
+      "fileName": "014_content_management.sql",
+      "version": "014_content_management",
+      "prefix": "014",
+      "isDuplicatePrefix": false,
+      "sha256Checksum": "7a4e9063b6778cdf1cccad86688b4ab616a2f709ba4406ecf1c8434436313435",
+      "statementsCount": 6,
+      "tablesCreated": [
+        "ops_bill.banner_events"
+      ]
+    },
+    {
+      "order": 16,
+      "fileName": "015_banner_history.sql",
+      "version": "015_banner_history",
+      "prefix": "015",
+      "isDuplicatePrefix": false,
+      "sha256Checksum": "9409474b8cbf86c0c31f00781a57f7de6b5a6bc06e7f95b9a4d0ee63983aae15",
+      "statementsCount": 4,
+      "tablesCreated": [
+        "ops_bill.banner_history"
+      ]
+    },
+    {
+      "order": 17,
+      "fileName": "016_user_number_and_activity_tracking.sql",
+      "version": "016_user_number_and_activity_tracking",
+      "prefix": "016",
+      "isDuplicatePrefix": false,
+      "sha256Checksum": "dc0ba1e57326414281716c1922c27190e5548c81f8cc51420e00c7e304ca2e20",
+      "statementsCount": 11,
+      "tablesCreated": [
+        "sys_core.user_activity_logs",
+        "ai_studio.user_follows"
+      ]
+    },
+    {
+      "order": 18,
+      "fileName": "017_user_notifications.sql",
+      "version": "017_user_notifications",
+      "prefix": "017",
+      "isDuplicatePrefix": false,
+      "sha256Checksum": "2b22010a836f38a0353edc938ecd7629775e19ea5c27b07095f32473b75e7d81",
+      "statementsCount": 3,
+      "tablesCreated": [
+        "sys_core.user_notifications"
+      ]
+    },
+    {
+      "order": 19,
+      "fileName": "018_user_asset_library.sql",
+      "version": "018_user_asset_library",
+      "prefix": "018",
+      "isDuplicatePrefix": false,
+      "sha256Checksum": "5f9d270c4fd492136724072a6d99c5df111bc3cd49ffb9f582d197cd965d9114",
+      "statementsCount": 9,
+      "tablesCreated": [
+        "ai_studio.asset_folders",
+        "ai_studio.user_assets"
+      ]
+    },
+    {
+      "order": 20,
+      "fileName": "019_unified_ai_routing_and_pricing.sql",
+      "version": "019_unified_ai_routing_and_pricing",
+      "prefix": "019",
+      "isDuplicatePrefix": false,
+      "sha256Checksum": "0f2843c1b1074bbce090ad8e3fb83ab97911736ec7d1444ae2621280cdb3e2f4",
+      "statementsCount": 29,
+      "tablesCreated": [
+        "ai_studio.ai_providers",
+        "ai_studio.ai_models",
+        "ai_studio.provider_models",
+        "ai_studio.model_pricing",
+        "ai_studio.routing_policies",
+        "ai_studio.generation_quotes",
+        "ai_studio.generation_attempts",
+        "ai_studio.route_decision_logs",
+        "ai_studio.provider_cost_records"
+      ]
+    },
+    {
+      "order": 21,
+      "fileName": "020_subscription_billing_cycle_hardening.sql",
+      "version": "020_subscription_billing_cycle_hardening",
+      "prefix": "020",
+      "isDuplicatePrefix": false,
+      "sha256Checksum": "c7130e4da6fc44ec4053f9db395a05339f2304e8484001206257e2e080ac1bd4",
+      "statementsCount": 4,
+      "tablesCreated": []
+    },
+    {
+      "order": 22,
+      "fileName": "021_user_onboarding_and_profile_tags.sql",
+      "version": "021_user_onboarding_and_profile_tags",
+      "prefix": "021",
+      "isDuplicatePrefix": false,
+      "sha256Checksum": "b113e888e8b503d63277544ca450146efb63fb5b1610fd228552e4391b4cd70e",
+      "statementsCount": 4,
+      "tablesCreated": []
+    },
+    {
+      "order": 23,
+      "fileName": "022_login_lookup_integrity.sql",
+      "version": "022_login_lookup_integrity",
+      "prefix": "022",
+      "isDuplicatePrefix": true,
+      "sha256Checksum": "00a65ec46acd9b9fd4be14a24c4bde6d50725b996f2b9bd53431f90c785a9306",
+      "statementsCount": 7,
+      "tablesCreated": []
+    },
+    {
+      "order": 24,
+      "fileName": "022_pricing_policy_v2.sql",
+      "version": "022_pricing_policy_v2",
+      "prefix": "022",
+      "isDuplicatePrefix": true,
+      "sha256Checksum": "ca2f402faf7d0dbf31ae567251837da68a38046883945a3494b5f2591fba7273",
+      "statementsCount": 4,
+      "tablesCreated": []
+    },
+    {
+      "order": 25,
+      "fileName": "023_ark_image_gateway.sql",
+      "version": "023_ark_image_gateway",
+      "prefix": "023",
+      "isDuplicatePrefix": true,
+      "sha256Checksum": "93519c466c7199f2da10a9e28d9cebf8a22e11c12ccab853bdc33d3339bb13bb",
+      "statementsCount": 3,
+      "tablesCreated": []
+    },
+    {
+      "order": 26,
+      "fileName": "023_unified_storage_assets.sql",
+      "version": "023_unified_storage_assets",
+      "prefix": "023",
+      "isDuplicatePrefix": true,
+      "sha256Checksum": "d5a941bf15c425ed77b8bc79e767a5327d2cd7fa5570b041260be5612afb997d",
+      "statementsCount": 23,
+      "tablesCreated": [
+        "ai_studio.storage_operation_logs"
+      ]
+    },
+    {
+      "order": 27,
+      "fileName": "024_coin_reward_catalog.sql",
+      "version": "024_coin_reward_catalog",
+      "prefix": "024",
+      "isDuplicatePrefix": true,
+      "sha256Checksum": "247bcfa1214a1952fa08a711c251e0279cf47de9f925d578c175a77d27be938f",
+      "statementsCount": 6,
+      "tablesCreated": [
+        "ai_studio.coin_reward_items",
+        "ai_studio.user_coin_rewards"
+      ]
+    },
+    {
+      "order": 28,
+      "fileName": "024_retire_external_banner_promo.sql",
+      "version": "024_retire_external_banner_promo",
+      "prefix": "024",
+      "isDuplicatePrefix": true,
+      "sha256Checksum": "8a76a884e91ccb8a201b0a65e906cc771e5a1ba97819d731f89101d0a95c1a34",
+      "statementsCount": 1,
+      "tablesCreated": []
+    },
+    {
+      "order": 29,
+      "fileName": "024_storage_variant_keys.sql",
+      "version": "024_storage_variant_keys",
+      "prefix": "024",
+      "isDuplicatePrefix": true,
+      "sha256Checksum": "ac224636164a57c19cd302640f9c1e5b95549feed25e33182ddbc492cd102ac2",
+      "statementsCount": 4,
+      "tablesCreated": []
+    },
+    {
+      "order": 30,
+      "fileName": "025_resumable_provider_polling.sql",
+      "version": "025_resumable_provider_polling",
+      "prefix": "025",
+      "isDuplicatePrefix": false,
+      "sha256Checksum": "76b71f26d2edc45e298c0102cee5a3957f4530aa973201b11b2c700e9e74d0cf",
+      "statementsCount": 2,
+      "tablesCreated": []
+    },
+    {
+      "order": 31,
+      "fileName": "026_user_profile_onboarding_v2.sql",
+      "version": "026_user_profile_onboarding_v2",
+      "prefix": "026",
+      "isDuplicatePrefix": false,
+      "sha256Checksum": "3a44f5e9f38b8a259e8d044a2bc0aac06e93ab322da76d52db189a1d69a970b0",
+      "statementsCount": 8,
+      "tablesCreated": []
+    },
+    {
+      "order": 32,
+      "fileName": "027_sms_auth.sql",
+      "version": "027_sms_auth",
+      "prefix": "027",
+      "isDuplicatePrefix": false,
+      "sha256Checksum": "2a8ae91c8ee9e0b73e6e522e93b7366017e854200b8f60288f587ae50009f701",
+      "statementsCount": 8,
+      "tablesCreated": [
+        "auth_usr.otp_challenges",
+        "auth_usr.sms_delivery_logs"
+      ]
+    },
+    {
+      "order": 33,
+      "fileName": "028_commercial_plan_catalog_and_postgres_types.sql",
+      "version": "028_commercial_plan_catalog_and_postgres_types",
+      "prefix": "028",
+      "isDuplicatePrefix": false,
+      "sha256Checksum": "b53e569ec1c0ab263844b162deaa98b246cafaf604d13e8c0dc41e35599f3df1",
+      "statementsCount": 8,
+      "tablesCreated": []
+    },
+    {
+      "order": 34,
+      "fileName": "029_email_send_logs.sql",
+      "version": "029_email_send_logs",
+      "prefix": "029",
+      "isDuplicatePrefix": false,
+      "sha256Checksum": "fa7bdce845b01bd9ea4132604f40ba8fbb230a09b6b147cc54a841198867551f",
+      "statementsCount": 5,
+      "tablesCreated": [
+        "auth_usr.email_send_logs"
+      ]
+    },
+    {
+      "order": 35,
+      "fileName": "030_feedback_reports.sql",
+      "version": "030_feedback_reports",
+      "prefix": "030",
+      "isDuplicatePrefix": false,
+      "sha256Checksum": "12bb56a92dea4286bec2cccddbc97ae3ee513b14d59681b339d4eabe53307227",
+      "statementsCount": 4,
+      "tablesCreated": [
+        "ops_bill.feedback_reports"
+      ]
+    },
+    {
+      "order": 36,
+      "fileName": "031_coin_benefit_entitlements.sql",
+      "version": "031_coin_benefit_entitlements",
+      "prefix": "031",
+      "isDuplicatePrefix": true,
+      "sha256Checksum": "d8109095ef23d7f9592eb3946f2b5a83d3ded62654f53e72dfffbcbf17a0220d",
+      "statementsCount": 2,
+      "tablesCreated": []
+    },
+    {
+      "order": 37,
+      "fileName": "031_zz_byteplus_model_catalog_prerequisite.sql",
+      "version": "031_zz_byteplus_model_catalog_prerequisite",
+      "prefix": "031",
+      "isDuplicatePrefix": true,
+      "sha256Checksum": "3f9a0fb5acfdaaed5d432ec8c21ebdd26c1b7f22cc49bd61a57c2501782b55b6",
+      "statementsCount": 1,
+      "tablesCreated": []
+    },
+    {
+      "order": 38,
+      "fileName": "032_byteplus_modelark_gateway.sql",
+      "version": "032_byteplus_modelark_gateway",
+      "prefix": "032",
+      "isDuplicatePrefix": false,
+      "sha256Checksum": "8d88f44d0b51ea8703e0771ab0ae4e334905893a6367182ad68ace6c54723143",
+      "statementsCount": 2,
+      "tablesCreated": []
+    },
+    {
+      "order": 39,
+      "fileName": "033_runninghub_gateway.sql",
+      "version": "033_runninghub_gateway",
+      "prefix": "033",
+      "isDuplicatePrefix": false,
+      "sha256Checksum": "41335e61befb1866d078c93ceb8f4a92cbe97662fb9ee486ffae0c266236450e",
+      "statementsCount": 3,
+      "tablesCreated": []
+    },
+    {
+      "order": 40,
+      "fileName": "034_pricing_policy_v2.sql",
+      "version": "034_pricing_policy_v2",
+      "prefix": "034",
+      "isDuplicatePrefix": false,
+      "sha256Checksum": "8225dac0261210b8b93aadb86592812bd916e8c9c8c1a7ee72c1dfe04f3f6ba2",
+      "statementsCount": 3,
+      "tablesCreated": []
+    },
+    {
+      "order": 41,
+      "fileName": "035_coin_reward_catalog.sql",
+      "version": "035_coin_reward_catalog",
+      "prefix": "035",
+      "isDuplicatePrefix": true,
+      "sha256Checksum": "323de4a1c572a438113477f88c351751129a0b2067d69c3e1783d2b0a1bdda9b",
+      "statementsCount": 6,
+      "tablesCreated": [
+        "ai_studio.coin_reward_items",
+        "ai_studio.user_coin_rewards"
+      ]
+    },
+    {
+      "order": 42,
+      "fileName": "035_zz_admin_notes_legacy_shape_compat.sql",
+      "version": "035_zz_admin_notes_legacy_shape_compat",
+      "prefix": "035",
+      "isDuplicatePrefix": true,
+      "sha256Checksum": "9f212370c3e6ddade2d55131a559ea7e0532ac31e533529d1ee51163229466b6",
+      "statementsCount": 1,
+      "tablesCreated": []
+    },
+    {
+      "order": 43,
+      "fileName": "036_admin_notes_target_shape.sql",
+      "version": "036_admin_notes_target_shape",
+      "prefix": "036",
+      "isDuplicatePrefix": false,
+      "sha256Checksum": "d7142ed277cb434464f51fbd337a3ed43affb6ee6cdfc09cf944323897895834",
+      "statementsCount": 6,
+      "tablesCreated": []
+    },
+    {
+      "order": 44,
+      "fileName": "037_user_id_root_and_allocator.sql",
+      "version": "037_user_id_root_and_allocator",
+      "prefix": "037",
+      "isDuplicatePrefix": false,
+      "sha256Checksum": "bbb7752adfe4b175ddbbab97b050121faf18db313af3d4c42afa7c9b9f329904",
+      "statementsCount": 10,
+      "tablesCreated": [
+        "auth_usr.user_id_allocations"
+      ]
+    },
+    {
+      "order": 45,
+      "fileName": "038_email_recovery_code_hash.sql",
+      "version": "038_email_recovery_code_hash",
+      "prefix": "038",
+      "isDuplicatePrefix": false,
+      "sha256Checksum": "909f9d304bfb3abc0c862d49e0e10d8e6a9687e9bd7627434b6103f6db818b5e",
+      "statementsCount": 1,
+      "tablesCreated": []
+    },
+    {
+      "order": 46,
+      "fileName": "039_user_number_compat_projection.sql",
+      "version": "039_user_number_compat_projection",
+      "prefix": "039",
+      "isDuplicatePrefix": false,
+      "sha256Checksum": "56792f1cc0ef993a36f36e935eba365feaf41a90244f815d758dbf6affc3e472",
+      "statementsCount": 1,
+      "tablesCreated": []
+    },
+    {
+      "order": 47,
+      "fileName": "040_model_pricing_routing_control_tower.sql",
+      "version": "040_model_pricing_routing_control_tower",
+      "prefix": "040",
+      "isDuplicatePrefix": false,
+      "sha256Checksum": "6e70a36cc822f54b3b33d44f23f1aa4780cb9518e61b219b45c26accdb1a0d05",
+      "statementsCount": 45,
+      "tablesCreated": [
+        "ai_studio.model_site_price_versions",
+        "ai_studio.exchange_rate_snapshots",
+        "ai_studio.provider_model_price_versions",
+        "ai_studio.channel_sync_runs",
+        "ai_studio.provider_catalog_entries",
+        "ai_studio.model_price_import_batches",
+        "ai_studio.generation_cost_reconciliations"
+      ]
+    },
+    {
+      "order": 48,
+      "fileName": "041_worker_heartbeat.sql",
+      "version": "041_worker_heartbeat",
+      "prefix": "041",
+      "isDuplicatePrefix": false,
+      "sha256Checksum": "b4fc0c94aa09ee604f302ab12f9cf2ec4dfbcc114f6aa20da57adda2360790e7",
+      "statementsCount": 2,
+      "tablesCreated": [
+        "sys_core.worker_heartbeats"
+      ]
+    },
+    {
+      "order": 49,
+      "fileName": "043_backfill_mapping_provider_endpoint.sql",
+      "version": "043_backfill_mapping_provider_endpoint",
+      "prefix": "043",
+      "isDuplicatePrefix": true,
+      "sha256Checksum": "74f7a034795adb4bed9126a72bba08f64039972b4193610ffb76405d25ce0e9f",
+      "statementsCount": 4,
+      "tablesCreated": [
+        "ai_studio.provider_model_endpoint_backfill_backup"
+      ]
+    },
+    {
+      "order": 50,
+      "fileName": "043_zz_minimax_music_backup_model_prerequisite.sql",
+      "version": "043_zz_minimax_music_backup_model_prerequisite",
+      "prefix": "043",
+      "isDuplicatePrefix": true,
+      "sha256Checksum": "f78dc64c45060b35a7907226378ccad50959a848e447498ba503fa84094b7934",
+      "statementsCount": 1,
+      "tablesCreated": []
+    },
+    {
+      "order": 51,
+      "fileName": "044_model_tiering_and_shrink_routing.sql",
+      "version": "044_model_tiering_and_shrink_routing",
+      "prefix": "044",
+      "isDuplicatePrefix": false,
+      "sha256Checksum": "cc0dd629530cc96cf55aa758eb89ff53d3f801b6c71883f738dfd834b1d6f7e5",
+      "statementsCount": 12,
+      "tablesCreated": []
+    },
+    {
+      "order": 52,
+      "fileName": "045_canvas_projects_and_text_results.sql",
+      "version": "045_canvas_projects_and_text_results",
+      "prefix": "045",
+      "isDuplicatePrefix": false,
+      "sha256Checksum": "f93646afbb5fca86ea84b3fe349f42d1306523be0e3e6652fb7c29bc97894def",
+      "statementsCount": 6,
+      "tablesCreated": [
+        "ai_studio.canvas_projects",
+        "ai_studio.canvas_project_versions",
+        "ai_studio.canvas_project_jobs"
+      ]
+    },
+    {
+      "order": 53,
+      "fileName": "046_canvas_asset_upload_idempotency.sql",
+      "version": "046_canvas_asset_upload_idempotency",
+      "prefix": "046",
+      "isDuplicatePrefix": true,
+      "sha256Checksum": "e3001220dda85f3268868522eceaffa84db812aef95d0d5ab7420c10bd16955f",
+      "statementsCount": 1,
+      "tablesCreated": []
+    },
+    {
+      "order": 54,
+      "fileName": "046_priority_routing_mode.sql",
+      "version": "046_priority_routing_mode",
+      "prefix": "046",
+      "isDuplicatePrefix": true,
+      "sha256Checksum": "974f686d7dc619ca8c892ed025ac52bb24792cdc278acbd872c0aac1012cf4d6",
+      "statementsCount": 2,
+      "tablesCreated": []
+    },
+    {
+      "order": 55,
+      "fileName": "047_user_assets_unique_creation_id.sql",
+      "version": "047_user_assets_unique_creation_id",
+      "prefix": "047",
+      "isDuplicatePrefix": false,
+      "sha256Checksum": "2d7bef85795187ccd5bb94b6235913c55dd1f941175c7ebd59b9da5502b6f976",
+      "statementsCount": 1,
+      "tablesCreated": []
+    },
+    {
+      "order": 56,
+      "fileName": "048_pricing_strategy.sql",
+      "version": "048_pricing_strategy",
+      "prefix": "048",
+      "isDuplicatePrefix": false,
+      "sha256Checksum": "62642f8cc10e5184ed34027fb8d4866f3ac3733c26081da0c4cc28df2ebf4b8d",
+      "statementsCount": 9,
+      "tablesCreated": [
+        "ai_studio.pricing_strategy"
+      ]
+    },
+    {
+      "order": 57,
+      "fileName": "049_model_frontend_pinning.sql",
+      "version": "049_model_frontend_pinning",
+      "prefix": "049",
+      "isDuplicatePrefix": false,
+      "sha256Checksum": "f32fd5b6f35edf59e065e91709daadeefd9b6e54165c4543ad3b2607807e111f",
+      "statementsCount": 3,
+      "tablesCreated": []
+    },
+    {
+      "order": 58,
+      "fileName": "050_muapi_seedream_v3_mapping_contract.sql",
+      "version": "050_muapi_seedream_v3_mapping_contract",
+      "prefix": "050",
+      "isDuplicatePrefix": false,
+      "sha256Checksum": "c18472da687451bea2b69dc04e74c55435a0a6c8e010933b435a5b8e87471ec7",
+      "statementsCount": 1,
+      "tablesCreated": []
+    },
+    {
+      "order": 59,
+      "fileName": "051_muapi_image_model_contracts.sql",
+      "version": "051_muapi_image_model_contracts",
+      "prefix": "051",
+      "isDuplicatePrefix": false,
+      "sha256Checksum": "a1eda29095b211995dac970efbc95fea4413a7b81ad140c01e110497d3cbcfea",
+      "statementsCount": 2,
+      "tablesCreated": []
+    },
+    {
+      "order": 60,
+      "fileName": "052_hunyuan_fast_video_contract.sql",
+      "version": "052_hunyuan_fast_video_contract",
+      "prefix": "052",
+      "isDuplicatePrefix": false,
+      "sha256Checksum": "a35e43ffd4a1c09935a8f1833981fa71a92a017329d8228a673b7805b06032ea",
+      "statementsCount": 2,
+      "tablesCreated": []
+    },
+    {
+      "order": 61,
+      "fileName": "053_invite_codes.sql",
+      "version": "053_invite_codes",
+      "prefix": "053",
+      "isDuplicatePrefix": false,
+      "sha256Checksum": "d907d389b8919bf94ff007f83c6d5aeb10e5f3e16107b9841fc3ffa82dc7dbbd",
+      "statementsCount": 7,
+      "tablesCreated": [
+        "ai_studio.invite_codes",
+        "ai_studio.invite_code_redemptions"
+      ]
+    },
+    {
+      "order": 62,
+      "fileName": "054_simplify_model_matching_and_gpt_dual_versions.sql",
+      "version": "054_simplify_model_matching_and_gpt_dual_versions",
+      "prefix": "054",
+      "isDuplicatePrefix": false,
+      "sha256Checksum": "86775246a26dc57bfa2ee57110fe83e42262aa5f3bb679318e1df6121d927469",
+      "statementsCount": 7,
+      "tablesCreated": []
+    },
+    {
+      "order": 63,
+      "fileName": "055_fix_provider_api_mode_and_type_constraints.sql",
+      "version": "055_fix_provider_api_mode_and_type_constraints",
+      "prefix": "055",
+      "isDuplicatePrefix": false,
+      "sha256Checksum": "42b950f2da1b6eb8445d9bcebcdf6f74125e676a0328d6f930368999b5758095",
+      "statementsCount": 4,
+      "tablesCreated": []
+    },
+    {
+      "order": 64,
+      "fileName": "056_user_account_deletion_grace_period.sql",
+      "version": "056_user_account_deletion_grace_period",
+      "prefix": "056",
+      "isDuplicatePrefix": false,
+      "sha256Checksum": "4ece12abcb11737678a24e50f41b79a0f1201585da057fe813b6d7fbd9a42862",
+      "statementsCount": 2,
+      "tablesCreated": []
+    },
+    {
+      "order": 65,
+      "fileName": "057_backfill_capabilities_and_activate_prices.sql",
+      "version": "057_backfill_capabilities_and_activate_prices",
+      "prefix": "057",
+      "isDuplicatePrefix": false,
+      "sha256Checksum": "3cb9182e56d14f8e56fb44eaae129980344bb10ae314dda591703c06f0caec0c",
+      "statementsCount": 6,
+      "tablesCreated": []
+    },
+    {
+      "order": 66,
+      "fileName": "058_seo_and_search_engine_push.sql",
+      "version": "058_seo_and_search_engine_push",
+      "prefix": "058",
+      "isDuplicatePrefix": false,
+      "sha256Checksum": "0c0c9f0145c84346c6a0b3769b24b1c1bd5d87e1c1b72e3d6e0b20a683ad516d",
+      "statementsCount": 4,
+      "tablesCreated": [
+        "ops_bill.seo_push_logs"
+      ]
+    },
+    {
+      "order": 67,
+      "fileName": "059_sync_seedream_model_matrix.sql",
+      "version": "059_sync_seedream_model_matrix",
+      "prefix": "059",
+      "isDuplicatePrefix": false,
+      "sha256Checksum": "0cdc08ef816e9c4c68f59a5dd99c010ba90378972d932121d5c2913be099c5a9",
+      "statementsCount": 6,
+      "tablesCreated": []
+    },
+    {
+      "order": 68,
+      "fileName": "060_supply_chain_m2_repair.sql",
+      "version": "060_supply_chain_m2_repair",
+      "prefix": "060",
+      "isDuplicatePrefix": false,
+      "sha256Checksum": "21fdc2e7706999de6b79e23f81c981cf051b571c0a54d5fb4c1f38fd1fd783b8",
+      "statementsCount": 15,
+      "tablesCreated": []
+    },
+    {
+      "order": 69,
+      "fileName": "061_volcengine_aspect_ratios_and_primary_priority.sql",
+      "version": "061_volcengine_aspect_ratios_and_primary_priority",
+      "prefix": "061",
+      "isDuplicatePrefix": false,
+      "sha256Checksum": "eb362345c2cd8efda2dc469d7b256f06698b7204992741eba566190e04882eae",
+      "statementsCount": 4,
+      "tablesCreated": []
+    },
+    {
+      "order": 70,
+      "fileName": "062_onboarding_v3_tags.sql",
+      "version": "062_onboarding_v3_tags",
+      "prefix": "062",
+      "isDuplicatePrefix": false,
+      "sha256Checksum": "aab3aaac5839bdf69fe19db4e38c5c33485df73447765ba2c738fc7ed7a4fcf4",
+      "statementsCount": 1,
+      "tablesCreated": []
+    },
+    {
+      "order": 71,
+      "fileName": "063_normalize_legacy_locales.sql",
+      "version": "063_normalize_legacy_locales",
+      "prefix": "063",
+      "isDuplicatePrefix": false,
+      "sha256Checksum": "2e000ea3ac94c28dbd09fe664a1ae812e05bfdb4790a5037e95a739acaeedb5b",
+      "statementsCount": 1,
+      "tablesCreated": []
+    },
+    {
+      "order": 72,
+      "fileName": "064_fix_imagen4_and_seedream_routes.sql",
+      "version": "064_fix_imagen4_and_seedream_routes",
+      "prefix": "064",
+      "isDuplicatePrefix": false,
+      "sha256Checksum": "72017a8ac786c0a16e4c48fdb42441fa38f583d072f48adaae1fe7688c52b189",
+      "statementsCount": 6,
+      "tablesCreated": []
+    },
+    {
+      "order": 73,
+      "fileName": "065_canvas_mounted_image_models.sql",
+      "version": "065_canvas_mounted_image_models",
+      "prefix": "065",
+      "isDuplicatePrefix": false,
+      "sha256Checksum": "b85b88422473ac2e33732528d2206539e0fee8d63716867b341c02eda8cc645d",
+      "statementsCount": 1,
+      "tablesCreated": []
+    },
+    {
+      "order": 74,
+      "fileName": "066_fix_provider_catalog_and_attempts.sql",
+      "version": "066_fix_provider_catalog_and_attempts",
+      "prefix": "066",
+      "isDuplicatePrefix": false,
+      "sha256Checksum": "8cf779c6c9123545e1aa6e2b567cd6eb42462cb04f466ac714ff383d70c928ce",
+      "statementsCount": 2,
+      "tablesCreated": []
+    },
+    {
+      "order": 75,
+      "fileName": "067_protect_unrouted_visible_models.sql",
+      "version": "067_protect_unrouted_visible_models",
+      "prefix": "067",
+      "isDuplicatePrefix": false,
+      "sha256Checksum": "c47a8b231388b56b88ce519a6ac24096ef387817f7ae3e87f7194b115d399d0b",
+      "statementsCount": 1,
+      "tablesCreated": []
+    },
+    {
+      "order": 76,
+      "fileName": "068_normalize_gross_margin_floor.sql",
+      "version": "068_normalize_gross_margin_floor",
+      "prefix": "068",
+      "isDuplicatePrefix": false,
+      "sha256Checksum": "277852b17d16b757e17b7f5b1af51a87c761d332770e4c668ed9937ca1099c8f",
+      "statementsCount": 1,
+      "tablesCreated": []
+    },
+    {
+      "order": 77,
+      "fileName": "069_deepseek_official_gateway.sql",
+      "version": "069_deepseek_official_gateway",
+      "prefix": "069",
+      "isDuplicatePrefix": false,
+      "sha256Checksum": "aa0919a846ac30783b036be3ced43d41b1332d6897f29e401f8adad5d395ca6f",
+      "statementsCount": 1,
+      "tablesCreated": []
+    },
+    {
+      "order": 78,
+      "fileName": "070_deepseek_text_models_and_canvas_mount.sql",
+      "version": "070_deepseek_text_models_and_canvas_mount",
+      "prefix": "070",
+      "isDuplicatePrefix": false,
+      "sha256Checksum": "68da1e722e2f536cf7de950ec6bac252ddd66151a304a3497ac55179bc05e92a",
+      "statementsCount": 7,
+      "tablesCreated": []
+    },
+    {
+      "order": 79,
+      "fileName": "071_enforce_default_english_locale.sql",
+      "version": "071_enforce_default_english_locale",
+      "prefix": "071",
+      "isDuplicatePrefix": true,
+      "sha256Checksum": "b1d2193a1e8fd4f44f3a76543103d9a7c0378dd62648b75c98c2e7e393334f4d",
+      "statementsCount": 2,
+      "tablesCreated": []
+    },
+    {
+      "order": 80,
+      "fileName": "071_provider_balance_api_capabilities.sql",
+      "version": "071_provider_balance_api_capabilities",
+      "prefix": "071",
+      "isDuplicatePrefix": true,
+      "sha256Checksum": "175ab044431369c3cd564b66979b4de0007c98a5034ae1067e84f853f3caf5a2",
+      "statementsCount": 12,
+      "tablesCreated": []
+    },
+    {
+      "order": 81,
+      "fileName": "072_feedback_attachments_and_github.sql",
+      "version": "072_feedback_attachments_and_github",
+      "prefix": "072",
+      "isDuplicatePrefix": false,
+      "sha256Checksum": "f5ffdf4ce60f2c2cfb78827066e2b3e876cbbfeb1ca29b1a185f32bf25c445f2",
+      "statementsCount": 1,
+      "tablesCreated": []
+    },
+    {
+      "order": 82,
+      "fileName": "073_asset_sync.sql",
+      "version": "073_asset_sync",
+      "prefix": "073",
+      "isDuplicatePrefix": true,
+      "sha256Checksum": "ac24bfc78a6210a019a3a7c4f8ef063102df0806ff92ef7e4961f9d84f348b49",
+      "statementsCount": 4,
+      "tablesCreated": [
+        "ai_studio.asset_sync_tokens",
+        "ai_studio.asset_sync_links"
+      ]
+    },
+    {
+      "order": 83,
+      "fileName": "073_generation_130pricing_and_canvas_capabilities.sql",
+      "version": "073_generation_130pricing_and_canvas_capabilities",
+      "prefix": "073",
+      "isDuplicatePrefix": true,
+      "sha256Checksum": "3a6aa3d707002717c47cdf2dfba9bc40661b410288fd9e9c23f4805f3cb1f326",
+      "statementsCount": 8,
+      "tablesCreated": []
+    },
+    {
+      "order": 84,
+      "fileName": "074_seedance_route_prerequisite.sql",
+      "version": "074_seedance_route_prerequisite",
+      "prefix": "074",
+      "isDuplicatePrefix": true,
+      "sha256Checksum": "062f286812a0d44eacd7ae5d3933902e9d453ff4b3a31dcd89290b0c2590f743",
+      "statementsCount": 1,
+      "tablesCreated": []
+    },
+    {
+      "order": 85,
+      "fileName": "074_volcengine_seedance2_route_ready.sql",
+      "version": "074_volcengine_seedance2_route_ready",
+      "prefix": "074",
+      "isDuplicatePrefix": true,
+      "sha256Checksum": "9f19c2a3913bf339d60ecb23594d3f508bce63c3b9ef607e22eed4a18700bbb8",
+      "statementsCount": 2,
+      "tablesCreated": []
+    },
+    {
+      "order": 86,
+      "fileName": "075_storage_v2.sql",
+      "version": "075_storage_v2",
+      "prefix": "075",
+      "isDuplicatePrefix": false,
+      "sha256Checksum": "2858af66f95b338f1fa06f3c121b13db2a914da5ed66fbd8a7f4c11e58cffb4c",
+      "statementsCount": 9,
+      "tablesCreated": [
+        "ai_studio.storage_locations",
+        "ai_studio.storage_migration_runs"
+      ]
+    },
+    {
+      "order": 87,
+      "fileName": "076_asset_library_v2.sql",
+      "version": "076_asset_library_v2",
+      "prefix": "076",
+      "isDuplicatePrefix": false,
+      "sha256Checksum": "9cdf7d5db3856596e7741ca1a2679ce5669d8f8dd535e1502b7c7a1590821e6e",
+      "statementsCount": 12,
+      "tablesCreated": []
+    },
+    {
+      "order": 88,
+      "fileName": "077_canvas_project_shares.sql",
+      "version": "077_canvas_project_shares",
+      "prefix": "077",
+      "isDuplicatePrefix": false,
+      "sha256Checksum": "713b50a584da69b240ab80f227d332912029e4e575a740e1de2f5a254247feda",
+      "statementsCount": 3,
+      "tablesCreated": [
+        "ai_studio.canvas_project_shares"
+      ]
+    },
+    {
+      "order": 89,
+      "fileName": "078_canvas_project_assets.sql",
+      "version": "078_canvas_project_assets",
+      "prefix": "078",
+      "isDuplicatePrefix": false,
+      "sha256Checksum": "9e80cc8331587db2c8dc91eb3723091a42f3002a6817d50142ebf9fbd5ae3ffb",
+      "statementsCount": 4,
+      "tablesCreated": []
+    },
+    {
+      "order": 90,
+      "fileName": "079_credit_release_expiry.sql",
+      "version": "079_credit_release_expiry",
+      "prefix": "079",
+      "isDuplicatePrefix": false,
+      "sha256Checksum": "89f209cc0f26f14863f718fb18fb7b83fdf547daafe0a98ae7fe92b907473ad1",
+      "statementsCount": 3,
+      "tablesCreated": [
+        "ops_bill.credit_returned_lots"
+      ]
+    },
+    {
+      "order": 91,
+      "fileName": "080_currency_exchange_snapshots.sql",
+      "version": "080_currency_exchange_snapshots",
+      "prefix": "080",
+      "isDuplicatePrefix": false,
+      "sha256Checksum": "a09cba0ccfb57d49e9593eb09e3c31d6f50a77d8a2df92feaffe6c244e99a256",
+      "statementsCount": 2,
+      "tablesCreated": [
+        "ops_bill.currency_exchange_snapshots"
+      ]
+    },
+    {
+      "order": 92,
+      "fileName": "081_model_publication_tests.sql",
+      "version": "081_model_publication_tests",
+      "prefix": "081",
+      "isDuplicatePrefix": false,
+      "sha256Checksum": "81fc585cd755a0226b3da62dacb2cfc57dff2085aaff89798fcdc92caad6071d",
+      "statementsCount": 2,
+      "tablesCreated": [
+        "ai_studio.model_publication_tests"
+      ]
+    },
+    {
+      "order": 93,
+      "fileName": "082_generation_result_checkpoints.sql",
+      "version": "082_generation_result_checkpoints",
+      "prefix": "082",
+      "isDuplicatePrefix": false,
+      "sha256Checksum": "23a3e8dcfdd850d0f0ae94a947a743dc0fef07dae05a5b6c7c6e0d4810627d8f",
+      "statementsCount": 1,
+      "tablesCreated": [
+        "ai_studio.generation_result_checkpoints"
+      ]
+    },
+    {
+      "order": 94,
+      "fileName": "083_music_capability_category.sql",
+      "version": "083_music_capability_category",
+      "prefix": "083",
+      "isDuplicatePrefix": false,
+      "sha256Checksum": "c447c72f80d9364171dd55291bd30ef347fc9a56ddded1273fd41bac70a932d2",
+      "statementsCount": 4,
+      "tablesCreated": []
+    },
+    {
+      "order": 95,
+      "fileName": "084_provider_balance_observed_values.sql",
+      "version": "084_provider_balance_observed_values",
+      "prefix": "084",
+      "isDuplicatePrefix": false,
+      "sha256Checksum": "7d0c040a7c7d858d6eae65b0f4f2e0ae266beed39cf2665c9c76b69748b82740",
+      "statementsCount": 2,
+      "tablesCreated": []
+    },
+    {
+      "order": 96,
+      "fileName": "085_route_decision_policy_version.sql",
+      "version": "085_route_decision_policy_version",
+      "prefix": "085",
+      "isDuplicatePrefix": false,
+      "sha256Checksum": "5659b1d3d6afeec1519fa9a70a06891376ca1b2ffeee3a192b9bf090ec39d789",
+      "statementsCount": 4,
+      "tablesCreated": []
+    },
+    {
+      "order": 97,
+      "fileName": "086_provider_cost_reconciliation.sql",
+      "version": "086_provider_cost_reconciliation",
+      "prefix": "086",
+      "isDuplicatePrefix": false,
+      "sha256Checksum": "4e6db5e9550e47680195daeb9a8e9e23b4f4ad06927638acfb47033fc3602b81",
+      "statementsCount": 15,
+      "tablesCreated": [
+        "ai_studio.provider_cost_reconciliation_events"
+      ]
+    },
+    {
+      "order": 98,
+      "fileName": "087_attempt_route_decision_link.sql",
+      "version": "087_attempt_route_decision_link",
+      "prefix": "087",
+      "isDuplicatePrefix": false,
+      "sha256Checksum": "4518f2b12af05b7a4fa60fd5a9d64385757d09695d6e5e90f554d0d704eab449",
+      "statementsCount": 3,
+      "tablesCreated": []
+    },
+    {
+      "order": 99,
+      "fileName": "088_oauth_onboarding.sql",
+      "version": "088_oauth_onboarding",
+      "prefix": "088",
+      "isDuplicatePrefix": false,
+      "sha256Checksum": "89c02a09af7ecc74abc696cd9c631c4863995a958d1302511fc1ce201969d016",
+      "statementsCount": 3,
+      "tablesCreated": [
+        "auth_usr.oauth_flows"
+      ]
+    }
+  ],
+  "tables": [
+    {
+      "fullName": "sys_core.schema_migrations",
+      "schema": "sys_core",
+      "name": "schema_migrations",
+      "createdInMigration": "001_admin_v1.sql",
+      "primaryKeyColumn": "version",
+      "primaryKeyType": "TEXT",
+      "idFormat": "TEXT (version)"
+    },
+    {
+      "fullName": "auth_usr.users",
+      "schema": "auth_usr",
+      "name": "users",
+      "createdInMigration": "001_admin_v1.sql",
+      "primaryKeyColumn": "id",
+      "primaryKeyType": "TEXT",
+      "idFormat": "6-64 digit numeric string ^[1-9][0-9]{5,63}$ (+ uuid UUID column on users)"
+    },
+    {
+      "fullName": "auth_usr.sessions",
+      "schema": "auth_usr",
+      "name": "sessions",
+      "createdInMigration": "001_admin_v1.sql",
+      "primaryKeyColumn": "token_hash",
+      "primaryKeyType": "TEXT",
+      "idFormat": "SHA-256 hex (64 chars)"
+    },
+    {
+      "fullName": "auth_usr.oauth_accounts",
+      "schema": "auth_usr",
+      "name": "oauth_accounts",
+      "createdInMigration": "001_admin_v1.sql",
+      "primaryKeyColumn": "provider, provider_user_id",
+      "primaryKeyType": "COMPOSITE",
+      "idFormat": "Composite key (provider, provider_user_id)"
+    },
+    {
+      "fullName": "auth_usr.auth_accounts",
+      "schema": "auth_usr",
+      "name": "auth_accounts",
+      "createdInMigration": "001_admin_v1.sql",
+      "primaryKeyColumn": "id",
+      "primaryKeyType": "TEXT",
+      "idFormat": "Prefixed randomId: <prefix>_<24hex> or <prefix>_id_<24hex>"
+    },
+    {
+      "fullName": "sys_core.auth_verification_codes",
+      "schema": "sys_core",
+      "name": "auth_verification_codes",
+      "createdInMigration": "001_admin_v1.sql",
+      "primaryKeyColumn": "id",
+      "primaryKeyType": "TEXT",
+      "idFormat": "Prefixed randomId: <prefix>_<24hex> or <prefix>_id_<24hex>"
+    },
+    {
+      "fullName": "ai_studio.models_config",
+      "schema": "ai_studio",
+      "name": "models_config",
+      "createdInMigration": "001_admin_v1.sql",
+      "primaryKeyColumn": "id",
+      "primaryKeyType": "TEXT",
+      "idFormat": "Prefixed randomId: <prefix>_<24hex> or <prefix>_id_<24hex>"
+    },
+    {
+      "fullName": "ai_studio.creations",
+      "schema": "ai_studio",
+      "name": "creations",
+      "createdInMigration": "001_admin_v1.sql",
+      "primaryKeyColumn": "id",
+      "primaryKeyType": "TEXT",
+      "idFormat": "Prefixed randomId: <prefix>_<24hex> or <prefix>_id_<24hex>"
+    },
+    {
+      "fullName": "ops_bill.subscriptions",
+      "schema": "ops_bill",
+      "name": "subscriptions",
+      "createdInMigration": "001_admin_v1.sql",
+      "primaryKeyColumn": "id",
+      "primaryKeyType": "TEXT",
+      "idFormat": "Prefixed randomId: <prefix>_<24hex> or <prefix>_id_<24hex>"
+    },
+    {
+      "fullName": "ops_bill.orders",
+      "schema": "ops_bill",
+      "name": "orders",
+      "createdInMigration": "001_admin_v1.sql",
+      "primaryKeyColumn": "id",
+      "primaryKeyType": "TEXT",
+      "idFormat": "Prefixed randomId: <prefix>_<24hex> or <prefix>_id_<24hex>"
+    },
+    {
+      "fullName": "ops_bill.webhook_events",
+      "schema": "ops_bill",
+      "name": "webhook_events",
+      "createdInMigration": "001_admin_v1.sql",
+      "primaryKeyColumn": "provider, event_id",
+      "primaryKeyType": "COMPOSITE",
+      "idFormat": "Composite key (provider, event_id)"
+    },
+    {
+      "fullName": "ops_bill.credit_ledger",
+      "schema": "ops_bill",
+      "name": "credit_ledger",
+      "createdInMigration": "001_admin_v1.sql",
+      "primaryKeyColumn": "id",
+      "primaryKeyType": "TEXT",
+      "idFormat": "Prefixed randomId: <prefix>_<24hex> or <prefix>_id_<24hex>"
+    },
+    {
+      "fullName": "ops_bill.plans_config",
+      "schema": "ops_bill",
+      "name": "plans_config",
+      "createdInMigration": "001_admin_v1.sql",
+      "primaryKeyColumn": "id",
+      "primaryKeyType": "TEXT",
+      "idFormat": "Prefixed randomId: <prefix>_<24hex> or <prefix>_id_<24hex>"
+    },
+    {
+      "fullName": "ops_bill.admin_audit_logs",
+      "schema": "ops_bill",
+      "name": "admin_audit_logs",
+      "createdInMigration": "001_admin_v1.sql",
+      "primaryKeyColumn": "id",
+      "primaryKeyType": "TEXT",
+      "idFormat": "Prefixed randomId: <prefix>_<24hex> or <prefix>_id_<24hex>"
+    },
+    {
+      "fullName": "ops_bill.admin_notes",
+      "schema": "ops_bill",
+      "name": "admin_notes",
+      "createdInMigration": "001_admin_v1.sql",
+      "primaryKeyColumn": "id",
+      "primaryKeyType": "TEXT",
+      "idFormat": "Prefixed randomId: <prefix>_<24hex> or <prefix>_id_<24hex>"
+    },
+    {
+      "fullName": "ops_bill.moderation_cases",
+      "schema": "ops_bill",
+      "name": "moderation_cases",
+      "createdInMigration": "001_admin_v1.sql",
+      "primaryKeyColumn": "id",
+      "primaryKeyType": "TEXT",
+      "idFormat": "Prefixed randomId: <prefix>_<24hex> or <prefix>_id_<24hex>"
+    },
+    {
+      "fullName": "ops_bill.provider_configs",
+      "schema": "ops_bill",
+      "name": "provider_configs",
+      "createdInMigration": "001_admin_v1.sql",
+      "primaryKeyColumn": "provider",
+      "primaryKeyType": "TEXT",
+      "idFormat": "TEXT (provider)"
+    },
+    {
+      "fullName": "ops_bill.provider_secrets",
+      "schema": "ops_bill",
+      "name": "provider_secrets",
+      "createdInMigration": "001_admin_v1.sql",
+      "primaryKeyColumn": "provider, name",
+      "primaryKeyType": "COMPOSITE",
+      "idFormat": "Composite key (provider, name)"
+    },
+    {
+      "fullName": "ops_bill.provider_health_checks",
+      "schema": "ops_bill",
+      "name": "provider_health_checks",
+      "createdInMigration": "001_admin_v1.sql",
+      "primaryKeyColumn": "id",
+      "primaryKeyType": "TEXT",
+      "idFormat": "Prefixed randomId: <prefix>_<24hex> or <prefix>_id_<24hex>"
+    },
+    {
+      "fullName": "ops_bill.system_settings",
+      "schema": "ops_bill",
+      "name": "system_settings",
+      "createdInMigration": "001_admin_v1.sql",
+      "primaryKeyColumn": "key",
+      "primaryKeyType": "TEXT",
+      "idFormat": "TEXT (key)"
+    },
+    {
+      "fullName": "ops_bill.idempotency_keys",
+      "schema": "ops_bill",
+      "name": "idempotency_keys",
+      "createdInMigration": "001_admin_v1.sql",
+      "primaryKeyColumn": "key_hash",
+      "primaryKeyType": "TEXT",
+      "idFormat": "SHA-256 hex (64 chars)"
+    },
+    {
+      "fullName": "ops_bill.coupons",
+      "schema": "ops_bill",
+      "name": "coupons",
+      "createdInMigration": "003_coupons.sql",
+      "primaryKeyColumn": "code",
+      "primaryKeyType": "TEXT",
+      "idFormat": "TEXT (code)"
+    },
+    {
+      "fullName": "ops_bill.coupon_redemptions",
+      "schema": "ops_bill",
+      "name": "coupon_redemptions",
+      "createdInMigration": "003_coupons.sql",
+      "primaryKeyColumn": "id",
+      "primaryKeyType": "TEXT",
+      "idFormat": "Prefixed randomId: <prefix>_<24hex> or <prefix>_id_<24hex>"
+    },
+    {
+      "fullName": "ops_bill.tags",
+      "schema": "ops_bill",
+      "name": "tags",
+      "createdInMigration": "003_pg_user_system.sql",
+      "primaryKeyColumn": "id",
+      "primaryKeyType": "TEXT",
+      "idFormat": "Prefixed randomId: <prefix>_<24hex> or <prefix>_id_<24hex>"
+    },
+    {
+      "fullName": "ops_bill.user_tags",
+      "schema": "ops_bill",
+      "name": "user_tags",
+      "createdInMigration": "003_pg_user_system.sql",
+      "primaryKeyColumn": "user_id, tag_id",
+      "primaryKeyType": "COMPOSITE",
+      "idFormat": "Composite key (user_id, tag_id)"
+    },
+    {
+      "fullName": "ops_bill.currency_wallets",
+      "schema": "ops_bill",
+      "name": "currency_wallets",
+      "createdInMigration": "004_financial_currency_and_credits.sql",
+      "primaryKeyColumn": "user_id",
+      "primaryKeyType": "TEXT",
+      "idFormat": "TEXT (user_id)"
+    },
+    {
+      "fullName": "ops_bill.currency_journal_entries",
+      "schema": "ops_bill",
+      "name": "currency_journal_entries",
+      "createdInMigration": "004_financial_currency_and_credits.sql",
+      "primaryKeyColumn": "id",
+      "primaryKeyType": "TEXT",
+      "idFormat": "Prefixed randomId: <prefix>_<24hex> or <prefix>_id_<24hex>"
+    },
+    {
+      "fullName": "ops_bill.currency_transfers",
+      "schema": "ops_bill",
+      "name": "currency_transfers",
+      "createdInMigration": "004_financial_currency_and_credits.sql",
+      "primaryKeyColumn": "id",
+      "primaryKeyType": "TEXT",
+      "idFormat": "Prefixed randomId: <prefix>_<24hex> or <prefix>_id_<24hex>"
+    },
+    {
+      "fullName": "ops_bill.credit_wallets",
+      "schema": "ops_bill",
+      "name": "credit_wallets",
+      "createdInMigration": "004_financial_currency_and_credits.sql",
+      "primaryKeyColumn": "user_id",
+      "primaryKeyType": "TEXT",
+      "idFormat": "TEXT (user_id)"
+    },
+    {
+      "fullName": "ops_bill.credit_reservations",
+      "schema": "ops_bill",
+      "name": "credit_reservations",
+      "createdInMigration": "004_financial_currency_and_credits.sql",
+      "primaryKeyColumn": "id",
+      "primaryKeyType": "TEXT",
+      "idFormat": "Prefixed randomId: <prefix>_<24hex> or <prefix>_id_<24hex>"
+    },
+    {
+      "fullName": "ops_bill.credit_ledger_v2",
+      "schema": "ops_bill",
+      "name": "credit_ledger_v2",
+      "createdInMigration": "004_financial_currency_and_credits.sql",
+      "primaryKeyColumn": "id",
+      "primaryKeyType": "TEXT",
+      "idFormat": "Prefixed randomId: <prefix>_<24hex> or <prefix>_id_<24hex>"
+    },
+    {
+      "fullName": "ai_studio.community_posts",
+      "schema": "ai_studio",
+      "name": "community_posts",
+      "createdInMigration": "006_community_and_social.sql",
+      "primaryKeyColumn": "id",
+      "primaryKeyType": "TEXT",
+      "idFormat": "Prefixed randomId: <prefix>_<24hex> or <prefix>_id_<24hex>"
+    },
+    {
+      "fullName": "ai_studio.community_likes",
+      "schema": "ai_studio",
+      "name": "community_likes",
+      "createdInMigration": "006_community_and_social.sql",
+      "primaryKeyColumn": "id",
+      "primaryKeyType": "TEXT",
+      "idFormat": "Prefixed randomId: <prefix>_<24hex> or <prefix>_id_<24hex>"
+    },
+    {
+      "fullName": "ai_studio.community_comments",
+      "schema": "ai_studio",
+      "name": "community_comments",
+      "createdInMigration": "006_community_and_social.sql",
+      "primaryKeyColumn": "id",
+      "primaryKeyType": "TEXT",
+      "idFormat": "Prefixed randomId: <prefix>_<24hex> or <prefix>_id_<24hex>"
+    },
+    {
+      "fullName": "ai_studio.generation_events",
+      "schema": "ai_studio",
+      "name": "generation_events",
+      "createdInMigration": "007_generation_core.sql",
+      "primaryKeyColumn": "id",
+      "primaryKeyType": "TEXT",
+      "idFormat": "Prefixed randomId: <prefix>_<24hex> or <prefix>_id_<24hex>"
+    },
+    {
+      "fullName": "sys_core.auth_events",
+      "schema": "sys_core",
+      "name": "auth_events",
+      "createdInMigration": "007_generation_core.sql",
+      "primaryKeyColumn": "id",
+      "primaryKeyType": "TEXT",
+      "idFormat": "Prefixed randomId: <prefix>_<24hex> or <prefix>_id_<24hex>"
+    },
+    {
+      "fullName": "sys_core.admin_roles",
+      "schema": "sys_core",
+      "name": "admin_roles",
+      "createdInMigration": "007_generation_core.sql",
+      "primaryKeyColumn": "role",
+      "primaryKeyType": "TEXT",
+      "idFormat": "TEXT (role)"
+    },
+    {
+      "fullName": "sys_core.admin_bootstrap_claims",
+      "schema": "sys_core",
+      "name": "admin_bootstrap_claims",
+      "createdInMigration": "007_generation_core.sql",
+      "primaryKeyColumn": "id",
+      "primaryKeyType": "TEXT",
+      "idFormat": "Prefixed randomId: <prefix>_<24hex> or <prefix>_id_<24hex>"
+    },
+    {
+      "fullName": "sys_core.admin_export_jobs",
+      "schema": "sys_core",
+      "name": "admin_export_jobs",
+      "createdInMigration": "008_admin_operations.sql",
+      "primaryKeyColumn": "id",
+      "primaryKeyType": "TEXT",
+      "idFormat": "Prefixed randomId: <prefix>_<24hex> or <prefix>_id_<24hex>"
+    },
+    {
+      "fullName": "ops_bill.payment_ledger",
+      "schema": "ops_bill",
+      "name": "payment_ledger",
+      "createdInMigration": "009_payment_provider_v2.sql",
+      "primaryKeyColumn": "id",
+      "primaryKeyType": "TEXT",
+      "idFormat": "Prefixed randomId: <prefix>_<24hex> or <prefix>_id_<24hex>"
+    },
+    {
+      "fullName": "ops_bill.payment_attempts",
+      "schema": "ops_bill",
+      "name": "payment_attempts",
+      "createdInMigration": "009_payment_provider_v2.sql",
+      "primaryKeyColumn": "id",
+      "primaryKeyType": "TEXT",
+      "idFormat": "Prefixed randomId: <prefix>_<24hex> or <prefix>_id_<24hex>"
+    },
+    {
+      "fullName": "ops_bill.provider_call_logs",
+      "schema": "ops_bill",
+      "name": "provider_call_logs",
+      "createdInMigration": "009_payment_provider_v2.sql",
+      "primaryKeyColumn": "id",
+      "primaryKeyType": "TEXT",
+      "idFormat": "Prefixed randomId: <prefix>_<24hex> or <prefix>_id_<24hex>"
+    },
+    {
+      "fullName": "sys_core.rate_limit_buckets",
+      "schema": "sys_core",
+      "name": "rate_limit_buckets",
+      "createdInMigration": "010_security_baseline.sql",
+      "primaryKeyColumn": "key_hash",
+      "primaryKeyType": "TEXT",
+      "idFormat": "SHA-256 hex (64 chars)"
+    },
+    {
+      "fullName": "ops_bill.credit_refund_obligations",
+      "schema": "ops_bill",
+      "name": "credit_refund_obligations",
+      "createdInMigration": "012_payment_credit_refunds.sql",
+      "primaryKeyColumn": "id",
+      "primaryKeyType": "TEXT",
+      "idFormat": "Prefixed randomId: <prefix>_<24hex> or <prefix>_id_<24hex>"
+    },
+    {
+      "fullName": "ops_bill.banner_events",
+      "schema": "ops_bill",
+      "name": "banner_events",
+      "createdInMigration": "014_content_management.sql",
+      "primaryKeyColumn": "id",
+      "primaryKeyType": "BIGSERIAL",
+      "idFormat": "BIGSERIAL (auto-increment int64)"
+    },
+    {
+      "fullName": "ops_bill.banner_history",
+      "schema": "ops_bill",
+      "name": "banner_history",
+      "createdInMigration": "015_banner_history.sql",
+      "primaryKeyColumn": "id",
+      "primaryKeyType": "VARCHAR(64)",
+      "idFormat": "Prefixed randomId: <prefix>_<24hex> or <prefix>_id_<24hex>"
+    },
+    {
+      "fullName": "sys_core.user_activity_logs",
+      "schema": "sys_core",
+      "name": "user_activity_logs",
+      "createdInMigration": "016_user_number_and_activity_tracking.sql",
+      "primaryKeyColumn": "id",
+      "primaryKeyType": "TEXT",
+      "idFormat": "Prefixed randomId: <prefix>_<24hex> or <prefix>_id_<24hex>"
+    },
+    {
+      "fullName": "ai_studio.user_follows",
+      "schema": "ai_studio",
+      "name": "user_follows",
+      "createdInMigration": "016_user_number_and_activity_tracking.sql",
+      "primaryKeyColumn": "id",
+      "primaryKeyType": "TEXT",
+      "idFormat": "Prefixed randomId: <prefix>_<24hex> or <prefix>_id_<24hex>"
+    },
+    {
+      "fullName": "sys_core.user_notifications",
+      "schema": "sys_core",
+      "name": "user_notifications",
+      "createdInMigration": "017_user_notifications.sql",
+      "primaryKeyColumn": "id",
+      "primaryKeyType": "TEXT",
+      "idFormat": "Prefixed randomId: <prefix>_<24hex> or <prefix>_id_<24hex>"
+    },
+    {
+      "fullName": "ai_studio.asset_folders",
+      "schema": "ai_studio",
+      "name": "asset_folders",
+      "createdInMigration": "018_user_asset_library.sql",
+      "primaryKeyColumn": "id",
+      "primaryKeyType": "VARCHAR(64)",
+      "idFormat": "Prefixed randomId: <prefix>_<24hex> or <prefix>_id_<24hex>"
+    },
+    {
+      "fullName": "ai_studio.user_assets",
+      "schema": "ai_studio",
+      "name": "user_assets",
+      "createdInMigration": "018_user_asset_library.sql",
+      "primaryKeyColumn": "id",
+      "primaryKeyType": "VARCHAR(64)",
+      "idFormat": "Prefixed randomId: <prefix>_<24hex> or <prefix>_id_<24hex>"
+    },
+    {
+      "fullName": "ai_studio.ai_providers",
+      "schema": "ai_studio",
+      "name": "ai_providers",
+      "createdInMigration": "019_unified_ai_routing_and_pricing.sql",
+      "primaryKeyColumn": "id",
+      "primaryKeyType": "VARCHAR(64)",
+      "idFormat": "Prefixed randomId: <prefix>_<24hex> or <prefix>_id_<24hex>"
+    },
+    {
+      "fullName": "ai_studio.ai_models",
+      "schema": "ai_studio",
+      "name": "ai_models",
+      "createdInMigration": "019_unified_ai_routing_and_pricing.sql",
+      "primaryKeyColumn": "id",
+      "primaryKeyType": "VARCHAR(64)",
+      "idFormat": "Prefixed randomId: <prefix>_<24hex> or <prefix>_id_<24hex>"
+    },
+    {
+      "fullName": "ai_studio.provider_models",
+      "schema": "ai_studio",
+      "name": "provider_models",
+      "createdInMigration": "019_unified_ai_routing_and_pricing.sql",
+      "primaryKeyColumn": "id",
+      "primaryKeyType": "VARCHAR(64)",
+      "idFormat": "Prefixed randomId: <prefix>_<24hex> or <prefix>_id_<24hex>"
+    },
+    {
+      "fullName": "ai_studio.model_pricing",
+      "schema": "ai_studio",
+      "name": "model_pricing",
+      "createdInMigration": "019_unified_ai_routing_and_pricing.sql",
+      "primaryKeyColumn": "id",
+      "primaryKeyType": "VARCHAR(64)",
+      "idFormat": "Prefixed randomId: <prefix>_<24hex> or <prefix>_id_<24hex>"
+    },
+    {
+      "fullName": "ai_studio.routing_policies",
+      "schema": "ai_studio",
+      "name": "routing_policies",
+      "createdInMigration": "019_unified_ai_routing_and_pricing.sql",
+      "primaryKeyColumn": "id",
+      "primaryKeyType": "VARCHAR(64)",
+      "idFormat": "Prefixed randomId: <prefix>_<24hex> or <prefix>_id_<24hex>"
+    },
+    {
+      "fullName": "ai_studio.generation_quotes",
+      "schema": "ai_studio",
+      "name": "generation_quotes",
+      "createdInMigration": "019_unified_ai_routing_and_pricing.sql",
+      "primaryKeyColumn": "id",
+      "primaryKeyType": "VARCHAR(64)",
+      "idFormat": "Prefixed randomId: <prefix>_<24hex> or <prefix>_id_<24hex>"
+    },
+    {
+      "fullName": "ai_studio.generation_attempts",
+      "schema": "ai_studio",
+      "name": "generation_attempts",
+      "createdInMigration": "019_unified_ai_routing_and_pricing.sql",
+      "primaryKeyColumn": "id",
+      "primaryKeyType": "VARCHAR(64)",
+      "idFormat": "Prefixed randomId: <prefix>_<24hex> or <prefix>_id_<24hex>"
+    },
+    {
+      "fullName": "ai_studio.route_decision_logs",
+      "schema": "ai_studio",
+      "name": "route_decision_logs",
+      "createdInMigration": "019_unified_ai_routing_and_pricing.sql",
+      "primaryKeyColumn": "id",
+      "primaryKeyType": "VARCHAR(64)",
+      "idFormat": "Prefixed randomId: <prefix>_<24hex> or <prefix>_id_<24hex>"
+    },
+    {
+      "fullName": "ai_studio.provider_cost_records",
+      "schema": "ai_studio",
+      "name": "provider_cost_records",
+      "createdInMigration": "019_unified_ai_routing_and_pricing.sql",
+      "primaryKeyColumn": "id",
+      "primaryKeyType": "VARCHAR(64)",
+      "idFormat": "Prefixed randomId: <prefix>_<24hex> or <prefix>_id_<24hex>"
+    },
+    {
+      "fullName": "ai_studio.storage_operation_logs",
+      "schema": "ai_studio",
+      "name": "storage_operation_logs",
+      "createdInMigration": "023_unified_storage_assets.sql",
+      "primaryKeyColumn": "id",
+      "primaryKeyType": "VARCHAR(64)",
+      "idFormat": "Prefixed randomId: <prefix>_<24hex> or <prefix>_id_<24hex>"
+    },
+    {
+      "fullName": "ai_studio.coin_reward_items",
+      "schema": "ai_studio",
+      "name": "coin_reward_items",
+      "createdInMigration": "024_coin_reward_catalog.sql",
+      "primaryKeyColumn": "id",
+      "primaryKeyType": "TEXT",
+      "idFormat": "Prefixed randomId: <prefix>_<24hex> or <prefix>_id_<24hex>"
+    },
+    {
+      "fullName": "ai_studio.user_coin_rewards",
+      "schema": "ai_studio",
+      "name": "user_coin_rewards",
+      "createdInMigration": "024_coin_reward_catalog.sql",
+      "primaryKeyColumn": "id",
+      "primaryKeyType": "TEXT",
+      "idFormat": "Prefixed randomId: <prefix>_<24hex> or <prefix>_id_<24hex>"
+    },
+    {
+      "fullName": "auth_usr.otp_challenges",
+      "schema": "auth_usr",
+      "name": "otp_challenges",
+      "createdInMigration": "027_sms_auth.sql",
+      "primaryKeyColumn": "id",
+      "primaryKeyType": "TEXT",
+      "idFormat": "Prefixed randomId: <prefix>_<24hex> or <prefix>_id_<24hex>"
+    },
+    {
+      "fullName": "auth_usr.sms_delivery_logs",
+      "schema": "auth_usr",
+      "name": "sms_delivery_logs",
+      "createdInMigration": "027_sms_auth.sql",
+      "primaryKeyColumn": "id",
+      "primaryKeyType": "TEXT",
+      "idFormat": "Prefixed randomId: <prefix>_<24hex> or <prefix>_id_<24hex>"
+    },
+    {
+      "fullName": "auth_usr.email_send_logs",
+      "schema": "auth_usr",
+      "name": "email_send_logs",
+      "createdInMigration": "029_email_send_logs.sql",
+      "primaryKeyColumn": "id",
+      "primaryKeyType": "TEXT",
+      "idFormat": "Prefixed randomId: <prefix>_<24hex> or <prefix>_id_<24hex>"
+    },
+    {
+      "fullName": "ops_bill.feedback_reports",
+      "schema": "ops_bill",
+      "name": "feedback_reports",
+      "createdInMigration": "030_feedback_reports.sql",
+      "primaryKeyColumn": "id",
+      "primaryKeyType": "TEXT",
+      "idFormat": "Prefixed randomId: <prefix>_<24hex> or <prefix>_id_<24hex>"
+    },
+    {
+      "fullName": "auth_usr.user_id_allocations",
+      "schema": "auth_usr",
+      "name": "user_id_allocations",
+      "createdInMigration": "037_user_id_root_and_allocator.sql",
+      "primaryKeyColumn": "user_id",
+      "primaryKeyType": "VARCHAR(64)",
+      "idFormat": "6-64 digit numeric string ^[1-9][0-9]{5,63}$ (+ uuid UUID column on users)"
+    },
+    {
+      "fullName": "ai_studio.model_site_price_versions",
+      "schema": "ai_studio",
+      "name": "model_site_price_versions",
+      "createdInMigration": "040_model_pricing_routing_control_tower.sql",
+      "primaryKeyColumn": "id",
+      "primaryKeyType": "VARCHAR(64)",
+      "idFormat": "Prefixed randomId: <prefix>_<24hex> or <prefix>_id_<24hex>"
+    },
+    {
+      "fullName": "ai_studio.exchange_rate_snapshots",
+      "schema": "ai_studio",
+      "name": "exchange_rate_snapshots",
+      "createdInMigration": "040_model_pricing_routing_control_tower.sql",
+      "primaryKeyColumn": "id",
+      "primaryKeyType": "VARCHAR(64)",
+      "idFormat": "Prefixed randomId: <prefix>_<24hex> or <prefix>_id_<24hex>"
+    },
+    {
+      "fullName": "ai_studio.provider_model_price_versions",
+      "schema": "ai_studio",
+      "name": "provider_model_price_versions",
+      "createdInMigration": "040_model_pricing_routing_control_tower.sql",
+      "primaryKeyColumn": "id",
+      "primaryKeyType": "VARCHAR(64)",
+      "idFormat": "Prefixed randomId: <prefix>_<24hex> or <prefix>_id_<24hex>"
+    },
+    {
+      "fullName": "ai_studio.channel_sync_runs",
+      "schema": "ai_studio",
+      "name": "channel_sync_runs",
+      "createdInMigration": "040_model_pricing_routing_control_tower.sql",
+      "primaryKeyColumn": "id",
+      "primaryKeyType": "VARCHAR(64)",
+      "idFormat": "Prefixed randomId: <prefix>_<24hex> or <prefix>_id_<24hex>"
+    },
+    {
+      "fullName": "ai_studio.provider_catalog_entries",
+      "schema": "ai_studio",
+      "name": "provider_catalog_entries",
+      "createdInMigration": "040_model_pricing_routing_control_tower.sql",
+      "primaryKeyColumn": "id",
+      "primaryKeyType": "VARCHAR(64)",
+      "idFormat": "Prefixed randomId: <prefix>_<24hex> or <prefix>_id_<24hex>"
+    },
+    {
+      "fullName": "ai_studio.model_price_import_batches",
+      "schema": "ai_studio",
+      "name": "model_price_import_batches",
+      "createdInMigration": "040_model_pricing_routing_control_tower.sql",
+      "primaryKeyColumn": "id",
+      "primaryKeyType": "VARCHAR(64)",
+      "idFormat": "Prefixed randomId: <prefix>_<24hex> or <prefix>_id_<24hex>"
+    },
+    {
+      "fullName": "ai_studio.generation_cost_reconciliations",
+      "schema": "ai_studio",
+      "name": "generation_cost_reconciliations",
+      "createdInMigration": "040_model_pricing_routing_control_tower.sql",
+      "primaryKeyColumn": "id",
+      "primaryKeyType": "VARCHAR(64)",
+      "idFormat": "Prefixed randomId: <prefix>_<24hex> or <prefix>_id_<24hex>"
+    },
+    {
+      "fullName": "sys_core.worker_heartbeats",
+      "schema": "sys_core",
+      "name": "worker_heartbeats",
+      "createdInMigration": "041_worker_heartbeat.sql",
+      "primaryKeyColumn": "worker_name, instance_id",
+      "primaryKeyType": "COMPOSITE",
+      "idFormat": "Composite key (worker_name, instance_id)"
+    },
+    {
+      "fullName": "ai_studio.provider_model_endpoint_backfill_backup",
+      "schema": "ai_studio",
+      "name": "provider_model_endpoint_backfill_backup",
+      "createdInMigration": "043_backfill_mapping_provider_endpoint.sql",
+      "primaryKeyColumn": "mapping_id",
+      "primaryKeyType": "TEXT",
+      "idFormat": "TEXT (mapping_id)"
+    },
+    {
+      "fullName": "ai_studio.canvas_projects",
+      "schema": "ai_studio",
+      "name": "canvas_projects",
+      "createdInMigration": "045_canvas_projects_and_text_results.sql",
+      "primaryKeyColumn": "id",
+      "primaryKeyType": "VARCHAR(64)",
+      "idFormat": "Prefixed randomId: <prefix>_<24hex> or <prefix>_id_<24hex>"
+    },
+    {
+      "fullName": "ai_studio.canvas_project_versions",
+      "schema": "ai_studio",
+      "name": "canvas_project_versions",
+      "createdInMigration": "045_canvas_projects_and_text_results.sql",
+      "primaryKeyColumn": "project_id, version",
+      "primaryKeyType": "COMPOSITE",
+      "idFormat": "Composite key (project_id, version)"
+    },
+    {
+      "fullName": "ai_studio.canvas_project_jobs",
+      "schema": "ai_studio",
+      "name": "canvas_project_jobs",
+      "createdInMigration": "045_canvas_projects_and_text_results.sql",
+      "primaryKeyColumn": "job_id",
+      "primaryKeyType": "COMPOSITE",
+      "idFormat": "Composite key (job_id)"
+    },
+    {
+      "fullName": "ai_studio.pricing_strategy",
+      "schema": "ai_studio",
+      "name": "pricing_strategy",
+      "createdInMigration": "048_pricing_strategy.sql",
+      "primaryKeyColumn": "id",
+      "primaryKeyType": "UUID",
+      "idFormat": "UUID v4 (gen_random_uuid())"
+    },
+    {
+      "fullName": "ai_studio.invite_codes",
+      "schema": "ai_studio",
+      "name": "invite_codes",
+      "createdInMigration": "053_invite_codes.sql",
+      "primaryKeyColumn": "id",
+      "primaryKeyType": "VARCHAR(64)",
+      "idFormat": "Prefixed randomId: <prefix>_<24hex> or <prefix>_id_<24hex>"
+    },
+    {
+      "fullName": "ai_studio.invite_code_redemptions",
+      "schema": "ai_studio",
+      "name": "invite_code_redemptions",
+      "createdInMigration": "053_invite_codes.sql",
+      "primaryKeyColumn": "id",
+      "primaryKeyType": "VARCHAR(64)",
+      "idFormat": "Prefixed randomId: <prefix>_<24hex> or <prefix>_id_<24hex>"
+    },
+    {
+      "fullName": "ops_bill.seo_push_logs",
+      "schema": "ops_bill",
+      "name": "seo_push_logs",
+      "createdInMigration": "058_seo_and_search_engine_push.sql",
+      "primaryKeyColumn": "id",
+      "primaryKeyType": "UUID",
+      "idFormat": "UUID v4 (gen_random_uuid())"
+    },
+    {
+      "fullName": "ai_studio.asset_sync_tokens",
+      "schema": "ai_studio",
+      "name": "asset_sync_tokens",
+      "createdInMigration": "073_asset_sync.sql",
+      "primaryKeyColumn": "id",
+      "primaryKeyType": "VARCHAR(64)",
+      "idFormat": "Prefixed randomId: <prefix>_<24hex> or <prefix>_id_<24hex>"
+    },
+    {
+      "fullName": "ai_studio.asset_sync_links",
+      "schema": "ai_studio",
+      "name": "asset_sync_links",
+      "createdInMigration": "073_asset_sync.sql",
+      "primaryKeyColumn": "id",
+      "primaryKeyType": "VARCHAR(64)",
+      "idFormat": "Prefixed randomId: <prefix>_<24hex> or <prefix>_id_<24hex>"
+    },
+    {
+      "fullName": "ai_studio.storage_locations",
+      "schema": "ai_studio",
+      "name": "storage_locations",
+      "createdInMigration": "075_storage_v2.sql",
+      "primaryKeyColumn": "id",
+      "primaryKeyType": "VARCHAR(64)",
+      "idFormat": "Prefixed randomId: <prefix>_<24hex> or <prefix>_id_<24hex>"
+    },
+    {
+      "fullName": "ai_studio.storage_migration_runs",
+      "schema": "ai_studio",
+      "name": "storage_migration_runs",
+      "createdInMigration": "075_storage_v2.sql",
+      "primaryKeyColumn": "id",
+      "primaryKeyType": "VARCHAR(64)",
+      "idFormat": "Prefixed randomId: <prefix>_<24hex> or <prefix>_id_<24hex>"
+    },
+    {
+      "fullName": "ai_studio.canvas_project_shares",
+      "schema": "ai_studio",
+      "name": "canvas_project_shares",
+      "createdInMigration": "077_canvas_project_shares.sql",
+      "primaryKeyColumn": "id",
+      "primaryKeyType": "UUID",
+      "idFormat": "UUID v4 (gen_random_uuid())"
+    },
+    {
+      "fullName": "ops_bill.credit_returned_lots",
+      "schema": "ops_bill",
+      "name": "credit_returned_lots",
+      "createdInMigration": "079_credit_release_expiry.sql",
+      "primaryKeyColumn": "id",
+      "primaryKeyType": "TEXT",
+      "idFormat": "Prefixed randomId: <prefix>_<24hex> or <prefix>_id_<24hex>"
+    },
+    {
+      "fullName": "ops_bill.currency_exchange_snapshots",
+      "schema": "ops_bill",
+      "name": "currency_exchange_snapshots",
+      "createdInMigration": "080_currency_exchange_snapshots.sql",
+      "primaryKeyColumn": "transaction_id",
+      "primaryKeyType": "TEXT",
+      "idFormat": "TEXT (transaction_id)"
+    },
+    {
+      "fullName": "ai_studio.model_publication_tests",
+      "schema": "ai_studio",
+      "name": "model_publication_tests",
+      "createdInMigration": "081_model_publication_tests.sql",
+      "primaryKeyColumn": "id",
+      "primaryKeyType": "TEXT",
+      "idFormat": "Prefixed randomId: <prefix>_<24hex> or <prefix>_id_<24hex>"
+    },
+    {
+      "fullName": "ai_studio.generation_result_checkpoints",
+      "schema": "ai_studio",
+      "name": "generation_result_checkpoints",
+      "createdInMigration": "082_generation_result_checkpoints.sql",
+      "primaryKeyColumn": "creation_id",
+      "primaryKeyType": "TEXT",
+      "idFormat": "TEXT (creation_id)"
+    },
+    {
+      "fullName": "ai_studio.provider_cost_reconciliation_events",
+      "schema": "ai_studio",
+      "name": "provider_cost_reconciliation_events",
+      "createdInMigration": "086_provider_cost_reconciliation.sql",
+      "primaryKeyColumn": "id",
+      "primaryKeyType": "VARCHAR(64)",
+      "idFormat": "Prefixed randomId: <prefix>_<24hex> or <prefix>_id_<24hex>"
+    },
+    {
+      "fullName": "auth_usr.oauth_flows",
+      "schema": "auth_usr",
+      "name": "oauth_flows",
+      "createdInMigration": "088_oauth_onboarding.sql",
+      "primaryKeyColumn": "token_hash",
+      "primaryKeyType": "TEXT",
+      "idFormat": "SHA-256 hex (64 chars)"
+    }
+  ]
+}

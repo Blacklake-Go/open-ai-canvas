@@ -1,4 +1,24 @@
 {
+  "workshopProjects": {
+    "heading": "我的專案",
+    "signIn": "登入查看專案",
+    "create": "新增專案",
+    "loading": "正在載入專案…",
+    "empty": "你還沒有建立專案。",
+    "previous": "上一頁",
+    "next": "下一頁",
+    "close": "關閉編輯",
+    "title": "專案名稱",
+    "story": "故事草稿",
+    "save": "儲存專案",
+    "saved": "專案已儲存。",
+    "discard": "捨棄尚未儲存的編輯？",
+    "invalid": "專案名稱須在 160 字以內，故事須在 20,000 字以內。",
+    "missing": "無法開啟此專案。",
+    "conflict": "已有新版本。請先複製目前的草稿，再重新開啟專案。",
+    "failed": "要求失敗，請重試。",
+    "retry": "重試"
+  },
   "tabs": {
     "image": "圖像工作室",
     "headshot": "AI 頭像",

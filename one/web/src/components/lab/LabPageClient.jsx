@@ -16,6 +16,7 @@ import {
   User,
 } from 'lucide-react';
 import StudioHeader from '@/components/site/StudioHeader';
+import WorkshopProjects from './WorkshopProjects';
 
 const BASIC_TOOLS = [
   {
@@ -187,6 +188,8 @@ export default function LabPageClient() {
             </div>
           </div>
         </section>
+
+        <WorkshopProjects />
 
         <ToolSection
           index="01 / EDIT"

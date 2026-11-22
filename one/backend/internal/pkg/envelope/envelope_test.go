@@ -18,7 +18,7 @@ func TestLoadRouteContractsMatches238Baseline(t *testing.T) {
 		t.Fatalf("expected 238 routes, got %d", len(contracts))
 	}
 
-	baselinePath := filepath.Join("..", "..", "..", "..", "..", "docs", "one-baseline", "api-inventory.json")
+	baselinePath := filepath.Join("testdata", "api-inventory.json")
 	raw, err := os.ReadFile(baselinePath)
 	if err != nil {
 		t.Fatalf("read baseline api-inventory.json: %v", err)

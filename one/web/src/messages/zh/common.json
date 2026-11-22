@@ -1,4 +1,24 @@
 {
+  "workshopProjects": {
+    "heading": "我的项目",
+    "signIn": "登录查看项目",
+    "create": "新建项目",
+    "loading": "正在加载项目…",
+    "empty": "你还没有创建项目。",
+    "previous": "上一页",
+    "next": "下一页",
+    "close": "关闭编辑",
+    "title": "项目名称",
+    "story": "故事草稿",
+    "save": "保存项目",
+    "saved": "项目已保存。",
+    "discard": "放弃未保存的编辑？",
+    "invalid": "项目名称需在 160 字以内，故事需在 20,000 字以内。",
+    "missing": "无法打开此项目。",
+    "conflict": "已有新版本。请先复制当前草稿，再重新打开项目。",
+    "failed": "请求失败，请重试。",
+    "retry": "重试"
+  },
   "tabs": {
     "image": "图像工作室",
     "headshot": "AI 肖像 / 写真",

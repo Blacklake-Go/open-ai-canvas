@@ -1,4 +1,24 @@
 {
+  "workshopProjects": {
+    "heading": "Mis proyectos",
+    "signIn": "Inicia sesión para abrir tus proyectos",
+    "create": "Nuevo proyecto",
+    "loading": "Cargando proyectos…",
+    "empty": "Todavía no has creado ningún proyecto.",
+    "previous": "Página anterior",
+    "next": "Página siguiente",
+    "close": "Cerrar el editor",
+    "title": "Nombre del proyecto",
+    "story": "Borrador de la historia",
+    "save": "Guardar proyecto",
+    "saved": "Proyecto guardado.",
+    "discard": "¿Descartar los cambios sin guardar?",
+    "invalid": "Introduce un nombre de hasta 160 caracteres y una historia de hasta 20 000 caracteres.",
+    "missing": "Este proyecto no está disponible.",
+    "conflict": "Se guardó una versión más reciente. Copia tu borrador antes de volver a abrir el proyecto.",
+    "failed": "La solicitud falló. Inténtalo de nuevo.",
+    "retry": "Reintentar"
+  },
   "tabs": {
     "image": "Estudio de Imagen",
     "headshot": "Retrato IA",

@@ -9,7 +9,7 @@ import (
 )
 
 func TestCompareLocaleEnMatchesSupdanceBaseline99Migrations(t *testing.T) {
-	manifestPath := filepath.Join("..", "..", "..", "..", "docs", "one-baseline", "db-schema-inventory.json")
+	manifestPath := filepath.Join("testdata", "db-schema-inventory.json")
 	raw, err := os.ReadFile(manifestPath)
 	if err != nil {
 		t.Fatalf("read db-schema-inventory.json: %v", err)

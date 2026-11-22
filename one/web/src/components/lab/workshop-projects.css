@@ -1,0 +1,22 @@
+/* Map the ONE control tokens to the design system's light roles in this panel. */
+html.light .workshop-projects {
+  --bg-surface-rgb: 255 255 255;
+  --bg-surface-raised-rgb: 236 236 236;
+  --bg-overlay-rgb: 255 255 255;
+  --bg-base-rgb: 247 247 247;
+  --bg-subtle: #f7f7f7;
+  --text-primary-rgb: 23 23 23;
+  --text-secondary-rgb: 115 115 115;
+  --text-tertiary-rgb: 115 115 115;
+  --border-line: rgb(17 17 17 / 18%);
+  --border-line-subtle: rgb(17 17 17 / 8%);
+  --border-line-strong: rgb(17 17 17 / 32%);
+  --wash: rgb(17 17 17 / 8%);
+  --wash-press: rgb(17 17 17 / 18%);
+  --accent-primary-rgb: 23 23 23;
+  --accent-primary-hover-solid: #303030;
+  --accent-primary-active-solid: #404040;
+  --brand-ring: rgb(23 23 23 / 60%);
+  --danger: #dc2626;
+  --danger-ring: rgb(220 38 38 / 60%);
+}

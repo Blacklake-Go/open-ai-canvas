@@ -1,0 +1,4388 @@
+{
+  "generatedFrom": "/Users/seelucency/Documents/dev/Supdance Pro",
+  "summary": {
+    "totalRouteHandlers": 238,
+    "apiRouteHandlers": 234,
+    "adminRouteHandlers": 105,
+    "nonApiRouteHandlers": 4,
+    "methodCounts": {
+      "PUT": 17,
+      "GET": 154,
+      "PATCH": 12,
+      "DELETE": 21,
+      "POST": 133,
+      "OPTIONS": 14,
+      "HEAD": 2
+    },
+    "responseFormatCounts": {
+      "admin_ok_meta_envelope": 103,
+      "binary_redirect_xml_or_callback": 17,
+      "upstream_proxy_passthrough": 9,
+      "direct_domain_json": 81,
+      "success_flagged_json": 27,
+      "sse_event_stream": 1
+    }
+  },
+  "responseContracts": [
+    {
+      "id": "admin_ok_meta_envelope",
+      "description": "Admin endpoints using okResponse / errorResponse",
+      "successShape": "{ ok: true, data: T, meta: { requestId, ... } }",
+      "errorShape": "{ ok: false, error: { code, message }, meta: { requestId } }"
+    },
+    {
+      "id": "direct_domain_json",
+      "description": "Direct domain JSON objects without outer envelope",
+      "successShape": "{ ...domainFields }",
+      "errorShape": "{ error: string, code?: string, ... }"
+    },
+    {
+      "id": "success_flagged_json",
+      "description": "Domain JSON with explicit boolean success flag",
+      "successShape": "{ success: true, ...domainFields }",
+      "errorShape": "{ error: string, code?: string }"
+    },
+    {
+      "id": "upstream_proxy_passthrough",
+      "description": "Legacy or upstream proxy pass-through preserving upstream status & body",
+      "successShape": "raw upstream HTTP status + payload",
+      "errorShape": "raw upstream HTTP status or { error: string }"
+    },
+    {
+      "id": "sse_event_stream",
+      "description": "Server-Sent Events real-time stream (/api/generations/events)",
+      "successShape": "Content-Type: text/event-stream; data: {...}\\n\\n",
+      "errorShape": "HTTP 401 plain text Unauthorized / SSE error frame"
+    },
+    {
+      "id": "binary_redirect_xml_or_callback",
+      "description": "Binary download/export (200/206), OAuth/asset 302 redirects, XML sitemap, or HTML popup callbacks",
+      "successShape": "302 Location / Range 206 binary / application/xml / text/html",
+      "errorShape": "HTTP 4xx/5xx JSON or plain text"
+    }
+  ],
+  "apiPolicies": {
+    "public": [
+      "/api/auth/login",
+      "/api/auth/register",
+      "/api/auth/logout",
+      "/api/auth/me",
+      "/api/auth/social-options",
+      "/api/auth/oauth/[provider]",
+      "/api/auth/oauth/google/one-tap",
+      "/api/auth/oauth/[provider]/callback",
+      "/api/auth/phone/send-code",
+      "/api/auth/phone/verify",
+      "/api/billing/plans",
+      "/api/billing/credit-packs",
+      "/api/site/branding",
+      "/api/site/content-config",
+      "/api/site/subscription-faq",
+      "/api/i18n",
+      "/api/models/active",
+      "/api/health",
+      "/api/live",
+      "/api/ready",
+      "/api/analytics/track",
+      "/api/analytics/banner-event"
+    ],
+    "signature": [
+      "/api/billing/webhooks/stripe",
+      "/api/billing/webhooks/alipay",
+      "/api/billing/webhooks/wechat",
+      "/api/generations/[id]/callback"
+    ],
+    "legacyProxy": [
+      "/api/api/v1/*",
+      "/api/v1/*",
+      "/api/v1/creative-agent/*",
+      "/api/agents/*",
+      "/api/app/*",
+      "/api/workflow/*"
+    ]
+  },
+  "routes": [
+    {
+      "file": "app/api/admin/admins/[id]/role/route.js",
+      "routePath": "/api/admin/admins/[id]/role",
+      "isApi": true,
+      "isAdmin": true,
+      "methods": [
+        "PUT"
+      ],
+      "policyTier": "admin",
+      "authSignals": [
+        "requirePermission",
+        "withAdminErrorBoundary"
+      ],
+      "guardSignals": [],
+      "rateLimitSignals": [],
+      "responseFormat": "admin_ok_meta_envelope"
+    },
+    {
+      "file": "app/api/admin/admins/route.js",
+      "routePath": "/api/admin/admins",
+      "isApi": true,
+      "isAdmin": true,
+      "methods": [
+        "GET"
+      ],
+      "policyTier": "admin",
+      "authSignals": [
+        "requirePermission",
+        "withAdminErrorBoundary"
+      ],
+      "guardSignals": [],
+      "rateLimitSignals": [],
+      "responseFormat": "admin_ok_meta_envelope"
+    },
+    {
+      "file": "app/api/admin/analytics/cost/route.js",
+      "routePath": "/api/admin/analytics/cost",
+      "isApi": true,
+      "isAdmin": true,
+      "methods": [
+        "GET"
+      ],
+      "policyTier": "admin",
+      "authSignals": [
+        "requirePermission",
+        "withAdminErrorBoundary"
+      ],
+      "guardSignals": [],
+      "rateLimitSignals": [],
+      "responseFormat": "admin_ok_meta_envelope"
+    },
+    {
+      "file": "app/api/admin/analytics/profit/route.js",
+      "routePath": "/api/admin/analytics/profit",
+      "isApi": true,
+      "isAdmin": true,
+      "methods": [
+        "GET"
+      ],
+      "policyTier": "admin",
+      "authSignals": [
+        "requirePermission",
+        "withAdminErrorBoundary"
+      ],
+      "guardSignals": [],
+      "rateLimitSignals": [],
+      "responseFormat": "admin_ok_meta_envelope"
+    },
+    {
+      "file": "app/api/admin/audit/route.js",
+      "routePath": "/api/admin/audit",
+      "isApi": true,
+      "isAdmin": true,
+      "methods": [
+        "GET"
+      ],
+      "policyTier": "admin",
+      "authSignals": [
+        "requirePermission",
+        "withAdminErrorBoundary"
+      ],
+      "guardSignals": [],
+      "rateLimitSignals": [],
+      "responseFormat": "admin_ok_meta_envelope"
+    },
+    {
+      "file": "app/api/admin/canvas/config/route.js",
+      "routePath": "/api/admin/canvas/config",
+      "isApi": true,
+      "isAdmin": true,
+      "methods": [
+        "GET",
+        "PUT"
+      ],
+      "policyTier": "admin",
+      "authSignals": [
+        "requirePermission",
+        "withAdminErrorBoundary"
+      ],
+      "guardSignals": [],
+      "rateLimitSignals": [],
+      "responseFormat": "admin_ok_meta_envelope"
+    },
+    {
+      "file": "app/api/admin/community/posts/[id]/route.js",
+      "routePath": "/api/admin/community/posts/[id]",
+      "isApi": true,
+      "isAdmin": true,
+      "methods": [
+        "PATCH"
+      ],
+      "policyTier": "admin",
+      "authSignals": [
+        "requirePermission",
+        "withAdminErrorBoundary"
+      ],
+      "guardSignals": [],
+      "rateLimitSignals": [],
+      "responseFormat": "admin_ok_meta_envelope"
+    },
+    {
+      "file": "app/api/admin/community/posts/route.js",
+      "routePath": "/api/admin/community/posts",
+      "isApi": true,
+      "isAdmin": true,
+      "methods": [
+        "GET"
+      ],
+      "policyTier": "admin",
+      "authSignals": [
+        "requirePermission",
+        "withAdminErrorBoundary"
+      ],
+      "guardSignals": [],
+      "rateLimitSignals": [],
+      "responseFormat": "admin_ok_meta_envelope"
+    },
+    {
+      "file": "app/api/admin/content/analytics/route.js",
+      "routePath": "/api/admin/content/analytics",
+      "isApi": true,
+      "isAdmin": true,
+      "methods": [
+        "GET",
+        "DELETE"
+      ],
+      "policyTier": "admin",
+      "authSignals": [
+        "requirePermission",
+        "withAdminErrorBoundary"
+      ],
+      "guardSignals": [],
+      "rateLimitSignals": [],
+      "responseFormat": "admin_ok_meta_envelope"
+    },
+    {
+      "file": "app/api/admin/content/banner/history/[id]/route.js",
+      "routePath": "/api/admin/content/banner/history/[id]",
+      "isApi": true,
+      "isAdmin": true,
+      "methods": [
+        "POST",
+        "DELETE"
+      ],
+      "policyTier": "admin",
+      "authSignals": [
+        "requirePermission",
+        "withAdminErrorBoundary"
+      ],
+      "guardSignals": [],
+      "rateLimitSignals": [],
+      "responseFormat": "admin_ok_meta_envelope"
+    },
+    {
+      "file": "app/api/admin/content/banner/history/route.js",
+      "routePath": "/api/admin/content/banner/history",
+      "isApi": true,
+      "isAdmin": true,
+      "methods": [
+        "GET"
+      ],
+      "policyTier": "admin",
+      "authSignals": [
+        "requirePermission",
+        "withAdminErrorBoundary"
+      ],
+      "guardSignals": [],
+      "rateLimitSignals": [],
+      "responseFormat": "admin_ok_meta_envelope"
+    },
+    {
+      "file": "app/api/admin/content/banner/route.js",
+      "routePath": "/api/admin/content/banner",
+      "isApi": true,
+      "isAdmin": true,
+      "methods": [
+        "GET",
+        "POST"
+      ],
+      "policyTier": "admin",
+      "authSignals": [
+        "requirePermission",
+        "withAdminErrorBoundary"
+      ],
+      "guardSignals": [],
+      "rateLimitSignals": [],
+      "responseFormat": "admin_ok_meta_envelope"
+    },
+    {
+      "file": "app/api/admin/content/branding/route.js",
+      "routePath": "/api/admin/content/branding",
+      "isApi": true,
+      "isAdmin": true,
+      "methods": [
+        "GET",
+        "POST"
+      ],
+      "policyTier": "admin",
+      "authSignals": [
+        "requirePermission",
+        "withAdminErrorBoundary"
+      ],
+      "guardSignals": [],
+      "rateLimitSignals": [],
+      "responseFormat": "admin_ok_meta_envelope"
+    },
+    {
+      "file": "app/api/admin/content/branding/upload/route.js",
+      "routePath": "/api/admin/content/branding/upload",
+      "isApi": true,
+      "isAdmin": true,
+      "methods": [
+        "POST"
+      ],
+      "policyTier": "admin",
+      "authSignals": [
+        "requirePermission",
+        "withAdminErrorBoundary"
+      ],
+      "guardSignals": [],
+      "rateLimitSignals": [],
+      "responseFormat": "admin_ok_meta_envelope"
+    },
+    {
+      "file": "app/api/admin/content/motion/route.js",
+      "routePath": "/api/admin/content/motion",
+      "isApi": true,
+      "isAdmin": true,
+      "methods": [
+        "GET",
+        "POST"
+      ],
+      "policyTier": "admin",
+      "authSignals": [
+        "requirePermission",
+        "withAdminErrorBoundary"
+      ],
+      "guardSignals": [],
+      "rateLimitSignals": [],
+      "responseFormat": "admin_ok_meta_envelope"
+    },
+    {
+      "file": "app/api/admin/content/x-prompts/adopt/route.js",
+      "routePath": "/api/admin/content/x-prompts/adopt",
+      "isApi": true,
+      "isAdmin": true,
+      "methods": [
+        "POST"
+      ],
+      "policyTier": "admin",
+      "authSignals": [
+        "requirePermission",
+        "withAdminErrorBoundary"
+      ],
+      "guardSignals": [],
+      "rateLimitSignals": [],
+      "responseFormat": "admin_ok_meta_envelope"
+    },
+    {
+      "file": "app/api/admin/content/x-prompts/config/route.js",
+      "routePath": "/api/admin/content/x-prompts/config",
+      "isApi": true,
+      "isAdmin": true,
+      "methods": [
+        "GET",
+        "PUT"
+      ],
+      "policyTier": "admin",
+      "authSignals": [
+        "requirePermission",
+        "withAdminErrorBoundary"
+      ],
+      "guardSignals": [],
+      "rateLimitSignals": [],
+      "responseFormat": "admin_ok_meta_envelope"
+    },
+    {
+      "file": "app/api/admin/content/x-prompts/crawl/route.js",
+      "routePath": "/api/admin/content/x-prompts/crawl",
+      "isApi": true,
+      "isAdmin": true,
+      "methods": [
+        "POST"
+      ],
+      "policyTier": "admin",
+      "authSignals": [
+        "requirePermission",
+        "withAdminErrorBoundary"
+      ],
+      "guardSignals": [],
+      "rateLimitSignals": [],
+      "responseFormat": "admin_ok_meta_envelope"
+    },
+    {
+      "file": "app/api/admin/content/x-prompts/route.js",
+      "routePath": "/api/admin/content/x-prompts",
+      "isApi": true,
+      "isAdmin": true,
+      "methods": [
+        "GET",
+        "DELETE"
+      ],
+      "policyTier": "admin",
+      "authSignals": [
+        "requirePermission",
+        "withAdminErrorBoundary"
+      ],
+      "guardSignals": [],
+      "rateLimitSignals": [],
+      "responseFormat": "admin_ok_meta_envelope"
+    },
+    {
+      "file": "app/api/admin/cost-center/reconciliations/route.js",
+      "routePath": "/api/admin/cost-center/reconciliations",
+      "isApi": true,
+      "isAdmin": true,
+      "methods": [
+        "GET",
+        "POST"
+      ],
+      "policyTier": "admin",
+      "authSignals": [
+        "requirePermission",
+        "withAdminErrorBoundary"
+      ],
+      "guardSignals": [],
+      "rateLimitSignals": [],
+      "responseFormat": "admin_ok_meta_envelope"
+    },
+    {
+      "file": "app/api/admin/cost-center/route.js",
+      "routePath": "/api/admin/cost-center",
+      "isApi": true,
+      "isAdmin": true,
+      "methods": [
+        "GET"
+      ],
+      "policyTier": "admin",
+      "authSignals": [
+        "requirePermission",
+        "withAdminErrorBoundary"
+      ],
+      "guardSignals": [],
+      "rateLimitSignals": [],
+      "responseFormat": "admin_ok_meta_envelope"
+    },
+    {
+      "file": "app/api/admin/coupons/route.js",
+      "routePath": "/api/admin/coupons",
+      "isApi": true,
+      "isAdmin": true,
+      "methods": [
+        "GET",
+        "POST"
+      ],
+      "policyTier": "admin",
+      "authSignals": [
+        "requirePermission",
+        "withAdminErrorBoundary"
+      ],
+      "guardSignals": [],
+      "rateLimitSignals": [],
+      "responseFormat": "admin_ok_meta_envelope"
+    },
+    {
+      "file": "app/api/admin/credits/ledger/route.js",
+      "routePath": "/api/admin/credits/ledger",
+      "isApi": true,
+      "isAdmin": true,
+      "methods": [
+        "GET"
+      ],
+      "policyTier": "admin",
+      "authSignals": [
+        "requirePermission",
+        "withAdminErrorBoundary"
+      ],
+      "guardSignals": [],
+      "rateLimitSignals": [],
+      "responseFormat": "admin_ok_meta_envelope"
+    },
+    {
+      "file": "app/api/admin/dashboard/route.js",
+      "routePath": "/api/admin/dashboard",
+      "isApi": true,
+      "isAdmin": true,
+      "methods": [
+        "GET"
+      ],
+      "policyTier": "admin",
+      "authSignals": [
+        "requirePermission",
+        "withAdminErrorBoundary"
+      ],
+      "guardSignals": [],
+      "rateLimitSignals": [],
+      "responseFormat": "admin_ok_meta_envelope"
+    },
+    {
+      "file": "app/api/admin/export/[type]/route.js",
+      "routePath": "/api/admin/export/[type]",
+      "isApi": true,
+      "isAdmin": true,
+      "methods": [
+        "GET"
+      ],
+      "policyTier": "admin",
+      "authSignals": [
+        "requirePermission",
+        "withAdminErrorBoundary"
+      ],
+      "guardSignals": [],
+      "rateLimitSignals": [],
+      "responseFormat": "admin_ok_meta_envelope"
+    },
+    {
+      "file": "app/api/admin/exports/[id]/download/route.js",
+      "routePath": "/api/admin/exports/[id]/download",
+      "isApi": true,
+      "isAdmin": true,
+      "methods": [
+        "GET"
+      ],
+      "policyTier": "admin",
+      "authSignals": [
+        "requirePermission",
+        "withAdminErrorBoundary"
+      ],
+      "guardSignals": [],
+      "rateLimitSignals": [],
+      "responseFormat": "binary_redirect_xml_or_callback"
+    },
+    {
+      "file": "app/api/admin/exports/[id]/route.js",
+      "routePath": "/api/admin/exports/[id]",
+      "isApi": true,
+      "isAdmin": true,
+      "methods": [
+        "GET"
+      ],
+      "policyTier": "admin",
+      "authSignals": [
+        "requirePermission",
+        "withAdminErrorBoundary"
+      ],
+      "guardSignals": [],
+      "rateLimitSignals": [],
+      "responseFormat": "admin_ok_meta_envelope"
+    },
+    {
+      "file": "app/api/admin/exports/route.js",
+      "routePath": "/api/admin/exports",
+      "isApi": true,
+      "isAdmin": true,
+      "methods": [
+        "POST"
+      ],
+      "policyTier": "admin",
+      "authSignals": [
+        "requirePermission",
+        "withAdminErrorBoundary"
+      ],
+      "guardSignals": [],
+      "rateLimitSignals": [],
+      "responseFormat": "admin_ok_meta_envelope"
+    },
+    {
+      "file": "app/api/admin/feedback/[id]/review/route.js",
+      "routePath": "/api/admin/feedback/[id]/review",
+      "isApi": true,
+      "isAdmin": true,
+      "methods": [
+        "POST"
+      ],
+      "policyTier": "admin",
+      "authSignals": [
+        "requirePermission",
+        "withAdminErrorBoundary"
+      ],
+      "guardSignals": [],
+      "rateLimitSignals": [],
+      "responseFormat": "admin_ok_meta_envelope"
+    },
+    {
+      "file": "app/api/admin/generations/[id]/retry/route.js",
+      "routePath": "/api/admin/generations/[id]/retry",
+      "isApi": true,
+      "isAdmin": true,
+      "methods": [
+        "POST"
+      ],
+      "policyTier": "admin",
+      "authSignals": [
+        "requirePermission",
+        "withAdminErrorBoundary"
+      ],
+      "guardSignals": [],
+      "rateLimitSignals": [],
+      "responseFormat": "admin_ok_meta_envelope"
+    },
+    {
+      "file": "app/api/admin/generations/[id]/route.js",
+      "routePath": "/api/admin/generations/[id]",
+      "isApi": true,
+      "isAdmin": true,
+      "methods": [
+        "GET"
+      ],
+      "policyTier": "admin",
+      "authSignals": [
+        "requirePermission",
+        "withAdminErrorBoundary"
+      ],
+      "guardSignals": [],
+      "rateLimitSignals": [],
+      "responseFormat": "admin_ok_meta_envelope"
+    },
+    {
+      "file": "app/api/admin/generations/reconciliation/route.js",
+      "routePath": "/api/admin/generations/reconciliation",
+      "isApi": true,
+      "isAdmin": true,
+      "methods": [
+        "GET",
+        "POST"
+      ],
+      "policyTier": "admin",
+      "authSignals": [
+        "requirePermission",
+        "withAdminErrorBoundary"
+      ],
+      "guardSignals": [],
+      "rateLimitSignals": [],
+      "responseFormat": "admin_ok_meta_envelope"
+    },
+    {
+      "file": "app/api/admin/generations/route.js",
+      "routePath": "/api/admin/generations",
+      "isApi": true,
+      "isAdmin": true,
+      "methods": [
+        "GET"
+      ],
+      "policyTier": "admin",
+      "authSignals": [
+        "requirePermission",
+        "withAdminErrorBoundary"
+      ],
+      "guardSignals": [],
+      "rateLimitSignals": [],
+      "responseFormat": "admin_ok_meta_envelope"
+    },
+    {
+      "file": "app/api/admin/health/route.js",
+      "routePath": "/api/admin/health",
+      "isApi": true,
+      "isAdmin": true,
+      "methods": [
+        "GET"
+      ],
+      "policyTier": "admin",
+      "authSignals": [
+        "requirePermission",
+        "withAdminErrorBoundary"
+      ],
+      "guardSignals": [],
+      "rateLimitSignals": [],
+      "responseFormat": "admin_ok_meta_envelope"
+    },
+    {
+      "file": "app/api/admin/i18n/route.js",
+      "routePath": "/api/admin/i18n",
+      "isApi": true,
+      "isAdmin": true,
+      "methods": [
+        "GET",
+        "POST"
+      ],
+      "policyTier": "admin",
+      "authSignals": [
+        "requirePermission",
+        "withAdminErrorBoundary"
+      ],
+      "guardSignals": [],
+      "rateLimitSignals": [],
+      "responseFormat": "admin_ok_meta_envelope"
+    },
+    {
+      "file": "app/api/admin/invites/[id]/route.js",
+      "routePath": "/api/admin/invites/[id]",
+      "isApi": true,
+      "isAdmin": true,
+      "methods": [
+        "PATCH"
+      ],
+      "policyTier": "admin",
+      "authSignals": [
+        "requirePermission",
+        "withAdminErrorBoundary"
+      ],
+      "guardSignals": [],
+      "rateLimitSignals": [],
+      "responseFormat": "admin_ok_meta_envelope"
+    },
+    {
+      "file": "app/api/admin/invites/[id]/users/route.js",
+      "routePath": "/api/admin/invites/[id]/users",
+      "isApi": true,
+      "isAdmin": true,
+      "methods": [
+        "GET"
+      ],
+      "policyTier": "admin",
+      "authSignals": [
+        "requirePermission",
+        "withAdminErrorBoundary"
+      ],
+      "guardSignals": [],
+      "rateLimitSignals": [],
+      "responseFormat": "admin_ok_meta_envelope"
+    },
+    {
+      "file": "app/api/admin/invites/route.js",
+      "routePath": "/api/admin/invites",
+      "isApi": true,
+      "isAdmin": true,
+      "methods": [
+        "GET",
+        "POST"
+      ],
+      "policyTier": "admin",
+      "authSignals": [
+        "requirePermission",
+        "withAdminErrorBoundary"
+      ],
+      "guardSignals": [],
+      "rateLimitSignals": [],
+      "responseFormat": "admin_ok_meta_envelope"
+    },
+    {
+      "file": "app/api/admin/invites/switch/route.js",
+      "routePath": "/api/admin/invites/switch",
+      "isApi": true,
+      "isAdmin": true,
+      "methods": [
+        "GET",
+        "POST"
+      ],
+      "policyTier": "admin",
+      "authSignals": [
+        "requirePermission",
+        "withAdminErrorBoundary"
+      ],
+      "guardSignals": [],
+      "rateLimitSignals": [],
+      "responseFormat": "admin_ok_meta_envelope"
+    },
+    {
+      "file": "app/api/admin/login/social-regions/route.js",
+      "routePath": "/api/admin/login/social-regions",
+      "isApi": true,
+      "isAdmin": true,
+      "methods": [
+        "GET",
+        "PUT"
+      ],
+      "policyTier": "admin",
+      "authSignals": [
+        "requirePermission",
+        "withAdminErrorBoundary"
+      ],
+      "guardSignals": [],
+      "rateLimitSignals": [],
+      "responseFormat": "admin_ok_meta_envelope"
+    },
+    {
+      "file": "app/api/admin/marketing/email/templates/route.js",
+      "routePath": "/api/admin/marketing/email/templates",
+      "isApi": true,
+      "isAdmin": true,
+      "methods": [
+        "GET"
+      ],
+      "policyTier": "admin",
+      "authSignals": [
+        "requirePermission",
+        "withAdminErrorBoundary"
+      ],
+      "guardSignals": [],
+      "rateLimitSignals": [],
+      "responseFormat": "admin_ok_meta_envelope"
+    },
+    {
+      "file": "app/api/admin/marketing/email/test/route.js",
+      "routePath": "/api/admin/marketing/email/test",
+      "isApi": true,
+      "isAdmin": true,
+      "methods": [
+        "POST"
+      ],
+      "policyTier": "admin",
+      "authSignals": [
+        "requirePermission",
+        "withAdminErrorBoundary"
+      ],
+      "guardSignals": [],
+      "rateLimitSignals": [],
+      "responseFormat": "admin_ok_meta_envelope"
+    },
+    {
+      "file": "app/api/admin/models/[id]/health/route.js",
+      "routePath": "/api/admin/models/[id]/health",
+      "isApi": true,
+      "isAdmin": true,
+      "methods": [
+        "POST"
+      ],
+      "policyTier": "admin",
+      "authSignals": [
+        "requirePermission",
+        "withAdminErrorBoundary"
+      ],
+      "guardSignals": [],
+      "rateLimitSignals": [],
+      "responseFormat": "admin_ok_meta_envelope"
+    },
+    {
+      "file": "app/api/admin/models/[id]/provider/route.js",
+      "routePath": "/api/admin/models/[id]/provider",
+      "isApi": true,
+      "isAdmin": true,
+      "methods": [
+        "PATCH"
+      ],
+      "policyTier": "admin",
+      "authSignals": [
+        "requirePermission",
+        "withAdminErrorBoundary"
+      ],
+      "guardSignals": [],
+      "rateLimitSignals": [],
+      "responseFormat": "admin_ok_meta_envelope"
+    },
+    {
+      "file": "app/api/admin/models/[id]/route.js",
+      "routePath": "/api/admin/models/[id]",
+      "isApi": true,
+      "isAdmin": true,
+      "methods": [
+        "PATCH"
+      ],
+      "policyTier": "admin",
+      "authSignals": [
+        "requirePermission",
+        "withAdminErrorBoundary"
+      ],
+      "guardSignals": [],
+      "rateLimitSignals": [],
+      "responseFormat": "admin_ok_meta_envelope"
+    },
+    {
+      "file": "app/api/admin/models/brands/route.js",
+      "routePath": "/api/admin/models/brands",
+      "isApi": true,
+      "isAdmin": true,
+      "methods": [
+        "GET",
+        "POST"
+      ],
+      "policyTier": "admin",
+      "authSignals": [
+        "requirePermission",
+        "withAdminErrorBoundary"
+      ],
+      "guardSignals": [],
+      "rateLimitSignals": [],
+      "responseFormat": "admin_ok_meta_envelope"
+    },
+    {
+      "file": "app/api/admin/models/catalog/route.js",
+      "routePath": "/api/admin/models/catalog",
+      "isApi": true,
+      "isAdmin": true,
+      "methods": [
+        "GET",
+        "POST"
+      ],
+      "policyTier": "admin",
+      "authSignals": [
+        "requirePermission",
+        "withAdminErrorBoundary"
+      ],
+      "guardSignals": [],
+      "rateLimitSignals": [],
+      "responseFormat": "admin_ok_meta_envelope"
+    },
+    {
+      "file": "app/api/admin/models/catalog/sync/route.js",
+      "routePath": "/api/admin/models/catalog/sync",
+      "isApi": true,
+      "isAdmin": true,
+      "methods": [
+        "GET",
+        "POST"
+      ],
+      "policyTier": "admin",
+      "authSignals": [
+        "requirePermission",
+        "withAdminErrorBoundary"
+      ],
+      "guardSignals": [],
+      "rateLimitSignals": [],
+      "responseFormat": "admin_ok_meta_envelope"
+    },
+    {
+      "file": "app/api/admin/models/control/export/route.js",
+      "routePath": "/api/admin/models/control/export",
+      "isApi": true,
+      "isAdmin": true,
+      "methods": [
+        "GET"
+      ],
+      "policyTier": "admin",
+      "authSignals": [
+        "requirePermission",
+        "withAdminErrorBoundary"
+      ],
+      "guardSignals": [],
+      "rateLimitSignals": [],
+      "responseFormat": "binary_redirect_xml_or_callback"
+    },
+    {
+      "file": "app/api/admin/models/control/route.js",
+      "routePath": "/api/admin/models/control",
+      "isApi": true,
+      "isAdmin": true,
+      "methods": [
+        "GET",
+        "POST"
+      ],
+      "policyTier": "admin",
+      "authSignals": [
+        "requirePermission",
+        "withAdminErrorBoundary"
+      ],
+      "guardSignals": [],
+      "rateLimitSignals": [],
+      "responseFormat": "admin_ok_meta_envelope"
+    },
+    {
+      "file": "app/api/admin/models/deduplicate/route.js",
+      "routePath": "/api/admin/models/deduplicate",
+      "isApi": true,
+      "isAdmin": true,
+      "methods": [
+        "GET",
+        "POST"
+      ],
+      "policyTier": "admin",
+      "authSignals": [
+        "requirePermission",
+        "withAdminErrorBoundary"
+      ],
+      "guardSignals": [],
+      "rateLimitSignals": [],
+      "responseFormat": "admin_ok_meta_envelope"
+    },
+    {
+      "file": "app/api/admin/models/health/reset/route.js",
+      "routePath": "/api/admin/models/health/reset",
+      "isApi": true,
+      "isAdmin": true,
+      "methods": [
+        "POST"
+      ],
+      "policyTier": "admin",
+      "authSignals": [
+        "requirePermission",
+        "withAdminErrorBoundary"
+      ],
+      "guardSignals": [],
+      "rateLimitSignals": [],
+      "responseFormat": "admin_ok_meta_envelope"
+    },
+    {
+      "file": "app/api/admin/models/health/route.js",
+      "routePath": "/api/admin/models/health",
+      "isApi": true,
+      "isAdmin": true,
+      "methods": [
+        "GET",
+        "POST"
+      ],
+      "policyTier": "admin",
+      "authSignals": [
+        "requirePermission",
+        "withAdminErrorBoundary"
+      ],
+      "guardSignals": [],
+      "rateLimitSignals": [],
+      "responseFormat": "admin_ok_meta_envelope"
+    },
+    {
+      "file": "app/api/admin/models/pricing/route.js",
+      "routePath": "/api/admin/models/pricing",
+      "isApi": true,
+      "isAdmin": true,
+      "methods": [
+        "GET",
+        "POST"
+      ],
+      "policyTier": "admin",
+      "authSignals": [
+        "requirePermission",
+        "withAdminErrorBoundary"
+      ],
+      "guardSignals": [],
+      "rateLimitSignals": [],
+      "responseFormat": "admin_ok_meta_envelope"
+    },
+    {
+      "file": "app/api/admin/models/pricing/strategy/route.js",
+      "routePath": "/api/admin/models/pricing/strategy",
+      "isApi": true,
+      "isAdmin": true,
+      "methods": [
+        "GET",
+        "POST"
+      ],
+      "policyTier": "admin",
+      "authSignals": [
+        "requirePermission",
+        "withAdminErrorBoundary"
+      ],
+      "guardSignals": [],
+      "rateLimitSignals": [],
+      "responseFormat": "admin_ok_meta_envelope"
+    },
+    {
+      "file": "app/api/admin/models/providers/route.js",
+      "routePath": "/api/admin/models/providers",
+      "isApi": true,
+      "isAdmin": true,
+      "methods": [
+        "GET",
+        "POST",
+        "DELETE"
+      ],
+      "policyTier": "admin",
+      "authSignals": [
+        "requirePermission",
+        "withAdminErrorBoundary"
+      ],
+      "guardSignals": [],
+      "rateLimitSignals": [],
+      "responseFormat": "admin_ok_meta_envelope"
+    },
+    {
+      "file": "app/api/admin/models/publication/route.js",
+      "routePath": "/api/admin/models/publication",
+      "isApi": true,
+      "isAdmin": true,
+      "methods": [
+        "POST"
+      ],
+      "policyTier": "admin",
+      "authSignals": [
+        "requirePermission",
+        "withAdminErrorBoundary"
+      ],
+      "guardSignals": [],
+      "rateLimitSignals": [],
+      "responseFormat": "admin_ok_meta_envelope"
+    },
+    {
+      "file": "app/api/admin/models/route.js",
+      "routePath": "/api/admin/models",
+      "isApi": true,
+      "isAdmin": true,
+      "methods": [
+        "GET"
+      ],
+      "policyTier": "admin",
+      "authSignals": [
+        "requirePermission",
+        "withAdminErrorBoundary"
+      ],
+      "guardSignals": [],
+      "rateLimitSignals": [],
+      "responseFormat": "admin_ok_meta_envelope"
+    },
+    {
+      "file": "app/api/admin/models/routing/route.js",
+      "routePath": "/api/admin/models/routing",
+      "isApi": true,
+      "isAdmin": true,
+      "methods": [
+        "GET",
+        "POST",
+        "DELETE"
+      ],
+      "policyTier": "admin",
+      "authSignals": [
+        "requirePermission",
+        "withAdminErrorBoundary"
+      ],
+      "guardSignals": [],
+      "rateLimitSignals": [],
+      "responseFormat": "admin_ok_meta_envelope"
+    },
+    {
+      "file": "app/api/admin/models/routing/test/route.js",
+      "routePath": "/api/admin/models/routing/test",
+      "isApi": true,
+      "isAdmin": true,
+      "methods": [
+        "POST"
+      ],
+      "policyTier": "admin",
+      "authSignals": [
+        "requirePermission",
+        "withAdminErrorBoundary"
+      ],
+      "guardSignals": [],
+      "rateLimitSignals": [],
+      "responseFormat": "admin_ok_meta_envelope"
+    },
+    {
+      "file": "app/api/admin/models/telemetry/route.js",
+      "routePath": "/api/admin/models/telemetry",
+      "isApi": true,
+      "isAdmin": true,
+      "methods": [
+        "GET"
+      ],
+      "policyTier": "admin",
+      "authSignals": [
+        "requirePermission",
+        "withAdminErrorBoundary"
+      ],
+      "guardSignals": [],
+      "rateLimitSignals": [],
+      "responseFormat": "admin_ok_meta_envelope"
+    },
+    {
+      "file": "app/api/admin/moderation/[id]/resolve/route.js",
+      "routePath": "/api/admin/moderation/[id]/resolve",
+      "isApi": true,
+      "isAdmin": true,
+      "methods": [
+        "POST"
+      ],
+      "policyTier": "admin",
+      "authSignals": [
+        "requirePermission",
+        "withAdminErrorBoundary"
+      ],
+      "guardSignals": [],
+      "rateLimitSignals": [],
+      "responseFormat": "admin_ok_meta_envelope"
+    },
+    {
+      "file": "app/api/admin/moderation/route.js",
+      "routePath": "/api/admin/moderation",
+      "isApi": true,
+      "isAdmin": true,
+      "methods": [
+        "GET"
+      ],
+      "policyTier": "admin",
+      "authSignals": [
+        "requirePermission",
+        "withAdminErrorBoundary"
+      ],
+      "guardSignals": [],
+      "rateLimitSignals": [],
+      "responseFormat": "admin_ok_meta_envelope"
+    },
+    {
+      "file": "app/api/admin/orders/[id]/refund/route.js",
+      "routePath": "/api/admin/orders/[id]/refund",
+      "isApi": true,
+      "isAdmin": true,
+      "methods": [
+        "POST"
+      ],
+      "policyTier": "admin",
+      "authSignals": [
+        "requirePermission",
+        "withAdminErrorBoundary"
+      ],
+      "guardSignals": [],
+      "rateLimitSignals": [],
+      "responseFormat": "admin_ok_meta_envelope"
+    },
+    {
+      "file": "app/api/admin/orders/route.js",
+      "routePath": "/api/admin/orders",
+      "isApi": true,
+      "isAdmin": true,
+      "methods": [
+        "GET"
+      ],
+      "policyTier": "admin",
+      "authSignals": [
+        "requirePermission",
+        "withAdminErrorBoundary"
+      ],
+      "guardSignals": [],
+      "rateLimitSignals": [],
+      "responseFormat": "admin_ok_meta_envelope"
+    },
+    {
+      "file": "app/api/admin/plans/[id]/route.js",
+      "routePath": "/api/admin/plans/[id]",
+      "isApi": true,
+      "isAdmin": true,
+      "methods": [
+        "PATCH"
+      ],
+      "policyTier": "admin",
+      "authSignals": [
+        "requirePermission",
+        "withAdminErrorBoundary"
+      ],
+      "guardSignals": [],
+      "rateLimitSignals": [],
+      "responseFormat": "admin_ok_meta_envelope"
+    },
+    {
+      "file": "app/api/admin/plans/route.js",
+      "routePath": "/api/admin/plans",
+      "isApi": true,
+      "isAdmin": true,
+      "methods": [
+        "GET",
+        "POST"
+      ],
+      "policyTier": "admin",
+      "authSignals": [
+        "requirePermission",
+        "withAdminErrorBoundary"
+      ],
+      "guardSignals": [],
+      "rateLimitSignals": [],
+      "responseFormat": "admin_ok_meta_envelope"
+    },
+    {
+      "file": "app/api/admin/profit-center/route.js",
+      "routePath": "/api/admin/profit-center",
+      "isApi": true,
+      "isAdmin": true,
+      "methods": [
+        "GET"
+      ],
+      "policyTier": "admin",
+      "authSignals": [
+        "requirePermission",
+        "withAdminErrorBoundary"
+      ],
+      "guardSignals": [],
+      "rateLimitSignals": [],
+      "responseFormat": "admin_ok_meta_envelope"
+    },
+    {
+      "file": "app/api/admin/providers/[id]/enabled/route.js",
+      "routePath": "/api/admin/providers/[id]/enabled",
+      "isApi": true,
+      "isAdmin": true,
+      "methods": [
+        "PUT"
+      ],
+      "policyTier": "admin",
+      "authSignals": [
+        "requirePermission",
+        "withAdminErrorBoundary"
+      ],
+      "guardSignals": [],
+      "rateLimitSignals": [],
+      "responseFormat": "admin_ok_meta_envelope"
+    },
+    {
+      "file": "app/api/admin/providers/[id]/env/route.js",
+      "routePath": "/api/admin/providers/[id]/env",
+      "isApi": true,
+      "isAdmin": true,
+      "methods": [
+        "GET",
+        "PUT"
+      ],
+      "policyTier": "admin",
+      "authSignals": [
+        "requirePermission",
+        "withAdminErrorBoundary"
+      ],
+      "guardSignals": [],
+      "rateLimitSignals": [],
+      "responseFormat": "admin_ok_meta_envelope"
+    },
+    {
+      "file": "app/api/admin/providers/[id]/secret/route.js",
+      "routePath": "/api/admin/providers/[id]/secret",
+      "isApi": true,
+      "isAdmin": true,
+      "methods": [
+        "PUT"
+      ],
+      "policyTier": "admin",
+      "authSignals": [
+        "requirePermission",
+        "withAdminErrorBoundary"
+      ],
+      "guardSignals": [],
+      "rateLimitSignals": [],
+      "responseFormat": "admin_ok_meta_envelope"
+    },
+    {
+      "file": "app/api/admin/providers/[id]/test/route.js",
+      "routePath": "/api/admin/providers/[id]/test",
+      "isApi": true,
+      "isAdmin": true,
+      "methods": [
+        "POST"
+      ],
+      "policyTier": "admin",
+      "authSignals": [
+        "requirePermission",
+        "withAdminErrorBoundary"
+      ],
+      "guardSignals": [],
+      "rateLimitSignals": [],
+      "responseFormat": "admin_ok_meta_envelope"
+    },
+    {
+      "file": "app/api/admin/providers/[id]/webhooks/route.js",
+      "routePath": "/api/admin/providers/[id]/webhooks",
+      "isApi": true,
+      "isAdmin": true,
+      "methods": [
+        "GET"
+      ],
+      "policyTier": "admin",
+      "authSignals": [
+        "requirePermission",
+        "webhookSignature",
+        "withAdminErrorBoundary"
+      ],
+      "guardSignals": [],
+      "rateLimitSignals": [],
+      "responseFormat": "admin_ok_meta_envelope"
+    },
+    {
+      "file": "app/api/admin/providers/email/diagnose/route.js",
+      "routePath": "/api/admin/providers/email/diagnose",
+      "isApi": true,
+      "isAdmin": true,
+      "methods": [
+        "POST"
+      ],
+      "policyTier": "admin",
+      "authSignals": [
+        "requirePermission",
+        "withAdminErrorBoundary"
+      ],
+      "guardSignals": [],
+      "rateLimitSignals": [],
+      "responseFormat": "admin_ok_meta_envelope"
+    },
+    {
+      "file": "app/api/admin/providers/email/health/route.js",
+      "routePath": "/api/admin/providers/email/health",
+      "isApi": true,
+      "isAdmin": true,
+      "methods": [
+        "POST"
+      ],
+      "policyTier": "admin",
+      "authSignals": [
+        "requirePermission",
+        "withAdminErrorBoundary"
+      ],
+      "guardSignals": [],
+      "rateLimitSignals": [],
+      "responseFormat": "admin_ok_meta_envelope"
+    },
+    {
+      "file": "app/api/admin/providers/email/route.js",
+      "routePath": "/api/admin/providers/email",
+      "isApi": true,
+      "isAdmin": true,
+      "methods": [
+        "GET",
+        "PUT"
+      ],
+      "policyTier": "admin",
+      "authSignals": [
+        "requirePermission",
+        "withAdminErrorBoundary"
+      ],
+      "guardSignals": [],
+      "rateLimitSignals": [],
+      "responseFormat": "admin_ok_meta_envelope"
+    },
+    {
+      "file": "app/api/admin/providers/email/test/route.js",
+      "routePath": "/api/admin/providers/email/test",
+      "isApi": true,
+      "isAdmin": true,
+      "methods": [
+        "POST"
+      ],
+      "policyTier": "admin",
+      "authSignals": [
+        "requirePermission",
+        "withAdminErrorBoundary"
+      ],
+      "guardSignals": [],
+      "rateLimitSignals": [],
+      "responseFormat": "admin_ok_meta_envelope"
+    },
+    {
+      "file": "app/api/admin/providers/route.js",
+      "routePath": "/api/admin/providers",
+      "isApi": true,
+      "isAdmin": true,
+      "methods": [
+        "GET"
+      ],
+      "policyTier": "admin",
+      "authSignals": [
+        "requirePermission",
+        "withAdminErrorBoundary"
+      ],
+      "guardSignals": [],
+      "rateLimitSignals": [],
+      "responseFormat": "admin_ok_meta_envelope"
+    },
+    {
+      "file": "app/api/admin/providers/sms/health/route.js",
+      "routePath": "/api/admin/providers/sms/health",
+      "isApi": true,
+      "isAdmin": true,
+      "methods": [
+        "POST"
+      ],
+      "policyTier": "admin",
+      "authSignals": [
+        "requirePermission",
+        "withAdminErrorBoundary"
+      ],
+      "guardSignals": [],
+      "rateLimitSignals": [],
+      "responseFormat": "admin_ok_meta_envelope"
+    },
+    {
+      "file": "app/api/admin/providers/sms/route.js",
+      "routePath": "/api/admin/providers/sms",
+      "isApi": true,
+      "isAdmin": true,
+      "methods": [
+        "GET",
+        "PUT"
+      ],
+      "policyTier": "admin",
+      "authSignals": [
+        "requirePermission",
+        "withAdminErrorBoundary"
+      ],
+      "guardSignals": [],
+      "rateLimitSignals": [],
+      "responseFormat": "admin_ok_meta_envelope"
+    },
+    {
+      "file": "app/api/admin/providers/sms/secrets/route.js",
+      "routePath": "/api/admin/providers/sms/secrets",
+      "isApi": true,
+      "isAdmin": true,
+      "methods": [
+        "PUT"
+      ],
+      "policyTier": "admin",
+      "authSignals": [
+        "requirePermission",
+        "withAdminErrorBoundary"
+      ],
+      "guardSignals": [],
+      "rateLimitSignals": [],
+      "responseFormat": "admin_ok_meta_envelope"
+    },
+    {
+      "file": "app/api/admin/providers/sms/test/route.js",
+      "routePath": "/api/admin/providers/sms/test",
+      "isApi": true,
+      "isAdmin": true,
+      "methods": [
+        "POST"
+      ],
+      "policyTier": "admin",
+      "authSignals": [
+        "requirePermission",
+        "withAdminErrorBoundary"
+      ],
+      "guardSignals": [],
+      "rateLimitSignals": [],
+      "responseFormat": "admin_ok_meta_envelope"
+    },
+    {
+      "file": "app/api/admin/routing/[modelId]/channels/route.js",
+      "routePath": "/api/admin/routing/[modelId]/channels",
+      "isApi": true,
+      "isAdmin": true,
+      "methods": [
+        "GET",
+        "PATCH"
+      ],
+      "policyTier": "admin",
+      "authSignals": [
+        "requirePermission",
+        "withAdminErrorBoundary"
+      ],
+      "guardSignals": [],
+      "rateLimitSignals": [],
+      "responseFormat": "admin_ok_meta_envelope"
+    },
+    {
+      "file": "app/api/admin/routing/route.js",
+      "routePath": "/api/admin/routing",
+      "isApi": true,
+      "isAdmin": true,
+      "methods": [
+        "GET",
+        "PATCH"
+      ],
+      "policyTier": "admin",
+      "authSignals": [
+        "requirePermission",
+        "withAdminErrorBoundary"
+      ],
+      "guardSignals": [],
+      "rateLimitSignals": [],
+      "responseFormat": "admin_ok_meta_envelope"
+    },
+    {
+      "file": "app/api/admin/security/sessions/[hash]/route.js",
+      "routePath": "/api/admin/security/sessions/[hash]",
+      "isApi": true,
+      "isAdmin": true,
+      "methods": [
+        "POST",
+        "DELETE"
+      ],
+      "policyTier": "admin",
+      "authSignals": [
+        "requirePermission",
+        "withAdminErrorBoundary"
+      ],
+      "guardSignals": [],
+      "rateLimitSignals": [],
+      "responseFormat": "admin_ok_meta_envelope"
+    },
+    {
+      "file": "app/api/admin/seo/config/route.js",
+      "routePath": "/api/admin/seo/config",
+      "isApi": true,
+      "isAdmin": true,
+      "methods": [
+        "GET",
+        "POST"
+      ],
+      "policyTier": "admin",
+      "authSignals": [
+        "requirePermission",
+        "withAdminErrorBoundary"
+      ],
+      "guardSignals": [],
+      "rateLimitSignals": [],
+      "responseFormat": "admin_ok_meta_envelope"
+    },
+    {
+      "file": "app/api/admin/seo/push/config/route.js",
+      "routePath": "/api/admin/seo/push/config",
+      "isApi": true,
+      "isAdmin": true,
+      "methods": [
+        "GET",
+        "POST"
+      ],
+      "policyTier": "admin",
+      "authSignals": [
+        "requirePermission",
+        "withAdminErrorBoundary"
+      ],
+      "guardSignals": [],
+      "rateLimitSignals": [],
+      "responseFormat": "admin_ok_meta_envelope"
+    },
+    {
+      "file": "app/api/admin/seo/push/route.js",
+      "routePath": "/api/admin/seo/push",
+      "isApi": true,
+      "isAdmin": true,
+      "methods": [
+        "GET",
+        "POST"
+      ],
+      "policyTier": "admin",
+      "authSignals": [
+        "requirePermission",
+        "withAdminErrorBoundary"
+      ],
+      "guardSignals": [],
+      "rateLimitSignals": [],
+      "responseFormat": "admin_ok_meta_envelope"
+    },
+    {
+      "file": "app/api/admin/settings/route.js",
+      "routePath": "/api/admin/settings",
+      "isApi": true,
+      "isAdmin": true,
+      "methods": [
+        "GET",
+        "POST"
+      ],
+      "policyTier": "admin",
+      "authSignals": [
+        "requirePermission",
+        "withAdminErrorBoundary"
+      ],
+      "guardSignals": [],
+      "rateLimitSignals": [],
+      "responseFormat": "admin_ok_meta_envelope"
+    },
+    {
+      "file": "app/api/admin/storage/bucket/route.js",
+      "routePath": "/api/admin/storage/bucket",
+      "isApi": true,
+      "isAdmin": true,
+      "methods": [
+        "GET",
+        "POST"
+      ],
+      "policyTier": "admin",
+      "authSignals": [
+        "requirePermission",
+        "withAdminErrorBoundary"
+      ],
+      "guardSignals": [],
+      "rateLimitSignals": [],
+      "responseFormat": "admin_ok_meta_envelope"
+    },
+    {
+      "file": "app/api/admin/storage/route.js",
+      "routePath": "/api/admin/storage",
+      "isApi": true,
+      "isAdmin": true,
+      "methods": [
+        "GET",
+        "POST"
+      ],
+      "policyTier": "admin",
+      "authSignals": [
+        "requirePermission",
+        "withAdminErrorBoundary"
+      ],
+      "guardSignals": [],
+      "rateLimitSignals": [],
+      "responseFormat": "admin_ok_meta_envelope"
+    },
+    {
+      "file": "app/api/admin/subscription-faq/route.js",
+      "routePath": "/api/admin/subscription-faq",
+      "isApi": true,
+      "isAdmin": true,
+      "methods": [
+        "GET",
+        "PUT"
+      ],
+      "policyTier": "admin",
+      "authSignals": [
+        "requirePermission",
+        "withAdminErrorBoundary"
+      ],
+      "guardSignals": [],
+      "rateLimitSignals": [],
+      "responseFormat": "admin_ok_meta_envelope"
+    },
+    {
+      "file": "app/api/admin/subscriptions/route.js",
+      "routePath": "/api/admin/subscriptions",
+      "isApi": true,
+      "isAdmin": true,
+      "methods": [
+        "GET"
+      ],
+      "policyTier": "admin",
+      "authSignals": [
+        "requirePermission",
+        "withAdminErrorBoundary"
+      ],
+      "guardSignals": [],
+      "rateLimitSignals": [],
+      "responseFormat": "admin_ok_meta_envelope"
+    },
+    {
+      "file": "app/api/admin/system/logs/route.js",
+      "routePath": "/api/admin/system/logs",
+      "isApi": true,
+      "isAdmin": true,
+      "methods": [
+        "GET"
+      ],
+      "policyTier": "admin",
+      "authSignals": [
+        "requirePermission",
+        "withAdminErrorBoundary"
+      ],
+      "guardSignals": [],
+      "rateLimitSignals": [],
+      "responseFormat": "admin_ok_meta_envelope"
+    },
+    {
+      "file": "app/api/admin/users/[id]/credits/route.js",
+      "routePath": "/api/admin/users/[id]/credits",
+      "isApi": true,
+      "isAdmin": true,
+      "methods": [
+        "POST"
+      ],
+      "policyTier": "admin",
+      "authSignals": [
+        "requirePermission",
+        "withAdminErrorBoundary"
+      ],
+      "guardSignals": [],
+      "rateLimitSignals": [],
+      "responseFormat": "admin_ok_meta_envelope"
+    },
+    {
+      "file": "app/api/admin/users/[id]/notes/route.js",
+      "routePath": "/api/admin/users/[id]/notes",
+      "isApi": true,
+      "isAdmin": true,
+      "methods": [
+        "POST"
+      ],
+      "policyTier": "admin",
+      "authSignals": [
+        "requirePermission",
+        "withAdminErrorBoundary"
+      ],
+      "guardSignals": [],
+      "rateLimitSignals": [],
+      "responseFormat": "admin_ok_meta_envelope"
+    },
+    {
+      "file": "app/api/admin/users/[id]/route.js",
+      "routePath": "/api/admin/users/[id]",
+      "isApi": true,
+      "isAdmin": true,
+      "methods": [
+        "GET",
+        "PATCH"
+      ],
+      "policyTier": "admin",
+      "authSignals": [
+        "requirePermission",
+        "withAdminErrorBoundary"
+      ],
+      "guardSignals": [],
+      "rateLimitSignals": [],
+      "responseFormat": "admin_ok_meta_envelope"
+    },
+    {
+      "file": "app/api/admin/users/[id]/sessions/route.js",
+      "routePath": "/api/admin/users/[id]/sessions",
+      "isApi": true,
+      "isAdmin": true,
+      "methods": [
+        "POST",
+        "DELETE"
+      ],
+      "policyTier": "admin",
+      "authSignals": [
+        "requirePermission",
+        "withAdminErrorBoundary"
+      ],
+      "guardSignals": [],
+      "rateLimitSignals": [],
+      "responseFormat": "admin_ok_meta_envelope"
+    },
+    {
+      "file": "app/api/admin/users/[id]/tags/route.js",
+      "routePath": "/api/admin/users/[id]/tags",
+      "isApi": true,
+      "isAdmin": true,
+      "methods": [
+        "POST"
+      ],
+      "policyTier": "admin",
+      "authSignals": [
+        "requirePermission",
+        "withAdminErrorBoundary"
+      ],
+      "guardSignals": [],
+      "rateLimitSignals": [],
+      "responseFormat": "admin_ok_meta_envelope"
+    },
+    {
+      "file": "app/api/admin/users/dashboard/route.js",
+      "routePath": "/api/admin/users/dashboard",
+      "isApi": true,
+      "isAdmin": true,
+      "methods": [
+        "GET"
+      ],
+      "policyTier": "admin",
+      "authSignals": [
+        "requirePermission",
+        "withAdminErrorBoundary"
+      ],
+      "guardSignals": [],
+      "rateLimitSignals": [],
+      "responseFormat": "admin_ok_meta_envelope"
+    },
+    {
+      "file": "app/api/admin/users/route.js",
+      "routePath": "/api/admin/users",
+      "isApi": true,
+      "isAdmin": true,
+      "methods": [
+        "GET"
+      ],
+      "policyTier": "admin",
+      "authSignals": [
+        "requirePermission",
+        "withAdminErrorBoundary"
+      ],
+      "guardSignals": [],
+      "rateLimitSignals": [],
+      "responseFormat": "admin_ok_meta_envelope"
+    },
+    {
+      "file": "app/api/admin/visitors/analytics/ga4/route.js",
+      "routePath": "/api/admin/visitors/analytics/ga4",
+      "isApi": true,
+      "isAdmin": true,
+      "methods": [
+        "GET",
+        "POST"
+      ],
+      "policyTier": "admin",
+      "authSignals": [
+        "requirePermission",
+        "withAdminErrorBoundary"
+      ],
+      "guardSignals": [],
+      "rateLimitSignals": [],
+      "responseFormat": "admin_ok_meta_envelope"
+    },
+    {
+      "file": "app/api/admin/visitors/analytics/route.js",
+      "routePath": "/api/admin/visitors/analytics",
+      "isApi": true,
+      "isAdmin": true,
+      "methods": [
+        "GET",
+        "POST"
+      ],
+      "policyTier": "admin",
+      "authSignals": [
+        "requirePermission",
+        "withAdminErrorBoundary"
+      ],
+      "guardSignals": [],
+      "rateLimitSignals": [],
+      "responseFormat": "admin_ok_meta_envelope"
+    },
+    {
+      "file": "app/api/admin/webhooks/[id]/replay/route.js",
+      "routePath": "/api/admin/webhooks/[id]/replay",
+      "isApi": true,
+      "isAdmin": true,
+      "methods": [
+        "POST"
+      ],
+      "policyTier": "admin",
+      "authSignals": [
+        "requirePermission",
+        "withAdminErrorBoundary"
+      ],
+      "guardSignals": [],
+      "rateLimitSignals": [],
+      "responseFormat": "admin_ok_meta_envelope"
+    },
+    {
+      "file": "app/api/admin/webhooks/route.js",
+      "routePath": "/api/admin/webhooks",
+      "isApi": true,
+      "isAdmin": true,
+      "methods": [
+        "GET"
+      ],
+      "policyTier": "admin",
+      "authSignals": [
+        "requirePermission",
+        "withAdminErrorBoundary"
+      ],
+      "guardSignals": [],
+      "rateLimitSignals": [],
+      "responseFormat": "admin_ok_meta_envelope"
+    },
+    {
+      "file": "app/api/agents/[[...path]]/route.js",
+      "routePath": "/api/agents/[[...path]]",
+      "isApi": true,
+      "isAdmin": false,
+      "methods": [
+        "GET",
+        "POST",
+        "PUT",
+        "DELETE"
+      ],
+      "policyTier": "legacyProxy",
+      "authSignals": [
+        "getUserFromRequest"
+      ],
+      "guardSignals": [
+        "guardMutation"
+      ],
+      "rateLimitSignals": [],
+      "responseFormat": "upstream_proxy_passthrough"
+    },
+    {
+      "file": "app/api/analytics/banner-event/route.js",
+      "routePath": "/api/analytics/banner-event",
+      "isApi": true,
+      "isAdmin": false,
+      "methods": [
+        "POST"
+      ],
+      "policyTier": "public",
+      "authSignals": [
+        "getUserFromRequest"
+      ],
+      "guardSignals": [
+        "guardMutation"
+      ],
+      "rateLimitSignals": [
+        "consumeRateLimit"
+      ],
+      "responseFormat": "binary_redirect_xml_or_callback"
+    },
+    {
+      "file": "app/api/analytics/track/route.js",
+      "routePath": "/api/analytics/track",
+      "isApi": true,
+      "isAdmin": false,
+      "methods": [
+        "POST"
+      ],
+      "policyTier": "public",
+      "authSignals": [
+        "getUserFromRequest"
+      ],
+      "guardSignals": [
+        "guardMutation"
+      ],
+      "rateLimitSignals": [
+        "consumeRateLimit"
+      ],
+      "responseFormat": "direct_domain_json"
+    },
+    {
+      "file": "app/api/api/v1/[[...path]]/route.js",
+      "routePath": "/api/api/v1/[[...path]]",
+      "isApi": true,
+      "isAdmin": false,
+      "methods": [
+        "GET",
+        "POST"
+      ],
+      "policyTier": "legacyProxy",
+      "authSignals": [
+        "getUserFromRequest"
+      ],
+      "guardSignals": [
+        "guardMutation"
+      ],
+      "rateLimitSignals": [
+        "consumeRateLimit",
+        "rateLimitResponse"
+      ],
+      "responseFormat": "upstream_proxy_passthrough"
+    },
+    {
+      "file": "app/api/app/[[...path]]/route.js",
+      "routePath": "/api/app/[[...path]]",
+      "isApi": true,
+      "isAdmin": false,
+      "methods": [
+        "GET",
+        "POST",
+        "PUT",
+        "DELETE"
+      ],
+      "policyTier": "legacyProxy",
+      "authSignals": [
+        "getUserFromRequest"
+      ],
+      "guardSignals": [
+        "guardMutation"
+      ],
+      "rateLimitSignals": [],
+      "responseFormat": "upstream_proxy_passthrough"
+    },
+    {
+      "file": "app/api/app/models/available/route.js",
+      "routePath": "/api/app/models/available",
+      "isApi": true,
+      "isAdmin": false,
+      "methods": [
+        "GET"
+      ],
+      "policyTier": "legacyProxy",
+      "authSignals": [],
+      "guardSignals": [],
+      "rateLimitSignals": [],
+      "responseFormat": "upstream_proxy_passthrough"
+    },
+    {
+      "file": "app/api/assets/[id]/download/route.js",
+      "routePath": "/api/assets/[id]/download",
+      "isApi": true,
+      "isAdmin": false,
+      "methods": [
+        "GET"
+      ],
+      "policyTier": "authenticated_or_domain",
+      "authSignals": [
+        "getUserFromRequest"
+      ],
+      "guardSignals": [],
+      "rateLimitSignals": [],
+      "responseFormat": "binary_redirect_xml_or_callback"
+    },
+    {
+      "file": "app/api/assets/folders/[id]/route.js",
+      "routePath": "/api/assets/folders/[id]",
+      "isApi": true,
+      "isAdmin": false,
+      "methods": [
+        "PATCH",
+        "DELETE"
+      ],
+      "policyTier": "authenticated_or_domain",
+      "authSignals": [
+        "getUserFromRequest"
+      ],
+      "guardSignals": [
+        "guardMutation"
+      ],
+      "rateLimitSignals": [
+        "consumeRateLimit",
+        "rateLimitResponse"
+      ],
+      "responseFormat": "direct_domain_json"
+    },
+    {
+      "file": "app/api/assets/folders/route.js",
+      "routePath": "/api/assets/folders",
+      "isApi": true,
+      "isAdmin": false,
+      "methods": [
+        "GET",
+        "POST"
+      ],
+      "policyTier": "authenticated_or_domain",
+      "authSignals": [
+        "getUserFromRequest"
+      ],
+      "guardSignals": [
+        "guardMutation"
+      ],
+      "rateLimitSignals": [
+        "consumeRateLimit",
+        "rateLimitResponse"
+      ],
+      "responseFormat": "direct_domain_json"
+    },
+    {
+      "file": "app/api/assets/library/[id]/route.js",
+      "routePath": "/api/assets/library/[id]",
+      "isApi": true,
+      "isAdmin": false,
+      "methods": [
+        "GET",
+        "PATCH",
+        "DELETE"
+      ],
+      "policyTier": "authenticated_or_domain",
+      "authSignals": [
+        "getUserFromRequest"
+      ],
+      "guardSignals": [
+        "guardMutation"
+      ],
+      "rateLimitSignals": [
+        "consumeRateLimit",
+        "rateLimitResponse"
+      ],
+      "responseFormat": "success_flagged_json"
+    },
+    {
+      "file": "app/api/assets/library/batch/route.js",
+      "routePath": "/api/assets/library/batch",
+      "isApi": true,
+      "isAdmin": false,
+      "methods": [
+        "POST"
+      ],
+      "policyTier": "authenticated_or_domain",
+      "authSignals": [
+        "getUserFromRequest"
+      ],
+      "guardSignals": [
+        "guardMutation"
+      ],
+      "rateLimitSignals": [
+        "consumeRateLimit",
+        "rateLimitResponse"
+      ],
+      "responseFormat": "direct_domain_json"
+    },
+    {
+      "file": "app/api/assets/library/export/route.js",
+      "routePath": "/api/assets/library/export",
+      "isApi": true,
+      "isAdmin": false,
+      "methods": [
+        "GET"
+      ],
+      "policyTier": "authenticated_or_domain",
+      "authSignals": [
+        "getUserFromRequest"
+      ],
+      "guardSignals": [],
+      "rateLimitSignals": [
+        "consumeRateLimit",
+        "rateLimitResponse"
+      ],
+      "responseFormat": "binary_redirect_xml_or_callback"
+    },
+    {
+      "file": "app/api/assets/library/route.js",
+      "routePath": "/api/assets/library",
+      "isApi": true,
+      "isAdmin": false,
+      "methods": [
+        "GET",
+        "POST"
+      ],
+      "policyTier": "authenticated_or_domain",
+      "authSignals": [
+        "getUserFromRequest"
+      ],
+      "guardSignals": [
+        "guardMutation"
+      ],
+      "rateLimitSignals": [
+        "consumeRateLimit",
+        "rateLimitResponse"
+      ],
+      "responseFormat": "direct_domain_json"
+    },
+    {
+      "file": "app/api/assets/library/usage/route.js",
+      "routePath": "/api/assets/library/usage",
+      "isApi": true,
+      "isAdmin": false,
+      "methods": [
+        "GET"
+      ],
+      "policyTier": "authenticated_or_domain",
+      "authSignals": [
+        "getUserFromRequest"
+      ],
+      "guardSignals": [],
+      "rateLimitSignals": [],
+      "responseFormat": "direct_domain_json"
+    },
+    {
+      "file": "app/api/assets/upload/route.js",
+      "routePath": "/api/assets/upload",
+      "isApi": true,
+      "isAdmin": false,
+      "methods": [
+        "POST"
+      ],
+      "policyTier": "authenticated_or_domain",
+      "authSignals": [
+        "getUserFromRequest"
+      ],
+      "guardSignals": [
+        "guardMutation"
+      ],
+      "rateLimitSignals": [
+        "consumeRateLimit"
+      ],
+      "responseFormat": "success_flagged_json"
+    },
+    {
+      "file": "app/api/auth/login/route.js",
+      "routePath": "/api/auth/login",
+      "isApi": true,
+      "isAdmin": false,
+      "methods": [
+        "POST"
+      ],
+      "policyTier": "public",
+      "authSignals": [],
+      "guardSignals": [
+        "guardMutation"
+      ],
+      "rateLimitSignals": [
+        "consumeRateLimit",
+        "rateLimitResponse"
+      ],
+      "responseFormat": "direct_domain_json"
+    },
+    {
+      "file": "app/api/auth/logout/route.js",
+      "routePath": "/api/auth/logout",
+      "isApi": true,
+      "isAdmin": false,
+      "methods": [
+        "POST"
+      ],
+      "policyTier": "public",
+      "authSignals": [],
+      "guardSignals": [
+        "guardMutation"
+      ],
+      "rateLimitSignals": [],
+      "responseFormat": "direct_domain_json"
+    },
+    {
+      "file": "app/api/auth/me/route.js",
+      "routePath": "/api/auth/me",
+      "isApi": true,
+      "isAdmin": false,
+      "methods": [
+        "GET"
+      ],
+      "policyTier": "public",
+      "authSignals": [
+        "getUserFromRequest"
+      ],
+      "guardSignals": [],
+      "rateLimitSignals": [],
+      "responseFormat": "direct_domain_json"
+    },
+    {
+      "file": "app/api/auth/oauth/[provider]/callback/route.js",
+      "routePath": "/api/auth/oauth/[provider]/callback",
+      "isApi": true,
+      "isAdmin": false,
+      "methods": [
+        "GET",
+        "POST"
+      ],
+      "policyTier": "public",
+      "authSignals": [],
+      "guardSignals": [],
+      "rateLimitSignals": [],
+      "responseFormat": "direct_domain_json"
+    },
+    {
+      "file": "app/api/auth/oauth/[provider]/route.js",
+      "routePath": "/api/auth/oauth/[provider]",
+      "isApi": true,
+      "isAdmin": false,
+      "methods": [
+        "GET"
+      ],
+      "policyTier": "public",
+      "authSignals": [
+        "getUserFromRequest"
+      ],
+      "guardSignals": [],
+      "rateLimitSignals": [],
+      "responseFormat": "binary_redirect_xml_or_callback"
+    },
+    {
+      "file": "app/api/auth/oauth/[provider]/webhook/route.js",
+      "routePath": "/api/auth/oauth/[provider]/webhook",
+      "isApi": true,
+      "isAdmin": false,
+      "methods": [
+        "GET",
+        "POST"
+      ],
+      "policyTier": "authenticated_or_domain",
+      "authSignals": [],
+      "guardSignals": [],
+      "rateLimitSignals": [],
+      "responseFormat": "binary_redirect_xml_or_callback"
+    },
+    {
+      "file": "app/api/auth/oauth/google/one-tap/route.js",
+      "routePath": "/api/auth/oauth/google/one-tap",
+      "isApi": true,
+      "isAdmin": false,
+      "methods": [
+        "GET",
+        "POST"
+      ],
+      "policyTier": "public",
+      "authSignals": [],
+      "guardSignals": [
+        "guardMutation"
+      ],
+      "rateLimitSignals": [
+        "consumeRateLimit",
+        "rateLimitResponse"
+      ],
+      "responseFormat": "direct_domain_json"
+    },
+    {
+      "file": "app/api/auth/oauth/onboarding/route.js",
+      "routePath": "/api/auth/oauth/onboarding",
+      "isApi": true,
+      "isAdmin": false,
+      "methods": [
+        "GET",
+        "POST"
+      ],
+      "policyTier": "authenticated_or_domain",
+      "authSignals": [],
+      "guardSignals": [
+        "guardMutation"
+      ],
+      "rateLimitSignals": [
+        "consumeRateLimit",
+        "rateLimitResponse"
+      ],
+      "responseFormat": "success_flagged_json"
+    },
+    {
+      "file": "app/api/auth/password/forgot/email/route.js",
+      "routePath": "/api/auth/password/forgot/email",
+      "isApi": true,
+      "isAdmin": false,
+      "methods": [
+        "POST"
+      ],
+      "policyTier": "authenticated_or_domain",
+      "authSignals": [],
+      "guardSignals": [
+        "guardMutation"
+      ],
+      "rateLimitSignals": [],
+      "responseFormat": "success_flagged_json"
+    },
+    {
+      "file": "app/api/auth/password/reset/email/route.js",
+      "routePath": "/api/auth/password/reset/email",
+      "isApi": true,
+      "isAdmin": false,
+      "methods": [
+        "POST"
+      ],
+      "policyTier": "authenticated_or_domain",
+      "authSignals": [],
+      "guardSignals": [
+        "guardMutation"
+      ],
+      "rateLimitSignals": [],
+      "responseFormat": "success_flagged_json"
+    },
+    {
+      "file": "app/api/auth/password/reset/phone/route.js",
+      "routePath": "/api/auth/password/reset/phone",
+      "isApi": true,
+      "isAdmin": false,
+      "methods": [
+        "POST"
+      ],
+      "policyTier": "authenticated_or_domain",
+      "authSignals": [],
+      "guardSignals": [
+        "guardMutation"
+      ],
+      "rateLimitSignals": [],
+      "responseFormat": "success_flagged_json"
+    },
+    {
+      "file": "app/api/auth/phone/send-code/route.js",
+      "routePath": "/api/auth/phone/send-code",
+      "isApi": true,
+      "isAdmin": false,
+      "methods": [
+        "POST"
+      ],
+      "policyTier": "public",
+      "authSignals": [],
+      "guardSignals": [
+        "guardMutation"
+      ],
+      "rateLimitSignals": [
+        "consumeRateLimit",
+        "rateLimitResponse"
+      ],
+      "responseFormat": "success_flagged_json"
+    },
+    {
+      "file": "app/api/auth/phone/verify/route.js",
+      "routePath": "/api/auth/phone/verify",
+      "isApi": true,
+      "isAdmin": false,
+      "methods": [
+        "POST"
+      ],
+      "policyTier": "public",
+      "authSignals": [],
+      "guardSignals": [
+        "guardMutation"
+      ],
+      "rateLimitSignals": [
+        "consumeRateLimit",
+        "rateLimitResponse"
+      ],
+      "responseFormat": "direct_domain_json"
+    },
+    {
+      "file": "app/api/auth/qq/callback/route.js",
+      "routePath": "/api/auth/qq/callback",
+      "isApi": true,
+      "isAdmin": false,
+      "methods": [
+        "GET"
+      ],
+      "policyTier": "authenticated_or_domain",
+      "authSignals": [],
+      "guardSignals": [],
+      "rateLimitSignals": [],
+      "responseFormat": "direct_domain_json"
+    },
+    {
+      "file": "app/api/auth/refresh/route.js",
+      "routePath": "/api/auth/refresh",
+      "isApi": true,
+      "isAdmin": false,
+      "methods": [
+        "POST"
+      ],
+      "policyTier": "authenticated_or_domain",
+      "authSignals": [],
+      "guardSignals": [
+        "guardMutation"
+      ],
+      "rateLimitSignals": [],
+      "responseFormat": "direct_domain_json"
+    },
+    {
+      "file": "app/api/auth/register/route.js",
+      "routePath": "/api/auth/register",
+      "isApi": true,
+      "isAdmin": false,
+      "methods": [
+        "POST"
+      ],
+      "policyTier": "public",
+      "authSignals": [],
+      "guardSignals": [
+        "guardMutation"
+      ],
+      "rateLimitSignals": [
+        "consumeRateLimit",
+        "rateLimitResponse"
+      ],
+      "responseFormat": "direct_domain_json"
+    },
+    {
+      "file": "app/api/auth/register/send-code/route.js",
+      "routePath": "/api/auth/register/send-code",
+      "isApi": true,
+      "isAdmin": false,
+      "methods": [
+        "POST"
+      ],
+      "policyTier": "authenticated_or_domain",
+      "authSignals": [],
+      "guardSignals": [
+        "guardMutation"
+      ],
+      "rateLimitSignals": [
+        "consumeRateLimit",
+        "rateLimitResponse"
+      ],
+      "responseFormat": "direct_domain_json"
+    },
+    {
+      "file": "app/api/auth/social-options/route.js",
+      "routePath": "/api/auth/social-options",
+      "isApi": true,
+      "isAdmin": false,
+      "methods": [
+        "GET"
+      ],
+      "policyTier": "public",
+      "authSignals": [],
+      "guardSignals": [],
+      "rateLimitSignals": [],
+      "responseFormat": "direct_domain_json"
+    },
+    {
+      "file": "app/api/auth/username/forgot/email/route.js",
+      "routePath": "/api/auth/username/forgot/email",
+      "isApi": true,
+      "isAdmin": false,
+      "methods": [
+        "POST"
+      ],
+      "policyTier": "authenticated_or_domain",
+      "authSignals": [],
+      "guardSignals": [
+        "guardMutation"
+      ],
+      "rateLimitSignals": [],
+      "responseFormat": "success_flagged_json"
+    },
+    {
+      "file": "app/api/auth/username/recover/email/route.js",
+      "routePath": "/api/auth/username/recover/email",
+      "isApi": true,
+      "isAdmin": false,
+      "methods": [
+        "POST"
+      ],
+      "policyTier": "authenticated_or_domain",
+      "authSignals": [],
+      "guardSignals": [
+        "guardMutation"
+      ],
+      "rateLimitSignals": [],
+      "responseFormat": "success_flagged_json"
+    },
+    {
+      "file": "app/api/billing/checkout/route.js",
+      "routePath": "/api/billing/checkout",
+      "isApi": true,
+      "isAdmin": false,
+      "methods": [
+        "POST"
+      ],
+      "policyTier": "authenticated_or_domain",
+      "authSignals": [
+        "getUserFromRequest"
+      ],
+      "guardSignals": [
+        "guardMutation"
+      ],
+      "rateLimitSignals": [
+        "consumeRateLimit",
+        "rateLimitResponse"
+      ],
+      "responseFormat": "direct_domain_json"
+    },
+    {
+      "file": "app/api/billing/credit-packs/route.js",
+      "routePath": "/api/billing/credit-packs",
+      "isApi": true,
+      "isAdmin": false,
+      "methods": [
+        "GET"
+      ],
+      "policyTier": "public",
+      "authSignals": [
+        "getUserFromRequest"
+      ],
+      "guardSignals": [],
+      "rateLimitSignals": [],
+      "responseFormat": "direct_domain_json"
+    },
+    {
+      "file": "app/api/billing/credits/route.js",
+      "routePath": "/api/billing/credits",
+      "isApi": true,
+      "isAdmin": false,
+      "methods": [
+        "GET"
+      ],
+      "policyTier": "authenticated_or_domain",
+      "authSignals": [
+        "getUserFromRequest"
+      ],
+      "guardSignals": [],
+      "rateLimitSignals": [],
+      "responseFormat": "direct_domain_json"
+    },
+    {
+      "file": "app/api/billing/entitlements/route.js",
+      "routePath": "/api/billing/entitlements",
+      "isApi": true,
+      "isAdmin": false,
+      "methods": [
+        "GET"
+      ],
+      "policyTier": "authenticated_or_domain",
+      "authSignals": [
+        "getUserFromRequest"
+      ],
+      "guardSignals": [],
+      "rateLimitSignals": [],
+      "responseFormat": "direct_domain_json"
+    },
+    {
+      "file": "app/api/billing/orders/[id]/status/route.js",
+      "routePath": "/api/billing/orders/[id]/status",
+      "isApi": true,
+      "isAdmin": false,
+      "methods": [
+        "GET"
+      ],
+      "policyTier": "authenticated_or_domain",
+      "authSignals": [
+        "getUserFromRequest"
+      ],
+      "guardSignals": [],
+      "rateLimitSignals": [],
+      "responseFormat": "direct_domain_json"
+    },
+    {
+      "file": "app/api/billing/orders/my/route.js",
+      "routePath": "/api/billing/orders/my",
+      "isApi": true,
+      "isAdmin": false,
+      "methods": [
+        "GET"
+      ],
+      "policyTier": "authenticated_or_domain",
+      "authSignals": [
+        "getUserFromRequest"
+      ],
+      "guardSignals": [],
+      "rateLimitSignals": [],
+      "responseFormat": "direct_domain_json"
+    },
+    {
+      "file": "app/api/billing/plans/route.js",
+      "routePath": "/api/billing/plans",
+      "isApi": true,
+      "isAdmin": false,
+      "methods": [
+        "GET"
+      ],
+      "policyTier": "public",
+      "authSignals": [],
+      "guardSignals": [],
+      "rateLimitSignals": [],
+      "responseFormat": "direct_domain_json"
+    },
+    {
+      "file": "app/api/billing/subscription/route.js",
+      "routePath": "/api/billing/subscription",
+      "isApi": true,
+      "isAdmin": false,
+      "methods": [
+        "GET"
+      ],
+      "policyTier": "authenticated_or_domain",
+      "authSignals": [
+        "getUserFromRequest"
+      ],
+      "guardSignals": [],
+      "rateLimitSignals": [],
+      "responseFormat": "direct_domain_json"
+    },
+    {
+      "file": "app/api/billing/usage/route.js",
+      "routePath": "/api/billing/usage",
+      "isApi": true,
+      "isAdmin": false,
+      "methods": [
+        "GET"
+      ],
+      "policyTier": "authenticated_or_domain",
+      "authSignals": [
+        "getUserFromRequest"
+      ],
+      "guardSignals": [],
+      "rateLimitSignals": [],
+      "responseFormat": "direct_domain_json"
+    },
+    {
+      "file": "app/api/billing/webhooks/alipay/route.js",
+      "routePath": "/api/billing/webhooks/alipay",
+      "isApi": true,
+      "isAdmin": false,
+      "methods": [
+        "POST"
+      ],
+      "policyTier": "signature",
+      "authSignals": [
+        "webhookSignature"
+      ],
+      "guardSignals": [],
+      "rateLimitSignals": [],
+      "responseFormat": "binary_redirect_xml_or_callback"
+    },
+    {
+      "file": "app/api/billing/webhooks/paypal/route.js",
+      "routePath": "/api/billing/webhooks/paypal",
+      "isApi": true,
+      "isAdmin": false,
+      "methods": [
+        "POST"
+      ],
+      "policyTier": "authenticated_or_domain",
+      "authSignals": [
+        "webhookSignature"
+      ],
+      "guardSignals": [],
+      "rateLimitSignals": [],
+      "responseFormat": "direct_domain_json"
+    },
+    {
+      "file": "app/api/billing/webhooks/stripe/route.js",
+      "routePath": "/api/billing/webhooks/stripe",
+      "isApi": true,
+      "isAdmin": false,
+      "methods": [
+        "POST"
+      ],
+      "policyTier": "signature",
+      "authSignals": [
+        "webhookSignature"
+      ],
+      "guardSignals": [],
+      "rateLimitSignals": [],
+      "responseFormat": "direct_domain_json"
+    },
+    {
+      "file": "app/api/billing/webhooks/wechat/route.js",
+      "routePath": "/api/billing/webhooks/wechat",
+      "isApi": true,
+      "isAdmin": false,
+      "methods": [
+        "POST"
+      ],
+      "policyTier": "signature",
+      "authSignals": [
+        "webhookSignature"
+      ],
+      "guardSignals": [],
+      "rateLimitSignals": [],
+      "responseFormat": "direct_domain_json"
+    },
+    {
+      "file": "app/api/canvas-tools/plan/route.js",
+      "routePath": "/api/canvas-tools/plan",
+      "isApi": true,
+      "isAdmin": false,
+      "methods": [
+        "POST"
+      ],
+      "policyTier": "authenticated_or_domain",
+      "authSignals": [],
+      "guardSignals": [
+        "guardMutation"
+      ],
+      "rateLimitSignals": [
+        "consumeRateLimit",
+        "rateLimitResponse"
+      ],
+      "responseFormat": "success_flagged_json"
+    },
+    {
+      "file": "app/api/canvas-tools/result/[id]/route.js",
+      "routePath": "/api/canvas-tools/result/[id]",
+      "isApi": true,
+      "isAdmin": false,
+      "methods": [
+        "GET"
+      ],
+      "policyTier": "authenticated_or_domain",
+      "authSignals": [
+        "getUserFromRequest"
+      ],
+      "guardSignals": [],
+      "rateLimitSignals": [],
+      "responseFormat": "binary_redirect_xml_or_callback"
+    },
+    {
+      "file": "app/api/canvas-tools/spec/route.js",
+      "routePath": "/api/canvas-tools/spec",
+      "isApi": true,
+      "isAdmin": false,
+      "methods": [
+        "GET"
+      ],
+      "policyTier": "authenticated_or_domain",
+      "authSignals": [],
+      "guardSignals": [],
+      "rateLimitSignals": [],
+      "responseFormat": "success_flagged_json"
+    },
+    {
+      "file": "app/api/canvas/assets/[id]/content/route.js",
+      "routePath": "/api/canvas/assets/[id]/content",
+      "isApi": true,
+      "isAdmin": false,
+      "methods": [
+        "GET",
+        "OPTIONS",
+        "HEAD"
+      ],
+      "policyTier": "authenticated_or_domain",
+      "authSignals": [
+        "getUserFromRequest"
+      ],
+      "guardSignals": [],
+      "rateLimitSignals": [],
+      "responseFormat": "direct_domain_json"
+    },
+    {
+      "file": "app/api/canvas/assets/route.js",
+      "routePath": "/api/canvas/assets",
+      "isApi": true,
+      "isAdmin": false,
+      "methods": [
+        "GET",
+        "OPTIONS"
+      ],
+      "policyTier": "authenticated_or_domain",
+      "authSignals": [
+        "getUserFromRequest"
+      ],
+      "guardSignals": [],
+      "rateLimitSignals": [],
+      "responseFormat": "direct_domain_json"
+    },
+    {
+      "file": "app/api/canvas/assets/upload/route.js",
+      "routePath": "/api/canvas/assets/upload",
+      "isApi": true,
+      "isAdmin": false,
+      "methods": [
+        "POST",
+        "OPTIONS"
+      ],
+      "policyTier": "authenticated_or_domain",
+      "authSignals": [
+        "getUserFromRequest"
+      ],
+      "guardSignals": [],
+      "rateLimitSignals": [
+        "consumeRateLimit",
+        "rateLimitResponse"
+      ],
+      "responseFormat": "direct_domain_json"
+    },
+    {
+      "file": "app/api/canvas/config/route.js",
+      "routePath": "/api/canvas/config",
+      "isApi": true,
+      "isAdmin": false,
+      "methods": [
+        "GET",
+        "OPTIONS"
+      ],
+      "policyTier": "authenticated_or_domain",
+      "authSignals": [
+        "getUserFromRequest"
+      ],
+      "guardSignals": [],
+      "rateLimitSignals": [],
+      "responseFormat": "direct_domain_json"
+    },
+    {
+      "file": "app/api/canvas/jobs/[id]/route.js",
+      "routePath": "/api/canvas/jobs/[id]",
+      "isApi": true,
+      "isAdmin": false,
+      "methods": [
+        "GET",
+        "OPTIONS"
+      ],
+      "policyTier": "authenticated_or_domain",
+      "authSignals": [],
+      "guardSignals": [],
+      "rateLimitSignals": [],
+      "responseFormat": "direct_domain_json"
+    },
+    {
+      "file": "app/api/canvas/jobs/route.js",
+      "routePath": "/api/canvas/jobs",
+      "isApi": true,
+      "isAdmin": false,
+      "methods": [
+        "GET",
+        "POST",
+        "OPTIONS"
+      ],
+      "policyTier": "authenticated_or_domain",
+      "authSignals": [
+        "getUserFromRequest"
+      ],
+      "guardSignals": [],
+      "rateLimitSignals": [
+        "consumeRateLimit",
+        "rateLimitResponse"
+      ],
+      "responseFormat": "direct_domain_json"
+    },
+    {
+      "file": "app/api/canvas/models/route.js",
+      "routePath": "/api/canvas/models",
+      "isApi": true,
+      "isAdmin": false,
+      "methods": [
+        "GET",
+        "OPTIONS"
+      ],
+      "policyTier": "authenticated_or_domain",
+      "authSignals": [
+        "getUserFromRequest"
+      ],
+      "guardSignals": [],
+      "rateLimitSignals": [],
+      "responseFormat": "direct_domain_json"
+    },
+    {
+      "file": "app/api/canvas/projects/[id]/route.js",
+      "routePath": "/api/canvas/projects/[id]",
+      "isApi": true,
+      "isAdmin": false,
+      "methods": [
+        "GET",
+        "PUT",
+        "DELETE",
+        "OPTIONS"
+      ],
+      "policyTier": "authenticated_or_domain",
+      "authSignals": [
+        "getUserFromRequest"
+      ],
+      "guardSignals": [],
+      "rateLimitSignals": [
+        "consumeRateLimit",
+        "rateLimitResponse"
+      ],
+      "responseFormat": "direct_domain_json"
+    },
+    {
+      "file": "app/api/canvas/projects/[id]/share/route.js",
+      "routePath": "/api/canvas/projects/[id]/share",
+      "isApi": true,
+      "isAdmin": false,
+      "methods": [
+        "GET",
+        "POST",
+        "DELETE",
+        "OPTIONS"
+      ],
+      "policyTier": "authenticated_or_domain",
+      "authSignals": [
+        "getUserFromRequest"
+      ],
+      "guardSignals": [],
+      "rateLimitSignals": [
+        "consumeRateLimit",
+        "rateLimitResponse"
+      ],
+      "responseFormat": "direct_domain_json"
+    },
+    {
+      "file": "app/api/canvas/projects/route.js",
+      "routePath": "/api/canvas/projects",
+      "isApi": true,
+      "isAdmin": false,
+      "methods": [
+        "GET",
+        "POST",
+        "OPTIONS"
+      ],
+      "policyTier": "authenticated_or_domain",
+      "authSignals": [
+        "getUserFromRequest"
+      ],
+      "guardSignals": [],
+      "rateLimitSignals": [
+        "consumeRateLimit",
+        "rateLimitResponse"
+      ],
+      "responseFormat": "direct_domain_json"
+    },
+    {
+      "file": "app/api/canvas/quotes/route.js",
+      "routePath": "/api/canvas/quotes",
+      "isApi": true,
+      "isAdmin": false,
+      "methods": [
+        "POST",
+        "OPTIONS"
+      ],
+      "policyTier": "authenticated_or_domain",
+      "authSignals": [
+        "getUserFromRequest"
+      ],
+      "guardSignals": [],
+      "rateLimitSignals": [
+        "consumeRateLimit",
+        "rateLimitResponse"
+      ],
+      "responseFormat": "direct_domain_json"
+    },
+    {
+      "file": "app/api/canvas/session/route.js",
+      "routePath": "/api/canvas/session",
+      "isApi": true,
+      "isAdmin": false,
+      "methods": [
+        "GET",
+        "POST",
+        "OPTIONS"
+      ],
+      "policyTier": "authenticated_or_domain",
+      "authSignals": [
+        "getUserFromRequest"
+      ],
+      "guardSignals": [],
+      "rateLimitSignals": [
+        "consumeRateLimit",
+        "rateLimitResponse"
+      ],
+      "responseFormat": "direct_domain_json"
+    },
+    {
+      "file": "app/api/canvas/shares/[token]/assets/[id]/content/route.js",
+      "routePath": "/api/canvas/shares/[token]/assets/[id]/content",
+      "isApi": true,
+      "isAdmin": false,
+      "methods": [
+        "GET",
+        "OPTIONS",
+        "HEAD"
+      ],
+      "policyTier": "authenticated_or_domain",
+      "authSignals": [
+        "getUserFromRequest"
+      ],
+      "guardSignals": [],
+      "rateLimitSignals": [],
+      "responseFormat": "direct_domain_json"
+    },
+    {
+      "file": "app/api/canvas/shares/[token]/route.js",
+      "routePath": "/api/canvas/shares/[token]",
+      "isApi": true,
+      "isAdmin": false,
+      "methods": [
+        "GET",
+        "OPTIONS"
+      ],
+      "policyTier": "authenticated_or_domain",
+      "authSignals": [
+        "getUserFromRequest"
+      ],
+      "guardSignals": [],
+      "rateLimitSignals": [],
+      "responseFormat": "direct_domain_json"
+    },
+    {
+      "file": "app/api/community/posts/[id]/coin/route.js",
+      "routePath": "/api/community/posts/[id]/coin",
+      "isApi": true,
+      "isAdmin": false,
+      "methods": [
+        "GET",
+        "POST"
+      ],
+      "policyTier": "authenticated_or_domain",
+      "authSignals": [
+        "getUserFromRequest"
+      ],
+      "guardSignals": [
+        "guardMutation"
+      ],
+      "rateLimitSignals": [
+        "consumeRateLimit"
+      ],
+      "responseFormat": "direct_domain_json"
+    },
+    {
+      "file": "app/api/community/posts/[id]/comments/route.js",
+      "routePath": "/api/community/posts/[id]/comments",
+      "isApi": true,
+      "isAdmin": false,
+      "methods": [
+        "GET",
+        "POST"
+      ],
+      "policyTier": "authenticated_or_domain",
+      "authSignals": [
+        "getUserFromRequest"
+      ],
+      "guardSignals": [
+        "guardMutation"
+      ],
+      "rateLimitSignals": [
+        "consumeRateLimit",
+        "rateLimitResponse"
+      ],
+      "responseFormat": "direct_domain_json"
+    },
+    {
+      "file": "app/api/community/posts/[id]/like/route.js",
+      "routePath": "/api/community/posts/[id]/like",
+      "isApi": true,
+      "isAdmin": false,
+      "methods": [
+        "POST"
+      ],
+      "policyTier": "authenticated_or_domain",
+      "authSignals": [
+        "getUserFromRequest"
+      ],
+      "guardSignals": [
+        "guardMutation"
+      ],
+      "rateLimitSignals": [
+        "consumeRateLimit",
+        "rateLimitResponse"
+      ],
+      "responseFormat": "direct_domain_json"
+    },
+    {
+      "file": "app/api/community/posts/[id]/remix/route.js",
+      "routePath": "/api/community/posts/[id]/remix",
+      "isApi": true,
+      "isAdmin": false,
+      "methods": [
+        "POST"
+      ],
+      "policyTier": "authenticated_or_domain",
+      "authSignals": [
+        "getUserFromRequest"
+      ],
+      "guardSignals": [
+        "guardMutation"
+      ],
+      "rateLimitSignals": [
+        "consumeRateLimit",
+        "rateLimitResponse"
+      ],
+      "responseFormat": "direct_domain_json"
+    },
+    {
+      "file": "app/api/community/posts/[id]/route.js",
+      "routePath": "/api/community/posts/[id]",
+      "isApi": true,
+      "isAdmin": false,
+      "methods": [
+        "GET",
+        "DELETE"
+      ],
+      "policyTier": "authenticated_or_domain",
+      "authSignals": [
+        "getUserFromRequest"
+      ],
+      "guardSignals": [
+        "guardMutation"
+      ],
+      "rateLimitSignals": [
+        "consumeRateLimit",
+        "rateLimitResponse"
+      ],
+      "responseFormat": "direct_domain_json"
+    },
+    {
+      "file": "app/api/community/posts/route.js",
+      "routePath": "/api/community/posts",
+      "isApi": true,
+      "isAdmin": false,
+      "methods": [
+        "GET",
+        "POST"
+      ],
+      "policyTier": "authenticated_or_domain",
+      "authSignals": [
+        "getUserFromRequest"
+      ],
+      "guardSignals": [
+        "guardMutation"
+      ],
+      "rateLimitSignals": [
+        "consumeRateLimit"
+      ],
+      "responseFormat": "direct_domain_json"
+    },
+    {
+      "file": "app/api/coupons/redeem/route.js",
+      "routePath": "/api/coupons/redeem",
+      "isApi": true,
+      "isAdmin": false,
+      "methods": [
+        "POST"
+      ],
+      "policyTier": "authenticated_or_domain",
+      "authSignals": [
+        "getUserFromRequest"
+      ],
+      "guardSignals": [
+        "guardMutation"
+      ],
+      "rateLimitSignals": [
+        "consumeRateLimit",
+        "rateLimitResponse"
+      ],
+      "responseFormat": "direct_domain_json"
+    },
+    {
+      "file": "app/api/coupons/verify/route.js",
+      "routePath": "/api/coupons/verify",
+      "isApi": true,
+      "isAdmin": false,
+      "methods": [
+        "POST"
+      ],
+      "policyTier": "authenticated_or_domain",
+      "authSignals": [
+        "getUserFromRequest"
+      ],
+      "guardSignals": [
+        "guardMutation"
+      ],
+      "rateLimitSignals": [
+        "consumeRateLimit",
+        "rateLimitResponse"
+      ],
+      "responseFormat": "direct_domain_json"
+    },
+    {
+      "file": "app/api/creations/report/route.js",
+      "routePath": "/api/creations/report",
+      "isApi": true,
+      "isAdmin": false,
+      "methods": [
+        "POST"
+      ],
+      "policyTier": "authenticated_or_domain",
+      "authSignals": [
+        "getUserFromRequest"
+      ],
+      "guardSignals": [
+        "guardMutation"
+      ],
+      "rateLimitSignals": [
+        "consumeRateLimit",
+        "rateLimitResponse"
+      ],
+      "responseFormat": "success_flagged_json"
+    },
+    {
+      "file": "app/api/creations/route.js",
+      "routePath": "/api/creations",
+      "isApi": true,
+      "isAdmin": false,
+      "methods": [
+        "GET",
+        "POST",
+        "DELETE"
+      ],
+      "policyTier": "authenticated_or_domain",
+      "authSignals": [
+        "getUserFromRequest"
+      ],
+      "guardSignals": [
+        "guardMutation"
+      ],
+      "rateLimitSignals": [
+        "consumeRateLimit",
+        "rateLimitResponse"
+      ],
+      "responseFormat": "direct_domain_json"
+    },
+    {
+      "file": "app/api/feedback/route.js",
+      "routePath": "/api/feedback",
+      "isApi": true,
+      "isAdmin": false,
+      "methods": [
+        "GET",
+        "POST"
+      ],
+      "policyTier": "authenticated_or_domain",
+      "authSignals": [
+        "getUserFromRequest"
+      ],
+      "guardSignals": [
+        "guardMutation"
+      ],
+      "rateLimitSignals": [
+        "consumeRateLimit",
+        "rateLimitResponse"
+      ],
+      "responseFormat": "direct_domain_json"
+    },
+    {
+      "file": "app/api/financial/credits/checkin/route.js",
+      "routePath": "/api/financial/credits/checkin",
+      "isApi": true,
+      "isAdmin": false,
+      "methods": [
+        "POST"
+      ],
+      "policyTier": "authenticated_or_domain",
+      "authSignals": [
+        "getUserFromRequest"
+      ],
+      "guardSignals": [
+        "guardMutation"
+      ],
+      "rateLimitSignals": [
+        "consumeRateLimit",
+        "rateLimitResponse"
+      ],
+      "responseFormat": "direct_domain_json"
+    },
+    {
+      "file": "app/api/financial/credits/commit/route.js",
+      "routePath": "/api/financial/credits/commit",
+      "isApi": true,
+      "isAdmin": false,
+      "methods": [
+        "POST"
+      ],
+      "policyTier": "authenticated_or_domain",
+      "authSignals": [
+        "getUserFromRequest"
+      ],
+      "guardSignals": [
+        "guardMutation"
+      ],
+      "rateLimitSignals": [
+        "consumeRateLimit",
+        "rateLimitResponse"
+      ],
+      "responseFormat": "direct_domain_json"
+    },
+    {
+      "file": "app/api/financial/credits/ledger/route.js",
+      "routePath": "/api/financial/credits/ledger",
+      "isApi": true,
+      "isAdmin": false,
+      "methods": [
+        "GET"
+      ],
+      "policyTier": "authenticated_or_domain",
+      "authSignals": [
+        "getUserFromRequest"
+      ],
+      "guardSignals": [],
+      "rateLimitSignals": [],
+      "responseFormat": "direct_domain_json"
+    },
+    {
+      "file": "app/api/financial/credits/reserve/route.js",
+      "routePath": "/api/financial/credits/reserve",
+      "isApi": true,
+      "isAdmin": false,
+      "methods": [
+        "POST"
+      ],
+      "policyTier": "authenticated_or_domain",
+      "authSignals": [
+        "getUserFromRequest"
+      ],
+      "guardSignals": [
+        "guardMutation"
+      ],
+      "rateLimitSignals": [
+        "consumeRateLimit",
+        "rateLimitResponse"
+      ],
+      "responseFormat": "direct_domain_json"
+    },
+    {
+      "file": "app/api/financial/credits/void/route.js",
+      "routePath": "/api/financial/credits/void",
+      "isApi": true,
+      "isAdmin": false,
+      "methods": [
+        "POST"
+      ],
+      "policyTier": "authenticated_or_domain",
+      "authSignals": [
+        "getUserFromRequest"
+      ],
+      "guardSignals": [
+        "guardMutation"
+      ],
+      "rateLimitSignals": [
+        "consumeRateLimit",
+        "rateLimitResponse"
+      ],
+      "responseFormat": "direct_domain_json"
+    },
+    {
+      "file": "app/api/financial/credits/wallet/route.js",
+      "routePath": "/api/financial/credits/wallet",
+      "isApi": true,
+      "isAdmin": false,
+      "methods": [
+        "GET"
+      ],
+      "policyTier": "authenticated_or_domain",
+      "authSignals": [
+        "getUserFromRequest"
+      ],
+      "guardSignals": [],
+      "rateLimitSignals": [],
+      "responseFormat": "direct_domain_json"
+    },
+    {
+      "file": "app/api/financial/currency/benefits/route.js",
+      "routePath": "/api/financial/currency/benefits",
+      "isApi": true,
+      "isAdmin": false,
+      "methods": [
+        "POST"
+      ],
+      "policyTier": "authenticated_or_domain",
+      "authSignals": [
+        "getUserFromRequest"
+      ],
+      "guardSignals": [
+        "guardMutation"
+      ],
+      "rateLimitSignals": [
+        "consumeRateLimit",
+        "rateLimitResponse"
+      ],
+      "responseFormat": "direct_domain_json"
+    },
+    {
+      "file": "app/api/financial/currency/daily-login/route.js",
+      "routePath": "/api/financial/currency/daily-login",
+      "isApi": true,
+      "isAdmin": false,
+      "methods": [
+        "GET",
+        "POST"
+      ],
+      "policyTier": "authenticated_or_domain",
+      "authSignals": [
+        "getUserFromRequest"
+      ],
+      "guardSignals": [
+        "guardMutation"
+      ],
+      "rateLimitSignals": [
+        "consumeRateLimit"
+      ],
+      "responseFormat": "direct_domain_json"
+    },
+    {
+      "file": "app/api/financial/currency/exchange/route.js",
+      "routePath": "/api/financial/currency/exchange",
+      "isApi": true,
+      "isAdmin": false,
+      "methods": [
+        "POST"
+      ],
+      "policyTier": "authenticated_or_domain",
+      "authSignals": [
+        "getUserFromRequest"
+      ],
+      "guardSignals": [
+        "guardMutation"
+      ],
+      "rateLimitSignals": [
+        "consumeRateLimit"
+      ],
+      "responseFormat": "direct_domain_json"
+    },
+    {
+      "file": "app/api/financial/currency/password/route.js",
+      "routePath": "/api/financial/currency/password",
+      "isApi": true,
+      "isAdmin": false,
+      "methods": [
+        "POST"
+      ],
+      "policyTier": "authenticated_or_domain",
+      "authSignals": [
+        "getUserFromRequest"
+      ],
+      "guardSignals": [
+        "guardMutation"
+      ],
+      "rateLimitSignals": [
+        "consumeRateLimit",
+        "rateLimitResponse"
+      ],
+      "responseFormat": "success_flagged_json"
+    },
+    {
+      "file": "app/api/financial/currency/rewards/route.js",
+      "routePath": "/api/financial/currency/rewards",
+      "isApi": true,
+      "isAdmin": false,
+      "methods": [
+        "GET",
+        "POST"
+      ],
+      "policyTier": "authenticated_or_domain",
+      "authSignals": [
+        "getUserFromRequest"
+      ],
+      "guardSignals": [
+        "guardMutation"
+      ],
+      "rateLimitSignals": [
+        "consumeRateLimit",
+        "rateLimitResponse"
+      ],
+      "responseFormat": "direct_domain_json"
+    },
+    {
+      "file": "app/api/financial/currency/transfer/route.js",
+      "routePath": "/api/financial/currency/transfer",
+      "isApi": true,
+      "isAdmin": false,
+      "methods": [
+        "POST"
+      ],
+      "policyTier": "authenticated_or_domain",
+      "authSignals": [
+        "getUserFromRequest"
+      ],
+      "guardSignals": [
+        "guardMutation"
+      ],
+      "rateLimitSignals": [
+        "consumeRateLimit",
+        "rateLimitResponse"
+      ],
+      "responseFormat": "direct_domain_json"
+    },
+    {
+      "file": "app/api/financial/currency/wallet/route.js",
+      "routePath": "/api/financial/currency/wallet",
+      "isApi": true,
+      "isAdmin": false,
+      "methods": [
+        "GET"
+      ],
+      "policyTier": "authenticated_or_domain",
+      "authSignals": [
+        "getUserFromRequest"
+      ],
+      "guardSignals": [],
+      "rateLimitSignals": [],
+      "responseFormat": "direct_domain_json"
+    },
+    {
+      "file": "app/api/generation/quote/route.js",
+      "routePath": "/api/generation/quote",
+      "isApi": true,
+      "isAdmin": false,
+      "methods": [
+        "POST"
+      ],
+      "policyTier": "authenticated_or_domain",
+      "authSignals": [],
+      "guardSignals": [
+        "guardMutation"
+      ],
+      "rateLimitSignals": [
+        "consumeRateLimit",
+        "rateLimitResponse"
+      ],
+      "responseFormat": "success_flagged_json"
+    },
+    {
+      "file": "app/api/generations/[id]/callback/route.js",
+      "routePath": "/api/generations/[id]/callback",
+      "isApi": true,
+      "isAdmin": false,
+      "methods": [
+        "POST"
+      ],
+      "policyTier": "signature",
+      "authSignals": [],
+      "guardSignals": [],
+      "rateLimitSignals": [],
+      "responseFormat": "direct_domain_json"
+    },
+    {
+      "file": "app/api/generations/[id]/route.js",
+      "routePath": "/api/generations/[id]",
+      "isApi": true,
+      "isAdmin": false,
+      "methods": [
+        "GET"
+      ],
+      "policyTier": "authenticated_or_domain",
+      "authSignals": [
+        "getUserFromRequest"
+      ],
+      "guardSignals": [],
+      "rateLimitSignals": [],
+      "responseFormat": "direct_domain_json"
+    },
+    {
+      "file": "app/api/generations/events/route.js",
+      "routePath": "/api/generations/events",
+      "isApi": true,
+      "isAdmin": false,
+      "methods": [
+        "GET"
+      ],
+      "policyTier": "authenticated_or_domain",
+      "authSignals": [
+        "getUserFromRequest"
+      ],
+      "guardSignals": [],
+      "rateLimitSignals": [],
+      "responseFormat": "sse_event_stream"
+    },
+    {
+      "file": "app/api/generations/route.js",
+      "routePath": "/api/generations",
+      "isApi": true,
+      "isAdmin": false,
+      "methods": [
+        "GET",
+        "POST"
+      ],
+      "policyTier": "authenticated_or_domain",
+      "authSignals": [],
+      "guardSignals": [
+        "guardMutation"
+      ],
+      "rateLimitSignals": [
+        "consumeRateLimit",
+        "rateLimitResponse"
+      ],
+      "responseFormat": "direct_domain_json"
+    },
+    {
+      "file": "app/api/health/route.js",
+      "routePath": "/api/health",
+      "isApi": true,
+      "isAdmin": false,
+      "methods": [
+        "GET"
+      ],
+      "policyTier": "public",
+      "authSignals": [],
+      "guardSignals": [],
+      "rateLimitSignals": [],
+      "responseFormat": "direct_domain_json"
+    },
+    {
+      "file": "app/api/i18n/route.js",
+      "routePath": "/api/i18n",
+      "isApi": true,
+      "isAdmin": false,
+      "methods": [
+        "GET"
+      ],
+      "policyTier": "public",
+      "authSignals": [],
+      "guardSignals": [],
+      "rateLimitSignals": [],
+      "responseFormat": "direct_domain_json"
+    },
+    {
+      "file": "app/api/live/route.js",
+      "routePath": "/api/live",
+      "isApi": true,
+      "isAdmin": false,
+      "methods": [
+        "GET"
+      ],
+      "policyTier": "public",
+      "authSignals": [],
+      "guardSignals": [],
+      "rateLimitSignals": [],
+      "responseFormat": "direct_domain_json"
+    },
+    {
+      "file": "app/api/models/active/route.js",
+      "routePath": "/api/models/active",
+      "isApi": true,
+      "isAdmin": false,
+      "methods": [
+        "GET"
+      ],
+      "policyTier": "public",
+      "authSignals": [
+        "getUserFromRequest"
+      ],
+      "guardSignals": [],
+      "rateLimitSignals": [],
+      "responseFormat": "success_flagged_json"
+    },
+    {
+      "file": "app/api/models/telemetry/route.js",
+      "routePath": "/api/models/telemetry",
+      "isApi": true,
+      "isAdmin": false,
+      "methods": [
+        "GET"
+      ],
+      "policyTier": "authenticated_or_domain",
+      "authSignals": [],
+      "guardSignals": [],
+      "rateLimitSignals": [],
+      "responseFormat": "direct_domain_json"
+    },
+    {
+      "file": "app/api/ready/route.js",
+      "routePath": "/api/ready",
+      "isApi": true,
+      "isAdmin": false,
+      "methods": [
+        "GET"
+      ],
+      "policyTier": "public",
+      "authSignals": [],
+      "guardSignals": [],
+      "rateLimitSignals": [],
+      "responseFormat": "direct_domain_json"
+    },
+    {
+      "file": "app/api/seo/indexnow-key/route.js",
+      "routePath": "/api/seo/indexnow-key",
+      "isApi": true,
+      "isAdmin": false,
+      "methods": [
+        "GET"
+      ],
+      "policyTier": "authenticated_or_domain",
+      "authSignals": [],
+      "guardSignals": [],
+      "rateLimitSignals": [],
+      "responseFormat": "binary_redirect_xml_or_callback"
+    },
+    {
+      "file": "app/api/site/branding/route.js",
+      "routePath": "/api/site/branding",
+      "isApi": true,
+      "isAdmin": false,
+      "methods": [
+        "GET"
+      ],
+      "policyTier": "public",
+      "authSignals": [],
+      "guardSignals": [],
+      "rateLimitSignals": [],
+      "responseFormat": "direct_domain_json"
+    },
+    {
+      "file": "app/api/site/content-config/route.js",
+      "routePath": "/api/site/content-config",
+      "isApi": true,
+      "isAdmin": false,
+      "methods": [
+        "GET"
+      ],
+      "policyTier": "public",
+      "authSignals": [],
+      "guardSignals": [],
+      "rateLimitSignals": [],
+      "responseFormat": "direct_domain_json"
+    },
+    {
+      "file": "app/api/site/subscription-faq/route.js",
+      "routePath": "/api/site/subscription-faq",
+      "isApi": true,
+      "isAdmin": false,
+      "methods": [
+        "GET"
+      ],
+      "policyTier": "public",
+      "authSignals": [],
+      "guardSignals": [],
+      "rateLimitSignals": [],
+      "responseFormat": "direct_domain_json"
+    },
+    {
+      "file": "app/api/upload-binary/route.js",
+      "routePath": "/api/upload-binary",
+      "isApi": true,
+      "isAdmin": false,
+      "methods": [
+        "POST"
+      ],
+      "policyTier": "authenticated_or_domain",
+      "authSignals": [
+        "getUserFromRequest",
+        "webhookSignature"
+      ],
+      "guardSignals": [
+        "guardMutation"
+      ],
+      "rateLimitSignals": [
+        "consumeRateLimit",
+        "rateLimitResponse"
+      ],
+      "responseFormat": "binary_redirect_xml_or_callback"
+    },
+    {
+      "file": "app/api/user/activity-dashboard/route.js",
+      "routePath": "/api/user/activity-dashboard",
+      "isApi": true,
+      "isAdmin": false,
+      "methods": [
+        "GET"
+      ],
+      "policyTier": "authenticated_or_domain",
+      "authSignals": [
+        "getUserFromRequest"
+      ],
+      "guardSignals": [],
+      "rateLimitSignals": [],
+      "responseFormat": "direct_domain_json"
+    },
+    {
+      "file": "app/api/user/api-key/route.js",
+      "routePath": "/api/user/api-key",
+      "isApi": true,
+      "isAdmin": false,
+      "methods": [
+        "GET",
+        "POST"
+      ],
+      "policyTier": "authenticated_or_domain",
+      "authSignals": [
+        "getUserFromRequest"
+      ],
+      "guardSignals": [
+        "guardMutation"
+      ],
+      "rateLimitSignals": [
+        "consumeRateLimit"
+      ],
+      "responseFormat": "success_flagged_json"
+    },
+    {
+      "file": "app/api/user/avatar-frame/route.js",
+      "routePath": "/api/user/avatar-frame",
+      "isApi": true,
+      "isAdmin": false,
+      "methods": [
+        "POST"
+      ],
+      "policyTier": "authenticated_or_domain",
+      "authSignals": [
+        "getUserFromRequest"
+      ],
+      "guardSignals": [
+        "guardMutation"
+      ],
+      "rateLimitSignals": [
+        "consumeRateLimit",
+        "rateLimitResponse"
+      ],
+      "responseFormat": "direct_domain_json"
+    },
+    {
+      "file": "app/api/user/avatar/route.js",
+      "routePath": "/api/user/avatar",
+      "isApi": true,
+      "isAdmin": false,
+      "methods": [
+        "GET",
+        "POST",
+        "DELETE"
+      ],
+      "policyTier": "authenticated_or_domain",
+      "authSignals": [
+        "getUserFromRequest"
+      ],
+      "guardSignals": [
+        "guardMutation"
+      ],
+      "rateLimitSignals": [
+        "consumeRateLimit",
+        "rateLimitResponse"
+      ],
+      "responseFormat": "success_flagged_json"
+    },
+    {
+      "file": "app/api/user/cancel-deletion/route.js",
+      "routePath": "/api/user/cancel-deletion",
+      "isApi": true,
+      "isAdmin": false,
+      "methods": [
+        "POST"
+      ],
+      "policyTier": "authenticated_or_domain",
+      "authSignals": [
+        "getUserFromRequest"
+      ],
+      "guardSignals": [
+        "guardMutation"
+      ],
+      "rateLimitSignals": [
+        "consumeRateLimit",
+        "rateLimitResponse"
+      ],
+      "responseFormat": "success_flagged_json"
+    },
+    {
+      "file": "app/api/user/deactivate/route.js",
+      "routePath": "/api/user/deactivate",
+      "isApi": true,
+      "isAdmin": false,
+      "methods": [
+        "POST"
+      ],
+      "policyTier": "authenticated_or_domain",
+      "authSignals": [
+        "getUserFromRequest"
+      ],
+      "guardSignals": [
+        "guardMutation"
+      ],
+      "rateLimitSignals": [
+        "consumeRateLimit",
+        "rateLimitResponse"
+      ],
+      "responseFormat": "success_flagged_json"
+    },
+    {
+      "file": "app/api/user/email/route.js",
+      "routePath": "/api/user/email",
+      "isApi": true,
+      "isAdmin": false,
+      "methods": [
+        "POST",
+        "DELETE"
+      ],
+      "policyTier": "authenticated_or_domain",
+      "authSignals": [
+        "getUserFromRequest"
+      ],
+      "guardSignals": [
+        "guardMutation"
+      ],
+      "rateLimitSignals": [
+        "consumeRateLimit",
+        "rateLimitResponse"
+      ],
+      "responseFormat": "success_flagged_json"
+    },
+    {
+      "file": "app/api/user/follow/route.js",
+      "routePath": "/api/user/follow",
+      "isApi": true,
+      "isAdmin": false,
+      "methods": [
+        "GET",
+        "POST"
+      ],
+      "policyTier": "authenticated_or_domain",
+      "authSignals": [
+        "getUserFromRequest"
+      ],
+      "guardSignals": [
+        "guardMutation"
+      ],
+      "rateLimitSignals": [
+        "consumeRateLimit",
+        "rateLimitResponse"
+      ],
+      "responseFormat": "success_flagged_json"
+    },
+    {
+      "file": "app/api/user/notifications/route.js",
+      "routePath": "/api/user/notifications",
+      "isApi": true,
+      "isAdmin": false,
+      "methods": [
+        "GET",
+        "POST"
+      ],
+      "policyTier": "authenticated_or_domain",
+      "authSignals": [
+        "getUserFromRequest"
+      ],
+      "guardSignals": [
+        "guardMutation"
+      ],
+      "rateLimitSignals": [
+        "consumeRateLimit"
+      ],
+      "responseFormat": "success_flagged_json"
+    },
+    {
+      "file": "app/api/user/oauth-security/route.js",
+      "routePath": "/api/user/oauth-security",
+      "isApi": true,
+      "isAdmin": false,
+      "methods": [
+        "GET",
+        "POST"
+      ],
+      "policyTier": "authenticated_or_domain",
+      "authSignals": [
+        "getUserFromRequest"
+      ],
+      "guardSignals": [
+        "guardMutation"
+      ],
+      "rateLimitSignals": [
+        "consumeRateLimit",
+        "rateLimitResponse"
+      ],
+      "responseFormat": "success_flagged_json"
+    },
+    {
+      "file": "app/api/user/oauth/[provider]/route.js",
+      "routePath": "/api/user/oauth/[provider]",
+      "isApi": true,
+      "isAdmin": false,
+      "methods": [
+        "GET",
+        "DELETE"
+      ],
+      "policyTier": "authenticated_or_domain",
+      "authSignals": [
+        "getUserFromRequest"
+      ],
+      "guardSignals": [],
+      "rateLimitSignals": [],
+      "responseFormat": "direct_domain_json"
+    },
+    {
+      "file": "app/api/user/onboarding/route.js",
+      "routePath": "/api/user/onboarding",
+      "isApi": true,
+      "isAdmin": false,
+      "methods": [
+        "POST"
+      ],
+      "policyTier": "authenticated_or_domain",
+      "authSignals": [
+        "getUserFromRequest"
+      ],
+      "guardSignals": [
+        "guardMutation"
+      ],
+      "rateLimitSignals": [
+        "consumeRateLimit"
+      ],
+      "responseFormat": "direct_domain_json"
+    },
+    {
+      "file": "app/api/user/password/route.js",
+      "routePath": "/api/user/password",
+      "isApi": true,
+      "isAdmin": false,
+      "methods": [
+        "POST"
+      ],
+      "policyTier": "authenticated_or_domain",
+      "authSignals": [
+        "getUserFromRequest"
+      ],
+      "guardSignals": [
+        "guardMutation"
+      ],
+      "rateLimitSignals": [
+        "consumeRateLimit",
+        "rateLimitResponse"
+      ],
+      "responseFormat": "success_flagged_json"
+    },
+    {
+      "file": "app/api/user/phone/route.js",
+      "routePath": "/api/user/phone",
+      "isApi": true,
+      "isAdmin": false,
+      "methods": [
+        "POST",
+        "DELETE"
+      ],
+      "policyTier": "authenticated_or_domain",
+      "authSignals": [
+        "getUserFromRequest"
+      ],
+      "guardSignals": [
+        "guardMutation"
+      ],
+      "rateLimitSignals": [
+        "consumeRateLimit",
+        "rateLimitResponse"
+      ],
+      "responseFormat": "success_flagged_json"
+    },
+    {
+      "file": "app/api/user/preferences/route.js",
+      "routePath": "/api/user/preferences",
+      "isApi": true,
+      "isAdmin": false,
+      "methods": [
+        "GET",
+        "PUT"
+      ],
+      "policyTier": "authenticated_or_domain",
+      "authSignals": [
+        "getUserFromRequest"
+      ],
+      "guardSignals": [
+        "guardMutation"
+      ],
+      "rateLimitSignals": [
+        "consumeRateLimit",
+        "rateLimitResponse"
+      ],
+      "responseFormat": "success_flagged_json"
+    },
+    {
+      "file": "app/api/user/privacy/route.js",
+      "routePath": "/api/user/privacy",
+      "isApi": true,
+      "isAdmin": false,
+      "methods": [
+        "GET",
+        "PATCH"
+      ],
+      "policyTier": "authenticated_or_domain",
+      "authSignals": [
+        "getUserFromRequest"
+      ],
+      "guardSignals": [
+        "guardMutation"
+      ],
+      "rateLimitSignals": [
+        "consumeRateLimit",
+        "rateLimitResponse"
+      ],
+      "responseFormat": "success_flagged_json"
+    },
+    {
+      "file": "app/api/user/profile/route.js",
+      "routePath": "/api/user/profile",
+      "isApi": true,
+      "isAdmin": false,
+      "methods": [
+        "GET",
+        "PUT"
+      ],
+      "policyTier": "authenticated_or_domain",
+      "authSignals": [
+        "getUserFromRequest"
+      ],
+      "guardSignals": [
+        "guardMutation"
+      ],
+      "rateLimitSignals": [
+        "consumeRateLimit",
+        "rateLimitResponse"
+      ],
+      "responseFormat": "direct_domain_json"
+    },
+    {
+      "file": "app/api/v1/[[...path]]/route.js",
+      "routePath": "/api/v1/[[...path]]",
+      "isApi": true,
+      "isAdmin": false,
+      "methods": [
+        "GET",
+        "POST"
+      ],
+      "policyTier": "legacyProxy",
+      "authSignals": [
+        "getUserFromRequest"
+      ],
+      "guardSignals": [
+        "guardMutation"
+      ],
+      "rateLimitSignals": [
+        "consumeRateLimit",
+        "rateLimitResponse"
+      ],
+      "responseFormat": "upstream_proxy_passthrough"
+    },
+    {
+      "file": "app/api/v1/creative-agent/[[...path]]/route.js",
+      "routePath": "/api/v1/creative-agent/[[...path]]",
+      "isApi": true,
+      "isAdmin": false,
+      "methods": [
+        "GET",
+        "POST",
+        "PATCH",
+        "DELETE"
+      ],
+      "policyTier": "legacyProxy",
+      "authSignals": [
+        "getUserFromRequest"
+      ],
+      "guardSignals": [
+        "guardMutation"
+      ],
+      "rateLimitSignals": [
+        "consumeRateLimit",
+        "rateLimitResponse"
+      ],
+      "responseFormat": "upstream_proxy_passthrough"
+    },
+    {
+      "file": "app/api/v1/get_upload_url/route.js",
+      "routePath": "/api/v1/get_upload_url",
+      "isApi": true,
+      "isAdmin": false,
+      "methods": [
+        "GET"
+      ],
+      "policyTier": "legacyProxy",
+      "authSignals": [
+        "getUserFromRequest"
+      ],
+      "guardSignals": [],
+      "rateLimitSignals": [],
+      "responseFormat": "upstream_proxy_passthrough"
+    },
+    {
+      "file": "app/api/v1/upload-binary/route.js",
+      "routePath": "/api/v1/upload-binary",
+      "isApi": true,
+      "isAdmin": false,
+      "methods": [
+        "POST"
+      ],
+      "policyTier": "legacyProxy",
+      "authSignals": [
+        "getUserFromRequest"
+      ],
+      "guardSignals": [
+        "guardMutation"
+      ],
+      "rateLimitSignals": [
+        "consumeRateLimit",
+        "rateLimitResponse"
+      ],
+      "responseFormat": "upstream_proxy_passthrough"
+    },
+    {
+      "file": "app/api/webhooks/bilibili/route.js",
+      "routePath": "/api/webhooks/bilibili",
+      "isApi": true,
+      "isAdmin": false,
+      "methods": [
+        "GET",
+        "POST"
+      ],
+      "policyTier": "authenticated_or_domain",
+      "authSignals": [],
+      "guardSignals": [],
+      "rateLimitSignals": [],
+      "responseFormat": "binary_redirect_xml_or_callback"
+    },
+    {
+      "file": "app/api/webhooks/douyin/route.js",
+      "routePath": "/api/webhooks/douyin",
+      "isApi": true,
+      "isAdmin": false,
+      "methods": [
+        "GET",
+        "POST"
+      ],
+      "policyTier": "authenticated_or_domain",
+      "authSignals": [],
+      "guardSignals": [],
+      "rateLimitSignals": [],
+      "responseFormat": "binary_redirect_xml_or_callback"
+    },
+    {
+      "file": "app/api/workflow/[[...path]]/route.js",
+      "routePath": "/api/workflow/[[...path]]",
+      "isApi": true,
+      "isAdmin": false,
+      "methods": [
+        "GET",
+        "POST",
+        "PUT",
+        "DELETE"
+      ],
+      "policyTier": "legacyProxy",
+      "authSignals": [
+        "getUserFromRequest"
+      ],
+      "guardSignals": [
+        "guardMutation"
+      ],
+      "rateLimitSignals": [],
+      "responseFormat": "upstream_proxy_passthrough"
+    },
+    {
+      "file": "app/auth/[provider]/callback/route.js",
+      "routePath": "/auth/[provider]/callback",
+      "isApi": false,
+      "isAdmin": false,
+      "methods": [
+        "GET"
+      ],
+      "policyTier": "authenticated_or_domain",
+      "authSignals": [],
+      "guardSignals": [],
+      "rateLimitSignals": [],
+      "responseFormat": "binary_redirect_xml_or_callback"
+    },
+    {
+      "file": "app/auth/tiktok/callback/route.js",
+      "routePath": "/auth/tiktok/callback",
+      "isApi": false,
+      "isAdmin": false,
+      "methods": [
+        "GET"
+      ],
+      "policyTier": "authenticated_or_domain",
+      "authSignals": [],
+      "guardSignals": [],
+      "rateLimitSignals": [],
+      "responseFormat": "binary_redirect_xml_or_callback"
+    },
+    {
+      "file": "app/auth/tiktok/route.js",
+      "routePath": "/auth/tiktok",
+      "isApi": false,
+      "isAdmin": false,
+      "methods": [
+        "GET"
+      ],
+      "policyTier": "authenticated_or_domain",
+      "authSignals": [],
+      "guardSignals": [],
+      "rateLimitSignals": [],
+      "responseFormat": "binary_redirect_xml_or_callback"
+    },
+    {
+      "file": "app/sitemap.xml/route.js",
+      "routePath": "/sitemap.xml",
+      "isApi": false,
+      "isAdmin": false,
+      "methods": [
+        "GET"
+      ],
+      "policyTier": "authenticated_or_domain",
+      "authSignals": [],
+      "guardSignals": [],
+      "rateLimitSignals": [],
+      "responseFormat": "binary_redirect_xml_or_callback"
+    }
+  ]
+}

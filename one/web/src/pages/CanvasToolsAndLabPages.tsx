@@ -125,5 +125,6 @@ export function ZhLabPage() {
 }
 
 export function LabRedirectPage() {
-  return <Navigate to="/zh/lab" replace />;
+  const { search, hash } = useLocation();
+  return <Navigate to={{ pathname: '/zh/lab', search, hash }} replace />;
 }
