@@ -1,0 +1,7 @@
+{
+  "price": {
+    "credits": "{credits} 积分",
+    "creditsFrom": "{credits} 积分起",
+    "unavailable": "暂无价格"
+  }
+}

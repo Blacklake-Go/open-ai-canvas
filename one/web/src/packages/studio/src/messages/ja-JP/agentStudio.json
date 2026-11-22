@@ -1,0 +1,66 @@
+{
+  "tabs": {
+    "templates": "テンプレート",
+    "my-agents": "マイエージェント",
+    "my-chats": "チャット履歴"
+  },
+  "headings": {
+    "agents": "エージェント",
+    "createAgent": "エージェント作成"
+  },
+  "buttons": {
+    "back": "エージェント一覧",
+    "create": "作成",
+    "createAgentSubmit": "エージェントを作成",
+    "creating": "作成中...",
+    "send": "送信",
+    "retry": "再試行",
+    "browseTemplates": "テンプレートを探す"
+  },
+  "labels": {
+    "name": "名前",
+    "description": "説明",
+    "systemPrompt": "システムプロンプト",
+    "welcomeMessage": "ウェルカムメッセージ（任意）"
+  },
+  "placeholders": {
+    "name": "例：キャプション生成プロ",
+    "description": "このエージェントはどのような支援をしますか？",
+    "systemPrompt": "あなたは役立つアシスタントとして...",
+    "welcomeMessage": "こんにちは！何かお手伝いできることはありますか？",
+    "chatInput": "メッセージを入力..."
+  },
+  "empty": {
+    "noChats": "チャットはまだありません",
+    "noAgents": "エージェントが見つかりません"
+  },
+  "errors": {
+    "loadFailed": "読み込みに失敗しました。",
+    "loadAgentFailed": "エージェントの読み込みに失敗しました",
+    "sendFailed": "メッセージの送信に失敗しました",
+    "createFailed": "エージェントの作成に失敗しました"
+  },
+  "card": {
+    "defaultCategory": "AIアシスタント",
+    "unnamedAgent": "名称未設定エージェント",
+    "byPrefix": "作成者：",
+    "unknownAgent": "不明なエージェント",
+    "newChat": "新しいチャット",
+    "msgsSuffix": "件のメッセージ"
+  },
+  "time": {
+    "justNow": "たった今",
+    "minutesAgo": "{n}分前",
+    "hoursAgo": "{n}時間前",
+    "daysAgo": "{n}日前"
+  },
+  "auth": {
+    "heading": "エージェントを使用するにはログインしてください",
+    "description": "テンプレート、作成したエージェント、チャット履歴はSupDanceアカウントと連携されます。",
+    "cta": "ログイン"
+  },
+  "unavailable": {
+    "title": "クリエイティブエージェントは一時的にご利用いただけません",
+    "description": "ユーザーごとのセッション、生成課金、結果保存に対応中です。現在ご利用いただける Studio の画像・動画ツールをお使いください。"
+  }
+}

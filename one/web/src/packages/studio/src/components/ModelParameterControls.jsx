@@ -1,0 +1,301 @@
+"use client";
+
+import { Children, useRef, useState, useEffect } from "react";
+
+import {
+  PROMPT_CONTROL_LABEL_CLASS,
+  PromptChevronIcon,
+  PromptPopover,
+  PromptPopoverHeader,
+  promptControlClassName,
+} from "./prompt/PromptComposer.jsx";
+
+const FIELD_CLASS =
+  "w-full rounded-lg border border-white/10 bg-white/[0.04] px-3 py-2 text-xs text-white outline-none transition-colors focus:border-[#e11d74]/50";
+
+function createEmptyValue(schema = {}) {
+  if (schema.default !== undefined) return schema.default;
+  if (schema.type === "boolean") return false;
+  if (schema.type === "array") return [];
+  if (schema.type === "object") {
+    return Object.fromEntries(
+      Object.entries(schema.properties || {}).map(([key, property]) => [
+        key,
+        createEmptyValue(property),
+      ]),
+    );
+  }
+  if (["number", "integer", "int"].includes(schema.type)) return 0;
+  return "";
+}
+
+function FieldLabel({ schema, inputKey }) {
+  return (
+    <div className="min-w-0">
+      <div className="text-xs font-semibold text-white/75">
+        {schema.title || inputKey.replaceAll("_", " ")}
+      </div>
+      {schema.description && (
+        <div className="mt-0.5 text-[10px] leading-relaxed text-white/35">
+          {schema.description}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function ScalarInput({ schema, value, onChange, label }) {
+  if (schema.enum) {
+    return (
+      <select
+        className={FIELD_CLASS}
+        aria-label={label}
+        value={value ?? ""}
+        onChange={(event) => {
+          const selected = schema.enum.find(
+            (option) => String(option) === event.target.value,
+          );
+          onChange(selected);
+        }}
+      >
+        {schema.emptyLabel && schema.default === undefined && (
+          <option value="">{schema.emptyLabel}</option>
+        )}
+        {schema.enum.map((option) => (
+          <option key={String(option)} value={String(option)}>
+            {schema.optionLabels?.[option] || String(option)}
+          </option>
+        ))}
+      </select>
+    );
+  }
+
+  if (schema.type === "boolean") {
+    return (
+      <button
+        type="button"
+        role="switch"
+        aria-label={label}
+        aria-checked={!!value}
+        onClick={() => onChange(!value)}
+        className={`relative h-6 w-11 shrink-0 rounded-full border transition-colors ${
+          value
+            ? "border-[#e11d74]/50 bg-[#e11d74]/30"
+            : "border-white/10 bg-white/[0.06]"
+        }`}
+      >
+        <span
+          className={`absolute left-0.5 top-0.5 h-4 w-4 rounded-full bg-white transition-transform ${
+            value ? "translate-x-5" : "translate-x-0"
+          }`}
+        />
+      </button>
+    );
+  }
+
+  const numeric = ["number", "integer", "int"].includes(schema.type);
+  return (
+    <input
+      className={FIELD_CLASS}
+      aria-label={label}
+      type={numeric ? "number" : "text"}
+      value={value ?? ""}
+      min={schema.minValue ?? schema.minimum}
+      max={schema.maxValue ?? schema.maximum}
+      step={schema.step || (schema.type === "number" ? "any" : 1)}
+      placeholder={schema.examples?.[0] && typeof schema.examples[0] !== "object"
+        ? String(schema.examples[0])
+        : undefined}
+      onChange={(event) => onChange(event.target.value)}
+    />
+  );
+}
+
+function ArrayInput({ schema, value, onChange, label }) {
+  const items = Array.isArray(value) ? value : [];
+  const itemSchema = schema.items || { type: "string" };
+  const maxItems = schema.maxItems ?? schema.max_items ?? Infinity;
+
+  const updateItem = (index, nextValue) => {
+    onChange(items.map((item, itemIndex) => (itemIndex === index ? nextValue : item)));
+  };
+
+  const removeItem = (index) => {
+    onChange(items.filter((_, itemIndex) => itemIndex !== index));
+  };
+
+  return (
+    <div className="flex flex-col gap-2">
+      {items.map((item, index) => (
+        <div
+          key={index}
+          className="rounded-lg border border-white/[0.07] bg-black/20 p-2.5"
+        >
+          {itemSchema.type === "object" && itemSchema.properties ? (
+            <div className="flex flex-col gap-2">
+              {Object.entries(itemSchema.properties || {}).map(([key, property]) => (
+                <div key={key} className="flex flex-col gap-1">
+                  <span className="text-[10px] font-semibold text-white/45">
+                    {property.title || key.replaceAll("_", " ")}
+                  </span>
+                  <ModelParameterInput
+                    schema={property}
+                    label={property.title || key.replaceAll("_", " ")}
+                    value={item?.[key] ?? createEmptyValue(property)}
+                    onChange={(nextValue) =>
+                      updateItem(index, { ...item, [key]: nextValue })
+                    }
+                  />
+                </div>
+              ))}
+            </div>
+          ) : (
+            <ModelParameterInput
+              schema={itemSchema}
+              label={`${label} ${index + 1}`}
+              value={item}
+              onChange={(nextValue) => updateItem(index, nextValue)}
+            />
+          )}
+          <button
+            type="button"
+            onClick={() => removeItem(index)}
+            aria-label={`Remove ${label} ${index + 1}`}
+            className="mt-2 text-[10px] font-semibold text-red-300/70 hover:text-red-300"
+          >
+            Remove
+          </button>
+        </div>
+      ))}
+      {items.length < maxItems && (
+        <button
+          type="button"
+          onClick={() => onChange([...items, createEmptyValue(itemSchema)])}
+          aria-label={`Add ${label}`}
+          className="rounded-lg border border-dashed border-white/10 px-3 py-2 text-xs font-semibold text-white/45 hover:border-[#e11d74]/30 hover:text-[#e11d74]"
+        >
+          + Add
+        </button>
+      )}
+    </div>
+  );
+}
+
+function JsonParameterInput({schema,value,onChange,label}) {
+  const [text,setText]=useState(()=>JSON.stringify(value ?? createEmptyValue(schema),null,2));
+  const [error,setError]=useState(false);
+  useEffect(()=>{if(value!==undefined){setText(JSON.stringify(value,null,2));setError(false);}},[value]);
+  return <div className="space-y-1"><textarea aria-label={label} aria-invalid={error} className={`${FIELD_CLASS} min-h-24 font-mono`} value={text} onChange={event=>{
+    const next=event.target.value;setText(next);
+    try{const parsed=JSON.parse(next);setError(false);onChange(parsed);}catch{setError(true);onChange(undefined);}
+  }}/>{error && <p role="alert" className="text-xs text-ink-muted">请输入完整、有效的参数内容。</p>}</div>;
+}
+
+export function ModelParameterInput({schema,value,onChange,label}) {
+  if(schema.const!==undefined)return <span className="text-xs text-ink-muted">{JSON.stringify(schema.const)}</span>;
+  if(schema.type==='object' && schema.properties)return <div className="space-y-3 rounded-xl border border-line p-3">{Object.entries(schema.properties).map(([key,property])=><div key={key} className="block space-y-1 text-xs text-ink-muted"><span>{property.title || key}</span><ModelParameterInput schema={property} label={`${label} ${property.title || key}`} value={value?.[key]} onChange={next=>onChange({...value,[key]:next})}/></div>)}</div>;
+  if(schema.type==='array')return <ArrayInput schema={schema} value={value} onChange={onChange} label={label}/>;
+  if(schema.type==='object' || Array.isArray(schema.type) || schema.anyOf || schema.oneOf)return <JsonParameterInput schema={schema} value={value} onChange={onChange} label={label}/>;
+  const numeric=['number','integer','int'].includes(schema.type);
+  return <ScalarInput schema={schema} value={value} label={label} onChange={next=>onChange(numeric ? next==='' ? undefined : Number(next) : next)}/>;
+}
+
+export default function ModelParameterControls({
+  inputs,
+  values,
+  onChange,
+  open,
+  onToggle,
+  children,
+  label = <span className="text-[10px] font-black text-primary/80">PARAMS</span>,
+  title = "Model parameters",
+  summary = inputs.length,
+  fitViewport = false,
+  solid = false,
+  advancedKeys = [],
+  advancedLabel = "Advanced",
+  advancedChildren,
+}) {
+  const triggerRef = useRef(null);
+  const extraControls = Children.toArray(children);
+  const extraAdvancedControls = Children.toArray(advancedChildren);
+  if (inputs.length === 0 && extraControls.length === 0 && extraAdvancedControls.length === 0) return null;
+  const advancedKeySet = new Set(advancedKeys);
+  const primaryInputs = [];
+  const advancedInputs = [];
+  for (const input of inputs) {
+    (advancedKeySet.has(input.key) ? advancedInputs : primaryInputs).push(input);
+  }
+  const renderInput = ({ key, schema }) => (
+    <div key={key} className="flex flex-col gap-2">
+      <div className={schema.type === "boolean" ? "flex items-center justify-between gap-4" : "flex flex-col gap-2"}>
+        <FieldLabel schema={schema} inputKey={key} />
+        {schema.type === "array" ? (
+          <ModelParameterInput
+            schema={schema}
+            label={schema.title || key.replaceAll("_", " ")}
+            value={values[key]}
+            onChange={(nextValue) => onChange(key, nextValue)}
+          />
+        ) : (
+          <ModelParameterInput
+            schema={schema}
+            label={schema.title || key.replaceAll("_", " ")}
+            value={values[key]}
+            onChange={(nextValue) => onChange(key, nextValue)}
+          />
+        )}
+      </div>
+    </div>
+  );
+
+  return (
+    <div
+      className="relative"
+      onKeyDown={(event) => {
+        if (!open || event.key !== "Escape") return;
+        event.preventDefault();
+        event.stopPropagation();
+        onToggle(event);
+        triggerRef.current?.focus();
+      }}
+    >
+      <button
+        type="button"
+        ref={triggerRef}
+        aria-expanded={open}
+        onClick={onToggle}
+        className={promptControlClassName({ active: open })}
+      >
+        <span className={PROMPT_CONTROL_LABEL_CLASS}>{label}</span>
+        {summary !== "" && <span className={PROMPT_CONTROL_LABEL_CLASS}>{summary}</span>}
+        <PromptChevronIcon />
+      </button>
+      {open && (
+        <PromptPopover
+          fitViewport={fitViewport}
+          solid={solid}
+          onClick={(event) => event.stopPropagation()}
+          className="w-[min(420px,calc(100vw-2rem))] max-h-[60vh]"
+        >
+          <PromptPopoverHeader>{title}</PromptPopoverHeader>
+          <div className="flex flex-col gap-4">
+            {extraControls}
+            {primaryInputs.map(renderInput)}
+            {(advancedInputs.length > 0 || extraAdvancedControls.length > 0) && (
+              <details className="border-t border-white/[0.07] pt-2">
+                <summary className="cursor-pointer py-2 text-xs font-semibold text-white/60 focus-visible:outline focus-visible:outline-1 focus-visible:outline-primary">
+                  {advancedLabel}
+                </summary>
+                <div className="flex flex-col gap-4 pt-2">
+                  {advancedInputs.map(renderInput)}
+                  {extraAdvancedControls}
+                </div>
+              </details>
+            )}
+          </div>
+        </PromptPopover>
+      )}
+    </div>
+  );
+}

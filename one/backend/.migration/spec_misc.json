@@ -1,0 +1,445 @@
+[
+ {
+  "routePath": "/api/agents/[[...path]]",
+  "methods": [
+   "GET",
+   "POST",
+   "PUT",
+   "DELETE"
+  ],
+  "policyTier": "legacyProxy",
+  "responseFormat": "upstream_proxy_passthrough",
+  "isApi": true,
+  "isAdmin": false,
+  "analysis": {
+   "src": "app/api/agents/[[...path]]/route.js",
+   "exists": true,
+   "perms": [],
+   "idem": false,
+   "adminPwd": false,
+   "lines": 152,
+   "imports": [
+    "@/lib/security/byok",
+    "@/lib/security/legacyProxyPolicy",
+    "@/lib/security/publicError",
+    "@/lib/security/requestGuard",
+    "@/lib/security/scopedProxyGuard",
+    "@/lib/services/auth"
+   ],
+   "srcAbs": "/Users/seelucency/Documents/dev/Supdance Pro/app/api/agents/[[...path]]/route.js",
+   "perm": "",
+   "scope": "",
+   "requiresKey": false,
+   "srcSnippet": "import { NextResponse } from 'next/server';\nimport { getUserFromRequest } from '@/lib/services/auth';\nimport { guardMutation } from '@/lib/security/requestGuard';\nimport { publicErrorMessage } from '@/lib/security/publicError';\nimport { resolveProviderApiKey } from '@/lib/security/byok';\nimport { PROXY_SCOPE } from '@/lib/security/legacyProxyPolicy';\nimport { guardScopedProxyRequest } from '@/lib/security/scopedProxyGuard';\n\nconst MUAPI_BASE = 'https://api.muapi.ai';\n\nasync function getApiKey(request) {\n    // Client-supplied keys are accepted only when the explicit BYOK gate is open.\n    return resolveProviderApiKey(request);\n}\n\nfunction cleanHeaders(request) {\n    const headers = new Headers(request.headers);\n    headers.delete('host');\n    headers.delete('connection');\n    headers.delete('cookie'); // CRITICAL: Stop forwarding browser cookies to MuAPI\n    headers.delete('authorization');\n    headers.delete('x-api-key');\n    return headers;\n}\n\n// Build the target URL without a trailing slash when path is empty.\n// e.g. GET /api/agents?is_template=true  → https://api.muapi.ai/agents?is_template=true\n// e.g. GET /api/agents/by-slug/foo       → https://api.muapi.ai/agents/by-slug/foo\nfunction buildTargetUrl(pathSegments, search) {\n    const path = pathSegments.join('/');\n    const base = `${MUAPI_BASE}/agents`;\n    return path ? `${base}/${path}${search}` : `${base}${search}`;\n}\n\nfunction isPublicAgentGet(pathSegments) {\n    if (!pathSegments || pathSegments.length === 0) return false;\n    const first = String(pathSegments[0]).toLowerCase();\n    const second = pathSegments.length > 1 ? String(pathSegments[1]).toLowerCase() : '';\n    if (first === 'templates' && second === 'agents') return true;\n    if (first === 'featured' && second === 'agents') return true;\n    if (first === 'by-slug' && pathSegments.length === 2) return true;\n    return false;\n}\n\nexport async function GET(request, { params }) {\n    const slug = await params;\n    const pathSegments = slug.path || [];\n    const isPublic = isPublicAgentGet(pathSegments);\n    const user = await getUserFromRequest(request);\n    if (!user && !isPublic) return NextResponse.json({ error: '请先登录' }, { status: 401 });\n    const denied = await guardScopedProxyRequest({ request, scope: PROXY_SCOPE.AGENTS, pathSegments, method: 'GET', user });\n    if (denied) return denied;\n    const { search } = new URL(request.url);\n    const targetUrl = buildTargetUrl(pathSegments, search);\n\n    const headers = cleanHeaders(request);\n    const apiKey = await getApiKey(request);\n    if (apiKey?.key) {\n        headers.set('x-api-key', apiKey.key);\n    } else if (!isPublic) {\n        return NextResponse.json({ error: 'Agent 服务暂未配置或不可用' }, { status: 503 });\n    }\n\n    try {\n        const response = await fetch(targetUrl, { headers, method: 'GET' });\n        const data = await response.json();\n        return NextResponse.json(data, { status: response.status });\n    } catch (error) {\n        return NextResponse.json({ error: publicErrorMessage(error, 'Agent 请求暂时不可用') }, { status: 500 });\n    }\n}\n\nexport async function POST(request, { params }) {\n    const user = await getUserFromRequest(request);\n    if (!user) return NextResponse.json({ error: '请先登录' }, { status: 401 });\n    const guarded = guardMutation(request, { maxBytes: 512 * 1024 });\n    if (guarded) return guarded;\n    const slug = await params;\n    const pathSegments = slug.path || [];\n    const denied = await guardScopedProxyRequest({ request, scope: PROXY_SCOPE.AGENTS, pathSegments, method: 'POST', user });\n    if (denied) return denied;\n    const { search } = new URL(request.url);\n    const targetUrl = buildTargetUrl(pathSegments, search);\n\n    const headers = cleanHeaders(request);\n    const apiKey = await getApiKey(request);\n    if (!apiKey.ok || !apiKey.key) return NextResponse.json({ error: 'Agent 服务暂未配置或不可用' }, { status: 503 });\n    if (apiKey.key) headers.set('x-api-key', apiKey.key);\n\n    try {\n        const body = await request.arrayBuffe"
+  }
+ },
+ {
+  "routePath": "/api/analytics/banner-event",
+  "methods": [
+   "POST"
+  ],
+  "policyTier": "public",
+  "responseFormat": "binary_redirect_xml_or_callback",
+  "isApi": true,
+  "isAdmin": false,
+  "analysis": {
+   "src": "app/api/analytics/banner-event/route.js",
+   "exists": true,
+   "perms": [],
+   "idem": false,
+   "adminPwd": false,
+   "lines": 66,
+   "imports": [
+    "@/lib/security/requestGuard",
+    "@/lib/services/auth",
+    "@/lib/services/content"
+   ],
+   "srcAbs": "/Users/seelucency/Documents/dev/Supdance Pro/app/api/analytics/banner-event/route.js",
+   "perm": "",
+   "scope": "",
+   "requiresKey": false,
+   "srcSnippet": "import { NextResponse } from 'next/server';\nimport { recordBannerEvent } from '@/lib/services/content';\nimport { getUserFromRequest } from '@/lib/services/auth';\nimport { consumeRateLimit, guardMutation } from '@/lib/security/requestGuard';\n\n\n/** 限流主体：登录态按用户，其余按客户端 IP；XFF 由 nginx 单向写入。 */\nfunction ipOf(request) {\n  return request.headers.get('x-forwarded-for')?.split(',')[0]?.trim()\n    || request.headers.get('x-real-ip')\n    || 'unknown';\n}\n\nexport const runtime = 'nodejs';\nexport const dynamic = 'force-dynamic';\n\nexport async function POST(request) {\n  const deniedByOrigin = guardMutation(request);\n  if (deniedByOrigin) return deniedByOrigin;\n  const rl = await consumeRateLimit({\n    scope: 'analytics.banner',\n    subject: ipOf(request),\n    limit: 120,\n    windowMs: 60_000,\n  });\n  if (!rl.allowed) {\n    return NextResponse.json({ error: '请求过于频繁，请稍后再试' }, { status: 429, headers: { 'Retry-After': String(rl.retryAfterSeconds) } });\n  }\n  try {\n    let body = {};\n    const contentType = request.headers.get('content-type') || '';\n    if (contentType.includes('application/json')) {\n      body = await request.json();\n    } else if (contentType.includes('text/plain')) {\n      // 兼容 navigator.sendBeacon 发送的 text/plain JSON 字符串\n      const text = await request.text();\n      body = JSON.parse(text);\n    } else {\n      body = await request.json();\n    }\n\n    const ip = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() ||\n      request.headers.get('x-real-ip') ||\n      '127.0.0.1';\n    const userAgent = request.headers.get('user-agent') || '';\n    const sessionUser = await getUserFromRequest(request);\n\n    const ok = await recordBannerEvent({\n      bannerId: body.bannerId,\n      eventType: body.eventType,\n      // userId 只能由服务端会话决定：接受 body.userId 等于任何人都能给别人账号刷曝光/点击。\n      userId: sessionUser?.id || null,\n      anonymousId: body.anonymousId,\n      targetUrl: body.targetUrl,\n      pagePath: body.pagePath,\n      locale: body.locale,\n      userAgent,\n      ip,\n    });\n\n    return NextResponse.json({ ok });\n  } catch (err) {\n    return NextResponse.json({ ok: false, error: err.message }, { status: 400 });\n  }\n}\n"
+  }
+ },
+ {
+  "routePath": "/api/analytics/track",
+  "methods": [
+   "POST"
+  ],
+  "policyTier": "public",
+  "responseFormat": "direct_domain_json",
+  "isApi": true,
+  "isAdmin": false,
+  "analysis": {
+   "src": "app/api/analytics/track/route.js",
+   "exists": true,
+   "perms": [],
+   "idem": false,
+   "adminPwd": false,
+   "lines": 61,
+   "imports": [
+    "@/lib/security/requestGuard",
+    "@/lib/services/activity",
+    "@/lib/services/auth"
+   ],
+   "srcAbs": "/Users/seelucency/Documents/dev/Supdance Pro/app/api/analytics/track/route.js",
+   "perm": "",
+   "scope": "",
+   "requiresKey": false,
+   "srcSnippet": "import { getUserFromRequest, json } from '@/lib/services/auth';\nimport { recordUserActivity } from '@/lib/services/activity';\nimport { consumeRateLimit, getClientIp, guardMutation } from '@/lib/security/requestGuard';\n\n\n/** 限流主体：登录态按用户，其余按客户端 IP；XFF 由 nginx 单向写入。 */\nfunction ipOf(request) {\n  return request.headers.get('x-forwarded-for')?.split(',')[0]?.trim()\n    || request.headers.get('x-real-ip')\n    || 'unknown';\n}\n\nexport const runtime = 'nodejs';\n\nexport async function POST(request) {\n  const user = await getUserFromRequest(request);\n  const rl = await consumeRateLimit({\n    scope: 'analytics.track',\n    subject: user?.id || ipOf(request),\n    limit: 180,\n    windowMs: 60_000,\n  });\n  if (!rl.allowed) {\n    return json({ error: '请求过于频繁，请稍后再试' }, {\n      status: 429,\n      headers: { 'Retry-After': String(rl.retryAfterSeconds) },\n    });\n  }\n  const guarded = guardMutation(request, { maxBytes: 32 * 1024 });\n  if (guarded) return guarded;\n\n  try {\n    const body = await request.json();\n    const action = String(body.action || '').trim();\n    if (!action) {\n      return json({ error: '缺少 action 参数' }, { status: 400 });\n    }\n\n    const ip = getClientIp(request);\n    const userAgent = request.headers.get('user-agent');\n\n    await recordUserActivity({\n      userId: user?.id || null,\n      sessionId: body.sessionId || null,\n      category: String(body.category || 'client'),\n      action,\n      targetType: body.targetType || null,\n      targetId: body.targetId || null,\n      modelName: body.modelName || null,\n      metadata: body.metadata || {},\n      ip,\n      userAgent,\n    });\n\n    return json({ ok: true });\n  } catch (error) {\n    console.error('[analytics/track error]', error);\n    return json({ ok: false }, { status: 500 });\n  }\n}\n"
+  }
+ },
+ {
+  "routePath": "/api/api/v1/[[...path]]",
+  "methods": [
+   "GET",
+   "POST"
+  ],
+  "policyTier": "legacyProxy",
+  "responseFormat": "upstream_proxy_passthrough",
+  "isApi": true,
+  "isAdmin": false,
+  "analysis": {
+   "src": "app/api/api/v1/[[...path]]/route.js",
+   "exists": true,
+   "perms": [],
+   "idem": false,
+   "adminPwd": false,
+   "lines": 133,
+   "imports": [
+    "@/lib/security/legacyProxyPolicy",
+    "@/lib/security/publicError",
+    "@/lib/security/requestGuard",
+    "@/lib/services/auth",
+    "@/lib/services/generations",
+    "@/lib/services/providerSecrets",
+    "@/lib/storage/storageService"
+   ],
+   "srcAbs": "/Users/seelucency/Documents/dev/Supdance Pro/app/api/api/v1/[[...path]]/route.js",
+   "perm": "",
+   "scope": "",
+   "requiresKey": false,
+   "srcSnippet": "import { NextResponse } from 'next/server';\nimport { getUserFromRequest } from '@/lib/services/auth';\nimport { findCreationById } from '@/lib/services/generations';\nimport { consumeRateLimit, getClientIp, guardMutation, rateLimitResponse } from '@/lib/security/requestGuard';\nimport { publicErrorMessage } from '@/lib/security/publicError';\nimport { getServerProviderApiKey } from '@/lib/services/providerSecrets';\nimport { getAssetUrl } from '@/lib/storage/storageService';\nimport { classifyProxyRequest, POLICY } from '@/lib/security/legacyProxyPolicy';\n\nconst MUAPI_BASE = 'https://api.muapi.ai';\n\nasync function guardGenericProxyRequest(request, pathSegments, method, user) {\n    const verdict = classifyProxyRequest(pathSegments, method);\n    if (!verdict.allow) {\n        const billed = verdict.decision === POLICY.DENY_BILLING_REQUIRED;\n        return NextResponse.json({\n            error: billed ? '该推理入口尚未接入平台额度结算，暂不可用' : '该接口不可用',\n            code: verdict.decision,\n        }, { status: billed ? 402 : verdict.decision === POLICY.DENY_ACCOUNT ? 403 : 404 });\n    }\n    const result = await consumeRateLimit({\n        scope: `legacy_api_v1_${method.toLowerCase()}`,\n        subject: user?.id || getClientIp(request),\n        limit: method === 'GET' ? 600 : 60,\n        windowMs: 60 * 1000,\n    });\n    return result.allowed ? null : rateLimitResponse(result);\n}\n\nfunction cleanHeaders(request) {\n    const headers = new Headers(request.headers);\n    headers.delete('host');\n    headers.delete('connection');\n    headers.delete('cookie');\n    headers.delete('authorization');\n    headers.delete('x-api-key');\n    return headers;\n}\n\n// Proxies /api/api/v1/* -> https://api.muapi.ai/api/v1/*\n// This is required because the AiAgent library hardcodes a double /api/api\nexport async function GET(request, { params }) {\n    const slug = await params;\n    const pathSegments = slug.path || [];\n    const path = pathSegments.join('/');\n\n    const user = await getUserFromRequest(request);\n    if (!user) return NextResponse.json({ error: '请先登录' }, { status: 401 });\n\n    // Async generation tasks are polled through the legacy agent path. Keep\n    // this local and ownership-checked instead of exposing provider requests.\n    if (pathSegments[0] === 'predictions' && pathSegments[2] === 'result' && String(pathSegments[1] || '').startsWith('gen_')) {\n        const creation = await findCreationById(pathSegments[1]);\n        if (!creation || creation.user_id !== user.id) {\n            return NextResponse.json({ error: '任务不存在' }, { status: 404 });\n        }\n        const status = creation.status === 'succeeded' ? 'completed'\n            : creation.status === 'cancelled' ? 'cancelled'\n                : creation.status;\n        const resultUrl = creation.result_object_key\n            ? await getAssetUrl({\n                objectKey: creation.result_object_key,\n                visibility: 'private',\n                provider: creation.storage_provider || null,\n                locationId: creation.storage_location_id || null,\n                bucket: creation.storage_bucket || null,\n                region: creation.storage_region || null,\n            }).catch(() => null)\n            : creation.result_url;\n        return NextResponse.json({\n            id: creation.id,\n            request_id: creation.id,\n            status,\n            url: resultUrl || undefined,\n            outputs: resultUrl ? [resultUrl] : undefined,\n            error: creation.error_reason ? { message: creation.error_reason, code: creation.error_code } : undefined,\n            cost: creation.status === 'failed' ? { refunded: true, amount_credits: Number(creation.credit_cost || 0) } : undefined,\n        });\n    }\n\n    const denied = await guardGenericProxyRequest(request, pathSegments, 'GET', user);\n    if (denied) return denied;\n    \n    const { search } = new URL(request.url);\n    const targetUrl = `${MUAPI_BASE}/api/v1/${path}${search}`;\n\n    const headers = cleanHeaders(request);\n    // NOTE: creden"
+  }
+ },
+ {
+  "routePath": "/api/app/[[...path]]",
+  "methods": [
+   "GET",
+   "POST",
+   "PUT",
+   "DELETE"
+  ],
+  "policyTier": "legacyProxy",
+  "responseFormat": "upstream_proxy_passthrough",
+  "isApi": true,
+  "isAdmin": false,
+  "analysis": {
+   "src": "app/api/app/[[...path]]/route.js",
+   "exists": true,
+   "perms": [],
+   "idem": false,
+   "adminPwd": false,
+   "lines": 178,
+   "imports": [
+    "@/lib/security/byok",
+    "@/lib/security/legacyProxyPolicy",
+    "@/lib/security/publicError",
+    "@/lib/security/requestGuard",
+    "@/lib/security/scopedProxyGuard",
+    "@/lib/services/auth"
+   ],
+   "srcAbs": "/Users/seelucency/Documents/dev/Supdance Pro/app/api/app/[[...path]]/route.js",
+   "perm": "",
+   "scope": "",
+   "requiresKey": false,
+   "srcSnippet": "import { NextResponse } from 'next/server';\nimport { getUserFromRequest } from '@/lib/services/auth';\nimport { guardMutation } from '@/lib/security/requestGuard';\nimport { publicErrorMessage } from '@/lib/security/publicError';\nimport { resolveProviderApiKey } from '@/lib/security/byok';\nimport { PROXY_SCOPE } from '@/lib/security/legacyProxyPolicy';\nimport { guardScopedProxyRequest } from '@/lib/security/scopedProxyGuard';\n\nconst MUAPI_BASE = 'https://api.muapi.ai';\n\nasync function getApiKey(request) {\n    return resolveProviderApiKey(request);\n}\n\nfunction cleanHeaders(request) {\n    const headers = new Headers(request.headers);\n    headers.delete('host');\n    headers.delete('connection');\n    headers.delete('cookie'); // CRITICAL: Stop forwarding browser cookies to MuAPI to avoid auth conflicts\n    headers.delete('authorization');\n    headers.delete('x-api-key');\n    return headers;\n}\n\nexport async function GET(request, { params }) {\n    const user = await getUserFromRequest(request);\n    if (!user) return NextResponse.json({ error: '请先登录' }, { status: 401 });\n    const slug = await params;\n    const pathSegments = slug.path || [];\n    const denied = await guardScopedProxyRequest({ request, scope: PROXY_SCOPE.APP, pathSegments, method: 'GET', user });\n    if (denied) return denied;\n    const path = pathSegments.join('/');\n    \n    // Handle alias: get_upload_file -> get_file_upload_url\n    const effectivePath = path === 'get_upload_file' ? 'get_file_upload_url' : path;\n    \n    const apiKey = await getApiKey(request);\n    if (!apiKey.ok || !apiKey.key) return NextResponse.json({ error: 'App 服务暂未配置或不可用' }, { status: 503 });\n    if (effectivePath === 'get_file_upload_url' && !apiKey.key) {\n        return NextResponse.json({ error: 'Unauthorized: Missing API key' }, { status: 401 });\n    }\n\n    const { search } = new URL(request.url);\n    const targetUrl = `${MUAPI_BASE}/app/${effectivePath}${search}`;\n\n    const headers = cleanHeaders(request);\n\n    if (apiKey.key) headers.set('x-api-key', apiKey.key);\n\n    try {\n        const response = await fetch(targetUrl, {\n            headers,\n            method: 'GET',\n        });\n\n        const data = await response.json();\n\n        // SPECIAL CASE: Intercept upload URL and redirect to local binary proxy\n        if (effectivePath === 'get_file_upload_url' && data.url) {\n            const originalS3Url = data.url;\n            // We pass the real S3 URL as a header to our proxy\n            data.url = `/api/upload-binary`;\n            \n            // Store target in a temporary way? \n            // Better: Return the target URL as an extra field that our proxy will look for\n            data.fields = {\n                ...data.fields,\n                'x-proxy-target-url': originalS3Url\n            };\n        }\n\n        return NextResponse.json(data, { status: response.status });\n    } catch (error) {\n        return NextResponse.json({ error: publicErrorMessage(error, '应用请求暂时不可用') }, { status: 500 });\n    }\n}\n\nexport async function POST(request, { params }) {\n    const user = await getUserFromRequest(request);\n    if (!user) return NextResponse.json({ error: '请先登录' }, { status: 401 });\n    const guarded = guardMutation(request, { maxBytes: 512 * 1024 });\n    if (guarded) return guarded;\n    const slug = await params;\n    const pathSegments = slug.path || [];\n    const denied = await guardScopedProxyRequest({ request, scope: PROXY_SCOPE.APP, pathSegments, method: 'POST', user });\n    if (denied) return denied;\n    const path = pathSegments.join('/');\n    \n    const { search } = new URL(request.url);\n    const targetUrl = `${MUAPI_BASE}/app/${path}${search}`;\n\n    const headers = cleanHeaders(request);\n\n    const apiKey = await getApiKey(request);\n    if (!apiKey.ok || !apiKey.key) return NextResponse.json({ error: 'App 服务暂未配置或不可用' }, { status: 503 });\n    if (apiKey.key) headers.set('x-api-key', apiKey.key);\n\n    try {\n        const body = await request.arrayBuffer();\n        const response ="
+  }
+ },
+ {
+  "routePath": "/api/app/models/available",
+  "methods": [
+   "GET"
+  ],
+  "policyTier": "legacyProxy",
+  "responseFormat": "upstream_proxy_passthrough",
+  "isApi": true,
+  "isAdmin": false,
+  "analysis": {
+   "src": "app/api/app/models/available/route.js",
+   "exists": true,
+   "perms": [],
+   "idem": false,
+   "adminPwd": false,
+   "lines": 29,
+   "imports": [
+    "@/lib/modelCenter/publicDirectory",
+    "@/lib/services/models"
+   ],
+   "srcAbs": "/Users/seelucency/Documents/dev/Supdance Pro/app/api/app/models/available/route.js",
+   "perm": "",
+   "scope": "",
+   "requiresKey": false,
+   "srcSnippet": "import { NextResponse } from 'next/server';\nimport { listAvailableAppModels } from '@/lib/services/models';\nimport { serializePublicAppModel } from '@/lib/modelCenter/publicDirectory';\n\n/**\n * GET /api/app/models/available?type=image\n *\n * 返回指定类型下前台可用的模型列表（含积分价格、能力标签）。\n * 与 Studio 公开目录共用服务端可选集合；不为缺价模型填充默认价格。\n */\nexport async function GET(request) {\n  try {\n    const { searchParams } = new URL(request.url);\n    const type = searchParams.get('type') || 'image';\n\n    const models = await listAvailableAppModels(type);\n\n    const result = models.map(serializePublicAppModel);\n\n    return NextResponse.json({ data: { models: result, type } });\n  } catch (err) {\n    console.error('[api/app/models/available] Error:', err.message);\n    return NextResponse.json(\n      { error: { message: '获取可用模型失败' } },\n      { status: 500 }\n    );\n  }\n}\n"
+  }
+ },
+ {
+  "routePath": "/api/feedback",
+  "methods": [
+   "GET",
+   "POST"
+  ],
+  "policyTier": "authenticated_or_domain",
+  "responseFormat": "direct_domain_json",
+  "isApi": true,
+  "isAdmin": false,
+  "analysis": {
+   "src": "app/api/feedback/route.js",
+   "exists": true,
+   "perms": [],
+   "idem": false,
+   "adminPwd": false,
+   "lines": 95,
+   "imports": [
+    "@/lib/feedback/attachments",
+    "@/lib/security/publicError",
+    "@/lib/security/requestGuard",
+    "@/lib/services/auth",
+    "@/lib/services/feedback"
+   ],
+   "srcAbs": "/Users/seelucency/Documents/dev/Supdance Pro/app/api/feedback/route.js",
+   "perm": "",
+   "scope": "",
+   "requiresKey": false,
+   "srcSnippet": "import { getUserFromRequest, json } from '@/lib/services/auth';\nimport { submitFeedback, listMyFeedback } from '@/lib/services/feedback';\nimport { FEEDBACK_ATTACHMENT_MAX_TOTAL_BYTES } from '@/lib/feedback/attachments';\nimport { guardMutation, consumeRateLimit, rateLimitResponse } from '@/lib/security/requestGuard';\nimport { publicErrorMessage } from '@/lib/security/publicError';\n\nexport const runtime = 'nodejs';\nexport const dynamic = 'force-dynamic';\n\nconst MULTIPART_OVERHEAD_BYTES = 2 * 1024 * 1024;\n\nfunction collectFiles(formData) {\n  const candidates = [\n    ...formData.getAll('attachments'),\n    ...formData.getAll('files'),\n    formData.get('file'),\n  ];\n  return candidates.filter(\n    (item) => item && typeof item === 'object' && typeof item.arrayBuffer === 'function' && Number(item.size) > 0,\n  );\n}\n\nexport async function GET(request) {\n  const user = await getUserFromRequest(request);\n  if (!user) return json({ error: '请先登录' }, { status: 401 });\n\n  try {\n    return json({ items: await listMyFeedback(user.id, { limit: 20 }) });\n  } catch (error) {\n    console.error('[api/feedback GET]', error);\n    return json({ error: publicErrorMessage(error, '获取提交记录失败') }, { status: 500 });\n  }\n}\n\nexport async function POST(request) {\n  const user = await getUserFromRequest(request);\n  if (!user) return json({ error: '请先登录后再提交' }, { status: 401 });\n\n  const isMultipart = String(request.headers.get('content-type') || '').includes('multipart/form-data');\n  const guarded = guardMutation(request, {\n    maxBytes: isMultipart ? FEEDBACK_ATTACHMENT_MAX_TOTAL_BYTES + MULTIPART_OVERHEAD_BYTES : 64 * 1024,\n  });\n  if (guarded) return guarded;\n\n  try {\n    const limited = await consumeRateLimit({\n      scope: 'feedback_submit',\n      subject: user.id,\n      limit: 10,\n      windowMs: 3600 * 1000,\n    });\n    if (!limited.allowed) return rateLimitResponse(limited);\n\n    let input;\n    let files = [];\n\n    if (isMultipart) {\n      const formData = await request.formData();\n      input = {\n        kind: formData.get('kind'),\n        title: formData.get('title'),\n        pageUrl: formData.get('pageUrl') || formData.get('page_url'),\n        githubUrl: formData.get('githubUrl') || formData.get('github_url'),\n        detail: formData.get('detail'),\n      };\n      files = collectFiles(formData);\n    } else {\n      const body = await request.json();\n      input = {\n        kind: body.kind,\n        title: body.title,\n        pageUrl: body.pageUrl,\n        githubUrl: body.githubUrl,\n        detail: body.detail,\n      };\n    }\n\n    const result = await submitFeedback({ userId: user.id, ...input, files });\n    if (result.error) {\n      return json(\n        { error: result.error, code: result.code || 'FEEDBACK_INVALID' },\n        { status: result.status || 400 },\n      );\n    }\n\n    return json({\n      ...result,\n      message: '提交成功，审核通过后硬币会自动到账',\n    });\n  } catch (error) {\n    console.error('[api/feedback POST]', error);\n    return json({ error: publicErrorMessage(error, '提交失败，请稍后重试') }, { status: 400 });\n  }\n}\n"
+  }
+ },
+ {
+  "routePath": "/api/seo/indexnow-key",
+  "methods": [
+   "GET"
+  ],
+  "policyTier": "authenticated_or_domain",
+  "responseFormat": "binary_redirect_xml_or_callback",
+  "isApi": true,
+  "isAdmin": false,
+  "analysis": {
+   "src": "app/api/seo/indexnow-key/route.js",
+   "exists": true,
+   "perms": [],
+   "idem": false,
+   "adminPwd": false,
+   "lines": 28,
+   "imports": [],
+   "srcAbs": "/Users/seelucency/Documents/dev/Supdance Pro/app/api/seo/indexnow-key/route.js",
+   "perm": "",
+   "scope": "",
+   "requiresKey": false,
+   "srcSnippet": "import { getSearchPushConfig, DEFAULT_SEARCH_PUSH_CONFIG } from '../../../../lib/services/seoPush.js';\n\nexport const dynamic = 'force-dynamic';\nexport const runtime = 'nodejs';\n\nexport async function GET() {\n  try {\n    const config = await getSearchPushConfig();\n    const activeKey = config.indexNow?.key || DEFAULT_SEARCH_PUSH_CONFIG.indexNow.key;\n\n    return new Response(activeKey, {\n      status: 200,\n      headers: {\n        'Content-Type': 'text/plain; charset=utf-8',\n        'Cache-Control': 'public, max-age=86400',\n      },\n    });\n  } catch (error) {\n    console.error('[IndexNowKey] Failed to retrieve key:', error);\n    return new Response(DEFAULT_SEARCH_PUSH_CONFIG.indexNow.key, {\n      status: 200,\n      headers: {\n        'Content-Type': 'text/plain; charset=utf-8',\n      },\n    });\n  }\n}\n"
+  }
+ },
+ {
+  "routePath": "/api/v1/[[...path]]",
+  "methods": [
+   "GET",
+   "POST"
+  ],
+  "policyTier": "legacyProxy",
+  "responseFormat": "upstream_proxy_passthrough",
+  "isApi": true,
+  "isAdmin": false,
+  "analysis": {
+   "src": "app/api/v1/[[...path]]/route.js",
+   "exists": true,
+   "perms": [],
+   "idem": false,
+   "adminPwd": false,
+   "lines": 187,
+   "imports": [
+    "@/lib/security/byok",
+    "@/lib/security/publicError",
+    "@/lib/security/requestGuard",
+    "@/lib/services/auth",
+    "@/lib/services/generationCore",
+    "@/lib/services/models",
+    "@/lib/storage/storageService"
+   ],
+   "srcAbs": "/Users/seelucency/Documents/dev/Supdance Pro/app/api/v1/[[...path]]/route.js",
+   "perm": "",
+   "scope": "",
+   "requiresKey": false,
+   "srcSnippet": "import { NextResponse } from 'next/server';\nimport { getUserFromRequest } from '@/lib/services/auth';\nimport { createGenerationTask, processGenerationTask } from '@/lib/services/generationCore';\nimport { findModelByEndpointOrId } from '@/lib/services/models';\nimport { consumeRateLimit, getClientIp, guardMutation, rateLimitResponse } from '@/lib/security/requestGuard';\nimport { publicErrorMessage } from '@/lib/security/publicError';\nimport { resolveProviderApiKey } from '@/lib/security/byok';\nimport { getAssetUrl } from '@/lib/storage/storageService';\n\nexport const runtime = 'nodejs';\nexport const dynamic = 'force-dynamic';\nconst UPSTREAM_BASE = process.env.UPSTREAM_AI_BASE || 'https://api.muapi.ai';\nconst MAX_FILE_UPLOAD_BYTES = 50 * 1024 * 1024;\nconst MAX_GENERATION_JSON_BYTES = 256 * 1024;\n\nfunction cleanHeaders(request) {\n  const headers = new Headers(request.headers);\n  headers.delete('host'); headers.delete('connection'); headers.delete('cookie');\n  headers.delete('authorization'); headers.delete('x-api-key');\n  return headers;\n}\n\n/**\n * `packages/studio` posts reference files directly to `/api/v1/upload_file`.\n * It is deliberately kept outside the generation-task path below: multipart\n * bodies are not JSON and must not be parsed or persisted as a generation.\n */\nasync function proxyFileUpload(request, headers) {\n  const contentType = request.headers.get('content-type') || '';\n  if (!contentType.toLowerCase().startsWith('multipart/form-data')) {\n    return NextResponse.json({ error: '上传请求必须使用 multipart/form-data' }, { status: 415 });\n  }\n\n  try {\n    const body = await request.arrayBuffer();\n    if (body.byteLength > MAX_FILE_UPLOAD_BYTES) {\n      return NextResponse.json({ error: '请求内容过大' }, { status: 413 });\n    }\n    const response = await fetch(`${UPSTREAM_BASE}/api/v1/upload_file`, {\n      method: 'POST',\n      headers,\n      body,\n    });\n    const responseText = await response.text();\n    let data;\n    try {\n      data = responseText ? JSON.parse(responseText) : {};\n    } catch {\n      data = { error: response.ok ? '上传服务返回了无效响应' : '上传服务暂时不可用' };\n    }\n    return NextResponse.json(data, { status: response.status });\n  } catch (error) {\n    console.error('[proxy/v1/upload]', { code: error.code || 'UPSTREAM_ERROR' });\n    return NextResponse.json({ error: publicErrorMessage(error, '上传服务暂时不可用') }, { status: 502 });\n  }\n}\n\nexport async function GET(request, context) {\n  const user = await getUserFromRequest(request);\n  if (!user) return NextResponse.json({ error: '请先登录' }, { status: 401 });\n  const { path: pathSegments = [] } = await context.params;\n  const targetUrl = `${UPSTREAM_BASE}/api/v1/${pathSegments.join('/')}${new URL(request.url).search}`;\n  const headers = cleanHeaders(request);\n  const apiKey = await resolveProviderApiKey(request);\n  if (!apiKey.ok || !apiKey.key) return NextResponse.json({ error: '模型服务未配置或不可用' }, { status: 503 });\n  if (apiKey.key) headers.set('x-api-key', apiKey.key);\n  try {\n    const response = await fetch(targetUrl, { headers, method: 'GET' });\n    const data = await response.json().catch(() => null);\n    const requestId = data?.request_id || data?.id || pathSegments[1];\n    const resultUrl = data?.outputs?.[0] || data?.url || data?.output?.url;\n    return NextResponse.json(data, { status: response.status });\n  } catch (error) { console.error('[proxy/v1/GET]', { code: error.code || 'UPSTREAM_ERROR' }); return NextResponse.json({ error: publicErrorMessage(error, '上游请求异常') }, { status: 502 }); }\n}\n\nexport async function POST(request, context) {\n  const { path: pathSegments = [] } = await context.params;\n  const endpoint = pathSegments[0] || '';\n  const isFileUpload = pathSegments.length === 1 && endpoint === 'upload_file';\n  const user = await getUserFromRequest(request);\n  if (!user) return NextResponse.json({ error: '请先登录后再创建生成任务' }, { status: 401 });\n  if (user.status === 'suspended') return NextResponse.json({ error: '账户已被封禁，无权上传文件' }, { status: 403 });\n\n  // A reference image is n"
+  }
+ },
+ {
+  "routePath": "/api/v1/creative-agent/[[...path]]",
+  "methods": [
+   "GET",
+   "POST",
+   "PATCH",
+   "DELETE"
+  ],
+  "policyTier": "legacyProxy",
+  "responseFormat": "upstream_proxy_passthrough",
+  "isApi": true,
+  "isAdmin": false,
+  "analysis": {
+   "src": "app/api/v1/creative-agent/[[...path]]/route.js",
+   "exists": true,
+   "perms": [],
+   "idem": false,
+   "adminPwd": false,
+   "lines": 161,
+   "imports": [
+    "@/lib/security/byok",
+    "@/lib/security/legacyProxyPolicy",
+    "@/lib/security/publicError",
+    "@/lib/security/requestGuard",
+    "@/lib/services/auth"
+   ],
+   "srcAbs": "/Users/seelucency/Documents/dev/Supdance Pro/app/api/v1/creative-agent/[[...path]]/route.js",
+   "perm": "",
+   "scope": "",
+   "requiresKey": false,
+   "srcSnippet": "import { NextResponse } from 'next/server';\nimport { getUserFromRequest } from '@/lib/services/auth';\nimport { guardMutation } from '@/lib/security/requestGuard';\nimport { publicErrorMessage } from '@/lib/security/publicError';\nimport { resolveProviderApiKey } from '@/lib/security/byok';\nimport { authorizeCreativeAgentProxyPath, POLICY } from '@/lib/security/legacyProxyPolicy';\nimport { consumeRateLimit, getClientIp, rateLimitResponse } from '@/lib/security/requestGuard';\n\nconst MUAPI_BASE = 'https://api.muapi.ai';\n\nasync function guardCreativeAgentProxy(request, pathSegments, method, user) {\n    const verdict = authorizeCreativeAgentProxyPath(pathSegments, method);\n    if (!verdict.allow) {\n        const billed = verdict.decision === POLICY.DENY_BILLING_REQUIRED;\n        return NextResponse.json({\n            error: billed ? '该推理入口尚未接入平台额度结算，暂不可用' : '该接口暂不可用',\n            code: verdict.decision,\n        }, { status: billed ? 402 : 404 });\n    }\n    const result = await consumeRateLimit({\n        scope: 'creative_agent_proxy',\n        subject: user?.id || getClientIp(request),\n        limit: method === 'GET' ? 600 : 60,\n        windowMs: 60 * 1000,\n    });\n    return result.allowed ? null : rateLimitResponse(result);\n}\n\nasync function getApiKey(request) {\n    return resolveProviderApiKey(request);\n}\n\nfunction cleanHeaders(request) {\n    const headers = new Headers(request.headers);\n    headers.delete('host');\n    headers.delete('connection');\n    headers.delete('cookie');\n    headers.delete('Authorization');\n    headers.delete('x-api-key');\n    return headers;\n}\n\nexport async function GET(request, { params }) {\n    const user = await getUserFromRequest(request);\n    if (!user) return NextResponse.json({ error: '请先登录' }, { status: 401 });\n    const slug = await params;\n    const pathSegments = slug.path || [];\n    const denied = await guardCreativeAgentProxy(request, pathSegments, 'GET', user);\n    if (denied) return denied;\n    const path = pathSegments.join('/');\n    \n    const { search } = new URL(request.url);\n    const targetUrl = `${MUAPI_BASE}/api/v1/creative-agent/${path}${search}`;\n\n    const headers = cleanHeaders(request);\n    const apiKey = await getApiKey(request);\n    if (!apiKey.ok || !apiKey.key) return NextResponse.json({ error: 'Creative Agent 服务暂未配置或不可用' }, { status: 503 });\n    if (apiKey.key) headers.set('x-api-key', apiKey.key);\n\n    try {\n        const response = await fetch(targetUrl, { headers, method: 'GET' });\n        const data = await response.json();\n        return NextResponse.json(data, { status: response.status });\n    } catch (error) {\n        console.error('[creative-agent proxy GET ERROR]', { code: error.code || 'UPSTREAM_ERROR' });\n        return NextResponse.json({ error: publicErrorMessage(error, 'Creative Agent 请求暂时不可用') }, { status: 500 });\n    }\n}\n\nexport async function POST(request, { params }) {\n    const user = await getUserFromRequest(request);\n    if (!user) return NextResponse.json({ error: '请先登录' }, { status: 401 });\n    const guarded = guardMutation(request, { maxBytes: 512 * 1024 });\n    if (guarded) return guarded;\n    const slug = await params;\n    const pathSegments = slug.path || [];\n    const denied = await guardCreativeAgentProxy(request, pathSegments, 'POST', user);\n    if (denied) return denied;\n    const path = pathSegments.join('/');\n    \n    const { search } = new URL(request.url);\n    const targetUrl = `${MUAPI_BASE}/api/v1/creative-agent/${path}${search}`;\n\n    const headers = cleanHeaders(request);\n    const apiKey = await getApiKey(request);\n    if (!apiKey.ok || !apiKey.key) return NextResponse.json({ error: 'Creative Agent 服务暂未配置或不可用' }, { status: 503 });\n\n    if (apiKey.key) headers.set('x-api-key', apiKey.key);\n\n    try {\n        const body = await request.arrayBuffer();\n        const response = await fetch(targetUrl, { method: 'POST', headers, body });\n        const data = await response.json();\n        return NextResponse.json(data, { status: response.statu"
+  }
+ },
+ {
+  "routePath": "/api/v1/get_upload_url",
+  "methods": [
+   "GET"
+  ],
+  "policyTier": "legacyProxy",
+  "responseFormat": "upstream_proxy_passthrough",
+  "isApi": true,
+  "isAdmin": false,
+  "analysis": {
+   "src": "app/api/v1/get_upload_url/route.js",
+   "exists": true,
+   "perms": [],
+   "idem": false,
+   "adminPwd": false,
+   "lines": 44,
+   "imports": [
+    "@/lib/security/byok",
+    "@/lib/security/publicError",
+    "@/lib/services/auth"
+   ],
+   "srcAbs": "/Users/seelucency/Documents/dev/Supdance Pro/app/api/v1/get_upload_url/route.js",
+   "perm": "",
+   "scope": "",
+   "requiresKey": false,
+   "srcSnippet": "import { NextResponse } from 'next/server';\nimport { getUserFromRequest } from '@/lib/services/auth';\nimport { publicErrorMessage } from '@/lib/security/publicError';\nimport { resolveProviderApiKey } from '@/lib/security/byok';\n\nconst MUAPI_BASE = 'https://api.muapi.ai';\n\nfunction cleanHeaders(request) {\n    const headers = new Headers(request.headers);\n    headers.delete('host');\n    headers.delete('connection');\n    headers.delete('cookie');\n    headers.delete('authorization');\n    headers.delete('x-api-key');\n    return headers;\n}\n\nexport async function GET(request) {\n    const user = await getUserFromRequest(request);\n    if (!user) return NextResponse.json({ error: '请先登录' }, { status: 401 });\n    const apiKey = await resolveProviderApiKey(request);\n    if (!apiKey.ok || !apiKey.key) return NextResponse.json({ error: '上传服务暂未配置或不可用' }, { status: 503 });\n\n    const { search } = new URL(request.url);\n    const targetUrl = `${MUAPI_BASE}/app/get_file_upload_url${search}`;\n\n    const headers = cleanHeaders(request);\n    headers.set('x-api-key', apiKey.key);\n\n    try {\n        const response = await fetch(targetUrl, {\n            headers,\n            method: 'GET',\n        });\n\n        const data = await response.json();\n\n        return NextResponse.json(data, { status: response.status });\n    } catch (error) {\n        return NextResponse.json({ error: publicErrorMessage(error, '上传地址服务暂时不可用') }, { status: 500 });\n    }\n}\n\n"
+  }
+ },
+ {
+  "routePath": "/api/v1/upload-binary",
+  "methods": [
+   "POST"
+  ],
+  "policyTier": "legacyProxy",
+  "responseFormat": "upstream_proxy_passthrough",
+  "isApi": true,
+  "isAdmin": false,
+  "analysis": {
+   "src": "app/api/v1/upload-binary/route.js",
+   "exists": true,
+   "perms": [],
+   "idem": false,
+   "adminPwd": false,
+   "lines": 80,
+   "imports": [
+    "@/lib/services/auth"
+   ],
+   "srcAbs": "/Users/seelucency/Documents/dev/Supdance Pro/app/api/v1/upload-binary/route.js",
+   "perm": "",
+   "scope": "",
+   "requiresKey": false,
+   "srcSnippet": "import { NextResponse } from 'next/server';\nimport { getUserFromRequest } from '@/lib/services/auth';\nimport { validateUploadProxyTarget, isBlockedFileType } from '../../../../src/lib/uploadProxyTarget';\nimport { consumeRateLimit, guardMutation, rateLimitResponse } from '../../../../lib/security/requestGuard';\nimport { publicErrorMessage } from '../../../../lib/security/publicError';\n\nexport async function POST(request) {\n    try {\n        const guarded = guardMutation(request, { maxBytes: 25 * 1024 * 1024 });\n        if (guarded) return guarded;\n        const user = await getUserFromRequest(request);\n        if (!user) return NextResponse.json({ error: '请先登录' }, { status: 401 });\n        const uploadLimit = await consumeRateLimit({ scope: 'binary_upload_user', subject: user.id, limit: 20, windowMs: 60 * 60 * 1000 });\n        if (!uploadLimit.allowed) return rateLimitResponse(uploadLimit);\n\n        const formData = await request.formData();\n\n        // Extract the original S3 target URL\n        const targetUrl = formData.get('x-proxy-target-url');\n\n        if (!targetUrl) {\n            return NextResponse.json({ error: 'Missing proxy target URL' }, { status: 400 });\n        }\n\n        const validatedTarget = validateUploadProxyTarget(targetUrl);\n        if (!validatedTarget.ok) {\n            return NextResponse.json(\n                { error: 'Invalid upload target', reason: validatedTarget.reason },\n                { status: 400 }\n            );\n        }\n\n        // Validate file content type and extension to prevent dangerous uploads (e.g. HTML, SVG, executables)\n        const fileContentType = formData.get('Content-Type') || formData.get('content-type') || '';\n        const keyName = formData.get('key') || '';\n        \n        for (const [key, value] of formData.entries()) {\n            if (value && typeof value === 'object' && typeof value.name === 'string') {\n                if (isBlockedFileType(value.name, value.type || fileContentType)) {\n                    return NextResponse.json(\n                        { error: 'Invalid file type', reason: 'blocked_file_type' },\n                        { status: 400 }\n                    );\n                }\n            }\n        }\n\n        if (isBlockedFileType(keyName, fileContentType)) {\n            return NextResponse.json(\n                { error: 'Invalid file type', reason: 'blocked_file_type' },\n                { status: 400 }\n            );\n        }\n\n        const s3FormData = new FormData();\n        for (const [key, value] of formData.entries()) {\n            if (key !== 'x-proxy-target-url') {\n                s3FormData.append(key, value);\n            }\n        }\n\n        const s3Response = await fetch(validatedTarget.url, {\n            method: 'POST',\n            body: s3FormData,\n        });\n\n        if (s3Response.ok || s3Response.status === 204) {\n            return new Response(null, { status: 204 });\n        } else {\n            await s3Response.arrayBuffer().catch(() => {});\n            console.error('S3 Proxy Error:', { status: s3Response.status });\n            return NextResponse.json({ error: '上传服务暂时不可用' }, { status: s3Response.status });\n        }\n    } catch (error) {\n        console.error('Upload Proxy Exception:', error);\n        return NextResponse.json({ error: publicErrorMessage(error, '上传服务暂时不可用') }, { status: 500 });\n    }\n}\n\n"
+  }
+ },
+ {
+  "routePath": "/api/webhooks/bilibili",
+  "methods": [
+   "GET",
+   "POST"
+  ],
+  "policyTier": "authenticated_or_domain",
+  "responseFormat": "binary_redirect_xml_or_callback",
+  "isApi": true,
+  "isAdmin": false,
+  "analysis": {
+   "src": "app/api/webhooks/bilibili/route.js",
+   "exists": true,
+   "perms": [],
+   "idem": false,
+   "adminPwd": false,
+   "lines": 52,
+   "imports": [],
+   "srcAbs": "/Users/seelucency/Documents/dev/Supdance Pro/app/api/webhooks/bilibili/route.js",
+   "perm": "",
+   "scope": "",
+   "requiresKey": false,
+   "srcSnippet": "import { NextResponse } from 'next/server';\n\nexport const runtime = 'nodejs';\nexport const dynamic = 'force-dynamic';\n\n/**\n * 哔哩哔哩开放平台 Webhook / 事件推送处理器\n */\nasync function parseRequestBody(request) {\n  try {\n    const rawText = await request.text();\n    if (!rawText) return {};\n    try {\n      return JSON.parse(rawText);\n    } catch {\n      const params = new URLSearchParams(rawText);\n      return Object.fromEntries(params.entries());\n    }\n  } catch (err) {\n    console.warn('[webhook/bilibili] 无法解析请求体:', err.message);\n    return {};\n  }\n}\n\nexport async function GET(request) {\n  const { searchParams } = new URL(request.url);\n  const challenge = searchParams.get('challenge') || searchParams.get('echostr');\n  if (challenge) {\n    return new NextResponse(challenge, {\n      status: 200,\n      headers: { 'Content-Type': 'text/plain; charset=utf-8' },\n    });\n  }\n  return NextResponse.json({ ok: true, provider: 'bilibili', timestamp: Date.now() });\n}\n\nexport async function POST(request) {\n  const body = await parseRequestBody(request);\n\n  if (body?.challenge !== undefined || body?.echostr !== undefined) {\n    const challenge = body?.challenge !== undefined ? body.challenge : body?.echostr;\n    return NextResponse.json({ challenge }, { status: 200 });\n  }\n\n  console.log('[webhook/bilibili] 收到开放平台事件推送:', {\n    event: body?.event || body?.type || 'unknown',\n    body,\n  });\n\n  return NextResponse.json({ code: 0, message: 'success' }, { status: 200 });\n}\n"
+  }
+ },
+ {
+  "routePath": "/api/webhooks/douyin",
+  "methods": [
+   "GET",
+   "POST"
+  ],
+  "policyTier": "authenticated_or_domain",
+  "responseFormat": "binary_redirect_xml_or_callback",
+  "isApi": true,
+  "isAdmin": false,
+  "analysis": {
+   "src": "app/api/webhooks/douyin/route.js",
+   "exists": true,
+   "perms": [],
+   "idem": false,
+   "adminPwd": false,
+   "lines": 61,
+   "imports": [],
+   "srcAbs": "/Users/seelucency/Documents/dev/Supdance Pro/app/api/webhooks/douyin/route.js",
+   "perm": "",
+   "scope": "",
+   "requiresKey": false,
+   "srcSnippet": "import { NextResponse } from 'next/server';\n\nexport const runtime = 'nodejs';\nexport const dynamic = 'force-dynamic';\n\n/**\n * 抖音开放平台 Webhook / 事件订阅处理器\n * 支持：\n * 1. 抖音开放平台开发者后台「保存 / 校验 Webhook URL」的 challenge 握手验证\n * 2. 授权状态变更、取消授权等业务事件推送接收\n */\nasync function parseRequestBody(request) {\n  try {\n    const rawText = await request.text();\n    if (!rawText) return {};\n    try {\n      return JSON.parse(rawText);\n    } catch {\n      const params = new URLSearchParams(rawText);\n      return Object.fromEntries(params.entries());\n    }\n  } catch (err) {\n    console.warn('[webhook/douyin] 无法解析请求体:', err.message);\n    return {};\n  }\n}\n\nexport async function GET(request) {\n  const { searchParams } = new URL(request.url);\n  const challenge = searchParams.get('challenge') || searchParams.get('echostr');\n  if (challenge) {\n    return new NextResponse(challenge, {\n      status: 200,\n      headers: { 'Content-Type': 'text/plain; charset=utf-8' },\n    });\n  }\n  return NextResponse.json({ ok: true, provider: 'douyin', timestamp: Date.now() });\n}\n\nexport async function POST(request) {\n  const body = await parseRequestBody(request);\n\n  // 1. 抖音开放平台 Webhook URL 合法性校验请求\n  // 抖音规范：event 为 verify_webhook，从 content.challenge 读取并原样返回 { challenge: ... }\n  if (body?.event === 'verify_webhook' || body?.content?.challenge !== undefined) {\n    const challenge = body?.content?.challenge !== undefined ? body.content.challenge : body?.challenge;\n    console.log('[webhook/douyin] 收到 Webhook 握手验证请求, challenge =', challenge);\n    return NextResponse.json({ challenge }, { status: 200 });\n  }\n\n  // 2. 业务事件推送（例如 authorize、unauthorize、token 刷新等）\n  console.log('[webhook/douyin] 收到开放平台事件推送:', {\n    event: body?.event || body?.type || 'unknown',\n    client_key: body?.client_key || null,\n    log_id: body?.log_id || null,\n  });\n\n  // 抖音要求返回成功响应\n  return NextResponse.json({ message: 'success' }, { status: 200 });\n}\n"
+  }
+ },
+ {
+  "routePath": "/api/workflow/[[...path]]",
+  "methods": [
+   "GET",
+   "POST",
+   "PUT",
+   "DELETE"
+  ],
+  "policyTier": "legacyProxy",
+  "responseFormat": "upstream_proxy_passthrough",
+  "isApi": true,
+  "isAdmin": false,
+  "analysis": {
+   "src": "app/api/workflow/[[...path]]/route.js",
+   "exists": true,
+   "perms": [],
+   "idem": false,
+   "adminPwd": false,
+   "lines": 165,
+   "imports": [
+    "@/lib/security/byok",
+    "@/lib/security/legacyProxyPolicy",
+    "@/lib/security/publicError",
+    "@/lib/security/requestGuard",
+    "@/lib/security/scopedProxyGuard",
+    "@/lib/services/auth"
+   ],
+   "srcAbs": "/Users/seelucency/Documents/dev/Supdance Pro/app/api/workflow/[[...path]]/route.js",
+   "perm": "",
+   "scope": "",
+   "requiresKey": false,
+   "srcSnippet": "import { NextResponse } from 'next/server';\nimport { getUserFromRequest } from '@/lib/services/auth';\nimport { publicErrorMessage } from '@/lib/security/publicError';\nimport { guardMutation } from '@/lib/security/requestGuard';\nimport { resolveProviderApiKey } from '@/lib/security/byok';\nimport { PROXY_SCOPE } from '@/lib/security/legacyProxyPolicy';\nimport { guardScopedProxyRequest } from '@/lib/security/scopedProxyGuard';\n\nconst MUAPI_BASE = 'https://api.muapi.ai';\n\nasync function getApiKey(request) {\n    return resolveProviderApiKey(request);\n}\n\nfunction cleanHeaders(request) {\n    const headers = new Headers(request.headers);\n    headers.delete('host');\n    headers.delete('connection');\n    headers.delete('cookie'); // CRITICAL: Stop forwarding browser cookies to MuAPI to avoid auth conflicts\n    headers.delete('authorization');\n    headers.delete('x-api-key');\n    return headers;\n}\n\nexport async function GET(request, { params }) {\n    const user = await getUserFromRequest(request);\n    if (!user) return NextResponse.json({ error: '请先登录' }, { status: 401 });\n    const slug = await params;\n    const pathSegments = slug.path || [];\n    const denied = await guardScopedProxyRequest({ request, scope: PROXY_SCOPE.WORKFLOW, pathSegments, method: 'GET', user });\n    if (denied) return denied;\n    const path = pathSegments.join('/');\n    \n    const { search } = new URL(request.url);\n    const targetUrl = `${MUAPI_BASE}/workflow/${path}${search}`;\n\n    const headers = cleanHeaders(request);\n\n    const apiKey = await getApiKey(request);\n    if (!apiKey.ok || !apiKey.key) return NextResponse.json({ error: 'Workflow 服务暂未配置或不可用' }, { status: 503 });\n    if (apiKey.key) headers.set('x-api-key', apiKey.key);\n\n    try {\n        const response = await fetch(targetUrl, {\n            headers,\n            method: 'GET',\n        });\n        const data = await response.json();\n        // Template workflows are an optional upstream capability. Normalize\n        // the missing capability to a successful empty response so the client\n        // can show its empty state without a noisy 404 request.\n        if (path === 'get-template-workflows' && response.status === 404) {\n            return NextResponse.json({ workflows: [] }, {\n                status: 200,\n                headers: { 'x-workflow-template-source': 'empty-upstream' },\n            });\n        }\n        if (path.includes('get-workflow-def')) {\n        }\n        return NextResponse.json(data, { status: response.status });\n    } catch (error) {\n        return NextResponse.json({ error: publicErrorMessage(error, 'Workflow 请求暂时不可用') }, { status: 500 });\n    }\n}\n\nexport async function POST(request, { params }) {\n    const user = await getUserFromRequest(request);\n    if (!user) return NextResponse.json({ error: '请先登录' }, { status: 401 });\n    const guarded = guardMutation(request, { maxBytes: 512 * 1024 });\n    if (guarded) return guarded;\n    const slug = await params;\n    const pathSegments = slug.path || [];\n    const denied = await guardScopedProxyRequest({ request, scope: PROXY_SCOPE.WORKFLOW, pathSegments, method: 'POST', user });\n    if (denied) return denied;\n    const path = pathSegments.join('/');\n    \n    const { search } = new URL(request.url);\n    const targetUrl = `${MUAPI_BASE}/workflow/${path}${search}`;\n\n    const headers = cleanHeaders(request);\n\n    const apiKey = await getApiKey(request);\n    if (!apiKey.ok || !apiKey.key) return NextResponse.json({ error: 'Workflow 服务暂未配置或不可用' }, { status: 503 });\n    if (apiKey.key) headers.set('x-api-key', apiKey.key);\n\n    try {\n        const body = await request.arrayBuffer();\n        const response = await fetch(targetUrl, {\n            method: 'POST',\n            headers,\n            body\n        });\n        const data = await response.json();\n        return NextResponse.json(data, { status: response.status });\n    } catch (error) {\n        return NextResponse.json({ error: publicErrorMessage(error, 'Workflow 请求暂时不可用') }, { status:"
+  }
+ }
+]

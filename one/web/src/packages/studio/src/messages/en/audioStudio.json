@@ -1,0 +1,412 @@
+{
+  "uploader": {
+    "clear": "Clear",
+    "uploadPrompt": "Upload audio track",
+    "uploadHint": "MP3, WAV, M4A up to 20MB",
+    "uploading": "Uploading...",
+    "ready": "Ready to generate",
+    "maxSuffix": "(Max {max})",
+    "trackLabel": "Track #{index}",
+    "sizeLimitError": "Audio file exceeds 20MB limit.",
+    "uploadFailedError": "Upload failed: {message}"
+  },
+  "player": {
+    "nowPlaying": "Now Playing",
+    "defaultTitle": "Generated Track",
+    "muteUnmute": "Mute/Unmute",
+    "pause": "Pause",
+    "play": "Play",
+    "download": "Download Audio",
+    "save": "Save",
+    "seek": "Seek position",
+    "volume": "Volume",
+    "playbackError": "Audio could not be played. Reopen it from your history.",
+    "downloadError": "Audio download failed. Please try again."
+  },
+  "sidebar": {
+    "modelLabel": "Audio Model",
+    "modelVersionLabel": "Model Version",
+    "selectModel": "Select Model",
+    "descriptionLabel": "Description",
+    "selectOption": "Select option",
+    "promptPlaceholder": "Enter what you want generated...",
+    "lyricsPromptLabel": "Lyrics / Prompt",
+    "fieldPlaceholder": "Enter {field}...",
+    "requiredFieldError": "Please complete the required field: {field}",
+    "musicGroup": "Music creation",
+    "speechGroup": "Speech and sound",
+    "musicMode": "Music mode",
+    "musicModes": {
+      "lyrics": "My lyrics",
+      "description": "Describe a song",
+      "instrumental": "Instrumental"
+    }
+  },
+  "generate": {
+    "generating": "Generating Audio...",
+    "cta": "Generate Track",
+    "noUrlError": "No audio URL returned by the API.",
+    "genericError": "Audio generation failed",
+    "droppedFileUploadError": "Failed to upload dropped file: {message}",
+    "pending": "A generation is still pending. Continue checking the original task.",
+    "resume": "View original task"
+  },
+  "result": {
+    "errorHeading": "Generation Error",
+    "loadingHeading": "Generating Soundtrack",
+    "loadingSubtext": "Rendering audio waveforms and vocals...",
+    "emptyHeading": "Audio Studio",
+    "emptyBody": "Choose an AI music model, voice cloner, or sound generator. Modify variables on the left and craft your next high-fidelity track.",
+    "newGeneration": "New Generation",
+    "success": "Success"
+  },
+  "history": {
+    "heading": "Generation History ({count})",
+    "untitled": "Untitled Audio",
+    "fallbackModel": "Audio",
+    "unavailable": "History is temporarily unavailable."
+  },
+  "models": {
+    "suno-create-music": {
+      "name": "Suno Create Music",
+      "description": "Suno generates music that turns text prompts into full songs — complete with vocals, lyrics, and instrumentation. Describe a mood, genre, or specific lyric idea, and Suno creates a realistic, studio-quality track in seconds."
+    },
+    "suno-remix-music": {
+      "name": "Suno Remix Music",
+      "description": "Remix and rearrange existing audio tracks with new styles and prompts to create brand-new musical arrangements."
+    },
+    "suno-extend-music": {
+      "name": "Suno Extend Music",
+      "description": "Seamlessly extend and continue existing audio tracks from any specified timestamp."
+    },
+    "suno-generate-sounds": {
+      "name": "Suno Generate Sounds",
+      "description": "Create realistic sound effects, ambient atmospheres, transition sounds, and rhythm loops from text descriptions."
+    },
+    "suno-add-vocals": {
+      "name": "Suno Add Vocals",
+      "description": "Add expressive, natural-sounding vocal tracks and singing over an existing instrumental track."
+    },
+    "suno-generate-mashup": {
+      "name": "Suno Generate Mashup",
+      "description": "Blend and mash up multiple audio tracks into a cohesive, creative musical fusion."
+    },
+    "suno-add-instrumental": {
+      "name": "Suno Add Instrumental",
+      "description": "Generate full instrumental backing arrangements for raw vocal recordings or audio snippets."
+    },
+    "suno-voice-clone": {
+      "name": "Suno Voice Cloning",
+      "description": "Clone and extract vocal personas from uploaded audio to use in custom music generation."
+    },
+    "minimax-voice-clone": {
+      "name": "Minimax Voice Clone",
+      "description": "High-accuracy voice replication with automatic background noise reduction and volume normalization."
+    },
+    "minimax-speech-2.6-hd": {
+      "name": "Minimax Speech HD",
+      "description": "Flagship high-definition multilingual text-to-speech with expressive emotions, pitch, and speed adjustments."
+    },
+    "minimax-speech-2.6-turbo": {
+      "name": "Minimax Speech Turbo",
+      "description": "Ultra-low latency speech synthesis optimized for real-time conversational agents and long-form voice generation."
+    },
+    "mmaudio-v2-text-to-audio": {
+      "name": "MM Audio V2",
+      "description": "Advanced multimodal audio synthesis that turns textual descriptions into high-fidelity soundscapes and audio effects."
+    },
+    "elevenlabs-text-to-dialogue-v3": {
+      "name": "ElevenLabs Text to Dialogue V3",
+      "description": "Multi-speaker theatrical dialogue generation with distinct persona voices and dramatic nuances."
+    },
+    "suno-convert-to-wav": {
+      "name": "Suno Convert to WAV",
+      "description": "Convert generated Suno audio tracks to lossless studio-grade WAV format."
+    },
+    "gemini-3-1-flash-tts": {
+      "name": "Gemini 3.1 Flash TTS",
+      "description": "Google Gemini next-generation Flash speech engine with natural pacing, multi-turn dialogue, and vivid expression."
+    },
+    "gemini-2-5-pro-tts": {
+      "name": "Gemini 2.5 Pro TTS",
+      "description": "Google Gemini 2.5 Pro studio-grade neural voice synthesis designed for audiobooks and cinematic narration."
+    },
+    "elevenlabs-tts-turbo-2-5": {
+      "name": "ElevenLabs TTS Turbo 2.5",
+      "description": "Industry-leading lifelike speech synthesis with ultra-fast generation and fine-grained voice stability control."
+    },
+    "minimax-music-3.0": {
+      "name": "MiniMax Music 3.0",
+      "description": "Generate full songs with vocals or instrumental tracks from text prompts and structured lyrics."
+    },
+    "suno-v4": {
+      "name": "Suno v4",
+      "description": "Suno v4 turns text prompts into full studio-mastered songs with vocals, lyrics, and instrumentation."
+    },
+    "suno-v3.5": {
+      "name": "Suno v3.5",
+      "description": "Suno v3.5 synthesizes pop-ready tracks from text prompts with vocals, lyrics, and instrumentation."
+    }
+  },
+  "fields": {
+    "prompt": {
+      "title": "Lyrics / Prompt",
+      "description": "Text prompt describing desired audio content or exact lyrics to be sung in the track.",
+      "placeholder": "Enter what you want generated or type your lyrics here...",
+      "example": "Hard-hitting rap track with aggressive beat and confident male vocals about winning."
+    },
+    "style": {
+      "title": "Music Style",
+      "description": "Music style specification for the generated audio.",
+      "placeholder": "Jazz, Classical, Electronic, Pop, Rock, Hip-hop, etc.",
+      "example": "Classical"
+    },
+    "model": {
+      "title": "Model Version",
+      "description": "The AI model version to use for generation."
+    },
+    "custom_mode": {
+      "title": "Custom Mode",
+      "description": "Enable custom mode for advanced settings."
+    },
+    "title": {
+      "title": "Track Title",
+      "description": "Title for the generated music track (optional).",
+      "placeholder": "Peaceful Piano Meditation"
+    },
+    "persona_id": {
+      "title": "Persona ID",
+      "description": "Persona ID or custom voice ID to apply to the generated music (optional).",
+      "placeholder": "Enter persona ID..."
+    },
+    "persona_model": {
+      "title": "Persona Model Type",
+      "description": "Select persona model type (style or voice persona).",
+      "options": {
+        "style_persona": "Style Persona",
+        "voice_persona": "Voice Persona"
+      }
+    },
+    "instrumental": {
+      "title": "Instrumental Only",
+      "description": "Generate purely instrumental music without vocals or sung lyrics."
+    },
+    "negative_tags": {
+      "title": "Negative Tags",
+      "description": "Music styles or traits to exclude from the generated audio (optional).",
+      "placeholder": "Heavy Metal, Upbeat Drums"
+    },
+    "vocal_gender": {
+      "title": "Vocal Gender",
+      "description": "Preferred gender for vocal performances.",
+      "options": {
+        "male": "Male",
+        "female": "Female"
+      }
+    },
+    "style_weight": {
+      "title": "Style Weight",
+      "description": "Influence weight of the specified musical style (0 to 1)."
+    },
+    "weirdness_constraint": {
+      "title": "Creativity / Weirdness",
+      "description": "Adjust experimental freedom and unconventionality."
+    },
+    "audio_weight": {
+      "title": "Audio Weight",
+      "description": "Weight of source audio reference in remix or continuation."
+    },
+    "audio_url": {
+      "title": "Audio File",
+      "description": "Upload or provide an audio URL to use as reference."
+    },
+    "continue_at": {
+      "title": "Continue At (seconds)",
+      "description": "Exact timestamp in seconds from which to extend the track."
+    },
+    "sound_loop": {
+      "title": "Seamless Loop",
+      "description": "Generate an audio track that loops seamlessly."
+    },
+    "sound_tempo": {
+      "title": "Tempo (BPM)",
+      "description": "Tempo specification in beats per minute."
+    },
+    "sound_key": {
+      "title": "Musical Key",
+      "description": "Musical key and scale for the generated sound (e.g. C Major, A Minor)."
+    },
+    "grab_lyrics": {
+      "title": "Extract Lyrics",
+      "description": "Extract and retain sung lyrics from the input audio."
+    },
+    "audios_list": {
+      "title": "Audio Track List",
+      "description": "List of audio tracks to combine into a mashup."
+    },
+    "tags": {
+      "title": "Style Tags",
+      "description": "Tags describing musical genre, mood, and instruments."
+    },
+    "voice_name": {
+      "title": "Voice Name",
+      "description": "Custom name for the cloned voice profile."
+    },
+    "description": {
+      "title": "Description",
+      "description": "Description of voice profile or musical style."
+    },
+    "language": {
+      "title": "Language",
+      "description": "Primary speaking or singing language."
+    },
+    "vocal_start_s": {
+      "title": "Vocal Start Time (s)",
+      "description": "Start position of vocal sample in seconds."
+    },
+    "vocal_end_s": {
+      "title": "Vocal End Time (s)",
+      "description": "End position of vocal sample in seconds."
+    },
+    "custom_voice_id": {
+      "title": "Custom Voice ID",
+      "description": "Target voice profile identifier."
+    },
+    "need_noise_reduction": {
+      "title": "Noise Reduction",
+      "description": "Filter background noise from uploaded voice recordings."
+    },
+    "need_volume_normalization": {
+      "title": "Volume Normalization",
+      "description": "Automatically balance audio volume levels."
+    },
+    "accuracy": {
+      "title": "Cloning Accuracy",
+      "description": "Voice similarity fidelity setting."
+    },
+    "voice_id": {
+      "title": "Preset Voice / Speaker",
+      "description": "Select a curated speaker profile for voice synthesis."
+    },
+    "speed": {
+      "title": "Speech Speed",
+      "description": "Speed multiplier for speech synthesis (1.0 is normal speed)."
+    },
+    "volume": {
+      "title": "Speech Volume",
+      "description": "Audio output volume multiplier."
+    },
+    "pitch": {
+      "title": "Voice Pitch",
+      "description": "Pitch adjustment for synthesized speech."
+    },
+    "emotion": {
+      "title": "Emotion",
+      "description": "Emotional expression and delivery style.",
+      "options": {
+        "happy": "Happy",
+        "sad": "Sad",
+        "angry": "Angry",
+        "fearful": "Fearful",
+        "disgusted": "Disgusted",
+        "surprised": "Surprised",
+        "neutral": "Neutral"
+      }
+    },
+    "english_normalization": {
+      "title": "English Normalization",
+      "description": "Enhance text normalization for numbers, symbols, and dates in English."
+    },
+    "sample_rate": {
+      "title": "Sample Rate (Hz)",
+      "description": "Audio sampling rate in Hertz."
+    },
+    "bitrate": {
+      "title": "Bitrate (bps)",
+      "description": "Audio bitrate in bits per second."
+    },
+    "channel": {
+      "title": "Audio Channels",
+      "description": "Audio channel format.",
+      "options": {
+        "1": "Mono (1 Channel)",
+        "2": "Stereo (2 Channels)"
+      }
+    },
+    "format": {
+      "title": "Audio Format",
+      "description": "Output audio file container format.",
+      "options": {
+        "mp3": "MP3",
+        "wav": "WAV",
+        "pcm": "PCM",
+        "flac": "FLAC"
+      }
+    },
+    "language_boost": {
+      "title": "Language Boost",
+      "description": "Enhance speech clarity and dialect recognition for selected language."
+    },
+    "duration": {
+      "title": "Duration (seconds)",
+      "description": "Length of generated audio in seconds."
+    },
+    "dialogue": {
+      "title": "Dialogue Script",
+      "description": "Multi-turn conversational script for speech synthesis."
+    },
+    "stability": {
+      "title": "Voice Stability",
+      "description": "Voice consistency and delivery stability (0 to 1)."
+    },
+    "similarity_boost": {
+      "title": "Similarity Boost",
+      "description": "Enhance vocal similarity and character fidelity."
+    },
+    "language_code": {
+      "title": "Language Code",
+      "description": "Target language ISO code for speech synthesis."
+    },
+    "task_id": {
+      "title": "Task ID",
+      "description": "Task identifier from a previous generation to convert."
+    },
+    "audio_id": {
+      "title": "Audio ID",
+      "description": "Specific audio track identifier to convert."
+    },
+    "speakers": {
+      "title": "Speakers",
+      "description": "Configured character voices for dialogue generation."
+    },
+    "dialogue_turns": {
+      "title": "Dialogue Turns",
+      "description": "Sequential speaker dialogue turns."
+    },
+    "scene": {
+      "title": "Acoustic Scene",
+      "description": "Acoustic atmosphere and reverberation environment."
+    },
+    "sample_context": {
+      "title": "Sample Context / Tone",
+      "description": "Overall narration tone, delivery style, and context."
+    },
+    "temperature": {
+      "title": "Temperature",
+      "description": "Sampling creativity and variability (0 to 2)."
+    },
+    "lyrics": {
+      "title": "Structured Lyrics",
+      "description": "Lyrics text with line breaks and optional instrumental section markers.",
+      "placeholder": "Enter lyrics with verse/chorus structure...",
+      "example": "Walking through the neon lights\nWe are shining, we are free"
+    },
+    "is_instrumental": {
+      "title": "Instrumental Only",
+      "description": "Generate purely instrumental music with no vocals."
+    },
+    "lyrics_optimizer": {
+      "title": "Write lyrics from the description"
+    }
+  }
+}

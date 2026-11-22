@@ -1,0 +1,568 @@
+{
+  "categories": {
+    "all": "全て",
+    "t2v": "テキストからビデオへ",
+    "i2v": "画像からビデオへ",
+    "v2v": "ビデオツール"
+  },
+  "providers": {
+    "allProviders": "すべてのプロバイダー"
+  },
+  "search": {
+    "placeholder": "モデルを検索..."
+  },
+  "media": {
+    "image": "画像",
+    "video": "ビデオ",
+    "audio": "オーディオ",
+    "endFrame": "終了フレーム",
+    "removePrefix": "取り除く"
+  },
+  "upload": {
+    "uploadStartFrame": "開始フレームをアップロードする",
+    "uploadEndFrame": "アップロード終了フレーム",
+    "uploadUpToReferenceImages": "最大 {count} の参照画像をアップロードします",
+    "uploadingProgress": "{title}: {progress}% がアップロードされました"
+  },
+  "placeholders": {
+    "editVideo": "動画の編集方法を説明する",
+    "continueVideo": "動画を続ける方法を説明する",
+    "motion": "動きを説明する",
+    "motionOptional": "モーションの説明（オプション）",
+    "videoReadyRemoveWatermark": "ビデオの準備ができました — [生成] をクリックしてウォーターマークを削除します",
+    "motionOrEffect": "モーションやエフェクトの説明",
+    "motionOrEffectOptional": "モーションまたはエフェクトの説明 (オプション)",
+    "optionalContinueVideo": "オプション: ビデオを続ける方法を説明します...",
+    "describeVideo": "作成したい動画について説明してください"
+  },
+  "dropdowns": {
+    "model": "モデル",
+    "source": "ビデオモード",
+    "baseGeneration": "ベース生成",
+    "aspectRatio": "アスペクト比",
+    "effect": "効果",
+    "effectType": "エフェクトタイプ",
+    "duration": "間隔",
+    "resolution": "解決"
+  },
+  "controls": {
+    "draw": "描く",
+    "generate": "生成する",
+    "generating": "生成中..."
+  },
+  "extend": {
+    "continuingGeneration": "前世代の {family} を継続"
+  },
+  "gallery": {
+    "download": "ダウンロード",
+    "extend": "伸ばす",
+    "extendSeedance": "Seedance 2.0 Extend を使用してこのビデオを延長します",
+    "delete": "消去",
+    "confirmDelete": "この生成されたアイテムを削除してもよろしいですか?",
+    "noPromptProvided": "プロンプトは提供されません",
+    "fallbackTitle": "ビデオスタジオ"
+  },
+  "empty": {
+    "heading": "で作成を始めましょう",
+    "subtitle": "画像をアニメーション化して、モーション効果を備えた見事な AI ビデオを作成します"
+  },
+  "creativeAssets": {
+    "asset1": "クリエイティブ アセット 1",
+    "asset2": "クリエイティブアセット 2",
+    "asset3": "クリエイティブアセット 3",
+    "asset4": "クリエイティブアセット 4"
+  },
+  "errors": {
+    "modelChangedDuringUpload": "アップロード中にモデルが変更されました。再度ファイルを追加してください。",
+    "modelDoesNotSupportReference": "{family} は {mediaType} 参照をサポートしません。",
+    "sourceDoesNotAcceptImages": "選択したソースは画像を受け入れません。",
+    "waitForCurrentUpload": "現在のアップロードが完了するまで待ってから、これらのファイルを再度追加します。",
+    "imageExceeds10MB": "画像が 10MB の制限を超えています。",
+    "labelExceedsLimit": "{label} が {limit}MB 制限を超えています。",
+    "labelUploadFailed": "{label} のアップロードに失敗しました: {message}",
+    "noPromptForModel": "このモデルのプロンプトを入力してください。",
+    "generationCapabilityUnavailable": "このモデルには、検証済みのサーバー生成能力がまだありません。",
+    "uploadVideoFirst": "まずはビデオをアップロードしてください。",
+    "uploadReferenceImageForMotion": "モーションコントロール用の参考画像をアップロードしてください。",
+    "uploadAtLeastOneReferenceImage": "最初に少なくとも 1 つの参照画像をアップロードしてください。",
+    "enterPromptToGenerate": "ビデオを生成するためのプロンプトを入力してください。",
+    "noVideoUrlReturned": "API からビデオ URL が返されません",
+    "videoGenerationFailed": "ビデオ生成に失敗しました",
+    "deleteItemFailed": "アイテムの削除に失敗しました",
+    "noContinuationSource": "続行するには、互換性のある {family} 結果を選択してください。"
+  },
+  "modelControls": {
+    "modes": {
+      "text": "プロンプトから",
+      "animate_image": "画像をアニメーション化する",
+      "keyframes": "開始フレームと終了フレーム",
+      "references": "参考文献を使用する",
+      "edit_video": "ビデオを編集する",
+      "extend_uploaded_video": "ビデオを延長する",
+      "motion_transfer": "転送モーション"
+    },
+    "settings": "設定",
+    "quality": "品質",
+    "extensionDuration": "延長期間",
+    "defaultResolution": "サービスのデフォルト",
+    "incompatible": "このモデル バージョンでは、この選択は利用できません。",
+    "incompatibleShort": "このバージョンでは使用できません",
+    "inheritedFormat": "形式はソース画像に従います",
+    "inheritedVideoResolution": "解像度はソースビデオに従います",
+    "modeDescriptions": {
+      "text": "説明からビデオを作成します。",
+      "animate_image": "説明を使用して、アップロードした画像をアニメーション化します。",
+      "keyframes": "選択した 2 つの画像の間にビデオを作成します。",
+      "references": "アップロードされたファイルをガイドとして使用してビデオを作成します。",
+      "edit_video": "ビデオをアップロードし、変更内容を説明します。",
+      "extend_uploaded_video": "アップロードされたビデオの最後に新しい映像を追加します。",
+      "motion_transfer": "ビデオからキャラクター画像にモーションを適用します。"
+    },
+    "defaultVariant": "デフォルト",
+    "advanced": "高度な",
+    "adjustments": {
+      "resolution": "{value} を使用します",
+      "duration": "期間: {value}",
+      "aspectRatio": "形式: {value}",
+      "speed": "速度: {value}",
+      "profile": "サービス: {value}",
+      "quality": "品質: {value}",
+      "imageUnused": "アップロードした画像は使用されません",
+      "videoUnused": "アップロードされた動画は使用されません",
+      "audioUnused": "アップロードされた音声は使用されません",
+      "imageCount": "使用画像：{value}",
+      "videoCount": "使用動画：{value}",
+      "audioCount": "使用した音声ファイル：{value}"
+    },
+    "fields": {
+      "seed": {
+        "title": "シード",
+        "description": "ランダムな結果には -1 を使用します。"
+      },
+      "high_bitrate": {
+        "title": "高ビットレート",
+        "description": "ファイルが大きいほど、より詳細な情報が得られます。"
+      },
+      "generate_audio": {
+        "title": "音声を生成する",
+        "description": ""
+      },
+      "camera_fixed": {
+        "title": "固定カメラ",
+        "description": "カメラを動かさないでください。"
+      }
+    },
+    "provider": "発電サービス",
+    "providerHelp": "必要に応じて特定のサービスを選択してください。",
+    "resolutionUnknown": "出力解像度は本サービスでは指定しておりません。",
+    "referenceSupport": "サポート: {media}。",
+    "referenceMediaTypes": {
+      "image": "画像",
+      "video": "ビデオ",
+      "audio": "オーディオ"
+    },
+    "restoreDefaultResolution": "サービスのデフォルトの出力サイズを使用する"
+  },
+  "seedance": {
+    "speed": "スピード",
+    "speeds": {
+      "standard": "標準速度",
+      "fast": "速い"
+    },
+    "tools": "シーダンスビデオツール",
+    "profiles": {
+      "standard": {
+        "label": "標準",
+        "description": ""
+      },
+      "intl": {
+        "label": "国際的",
+        "description": "国際展開。"
+      },
+      "vip": {
+        "label": "VIP",
+        "description": "優先処理。"
+      },
+      "mini": {
+        "label": "ミニ",
+        "description": "軽量モデル。"
+      },
+      "spicy": {
+        "label": "辛い",
+        "description": "より大胆なコントラストと動き。"
+      },
+      "mini_spicy": {
+        "label": "ミニスパイシー",
+        "description": ""
+      },
+      "legacy": {
+        "label": "シーダンス 2.0 API",
+        "description": ""
+      },
+      "legacy_new": {
+        "label": "Seedance 2.0の新しいAPI",
+        "description": ""
+      }
+    },
+    "continueGenerated": "Seedance 2.0 の結果を継続する",
+    "removeWatermark": "透かしを削除する",
+    "toolNames": {
+      "continueGenerated": "シーダンス 2.0 を続ける",
+      "removeWatermark": "透かしを削除する"
+    },
+    "toolVariants": {
+      "standard": "標準",
+      "vip": "VIP",
+      "pro": "プロ"
+    },
+    "editAudio": {
+      "title": "新しいオーディオ",
+      "description": "オフにすると、元の音声が維持されます。"
+    }
+  },
+  "happyHorse": {
+    "fields": {
+      "seed": {
+        "title": "シード",
+        "description": "ランダムな結果を得るには空白のままにします。"
+      },
+      "audio_setting": {
+        "title": "オーディオ",
+        "description": "",
+        "optionLabels": {
+          "auto": "モデルに選んでもらう",
+          "origin": "オリジナルを維持"
+        }
+      }
+    }
+  },
+  "veo": {
+    "speed": "世代",
+    "speeds": {
+      "standard": "標準",
+      "fast": "速い",
+      "lite": "ライト"
+    },
+    "speedDescriptions": {
+      "standard": "",
+      "fast": "より高速な生成。",
+      "lite": "低コスト。"
+    },
+    "tools": "Veoビデオツール",
+    "toolNames": {
+      "continueGenerated": "Veo 3.1 を続行",
+      "upscale": "4K コピーを作成する"
+    },
+    "toolsHelp": "完成した Veo 3.1 ビデオを使用します。",
+    "sourceVideo": "ソースビデオ",
+    "sourceHelp": {
+      "continueGenerated": "まず、Veo 3.1 Standard または Fast を使用して 720p ビデオを作成します。",
+      "upscale": "まず、Veo 3.1 Standard または Fast でビデオを作成します。"
+    },
+    "adjustments": {
+      "speed": "世代: {value}"
+    }
+  },
+  "minimax": {
+    "speed": "スピード",
+    "speeds": {
+      "standard": "標準速度",
+      "fast": "速い"
+    },
+    "speedDescriptions": {
+      "standard": "",
+      "fast": "より高速な生成。"
+    },
+    "provider": "カスタマイズ",
+    "providerHelp": "LoRA または Spicy モデルを使用します。",
+    "profiles": {
+      "standard": {
+        "label": "標準",
+        "description": ""
+      },
+      "lora": {
+        "label": "LoRA",
+        "description": "カスタムのスタイルや文字を適用します。"
+      },
+      "spicy": {
+        "label": "辛い",
+        "description": "イメージアニメーションの代替モデル。"
+      }
+    },
+    "adjustments": {
+      "profile": "カスタマイズ: {value}"
+    },
+    "fields": {
+      "go_fast": {
+        "title": "エクストラスピード",
+        "description": "スピードのために詳細を犠牲にします。"
+      },
+      "loras": {
+        "title": "LoRA",
+        "description": "最大 3 つのカスタム スタイルまたは文字を追加します。"
+      }
+    }
+  },
+  "alibaba": {
+    "speed": "スピード",
+    "speeds": {
+      "standard": "標準速度",
+      "fast": "速い"
+    },
+    "speedDescriptions": {
+      "standard": "",
+      "fast": "より高速な生成。"
+    },
+    "provider": "発電サービス",
+    "providerHelp": "同じ Wan バージョンに対して別のサービスを使用します。",
+    "profiles": {
+      "standard": {
+        "label": "標準",
+        "description": ""
+      },
+      "prime": {
+        "label": "プライム",
+        "description": ""
+      },
+      "spicy": {
+        "label": "辛い",
+        "description": ""
+      }
+    },
+    "durationLabels": {
+      "0": "ソースの長さ (最大 10 秒)"
+    },
+    "fields": {
+      "enable_audio": {
+        "title": "音声を生成する",
+        "description": ""
+      },
+      "thinking_mode": {
+        "title": "迅速な推論",
+        "description": "モデルが複雑な説明を解釈できるようにします。"
+      },
+      "negative_prompt": {
+        "title": "避ける",
+        "description": "何を省略するかを説明します。"
+      },
+      "shot_type": {
+        "title": "ショット",
+        "description": "1 枚の連続ショットまたは複数のショットを使用します。",
+        "optionLabels": {
+          "single": "シングルショット",
+          "multi": "複数のショット"
+        }
+      },
+      "enable_prompt_expansion": {
+        "title": "プロンプトを展開します",
+        "description": "モデルに説明に詳細を追加してもらいます。"
+      },
+      "audio_setting": {
+        "title": "オーディオ",
+        "description": "説明に従うか、ソース音声を保持してください。",
+        "optionLabels": {
+          "auto": "プロンプトに従ってください",
+          "origin": "オリジナルを維持"
+        }
+      },
+      "mode": {
+        "title": "キャラクターアニメーション",
+        "description": "キャラクターをアニメーション化するか、ビデオ内のキャラクターを置き換えます。",
+        "optionLabels": {
+          "animate": "キャラクターをアニメーション化する",
+          "replace": "文字を置き換える"
+        }
+      }
+    }
+  },
+  "kling": {
+    "speed": "スピード",
+    "speeds": {
+      "standard": "標準速度",
+      "fast": "速い"
+    },
+    "speedDescriptions": {
+      "standard": "",
+      "fast": "より高速な生成。"
+    },
+    "provider": "世代",
+    "providerHelp": "",
+    "profiles": {
+      "standard": {
+        "label": "標準",
+        "description": ""
+      },
+      "master": {
+        "label": "マスター",
+        "description": "モーションとプロンプトフォローが改善されました。"
+      },
+      "pro": {
+        "label": "プロ",
+        "description": "さらに詳しく。"
+      },
+      "fast": {
+        "label": "速い",
+        "description": "より高速なビデオ編集。"
+      }
+    },
+    "adjustments": {
+      "profile": "世代: {value}"
+    },
+    "fields": {
+      "sound": {
+        "title": "音声を生成する",
+        "description": ""
+      },
+      "keep_original_sound": {
+        "title": "元の音声を保持する",
+        "description": "ビデオの音声を使用します。"
+      },
+      "character_orientation": {
+        "title": "キャラクターポーズ",
+        "description": "キャラクターのポーズを設定するソースを選択します。",
+        "optionLabels": {
+          "image": "画像から（最大10秒）",
+          "video": "動画より（30秒まで）"
+        }
+      }
+    }
+  },
+  "vidu": {
+    "speed": "スピード",
+    "speeds": {
+      "standard": "標準速度",
+      "fast": "速い"
+    },
+    "speedDescriptions": {
+      "standard": "",
+      "fast": "より高速な生成。"
+    },
+    "fields": {
+      "audio": {
+        "title": "音声を生成する",
+        "description": ""
+      },
+      "bgm": {
+        "title": "バックグラウンドミュージック",
+        "description": ""
+      },
+      "movement_amplitude": {
+        "title": "モーション",
+        "description": "被写体がどれだけ動くか。",
+        "optionLabels": {
+          "auto": "モデルに選んでもらう",
+          "small": "微妙",
+          "medium": "適度",
+          "large": "強い"
+        }
+      }
+    },
+    "musicDuration": "継続時間を 4 秒に設定します。"
+  },
+  "xai": {
+    "aspectRatioLabels": {
+      "auto": "マッチイメージ"
+    },
+    "singleImageFormat": "画像が 1 つある場合、形式はその画像に従います。",
+    "fields": {
+      "mode": {
+        "title": "スタイル",
+        "description": "",
+        "optionLabels": {
+          "normal": "標準",
+          "fun": "クリエイティブ",
+          "spicy": "辛い"
+        }
+      }
+    }
+  },
+  "sora": {
+    "provider": "世代",
+    "providerHelp": "",
+    "profiles": {
+      "standard": {
+        "label": "標準",
+        "description": "日常の動画に。"
+      },
+      "pro": {
+        "label": "プロ",
+        "description": "最大 1080p までの詳細。"
+      }
+    },
+    "adjustments": {
+      "profile": "世代: {value}"
+    }
+  },
+  "ltx": {
+    "provider": "世代",
+    "providerHelp": "",
+    "profiles": {
+      "standard": {
+        "label": "標準",
+        "description": "480p ～ 1080p、5 ～ 20 秒。"
+      },
+      "pro": {
+        "label": "プロ",
+        "description": "6秒、8秒、または10秒。"
+      },
+      "fast": {
+        "label": "速い",
+        "description": "最大 20 秒の高速生成。"
+      }
+    },
+    "adjustments": {
+      "profile": "世代: {value}"
+    }
+  },
+  "pixverse": {
+    "fields": {
+      "audio": {
+        "title": "音声を生成する",
+        "description": ""
+      },
+      "generate_audio_switch": {
+        "title": "音声を生成する",
+        "description": ""
+      },
+      "style": {
+        "title": "スタイル",
+        "description": "",
+        "emptyLabel": "プリセットなし",
+        "optionLabels": {
+          "none": "プリセットなし",
+          "anime": "アニメ",
+          "3d_animation": "3Dアニメーション",
+          "clay": "粘土",
+          "comic": "漫画",
+          "cyberpunk": "サイバーパンク"
+        }
+      },
+      "thinking": {
+        "title": "即時強化",
+        "description": "モデルに説明を洗練させましょう。",
+        "optionLabels": {
+          "auto": "モデルに選んでもらう",
+          "enabled": "の上",
+          "disabled": "オフ"
+        }
+      },
+      "thinking_type": {
+        "title": "即時強化",
+        "description": "モデルがあなたの説明を解釈できるようにします。",
+        "optionLabels": {
+          "auto": "モデルに選んでもらう",
+          "enabled": "の上",
+          "disabled": "オフ"
+        }
+      },
+      "multi_clip": {
+        "title": "複数のショット",
+        "description": "カメラを変えて複数のショットを使用します。"
+      },
+      "negative_prompt": {
+        "title": "避ける",
+        "description": "何を省略するかを説明します。"
+      }
+    }
+  }
+}

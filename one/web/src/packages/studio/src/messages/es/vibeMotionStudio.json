@@ -1,0 +1,70 @@
+{
+  "loading": {
+    "remixing": "Remezclando gráficos en movimiento…",
+    "generating": "Generando gráficos en movimiento…",
+    "backend": "Renderizado de React/Remotion en Modal"
+  },
+  "card": {
+    "modeEdit": "✏ Editar",
+    "modeGenerated": "✦ Generado",
+    "download": "Descargar",
+    "remixThis": "Remezclar esta generación",
+    "legacyRemixUnavailable": "No se puede remezclar hasta que la generación tenga un recurso privado del servidor y una ruta de edición de video revisada.",
+    "delete": "Eliminar",
+    "confirmDelete": "¿Estás seguro de que deseas eliminar este elemento generado?",
+    "noPrompt": "Sin prompt",
+    "tag": "Movimiento Vibe"
+  },
+  "mobileActions": {
+    "download": "Descargar",
+    "remix": "Remezclar",
+    "delete": "Eliminar"
+  },
+  "empty": {
+    "titleLine1": "COMIENZA A CREAR CON",
+    "titleLine2": "ESTUDIO DE MOVIMIENTO VIBE",
+    "description": "Genera gráficos animados en movimiento a partir de un prompt de texto: tipografía cinética, gráficos de datos, revelaciones de logotipos y más."
+  },
+  "modeToggle": {
+    "generate": "Generar",
+    "edit": "Editar"
+  },
+  "editBanner": {
+    "editingPrefix": "Editando:",
+    "selectSource": "Selecciona una generación de origen de la galería",
+    "cancelEdit": "Cancelar Modo de Edición"
+  },
+  "placeholder": {
+    "edit": "Describe qué cambiar: 'cambia el fondo a azul marino oscuro, haz las barras doradas, añade partículas…'",
+    "generate": "Describe el gráfico en movimiento: 'Panel de ventas animado con gráficos de barras brillantes y números en aumento'"
+  },
+  "controls": {
+    "aspectRatio": "Relación de Aspecto",
+    "resolution": "Resolución",
+    "duration": "Duración",
+    "sourcePrefix": "Origen:",
+    "pickSource": "Elegir origen…",
+    "sourceGeneration": "Generación de Origen",
+    "shortcutHint": "Ctrl+Enter para ejecutar",
+    "model": "Modelo",
+    "pickModel": "Elige un modelo…",
+    "loadingModels": "Cargando modelos disponibles…",
+    "modelsUnavailable": "No hay modelos de texto a video con cotización disponible."
+  },
+  "errors": {
+    "staleEditUnavailable": "La edición de video no está disponible hasta que el servidor exponga un recurso propio del usuario y una ruta de edición revisada.",
+    "generationFailed": "Error al generar Movimiento Vibe"
+  },
+  "generateButton": {
+    "remixing": "Remezclando...",
+    "generating": "Generando...",
+    "remix": "Remezclar",
+    "generate": "Generar"
+  },
+  "history": {
+    "loading": "Cargando tu historial de Vibe Motion…",
+    "loadFailed": "No se pudo cargar el historial de generaciones. Inténtalo más tarde.",
+    "unavailable": "Este video privado no está disponible en este momento.",
+    "downloadUnavailable": "No se pudo descargar el video privado. Inténtalo más tarde."
+  }
+}

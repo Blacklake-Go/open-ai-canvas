@@ -1,0 +1,47 @@
+{
+  "blockPage": {
+    "title": "403 禁止访问",
+    "heading": "403 禁止访问",
+    "message": "禁止访问：您无权访问此服务器或资源。",
+    "footer": "nginx"
+  },
+  "api": {
+    "message": "403 禁止访问 - 拒绝访问"
+  },
+  "admin": {
+    "rowLabel": "屏蔽中国流量 (临时插件)",
+    "badgeEnabled": "已开启屏蔽 (403)",
+    "badgeDisabled": "未开启屏蔽",
+    "switchOnAria": "启用中国流量屏蔽",
+    "switchOffAria": "停用中国流量屏蔽",
+    "contextEnabled": "已对所有来自中国大陆的访客 IP 强制返回 403 Forbidden 页面。临时插件架构，支持一键安全完全移除。",
+    "contextDisabled": "临时插件：开启后所有来自中国大陆的访客 IP 打开站点将显示标准 403 Forbidden 页面，支持放行白名单及管理后台豁免。",
+    "openConfig": "高级配置与测试",
+    "modalTitle": "中国大陆流量屏蔽控制 (临时插件)",
+    "modalCloseAria": "关闭配置弹窗",
+    "blockCardTitle": "拦截所有中国流量",
+    "blockCardDesc": "开启后，来自中国大陆的访客访问任何前台页面将直接看到 403 Forbidden。",
+    "exemptTitle": "允许管理员访问管理后台路径 (/admin)",
+    "exemptDesc": "推荐勾选。若管理员本身在中国境内，此项可确保管理员不会因开启拦截而把自己关在后台外面。",
+    "testTitle": "中国 IP 检测测试工具",
+    "testSubtitle": "权威 APNIC 网段库实时二分比对",
+    "testPlaceholder": "输入 IP 地址测试，如 114.114.114.114 或 8.8.8.8",
+    "testRun": "检测",
+    "testRunning": "检测中…",
+    "testBlockedTitle": "【判定拦截】IP {ip} 属于中国大陆 ({type})",
+    "testBlockedDesc": "访问前台页面时将直接返回 403 Forbidden 拦截页。",
+    "testPassedTitle": "【判定放行】IP {ip} 属于海外或非中国公网 IP",
+    "testPassedDesc": "访问站点不受任何限制，正常放行通行。",
+    "testError": "测试失败",
+    "whitelistLabel": "放行白名单 IP 或 CIDR 网段（每行一个，支持 IPv4/IPv6）",
+    "whitelistPlaceholder": "例如：\n192.168.1.100\n120.24.0.0/16",
+    "whitelistHint": "位于白名单内的 IP 即使位于中国大陆境内，也将予以豁免放行。",
+    "uninstallTitle": "临时插件完全卸载指引",
+    "uninstallIntro": "本功能为独立临时插件设计。后续若需要彻底、完全移除此功能及相关代码，只需在服务器终端执行：",
+    "uninstallCommand": "node plugins/china-ip-block/uninstall.mjs",
+    "uninstallOutro": "该脚本会自动抹除 Middleware 挂钩、管理页面配置项及插件目录，100% 干净还原。",
+    "cancel": "取消",
+    "save": "保存安全配置",
+    "saving": "保存中…"
+  }
+}

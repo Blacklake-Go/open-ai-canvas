@@ -1,0 +1,2497 @@
+[
+  {
+    "routePath": "/api/admin/admins/[id]/role",
+    "methods": [
+      "PUT"
+    ],
+    "policyTier": "admin",
+    "responseFormat": "admin_ok_meta_envelope",
+    "isApi": true,
+    "isAdmin": true
+  },
+  {
+    "routePath": "/api/admin/admins",
+    "methods": [
+      "GET"
+    ],
+    "policyTier": "admin",
+    "responseFormat": "admin_ok_meta_envelope",
+    "isApi": true,
+    "isAdmin": true
+  },
+  {
+    "routePath": "/api/admin/analytics/cost",
+    "methods": [
+      "GET"
+    ],
+    "policyTier": "admin",
+    "responseFormat": "admin_ok_meta_envelope",
+    "isApi": true,
+    "isAdmin": true
+  },
+  {
+    "routePath": "/api/admin/analytics/profit",
+    "methods": [
+      "GET"
+    ],
+    "policyTier": "admin",
+    "responseFormat": "admin_ok_meta_envelope",
+    "isApi": true,
+    "isAdmin": true
+  },
+  {
+    "routePath": "/api/admin/audit",
+    "methods": [
+      "GET"
+    ],
+    "policyTier": "admin",
+    "responseFormat": "admin_ok_meta_envelope",
+    "isApi": true,
+    "isAdmin": true
+  },
+  {
+    "routePath": "/api/admin/canvas/config",
+    "methods": [
+      "GET",
+      "PUT"
+    ],
+    "policyTier": "admin",
+    "responseFormat": "admin_ok_meta_envelope",
+    "isApi": true,
+    "isAdmin": true
+  },
+  {
+    "routePath": "/api/admin/community/posts/[id]",
+    "methods": [
+      "PATCH"
+    ],
+    "policyTier": "admin",
+    "responseFormat": "admin_ok_meta_envelope",
+    "isApi": true,
+    "isAdmin": true
+  },
+  {
+    "routePath": "/api/admin/community/posts",
+    "methods": [
+      "GET"
+    ],
+    "policyTier": "admin",
+    "responseFormat": "admin_ok_meta_envelope",
+    "isApi": true,
+    "isAdmin": true
+  },
+  {
+    "routePath": "/api/admin/content/analytics",
+    "methods": [
+      "GET",
+      "DELETE"
+    ],
+    "policyTier": "admin",
+    "responseFormat": "admin_ok_meta_envelope",
+    "isApi": true,
+    "isAdmin": true
+  },
+  {
+    "routePath": "/api/admin/content/banner/history/[id]",
+    "methods": [
+      "POST",
+      "DELETE"
+    ],
+    "policyTier": "admin",
+    "responseFormat": "admin_ok_meta_envelope",
+    "isApi": true,
+    "isAdmin": true
+  },
+  {
+    "routePath": "/api/admin/content/banner/history",
+    "methods": [
+      "GET"
+    ],
+    "policyTier": "admin",
+    "responseFormat": "admin_ok_meta_envelope",
+    "isApi": true,
+    "isAdmin": true
+  },
+  {
+    "routePath": "/api/admin/content/banner",
+    "methods": [
+      "GET",
+      "POST"
+    ],
+    "policyTier": "admin",
+    "responseFormat": "admin_ok_meta_envelope",
+    "isApi": true,
+    "isAdmin": true
+  },
+  {
+    "routePath": "/api/admin/content/branding",
+    "methods": [
+      "GET",
+      "POST"
+    ],
+    "policyTier": "admin",
+    "responseFormat": "admin_ok_meta_envelope",
+    "isApi": true,
+    "isAdmin": true
+  },
+  {
+    "routePath": "/api/admin/content/branding/upload",
+    "methods": [
+      "POST"
+    ],
+    "policyTier": "admin",
+    "responseFormat": "admin_ok_meta_envelope",
+    "isApi": true,
+    "isAdmin": true
+  },
+  {
+    "routePath": "/api/admin/content/motion",
+    "methods": [
+      "GET",
+      "POST"
+    ],
+    "policyTier": "admin",
+    "responseFormat": "admin_ok_meta_envelope",
+    "isApi": true,
+    "isAdmin": true
+  },
+  {
+    "routePath": "/api/admin/content/x-prompts/adopt",
+    "methods": [
+      "POST"
+    ],
+    "policyTier": "admin",
+    "responseFormat": "admin_ok_meta_envelope",
+    "isApi": true,
+    "isAdmin": true
+  },
+  {
+    "routePath": "/api/admin/content/x-prompts/config",
+    "methods": [
+      "GET",
+      "PUT"
+    ],
+    "policyTier": "admin",
+    "responseFormat": "admin_ok_meta_envelope",
+    "isApi": true,
+    "isAdmin": true
+  },
+  {
+    "routePath": "/api/admin/content/x-prompts/crawl",
+    "methods": [
+      "POST"
+    ],
+    "policyTier": "admin",
+    "responseFormat": "admin_ok_meta_envelope",
+    "isApi": true,
+    "isAdmin": true
+  },
+  {
+    "routePath": "/api/admin/content/x-prompts",
+    "methods": [
+      "GET",
+      "DELETE"
+    ],
+    "policyTier": "admin",
+    "responseFormat": "admin_ok_meta_envelope",
+    "isApi": true,
+    "isAdmin": true
+  },
+  {
+    "routePath": "/api/admin/cost-center/reconciliations",
+    "methods": [
+      "GET",
+      "POST"
+    ],
+    "policyTier": "admin",
+    "responseFormat": "admin_ok_meta_envelope",
+    "isApi": true,
+    "isAdmin": true
+  },
+  {
+    "routePath": "/api/admin/cost-center",
+    "methods": [
+      "GET"
+    ],
+    "policyTier": "admin",
+    "responseFormat": "admin_ok_meta_envelope",
+    "isApi": true,
+    "isAdmin": true
+  },
+  {
+    "routePath": "/api/admin/coupons",
+    "methods": [
+      "GET",
+      "POST"
+    ],
+    "policyTier": "admin",
+    "responseFormat": "admin_ok_meta_envelope",
+    "isApi": true,
+    "isAdmin": true
+  },
+  {
+    "routePath": "/api/admin/credits/ledger",
+    "methods": [
+      "GET"
+    ],
+    "policyTier": "admin",
+    "responseFormat": "admin_ok_meta_envelope",
+    "isApi": true,
+    "isAdmin": true
+  },
+  {
+    "routePath": "/api/admin/dashboard",
+    "methods": [
+      "GET"
+    ],
+    "policyTier": "admin",
+    "responseFormat": "admin_ok_meta_envelope",
+    "isApi": true,
+    "isAdmin": true
+  },
+  {
+    "routePath": "/api/admin/export/[type]",
+    "methods": [
+      "GET"
+    ],
+    "policyTier": "admin",
+    "responseFormat": "admin_ok_meta_envelope",
+    "isApi": true,
+    "isAdmin": true
+  },
+  {
+    "routePath": "/api/admin/exports/[id]/download",
+    "methods": [
+      "GET"
+    ],
+    "policyTier": "admin",
+    "responseFormat": "binary_redirect_xml_or_callback",
+    "isApi": true,
+    "isAdmin": true
+  },
+  {
+    "routePath": "/api/admin/exports/[id]",
+    "methods": [
+      "GET"
+    ],
+    "policyTier": "admin",
+    "responseFormat": "admin_ok_meta_envelope",
+    "isApi": true,
+    "isAdmin": true
+  },
+  {
+    "routePath": "/api/admin/exports",
+    "methods": [
+      "POST"
+    ],
+    "policyTier": "admin",
+    "responseFormat": "admin_ok_meta_envelope",
+    "isApi": true,
+    "isAdmin": true
+  },
+  {
+    "routePath": "/api/admin/feedback/[id]/review",
+    "methods": [
+      "POST"
+    ],
+    "policyTier": "admin",
+    "responseFormat": "admin_ok_meta_envelope",
+    "isApi": true,
+    "isAdmin": true
+  },
+  {
+    "routePath": "/api/admin/generations/[id]/retry",
+    "methods": [
+      "POST"
+    ],
+    "policyTier": "admin",
+    "responseFormat": "admin_ok_meta_envelope",
+    "isApi": true,
+    "isAdmin": true
+  },
+  {
+    "routePath": "/api/admin/generations/[id]",
+    "methods": [
+      "GET"
+    ],
+    "policyTier": "admin",
+    "responseFormat": "admin_ok_meta_envelope",
+    "isApi": true,
+    "isAdmin": true
+  },
+  {
+    "routePath": "/api/admin/generations/reconciliation",
+    "methods": [
+      "GET",
+      "POST"
+    ],
+    "policyTier": "admin",
+    "responseFormat": "admin_ok_meta_envelope",
+    "isApi": true,
+    "isAdmin": true
+  },
+  {
+    "routePath": "/api/admin/generations",
+    "methods": [
+      "GET"
+    ],
+    "policyTier": "admin",
+    "responseFormat": "admin_ok_meta_envelope",
+    "isApi": true,
+    "isAdmin": true
+  },
+  {
+    "routePath": "/api/admin/health",
+    "methods": [
+      "GET"
+    ],
+    "policyTier": "admin",
+    "responseFormat": "admin_ok_meta_envelope",
+    "isApi": true,
+    "isAdmin": true
+  },
+  {
+    "routePath": "/api/admin/i18n",
+    "methods": [
+      "GET",
+      "POST"
+    ],
+    "policyTier": "admin",
+    "responseFormat": "admin_ok_meta_envelope",
+    "isApi": true,
+    "isAdmin": true
+  },
+  {
+    "routePath": "/api/admin/invites/[id]",
+    "methods": [
+      "PATCH"
+    ],
+    "policyTier": "admin",
+    "responseFormat": "admin_ok_meta_envelope",
+    "isApi": true,
+    "isAdmin": true
+  },
+  {
+    "routePath": "/api/admin/invites/[id]/users",
+    "methods": [
+      "GET"
+    ],
+    "policyTier": "admin",
+    "responseFormat": "admin_ok_meta_envelope",
+    "isApi": true,
+    "isAdmin": true
+  },
+  {
+    "routePath": "/api/admin/invites",
+    "methods": [
+      "GET",
+      "POST"
+    ],
+    "policyTier": "admin",
+    "responseFormat": "admin_ok_meta_envelope",
+    "isApi": true,
+    "isAdmin": true
+  },
+  {
+    "routePath": "/api/admin/invites/switch",
+    "methods": [
+      "GET",
+      "POST"
+    ],
+    "policyTier": "admin",
+    "responseFormat": "admin_ok_meta_envelope",
+    "isApi": true,
+    "isAdmin": true
+  },
+  {
+    "routePath": "/api/admin/login/social-regions",
+    "methods": [
+      "GET",
+      "PUT"
+    ],
+    "policyTier": "admin",
+    "responseFormat": "admin_ok_meta_envelope",
+    "isApi": true,
+    "isAdmin": true
+  },
+  {
+    "routePath": "/api/admin/marketing/email/templates",
+    "methods": [
+      "GET"
+    ],
+    "policyTier": "admin",
+    "responseFormat": "admin_ok_meta_envelope",
+    "isApi": true,
+    "isAdmin": true
+  },
+  {
+    "routePath": "/api/admin/marketing/email/test",
+    "methods": [
+      "POST"
+    ],
+    "policyTier": "admin",
+    "responseFormat": "admin_ok_meta_envelope",
+    "isApi": true,
+    "isAdmin": true
+  },
+  {
+    "routePath": "/api/admin/models/[id]/health",
+    "methods": [
+      "POST"
+    ],
+    "policyTier": "admin",
+    "responseFormat": "admin_ok_meta_envelope",
+    "isApi": true,
+    "isAdmin": true
+  },
+  {
+    "routePath": "/api/admin/models/[id]/provider",
+    "methods": [
+      "PATCH"
+    ],
+    "policyTier": "admin",
+    "responseFormat": "admin_ok_meta_envelope",
+    "isApi": true,
+    "isAdmin": true
+  },
+  {
+    "routePath": "/api/admin/models/[id]",
+    "methods": [
+      "PATCH"
+    ],
+    "policyTier": "admin",
+    "responseFormat": "admin_ok_meta_envelope",
+    "isApi": true,
+    "isAdmin": true
+  },
+  {
+    "routePath": "/api/admin/models/brands",
+    "methods": [
+      "GET",
+      "POST"
+    ],
+    "policyTier": "admin",
+    "responseFormat": "admin_ok_meta_envelope",
+    "isApi": true,
+    "isAdmin": true
+  },
+  {
+    "routePath": "/api/admin/models/catalog",
+    "methods": [
+      "GET",
+      "POST"
+    ],
+    "policyTier": "admin",
+    "responseFormat": "admin_ok_meta_envelope",
+    "isApi": true,
+    "isAdmin": true
+  },
+  {
+    "routePath": "/api/admin/models/catalog/sync",
+    "methods": [
+      "GET",
+      "POST"
+    ],
+    "policyTier": "admin",
+    "responseFormat": "admin_ok_meta_envelope",
+    "isApi": true,
+    "isAdmin": true
+  },
+  {
+    "routePath": "/api/admin/models/control/export",
+    "methods": [
+      "GET"
+    ],
+    "policyTier": "admin",
+    "responseFormat": "binary_redirect_xml_or_callback",
+    "isApi": true,
+    "isAdmin": true
+  },
+  {
+    "routePath": "/api/admin/models/control",
+    "methods": [
+      "GET",
+      "POST"
+    ],
+    "policyTier": "admin",
+    "responseFormat": "admin_ok_meta_envelope",
+    "isApi": true,
+    "isAdmin": true
+  },
+  {
+    "routePath": "/api/admin/models/deduplicate",
+    "methods": [
+      "GET",
+      "POST"
+    ],
+    "policyTier": "admin",
+    "responseFormat": "admin_ok_meta_envelope",
+    "isApi": true,
+    "isAdmin": true
+  },
+  {
+    "routePath": "/api/admin/models/health/reset",
+    "methods": [
+      "POST"
+    ],
+    "policyTier": "admin",
+    "responseFormat": "admin_ok_meta_envelope",
+    "isApi": true,
+    "isAdmin": true
+  },
+  {
+    "routePath": "/api/admin/models/health",
+    "methods": [
+      "GET",
+      "POST"
+    ],
+    "policyTier": "admin",
+    "responseFormat": "admin_ok_meta_envelope",
+    "isApi": true,
+    "isAdmin": true
+  },
+  {
+    "routePath": "/api/admin/models/pricing",
+    "methods": [
+      "GET",
+      "POST"
+    ],
+    "policyTier": "admin",
+    "responseFormat": "admin_ok_meta_envelope",
+    "isApi": true,
+    "isAdmin": true
+  },
+  {
+    "routePath": "/api/admin/models/pricing/strategy",
+    "methods": [
+      "GET",
+      "POST"
+    ],
+    "policyTier": "admin",
+    "responseFormat": "admin_ok_meta_envelope",
+    "isApi": true,
+    "isAdmin": true
+  },
+  {
+    "routePath": "/api/admin/models/providers",
+    "methods": [
+      "GET",
+      "POST",
+      "DELETE"
+    ],
+    "policyTier": "admin",
+    "responseFormat": "admin_ok_meta_envelope",
+    "isApi": true,
+    "isAdmin": true
+  },
+  {
+    "routePath": "/api/admin/models/publication",
+    "methods": [
+      "POST"
+    ],
+    "policyTier": "admin",
+    "responseFormat": "admin_ok_meta_envelope",
+    "isApi": true,
+    "isAdmin": true
+  },
+  {
+    "routePath": "/api/admin/models",
+    "methods": [
+      "GET"
+    ],
+    "policyTier": "admin",
+    "responseFormat": "admin_ok_meta_envelope",
+    "isApi": true,
+    "isAdmin": true
+  },
+  {
+    "routePath": "/api/admin/models/routing",
+    "methods": [
+      "GET",
+      "POST",
+      "DELETE"
+    ],
+    "policyTier": "admin",
+    "responseFormat": "admin_ok_meta_envelope",
+    "isApi": true,
+    "isAdmin": true
+  },
+  {
+    "routePath": "/api/admin/models/routing/test",
+    "methods": [
+      "POST"
+    ],
+    "policyTier": "admin",
+    "responseFormat": "admin_ok_meta_envelope",
+    "isApi": true,
+    "isAdmin": true
+  },
+  {
+    "routePath": "/api/admin/models/telemetry",
+    "methods": [
+      "GET"
+    ],
+    "policyTier": "admin",
+    "responseFormat": "admin_ok_meta_envelope",
+    "isApi": true,
+    "isAdmin": true
+  },
+  {
+    "routePath": "/api/admin/moderation/[id]/resolve",
+    "methods": [
+      "POST"
+    ],
+    "policyTier": "admin",
+    "responseFormat": "admin_ok_meta_envelope",
+    "isApi": true,
+    "isAdmin": true
+  },
+  {
+    "routePath": "/api/admin/moderation",
+    "methods": [
+      "GET"
+    ],
+    "policyTier": "admin",
+    "responseFormat": "admin_ok_meta_envelope",
+    "isApi": true,
+    "isAdmin": true
+  },
+  {
+    "routePath": "/api/admin/orders/[id]/refund",
+    "methods": [
+      "POST"
+    ],
+    "policyTier": "admin",
+    "responseFormat": "admin_ok_meta_envelope",
+    "isApi": true,
+    "isAdmin": true
+  },
+  {
+    "routePath": "/api/admin/orders",
+    "methods": [
+      "GET"
+    ],
+    "policyTier": "admin",
+    "responseFormat": "admin_ok_meta_envelope",
+    "isApi": true,
+    "isAdmin": true
+  },
+  {
+    "routePath": "/api/admin/plans/[id]",
+    "methods": [
+      "PATCH"
+    ],
+    "policyTier": "admin",
+    "responseFormat": "admin_ok_meta_envelope",
+    "isApi": true,
+    "isAdmin": true
+  },
+  {
+    "routePath": "/api/admin/plans",
+    "methods": [
+      "GET",
+      "POST"
+    ],
+    "policyTier": "admin",
+    "responseFormat": "admin_ok_meta_envelope",
+    "isApi": true,
+    "isAdmin": true
+  },
+  {
+    "routePath": "/api/admin/profit-center",
+    "methods": [
+      "GET"
+    ],
+    "policyTier": "admin",
+    "responseFormat": "admin_ok_meta_envelope",
+    "isApi": true,
+    "isAdmin": true
+  },
+  {
+    "routePath": "/api/admin/providers/[id]/enabled",
+    "methods": [
+      "PUT"
+    ],
+    "policyTier": "admin",
+    "responseFormat": "admin_ok_meta_envelope",
+    "isApi": true,
+    "isAdmin": true
+  },
+  {
+    "routePath": "/api/admin/providers/[id]/env",
+    "methods": [
+      "GET",
+      "PUT"
+    ],
+    "policyTier": "admin",
+    "responseFormat": "admin_ok_meta_envelope",
+    "isApi": true,
+    "isAdmin": true
+  },
+  {
+    "routePath": "/api/admin/providers/[id]/secret",
+    "methods": [
+      "PUT"
+    ],
+    "policyTier": "admin",
+    "responseFormat": "admin_ok_meta_envelope",
+    "isApi": true,
+    "isAdmin": true
+  },
+  {
+    "routePath": "/api/admin/providers/[id]/test",
+    "methods": [
+      "POST"
+    ],
+    "policyTier": "admin",
+    "responseFormat": "admin_ok_meta_envelope",
+    "isApi": true,
+    "isAdmin": true
+  },
+  {
+    "routePath": "/api/admin/providers/[id]/webhooks",
+    "methods": [
+      "GET"
+    ],
+    "policyTier": "admin",
+    "responseFormat": "admin_ok_meta_envelope",
+    "isApi": true,
+    "isAdmin": true
+  },
+  {
+    "routePath": "/api/admin/providers/email/diagnose",
+    "methods": [
+      "POST"
+    ],
+    "policyTier": "admin",
+    "responseFormat": "admin_ok_meta_envelope",
+    "isApi": true,
+    "isAdmin": true
+  },
+  {
+    "routePath": "/api/admin/providers/email/health",
+    "methods": [
+      "POST"
+    ],
+    "policyTier": "admin",
+    "responseFormat": "admin_ok_meta_envelope",
+    "isApi": true,
+    "isAdmin": true
+  },
+  {
+    "routePath": "/api/admin/providers/email",
+    "methods": [
+      "GET",
+      "PUT"
+    ],
+    "policyTier": "admin",
+    "responseFormat": "admin_ok_meta_envelope",
+    "isApi": true,
+    "isAdmin": true
+  },
+  {
+    "routePath": "/api/admin/providers/email/test",
+    "methods": [
+      "POST"
+    ],
+    "policyTier": "admin",
+    "responseFormat": "admin_ok_meta_envelope",
+    "isApi": true,
+    "isAdmin": true
+  },
+  {
+    "routePath": "/api/admin/providers",
+    "methods": [
+      "GET"
+    ],
+    "policyTier": "admin",
+    "responseFormat": "admin_ok_meta_envelope",
+    "isApi": true,
+    "isAdmin": true
+  },
+  {
+    "routePath": "/api/admin/providers/sms/health",
+    "methods": [
+      "POST"
+    ],
+    "policyTier": "admin",
+    "responseFormat": "admin_ok_meta_envelope",
+    "isApi": true,
+    "isAdmin": true
+  },
+  {
+    "routePath": "/api/admin/providers/sms",
+    "methods": [
+      "GET",
+      "PUT"
+    ],
+    "policyTier": "admin",
+    "responseFormat": "admin_ok_meta_envelope",
+    "isApi": true,
+    "isAdmin": true
+  },
+  {
+    "routePath": "/api/admin/providers/sms/secrets",
+    "methods": [
+      "PUT"
+    ],
+    "policyTier": "admin",
+    "responseFormat": "admin_ok_meta_envelope",
+    "isApi": true,
+    "isAdmin": true
+  },
+  {
+    "routePath": "/api/admin/providers/sms/test",
+    "methods": [
+      "POST"
+    ],
+    "policyTier": "admin",
+    "responseFormat": "admin_ok_meta_envelope",
+    "isApi": true,
+    "isAdmin": true
+  },
+  {
+    "routePath": "/api/admin/routing/[modelId]/channels",
+    "methods": [
+      "GET",
+      "PATCH"
+    ],
+    "policyTier": "admin",
+    "responseFormat": "admin_ok_meta_envelope",
+    "isApi": true,
+    "isAdmin": true
+  },
+  {
+    "routePath": "/api/admin/routing",
+    "methods": [
+      "GET",
+      "PATCH"
+    ],
+    "policyTier": "admin",
+    "responseFormat": "admin_ok_meta_envelope",
+    "isApi": true,
+    "isAdmin": true
+  },
+  {
+    "routePath": "/api/admin/security/sessions/[hash]",
+    "methods": [
+      "POST",
+      "DELETE"
+    ],
+    "policyTier": "admin",
+    "responseFormat": "admin_ok_meta_envelope",
+    "isApi": true,
+    "isAdmin": true
+  },
+  {
+    "routePath": "/api/admin/seo/config",
+    "methods": [
+      "GET",
+      "POST"
+    ],
+    "policyTier": "admin",
+    "responseFormat": "admin_ok_meta_envelope",
+    "isApi": true,
+    "isAdmin": true
+  },
+  {
+    "routePath": "/api/admin/seo/push/config",
+    "methods": [
+      "GET",
+      "POST"
+    ],
+    "policyTier": "admin",
+    "responseFormat": "admin_ok_meta_envelope",
+    "isApi": true,
+    "isAdmin": true
+  },
+  {
+    "routePath": "/api/admin/seo/push",
+    "methods": [
+      "GET",
+      "POST"
+    ],
+    "policyTier": "admin",
+    "responseFormat": "admin_ok_meta_envelope",
+    "isApi": true,
+    "isAdmin": true
+  },
+  {
+    "routePath": "/api/admin/settings",
+    "methods": [
+      "GET",
+      "POST"
+    ],
+    "policyTier": "admin",
+    "responseFormat": "admin_ok_meta_envelope",
+    "isApi": true,
+    "isAdmin": true
+  },
+  {
+    "routePath": "/api/admin/storage/bucket",
+    "methods": [
+      "GET",
+      "POST"
+    ],
+    "policyTier": "admin",
+    "responseFormat": "admin_ok_meta_envelope",
+    "isApi": true,
+    "isAdmin": true
+  },
+  {
+    "routePath": "/api/admin/storage",
+    "methods": [
+      "GET",
+      "POST"
+    ],
+    "policyTier": "admin",
+    "responseFormat": "admin_ok_meta_envelope",
+    "isApi": true,
+    "isAdmin": true
+  },
+  {
+    "routePath": "/api/admin/subscription-faq",
+    "methods": [
+      "GET",
+      "PUT"
+    ],
+    "policyTier": "admin",
+    "responseFormat": "admin_ok_meta_envelope",
+    "isApi": true,
+    "isAdmin": true
+  },
+  {
+    "routePath": "/api/admin/subscriptions",
+    "methods": [
+      "GET"
+    ],
+    "policyTier": "admin",
+    "responseFormat": "admin_ok_meta_envelope",
+    "isApi": true,
+    "isAdmin": true
+  },
+  {
+    "routePath": "/api/admin/system/logs",
+    "methods": [
+      "GET"
+    ],
+    "policyTier": "admin",
+    "responseFormat": "admin_ok_meta_envelope",
+    "isApi": true,
+    "isAdmin": true
+  },
+  {
+    "routePath": "/api/admin/users/[id]/credits",
+    "methods": [
+      "POST"
+    ],
+    "policyTier": "admin",
+    "responseFormat": "admin_ok_meta_envelope",
+    "isApi": true,
+    "isAdmin": true
+  },
+  {
+    "routePath": "/api/admin/users/[id]/notes",
+    "methods": [
+      "POST"
+    ],
+    "policyTier": "admin",
+    "responseFormat": "admin_ok_meta_envelope",
+    "isApi": true,
+    "isAdmin": true
+  },
+  {
+    "routePath": "/api/admin/users/[id]",
+    "methods": [
+      "GET",
+      "PATCH"
+    ],
+    "policyTier": "admin",
+    "responseFormat": "admin_ok_meta_envelope",
+    "isApi": true,
+    "isAdmin": true
+  },
+  {
+    "routePath": "/api/admin/users/[id]/sessions",
+    "methods": [
+      "POST",
+      "DELETE"
+    ],
+    "policyTier": "admin",
+    "responseFormat": "admin_ok_meta_envelope",
+    "isApi": true,
+    "isAdmin": true
+  },
+  {
+    "routePath": "/api/admin/users/[id]/tags",
+    "methods": [
+      "POST"
+    ],
+    "policyTier": "admin",
+    "responseFormat": "admin_ok_meta_envelope",
+    "isApi": true,
+    "isAdmin": true
+  },
+  {
+    "routePath": "/api/admin/users/dashboard",
+    "methods": [
+      "GET"
+    ],
+    "policyTier": "admin",
+    "responseFormat": "admin_ok_meta_envelope",
+    "isApi": true,
+    "isAdmin": true
+  },
+  {
+    "routePath": "/api/admin/users",
+    "methods": [
+      "GET"
+    ],
+    "policyTier": "admin",
+    "responseFormat": "admin_ok_meta_envelope",
+    "isApi": true,
+    "isAdmin": true
+  },
+  {
+    "routePath": "/api/admin/visitors/analytics/ga4",
+    "methods": [
+      "GET",
+      "POST"
+    ],
+    "policyTier": "admin",
+    "responseFormat": "admin_ok_meta_envelope",
+    "isApi": true,
+    "isAdmin": true
+  },
+  {
+    "routePath": "/api/admin/visitors/analytics",
+    "methods": [
+      "GET",
+      "POST"
+    ],
+    "policyTier": "admin",
+    "responseFormat": "admin_ok_meta_envelope",
+    "isApi": true,
+    "isAdmin": true
+  },
+  {
+    "routePath": "/api/admin/webhooks/[id]/replay",
+    "methods": [
+      "POST"
+    ],
+    "policyTier": "admin",
+    "responseFormat": "admin_ok_meta_envelope",
+    "isApi": true,
+    "isAdmin": true
+  },
+  {
+    "routePath": "/api/admin/webhooks",
+    "methods": [
+      "GET"
+    ],
+    "policyTier": "admin",
+    "responseFormat": "admin_ok_meta_envelope",
+    "isApi": true,
+    "isAdmin": true
+  },
+  {
+    "routePath": "/api/agents/[[...path]]",
+    "methods": [
+      "GET",
+      "POST",
+      "PUT",
+      "DELETE"
+    ],
+    "policyTier": "legacyProxy",
+    "responseFormat": "upstream_proxy_passthrough",
+    "isApi": true,
+    "isAdmin": false
+  },
+  {
+    "routePath": "/api/analytics/banner-event",
+    "methods": [
+      "POST"
+    ],
+    "policyTier": "public",
+    "responseFormat": "binary_redirect_xml_or_callback",
+    "isApi": true,
+    "isAdmin": false
+  },
+  {
+    "routePath": "/api/analytics/track",
+    "methods": [
+      "POST"
+    ],
+    "policyTier": "public",
+    "responseFormat": "direct_domain_json",
+    "isApi": true,
+    "isAdmin": false
+  },
+  {
+    "routePath": "/api/api/v1/[[...path]]",
+    "methods": [
+      "GET",
+      "POST"
+    ],
+    "policyTier": "legacyProxy",
+    "responseFormat": "upstream_proxy_passthrough",
+    "isApi": true,
+    "isAdmin": false
+  },
+  {
+    "routePath": "/api/app/[[...path]]",
+    "methods": [
+      "GET",
+      "POST",
+      "PUT",
+      "DELETE"
+    ],
+    "policyTier": "legacyProxy",
+    "responseFormat": "upstream_proxy_passthrough",
+    "isApi": true,
+    "isAdmin": false
+  },
+  {
+    "routePath": "/api/app/models/available",
+    "methods": [
+      "GET"
+    ],
+    "policyTier": "legacyProxy",
+    "responseFormat": "upstream_proxy_passthrough",
+    "isApi": true,
+    "isAdmin": false
+  },
+  {
+    "routePath": "/api/assets/[id]/download",
+    "methods": [
+      "GET"
+    ],
+    "policyTier": "authenticated_or_domain",
+    "responseFormat": "binary_redirect_xml_or_callback",
+    "isApi": true,
+    "isAdmin": false
+  },
+  {
+    "routePath": "/api/assets/folders/[id]",
+    "methods": [
+      "PATCH",
+      "DELETE"
+    ],
+    "policyTier": "authenticated_or_domain",
+    "responseFormat": "direct_domain_json",
+    "isApi": true,
+    "isAdmin": false
+  },
+  {
+    "routePath": "/api/assets/folders",
+    "methods": [
+      "GET",
+      "POST"
+    ],
+    "policyTier": "authenticated_or_domain",
+    "responseFormat": "direct_domain_json",
+    "isApi": true,
+    "isAdmin": false
+  },
+  {
+    "routePath": "/api/assets/library/[id]",
+    "methods": [
+      "GET",
+      "PATCH",
+      "DELETE"
+    ],
+    "policyTier": "authenticated_or_domain",
+    "responseFormat": "success_flagged_json",
+    "isApi": true,
+    "isAdmin": false
+  },
+  {
+    "routePath": "/api/assets/library/batch",
+    "methods": [
+      "POST"
+    ],
+    "policyTier": "authenticated_or_domain",
+    "responseFormat": "direct_domain_json",
+    "isApi": true,
+    "isAdmin": false
+  },
+  {
+    "routePath": "/api/assets/library/export",
+    "methods": [
+      "GET"
+    ],
+    "policyTier": "authenticated_or_domain",
+    "responseFormat": "binary_redirect_xml_or_callback",
+    "isApi": true,
+    "isAdmin": false
+  },
+  {
+    "routePath": "/api/assets/library",
+    "methods": [
+      "GET",
+      "POST"
+    ],
+    "policyTier": "authenticated_or_domain",
+    "responseFormat": "direct_domain_json",
+    "isApi": true,
+    "isAdmin": false
+  },
+  {
+    "routePath": "/api/assets/library/usage",
+    "methods": [
+      "GET"
+    ],
+    "policyTier": "authenticated_or_domain",
+    "responseFormat": "direct_domain_json",
+    "isApi": true,
+    "isAdmin": false
+  },
+  {
+    "routePath": "/api/assets/upload",
+    "methods": [
+      "POST"
+    ],
+    "policyTier": "authenticated_or_domain",
+    "responseFormat": "success_flagged_json",
+    "isApi": true,
+    "isAdmin": false
+  },
+  {
+    "routePath": "/api/auth/login",
+    "methods": [
+      "POST"
+    ],
+    "policyTier": "public",
+    "responseFormat": "direct_domain_json",
+    "isApi": true,
+    "isAdmin": false
+  },
+  {
+    "routePath": "/api/auth/logout",
+    "methods": [
+      "POST"
+    ],
+    "policyTier": "public",
+    "responseFormat": "direct_domain_json",
+    "isApi": true,
+    "isAdmin": false
+  },
+  {
+    "routePath": "/api/auth/me",
+    "methods": [
+      "GET"
+    ],
+    "policyTier": "public",
+    "responseFormat": "direct_domain_json",
+    "isApi": true,
+    "isAdmin": false
+  },
+  {
+    "routePath": "/api/auth/oauth/[provider]/callback",
+    "methods": [
+      "GET",
+      "POST"
+    ],
+    "policyTier": "public",
+    "responseFormat": "direct_domain_json",
+    "isApi": true,
+    "isAdmin": false
+  },
+  {
+    "routePath": "/api/auth/oauth/[provider]",
+    "methods": [
+      "GET"
+    ],
+    "policyTier": "public",
+    "responseFormat": "binary_redirect_xml_or_callback",
+    "isApi": true,
+    "isAdmin": false
+  },
+  {
+    "routePath": "/api/auth/oauth/[provider]/webhook",
+    "methods": [
+      "GET",
+      "POST"
+    ],
+    "policyTier": "authenticated_or_domain",
+    "responseFormat": "binary_redirect_xml_or_callback",
+    "isApi": true,
+    "isAdmin": false
+  },
+  {
+    "routePath": "/api/auth/oauth/google/one-tap",
+    "methods": [
+      "GET",
+      "POST"
+    ],
+    "policyTier": "public",
+    "responseFormat": "direct_domain_json",
+    "isApi": true,
+    "isAdmin": false
+  },
+  {
+    "routePath": "/api/auth/oauth/onboarding",
+    "methods": [
+      "GET",
+      "POST"
+    ],
+    "policyTier": "authenticated_or_domain",
+    "responseFormat": "success_flagged_json",
+    "isApi": true,
+    "isAdmin": false
+  },
+  {
+    "routePath": "/api/auth/password/forgot/email",
+    "methods": [
+      "POST"
+    ],
+    "policyTier": "authenticated_or_domain",
+    "responseFormat": "success_flagged_json",
+    "isApi": true,
+    "isAdmin": false
+  },
+  {
+    "routePath": "/api/auth/password/reset/email",
+    "methods": [
+      "POST"
+    ],
+    "policyTier": "authenticated_or_domain",
+    "responseFormat": "success_flagged_json",
+    "isApi": true,
+    "isAdmin": false
+  },
+  {
+    "routePath": "/api/auth/password/reset/phone",
+    "methods": [
+      "POST"
+    ],
+    "policyTier": "authenticated_or_domain",
+    "responseFormat": "success_flagged_json",
+    "isApi": true,
+    "isAdmin": false
+  },
+  {
+    "routePath": "/api/auth/phone/send-code",
+    "methods": [
+      "POST"
+    ],
+    "policyTier": "public",
+    "responseFormat": "success_flagged_json",
+    "isApi": true,
+    "isAdmin": false
+  },
+  {
+    "routePath": "/api/auth/phone/verify",
+    "methods": [
+      "POST"
+    ],
+    "policyTier": "public",
+    "responseFormat": "direct_domain_json",
+    "isApi": true,
+    "isAdmin": false
+  },
+  {
+    "routePath": "/api/auth/qq/callback",
+    "methods": [
+      "GET"
+    ],
+    "policyTier": "authenticated_or_domain",
+    "responseFormat": "direct_domain_json",
+    "isApi": true,
+    "isAdmin": false
+  },
+  {
+    "routePath": "/api/auth/refresh",
+    "methods": [
+      "POST"
+    ],
+    "policyTier": "authenticated_or_domain",
+    "responseFormat": "direct_domain_json",
+    "isApi": true,
+    "isAdmin": false
+  },
+  {
+    "routePath": "/api/auth/register",
+    "methods": [
+      "POST"
+    ],
+    "policyTier": "public",
+    "responseFormat": "direct_domain_json",
+    "isApi": true,
+    "isAdmin": false
+  },
+  {
+    "routePath": "/api/auth/register/send-code",
+    "methods": [
+      "POST"
+    ],
+    "policyTier": "authenticated_or_domain",
+    "responseFormat": "direct_domain_json",
+    "isApi": true,
+    "isAdmin": false
+  },
+  {
+    "routePath": "/api/auth/social-options",
+    "methods": [
+      "GET"
+    ],
+    "policyTier": "public",
+    "responseFormat": "direct_domain_json",
+    "isApi": true,
+    "isAdmin": false
+  },
+  {
+    "routePath": "/api/auth/username/forgot/email",
+    "methods": [
+      "POST"
+    ],
+    "policyTier": "authenticated_or_domain",
+    "responseFormat": "success_flagged_json",
+    "isApi": true,
+    "isAdmin": false
+  },
+  {
+    "routePath": "/api/auth/username/recover/email",
+    "methods": [
+      "POST"
+    ],
+    "policyTier": "authenticated_or_domain",
+    "responseFormat": "success_flagged_json",
+    "isApi": true,
+    "isAdmin": false
+  },
+  {
+    "routePath": "/api/billing/checkout",
+    "methods": [
+      "POST"
+    ],
+    "policyTier": "authenticated_or_domain",
+    "responseFormat": "direct_domain_json",
+    "isApi": true,
+    "isAdmin": false
+  },
+  {
+    "routePath": "/api/billing/credit-packs",
+    "methods": [
+      "GET"
+    ],
+    "policyTier": "public",
+    "responseFormat": "direct_domain_json",
+    "isApi": true,
+    "isAdmin": false
+  },
+  {
+    "routePath": "/api/billing/credits",
+    "methods": [
+      "GET"
+    ],
+    "policyTier": "authenticated_or_domain",
+    "responseFormat": "direct_domain_json",
+    "isApi": true,
+    "isAdmin": false
+  },
+  {
+    "routePath": "/api/billing/entitlements",
+    "methods": [
+      "GET"
+    ],
+    "policyTier": "authenticated_or_domain",
+    "responseFormat": "direct_domain_json",
+    "isApi": true,
+    "isAdmin": false
+  },
+  {
+    "routePath": "/api/billing/orders/[id]/status",
+    "methods": [
+      "GET"
+    ],
+    "policyTier": "authenticated_or_domain",
+    "responseFormat": "direct_domain_json",
+    "isApi": true,
+    "isAdmin": false
+  },
+  {
+    "routePath": "/api/billing/orders/my",
+    "methods": [
+      "GET"
+    ],
+    "policyTier": "authenticated_or_domain",
+    "responseFormat": "direct_domain_json",
+    "isApi": true,
+    "isAdmin": false
+  },
+  {
+    "routePath": "/api/billing/plans",
+    "methods": [
+      "GET"
+    ],
+    "policyTier": "public",
+    "responseFormat": "direct_domain_json",
+    "isApi": true,
+    "isAdmin": false
+  },
+  {
+    "routePath": "/api/billing/subscription",
+    "methods": [
+      "GET"
+    ],
+    "policyTier": "authenticated_or_domain",
+    "responseFormat": "direct_domain_json",
+    "isApi": true,
+    "isAdmin": false
+  },
+  {
+    "routePath": "/api/billing/usage",
+    "methods": [
+      "GET"
+    ],
+    "policyTier": "authenticated_or_domain",
+    "responseFormat": "direct_domain_json",
+    "isApi": true,
+    "isAdmin": false
+  },
+  {
+    "routePath": "/api/billing/webhooks/alipay",
+    "methods": [
+      "POST"
+    ],
+    "policyTier": "signature",
+    "responseFormat": "binary_redirect_xml_or_callback",
+    "isApi": true,
+    "isAdmin": false
+  },
+  {
+    "routePath": "/api/billing/webhooks/paypal",
+    "methods": [
+      "POST"
+    ],
+    "policyTier": "authenticated_or_domain",
+    "responseFormat": "direct_domain_json",
+    "isApi": true,
+    "isAdmin": false
+  },
+  {
+    "routePath": "/api/billing/webhooks/stripe",
+    "methods": [
+      "POST"
+    ],
+    "policyTier": "signature",
+    "responseFormat": "direct_domain_json",
+    "isApi": true,
+    "isAdmin": false
+  },
+  {
+    "routePath": "/api/billing/webhooks/wechat",
+    "methods": [
+      "POST"
+    ],
+    "policyTier": "signature",
+    "responseFormat": "direct_domain_json",
+    "isApi": true,
+    "isAdmin": false
+  },
+  {
+    "routePath": "/api/canvas-tools/plan",
+    "methods": [
+      "POST"
+    ],
+    "policyTier": "authenticated_or_domain",
+    "responseFormat": "success_flagged_json",
+    "isApi": true,
+    "isAdmin": false
+  },
+  {
+    "routePath": "/api/canvas-tools/result/[id]",
+    "methods": [
+      "GET"
+    ],
+    "policyTier": "authenticated_or_domain",
+    "responseFormat": "binary_redirect_xml_or_callback",
+    "isApi": true,
+    "isAdmin": false
+  },
+  {
+    "routePath": "/api/canvas-tools/spec",
+    "methods": [
+      "GET"
+    ],
+    "policyTier": "authenticated_or_domain",
+    "responseFormat": "success_flagged_json",
+    "isApi": true,
+    "isAdmin": false
+  },
+  {
+    "routePath": "/api/canvas/assets/[id]/content",
+    "methods": [
+      "GET",
+      "OPTIONS",
+      "HEAD"
+    ],
+    "policyTier": "authenticated_or_domain",
+    "responseFormat": "direct_domain_json",
+    "isApi": true,
+    "isAdmin": false
+  },
+  {
+    "routePath": "/api/canvas/assets",
+    "methods": [
+      "GET",
+      "OPTIONS"
+    ],
+    "policyTier": "authenticated_or_domain",
+    "responseFormat": "direct_domain_json",
+    "isApi": true,
+    "isAdmin": false
+  },
+  {
+    "routePath": "/api/canvas/assets/upload",
+    "methods": [
+      "POST",
+      "OPTIONS"
+    ],
+    "policyTier": "authenticated_or_domain",
+    "responseFormat": "direct_domain_json",
+    "isApi": true,
+    "isAdmin": false
+  },
+  {
+    "routePath": "/api/canvas/config",
+    "methods": [
+      "GET",
+      "OPTIONS"
+    ],
+    "policyTier": "authenticated_or_domain",
+    "responseFormat": "direct_domain_json",
+    "isApi": true,
+    "isAdmin": false
+  },
+  {
+    "routePath": "/api/canvas/jobs/[id]",
+    "methods": [
+      "GET",
+      "OPTIONS"
+    ],
+    "policyTier": "authenticated_or_domain",
+    "responseFormat": "direct_domain_json",
+    "isApi": true,
+    "isAdmin": false
+  },
+  {
+    "routePath": "/api/canvas/jobs",
+    "methods": [
+      "GET",
+      "POST",
+      "OPTIONS"
+    ],
+    "policyTier": "authenticated_or_domain",
+    "responseFormat": "direct_domain_json",
+    "isApi": true,
+    "isAdmin": false
+  },
+  {
+    "routePath": "/api/canvas/models",
+    "methods": [
+      "GET",
+      "OPTIONS"
+    ],
+    "policyTier": "authenticated_or_domain",
+    "responseFormat": "direct_domain_json",
+    "isApi": true,
+    "isAdmin": false
+  },
+  {
+    "routePath": "/api/canvas/projects/[id]",
+    "methods": [
+      "GET",
+      "PUT",
+      "DELETE",
+      "OPTIONS"
+    ],
+    "policyTier": "authenticated_or_domain",
+    "responseFormat": "direct_domain_json",
+    "isApi": true,
+    "isAdmin": false
+  },
+  {
+    "routePath": "/api/canvas/projects/[id]/share",
+    "methods": [
+      "GET",
+      "POST",
+      "DELETE",
+      "OPTIONS"
+    ],
+    "policyTier": "authenticated_or_domain",
+    "responseFormat": "direct_domain_json",
+    "isApi": true,
+    "isAdmin": false
+  },
+  {
+    "routePath": "/api/canvas/projects",
+    "methods": [
+      "GET",
+      "POST",
+      "OPTIONS"
+    ],
+    "policyTier": "authenticated_or_domain",
+    "responseFormat": "direct_domain_json",
+    "isApi": true,
+    "isAdmin": false
+  },
+  {
+    "routePath": "/api/canvas/quotes",
+    "methods": [
+      "POST",
+      "OPTIONS"
+    ],
+    "policyTier": "authenticated_or_domain",
+    "responseFormat": "direct_domain_json",
+    "isApi": true,
+    "isAdmin": false
+  },
+  {
+    "routePath": "/api/canvas/session",
+    "methods": [
+      "GET",
+      "POST",
+      "OPTIONS"
+    ],
+    "policyTier": "authenticated_or_domain",
+    "responseFormat": "direct_domain_json",
+    "isApi": true,
+    "isAdmin": false
+  },
+  {
+    "routePath": "/api/canvas/shares/[token]/assets/[id]/content",
+    "methods": [
+      "GET",
+      "OPTIONS",
+      "HEAD"
+    ],
+    "policyTier": "authenticated_or_domain",
+    "responseFormat": "direct_domain_json",
+    "isApi": true,
+    "isAdmin": false
+  },
+  {
+    "routePath": "/api/canvas/shares/[token]",
+    "methods": [
+      "GET",
+      "OPTIONS"
+    ],
+    "policyTier": "authenticated_or_domain",
+    "responseFormat": "direct_domain_json",
+    "isApi": true,
+    "isAdmin": false
+  },
+  {
+    "routePath": "/api/community/posts/[id]/coin",
+    "methods": [
+      "GET",
+      "POST"
+    ],
+    "policyTier": "authenticated_or_domain",
+    "responseFormat": "direct_domain_json",
+    "isApi": true,
+    "isAdmin": false
+  },
+  {
+    "routePath": "/api/community/posts/[id]/comments",
+    "methods": [
+      "GET",
+      "POST"
+    ],
+    "policyTier": "authenticated_or_domain",
+    "responseFormat": "direct_domain_json",
+    "isApi": true,
+    "isAdmin": false
+  },
+  {
+    "routePath": "/api/community/posts/[id]/like",
+    "methods": [
+      "POST"
+    ],
+    "policyTier": "authenticated_or_domain",
+    "responseFormat": "direct_domain_json",
+    "isApi": true,
+    "isAdmin": false
+  },
+  {
+    "routePath": "/api/community/posts/[id]/remix",
+    "methods": [
+      "POST"
+    ],
+    "policyTier": "authenticated_or_domain",
+    "responseFormat": "direct_domain_json",
+    "isApi": true,
+    "isAdmin": false
+  },
+  {
+    "routePath": "/api/community/posts/[id]",
+    "methods": [
+      "GET",
+      "DELETE"
+    ],
+    "policyTier": "authenticated_or_domain",
+    "responseFormat": "direct_domain_json",
+    "isApi": true,
+    "isAdmin": false
+  },
+  {
+    "routePath": "/api/community/posts",
+    "methods": [
+      "GET",
+      "POST"
+    ],
+    "policyTier": "authenticated_or_domain",
+    "responseFormat": "direct_domain_json",
+    "isApi": true,
+    "isAdmin": false
+  },
+  {
+    "routePath": "/api/coupons/redeem",
+    "methods": [
+      "POST"
+    ],
+    "policyTier": "authenticated_or_domain",
+    "responseFormat": "direct_domain_json",
+    "isApi": true,
+    "isAdmin": false
+  },
+  {
+    "routePath": "/api/coupons/verify",
+    "methods": [
+      "POST"
+    ],
+    "policyTier": "authenticated_or_domain",
+    "responseFormat": "direct_domain_json",
+    "isApi": true,
+    "isAdmin": false
+  },
+  {
+    "routePath": "/api/creations/report",
+    "methods": [
+      "POST"
+    ],
+    "policyTier": "authenticated_or_domain",
+    "responseFormat": "success_flagged_json",
+    "isApi": true,
+    "isAdmin": false
+  },
+  {
+    "routePath": "/api/creations",
+    "methods": [
+      "GET",
+      "POST",
+      "DELETE"
+    ],
+    "policyTier": "authenticated_or_domain",
+    "responseFormat": "direct_domain_json",
+    "isApi": true,
+    "isAdmin": false
+  },
+  {
+    "routePath": "/api/feedback",
+    "methods": [
+      "GET",
+      "POST"
+    ],
+    "policyTier": "authenticated_or_domain",
+    "responseFormat": "direct_domain_json",
+    "isApi": true,
+    "isAdmin": false
+  },
+  {
+    "routePath": "/api/financial/credits/checkin",
+    "methods": [
+      "POST"
+    ],
+    "policyTier": "authenticated_or_domain",
+    "responseFormat": "direct_domain_json",
+    "isApi": true,
+    "isAdmin": false
+  },
+  {
+    "routePath": "/api/financial/credits/commit",
+    "methods": [
+      "POST"
+    ],
+    "policyTier": "authenticated_or_domain",
+    "responseFormat": "direct_domain_json",
+    "isApi": true,
+    "isAdmin": false
+  },
+  {
+    "routePath": "/api/financial/credits/ledger",
+    "methods": [
+      "GET"
+    ],
+    "policyTier": "authenticated_or_domain",
+    "responseFormat": "direct_domain_json",
+    "isApi": true,
+    "isAdmin": false
+  },
+  {
+    "routePath": "/api/financial/credits/reserve",
+    "methods": [
+      "POST"
+    ],
+    "policyTier": "authenticated_or_domain",
+    "responseFormat": "direct_domain_json",
+    "isApi": true,
+    "isAdmin": false
+  },
+  {
+    "routePath": "/api/financial/credits/void",
+    "methods": [
+      "POST"
+    ],
+    "policyTier": "authenticated_or_domain",
+    "responseFormat": "direct_domain_json",
+    "isApi": true,
+    "isAdmin": false
+  },
+  {
+    "routePath": "/api/financial/credits/wallet",
+    "methods": [
+      "GET"
+    ],
+    "policyTier": "authenticated_or_domain",
+    "responseFormat": "direct_domain_json",
+    "isApi": true,
+    "isAdmin": false
+  },
+  {
+    "routePath": "/api/financial/currency/benefits",
+    "methods": [
+      "POST"
+    ],
+    "policyTier": "authenticated_or_domain",
+    "responseFormat": "direct_domain_json",
+    "isApi": true,
+    "isAdmin": false
+  },
+  {
+    "routePath": "/api/financial/currency/daily-login",
+    "methods": [
+      "GET",
+      "POST"
+    ],
+    "policyTier": "authenticated_or_domain",
+    "responseFormat": "direct_domain_json",
+    "isApi": true,
+    "isAdmin": false
+  },
+  {
+    "routePath": "/api/financial/currency/exchange",
+    "methods": [
+      "POST"
+    ],
+    "policyTier": "authenticated_or_domain",
+    "responseFormat": "direct_domain_json",
+    "isApi": true,
+    "isAdmin": false
+  },
+  {
+    "routePath": "/api/financial/currency/password",
+    "methods": [
+      "POST"
+    ],
+    "policyTier": "authenticated_or_domain",
+    "responseFormat": "success_flagged_json",
+    "isApi": true,
+    "isAdmin": false
+  },
+  {
+    "routePath": "/api/financial/currency/rewards",
+    "methods": [
+      "GET",
+      "POST"
+    ],
+    "policyTier": "authenticated_or_domain",
+    "responseFormat": "direct_domain_json",
+    "isApi": true,
+    "isAdmin": false
+  },
+  {
+    "routePath": "/api/financial/currency/transfer",
+    "methods": [
+      "POST"
+    ],
+    "policyTier": "authenticated_or_domain",
+    "responseFormat": "direct_domain_json",
+    "isApi": true,
+    "isAdmin": false
+  },
+  {
+    "routePath": "/api/financial/currency/wallet",
+    "methods": [
+      "GET"
+    ],
+    "policyTier": "authenticated_or_domain",
+    "responseFormat": "direct_domain_json",
+    "isApi": true,
+    "isAdmin": false
+  },
+  {
+    "routePath": "/api/generation/quote",
+    "methods": [
+      "POST"
+    ],
+    "policyTier": "authenticated_or_domain",
+    "responseFormat": "success_flagged_json",
+    "isApi": true,
+    "isAdmin": false
+  },
+  {
+    "routePath": "/api/generations/[id]/callback",
+    "methods": [
+      "POST"
+    ],
+    "policyTier": "signature",
+    "responseFormat": "direct_domain_json",
+    "isApi": true,
+    "isAdmin": false
+  },
+  {
+    "routePath": "/api/generations/[id]",
+    "methods": [
+      "GET"
+    ],
+    "policyTier": "authenticated_or_domain",
+    "responseFormat": "direct_domain_json",
+    "isApi": true,
+    "isAdmin": false
+  },
+  {
+    "routePath": "/api/generations/events",
+    "methods": [
+      "GET"
+    ],
+    "policyTier": "authenticated_or_domain",
+    "responseFormat": "sse_event_stream",
+    "isApi": true,
+    "isAdmin": false
+  },
+  {
+    "routePath": "/api/generations",
+    "methods": [
+      "GET",
+      "POST"
+    ],
+    "policyTier": "authenticated_or_domain",
+    "responseFormat": "direct_domain_json",
+    "isApi": true,
+    "isAdmin": false
+  },
+  {
+    "routePath": "/api/health",
+    "methods": [
+      "GET"
+    ],
+    "policyTier": "public",
+    "responseFormat": "direct_domain_json",
+    "isApi": true,
+    "isAdmin": false
+  },
+  {
+    "routePath": "/api/i18n",
+    "methods": [
+      "GET"
+    ],
+    "policyTier": "public",
+    "responseFormat": "direct_domain_json",
+    "isApi": true,
+    "isAdmin": false
+  },
+  {
+    "routePath": "/api/live",
+    "methods": [
+      "GET"
+    ],
+    "policyTier": "public",
+    "responseFormat": "direct_domain_json",
+    "isApi": true,
+    "isAdmin": false
+  },
+  {
+    "routePath": "/api/models/active",
+    "methods": [
+      "GET"
+    ],
+    "policyTier": "public",
+    "responseFormat": "success_flagged_json",
+    "isApi": true,
+    "isAdmin": false
+  },
+  {
+    "routePath": "/api/models/telemetry",
+    "methods": [
+      "GET"
+    ],
+    "policyTier": "authenticated_or_domain",
+    "responseFormat": "direct_domain_json",
+    "isApi": true,
+    "isAdmin": false
+  },
+  {
+    "routePath": "/api/ready",
+    "methods": [
+      "GET"
+    ],
+    "policyTier": "public",
+    "responseFormat": "direct_domain_json",
+    "isApi": true,
+    "isAdmin": false
+  },
+  {
+    "routePath": "/api/seo/indexnow-key",
+    "methods": [
+      "GET"
+    ],
+    "policyTier": "authenticated_or_domain",
+    "responseFormat": "binary_redirect_xml_or_callback",
+    "isApi": true,
+    "isAdmin": false
+  },
+  {
+    "routePath": "/api/site/branding",
+    "methods": [
+      "GET"
+    ],
+    "policyTier": "public",
+    "responseFormat": "direct_domain_json",
+    "isApi": true,
+    "isAdmin": false
+  },
+  {
+    "routePath": "/api/site/content-config",
+    "methods": [
+      "GET"
+    ],
+    "policyTier": "public",
+    "responseFormat": "direct_domain_json",
+    "isApi": true,
+    "isAdmin": false
+  },
+  {
+    "routePath": "/api/site/subscription-faq",
+    "methods": [
+      "GET"
+    ],
+    "policyTier": "public",
+    "responseFormat": "direct_domain_json",
+    "isApi": true,
+    "isAdmin": false
+  },
+  {
+    "routePath": "/api/upload-binary",
+    "methods": [
+      "POST"
+    ],
+    "policyTier": "authenticated_or_domain",
+    "responseFormat": "binary_redirect_xml_or_callback",
+    "isApi": true,
+    "isAdmin": false
+  },
+  {
+    "routePath": "/api/user/activity-dashboard",
+    "methods": [
+      "GET"
+    ],
+    "policyTier": "authenticated_or_domain",
+    "responseFormat": "direct_domain_json",
+    "isApi": true,
+    "isAdmin": false
+  },
+  {
+    "routePath": "/api/user/api-key",
+    "methods": [
+      "GET",
+      "POST"
+    ],
+    "policyTier": "authenticated_or_domain",
+    "responseFormat": "success_flagged_json",
+    "isApi": true,
+    "isAdmin": false
+  },
+  {
+    "routePath": "/api/user/avatar-frame",
+    "methods": [
+      "POST"
+    ],
+    "policyTier": "authenticated_or_domain",
+    "responseFormat": "direct_domain_json",
+    "isApi": true,
+    "isAdmin": false
+  },
+  {
+    "routePath": "/api/user/avatar",
+    "methods": [
+      "GET",
+      "POST",
+      "DELETE"
+    ],
+    "policyTier": "authenticated_or_domain",
+    "responseFormat": "success_flagged_json",
+    "isApi": true,
+    "isAdmin": false
+  },
+  {
+    "routePath": "/api/user/cancel-deletion",
+    "methods": [
+      "POST"
+    ],
+    "policyTier": "authenticated_or_domain",
+    "responseFormat": "success_flagged_json",
+    "isApi": true,
+    "isAdmin": false
+  },
+  {
+    "routePath": "/api/user/deactivate",
+    "methods": [
+      "POST"
+    ],
+    "policyTier": "authenticated_or_domain",
+    "responseFormat": "success_flagged_json",
+    "isApi": true,
+    "isAdmin": false
+  },
+  {
+    "routePath": "/api/user/email",
+    "methods": [
+      "POST",
+      "DELETE"
+    ],
+    "policyTier": "authenticated_or_domain",
+    "responseFormat": "success_flagged_json",
+    "isApi": true,
+    "isAdmin": false
+  },
+  {
+    "routePath": "/api/user/follow",
+    "methods": [
+      "GET",
+      "POST"
+    ],
+    "policyTier": "authenticated_or_domain",
+    "responseFormat": "success_flagged_json",
+    "isApi": true,
+    "isAdmin": false
+  },
+  {
+    "routePath": "/api/user/notifications",
+    "methods": [
+      "GET",
+      "POST"
+    ],
+    "policyTier": "authenticated_or_domain",
+    "responseFormat": "success_flagged_json",
+    "isApi": true,
+    "isAdmin": false
+  },
+  {
+    "routePath": "/api/user/oauth-security",
+    "methods": [
+      "GET",
+      "POST"
+    ],
+    "policyTier": "authenticated_or_domain",
+    "responseFormat": "success_flagged_json",
+    "isApi": true,
+    "isAdmin": false
+  },
+  {
+    "routePath": "/api/user/oauth/[provider]",
+    "methods": [
+      "GET",
+      "DELETE"
+    ],
+    "policyTier": "authenticated_or_domain",
+    "responseFormat": "direct_domain_json",
+    "isApi": true,
+    "isAdmin": false
+  },
+  {
+    "routePath": "/api/user/onboarding",
+    "methods": [
+      "POST"
+    ],
+    "policyTier": "authenticated_or_domain",
+    "responseFormat": "direct_domain_json",
+    "isApi": true,
+    "isAdmin": false
+  },
+  {
+    "routePath": "/api/user/password",
+    "methods": [
+      "POST"
+    ],
+    "policyTier": "authenticated_or_domain",
+    "responseFormat": "success_flagged_json",
+    "isApi": true,
+    "isAdmin": false
+  },
+  {
+    "routePath": "/api/user/phone",
+    "methods": [
+      "POST",
+      "DELETE"
+    ],
+    "policyTier": "authenticated_or_domain",
+    "responseFormat": "success_flagged_json",
+    "isApi": true,
+    "isAdmin": false
+  },
+  {
+    "routePath": "/api/user/preferences",
+    "methods": [
+      "GET",
+      "PUT"
+    ],
+    "policyTier": "authenticated_or_domain",
+    "responseFormat": "success_flagged_json",
+    "isApi": true,
+    "isAdmin": false
+  },
+  {
+    "routePath": "/api/user/privacy",
+    "methods": [
+      "GET",
+      "PATCH"
+    ],
+    "policyTier": "authenticated_or_domain",
+    "responseFormat": "success_flagged_json",
+    "isApi": true,
+    "isAdmin": false
+  },
+  {
+    "routePath": "/api/user/profile",
+    "methods": [
+      "GET",
+      "PUT"
+    ],
+    "policyTier": "authenticated_or_domain",
+    "responseFormat": "direct_domain_json",
+    "isApi": true,
+    "isAdmin": false
+  },
+  {
+    "routePath": "/api/v1/[[...path]]",
+    "methods": [
+      "GET",
+      "POST"
+    ],
+    "policyTier": "legacyProxy",
+    "responseFormat": "upstream_proxy_passthrough",
+    "isApi": true,
+    "isAdmin": false
+  },
+  {
+    "routePath": "/api/v1/creative-agent/[[...path]]",
+    "methods": [
+      "GET",
+      "POST",
+      "PATCH",
+      "DELETE"
+    ],
+    "policyTier": "legacyProxy",
+    "responseFormat": "upstream_proxy_passthrough",
+    "isApi": true,
+    "isAdmin": false
+  },
+  {
+    "routePath": "/api/v1/get_upload_url",
+    "methods": [
+      "GET"
+    ],
+    "policyTier": "legacyProxy",
+    "responseFormat": "upstream_proxy_passthrough",
+    "isApi": true,
+    "isAdmin": false
+  },
+  {
+    "routePath": "/api/v1/upload-binary",
+    "methods": [
+      "POST"
+    ],
+    "policyTier": "legacyProxy",
+    "responseFormat": "upstream_proxy_passthrough",
+    "isApi": true,
+    "isAdmin": false
+  },
+  {
+    "routePath": "/api/webhooks/bilibili",
+    "methods": [
+      "GET",
+      "POST"
+    ],
+    "policyTier": "authenticated_or_domain",
+    "responseFormat": "binary_redirect_xml_or_callback",
+    "isApi": true,
+    "isAdmin": false
+  },
+  {
+    "routePath": "/api/webhooks/douyin",
+    "methods": [
+      "GET",
+      "POST"
+    ],
+    "policyTier": "authenticated_or_domain",
+    "responseFormat": "binary_redirect_xml_or_callback",
+    "isApi": true,
+    "isAdmin": false
+  },
+  {
+    "routePath": "/api/workflow/[[...path]]",
+    "methods": [
+      "GET",
+      "POST",
+      "PUT",
+      "DELETE"
+    ],
+    "policyTier": "legacyProxy",
+    "responseFormat": "upstream_proxy_passthrough",
+    "isApi": true,
+    "isAdmin": false
+  },
+  {
+    "routePath": "/auth/[provider]/callback",
+    "methods": [
+      "GET"
+    ],
+    "policyTier": "authenticated_or_domain",
+    "responseFormat": "binary_redirect_xml_or_callback",
+    "isApi": false,
+    "isAdmin": false
+  },
+  {
+    "routePath": "/auth/tiktok/callback",
+    "methods": [
+      "GET"
+    ],
+    "policyTier": "authenticated_or_domain",
+    "responseFormat": "binary_redirect_xml_or_callback",
+    "isApi": false,
+    "isAdmin": false
+  },
+  {
+    "routePath": "/auth/tiktok",
+    "methods": [
+      "GET"
+    ],
+    "policyTier": "authenticated_or_domain",
+    "responseFormat": "binary_redirect_xml_or_callback",
+    "isApi": false,
+    "isAdmin": false
+  },
+  {
+    "routePath": "/sitemap.xml",
+    "methods": [
+      "GET"
+    ],
+    "policyTier": "authenticated_or_domain",
+    "responseFormat": "binary_redirect_xml_or_callback",
+    "isApi": false,
+    "isAdmin": false
+  }
+]

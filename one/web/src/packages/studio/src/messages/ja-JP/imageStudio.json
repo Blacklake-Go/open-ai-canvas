@@ -1,0 +1,137 @@
+{
+  "uploadButton": {
+    "faceLabel": "顔",
+    "referenceImageLabel": "参考画像",
+    "addUpToImages": "{max} までの画像を追加します",
+    "singleSelectedTitle": "1 つの画像が選択されました — クリックしてさらに追加します (最大 {max})",
+    "multiSelectedTitle": "{max} 画像のうち {count} が選択されました — クリックして管理します",
+    "tooLargeAlert": "次の画像は大きすぎます (最大 10MB): {names}",
+    "uploadFailedAlert": "画像のアップロードに失敗しました: {message}",
+    "headerTitle": "参考画像",
+    "selectUpTo": "最大 {max} の画像を選択します",
+    "doneButton": "✓ 完了 ({count})",
+    "uploadFilesButton": "ファイルをアップロードする",
+    "uploadNewButton": "新規アップロード",
+    "emptyState": "まだアップロードはありません",
+    "removeFromHistory": "履歴から削除",
+    "selectedCount": "{max} の {count} が選択されました",
+    "useSelected": "選択したものを使用",
+    "imageName": "画像{n}",
+    "addReferenceLabel": "参照画像を追加",
+    "historyLabel": "アップロード履歴",
+    "uploadUnknownFailed": "アップロードに失敗しました。再試行してください"
+  },
+  "modelDropdown": {
+    "categoryAll": "全て",
+    "categoryT2I": "テキストから画像へ",
+    "categoryI2I": "画像から画像へ",
+    "allProviders": "すべてのプロバイダー",
+    "searchPlaceholder": "モデルを検索...",
+    "modelsSuffix": "モデル",
+    "noModelsFound": "モデルが見つかりません",
+    "selectModelHeader": "モデルを選択"
+  },
+  "gallery": {
+    "generatedImageAlt": "生成された画像",
+    "download": "ダウンロード",
+    "delete": "消去",
+    "deleteConfirm": "この生成されたアイテムを削除してもよろしいですか?",
+    "deleteFailed": "アイテムの削除に失敗しました",
+    "noPrompt": "プロンプトは提供されません",
+    "modelFallback": "イメージスタジオ"
+  },
+  "emptyState": {
+    "heading": "で作成を始めましょう",
+    "subtitle": "シーン、キャラクター、雰囲気、スタイルを説明し、それが現実になるのを見てください。"
+  },
+  "qualityLabels": {
+    "standard": "標準",
+    "high": "高画質",
+    "medium": "中",
+    "low": "高速"
+  },
+  "negativePrompt": {
+    "trigger": "ネガティブ",
+    "chip": "ネガティブ：{text}",
+    "title": "ネガティブプロンプト",
+    "placeholder": "避けたい要素を入力してください",
+    "clear": "クリア",
+    "done": "完了",
+    "separator": "、",
+    "promptSuffix": "次の要素を避ける：{value}",
+    "presetBlurry": "ぼやけ",
+    "presetLowQuality": "低品質",
+    "presetDeformed": "変形",
+    "presetExtraFingers": "指の重複",
+    "presetWatermark": "透かし",
+    "presetText": "文字",
+    "presetDark": "暗すぎる",
+    "presetEdges": "エッジの破綻"
+  },
+  "regenerateConfirm": {
+    "title": "このバッチを再生成しますか？",
+    "description": "同じプロンプトとパラメータで {count} 枚生成します。",
+    "cost": "推定消費",
+    "cancel": "キャンセル",
+    "confirm": "再生成する"
+  },
+  "promptBar": {
+    "placeholderMultiImage": "選択された {count} 画像 — 変換の説明 (オプション)",
+    "placeholderI2I": "この画像を変換する方法を説明します (オプション)",
+    "placeholderT2I": "作りたいイメージを説明してください",
+    "swapFaceLabel": "顔を交換する",
+    "effectFallback": "効果",
+    "drawButton": "描く",
+    "generating": "生成中...",
+    "generateButton": "生成する",
+    "mentionTitle": "@できる項目"
+  },
+  "popovers": {
+    "model": "モデル",
+    "aspectRatio": "アスペクト比",
+    "resolution": "解決",
+    "quality": "品質",
+    "effectType": "エフェクトタイプ"
+  },
+  "errors": {
+    "noImageReferenceSupport": "{name} は画像参照をサポートしていません。",
+    "uploadReferenceFirst": "まずは参考画像をアップロードしてください。",
+    "uploadSwapFaceFirst": "交換顔画像をアップロードしてください。",
+    "enterPromptFirst": "イメージを生成するためのプロンプトを入力してください。",
+    "generationCapabilityUnavailable": "このモデルには、検証済みのサーバー生成能力がまだありません。",
+    "generationFailed": "画像生成に失敗しました"
+  },
+  "fullscreen": {
+    "previewAlt": "全画面プレビュー"
+  },
+  "mediaMenu": {
+    "image": "画像",
+    "imageDesc": "リアルでスタイリッシュな画像を生成",
+    "video": "動画",
+    "videoDesc": "映画クオリティの映像を生成",
+    "script": "シナリオ",
+    "scriptDesc": "クリエイティブな脚本とセリフを生成",
+    "audio": "音声",
+    "audioDesc": "効果音や高品質ナレーションを生成"
+  },
+  "paramsPanel": {
+    "titleRatio": "アスペクト比",
+    "titleResolution": "解像度",
+    "titleQuantity": "生成枚数",
+    "titleDimensions": "サイズ",
+    "smartRatio": "スマート比率",
+    "standard15k": "標準 1.5K",
+    "hd2k": "高解像度 2K ✦",
+    "ultra4k": "超高解像度 4K ✦",
+    "smartReference": "スマート参照",
+    "addReference": "参照画像を追加",
+    "referenceCount": "参照画像 ({count}/{max})",
+    "autoSwitchedToI2I": "参照対応モデルに切り替えました: {model}",
+    "autoSwitchedToT2I": "テキスト生成モデルに戻しました",
+    "modeImageGen": "画像生成",
+    "modeImageToImage": "画像から画像",
+    "creditPerImage": "✦ {cost}/枚",
+    "creditPerImageOriginal": "11/枚",
+    "batchCountUnit": "{count} 枚"
+  }
+}

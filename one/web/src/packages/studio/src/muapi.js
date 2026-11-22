@@ -1,0 +1,1349 @@
+import { getModelById, getVideoModelById, getI2IModelById, getI2VModelById, getV2VModelById, getRecastModelById, getLipSyncModelById, getAudioModelById, getMotionControlModelById } from './models.js';
+import {
+    buildVideoToolPayload,
+    serializeVideoToolOptions,
+} from './videoToolCapabilities.js';
+import { buildImageSizePayload } from './imageSizing.js';
+import { buildImageInputPayload, getImageInputValidationError, normalizePrimaryImageUrls } from './imageInputContracts.js';
+import { pollForGenerationResult } from './utils/generationLifecycle.js';
+import { getModelMediaCapabilities, mapReferenceParams } from './modelCapabilities.js';
+import { buildSupplementalInputPayload } from './modelParameters.js';
+import { getGroupedVideoConfiguration } from './groupedVideoModels.js';
+import { submitPlatformGeneration } from './platformGeneration.js';
+import { getServerModelMeta } from './modelDescriptions.js';
+
+// In an http(s) browser we route through the host app's proxy (Next.js routes
+// under /api/* re-issue the call server-side) so api.muapi.ai CORS is bypassed.
+// SSR (no window) and Electron's file:// renderer call the upstream directly.
+const BASE_URL = (typeof window !== 'undefined' && window.location?.protocol?.startsWith('http'))
+    ? '/api'
+    : 'https://api.muapi.ai';
+const PROXY_WF_BASE = '/api/workflow';
+const FILE_UPLOAD_TIMEOUT_MS = 300_000;
+const FILE_UPLOAD_PENDING_PROGRESS = 99;
+
+async function uploadViaProviderProxy(apiKey, file, onProgress) {
+    let uploadKey = apiKey || (typeof window !== 'undefined' && window.__SUPDANCE_REQUIRE_API_KEY__
+        ? await window.__SUPDANCE_REQUIRE_API_KEY__()
+        : null);
+    if (!uploadKey && typeof document !== 'undefined') {
+        uploadKey = document.cookie.match(/(?:supdance_key|muapi_key)=([^;]+)/)?.[1] || null;
+    }
+    uploadKey ||= 'supdance-account-session';
+
+    return new Promise((resolve, reject) => {
+        const uploadEndpoint = (typeof window !== 'undefined' && window.location?.protocol?.startsWith('http'))
+            ? '/api/assets/upload'
+            : `${BASE_URL}/api/v1/upload_file`;
+        const xhr = new XMLHttpRequest();
+        xhr.open('POST', uploadEndpoint);
+        xhr.withCredentials = true;
+        if (uploadEndpoint !== '/api/assets/upload') {
+            xhr.setRequestHeader('x-api-key', uploadKey);
+        }
+        xhr.timeout = FILE_UPLOAD_TIMEOUT_MS;
+        xhr.upload.onprogress = (event) => {
+            if (event.lengthComputable) onProgress?.(Math.min(Math.round((event.loaded / event.total) * 100), FILE_UPLOAD_PENDING_PROGRESS));
+        };
+        xhr.onload = () => {
+            if (xhr.status < 200 || xhr.status >= 300) {
+                let payload = null;
+                try { payload = JSON.parse(xhr.responseText); } catch { /* non-json body */ }
+                const upstream = payload?.detail?.error || payload?.error ||
+                    (typeof payload?.detail === 'string' ? { message: payload.detail } : null);
+                const rawDetail = typeof upstream?.message === 'string' ? upstream.message
+                    : (typeof payload?.detail === 'string' ? payload.detail : xhr.statusText);
+                const detail = rawDetail || '上传服务暂时不可用';
+                // The fallback channel bills against the server-side provider account, so a
+                // credit 403 there says nothing about this visitor's session; prompting for
+                // login just traps them in a loop they cannot get out of.
+                const providerQuota = String(upstream?.code || '').toUpperCase().includes('CREDIT')
+                    || /credit/i.test(detail);
+                if (!providerQuota) notifyAuthRequired(xhr.status, detail);
+                reject(new Error(providerQuota
+                    ? '参考图上传通道暂不可用：对象存储未配置且备用上传额度不足，请联系管理员'
+                    : `文件上传失败：${xhr.status} ${detail}`.trim()));
+                return;
+            }
+            try {
+                const data = JSON.parse(xhr.responseText);
+                const fileUrl = data.url || data.file_url || data.asset?.url || data.data?.url;
+                if (!fileUrl) throw new Error('上传服务未返回文件地址');
+                onProgress?.(100);
+                resolve(fileUrl);
+            } catch {
+                reject(new Error('上传服务返回了无效响应'));
+            }
+        };
+        xhr.onerror = () => reject(new Error('文件上传网络错误'));
+        xhr.ontimeout = () => reject(new Error('文件上传超时，请稍后重试'));
+        const formData = new FormData();
+        formData.append('file', file);
+        xhr.send(formData);
+    });
+}
+
+function notifyAuthRequired(status, detail) {
+    if (typeof window === 'undefined') return;
+    if (status !== 401 && status !== 403) return;
+    window.dispatchEvent(new CustomEvent('muapi:auth-required', { detail: { status, message: detail } }));
+}
+
+function assertRequiredPrompt(model, params) {
+    if (model?.promptRequired && !String(params.prompt || '').trim()) {
+        throw new Error('Prompt is required for this model.');
+    }
+}
+
+function includeRequiredArrayDefaults(model, payload) {
+    const defaults = {};
+    for (const field of model?.required || []) {
+        if (payload[field] !== undefined || model?.inputs?.[field]?.type !== 'array') continue;
+        defaults[field] = [];
+    }
+    return Object.keys(defaults).length > 0 ? { ...defaults, ...payload } : payload;
+}
+
+async function pollForResult(requestId, key, maxAttempts = 900, interval = 2000) {
+    return pollForGenerationResult({
+        baseUrl: BASE_URL,
+        requestId,
+        apiKey: key,
+        maxAttempts,
+        interval,
+        onAuthRequired: notifyAuthRequired,
+    });
+}
+
+function normalizePredictionResult(submitData, result, outputUrl) {
+    const requestId = submitData?.request_id || submitData?.id || result?.request_id || result?.id;
+    return {
+        ...result,
+        ...(requestId ? { request_id: requestId } : {}),
+        url: outputUrl,
+    };
+}
+
+const VALID_STUDIO_IDS = new Set([
+    'home', 'image', 'video', 'cinema', 'vibemotion', 'recast',
+    'lipsync', 'marketing', 'clipping', 'motioncontrol', 'audio', 'layers', 'canvas', 'studio'
+]);
+
+export function resolveStudioId(explicitStudioId, fallbackStudioId = 'studio') {
+    if (explicitStudioId && typeof explicitStudioId === 'string' && explicitStudioId.trim() && explicitStudioId !== 'studio') {
+        return explicitStudioId.trim().toLowerCase();
+    }
+    if (typeof window !== 'undefined' && window.location) {
+        try {
+            const params = new URLSearchParams(window.location.search || '');
+            const tab = (params.get('tab') || '').trim().toLowerCase();
+            if (tab && VALID_STUDIO_IDS.has(tab)) return tab;
+            const pathParts = (window.location.pathname || '').split('/').filter(Boolean);
+            const studioIdx = pathParts.indexOf('studio');
+            if (studioIdx >= 0 && pathParts[studioIdx + 1]) {
+                const seg = pathParts[studioIdx + 1].toLowerCase().replace(/[-_]/g, '');
+                if (VALID_STUDIO_IDS.has(seg)) return seg;
+            }
+        } catch {}
+    }
+    return fallbackStudioId || 'studio';
+}
+
+export async function requestGenerationQuote(modelId, parameters = {}, options = {}) {
+    const idemKey = options.idempotencyKey
+        || `quote_${Date.now()}_${Math.random().toString(36).substring(2, 10)}`;
+    const quoteRes = await fetch('/api/generation/quote', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'Idempotency-Key': idemKey,
+        },
+        body: JSON.stringify({ modelId, parameters }),
+        signal: options.signal,
+    });
+    if (!quoteRes.ok) {
+        const errData = await quoteRes.json().catch(() => ({}));
+        const errMsg = errData.error || '获取服务端模型报价失败，请稍后重试';
+        if (quoteRes.status === 401) {
+            notifyAuthRequired(401, errMsg);
+            throw Object.assign(new Error('请先登录后再进行创作'), { code: 'UNAUTHENTICATED', status: 401 });
+        }
+        throw Object.assign(new Error(errMsg), {
+            code: errData.code || 'QUOTE_FAILED',
+            status: quoteRes.status,
+        });
+    }
+    const quote = await quoteRes.json();
+    const quoteId = quote.quoteId || quote.quote_id || null;
+    const credits = quote.creditsQuoted ?? quote.credits ?? null;
+    if (!quoteId) {
+        throw Object.assign(new Error('未获取到有效的服务端报价单 (quoteId)'), { code: 'QUOTE_REQUIRED' });
+    }
+    if (typeof window !== 'undefined' && credits != null) {
+        window.dispatchEvent(new CustomEvent('supdance:quote', {
+            detail: {
+                modelId,
+                credits,
+                quoteId,
+                expiresAt: quote.expiresAt || quote.expires_at || null,
+                pricingBreakdown: quote.pricingBreakdown || quote.pricing_breakdown || null,
+            },
+        }));
+    }
+    return {
+        quoteId,
+        quote_id: quoteId,
+        credits,
+        creditsQuoted: credits,
+        expiresAt: quote.expiresAt || quote.expires_at || null,
+        pricingBreakdown: quote.pricingBreakdown || quote.pricing_breakdown || null,
+    };
+}
+
+async function submitAndPoll(endpoint, payload, key, onRequestId, maxAttempts = 60, studioId = 'studio', platformModelId = endpoint, idempotencyKey, resumeExistingTask) {
+    // The shell opens the account dialog only when a model request is about
+    // to consume quota. It resolves after login so the original request can
+    // continue without making the user click Generate a second time.
+    const accountGate = typeof window !== 'undefined' && window.__SUPDANCE_REQUIRE_ACCOUNT__;
+    let ownerUserId;
+    if (accountGate) {
+        const user = await accountGate();
+        ownerUserId = user?.id || user?.userId;
+        if (!user) throw new Error('Generation cancelled: account login is required.');
+    }
+    if (typeof window !== 'undefined' && BASE_URL === '/api') {
+        if (!platformModelId) throw new Error('A server-admitted model ID is required for platform generation.');
+        const resolvedStudioId = resolveStudioId(studioId);
+        const canonicalModelId = getServerModelMeta(platformModelId)?.id || platformModelId;
+        return submitPlatformGeneration({
+            modelId: canonicalModelId,
+            capabilityVersion: getServerModelMeta(platformModelId)?.capabilityVersion,
+            studioId: resolvedStudioId,
+            prompt: payload.prompt || '',
+            parameters: payload,
+            label: payload.label,
+            idempotencyKey,
+            ownerUserId,
+            resumeExistingTask,
+            onRequestId,
+            maxAttempts,
+            intervalMs: 2_000,
+            onAuthRequired: notifyAuthRequired,
+            onPhase: (phase, requestId) => {
+                window.dispatchEvent(new CustomEvent('supdance:credits-updated', {
+                    detail: { phase, requestId, modelId: canonicalModelId, studioId: resolvedStudioId },
+                }));
+            },
+        }).catch((error) => {
+            if (error.status === 402 || error.code === 'INSUFFICIENT_CREDITS') {
+                window.dispatchEvent(new CustomEvent('supdance:insufficient-credits', {
+                    detail: { message: error.message },
+                }));
+            }
+            throw error;
+        });
+    }
+    let requestKey = key;
+    if (!requestKey && typeof window !== 'undefined' && window.__SUPDANCE_REQUIRE_API_KEY__) {
+        requestKey = await window.__SUPDANCE_REQUIRE_API_KEY__();
+    }
+    if (!requestKey) {
+        const cookieMatch = typeof document !== 'undefined' && document.cookie.match(/(?:supdance_key|muapi_key)=([^;]+)/);
+        if (cookieMatch) requestKey = cookieMatch[1];
+    }
+    if (!requestKey) {
+        requestKey = 'supdance-account-session';
+    }
+
+    const url = `${BASE_URL}/api/v1/${endpoint}`;
+    const response = await fetch(url, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'x-api-key': requestKey },
+        body: JSON.stringify(payload)
+    });
+    if (!response.ok) {
+        const errText = await response.text();
+        notifyAuthRequired(response.status, errText);
+        throw new Error(`API Request Failed: ${response.status} ${response.statusText} - ${errText.slice(0, 100)}`);
+    }
+    const submitData = await response.json();
+    const requestId = submitData.request_id || submitData.id;
+    if (!requestId) return submitData;
+    if (onRequestId) onRequestId(requestId);
+    const result = await pollForResult(requestId, requestKey, maxAttempts);
+    const outputUrl = result.outputs?.[0] || result.url || result.output?.url;
+    return normalizePredictionResult(submitData, result, outputUrl);
+}
+
+export async function generateImage(apiKey, params) {
+    const modelInfo = getModelById(params.model);
+    const endpoint = params.model || modelInfo?.id || modelInfo?.endpoint;
+    const usePublicPlatformParameters = typeof window !== 'undefined'
+        && BASE_URL === '/api'
+        && params.public_parameters
+        && typeof params.public_parameters === 'object'
+        && !Array.isArray(params.public_parameters);
+    const payload = {
+        ...buildSupplementalInputPayload(modelInfo, params),
+        prompt: params.prompt
+    };
+    if (modelInfo) Object.assign(payload, buildImageSizePayload(modelInfo, params.aspect_ratio));
+    else if (params.aspect_ratio) payload.aspect_ratio = params.aspect_ratio;
+    if (params.resolution) payload.resolution = params.resolution;
+    if (params.quality) payload.quality = params.quality;
+    if (params.image_url) {
+        payload.image_url = params.image_url;
+        payload.strength = params.strength || 0.6;
+    } else if (params.images_list) {
+        payload.images_list = params.images_list;
+    }
+    if (params.negative_prompt) payload.negative_prompt = params.negative_prompt;
+    if (params.seed != null && params.seed !== -1) payload.seed = params.seed;
+    const submittedPayload = usePublicPlatformParameters ? params.public_parameters : payload;
+    return submitAndPoll(endpoint, submittedPayload, apiKey, params.onRequestId, 180, resolveStudioId(params.studioId, 'image'), endpoint, params.idempotencyKey, params.resumeExistingTask);
+}
+
+export async function generateI2I(apiKey, params) {
+    const modelInfo = getI2IModelById(params.model);
+    const endpoint = params.model || modelInfo?.id || modelInfo?.endpoint;
+    const imageField = modelInfo?.imageField || 'image_url';
+    const imagesList = normalizePrimaryImageUrls(params.images_list, params.image_url);
+    const inputError = getImageInputValidationError(modelInfo, 'i2i', {
+        prompt: params.prompt,
+        primaryImageUrls: imagesList,
+        auxiliaryImageUrls: params,
+    });
+    const usePublicPlatformParameters = typeof window !== 'undefined'
+        && BASE_URL === '/api'
+        && params.public_parameters
+        && typeof params.public_parameters === 'object'
+        && !Array.isArray(params.public_parameters);
+    if (inputError && !usePublicPlatformParameters) throw new Error(inputError);
+    const payload = {
+        ...mapReferenceParams(modelInfo, params),
+        ...buildSupplementalInputPayload(modelInfo, params),
+        ...buildImageInputPayload(modelInfo, 'i2i', params)
+    };
+    if (imagesList.length > 0) {
+        if (imageField === 'images_list') payload.images_list = imagesList;
+        else payload[imageField] = imagesList[0];
+    }
+    if (modelInfo) Object.assign(payload, buildImageSizePayload(modelInfo, params.aspect_ratio));
+    else if (params.aspect_ratio) payload.aspect_ratio = params.aspect_ratio;
+    if (params.resolution) payload.resolution = params.resolution;
+    if (params.quality) payload.quality = params.quality;
+    if (modelInfo?.inputs?.name) {
+        payload.name = params.name || modelInfo.inputs.name.default;
+    }
+    if (params.negative_prompt) payload.negative_prompt = params.negative_prompt;
+    if (params.seed != null && params.seed !== -1) payload.seed = params.seed;
+    const submittedPayload = usePublicPlatformParameters ? params.public_parameters : payload;
+    return submitAndPoll(endpoint, submittedPayload, apiKey, params.onRequestId, 180, resolveStudioId(params.studioId, 'image'), endpoint, params.idempotencyKey, params.resumeExistingTask);
+}
+
+export async function decomposeLayers(apiKey, params) {
+    const endpoint = 'bytedance-seedream-5.0-pro-layer';
+    const payload = {
+        image_url: params.image_url,
+        prompt: params.prompt || '',
+        resolution: params.resolution || 'auto',
+        output_format: params.output_format || 'png'
+    };
+    const result = await submitAndPoll(endpoint, payload, apiKey, params.onRequestId, 300, resolveStudioId(params.studioId, 'layers'));
+    const rawImages = result.images || result.output?.images || result.outputs || (result.url ? [result.url] : []);
+    const images = Array.isArray(rawImages) ? rawImages : [rawImages];
+    return { ...result, images };
+}
+
+export async function generateVideo(apiKey, params) {
+    const modelInfo = getVideoModelById(params.model);
+    const endpoint = params.model || modelInfo?.id || modelInfo?.endpoint;
+    const mediaCapabilities = getModelMediaCapabilities(modelInfo);
+    assertRequiredPrompt(modelInfo, params);
+    let payload = {
+        ...mapReferenceParams(modelInfo, params),
+        ...buildSupplementalInputPayload(modelInfo, params)
+    };
+    if (params.prompt) payload.prompt = params.prompt;
+    if (typeof window !== 'undefined' && BASE_URL === '/api' && params.task_type) payload.task_type = params.task_type;
+    if (params.request_id) payload.request_id = params.request_id;
+    if (params.aspect_ratio) payload.aspect_ratio = params.aspect_ratio;
+    if (params.duration) payload.duration = params.duration;
+    if (params.resolution) payload.resolution = params.resolution;
+    if (typeof params.generate_audio === 'boolean') payload.generate_audio = params.generate_audio;
+    if (params.quality) payload.quality = params.quality;
+    if (params.mode) payload.mode = params.mode;
+    if (!mediaCapabilities.image.field && params.image_url) payload.image_url = params.image_url;
+    if (!mediaCapabilities.image.field && params.images_list?.length > 0) payload.images_list = params.images_list;
+    if (!mediaCapabilities.video.field && params.videos_list?.length > 0) payload.videos_list = params.videos_list;
+    if (!mediaCapabilities.video.field && params.video_files?.length > 0) payload.video_files = params.video_files;
+    if (params.negative_prompt) payload.negative_prompt = params.negative_prompt;
+    if (params.seed != null && params.seed !== -1) payload.seed = params.seed;
+    Object.assign(payload, serializeVideoToolOptions(modelInfo, params.options));
+    payload = includeRequiredArrayDefaults(modelInfo, payload);
+    return submitAndPoll(endpoint, payload, apiKey, params.onRequestId, 900, resolveStudioId(params.studioId, 'video'), endpoint, params.idempotencyKey, params.resumeExistingTask);
+}
+
+export async function generateI2V(apiKey, params) {
+    const modelInfo = getI2VModelById(params.model);
+    const endpoint = modelInfo?.endpoint || params.model;
+    assertRequiredPrompt(modelInfo, params);
+    let payload = {
+        ...mapReferenceParams(modelInfo, params),
+        ...buildSupplementalInputPayload(modelInfo, params)
+    };
+    if (params.prompt) payload.prompt = params.prompt;
+    if (typeof window !== 'undefined' && BASE_URL === '/api' && params.task_type) payload.task_type = params.task_type;
+    if (params.aspect_ratio) payload.aspect_ratio = params.aspect_ratio;
+    if (params.duration) payload.duration = params.duration;
+    if (params.resolution) payload.resolution = params.resolution;
+    if (typeof params.generate_audio === 'boolean') payload.generate_audio = params.generate_audio;
+    if (params.quality) payload.quality = params.quality;
+    if (params.mode) payload.mode = params.mode;
+    if (modelInfo?.inputs?.name) {
+        payload.name = params.name || modelInfo.inputs.name.default;
+    }
+    if (params.negative_prompt) payload.negative_prompt = params.negative_prompt;
+    if (params.seed != null && params.seed !== -1) payload.seed = params.seed;
+    payload = includeRequiredArrayDefaults(modelInfo, payload);
+    return submitAndPoll(endpoint, payload, apiKey, params.onRequestId, 900, resolveStudioId(params.studioId, 'video'), endpoint, params.idempotencyKey, params.resumeExistingTask);
+}
+
+export async function generateMarketingStudioAd(apiKey, params) {
+    const endpoint = params.resolution === '1080p' ? 'sd-2-vip-omni-reference-1080p' : 'seedance-2-vip-omni-reference';
+    const payload = {
+        prompt: params.prompt,
+        aspect_ratio: params.aspect_ratio || '16:9',
+        duration: params.duration || 5,
+        images_list: params.images_list || [],
+        video_files: params.video_files || []
+    };
+    return submitAndPoll(endpoint, payload, apiKey, params.onRequestId, 900, resolveStudioId(params.studioId, 'marketing'));
+}
+
+export async function processV2V(apiKey, params) {
+    const modelInfo = getV2VModelById(params.model);
+    const endpoint = modelInfo?.endpoint || params.model;
+    const toolPayload = buildVideoToolPayload(modelInfo, params);
+    let payload = {
+        ...buildSupplementalInputPayload(modelInfo, params),
+        ...toolPayload,
+        ...mapReferenceParams(modelInfo, params),
+    };
+    if (typeof window !== 'undefined' && BASE_URL === '/api' && params.task_type) payload.task_type = params.task_type;
+    if (modelInfo?.hasPrompt && params.prompt) {
+        payload.prompt = params.prompt;
+    }
+    if (getGroupedVideoConfiguration(modelInfo?.id)) {
+        for (const field of ['duration', 'aspect_ratio', 'resolution', 'quality']) {
+            if (modelInfo.inputs?.[field] && params[field] !== undefined) {
+                payload[field] = params[field];
+            }
+        }
+    }
+    payload = includeRequiredArrayDefaults(modelInfo, payload);
+    return submitAndPoll(endpoint, payload, apiKey, params.onRequestId, 900, resolveStudioId(params.studioId, 'video'));
+}
+
+export async function estimateV2VCost(params, signal) {
+    const modelInfo = getV2VModelById(params?.model);
+    const endpoint = modelInfo?.endpoint || params?.model;
+    if (!endpoint) {
+        throw new Error('A V2V model is required to estimate cost.');
+    }
+
+    const payload = buildVideoToolPayload(modelInfo, params);
+    const response = await fetch(`${BASE_URL}/api/v1/models/${endpoint}/estimate-cost`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+        signal,
+    });
+
+    if (!response.ok) {
+        const errText = await response.text();
+        throw new Error(`Cost estimate failed: ${response.status} ${response.statusText} - ${errText.slice(0, 100)}`);
+    }
+
+    let data;
+    try {
+        data = await response.json();
+    } catch {
+        throw new Error('Cost estimate returned invalid JSON.');
+    }
+
+    if (typeof data?.cost !== 'number' || !Number.isFinite(data.cost) || data.cost < 0) {
+        throw new Error('Cost estimate returned an invalid cost.');
+    }
+    if (typeof data.currency !== 'string' || !/^[A-Za-z]{3}$/.test(data.currency.trim())) {
+        throw new Error('Cost estimate returned an invalid currency.');
+    }
+
+    return {
+        cost: data.cost,
+        currency: data.currency.trim().toUpperCase(),
+    };
+}
+
+export async function processRecast(apiKey, params) {
+    const modelInfo = getRecastModelById(params.model);
+    const endpoint = modelInfo?.endpoint || params.model;
+    const videoField = modelInfo?.videoField || 'video_url';
+    const payload = { [videoField]: params.video_url };
+    if (modelInfo?.imageField && params.image_url) {
+        payload[modelInfo.imageField] = params.image_url;
+    }
+    if (modelInfo?.hasPrompt && params.prompt) {
+        payload.prompt = params.prompt;
+    }
+    if (params.aspect_ratio) {
+        payload.aspect_ratio = params.aspect_ratio;
+    }
+    if (params.character_orientation) {
+        payload.character_orientation = params.character_orientation;
+    }
+    return submitAndPoll(endpoint, payload, apiKey, params.onRequestId, 900, resolveStudioId(params.studioId, 'recast'));
+}
+
+export async function processMotionControl(apiKey, params) {
+    const model = params.model || 'seedance-2.5-motion-control';
+    const mode = params.mode || 'motion_transfer';
+    const internalPrompt = mode === 'objects_swap'
+        ? "Keep the rest of the scene as filmed, swap the characters, products, or clothes with the reference images."
+        : "Extract motion from the reference video and rebuild the scene with the new characters and assets, preserving the original motion, choreography, and camera movements.";
+
+    const userPrompt = String(params.prompt || '').trim();
+    const finalPrompt = userPrompt ? `${internalPrompt} ${userPrompt}` : internalPrompt;
+
+    let imagesList = [];
+    if (Array.isArray(params.images_list)) {
+        imagesList = params.images_list;
+    } else if (params.images) {
+        imagesList = Array.isArray(params.images) ? params.images : [params.images];
+    } else if (params.image_url) {
+        imagesList = [params.image_url];
+    }
+
+    let duration = Number(params.duration) || 5;
+
+    const payload = {
+        video_url: params.video_url,
+        images_list: imagesList,
+        aspect_ratio: params.aspect_ratio || '16:9',
+        duration: duration,
+        generate_audio: !!params.generate_audio,
+        prompt: finalPrompt
+    };
+
+    if (model === 'seedance-2-motion-control') {
+        if (payload.duration > 15) payload.duration = 15;
+        if (payload.duration < 4) payload.duration = 4;
+        if (payload.images_list.length > 9) payload.images_list = payload.images_list.slice(0, 9);
+        payload.quality = params.quality === 'basic' ? 'basic' : 'high';
+        if (params.seed !== undefined && params.seed !== -1) payload.seed = Number(params.seed);
+    } else {
+        if (payload.duration > 30) payload.duration = 30;
+        if (payload.duration < 4) payload.duration = 4;
+        if (payload.images_list.length > 30) payload.images_list = payload.images_list.slice(0, 30);
+        payload.high_bitrate = !!params.high_bitrate;
+        if (params.seed !== undefined && params.seed !== -1) payload.seed = Number(params.seed);
+    }
+
+    return submitAndPoll(model, payload, apiKey, params.onRequestId, 900, resolveStudioId(params.studioId, 'motioncontrol'));
+}
+
+export async function processLipSync(apiKey, params) {
+    const modelInfo = getLipSyncModelById(params.model);
+    const endpoint = modelInfo?.endpoint || params.model;
+    const payload = {};
+    if (params.audio_url) payload.audio_url = params.audio_url;
+    if (params.image_url) payload.image_url = params.image_url;
+    if (params.video_url) payload.video_url = params.video_url;
+    if (modelInfo?.hasPrompt) payload.prompt = params.prompt || '';
+    if (params.resolution) payload.resolution = params.resolution;
+    if (params.seed !== undefined && params.seed !== -1) payload.seed = params.seed;
+    return submitAndPoll(endpoint, payload, apiKey, params.onRequestId, 900, resolveStudioId(params.studioId, 'lipsync'));
+}
+
+export async function generateAudio(apiKey, params) {
+    const modelId = params._modelId || params.model;
+    const modelInfo = getAudioModelById(modelId);
+    const endpoint = modelInfo?.endpoint || modelId;
+    const payload = {};
+    const skipKeys = ['_modelId', 'onRequestId', 'studioId', 'idempotencyKey', 'resumeExistingTask'];
+    for (const key in params) {
+        if (!skipKeys.includes(key) && params[key] !== undefined && params[key] !== null) {
+            payload[key] = params[key];
+        }
+    }
+    return submitAndPoll(endpoint, payload, apiKey, params.onRequestId, 900, resolveStudioId(params.studioId, 'audio'), endpoint, params.idempotencyKey, params.resumeExistingTask);
+}
+
+export async function uploadFile(apiKey, file, onProgress, { stableAssetUrl = false } = {}) {
+    if (!file || typeof file.size !== 'number') throw new Error('请选择有效文件');
+    const accountGate = typeof window !== 'undefined' && window.__SUPDANCE_REQUIRE_ACCOUNT__;
+    if (accountGate) {
+        const user = await accountGate();
+        if (!user) throw new Error('LOGIN_CANCELLED');
+    }
+    const type = String(file.type || '').startsWith('video/')
+        ? 'video'
+        : String(file.type || '').startsWith('audio/')
+            ? 'audio'
+            : 'image';
+
+    const formData = new FormData();
+    formData.append('file', file);
+    formData.append('type', type);
+
+    const assetUrl = await new Promise((resolve, reject) => {
+        const xhr = new XMLHttpRequest();
+        xhr.open('POST', '/api/assets/upload');
+        xhr.timeout = FILE_UPLOAD_TIMEOUT_MS;
+        xhr.upload.onprogress = (event) => {
+            if (event.lengthComputable) {
+                onProgress?.(Math.min(Math.round((event.loaded / event.total) * 100), 95));
+            }
+        };
+        xhr.onload = () => {
+            if (xhr.status >= 200 && xhr.status < 300) {
+                try {
+                    const res = JSON.parse(xhr.responseText);
+                    const asset = res.asset || res.data?.asset;
+                    if (stableAssetUrl && !asset?.id) {
+                        return reject(new Error('上传结果缺少素材编号，请重新上传'));
+                    }
+                    const url = stableAssetUrl && asset?.id
+                        ? `/api/assets/${encodeURIComponent(asset.id)}/download?inline=1`
+                        : (res.url || asset?.url);
+                    if (url) {
+                        onProgress?.(100);
+                        return resolve(url);
+                    }
+                    reject(new Error(res.error || '上传成功但未返回有效地址'));
+                } catch (e) {
+                    reject(new Error('上传响应解析失败'));
+                }
+            } else {
+                try {
+                    const res = JSON.parse(xhr.responseText);
+                    reject(new Error(res.error || `文件上传失败：${xhr.status}`));
+                } catch {
+                    reject(new Error(`文件上传失败：${xhr.status}`));
+                }
+            }
+        };
+        xhr.onerror = () => reject(new Error('文件上传网络错误'));
+        xhr.ontimeout = () => reject(new Error('文件上传超时，请稍后重试'));
+        xhr.send(formData);
+    });
+
+    return assetUrl;
+}
+
+export async function getUserBalance(apiKey) {
+    const response = await fetch(`${BASE_URL}/api/v1/account/balance`, {
+        headers: {
+            'Content-Type': 'application/json',
+            'x-api-key': apiKey
+        }
+    });
+    if (!response.ok) {
+        const errText = await response.text();
+        notifyAuthRequired(response.status, errText);
+        throw new Error(`Failed to fetch balance: ${response.status} - ${errText.slice(0, 100)}`);
+    }
+    return await response.json();
+}
+
+export async function getTemplateWorkflows(apiKey) {
+    const response = await fetch(`${BASE_URL}/workflow/get-template-workflows`, {
+        headers: {
+            'Content-Type': 'application/json',
+            'x-api-key': apiKey
+        }
+    });
+    if (!response.ok) {
+        // Templates are optional. Older MuAPI deployments do not expose this
+        // endpoint; the Studio must render its empty state instead of failing
+        // the whole Workflows workbench on a harmless 404.
+        if (response.status === 404) return [];
+        const errText = await response.text();
+        throw new Error(`Failed to fetch template workflows: ${response.status} - ${errText.slice(0, 100)}`);
+    }
+    const data = await response.json();
+    return Array.isArray(data) ? data : (Array.isArray(data?.workflows) ? data.workflows : []);
+};
+
+export async function getUserWorkflows(apiKey) {
+    const response = await fetch(`${BASE_URL}/workflow/get-workflow-defs`, {
+        headers: {
+            'Content-Type': 'application/json',
+            'x-api-key': apiKey
+        }
+    });
+    if (!response.ok) {
+        const errText = await response.text();
+        throw new Error(`Failed to fetch user workflows: ${response.status} - ${errText.slice(0, 100)}`);
+    }
+    return await response.json();
+};
+
+export async function getPublishedWorkflows(apiKey) {
+    const response = await fetch(`${BASE_URL}/workflow/get-published-workflows`, {
+        headers: {
+            'Content-Type': 'application/json',
+            'x-api-key': apiKey
+        }
+    });
+    if (!response.ok) {
+        const errText = await response.text();
+        throw new Error(`Failed to fetch published workflows: ${response.status} - ${errText.slice(0, 100)}`);
+    }
+    return await response.json();
+};
+
+function resolveAgentKey(apiKey) {
+    if (apiKey) return apiKey;
+    if (typeof window !== 'undefined') return 'supdance-account-session';
+    return null;
+}
+
+// Agents — uses direct URL → https://api.muapi.ai/agents/...
+export async function getTemplateAgents(apiKey) {
+    const reqKey = resolveAgentKey(apiKey);
+    const headers = { 'Content-Type': 'application/json' };
+    if (reqKey) headers['x-api-key'] = reqKey;
+
+    const response = await fetch(`${BASE_URL}/agents/templates/agents`, {
+        headers,
+        credentials: 'include',
+    });
+    if (!response.ok) {
+        const errText = await response.text();
+        notifyAuthRequired(response.status, errText);
+        throw new Error(`Failed to fetch template agents: ${response.status} - ${errText.slice(0, 100)}`);
+    }
+    const data = await response.json();
+    return Array.isArray(data) ? data : (data.agents || data.items || []);
+};
+
+export async function getUserAgents(apiKey) {
+    const reqKey = resolveAgentKey(apiKey);
+    const headers = { 'Content-Type': 'application/json' };
+    if (reqKey) headers['x-api-key'] = reqKey;
+
+    const response = await fetch(`${BASE_URL}/agents/user/agents`, {
+        headers,
+        credentials: 'include',
+    });
+    if (!response.ok) {
+        const errText = await response.text();
+        notifyAuthRequired(response.status, errText);
+        throw new Error(`Failed to fetch user agents: ${response.status} - ${errText.slice(0, 100)}`);
+    }
+    const data = await response.json();
+    return Array.isArray(data) ? data : (data.agents || data.items || []);
+};
+
+export async function getPublishedAgents(apiKey) {
+    // MuAPI: GET /agents/featured/agents
+    const reqKey = resolveAgentKey(apiKey);
+    const headers = { 'Content-Type': 'application/json' };
+    if (reqKey) headers['x-api-key'] = reqKey;
+
+    const response = await fetch(`${BASE_URL}/agents/featured/agents`, {
+        headers,
+        credentials: 'include',
+    });
+    if (!response.ok) {
+        const errText = await response.text();
+        notifyAuthRequired(response.status, errText);
+        throw new Error(`Failed to fetch featured agents: ${response.status} - ${errText.slice(0, 100)}`);
+    }
+    const data = await response.json();
+    return Array.isArray(data) ? data : (data.agents || data.items || []);
+};
+
+// GET /agents/user/conversations — returns the user's chat history across all agents
+export async function getUserConversations(apiKey) {
+    const reqKey = resolveAgentKey(apiKey);
+    const headers = { 'Content-Type': 'application/json' };
+    if (reqKey) headers['x-api-key'] = reqKey;
+
+    const response = await fetch(`${BASE_URL}/agents/user/conversations`, {
+        headers,
+        credentials: 'include',
+    });
+    if (!response.ok) {
+        const errText = await response.text();
+        notifyAuthRequired(response.status, errText);
+        throw new Error(`Failed to fetch conversations: ${response.status} - ${errText.slice(0, 100)}`);
+    }
+    const data = await response.json();
+    return Array.isArray(data) ? data : [];
+};
+
+// GET /agents/by-slug/{slug} — public agent details (works unauthenticated for
+// published/template agents; x-api-key is sent for consistency but not required).
+export async function getAgentBySlug(apiKey, slug) {
+    const reqKey = resolveAgentKey(apiKey);
+    const headers = { 'Content-Type': 'application/json' };
+    if (reqKey) headers['x-api-key'] = reqKey;
+
+    const response = await fetch(`${BASE_URL}/agents/by-slug/${slug}`, {
+        headers,
+        credentials: 'include',
+    });
+    if (!response.ok) {
+        const errText = await response.text();
+        notifyAuthRequired(response.status, errText);
+        throw new Error(`Failed to fetch agent: ${response.status} - ${errText.slice(0, 100)}`);
+    }
+    return await response.json();
+}
+
+// GET /agents/by-slug/{slug}/{conversationId} — chat history for one conversation.
+export async function getAgentConversation(apiKey, agentSlug, conversationId) {
+    const reqKey = resolveAgentKey(apiKey);
+    const headers = { 'Content-Type': 'application/json' };
+    if (reqKey) headers['x-api-key'] = reqKey;
+
+    const response = await fetch(`${BASE_URL}/agents/by-slug/${agentSlug}/${conversationId}`, {
+        headers,
+        credentials: 'include',
+    });
+    if (!response.ok) {
+        const errText = await response.text();
+        notifyAuthRequired(response.status, errText);
+        throw new Error(`Failed to fetch conversation: ${response.status} - ${errText.slice(0, 100)}`);
+    }
+    return await response.json();
+}
+
+// POST /agents/by-slug/{slug}/chat — send a message, returns {request_id, status}
+// to poll via pollAgentChatResult.
+export async function sendAgentChatMessage(apiKey, agentSlug, { message, conversationId, attachments } = {}) {
+    const reqKey = resolveAgentKey(apiKey);
+    const headers = { 'Content-Type': 'application/json' };
+    if (reqKey) headers['x-api-key'] = reqKey;
+
+    const response = await fetch(`${BASE_URL}/agents/by-slug/${agentSlug}/chat`, {
+        method: 'POST',
+        headers,
+        credentials: 'include',
+        body: JSON.stringify({
+            message,
+            conversation_id: conversationId || null,
+            attachments: attachments || null,
+            stream: false
+        })
+    });
+    if (!response.ok) {
+        const errText = await response.text();
+        notifyAuthRequired(response.status, errText);
+        throw new Error(`Failed to send message: ${response.status} - ${errText.slice(0, 100)}`);
+    }
+    return await response.json();
+}
+
+// Polls /api/v1/predictions/{requestId}/result until the agent turn completes.
+// Unlike submitAndPoll's generic media polling, a completed agent-chat result is
+// the full {conversation_id, messages, is_complete, suggestions} envelope, not a
+// media URL — while processing, the endpoint doesn't surface intermediate status
+// text (get_result_url_from_output only returns output_data once COMPLETED), so
+// this just waits until is_complete rather than showing incremental progress.
+export async function pollAgentChatResult(apiKey, requestId, { maxAttempts = 150, interval = 2000 } = {}) {
+    const reqKey = resolveAgentKey(apiKey);
+    const headers = { 'Content-Type': 'application/json' };
+    if (reqKey) headers['x-api-key'] = reqKey;
+
+    const url = `${BASE_URL}/api/v1/predictions/${requestId}/result`;
+    for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+        await new Promise(resolve => setTimeout(resolve, interval));
+        const response = await fetch(url, {
+            headers,
+            credentials: 'include',
+        });
+        if (response.status === 400) {
+            const errBody = await response.json().catch(() => ({}));
+            throw new Error(errBody?.detail?.error || 'Agent failed to respond');
+        }
+        if (!response.ok) {
+            if (attempt === maxAttempts) throw new Error(`Poll failed: ${response.status}`);
+            continue;
+        }
+        const data = await response.json();
+        if (data.is_complete) return data;
+    }
+    throw new Error('Agent response timed out.');
+}
+
+// POST /agents — create a new persona agent (no skill picker in this minimal
+// embedded form; skill_ids defaults to [] server-side, so the agent is created
+// as a plain system-prompt-driven assistant with no extra tool skills attached).
+export async function createAgent(apiKey, payload) {
+    const reqKey = resolveAgentKey(apiKey);
+    const headers = { 'Content-Type': 'application/json' };
+    if (reqKey) headers['x-api-key'] = reqKey;
+
+    const response = await fetch(`${BASE_URL}/agents`, {
+        method: 'POST',
+        headers,
+        credentials: 'include',
+        body: JSON.stringify(payload)
+    });
+    if (!response.ok) {
+        const errText = await response.text();
+        notifyAuthRequired(response.status, errText);
+        throw new Error(`Failed to create agent: ${response.status} - ${errText.slice(0, 100)}`);
+    }
+    return await response.json();
+}
+
+export async function createWorkflow(apiKey, payload) {
+    const response = await fetch(`${BASE_URL}/workflow/create`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'x-api-key': apiKey
+        },
+        body: JSON.stringify(payload)
+    });
+    if (!response.ok) {
+        const errText = await response.text();
+        throw new Error(`Failed to create workflow: ${response.status} - ${errText.slice(0, 100)}`);
+    }
+    return await response.json();
+};
+
+export async function updateWorkflowName(apiKey, workflowId, name) {
+    const response = await fetch(`${BASE_URL}/workflow/update-name/${workflowId}`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'x-api-key': apiKey
+        },
+        body: JSON.stringify({ name })
+    });
+    if (!response.ok) {
+        const errText = await response.text();
+        throw new Error(`Failed to rename workflow: ${response.status} - ${errText.slice(0, 100)}`);
+    }
+    return await response.json();
+};
+
+export async function deleteWorkflow(apiKey, workflowId) {
+    const response = await fetch(`${BASE_URL}/workflow/delete-workflow-def/${workflowId}`, {
+        method: 'DELETE',
+        headers: {
+            'Content-Type': 'application/json',
+            'x-api-key': apiKey
+        }
+    });
+    if (!response.ok) {
+        const errText = await response.text();
+        throw new Error(`Failed to delete workflow: ${response.status} - ${errText.slice(0, 100)}`);
+    }
+    return await response.json();
+};
+
+export async function getWorkflowInputs(apiKey, workflowId) {
+    const response = await fetch(`${BASE_URL}/workflow/${workflowId}/api-inputs`, {
+        headers: {
+            'Content-Type': 'application/json',
+            'x-api-key': apiKey
+        }
+    });
+    if (!response.ok) {
+        const errText = await response.text();
+        throw new Error(`Failed to fetch workflow inputs: ${response.status} - ${errText.slice(0, 100)}`);
+    }
+    return await response.json();
+};
+
+export async function executeWorkflow(apiKey, workflowId, inputs) {
+    const response = await fetch(`${BASE_URL}/workflow/${workflowId}/api-execute`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'x-api-key': apiKey
+        },
+        body: JSON.stringify({ inputs })
+    });
+    if (!response.ok) {
+        const errText = await response.text();
+        throw new Error(`Failed to execute workflow: ${response.status} - ${errText.slice(0, 100)}`);
+    }
+    const submitData = await response.json();
+    const runId = submitData.run_id || submitData.id;
+    if (!runId) return submitData;
+    
+    // Poll for results
+    return await pollWorkflowResult(runId, apiKey);
+};
+
+async function pollWorkflowResult(runId, apiKey, maxAttempts = 900, interval = 2000) {
+    const pollUrl = `${BASE_URL}/workflow/run/${runId}/api-outputs`;
+    for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+        await new Promise(resolve => setTimeout(resolve, interval));
+        try {
+            const response = await fetch(pollUrl, {
+                headers: { 'Content-Type': 'application/json', 'x-api-key': apiKey }
+            });
+            if (!response.ok) {
+                if (response.status >= 500) continue;
+                throw new Error(`Poll Failed: ${response.status}`);
+            }
+            const data = await response.json();
+            const status = data.status?.toLowerCase();
+            if (status === 'completed' || status === 'succeeded' || status === 'success') return data;
+            if (status === 'failed' || status === 'error') throw new Error(`Workflow failed: ${data.error || 'Unknown error'}`);
+        } catch (error) {
+            if (attempt === maxAttempts) throw error;
+        }
+    }
+    throw new Error('Workflow timed out after polling.');
+};
+
+export async function getAllNodeSchemas(apiKey, workflowId) {
+    const response = await fetch(`${BASE_URL}/workflow/${workflowId}/node-schemas`, {
+        headers: {
+            'Content-Type': 'application/json',
+            'x-api-key': apiKey
+        }
+    });
+    if (!response.ok) {
+        const errText = await response.text();
+        throw new Error(`Failed to fetch node schemas: ${response.status} - ${errText.slice(0, 100)}`);
+    }
+    return await response.json();
+};
+
+export async function getWorkflowData(apiKey, workflowId) {
+    const response = await fetch(`${BASE_URL}/workflow/get-workflow-def/${workflowId}`, {
+        headers: {
+            'Content-Type': 'application/json',
+            'x-api-key': apiKey
+        }
+    });
+    if (!response.ok) {
+        const errText = await response.text();
+        throw new Error(`Failed to fetch workflow data: ${response.status} - ${errText.slice(0, 100)}`);
+    }
+    return await response.json();
+};
+
+export async function getNodeSchemas(apiKey, workflowId) {
+    const response = await fetch(`${BASE_URL}/workflow/${workflowId}/api-node-schemas`, {
+        headers: {
+            'Content-Type': 'application/json',
+            'x-api-key': apiKey
+        }
+    });
+    if (!response.ok) {
+        const errText = await response.text();
+        throw new Error(`Failed to fetch node schemas: ${response.status} - ${errText.slice(0, 100)}`);
+    }
+    return await response.json();
+}
+
+export async function runSingleNode(apiKey, workflowId, nodeId, payload) {
+    const response = await fetch(`${BASE_URL}/workflow/${workflowId}/node/${nodeId}/run`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'x-api-key': apiKey
+        },
+        body: JSON.stringify(payload)
+    });
+    if (!response.ok) {
+        const errText = await response.text();
+        throw new Error(`Failed to run single node: ${response.status} - ${errText.slice(0, 100)}`);
+    }
+    return await response.json();
+}
+
+export async function deleteNodeRun(apiKey, nodeRunId) {
+    const response = await fetch(`${BASE_URL}/workflow/node-run/${nodeRunId}`, {
+        method: 'DELETE',
+        headers: {
+            'Content-Type': 'application/json',
+            'x-api-key': apiKey
+        }
+    });
+    if (!response.ok) {
+        const errText = await response.text();
+        throw new Error(`Failed to delete node run: ${response.status} - ${errText.slice(0, 100)}`);
+    }
+    return await response.json();
+}
+
+export async function getNodeStatus(apiKey, runId) {
+    const response = await fetch(`${BASE_URL}/workflow/run/${runId}/status`, {
+        headers: {
+            'Content-Type': 'application/json',
+            'x-api-key': apiKey
+        }
+    });
+    if (!response.ok) {
+        const errText = await response.text();
+        throw new Error(`Failed to get node status: ${response.status} - ${errText.slice(0, 100)}`);
+    }
+    return await response.json();
+}
+
+/**
+ * Handle proxy requests centralizing communication logic with MuAPI.
+ * This is used by the server-side entry points.
+ */
+export async function handleProxyRequest(prefix, path, method, headers, body, apiKey) {
+    const url = `${BASE_URL}/${prefix}/${path}`;
+    
+    const finalHeaders = new Headers(headers);
+    finalHeaders.delete('host');
+    finalHeaders.delete('connection');
+    finalHeaders.delete('content-length'); // Let fetch recalculate this for safety
+
+    if (apiKey) {
+        finalHeaders.set('x-api-key', apiKey);
+    }
+
+    try {
+        const response = await fetch(url, {
+            method,
+            headers: finalHeaders,
+            body: (method !== 'GET' && method !== 'HEAD') ? body : undefined,
+            redirect: 'follow',
+        });
+
+        const contentType = response.headers.get('Content-Type') || 'application/json';
+        const buffer = await response.arrayBuffer();
+        
+        return {
+            status: response.status,
+            contentType,
+            data: buffer
+        };
+    } catch (error) {
+        console.error(`MuAPI Proxy error for ${url}:`, error);
+        throw error;
+    }
+}
+
+/**
+ * A centralized handler for Next.js API routes or middleware.
+ */
+export async function handleServerSideProxy(prefix, request, params, apiKey) {
+    try {
+        const slug = await params;
+        const pathSegments = slug.path || [];
+        const path = pathSegments.join('/');
+        
+        const method = request.method;
+        let body = null;
+        if (method !== 'GET' && method !== 'HEAD') {
+            body = await request.arrayBuffer();
+        }
+
+        const { search } = new URL(request.url);
+        const pathWithSearch = search ? `${path}${search}` : path;
+
+        return await handleProxyRequest(
+            prefix, 
+            pathWithSearch, 
+            method, 
+            request.headers, 
+            body, 
+            apiKey
+        );
+    } catch (error) {
+        console.error(`Server proxy failed:`, error);
+        throw error;
+    }
+}
+
+export async function calculateDynamicCost(apiKey, taskName, payload) {
+    const response = await fetch(`${BASE_URL}/api/v1/app/calculate_dynamic_cost`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'x-api-key': apiKey
+        },
+        body: JSON.stringify({ task_name: taskName, payload })
+    });
+    if (!response.ok) {
+        const errText = await response.text();
+        throw new Error(`Failed to calculate dynamic cost: ${response.status} - ${errText.slice(0, 100)}`);
+    }
+    return await response.json();
+}
+
+export async function registerAppInterest(apiKey, appName) {
+    const response = await fetch(`${BASE_URL}/app/interest`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'x-api-key': apiKey
+        },
+        body: JSON.stringify({ app_name: appName })
+    });
+    if (!response.ok) {
+        const errText = await response.text();
+        throw new Error(`Failed to register interest: ${response.status} - ${errText.slice(0, 100)}`);
+    }
+    return await response.json();
+}
+
+export async function getAppInterests(apiKey) {
+    const response = await fetch(`${BASE_URL}/app/interests`, {
+        headers: {
+            'Content-Type': 'application/json',
+            'x-api-key': apiKey
+        }
+    });
+    if (!response.ok) {
+        const errText = await response.text();
+        throw new Error(`Failed to fetch interests: ${response.status} - ${errText.slice(0, 100)}`);
+    }
+    return await response.json();
+}
+
+// Paginated past-generations list, scoped server-side to the calling identity
+// (BYOK key or white-label session token) — see GET /api/v1/history.
+export async function getHistory(apiKey, { cursor, limit = 50 } = {}) {
+    const isBrowser = typeof window !== 'undefined' && window.location?.protocol?.startsWith('http');
+    if (isBrowser) {
+        const response = await fetch(`/api/generations?limit=${limit}`, {
+            headers: { 'Content-Type': 'application/json' },
+            credentials: 'include',
+        });
+        if (response.ok) {
+            const data = await response.json();
+            return {
+                items: (data.creations || []).map((c) => ({
+                    id: c.id,
+                    request_id: c.id,
+                    status: c.status,
+                    outputs: c.result_url ? [c.result_url] : [],
+                    url: c.result_url,
+                    model: c.model,
+                    created_at: c.created_at,
+                })),
+                creations: data.creations,
+            };
+        }
+    }
+    const params = new URLSearchParams();
+    if (cursor) params.set('cursor', cursor);
+    if (limit) params.set('limit', String(limit));
+    const response = await fetch(`${BASE_URL}/api/v1/history?${params.toString()}`, {
+        headers: {
+            'Content-Type': 'application/json',
+            ...(apiKey ? { 'x-api-key': apiKey } : {}),
+        },
+        credentials: 'include',
+    });
+    if (!response.ok) {
+        const errText = await response.text();
+        throw new Error(`Failed to fetch history: ${response.status} - ${errText.slice(0, 100)}`);
+    }
+    return await response.json();
+}
+
+// DELETE /api/v1/predictions/{requestId}/media — strips input/output media
+// URLs from the request (S3 objects removed) and clears them from the row;
+// used to back the "delete generated item" action against server-backed
+// (backfilled) history lists, since removing an item from local component
+// state alone doesn't touch the server record or its stored media.
+export async function deleteMedia(apiKey, requestId) {
+    const response = await fetch(`${BASE_URL}/api/v1/predictions/${requestId}/media`, {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json', 'x-api-key': apiKey }
+    });
+    if (!response.ok) {
+        const errText = await response.text();
+        notifyAuthRequired(response.status, errText);
+        throw new Error(`Failed to delete: ${response.status} - ${errText.slice(0, 100)}`);
+    }
+    return await response.json();
+}
+
+export async function runClipping(apiKey, params) {
+    const payload = {
+        video_url: params.video_url,
+        num_highlights: params.num_highlights || 3,
+        aspect_ratio: params.aspect_ratio || "9:16",
+        return_coordinates_only: !!params.return_coordinates_only
+    };
+    return submitAndPoll("ai-clipping", payload, apiKey, params.onRequestId, 900, resolveStudioId(params.studioId, 'clipping'));
+}
+
+export async function runMotionGraphics(apiKey, params) {
+    const isPlatformBrowser = typeof window !== 'undefined' && BASE_URL === '/api';
+    if (isPlatformBrowser && !params.modelId) {
+        throw new Error('Choose a currently available video model before generating.');
+    }
+    const payload = isPlatformBrowser
+        ? {
+            prompt: params.prompt,
+            task_type: params.task_type || 't2v',
+            ...(params.aspect_ratio ? { aspect_ratio: params.aspect_ratio } : {}),
+            ...(params.resolution ? { resolution: params.resolution } : {}),
+            ...(params.duration !== undefined && params.duration !== null
+                ? { duration: Number(params.duration), duration_seconds: Number(params.duration) }
+                : {}),
+        }
+        : {
+            prompt: params.prompt,
+            aspect_ratio: params.aspect_ratio || "16:9",
+            duration_seconds: params.duration_seconds || 6,
+        };
+    return submitAndPoll(
+        "motion-graphics",
+        payload,
+        apiKey,
+        params.onRequestId,
+        900,
+        resolveStudioId(params.studioId, 'vibemotion'),
+        params.modelId || "motion-graphics",
+    );
+}
+
+export async function runMotionGraphicsEdit(apiKey, params) {
+    if (typeof window !== 'undefined' && BASE_URL === '/api') {
+        throw new Error('Video editing is unavailable until a server-owned Asset reference and reviewed v2v route are supported.');
+    }
+    const payload = {
+        request_id: params.request_id,
+        edit_prompt: params.edit_prompt,
+        aspect_ratio: params.aspect_ratio || "16:9",
+        duration_seconds: params.duration_seconds || 6,
+    };
+    return submitAndPoll("motion-graphics-edit", payload, apiKey, params.onRequestId, 900, resolveStudioId(params.studioId, 'vibemotion'));
+}
+
+export async function upscaleImage(apiKey, { model, image_url, resolution, upscale_factor, onRequestId }) {
+    let endpoint = model;
+    let payload = { image_url };
+    if (model === "seedvr2-image-upscale") {
+        payload.resolution = resolution || "4k";
+    } else if (model === "topaz-image-upscale") {
+        payload.upscale_factor = Number(upscale_factor) || 2;
+    } else if (model === "ai-image-upscaler") {
+        endpoint = "ai-image-upscale";
+    }
+    return submitAndPoll(endpoint, payload, apiKey, onRequestId, 90);
+}
+
+export async function removeBackground(apiKey, { image_url, onRequestId }) {
+    const endpoint = "ai-background-remover";
+    const payload = { image_url };
+    return submitAndPoll(endpoint, payload, apiKey, onRequestId, 90);
+}
+
+export async function expandImage(apiKey, { image_url, onRequestId }) {
+    const endpoint = "ai-image-extension";
+    const payload = { image_url };
+    return submitAndPoll(endpoint, payload, apiKey, onRequestId, 90);
+}

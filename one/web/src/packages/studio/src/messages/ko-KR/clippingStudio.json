@@ -1,0 +1,73 @@
+{
+  "headings": {
+    "startCreatingWith": "창작 시작하기",
+    "aiClippingStudio": "AI 클리핑 스튜디오",
+    "emptyStateSubtitle": "동영상에서 화제성 높은 하이라이트와 정확한 타임코드를 자동으로 추출하세요.",
+    "clippingHistoryRuns": "클리핑 작업 기록",
+    "savedGenerations": "{count}개 저장된 결과",
+    "backToHistory": "기록으로 돌아가기",
+    "highlightsTimeline": "하이라이트 타임라인",
+    "matches": "{count}개 일치",
+    "extractedVideoClips": "추출된 비디오 클립",
+    "aspectRatioLabel": "화면 비율: {ratio}",
+    "originalVideoPlayer": "원본 동영상 플레이어"
+  },
+  "modes": {
+    "timelineSeek": "타임라인 탐색 모드",
+    "clipsGallery": "클립 갤러리 모드"
+  },
+  "labels": {
+    "highlights": "{count}개 하이라이트",
+    "clips": "{count}개 클립",
+    "highlightFallback": "하이라이트 #{index}",
+    "scoreSuffix": "% 일치 점수",
+    "durationSuffix": "초 길이",
+    "seekAndPlay": "이동 및 재생",
+    "clipIndex": "클립 #{index}",
+    "aiClipping": "AI 클리핑"
+  },
+  "buttons": {
+    "deleteFromHistory": "기록에서 삭제",
+    "delete": "삭제",
+    "copyLink": "링크 복사",
+    "copyLinkShort": "링크 복사",
+    "download": "다운로드",
+    "clearVideo": "동영상 지우기",
+    "uploadSourceVideo": "원본 동영상 업로드",
+    "generate": "클립 생성",
+    "generating": "생성 중...",
+    "coordinatesOnly": "좌표만 출력"
+  },
+  "placeholders": {
+    "promptOrUrl": "추출하려는 프롬프트 또는 하이라이트 특징 설명"
+  },
+  "popovers": {
+    "aspectRatio": "화면 비율",
+    "maxHighlights": "최대 하이라이트 수",
+    "limit": "제한:"
+  },
+  "empty": {
+    "noHighlights": "추출된 하이라이트가 없습니다.",
+    "noClips": "동영상 클립이 생성되지 않았습니다. 다시 시도해 주세요."
+  },
+  "alerts": {
+    "urlCopied": "링크가 클립보드에 복사되었습니다!",
+    "needVideo": "먼저 동영상을 업로드하거나 동영상 링크를 입력해 주세요."
+  },
+  "errors": {
+    "dismissNotification": "알림 닫기",
+    "videoTooLarge": "이 모드에서 파일이 너무 큽니다. 동영상을 압축하거나 자른 후 업로드해 주세요.",
+    "videoExceedsLimit": "동영상이 {mb}MB 제한을 초과했습니다.",
+    "uploadFailed": "동영상 업로드에 실패했습니다. 다시 시도해 주세요.",
+    "generationFailed": "AI 클립 생성 작업에 실패했습니다."
+  },
+  "sourceVideoFallback": "원본_동영상.mp4",
+  "aspectRatioLabels": {
+    "9:16": "9:16 (틱톡 / 릴스 / 쇼츠 영상)",
+    "16:9": "16:9 (유튜브 / 가로형 비디오)",
+    "1:1": "1:1 (인스타그램 정방형 피드)",
+    "4:5": "4:5 (인스타그램 세로형 피드)",
+    "4:3": "4:3 (클래식 표준 비디오)",
+    "3:4": "3:4 (버티컬 세로형)"
+  }
+}

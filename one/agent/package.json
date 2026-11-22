@@ -1,0 +1,15 @@
+{
+  "name": "one-agent",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Isolated stateless Node.js Agent runtime for ONE",
+  "scripts": {
+    "start": "node server.mjs",
+    "test": "node --test agent.test.mjs"
+  },
+  "engines": {
+    "node": ">=22.0.0"
+  },
+  "dependencies": {}
+}

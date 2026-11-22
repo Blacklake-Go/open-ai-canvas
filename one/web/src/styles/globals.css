@@ -1,0 +1,1128 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Local variable fonts ported from Supdance Pro/app/fonts */
+@font-face {
+  font-family: "Inter";
+  font-style: normal;
+  font-weight: 100 900;
+  font-display: swap;
+  src: url("../assets/fonts/inter-latin-wght-normal.woff2") format("woff2");
+}
+
+@font-face {
+  font-family: "Jost";
+  font-style: normal;
+  font-weight: 100 900;
+  font-display: swap;
+  src: url("../assets/fonts/jost-latin-wght-normal.woff2") format("woff2");
+}
+
+:root {
+  --font-inter: "Inter";
+  --font-jost: "Jost";
+}
+
+
+:root {
+  /* KOYO Studio "Premium AI Creative Workspace" Design Tokens */
+  --bg-canvas: #030303;
+  --bg-base: #070708;
+  --bg-surface: #0d0e12;
+  --bg-surface-raised: #13151c;
+  --bg-overlay: #181a22;
+  --bg-subtle: #0f1015;
+
+  /* RGB 通道三元组：供 Tailwind 的 <alpha-value> 透明度修饰符使用（bg-surface/90 等） */
+  --bg-canvas-rgb: 3 3 3;
+  --bg-base-rgb: 7 7 8;
+  --bg-surface-rgb: 13 14 18;
+  --bg-surface-raised-rgb: 19 21 28;
+  --bg-overlay-rgb: 24 26 34;
+  --bg-subtle-rgb: 15 16 21;
+  --text-primary-rgb: 243 244 246;
+  --text-secondary-rgb: 156 163 175;
+  --text-tertiary-rgb: 134 139 143;
+  --text-disabled-rgb: 75 85 99;
+  --text-inverse-rgb: 7 8 11;
+  --accent-primary-rgb: 225 29 116;
+
+  /* Semantic aliases keep Tailwind and component recipes on this token set. */
+  --bg-inverse: var(--text-primary);
+  --bg-surface-glass: rgb(var(--bg-surface-rgb) / 0.92);
+  --bg-overlay-glass: rgb(var(--bg-overlay-rgb) / 0.97);
+  --ink-on-accent: #ffffff;
+  --ink-on-accent-rgb: 255 255 255;
+  --brand-pressed: rgb(var(--accent-primary-rgb) / 0.20);
+  --brand-ring: rgba(225, 29, 116, 0.45);
+  --brand-line: rgba(225, 29, 116, 0.28);
+  --wash: rgba(255, 255, 255, 0.04);
+  --wash-strong: rgba(255, 255, 255, 0.07);
+  --wash-press: rgba(255, 255, 255, 0.10);
+  --scrim: rgba(3, 4, 5, 0.72);
+  --surface-inverse: var(--text-primary);
+  --border-line: var(--border-default);
+  --border-line-subtle: var(--border-subtle);
+  --border-line-strong: var(--border-strong);
+  --danger-hover: rgba(239, 68, 68, 0.22);
+  --danger-pressed: rgba(239, 68, 68, 0.30);
+  --danger-ring: rgba(239, 68, 68, 0.40);
+  --danger-line: rgba(239, 68, 68, 0.30);
+  --success-line: rgba(16, 185, 129, 0.30);
+  --warning-line: rgba(245, 158, 11, 0.30);
+  --info-line: rgba(59, 130, 246, 0.30);
+
+  /* Radius scale: compact control → field/card → composer/modal → pill. */
+  --radius-xs: 4px;
+  --radius-sm: 6px;
+  --radius-md: 8px;
+  --radius-lg: 12px;
+  --radius-xl: 16px;
+  --radius-2xl: 20px;
+  --radius-3xl: var(--radius-2xl);
+  --radius-sheet-top: var(--radius-2xl) var(--radius-2xl) 0 0;
+  --radius-full: 9999px;
+
+  /* Control geometry and shared floating-layer dimensions. */
+  --control-xs: 28px;
+  --control-sm: 32px;
+  --control-md: 38px;
+  --control-lg: 44px;
+  --segment-track-sm: 36px;
+  --segment-track-md: 40px;
+  --segment-item-sm: 28px;
+  --segment-item-md: 32px;
+  --composer-max-h: 150px;
+  --composer-max-h-lg: 250px;
+  --header-h: 56px;
+  --sidebar-w: 240px;
+  --sidebar-w-collapsed: 60px;
+  --panel-w: 400px;
+  --modal-w: calc(100vw - 32px);
+  --auth-modal-w: min(440px, calc(100vw - 32px));
+  --commerce-modal-w: min(1024px, calc(100vw - 32px));
+  --commerce-modal-min-h: 520px;
+  --commerce-modal-max-h: 88vh;
+  --modal-max-h: calc(100vh - 64px);
+  --sheet-max-h: 88vh;
+  --drawer-max-h: 85vh;
+  --menu-min-w: 176px;
+  --popover-min-w: 176px;
+  --popover-max-h: 45vh;
+  --toast-w: 340px;
+  --media-tile-w: 46px;
+  --media-tile-h: 56px;
+  --media-history-w: 34px;
+  --media-menu-w: min(260px, calc(100vw - 48px));
+  --media-menu-list-max-h: 210px;
+  --announcement-h: 36px;
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 20px;
+  --space-6: 24px;
+  --space-8: 32px;
+  --space-10: 40px;
+  --space-12: 48px;
+  --space-16: 64px;
+
+  --z-base: 0;
+  --z-raised: 1;
+  --z-sticky: 10;
+  --z-header: 40;
+  --z-drawer: 50;
+  --z-dropdown: 60;
+  --z-popover: 70;
+  --z-overlay: 80;
+  --z-modal: 90;
+  --z-toast: 100;
+  --z-tooltip: 110;
+
+  /* Neutral multi-layer elevations; no colored glow. */
+  --shadow-elevation-1:
+    0 1px 2px rgba(0, 0, 0, 0.46),
+    0 0 0 1px rgba(255, 255, 255, 0.018);
+  --shadow-elevation-2:
+    0 4px 12px -4px rgba(0, 0, 0, 0.58),
+    0 1px 3px rgba(0, 0, 0, 0.34),
+    0 0 0 1px rgba(255, 255, 255, 0.022);
+  --shadow-elevation-3:
+    0 12px 32px -10px rgba(0, 0, 0, 0.74),
+    0 4px 12px -6px rgba(0, 0, 0, 0.48),
+    0 0 0 1px rgba(255, 255, 255, 0.025);
+  --shadow-elevation-4:
+    0 28px 80px -24px rgba(0, 0, 0, 0.90),
+    0 14px 36px -18px rgba(0, 0, 0, 0.68),
+    0 0 0 1px rgba(255, 255, 255, 0.030);
+  --shadow-elevation-brand: 0 8px 14px -4px rgba(225, 29, 116, 0.35);
+
+  /* Motion and semantic type metrics consumed by Tailwind utilities. */
+  --motion-instant: 80ms;
+  --motion-fast: 120ms;
+  --motion-base: 180ms;
+  --motion-smooth: 240ms;
+  --motion-slow: 240ms;
+  --motion-drawer: 300ms;
+  --motion-drawer-lg: 420ms;
+  --motion-expand: 350ms;
+  --motion-page: 300ms;
+  --motion-modal: 400ms;
+  --motion-modal-lg: 520ms;
+
+  --ease-standard: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-enter: cubic-bezier(0.05, 0.7, 0.1, 1);
+  --ease-exit: cubic-bezier(0.3, 0, 0.8, 0.15);
+  --ease-bounce: cubic-bezier(0.3, 1.3, 0.3, 1);
+  --ease-fluid: cubic-bezier(0.15, 0.75, 0.3, 1);
+  --ease-card-hover: cubic-bezier(0.4, 0.95, 0.6, 1.1);
+  --ease-drawer: cubic-bezier(0.2, 0, 0.4, 1);
+
+  /* 影策双语义动效层（v3.8.0 §4.7.6）：结构动效与即时状态分开计时。 */
+  --motion-product-fast: 120ms;
+  --motion-product-state: 180ms;
+  --motion-product-enter: 360ms;
+  --motion-press: 90ms;
+  --motion-theme: 400ms;
+  --motion-stagger: 45ms;
+  --ease-product-enter: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-overshoot: cubic-bezier(0.34, 1.56, 0.64, 1);
+  --ease-theme: ease-in-out;
+  --text-display: 32px;
+  --text-page-title: 24px;
+  --text-section-title: 18px;
+  --text-card-title: 15px;
+  --text-body: 14px;
+  --text-body-sm: 13px;
+  --text-label: 12px;
+  --text-caption: 11px;
+  --text-micro: 10px;
+  --lh-display: 40px;
+  --lh-page-title: 32px;
+  --lh-section-title: 26px;
+  --lh-card-title: 22px;
+  --lh-body: 20px;
+  --lh-body-sm: 18px;
+  --lh-label: 16px;
+  --lh-caption: 14px;
+  --lh-micro: 14px;
+  --tracking-display: -0.025em;
+  --tracking-page-title: -0.02em;
+  --tracking-section-title: -0.015em;
+  --tracking-card-title: -0.01em;
+  --tracking-body: -0.005em;
+  --tracking-label: 0.01em;
+  --tracking-caption: 0.015em;
+  --tracking-micro: 0.02em;
+  --weight-display: 700;
+  --weight-page-title: 600;
+  --weight-section-title: 600;
+  --weight-card-title: 600;
+  --weight-label: 500;
+
+  /* Native range, canvas texture, and browser-surface tokens. */
+  --range-h: 24px;
+  --range-track: rgba(255, 255, 255, 0.14);
+  --range-thumb: var(--text-primary);
+  --range-thumb-size: 14px;
+  --dot-grid-size: 24px;
+  --scrollbar-thumb: rgba(255, 255, 255, 0.14);
+  --scrollbar-thumb-hover: rgba(255, 255, 255, 0.26);
+  --scrollbar-size: 10px;
+
+  --text-primary: #f3f4f6;
+  --text-secondary: #9ca3af;
+  --text-tertiary: #868b8f;
+  --text-disabled: #4b5563;
+  --text-inverse: #07080b;
+
+  --border-subtle: rgba(255, 255, 255, 0.06);
+  --border-default: rgba(255, 255, 255, 0.10);
+  --border-strong: rgba(255, 255, 255, 0.18);
+  --border-accent: rgba(225, 29, 116, 0.45);
+
+  --accent-primary: #e11d74;
+  --accent-primary-hover: #f43f5e;
+  --accent-primary-active: #c0175f;
+  /* Solid brand fills carrying white text: hover/active must stay >= 4.5:1 on white (v3.8.0 §2.3). */
+  --accent-primary-hover-solid: #c0175f;
+  --accent-primary-active-solid: #9f1239;
+  --accent-soft: rgba(225, 29, 116, 0.10);
+  --accent-border: rgba(225, 29, 116, 0.28);
+  /* 深色表面上的品牌文字专用浅玫红：对 canvas 7.79:1、对 overlay 6.55:1（v3.8.0 §2.3）。 */
+  --brand-text: #f472b6;
+
+  --success: #10b981;
+  --success-soft: rgba(16, 185, 129, 0.14);
+  --warning: #f59e0b;
+  --warning-soft: rgba(245, 158, 11, 0.14);
+  --danger: #ef4444;
+  --danger-soft: rgba(239, 68, 68, 0.14);
+  --info: #3b82f6;
+  --info-soft: rgba(59, 130, 246, 0.14);
+
+  /* Radix UI & Legacy Mapping */
+  /* 与上方 surface/text token 同源的 HSL 表达，避免 legacy 组件走出第二套色板 */
+  --background: 0 0% 1%;            /* #030303 = --bg-canvas */
+  --foreground: 210 17% 98%;        /* #f3f4f6 = --text-primary */
+  --card: 240 7% 3%;               /* #070708 = --bg-base */
+  --card-foreground: 210 17% 98%;
+  --popover: 228 17% 11%;          /* #181a22 = --bg-overlay */
+  --popover-foreground: 210 17% 98%;
+  --primary: 333 77% 50%;          /* #e11d74 = --accent-primary */
+  --primary-foreground: 0 0% 100%;
+  --secondary: 227 19% 9%;         /* #13151c = --bg-surface-raised */
+  --secondary-foreground: 210 17% 98%;
+  --muted: 228 16% 6%;             /* #0d0e12 = --bg-surface */
+  --muted-foreground: 220 9% 65%;  /* #9ca3af = --text-secondary */
+  --accent: 333 77% 50%;
+  --accent-foreground: 0 0% 100%;
+  --destructive: 0 84% 60%;        /* #ef4444 = --danger */
+  --border: 230 12% 13%;
+  --input: 230 17% 7%;             /* #0f1015 = --bg-subtle */
+  --ring: 333 77% 50%;
+  --radius: var(--radius-md);
+
+  /* SupDance AI Spatial Light System Tokens */
+  --bg-obsidian: #050507;
+  --bg-obsidian-rgb: 5 5 7;
+  --bg-deep-space: #080a12;
+  --bg-deep-space-rgb: 8 10 18;
+
+  --aurora-cyan: #55e6ff;
+  --aurora-cyan-rgb: 85 230 255;
+  --aurora-blue: #5a7cff;
+  --aurora-blue-rgb: 90 124 255;
+  --aurora-violet: #8767ff;
+  --aurora-violet-rgb: 135 103 255;
+  --aurora-purple: #b16cff;
+  --aurora-purple-rgb: 177 108 255;
+  --aurora-rose: #d983ff;
+  --aurora-rose-rgb: 217 131 255;
+
+  --glow-low: 0.12;
+  --glow-medium: 0.28;
+  --glow-high: 0.45;
+
+  --spatial-grid-size: 24px;
+  --spatial-grid-color: rgba(120, 160, 255, 0.14);
+  --spatial-grid-opacity: 0.14;
+
+  --surface-highlight: rgba(255, 255, 255, 0.04);
+  --surface-glass-prompt: rgba(12, 14, 20, 0.82);
+
+  /* Studio Deep-Frosted Glassmorphism Tokens */
+  --glass-wash-stage: rgba(255, 255, 255, 0.03);
+  --glass-wash-control: rgba(255, 255, 255, 0.04);
+  --glass-wash-hover: rgba(255, 255, 255, 0.08);
+  --glass-border-hairline: rgba(255, 255, 255, 0.10);
+  --glass-border-hover: rgba(255, 255, 255, 0.20);
+  --glass-panel-bg: rgba(19, 21, 25, 0.80);
+  --glass-dock-bg: rgba(19, 21, 25, 0.90);
+  --glass-well-bg: rgba(0, 0, 0, 0.40);
+  --glass-blur-deep: 40px;
+  --glass-blur-control: 12px;
+  /* 大型模型选择器/多列浮层的第三档玻璃（v3.8.0 §4.17.4）。 */
+  --glass-blur-popover: 28px;
+  --glass-popover-bg: rgba(24, 26, 34, 0.94);
+  --glass-popover-border: rgba(255, 255, 255, 0.14);
+  --glass-popover-shadow: 0 20px 52px rgba(0, 0, 0, 0.34), inset 0 1px 0 rgba(255, 255, 255, 0.055);
+
+  --motion-ambient: 24s;
+
+  --font-sans: "Inter", "Geist", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", system-ui, -apple-system, sans-serif;
+  --font-mono: "JetBrains Mono", "Fira Code", monospace;
+}
+
+@layer base {
+  * {
+    border-color: var(--border-subtle);
+  }
+  html {
+    scroll-smooth: smooth;
+    color-scheme: dark;
+    background-color: var(--bg-canvas);
+    scrollbar-gutter: stable;
+  }
+  body {
+    min-height: 100vh;
+    background-color: var(--bg-canvas);
+    color: var(--text-primary);
+    font-family: var(--font-sans);
+    letter-spacing: -0.01em;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+  button:not(:disabled), [role='button']:not(:disabled) {
+    cursor: pointer;
+  }
+  ::selection {
+    background: rgba(225, 29, 116, 0.28);
+    color: var(--text-primary);
+  }
+  /* Low-contrast scrollbars remain visible so scrollable content is discoverable. */
+  * {
+    scrollbar-width: thin;
+    scrollbar-color: var(--scrollbar-thumb) transparent;
+  }
+  ::-webkit-scrollbar {
+    width: var(--scrollbar-size);
+    height: var(--scrollbar-size);
+  }
+  ::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  ::-webkit-scrollbar-thumb {
+    background: var(--scrollbar-thumb);
+    border-radius: 9999px;
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    background: var(--scrollbar-thumb-hover);
+  }
+}
+
+@layer components {
+  /* Page Container Contract - 统一 1360px 电影感居中版心 */
+  .page-shell {
+    width: 100%;
+    max-width: 1360px;
+    margin-left: auto;
+    margin-right: auto;
+    padding-left: 1.5rem;
+    padding-right: 1.5rem;
+  }
+  @media (min-width: 640px) {
+    .page-shell {
+      padding-left: 2rem;
+      padding-right: 2rem;
+    }
+  }
+  @media (min-width: 1024px) {
+    .page-shell {
+      padding-left: 3rem;
+      padding-right: 3rem;
+    }
+  }
+
+  /* Surface Containers */
+  .surface-panel {
+    background-color: var(--bg-surface);
+    border: 1px solid var(--border-default);
+    border-radius: var(--radius-xl);
+  }
+  .surface-raised {
+    background-color: var(--bg-surface-raised);
+    border: 1px solid var(--border-default);
+    border-radius: var(--radius-xl);
+  }
+  .surface-overlay {
+    background-color: var(--bg-overlay);
+    border: 1px solid var(--border-strong);
+    border-radius: var(--radius-xl);
+    box-shadow: var(--shadow-elevation-3);
+  }
+
+  /* Creation mode switch: 40px track, 32px item, neutral inverse selected state (v3.8.0 §4.17.1). */
+  .mode-switch {
+    display: flex;
+    align-items: center;
+    gap: 2px;
+    width: min(100%, 320px);
+    height: 40px;
+    padding: 4px;
+    border-radius: 9999px;
+    background: var(--bg-subtle);
+    border: 1px solid var(--border-subtle);
+    box-sizing: border-box;
+  }
+  .mode-switch-option {
+    display: flex;
+    flex: 1 1 0;
+    align-items: center;
+    justify-content: center;
+    min-width: 0;
+    height: 32px;
+    padding: 0 16px;
+    border: 0;
+    border-radius: 9999px;
+    background: transparent;
+    color: var(--text-secondary);
+    font-size: var(--text-label);
+    font-weight: 500;
+    line-height: 16px;
+    white-space: nowrap;
+    cursor: pointer;
+    user-select: none;
+    -webkit-tap-highlight-color: transparent;
+    transition:
+      background-color var(--motion-product-fast) var(--ease-standard),
+      color var(--motion-product-fast) var(--ease-standard);
+  }
+  .mode-switch-option:hover {
+    background: var(--wash-strong);
+    color: var(--text-primary);
+  }
+  .mode-switch-option:active {
+    background: var(--wash-press);
+    transition: none;
+  }
+  .mode-switch-option:focus-visible {
+    outline: 1px solid color-mix(in srgb, currentColor 36%, transparent);
+    outline-offset: 1px;
+  }
+  .mode-switch-option[aria-pressed='true'] {
+    background: var(--text-primary);
+    color: var(--text-inverse);
+    font-weight: 600;
+    box-shadow: var(--shadow-elevation-1);
+  }
+  .mode-switch-option[aria-pressed='true']:hover {
+    background: var(--text-primary);
+    color: var(--text-inverse);
+  }
+  .mode-switch-option[aria-pressed='true']:active {
+    background: color-mix(in srgb, var(--text-primary) 88%, var(--text-inverse));
+  }
+
+  /* Spatial Prompt Composer Container */
+  .prompt-composer-spatial {
+    background-color: var(--surface-glass-prompt);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid var(--surface-border);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08), var(--shadow-elevation-2);
+    transition: border-color var(--motion-base) var(--ease-standard), box-shadow var(--motion-base) var(--ease-standard);
+  }
+  .prompt-composer-spatial:focus-within {
+    border-color: rgba(96, 86, 240, 0.48);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.14), 0 0 32px -4px rgba(96, 86, 240, 0.35), 0 0 14px 0 rgba(64, 217, 198, 0.25);
+  }
+
+  /* Primary Button Subtle Spatial Glow on Hover */
+  .btn-spatial-glow {
+    position: relative;
+    transition: background-color var(--motion-fast) var(--ease-standard), box-shadow var(--motion-fast) var(--ease-standard), transform var(--motion-fast) var(--ease-standard);
+  }
+  .btn-spatial-glow:hover {
+    box-shadow: 0 4px 20px -2px rgba(85, 230, 255, 0.35);
+  }
+
+  /* Accessibility Focus Rings */
+  .focus-ring {
+    outline: none;
+    transition: box-shadow 150ms cubic-bezier(0.16, 1, 0.3, 1), border-color 150ms cubic-bezier(0.16, 1, 0.3, 1);
+  }
+  .focus-ring:focus-visible {
+    border-color: var(--accent-primary);
+    box-shadow: 0 0 0 2px var(--brand-ring);
+  }
+
+  /* Quiet Interactive Hover */
+  .interactive-hover {
+    transition: background-color 150ms cubic-bezier(0.16, 1, 0.3, 1), border-color 150ms cubic-bezier(0.16, 1, 0.3, 1), opacity 150ms cubic-bezier(0.16, 1, 0.3, 1);
+  }
+  .interactive-hover:hover {
+    background-color: rgba(255, 255, 255, 0.04);
+    border-color: var(--border-strong);
+  }
+
+  /* Studio Deep-Frosted Glassmorphism Primitives */
+  .surface-glass-stage {
+    background-color: var(--glass-wash-stage);
+    backdrop-filter: blur(var(--glass-blur-deep));
+    -webkit-backdrop-filter: blur(var(--glass-blur-deep));
+    border: 1px solid var(--glass-border-hairline);
+    border-radius: var(--radius-2xl);
+    box-shadow: var(--shadow-elevation-2);
+  }
+  .surface-glass-panel {
+    background-color: var(--glass-panel-bg);
+    backdrop-filter: blur(var(--glass-blur-deep));
+    -webkit-backdrop-filter: blur(var(--glass-blur-deep));
+    border-right: 1px solid var(--glass-border-hairline);
+  }
+  .surface-glass-control {
+    background-color: var(--glass-wash-control);
+    backdrop-filter: blur(var(--glass-blur-control));
+    -webkit-backdrop-filter: blur(var(--glass-blur-control));
+    border: 1px solid var(--glass-border-hairline);
+    border-radius: var(--radius-xl);
+    transition: border-color var(--motion-fast) var(--ease-standard), background-color var(--motion-fast) var(--ease-standard);
+  }
+  .surface-glass-control:hover {
+    background-color: var(--glass-wash-hover);
+    border-color: var(--glass-border-hover);
+  }
+  .surface-glass-dock {
+    background-color: var(--glass-dock-bg);
+    backdrop-filter: blur(var(--glass-blur-deep));
+    -webkit-backdrop-filter: blur(var(--glass-blur-deep));
+    border-top: 1px solid var(--glass-border-hairline);
+  }
+  .surface-glass-well {
+    background-color: var(--glass-well-bg);
+    backdrop-filter: blur(var(--glass-blur-control));
+    -webkit-backdrop-filter: blur(var(--glass-blur-control));
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    border-radius: var(--radius-xl);
+  }
+  .glass-ambient-backlight {
+    position: absolute;
+    inset: 0;
+    background-color: rgba(225, 29, 116, 0.05);
+    filter: blur(48px);
+    border-radius: 9999px;
+    opacity: 0.3;
+    pointer-events: none;
+    transition: opacity 1000ms ease;
+  }
+
+  /* Keyboard-only focus ring (v3.8.0 §4.17.2): 1px currentColor outline, no box-shadow glow. */
+  .control-focus {
+    outline: none;
+  }
+  .control-focus:focus-visible {
+    outline: 1px solid color-mix(in srgb, currentColor 36%, transparent);
+    outline-offset: 1px;
+  }
+
+  /* Unified selector / dropdown surface (v3.8.0 §4.17.1 B). */
+  .popover-surface {
+    background-color: var(--bg-overlay);
+    border: 1px solid var(--border-default);
+    border-radius: var(--radius-xl);
+    box-shadow: var(--shadow-elevation-3);
+    transform-origin: var(--radix-popover-content-transform-origin, top left);
+  }
+  .popover-surface[data-state='open'] {
+    animation: popover-enter var(--motion-product-state) var(--ease-enter) both;
+  }
+  .popover-surface[data-state='closed'] {
+    animation: popover-exit var(--motion-product-fast) var(--ease-exit) both;
+  }
+
+  /* Large selector / command palette glass tier (v3.8.0 §4.17.4 C). */
+  .glass-popover {
+    background: var(--glass-popover-bg);
+    border: 1px solid var(--glass-popover-border);
+    box-shadow: var(--glass-popover-shadow);
+    backdrop-filter: blur(var(--glass-blur-popover)) saturate(140%);
+    -webkit-backdrop-filter: blur(var(--glass-blur-popover)) saturate(140%);
+    border-radius: var(--radius-xl);
+    transform-origin: var(--radix-popover-content-transform-origin, top left);
+  }
+  .glass-popover[data-state='open'] {
+    animation: popover-enter var(--motion-product-state) var(--ease-enter) both;
+  }
+  .glass-popover[data-state='closed'] {
+    animation: popover-exit var(--motion-product-fast) var(--ease-exit) both;
+  }
+}
+
+/* Minimalist Dark Scrollbars */
+.custom-scrollbar {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255, 255, 255, 0.15) transparent;
+}
+.custom-scrollbar::-webkit-scrollbar {
+  width: 5px;
+  height: 5px;
+}
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+}
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.15);
+  border-radius: 999px;
+}
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.3);
+}
+
+/* Explicitly marked horizontal rails retain a visible, compact scrollbar. */
+.scrollbar-rail {
+  scrollbar-width: thin;
+  scrollbar-color: var(--scrollbar-thumb) transparent;
+}
+.scrollbar-rail::-webkit-scrollbar {
+  width: var(--scrollbar-size);
+  height: var(--scrollbar-size);
+}
+.scrollbar-rail::-webkit-scrollbar-track {
+  background: transparent;
+}
+.scrollbar-rail::-webkit-scrollbar-thumb {
+  background: var(--scrollbar-thumb);
+  border-radius: var(--radius-full);
+}
+.scrollbar-rail::-webkit-scrollbar-thumb:hover {
+  background: var(--scrollbar-thumb-hover);
+}
+
+/* Legacy class name retained during migration; scrollbars stay visible. */
+.no-scrollbar {
+  scrollbar-width: thin;
+  scrollbar-color: var(--scrollbar-thumb) transparent;
+}
+.no-scrollbar::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+.no-scrollbar::-webkit-scrollbar-thumb {
+  background: var(--scrollbar-thumb);
+  border-radius: var(--radius-full);
+}
+
+/* Specialized ultra-clean scrollbar for admin sidebar */
+.admin-sidebar-scrollbar {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255, 255, 255, 0.08) transparent;
+}
+.admin-sidebar-scrollbar::-webkit-scrollbar {
+  width: 4px;
+}
+.admin-sidebar-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+}
+.admin-sidebar-scrollbar::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.08);
+  border-radius: 9999px;
+  transition: background 0.2s ease;
+}
+.admin-sidebar-scrollbar:hover::-webkit-scrollbar-thumb {
+  background: var(--scrollbar-thumb-hover);
+}
+
+/* Standard Keyframe Animations */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(4px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+@keyframes scaleIn {
+  from { opacity: 0; transform: scale(0.97); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+/* Floating-layer motion (v3.8.0 §4.17.1 B): options snap, only the shell eases. */
+@keyframes popover-enter {
+  from { opacity: 0; transform: translateY(6px) scale(0.985); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+@keyframes popover-exit {
+  from { opacity: 1; transform: translateY(0) scale(1); }
+  to { opacity: 0; transform: translateY(4px) scale(0.99); }
+}
+@keyframes tooltip-enter-top {
+  from { opacity: 0; transform: translateY(4px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+@keyframes tooltip-enter-bottom {
+  from { opacity: 0; transform: translateY(-4px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+@keyframes tooltip-enter-left {
+  from { opacity: 0; transform: translateX(4px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+@keyframes tooltip-enter-right {
+  from { opacity: 0; transform: translateX(-4px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+
+.tooltip-surface[data-state='delayed-open'] { animation: 120ms var(--ease-standard) both; }
+.tooltip-surface[data-side='top'][data-state='delayed-open'] { animation-name: tooltip-enter-top; }
+.tooltip-surface[data-side='bottom'][data-state='delayed-open'] { animation-name: tooltip-enter-bottom; }
+.tooltip-surface[data-side='left'][data-state='delayed-open'] { animation-name: tooltip-enter-left; }
+.tooltip-surface[data-side='right'][data-state='delayed-open'] { animation-name: tooltip-enter-right; }
+.tooltip-surface[data-state='closed'] { animation: popover-exit 80ms var(--ease-exit) both; }
+
+.animate-fade-in {
+  animation: fadeIn 120ms cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+.animate-popover-in {
+  animation: popover-enter var(--motion-product-state) var(--ease-enter) both;
+}
+.animate-scale-in {
+  animation: scaleIn 120ms cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+/* Modal & Dialog Optical Animations (v3.7.0 §4.14.1) */
+@keyframes modalEnter {
+  from {
+    opacity: 0;
+    scale: 0.95;
+  }
+  to {
+    opacity: 1;
+    scale: 1;
+  }
+}
+@keyframes modalExit {
+  from {
+    opacity: 1;
+    scale: 1;
+  }
+  to {
+    opacity: 0;
+    scale: 0.98;
+  }
+}
+
+.animate-modal-enter {
+  animation: modalEnter 150ms var(--ease-enter) both;
+}
+.animate-modal-exit {
+  animation: modalExit 100ms var(--ease-exit) both;
+}
+
+/* Drawer Optical Slide Animations (v3.7.0 §4.14.2) */
+@keyframes drawerSlideInRight {
+  from {
+    transform: translateX(100%);
+  }
+  to {
+    transform: translateX(0);
+  }
+}
+@keyframes drawerSlideOutRight {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(100%);
+  }
+}
+@keyframes drawerSlideInLeft {
+  from {
+    transform: translateX(-100%);
+  }
+  to {
+    transform: translateX(0);
+  }
+}
+@keyframes drawerSlideInBottom {
+  from {
+    transform: translateY(100%);
+  }
+  to {
+    transform: translateY(0);
+  }
+}
+
+.animate-drawer-in-right {
+  animation: drawerSlideInRight 420ms var(--ease-drawer) both;
+}
+.animate-drawer-out-right {
+  animation: drawerSlideOutRight 300ms var(--ease-exit) both;
+}
+.animate-drawer-in-left {
+  animation: drawerSlideInLeft 420ms var(--ease-drawer) both;
+}
+.animate-drawer-in-bottom {
+  animation: drawerSlideInBottom 420ms var(--ease-drawer) both;
+}
+
+/* A11y Reduced Motion */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    scroll-behavior: auto !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* In-app motion kill switch (v3.8.0 §4.7.6): same hard-zero policy as the OS preference. */
+.no-motion *,
+.no-motion *::before,
+.no-motion *::after {
+  animation-duration: 0.01ms !important;
+  animation-iteration-count: 1 !important;
+  scroll-behavior: auto !important;
+  transition-duration: 0.01ms !important;
+}
+
+/* SupDance Brand Typography - Jost Medium (中粗体 500) */
+.font-brand {
+  font-family: var(--font-jost), 'Jost', system-ui, -apple-system, sans-serif;
+  font-weight: 500;
+  letter-spacing: -0.01em;
+}
+
+.font-jost {
+  font-family: var(--font-jost), 'Jost', system-ui, -apple-system, sans-serif;
+}
+
+@layer utilities {
+  .text-mono {
+    font-family: var(--font-mono);
+  }
+}
+
+/* Global Site Banner Special Animations */
+@keyframes bannerShimmer {
+  0% {
+    transform: translateX(-100%);
+  }
+  50%, 100% {
+    transform: translateX(100%);
+  }
+}
+
+@keyframes bannerRadar {
+  0% {
+    transform: scale(0.95);
+    opacity: 0.9;
+  }
+  70% {
+    transform: scale(2.2);
+    opacity: 0;
+  }
+  100% {
+    transform: scale(2.2);
+    opacity: 0;
+  }
+}
+
+.animate-banner-shimmer {
+  animation: bannerShimmer 4.5s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+}
+
+.animate-banner-radar {
+  animation: bannerRadar 2s cubic-bezier(0, 0, 0.2, 1) infinite;
+}
+
+/* Ambient Diffusion Glow & Mesh Aura Keyframes */
+@keyframes bannerAuraBreathe {
+  0%, 100% {
+    transform: scale(1) translateY(0);
+    opacity: 0.7;
+  }
+  50% {
+    transform: scale(1.15) translateY(-2px);
+    opacity: 0.95;
+  }
+}
+
+@keyframes bannerAuraDrift {
+  0% {
+    transform: translate(-10%, 0%) scale(1);
+  }
+  50% {
+    transform: translate(15%, -8%) scale(1.12);
+  }
+  100% {
+    transform: translate(-10%, 0%) scale(1);
+  }
+}
+
+.animate-banner-aura {
+  animation: bannerAuraBreathe 6s ease-in-out infinite;
+}
+
+.animate-banner-drift {
+  animation: bannerAuraDrift 9s ease-in-out infinite;
+}
+
+/* Ambient Overflow Glow (向下溢出映射到页面背景) */
+.banner-ambient-glow {
+  box-shadow: var(--shadow-elevation-2);
+}
+
+/* UI Design System §2.8 Engineering Dot-Grid & Atmospheric Mask */
+.bg-dot-grid {
+  background-image: radial-gradient(var(--border-strong) 1px, transparent 1px);
+  background-size: var(--dot-grid-size, 24px) var(--dot-grid-size, 24px);
+}
+
+.hero-atmospheric-mask {
+  mask-image: linear-gradient(to bottom, black 40%, transparent 100%);
+  -webkit-mask-image: linear-gradient(to bottom, black 40%, transparent 100%);
+}
+
+/* Smooth Horizontal Infinite Marquee for Model Ecosystem Slider */
+@keyframes marquee {
+  0% {
+    transform: translateX(0%);
+  }
+  100% {
+    transform: translateX(-50%);
+  }
+}
+
+.animate-marquee {
+  display: flex;
+  width: max-content;
+  animation: marquee 40s linear infinite;
+  will-change: transform;
+}
+
+.animate-marquee:hover {
+  animation-play-state: paused;
+}
+
+/* Smooth Horizontal Infinite Marquee from Left to Right (LTR) */
+@keyframes marquee-ltr {
+  0% {
+    transform: translateX(-50%);
+  }
+  100% {
+    transform: translateX(0%);
+  }
+}
+
+.animate-marquee-ltr {
+  display: flex;
+  width: max-content;
+  animation: marquee-ltr 45s linear infinite;
+  will-change: transform;
+}
+
+.animate-marquee-ltr:hover,
+.animate-marquee-ltr[data-paused="true"] {
+  animation-play-state: paused;
+}
+
+/* ========================================================================== */
+/* SupDance Spatial Light System Keyframe Animations & Utilities              */
+/* ========================================================================== */
+
+@keyframes auroraDriftA {
+  0% {
+    transform: translate3d(0%, 0%, 0) scale(1) rotate(0deg);
+    opacity: 0.75;
+  }
+  50% {
+    transform: translate3d(3%, -2.5%, 0) scale(1.05) rotate(1.2deg);
+    opacity: 0.95;
+  }
+  100% {
+    transform: translate3d(-2.5%, 1.5%, 0) scale(0.98) rotate(-1deg);
+    opacity: 0.8;
+  }
+}
+
+@keyframes auroraDriftB {
+  0% {
+    transform: translate3d(0%, 0%, 0) scale(1) rotate(0deg);
+    opacity: 0.7;
+  }
+  50% {
+    transform: translate3d(-3.5%, 3%, 0) scale(1.07) rotate(-1.5deg);
+    opacity: 0.92;
+  }
+  100% {
+    transform: translate3d(2.5%, -2%, 0) scale(0.96) rotate(1deg);
+    opacity: 0.75;
+  }
+}
+
+@keyframes auroraBreatheC {
+  0%, 100% {
+    transform: scale(1) translate3d(0, 0, 0);
+    opacity: 0.65;
+  }
+  50% {
+    transform: scale(1.08) translate3d(1.5%, -1.5%, 0);
+    opacity: 0.88;
+  }
+}
+
+@keyframes auroraArcSweep {
+  0%, 100% {
+    transform: translate3d(0, 0, 0) scale(1) rotate(0deg);
+    opacity: 0.85;
+  }
+  50% {
+    transform: translate3d(-1.5%, -2%, 0) scale(1.03) rotate(-0.8deg);
+    opacity: 1;
+  }
+}
+
+.animate-aurora-drift-a {
+  animation: auroraDriftA 10s ease-in-out infinite alternate;
+  will-change: transform, opacity;
+}
+
+.animate-aurora-drift-b {
+  animation: auroraDriftB 12s ease-in-out infinite alternate;
+  will-change: transform, opacity;
+}
+
+.animate-aurora-breathe-c {
+  animation: auroraBreatheC 8s ease-in-out infinite alternate;
+  will-change: transform, opacity;
+}
+
+.animate-aurora-arc {
+  animation: auroraArcSweep 10s ease-in-out infinite alternate;
+  will-change: transform, opacity;
+}
+
+/* Spatial Dot Grid with radial illumination mask */
+.spatial-dot-grid {
+  background-image: radial-gradient(var(--spatial-grid-color, rgba(120, 160, 255, 0.14)) 1px, transparent 1px);
+  background-size: var(--spatial-grid-size, 24px) var(--spatial-grid-size, 24px);
+}
+
+/* Subtle noise texture to eliminate 8-bit banding */
+.spatial-noise-overlay {
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' opacity='0.035'/%3E%3C/svg%3E");
+}
+
+/* Card Shimmer / Glow Effect matching oiioii */
+@keyframes borderShineSpin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.animate-border-shine {
+  animation: borderShineSpin 6s linear infinite;
+}
+
+/* Premium Floating & Holographic Motion Effects */
+@keyframes subtleFloat {
+  0%, 100% {
+    transform: translateY(0px) rotate(0deg);
+  }
+  50% {
+    transform: translateY(-8px) rotate(0.8deg);
+  }
+}
+
+@keyframes subtleFloatReverse {
+  0%, 100% {
+    transform: translateY(0px) rotate(0deg);
+  }
+  50% {
+    transform: translateY(8px) rotate(-0.8deg);
+  }
+}
+
+@keyframes glowPulse {
+  0%, 100% {
+    opacity: 0.6;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.95;
+    transform: scale(1.04);
+  }
+}
+
+.animate-subtle-float {
+  animation: subtleFloat 5s ease-in-out infinite;
+}
+
+.animate-subtle-float-reverse {
+  animation: subtleFloatReverse 6s ease-in-out infinite;
+}
+
+.animate-glow-pulse {
+  animation: glowPulse 4s ease-in-out infinite;
+}
+
+
+
+

@@ -1,0 +1,412 @@
+{
+  "uploader": {
+    "clear": "クリア",
+    "uploadPrompt": "オーディオトラックをアップロード",
+    "uploadHint": "MP3、WAV、M4A（最大20MB）",
+    "uploading": "アップロード中...",
+    "ready": "生成の準備完了",
+    "maxSuffix": "（最大 {max}）",
+    "trackLabel": "トラック #{index}",
+    "sizeLimitError": "音声ファイルが20MBの制限を超えています。",
+    "uploadFailedError": "アップロード失敗：{message}"
+  },
+  "player": {
+    "nowPlaying": "再生中",
+    "defaultTitle": "生成されたトラック",
+    "muteUnmute": "ミュート切替",
+    "pause": "一時停止",
+    "play": "再生",
+    "download": "音声をダウンロード",
+    "save": "保存",
+    "seek": "シーク",
+    "volume": "音量",
+    "playbackError": "音声を再生できません。履歴から開き直してください。",
+    "downloadError": "ダウンロードに失敗しました。再試行してください。"
+  },
+  "sidebar": {
+    "modelLabel": "オーディオモデル",
+    "modelVersionLabel": "モデルバージョン",
+    "selectModel": "モデルを選択",
+    "descriptionLabel": "説明",
+    "selectOption": "オプションを選択",
+    "promptPlaceholder": "生成したい音楽や音声の説明を入力...",
+    "lyricsPromptLabel": "歌詞 / プロンプト",
+    "fieldPlaceholder": "{field} を入力...",
+    "requiredFieldError": "必須項目を入力してください：{field}",
+    "musicGroup": "音楽制作",
+    "speechGroup": "音声と効果音",
+    "musicMode": "音楽モード",
+    "musicModes": {
+      "lyrics": "自作の歌詞",
+      "description": "説明から楽曲を作成",
+      "instrumental": "インストゥルメンタル"
+    }
+  },
+  "generate": {
+    "generating": "音声を生成中...",
+    "cta": "トラックを生成",
+    "noUrlError": "APIから音声URLが返されませんでした。",
+    "genericError": "音声の生成に失敗しました",
+    "droppedFileUploadError": "ドラッグされたファイルのアップロードに失敗しました：{message}",
+    "pending": "生成中のタスクがあります。元のタスクを確認してください。",
+    "resume": "元のタスクを確認"
+  },
+  "result": {
+    "errorHeading": "生成エラー",
+    "loadingHeading": "サウンドトラックを生成中",
+    "loadingSubtext": "音声波形とボーカルをレンダリングしています...",
+    "emptyHeading": "オーディオスタジオ",
+    "emptyBody": "AI音楽モデル、ボイスクローナー、またはサウンドジェネレーターを選択してください。左側のパラメータを調整して、高品位なトラックを作成しましょう。",
+    "newGeneration": "新規生成",
+    "success": "生成成功"
+  },
+  "history": {
+    "heading": "生成履歴（{count}）",
+    "untitled": "無題のオーディオ",
+    "fallbackModel": "オーディオ",
+    "unavailable": "履歴を読み込めません。"
+  },
+  "models": {
+    "suno-create-music": {
+      "name": "Suno 音楽生成",
+      "description": "Sunoはテキストプロンプトからボーカル、歌詞、楽器演奏を含むフル楽曲を即座に生成します。気分、ジャンル、具体的な歌詞のアイデアを指定すれば、スタジオ品質のトラックを作成できます。"
+    },
+    "suno-remix-music": {
+      "name": "Suno 音楽リミックス",
+      "description": "既存の音声トラックを新しいスタイルやプロンプトで再構成し、全く新しいアレンジを生み出します。"
+    },
+    "suno-extend-music": {
+      "name": "Suno 音楽拡張・延長",
+      "description": "既存の音声トラックを指定した秒数からシームレスに延長・展開します。"
+    },
+    "suno-generate-sounds": {
+      "name": "Suno 効果音生成",
+      "description": "テキストからリアルな効果音、環境音、トランジション音、リズムループを生成します。"
+    },
+    "suno-add-vocals": {
+      "name": "Suno ボーカル追加",
+      "description": "既存のインストゥルメンタル音源に表現力豊かなボーカルと歌声を追加します。"
+    },
+    "suno-generate-mashup": {
+      "name": "Suno マッシュアップ",
+      "description": "複数のオーディオトラックを融合し、独創的なマッシュアップ作品を作成します。"
+    },
+    "suno-add-instrumental": {
+      "name": "Suno 伴奏追加",
+      "description": "アカペラや音声クリップに合わせた本格的な楽器伴奏を自動生成します。"
+    },
+    "suno-voice-clone": {
+      "name": "Suno 声・ボーカルクローン",
+      "description": "音声サンプルから声質を抽出し、楽曲制作に使える専用ボイスペルソナを作成します。"
+    },
+    "minimax-voice-clone": {
+      "name": "MiniMax 声・ボイスクローン",
+      "description": "高精度に対象の話者の声を再現。ノイズ除去と音量正規化にも対応しています。"
+    },
+    "minimax-speech-2.6-hd": {
+      "name": "MiniMax 音声合成 HD",
+      "description": "MiniMaxの高品位多言語音声合成。豊かな感情表現、話速、ピッチ調整に対応。"
+    },
+    "minimax-speech-2.6-turbo": {
+      "name": "MiniMax 音声合成 Turbo",
+      "description": "極めて低遅延な音声合成モデル。リアルタイム対話や長文の読み上げに最適です。"
+    },
+    "mmaudio-v2-text-to-audio": {
+      "name": "MM Audio V2 音声生成",
+      "description": "文字による描写を高品位な自然環境音やサウンドエフェクトに変換するマルチモーダル音声モデル。"
+    },
+    "elevenlabs-text-to-dialogue-v3": {
+      "name": "ElevenLabs 複数人対話 V3",
+      "description": "複数キャラクターによる掛け合いスクリプトを、臨場感あふれる声と表現力で合成します。"
+    },
+    "suno-convert-to-wav": {
+      "name": "Suno WAV 変換",
+      "description": "生成されたSunoトラックをスタジオ品質のロスレスWAV形式に変換します。"
+    },
+    "gemini-3-1-flash-tts": {
+      "name": "Gemini 3.1 Flash 音声合成",
+      "description": "Google Geminiの最新Flash音声エンジン。自然な間、対話、生き生きとした抑揚に対応。"
+    },
+    "gemini-2-5-pro-tts": {
+      "name": "Gemini 2.5 Pro 音声合成",
+      "description": "オーディオブックや映画のナレーション向けに設計された極めて自然なニューラル音声合成。"
+    },
+    "elevenlabs-tts-turbo-2-5": {
+      "name": "ElevenLabs 高速音声合成 2.5",
+      "description": "業界最高水準のリアルな音声合成。高速生成と細やかな声の安定性制御に対応。"
+    },
+    "minimax-music-3.0": {
+      "name": "MiniMax 音楽 3.0",
+      "description": "プロンプトと構造化された歌詞から、ボーカル入り楽曲または伴奏曲を生成します。"
+    },
+    "suno-v4": {
+      "name": "Suno v4",
+      "description": "Suno v4 はテキストプロンプトからボーカル・歌詞・伴奏を含むスタジオ品質の楽曲を制作します。"
+    },
+    "suno-v3.5": {
+      "name": "Suno v3.5",
+      "description": "Suno v3.5 はテキストプロンプトからポップス向けの楽曲をボーカル・歌詞・伴奏付きで素早く合成します。"
+    }
+  },
+  "fields": {
+    "prompt": {
+      "title": "歌詞 / プロンプト",
+      "description": "生成したい音声内容の説明。プロンプトは歌詞として楽曲内で歌唱されます。",
+      "placeholder": "生成したい内容や歌詞を入力してください...",
+      "example": "勝利への決意を歌う、重厚なビートと力強い男性ボーカルのラップトラック。"
+    },
+    "style": {
+      "title": "音楽スタイル",
+      "description": "生成する音声の音楽スタイル指定。",
+      "placeholder": "ジャズ、クラシック、エレクトロニック、ポップ、ロック、ヒップホップなど",
+      "example": "クラシック"
+    },
+    "model": {
+      "title": "モデルバージョン",
+      "description": "生成に使用する AI モデルのバージョン。"
+    },
+    "custom_mode": {
+      "title": "カスタムモード",
+      "description": "高度な設定のためのカスタムモードを有効にします。"
+    },
+    "title": {
+      "title": "曲名・タイトル",
+      "description": "生成する音楽トラックのタイトル（任意）。",
+      "placeholder": "穏やかなピアノ瞑想"
+    },
+    "persona_id": {
+      "title": "ペルソナ ID",
+      "description": "生成音楽に適用するキャラクター ID またはカスタム音声 ID（任意）。",
+      "placeholder": "ペルソナ ID を入力..."
+    },
+    "persona_model": {
+      "title": "ペルソナモデルタイプ",
+      "description": "スタイルプリセットとボイスクローンを区別するためのペルソナタイプ選択。",
+      "options": {
+        "style_persona": "スタイルペルソナ",
+        "voice_persona": "ボイスペルソナ"
+      }
+    },
+    "instrumental": {
+      "title": "インストゥルメンタルのみ",
+      "description": "ボーカルなしの純粋な楽器演奏曲を生成します。"
+    },
+    "negative_tags": {
+      "title": "除外スタイル / ネガティブタグ",
+      "description": "生成音声から除外したい音楽スタイルや特徴（任意）。",
+      "placeholder": "ヘヴィメタル、アップビートドラム"
+    },
+    "vocal_gender": {
+      "title": "ボーカルの性別",
+      "description": "歌唱ボーカルの希望する性別。",
+      "options": {
+        "male": "男性",
+        "female": "女性"
+      }
+    },
+    "style_weight": {
+      "title": "スタイルウェイト",
+      "description": "指定した音楽スタイルの反映度合い（0〜1）。"
+    },
+    "weirdness_constraint": {
+      "title": "特異性制約 / 創造性",
+      "description": "音楽の実験性や独自性の度合いを調整します。"
+    },
+    "audio_weight": {
+      "title": "オーディオウェイト",
+      "description": "リミックスや継続生成時における参照音声の重み。"
+    },
+    "audio_url": {
+      "title": "音声ファイル",
+      "description": "参照用の音声ファイルをアップロードまたはURL入力。"
+    },
+    "continue_at": {
+      "title": "継続開始位置（秒）",
+      "description": "トラックを延長開始する秒数位置。"
+    },
+    "sound_loop": {
+      "title": "シームレスループ",
+      "description": "継ぎ目なくループ再生可能なオーディオを生成します。"
+    },
+    "sound_tempo": {
+      "title": "テンポ (BPM)",
+      "description": "生成する音の1分あたりの拍数 (BPM)。"
+    },
+    "sound_key": {
+      "title": "調・キー",
+      "description": "生成する音の調性（例：ハ長調、イ短調）。"
+    },
+    "grab_lyrics": {
+      "title": "歌詞を抽出",
+      "description": "入力オーディオから歌唱歌詞を自動抽出して保持します。"
+    },
+    "audios_list": {
+      "title": "オーディオトラック一覧",
+      "description": "マッシュアップに結合するオーディオトラックの一覧。"
+    },
+    "tags": {
+      "title": "スタイルタグ",
+      "description": "ジャンル、ムード、楽器を表すタグ。"
+    },
+    "voice_name": {
+      "title": "音声の名前",
+      "description": "クローンしたボイスプロファイルの名前。"
+    },
+    "description": {
+      "title": "説明",
+      "description": "音声プロファイルやスタイルの説明。"
+    },
+    "language": {
+      "title": "主要言語",
+      "description": "話者または歌唱のメイン言語。"
+    },
+    "vocal_start_s": {
+      "title": "ボーカル開始秒数",
+      "description": "ボーカルサンプルの抽出開始秒数。"
+    },
+    "vocal_end_s": {
+      "title": "ボーカル終了秒数",
+      "description": "ボーカルサンプルの抽出終了秒数。"
+    },
+    "custom_voice_id": {
+      "title": "カスタム音声 ID",
+      "description": "対象ボイスプロファイルの識別子。"
+    },
+    "need_noise_reduction": {
+      "title": "ノイズ低減",
+      "description": "録音音声の背景ノイズを自動で除去します。"
+    },
+    "need_volume_normalization": {
+      "title": "音量正規化",
+      "description": "音声の音量を自動的に均一化します。"
+    },
+    "accuracy": {
+      "title": "クローン精度",
+      "description": "音声クローンの再現精度設定。"
+    },
+    "voice_id": {
+      "title": "音声プリセット",
+      "description": "厳選されたプリセット話者プロファイルを選択。"
+    },
+    "speed": {
+      "title": "話速",
+      "description": "音声合成の読み上げ速度（1.0が標準速度）。"
+    },
+    "volume": {
+      "title": "音量",
+      "description": "音声出力の音量倍率。"
+    },
+    "pitch": {
+      "title": "ピッチ（音の高さ）",
+      "description": "合成音声の音の高さ調整。"
+    },
+    "emotion": {
+      "title": "感情表現",
+      "description": "音声に込める感情トーン。",
+      "options": {
+        "happy": "喜び・明るい",
+        "sad": "悲しみ",
+        "angry": "怒り",
+        "fearful": "恐れ",
+        "disgusted": "嫌悪",
+        "surprised": "驚き",
+        "neutral": "標準・ニュートラル"
+      }
+    },
+    "english_normalization": {
+      "title": "英語テキスト正規化",
+      "description": "英語の数値、記号、日付の読み方を最適化します。"
+    },
+    "sample_rate": {
+      "title": "サンプリングレート (Hz)",
+      "description": "生成音声の1秒あたりのサンプリング周波数。"
+    },
+    "bitrate": {
+      "title": "ビットレート (bps)",
+      "description": "生成音声のビットレート。"
+    },
+    "channel": {
+      "title": "チャンネル数",
+      "description": "オーディオ出力のチャンネル形式。",
+      "options": {
+        "1": "モノラル (1ch)",
+        "2": "ステレオ (2ch)"
+      }
+    },
+    "format": {
+      "title": "オーディオ形式",
+      "description": "出力する音声ファイルのコンテナ形式。",
+      "options": {
+        "mp3": "MP3 形式",
+        "wav": "WAV（ロスレス）",
+        "pcm": "PCM 生データ",
+        "flac": "FLAC（可逆圧縮）"
+      }
+    },
+    "language_boost": {
+      "title": "言語認識強化",
+      "description": "指定した言語の発音・イントネーション認識を強化。"
+    },
+    "duration": {
+      "title": "音声の長さ（秒）",
+      "description": "生成する音声の秒数長。"
+    },
+    "dialogue": {
+      "title": "対話スクリプト",
+      "description": "複数キャラクターによる掛け合いスクリプト。"
+    },
+    "stability": {
+      "title": "音声の安定性",
+      "description": "合成音声の一貫性と安定性の度合い（0〜1）。"
+    },
+    "similarity_boost": {
+      "title": "類似度ブースト",
+      "description": "元の話者との声質の類似性を強化します。"
+    },
+    "language_code": {
+      "title": "言語コード",
+      "description": "音声合成の対象言語 ISO コード。"
+    },
+    "task_id": {
+      "title": "タスク ID",
+      "description": "以前の生成リクエストのタスク ID。"
+    },
+    "audio_id": {
+      "title": "オーディオ ID",
+      "description": "変換対象のオーディオトラック ID。"
+    },
+    "speakers": {
+      "title": "話者設定",
+      "description": "対話に参加する各キャラクターの声の設定。"
+    },
+    "dialogue_turns": {
+      "title": "対話ターン",
+      "description": "時系列順に並んだ対話セリフのリスト。"
+    },
+    "scene": {
+      "title": "音響シーン設定",
+      "description": "録音環境の音響特性や空間リバーブ設定。"
+    },
+    "sample_context": {
+      "title": "朗読スタイル・トーン",
+      "description": "全体的な語り口、トーン、文脈の指示。"
+    },
+    "temperature": {
+      "title": "温度 (Temperature)",
+      "description": "サンプリングのランダム性と創造性（0〜2）。"
+    },
+    "lyrics": {
+      "title": "構造化歌詞",
+      "description": "Aメロ、サビなどの構成マーカーを含む歌詞テキスト。",
+      "placeholder": "セクション分けされた歌詞を入力...",
+      "example": "街のネオンを駆け抜けて\n私たちは自由、輝き続ける"
+    },
+    "is_instrumental": {
+      "title": "インストゥルメンタルのみ",
+      "description": "歌声を含まない純粋な楽器演奏のみを生成します。"
+    },
+    "lyrics_optimizer": {
+      "title": "説明から歌詞を作成"
+    }
+  }
+}

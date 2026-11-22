@@ -1,0 +1,412 @@
+{
+  "uploader": {
+    "clear": "清除",
+    "uploadPrompt": "上傳音訊文件",
+    "uploadHint": "支援 MP3、WAV、M4A，最大 20MB",
+    "uploading": "上傳中...",
+    "ready": "已準備好生成",
+    "maxSuffix": "（最多 {max} 個）",
+    "trackLabel": "音轨 #{index}",
+    "sizeLimitError": "音訊文件超過 20MB 限製。",
+    "uploadFailedError": "上傳失敗：{message}"
+  },
+  "player": {
+    "nowPlaying": "正在播放",
+    "defaultTitle": "生成的音轨",
+    "muteUnmute": "靜音/取消靜音",
+    "pause": "暫停",
+    "play": "播放",
+    "download": "下載音訊",
+    "save": "儲存",
+    "seek": "調節進度",
+    "volume": "音量",
+    "playbackError": "音訊暫時無法播放，請從歷史記錄重新開啟。",
+    "downloadError": "音訊下載失敗，請稍後重試。"
+  },
+  "sidebar": {
+    "modelLabel": "音訊模型",
+    "modelVersionLabel": "模型版本",
+    "selectModel": "選取模型",
+    "descriptionLabel": "描述",
+    "selectOption": "選取選項",
+    "promptPlaceholder": "輸入您想要生成的內容...",
+    "lyricsPromptLabel": "歌詞 / 提示詞",
+    "fieldPlaceholder": "輸入{field}...",
+    "requiredFieldError": "請填寫必填字段：{field}",
+    "musicGroup": "音樂創作",
+    "speechGroup": "語音與音效",
+    "musicMode": "音樂模式",
+    "musicModes": {
+      "lyrics": "使用自填歌詞",
+      "description": "描述生成歌曲",
+      "instrumental": "純音樂"
+    }
+  },
+  "generate": {
+    "generating": "正在生成音訊...",
+    "cta": "生成音轨",
+    "noUrlError": "API 未返回音訊地址。",
+    "genericError": "音訊生成失敗",
+    "droppedFileUploadError": "上傳拖放的文件失敗：{message}",
+    "pending": "已有生成任務尚未完成，請繼續查看原任務。",
+    "resume": "繼續查看原任務"
+  },
+  "result": {
+    "errorHeading": "生成錯誤",
+    "loadingHeading": "正在生成配樂",
+    "loadingSubtext": "正在渲染音訊波形和人聲...",
+    "emptyHeading": "音訊工作室",
+    "emptyBody": "選取一個 AI 音樂模型、音效複製或音效生成器。在左侧修改參數，創作您的下一段高保真音轨。",
+    "newGeneration": "新建生成",
+    "success": "成功"
+  },
+  "history": {
+    "heading": "生成歷史（{count}）",
+    "untitled": "未命名音訊",
+    "fallbackModel": "音訊",
+    "unavailable": "生成歷史暫時無法讀取。"
+  },
+  "models": {
+    "suno-create-music": {
+      "name": "Suno 音樂創作",
+      "description": "Suno 可將文字提示詞生成包含人聲、歌詞與伴奏的完整歌曲。您可以描述情緒、風格甚至具體的歌詞靈感，Suno 即可在數秒內創作出錄音室品質的音軌。"
+    },
+    "suno-remix-music": {
+      "name": "Suno 音樂混音",
+      "description": "基於已有參考音訊與文字提示詞進行風格重混與重新編曲，創造全新音樂風格。"
+    },
+    "suno-extend-music": {
+      "name": "Suno 音樂續寫",
+      "description": "延長或續寫現有音軌，在指定時間點無縫銜接後續樂段或副歌。"
+    },
+    "suno-generate-sounds": {
+      "name": "Suno 音效生成",
+      "description": "根據文字描述生成各類擬真音效、環境音、過渡轉場聲與節奏循環。"
+    },
+    "suno-add-vocals": {
+      "name": "Suno 新增人聲",
+      "description": "為已有的純器樂伴奏音軌新增逼真且富有表現力的人聲演唱。"
+    },
+    "suno-generate-mashup": {
+      "name": "Suno 混搭串燒",
+      "description": "融合多首參考音軌的旋律與風格，生成創意十足的音樂混搭作品。"
+    },
+    "suno-add-instrumental": {
+      "name": "Suno 新增伴奏",
+      "description": "為人聲乾音或音訊片段智慧編配完整的器樂伴奏。"
+    },
+    "suno-voice-clone": {
+      "name": "Suno 聲音克隆",
+      "description": "上傳人聲音訊提取音色特徵，生成專屬聲音人設用於音樂創作。"
+    },
+    "minimax-voice-clone": {
+      "name": "MiniMax 聲音克隆",
+      "description": "高精度復刻目標說話人的音色，支援降噪與音量自適應標準化。"
+    },
+    "minimax-speech-2.6-hd": {
+      "name": "MiniMax 語音 HD",
+      "description": "MiniMax 旗艦級高解析多語種語音合成，支援細膩情感與語速音調調節。"
+    },
+    "minimax-speech-2.6-turbo": {
+      "name": "MiniMax 語音 Turbo",
+      "description": "極速低延遲語音合成模型，適合即時互動、對話與大段文字轉語音。"
+    },
+    "mmaudio-v2-text-to-audio": {
+      "name": "MM Audio V2 文字生成音訊",
+      "description": "先進的多模態音訊合成模型，精準將文字描述轉化為高保真自然聲音與音效。"
+    },
+    "elevenlabs-text-to-dialogue-v3": {
+      "name": "ElevenLabs 多角色對話 V3",
+      "description": "支援多說話人角色的智慧劇本對話合成，逼真呈現人物對白與語氣張力。"
+    },
+    "suno-convert-to-wav": {
+      "name": "Suno 轉 WAV 高清格式",
+      "description": "將之前生成的 Suno 音樂轉換為無損高品質 WAV 音訊檔案。"
+    },
+    "gemini-3-1-flash-tts": {
+      "name": "Gemini 3.1 Flash 語音合成",
+      "description": "Google Gemini 最新 Flash 語音引擎，支援豐富場景、情感音色與多輪自然對話。"
+    },
+    "gemini-2-5-pro-tts": {
+      "name": "Gemini 2.5 Pro 語音合成",
+      "description": "Google Gemini 2.5 Pro 級超自然高擬真語音合成，專為專業長篇與影視級旁白設計。"
+    },
+    "elevenlabs-tts-turbo-2-5": {
+      "name": "ElevenLabs 極速語音 2.5",
+      "description": "ElevenLabs 行業領先的擬真人聲合成，具備超高音色還原度與自然流利度。"
+    },
+    "minimax-music-3.0": {
+      "name": "MiniMax 音樂 3.0",
+      "description": "MiniMax 音樂大模型，支援根據提示詞與結構化歌詞生成完整歌曲或純伴奏。"
+    },
+    "suno-v4": {
+      "name": "Suno v4 錄音室母帶級全曲",
+      "description": "Suno v4 可將文字提示詞創作成錄音室品質的完整歌曲，包含人聲、歌詞與伴奏。"
+    },
+    "suno-v3.5": {
+      "name": "Suno v3.5 流行音樂合成",
+      "description": "Suno v3.5 可根據文字提示詞快速合成流行風格歌曲，包含人聲、歌詞與伴奏。"
+    }
+  },
+  "fields": {
+    "prompt": {
+      "title": "歌詞 / 提示詞",
+      "description": "描述您想要的音訊內容。提示詞將作為歌詞在生成的曲目中演唱。",
+      "placeholder": "輸入您想要生成的內容或在此輸入歌詞...",
+      "example": "激昂震撼的中文說唱曲目，伴隨強勁節奏與自信的男聲演唱，主題關於追逐勝利與夢想。"
+    },
+    "style": {
+      "title": "音樂風格",
+      "description": "生成音訊的音樂風格規範與流派定義。",
+      "placeholder": "爵士、古典、電子、流行、搖滾、嘻哈、國風等",
+      "example": "古典"
+    },
+    "model": {
+      "title": "模型版本",
+      "description": "用於生成的 AI 模型版本。"
+    },
+    "custom_mode": {
+      "title": "自訂模式",
+      "description": "開啟自訂模式以解鎖更多進階設定。"
+    },
+    "title": {
+      "title": "曲目標題",
+      "description": "生成音樂曲目的標題（可選）。",
+      "placeholder": "寧靜鋼琴冥想"
+    },
+    "persona_id": {
+      "title": "音色/人設 ID",
+      "description": "應用於生成音樂的角色 ID 或自訂聲音 ID（可選）。",
+      "placeholder": "輸入人設或聲音 ID..."
+    },
+    "persona_model": {
+      "title": "人設模型類型",
+      "description": "選擇人設 ID 類型，用於區分克隆音色與預設風格。",
+      "options": {
+        "style_persona": "風格人設",
+        "voice_persona": "聲音人設"
+      }
+    },
+    "instrumental": {
+      "title": "純音樂伴奏",
+      "description": "開啟此選項可生成純器樂伴奏（無人聲）。若關閉，提示詞將作為歌詞演唱。"
+    },
+    "negative_tags": {
+      "title": "排除風格 / 負向標籤",
+      "description": "從生成音訊中排除的音樂風格或特徵（可選）。",
+      "placeholder": "重金屬，強烈鼓點"
+    },
+    "vocal_gender": {
+      "title": "人聲音色性別",
+      "description": "生成演唱人聲的首選性別。",
+      "options": {
+        "male": "男聲",
+        "female": "女聲"
+      }
+    },
+    "style_weight": {
+      "title": "風格權重",
+      "description": "所指定音樂風格對生成結果的影響比重（0 到 1）。"
+    },
+    "weirdness_constraint": {
+      "title": "創意自由度 / 奇特度約束",
+      "description": "調節音樂旋律的實驗性與非常規自由度。"
+    },
+    "audio_weight": {
+      "title": "參考音訊權重",
+      "description": "參考或原音訊在混音/續寫中的權重佔比。"
+    },
+    "audio_url": {
+      "title": "音訊檔案",
+      "description": "上傳或輸入音訊 URL 作為參考音軌。"
+    },
+    "continue_at": {
+      "title": "續寫起點（秒）",
+      "description": "從指定時間點（秒）開始繼續延長生成音訊。"
+    },
+    "sound_loop": {
+      "title": "無縫循環音效",
+      "description": "生成可無縫循環播放的音訊片段。"
+    },
+    "sound_tempo": {
+      "title": "節拍速度 (BPM)",
+      "description": "生成音訊的每分鐘節拍數 (BPM)。"
+    },
+    "sound_key": {
+      "title": "調式 / 調號",
+      "description": "生成音訊的音樂調號與調式（如 C大調、A小調）。"
+    },
+    "grab_lyrics": {
+      "title": "提取歌詞",
+      "description": "自動提取並保留輸入音訊中的演唱歌詞。"
+    },
+    "audios_list": {
+      "title": "音訊檔案列表",
+      "description": "待合併混搭的多段音訊檔案列表。"
+    },
+    "tags": {
+      "title": "風格標籤",
+      "description": "描述音樂流派、情緒與樂器特徵的標籤。"
+    },
+    "voice_name": {
+      "title": "音色名稱",
+      "description": "為克隆的聲音角色設定自訂名稱。"
+    },
+    "description": {
+      "title": "音色描述",
+      "description": "聲音角色的音色特點或應用場景描述。"
+    },
+    "language": {
+      "title": "主要語言",
+      "description": "說話人或演唱的主要語言。"
+    },
+    "vocal_start_s": {
+      "title": "人聲起始時間（秒）",
+      "description": "截取目標人聲樣本的起始秒數。"
+    },
+    "vocal_end_s": {
+      "title": "人聲結束時間（秒）",
+      "description": "截取目標人聲樣本的結束秒數。"
+    },
+    "custom_voice_id": {
+      "title": "自訂音色 ID",
+      "description": "目標聲音角色的唯一識別碼。"
+    },
+    "need_noise_reduction": {
+      "title": "智慧降噪",
+      "description": "自動消除輸入人聲音訊中的環境背景雜音。"
+    },
+    "need_volume_normalization": {
+      "title": "音量標準化",
+      "description": "自動平衡並標準化音訊整體音量電平。"
+    },
+    "accuracy": {
+      "title": "克隆保真度",
+      "description": "聲音克隆的特徵還原精度等級。"
+    },
+    "voice_id": {
+      "title": "預設音色 / 說話人",
+      "description": "選擇官方精選的預設配音音色角色。"
+    },
+    "speed": {
+      "title": "語速倍率",
+      "description": "語音播放速度倍率（1.0 為正常語速）。"
+    },
+    "volume": {
+      "title": "輸出音量",
+      "description": "語音輸出音量大小倍率。"
+    },
+    "pitch": {
+      "title": "語調音高",
+      "description": "生成語音的音高升降調節。"
+    },
+    "emotion": {
+      "title": "情感語調",
+      "description": "語音演繹所表達的情感色彩。",
+      "options": {
+        "happy": "高興 / 開心",
+        "sad": "悲傷",
+        "angry": "憤怒",
+        "fearful": "恐懼",
+        "disgusted": "厭惡",
+        "surprised": "驚訝",
+        "neutral": "自然 / 中性"
+      }
+    },
+    "english_normalization": {
+      "title": "英文讀法規範化",
+      "description": "優化英文文字中的數字、符號與日期讀音規範。"
+    },
+    "sample_rate": {
+      "title": "取樣率 (Hz)",
+      "description": "輸出音訊的每秒取樣頻率。"
+    },
+    "bitrate": {
+      "title": "位元速率 (bps)",
+      "description": "輸出音訊的資料傳輸速率。"
+    },
+    "channel": {
+      "title": "聲道設定",
+      "description": "輸出音訊的聲音通道格式。",
+      "options": {
+        "1": "單聲道 (Mono)",
+        "2": "立體聲 (Stereo)"
+      }
+    },
+    "format": {
+      "title": "音訊格式",
+      "description": "生成的音訊檔案封裝格式。",
+      "options": {
+        "mp3": "MP3 格式",
+        "wav": "WAV 無損",
+        "pcm": "PCM 原始",
+        "flac": "FLAC 無損"
+      }
+    },
+    "language_boost": {
+      "title": "多語種識別增強",
+      "description": "針對選定語言優化音素識別與發音清晰度。"
+    },
+    "duration": {
+      "title": "音訊時長（秒）",
+      "description": "期望生成的音訊長度（秒）。"
+    },
+    "dialogue": {
+      "title": "對話劇本",
+      "description": "用於多角色配音對話的結構化劇本文字。"
+    },
+    "stability": {
+      "title": "聲音穩定性",
+      "description": "合成音色的穩定一致性控制（0 到 1）。"
+    },
+    "similarity_boost": {
+      "title": "音色相似度增強",
+      "description": "強化與原始說話人音色的聲線相似程度。"
+    },
+    "language_code": {
+      "title": "語言代碼",
+      "description": "語音合成的目標語言 ISO 代碼。"
+    },
+    "task_id": {
+      "title": "任務 ID",
+      "description": "先前生成任務的請求 ID，用於格式轉換。"
+    },
+    "audio_id": {
+      "title": "音訊 ID",
+      "description": "待轉換處理的目標音訊音軌識別碼。"
+    },
+    "speakers": {
+      "title": "說話人角色配置",
+      "description": "對話中參與的說話人角色音色定義。"
+    },
+    "dialogue_turns": {
+      "title": "對話對白輪次",
+      "description": "按時間順序排列的多角色對話對白。"
+    },
+    "scene": {
+      "title": "聲學場景氛圍",
+      "description": "設定錄音環境的聲學反射與環境空間混響。"
+    },
+    "sample_context": {
+      "title": "演播風格 / 語調背景",
+      "description": "整體朗讀風格、敘事基調與氛圍背景描述。"
+    },
+    "temperature": {
+      "title": "創意發散度 (Temperature)",
+      "description": "語音生成的隨機性與創造性自由度（0 到 2）。"
+    },
+    "lyrics": {
+      "title": "結構化歌詞",
+      "description": "包含主歌、副歌等樂段標記的歌詞文字。",
+      "placeholder": "在此輸入帶有結構標記的歌詞...",
+      "example": "漫步在閃爍的霓虹街頭\n我們自由奔跑，光芒萬丈"
+    },
+    "is_instrumental": {
+      "title": "僅生成純音樂伴奏",
+      "description": "生成無人聲演唱的純樂器演奏曲目。"
+    },
+    "lyrics_optimizer": {
+      "title": "根據描述自動寫詞"
+    }
+  }
+}

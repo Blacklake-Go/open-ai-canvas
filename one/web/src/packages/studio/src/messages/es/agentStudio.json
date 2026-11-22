@@ -1,0 +1,66 @@
+{
+  "tabs": {
+    "templates": "Plantillas",
+    "my-agents": "Mis Agentes",
+    "my-chats": "Mis Chats"
+  },
+  "headings": {
+    "agents": "Agentes",
+    "createAgent": "Crear Agente"
+  },
+  "buttons": {
+    "back": "Agentes",
+    "create": "Crear",
+    "createAgentSubmit": "Crear Agente",
+    "creating": "Creando...",
+    "send": "Enviar",
+    "retry": "Reintentar",
+    "browseTemplates": "Explorar Plantillas"
+  },
+  "labels": {
+    "name": "Nombre",
+    "description": "Descripción",
+    "systemPrompt": "Prompt del Sistema",
+    "welcomeMessage": "Mensaje de Bienvenida (opcional)"
+  },
+  "placeholders": {
+    "name": "ej. Creador de Subtítulos Pro",
+    "description": "¿En qué ayuda este agente?",
+    "systemPrompt": "Eres un asistente servicial que...",
+    "welcomeMessage": "¡Hola! ¿Cómo puedo ayudarte hoy?",
+    "chatInput": "Envía un mensaje a este agente..."
+  },
+  "empty": {
+    "noChats": "Aún no hay chats",
+    "noAgents": "No se encontraron agentes"
+  },
+  "errors": {
+    "loadFailed": "Error al cargar.",
+    "loadAgentFailed": "Error al cargar el agente",
+    "sendFailed": "Error al enviar el mensaje",
+    "createFailed": "Error al crear el agente"
+  },
+  "card": {
+    "defaultCategory": "Asistente IA",
+    "unnamedAgent": "Agente sin nombre",
+    "byPrefix": "Por",
+    "unknownAgent": "Agente Desconocido",
+    "newChat": "Nuevo Chat",
+    "msgsSuffix": "mensajes"
+  },
+  "time": {
+    "justNow": "hace un momento",
+    "minutesAgo": "hace {n}m",
+    "hoursAgo": "hace {n}h",
+    "daysAgo": "hace {n}d"
+  },
+  "auth": {
+    "heading": "Inicia sesión para usar los agentes",
+    "description": "Las plantillas, tus agentes y el historial de chats están vinculados a tu cuenta de SupDance. Inicia sesión.",
+    "cta": "Iniciar sesión"
+  },
+  "unavailable": {
+    "title": "Creative Agent no está disponible temporalmente",
+    "description": "Estamos conectando las sesiones por usuario, la facturación de generaciones y el almacenamiento de resultados. Mientras tanto, usa las herramientas de imagen y vídeo disponibles en Studio."
+  }
+}

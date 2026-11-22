@@ -1,0 +1,49 @@
+{
+  "empty": {
+    "titleLine1": "COMIENZA A CREAR CON",
+    "titleLine2": "ESTUDIO DE MARKETING",
+    "subtitle": "Describe tu escena, sube tu producto y observa cómo cobran vida anuncios de video de alta conversión con IA."
+  },
+  "uploadSlots": {
+    "product": "Producto",
+    "avatar": "Foto de perfil (Avatar)",
+    "references": "Referencias",
+    "uploadPrefix": "Subir"
+  },
+  "prompt": {
+    "placeholder": "Describe el guion de tu anuncio... Usa @image1 para el producto, @image2 para el avatar."
+  },
+  "dropdowns": {
+    "videoFormatPresets": "Ajustes Preestablecidos de Formato de Video",
+    "avatarPresets": "Ajustes Preestablecidos de Avatar",
+    "aspectRatio": "Relación de Aspecto",
+    "resolution": "Resolución",
+    "duration": "Duración",
+    "selectAvatarFallback": "Seleccionar Avatar"
+  },
+  "buttons": {
+    "generating": "Generando...",
+    "launch": "Lanzar",
+    "enlargePreview": "Ampliar vista previa",
+    "enlargeSelectedAvatar": "Ampliar avatar seleccionado",
+    "selectAvatar": "Seleccionar Avatar",
+    "download": "Descargar",
+    "delete": "Eliminar"
+  },
+  "history": {
+    "badge": "Estudio de Marketing"
+  },
+  "alt": {
+    "creativeAsset": "Recurso creativo {index}",
+    "previousAvatar": "Avatar Anterior",
+    "nextAvatar": "Avatar Siguiente"
+  },
+  "errors": {
+    "missingScript": "Por favor, introduce un guion publicitario.",
+    "missingProductImage": "Por favor, sube una imagen del producto.",
+    "generationFailed": "Error al generar contenido de marketing"
+  },
+  "confirm": {
+    "deleteItem": "¿Estás seguro de que deseas eliminar este elemento generado?"
+  }
+}

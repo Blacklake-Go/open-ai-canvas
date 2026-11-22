@@ -1,0 +1,49 @@
+{
+  "empty": {
+    "titleLine1": "창작 시작하기",
+    "titleLine2": "마케팅 스튜디오",
+    "subtitle": "장면을 설명하고 제품을 업로드하면, 높은 전환율의 AI 비디오 광고가 눈앞에서 완성됩니다."
+  },
+  "uploadSlots": {
+    "product": "제품",
+    "avatar": "아바타",
+    "references": "참조 이미지",
+    "uploadPrefix": "업로드"
+  },
+  "prompt": {
+    "placeholder": "광고 스크립트를 입력하세요... 제품은 @image1, 아바타는 @image2 로 지정하세요."
+  },
+  "dropdowns": {
+    "videoFormatPresets": "동영상 포맷 프리셋",
+    "avatarPresets": "아바타 프리셋",
+    "aspectRatio": "화면 비율",
+    "resolution": "해상도",
+    "duration": "재생 시간",
+    "selectAvatarFallback": "아바타 선택"
+  },
+  "buttons": {
+    "generating": "생성 중...",
+    "launch": "광고 제작",
+    "enlargePreview": "미리보기 확대",
+    "enlargeSelectedAvatar": "선택된 아바타 확대",
+    "selectAvatar": "아바타 선택",
+    "download": "다운로드",
+    "delete": "삭제"
+  },
+  "history": {
+    "badge": "마케팅 스튜디오"
+  },
+  "alt": {
+    "creativeAsset": "크리에이티브 에셋 {index}",
+    "previousAvatar": "이전 아바타",
+    "nextAvatar": "다음 아바타"
+  },
+  "errors": {
+    "missingScript": "광고 스크립트를 입력해 주세요.",
+    "missingProductImage": "제품 이미지를 업로드해 주세요.",
+    "generationFailed": "마케팅 광고 생성에 실패했습니다"
+  },
+  "confirm": {
+    "deleteItem": "이 생성 항목을 삭제하시겠습니까?"
+  }
+}

@@ -1,0 +1,6 @@
+{
+  "title": "Algo falló en esta página",
+  "description": "El resto del sitio funciona. Recarga para reintentar; si sigue fallando, vuelve a Studio.",
+  "retry": "Recargar la página",
+  "backHome": "Volver a Studio"
+}

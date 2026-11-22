@@ -1,0 +1,6 @@
+{
+  "title": "Something went wrong on this page",
+  "description": "The rest of the site is fine. Reload to try again; if it keeps happening, head back to Studio.",
+  "retry": "Reload page",
+  "backHome": "Back to Studio"
+}

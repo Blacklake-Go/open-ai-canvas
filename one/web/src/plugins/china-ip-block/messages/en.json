@@ -1,0 +1,47 @@
+{
+  "blockPage": {
+    "title": "403 Forbidden",
+    "heading": "403 Forbidden",
+    "message": "Access to this server or resource is strictly forbidden.",
+    "footer": "nginx"
+  },
+  "api": {
+    "message": "403 Forbidden - Access Denied"
+  },
+  "admin": {
+    "rowLabel": "Block traffic from mainland China (temporary plugin)",
+    "badgeEnabled": "Blocking enabled (403)",
+    "badgeDisabled": "Blocking disabled",
+    "switchOnAria": "Enable mainland China traffic blocking",
+    "switchOffAria": "Disable mainland China traffic blocking",
+    "contextEnabled": "Every visitor IP from mainland China now gets a 403 Forbidden page. Temporary plugin architecture — safe to remove completely in one command.",
+    "contextDisabled": "Temporary plugin: when enabled, visitors from mainland China see the standard 403 Forbidden page. Supports a whitelist and an admin-console exemption.",
+    "openConfig": "Advanced settings & test",
+    "modalTitle": "Mainland China traffic control (temporary plugin)",
+    "modalCloseAria": "Close settings dialog",
+    "blockCardTitle": "Block all traffic from China",
+    "blockCardDesc": "Once enabled, visitors from mainland China get 403 Forbidden on every public page.",
+    "exemptTitle": "Allow administrators to reach the /admin paths",
+    "exemptDesc": "Recommended. If you manage the site from mainland China, this keeps the block from locking you out of your own console.",
+    "testTitle": "China IP detection test",
+    "testSubtitle": "Live binary search against the authoritative APNIC ranges",
+    "testPlaceholder": "Enter an IP to test, e.g. 114.114.114.114 or 8.8.8.8",
+    "testRun": "Check",
+    "testRunning": "Checking…",
+    "testBlockedTitle": "Would be blocked — IP {ip} belongs to mainland China ({type})",
+    "testBlockedDesc": "Requests to public pages return the 403 Forbidden block page.",
+    "testPassedTitle": "Allowed — IP {ip} is overseas or not a Chinese public IP",
+    "testPassedDesc": "Access to the site is unrestricted and passes normally.",
+    "testError": "The test failed",
+    "whitelistLabel": "Whitelisted IPs or CIDR ranges (one per line, IPv4/IPv6)",
+    "whitelistPlaceholder": "Example:\n192.168.1.100\n120.24.0.0/16",
+    "whitelistHint": "Whitelisted IPs are exempt even when they are located in mainland China.",
+    "uninstallTitle": "How to remove this temporary plugin",
+    "uninstallIntro": "This feature is a self-contained temporary plugin. To remove it and its code completely, run this on the server:",
+    "uninstallCommand": "node plugins/china-ip-block/uninstall.mjs",
+    "uninstallOutro": "The script strips the middleware hook, the admin settings row and the plugin folder — a 100% clean restore.",
+    "cancel": "Cancel",
+    "save": "Save security settings",
+    "saving": "Saving…"
+  }
+}

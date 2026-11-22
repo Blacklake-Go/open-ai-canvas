@@ -1,0 +1,47 @@
+{
+  "blockPage": {
+    "title": "403 Prohibido",
+    "heading": "403 Prohibido",
+    "message": "El acceso a este servidor o recurso está estrictamente prohibido.",
+    "footer": "nginx"
+  },
+  "api": {
+    "message": "403 Prohibido - Acceso denegado"
+  },
+  "admin": {
+    "rowLabel": "Bloquear tráfico desde China (complemento temporal)",
+    "badgeEnabled": "Bloqueo activado (403)",
+    "badgeDisabled": "Bloqueo desactivado",
+    "switchOnAria": "Activar el bloqueo de tráfico desde China",
+    "switchOffAria": "Desactivar el bloqueo de tráfico desde China",
+    "contextEnabled": "Todas las IPs de visitantes desde China continental reciben ahora una página 403 Forbidden. Arquitectura de complemento temporal: se retira por completo con un solo comando.",
+    "contextDisabled": "Complemento temporal: al activarlo, los visitantes desde China continental ven la página estándar 403 Forbidden. Admite lista blanca y excepción para la consola de administración.",
+    "openConfig": "Ajustes avanzados y prueba",
+    "modalTitle": "Control de tráfico desde China continental (complemento temporal)",
+    "modalCloseAria": "Cerrar el cuadro de ajustes",
+    "blockCardTitle": "Bloquear todo el tráfico desde China",
+    "blockCardDesc": "Al activarlo, cualquier visitante de China continental verá 403 Forbidden en cualquier página pública.",
+    "exemptTitle": "Permitir a los administradores acceder a la consola (/admin)",
+    "exemptDesc": "Recomendado. Si administras el sitio desde China continental, evita que el bloqueo te deje fuera de tu propia consola.",
+    "testTitle": "Prueba de detección de IPs chinas",
+    "testSubtitle": "Búsqueda binaria en tiempo real sobre los rangos oficiales de APNIC",
+    "testPlaceholder": "Escribe una IP para probar, p. ej. 114.114.114.114 o 8.8.8.8",
+    "testRun": "Comprobar",
+    "testRunning": "Comprobando…",
+    "testBlockedTitle": "Se bloqueará: la IP {ip} pertenece a China continental ({type})",
+    "testBlockedDesc": "Las solicitudes a páginas públicas devolverán la página de bloqueo 403 Forbidden.",
+    "testPassedTitle": "Permitida: la IP {ip} es del extranjero o no es una IP pública de China",
+    "testPassedDesc": "El acceso al sitio no tiene ninguna restricción.",
+    "testError": "La prueba falló",
+    "whitelistLabel": "IPs o rangos CIDR permitidos (uno por línea, IPv4/IPv6)",
+    "whitelistPlaceholder": "Ejemplo:\n192.168.1.100\n120.24.0.0/16",
+    "whitelistHint": "Las IPs de la lista blanca quedan exentas aunque estén en China continental.",
+    "uninstallTitle": "Cómo desinstalar este complemento temporal",
+    "uninstallIntro": "Esta función es un complemento temporal autónomo. Para eliminarla por completo junto con su código, ejecuta esto en el servidor:",
+    "uninstallCommand": "node plugins/china-ip-block/uninstall.mjs",
+    "uninstallOutro": "El script borra el gancho del middleware, la fila de ajustes del panel y la carpeta del complemento; restaura el estado original al 100 %.",
+    "cancel": "Cancelar",
+    "save": "Guardar ajustes de seguridad",
+    "saving": "Guardando…"
+  }
+}

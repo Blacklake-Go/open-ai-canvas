@@ -1,0 +1,1242 @@
+[
+ {
+  "routePath": "/api/assets/[id]/download",
+  "methods": [
+   "GET"
+  ],
+  "policyTier": "authenticated_or_domain",
+  "responseFormat": "binary_redirect_xml_or_callback",
+  "isApi": true,
+  "isAdmin": false,
+  "analysis": {
+   "src": "app/api/assets/[id]/download/route.js",
+   "exists": true,
+   "perms": [],
+   "idem": false,
+   "adminPwd": false,
+   "lines": 36,
+   "imports": [
+    "@/lib/services/assets",
+    "@/lib/services/auth",
+    "@/lib/storage/storageService"
+   ],
+   "srcAbs": "/Users/seelucency/Documents/dev/Supdance Pro/app/api/assets/[id]/download/route.js",
+   "perm": "",
+   "scope": "",
+   "requiresKey": false,
+   "srcSnippet": "import { NextResponse } from 'next/server';\nimport { getUserFromRequest } from '@/lib/services/auth';\nimport { getAssetUrl } from '@/lib/storage/storageService';\nimport { getUserAssetDownload } from '@/lib/services/assets';\n\nexport const runtime = 'nodejs';\nexport const dynamic = 'force-dynamic';\n\nexport async function GET(request, { params }) {\n  const user = await getUserFromRequest(request);\n  if (!user) return NextResponse.json({ error: '请先登录' }, { status: 401 });\n  const { id } = await params;\n  const asset = await getUserAssetDownload(user.id, id);\n  if (!asset || asset.deletedAt) return NextResponse.json({ error: '资产不存在或已删除' }, { status: 404 });\n  if (asset.objectKey) {\n    const url = await getAssetUrl({\n      objectKey: asset.objectKey,\n      visibility: asset.visibility || 'private',\n      disposition: request.nextUrl.searchParams.get('inline') === '1' ? 'inline' : 'attachment',\n      provider: asset.provider,\n      locationId: asset.locationId,\n      bucket: asset.bucket,\n      region: asset.region,\n    });\n    if (url) {\n      const redirectUrl = /^https?:\\/\\//i.test(url) ? url : new URL(url, request.url);\n      return NextResponse.redirect(redirectUrl);\n    }\n  }\n  if (asset.mediaUrl) {\n    const redirectUrl = /^https?:\\/\\//i.test(asset.mediaUrl) ? asset.mediaUrl : new URL(asset.mediaUrl, request.url);\n    return NextResponse.redirect(redirectUrl);\n  }\n  return NextResponse.json({ error: '资产尚未完成存储归档' }, { status: 409 });\n}\n"
+  }
+ },
+ {
+  "routePath": "/api/assets/folders/[id]",
+  "methods": [
+   "PATCH",
+   "DELETE"
+  ],
+  "policyTier": "authenticated_or_domain",
+  "responseFormat": "direct_domain_json",
+  "isApi": true,
+  "isAdmin": false,
+  "analysis": {
+   "src": "app/api/assets/folders/[id]/route.js",
+   "exists": true,
+   "perms": [],
+   "idem": false,
+   "adminPwd": false,
+   "lines": 61,
+   "imports": [
+    "@/lib/security/publicError",
+    "@/lib/security/requestGuard",
+    "@/lib/services/assets",
+    "@/lib/services/auth"
+   ],
+   "srcAbs": "/Users/seelucency/Documents/dev/Supdance Pro/app/api/assets/folders/[id]/route.js",
+   "perm": "",
+   "scope": "",
+   "requiresKey": false,
+   "srcSnippet": "import { getUserFromRequest, json } from '@/lib/services/auth';\nimport { updateUserAssetFolder, deleteUserAssetFolder } from '@/lib/services/assets';\nimport { consumeRateLimit, guardMutation, rateLimitResponse } from '@/lib/security/requestGuard';\nimport { publicErrorMessage } from '@/lib/security/publicError';\n\nexport const runtime = 'nodejs';\n\nexport async function PATCH(request, { params }) {\n  const user = await getUserFromRequest(request);\n  if (!user) return json({ error: '请先登录' }, { status: 401 });\n\n  const guarded = guardMutation(request, { maxBytes: 32 * 1024 });\n  if (guarded) return guarded;\n  const limit = await consumeRateLimit({ scope: 'asset_folder_update_user', subject: user.id, limit: 120, windowMs: 60 * 60 * 1000 });\n  if (!limit.allowed) return rateLimitResponse(limit);\n\n  const { id } = await params;\n  if (!id) return json({ error: '缺少文件夹标识' }, { status: 400 });\n\n  try {\n    const body = await request.json();\n    const updated = await updateUserAssetFolder(user.id, id, {\n      name: body.name,\n      color: body.color,\n      icon: body.icon,\n      sortOrder: body.sortOrder !== undefined ? body.sortOrder : (body.sort_order !== undefined ? body.sort_order : undefined),\n    });\n\n    return json({ folder: updated });\n  } catch (error) {\n    console.error('[PATCH /api/assets/folders/[id]]', error);\n    const status = error.code === 'FOLDER_NOT_FOUND' ? 404\n      : error.code === 'FOLDER_NAME_DUPLICATE' ? 409\n        : error.code === 'INVALID_FOLDER_NAME' ? 400\n          : 422;\n    return json({ error: publicErrorMessage(error, '更新文件夹失败') }, { status });\n  }\n}\n\nexport async function DELETE(request, { params }) {\n  const user = await getUserFromRequest(request);\n  if (!user) return json({ error: '请先登录' }, { status: 401 });\n\n  const guarded = guardMutation(request, { maxBytes: 8 * 1024 });\n  if (guarded) return guarded;\n  const limit = await consumeRateLimit({ scope: 'asset_folder_delete_user', subject: user.id, limit: 120, windowMs: 60 * 60 * 1000 });\n  if (!limit.allowed) return rateLimitResponse(limit);\n\n  const { id } = await params;\n  if (!id) return json({ error: '缺少文件夹标识' }, { status: 400 });\n\n  try {\n    const res = await deleteUserAssetFolder(user.id, id);\n    return json(res);\n  } catch (error) {\n    console.error('[DELETE /api/assets/folders/[id]]', error);\n    const status = error.code === 'FOLDER_NOT_FOUND' ? 404 : 500;\n    return json({ error: publicErrorMessage(error, '删除文件夹失败') }, { status });\n  }\n}\n"
+  }
+ },
+ {
+  "routePath": "/api/assets/folders",
+  "methods": [
+   "GET",
+   "POST"
+  ],
+  "policyTier": "authenticated_or_domain",
+  "responseFormat": "direct_domain_json",
+  "isApi": true,
+  "isAdmin": false,
+  "analysis": {
+   "src": "app/api/assets/folders/route.js",
+   "exists": true,
+   "perms": [],
+   "idem": false,
+   "adminPwd": false,
+   "lines": 51,
+   "imports": [
+    "@/lib/security/publicError",
+    "@/lib/security/requestGuard",
+    "@/lib/services/assets",
+    "@/lib/services/auth"
+   ],
+   "srcAbs": "/Users/seelucency/Documents/dev/Supdance Pro/app/api/assets/folders/route.js",
+   "perm": "",
+   "scope": "",
+   "requiresKey": false,
+   "srcSnippet": "import { getUserFromRequest, json } from '@/lib/services/auth';\nimport { getUserAssetFolders, createUserAssetFolder } from '@/lib/services/assets';\nimport { consumeRateLimit, guardMutation, rateLimitResponse } from '@/lib/security/requestGuard';\nimport { publicErrorMessage } from '@/lib/security/publicError';\n\nexport const runtime = 'nodejs';\nexport const dynamic = 'force-dynamic';\n\nexport async function GET(request) {\n  const user = await getUserFromRequest(request);\n  if (!user) return json({ error: '请先登录' }, { status: 401 });\n\n  try {\n    const data = await getUserAssetFolders(user.id);\n    return json(data);\n  } catch (error) {\n    console.error('[GET /api/assets/folders]', error);\n    return json({ error: publicErrorMessage(error, '获取文件夹列表失败') }, { status: 500 });\n  }\n}\n\nexport async function POST(request) {\n  const user = await getUserFromRequest(request);\n  if (!user) return json({ error: '请先登录' }, { status: 401 });\n\n  const guarded = guardMutation(request, { maxBytes: 32 * 1024 });\n  if (guarded) return guarded;\n  const limit = await consumeRateLimit({ scope: 'asset_folder_create_user', subject: user.id, limit: 120, windowMs: 60 * 60 * 1000 });\n  if (!limit.allowed) return rateLimitResponse(limit);\n\n  try {\n    const body = await request.json();\n    const folder = await createUserAssetFolder(user.id, {\n      name: body.name,\n      parentId: body.parentId || body.parent_id || null,\n      color: body.color || '#e11d74',\n      icon: body.icon || 'folder',\n    });\n\n    return json({ folder }, { status: 201 });\n  } catch (error) {\n    console.error('[POST /api/assets/folders]', error);\n    const status = error.code === 'FOLDER_DEPTH_EXCEEDED' ? 422\n      : error.code === 'FOLDER_NAME_DUPLICATE' ? 409\n        : error.code === 'PARENT_FOLDER_NOT_FOUND' ? 404\n          : error.code === 'INVALID_FOLDER_NAME' ? 400\n            : 422;\n    return json({ error: publicErrorMessage(error, '创建文件夹失败') }, { status });\n  }\n}\n"
+  }
+ },
+ {
+  "routePath": "/api/assets/library/[id]",
+  "methods": [
+   "GET",
+   "PATCH",
+   "DELETE"
+  ],
+  "policyTier": "authenticated_or_domain",
+  "responseFormat": "success_flagged_json",
+  "isApi": true,
+  "isAdmin": false,
+  "analysis": {
+   "src": "app/api/assets/library/[id]/route.js",
+   "exists": true,
+   "perms": [],
+   "idem": false,
+   "adminPwd": false,
+   "lines": 73,
+   "imports": [
+    "@/lib/security/publicError",
+    "@/lib/security/requestGuard",
+    "@/lib/services/assetLibrary",
+    "@/lib/services/assets",
+    "@/lib/services/auth"
+   ],
+   "srcAbs": "/Users/seelucency/Documents/dev/Supdance Pro/app/api/assets/library/[id]/route.js",
+   "perm": "",
+   "scope": "",
+   "requiresKey": false,
+   "srcSnippet": "import { getUserFromRequest, json } from '@/lib/services/auth';\nimport { getLibraryAsset, updateLibraryAsset, purgeLibraryAssets } from '@/lib/services/assetLibrary';\nimport { deleteUserAsset } from '@/lib/services/assets';\nimport { consumeRateLimit, guardMutation, rateLimitResponse } from '@/lib/security/requestGuard';\nimport { publicErrorMessage } from '@/lib/security/publicError';\n\nexport const runtime = 'nodejs';\nexport const dynamic = 'force-dynamic';\n\nexport async function GET(request, { params }) {\n  const user = await getUserFromRequest(request);\n  if (!user) return json({ error: '请先登录' }, { status: 401 });\n\n  const { id } = await params;\n  if (!id) return json({ error: '缺少资产标识' }, { status: 400 });\n\n  const asset = await getLibraryAsset(user.id, id);\n  if (!asset) return json({ error: '资产不存在或已被删除' }, { status: 404 });\n  return json({ asset });\n}\n\nexport async function PATCH(request, { params }) {\n  const user = await getUserFromRequest(request);\n  if (!user) return json({ error: '请先登录' }, { status: 401 });\n\n  const guarded = guardMutation(request, { maxBytes: 1024 * 1024 });\n  if (guarded) return guarded;\n  const limit = await consumeRateLimit({ scope: 'asset_library_update_user', subject: user.id, limit: 600, windowMs: 60 * 60 * 1000 });\n  if (!limit.allowed) return rateLimitResponse(limit);\n\n  const { id } = await params;\n  if (!id) return json({ error: '缺少资产标识' }, { status: 400 });\n\n  try {\n    const body = await request.json();\n    const asset = await updateLibraryAsset(user.id, id, body);\n    return json({ asset });\n  } catch (error) {\n    console.error('[PATCH /api/assets/library/[id]]', error);\n    const status = error.code === 'ASSET_NOT_FOUND' ? 404\n      : error.code === 'FOLDER_NOT_FOUND' ? 400\n        : error.code === 'INVALID_ASSET_DATA' ? 400\n          : 422;\n    return json({ error: publicErrorMessage(error, '更新素材失败') }, { status });\n  }\n}\n\nexport async function DELETE(request, { params }) {\n  const user = await getUserFromRequest(request);\n  if (!user) return json({ error: '请先登录' }, { status: 401 });\n\n  const guarded = guardMutation(request, { maxBytes: 8 * 1024 });\n  if (guarded) return guarded;\n  const limit = await consumeRateLimit({ scope: 'asset_library_delete_user', subject: user.id, limit: 600, windowMs: 60 * 60 * 1000 });\n  if (!limit.allowed) return rateLimitResponse(limit);\n\n  const { id } = await params;\n  if (!id) return json({ error: '缺少资产标识' }, { status: 400 });\n\n  const purge = request.nextUrl.searchParams.get('purge') === 'true';\n\n  try {\n    const result = purge\n      ? await purgeLibraryAssets(user.id, [id])\n      : await deleteUserAsset(user.id, id);\n    return json({ success: true, ...result });\n  } catch (error) {\n    console.error('[DELETE /api/assets/library/[id]]', error);\n    const status = error.code === 'ASSET_NOT_FOUND' ? 404 : 422;\n    return json({ error: publicErrorMessage(error, purge ? '彻底删除素材失败' : '移入回收站失败') }, { status });\n  }\n}\n"
+  }
+ },
+ {
+  "routePath": "/api/assets/library/batch",
+  "methods": [
+   "POST"
+  ],
+  "policyTier": "authenticated_or_domain",
+  "responseFormat": "direct_domain_json",
+  "isApi": true,
+  "isAdmin": false,
+  "analysis": {
+   "src": "app/api/assets/library/batch/route.js",
+   "exists": true,
+   "perms": [],
+   "idem": false,
+   "adminPwd": false,
+   "lines": 50,
+   "imports": [
+    "@/lib/security/publicError",
+    "@/lib/security/requestGuard",
+    "@/lib/services/assetLibrary",
+    "@/lib/services/assets",
+    "@/lib/services/auth"
+   ],
+   "srcAbs": "/Users/seelucency/Documents/dev/Supdance Pro/app/api/assets/library/batch/route.js",
+   "perm": "",
+   "scope": "",
+   "requiresKey": false,
+   "srcSnippet": "import { getUserFromRequest, json } from '@/lib/services/auth';\nimport {\n  trashLibraryAssets,\n  restoreLibraryAssets,\n  purgeLibraryAssets,\n  emptyLibraryTrash,\n} from '@/lib/services/assetLibrary';\nimport { batchMoveUserAssets, batchSetFavoriteUserAssets } from '@/lib/services/assets';\nimport { consumeRateLimit, guardMutation, rateLimitResponse } from '@/lib/security/requestGuard';\nimport { publicErrorMessage } from '@/lib/security/publicError';\n\nexport const runtime = 'nodejs';\n\nexport async function POST(request) {\n  const user = await getUserFromRequest(request);\n  if (!user) return json({ error: '请先登录' }, { status: 401 });\n\n  const guarded = guardMutation(request, { maxBytes: 64 * 1024 });\n  if (guarded) return guarded;\n  const limit = await consumeRateLimit({ scope: 'asset_library_batch_user', subject: user.id, limit: 300, windowMs: 60 * 60 * 1000 });\n  if (!limit.allowed) return rateLimitResponse(limit);\n\n  try {\n    const body = await request.json();\n    const { action, assetIds, targetFolderId, value } = body || {};\n\n    if (action === 'empty') {\n      return json(await emptyLibraryTrash(user.id));\n    }\n\n    if (!Array.isArray(assetIds) || assetIds.length === 0) {\n      return json({ error: '请选择要操作的素材' }, { status: 400 });\n    }\n\n    if (action === 'trash') return json(await trashLibraryAssets(user.id, assetIds));\n    if (action === 'restore') return json(await restoreLibraryAssets(user.id, assetIds));\n    if (action === 'purge') return json(await purgeLibraryAssets(user.id, assetIds));\n    if (action === 'move') return json(await batchMoveUserAssets(user.id, assetIds, targetFolderId || null));\n    if (action === 'favorite') return json(await batchSetFavoriteUserAssets(user.id, assetIds, Boolean(value)));\n\n    return json({ error: '不支持的操作类型' }, { status: 400 });\n  } catch (error) {\n    console.error('[POST /api/assets/library/batch]', error);\n    const status = error.code === 'FOLDER_NOT_FOUND' ? 404\n      : error.code === 'INVALID_ASSET_IDS' ? 400\n        : 500;\n    return json({ error: publicErrorMessage(error, '批量操作失败') }, { status });\n  }\n}\n"
+  }
+ },
+ {
+  "routePath": "/api/assets/library/export",
+  "methods": [
+   "GET"
+  ],
+  "policyTier": "authenticated_or_domain",
+  "responseFormat": "binary_redirect_xml_or_callback",
+  "isApi": true,
+  "isAdmin": false,
+  "analysis": {
+   "src": "app/api/assets/library/export/route.js",
+   "exists": true,
+   "perms": [],
+   "idem": false,
+   "adminPwd": false,
+   "lines": 180,
+   "imports": [
+    "@/lib/security/publicError",
+    "@/lib/security/requestGuard",
+    "@/lib/services/assetLibrary",
+    "@/lib/services/auth",
+    "@/lib/storage/storageService"
+   ],
+   "srcAbs": "/Users/seelucency/Documents/dev/Supdance Pro/app/api/assets/library/export/route.js",
+   "perm": "",
+   "scope": "",
+   "requiresKey": false,
+   "srcSnippet": "import { Zip, ZipPassThrough } from 'fflate';\nimport { getUserFromRequest, json } from '@/lib/services/auth';\nimport { getLibraryExportAssets } from '@/lib/services/assetLibrary';\nimport { getAssetStorageAdapter } from '@/lib/storage/storageService';\nimport { consumeRateLimit, rateLimitResponse } from '@/lib/security/requestGuard';\nimport { publicErrorMessage } from '@/lib/security/publicError';\n\nexport const runtime = 'nodejs';\nexport const dynamic = 'force-dynamic';\n\nconst MIME_EXTENSIONS = {\n  'image/jpeg': 'jpg',\n  'image/png': 'png',\n  'image/webp': 'webp',\n  'image/gif': 'gif',\n  'image/avif': 'avif',\n  'video/mp4': 'mp4',\n  'video/quicktime': 'mov',\n  'video/webm': 'webm',\n  'audio/mpeg': 'mp3',\n  'audio/wav': 'wav',\n  'audio/x-wav': 'wav',\n  'audio/aac': 'aac',\n  'audio/mp4': 'm4a',\n  'audio/flac': 'flac',\n  'audio/ogg': 'ogg',\n};\n\nfunction assetExtension(row, mimeType) {\n  const fromName = String(row.original_filename || row.filename || '').split('.').pop() || '';\n  if (fromName && fromName.length <= 8 && /^[a-z0-9]+$/i.test(fromName)) return fromName.toLowerCase();\n  return MIME_EXTENSIONS[String(mimeType || '').toLowerCase()] || row.extension || 'bin';\n}\n\nfunction manifestAsset({ row, asset }) {\n  const shared = {\n    id: asset.id,\n    kind: asset.kind,\n    category: asset.category || 'other',\n    title: asset.title,\n    tags: Array.isArray(asset.tags) ? asset.tags : [],\n    source: asset.source || '',\n    note: asset.note || '',\n    folderName: asset.folderName || null,\n    coverUrl: asset.coverUrl || null,\n  };\n  if (asset.kind === 'text') return { ...shared, data: { content: asset.data?.content || '' } };\n  if (asset.kind === 'entity') return { ...shared, data: { definition: asset.data?.definition || {} } };\n  return {\n    ...shared,\n    data: {\n      fileName: asset.data?.fileName || row.original_filename || row.filename || '',\n      mimeType: asset.data?.mimeType || row.mime_type || '',\n      bytes: asset.data?.bytes || Number(row.file_size_bytes || 0),\n    },\n  };\n}\n\nfunction createZipStream() {\n  let controller;\n  let cancelled = false;\n  const stream = new ReadableStream({\n    start(next) { controller = next; },\n    cancel() { cancelled = true; },\n  });\n  const zip = new Zip((error, chunk, final) => {\n    if (error) {\n      try { controller.error(error); } catch { /* stream already closed */ }\n      return;\n    }\n    try {\n      controller.enqueue(chunk);\n      if (final) controller.close();\n    } catch {\n      cancelled = true;\n    }\n  });\n  return { stream, zip, isCancelled: () => cancelled };\n}\n\nfunction writeTextEntry(zip, name, content) {\n  const entry = new ZipPassThrough(name);\n  zip.add(entry);\n  entry.push(new TextEncoder().encode(content), true);\n}\n\nexport async function GET(request) {\n  const user = await getUserFromRequest(request);\n  if (!user) return json({ error: '请先登录' }, { status: 401 });\n\n  const url = new URL(request.url);\n  const ids = String(url.searchParams.get('ids') || '').split(',').map((id) => id.trim()).filter(Boolean);\n  const preflight = request.headers.get('x-asset-export') === 'preflight';\n\n  try {\n    const limit = await consumeRateLimit({\n      scope: preflight ? 'asset_library_export_preflight_user' : 'asset_library_export_user',\n      subject: user.id,\n      limit: preflight ? 120 : 20,\n      windowMs: 60 * 60 * 1000,\n    });\n    if (!limit.allowed) return rateLimitResponse(limit);\n\n    const items = await getLibraryExportAssets(user.id, { assetIds: ids });\n    if (!items.length) return json({ error: '暂无素材可导出' }, { status: 400 });\n    if (preflight) return json({ count: items.length });\n\n    const { stream, zip, isCancelled } = createZipStream();\n\n    void (async () => {\n      const manifest = { app: 'supdance', version: 1, exportedAt: new Date().toISOString(), assets: [], files: [], skipped: [] };\n      try {\n        for (let index = 0; index < items.length; index += 1) {\n          if (isCancelled()) return;\n          const { row, asset } = items[index];\n          if (!row"
+  }
+ },
+ {
+  "routePath": "/api/assets/library",
+  "methods": [
+   "GET",
+   "POST"
+  ],
+  "policyTier": "authenticated_or_domain",
+  "responseFormat": "direct_domain_json",
+  "isApi": true,
+  "isAdmin": false,
+  "analysis": {
+   "src": "app/api/assets/library/route.js",
+   "exists": true,
+   "perms": [],
+   "idem": false,
+   "adminPwd": false,
+   "lines": 51,
+   "imports": [
+    "@/lib/security/publicError",
+    "@/lib/security/requestGuard",
+    "@/lib/services/assetLibrary",
+    "@/lib/services/auth"
+   ],
+   "srcAbs": "/Users/seelucency/Documents/dev/Supdance Pro/app/api/assets/library/route.js",
+   "perm": "",
+   "scope": "",
+   "requiresKey": false,
+   "srcSnippet": "import { getUserFromRequest, json } from '@/lib/services/auth';\nimport { getLibraryAssets, createLibraryAsset } from '@/lib/services/assetLibrary';\nimport { consumeRateLimit, guardMutation, rateLimitResponse } from '@/lib/security/requestGuard';\nimport { publicErrorMessage } from '@/lib/security/publicError';\n\nexport const runtime = 'nodejs';\nexport const dynamic = 'force-dynamic';\n\nexport async function GET(request) {\n  const user = await getUserFromRequest(request);\n  if (!user) return json({ error: '请先登录' }, { status: 401 });\n\n  const params = request.nextUrl.searchParams;\n  try {\n    const result = await getLibraryAssets(user.id, {\n      status: params.get('status') || 'ready',\n      kind: params.get('kind') || 'all',\n      category: params.get('category') || 'all',\n      folderId: params.get('folderId') || params.get('folder_id') || 'all',\n      uncategorized: params.get('uncategorized') === 'true' || params.get('uncategorized') === '1',\n      search: params.get('q') || params.get('search') || '',\n      page: Number(params.get('page')) || 1,\n      pageSize: Number(params.get('pageSize') || params.get('page_size')) || 40,\n    });\n    return json(result);\n  } catch (error) {\n    console.error('[GET /api/assets/library]', error);\n    return json({ error: publicErrorMessage(error, '获取资产库失败') }, { status: 500 });\n  }\n}\n\nexport async function POST(request) {\n  const user = await getUserFromRequest(request);\n  if (!user) return json({ error: '请先登录' }, { status: 401 });\n\n  const guarded = guardMutation(request, { maxBytes: 1024 * 1024 });\n  if (guarded) return guarded;\n  const limit = await consumeRateLimit({ scope: 'asset_library_create_user', subject: user.id, limit: 300, windowMs: 60 * 60 * 1000 });\n  if (!limit.allowed) return rateLimitResponse(limit);\n\n  try {\n    const body = await request.json();\n    const asset = await createLibraryAsset(user.id, body);\n    return json({ asset }, { status: 201 });\n  } catch (error) {\n    console.error('[POST /api/assets/library]', error);\n    const status = error.code === 'INVALID_ASSET_DATA' ? 400 : 422;\n    return json({ error: publicErrorMessage(error, '创建素材失败') }, { status });\n  }\n}\n"
+  }
+ },
+ {
+  "routePath": "/api/assets/library/usage",
+  "methods": [
+   "GET"
+  ],
+  "policyTier": "authenticated_or_domain",
+  "responseFormat": "direct_domain_json",
+  "isApi": true,
+  "isAdmin": false,
+  "analysis": {
+   "src": "app/api/assets/library/usage/route.js",
+   "exists": true,
+   "perms": [],
+   "idem": false,
+   "adminPwd": false,
+   "lines": 18,
+   "imports": [
+    "@/lib/services/assetLibrary",
+    "@/lib/services/auth"
+   ],
+   "srcAbs": "/Users/seelucency/Documents/dev/Supdance Pro/app/api/assets/library/usage/route.js",
+   "perm": "",
+   "scope": "",
+   "requiresKey": false,
+   "srcSnippet": "import { getUserFromRequest, json } from '@/lib/services/auth';\nimport { getLibraryUsage } from '@/lib/services/assetLibrary';\n\nexport const runtime = 'nodejs';\nexport const dynamic = 'force-dynamic';\n\nexport async function GET(request) {\n  const user = await getUserFromRequest(request);\n  if (!user) return json({ error: '请先登录' }, { status: 401 });\n\n  try {\n    return json(await getLibraryUsage(user.id));\n  } catch (error) {\n    console.error('[GET /api/assets/library/usage]', error);\n    return json({ error: '读取存储容量失败' }, { status: 500 });\n  }\n}\n"
+  }
+ },
+ {
+  "routePath": "/api/assets/upload",
+  "methods": [
+   "POST"
+  ],
+  "policyTier": "authenticated_or_domain",
+  "responseFormat": "success_flagged_json",
+  "isApi": true,
+  "isAdmin": false,
+  "analysis": {
+   "src": "app/api/assets/upload/route.js",
+   "exists": true,
+   "perms": [],
+   "idem": false,
+   "adminPwd": false,
+   "lines": 182,
+   "imports": [
+    "@/lib/security/publicError",
+    "@/lib/security/requestGuard",
+    "@/lib/services/assetLibrary",
+    "@/lib/services/assets",
+    "@/lib/services/auth",
+    "@/lib/storage/storageService"
+   ],
+   "srcAbs": "/Users/seelucency/Documents/dev/Supdance Pro/app/api/assets/upload/route.js",
+   "perm": "",
+   "scope": "",
+   "requiresKey": false,
+   "srcSnippet": "import { getUserFromRequest, json } from '@/lib/services/auth';\nimport { consumeRateLimit, guardMutation } from '@/lib/security/requestGuard';\nimport { publicErrorMessage } from '@/lib/security/publicError';\nimport { inspectStoredObject, prepareDirectUpload, generateStorageVariants, getStorageConfigAndAdapter, ingestBuffer, storedLocationFields } from '@/lib/storage/storageService';\nimport { recordUserAsset, toClientAsset } from '@/lib/services/assets';\nimport { assertStorageQuota } from '@/lib/services/assetLibrary';\n\n/** 限流主体：登录态按用户，其余按客户端 IP；XFF 由 nginx 单向写入。 */\nfunction ipOf(request) {\n  return request.headers.get('x-forwarded-for')?.split(',')[0]?.trim()\n    || request.headers.get('x-real-ip')\n    || 'unknown';\n}\n\nexport const runtime = 'nodejs';\nexport const dynamic = 'force-dynamic';\n\nfunction userKeyBelongsToUser(objectKey, userId) {\n  const needle = `/${String(userId).replace(/[^a-zA-Z0-9_-]/g, '_')}/`;\n  return String(objectKey || '').includes(needle);\n}\n\nexport async function POST(request) {\n  const contentType = request.headers.get('content-type') || '';\n  const isMultipart = contentType.includes('multipart/form-data');\n\n  const maxBytes = isMultipart ? 500 * 1024 * 1024 : 128 * 1024;\n  const guarded = guardMutation(request, { maxBytes });\n  if (guarded) return guarded;\n\n  const user = await getUserFromRequest(request);\n  const rl = await consumeRateLimit({\n    scope: 'assets.upload',\n    subject: user?.id || ipOf(request),\n    limit: 120,\n    windowMs: 60_000,\n  });\n  if (!rl.allowed) {\n    return json({ error: '请求过于频繁，请稍后再试' }, {\n      status: 429,\n      headers: { 'Retry-After': String(rl.retryAfterSeconds) },\n    });\n  }\n  if (!user) return json({ error: '请先登录' }, { status: 401 });\n\n  try {\n    if (isMultipart) {\n      const formData = await request.formData();\n      const file = formData.get('file') || formData.get('asset');\n      if (!file || typeof file !== 'object' || typeof file.arrayBuffer !== 'function') {\n        return json({ error: '请提供有效的待上传文件' }, { status: 400 });\n      }\n\n      const rawType = String(formData.get('type') || file.type || '').toLowerCase();\n      const requestedKind = String(formData.get('kind') || '').trim().toLowerCase();\n      const isModel = requestedKind === 'model'\n        || /\\.(glb|gltf)$/i.test(file.name || '')\n        || String(file.type || '').toLowerCase().startsWith('model/');\n      const type = isModel ? 'other' : rawType.startsWith('video') ? 'video' : rawType.startsWith('audio') ? 'audio' : 'image';\n      const kind = isModel ? 'model' : (requestedKind || null);\n      const folderId = formData.get('folderId') || formData.get('folder_id') || null;\n      const studioId = formData.get('studioId') || 'upload';\n      const title = formData.get('title') || file.name || '上传素材';\n\n      await assertStorageQuota(user.id, file.size);\n\n      const arrayBuffer = await file.arrayBuffer();\n      const buffer = Buffer.from(arrayBuffer);\n\n      const stored = await ingestBuffer({\n        body: buffer,\n        userId: user.id,\n        type,\n        filename: file.name || 'asset',\n        contentType: file.type || '',\n        sourceType: 'user_upload',\n        sourceProvider: 'direct_upload',\n      });\n\n      const asset = await recordUserAsset(user.id, {\n        folderId,\n        assetType: isModel ? 'other' : type,\n        studioId,\n        title,\n        objectKey: stored.objectKey,\n        previewObjectKey: stored.previewObjectKey || null,\n        thumbnailObjectKey: stored.thumbnailObjectKey || null,\n        ...storedLocationFields(stored),\n        mediaUrl: stored.url,\n        thumbnailUrl: stored.url,\n        previewUrl: stored.url,\n        originalFilename: file.name || null,\n        filename: file.name || null,\n        extension: stored.extension || null,\n        mimeType: stored.mimeType,\n        fileSizeBytes: stored.sizeBytes,\n        width: stored.width || Number(formData.get('width')) || null,\n        height: stored.height || Number(formData.get('height')) || null,\n       "
+  }
+ },
+ {
+  "routePath": "/api/canvas-tools/plan",
+  "methods": [
+   "POST"
+  ],
+  "policyTier": "authenticated_or_domain",
+  "responseFormat": "success_flagged_json",
+  "isApi": true,
+  "isAdmin": false,
+  "analysis": {
+   "src": "app/api/canvas-tools/plan/route.js",
+   "exists": true,
+   "perms": [],
+   "idem": false,
+   "adminPwd": false,
+   "lines": 100,
+   "imports": [
+    "@/lib/canvasTools/catalog",
+    "@/lib/canvasTools/spec",
+    "@/lib/security/contentModeration",
+    "@/lib/security/publicError",
+    "@/lib/security/requestGuard",
+    "@/lib/security/requestJson",
+    "@/lib/security/requestUser",
+    "@/lib/services/assets",
+    "@/lib/services/auth"
+   ],
+   "srcAbs": "/Users/seelucency/Documents/dev/Supdance Pro/app/api/canvas-tools/plan/route.js",
+   "perm": "",
+   "scope": "",
+   "requiresKey": false,
+   "srcSnippet": "import { json } from '@/lib/services/auth';\nimport { getUserAssetDownload } from '@/lib/services/assets';\nimport { consumeRateLimit, guardMutation, rateLimitResponse } from '@/lib/security/requestGuard';\nimport { publicErrorMessage } from '@/lib/security/publicError';\nimport { resolveRequestUser } from '@/lib/security/requestUser';\nimport { readJsonObjectRequestBody } from '@/lib/security/requestJson';\nimport { validatePromptSafety } from '@/lib/security/contentModeration';\nimport { getCanvasToolCatalog } from '@/lib/canvasTools/catalog';\nimport { buildCanvasToolPlan } from '@/lib/canvasTools/spec';\n\nexport const runtime = 'nodejs';\nexport const dynamic = 'force-dynamic';\n\nconst IMAGE_MIME = /^image\\/(?:jpeg|png|webp|gif)$/;\nconst CLIENT_ERROR_CODES = new Set([\n  'INVALID_TOOL',\n  'INVALID_SOURCE',\n  'ASPECT_RATIO_UNSUPPORTED',\n  'RESOLUTION_UNSUPPORTED',\n  'PRESET_UNSUPPORTED',\n  'PROMPT_TOO_LONG',\n]);\n\nexport async function POST(request) {\n  const auth = await resolveRequestUser(request);\n  if (!auth.user) return json({ error: auth.error, code: auth.code }, { status: auth.status });\n  const { user } = auth;\n\n  try {\n    const guarded = guardMutation(request, { maxBytes: 64 * 1024 });\n    if (guarded) return guarded;\n\n    const limit = await consumeRateLimit({ scope: 'canvas_tools_plan_user', subject: user.id, limit: 120, windowMs: 60 * 60 * 1000 });\n    if (!limit.allowed) return rateLimitResponse(limit);\n\n    const parsedBody = await readJsonObjectRequestBody(request);\n    if (!parsedBody.ok) {\n      return json({\n        error: parsedBody.code === 'INVALID_JSON' ? '请求内容不是有效 JSON' : '请求 JSON 顶层必须是对象',\n        code: parsedBody.code,\n      }, { status: 400 });\n    }\n    const body = parsedBody.value;\n    const tool = String(body.tool || '').trim();\n    if (!tool) return json({ error: '必须指定画布工具', code: 'INVALID_TOOL' }, { status: 422 });\n\n    const sourceAssetId = String(body.sourceAssetId || body.source_asset_id || '').trim();\n    if (!/^[A-Za-z0-9_-]{8,160}$/.test(sourceAssetId)) {\n      return json({ error: '请先上传一张源图片', code: 'INVALID_SOURCE' }, { status: 422 });\n    }\n\n    const catalog = await getCanvasToolCatalog();\n    if (!catalog.available) {\n      return json({ error: catalog.message, code: catalog.reason }, { status: 503 });\n    }\n\n    let asset = null;\n    try {\n      asset = await getUserAssetDownload(user.id, sourceAssetId);\n    } catch {\n      asset = null;\n    }\n    if (!asset || asset.deletedAt) {\n      return json({ error: '源图片不存在或已删除，请重新上传', code: 'SOURCE_NOT_FOUND' }, { status: 404 });\n    }\n    const mime = String(asset.mimeType || '').toLowerCase();\n    if (mime && !IMAGE_MIME.test(mime)) {\n      return json({ error: '源素材不是受支持的图片格式', code: 'SOURCE_NOT_IMAGE' }, { status: 422 });\n    }\n    if (Number(asset.sizeBytes) > 30 * 1024 * 1024) {\n      return json({ error: '源图片超过 30MB，请压缩后再试', code: 'SOURCE_TOO_LARGE' }, { status: 413 });\n    }\n\n    const plan = buildCanvasToolPlan({\n      tool,\n      params: body.params && typeof body.params === 'object' ? body.params : {},\n      sourceAssetId,\n    });\n\n    const moderation = validatePromptSafety(plan.prompt);\n    if (!moderation.passed) {\n      return json({ error: moderation.reason, code: moderation.code }, { status: 422 });\n    }\n\n    return json({\n      success: true,\n      plan: {\n        ...plan,\n        modelId: catalog.model.id,\n        studioId: 'canvas',\n        sourceAssetId,\n      },\n    });\n  } catch (error) {\n    const code = error?.code || 'PLAN_FAILED';\n    const status = CLIENT_ERROR_CODES.has(code) ? 422 : 503;\n    return json({ error: publicErrorMessage(error, '生成方案创建失败，请稍后再试'), code }, { status });\n  }\n}\n"
+  }
+ },
+ {
+  "routePath": "/api/canvas-tools/result/[id]",
+  "methods": [
+   "GET"
+  ],
+  "policyTier": "authenticated_or_domain",
+  "responseFormat": "binary_redirect_xml_or_callback",
+  "isApi": true,
+  "isAdmin": false,
+  "analysis": {
+   "src": "app/api/canvas-tools/result/[id]/route.js",
+   "exists": true,
+   "perms": [],
+   "idem": false,
+   "adminPwd": false,
+   "lines": 59,
+   "imports": [
+    "@/lib/security/publicError",
+    "@/lib/services/auth",
+    "@/lib/services/generations",
+    "@/lib/storage/storageService"
+   ],
+   "srcAbs": "/Users/seelucency/Documents/dev/Supdance Pro/app/api/canvas-tools/result/[id]/route.js",
+   "perm": "",
+   "scope": "",
+   "requiresKey": false,
+   "srcSnippet": "import { getUserFromRequest, json } from '@/lib/services/auth';\nimport { getGenerationTrace } from '@/lib/services/generations';\nimport { getAssetStorageAdapter } from '@/lib/storage/storageService';\nimport { publicErrorMessage } from '@/lib/security/publicError';\n\nexport const runtime = 'nodejs';\nexport const dynamic = 'force-dynamic';\n\nexport async function GET(request, context) {\n  const user = await getUserFromRequest(request);\n  if (!user) return json({ error: '请先登录' }, { status: 401 });\n\n  const { id } = await context.params;\n  if (!id) return json({ error: '缺少任务 ID' }, { status: 400 });\n\n  try {\n    const trace = await getGenerationTrace(id, { expectedUserId: user.id, includeResultUrl: false });\n    const creation = trace?.creation;\n    if (!creation) return json({ error: '生成任务不存在或无权查看' }, { status: 404 });\n\n    const objectKey = String(creation.result_object_key || '').trim();\n    if (!objectKey) {\n      const fallback = String(creation.result_url || '').trim();\n      if (/^https?:\\/\\//i.test(fallback) && !/\\/uploads\\/generated\\//i.test(fallback)) {\n        return Response.redirect(fallback, 302);\n      }\n      return json({ error: '生成结果暂不可用' }, { status: 404 });\n    }\n\n    const adapter = await getAssetStorageAdapter({\n      provider: creation.storage_provider || null,\n      locationId: creation.storage_location_id || null,\n      bucket: creation.storage_bucket || null,\n      region: creation.storage_region || null,\n    });\n    if (!adapter) return json({ error: '生成结果所属存储位置不可用' }, { status: 503 });\n    const downloaded = await adapter.download({ key: objectKey });\n    const body = Buffer.isBuffer(downloaded?.body) ? downloaded.body : Buffer.from(downloaded?.body || '');\n    if (!body.length) return json({ error: '生成结果暂不可用' }, { status: 404 });\n\n    const ext = (objectKey.split('.').pop() || 'webp').toLowerCase().replace(/[^a-z0-9]/g, '') || 'webp';\n    return new Response(body, {\n      status: 200,\n      headers: {\n        'Content-Type': downloaded?.metadata?.mimeType || 'application/octet-stream',\n        'Content-Length': String(body.length),\n        'Cache-Control': 'private, max-age=3600',\n        'Content-Disposition': `inline; filename=\"supdance-canvas-${id}.${ext}\"`,\n      },\n    });\n  } catch (error) {\n    if (error?.code === 'STORAGE_FILE_NOT_FOUND' || error?.statusCode === 404) {\n      return json({ error: '生成结果暂不可用' }, { status: 404 });\n    }\n    console.error('[api/canvas-tools/result]', error);\n    return json({ error: publicErrorMessage(error, '读取生成结果失败') }, { status: 500 });\n  }\n}\n"
+  }
+ },
+ {
+  "routePath": "/api/canvas-tools/spec",
+  "methods": [
+   "GET"
+  ],
+  "policyTier": "authenticated_or_domain",
+  "responseFormat": "success_flagged_json",
+  "isApi": true,
+  "isAdmin": false,
+  "analysis": {
+   "src": "app/api/canvas-tools/spec/route.js",
+   "exists": true,
+   "perms": [],
+   "idem": false,
+   "adminPwd": false,
+   "lines": 28,
+   "imports": [
+    "@/lib/canvasTools/catalog"
+   ],
+   "srcAbs": "/Users/seelucency/Documents/dev/Supdance Pro/app/api/canvas-tools/spec/route.js",
+   "perm": "",
+   "scope": "",
+   "requiresKey": false,
+   "srcSnippet": "import { NextResponse } from 'next/server';\nimport { getCanvasToolCatalog } from '@/lib/canvasTools/catalog';\n\nexport const runtime = 'nodejs';\nexport const dynamic = 'force-dynamic';\n\nexport async function GET() {\n  try {\n    const catalog = await getCanvasToolCatalog();\n    if (!catalog.available) {\n      return NextResponse.json(\n        { success: false, code: catalog.reason, error: catalog.message },\n        { status: 503, headers: { 'Cache-Control': 'no-store' } },\n      );\n    }\n    return NextResponse.json(\n      { success: true, ...catalog.spec },\n      { headers: { 'Cache-Control': 'no-store' } },\n    );\n  } catch (error) {\n    console.error('[api/canvas-tools/spec]', error);\n    return NextResponse.json(\n      { success: false, code: 'SPEC_UNAVAILABLE', error: '画布工具规格读取失败，请稍后再试' },\n      { status: 500, headers: { 'Cache-Control': 'no-store' } },\n    );\n  }\n}\n"
+  }
+ },
+ {
+  "routePath": "/api/canvas/assets/[id]/content",
+  "methods": [
+   "GET",
+   "OPTIONS",
+   "HEAD"
+  ],
+  "policyTier": "authenticated_or_domain",
+  "responseFormat": "direct_domain_json",
+  "isApi": true,
+  "isAdmin": false,
+  "analysis": {
+   "src": "app/api/canvas/assets/[id]/content/route.js",
+   "exists": true,
+   "perms": [],
+   "idem": false,
+   "adminPwd": false,
+   "lines": 165,
+   "imports": [
+    "@/lib/canvas/http",
+    "@/lib/services/assets",
+    "@/lib/services/auth",
+    "@/lib/storage/storageService"
+   ],
+   "srcAbs": "/Users/seelucency/Documents/dev/Supdance Pro/app/api/canvas/assets/[id]/content/route.js",
+   "perm": "",
+   "scope": "",
+   "requiresKey": false,
+   "srcSnippet": "import { Readable } from 'node:stream';\nimport { getUserFromRequest } from '@/lib/services/auth';\nimport { getUserAssetDownload, getUserAsset } from '@/lib/services/assets';\nimport { getAssetStorageAdapter, getAssetUrl } from '@/lib/storage/storageService';\nimport { canvasJson, canvasOriginGuard, canvasPreflight, canvasResponse } from '@/lib/canvas/http';\n\nexport const runtime = 'nodejs';\nexport const dynamic = 'force-dynamic';\n\nexport function OPTIONS(request) {\n  return canvasPreflight(request, 'GET, HEAD, OPTIONS');\n}\n\nasync function serveAsset(request, { params }, headOnly = false) {\n  const blocked = canvasOriginGuard(request);\n  if (blocked) return blocked;\n  const user = await getUserFromRequest(request);\n  if (!user) return canvasJson(request, { error: '请先登录 SupDance', code: 'UNAUTHENTICATED' }, { status: 401 });\n  const { id } = await params;\n  const [asset, download] = await Promise.all([\n    getUserAsset(user.id, id),\n    getUserAssetDownload(user.id, id),\n  ]);\n  if (!asset || !download?.objectKey || download.deletedAt) {\n    return canvasJson(request, { error: '素材不存在或尚未归档到 对象存储', code: 'ASSET_NOT_FOUND' }, { status: 404 });\n  }\n  if (!/^(image|video|audio)\\//i.test(String(asset.mimeType || ''))) {\n    return canvasJson(request, { error: '该素材类型不支持预览', code: 'ASSET_PREVIEW_UNSUPPORTED' }, { status: 415 });\n  }\n  const wantsPreview = new URL(request.url).searchParams.get('preview') === '1';\n  const previewObjectKey = download.previewObjectKey || download.thumbnailObjectKey || null;\n  let objectKey = wantsPreview && previewObjectKey ? previewObjectKey : download.objectKey;\n  let contentType = objectKey !== download.objectKey ? 'image/webp' : asset.mimeType;\n  try {\n    const range = request.headers.get('range');\n    const location = {\n      provider: download.provider,\n      locationId: download.locationId,\n      bucket: download.bucket,\n      region: download.region,\n    };\n    const adapter = await getAssetStorageAdapter(location);\n    if (!adapter) {\n      return canvasJson(request, { error: '素材所属存储位置不可用', code: 'STORAGE_LOCATION_UNAVAILABLE' }, { status: 503 });\n    }\n    if (objectKey !== download.objectKey && typeof adapter.getMetadata === 'function') {\n      try {\n        const previewMetadata = await adapter.getMetadata({ key: objectKey });\n        if (!previewMetadata || !(Number(previewMetadata.size) > 0)) {\n          objectKey = download.objectKey;\n          contentType = asset.mimeType;\n        }\n      } catch {\n        objectKey = download.objectKey;\n        contentType = asset.mimeType;\n      }\n    }\n    if (adapter.provider === 'amh'\n      && typeof adapter.downloadStream === 'function'\n      && !/^https?:\\/\\//i.test(objectKey)\n      && !String(objectKey).startsWith('data:')) {\n      const metadata = await adapter.getMetadata({ key: objectKey });\n      const size = Number(metadata.size) || 0;\n      const rangeMatch = range?.match(/^bytes=(\\d*)-(\\d*)$/);\n      let status = 200;\n      let rangeHeader = null;\n      let start = 0;\n      let end = Math.max(0, size - 1);\n\n      if (rangeMatch) {\n        if (!size) {\n          return canvasResponse(request, new Response(null, {\n            status: 416,\n            headers: { 'Content-Range': 'bytes */0', 'Content-Length': '0' },\n          }));\n        }\n        const [, startValue, endValue] = rangeMatch;\n        if (!startValue) {\n          const suffixLength = Number(endValue);\n          if (!Number.isSafeInteger(suffixLength) || suffixLength <= 0) {\n            return canvasResponse(request, new Response(null, {\n              status: 416,\n              headers: { 'Content-Range': `bytes */${size}`, 'Content-Length': '0' },\n            }));\n          }\n          start = Math.max(0, size - suffixLength);\n          end = size - 1;\n        } else {\n          start = Number(startValue);\n          end = endValue ? Number(endValue) : size - 1;\n          if (!Number.isSafeInteger(start) || !Number.isSafeInteger(end) || start < 0 || start >= size || end < start) {\n "
+  }
+ },
+ {
+  "routePath": "/api/canvas/assets",
+  "methods": [
+   "GET",
+   "OPTIONS"
+  ],
+  "policyTier": "authenticated_or_domain",
+  "responseFormat": "direct_domain_json",
+  "isApi": true,
+  "isAdmin": false,
+  "analysis": {
+   "src": "app/api/canvas/assets/route.js",
+   "exists": true,
+   "perms": [],
+   "idem": false,
+   "adminPwd": false,
+   "lines": 50,
+   "imports": [
+    "@/lib/canvas/http",
+    "@/lib/services/assets",
+    "@/lib/services/auth"
+   ],
+   "srcAbs": "/Users/seelucency/Documents/dev/Supdance Pro/app/api/canvas/assets/route.js",
+   "perm": "",
+   "scope": "",
+   "requiresKey": false,
+   "srcSnippet": "import { getUserFromRequest } from '@/lib/services/auth';\nimport { getUserAssets } from '@/lib/services/assets';\nimport { canvasJson, canvasOriginGuard, canvasPreflight } from '@/lib/canvas/http';\n\nexport const runtime = 'nodejs';\nexport const dynamic = 'force-dynamic';\n\nexport function OPTIONS(request) {\n  return canvasPreflight(request, 'GET, OPTIONS');\n}\n\nexport async function GET(request) {\n  const blocked = canvasOriginGuard(request);\n  if (blocked) return blocked;\n  const user = await getUserFromRequest(request);\n  if (!user) return canvasJson(request, { error: '请先登录 SupDance', code: 'UNAUTHENTICATED' }, { status: 401 });\n  const params = new URL(request.url).searchParams;\n  const page = Math.max(1, Math.min(10000, Number.parseInt(params.get('page') || '1', 10) || 1));\n  const limit = Math.max(1, Math.min(50, Number.parseInt(params.get('limit') || '30', 10) || 30));\n  const type = ['all', 'image', 'video', 'audio'].includes(params.get('type')) ? params.get('type') : 'all';\n  try {\n    const result = await getUserAssets(user.id, { assetType: type, search: String(params.get('search') || '').slice(0, 160), page, limit, sort: 'newest', mediaOnly: true });\n    return canvasJson(request, {\n      assets: result.assets.map((asset) => ({\n        id: asset.id,\n        type: asset.type,\n        kind: asset.kind || asset.type,\n        category: asset.category || 'other',\n        title: asset.title,\n        url: `/api/canvas/assets/${encodeURIComponent(asset.id)}/content`,\n        thumbnailUrl: null,\n        mimeType: asset.mimeType,\n        width: asset.width,\n        height: asset.height,\n        size: asset.size,\n        createdAt: asset.createdAt,\n      })),\n      pagination: {\n        page: result.page,\n        limit: result.limit,\n        total: result.total,\n        totalPages: result.totalPages,\n      },\n    });\n  } catch (error) {\n    console.error('[api/canvas/assets]', { code: error?.code || 'ASSET_LIST_FAILED' });\n    return canvasJson(request, { error: '读取 SupDance 素材库失败', code: 'ASSET_LIST_FAILED' }, { status: 503 });\n  }\n}\n"
+  }
+ },
+ {
+  "routePath": "/api/canvas/assets/upload",
+  "methods": [
+   "POST",
+   "OPTIONS"
+  ],
+  "policyTier": "authenticated_or_domain",
+  "responseFormat": "direct_domain_json",
+  "isApi": true,
+  "isAdmin": false,
+  "analysis": {
+   "src": "app/api/canvas/assets/upload/route.js",
+   "exists": true,
+   "perms": [],
+   "idem": false,
+   "adminPwd": false,
+   "lines": 122,
+   "imports": [
+    "@/lib/canvas/http",
+    "@/lib/canvas/sessionOwner",
+    "@/lib/security/publicError",
+    "@/lib/security/requestGuard",
+    "@/lib/services/assetLibrary",
+    "@/lib/services/assets",
+    "@/lib/services/auth",
+    "@/lib/storage/storageService"
+   ],
+   "srcAbs": "/Users/seelucency/Documents/dev/Supdance Pro/app/api/canvas/assets/upload/route.js",
+   "perm": "",
+   "scope": "",
+   "requiresKey": false,
+   "srcSnippet": "import crypto from 'node:crypto';\nimport { getUserFromRequest } from '@/lib/services/auth';\nimport { getCanvasUploadAssetByIdempotencyHash, recordUserAsset, toClientAsset } from '@/lib/services/assets';\nimport { consumeRateLimit, rateLimitResponse } from '@/lib/security/requestGuard';\nimport { ingestBuffer, storedLocationFields } from '@/lib/storage/storageService';\nimport { publicErrorMessage } from '@/lib/security/publicError';\nimport { canvasJson, canvasMutationGuard, canvasPreflight, canvasResponse } from '@/lib/canvas/http';\nimport { getCanvasSessionOwnerConflict } from '@/lib/canvas/sessionOwner';\nimport { assertStorageQuota } from '@/lib/services/assetLibrary';\n\nexport const runtime = 'nodejs';\nexport const dynamic = 'force-dynamic';\n\nexport function OPTIONS(request) {\n  return canvasPreflight(request, 'POST, OPTIONS');\n}\n\nexport async function POST(request) {\n  const guarded = canvasMutationGuard(request, { maxBytes: 104 * 1024 * 1024, multipart: true });\n  if (guarded) return guarded;\n  const requestId = crypto.randomUUID();\n  const user = await getUserFromRequest(request);\n  if (!user) return canvasJson(request, { error: '请先登录 SupDance', code: 'UNAUTHENTICATED' }, { status: 401 });\n  let stage = 'rate_limit';\n  try {\n    const limit = await consumeRateLimit({ scope: 'canvas_asset_upload', subject: user.id, limit: 120, windowMs: 60 * 60 * 1000 });\n    if (!limit.allowed) return canvasResponse(request, rateLimitResponse(limit));\n    stage = 'form_data';\n    const form = await request.formData();\n    stage = 'owner_check';\n    const ownerConflict = getCanvasSessionOwnerConflict(user.id, form.get('expectedOwnerUserId'));\n    if (ownerConflict) return canvasJson(request, ownerConflict, { status: 409 });\n    stage = 'file_validation';\n    const file = form.get('file');\n    const idempotencyKey = String(request.headers.get('idempotency-key') || '').trim();\n    if (idempotencyKey.length < 8 || idempotencyKey.length > 200) {\n      return canvasJson(request, { error: '素材上传必须提供有效的幂等键', code: 'IDEMPOTENCY_REQUIRED' }, { status: 422 });\n    }\n    const mimeType = String(file?.type || '').toLowerCase();\n    const assetType = mimeType.startsWith('image/') ? 'image' : mimeType.startsWith('video/') ? 'video' : mimeType.startsWith('audio/') ? 'audio' : '';\n    if (!file || typeof file.arrayBuffer !== 'function' || !assetType) {\n      return canvasJson(request, { error: '请提供有效的图片、视频或音频文件', code: 'INVALID_UPLOAD' }, { status: 400 });\n    }\n    const maxBytes = assetType === 'image' ? 20 * 1024 * 1024 : 100 * 1024 * 1024;\n    if (file.size > maxBytes) return canvasJson(request, { error: '素材超过 允许的上传大小', code: 'UPLOAD_TOO_LARGE' }, { status: 413 });\n    const buffer = Buffer.from(await file.arrayBuffer());\n    const checksum = crypto.createHash('sha256').update(buffer).digest('hex');\n    const idempotencyHash = crypto.createHash('sha256').update(idempotencyKey).digest('hex');\n    stage = 'idempotency_lookup';\n    const existing = await getCanvasUploadAssetByIdempotencyHash(user.id, idempotencyHash);\n    if (existing) {\n      if (existing.checksum !== checksum) {\n        return canvasJson(request, { error: '相同幂等键不能用于不同素材内容', code: 'UPLOAD_IDEMPOTENCY_CONFLICT' }, { status: 409 });\n      }\n      stage = 'client_asset';\n      return canvasJson(request, {\n        asset: await toClientAsset(existing),\n        contentUrl: `/api/canvas/assets/${encodeURIComponent(existing.id)}/content`,\n        idempotent: true,\n      }, { status: 200 });\n    }\n    await assertStorageQuota(user.id, file.size || buffer.length);\n    const safeUserId = String(user.id).replace(/[^a-zA-Z0-9_-]/g, '_');\n    const objectKey = 'uploads/' + safeUserId + '/canvas/' + idempotencyHash + '-' + checksum + '.bin';\n    stage = 'storage_ingest';\n    const stored = await ingestBuffer({\n      body: buffer,\n      userId: user.id,\n      type: assetType,\n      filename: file.name || 'canvas-reference',\n      contentType: file.type,\n      sourceType: 'canvas_upload',\n      sourceProvid"
+  }
+ },
+ {
+  "routePath": "/api/canvas/config",
+  "methods": [
+   "GET",
+   "OPTIONS"
+  ],
+  "policyTier": "authenticated_or_domain",
+  "responseFormat": "direct_domain_json",
+  "isApi": true,
+  "isAdmin": false,
+  "analysis": {
+   "src": "app/api/canvas/config/route.js",
+   "exists": true,
+   "perms": [],
+   "idem": false,
+   "adminPwd": false,
+   "lines": 41,
+   "imports": [
+    "@/lib/canvas/http",
+    "@/lib/modelCenter/capabilitySchema",
+    "@/lib/security/publicError",
+    "@/lib/services/auth",
+    "@/lib/services/canvasModelConfig"
+   ],
+   "srcAbs": "/Users/seelucency/Documents/dev/Supdance Pro/app/api/canvas/config/route.js",
+   "perm": "",
+   "scope": "",
+   "requiresKey": false,
+   "srcSnippet": "import { canvasContractVersion } from '@/lib/modelCenter/capabilitySchema';\nimport { getUserFromRequest } from '@/lib/services/auth';\nimport { CANVAS_CAPABILITIES, getCanvasAllowedModelIds, getCanvasModelConfig, listCanvasModelCandidates, projectCanvasConfig } from '@/lib/services/canvasModelConfig';\nimport { canvasJson, canvasOriginGuard, canvasPreflight } from '@/lib/canvas/http';\nimport { publicErrorMessage } from '@/lib/security/publicError';\n\nexport const runtime = 'nodejs';\nexport const dynamic = 'force-dynamic';\n\nexport function OPTIONS(request) {\n  return canvasPreflight(request, 'GET, OPTIONS');\n}\n\nexport async function GET(request) {\n  const blocked = canvasOriginGuard(request);\n  if (blocked) return blocked;\n  const user = await getUserFromRequest(request);\n  if (!user) return canvasJson(request, { error: '请先登录 SupDance', code: 'UNAUTHENTICATED' }, { status: 401 });\n  try {\n    const schemaVersion = canvasContractVersion(request);\n    const config = await getCanvasModelConfig();\n    const [candidates, allowedModelIds] = await Promise.all([\n      config ? listCanvasModelCandidates() : [],\n      getCanvasAllowedModelIds({ userId: user.id }),\n    ]);\n    const projected = projectCanvasConfig(config, candidates);\n    for (const capability of projected.mountedModelIds ? CANVAS_CAPABILITIES : []) {\n      projected.mountedModelIds[capability] = projected.mountedModelIds[capability].filter((id) => allowedModelIds.has(id));\n      const defaultKey = `${capability}ModelId`;\n      if (!allowedModelIds.has(projected.defaults[defaultKey])) projected.defaults[defaultKey] = '';\n    }\n    projected.configured = Object.values(projected.mountedModelIds || {}).some((ids) => ids.length > 0);\n    return canvasJson(request, schemaVersion === 1 && projected.mountedModelIds ? projectCanvasConfig(projected,candidates,{schemaVersion:1}) : projected);\n  } catch (error) {\n    if (error.code === 'MODEL_CATALOG_VERSION_UNSUPPORTED') return canvasJson(request,{error:publicErrorMessage(error),code:error.code},{status:409});\n    console.error('[api/canvas/config]', error);\n    return canvasJson(request, { error: '画布配置暂时不可用' }, { status: 503 });\n  }\n}\n\n"
+  }
+ },
+ {
+  "routePath": "/api/canvas/jobs/[id]",
+  "methods": [
+   "GET",
+   "OPTIONS"
+  ],
+  "policyTier": "authenticated_or_domain",
+  "responseFormat": "direct_domain_json",
+  "isApi": true,
+  "isAdmin": false,
+  "analysis": {
+   "src": "app/api/canvas/jobs/[id]/route.js",
+   "exists": true,
+   "perms": [],
+   "idem": false,
+   "adminPwd": false,
+   "lines": 96,
+   "imports": [
+    "@/lib/canvas/http",
+    "@/lib/canvas/jobResultState",
+    "@/lib/canvas/resolveJobAsset",
+    "@/lib/repositories/canvasProjects",
+    "@/lib/repositories/creations",
+    "@/lib/security/publicError",
+    "@/lib/security/requestUser",
+    "@/lib/services/assets",
+    "@/lib/services/generations"
+   ],
+   "srcAbs": "/Users/seelucency/Documents/dev/Supdance Pro/app/api/canvas/jobs/[id]/route.js",
+   "perm": "",
+   "scope": "",
+   "requiresKey": false,
+   "srcSnippet": "import { resolveRequestUser } from '@/lib/security/requestUser';\nimport { publicErrorMessage } from '@/lib/security/publicError';\nimport { getGenerationTrace } from '@/lib/services/generations';\nimport { getUserAssetByCreationId, getUserAssetDownload, syncCreationToAsset } from '@/lib/services/assets';\nimport { getCanvasProjectJob, updateCanvasProjectJob } from '@/lib/repositories/canvasProjects';\nimport { findCreationById } from '@/lib/repositories/creations';\nimport { getCanvasJobCostMetadata, getCanvasJobFailure, getCanvasJobResultStatus, getCanvasJobFunding, getCanvasJobReconciliation } from '@/lib/canvas/jobResultState';\nimport { ensureCanvasResultAsset } from '@/lib/canvas/resolveJobAsset';\nimport { canvasJson, canvasOriginGuard, canvasPreflight } from '@/lib/canvas/http';\n\nexport const runtime = 'nodejs';\nexport const dynamic = 'force-dynamic';\n\nexport function OPTIONS(request) {\n  return canvasPreflight(request, 'GET, OPTIONS');\n}\n\nexport async function GET(request, { params }) {\n  const blocked = canvasOriginGuard(request);\n  if (blocked) return blocked;\n  const auth = await resolveRequestUser(request);\n  if (!auth.user) {\n    return canvasJson(request, { error: auth.error, code: auth.code }, { status: auth.status });\n  }\n  const { user } = auth;\n\n  try {\n    const { id } = await params;\n    const linkedJob = await getCanvasProjectJob(user.id, id);\n    if (!linkedJob) return canvasJson(request, { error: '任务不存在', code: 'JOB_NOT_FOUND' }, { status: 404 });\n    const trace = await getGenerationTrace(id, { expectedUserId: user.id, includeResultUrl: false });\n    if (!trace?.creation) return canvasJson(request, { error: '任务不存在', code: 'JOB_NOT_FOUND' }, { status: 404 });\n    const creation = trace.creation;\n    const failureEvent = [...(trace.events || [])].reverse().find((event) => event.event_type === 'TASK_FAILED');\n    let asset = null;\n    let rawCreation = null;\n    if (creation.status === 'succeeded' && !creation.result_text) {\n      ({ asset, creation: rawCreation } = await ensureCanvasResultAsset({\n        userId: user.id,\n        creationId: creation.id,\n        getAssetByCreationId: getUserAssetByCreationId,\n        getAssetDownload: getUserAssetDownload,\n        findCreationById,\n        syncCreationToAsset,\n      }));\n    }\n    const jobStatus = getCanvasJobResultStatus({\n      taskStatus: creation.status,\n      resultText: creation.result_text,\n      resultObjectKey: rawCreation?.result_object_key,\n      hasAsset: Boolean(asset),\n      taskUpdatedAt: rawCreation?.updated_at || creation.updated_at,\n    });\n    await updateCanvasProjectJob(user.id, id, {\n      status: jobStatus,\n      assetId: asset?.id || null,\n      creditsUsed: creation.status === 'succeeded' ? Number(creation.credit_cost || 0) : null,\n    });\n    return canvasJson(request, {\n      job: {\n        id: creation.id,\n        projectId: linkedJob.project_id,\n        nodeId: linkedJob.node_id,\n        modelId: creation.model,\n        quoteId: linkedJob.quote_id || null,\n        providerRequestId: linkedJob.provider_request_id || null,\n        status: jobStatus,\n        funding: getCanvasJobFunding(trace.reservation),\n        reconciliation: getCanvasJobReconciliation(creation.status, trace.events),\n        createdAt: creation.created_at,\n        updatedAt: creation.updated_at,\n        estimatedCredits: Number(creation.credit_cost || 0),\n        creditsUsed: creation.status === 'succeeded' ? Number(creation.credit_cost || 0) : 0,\n        ...getCanvasJobCostMetadata(creation.actual_cost_usd),\n        result: {\n          text: creation.result_text || null,\n          assetId: asset?.id || null,\n          mimeType: asset?.mimeType || creation.storage_mime_type || null,\n          contentUrl: asset?.id ? `/api/canvas/assets/${encodeURIComponent(asset.id)}/content` : null,\n        },\n        error: creation.status === 'failed'\n          ? getCanvasJobFailure({ errorCode: creation.error_code, failureMetadata: failureEvent?.metadata, reservation: trace.rese"
+  }
+ },
+ {
+  "routePath": "/api/canvas/jobs",
+  "methods": [
+   "GET",
+   "POST",
+   "OPTIONS"
+  ],
+  "policyTier": "authenticated_or_domain",
+  "responseFormat": "direct_domain_json",
+  "isApi": true,
+  "isAdmin": false,
+  "analysis": {
+   "src": "app/api/canvas/jobs/route.js",
+   "exists": true,
+   "perms": [],
+   "idem": false,
+   "adminPwd": false,
+   "lines": 248,
+   "imports": [
+    "@/lib/canvas/capabilityPolicy",
+    "@/lib/canvas/http",
+    "@/lib/canvas/jobResultState",
+    "@/lib/canvas/modelDescriptor",
+    "@/lib/canvas/projectSnapshot",
+    "@/lib/canvas/sessionOwner",
+    "@/lib/modelCenter/capabilitySchema",
+    "@/lib/modelCenter/validateCapabilitySchema",
+    "@/lib/repositories/canvasProjects",
+    "@/lib/repositories/creations",
+    "@/lib/security/contentModeration",
+    "@/lib/security/publicError",
+    "@/lib/security/requestGuard",
+    "@/lib/services/assets",
+    "@/lib/services/auth",
+    "@/lib/services/canvasModelConfig",
+    "@/lib/services/generationCore",
+    "@/lib/services/models"
+   ],
+   "srcAbs": "/Users/seelucency/Documents/dev/Supdance Pro/app/api/canvas/jobs/route.js",
+   "perm": "",
+   "scope": "",
+   "requiresKey": false,
+   "srcSnippet": "import { publicCanvasModel } from '@/lib/canvas/modelDescriptor';\nimport { validateCapabilityParameters } from '@/lib/modelCenter/validateCapabilitySchema';\nimport { isProviderConfigurationParameter } from '@/lib/modelCenter/capabilitySchema';\nimport { getUserFromRequest } from '@/lib/services/auth';\nimport { createGenerationTask } from '@/lib/services/generationCore';\nimport { listActiveModels } from '@/lib/services/models';\nimport { getCanvasAllowedModelIds } from '@/lib/services/canvasModelConfig';\nimport { isCanvasServerCapabilityEnabled } from '@/lib/canvas/capabilityPolicy';\nimport { consumeRateLimit, rateLimitResponse } from '@/lib/security/requestGuard';\nimport { validatePromptSafety } from '@/lib/security/contentModeration';\nimport { getCanvasProject, linkCanvasProjectJob, listCanvasProjectJobs } from '@/lib/repositories/canvasProjects';\nimport { canvasSnapshotContainsNode } from '@/lib/canvas/projectSnapshot';\nimport { getUserAssetDownload, syncCreationToAsset } from '@/lib/services/assets';\nimport { findCreationById } from '@/lib/repositories/creations';\nimport { getCanvasJobCostMetadata, getCanvasJobFailure, getCanvasJobResultStatus } from '@/lib/canvas/jobResultState';\nimport { publicErrorMessage, publicErrorPayload } from '@/lib/security/publicError';\nimport { canvasJson, canvasMutationGuard, canvasOriginGuard, canvasPreflight, readCanvasJson, canvasResponse } from '@/lib/canvas/http';\nimport { getCanvasSessionOwnerConflict } from '@/lib/canvas/sessionOwner';\n\nexport const runtime = 'nodejs';\nexport const dynamic = 'force-dynamic';\n\nfunction validateParameters(value) {\n  if (!value || typeof value !== 'object' || Array.isArray(value)) return {};\n  const serialized = JSON.stringify(value);\n  if (Buffer.byteLength(serialized, 'utf8') > 96 * 1024) {\n    throw Object.assign(new Error('生成参数过大'), { code: 'PARAMETERS_TOO_LARGE' });\n  }\n  const pending = [{ value, key: '' }];\n  let visited = 0;\n  while (pending.length) {\n    const { value: current, key } = pending.pop();\n    if (isProviderConfigurationParameter(key)) {\n      throw Object.assign(new Error('Canvas 不能提交 Provider 或凭据配置'), { code: 'PROVIDER_CONFIG_FORBIDDEN' });\n    }\n    if (typeof current === 'string') {\n      if (/^(?:data:|blob:)/i.test(current)) throw Object.assign(new Error('请先将参考媒体上传到 SupDance 素材库'), { code: 'MEDIA_UPLOAD_REQUIRED' });\n      if (/^https?:\\/\\//i.test(current) && /image|video|audio|reference|frame|url/i.test(key)) {\n        throw Object.assign(new Error('参考媒体必须使用 SupDance 素材 ID'), { code: 'EXTERNAL_MEDIA_URL_FORBIDDEN' });\n      }\n      continue;\n    }\n    if (!current || typeof current !== 'object') continue;\n    if (++visited > 20_000) throw Object.assign(new Error('生成参数结构过于复杂'), { code: 'PARAMETERS_TOO_COMPLEX' });\n    if (Array.isArray(current)) {\n      for (const childValue of current) pending.push({ value: childValue, key });\n      continue;\n    }\n    for (const [childKey, childValue] of Object.entries(current)) pending.push({ value: childValue, key: childKey });\n  }\n  return value;\n}\n\nexport function OPTIONS(request) {\n  return canvasPreflight(request, 'GET, POST, OPTIONS');\n}\n\nexport async function GET(request) {\n  const blocked = canvasOriginGuard(request);\n  if (blocked) return blocked;\n  const user = await getUserFromRequest(request);\n  if (!user) return canvasJson(request, { error: '请先登录 SupDance', code: 'UNAUTHENTICATED' }, { status: 401 });\n\n  try {\n    const url = new URL(request.url);\n    const projectId = String(url.searchParams.get('projectId') || '').trim() || null;\n    const idempotencyKeys = url.searchParams.getAll('idempotencyKey');\n    const page = Number(url.searchParams.get('page') || 1);\n    const offset = (page - 1) * 50;\n    if (idempotencyKeys.length > 50 || idempotencyKeys.some((key) => key.length < 8 || key.length > 200)) {\n      return canvasJson(request, { error: '幂等键查询无效', code: 'INVALID_IDEMPOTENCY_FILTER' }, { status: 422 });\n    }\n    if (!Number.isSafeInteger(page) || page < 1 || !Number.isSafeIntege"
+  }
+ },
+ {
+  "routePath": "/api/canvas/models",
+  "methods": [
+   "GET",
+   "OPTIONS"
+  ],
+  "policyTier": "authenticated_or_domain",
+  "responseFormat": "direct_domain_json",
+  "isApi": true,
+  "isAdmin": false,
+  "analysis": {
+   "src": "app/api/canvas/models/route.js",
+   "exists": true,
+   "perms": [],
+   "idem": false,
+   "adminPwd": false,
+   "lines": 38,
+   "imports": [
+    "@/lib/canvas/capabilityPolicy",
+    "@/lib/canvas/http",
+    "@/lib/canvas/modelDescriptor",
+    "@/lib/modelCenter/capabilitySchema",
+    "@/lib/security/publicError",
+    "@/lib/services/auth",
+    "@/lib/services/canvasModelConfig",
+    "@/lib/services/models"
+   ],
+   "srcAbs": "/Users/seelucency/Documents/dev/Supdance Pro/app/api/canvas/models/route.js",
+   "perm": "",
+   "scope": "",
+   "requiresKey": false,
+   "srcSnippet": "import { canvasContractVersion } from '@/lib/modelCenter/capabilitySchema';\nimport { getUserFromRequest } from '@/lib/services/auth';\nimport { listActiveModels } from '@/lib/services/models';\nimport { getCanvasAllowedModelIds } from '@/lib/services/canvasModelConfig';\nimport { isCanvasServerCapabilityEnabled } from '@/lib/canvas/capabilityPolicy';\nimport { publicCanvasModel, canvasCatalogVersion } from '@/lib/canvas/modelDescriptor';\nimport { canvasJson, canvasOriginGuard, canvasPreflight } from '@/lib/canvas/http';\nimport { publicErrorMessage } from '@/lib/security/publicError';\n\nexport const runtime = 'nodejs';\nexport const dynamic = 'force-dynamic';\n\n\nexport function OPTIONS(request) {\n  return canvasPreflight(request, 'GET, OPTIONS');\n}\n\nexport async function GET(request) {\n  const blocked = canvasOriginGuard(request);\n  if (blocked) return blocked;\n  const user = await getUserFromRequest(request);\n  if (!user) return canvasJson(request, { error: '请先登录 SupDance', code: 'UNAUTHENTICATED' }, { status: 401 });\n  try {\n    const schemaVersion = canvasContractVersion(request);\n    const [models, allowed] = await Promise.all([\n      listActiveModels(),\n      getCanvasAllowedModelIds({ userId: user.id }),\n    ]);\n    const published = models.map(model => publicCanvasModel(model, {schemaVersion}))\n      .filter((model) => isCanvasServerCapabilityEnabled(model.capability) && allowed.has(model.id) && model.available);\n    return canvasJson(request, { schemaVersion, catalogVersion: canvasCatalogVersion(published), models: published });\n  } catch (error) {\n    if (error.code === 'MODEL_CATALOG_VERSION_UNSUPPORTED') return canvasJson(request,{error:publicErrorMessage(error),code:error.code},{status:409});\n    console.error('[api/canvas/models]', { code: error?.code || 'MODEL_CATALOG_FAILED' });\n    return canvasJson(request, { error: '读取模型目录失败', code: 'MODEL_CATALOG_FAILED' }, { status: 503 });\n  }\n}\n"
+  }
+ },
+ {
+  "routePath": "/api/canvas/projects/[id]",
+  "methods": [
+   "GET",
+   "PUT",
+   "DELETE",
+   "OPTIONS"
+  ],
+  "policyTier": "authenticated_or_domain",
+  "responseFormat": "direct_domain_json",
+  "isApi": true,
+  "isAdmin": false,
+  "analysis": {
+   "src": "app/api/canvas/projects/[id]/route.js",
+   "exists": true,
+   "perms": [],
+   "idem": false,
+   "adminPwd": false,
+   "lines": 94,
+   "imports": [
+    "@/lib/canvas/http",
+    "@/lib/canvas/sessionOwner",
+    "@/lib/repositories/canvasProjects",
+    "@/lib/security/requestGuard",
+    "@/lib/services/auth"
+   ],
+   "srcAbs": "/Users/seelucency/Documents/dev/Supdance Pro/app/api/canvas/projects/[id]/route.js",
+   "perm": "",
+   "scope": "",
+   "requiresKey": false,
+   "srcSnippet": "import { getUserFromRequest } from '@/lib/services/auth';\nimport { consumeRateLimit, rateLimitResponse } from '@/lib/security/requestGuard';\nimport { canvasJson, canvasMutationGuard, canvasOriginGuard, canvasPreflight, readCanvasJson, validateCanvasSnapshot, canvasResponse } from '@/lib/canvas/http';\nimport { getCanvasSessionOwnerConflict } from '@/lib/canvas/sessionOwner';\nimport { deleteCanvasProject, getCanvasProject, saveCanvasProject } from '@/lib/repositories/canvasProjects';\n\nexport const runtime = 'nodejs';\nexport const dynamic = 'force-dynamic';\n\nexport function OPTIONS(request) {\n  return canvasPreflight(request, 'GET, PUT, DELETE, OPTIONS');\n}\n\nfunction projectPayload(project) {\n  if (!project) return null;\n  const snapshot = typeof project.snapshot_json === 'string' ? JSON.parse(project.snapshot_json) : project.snapshot_json;\n  return {\n    id: project.id,\n    ownerUserId: project.owner_user_id,\n    name: project.name,\n    thumbnailAssetId: project.thumbnail_asset_id,\n    snapshot,\n    version: Number(project.version),\n    createdAt: project.created_at,\n    updatedAt: project.updated_at,\n  };\n}\n\nexport async function GET(request, { params }) {\n  const blocked = canvasOriginGuard(request);\n  if (blocked) return blocked;\n  const user = await getUserFromRequest(request);\n  if (!user) return canvasJson(request, { error: '请先登录 SupDance', code: 'UNAUTHENTICATED' }, { status: 401 });\n  const { id } = await params;\n  const project = await getCanvasProject(user.id, id);\n  if (!project) return canvasJson(request, { error: '画布不存在', code: 'PROJECT_NOT_FOUND' }, { status: 404 });\n  return canvasJson(request, { project: projectPayload(project) });\n}\n\nexport async function PUT(request, { params }) {\n  const guarded = canvasMutationGuard(request, { maxBytes: 2 * 1024 * 1024 });\n  if (guarded) return guarded;\n  const user = await getUserFromRequest(request);\n  if (!user) return canvasJson(request, { error: '请先登录 SupDance', code: 'UNAUTHENTICATED' }, { status: 401 });\n  try {\n    const limit = await consumeRateLimit({ scope: 'canvas_project_save', subject: user.id, limit: 600, windowMs: 60 * 60 * 1000 });\n    if (!limit.allowed) return canvasResponse(request, rateLimitResponse(limit));\n    const { id } = await params;\n    const body = await readCanvasJson(request, 2 * 1024 * 1024);\n    const ownerConflict = getCanvasSessionOwnerConflict(user.id, body.expectedOwnerUserId);\n    if (ownerConflict) return canvasJson(request, ownerConflict, { status: 409 });\n    const expectedVersion = Number(body.expectedVersion);\n    if (!Number.isInteger(expectedVersion) || expectedVersion < 1) {\n      return canvasJson(request, { error: '保存项目必须提供有效的 expectedVersion', code: 'EXPECTED_VERSION_REQUIRED' }, { status: 422 });\n    }\n    const snapshot = validateCanvasSnapshot(body.snapshot);\n    const name = typeof body.name === 'string' ? body.name.trim().slice(0, 160) : undefined;\n    const project = await saveCanvasProject(user.id, id, { name, snapshot, expectedVersion });\n    if (!project) return canvasJson(request, { error: '画布不存在', code: 'PROJECT_NOT_FOUND' }, { status: 404 });\n    return canvasJson(request, { project: projectPayload(project) });\n  } catch (error) {\n    const status = error.code === 'PROJECT_VERSION_CONFLICT' ? 409\n      : error.code === 'BODY_TOO_LARGE' || error.code === 'PROJECT_SNAPSHOT_TOO_LARGE' ? 413\n        : error.code === 'INVALID_JSON' ? 400 : 422;\n    return canvasJson(request, {\n      error: error.message || '保存画布失败',\n      code: error.code || 'PROJECT_SAVE_FAILED',\n      ...(error.currentVersion ? { currentVersion: error.currentVersion } : {}),\n    }, { status });\n  }\n}\n\nexport async function DELETE(request, { params }) {\n  const guarded = canvasMutationGuard(request, { maxBytes: 4 * 1024 });\n  if (guarded) return guarded;\n  const user = await getUserFromRequest(request);\n  if (!user) return canvasJson(request, { error: '请先登录 SupDance', code: 'UNAUTHENTICATED' }, { status: 401 });\n  let body;\n  try {\n    body = await rea"
+  }
+ },
+ {
+  "routePath": "/api/canvas/projects/[id]/share",
+  "methods": [
+   "GET",
+   "POST",
+   "DELETE",
+   "OPTIONS"
+  ],
+  "policyTier": "authenticated_or_domain",
+  "responseFormat": "direct_domain_json",
+  "isApi": true,
+  "isAdmin": false,
+  "analysis": {
+   "src": "app/api/canvas/projects/[id]/share/route.js",
+   "exists": true,
+   "perms": [],
+   "idem": false,
+   "adminPwd": false,
+   "lines": 50,
+   "imports": [
+    "@/lib/canvas/http",
+    "@/lib/canvas/projectShare",
+    "@/lib/repositories/canvasProjectShares",
+    "@/lib/security/requestGuard",
+    "@/lib/services/auth"
+   ],
+   "srcAbs": "/Users/seelucency/Documents/dev/Supdance Pro/app/api/canvas/projects/[id]/share/route.js",
+   "perm": "",
+   "scope": "",
+   "requiresKey": false,
+   "srcSnippet": "import { getUserFromRequest } from '@/lib/services/auth';\nimport { consumeRateLimit, rateLimitResponse } from '@/lib/security/requestGuard';\nimport { canvasJson, canvasMutationGuard, canvasOriginGuard, canvasPreflight, canvasResponse } from '@/lib/canvas/http';\nimport { createCanvasShareToken, hashCanvasShareToken } from '@/lib/canvas/projectShare';\nimport { getCanvasProjectShareStatus, issueCanvasProjectShare, revokeCanvasProjectShare } from '@/lib/repositories/canvasProjectShares';\n\nexport const runtime = 'nodejs';\nexport const dynamic = 'force-dynamic';\n\nexport function OPTIONS(request) {\n  return canvasPreflight(request, 'GET, POST, DELETE, OPTIONS');\n}\n\nexport async function GET(request, { params }) {\n  const blocked = canvasOriginGuard(request);\n  if (blocked) return blocked;\n  const user = await getUserFromRequest(request);\n  if (!user) return canvasJson(request, { error: '请先登录 SupDance', code: 'UNAUTHENTICATED' }, { status: 401 });\n  const { id } = await params;\n  const share = await getCanvasProjectShareStatus(user.id, id);\n  return canvasJson(request, { share: share ? { active: true, createdAt: share.created_at } : { active: false } });\n}\n\nexport async function POST(request, { params }) {\n  const guarded = canvasMutationGuard(request, { maxBytes: 1024 });\n  if (guarded) return guarded;\n  const user = await getUserFromRequest(request);\n  if (!user) return canvasJson(request, { error: '请先登录 SupDance', code: 'UNAUTHENTICATED' }, { status: 401 });\n  const limit = await consumeRateLimit({ scope: 'canvas_project_share_create', subject: user.id, limit: 30, windowMs: 60 * 60 * 1000 });\n  if (!limit.allowed) return canvasResponse(request, rateLimitResponse(limit));\n  const { id } = await params;\n  const token = createCanvasShareToken();\n  const share = await issueCanvasProjectShare(user.id, id, hashCanvasShareToken(token));\n  if (!share) return canvasJson(request, { error: '画布不存在', code: 'PROJECT_NOT_FOUND' }, { status: 404 });\n  return canvasJson(request, { share: { active: true, createdAt: share.created_at, path: `/canvas/share/${token}` } }, { status: 201 });\n}\n\nexport async function DELETE(request, { params }) {\n  const guarded = canvasMutationGuard(request, { maxBytes: 1024 });\n  if (guarded) return guarded;\n  const user = await getUserFromRequest(request);\n  if (!user) return canvasJson(request, { error: '请先登录 SupDance', code: 'UNAUTHENTICATED' }, { status: 401 });\n  const limit = await consumeRateLimit({ scope: 'canvas_project_share_revoke', subject: user.id, limit: 60, windowMs: 60 * 60 * 1000 });\n  if (!limit.allowed) return canvasResponse(request, rateLimitResponse(limit));\n  const { id } = await params;\n  const share = await revokeCanvasProjectShare(user.id, id);\n  if (!share) return canvasJson(request, { error: '没有有效的画布分享', code: 'SHARE_NOT_FOUND' }, { status: 404 });\n  return canvasJson(request, { ok: true, revokedAt: share.revoked_at });\n}\n"
+  }
+ },
+ {
+  "routePath": "/api/canvas/projects",
+  "methods": [
+   "GET",
+   "POST",
+   "OPTIONS"
+  ],
+  "policyTier": "authenticated_or_domain",
+  "responseFormat": "direct_domain_json",
+  "isApi": true,
+  "isAdmin": false,
+  "analysis": {
+   "src": "app/api/canvas/projects/route.js",
+   "exists": true,
+   "perms": [],
+   "idem": false,
+   "adminPwd": false,
+   "lines": 73,
+   "imports": [
+    "@/lib/canvas/http",
+    "@/lib/canvas/sessionOwner",
+    "@/lib/repositories/canvasProjects",
+    "@/lib/security/requestGuard",
+    "@/lib/services/auth"
+   ],
+   "srcAbs": "/Users/seelucency/Documents/dev/Supdance Pro/app/api/canvas/projects/route.js",
+   "perm": "",
+   "scope": "",
+   "requiresKey": false,
+   "srcSnippet": "import { getUserFromRequest } from '@/lib/services/auth';\nimport { consumeRateLimit, rateLimitResponse } from '@/lib/security/requestGuard';\nimport { canvasJson, canvasMutationGuard, canvasOriginGuard, canvasPreflight, readCanvasJson, validateCanvasSnapshot, canvasResponse } from '@/lib/canvas/http';\nimport { getCanvasSessionOwnerConflict } from '@/lib/canvas/sessionOwner';\nimport { createCanvasProject, listCanvasProjects } from '@/lib/repositories/canvasProjects';\n\nexport const runtime = 'nodejs';\nexport const dynamic = 'force-dynamic';\n\nfunction projectPayload(project) {\n  if (!project) return null;\n  const snapshot = typeof project.snapshot_json === 'string' ? JSON.parse(project.snapshot_json) : (project.snapshot_json || project.snapshot || {});\n  return {\n    id: project.id,\n    ownerUserId: project.owner_user_id || project.ownerUserId,\n    name: project.name,\n    thumbnailAssetId: project.thumbnail_asset_id || project.thumbnailAssetId || null,\n    snapshot,\n    version: Number(project.version),\n    createdAt: project.created_at || project.createdAt,\n    updatedAt: project.updated_at || project.updatedAt,\n  };\n}\n\nexport function OPTIONS(request) {\n  return canvasPreflight(request, 'GET, POST, OPTIONS');\n}\n\nexport async function GET(request) {\n  const blocked = canvasOriginGuard(request);\n  if (blocked) return blocked;\n  const user = await getUserFromRequest(request);\n  if (!user) return canvasJson(request, { error: '请先登录 SupDance', code: 'UNAUTHENTICATED' }, { status: 401 });\n  const projects = await listCanvasProjects(user.id);\n  return canvasJson(request, { projects: projects.map((project) => ({\n    id: project.id,\n    name: project.name,\n    version: Number(project.version),\n    nodeCount: Number(project.node_count || 0),\n    connectionCount: Number(project.connection_count || 0),\n    createdAt: project.created_at,\n    updatedAt: project.updated_at,\n  })) });\n}\n\nexport async function POST(request) {\n  const guarded = canvasMutationGuard(request, { maxBytes: 2 * 1024 * 1024 });\n  if (guarded) return guarded;\n  const user = await getUserFromRequest(request);\n  if (!user) return canvasJson(request, { error: '请先登录 SupDance', code: 'UNAUTHENTICATED' }, { status: 401 });\n  try {\n    const limit = await consumeRateLimit({ scope: 'canvas_project_create', subject: user.id, limit: 30, windowMs: 60 * 60 * 1000 });\n    if (!limit.allowed) return canvasResponse(request, rateLimitResponse(limit));\n    const body = await readCanvasJson(request, 2 * 1024 * 1024);\n    const ownerConflict = getCanvasSessionOwnerConflict(user.id, body.expectedOwnerUserId);\n    if (ownerConflict) return canvasJson(request, ownerConflict, { status: 409 });\n    const name = String(body.name || '').trim().slice(0, 160) || '未命名画布';\n    const snapshot = validateCanvasSnapshot(body.snapshot || {});\n    const migrationId = body.migrationId === undefined ? null : String(body.migrationId || '').trim();\n    if (migrationId !== null && !/^[A-Za-z0-9_-]{8,120}$/.test(migrationId)) {\n      return canvasJson(request, { error: '迁移标识无效', code: 'INVALID_MIGRATION_ID' }, { status: 422 });\n    }\n    const result = await createCanvasProject(user.id, { name, snapshot, migrationId });\n    return canvasJson(request, { project: projectPayload(result.project), idempotent: result.idempotent }, { status: result.idempotent ? 200 : 201 });\n  } catch (error) {\n    const status = error.code === 'BODY_TOO_LARGE' || error.code === 'PROJECT_SNAPSHOT_TOO_LARGE' ? 413\n      : error.code === 'INLINE_MEDIA_UPLOAD_REQUIRED' ? 422\n        : error.code === 'PROJECT_CREATE_IDEMPOTENCY_CONFLICT' ? 409\n        : error.code === 'INVALID_JSON' ? 400 : 422;\n    return canvasJson(request, { error: error.message || '创建画布失败', code: error.code || 'PROJECT_CREATE_FAILED' }, { status });\n  }\n}\n"
+  }
+ },
+ {
+  "routePath": "/api/canvas/quotes",
+  "methods": [
+   "POST",
+   "OPTIONS"
+  ],
+  "policyTier": "authenticated_or_domain",
+  "responseFormat": "direct_domain_json",
+  "isApi": true,
+  "isAdmin": false,
+  "analysis": {
+   "src": "app/api/canvas/quotes/route.js",
+   "exists": true,
+   "perms": [],
+   "idem": false,
+   "adminPwd": false,
+   "lines": 118,
+   "imports": [
+    "@/lib/application/dataAccess.js",
+    "@/lib/canvas/capabilityPolicy",
+    "@/lib/canvas/http",
+    "@/lib/canvas/modelDescriptor",
+    "@/lib/canvas/sessionOwner",
+    "@/lib/modelCenter/validateCapabilitySchema",
+    "@/lib/pricing/exclusiveBenefits",
+    "@/lib/security/publicError",
+    "@/lib/security/requestGuard",
+    "@/lib/services/auth",
+    "@/lib/services/billing",
+    "@/lib/services/canvasModelConfig",
+    "@/lib/services/models",
+    "@/lib/services/pricingEngine"
+   ],
+   "srcAbs": "/Users/seelucency/Documents/dev/Supdance Pro/app/api/canvas/quotes/route.js",
+   "perm": "",
+   "scope": "",
+   "requiresKey": false,
+   "srcSnippet": "import { publicCanvasModel } from '@/lib/canvas/modelDescriptor';\nimport { validateCapabilityParameters } from '@/lib/modelCenter/validateCapabilitySchema';\nimport { getUserFromRequest } from '@/lib/services/auth';\nimport { createGenerationQuote } from '@/lib/services/pricingEngine';\nimport { getActiveSubscription } from '@/lib/application/dataAccess.js';\nimport { getEntitlements } from '@/lib/services/billing';\nimport { EXCLUSIVE_BENEFIT_KEYS } from '@/lib/pricing/exclusiveBenefits';\nimport { listActiveModels } from '@/lib/services/models';\nimport { getCanvasAllowedModelIds } from '@/lib/services/canvasModelConfig';\nimport { isCanvasServerCapabilityEnabled } from '@/lib/canvas/capabilityPolicy';\nimport { consumeRateLimit, rateLimitResponse } from '@/lib/security/requestGuard';\nimport { canvasJson, canvasMutationGuard, canvasPreflight, readCanvasJson, canvasResponse } from '@/lib/canvas/http';\nimport { getCanvasSessionOwnerConflict } from '@/lib/canvas/sessionOwner';\nimport { publicErrorMessage, publicErrorPayload } from '@/lib/security/publicError';\n\nexport const runtime = 'nodejs';\nexport const dynamic = 'force-dynamic';\n\nexport function OPTIONS(request) {\n  return canvasPreflight(request, 'POST, OPTIONS');\n}\n\nexport async function POST(request) {\n  const guarded = canvasMutationGuard(request);\n  if (guarded) return guarded;\n  let user;\n  try {\n    user = await getUserFromRequest(request);\n  } catch (error) {\n    return canvasJson(request, {\n      error: publicErrorMessage(error, '登录状态暂时无法确认，请稍后重试'),\n      code: 'AUTH_SESSION_UNAVAILABLE',\n    }, { status: 503 });\n  }\n  if (!user) return canvasJson(request, { error: '请先登录 SupDance', code: 'UNAUTHENTICATED' }, { status: 401 });\n  try {\n    const limit = await consumeRateLimit({ scope: 'canvas_quote_user', subject: user.id, limit: 60, windowMs: 60 * 60 * 1000 });\n    if (!limit.allowed) return canvasResponse(request, rateLimitResponse(limit));\n    const body = await readCanvasJson(request);\n    const ownerConflict = getCanvasSessionOwnerConflict(user.id, body.expectedOwnerUserId);\n    if (ownerConflict) return canvasJson(request, ownerConflict, { status: 409 });\n    const modelId = String(body.modelId || '').trim();\n    const idempotencyKey = String(request.headers.get('idempotency-key') || '').trim();\n    if (!modelId) return canvasJson(request, { error: '必须指定模型 ID', code: 'MODEL_ID_REQUIRED' }, { status: 422 });\n    if (idempotencyKey.length < 8 || idempotencyKey.length > 200) {\n      return canvasJson(request, { error: '报价请求必须提供有效的幂等键', code: 'IDEMPOTENCY_REQUIRED' }, { status: 422 });\n    }\n    const catalog = await listActiveModels();\n    const model = catalog.find((item) => item.id === modelId);\n    if (!model) {\n      return canvasJson(request, { error: '模型当前不可用', code: 'MODEL_NOT_AVAILABLE' }, { status: 404 });\n    }\n    if (!isCanvasServerCapabilityEnabled(model.type)) {\n      return canvasJson(request, { error: 'Canvas 当前仅开放已验证的图片生成能力', code: 'CANVAS_CAPABILITY_DISABLED' }, { status: 422 });\n    }\n    const capability = body.capabilityVersion ? publicCanvasModel(model,{schemaVersion:2}) : null;\n    if (capability && body.capabilityVersion !== capability.capabilityVersion) return canvasJson(request,{error:'模型能力已更新，请刷新参数并重新报价',code:'MODEL_CAPABILITY_CHANGED'},{status:409});\n    if (capability) validateCapabilityParameters(modelId,capability.capabilityVersion,capability.inputSchema,body.parameters || {});\n    const allowed = await getCanvasAllowedModelIds({ userId: user.id });\n    if (!allowed.has(modelId)) {\n      return canvasJson(request, { error: '该模型未挂载到无限画布', code: 'CANVAS_MODEL_UNMOUNTED' }, { status: 404 });\n    }\n    // A failed entitlement lookup must not silently quote this user at the Free tier.\n    const subscription = await getActiveSubscription(user.id);\n    const premiumFeature = typeof body.premiumFeature === 'string' ? body.premiumFeature.trim() : '';\n    if (premiumFeature) {\n      if (!EXCLUSIVE_BENEFIT_KEYS.includes(premiumFeature)) {\n        return"
+  }
+ },
+ {
+  "routePath": "/api/canvas/session",
+  "methods": [
+   "GET",
+   "POST",
+   "OPTIONS"
+  ],
+  "policyTier": "authenticated_or_domain",
+  "responseFormat": "direct_domain_json",
+  "isApi": true,
+  "isAdmin": false,
+  "analysis": {
+   "src": "app/api/canvas/session/route.js",
+   "exists": true,
+   "perms": [],
+   "idem": false,
+   "adminPwd": false,
+   "lines": 65,
+   "imports": [
+    "@/lib/canvas/http",
+    "@/lib/security/requestGuard",
+    "@/lib/services/auth",
+    "@/lib/services/billing"
+   ],
+   "srcAbs": "/Users/seelucency/Documents/dev/Supdance Pro/app/api/canvas/session/route.js",
+   "perm": "",
+   "scope": "",
+   "requiresKey": false,
+   "srcSnippet": "import crypto from 'node:crypto';\nimport { getUserFromRequest, json, clearSessionCookie, deleteSession } from '@/lib/services/auth';\nimport { getEntitlements } from '@/lib/services/billing';\nimport { consumeRateLimit, rateLimitResponse } from '@/lib/security/requestGuard';\nimport { canvasJson, canvasMutationGuard, canvasOriginGuard, canvasPreflight, canvasResponse } from '@/lib/canvas/http';\n\nexport const runtime = 'nodejs';\nexport const dynamic = 'force-dynamic';\n\nexport function OPTIONS(request) {\n  return canvasPreflight(request, 'GET, POST, OPTIONS');\n}\n\nexport async function GET(request) {\n  const blocked = canvasOriginGuard(request);\n  if (blocked) return blocked;\n  const user = await getUserFromRequest(request);\n  if (!user) return canvasJson(request, { error: '请先登录 SupDance', code: 'UNAUTHENTICATED' }, { status: 401 });\n  try {\n    const entitlements = await getEntitlements(user.id);\n    return canvasJson(request, {\n      user: {\n        id: user.id,\n        userNumber: user.user_number || user.userNumber || String(user.id).slice(-6),\n        displayName: user.display_name || user.displayName || user.nickname || `创作者#${user.id}`,\n        avatar: user.avatar || user.avatar_url || user.avatarUrl || null,\n        email: user.email || null,\n        phone: user.phone || null,\n        isAdmin: Boolean(user.role === 'admin' || user.is_admin),\n        kcoins: Number(user.kcoins || 0),\n      },\n      credits: Number(entitlements?.creditBuckets?.totalAvailable ?? entitlements?.credits ?? 0),\n      subscription: {\n        planId: entitlements?.planId || 'free',\n        planName: entitlements?.planName || 'Free',\n        isPaid: Boolean(entitlements?.isPaidSubscription),\n        exclusiveFeatures: Array.isArray(entitlements?.exclusiveFeatures) ? entitlements.exclusiveFeatures : [],\n        hasCanvasPremiumTools: Boolean(entitlements?.hasCanvasPremiumTools),\n      },\n    });\n  } catch (error) {\n    console.error('[api/canvas/session]', { code: error?.code || 'SESSION_LOOKUP_FAILED' });\n    return canvasJson(request, { error: '读取 账户状态失败', code: 'SESSION_LOOKUP_FAILED' }, { status: 503 });\n  }\n}\n\nexport async function POST(request) {\n  const guarded = canvasMutationGuard(request, { maxBytes: 4 * 1024 });\n  if (guarded) return guarded;\n  const token = request.cookies.get('ko_session')?.value;\n  const subject = token\n    ? crypto.createHash('sha256').update(token).digest('hex')\n    : 'missing-session';\n  const limit = await consumeRateLimit({ scope: 'canvas_session_logout', subject, limit: 10, windowMs: 60 * 1000 });\n  if (!limit.allowed) return canvasResponse(request, rateLimitResponse(limit));\n  await deleteSession(token);\n  const response = json({ ok: true });\n  clearSessionCookie(response,request);\n  response.headers.set('Access-Control-Allow-Origin', request.headers.get('origin'));\n  response.headers.set('Access-Control-Allow-Credentials', 'true');\n  response.headers.set('Vary', 'Origin');\n  response.headers.set('Cache-Control', 'private, no-store');\n  return response;\n}\n"
+  }
+ },
+ {
+  "routePath": "/api/canvas/shares/[token]/assets/[id]/content",
+  "methods": [
+   "GET",
+   "OPTIONS",
+   "HEAD"
+  ],
+  "policyTier": "authenticated_or_domain",
+  "responseFormat": "direct_domain_json",
+  "isApi": true,
+  "isAdmin": false,
+  "analysis": {
+   "src": "app/api/canvas/shares/[token]/assets/[id]/content/route.js",
+   "exists": true,
+   "perms": [],
+   "idem": false,
+   "adminPwd": false,
+   "lines": 80,
+   "imports": [
+    "@/lib/canvas/http",
+    "@/lib/canvas/projectShare",
+    "@/lib/repositories/canvasProjectShares",
+    "@/lib/services/assets",
+    "@/lib/services/auth",
+    "@/lib/storage/storageService"
+   ],
+   "srcAbs": "/Users/seelucency/Documents/dev/Supdance Pro/app/api/canvas/shares/[token]/assets/[id]/content/route.js",
+   "perm": "",
+   "scope": "",
+   "requiresKey": false,
+   "srcSnippet": "import { getUserFromRequest } from '@/lib/services/auth';\nimport { getUserAssetDownload, getUserAsset } from '@/lib/services/assets';\nimport { getAssetUrl } from '@/lib/storage/storageService';\nimport { canvasJson, canvasOriginGuard, canvasPreflight, canvasResponse } from '@/lib/canvas/http';\nimport { collectCanvasShareAssetIds, hashCanvasShareToken, isCanvasShareToken } from '@/lib/canvas/projectShare';\nimport { getCanvasProjectShareByHash } from '@/lib/repositories/canvasProjectShares';\n\nexport const runtime = 'nodejs';\nexport const dynamic = 'force-dynamic';\n\nexport function OPTIONS(request) {\n  return canvasPreflight(request, 'GET, HEAD, OPTIONS');\n}\n\nasync function serveAsset(request, { params }, headOnly = false) {\n  const blocked = canvasOriginGuard(request);\n  if (blocked) return blocked;\n  const user = await getUserFromRequest(request);\n  if (!user) return canvasJson(request, { error: '请先登录 SupDance', code: 'UNAUTHENTICATED' }, { status: 401 });\n  const { token, id } = await params;\n  if (!isCanvasShareToken(token)) return canvasJson(request, { error: '分享链接无效或已撤销', code: 'SHARE_NOT_FOUND' }, { status: 404 });\n  const share = await getCanvasProjectShareByHash(hashCanvasShareToken(token));\n  if (!share) return canvasJson(request, { error: '分享链接无效或已撤销', code: 'SHARE_NOT_FOUND' }, { status: 404 });\n  const snapshot = typeof share.snapshot_json === 'string' ? JSON.parse(share.snapshot_json) : share.snapshot_json;\n  if (!collectCanvasShareAssetIds(snapshot).has(id)) return canvasJson(request, { error: '分享画布中没有该素材', code: 'SHARED_ASSET_NOT_FOUND' }, { status: 404 });\n  const [asset, download] = await Promise.all([\n    getUserAsset(share.owner_user_id, id),\n    getUserAssetDownload(share.owner_user_id, id),\n  ]);\n  if (!asset || !download?.objectKey || download.deletedAt) return canvasJson(request, { error: '素材不存在或尚未归档到对象存储', code: 'ASSET_NOT_FOUND' }, { status: 404 });\n  if (!/^(image|video|audio)\\//i.test(String(asset.mimeType || ''))) return canvasJson(request, { error: '该素材类型不支持预览', code: 'ASSET_PREVIEW_UNSUPPORTED' }, { status: 415 });\n  try {\n    const objectKey = new URL(request.url).searchParams.get('preview') === '1'\n      ? download.previewObjectKey || download.thumbnailObjectKey || download.objectKey\n      : download.objectKey;\n    const previewing = objectKey !== download.objectKey;\n    const signedUrl = await getAssetUrl({\n      provider: download.provider,\n      locationId: download.locationId,\n      bucket: download.bucket,\n      region: download.region,\n      objectKey,\n      visibility: download.visibility || 'private',\n    });\n    const upstreamUrl = /^https?:\\/\\//i.test(signedUrl) ? signedUrl : new URL(signedUrl, 'http://127.0.0.1:3100').toString();\n    const headers = new Headers();\n    const range = request.headers.get('range');\n    if (range && /^bytes=\\d*-\\d*(,\\d*-\\d*)*$/.test(range)) headers.set('Range', range);\n    const upstream = await fetch(upstreamUrl, {\n      method: headOnly ? 'HEAD' : 'GET',\n      headers,\n      redirect: 'error',\n      signal: AbortSignal.timeout(30_000),\n    });\n    if (!upstream.ok && upstream.status !== 206) return canvasJson(request, { error: '读取素材失败', code: 'ASSET_READ_FAILED' }, { status: 502 });\n    const responseHeaders = new Headers({\n      'Content-Type': previewing ? 'image/webp' : asset.mimeType,\n      'Cache-Control': 'private, no-store',\n      'X-Content-Type-Options': 'nosniff',\n      'Accept-Ranges': 'bytes',\n    });\n    for (const name of ['content-length', 'content-range', 'last-modified']) {\n      const value = upstream.headers.get(name);\n      if (value) responseHeaders.set(name, value);\n    }\n    return canvasResponse(request, new Response(headOnly ? null : upstream.body, { status: upstream.status, headers: responseHeaders }));\n  } catch (error) {\n    console.error('[api/canvas/shares/asset-content]', { code: error?.code || 'SHARED_ASSET_READ_FAILED' });\n    return canvasJson(request, { error: '读取分享素材失败', code: 'SHARED_ASSET_READ_FAILED' }, { status: 502 }"
+  }
+ },
+ {
+  "routePath": "/api/canvas/shares/[token]",
+  "methods": [
+   "GET",
+   "OPTIONS"
+  ],
+  "policyTier": "authenticated_or_domain",
+  "responseFormat": "direct_domain_json",
+  "isApi": true,
+  "isAdmin": false,
+  "analysis": {
+   "src": "app/api/canvas/shares/[token]/route.js",
+   "exists": true,
+   "perms": [],
+   "idem": false,
+   "adminPwd": false,
+   "lines": 30,
+   "imports": [
+    "@/lib/canvas/http",
+    "@/lib/canvas/projectShare",
+    "@/lib/repositories/canvasProjectShares",
+    "@/lib/services/auth"
+   ],
+   "srcAbs": "/Users/seelucency/Documents/dev/Supdance Pro/app/api/canvas/shares/[token]/route.js",
+   "perm": "",
+   "scope": "",
+   "requiresKey": false,
+   "srcSnippet": "import { getUserFromRequest } from '@/lib/services/auth';\nimport { canvasJson, canvasOriginGuard, canvasPreflight } from '@/lib/canvas/http';\nimport { isCanvasShareToken, hashCanvasShareToken, rewriteCanvasShareAssetUrls } from '@/lib/canvas/projectShare';\nimport { getCanvasProjectShareByHash } from '@/lib/repositories/canvasProjectShares';\n\nexport const runtime = 'nodejs';\nexport const dynamic = 'force-dynamic';\n\nexport function OPTIONS(request) {\n  return canvasPreflight(request, 'GET, OPTIONS');\n}\n\nexport async function GET(request, { params }) {\n  const blocked = canvasOriginGuard(request);\n  if (blocked) return blocked;\n  const user = await getUserFromRequest(request);\n  if (!user) return canvasJson(request, { error: '请先登录 SupDance', code: 'UNAUTHENTICATED' }, { status: 401 });\n  const { token } = await params;\n  if (!isCanvasShareToken(token)) return canvasJson(request, { error: '分享链接无效或已撤销', code: 'SHARE_NOT_FOUND' }, { status: 404 });\n  const share = await getCanvasProjectShareByHash(hashCanvasShareToken(token));\n  if (!share) return canvasJson(request, { error: '分享链接无效或已撤销', code: 'SHARE_NOT_FOUND' }, { status: 404 });\n  const snapshot = typeof share.snapshot_json === 'string' ? JSON.parse(share.snapshot_json) : share.snapshot_json;\n  return canvasJson(request, { project: {\n    id: share.project_id,\n    name: share.name,\n    version: Number(share.version),\n    snapshot: rewriteCanvasShareAssetUrls(snapshot, token),\n  } });\n}\n"
+  }
+ },
+ {
+  "routePath": "/api/community/posts/[id]/coin",
+  "methods": [
+   "GET",
+   "POST"
+  ],
+  "policyTier": "authenticated_or_domain",
+  "responseFormat": "direct_domain_json",
+  "isApi": true,
+  "isAdmin": false,
+  "analysis": {
+   "src": "app/api/community/posts/[id]/coin/route.js",
+   "exists": true,
+   "perms": [],
+   "idem": false,
+   "adminPwd": false,
+   "lines": 85,
+   "imports": [
+    "@/lib/application/dataAccess.js",
+    "@/lib/financial/currencyService",
+    "@/lib/security/requestGuard",
+    "@/lib/services/auth"
+   ],
+   "srcAbs": "/Users/seelucency/Documents/dev/Supdance Pro/app/api/community/posts/[id]/coin/route.js",
+   "perm": "",
+   "scope": "",
+   "requiresKey": false,
+   "srcSnippet": "import { getUserFromRequest, json } from '@/lib/services/auth';\nimport { queryOne } from '@/lib/application/dataAccess.js';\nimport { tipPostCoins } from '@/lib/financial/currencyService';\nimport { consumeRateLimit, guardMutation } from '@/lib/security/requestGuard';\n\n\n/** 限流主体：登录态按用户，其余按客户端 IP；XFF 由 nginx 单向写入。 */\nfunction ipOf(request) {\n  return request.headers.get('x-forwarded-for')?.split(',')[0]?.trim()\n    || request.headers.get('x-real-ip')\n    || 'unknown';\n}\n\nexport const runtime = 'nodejs';\n\n// GET: 获取当前用户对该作品的投币数与作品累计投币总数\nexport async function GET(request, { params }) {\n  const { id: postId } = await params;\n  const user = await getUserFromRequest(request);\n\n  const post = await queryOne('SELECT id, coins_count, user_id FROM ai_studio.community_posts WHERE id = $1', [postId]);\n  if (!post) {\n    return json({ error: '作品不存在' }, { status: 404 });\n  }\n\n  let userTipped = 0;\n  if (user) {\n    const historyRow = await queryOne(`\n      SELECT COALESCE(SUM(amount), 0) as total_tipped\n      FROM ops_bill.currency_journal_entries\n      WHERE user_id = $1 AND biz_type = 'POST_COIN_TIP' AND biz_id = $2\n    `, [user.id, String(postId)]);\n    userTipped = Number(historyRow?.total_tipped || 0);\n  }\n\n  return json({\n    postId,\n    totalCoins: Number(post.coins_count || 0),\n    userTipped,\n    isAuthor: user ? user.id === post.user_id : false,\n    maxTipPerPost: 2,\n  });\n}\n\n// POST: 给作品投币 (1 或 2 币)\nexport async function POST(request, { params }) {\n  const deniedByOrigin = guardMutation(request);\n  if (deniedByOrigin) return deniedByOrigin;\n  const { id: postId } = await params;\n  const user = await getUserFromRequest(request);\n  const rl = await consumeRateLimit({\n    scope: 'community.coin',\n    subject: user?.id || ipOf(request),\n    limit: 30,\n    windowMs: 60_000,\n  });\n  if (!rl.allowed) {\n    return json({ error: '请求过于频繁，请稍后再试' }, { status: 429, headers: { 'Retry-After': String(rl.retryAfterSeconds) } });\n  }\n  if (!user) {\n    return json({ error: '请先登录后再投币' }, { status: 401 });\n  }\n\n  let body = {};\n  try {\n    body = await request.json();\n  } catch {}\n\n  const amount = parseInt(body.amount || 1, 10);\n  if (amount !== 1 && amount !== 2) {\n    return json({ error: '单次投币仅支持 1 或 2 枚 K 币' }, { status: 400 });\n  }\n\n  try {\n    const result = await tipPostCoins({\n      userId: user.id,\n      postId,\n      amount,\n    });\n    return json(result);\n  } catch (err) {\n    return json({ error: err.message || '投币失败' }, { status: 400 });\n  }\n}\n"
+  }
+ },
+ {
+  "routePath": "/api/community/posts/[id]/comments",
+  "methods": [
+   "GET",
+   "POST"
+  ],
+  "policyTier": "authenticated_or_domain",
+  "responseFormat": "direct_domain_json",
+  "isApi": true,
+  "isAdmin": false,
+  "analysis": {
+   "src": "app/api/community/posts/[id]/comments/route.js",
+   "exists": true,
+   "perms": [],
+   "idem": false,
+   "adminPwd": false,
+   "lines": 51,
+   "imports": [
+    "@/lib/security/publicError",
+    "@/lib/security/requestGuard",
+    "@/lib/services/auth",
+    "@/lib/services/community"
+   ],
+   "srcAbs": "/Users/seelucency/Documents/dev/Supdance Pro/app/api/community/posts/[id]/comments/route.js",
+   "perm": "",
+   "scope": "",
+   "requiresKey": false,
+   "srcSnippet": "import { getUserFromRequest, json } from '@/lib/services/auth';\nimport { addCommunityComment, listCommunityComments } from '@/lib/services/community';\nimport { consumeRateLimit, guardMutation, rateLimitResponse } from '@/lib/security/requestGuard';\nimport { publicErrorMessage } from '@/lib/security/publicError';\n\nexport const runtime = 'nodejs';\n\nexport async function GET(request, { params }) {\n  try {\n    const { id } = await params;\n    const limit = parseInt(request.nextUrl.searchParams.get('limit') || '50', 10);\n    const comments = await listCommunityComments(id, limit);\n    return json({ comments });\n  } catch (error) {\n    console.error('[community list comments error]', error);\n    return json({ error: '获取评论失败' }, { status: 500 });\n  }\n}\n\nexport async function POST(request, { params }) {\n  const user = await getUserFromRequest(request);\n  if (!user) return json({ error: '请先登录后再发表评论' }, { status: 401 });\n\n  const guarded = guardMutation(request, { maxBytes: 32 * 1024 });\n  if (guarded) return guarded;\n\n  try {\n    const { id } = await params;\n    const body = await request.json();\n    const content = body.content;\n\n    if (!content || !content.trim()) {\n      return json({ error: '评论内容不能为空' }, { status: 400 });\n    }\n\n    const limit = await consumeRateLimit({ scope: 'community_comment_user', subject: user.id, limit: 30, windowMs: 60 * 60 * 1000 });\n    if (!limit.allowed) return rateLimitResponse(limit);\n\n    const comment = await addCommunityComment({\n      postId: id,\n      userId: user.id,\n      content: content.trim(),\n    });\n\n    return json({ comment }, { status: 201 });\n  } catch (error) {\n    console.error('[community add comment error]', error);\n    return json({ error: publicErrorMessage(error, '发表评论失败') }, { status: 500 });\n  }\n}\n"
+  }
+ },
+ {
+  "routePath": "/api/community/posts/[id]/like",
+  "methods": [
+   "POST"
+  ],
+  "policyTier": "authenticated_or_domain",
+  "responseFormat": "direct_domain_json",
+  "isApi": true,
+  "isAdmin": false,
+  "analysis": {
+   "src": "app/api/community/posts/[id]/like/route.js",
+   "exists": true,
+   "perms": [],
+   "idem": false,
+   "adminPwd": false,
+   "lines": 25,
+   "imports": [
+    "@/lib/security/requestGuard",
+    "@/lib/services/auth",
+    "@/lib/services/community"
+   ],
+   "srcAbs": "/Users/seelucency/Documents/dev/Supdance Pro/app/api/community/posts/[id]/like/route.js",
+   "perm": "",
+   "scope": "",
+   "requiresKey": false,
+   "srcSnippet": "import { getUserFromRequest, json } from '@/lib/services/auth';\nimport { toggleCommunityLike } from '@/lib/services/community';\nimport { consumeRateLimit, guardMutation, rateLimitResponse } from '@/lib/security/requestGuard';\n\nexport const runtime = 'nodejs';\n\nexport async function POST(request, { params }) {\n  const user = await getUserFromRequest(request);\n  if (!user) return json({ error: '请先登录后再进行点赞' }, { status: 401 });\n\n  const guarded = guardMutation(request, { maxBytes: 16 * 1024 });\n  if (guarded) return guarded;\n\n  try {\n    const { id } = await params;\n    const limit = await consumeRateLimit({ scope: 'community_like_user', subject: user.id, limit: 120, windowMs: 60 * 60 * 1000 });\n    if (!limit.allowed) return rateLimitResponse(limit);\n    const result = await toggleCommunityLike(id, user.id);\n    return json(result);\n  } catch (error) {\n    console.error('[community like error]', error);\n    return json({ error: '点赞操作失败' }, { status: 500 });\n  }\n}\n"
+  }
+ },
+ {
+  "routePath": "/api/community/posts/[id]/remix",
+  "methods": [
+   "POST"
+  ],
+  "policyTier": "authenticated_or_domain",
+  "responseFormat": "direct_domain_json",
+  "isApi": true,
+  "isAdmin": false,
+  "analysis": {
+   "src": "app/api/community/posts/[id]/remix/route.js",
+   "exists": true,
+   "perms": [],
+   "idem": false,
+   "adminPwd": false,
+   "lines": 24,
+   "imports": [
+    "@/lib/security/requestGuard",
+    "@/lib/services/auth",
+    "@/lib/services/community"
+   ],
+   "srcAbs": "/Users/seelucency/Documents/dev/Supdance Pro/app/api/community/posts/[id]/remix/route.js",
+   "perm": "",
+   "scope": "",
+   "requiresKey": false,
+   "srcSnippet": "import { json } from '@/lib/services/auth';\nimport { recordRemixCount } from '@/lib/services/community';\nimport { getUserFromRequest } from '@/lib/services/auth';\nimport { consumeRateLimit, guardMutation, rateLimitResponse } from '@/lib/security/requestGuard';\n\nexport const runtime = 'nodejs';\n\nexport async function POST(request, { params }) {\n  const user = await getUserFromRequest(request);\n  if (!user) return json({ error: '请先登录后再使用做同款' }, { status: 401 });\n  const guarded = guardMutation(request, { maxBytes: 16 * 1024 });\n  if (guarded) return guarded;\n\n  try {\n    const { id } = await params;\n    const limit = await consumeRateLimit({ scope: 'community_remix_user', subject: user.id, limit: 60, windowMs: 60 * 60 * 1000 });\n    if (!limit.allowed) return rateLimitResponse(limit);\n    await recordRemixCount(id);\n    return json({ ok: true });\n  } catch (error) {\n    return json({ error: '记录做同款失败' }, { status: 500 });\n  }\n}\n"
+  }
+ },
+ {
+  "routePath": "/api/community/posts/[id]",
+  "methods": [
+   "GET",
+   "DELETE"
+  ],
+  "policyTier": "authenticated_or_domain",
+  "responseFormat": "direct_domain_json",
+  "isApi": true,
+  "isAdmin": false,
+  "analysis": {
+   "src": "app/api/community/posts/[id]/route.js",
+   "exists": true,
+   "perms": [],
+   "idem": false,
+   "adminPwd": false,
+   "lines": 49,
+   "imports": [
+    "@/lib/security/requestGuard",
+    "@/lib/services/auth",
+    "@/lib/services/community"
+   ],
+   "srcAbs": "/Users/seelucency/Documents/dev/Supdance Pro/app/api/community/posts/[id]/route.js",
+   "perm": "",
+   "scope": "",
+   "requiresKey": false,
+   "srcSnippet": "import { getUserFromRequest, json } from '@/lib/services/auth';\nimport { deleteCommunityPost, getCommunityPostById } from '@/lib/services/community';\nimport { consumeRateLimit, guardMutation, rateLimitResponse } from '@/lib/security/requestGuard';\n\nexport const runtime = 'nodejs';\n\nexport async function GET(request, { params }) {\n  try {\n    const { id } = await params;\n    const user = await getUserFromRequest(request);\n\n    const post = await getCommunityPostById(id, user?.id || null);\n    if (!post) {\n      return json({ error: '作品不存在或已被作者删除' }, { status: 404 });\n    }\n\n    return json({ post });\n  } catch (error) {\n    console.error('[community detail error]', error);\n    return json({ error: '获取作品详情失败' }, { status: 500 });\n  }\n}\n\nexport async function DELETE(request, { params }) {\n  const user = await getUserFromRequest(request);\n  if (!user) return json({ error: '请先登录' }, { status: 401 });\n\n  const guarded = guardMutation(request, { maxBytes: 32 * 1024 });\n  if (guarded) return guarded;\n\n  try {\n    const limit = await consumeRateLimit({ scope: 'community_post_delete_user', subject: user.id, limit: 30, windowMs: 60 * 60 * 1000 });\n    if (!limit.allowed) return rateLimitResponse(limit);\n\n    const { id } = await params;\n    const isAdmin = ['admin', 'super_admin'].includes(user.role);\n\n    const ok = await deleteCommunityPost(id, user.id, isAdmin);\n    if (!ok) {\n      return json({ error: '作品不存在或无权删除' }, { status: 403 });\n    }\n\n    return json({ ok: true, message: '作品已成功从社区下架' });\n  } catch (error) {\n    console.error('[community delete error]', error);\n    return json({ error: '删除作品失败' }, { status: 500 });\n  }\n}\n"
+  }
+ },
+ {
+  "routePath": "/api/community/posts",
+  "methods": [
+   "GET",
+   "POST"
+  ],
+  "policyTier": "authenticated_or_domain",
+  "responseFormat": "direct_domain_json",
+  "isApi": true,
+  "isAdmin": false,
+  "analysis": {
+   "src": "app/api/community/posts/route.js",
+   "exists": true,
+   "perms": [],
+   "idem": false,
+   "adminPwd": false,
+   "lines": 118,
+   "imports": [
+    "@/lib/security/publicError",
+    "@/lib/security/requestGuard",
+    "@/lib/services/auth",
+    "@/lib/services/community"
+   ],
+   "srcAbs": "/Users/seelucency/Documents/dev/Supdance Pro/app/api/community/posts/route.js",
+   "perm": "",
+   "scope": "",
+   "requiresKey": false,
+   "srcSnippet": "import { getUserFromRequest, json } from '@/lib/services/auth';\nimport { createCommunityPost, listCommunityPosts } from '@/lib/services/community';\nimport { consumeRateLimit, guardMutation } from '@/lib/security/requestGuard';\nimport { publicErrorMessage } from '@/lib/security/publicError';\n\n\n/** 限流主体：登录态按用户，其余按客户端 IP；XFF 由 nginx 单向写入。 */\nfunction ipOf(request) {\n  return request.headers.get('x-forwarded-for')?.split(',')[0]?.trim()\n    || request.headers.get('x-real-ip')\n    || 'unknown';\n}\n\nexport const runtime = 'nodejs';\n\nexport async function GET(request) {\n  try {\n    const user = await getUserFromRequest(request);\n    const searchParams = request.nextUrl.searchParams;\n\n    const category = searchParams.get('category') || 'all';\n    const sort = searchParams.get('sort') || 'trending';\n    const tag = searchParams.get('tag') || '';\n    const q = searchParams.get('q') || '';\n    const userId = searchParams.get('userId') || '';\n    const featuredOnly = searchParams.get('featured') === 'true';\n    const limit = parseInt(searchParams.get('limit') || '24', 10);\n    const offset = parseInt(searchParams.get('offset') || '0', 10);\n\n    const posts = await listCommunityPosts({\n      category,\n      sort,\n      tag,\n      q,\n      userId,\n      featuredOnly,\n      viewerId: user?.id || null,\n      limit,\n      offset,\n    });\n\n    return json({\n      posts,\n      pagination: {\n        limit,\n        offset,\n        hasMore: posts.length === limit,\n      },\n    });\n  } catch (error) {\n    console.error('[community list error]', error);\n    return json({ error: publicErrorMessage(error, '获取社区作品失败') }, { status: 500 });\n  }\n}\n\nexport async function POST(request) {\n  const user = await getUserFromRequest(request);\n  const rl = await consumeRateLimit({\n    scope: 'community.posts',\n    subject: user?.id || ipOf(request),\n    limit: 20,\n    windowMs: 60_000,\n  });\n  if (!rl.allowed) {\n    return json({ error: '请求过于频繁，请稍后再试' }, {\n      status: 429,\n      headers: { 'Retry-After': String(rl.retryAfterSeconds) },\n    });\n  }\n  if (!user) {\n    return json({ error: '请登录后再分享作品到社区' }, { status: 401 });\n  }\n\n  const guarded = guardMutation(request, { maxBytes: 256 * 1024 });\n  if (guarded) return guarded;\n\n  try {\n    const body = await request.json();\n    const {\n      creationId,\n      title,\n      description,\n      mediaType,\n      mediaUrl,\n      coverUrl,\n      prompt,\n      negativePrompt,\n      modelName,\n      parameters,\n      tags,\n    } = body;\n\n    if (!mediaUrl) {\n      return json({ error: '缺少作品媒体资源地址' }, { status: 400 });\n    }\n\n    const post = await createCommunityPost({\n      userId: user.id,\n      creationId,\n      title: title || '未命名作品',\n      description,\n      mediaType: mediaType || 'image',\n      mediaUrl,\n      coverUrl: coverUrl || mediaUrl,\n      prompt,\n      negativePrompt,\n      modelName,\n      parameters: parameters || {},\n      tags: tags || [],\n    });\n\n    return json({ post }, { status: 201 });\n  } catch (error) {\n    console.error('[community create error]', error);\n    return json({ error: publicErrorMessage(error, '发布到社区失败') }, { status: 500 });\n  }\n}\n"
+  }
+ },
+ {
+  "routePath": "/api/creations/report",
+  "methods": [
+   "POST"
+  ],
+  "policyTier": "authenticated_or_domain",
+  "responseFormat": "success_flagged_json",
+  "isApi": true,
+  "isAdmin": false,
+  "analysis": {
+   "src": "app/api/creations/report/route.js",
+   "exists": true,
+   "perms": [],
+   "idem": false,
+   "adminPwd": false,
+   "lines": 42,
+   "imports": [
+    "@/lib/security/requestGuard",
+    "@/lib/services/auth",
+    "@/lib/services/moderation"
+   ],
+   "srcAbs": "/Users/seelucency/Documents/dev/Supdance Pro/app/api/creations/report/route.js",
+   "perm": "",
+   "scope": "",
+   "requiresKey": false,
+   "srcSnippet": "import { NextResponse } from 'next/server';\nimport { getUserFromRequest } from '@/lib/services/auth';\nimport { reportCreation } from '@/lib/services/moderation';\nimport { consumeRateLimit, guardMutation, rateLimitResponse } from '@/lib/security/requestGuard';\n\nexport const runtime = 'nodejs';\n\nexport async function POST(request) {\n  const user = await getUserFromRequest(request);\n  if (!user) {\n    return NextResponse.json({ error: '请先登录后再提交举报' }, { status: 401 });\n  }\n\n  const guarded = guardMutation(request, { maxBytes: 32 * 1024 });\n  if (guarded) return guarded;\n\n  try {\n    const body = await request.json();\n    const creationId = String(body.creationId || '').trim();\n    const reasonCode = String(body.reason || 'user_reported').slice(0, 50);\n\n    if (!creationId) {\n      return NextResponse.json({ error: '缺少作品标识' }, { status: 400 });\n    }\n\n    const limit = await consumeRateLimit({ scope: 'creation_report_user', subject: user.id, limit: 10, windowMs: 24 * 60 * 60 * 1000 });\n    if (!limit.allowed) return rateLimitResponse(limit);\n\n    const result = await reportCreation({ userId: user.id, creationId, reasonCode });\n    if (result.error) return NextResponse.json({ error: result.error }, { status: 404 });\n\n    return NextResponse.json({\n      success: true,\n      message: '举报已受理，内容安全团队将尽快核查处理',\n      caseId: result.caseId,\n    });\n  } catch (error) {\n    console.error('[creations/report]', error);\n    return NextResponse.json({ error: '提交举报失败，请稍后重试' }, { status: 500 });\n  }\n}\n"
+  }
+ },
+ {
+  "routePath": "/api/creations",
+  "methods": [
+   "GET",
+   "POST",
+   "DELETE"
+  ],
+  "policyTier": "authenticated_or_domain",
+  "responseFormat": "direct_domain_json",
+  "isApi": true,
+  "isAdmin": false,
+  "analysis": {
+   "src": "app/api/creations/route.js",
+   "exists": true,
+   "perms": [],
+   "idem": false,
+   "adminPwd": false,
+   "lines": 39,
+   "imports": [
+    "@/lib/security/requestGuard",
+    "@/lib/services/auth",
+    "@/lib/services/generations"
+   ],
+   "srcAbs": "/Users/seelucency/Documents/dev/Supdance Pro/app/api/creations/route.js",
+   "perm": "",
+   "scope": "",
+   "requiresKey": false,
+   "srcSnippet": "import { getUserFromRequest, json } from '@/lib/services/auth';\nimport { deleteUserCreation, listUserGenerations } from '@/lib/services/generations';\nimport { consumeRateLimit, guardMutation, rateLimitResponse } from '@/lib/security/requestGuard';\n\nexport const runtime = 'nodejs';\n\nexport async function GET(request) {\n  const user = await getUserFromRequest(request);\n  if (!user) return json({ error: '需要登录' }, { status: 401 });\n  const creations = await listUserGenerations(user.id, request.nextUrl.searchParams.get('limit') || 50, request.nextUrl.searchParams.get('studioId') || '');\n  return json({ creations });\n}\n\nexport async function POST(request) {\n  const user = await getUserFromRequest(request);\n  if (!user) return json({ error: '需要登录' }, { status: 401 });\n  const guarded = guardMutation(request, { maxBytes: 128 * 1024 });\n  if (guarded) return guarded;\n\n  // This legacy endpoint used to let an authenticated user create an\n  // arbitrary succeeded record without a model call or credit settlement.\n  // All new records must come from /api/generations and its state machine.\n  return json({ error: '直接写入作品记录的接口已停用，请通过生成任务创建作品' }, { status: 410 });\n}\n\nexport async function DELETE(request) {\n  const user = await getUserFromRequest(request);\n  if (!user) return json({ error: '需要登录' }, { status: 401 });\n  const guarded = guardMutation(request, { maxBytes: 8 * 1024 });\n  if (guarded) return guarded;\n  const limit = await consumeRateLimit({ scope: 'creation_delete_user', subject: user.id, limit: 60, windowMs: 60 * 60 * 1000 });\n  if (!limit.allowed) return rateLimitResponse(limit);\n  const id = request.nextUrl.searchParams.get('id');\n  if (!id || id.length > 100) return json({ error: '缺少作品标识' }, { status: 400 });\n  const ok = await deleteUserCreation(user.id, id);\n  if (!ok) return json({ error: '作品不存在或无权删除' }, { status: 404 });\n  return json({ ok: true });\n}\n"
+  }
+ },
+ {
+  "routePath": "/api/generation/quote",
+  "methods": [
+   "POST"
+  ],
+  "policyTier": "authenticated_or_domain",
+  "responseFormat": "success_flagged_json",
+  "isApi": true,
+  "isAdmin": false,
+  "analysis": {
+   "src": "app/api/generation/quote/route.js",
+   "exists": true,
+   "perms": [],
+   "idem": false,
+   "adminPwd": false,
+   "lines": 86,
+   "imports": [
+    "@/lib/application/dataAccess.js",
+    "@/lib/canvas/modelDescriptor",
+    "@/lib/security/generationApiErrors",
+    "@/lib/security/publicError",
+    "@/lib/security/requestGuard",
+    "@/lib/security/requestJson",
+    "@/lib/security/requestUser",
+    "@/lib/services/auth",
+    "@/lib/services/models",
+    "@/lib/services/pricingEngine"
+   ],
+   "srcAbs": "/Users/seelucency/Documents/dev/Supdance Pro/app/api/generation/quote/route.js",
+   "perm": "",
+   "scope": "",
+   "requiresKey": false,
+   "srcSnippet": "import { json } from '@/lib/services/auth';\nimport { createGenerationQuote } from '@/lib/services/pricingEngine';\nimport { listActiveModels } from '@/lib/services/models';\nimport { publicCanvasModel } from '@/lib/canvas/modelDescriptor';\nimport { getActiveSubscription } from '@/lib/application/dataAccess.js';\nimport { consumeRateLimit, guardMutation, rateLimitResponse } from '@/lib/security/requestGuard';\nimport { publicErrorMessage, publicErrorPayload } from '@/lib/security/publicError';\nimport { generationApiErrorStatus } from '@/lib/security/generationApiErrors';\nimport { resolveRequestUser } from '@/lib/security/requestUser';\nimport { readJsonObjectRequestBody } from '@/lib/security/requestJson';\n\nexport const runtime = 'nodejs';\nexport const dynamic = 'force-dynamic';\n\nexport async function POST(request) {\n  const auth = await resolveRequestUser(request);\n  if (!auth.user) return json({ error: auth.error, code: auth.code }, { status: auth.status });\n  const { user } = auth;\n\n  try {\n    const guarded = guardMutation(request, { maxBytes: 128 * 1024 });\n    if (guarded) return guarded;\n\n    const limit = await consumeRateLimit({ scope: 'generation_quote_user', subject: user.id, limit: 60, windowMs: 60 * 60 * 1000 });\n    if (!limit.allowed) return rateLimitResponse(limit);\n\n    const parsedBody = await readJsonObjectRequestBody(request);\n    if (!parsedBody.ok) {\n      const malformedJson = parsedBody.code === 'INVALID_JSON';\n      return json({\n        error: malformedJson ? '请求内容不是有效 JSON' : '请求 JSON 顶层必须是对象',\n        code: parsedBody.code,\n      }, { status: 400 });\n    }\n    const body = parsedBody.value;\n    const idempotencyKey = String(request.headers.get('idempotency-key') || '').trim();\n    if (idempotencyKey.length < 8 || idempotencyKey.length > 200) {\n      return json({ error: '报价请求必须提供有效的 Idempotency-Key', code: 'IDEMPOTENCY_REQUIRED' }, { status: 422 });\n    }\n    const modelId = body.modelId || body.model || body.endpoint;\n    if (!modelId) {\n      return json({ error: '必须指定模型 ID' }, { status: 422 });\n    }\n\n    // 获取用户当前订阅等级\n    const activeSub = await getActiveSubscription(user.id);\n    const subscriptionLevel = activeSub?.plan_id || 'free';\n\n    let capability = null;\n    if (body.capabilityVersion) {\n      const model = (await listActiveModels()).find(model => model.id === modelId);\n      if (!model) return json({error:'模型当前不可用',code:'MODEL_NOT_AVAILABLE'},{status:404});\n      capability = publicCanvasModel(model,{schemaVersion:2});\n      if (capability.capabilityVersion !== body.capabilityVersion) return json({error:'模型能力已更新，请刷新参数并重新报价',code:'MODEL_CAPABILITY_CHANGED'},{status:409});\n    }\n    const quote = await createGenerationQuote({\n      userId: user.id,\n      modelId,\n      parameters: body.parameters || body,\n      ...(capability ? {capabilitySnapshot:{version:capability.capabilityVersion,schema:capability.inputSchema,schemaVersion:2}} : {}),\n      subscriptionLevel,\n      idempotencyKey,\n      requirePublicAvailability: true,\n    });\n\n    return json({\n      success: true,\n      quote_id: quote.quoteId,\n      quoteId: quote.quoteId,\n      credits: quote.credits,\n      creditsQuoted: quote.credits,\n      pricing_breakdown: quote.pricingBreakdown,\n      pricingBreakdown: quote.pricingBreakdown,\n      expires_at: quote.expiresAt,\n      expiresAt: quote.expiresAt,\n      ttlSeconds: 300,\n    }, { status: 201 });\n  } catch (error) {\n    console.error('[api/generation/quote]', error);\n    return json(\n      publicErrorPayload(error, '获取模型报价失败', 'QUOTE_FAILED'),\n      { status: generationApiErrorStatus(error) },\n    );\n  }\n}\n"
+  }
+ },
+ {
+  "routePath": "/api/generations/[id]/callback",
+  "methods": [
+   "POST"
+  ],
+  "policyTier": "signature",
+  "responseFormat": "direct_domain_json",
+  "isApi": true,
+  "isAdmin": false,
+  "analysis": {
+   "src": "app/api/generations/[id]/callback/route.js",
+   "exists": true,
+   "perms": [],
+   "idem": false,
+   "adminPwd": false,
+   "lines": 43,
+   "imports": [
+    "@/lib/security/publicError",
+    "@/lib/services/auth",
+    "@/lib/services/generationCore"
+   ],
+   "srcAbs": "/Users/seelucency/Documents/dev/Supdance Pro/app/api/generations/[id]/callback/route.js",
+   "perm": "",
+   "scope": "",
+   "requiresKey": false,
+   "srcSnippet": "import crypto from 'node:crypto';\nimport { json } from '@/lib/services/auth';\nimport { handleGenerationCallback } from '@/lib/services/generationCore';\nimport { publicErrorMessage } from '@/lib/security/publicError';\n\nexport const runtime = 'nodejs';\n\nfunction isAuthorized(request) {\n  const configured = String(process.env.GENERATION_CALLBACK_SECRET || '');\n  const received = request.headers.get('x-generation-callback-secret') || '';\n  if (configured.length < 32 || received.length !== configured.length) return false;\n  return crypto.timingSafeEqual(Buffer.from(received), Buffer.from(configured));\n}\n\nexport async function POST(request, context) {\n  if (!isAuthorized(request)) return json({ error: '无效的供应商回调凭据' }, { status: 401 });\n  const callbackKey = request.headers.get('idempotency-key') || request.headers.get('x-idempotency-key');\n  if (!callbackKey || callbackKey.trim().length < 8) return json({ error: '缺少有效的回调幂等键' }, { status: 422 });\n\n  let body;\n  try { body = await request.json(); } catch { return json({ error: '无效的回调数据' }, { status: 400 }); }\n  const { id } = await context.params;\n  try {\n    const result = await handleGenerationCallback({\n      creationId: id,\n      status: body.status,\n      resultUrl: body.resultUrl || body.url || null,\n      providerRequestId: body.providerRequestId || body.request_id || null,\n      errorCode: body.errorCode || body.error_code,\n      errorReason: body.errorReason || body.error || undefined,\n      actualCostUsd: body.actualCostUsd ?? body.cost_usd ?? null,\n      durationMs: body.durationMs ?? null,\n      callbackIdempotencyKey: callbackKey,\n    });\n    if (result.error === 'TASK_NOT_FOUND') return json({ error: '任务不存在' }, { status: 404 });\n    return json(result);\n  } catch (error) {\n    console.error('[api/generations/callback]', error);\n    const status = error.code === 'IDEMPOTENCY_REQUIRED' ? 422 : error.code === 'INVALID_CALLBACK_STATUS' ? 400 : 409;\n    return json({ error: publicErrorMessage(error, '供应商回调处理失败'), code: error.code || 'CALLBACK_FAILED' }, { status });\n  }\n}\n"
+  }
+ },
+ {
+  "routePath": "/api/generations/[id]",
+  "methods": [
+   "GET"
+  ],
+  "policyTier": "authenticated_or_domain",
+  "responseFormat": "direct_domain_json",
+  "isApi": true,
+  "isAdmin": false,
+  "analysis": {
+   "src": "app/api/generations/[id]/route.js",
+   "exists": true,
+   "perms": [],
+   "idem": false,
+   "adminPwd": false,
+   "lines": 38,
+   "imports": [
+    "@/lib/security/publicError",
+    "@/lib/services/auth",
+    "@/lib/services/generations"
+   ],
+   "srcAbs": "/Users/seelucency/Documents/dev/Supdance Pro/app/api/generations/[id]/route.js",
+   "perm": "",
+   "scope": "",
+   "requiresKey": false,
+   "srcSnippet": "import { getUserFromRequest, json } from '@/lib/services/auth';\nimport { getUserCreation } from '@/lib/services/generations';\nimport { publicErrorMessage } from '@/lib/security/publicError';\n\nexport const runtime = 'nodejs';\nexport const dynamic = 'force-dynamic';\n\nexport async function GET(request, context) {\n  const user = await getUserFromRequest(request);\n  if (!user) return json({ error: '请先登录' }, { status: 401 });\n\n  const { id } = await context.params;\n  if (!id) return json({ error: '缺少任务 ID' }, { status: 400 });\n\n  try {\n    const creation = await getUserCreation(user.id, id);\n    if (!creation) return json({ error: '生成任务不存在或无权查看' }, { status: 404 });\n\n    const isSuccess = ['succeeded', 'completed', 'success'].includes(creation.status);\n    const isFailed = ['failed', 'error', 'cancelled', 'canceled'].includes(creation.status);\n\n    return json({\n      id: creation.id,\n      request_id: creation.id,\n      status: isSuccess ? 'succeeded' : isFailed ? 'failed' : 'processing',\n      url: creation.result_url || undefined,\n      outputs: creation.result_url ? [creation.result_url] : [],\n      error: creation.error_reason || undefined,\n      credit_cost: creation.credit_cost,\n      created_at: creation.created_at,\n      completed_at: creation.completed_at,\n    });\n  } catch (error) {\n    console.error('[api/generations/[id]]', error);\n    return json({ error: publicErrorMessage(error, '获取生成任务失败') }, { status: 500 });\n  }\n}\n"
+  }
+ },
+ {
+  "routePath": "/api/generations",
+  "methods": [
+   "GET",
+   "POST"
+  ],
+  "policyTier": "authenticated_or_domain",
+  "responseFormat": "direct_domain_json",
+  "isApi": true,
+  "isAdmin": false,
+  "analysis": {
+   "src": "app/api/generations/route.js",
+   "exists": true,
+   "perms": [],
+   "idem": false,
+   "adminPwd": false,
+   "lines": 111,
+   "imports": [
+    "@/lib/repositories/creations",
+    "@/lib/security/contentModeration",
+    "@/lib/security/generationApiErrors",
+    "@/lib/security/publicError",
+    "@/lib/security/requestGuard",
+    "@/lib/security/requestJson",
+    "@/lib/security/requestUser",
+    "@/lib/services/auth",
+    "@/lib/services/generationCore",
+    "@/lib/services/generations"
+   ],
+   "srcAbs": "/Users/seelucency/Documents/dev/Supdance Pro/app/api/generations/route.js",
+   "perm": "",
+   "scope": "",
+   "requiresKey": false,
+   "srcSnippet": "import { json } from '@/lib/services/auth';\nimport { createGenerationTask, processGenerationTask } from '@/lib/services/generationCore';\nimport { findUserCreationByIdempotency } from '@/lib/repositories/creations';\nimport { exposeCreationResult, getGenerationTrace, listUserGenerations } from '@/lib/services/generations';\nimport { consumeRateLimit, getClientIp, guardMutation, rateLimitResponse } from '@/lib/security/requestGuard';\nimport { publicErrorMessage, publicErrorPayload } from '@/lib/security/publicError';\nimport { validatePromptSafety } from '@/lib/security/contentModeration';\nimport { generationApiErrorStatus } from '@/lib/security/generationApiErrors';\nimport { resolveRequestUser } from '@/lib/security/requestUser';\nimport { readJsonObjectRequestBody } from '@/lib/security/requestJson';\n\nexport const runtime = 'nodejs';\nexport const dynamic = 'force-dynamic';\n\nexport async function GET(request) {\n  const auth = await resolveRequestUser(request);\n  if (!auth.user) return json({ error: auth.error, code: auth.code }, { status: auth.status });\n  const { user } = auth;\n\n  try {\n    let creationId = request.nextUrl.searchParams.get('id');\n    const retryKey = request.nextUrl.searchParams.get('idempotencyKey');\n    if (!creationId && retryKey) {\n      if (retryKey.length<8 || retryKey.length>200) return json({error:'请求标识无效',code:'IDEMPOTENCY_REQUIRED'},{status:422});\n      const existing=await findUserCreationByIdempotency(user.id,retryKey);\n      if(!existing)return json({error:'尚未创建该请求的任务',code:'GENERATION_NOT_FOUND'},{status:404});\n      creationId=existing.id;\n    }\n    if (creationId) {\n      const trace = await getGenerationTrace(creationId, { expectedUserId: user.id });\n      if (!trace?.creation) return json({ error: '任务不存在' }, { status: 404 });\n      return json(trace);\n    }\n\n    const result = await listUserGenerations(user.id, Math.min(100, Number(request.nextUrl.searchParams.get('limit') || 50)));\n    return json({ creations: result });\n  } catch (error) {\n    console.error('[api/generations GET]', error);\n    return json({ error: publicErrorMessage(error, '读取生成任务失败，请稍后重试'), code: error.code || 'GENERATION_READ_FAILED' }, { status: 503 });\n  }\n}\n\nexport async function POST(request) {\n  const auth = await resolveRequestUser(request);\n  if (!auth.user) return json({ error: auth.error, code: auth.code }, { status: auth.status });\n  const { user } = auth;\n\n  try {\n    const guarded = guardMutation(request, { maxBytes: 256 * 1024 });\n    if (guarded) return guarded;\n    const limit = await consumeRateLimit({ scope: 'generation_user', subject: user.id || getClientIp(request), limit: 60, windowMs: 60 * 60 * 1000 });\n    if (!limit.allowed) return rateLimitResponse(limit);\n    const parsedBody = await readJsonObjectRequestBody(request);\n    if (!parsedBody.ok) {\n      const malformedJson = parsedBody.code === 'INVALID_JSON';\n      return json({\n        error: malformedJson ? '请求内容不是有效 JSON' : '请求 JSON 顶层必须是对象',\n        code: parsedBody.code,\n      }, { status: 400 });\n    }\n    const body = parsedBody.value;\n    const moderation = validatePromptSafety(body.prompt);\n    if (!moderation.passed) {\n      return json({ error: moderation.reason, code: moderation.code }, { status: 422 });\n    }\n    const idempotencyKey = request.headers.get('idempotency-key') || request.headers.get('x-idempotency-key');\n    const quoteId = String(body.quoteId || body.quote_id || '').trim() || null;\n    if (!quoteId) {\n      return json({ error: '创建生成任务前必须先获取有效的服务端报价', code: 'QUOTE_REQUIRED' }, { status: 422 });\n    }\n    const task = await createGenerationTask({\n      user,\n      modelId: body.modelId || body.model || body.endpoint,\n      studioId: body.studioId || 'studio',\n      prompt: body.prompt,\n      parameters: body.parameters || body,\n      quoteParameters: body.parameters || body,\n      idempotencyKey,\n      label: body.label,\n      quoteId,\n      expectedCapabilityVersion: body.capabilityVersion || null,\n      requirePublicAvailabi"
+  }
+ },
+ {
+  "routePath": "/api/models/telemetry",
+  "methods": [
+   "GET"
+  ],
+  "policyTier": "authenticated_or_domain",
+  "responseFormat": "direct_domain_json",
+  "isApi": true,
+  "isAdmin": false,
+  "analysis": {
+   "src": "app/api/models/telemetry/route.js",
+   "exists": true,
+   "perms": [],
+   "idem": false,
+   "adminPwd": false,
+   "lines": 63,
+   "imports": [
+    "@/lib/services/modelTelemetry"
+   ],
+   "srcAbs": "/Users/seelucency/Documents/dev/Supdance Pro/app/api/models/telemetry/route.js",
+   "perm": "",
+   "scope": "",
+   "requiresKey": false,
+   "srcSnippet": "import { NextResponse } from 'next/server';\nimport { getModelTelemetryOverview } from '@/lib/services/modelTelemetry';\n\nexport const runtime = 'nodejs';\nexport const dynamic = 'force-dynamic';\n\nconst RANGES = new Set(['24h', '7d', '30d']);\n\nexport async function GET(request) {\n  const requested = request.nextUrl.searchParams.get('range') || '24h';\n  const timeRange = RANGES.has(requested) ? requested : '24h';\n\n  try {\n    const data = await getModelTelemetryOverview({ timeRange, limit: 24 });\n    if (data?.error) {\n      return NextResponse.json(\n        { error: '模型遥测暂不可用' },\n        { status: 503, headers: { 'Cache-Control': 'no-store' } }\n      );\n    }\n\n    const models = (data.topModels || [])\n      .filter((item) => item.is_visible !== false)\n      .map((item) => ({\n        id: item.model_id,\n        name: item.model_name,\n        category: item.category,\n        totalCalls: Number(item.total_calls || 0),\n        successRate: Number(item.success_rate || 0),\n        avgDurationMs: Number(item.avg_duration_ms || 0),\n        p90DurationMs: Number(item.p90_duration_ms || 0),\n      }));\n\n    const kpi = {\n      totalCalls: Number(data.kpi?.totalCalls || 0),\n      successRate: Number(data.kpi?.successRate || 0),\n      avgDurationMs: Number(data.kpi?.avgDurationMs || 0),\n      p50DurationMs: Number(data.kpi?.p50DurationMs || 0),\n      p90DurationMs: Number(data.kpi?.p90DurationMs || 0),\n      activeModelsCount: Number(data.kpi?.activeModelsCount || 0),\n    };\n\n    return NextResponse.json(\n      {\n        range: data.timeRange || timeRange,\n        kpi,\n        models,\n      },\n      {\n        headers: {\n          'Cache-Control': 'public, max-age=15, stale-while-revalidate=45',\n        },\n      }\n    );\n  } catch (error) {\n    console.error('[public/models/telemetry] failed to load telemetry:', error);\n    return NextResponse.json(\n      { error: '模型遥测暂不可用' },\n      { status: 503, headers: { 'Cache-Control': 'no-store' } }\n    );\n  }\n}\n"
+  }
+ },
+ {
+  "routePath": "/api/upload-binary",
+  "methods": [
+   "POST"
+  ],
+  "policyTier": "authenticated_or_domain",
+  "responseFormat": "binary_redirect_xml_or_callback",
+  "isApi": true,
+  "isAdmin": false,
+  "analysis": {
+   "src": "app/api/upload-binary/route.js",
+   "exists": true,
+   "perms": [],
+   "idem": false,
+   "adminPwd": false,
+   "lines": 104,
+   "imports": [
+    "@/lib/services/auth"
+   ],
+   "srcAbs": "/Users/seelucency/Documents/dev/Supdance Pro/app/api/upload-binary/route.js",
+   "perm": "",
+   "scope": "",
+   "requiresKey": false,
+   "srcSnippet": "import { NextResponse } from 'next/server';\nimport { getUserFromRequest } from '@/lib/services/auth';\nimport { validateUploadProxyTarget, isBlockedFileType } from '../../../src/lib/uploadProxyTarget';\nimport { consumeRateLimit, guardMutation, rateLimitResponse } from '../../../lib/security/requestGuard';\nimport { publicErrorMessage } from '../../../lib/security/publicError';\n\nexport async function POST(request) {\n    try {\n        const guarded = guardMutation(request, { maxBytes: 25 * 1024 * 1024 });\n        if (guarded) return guarded;\n        const user = await getUserFromRequest(request);\n        if (!user) return NextResponse.json({ error: '请先登录' }, { status: 401 });\n        const uploadLimit = await consumeRateLimit({ scope: 'binary_upload_user', subject: user.id, limit: 20, windowMs: 60 * 60 * 1000 });\n        if (!uploadLimit.allowed) return rateLimitResponse(uploadLimit);\n\n        const formData = await request.formData();\n\n        // Extract the original S3 target URL we injected earlier\n        const targetUrl = formData.get('x-proxy-target-url');\n\n        if (!targetUrl) {\n            return NextResponse.json({ error: 'Missing proxy target URL' }, { status: 400 });\n        }\n\n        const validatedTarget = validateUploadProxyTarget(targetUrl);\n        if (!validatedTarget.ok) {\n            return NextResponse.json(\n                { error: 'Invalid upload target', reason: validatedTarget.reason },\n                { status: 400 }\n            );\n        }\n\n        // Validate file content type and extension to prevent dangerous uploads (e.g. HTML, SVG, executables)\n        const fileContentType = formData.get('Content-Type') || formData.get('content-type') || '';\n        const keyName = formData.get('key') || '';\n        \n        for (const [key, value] of formData.entries()) {\n            if (value && typeof value === 'object' && typeof value.name === 'string') {\n                if (isBlockedFileType(value.name, value.type || fileContentType)) {\n                    return NextResponse.json(\n                        { error: 'Invalid file type', reason: 'blocked_file_type' },\n                        { status: 400 }\n                    );\n                }\n            }\n        }\n\n        if (isBlockedFileType(keyName, fileContentType)) {\n            return NextResponse.json(\n                { error: 'Invalid file type', reason: 'blocked_file_type' },\n                { status: 400 }\n            );\n        }\n\n        // Reconstruct the FormData for S3 (excluding our internal proxy marker)\n        const proxyMethod = String(formData.get('x-proxy-method') || 'POST').toUpperCase();\n    if (proxyMethod === 'PUT') {\n      const file = formData.get('file');\n      if (!file || typeof file.arrayBuffer !== 'function' || typeof file.name !== 'string') return NextResponse.json({ error: 'Missing upload file' }, { status: 400 });\n      let requestedHeaders = {};\n      try { requestedHeaders = JSON.parse(String(formData.get('x-proxy-headers') || '{}')); }\n      catch { return NextResponse.json({ error: 'Invalid upload headers' }, { status: 400 }); }\n      const headers = new Headers();\n      for (const [name, value] of Object.entries(requestedHeaders)) {\n        const lowerName = name.toLowerCase();\n        if (/^(content-type|x-cos-[a-z0-9-]+)$/.test(lowerName) && value != null) headers.set(lowerName, String(value));\n      }\n      if (!headers.has('content-type')) headers.set('content-type', file.type || 'application/octet-stream');\n      const response = await fetch(validatedTarget.url, { method: 'PUT', headers, body: Buffer.from(await file.arrayBuffer()) });\n      if (response.ok || response.status === 204) return new Response(null, { status: 204 });\n      await response.arrayBuffer().catch(() => {});\n      console.error('S3 Proxy Error:', { status: response.status });\n      return NextResponse.json({ error: 'Upload service unavailable' }, { status: 502 });\n    }\n    if (proxyMethod !== 'POST') return NextResponse.json({ error: '"
+  }
+ }
+]

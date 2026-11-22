@@ -1,0 +1,70 @@
+{
+  "builder": {
+    "title": "キャラクタービルダー",
+    "reset": "リセット"
+  },
+  "categoryTabs": {
+    "face": "顔",
+    "body": "体型",
+    "style": "スタイル・構図"
+  },
+  "subcategories": {
+    "character_type": "キャラクター種別",
+    "gender": "性別",
+    "ethnicity_origin_base": "人種・出身地",
+    "eye_color": "瞳の色",
+    "eyes_type": "目の形",
+    "eyes_details": "目のディテール",
+    "mouth": "口元・歯",
+    "ears": "耳",
+    "horns": "角・装飾",
+    "skin_conditions": "肌の状態",
+    "face_skin_material": "顔の肌質感",
+    "face_surface_pattern": "肌の模様",
+    "body_type": "体型タイプ",
+    "left_arm": "左腕",
+    "right_arm": "右腕",
+    "left_leg": "左脚",
+    "right_leg": "右脚",
+    "hair": "髪型・ヘッドスタイル",
+    "accessories": "アクセサリー・マーク",
+    "rendering_style": "レンダリングスタイル",
+    "framing": "構図・画角",
+    "outfit_preset": "衣装・装備",
+    "backdrop": "背景・ライティング"
+  },
+  "toolbar": {
+    "shuffle": "シャッフル",
+    "generate": "キャラクター生成",
+    "generating": "生成中…",
+    "model": "モデル",
+    "credits": "クレジット"
+  },
+  "preview": {
+    "generating": "オリジナルキャラクターを生成しています…",
+    "emptyTitle": "ここにあなたのオリジナルキャラクターが表示されます。",
+    "emptySubtitleLine1": "独自のキャラクターコンセプトを",
+    "emptySubtitleLine2": "ゼロからデザインしましょう",
+    "save": "保存",
+    "altGenerated": "生成されたキャラクター"
+  },
+  "tags": {
+    "showMore": "もっと見る",
+    "hide": "折りたたむ"
+  },
+  "customPrompt": {
+    "placeholder": "詳細を追加… 例：サイバーパンクのアーマー、ドラマチックなリムライト、UE5レンダリング"
+  },
+  "gallery": {
+    "title": "デザイン履歴",
+    "countSuffix": "人のキャラクター",
+    "emptyText": "生成されたキャラクターが\nここに表示されます",
+    "altPrefix": "キャラクター",
+    "download": "ダウンロード"
+  },
+  "errors": {
+    "generationFailed": "キャラクターの生成に失敗しました",
+    "noActiveModels": "現在利用可能な画像生成モデルがありません。",
+    "loginRequired": "キャラクターを作成するにはログインしてください。"
+  }
+}

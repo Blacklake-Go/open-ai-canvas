@@ -1,0 +1,206 @@
+{
+  "common": {
+    "model": "模型",
+    "reset": "重設"
+  },
+  "panels": {
+    "layer-decomposition": "圖層分解",
+    "upscale": "超解析度",
+    "color-grading": "調色",
+    "remove-bg": "背景移除",
+    "expand-crop": "擴圖",
+    "tools": "工具"
+  },
+  "menuItems": {
+    "layer-decomposition": "圖層分解",
+    "upscale": "超解析度",
+    "color-grading": "調色",
+    "remove-bg": "移除背景",
+    "expand-crop": "擴充功能与外擴繪製",
+    "edit-text": "編輯文字",
+    "enhancer": "增強器",
+    "relight": "重新打光",
+    "angles": "角度調整",
+    "new": "新"
+  },
+  "tools": {
+    "uploadOrChangeImage": "上傳或更換圖片",
+    "clearMarkedRegions": "清除標記區域",
+    "runSelectionEdit": "運行選區編輯",
+    "line": "直線",
+    "arrow": "箭頭",
+    "rectangle": "矩形",
+    "circle": "圓形",
+    "customColor": "自訂颜色",
+    "undoStroke": "撤銷筆畫",
+    "redoStroke": "重做筆畫",
+    "clearDrawings": "清除繪畫",
+    "selectPointerTool": "選取指針工具",
+    "panTool": "平移工具",
+    "lassoEdit": "套索編輯",
+    "regionalEdit": "區域編輯",
+    "highlightMarkerPen": "高亮記號筆",
+    "eraserTool": "橡皮擦工具",
+    "shapes": "形狀 (R)",
+    "resetZoomPan": "重設縮放与平移",
+    "addImage": "添加圖片",
+    "runLayerDecomposition": "運行圖層分解",
+    "backToTools": "返回工具",
+    "closePanel": "關閉面板",
+    "regionalPromptPlaceholder": "在此輸入提示詞...",
+    "promptPlaceholder": "描述如何編輯圖像或拆分圖層...",
+    "markedPromptPlaceholder": "為 {count} 個標記區域描述圖層..."
+  },
+  "sample": {
+    "clickToLoad": "點擊加載此圖層分解示例",
+    "original": "原圖",
+    "layersCount": "5 個圖層",
+    "try": "試試 →",
+    "clickToExplore": "點擊檢視示例"
+  },
+  "settings": {
+    "heading": "設定",
+    "resolution": "解析度",
+    "layers": "圖層數"
+  },
+  "carousel": {
+    "heading": "圖層輪播",
+    "soloActive": "僅顯示當前",
+    "stackMode": "堆叠模式",
+    "viewOnlyActive": "僅檢視當前圖層",
+    "downloadAll": "下載全部",
+    "previousLayer": "上一圖層",
+    "nextLayer": "下一圖層",
+    "toggleVisibility": "切換可見性",
+    "downloadThisLayer": "下載此圖層",
+    "save": "儲存",
+    "layerLabel": "圖層 {n}",
+    "seedreamDecomposed": "Seedream 分解結果"
+  },
+  "colorGrading": {
+    "colorCorrect": {
+      "heading": "色彩校正",
+      "info": "色溫、色相、饱和度、對比度与分離色調",
+      "reset": "重設色彩校正"
+    },
+    "softenDetails": {
+      "heading": "細節柔化",
+      "info": "半径与細節柔化程度",
+      "reset": "重設細節柔化"
+    },
+    "bloom": {
+      "heading": "泛光",
+      "info": "光晕擴散与混合模式",
+      "reset": "重設泛光"
+    },
+    "halation": {
+      "heading": "光晕渗色",
+      "info": "強光邊缘的紅色光晕效果",
+      "reset": "重設光晕渗色"
+    },
+    "lensInstructions": {
+      "heading": "鏡頭效果",
+      "info": "暗角与光學鏡頭畸变",
+      "reset": "重設鏡頭效果"
+    },
+    "exposure": {
+      "heading": "曝光",
+      "info": "曝光档位調整",
+      "reset": "重設曝光"
+    },
+    "filmGrain": {
+      "heading": "胶片颗粒",
+      "info": "模擬胶片颗粒質感",
+      "reset": "重設胶片颗粒"
+    },
+    "resetToDefault": "重設為預設",
+    "resetAll": "重設全部調色",
+    "download": "下載"
+  },
+  "removeBg": {
+    "modelName": "AI 背景移除",
+    "targetPreview": "目標預覽",
+    "alphaMatte": "透明通道抠圖",
+    "feature1": "精細邊缘提取（發絲、毛發、細節輪廓）",
+    "feature2": "高解析度透明 PNG 輸出"
+  },
+  "expandCrop": {
+    "modelName": "AI 圖像擴充功能",
+    "canvasPreview": "畫布預覽",
+    "boundaryOutpainting": "邊界外擴繪製",
+    "expand": "擴充功能",
+    "feature1": "在匹配光照、風格与紋理的同時擴充功能邊界",
+    "feature2": "自動智能邊缘外擴与延展"
+  },
+  "editText": {
+    "heading": "文字編輯工具",
+    "placeholder": "輸入文字修改提示詞...",
+    "run": "運行文字編輯",
+    "processing": "處理中..."
+  },
+  "enhancer": {
+    "heading": "AI 增強器",
+    "description": "自動最佳化光照、清晰度与色彩平衡。",
+    "run": "增強圖像",
+    "processing": "增強中..."
+  },
+  "relight": {
+    "heading": "AI 重新打光",
+    "description": "調整光照、環境影棚燈光与陰影。",
+    "run": "應用打光",
+    "processing": "打光中..."
+  },
+  "angles": {
+    "heading": "3D 角度透視",
+    "description": "調整透視傾斜与相機角度對齊。",
+    "run": "應用透視角度",
+    "processing": "变換中..."
+  },
+  "footer": {
+    "decomposing": "分解中（{progress}%）...",
+    "separateLayers": "分離圖層 {count}",
+    "upscaling": "超解析度處理中（{progress}%）...",
+    "upscaleCost": "超解析度 {cost}",
+    "removingBackground": "正在移除背景（{progress}%）...",
+    "removeBackgroundCost": "移除背景 1.0",
+    "expandingBorders": "正在擴充功能邊界（{progress}%）...",
+    "expandImageCost": "擴充功能圖像 0.03"
+  },
+  "toasts": {
+    "enterApiKeyUpload": "請輸入您的 API 密钥以上傳圖片。",
+    "imageUploaded": "圖片上傳成功！",
+    "uploadFailed": "上傳失敗：{error}",
+    "uploadImageFileOnly": "請上傳圖片文件。",
+    "fileTooLarge": "文件過大（最大 20MB）：{name}",
+    "viewReset": "檢視已重設",
+    "enterApiKey": "請輸入您的 API 密钥。",
+    "enterRegionPrompt": "請為所選區域輸入提示詞。",
+    "editFailed": "編輯失敗：{error}",
+    "apiKeyMissingSet": "缺少 API 密钥，請先設定您的 API 密钥。",
+    "uploadOrSelectDecompose": "請上傳或選取一張圖片以分解圖層。",
+    "decomposedInto": "已分解為 {count} 個圖層！",
+    "decompositionFailed": "圖層分解失敗：{error}",
+    "uploadOrSelectUpscale": "請選取或上傳一張圖片以進行超解析度處理。",
+    "upscaleSuccess": "已使用 {model} 成功完成超解析度處理！",
+    "upscaleNoOutput": "超解析度處理已完成，但未返回輸出地址。",
+    "upscaleFailed": "超解析度處理失敗：{error}",
+    "uploadOrSelectRemoveBg": "請上傳或選取一張圖片以移除背景。",
+    "removeBgSuccess": "已使用 AI 背景移除工具干淨地移除背景！",
+    "removeBgNoOutput": "背景移除已完成，但未返回輸出地址。",
+    "removeBgFailed": "背景移除失敗：{error}",
+    "uploadOrSelectExpand": "請上傳或選取一張圖片以進行擴充功能。",
+    "expandSuccess": "已使用 AI 圖像擴充功能工具干淨地完成圖像擴充功能！",
+    "expandNoOutput": "圖像擴充功能已完成，但未返回輸出地址。",
+    "expandFailed": "圖像擴充功能失敗：{error}",
+    "upscaleSettingsReset": "超解析度設定已重設為預設",
+    "resetCategory": "已重設 {category}",
+    "colorGradingReset": "調色已重設為預設",
+    "downloadedGraded": "已下載調色後的圖像！",
+    "loadedSample": "已加載 Seedream 5 層示例！",
+    "apiKeyMissing": "缺少 API 密钥。",
+    "uploadImageFirst": "請先上傳一張圖片。",
+    "toolCompleted": "{tool} 已成功完成！",
+    "operationFailed": "操作失敗：{error}",
+    "downloadingAll": "正在下載所有圖層..."
+  }
+}

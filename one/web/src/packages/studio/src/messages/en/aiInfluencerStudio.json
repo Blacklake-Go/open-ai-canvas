@@ -1,0 +1,70 @@
+{
+  "builder": {
+    "title": "Character Builder",
+    "reset": "Reset"
+  },
+  "categoryTabs": {
+    "face": "Face",
+    "body": "Body",
+    "style": "Style & Framing"
+  },
+  "subcategories": {
+    "character_type": "Character Type",
+    "gender": "Gender",
+    "ethnicity_origin_base": "Ethnicity / Origin",
+    "eye_color": "Eye Color",
+    "eyes_type": "Eye Type",
+    "eyes_details": "Eye Features",
+    "mouth": "Mouth & Teeth",
+    "ears": "Ears",
+    "horns": "Horns",
+    "skin_conditions": "Skin Conditions",
+    "face_skin_material": "Face Skin Material",
+    "face_surface_pattern": "Skin Pattern",
+    "body_type": "Body Type",
+    "left_arm": "Left Arm",
+    "right_arm": "Right Arm",
+    "left_leg": "Left Leg",
+    "right_leg": "Right Leg",
+    "hair": "Hair / Head Growth",
+    "accessories": "Accessories & Markings",
+    "rendering_style": "Rendering Style",
+    "framing": "Framing & Angle",
+    "outfit_preset": "Outfit & Gear",
+    "backdrop": "Atmosphere & Backdrop"
+  },
+  "toolbar": {
+    "shuffle": "Shuffle",
+    "generate": "Generate Character",
+    "generating": "Generating…",
+    "model": "Model",
+    "credits": "Credits"
+  },
+  "preview": {
+    "generating": "Generating your character concept…",
+    "emptyTitle": "Your original character lives here.",
+    "emptySubtitleLine1": "Design and craft your unique character",
+    "emptySubtitleLine2": "concept from scratch",
+    "save": "Save",
+    "altGenerated": "Generated Original Character"
+  },
+  "tags": {
+    "showMore": "show more",
+    "hide": "hide"
+  },
+  "customPrompt": {
+    "placeholder": "Add extra character details, attire, lighting effects, backdrop... e.g. cyberpunk armor, epic rim light, UE5 render"
+  },
+  "gallery": {
+    "title": "Designed Characters",
+    "countSuffix": "characters",
+    "emptyText": "Generated characters\nappear here",
+    "altPrefix": "Character",
+    "download": "Download"
+  },
+  "errors": {
+    "generationFailed": "Generation failed. Please try again.",
+    "noActiveModels": "No active image models available. Please try again later.",
+    "loginRequired": "Please log in to generate characters."
+  }
+}

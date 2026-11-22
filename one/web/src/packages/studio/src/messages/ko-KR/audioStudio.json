@@ -1,0 +1,412 @@
+{
+  "uploader": {
+    "clear": "비우기",
+    "uploadPrompt": "오디오 트랙 업로드",
+    "uploadHint": "MP3, WAV, M4A 형식 (최대 20MB)",
+    "uploading": "업로드 중...",
+    "ready": "생성 준비 완료",
+    "maxSuffix": "(최대 {max})",
+    "trackLabel": "트랙 #{index}",
+    "sizeLimitError": "오디오 파일이 20MB 제한을 초과했습니다.",
+    "uploadFailedError": "업로드 실패: {message}"
+  },
+  "player": {
+    "nowPlaying": "현재 재생 중",
+    "defaultTitle": "생성된 트랙",
+    "muteUnmute": "음소거 켜기/끄기",
+    "pause": "일시정지",
+    "play": "재생",
+    "download": "오디오 다운로드",
+    "save": "저장",
+    "seek": "위치 탐색",
+    "volume": "볼륨",
+    "playbackError": "오디오를 재생할 수 없습니다. 기록에서 다시 열어 주세요.",
+    "downloadError": "다운로드하지 못했습니다. 다시 시도하세요."
+  },
+  "sidebar": {
+    "modelLabel": "오디오 모델",
+    "modelVersionLabel": "모델 버전",
+    "selectModel": "모델 선택",
+    "descriptionLabel": "설명",
+    "selectOption": "옵션 선택",
+    "promptPlaceholder": "생성하고 싶은 사운드 또는 음악을 설명하세요...",
+    "lyricsPromptLabel": "가사 / 프롬프트",
+    "fieldPlaceholder": "{field} 입력...",
+    "requiredFieldError": "필수 항목을 입력해 주세요: {field}",
+    "musicGroup": "음악 만들기",
+    "speechGroup": "음성 및 효과음",
+    "musicMode": "음악 모드",
+    "musicModes": {
+      "lyrics": "직접 쓴 가사",
+      "description": "설명으로 노래 만들기",
+      "instrumental": "연주곡"
+    }
+  },
+  "generate": {
+    "generating": "오디오 생성 중...",
+    "cta": "트랙 생성",
+    "noUrlError": "API에서 오디오 URL을 반환하지 않았습니다.",
+    "genericError": "오디오 생성에 실패했습니다",
+    "droppedFileUploadError": "드롭된 파일 업로드 실패: {message}",
+    "pending": "진행 중인 생성 작업이 있습니다. 기존 작업을 확인하세요.",
+    "resume": "기존 작업 보기"
+  },
+  "result": {
+    "errorHeading": "생성 오류",
+    "loadingHeading": "사운드트랙 생성 중",
+    "loadingSubtext": "오디오 파형과 보컬을 렌더링하는 중입니다...",
+    "emptyHeading": "오디오 스튜디오",
+    "emptyBody": "AI 음악 모델, 음성 복제기 또는 사운드 생성기를 선택하세요. 왼쪽 옵션을 조정하여 고음질 트랙을 제작해 보세요.",
+    "newGeneration": "새로 생성",
+    "success": "생성 성공"
+  },
+  "history": {
+    "heading": "생성 기록 ({count})",
+    "untitled": "제목 없는 오디오",
+    "fallbackModel": "오디오",
+    "unavailable": "생성 기록을 불러올 수 없습니다."
+  },
+  "models": {
+    "suno-create-music": {
+      "name": "Suno 음악 생성",
+      "description": "Suno는 텍스트 프롬프트를 보컬, 가사, 악기 연주가 포함된 완성도 높은 음악으로 변환합니다. 분위기나 장르, 구체적인 가사를 입력하면 스튜디오급 고음질 트랙을 몇 초 만에 제작합니다."
+    },
+    "suno-remix-music": {
+      "name": "Suno 음악 리믹스",
+      "description": "기존 오디오 트랙을 새로운 스타일과 프롬프트로 재해석하여 색다른 음악적 편곡을 만듭니다."
+    },
+    "suno-extend-music": {
+      "name": "Suno 음악 이어하기 (연장)",
+      "description": "지정한 시간대부터 기존 트랙을 자연스럽고 매끄럽게 확장하여 이어갑니다."
+    },
+    "suno-generate-sounds": {
+      "name": "Suno 사운드 효과음 생성",
+      "description": "텍스트 설명으로 사실적인 음향 효과, 배경 분위기음, 전환음 및 리듬 루프를 만듭니다."
+    },
+    "suno-add-vocals": {
+      "name": "Suno 보컬 추가",
+      "description": "기존 연주곡 트랙에 감성적이고 자연스러운 보컬 가창을 추가합니다."
+    },
+    "suno-generate-mashup": {
+      "name": "Suno 매시업 생성",
+      "description": "여러 오디오 트랙의 멜로디와 분위기를 융합하여 독창적인 매시업 음악을 완성합니다."
+    },
+    "suno-add-instrumental": {
+      "name": "Suno 반주 추가",
+      "description": "음성 녹음이나 보컬 클립에 어울리는 풍성한 악기 반주를 자동으로 구성합니다."
+    },
+    "suno-voice-clone": {
+      "name": "Suno 음성 클론",
+      "description": "업로드한 음성에서 음색을 추출하여 음악 제작에 활용할 수 있는 보이스 페르소나를 생성합니다."
+    },
+    "minimax-voice-clone": {
+      "name": "MiniMax 음성 클론",
+      "description": "잡음 제거 및 볼륨 표준화 기능을 갖춘 정밀한 타깃 화자 음성 복제 모델입니다."
+    },
+    "minimax-speech-2.6-hd": {
+      "name": "MiniMax 음성 HD",
+      "description": "감정 표현, 말하기 속도, 음높이 조절이 가능한 MiniMax 프리미엄 다국어 음성 합성입니다."
+    },
+    "minimax-speech-2.6-turbo": {
+      "name": "MiniMax 음성 Turbo",
+      "description": "실시간 대화와 긴 텍스트 낭독에 최적화된 초저지연 음성 합성 모델입니다."
+    },
+    "mmaudio-v2-text-to-audio": {
+      "name": "MM Audio V2 텍스트-오디오",
+      "description": "텍스트 묘사를 고음질 자연 음향 및 사운드 효과로 구현하는 고급 멀티모달 오디오 모델입니다."
+    },
+    "elevenlabs-text-to-dialogue-v3": {
+      "name": "ElevenLabs 다자간 대화 V3",
+      "description": "다양한 캐릭터 음성과 연기 뉘앙스를 담은 시나리오 기반 다화자 대화를 생성합니다."
+    },
+    "suno-convert-to-wav": {
+      "name": "Suno WAV 변환",
+      "description": "생성된 Suno 음악을 무손실 스튜디오 품질의 WAV 파일로 변환합니다."
+    },
+    "gemini-3-1-flash-tts": {
+      "name": "Gemini 3.1 Flash 음성 합성",
+      "description": "자연스러운 호흡과 억양, 다자간 대화를 지원하는 Google Gemini 차세대 음성 엔진입니다."
+    },
+    "gemini-2-5-pro-tts": {
+      "name": "Gemini 2.5 Pro 음성 합성",
+      "description": "오디오북 및 영화 내레이션을 위해 설계된 스튜디오급 초자연적 신경망 음성 합성입니다."
+    },
+    "elevenlabs-tts-turbo-2-5": {
+      "name": "ElevenLabs 초고속 음성 2.5",
+      "description": "매우 빠른 생성 속도와 섬세한 음성 안정성 제어를 제공하는 최고 수준의 실감형 음성 합성입니다."
+    },
+    "minimax-music-3.0": {
+      "name": "MiniMax 음악 3.0",
+      "description": "프롬프트와 구조화된 가사를 바탕으로 보컬곡 또는 연주곡을 생성하는 음악 모델입니다."
+    },
+    "suno-v4": {
+      "name": "Suno v4",
+      "description": "Suno v4는 텍스트 프롬프트로 보컬, 가사, 반주가 포함된 스튜디오 품질의 완성곡을 만듭니다."
+    },
+    "suno-v3.5": {
+      "name": "Suno v3.5",
+      "description": "Suno v3.5는 텍스트 프롬프트로 보컬, 가사, 반주가 포함된 팝 스타일 곡을 빠르게 합성합니다."
+    }
+  },
+  "fields": {
+    "prompt": {
+      "title": "가사 / 프롬프트",
+      "description": "원하는 오디오 콘텐츠를 설명하세요. 프롬프트는 가사로 사용되어 생성된 트랙에서 노래됩니다.",
+      "placeholder": "생성하고 싶은 내용이나 가사를 입력하세요...",
+      "example": "승리를 향한 결의를 노래하는 강렬한 비트와 자신감 넘치는 남성 보컬 랩 트랙."
+    },
+    "style": {
+      "title": "음악 스타일",
+      "description": "생성할 오디오의 음악 스타일 지정.",
+      "placeholder": "재즈, 클래식, 일렉트로닉, 팝, 록, 힙합 등",
+      "example": "클래식"
+    },
+    "model": {
+      "title": "모델 버전",
+      "description": "생성에 사용할 AI 모델 버전."
+    },
+    "custom_mode": {
+      "title": "커스텀 모드",
+      "description": "고급 설정을 위한 커스텀 모드를 활성화합니다."
+    },
+    "title": {
+      "title": "트랙 제목",
+      "description": "생성할 음악 트랙의 제목 (선택 사항).",
+      "placeholder": "평화로운 피아노 명상"
+    },
+    "persona_id": {
+      "title": "페르소나 ID",
+      "description": "생성 음악에 적용할 캐릭터 ID 또는 커스텀 음성 ID (선택 사항).",
+      "placeholder": "페르소나 ID 입력..."
+    },
+    "persona_model": {
+      "title": "페르소나 모델 유형",
+      "description": "스타일 프리셋과 복제 음성을 구분하기 위한 페르소나 유형 선택.",
+      "options": {
+        "style_persona": "스타일 페르소나",
+        "voice_persona": "보이스 페르소나"
+      }
+    },
+    "instrumental": {
+      "title": "연주곡 전용",
+      "description": "보컬이나 가사 없이 순수 악기 연주곡만 생성합니다."
+    },
+    "negative_tags": {
+      "title": "제외할 스타일 / 부정적 태그",
+      "description": "생성 오디오에서 배제할 음악 스타일이나 특징 (선택 사항).",
+      "placeholder": "헤비메탈, 빠른 드럼"
+    },
+    "vocal_gender": {
+      "title": "보컬 성별",
+      "description": "가창 보컬의 선호 성별.",
+      "options": {
+        "male": "남성",
+        "female": "여성"
+      }
+    },
+    "style_weight": {
+      "title": "스타일 가중치",
+      "description": "지정된 음악 스타일의 반영 비율 (0 ~ 1)."
+    },
+    "weirdness_constraint": {
+      "title": "특이성 제약 / 창의성",
+      "description": "음악의 실험성과 파격성 수준을 조절합니다."
+    },
+    "audio_weight": {
+      "title": "오디오 가중치",
+      "description": "리믹스나 이어하기 시 원본 참조 오디오의 반영 비율."
+    },
+    "audio_url": {
+      "title": "오디오 파일",
+      "description": "참조할 오디오 파일을 업로드하거나 URL을 입력하세요."
+    },
+    "continue_at": {
+      "title": "이어하기 시작 지점 (초)",
+      "description": "트랙 연장을 시작할 기준 시간 (초)."
+    },
+    "sound_loop": {
+      "title": "심리스 루프",
+      "description": "매끄럽게 반복 재생되는 오디오 트랙을 생성합니다."
+    },
+    "sound_tempo": {
+      "title": "템포 (BPM)",
+      "description": "생성할 사운드의 분당 비트 수 (BPM)."
+    },
+    "sound_key": {
+      "title": "조성 / 키",
+      "description": "생성할 사운드의 음악 키 (예: C Major, A Minor)."
+    },
+    "grab_lyrics": {
+      "title": "가사 추출",
+      "description": "입력 오디오에서 가창 가사를 자동으로 추출하여 보존합니다."
+    },
+    "audios_list": {
+      "title": "오디오 트랙 목록",
+      "description": "매시업으로 결합할 오디오 트랙 목록."
+    },
+    "tags": {
+      "title": "스타일 태그",
+      "description": "장르, 분위기, 악기를 설명하는 태그."
+    },
+    "voice_name": {
+      "title": "음성 이름",
+      "description": "복제된 보이스 프로필의 사용자 지정 이름."
+    },
+    "description": {
+      "title": "설명",
+      "description": "음성 프로필이나 음악 스타일에 대한 설명."
+    },
+    "language": {
+      "title": "주요 언어",
+      "description": "화자 또는 가창의 주요 언어."
+    },
+    "vocal_start_s": {
+      "title": "보컬 시작 시간 (초)",
+      "description": "보컬 샘플 추출 시작 초."
+    },
+    "vocal_end_s": {
+      "title": "보컬 종료 시간 (초)",
+      "description": "보컬 샘플 추출 종료 초."
+    },
+    "custom_voice_id": {
+      "title": "커스텀 음성 ID",
+      "description": "대상 보이스 프로필 고유 식별자."
+    },
+    "need_noise_reduction": {
+      "title": "노이즈 감소",
+      "description": "업로드된 음성 녹음의 배경 잡음을 자동으로 제거합니다."
+    },
+    "need_volume_normalization": {
+      "title": "음량 정규화",
+      "description": "오디오의 전반적인 볼륨을 자동으로 평준화합니다."
+    },
+    "accuracy": {
+      "title": "클론 정확도",
+      "description": "음성 복제의 정밀도 설정."
+    },
+    "voice_id": {
+      "title": "프리셋 음성 / 화자",
+      "description": "음성 합성을 위한 엄선된 화자 프로필을 선택하세요."
+    },
+    "speed": {
+      "title": "말하기 속도",
+      "description": "음성 재생 속도 배율 (1.0이 기본 속도)."
+    },
+    "volume": {
+      "title": "볼륨 크기",
+      "description": "음성 출력 볼륨 배율."
+    },
+    "pitch": {
+      "title": "음높이 (피치)",
+      "description": "합성된 음성의 피치 조절."
+    },
+    "emotion": {
+      "title": "감정 표현",
+      "description": "음성에 담길 감정 톤.",
+      "options": {
+        "happy": "기쁨 / 밝음",
+        "sad": "슬픔",
+        "angry": "분노",
+        "fearful": "두려움",
+        "disgusted": "혐오",
+        "surprised": "놀람",
+        "neutral": "자연스러움 / 중립"
+      }
+    },
+    "english_normalization": {
+      "title": "영어 텍스트 정규화",
+      "description": "영어 텍스트의 숫자, 기호, 날짜 발음을 최적화합니다."
+    },
+    "sample_rate": {
+      "title": "샘플링 레이트 (Hz)",
+      "description": "출력 오디오의 초당 샘플링 주파수."
+    },
+    "bitrate": {
+      "title": "비트레이트 (bps)",
+      "description": "출력 오디오의 데이터 전송률."
+    },
+    "channel": {
+      "title": "채널 설정",
+      "description": "오디오 출력 채널 포맷.",
+      "options": {
+        "1": "모노 (1채널)",
+        "2": "스테레오 (2채널)"
+      }
+    },
+    "format": {
+      "title": "오디오 포맷",
+      "description": "출력 오디오 파일 형식.",
+      "options": {
+        "mp3": "MP3 포맷",
+        "wav": "WAV 무손실",
+        "pcm": "PCM 원시 데이터",
+        "flac": "FLAC 무손실"
+      }
+    },
+    "language_boost": {
+      "title": "언어 인식 강화",
+      "description": "선택한 언어의 발음 및 억양 인식을 강화합니다."
+    },
+    "duration": {
+      "title": "오디오 길이 (초)",
+      "description": "생성할 오디오의 길이 (초)."
+    },
+    "dialogue": {
+      "title": "대화 스크립트",
+      "description": "여러 캐릭터가 참여하는 대화 스크립트."
+    },
+    "stability": {
+      "title": "음성 안정성",
+      "description": "합성 음성의 일관성 및 안정성 비율 (0 ~ 1)."
+    },
+    "similarity_boost": {
+      "title": "유사도 향상",
+      "description": "원본 화자와의 음색 유사성을 극대화합니다."
+    },
+    "language_code": {
+      "title": "언어 코드",
+      "description": "음성 합성 대상 언어의 ISO 코드."
+    },
+    "task_id": {
+      "title": "작업 ID",
+      "description": "변환할 이전 생성 요청의 고유 작업 ID."
+    },
+    "audio_id": {
+      "title": "오디오 ID",
+      "description": "변환할 대상 오디오 트랙의 ID."
+    },
+    "speakers": {
+      "title": "화자 설정",
+      "description": "대화에 참여하는 캐릭터별 목소리 설정."
+    },
+    "dialogue_turns": {
+      "title": "대화 턴",
+      "description": "순서대로 나열된 캐릭터별 대사 목록."
+    },
+    "scene": {
+      "title": "음향 공간 배경",
+      "description": "녹음 환경의 음향 반사 및 공간 잔향 설정."
+    },
+    "sample_context": {
+      "title": "낭독 스타일 / 어조",
+      "description": "전체적인 내레이션 어조, 스타일 및 분위기 지침."
+    },
+    "temperature": {
+      "title": "온도 (Temperature)",
+      "description": "샘플링 창의성 및 가변성 수준 (0 ~ 2)."
+    },
+    "lyrics": {
+      "title": "구조화된 가사",
+      "description": "절과 후렴구 등 섹션 구분이 포함된 가사 텍스트.",
+      "placeholder": "구조화된 가사를 입력하세요...",
+      "example": "네온 빛 거리를 가로질러\n우리는 자유롭게 찬란히 빛나리"
+    },
+    "is_instrumental": {
+      "title": "연주곡 전용",
+      "description": "보컬 없이 악기 연주만으로 구성된 음악을 생성합니다."
+    },
+    "lyrics_optimizer": {
+      "title": "설명으로 가사 작성"
+    }
+  }
+}

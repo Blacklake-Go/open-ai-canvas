@@ -1,0 +1,412 @@
+{
+  "uploader": {
+    "clear": "Limpiar",
+    "uploadPrompt": "Subir pista de audio",
+    "uploadHint": "MP3, WAV, M4A hasta 20MB",
+    "uploading": "Subiendo...",
+    "ready": "Listo para generar",
+    "maxSuffix": "(Máx {max})",
+    "trackLabel": "Pista #{index}",
+    "sizeLimitError": "El archivo de audio supera el límite de 20MB.",
+    "uploadFailedError": "Error al subir: {message}"
+  },
+  "player": {
+    "nowPlaying": "Reproduciendo Ahora",
+    "defaultTitle": "Pista Generada",
+    "muteUnmute": "Silenciar/Activar sonido",
+    "pause": "Pausar",
+    "play": "Reproducir",
+    "download": "Descargar Audio",
+    "save": "Guardar",
+    "seek": "Buscar posición",
+    "volume": "Volumen",
+    "playbackError": "No se pudo reproducir el audio. Ábrelo desde el historial.",
+    "downloadError": "No se pudo descargar el audio. Inténtalo de nuevo."
+  },
+  "sidebar": {
+    "modelLabel": "Modelo de Audio",
+    "modelVersionLabel": "Versión del modelo",
+    "selectModel": "Seleccionar Modelo",
+    "descriptionLabel": "Descripción",
+    "selectOption": "Seleccionar opción",
+    "promptPlaceholder": "Introduce lo que deseas generar...",
+    "lyricsPromptLabel": "Letra / Prompt",
+    "fieldPlaceholder": "Introduce {field}...",
+    "requiredFieldError": "Por favor completa el campo requerido: {field}",
+    "musicGroup": "Crear música",
+    "speechGroup": "Voz y efectos",
+    "musicMode": "Modo de música",
+    "musicModes": {
+      "lyrics": "Mis letras",
+      "description": "Describir una canción",
+      "instrumental": "Instrumental"
+    }
+  },
+  "generate": {
+    "generating": "Generando Audio...",
+    "cta": "Generar Pista",
+    "noUrlError": "La API no devolvió ninguna URL de audio.",
+    "genericError": "Error al generar audio",
+    "droppedFileUploadError": "Error al subir el archivo soltado: {message}",
+    "pending": "Hay una generación pendiente. Consulta la tarea original.",
+    "resume": "Ver tarea original"
+  },
+  "result": {
+    "errorHeading": "Error de Generación",
+    "loadingHeading": "Generando Banda Sonora",
+    "loadingSubtext": "Renderizando ondas de audio y voces...",
+    "emptyHeading": "Estudio de Audio",
+    "emptyBody": "Elige un modelo de música IA, clonador de voz o generador de sonido. Modifica las variables a la izquierda y crea tu próxima pista de alta fidelidad.",
+    "newGeneration": "Nueva Generación",
+    "success": "Éxito"
+  },
+  "history": {
+    "heading": "Historial de Generación ({count})",
+    "untitled": "Audio sin título",
+    "fallbackModel": "Modelo de audio",
+    "unavailable": "El historial no está disponible."
+  },
+  "models": {
+    "suno-create-music": {
+      "name": "Suno Creación Musical",
+      "description": "Suno transforma indicaciones de texto en canciones completas con voces, letra e instrumentación. Describe un estado de ánimo o género y crea pistas con calidad de estudio en segundos."
+    },
+    "suno-remix-music": {
+      "name": "Suno Remix Musical",
+      "description": "Remezcla y reorganiza pistas de audio existentes con nuevos estilos y descripciones para crear arreglos musicales originales."
+    },
+    "suno-extend-music": {
+      "name": "Suno Extensión Musical",
+      "description": "Extiende y continúa pistas de audio existentes sin cortes desde el segundo especificado."
+    },
+    "suno-generate-sounds": {
+      "name": "Suno Generación de Sonidos",
+      "description": "Crea efectos de sonido realistas, atmósferas ambientales y bucles rítmicos a partir de texto."
+    },
+    "suno-add-vocals": {
+      "name": "Suno Agregar Voces",
+      "description": "Agrega pistas vocales expresivas y canto sobre una pista instrumental existente."
+    },
+    "suno-generate-mashup": {
+      "name": "Suno Generador de Mashups",
+      "description": "Combina múltiples pistas de audio en una fusión musical creativa y armónica."
+    },
+    "suno-add-instrumental": {
+      "name": "Suno Agregar Instrumental",
+      "description": "Genera arreglos instrumentales completos para grabaciones de voz o fragmentos de audio."
+    },
+    "suno-voice-clone": {
+      "name": "Suno Clonación de Voz",
+      "description": "Clona y extrae personajes vocales de audios subidos para utilizarlos en creaciones musicales."
+    },
+    "minimax-voice-clone": {
+      "name": "MiniMax Clonación de Voz",
+      "description": "Replicación de voz de alta precisión con reducción automática de ruido y normalización de volumen."
+    },
+    "minimax-speech-2.6-hd": {
+      "name": "MiniMax Voz HD",
+      "description": "Síntesis de voz multilingüe de alta definición con emociones expresivas, tono y velocidad ajustables."
+    },
+    "minimax-speech-2.6-turbo": {
+      "name": "MiniMax Voz Turbo",
+      "description": "Modelo de voz de latencia ultrabaja optimizado para asistentes conversacionales y locuciones largas."
+    },
+    "mmaudio-v2-text-to-audio": {
+      "name": "MM Audio V2 Texto a Audio",
+      "description": "Síntesis de audio multimodal avanzada que convierte descripciones de texto en paisajes sonoros de alta fidelidad."
+    },
+    "elevenlabs-text-to-dialogue-v3": {
+      "name": "ElevenLabs Diálogo Múltiple V3",
+      "description": "Generación de diálogos teatrales con múltiples hablantes, personalidades vocales y matices dramáticos."
+    },
+    "suno-convert-to-wav": {
+      "name": "Suno Convertir a WAV",
+      "description": "Convierte pistas de música generadas en Suno a formato WAV sin pérdida con calidad de estudio."
+    },
+    "gemini-3-1-flash-tts": {
+      "name": "Gemini 3.1 Flash TTS",
+      "description": "Motor de voz Flash de Google Gemini con ritmo natural, diálogo multiturno y expresiones vívidas."
+    },
+    "gemini-2-5-pro-tts": {
+      "name": "Gemini 2.5 Pro TTS",
+      "description": "Síntesis de voz neuronal de calidad profesional para audiolibros y narraciones cinematográficas."
+    },
+    "elevenlabs-tts-turbo-2-5": {
+      "name": "ElevenLabs TTS Turbo 2.5",
+      "description": "Síntesis de voz hiperrealista con generación ultrarrápida y control preciso de estabilidad."
+    },
+    "minimax-music-3.0": {
+      "name": "MiniMax Música 3.0",
+      "description": "Genera canciones completas con voz o pistas puramente instrumentales con MiniMax Music 3.0."
+    },
+    "suno-v4": {
+      "name": "Suno v4",
+      "description": "Suno v4 convierte prompts de texto en canciones completas con calidad de estudio, incluyendo voces, letras e instrumentación."
+    },
+    "suno-v3.5": {
+      "name": "Suno v3.5",
+      "description": "Suno v3.5 sintetiza pistas de estilo pop a partir de prompts de texto con voces, letras e instrumentación."
+    }
+  },
+  "fields": {
+    "prompt": {
+      "title": "Letra / Indicación (Prompt)",
+      "description": "Descripción del audio deseado o letra exacta que se cantará en la pista generada.",
+      "placeholder": "Introduce lo que deseas generar o escribe la letra aquí...",
+      "example": "Pista de rap contundente con ritmo agresivo y voz masculina segura sobre la victoria."
+    },
+    "style": {
+      "title": "Estilo musical",
+      "description": "Especificación del estilo musical para el audio generado.",
+      "placeholder": "Jazz, Clásica, Electrónica, Pop, Rock, Hip-hop, etc.",
+      "example": "Clásica"
+    },
+    "model": {
+      "title": "Versión del modelo",
+      "description": "Versión del modelo de IA a utilizar para la generación."
+    },
+    "custom_mode": {
+      "title": "Modo personalizado",
+      "description": "Activa el modo personalizado para configuraciones avanzadas."
+    },
+    "title": {
+      "title": "Título de la pista",
+      "description": "Título para la pista de música generada (opcional).",
+      "placeholder": "Meditación de piano pacífica"
+    },
+    "persona_id": {
+      "title": "ID de personaje / voz",
+      "description": "ID de personaje o voz personalizada para aplicar a la música (opcional).",
+      "placeholder": "Introduce ID de personaje..."
+    },
+    "persona_model": {
+      "title": "Tipo de modelo de personaje",
+      "description": "Selecciona el tipo de personaje para diferenciar voces clonadas de estilos predeterminados.",
+      "options": {
+        "style_persona": "Personaje de estilo",
+        "voice_persona": "Personaje de voz"
+      }
+    },
+    "instrumental": {
+      "title": "Solo instrumental",
+      "description": "Genera música exclusivamente instrumental sin voces ni canto."
+    },
+    "negative_tags": {
+      "title": "Etiquetas negativas",
+      "description": "Estilos musicales o rasgos a excluir del audio generado (opcional).",
+      "placeholder": "Heavy Metal, Batería animada"
+    },
+    "vocal_gender": {
+      "title": "Género de la voz",
+      "description": "Género preferido para la interpretación vocal.",
+      "options": {
+        "male": "Masculino",
+        "female": "Femenino"
+      }
+    },
+    "style_weight": {
+      "title": "Peso del estilo",
+      "description": "Peso de influencia del estilo musical especificado (0 a 1)."
+    },
+    "weirdness_constraint": {
+      "title": "Creatividad / Rareza",
+      "description": "Ajusta el nivel de libertad experimental y originalidad."
+    },
+    "audio_weight": {
+      "title": "Peso del audio",
+      "description": "Peso del audio de referencia en la remezcla o continuación."
+    },
+    "audio_url": {
+      "title": "Archivo de audio",
+      "description": "Sube o proporciona una URL de audio como referencia."
+    },
+    "continue_at": {
+      "title": "Continuar en (segundos)",
+      "description": "Marca de tiempo exacta en segundos desde la cual continuar la pista."
+    },
+    "sound_loop": {
+      "title": "Bucle continuo",
+      "description": "Genera una pista de audio que se repite en bucle sin interrupciones."
+    },
+    "sound_tempo": {
+      "title": "Tempo (BPM)",
+      "description": "Especificación de tempo en pulsaciones por minuto."
+    },
+    "sound_key": {
+      "title": "Tonalidad musical",
+      "description": "Tonalidad y escala musical del sonido generado (ej. Do Mayor, La Menor)."
+    },
+    "grab_lyrics": {
+      "title": "Extraer letra",
+      "description": "Extrae y conserva la letra cantada del audio de entrada."
+    },
+    "audios_list": {
+      "title": "Lista de pistas de audio",
+      "description": "Lista de pistas de audio para combinar en un mashup."
+    },
+    "tags": {
+      "title": "Etiquetas de estilo",
+      "description": "Etiquetas que describen género musical, estado de ánimo e instrumentos."
+    },
+    "voice_name": {
+      "title": "Nombre de la voz",
+      "description": "Nombre personalizado para el perfil de voz clonado."
+    },
+    "description": {
+      "title": "Descripción",
+      "description": "Descripción del perfil de voz o estilo musical."
+    },
+    "language": {
+      "title": "Idioma principal",
+      "description": "Idioma principal del hablante o cantante."
+    },
+    "vocal_start_s": {
+      "title": "Inicio de voz (s)",
+      "description": "Segundo de inicio de la muestra vocal."
+    },
+    "vocal_end_s": {
+      "title": "Fin de voz (s)",
+      "description": "Segundo de fin de la muestra vocal."
+    },
+    "custom_voice_id": {
+      "title": "ID de voz personalizada",
+      "description": "Identificador del perfil de voz objetivo."
+    },
+    "need_noise_reduction": {
+      "title": "Reducción de ruido",
+      "description": "Filtra el ruido de fondo de las grabaciones de voz subidas."
+    },
+    "need_volume_normalization": {
+      "title": "Normalización de volumen",
+      "description": "Equilibra automáticamente los niveles de volumen del audio."
+    },
+    "accuracy": {
+      "title": "Precisión de clonación",
+      "description": "Nivel de fidelidad en la similitud de la voz."
+    },
+    "voice_id": {
+      "title": "Voz predeterminada / Hablante",
+      "description": "Selecciona un perfil de voz preestablecido para la síntesis."
+    },
+    "speed": {
+      "title": "Velocidad de habla",
+      "description": "Multiplicador de velocidad de habla (1.0 es velocidad normal)."
+    },
+    "volume": {
+      "title": "Volumen de habla",
+      "description": "Multiplicador de volumen de salida."
+    },
+    "pitch": {
+      "title": "Tono de voz",
+      "description": "Ajuste de tono para la voz sintetizada."
+    },
+    "emotion": {
+      "title": "Emoción",
+      "description": "Expresión emocional y tono de la locución.",
+      "options": {
+        "happy": "Feliz / Alegre",
+        "sad": "Triste",
+        "angry": "Enojado",
+        "fearful": "Temeroso",
+        "disgusted": "Disgustado",
+        "surprised": "Sorprendido",
+        "neutral": "Neutral / Natural"
+      }
+    },
+    "english_normalization": {
+      "title": "Normalización en inglés",
+      "description": "Mejora la pronunciación de números, símbolos y fechas en inglés."
+    },
+    "sample_rate": {
+      "title": "Frecuencia de muestreo (Hz)",
+      "description": "Frecuencia de muestreo del audio en hercios."
+    },
+    "bitrate": {
+      "title": "Tasa de bits (bps)",
+      "description": "Tasa de bits del audio en bits por segundo."
+    },
+    "channel": {
+      "title": "Canales de audio",
+      "description": "Formato de canales de audio.",
+      "options": {
+        "1": "Mono (1 canal)",
+        "2": "Estéreo (2 canales)"
+      }
+    },
+    "format": {
+      "title": "Formato de audio",
+      "description": "Formato de archivo de salida.",
+      "options": {
+        "mp3": "Formato MP3",
+        "wav": "WAV sin pérdida",
+        "pcm": "PCM sin procesar",
+        "flac": "FLAC sin pérdida"
+      }
+    },
+    "language_boost": {
+      "title": "Mejora de idioma",
+      "description": "Mejora la claridad y el reconocimiento de dialectos del idioma seleccionado."
+    },
+    "duration": {
+      "title": "Duración (segundos)",
+      "description": "Longitud del audio generado en segundos."
+    },
+    "dialogue": {
+      "title": "Guión de diálogo",
+      "description": "Guión conversacional de varios turnos para síntesis de voz."
+    },
+    "stability": {
+      "title": "Estabilidad de voz",
+      "description": "Consistencia y estabilidad de la locución (0 a 1)."
+    },
+    "similarity_boost": {
+      "title": "Aumento de similitud",
+      "description": "Aumenta el parecido vocal con la voz original."
+    },
+    "language_code": {
+      "title": "Código de idioma",
+      "description": "Código ISO del idioma de destino."
+    },
+    "task_id": {
+      "title": "ID de tarea",
+      "description": "Identificador de la tarea previa a convertir."
+    },
+    "audio_id": {
+      "title": "ID de audio",
+      "description": "Identificador específico de la pista de audio."
+    },
+    "speakers": {
+      "title": "Hablantes",
+      "description": "Configuración de voces de personajes para diálogos."
+    },
+    "dialogue_turns": {
+      "title": "Turnos de diálogo",
+      "description": "Lista secuencial de intervenciones en el diálogo."
+    },
+    "scene": {
+      "title": "Escenario acústico",
+      "description": "Entorno acústico y reverberación ambiental."
+    },
+    "sample_context": {
+      "title": "Contexto / Tono de narración",
+      "description": "Tono general, estilo y contexto de la narración."
+    },
+    "temperature": {
+      "title": "Temperatura",
+      "description": "Aleatoriedad y variedad creativa de la muestra (0 a 2)."
+    },
+    "lyrics": {
+      "title": "Letra estructurada",
+      "description": "Texto de la letra con saltos de línea y marcadores de sección.",
+      "placeholder": "Introduce la letra con estructura de estrofas/estribillos...",
+      "example": "Caminando bajo las luces de neón\nSomos libres, brillamos sin fin"
+    },
+    "is_instrumental": {
+      "title": "Solo instrumental",
+      "description": "Genera música exclusivamente instrumental sin partes vocales."
+    },
+    "lyrics_optimizer": {
+      "title": "Crear letras a partir de la descripción"
+    }
+  }
+}

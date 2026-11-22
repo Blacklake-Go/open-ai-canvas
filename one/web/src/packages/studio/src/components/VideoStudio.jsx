@@ -1,0 +1,3961 @@
+"use client";
+
+import { hasTemporaryReferenceUrl } from "../stableAssetReference.js";
+import { useState, useEffect, useRef, useCallback, useMemo, useId } from "react";
+import toast from "react-hot-toast";
+import { ToastHost as Toaster } from "../ui";
+import { generateVideo, generateI2V, processV2V, uploadFile } from "../muapi.js";
+import { formatErrorMessage } from "../utils/formatError.js";
+import { scopedPersistKey, migrateLegacyPersistKey } from "../persistKey.js";
+import DrawModal from "./DrawModal.jsx";
+import ModelPriceTag from "./ModelPriceTag.jsx";
+import FrontendModelPicker from "./FrontendModelPicker.jsx";
+import { priceForIds } from "../modelPrice.js";
+import VideoSpecPopover from "./VideoSpecPopover.jsx";
+import ModelParameterControls from "./ModelParameterControls.jsx";
+import { VideoOptionControl, VideoSettingsControl } from "./VideoModelControls.jsx";
+import MobileGenerationActions, {
+  GenerationCopyButtons,
+} from "./MobileGenerationActions.jsx";
+import VideoRelayMenu from "./VideoRelayMenu.jsx";
+import {
+  applyActiveModelDirectory,
+  t2vModels,
+  getAspectRatiosForVideoModel,
+  getDurationsForModel,
+  getResolutionsForVideoModel,
+  getAspectRatiosForI2VModel,
+  getDurationsForI2VModel,
+  getResolutionsForI2VModel,
+  getEffectsForI2VModel,
+  getDefaultEffectForI2VModel,
+} from "../models.js";
+import {
+  filterActiveModelEntries,
+  getFamilyVariant,
+  videoModelCatalog,
+  videoModelMenuEntries as videoModelPickerEntries,
+  videoModelMenuEntryByVariantId as videoModelPickerEntryByVariantId,
+} from "../modelFamilies.js";
+import { getSeedanceEndpointResolution, getSeedanceToolConfiguration } from "../seedanceModels.js";
+import { getVeoToolConfiguration } from "../veoModels.js";
+import { getGroupedVideoConfiguration, getGroupedVideoCopyKey, getGroupedVideoVariantOptions } from "../groupedVideoModels.js";
+import {
+  getVideoCommonOptions,
+  getVideoCommonValues,
+  buildVideoCommonPayload,
+} from "../videoModelParameters.js";
+import {
+  getGroupedVideoResolutionOptions,
+  planGroupedVideoSelection,
+  getGroupedVideoSelectionAdjustments,
+} from "../groupedVideoParameters.js";
+import { migrateSeedanceResolutionSelection } from "../seedanceParameters.js";
+import { getVideoAspectRatioLabel, getVideoDurationLabel, getVideoModeDescription } from "../videoModelCopy.js";
+import {
+  buildReferenceParams,
+  getModelMediaCapabilities,
+  recordGenerationSource,
+  shouldDisableVideoPrompt,
+} from "../modelCapabilities.js";
+import { getServerModelMeta } from "../modelDescriptions.js";
+import { formatModelDisplayName } from "../modelDisplayFormat.js";
+import {
+  buildPublicVideoParameters,
+  filterPublicVideoProviderParameters,
+  findPublicVideoCapability,
+  getPublicVideoControlOptions,
+} from "../publicGenerationCapabilities.js";
+import {
+  buildSupplementalInputPayload,
+  createModelParameterValues,
+  getSupplementalModelInputs,
+  mergeModelParameterValues,
+} from "../modelParameters.js";
+import { getCompatibleContinuationSources, getContinuationConfig, isContinuationSourceModel } from "../videoToolCapabilities.js";
+import {
+  appendVideoWorkflowMedia,
+  buildVideoWorkflowMediaParams,
+  getVideoWorkflowControlLabel,
+  getVideoWorkflowControlState,
+  getVideoWorkflowDraftKey,
+  getVideoWorkflowFamily,
+  getVideoWorkflowMediaConfig,
+  getVideoWorkflowMediaSlots,
+  migrateVideoWorkflowMediaDrafts,
+  getVideoWorkflowSlotRemaining,
+  inferVideoWorkflowId,
+  legacyVideoMediaToWorkflowDraft,
+  projectVideoWorkflowMedia,
+  removeVideoWorkflowMedia,
+  resolvePersistedVideoWorkflowSelection,
+  resolveVideoBaseVariant,
+  resolveVideoWorkflowVariant,
+  validateVideoWorkflowMedia,
+} from "../videoWorkflows.js";
+import {
+  PROMPT_CONTROL_LABEL_CLASS,
+  PROMPT_MEDIA_PREVIEW_CLASS,
+  PromptAspectRatioIcon,
+  PromptAction,
+  PromptChevronIcon,
+  PromptComposer,
+  PromptControls,
+  PromptFooter,
+  PromptMenuItem,
+  PromptMenuList,
+  PromptPopover,
+  PromptPopoverHeader,
+  PromptDurationIcon,
+  PromptQualityIcon,
+  promptControlClassName,
+  promptMediaButtonClassName,
+} from "./prompt/PromptComposer.jsx";
+import { PromptInputField } from "./prompt/PromptInputField.jsx";
+import { usePromptMention } from "./prompt/PromptAttachments.jsx";
+import usePromptMenu from "./prompt/usePromptMenu.js";
+import en from "../messages/en/videoStudio.json";
+import zh from "../messages/zh/videoStudio.json";
+import ja from "../messages/ja-JP/videoStudio.json";
+import ko from "../messages/ko-KR/videoStudio.json";
+import zhTw from "../messages/zh-TW/videoStudio.json";
+import es from "../messages/es/videoStudio.json";
+import { resolveCopy } from "../i18nUtils";
+
+const VIDEO_MESSAGES = {
+  'zh-CN': zh,
+  'ja-JP': ja,
+  'ko-KR': ko,
+  'zh-TW': zhTw,
+  es: es,
+  'es-ES': es,
+};
+import {
+  PROVIDER_LOGOS,
+  invertLogos,
+  getProviderLogo,
+  getProviderStyle,
+} from "../providerLogos.js";
+
+async function downloadFile(url, filename) {
+  try {
+    const response = await fetch(url);
+    const blob = await response.blob();
+    const blobUrl = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = blobUrl;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(blobUrl);
+  } catch {
+    window.open(url, "_blank");
+  }
+}
+
+function mergeReferenceUrls(current, incoming, limit) {
+  return [...new Set([...current, ...incoming])].slice(0, limit);
+}
+
+const EMPTY_WORKFLOW_MEDIA_DRAFT = Object.freeze({});
+
+function workflowContextKey(familyId, workflowId) {
+  return `${familyId}:${workflowId || "base"}`;
+}
+
+function isSameSelection(left, right) {
+  return (
+    left?.selectedFamilyId === right?.selectedFamilyId &&
+    left?.selectedModel === right?.selectedModel &&
+    left?.selectedWorkflowId === right?.selectedWorkflowId
+  );
+}
+
+function ReferenceMediaLabel({ label, required = false }) {
+  if (!label) return null;
+  return (
+    <span
+      className={`flex min-h-6 max-w-[88px] items-start justify-center text-balance text-center text-[10px] font-semibold leading-3 ${
+        required ? "text-white/60" : "text-white/45"
+      }`}
+    >
+      {label}
+      {required && (
+        <span className="ml-0.5 text-brand" aria-hidden="true">
+          *
+        </span>
+      )}
+    </span>
+  );
+}
+
+function ReferencePreview({
+  type,
+  url,
+  index,
+  onRemove,
+  label = null,
+  description = null,
+  copy = en,
+}) {
+  const mediaLabel = label || (type === "image" ? copy.media.image : type === "video" ? copy.media.video : copy.media.audio);
+  const actionLabel = description || mediaLabel;
+  return (
+    <div className="flex min-w-[60px] flex-col items-center gap-1.5">
+      <div className={PROMPT_MEDIA_PREVIEW_CLASS}>
+        {type === "image" ? (
+          <img src={url} alt="" className="w-full h-full object-cover" />
+        ) : type === "video" ? (
+          <video src={url} className="w-full h-full object-cover" muted onError={(e) => { e.target.style.display = 'none'; if (e.target.parentElement) e.target.parentElement.classList.add('bg-white/5'); }} />
+        ) : (
+          <div className="w-full h-full flex items-center justify-center bg-white/5 text-primary">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+              <path d="M9 18V5l10-2v13" />
+              <circle cx="6" cy="18" r="3" />
+              <circle cx="16" cy="16" r="3" />
+            </svg>
+          </div>
+        )}
+        <button
+          type="button"
+          aria-label={`${copy.media.removePrefix} ${actionLabel}`}
+          title={`${copy.media.removePrefix} ${actionLabel}`}
+          onClick={() => onRemove(index)}
+          className="absolute top-0.5 right-0.5 w-4 h-4 bg-black/60 hover:bg-black rounded-full flex items-center justify-center text-white/85 hover:text-white text-[8px] border border-white/5"
+        >
+          ×
+        </button>
+      </div>
+      <ReferenceMediaLabel label={mediaLabel} />
+    </div>
+  );
+}
+
+function ReferenceUploadButton({
+  inputRef,
+  accept,
+  multiple,
+  onChange,
+  onClick,
+  title,
+  uploading,
+  progress,
+  type,
+  label = null,
+  required = false,
+  disabled = false,
+  copy = en,
+}) {
+  const localInputRef = useRef(null);
+  const resolvedInputRef = inputRef || localInputRef;
+  const announcedProgress = Math.min(
+    100,
+    Math.max(0, Math.floor(progress / 10) * 10),
+  );
+  const [isUploadDragging, setIsUploadDragging] = useState(false);
+  const uploadDragCounterRef = useRef(0);
+
+  const acceptPrefixes = (accept || "")
+    .split(",")
+    .map((token) => token.trim())
+    .filter(Boolean);
+  const fileMatchesAccept = (file) => {
+    if (acceptPrefixes.length === 0) return true;
+    return acceptPrefixes.some((token) => {
+      if (token.endsWith("/*")) {
+        return file.type?.startsWith(token.slice(0, -1));
+      }
+      if (token.startsWith(".")) {
+        return file.name?.toLowerCase().endsWith(token.toLowerCase());
+      }
+      return file.type === token;
+    });
+  };
+
+  const handleUploadDragEnter = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (disabled || uploading) return;
+    uploadDragCounterRef.current += 1;
+    if (e.dataTransfer?.items && e.dataTransfer.items.length > 0) {
+      setIsUploadDragging(true);
+    }
+  };
+
+  const handleUploadDragLeave = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    uploadDragCounterRef.current -= 1;
+    if (uploadDragCounterRef.current <= 0) {
+      uploadDragCounterRef.current = 0;
+      setIsUploadDragging(false);
+    }
+  };
+
+  const handleUploadDragOver = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+  };
+
+  const handleUploadDrop = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    uploadDragCounterRef.current = 0;
+    setIsUploadDragging(false);
+    if (disabled || uploading) return;
+    const droppedFiles = Array.from(e.dataTransfer?.files || []).filter(
+      fileMatchesAccept,
+    );
+    if (droppedFiles.length === 0) return;
+    const filesToUse = multiple ? droppedFiles : [droppedFiles[0]];
+    onChange?.({ target: { files: filesToUse, value: "" } });
+  };
+
+  return (
+    <div
+      className={
+        label
+          ? "relative flex min-w-[60px] flex-col items-center gap-1.5"
+          : "relative"
+      }
+    >
+      <input
+        ref={resolvedInputRef}
+        type="file"
+        accept={accept}
+        multiple={multiple}
+        className="hidden"
+        onChange={onChange}
+      />
+      <button
+        type="button"
+        title={title}
+        aria-label={title}
+        aria-busy={uploading || undefined}
+        disabled={disabled}
+        onClick={onClick || (() => resolvedInputRef.current?.click())}
+        onDragEnter={handleUploadDragEnter}
+        onDragLeave={handleUploadDragLeave}
+        onDragOver={handleUploadDragOver}
+        onDrop={handleUploadDrop}
+        className={`${promptMediaButtonClassName()} disabled:cursor-not-allowed disabled:opacity-50${
+          isUploadDragging ? " ring-2 ring-brand border-brand bg-brand-soft" : ""
+        }`}
+      >
+        {uploading ? (
+          <div className="flex flex-col items-center justify-center w-full h-full absolute inset-0 bg-black/80 z-20 backdrop-blur-[2px]">
+            <svg className="w-8 h-8 -rotate-90">
+              <circle cx="16" cy="16" r="14" stroke="currentColor" strokeWidth="2" fill="transparent" className="text-white/10" />
+              <circle
+                cx="16"
+                cy="16"
+                r="14"
+                stroke="currentColor"
+                strokeWidth="2"
+                fill="transparent"
+                strokeDasharray={88}
+                strokeDashoffset={88 - (88 * progress) / 100}
+                className="text-brand transition-[stroke-dashoffset] duration-fast ease-standard"
+              />
+            </svg>
+            <span className="absolute text-[9px] font-black text-brand leading-none">{progress}%</span>
+          </div>
+        ) : type === "video" ? (
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" className="text-white/40 group-hover:text-brand transition-colors">
+            <polygon points="23 7 16 12 23 17 23 7" />
+            <rect x="1" y="5" width="15" height="14" rx="2" ry="2" />
+          </svg>
+        ) : type === "audio" ? (
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" className="text-white/40 group-hover:text-brand transition-colors">
+            <path d="M9 18V5l10-2v13" />
+            <circle cx="6" cy="18" r="3" />
+            <circle cx="16" cy="16" r="3" />
+          </svg>
+        ) : (
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" className="text-white/40 group-hover:text-brand transition-colors">
+            <line x1="12" y1="5" x2="12" y2="19" />
+            <line x1="5" y1="12" x2="19" y2="12" />
+          </svg>
+        )}
+      </button>
+      <span
+        className="sr-only"
+        role="status"
+        aria-live="polite"
+        aria-atomic="true"
+      >
+        {uploading ? copy.upload.uploadingProgress.replace('{title}', title).replace('{progress}', announcedProgress) : ""}
+      </span>
+      <ReferenceMediaLabel label={label} required={required} />
+    </div>
+  );
+}
+
+// ── SVG icons (kept inline to avoid extra deps) ───────────────────────────────
+
+const CheckSvg = () => (
+  <svg
+    width="16"
+    height="16"
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="4"
+    className="text-brand"
+  >
+    <polyline points="20 6 9 17 4 12" />
+  </svg>
+);
+
+const VideoIconSvg = ({ className }) => (
+  <svg
+    width="18"
+    height="18"
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2"
+    className={className}
+  >
+    <polygon points="23 7 16 12 23 17 23 7" />
+    <rect x="1" y="5" width="15" height="14" rx="2" ry="2" />
+  </svg>
+);
+
+const VideoReadySvg = () => (
+  <svg
+    width="18"
+    height="18"
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2"
+    className="text-primary"
+  >
+    <polygon points="23 7 16 12 23 17 23 7" />
+    <rect x="1" y="5" width="15" height="14" rx="2" ry="2" />
+    <polyline points="7 10 10 13 15 8" stroke="currentColor" strokeWidth="2.5" className="text-brand" />
+  </svg>
+);
+
+// ── Dropdown components ───────────────────────────────────────────────────────
+
+// Grouped menu entries derive `defaultVariant` from their mode variants, so an
+// entry whose grouped variants all fail to resolve has none — dereferencing it
+// during render crashed the whole video workbench.
+const entryModelId = (entry) => entry?.defaultVariant?.model?.id ?? null;
+
+function seedanceToolLabel(tool, copy, includeAction = false) {
+  return [
+    includeAction ? copy.seedance.toolNames[tool.group] : null,
+    copy.seedance.toolVariants[tool.variant],
+    tool.resolution,
+  ].filter(Boolean).join(" · ");
+}
+
+function ModelDropdown({ selectedModel, onSelect, onClose, copy = en, locale = "en" }) {
+  const [search, setSearch] = useState("");
+  const selectedEntry = videoModelPickerEntryByVariantId.get(selectedModel);
+  const selectedModelProvider = selectedEntry?.family.provider || "all";
+  const activeEntries = filterActiveModelEntries(videoModelPickerEntries);
+  const modelCategories = [
+    {
+      id: "all",
+      label: copy.categories.all,
+      entries: activeEntries,
+    },
+    {
+      id: "t2v",
+      label: copy.categories.t2v,
+      entries: activeEntries.filter((entry) => entry.variantsByMode.t2v && !getVeoToolConfiguration(entryModelId(entry))),
+    },
+    {
+      id: "i2v",
+      label: copy.categories.i2v,
+      entries: activeEntries.filter((entry) => entry.variantsByMode.i2v),
+    },
+    {
+      id: "v2v",
+      label: copy.categories.v2v,
+      entries: activeEntries.filter((entry) => entry.variantsByMode.v2v || getVeoToolConfiguration(entryModelId(entry))),
+    },
+  ];
+  const [selectedCategory, setSelectedCategory] = useState("all");
+  const [selectedProvider, setSelectedProvider] = useState(
+    () => selectedModelProvider,
+  );
+  const activeCategory = modelCategories.find((category) => category.id === selectedCategory) || modelCategories[0];
+  const modelEntries = activeCategory.entries;
+
+  const activeItemRef = useRef(null);
+
+  useEffect(() => {
+    // Automatically scroll the active model into view when opening
+    if (activeItemRef.current) {
+      activeItemRef.current.scrollIntoView({ block: "nearest" });
+    }
+  }, []);
+
+
+  // Dynamically compute list of providers from the input models lists
+  const availableProviders = [];
+  const seenProviders = new Set();
+  
+  modelEntries.forEach(({ family }) => {
+    const pId = family.provider || 'muapi';
+    const pName = family.provider_name || 'Muapi';
+    if (!seenProviders.has(pId)) {
+      seenProviders.add(pId);
+      availableProviders.push({ id: pId, name: pName });
+    }
+  });
+
+  const lf = search.toLowerCase();
+
+  const filtered = modelEntries.filter((entry) => {
+    const { family } = entry;
+    // 1. Filter by provider tab
+    if (selectedProvider !== "all") {
+      const pId = family.provider || 'muapi';
+      if (pId !== selectedProvider) return false;
+    }
+    // 2. Filter by search query
+    return entry.searchText.includes(lf);
+  });
+  const selectedTool = getSeedanceToolConfiguration(selectedModel);
+  const selectedVeoTool = getVeoToolConfiguration(selectedModel);
+  const mainEntries = [];
+  const seedanceToolsByGroup = { continueGenerated: [], removeWatermark: [] };
+  const veoTools = [];
+  for (const entry of filtered) {
+    const tool = getSeedanceToolConfiguration(entryModelId(entry));
+    const veoTool = getVeoToolConfiguration(entryModelId(entry));
+    if (tool) seedanceToolsByGroup[tool.group][tool.order] = entry;
+    else if (veoTool) veoTools[veoTool.order] = entry;
+    else mainEntries.push(entry);
+  }
+
+  const getIconColor = (family) => {
+    if (family.id.includes("kling")) return "bg-blue-500/10 text-blue-400 border-blue-500/10";
+    if (family.id.includes("veo")) return "bg-purple-500/10 text-purple-400 border-purple-500/10";
+    if (family.id.includes("sora")) return "bg-rose-500/10 text-rose-400 border-rose-500/10";
+    return "bg-brand-soft text-brand border-brand-line";
+  };
+
+  const renderItem = (entry, label = entry.name) => {
+    const { family } = entry;
+    const isSelected = selectedEntry === entry;
+    return (
+    <button
+      type="button"
+      key={entry.id}
+      aria-pressed={isSelected}
+      ref={isSelected ? activeItemRef : null}
+      className={`flex w-full text-left items-center justify-between p-3.5 hover:bg-wash rounded-xl cursor-pointer transition-[background-color,border-color] duration-fast ease-standard border border-transparent hover:border-line-subtle focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-brand-ring ${isSelected ? "bg-wash border-line-subtle" : ""}`}
+      onClick={(e) => {
+        e.stopPropagation();
+        onSelect(entry, activeCategory.id);
+        onClose();
+      }}
+    >
+      <div className="flex items-center gap-3.5">
+        {(() => {
+          const logo = getProviderLogo(family.provider, family.id);
+          return logo ? (
+            <div className="w-8 h-8 rounded-xl border border-white/5 overflow-hidden shrink-0 flex items-center justify-center bg-white/[0.02]">
+              <img
+                src={logo}
+                alt={family.provider_name}
+                className={`w-full h-full object-contain p-1 ${invertLogos.includes(family.provider) ? "invert" : ""}`}
+                onError={(e) => {
+                  e.currentTarget.style.display = "none";
+                }}
+              />
+            </div>
+          ) : (
+            <div
+              className={`w-9 h-9 ${getIconColor(family)} border rounded-xl flex items-center justify-center font-black text-xs shadow-inner uppercase`}
+            >
+              {entry.name.charAt(0)}
+            </div>
+          );
+        })()}
+        <div className="flex flex-col gap-0.5 min-w-0">
+          <span className="text-xs font-bold text-white tracking-tight truncate">
+            {label}
+          </span>
+          <ModelPriceTag ids={entry.variantIds} locale={locale} />
+          <div className="flex items-center gap-1.5">
+            {selectedProvider === "all" && family.provider_name && (
+              <span className="text-[9px] text-white/40">
+                {family.provider_name}
+              </span>
+            )}
+          </div>
+        </div>
+      </div>
+      {isSelected && <CheckSvg />}
+    </button>
+    );
+  };
+
+  return (
+    <div className="flex gap-4 flex-1 min-h-[350px] overflow-hidden">
+      {/* Left Sidebar: Provider tabs */}
+      <div className="flex flex-col gap-2.5 items-center pr-2 border-r border-white/5 shrink-0 select-none overflow-y-auto custom-scrollbar w-14 pt-0.5">
+        <button
+          type="button"
+          onClick={() => setSelectedProvider("all")}
+          className={`w-8 h-8 rounded-full flex items-center justify-center border transition-[background-color,color,border-color,transform,box-shadow] duration-fast ease-standard active:scale-[0.98] active:duration-instant focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-brand-ring flex-shrink-0 cursor-pointer ${
+            selectedProvider === "all"
+              ? "bg-white/10 text-yellow-400 border-yellow-500/30 shadow-md scale-105"
+              : "bg-white/[0.02] text-white/50 border-white/[0.03] hover:bg-white/5 hover:text-white"
+          }`}
+          title={copy.providers.allProviders}
+        >
+          <svg width="15" height="15" viewBox="0 0 24 24" fill={selectedProvider === "all" ? "currentColor" : "none"} stroke="currentColor" strokeWidth="2">
+            <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
+          </svg>
+        </button>
+        
+        {availableProviders.map(p => {
+          const style = getProviderStyle(p.id);
+          const isSelected = selectedProvider === p.id;
+          return (
+            <button
+              key={p.id}
+              type="button"
+              onClick={() => setSelectedProvider(p.id)}
+              aria-pressed={isSelected}
+              className={`w-8 h-8 flex-shrink-0 rounded-full flex items-center justify-center overflow-hidden font-black text-[10px] border transition-[background-color,color,border-color,transform,box-shadow] duration-fast ease-standard active:scale-[0.98] active:duration-instant focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-brand-ring cursor-pointer ${
+                isSelected
+                  ? `${style.bg} scale-105 shadow-md shadow-black/10`
+                  : "bg-white/[0.02] text-white/40 border-white/[0.02] hover:bg-white/5 hover:text-white/80"
+              }`}
+              title={p.name}
+            >
+              {(() => {
+                const logo = getProviderLogo(p.id);
+                return logo ? (
+                  <img
+                    src={logo}
+                    alt={p.name}
+                    className={`w-full h-full rounded-full object-contain ${invertLogos.includes(p.id) ? "invert" : ""}`}
+                    onError={(e) => {
+                      e.currentTarget.style.display = "none";
+                    }}
+                  />
+                ) : (
+                  style.text
+                );
+              })()}
+            </button>
+          );
+        })}
+      </div>
+
+      {/* Right Pane: Search + Lists */}
+      <div className="flex-1 flex flex-col gap-2 min-w-0 overflow-hidden">
+        <div className="px-1 pb-2 border-b border-white/5 shrink-0 space-y-2">
+          {/* Top Search Input (Fixed at top) */}
+          <div className="flex items-center gap-2.5 bg-white/5 rounded-xl px-3 py-2 border border-white/5 focus-within:border-primary/50 transition-colors">
+            <svg
+              width="14"
+              height="14"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2.5"
+              className="text-white/40 shrink-0"
+            >
+              <circle cx="11" cy="11" r="8" />
+              <path d="M21 21l-4.35-4.35" />
+            </svg>
+            <input
+              type="text"
+              placeholder={copy.search.placeholder}
+              value={search}
+              onChange={(e) => {
+                const value = e.target.value;
+                setSearch(value);
+                if (value.trim()) setSelectedProvider("all");
+              }}
+              onClick={(e) => e.stopPropagation()}
+              className="bg-transparent border-none text-xs text-white placeholder:text-white/40 focus:ring-0 w-full p-0 outline-none"
+            />
+            {search && (
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setSearch("");
+                }}
+                className="text-white/40 hover:text-white/80 p-0.5 text-xs shrink-0"
+              >
+                ✕
+              </button>
+            )}
+          </div>
+
+          {/* Category Tabs below search */}
+          <div className="flex items-center gap-1.5 overflow-x-auto custom-scrollbar pb-0.5">
+            {modelCategories.map((category) => (
+              <button
+                key={category.id}
+                type="button"
+                onClick={() => {
+                  setSelectedCategory(category.id);
+                  setSelectedProvider("all");
+                }}
+                className={`shrink-0 rounded-lg px-2.5 py-1 text-[11px] font-medium transition-colors border ${
+                  selectedCategory === category.id
+                    ? "bg-brand-soft text-brand border-brand-line font-medium"
+                    : "bg-white/[0.02] text-white/50 border-white/[0.04] hover:bg-white/5 hover:text-white"
+                }`}
+              >
+                {category.label}
+              </button>
+            ))}
+            {selectedProvider !== "all" && (
+              <button
+                type="button"
+                onClick={() => setSelectedProvider("all")}
+                className="shrink-0 rounded-lg px-2 py-0.5 text-[10px] bg-white/5 hover:bg-white/10 text-white/70 border border-white/10 flex items-center gap-1 transition-colors"
+                title="Clear provider filter"
+              >
+                <span>{availableProviders.find(p => p.id === selectedProvider)?.name || selectedProvider}</span>
+                <span className="opacity-60">✕</span>
+              </button>
+            )}
+          </div>
+        </div>
+        
+        <div className="flex flex-col gap-1.5 overflow-y-auto custom-scrollbar pr-1 pb-2 flex-1 min-h-0">
+          {filtered.length === 0 ? (
+            <div className="text-xs text-white/30 text-center py-6">
+              No models found
+            </div>
+          ) : (
+            <>
+              {mainEntries.map((entry) => renderItem(entry))}
+              {Object.values(seedanceToolsByGroup).some((entries) => entries.length > 0) && (
+                <details open={Boolean(search.trim()) || Boolean(selectedTool)} className="mt-2 border-t border-white/5 pt-2">
+                  <summary className="cursor-pointer px-3 py-2 text-xs font-semibold text-white/50">
+                    {copy.seedance.tools}
+                  </summary>
+                  {["continueGenerated", "removeWatermark"].map((group) => {
+                    const entries = seedanceToolsByGroup[group].filter(Boolean);
+                    return entries.length > 0 && (
+                      <div key={group} role="group" aria-label={copy.seedance[group]} className="pt-2">
+                        <p className="px-3 pb-1 text-[11px] font-semibold text-white/60">{copy.seedance[group]}</p>
+                        {entries.map((entry) => renderItem(entry, seedanceToolLabel(getSeedanceToolConfiguration(entryModelId(entry)), copy)))}
+                      </div>
+                    );
+                  })}
+                </details>
+              )}
+              {veoTools.length > 0 && (
+                <details open={Boolean(search.trim()) || Boolean(selectedVeoTool)} className="mt-2 border-t border-white/5 pt-2">
+                  <summary className="cursor-pointer px-3 py-2 text-xs font-semibold text-white/50">{copy.veo.tools}</summary>
+                  <p className="px-3 pb-2 text-[11px] text-white/45">{copy.veo.toolsHelp}</p>
+                  {veoTools.filter(Boolean).map((entry) => {
+                    const veoTool = getVeoToolConfiguration(entryModelId(entry));
+                    return renderItem(entry, copy.veo.toolNames[veoTool?.key] ?? entry.name);
+                  })}
+                </details>
+              )}
+            </>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ── Control button ────────────────────────────────────────────────────────────
+
+// ── Dropdown panel ─────────────────────────────────────────────────────────────
+// Rendered inside a `relative` wrapper div; floats above the anchor button.
+
+// ── Main component ────────────────────────────────────────────────────────────
+
+const VIDEO_STUDIO_RELAY_COPY_EN = {
+  presetsTitle: "Video Presets:",
+  relayLoadedToast: "Loaded relayed video as reference for Video Studio!",
+  presets: [
+    {
+      id: "drone-vista",
+      label: "Cinematic Drone",
+      prompt: "Sweeping aerial FPV drone flight over misty mountain ridges at sunrise, volumetric golden light, crisp 4K cinematography",
+    },
+    {
+      id: "macro-slowmo",
+      label: "Macro Slow-Mo",
+      prompt: "Ultra-high-speed 1000fps phantom macro shot, shimmering water droplets colliding in mid-air, studio rim lighting, shallow depth of field",
+    },
+    {
+      id: "cyber-street",
+      label: "Cyberpunk Street",
+      prompt: "Rain-slicked neon cyberpunk alleyway at night, holographic reflections on wet pavement, smooth tracking camera movement",
+    },
+    {
+      id: "studio-product",
+      label: "Studio Product",
+      prompt: "Minimalist luxury product showcase on a rotating obsidian pedestal, dramatic softbox lighting, smooth orbital camera motion",
+    },
+  ],
+};
+
+const VIDEO_STUDIO_RELAY_COPY_LOCALES = {
+  "zh-CN": {
+    presetsTitle: "视频灵感预设:",
+    relayLoadedToast: "已载入接力视频作为视频生成参考！",
+    presets: [
+      { id: "drone-vista", label: "史诗航拍全景", prompt: VIDEO_STUDIO_RELAY_COPY_EN.presets[0].prompt },
+      { id: "macro-slowmo", label: "微距升格慢镜", prompt: VIDEO_STUDIO_RELAY_COPY_EN.presets[1].prompt },
+      { id: "cyber-street", label: "赛博霓虹街景", prompt: VIDEO_STUDIO_RELAY_COPY_EN.presets[2].prompt },
+      { id: "studio-product", label: "影棚产品特写", prompt: VIDEO_STUDIO_RELAY_COPY_EN.presets[3].prompt },
+    ],
+  },
+  "zh-TW": {
+    presetsTitle: "影片靈感預設:",
+    relayLoadedToast: "已載入接力影片作為影片生成參考！",
+    presets: [
+      { id: "drone-vista", label: "史詩航拍全景", prompt: VIDEO_STUDIO_RELAY_COPY_EN.presets[0].prompt },
+      { id: "macro-slowmo", label: "微距升格慢鏡", prompt: VIDEO_STUDIO_RELAY_COPY_EN.presets[1].prompt },
+      { id: "cyber-street", label: "賽博霓虹街景", prompt: VIDEO_STUDIO_RELAY_COPY_EN.presets[2].prompt },
+      { id: "studio-product", label: "影棚產品特寫", prompt: VIDEO_STUDIO_RELAY_COPY_EN.presets[3].prompt },
+    ],
+  },
+  "ja-JP": {
+    presetsTitle: "動画プリセット:",
+    relayLoadedToast: "リレーされた動画を参照として読み込みました！",
+    presets: [
+      { id: "drone-vista", label: "シネマティック空撮", prompt: VIDEO_STUDIO_RELAY_COPY_EN.presets[0].prompt },
+      { id: "macro-slowmo", label: "マクロスローモーション", prompt: VIDEO_STUDIO_RELAY_COPY_EN.presets[1].prompt },
+      { id: "cyber-street", label: "サイバーパンク街並み", prompt: VIDEO_STUDIO_RELAY_COPY_EN.presets[2].prompt },
+      { id: "studio-product", label: "スタジオ商品撮影", prompt: VIDEO_STUDIO_RELAY_COPY_EN.presets[3].prompt },
+    ],
+  },
+  "ko-KR": {
+    presetsTitle: "비디오 프리셋:",
+    relayLoadedToast: "릴레이된 영상을 비디오 스튜디오 참조로 불러왔습니다!",
+    presets: [
+      { id: "drone-vista", label: "시네마틱 드론", prompt: VIDEO_STUDIO_RELAY_COPY_EN.presets[0].prompt },
+      { id: "macro-slowmo", label: "매크로 슬로우모션", prompt: VIDEO_STUDIO_RELAY_COPY_EN.presets[1].prompt },
+      { id: "cyber-street", label: "사이버펑크 거리", prompt: VIDEO_STUDIO_RELAY_COPY_EN.presets[2].prompt },
+      { id: "studio-product", label: "스튜디오 제품 샷", prompt: VIDEO_STUDIO_RELAY_COPY_EN.presets[3].prompt },
+    ],
+  },
+  "es": {
+    presetsTitle: "Ajustes de Video:",
+    relayLoadedToast: "¡Video recibido cargado como referencia en Video Studio!",
+    presets: [
+      { id: "drone-vista", label: "Dron Cinematográfico", prompt: VIDEO_STUDIO_RELAY_COPY_EN.presets[0].prompt },
+      { id: "macro-slowmo", label: "Macro Cámara Lenta", prompt: VIDEO_STUDIO_RELAY_COPY_EN.presets[1].prompt },
+      { id: "cyber-street", label: "Calle Cyberpunk", prompt: VIDEO_STUDIO_RELAY_COPY_EN.presets[2].prompt },
+      { id: "studio-product", label: "Producto en Estudio", prompt: VIDEO_STUDIO_RELAY_COPY_EN.presets[3].prompt },
+    ],
+  },
+};
+
+export default function VideoStudio({
+  apiKey,
+  initialModel = "",
+  initialPrompt = "",
+  onGenerationStart,
+  onGenerationEnd,
+  onGenerationComplete,
+  onGenerationError,
+  historyItems,
+  onDeleteHistoryItem,
+  droppedFiles,
+  onFilesHandled,
+  locale = "en",
+}) {
+  const copy = useMemo(() => resolveCopy(en, VIDEO_MESSAGES, locale), [locale]);
+  const relayCopy = useMemo(() => resolveCopy(VIDEO_STUDIO_RELAY_COPY_EN, VIDEO_STUDIO_RELAY_COPY_LOCALES, locale), [locale]);
+  const LEGACY_PERSIST_KEY = "hg_video_studio_persistent";
+  const PERSIST_KEY = scopedPersistKey(LEGACY_PERSIST_KEY, apiKey);
+  useEffect(() => {
+    migrateLegacyPersistKey(LEGACY_PERSIST_KEY, PERSIST_KEY);
+  }, [PERSIST_KEY]);
+
+  // ── generation state ──
+  const [imageMode, setImageMode] = useState(false); // i2v
+  const [v2vMode, setV2vMode] = useState(false);
+  const [modelDirectoryRevision, setModelDirectoryRevision] = useState(0);
+  const [selectedWorkflowId, setSelectedWorkflowId] = useState(null);
+
+  useEffect(() => {
+    const refreshModelDirectory = () => setModelDirectoryRevision((revision) => revision + 1);
+    window.addEventListener("supdance-model-pricing-updated", refreshModelDirectory);
+    return () => window.removeEventListener("supdance-model-pricing-updated", refreshModelDirectory);
+  }, []);
+
+  useEffect(() => {
+    if (typeof window === "undefined" || window.__SUPDANCE_ACTIVE_MODEL_IDS__ instanceof Set) return;
+    let mounted = true;
+    fetch("/api/models/active?schemaVersion=2&nocache=1")
+      .then((response) => {
+        if (!response.ok) throw new Error("Active model directory unavailable");
+        return response.json();
+      })
+      .then((data) => {
+        if (!mounted) return;
+        if (!Array.isArray(data?.models)) throw new Error("Active model directory is invalid");
+        applyActiveModelDirectory(data.models);
+      })
+      .catch(() => {
+        if (mounted) applyActiveModelDirectory([]);
+      });
+    return () => { mounted = false; };
+  }, []);
+
+  // ── model / params ──
+  const defaultModel = t2vModels.find((m) => m.id === "kling-v3.0-standard-text-to-video") ||
+                       t2vModels.find((m) => m.id === "seedance-2.5-text-to-video") ||
+                       t2vModels[0] ||
+                       videoModelCatalog.families[0]?.variants?.t2v?.[0]?.model ||
+                       { id: "kling-v3.0-standard-text-to-video", name: "Kling 3.0 Standard" };
+  const defaultFamily = (defaultModel?.id ? videoModelCatalog.familyByVariantId.get(defaultModel.id) : null) ||
+                        videoModelCatalog.familyById.get("kling-v3") ||
+                        videoModelCatalog.families[0] ||
+                        { id: "kling-v3", name: "Kling v3" };
+  const [selectedModel, setSelectedModel] = useState(defaultModel.id || "kling-v3.0-standard-text-to-video");
+  const [selectedFamilyId, setSelectedFamilyId] = useState(defaultFamily?.id || defaultModel.id || "kling-v3");
+  const [selectedAr, setSelectedAr] = useState(
+    defaultModel.inputs?.aspect_ratio?.default || "16:9",
+  );
+  const [selectedDuration, setSelectedDuration] = useState(
+    defaultModel.inputs?.duration?.default || 5,
+  );
+  const [selectedResolution, setSelectedResolution] = useState(
+    defaultModel.inputs?.resolution?.default || "",
+  );
+  const [selectedQuality, setSelectedQuality] = useState(
+    defaultModel.inputs?.quality?.default || "",
+  );
+  const [selectedEffect, setSelectedEffect] = useState("");
+  const [modelParameterValues, setModelParameterValues] = useState(() =>
+    createModelParameterValues(defaultModel),
+  );
+
+  // ── upload progress ──
+  const [imageProgress, setImageProgress] = useState(0);
+  const [videoProgress, setVideoProgress] = useState(0);
+
+  // ── control visibility ──
+  const [showAr, setShowAr] = useState(true);
+  const [showDuration, setShowDuration] = useState(true);
+  const [showResolution, setShowResolution] = useState(false);
+  const [showQuality, setShowQuality] = useState(false);
+  const [showEffect, setShowEffect] = useState(false);
+
+  // ── uploads ──
+  const [uploadedImageUrls, setUploadedImageUrls] = useState([]);
+  const [imageUploading, setImageUploading] = useState(false);
+  const [uploadedEndImageUrl, setUploadedEndImageUrl] = useState(null);
+  const [endImageUploading, setEndImageUploading] = useState(false);
+  const [endImageProgress, setEndImageProgress] = useState(0);
+  const [uploadedVideoUrls, setUploadedVideoUrls] = useState([]);
+  const [videoUploading, setVideoUploading] = useState(false);
+  const [uploadedAudioUrls, setUploadedAudioUrls] = useState([]);
+  const [audioUploading, setAudioUploading] = useState(false);
+  const [audioProgress, setAudioProgress] = useState(0);
+  const [workflowMediaDrafts, setWorkflowMediaDrafts] = useState({});
+  const [workflowUploadSlotId, setWorkflowUploadSlotId] = useState(null);
+  const mediaUploading = imageUploading || endImageUploading || videoUploading ||
+    audioUploading || Boolean(workflowUploadSlotId);
+  const uploadedImageUrl = uploadedImageUrls[0] || null;
+  const uploadedVideoUrl = uploadedVideoUrls[0] || null;
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    try {
+      const sp = new URLSearchParams(window.location.search);
+      const relayedVideo = sp.get("video_url");
+      if (relayedVideo) {
+        setUploadedVideoUrls([relayedVideo]);
+        toast.success(relayCopy.relayLoadedToast);
+      }
+    } catch (_) {}
+
+    const handleRelay = (e) => {
+      const { videoUrl } = e.detail || {};
+      if (videoUrl) {
+        setUploadedVideoUrls([videoUrl]);
+        toast.success(relayCopy.relayLoadedToast);
+      }
+    };
+    window.addEventListener("supdance-relay-video", handleRelay);
+    return () => window.removeEventListener("supdance-relay-video", handleRelay);
+  }, [relayCopy]);
+
+  // ── generation / canvas ──
+  const [generating, setGenerating] = useState(false);
+  const [generateError, setGenerateError] = useState(null);
+  const [fullscreenUrl, setFullscreenUrl] = useState(null);
+  const [failedVideoUrls, setFailedVideoUrls] = useState({});
+  const [fullscreenVideoError, setFullscreenVideoError] = useState(false);
+  const [isDrawModalOpen, setIsDrawModalOpen] = useState(false);
+
+  useEffect(() => {
+    setFullscreenVideoError(false);
+  }, [fullscreenUrl]);
+  const [generationSources, setGenerationSources] = useState({});
+  const [selectedVeoSourceId, setSelectedVeoSourceId] = useState("");
+
+  // ── history ──
+  const [localHistory, setLocalHistory] = useState([]);
+  const [activeHistoryIdx, setActiveHistoryIdx] = useState(0);
+
+  // ── dropdown ──
+  const [openDropdown, setOpenDropdown] = useState(null);
+
+  // ── prompt ──
+  const [prompt, setPrompt] = useState(initialPrompt || "");
+
+  // ── refs ──
+  const containerRef = useRef(null);
+  const textareaRef = useRef(null);
+  const dropdownRef = useRef(null);
+  const imageFileInputRef = useRef(null);
+  const endImageFileInputRef = useRef(null);
+  const videoFileInputRef = useRef(null);
+  const audioFileInputRef = useRef(null);
+  const resultVideoRef = useRef(null);
+  const workflowControlId = useId();
+  const workflowMenuId = `${workflowControlId}-menu`;
+  const hasRestored = useRef(false);
+  const selectionRef = useRef(null);
+  selectionRef.current = {
+    selectedFamilyId,
+    selectedModel,
+    selectedWorkflowId,
+    imageMode,
+    v2vMode,
+  };
+  const workflowVariantPreferencesRef = useRef(new Map());
+  const workflowUploadSlotRef = useRef(null);
+  const workflowDraftSessionRef = useRef(0);
+  const mediaRef = useRef(null);
+  mediaRef.current = {
+    imageUrls: uploadedImageUrls,
+    endImageUrl: uploadedEndImageUrl,
+    videoUrls: uploadedVideoUrls,
+    audioUrls: uploadedAudioUrls,
+  };
+  const workflowMediaDraftsRef = useRef(workflowMediaDrafts);
+  workflowMediaDraftsRef.current = workflowMediaDrafts;
+  const commonParameterValuesRef = useRef(null);
+  commonParameterValuesRef.current = {
+    ...modelParameterValues,
+    aspectRatio: selectedAr,
+    duration: selectedDuration,
+    resolution: selectedResolution,
+    quality: selectedQuality,
+  };
+
+  // ── derived data ──
+  const history = historyItems ?? localHistory;
+
+  // See ImageStudio's handleDeleteEntry: when historyItems is server-backed
+  // (White Label / backfilled sessions), localHistory isn't what's rendered,
+  // so removal has to go through the parent to delete server-side and
+  // update the same state `history` reads from.
+  const handleDeleteEntry = useCallback(async (entry, idx) => {
+    if (historyItems && onDeleteHistoryItem) {
+      await onDeleteHistoryItem(entry);
+    } else {
+      setLocalHistory((prev) => prev.filter((_, i) => i !== idx));
+    }
+  }, [historyItems, onDeleteHistoryItem]);
+
+  const getPublicVideoCapability = useCallback((id, taskType) =>
+    findPublicVideoCapability(getServerModelMeta(id), taskType),
+  [modelDirectoryRevision]);
+
+  const getCurrentAspectRatios = useCallback(
+    (id) => {
+      if (getServerModelMeta(id) || modelDirectoryRevision > 0) {
+        return getPublicVideoControlOptions(getPublicVideoCapability(id, imageMode ? "i2v" : "t2v")).aspectRatios;
+      }
+      return imageMode ? getAspectRatiosForI2VModel(id) : getAspectRatiosForVideoModel(id);
+    },
+    [imageMode, modelDirectoryRevision, getPublicVideoCapability],
+  );
+
+  const getCurrentDurations = useCallback(
+    (id) => {
+      if (getServerModelMeta(id) || modelDirectoryRevision > 0) {
+        return getPublicVideoControlOptions(getPublicVideoCapability(id, imageMode ? "i2v" : "t2v")).durations;
+      }
+      return imageMode ? getDurationsForI2VModel(id) : getDurationsForModel(id);
+    },
+    [imageMode, modelDirectoryRevision, getPublicVideoCapability],
+  );
+
+  const getCurrentResolutions = useCallback(
+    (id) => {
+      if (getServerModelMeta(id) || modelDirectoryRevision > 0) {
+        return getPublicVideoControlOptions(getPublicVideoCapability(id, imageMode ? "i2v" : "t2v")).resolutions;
+      }
+      return imageMode ? getResolutionsForI2VModel(id) : getResolutionsForVideoModel(id);
+    },
+    [imageMode, modelDirectoryRevision, getPublicVideoCapability],
+  );
+
+  const getCurrentModel = useCallback(
+    () => videoModelCatalog.variantById.get(selectedModel)?.model,
+    [selectedModel],
+  );
+
+  const isMotionControlSelection = useCallback(
+    (modelId, isV2v) => {
+      if (!isV2v) return false;
+      const m = videoModelCatalog.variantById.get(modelId)?.model;
+      return !!m?.imageField;
+    },
+    [],
+  );
+
+  // ── update controls when the selected model changes ─────────────────────
+  const applyControlsForModel = useCallback(
+    (modelId, isImageMode, isV2vMode) => {
+      if (getGroupedVideoConfiguration(modelId)) {
+        const model = videoModelCatalog.variantById.get(modelId)?.model;
+        const serverMeta = getServerModelMeta(modelId);
+        const hasServerDirectory = Boolean(serverMeta) || modelDirectoryRevision > 0;
+        const capability = getPublicVideoCapability(modelId, isV2vMode ? "v2v" : isImageMode ? "i2v" : "t2v");
+        const rawOptions = getVideoCommonOptions(model, commonParameterValuesRef.current);
+        const options = hasServerDirectory
+          ? getPublicVideoControlOptions(capability)
+          : rawOptions;
+        const rawValues = getVideoCommonValues(model, commonParameterValuesRef.current);
+        const values = {
+          aspectRatio: options.aspectRatios.includes(rawValues.aspectRatio) ? rawValues.aspectRatio : options.aspectRatios[0],
+          duration: options.durations.find((value) => Number(value) === Number(rawValues.duration)) ?? options.durations[0],
+          resolution: options.resolutions.includes(rawValues.resolution) ? rawValues.resolution : options.resolutions[0],
+          quality: options.qualities.includes(rawValues.quality) ? rawValues.quality : options.qualities[0],
+        };
+        setShowAr(options.aspectRatios.length > 0);
+        setShowDuration(options.durations.length > 0);
+        setShowResolution(options.resolutions.length > 0);
+        setShowQuality(options.qualities.length > 0);
+        setShowEffect(false);
+        if (values.aspectRatio !== undefined) setSelectedAr(values.aspectRatio);
+        if (values.duration !== undefined) setSelectedDuration(values.duration);
+        const candidateResolution = values.resolution ?? getSeedanceEndpointResolution(modelId);
+        const resolution = hasServerDirectory && candidateResolution
+          && !options.resolutions.includes(candidateResolution)
+          ? options.resolutions[0]
+          : candidateResolution;
+        if (resolution !== undefined) setSelectedResolution(resolution);
+        if (values.quality !== undefined) setSelectedQuality(values.quality);
+        return;
+      }
+      if (isV2vMode || getVeoToolConfiguration(modelId)) {
+        setShowAr(false);
+        setShowDuration(false);
+        setShowResolution(false);
+        setShowQuality(false);
+        setShowEffect(false);
+        return;
+      }
+
+      const model = videoModelCatalog.variantById.get(modelId)?.model;
+      const modelMeta = getServerModelMeta(modelId);
+      const serverMeta = modelMeta || modelDirectoryRevision > 0;
+      const capability = getPublicVideoCapability(modelId, isV2vMode ? "v2v" : isImageMode ? "i2v" : "t2v");
+      const declaredOptions = getPublicVideoControlOptions(capability);
+
+      const ars = serverMeta
+        ? declaredOptions.aspectRatios
+        : isImageMode
+        ? getAspectRatiosForI2VModel(modelId)
+        : getAspectRatiosForVideoModel(modelId);
+      if (ars.length > 0) {
+        setSelectedAr(ars[0]);
+        setShowAr(true);
+      } else {
+        setShowAr(false);
+      }
+
+      const durations = serverMeta
+        ? declaredOptions.durations
+        : isImageMode
+        ? getDurationsForI2VModel(modelId)
+        : getDurationsForModel(modelId);
+      if (durations.length > 0) {
+        const defaultDuration = Number(model?.inputs?.duration?.default);
+        setSelectedDuration(durations.includes(defaultDuration) ? defaultDuration : durations[0]);
+        setShowDuration(true);
+      } else {
+        setShowDuration(false);
+      }
+
+      const resolutions = serverMeta
+        ? declaredOptions.resolutions
+        : isImageMode
+        ? getResolutionsForI2VModel(modelId)
+        : getResolutionsForVideoModel(modelId);
+      if (resolutions.length > 0) {
+        setSelectedResolution(resolutions[0]);
+        setShowResolution(true);
+      } else {
+        setShowResolution(false);
+      }
+
+      const qualities = serverMeta ? declaredOptions.qualities : model?.inputs?.quality?.enum || [];
+      if (qualities.length > 0) {
+        const defaultQuality = model?.inputs?.quality?.default;
+        setSelectedQuality(qualities.includes(defaultQuality) ? defaultQuality : qualities[0]);
+        setShowQuality(true);
+      } else {
+        setSelectedQuality("");
+        setShowQuality(false);
+      }
+
+      const effects = !serverMeta && isImageMode ? getEffectsForI2VModel(modelId) : [];
+      if (effects.length > 0) {
+        setSelectedEffect(getDefaultEffectForI2VModel(modelId) || effects[0]);
+        setShowEffect(true);
+      } else {
+        setSelectedEffect("");
+        setShowEffect(false);
+      }
+    },
+    [modelDirectoryRevision, getPublicVideoCapability],
+  );
+
+  useEffect(() => {
+    if (modelDirectoryRevision > 0 && selectedModel) {
+      applyControlsForModel(selectedModel, imageMode, v2vMode);
+    }
+  }, [modelDirectoryRevision, selectedModel, imageMode, v2vMode, applyControlsForModel]);
+
+  const selectedFamily =
+    videoModelCatalog.familyById.get(selectedFamilyId) ||
+    (selectedModel ? videoModelCatalog.familyByVariantId.get(selectedModel) : null) ||
+    defaultFamily ||
+    { id: selectedFamilyId || selectedModel || "kling-v3", name: "Video" };
+  const currentFamilyMode = v2vMode ? "v2v" : imageMode ? "i2v" : "t2v";
+
+  // A saved studio draft can restore values after applyControlsForModel has
+  // applied the server directory. Re-clamp whenever the selected route or its
+  // declared capabilities change so persisted values cannot leak into quote/job.
+  useEffect(() => {
+    if (!selectedModel || (!getServerModelMeta(selectedModel) && modelDirectoryRevision === 0)) return;
+    const options = getPublicVideoControlOptions(
+      getPublicVideoCapability(selectedModel, currentFamilyMode),
+    );
+    if (options.aspectRatios.length && !options.aspectRatios.includes(selectedAr)) {
+      setSelectedAr(options.aspectRatios[0]);
+    }
+    if (options.resolutions.length && !options.resolutions.includes(selectedResolution)) {
+      setSelectedResolution(options.resolutions[0]);
+    }
+    if (options.durations.length && !options.durations.includes(Number(selectedDuration))) {
+      setSelectedDuration(options.durations[0]);
+    }
+    if (options.qualities.length && !options.qualities.includes(selectedQuality)) {
+      setSelectedQuality(options.qualities[0]);
+    }
+  }, [modelDirectoryRevision, selectedModel, currentFamilyMode, selectedAr,
+    selectedResolution, selectedDuration, selectedQuality, getPublicVideoCapability]);
+
+  const workflowFamily = getVideoWorkflowFamily(selectedFamilyId);
+  const selectedWorkflow = selectedWorkflowId
+    ? workflowFamily?.workflowById.get(selectedWorkflowId) || null
+    : null;
+  const groupedConfiguration = getGroupedVideoConfiguration(selectedModel);
+  const groupCopyKey = getGroupedVideoCopyKey(selectedFamilyId);
+  const providerCopy = copy[groupCopyKey] || copy.seedance;
+  const groupCopy = useMemo(() => ({
+    ...copy.modelControls,
+    ...providerCopy,
+    fields: { ...copy.modelControls.fields, ...providerCopy.fields },
+    adjustments: { ...copy.modelControls.adjustments, ...providerCopy.adjustments },
+  }), [copy, providerCopy]);
+  const workflowControlState = groupedConfiguration && workflowFamily
+    ? { kind: "menu", workflow: null }
+    : getVideoWorkflowControlState(
+    workflowFamily,
+    selectedModel,
+  );
+  const workflowMediaDraftKey = selectedWorkflowId
+    ? getVideoWorkflowDraftKey(selectedFamilyId, selectedWorkflowId)
+    : null;
+  const selectedVariant = videoModelCatalog.variantById.get(selectedModel);
+  const activeWorkflowMediaDraft = useMemo(
+    () => workflowMediaDraftKey
+      ? projectVideoWorkflowMedia(
+          selectedVariant?.model,
+          selectedWorkflowId,
+          workflowMediaDrafts[workflowMediaDraftKey] || EMPTY_WORKFLOW_MEDIA_DRAFT,
+        )
+      : null,
+    [
+      selectedVariant,
+      selectedWorkflowId,
+      workflowMediaDraftKey,
+      workflowMediaDrafts,
+    ],
+  );
+  const selectedPickerEntry = videoModelPickerEntryByVariantId.get(selectedModel);
+  const selectedTool = getSeedanceToolConfiguration(selectedModel);
+  const selectedVeoTool = getVeoToolConfiguration(selectedModel);
+  const veoContinuation = selectedVeoTool ? getContinuationConfig(selectedModel) : null;
+  const veoSources = useMemo(() => selectedVeoTool
+    ? getCompatibleContinuationSources(selectedModel, history) : [],
+  [selectedModel, selectedVeoTool, history]);
+  const selectedVeoSource = veoSources.find((entry) => entry.requestId === selectedVeoSourceId) || veoSources[0];
+  const selectedPickerLabel = selectedTool
+    ? seedanceToolLabel(selectedTool, copy, true)
+    : selectedVeoTool ? (copy.veo?.toolNames?.[selectedVeoTool.key] || selectedVeoTool.key)
+    : selectedPickerEntry?.name || selectedFamily?.name || defaultFamily?.name || selectedModel || "Video";
+  const selectedPickerDisplayLabel = formatModelDisplayName(selectedPickerLabel, {
+    provider: selectedFamily?.provider || selectedPickerEntry?.family?.provider,
+    modelId: selectedFamily?.id || selectedModel,
+  });
+  const getSelectionPlan = useCallback((options = {}) => planGroupedVideoSelection({
+    familyId: selectedFamilyId,
+    workflowId: selectedWorkflowId,
+    currentWorkflowId: selectedWorkflowId,
+    media: activeWorkflowMediaDraft,
+    currentModelId: selectedModel,
+    nativeResolution: selectedResolution,
+    commonValues: {
+      ...modelParameterValues,
+      aspectRatio: selectedAr, duration: selectedDuration,
+      quality: selectedQuality,
+    },
+    ...options,
+  }), [selectedFamilyId, selectedWorkflowId, selectedModel, selectedResolution, selectedAr, selectedDuration, selectedQuality, modelParameterValues, activeWorkflowMediaDraft]);
+  const describeSelectionAdjustments = useCallback((adjustments) => {
+    const valueLabel = (key, value) => {
+      if (key === "duration") return getVideoDurationLabel(value, groupCopy);
+      if (key === "aspectRatio") return getVideoAspectRatioLabel(value, groupCopy);
+      if (key === "profile") return groupCopy.profiles[value]?.label || value;
+      if (key === "speed") return groupCopy.speeds[value] || value;
+      if (key === "resolution" && value === "default") return groupCopy.defaultResolution;
+      return String(value).toLowerCase() === "4k" ? "4K" : value;
+    };
+    return adjustments.map(({ key, to }) =>
+      groupCopy.adjustments[key].replace("{value}", valueLabel(key, to))).join(" · ");
+  }, [groupCopy]);
+  const groupedVariantOptions = useMemo(() => groupedConfiguration
+    ? getGroupedVideoVariantOptions(selectedFamilyId, selectedWorkflowId, selectedModel)
+      .filter((field) => field.key !== "resolution")
+      .map((field) => ({
+        ...field,
+        options: field.options.map((option) => {
+          const plan = getSelectionPlan({ changes: { [field.key]: option.value } });
+          return {
+            ...option,
+            description: groupCopy.speedDescriptions?.[option.value],
+            disabled: !plan,
+            adjustmentDescription: plan ? describeSelectionAdjustments(plan.adjustments) : "",
+          };
+        }),
+      }))
+    : [], [groupedConfiguration, selectedFamilyId, selectedWorkflowId, selectedModel, getSelectionPlan, describeSelectionAdjustments, groupCopy]);
+  const groupedProfile = groupedVariantOptions.find((field) => field.key === "profile");
+  const groupedSpeed = groupedVariantOptions.find((field) => field.key === "speed");
+  const groupedResolution = useMemo(() => {
+    if (!groupedConfiguration) return null;
+    const field = getGroupedVideoResolutionOptions(selectedFamilyId, selectedWorkflowId, selectedModel, selectedResolution, {
+      aspectRatio: selectedAr, duration: selectedDuration, quality: selectedQuality,
+    });
+    const hasServerDirectory = Boolean(getServerModelMeta(selectedModel)) || modelDirectoryRevision > 0;
+    const declaredResolutions = getPublicVideoControlOptions(
+      getPublicVideoCapability(selectedModel, currentFamilyMode),
+    ).resolutions;
+    const resolutionOptions = hasServerDirectory
+      ? field.options.filter((option) => option.value === "default"
+        || declaredResolutions.some((value) => String(value).toLowerCase() === String(option.resolution ?? option.value).toLowerCase()))
+      : field.options;
+    return {
+      ...field,
+      key: "resolution",
+      ...(groupCopyKey === "seedance" && !field.value && selectedWorkflowId !== "extend_uploaded_video"
+        ? { label: groupCopy.defaultResolution } : {}),
+      options: resolutionOptions.map((option) => {
+        const adjustments = option.disabled ? [] : getGroupedVideoSelectionAdjustments({
+          currentModelId: selectedModel, nativeResolution: selectedResolution,
+          currentWorkflowId: selectedWorkflowId, media: activeWorkflowMediaDraft,
+          commonValues: { ...modelParameterValues, aspectRatio: selectedAr, duration: selectedDuration, quality: selectedQuality },
+          selection: option, changes: { resolution: option.value },
+        });
+        return { ...option, adjustmentDescription: describeSelectionAdjustments(adjustments) };
+      }),
+    };
+  }, [groupedConfiguration, selectedFamilyId, selectedWorkflowId, selectedModel, selectedResolution, selectedAr, selectedDuration, selectedQuality, modelParameterValues, describeSelectionAdjustments, groupCopy, groupCopyKey, activeWorkflowMediaDraft, currentFamilyMode, modelDirectoryRevision, getPublicVideoCapability]);
+  const commonOptions = useMemo(
+    () => {
+      const options = getVideoCommonOptions(selectedVariant?.model, {
+        ...modelParameterValues, aspectRatio: selectedAr, duration: selectedDuration,
+        resolution: selectedResolution, quality: selectedQuality,
+      });
+      if (!getServerModelMeta(selectedModel) && modelDirectoryRevision === 0) return options;
+      return getPublicVideoControlOptions(getPublicVideoCapability(selectedModel, currentFamilyMode));
+    }, [selectedVariant, selectedModel, modelParameterValues, selectedAr, selectedDuration, selectedResolution, selectedQuality, modelDirectoryRevision, getPublicVideoCapability, currentFamilyMode],
+  );
+  const aspectRatioHelp = groupCopy[selectedVariant?.model.inputs?.aspect_ratio?.descriptionKey];
+  const groupedModes = useMemo(() => groupedConfiguration && workflowFamily
+    ? [...(workflowFamily.hasBase ? [{ id: null }] : []), ...workflowFamily.workflows].map((workflow) => {
+        const plan = getSelectionPlan({ workflowId: workflow.id });
+        return {
+          id: workflow.id,
+          label: groupCopy.modes[workflow.id || "text"],
+          description: getVideoModeDescription(
+            videoModelCatalog.variantById.get(plan?.selection.modelId)?.model,
+            workflow.id, groupCopy,
+          ),
+          adjustmentDescription: plan ? describeSelectionAdjustments(plan.adjustments) : "",
+          disabled: !plan,
+        };
+      })
+    : [], [groupedConfiguration, workflowFamily, getSelectionPlan, describeSelectionAdjustments, groupCopy]);
+  const promptDisabled = Boolean(selectedVeoTool && !selectedVariant?.model.inputs?.prompt) || shouldDisableVideoPrompt(
+    selectedVariant?.model,
+    currentFamilyMode,
+  );
+  const workflowMediaSlots = useMemo(
+    () => selectedWorkflowId
+      ? getVideoWorkflowMediaSlots(selectedVariant?.model, selectedWorkflowId)
+      : [],
+    [selectedVariant, selectedWorkflowId],
+  );
+  const currentModelCapabilities = getModelMediaCapabilities(selectedVariant?.model);
+  const supplementalInputs = useMemo(
+    () => {
+      let inputs = getSupplementalModelInputs(selectedVariant?.model);
+      const hasServerDirectory = Boolean(getServerModelMeta(selectedModel)) || modelDirectoryRevision > 0;
+      if (hasServerDirectory) {
+        const declaredParameters = new Set((getPublicVideoCapability(selectedModel, currentFamilyMode)?.parameters || [])
+          .map((name) => String(name).toLowerCase()));
+        inputs = inputs.filter(({ key }) => declaredParameters.has(key.toLowerCase()));
+      }
+      return groupedConfiguration
+        ? inputs.filter(({ key }) => key !== "omni_reference_task_type").map(({ key, schema }) => ({
+            key, schema: {
+              ...schema, ...groupCopy.fields[key],
+              ...(schema.descriptionKey ? { description: groupCopy[schema.descriptionKey] } : {}),
+              ...(key === "generate_audio" && selectedWorkflowId === "edit_video" ? groupCopy.editAudio : {}),
+            },
+          }))
+        : inputs;
+    }, [selectedVariant, selectedModel, modelDirectoryRevision, currentFamilyMode,
+      getPublicVideoCapability, groupedConfiguration, selectedWorkflowId, groupCopy],
+  );
+  const handleModelParameterChange = useCallback((key, value) => {
+    setModelParameterValues((values) => ({ ...values, [key]: value }));
+    if (selectedVariant?.model.commonParameterRules) {
+      commonParameterValuesRef.current = { ...commonParameterValuesRef.current, [key]: value };
+      applyControlsForModel(selectedModel, imageMode, v2vMode);
+    }
+  }, [selectedVariant, selectedModel, imageMode, v2vMode, applyControlsForModel]);
+
+  const applySelectedVariant = useCallback(
+    (variant, mode, family, workflowId = null) => {
+      const model = variant.model;
+      const nextV2VMode = mode === "v2v";
+      const nextImageMode = mode === "i2v";
+
+      const previous = selectionRef.current;
+      if (previous?.selectedFamilyId && previous?.selectedModel) {
+        workflowVariantPreferencesRef.current.set(
+          workflowContextKey(previous.selectedFamilyId, previous.selectedWorkflowId),
+          previous.selectedModel,
+        );
+      }
+      workflowVariantPreferencesRef.current.set(
+        workflowContextKey(family.id, workflowId),
+        model.id,
+      );
+
+      selectionRef.current = {
+        selectedFamilyId: family.id,
+        selectedModel: model.id,
+        selectedWorkflowId: workflowId,
+        imageMode: nextImageMode,
+        v2vMode: nextV2VMode,
+      };
+      setSelectedFamilyId(family.id);
+      setSelectedModel(model.id);
+      setSelectedWorkflowId(workflowId);
+      setModelParameterValues((values) =>
+        mergeModelParameterValues(model, values),
+      );
+      setV2vMode(nextV2VMode);
+      setImageMode(nextImageMode);
+      applyControlsForModel(model.id, nextImageMode, nextV2VMode);
+    },
+    [applyControlsForModel],
+  );
+
+  const reconcileReferencesForModel = useCallback((model) => {
+    const capabilities = getModelMediaCapabilities(model);
+    setUploadedImageUrls((urls) => urls.slice(0, capabilities.image.maxItems));
+    setUploadedVideoUrls((urls) => urls.slice(0, capabilities.video.maxItems));
+    setUploadedAudioUrls((urls) => urls.slice(0, capabilities.audio.maxItems));
+    if (!capabilities.image.separateLastItem) setUploadedEndImageUrl(null);
+  }, []);
+
+  const applyUserSelectedVariant = useCallback(
+    (variant, mode, family, workflowId = null) => {
+      if (workflowId) {
+        const draftKey = getVideoWorkflowDraftKey(family.id, workflowId);
+        const previous = selectionRef.current;
+        const sourceWorkflowId = previous?.selectedFamilyId === family.id
+          ? previous.selectedWorkflowId : null;
+        const sourceDraftKey = sourceWorkflowId
+          ? getVideoWorkflowDraftKey(family.id, sourceWorkflowId) : null;
+        const sourceModel = sourceDraftKey
+          ? videoModelCatalog.variantById.get(previous.selectedModel)?.model : null;
+        const legacyMedia = mediaRef.current;
+        setWorkflowMediaDrafts((drafts) => {
+          if (drafts[draftKey]) return drafts;
+          // Seed a new mode from matching active slots; keep existing drafts intact.
+          const media = sourceDraftKey
+            ? projectVideoWorkflowMedia(sourceModel, sourceWorkflowId, drafts[sourceDraftKey])
+            : legacyMedia;
+          return {
+            ...drafts,
+            [draftKey]: projectVideoWorkflowMedia(
+              variant.model,
+              workflowId,
+              media,
+            ),
+          };
+        });
+      } else {
+        reconcileReferencesForModel(variant.model);
+      }
+      if (shouldDisableVideoPrompt(variant.model, mode)) {
+        setPrompt("");
+      }
+      applySelectedVariant(variant, mode, family, workflowId);
+    },
+    [applySelectedVariant, reconcileReferencesForModel],
+  );
+
+  const VIDEO_MODEL_ALIASES = {
+    'sora': 'openai-sora-2-text-to-video',
+    'sora-2': 'openai-sora-2-text-to-video',
+    'openai-sora': 'openai-sora-2-text-to-video',
+    'openai-sora-2': 'openai-sora-2-text-to-video',
+    'veo-2': 'veo3.1-text-to-video',
+    'veo-2-text-to-video': 'veo3.1-text-to-video',
+    'google-veo-2': 'veo3.1-text-to-video',
+    'veo-3': 'veo3-text-to-video',
+    'veo-3.1': 'veo3.1-text-to-video',
+    'google-veo-3-1': 'veo3.1-text-to-video',
+    'kling-2.6': 'kling-v2.6-standard-text-to-video',
+    'kling-3.0': 'kling-v3.0-standard-text-to-video',
+    'kling-3-0': 'kling-v3.0-standard-text-to-video',
+    'hailuo-2.3': 'minimax-hailuo-2.3-standard-t2v',
+    'hailuo-ai': 'minimax-hailuo-2.3-standard-t2v',
+    'minimax-hailuo-2.3': 'minimax-hailuo-2.3-standard-t2v',
+    'wan-2.7': 'wan2.7-text-to-video',
+    'wan-2-7': 'wan2.7-text-to-video',
+    'wan-video': 'wan2.7-text-to-video',
+    'hunyuan-3d': 'hunyuan-text-to-video',
+    'hunyuan-video': 'hunyuan-text-to-video',
+    'hunyuan': 'hunyuan-text-to-video',
+    'grok-video': 'grok-imagine-text-to-video',
+    'grok': 'grok-imagine-text-to-video',
+    'vidu-q2': 'vidu-q2-text-to-video',
+    'vidu': 'vidu-q2-text-to-video',
+  };
+
+  const applyModelSelection = useCallback((targetModelKey) => {
+    if (!targetModelKey) return;
+    const rawKey = String(targetModelKey).trim();
+    const cleanKey = VIDEO_MODEL_ALIASES[rawKey] || VIDEO_MODEL_ALIASES[rawKey.toLowerCase()] || rawKey;
+
+    // 1. Try resolvePersistedVideoWorkflowSelection directly
+    const directResolution = resolvePersistedVideoWorkflowSelection(cleanKey, null);
+    if (directResolution?.family && directResolution?.variant) {
+      applyUserSelectedVariant(
+        directResolution.variant,
+        directResolution.variant.mode,
+        directResolution.family,
+        directResolution.workflowId,
+      );
+      return;
+    }
+
+    // 2. Direct variant in catalog
+    const variant = videoModelCatalog.variantById.get(cleanKey);
+    const family = videoModelCatalog.familyByVariantId.get(cleanKey);
+    if (variant && family) {
+      const targetWorkflowFamily = getVideoWorkflowFamily(family.id);
+      const workflowId = targetWorkflowFamily
+        ? (targetWorkflowFamily.base.variantIds.has(variant.model.id) || targetWorkflowFamily.unmanagedVariantIds.has(variant.model.id)
+            ? null
+            : inferVideoWorkflowId(family.id, variant.model.id))
+        : null;
+      applyUserSelectedVariant(variant, variant.mode, family, workflowId);
+      return;
+    }
+
+    // 2.5 Direct family in catalog (fallback to default family variant)
+    const directFamily = videoModelCatalog.familyById.get(cleanKey);
+    if (directFamily) {
+      const defaultVar = getFamilyVariant(videoModelCatalog, directFamily, "t2v") || directFamily.variants?.[0];
+      if (defaultVar) {
+        applyUserSelectedVariant(defaultVar, defaultVar.mode || "t2v", directFamily, null);
+        return;
+      }
+    }
+
+    // 3. Search in videoModelPickerEntries
+    const pickerEntry = videoModelPickerEntries.find(
+      (e) => e.id === cleanKey || e.variantIds?.has(cleanKey) || e.name?.toLowerCase() === cleanKey.toLowerCase()
+    );
+    if (pickerEntry) {
+      const target = pickerEntry.defaultVariant || pickerEntry.variantsByMode?.t2v || pickerEntry.variantsByMode?.i2v;
+      const targetFamily = pickerEntry.family;
+      if (target && targetFamily) {
+        const targetWorkflowFamily = getVideoWorkflowFamily(targetFamily.id);
+        const workflowId = targetWorkflowFamily
+          ? (targetWorkflowFamily.base.variantIds.has(target.model.id) || targetWorkflowFamily.unmanagedVariantIds.has(target.model.id)
+              ? null
+              : inferVideoWorkflowId(targetFamily.id, target.model.id))
+          : null;
+        applyUserSelectedVariant(target, target.mode, targetFamily, workflowId);
+        return;
+      }
+    }
+
+    // 4. Raw search in t2vModels / i2vModels / v2vModels
+    const rawT2V = t2vModels.find((m) => m.id === cleanKey || m.endpoint === cleanKey);
+    if (rawT2V) {
+      const rawFamily = videoModelCatalog.familyByVariantId.get(rawT2V.id) || { id: rawT2V.id, name: rawT2V.name };
+      applyUserSelectedVariant({ mode: "t2v", model: rawT2V }, "t2v", rawFamily, null);
+      return;
+    }
+  }, [applyUserSelectedVariant]);
+
+  // ── Sync with initialModel prop and URL ?model= ──────────────────────────
+  useEffect(() => {
+    const urlParams = typeof window !== "undefined" ? new URLSearchParams(window.location.search) : null;
+    const urlModel = urlParams?.get("model");
+    const targetModel = initialModel || urlModel;
+    if (targetModel) {
+      applyModelSelection(targetModel);
+    }
+  }, [initialModel, applyModelSelection]);
+
+  // ── Sync with initialPrompt prop and URL ?prompt= / ?remixPrompt= ────────
+  useEffect(() => {
+    const urlParams = typeof window !== "undefined" ? new URLSearchParams(window.location.search) : null;
+    const urlPrompt = urlParams?.get("prompt") || urlParams?.get("remixPrompt");
+    const targetPrompt = urlPrompt || initialPrompt;
+    if (targetPrompt) {
+      setPrompt(targetPrompt);
+    }
+  }, [initialPrompt]);
+
+  // ── Sync with global supdance-select-model custom events ──────────────────
+  useEffect(() => {
+    const handleSelectModelEvent = (e) => {
+      const detail = e.detail;
+      const modelKey = typeof detail === "string" ? detail : (detail?.modelKey || detail?.modelId);
+      if (modelKey) {
+        applyModelSelection(modelKey);
+      }
+    };
+    window.addEventListener("supdance-select-model", handleSelectModelEvent);
+    return () => window.removeEventListener("supdance-select-model", handleSelectModelEvent);
+  }, [applyModelSelection]);
+
+  // ── Persistence: Load ────────────────────────────────────────────────────
+  useEffect(() => {
+    try {
+      const stored = localStorage.getItem(PERSIST_KEY);
+      if (stored) {
+        const data = JSON.parse(stored);
+        let restoredMode = data.v2vMode ? "v2v" : data.imageMode ? "i2v" : "t2v";
+        let restoredModelId = data.selectedModel || defaultModel?.id || "kling-v3.0-standard-text-to-video";
+        let restoredWorkflowId = null;
+        let restoredModel = defaultModel || { id: restoredModelId, name: "Video" };
+        let restoredFamilyId = defaultFamily?.id || "kling-v3";
+        let restoredResolution = data.selectedResolution;
+        if (data.selectedModel) {
+          const restored = resolvePersistedVideoWorkflowSelection(
+            migrateSeedanceResolutionSelection(data.selectedModel, data.selectedResolution),
+            data.selectedWorkflowId || null,
+            { hasEndFrame: Boolean(data.uploadedEndImageUrl || data.uploadedImageUrls?.[1]) },
+          );
+          if (restored.family && restored.variant) {
+            restoredModelId = restored.variant.model.id;
+            restoredMode = restored.variant.mode;
+            restoredWorkflowId = restored.workflowId;
+            restoredModel = restored.variant.model;
+            restoredFamilyId = restored.family.id;
+            const resolutionField = getGroupedVideoResolutionOptions(
+              restoredFamilyId, restoredWorkflowId, restoredModelId, restoredResolution,
+            );
+            // Restore the exact endpoint while respecting the workflow's allowed resolutions.
+            restoredResolution = resolutionField.options.find((option) =>
+              option.modelId === restoredModelId && option.value === resolutionField.value,
+            )?.resolution ?? restoredResolution;
+            setSelectedModel(restoredModelId);
+            setSelectedFamilyId(restored.family.id);
+            setSelectedWorkflowId(restored.workflowId);
+            setModelParameterValues(
+              mergeModelParameterValues(
+                restoredModel,
+                data.modelParameterValues || {},
+              ),
+            );
+          }
+        }
+        setImageMode(restoredMode === "i2v");
+        setV2vMode(restoredMode === "v2v");
+        if (data.selectedAr) setSelectedAr(data.selectedAr);
+        if (data.selectedDuration) setSelectedDuration(data.selectedDuration);
+        if (restoredResolution) setSelectedResolution(restoredResolution);
+        if (data.selectedQuality) setSelectedQuality(data.selectedQuality);
+        if (data.selectedEffect) setSelectedEffect(data.selectedEffect);
+        if (data.selectedVeoSourceId) setSelectedVeoSourceId(data.selectedVeoSourceId);
+        if (data.uploadedImageUrls) {
+          setUploadedImageUrls(data.uploadedImageUrls);
+        } else if (data.uploadedImageUrl) {
+          setUploadedImageUrls([data.uploadedImageUrl]);
+        }
+        if (data.uploadedEndImageUrl) setUploadedEndImageUrl(data.uploadedEndImageUrl);
+        if (data.uploadedVideoUrls) {
+          setUploadedVideoUrls(data.uploadedVideoUrls);
+        } else if (data.uploadedVideoUrl) {
+          setUploadedVideoUrls([data.uploadedVideoUrl]);
+        }
+        if (data.uploadedAudioUrls) setUploadedAudioUrls(data.uploadedAudioUrls);
+        const persistedDrafts =
+          data.workflowMediaDrafts && typeof data.workflowMediaDrafts === "object"
+            ? migrateVideoWorkflowMediaDrafts(data.workflowMediaDrafts)
+            : {};
+        if (restoredWorkflowId) {
+          const draftKey = getVideoWorkflowDraftKey(
+            restoredFamilyId,
+            restoredWorkflowId,
+          );
+          if (!data.selectedWorkflowId || !persistedDrafts[draftKey]) {
+            persistedDrafts[draftKey] = legacyVideoMediaToWorkflowDraft(
+              restoredModel,
+              restoredWorkflowId,
+              {
+                imageUrls: data.uploadedImageUrls ||
+                  (data.uploadedImageUrl ? [data.uploadedImageUrl] : []),
+                endImageUrl: data.uploadedEndImageUrl ||
+                  (restoredWorkflowId === "keyframes" ? data.uploadedImageUrls?.[1] : null),
+                videoUrls: data.uploadedVideoUrls ||
+                  (data.uploadedVideoUrl ? [data.uploadedVideoUrl] : []),
+                audioUrls: data.uploadedAudioUrls || [],
+              },
+            );
+          }
+        }
+        setWorkflowMediaDrafts(persistedDrafts);
+        if (data.prompt) setPrompt(data.prompt);
+        if (data.localHistory) setLocalHistory(data.localHistory);
+
+        // Update control visibility based on restored model/mode
+        commonParameterValuesRef.current = {
+          ...data.modelParameterValues,
+          aspectRatio: data.selectedAr,
+          duration: data.selectedDuration,
+          resolution: restoredResolution,
+          quality: data.selectedQuality,
+        };
+        applyControlsForModel(
+          restoredModelId,
+          restoredMode === "i2v",
+          restoredMode === "v2v",
+        );
+      }
+    } catch (err) {
+      console.warn("Failed to load VideoStudio persistence:", err);
+    } finally {
+      hasRestored.current = true;
+    }
+  }, [applyControlsForModel, defaultModel?.id]);
+
+  // ── Persistence: Save ────────────────────────────────────────────────────
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      try {
+        const state = {
+          imageMode,
+          v2vMode,
+          selectedWorkflowId,
+          selectedModel,
+          selectedFamilyId,
+          selectedAr,
+          selectedDuration,
+          selectedResolution,
+          selectedQuality,
+          selectedEffect,
+          selectedVeoSourceId,
+          modelParameterValues,
+          uploadedImageUrls,
+          uploadedEndImageUrl,
+          uploadedVideoUrls,
+          uploadedAudioUrls,
+          workflowMediaDrafts,
+          prompt,
+          localHistory,
+        };
+        localStorage.setItem(PERSIST_KEY, JSON.stringify(state));
+      } catch (err) {
+        console.warn("Failed to save VideoStudio persistence:", err);
+      }
+    }, 500); // 500ms debounce
+    return () => clearTimeout(timer);
+  }, [
+    imageMode,
+    v2vMode,
+    selectedWorkflowId,
+    selectedModel,
+    selectedFamilyId,
+    selectedAr,
+    selectedDuration,
+    selectedResolution,
+    selectedQuality,
+    selectedEffect,
+    selectedVeoSourceId,
+    modelParameterValues,
+    uploadedImageUrls,
+    uploadedEndImageUrl,
+    uploadedVideoUrls,
+    uploadedAudioUrls,
+    workflowMediaDrafts,
+    prompt,
+    localHistory,
+  ]);
+
+  // ── Derived UI values ────────────────────────────────────────────────────
+
+  const resolveMediaTarget = useCallback((mediaType) => {
+    const selection = selectionRef.current;
+    const family = videoModelCatalog.familyById.get(selection.selectedFamilyId);
+    const currentVariant = videoModelCatalog.variantById.get(selection.selectedModel);
+    const currentCapabilities = getModelMediaCapabilities(currentVariant?.model);
+    if (currentCapabilities[mediaType].maxItems > 0) {
+      return {
+        family,
+        mode: selection.v2vMode ? "v2v" : selection.imageMode ? "i2v" : "t2v",
+        variant: currentVariant,
+      };
+    }
+
+    // Families with explicit workflows never switch endpoints because a file
+    // was uploaded. The user chooses the workflow first.
+    if (getVideoWorkflowFamily(family?.id)) return null;
+
+    const targetMode = mediaType === "image" ? "i2v" : mediaType === "video" ? "v2v" : null;
+    if (!targetMode || !family?.supports[targetMode]) return null;
+    const variant = getFamilyVariant(
+      videoModelCatalog,
+      family,
+      targetMode,
+      selection.selectedModel,
+    );
+    return variant ? { family, mode: targetMode, variant } : null;
+  }, []);
+
+  const applyReferenceUrls = useCallback(
+    (mediaType, urls, target = null, selectionAtStart = null) => {
+      const validUrls = urls.filter(Boolean);
+      if (validUrls.length === 0) return;
+      if (selectionAtStart && !isSameSelection(selectionAtStart, selectionRef.current)) {
+        toast.error(copy.errors.modelChangedDuringUpload);
+        return;
+      }
+      const resolvedTarget = target || resolveMediaTarget(mediaType);
+      if (!resolvedTarget) {
+        const family = videoModelCatalog.familyById.get(selectionRef.current.selectedFamilyId);
+        toast.error(copy.errors.modelDoesNotSupportReference.replace('{family}', family.name).replace('{mediaType}', mediaType));
+        return;
+      }
+
+      const isCurrentVariant =
+        resolvedTarget.variant.model.id === selectionRef.current.selectedModel;
+      if (!isCurrentVariant) {
+        reconcileReferencesForModel(resolvedTarget.variant.model);
+        applySelectedVariant(
+          resolvedTarget.variant,
+          resolvedTarget.mode,
+          resolvedTarget.family,
+        );
+      }
+
+      const activeWorkflowId = selectionRef.current.selectedWorkflowId;
+      const workflowConfig = activeWorkflowId
+        ? getVideoWorkflowMediaConfig(resolvedTarget.variant.model, activeWorkflowId)
+        : null;
+      const limit = workflowConfig
+        ? mediaType === "image"
+          ? workflowConfig.imageLimit
+          : mediaType === "video"
+            ? workflowConfig.videoLimit
+            : workflowConfig.audioLimit
+        : getModelMediaCapabilities(resolvedTarget.variant.model)[mediaType].maxItems;
+      const setter = mediaType === "image"
+        ? setUploadedImageUrls
+        : mediaType === "video"
+          ? setUploadedVideoUrls
+          : setUploadedAudioUrls;
+      setter((current) => mergeReferenceUrls(current, validUrls, limit));
+    },
+    [applySelectedVariant, reconcileReferencesForModel, resolveMediaTarget],
+  );
+
+  const handleDrawReference = useCallback(
+    (entry) => {
+      if (!selectedWorkflowId) {
+        applyReferenceUrls("image", [entry?.url]);
+        return;
+      }
+      const slot = workflowMediaSlots.find((item) => {
+        return (
+          item.mediaType === "image" &&
+          item.acceptDrop !== false &&
+          getVideoWorkflowSlotRemaining(item, activeWorkflowMediaDraft) > 0
+        );
+      });
+      if (!slot || !workflowMediaDraftKey || !entry?.url) {
+        toast.error(copy.errors.sourceDoesNotAcceptImages);
+        return;
+      }
+      setWorkflowMediaDrafts((drafts) => {
+        const draft = drafts[workflowMediaDraftKey] || {};
+        const activeDraft = projectVideoWorkflowMedia(
+          selectedVariant?.model,
+          selectedWorkflowId,
+          draft,
+        );
+        return appendVideoWorkflowMedia(
+          drafts,
+          workflowMediaDraftKey,
+          slot,
+          [entry.url],
+          activeDraft,
+        );
+      });
+    },
+    [
+      activeWorkflowMediaDraft,
+      applyReferenceUrls,
+      selectedWorkflowId,
+      selectedVariant,
+      workflowMediaDraftKey,
+      workflowMediaSlots,
+    ],
+  );
+
+  const uploadFiles = useCallback(
+    async (files, { label, maxBytes, setUploading, setProgress, stableAssetUrl = false }) => {
+      const selectedFiles = Array.from(files);
+      const tooLarge = selectedFiles.find((file) => file.size > maxBytes);
+      if (tooLarge) {
+        toast.error(copy.errors.labelExceedsLimit.replace('{label}', label).replace('{limit}', Math.round(maxBytes / 1024 / 1024)));
+        return [];
+      }
+      setUploading(true);
+      setProgress(0);
+      try {
+        const progress = new Array(selectedFiles.length).fill(0);
+        const results = await Promise.allSettled(
+          selectedFiles.map((file, index) =>
+            uploadFile(apiKey, file, (value) => {
+              progress[index] = value;
+              setProgress(
+                Math.round(progress.reduce((sum, item) => sum + item, 0) / progress.length),
+              );
+            }, { stableAssetUrl }),
+          ),
+        );
+        const failures = results.flatMap((result, index) =>
+          result.status === "rejected"
+            ? [`${selectedFiles[index].name}: ${result.reason?.message || result.reason}`]
+            : [],
+        );
+        if (failures.length > 0) {
+          toast.error(copy.errors.labelUploadFailed
+            .replace('{label}', label)
+            .replace('{message}', failures.join('\n')));
+        }
+        return results.flatMap((result) =>
+          result.status === "fulfilled" ? [result.value] : [],
+        );
+      } catch (err) {
+        console.error(`[VideoStudio] ${label} upload failed:`, err);
+        toast.error(copy.errors.labelUploadFailed.replace('{label}', label).replace('{message}', err.message));
+        return [];
+      } finally {
+        setUploading(false);
+        setProgress(0);
+      }
+    },
+    [apiKey, copy.errors.labelExceedsLimit, copy.errors.labelUploadFailed],
+  );
+
+  const uploadWorkflowSlotFiles = useCallback(
+    async (draftKey, slot, files, context = null) => {
+      if (!draftKey || !slot || workflowUploadSlotRef.current) return;
+      const selectionAtStart = context?.selection || { ...selectionRef.current };
+      const targetModel = videoModelCatalog.variantById.get(
+        selectionAtStart.selectedModel,
+      )?.model;
+      const workflowIdAtStart = selectionAtStart.selectedWorkflowId;
+      const draftSession = context?.session ?? workflowDraftSessionRef.current;
+      const currentDraft = workflowMediaDraftsRef.current[draftKey] || {};
+      const activeDraft = projectVideoWorkflowMedia(
+        targetModel,
+        workflowIdAtStart,
+        currentDraft,
+      );
+      const remaining = getVideoWorkflowSlotRemaining(slot, activeDraft);
+      if (remaining === 0) return;
+
+      const selectedFiles = Array.from(files).slice(0, remaining);
+      if (selectedFiles.length === 0) return;
+      const options = slot.mediaType === "image"
+        ? { label: slot.label, maxBytes: 10 * 1024 * 1024, setUploading: setImageUploading, setProgress: setImageProgress, stableAssetUrl: true }
+        : slot.mediaType === "video"
+          ? { label: slot.label, maxBytes: 50 * 1024 * 1024, setUploading: setVideoUploading, setProgress: setVideoProgress }
+          : { label: slot.label, maxBytes: 50 * 1024 * 1024, setUploading: setAudioUploading, setProgress: setAudioProgress };
+
+      const uploadKey = `${draftKey}:${slot.id}`;
+      workflowUploadSlotRef.current = uploadKey;
+      setWorkflowUploadSlotId(uploadKey);
+      try {
+        const urls = await uploadFiles(selectedFiles, options);
+        if (
+          urls.length > 0 &&
+          draftSession === workflowDraftSessionRef.current
+        ) {
+          const appendUploads = (drafts) => appendVideoWorkflowMedia(
+            drafts, draftKey, slot, urls,
+            projectVideoWorkflowMedia(targetModel, workflowIdAtStart, drafts[draftKey] || {}),
+          );
+          // Keep upload capacity current without overwriting queued draft edits.
+          workflowMediaDraftsRef.current = appendUploads(workflowMediaDraftsRef.current);
+          setWorkflowMediaDrafts(appendUploads);
+        }
+      } finally {
+        workflowUploadSlotRef.current = null;
+        setWorkflowUploadSlotId(null);
+      }
+    },
+    [uploadFiles],
+  );
+
+  const uploadDroppedWorkflowFiles = useCallback(
+    async (files) => {
+      if (!workflowMediaDraftKey) return;
+      const dropSession = workflowDraftSessionRef.current;
+      const dropSelection = { ...selectionRef.current };
+      const dropModel = videoModelCatalog.variantById.get(
+        dropSelection.selectedModel,
+      )?.model;
+      const remainingFiles = Array.from(files);
+      for (const slot of workflowMediaSlots) {
+        if (dropSession !== workflowDraftSessionRef.current) break;
+        if (slot.acceptDrop === false) continue;
+        const matching = remainingFiles.filter((file) =>
+          file.type.startsWith(`${slot.mediaType}/`),
+        );
+        if (matching.length === 0) continue;
+        const currentDraft = workflowMediaDraftsRef.current[workflowMediaDraftKey] || {};
+        const activeDraft = projectVideoWorkflowMedia(
+          dropModel,
+          dropSelection.selectedWorkflowId,
+          currentDraft,
+        );
+        const capacity = getVideoWorkflowSlotRemaining(slot, activeDraft);
+        if (capacity === 0) continue;
+        const batch = matching.slice(0, capacity);
+        await uploadWorkflowSlotFiles(workflowMediaDraftKey, slot, batch, {
+          selection: dropSelection,
+          session: dropSession,
+        });
+        if (dropSession !== workflowDraftSessionRef.current) break;
+        for (const file of batch) {
+          const index = remainingFiles.indexOf(file);
+          if (index >= 0) remainingFiles.splice(index, 1);
+        }
+      }
+    },
+    [uploadWorkflowSlotFiles, workflowMediaDraftKey, workflowMediaSlots],
+  );
+
+  const removeWorkflowMedia = useCallback((slotId, index) => {
+    if (!workflowMediaDraftKey) return;
+    setWorkflowMediaDrafts((drafts) =>
+      removeVideoWorkflowMedia(
+        drafts,
+        workflowMediaDraftKey,
+        slotId,
+        index,
+      ),
+    );
+  }, [workflowMediaDraftKey]);
+
+  const uploadReferences = useCallback(
+    async (mediaType, files) => {
+      const selectionAtStart = { ...selectionRef.current };
+      const target = resolveMediaTarget(mediaType);
+      if (!target) {
+        const family = videoModelCatalog.familyById.get(selectionRef.current.selectedFamilyId);
+        toast.error(`${family.name} does not support ${mediaType} references.`);
+        return;
+      }
+      const capability = getModelMediaCapabilities(target.variant.model)[mediaType];
+      const workflowConfig = selectionAtStart.selectedWorkflowId
+        ? getVideoWorkflowMediaConfig(
+            target.variant.model,
+            selectionAtStart.selectedWorkflowId,
+          )
+        : null;
+      const currentUrls = mediaType === "image"
+        ? mediaRef.current.imageUrls
+        : mediaType === "video"
+          ? mediaRef.current.videoUrls
+          : mediaRef.current.audioUrls;
+      const configuredLimit = workflowConfig
+        ? mediaType === "image"
+          ? workflowConfig.imageLimit
+          : mediaType === "video"
+            ? workflowConfig.videoLimit
+            : workflowConfig.audioLimit
+        : capability.maxItems;
+      const mainLimit =
+        mediaType === "image" &&
+        (capability.separateLastItem || workflowConfig?.separateEndImage)
+          ? Math.min(configuredLimit, 1)
+          : configuredLimit;
+      const remaining = Math.max(mainLimit - currentUrls.length, 0);
+      if (remaining === 0) return;
+
+      const options = mediaType === "image"
+        ? { label: copy.media.image, maxBytes: 10 * 1024 * 1024, setUploading: setImageUploading, setProgress: setImageProgress, stableAssetUrl: true }
+        : mediaType === "video"
+          ? { label: copy.media.video, maxBytes: 50 * 1024 * 1024, setUploading: setVideoUploading, setProgress: setVideoProgress }
+          : { label: copy.media.audio, maxBytes: 50 * 1024 * 1024, setUploading: setAudioUploading, setProgress: setAudioProgress };
+      const urls = await uploadFiles(Array.from(files).slice(0, remaining), options);
+      applyReferenceUrls(mediaType, urls, target, selectionAtStart);
+    },
+    [applyReferenceUrls, resolveMediaTarget, uploadFiles],
+  );
+
+  // ── Handle Dropped Files ────────────────────────────────────────────────
+  useEffect(() => {
+    if (droppedFiles && droppedFiles.length > 0) {
+      if (selectedWorkflowId) {
+        if (workflowUploadSlotRef.current) {
+          toast.error(copy.errors.waitForCurrentUpload);
+          onFilesHandled?.();
+          return;
+        }
+        void uploadDroppedWorkflowFiles(droppedFiles);
+        onFilesHandled?.();
+        return;
+      }
+      const imageFiles = droppedFiles.filter(f => f.type.startsWith('image/'));
+      const videoFiles = droppedFiles.filter(f => f.type.startsWith('video/'));
+      const audioFiles = droppedFiles.filter(f => f.type.startsWith('audio/'));
+      
+      if (videoFiles.length > 0) {
+        uploadReferences("video", videoFiles);
+      } else if (imageFiles.length > 0) {
+        uploadReferences("image", imageFiles);
+      } else if (audioFiles.length > 0) {
+        uploadReferences("audio", audioFiles);
+      }
+      onFilesHandled?.();
+    }
+  }, [
+    droppedFiles,
+    onFilesHandled,
+    selectedWorkflowId,
+    uploadDroppedWorkflowFiles,
+    uploadReferences,
+  ]);
+
+  // Initialise controls for default model on mount
+  useEffect(() => {
+    if (hasRestored.current) return;
+    applyControlsForModel(defaultModel?.id || "kling-v3.0-standard-text-to-video", false, false);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // ── close dropdown on outside click ─────────────────────────────────────
+  useEffect(() => {
+    if (!openDropdown) return;
+    const handler = (e) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(e.target)) {
+        setOpenDropdown(null);
+      }
+    };
+    window.addEventListener("click", handler);
+    return () => window.removeEventListener("click", handler);
+  }, [openDropdown]);
+
+  const handlePromptInput = (e) => {
+    setPrompt(e.target.value);
+  };
+
+  const mentionItems = useMemo(() => {
+    const activeImages = selectedWorkflowId
+      ? activeWorkflowMediaDraft?.imageUrls || []
+      : uploadedImageUrls;
+    return activeImages.filter(Boolean).map((url, index) => ({
+      id: url,
+      url,
+      name: `${copy.media?.image || "Image"} ${index + 1}`,
+    }));
+  }, [selectedWorkflowId, activeWorkflowMediaDraft, uploadedImageUrls, copy.media]);
+
+  const mention = usePromptMention({
+    textareaRef,
+    value: prompt,
+    onChange: (event) => setPrompt(event.target.value),
+    items: mentionItems,
+    enabled: mentionItems.length > 0 && !promptDisabled,
+  });
+
+  // ── image upload ─────────────────────────────────────────────────────────
+  const handleImageFileChange = async (e) => {
+    const files = Array.from(e.target.files);
+    if (files.length === 0) return;
+    try {
+      await uploadReferences("image", files);
+    } finally {
+      if (imageFileInputRef.current) imageFileInputRef.current.value = "";
+    }
+  };
+
+  const removeImageAtIndex = (idx) => {
+    const nextUrls = uploadedImageUrls.filter((_, i) => i !== idx);
+    setUploadedImageUrls(nextUrls);
+    if (nextUrls.length === 0) {
+      if (workflowFamily) return;
+      if (isMotionControlSelection(selectedModel, v2vMode)) return;
+      if (currentFamilyMode === "t2v" && currentModelCapabilities.image.maxItems > 0) return;
+      const family = videoModelCatalog.familyById.get(selectedFamilyId);
+      const target = getFamilyVariant(videoModelCatalog, family, "t2v", selectedModel);
+      if (target) applyUserSelectedVariant(target, "t2v", family);
+    }
+  };
+
+  // ── end-frame upload (FLF i2v models) ──────────────────────────────────────
+  const handleEndImageFileChange = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    if (file.size > 10 * 1024 * 1024) {
+      toast.error(copy.errors.imageExceeds10MB);
+      return;
+    }
+    setEndImageUploading(true);
+    setEndImageProgress(0);
+    const selectionAtStart = { ...selectionRef.current };
+    try {
+      const url = await uploadFile(apiKey, file, (pct) => {
+        setEndImageProgress(pct);
+      }, { stableAssetUrl: true });
+      const latestModel = videoModelCatalog.variantById.get(
+        selectionRef.current.selectedModel,
+      )?.model;
+      if (
+        isSameSelection(selectionAtStart, selectionRef.current) &&
+        (selectionRef.current.selectedWorkflowId === "keyframes" ||
+          getModelMediaCapabilities(latestModel).image.separateLastItem)
+      ) {
+        setUploadedEndImageUrl(url);
+      }
+    } catch (err) {
+      toast.error(`End frame upload failed: ${err.message}`);
+    } finally {
+      setEndImageUploading(false);
+      setEndImageProgress(0);
+      if (endImageFileInputRef.current) endImageFileInputRef.current.value = "";
+    }
+  };
+
+  const clearEndImage = () => setUploadedEndImageUrl(null);
+
+  // ── video upload ─────────────────────────────────────────────────────────
+  const handleVideoFileChange = async (e) => {
+    const files = Array.from(e.target.files);
+    if (files.length === 0) return;
+    try {
+      await uploadReferences("video", files);
+    } finally {
+      if (videoFileInputRef.current) videoFileInputRef.current.value = "";
+    }
+  };
+
+  const removeVideoAtIndex = (index) => {
+    const nextUrls = uploadedVideoUrls.filter((_, itemIndex) => itemIndex !== index);
+    setUploadedVideoUrls(nextUrls);
+    if (workflowFamily) return;
+    if (nextUrls.length > 0 || currentFamilyMode !== "v2v") return;
+    const family = videoModelCatalog.familyById.get(selectedFamilyId);
+    const target = getFamilyVariant(videoModelCatalog, family, "t2v", selectedModel);
+    if (target) applyUserSelectedVariant(target, "t2v", family);
+  };
+
+  const handleAudioFileChange = async (e) => {
+    const files = Array.from(e.target.files);
+    if (files.length === 0) return;
+    try {
+      await uploadReferences("audio", files);
+    } finally {
+      if (audioFileInputRef.current) audioFileInputRef.current.value = "";
+    }
+  };
+
+  const removeAudioAtIndex = (index) => {
+    setUploadedAudioUrls((urls) => urls.filter((_, itemIndex) => itemIndex !== index));
+  };
+
+  const handleGroupedSelection = useCallback((plan, family, workflowId) => {
+    if (!plan) {
+      toast.error(groupCopy.incompatible);
+      return;
+    }
+    const { selection, adjustments } = plan;
+    const target = videoModelCatalog.variantById.get(selection.modelId);
+    if (selection.resolution !== undefined) {
+      commonParameterValuesRef.current = { ...commonParameterValuesRef.current, resolution: selection.resolution };
+    }
+    applyUserSelectedVariant(target, target.mode, family, workflowId);
+    if (selection.resolution !== undefined) setSelectedResolution(selection.resolution);
+    if (adjustments.length) {
+      toast(describeSelectionAdjustments(adjustments));
+    }
+  }, [applyUserSelectedVariant, describeSelectionAdjustments, groupCopy]);
+
+  // ── model selection from dropdown ─────────────────────────────────────────
+  const handleModelSelect = useCallback(
+    (pickerEntry, category = "all") => {
+      const { family, variantsByMode, defaultVariant } = pickerEntry;
+      if (pickerEntry.groupedVideo) {
+        // Reopening the model picker must not reset a configured version.
+        if (family.id === selectedFamilyId &&
+            (category === "all" || (category === currentFamilyMode &&
+              (category !== "t2v" || !selectedWorkflowId))) &&
+            pickerEntry.variantIds.has(selectedModel)) return;
+        const candidate = category !== "all"
+          ? variantsByMode[category]
+          : variantsByMode[currentFamilyMode] || defaultVariant;
+        if (!candidate) return;
+        const targetFamily = getVideoWorkflowFamily(family.id);
+        const workflowId = category === "all" && selectedWorkflowId &&
+          targetFamily?.workflowById.has(selectedWorkflowId)
+          ? selectedWorkflowId
+          : inferVideoWorkflowId(family.id, candidate.model.id);
+        const remembered = workflowVariantPreferencesRef.current.get(
+          workflowContextKey(family.id, workflowId),
+        );
+        const plan = getSelectionPlan({
+          familyId: family.id,
+          workflowId,
+          currentModelId: family.id === selectedFamilyId ? selectedModel : remembered,
+          nativeResolution: family.id === selectedFamilyId ? selectedResolution : undefined,
+        });
+        handleGroupedSelection(plan, family, workflowId);
+        return;
+      }
+      const target = category !== "all"
+        ? category === "v2v" && getVeoToolConfiguration(defaultVariant?.model?.id)
+          ? defaultVariant : variantsByMode[category]
+        : variantsByMode[currentFamilyMode] || defaultVariant;
+      if (!target) return;
+
+      const targetWorkflowFamily = getVideoWorkflowFamily(family.id);
+      if (targetWorkflowFamily) {
+        const workflowId = targetWorkflowFamily.base.variantIds.has(target.model.id) ||
+          targetWorkflowFamily.unmanagedVariantIds.has(target.model.id)
+          ? null
+          : inferVideoWorkflowId(family.id, target.model.id, {
+              preferredWorkflowId: family.id === selectedFamilyId
+                ? selectedWorkflowId
+                : null,
+            });
+        applyUserSelectedVariant(target, target.mode, family, workflowId);
+        return;
+      }
+
+      applyUserSelectedVariant(target, target.mode, family);
+    },
+    [
+      applyUserSelectedVariant,
+      handleGroupedSelection,
+      getSelectionPlan,
+      currentFamilyMode,
+      selectedFamilyId,
+      selectedWorkflowId,
+      selectedModel,
+      selectedResolution,
+    ],
+  );
+
+  const handleWorkflowSelect = useCallback((workflowId) => {
+    if (getGroupedVideoConfiguration(selectedModel)) {
+      handleGroupedSelection(getSelectionPlan({ workflowId }), selectedFamily, workflowId);
+      return;
+    }
+    const preferred = workflowVariantPreferencesRef.current.get(
+      workflowContextKey(selectedFamilyId, workflowId),
+    );
+    const target = resolveVideoWorkflowVariant(
+      selectedFamilyId,
+      workflowId,
+      selectedModel,
+      preferred,
+    );
+    if (target) {
+      applyUserSelectedVariant(target, target.mode, selectedFamily, workflowId);
+    }
+  }, [applyUserSelectedVariant, selectedFamily, selectedFamilyId, selectedModel, getSelectionPlan, handleGroupedSelection]);
+
+  const clearWorkflow = useCallback(() => {
+    if (getGroupedVideoConfiguration(selectedModel)) {
+      handleGroupedSelection(getSelectionPlan({ workflowId: null }), selectedFamily, null);
+      return;
+    }
+    const preferred = workflowVariantPreferencesRef.current.get(
+      workflowContextKey(selectedFamilyId, null),
+    );
+    const target = resolveVideoBaseVariant(
+      selectedFamilyId,
+      selectedModel,
+      preferred,
+    );
+    if (target) applyUserSelectedVariant(target, target.mode, selectedFamily, null);
+  }, [applyUserSelectedVariant, selectedFamily, selectedFamilyId, selectedModel, getSelectionPlan, handleGroupedSelection]);
+
+  const handleGroupedOptionChange = useCallback((key, value) => {
+    handleGroupedSelection(getSelectionPlan({ changes: { [key]: value } }), selectedFamily, selectedWorkflowId);
+  }, [selectedFamily, selectedWorkflowId, getSelectionPlan, handleGroupedSelection]);
+
+  const handleGroupedResolutionChange = useCallback((option) => {
+    if (option.disabled) return;
+    const adjustments = getGroupedVideoSelectionAdjustments({
+      currentModelId: selectedModel,
+      currentWorkflowId: selectedWorkflowId,
+      media: activeWorkflowMediaDraft,
+      nativeResolution: selectedResolution,
+      commonValues: commonParameterValuesRef.current,
+      selection: option,
+      changes: { resolution: option.value },
+    });
+    handleGroupedSelection({ selection: option, adjustments }, selectedFamily, selectedWorkflowId);
+    setOpenDropdown(null);
+  }, [handleGroupedSelection, selectedFamily, selectedWorkflowId, selectedModel, selectedResolution, activeWorkflowMediaDraft]);
+
+  // ── add to local history ──────────────────────────────────────────────────
+  const addToLocalHistory = useCallback((entry) => {
+    setLocalHistory((prev) => [entry, ...prev].slice(0, 30));
+    setActiveHistoryIdx(0);
+  }, []);
+
+  // ── generate ──────────────────────────────────────────────────────────────
+  const handleGenerate = useCallback(async () => {
+    if (mediaUploading || workflowUploadSlotRef.current) {
+      toast.error(copy.errors.waitForCurrentUpload);
+      return;
+    }
+    const currentModel = getCurrentModel();
+    const grouped = getGroupedVideoConfiguration(selectedModel);
+    const generationTaskType = currentFamilyMode;
+    const publicVideoParameters = buildPublicVideoParameters({
+      capability: getPublicVideoCapability(selectedModel, generationTaskType),
+      taskType: generationTaskType,
+      prompt: promptDisabled ? "" : prompt,
+      aspectRatio: selectedAr,
+      resolution: selectedResolution,
+      duration: selectedDuration,
+      quality: selectedQuality,
+    });
+    if (!publicVideoParameters) {
+      toast.error(copy.errors.generationCapabilityUnavailable);
+      return;
+    }
+    const activeParameterValues = createModelParameterValues(currentModel, modelParameterValues);
+    const generationParameterValues = grouped && currentModel.inputs?.omni_reference_task_type
+      ? { ...activeParameterValues, omni_reference_task_type: "auto" }
+      : activeParameterValues;
+    const rawCommonParams = grouped
+      ? buildVideoCommonPayload(currentModel, {
+          ...generationParameterValues,
+          aspectRatio: selectedAr, duration: selectedDuration,
+          resolution: selectedResolution, quality: selectedQuality,
+        })
+      : {};
+    const commonParams = Object.fromEntries(Object.entries(rawCommonParams).filter(([key, value]) =>
+      publicVideoParameters[key] !== undefined
+      && String(publicVideoParameters[key]).toLowerCase() === String(value).toLowerCase(),
+    ));
+    const groupedHistorySettings = grouped ? {
+      ...currentModel.fixedParameters,
+      ...commonParams,
+      workflowId: selectedWorkflowId,
+      modelParameterValues: { ...generationParameterValues },
+    } : {};
+    const isExtendMode = currentModel?.requiresRequestId;
+    const capabilities = getModelMediaCapabilities(currentModel);
+    const requestSource = selectedVeoTool ? selectedVeoSource : (selectedFamily?.id ? generationSources[selectedFamily.id] : null);
+    const trimmedPrompt = promptDisabled ? "" : prompt.trim();
+    const workflowMedia = selectedWorkflowId
+      ? activeWorkflowMediaDraft || {}
+      : {
+          imageUrls: uploadedImageUrls,
+          endImageUrl: uploadedEndImageUrl,
+          videoUrls: uploadedVideoUrls,
+          audioUrls: uploadedAudioUrls,
+        };
+
+    if (hasTemporaryReferenceUrl([...(workflowMedia.imageUrls || []), workflowMedia.endImageUrl])) {
+      toast.error("参考图链接已过期或无法安全恢复，请重新上传参考图。");
+      return;
+    }
+
+    if (!selectedWorkflowId && uploadedVideoUrls.length > 0 && capabilities.video.maxItems === 0) {
+      toast.error(`${selectedFamily?.name || "This model"} does not support video references.`);
+      return;
+    }
+    if (!selectedWorkflowId && uploadedImageUrls.length > 0 && capabilities.image.maxItems === 0) {
+      toast.error(`${selectedFamily?.name || "This model"} does not support image references.`);
+      return;
+    }
+    if (!selectedWorkflowId && uploadedAudioUrls.length > 0 && capabilities.audio.maxItems === 0) {
+      toast.error(`${selectedFamily?.name || "This model"} does not support audio references.`);
+      return;
+    }
+    if ((currentModel?.promptRequired || veoContinuation?.promptRequired) && !trimmedPrompt) {
+      toast.error(copy.errors.noPromptForModel);
+      return;
+    }
+
+    if (selectedWorkflowId) {
+      const validation = validateVideoWorkflowMedia(
+        selectedWorkflowId,
+        workflowMedia,
+        currentModel,
+      );
+      if (!validation.valid) {
+        toast.error(validation.message);
+        return;
+      }
+    } else if (v2vMode) {
+      if (!uploadedVideoUrl) {
+        toast.error(copy.errors.uploadVideoFirst);
+        return;
+      }
+      if (currentModel?.imageField && !currentModel?.imageOptional && !uploadedImageUrl) {
+        toast.error(copy.errors.uploadReferenceImageForMotion);
+        return;
+      }
+    } else if (isExtendMode) {
+      if (!requestSource?.requestId || (selectedFamily?.id === "seedance-2" && !isContinuationSourceModel(currentModel, requestSource.modelId))) {
+        toast.error(copy.errors.noContinuationSource.replace("{family}", selectedFamily?.name || "Video"));
+        return;
+      }
+    } else if (imageMode) {
+      const requiresImage =
+        currentModel?.imageField && !currentModel?.imageOptional;
+      if (requiresImage && uploadedImageUrls.length === 0) {
+        toast.error(copy.errors.uploadAtLeastOneReferenceImage);
+        return;
+      }
+    } else {
+      if (!trimmedPrompt) {
+        toast.error(copy.errors.enterPromptToGenerate);
+        return;
+      }
+    }
+
+    const rawReferenceParams = selectedWorkflowId
+      ? buildVideoWorkflowMediaParams(currentModel, selectedWorkflowId, workflowMedia)
+      : buildReferenceParams(currentModel, workflowMedia);
+    const videoCapability = getPublicVideoCapability(selectedModel, generationTaskType);
+    const referenceParams = filterPublicVideoProviderParameters(rawReferenceParams, videoCapability);
+    if (Object.keys(rawReferenceParams).some((key) => !Object.hasOwn(referenceParams, key))) {
+      toast.error(copy.errors.generationCapabilityUnavailable);
+      return;
+    }
+    const supplementalParams = filterPublicVideoProviderParameters(
+      buildSupplementalInputPayload(currentModel, generationParameterValues),
+      videoCapability,
+    );
+
+    onGenerationStart?.();
+    setGenerating(true);
+    setGenerateError(null);
+
+    try {
+      let res;
+
+      if (v2vMode) {
+        // V2V: dedicated processV2V handles single-input tools (e.g. watermark
+        // remover) and motion-control models (which take video + image + prompt)
+        const v2vParams = {
+          model: selectedModel,
+          ...publicVideoParameters,
+          ...supplementalParams,
+          ...commonParams,
+          ...referenceParams,
+        };
+        if (currentModel?.hasPrompt && trimmedPrompt) {
+          v2vParams.prompt = trimmedPrompt;
+        }
+        res = await processV2V(apiKey, v2vParams);
+        if (!res?.url) throw new Error(copy.errors.noVideoUrlReturned);
+
+        const genId = res.request_id || res.id || Date.now().toString();
+        const entry = {
+          id: genId,
+          url: res.url,
+          prompt: currentModel?.hasPrompt ? trimmedPrompt : "",
+          model: selectedModel,
+          ...groupedHistorySettings,
+          timestamp: new Date().toISOString(),
+        };
+        addToLocalHistory(entry);
+        if (onGenerationComplete)
+          onGenerationComplete({
+            url: res.url,
+            model: selectedModel,
+            prompt: currentModel?.hasPrompt ? trimmedPrompt : "",
+            type: "video",
+          });
+      } else if (imageMode) {
+        const i2vParams = {
+          model: selectedModel,
+          ...publicVideoParameters,
+          ...supplementalParams,
+          ...commonParams,
+          ...referenceParams,
+        };
+        if (trimmedPrompt) i2vParams.prompt = trimmedPrompt;
+        if (showEffect && selectedEffect) i2vParams.name = selectedEffect;
+
+        res = await generateI2V(apiKey, i2vParams);
+        if (!res?.url) throw new Error(copy.errors.noVideoUrlReturned);
+
+        const genId = res.request_id || res.id || Date.now().toString();
+        setGenerationSources((sources) =>
+          recordGenerationSource(sources, selectedFamily?.id || selectedModel, genId, selectedModel),
+        );
+        const entry = {
+          id: genId,
+          url: res.url,
+          prompt: trimmedPrompt,
+          model: selectedModel,
+          ...(!grouped ? {
+            ...(publicVideoParameters.aspect_ratio ? { aspect_ratio: publicVideoParameters.aspect_ratio } : {}),
+            ...(publicVideoParameters.duration ? { duration: publicVideoParameters.duration } : {}),
+            ...(publicVideoParameters.resolution ? { resolution: publicVideoParameters.resolution } : {}),
+            ...(publicVideoParameters.quality ? { quality: publicVideoParameters.quality } : {}),
+          } : {}),
+          ...groupedHistorySettings,
+          timestamp: new Date().toISOString(),
+        };
+        addToLocalHistory(entry);
+        if (onGenerationComplete)
+          onGenerationComplete({
+            url: res.url,
+            model: selectedModel,
+            prompt: trimmedPrompt,
+            type: "video",
+          });
+      } else {
+        // T2V (including extend mode)
+        const params = {
+          model: selectedModel,
+          ...publicVideoParameters,
+          ...supplementalParams,
+          ...commonParams,
+          ...referenceParams,
+        };
+        if (trimmedPrompt) params.prompt = trimmedPrompt;
+
+        if (isExtendMode) {
+          params.request_id = requestSource.requestId;
+        }
+
+        res = await generateVideo(apiKey, params);
+        if (!res?.url) throw new Error(copy.errors.noVideoUrlReturned);
+
+        const genId = res.request_id || res.id || Date.now().toString();
+        setGenerationSources((sources) =>
+          recordGenerationSource(sources, selectedFamily?.id || selectedModel, genId, selectedModel),
+        );
+        const entry = {
+          id: genId,
+          url: res.url,
+          prompt: trimmedPrompt,
+          model: selectedModel,
+          ...(!grouped && !selectedVeoTool ? {
+            ...(publicVideoParameters.aspect_ratio ? { aspect_ratio: publicVideoParameters.aspect_ratio } : {}),
+            ...(publicVideoParameters.duration ? { duration: publicVideoParameters.duration } : {}),
+            ...(publicVideoParameters.resolution ? { resolution: publicVideoParameters.resolution } : {}),
+          } : {}),
+          ...groupedHistorySettings,
+          timestamp: new Date().toISOString(),
+        };
+        addToLocalHistory(entry);
+        if (onGenerationComplete)
+          onGenerationComplete({
+            url: res.url,
+            model: selectedModel,
+            prompt: trimmedPrompt,
+            type: "video",
+          });
+      }
+    } catch (e) {
+      console.error("[VideoStudio]", e);
+      const errMsg = formatErrorMessage(e, copy.errors.videoGenerationFailed);
+      if (onGenerationError) onGenerationError(errMsg);
+      else toast.error(errMsg);
+    } finally {
+      setGenerating(false);
+      onGenerationEnd?.();
+    }
+  }, [
+    apiKey,
+    copy,
+    prompt,
+    promptDisabled,
+    v2vMode,
+    imageMode,
+    selectedWorkflowId,
+    selectedModel,
+    selectedFamily,
+    selectedAr,
+    selectedDuration,
+    selectedResolution,
+    selectedQuality,
+    selectedEffect,
+    modelParameterValues,
+    showEffect,
+    uploadedImageUrls,
+    uploadedEndImageUrl,
+    uploadedVideoUrls,
+    uploadedAudioUrls,
+    activeWorkflowMediaDraft,
+    generationSources,
+    selectedVeoTool,
+    selectedVeoSource,
+    veoContinuation,
+    mediaUploading,
+    getCurrentModel,
+    getPublicVideoCapability,
+    currentFamilyMode,
+    addToLocalHistory,
+    onGenerationComplete,
+    onGenerationEnd,
+    onGenerationError,
+    onGenerationStart,
+  ]);
+
+  // ── Auto-generation trigger from URL (?auto=1) ───────────────────────────
+  const autoTriggeredRef = useRef(false);
+  useEffect(() => {
+    if (typeof window === "undefined" || autoTriggeredRef.current) return;
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.get("auto") === "1") {
+      autoTriggeredRef.current = true;
+      try {
+        const nextUrl = new URL(window.location.href);
+        nextUrl.searchParams.delete("auto");
+        window.history.replaceState({}, "", nextUrl.toString());
+      } catch {}
+      const timer = setTimeout(() => {
+        handleGenerate();
+      }, 500);
+      return () => clearTimeout(timer);
+    }
+  }, [handleGenerate]);
+
+  const handleNewPrompt = useCallback(() => {
+    setPrompt("");
+    setUploadedImageUrls([]);
+    setUploadedEndImageUrl(null);
+    setUploadedVideoUrls([]);
+    setUploadedAudioUrls([]);
+    workflowDraftSessionRef.current += 1;
+    setWorkflowMediaDrafts({});
+    const first = t2vModels[0];
+    const family = videoModelCatalog.familyByVariantId.get(first.id);
+    const variant = videoModelCatalog.variantById.get(first.id);
+    applyUserSelectedVariant(variant, "t2v", family);
+    setTimeout(() => textareaRef.current?.focus(), 50);
+  }, [applyUserSelectedVariant]);
+
+  const handleExtend = useCallback((requestId, sourceModelId) => {
+    if (!requestId) return;
+    setPrompt("");
+    setUploadedImageUrls([]);
+    setUploadedEndImageUrl(null);
+    setUploadedVideoUrls([]);
+    setUploadedAudioUrls([]);
+    const family = videoModelCatalog.familyById.get("seedance-2");
+    const target = videoModelCatalog.variantById.get("seedance-2-extend");
+    setGenerationSources((sources) =>
+      recordGenerationSource(sources, family.id, requestId, sourceModelId),
+    );
+    applyUserSelectedVariant(target, "t2v", family);
+    setTimeout(() => textareaRef.current?.focus(), 50);
+  }, [applyUserSelectedVariant]);
+
+  // ── derived UI values ────────────────────────────────────────────────────
+  const currentModelObj = selectedVariant?.model;
+  const isExtendMode = currentModelObj?.requiresRequestId;
+  const continuationSource = selectedFamily?.id ? generationSources[selectedFamily.id] : null;
+  const hasContinuationSource = continuationSource?.requestId &&
+    (!selectedTool || isContinuationSourceModel(currentModelObj, continuationSource.modelId));
+  const isMotionControlModel = isMotionControlSelection(selectedModel, v2vMode);
+  const workflowMediaConfig = selectedWorkflowId
+    ? getVideoWorkflowMediaConfig(currentModelObj, selectedWorkflowId)
+    : null;
+  const canUploadImageReference = workflowMediaConfig
+    ? workflowMediaConfig.imageLimit > 0
+    : workflowFamily
+      ? currentModelCapabilities.image.maxItems > 0
+    : currentModelCapabilities.image.maxItems > 0 ||
+      (!v2vMode && Boolean(selectedFamily?.supports?.i2v));
+  const imageTargetVariant = workflowFamily
+    ? selectedVariant
+    : currentModelCapabilities.image.maxItems > 0
+      ? selectedVariant
+      : getFamilyVariant(videoModelCatalog, selectedFamily, "i2v", selectedModel);
+  const imageUploadCapability = getModelMediaCapabilities(imageTargetVariant?.model).image;
+  const imageUploadLimit = workflowMediaConfig
+    ? workflowMediaConfig.imageLimit
+    : imageUploadCapability.separateLastItem
+      ? 1
+      : imageUploadCapability.maxItems;
+  const videoTargetVariant = workflowFamily
+    ? selectedVariant
+    : currentModelCapabilities.video.maxItems > 0
+      ? selectedVariant
+      : getFamilyVariant(videoModelCatalog, selectedFamily, "v2v", selectedModel);
+  const videoUploadLimit = workflowMediaConfig
+    ? workflowMediaConfig.videoLimit
+    : getModelMediaCapabilities(videoTargetVariant?.model).video.maxItems;
+  const audioUploadLimit = workflowMediaConfig
+    ? workflowMediaConfig.audioLimit
+    : currentModelCapabilities.audio.maxItems;
+  const showEndImageUpload = workflowMediaConfig
+    ? workflowMediaConfig.separateEndImage
+    : imageUploadCapability.separateLastItem;
+
+  const promptPlaceholder = selectedWorkflowId === "edit_video"
+    ? copy.placeholders.editVideo
+    : selectedWorkflowId === "extend_uploaded_video"
+      ? copy.placeholders.continueVideo
+      : selectedWorkflowId === "motion_transfer"
+        ? currentModelObj?.promptRequired
+          ? copy.placeholders.motion
+          : copy.placeholders.motionOptional
+        : v2vMode
+          ? currentModelObj?.imageField
+            ? currentModelObj?.promptRequired
+              ? copy.placeholders.motion
+              : copy.placeholders.motionOptional
+            : copy.placeholders.videoReadyRemoveWatermark
+          : imageMode
+            ? currentModelObj?.promptRequired
+              ? copy.placeholders.motionOrEffect
+              : copy.placeholders.motionOrEffectOptional
+            : isExtendMode
+              ? veoContinuation?.promptRequired
+                ? copy.placeholders.continueVideo
+                : copy.placeholders.optionalContinueVideo
+              : copy.placeholders.describeVideo;
+
+  const {
+    triggerRef: workflowTriggerRef,
+    menuRef: workflowMenuRef,
+    focusTargetRef: workflowMenuFocusTargetRef,
+    onTriggerKeyDown: handleWorkflowTriggerKeyDown,
+    onMenuKeyDown: handleWorkflowMenuKeyDown,
+    closeMenu: closeWorkflowMenu,
+  } = usePromptMenu({
+    open: openDropdown === "workflow",
+    onOpen: () => setOpenDropdown("workflow"),
+    onClose: () => setOpenDropdown(null),
+    selectionKey: selectedWorkflowId,
+  });
+
+  const toggleDropdown = (type) => (e) => {
+    e.stopPropagation();
+    setOpenDropdown((prev) => (prev === type ? null : type));
+  };
+
+  // ── render ────────────────────────────────────────────────────────────────
+  return (
+    <div
+      ref={containerRef}
+      className="w-full h-full flex flex-col items-center justify-center bg-transparent relative overflow-hidden"
+    >
+      {/* ── CENTRAL GALLERY AREA ── */}
+      <div className="flex-1 w-full max-w-7xl mx-auto overflow-y-auto custom-scrollbar pb-40 lg:pb-32 px-2">
+        {history.length > 0 ? (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 w-full pt-4 animate-fade-in">
+            {history.map((entry, idx) => {
+              const isSeedance2 = isContinuationSourceModel("seedance-2-extend", entry.model);
+              return (
+                <div
+                  key={entry.id || idx}
+                  className="relative group rounded-2xl overflow-hidden border border-line bg-surface shadow-elevation-2 hover:border-brand-line transition-[border-color,box-shadow] duration-fast ease-standard flex flex-col cursor-pointer"
+                  onClick={() => setFullscreenUrl(entry.url)}
+                >
+                  {failedVideoUrls[entry.url] ? (
+                    <div className="w-full aspect-video flex flex-col items-center justify-center bg-zinc-900 border border-white/5 text-white/50 p-4 text-center">
+                      <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="text-red-400 mb-2">
+                        <circle cx="12" cy="12" r="10" />
+                        <line x1="12" y1="8" x2="12" y2="12" />
+                        <line x1="12" y1="16" x2="12.01" y2="16" />
+                      </svg>
+                      <span className="text-xs font-medium text-white/60">Failed to load video</span>
+                    </div>
+                  ) : (
+                    <video
+                      src={entry.url}
+                      className="w-full aspect-video object-cover bg-black/40 hover:opacity-80 transition-opacity"
+                      controls={false}
+                      loop
+                      muted
+                      playsInline
+                      onError={() => setFailedVideoUrls((prev) => ({ ...prev, [entry.url]: true }))}
+                      onMouseOver={(e) => {
+                        e.target.play().catch(() => {});
+                      }}
+                      onMouseOut={(e) => {
+                        e.target.pause();
+                        e.target.currentTime = 0;
+                      }}
+                    />
+                  )}
+                  
+                  {/* Overlay actions */}
+                  <div className="pointer-events-none absolute top-2 right-2 hidden flex-col gap-2 opacity-0 transition-opacity group-hover:pointer-events-auto group-hover:opacity-100 group-focus-within:pointer-events-auto group-focus-within:opacity-100 md:flex">
+                    <GenerationCopyButtons
+                      prompt={entry.prompt}
+                      onCopyError={onGenerationError}
+                    />
+                    <VideoRelayMenu
+                      videoUrl={entry.url}
+                      currentTab="video"
+                      locale={locale}
+                    />
+                    <button
+                      type="button"
+                      title={copy.gallery.download}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        downloadFile(entry.url, `video-${entry.id || idx}.mp4`);
+                      }}
+                      className="p-2 bg-overlay-glass backdrop-blur-md rounded-full text-ink hover:bg-brand hover:text-ink-on-accent active:bg-brand-active active:scale-95 active:duration-instant transition-[background-color,color,transform] duration-fast ease-standard border border-line-subtle cursor-pointer focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-brand-ring"
+                    >
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                        <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3" />
+                      </svg>
+                    </button>
+                    {isSeedance2 && (
+                      <button
+                        type="button"
+                        title={copy.gallery.extendSeedance}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleExtend(entry.id, entry.model);
+                        }}
+                        className="p-2 bg-overlay-glass backdrop-blur-md rounded-full text-ink hover:bg-brand hover:text-ink-on-accent active:bg-brand-active active:scale-95 active:duration-instant transition-[background-color,color,transform] duration-fast ease-standard border border-line-subtle cursor-pointer focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-brand-ring"
+                      >
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                          <path d="M5 12h14M12 5l7 7-7 7" />
+                        </svg>
+                      </button>
+                    )}
+                    <button
+                      type="button"
+                      title={copy.gallery.delete}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        if (confirm(copy.gallery.confirmDelete)) {
+                          handleDeleteEntry(entry, idx).catch((err) => {
+                            onGenerationError?.(err.message || copy.errors.deleteItemFailed);
+                          });
+                        }
+                      }}
+                      className="p-2 bg-overlay-glass backdrop-blur-md rounded-full text-danger hover:bg-danger hover:text-ink-on-accent active:scale-95 active:duration-instant transition-[background-color,color,transform] duration-fast ease-standard border border-line-subtle cursor-pointer focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-danger"
+                    >
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                        <polyline points="3 6 5 6 21 6" />
+                        <path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2" />
+                        <line x1="10" y1="11" x2="10" y2="17" />
+                        <line x1="14" y1="11" x2="14" y2="17" />
+                      </svg>
+                    </button>
+                  </div>
+                  <MobileGenerationActions
+                    prompt={entry.prompt}
+                    onCopyError={onGenerationError}
+                    actions={[
+                      {
+                        kind: "download",
+                        label: copy.gallery.download,
+                        onSelect: () =>
+                          downloadFile(entry.url, `video-${entry.id || idx}.mp4`),
+                      },
+                      isSeedance2 && {
+                        kind: "extend",
+                        label: copy.gallery.extend,
+                        onSelect: () => handleExtend(entry.id, entry.model),
+                      },
+                      {
+                        kind: "delete",
+                        label: copy.gallery.delete,
+                        danger: true,
+                        onSelect: () => {
+                          if (confirm(copy.gallery.confirmDelete)) {
+                            handleDeleteEntry(entry, idx).catch((err) => {
+                              onGenerationError?.(err.message || copy.errors.deleteItemFailed);
+                            });
+                          }
+                        },
+                      },
+                    ]}
+                  />
+
+                  {/* Prompt & Details */}
+                  <div className="p-3 bg-black/80 backdrop-blur-sm border-t border-white/5 flex-1 flex flex-col justify-between gap-2">
+                    <p className="text-white/70 text-xs line-clamp-3 leading-relaxed" title={entry.prompt}>
+                      {entry.prompt || copy.gallery.noPromptProvided}
+                    </p>
+                    <div className="flex items-center justify-between mt-1 flex-wrap gap-1">
+                      <div className="flex items-center gap-2">
+                        <span className="text-[10px] font-bold text-brand px-2 py-0.5 bg-brand-soft rounded border border-brand-line whitespace-nowrap capitalize">
+                          {entry.model?.replace("-", " ") || copy.gallery.fallbackTitle}
+                        </span>
+                        <div className="flex gap-2">
+                          {entry.resolution && (
+                            <span className="text-[10px] text-white/40">{entry.resolution}</span>
+                          )}
+                          {entry.duration && (
+                            <span className="text-[10px] text-white/40">{entry.duration}s</span>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        ) : (
+          <div className="flex flex-col items-center justify-center h-full animate-fade-in min-h-[50vh]">
+            {/* Overlapping floating cards */}
+            <div className="flex items-center justify-center gap-1.5 md:gap-3 mb-10 select-none scale-90 sm:scale-100">
+              <div className="w-16 h-20 sm:w-24 sm:h-28 rounded-2xl border border-white/10 shadow-elevation-3 -rotate-[12deg] transform hover:rotate-0 hover:scale-110 hover:z-20 transition-transform duration-fast ease-standard overflow-hidden bg-white/[0.01] flex-shrink-0">
+                <img
+                  src="https://d3adwkbyhxyrtq.cloudfront.net/webassets/videomodels/sdxl-image.avif"
+                  alt={copy.creativeAssets.asset1}
+                  className="w-full h-full object-cover"
+                />
+              </div>
+              <div className="w-16 h-20 sm:w-24 sm:h-28 rounded-2xl border border-white/10 shadow-elevation-3 -rotate-[4deg] transform hover:rotate-0 hover:scale-110 hover:z-20 transition-transform duration-fast ease-standard overflow-hidden bg-white/[0.01] -ml-3 sm:-ml-4 flex-shrink-0">
+                <img
+                  src="https://d3adwkbyhxyrtq.cloudfront.net/webassets/videomodels/chroma-image.avif"
+                  alt={copy.creativeAssets.asset2}
+                  className="w-full h-full object-cover"
+                />
+              </div>
+              <div className="w-16 h-16 sm:w-24 sm:h-24 rounded-full border border-white/10 shadow-elevation-3 rotate-[6deg] transform hover:rotate-0 hover:scale-110 hover:z-20 transition-transform duration-fast ease-standard overflow-hidden bg-white/[0.01] -ml-3 sm:-ml-4 flex-shrink-0">
+                <img
+                  src="https://d3adwkbyhxyrtq.cloudfront.net/webassets/videomodels/neta-lumina.avif"
+                  alt={copy.creativeAssets.asset3}
+                  className="w-full h-full object-cover"
+                />
+              </div>
+              <div className="w-16 h-20 sm:w-24 sm:h-28 rounded-2xl border border-white/10 shadow-elevation-3 rotate-[12deg] transform hover:rotate-0 hover:scale-110 hover:z-20 transition-transform duration-fast ease-standard overflow-hidden bg-white/[0.01] -ml-3 sm:-ml-4 flex-shrink-0">
+                <img
+                  src="https://d3adwkbyhxyrtq.cloudfront.net/webassets/videomodels/perfect-pony-xl.avif"
+                  alt={copy.creativeAssets.asset4}
+                  className="w-full h-full object-cover"
+                />
+              </div>
+            </div>
+
+            <h1 className="text-2xl sm:text-4xl md:text-5xl font-extrabold tracking-tight mb-4 text-center px-4 flex flex-col items-center">
+              {!selectedTool && !selectedVeoTool && <span className="text-white font-black uppercase text-xl sm:text-3xl tracking-wide mb-1 opacity-90">{copy.empty.heading}</span>}
+              <span className="text-brand font-black uppercase text-2xl sm:text-4xl sm:mt-1 tracking-tight">
+                {selectedTool || selectedVeoTool || selectedPickerEntry?.groupedVideo ? selectedPickerLabel : (selectedFamily?.name || defaultFamily?.name || "Video")}
+              </span>
+            </h1>
+            {!selectedTool && !selectedVeoTool && (
+              <p className="text-white/40 text-xs sm:text-sm font-medium tracking-wide text-center max-w-lg leading-relaxed px-4">
+                {groupedConfiguration && selectedVariant?.model
+                  ? getVideoModeDescription(selectedVariant.model, selectedWorkflowId, groupCopy)
+                  : copy.empty.subtitle}
+              </p>
+            )}
+          </div>
+        )}
+      </div>
+
+      {/* ── BOTTOM PROMPT BAR ── */}
+      <PromptComposer>
+          <div className="flex flex-col gap-3">
+            {/* Inline list of uploaded media files */}
+            <div className="flex items-start gap-2.5 flex-wrap">
+              {selectedWorkflowId ? (
+                <>
+                  {workflowMediaSlots.flatMap((slot) => {
+                    const values = activeWorkflowMediaDraft?.[slot.id] || [];
+                    return values.map((url, index) => (
+                      <ReferencePreview
+                        copy={copy}
+                        key={`${slot.id}:${index}:${url}`}
+                        type={slot.mediaType}
+                        url={url}
+                        index={index}
+                        onRemove={(itemIndex) =>
+                          removeWorkflowMedia(slot.id, itemIndex)
+                        }
+                        label={
+                          values.length > 1
+                            ? `${slot.label} · ${index + 1}`
+                            : slot.label
+                        }
+                        description={
+                          values.length > 1
+                            ? `${slot.description} ${index + 1}`
+                            : slot.description
+                        }
+                      />
+                    ));
+                  })}
+
+                  {workflowMediaSlots.map((slot) => {
+                    const values = activeWorkflowMediaDraft?.[slot.id] || [];
+                    const remaining = getVideoWorkflowSlotRemaining(
+                      slot,
+                      activeWorkflowMediaDraft,
+                    );
+                    if (remaining <= 0) return null;
+                    const uploadKey = `${workflowMediaDraftKey}:${slot.id}`;
+                    const uploading = workflowUploadSlotId === uploadKey;
+                    const progress = slot.mediaType === "image"
+                      ? imageProgress
+                      : slot.mediaType === "video"
+                        ? videoProgress
+                        : audioProgress;
+                    return (
+                      <ReferenceUploadButton
+                  copy={copy}
+                        key={slot.id}
+                        accept={`${slot.mediaType}/*`}
+                        multiple={remaining > 1}
+                        onChange={async (event) => {
+                          const files = Array.from(event.target.files || []);
+                          event.target.value = "";
+                          await uploadWorkflowSlotFiles(
+                            workflowMediaDraftKey,
+                            slot,
+                            files,
+                          );
+                        }}
+                        title={`${slot.description || slot.label}${slot.required ? " (required)" : " (optional)"}`}
+                        uploading={uploading}
+                        progress={progress}
+                        type={slot.mediaType}
+                        label={slot.label}
+                        required={slot.required}
+                        disabled={Boolean(workflowUploadSlotId)}
+                      />
+                    );
+                  })}
+                </>
+              ) : (
+                <>
+              {uploadedImageUrls.map((url, index) => (
+                <ReferencePreview
+                        copy={copy}
+                  key={url}
+                  type="image"
+                  url={url}
+                  index={index}
+                  onRemove={removeImageAtIndex}
+                  label={
+                    uploadedImageUrls.length > 1
+                      ? `${copy.media.image} · ${index + 1}`
+                      : copy.media.image
+                  }
+                />
+              ))}
+
+              {uploadedEndImageUrl && (
+                <ReferencePreview
+                        copy={copy}
+                  type="image"
+                  url={uploadedEndImageUrl}
+                  index={0}
+                  onRemove={clearEndImage}
+                  label={copy.media.endFrame}
+                />
+              )}
+
+              {uploadedVideoUrls.map((url, index) => (
+                <ReferencePreview
+                        copy={copy}
+                  key={url}
+                  type="video"
+                  url={url}
+                  index={index}
+                  onRemove={removeVideoAtIndex}
+                  label={
+                    uploadedVideoUrls.length > 1
+                      ? `${copy.media.video} · ${index + 1}`
+                      : copy.media.video
+                  }
+                />
+              ))}
+
+              {uploadedAudioUrls.map((url, index) => (
+                <ReferencePreview
+                        copy={copy}
+                  key={url}
+                  type="audio"
+                  url={url}
+                  index={index}
+                  onRemove={removeAudioAtIndex}
+                  label={
+                    uploadedAudioUrls.length > 1
+                      ? `${copy.media.audio} · ${index + 1}`
+                      : copy.media.audio
+                  }
+                />
+              ))}
+
+              {/* Upload trigger buttons */}
+              {canUploadImageReference && uploadedImageUrls.length < imageUploadLimit && (
+                <ReferenceUploadButton
+                  copy={copy}
+                  inputRef={imageFileInputRef}
+                  accept="image/*"
+                  multiple={imageUploadLimit - uploadedImageUrls.length > 1}
+                  onChange={handleImageFileChange}
+                  onClick={() => imageFileInputRef.current?.click()}
+                  title={
+                    selectedWorkflowId === "keyframes"
+                      ? copy.upload.uploadStartFrame
+                      : copy.upload.uploadUpToReferenceImages.replace('{count}', imageUploadLimit)
+                  }
+                  uploading={imageUploading}
+                  progress={imageProgress}
+                  type="image"
+                />
+              )}
+
+              {showEndImageUpload && !uploadedEndImageUrl && (
+                <ReferenceUploadButton
+                  copy={copy}
+                  inputRef={endImageFileInputRef}
+                  accept="image/*"
+                  multiple={false}
+                  onChange={handleEndImageFileChange}
+                  onClick={() => endImageFileInputRef.current?.click()}
+                  title={copy.upload.uploadEndFrame}
+                  uploading={endImageUploading}
+                  progress={endImageProgress}
+                  type="image"
+                />
+              )}
+
+              {videoUploadLimit > 0 && uploadedVideoUrls.length < videoUploadLimit && (
+                <ReferenceUploadButton
+                  copy={copy}
+                  inputRef={videoFileInputRef}
+                  accept="video/*"
+                  multiple={videoUploadLimit - uploadedVideoUrls.length > 1}
+                  onChange={handleVideoFileChange}
+                  onClick={() => videoFileInputRef.current?.click()}
+                  title={`Upload up to ${videoUploadLimit} reference videos`}
+                  uploading={videoUploading}
+                  progress={videoProgress}
+                  type="video"
+                />
+              )}
+
+              {audioUploadLimit > 0 && uploadedAudioUrls.length < audioUploadLimit && (
+                <ReferenceUploadButton
+                  copy={copy}
+                  inputRef={audioFileInputRef}
+                  accept="audio/*"
+                  multiple={audioUploadLimit - uploadedAudioUrls.length > 1}
+                  onChange={handleAudioFileChange}
+                  onClick={() => audioFileInputRef.current?.click()}
+                  title={`Upload up to ${audioUploadLimit} reference audio files`}
+                  uploading={audioUploading}
+                  progress={audioProgress}
+                  type="audio"
+                />
+              )}
+                </>
+              )}
+            </div>
+
+            {/* Quick Video Presets Pills */}
+            {!(selectedVeoTool && promptDisabled) && !promptDisabled && (
+              <div className="w-full flex items-center gap-1.5 overflow-x-auto scrollbar-rail py-1">
+                <span className="text-micro font-bold uppercase tracking-wider text-ink-subtle shrink-0 mr-1">
+                  {relayCopy.presetsTitle}
+                </span>
+                {relayCopy.presets.map((preset) => (
+                  <button
+                    key={preset.id}
+                    type="button"
+                    onClick={() =>
+                      setPrompt((prev) =>
+                        prev ? `${prev.trim()}, ${preset.prompt}` : preset.prompt,
+                      )
+                    }
+                    className="rounded-full border border-line bg-wash px-2.5 py-0.5 text-micro font-medium text-ink-muted hover:border-brand-line hover:bg-wash-strong hover:text-ink transition-colors whitespace-nowrap shrink-0"
+                  >
+                    {preset.label}
+                  </button>
+                ))}
+              </div>
+            )}
+
+            {/* Prompt textarea */}
+            <div className="flex-1 flex flex-col gap-1">
+              {!(selectedVeoTool && promptDisabled) && (
+              <PromptInputField
+                ref={textareaRef}
+                value={prompt}
+                onChange={handlePromptInput}
+                onEnter={handleGenerate}
+                mention={mention}
+                mentionTitle={copy.promptBar?.mentionTitle}
+                placeholder={promptPlaceholder}
+                disabled={promptDisabled}
+                className="relative"
+              />
+              )}
+            </div>
+          </div>
+
+          {/* Extend banner */}
+          {selectedVeoTool ? (
+            <div className="mx-3 rounded-xl border border-brand-line bg-brand-soft px-3 py-2">
+              {selectedVeoSource ? (
+                <label className="flex min-w-0 items-center gap-3 text-xs text-white/70">
+                  <span className="shrink-0">{copy.veo.sourceVideo}</span>
+                  <select
+                    className="min-w-0 flex-1 rounded-xl border border-line bg-surface px-2 py-2 text-xs text-ink"
+                    value={selectedVeoSource.requestId}
+                    onChange={(event) => setSelectedVeoSourceId(event.target.value)}
+                  >
+                    {veoSources.map((entry, index) => (
+                      <option key={entry.requestId} value={entry.requestId}>{index + 1}. {entry.prompt || "Veo 3.1"}</option>
+                    ))}
+                  </select>
+                </label>
+              ) : (
+                <p className="text-xs text-white/60">{copy.veo.sourceHelp[selectedVeoTool.key]}</p>
+              )}
+            </div>
+          ) : isExtendMode && (
+            <div className="flex items-center gap-2 px-3 py-1.5 mx-3 bg-brand-soft border border-brand-line rounded-lg text-[10px] text-brand font-medium tracking-tight">
+              <svg
+                width="13"
+                height="13"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2.5"
+              >
+                <path d="M5 12h14M12 5l7 7-7 7" />
+              </svg>
+              <span>{hasContinuationSource
+                ? copy.extend.continuingGeneration.replace('{family}', selectedFamily?.name || "Video")
+                : copy.errors.noContinuationSource.replace("{family}", selectedFamily?.name || "Video")}</span>
+            </div>
+          )}
+
+          {groupedConfiguration && selectedVariant?.model?.aspectRatioMode === "inherited" && (
+            <p className="px-2 text-[10px] text-white/40">{groupCopy.inheritedFormat}</p>
+          )}
+          {groupedConfiguration && selectedWorkflowId === "extend_uploaded_video" && groupedResolution.options.length === 0 && (
+            <p className="px-2 text-[10px] text-white/40">{groupCopy.inheritedVideoResolution}</p>
+          )}
+          {groupedResolution?.label && (
+            <p className="px-2 text-[10px] text-white/40">{groupCopy.resolutionUnknown}</p>
+          )}
+
+          {/* Bottom row: controls + generate */}
+          <PromptFooter>
+            <PromptControls ref={dropdownRef}>
+              {/* Model btn */}
+              <div className="relative">
+                <button
+                  type="button"
+                  onClick={toggleDropdown("model")}
+                  className={promptControlClassName({
+                    active: openDropdown === "model",
+                  })}
+                >
+                  <div className="w-4 h-4 rounded overflow-hidden shrink-0 flex items-center justify-center bg-white/5">
+                    {(() => {
+                      const selectedModelProvider = selectedFamily?.provider || 'muapi';
+                      const logo = getProviderLogo(selectedModelProvider, selectedFamily?.id || selectedModel);
+                      const style = getProviderStyle(selectedModelProvider);
+                      return logo ? (
+                        <img 
+                          src={logo} 
+                          alt="" 
+                          className={`w-full h-full object-contain ${invertLogos.includes(selectedModelProvider) ? "invert" : ""}`} 
+                          onError={(e) => {
+                            e.currentTarget.style.display = "none";
+                          }}
+                        />
+                      ) : (
+                        <span className="text-[9px] font-bold text-white/80 uppercase">
+                          {style.text || "V"}
+                        </span>
+                      );
+                    })()}
+                </div>
+                <span
+                  title={selectedPickerDisplayLabel}
+                  className={`${PROMPT_CONTROL_LABEL_CLASS} min-w-0 max-w-[148px] truncate whitespace-nowrap sm:max-w-[220px]`}
+                >
+                    {selectedPickerDisplayLabel}
+                  </span>
+                  <PromptChevronIcon />
+                </button>
+                {openDropdown === "model" && (
+                  <PromptPopover
+                    onClick={(e) => e.stopPropagation()}
+                    className="w-[calc(100vw-2rem)] sm:w-[380px] max-h-[78vh] flex flex-col overflow-hidden p-0"
+                    fitViewport={Boolean(groupedConfiguration)}
+                    solid={Boolean(groupedConfiguration)}
+                    glass
+                  >
+                    <FrontendModelPicker
+                      studioType="video"
+                      selectedModel={selectedModel}
+                      onSelect={handleModelSelect}
+                      onClose={() => setOpenDropdown(null)}
+                      copy={copy}
+                      locale={locale}
+                    />
+                  </PromptPopover>
+                )}
+              </div>
+
+              {workflowControlState.kind !== "hidden" && (
+                <div className="relative flex items-center gap-1">
+                  <button
+                    type="button"
+                    ref={workflowTriggerRef}
+                    id={workflowControlId}
+                    aria-haspopup={
+                      workflowControlState.kind === "menu" ? "menu" : undefined
+                    }
+                    aria-controls={
+                      workflowControlState.kind === "menu" ? workflowMenuId : undefined
+                    }
+                    aria-expanded={
+                      workflowControlState.kind === "menu"
+                        ? openDropdown === "workflow"
+                        : undefined
+                    }
+                    aria-pressed={
+                      workflowControlState.kind === "direct"
+                        ? Boolean(selectedWorkflowId)
+                        : undefined
+                    }
+                    onClick={(event) => {
+                      if (workflowControlState.kind === "direct") {
+                        event.stopPropagation();
+                        if (selectedWorkflowId) {
+                          clearWorkflow();
+                        } else if (workflowControlState.workflow) {
+                          handleWorkflowSelect(workflowControlState.workflow.id);
+                        }
+                        setOpenDropdown(null);
+                        return;
+                      }
+                      event.stopPropagation();
+                      if (openDropdown === "workflow") {
+                        setOpenDropdown(null);
+                        return;
+                      }
+                      workflowMenuFocusTargetRef.current = "selected";
+                      setOpenDropdown("workflow");
+                    }}
+                    onKeyDown={
+                      workflowControlState.kind === "menu"
+                        ? handleWorkflowTriggerKeyDown
+                        : undefined
+                    }
+                    className={promptControlClassName({
+                      active: openDropdown === "workflow",
+                    })}
+                  >
+                    <span className={PROMPT_CONTROL_LABEL_CLASS}>
+                      {groupedConfiguration
+                        ? groupCopy.modes[selectedWorkflowId || "text"]
+                        : getVideoWorkflowControlLabel(selectedWorkflow)}
+                    </span>
+                    {workflowControlState.kind === "menu" && <PromptChevronIcon />}
+                  </button>
+                  {workflowControlState.kind === "menu" && openDropdown === "workflow" && (
+                    <PromptPopover
+                      className={groupedConfiguration ? "w-[300px] max-w-[calc(100vw-32px)]" : "min-w-[210px]"}
+                      fitViewport={Boolean(groupedConfiguration)}
+                      solid={Boolean(groupedConfiguration)}
+                      style={{ maxHeight: groupedConfiguration ? "65vh" : "55vh" }}
+                      onClick={(event) => event.stopPropagation()}
+                    >
+                      <PromptPopoverHeader>{copy.dropdowns.source}</PromptPopoverHeader>
+                      <div
+                        ref={workflowMenuRef}
+                        id={workflowMenuId}
+                        role="menu"
+                        aria-labelledby={workflowControlId}
+                        onKeyDown={handleWorkflowMenuKeyDown}
+                        className="flex flex-col gap-1"
+                      >
+                        {(groupedConfiguration ? groupedModes : workflowFamily.workflows).map((workflow) => (
+                          <PromptMenuItem
+                            key={workflow.id || "text"}
+                            selected={selectedWorkflowId === workflow.id}
+                            disabled={workflow.disabled}
+                            wrapDescription={Boolean(groupedConfiguration)}
+                            description={groupedConfiguration && (
+                              <>
+                                {workflow.description}
+                                {workflow.adjustmentDescription && (
+                                  <span className="mt-1 block text-amber-200/85">{workflow.adjustmentDescription}</span>
+                                )}
+                              </>
+                            )}
+                            className="disabled:opacity-40 disabled:cursor-not-allowed"
+                            onClick={(event) => {
+                              event.stopPropagation();
+                              if (workflow.id === null) clearWorkflow();
+                              else handleWorkflowSelect(workflow.id);
+                              closeWorkflowMenu(true);
+                            }}
+                          >
+                            {workflow.label}
+                          </PromptMenuItem>
+                        ))}
+                        {!groupedConfiguration && selectedWorkflow && workflowFamily?.hasBase && (
+                          <div className="mt-2 border-t border-white/[0.05] pt-2">
+                            <button
+                              type="button"
+                              role="menuitemradio"
+                              aria-checked={false}
+                              onClick={(event) => {
+                                event.stopPropagation();
+                                clearWorkflow();
+                                closeWorkflowMenu(true);
+                              }}
+                              className="flex min-h-9 w-full items-center gap-2 rounded-xl px-3 py-2 text-left text-[11px] font-semibold text-white/40 transition-colors hover:bg-white/[0.04] hover:text-white/70 focus:outline-none focus-visible:bg-white/[0.04] focus-visible:text-white/70"
+                            >
+                              <svg
+                                width="13"
+                                height="13"
+                                viewBox="0 0 24 24"
+                                fill="none"
+                                stroke="currentColor"
+                                strokeWidth="2"
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                aria-hidden="true"
+                              >
+                                <path d="M3 12a9 9 0 1 0 3-6.7L3 8" />
+                                <path d="M3 3v5h5" />
+                              </svg>
+                              <span>{copy.dropdowns.baseGeneration}</span>
+                            </button>
+                          </div>
+                        )}
+                      </div>
+                    </PromptPopover>
+                  )}
+                </div>
+              )}
+
+              <VideoOptionControl
+                label={groupCopy.speed}
+                field={groupedSpeed}
+                open={openDropdown === "generation-speed"}
+                onToggle={toggleDropdown("generation-speed")}
+                onSelect={(option) => {
+                  handleGroupedOptionChange("speed", option.value);
+                  setOpenDropdown(null);
+                }}
+                copy={groupCopy}
+              />
+
+              {groupedConfiguration ? (
+                <VideoSettingsControl
+                  profile={groupedProfile}
+                  onDefaultResolution={groupedConfiguration.profile === "legacy" && groupedConfiguration.resolution !== "default"
+                    ? () => handleGroupedOptionChange("resolution", "default") : undefined}
+                  qualities={commonOptions.qualities}
+                  quality={selectedQuality}
+                  onProfileChange={(value) => handleGroupedOptionChange("profile", value)}
+                  onQualityChange={setSelectedQuality}
+                  inputs={supplementalInputs}
+                  values={modelParameterValues}
+                  onChange={handleModelParameterChange}
+                  open={openDropdown === "parameters"}
+                  onToggle={toggleDropdown("parameters")}
+                  copy={groupCopy}
+                />
+              ) : (
+                <ModelParameterControls
+                  inputs={supplementalInputs}
+                  values={modelParameterValues}
+                  onChange={handleModelParameterChange}
+                  open={openDropdown === "parameters"}
+                  onToggle={toggleDropdown("parameters")}
+                />
+              )}
+
+              {/* Unified Video Specification (Aspect Ratio · Resolution) */}
+              {(() => {
+                const currentVideoAspectRatios = groupedConfiguration
+                  ? commonOptions.aspectRatios
+                  : getCurrentAspectRatios(selectedModel);
+
+                const currentVideoResolutions = groupedConfiguration
+                  ? (groupedResolution?.options || [])
+                  : getCurrentResolutions(selectedModel);
+
+                const currentVideoResValue = groupedConfiguration
+                  ? groupedResolution?.value
+                  : selectedResolution;
+
+                const currentVideoResDisplayLabel = (() => {
+                  if (groupedConfiguration) {
+                    const found = groupedResolution?.options?.find(
+                      (o) => o.value === currentVideoResValue,
+                    );
+                    return found?.label || currentVideoResValue || "720P";
+                  }
+                  return selectedResolution ? String(selectedResolution).toUpperCase() : "720P";
+                })();
+
+                const shouldShowSpec =
+                  showAr ||
+                  showResolution ||
+                  (groupedResolution?.options && groupedResolution.options.length > 0);
+
+                if (!shouldShowSpec) return null;
+
+                return (
+                  <div className="relative">
+                    <button
+                      type="button"
+                      onClick={toggleDropdown("spec")}
+                      className={promptControlClassName({
+                        active: openDropdown === "spec",
+                      })}
+                    >
+                      <svg
+                        width="15"
+                        height="15"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="2"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        className="opacity-60 flex-shrink-0"
+                      >
+                        <rect x="2" y="4" width="20" height="16" rx="2" />
+                        <path d="M10 9l5 3-5 3V9z" fill="currentColor" fillOpacity="0.4" />
+                      </svg>
+                      <span className={PROMPT_CONTROL_LABEL_CLASS}>
+                        {selectedAr} · {currentVideoResDisplayLabel}
+                      </span>
+                      <PromptChevronIcon />
+                    </button>
+
+                    {openDropdown === "spec" && (
+                      <PromptPopover
+                        onClick={(e) => e.stopPropagation()}
+                        className="w-[calc(100vw-2rem)] sm:w-[380px] p-4 flex flex-col"
+                      >
+                        <VideoSpecPopover
+                          aspectRatios={currentVideoAspectRatios}
+                          selectedAr={selectedAr}
+                          onSelectAr={(r) => setSelectedAr(r)}
+                          aspectRatioHelp={aspectRatioHelp}
+                          resolutions={currentVideoResolutions}
+                          selectedResolution={currentVideoResValue}
+                          onSelectResolution={(opt) => {
+                            if (groupedConfiguration) {
+                              handleGroupedResolutionChange(opt);
+                            } else {
+                              const val = typeof opt === "object" ? opt.value : opt;
+                              setSelectedResolution(val);
+                              setOpenDropdown(null);
+                            }
+                          }}
+                          copy={copy}
+                        />
+                      </PromptPopover>
+                    )}
+                  </div>
+                );
+              })()}
+
+              {/* Duration btn */}
+              {groupedConfiguration && (
+                <VideoOptionControl
+                  label={selectedWorkflowId === "extend_uploaded_video" ? groupCopy.extensionDuration : copy.dropdowns.duration}
+                  field={{
+                    key: "duration",
+                    value: selectedDuration,
+                    options: commonOptions.durations.map((value) => ({ value, label: getVideoDurationLabel(value, groupCopy) })),
+                  }}
+                  icon={<PromptDurationIcon />}
+                  open={openDropdown === "duration"}
+                  onToggle={toggleDropdown("duration")}
+                  onSelect={(option) => {
+                    setSelectedDuration(option.value);
+                    setOpenDropdown(null);
+                  }}
+                  copy={groupCopy}
+                />
+              )}
+              {!groupedConfiguration && showDuration && (
+                <div className="relative">
+                  <button
+                    type="button"
+                    onClick={toggleDropdown("duration")}
+                    className={promptControlClassName({
+                      active: openDropdown === "duration",
+                    })}
+                  >
+                    <PromptDurationIcon />
+                    <span className={PROMPT_CONTROL_LABEL_CLASS}>
+                      {selectedDuration}s
+                    </span>
+                  </button>
+                  {openDropdown === "duration" && (
+                    <PromptPopover
+                      onClick={(e) => e.stopPropagation()}
+                    >
+                      <PromptPopoverHeader>
+                        {copy.dropdowns.duration}
+                      </PromptPopoverHeader>
+                      <PromptMenuList>
+                        {getCurrentDurations(selectedModel).map((d) => (
+                          <PromptMenuItem
+                            key={d}
+                            selected={selectedDuration === d}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setSelectedDuration(d);
+                              setOpenDropdown(null);
+                            }}
+                          >
+                            {d}s
+                          </PromptMenuItem>
+                        ))}
+                      </PromptMenuList>
+                    </PromptPopover>
+                  )}
+                </div>
+              )}
+
+              {/* Effect btn */}
+              {showEffect && (
+                <div className="relative">
+                  <button
+                    type="button"
+                    onClick={toggleDropdown("effect")}
+                    className={promptControlClassName({
+                      active: openDropdown === "effect",
+                    })}
+                  >
+                    <svg
+                      width="16"
+                      height="16"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                      className="opacity-40 text-white"
+                    >
+                      <path d="M5 3l14 9-14 9V3z" />
+                    </svg>
+                    <span className={`${PROMPT_CONTROL_LABEL_CLASS} max-w-[140px] truncate`}>
+                      {selectedEffect || copy.dropdowns.effect}
+                    </span>
+                  </button>
+                  {openDropdown === "effect" && (
+                    <PromptPopover
+                      onClick={(e) => e.stopPropagation()}
+                      className="min-w-[200px]"
+                    >
+                      <PromptPopoverHeader>
+                        {copy.dropdowns.effectType}
+                      </PromptPopoverHeader>
+                      <PromptMenuList>
+                        {getEffectsForI2VModel(selectedModel).map((eff) => (
+                          <PromptMenuItem
+                            key={eff}
+                            selected={selectedEffect === eff}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setSelectedEffect(eff);
+                              setOpenDropdown(null);
+                            }}
+                          >
+                            {eff}
+                          </PromptMenuItem>
+                        ))}
+                      </PromptMenuList>
+                    </PromptPopover>
+                  )}
+                </div>
+              )}
+
+              {canUploadImageReference && (
+                <button
+                  type="button"
+                  className={promptControlClassName()}
+                  onClick={() => setIsDrawModalOpen(true)}
+                >
+                  <svg
+                    width="16"
+                    height="16"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2.5"
+                    className="opacity-40 text-white group-hover:text-brand transition-colors"
+                  >
+                    <path d="M12 20h9" />
+                    <path d="M16.5 3.5a2.121 2.121 0 013 3L7 19l-4 1 1-4L16.5 3.5z" />
+                  </svg>
+                  <span className={PROMPT_CONTROL_LABEL_CLASS}>{copy.controls.draw}</span>
+                </button>
+              )}
+            </PromptControls>
+
+            {/* Right actions: Cost in credits + Generate button */}
+            <div className="flex items-center gap-3 self-end sm:self-center shrink-0">
+              {(() => {
+                const isZh = String(locale || "").startsWith("zh");
+                return (
+                  <div className="flex items-center gap-1.5 px-2 py-1 select-none whitespace-nowrap">
+                    <span className="text-[11px] text-white/50">{isZh ? "消耗" : "Cost"}</span>
+                    <ModelPriceTag
+                      ids={selectedModel}
+                      locale={locale}
+                      className="text-xs font-semibold text-white/90"
+                    />
+                  </div>
+                );
+              })()}
+
+              <PromptAction
+                onClick={handleGenerate}
+                disabled={generating || mediaUploading || (selectedTool?.group === "continueGenerated" && !hasContinuationSource) || (selectedVeoTool && !selectedVeoSource)}
+              >
+                {generating ? (
+                  <>
+                    <span className="animate-spin inline-block text-black">
+                      ◌
+                    </span>{" "}
+                    {copy.controls.generating}
+                  </>
+                ) : (
+                  <>
+                    <span>{copy.controls.generate}</span>
+                  </>
+                )}
+              </PromptAction>
+            </div>
+          </PromptFooter>
+      </PromptComposer>
+
+      {/* ── FULLSCREEN VIDEO MODAL ── */}
+      {fullscreenUrl && (
+        <div 
+          className="fixed inset-0 z-modal flex items-center justify-center bg-black/95 backdrop-blur-sm animate-fade-in"
+          onClick={() => setFullscreenUrl(null)}
+        >
+          <button
+            type="button"
+            className="absolute top-6 right-6 p-3 bg-white/10 hover:bg-white/20 rounded-full text-white transition-colors border border-white/10"
+            onClick={(e) => {
+              e.stopPropagation();
+              setFullscreenUrl(null);
+            }}
+          >
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+              <line x1="18" y1="6" x2="6" y2="18" />
+              <line x1="6" y1="6" x2="18" y2="18" />
+            </svg>
+          </button>
+          {fullscreenVideoError ? (
+            <div
+              className="flex flex-col items-center justify-center p-8 bg-zinc-900/90 rounded-2xl border border-white/10 text-white text-center"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="text-red-400 mb-3">
+                <circle cx="12" cy="12" r="10" />
+                <line x1="12" y1="8" x2="12" y2="12" />
+                <line x1="12" y1="16" x2="12.01" y2="16" />
+              </svg>
+              <span className="text-sm font-medium text-white/70">Failed to load video preview</span>
+            </div>
+          ) : (
+            <video 
+              src={fullscreenUrl} 
+              controls 
+              autoPlay 
+              loop 
+              className="max-w-[95vw] max-h-[95vh] rounded-2xl shadow-2xl object-contain animate-scale-up" 
+              onClick={(e) => e.stopPropagation()}
+              onError={(e) => { setFullscreenVideoError(true); e.target.style.display = 'none'; }}
+            />
+          )}
+        </div>
+      )}
+
+      <DrawModal
+        isOpen={isDrawModalOpen}
+        onClose={() => setIsDrawModalOpen(false)}
+        apiKey={apiKey}
+        batchSize={1}
+        onAddHistoryItem={handleDrawReference}
+      />
+      <Toaster position="top-right" duration={5000} />
+    </div>
+  );
+}

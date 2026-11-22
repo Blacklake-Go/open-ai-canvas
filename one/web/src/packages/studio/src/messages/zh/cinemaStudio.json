@@ -1,0 +1,59 @@
+{
+  "cameraOverlay": {
+    "eyebrow": "影院工作室",
+    "title": "相机设置",
+    "description": "通过选择相机、镜头、焦距和景深，打造统一的电影质感。",
+    "close": "关闭",
+    "closeAria": "关闭相机设置",
+    "columns": {
+      "camera": "相机",
+      "lens": "镜头",
+      "focalLength": "焦距",
+      "aperture": "光圈"
+    }
+  },
+  "modes": {
+    "video": "电影视频",
+    "image": "电影摄影"
+  },
+  "models": {
+    "title": "电影模型"
+  },
+  "duration": {
+    "title": "视频时长"
+  },
+  "dropdowns": {
+    "aspectRatio": "宽高比",
+    "resolution": "分辨率"
+  },
+  "actions": {
+    "copyPrompt": "复制提示词",
+    "promptCopied": "提示词已复制",
+    "copyImage": "复制图片",
+    "imageCopied": "图片已复制",
+    "download": "下载",
+    "delete": "删除",
+    "deleteConfirm": "确定要删除此生成结果吗？"
+  },
+  "card": {
+    "noPrompt": "无提示词",
+    "badge": "电影工作室",
+    "historyItemAlt": "历史记录 {index}"
+  },
+  "empty": {
+    "kicker": "开始创作",
+    "title": "电影工作室 CINEMA STUDIO",
+    "description": "自由掌控电影机、运镜、镜头和光圈，支持多模型电影级视频与高清剧照生成。"
+  },
+  "prompt": {
+    "placeholder": "描述你的电影视频或摄影场景...",
+    "generating": "正在拍摄制作...",
+    "generate": "开机拍摄"
+  },
+  "fullscreen": {
+    "alt": "全屏预览"
+  },
+  "referenceImage": {
+    "alt": "首帧/参考图片"
+  }
+}

@@ -1,0 +1,59 @@
+{
+  "cameraOverlay": {
+    "eyebrow": "シネマスタジオ",
+    "title": "カメラ設定",
+    "description": "カメラ、レンズ、焦点距離、被写界深度を選択し、統一された映画のような映像美を構築します。",
+    "close": "閉じる",
+    "closeAria": "カメラ設定を閉じる",
+    "columns": {
+      "camera": "カメラ",
+      "lens": "レンズ",
+      "focalLength": "焦点距離",
+      "aperture": "絞り値（F値）"
+    }
+  },
+  "modes": {
+    "video": "シネマ動画",
+    "image": "シネマ静止画"
+  },
+  "models": {
+    "title": "シネマモデル"
+  },
+  "duration": {
+    "title": "再生時間"
+  },
+  "dropdowns": {
+    "aspectRatio": "アスペクト比",
+    "resolution": "解像度"
+  },
+  "actions": {
+    "copyPrompt": "プロンプトをコピー",
+    "promptCopied": "プロンプトをコピーしました",
+    "copyImage": "画像をコピー",
+    "imageCopied": "画像をコピーしました",
+    "download": "ダウンロード",
+    "delete": "削除",
+    "deleteConfirm": "この生成アイテムを削除してもよろしいですか？"
+  },
+  "card": {
+    "noPrompt": "プロンプトなし",
+    "badge": "シネマスタジオ",
+    "historyItemAlt": "履歴アイテム {index}"
+  },
+  "empty": {
+    "kicker": "クリエイティブを始める",
+    "title": "シネマスタジオ",
+    "description": "無制限の予算があれば何を撮影しますか？カメラ、ライティング、レンズを自在に操り、複数の動画・写真モデルで最高峰の映画シーンを創り出しましょう。"
+  },
+  "prompt": {
+    "placeholder": "映画のシーンを詳しく描写...",
+    "generating": "撮影＆レンダリング中...",
+    "generate": "シーンを撮影"
+  },
+  "fullscreen": {
+    "alt": "全画面プレビュー"
+  },
+  "referenceImage": {
+    "alt": "開始フレーム / 参照画像"
+  }
+}

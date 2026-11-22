@@ -1,0 +1,47 @@
+{
+  "blockPage": {
+    "title": "403 접근 금지",
+    "heading": "403 접근 금지",
+    "message": "이 서버 또는 리소스에 대한 접근이 엄격히 금지되어 있습니다.",
+    "footer": "nginx"
+  },
+  "api": {
+    "message": "403 접근 금지 - 접근이 거부되었습니다"
+  },
+  "admin": {
+    "rowLabel": "중국 대륙 트래픽 차단 (임시 플러그인)",
+    "badgeEnabled": "차단 켜짐 (403)",
+    "badgeDisabled": "차단 꺼짐",
+    "switchOnAria": "중국 대륙 트래픽 차단 활성화",
+    "switchOffAria": "중국 대륙 트래픽 차단 비활성화",
+    "contextEnabled": "중국 대륙에서 접속한 모든 방문자 IP에 403 Forbidden 페이지를 반환하도록 강제했습니다. 임시 플러그인 구조라 한 번의 명령으로 안전하게 완전 제거할 수 있습니다.",
+    "contextDisabled": "임시 플러그인: 켜면 중국 대륙의 방문자 IP가 사이트에 접속할 때 표준 403 Forbidden 페이지를 봅니다. 화이트리스트와 관리자 콘솔 예외를 지원합니다.",
+    "openConfig": "고급 설정 및 테스트",
+    "modalTitle": "중국 대륙 트래픽 차단 제어 (임시 플러그인)",
+    "modalCloseAria": "설정 대화상자 닫기",
+    "blockCardTitle": "중국 대륙 트래픽 모두 차단",
+    "blockCardDesc": "켜면 중국 대륙의 방문자가 모든 공개 페이지에서 403 Forbidden을 즉시 보게 됩니다.",
+    "exemptTitle": "관리자의 관리자 콘솔 경로 (/admin) 접근 허용",
+    "exemptDesc": "권장 항목입니다. 관리자가 중국 대륙에 있으면 차단을 켜도 자기 자신을 관리자 콘솔에서 막지 않습니다.",
+    "testTitle": "중국 IP 감지 테스트",
+    "testSubtitle": "공신력 있는 APNIC 네트워크 대역 라이브러리로 실시간 이진 비교",
+    "testPlaceholder": "테스트할 IP 입력, 예: 114.114.114.114 또는 8.8.8.8",
+    "testRun": "감지",
+    "testRunning": "감지 중…",
+    "testBlockedTitle": "【차단 판정】IP {ip}은(는) 중국 대륙에 속합니다 ({type})",
+    "testBlockedDesc": "공개 페이지 접속 시 403 Forbidden 차단 페이지가 반환됩니다.",
+    "testPassedTitle": "【통과 판정】IP {ip}은(는) 해외 또는 비중국 공인 IP입니다",
+    "testPassedDesc": "사이트 접속에 제한이 없으며 정상적으로 통과합니다.",
+    "testError": "테스트에 실패했습니다",
+    "whitelistLabel": "허용할 IP 또는 CIDR 대역 (한 줄에 하나, IPv4/IPv6 지원)",
+    "whitelistPlaceholder": "예시:\n192.168.1.100\n120.24.0.0/16",
+    "whitelistHint": "화이트리스트에 등록된 IP는 중국 대륙에 있어도 예외로 통과합니다.",
+    "uninstallTitle": "임시 플러그인 완전 제거 안내",
+    "uninstallIntro": "이 기능은 독립적인 임시 플러그인으로 설계됐습니다. 기능과 관련 코드를 모두 삭제하려면 서버 터미널에서 다음을 실행하세요:",
+    "uninstallCommand": "node plugins/china-ip-block/uninstall.mjs",
+    "uninstallOutro": "스크립트가 Middleware 훅, 관리자 페이지 설정 항목, 플러그인 폴더를 자동으로 지워 100% 깨끗하게 복원합니다.",
+    "cancel": "취소",
+    "save": "보안 설정 저장",
+    "saving": "저장 중…"
+  }
+}

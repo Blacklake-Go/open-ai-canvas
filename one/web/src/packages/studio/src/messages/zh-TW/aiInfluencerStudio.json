@@ -1,0 +1,70 @@
+{
+  "builder": {
+    "title": "角色構建器",
+    "reset": "重設"
+  },
+  "categoryTabs": {
+    "face": "面部",
+    "body": "身體",
+    "style": "風格與構圖"
+  },
+  "subcategories": {
+    "character_type": "角色類型",
+    "gender": "性別",
+    "ethnicity_origin_base": "種族 / 出身",
+    "eye_color": "眼睛颜色",
+    "eyes_type": "眼睛類型",
+    "eyes_details": "眼部特徵",
+    "mouth": "嘴巴与牙齒",
+    "ears": "耳朵",
+    "horns": "角",
+    "skin_conditions": "皮肤狀況",
+    "face_skin_material": "面部皮肤材質",
+    "face_surface_pattern": "皮肤圖案",
+    "body_type": "體型",
+    "left_arm": "左臂",
+    "right_arm": "右臂",
+    "left_leg": "左腿",
+    "right_leg": "右腿",
+    "hair": "毛發 / 頭部生長物",
+    "accessories": "配飾与印記",
+    "rendering_style": "渲染風格",
+    "framing": "景別構圖",
+    "outfit_preset": "服飾裝備",
+    "backdrop": "背景氛圍"
+  },
+  "toolbar": {
+    "shuffle": "隨機",
+    "generate": "生成角色",
+    "generating": "設計生成中…",
+    "model": "模型",
+    "credits": "算力"
+  },
+  "preview": {
+    "generating": "正在設計生成專屬角色形象…",
+    "emptyTitle": "您的原創角色將在此呈現。",
+    "emptySubtitleLine1": "從零開始定制專屬的",
+    "emptySubtitleLine2": "獨特角色概念形象",
+    "save": "儲存",
+    "altGenerated": "生成的原創角色"
+  },
+  "tags": {
+    "showMore": "顯示更多",
+    "hide": "收起"
+  },
+  "customPrompt": {
+    "placeholder": "添加角色細節、服飾裝扮、發光特效、背景場景或光影氛圍...例如：機能風機甲塗裝、史詩級背光、虛幻引擎5渲染"
+  },
+  "gallery": {
+    "title": "已設計角色",
+    "countSuffix": "個角色",
+    "emptyText": "生成的角色\n將顯示在此處",
+    "altPrefix": "角色",
+    "download": "下載"
+  },
+  "errors": {
+    "generationFailed": "生成失敗，請重試。",
+    "noActiveModels": "當前暫無可用的圖像模型，請稍後重試。",
+    "loginRequired": "請先登錄後再進行角色創作。"
+  }
+}

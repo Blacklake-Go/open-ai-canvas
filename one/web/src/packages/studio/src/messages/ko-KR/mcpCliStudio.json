@@ -1,0 +1,35 @@
+{
+  "hero": {
+    "badge": "개발자 및 AI 에이전트용",
+    "title": "MCP 및 CLI",
+    "description": "터미널, IDE 또는 MCP 호환 도우미에서 supdance을 사용하세요. 워크플로우를 종료하지 않고도 100개 이상의 모델에서 영화 이미지, 비디오 및 오디오를 생성할 수 있습니다."
+  },
+  "quickStart": {
+    "sectionLabel": "빠른 시작",
+    "steps": {
+      "installCli": "CLI 설치",
+      "signIn": "로그인",
+      "addSkills": "스킬을 추가하세요"
+    }
+  },
+  "features": {
+    "cli": {
+      "description": "14개 이상의 AI 모델에 걸쳐 터미널에서 이미지, 비디오 및 오디오를 생성합니다. 듀얼 인터페이스 — 컬러 인간 출력과 에이전트용 JSON(--output-json, --jq 필터링) 비동기 워크플로, 파일 업로드, 신용 추적."
+    },
+    "mcp": {
+      "description": "Claude, Cursor, Windsurf 및 모든 MCP 호환 보조자를 100개 이상의 생성 모델에 연결하세요. 호스팅된 엔드포인트 - 설치가 필요하지 않습니다. 입력/출력 스키마, 비동기 폴링 및 계정 관리 기능을 갖춘 19개의 구조화된 도구입니다."
+    },
+    "skills": {
+      "description": "Claude Code, Cursor 및 Gemini CLI용 다중 모드 툴킷입니다. Cinema Director, Nano-Banana, UI Designer, Logo Creator, Seedance 2, AI Clipping 및 YouTube Shorts 사전 설정. JSON 출력 및 의미 체계 종료 코드가 포함된 에이전트 기반입니다."
+    }
+  },
+  "viewOnGithub": "GitHub에서 보기",
+  "examples": {
+    "sectionLabel": "예",
+    "imageGeneration": "이미지 생성",
+    "textToVideo": "텍스트-비디오",
+    "audioCreation": "오디오 생성",
+    "runSkill": "스킬 실행"
+  },
+  "footer": "오픈 소스 · MIT 라이센스 · Claude, Cursor, Windsurf 및 Gemini CLI와 함께 작동"
+}

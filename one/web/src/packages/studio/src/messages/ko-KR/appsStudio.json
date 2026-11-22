@@ -1,0 +1,45 @@
+{
+  "hero": {
+    "badge": "앱 템플릿 미리보기",
+    "titleLine1": "AI 앱 템플릿을 둘러보고,",
+    "titleLine2": "출시 시 가장 먼저 경험하세요.",
+    "subtitle": "앱 콘셉트와 템플릿을 살펴보세요. 일부 앱은 아직 SupDance에서 제공되지 않습니다. 관심을 등록하면 출시 시 알려드립니다."
+  },
+  "steps": {
+    "stepLabel": "단계",
+    "deploy": {
+      "title": "몇 분 안에 배포",
+      "body": "오픈 소스 템플릿을 포크하고, muapi 키를 추가하고, Vercel에 푸시하세요. 백엔드 설정이 필요하지 않습니다."
+    },
+    "collect": {
+      "title": "지불금 징수",
+      "body": "스트라이프는 사전 배선되어 있습니다. 일회성 크레딧, 구독, 종량제 등 원하는 가격을 설정하세요."
+    },
+    "keep": {
+      "title": "수익을 유지하세요",
+      "body": "결제는 Stripe 계정으로 바로 이루어집니다. 귀하는 제품, 브랜드 및 이익을 소유하고 있습니다."
+    }
+  },
+  "card": {
+    "templateFallback": "템플릿",
+    "github": "GitHub",
+    "demo": "출시 예정",
+    "reserve": "알림 받기",
+    "getTemplate": "관심 등록",
+    "requested": "등록됨"
+  },
+  "footer": {
+    "moreComingSoon": "SupDance 앱 생태계 — 더 많은 앱을 준비 중입니다"
+  },
+  "modal": {
+    "deployTitle": "{appName} 관심 등록",
+    "body": "이 앱은 아직 SupDance에서 완전히 제공되지 않습니다. 관심을 등록하면 출시 시 알려드립니다.",
+    "sending": "등록 중...",
+    "getTemplate": "관심 등록",
+    "maybeLater": "나중에"
+  },
+  "toast": {
+    "requestSuccess": "등록되었습니다. 앱 출시 시 알려드립니다.",
+    "requestError": "관심 등록에 실패했습니다. 나중에 다시 시도해 주세요."
+  }
+}

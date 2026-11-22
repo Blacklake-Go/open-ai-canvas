@@ -1,0 +1,7 @@
+{
+  "price": {
+    "credits": "{credits} créditos",
+    "creditsFrom": "desde {credits} créditos",
+    "unavailable": "Sin precio definido"
+  }
+}

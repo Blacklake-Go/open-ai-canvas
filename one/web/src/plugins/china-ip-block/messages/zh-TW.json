@@ -1,0 +1,47 @@
+{
+  "blockPage": {
+    "title": "403 存取被拒",
+    "heading": "403 存取被拒",
+    "message": "禁止存取：您沒有權限存取此伺服器或資源。",
+    "footer": "nginx"
+  },
+  "api": {
+    "message": "403 存取被拒 - 存取遭拒絕"
+  },
+  "admin": {
+    "rowLabel": "封鎖中國流量 (臨時外掛)",
+    "badgeEnabled": "已開啟封鎖 (403)",
+    "badgeDisabled": "未開啟封鎖",
+    "switchOnAria": "啟用中國流量封鎖",
+    "switchOffAria": "停用中國流量封鎖",
+    "contextEnabled": "已對所有來自中國大陸的訪客 IP 強制返回 403 Forbidden 頁面。臨時外掛架構，支援一鍵安全完整移除。",
+    "contextDisabled": "臨時外掛：開啟後所有來自中國大陸的訪客 IP 開啟網站將顯示標準 403 Forbidden 頁面，支援放行白名單及管理後台豁免。",
+    "openConfig": "進階設定與測試",
+    "modalTitle": "中國大陸流量封鎖控制 (臨時外掛)",
+    "modalCloseAria": "關閉設定彈窗",
+    "blockCardTitle": "封鎖所有中國流量",
+    "blockCardDesc": "開啟後，來自中國大陸的訪客存取任何前台頁面將直接看到 403 Forbidden。",
+    "exemptTitle": "允許管理員存取管理後卡路徑 (/admin)",
+    "exemptDesc": "建議勾選。若管理員本身在中國境內，此項可確保管理員不會因開啟封鎖而把自己關在後台外面。",
+    "testTitle": "中國 IP 偵測測試工具",
+    "testSubtitle": "權威 APNIC 網段庫即時二分比對",
+    "testPlaceholder": "輸入 IP 位址測試，如 114.114.114.114 或 8.8.8.8",
+    "testRun": "偵測",
+    "testRunning": "偵測中…",
+    "testBlockedTitle": "【判定封鎖】IP {ip} 屬於中國大陸 ({type})",
+    "testBlockedDesc": "存取前台頁面時將直接返回 403 Forbidden 封鎖頁。",
+    "testPassedTitle": "【判定放行】IP {ip} 屬於海外或非中國公網 IP",
+    "testPassedDesc": "存取網站不受任何限制，正常放行通行。",
+    "testError": "測試失敗",
+    "whitelistLabel": "放行白名單 IP 或 CIDR 網段（每行一個，支援 IPv4/IPv6）",
+    "whitelistPlaceholder": "例如：\n192.168.1.100\n120.24.0.0/16",
+    "whitelistHint": "位於白名單內的 IP 即使位於中國大陸境內，也將予以豁免放行。",
+    "uninstallTitle": "臨時外掛完整移除指引",
+    "uninstallIntro": "本功能為獨立臨時外掛設計。後續若需徹底、完整移除此功能及相關程式碼，只需在伺服器終端執行：",
+    "uninstallCommand": "node plugins/china-ip-block/uninstall.mjs",
+    "uninstallOutro": "該腳本會自動抹除 Middleware 掛鉤、管理頁面設定項及外掛目錄，100% 乾淨還原。",
+    "cancel": "取消",
+    "save": "儲存安全性設定",
+    "saving": "儲存中…"
+  }
+}

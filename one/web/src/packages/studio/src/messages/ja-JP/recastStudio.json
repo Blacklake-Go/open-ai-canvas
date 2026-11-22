@@ -1,0 +1,68 @@
+{
+  "labels": {
+    "video": "動画",
+    "characterImage": "キャラクター画像",
+    "library": "素材ライブラリ",
+    "orientationPrefix": "画面の向き："
+  },
+  "buttons": {
+    "use": "選択する",
+    "download": "ダウンロード",
+    "delete": "削除",
+    "swapBody": "ボディスワップ開始",
+    "swapping": "変換処理中..."
+  },
+  "titles": {
+    "clickToClear": "{fileName} — クリックしてクリア",
+    "uploadFile": "{label} ファイルをアップロード、またはドラッグ＆ドロップ",
+    "enlargePreview": "プレビューを拡大",
+    "deleteFromLibrary": "ライブラリから削除"
+  },
+  "assetLibrary": {
+    "header": "アセットライブラリ",
+    "tabs": {
+      "videos": "動画一覧",
+      "images": "画像一覧",
+      "results": "変換結果"
+    },
+    "empty": "素材が見つかりません"
+  },
+  "dropdowns": {
+    "model": "モデル",
+    "selectModel": "モデルを選択",
+    "aspectRatio": "画面比率",
+    "orientation": "向き",
+    "orientationImage": "画像基準",
+    "orientationVideo": "動画基準",
+    "orientationImageDesc": "画像の向きを使用（最長10秒の動画）",
+    "orientationVideoDesc": "動画の向きを使用（最長30秒の動画）"
+  },
+  "empty": {
+    "titleLine1": "クリエイティブを始める",
+    "titleLine2": "ボディスワップスタジオ",
+    "description": "動画クリップと対象のキャラクター画像を選択し、動画内の人物をダイナミックに入れ替えます。"
+  },
+  "placeholders": {
+    "prompt": "任意 — 動きやシーンの詳細を記述..."
+  },
+  "badges": {
+    "bodySwap": "ボディスワップ"
+  },
+  "confirm": {
+    "deleteGenerated": "この生成アイテムを削除してもよろしいですか？"
+  },
+  "errors": {
+    "videoTooLarge": "動画が50MBの上限を超えています。",
+    "imageTooLarge": "画像が10MBの上限を超えています。",
+    "missingVideo": "先に元動画をアップロードしてください。",
+    "missingImage": "先にキャラクター画像をアップロードしてください。",
+    "videoUploadFailed": "動画のアップロードに失敗しました：{message}",
+    "imageUploadFailed": "画像のアップロードに失败しました：{message}",
+    "generationFailed": "ボディスワップの生成に失敗しました"
+  },
+  "defaults": {
+    "selectedVideo": "選択された動画",
+    "selectedImage": "選択された画像",
+    "resultVideo": "完成動画"
+  }
+}

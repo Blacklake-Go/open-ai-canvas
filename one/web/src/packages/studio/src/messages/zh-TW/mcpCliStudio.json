@@ -1,0 +1,35 @@
+{
+  "hero": {
+    "badge": "對於開發者和人工智慧代理",
+    "title": "MCP 和 CLI",
+    "description": "從您的終端、IDE 或任何與 MCP 相容的助手中使用 supdance。無需離開您的工作流程即可產生 100 多個模型的影片影像、視訊和音訊。"
+  },
+  "quickStart": {
+    "sectionLabel": "快速啟動",
+    "steps": {
+      "installCli": "安裝命令列介面",
+      "signIn": "登入",
+      "addSkills": "添加技能"
+    }
+  },
+  "features": {
+    "cli": {
+      "description": "從終端產生超過 14 個 AI 模型的影像、視訊和音訊。雙介面 — 彩色人工輸出加上代理的 JSON（--output-json、--jq 過濾）。非同步工作流程、文件上傳、信用追蹤。"
+    },
+    "mcp": {
+      "description": "將 Claude、Cursor、Windsurf 和任何 MCP 相容助手連接到 100 多個生成模型。託管端點 — 無需安裝。 19 個結構化工具，具有輸入/輸出模式、非同步輪詢和帳戶管理。"
+    },
+    "skills": {
+      "description": "用於 Claude Code、Cursor 和 Gemini CLI 的多模式工具包。 Cinema Director、Nano-Banana、UI Designer、Logo Creator、Seedance 2、AI Clipping 和 YouTube Shorts 預設。具有 JSON 輸出和語意退出程式碼的本機代理程式。"
+    }
+  },
+  "viewOnGithub": "在 GitHub 上查看",
+  "examples": {
+    "sectionLabel": "範例",
+    "imageGeneration": "影像生成",
+    "textToVideo": "文字轉視頻",
+    "audioCreation": "音訊創作",
+    "runSkill": "運作技能"
+  },
+  "footer": "開源 · MIT 許可 · 可與 Claude、Cursor、Windsurf 和 Gemini CLI 配合使用"
+}

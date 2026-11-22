@@ -1,0 +1,206 @@
+{
+  "common": {
+    "model": "モデル",
+    "reset": "リセット"
+  },
+  "panels": {
+    "layer-decomposition": "レイヤー分解",
+    "upscale": "アップスケール",
+    "color-grading": "カラーグレーディング",
+    "remove-bg": "背景透過",
+    "expand-crop": "画像拡張",
+    "tools": "ツール"
+  },
+  "menuItems": {
+    "layer-decomposition": "レイヤー分解",
+    "upscale": "アップスケール",
+    "color-grading": "カラーグレーディング",
+    "remove-bg": "背景を削除",
+    "expand-crop": "拡張＆アウトペイント",
+    "edit-text": "テキスト編集",
+    "enhancer": "エンハンサー",
+    "relight": "リライティング",
+    "angles": "アングル調整",
+    "new": "新規作成"
+  },
+  "tools": {
+    "uploadOrChangeImage": "画像をアップロードまたは変更",
+    "clearMarkedRegions": "マーク領域をクリア",
+    "runSelectionEdit": "選択範囲の編集を実行",
+    "line": "直線",
+    "arrow": "矢印",
+    "rectangle": "長方形",
+    "circle": "円形",
+    "customColor": "カスタムカラー",
+    "undoStroke": "元に戻す",
+    "redoStroke": "やり直し",
+    "clearDrawings": "描画をクリア",
+    "selectPointerTool": "選択ポインターツール",
+    "panTool": "手のひらツール",
+    "lassoEdit": "投げなわ選択編集",
+    "regionalEdit": "部分領域編集",
+    "highlightMarkerPen": "蛍光マーカーペン",
+    "eraserTool": "消しゴムツール",
+    "shapes": "図形ツール (R)",
+    "resetZoomPan": "拡大縮小・位置をリセット",
+    "addImage": "画像を追加",
+    "runLayerDecomposition": "レイヤー分解を実行",
+    "backToTools": "ツールに戻る",
+    "closePanel": "パネルを閉じる",
+    "regionalPromptPlaceholder": "ここにプロンプトを入力...",
+    "promptPlaceholder": "画像の編集またはレイヤー分割の方法を説明...",
+    "markedPromptPlaceholder": "{count} 個のマーク領域のレイヤーを説明..."
+  },
+  "sample": {
+    "clickToLoad": "クリックしてこのレイヤー分解サンプルを読み込む",
+    "original": "オリジナル",
+    "layersCount": "5層のレイヤー",
+    "try": "試す →",
+    "clickToExplore": "クリックしてサンプルをプレビュー"
+  },
+  "settings": {
+    "heading": "設定",
+    "resolution": "解像度",
+    "layers": "レイヤー数"
+  },
+  "carousel": {
+    "heading": "レイヤーカルーセル",
+    "soloActive": "選択レイヤー単独表示",
+    "stackMode": "スタック合成モード",
+    "viewOnlyActive": "アクティブレイヤーのみ表示",
+    "downloadAll": "全レイヤーを一括ダウンロード",
+    "previousLayer": "前のレイヤー",
+    "nextLayer": "次のレイヤー",
+    "toggleVisibility": "表示/非表示を切り替え",
+    "downloadThisLayer": "このレイヤーをダウンロード",
+    "save": "保存",
+    "layerLabel": "レイヤー {n}",
+    "seedreamDecomposed": "Seedream 分解済み"
+  },
+  "colorGrading": {
+    "colorCorrect": {
+      "heading": "カラー補正",
+      "info": "色温度、色相、彩度、コントラスト、スプリットトーン",
+      "reset": "カラー補正をリセット"
+    },
+    "softenDetails": {
+      "heading": "ディテール軟化",
+      "info": "半径とディテールのソフトネス調整",
+      "reset": "ディテール軟化をリセット"
+    },
+    "bloom": {
+      "heading": "ブルーム効果",
+      "info": "発光拡散とブレンドモード調整",
+      "reset": "ブルームをリセット"
+    },
+    "halation": {
+      "heading": "ハレーション",
+      "info": "強いハイライト周囲のフィルム赤色フレア",
+      "reset": "ハレーションをリセット"
+    },
+    "lensInstructions": {
+      "heading": "レンズ効果",
+      "info": "周辺減光（ビネット）と光学レンズ歪み",
+      "reset": "レンズ効果をリセット"
+    },
+    "exposure": {
+      "heading": "露出調整",
+      "info": "露出ステップ数の増減調整",
+      "reset": "露出をリセット"
+    },
+    "filmGrain": {
+      "heading": "フィルムグレイン",
+      "info": "アナログフィルム特有の粒子シミュレーション",
+      "reset": "フィルムグレインをリセット"
+    },
+    "resetToDefault": "デフォルトに戻す",
+    "resetAll": "すべてのカラーグレーディングをリセット",
+    "download": "ダウンロード"
+  },
+  "removeBg": {
+    "modelName": "AI背景リムーバー",
+    "targetPreview": "対象プレビュー",
+    "alphaMatte": "アルファマット切り抜き",
+    "feature1": "精密なエッジ抽出（髪の毛、毛並み、微細な輪郭）",
+    "feature2": "高解像度の透過PNG形式出力"
+  },
+  "expandCrop": {
+    "modelName": "AI画像拡張ツール",
+    "canvasPreview": "キャンバスプレビュー",
+    "boundaryOutpainting": "境界アウトペインティング",
+    "expand": "画像を拡張",
+    "feature1": "照明、スタイル、質感を一致させながら境界を拡張",
+    "feature2": "エッジの自動インテリジェント補完と自然な継続"
+  },
+  "editText": {
+    "heading": "テキスト編集ツール",
+    "placeholder": "テキストの変更プロンプトを入力...",
+    "run": "テキスト編集を実行",
+    "processing": "処理中..."
+  },
+  "enhancer": {
+    "heading": "AIエンハンサー",
+    "description": "照明、シャープネス、カラーバランスを自動最適化します。",
+    "run": "画像を補正",
+    "processing": "補正処理中..."
+  },
+  "relight": {
+    "heading": "AIリライティング",
+    "description": "環境光、スタジオライティング、影の向きを自在に調整します。",
+    "run": "ライティングを適用",
+    "processing": "リライティング中..."
+  },
+  "angles": {
+    "heading": "3Dアングル・パースペクティブ",
+    "description": "パースの傾きやカメラアングルを直感的に再調整します。",
+    "run": "アングルを適用",
+    "processing": "変換中..."
+  },
+  "footer": {
+    "decomposing": "レイヤーを分解中（{progress}%）...",
+    "separateLayers": "個別レイヤー数 {count}",
+    "upscaling": "高画質化中（{progress}%）...",
+    "upscaleCost": "高画質化コスト {cost}",
+    "removingBackground": "背景を削除中（{progress}%）...",
+    "removeBackgroundCost": "背景削除コスト 1.0",
+    "expandingBorders": "境界を拡張中（{progress}%）...",
+    "expandImageCost": "画像拡張コスト 0.03"
+  },
+  "toasts": {
+    "enterApiKeyUpload": "画像をアップロードするにはAPIキーを入力してください。",
+    "imageUploaded": "画像が正常にアップロードされました！",
+    "uploadFailed": "アップロードに失敗しました：{error}",
+    "uploadImageFileOnly": "画像ファイルのみアップロード可能です。",
+    "fileTooLarge": "ファイルサイズが上限（20MB）を超えています：{name}",
+    "viewReset": "ビューをリセットしました",
+    "enterApiKey": "APIキーを入力してください。",
+    "enterRegionPrompt": "選択領域のプロンプトを入力してください。",
+    "editFailed": "編集に失敗しました：{error}",
+    "apiKeyMissingSet": "APIキーが設定されていません。キーを入力してください。",
+    "uploadOrSelectDecompose": "分解する画像をアップロードまたは選択してください。",
+    "decomposedInto": "{count} 枚のレイヤーに分解されました！",
+    "decompositionFailed": "レイヤー分解に失敗しました：{error}",
+    "uploadOrSelectUpscale": "高画質化する画像を選択またはアップロードしてください。",
+    "upscaleSuccess": "{model} による高画質化が完了しました！",
+    "upscaleNoOutput": "高画質化が完了しましたが、URLが返されませんでした。",
+    "upscaleFailed": "高画質化に失敗しました：{error}",
+    "uploadOrSelectRemoveBg": "背景を削除する画像をアップロードまたは選択してください。",
+    "removeBgSuccess": "AI背景リムーバーで背景を透過処理しました！",
+    "removeBgNoOutput": "背景透過が完了しましたが、URLが返されませんでした。",
+    "removeBgFailed": "背景削除に失敗しました：{error}",
+    "uploadOrSelectExpand": "拡張する画像をアップロードまたは選択してください。",
+    "expandSuccess": "AI画像拡張ツールで綺麗に拡張されました！",
+    "expandNoOutput": "拡張処理が完了しましたが、URLが返されませんでした。",
+    "expandFailed": "画像拡張に失敗しました：{error}",
+    "upscaleSettingsReset": "アップスケール設定を初期値に戻しました",
+    "resetCategory": "{category} をリセットしました",
+    "colorGradingReset": "カラーグレーディングを初期値に戻しました",
+    "downloadedGraded": "カラーグレーディング画像をダウンロードしました！",
+    "loadedSample": "Seedream 5層レイヤーサンプルを読み込みました！",
+    "apiKeyMissing": "APIキーが見つかりません。",
+    "uploadImageFirst": "先に画像をアップロードしてください。",
+    "toolCompleted": "{tool} の処理が正常に完了しました！",
+    "operationFailed": "処理に失敗しました：{error}",
+    "downloadingAll": "すべてのレイヤーをダウンロードしています..."
+  }
+}

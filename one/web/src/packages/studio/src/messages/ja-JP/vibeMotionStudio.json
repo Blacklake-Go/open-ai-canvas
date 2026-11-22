@@ -1,0 +1,70 @@
+{
+  "loading": {
+    "remixing": "モーショングラフィックスをリミックス中…",
+    "generating": "モーショングラフィックスを生成中…",
+    "backend": "Modal 上での React/Remotion レンダリング"
+  },
+  "card": {
+    "modeEdit": "✏ 編集",
+    "modeGenerated": "✦ 生成完了",
+    "download": "ダウンロード",
+    "remixThis": "この生成結果をリミックス",
+    "legacyRemixUnavailable": "この生成結果にはサーバー所有のアセット参照と審査済みの動画編集ルートがないため、リミックスできません。",
+    "delete": "削除",
+    "confirmDelete": "この生成アイテムを削除してもよろしいですか？",
+    "noPrompt": "プロンプトなし",
+    "tag": "バイブモーション"
+  },
+  "mobileActions": {
+    "download": "ダウンロード",
+    "remix": "リミックス",
+    "delete": "削除"
+  },
+  "empty": {
+    "titleLine1": "クリエイティブを始める",
+    "titleLine2": "バイブモーションスタジオ",
+    "description": "テキストプロンプトから躍動感あるモーショングラフィックスを生成 — キネティックタイポグラフィ、データチャート、ロゴアニメーションなど。"
+  },
+  "modeToggle": {
+    "generate": "新規生成",
+    "edit": "編集モード"
+  },
+  "editBanner": {
+    "editingPrefix": "編集中：",
+    "selectSource": "ギャラリーからベースとなる生成結果を選択してください",
+    "cancelEdit": "編集モードを終了"
+  },
+  "placeholder": {
+    "edit": "変更内容を記述 — 例：「背景をダークネイビーに変更し、棒グラフをゴールドにしてパーティクルを追加…」",
+    "generate": "モーショングラフィックスを描写 — 例：「発光する棒グラフと上昇する数値を備えた動的売上ダッシュボード」"
+  },
+  "controls": {
+    "aspectRatio": "アスペクト比",
+    "resolution": "解像度",
+    "duration": "再生時間",
+    "sourcePrefix": "ソース元：",
+    "pickSource": "ソースを選択…",
+    "sourceGeneration": "ソース生成物",
+    "shortcutHint": "Ctrl+Enter で実行",
+    "model": "モデル",
+    "pickModel": "モデルを選択…",
+    "loadingModels": "利用可能なモデルを読み込み中…",
+    "modelsUnavailable": "現在、見積もり可能なテキスト動画モデルはありません。"
+  },
+  "errors": {
+    "staleEditUnavailable": "サーバー所有のアセット参照と審査済みの動画編集ルートがないため、動画編集は利用できません。",
+    "generationFailed": "バイブモーションの生成に失敗しました"
+  },
+  "generateButton": {
+    "remixing": "リミックス中...",
+    "generating": "生成中...",
+    "remix": "リミックス",
+    "generate": "グラフィック生成"
+  },
+  "history": {
+    "loading": "Vibe Motion の履歴を読み込んでいます…",
+    "loadFailed": "生成履歴を読み込めませんでした。後でもう一度お試しください。",
+    "unavailable": "このプライベート動画は現在利用できません。",
+    "downloadUnavailable": "プライベート動画をダウンロードできませんでした。後でもう一度お試しください。"
+  }
+}

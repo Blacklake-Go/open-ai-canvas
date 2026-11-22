@@ -1,0 +1,137 @@
+{
+  "uploadButton": {
+    "faceLabel": "얼굴",
+    "referenceImageLabel": "참고 이미지",
+    "addUpToImages": "최대 {max} 이미지 추가",
+    "singleSelectedTitle": "1개의 이미지가 선택되었습니다. 더 추가하려면 클릭하세요(최대 {max}).",
+    "multiSelectedTitle": "{max} 이미지 중 {count}가 선택됨 — 관리하려면 클릭하세요.",
+    "tooLargeAlert": "다음 이미지는 너무 큽니다(최대 10MB): {names}",
+    "uploadFailedAlert": "이미지 업로드 실패: {message}",
+    "headerTitle": "참조 이미지",
+    "selectUpTo": "최대 {max} 이미지를 선택하세요.",
+    "doneButton": "✓ 완료({count})",
+    "uploadFilesButton": "파일 업로드",
+    "uploadNewButton": "새로 업로드",
+    "emptyState": "아직 업로드가 없습니다.",
+    "removeFromHistory": "기록에서 삭제",
+    "selectedCount": "{max} 중 {count}가 선택됨",
+    "useSelected": "선택 사용",
+    "imageName": "이미지 {n}",
+    "addReferenceLabel": "참조 이미지 추가",
+    "historyLabel": "업로드 기록",
+    "uploadUnknownFailed": "업로드에 실패했습니다. 다시 시도해 주세요"
+  },
+  "modelDropdown": {
+    "categoryAll": "모두",
+    "categoryT2I": "텍스트를 이미지로",
+    "categoryI2I": "이미지를 이미지로",
+    "allProviders": "모든 제공자",
+    "searchPlaceholder": "모델 검색...",
+    "modelsSuffix": "모델",
+    "noModelsFound": "모델을 찾을 수 없습니다.",
+    "selectModelHeader": "모델 선택"
+  },
+  "gallery": {
+    "generatedImageAlt": "생성된 이미지",
+    "download": "다운로드",
+    "delete": "삭제",
+    "deleteConfirm": "생성된 이 항목을 삭제하시겠습니까?",
+    "deleteFailed": "항목을 삭제하지 못했습니다.",
+    "noPrompt": "프롬프트가 제공되지 않음",
+    "modelFallback": "이미지 스튜디오"
+  },
+  "emptyState": {
+    "heading": "만들기 시작하기",
+    "subtitle": "장면, 캐릭터, 분위기, 스타일을 설명하고 그것이 실제로 나타나는 것을 지켜보세요."
+  },
+  "qualityLabels": {
+    "standard": "표준",
+    "high": "고화질",
+    "medium": "중간",
+    "low": "빠름"
+  },
+  "negativePrompt": {
+    "trigger": "네거티브",
+    "chip": "네거티브: {text}",
+    "title": "네거티브 프롬프트",
+    "placeholder": "피하고 싶은 요소를 설명하세요",
+    "clear": "지우기",
+    "done": "완료",
+    "separator": ", ",
+    "promptSuffix": "피하기: {value}",
+    "presetBlurry": "흐림",
+    "presetLowQuality": "저품질",
+    "presetDeformed": "변형",
+    "presetExtraFingers": "손가락 중복",
+    "presetWatermark": "워터마크",
+    "presetText": "텍스트",
+    "presetDark": "너무 어두움",
+    "presetEdges": "가장자리 깨짐"
+  },
+  "regenerateConfirm": {
+    "title": "이 배치를 다시 생성할까요?",
+    "description": "동일한 프롬프트와 파라미터로 {count}장을 생성합니다.",
+    "cost": "예상 소모",
+    "cancel": "취소",
+    "confirm": "다시 생성"
+  },
+  "promptBar": {
+    "placeholderMultiImage": "{count} 이미지가 선택됨 - 변환 설명(선택 사항)",
+    "placeholderI2I": "이 이미지를 변환하는 방법을 설명하세요(선택사항).",
+    "placeholderT2I": "만들고 싶은 이미지를 설명해주세요",
+    "swapFaceLabel": "얼굴 교환",
+    "effectFallback": "효과",
+    "drawButton": "그리다",
+    "generating": "생성 중...",
+    "generateButton": "생성하다",
+    "mentionTitle": "@ 가능한 항목"
+  },
+  "popovers": {
+    "model": "모델",
+    "aspectRatio": "종횡비",
+    "resolution": "해결",
+    "quality": "품질",
+    "effectType": "효과 유형"
+  },
+  "errors": {
+    "noImageReferenceSupport": "{name}는 이미지 참조를 지원하지 않습니다.",
+    "uploadReferenceFirst": "먼저 참조 이미지를 업로드해 주세요.",
+    "uploadSwapFaceFirst": "교체 얼굴 이미지를 업로드해 주세요.",
+    "enterPromptFirst": "이미지를 생성하려면 프롬프트를 입력하세요.",
+    "generationCapabilityUnavailable": "이 모델은 아직 검증된 서버 생성 기능이 없습니다.",
+    "generationFailed": "이미지 생성 실패"
+  },
+  "fullscreen": {
+    "previewAlt": "전체 화면 미리보기"
+  },
+  "mediaMenu": {
+    "image": "이미지",
+    "imageDesc": "고품질 스타일의 이미지 생성",
+    "video": "비디오",
+    "videoDesc": "영화 같은 연출의 영상 생성",
+    "script": "대본",
+    "scriptDesc": "창의적인 스토리 및 대사 생성",
+    "audio": "오디오",
+    "audioDesc": "생생한 효과음 및 보이스 생성"
+  },
+  "paramsPanel": {
+    "titleRatio": "화면 비율",
+    "titleResolution": "해상도",
+    "titleQuantity": "생성 수량",
+    "titleDimensions": "크기",
+    "smartRatio": "스마트 비율",
+    "standard15k": "기본 1.5K",
+    "hd2k": "고해상도 2K ✦",
+    "ultra4k": "초고해상도 4K ✦",
+    "smartReference": "스마트 참조",
+    "addReference": "참조 이미지 추가",
+    "referenceCount": "참조 이미지 ({count}/{max})",
+    "autoSwitchedToI2I": "참조 지원 모델로 전환됨: {model}",
+    "autoSwitchedToT2I": "텍스트-이미지 모델로 복귀됨",
+    "modeImageGen": "이미지 생성",
+    "modeImageToImage": "이미지 투 이미지",
+    "creditPerImage": "✦ {cost}/장",
+    "creditPerImageOriginal": "11/장",
+    "batchCountUnit": "{count} 장"
+  }
+}

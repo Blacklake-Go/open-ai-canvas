@@ -1,0 +1,45 @@
+{
+  "hero": {
+    "badge": "App Template Preview",
+    "titleLine1": "EXPLORE AI APP TEMPLATES.",
+    "titleLine2": "JOIN THE WAITLIST.",
+    "subtitle": "Browse app concepts and templates. Not all apps are available on SupDance yet; register interest and we'll notify you when they launch."
+  },
+  "steps": {
+    "stepLabel": "Step",
+    "deploy": {
+      "title": "Deploy in Minutes",
+      "body": "Fork the open-source template, add your muapi key, and push to Vercel. No backend setup needed."
+    },
+    "collect": {
+      "title": "Collect Payments",
+      "body": "Stripe is pre-wired. Set your own pricing — one-time credits, subscriptions, or pay-per-use."
+    },
+    "keep": {
+      "title": "Keep the Revenue",
+      "body": "Payments go straight to your Stripe account. You own the product, the brand, and the profits."
+    }
+  },
+  "card": {
+    "templateFallback": "Template",
+    "github": "Github",
+    "demo": "Coming soon",
+    "reserve": "Notify me",
+    "getTemplate": "Register interest",
+    "requested": "Registered"
+  },
+  "footer": {
+    "moreComingSoon": "SupDance App Ecosystem — More apps in preparation"
+  },
+  "modal": {
+    "deployTitle": "Register interest in {appName}",
+    "body": "This app is not fully available on SupDance yet. Leave your interest and we'll notify you when it launches.",
+    "sending": "Registering...",
+    "getTemplate": "Register interest",
+    "maybeLater": "Maybe later"
+  },
+  "toast": {
+    "requestSuccess": "Registered. We'll notify you when this app becomes available.",
+    "requestError": "Failed to register interest. Please try again later."
+  }
+}

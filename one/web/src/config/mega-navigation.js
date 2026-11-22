@@ -1,0 +1,1018 @@
+/**
+ * Mega Navigation Configuration (参考 Higgsfield.ai 双栏 Mega Menu 模式)
+ * 
+ * 整合全站一级导航、各模块 Features（工具特性）与 Models（底层模型矩阵）。
+ * 支持 6 大核心语言（en, zh-CN, ja-JP, ko-KR, zh-TW, es）、Badge 状态标识、以及直接携带参数跳转进入工作室。
+ */
+import { normalizeLocale, getLocaleConfig } from '../lib/locales.js';
+
+export const MEGA_NAV_CATEGORIES = [
+  {
+    id: 'images',
+    tabId: 'image',
+    label: {
+      en: 'Image',
+      'zh-CN': '图像',
+      'zh-TW': '圖像',
+      'ja-JP': '画像',
+      'ko-KR': '이미지',
+      es: 'Imagen',
+    },
+    href: '/studio?tab=image',
+    badge: null,
+    features: [
+      {
+        id: 'image',
+        tabId: 'image',
+        icon: 'image',
+        label: {
+          en: 'Create Image',
+          'zh-CN': '图像工作室',
+          'zh-TW': '圖像工作室',
+          'ja-JP': '画像スタジオ',
+          'ko-KR': '이미지 스튜디오',
+          es: 'Estudio de Imagen',
+        },
+        description: {
+          en: 'Generate AI images with multi-models',
+          'zh-CN': '文本生图与多模型画板',
+          'zh-TW': '文字生圖與多模型畫板',
+          'ja-JP': 'テキストから画像生成・複数モデル対応',
+          'ko-KR': '텍스트 투 이미지 및 멀티 모델 캔버스',
+          es: 'Generación de imágenes con múltiples modelos',
+        },
+        badge: 'HOT',
+        href: '/studio?tab=image',
+      },
+      {
+        id: 'headshot',
+        tabId: 'headshot',
+        icon: 'user',
+        label: {
+          en: 'AI Headshot',
+          'zh-CN': 'AI 肖像',
+          'zh-TW': 'AI 肖像',
+          'ja-JP': 'AIポートレート',
+          'ko-KR': 'AI 프로필 사진',
+          es: 'Retrato con IA',
+        },
+        description: {
+          en: 'Generate professional portraits & headshots',
+          'zh-CN': '一键生成专业写真与肖像照',
+          'zh-TW': '一鍵生成專業寫真與肖像照',
+          'ja-JP': 'プロ仕様のポートレート写真を瞬時に生成',
+          'ko-KR': '전문적인 프로필 및 인물 사진 원클릭 생성',
+          es: 'Retratos y fotos de perfil profesionales',
+        },
+        badge: 'TOP',
+        href: '/studio?tab=headshot',
+      },
+      {
+        id: 'layers',
+        tabId: 'layers',
+        icon: 'layers',
+        label: {
+          en: 'Layers Studio',
+          'zh-CN': '图层工作室',
+          'zh-TW': '圖層工作室',
+          'ja-JP': 'レイヤースタジオ',
+          'ko-KR': '레이어 스튜디오',
+          es: 'Estudio de Capas',
+        },
+        description: {
+          en: 'Visual ideation & layered canvas editing',
+          'zh-CN': '专业图层分离与画布编辑',
+          'zh-TW': '專業圖層分離與畫布編輯',
+          'ja-JP': 'レイヤー分離とキャンバス編集',
+          'ko-KR': '전문 레이어 분리 및 캔버스 편집',
+          es: 'Separación de capas y edición en lienzo',
+        },
+        badge: 'SOON',
+        href: '/studio?tab=layers',
+      },
+      {
+        id: 'design-agent',
+        tabId: 'design-agent',
+        icon: 'sparkles',
+        label: {
+          en: 'Design Agent',
+          'zh-CN': '设计智能体',
+          'zh-TW': '設計智慧體',
+          'ja-JP': 'デザインエージェント',
+          'ko-KR': '디자인 에이전트',
+          es: 'Agente de Diseño',
+        },
+        description: {
+          en: 'Automated poster & commercial visual design',
+          'zh-CN': '海报、Banner 与商用视觉自动化',
+          'zh-TW': '海報、Banner 與商用視覺自動化',
+          'ja-JP': 'ポスター・バナー・商用ビジュアルの自動化',
+          'ko-KR': '포스터, 배너 및 상업용 비주얼 자동화',
+          es: 'Diseño automatizado de pósters y banners',
+        },
+        badge: 'SOON',
+        href: '/studio?tab=design-agent',
+      },
+      {
+        id: 'ai-influencer',
+        tabId: 'ai-influencer',
+        icon: 'bot',
+        label: {
+          en: 'Character Designer',
+          'zh-CN': '角色设计器',
+          'zh-TW': '角色設計器',
+          'ja-JP': 'キャラクターデザイナー',
+          'ko-KR': '캐릭터 디자이너',
+          es: 'Diseñador de Personajes',
+        },
+        description: {
+          en: 'Original character concept design and visual crafting',
+          'zh-CN': '全能原创角色设定与高精概念形象定制',
+          'zh-TW': '全能原創角色設定與高精概念形象定制',
+          'ja-JP': 'オリジナルキャラクター設定と高精細ビジュアル',
+          'ko-KR': '오리지널 캐릭터 컨셉 설정 및 고정밀 이미지 제작',
+          es: 'Diseño de conceptos y personajes originales',
+        },
+        badge: 'NEW',
+        href: '/studio?tab=ai-influencer',
+      },
+    ],
+    models: [
+      {
+        id: 'seedream-5-0-pro',
+        modelKey: 'bytedance-seedream-5.0-pro',
+        tabId: 'image',
+        name: 'Seedream 5.0 Pro',
+        provider: 'ByteDance',
+        description: {
+          en: 'Optimized for cinematic visual effects and rich typography.',
+          'zh-CN': '针对电影级和文字丰富的视觉效果进行了优化。',
+          'zh-TW': '針對電影級和文字豐富的視覺效果進行了最佳化。',
+          'ja-JP': 'シネマティックで精細なビジュアル表現に最適化。',
+          'ko-KR': '영화급 고화질과 텍스트 디테일에 최적화되었습니다.',
+          es: 'Optimizado para efectos visuales cinematográficos de alta fidelidad.',
+        },
+        badge: 'SOON',
+        href: '/studio?tab=image&model=bytedance-seedream-5.0-pro',
+      },
+      {
+        id: 'gpt-image-2-5-flash',
+        modelKey: 'gpt-image-2.5-flash',
+        tabId: 'image',
+        name: 'Seedream 4.5 Flash',
+        provider: 'ByteDance',
+        description: {
+          en: 'Official Seedream 4.5 high-speed generation, 20 credits/image',
+          'zh-CN': '火山引擎 Seedream 4.5 官方极速绘图，细节细腻，20 积分/张',
+          'zh-TW': '火山引擎 Seedream 4.5 官方極速繪圖，細節細膩，20 積分/張',
+          'ja-JP': 'Seedream 4.5 公式高速画像生成、精細なディテール、20pt/枚',
+          'ko-KR': 'Seedream 4.5 초고속 이미지 생성, 정밀한 디테일, 20 크레딧/장',
+          es: 'Generación ultra rápida oficial Seedream 4.5, 20 créditos/imagen',
+        },
+        badge: 'HOT',
+        href: '/studio?tab=image&model=gpt-image-2.5-flash',
+      },
+      {
+        id: 'seedream-3-0',
+        modelKey: 'bytedance-seedream-v3',
+        tabId: 'image',
+        name: 'Seedream 3.0',
+        provider: 'ByteDance',
+        description: {
+          en: 'Classic cost-effective image generation, 10 credits/image',
+          'zh-CN': '稳定可靠的经典图像生成底座，10 积分/张',
+          'zh-TW': '穩定可靠的經典圖像生成底座，10 積分/張',
+          'ja-JP': '安定した信頼性のある定番画像生成モデル、10pt/枚',
+          'ko-KR': '안정적이고 검증된 클래식 이미지 생성 모델, 10 크레딧/장',
+          es: 'Base clásica y confiable para generación de imágenes, 10 créditos',
+        },
+        badge: 'TOP',
+        href: '/studio?tab=image&model=bytedance-seedream-v3',
+      },
+      {
+        id: 'midjourney-v7',
+        modelKey: 'midjourney-v7',
+        tabId: 'image',
+        name: 'Midjourney v7',
+        provider: 'Midjourney',
+        description: {
+          en: 'Top artistic aesthetics, supports character and style references',
+          'zh-CN': '顶尖艺术质感与审美，支持角色一致性与风格参考',
+          'zh-TW': '頂尖藝術質感與審美，支援角色一致性與風格參考',
+          'ja-JP': '最高峰のアート質感、キャラクターとスタイルの整合性をサポート',
+          'ko-KR': '최고 수준의 예술적 미학과 캐릭터 일관성 지원',
+          es: 'Máxima calidad artística con soporte para consistencia de personajes',
+        },
+        badge: 'SOON',
+        href: '/studio?tab=image&model=midjourney-v7',
+      },
+      {
+        id: 'nano-banana-pro',
+        modelKey: 'nano-banana-pro',
+        tabId: 'image',
+        name: 'Nano Banana Pro',
+        provider: 'Google DeepMind',
+        description: {
+          en: 'Best 4K image model with micro-detail precision',
+          'zh-CN': '顶级 4K 超微细节与写实光影',
+          'zh-TW': '頂級 4K 超微細節與寫實光影',
+          'ja-JP': '4K超微細ディテールとリアルな光影',
+          'ko-KR': '최고 수준의 4K 초정밀 디테일과 사실적인 조명',
+          es: 'Precisión 4K con microdetalles y luz hiperrealista',
+        },
+        badge: 'SOON',
+        href: '/studio?tab=image&model=nano-banana-pro',
+      },
+      {
+        id: 'vidu-q2',
+        modelKey: 'vidu-q2-text-to-image',
+        tabId: 'image',
+        name: 'Vidu Q2',
+        provider: 'ShengShu',
+        description: {
+          en: 'Vivid multimodal high-quality image generation foundation',
+          'zh-CN': '生动多模态高品质图像生成底座',
+          'zh-TW': '生動多模態高品質圖像生成底座',
+          'ja-JP': '高品質マルチモーダル画像生成モデル',
+          'ko-KR': '생생한 고품질 멀티모달 이미지 생성 모델',
+          es: 'Base multimodal para generación de imágenes de alta calidad',
+        },
+        badge: 'SOON',
+        href: '/studio?tab=image&model=vidu-q2-text-to-image',
+      },
+    ],
+  },
+  {
+    id: 'video',
+    tabId: 'video',
+    label: {
+      en: 'Video',
+      'zh-CN': '视频',
+      'zh-TW': '影片',
+      'ja-JP': '動画',
+      'ko-KR': '비디오',
+      es: 'Video',
+    },
+    href: '/studio?tab=video',
+    badge: null,
+    features: [
+      {
+        id: 'cinema',
+        tabId: 'cinema',
+        icon: 'video',
+        label: {
+          en: 'Cinema Studio',
+          'zh-CN': '电影影视工作室',
+          'zh-TW': '電影影視工作室',
+          'ja-JP': 'シネマスタジオ',
+          'ko-KR': '시네마 스튜디오',
+          es: 'Estudio de Cine',
+        },
+        description: {
+          en: 'Cinematic film-grade aesthetic & lens controls',
+          'zh-CN': '电影级景深、运镜与电影感调色',
+          'zh-TW': '電影級景深、鏡頭運動與電影感調色',
+          'ja-JP': '映画級の被写界深度、カメラワーク、カラーグレーディング',
+          'ko-KR': '영화급 피사계 심도, 카메라 워크 및 시네마틱 보정',
+          es: 'Profundidad de campo y estética cinematográfica',
+        },
+        badge: 'TOP',
+        href: '/studio?tab=cinema',
+      },
+      {
+        id: 'video',
+        tabId: 'video',
+        icon: 'video',
+        label: {
+          en: 'Video Studio',
+          'zh-CN': '视频工作室',
+          'zh-TW': '影片工作室',
+          'ja-JP': 'ビデオスタジオ',
+          'ko-KR': '비디오 스튜디오',
+          es: 'Estudio de Video',
+        },
+        description: {
+          en: 'Text & image to video foundation workspace',
+          'zh-CN': '文生视频与图生视频基础工作台',
+          'zh-TW': '文字與圖像生影片基礎工作台',
+          'ja-JP': 'テキスト・画像からの動画生成メインワークスペース',
+          'ko-KR': '텍스트 및 이미지 기반 비디오 생성 워크스페이스',
+          es: 'Generación de video a partir de texto e imagen',
+        },
+        badge: 'HOT',
+        href: '/studio?tab=video',
+      },
+      {
+        id: 'clipping',
+        tabId: 'clipping',
+        icon: 'zap',
+        label: {
+          en: 'AI Clipping',
+          'zh-CN': 'AI 剪辑',
+          'zh-TW': 'AI 剪輯',
+          'ja-JP': 'AI切り抜き',
+          'ko-KR': 'AI 클리핑',
+          es: 'Recorte con IA',
+        },
+        description: {
+          en: 'Smart highlight extraction & automated editing',
+          'zh-CN': '智能识别高光片段与自动化剪辑',
+          'zh-TW': '智慧識別高光片段與自動化剪輯',
+          'ja-JP': 'ハイライト自動検出と自動カット編集',
+          'ko-KR': '하이라이트 자동 감지 및 스마트 편집',
+          es: 'Extracción de momentos destacados y edición automática',
+        },
+        badge: 'NEW',
+        href: '/studio?tab=clipping',
+      },
+      {
+        id: 'motion-control',
+        tabId: 'motion-control',
+        icon: 'compass',
+        label: {
+          en: 'Motion Control',
+          'zh-CN': '动作控制',
+          'zh-TW': '動作控制',
+          'ja-JP': 'モーションコントロール',
+          'ko-KR': '모션 컨트롤',
+          es: 'Control de Movimiento',
+        },
+        description: {
+          en: 'Skeletal pose tracking & motion transfer',
+          'zh-CN': '骨骼姿态追踪与动作轨迹驱动',
+          'zh-TW': '骨骼姿態追蹤與動作軌跡驅動',
+          'ja-JP': '骨格ポーズ追跡とモーション転送',
+          'ko-KR': '포즈 트래킹 및 동작 궤적 제어',
+          es: 'Seguimiento de poses y transferencia de movimiento',
+        },
+        badge: 'HOT',
+        href: '/studio?tab=motion-control',
+      },
+      {
+        id: 'vibe-motion',
+        tabId: 'vibe-motion',
+        icon: 'zap',
+        label: {
+          en: 'Vibe Motion',
+          'zh-CN': '动感运镜',
+          'zh-TW': '動感運鏡',
+          'ja-JP': 'バイブモーション',
+          'ko-KR': '바이브 모션',
+          es: 'Movimiento Vibe',
+        },
+        description: {
+          en: 'Dynamic camera paths, zooms and pans',
+          'zh-CN': '推拉摇移与复杂动态摄像机转场',
+          'zh-TW': '推拉搖移與複雜動態攝影機轉場',
+          'ja-JP': 'ダイナミックなカメラパス、ズーム、パン演出',
+          'ko-KR': '카메라 무빙, 줌 및 트랜지션 연출',
+          es: 'Trayectorias de cámara dinámicas, zoom y giros',
+        },
+        badge: 'HOT',
+        href: '/studio?tab=vibe-motion',
+      },
+      {
+        id: 'lipsync',
+        tabId: 'lipsync',
+        icon: 'smile',
+        label: {
+          en: 'Lip Sync',
+          'zh-CN': '唇形同步',
+          'zh-TW': '唇形同步',
+          'ja-JP': 'リップシンク',
+          'ko-KR': '립싱크',
+          es: 'Sincronización Labial',
+        },
+        description: {
+          en: 'Precision lip sync matching voice & audio',
+          'zh-CN': '音频与人物嘴型高精度对齐匹配',
+          'zh-TW': '音訊與人物嘴型高精度對齊匹配',
+          'ja-JP': '音声と口の動きを高精度に同期',
+          'ko-KR': '오디오 기반 고정밀 입모양 동기화',
+          es: 'Sincronización labial precisa con voz y audio',
+        },
+        badge: 'NEW',
+        href: '/studio?tab=lipsync',
+      },
+      {
+        id: 'body-swap',
+        tabId: 'body-swap',
+        icon: 'user',
+        label: {
+          en: 'Body Swap',
+          'zh-CN': '换体工作室',
+          'zh-TW': '換體工作室',
+          'ja-JP': 'ボディスワップ',
+          'ko-KR': '바디 스왑',
+          es: 'Intercambio Corporal',
+        },
+        description: {
+          en: 'Seamless character body & pose replacement',
+          'zh-CN': '角色身形替换与动作无缝融合',
+          'zh-TW': '角色身形替換與動作無縫融合',
+          'ja-JP': 'キャラクターの体型置換とモーション統合',
+          'ko-KR': '캐릭터 체형 교체 및 동작 융합',
+          es: 'Reemplazo de cuerpo y pose de personajes',
+        },
+        badge: 'HOT',
+        href: '/studio?tab=body-swap',
+      },
+      {
+        id: 'marketing',
+        tabId: 'marketing',
+        icon: 'sparkles',
+        label: {
+          en: 'Marketing Studio',
+          'zh-CN': '营销工作室',
+          'zh-TW': '行銷工作室',
+          'ja-JP': 'マーケティングスタジオ',
+          'ko-KR': '마케팅 스튜디오',
+          es: 'Estudio de Marketing',
+        },
+        description: {
+          en: 'High-converting marketing clips & ads',
+          'zh-CN': '爆款带货短视频与电商切片制作',
+          'zh-TW': '爆款帶貨短影音與電商切片製作',
+          'ja-JP': 'EC・SNS向け高コンバージョン広告動画の制作',
+          'ko-KR': '커머스 및 광고 홍보 영상 제작',
+          es: 'Clips publicitarios de alta conversión y anuncios',
+        },
+        badge: 'NEW',
+        href: '/studio?tab=marketing',
+      },
+    ],
+    models: [
+      {
+        id: 'kling-3-0',
+        modelKey: 'kling-v3.0-standard-text-to-video',
+        tabId: 'video',
+        name: 'Kling 3.0 Pro',
+        provider: 'Kuaishou',
+        description: {
+          en: 'SOTA physics simulation & dynamic coherent motion, 35 credits',
+          'zh-CN': '顶级物理规律模拟与大幅度连贯动态，35 积分/次',
+          'zh-TW': '頂級物理規律模擬與大幅度連貫動態，35 積分/次',
+          'ja-JP': '最高水準の物理シミュレーションと一貫したダイナミックモーション、35pt',
+          'ko-KR': '최고 수준의 물리 법칙 시뮬레이션과 연속적인 역동적 움직임, 35 크레딧',
+          es: 'Simulación física de vanguardia y movimiento coherente, 35 créditos',
+        },
+        badge: 'TOP',
+        href: '/studio?tab=video&model=kling-v3.0-standard-text-to-video',
+      },
+      {
+        id: 'seedance-2-5',
+        modelKey: 'seedance-2.5-text-to-video',
+        tabId: 'video',
+        name: 'Seedance 2.5',
+        provider: 'ByteDance',
+        description: {
+          en: 'Native audio-visual co-generation, cinematic quality & camera',
+          'zh-CN': '音视频原生协同生成，电影级质感与运镜',
+          'zh-TW': '音視訊原生協同生成，電影級質感與運鏡',
+          'ja-JP': '音声と動画のネイティブ協調生成、映画級の質感とカメラワーク',
+          'ko-KR': '오디오-비디오 네이티브 협업 생성, 영화급 질감과 카메라 워크',
+          es: 'Co-generación nativa de audio y video con calidad de cine',
+        },
+        badge: 'HOT',
+        href: '/studio?tab=video&model=seedance-2.5-text-to-video',
+      },
+      {
+        id: 'minimax-hailuo-2-3',
+        modelKey: 'minimax-video-01',
+        tabId: 'video',
+        name: 'MiniMax Hailuo 2.3',
+        provider: 'MiniMax',
+        description: {
+          en: 'Cinematic storytelling & rich micro-expressions, 30 credits',
+          'zh-CN': '电影级叙事张力与自然生动的微表情神态，30 积分/次',
+          'zh-TW': '電影級敘事張力與自然生動的微表情神態，30 積分/次',
+          'ja-JP': '映画級の物語描写力と自然な表情変化、30pt',
+          'ko-KR': '영화급 스토리텔링과 자연스러운 미세 표정, 30 크레딧',
+          es: 'Fuerza narrativa cinematográfica y microexpresiones naturales, 30 créditos',
+        },
+        badge: 'HOT',
+        href: '/studio?tab=video&model=minimax-video-01',
+      },
+      {
+        id: 'google-veo-3-1',
+        modelKey: 'google-veo-3.1',
+        tabId: 'video',
+        name: 'Google Veo 3.1',
+        provider: 'Google DeepMind',
+        description: {
+          en: 'Cinematic HD video generation, 38 credits',
+          'zh-CN': '高保真电影级高清视频生成底座，38 积分/次',
+          'zh-TW': '高保真電影級高畫質影片生成底座，38 積分/次',
+          'ja-JP': '高精細シネマティックHD動画生成モデル、38pt',
+          'ko-KR': '고품질 영화급 HD 비디오 생성 파운데이션, 38 크레딧',
+          es: 'Modelo insignia de Google para video cinematográfico en HD, 38 créditos',
+        },
+        badge: 'NEW',
+        href: '/studio?tab=video&model=google-veo-3.1',
+      },
+      {
+        id: 'google-veo-3',
+        modelKey: 'google-veo-3',
+        tabId: 'video',
+        name: 'Google Veo 3',
+        provider: 'Google DeepMind',
+        description: {
+          en: 'High-fidelity cinematic camera paths & Ultra HD, 30 credits',
+          'zh-CN': '高保真电影运镜与超高清生成底座，30 积分/次',
+          'zh-TW': '高保真電影運鏡與超高畫質生成底座，30 積分/次',
+          'ja-JP': 'シネマティックカメラワークとUltra HD動画生成、30pt',
+          'ko-KR': '영화급 카메라 워크와 울트라 HD 비디오 생성, 30 크레딧',
+          es: 'Tomas cinematográficas de alta fidelidad y Ultra HD, 30 créditos',
+        },
+        badge: 'TOP',
+        href: '/studio?tab=video&model=google-veo-3',
+      },
+      {
+        id: 'wan-2-7',
+        modelKey: 'wan-2.7-t2v',
+        tabId: 'video',
+        name: 'Wan 2.7',
+        provider: 'Alibaba',
+        description: {
+          en: 'High temporal stability & prompt alignment',
+          'zh-CN': '高动态稳定性与优质语义还原',
+          'zh-TW': '高動態穩定性與優質語意還原',
+          'ja-JP': '高い時間的安定性とプロンプト再現性',
+          'ko-KR': '높은 시간적 안정성과 뛰어난 프롬프트 정합성',
+          es: 'Alta estabilidad temporal y precisión con las indicaciones',
+        },
+        badge: 'SOON',
+        href: '/studio?tab=video&model=wan-2.7-t2v',
+      },
+      {
+        id: 'runway-gen3-alpha',
+        modelKey: 'runway-gen3-alpha-turbo',
+        tabId: 'video',
+        name: 'Runway Gen-3 Alpha',
+        provider: 'Runway',
+        description: {
+          en: 'Industry-grade camera controls & visual fidelity',
+          'zh-CN': '影视行业级镜头控制与高保真画质',
+          'zh-TW': '影視行業級鏡頭控制與高保真畫質',
+          'ja-JP': '映画業界標準のカメラコントロールと高画質',
+          'ko-KR': '영화 업계 수준의 카메라 제어 및 고화질 비주얼',
+          es: 'Control de cámara de nivel industrial y alta fidelidad visual',
+        },
+        badge: 'SOON',
+        href: '/studio?tab=video&model=runway-gen3-alpha-turbo',
+      },
+      {
+        id: 'openai-sora-2',
+        modelKey: 'openai-sora-2',
+        tabId: 'video',
+        name: 'OpenAI Sora 2',
+        provider: 'OpenAI',
+        description: {
+          en: 'World simulation & coherent long-shot generation',
+          'zh-CN': '世界模拟与超长镜头连贯生成',
+          'zh-TW': '世界模擬與超長鏡頭連貫生成',
+          'ja-JP': 'ワールドシミュレーションと超長尺カットの整合生成',
+          'ko-KR': '세계 시뮬레이션 및 초장시간 롱테이크 일관 생성',
+          es: 'Simulación del mundo y tomas largas coherentes',
+        },
+        badge: 'SOON',
+        href: '/studio?tab=video&model=openai-sora-2',
+      },
+      {
+        id: 'luma-dream-machine',
+        modelKey: 'luma-dream-machine-v1.6',
+        tabId: 'video',
+        name: 'Luma Dream Machine',
+        provider: 'Luma AI',
+        description: {
+          en: 'Realistic lighting dynamics & seamless transitions',
+          'zh-CN': '自然光影动态与顺滑转场过渡',
+          'zh-TW': '自然光影動態與順滑轉場過渡',
+          'ja-JP': 'リアルな光影ダイナミクスと滑らかなトランジション',
+          'ko-KR': '자연스러운 빛의 변화와 부드러운 화면 전환',
+          es: 'Dinámica de luz realista y transiciones fluidas',
+        },
+        badge: 'SOON',
+        href: '/studio?tab=video&model=luma-dream-machine-v1.6',
+      },
+    ],
+  },
+  {
+    id: 'audio',
+    tabId: 'audio',
+    label: {
+      en: 'Audio',
+      'zh-CN': '音频',
+      'zh-TW': '音訊',
+      'ja-JP': '音声',
+      'ko-KR': '오디오',
+      es: 'Audio',
+    },
+    href: '/studio?tab=audio',
+    badge: null,
+    features: [
+      {
+        id: 'audio',
+        tabId: 'audio',
+        icon: 'volume',
+        label: {
+          en: 'Audio Studio',
+          'zh-CN': '音频工作室',
+          'zh-TW': '音訊工作室',
+          'ja-JP': 'オーディオスタジオ',
+          'ko-KR': '오디오 스튜디오',
+          es: 'Estudio de Audio',
+        },
+        description: {
+          en: 'AI song composition, voice cloning & sound FX',
+          'zh-CN': 'AI 全曲编曲、人声克隆与专业音效',
+          'zh-TW': 'AI 全曲編曲、人聲克隆與專業音效',
+          'ja-JP': 'AI楽曲制作、音声クローン、プロ仕様音響効果',
+          'ko-KR': 'AI 작곡, 음성 복제 및 전문 음향 효과',
+          es: 'Composición musical, clonación de voz y efectos de sonido',
+        },
+        badge: 'HOT',
+        href: '/studio?tab=audio',
+      },
+    ],
+    models: [
+      {
+        id: 'suno-v4',
+        modelKey: 'suno-v4',
+        tabId: 'audio',
+        name: 'Suno v4',
+        provider: 'Suno',
+        description: {
+          en: 'Full-song generation with emotive vocal styles',
+          'zh-CN': '全曲高保真编曲与极富感染力的人声演唱',
+          'zh-TW': '全曲高保真編曲與極富感染力的人聲演唱',
+          'ja-JP': '高品位な全曲編曲とエモーショナルなボーカル歌唱',
+          'ko-KR': '풀 트랙 고음질 편곡과 감성적인 보컬 가창',
+          es: 'Composición musical completa con voces emotivas',
+        },
+        badge: 'HOT',
+        href: '/studio?tab=audio&model=suno-v4',
+      },
+      {
+        id: 'minimax-music-3-0',
+        modelKey: 'minimax-music-01',
+        tabId: 'audio',
+        name: 'MiniMax Music 3.0',
+        provider: 'MiniMax',
+        description: {
+          en: 'Studio-grade multi-track song synthesis, 15 credits',
+          'zh-CN': '专业级多声部全曲编曲与逼真人声演唱，15 积分/次',
+          'zh-TW': '專業級多聲部全曲編曲與逼真人聲演唱，15 積分/次',
+          'ja-JP': 'スタジオ品質のマルチトラック楽曲制作とリアルなボーカル、15pt',
+          'ko-KR': '전문가급 다성부 작곡과 사실적인 보컬 합성, 15 크레딧',
+          es: 'Producción musical multipista de estudio y voces realistas, 15 créditos',
+        },
+        badge: 'TOP',
+        href: '/studio?tab=audio&model=minimax-music-01',
+      },
+      {
+        id: 'udio-v1-5',
+        modelKey: 'udio-v1.5',
+        tabId: 'audio',
+        name: 'Udio v1.5',
+        provider: 'Udio',
+        description: {
+          en: 'Studio-grade music production & stem separation',
+          'zh-CN': '母带级专业音乐制作与高保真分轨',
+          'zh-TW': '母帶級專業音樂製作與高保真分軌',
+          'ja-JP': 'マスタリング品質のプロ仕様音楽制作と高精度ステム分離',
+          'ko-KR': '마스터링급 전문 음악 제작 및 고정밀 스템 분리',
+          es: 'Producción musical profesional y separación de pistas',
+        },
+        badge: 'SOON',
+        href: '/studio?tab=audio&model=udio-v1.5',
+      },
+      {
+        id: 'minimax-speech-2-6-hd',
+        modelKey: 'minimax-speech-01-hd',
+        tabId: 'audio',
+        name: 'MiniMax Speech 2.6 HD',
+        provider: 'MiniMax',
+        description: {
+          en: 'Ultra-realistic humanlike voice synthesis & cloning',
+          'zh-CN': '超拟真人性化语音合成与多语言克隆',
+          'zh-TW': '超擬真人性化語音合成與多語言克隆',
+          'ja-JP': '超リアルな人間らしい音声合成と多言語クローン',
+          'ko-KR': '인간에 가까운 초사실적 음성 합성 및 다국어 복제',
+          es: 'Síntesis de voz ultra realista y clonación multilingüe',
+        },
+        badge: 'HOT',
+        href: '/studio?tab=audio&model=minimax-speech-01-hd',
+      },
+    ],
+  },
+  {
+    id: 'agents-automation',
+    tabId: 'workflows',
+    label: {
+      en: 'Agents & Workflows',
+      'zh-CN': '智能体与工作流',
+      'zh-TW': '智慧體與工作流',
+      'ja-JP': 'エージェント・ワークフロー',
+      'ko-KR': '에이전트 및 워크플로우',
+      es: 'Agentes y Flujos',
+    },
+    href: '/studio?tab=workflows',
+    badge: null,
+    features: [
+      {
+        id: 'workflows',
+        tabId: 'workflows',
+        icon: 'workflow',
+        label: {
+          en: 'Workflows',
+          'zh-CN': 'AI 创作工作流',
+          'zh-TW': 'AI 創作工作流',
+          'ja-JP': 'ワークフロー',
+          'ko-KR': '워크플로우',
+          es: 'Flujos de Trabajo',
+        },
+        description: {
+          en: 'Visual node orchestration & automated pipeline',
+          'zh-CN': '可视化节点编排与全链路自动化生成',
+          'zh-TW': '可視化節點編排與全鏈路自動化生成',
+          'ja-JP': 'ノードベースの自動化パイプライン構築',
+          'ko-KR': '비주얼 노드 오케스트레이션 및 자동화 파이프라인',
+          es: 'Orquestación visual de nodos y flujos automatizados',
+        },
+        badge: 'HOT',
+        href: '/studio?tab=workflows',
+      },
+      {
+        id: 'agents',
+        tabId: 'agents',
+        icon: 'bot',
+        label: {
+          en: 'Agents',
+          'zh-CN': '创作智能体',
+          'zh-TW': '創作智慧體',
+          'ja-JP': 'エージェント',
+          'ko-KR': '에이전트',
+          es: 'Agentes',
+        },
+        description: {
+          en: 'Autonomous thinking & multi-step creative assistant',
+          'zh-CN': '自主思考与分步执行的 AI 创作助理',
+          'zh-TW': '自主思考與分步執行的 AI 創作助理',
+          'ja-JP': '自律思考とマルチステップ実行のAIアシスタント',
+          'ko-KR': '자율적 추론과 단계별 실행의 AI 창작 어시스턴트',
+          es: 'Asistente creativo con razonamiento y ejecución paso a paso',
+        },
+        badge: 'TOP',
+        href: '/studio?tab=agents',
+      },
+    ],
+    models: [
+      {
+        id: 'deepseek-r1',
+        modelKey: 'deepseek-reasoner',
+        tabId: 'agents',
+        name: 'DeepSeek-R1',
+        provider: 'DeepSeek',
+        description: {
+          en: 'Deep reasoning & complex multi-step task planning',
+          'zh-CN': '深度长思考与复杂多步骤任务规划',
+          'zh-TW': '深度長思考與複雜多步驟任務規劃',
+          'ja-JP': '深い思考と複雑なマルチステップタスクの計画',
+          'ko-KR': '심층적 사고와 복잡한 다단계 작업 계획 수립',
+          es: 'Razonamiento profundo y planificación de tareas complejas',
+        },
+        badge: 'HOT',
+        href: '/studio?tab=agents&model=deepseek-reasoner',
+      },
+      {
+        id: 'claude-3-7-sonnet',
+        modelKey: 'claude-3-7-sonnet',
+        tabId: 'agents',
+        name: 'Claude 3.7 Sonnet',
+        provider: 'Anthropic',
+        description: {
+          en: 'Premier multimodal orchestration & workflow coding',
+          'zh-CN': '顶级多模态编排与代码/工作流生成',
+          'zh-TW': '頂級多模態編排與代碼/工作流生成',
+          'ja-JP': '最高峰のマルチモーダル調整とワークフロー構築',
+          'ko-KR': '최고 수준의 멀티모달 오케스트레이션 및 워크플로우 생성',
+          es: 'Orquestación multimodal de vanguardia y generación de código',
+        },
+        badge: 'NEW',
+        href: '/studio?tab=agents&model=claude-3-7-sonnet',
+      },
+      {
+        id: 'gpt-4o',
+        modelKey: 'gpt-4o',
+        tabId: 'agents',
+        name: 'GPT-4o',
+        provider: 'OpenAI',
+        description: {
+          en: 'Omni high-speed multimodal vision & execution',
+          'zh-CN': '全能高响应多模态视觉理解与任务执行',
+          'zh-TW': '全能高響應多模態視覺理解與任務執行',
+          'ja-JP': '高レスポンスなマルチモーダル視覚理解とタスク実行',
+          'ko-KR': '빠른 응답의 멀티모달 비전 이해 및 작업 수행',
+          es: 'Comprensión visual multimodal de alta velocidad y ejecución',
+        },
+        badge: 'TOP',
+        href: '/studio?tab=agents&model=gpt-4o',
+      },
+    ],
+  },
+  {
+    id: 'short-drama-workshop',
+    tabId: null,
+    label: {
+      en: 'Drama Workshop',
+      'zh-CN': '短剧工作坊',
+      'zh-TW': '短劇工作坊',
+      'ja-JP': 'ショートドラマ工房',
+      'ko-KR': '숏드라마 워크숍',
+      es: 'Taller de Drama Corto',
+    },
+    href: '/lab',
+    badge: 'NEW',
+    features: [],
+    models: [],
+  },
+  {
+    id: 'community',
+    tabId: null,
+    label: {
+      en: 'Community',
+      'zh-CN': '社区',
+      'zh-TW': '社群',
+      'ja-JP': 'コミュニティ',
+      'ko-KR': '커뮤니티',
+      es: 'Comunidad',
+    },
+    href: '/community',
+    badge: null,
+    features: [
+      {
+        id: 'explore-feed',
+        tabId: null,
+        icon: 'compass',
+        label: {
+          en: 'Explore Feed',
+          'zh-CN': '探索灵感',
+          'zh-TW': '探索靈感',
+          'ja-JP': 'インスピレーション探索',
+          'ko-KR': '영감 탐색',
+          es: 'Explorar Inspiración',
+        },
+        description: {
+          en: 'Browse featured creations & prompts worldwide',
+          'zh-CN': '浏览全球创作者精选作品与提示词',
+          'zh-TW': '瀏覽全球創作者精選作品與提示詞',
+          'ja-JP': '世界中のクリエイターの厳選作品とプロンプト',
+          'ko-KR': '전 세계 크리에이터의 엄선된 작품과 프롬프트',
+          es: 'Explora obras y prompts destacados de todo el mundo',
+        },
+        badge: 'HOT',
+        href: '/community',
+      },
+      {
+        id: 'remix-hub',
+        tabId: null,
+        icon: 'sparkles',
+        label: {
+          en: 'Remix Hub',
+          'zh-CN': '一键同款',
+          'zh-TW': '一鍵同款',
+          'ja-JP': 'ワンクリック同款',
+          'ko-KR': '원클릭 리믹스',
+          es: 'Centro de Remix',
+        },
+        description: {
+          en: 'One-click load popular parameters & workflows',
+          'zh-CN': '一键载入热门作品参数与工作流',
+          'zh-TW': '一鍵載入熱門作品參數與工作流',
+          'ja-JP': '人気作品のパラメータとワークフローを即座に適用',
+          'ko-KR': '인기 작품의 파라미터와 워크플로우 즉시 불러오기',
+          es: 'Carga parámetros y flujos populares con un clic',
+        },
+        badge: 'NEW',
+        href: '/community?sort=likes',
+      },
+    ],
+    models: [],
+  },
+];
+
+export const MEGA_NAV_COPY = {
+  en: {
+    explore: 'Explore',
+    features: 'Features & Tools',
+    models: 'Core Model Matrix',
+    modelsReady: 'listed',
+  },
+  'zh-CN': {
+    explore: '探索',
+    features: '功能与工具',
+    models: '核心模型矩阵',
+    modelsReady: '款可选',
+  },
+  'zh-TW': {
+    explore: '探索',
+    features: '功能與工具',
+    models: '核心模型矩陣',
+    modelsReady: '款可選',
+  },
+  'ja-JP': {
+    explore: '探索',
+    features: '機能とツール',
+    models: 'コアモデルマトリックス',
+    modelsReady: '個を表示',
+  },
+  'ko-KR': {
+    explore: '탐색',
+    features: '기능 및 도구',
+    models: '핵심 모델 매트릭스',
+    modelsReady: '개 표시',
+  },
+  es: {
+    explore: 'Explorar',
+    features: 'Funciones y herramientas',
+    models: 'Modelos principales',
+    modelsReady: 'en la lista',
+  },
+};
+
+/**
+ * 辅助函数：根据当前语言获取格式化后的导航项
+ * @param {string} locale
+ */
+export function getMegaNavCategories(locale = 'en') {
+  const norm = normalizeLocale(locale);
+  const isZh = norm.startsWith('zh');
+  const rootPath = getLocaleConfig(norm)?.rootPath || '';
+  const studioBase = rootPath ? `${rootPath}/studio` : '/studio';
+  const communityBase = (rootPath && rootPath === '/zh') ? '/zh/community' : '/community';
+
+  const pickText = (obj) => {
+    if (!obj) return '';
+    if (typeof obj === 'string') return obj;
+    return obj[norm] || (norm === 'zh-CN' ? (obj['zh-CN'] || obj.zh) : (norm === 'zh-TW' ? (obj['zh-TW'] || obj.zh) : null)) || obj.en || obj.zh || '';
+  };
+
+  const localizeUrl = (rawHref) => {
+    if (!rawHref) return rawHref;
+    if (rawHref.startsWith('/studio')) {
+      return rawHref.replace('/studio', studioBase);
+    }
+    if (rawHref.startsWith('/community')) {
+      return rawHref.replace('/community', communityBase);
+    }
+    if (rawHref === '/lab' || rawHref.startsWith('/lab/')) {
+      return isZh ? '/zh/lab' : '/lab';
+    }
+    return rawHref;
+  };
+
+  return MEGA_NAV_CATEGORIES.map((cat) => ({
+    ...cat,
+    label: pickText(cat.label),
+    href: localizeUrl(cat.href),
+    features: (cat.features || []).map((feat) => ({
+      ...feat,
+      label: pickText(feat.label),
+      description: pickText(feat.description),
+      href: localizeUrl(feat.href),
+    })),
+    models: (cat.models || []).map((m) => ({
+      ...m,
+      description: pickText(m.description),
+      href: localizeUrl(m.href),
+    })),
+  }));
+}
+
+export function getMegaNavCopy(locale = 'en') {
+  const norm = normalizeLocale(locale);
+  return MEGA_NAV_COPY[norm] || MEGA_NAV_COPY.en;
+}
+
+/**
+ * 辅助函数：通过 tabId 查找 Feature
+ */
+export function findFeatureByTabId(tabId) {
+  for (const cat of MEGA_NAV_CATEGORIES) {
+    const found = cat.features?.find((f) => f.tabId === tabId);
+    if (found) return found;
+  }
+  return null;
+}
+
+/**
+ * 辅助函数：通过 modelKey 查找 Model
+ */
+export function findModelByKey(modelKey) {
+  for (const cat of MEGA_NAV_CATEGORIES) {
+    const found = cat.models?.find((m) => m.modelKey === modelKey);
+    if (found) return found;
+  }
+  return null;
+}

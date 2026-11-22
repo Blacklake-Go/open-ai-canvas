@@ -1,0 +1,159 @@
+{
+  "shared": {
+    "headerTitle": "Cumplimiento legal",
+    "copyright": "© 2026 {{brand}} · Todos los derechos reservados",
+    "disclaimer": "Esta traducción es una cortesía y no es una versión oficial. En caso de discrepancia, prevalecerá el texto original en chino simplificado.",
+    "links": {
+      "terms": "Términos de servicio",
+      "privacy": "Política de privacidad",
+      "refund": "Política de reembolsos",
+      "contentPolicy": "Normas de contenido"
+    }
+  },
+  "meta": {
+    "terms": {
+      "title": "Términos de servicio | supdance"
+    },
+    "privacy": {
+      "title": "Política de privacidad | supdance"
+    },
+    "refund": {
+      "title": "Política de reembolsos y protección de activos | supdance"
+    },
+    "contentPolicy": {
+      "title": "Normas de seguridad del contenido y uso conforme a la normativa | supdance"
+    }
+  },
+  "terms": {
+    "headerSubtitle": "Términos de servicio y acuerdo de uso",
+    "eyebrow": "Acuerdo de servicio SaaS",
+    "heading": "Términos de servicio de la plataforma {{brand}}",
+    "intro": "Le damos la bienvenida al taller de creación de IA generativa de {{brand}}. Lea atentamente estos términos de servicio antes de acceder o utilizar nuestros modelos multimodales y herramientas para creadores.",
+    "sections": {
+      "s1": {
+        "title": "1. Ámbito del servicio y posición de la plataforma",
+        "body": {
+          "p1": "La plataforma ofrece a los creadores servicios profesionales que incluyen, entre otros, generación multimodal de imágenes, producción de vídeo en alta definición, síntesis de audio, orquestación de agentes y diseño de flujos de trabajo. La plataforma admite tanto recursos de cálculo propios como interfaces de modelos de proveedores terceros autorizados; el catálogo de modelos y las cuotas de cálculo realmente disponibles son los que se muestran en la consola."
+        }
+      },
+      "s2": {
+        "title": "2. Derechos del creador y cumplimiento del contenido",
+        "body": {
+          "p1": "El usuario dispone del derecho legítimo de uso sobre los prompts y los materiales de referencia que introduce a través de este servicio, y garantiza que su contenido cumple la legislación aplicable y los valores fundamentales del socialismo. Queda estrictamente prohibido utilizar este servicio para crear o difundir contenido que infrinja derechos de terceros, sea fraudulento, pornográfico, violento, contenga código malicioso o ponga en peligro la seguridad pública."
+        }
+      },
+      "s3": {
+        "title": "3. Consumo de créditos, conciliación de libros y disponibilidad",
+        "body": {
+          "p1": "Todas las tareas de invocación de modelos se ejecutan bajo un bloqueo de transacción distribuido con doble conciliación de créditos (reserva, confirmación y liberación en caso de fallo). Si una tarea termina en fallo porque un servicio de modelo upstream agotó el tiempo de espera o se interrumpió de forma anómala, el sistema activa automáticamente la devolución de los créditos para garantizar la exactitud del saldo del creador."
+        }
+      },
+      "s4": {
+        "title": "4. Propiedad intelectual y compartición en la comunidad",
+        "body": {
+          "p1": "Cuando elija publicar un recurso generado propio en la comunidad de la plataforma, entenderá que otorga a la plataforma y a los demás creadores de la comunidad un derecho no exclusivo de exhibirlo, tomarlo como referencia de inspiración y replicar su preset de parámetros dentro del sitio. Las obras guardadas en el Centro de recursos permanecen privadas de forma predeterminada."
+        }
+      }
+    }
+  },
+  "privacy": {
+    "headerSubtitle": "Privacidad de datos y protección de la información del usuario",
+    "eyebrow": "Privacidad y seguridad",
+    "heading": "Política de privacidad de la plataforma {{brand}}",
+    "intro": "{{brand}} es consciente de lo importantes que son la privacidad personal y los datos creativos generados para los creadores. Esta política explica de forma transparente cómo recopilamos, ciframos, almacenamos, protegemos y tratamos sus credenciales de cuenta y los datos de sus tareas.",
+    "sections": {
+      "s1": {
+        "title": "1. Recopilación de datos y principio de mínimos necesarios",
+        "body": {
+          "p1": "Solo recopilamos la información necesaria para prestarle el servicio: el correo electrónico o el número de teléfono usados para registrarse e iniciar sesión, los parámetros de entrada históricos de sus tareas de generación (prompt, resolución, pasos), las direcciones de los resultados generados y la información de los pedidos de conciliación de pagos. Las contraseñas se almacenan exclusivamente mediante hash unidireccional de grado bancario."
+        }
+      },
+      "s2": {
+        "title": "2. Seguridad de la interacción con proveedores de modelos upstream",
+        "body": {
+          "p1": "Cuando envía una tarea de generación, el prompt y las imágenes de referencia necesarios se transmiten a través de un canal cifrado seguro (TLS 1.3) al clúster de cálculo o al proveedor de modelos correspondiente. No utilizamos los recursos privados ni las entradas exclusivas de un usuario para el entrenamiento general no autorizado de modelos públicos."
+        }
+      },
+      "s3": {
+        "title": "3. Protección de cookies y tokens de sesión",
+        "body": {
+          "p1": "La plataforma utiliza cookies de sesión protegidas con HttpOnly y SameSite, y admite la defensa de origen en todo el sitio (control de solicitudes CSRF). El creador puede cerrar sesión de forma segura en cualquier momento desde el Centro de cuentas o revocar las sesiones activas de un dispositivo concreto."
+        }
+      },
+      "s4": {
+        "title": "4. Derechos sobre los datos del creador y eliminación de la cuenta",
+        "body": {
+          "p1": "El creador dispone de pleno derecho a conocer y eliminar los datos de sus recursos. Puede exportar, ocultar o borrar física y definitivamente el historial de creaciones en su centro de obras personales en cualquier momento, o ponerse en contacto con el soporte técnico para solicitar la eliminación de la cuenta."
+        }
+      },
+      "s5": {
+        "title": "5. Complemento SupDance Canvas Codex y agente local",
+        "body": {
+          "p1": "Cuando utiliza el complemento SupDance Canvas Codex, el agente local de su dispositivo lee o manipula el lienzo actual según su solicitud, por lo que puede procesar títulos de lienzos, contenido de nodos, contenido seleccionado, prompts, materiales de referencia y los datos de ejecución del agente necesarios para completar la conexión y la tarea. Esta información se emplea para establecer la conexión con el lienzo, leer o editar el lienzo y ejecutar los flujos de trabajo que usted solicite. Solo cuando usted solicita generar contenido se envían el prompt, los materiales de referencia y los parámetros de tarea necesarios al modelo o proveedor de cálculo elegido para esa tarea.",
+          "p2": "Los servidores de SupDance conservan durante 3 días el contenido de lienzo, los prompts y los datos de ejecución del agente recibidos a través de este complemento, y los eliminan automáticamente al vencer el plazo. Este plazo se aplica únicamente a los datos almacenados en los servidores de SupDance, no a los registros de sesión, el historial de tareas, la configuración ni los registros de depuración que Codex o el agente local guarden en su dispositivo; los datos locales se conservan hasta que usted o la configuración del software local los elimine. Puede dejar de usar el complemento y eliminar el contenido en línea mediante las funciones de gestión de lienzos y recursos que ofrece su cuenta de SupDance."
+        }
+      },
+      "s6": {
+        "title": "6. Inicio de sesión con redes sociales de terceros y eliminación de datos (Social Login & Data Deletion)",
+        "body": {
+          "p1": "**Inicio de sesión y perfil de Instagram:** El inicio de sesión con Instagram admite actualmente cuentas Business o Creator (profesionales) de Instagram. Tras su autorización, SupDance solo solicita `instagram_business_basic` para leer el identificador de cuenta y el nombre de usuario de Instagram, con el fin de iniciar sesión, crear una cuenta de SupDance o vincular un método de acceso. No solicitamos permisos de publicación de contenido, mensajes directos, comentarios ni analíticas, y no almacenamos de forma persistente los tokens de acceso de Instagram.",
+          "p2": "**Eliminación de datos de Instagram:** Puede desvincular Instagram desde la lista «Cuentas sociales» de la página de perfil de SupDance. La desvinculación elimina esa credencial de acceso, pero no cierra su cuenta de SupDance. Para eliminar su cuenta de SupDance y los datos asociados, elija «Eliminar cuenta» en su página de perfil; la cuenta entra primero en un período de revocación de 3 días y, si no la revoca dentro de ese plazo, el sistema borra definitivamente los datos de la cuenta. También puede escribir a `privacy@supdance.com` para recibir ayuda.",
+          "p3": "**Inicio de sesión y perfil de TikTok:** Cuando elige iniciar sesión con TikTok (Login Kit), SupDance solo solicita, con su autorización expresa, credenciales básicas de identidad (`user.info.basic`: avatar público, nombre visible y `open_id` único de la aplicación) y las utiliza únicamente para identificar al creador, crear la cuenta y personalizar el espacio de trabajo. Nunca leemos ni publicamos sus vídeos no públicos ni su contenido privado.",
+          "p4": "**Instrucciones de solicitud de eliminación de datos (Data Deletion Request Instructions):** El creador puede revocar la autorización de TikTok con un clic en cualquier momento desde «Centro de cuentas - Vinculaciones de cuentas sociales» de SupDance, o enviar una solicitud de borrado de datos escribiendo a `privacy@supdance.com` o `support@supdance.com` (indique en el asunto: TikTok Data Deletion Request). Tras verificar su identidad, eliminamos física y definitivamente, en un plazo de 30 días naturales, todos los metadatos de usuario y las credenciales correspondientes sincronizados desde la interfaz de TikTok a su nombre."
+        }
+      }
+    }
+  },
+  "refund": {
+    "headerSubtitle": "Recargas, reembolsos de suscripción y garantía de créditos",
+    "eyebrow": "Política de reembolsos y protección",
+    "heading": "{{brand}} Reglas de reembolso de recargas y garantía de cálculo",
+    "intro": "Para mantener un ecosistema de creadores sano, justo y transparente, y proteger sus derechos legítimos como consumidor, esta política detalla los mecanismos de garantía de liquidación aplicables a las suscripciones de membresía, los paquetes de recarga de cálculo y las generaciones fallidas.",
+    "sections": {
+      "s1": {
+        "title": "1. Liberación y devolución automáticas del 100 % en caso de fallo",
+        "body": {
+          "p1": "La máquina de estados de tareas de la plataforma aplica un control de activos de precisión en tres fases: reserva (Reserve), confirmación (Commit) y liberación (Release). Si un modelo no produce un resultado correcto por causas ajenas al usuario —congestión de cálculo, avería de un proveedor o bloqueo de un prompt con términos prohibidos—, los créditos reservados se devuelven íntegramente dentro de los milisegundos siguientes a que la tarea se marque como fallida."
+        }
+      },
+      "s2": {
+        "title": "2. Reglas de compra de paquetes de recarga de cálculo",
+        "body": {
+          "p1": "Los paquetes de recarga de cálculo adquiridos a través de la pasarela oficial se conservan de forma permanente en su monedero personal. Si tras recargar no ha utilizado ningún crédito, puede solicitar a atención al cliente el reembolso al mismo método de pago dentro de los 7 días naturales desde la compra; los créditos ya consumidos por tareas de generación y la diferencia de descuento correspondiente no son reembolsables."
+        }
+      },
+      "s3": {
+        "title": "3. Ciclo de facturación de la membresía y gestión de bajas",
+        "body": {
+          "p1": "Los miembros mensuales y anuales pueden desactivar la «renovación automática del siguiente ciclo» desde el Centro de cuentas en cualquier momento. Tras la cancelación, sus ventajas VIP vigentes y el cálculo otorgado a diario seguirán siendo válidos hasta el final del período de facturación, y no se realizará ningún cargo el mes siguiente."
+        }
+      }
+    }
+  },
+  "contentPolicy": {
+    "headerSubtitle": "Cumplimiento en la creación con IA y seguridad del contenido",
+    "eyebrow": "IA responsable y seguridad",
+    "heading": "{{brand}} Normas de seguridad del contenido y cumplimiento",
+    "intro": "Estamos comprometidos con la construcción de una infraestructura de IA generativa responsable. La plataforma se apoya en un mecanismo de doble capa —una tubería de revisión automatizada y una revalidación humana— para reprimir todo tipo de uso ilícito o abusivo.",
+    "sections": {
+      "s1": {
+        "title": "1. Ámbito de contenido prohibido con tolerancia cero",
+        "body": {
+          "p1": "Queda estrictamente prohibido utilizar cualquier modelo de texto a imagen, de imagen a vídeo, de clonación de voz o similar para generar —o inducir la generación de— el siguiente contenido: material y abuso sexual infantil (CSAM); terrorismo y violencia extremista; guías para fabricar armas peligrosas o productos químicos peligrosos; difamación mediante deepfakes (Deepfake) no consentidos o invasión de la imagen y la privacidad de otras personas; fraude, phishing y código malicioso."
+        }
+      },
+      "s2": {
+        "title": "2. Revisión automatizada multinivel y corte en tiempo real",
+        "body": {
+          "p1": "En la capa de admisión de tareas el sistema aplica un filtrado semántico preventivo estricto de términos sensibles y una intercepción de cumplimiento visual upstream. Las solicitudes que provoquen una infracción grave se bloquean en tiempo real, y los registros de seguridad correspondientes se conservan de forma persistente para exigir responsabilidades."
+        }
+      },
+      "s3": {
+        "title": "3. Supervisión de la comunidad y canal rápido de apelación",
+        "body": {
+          "p1": "La comunidad de la plataforma ofrece a todos los visitantes un acceso de denuncia con un clic en tiempo real. Si observa que una obra publicada infringe derechos o incumple las normas, puede presentar una denuncia en cualquier momento. El creador cuya obra haya sido retirada puede iniciar una revisión a través del sistema de tickets aportando una prueba de titularidad legítima."
+        }
+      }
+    }
+  }
+}

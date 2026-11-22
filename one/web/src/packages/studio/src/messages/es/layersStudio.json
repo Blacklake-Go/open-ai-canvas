@@ -1,0 +1,206 @@
+{
+  "common": {
+    "model": "Modelo",
+    "reset": "Restablecer"
+  },
+  "panels": {
+    "layer-decomposition": "Descomposición de Capas",
+    "upscale": "Escalado",
+    "color-grading": "Gradación de Color",
+    "remove-bg": "Eliminar Fondo",
+    "expand-crop": "Expandir Imagen",
+    "tools": "Herramientas"
+  },
+  "menuItems": {
+    "layer-decomposition": "Descomposición de Capas",
+    "upscale": "Escalado",
+    "color-grading": "Gradación de Color",
+    "remove-bg": "Eliminar fondo",
+    "expand-crop": "Expandir y Outpainting",
+    "edit-text": "Editar texto",
+    "enhancer": "Mejorador",
+    "relight": "Reiluminar",
+    "angles": "Ángulos",
+    "new": "Nuevo"
+  },
+  "tools": {
+    "uploadOrChangeImage": "Subir o Cambiar Imagen",
+    "clearMarkedRegions": "Limpiar Regiones Marcadas",
+    "runSelectionEdit": "Ejecutar Edición de Selección",
+    "line": "Línea",
+    "arrow": "Flecha",
+    "rectangle": "Rectángulo",
+    "circle": "Círculo",
+    "customColor": "Color Personalizado",
+    "undoStroke": "Deshacer Trazo",
+    "redoStroke": "Rehacer Trazo",
+    "clearDrawings": "Limpiar Dibujos",
+    "selectPointerTool": "Herramienta Puntero",
+    "panTool": "Herramienta Mano (Mover)",
+    "lassoEdit": "Edición con Lazo",
+    "regionalEdit": "Edición Regional",
+    "highlightMarkerPen": "Marcador Resaltador",
+    "eraserTool": "Borrador",
+    "shapes": "Formas (R)",
+    "resetZoomPan": "Restablecer Zoom y Posición",
+    "addImage": "Añadir Imagen",
+    "runLayerDecomposition": "Ejecutar Descomposición de Capas",
+    "backToTools": "Volver a Herramientas",
+    "closePanel": "Cerrar Panel",
+    "regionalPromptPlaceholder": "Escribe tu prompt aquí...",
+    "promptPlaceholder": "Describe cómo editar la imagen o dividir capas...",
+    "markedPromptPlaceholder": "Describe capas para {count} región(es) marcada(s)..."
+  },
+  "sample": {
+    "clickToLoad": "Haz clic para cargar este ejemplo de descomposición de capas",
+    "original": "Capa original",
+    "layersCount": "5 Capas",
+    "try": "Probar →",
+    "clickToExplore": "Haz clic para explorar el ejemplo"
+  },
+  "settings": {
+    "heading": "Ajustes",
+    "resolution": "Resolución",
+    "layers": "Capas"
+  },
+  "carousel": {
+    "heading": "Carrusel de Capas",
+    "soloActive": "Solo Activa",
+    "stackMode": "Modo Pila",
+    "viewOnlyActive": "Ver solo la capa activa",
+    "downloadAll": "Descargar Todo",
+    "previousLayer": "Capa Anterior",
+    "nextLayer": "Capa Siguiente",
+    "toggleVisibility": "Alternar Visibilidad",
+    "downloadThisLayer": "Descargar esta capa",
+    "save": "Guardar",
+    "layerLabel": "Capa {n}",
+    "seedreamDecomposed": "Seedream Descompuesto"
+  },
+  "colorGrading": {
+    "colorCorrect": {
+      "heading": "Corrección de Color",
+      "info": "Temperatura, tono, saturación, contraste y división de tonos",
+      "reset": "Restablecer Corrección de Color"
+    },
+    "softenDetails": {
+      "heading": "Suavizar Detalles",
+      "info": "Radio y suavizado de detalles",
+      "reset": "Restablecer Suavizado de Detalles"
+    },
+    "bloom": {
+      "heading": "Resplandor (Bloom)",
+      "info": "Difusión de luminiscencia y modo de fusión",
+      "reset": "Restablecer Resplandor"
+    },
+    "halation": {
+      "heading": "Halación",
+      "info": "Brillo rojo de película alrededor de luces intensas",
+      "reset": "Restablecer Halación"
+    },
+    "lensInstructions": {
+      "heading": "Instrucciones de Lente",
+      "info": "Viñeta y distorsión óptica de lente",
+      "reset": "Restablecer Lente"
+    },
+    "exposure": {
+      "heading": "Exposición",
+      "info": "Ajuste de pasos de exposición",
+      "reset": "Restablecer Exposición"
+    },
+    "filmGrain": {
+      "heading": "Grano de Película",
+      "info": "Simulación de grano de película analógica",
+      "reset": "Restablecer Grano"
+    },
+    "resetToDefault": "Restablecer por defecto",
+    "resetAll": "Restablecer Toda la Gradación",
+    "download": "Descargar"
+  },
+  "removeBg": {
+    "modelName": "Eliminador de Fondo IA",
+    "targetPreview": "Vista Previa de Destino",
+    "alphaMatte": "Recorte de Máscara Alfa",
+    "feature1": "Extracción precisa de bordes (cabello, pelaje, contornos finos)",
+    "feature2": "Salida PNG transparente de alta resolución"
+  },
+  "expandCrop": {
+    "modelName": "Extensión de Imagen IA",
+    "canvasPreview": "Vista Previa del Lienzo",
+    "boundaryOutpainting": "Outpainting de Bordes",
+    "expand": "Expandir",
+    "feature1": "Expande los bordes manteniendo la iluminación, estilo y texturas",
+    "feature2": "Outpainting y continuación inteligente automática de bordes"
+  },
+  "editText": {
+    "heading": "Herramienta de Edición de Texto",
+    "placeholder": "Introduce el prompt de modificación de texto...",
+    "run": "Ejecutar Edición de Texto",
+    "processing": "Procesando..."
+  },
+  "enhancer": {
+    "heading": "Mejorador IA",
+    "description": "Optimiza automáticamente iluminación, nitidez y equilibrio de color.",
+    "run": "Mejorar Imagen",
+    "processing": "Mejorando..."
+  },
+  "relight": {
+    "heading": "Reiluminación IA",
+    "description": "Ajusta la iluminación, la luz ambiental de estudio y las sombras.",
+    "run": "Aplicar Reiluminación",
+    "processing": "Reiluminando..."
+  },
+  "angles": {
+    "heading": "Perspectiva de Ángulo 3D",
+    "description": "Ajusta la inclinación de la perspectiva y la alineación del ángulo de cámara.",
+    "run": "Aplicar Ángulo de Perspectiva",
+    "processing": "Transformando..."
+  },
+  "footer": {
+    "decomposing": "Descomponiendo ({progress}%)...",
+    "separateLayers": "Separar capas {count}",
+    "upscaling": "Escalando ({progress}%)...",
+    "upscaleCost": "Escalar {cost}",
+    "removingBackground": "Eliminando fondo ({progress}%)...",
+    "removeBackgroundCost": "Eliminar Fondo 1.0",
+    "expandingBorders": "Expandiendo bordes ({progress}%)...",
+    "expandImageCost": "Expandir Imagen 0.03"
+  },
+  "toasts": {
+    "enterApiKeyUpload": "Por favor, introduce tu Clave API para subir imágenes.",
+    "imageUploaded": "¡Imagen subida con éxito!",
+    "uploadFailed": "Error al subir: {error}",
+    "uploadImageFileOnly": "Por favor, sube solo un archivo de imagen.",
+    "fileTooLarge": "Archivo demasiado grande (máx 20MB): {name}",
+    "viewReset": "Vista restablecida",
+    "enterApiKey": "Por favor, introduce tu clave API.",
+    "enterRegionPrompt": "Por favor, introduce un prompt para la región seleccionada.",
+    "editFailed": "Error en la edición: {error}",
+    "apiKeyMissingSet": "Falta la clave API. Por favor, configúrala.",
+    "uploadOrSelectDecompose": "Por favor, sube o selecciona una imagen para descomponer en capas.",
+    "decomposedInto": "¡Descompuesto en {count} capa(s)!",
+    "decompositionFailed": "Error en la descomposición: {error}",
+    "uploadOrSelectUpscale": "Por favor, selecciona o sube una imagen para escalar.",
+    "upscaleSuccess": "¡Imagen escalada con éxito con {model}!",
+    "upscaleNoOutput": "El escalado se completó pero no se devolvió ninguna URL de salida.",
+    "upscaleFailed": "Error al escalar: {error}",
+    "uploadOrSelectRemoveBg": "Por favor, sube o selecciona una imagen para eliminar el fondo.",
+    "removeBgSuccess": "¡Fondo eliminado limpiamente con el Eliminador de Fondo IA!",
+    "removeBgNoOutput": "La eliminación de fondo se completó pero no se devolvió ninguna URL de salida.",
+    "removeBgFailed": "Error al eliminar el fondo: {error}",
+    "uploadOrSelectExpand": "Por favor, sube o selecciona una imagen para expandir.",
+    "expandSuccess": "¡Imagen expandida limpiamente con Extensión de Imagen IA!",
+    "expandNoOutput": "La expansión de imagen se completó pero no se devolvió ninguna URL de salida.",
+    "expandFailed": "Error al expandir la imagen: {error}",
+    "upscaleSettingsReset": "Ajustes de escalado restablecidos por defecto",
+    "resetCategory": "Restablecer {category}",
+    "colorGradingReset": "Gradación de color restablecida por defecto",
+    "downloadedGraded": "¡Imagen con gradación de color descargada!",
+    "loadedSample": "¡Muestra de 5 capas de Seedream cargada!",
+    "apiKeyMissing": "Falta la clave API.",
+    "uploadImageFirst": "Por favor, sube primero una imagen.",
+    "toolCompleted": "¡{tool} completado con éxito!",
+    "operationFailed": "Operación fallida: {error}",
+    "downloadingAll": "Descargando todas las capas..."
+  }
+}

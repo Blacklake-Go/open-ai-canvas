@@ -1,0 +1,7 @@
+{
+  "price": {
+    "credits": "{credits} credits",
+    "creditsFrom": "from {credits} credits",
+    "unavailable": "No price set yet"
+  }
+}

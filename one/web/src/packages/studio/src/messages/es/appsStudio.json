@@ -1,0 +1,45 @@
+{
+  "hero": {
+    "badge": "Vista previa de plantillas de apps",
+    "titleLine1": "EXPLORA PLANTILLAS DE APPS CON IA.",
+    "titleLine2": "ÚNETE A LA LISTA DE ESPERA.",
+    "subtitle": "Explora conceptos y plantillas de apps. Todavía no todas las apps están disponibles en SupDance; registra tu interés y te avisaremos cuando se publiquen."
+  },
+  "steps": {
+    "stepLabel": "Paso",
+    "deploy": {
+      "title": "Despliega en Minutos",
+      "body": "Haz un fork de la plantilla de código abierto, añade tu clave muapi y sube a Vercel. No se necesita configuración de backend."
+    },
+    "collect": {
+      "title": "Cobra Pagos",
+      "body": "Stripe viene preconfigurado. Establece tus propios precios: créditos únicos, suscripciones o pago por uso."
+    },
+    "keep": {
+      "title": "Conserva los Ingresos",
+      "body": "Los pagos van directamente a tu cuenta de Stripe. Eres dueño del producto, la marca y los beneficios."
+    }
+  },
+  "card": {
+    "templateFallback": "Plantilla",
+    "github": "GitHub",
+    "demo": "Próximamente",
+    "reserve": "Avisadme",
+    "getTemplate": "Registrar interés",
+    "requested": "Registrado"
+  },
+  "footer": {
+    "moreComingSoon": "Ecosistema de apps de SupDance: más apps en preparación"
+  },
+  "modal": {
+    "deployTitle": "Registrar interés en {appName}",
+    "body": "Esta app aún no está disponible por completo en SupDance. Registra tu interés y te avisaremos cuando se publique.",
+    "sending": "Registrando...",
+    "getTemplate": "Registrar interés",
+    "maybeLater": "Quizás más tarde"
+  },
+  "toast": {
+    "requestSuccess": "Registrado. Te avisaremos cuando la app esté disponible.",
+    "requestError": "No se pudo registrar el interés. Inténtalo de nuevo más tarde."
+  }
+}

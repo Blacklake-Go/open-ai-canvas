@@ -1,0 +1,1162 @@
+[
+  {
+    "file": "app/[locale]/[...slug]/page.js",
+    "urlPattern": "/:loc/*",
+    "basePath": "/*",
+    "isLocalizedTree": true,
+    "authLevel": "redirect",
+    "indexPolicy": "none"
+  },
+  {
+    "file": "app/[locale]/assets/page.js",
+    "urlPattern": "/:loc/assets",
+    "basePath": "/assets",
+    "isLocalizedTree": true,
+    "authLevel": "redirect",
+    "indexPolicy": "none"
+  },
+  {
+    "file": "app/[locale]/content-policy/page.js",
+    "urlPattern": "/:loc/content-policy",
+    "basePath": "/content-policy",
+    "isLocalizedTree": true,
+    "authLevel": "public",
+    "indexPolicy": "index"
+  },
+  {
+    "file": "app/[locale]/login/page.js",
+    "urlPattern": "/:loc/login",
+    "basePath": "/login",
+    "isLocalizedTree": true,
+    "authLevel": "public",
+    "indexPolicy": "none"
+  },
+  {
+    "file": "app/[locale]/page.js",
+    "urlPattern": "/:loc",
+    "basePath": "/",
+    "isLocalizedTree": true,
+    "authLevel": "public",
+    "indexPolicy": "index"
+  },
+  {
+    "file": "app/[locale]/privacy/page.js",
+    "urlPattern": "/:loc/privacy",
+    "basePath": "/privacy",
+    "isLocalizedTree": true,
+    "authLevel": "public",
+    "indexPolicy": "index"
+  },
+  {
+    "file": "app/[locale]/refund/page.js",
+    "urlPattern": "/:loc/refund",
+    "basePath": "/refund",
+    "isLocalizedTree": true,
+    "authLevel": "public",
+    "indexPolicy": "index"
+  },
+  {
+    "file": "app/[locale]/studio/[[...slug]]/page.js",
+    "urlPattern": "/:loc/studio/**",
+    "basePath": "/studio/**",
+    "isLocalizedTree": true,
+    "authLevel": "onboarding",
+    "indexPolicy": "index"
+  },
+  {
+    "file": "app/[locale]/studio/assets/page.js",
+    "urlPattern": "/:loc/studio/assets",
+    "basePath": "/studio/assets",
+    "isLocalizedTree": true,
+    "authLevel": "onboarding",
+    "indexPolicy": "index"
+  },
+  {
+    "file": "app/[locale]/terms/page.js",
+    "urlPattern": "/:loc/terms",
+    "basePath": "/terms",
+    "isLocalizedTree": true,
+    "authLevel": "public",
+    "indexPolicy": "index"
+  },
+  {
+    "file": "app/about/page.js",
+    "urlPattern": "/about",
+    "basePath": "/about",
+    "isLocalizedTree": false,
+    "authLevel": "public",
+    "indexPolicy": "index"
+  },
+  {
+    "file": "app/account/page.js",
+    "urlPattern": "/account",
+    "basePath": "/account",
+    "isLocalizedTree": false,
+    "authLevel": "redirect",
+    "indexPolicy": "none"
+  },
+  {
+    "file": "app/admin/admins/page.js",
+    "urlPattern": "/admin/admins",
+    "basePath": "/admin/admins",
+    "isLocalizedTree": false,
+    "authLevel": "admin",
+    "indexPolicy": "none"
+  },
+  {
+    "file": "app/admin/audit/page.js",
+    "urlPattern": "/admin/audit",
+    "basePath": "/admin/audit",
+    "isLocalizedTree": false,
+    "authLevel": "admin",
+    "indexPolicy": "none"
+  },
+  {
+    "file": "app/admin/community/page.js",
+    "urlPattern": "/admin/community",
+    "basePath": "/admin/community",
+    "isLocalizedTree": false,
+    "authLevel": "admin",
+    "indexPolicy": "none"
+  },
+  {
+    "file": "app/admin/content/analytics/page.js",
+    "urlPattern": "/admin/content/analytics",
+    "basePath": "/admin/content/analytics",
+    "isLocalizedTree": false,
+    "authLevel": "admin",
+    "indexPolicy": "none"
+  },
+  {
+    "file": "app/admin/content/banners/page.js",
+    "urlPattern": "/admin/content/banners",
+    "basePath": "/admin/content/banners",
+    "isLocalizedTree": false,
+    "authLevel": "admin",
+    "indexPolicy": "none"
+  },
+  {
+    "file": "app/admin/content/branding/page.js",
+    "urlPattern": "/admin/content/branding",
+    "basePath": "/admin/content/branding",
+    "isLocalizedTree": false,
+    "authLevel": "admin",
+    "indexPolicy": "none"
+  },
+  {
+    "file": "app/admin/content/effects/page.js",
+    "urlPattern": "/admin/content/effects",
+    "basePath": "/admin/content/effects",
+    "isLocalizedTree": false,
+    "authLevel": "admin",
+    "indexPolicy": "none"
+  },
+  {
+    "file": "app/admin/content/icon/page.js",
+    "urlPattern": "/admin/content/icon",
+    "basePath": "/admin/content/icon",
+    "isLocalizedTree": false,
+    "authLevel": "admin",
+    "indexPolicy": "none"
+  },
+  {
+    "file": "app/admin/content/visitors/page.js",
+    "urlPattern": "/admin/content/visitors",
+    "basePath": "/admin/content/visitors",
+    "isLocalizedTree": false,
+    "authLevel": "admin",
+    "indexPolicy": "none"
+  },
+  {
+    "file": "app/admin/content/x-prompts/page.js",
+    "urlPattern": "/admin/content/x-prompts",
+    "basePath": "/admin/content/x-prompts",
+    "isLocalizedTree": false,
+    "authLevel": "admin",
+    "indexPolicy": "none"
+  },
+  {
+    "file": "app/admin/cost-center/page.js",
+    "urlPattern": "/admin/cost-center",
+    "basePath": "/admin/cost-center",
+    "isLocalizedTree": false,
+    "authLevel": "admin",
+    "indexPolicy": "none"
+  },
+  {
+    "file": "app/admin/coupons/page.js",
+    "urlPattern": "/admin/coupons",
+    "basePath": "/admin/coupons",
+    "isLocalizedTree": false,
+    "authLevel": "admin",
+    "indexPolicy": "none"
+  },
+  {
+    "file": "app/admin/credits/page.js",
+    "urlPattern": "/admin/credits",
+    "basePath": "/admin/credits",
+    "isLocalizedTree": false,
+    "authLevel": "admin",
+    "indexPolicy": "none"
+  },
+  {
+    "file": "app/admin/email/page.js",
+    "urlPattern": "/admin/email",
+    "basePath": "/admin/email",
+    "isLocalizedTree": false,
+    "authLevel": "admin",
+    "indexPolicy": "none"
+  },
+  {
+    "file": "app/admin/feedback/[id]/page.js",
+    "urlPattern": "/admin/feedback/*",
+    "basePath": "/admin/feedback/*",
+    "isLocalizedTree": false,
+    "authLevel": "admin",
+    "indexPolicy": "none"
+  },
+  {
+    "file": "app/admin/feedback/page.js",
+    "urlPattern": "/admin/feedback",
+    "basePath": "/admin/feedback",
+    "isLocalizedTree": false,
+    "authLevel": "admin",
+    "indexPolicy": "none"
+  },
+  {
+    "file": "app/admin/forbidden/page.js",
+    "urlPattern": "/admin/forbidden",
+    "basePath": "/admin/forbidden",
+    "isLocalizedTree": false,
+    "authLevel": "public",
+    "indexPolicy": "none"
+  },
+  {
+    "file": "app/admin/generations/failures/page.js",
+    "urlPattern": "/admin/generations/failures",
+    "basePath": "/admin/generations/failures",
+    "isLocalizedTree": false,
+    "authLevel": "admin",
+    "indexPolicy": "none"
+  },
+  {
+    "file": "app/admin/generations/page.js",
+    "urlPattern": "/admin/generations",
+    "basePath": "/admin/generations",
+    "isLocalizedTree": false,
+    "authLevel": "admin",
+    "indexPolicy": "none"
+  },
+  {
+    "file": "app/admin/generations/reconciliation/page.js",
+    "urlPattern": "/admin/generations/reconciliation",
+    "basePath": "/admin/generations/reconciliation",
+    "isLocalizedTree": false,
+    "authLevel": "admin",
+    "indexPolicy": "none"
+  },
+  {
+    "file": "app/admin/health/page.js",
+    "urlPattern": "/admin/health",
+    "basePath": "/admin/health",
+    "isLocalizedTree": false,
+    "authLevel": "admin",
+    "indexPolicy": "none"
+  },
+  {
+    "file": "app/admin/i18n/page.js",
+    "urlPattern": "/admin/i18n",
+    "basePath": "/admin/i18n",
+    "isLocalizedTree": false,
+    "authLevel": "admin",
+    "indexPolicy": "none"
+  },
+  {
+    "file": "app/admin/invites/page.js",
+    "urlPattern": "/admin/invites",
+    "basePath": "/admin/invites",
+    "isLocalizedTree": false,
+    "authLevel": "admin",
+    "indexPolicy": "none"
+  },
+  {
+    "file": "app/admin/login/page.js",
+    "urlPattern": "/admin/login",
+    "basePath": "/admin/login",
+    "isLocalizedTree": false,
+    "authLevel": "admin",
+    "indexPolicy": "none"
+  },
+  {
+    "file": "app/admin/models/brands/page.js",
+    "urlPattern": "/admin/models/brands",
+    "basePath": "/admin/models/brands",
+    "isLocalizedTree": false,
+    "authLevel": "admin",
+    "indexPolicy": "none"
+  },
+  {
+    "file": "app/admin/models/canvas/page.js",
+    "urlPattern": "/admin/models/canvas",
+    "basePath": "/admin/models/canvas",
+    "isLocalizedTree": false,
+    "authLevel": "admin",
+    "indexPolicy": "none"
+  },
+  {
+    "file": "app/admin/models/catalog/page.js",
+    "urlPattern": "/admin/models/catalog",
+    "basePath": "/admin/models/catalog",
+    "isLocalizedTree": false,
+    "authLevel": "admin",
+    "indexPolicy": "none"
+  },
+  {
+    "file": "app/admin/models/cost-center/page.js",
+    "urlPattern": "/admin/models/cost-center",
+    "basePath": "/admin/models/cost-center",
+    "isLocalizedTree": false,
+    "authLevel": "admin",
+    "indexPolicy": "none"
+  },
+  {
+    "file": "app/admin/models/frontend/page.js",
+    "urlPattern": "/admin/models/frontend",
+    "basePath": "/admin/models/frontend",
+    "isLocalizedTree": false,
+    "authLevel": "admin",
+    "indexPolicy": "none"
+  },
+  {
+    "file": "app/admin/models/health/page.js",
+    "urlPattern": "/admin/models/health",
+    "basePath": "/admin/models/health",
+    "isLocalizedTree": false,
+    "authLevel": "admin",
+    "indexPolicy": "none"
+  },
+  {
+    "file": "app/admin/models/page.js",
+    "urlPattern": "/admin/models",
+    "basePath": "/admin/models",
+    "isLocalizedTree": false,
+    "authLevel": "admin",
+    "indexPolicy": "none"
+  },
+  {
+    "file": "app/admin/models/pricing/page.js",
+    "urlPattern": "/admin/models/pricing",
+    "basePath": "/admin/models/pricing",
+    "isLocalizedTree": false,
+    "authLevel": "admin",
+    "indexPolicy": "none"
+  },
+  {
+    "file": "app/admin/models/profit-center/page.js",
+    "urlPattern": "/admin/models/profit-center",
+    "basePath": "/admin/models/profit-center",
+    "isLocalizedTree": false,
+    "authLevel": "admin",
+    "indexPolicy": "none"
+  },
+  {
+    "file": "app/admin/models/providers/page.js",
+    "urlPattern": "/admin/models/providers",
+    "basePath": "/admin/models/providers",
+    "isLocalizedTree": false,
+    "authLevel": "admin",
+    "indexPolicy": "none"
+  },
+  {
+    "file": "app/admin/models/publication/page.js",
+    "urlPattern": "/admin/models/publication",
+    "basePath": "/admin/models/publication",
+    "isLocalizedTree": false,
+    "authLevel": "admin",
+    "indexPolicy": "none"
+  },
+  {
+    "file": "app/admin/models/registry/page.js",
+    "urlPattern": "/admin/models/registry",
+    "basePath": "/admin/models/registry",
+    "isLocalizedTree": false,
+    "authLevel": "admin",
+    "indexPolicy": "none"
+  },
+  {
+    "file": "app/admin/models/routing/page.js",
+    "urlPattern": "/admin/models/routing",
+    "basePath": "/admin/models/routing",
+    "isLocalizedTree": false,
+    "authLevel": "admin",
+    "indexPolicy": "none"
+  },
+  {
+    "file": "app/admin/models/telemetry/page.js",
+    "urlPattern": "/admin/models/telemetry",
+    "basePath": "/admin/models/telemetry",
+    "isLocalizedTree": false,
+    "authLevel": "admin",
+    "indexPolicy": "none"
+  },
+  {
+    "file": "app/admin/moderation/page.js",
+    "urlPattern": "/admin/moderation",
+    "basePath": "/admin/moderation",
+    "isLocalizedTree": false,
+    "authLevel": "admin",
+    "indexPolicy": "none"
+  },
+  {
+    "file": "app/admin/orders/page.js",
+    "urlPattern": "/admin/orders",
+    "basePath": "/admin/orders",
+    "isLocalizedTree": false,
+    "authLevel": "admin",
+    "indexPolicy": "none"
+  },
+  {
+    "file": "app/admin/page.js",
+    "urlPattern": "/admin",
+    "basePath": "/admin",
+    "isLocalizedTree": false,
+    "authLevel": "admin",
+    "indexPolicy": "none"
+  },
+  {
+    "file": "app/admin/plans/page.js",
+    "urlPattern": "/admin/plans",
+    "basePath": "/admin/plans",
+    "isLocalizedTree": false,
+    "authLevel": "admin",
+    "indexPolicy": "none"
+  },
+  {
+    "file": "app/admin/profit-center/page.js",
+    "urlPattern": "/admin/profit-center",
+    "basePath": "/admin/profit-center",
+    "isLocalizedTree": false,
+    "authLevel": "admin",
+    "indexPolicy": "none"
+  },
+  {
+    "file": "app/admin/providers/ai/page.js",
+    "urlPattern": "/admin/providers/ai",
+    "basePath": "/admin/providers/ai",
+    "isLocalizedTree": false,
+    "authLevel": "admin",
+    "indexPolicy": "none"
+  },
+  {
+    "file": "app/admin/providers/email/page.js",
+    "urlPattern": "/admin/providers/email",
+    "basePath": "/admin/providers/email",
+    "isLocalizedTree": false,
+    "authLevel": "admin",
+    "indexPolicy": "none"
+  },
+  {
+    "file": "app/admin/providers/models/page.js",
+    "urlPattern": "/admin/providers/models",
+    "basePath": "/admin/providers/models",
+    "isLocalizedTree": false,
+    "authLevel": "admin",
+    "indexPolicy": "none"
+  },
+  {
+    "file": "app/admin/providers/page.js",
+    "urlPattern": "/admin/providers",
+    "basePath": "/admin/providers",
+    "isLocalizedTree": false,
+    "authLevel": "admin",
+    "indexPolicy": "none"
+  },
+  {
+    "file": "app/admin/providers/payments/page.js",
+    "urlPattern": "/admin/providers/payments",
+    "basePath": "/admin/providers/payments",
+    "isLocalizedTree": false,
+    "authLevel": "admin",
+    "indexPolicy": "none"
+  },
+  {
+    "file": "app/admin/providers/sms/page.js",
+    "urlPattern": "/admin/providers/sms",
+    "basePath": "/admin/providers/sms",
+    "isLocalizedTree": false,
+    "authLevel": "admin",
+    "indexPolicy": "none"
+  },
+  {
+    "file": "app/admin/providers/social/page.js",
+    "urlPattern": "/admin/providers/social",
+    "basePath": "/admin/providers/social",
+    "isLocalizedTree": false,
+    "authLevel": "admin",
+    "indexPolicy": "none"
+  },
+  {
+    "file": "app/admin/routing/[modelId]/page.js",
+    "urlPattern": "/admin/routing/*",
+    "basePath": "/admin/routing/*",
+    "isLocalizedTree": false,
+    "authLevel": "admin",
+    "indexPolicy": "none"
+  },
+  {
+    "file": "app/admin/routing/page.js",
+    "urlPattern": "/admin/routing",
+    "basePath": "/admin/routing",
+    "isLocalizedTree": false,
+    "authLevel": "admin",
+    "indexPolicy": "none"
+  },
+  {
+    "file": "app/admin/security/sessions/page.js",
+    "urlPattern": "/admin/security/sessions",
+    "basePath": "/admin/security/sessions",
+    "isLocalizedTree": false,
+    "authLevel": "admin",
+    "indexPolicy": "none"
+  },
+  {
+    "file": "app/admin/settings/page.js",
+    "urlPattern": "/admin/settings",
+    "basePath": "/admin/settings",
+    "isLocalizedTree": false,
+    "authLevel": "admin",
+    "indexPolicy": "none"
+  },
+  {
+    "file": "app/admin/settings/storage/page.js",
+    "urlPattern": "/admin/settings/storage",
+    "basePath": "/admin/settings/storage",
+    "isLocalizedTree": false,
+    "authLevel": "admin",
+    "indexPolicy": "none"
+  },
+  {
+    "file": "app/admin/storage/page.js",
+    "urlPattern": "/admin/storage",
+    "basePath": "/admin/storage",
+    "isLocalizedTree": false,
+    "authLevel": "admin",
+    "indexPolicy": "none"
+  },
+  {
+    "file": "app/admin/subscription-faq/page.js",
+    "urlPattern": "/admin/subscription-faq",
+    "basePath": "/admin/subscription-faq",
+    "isLocalizedTree": false,
+    "authLevel": "admin",
+    "indexPolicy": "none"
+  },
+  {
+    "file": "app/admin/subscriptions/page.js",
+    "urlPattern": "/admin/subscriptions",
+    "basePath": "/admin/subscriptions",
+    "isLocalizedTree": false,
+    "authLevel": "admin",
+    "indexPolicy": "none"
+  },
+  {
+    "file": "app/admin/system/email/page.js",
+    "urlPattern": "/admin/system/email",
+    "basePath": "/admin/system/email",
+    "isLocalizedTree": false,
+    "authLevel": "admin",
+    "indexPolicy": "none"
+  },
+  {
+    "file": "app/admin/system/login/page.js",
+    "urlPattern": "/admin/system/login",
+    "basePath": "/admin/system/login",
+    "isLocalizedTree": false,
+    "authLevel": "admin",
+    "indexPolicy": "none"
+  },
+  {
+    "file": "app/admin/system/page.js",
+    "urlPattern": "/admin/system",
+    "basePath": "/admin/system",
+    "isLocalizedTree": false,
+    "authLevel": "admin",
+    "indexPolicy": "none"
+  },
+  {
+    "file": "app/admin/users/[id]/page.js",
+    "urlPattern": "/admin/users/*",
+    "basePath": "/admin/users/*",
+    "isLocalizedTree": false,
+    "authLevel": "admin",
+    "indexPolicy": "none"
+  },
+  {
+    "file": "app/admin/users/dashboard/page.js",
+    "urlPattern": "/admin/users/dashboard",
+    "basePath": "/admin/users/dashboard",
+    "isLocalizedTree": false,
+    "authLevel": "admin",
+    "indexPolicy": "none"
+  },
+  {
+    "file": "app/admin/users/page.js",
+    "urlPattern": "/admin/users",
+    "basePath": "/admin/users",
+    "isLocalizedTree": false,
+    "authLevel": "admin",
+    "indexPolicy": "none"
+  },
+  {
+    "file": "app/admin/visitors/page.js",
+    "urlPattern": "/admin/visitors",
+    "basePath": "/admin/visitors",
+    "isLocalizedTree": false,
+    "authLevel": "admin",
+    "indexPolicy": "none"
+  },
+  {
+    "file": "app/admin/webhooks/page.js",
+    "urlPattern": "/admin/webhooks",
+    "basePath": "/admin/webhooks",
+    "isLocalizedTree": false,
+    "authLevel": "admin",
+    "indexPolicy": "none"
+  },
+  {
+    "file": "app/agents/[agent_id]/[conversation_id]/page.js",
+    "urlPattern": "/agents/*/*",
+    "basePath": "/agents/*/*",
+    "isLocalizedTree": false,
+    "authLevel": "redirect",
+    "indexPolicy": "none"
+  },
+  {
+    "file": "app/agents/[agent_id]/page.js",
+    "urlPattern": "/agents/*",
+    "basePath": "/agents/*",
+    "isLocalizedTree": false,
+    "authLevel": "redirect",
+    "indexPolicy": "none"
+  },
+  {
+    "file": "app/agents/create/page.js",
+    "urlPattern": "/agents/create",
+    "basePath": "/agents/create",
+    "isLocalizedTree": false,
+    "authLevel": "redirect",
+    "indexPolicy": "none"
+  },
+  {
+    "file": "app/agents/edit/[id]/page.js",
+    "urlPattern": "/agents/edit/*",
+    "basePath": "/agents/edit/*",
+    "isLocalizedTree": false,
+    "authLevel": "redirect",
+    "indexPolicy": "none"
+  },
+  {
+    "file": "app/agents/page.js",
+    "urlPattern": "/agents",
+    "basePath": "/agents",
+    "isLocalizedTree": false,
+    "authLevel": "redirect",
+    "indexPolicy": "none"
+  },
+  {
+    "file": "app/assets/page.js",
+    "urlPattern": "/assets",
+    "basePath": "/assets",
+    "isLocalizedTree": false,
+    "authLevel": "redirect",
+    "indexPolicy": "none"
+  },
+  {
+    "file": "app/assistant/page.js",
+    "urlPattern": "/assistant",
+    "basePath": "/assistant",
+    "isLocalizedTree": false,
+    "authLevel": "redirect",
+    "indexPolicy": "none"
+  },
+  {
+    "file": "app/auth/onboarding/page.js",
+    "urlPattern": "/auth/onboarding",
+    "basePath": "/auth/onboarding",
+    "isLocalizedTree": false,
+    "authLevel": "client",
+    "indexPolicy": "none"
+  },
+  {
+    "file": "app/benefits/page.js",
+    "urlPattern": "/benefits",
+    "basePath": "/benefits",
+    "isLocalizedTree": false,
+    "authLevel": "client",
+    "indexPolicy": "index"
+  },
+  {
+    "file": "app/call-api/page.jsx",
+    "urlPattern": "/call-api",
+    "basePath": "/call-api",
+    "isLocalizedTree": false,
+    "authLevel": "public",
+    "indexPolicy": "none"
+  },
+  {
+    "file": "app/canvas-tools/[...slug]/page.js",
+    "urlPattern": "/canvas-tools/*",
+    "basePath": "/canvas-tools/*",
+    "isLocalizedTree": false,
+    "authLevel": "client",
+    "indexPolicy": "index"
+  },
+  {
+    "file": "app/canvas-tools/page.js",
+    "urlPattern": "/canvas-tools",
+    "basePath": "/canvas-tools",
+    "isLocalizedTree": false,
+    "authLevel": "client",
+    "indexPolicy": "index"
+  },
+  {
+    "file": "app/change-password/page.js",
+    "urlPattern": "/change-password",
+    "basePath": "/change-password",
+    "isLocalizedTree": false,
+    "authLevel": "client",
+    "indexPolicy": "none"
+  },
+  {
+    "file": "app/coins/page.js",
+    "urlPattern": "/coins",
+    "basePath": "/coins",
+    "isLocalizedTree": false,
+    "authLevel": "client",
+    "indexPolicy": "index"
+  },
+  {
+    "file": "app/community/[id]/page.js",
+    "urlPattern": "/community/*",
+    "basePath": "/community/*",
+    "isLocalizedTree": false,
+    "authLevel": "public",
+    "indexPolicy": "index"
+  },
+  {
+    "file": "app/community/page.js",
+    "urlPattern": "/community",
+    "basePath": "/community",
+    "isLocalizedTree": false,
+    "authLevel": "public",
+    "indexPolicy": "index"
+  },
+  {
+    "file": "app/content-policy/page.js",
+    "urlPattern": "/content-policy",
+    "basePath": "/content-policy",
+    "isLocalizedTree": false,
+    "authLevel": "public",
+    "indexPolicy": "index"
+  },
+  {
+    "file": "app/creations/page.js",
+    "urlPattern": "/creations",
+    "basePath": "/creations",
+    "isLocalizedTree": false,
+    "authLevel": "client",
+    "indexPolicy": "index"
+  },
+  {
+    "file": "app/credits/page.js",
+    "urlPattern": "/credits",
+    "basePath": "/credits",
+    "isLocalizedTree": false,
+    "authLevel": "client",
+    "indexPolicy": "index"
+  },
+  {
+    "file": "app/design-system/page.js",
+    "urlPattern": "/design-system",
+    "basePath": "/design-system",
+    "isLocalizedTree": false,
+    "authLevel": "public",
+    "indexPolicy": "none"
+  },
+  {
+    "file": "app/embed-auth/page.js",
+    "urlPattern": "/embed-auth",
+    "basePath": "/embed-auth",
+    "isLocalizedTree": false,
+    "authLevel": "public",
+    "indexPolicy": "none"
+  },
+  {
+    "file": "app/feedback/page.js",
+    "urlPattern": "/feedback",
+    "basePath": "/feedback",
+    "isLocalizedTree": false,
+    "authLevel": "client",
+    "indexPolicy": "index"
+  },
+  {
+    "file": "app/forgot-password/page.js",
+    "urlPattern": "/forgot-password",
+    "basePath": "/forgot-password",
+    "isLocalizedTree": false,
+    "authLevel": "public",
+    "indexPolicy": "none"
+  },
+  {
+    "file": "app/lab/page.js",
+    "urlPattern": "/lab",
+    "basePath": "/lab",
+    "isLocalizedTree": false,
+    "authLevel": "public",
+    "indexPolicy": "index"
+  },
+  {
+    "file": "app/login/page.js",
+    "urlPattern": "/login",
+    "basePath": "/login",
+    "isLocalizedTree": false,
+    "authLevel": "public",
+    "indexPolicy": "none"
+  },
+  {
+    "file": "app/models/[id]/page.js",
+    "urlPattern": "/models/*",
+    "basePath": "/models/*",
+    "isLocalizedTree": false,
+    "authLevel": "public",
+    "indexPolicy": "index"
+  },
+  {
+    "file": "app/models/page.js",
+    "urlPattern": "/models",
+    "basePath": "/models",
+    "isLocalizedTree": false,
+    "authLevel": "public",
+    "indexPolicy": "index"
+  },
+  {
+    "file": "app/onboarding/page.js",
+    "urlPattern": "/onboarding",
+    "basePath": "/onboarding",
+    "isLocalizedTree": false,
+    "authLevel": "session",
+    "indexPolicy": "none"
+  },
+  {
+    "file": "app/page.js",
+    "urlPattern": "/",
+    "basePath": "/",
+    "isLocalizedTree": false,
+    "authLevel": "public",
+    "indexPolicy": "index"
+  },
+  {
+    "file": "app/pricing/page.js",
+    "urlPattern": "/pricing",
+    "basePath": "/pricing",
+    "isLocalizedTree": false,
+    "authLevel": "public",
+    "indexPolicy": "index"
+  },
+  {
+    "file": "app/privacy/page.js",
+    "urlPattern": "/privacy",
+    "basePath": "/privacy",
+    "isLocalizedTree": false,
+    "authLevel": "public",
+    "indexPolicy": "index"
+  },
+  {
+    "file": "app/profile/page.js",
+    "urlPattern": "/profile",
+    "basePath": "/profile",
+    "isLocalizedTree": false,
+    "authLevel": "session",
+    "indexPolicy": "none"
+  },
+  {
+    "file": "app/refund/page.js",
+    "urlPattern": "/refund",
+    "basePath": "/refund",
+    "isLocalizedTree": false,
+    "authLevel": "public",
+    "indexPolicy": "index"
+  },
+  {
+    "file": "app/register/page.js",
+    "urlPattern": "/register",
+    "basePath": "/register",
+    "isLocalizedTree": false,
+    "authLevel": "public",
+    "indexPolicy": "none"
+  },
+  {
+    "file": "app/reset-password/page.js",
+    "urlPattern": "/reset-password",
+    "basePath": "/reset-password",
+    "isLocalizedTree": false,
+    "authLevel": "redirect",
+    "indexPolicy": "none"
+  },
+  {
+    "file": "app/studio/[[...slug]]/page.js",
+    "urlPattern": "/studio/**",
+    "basePath": "/studio/**",
+    "isLocalizedTree": false,
+    "authLevel": "onboarding",
+    "indexPolicy": "index"
+  },
+  {
+    "file": "app/subscription/page.js",
+    "urlPattern": "/subscription",
+    "basePath": "/subscription",
+    "isLocalizedTree": false,
+    "authLevel": "redirect",
+    "indexPolicy": "none"
+  },
+  {
+    "file": "app/terms/page.js",
+    "urlPattern": "/terms",
+    "basePath": "/terms",
+    "isLocalizedTree": false,
+    "authLevel": "public",
+    "indexPolicy": "index"
+  },
+  {
+    "file": "app/u/[id]/page.js",
+    "urlPattern": "/u/*",
+    "basePath": "/u/*",
+    "isLocalizedTree": false,
+    "authLevel": "public",
+    "indexPolicy": "index"
+  },
+  {
+    "file": "app/workflow/[id]/[tab]/page.js",
+    "urlPattern": "/workflow/*/*",
+    "basePath": "/workflow/*/*",
+    "isLocalizedTree": false,
+    "authLevel": "client",
+    "indexPolicy": "none"
+  },
+  {
+    "file": "app/workflow/[id]/page.js",
+    "urlPattern": "/workflow/*",
+    "basePath": "/workflow/*",
+    "isLocalizedTree": false,
+    "authLevel": "client",
+    "indexPolicy": "none"
+  },
+  {
+    "file": "app/workflow/page.js",
+    "urlPattern": "/workflow",
+    "basePath": "/workflow",
+    "isLocalizedTree": false,
+    "authLevel": "client",
+    "indexPolicy": "none"
+  },
+  {
+    "file": "app/zh/about/page.js",
+    "urlPattern": "/:loc/about",
+    "basePath": "/about",
+    "isLocalizedTree": true,
+    "authLevel": "public",
+    "indexPolicy": "index"
+  },
+  {
+    "file": "app/zh/assets/page.js",
+    "urlPattern": "/:loc/assets",
+    "basePath": "/assets",
+    "isLocalizedTree": true,
+    "authLevel": "redirect",
+    "indexPolicy": "none"
+  },
+  {
+    "file": "app/zh/assistant/page.js",
+    "urlPattern": "/:loc/assistant",
+    "basePath": "/assistant",
+    "isLocalizedTree": true,
+    "authLevel": "redirect",
+    "indexPolicy": "none"
+  },
+  {
+    "file": "app/zh/benefits/page.js",
+    "urlPattern": "/:loc/benefits",
+    "basePath": "/benefits",
+    "isLocalizedTree": true,
+    "authLevel": "client",
+    "indexPolicy": "index"
+  },
+  {
+    "file": "app/zh/call-api/page.jsx",
+    "urlPattern": "/:loc/call-api",
+    "basePath": "/call-api",
+    "isLocalizedTree": true,
+    "authLevel": "public",
+    "indexPolicy": "none"
+  },
+  {
+    "file": "app/zh/canvas-tools/[...slug]/page.js",
+    "urlPattern": "/:loc/canvas-tools/*",
+    "basePath": "/canvas-tools/*",
+    "isLocalizedTree": true,
+    "authLevel": "client",
+    "indexPolicy": "index"
+  },
+  {
+    "file": "app/zh/canvas-tools/page.js",
+    "urlPattern": "/:loc/canvas-tools",
+    "basePath": "/canvas-tools",
+    "isLocalizedTree": true,
+    "authLevel": "client",
+    "indexPolicy": "index"
+  },
+  {
+    "file": "app/zh/change-password/page.js",
+    "urlPattern": "/:loc/change-password",
+    "basePath": "/change-password",
+    "isLocalizedTree": true,
+    "authLevel": "client",
+    "indexPolicy": "none"
+  },
+  {
+    "file": "app/zh/coins/page.js",
+    "urlPattern": "/:loc/coins",
+    "basePath": "/coins",
+    "isLocalizedTree": true,
+    "authLevel": "client",
+    "indexPolicy": "index"
+  },
+  {
+    "file": "app/zh/community/[id]/page.js",
+    "urlPattern": "/:loc/community/*",
+    "basePath": "/community/*",
+    "isLocalizedTree": true,
+    "authLevel": "public",
+    "indexPolicy": "index"
+  },
+  {
+    "file": "app/zh/community/page.js",
+    "urlPattern": "/:loc/community",
+    "basePath": "/community",
+    "isLocalizedTree": true,
+    "authLevel": "public",
+    "indexPolicy": "index"
+  },
+  {
+    "file": "app/zh/credits/page.js",
+    "urlPattern": "/:loc/credits",
+    "basePath": "/credits",
+    "isLocalizedTree": true,
+    "authLevel": "client",
+    "indexPolicy": "index"
+  },
+  {
+    "file": "app/zh/forgot-password/page.js",
+    "urlPattern": "/:loc/forgot-password",
+    "basePath": "/forgot-password",
+    "isLocalizedTree": true,
+    "authLevel": "public",
+    "indexPolicy": "none"
+  },
+  {
+    "file": "app/zh/lab/page.js",
+    "urlPattern": "/:loc/lab",
+    "basePath": "/lab",
+    "isLocalizedTree": true,
+    "authLevel": "public",
+    "indexPolicy": "index"
+  },
+  {
+    "file": "app/zh/login/page.js",
+    "urlPattern": "/:loc/login",
+    "basePath": "/login",
+    "isLocalizedTree": true,
+    "authLevel": "public",
+    "indexPolicy": "none"
+  },
+  {
+    "file": "app/zh/models/[id]/page.js",
+    "urlPattern": "/:loc/models/*",
+    "basePath": "/models/*",
+    "isLocalizedTree": true,
+    "authLevel": "public",
+    "indexPolicy": "index"
+  },
+  {
+    "file": "app/zh/models/page.js",
+    "urlPattern": "/:loc/models",
+    "basePath": "/models",
+    "isLocalizedTree": true,
+    "authLevel": "public",
+    "indexPolicy": "index"
+  },
+  {
+    "file": "app/zh/page.js",
+    "urlPattern": "/:loc",
+    "basePath": "/",
+    "isLocalizedTree": true,
+    "authLevel": "public",
+    "indexPolicy": "index"
+  },
+  {
+    "file": "app/zh/pricing/page.js",
+    "urlPattern": "/:loc/pricing",
+    "basePath": "/pricing",
+    "isLocalizedTree": true,
+    "authLevel": "public",
+    "indexPolicy": "index"
+  },
+  {
+    "file": "app/zh/profile/page.js",
+    "urlPattern": "/:loc/profile",
+    "basePath": "/profile",
+    "isLocalizedTree": true,
+    "authLevel": "session",
+    "indexPolicy": "none"
+  },
+  {
+    "file": "app/zh/register/page.js",
+    "urlPattern": "/:loc/register",
+    "basePath": "/register",
+    "isLocalizedTree": true,
+    "authLevel": "public",
+    "indexPolicy": "none"
+  },
+  {
+    "file": "app/zh/reset-password/page.js",
+    "urlPattern": "/:loc/reset-password",
+    "basePath": "/reset-password",
+    "isLocalizedTree": true,
+    "authLevel": "redirect",
+    "indexPolicy": "none"
+  },
+  {
+    "file": "app/zh/studio/[[...slug]]/page.js",
+    "urlPattern": "/:loc/studio/**",
+    "basePath": "/studio/**",
+    "isLocalizedTree": true,
+    "authLevel": "onboarding",
+    "indexPolicy": "index"
+  },
+  {
+    "file": "app/zh/subscription/page.js",
+    "urlPattern": "/:loc/subscription",
+    "basePath": "/subscription",
+    "isLocalizedTree": true,
+    "authLevel": "redirect",
+    "indexPolicy": "none"
+  },
+  {
+    "file": "app/zh/workflow/page.js",
+    "urlPattern": "/:loc/workflow",
+    "basePath": "/workflow",
+    "isLocalizedTree": true,
+    "authLevel": "client",
+    "indexPolicy": "none"
+  }
+]

@@ -1,0 +1,54 @@
+{
+  "hero": {
+    "titleLine1": "창작 시작하기",
+    "titleLine2": "립싱크 스튜디오",
+    "subtitle": "어떤 음성이든 얼굴 영상과 정밀하게 동기화하여 프리미엄 대화형 아바타 영상을 제작하세요."
+  },
+  "modes": {
+    "portraitImage": "인물 사진",
+    "video": "동영상"
+  },
+  "media": {
+    "imageLabel": "이미지",
+    "videoLabel": "동영상",
+    "audioLabel": "오디오",
+    "uploadFilePrefix": "업로드:",
+    "uploadFileSuffix": "파일",
+    "clickToClear": "클릭하여 지우기",
+    "noImage": "이미지 없음",
+    "noVideo": "동영상 없음",
+    "noAudio": "오디오 없음"
+  },
+  "prompt": {
+    "placeholder": "말투나 표정 스타일을 설명하세요..."
+  },
+  "model": {
+    "selectModel": "모델 선택",
+    "dropdownTitle": "모델",
+    "resolutionDropdownTitle": "해상도"
+  },
+  "actions": {
+    "generate": "립싱크 생성",
+    "generating": "생성 중...",
+    "download": "다운로드",
+    "delete": "삭제"
+  },
+  "confirm": {
+    "deleteItem": "이 생성 항목을 삭제하시겠습니까?"
+  },
+  "badges": {
+    "lipSync": "립싱크"
+  },
+  "errors": {
+    "imageTooLarge": "이미지가 10MB 제한을 초과했습니다.",
+    "videoTooLarge": "동영상이 50MB 제한을 초과했습니다.",
+    "audioTooLarge": "오디오 파일이 10MB 제한을 초과했습니다.",
+    "imageUploadFailed": "이미지 업로드 실패: {message}",
+    "videoUploadFailed": "동영상 업로드 실패: {message}",
+    "audioUploadFailed": "오디오 업로드 실패: {message}",
+    "needAudio": "먼저 오디오 파일을 업로드해 주세요.",
+    "needImage": "먼저 인물 사진을 업로드해 주세요.",
+    "needVideo": "먼저 원본 동영상을 업로드해 주세요.",
+    "generationFailed": "립싱크 생성에 실패했습니다"
+  }
+}

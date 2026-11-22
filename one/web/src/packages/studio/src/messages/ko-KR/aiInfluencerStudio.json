@@ -1,0 +1,70 @@
+{
+  "builder": {
+    "title": "캐릭터 빌더",
+    "reset": "재설정"
+  },
+  "categoryTabs": {
+    "face": "얼굴",
+    "body": "신체",
+    "style": "스타일 및 구도"
+  },
+  "subcategories": {
+    "character_type": "캐릭터 유형",
+    "gender": "성별",
+    "ethnicity_origin_base": "민족 / 출신",
+    "eye_color": "눈동자 색상",
+    "eyes_type": "눈 모양",
+    "eyes_details": "눈 세부특징",
+    "mouth": "입과 치아",
+    "ears": "귀",
+    "horns": "뿔 / 장식",
+    "skin_conditions": "피부 상태",
+    "face_skin_material": "얼굴 피부 질감",
+    "face_surface_pattern": "피부 패턴",
+    "body_type": "체형",
+    "left_arm": "왼팔",
+    "right_arm": "오른팔",
+    "left_leg": "왼다리",
+    "right_leg": "오른다리",
+    "hair": "헤어스타일",
+    "accessories": "액세서리 및 표식",
+    "rendering_style": "렌더링 스타일",
+    "framing": "구도 및 앵글",
+    "outfit_preset": "의상 및 장비",
+    "backdrop": "배경 분위기"
+  },
+  "toolbar": {
+    "shuffle": "무작위 셔플",
+    "generate": "캐릭터 생성",
+    "generating": "생성 중…",
+    "model": "모델",
+    "credits": "크레딧"
+  },
+  "preview": {
+    "generating": "오리지널 캐릭터를 생성하는 중…",
+    "emptyTitle": "나만의 캐릭터가 여기에 표시됩니다.",
+    "emptySubtitleLine1": "나만의 독창적인 캐릭터를",
+    "emptySubtitleLine2": "처음부터 직접 설계해보세요",
+    "save": "저장",
+    "altGenerated": "생성된 오리지널 캐릭터"
+  },
+  "tags": {
+    "showMore": "더 보기",
+    "hide": "숨기기"
+  },
+  "customPrompt": {
+    "placeholder": "추가 세부사항 입력… 예: 사이버펑크 텍티컬 아머, 극적인 역광, 언리얼 엔진 5 렌더링"
+  },
+  "gallery": {
+    "title": "디자인된 캐릭터",
+    "countSuffix": "명의 캐릭터",
+    "emptyText": "생성된 캐릭터가\n여기에 나타납니다",
+    "altPrefix": "캐릭터",
+    "download": "다운로드"
+  },
+  "errors": {
+    "generationFailed": "캐릭터 생성에 실패했습니다",
+    "noActiveModels": "현재 사용 가능한 이미지 생성 모델이 없습니다.",
+    "loginRequired": "캐릭터를 생성하려면 먼저 로그인하세요."
+  }
+}

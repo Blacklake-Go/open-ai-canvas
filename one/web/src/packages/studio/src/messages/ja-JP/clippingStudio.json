@@ -1,0 +1,73 @@
+{
+  "headings": {
+    "startCreatingWith": "クリエイティブを始める",
+    "aiClippingStudio": "AI クライピングスタジオ",
+    "emptyStateSubtitle": "動画からバズるハイライトと正確なタイムスタンプを自動的に抽出します。",
+    "clippingHistoryRuns": "クリッピング実行履歴",
+    "savedGenerations": "{count} 件の保存済み生成結果",
+    "backToHistory": "履歴に戻る",
+    "highlightsTimeline": "ハイライトタイムライン",
+    "matches": "{count} 件の一致",
+    "extractedVideoClips": "抽出された動画クリップ",
+    "aspectRatioLabel": "アスペクト比：{ratio}",
+    "originalVideoPlayer": "元動画プレイヤー"
+  },
+  "modes": {
+    "timelineSeek": "タイムラインシークモード",
+    "clipsGallery": "クリップギャラリーモード"
+  },
+  "labels": {
+    "highlights": "{count} 件のハイライト",
+    "clips": "{count} 本のクリップ",
+    "highlightFallback": "ハイライト #{index}",
+    "scoreSuffix": "% マッチスコア",
+    "durationSuffix": "秒の長さ",
+    "seekAndPlay": "シークして再生",
+    "clipIndex": "クリップ #{index}",
+    "aiClipping": "AI クライピング"
+  },
+  "buttons": {
+    "deleteFromHistory": "履歴から削除",
+    "delete": "削除",
+    "copyLink": "リンクをコピー",
+    "copyLinkShort": "リンクコピー",
+    "download": "ダウンロード",
+    "clearVideo": "動画をクリア",
+    "uploadSourceVideo": "元動画をアップロード",
+    "generate": "クリップ生成",
+    "generating": "生成中...",
+    "coordinatesOnly": "座標のみ出力"
+  },
+  "placeholders": {
+    "promptOrUrl": "抽出したいプロンプトまたはハイライトの特徴を記述"
+  },
+  "popovers": {
+    "aspectRatio": "アスペクト比",
+    "maxHighlights": "最大ハイライト数",
+    "limit": "制限："
+  },
+  "empty": {
+    "noHighlights": "ハイライトが抽出されませんでした。",
+    "noClips": "動画クリップが生成されませんでした。もう一度お試しください。"
+  },
+  "alerts": {
+    "urlCopied": "リンクをクリップボードにコピーしました！",
+    "needVideo": "先に動画をアップロードするか、動画URLを貼り付けてください。"
+  },
+  "errors": {
+    "dismissNotification": "通知を閉じる",
+    "videoTooLarge": "このモードではファイルサイズが大きすぎます。動画を圧縮またはトリミングしてからアップロードしてください。",
+    "videoExceedsLimit": "動画サイズが {mb}MB の上限を超えています。",
+    "uploadFailed": "動画のアップロードに失敗しました。再試行してください。",
+    "generationFailed": "AIクリッピング処理に失敗しました。"
+  },
+  "sourceVideoFallback": "元動画.mp4",
+  "aspectRatioLabels": {
+    "9:16": "9:16（TikTok / リール / ショート動画）",
+    "16:9": "16:9（YouTube / 横型ランドスケープ）",
+    "1:1": "1:1（Instagram 正方形スクエア）",
+    "4:5": "4:5（Instagram 縦型ポートレート）",
+    "4:3": "4:3（クラシックテレビ映像）",
+    "3:4": "3:4（縦型動画）"
+  }
+}

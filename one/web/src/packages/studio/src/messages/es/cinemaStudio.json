@@ -1,0 +1,59 @@
+{
+  "cameraOverlay": {
+    "eyebrow": "Estudio de Cine",
+    "title": "Ajustes de cámara",
+    "description": "Crea una estética cinematográfica coherente eligiendo la cámara, el objetivo, la distancia focal y la profundidad de campo.",
+    "close": "Cerrar",
+    "closeAria": "Cerrar ajustes de cámara",
+    "columns": {
+      "camera": "Cámara",
+      "lens": "Objetivo",
+      "focalLength": "Distancia focal",
+      "aperture": "Apertura"
+    }
+  },
+  "modes": {
+    "video": "Video Cinematográfico",
+    "image": "Foto Cinematográfica"
+  },
+  "models": {
+    "title": "Modelo de Cine"
+  },
+  "duration": {
+    "title": "Duración"
+  },
+  "dropdowns": {
+    "aspectRatio": "Relación de Aspecto",
+    "resolution": "Resolución"
+  },
+  "actions": {
+    "copyPrompt": "Copiar prompt",
+    "promptCopied": "Prompt copiado",
+    "copyImage": "Copiar imagen",
+    "imageCopied": "Imagen copiada",
+    "download": "Descargar",
+    "delete": "Eliminar",
+    "deleteConfirm": "¿Estás seguro de que deseas eliminar este elemento generado?"
+  },
+  "card": {
+    "noPrompt": "Sin prompt",
+    "badge": "Estudio de Cine",
+    "historyItemAlt": "Elemento de historial {index}"
+  },
+  "empty": {
+    "kicker": "COMIENZA A CREAR CON",
+    "title": "ESTUDIO DE CINE",
+    "description": "¿Qué filmarías con presupuesto infinito? Controla cámaras, iluminación, objetivos y genera escenas cinematográficas de alta gama con múltiples modelos de video y foto."
+  },
+  "prompt": {
+    "placeholder": "Describe tu escena cinematográfica...",
+    "generating": "Filmando y Renderizando...",
+    "generate": "Filmar Escena"
+  },
+  "fullscreen": {
+    "alt": "Vista previa a pantalla completa"
+  },
+  "referenceImage": {
+    "alt": "Primer Fotograma / Referencia"
+  }
+}

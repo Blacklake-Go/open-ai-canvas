@@ -1,0 +1,90 @@
+{
+  "labels": {
+    "referenceVideo": "参照動画",
+    "characterImages": "キャラクター / 演者画像",
+    "addImage": "画像を追加",
+    "library": "ライブラリ",
+    "mode": "モード",
+    "motionTransfer": "モーション転送",
+    "objectsSwap": "オブジェクト置換",
+    "duration": "再生時間",
+    "durationSeconds": "{count}秒",
+    "quality": "画質",
+    "highBitrate": "高ビットレート",
+    "generateAudio": "音声を生成",
+    "seed": "シード値",
+    "randomSeed": "ランダム (-1)"
+  },
+  "buttons": {
+    "use": "適用",
+    "useAsVideo": "動画として使用",
+    "useAsImage": "画像として追加",
+    "download": "ダウンロード",
+    "delete": "削除",
+    "generate": "モーション動画を生成",
+    "generating": "生成中..."
+  },
+  "titles": {
+    "clickToClear": "{fileName} — クリックしてクリア",
+    "uploadVideo": "参照動画（MP4/WebM/MOV）をアップロードまたはドラッグ＆ドロップ",
+    "uploadImage": "キャラクター・演者画像（PNG/JPEG/WebP）をアップロード",
+    "enlargePreview": "プレビューを拡大",
+    "deleteFromLibrary": "ライブラリから削除",
+    "removeImage": "画像を削除"
+  },
+  "assetLibrary": {
+    "header": "アセットライブラリ",
+    "tabs": {
+      "videos": "動画一覧",
+      "images": "画像一覧",
+      "results": "生成結果"
+    },
+    "empty": "素材が見つかりません"
+  },
+  "dropdowns": {
+    "model": "モデル",
+    "selectModel": "モデルを選択",
+    "aspectRatio": "画面比率",
+    "qualityBasic": "ベーシック",
+    "qualityHigh": "高画質",
+    "qualityBasicDesc": "高速生成、標準解像度",
+    "qualityHighDesc": "映画レベルの精細度と最高の一貫性"
+  },
+  "modes": {
+    "motionTransfer": "モーション転送",
+    "motionTransferDesc": "動画から動作とカメラワークを抽出し、新キャラクターで再構築",
+    "objectsSwap": "オブジェクト置換",
+    "objectsSwapDesc": "背景やシーンを維持したまま、衣装やアイテム、人物を置換"
+  },
+  "empty": {
+    "titleLine1": "クリエイティブを始める",
+    "titleLine2": "モーションコントロールスタジオ",
+    "description": "Seedance モーションコントロールモデルを活用し、参照動画の動き、ダンスの振付、カメラワークでキャラクター画像を動かします。"
+  },
+  "placeholders": {
+    "prompt": "任意 — シーンの詳細、照明効果、動きのニュアンスを記述..."
+  },
+  "badges": {
+    "motionControl": "モーション制御",
+    "motionTransfer": "モーション転送",
+    "objectsSwap": "オブジェクト置換"
+  },
+  "confirm": {
+    "deleteGenerated": "この生成アイテムを削除してもよろしいですか？"
+  },
+  "errors": {
+    "videoTooLarge": "動画が100MBの制限を超えています。",
+    "imageTooLarge": "画像が20MBの制限を超えています。",
+    "missingVideo": "先に参照動画をアップロードまたは選択してください。",
+    "missingImages": "先に少なくとも1枚のキャラクター画像をアップロードまたは選択してください。",
+    "maxImagesExceeded": "このモデルでは最大 {max} 枚の画像のみ指定できます。",
+    "videoUploadFailed": "動画のアップロードに失敗しました：{message}",
+    "imageUploadFailed": "画像のアップロードに失敗しました：{message}",
+    "generationFailed": "モーション制御動画の生成に失敗しました"
+  },
+  "defaults": {
+    "selectedVideo": "選択された参照動画",
+    "selectedImage": "選択されたキャラクター画像",
+    "resultVideo": "モーション動画"
+  }
+}

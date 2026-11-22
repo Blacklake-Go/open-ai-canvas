@@ -1,0 +1,54 @@
+{
+  "hero": {
+    "titleLine1": "クリエイティブを始める",
+    "titleLine2": "リップシンクスタジオ",
+    "subtitle": "任意の音声と人物の顔動画を同期させ、自然で高品質なトーキングアバターを作成します。"
+  },
+  "modes": {
+    "portraitImage": "人物写真",
+    "video": "動画"
+  },
+  "media": {
+    "imageLabel": "画像",
+    "videoLabel": "動画",
+    "audioLabel": "音声",
+    "uploadFilePrefix": "アップロード：",
+    "uploadFileSuffix": "ファイル",
+    "clickToClear": "クリックしてクリア",
+    "noImage": "画像なし",
+    "noVideo": "動画なし",
+    "noAudio": "音声なし"
+  },
+  "prompt": {
+    "placeholder": "話し方や表情のスタイルを記述..."
+  },
+  "model": {
+    "selectModel": "モデルを選択",
+    "dropdownTitle": "モデル",
+    "resolutionDropdownTitle": "解像度"
+  },
+  "actions": {
+    "generate": "リップシンク開始",
+    "generating": "生成中...",
+    "download": "ダウンロード",
+    "delete": "削除"
+  },
+  "confirm": {
+    "deleteItem": "この生成アイテムを削除してもよろしいですか？"
+  },
+  "badges": {
+    "lipSync": "リップシンク"
+  },
+  "errors": {
+    "imageTooLarge": "画像が10MBの制限を超えています。",
+    "videoTooLarge": "動画が50MBの制限を超えています。",
+    "audioTooLarge": "音声ファイルが10MBの制限を超えています。",
+    "imageUploadFailed": "画像のアップロードに失敗しました：{message}",
+    "videoUploadFailed": "動画のアップロードに失敗しました：{message}",
+    "audioUploadFailed": "音声のアップロードに失敗しました：{message}",
+    "needAudio": "先に音声ファイルをアップロードしてください。",
+    "needImage": "先に人物のポートレート画像をアップロードしてください。",
+    "needVideo": "先に元動画をアップロードしてください。",
+    "generationFailed": "リップシンクの生成に失敗しました"
+  }
+}

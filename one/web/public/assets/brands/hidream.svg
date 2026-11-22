@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" role="img" aria-label="HiDream">
+  <rect width="100" height="100" rx="23" fill="#1D8EFF"/>
+  <g fill="#ffffff">
+    <rect x="19.5" y="24.4" width="15.8" height="47.9" rx="7.9"/>
+    <rect x="41.9" y="43.6" width="15.8" height="28.7" rx="7.9"/>
+    <rect x="64.2" y="43.6" width="15.8" height="28.7" rx="7.9"/>
+    <circle cx="72.1" cy="32.3" r="7.9"/>
+  </g>
+</svg>

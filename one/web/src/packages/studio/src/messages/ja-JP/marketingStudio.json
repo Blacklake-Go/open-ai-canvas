@@ -1,0 +1,49 @@
+{
+  "empty": {
+    "titleLine1": "クリエイティブを始める",
+    "titleLine2": "マーケティングスタジオ",
+    "subtitle": "シーンを描写し、商品画像をアップロードするだけで、高コンバージョン率のAI動画広告が瞬時に完成します。"
+  },
+  "uploadSlots": {
+    "product": "商品",
+    "avatar": "アバター",
+    "references": "参照素材",
+    "uploadPrefix": "アップロード"
+  },
+  "prompt": {
+    "placeholder": "広告スクリプトを記述... 商品には @image1、アバターには @image2 を使用してください。"
+  },
+  "dropdowns": {
+    "videoFormatPresets": "動画フォーマットプリセット",
+    "avatarPresets": "アバタープリセット",
+    "aspectRatio": "アスペクト比",
+    "resolution": "解像度",
+    "duration": "再生時間",
+    "selectAvatarFallback": "アバターを選択"
+  },
+  "buttons": {
+    "generating": "生成中...",
+    "launch": "広告を生成",
+    "enlargePreview": "プレビューを拡大",
+    "enlargeSelectedAvatar": "選択中のアバターを拡大",
+    "selectAvatar": "アバターを選択",
+    "download": "ダウンロード",
+    "delete": "削除"
+  },
+  "history": {
+    "badge": "マーケティングスタジオ"
+  },
+  "alt": {
+    "creativeAsset": "クリエイティブアセット {index}",
+    "previousAvatar": "前のアバター",
+    "nextAvatar": "次のアバター"
+  },
+  "errors": {
+    "missingScript": "広告スクリプトを入力してください。",
+    "missingProductImage": "商品画像をアップロードしてください。",
+    "generationFailed": "マーケティング広告の生成に失敗しました"
+  },
+  "confirm": {
+    "deleteItem": "この生成アイテムを削除してもよろしいですか？"
+  }
+}

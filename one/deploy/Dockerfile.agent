@@ -1,0 +1,8 @@
+FROM node:22-alpine
+RUN addgroup -S one \
+ && adduser -S -G one one
+WORKDIR /app
+COPY one/agent/package.json one/agent/server.mjs one/agent/agent-runtime.mjs ./
+USER one
+EXPOSE 8090
+CMD ["node", "server.mjs"]

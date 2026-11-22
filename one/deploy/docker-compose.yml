@@ -1,0 +1,207 @@
+services:
+  postgres:
+    image: postgres:17-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-supdance}
+      POSTGRES_USER: ${POSTGRES_USER:-supdance}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?POSTGRES_PASSWORD is required}
+    volumes:
+      - one_pg_data:/var/lib/postgresql/data
+    networks:
+      - backend-data-net
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-supdance} -d ${POSTGRES_DB:-supdance}"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
+  redis:
+    image: redis:7.4-alpine
+    restart: unless-stopped
+    command: ["redis-server", "--requirepass", "${REDIS_PASSWORD:?REDIS_PASSWORD is required}", "--appendonly", "yes"]
+    volumes:
+      - one_redis_data:/data
+    networks:
+      - backend-data-net
+    healthcheck:
+      test: ["CMD-SHELL", "redis-cli -a ${REDIS_PASSWORD:?REDIS_PASSWORD is required} ping | grep -q PONG"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
+  migrate:
+    build:
+      context: ../..
+      dockerfile: one/deploy/Dockerfile.backend
+    command: ["-migrate"]
+    environment:
+      DATABASE_URL: postgres://${POSTGRES_USER:-supdance}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB:-supdance}?sslmode=disable
+      ONE_MIGRATIONS_DIR: /migrations
+    volumes:
+      - ${ONE_MIGRATIONS_HOST_DIR:-./migrations}:/migrations:ro
+    networks:
+      - backend-data-net
+    depends_on:
+      postgres:
+        condition: service_healthy
+    restart: "no"
+
+  backend:
+    build:
+      context: ../..
+      dockerfile: one/deploy/Dockerfile.backend
+    restart: unless-stopped
+    environment:
+      PORT: "8080"
+      NODE_ENV: ${NODE_ENV:-production}
+      DATABASE_URL: postgres://${POSTGRES_USER:-supdance}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB:-supdance}?sslmode=disable
+      REDIS_URL: redis://:${REDIS_PASSWORD}@redis:6379/0
+      REDIS_PASSWORD: ${REDIS_PASSWORD:?REDIS_PASSWORD is required}
+      PG_MAX_CONNECTIONS: ${PG_MAX_CONNECTIONS:-20}
+      PG_MIN_CONNECTIONS: ${PG_MIN_CONNECTIONS:-2}
+      ONE_AGENT_URL: http://agent:8090
+      ONE_AGENT_BRIDGE_HOST: backend
+      ONE_AGENT_TOKEN: ${ONE_AGENT_TOKEN:?ONE_AGENT_TOKEN must be >=32 chars}
+      ONE_AGENT_LLM_PROVIDER: ${ONE_AGENT_LLM_PROVIDER:-openai}
+      ONE_AGENT_LLM_MODEL: ${ONE_AGENT_LLM_MODEL:-gpt-4o-mini}
+      ONE_AGENT_LLM_BASE_URL: ${ONE_AGENT_LLM_BASE_URL:-}
+      ONE_AGENT_LLM_API_KEY: ${ONE_AGENT_LLM_API_KEY:-}
+      ONE_WORKER_DISABLED: ${ONE_WORKER_DISABLED:-false}
+      PUBLIC_APP_URL: ${PUBLIC_APP_URL:-https://www.supdance.com}
+      ONE_COOKIE_DOMAIN: ${ONE_COOKIE_DOMAIN:-}
+      ADDITIONAL_ALLOWED_ORIGINS: ${ADDITIONAL_ALLOWED_ORIGINS:-}
+      ONE_CSRF_ORIGIN_REQUIRED: ${ONE_CSRF_ORIGIN_REQUIRED:-true}
+      ONE_MIGRATIONS_DIR: /migrations
+      AUTH_SECRET: ${AUTH_SECRET:?AUTH_SECRET is required}
+      AUTH_VERIFICATION_CODE_SECRET: ${AUTH_VERIFICATION_CODE_SECRET:-}
+      OAUTH_STATE_SECRET: ${OAUTH_STATE_SECRET:-}
+      BILLING_SESSION_SECRET: ${BILLING_SESSION_SECRET:-}
+      PROVIDER_SECRETS_ENCRYPTION_KEY: ${PROVIDER_SECRETS_ENCRYPTION_KEY:-}
+      STORAGE_SECRETS_ENCRYPTION_KEY: ${STORAGE_SECRETS_ENCRYPTION_KEY:-}
+      ADMIN_SECRET_KEY: ${ADMIN_SECRET_KEY:-}
+      ONE_STORAGE_LOCAL_ROOT: ${ONE_STORAGE_LOCAL_ROOT:-/data/storage}
+      ALLOWED_PRIVATE_UPSTREAM_HOSTS: ${ALLOWED_PRIVATE_UPSTREAM_HOSTS:-}
+      INVITE_CODE_REQUIRED: ${INVITE_CODE_REQUIRED:-true}
+      GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID:-}
+      GOOGLE_CLIENT_SECRET: ${GOOGLE_CLIENT_SECRET:-}
+      GITHUB_CLIENT_ID: ${GITHUB_CLIENT_ID:-}
+      GITHUB_CLIENT_SECRET: ${GITHUB_CLIENT_SECRET:-}
+      DISCORD_CLIENT_ID: ${DISCORD_CLIENT_ID:-}
+      DISCORD_CLIENT_SECRET: ${DISCORD_CLIENT_SECRET:-}
+      WECHAT_OAUTH_APP_ID: ${WECHAT_OAUTH_APP_ID:-}
+      WECHAT_OAUTH_APP_SECRET: ${WECHAT_OAUTH_APP_SECRET:-}
+      QQ_APP_ID: ${QQ_APP_ID:-}
+      QQ_APP_KEY: ${QQ_APP_KEY:-}
+      STRIPE_SECRET_KEY: ${STRIPE_SECRET_KEY:-}
+      STRIPE_WEBHOOK_SECRET: ${STRIPE_WEBHOOK_SECRET:-}
+      ALIPAY_APP_ID: ${ALIPAY_APP_ID:-}
+      ALIPAY_PUBLIC_KEY: ${ALIPAY_PUBLIC_KEY:-}
+      ALIPAY_PRIVATE_KEY: ${ALIPAY_PRIVATE_KEY:-}
+      ALIPAY_NOTIFY_URL: ${ALIPAY_NOTIFY_URL:-}
+      WECHAT_APP_ID: ${WECHAT_APP_ID:-}
+      WECHAT_MCH_ID: ${WECHAT_MCH_ID:-}
+      WECHAT_API_V3_KEY: ${WECHAT_API_V3_KEY:-}
+      WECHAT_PUBLIC_KEY: ${WECHAT_PUBLIC_KEY:-}
+      WECHAT_PRIVATE_KEY: ${WECHAT_PRIVATE_KEY:-}
+      WECHAT_CERT_SERIAL_NO: ${WECHAT_CERT_SERIAL_NO:-}
+      WECHAT_NOTIFY_URL: ${WECHAT_NOTIFY_URL:-}
+      PAYPAL_CLIENT_ID: ${PAYPAL_CLIENT_ID:-}
+      PAYPAL_CLIENT_SECRET: ${PAYPAL_CLIENT_SECRET:-}
+      PAYPAL_WEBHOOK_ID: ${PAYPAL_WEBHOOK_ID:-}
+      PAYPAL_MODE: ${PAYPAL_MODE:-live}
+      UPSTREAM_AI_BASE: ${UPSTREAM_AI_BASE:-https://api.muapi.ai}
+      MUAPI_API_KEY: ${MUAPI_API_KEY:-}
+      OPENAI_API_KEY: ${OPENAI_API_KEY:-}
+      DEEPSEEK_API_KEY: ${DEEPSEEK_API_KEY:-}
+      GEMINI_API_KEY: ${GEMINI_API_KEY:-}
+      VOLCENGINE_API_KEY: ${VOLCENGINE_API_KEY:-}
+      DASHSCOPE_API_KEY: ${DASHSCOPE_API_KEY:-}
+      MINIMAX_API_KEY: ${MINIMAX_API_KEY:-}
+      RUNNINGHUB_API_KEY: ${RUNNINGHUB_API_KEY:-}
+      GENERATION_CALLBACK_SECRET: ${GENERATION_CALLBACK_SECRET:-}
+      GENERATION_CALLBACK_HMAC_SECRET: ${GENERATION_CALLBACK_HMAC_SECRET:-}
+      SMS_CHINA_PRIMARY: ${SMS_CHINA_PRIMARY:-tencent_sms}
+      SMS_CHINA_FALLBACK: ${SMS_CHINA_FALLBACK:-aliyun_sms}
+      TENCENT_SMS_SECRET_ID: ${TENCENT_SMS_SECRET_ID:-}
+      TENCENT_SMS_SECRET_KEY: ${TENCENT_SMS_SECRET_KEY:-}
+      TENCENT_SMS_SDK_APP_ID: ${TENCENT_SMS_SDK_APP_ID:-}
+      TENCENT_SMS_SIGN_NAME: ${TENCENT_SMS_SIGN_NAME:-}
+      TENCENT_SMS_TEMPLATE_ID: ${TENCENT_SMS_TEMPLATE_ID:-}
+      ALIYUN_SMS_ACCESS_KEY_ID: ${ALIYUN_SMS_ACCESS_KEY_ID:-}
+      ALIYUN_SMS_ACCESS_KEY_SECRET: ${ALIYUN_SMS_ACCESS_KEY_SECRET:-}
+      ALIYUN_SMS_SIGN_NAME: ${ALIYUN_SMS_SIGN_NAME:-}
+      ALIYUN_SMS_TEMPLATE_CODE: ${ALIYUN_SMS_TEMPLATE_CODE:-}
+      INDEXNOW_KEY: ${INDEXNOW_KEY:-}
+      X_BEARER_TOKEN: ${X_BEARER_TOKEN:-}
+      UPLOAD_PROXY_ALLOWED_HOSTS: ${UPLOAD_PROXY_ALLOWED_HOSTS:-}
+    volumes:
+      - ${ONE_MIGRATIONS_HOST_DIR:-./migrations}:/migrations:ro
+      - one_storage_data:/data/storage
+    networks:
+      - public-edge-net
+      - backend-data-net
+      - backend-agent-net
+    healthcheck:
+      test: ["CMD", "/usr/local/bin/one-backend", "-healthcheck"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 10s
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      migrate:
+        condition: service_completed_successfully
+
+  agent:
+    build:
+      context: ../..
+      dockerfile: one/deploy/Dockerfile.agent
+    restart: unless-stopped
+    read_only: true
+    tmpfs:
+      - /tmp:rw,noexec,nosuid,size=512m
+    environment:
+      PORT: "8090"
+      HOST: "0.0.0.0"
+      ONE_AGENT_TOKEN: ${ONE_AGENT_TOKEN:?ONE_AGENT_TOKEN must be >=32 chars}
+      ONE_AGENT_MAX_CONCURRENT: ${ONE_AGENT_MAX_CONCURRENT:-4}
+    healthcheck:
+      test: ["CMD", "node", "-e", "fetch('http://127.0.0.1:8090/healthz').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+    # Dual-network isolation: agent has NO access to PostgreSQL or Redis
+    networks:
+      - backend-agent-net
+
+  web:
+    build:
+      context: ../..
+      dockerfile: one/deploy/Dockerfile.web
+    restart: unless-stopped
+    ports:
+      - "${ONE_HTTP_PORT:-3000}:80"
+    networks:
+      - public-edge-net
+    depends_on:
+      backend:
+        condition: service_healthy
+
+networks:
+  public-edge-net:
+    driver: bridge
+  backend-data-net:
+    driver: bridge
+    internal: true
+  backend-agent-net:
+    driver: bridge
+    internal: true
+
+volumes:
+  one_pg_data:
+  one_redis_data:
+  one_storage_data:

@@ -1,0 +1,568 @@
+{
+  "categories": {
+    "all": "모두",
+    "t2v": "텍스트를 비디오로",
+    "i2v": "이미지를 비디오로",
+    "v2v": "비디오 도구"
+  },
+  "providers": {
+    "allProviders": "모든 제공자"
+  },
+  "search": {
+    "placeholder": "모델 검색..."
+  },
+  "media": {
+    "image": "영상",
+    "video": "동영상",
+    "audio": "오디오",
+    "endFrame": "끝 프레임",
+    "removePrefix": "제거하다"
+  },
+  "upload": {
+    "uploadStartFrame": "업로드 시작 프레임",
+    "uploadEndFrame": "종료 프레임 업로드",
+    "uploadUpToReferenceImages": "최대 {count} 참조 이미지 업로드",
+    "uploadingProgress": "{title}: {progress}% 업로드됨"
+  },
+  "placeholders": {
+    "editVideo": "영상 편집 방법을 설명해주세요.",
+    "continueVideo": "동영상을 계속하는 방법을 설명하세요.",
+    "motion": "모션 설명",
+    "motionOptional": "동작 설명(선택 사항)",
+    "videoReadyRemoveWatermark": "비디오 준비됨 - 워터마크를 제거하려면 생성을 클릭하세요.",
+    "motionOrEffect": "동작이나 효과를 설명하세요.",
+    "motionOrEffectOptional": "동작이나 효과 설명(선택 사항)",
+    "optionalContinueVideo": "선택사항: 동영상을 계속하는 방법을 설명하세요...",
+    "describeVideo": "만들고 싶은 영상을 설명해주세요"
+  },
+  "dropdowns": {
+    "model": "모델",
+    "source": "비디오 모드",
+    "baseGeneration": "기본 생성",
+    "aspectRatio": "종횡비",
+    "effect": "효과",
+    "effectType": "효과 유형",
+    "duration": "지속",
+    "resolution": "해결"
+  },
+  "controls": {
+    "draw": "그리다",
+    "generate": "생성하다",
+    "generating": "생성 중..."
+  },
+  "extend": {
+    "continuingGeneration": "이전 {family} 세대를 이어갑니다."
+  },
+  "gallery": {
+    "download": "다운로드",
+    "extend": "연장하다",
+    "extendSeedance": "Seedance 2.0 Extend를 사용하여 이 비디오를 확장하세요",
+    "delete": "삭제",
+    "confirmDelete": "생성된 이 항목을 삭제하시겠습니까?",
+    "noPromptProvided": "프롬프트가 제공되지 않음",
+    "fallbackTitle": "비디오 스튜디오"
+  },
+  "empty": {
+    "heading": "만들기 시작하기",
+    "subtitle": "모션 효과를 사용하여 이미지를 놀라운 AI ​​비디오로 애니메이션화"
+  },
+  "creativeAssets": {
+    "asset1": "광고 애셋 1",
+    "asset2": "광고 애셋 2",
+    "asset3": "광고 애셋 3",
+    "asset4": "광고 애셋 4"
+  },
+  "errors": {
+    "modelChangedDuringUpload": "업로드 중에 모델이 변경되었습니다. 파일을 다시 추가해주세요.",
+    "modelDoesNotSupportReference": "{family}는 {mediaType} 참조를 지원하지 않습니다.",
+    "sourceDoesNotAcceptImages": "선택한 소스는 이미지를 허용하지 않습니다.",
+    "waitForCurrentUpload": "현재 업로드가 완료될 때까지 기다린 후 해당 파일을 다시 추가하세요.",
+    "imageExceeds10MB": "이미지가 10MB 제한을 초과했습니다.",
+    "labelExceedsLimit": "{label}가 {limit}MB 한도를 초과합니다.",
+    "labelUploadFailed": "{label} 업로드 실패: {message}",
+    "noPromptForModel": "이 모델에 대한 프롬프트를 입력하세요.",
+    "generationCapabilityUnavailable": "이 모델은 아직 검증된 서버 생성 기능이 없습니다.",
+    "uploadVideoFirst": "먼저 영상을 올려주세요.",
+    "uploadReferenceImageForMotion": "모션 제어를 위한 참조 이미지를 업로드해주세요.",
+    "uploadAtLeastOneReferenceImage": "먼저 참조 이미지를 하나 이상 업로드하세요.",
+    "enterPromptToGenerate": "동영상을 생성하려면 메시지를 입력하세요.",
+    "noVideoUrlReturned": "API에서 반환된 비디오 URL이 없습니다.",
+    "videoGenerationFailed": "비디오 생성 실패",
+    "deleteItemFailed": "항목을 삭제하지 못했습니다.",
+    "noContinuationSource": "계속하려면 호환되는 {family} 결과를 선택하세요."
+  },
+  "modelControls": {
+    "modes": {
+      "text": "프롬프트에서",
+      "animate_image": "애니메이션 이미지",
+      "keyframes": "시작 및 끝 프레임",
+      "references": "참조 사용",
+      "edit_video": "비디오 편집",
+      "extend_uploaded_video": "비디오 확장",
+      "motion_transfer": "모션 전송"
+    },
+    "settings": "설정",
+    "quality": "품질",
+    "extensionDuration": "연장 기간",
+    "defaultResolution": "서비스 기본값",
+    "incompatible": "이 모델 버전에서는 이 선택 사항을 사용할 수 없습니다.",
+    "incompatibleShort": "이 버전에서는 사용할 수 없습니다.",
+    "inheritedFormat": "형식은 원본 이미지를 따릅니다.",
+    "inheritedVideoResolution": "해상도는 소스 비디오를 따릅니다.",
+    "modeDescriptions": {
+      "text": "설명을 바탕으로 동영상을 만드세요.",
+      "animate_image": "설명을 사용하여 업로드된 이미지에 애니메이션을 적용합니다.",
+      "keyframes": "선택한 두 이미지 사이에 비디오를 만듭니다.",
+      "references": "업로드된 파일을 가이드로 사용하여 동영상을 제작하세요.",
+      "edit_video": "동영상을 업로드하고 변경사항을 설명하세요.",
+      "extend_uploaded_video": "업로드된 동영상 끝에 새 영상을 추가하세요.",
+      "motion_transfer": "비디오의 모션을 캐릭터 이미지에 적용합니다."
+    },
+    "defaultVariant": "기본",
+    "advanced": "고급의",
+    "adjustments": {
+      "resolution": "{value}를 사용합니다.",
+      "duration": "기간: {value}",
+      "aspectRatio": "형식: {value}",
+      "speed": "속도: {value}",
+      "profile": "서비스: {value}",
+      "quality": "품질: {value}",
+      "imageUnused": "업로드된 이미지는 사용되지 않습니다.",
+      "videoUnused": "업로드된 동영상은 사용되지 않습니다.",
+      "audioUnused": "업로드된 오디오는 사용되지 않습니다.",
+      "imageCount": "사용된 이미지: {value}",
+      "videoCount": "사용된 동영상: {value}",
+      "audioCount": "사용된 오디오 파일: {value}"
+    },
+    "fields": {
+      "seed": {
+        "title": "씨앗",
+        "description": "임의의 결과를 얻으려면 -1을 사용하십시오."
+      },
+      "high_bitrate": {
+        "title": "높은 비트레이트",
+        "description": "파일이 클수록 더 자세한 정보를 얻을 수 있습니다."
+      },
+      "generate_audio": {
+        "title": "오디오 생성",
+        "description": ""
+      },
+      "camera_fixed": {
+        "title": "고정 카메라",
+        "description": "카메라를 가만히 두십시오."
+      }
+    },
+    "provider": "발전 서비스",
+    "providerHelp": "필요한 경우 특정 서비스를 선택하세요.",
+    "resolutionUnknown": "이 서비스에서는 출력 해상도를 지정하지 않습니다.",
+    "referenceSupport": "지원: {media}.",
+    "referenceMediaTypes": {
+      "image": "이미지",
+      "video": "동영상",
+      "audio": "오디오"
+    },
+    "restoreDefaultResolution": "서비스의 기본 출력 크기 사용"
+  },
+  "seedance": {
+    "speed": "속도",
+    "speeds": {
+      "standard": "표준 속도",
+      "fast": "빠른"
+    },
+    "tools": "Seedance 비디오 도구",
+    "profiles": {
+      "standard": {
+        "label": "기준",
+        "description": ""
+      },
+      "intl": {
+        "label": "국제적인",
+        "description": "국제 배포."
+      },
+      "vip": {
+        "label": "요일",
+        "description": "우선 처리."
+      },
+      "mini": {
+        "label": "미니",
+        "description": "라이터 모델."
+      },
+      "spicy": {
+        "label": "매운",
+        "description": "더욱 대담한 대비와 움직임."
+      },
+      "mini_spicy": {
+        "label": "미니 매운맛",
+        "description": ""
+      },
+      "legacy": {
+        "label": "시드스 2.0 API",
+        "description": ""
+      },
+      "legacy_new": {
+        "label": "Seedance 2.0 새로운 API",
+        "description": ""
+      }
+    },
+    "continueGenerated": "Seedance 2.0 결과 계속하기",
+    "removeWatermark": "워터마크 제거",
+    "toolNames": {
+      "continueGenerated": "계속 시드 2.0",
+      "removeWatermark": "워터마크 제거"
+    },
+    "toolVariants": {
+      "standard": "기준",
+      "vip": "요일",
+      "pro": "찬성"
+    },
+    "editAudio": {
+      "title": "새로운 오디오",
+      "description": "끄면 원본 오디오가 유지됩니다."
+    }
+  },
+  "happyHorse": {
+    "fields": {
+      "seed": {
+        "title": "씨앗",
+        "description": "임의의 결과를 얻으려면 비워 두세요."
+      },
+      "audio_setting": {
+        "title": "오디오",
+        "description": "",
+        "optionLabels": {
+          "auto": "모델이 선택하도록 하세요",
+          "origin": "원본 유지"
+        }
+      }
+    }
+  },
+  "veo": {
+    "speed": "세대",
+    "speeds": {
+      "standard": "기준",
+      "fast": "빠른",
+      "lite": "라이트"
+    },
+    "speedDescriptions": {
+      "standard": "",
+      "fast": "더 빠른 세대.",
+      "lite": "비용 절감."
+    },
+    "tools": "Veo 비디오 도구",
+    "toolNames": {
+      "continueGenerated": "계속 Veo 3.1",
+      "upscale": "4K 사본 만들기"
+    },
+    "toolsHelp": "완성된 Veo 3.1 비디오를 사용하십시오.",
+    "sourceVideo": "소스 비디오",
+    "sourceHelp": {
+      "continueGenerated": "먼저 Veo 3.1 Standard 또는 Fast를 사용하여 720p 비디오를 만듭니다.",
+      "upscale": "먼저 Veo 3.1 Standard 또는 Fast를 사용하여 비디오를 만드십시오."
+    },
+    "adjustments": {
+      "speed": "세대: {value}"
+    }
+  },
+  "minimax": {
+    "speed": "속도",
+    "speeds": {
+      "standard": "표준 속도",
+      "fast": "빠른"
+    },
+    "speedDescriptions": {
+      "standard": "",
+      "fast": "더 빠른 세대."
+    },
+    "provider": "맞춤화",
+    "providerHelp": "LoRA 또는 Spicy 모델을 사용하세요.",
+    "profiles": {
+      "standard": {
+        "label": "기준",
+        "description": ""
+      },
+      "lora": {
+        "label": "로라",
+        "description": "사용자 정의 스타일이나 문자를 적용합니다."
+      },
+      "spicy": {
+        "label": "매운",
+        "description": "이미지 애니메이션을 위한 대체 모델."
+      }
+    },
+    "adjustments": {
+      "profile": "사용자 정의: {value}"
+    },
+    "fields": {
+      "go_fast": {
+        "title": "추가 속도",
+        "description": "속도를 위해 세부 사항을 거래합니다."
+      },
+      "loras": {
+        "title": "LoRA",
+        "description": "최대 3개의 사용자 정의 스타일이나 문자를 추가하세요."
+      }
+    }
+  },
+  "alibaba": {
+    "speed": "속도",
+    "speeds": {
+      "standard": "표준 속도",
+      "fast": "빠른"
+    },
+    "speedDescriptions": {
+      "standard": "",
+      "fast": "더 빠른 세대."
+    },
+    "provider": "발전 서비스",
+    "providerHelp": "동일한 Wan 버전에 대해 다른 서비스를 사용하십시오.",
+    "profiles": {
+      "standard": {
+        "label": "기준",
+        "description": ""
+      },
+      "prime": {
+        "label": "초기",
+        "description": ""
+      },
+      "spicy": {
+        "label": "매운",
+        "description": ""
+      }
+    },
+    "durationLabels": {
+      "0": "소스 길이(최대 10초)"
+    },
+    "fields": {
+      "enable_audio": {
+        "title": "오디오 생성",
+        "description": ""
+      },
+      "thinking_mode": {
+        "title": "신속한 추론",
+        "description": "모델이 복잡한 설명을 해석하도록 도와주세요."
+      },
+      "negative_prompt": {
+        "title": "피하다",
+        "description": "무엇을 생략해야 하는지 설명하세요."
+      },
+      "shot_type": {
+        "title": "샷",
+        "description": "한 번의 연속 촬영 또는 여러 번의 촬영을 사용하십시오.",
+        "optionLabels": {
+          "single": "단발",
+          "multi": "다중 촬영"
+        }
+      },
+      "enable_prompt_expansion": {
+        "title": "프롬프트 펼치기",
+        "description": "모델이 설명에 세부 사항을 추가하도록 하세요."
+      },
+      "audio_setting": {
+        "title": "오디오",
+        "description": "설명을 따르거나 소스 오디오를 유지하세요.",
+        "optionLabels": {
+          "auto": "프롬프트를 따르세요",
+          "origin": "원본 유지"
+        }
+      },
+      "mode": {
+        "title": "캐릭터 애니메이션",
+        "description": "캐릭터에 애니메이션을 적용하거나 비디오의 캐릭터를 교체하세요.",
+        "optionLabels": {
+          "animate": "캐릭터 애니메이션",
+          "replace": "문자 바꾸기"
+        }
+      }
+    }
+  },
+  "kling": {
+    "speed": "속도",
+    "speeds": {
+      "standard": "표준 속도",
+      "fast": "빠른"
+    },
+    "speedDescriptions": {
+      "standard": "",
+      "fast": "더 빠른 세대."
+    },
+    "provider": "세대",
+    "providerHelp": "",
+    "profiles": {
+      "standard": {
+        "label": "기준",
+        "description": ""
+      },
+      "master": {
+        "label": "주인",
+        "description": "동작이 개선되고 따라가기가 빨라졌습니다."
+      },
+      "pro": {
+        "label": "찬성",
+        "description": "더 자세히."
+      },
+      "fast": {
+        "label": "빠른",
+        "description": "더 빠른 비디오 편집."
+      }
+    },
+    "adjustments": {
+      "profile": "세대: {value}"
+    },
+    "fields": {
+      "sound": {
+        "title": "오디오 생성",
+        "description": ""
+      },
+      "keep_original_sound": {
+        "title": "원본 오디오 유지",
+        "description": "비디오의 오디오를 사용하십시오."
+      },
+      "character_orientation": {
+        "title": "캐릭터 포즈",
+        "description": "캐릭터의 포즈를 설정하는 소스를 선택합니다.",
+        "optionLabels": {
+          "image": "이미지에서(최대 10초)",
+          "video": "동영상에서(최대 30초)"
+        }
+      }
+    }
+  },
+  "vidu": {
+    "speed": "속도",
+    "speeds": {
+      "standard": "표준 속도",
+      "fast": "빠른"
+    },
+    "speedDescriptions": {
+      "standard": "",
+      "fast": "더 빠른 세대."
+    },
+    "fields": {
+      "audio": {
+        "title": "오디오 생성",
+        "description": ""
+      },
+      "bgm": {
+        "title": "배경음악",
+        "description": ""
+      },
+      "movement_amplitude": {
+        "title": "운동",
+        "description": "피사체가 얼마나 많이 움직이는지.",
+        "optionLabels": {
+          "auto": "모델이 선택하도록 하세요",
+          "small": "미묘한",
+          "medium": "보통의",
+          "large": "강한"
+        }
+      }
+    },
+    "musicDuration": "지속 시간을 4초로 설정합니다."
+  },
+  "xai": {
+    "aspectRatioLabels": {
+      "auto": "이미지 일치"
+    },
+    "singleImageFormat": "하나의 이미지에서는 형식이 해당 이미지를 따릅니다.",
+    "fields": {
+      "mode": {
+        "title": "스타일",
+        "description": "",
+        "optionLabels": {
+          "normal": "기준",
+          "fun": "창의적인",
+          "spicy": "매운"
+        }
+      }
+    }
+  },
+  "sora": {
+    "provider": "세대",
+    "providerHelp": "",
+    "profiles": {
+      "standard": {
+        "label": "기준",
+        "description": "일상 영상용."
+      },
+      "pro": {
+        "label": "찬성",
+        "description": "자세한 내용은 최대 1080p입니다."
+      }
+    },
+    "adjustments": {
+      "profile": "세대: {value}"
+    }
+  },
+  "ltx": {
+    "provider": "세대",
+    "providerHelp": "",
+    "profiles": {
+      "standard": {
+        "label": "기준",
+        "description": "480p~1080p, 5~20초."
+      },
+      "pro": {
+        "label": "찬성",
+        "description": "6, 8, 10초."
+      },
+      "fast": {
+        "label": "빠른",
+        "description": "더 빠른 생성, 최대 20초."
+      }
+    },
+    "adjustments": {
+      "profile": "세대: {value}"
+    }
+  },
+  "pixverse": {
+    "fields": {
+      "audio": {
+        "title": "오디오 생성",
+        "description": ""
+      },
+      "generate_audio_switch": {
+        "title": "오디오 생성",
+        "description": ""
+      },
+      "style": {
+        "title": "스타일",
+        "description": "",
+        "emptyLabel": "사전 설정 없음",
+        "optionLabels": {
+          "none": "사전 설정 없음",
+          "anime": "일본 만화 영화",
+          "3d_animation": "3D 애니메이션",
+          "clay": "점토",
+          "comic": "만화 잡지",
+          "cyberpunk": "사이버펑크"
+        }
+      },
+      "thinking": {
+        "title": "신속한 개선",
+        "description": "모델을 통해 설명을 구체화해 보세요.",
+        "optionLabels": {
+          "auto": "모델이 선택하도록 하세요",
+          "enabled": "~에",
+          "disabled": "끄다"
+        }
+      },
+      "thinking_type": {
+        "title": "신속한 개선",
+        "description": "모델이 설명을 해석하도록 도와주세요.",
+        "optionLabels": {
+          "auto": "모델이 선택하도록 하세요",
+          "enabled": "~에",
+          "disabled": "끄다"
+        }
+      },
+      "multi_clip": {
+        "title": "다중 촬영",
+        "description": "카메라를 변경하면서 여러 장의 사진을 사용하세요."
+      },
+      "negative_prompt": {
+        "title": "피하다",
+        "description": "무엇을 생략해야 하는지 설명하세요."
+      }
+    }
+  }
+}

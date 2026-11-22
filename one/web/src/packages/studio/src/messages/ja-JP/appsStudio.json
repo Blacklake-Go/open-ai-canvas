@@ -1,0 +1,45 @@
+{
+  "hero": {
+    "badge": "アプリテンプレートのプレビュー",
+    "titleLine1": "AI アプリテンプレートを探す、",
+    "titleLine2": "公開時にいち早く体験。",
+    "subtitle": "アプリのコンセプトとテンプレートを閲覧できます。SupDance ではまだ一部のアプリのみ公開中です。興味を登録すると、公開時にお知らせします。"
+  },
+  "steps": {
+    "stepLabel": "ステップ",
+    "deploy": {
+      "title": "数分で導入",
+      "body": "オープンソース テンプレートをフォークし、muapi キーを追加して、Vercel にプッシュします。バックエンドのセットアップは必要ありません。"
+    },
+    "collect": {
+      "title": "支払いの回収",
+      "body": "ストライプは配線済みです。 1 回限りのクレジット、サブスクリプション、または従量課金制など、独自の価格を設定します。"
+    },
+    "keep": {
+      "title": "収益を維持する",
+      "body": "支払いは Stripe アカウントに直接送られます。製品、ブランド、利益の所有者はあなたです。"
+    }
+  },
+  "card": {
+    "templateFallback": "テンプレート",
+    "github": "GitHub",
+    "demo": "近日公開",
+    "reserve": "通知を受け取る",
+    "getTemplate": "興味を登録",
+    "requested": "登録済み"
+  },
+  "footer": {
+    "moreComingSoon": "SupDance アプリエコシステム — さらに多くのアプリを準備中"
+  },
+  "modal": {
+    "deployTitle": "「{appName}」の興味を登録",
+    "body": "このアプリは SupDance ではまだ完全には公開されていません。興味を登録すると、公開時にお知らせします。",
+    "sending": "登録中...",
+    "getTemplate": "興味を登録",
+    "maybeLater": "後で"
+  },
+  "toast": {
+    "requestSuccess": "登録しました。アプリ公開時にお知らせします。",
+    "requestError": "興味の登録に失敗しました。後でもう一度お試しください。"
+  }
+}

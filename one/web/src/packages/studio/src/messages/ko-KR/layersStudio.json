@@ -1,0 +1,206 @@
+{
+  "common": {
+    "model": "모델",
+    "reset": "초기화"
+  },
+  "panels": {
+    "layer-decomposition": "레이어 분해",
+    "upscale": "업스케일",
+    "color-grading": "컬러 그레이딩",
+    "remove-bg": "배경 제거",
+    "expand-crop": "이미지 확장",
+    "tools": "도구함"
+  },
+  "menuItems": {
+    "layer-decomposition": "레이어 분해",
+    "upscale": "업스케일",
+    "color-grading": "컬러 그레이딩",
+    "remove-bg": "배경 제거",
+    "expand-crop": "확장 및 아웃페인팅",
+    "edit-text": "텍스트 편집",
+    "enhancer": "화질 향상기",
+    "relight": "재조명 효과",
+    "angles": "각도 조절",
+    "new": "새로 만들기"
+  },
+  "tools": {
+    "uploadOrChangeImage": "이미지 업로드 또는 변경",
+    "clearMarkedRegions": "표시된 영역 지우기",
+    "runSelectionEdit": "선택 영역 편집 실행",
+    "line": "직선",
+    "arrow": "화살표",
+    "rectangle": "직사각형",
+    "circle": "원형",
+    "customColor": "사용자 지정 색상",
+    "undoStroke": "실행 취소",
+    "redoStroke": "다시 실행",
+    "clearDrawings": "그리기 지우기",
+    "selectPointerTool": "선택 포인터 도구",
+    "panTool": "이동 손 도구",
+    "lassoEdit": "올가미 편집",
+    "regionalEdit": "영역별 편집",
+    "highlightMarkerPen": "형광펜 마커",
+    "eraserTool": "지우개 도구",
+    "shapes": "도형 도구 (R)",
+    "resetZoomPan": "확대/이동 초기화",
+    "addImage": "이미지 추가",
+    "runLayerDecomposition": "레이어 분해 실행",
+    "backToTools": "도구 목록으로",
+    "closePanel": "패널 닫기",
+    "regionalPromptPlaceholder": "프롬프트를 여기에 입력하세요...",
+    "promptPlaceholder": "이미지 편집 또는 레이어 분할 방법 설명...",
+    "markedPromptPlaceholder": "{count}개 표시 영역의 레이어 설명..."
+  },
+  "sample": {
+    "clickToLoad": "클릭하여 이 레이어 분해 샘플 불러오기",
+    "original": "원본",
+    "layersCount": "5개 레이어",
+    "try": "체험하기 →",
+    "clickToExplore": "샘플 둘러보기"
+  },
+  "settings": {
+    "heading": "설정",
+    "resolution": "해상도",
+    "layers": "레이어 수"
+  },
+  "carousel": {
+    "heading": "레이어 캐러셀",
+    "soloActive": "선택 레이어 단독 보기",
+    "stackMode": "스택 합성 모드",
+    "viewOnlyActive": "활성 레이어만 표시",
+    "downloadAll": "전체 레이어 다운로드",
+    "previousLayer": "이전 레이어",
+    "nextLayer": "다음 레이어",
+    "toggleVisibility": "표시 여부 전환",
+    "downloadThisLayer": "이 레이어 다운로드",
+    "save": "저장",
+    "layerLabel": "레이어 {n}",
+    "seedreamDecomposed": "Seedream 분해 완료"
+  },
+  "colorGrading": {
+    "colorCorrect": {
+      "heading": "색상 보정",
+      "info": "색온도, 색조, 채도, 대비 및 스플릿 톤",
+      "reset": "색상 보정 초기화"
+    },
+    "softenDetails": {
+      "heading": "디테일 연화",
+      "info": "반경 및 세부 윤곽 연화",
+      "reset": "디테일 연화 초기화"
+    },
+    "bloom": {
+      "heading": "블룸 효과",
+      "info": "광원 확산 및 혼합 모드",
+      "reset": "블룸 초기화"
+    },
+    "halation": {
+      "heading": "할레이션",
+      "info": "강한 하이라이트 주변 필름 붉은 번짐",
+      "reset": "할레이션 초기화"
+    },
+    "lensInstructions": {
+      "heading": "렌즈 왜곡 효과",
+      "info": "비네팅 및 광학 렌즈 왜곡 조정",
+      "reset": "렌즈 효과 초기화"
+    },
+    "exposure": {
+      "heading": "노출 조정",
+      "info": "노출 단계 스톱 조절",
+      "reset": "노출 초기화"
+    },
+    "filmGrain": {
+      "heading": "필름 그레인",
+      "info": "아날로그 필름 입자 질감 시뮬레이션",
+      "reset": "필름 그레인 초기화"
+    },
+    "resetToDefault": "기본값으로 초기화",
+    "resetAll": "모든 컬러 그레이딩 초기화",
+    "download": "다운로드"
+  },
+  "removeBg": {
+    "modelName": "AI 배경 제거기",
+    "targetPreview": "대상 미리보기",
+    "alphaMatte": "알파 매트 누끼 추출",
+    "feature1": "정밀한 경계선 추출 (머리카락, 털, 미세 윤곽)",
+    "feature2": "고해상도 투명 PNG 이미지 출력"
+  },
+  "expandCrop": {
+    "modelName": "AI 이미지 확장기",
+    "canvasPreview": "캔버스 미리보기",
+    "boundaryOutpainting": "경계선 아웃페인팅",
+    "expand": "이미지 확장",
+    "feature1": "조명, 스타일, 질감을 일치시키며 캔버스 확장",
+    "feature2": "자동 지능형 모서리 외곽 완성 및 연속성 유지"
+  },
+  "editText": {
+    "heading": "텍스트 편집 도구",
+    "placeholder": "텍스트 수정 프롬프트를 입력하세요...",
+    "run": "텍스트 편집 실행",
+    "processing": "처리 중..."
+  },
+  "enhancer": {
+    "heading": "AI 화질 향상기",
+    "description": "조명, 선명도 및 색상 균형을 자동으로 최적화합니다.",
+    "run": "이미지 향상",
+    "processing": "향상 처리 중..."
+  },
+  "relight": {
+    "heading": "AI 재조명 효과",
+    "description": "환경광, 스튜디오 조명 및 그림자 방향을 세밀하게 조절합니다.",
+    "run": "재조명 적용",
+    "processing": "조명 재구성 중..."
+  },
+  "angles": {
+    "heading": "3D 원근 앵글",
+    "description": "원근 기울기와 카메라 앵글 정렬을 자유롭게 변경합니다.",
+    "run": "원근 각도 적용",
+    "processing": "변환 중..."
+  },
+  "footer": {
+    "decomposing": "레이어 분해 중 ({progress}%)...",
+    "separateLayers": "개별 레이어 수 {count}",
+    "upscaling": "고해상도 변환 중 ({progress}%)...",
+    "upscaleCost": "업스케일 비용 {cost}",
+    "removingBackground": "배경 제거 중 ({progress}%)...",
+    "removeBackgroundCost": "배경 제거 비용 1.0",
+    "expandingBorders": "경계 확장 중 ({progress}%)...",
+    "expandImageCost": "이미지 확장 비용 0.03"
+  },
+  "toasts": {
+    "enterApiKeyUpload": "이미지를 업로드하려면 API 키를 입력해 주세요.",
+    "imageUploaded": "이미지가 성공적으로 업로드되었습니다!",
+    "uploadFailed": "업로드 실패: {error}",
+    "uploadImageFileOnly": "이미지 파일만 업로드할 수 있습니다.",
+    "fileTooLarge": "파일 용량이 20MB 제한을 초과했습니다: {name}",
+    "viewReset": "뷰가 초기화되었습니다",
+    "enterApiKey": "API 키를 입력해 주세요.",
+    "enterRegionPrompt": "선택된 영역의 프롬프트를 입력해 주세요.",
+    "editFailed": "편집 실패: {error}",
+    "apiKeyMissingSet": "API 키가 누락되었습니다. API 키를 설정해 주세요.",
+    "uploadOrSelectDecompose": "레이어로 분해할 이미지를 업로드하거나 선택해 주세요.",
+    "decomposedInto": "{count}개의 레이어로 성공적으로 분해되었습니다!",
+    "decompositionFailed": "레이어 분해 실패: {error}",
+    "uploadOrSelectUpscale": "고해상도로 변환할 이미지를 업로드하거나 선택해 주세요.",
+    "upscaleSuccess": "{model} 모델로 이미지 고해상도 변환 완료!",
+    "upscaleNoOutput": "업스케일이 완료되었으나 결과 URL이 없습니다.",
+    "upscaleFailed": "업스케일 실패: {error}",
+    "uploadOrSelectRemoveBg": "배경을 제거할 이미지를 업로드하거나 선택해 주세요.",
+    "removeBgSuccess": "AI 배경 제거기로 배경을 투명화했습니다!",
+    "removeBgNoOutput": "배경 제거가 완료되었으나 결과 URL이 없습니다.",
+    "removeBgFailed": "배경 제거 실패: {error}",
+    "uploadOrSelectExpand": "확장할 이미지를 업로드하거나 선택해 주세요.",
+    "expandSuccess": "AI 이미지 확장기로 자연스럽게 확장되었습니다!",
+    "expandNoOutput": "이미지 확장이 완료되었으나 결과 URL이 없습니다.",
+    "expandFailed": "이미지 확장 실패: {error}",
+    "upscaleSettingsReset": "업스케일 설정이 기본값으로 초기화되었습니다",
+    "resetCategory": "{category} 초기화됨",
+    "colorGradingReset": "컬러 그레이딩 설정이 기본값으로 초기화되었습니다",
+    "downloadedGraded": "색상 보정된 이미지를 다운로드했습니다!",
+    "loadedSample": "Seedream 5단계 레이어 샘플을 불러왔습니다!",
+    "apiKeyMissing": "API 키가 누락되었습니다.",
+    "uploadImageFirst": "먼저 이미지를 업로드해 주세요.",
+    "toolCompleted": "{tool} 작업이 성공적으로 완료되었습니다!",
+    "operationFailed": "작업 실패: {error}",
+    "downloadingAll": "모든 레이어를 다운로드하는 중..."
+  }
+}

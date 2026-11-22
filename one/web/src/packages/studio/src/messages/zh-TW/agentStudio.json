@@ -1,0 +1,66 @@
+{
+  "tabs": {
+    "templates": "範本",
+    "my-agents": "我的智慧代理",
+    "my-chats": "我的對話"
+  },
+  "headings": {
+    "agents": "智慧代理",
+    "createAgent": "建立智慧代理"
+  },
+  "buttons": {
+    "back": "智慧代理",
+    "create": "建立",
+    "createAgentSubmit": "建立智慧代理",
+    "creating": "建立中...",
+    "send": "傳送",
+    "retry": "重試",
+    "browseTemplates": "浏覽範本"
+  },
+  "labels": {
+    "name": "名稱",
+    "description": "描述",
+    "systemPrompt": "系統提示詞",
+    "welcomeMessage": "歡迎語（可選）"
+  },
+  "placeholders": {
+    "name": "例如：文案精靈 Pro",
+    "description": "這個智慧代理能說明解決什麼問題？",
+    "systemPrompt": "你是一個樂於助人的助手，會……",
+    "welcomeMessage": "你好！今天有什麼可以帮你的吗？",
+    "chatInput": "給這個智慧代理發訊息……"
+  },
+  "empty": {
+    "noChats": "暫無對話",
+    "noAgents": "未找到智慧代理"
+  },
+  "errors": {
+    "loadFailed": "加載失敗。",
+    "loadAgentFailed": "加載智慧代理失敗",
+    "sendFailed": "傳送訊息失敗",
+    "createFailed": "建立智慧代理失敗"
+  },
+  "card": {
+    "defaultCategory": "AI 助手",
+    "unnamedAgent": "未命名智慧代理",
+    "byPrefix": "建立者：",
+    "unknownAgent": "未知智慧代理",
+    "newChat": "新對話",
+    "msgsSuffix": "條訊息"
+  },
+  "time": {
+    "justNow": "刚刚",
+    "minutesAgo": "{n} 分鐘前",
+    "hoursAgo": "{n} 小時前",
+    "daysAgo": "{n} 天前"
+  },
+  "auth": {
+    "heading": "登入以使用智慧體",
+    "description": "範本、智慧體設定與對話歷史已同步至您的 SupDance 帳號。請先登入。",
+    "cta": "立即登入"
+  },
+  "unavailable": {
+    "title": "創意代理人暫時無法使用",
+    "description": "我們正在建置使用者專屬工作階段、生成計費與結果儲存。您可以先使用 Studio 中已開放的圖片和影片工具。"
+  }
+}

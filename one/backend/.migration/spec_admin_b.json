@@ -1,0 +1,1651 @@
+[
+ {
+  "routePath": "/api/admin/models/health/reset",
+  "methods": [
+   "POST"
+  ],
+  "policyTier": "admin",
+  "responseFormat": "admin_ok_meta_envelope",
+  "isApi": true,
+  "isAdmin": true,
+  "analysis": {
+   "src": "app/api/admin/models/health/reset/route.js",
+   "exists": true,
+   "perms": [
+    "providersWrite"
+   ],
+   "idem": false,
+   "adminPwd": false,
+   "lines": 24,
+   "imports": [
+    "@/lib/admin/authz",
+    "@/lib/admin/permissions",
+    "@/lib/services/circuitBreaker"
+   ],
+   "srcAbs": "/Users/seelucency/Documents/dev/Supdance Pro/app/api/admin/models/health/reset/route.js",
+   "perm": "providersWrite",
+   "scope": "",
+   "requiresKey": false,
+   "srcSnippet": "import { withAdminErrorBoundary, requirePermission, okResponse, errorResponse } from '@/lib/admin/authz';\nimport { PERMISSIONS } from '@/lib/admin/permissions';\nimport { resetProviderCircuit } from '@/lib/services/circuitBreaker';\n\nexport const runtime = 'nodejs';\nexport const dynamic = 'force-dynamic';\n\nasync function handlePOST(request) {\n  const guard = await requirePermission(request, PERMISSIONS.providersWrite);\n  if (!guard.ok) return guard.response;\n\n  const body = await request.json().catch(() => ({}));\n  const providerId = body.providerId || body.provider_id;\n\n  if (!providerId) {\n    return errorResponse('VALIDATION_ERROR', '请指定要重置熔断器的供应商 ID', 422, guard.requestId);\n  }\n\n  const result = await resetProviderCircuit(providerId);\n  return okResponse(result, guard.requestId);\n}\n\nexport const POST = withAdminErrorBoundary(handlePOST);\n"
+  }
+ },
+ {
+  "routePath": "/api/admin/models/pricing",
+  "methods": [
+   "GET",
+   "POST"
+  ],
+  "policyTier": "admin",
+  "responseFormat": "admin_ok_meta_envelope",
+  "isApi": true,
+  "isAdmin": true,
+  "analysis": {
+   "src": "app/api/admin/models/pricing/route.js",
+   "exists": true,
+   "perms": [
+    "modelsRead",
+    "modelsWrite"
+   ],
+   "idem": false,
+   "adminPwd": false,
+   "lines": 93,
+   "imports": [
+    "@/lib/admin/audit",
+    "@/lib/admin/authz",
+    "@/lib/admin/permissions",
+    "@/lib/application/dataAccess.js"
+   ],
+   "srcAbs": "/Users/seelucency/Documents/dev/Supdance Pro/app/api/admin/models/pricing/route.js",
+   "perm": "modelsRead",
+   "scope": "",
+   "requiresKey": false,
+   "srcSnippet": "import { withAdminErrorBoundary, requirePermission, okResponse, errorResponse } from '@/lib/admin/authz';\nimport { PERMISSIONS } from '@/lib/admin/permissions';\nimport {\n  listCanonicalModels,\n  getModelPricing,\n  upsertModelPricing,\n} from '@/lib/application/dataAccess.js';\nimport { queryMany } from '@/lib/application/dataAccess.js';\nimport { logAudit } from '@/lib/admin/audit';\n\nexport const runtime = 'nodejs';\nexport const dynamic = 'force-dynamic';\n\nasync function handleGET(request) {\n  const guard = await requirePermission(request, PERMISSIONS.modelsRead);\n  if (!guard.ok) return guard.response;\n\n  const [models, pricingList] = await Promise.all([\n    listCanonicalModels(),\n    queryMany(`\n      SELECT mp.*, m.name, m.display_name, m.category, m.status AS model_status\n      FROM ai_studio.model_pricing mp\n      JOIN ai_studio.ai_models m ON m.id = mp.model_id\n      ORDER BY m.sort ASC, m.id ASC\n    `),\n  ]);\n\n  const pricingMap = new Map(pricingList.map((p) => [p.model_id, p]));\n  const fullList = models.map((m) => {\n    const existing = pricingMap.get(m.id);\n    return {\n      modelId: m.id,\n      modelName: m.display_name || m.name,\n      category: m.category,\n      modelStatus: m.status,\n      pricingType: existing?.pricing_type || 'fixed',\n      baseCredits: existing?.base_credits == null ? null : Number(existing.base_credits),\n      formulaConfig: existing?.formula_config || {},\n      subscriptionDiscounts: {},\n      minCredits: Number(existing?.min_credits ?? 10),\n      minGrossMarginRate: Math.max(Number(existing?.min_gross_margin_rate ?? 0.75), 0.75),\n      isActive: existing?.is_active === true,\n      updatedAt: existing?.updated_at || m.updated_at,\n    };\n  });\n\n  return okResponse({ pricing: fullList }, guard.requestId);\n}\n\nasync function handlePOST(request) {\n  const guard = await requirePermission(request, PERMISSIONS.modelsWrite);\n  if (!guard.ok) return guard.response;\n\n  const body = await request.json().catch(() => ({}));\n  if (!body.modelId && !body.model_id) {\n    return errorResponse('VALIDATION_ERROR', 'modelId 为必填项', 422, guard.requestId);\n  }\n\n  const modelId = body.modelId || body.model_id;\n  const baseCredits = Number(body.baseCredits ?? body.base_credits);\n  if (!Number.isInteger(baseCredits) || baseCredits <= 0) {\n    return errorResponse('VALIDATION_ERROR', '必须提供已核实的正整数积分价格', 422, guard.requestId);\n  }\n  const before = await getModelPricing(modelId);\n\n  const updated = await upsertModelPricing({\n    model_id: modelId,\n    pricing_type: body.pricingType || body.pricing_type || 'fixed',\n    base_credits: baseCredits,\n    formula_config: body.formulaConfig || body.formula_config || {},\n    // 会员套餐的权益不再以生成单价折扣体现，避免绕过统一成本报价。\n    subscription_discounts: {},\n    min_credits: Number(body.minCredits ?? body.min_credits ?? 10),\n    min_gross_margin_rate: Math.max(Number(body.minGrossMarginRate ?? body.min_gross_margin_rate ?? 0.75), 0.75),\n    is_active: body.isActive !== false && body.is_active !== false,\n  });\n\n  await logAudit({\n    actor: guard.user,\n    action: 'models.pricing_update',\n    targetType: 'model_pricing',\n    targetId: modelId,\n    riskLevel: 'high',\n    before,\n    after: updated,\n  });\n\n  return okResponse({ pricing: updated }, guard.requestId);\n}\n\nexport const GET = withAdminErrorBoundary(handleGET);\nexport const POST = withAdminErrorBoundary(handlePOST);\n"
+  }
+ },
+ {
+  "routePath": "/api/admin/models/pricing/strategy",
+  "methods": [
+   "GET",
+   "POST"
+  ],
+  "policyTier": "admin",
+  "responseFormat": "admin_ok_meta_envelope",
+  "isApi": true,
+  "isAdmin": true,
+  "analysis": {
+   "src": "app/api/admin/models/pricing/strategy/route.js",
+   "exists": true,
+   "perms": [
+    "modelsRead",
+    "modelsWrite"
+   ],
+   "idem": false,
+   "adminPwd": false,
+   "lines": 54,
+   "imports": [
+    "@/lib/admin/audit",
+    "@/lib/admin/authz",
+    "@/lib/admin/permissions",
+    "@/lib/services/pricingStrategy"
+   ],
+   "srcAbs": "/Users/seelucency/Documents/dev/Supdance Pro/app/api/admin/models/pricing/strategy/route.js",
+   "perm": "modelsRead",
+   "scope": "",
+   "requiresKey": false,
+   "srcSnippet": "import { withAdminErrorBoundary, requirePermission, okResponse, errorResponse } from '@/lib/admin/authz';\nimport { PERMISSIONS } from '@/lib/admin/permissions';\nimport { savePricingStrategy, getActivePricingStrategy } from '@/lib/services/pricingStrategy';\nimport { logAudit } from '@/lib/admin/audit';\n\nexport const runtime = 'nodejs';\nexport const dynamic = 'force-dynamic';\n\nasync function handleGET(request) {\n  const guard = await requirePermission(request, PERMISSIONS.modelsRead);\n  if (!guard.ok) return guard.response;\n\n  const strategy = await getActivePricingStrategy();\n  return okResponse({ strategy }, guard.requestId);\n}\n\nasync function handlePOST(request) {\n  const guard = await requirePermission(request, PERMISSIONS.modelsWrite);\n  if (!guard.ok) return guard.response;\n\n  const body = await request.json().catch(() => ({}));\n  const { baseMultiplier, minMarginRate, categoryMultipliers, tierMultipliers, specMultipliers } = body;\n\n  if (!baseMultiplier || baseMultiplier < 1) {\n    return errorResponse('VALIDATION_ERROR', '基准倍率不能小于 1', 400, guard.requestId);\n  }\n\n  if (!minMarginRate || minMarginRate < 0.1 || minMarginRate > 0.9) {\n    return errorResponse('VALIDATION_ERROR', '最低毛利率应在 10%-90% 之间', 400, guard.requestId);\n  }\n\n  const before = await getActivePricingStrategy();\n\n  const result = await savePricingStrategy(\n    { baseMultiplier, minMarginRate, categoryMultipliers, tierMultipliers, specMultipliers },\n    guard.user?.id\n  );\n\n  await logAudit({\n    actor: guard.user,\n    action: 'models.pricing_strategy_update',\n    targetType: 'pricing_strategy',\n    targetId: result?.id || 'default',\n    riskLevel: 'high',\n    before,\n    after: result,\n  });\n\n  return okResponse({ strategy: result, message: '定价策略已保存' }, guard.requestId);\n}\n\nexport const GET = withAdminErrorBoundary(handleGET);\nexport const POST = withAdminErrorBoundary(handlePOST);\n"
+  }
+ },
+ {
+  "routePath": "/api/admin/models/providers",
+  "methods": [
+   "GET",
+   "POST",
+   "DELETE"
+  ],
+  "policyTier": "admin",
+  "responseFormat": "admin_ok_meta_envelope",
+  "isApi": true,
+  "isAdmin": true,
+  "analysis": {
+   "src": "app/api/admin/models/providers/route.js",
+   "exists": true,
+   "perms": [
+    "providersRead",
+    "providersWrite"
+   ],
+   "idem": false,
+   "adminPwd": false,
+   "lines": 149,
+   "imports": [
+    "@/lib/admin/audit",
+    "@/lib/admin/authz",
+    "@/lib/admin/permissions",
+    "@/lib/application/dataAccess.js",
+    "@/lib/services/providerCredentialChange.js",
+    "@/lib/services/providerSecrets.js"
+   ],
+   "srcAbs": "/Users/seelucency/Documents/dev/Supdance Pro/app/api/admin/models/providers/route.js",
+   "perm": "providersRead",
+   "scope": "",
+   "requiresKey": false,
+   "srcSnippet": "import { withAdminErrorBoundary, requirePermission, okResponse, errorResponse } from '@/lib/admin/authz';\nimport { PERMISSIONS } from '@/lib/admin/permissions';\nimport { listProviders, getProviderById, updateProvider, createProvider, deleteProvider } from '@/lib/application/dataAccess.js';\nimport { saveProviderSecret, getProviderSecretsMetadata } from '@/lib/application/dataAccess.js';\nimport { getServerProviderCredentialStatus, getProviderEnvCredentialHints } from '@/lib/services/providerSecrets.js';\nimport { invalidateProviderCredentialConsumers } from '@/lib/services/providerCredentialChange.js';\nimport { logAudit } from '@/lib/admin/audit';\n\nexport const runtime = 'nodejs';\nexport const dynamic = 'force-dynamic';\n\nasync function handleGET(request) {\n  const guard = await requirePermission(request, PERMISSIONS.providersRead);\n  if (!guard.ok) return guard.response;\n\n  const providers = await listProviders();\n  const enriched = await Promise.all(\n    providers.map(async (p) => {\n      const secrets = await getProviderSecretsMetadata(p.id);\n      const credential = await getServerProviderCredentialStatus({ provider: p.id });\n      return {\n        ...p,\n        hasApiKey: credential.configured,\n        maskedApiKey: credential.configured ? '••••••••' : '',\n        credential,\n        storedSecrets: secrets,\n        envNames: getProviderEnvCredentialHints(p.id).envNames,\n        modelCatalogApiUrl: p.model_catalog_api_url || p.metadata?.model_catalog_api_url || '',\n        secretsCount: secrets.length,\n      };\n    })\n  );\n\n  return okResponse({ providers: enriched }, guard.requestId);\n}\n\nasync function handlePOST(request) {\n  const guard = await requirePermission(request, PERMISSIONS.providersWrite);\n  if (!guard.ok) return guard.response;\n\n  const body = await request.json().catch(() => ({}));\n  const id = body.id ? String(body.id).trim().toLowerCase() : null;\n\n  if (!id || !body.name) {\n    return errorResponse('VALIDATION_ERROR', '供应商 ID 与名称为必填项', 422, guard.requestId);\n  }\n\n  const modelCatalogApiUrl = body.modelCatalogApiUrl !== undefined ? body.modelCatalogApiUrl : body.model_catalog_api_url;\n  const existing = await getProviderById(id);\n  let saved;\n\n  if (existing) {\n    saved = await updateProvider(id, {\n      name: body.name,\n      provider_type: body.provider_type || body.providerType,\n      enabled: body.enabled !== false,\n      priority: Number(body.priority ?? 100),\n      base_url: body.base_url || body.baseUrl,\n      model_catalog_api_url: modelCatalogApiUrl,\n      api_mode: body.api_mode || body.apiMode,\n      balance: body.balance !== undefined ? Number(body.balance) : existing.balance,\n      currency: body.currency || existing.currency,\n      metadata: body.metadata,\n    });\n  } else {\n    saved = await createProvider({\n      id,\n      slug: body.slug || id,\n      name: body.name,\n      provider_type: body.provider_type || body.providerType || 'aggregator',\n      enabled: body.enabled !== false,\n      priority: Number(body.priority ?? 100),\n      base_url: body.base_url || body.baseUrl || '',\n      model_catalog_api_url: modelCatalogApiUrl || '',\n      api_mode: body.api_mode || body.apiMode || 'async',\n      balance: Number(body.balance || 0),\n      currency: body.currency || 'USD',\n      metadata: body.metadata || {},\n    });\n  }\n\n  // 若提交了新的 API 密钥，安全加密存储\n  if (body.apiKey && String(body.apiKey).trim()) {\n    await saveProviderSecret({\n      provider: id,\n      name: 'api_key',\n      secretValue: String(body.apiKey).trim(),\n    });\n    // 旧密钥留下的熔断与目录缓存不能继续代表新密钥的执行结论。\n    await invalidateProviderCredentialConsumers(id);\n  }\n\n  const [credential, secrets] = await Promise.all([\n    getServerProviderCredentialStatus({ provider: id }),\n    getProviderSecretsMetadata(id),\n  ]);\n  const providerWithKeyInfo = {\n    ...saved,\n    hasApiKey: credential.configured,\n    maskedApiKey: credential.configured ? '••••••••' : '',\n    credential,\n    storedSecrets: secrets,\n    envNames: getProviderEnvCredentialHints(id).en"
+  }
+ },
+ {
+  "routePath": "/api/admin/models/publication",
+  "methods": [
+   "POST"
+  ],
+  "policyTier": "admin",
+  "responseFormat": "admin_ok_meta_envelope",
+  "isApi": true,
+  "isAdmin": true,
+  "analysis": {
+   "src": "app/api/admin/models/publication/route.js",
+   "exists": true,
+   "perms": [
+    "modelsRead",
+    "modelsWrite"
+   ],
+   "idem": true,
+   "adminPwd": false,
+   "lines": 32,
+   "imports": [
+    "@/lib/admin/authz",
+    "@/lib/admin/idempotency",
+    "@/lib/admin/permissions",
+    "@/lib/security/publicError",
+    "@/lib/services/modelPublication"
+   ],
+   "srcAbs": "/Users/seelucency/Documents/dev/Supdance Pro/app/api/admin/models/publication/route.js",
+   "perm": "modelsRead",
+   "scope": "",
+   "requiresKey": true,
+   "srcSnippet": "import {withAdminErrorBoundary,requirePermission,okResponse,errorResponse} from '@/lib/admin/authz';\nimport {PERMISSIONS} from '@/lib/admin/permissions';\nimport {checkIdempotency,completeIdempotency,releaseIdempotency,getRequiredIdempotencyKey} from '@/lib/admin/idempotency';\nimport {publicErrorMessage} from '@/lib/security/publicError';\nimport {inspectModelPublication,prepareModelPublicationTest,quoteModelPublicationTest,submitModelPublicationTest,recordModelPublicationTest,publishModel,readModelPublicationTest} from '@/lib/services/modelPublication';\nimport {invalidateActiveModelsCache} from '@/app/api/models/active/route';\n\nexport const runtime='nodejs';\nexport const dynamic='force-dynamic';\n\nexport const POST=withAdminErrorBoundary(async request=>{\n  const body=await request.json().catch(()=>({}));\n  const readOnly=['inspect','read_test'].includes(body.action);\n  const guard=await requirePermission(request,readOnly ? PERMISSIONS.modelsRead : PERMISSIONS.modelsWrite);\n  if(!guard.ok)return guard.response;\n  const actions={inspect:inspectModelPublication,prepare_test:prepareModelPublicationTest,quote_test:quoteModelPublicationTest,submit_test:submitModelPublicationTest,record_test:recordModelPublicationTest,publish:publishModel,read_test:readModelPublicationTest};\n  if(!actions[body.action] || !body.modelId)return errorResponse('VALIDATION_ERROR','请选择模型及有效操作',422,guard.requestId);\n  const key=getRequiredIdempotencyKey(request);\n  if(!readOnly && !key)return errorResponse('IDEMPOTENCY_REQUIRED','操作必须携带幂等标识',422,guard.requestId);\n  const idem=readOnly ? null : await checkIdempotency({scope:`model_publication:${body.action}`,key,actorId:guard.user.id});\n  if(idem && !idem.allowed)return idem.cachedResponse ? okResponse(idem.cachedResponse,guard.requestId) : errorResponse('CONFLICT','操作正在处理',409,guard.requestId);\n  try{\n    const result=await actions[body.action]({...body,actor:guard.user,idempotencyKey:key,requestId:guard.requestId});\n    if(body.action==='publish')invalidateActiveModelsCache();\n    if(idem)await completeIdempotency(idem.keyHash,result);\n    return okResponse(result,guard.requestId);\n  }catch(error){\n    if(idem)await releaseIdempotency(idem.keyHash);\n    return errorResponse(error.code || 'MODEL_PUBLICATION_FAILED',publicErrorMessage(error,'操作尚未完成，请处理阻塞项'),error.code==='FORBIDDEN' ? 403 : 422,guard.requestId);\n  }\n});\n"
+  }
+ },
+ {
+  "routePath": "/api/admin/models/routing",
+  "methods": [
+   "GET",
+   "POST",
+   "DELETE"
+  ],
+  "policyTier": "admin",
+  "responseFormat": "admin_ok_meta_envelope",
+  "isApi": true,
+  "isAdmin": true,
+  "analysis": {
+   "src": "app/api/admin/models/routing/route.js",
+   "exists": true,
+   "perms": [
+    "modelsRead",
+    "modelsWrite"
+   ],
+   "idem": false,
+   "adminPwd": false,
+   "lines": 118,
+   "imports": [
+    "@/lib/admin/audit",
+    "@/lib/admin/authz",
+    "@/lib/admin/permissions",
+    "@/lib/application/dataAccess.js"
+   ],
+   "srcAbs": "/Users/seelucency/Documents/dev/Supdance Pro/app/api/admin/models/routing/route.js",
+   "perm": "modelsRead",
+   "scope": "",
+   "requiresKey": false,
+   "srcSnippet": "import { withAdminErrorBoundary, requirePermission, okResponse, errorResponse } from '@/lib/admin/authz';\nimport { PERMISSIONS } from '@/lib/admin/permissions';\nimport {\n  listProviderModelsByModelId,\n  getRoutingPolicy,\n  upsertRoutingPolicy,\n  upsertProviderModel,\n  deleteProviderModel,\n  getCanonicalModelById,\n  listProviders,\n  listCanonicalModels,\n} from '@/lib/application/dataAccess.js';\nimport { logAudit } from '@/lib/admin/audit';\n\nexport const runtime = 'nodejs';\nexport const dynamic = 'force-dynamic';\n\nasync function handleGET(request) {\n  const guard = await requirePermission(request, PERMISSIONS.modelsRead);\n  if (!guard.ok) return guard.response;\n\n  const { searchParams } = new URL(request.url);\n  const modelId = searchParams.get('modelId');\n\n  if (!modelId) {\n    // 列出所有规范模型及其关联渠道数量\n    const models = await listCanonicalModels();\n    const providers = await listProviders();\n    return okResponse({ models, providers }, guard.requestId);\n  }\n\n  const [canonicalModel, providerModels, routingPolicy, providers] = await Promise.all([\n    getCanonicalModelById(modelId),\n    listProviderModelsByModelId(modelId),\n    getRoutingPolicy(modelId),\n    listProviders(),\n  ]);\n\n  return okResponse({\n    canonicalModel,\n    providerModels,\n    routingPolicy: routingPolicy || {\n      model_id: modelId,\n      routing_mode: 'balanced',\n      weights: { cost: 0.4, success_rate: 0.3, speed: 0.2, capacity: 0.1 },\n      circuit_breaker_config: { failure_threshold: 3, cooling_period_sec: 60 },\n      failover_enabled: true,\n    },\n    availableProviders: providers,\n  }, guard.requestId);\n}\n\nasync function handlePOST(request) {\n  const guard = await requirePermission(request, PERMISSIONS.modelsWrite);\n  if (!guard.ok) return guard.response;\n\n  const body = await request.json().catch(() => ({}));\n  const { type = 'provider_model', data } = body;\n\n  if (type === 'policy') {\n    if (!data?.model_id) {\n      return errorResponse('VALIDATION_ERROR', 'model_id 为必填项', 422, guard.requestId);\n    }\n    const updatedPolicy = await upsertRoutingPolicy(data);\n    await logAudit({\n      actor: guard.user,\n      action: 'models.routing_policy_update',\n      targetType: 'routing_policy',\n      targetId: data.model_id,\n      riskLevel: 'medium',\n      after: updatedPolicy,\n    });\n    return okResponse({ routingPolicy: updatedPolicy }, guard.requestId);\n  }\n\n  if (!data?.model_id || !data?.provider_id) {\n    return errorResponse('VALIDATION_ERROR', 'model_id 与 provider_id 均为必填项', 422, guard.requestId);\n  }\n\n  const updatedChannel = await upsertProviderModel(data);\n  await logAudit({\n    actor: guard.user,\n    action: 'models.channel_mapping_upsert',\n    targetType: 'provider_model',\n    targetId: updatedChannel.id,\n    riskLevel: 'medium',\n    after: updatedChannel,\n  });\n\n  return okResponse({ providerModel: updatedChannel }, guard.requestId);\n}\n\nasync function handleDELETE(request) {\n  const guard = await requirePermission(request, PERMISSIONS.modelsWrite);\n  if (!guard.ok) return guard.response;\n\n  const { searchParams } = new URL(request.url);\n  const id = searchParams.get('id');\n  if (!id) {\n    return errorResponse('VALIDATION_ERROR', '请指定要删除的渠道映射 ID', 422, guard.requestId);\n  }\n\n  await deleteProviderModel(id);\n  await logAudit({\n    actor: guard.user,\n    action: 'models.channel_mapping_delete',\n    targetType: 'provider_model',\n    targetId: id,\n    riskLevel: 'medium',\n  });\n\n  return okResponse({ success: true, id }, guard.requestId);\n}\n\nexport const GET = withAdminErrorBoundary(handleGET);\nexport const POST = withAdminErrorBoundary(handlePOST);\nexport const DELETE = withAdminErrorBoundary(handleDELETE);\n"
+  }
+ },
+ {
+  "routePath": "/api/admin/models/routing/test",
+  "methods": [
+   "POST"
+  ],
+  "policyTier": "admin",
+  "responseFormat": "admin_ok_meta_envelope",
+  "isApi": true,
+  "isAdmin": true,
+  "analysis": {
+   "src": "app/api/admin/models/routing/test/route.js",
+   "exists": true,
+   "perms": [
+    "providersRead"
+   ],
+   "idem": false,
+   "adminPwd": false,
+   "lines": 55,
+   "imports": [
+    "@/lib/adapters/index",
+    "@/lib/admin/authz",
+    "@/lib/admin/permissions",
+    "@/lib/application/dataAccess.js"
+   ],
+   "srcAbs": "/Users/seelucency/Documents/dev/Supdance Pro/app/api/admin/models/routing/test/route.js",
+   "perm": "providersRead",
+   "scope": "",
+   "requiresKey": false,
+   "srcSnippet": "import { withAdminErrorBoundary, requirePermission, okResponse, errorResponse } from '@/lib/admin/authz';\nimport { PERMISSIONS } from '@/lib/admin/permissions';\nimport { getProviderAdapter } from '@/lib/adapters/index';\nimport { getProviderModelById } from '@/lib/application/dataAccess.js';\n\nexport const runtime = 'nodejs';\nexport const dynamic = 'force-dynamic';\n\nasync function handlePOST(request) {\n  const guard = await requirePermission(request, PERMISSIONS.providersRead);\n  if (!guard.ok) return guard.response;\n\n  const body = await request.json().catch(() => ({}));\n  const channelId = body.channelId || body.channel_id;\n\n  if (!channelId) {\n    return errorResponse('VALIDATION_ERROR', '请指定要测试的渠道 ID (channelId)', 422, guard.requestId);\n  }\n\n  const channel = await getProviderModelById(channelId);\n  if (!channel) {\n    return errorResponse('NOT_FOUND', '未找到对应的供应商模型渠道', 404, guard.requestId);\n  }\n\n  const start = Date.now();\n  try {\n    const adapter = await getProviderAdapter(channel.provider_id);\n    const healthResult = await adapter.healthCheck();\n    const latencyMs = Date.now() - start;\n\n    return okResponse({\n      success: true,\n      channelId,\n      providerId: channel.provider_id,\n      providerModelId: channel.provider_model_id,\n      latencyMs,\n      message: `渠道测试成功 (${healthResult.status || 'OK'})`,\n      details: healthResult,\n    }, guard.requestId);\n  } catch (error) {\n    const latencyMs = Date.now() - start;\n    return okResponse({\n      success: false,\n      channelId,\n      providerId: channel.provider_id,\n      providerModelId: channel.provider_model_id,\n      latencyMs,\n      message: '渠道探测请求失败',\n      errorCode: /^[A-Z0-9_:-]{2,80}$/.test(String(error?.code || '')) ? String(error.code) : 'CHANNEL_PROBE_ERROR',\n    }, guard.requestId);\n  }\n}\n\nexport const POST = withAdminErrorBoundary(handlePOST);\n"
+  }
+ },
+ {
+  "routePath": "/api/admin/models/telemetry",
+  "methods": [
+   "GET"
+  ],
+  "policyTier": "admin",
+  "responseFormat": "admin_ok_meta_envelope",
+  "isApi": true,
+  "isAdmin": true,
+  "analysis": {
+   "src": "app/api/admin/models/telemetry/route.js",
+   "exists": true,
+   "perms": [
+    "modelsRead"
+   ],
+   "idem": false,
+   "adminPwd": false,
+   "lines": 21,
+   "imports": [
+    "@/lib/admin/authz",
+    "@/lib/admin/permissions",
+    "@/lib/services/modelTelemetry.js"
+   ],
+   "srcAbs": "/Users/seelucency/Documents/dev/Supdance Pro/app/api/admin/models/telemetry/route.js",
+   "perm": "modelsRead",
+   "scope": "",
+   "requiresKey": false,
+   "srcSnippet": "import { withAdminErrorBoundary, requirePermission, okResponse } from '@/lib/admin/authz';\nimport { PERMISSIONS } from '@/lib/admin/permissions';\nimport { getModelTelemetryOverview } from '@/lib/services/modelTelemetry.js';\n\nexport const runtime = 'nodejs';\nexport const dynamic = 'force-dynamic';\n\nasync function handleGET(request) {\n  const guard = await requirePermission(request, PERMISSIONS.modelsRead);\n  if (!guard.ok) return guard.response;\n\n  const url = new URL(request.url);\n  const timeRange = url.searchParams.get('timeRange') || url.searchParams.get('range') || '24h';\n  const limit = Math.min(Number(url.searchParams.get('limit') || 50), 100);\n\n  const data = await getModelTelemetryOverview({ timeRange, limit });\n  return okResponse(data, guard.requestId);\n}\n\nexport const GET = withAdminErrorBoundary(handleGET);\n"
+  }
+ },
+ {
+  "routePath": "/api/admin/moderation",
+  "methods": [
+   "GET"
+  ],
+  "policyTier": "admin",
+  "responseFormat": "admin_ok_meta_envelope",
+  "isApi": true,
+  "isAdmin": true,
+  "analysis": {
+   "src": "app/api/admin/moderation/route.js",
+   "exists": true,
+   "perms": [
+    "moderationRead"
+   ],
+   "idem": false,
+   "adminPwd": false,
+   "lines": 17,
+   "imports": [
+    "@/lib/admin/authz",
+    "@/lib/admin/permissions",
+    "@/lib/services/adminRead"
+   ],
+   "srcAbs": "/Users/seelucency/Documents/dev/Supdance Pro/app/api/admin/moderation/route.js",
+   "perm": "moderationRead",
+   "scope": "",
+   "requiresKey": false,
+   "srcSnippet": "import { withAdminErrorBoundary, requirePermission, okResponse } from '@/lib/admin/authz';\nimport { PERMISSIONS } from '@/lib/admin/permissions';\nimport { listModerationCases } from '@/lib/services/adminRead';\n\nexport const runtime = 'nodejs';\nexport const dynamic = 'force-dynamic';\n\nasync function handleGET(request) {\n  const guard = await requirePermission(request, PERMISSIONS.moderationRead);\n  if (!guard.ok) return guard.response;\n\n  const result = await listModerationCases(request.nextUrl.searchParams);\n  return okResponse(result.rows, guard.requestId, result.meta);\n}\n\nexport const GET = withAdminErrorBoundary(handleGET);\n"
+  }
+ },
+ {
+  "routePath": "/api/admin/moderation/[id]/resolve",
+  "methods": [
+   "POST"
+  ],
+  "policyTier": "admin",
+  "responseFormat": "admin_ok_meta_envelope",
+  "isApi": true,
+  "isAdmin": true,
+  "analysis": {
+   "src": "app/api/admin/moderation/[id]/resolve/route.js",
+   "exists": true,
+   "perms": [
+    "moderationWrite"
+   ],
+   "idem": true,
+   "adminPwd": false,
+   "lines": 51,
+   "imports": [
+    "@/lib/admin/authz",
+    "@/lib/admin/idempotency",
+    "@/lib/admin/permissions",
+    "@/lib/services/moderation"
+   ],
+   "srcAbs": "/Users/seelucency/Documents/dev/Supdance Pro/app/api/admin/moderation/[id]/resolve/route.js",
+   "perm": "moderationWrite",
+   "scope": "moderation_resolve",
+   "requiresKey": true,
+   "srcSnippet": "import { withAdminErrorBoundary, requirePermission, okResponse, errorResponse, resultErrorResponse } from '@/lib/admin/authz';\nimport { PERMISSIONS } from '@/lib/admin/permissions';\nimport { checkIdempotency, completeIdempotency, getRequiredIdempotencyKey, releaseIdempotency } from '@/lib/admin/idempotency';\nimport { resolveModeration } from '@/lib/services/moderation';\n\nexport const runtime = 'nodejs';\nexport const dynamic = 'force-dynamic';\n\nasync function handlePOST(request, context) {\n  const guard = await requirePermission(request, PERMISSIONS.moderationWrite);\n  if (!guard.ok) return guard.response;\n\n  const { id } = await context.params;\n  const idempotencyKey = getRequiredIdempotencyKey(request);\n  if (!idempotencyKey) return errorResponse('VALIDATION_ERROR', '高风险写操作必须提供有效的 Idempotency-Key', 422, guard.requestId);\n\n  const idemp = await checkIdempotency({\n    scope: 'moderation_resolve',\n    key: idempotencyKey,\n    actorId: guard.user.id,\n  });\n\n  if (!idemp.allowed) {\n    if (idemp.cachedResponse) return okResponse(idemp.cachedResponse, guard.requestId);\n    return errorResponse('CONFLICT', '审核处理中', 409, guard.requestId);\n  }\n\n  let body = {};\n  try {\n    body = await request.json();\n  } catch {}\n\n  const result = await resolveModeration({\n    actor: guard.user,\n    caseId: id,\n    resolution: body.resolution,\n    notes: body.notes,\n    requestId: guard.requestId,\n  });\n\n  if (result.error) {\n    await releaseIdempotency(idemp.keyHash);\n    return resultErrorResponse(result.error, guard.requestId);\n  }\n\n  await completeIdempotency(idemp.keyHash, result);\n  return okResponse(result, guard.requestId);\n}\n\nexport const POST = withAdminErrorBoundary(handlePOST);\n"
+  }
+ },
+ {
+  "routePath": "/api/admin/orders",
+  "methods": [
+   "GET"
+  ],
+  "policyTier": "admin",
+  "responseFormat": "admin_ok_meta_envelope",
+  "isApi": true,
+  "isAdmin": true,
+  "analysis": {
+   "src": "app/api/admin/orders/route.js",
+   "exists": true,
+   "perms": [
+    "billingRead"
+   ],
+   "idem": false,
+   "adminPwd": false,
+   "lines": 17,
+   "imports": [
+    "@/lib/admin/authz",
+    "@/lib/admin/permissions",
+    "@/lib/services/adminRead"
+   ],
+   "srcAbs": "/Users/seelucency/Documents/dev/Supdance Pro/app/api/admin/orders/route.js",
+   "perm": "billingRead",
+   "scope": "",
+   "requiresKey": false,
+   "srcSnippet": "import { withAdminErrorBoundary, requirePermission, okResponse } from '@/lib/admin/authz';\nimport { PERMISSIONS } from '@/lib/admin/permissions';\nimport { listOrders } from '@/lib/services/adminRead';\n\nexport const runtime = 'nodejs';\nexport const dynamic = 'force-dynamic';\n\nasync function handleGET(request) {\n  const guard = await requirePermission(request, PERMISSIONS.billingRead);\n  if (!guard.ok) return guard.response;\n\n  const result = await listOrders(request.nextUrl.searchParams);\n  return okResponse(result.rows, guard.requestId, result.meta);\n}\n\nexport const GET = withAdminErrorBoundary(handleGET);\n"
+  }
+ },
+ {
+  "routePath": "/api/admin/orders/[id]/refund",
+  "methods": [
+   "POST"
+  ],
+  "policyTier": "admin",
+  "responseFormat": "admin_ok_meta_envelope",
+  "isApi": true,
+  "isAdmin": true,
+  "analysis": {
+   "src": "app/api/admin/orders/[id]/refund/route.js",
+   "exists": true,
+   "perms": [
+    "billingWrite"
+   ],
+   "idem": true,
+   "adminPwd": false,
+   "lines": 50,
+   "imports": [
+    "@/lib/admin/authz",
+    "@/lib/admin/idempotency",
+    "@/lib/admin/permissions",
+    "@/lib/services/billing"
+   ],
+   "srcAbs": "/Users/seelucency/Documents/dev/Supdance Pro/app/api/admin/orders/[id]/refund/route.js",
+   "perm": "billingWrite",
+   "scope": "order_refund",
+   "requiresKey": true,
+   "srcSnippet": "import { withAdminErrorBoundary, requirePermission, okResponse, errorResponse, resultErrorResponse } from '@/lib/admin/authz';\nimport { PERMISSIONS } from '@/lib/admin/permissions';\nimport { checkIdempotency, completeIdempotency, getRequiredIdempotencyKey, releaseIdempotency } from '@/lib/admin/idempotency';\nimport { processOrderRefund } from '@/lib/services/billing';\n\nexport const runtime = 'nodejs';\nexport const dynamic = 'force-dynamic';\n\nasync function handlePOST(request, context) {\n  const guard = await requirePermission(request, PERMISSIONS.billingWrite);\n  if (!guard.ok) return guard.response;\n\n  const { id } = await context.params;\n  const idempotencyKey = getRequiredIdempotencyKey(request);\n  if (!idempotencyKey) return errorResponse('VALIDATION_ERROR', '退款必须提供有效的 Idempotency-Key', 422, guard.requestId);\n\n  const idemp = await checkIdempotency({\n    scope: 'order_refund',\n    key: idempotencyKey,\n    actorId: guard.user.id,\n  });\n\n  if (!idemp.allowed) {\n    if (idemp.cachedResponse) return okResponse(idemp.cachedResponse, guard.requestId);\n    return errorResponse('CONFLICT', '退款操作正在处理中', 409, guard.requestId);\n  }\n\n  let body = {};\n  try {\n    body = await request.json();\n  } catch {}\n\n  const result = await processOrderRefund({\n    actor: guard.user,\n    orderId: id,\n    reason: body.reason,\n    requestId: guard.requestId,\n  });\n\n  if (result.error) {\n    await releaseIdempotency(idemp.keyHash);\n    return resultErrorResponse(result.error, guard.requestId);\n  }\n\n  await completeIdempotency(idemp.keyHash, result);\n  return okResponse(result, guard.requestId);\n}\n\nexport const POST = withAdminErrorBoundary(handlePOST);\n"
+  }
+ },
+ {
+  "routePath": "/api/admin/plans",
+  "methods": [
+   "GET",
+   "POST"
+  ],
+  "policyTier": "admin",
+  "responseFormat": "admin_ok_meta_envelope",
+  "isApi": true,
+  "isAdmin": true,
+  "analysis": {
+   "src": "app/api/admin/plans/route.js",
+   "exists": true,
+   "perms": [
+    "plansRead",
+    "plansWrite"
+   ],
+   "idem": true,
+   "adminPwd": false,
+   "lines": 72,
+   "imports": [
+    "@/lib/admin/authz",
+    "@/lib/admin/idempotency",
+    "@/lib/admin/permissions",
+    "@/lib/services/adminRead",
+    "@/lib/services/billing"
+   ],
+   "srcAbs": "/Users/seelucency/Documents/dev/Supdance Pro/app/api/admin/plans/route.js",
+   "perm": "plansRead",
+   "scope": "plan_create",
+   "requiresKey": true,
+   "srcSnippet": "import { withAdminErrorBoundary, requirePermission, okResponse, errorResponse, resultErrorResponse } from '@/lib/admin/authz';\nimport { PERMISSIONS } from '@/lib/admin/permissions';\nimport { checkIdempotency, completeIdempotency, getRequiredIdempotencyKey, releaseIdempotency } from '@/lib/admin/idempotency';\nimport { getAllPlansConfig } from '@/lib/services/adminRead';\nimport { createPlan } from '@/lib/services/billing';\n\nexport const runtime = 'nodejs';\nexport const dynamic = 'force-dynamic';\n\nasync function handleGET(request) {\n  const guard = await requirePermission(request, PERMISSIONS.plansRead);\n  if (!guard.ok) return guard.response;\n\n  const plans = await getAllPlansConfig();\n  return okResponse(plans, guard.requestId);\n}\n\nasync function handlePOST(request) {\n  const guard = await requirePermission(request, PERMISSIONS.plansWrite);\n  if (!guard.ok) return guard.response;\n\n  const idempotencyKey = getRequiredIdempotencyKey(request);\n  if (!idempotencyKey) {\n    return errorResponse('VALIDATION_ERROR', '高风险写操作必须提供有效的 Idempotency-Key', 422, guard.requestId);\n  }\n\n  const idemp = await checkIdempotency({ scope: 'plan_create', key: idempotencyKey, actorId: guard.user.id });\n  if (!idemp.allowed) {\n    if (idemp.cachedResponse) return okResponse(idemp.cachedResponse, guard.requestId);\n    return errorResponse('CONFLICT', '套餐创建正在处理中', 409, guard.requestId);\n  }\n\n  let body = {};\n  try {\n    body = await request.json();\n  } catch {}\n\n  const result = await createPlan({\n    actor: guard.user,\n    planId: body.id || body.planId,\n    name: body.name,\n    monthlyCny: body.monthlyCny,\n    monthlyUsd: body.monthlyUsd,\n    yearlyCny: body.yearlyCny,\n    yearlyUsd: body.yearlyUsd,\n    quarterlyCny: body.quarterlyCny,\n    quarterlyUsd: body.quarterlyUsd,\n    quotaBase: body.quotaBase,\n    concurrency: body.concurrency,\n    asyncConcurrency: body.asyncConcurrency,\n    portraitCapacity: body.portraitCapacity,\n    storageGb: body.storageGb,\n    badge: body.badge,\n    exclusiveFeatures: body.exclusiveFeatures,\n    features: body.features,\n    displayOrder: body.displayOrder,\n    enabled: body.enabled,\n    requestId: guard.requestId,\n  });\n\n  if (result.error) {\n    await releaseIdempotency(idemp.keyHash);\n    return resultErrorResponse(result.error, guard.requestId);\n  }\n\n  await completeIdempotency(idemp.keyHash, result.plan);\n  return okResponse(result.plan, guard.requestId);\n}\n\nexport const GET = withAdminErrorBoundary(handleGET);\nexport const POST = withAdminErrorBoundary(handlePOST);\n"
+  }
+ },
+ {
+  "routePath": "/api/admin/plans/[id]",
+  "methods": [
+   "PATCH"
+  ],
+  "policyTier": "admin",
+  "responseFormat": "admin_ok_meta_envelope",
+  "isApi": true,
+  "isAdmin": true,
+  "analysis": {
+   "src": "app/api/admin/plans/[id]/route.js",
+   "exists": true,
+   "perms": [
+    "plansWrite"
+   ],
+   "idem": true,
+   "adminPwd": false,
+   "lines": 61,
+   "imports": [
+    "@/lib/admin/authz",
+    "@/lib/admin/idempotency",
+    "@/lib/admin/permissions",
+    "@/lib/services/billing"
+   ],
+   "srcAbs": "/Users/seelucency/Documents/dev/Supdance Pro/app/api/admin/plans/[id]/route.js",
+   "perm": "plansWrite",
+   "scope": "plan_update",
+   "requiresKey": true,
+   "srcSnippet": "import { withAdminErrorBoundary, requirePermission, okResponse, errorResponse, resultErrorResponse } from '@/lib/admin/authz';\nimport { PERMISSIONS } from '@/lib/admin/permissions';\nimport { checkIdempotency, completeIdempotency, getRequiredIdempotencyKey, releaseIdempotency } from '@/lib/admin/idempotency';\nimport { updatePlanDetails } from '@/lib/services/billing';\n\nexport const runtime = 'nodejs';\nexport const dynamic = 'force-dynamic';\n\nasync function handlePATCH(request, context) {\n  const guard = await requirePermission(request, PERMISSIONS.plansWrite);\n  if (!guard.ok) return guard.response;\n  const idempotencyKey = getRequiredIdempotencyKey(request);\n  if (!idempotencyKey) return errorResponse('VALIDATION_ERROR', '高风险写操作必须提供有效的 Idempotency-Key', 422, guard.requestId);\n  const idemp = await checkIdempotency({ scope: 'plan_update', key: idempotencyKey, actorId: guard.user.id });\n  if (!idemp.allowed) {\n    if (idemp.cachedResponse) return okResponse(idemp.cachedResponse, guard.requestId);\n    return errorResponse('CONFLICT', '套餐更新正在处理中', 409, guard.requestId);\n  }\n\n  const { id } = await context.params;\n  let body = {};\n  try {\n    body = await request.json();\n  } catch {}\n\n  const result = await updatePlanDetails({\n    actor: guard.user,\n    planId: id,\n    name: body.name,\n    monthlyCny: body.monthlyCny,\n    monthlyUsd: body.monthlyUsd,\n    yearlyCny: body.yearlyCny,\n    yearlyUsd: body.yearlyUsd,\n    quarterlyCny: body.quarterlyCny,\n    quarterlyUsd: body.quarterlyUsd,\n    quotaBase: body.quotaBase,\n    quotaBonus: body.quotaBonus,\n    concurrency: body.concurrency,\n    asyncConcurrency: body.asyncConcurrency,\n    portraitCapacity: body.portraitCapacity,\n    storageGb: body.storageGb,\n    badge: body.badge,\n    exclusiveFeatures: body.exclusiveFeatures,\n    meta: body.meta,\n    features: body.features,\n    displayOrder: body.displayOrder,\n    enabled: body.enabled,\n    requestId: guard.requestId,\n  });\n\n  if (result.error) {\n    await releaseIdempotency(idemp.keyHash);\n    return resultErrorResponse(result.error, guard.requestId);\n  }\n\n  await completeIdempotency(idemp.keyHash, result.plan);\n  return okResponse(result.plan, guard.requestId);\n}\n\nexport const PATCH = withAdminErrorBoundary(handlePATCH);\n"
+  }
+ },
+ {
+  "routePath": "/api/admin/profit-center",
+  "methods": [
+   "GET"
+  ],
+  "policyTier": "admin",
+  "responseFormat": "admin_ok_meta_envelope",
+  "isApi": true,
+  "isAdmin": true,
+  "analysis": {
+   "src": "app/api/admin/profit-center/route.js",
+   "exists": true,
+   "perms": [
+    "dashboardRead"
+   ],
+   "idem": false,
+   "adminPwd": false,
+   "lines": 72,
+   "imports": [
+    "@/lib/admin/authz",
+    "@/lib/admin/permissions",
+    "@/lib/db/index"
+   ],
+   "srcAbs": "/Users/seelucency/Documents/dev/Supdance Pro/app/api/admin/profit-center/route.js",
+   "perm": "dashboardRead",
+   "scope": "",
+   "requiresKey": false,
+   "srcSnippet": "import { withAdminErrorBoundary, requirePermission, okResponse } from '@/lib/admin/authz';\nimport { PERMISSIONS } from '@/lib/admin/permissions';\nimport { queryMany } from '@/lib/db/index';\n\nexport const runtime = 'nodejs';\nexport const dynamic = 'force-dynamic';\n\nconst CREDIT_TO_CNY = 0.07;\n\nfunction periodToInterval(period) {\n  switch (period) {\n    case 'today': return \"now() - INTERVAL '1 day'\";\n    case 'yesterday': return \"now() - INTERVAL '2 day'\";\n    case '7d': return \"now() - INTERVAL '7 day'\";\n    case '30d': return \"now() - INTERVAL '30 day'\";\n    case 'month': return \"date_trunc('month', now())\";\n    default: return \"now() - INTERVAL '7 day'\";\n  }\n}\n\nfunction periodEndClause(period) {\n  if (period === 'yesterday') return \"AND c.updated_at < now() - INTERVAL '1 day'\";\n  return '';\n}\n\nasync function handleGET(request) {\n  const guard = await requirePermission(request, PERMISSIONS.dashboardRead);\n  if (!guard.ok) return guard.response;\n\n  const { searchParams } = new URL(request.url);\n  const period = searchParams.get('period') || '7d';\n  const since = periodToInterval(period);\n  const endClause = periodEndClause(period);\n\n  const rows = await queryMany(`\n    SELECT\n      c.model AS model_id,\n      m.display_name AS model_name,\n      m.category,\n      mp.min_gross_margin_rate,\n      SUM(c.credit_cost)::int AS total_credits_consumed,\n      ROUND(SUM(c.credit_cost) * ${CREDIT_TO_CNY}, 2) AS revenue_cny,\n      ROUND(COALESCE(cost_agg.total_cost_usd, 0)::numeric, 4) AS total_cost_usd,\n      ROUND(COALESCE(cost_agg.total_cost_usd, 0)::numeric * 7.2, 2) AS total_cost_cny_est,\n      ROUND(SUM(c.credit_cost) * ${CREDIT_TO_CNY}\n        - COALESCE(cost_agg.total_cost_usd, 0)::numeric * 7.2, 2) AS gross_profit_cny,\n      CASE WHEN SUM(c.credit_cost) * ${CREDIT_TO_CNY} = 0 THEN 0\n        ELSE ROUND(\n          (SUM(c.credit_cost) * ${CREDIT_TO_CNY}\n            - COALESCE(cost_agg.total_cost_usd, 0)::numeric * 7.2)\n          / (SUM(c.credit_cost) * ${CREDIT_TO_CNY}) * 100, 1)\n      END AS gross_margin_pct,\n      COUNT(*)::int AS generation_count\n    FROM ai_studio.creations c\n    LEFT JOIN ai_studio.ai_models m ON m.id = c.model\n    LEFT JOIN ai_studio.model_pricing mp ON mp.model_id = c.model AND mp.is_active = TRUE\n    LEFT JOIN LATERAL (\n      SELECT SUM(COALESCE(pcr.actual_cost_usd, pcr.estimated_cost_usd, 0)) AS total_cost_usd\n      FROM ai_studio.provider_cost_records pcr\n      WHERE pcr.job_id = c.id\n    ) cost_agg ON TRUE\n    WHERE c.status = 'succeeded'\n      AND c.updated_at >= ${since} ${endClause}\n    GROUP BY c.model, m.display_name, m.category, mp.min_gross_margin_rate\n    ORDER BY revenue_cny DESC\n  `);\n\n  return okResponse({ rows, period, creditToCny: CREDIT_TO_CNY }, guard.requestId);\n}\n\nexport const GET = withAdminErrorBoundary(handleGET);\n"
+  }
+ },
+ {
+  "routePath": "/api/admin/providers",
+  "methods": [
+   "GET"
+  ],
+  "policyTier": "admin",
+  "responseFormat": "admin_ok_meta_envelope",
+  "isApi": true,
+  "isAdmin": true,
+  "analysis": {
+   "src": "app/api/admin/providers/route.js",
+   "exists": true,
+   "perms": [
+    "providersRead"
+   ],
+   "idem": false,
+   "adminPwd": false,
+   "lines": 17,
+   "imports": [
+    "@/lib/admin/authz",
+    "@/lib/admin/permissions",
+    "@/lib/services/providers"
+   ],
+   "srcAbs": "/Users/seelucency/Documents/dev/Supdance Pro/app/api/admin/providers/route.js",
+   "perm": "providersRead",
+   "scope": "",
+   "requiresKey": false,
+   "srcSnippet": "import { withAdminErrorBoundary, requirePermission, okResponse } from '@/lib/admin/authz';\nimport { PERMISSIONS } from '@/lib/admin/permissions';\nimport { getProvidersOverview } from '@/lib/services/providers';\n\nexport const runtime = 'nodejs';\nexport const dynamic = 'force-dynamic';\n\nasync function handleGET(request) {\n  const guard = await requirePermission(request, PERMISSIONS.providersRead);\n  if (!guard.ok) return guard.response;\n\n  const data = await getProvidersOverview();\n  return okResponse(data, guard.requestId);\n}\n\nexport const GET = withAdminErrorBoundary(handleGET);\n"
+  }
+ },
+ {
+  "routePath": "/api/admin/providers/[id]/enabled",
+  "methods": [
+   "PUT"
+  ],
+  "policyTier": "admin",
+  "responseFormat": "admin_ok_meta_envelope",
+  "isApi": true,
+  "isAdmin": true,
+  "analysis": {
+   "src": "app/api/admin/providers/[id]/enabled/route.js",
+   "exists": true,
+   "perms": [
+    "providersWrite"
+   ],
+   "idem": true,
+   "adminPwd": false,
+   "lines": 41,
+   "imports": [
+    "@/lib/admin/audit",
+    "@/lib/admin/authz",
+    "@/lib/admin/idempotency",
+    "@/lib/admin/permissions",
+    "@/lib/services/paymentProviders"
+   ],
+   "srcAbs": "/Users/seelucency/Documents/dev/Supdance Pro/app/api/admin/providers/[id]/enabled/route.js",
+   "perm": "providersWrite",
+   "scope": "payment_provider_toggle",
+   "requiresKey": true,
+   "srcSnippet": "import { withAdminErrorBoundary, requirePermission, okResponse, errorResponse } from '@/lib/admin/authz';\nimport { PERMISSIONS } from '@/lib/admin/permissions';\nimport { checkIdempotency, completeIdempotency, getRequiredIdempotencyKey, releaseIdempotency } from '@/lib/admin/idempotency';\nimport { logAudit } from '@/lib/admin/audit';\nimport { setPaymentProviderEnabled } from '@/lib/services/paymentProviders';\n\nexport const runtime = 'nodejs';\nexport const dynamic = 'force-dynamic';\nconst ALLOWED = new Set(['alipay', 'wechat', 'stripe', 'paypal']);\n\nasync function handlePUT(request, context) {\n  const guard = await requirePermission(request, PERMISSIONS.providersWrite);\n  if (!guard.ok) return guard.response;\n  const { id } = await context.params;\n  if (!ALLOWED.has(id)) return errorResponse('VALIDATION_ERROR', '不支持的支付渠道', 400, guard.requestId);\n  const idempotencyKey = getRequiredIdempotencyKey(request);\n  if (!idempotencyKey) return errorResponse('VALIDATION_ERROR', '请提供有效的 Idempotency-Key', 422, guard.requestId);\n  const idemp = await checkIdempotency({ scope: 'payment_provider_toggle', key: idempotencyKey, actorId: guard.user.id });\n  if (!idemp.allowed) {\n    if (idemp.cachedResponse) return okResponse(idemp.cachedResponse, guard.requestId);\n    return errorResponse('CONFLICT', '支付渠道状态正在更新', 409, guard.requestId);\n  }\n  let body = {};\n  try { body = await request.json(); } catch {}\n  if (typeof body.enabled !== 'boolean') {\n    await releaseIdempotency(idemp.keyHash);\n    return errorResponse('VALIDATION_ERROR', 'enabled 必须为布尔值', 422, guard.requestId);\n  }\n  try {\n    const result = await setPaymentProviderEnabled({ actor: guard.user, provider: id, enabled: body.enabled });\n    await logAudit({ actor: guard.user, action: 'providers.set_payment_enabled', targetType: 'provider', targetId: id, riskLevel: 'medium', after: result, requestId: guard.requestId });\n    await completeIdempotency(idemp.keyHash, result);\n    return okResponse(result, guard.requestId);\n  } catch (error) {\n    await releaseIdempotency(idemp.keyHash);\n    throw error;\n  }\n}\n\nexport const PUT = withAdminErrorBoundary(handlePUT);\n"
+  }
+ },
+ {
+  "routePath": "/api/admin/providers/[id]/env",
+  "methods": [
+   "GET",
+   "PUT"
+  ],
+  "policyTier": "admin",
+  "responseFormat": "admin_ok_meta_envelope",
+  "isApi": true,
+  "isAdmin": true,
+  "analysis": {
+   "src": "app/api/admin/providers/[id]/env/route.js",
+   "exists": true,
+   "perms": [
+    "providersRead",
+    "providersWrite"
+   ],
+   "idem": false,
+   "adminPwd": false,
+   "lines": 40,
+   "imports": [
+    "@/lib/admin/authz",
+    "@/lib/admin/permissions",
+    "@/lib/services/providers"
+   ],
+   "srcAbs": "/Users/seelucency/Documents/dev/Supdance Pro/app/api/admin/providers/[id]/env/route.js",
+   "perm": "providersRead",
+   "scope": "",
+   "requiresKey": false,
+   "srcSnippet": "import { withAdminErrorBoundary, requirePermission, okResponse, errorResponse } from '@/lib/admin/authz';\nimport { PERMISSIONS } from '@/lib/admin/permissions';\nimport { getActiveProviderKeyEnv, setActiveProviderKeyEnv } from '@/lib/services/providers';\n\nexport const runtime = 'nodejs';\nexport const dynamic = 'force-dynamic';\n\nasync function handleGET(request, context) {\n  const guard = await requirePermission(request, PERMISSIONS.providersRead);\n  if (!guard.ok) return guard.response;\n\n  const { id } = await context.params;\n  const activeKeyEnv = await getActiveProviderKeyEnv(id);\n  return okResponse({ provider: id, activeKeyEnv }, guard.requestId);\n}\n\nasync function handlePUT(request, context) {\n  const guard = await requirePermission(request, PERMISSIONS.providersWrite);\n  if (!guard.ok) return guard.response;\n\n  const { id } = await context.params;\n  let body = {};\n  try {\n    body = await request.json();\n  } catch {}\n\n  const env = body?.env === 'sandbox' ? 'sandbox' : 'production';\n  const result = await setActiveProviderKeyEnv({\n    actor: guard.user,\n    provider: id,\n    env,\n    requestId: guard.requestId,\n  });\n\n  return okResponse(result, guard.requestId);\n}\n\nexport const GET = withAdminErrorBoundary(handleGET);\nexport const PUT = withAdminErrorBoundary(handlePUT);\n"
+  }
+ },
+ {
+  "routePath": "/api/admin/providers/[id]/secret",
+  "methods": [
+   "PUT"
+  ],
+  "policyTier": "admin",
+  "responseFormat": "admin_ok_meta_envelope",
+  "isApi": true,
+  "isAdmin": true,
+  "analysis": {
+   "src": "app/api/admin/providers/[id]/secret/route.js",
+   "exists": true,
+   "perms": [
+    "providersWrite"
+   ],
+   "idem": true,
+   "adminPwd": false,
+   "lines": 105,
+   "imports": [
+    "@/lib/admin/authz",
+    "@/lib/admin/idempotency",
+    "@/lib/admin/permissions",
+    "@/lib/services/providers"
+   ],
+   "srcAbs": "/Users/seelucency/Documents/dev/Supdance Pro/app/api/admin/providers/[id]/secret/route.js",
+   "perm": "providersWrite",
+   "scope": "provider_secret_rotate",
+   "requiresKey": true,
+   "srcSnippet": "import { withAdminErrorBoundary, requirePermission, okResponse, errorResponse } from '@/lib/admin/authz';\nimport { PERMISSIONS } from '@/lib/admin/permissions';\nimport { checkIdempotency, completeIdempotency, getRequiredIdempotencyKey, releaseIdempotency } from '@/lib/admin/idempotency';\nimport { rotateProviderSecret, testProviderHealth, setActiveProviderKeyEnv, getActiveProviderKeyEnv } from '@/lib/services/providers';\n\nexport const runtime = 'nodejs';\nexport const dynamic = 'force-dynamic';\n\nasync function handlePUT(request, context) {\n  const guard = await requirePermission(request, PERMISSIONS.providersWrite);\n  if (!guard.ok) return guard.response;\n\n  const { id } = await context.params;\n  const idempotencyKey = getRequiredIdempotencyKey(request);\n  if (!idempotencyKey) return errorResponse('VALIDATION_ERROR', '密钥配置必须提供有效的 Idempotency-Key', 422, guard.requestId);\n\n  const idemp = await checkIdempotency({\n    scope: 'provider_secret_rotate',\n    key: idempotencyKey,\n    actorId: guard.user.id,\n  });\n\n  if (!idemp.allowed) {\n    if (idemp.cachedResponse) return okResponse(idemp.cachedResponse, guard.requestId);\n    return errorResponse('CONFLICT', '密钥配置处理中', 409, guard.requestId);\n  }\n\n  let body = {};\n  try {\n    body = await request.json();\n  } catch {}\n\n  // 支持 secrets 键值对象或单个 secretName\n  const secretsToUpdate = [];\n  if (body.secrets && typeof body.secrets === 'object') {\n    for (const [k, v] of Object.entries(body.secrets)) {\n      if (typeof v === 'string' && v.trim()) {\n        secretsToUpdate.push({ name: k, value: v.trim() });\n      }\n    }\n  } else if (body.secretValue) {\n    secretsToUpdate.push({ name: body.secretName || 'api_key', value: body.secretValue });\n  }\n\n  if (secretsToUpdate.length === 0) {\n    await releaseIdempotency(idemp.keyHash);\n    return errorResponse('VALIDATION_ERROR', '未提供任何有效密钥内容', 422, guard.requestId);\n  }\n\n  const results = [];\n  try {\n    for (const item of secretsToUpdate) {\n      const res = await rotateProviderSecret({\n        actor: guard.user,\n        provider: id,\n        secretName: item.name,\n        secretValue: item.value,\n        requestId: guard.requestId,\n      });\n      if (res.error) {\n        await releaseIdempotency(idemp.keyHash);\n        return errorResponse('VALIDATION_ERROR', `${item.name}: ${res.error}`, 422, guard.requestId);\n      }\n      results.push(res);\n    }\n  } catch (err) {\n    await releaseIdempotency(idemp.keyHash);\n    console.error(`[rotateProviderSecret] 写入 ${id} 失败:`, err);\n    return errorResponse('INTERNAL_ERROR', `密钥安全加密存盘失败: ${err.message}`, 500, guard.requestId);\n  }\n\n  if (body.activeEnv === 'sandbox' || body.activeEnv === 'production') {\n    await setActiveProviderKeyEnv({\n      actor: guard.user,\n      provider: id,\n      env: body.activeEnv,\n      requestId: guard.requestId,\n    });\n  }\n\n  let latestCheck = null;\n  try {\n    latestCheck = await testProviderHealth({\n      actor: guard.user,\n      provider: id,\n      requestId: guard.requestId,\n    });\n  } catch (probeErr) {\n    console.warn(`[rotateProviderSecret] 存盘后自动探测 ${id} 异常:`, probeErr.message);\n  }\n\n  const responsePayload = {\n    success: true,\n    count: results.length,\n    provider: id,\n    activeKeyEnv: await getActiveProviderKeyEnv(id),\n    latestCheck,\n  };\n\n  await completeIdempotency(idemp.keyHash, responsePayload);\n  return okResponse(responsePayload, guard.requestId);\n}\n\nexport const PUT = withAdminErrorBoundary(handlePUT);\n"
+  }
+ },
+ {
+  "routePath": "/api/admin/providers/[id]/test",
+  "methods": [
+   "POST"
+  ],
+  "policyTier": "admin",
+  "responseFormat": "admin_ok_meta_envelope",
+  "isApi": true,
+  "isAdmin": true,
+  "analysis": {
+   "src": "app/api/admin/providers/[id]/test/route.js",
+   "exists": true,
+   "perms": [
+    "providersRead"
+   ],
+   "idem": true,
+   "adminPwd": false,
+   "lines": 44,
+   "imports": [
+    "@/lib/admin/authz",
+    "@/lib/admin/idempotency",
+    "@/lib/admin/permissions",
+    "@/lib/services/providers"
+   ],
+   "srcAbs": "/Users/seelucency/Documents/dev/Supdance Pro/app/api/admin/providers/[id]/test/route.js",
+   "perm": "providersRead",
+   "scope": "provider_health_check",
+   "requiresKey": true,
+   "srcSnippet": "import { withAdminErrorBoundary, requirePermission, okResponse, errorResponse } from '@/lib/admin/authz';\nimport { PERMISSIONS } from '@/lib/admin/permissions';\nimport { checkIdempotency, completeIdempotency, getRequiredIdempotencyKey, releaseIdempotency } from '@/lib/admin/idempotency';\nimport { testProviderHealth } from '@/lib/services/providers';\n\nexport const runtime = 'nodejs';\nexport const dynamic = 'force-dynamic';\n\nasync function handlePOST(request, context) {\n  const guard = await requirePermission(request, PERMISSIONS.providersRead);\n  if (!guard.ok) return guard.response;\n\n  const idempotencyKey = getRequiredIdempotencyKey(request);\n  if (!idempotencyKey) return errorResponse('VALIDATION_ERROR', '供应商健康检查必须提供有效的 Idempotency-Key', 422, guard.requestId);\n  const idemp = await checkIdempotency({ scope: 'provider_health_check', key: idempotencyKey, actorId: guard.user.id });\n  if (!idemp.allowed) {\n    if (idemp.cachedResponse) return okResponse(idemp.cachedResponse, guard.requestId);\n    return errorResponse('CONFLICT', '供应商健康检查正在处理中', 409, guard.requestId);\n  }\n\n  const { id } = await context.params;\n  let body = {};\n  try {\n    body = await request.json();\n  } catch {}\n  const env = body?.env || request.nextUrl?.searchParams?.get('env') || null;\n\n  try {\n    const result = await testProviderHealth({\n      actor: guard.user,\n      provider: id,\n      env,\n      requestId: guard.requestId,\n    });\n    await completeIdempotency(idemp.keyHash, result);\n    return okResponse(result, guard.requestId);\n  } catch (error) {\n    await releaseIdempotency(idemp.keyHash);\n    throw error;\n  }\n}\n\nexport const POST = withAdminErrorBoundary(handlePOST);\n"
+  }
+ },
+ {
+  "routePath": "/api/admin/providers/[id]/webhooks",
+  "methods": [
+   "GET"
+  ],
+  "policyTier": "admin",
+  "responseFormat": "admin_ok_meta_envelope",
+  "isApi": true,
+  "isAdmin": true,
+  "analysis": {
+   "src": "app/api/admin/providers/[id]/webhooks/route.js",
+   "exists": true,
+   "perms": [
+    "providersRead"
+   ],
+   "idem": false,
+   "adminPwd": false,
+   "lines": 70,
+   "imports": [
+    "@/lib/admin/authz",
+    "@/lib/admin/permissions",
+    "@/lib/services/adminRead"
+   ],
+   "srcAbs": "/Users/seelucency/Documents/dev/Supdance Pro/app/api/admin/providers/[id]/webhooks/route.js",
+   "perm": "providersRead",
+   "scope": "",
+   "requiresKey": false,
+   "srcSnippet": "import { withAdminErrorBoundary, requirePermission, okResponse } from '@/lib/admin/authz';\nimport { PERMISSIONS } from '@/lib/admin/permissions';\nimport { listWebhookEvents } from '@/lib/services/adminRead';\n\nexport const runtime = 'nodejs';\nexport const dynamic = 'force-dynamic';\n\nfunction extractOrderId(payload) {\n  if (!payload || typeof payload !== 'object') return null;\n  return (\n    payload.order_id ||\n    payload.orderId ||\n    payload.out_trade_no ||\n    payload.outTradeNo ||\n    payload.data?.object?.metadata?.order_id ||\n    payload.data?.object?.metadata?.orderId ||\n    payload.data?.object?.id ||\n    payload.resource?.custom_id ||\n    payload.resource?.id ||\n    payload.id ||\n    null\n  );\n}\n\nfunction resolveSignatureStatus(row) {\n  if (row.status === 'rejected' && /签名|sign|verify/i.test(row.last_error || '')) {\n    return '验签未通过';\n  }\n  if (row.status === 'processed' || row.status === 'received') {\n    return '验签通过';\n  }\n  if (row.status === 'replayed') {\n    return '已重放';\n  }\n  if (row.status === 'failed') {\n    return '处理失败';\n  }\n  return row.status || '未知';\n}\n\nasync function handleGET(request, context) {\n  const guard = await requirePermission(request, PERMISSIONS.providersRead);\n  if (!guard.ok) return guard.response;\n\n  const { id } = await context.params;\n  const searchParams = new URLSearchParams(request.nextUrl.searchParams);\n  searchParams.set('provider', id);\n  if (!searchParams.get('limit')) {\n    searchParams.set('limit', '10');\n  }\n\n  const result = await listWebhookEvents(searchParams);\n  const rows = (result.rows || []).map((row) => ({\n    provider: row.provider,\n    eventId: row.event_id,\n    eventType: row.event_type || 'callback',\n    status: row.status,\n    signatureStatus: resolveSignatureStatus(row),\n    orderId: extractOrderId(row.payload_json),\n    attempts: row.attempts,\n    lastError: row.last_error,\n    createdAt: row.created_at,\n    processedAt: row.processed_at,\n  }));\n\n  return okResponse(rows, guard.requestId, result.meta);\n}\n\nexport const GET = withAdminErrorBoundary(handleGET);\n"
+  }
+ },
+ {
+  "routePath": "/api/admin/providers/email",
+  "methods": [
+   "GET",
+   "PUT"
+  ],
+  "policyTier": "admin",
+  "responseFormat": "admin_ok_meta_envelope",
+  "isApi": true,
+  "isAdmin": true,
+  "analysis": {
+   "src": "app/api/admin/providers/email/route.js",
+   "exists": true,
+   "perms": [
+    "providersRead",
+    "providersWrite"
+   ],
+   "idem": true,
+   "adminPwd": false,
+   "lines": 45,
+   "imports": [
+    "@/lib/admin/authz",
+    "@/lib/admin/idempotency",
+    "@/lib/admin/permissions",
+    "@/lib/emailAdmin"
+   ],
+   "srcAbs": "/Users/seelucency/Documents/dev/Supdance Pro/app/api/admin/providers/email/route.js",
+   "perm": "providersRead",
+   "scope": "email_smtp_config",
+   "requiresKey": true,
+   "srcSnippet": "import { withAdminErrorBoundary, requirePermission, okResponse, errorResponse } from '@/lib/admin/authz';\nimport { PERMISSIONS } from '@/lib/admin/permissions';\nimport { checkIdempotency, completeIdempotency, getRequiredIdempotencyKey, releaseIdempotency } from '@/lib/admin/idempotency';\nimport { getEmailSmtpOverview, saveEmailSmtpConfiguration } from '@/lib/emailAdmin';\n\nexport const runtime = 'nodejs';\nexport const dynamic = 'force-dynamic';\n\nasync function handleGET(request) {\n  const guard = await requirePermission(request, PERMISSIONS.providersRead);\n  if (!guard.ok) return guard.response;\n  return okResponse(await getEmailSmtpOverview(), guard.requestId);\n}\n\nasync function handlePUT(request) {\n  const guard = await requirePermission(request, PERMISSIONS.providersWrite);\n  if (!guard.ok) return guard.response;\n  const key = getRequiredIdempotencyKey(request);\n  if (!key) return errorResponse('VALIDATION_ERROR', '邮箱配置必须提供 Idempotency-Key', 422, guard.requestId);\n  const idemp = await checkIdempotency({ scope: 'email_smtp_config', key, actorId: guard.user.id });\n  if (!idemp.allowed) {\n    if (idemp.cachedResponse) return okResponse(idemp.cachedResponse, guard.requestId);\n    return errorResponse('CONFLICT', '邮箱配置正在处理中', 409, guard.requestId);\n  }\n\n  let body;\n  try {\n    body = await request.json();\n  } catch {\n    await releaseIdempotency(idemp.keyHash);\n    return errorResponse('VALIDATION_ERROR', '邮箱配置格式无效', 400, guard.requestId);\n  }\n  const result = await saveEmailSmtpConfiguration({ actor: guard.user, body, requestId: guard.requestId });\n  if (result.error) {\n    await releaseIdempotency(idemp.keyHash);\n    return errorResponse('VALIDATION_ERROR', result.error, 422, guard.requestId);\n  }\n  const payload = await getEmailSmtpOverview();\n  await completeIdempotency(idemp.keyHash, payload);\n  return okResponse(payload, guard.requestId);\n}\n\nexport const GET = withAdminErrorBoundary(handleGET);\nexport const PUT = withAdminErrorBoundary(handlePUT);\n"
+  }
+ },
+ {
+  "routePath": "/api/admin/providers/email/diagnose",
+  "methods": [
+   "POST"
+  ],
+  "policyTier": "admin",
+  "responseFormat": "admin_ok_meta_envelope",
+  "isApi": true,
+  "isAdmin": true,
+  "analysis": {
+   "src": "app/api/admin/providers/email/diagnose/route.js",
+   "exists": true,
+   "perms": [
+    "providersRead"
+   ],
+   "idem": true,
+   "adminPwd": false,
+   "lines": 36,
+   "imports": [
+    "@/lib/admin/authz",
+    "@/lib/admin/idempotency",
+    "@/lib/admin/permissions",
+    "@/lib/emailAdmin"
+   ],
+   "srcAbs": "/Users/seelucency/Documents/dev/Supdance Pro/app/api/admin/providers/email/diagnose/route.js",
+   "perm": "providersRead",
+   "scope": "email_smtp_diagnose",
+   "requiresKey": true,
+   "srcSnippet": "import { withAdminErrorBoundary, requirePermission, okResponse, errorResponse } from '@/lib/admin/authz';\nimport { PERMISSIONS } from '@/lib/admin/permissions';\nimport { checkIdempotency, completeIdempotency, getRequiredIdempotencyKey, releaseIdempotency } from '@/lib/admin/idempotency';\nimport { runEmailSmtpDiagnostics } from '@/lib/emailAdmin';\n\nexport const runtime = 'nodejs';\nexport const dynamic = 'force-dynamic';\n\nasync function handlePOST(request) {\n  const guard = await requirePermission(request, PERMISSIONS.providersRead);\n  if (!guard.ok) return guard.response;\n  const key = getRequiredIdempotencyKey(request);\n  if (!key) return errorResponse('VALIDATION_ERROR', '质量诊断请求必须提供 Idempotency-Key', 422, guard.requestId);\n  const idemp = await checkIdempotency({ scope: 'email_smtp_diagnose', key, actorId: guard.user.id });\n  if (!idemp.allowed) {\n    if (idemp.cachedResponse) return okResponse(idemp.cachedResponse, guard.requestId);\n    return errorResponse('CONFLICT', '邮件质量诊断正在处理中', 409, guard.requestId);\n  }\n\n  let body = {};\n  try {\n    body = await request.json();\n  } catch {}\n\n  try {\n    const result = await runEmailSmtpDiagnostics({ actor: guard.user, channel: body?.channel, requestId: guard.requestId });\n    await completeIdempotency(idemp.keyHash, result);\n    return okResponse(result, guard.requestId);\n  } catch (error) {\n    await releaseIdempotency(idemp.keyHash);\n    return errorResponse('DIAGNOSE_FAILED', error?.message || '发信质量诊断执行失败', 500, guard.requestId);\n  }\n}\n\nexport const POST = withAdminErrorBoundary(handlePOST);\n"
+  }
+ },
+ {
+  "routePath": "/api/admin/providers/email/health",
+  "methods": [
+   "POST"
+  ],
+  "policyTier": "admin",
+  "responseFormat": "admin_ok_meta_envelope",
+  "isApi": true,
+  "isAdmin": true,
+  "analysis": {
+   "src": "app/api/admin/providers/email/health/route.js",
+   "exists": true,
+   "perms": [
+    "providersRead"
+   ],
+   "idem": true,
+   "adminPwd": false,
+   "lines": 25,
+   "imports": [
+    "@/lib/admin/authz",
+    "@/lib/admin/idempotency",
+    "@/lib/admin/permissions",
+    "@/lib/emailAdmin"
+   ],
+   "srcAbs": "/Users/seelucency/Documents/dev/Supdance Pro/app/api/admin/providers/email/health/route.js",
+   "perm": "providersRead",
+   "scope": "email_smtp_health",
+   "requiresKey": true,
+   "srcSnippet": "import { withAdminErrorBoundary, requirePermission, okResponse, errorResponse } from '@/lib/admin/authz';\nimport { PERMISSIONS } from '@/lib/admin/permissions';\nimport { checkIdempotency, completeIdempotency, getRequiredIdempotencyKey, releaseIdempotency } from '@/lib/admin/idempotency';\nimport { runEmailSmtpHealthCheck } from '@/lib/emailAdmin';\n\nexport const runtime = 'nodejs';\nexport const dynamic = 'force-dynamic';\n\nasync function handlePOST(request) {\n  const guard = await requirePermission(request, PERMISSIONS.providersRead);\n  if (!guard.ok) return guard.response;\n  const key = getRequiredIdempotencyKey(request);\n  if (!key) return errorResponse('VALIDATION_ERROR', 'SMTP 健康检查必须提供 Idempotency-Key', 422, guard.requestId);\n  const idemp = await checkIdempotency({ scope: 'email_smtp_health', key, actorId: guard.user.id });\n  if (!idemp.allowed) {\n    if (idemp.cachedResponse) return okResponse(idemp.cachedResponse, guard.requestId);\n    return errorResponse('CONFLICT', 'SMTP 健康检查正在处理中', 409, guard.requestId);\n  }\n  const result = await runEmailSmtpHealthCheck({ actor: guard.user, requestId: guard.requestId });\n  await completeIdempotency(idemp.keyHash, result);\n  return okResponse(result, guard.requestId);\n}\n\nexport const POST = withAdminErrorBoundary(handlePOST);\n"
+  }
+ },
+ {
+  "routePath": "/api/admin/providers/email/test",
+  "methods": [
+   "POST"
+  ],
+  "policyTier": "admin",
+  "responseFormat": "admin_ok_meta_envelope",
+  "isApi": true,
+  "isAdmin": true,
+  "analysis": {
+   "src": "app/api/admin/providers/email/test/route.js",
+   "exists": true,
+   "perms": [
+    "providersWrite"
+   ],
+   "idem": true,
+   "adminPwd": false,
+   "lines": 51,
+   "imports": [
+    "@/lib/admin/authz",
+    "@/lib/admin/idempotency",
+    "@/lib/admin/permissions",
+    "@/lib/emailAdmin"
+   ],
+   "srcAbs": "/Users/seelucency/Documents/dev/Supdance Pro/app/api/admin/providers/email/test/route.js",
+   "perm": "providersWrite",
+   "scope": "email_smtp_test_send",
+   "requiresKey": true,
+   "srcSnippet": "import { withAdminErrorBoundary, requirePermission, okResponse, errorResponse } from '@/lib/admin/authz';\nimport { PERMISSIONS } from '@/lib/admin/permissions';\nimport { checkIdempotency, completeIdempotency, getRequiredIdempotencyKey, releaseIdempotency } from '@/lib/admin/idempotency';\nimport { sendEmailSmtpTest } from '@/lib/emailAdmin';\n\nexport const runtime = 'nodejs';\nexport const dynamic = 'force-dynamic';\n\nasync function handlePOST(request) {\n  const guard = await requirePermission(request, PERMISSIONS.providersWrite);\n  if (!guard.ok) return guard.response;\n  const key = getRequiredIdempotencyKey(request);\n  if (!key) return errorResponse('VALIDATION_ERROR', '测试邮件必须提供 Idempotency-Key', 422, guard.requestId);\n  const idemp = await checkIdempotency({ scope: 'email_smtp_test_send', key, actorId: guard.user.id });\n  if (!idemp.allowed) {\n    if (idemp.cachedResponse) return okResponse(idemp.cachedResponse, guard.requestId);\n    return errorResponse('CONFLICT', '测试邮件正在发送', 409, guard.requestId);\n  }\n\n  let body;\n  try {\n    body = await request.json();\n  } catch {\n    await releaseIdempotency(idemp.keyHash);\n    return errorResponse('VALIDATION_ERROR', '测试邮件参数无效', 400, guard.requestId);\n  }\n  try {\n    const result = await sendEmailSmtpTest({ actor: guard.user, to: body.to, requestId: guard.requestId });\n    if (result.error) {\n      await releaseIdempotency(idemp.keyHash);\n      return errorResponse(result.status === 429 ? 'RATE_LIMITED' : 'VALIDATION_ERROR', result.error, result.status || 422, guard.requestId);\n    }\n    await completeIdempotency(idemp.keyHash, result);\n    return okResponse(result, guard.requestId);\n  } catch (error) {\n    await releaseIdempotency(idemp.keyHash);\n    const code = String(error?.code || 'SMTP_ERROR');\n    console.error('[admin/email-smtp-test]', { code });\n    const messages = {\n      SMTP_NOT_CONFIGURED: '请先配置邮箱账号与 SMTP 客户端密码',\n      SMTP_AUTH_FAILED: 'SMTP 认证失败，请检查邮箱账号和客户端密码',\n      SMTP_TIMEOUT: 'SMTP 连接超时，请稍后重试',\n      SMTP_UNAVAILABLE: 'SMTP 服务当前不可连接',\n      EMAIL_INVALID_RECIPIENT: '请输入有效的测试收件邮箱',\n    };\n    return errorResponse(code, messages[code] || '测试邮件发送失败，请检查 SMTP 配置', 422, guard.requestId);\n  }\n}\n\nexport const POST = withAdminErrorBoundary(handlePOST);\n"
+  }
+ },
+ {
+  "routePath": "/api/admin/providers/sms",
+  "methods": [
+   "GET",
+   "PUT"
+  ],
+  "policyTier": "admin",
+  "responseFormat": "admin_ok_meta_envelope",
+  "isApi": true,
+  "isAdmin": true,
+  "analysis": {
+   "src": "app/api/admin/providers/sms/route.js",
+   "exists": true,
+   "perms": [
+    "providersRead",
+    "providersWrite"
+   ],
+   "idem": true,
+   "adminPwd": false,
+   "lines": 47,
+   "imports": [
+    "@/lib/admin/authz",
+    "@/lib/admin/idempotency",
+    "@/lib/admin/permissions",
+    "@/lib/smsAdmin"
+   ],
+   "srcAbs": "/Users/seelucency/Documents/dev/Supdance Pro/app/api/admin/providers/sms/route.js",
+   "perm": "providersRead",
+   "scope": "sms_provider_config",
+   "requiresKey": true,
+   "srcSnippet": "import { withAdminErrorBoundary, requirePermission, okResponse, errorResponse } from '@/lib/admin/authz';\nimport { PERMISSIONS } from '@/lib/admin/permissions';\nimport { checkIdempotency, completeIdempotency, getRequiredIdempotencyKey, releaseIdempotency } from '@/lib/admin/idempotency';\nimport { getSmsAdminOverview, saveSmsAdminConfiguration } from '@/lib/smsAdmin';\n\nexport const runtime = 'nodejs';\nexport const dynamic = 'force-dynamic';\n\nasync function handleGET(request) {\n  const guard = await requirePermission(request, PERMISSIONS.providersRead);\n  if (!guard.ok) return guard.response;\n  return okResponse(await getSmsAdminOverview(), guard.requestId);\n}\n\nasync function handlePUT(request) {\n  const guard = await requirePermission(request, PERMISSIONS.providersWrite);\n  if (!guard.ok) return guard.response;\n\n  const idempotencyKey = getRequiredIdempotencyKey(request);\n  if (!idempotencyKey) return errorResponse('VALIDATION_ERROR', 'SMS 配置必须提供有效的 Idempotency-Key', 422, guard.requestId);\n  const idemp = await checkIdempotency({ scope: 'sms_provider_config', key: idempotencyKey, actorId: guard.user.id });\n  if (!idemp.allowed) {\n    if (idemp.cachedResponse) return okResponse(idemp.cachedResponse, guard.requestId);\n    return errorResponse('CONFLICT', 'SMS 配置正在处理中', 409, guard.requestId);\n  }\n\n  let body;\n  try {\n    body = await request.json();\n  } catch {\n    await releaseIdempotency(idemp.keyHash);\n    return errorResponse('VALIDATION_ERROR', '配置格式无效', 400, guard.requestId);\n  }\n  const result = await saveSmsAdminConfiguration({ actor: guard.user, body, requestId: guard.requestId });\n  if (result.error) {\n    await releaseIdempotency(idemp.keyHash);\n    return errorResponse('VALIDATION_ERROR', result.error, 422, guard.requestId);\n  }\n\n  const payload = await getSmsAdminOverview();\n  await completeIdempotency(idemp.keyHash, payload);\n  return okResponse(payload, guard.requestId);\n}\n\nexport const GET = withAdminErrorBoundary(handleGET);\nexport const PUT = withAdminErrorBoundary(handlePUT);\n"
+  }
+ },
+ {
+  "routePath": "/api/admin/providers/sms/health",
+  "methods": [
+   "POST"
+  ],
+  "policyTier": "admin",
+  "responseFormat": "admin_ok_meta_envelope",
+  "isApi": true,
+  "isAdmin": true,
+  "analysis": {
+   "src": "app/api/admin/providers/sms/health/route.js",
+   "exists": true,
+   "perms": [
+    "providersRead"
+   ],
+   "idem": true,
+   "adminPwd": false,
+   "lines": 38,
+   "imports": [
+    "@/lib/admin/authz",
+    "@/lib/admin/idempotency",
+    "@/lib/admin/permissions",
+    "@/lib/smsAdmin"
+   ],
+   "srcAbs": "/Users/seelucency/Documents/dev/Supdance Pro/app/api/admin/providers/sms/health/route.js",
+   "perm": "providersRead",
+   "scope": "sms_provider_health",
+   "requiresKey": true,
+   "srcSnippet": "import { withAdminErrorBoundary, requirePermission, okResponse, errorResponse } from '@/lib/admin/authz';\nimport { PERMISSIONS } from '@/lib/admin/permissions';\nimport { checkIdempotency, completeIdempotency, getRequiredIdempotencyKey, releaseIdempotency } from '@/lib/admin/idempotency';\nimport { runSmsProviderHealthCheck } from '@/lib/smsAdmin';\n\nexport const runtime = 'nodejs';\nexport const dynamic = 'force-dynamic';\n\nasync function handlePOST(request) {\n  const guard = await requirePermission(request, PERMISSIONS.providersRead);\n  if (!guard.ok) return guard.response;\n\n  const idempotencyKey = getRequiredIdempotencyKey(request);\n  if (!idempotencyKey) return errorResponse('VALIDATION_ERROR', '健康检查必须提供有效的 Idempotency-Key', 422, guard.requestId);\n  const idemp = await checkIdempotency({ scope: 'sms_provider_health', key: idempotencyKey, actorId: guard.user.id });\n  if (!idemp.allowed) {\n    if (idemp.cachedResponse) return okResponse(idemp.cachedResponse, guard.requestId);\n    return errorResponse('CONFLICT', '健康检查正在处理中', 409, guard.requestId);\n  }\n\n  let body;\n  try {\n    body = await request.json();\n  } catch {\n    await releaseIdempotency(idemp.keyHash);\n    return errorResponse('VALIDATION_ERROR', 'Provider 参数无效', 400, guard.requestId);\n  }\n  const result = await runSmsProviderHealthCheck({ actor: guard.user, provider: body.provider, requestId: guard.requestId });\n  if (result.error) {\n    await releaseIdempotency(idemp.keyHash);\n    return errorResponse('VALIDATION_ERROR', result.error, 422, guard.requestId);\n  }\n  await completeIdempotency(idemp.keyHash, result);\n  return okResponse(result, guard.requestId);\n}\n\nexport const POST = withAdminErrorBoundary(handlePOST);\n"
+  }
+ },
+ {
+  "routePath": "/api/admin/providers/sms/secrets",
+  "methods": [
+   "PUT"
+  ],
+  "policyTier": "admin",
+  "responseFormat": "admin_ok_meta_envelope",
+  "isApi": true,
+  "isAdmin": true,
+  "analysis": {
+   "src": "app/api/admin/providers/sms/secrets/route.js",
+   "exists": true,
+   "perms": [
+    "providersWrite"
+   ],
+   "idem": true,
+   "adminPwd": false,
+   "lines": 43,
+   "imports": [
+    "@/lib/admin/authz",
+    "@/lib/admin/idempotency",
+    "@/lib/admin/permissions",
+    "@/lib/smsAdmin"
+   ],
+   "srcAbs": "/Users/seelucency/Documents/dev/Supdance Pro/app/api/admin/providers/sms/secrets/route.js",
+   "perm": "providersWrite",
+   "scope": "sms_provider_secret_rotate",
+   "requiresKey": true,
+   "srcSnippet": "import { withAdminErrorBoundary, requirePermission, okResponse, errorResponse } from '@/lib/admin/authz';\nimport { PERMISSIONS } from '@/lib/admin/permissions';\nimport { checkIdempotency, completeIdempotency, getRequiredIdempotencyKey, releaseIdempotency } from '@/lib/admin/idempotency';\nimport { saveSmsProviderSecrets } from '@/lib/smsAdmin';\n\nexport const runtime = 'nodejs';\nexport const dynamic = 'force-dynamic';\n\nasync function handlePUT(request) {\n  const guard = await requirePermission(request, PERMISSIONS.providersWrite);\n  if (!guard.ok) return guard.response;\n\n  const idempotencyKey = getRequiredIdempotencyKey(request);\n  if (!idempotencyKey) return errorResponse('VALIDATION_ERROR', '密钥保存必须提供有效的 Idempotency-Key', 422, guard.requestId);\n  const idemp = await checkIdempotency({ scope: 'sms_provider_secret_rotate', key: idempotencyKey, actorId: guard.user.id });\n  if (!idemp.allowed) {\n    if (idemp.cachedResponse) return okResponse(idemp.cachedResponse, guard.requestId);\n    return errorResponse('CONFLICT', '密钥保存正在处理中', 409, guard.requestId);\n  }\n\n  let body;\n  try {\n    body = await request.json();\n  } catch {\n    await releaseIdempotency(idemp.keyHash);\n    return errorResponse('VALIDATION_ERROR', '密钥配置格式无效', 400, guard.requestId);\n  }\n  const result = await saveSmsProviderSecrets({\n    actor: guard.user,\n    adminPassword: body.adminPassword,\n    secrets: body.secrets,\n    requestId: guard.requestId,\n  });\n  if (result.error) {\n    await releaseIdempotency(idemp.keyHash);\n    return errorResponse(result.error === '管理员密码验证失败' ? 'UNAUTHENTICATED' : 'VALIDATION_ERROR', result.error, result.error === '管理员密码验证失败' ? 401 : 422, guard.requestId);\n  }\n  await completeIdempotency(idemp.keyHash, result);\n  return okResponse(result, guard.requestId);\n}\n\nexport const PUT = withAdminErrorBoundary(handlePUT);\n"
+  }
+ },
+ {
+  "routePath": "/api/admin/providers/sms/test",
+  "methods": [
+   "POST"
+  ],
+  "policyTier": "admin",
+  "responseFormat": "admin_ok_meta_envelope",
+  "isApi": true,
+  "isAdmin": true,
+  "analysis": {
+   "src": "app/api/admin/providers/sms/test/route.js",
+   "exists": true,
+   "perms": [
+    "providersWrite"
+   ],
+   "idem": true,
+   "adminPwd": false,
+   "lines": 45,
+   "imports": [
+    "@/lib/admin/authz",
+    "@/lib/admin/idempotency",
+    "@/lib/admin/permissions",
+    "@/lib/security/requestGuard",
+    "@/lib/smsAdmin"
+   ],
+   "srcAbs": "/Users/seelucency/Documents/dev/Supdance Pro/app/api/admin/providers/sms/test/route.js",
+   "perm": "providersWrite",
+   "scope": "sms_provider_test_send",
+   "requiresKey": true,
+   "srcSnippet": "import { withAdminErrorBoundary, requirePermission, okResponse, errorResponse } from '@/lib/admin/authz';\nimport { PERMISSIONS } from '@/lib/admin/permissions';\nimport { checkIdempotency, completeIdempotency, getRequiredIdempotencyKey, releaseIdempotency } from '@/lib/admin/idempotency';\nimport { getClientIp } from '@/lib/security/requestGuard';\nimport { sendSmsProviderTest } from '@/lib/smsAdmin';\n\nexport const runtime = 'nodejs';\nexport const dynamic = 'force-dynamic';\n\nasync function handlePOST(request) {\n  const guard = await requirePermission(request, PERMISSIONS.providersWrite);\n  if (!guard.ok) return guard.response;\n\n  const idempotencyKey = getRequiredIdempotencyKey(request);\n  if (!idempotencyKey) return errorResponse('VALIDATION_ERROR', '测试短信必须提供有效的 Idempotency-Key', 422, guard.requestId);\n  const idemp = await checkIdempotency({ scope: 'sms_provider_test_send', key: idempotencyKey, actorId: guard.user.id });\n  if (!idemp.allowed) {\n    if (idemp.cachedResponse) return okResponse(idemp.cachedResponse, guard.requestId);\n    return errorResponse('CONFLICT', '测试短信正在处理中', 409, guard.requestId);\n  }\n\n  let body;\n  try {\n    body = await request.json();\n  } catch {\n    await releaseIdempotency(idemp.keyHash);\n    return errorResponse('VALIDATION_ERROR', '测试短信参数无效', 400, guard.requestId);\n  }\n  const result = await sendSmsProviderTest({\n    actor: guard.user,\n    provider: body.provider,\n    phone: body.phone,\n    ip: getClientIp(request),\n    requestId: guard.requestId,\n  });\n  if (result.error) {\n    await releaseIdempotency(idemp.keyHash);\n    return errorResponse(result.status === 429 ? 'RATE_LIMITED' : 'VALIDATION_ERROR', result.error, result.status || 422, guard.requestId);\n  }\n  await completeIdempotency(idemp.keyHash, result);\n  return okResponse(result, guard.requestId);\n}\n\nexport const POST = withAdminErrorBoundary(handlePOST);\n"
+  }
+ },
+ {
+  "routePath": "/api/admin/routing",
+  "methods": [
+   "GET",
+   "PATCH"
+  ],
+  "policyTier": "admin",
+  "responseFormat": "admin_ok_meta_envelope",
+  "isApi": true,
+  "isAdmin": true,
+  "analysis": {
+   "src": "app/api/admin/routing/route.js",
+   "exists": true,
+   "perms": [
+    "modelsRead",
+    "modelsWrite"
+   ],
+   "idem": false,
+   "adminPwd": false,
+   "lines": 97,
+   "imports": [
+    "@/lib/admin/authz",
+    "@/lib/admin/permissions",
+    "@/lib/db/index"
+   ],
+   "srcAbs": "/Users/seelucency/Documents/dev/Supdance Pro/app/api/admin/routing/route.js",
+   "perm": "modelsRead",
+   "scope": "",
+   "requiresKey": false,
+   "srcSnippet": "import { withAdminErrorBoundary, requirePermission, okResponse, resultErrorResponse } from '@/lib/admin/authz';\nimport { PERMISSIONS } from '@/lib/admin/permissions';\nimport { queryMany, queryOne, execute, nowIso, randomId } from '@/lib/db/index';\n\nexport const runtime = 'nodejs';\nexport const dynamic = 'force-dynamic';\n\nasync function handleGET(request) {\n  const guard = await requirePermission(request, PERMISSIONS.modelsRead);\n  if (!guard.ok) return guard.response;\n\n  const rows = await queryMany(`\n    SELECT\n      m.id, m.name, m.display_name, m.category, m.status, m.sort,\n      rp.routing_mode, rp.weights, rp.failover_enabled,\n      rp.circuit_breaker_config,\n      COALESCE(ch.enabled_count, 0)::int AS enabled_channels,\n      COALESCE(ch.total_count, 0)::int AS total_channels,\n      COALESCE(health.healthy_count, 0)::int AS healthy_channels\n    FROM ai_studio.ai_models m\n    LEFT JOIN ai_studio.routing_policies rp ON rp.model_id = m.id\n    LEFT JOIN LATERAL (\n      SELECT\n        COUNT(*)::int AS total_count,\n        COUNT(*) FILTER (WHERE pm.enabled = TRUE)::int AS enabled_count\n      FROM ai_studio.provider_models pm WHERE pm.model_id = m.id\n    ) ch ON TRUE\n    LEFT JOIN LATERAL (\n      SELECT COUNT(*)::int AS healthy_count\n      FROM ai_studio.provider_models pm\n      JOIN ai_studio.ai_providers p ON p.id = pm.provider_id\n      WHERE pm.model_id = m.id AND pm.enabled = TRUE\n        AND p.enabled = TRUE AND p.health_status IN ('healthy', 'degraded')\n    ) health ON TRUE\n    ORDER BY m.sort ASC, m.created_at ASC\n  `);\n\n  return okResponse({ models: rows }, guard.requestId);\n}\n\nasync function handlePATCH(request) {\n  const guard = await requirePermission(request, PERMISSIONS.modelsWrite);\n  if (!guard.ok) return guard.response;\n\n  const body = await request.json().catch(() => ({}));\n  const { model_id, routing_mode, weights, failover_enabled } = body;\n  if (!model_id) {\n    return resultErrorResponse('model_id required', guard.requestId);\n  }\n\n  const existing = await queryOne(\n    'SELECT * FROM ai_studio.routing_policies WHERE model_id = $1', [model_id]\n  );\n\n  const now = nowIso();\n  if (existing) {\n    const setClauses = ['updated_at = $1'];\n    const params = [now];\n    let idx = 1;\n    if (routing_mode !== undefined) {\n      setClauses.push(`routing_mode = $${++idx}`);\n      params.push(routing_mode);\n    }\n    if (weights !== undefined) {\n      setClauses.push(`weights = $${++idx}::jsonb`);\n      params.push(JSON.stringify(weights));\n    }\n    if (failover_enabled !== undefined) {\n      setClauses.push(`failover_enabled = $${++idx}`);\n      params.push(Boolean(failover_enabled));\n    }\n    params.push(model_id);\n    await execute(\n      `UPDATE ai_studio.routing_policies SET ${setClauses.join(', ')} WHERE model_id = $${++idx}`,\n      params\n    );\n  } else {\n    await execute(`\n      INSERT INTO ai_studio.routing_policies\n        (id, model_id, routing_mode, weights, failover_enabled, created_at, updated_at)\n      VALUES ($1, $2, $3, $4::jsonb, $5, $6, $6)\n    `, [\n      `rp_${randomId()}`, model_id, routing_mode || 'balanced',\n      JSON.stringify(weights || { cost: 0.4, success_rate: 0.3, speed: 0.2, capacity: 0.1 }),\n      failover_enabled !== false, now,\n    ]);\n  }\n\n  const updated = await queryOne(\n    'SELECT * FROM ai_studio.routing_policies WHERE model_id = $1', [model_id]\n  );\n  return okResponse({ policy: updated }, guard.requestId);\n}\n\nexport const GET = withAdminErrorBoundary(handleGET);\nexport const PATCH = withAdminErrorBoundary(handlePATCH);\n"
+  }
+ },
+ {
+  "routePath": "/api/admin/routing/[modelId]/channels",
+  "methods": [
+   "GET",
+   "PATCH"
+  ],
+  "policyTier": "admin",
+  "responseFormat": "admin_ok_meta_envelope",
+  "isApi": true,
+  "isAdmin": true,
+  "analysis": {
+   "src": "app/api/admin/routing/[modelId]/channels/route.js",
+   "exists": true,
+   "perms": [
+    "modelsRead",
+    "modelsWrite"
+   ],
+   "idem": false,
+   "adminPwd": false,
+   "lines": 97,
+   "imports": [
+    "@/lib/admin/authz",
+    "@/lib/admin/permissions",
+    "@/lib/db/index",
+    "@/lib/repositories/aiCatalog"
+   ],
+   "srcAbs": "/Users/seelucency/Documents/dev/Supdance Pro/app/api/admin/routing/[modelId]/channels/route.js",
+   "perm": "modelsRead",
+   "scope": "",
+   "requiresKey": false,
+   "srcSnippet": "import { withAdminErrorBoundary, requirePermission, okResponse, resultErrorResponse } from '@/lib/admin/authz';\nimport { PERMISSIONS } from '@/lib/admin/permissions';\nimport { queryMany, execute, nowIso } from '@/lib/db/index';\nimport { setChannelPrimary } from '@/lib/repositories/aiCatalog';\n\nexport const runtime = 'nodejs';\nexport const dynamic = 'force-dynamic';\n\nasync function handleGET(request, { params }) {\n  const guard = await requirePermission(request, PERMISSIONS.modelsRead);\n  if (!guard.ok) return guard.response;\n\n  const { modelId } = await params;\n  const rows = await queryMany(`\n    SELECT\n      pm.id, pm.model_id, pm.provider_id, pm.provider_model_id, pm.enabled,\n      pm.priority, pm.timeout, pm.max_retries, pm.concurrency_limit, pm.rate_limit,\n      pm.review_status, pm.provider_model_version, pm.provider_endpoint,\n      pm.metadata, pm.cost_config,\n      COALESCE((pm.metadata->>'primary')::boolean, false) AS is_primary,\n      p.name AS provider_name, p.provider_type, p.health_status, p.circuit_state,\n      p.consecutive_failures, p.balance AS provider_balance, p.currency AS provider_currency,\n      COALESCE(active.active_count, 0)::int AS active_attempt_count,\n      COALESCE(stats.success_rate, 0)::numeric AS success_rate,\n      COALESCE(stats.average_latency_ms, 0)::numeric AS average_latency_ms,\n      COALESCE(stats.total_attempts, 0)::int AS total_recent_attempts\n    FROM ai_studio.provider_models pm\n    JOIN ai_studio.ai_providers p ON p.id = pm.provider_id\n    LEFT JOIN LATERAL (\n      SELECT COUNT(*)::int AS active_count\n      FROM ai_studio.generation_attempts att\n      WHERE att.provider_id = pm.provider_id\n        AND att.provider_model_id = pm.provider_model_id\n        AND att.status IN ('submitted', 'processing')\n    ) active ON TRUE\n    LEFT JOIN LATERAL (\n      SELECT\n        COUNT(*) AS total_attempts,\n        CASE WHEN COUNT(*) = 0 THEN 0\n          ELSE COUNT(*) FILTER (WHERE a2.status = 'succeeded')::numeric / COUNT(*) END AS success_rate,\n        AVG(a2.duration_ms) FILTER (WHERE a2.duration_ms IS NOT NULL) AS average_latency_ms\n      FROM (\n        SELECT status, duration_ms FROM ai_studio.generation_attempts\n        WHERE provider_id = pm.provider_id ORDER BY created_at DESC LIMIT 100\n      ) a2\n    ) stats ON TRUE\n    WHERE pm.model_id = $1\n    ORDER BY COALESCE((pm.metadata->>'primary')::boolean, false) DESC, pm.priority DESC, pm.id ASC\n  `, [modelId]);\n\n  return okResponse({ channels: rows }, guard.requestId);\n}\n\nasync function handlePATCH(request, { params }) {\n  const guard = await requirePermission(request, PERMISSIONS.modelsWrite);\n  if (!guard.ok) return guard.response;\n\n  const { modelId } = await params;\n  const body = await request.json().catch(() => ({}));\n  const { channel_id, enabled, priority, is_primary } = body;\n  if (!channel_id) {\n    return resultErrorResponse('channel_id required', guard.requestId);\n  }\n\n  if (is_primary) {\n    try {\n      await setChannelPrimary(modelId, channel_id);\n    } catch (err) {\n      return resultErrorResponse(err.message || '切换主渠道失败', guard.requestId);\n    }\n  }\n\n  if (enabled !== undefined || priority !== undefined) {\n    const setClauses = ['updated_at = $1'];\n    const setParams = [nowIso()];\n    let idx = 1;\n    if (enabled !== undefined) {\n      setClauses.push(`enabled = $${++idx}`);\n      setParams.push(Boolean(enabled));\n    }\n    if (priority !== undefined) {\n      setClauses.push(`priority = $${++idx}`);\n      setParams.push(Number(priority));\n    }\n    setParams.push(channel_id, modelId);\n    await execute(\n      `UPDATE ai_studio.provider_models SET ${setClauses.join(', ')} WHERE id = $${++idx} AND model_id = $${++idx}`,\n      setParams\n    );\n  }\n\n  return okResponse({ ok: true, channel_id, is_primary: Boolean(is_primary) }, guard.requestId);\n}\n\nexport const GET = withAdminErrorBoundary(handleGET);\nexport const PATCH = withAdminErrorBoundary(handlePATCH);\n"
+  }
+ },
+ {
+  "routePath": "/api/admin/security/sessions/[hash]",
+  "methods": [
+   "POST",
+   "DELETE"
+  ],
+  "policyTier": "admin",
+  "responseFormat": "admin_ok_meta_envelope",
+  "isApi": true,
+  "isAdmin": true,
+  "analysis": {
+   "src": "app/api/admin/security/sessions/[hash]/route.js",
+   "exists": true,
+   "perms": [
+    "sessionsRevoke"
+   ],
+   "idem": true,
+   "adminPwd": false,
+   "lines": 48,
+   "imports": [
+    "@/lib/admin/audit",
+    "@/lib/admin/authz",
+    "@/lib/admin/idempotency",
+    "@/lib/admin/permissions",
+    "@/lib/repositories/sessions"
+   ],
+   "srcAbs": "/Users/seelucency/Documents/dev/Supdance Pro/app/api/admin/security/sessions/[hash]/route.js",
+   "perm": "sessionsRevoke",
+   "scope": "session_revoke_single",
+   "requiresKey": true,
+   "srcSnippet": "import { withAdminErrorBoundary, requirePermission, okResponse, errorResponse } from '@/lib/admin/authz';\nimport { PERMISSIONS } from '@/lib/admin/permissions';\nimport { checkIdempotency, completeIdempotency, getRequiredIdempotencyKey, releaseIdempotency } from '@/lib/admin/idempotency';\nimport { revokeSessionByHash } from '@/lib/repositories/sessions';\nimport { logAudit } from '@/lib/admin/audit';\n\nexport const runtime = 'nodejs';\nexport const dynamic = 'force-dynamic';\n\nasync function handleRevokeSingle(request, context) {\n  const guard = await requirePermission(request, PERMISSIONS.sessionsRevoke);\n  if (!guard.ok) return guard.response;\n\n  const idempotencyKey = getRequiredIdempotencyKey(request);\n  if (!idempotencyKey) return errorResponse('VALIDATION_ERROR', '高风险写操作必须提供有效的 Idempotency-Key', 422, guard.requestId);\n\n  const idemp = await checkIdempotency({\n    scope: 'session_revoke_single',\n    key: idempotencyKey,\n    actorId: guard.user.id,\n  });\n\n  if (!idemp.allowed) {\n    if (idemp.cachedResponse) return okResponse(idemp.cachedResponse, guard.requestId);\n    return errorResponse('CONFLICT', '会话撤销正在处理中', 409, guard.requestId);\n  }\n\n  const { hash } = await context.params;\n  const result = await revokeSessionByHash(hash);\n\n  await logAudit({\n    actor: guard.user,\n    action: 'sessions.revoke_single',\n    targetType: 'session',\n    targetId: hash,\n    riskLevel: 'medium',\n    after: { tokenHash: hash, rowCount: result?.rowCount || 1 },\n    requestId: guard.requestId,\n  });\n\n  const responsePayload = { ok: true, tokenHash: hash };\n  await completeIdempotency(idemp.keyHash, responsePayload);\n  return okResponse(responsePayload, guard.requestId);\n}\n\nexport const DELETE = withAdminErrorBoundary(handleRevokeSingle);\nexport const POST = withAdminErrorBoundary(handleRevokeSingle);\n"
+  }
+ },
+ {
+  "routePath": "/api/admin/seo/config",
+  "methods": [
+   "GET",
+   "POST"
+  ],
+  "policyTier": "admin",
+  "responseFormat": "admin_ok_meta_envelope",
+  "isApi": true,
+  "isAdmin": true,
+  "analysis": {
+   "src": "app/api/admin/seo/config/route.js",
+   "exists": true,
+   "perms": [
+    "settingsWrite",
+    "usersRead"
+   ],
+   "idem": false,
+   "adminPwd": false,
+   "lines": 33,
+   "imports": [
+    "@/lib/admin/authz",
+    "@/lib/admin/permissions",
+    "@/lib/services/seo"
+   ],
+   "srcAbs": "/Users/seelucency/Documents/dev/Supdance Pro/app/api/admin/seo/config/route.js",
+   "perm": "settingsWrite",
+   "scope": "",
+   "requiresKey": false,
+   "srcSnippet": "import { withAdminErrorBoundary, requirePermission, okResponse, errorResponse } from '@/lib/admin/authz';\nimport { PERMISSIONS } from '@/lib/admin/permissions';\nimport { getSeoConfig, saveSeoConfig } from '@/lib/services/seo';\n\nexport const runtime = 'nodejs';\nexport const dynamic = 'force-dynamic';\n\nasync function handleGET(request) {\n  const guard = await requirePermission(request, PERMISSIONS.usersRead);\n  if (!guard.ok) return guard.response;\n\n  const config = await getSeoConfig();\n  return okResponse(config, guard.requestId);\n}\n\nasync function handlePOST(request) {\n  const guard = await requirePermission(request, PERMISSIONS.settingsWrite);\n  if (!guard.ok) return guard.response;\n\n  let body = {};\n  try {\n    body = await request.json();\n  } catch {\n    return errorResponse('INVALID_JSON', '请求体必须为合法 JSON 数据', 400, guard.requestId);\n  }\n\n  const saved = await saveSeoConfig(body, guard.user);\n  return okResponse(saved, guard.requestId);\n}\n\nexport const GET = withAdminErrorBoundary(handleGET);\nexport const POST = withAdminErrorBoundary(handlePOST);\n"
+  }
+ },
+ {
+  "routePath": "/api/admin/seo/push",
+  "methods": [
+   "GET",
+   "POST"
+  ],
+  "policyTier": "admin",
+  "responseFormat": "admin_ok_meta_envelope",
+  "isApi": true,
+  "isAdmin": true,
+  "analysis": {
+   "src": "app/api/admin/seo/push/route.js",
+   "exists": true,
+   "perms": [
+    "settingsWrite",
+    "usersRead"
+   ],
+   "idem": false,
+   "adminPwd": false,
+   "lines": 54,
+   "imports": [
+    "@/lib/admin/authz",
+    "@/lib/admin/permissions",
+    "@/lib/repositories/seo",
+    "@/lib/services/seoPush"
+   ],
+   "srcAbs": "/Users/seelucency/Documents/dev/Supdance Pro/app/api/admin/seo/push/route.js",
+   "perm": "settingsWrite",
+   "scope": "",
+   "requiresKey": false,
+   "srcSnippet": "import { withAdminErrorBoundary, requirePermission, okResponse, errorResponse } from '@/lib/admin/authz';\nimport { PERMISSIONS } from '@/lib/admin/permissions';\nimport { listPushLogs } from '@/lib/repositories/seo';\nimport { executeSearchPush } from '@/lib/services/seoPush';\n\nexport const runtime = 'nodejs';\nexport const dynamic = 'force-dynamic';\n\nasync function handleGET(request) {\n  const guard = await requirePermission(request, PERMISSIONS.usersRead);\n  if (!guard.ok) return guard.response;\n\n  const url = new URL(request.url);\n  const limit = Math.min(Math.max(1, parseInt(url.searchParams.get('limit') || '50', 10)), 200);\n  const offset = Math.max(0, parseInt(url.searchParams.get('offset') || '0', 10));\n  const engine = url.searchParams.get('engine') || null;\n\n  const logs = await listPushLogs({ limit, offset, engine });\n  return okResponse(logs, guard.requestId, { limit, offset, count: logs.length });\n}\n\nasync function handlePOST(request) {\n  const guard = await requirePermission(request, PERMISSIONS.settingsWrite);\n  if (!guard.ok) return guard.response;\n\n  let body = {};\n  try {\n    body = await request.json();\n  } catch {\n    return errorResponse('INVALID_JSON', '请求体必须为合法 JSON 数据', 400, guard.requestId);\n  }\n\n  const { engine = 'all', urls = [] } = body;\n  if (!Array.isArray(urls) || urls.length === 0) {\n    return errorResponse('VALIDATION_ERROR', '推送 URL 列表不能为空且必须为数组', 422, guard.requestId);\n  }\n\n  const result = await executeSearchPush({\n    engine,\n    urls,\n    user: guard.user,\n    actorEmail: guard.user.email,\n  });\n\n  if (!result.success && result.count === 0 && result.errors?.length > 0) {\n    return errorResponse('VALIDATION_ERROR', result.errors.join('；'), 422, guard.requestId);\n  }\n\n  return okResponse(result, guard.requestId);\n}\n\nexport const GET = withAdminErrorBoundary(handleGET);\nexport const POST = withAdminErrorBoundary(handlePOST);\n"
+  }
+ },
+ {
+  "routePath": "/api/admin/seo/push/config",
+  "methods": [
+   "GET",
+   "POST"
+  ],
+  "policyTier": "admin",
+  "responseFormat": "admin_ok_meta_envelope",
+  "isApi": true,
+  "isAdmin": true,
+  "analysis": {
+   "src": "app/api/admin/seo/push/config/route.js",
+   "exists": true,
+   "perms": [
+    "settingsWrite",
+    "usersRead"
+   ],
+   "idem": false,
+   "adminPwd": false,
+   "lines": 33,
+   "imports": [
+    "@/lib/admin/authz",
+    "@/lib/admin/permissions",
+    "@/lib/services/seoPush"
+   ],
+   "srcAbs": "/Users/seelucency/Documents/dev/Supdance Pro/app/api/admin/seo/push/config/route.js",
+   "perm": "settingsWrite",
+   "scope": "",
+   "requiresKey": false,
+   "srcSnippet": "import { withAdminErrorBoundary, requirePermission, okResponse, errorResponse } from '@/lib/admin/authz';\nimport { PERMISSIONS } from '@/lib/admin/permissions';\nimport { getSearchPushConfig, saveSearchPushConfig } from '@/lib/services/seoPush';\n\nexport const runtime = 'nodejs';\nexport const dynamic = 'force-dynamic';\n\nasync function handleGET(request) {\n  const guard = await requirePermission(request, PERMISSIONS.usersRead);\n  if (!guard.ok) return guard.response;\n\n  const config = await getSearchPushConfig();\n  return okResponse(config, guard.requestId);\n}\n\nasync function handlePOST(request) {\n  const guard = await requirePermission(request, PERMISSIONS.settingsWrite);\n  if (!guard.ok) return guard.response;\n\n  let body = {};\n  try {\n    body = await request.json();\n  } catch {\n    return errorResponse('INVALID_JSON', '请求体必须为合法 JSON 数据', 400, guard.requestId);\n  }\n\n  const saved = await saveSearchPushConfig(body, guard.user);\n  return okResponse(saved, guard.requestId);\n}\n\nexport const GET = withAdminErrorBoundary(handleGET);\nexport const POST = withAdminErrorBoundary(handlePOST);\n"
+  }
+ },
+ {
+  "routePath": "/api/admin/settings",
+  "methods": [
+   "GET",
+   "POST"
+  ],
+  "policyTier": "admin",
+  "responseFormat": "admin_ok_meta_envelope",
+  "isApi": true,
+  "isAdmin": true,
+  "analysis": {
+   "src": "app/api/admin/settings/route.js",
+   "exists": true,
+   "perms": [
+    "settingsRead",
+    "settingsWrite"
+   ],
+   "idem": true,
+   "adminPwd": false,
+   "lines": 65,
+   "imports": [
+    "@/lib/admin/authz",
+    "@/lib/admin/idempotency",
+    "@/lib/admin/permissions",
+    "@/lib/services/settings"
+   ],
+   "srcAbs": "/Users/seelucency/Documents/dev/Supdance Pro/app/api/admin/settings/route.js",
+   "perm": "settingsRead",
+   "scope": "system_setting_update",
+   "requiresKey": true,
+   "srcSnippet": "import { withAdminErrorBoundary, requirePermission, okResponse, errorResponse, resultErrorResponse } from '@/lib/admin/authz';\nimport { PERMISSIONS } from '@/lib/admin/permissions';\nimport { checkIdempotency, completeIdempotency, getRequiredIdempotencyKey, releaseIdempotency } from '@/lib/admin/idempotency';\nimport { getSystemSettingsList, saveSystemSetting } from '@/lib/services/settings';\n\nexport const runtime = 'nodejs';\nexport const dynamic = 'force-dynamic';\n\nasync function handleGET(request) {\n  const guard = await requirePermission(request, PERMISSIONS.settingsRead);\n  if (!guard.ok) return guard.response;\n\n  const settings = await getSystemSettingsList();\n  return okResponse(settings, guard.requestId);\n}\n\nasync function handlePOST(request) {\n  const guard = await requirePermission(request, PERMISSIONS.settingsWrite);\n  if (!guard.ok) return guard.response;\n  const idempotencyKey = getRequiredIdempotencyKey(request);\n  if (!idempotencyKey) return errorResponse('VALIDATION_ERROR', '高风险写操作必须提供有效的 Idempotency-Key', 422, guard.requestId);\n  const idemp = await checkIdempotency({ scope: 'system_setting_update', key: idempotencyKey, actorId: guard.user.id });\n  if (!idemp.allowed) {\n    if (idemp.cachedResponse) return okResponse(idemp.cachedResponse, guard.requestId);\n    return errorResponse('CONFLICT', '系统设置更新正在处理中', 409, guard.requestId);\n  }\n\n  let body = {};\n  try {\n    body = await request.json();\n  } catch {}\n\n  if (body.key === 'canvas_model_config') {\n    await releaseIdempotency(idemp.keyHash);\n    return errorResponse('VALIDATION_ERROR', '无限画布配置请在专用控制面板中修改', 422, guard.requestId);\n  }\n\n  /* --- [TEMPORARY PLUGIN: china-ip-block START] --- */\n  if (body.action === 'test_china_ip') {\n    await releaseIdempotency(idemp.keyHash);\n    const { testIpAddress } = await import('@/plugins/china-ip-block/index.js');\n    return okResponse(testIpAddress(body.ip), guard.requestId);\n  }\n  /* --- [TEMPORARY PLUGIN: china-ip-block END] --- */\n\n  const result = await saveSystemSetting({\n    actor: guard.user,\n    key: body.key,\n    value: body.value,\n    visibility: body.visibility || 'private',\n    requestId: guard.requestId,\n  });\n\n  if (result.error) {\n    await releaseIdempotency(idemp.keyHash);\n    return resultErrorResponse(result.error, guard.requestId);\n  }\n\n  await completeIdempotency(idemp.keyHash, result.setting);\n  return okResponse(result.setting, guard.requestId);\n}\n\nexport const GET = withAdminErrorBoundary(handleGET);\nexport const POST = withAdminErrorBoundary(handlePOST);\n"
+  }
+ },
+ {
+  "routePath": "/api/admin/storage",
+  "methods": [
+   "GET",
+   "POST"
+  ],
+  "policyTier": "admin",
+  "responseFormat": "admin_ok_meta_envelope",
+  "isApi": true,
+  "isAdmin": true,
+  "analysis": {
+   "src": "app/api/admin/storage/route.js",
+   "exists": true,
+   "perms": [
+    "storageRead",
+    "storageWrite"
+   ],
+   "idem": true,
+   "adminPwd": false,
+   "lines": 137,
+   "imports": [
+    "@/lib/admin/authz",
+    "@/lib/admin/idempotency",
+    "@/lib/admin/permissions",
+    "@/lib/services/storageAdmin",
+    "@/lib/services/storageMigration",
+    "@/lib/storage/adapterRegistry.js",
+    "@/lib/storage/storageLocations.js",
+    "@/lib/storage/storageSettingsV2.js"
+   ],
+   "srcAbs": "/Users/seelucency/Documents/dev/Supdance Pro/app/api/admin/storage/route.js",
+   "perm": "storageRead",
+   "scope": "storage_settings_save",
+   "requiresKey": true,
+   "srcSnippet": "import { withAdminErrorBoundary, requirePermission, okResponse, errorResponse } from '@/lib/admin/authz';\nimport { PERMISSIONS } from '@/lib/admin/permissions';\nimport { checkIdempotency, completeIdempotency, getRequiredIdempotencyKey, releaseIdempotency } from '@/lib/admin/idempotency';\nimport { createStorageAdapter } from '@/lib/storage/adapterRegistry.js';\nimport { markStorageLocationTested, storageLocationDigest } from '@/lib/storage/storageLocations.js';\nimport {\n  normalizeStorageSettings,\n  publicStorageSettings,\n  readStorageSettings,\n  saveStorageSettings,\n  validateStorageSettings,\n} from '@/lib/storage/storageSettingsV2.js';\nimport { getStorageAdminOverview } from '@/lib/services/storageAdmin';\nimport {\n  advanceStorageMigration,\n  cancelStorageMigration,\n  startStorageMigration,\n} from '@/lib/services/storageMigration';\n\nexport const runtime = 'nodejs';\nexport const dynamic = 'force-dynamic';\n\nasync function handleGET(request) {\n  const guard = await requirePermission(request, PERMISSIONS.storageRead);\n  if (!guard.ok) return guard.response;\n  return okResponse(await getStorageAdminOverview(), guard.requestId);\n}\n\nfunction buildCandidateSettings({ config = {} }, current) {\n  const incoming = normalizeStorageSettings(config);\n  if (!incoming.accessKeyId && current && current.provider === incoming.provider) {\n    incoming.accessKeyId = current.accessKeyId || '';\n  }\n  if (!incoming.accessKeySecret && current && current.provider === incoming.provider) {\n    incoming.accessKeySecret = current.accessKeySecret || '';\n  }\n  if (!incoming.sessionToken && current && current.provider === incoming.provider) {\n    incoming.sessionToken = current.sessionToken || '';\n  }\n  return incoming;\n}\n\nasync function handlePOST(request) {\n  const guard = await requirePermission(request, PERMISSIONS.storageWrite);\n  if (!guard.ok) return guard.response;\n  const idempotencyKey = getRequiredIdempotencyKey(request);\n  if (!idempotencyKey) return errorResponse('VALIDATION_ERROR', '高风险写操作必须提供有效的 Idempotency-Key', 422, guard.requestId);\n\n  let body = {};\n  try {\n    body = await request.json();\n  } catch {}\n  const action = String(body.action || 'save');\n\n  if (action === 'test') {\n    const current = await readStorageSettings({ fresh: true });\n    const candidate = buildCandidateSettings(body, current);\n    const validation = validateStorageSettings(candidate, { hasStoredSecret: Boolean(candidate.accessKeySecret) });\n    if (validation) return errorResponse('VALIDATION_ERROR', validation, 422, guard.requestId);\n    try {\n      const adapter = createStorageAdapter(candidate);\n      const startedAt = Date.now();\n      const result = await adapter.testConnection();\n      const latencyMs = Date.now() - startedAt;\n      const digest = storageLocationDigest(candidate);\n      if (\n        candidate.storageLocationId\n        && candidate.storageLocationId === current?.storageLocationId\n        && candidate.provider === current?.provider\n      ) {\n        await markStorageLocationTested(candidate.storageLocationId, digest).catch(() => {});\n      }\n      return okResponse({ ok: true, latencyMs, provider: candidate.provider, result }, guard.requestId);\n    } catch (error) {\n      return errorResponse('STORAGE_TEST_FAILED', String(error?.message || '存储连通性测试失败').slice(0, 300), 422, guard.requestId);\n    }\n  }\n\n  if (action.startsWith('migrate.')) {\n    const idemp = await checkIdempotency({ scope: `storage_migration_${action}`, key: idempotencyKey, actorId: guard.user.id });\n    if (!idemp.allowed) {\n      if (idemp.cachedResponse) return okResponse(idemp.cachedResponse, guard.requestId);\n      return errorResponse('CONFLICT', '迁移操作正在处理中', 409, guard.requestId);\n    }\n    try {\n      let payload;\n      if (action === 'migrate.start') {\n        const { run } = await startStorageMigration({\n          actorEmail: guard.user.email || 'system',\n          targetLocationId: String(body.targetLocationId || ''),\n        });\n        payload = { run };\n      } else if"
+  }
+ },
+ {
+  "routePath": "/api/admin/storage/bucket",
+  "methods": [
+   "GET",
+   "POST"
+  ],
+  "policyTier": "admin",
+  "responseFormat": "admin_ok_meta_envelope",
+  "isApi": true,
+  "isAdmin": true,
+  "analysis": {
+   "src": "app/api/admin/storage/bucket/route.js",
+   "exists": true,
+   "perms": [
+    "storageRead",
+    "storageWrite"
+   ],
+   "idem": true,
+   "adminPwd": false,
+   "lines": 74,
+   "imports": [
+    "@/lib/admin/authz",
+    "@/lib/admin/idempotency",
+    "@/lib/admin/permissions",
+    "@/lib/services/storageBucketAdmin"
+   ],
+   "srcAbs": "/Users/seelucency/Documents/dev/Supdance Pro/app/api/admin/storage/bucket/route.js",
+   "perm": "storageRead",
+   "scope": "",
+   "requiresKey": true,
+   "srcSnippet": "import { withAdminErrorBoundary, requirePermission, okResponse, errorResponse } from '@/lib/admin/authz';\nimport { PERMISSIONS } from '@/lib/admin/permissions';\nimport { checkIdempotency, completeIdempotency, getRequiredIdempotencyKey, releaseIdempotency } from '@/lib/admin/idempotency';\nimport {\n  getBucketAdminOverview,\n  saveBucketAdminCredentials,\n  updateBucketAdminConfig,\n} from '@/lib/services/storageBucketAdmin';\n\nexport const runtime = 'nodejs';\nexport const dynamic = 'force-dynamic';\n\nasync function handleGET(request) {\n  const guard = await requirePermission(request, PERMISSIONS.storageRead);\n  if (!guard.ok) return guard.response;\n  return okResponse(await getBucketAdminOverview(), guard.requestId);\n}\n\nasync function handlePOST(request) {\n  const guard = await requirePermission(request, PERMISSIONS.storageWrite);\n  if (!guard.ok) return guard.response;\n  const idempotencyKey = getRequiredIdempotencyKey(request);\n  if (!idempotencyKey) return errorResponse('VALIDATION_ERROR', '高风险写操作必须提供有效的 Idempotency-Key', 422, guard.requestId);\n\n  let body = {};\n  try {\n    body = await request.json();\n  } catch {}\n  const action = String(body.action || '');\n\n  if (action !== 'credentials.save' && action !== 'config.update') {\n    return errorResponse('VALIDATION_ERROR', '不支持的桶级配置操作', 422, guard.requestId);\n  }\n\n  const section = action === 'config.update' ? String(body.section || '') : '';\n  const idemp = await checkIdempotency({\n    scope: `storage_bucket_admin_${action}${section ? `_${section}` : ''}`,\n    key: idempotencyKey,\n    actorId: guard.user.id,\n  });\n  if (!idemp.allowed) {\n    if (idemp.cachedResponse) return okResponse(idemp.cachedResponse, guard.requestId);\n    return errorResponse('CONFLICT', '桶级配置更新正在处理中', 409, guard.requestId);\n  }\n\n  try {\n    let payload;\n    if (action === 'credentials.save') {\n      payload = await saveBucketAdminCredentials({\n        accessKeyId: body.accessKeyId,\n        accessKeySecret: body.accessKeySecret,\n        actorEmail: guard.user.email || 'system',\n      });\n    } else {\n      payload = {\n        overview: await updateBucketAdminConfig({\n          section,\n          value: body.value,\n          actorEmail: guard.user.email || 'system',\n        }),\n      };\n    }\n    await completeIdempotency(idemp.keyHash, payload);\n    return okResponse(payload, guard.requestId);\n  } catch (error) {\n    await releaseIdempotency(idemp.keyHash).catch(() => {});\n    const status = Number(error?.statusCode) || 422;\n    return errorResponse(error?.code || 'BUCKET_ADMIN_UPDATE_FAILED', String(error?.message || '桶级配置更新失败').slice(0, 300), status, guard.requestId);\n  }\n}\n\nexport const GET = withAdminErrorBoundary(handleGET);\nexport const POST = withAdminErrorBoundary(handlePOST);\n"
+  }
+ },
+ {
+  "routePath": "/api/admin/subscription-faq",
+  "methods": [
+   "GET",
+   "PUT"
+  ],
+  "policyTier": "admin",
+  "responseFormat": "admin_ok_meta_envelope",
+  "isApi": true,
+  "isAdmin": true,
+  "analysis": {
+   "src": "app/api/admin/subscription-faq/route.js",
+   "exists": true,
+   "perms": [
+    "plansRead",
+    "plansWrite"
+   ],
+   "idem": false,
+   "adminPwd": false,
+   "lines": 40,
+   "imports": [
+    "@/lib/admin/authz",
+    "@/lib/admin/permissions",
+    "@/lib/services/subscriptionFaq"
+   ],
+   "srcAbs": "/Users/seelucency/Documents/dev/Supdance Pro/app/api/admin/subscription-faq/route.js",
+   "perm": "plansRead",
+   "scope": "",
+   "requiresKey": false,
+   "srcSnippet": "﻿import { withAdminErrorBoundary, requirePermission, okResponse } from '@/lib/admin/authz';\nimport { PERMISSIONS } from '@/lib/admin/permissions';\nimport { errorResponse } from '@/lib/admin/authz';\nimport { getSubscriptionFaqConfig, saveSubscriptionFaqConfig, DEFAULT_SUBSCRIPTION_FAQ_CONFIG } from '@/lib/services/subscriptionFaq';\n\nexport const runtime = 'nodejs';\n\nasync function handleGET(request) {\n  const guard = await requirePermission(request, PERMISSIONS.plansRead);\n  if (!guard.ok) return guard.response;\n  const config = await getSubscriptionFaqConfig();\n  return okResponse({ config, defaults: DEFAULT_SUBSCRIPTION_FAQ_CONFIG }, guard.requestId);\n}\n\nasync function handlePUT(request) {\n  const guard = await requirePermission(request, PERMISSIONS.plansWrite);\n  if (!guard.ok) return guard.response;\n  try {\n    const body = await request.json();\n    const requestId = request.headers.get('x-request-id') || undefined;\n    const result = await saveSubscriptionFaqConfig({\n      actor: guard.user,\n      config: body.config || body,\n      requestId,\n    });\n\n    if (result.error) {\n      return errorResponse('VALIDATION_ERROR', result.error, 400, guard.requestId);\n    }\n\n    return okResponse({ success: true, config: result.config }, guard.requestId);\n  } catch (err) {\n    console.error('[api/admin/subscription-faq] PUT error:', err);\n    throw err;\n  }\n}\n\nexport const GET = withAdminErrorBoundary(handleGET);\nexport const PUT = withAdminErrorBoundary(handlePUT);\n"
+  }
+ },
+ {
+  "routePath": "/api/admin/subscriptions",
+  "methods": [
+   "GET"
+  ],
+  "policyTier": "admin",
+  "responseFormat": "admin_ok_meta_envelope",
+  "isApi": true,
+  "isAdmin": true,
+  "analysis": {
+   "src": "app/api/admin/subscriptions/route.js",
+   "exists": true,
+   "perms": [
+    "billingRead"
+   ],
+   "idem": false,
+   "adminPwd": false,
+   "lines": 17,
+   "imports": [
+    "@/lib/admin/authz",
+    "@/lib/admin/permissions",
+    "@/lib/services/adminRead"
+   ],
+   "srcAbs": "/Users/seelucency/Documents/dev/Supdance Pro/app/api/admin/subscriptions/route.js",
+   "perm": "billingRead",
+   "scope": "",
+   "requiresKey": false,
+   "srcSnippet": "import { withAdminErrorBoundary, requirePermission, okResponse } from '@/lib/admin/authz';\nimport { PERMISSIONS } from '@/lib/admin/permissions';\nimport { listSubscriptions } from '@/lib/services/adminRead';\n\nexport const runtime = 'nodejs';\nexport const dynamic = 'force-dynamic';\n\nasync function handleGET(request) {\n  const guard = await requirePermission(request, PERMISSIONS.billingRead);\n  if (!guard.ok) return guard.response;\n\n  const result = await listSubscriptions(request.nextUrl.searchParams);\n  return okResponse(result.rows, guard.requestId, result.meta);\n}\n\nexport const GET = withAdminErrorBoundary(handleGET);\n"
+  }
+ },
+ {
+  "routePath": "/api/admin/system/logs",
+  "methods": [
+   "GET"
+  ],
+  "policyTier": "admin",
+  "responseFormat": "admin_ok_meta_envelope",
+  "isApi": true,
+  "isAdmin": true,
+  "analysis": {
+   "src": "app/api/admin/system/logs/route.js",
+   "exists": true,
+   "perms": [
+    "healthRead"
+   ],
+   "idem": false,
+   "adminPwd": false,
+   "lines": 82,
+   "imports": [
+    "@/lib/admin/authz",
+    "@/lib/admin/permissions"
+   ],
+   "srcAbs": "/Users/seelucency/Documents/dev/Supdance Pro/app/api/admin/system/logs/route.js",
+   "perm": "healthRead",
+   "scope": "",
+   "requiresKey": false,
+   "srcSnippet": "import fs from 'node:fs/promises';\nimport os from 'node:os';\nimport path from 'node:path';\nimport {\n  withAdminErrorBoundary,\n  requirePermission,\n  okResponse,\n  errorResponse,\n} from '@/lib/admin/authz';\nimport { PERMISSIONS } from '@/lib/admin/permissions';\n\nexport const runtime = 'nodejs';\nexport const dynamic = 'force-dynamic';\n\nconst MAX_LINES = 100;\nconst MAX_BYTES = 256 * 1024;\n\nfunction resolveLogFile(type) {\n  const appName = process.env.PM2_APP_NAME || 'supdance-ai-studio';\n  const logDir = process.env.PM2_LOG_DIR || path.join(os.homedir(), '.pm2', 'logs');\n  const fileName = type === 'error' ? `${appName}-error.log` : `${appName}-out.log`;\n  return path.join(logDir, fileName);\n}\n\nasync function tailLog(filePath) {\n  let stat;\n  try {\n    stat = await fs.stat(filePath);\n  } catch (error) {\n    if (error?.code === 'ENOENT') return { lines: '', missing: true };\n    throw error;\n  }\n\n  const bytesToRead = Math.min(stat.size, MAX_BYTES);\n  if (bytesToRead <= 0) return { lines: '', missing: false };\n\n  const handle = await fs.open(filePath, 'r');\n  try {\n    const buffer = Buffer.alloc(bytesToRead);\n    await handle.read(buffer, 0, bytesToRead, Math.max(0, stat.size - bytesToRead));\n    let text = buffer.toString('utf8');\n    if (stat.size > bytesToRead) {\n      const firstBreak = text.indexOf('\\n');\n      text = firstBreak === -1 ? '' : text.slice(firstBreak + 1);\n    }\n    const lines = text.split(/\\r?\\n/);\n    if (lines.at(-1) === '') lines.pop();\n    return { lines: lines.slice(-MAX_LINES).join('\\n'), missing: false };\n  } finally {\n    await handle.close();\n  }\n}\n\nasync function handleGET(request) {\n  const guard = await requirePermission(request, PERMISSIONS.healthRead);\n  if (!guard.ok) return guard.response;\n\n  const requestedType = request.nextUrl.searchParams.get('type') || 'out';\n  if (!['out', 'error'].includes(requestedType)) {\n    return errorResponse('VALIDATION_ERROR', '日志类型必须是 out 或 error', 422, guard.requestId);\n  }\n\n  const filePath = resolveLogFile(requestedType);\n  try {\n    const result = await tailLog(filePath);\n    return okResponse(\n      {\n        type: requestedType,\n        path: filePath,\n        lines: result.lines,\n        missing: result.missing,\n        maxLines: MAX_LINES,\n      },\n      guard.requestId\n    );\n  } catch (error) {\n    return errorResponse('LOG_READ_FAILED', '读取服务端日志失败', 500, guard.requestId);\n  }\n}\n\nexport const GET = withAdminErrorBoundary(handleGET);\n"
+  }
+ },
+ {
+  "routePath": "/api/admin/users",
+  "methods": [
+   "GET"
+  ],
+  "policyTier": "admin",
+  "responseFormat": "admin_ok_meta_envelope",
+  "isApi": true,
+  "isAdmin": true,
+  "analysis": {
+   "src": "app/api/admin/users/route.js",
+   "exists": true,
+   "perms": [
+    "usersRead"
+   ],
+   "idem": false,
+   "adminPwd": false,
+   "lines": 17,
+   "imports": [
+    "@/lib/admin/authz",
+    "@/lib/admin/permissions",
+    "@/lib/services/adminRead"
+   ],
+   "srcAbs": "/Users/seelucency/Documents/dev/Supdance Pro/app/api/admin/users/route.js",
+   "perm": "usersRead",
+   "scope": "",
+   "requiresKey": false,
+   "srcSnippet": "import { withAdminErrorBoundary, requirePermission, okResponse } from '@/lib/admin/authz';\nimport { PERMISSIONS } from '@/lib/admin/permissions';\nimport { listUsers } from '@/lib/services/adminRead';\n\nexport const runtime = 'nodejs';\nexport const dynamic = 'force-dynamic';\n\nasync function handleGET(request) {\n  const guard = await requirePermission(request, PERMISSIONS.usersRead);\n  if (!guard.ok) return guard.response;\n\n  const result = await listUsers(request.nextUrl.searchParams);\n  return okResponse(result.rows, guard.requestId, result.meta);\n}\n\nexport const GET = withAdminErrorBoundary(handleGET);\n"
+  }
+ },
+ {
+  "routePath": "/api/admin/users/[id]",
+  "methods": [
+   "GET",
+   "PATCH"
+  ],
+  "policyTier": "admin",
+  "responseFormat": "admin_ok_meta_envelope",
+  "isApi": true,
+  "isAdmin": true,
+  "analysis": {
+   "src": "app/api/admin/users/[id]/route.js",
+   "exists": true,
+   "perms": [
+    "usersRead",
+    "usersUpdate"
+   ],
+   "idem": true,
+   "adminPwd": false,
+   "lines": 57,
+   "imports": [
+    "@/lib/admin/authz",
+    "@/lib/admin/idempotency",
+    "@/lib/admin/permissions",
+    "@/lib/services/users"
+   ],
+   "srcAbs": "/Users/seelucency/Documents/dev/Supdance Pro/app/api/admin/users/[id]/route.js",
+   "perm": "usersRead",
+   "scope": "user_status_update",
+   "requiresKey": true,
+   "srcSnippet": "import { withAdminErrorBoundary, requirePermission, okResponse, errorResponse, resultErrorResponse } from '@/lib/admin/authz';\nimport { PERMISSIONS } from '@/lib/admin/permissions';\nimport { checkIdempotency, completeIdempotency, getRequiredIdempotencyKey, releaseIdempotency } from '@/lib/admin/idempotency';\nimport { getUserDetailFull, setUserStatus } from '@/lib/services/users';\n\nexport const runtime = 'nodejs';\nexport const dynamic = 'force-dynamic';\n\nasync function handleGET(request, context) {\n  const guard = await requirePermission(request, PERMISSIONS.usersRead);\n  if (!guard.ok) return guard.response;\n\n  const { id } = await context.params;\n  const detail = await getUserDetailFull(id);\n  if (!detail) {\n    return errorResponse('NOT_FOUND', '用户不存在', 404, guard.requestId);\n  }\n\n  return okResponse(detail, guard.requestId);\n}\n\nasync function handlePATCH(request, context) {\n  const guard = await requirePermission(request, PERMISSIONS.usersUpdate);\n  if (!guard.ok) return guard.response;\n  const idempotencyKey = getRequiredIdempotencyKey(request);\n  if (!idempotencyKey) return errorResponse('VALIDATION_ERROR', '高风险写操作必须提供有效的 Idempotency-Key', 422, guard.requestId);\n  const idemp = await checkIdempotency({ scope: 'user_status_update', key: idempotencyKey, actorId: guard.user.id });\n  if (!idemp.allowed) {\n    if (idemp.cachedResponse) return okResponse(idemp.cachedResponse, guard.requestId);\n    return errorResponse('CONFLICT', '用户状态更新正在处理中', 409, guard.requestId);\n  }\n\n  const { id } = await context.params;\n  let body = {};\n  try {\n    body = await request.json();\n  } catch {}\n\n  const result = await setUserStatus({\n    actor: guard.user,\n    userId: id,\n    status: body.status,\n    requestId: guard.requestId,\n  });\n\n  if (result.error) {\n    await releaseIdempotency(idemp.keyHash);\n    return resultErrorResponse(result.error, guard.requestId);\n  }\n\n  await completeIdempotency(idemp.keyHash, result.user);\n  return okResponse(result.user, guard.requestId);\n}\n\nexport const GET = withAdminErrorBoundary(handleGET);\nexport const PATCH = withAdminErrorBoundary(handlePATCH);\n"
+  }
+ },
+ {
+  "routePath": "/api/admin/users/[id]/credits",
+  "methods": [
+   "POST"
+  ],
+  "policyTier": "admin",
+  "responseFormat": "admin_ok_meta_envelope",
+  "isApi": true,
+  "isAdmin": true,
+  "analysis": {
+   "src": "app/api/admin/users/[id]/credits/route.js",
+   "exists": true,
+   "perms": [
+    "creditsAdjust"
+   ],
+   "idem": true,
+   "adminPwd": false,
+   "lines": 55,
+   "imports": [
+    "@/lib/admin/authz",
+    "@/lib/admin/idempotency",
+    "@/lib/admin/permissions",
+    "@/lib/services/credits"
+   ],
+   "srcAbs": "/Users/seelucency/Documents/dev/Supdance Pro/app/api/admin/users/[id]/credits/route.js",
+   "perm": "creditsAdjust",
+   "scope": "credits_adjust",
+   "requiresKey": true,
+   "srcSnippet": "import { withAdminErrorBoundary, requirePermission, okResponse, errorResponse, resultErrorResponse } from '@/lib/admin/authz';\nimport { PERMISSIONS } from '@/lib/admin/permissions';\nimport { checkIdempotency, completeIdempotency, getRequiredIdempotencyKey, releaseIdempotency } from '@/lib/admin/idempotency';\nimport { adjustUserCredits } from '@/lib/services/credits';\n\nexport const runtime = 'nodejs';\nexport const dynamic = 'force-dynamic';\n\nasync function handlePOST(request, context) {\n  const guard = await requirePermission(request, PERMISSIONS.creditsAdjust);\n  if (!guard.ok) return guard.response;\n\n  const { id } = await context.params;\n  const idempotencyKey = getRequiredIdempotencyKey(request);\n  if (!idempotencyKey) return errorResponse('VALIDATION_ERROR', '缺少 idempotency-key', 422, guard.requestId);\n\n  const idemp = await checkIdempotency({\n    scope: 'credits_adjust',\n    key: idempotencyKey,\n    actorId: guard.user.id,\n  });\n\n  if (!idemp.allowed) {\n    if (idemp.cachedResponse) {\n      return okResponse(idemp.cachedResponse, guard.requestId);\n    }\n    return errorResponse('CONFLICT', '该调额请求正在处理中，请勿重复提交', 409, guard.requestId);\n  }\n\n  let body = {};\n  try {\n    body = await request.json();\n  } catch {}\n\n  const result = await adjustUserCredits({\n    actor: guard.user,\n    userId: id,\n    delta: body.delta,\n    reason: body.reason,\n    referenceId: body.referenceId,\n    requestId: guard.requestId,\n    idempotencyKey,\n  });\n\n  if (result.error) {\n    await releaseIdempotency(idemp.keyHash);\n    return resultErrorResponse(result.error, guard.requestId);\n  }\n\n  await completeIdempotency(idemp.keyHash, result);\n  return okResponse(result, guard.requestId);\n}\n\nexport const POST = withAdminErrorBoundary(handlePOST);\n"
+  }
+ },
+ {
+  "routePath": "/api/admin/users/[id]/notes",
+  "methods": [
+   "POST"
+  ],
+  "policyTier": "admin",
+  "responseFormat": "admin_ok_meta_envelope",
+  "isApi": true,
+  "isAdmin": true,
+  "analysis": {
+   "src": "app/api/admin/users/[id]/notes/route.js",
+   "exists": true,
+   "perms": [
+    "usersNote"
+   ],
+   "idem": true,
+   "adminPwd": false,
+   "lines": 50,
+   "imports": [
+    "@/lib/admin/authz",
+    "@/lib/admin/idempotency",
+    "@/lib/admin/permissions",
+    "@/lib/services/users"
+   ],
+   "srcAbs": "/Users/seelucency/Documents/dev/Supdance Pro/app/api/admin/users/[id]/notes/route.js",
+   "perm": "usersNote",
+   "scope": "user_note_create",
+   "requiresKey": true,
+   "srcSnippet": "import { withAdminErrorBoundary, requirePermission, okResponse, errorResponse, resultErrorResponse } from '@/lib/admin/authz';\nimport { PERMISSIONS } from '@/lib/admin/permissions';\nimport { checkIdempotency, completeIdempotency, getRequiredIdempotencyKey, releaseIdempotency } from '@/lib/admin/idempotency';\nimport { addUserAdminNote } from '@/lib/services/users';\n\nexport const runtime = 'nodejs';\nexport const dynamic = 'force-dynamic';\n\nasync function handlePOST(request, context) {\n  const guard = await requirePermission(request, PERMISSIONS.usersNote);\n  if (!guard.ok) return guard.response;\n\n  const { id } = await context.params;\n  const idempotencyKey = getRequiredIdempotencyKey(request);\n  if (!idempotencyKey) return errorResponse('VALIDATION_ERROR', '缺少 idempotency-key', 422, guard.requestId);\n\n  const idemp = await checkIdempotency({\n    scope: 'user_note_create',\n    key: idempotencyKey,\n    actorId: guard.user.id,\n  });\n\n  if (!idemp.allowed) {\n    if (idemp.cachedResponse) return okResponse(idemp.cachedResponse, guard.requestId);\n    return errorResponse('CONFLICT', '该备注请求正在处理中', 409, guard.requestId);\n  }\n\n  let body = {};\n  try {\n    body = await request.json();\n  } catch {}\n\n  const result = await addUserAdminNote({\n    actor: guard.user,\n    userId: id,\n    body: body.body,\n    requestId: guard.requestId,\n  });\n\n  if (result.error) {\n    await releaseIdempotency(idemp.keyHash);\n    return resultErrorResponse(result.error, guard.requestId);\n  }\n\n  await completeIdempotency(idemp.keyHash, result);\n  return okResponse(result, guard.requestId);\n}\n\nexport const POST = withAdminErrorBoundary(handlePOST);\n"
+  }
+ },
+ {
+  "routePath": "/api/admin/users/[id]/sessions",
+  "methods": [
+   "POST",
+   "DELETE"
+  ],
+  "policyTier": "admin",
+  "responseFormat": "admin_ok_meta_envelope",
+  "isApi": true,
+  "isAdmin": true,
+  "analysis": {
+   "src": "app/api/admin/users/[id]/sessions/route.js",
+   "exists": true,
+   "perms": [
+    "sessionsRevoke"
+   ],
+   "idem": true,
+   "adminPwd": false,
+   "lines": 45,
+   "imports": [
+    "@/lib/admin/authz",
+    "@/lib/admin/idempotency",
+    "@/lib/admin/permissions",
+    "@/lib/services/users"
+   ],
+   "srcAbs": "/Users/seelucency/Documents/dev/Supdance Pro/app/api/admin/users/[id]/sessions/route.js",
+   "perm": "sessionsRevoke",
+   "scope": "user_sessions_revoke",
+   "requiresKey": true,
+   "srcSnippet": "import { withAdminErrorBoundary, requirePermission, okResponse, errorResponse, resultErrorResponse } from '@/lib/admin/authz';\nimport { PERMISSIONS } from '@/lib/admin/permissions';\nimport { checkIdempotency, completeIdempotency, getRequiredIdempotencyKey, releaseIdempotency } from '@/lib/admin/idempotency';\nimport { revokeUserSessions } from '@/lib/services/users';\n\nexport const runtime = 'nodejs';\nexport const dynamic = 'force-dynamic';\n\nasync function handleRevoke(request, context) {\n  const guard = await requirePermission(request, PERMISSIONS.sessionsRevoke);\n  if (!guard.ok) return guard.response;\n\n  const idempotencyKey = getRequiredIdempotencyKey(request);\n  if (!idempotencyKey) return errorResponse('VALIDATION_ERROR', '高风险写操作必须提供有效的 Idempotency-Key', 422, guard.requestId);\n\n  const idemp = await checkIdempotency({\n    scope: 'user_sessions_revoke',\n    key: idempotencyKey,\n    actorId: guard.user.id,\n  });\n\n  if (!idemp.allowed) {\n    if (idemp.cachedResponse) return okResponse(idemp.cachedResponse, guard.requestId);\n    return errorResponse('CONFLICT', '会话撤销正在处理中', 409, guard.requestId);\n  }\n\n  const { id } = await context.params;\n  const result = await revokeUserSessions({\n    actor: guard.user,\n    userId: id,\n    requestId: guard.requestId,\n  });\n\n  if (result.error) {\n    await releaseIdempotency(idemp.keyHash);\n    return resultErrorResponse(result.error, guard.requestId);\n  }\n\n  await completeIdempotency(idemp.keyHash, result);\n  return okResponse(result, guard.requestId);\n}\n\nexport const DELETE = withAdminErrorBoundary(handleRevoke);\nexport const POST = withAdminErrorBoundary(handleRevoke);\n"
+  }
+ },
+ {
+  "routePath": "/api/admin/users/[id]/tags",
+  "methods": [
+   "POST"
+  ],
+  "policyTier": "admin",
+  "responseFormat": "admin_ok_meta_envelope",
+  "isApi": true,
+  "isAdmin": true,
+  "analysis": {
+   "src": "app/api/admin/users/[id]/tags/route.js",
+   "exists": true,
+   "perms": [
+    "usersUpdate"
+   ],
+   "idem": true,
+   "adminPwd": false,
+   "lines": 52,
+   "imports": [
+    "@/lib/admin/authz",
+    "@/lib/admin/idempotency",
+    "@/lib/admin/permissions",
+    "@/lib/services/users"
+   ],
+   "srcAbs": "/Users/seelucency/Documents/dev/Supdance Pro/app/api/admin/users/[id]/tags/route.js",
+   "perm": "usersUpdate",
+   "scope": "user_tag_update",
+   "requiresKey": true,
+   "srcSnippet": "import { withAdminErrorBoundary, requirePermission, okResponse, resultErrorResponse, errorResponse } from '@/lib/admin/authz';\nimport { PERMISSIONS } from '@/lib/admin/permissions';\nimport { checkIdempotency, completeIdempotency, getRequiredIdempotencyKey, releaseIdempotency } from '@/lib/admin/idempotency';\nimport { manageUserTag } from '@/lib/services/users';\n\nexport const runtime = 'nodejs';\nexport const dynamic = 'force-dynamic';\n\nasync function handlePOST(request, context) {\n  const guard = await requirePermission(request, PERMISSIONS.usersUpdate);\n  if (!guard.ok) return guard.response;\n  const idempotencyKey = getRequiredIdempotencyKey(request);\n  if (!idempotencyKey) return errorResponse('VALIDATION_ERROR', '高风险写操作必须提供有效的 Idempotency-Key', 422, guard.requestId);\n  const idemp = await checkIdempotency({ scope: 'user_tag_update', key: idempotencyKey, actorId: guard.user.id });\n  if (!idemp.allowed) {\n    if (idemp.cachedResponse) return okResponse(idemp.cachedResponse, guard.requestId);\n    return errorResponse('CONFLICT', '用户标签更新正在处理中', 409, guard.requestId);\n  }\n\n  const { id } = await context.params;\n  let body = {};\n  try {\n    body = await request.json();\n  } catch {}\n\n  const tagId = String(body.tagId || '').trim();\n  const action = body.action === 'remove' ? 'remove' : 'add';\n\n  if (!tagId) {\n    await releaseIdempotency(idemp.keyHash);\n    return errorResponse('VALIDATION_ERROR', '缺少 tagId 参数', 422, guard.requestId);\n  }\n\n  const result = await manageUserTag({\n    actor: guard.user,\n    userId: id,\n    tagId,\n    action,\n    requestId: guard.requestId,\n  });\n\n  if (result.error) {\n    await releaseIdempotency(idemp.keyHash);\n    return resultErrorResponse(result.error, guard.requestId);\n  }\n\n  await completeIdempotency(idemp.keyHash, result.user);\n  return okResponse(result.user, guard.requestId);\n}\n\nexport const POST = withAdminErrorBoundary(handlePOST);\n"
+  }
+ },
+ {
+  "routePath": "/api/admin/users/dashboard",
+  "methods": [
+   "GET"
+  ],
+  "policyTier": "admin",
+  "responseFormat": "admin_ok_meta_envelope",
+  "isApi": true,
+  "isAdmin": true,
+  "analysis": {
+   "src": "app/api/admin/users/dashboard/route.js",
+   "exists": true,
+   "perms": [
+    "usersRead"
+   ],
+   "idem": false,
+   "adminPwd": false,
+   "lines": 18,
+   "imports": [
+    "@/lib/admin/authz",
+    "@/lib/admin/permissions",
+    "@/lib/services/userDashboard"
+   ],
+   "srcAbs": "/Users/seelucency/Documents/dev/Supdance Pro/app/api/admin/users/dashboard/route.js",
+   "perm": "usersRead",
+   "scope": "",
+   "requiresKey": false,
+   "srcSnippet": "import { withAdminErrorBoundary, requirePermission, okResponse } from '@/lib/admin/authz';\nimport { PERMISSIONS } from '@/lib/admin/permissions';\nimport { getUserDashboardData } from '@/lib/services/userDashboard';\n\nexport const runtime = 'nodejs';\nexport const dynamic = 'force-dynamic';\n\nasync function handleGET(request) {\n  const guard = await requirePermission(request, PERMISSIONS.usersRead);\n  if (!guard.ok) return guard.response;\n\n  const period = request.nextUrl.searchParams.get('period') || 'day';\n  const data = await getUserDashboardData(period);\n  return okResponse(data, guard.requestId, data.meta);\n}\n\nexport const GET = withAdminErrorBoundary(handleGET);\n"
+  }
+ },
+ {
+  "routePath": "/api/admin/visitors/analytics",
+  "methods": [
+   "GET",
+   "POST"
+  ],
+  "policyTier": "admin",
+  "responseFormat": "admin_ok_meta_envelope",
+  "isApi": true,
+  "isAdmin": true,
+  "analysis": {
+   "src": "app/api/admin/visitors/analytics/route.js",
+   "exists": true,
+   "perms": [
+    "settingsWrite",
+    "usersRead"
+   ],
+   "idem": true,
+   "adminPwd": false,
+   "lines": 87,
+   "imports": [
+    "@/lib/admin/authz",
+    "@/lib/admin/idempotency",
+    "@/lib/admin/permissions",
+    "@/lib/services/visitorAnalytics"
+   ],
+   "srcAbs": "/Users/seelucency/Documents/dev/Supdance Pro/app/api/admin/visitors/analytics/route.js",
+   "perm": "settingsWrite",
+   "scope": "visitor_analytics_update",
+   "requiresKey": true,
+   "srcSnippet": "import { withAdminErrorBoundary, requirePermission, okResponse, errorResponse, resultErrorResponse } from '@/lib/admin/authz';\nimport { PERMISSIONS } from '@/lib/admin/permissions';\nimport { checkIdempotency, completeIdempotency, getRequiredIdempotencyKey, releaseIdempotency } from '@/lib/admin/idempotency';\nimport {\n  getVisitorAnalyticsConfig,\n  saveVisitorAnalyticsConfig,\n  validateVisitorAnalyticsConfig,\n  DEFAULT_VISITOR_ANALYTICS,\n  OFFICIAL_CONSOLE_LINKS,\n} from '@/lib/services/visitorAnalytics';\n\nexport const runtime = 'nodejs';\nexport const dynamic = 'force-dynamic';\n\nasync function handleGET(request) {\n  const guard = await requirePermission(request, PERMISSIONS.usersRead);\n  if (!guard.ok) return guard.response;\n\n  const config = await getVisitorAnalyticsConfig();\n\n  return okResponse(\n    {\n      config,\n      defaults: DEFAULT_VISITOR_ANALYTICS,\n      links: OFFICIAL_CONSOLE_LINKS,\n    },\n    guard.requestId\n  );\n}\n\nasync function handlePOST(request) {\n  const guard = await requirePermission(request, PERMISSIONS.settingsWrite);\n  if (!guard.ok) return guard.response;\n\n  const idempotencyKey = getRequiredIdempotencyKey(request);\n  if (!idempotencyKey) {\n    return errorResponse('VALIDATION_ERROR', '高风险写操作必须提供有效的 Idempotency-Key', 422, guard.requestId);\n  }\n\n  const idemp = await checkIdempotency({\n    scope: 'visitor_analytics_update',\n    key: idempotencyKey,\n    actorId: guard.user.id,\n  });\n  if (!idemp.allowed) {\n    if (idemp.cachedResponse) return okResponse(idemp.cachedResponse, guard.requestId);\n    return errorResponse('CONFLICT', '访客分析设置更新正在处理中', 409, guard.requestId);\n  }\n\n  let body = {};\n  try {\n    body = await request.json();\n  } catch {\n    await releaseIdempotency(idemp.keyHash);\n    return errorResponse('VALIDATION_ERROR', '请求体必须为合法 JSON', 400, guard.requestId);\n  }\n\n  const rawConfig = body.config || body;\n  const validation = validateVisitorAnalyticsConfig(rawConfig);\n  if (!validation.valid) {\n    await releaseIdempotency(idemp.keyHash);\n    return errorResponse('VALIDATION_ERROR', validation.errors.join('; '), 422, guard.requestId);\n  }\n\n  try {\n    const saved = await saveVisitorAnalyticsConfig({\n      actor: guard.user,\n      config: rawConfig,\n      requestId: guard.requestId,\n    });\n\n    const responsePayload = {\n      config: saved,\n      links: OFFICIAL_CONSOLE_LINKS,\n    };\n\n    await completeIdempotency(idemp.keyHash, responsePayload);\n    return okResponse(responsePayload, guard.requestId);\n  } catch (err) {\n    await releaseIdempotency(idemp.keyHash);\n    return resultErrorResponse(err?.message || '保存访客分析配置失败', guard.requestId);\n  }\n}\n\nexport const GET = withAdminErrorBoundary(handleGET);\nexport const POST = withAdminErrorBoundary(handlePOST);\n"
+  }
+ },
+ {
+  "routePath": "/api/admin/visitors/analytics/ga4",
+  "methods": [
+   "GET",
+   "POST"
+  ],
+  "policyTier": "admin",
+  "responseFormat": "admin_ok_meta_envelope",
+  "isApi": true,
+  "isAdmin": true,
+  "analysis": {
+   "src": "app/api/admin/visitors/analytics/ga4/route.js",
+   "exists": true,
+   "perms": [
+    "usersRead"
+   ],
+   "idem": false,
+   "adminPwd": false,
+   "lines": 115,
+   "imports": [
+    "@/lib/admin/authz",
+    "@/lib/admin/permissions",
+    "@/lib/services/ga4DataApi",
+    "@/lib/services/visitorAnalytics"
+   ],
+   "srcAbs": "/Users/seelucency/Documents/dev/Supdance Pro/app/api/admin/visitors/analytics/ga4/route.js",
+   "perm": "usersRead",
+   "scope": "",
+   "requiresKey": false,
+   "srcSnippet": "import { withAdminErrorBoundary, requirePermission, okResponse, errorResponse } from '@/lib/admin/authz';\nimport { PERMISSIONS } from '@/lib/admin/permissions';\nimport { getVisitorAnalyticsConfig } from '@/lib/services/visitorAnalytics';\nimport {\n  resolveGa4Credentials,\n  runGa4RealtimeReport,\n  runGa4SummaryReport,\n  testGa4DataApiConnection,\n} from '@/lib/services/ga4DataApi';\n\nexport const runtime = 'nodejs';\nexport const dynamic = 'force-dynamic';\n\n/**\n * GET /api/admin/visitors/analytics/ga4\n * Pulls real GA4 metrics and reports via Google Analytics Data API (v1beta)\n */\nasync function handleGET(request) {\n  const guard = await requirePermission(request, PERMISSIONS.usersRead);\n  if (!guard.ok) return guard.response;\n\n  const url = new URL(request.url);\n  const range = url.searchParams.get('range') || '7d';\n\n  // 1. Load config from DB\n  const storedConfig = await getVisitorAnalyticsConfig();\n  const ga4Config = storedConfig?.googleAnalytics || {};\n\n  // 2. Resolve credentials combining DB config & environment variables\n  const creds = resolveGa4Credentials({\n    propertyId: ga4Config.propertyId,\n    clientEmail: ga4Config.serviceAccountEmail,\n    privateKey: ga4Config.serviceAccountPrivateKey,\n  });\n\n  if (!creds || !creds.propertyId) {\n    return okResponse(\n      {\n        configured: false,\n        measurementId: ga4Config.measurementId || '',\n        propertyId: ga4Config.propertyId || '',\n        hasCredentials: Boolean(creds?.clientEmail && creds?.privateKey),\n        message: '尚未配置完整的 GA4 Property ID 或 Service Account 凭据',\n      },\n      guard.requestId\n    );\n  }\n\n  // 3. Fetch real reports from GA4 Data API\n  try {\n    const [realtime, summary] = await Promise.all([\n      runGa4RealtimeReport(creds).catch((err) => ({\n        error: err.message,\n        activeUsers: 0,\n        topPages: [],\n      })),\n      runGa4SummaryReport(creds, range),\n    ]);\n\n    return okResponse(\n      {\n        configured: true,\n        source: creds.source,\n        propertyId: creds.propertyId,\n        measurementId: ga4Config.measurementId || '',\n        realtime,\n        summary: summary.summary,\n        topPages: summary.topPages,\n        topCountries: summary.topCountries,\n        fetchedAt: new Date().toISOString(),\n      },\n      guard.requestId\n    );\n  } catch (err) {\n    return okResponse(\n      {\n        configured: true,\n        propertyId: creds.propertyId,\n        error: err?.message || '拉取 GA4 数据源失败',\n        fetchedAt: new Date().toISOString(),\n      },\n      guard.requestId\n    );\n  }\n}\n\n/**\n * POST /api/admin/visitors/analytics/ga4\n * Tests connection to Google Analytics Data API with custom or saved credentials\n */\nasync function handlePOST(request) {\n  const guard = await requirePermission(request, PERMISSIONS.usersRead);\n  if (!guard.ok) return guard.response;\n\n  let body = {};\n  try {\n    body = await request.json();\n  } catch {}\n\n  const storedConfig = await getVisitorAnalyticsConfig();\n  const ga4Config = storedConfig?.googleAnalytics || {};\n\n  const testParams = {\n    propertyId: body.propertyId || ga4Config.propertyId,\n    clientEmail: body.serviceAccountEmail || ga4Config.serviceAccountEmail,\n    privateKey: body.serviceAccountPrivateKey || ga4Config.serviceAccountPrivateKey,\n  };\n\n  const result = await testGa4DataApiConnection(testParams);\n  return okResponse(result, guard.requestId);\n}\n\nexport const GET = withAdminErrorBoundary(handleGET);\nexport const POST = withAdminErrorBoundary(handlePOST);\n"
+  }
+ },
+ {
+  "routePath": "/api/admin/webhooks",
+  "methods": [
+   "GET"
+  ],
+  "policyTier": "admin",
+  "responseFormat": "admin_ok_meta_envelope",
+  "isApi": true,
+  "isAdmin": true,
+  "analysis": {
+   "src": "app/api/admin/webhooks/route.js",
+   "exists": true,
+   "perms": [
+    "webhooksRead"
+   ],
+   "idem": false,
+   "adminPwd": false,
+   "lines": 17,
+   "imports": [
+    "@/lib/admin/authz",
+    "@/lib/admin/permissions",
+    "@/lib/services/adminRead"
+   ],
+   "srcAbs": "/Users/seelucency/Documents/dev/Supdance Pro/app/api/admin/webhooks/route.js",
+   "perm": "webhooksRead",
+   "scope": "",
+   "requiresKey": false,
+   "srcSnippet": "import { withAdminErrorBoundary, requirePermission, okResponse } from '@/lib/admin/authz';\nimport { PERMISSIONS } from '@/lib/admin/permissions';\nimport { listWebhookEvents } from '@/lib/services/adminRead';\n\nexport const runtime = 'nodejs';\nexport const dynamic = 'force-dynamic';\n\nasync function handleGET(request) {\n  const guard = await requirePermission(request, PERMISSIONS.webhooksRead);\n  if (!guard.ok) return guard.response;\n\n  const result = await listWebhookEvents(request.nextUrl.searchParams);\n  return okResponse(result.rows, guard.requestId, result.meta);\n}\n\nexport const GET = withAdminErrorBoundary(handleGET);\n"
+  }
+ },
+ {
+  "routePath": "/api/admin/webhooks/[id]/replay",
+  "methods": [
+   "POST"
+  ],
+  "policyTier": "admin",
+  "responseFormat": "admin_ok_meta_envelope",
+  "isApi": true,
+  "isAdmin": true,
+  "analysis": {
+   "src": "app/api/admin/webhooks/[id]/replay/route.js",
+   "exists": true,
+   "perms": [
+    "webhooksReplay"
+   ],
+   "idem": true,
+   "adminPwd": false,
+   "lines": 31,
+   "imports": [
+    "@/lib/admin/authz",
+    "@/lib/admin/idempotency",
+    "@/lib/admin/permissions",
+    "@/lib/services/webhookDispatcher"
+   ],
+   "srcAbs": "/Users/seelucency/Documents/dev/Supdance Pro/app/api/admin/webhooks/[id]/replay/route.js",
+   "perm": "webhooksReplay",
+   "scope": "webhook_replay",
+   "requiresKey": true,
+   "srcSnippet": "import { withAdminErrorBoundary, requirePermission, okResponse, errorResponse } from '@/lib/admin/authz';\nimport { PERMISSIONS } from '@/lib/admin/permissions';\nimport { checkIdempotency, completeIdempotency, getRequiredIdempotencyKey, releaseIdempotency } from '@/lib/admin/idempotency';\nimport { replayWebhookEvent } from '@/lib/services/webhookDispatcher';\n\nexport const runtime = 'nodejs';\nexport const dynamic = 'force-dynamic';\n\nasync function handlePOST(request, context) {\n  const guard = await requirePermission(request, PERMISSIONS.webhooksReplay);\n  if (!guard.ok) return guard.response;\n  const { id } = await context.params;\n  const idempotencyKey = getRequiredIdempotencyKey(request);\n  if (!idempotencyKey) return errorResponse('VALIDATION_ERROR', '高风险写操作必须提供有效的 Idempotency-Key', 422, guard.requestId);\n  const idemp = await checkIdempotency({ scope: 'webhook_replay', key: idempotencyKey, actorId: guard.user.id });\n  if (!idemp.allowed) {\n    if (idemp.cachedResponse) return okResponse(idemp.cachedResponse, guard.requestId);\n    return errorResponse('CONFLICT', 'Webhook 重放正在处理中', 409, guard.requestId);\n  }\n  const result = await replayWebhookEvent({ actor: guard.user, eventId: id, requestId: guard.requestId });\n  if (result.error) {\n    await releaseIdempotency(idemp.keyHash);\n    if (result.error === 'NOT_FOUND') return errorResponse('NOT_FOUND', 'Webhook 事件记录不存在', 404, guard.requestId);\n    return errorResponse('VALIDATION_ERROR', result.error, 422, guard.requestId);\n  }\n  await completeIdempotency(idemp.keyHash, result);\n  return okResponse(result, guard.requestId);\n}\n\nexport const POST = withAdminErrorBoundary(handlePOST);\n"
+  }
+ }
+]

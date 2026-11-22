@@ -1,0 +1,137 @@
+{
+  "uploadButton": {
+    "faceLabel": "Rostro",
+    "referenceImageLabel": "Imagen de referencia",
+    "addUpToImages": "Añade hasta {max} imágenes",
+    "singleSelectedTitle": "1 imagen seleccionada — haz clic para añadir más (hasta {max})",
+    "multiSelectedTitle": "{count} de {max} imágenes seleccionadas — haz clic para gestionar",
+    "tooLargeAlert": "Las siguientes imágenes son demasiado grandes (máx 10MB): {names}",
+    "uploadFailedAlert": "Error al subir la imagen: {message}",
+    "headerTitle": "Imágenes de Referencia",
+    "selectUpTo": "Selecciona hasta {max} imágenes",
+    "doneButton": "✓ Hecho ({count})",
+    "uploadFilesButton": "Subir archivos",
+    "uploadNewButton": "Subir nuevo",
+    "emptyState": "Aún no hay subidas",
+    "removeFromHistory": "Eliminar del historial",
+    "selectedCount": "{count} de {max} seleccionadas",
+    "useSelected": "Usar Seleccionadas",
+    "imageName": "Imagen {n}",
+    "addReferenceLabel": "Añadir imagen de referencia",
+    "historyLabel": "Historial de subidas",
+    "uploadUnknownFailed": "Error al subir, inténtalo de nuevo"
+  },
+  "mediaMenu": {
+    "image": "Imagen",
+    "imageDesc": "Genera imágenes realistas y estilizadas",
+    "video": "Vídeo",
+    "videoDesc": "Genera videos cinematográficos",
+    "script": "Guión",
+    "scriptDesc": "Genera guiones y diálogos creativos",
+    "audio": "Audio",
+    "audioDesc": "Genera efectos de sonido y locuciones"
+  },
+  "paramsPanel": {
+    "titleRatio": "Relación de Aspecto",
+    "titleResolution": "Resolución",
+    "titleQuantity": "Cantidad de Generación",
+    "titleDimensions": "Dimensiones",
+    "smartRatio": "Inteligente",
+    "standard15k": "Estándar 1.5K",
+    "hd2k": "Alta Definición 2K ✦",
+    "ultra4k": "Ultra Definición 4K ✦",
+    "smartReference": "Referencia Inteligente",
+    "addReference": "Añadir Referencia",
+    "referenceCount": "Imágenes de Referencia ({count}/{max})",
+    "autoSwitchedToI2I": "Cambiado a modelo compatible con referencias: {model}",
+    "autoSwitchedToT2I": "Revertido a modelo de texto a imagen",
+    "modeImageGen": "Generación de Imagen",
+    "modeImageToImage": "Imagen a Imagen",
+    "creditPerImage": "✦ {cost}/imagen",
+    "creditPerImageOriginal": "11/imagen",
+    "batchCountUnit": "{count} imág."
+  },
+  "modelDropdown": {
+    "categoryAll": "Todos",
+    "categoryT2I": "Texto a Imagen",
+    "categoryI2I": "Imagen a Imagen",
+    "allProviders": "Todos los Proveedores",
+    "searchPlaceholder": "Buscar modelos...",
+    "modelsSuffix": "modelos",
+    "noModelsFound": "No se encontraron modelos",
+    "selectModelHeader": "Seleccionar modelo"
+  },
+  "gallery": {
+    "generatedImageAlt": "Imagen generada",
+    "download": "Descargar",
+    "delete": "Eliminar",
+    "deleteConfirm": "¿Estás seguro de que deseas eliminar este elemento generado?",
+    "deleteFailed": "Error al eliminar el elemento",
+    "noPrompt": "No se proporcionó ningún prompt",
+    "modelFallback": "Estudio de Imagen"
+  },
+  "emptyState": {
+    "heading": "COMIENZA A CREAR CON",
+    "subtitle": "Describe una escena, personaje, ambiente o estilo — y mira cómo cobra vida"
+  },
+  "qualityLabels": {
+    "standard": "Estándar",
+    "high": "Alta",
+    "medium": "Media",
+    "low": "Rápida"
+  },
+  "negativePrompt": {
+    "trigger": "Negativo",
+    "chip": "Negativo: {text}",
+    "title": "Prompt negativo",
+    "placeholder": "Describe lo que quieres evitar",
+    "clear": "Borrar",
+    "done": "Listo",
+    "separator": ", ",
+    "promptSuffix": "Evitar: {value}",
+    "presetBlurry": "borroso",
+    "presetLowQuality": "baja calidad",
+    "presetDeformed": "deformado",
+    "presetExtraFingers": "dedos extra",
+    "presetWatermark": "marca de agua",
+    "presetText": "texto",
+    "presetDark": "demasiado oscuro",
+    "presetEdges": "bordes rotos"
+  },
+  "regenerateConfirm": {
+    "title": "¿Regenerar este lote?",
+    "description": "Se usarán el mismo prompt y los mismos parámetros para generar {count} imagen(es).",
+    "cost": "Coste estimado",
+    "cancel": "Cancelar",
+    "confirm": "Regenerar"
+  },
+  "promptBar": {
+    "placeholderMultiImage": "{count} imágenes seleccionadas — describe la transformación (opcional)",
+    "placeholderI2I": "Describe cómo transformar esta imagen (opcional)",
+    "placeholderT2I": "Describe la imagen que deseas crear",
+    "swapFaceLabel": "Cambiar Rostro",
+    "effectFallback": "Efecto",
+    "drawButton": "Dibujar",
+    "generating": "Generando...",
+    "generateButton": "Generar",
+    "mentionTitle": "Menciones"
+  },
+  "popovers": {
+    "model": "Modelo",
+    "aspectRatio": "Relación de Aspecto",
+    "resolution": "Resolución",
+    "quality": "Calidad",
+    "effectType": "Tipo de Efecto"
+  },
+  "errors": {
+    "noImageReferenceSupport": "{name} no admite referencias de imagen.",
+    "uploadReferenceFirst": "Por favor, sube primero una imagen de referencia.",
+    "uploadSwapFaceFirst": "Por favor, sube una imagen para el cambio de rostro.",
+    "enterPromptFirst": "Por favor, introduce un prompt para generar una imagen.",
+    "generationCapabilityUnavailable": "Este modelo aún no tiene una capacidad de generación del servidor verificada.",
+    "generationFailed": "Error al generar la imagen"
+  },
+  "fullscreen": {
+    "previewAlt": "Vista previa a pantalla completa"
+  }
+}

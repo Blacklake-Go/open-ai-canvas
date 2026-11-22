@@ -1,0 +1,68 @@
+{
+  "labels": {
+    "video": "影片",
+    "characterImage": "角色圖片",
+    "library": "素材库",
+    "orientationPrefix": "朝向："
+  },
+  "buttons": {
+    "use": "使用",
+    "download": "下載",
+    "delete": "刪除",
+    "swapBody": "開始換體",
+    "swapping": "正在換體..."
+  },
+  "titles": {
+    "clickToClear": "{fileName} — 點擊清除",
+    "uploadFile": "上傳{label}文件，或拖放至此",
+    "enlargePreview": "放大預覽",
+    "deleteFromLibrary": "從素材库中刪除"
+  },
+  "assetLibrary": {
+    "header": "素材库",
+    "tabs": {
+      "videos": "影片",
+      "images": "圖片",
+      "results": "結果"
+    },
+    "empty": "未找到素材"
+  },
+  "dropdowns": {
+    "model": "模型",
+    "selectModel": "選取模型",
+    "aspectRatio": "畫面比例",
+    "orientation": "朝向",
+    "orientationImage": "圖片",
+    "orientationVideo": "影片",
+    "orientationImageDesc": "使用圖片朝向（最長 10 秒影片）",
+    "orientationVideoDesc": "使用影片朝向（最長 30 秒影片）"
+  },
+  "empty": {
+    "titleLine1": "開始創作，使用",
+    "titleLine2": "換體工作室",
+    "description": "通過選取一段影片片段和一張目標角色圖片，動態取代影片中的角色。"
+  },
+  "placeholders": {
+    "prompt": "可選 — 描述動作或场景..."
+  },
+  "badges": {
+    "bodySwap": "換體"
+  },
+  "confirm": {
+    "deleteGenerated": "確定要刪除此生成內容吗？"
+  },
+  "errors": {
+    "videoTooLarge": "影片超過 50MB 限製。",
+    "imageTooLarge": "圖片超過 10MB 限製。",
+    "missingVideo": "請先上傳源影片。",
+    "missingImage": "請先上傳角色圖片。",
+    "videoUploadFailed": "影片上傳失敗：{message}",
+    "imageUploadFailed": "圖片上傳失敗：{message}",
+    "generationFailed": "換體生成失敗"
+  },
+  "defaults": {
+    "selectedVideo": "已選影片",
+    "selectedImage": "已選圖片",
+    "resultVideo": "結果影片"
+  }
+}

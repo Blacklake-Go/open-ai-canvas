@@ -1,0 +1,568 @@
+{
+  "categories": {
+    "all": "全部",
+    "t2v": "文字轉視頻",
+    "i2v": "影像轉視頻",
+    "v2v": "視訊工具"
+  },
+  "providers": {
+    "allProviders": "所有提供者"
+  },
+  "search": {
+    "placeholder": "搜尋型號..."
+  },
+  "media": {
+    "image": "影像",
+    "video": "影片",
+    "audio": "聲音的",
+    "endFrame": "結束框架",
+    "removePrefix": "消除"
+  },
+  "upload": {
+    "uploadStartFrame": "上傳起始幀",
+    "uploadEndFrame": "上傳結束幀",
+    "uploadUpToReferenceImages": "上傳最多 {count} 參考影像",
+    "uploadingProgress": "{title}: {progress}% 已上傳"
+  },
+  "placeholders": {
+    "editVideo": "描述如何編輯視頻",
+    "continueVideo": "描述如何繼續視頻",
+    "motion": "描述運動",
+    "motionOptional": "描述動作（可選）",
+    "videoReadyRemoveWatermark": "影片準備好 — 按一下「產生」以刪除浮水印",
+    "motionOrEffect": "描述動作或效果",
+    "motionOrEffectOptional": "描述動作或效果（可選）",
+    "optionalContinueVideo": "可選：描述如何繼續視頻...",
+    "describeVideo": "描述您要建立的視頻"
+  },
+  "dropdowns": {
+    "model": "模型",
+    "source": "視訊模式",
+    "baseGeneration": "鹼基生成",
+    "aspectRatio": "縱橫比",
+    "effect": "影響",
+    "effectType": "效果類型",
+    "duration": "期間",
+    "resolution": "解決"
+  },
+  "controls": {
+    "draw": "畫",
+    "generate": "產生",
+    "generating": "生成..."
+  },
+  "extend": {
+    "continuingGeneration": "延續上一代{family}"
+  },
+  "gallery": {
+    "download": "下載",
+    "extend": "延長",
+    "extendSeedance": "使用 Seedance 2.0 Extend 擴展此視頻",
+    "delete": "刪除",
+    "confirmDelete": "您確定要刪除此產生的項目嗎？",
+    "noPromptProvided": "沒有提供提示",
+    "fallbackTitle": "影音工作室"
+  },
+  "empty": {
+    "heading": "開始創作",
+    "subtitle": "將圖像動畫化為具有運動效果的令人驚嘆的 AI 視頻"
+  },
+  "creativeAssets": {
+    "asset1": "創意資產1",
+    "asset2": "創意資產2",
+    "asset3": "創意資產3",
+    "asset4": "創意資產 4"
+  },
+  "errors": {
+    "modelChangedDuringUpload": "上傳過程中模型發生變化。請重新新增該檔案。",
+    "modelDoesNotSupportReference": "{family} 不支援 {mediaType} 引用。",
+    "sourceDoesNotAcceptImages": "所選來源不接受影像。",
+    "waitForCurrentUpload": "等待目前上傳完成，然後再次新增這些檔案。",
+    "imageExceeds10MB": "圖片超過 10MB 限制。",
+    "labelExceedsLimit": "{label} 超過 {limit}MB 限制。",
+    "labelUploadFailed": "{label} 上傳失敗：{message}",
+    "noPromptForModel": "請輸入該型號的提示。",
+    "generationCapabilityUnavailable": "此模型尚無已驗證的伺服器生成能力。",
+    "uploadVideoFirst": "請先上傳影片。",
+    "uploadReferenceImageForMotion": "請上傳運動控制的參考影像。",
+    "uploadAtLeastOneReferenceImage": "請先上傳至少一張參考圖片。",
+    "enterPromptToGenerate": "請輸入提示以產生影片。",
+    "noVideoUrlReturned": "API未回傳視訊URL",
+    "videoGenerationFailed": "視訊生成失敗",
+    "deleteItemFailed": "刪除項目失敗",
+    "noContinuationSource": "選擇相容的 {family} 結果繼續。"
+  },
+  "modelControls": {
+    "modes": {
+      "text": "根據提示",
+      "animate_image": "動畫影像",
+      "keyframes": "開始幀和結束幀",
+      "references": "使用參考文獻",
+      "edit_video": "編輯視頻",
+      "extend_uploaded_video": "延長視頻",
+      "motion_transfer": "轉移運動"
+    },
+    "settings": "設定",
+    "quality": "品質",
+    "extensionDuration": "延長期限",
+    "defaultResolution": "服務默認值",
+    "incompatible": "此選項不適用於此型號版本。",
+    "incompatibleShort": "此版本不可用",
+    "inheritedFormat": "格式遵循來源影像",
+    "inheritedVideoResolution": "分辨率繼承自原始視頻",
+    "modeDescriptions": {
+      "text": "根據你的描述生成視頻。",
+      "animate_image": "根據你的描述，讓上傳的圖片動起來。",
+      "keyframes": "在您選擇的兩個影像之間建立影片。",
+      "references": "參考上傳的素材生成視頻。",
+      "edit_video": "上傳影片並描述您的變更。",
+      "extend_uploaded_video": "將新片段新增到上傳影片的末尾。",
+      "motion_transfer": "將影片中的運動應用到角色影像。"
+    },
+    "defaultVariant": "預設",
+    "advanced": "高級",
+    "adjustments": {
+      "resolution": "使用 {value}",
+      "duration": "時長：{value}",
+      "aspectRatio": "畫面比例：{value}",
+      "speed": "速度：{value}",
+      "profile": "服務：{value}",
+      "quality": "質量：{value}",
+      "imageUnused": "不會使用已上傳的圖片",
+      "videoUnused": "不會使用已上傳的視頻",
+      "audioUnused": "不會使用已上傳的音頻",
+      "imageCount": "使用圖片數量：{value}",
+      "videoCount": "使用視頻數量：{value}",
+      "audioCount": "使用音頻數量：{value}"
+    },
+    "fields": {
+      "seed": {
+        "title": "隨機種子",
+        "description": "設為 −1 使用隨機結果。"
+      },
+      "high_bitrate": {
+        "title": "高碼率",
+        "description": "更多細節，更大的文件。"
+      },
+      "generate_audio": {
+        "title": "生成音頻",
+        "description": ""
+      },
+      "camera_fixed": {
+        "title": "固定鏡頭",
+        "description": "保持鏡頭靜止。"
+      }
+    },
+    "provider": "生成服務",
+    "providerHelp": "有特定需要時，可選擇指定服務。",
+    "resolutionUnknown": "此服務未指定輸出分辨率。",
+    "referenceSupport": "支持：{media}。",
+    "referenceMediaTypes": {
+      "image": "圖片",
+      "video": "影片",
+      "audio": "聲音的"
+    },
+    "restoreDefaultResolution": "使用服務默認的輸出分辨率"
+  },
+  "seedance": {
+    "speed": "速度",
+    "speeds": {
+      "standard": "標準速度",
+      "fast": "快速"
+    },
+    "tools": "Seedance 視頻工具",
+    "profiles": {
+      "standard": {
+        "label": "標準版",
+        "description": ""
+      },
+      "intl": {
+        "label": "國際版",
+        "description": "國際部署。"
+      },
+      "vip": {
+        "label": "VIP 版",
+        "description": "優先處理。"
+      },
+      "mini": {
+        "label": "Mini 版",
+        "description": "輕量模型。"
+      },
+      "spicy": {
+        "label": "Spicy 版",
+        "description": "更鮮明的對比和運動效果。"
+      },
+      "mini_spicy": {
+        "label": "Mini Spicy 版",
+        "description": ""
+      },
+      "legacy": {
+        "label": "Seedance 2.0 經典 API",
+        "description": ""
+      },
+      "legacy_new": {
+        "label": "Seedance 2.0 最新 API",
+        "description": ""
+      }
+    },
+    "continueGenerated": "續接 Seedance 2.0 結果",
+    "removeWatermark": "去除水印",
+    "toolNames": {
+      "continueGenerated": "續接 Seedance 2.0",
+      "removeWatermark": "去除水印"
+    },
+    "toolVariants": {
+      "standard": "標準版",
+      "vip": "VIP 會員版",
+      "pro": "Pro 專業版"
+    },
+    "editAudio": {
+      "title": "新音頻",
+      "description": "關閉時保留原音頻。"
+    }
+  },
+  "happyHorse": {
+    "fields": {
+      "seed": {
+        "title": "種子",
+        "description": "留空以隨機生成。"
+      },
+      "audio_setting": {
+        "title": "聲音的",
+        "description": "",
+        "optionLabels": {
+          "auto": "由模型決定",
+          "origin": "保留原音頻"
+        }
+      }
+    }
+  },
+  "veo": {
+    "speed": "生成方式",
+    "speeds": {
+      "standard": "標準",
+      "fast": "快速",
+      "lite": "輕量"
+    },
+    "speedDescriptions": {
+      "standard": "",
+      "fast": "生成更快。",
+      "lite": "費用更低。"
+    },
+    "tools": "Veo 視頻工具",
+    "toolNames": {
+      "continueGenerated": "續寫 Veo 3.1",
+      "upscale": "創建 4K 副本"
+    },
+    "toolsHelp": "使用已生成的 Veo 3.1 視頻。",
+    "sourceVideo": "源視頻",
+    "sourceHelp": {
+      "continueGenerated": "請先使用 Veo 3.1 標準或快速模式生成 720p 視頻。",
+      "upscale": "請先使用 Veo 3.1 標準或快速模式生成視頻。"
+    },
+    "adjustments": {
+      "speed": "生成方式：{value}"
+    }
+  },
+  "minimax": {
+    "speed": "速度",
+    "speeds": {
+      "standard": "標準速度",
+      "fast": "快速"
+    },
+    "speedDescriptions": {
+      "standard": "",
+      "fast": "更快生成。"
+    },
+    "provider": "自定義",
+    "providerHelp": "使用 LoRA 或 Spicy 模型。",
+    "profiles": {
+      "standard": {
+        "label": "標準",
+        "description": ""
+      },
+      "lora": {
+        "label": "LoRA 微調模型",
+        "description": "應用自定義風格或角色。"
+      },
+      "spicy": {
+        "label": "Spicy 增強版",
+        "description": "用於圖片動畫的另一種模型。"
+      }
+    },
+    "adjustments": {
+      "profile": "自定義：{value}"
+    },
+    "fields": {
+      "go_fast": {
+        "title": "額外加速",
+        "description": "以細節換取速度。"
+      },
+      "loras": {
+        "title": "LoRA",
+        "description": "最多添加 3 個自定義風格或角色。"
+      }
+    }
+  },
+  "alibaba": {
+    "speed": "速度",
+    "speeds": {
+      "standard": "標準速度",
+      "fast": "快速"
+    },
+    "speedDescriptions": {
+      "standard": "",
+      "fast": "更快生成。"
+    },
+    "provider": "生成服務",
+    "providerHelp": "為同一 Wan 版本選擇其他生成服務。",
+    "profiles": {
+      "standard": {
+        "label": "標準版",
+        "description": ""
+      },
+      "prime": {
+        "label": "Prime 旗艦版",
+        "description": ""
+      },
+      "spicy": {
+        "label": "Spicy 增強版",
+        "description": ""
+      }
+    },
+    "durationLabels": {
+      "0": "原視頻時長（最多 10 秒）"
+    },
+    "fields": {
+      "enable_audio": {
+        "title": "生成音頻",
+        "description": ""
+      },
+      "thinking_mode": {
+        "title": "提示詞推理",
+        "description": "幫助模型理解復雜描述。"
+      },
+      "negative_prompt": {
+        "title": "排除內容",
+        "description": "描述不希望出現的內容。"
+      },
+      "shot_type": {
+        "title": "鏡頭",
+        "description": "使用一個連續鏡頭或多個鏡頭。",
+        "optionLabels": {
+          "single": "單鏡頭",
+          "multi": "多鏡頭"
+        }
+      },
+      "enable_prompt_expansion": {
+        "title": "擴展提示詞",
+        "description": "讓模型為描述補充細節。"
+      },
+      "audio_setting": {
+        "title": "聲音的",
+        "description": "按描述處理音頻，或保留原音頻。",
+        "optionLabels": {
+          "auto": "按提示詞處理",
+          "origin": "保留原音頻"
+        }
+      },
+      "mode": {
+        "title": "角色動畫",
+        "description": "讓角色動起來，或替換視頻中的角色。",
+        "optionLabels": {
+          "animate": "生成角色動畫",
+          "replace": "替換角色"
+        }
+      }
+    }
+  },
+  "kling": {
+    "speed": "速度",
+    "speeds": {
+      "standard": "標準速度",
+      "fast": "快速"
+    },
+    "speedDescriptions": {
+      "standard": "",
+      "fast": "更快生成。"
+    },
+    "provider": "生成方式",
+    "providerHelp": "",
+    "profiles": {
+      "standard": {
+        "label": "標準",
+        "description": ""
+      },
+      "master": {
+        "label": "大師版",
+        "description": "改善運動效果和提示詞理解。"
+      },
+      "pro": {
+        "label": "Pro 專業版",
+        "description": "更多細節。"
+      },
+      "fast": {
+        "label": "快速",
+        "description": "更快編輯視頻。"
+      }
+    },
+    "adjustments": {
+      "profile": "生成方式：{value}"
+    },
+    "fields": {
+      "sound": {
+        "title": "生成音頻",
+        "description": ""
+      },
+      "keep_original_sound": {
+        "title": "保留原音頻",
+        "description": "使用上傳視頻中的音頻。"
+      },
+      "character_orientation": {
+        "title": "角色姿態",
+        "description": "選擇用於確定角色姿態的素材。",
+        "optionLabels": {
+          "image": "來自圖片（最長10秒）",
+          "video": "來自視頻（最長30秒）"
+        }
+      }
+    }
+  },
+  "vidu": {
+    "speed": "速度",
+    "speeds": {
+      "standard": "標準速度",
+      "fast": "快速"
+    },
+    "speedDescriptions": {
+      "standard": "",
+      "fast": "更快生成。"
+    },
+    "fields": {
+      "audio": {
+        "title": "生成音頻",
+        "description": ""
+      },
+      "bgm": {
+        "title": "背景音樂",
+        "description": ""
+      },
+      "movement_amplitude": {
+        "title": "動作幅度",
+        "description": "主體的動作幅度。",
+        "optionLabels": {
+          "auto": "由模型選擇",
+          "small": "輕微",
+          "medium": "適中",
+          "large": "強烈"
+        }
+      }
+    },
+    "musicDuration": "時長設為 4 秒。"
+  },
+  "xai": {
+    "aspectRatioLabels": {
+      "auto": "匹配圖片"
+    },
+    "singleImageFormat": "只有一張圖片時，畫面比例隨圖片。",
+    "fields": {
+      "mode": {
+        "title": "風格",
+        "description": "",
+        "optionLabels": {
+          "normal": "標準",
+          "fun": "創意",
+          "spicy": "Spicy 增強模式"
+        }
+      }
+    }
+  },
+  "sora": {
+    "provider": "生成方式",
+    "providerHelp": "",
+    "profiles": {
+      "standard": {
+        "label": "標準",
+        "description": "適合日常視頻。"
+      },
+      "pro": {
+        "label": "Pro 專業版",
+        "description": "細節更豐富，最高 1080p。"
+      }
+    },
+    "adjustments": {
+      "profile": "生成方式：{value}"
+    }
+  },
+  "ltx": {
+    "provider": "生成方式",
+    "providerHelp": "",
+    "profiles": {
+      "standard": {
+        "label": "標準",
+        "description": "480p–1080p，5–20 秒。"
+      },
+      "pro": {
+        "label": "Pro 專業版",
+        "description": "6、8 或 10 秒。"
+      },
+      "fast": {
+        "label": "快速",
+        "description": "更快生成，最長 20 秒。"
+      }
+    },
+    "adjustments": {
+      "profile": "生成方式：{value}"
+    }
+  },
+  "pixverse": {
+    "fields": {
+      "audio": {
+        "title": "生成音頻",
+        "description": ""
+      },
+      "generate_audio_switch": {
+        "title": "生成音頻",
+        "description": ""
+      },
+      "style": {
+        "title": "風格",
+        "description": "",
+        "emptyLabel": "無預設",
+        "optionLabels": {
+          "none": "無預設",
+          "anime": "動漫",
+          "3d_animation": "3D 動畫",
+          "clay": "黏土",
+          "comic": "漫畫",
+          "cyberpunk": "賽博朋克"
+        }
+      },
+      "thinking": {
+        "title": "提示詞優化",
+        "description": "讓模型完善你的描述。",
+        "optionLabels": {
+          "auto": "由模型決定",
+          "enabled": "開啟",
+          "disabled": "關閉"
+        }
+      },
+      "thinking_type": {
+        "title": "提示詞優化",
+        "description": "幫助模型理解你的描述。",
+        "optionLabels": {
+          "auto": "由模型決定",
+          "enabled": "開啟",
+          "disabled": "關閉"
+        }
+      },
+      "multi_clip": {
+        "title": "多鏡頭",
+        "description": "使用多個鏡頭和視角切換。"
+      },
+      "negative_prompt": {
+        "title": "排除內容",
+        "description": "描述不希望出現的內容。"
+      }
+    }
+  }
+}

@@ -1,0 +1,70 @@
+{
+  "builder": {
+    "title": "Constructor",
+    "reset": "Restablecer"
+  },
+  "categoryTabs": {
+    "face": "Rostro",
+    "body": "Cuerpo",
+    "style": "Estilo"
+  },
+  "subcategories": {
+    "character_type": "Tipo de Personaje",
+    "gender": "Género",
+    "ethnicity_origin_base": "Etnia / Origen",
+    "eye_color": "Color de Ojos",
+    "eyes_type": "Tipo de Ojos",
+    "eyes_details": "Detalles de Ojos",
+    "mouth": "Boca y Dientes",
+    "ears": "Orejas",
+    "horns": "Cuernos",
+    "skin_conditions": "Condición de la Piel",
+    "face_skin_material": "Material de la Piel Facial",
+    "face_surface_pattern": "Patrón de la Piel",
+    "body_type": "Tipo de Cuerpo",
+    "left_arm": "Brazo Izquierdo",
+    "right_arm": "Brazo Derecho",
+    "left_leg": "Pierna Izquierda",
+    "right_leg": "Pierna Derecha",
+    "hair": "Cabello / Crecimiento",
+    "accessories": "Accesorios y Marcas",
+    "rendering_style": "Estilo de Renderizado",
+    "framing": "Encuadre y Ángulo",
+    "outfit_preset": "Atuendo y Equipo",
+    "backdrop": "Atmósfera y Fondo"
+  },
+  "toolbar": {
+    "shuffle": "Aleatorio",
+    "generate": "Generar Personaje",
+    "generating": "Generando…",
+    "model": "Modelo",
+    "credits": "Créditos"
+  },
+  "preview": {
+    "generating": "Generando tu influencer IA…",
+    "emptyTitle": "Tu influencer IA vive aquí.",
+    "emptySubtitleLine1": "Diseña y construye tu influencer IA",
+    "emptySubtitleLine2": "desde cero",
+    "save": "Guardar",
+    "altGenerated": "Personaje IA Generado"
+  },
+  "tags": {
+    "showMore": "mostrar más",
+    "hide": "ocultar"
+  },
+  "customPrompt": {
+    "placeholder": "Añade detalles adicionales… ej. iluminación cyberpunk neón, sombras dramáticas"
+  },
+  "gallery": {
+    "title": "Generados",
+    "countSuffix": "personajes",
+    "emptyText": "Los personajes generados\naparecen aquí",
+    "altPrefix": "Personaje",
+    "download": "Descargar"
+  },
+  "errors": {
+    "generationFailed": "Error en la generación. Por favor, inténtalo de nuevo.",
+    "noActiveModels": "No hay modelos de imagen activos disponibles. Por favor, inténtalo más tarde.",
+    "loginRequired": "Inicia sesión para generar personajes."
+  }
+}

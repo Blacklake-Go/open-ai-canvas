@@ -1,0 +1,66 @@
+{
+  "tabs": {
+    "templates": "템플릿",
+    "my-agents": "내 에이전트",
+    "my-chats": "내 채팅"
+  },
+  "headings": {
+    "agents": "에이전트",
+    "createAgent": "에이전트 생성"
+  },
+  "buttons": {
+    "back": "에이전트 목록",
+    "create": "생성",
+    "createAgentSubmit": "에이전트 생성",
+    "creating": "생성 중...",
+    "send": "전송",
+    "retry": "재시도",
+    "browseTemplates": "템플릿 둘러보기"
+  },
+  "labels": {
+    "name": "이름",
+    "description": "설명",
+    "systemPrompt": "시스템 프롬프트",
+    "welcomeMessage": "환영 메시지 (선택 사항)"
+  },
+  "placeholders": {
+    "name": "예: 캡션 크리에이터 프로",
+    "description": "이 에이전트는 어떤 도움을 주나요?",
+    "systemPrompt": "당신은 유용한 AI 어시스턴트로서...",
+    "welcomeMessage": "안녕하세요! 오늘 어떤 도움이 필요하신가요?",
+    "chatInput": "에이전트에게 메시지 보내기..."
+  },
+  "empty": {
+    "noChats": "아직 채팅이 없습니다",
+    "noAgents": "에이전트를 찾을 수 없습니다"
+  },
+  "errors": {
+    "loadFailed": "로드하지 못했습니다.",
+    "loadAgentFailed": "에이전트를 불러오지 못했습니다",
+    "sendFailed": "메시지 전송에 실패했습니다",
+    "createFailed": "에이전트 생성에 실패했습니다"
+  },
+  "card": {
+    "defaultCategory": "AI 어시스턴트",
+    "unnamedAgent": "이름 없는 에이전트",
+    "byPrefix": "작성자:",
+    "unknownAgent": "알 수 없는 에이전트",
+    "newChat": "새 채팅",
+    "msgsSuffix": "개 메시지"
+  },
+  "time": {
+    "justNow": "방금 전",
+    "minutesAgo": "{n}분 전",
+    "hoursAgo": "{n}시간 전",
+    "daysAgo": "{n}일 전"
+  },
+  "auth": {
+    "heading": "에이전트를 사용하려면 로그인하세요",
+    "description": "템플릿, 사용자 에이전트 및 대화 기록이 SupDance 계정과 연동됩니다. 로그인해 주세요.",
+    "cta": "로그인"
+  },
+  "unavailable": {
+    "title": "크리에이티브 에이전트를 일시적으로 사용할 수 없습니다",
+    "description": "사용자별 세션, 생성 결제 및 결과 저장 기능을 연결하고 있습니다. 지금은 Studio에서 제공되는 이미지 및 동영상 도구를 이용해 주세요."
+  }
+}

@@ -1,0 +1,137 @@
+{
+  "uploadButton": {
+    "faceLabel": "臉",
+    "referenceImageLabel": "參考圖片",
+    "addUpToImages": "新增 {max} 圖片",
+    "singleSelectedTitle": "已選擇 1 張圖片 — 點擊可新增更多圖片（最多 {max}）",
+    "multiSelectedTitle": "已選擇 {count} 或 {max} 映像 — 單擊即可管理",
+    "tooLargeAlert": "以下影像太大（最大 10MB）：{names}",
+    "uploadFailedAlert": "圖片上傳失敗：{message}",
+    "headerTitle": "參考圖片",
+    "selectUpTo": "最多選擇 {max} 影像",
+    "doneButton": "✓ 完成 ({count})",
+    "uploadFilesButton": "上傳文件",
+    "uploadNewButton": "上傳新的",
+    "emptyState": "還沒上傳",
+    "removeFromHistory": "從歷史記錄中刪除",
+    "selectedCount": "已選擇 {max} 中的 {count}",
+    "useSelected": "使用選定的",
+    "imageName": "圖片{n}",
+    "addReferenceLabel": "新增參考圖片",
+    "historyLabel": "上傳歷史",
+    "uploadUnknownFailed": "上傳失敗，請重試"
+  },
+  "modelDropdown": {
+    "categoryAll": "全部",
+    "categoryT2I": "文字轉圖像",
+    "categoryI2I": "影像到影像",
+    "allProviders": "所有提供者",
+    "searchPlaceholder": "搜尋型號...",
+    "modelsSuffix": "型號",
+    "noModelsFound": "沒有找到型號",
+    "selectModelHeader": "選擇生成模型"
+  },
+  "gallery": {
+    "generatedImageAlt": "生成的圖像",
+    "download": "下載",
+    "delete": "刪除",
+    "deleteConfirm": "您確定要刪除此產生的項目嗎？",
+    "deleteFailed": "刪除項目失敗",
+    "noPrompt": "沒有提供提示",
+    "modelFallback": "影像工作室"
+  },
+  "emptyState": {
+    "heading": "開始創作",
+    "subtitle": "描述一個場景、人物、情緒或風格——然後看著它變得栩栩如生"
+  },
+  "qualityLabels": {
+    "standard": "標準",
+    "high": "高畫質",
+    "medium": "中等",
+    "low": "快速"
+  },
+  "negativePrompt": {
+    "trigger": "負面詞",
+    "chip": "負面詞：{text}",
+    "title": "負面提示詞",
+    "placeholder": "描述不希望出現的畫面元素",
+    "clear": "清空",
+    "done": "完成",
+    "separator": "、",
+    "promptSuffix": "避免出現：{value}",
+    "presetBlurry": "模糊",
+    "presetLowQuality": "低品質",
+    "presetDeformed": "變形",
+    "presetExtraFingers": "多餘手指",
+    "presetWatermark": "浮水印",
+    "presetText": "文字",
+    "presetDark": "過暗",
+    "presetEdges": "邊緣破損"
+  },
+  "regenerateConfirm": {
+    "title": "再次生成這一組？",
+    "description": "將使用相同的提示詞和參數生成 {count} 張圖片。",
+    "cost": "預計消耗",
+    "cancel": "取消",
+    "confirm": "確認生成"
+  },
+  "promptBar": {
+    "placeholderMultiImage": "所選的 {count} 影像 — 描述轉換（選購）",
+    "placeholderI2I": "描述如何變換該圖像（可選）",
+    "placeholderT2I": "描述您想要建立的影像",
+    "swapFaceLabel": "交換臉",
+    "effectFallback": "影響",
+    "drawButton": "畫",
+    "generating": "生成...",
+    "generateButton": "產生",
+    "mentionTitle": "可能@的內容"
+  },
+  "popovers": {
+    "model": "模型",
+    "aspectRatio": "縱橫比",
+    "resolution": "解決",
+    "quality": "品質",
+    "effectType": "效果類型"
+  },
+  "errors": {
+    "noImageReferenceSupport": "{name} 不支援影像引用。",
+    "uploadReferenceFirst": "請先上傳參考圖片。",
+    "uploadSwapFaceFirst": "請上傳交換臉圖像。",
+    "enterPromptFirst": "請輸入提示以產生影像。",
+    "generationCapabilityUnavailable": "此模型尚無已驗證的伺服器生成能力。",
+    "generationFailed": "影像生成失敗"
+  },
+  "fullscreen": {
+    "previewAlt": "全螢幕預覽"
+  },
+  "mediaMenu": {
+    "image": "圖片",
+    "imageDesc": "生成逼真細膩的各類風格圖像",
+    "video": "影片",
+    "videoDesc": "生成高畫質電影級運鏡影片",
+    "script": "劇本",
+    "scriptDesc": "生成創意劇本分鏡與對白",
+    "audio": "音訊",
+    "audioDesc": "生成擬真音效與專業配音"
+  },
+  "paramsPanel": {
+    "titleRatio": "畫幅比例",
+    "titleResolution": "解析度",
+    "titleQuantity": "生成張數",
+    "titleDimensions": "尺寸規格",
+    "smartRatio": "智慧自適應",
+    "standard15k": "標準 1.5K",
+    "hd2k": "高清 2K ✦",
+    "ultra4k": "超清 4K ✦",
+    "smartReference": "智慧墊圖參考",
+    "addReference": "新增參考圖",
+    "referenceCount": "參考圖 ({count}/{max})",
+    "autoSwitchedToI2I": "已自動切換至墊圖相容模型：{model}",
+    "autoSwitchedToT2I": "已恢復為文生圖模型",
+    "modeImageGen": "文生圖",
+    "modeImageToImage": "圖生圖",
+    "creditPerImage": "✦ {cost}/張",
+    "creditPerImageOriginal": "11/張",
+    "batchCountUnit": "{count} 張"
+  }
+}

@@ -1,0 +1,7 @@
+{
+  "price": {
+    "credits": "{credits} 크레딧",
+    "creditsFrom": "{credits} 크레딧부터",
+    "unavailable": "가격 미설정"
+  }
+}

@@ -1,0 +1,47 @@
+{
+  "blockPage": {
+    "title": "403 アクセス拒否",
+    "heading": "403 アクセス拒否",
+    "message": "このサーバーまたはリソースへのアクセスは厳しく禁止されています。",
+    "footer": "nginx"
+  },
+  "api": {
+    "message": "403 アクセス拒否 - リクエストが拒否されました"
+  },
+  "admin": {
+    "rowLabel": "中国本土トラフィックをブロック (一時プラグイン)",
+    "badgeEnabled": "ブロック有効 (403)",
+    "badgeDisabled": "ブロック無効",
+    "switchOnAria": "中国本土トラフィックのブロックを有効にする",
+    "switchOffAria": "中国本土トラフィックのブロックを無効にする",
+    "contextEnabled": "中国本土からの訪問者 IP にはすべて 403 Forbidden ページを返しています。一時プラグイン構成のため、1 コマンドで安全に完全削除できます。",
+    "contextDisabled": "一時プラグイン：有効にすると、中国本土からの訪問者 IP には標準の 403 Forbidden ページを表示します。ホワイトリストと管理コンソールの除外に対応。",
+    "openConfig": "詳細設定とテスト",
+    "modalTitle": "中国本土トラフィックのブロック制御 (一時プラグイン)",
+    "modalCloseAria": "設定ダイアログを閉じる",
+    "blockCardTitle": "中国本土のトラフィックをすべてブロック",
+    "blockCardDesc": "有効にすると、中国本土からの訪問者はどの公開ページでも 403 Forbidden が表示されます。",
+    "exemptTitle": "管理者の管理コンソールパス (/admin) アクセスを許可",
+    "exemptDesc": "推奨。管理者自身が中国本土にいる場合、この項目があればブロックを有効にしても自分を管理コンソールから締め出しません。",
+    "testTitle": "中国 IP 検出テスト",
+    "testSubtitle": "信頼できる APNIC アドレス範囲ライブラリによるリアルタイム二分比較",
+    "testPlaceholder": "テストする IP を入力（例 114.114.114.114 または 8.8.8.8）",
+    "testRun": "検出",
+    "testRunning": "検出中…",
+    "testBlockedTitle": "【ブロック判定】IP {ip} は中国本土に属します ({type})",
+    "testBlockedDesc": "公開ページへのアクセスは 403 Forbidden ブロックページが返されます。",
+    "testPassedTitle": "【許可判定】IP {ip} は海外、または中国以外の公衆 IP です",
+    "testPassedDesc": "サイトへのアクセスは制限されず、通常どおり通過します。",
+    "testError": "テストに失敗しました",
+    "whitelistLabel": "許可する IP または CIDR 範囲（1 行に 1 件、IPv4/IPv6 対応）",
+    "whitelistPlaceholder": "例：\n192.168.1.100\n120.24.0.0/16",
+    "whitelistHint": "ホワイトリストに登録された IP は、中国本土にある場合でもブロックから除外されます。",
+    "uninstallTitle": "一時プラグインの完全削除手順",
+    "uninstallIntro": "この機能は独立した一時プラグインとして実装されています。機能と関連コードを完全に削除するには、サーバーのターミナルで次を実行してください：",
+    "uninstallCommand": "node plugins/china-ip-block/uninstall.mjs",
+    "uninstallOutro": "このスクリプトは Middleware のフック、管理ページの設定項目、プラグインフォルダを自動で消去し、100% クリーンに復元します。",
+    "cancel": "キャンセル",
+    "save": "セキュリティ設定を保存",
+    "saving": "保存中…"
+  }
+}

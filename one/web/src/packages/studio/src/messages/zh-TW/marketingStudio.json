@@ -1,0 +1,49 @@
+{
+  "empty": {
+    "titleLine1": "開始使用",
+    "titleLine2": "營銷工作室創作",
+    "subtitle": "描述您的场景，上傳您的產品，觀看高轉化率的 AI 影片广告瞬间生成。"
+  },
+  "uploadSlots": {
+    "product": "產品",
+    "avatar": "形象",
+    "references": "參考圖",
+    "uploadPrefix": "上傳"
+  },
+  "prompt": {
+    "placeholder": "描述您的广告脚本... 使用 @image1 表示產品，@image2 表示形象。"
+  },
+  "dropdowns": {
+    "videoFormatPresets": "影片格式預設",
+    "avatarPresets": "形象預設",
+    "aspectRatio": "長寬比",
+    "resolution": "解析度",
+    "duration": "時長",
+    "selectAvatarFallback": "選取形象"
+  },
+  "buttons": {
+    "generating": "生成中...",
+    "launch": "生成",
+    "enlargePreview": "放大預覽",
+    "enlargeSelectedAvatar": "放大已選形象",
+    "selectAvatar": "選取形象",
+    "download": "下載",
+    "delete": "刪除"
+  },
+  "history": {
+    "badge": "營銷工作室"
+  },
+  "alt": {
+    "creativeAsset": "創意素材 {index}",
+    "previousAvatar": "上一個形象",
+    "nextAvatar": "下一個形象"
+  },
+  "errors": {
+    "missingScript": "請輸入广告脚本。",
+    "missingProductImage": "請上傳產品圖片。",
+    "generationFailed": "營銷广告生成失敗"
+  },
+  "confirm": {
+    "deleteItem": "確定要刪除此生成內容吗？"
+  }
+}

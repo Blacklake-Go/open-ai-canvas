@@ -1,0 +1,90 @@
+{
+  "labels": {
+    "referenceVideo": "參考影片",
+    "characterImages": "角色/主體圖片",
+    "addImage": "添加圖片",
+    "library": "素材库",
+    "mode": "模式",
+    "motionTransfer": "動作遷移",
+    "objectsSwap": "主體取代",
+    "duration": "時長",
+    "durationSeconds": "{count}秒",
+    "quality": "畫質",
+    "highBitrate": "高碼率",
+    "generateAudio": "生成音訊",
+    "seed": "隨機種子",
+    "randomSeed": "隨機 (-1)"
+  },
+  "buttons": {
+    "use": "使用",
+    "useAsVideo": "設為影片",
+    "useAsImage": "添加為圖片",
+    "download": "下載",
+    "delete": "刪除",
+    "generate": "生成動作控製影片",
+    "generating": "生成中..."
+  },
+  "titles": {
+    "clickToClear": "{fileName} — 點擊清除",
+    "uploadVideo": "上傳參考影片 (MP4/WebM/MOV) 或拖放到此處",
+    "uploadImage": "上傳角色或主體圖片 (PNG/JPEG/WebP)",
+    "enlargePreview": "放大預覽",
+    "deleteFromLibrary": "從素材库刪除",
+    "removeImage": "移除圖片"
+  },
+  "assetLibrary": {
+    "header": "素材库",
+    "tabs": {
+      "videos": "影片",
+      "images": "圖片",
+      "results": "生成結果"
+    },
+    "empty": "暫無素材"
+  },
+  "dropdowns": {
+    "model": "模型",
+    "selectModel": "選取模型",
+    "aspectRatio": "畫面比例",
+    "qualityBasic": "基礎",
+    "qualityHigh": "高畫質",
+    "qualityBasicDesc": "生成速度快，標準解析度",
+    "qualityHighDesc": "電影級細節与最高動作連贯性"
+  },
+  "modes": {
+    "motionTransfer": "動作遷移",
+    "motionTransferDesc": "提取影片動作与鏡頭運鏡，由新角色重新表演",
+    "objectsSwap": "主體取代",
+    "objectsSwapDesc": "保持影片背景与场景不变，取代人物服裝或道具"
+  },
+  "empty": {
+    "titleLine1": "開始使用",
+    "titleLine2": "動作控製工作室",
+    "description": "借助 Seedance 動作控製模型，使用參考影片的動作、舞蹈编排和鏡頭鏡頭運鏡驅動角色圖像。"
+  },
+  "placeholders": {
+    "prompt": "可選 — 描述补充场景細節、光影或動作特點..."
+  },
+  "badges": {
+    "motionControl": "動作控製",
+    "motionTransfer": "動作遷移",
+    "objectsSwap": "主體取代"
+  },
+  "confirm": {
+    "deleteGenerated": "確定要刪除此生成項吗？"
+  },
+  "errors": {
+    "videoTooLarge": "影片大小超過 100MB 限製。",
+    "imageTooLarge": "圖片大小超過 20MB 限製。",
+    "missingVideo": "請先上傳或選取參考影片。",
+    "missingImages": "請先上傳或選取至少一張角色圖片。",
+    "maxImagesExceeded": "该模型最多支援 {max} 張圖片。",
+    "videoUploadFailed": "影片上傳失敗: {message}",
+    "imageUploadFailed": "圖片上傳失敗: {message}",
+    "generationFailed": "動作控製影片生成失敗"
+  },
+  "defaults": {
+    "selectedVideo": "參考影片",
+    "selectedImage": "角色圖片",
+    "resultVideo": "動作控製影片"
+  }
+}

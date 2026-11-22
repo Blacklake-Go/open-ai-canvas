@@ -1,0 +1,45 @@
+{
+  "hero": {
+    "badge": "应用模板预览",
+    "titleLine1": "探索 AI 应用模板，",
+    "titleLine2": "上线时第一时间体验。",
+    "subtitle": "浏览应用概念与模板。部分应用尚未在 SupDance 开放，登记意向即可在上线时收到通知。"
+  },
+  "steps": {
+    "stepLabel": "步骤",
+    "deploy": {
+      "title": "几分钟内完成部署",
+      "body": "Fork 开源模板，填入你的 muapi 密钥，然后推送到 Vercel。无需搭建后端。"
+    },
+    "collect": {
+      "title": "收取付款",
+      "body": "Stripe 已预先接入。自行设置定价——一次性积分、订阅制或按次付费均可。"
+    },
+    "keep": {
+      "title": "利润全归你",
+      "body": "款项直接进入你的 Stripe 账户。产品、品牌和利润都归你所有。"
+    }
+  },
+  "card": {
+    "templateFallback": "模板",
+    "github": "GitHub 仓库",
+    "demo": "即将上线",
+    "reserve": "预约通知",
+    "getTemplate": "登记意向",
+    "requested": "已登记"
+  },
+  "footer": {
+    "moreComingSoon": "SupDance 应用生态 — 更多应用正在筹备中"
+  },
+  "modal": {
+    "deployTitle": "登记 {appName} 意向",
+    "body": "该应用尚未在 SupDance 完整开放。留下意向后，我们会在上线时通知你。",
+    "sending": "正在登记...",
+    "getTemplate": "登记意向",
+    "maybeLater": "稍后再说"
+  },
+  "toast": {
+    "requestSuccess": "已登记，应用上线时我们会通知你。",
+    "requestError": "登记意向失败，请稍后重试。"
+  }
+}

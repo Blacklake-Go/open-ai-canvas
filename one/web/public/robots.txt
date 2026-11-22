@@ -1,0 +1,12 @@
+User-agent: *
+Allow: /
+Disallow: /admin/
+Disallow: /api/
+Disallow: /login
+Disallow: /register
+Disallow: /forgot-password
+Disallow: /onboarding
+Disallow: /profile
+Disallow: /design-system
+
+Sitemap: https://www.supdance.com/sitemap.xml

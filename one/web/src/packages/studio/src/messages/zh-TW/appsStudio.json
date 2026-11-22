@@ -1,0 +1,45 @@
+{
+  "hero": {
+    "badge": "應用模板預覽",
+    "titleLine1": "探索 AI 應用模板，",
+    "titleLine2": "上線時第一時間體驗。",
+    "subtitle": "瀏覽應用概念與模板。部分應用尚未在 SupDance 開放，登記意向上線時即可收到通知。"
+  },
+  "steps": {
+    "stepLabel": "步",
+    "deploy": {
+      "title": "只需幾分鐘即可部署",
+      "body": "分叉開源模板，加入 muapi 金鑰，然後推送到 Vercel。無需後端設定。"
+    },
+    "collect": {
+      "title": "收款",
+      "body": "Stripe 已預先接線。設定您自己的定價—一次性積分、訂閱或按使用付費。"
+    },
+    "keep": {
+      "title": "保持收入",
+      "body": "付款直接存入您的 Stripe 帳戶。您擁有產品、品牌和利潤。"
+    }
+  },
+  "card": {
+    "templateFallback": "範本",
+    "github": "GitHub 儲存庫",
+    "demo": "即將上線",
+    "reserve": "預約通知",
+    "getTemplate": "登記意向",
+    "requested": "已登記"
+  },
+  "footer": {
+    "moreComingSoon": "SupDance 應用生態 — 更多應用正在籌備中"
+  },
+  "modal": {
+    "deployTitle": "登記 {appName} 意向",
+    "body": "此應用尚未在 SupDance 完整開放。留下意向後，我們會在上線時通知您。",
+    "sending": "正在登記...",
+    "getTemplate": "登記意向",
+    "maybeLater": "稍後再說"
+  },
+  "toast": {
+    "requestSuccess": "已登記，應用上線時我們會通知您。",
+    "requestError": "登記意向失敗，請稍後重試。"
+  }
+}

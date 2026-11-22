@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" width="128" height="128" role="img" aria-label="默认头像 5">
+<defs>
+<linearGradient id="g4" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#0c3230"/><stop offset="1" stop-color="#117365"/></linearGradient>
+<clipPath id="c4"><rect width="128" height="128" rx="28"/></clipPath>
+</defs>
+<g clip-path="url(#c4)"><rect width="128" height="128" fill="url(#g4)"/><path d="M64 22 L104 98 L24 98 Z" fill="#6ee7b7" fill-opacity="0.22"/><path d="M64 46 L86 88 L42 88 Z" fill="#6ee7b7" fill-opacity="0.8"/></g>
+</svg>

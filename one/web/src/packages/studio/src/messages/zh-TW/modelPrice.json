@@ -1,0 +1,7 @@
+{
+  "price": {
+    "credits": "{credits} 積分",
+    "creditsFrom": "{credits} 積分起",
+    "unavailable": "暫無價格"
+  }
+}

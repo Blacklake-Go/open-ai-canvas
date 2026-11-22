@@ -1,0 +1,159 @@
+{
+  "shared": {
+    "headerTitle": "Legal & Compliance",
+    "copyright": "© 2026 {{brand}} · All rights reserved",
+    "disclaimer": "This is a convenience translation of the Simplified Chinese original and is not an official version. If the versions differ, the Simplified Chinese text prevails.",
+    "links": {
+      "terms": "Terms of Service",
+      "privacy": "Privacy Policy",
+      "refund": "Refund Policy",
+      "contentPolicy": "Content Policy"
+    }
+  },
+  "meta": {
+    "terms": {
+      "title": "Terms of Service | supdance"
+    },
+    "privacy": {
+      "title": "Privacy Policy | supdance"
+    },
+    "refund": {
+      "title": "Refund Policy and Asset Protection | supdance"
+    },
+    "contentPolicy": {
+      "title": "Content Safety and Compliance Rules | supdance"
+    }
+  },
+  "terms": {
+    "headerSubtitle": "Terms of service and acceptable use",
+    "eyebrow": "SaaS Service Agreement",
+    "heading": "{{brand}} Platform Terms of Service",
+    "intro": "Welcome to the {{brand}} generative AI creation workbench. Please read these Terms of Service carefully before you access or use our multimodal models and creator tools.",
+    "sections": {
+      "s1": {
+        "title": "1. Scope of Service and Platform Positioning",
+        "body": {
+          "p1": "The platform provides creators with professional services including, but not limited to, multimodal image generation, high-definition video production, audio synthesis, agent orchestration, and workflow design. The platform supports both self-hosted compute and authorised third-party model interfaces; the model catalogue and compute quotas actually available to you are those shown in the console."
+        }
+      },
+      "s2": {
+        "title": "2. Creator Rights and Content Compliance",
+        "body": {
+          "p1": "You hold the lawful right to use the prompts and reference assets that you submit through this service, and you warrant that your content complies with applicable laws, regulations, and core socialist values. Using this service to produce or distribute content that infringes the rights of others, is fraudulent, pornographic, violent, malicious code, or otherwise endangers public safety is strictly prohibited."
+        }
+      },
+      "s3": {
+        "title": "3. Credit Consumption, Ledger Reconciliation, and Availability",
+        "body": {
+          "p1": "Every model invocation task is executed under a distributed transaction lock with dual credit reconciliation (reserve, commit, and release on failure). If a task reaches a terminal failure because an upstream model service timed out or was interrupted, the system automatically triggers a credit return so that your creator balance stays accurate."
+        }
+      },
+      "s4": {
+        "title": "4. Intellectual Property and Community Sharing",
+        "body": {
+          "p1": "When you choose to publish a personal generated asset to the platform's community, you grant the platform and other community creators a non-exclusive right to display, use as inspiration, and replicate the parameter preset for that work on-site. Personal works kept in the Asset Centre remain private by default."
+        }
+      }
+    }
+  },
+  "privacy": {
+    "headerSubtitle": "Data privacy and user information protection",
+    "eyebrow": "Privacy & Security",
+    "heading": "{{brand}} Platform Privacy Policy",
+    "intro": "{{brand}} understands how important personal privacy and generated creative data are to creators. This policy explains transparently how we collect, encrypt and store, protect, and process your account credentials and task data.",
+    "sections": {
+      "s1": {
+        "title": "1. Data Collection and the Minimum-Necessary Principle",
+        "body": {
+          "p1": "We collect only the information that is necessary to provide you with the service: the email address or phone number used for registration and sign-in, the historical input parameters of your generation tasks (prompt, resolution, steps), the addresses of generated outputs, and payment reconciliation order information. Passwords are stored strictly as bank-grade one-way hashes."
+        }
+      },
+      "s2": {
+        "title": "2. Security of Interactions with Upstream Model Providers",
+        "body": {
+          "p1": "When you submit a generation task, the necessary prompt and reference images are transmitted over a secure encrypted channel (TLS 1.3) to the corresponding compute cluster or model provider. We do not use a user's private, proprietary assets or inputs for unauthorised general training of public models."
+        }
+      },
+      "s3": {
+        "title": "3. Cookie and Session Token Protection",
+        "body": {
+          "p1": "The platform uses session cookies protected with HttpOnly and SameSite attributes, and supports same-origin defence across the site (CSRF request gating). Creators can sign out at any time in the Account Centre or revoke the active sessions of a specific device."
+        }
+      },
+      "s4": {
+        "title": "4. Creator Data Rights and Account Deletion",
+        "body": {
+          "p1": "Creators have full visibility of, and the right to delete, their asset data. You can export, unpublish, or permanently and physically delete historical creation records at any time in your personal works centre, or contact technical support to request account deletion."
+        }
+      },
+      "s5": {
+        "title": "5. SupDance Canvas Codex Plugin and the Local Agent",
+        "body": {
+          "p1": "When you use the SupDance Canvas Codex plugin, the local Agent on your device reads or operates the current canvas at your request, so it may process canvas titles, node content, selected content, prompts, reference assets, and the Agent runtime data needed to complete the connection and the task. This information is used to establish the canvas connection, to read or edit the canvas, and to run the workflows you request. Only when you ask for content to be generated are the necessary prompt, reference assets, and task parameters sent to the model or compute provider selected for that task.",
+          "p2": "SupDance servers retain the canvas content, prompts, and Agent runtime data received through this plugin for 3 days and delete them automatically when the period ends. This period applies only to data stored on SupDance servers; it does not apply to session records, task history, configuration, or debug logs kept on your device by Codex or the local Agent, and that local data remains until you or your local software settings delete it. You can stop using the plugin and delete online content through the canvas and asset management features provided by your SupDance account."
+        }
+      },
+      "s6": {
+        "title": "6. Third-Party Social Login and Data Deletion",
+        "body": {
+          "p1": "**Instagram login and profile:** Instagram sign-in currently supports Instagram Business or Creator (professional) accounts. After you authorise it, SupDance requests only `instagram_business_basic`, to read the Instagram account identifier and username for signing in, creating a SupDance account, or linking a sign-in method. We do not request permissions for publishing content, direct messages, comments, or insights, and we do not persist Instagram access tokens.",
+          "p2": "**Instagram data deletion:** You can unlink Instagram from the “Social accounts” list on your SupDance profile page. Unlinking deletes that login credential but does not close your SupDance account. To delete your SupDance account and its associated data, choose “Delete account” on your profile page; the account first enters a 3-day revocation period, and if you do not revoke it the system then permanently erases your account data. You can also contact `privacy@supdance.com` for assistance.",
+          "p3": "**TikTok login and profile:** When you choose to sign in with TikTok (Login Kit), SupDance requests basic identity credentials (`user.info.basic`, comprising the public avatar, nickname, and the application-unique `open_id`) only with your explicit authorisation, and only to identify the creator, create the account, and personalise the workspace. We never read or publish your non-public videos or private content.",
+          "p4": "**Data deletion request instructions:** Creators can revoke TikTok authorisation with one click at any time in SupDance under “Account centre - Social account links”, or submit a data-erasure request by emailing `privacy@supdance.com` or `support@supdance.com` (please put “TikTok Data Deletion Request” in the subject line). After verifying your identity, we permanently and physically erase all user metadata and corresponding credentials synced from the TikTok interface under your account within 30 calendar days."
+        }
+      }
+    }
+  },
+  "refund": {
+    "headerSubtitle": "Top-up, subscription refunds, and credit guarantees",
+    "eyebrow": "Refund & Protection Policy",
+    "heading": "{{brand}} Top-Up Refund and Compute Guarantee Rules",
+    "intro": "To maintain a healthy, fair, and transparent creator ecosystem and to protect your lawful consumer rights, this policy sets out the settlement guarantees for membership subscriptions, compute top-up packs, and failed generations.",
+    "sections": {
+      "s1": {
+        "title": "1. 100% Automatic Release and Refund on Failed Generations",
+        "body": {
+          "p1": "The platform task state machine applies precise three-phase asset control: reserve, commit, and release. If a model fails to produce a successful result for reasons not attributable to you — compute congestion, a provider outage, or a blocked sensitive-term request — the reserved credits are refunded in full within milliseconds of the task being marked as failed."
+        }
+      },
+      "s2": {
+        "title": "2. Compute Top-Up Pack Purchase Rules",
+        "body": {
+          "p1": "Compute top-up packs purchased through the official checkout are kept in your personal wallet indefinitely. If you have not used any credits after topping up, you may contact customer support within 7 calendar days of purchase to request a refund to the original payment method; credits already consumed by generation tasks, and the corresponding discount difference, are not refundable."
+        }
+      },
+      "s3": {
+        "title": "3. Membership Billing Cycle and Cancellation",
+        "body": {
+          "p1": "Monthly and annual members can turn off “Next-cycle auto-renewal” in the Account Centre at any time. After cancellation, your current VIP benefits and daily granted compute remain valid until the end of the billing period, and no charge is made in the following month."
+        }
+      }
+    }
+  },
+  "contentPolicy": {
+    "headerSubtitle": "AI creation compliance and content safety",
+    "eyebrow": "Responsible AI & Safety",
+    "heading": "{{brand}} Content Safety and Compliance Rules",
+    "intro": "We are committed to building responsible generative AI infrastructure. The platform relies on a two-layer mechanism of an automated review pipeline plus human re-review to crack down on all forms of unlawful or abusive use.",
+    "sections": {
+      "s1": {
+        "title": "1. Zero-Tolerance Prohibited Content",
+        "body": {
+          "p1": "Using any text-to-image, image-to-video, voice-cloning, or similar model to generate — or to induce the generation of — the following content is strictly prohibited: child sexual abuse material (CSAM); terrorism and extremist violence; instructions for making dangerous weapons or hazardous chemicals; non-consensual deepfake defamation or infringement of another person's likeness and privacy; and fraud, phishing, and malicious code."
+        }
+      },
+      "s2": {
+        "title": "2. Multi-Level Automated Review and Real-Time Circuit Breaking",
+        "body": {
+          "p1": "At the task intake layer the system performs strict pre-emptive semantic filtering of sensitive terms together with upstream visual compliance interception. Requests that trigger a severe violation are blocked in real time, and the related security logs are persisted for accountability."
+        }
+      },
+      "s3": {
+        "title": "3. Community Oversight and a Fast Appeal Channel",
+        "body": {
+          "p1": "The platform's community exposes a one-click report entry to every visitor. If you find that a publicly posted work infringes rights or breaches the rules, you may submit a report at any time. A creator whose work has been taken down may open a review through the ticket system with proof of lawful ownership."
+        }
+      }
+    }
+  }
+}

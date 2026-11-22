@@ -1,0 +1,7 @@
+{
+  "price": {
+    "credits": "{credits} クレジット",
+    "creditsFrom": "{credits} クレジット～",
+    "unavailable": "価格未設定"
+  }
+}
