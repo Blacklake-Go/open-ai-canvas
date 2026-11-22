@@ -9,6 +9,7 @@ RUN --mount=type=cache,target=/root/.bun/install/cache bun install --frozen-lock
 COPY VERSION /app/VERSION
 COPY CHANGELOG.md /app/CHANGELOG.md
 COPY README.md /app/README.md
+COPY LICENSE NOTICE /app/
 COPY assets /app/assets
 COPY web ./
 COPY backend/internal/ecommerceagent/platform_knowledge.json /app/backend/internal/ecommerceagent/platform_knowledge.json
@@ -29,6 +30,7 @@ RUN bun --bun ./node_modules/vite/bin/vite.js build
 FROM nginx:1.27-alpine
 
 COPY --from=web-build /app/web/dist /opt/canvas-release
+COPY --from=web-build /app/LICENSE /app/NOTICE /usr/share/licenses/supdance/
 COPY docker/canvas-web-entrypoint.sh /usr/local/bin/canvas-web-entrypoint
 RUN chmod +x /usr/local/bin/canvas-web-entrypoint
 COPY nginx.conf /etc/nginx/conf.d/default.conf

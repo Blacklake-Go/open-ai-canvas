@@ -385,3 +385,5 @@ The host seams are registered under `supdance-one-identity-community`.
 
 欢迎页移除上游贡献者名录及其导航、头像和联系方式，MIT 入口直接下载仓库的 `LICENSE`。仓库维护者使用 `supdance`，安全和社区报告统一使用本站支持邮箱。继承代码的原始版权声明保存在 `LICENSE` 和 `NOTICE`，上游同步仍按实际仓库地址进行。升级时核对 `supdance-maintainer-metadata`，避免欢迎页再次从上游 README 加载个人信息。
 
+`web/test/supdance-maintainer-metadata.test.ts` 随 GitHub 的 Web 质量检查运行。解决上游冲突后，核对名录、头像、维护者联系方式及原始 MIT 声明。Web 镜像同时携带 `LICENSE` 和 `NOTICE`，正式发布应以通过检查的 SupDance 标签构建并部署。
+
