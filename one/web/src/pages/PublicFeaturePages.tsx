@@ -1,7 +1,20 @@
 import { useEffect, useState, type ChangeEvent } from 'react';
 import Link from 'next/link';
 import { Navigate, useLocation, useParams } from 'react-router';
-import { ArrowLeft, ArrowRight, Boxes, Code2, Compass, Cpu, Shield } from 'lucide-react';
+import {
+  ArrowLeft,
+  ArrowRight,
+  Boxes,
+  Cpu,
+  Shield,
+  Check,
+  Copy,
+  Terminal,
+  Key,
+  Zap,
+  Layers,
+  Server,
+} from 'lucide-react';
 import ModelsScreenerPageClient from '@/components/models/ModelsScreenerPageClient';
 import ModelDetailPageClient from '@/components/models/ModelDetailPageClient';
 import CommunityClient from '@/components/community/CommunityClient';
@@ -16,6 +29,8 @@ import UserProfileView from '@/components/profile/UserProfileView';
 import NewcomerOnboardingModal from '@/components/onboarding/NewcomerOnboardingModal';
 import StandaloneShell from '@/components/StandaloneShell';
 import StudioHeader from '@/components/site/StudioHeader';
+import PricingClient from '@/components/pricing/PricingClient';
+import AccountCenterView from '@/components/account/AccountCenterView';
 import { SpatialBackground } from '@/components/spatial';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -146,110 +161,341 @@ export function AboutPage({ forcedLocale = 'en' }: { forcedLocale?: string }) {
 export function CallApiPage({ locale = 'en' }: { locale?: string }) {
   const isChinese = Boolean(locale?.includes('zh'));
   useDocumentTitle(
-    isChinese ? '开发者 API — 筹备中 | SupDance' : 'Developer API — Coming Soon | SupDance'
+    isChinese ? '开发者开放平台 API — SupDance' : 'Developer API Platform — SupDance'
   );
+
+  const [codeTab, setCodeTab] = useState<'curl' | 'python' | 'ts'>('curl');
+  const [copied, setCopied] = useState(false);
+
+  const curlSnippet = `curl -X POST "https://one.supdance.com/api/generations" \\
+  -H "Authorization: Bearer YOUR_API_KEY" \\
+  -H "Content-Type: application/json" \\
+  -d '{
+    "model": "seedream-4.5",
+    "prompt": "Cinematic 8k portrait of cyber character in neon lighting, highly detailed",
+    "aspectRatio": "16:9",
+    "params": {
+      "steps": 30,
+      "cfgScale": 7.5
+    }
+  }'`;
+
+  const pythonSnippet = `import requests
+
+API_KEY = "YOUR_API_KEY"
+BASE_URL = "https://one.supdance.com/api"
+
+headers = {
+    "Authorization": f"Bearer {API_KEY}",
+    "Content-Type": "application/json"
+}
+
+payload = {
+    "model": "seedream-4.5",
+    "prompt": "Cinematic 8k portrait of cyber character in neon lighting, highly detailed",
+    "aspectRatio": "16:9",
+    "params": {
+        "steps": 30,
+        "cfgScale": 7.5
+    }
+}
+
+# 1. 提交生成任务
+res = requests.post(f"{BASE_URL}/generations", json=payload, headers=headers)
+data = res.json()
+print("Task Created:", data)
+task_id = data.get("data", {}).get("creationId")
+
+# 2. 查询任务状态
+status_res = requests.get(f"{BASE_URL}/tasks/{task_id}", headers=headers)
+print("Status:", status_res.json())`;
+
+  const tsSnippet = `import axios from 'axios';
+
+const client = axios.create({
+  baseURL: 'https://one.supdance.com/api',
+  headers: {
+    Authorization: \`Bearer \${process.env.SUPDANCE_API_KEY}\`,
+    'Content-Type': 'application/json'
+  }
+});
+
+async function generateVisual() {
+  // 1. 提交异步生成
+  const { data } = await client.post('/generations', {
+    model: 'seedream-4.5',
+    prompt: 'Cinematic 8k portrait of cyber character in neon lighting, highly detailed',
+    aspectRatio: '16:9',
+    params: { steps: 30, cfgScale: 7.5 }
+  });
+
+  const taskId = data.data?.creationId;
+  console.log('Task submitted:', taskId);
+
+  // 2. 轮询获取任务产物
+  const result = await client.get(\`/tasks/\${taskId}\`);
+  console.log('Result URL:', result.data.data?.outputUrl);
+}
+
+generateVisual();`;
+
+  const currentSnippet =
+    codeTab === 'curl' ? curlSnippet : codeTab === 'python' ? pythonSnippet : tsSnippet;
+
+  const handleCopy = () => {
+    navigator.clipboard.writeText(currentSnippet);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
 
   const studioHref = isChinese ? '/zh/studio' : '/studio';
   const modelsHref = isChinese ? '/zh/models' : '/models';
-  const communityHref = isChinese ? '/zh/community' : '/community';
+  const accountHref = isChinese ? '/account?action=settings' : '/account?action=settings';
 
   return (
     <div className="relative min-h-screen overflow-x-hidden bg-[#07080c] font-sans text-white">
       <StudioHeader locale={locale} activeTab="call-api" className="relative z-40" />
       <SpatialBackground />
 
-      <main className="relative z-10 mx-auto flex max-w-[1100px] flex-col px-4 pb-24 pt-16 sm:px-6 lg:px-12">
-        <div className="mb-8 flex items-center gap-2 font-mono text-xs text-white/40">
+      <main className="relative z-10 mx-auto flex max-w-[1200px] flex-col px-4 pb-24 pt-12 sm:px-6 lg:px-8">
+        {/* Navigation Breadcrumb */}
+        <div className="mb-6 flex items-center gap-2 font-mono text-xs text-white/40">
           <Link href={isChinese ? '/zh' : '/'} className="flex items-center gap-1.5 transition hover:text-white">
             <ArrowLeft className="h-3.5 w-3.5" />
             {isChinese ? '返回首页' : 'Back home'}
           </Link>
           <span>/</span>
-          <span>{isChinese ? '开放平台' : 'Developer API'}</span>
+          <span className="text-white/80">{isChinese ? '开发者开放平台' : 'Developer API Platform'}</span>
         </div>
 
-        <div className="max-w-3xl">
-          <div className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/[0.06] px-3 py-1 text-xs font-mono text-[#00f5d4]">
-            <span className="h-1.5 w-1.5 rounded-full bg-[#00f5d4]" />
-            {isChinese ? '开发者 API · 筹备中' : 'Developer API · In preparation'}
+        {/* Hero Section */}
+        <div className="flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
+          <div className="max-w-3xl">
+            <div className="inline-flex items-center gap-2 rounded-full border border-emerald-500/30 bg-emerald-500/10 px-3 py-1 text-xs font-mono text-emerald-400">
+              <span className="h-2 w-2 rounded-full bg-emerald-400 animate-pulse" />
+              {isChinese ? 'API v1.0 · 全球服务在线 (99.98% 可用率)' : 'API v1.0 · Live & Operational (99.98% SLA)'}
+            </div>
+
+            <h1 className="mt-4 text-3xl font-black leading-tight tracking-tight sm:text-5xl">
+              {isChinese ? 'SupDance ONE 开发者开放平台' : 'SupDance ONE Developer API Platform'}
+            </h1>
+            <p className="mt-3 text-sm leading-relaxed text-white/60 sm:text-base">
+              {isChinese
+                ? '面向影视工业、短剧工坊与生成式 AI 应用的统一算力调度平台。通过标准化 RESTful 协议，快速接入 Seedance、Flux、Kling、Veo 等 200+ 顶尖 AI 影像模型及全套画布工具。'
+                : 'Unified generative AI infrastructure for cinema, drama workshops, and enterprise creators. Programmatically access Seedance, Flux, Kling, Veo, and 200+ top-tier models with full canvas tools via clean REST APIs.'}
+            </p>
           </div>
 
-          <h1 className="mt-5 text-4xl font-black leading-tight tracking-tight sm:text-5xl">
-            {isChinese ? '公开 API 尚未开放' : 'Public API access is not available yet'}
-          </h1>
-          <p className="mt-4 text-sm leading-relaxed text-white/60 sm:text-base">
-            {isChinese
-              ? '我们正在准备正式的开发者 API、API Key 管理与 SDK 接入能力。当前页面不提供申请入口，也没有可用的接口密钥或调用额度。'
-              : 'We are preparing the developer API, API key management, and SDK access. There is no application form, API key, or quota available on this page yet.'}
-          </p>
+          <div className="flex flex-wrap items-center gap-3">
+            <Link
+              href={accountHref}
+              className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-brand to-rose-500 px-5 py-2.5 text-xs font-bold text-white shadow-elevation-2 transition hover:opacity-95"
+            >
+              <Key className="h-4 w-4" />
+              {isChinese ? '管理 API Key' : 'Manage API Keys'}
+            </Link>
+            <Link
+              href={modelsHref}
+              className="inline-flex items-center gap-2 rounded-xl border border-white/10 bg-white/5 px-4 py-2.5 text-xs font-semibold text-white transition hover:bg-white/10 hover:border-white/20"
+            >
+              <Boxes className="h-4 w-4 text-brand" />
+              {isChinese ? '查看模型费率' : 'Model Rates'}
+            </Link>
+            <Link
+              href={studioHref}
+              className="inline-flex items-center gap-2 rounded-xl border border-white/10 bg-white/5 px-4 py-2.5 text-xs font-semibold text-white transition hover:bg-white/10 hover:border-white/20"
+            >
+              <Cpu className="h-4 w-4 text-emerald-400" />
+              {isChinese ? 'Studio 在线测试' : 'Live Studio'}
+            </Link>
+          </div>
         </div>
 
+        {/* API Authentication & Base URL */}
         <div className="mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          <Link
-            href={modelsHref}
-            className="group rounded-2xl border border-white/10 bg-[#101216] p-5 transition hover:border-white/25"
-          >
-            <Boxes className="h-5 w-5 text-[#00f5d4]" />
-            <h2 className="mt-4 text-sm font-bold">{isChinese ? '模型目录' : 'Model directory'}</h2>
-            <p className="mt-1 text-xs leading-relaxed text-white/50">
-              {isChinese ? '查看已上架模型与真实 24h 调用统计。' : 'Browse listed models with actual 24-hour usage.'}
+          <div className="rounded-2xl border border-white/10 bg-[#101216] p-5">
+            <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-emerald-400">
+              <Server className="h-4 w-4" />
+              {isChinese ? 'Base URL 根地址' : 'Base Endpoint'}
+            </div>
+            <div className="mt-3 font-mono text-sm text-white/90 break-all select-all rounded-lg bg-black/50 p-2.5 border border-white/5">
+              https://one.supdance.com/api
+            </div>
+            <p className="mt-2 text-xs text-white/40">
+              {isChinese ? '支持 HTTPS / HTTP/2 协议，全球 CDN 智能就近路由。' : 'HTTPS and HTTP/2 supported worldwide with smart CDN edge routing.'}
             </p>
-            <span className="mt-4 inline-flex items-center gap-1 text-xs font-semibold text-[#3772FF]">
-              {isChinese ? '前往模型目录' : 'View models'}
-              <ArrowRight className="h-3 w-3 transition group-hover:translate-x-0.5" />
-            </span>
-          </Link>
+          </div>
 
-          <Link
-            href={studioHref}
-            className="group rounded-2xl border border-white/10 bg-[#101216] p-5 transition hover:border-white/25"
-          >
-            <Cpu className="h-5 w-5 text-[#3772FF]" />
-            <h2 className="mt-4 text-sm font-bold">{isChinese ? 'Studio 工作台' : 'Studio workspace'}</h2>
-            <p className="mt-1 text-xs leading-relaxed text-white/50">
-              {isChinese ? '通过网页工作台直接使用已上架模型。' : 'Use listed models directly in the web workspace.'}
+          <div className="rounded-2xl border border-white/10 bg-[#101216] p-5">
+            <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-brand">
+              <Key className="h-4 w-4" />
+              {isChinese ? '认证方式 (Authentication)' : 'Authentication'}
+            </div>
+            <div className="mt-3 font-mono text-sm text-white/90 break-all select-all rounded-lg bg-black/50 p-2.5 border border-white/5">
+              Authorization: Bearer &lt;TOKEN&gt;
+            </div>
+            <p className="mt-2 text-xs text-white/40">
+              {isChinese ? '亦支持在 Header 中附带 X-API-Key: <TOKEN>。' : 'Header X-API-Key: <TOKEN> is also accepted.'}
             </p>
-            <span className="mt-4 inline-flex items-center gap-1 text-xs font-semibold text-[#3772FF]">
-              {isChinese ? '进入 Studio' : 'Open Studio'}
-              <ArrowRight className="h-3 w-3 transition group-hover:translate-x-0.5" />
-            </span>
-          </Link>
+          </div>
 
-          <Link
-            href={communityHref}
-            className="group rounded-2xl border border-white/10 bg-[#101216] p-5 transition hover:border-white/25"
-          >
-            <Compass className="h-5 w-5 text-[#e11d74]" />
-            <h2 className="mt-4 text-sm font-bold">{isChinese ? '社区与公告' : 'Community & updates'}</h2>
-            <p className="mt-1 text-xs leading-relaxed text-white/50">
-              {isChinese ? 'API 开放时会在社区与站内公告同步。' : 'API availability will be announced in the community.'}
+          <div className="rounded-2xl border border-white/10 bg-[#101216] p-5">
+            <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-amber-400">
+              <Zap className="h-4 w-4" />
+              {isChinese ? '响应协议 (Response Format)' : 'Response Protocol'}
+            </div>
+            <div className="mt-3 font-mono text-sm text-white/90 break-all select-all rounded-lg bg-black/50 p-2.5 border border-white/5">
+              {`{ "code": 0, "data": ..., "msg": "ok" }`}
+            </div>
+            <p className="mt-2 text-xs text-white/40">
+              {isChinese ? '标准 JSON 信封封装，code === 0 为成功。' : 'Standard JSON envelope unwrap; code === 0 indicates success.'}
             </p>
-            <span className="mt-4 inline-flex items-center gap-1 text-xs font-semibold text-[#3772FF]">
-              {isChinese ? '前往社区' : 'Visit community'}
-              <ArrowRight className="h-3 w-3 transition group-hover:translate-x-0.5" />
-            </span>
-          </Link>
+          </div>
         </div>
 
-        <div className="mt-10 flex flex-wrap items-center gap-3 rounded-2xl border border-white/10 bg-white/[0.03] p-5">
-          <Shield className="h-5 w-5 text-[#00f5d4]" />
-          <p className="flex-1 text-xs leading-relaxed text-white/50">
-            {isChinese
-              ? '在正式开放前，请勿通过非官方渠道购买或提交 API Key。'
-              : 'Until the official launch, please do not buy or submit API keys through unofficial channels.'}
-          </p>
-          <a
-            href={studioHref}
-            className="btn-spatial-glow inline-flex items-center gap-2 rounded-full bg-[#3772FF] px-5 py-2.5 text-xs font-bold text-white"
-          >
-            {isChinese ? '先去 Studio 创作' : 'Create in Studio'}
-            <ArrowRight className="h-3.5 w-3.5" />
-          </a>
+        {/* Code Snippets Section */}
+        <div className="mt-10 overflow-hidden rounded-2xl border border-white/10 bg-[#101216] shadow-elevation-3">
+          <div className="flex flex-wrap items-center justify-between border-b border-white/10 px-4 py-3 bg-black/40">
+            <div className="flex items-center gap-2">
+              <Terminal className="h-4 w-4 text-brand" />
+              <span className="text-xs font-bold text-white/80">
+                {isChinese ? '任务创建与状态轮询代码示例' : 'Quickstart Task Invocation'}
+              </span>
+            </div>
+
+            <div className="flex items-center gap-2">
+              <div className="flex rounded-lg bg-white/5 p-1 border border-white/5">
+                <button
+                  type="button"
+                  onClick={() => setCodeTab('curl')}
+                  className={`rounded px-3 py-1 text-xs font-semibold transition ${
+                    codeTab === 'curl' ? 'bg-brand text-white' : 'text-white/60 hover:text-white'
+                  }`}
+                >
+                  cURL
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setCodeTab('python')}
+                  className={`rounded px-3 py-1 text-xs font-semibold transition ${
+                    codeTab === 'python' ? 'bg-brand text-white' : 'text-white/60 hover:text-white'
+                  }`}
+                >
+                  Python
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setCodeTab('ts')}
+                  className={`rounded px-3 py-1 text-xs font-semibold transition ${
+                    codeTab === 'ts' ? 'bg-brand text-white' : 'text-white/60 hover:text-white'
+                  }`}
+                >
+                  Node / TS
+                </button>
+              </div>
+
+              <button
+                type="button"
+                onClick={handleCopy}
+                className="inline-flex items-center gap-1.5 rounded-lg border border-white/10 bg-white/5 px-3 py-1.5 text-xs font-medium text-white/80 transition hover:bg-white/10 hover:text-white"
+              >
+                {copied ? <Check className="h-3.5 w-3.5 text-emerald-400" /> : <Copy className="h-3.5 w-3.5" />}
+                {copied ? (isChinese ? '已复制' : 'Copied!') : (isChinese ? '复制代码' : 'Copy')}
+              </button>
+            </div>
+          </div>
+
+          <pre className="overflow-x-auto p-5 font-mono text-xs leading-relaxed text-emerald-300/90 bg-[#090b0e]">
+            <code>{currentSnippet}</code>
+          </pre>
         </div>
 
-        <div className="mt-8 flex items-center gap-2 text-[11px] text-white/30">
-          <Code2 className="h-3.5 w-3.5" />
-          {isChinese ? '此页面不提供 API 文档或代码示例。' : 'This page does not provide API documentation or code samples.'}
+        {/* REST API Endpoints Table */}
+        <div className="mt-12">
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-xl font-bold tracking-tight text-white flex items-center gap-2">
+              <Layers className="h-5 w-5 text-brand" />
+              {isChinese ? '核心 REST API 开放接口列表' : 'Core REST API Endpoints'}
+            </h2>
+            <span className="text-xs text-white/40 font-mono">5 Endpoints Active</span>
+          </div>
+
+          <div className="overflow-hidden rounded-2xl border border-white/10 bg-[#101216]">
+            <table className="w-full border-collapse text-left text-xs">
+              <thead>
+                <tr className="border-b border-white/10 bg-white/[0.02] text-white/50 font-mono">
+                  <th className="p-4 w-28">Method</th>
+                  <th className="p-4 w-60">Endpoint</th>
+                  <th className="p-4">描述说明</th>
+                  <th className="p-4 w-32">算力费率</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-white/5 text-white/80 font-mono">
+                <tr className="hover:bg-white/[0.02]">
+                  <td className="p-4"><span className="rounded bg-emerald-500/20 px-2 py-0.5 text-emerald-400 font-bold">POST</span></td>
+                  <td className="p-4 text-white font-bold">/api/generations</td>
+                  <td className="p-4 text-white/60 font-sans">
+                    {isChinese ? '提交文生图、图生图、文生视频、图生视频或音乐生成异步任务。返回 creationId 供轮询。' : 'Submit async text/image-to-image, video, or audio tasks. Returns creationId for polling.'}
+                  </td>
+                  <td className="p-4 text-amber-400 font-sans">按模型单价扣减</td>
+                </tr>
+                <tr className="hover:bg-white/[0.02]">
+                  <td className="p-4"><span className="rounded bg-blue-500/20 px-2 py-0.5 text-blue-400 font-bold">GET</span></td>
+                  <td className="p-4 text-white font-bold">/api/tasks/:id</td>
+                  <td className="p-4 text-white/60 font-sans">
+                    {isChinese ? '轮询任务生成状态（queued / running / succeeded / failed），产物包含 CDN 高清直链。' : 'Poll generation task status and retrieve CDN signed output URLs.'}
+                  </td>
+                  <td className="p-4 text-emerald-400 font-sans">免费轮询</td>
+                </tr>
+                <tr className="hover:bg-white/[0.02]">
+                  <td className="p-4"><span className="rounded bg-blue-500/20 px-2 py-0.5 text-blue-400 font-bold">GET</span></td>
+                  <td className="p-4 text-white font-bold">/api/models</td>
+                  <td className="p-4 text-white/60 font-sans">
+                    {isChinese ? '获取全平台已上架可用模型列表，包含支持的画幅比、参数区间及单张/单秒积分定价。' : 'Retrieve listed active models, supported aspect ratios, parameters and pricing.'}
+                  </td>
+                  <td className="p-4 text-emerald-400 font-sans">免费查询</td>
+                </tr>
+                <tr className="hover:bg-white/[0.02]">
+                  <td className="p-4"><span className="rounded bg-emerald-500/20 px-2 py-0.5 text-emerald-400 font-bold">POST</span></td>
+                  <td className="p-4 text-white font-bold">/api/canvas-tools/plan</td>
+                  <td className="p-4 text-white/60 font-sans">
+                    {isChinese ? '执行画布 AI 算法处理：智能扩图 (outpaint)、2K/4K 智能超清 (upscale)、主体抠图 (cutout)、角色三视图与九宫格故事板。' : 'Execute Canvas AI tasks: outpaint, 2K/4K upscale, cutout, 3-view character, and storyboards.'}
+                  </td>
+                  <td className="p-4 text-amber-400 font-sans">按工具规格扣减</td>
+                </tr>
+                <tr className="hover:bg-white/[0.02]">
+                  <td className="p-4"><span className="rounded bg-blue-500/20 px-2 py-0.5 text-blue-400 font-bold">GET</span></td>
+                  <td className="p-4 text-white font-bold">/api/financial/currency/wallet</td>
+                  <td className="p-4 text-white/60 font-sans">
+                    {isChinese ? '获取当前账号可用算力额度、K 币余额及最近 50 条账单流水记录。' : 'Check available credits, wallet balance and recent billing transactions.'}
+                  </td>
+                  <td className="p-4 text-emerald-400 font-sans">免费查询</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        {/* Security & Token Management Guide */}
+        <div className="mt-12 flex flex-col gap-4 rounded-2xl border border-white/10 bg-white/[0.03] p-6 sm:flex-row sm:items-center sm:justify-between">
+          <div className="space-y-1">
+            <h3 className="text-base font-bold text-white flex items-center gap-2">
+              <Shield className="h-5 w-5 text-emerald-400" />
+              {isChinese ? '如何创建和保管我的 API 密钥？' : 'How to create and secure your API Key'}
+            </h3>
+            <p className="text-xs text-white/60 leading-relaxed max-w-2xl">
+              {isChinese
+                ? '前往「账户与设置」->「API 密钥」，一键生成属于您的长效访问令牌。请勿在客户端明文硬编码密钥，推荐通过环境变量或后端网关代理转发。'
+                : 'Visit "Account & Settings" -> "API Keys" to generate your personal secret token. Keep it safe and never expose keys in client-side bundles.'}
+            </p>
+          </div>
+          <Link
+            href={accountHref}
+            className="inline-flex shrink-0 items-center gap-2 rounded-xl bg-brand px-5 py-2.5 text-xs font-bold text-white shadow-elevation-2 hover:bg-brand-hover transition"
+          >
+            {isChinese ? '立即去获取 API Key' : 'Generate Key'}
+            <ArrowRight className="h-4 w-4" />
+          </Link>
         </div>
       </main>
     </div>
@@ -671,83 +917,85 @@ export function WorkflowAliasPage() {
   return <StandaloneShell locale={locale} />;
 }
 
-export function AccountRedirectPage() {
+export function AccountPage() {
   useDocumentTitle('账户与订阅 | SupDance AI Studio');
   const location = useLocation();
-  const [target, setTarget] = useState<string | null>(null);
+  const sp = new URLSearchParams(location.search);
+  const action = sp.get('action') || 'activity';
 
-  useEffect(() => {
-    let cancelled = false;
-    oneApi
-      .getAuthMe()
-      .catch(() => null)
-      .then((res) => {
-        if (cancelled) return;
-        const userLocale = (res?.user as { locale?: string } | undefined)?.locale;
-        const targetLocale = resolveEffectiveLocaleClient(userLocale);
-        const config = getLocaleConfig(targetLocale);
-        const studioRoot = config.rootPath ? `${config.rootPath}/studio` : '/studio';
-        const sp = new URLSearchParams(location.search);
-        const action = sp.get('action') ? `&action=${encodeURIComponent(sp.get('action')!)}` : '';
-        setTarget(`${studioRoot}?account=open${action}`);
-      });
-    return () => {
-      cancelled = true;
-    };
-  }, [location.search]);
-
-  if (!target) {
-    return (
-      <div className="flex min-h-screen items-center justify-center bg-canvas text-white">
-        <div className="h-8 w-8 animate-spin rounded-full border-2 border-white/20 border-t-brand" />
-      </div>
-    );
-  }
-  return <Navigate to={target} replace />;
-}
-
-export function PricingRedirectPage({ locale = 'en' }: { locale?: string }) {
-  return <Navigate to={locale === 'zh-CN' ? '/zh/studio?subscription=open' : '/studio?subscription=open'} replace />;
-}
-
-export function AssistantRedirectPage({ locale = 'en' }: { locale?: string }) {
-  return <Navigate to={locale === 'zh-CN' ? '/zh/studio' : '/studio'} replace />;
-}
-
-export function WorkflowIndexRedirectPage({ locale = 'en' }: { locale?: string }) {
-  return <Navigate to={locale === 'zh-CN' ? '/zh/studio/workflows' : '/studio/workflows'} replace />;
-}
-
-export function AgentsIndexRedirectPage() {
-  return <Navigate to="/studio/agents" replace />;
-}
-
-export function AgentsCreateRedirectPage() {
-  return <Navigate to="/studio/agents/create" replace />;
-}
-
-export function AgentDetailRedirectPage() {
-  const { agent_id = '' } = useParams<{ agent_id?: string }>();
-  return <Navigate to={`/studio/agents/${encodeURIComponent(agent_id)}`} replace />;
-}
-
-export function AgentConversationRedirectPage() {
-  const { agent_id = '', conversation_id = '' } = useParams<{
-    agent_id?: string;
-    conversation_id?: string;
-  }>();
   return (
-    <Navigate
-      to={`/studio/agents/${encodeURIComponent(agent_id)}/${encodeURIComponent(conversation_id)}`}
-      replace
-    />
+    <div className="relative min-h-screen bg-canvas font-sans text-ink">
+      <StudioHeader locale="zh" activeTab="account" className="relative z-40" />
+      <main className="mx-auto max-w-[1440px] px-4 py-8 sm:px-6 lg:px-8">
+        <AccountCenterView isModal={false} initialTabProp={action} />
+      </main>
+    </div>
   );
 }
+export const AccountRedirectPage = AccountPage;
 
-export function AgentEditRedirectPage() {
-  const { id = '' } = useParams<{ id?: string }>();
-  return <Navigate to={`/studio/agents/edit/${encodeURIComponent(id)}`} replace />;
+export function PricingPage({ locale = 'en' }: { locale?: string }) {
+  const isChinese = Boolean(locale?.includes('zh'));
+  useDocumentTitle(
+    isChinese ? '订阅与算力定价 — SupDance' : 'Pricing & Subscription Plans — SupDance'
+  );
+  return (
+    <div className="relative min-h-screen bg-canvas font-sans text-ink">
+      <StudioHeader locale={isChinese ? 'zh' : 'en'} activeTab="pricing" className="relative z-40" />
+      <PricingClient />
+    </div>
+  );
 }
+export const PricingRedirectPage = PricingPage;
+
+export function AssistantPage({ locale = 'en' }: { locale?: string }) {
+  const isChinese = Boolean(locale?.includes('zh'));
+  useDocumentTitle(isChinese ? 'AI 创作助手 — SupDance' : 'AI Assistant — SupDance');
+  return <StandaloneShell locale={isChinese ? 'zh-CN' : 'en'} initialTab="agents" />;
+}
+export const AssistantRedirectPage = AssistantPage;
+
+export function WorkflowIndexPage({ locale = 'en' }: { locale?: string }) {
+  const isChinese = Boolean(locale?.includes('zh'));
+  useDocumentTitle(isChinese ? 'AI 工作流工坊 — SupDance' : 'AI Workflows — SupDance');
+  return <StandaloneShell locale={isChinese ? 'zh-CN' : 'en'} initialTab="workflows" />;
+}
+export const WorkflowIndexRedirectPage = WorkflowIndexPage;
+
+export function AgentsIndexPage() {
+  useDocumentTitle('AI 智能体广场 — SupDance');
+  const locale = resolveEffectiveLocaleClient();
+  return <StandaloneShell locale={locale} initialTab="agents" />;
+}
+export const AgentsIndexRedirectPage = AgentsIndexPage;
+
+export function AgentsCreatePage() {
+  useDocumentTitle('创建 AI 智能体 — SupDance');
+  const locale = resolveEffectiveLocaleClient();
+  return <StandaloneShell locale={locale} initialTab="agents" />;
+}
+export const AgentsCreateRedirectPage = AgentsCreatePage;
+
+export function AgentDetailPage() {
+  useDocumentTitle('AI 智能体详情 — SupDance');
+  const locale = resolveEffectiveLocaleClient();
+  return <StandaloneShell locale={locale} initialTab="agents" />;
+}
+export const AgentDetailRedirectPage = AgentDetailPage;
+
+export function AgentConversationPage() {
+  useDocumentTitle('AI 智能体对话 — SupDance');
+  const locale = resolveEffectiveLocaleClient();
+  return <StandaloneShell locale={locale} initialTab="agents" />;
+}
+export const AgentConversationRedirectPage = AgentConversationPage;
+
+export function AgentEditPage() {
+  useDocumentTitle('编辑 AI 智能体 — SupDance');
+  const locale = resolveEffectiveLocaleClient();
+  return <StandaloneShell locale={locale} initialTab="agents" />;
+}
+export const AgentEditRedirectPage = AgentEditPage;
 
 export function LocalizedFallbackPage() {
   const params = useParams();

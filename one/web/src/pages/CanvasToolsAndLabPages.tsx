@@ -1,4 +1,4 @@
-import { Navigate, useLocation, useParams as useRRParams } from 'react-router';
+import { useLocation, useParams as useRRParams } from 'react-router';
 import CanvasToolsStudio from '@/components/canvasTools/CanvasToolsStudio';
 import LabPageClient from '@/components/lab/LabPageClient';
 import '@/components/canvasTools/canvas-tools.css';
@@ -107,24 +107,22 @@ export function ZhCanvasToolDetailPage() {
   );
 }
 
-export function CanvasToolsRedirectPage() {
+export function CanvasToolsPage() {
   const rrParams = useRRParams();
-  const location = useLocation();
   const slug = typeof rrParams['*'] === 'string' ? rrParams['*'].split('/').filter(Boolean) : [];
-  const suffix = slug.length
-    ? `/${slug.map((item) => encodeURIComponent(String(item))).join('/')}`
-    : '';
-  const presetVal = new URLSearchParams(location.search).get('preset');
-  const preset = presetVal ? `?preset=${encodeURIComponent(presetVal)}` : '';
-  return <Navigate to={`/zh/canvas-tools${suffix}${preset}`} replace />;
+  if (slug.length > 0) {
+    return <ZhCanvasToolDetailPage />;
+  }
+  return <ZhCanvasToolsPage />;
 }
+export const CanvasToolsRedirectPage = CanvasToolsPage;
 
 export function ZhLabPage() {
   useDocumentTitle('短剧工作坊 — SupDance Lab');
   return <LabPageClient />;
 }
 
-export function LabRedirectPage() {
-  const { search, hash } = useLocation();
-  return <Navigate to={{ pathname: '/zh/lab', search, hash }} replace />;
+export function LabPage() {
+  return <ZhLabPage />;
 }
+export const LabRedirectPage = LabPage;

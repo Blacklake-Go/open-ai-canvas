@@ -2,7 +2,10 @@ import Link from 'next/link';
 import { Navigate, useLocation, useParams } from 'react-router';
 import { ShieldX, ArrowLeft } from 'lucide-react';
 import { buildRedirectTarget, serializeSearchParams } from '@/lib/admin/navigation';
-import { useAdminPermissionGuard, useDocumentTitle } from '@/pages/helpers/pageHelpers';
+import { useAdminData, useAdminPermissionGuard, useDocumentTitle } from '@/pages/helpers/pageHelpers';
+import { hasPermission, PERMISSIONS } from '@/lib/admin/permissions';
+import BrandsManagerClient from '@/pages/admin/client/models/brands/BrandsManagerClient';
+import PricingManagerClient from '@/pages/admin/client/models/pricing/PricingManagerClient';
 
 export function AdminLegacyRedirectPage({
   to,
@@ -37,28 +40,67 @@ export function AdminSystemCatchallRedirectPage() {
   return <Navigate to={buildRedirectTarget('/admin/system/login', qs)} replace />;
 }
 
-export function AdminBrandsRedirectPage() {
+export function AdminBrandsPage() {
+  useDocumentTitle('品牌与供应商管理 | SupDance 管理后台');
+  const { user, redirectEl } = useAdminPermissionGuard(PERMISSIONS.modelsRead);
   const location = useLocation();
-  const { redirectEl } = useAdminPermissionGuard('models.read');
-  if (redirectEl) return redirectEl;
   const sp = new URLSearchParams(location.search);
-  const brandId = sp.get('brand') || sp.get('provider');
-  if (brandId && brandId !== 'all') {
-    return <Navigate to={`/admin/models?brand=${encodeURIComponent(brandId)}`} replace />;
-  }
-  return <Navigate to="/admin/models?brand=all" replace />;
-}
+  const brandId = sp.get('brand') || sp.get('provider') || 'all';
+  const { data, loading } = useAdminData<any>('/api/admin/models/providers');
 
-export function AdminPricingRedirectPage() {
-  const location = useLocation();
-  const { redirectEl } = useAdminPermissionGuard('models.read');
   if (redirectEl) return redirectEl;
-  const tab = new URLSearchParams(location.search).get('tab');
-  if (tab === 'pending') {
-    return <Navigate to="/admin/models/routing?tab=pending" replace />;
-  }
-  return <Navigate to="/admin/models/routing?tab=pricing" replace />;
+
+  return (
+    <div className="space-y-6 max-w-[1600px] mx-auto pb-16">
+      {loading ? (
+        <div className="h-64 animate-pulse rounded-2xl bg-white/[0.03]" />
+      ) : (
+        <BrandsManagerClient
+          initialData={data || {}}
+          canWrite={hasPermission(user?.role, PERMISSIONS.modelsWrite)}
+          initialProviderId={brandId}
+        />
+      )}
+    </div>
+  );
 }
+export const AdminBrandsRedirectPage = AdminBrandsPage;
+
+export function AdminPricingPage() {
+  useDocumentTitle('模型定价与价盘策略 | SupDance 管理后台');
+  const { user, redirectEl } = useAdminPermissionGuard(PERMISSIONS.modelsRead);
+  const location = useLocation();
+  const sp = new URLSearchParams(location.search);
+  const tab = sp.get('tab') || 'rules';
+  const { data: pricingData, loading: l1 } = useAdminData<any>('/api/admin/models/pricing');
+  const { data: strategyData, loading: l2 } = useAdminData<any>('/api/admin/models/pricing/strategy');
+
+  if (redirectEl) return redirectEl;
+
+  const loading = l1 || l2;
+  const pricingList = Array.isArray(pricingData) ? pricingData : pricingData?.pricing || pricingData?.rows || [];
+  const breakdownList = pricingData?.breakdown || [];
+  const pendingPrices = pricingData?.pendingPrices || [];
+  const strategy = strategyData?.strategy || strategyData || {};
+
+  return (
+    <div className="space-y-6 max-w-[1600px] mx-auto pb-16">
+      {loading ? (
+        <div className="h-64 animate-pulse rounded-2xl bg-white/[0.03]" />
+      ) : (
+        <PricingManagerClient
+          initialTab={tab}
+          initialPricing={pricingList}
+          initialStrategy={strategy}
+          initialBreakdown={breakdownList}
+          initialPendingPrices={pendingPrices}
+          canWrite={hasPermission(user?.role, PERMISSIONS.modelsWrite)}
+        />
+      )}
+    </div>
+  );
+}
+export const AdminPricingRedirectPage = AdminPricingPage;
 
 export function AdminForbiddenPage() {
   useDocumentTitle('无权限访问 | 管理后台');

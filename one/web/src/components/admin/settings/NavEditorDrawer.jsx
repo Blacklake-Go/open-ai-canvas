@@ -33,7 +33,7 @@ const NAV_ICON_OPTIONS = [
 const QUICK_ROUTES = [
   { label: '核心工作台', labelEn: 'Studio', path: '/studio', icon: 'sparkles', badge: '' },
   { label: '商用定价', labelEn: 'Pricing', path: '/pricing', icon: 'zap', badge: 'PRO' },
-  { label: '开放平台', labelEn: 'API Platform', path: '/call-api', icon: 'workflow', badge: '筹备中' },
+  { label: '开放平台', labelEn: 'API Platform', path: '/call-api', icon: 'workflow', badge: 'API' },
   { label: '即梦社区', labelEn: 'Community', path: '/community', icon: 'flame', badge: 'HOT' },
   { label: '我的作品', labelEn: 'My Creations', path: '/creations', icon: 'folder', badge: '' },
   { label: '工作流中心', labelEn: 'Workflow', path: '/workflow', icon: 'workflow', badge: '' },

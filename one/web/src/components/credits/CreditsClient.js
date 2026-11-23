@@ -816,7 +816,7 @@ export default function CreditsClient() {
               {/* 奖品 1 */}
               <div className="relative overflow-hidden rounded-2xl border border-white/[0.08] bg-base/90 p-5 flex flex-col justify-between group hover:border-amber-500/30 transition-all">
                 <div className="absolute top-3 right-3 px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/40 text-[10px] font-bold">
-                  🚧 开发中
+                  ✅ 可兑换
                 </div>
                 <div>
                   <div className="flex size-14 items-center justify-center rounded-2xl bg-amber-500/10 border border-amber-500/20 text-3xl mb-4 group-hover:scale-110 transition-transform">
@@ -831,16 +831,16 @@ export default function CreditsClient() {
                   <div className="font-mono text-sm font-bold text-amber-400">
                     🪙 30 K币
                   </div>
-                  <Button size="xs" disabled className="bg-white/10 text-zinc-400 text-[11px] cursor-not-allowed">
-                    后续开放
-                  </Button>
+                  <Link href="/coins" className="inline-flex h-8 items-center justify-center rounded-xl bg-brand hover:bg-brand-hover active:bg-brand-active active:scale-[0.98] active:duration-instant px-3 text-[11px] font-semibold text-ink-on-accent transition-[background-color,transform] duration-fast ease-standard cursor-pointer shadow-elevation-1 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-brand-ring">
+                    去兑换
+                  </Link>
                 </div>
               </div>
 
               {/* 奖品 2 */}
               <div className="relative overflow-hidden rounded-2xl border border-white/[0.08] bg-base/90 p-5 flex flex-col justify-between group hover:border-amber-500/30 transition-all">
                 <div className="absolute top-3 right-3 px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/40 text-[10px] font-bold">
-                  🚧 开发中
+                  ✅ 可兑换
                 </div>
                 <div>
                   <div className="flex size-14 items-center justify-center rounded-2xl bg-purple-500/10 border border-purple-500/20 text-3xl mb-4 group-hover:scale-110 transition-transform">
@@ -855,9 +855,9 @@ export default function CreditsClient() {
                   <div className="font-mono text-sm font-bold text-amber-400">
                     🪙 50 K币
                   </div>
-                  <Button size="xs" disabled className="bg-white/10 text-zinc-400 text-[11px] cursor-not-allowed">
-                    后续开放
-                  </Button>
+                  <Link href="/coins" className="inline-flex h-8 items-center justify-center rounded-xl bg-brand hover:bg-brand-hover active:bg-brand-active active:scale-[0.98] active:duration-instant px-3 text-[11px] font-semibold text-ink-on-accent transition-[background-color,transform] duration-fast ease-standard cursor-pointer shadow-elevation-1 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-brand-ring">
+                    去兑换
+                  </Link>
                 </div>
               </div>
 
@@ -888,7 +888,7 @@ export default function CreditsClient() {
               {/* 奖品 4 */}
               <div className="relative overflow-hidden rounded-2xl border border-white/[0.08] bg-base/90 p-5 flex flex-col justify-between group hover:border-amber-500/30 transition-all">
                 <div className="absolute top-3 right-3 px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/40 text-[10px] font-bold">
-                  🚧 开发中
+                  ✅ 可兑换
                 </div>
                 <div>
                   <div className="flex size-14 items-center justify-center rounded-2xl bg-emerald-500/10 border border-emerald-500/20 text-3xl mb-4 group-hover:scale-110 transition-transform">
@@ -903,16 +903,16 @@ export default function CreditsClient() {
                   <div className="font-mono text-sm font-bold text-amber-400">
                     🪙 60 K币
                   </div>
-                  <Button size="xs" disabled className="bg-white/10 text-zinc-400 text-[11px] cursor-not-allowed">
-                    敬请期待
-                  </Button>
+                  <Link href="/coins" className="inline-flex h-8 items-center justify-center rounded-xl bg-brand hover:bg-brand-hover active:bg-brand-active active:scale-[0.98] active:duration-instant px-3 text-[11px] font-semibold text-ink-on-accent transition-[background-color,transform] duration-fast ease-standard cursor-pointer shadow-elevation-1 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-brand-ring">
+                    去兑换
+                  </Link>
                 </div>
               </div>
 
               {/* 奖品 5 */}
               <div className="relative overflow-hidden rounded-2xl border border-white/[0.08] bg-base/90 p-5 flex flex-col justify-between group hover:border-amber-500/30 transition-all">
                 <div className="absolute top-3 right-3 px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/40 text-[10px] font-bold">
-                  🚧 开发中
+                  ✅ 可兑换
                 </div>
                 <div>
                   <div className="flex size-14 items-center justify-center rounded-2xl bg-rose-500/10 border border-rose-500/20 text-3xl mb-4 group-hover:scale-110 transition-transform">
@@ -927,16 +927,16 @@ export default function CreditsClient() {
                   <div className="font-mono text-sm font-bold text-amber-400">
                     🪙 99 K币
                   </div>
-                  <Button size="xs" disabled className="bg-white/10 text-zinc-400 text-[11px] cursor-not-allowed">
-                    敬请期待
-                  </Button>
+                  <Link href="/coins" className="inline-flex h-8 items-center justify-center rounded-xl bg-brand hover:bg-brand-hover active:bg-brand-active active:scale-[0.98] active:duration-instant px-3 text-[11px] font-semibold text-ink-on-accent transition-[background-color,transform] duration-fast ease-standard cursor-pointer shadow-elevation-1 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-brand-ring">
+                    去兑换
+                  </Link>
                 </div>
               </div>
 
               {/* 奖品 6 */}
               <div className="relative overflow-hidden rounded-2xl border border-white/[0.08] bg-base/90 p-5 flex flex-col justify-between group hover:border-amber-500/30 transition-all">
                 <div className="absolute top-3 right-3 px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/40 text-[10px] font-bold">
-                  🚧 开发中
+                  ✅ 可兑换
                 </div>
                 <div>
                   <div className="flex size-14 items-center justify-center rounded-2xl bg-yellow-500/10 border border-yellow-500/20 text-3xl mb-4 group-hover:scale-110 transition-transform">
@@ -951,9 +951,9 @@ export default function CreditsClient() {
                   <div className="font-mono text-sm font-bold text-amber-400">
                     🪙 15 K币
                   </div>
-                  <Button size="xs" disabled className="bg-white/10 text-zinc-400 text-[11px] cursor-not-allowed">
-                    敬请期待
-                  </Button>
+                  <Link href="/coins" className="inline-flex h-8 items-center justify-center rounded-xl bg-brand hover:bg-brand-hover active:bg-brand-active active:scale-[0.98] active:duration-instant px-3 text-[11px] font-semibold text-ink-on-accent transition-[background-color,transform] duration-fast ease-standard cursor-pointer shadow-elevation-1 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-brand-ring">
+                    去兑换
+                  </Link>
                 </div>
               </div>
             </div>

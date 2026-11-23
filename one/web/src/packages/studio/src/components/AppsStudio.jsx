@@ -1,15 +1,35 @@
 "use client";
 
-import React, { useState, useEffect } from 'react';
-import { 
-  FaUserTie, FaImage, FaMagic, FaVideo, FaFileAlt, 
-  FaBriefcase, FaHome, FaMicrophone, FaHandSparkles, FaBuilding,
-  FaUserInjured, FaStethoscope, FaCar, FaPaw, FaBalanceScale, FaTruck, FaMapMarkerAlt,
-  FaRocket
-} from "react-icons/fa";
-import { registerAppInterest, getAppInterests } from '../muapi.js';
-import toast from 'react-hot-toast';
-import { ToastHost as Toaster } from '../ui';
+import React, { useState, useMemo } from 'react';
+import { useNavigate } from 'react-router';
+import {
+  FaUserTie,
+  FaImage,
+  FaMagic,
+  FaVideo,
+  FaFilm,
+  FaHome,
+  FaRocket,
+  FaExpand,
+  FaCut,
+  FaCamera,
+  FaLayerGroup,
+  FaRunning,
+  FaMusic,
+  FaProjectDiagram,
+  FaRobot,
+  FaPalette,
+  FaRegSmile,
+  FaBox,
+  FaUserFriends,
+  FaThLarge,
+  FaSearch,
+  FaArrowRight,
+  FaCheckCircle,
+  FaWind,
+  FaComments,
+  FaHandSparkles,
+} from 'react-icons/fa';
 import en from '../messages/en/appsStudio.json';
 import zh from '../messages/zh/appsStudio.json';
 import ja from '../messages/ja-JP/appsStudio.json';
@@ -27,325 +47,448 @@ const APPS_MESSAGES = {
   'es-ES': es,
 };
 
-const templateApps = [
+const CATEGORIES = [
+  { id: 'all', label: '全部工具', labelEn: 'All Tools' },
+  { id: 'drama', label: '影视短剧', labelEn: 'Drama & Cinema' },
+  { id: 'character', label: '角色设定', labelEn: 'Character & 3-View' },
+  { id: 'canvas', label: '画布处理', labelEn: 'Canvas & Upscale' },
+  { id: 'motion', label: '动态驱动', labelEn: 'Motion & LipSync' },
+  { id: 'workflow', label: '流程智能体', labelEn: 'Audio & Agent' },
+];
+
+export const REAL_STUDIO_APPS = [
+  // 1. 影视与短剧工坊
   {
-    name: "AI Headshot Studio",
-    description: "A headshot studio template concept with user accounts and a credit-based workflow.",
-    icon: FaUserTie,
-    color: "blue",
-    thumbnail: "https://cdn.muapi.ai/apps/d9c39378f60e48098f6b6ce657dc18b5.png",
-    isTemplate: true
-  },
-  {
-    name: "Nano Banana Studio",
-    description: "An AI image studio template concept with credit packs and subscription options.",
-    icon: FaHandSparkles,
-    color: "amber",
-    thumbnail: "https://cdn.muapi.ai/data/2/874086171651/Screenshot_2026-04-15_103743.png",
-    isTemplate: true
-  },
-  {
-    name: "Seedance V2 Studio",
-    description: "A premium AI art studio template concept with a credit-based access flow.",
+    id: 'drama-lab',
+    name: '短剧工作坊',
+    nameEn: 'Drama Lab Workshop',
+    category: 'drama',
+    description: '全流程短剧创作工坊，支持新建项目、编写分镜脚本草稿并自动排版生成分镜画面。',
+    descriptionEn: 'End-to-end AI drama creation suite: create projects, draft scripts, and render storyboards.',
     icon: FaMagic,
-    color: "purple",
-    thumbnail: "https://cdn.muapi.ai/apps/4cd1f49d48934d448e7f493f9d5e476e.png",
-    isTemplate: true
+    badge: 'HOT',
+    color: 'from-brand/20 to-rose-600/20',
+    href: '/zh/lab',
   },
   {
-    name: "AI Clipping Studio",
-    description: "An AI video clipping template concept for extracting highlights from long videos.",
+    id: 'cinema-studio',
+    name: '电影级视频生成',
+    nameEn: 'Cinema Studio',
+    category: 'drama',
+    description: '影视级运镜控制与电影级镜头感，支持多镜头叙事、景深调度与 4K 超高清渲染。',
+    descriptionEn: 'Cinematic visual storytelling with precise camera motion and 4K ultra-HD generation.',
     icon: FaVideo,
-    color: "emerald",
-    thumbnail: "https://cdn.muapi.ai/data/2/883345778103/cca8b5bb-25f1-40fe-928e-53dce2c8c928.png",
-    isTemplate: true
+    badge: 'PRO',
+    color: 'from-indigo-600/20 to-blue-600/20',
+    href: '/studio/cinema',
   },
   {
-    name: "EasyVeo Studio",
-    description: "A video generation suite template concept covering text-to-video and image-to-video flows.",
-    icon: FaVideo,
-    color: "indigo",
-    thumbnail: "https://cdn.muapi.ai/data/2/901343404247/94ac6d86-be4e-4b70-b1e6-96d7e3692604.png",
-    isTemplate: true
-  }
+    id: 'storyboard',
+    name: '连续分镜故事板',
+    nameEn: 'Storyboard Studio',
+    category: 'drama',
+    description: '横向多格连续动作分镜，自动保持角色服装、面貌与光影场景的跨镜头一致性。',
+    descriptionEn: 'Generate sequential visual storyboards with consistent characters, lighting, and wardrobe.',
+    icon: FaFilm,
+    badge: 'HOT',
+    color: 'from-amber-500/20 to-orange-600/20',
+    href: '/zh/canvas-tools/three-view/storyboard',
+  },
+  {
+    id: 'nine-grid',
+    name: '多机位九宫格镜头组',
+    nameEn: 'Multi-Camera Nine-Grid',
+    category: 'drama',
+    description: '同一主体 3×3 九机位全景、中景、特写与正俯仰视角拍摄，极速锁定成套镜头组。',
+    descriptionEn: 'Generate 3x3 camera matrices covering wide, medium, close-up, high and low angles.',
+    icon: FaThLarge,
+    badge: 'NEW',
+    color: 'from-purple-600/20 to-pink-600/20',
+    href: '/zh/canvas-tools/three-view/nine-grid',
+  },
+  {
+    id: 'scene-top',
+    name: '场景空间俯视图',
+    nameEn: 'Scene Top-View',
+    category: 'drama',
+    description: '正上方俯视角空间透视重建，直观还原建筑内部布局、家具陈设与物体动线。',
+    descriptionEn: 'Top-down architectural perspective reconstruction showing spatial relations and layout.',
+    icon: FaHome,
+    color: 'from-emerald-500/20 to-teal-600/20',
+    href: '/zh/canvas-tools/three-view/scene-top-view',
+  },
+
+  // 2. 角色与人像设定
+  {
+    id: 'character-3view',
+    name: '角色全角度三视图',
+    nameEn: 'Character 3-View',
+    category: 'character',
+    description: '正面 / 侧面 / 背面全身角色设定图，锁定角色发型、面容细节与服装配饰。',
+    descriptionEn: 'Full-body front, side, and rear character concept sheets with locked design consistency.',
+    icon: FaUserTie,
+    badge: 'HOT',
+    color: 'from-rose-500/20 to-purple-600/20',
+    href: '/zh/canvas-tools/three-view/character',
+  },
+  {
+    id: 'face-3view',
+    name: '面部精细三视图',
+    nameEn: 'Face 3-View',
+    category: 'character',
+    description: '面部正面、侧面及 45° 视角高保真三视图，为 3D 建模与动作捕捉提供精确参考。',
+    descriptionEn: 'High-fidelity multi-angle facial reference sheets for 3D modeling and animation.',
+    icon: FaRegSmile,
+    badge: 'NEW',
+    color: 'from-pink-500/20 to-rose-600/20',
+    href: '/zh/canvas-tools/three-view/face',
+  },
+  {
+    id: 'product-3view',
+    name: '商品电商三视图',
+    nameEn: 'Product 3-View',
+    category: 'character',
+    description: '商品包装与工业设计产品三重视角展现，质感光影与结构细节精准呈现。',
+    descriptionEn: 'E-commerce and industrial design multi-angle showcase preserving textures and dimensions.',
+    icon: FaBox,
+    color: 'from-amber-600/20 to-yellow-600/20',
+    href: '/zh/canvas-tools/three-view/product',
+  },
+  {
+    id: 'body-swap',
+    name: 'AI 数字替身与换脸',
+    nameEn: 'Digital Recast & Body Swap',
+    category: 'character',
+    description: '影视级高保真面部特征置换，保留原有光影、皮肤肌理、微表情与视线方向。',
+    descriptionEn: 'Cinematic face and actor recast preserving natural lighting, skin pores, and expressions.',
+    icon: FaUserFriends,
+    badge: 'SOTA',
+    color: 'from-cyan-500/20 to-blue-600/20',
+    href: '/studio/body-swap',
+  },
+  {
+    id: 'headshot-studio',
+    name: 'AI 商务写真摄影棚',
+    nameEn: 'AI Headshot Studio',
+    category: 'character',
+    description: '专业影棚级商务写真照与领英职业头像生成，支持光影风格与西装礼服切换。',
+    descriptionEn: 'Studio-grade corporate headshots and executive portraits in diverse attire and lighting.',
+    icon: FaUserTie,
+    color: 'from-blue-600/20 to-indigo-600/20',
+    href: '/studio/headshot',
+  },
+
+  // 3. 画布处理与画质增强
+  {
+    id: 'outpaint',
+    name: 'AI 智能无缝扩图',
+    nameEn: 'AI Canvas Outpaint',
+    category: 'canvas',
+    description: '向画面四周自由延展画幅并智能补全场景，边缘自然过渡，主体透视完全一致。',
+    descriptionEn: 'Expand image boundaries with intelligent background synthesis and consistent perspective.',
+    icon: FaExpand,
+    badge: 'HOT',
+    color: 'from-teal-500/20 to-emerald-600/20',
+    href: '/zh/canvas-tools/outpaint',
+  },
+  {
+    id: 'upscale',
+    name: '2K / 4K 智能超清重构',
+    nameEn: '2K/4K AI Upscale',
+    category: 'canvas',
+    description: 'AI 细节再造与超分辨率放大，消除压缩噪点与模糊，重现发丝与微小纹理。',
+    descriptionEn: 'Super-resolution neural upscaling eliminating artifacts and restoring photorealistic textures.',
+    icon: FaHandSparkles,
+    badge: '4K SOTA',
+    color: 'from-emerald-600/20 to-teal-700/20',
+    href: '/zh/canvas-tools/upscale',
+  },
+  {
+    id: 'cutout',
+    name: '智能高精主体抠图',
+    nameEn: 'Precision AI Matting',
+    category: 'canvas',
+    description: '毛发级半透明边缘羽化抠图，自动分离复杂背景并导出透明 PNG 或白底素材。',
+    descriptionEn: 'Hair-level matting and transparent cutout with alpha matte refinement for composite workflows.',
+    icon: FaCut,
+    color: 'from-rose-600/20 to-pink-700/20',
+    href: '/zh/canvas-tools/cutout',
+  },
+  {
+    id: 'multi-angle',
+    name: '多角度空间运镜',
+    nameEn: 'Multi-Angle Camera View',
+    category: 'canvas',
+    description: '自由调节相机机位的水平角度、俯仰高度与变焦景别，无缝重绘全新视角画面。',
+    descriptionEn: 'Adjust camera azimuth, elevation, and distance to redraw the scene from any vantage point.',
+    icon: FaCamera,
+    color: 'from-blue-500/20 to-cyan-600/20',
+    href: '/zh/canvas-tools/multi-angle',
+  },
+  {
+    id: 'layers-studio',
+    name: '多图层自由创作画布',
+    nameEn: 'Layers Studio Canvas',
+    category: 'canvas',
+    description: '支持分层编辑、选区重绘、笔刷蒙版与节点式图层混合的高自由度创作台。',
+    descriptionEn: 'Photoshop-like infinite layer canvas with inpainting, masks, and blending nodes.',
+    icon: FaLayerGroup,
+    badge: 'PRO',
+    color: 'from-purple-600/20 to-indigo-600/20',
+    href: '/studio/layers',
+  },
+
+  // 4. 动作驱动与特效
+  {
+    id: 'motion-control',
+    name: '骨骼姿态精确控制',
+    nameEn: 'Motion Control Studio',
+    category: 'motion',
+    description: '输入参考姿态骨架控制角色起伏动作，精准驱动舞蹈、打斗与特技肢体运动。',
+    descriptionEn: 'Control character motion using pose skeletons for complex fight, dance, and action scenes.',
+    icon: FaRunning,
+    badge: 'SOTA',
+    color: 'from-orange-500/20 to-red-600/20',
+    href: '/studio/motion-control',
+  },
+  {
+    id: 'vibe-motion',
+    name: 'AI 动态神韵驱动',
+    nameEn: 'Vibe Motion Transfer',
+    category: 'motion',
+    description: '基于真实视频素材提取节奏、呼吸感与镜头晃动韵律，迁移至全新静态图像。',
+    descriptionEn: 'Extract organic camera motion and micro-movements to breathe life into still images.',
+    icon: FaWind,
+    color: 'from-cyan-600/20 to-teal-600/20',
+    href: '/studio/vibe-motion',
+  },
+  {
+    id: 'lipsync-studio',
+    name: 'AI 音视频对口型同步',
+    nameEn: 'LipSync Studio',
+    category: 'motion',
+    description: '语音音频驱动角色嘴唇运动，多语言发音自动匹配，微表情与眨眼自然流畅。',
+    descriptionEn: 'Audio-driven lip synchronization with natural facial micro-expressions in any language.',
+    icon: FaComments,
+    badge: 'HOT',
+    color: 'from-pink-500/20 to-purple-600/20',
+    href: '/studio/lipsync',
+  },
+  {
+    id: 'clipping-studio',
+    name: '长视频智能高光切片',
+    nameEn: 'AI Clipping Studio',
+    category: 'motion',
+    description: '基于视觉关键帧与语音语义自动识别长视频精彩瞬间，快速切出竖屏短视频。',
+    descriptionEn: 'Automated video highlight detection extracting engaging vertical clips from long footage.',
+    icon: FaFilm,
+    color: 'from-indigo-500/20 to-blue-600/20',
+    href: '/studio/clipping',
+  },
+
+  // 5. 音频与流程智能体
+  {
+    id: 'audio-studio',
+    name: 'AI 电影级配乐与音效',
+    nameEn: 'Audio & Music Studio',
+    category: 'workflow',
+    description: '输入情绪提示词或分镜气氛描述，生成电影原声交响、电子配乐与拟真环境音效。',
+    descriptionEn: 'Generate cinematic film scores, background ambient soundscapes, and foley audio.',
+    icon: FaMusic,
+    color: 'from-amber-500/20 to-rose-600/20',
+    href: '/studio/audio',
+  },
+  {
+    id: 'workflow-studio',
+    name: '可视化工作流编排',
+    nameEn: 'Workflow Studio',
+    category: 'workflow',
+    description: '拖拽式流程画布，串联生图、生视频、扩图、超清等多个模型与后处理算子。',
+    descriptionEn: 'Visual node graph to chain multiple AI models and operators into automated pipelines.',
+    icon: FaProjectDiagram,
+    badge: 'NODE',
+    color: 'from-blue-600/20 to-purple-600/20',
+    href: '/studio/workflows',
+  },
+  {
+    id: 'agent-studio',
+    name: 'AI 交互剧作智能体',
+    nameEn: 'Agent Studio',
+    category: 'workflow',
+    description: '垂直领域的影视编剧、概念美术与分镜推演 Agent，与您多轮协同共创。',
+    descriptionEn: 'Collaborative AI screenwriting, concept art, and scene continuity agents.',
+    icon: FaRobot,
+    badge: 'AI AGENT',
+    color: 'from-purple-600/20 to-brand/20',
+    href: '/studio/agents',
+  },
+  {
+    id: 'design-agent',
+    name: 'UI/海报视觉设计智能体',
+    nameEn: 'Design Agent Studio',
+    category: 'workflow',
+    description: '自然语言指令驱动布局排版，智能微调字体、色彩配搭与影视海报设计。',
+    descriptionEn: 'Prompt-driven visual design assistant for poster layouts, typography, and color grading.',
+    icon: FaPalette,
+    color: 'from-rose-500/20 to-orange-600/20',
+    href: '/studio/design-agent',
+  },
 ];
 
-const dummyAppsData = [
-  { thumbnail: "https://cdn.muapi.ai/apps/Pet_Product_Studio.jpg", name: "Pet Product Studio", description: "High-end product photography specifically for pet toys and food.", icon: FaPaw, category: "Lifestyle" },
-  { thumbnail: "https://cdn.muapi.ai/apps/Resale_Photo_Enhancer.png", name: "Resale Photo Enhancer", description: "Boost sales by elevating low-quality product photos to studio level.", icon: FaImage, category: "Business" },
-  { thumbnail: "https://cdn.muapi.ai/apps/AI_Recruiter.png", name: "AI Recruiter", description: "Smart candidate screening and interview assistant.", icon: FaBriefcase, category: "Business" },
-  { thumbnail: "https://cdn.muapi.ai/apps/Talk_to_PDF.png", name: "Talk to PDF", description: "Interactive document chat for deep research and summarization.", icon: FaFileAlt, category: "Productivity" },
-  { thumbnail: "https://cdn.muapi.ai/apps/Blogger_CMS.png", name: "Blogger CMS", description: "AI-powered content management for high-velocity SEO blogs.", icon: FaBriefcase, category: "Business" },
-  { thumbnail: "https://cdn.muapi.ai/apps/Amazon_Product_Studio.webp", name: "Amazon Product Studio", description: "Perfect Amazon-ready product shots with AI backdrops.", icon: FaImage, category: "Business" },
-  { thumbnail: "https://cdn.muapi.ai/apps/AI_Business_Card.webp", name: "AI Business Card", description: "Digital-first business card generator with AI networking.", icon: FaBriefcase, category: "Business" },
-  { thumbnail: "https://cdn.muapi.ai/apps/MailWise.png", name: "MailWise", description: "Intelligent email drafting and scheduling assistant.", icon: FaBriefcase, category: "Business" },
-  { thumbnail: "https://cdn.muapi.ai/apps/My_Podcast.webp", name: "My Podcast", description: "Automated podcast editing and show-note generation.", icon: FaMicrophone, category: "Creative" },
-  { thumbnail: "https://cdn.muapi.ai/apps/EZScribe.png", name: "EZScribe", description: "Instant transcription and meeting minute automation.", icon: FaFileAlt, category: "Productivity" },
-  { thumbnail: "https://cdn.muapi.ai/apps/AI_Knowledge_Base.png", name: "AI Knowledge Base", description: "Train an AI on your company data for instant support.", icon: FaBriefcase, category: "Business" },
-  { thumbnail: "https://cdn.muapi.ai/apps/AI_Outbound.webp", name: "AI Outbound", description: "Personalized cold outreach at scale for sales teams.", icon: FaBriefcase, category: "Business" },
-  { thumbnail: "https://cdn.muapi.ai/apps/AI_Royal_Portrait.png", name: "AI Royal Portrait", description: "Transform your photos into 18th-century royal oil paintings.", icon: FaHandSparkles, category: "Creative" },
-  { thumbnail: "https://cdn.muapi.ai/apps/AI_MEME.png", name: "AI MEME", description: "Viral-ready meme generation based on trending topics.", icon: FaMagic, category: "Creative" },
-  { thumbnail: "https://cdn.muapi.ai/apps/AI_Real_Estate_Stager.webp", name: "AI Real Estate Stager", description: "Virtually furnish and stage empty homes for sale.", icon: FaHome, category: "Real Estate" },
-  { thumbnail: "https://cdn.muapi.ai/apps/AI_Logo.png", name: "AI Logo", description: "Dynamic brand identity and logo generator.", icon: FaHandSparkles, category: "Business" },
-  { thumbnail: "https://cdn.muapi.ai/apps/OldPhoto.png", name: "OldPhoto", description: "Restore, colorize, and sharpen vintage family photos.", icon: FaImage, category: "Creative" },
-  { thumbnail: "https://cdn.muapi.ai/apps/AITryOn.png", name: "AITryOn", description: "Virtual fitting room for fashion brands and enthusiasts.", icon: FaHandSparkles, category: "Lifestyle" },
-  { thumbnail: "https://cdn.muapi.ai/apps/AI_Age_Transformation.webp", name: "AI Age Transformation", description: "Visualize yourself at different stages of life with high fidelity.", icon: FaImage, category: "Lifestyle" },
-  { thumbnail: "https://cdn.muapi.ai/apps/AI_Professional_Makeup_Generator.webp", name: "AI Professional Makeup Generator", description: "Try on hundreds of makeup looks virtually.", icon: FaHandSparkles, category: "Lifestyle" },
-  { thumbnail: "https://cdn.muapi.ai/apps/AI_Flash_Cards.webp", name: "AI Flash Cards", description: "Turn any text or PDF into pedagogical flashcards.", icon: FaFileAlt, category: "Education" },
-  { thumbnail: "https://cdn.muapi.ai/apps/AI_Group_Photo.webp", name: "AI Group Photo", description: "Seamlessly combine individual portraits into a group photo.", icon: FaImage, category: "Creative" },
-  { thumbnail: "https://cdn.muapi.ai/apps/AI_Tattoo_Try_On.webp", name: "AI Tattoo Try-On", description: "Visualize tattoos on your body before getting inked.", icon: FaHandSparkles, category: "Lifestyle" },
-  { thumbnail: "https://cdn.muapi.ai/apps/AI_Hair_Style_Simulator.webp", name: "AI Hair Style Simulator", description: "Try on new haircuts and colors with zero commitment.", icon: FaHandSparkles, category: "Lifestyle" },
-  { thumbnail: "https://cdn.muapi.ai/apps/AI_Kids_to_Adult_Prediction.webp", name: "AI Kids-to-Adult Prediction", description: "Ever wonder what your kid will look like as an adult?", icon: FaImage, category: "Lifestyle" },
-  { thumbnail: "https://cdn.muapi.ai/apps/AI_Room_Declutter.webp", name: "AI Room Declutter", description: "Instantly clean up messy room photos for listings.", icon: FaHome, category: "Real Estate" },
-  { thumbnail: "https://cdn.muapi.ai/apps/AI_Fitness_Body_Simulator.webp", name: "AI Fitness Body Simulator", description: "Visualize your fitness goals on your own body.", icon: FaImage, category: "Lifestyle" },
-  { thumbnail: "https://cdn.muapi.ai/apps/AI_Pet_Portrait.webp", name: "AI Pet Portrait", description: "Elegant, artistic portraits for your beloved pets.", icon: FaPaw, category: "Lifestyle" },
-  { thumbnail: "https://cdn.muapi.ai/apps/AI_Kissing_Video_Generator.webp", name: "AI Kissing Video Generator", description: "Expressive AI video generation for romantic moments.", icon: FaVideo, category: "Creative" },
-  { thumbnail: "https://cdn.muapi.ai/apps/Chat_with_PDF.webp", name: "Chat with PDF", description: "Ask questions and extract data from massive PDF files.", icon: FaFileAlt, category: "Productivity" },
-  { thumbnail: "https://cdn.muapi.ai/apps/AI_Travel_Studio.png", name: "AI Travel Studio", description: "Create stunning travel posters and visuals from prompts.", icon: FaMapMarkerAlt, category: "Lifestyle" },
-  { thumbnail: "https://cdn.muapi.ai/apps/Prompt_Architect.webp", name: "Prompt Architect", description: "Refine and optimize complex prompts for high-tier AI models.", icon: FaMagic, category: "Creative" },
-  { thumbnail: "https://cdn.muapi.ai/apps/ClearMark_AI.webp", name: "ClearMark AI", description: "Automated watermark removal and brand cleanup for assets.", icon: FaImage, category: "Business" },
-  { thumbnail: "https://cdn.muapi.ai/apps/PlantVision_AI.webp", name: "PlantVision AI", description: "Identify plants and generate gardening care guides.", icon: FaHandSparkles, category: "Lifestyle" },
-  { thumbnail: "https://cdn.muapi.ai/apps/AI_Wedding_Photo.png", name: "AI Wedding Photo", description: "Cinematic wedding photography enhancements and filters.", icon: FaImage, category: "Lifestyle" },
-  { thumbnail: "https://cdn.muapi.ai/apps/User_Account_Registration_Form.webp", name: "User Account Registration Form", description: "Beautiful, conversion-optimized signup flows.", icon: FaBriefcase, category: "Development" },
-  { thumbnail: "https://cdn.muapi.ai/apps/Social_Post.webp", name: "Social Post", description: "AI-generated social media scheduling and copy creator.", icon: FaBriefcase, category: "Marketing" },
-  { thumbnail: "https://cdn.muapi.ai/apps/MagicSelf_AI.webp", name: "MagicSelf AI", description: "The ultimate AI selfie and avatar generation engine.", icon: FaMagic, category: "Creative" },
-  { thumbnail: "https://cdn.muapi.ai/apps/AI_Resume_Builder.webp", name: "AI Resume Builder", description: "Craft the perfect, ATS-friendly resume in seconds.", icon: FaFileAlt, category: "Productivity" },
-  { thumbnail: "https://cdn.muapi.ai/apps/GEO_Checker.webp", name: "GEO Checker", description: "AI-powered location tagging and geodata validation.", icon: FaMapMarkerAlt, category: "Business" },
-  { thumbnail: "https://cdn.muapi.ai/apps/AI_Character_Studio.webp", name: "AI Character Studio", description: "Consistent character design for animators and writers.", icon: FaUserTie, category: "Creative" },
-  { thumbnail: "https://cdn.muapi.ai/apps/Luxury_Hair_Studio.webp", name: "Luxury Hair Studio", description: "High-end hair visualization for top-tier salons.", icon: FaHandSparkles, category: "Lifestyle" },
-  { thumbnail: "https://cdn.muapi.ai/apps/ProFlow_Plumbing.webp", name: "ProFlow Plumbing", description: "AI scheduling and diagnostics for plumbing services.", icon: FaHome, category: "Services" },
-  { thumbnail: "https://cdn.muapi.ai/apps/Solace_AI.webp", name: "Solace AI", description: "Empathetic AI assistant for mental well-being support.", icon: FaHandSparkles, category: "Health" },
-  { thumbnail: "https://cdn.muapi.ai/apps/ReLive_AI.webp", name: "ReLive AI", description: "Immersive memory and historical visualization engine.", icon: FaHandSparkles, category: "Creative" },
-  { thumbnail: "https://cdn.muapi.ai/apps/AI_Chiropractic_Service.webp", name: "AI Chiropractic Service", description: "Postural analysis and exercise recommendation AI.", icon: FaUserInjured, category: "Health" },
-  { thumbnail: "https://cdn.muapi.ai/apps/Tabla___ReserveAI.webp", name: "Tabla - ReserveAI", description: "Intelligent table reservation engine for restaurants.", icon: FaBuilding, category: "Services" },
-  { thumbnail: "https://cdn.muapi.ai/apps/Dental_ReserveAI.webp", name: "Dental ReserveAI", description: "Smart dental appointment and follow-up management.", icon: FaStethoscope, category: "Health" },
-  { thumbnail: "https://cdn.muapi.ai/apps/CounselMate.webp", name: "CounselMate", description: "Legal research and document drafting aid for lawyers.", icon: FaBalanceScale, category: "Legal" },
-  { thumbnail: "https://cdn.muapi.ai/apps/Intelligent_Real_Estate_Agent.webp", name: "Intelligent Real Estate Agent", description: "Automate leads and property matches with AI agents.", icon: FaHome, category: "Real Estate" },
-  { thumbnail: "https://cdn.muapi.ai/apps/Fixera.webp", name: "Fixera", description: "Home repair diagnosis and pro-finding ecosystem.", icon: FaHome, category: "Services" },
-  { thumbnail: "https://cdn.muapi.ai/apps/Velora___Yoga_AI.webp", name: "Velora - Yoga AI", description: "Personalized AI yoga and posture guidance engine.", icon: FaHandSparkles, category: "Health" },
-  { thumbnail: "https://cdn.muapi.ai/apps/Nova_AssuranceAI.webp", name: "Nova AssuranceAI", description: "Smart insurance quote and claim processing assistant.", icon: FaBalanceScale, category: "Legal" },
-  { thumbnail: "https://cdn.muapi.ai/apps/TurboGlow_Auto_Spa.webp", name: "TurboGlow Auto Spa", description: "AI booking and customization for luxury auto detailing.", icon: FaCar, category: "Services" },
-  { thumbnail: "https://cdn.muapi.ai/apps/Paws___Pals.webp", name: "Paws & Pals", description: "AI-powered pet care and walking coordination hub.", icon: FaPaw, category: "Lifestyle" },
-  { thumbnail: "https://cdn.muapi.ai/apps/Vertex_Tax_Strategy.webp", name: "Vertex Tax Strategy", description: "Intelligent tax planning and deduction spotting AI.", icon: FaBalanceScale, category: "Business" },
-  { thumbnail: "https://cdn.muapi.ai/apps/LedgerSync.webp", name: "LedgerSync", description: "Automated bookkeeping and financial reconciliations.", icon: FaBriefcase, category: "Business" },
-  { thumbnail: "https://cdn.muapi.ai/apps/Nova_Care_Clinic.webp", name: "Nova Care Clinic", description: "Patient scheduling and medical intake automation.", icon: FaStethoscope, category: "Health" },
-  { thumbnail: "https://cdn.muapi.ai/apps/Opulent_Drive.webp", name: "Opulent Drive", description: "Luxury car rental and fleet management AI.", icon: FaCar, category: "Services" },
-  { thumbnail: "https://cdn.muapi.ai/apps/ProFix_Auto.webp", name: "ProFix Auto", description: "Engine diagnostics and preventive maintenance alerts.", icon: FaCar, category: "Services" },
-  { thumbnail: "https://cdn.muapi.ai/apps/TowMate.webp", name: "TowMate", description: "Smart roadside assistance and dispatch coordination.", icon: FaTruck, category: "Services" },
-  { thumbnail: "https://cdn.muapi.ai/apps/SwiftLink_Logistics.webp", name: "SwiftLink Logistics", description: "AI route optimization and fleet tracking system.", icon: FaTruck, category: "Services" },
-  { thumbnail: "https://cdn.muapi.ai/apps/Lumea_Residence.webp", name: "Lumea Residence", description: "Smart home property management and tenant portal.", icon: FaHome, category: "Real Estate" }
-];
+export default function AppsStudio({ locale = 'en' }) {
+  const isChinese = Boolean(locale?.includes('zh'));
+  const navigate = useNavigate();
+  const [selectedCategory, setSelectedCategory] = useState('all');
+  const [searchQuery, setSearchQuery] = useState('');
 
-export default function AppsStudio({ apiKey, locale = 'en' }) {
-  const copy = resolveCopy(en, APPS_MESSAGES, locale);
-  const [selectedApp, setSelectedApp] = useState(null);
-  const [isRequesting, setIsRequesting] = useState(false);
-  const [requestedApps, setRequestedApps] = useState([]);
+  const filteredApps = useMemo(() => {
+    return REAL_STUDIO_APPS.filter((app) => {
+      const matchCategory = selectedCategory === 'all' || app.category === selectedCategory;
+      if (!matchCategory) return false;
+      if (!searchQuery.trim()) return true;
+      const q = searchQuery.toLowerCase();
+      return (
+        app.name.toLowerCase().includes(q) ||
+        app.nameEn.toLowerCase().includes(q) ||
+        app.description.toLowerCase().includes(q) ||
+        app.descriptionEn.toLowerCase().includes(q)
+      );
+    });
+  }, [selectedCategory, searchQuery]);
 
-  useEffect(() => {
-    if (apiKey) {
-      getAppInterests(apiKey)
-        .then(setRequestedApps)
-        .catch(err => console.error("Error fetching interests:", err));
-    }
-  }, [apiKey]);
-
-  useEffect(() => {
-    if (!selectedApp) return;
-    const handleKeyDown = (e) => {
-      if (e.key === 'Escape') setSelectedApp(null);
-    };
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [selectedApp]);
-
-  const handleRequestAccess = async () => {
-    if (!selectedApp) return;
-    if (!apiKey) {
-      toast.error(copy.toast.requestError);
-      return;
-    }
-    
-    setIsRequesting(true);
-    try {
-      await registerAppInterest(apiKey, selectedApp.name);
-      setRequestedApps(prev => [...prev, selectedApp.name]);
-      toast.success(copy.toast.requestSuccess);
-      setTimeout(() => setSelectedApp(null), 1500);
-    } catch (error) {
-      console.error(error);
-      toast.error(copy.toast.requestError);
-    } finally {
-      setIsRequesting(false);
-    }
-  };
-
-  const renderAppCard = (app, isDummy = false, index = 0) => {
-    const requested = requestedApps.includes(app.name);
-    // Premium Vibrant Gradients for placeholders
-    const gradients = [
-      "from-blue-600/20 to-indigo-600/20",
-      "from-purple-600/20 to-pink-600/20",
-      "from-amber-500/20 to-orange-600/20",
-      "from-emerald-500/20 to-teal-600/20",
-      "from-rose-500/20 to-red-600/20",
-      "from-rose-500/20 to-purple-600/20",
-    ];
-    const cardGradient = gradients[index % gradients.length];
-    
-    return (
-      <div 
-        key={app.name}
-        className="group bg-surface-glass/80 backdrop-blur-md border border-white/10 rounded-xl flex flex-col overflow-hidden transition-[border-color,background-color,box-shadow,transform] duration-smooth ease-card-hover hover:border-white/20 hover:bg-surface-glass/95 hover:shadow-elevation-3 hover:-translate-y-1"
-      >
-        {/* Thumbnail Section */}
-        <div className="relative h-44 w-full overflow-hidden bg-white/5">
-          {app.thumbnail ? (
-            <img
-              src={app.thumbnail}
-              alt={app.name}
-              className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
-            />
-          ) : (
-            <div className={`w-full h-full flex items-center justify-center bg-gradient-to-br ${cardGradient} transition-colors group-hover:scale-110 duration-700`}>
-              <app.icon className={`text-4xl opacity-20 group-hover:opacity-40 transition-opacity text-white`} />
-            </div>
-          )}
-          <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent opacity-60 group-hover:opacity-80 transition-opacity" />
-          {isDummy && (
-            <span className="absolute left-3 top-3 rounded-full border border-white/20 bg-black/70 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider text-white/80 backdrop-blur-sm">
-              {copy.card.demo || 'Coming soon'}
-            </span>
-          )}
-        </div>
-
-        {/* Content Section */}
-        <div className="p-5 flex flex-col flex-1 space-y-4">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-white/5 flex items-center justify-center text-lg text-[#e11d74] border border-white/5 group-hover:border-white/10 transition-colors">
-              <app.icon />
-            </div>
-            <div className="flex-1 min-w-0">
-              <h3 className="text-sm font-bold text-white uppercase tracking-tight truncate">{app.name}</h3>
-              <p className="text-[10px] text-white/40 font-bold uppercase tracking-widest">{app.category || copy.card.templateFallback}</p>
-            </div>
-          </div>
-          
-          <p className="text-xs text-white/50 leading-relaxed font-medium line-clamp-2 min-h-[2.5rem]">{app.description}</p>
-          
-          {/* Action Buttons */}
-          <div className="flex items-center gap-2 pt-2">
-            <button
-              onClick={() => setSelectedApp({ ...app, isDummy })}
-              disabled={requested}
-              className="flex-1 py-2 bg-white/5 text-white rounded-md text-[11px] font-bold uppercase tracking-wider flex items-center justify-center gap-2 hover:bg-white/10 active:scale-[0.98] active:duration-instant transition-[background-color,transform] duration-fast ease-standard border border-white/10 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-brand-ring cursor-pointer disabled:opacity-50 disabled:pointer-events-none"
-            >
-              <FaRocket className="text-xs text-[#e11d74]" />
-              {requested ? (copy.card.requested || '已登记') : isDummy ? (copy.card.reserve || '预约通知') : (copy.card.getTemplate || '登记意向')}
-            </button>
-          </div>
-        </div>
-      </div>
-    );
+  const handleLaunch = (href) => {
+    navigate(href);
   };
 
   return (
     <div className="h-full w-full flex flex-col items-center bg-transparent overflow-y-auto custom-scrollbar relative">
-      <Toaster position="bottom-right" reverseOrder={false} />
-      
-      <div className="flex flex-col gap-10 items-center w-full max-w-7xl pt-12 pb-24 px-6">
-        
+      <div className="flex flex-col gap-8 items-center w-full max-w-7xl pt-10 pb-24 px-4 sm:px-6 lg:px-8">
         {/* Header Section */}
-        <div className="text-center space-y-6 max-w-3xl">
+        <div className="text-center space-y-4 max-w-3xl">
           <div className="inline-flex items-center gap-2 px-3 py-1.5 bg-[#e11d74]/10 border border-[#e11d74]/20 rounded-full">
             <FaMagic className="text-[#e11d74] text-xs" />
-            <span className="text-[10px] font-black text-[#e11d74] uppercase tracking-widest">{copy.hero.badge}</span>
+            <span className="text-[10px] font-black text-[#e11d74] uppercase tracking-widest">
+              {isChinese ? '影视与短剧创意生产力中心' : 'CREATIVE STUDIO APPS & TOOLS'}
+            </span>
           </div>
-          <h1 className="text-5xl font-black text-white tracking-tighter leading-[0.9]">
-            {copy.hero.titleLine1}<br />{copy.hero.titleLine2}
+
+          <h1 className="text-4xl sm:text-5xl font-black text-white tracking-tight leading-tight">
+            {isChinese ? (
+              <>
+                专业 AI 影视创意与制作工具库
+              </>
+            ) : (
+              <>
+                Production AI Cinema & Drama Tools
+              </>
+            )}
           </h1>
-          <p className="text-white/40 text-sm font-medium leading-relaxed max-w-xl mx-auto">
-            {copy.hero.subtitle}
+
+          <p className="text-white/60 text-xs sm:text-sm font-medium leading-relaxed max-w-2xl mx-auto">
+            {isChinese
+              ? '从剧作故事板、分镜机位、角色三视图，到扩图超清、数字替身与动态驱动。22 项真实专业工具开箱即用，全面赋能影视短剧创作者。'
+              : 'From script storyboarding and multi-camera views to 4K upscale, face recast, and motion control. 22 production-grade AI tools ready to launch.'}
           </p>
-        </div>
 
-        {/* Apps Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 w-full pt-8">
-          {templateApps.map((app, index) => renderAppCard(app, false, index))}
-          {dummyAppsData.map((app, index) => renderAppCard(app, true, index + templateApps.length))}
-        </div>
-
-        {/* Footer Accent */}
-        <div className="pt-24 pb-12 flex flex-col items-center gap-4">
-          <div className="inline-flex items-center gap-3 px-4 py-2 bg-white/5 rounded-full border border-white/5">
-            <span className="block w-1.5 h-1.5 rounded-full bg-[#e11d74] animate-pulse" />
-            <span className="text-[9px] font-black text-white/40 uppercase tracking-widest">{copy.footer.moreComingSoon}</span>
+          {/* Search Bar */}
+          <div className="relative max-w-md mx-auto pt-2">
+            <FaSearch className="absolute left-3.5 top-1/2 -translate-y-1/2 text-white/40 text-xs" />
+            <input
+              type="text"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder={isChinese ? '搜索工具名称或创作功能...' : 'Search studio tools & capabilities...'}
+              className="w-full pl-9 pr-4 py-2.5 rounded-xl bg-white/5 border border-white/10 text-white placeholder-white/30 text-xs focus:outline-none focus:border-brand transition"
+            />
           </div>
+
+          {/* Category Tabs */}
+          <div className="flex flex-wrap items-center justify-center gap-2 pt-2">
+            {CATEGORIES.map((cat) => {
+              const active = selectedCategory === cat.id;
+              return (
+                <button
+                  key={cat.id}
+                  type="button"
+                  onClick={() => setSelectedCategory(cat.id)}
+                  className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition cursor-pointer ${
+                    active
+                      ? 'bg-brand text-white shadow-elevation-1'
+                      : 'bg-white/5 text-white/60 hover:text-white hover:bg-white/10 border border-white/5'
+                  }`}
+                >
+                  {isChinese ? cat.label : cat.labelEn}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* Tools Count Bar */}
+        <div className="w-full flex items-center justify-between border-b border-white/10 pb-3 text-xs text-white/40 font-mono">
+          <span>
+            {isChinese
+              ? `共检索到 ${filteredApps.length} 款可用创作工具`
+              : `Found ${filteredApps.length} active creative tools`}
+          </span>
+          <span className="flex items-center gap-1.5 text-emerald-400 font-bold">
+            <FaCheckCircle className="text-xs" />
+            {isChinese ? '100% 真实功能已上线' : '100% Production Ready'}
+          </span>
+        </div>
+
+        {/* Tools Grid */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5 w-full">
+          {filteredApps.map((app) => {
+            const Icon = app.icon;
+            return (
+              <div
+                key={app.id}
+                onClick={() => handleLaunch(app.href)}
+                className="group relative bg-[#101216] border border-white/10 rounded-2xl flex flex-col overflow-hidden transition-[border-color,background-color,box-shadow,transform] duration-200 hover:border-brand/40 hover:bg-[#14161b] hover:shadow-elevation-3 hover:-translate-y-1 cursor-pointer"
+              >
+                {/* Visual Header */}
+                <div className={`relative h-28 w-full overflow-hidden bg-gradient-to-br ${app.color} p-4 flex items-center justify-between border-b border-white/5`}>
+                  <div className="w-12 h-12 rounded-xl bg-black/40 backdrop-blur-md flex items-center justify-center text-xl text-brand border border-white/10 group-hover:scale-110 transition-transform duration-300">
+                    <Icon />
+                  </div>
+
+                  {app.badge && (
+                    <span className="rounded-full border border-brand/40 bg-brand/20 px-2.5 py-0.5 text-[10px] font-black uppercase tracking-wider text-brand backdrop-blur-md shadow-sm">
+                      {app.badge}
+                    </span>
+                  )}
+                </div>
+
+                {/* Content Section */}
+                <div className="p-4 flex flex-col flex-1 justify-between gap-3">
+                  <div className="space-y-1.5">
+                    <h3 className="text-sm font-bold text-white tracking-tight group-hover:text-brand transition-colors">
+                      {isChinese ? app.name : app.nameEn}
+                    </h3>
+                    <p className="text-xs text-white/50 leading-relaxed line-clamp-2">
+                      {isChinese ? app.description : app.descriptionEn}
+                    </p>
+                  </div>
+
+                  {/* Action Row */}
+                  <div className="pt-2 border-t border-white/5 flex items-center justify-between">
+                    <span className="inline-flex items-center gap-1.5 text-[11px] font-semibold text-emerald-400">
+                      <span className="size-1.5 rounded-full bg-emerald-400" />
+                      {isChinese ? '现已就绪' : 'Ready'}
+                    </span>
+
+                    <span className="inline-flex items-center gap-1 text-xs font-bold text-white group-hover:text-brand group-hover:translate-x-0.5 transition-all">
+                      {isChinese ? '打开工具' : 'Launch'}
+                      <FaArrowRight className="text-[10px]" />
+                    </span>
+                  </div>
+                </div>
+              </div>
+            );
+          })}
         </div>
       </div>
-
-      {/* Get Template Modal */}
-      {selectedApp && (
-        <div 
-          className="fixed inset-0 z-modal flex items-center justify-center p-4 bg-scrim backdrop-blur-xl animate-in fade-in duration-modal ease-enter"
-          onClick={() => setSelectedApp(null)}
-          role="dialog"
-          aria-modal="true"
-        >
-          <div 
-            className="relative bg-overlay border border-line w-full max-w-md rounded-2xl p-6 sm:p-8 space-y-6 shadow-elevation-4 animate-scale-in text-ink"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <div className="flex flex-col items-center text-center space-y-3">
-              <div className="w-16 h-16 rounded-2xl bg-brand/10 border border-brand/20 flex items-center justify-center text-3xl text-brand mb-1">
-                <selectedApp.icon />
-              </div>
-              <h2 className="text-xl font-bold text-ink uppercase tracking-tight">
-                {copy.modal.deployTitle.replace('{appName}', selectedApp.name)}
-              </h2>
-              <p className="text-xs text-ink-muted leading-relaxed px-2">
-                {copy.modal.body.split('{appName}').map((part, i, arr) => (
-                  <React.Fragment key={i}>
-                    {part}
-                    {i < arr.length - 1 && <b className="text-ink font-semibold">{selectedApp.name}</b>}
-                  </React.Fragment>
-                ))}
-              </p>
-            </div>
-
-            <div className="space-y-2.5 pt-2 border-t border-line">
-              <button
-                type="button"
-                onClick={handleRequestAccess}
-                disabled={isRequesting}
-                className="w-full py-3 bg-brand hover:bg-brand-hover active:bg-brand-active active:scale-[0.98] active:duration-instant text-ink-on-accent font-semibold rounded-xl text-xs uppercase tracking-wider flex items-center justify-center gap-2 transition-[background-color,transform] duration-fast ease-standard cursor-pointer shadow-elevation-1 disabled:opacity-50 disabled:pointer-events-none focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-brand-ring"
-              >
-                {isRequesting ? copy.modal.sending : copy.modal.getTemplate}
-              </button>
-              <button
-                type="button"
-                onClick={() => setSelectedApp(null)}
-                className="w-full py-2.5 bg-well hover:bg-raised border border-line text-ink-muted hover:text-ink rounded-xl text-xs font-semibold uppercase tracking-wider flex items-center justify-center gap-2 active:scale-[0.98] active:duration-instant transition-[background-color,color,transform] duration-fast ease-standard cursor-pointer focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-brand-ring"
-              >
-                {copy.modal.maybeLater}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      <style>{`
-        @keyframes fadeIn {
-          from { opacity: 0; }
-          to { opacity: 1; }
-        }
-        @keyframes scaleUp {
-          from { opacity: 0; transform: scale(0.95) translateY(10px); }
-          to { opacity: 1; transform: scale(1) translateY(0); }
-        }
-        .animate-fade-in { animation: fadeIn 0.3s ease-out; }
-        .animate-scale-up { animation: scaleUp 0.3s cubic-bezier(0.16, 1, 0.3, 1); }
-      `}</style>
     </div>
   );
 }

@@ -452,7 +452,7 @@ const FOOTER_COPY = {
     linkWorkflow: '节点式工作流',
     linkPricing: '会员订阅方案',
     colDeveloper: '开发者与遥测',
-    linkApiPlatform: '开放平台（筹备中）',
+    linkApiPlatform: '开发者开放平台 API',
     linkModelDirectory: '模型目录与真实调用',
     linkCommunity: '创作者案例广场',
     linkCreatorBenefits: '创作者算力权益',

@@ -66,7 +66,7 @@ export const DEFAULT_NAVIGATION = [
     icon: 'workflow',
     iconColor: '#a855f7',
     style: 'subtle',
-    badge: '筹备中',
+    badge: 'API',
     enabled: true,
     target: '_self',
     order: 4,
