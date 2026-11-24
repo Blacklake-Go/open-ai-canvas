@@ -4,6 +4,16 @@
     "my-agents": "My Agents",
     "my-chats": "My Chats"
   },
+  "editor": {
+    "edit": "Edit Agent",
+    "save": "Save changes",
+    "conflict": "This agent was updated in another tab. Refresh before saving.",
+    "model": "Text model",
+    "credits": "credits",
+    "newChat": "New chat",
+    "unavailable": "No published text model is available.",
+    "chooseModel": "The requested model is unavailable. Choose a published model."
+  },
   "headings": {
     "agents": "Agents",
     "createAgent": "Create Agent"

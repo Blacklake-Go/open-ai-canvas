@@ -1,5 +1,11 @@
 
 
+## ONE 作品导入 Canvas
+
+Canvas 接收页在 `/canvas/import-one`，扩展实现位于 `web/src/supdance/federation/`。用户在 ONE 的已保存作品上打开入口，核对 Canvas 登录账号并确认后，浏览器读取当前 ONE 账号下的私有文件。接收页复用 Canvas 原有的鉴权上传和云端画布保存，保存成功后进入新画布。发布顺序为 Canvas 接收页、ONE 发送入口，回退按相反顺序。
+
+浏览器通道只接受预期的来源和窗口，握手结束后接收页断开 opener。URL 片段包含临时请求标识和发起站点，文件字节和凭据留在认证请求与浏览器通道中。本地联调可在各自构建指定 `VITE_ONE_CANVAS_TARGET_ORIGIN` 和 `VITE_ONE_CANVAS_SOURCE_ORIGIN`，仅本机回环地址生效。
+
 ## HTML 页面管理后台 V2 规范覆盖
 
 - 后台样式隔离于 `html-page-manager/admin/`，复用 `--admin-*`、AdminModal 和 AdminSwitch，补齐响应式、键盘操作、加载失败与未保存提醒及六语种词条。

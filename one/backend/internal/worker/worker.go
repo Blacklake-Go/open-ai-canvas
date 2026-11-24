@@ -17,7 +17,9 @@ import (
 
 	"one/backend/internal/domain/billing"
 	"one/backend/internal/domain/generation"
+	"one/backend/internal/domain/workflow"
 	"one/backend/internal/pkg/ids"
+	"one/backend/internal/platform/runtimelog"
 	"one/backend/internal/queue"
 	"one/backend/internal/storage"
 )
@@ -46,6 +48,7 @@ type Manager struct {
 	JobTimeout    time.Duration
 	Concurrency   int
 	ProcessJob    func(ctx context.Context, creationID string) error
+	RuntimeLog    *runtimelog.Buffer
 }
 
 func defaultInstanceID() string {
@@ -87,12 +90,21 @@ func (m *Manager) Run(ctx context.Context) {
 		return
 	}
 	m.normalizeDefaults()
+	m.RuntimeLog.Info("generation.worker_started")
 
 	startedAt := time.Now().UTC()
 	m.recordHeartbeat(ctx, startedAt)
 
 	sem := make(chan struct{}, m.Concurrency)
 	var wg sync.WaitGroup
+
+	if m.Generation != nil {
+		wg.Add(1)
+		go func() {
+			defer wg.Done()
+			m.runWorkflowAutomation(ctx)
+		}()
+	}
 
 	wg.Add(1)
 	go func() {
@@ -150,6 +162,7 @@ func (m *Manager) Run(ctx context.Context) {
 		if err != nil {
 			<-sem
 			if ctx.Err() == nil {
+				m.RuntimeLog.Error("generation.queue_claim_failed")
 				log.Printf("worker claim error: %v", err)
 			}
 			backoff = nextBackoff(backoff)
@@ -176,12 +189,33 @@ drain:
 	wg.Wait()
 }
 
+func (m *Manager) runWorkflowAutomation(ctx context.Context) {
+	automation := workflow.Automation{Store: workflow.Store{Pool: m.Pool}, Generation: m.Generation}
+	ticker := time.NewTicker(time.Second)
+	defer ticker.Stop()
+	for {
+		select {
+		case <-ctx.Done():
+			return
+		case <-ticker.C:
+			advanceCtx, cancel := context.WithTimeout(ctx, 15*time.Second)
+			_, err := automation.RunDue(advanceCtx)
+			cancel()
+			if err != nil && ctx.Err() == nil {
+				m.RuntimeLog.Error("workflow.automatic_tick_failed")
+				log.Printf("workflow automatic tick failed: %v", err)
+			}
+		}
+	}
+}
+
 func (m *Manager) runClaimedJob(ctx context.Context, job *queue.ClaimedJob) {
 	jobCtx, cancel := context.WithTimeout(ctx, m.JobTimeout)
 	defer cancel()
 
 	defer func() {
 		if r := recover(); r != nil {
+			m.RuntimeLog.Error("generation.worker_job_panic")
 			log.Printf("worker panic handling creation %s: %v", job.ID, r)
 			if m.Generation != nil {
 				_ = m.Generation.FinalizeFailure(context.Background(), job.ID, "failed", "", "", "WORKER_PANIC", fmt.Sprint(r))
@@ -197,6 +231,7 @@ func (m *Manager) runClaimedJob(ctx context.Context, job *queue.ClaimedJob) {
 		return
 	}
 	if err := fn(jobCtx, job.ID); err != nil && ctx.Err() == nil {
+		m.RuntimeLog.Error("generation.worker_job_error")
 		log.Printf("worker job %s error: %v", job.ID, err)
 	}
 }

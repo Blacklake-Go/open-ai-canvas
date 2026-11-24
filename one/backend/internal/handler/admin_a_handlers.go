@@ -25,19 +25,24 @@ import (
 	"io"
 	"mime/multipart"
 	"net/http"
+	"net/url"
 	"os"
 	"path/filepath"
 	"regexp"
 	"strconv"
 	"strings"
 	"time"
+	"unicode"
+	"unicode/utf8"
 
 	"github.com/jackc/pgx/v5"
+	"github.com/jackc/pgx/v5/pgconn"
 	"github.com/jackc/pgx/v5/pgxpool"
 
 	"one/backend/internal/domain/admin"
 	"one/backend/internal/domain/auth"
 	"one/backend/internal/domain/generation"
+	"one/backend/internal/domain/site"
 	"one/backend/internal/middleware"
 	"one/backend/internal/notify"
 )
@@ -81,7 +86,8 @@ func adminARoutes() []adminARoute {
 		{[]string{"GET"}, "/api/admin/community/posts", "contentRead", "", adminACommunityPosts},
 		{[]string{"PATCH"}, "/api/admin/community/posts/[id]", "contentWrite", "community_post_update", adminACommunityPostPatch},
 		{[]string{"GET", "DELETE"}, "/api/admin/content/analytics", "contentRead", "", adminABannerAnalytics},
-		{[]string{"GET", "POST"}, "/api/admin/content/banner", "contentRead", "content_banner_update", adminABannerConfig},
+		{[]string{"GET"}, "/api/admin/content/banner", "contentRead", "", adminABannerConfig},
+		{[]string{"POST"}, "/api/admin/content/banner", "contentWrite", "content_banner_update", adminABannerConfig},
 		{[]string{"GET"}, "/api/admin/content/banner/history", "contentRead", "", adminABannerHistory},
 		{[]string{"POST", "DELETE"}, "/api/admin/content/banner/history/[id]", "contentWrite", "", adminABannerHistoryItem},
 		{[]string{"GET", "POST"}, "/api/admin/content/branding", "contentRead", "content_branding_update", adminABranding},
@@ -96,10 +102,15 @@ func adminARoutes() []adminARoute {
 		{[]string{"GET", "POST"}, "/api/admin/coupons", "couponsRead", "coupons_batch_create", adminACoupons},
 		{[]string{"GET"}, "/api/admin/credits/ledger", "creditsRead", "", adminACreditLedger},
 		{[]string{"GET"}, "/api/admin/dashboard", "dashboardRead", "", adminADashboard},
+		{[]string{"GET"}, "/api/admin/workshop/models", "modelsRead", "", adminAWorkshopModels},
+		{[]string{"PUT"}, "/api/admin/workshop/models", "modelsWrite", "workshop_model_defaults", adminAWorkshopModels},
 		{[]string{"GET"}, "/api/admin/export/[type]", "exportsRead", "", adminAExportGone},
 		{[]string{"POST"}, "/api/admin/exports", "exportsWrite", "admin_export_request", adminAExportRequest},
 		{[]string{"GET"}, "/api/admin/exports/[id]", "exportsRead", "", adminAExportStatus},
 		{[]string{"GET"}, "/api/admin/exports/[id]/download", "exportsRead", "", adminAExportDownload},
+		{[]string{"GET"}, "/api/admin/feedback", "contentRead", "", adminFeedbackList},
+		{[]string{"GET"}, "/api/admin/feedback/[id]", "contentRead", "", adminFeedbackDetail},
+		{[]string{"GET"}, "/api/admin/feedback/[id]/attachments/[index]", "contentRead", "", adminFeedbackAttachment},
 		{[]string{"POST"}, "/api/admin/feedback/[id]/review", "contentWrite", "feedback_review", adminAFeedbackReview},
 		{[]string{"GET"}, "/api/admin/generations", "generationsRead", "", adminAGenerations},
 		{[]string{"GET"}, "/api/admin/generations/[id]", "generationsRead", "", adminAGenerationTrace},
@@ -500,8 +511,10 @@ func adminAReadSetting(ctx context.Context, pool *pgxpool.Pool, key string) (any
 	return row["value_json"], true, nil
 }
 
-func adminAWriteSetting(ctx context.Context, pool *pgxpool.Pool, key string, value any, visibility, actor string) error {
-	_, err := pool.Exec(ctx, `
+func adminAWriteSetting(ctx context.Context, db interface {
+	Exec(context.Context, string, ...any) (pgconn.CommandTag, error)
+}, key string, value any, visibility, actor string) error {
+	_, err := db.Exec(ctx, `
 		INSERT INTO ops_bill.system_settings (key, value_json, visibility, version, updated_by, updated_at)
 		VALUES ($1, $2::jsonb, $3, 1, $4, now())
 		ON CONFLICT (key) DO UPDATE SET
@@ -1145,7 +1158,7 @@ func adminADefaultBannerConfig() map[string]any {
 func adminANormalizeBannerConfig(raw map[string]any) map[string]any {
 	cfg := adminADefaultBannerConfig()
 	for k, v := range raw {
-		if v != nil {
+		if _, known := cfg[k]; known && v != nil {
 			cfg[k] = v
 		}
 	}
@@ -1154,36 +1167,58 @@ func adminANormalizeBannerConfig(raw map[string]any) map[string]any {
 	}
 	cfg["title"] = strings.TrimSpace(adminAStr(cfg["title"]))
 	if adminAStr(cfg["title"]) == "" {
-		msg := adminAStr(cfg["message"])
+		msg := []rune(adminAStr(cfg["message"]))
 		if len(msg) > 30 {
 			msg = msg[:30]
 		}
-		cfg["title"] = firstNonEmpty(msg, "未命名横幅")
+		cfg["title"] = firstNonEmpty(string(msg), "未命名横幅")
 	}
 	cfg["enabled"] = adminABool(cfg["enabled"])
-	cfg["message"] = firstNonEmpty(strings.TrimSpace(adminAStr(cfg["message"])), adminAStr(adminADefaultBannerConfig()["message"]))
+	cfg["message"] = strings.TrimSpace(adminAStr(cfg["message"]))
 	cfg["linkUrl"] = firstNonEmpty(strings.TrimSpace(adminAStr(cfg["linkUrl"])), "#")
 	if adminAStr(cfg["linkTarget"]) != "_self" {
 		cfg["linkTarget"] = "_blank"
 	}
-	cfg["theme"] = adminAOneOf(adminAStr(cfg["theme"]), []string{"indigo", "cyan", "emerald", "amber", "rose", "purple"}, "indigo")
+	cfg["theme"] = adminAOneOf(adminAStr(cfg["theme"]), []string{"brand", "inverse", "neutral", "indigo", "cyan", "emerald", "amber", "rose", "purple"}, "indigo")
 	cfg["ambientGlow"] = cfg["ambientGlow"] != false
-	cfg["glowStyle"] = adminAOneOf(adminAStr(cfg["glowStyle"]), []string{"aurora", "cyan", "amber", "rose"}, "aurora")
-	cfg["dynamicEffect"] = adminAOneOf(adminAStr(cfg["dynamicEffect"]), []string{"breathe", "drift", "shimmer", "none"}, "breathe")
+	cfg["glowStyle"] = adminAOneOf(adminAStr(cfg["glowStyle"]), []string{"aurora", "brand", "cyan", "amber", "rose"}, "aurora")
+	cfg["dynamicEffect"] = adminAOneOf(adminAStr(cfg["dynamicEffect"]), []string{"breathe", "drift", "shimmer", "both", "none"}, "breathe")
 	cfg["dismissible"] = cfg["dismissible"] != false
 	days := int(adminAFloat(cfg["autoHideDays"]))
 	if days < 0 {
 		days = 7
 	}
 	cfg["autoHideDays"] = days
-	badge := strings.TrimSpace(adminAStr(cfg["badgeText"]))
-	if len(badge) > 10 {
-		badge = badge[:10]
-	}
-	cfg["badgeText"] = badge
+	cfg["badgeText"] = strings.TrimSpace(adminAStr(cfg["badgeText"]))
 	cfg["showPulseDot"] = adminABool(cfg["showPulseDot"])
 	cfg["targetScope"] = adminAOneOf(adminAStr(cfg["targetScope"]), []string{"all", "studio", "home"}, "all")
 	return cfg
+}
+
+func adminAValidateBannerConfig(cfg map[string]any) *adminError {
+	if adminABool(cfg["enabled"]) && adminAStr(cfg["message"]) == "" {
+		return adminErr("INVALID_CONFIG", "开启横幅前，请填写公告文案。", http.StatusUnprocessableEntity)
+	}
+	limits := []struct {
+		field, label string
+		limit        int
+	}{
+		{"id", "活动 ID", 64}, {"title", "活动名称", 128}, {"highlightText", "高亮前缀", 64},
+		{"ctaText", "按钮文案", 32}, {"badgeText", "角标", 10},
+	}
+	for _, field := range limits {
+		if utf8.RuneCountInString(adminAStr(cfg[field.field])) > field.limit {
+			return adminErr("INVALID_CONFIG", fmt.Sprintf("%s最多 %d 个字符。", field.label, field.limit), http.StatusUnprocessableEntity)
+		}
+	}
+	href := adminAStr(cfg["linkUrl"])
+	parsed, err := url.Parse(href)
+	if err != nil || strings.Contains(href, "\\") || strings.IndexFunc(href, unicode.IsControl) >= 0 ||
+		(href != "#" && !(strings.HasPrefix(href, "/") && !strings.HasPrefix(href, "//") ||
+			(parsed.Scheme == "https" || parsed.Scheme == "http") && parsed.Hostname() != "" && parsed.User == nil)) {
+		return adminErr("INVALID_BANNER_LINK", "请输入站内路径或有效的 HTTPS/HTTP 链接。", http.StatusUnprocessableEntity)
+	}
+	return nil
 }
 
 func adminAOneOf(value string, allowed []string, fallback string) string {
@@ -1195,41 +1230,41 @@ func adminAOneOf(value string, allowed []string, fallback string) string {
 	return fallback
 }
 
-// adminASaveBanner persists the effective setting and archives it into
-// ops_bill.banner_history exactly like lib/services/content.js.
-func adminASaveBanner(ctx context.Context, pool *pgxpool.Pool, cfg map[string]any, u *middleware.SessionUser, reqID string) (map[string]any, *adminError) {
-	if err := adminAWriteSetting(ctx, pool, "site_banner", cfg, "private", adminAActorEmail(u)); err != nil {
-		return nil, adminAInternal(err, "保存横幅配置失败")
-	}
-	if _, err := pool.Exec(ctx, `UPDATE ops_bill.banner_history SET is_active = false WHERE is_active = true`); err != nil {
-		return nil, adminAInternal(err, "保存横幅配置失败")
-	}
-	_, err := pool.Exec(ctx, `
+const adminABannerSnapshotFields = `
+	id, COALESCE(campaign_id, id) AS "campaignId", enabled, title, message, highlight_text AS "highlightText",
+	cta_text AS "ctaText", link_url AS "linkUrl", link_target AS "linkTarget", theme,
+	ambient_glow AS "ambientGlow", glow_style AS "glowStyle", dynamic_effect AS "dynamicEffect",
+	badge_text AS "badgeText", show_pulse_dot AS "showPulseDot", dismissible,
+	auto_hide_days AS "autoHideDays", target_scope AS "targetScope", is_active AS "isActive",
+	created_by AS "createdBy", created_at AS "createdAt", updated_at AS "updatedAt"`
+
+func adminABannerLock(ctx context.Context, tx pgx.Tx) error {
+	_, err := tx.Exec(ctx, `SELECT pg_advisory_xact_lock(hashtext('one.site_banner'))`)
+	return err
+}
+
+func adminAInsertBannerSnapshot(ctx context.Context, tx pgx.Tx, cfg map[string]any, actor string) error {
+	_, err := tx.Exec(ctx, `
 		INSERT INTO ops_bill.banner_history
 			(id, title, message, highlight_text, cta_text, link_url, link_target, theme,
 			 ambient_glow, glow_style, dynamic_effect, badge_text, show_pulse_dot,
-			 dismissible, auto_hide_days, target_scope, is_active, created_by, created_at, updated_at)
-		VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,true,$17,now(),now())
-		ON CONFLICT (id) DO UPDATE SET
-			title = EXCLUDED.title, message = EXCLUDED.message,
-			highlight_text = EXCLUDED.highlight_text, cta_text = EXCLUDED.cta_text,
-			link_url = EXCLUDED.link_url, link_target = EXCLUDED.link_target,
-			theme = EXCLUDED.theme, ambient_glow = EXCLUDED.ambient_glow,
-			glow_style = EXCLUDED.glow_style, dynamic_effect = EXCLUDED.dynamic_effect,
-			badge_text = EXCLUDED.badge_text, show_pulse_dot = EXCLUDED.show_pulse_dot,
-			dismissible = EXCLUDED.dismissible, auto_hide_days = EXCLUDED.auto_hide_days,
-			target_scope = EXCLUDED.target_scope, is_active = true, updated_at = now()`,
-		adminAStr(cfg["id"]), adminAStr(cfg["title"]), adminAStr(cfg["message"]),
+			 dismissible, auto_hide_days, target_scope, is_active, created_by, campaign_id, enabled)
+		VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,true,$17,$18,$19)`,
+		adminANewID("banner-version"), adminAStr(cfg["title"]), adminAStr(cfg["message"]),
 		adminAStr(cfg["highlightText"]), adminAStr(cfg["ctaText"]), adminAStr(cfg["linkUrl"]),
 		adminAStr(cfg["linkTarget"]), adminAStr(cfg["theme"]), adminABool(cfg["ambientGlow"]),
 		adminAStr(cfg["glowStyle"]), adminAStr(cfg["dynamicEffect"]), adminAStr(cfg["badgeText"]),
 		adminABool(cfg["showPulseDot"]), adminABool(cfg["dismissible"]), int(adminAFloat(cfg["autoHideDays"])),
-		adminAStr(cfg["targetScope"]), adminAActorEmail(u))
-	if err != nil {
-		return nil, adminAInternal(err, "保存横幅配置失败")
+		adminAStr(cfg["targetScope"]), actor, adminAStr(cfg["id"]), adminABool(cfg["enabled"]))
+	return err
+}
+
+func adminASetBanner(ctx context.Context, tx pgx.Tx, cfg map[string]any, actor string) error {
+	if err := adminAWriteSetting(ctx, tx, "site_banner", cfg, "private", actor); err != nil {
+		return err
 	}
-	adminAAuditAfter(ctx, pool, u, "content.banner_update", "content_banner", adminAStr(cfg["id"]), "medium", reqID, cfg)
-	return cfg, nil
+	_, err := tx.Exec(ctx, `UPDATE ops_bill.banner_history SET is_active = false WHERE is_active`)
+	return err
 }
 
 func adminABannerConfig(_ http.ResponseWriter, r *http.Request, d *Dependencies, u *middleware.SessionUser, reqID string) (any, map[string]any, *adminError) {
@@ -1252,10 +1287,24 @@ func adminABannerConfig(_ http.ResponseWriter, r *http.Request, d *Dependencies,
 	if len(body) == 0 {
 		return nil, nil, adminErr("INVALID_CONFIG", "横幅配置必须为有效对象", http.StatusUnprocessableEntity)
 	}
-	cfg, e := adminASaveBanner(ctx, pool, adminANormalizeBannerConfig(body), u, reqID)
-	if e != nil {
+	cfg := adminANormalizeBannerConfig(body)
+	cfg["message"] = strings.TrimSpace(adminAStr(body["message"]))
+	if e := adminAValidateBannerConfig(cfg); e != nil {
 		return nil, nil, e
 	}
+	actor := adminAActorEmail(u)
+	if err := pgx.BeginFunc(ctx, pool, func(tx pgx.Tx) error {
+		if err := adminABannerLock(ctx, tx); err != nil {
+			return err
+		}
+		if err := adminASetBanner(ctx, tx, cfg, actor); err != nil {
+			return err
+		}
+		return adminAInsertBannerSnapshot(ctx, tx, cfg, actor)
+	}); err != nil {
+		return nil, nil, adminAInternal(err, "保存横幅配置失败")
+	}
+	adminAAuditAfter(ctx, pool, u, "content.banner_update", "content_banner", adminAStr(cfg["id"]), "medium", reqID, cfg)
 	return cfg, nil, nil
 }
 
@@ -1269,25 +1318,10 @@ func adminABannerHistory(_ http.ResponseWriter, r *http.Request, d *Dependencies
 		return nil, nil, aerr
 	}
 	ctx := r.Context()
-	rows, err := adminAQueryRows(ctx, pool, `
-		SELECT id, title, message, highlight_text AS "highlightText", cta_text AS "ctaText",
-			link_url AS "linkUrl", link_target AS "linkTarget", theme,
-			ambient_glow AS "ambientGlow", glow_style AS "glowStyle", dynamic_effect AS "dynamicEffect",
-			badge_text AS "badgeText", show_pulse_dot AS "showPulseDot", dismissible,
-			auto_hide_days AS "autoHideDays", target_scope AS "targetScope", is_active AS "isActive",
-			created_by AS "createdBy", created_at AS "createdAt", updated_at AS "updatedAt"
-		FROM ops_bill.banner_history ORDER BY created_at DESC LIMIT 50`)
+	rows, err := adminAQueryRows(ctx, pool, `SELECT `+adminABannerSnapshotFields+`
+		FROM ops_bill.banner_history ORDER BY is_active DESC NULLS LAST, created_at DESC, id DESC LIMIT 50`)
 	if err != nil {
 		return nil, nil, adminAInternal(err, "横幅历史读取失败")
-	}
-	if len(rows) == 0 {
-		stored, _, err := adminAReadSetting(ctx, pool, "site_banner")
-		if err != nil {
-			return nil, nil, adminAInternal(err, "横幅配置读取失败")
-		}
-		cur := adminANormalizeBannerConfig(adminAJSONMap(stored))
-		cur["isActive"] = true
-		return []map[string]any{cur}, nil, nil
 	}
 	return rows, nil, nil
 }
@@ -1307,42 +1341,55 @@ func adminABannerHistoryItem(_ http.ResponseWriter, r *http.Request, d *Dependen
 	if id == "" {
 		return nil, nil, adminErr("VALIDATION_ERROR", "历史横幅 ID 不能为空", http.StatusUnprocessableEntity)
 	}
-	if r.Method == http.MethodDelete {
-		row, ok, err := adminAQueryOne(ctx, pool, `SELECT id, is_active AS "isActive" FROM ops_bill.banner_history WHERE id = $1`, id)
+	deleting := r.Method == http.MethodDelete
+	var before map[string]any
+	result, e := adminAWithTx(ctx, pool, func(tx pgx.Tx) (any, *adminError) {
+		if err := adminABannerLock(ctx, tx); err != nil {
+			return nil, adminAInternal(err, "横幅操作失败")
+		}
+		rows, err := tx.Query(ctx, `SELECT `+adminABannerSnapshotFields+` FROM ops_bill.banner_history WHERE id = $1`, id)
 		if err != nil {
-			return nil, nil, adminAInternal(err, "删除历史横幅失败")
+			return nil, adminAInternal(err, "历史横幅读取失败")
 		}
-		if !ok {
-			return nil, nil, adminErr("NOT_FOUND", "历史横幅记录不存在", http.StatusNotFound)
+		snapshots, err := adminARows(rows)
+		if err != nil {
+			return nil, adminAInternal(err, "历史横幅读取失败")
 		}
-		if adminABool(row["isActive"]) {
-			return nil, nil, adminErr("FORBIDDEN", "当前正在生效中的横幅无法直接删除，请先切换其他横幅", http.StatusForbidden)
+		if len(snapshots) == 0 {
+			return nil, adminErr("NOT_FOUND", "历史横幅记录不存在", http.StatusNotFound)
 		}
-		if _, err := pool.Exec(ctx, `DELETE FROM ops_bill.banner_history WHERE id = $1`, id); err != nil {
-			return nil, nil, adminAInternal(err, "删除历史横幅失败")
+		before = snapshots[0]
+		if deleting {
+			if adminABool(before["isActive"]) {
+				return nil, adminErr("FORBIDDEN", "请先切换到其他版本，再删除当前版本。", http.StatusForbidden)
+			}
+			if _, err := tx.Exec(ctx, `DELETE FROM ops_bill.banner_history WHERE id = $1`, id); err != nil {
+				return nil, adminAInternal(err, "删除历史横幅失败")
+			}
+			return map[string]any{"success": true, "id": id}, nil
 		}
-		adminAAudit(ctx, pool, u, "content.banner_history_delete", "content_banner_history", id, "medium", reqID, row, nil)
-		return map[string]any{"success": true, "id": id}, nil, nil
-	}
-	row, ok, err := adminAQueryOne(ctx, pool, `
-		SELECT id, title, message, highlight_text AS "highlightText", cta_text AS "ctaText",
-			link_url AS "linkUrl", link_target AS "linkTarget", theme,
-			ambient_glow AS "ambientGlow", glow_style AS "glowStyle", dynamic_effect AS "dynamicEffect",
-			badge_text AS "badgeText", show_pulse_dot AS "showPulseDot", dismissible,
-			auto_hide_days AS "autoHideDays", target_scope AS "targetScope"
-		FROM ops_bill.banner_history WHERE id = $1`, id)
-	if err != nil {
-		return nil, nil, adminAInternal(err, "激活历史横幅失败")
-	}
-	if !ok {
-		return nil, nil, adminErr("NOT_FOUND", "未找到该历史横幅记录", http.StatusNotFound)
-	}
-	row["enabled"] = true
-	cfg, e := adminASaveBanner(ctx, pool, adminANormalizeBannerConfig(row), u, reqID)
+		cfg := adminANormalizeBannerConfig(before)
+		cfg["id"] = before["campaignId"]
+		if e := adminAValidateBannerConfig(cfg); e != nil {
+			return nil, e
+		}
+		if err := adminASetBanner(ctx, tx, cfg, adminAActorEmail(u)); err != nil {
+			return nil, adminAInternal(err, "激活历史横幅失败")
+		}
+		if _, err := tx.Exec(ctx, `UPDATE ops_bill.banner_history SET is_active = true, updated_at = now() WHERE id = $1`, id); err != nil {
+			return nil, adminAInternal(err, "激活历史横幅失败")
+		}
+		return cfg, nil
+	})
 	if e != nil {
 		return nil, nil, e
 	}
-	return cfg, nil, nil
+	if deleting {
+		adminAAudit(ctx, pool, u, "content.banner_history_delete", "content_banner_history", id, "medium", reqID, before, nil)
+	} else {
+		adminAAuditAfter(ctx, pool, u, "content.banner_history_activate", "content_banner_history", id, "medium", reqID, result)
+	}
+	return result, nil, nil
 }
 
 // ---------------------------------------------------------------------------
@@ -1353,10 +1400,10 @@ func adminADefaultBrandConfig() map[string]any {
 	return map[string]any{
 		"brandName": "supdance", "siteTitle": "SupDance — Free AI Image & Video Studio",
 		"titleTemplate": "%s | SupDance AI Studio", "brandSlogan": "AI 创意工作室",
-		"logoType": "image", "logoUrl": "/uploads/branding/logo-1789960604256-8d69f211113d.png",
+		"logoType": "image", "logoUrl": "/branding/logo.png",
 		"logoIcon": "layers", "logoBgColor": "#22d3ee", "logoTextColor": "#000000",
 		"logoHref": "/", "logoTarget": "_self", "showBrandName": false,
-		"faviconUrl": "/uploads/branding/icon-1790631358168-d0b66b0fc4e1.svg",
+		"faviconUrl": "/branding/favicon.svg",
 	}
 }
 
@@ -1399,8 +1446,8 @@ func adminABranding(_ http.ResponseWriter, r *http.Request, d *Dependencies, u *
 			brand[k] = v
 		}
 		navigation := any(adminADefaultNavConfig())
-		if arr, ok := navRaw.([]any); ok && len(arr) > 0 {
-			navigation = arr
+		if items, err := site.DecodeNavigation([]byte(adminAJSONRaw(navRaw)), false); err == nil {
+			navigation = items
 		}
 		return map[string]any{"brand": brand, "navigation": navigation, "defaults": defaults}, nil, nil
 	}
@@ -1409,24 +1456,23 @@ func adminABranding(_ http.ResponseWriter, r *http.Request, d *Dependencies, u *
 		return nil, nil, e
 	}
 	if body["action"] == "reset" {
-		if err := adminAWriteSetting(ctx, pool, "site_brand", adminADefaultBrandConfig(), "private", adminAActorEmail(u)); err != nil {
-			return nil, nil, adminAInternal(err, "品牌配置重置失败")
-		}
-		if err := adminAWriteSetting(ctx, pool, "site_navigation", adminADefaultNavConfig(), "private", adminAActorEmail(u)); err != nil {
-			return nil, nil, adminAInternal(err, "导航配置重置失败")
+		err := pgx.BeginFunc(ctx, pool, func(tx pgx.Tx) error {
+			if err := adminAWriteSetting(ctx, tx, "site_brand", defaults["brand"], "private", adminAActorEmail(u)); err != nil {
+				return err
+			}
+			return adminAWriteSetting(ctx, tx, "site_navigation", defaults["navigation"], "private", adminAActorEmail(u))
+		})
+		if err != nil {
+			return nil, nil, adminAInternal(err, "品牌与导航配置重置失败")
 		}
 		adminAAuditAfter(ctx, pool, u, "content.branding_reset", "content_branding", "global", "medium", reqID, defaults)
-		return map[string]any{"brand": adminADefaultBrandConfig(), "navigation": adminADefaultNavConfig()}, nil, nil
+		return defaults, nil, nil
 	}
 	brand := adminADefaultBrandConfig()
 	for k, v := range adminAJSONMap(body["brand"]) {
 		brand[k] = v
 	}
-	if body["brand"] != nil {
-		if err := adminAWriteSetting(ctx, pool, "site_brand", brand, "private", adminAActorEmail(u)); err != nil {
-			return nil, nil, adminAInternal(err, "品牌配置保存失败")
-		}
-	} else {
+	if body["brand"] == nil {
 		stored, e := adminABrandingRead(ctx, pool, "site_brand")
 		if e != nil {
 			return nil, nil, e
@@ -1437,12 +1483,9 @@ func adminABranding(_ http.ResponseWriter, r *http.Request, d *Dependencies, u *
 	}
 	var navigation any = adminADefaultNavConfig()
 	if body["navigation"] != nil {
-		items := adminAJSONArray(body["navigation"])
-		if len(items) == 0 {
-			return nil, nil, adminAResultErr("导航菜单不能为空")
-		}
-		if err := adminAWriteSetting(ctx, pool, "site_navigation", items, "private", adminAActorEmail(u)); err != nil {
-			return nil, nil, adminAInternal(err, "导航配置保存失败")
+		items, err := site.DecodeNavigation([]byte(adminAJSONRaw(body["navigation"])), true)
+		if err != nil {
+			return nil, nil, adminAResultErr("导航项需要唯一标识、名称及有效站内路径或 HTTP(S) 链接")
 		}
 		navigation = items
 	} else {
@@ -1450,9 +1493,22 @@ func adminABranding(_ http.ResponseWriter, r *http.Request, d *Dependencies, u *
 		if e != nil {
 			return nil, nil, e
 		}
-		if arr, ok := stored.([]any); ok && len(arr) > 0 {
-			navigation = arr
+		if items, err := site.DecodeNavigation([]byte(adminAJSONRaw(stored)), false); err == nil {
+			navigation = items
 		}
+	}
+	if err := pgx.BeginFunc(ctx, pool, func(tx pgx.Tx) error {
+		if body["brand"] != nil {
+			if err := adminAWriteSetting(ctx, tx, "site_brand", brand, "private", adminAActorEmail(u)); err != nil {
+				return err
+			}
+		}
+		if body["navigation"] != nil {
+			return adminAWriteSetting(ctx, tx, "site_navigation", navigation, "private", adminAActorEmail(u))
+		}
+		return nil
+	}); err != nil {
+		return nil, nil, adminAInternal(err, "品牌与导航配置保存失败")
 	}
 	payload := map[string]any{"brand": brand, "navigation": navigation}
 	adminAAuditAfter(ctx, pool, u, "content.branding_update", "content_branding", "global", "medium", reqID, payload)
@@ -1510,12 +1566,17 @@ func adminABrandingUpload(_ http.ResponseWriter, r *http.Request, d *Dependencie
 	if uploadType == "icon" {
 		prefix = "icon"
 	}
-	dir := filepath.Join("public", "uploads", "branding")
+	dir := d.brandingUploadDir()
+	if dir == "" {
+		return nil, nil, adminErr("STORAGE_NOT_CONFIGURED", "品牌图片存储尚未配置", http.StatusServiceUnavailable)
+	}
 	if err := os.MkdirAll(dir, 0o755); err != nil {
 		return nil, nil, adminErr("UPLOAD_FAILED", "图片上传处理失败", http.StatusInternalServerError)
 	}
 	var suffix [6]byte
-	_, _ = rand.Read(suffix[:])
+	if _, err := rand.Read(suffix[:]); err != nil {
+		return nil, nil, adminErr("UPLOAD_FAILED", "图片上传处理失败", http.StatusInternalServerError)
+	}
 	filename := fmt.Sprintf("%s-%d-%s%s", prefix, time.Now().UnixMilli(), hex.EncodeToString(suffix[:]), ext)
 	if err := os.WriteFile(filepath.Join(dir, filename), data, 0o644); err != nil {
 		return nil, nil, adminErr("UPLOAD_FAILED", "图片上传处理失败", http.StatusInternalServerError)
@@ -1524,6 +1585,43 @@ func adminABrandingUpload(_ http.ResponseWriter, r *http.Request, d *Dependencie
 		"url": "/uploads/branding/" + filename, "filename": filename,
 		"size": len(data), "ext": ext,
 	}, nil, nil
+}
+
+var brandingUploadName = regexp.MustCompile(`^(logo|icon)-[0-9]+-[a-f0-9]{12}\.(png|jpe?g|webp|svg|ico)$`)
+
+func (d *Dependencies) brandingUploadDir() string {
+	if root := d.Config.StorageLocalRoot; root != "" {
+		return filepath.Join(root, "branding")
+	}
+	return ""
+}
+
+func (d *Dependencies) handleBrandingUploadRead(w http.ResponseWriter, r *http.Request) {
+	name := pathParam(r, "filename")
+	dir := d.brandingUploadDir()
+	if dir == "" || !brandingUploadName.MatchString(name) {
+		http.NotFound(w, r)
+		return
+	}
+	file, err := os.Open(filepath.Join(dir, name))
+	if err != nil {
+		if errors.Is(err, os.ErrNotExist) {
+			http.NotFound(w, r)
+		} else {
+			http.Error(w, "Branding asset unavailable", http.StatusServiceUnavailable)
+		}
+		return
+	}
+	defer file.Close()
+	info, err := file.Stat()
+	if err != nil || !info.Mode().IsRegular() {
+		http.Error(w, "Branding asset unavailable", http.StatusServiceUnavailable)
+		return
+	}
+	w.Header().Set("Cache-Control", "public, max-age=604800, immutable")
+	w.Header().Set("Content-Security-Policy", "sandbox; default-src 'none'; style-src 'unsafe-inline'")
+	w.Header().Set("X-Content-Type-Options", "nosniff")
+	http.ServeContent(w, r, name, info.ModTime(), file)
 }
 
 // ---------------------------------------------------------------------------
@@ -2461,13 +2559,20 @@ func adminAFeedbackReview(_ http.ResponseWriter, r *http.Request, d *Dependencie
 	if aerr != nil {
 		return nil, nil, aerr
 	}
-	var body map[string]any
-	if e := adminABodyLenient(r, 128*1024, &body); e != nil {
+	var body struct {
+		Resolution  string `json:"resolution"`
+		RewardCoins *int64 `json:"rewardCoins"`
+		Note        string `json:"note"`
+	}
+	if e := adminABodyStrict(r, 128*1024, &body, "FEEDBACK_REVIEW_INVALID", "请核对审核结论和整数硬币数量", http.StatusBadRequest); e != nil {
 		return nil, nil, e
 	}
-	resolution := adminAStr(body["resolution"])
+	resolution := strings.TrimSpace(body.Resolution)
 	if resolution != "accepted" && resolution != "rejected" {
 		return nil, nil, adminAResultErr("审核结论无效")
+	}
+	if resolution == "accepted" && body.RewardCoins != nil && (*body.RewardCoins < 1 || *body.RewardCoins >= 100_000_000_000_000) {
+		return nil, nil, adminAResultErr("采纳需要填写有效的整数发放数量")
 	}
 	id := pathParam(r, "id")
 	data, aerr := adminAWithTx(r.Context(), pool, func(tx pgx.Tx) (any, *adminError) {
@@ -2486,9 +2591,9 @@ func adminAFeedbackReview(_ http.ResponseWriter, r *http.Request, d *Dependencie
 		amount := 0.0
 		var rewardTxn any
 		if resolution == "accepted" {
-			amount = adminAFloat(body["rewardCoins"])
-			if amount <= 0 {
-				amount = adminAFeedbackDefaults[kind]
+			amount = adminAFeedbackDefaults[kind]
+			if body.RewardCoins != nil {
+				amount = float64(*body.RewardCoins)
 			}
 			if amount <= 0 {
 				return nil, adminAResultErr("采纳需要填写发放数量")
@@ -2523,8 +2628,8 @@ func adminAFeedbackReview(_ http.ResponseWriter, r *http.Request, d *Dependencie
 				newBalance := balance + amount
 				txn := "tx_fbrw_" + adminANewID("id")
 				note := "采纳建议《" + title + "》发放硬币奖励"
-				if len(note) > 200 {
-					note = note[:200]
+				if runes := []rune(note); len(runes) > 200 {
+					note = string(runes[:200])
 				}
 				if _, err := tx.Exec(ctx, `
 					INSERT INTO ops_bill.currency_journal_entries
@@ -2541,9 +2646,9 @@ func adminAFeedbackReview(_ http.ResponseWriter, r *http.Request, d *Dependencie
 				rewardTxn = txn
 			}
 		}
-		note := adminAStr(body["note"])
-		if len(note) > 500 {
-			note = note[:500]
+		note := strings.TrimSpace(body.Note)
+		if runes := []rune(note); len(runes) > 500 {
+			note = string(runes[:500])
 		}
 		tag, err := tx.Exec(ctx, `
 			UPDATE ops_bill.feedback_reports
@@ -2556,6 +2661,15 @@ func adminAFeedbackReview(_ http.ResponseWriter, r *http.Request, d *Dependencie
 		}
 		if tag.RowsAffected() == 0 {
 			return nil, adminAResultErr("该提交已被其他管理员处理，请刷新后重试")
+		}
+		notice := fmt.Sprintf("「%s」已审核，请查看回复。", title)
+		if resolution == "accepted" {
+			notice = fmt.Sprintf("「%s」已采纳，发放 %.0f 枚硬币。", title, amount)
+		}
+		if _, err := tx.Exec(ctx, `
+			INSERT INTO sys_core.user_notifications (id, user_id, title, content, type, link_url)
+			VALUES ($1, $2, '反馈已审核', $3, 'system', '/feedback')`, "feedback-review-"+id, userID, notice); err != nil {
+			return nil, adminAInternal(err, "审核通知写入失败")
 		}
 		if _, err := tx.Exec(ctx, `
 			INSERT INTO ops_bill.admin_audit_logs
@@ -2596,15 +2710,41 @@ func adminAGenerations(_ http.ResponseWriter, r *http.Request, d *Dependencies, 
 	if s := adminAQueryStr(r, "model"); s != "" {
 		clauses = append(clauses, "c.model = "+n(s))
 	}
-	if s := adminAQueryStr(r, "userId"); s != "" {
+	userID := adminAQueryStr(r, "user_id")
+	if userID == "" {
+		userID = adminAQueryStr(r, "userId")
+	}
+	if s := userID; s != "" {
 		clauses = append(clauses, "c.user_id = "+n(s))
 	}
 	if s := adminAQueryStr(r, "q"); s != "" {
 		p := n("%" + s + "%")
-		clauses = append(clauses, "(c.label ILIKE "+p+" OR c.external_request_id ILIKE "+p+")")
+		clauses = append(clauses, "(c.id ILIKE "+p+" OR c.label ILIKE "+p+" OR c.model ILIKE "+p+" OR u.email ILIKE "+p+" OR c.external_request_id ILIKE "+p+")")
 	}
 	base := `SELECT c.*, u.email FROM ai_studio.creations c
 		LEFT JOIN auth_usr.users u ON u.id = c.user_id WHERE ` + strings.Join(clauses, " AND ")
+	if adminAQueryStr(r, "view") == "users" && userID == "" {
+		grouped := `WITH filtered AS (` + base + `), ranked AS (
+			SELECT f.*,
+				row_number() OVER (account ORDER BY created_at DESC, id DESC) AS position,
+				count(*) OVER account AS task_count,
+				count(*) FILTER (WHERE status IN ('succeeded','completed','success')) OVER account AS succeeded_count,
+				count(*) FILTER (WHERE status IN ('failed','error','timeout')) OVER account AS failed_count,
+				count(*) FILTER (WHERE status IN ('queued','pending','running','processing','submitting','needs_reconcile')) OVER account AS active_count,
+				sum(credit_cost) OVER account AS total_credits,
+				sum(actual_cost_usd) OVER account AS total_cost_usd
+			FROM filtered f WINDOW account AS (PARTITION BY user_id)
+		)
+		SELECT latest.*, latest.id AS task_id,
+			COALESCE((SELECT jsonb_agg(to_jsonb(h) ORDER BY h.position)
+				FROM ranked h WHERE h.user_id = latest.user_id AND h.position BETWEEN 2 AND 6), '[]'::jsonb) AS history
+		FROM ranked latest WHERE latest.position = 1`
+		rows, meta, err := adminAPaged(r.Context(), pool, r, grouped, "latest.created_at", "latest.id", args...)
+		if err != nil {
+			return nil, nil, adminAInternal(err, "用户生成任务读取失败")
+		}
+		return rows, meta, nil
+	}
 	rows, meta, err := adminAPaged(r.Context(), pool, r, base, "c.created_at", "c.id", args...)
 	if err != nil {
 		return nil, nil, adminAInternal(err, "生成任务列表读取失败")

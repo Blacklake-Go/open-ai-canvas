@@ -412,6 +412,7 @@ export default function CommunityClient({ initialPostId = null, locale: localePr
   const [posts, setPosts] = useState([]);
   const [featuredPosts, setFeaturedPosts] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [feedError, setFeedError] = useState(null);
   const [category, setCategory] = useState('all');
   const [sort, setSort] = useState('trending');
   const [searchQuery, setSearchQuery] = useState('');
@@ -438,19 +439,27 @@ export default function CommunityClient({ initialPostId = null, locale: localePr
   const loadPosts = useCallback(async () => {
     try {
       setLoading(true);
+      setFeedError(null);
       const params = new URLSearchParams({ limit: '36', sort });
       if (category !== 'all') params.set('category', category);
       if (searchQuery.trim()) params.set('q', searchQuery.trim());
       const response = await fetch(`/api/community/posts?${params.toString()}`, { cache: 'no-store' });
+      if (response.status === 401) {
+        setPosts([]);
+        setFeaturedPosts([]);
+        setFeedError('auth');
+        return;
+      }
+      if (!response.ok) throw new Error(`HTTP ${response.status}`);
       const data = await response.json();
       if (Array.isArray(data.posts)) setPosts(data.posts);
     } catch (error) {
       console.error('Failed to load community creations', error);
-      triggerToast(t.loadFailed);
+      setFeedError('unavailable');
     } finally {
       setLoading(false);
     }
-  }, [category, searchQuery, sort, t.loadFailed]);
+  }, [category, searchQuery, sort]);
 
   useEffect(() => { loadPosts(); }, [loadPosts]);
 
@@ -486,7 +495,7 @@ export default function CommunityClient({ initialPostId = null, locale: localePr
       const response = await fetch(`/api/community/posts/${post.id}/like`, { method: 'POST' });
       const data = await response.json();
       if (!response.ok) return triggerToast(data.error || t.pleaseLogin);
-      setPosts((current) => current.map((item) => item.id === post.id ? { ...item, is_liked: data.isLiked, likes_count: data.likesCount } : item));
+      setPosts((current) => current.map((item) => item.id === post.id ? { ...item, is_liked: data.liked, likes_count: data.likesCount } : item));
     } catch { triggerToast(t.networkError); }
   };
 
@@ -590,6 +599,17 @@ export default function CommunityClient({ initialPostId = null, locale: localePr
         <section className="flex-1 flex flex-col min-h-[420px]" aria-live="polite">
           {loading ? (
             <FeedSkeleton />
+          ) : feedError ? (
+            <div className="flex flex-1 flex-col items-center justify-center gap-3 rounded-2xl border border-line bg-surface p-6">
+              <p role="alert" className="text-body-sm text-ink-muted">{feedError === 'auth' ? t.pleaseLogin : t.loadFailed}</p>
+              {feedError === 'auth' && (
+                <Button asChild>
+                  <Link href={localizeStudioPath(`/login?redirect=${encodeURIComponent(window.location.pathname + window.location.search + window.location.hash)}`, norm)}>
+                    {t.pleaseLogin}
+                  </Link>
+                </Button>
+              )}
+            </div>
           ) : posts.length === 0 ? (
             <div className="flex-1 rounded-[28px] border border-white/[0.07] bg-[#16171a]/80 backdrop-blur-sm p-12 sm:p-20 text-center flex flex-col items-center justify-center shadow-xl">
               <div className="flex size-14 items-center justify-center rounded-2xl border border-white/[0.08] bg-white/[0.04] text-white shadow-inner">

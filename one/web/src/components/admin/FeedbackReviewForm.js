@@ -1,11 +1,11 @@
 'use client';
 
-import { useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRef, useState } from 'react';
 import { CheckCircle2, XCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
+import { apiRequest } from '@/services/api/http';
 
 const RESOLUTIONS = [
   {
@@ -29,8 +29,8 @@ function createIdempotencyKey() {
   return `feedback-review-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 12)}`;
 }
 
-export default function FeedbackReviewForm({ feedbackId, defaultReward = 0 }) {
-  const router = useRouter();
+export default function FeedbackReviewForm({ feedbackId, defaultReward = 0, onReviewed }) {
+  const attempt = useRef(null);
   const [resolution, setResolution] = useState('accepted');
   const [rewardCoins, setRewardCoins] = useState(String(defaultReward || 0));
   const [note, setNote] = useState('');
@@ -42,47 +42,33 @@ export default function FeedbackReviewForm({ feedbackId, defaultReward = 0 }) {
     if (busy) return;
 
     const amount = Number(rewardCoins);
-    if (resolution === 'accepted' && (!Number.isFinite(amount) || amount <= 0)) {
-      setMessage({ tone: 'error', text: '采纳时必须填写大于 0 的硬币数量' });
+    if (resolution === 'accepted' && (!Number.isSafeInteger(amount) || amount < 1 || amount >= 100_000_000_000_000)) {
+      setMessage({ tone: 'error', text: '采纳时请填写有效的整数硬币数量' });
       return;
     }
 
     setBusy(true);
     setMessage(null);
+    const body = JSON.stringify({
+      resolution,
+      rewardCoins: resolution === 'accepted' ? amount : 0,
+      note: note.trim(),
+    });
+    if (attempt.current?.body !== body) attempt.current = { body, key: createIdempotencyKey() };
 
     try {
-      const response = await fetch(`/api/admin/feedback/${encodeURIComponent(feedbackId)}/review`, {
+      const result = await apiRequest(`/api/admin/feedback/${encodeURIComponent(feedbackId)}/review`, {
         method: 'POST',
+        contract: 'admin',
         headers: {
           'Content-Type': 'application/json',
-          'Idempotency-Key': createIdempotencyKey(),
+          'Idempotency-Key': attempt.current.key,
         },
-        body: JSON.stringify({
-          resolution,
-          rewardCoins: resolution === 'accepted' ? Math.trunc(amount) : 0,
-          note: note.trim(),
-        }),
+        body,
       });
-      const data = await response.json().catch(() => null);
-      if (!response.ok) {
-        setMessage({
-          tone: 'error',
-          text: data?.error?.message || data?.error || '裁决失败，请刷新后重试',
-        });
-        return;
-      }
-
-      const rewarded = Number(data?.data?.rewardedCoins || 0);
-      setMessage({
-        tone: 'success',
-        text:
-          resolution === 'accepted'
-            ? `已采纳，${rewarded} 枚硬币已发放。页面即将刷新。`
-            : '已驳回，页面即将刷新。',
-      });
-      setTimeout(() => router.refresh(), 700);
-    } catch {
-      setMessage({ tone: 'error', text: '网络异常，裁决未送达，请重试' });
+      onReviewed(result.feedback);
+    } catch (error) {
+      setMessage({ tone: 'error', text: error.message || '裁决失败，请重试' });
     } finally {
       setBusy(false);
     }

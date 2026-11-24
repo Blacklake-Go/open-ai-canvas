@@ -41,7 +41,7 @@ const CINEMA_MESSAGES = {
   es: es,
   'es-ES': es,
 };
-import { isModelActive, getVideoModelById, getI2VModelById, getModelById, getI2IModelById } from "../models.js";
+import { isModelActive, subscribeModelDirectory, getVideoModelById, getI2VModelById, getModelById, getI2IModelById } from "../models.js";
 
 // ─── Constants (inlined from promptUtils) ───────────────────────────────────
 
@@ -716,8 +716,10 @@ export default function CinemaStudio({
 }) {
   const copy = resolveCopy(en, CINEMA_MESSAGES, locale);
   const relayCopy = resolveCopy(CINEMA_RELAY_COPY_EN, CINEMA_RELAY_COPY_LOCALES, locale);
-  const availableCinemaVideoModels = CINEMA_VIDEO_MODELS.filter((model) => isModelActive(model.id));
-  const availableCinemaPhotoModels = CINEMA_PHOTO_MODELS.filter((model) => isModelActive(model.id));
+  const [directoryRevision, setDirectoryRevision] = useState(0);
+  useEffect(() => subscribeModelDirectory(() => setDirectoryRevision(revision => revision + 1)), []);
+  const availableCinemaVideoModels = useMemo(() => CINEMA_VIDEO_MODELS.filter(model => isModelActive(model.id)), [directoryRevision]);
+  const availableCinemaPhotoModels = useMemo(() => CINEMA_PHOTO_MODELS.filter(model => isModelActive(model.id)), [directoryRevision]);
   const LEGACY_PERSIST_KEY = "hg_cinema_studio_persistent";
   const PERSIST_KEY = scopedPersistKey(LEGACY_PERSIST_KEY, apiKey);
   useEffect(() => {
@@ -784,6 +786,7 @@ export default function CinemaStudio({
   useEffect(() => {
     const handleSelectModelEvent = (e) => {
       const detail = e.detail;
+      if (detail?.tabId && detail.tabId !== "cinema") return;
       const modelKey = typeof detail === "string" ? detail : detail?.modelKey;
       if (modelKey) {
         applyModelSelection(modelKey);
@@ -938,9 +941,11 @@ export default function CinemaStudio({
       const stored = localStorage.getItem(PERSIST_KEY);
       if (stored) {
         const data = JSON.parse(stored);
-        if (data.generationMode) setGenerationMode(data.generationMode);
-        if (data.selectedVideoModel) setSelectedVideoModel(data.selectedVideoModel);
-        if (data.selectedPhotoModel) setSelectedPhotoModel(data.selectedPhotoModel);
+        if (!new URLSearchParams(window.location.search).get("model")) {
+          if (data.generationMode) setGenerationMode(data.generationMode);
+          if (data.selectedVideoModel) setSelectedVideoModel(data.selectedVideoModel);
+          if (data.selectedPhotoModel) setSelectedPhotoModel(data.selectedPhotoModel);
+        }
         if (data.videoDuration) setVideoDuration(data.videoDuration);
         if (data.settings) setSettings(data.settings);
         if (data.resolution) setResolution(data.resolution);
@@ -1718,7 +1723,9 @@ export default function CinemaStudio({
               {/* Model Picker */}
               <div className="relative">
                 <button
+                  type="button"
                   ref={modelBtnRef}
+                  data-studio-model={generationMode === "video" ? selectedVideoModel : selectedPhotoModel}
                   className={promptControlClassName({
                     active: openDropdown === "model",
                     className: "text-xs font-semibold active:scale-[0.98] active:duration-instant cursor-pointer",

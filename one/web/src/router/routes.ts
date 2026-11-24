@@ -70,7 +70,7 @@ export const STUDIO_TAB_ALIASES: Record<string, StudioTabId> = {
 export const STUDIO_ALIAS_SEGMENTS = ['workflow', 'character', 'motion-agent'] as const;
 
 export const UNPREFIXED_TOP_SEGMENTS = [
-  'about', 'account', 'admin', 'agents', 'assets', 'assistant', 'benefits',
+  'about', 'account', 'admin', 'agents', 'assets', 'assistant', 'benefits', 'billing',
   'call-api', 'canvas-tools', 'change-password', 'community', 'coins',
   'content-policy', 'creations', 'credits', 'design-system', 'embed-auth',
   'feedback', 'forgot-password', 'lab', 'login', 'models', 'onboarding',

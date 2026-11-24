@@ -5,6 +5,29 @@ import (
 	"testing"
 )
 
+func TestWorkshopDefaultsPinTheReviewedVersion(t *testing.T) {
+	tool, ok := WorkshopToolByID("character_three_view")
+	if !ok || len(WorkshopTools()) != 10 {
+		t.Fatal("workshop tools must include all ten distinct entries")
+	}
+	unusable := WorkshopVersion{WorkshopSelection: WorkshopSelection{"model", "route-1", "contract-1"},
+		Ratios: []string{"1:1"}, Resolutions: []string{"2k"}}
+	oldVersion := WorkshopVersion{WorkshopSelection: WorkshopSelection{"model", "route-2", "old-contract"},
+		Ratios: []string{"16:9"}, Resolutions: []string{"2k"}}
+	newVersion := oldVersion
+	newVersion.Contract = "new-contract"
+	versions := []WorkshopVersion{unusable, newVersion}
+	if result, ok := ResolveWorkshopVersion(tool, versions, nil); !ok || result.VersionID != newVersion.VersionID {
+		t.Fatalf("automatic selection did not skip incompatible version: %#v", result)
+	}
+	if _, ok := ResolveWorkshopVersion(tool, versions, map[string]WorkshopSelection{tool.ID: oldVersion.WorkshopSelection}); ok {
+		t.Fatal("a changed provider route must not replace a version explicitly selected by an administrator")
+	}
+	if err := newVersion.ValidatePlan(&ToolPlan{Parameters: map[string]any{"aspect_ratio": "16:9", "resolution": "4k"}}); err == nil {
+		t.Fatal("the plan must reject resolution outside the selected version's contract")
+	}
+}
+
 func TestBuildToolPlanAndValidation(t *testing.T) {
 	if _, err := BuildToolPlan("outpaint", nil, "bad"); err == nil {
 		t.Fatalf("expected invalid source error")

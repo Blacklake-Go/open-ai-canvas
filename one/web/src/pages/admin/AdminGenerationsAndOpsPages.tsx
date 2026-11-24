@@ -34,12 +34,13 @@ export function AdminGenerationsPage() {
   const { redirectEl } = useAdminPermissionGuard(PERMISSIONS.generationsRead);
   const location = useLocation();
   const params = new URLSearchParams(location.search);
-  const view = params.get('view') || 'users';
   const userId = params.get('user_id') || '';
+  const view = userId || params.get('view') === 'tasks' ? 'tasks' : 'users';
 
   const backParams = new URLSearchParams(params);
   backParams.delete('user_id');
   backParams.delete('cursor');
+  backParams.delete('view');
   const backHref = `?${backParams.toString()}`;
 
   const viewHref = (key: string) => {
@@ -51,7 +52,7 @@ export function AdminGenerationsPage() {
 
   const apiParams = new URLSearchParams(params);
   apiParams.set('view', view);
-  const { data: raw } = useAdminRawData(`/api/admin/generations?${apiParams.toString()}`, [
+  const { data: raw, loading, error, reload } = useAdminRawData(`/api/admin/generations?${apiParams.toString()}`, [
     location.search,
   ]);
 
@@ -263,7 +264,14 @@ export function AdminGenerationsPage() {
 
       {filterForm}
 
-      {view === 'users' ? (
+      {loading ? (
+        <p role="status" className="py-6 text-body-sm text-ink-muted">正在读取生成任务…</p>
+      ) : error ? (
+        <Card>
+          <p role="alert" className="text-body-sm text-danger">{error}</p>
+          <button type="button" onClick={reload} className="control-focus mt-3 rounded-lg border border-line px-4 py-2">重新加载</button>
+        </Card>
+      ) : view === 'users' ? (
         result.rows.length ? (
           <UserGroupList groups={result.rows} baseParams={params.toString()} />
         ) : (
@@ -272,7 +280,7 @@ export function AdminGenerationsPage() {
       ) : (
         <DataTable columns={columns} rows={result.rows} empty="未找到匹配的生成任务记录" />
       )}
-      <Pagination meta={result.meta} searchParams={params} />
+      {!loading && !error && <Pagination meta={result.meta} searchParams={params} />}
     </>
   );
 }

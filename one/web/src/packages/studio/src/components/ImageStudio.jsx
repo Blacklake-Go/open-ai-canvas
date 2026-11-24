@@ -20,6 +20,7 @@ import MobileGenerationActions, {
 } from "./MobileGenerationActions.jsx";
 import {
   applyActiveModelDirectory,
+  findModelForDeepLink,
   t2iModels,
   i2iModels,
   isModelActive,
@@ -1686,12 +1687,12 @@ export default function ImageStudio({
 
     // 4. Fallback search in raw t2iModels / i2iModels
     if (!variant) {
-      const rawT2I = t2iModels.find((m) => m.id === cleanKey || m.endpoint === cleanKey);
+      const rawT2I = findModelForDeepLink(t2iModels, cleanKey);
       if (rawT2I) {
         variant = { mode: "t2i", model: rawT2I };
         family = imageModelCatalog.familyByVariantId.get(rawT2I.id) || { id: rawT2I.id, name: rawT2I.name };
       } else {
-        const rawI2I = i2iModels.find((m) => m.id === cleanKey || m.endpoint === cleanKey);
+        const rawI2I = findModelForDeepLink(i2iModels, cleanKey);
         if (rawI2I) {
           variant = { mode: "i2i", model: rawI2I };
           family = imageModelCatalog.familyByVariantId.get(rawI2I.id) || { id: rawI2I.id, name: rawI2I.name };
@@ -1712,7 +1713,7 @@ export default function ImageStudio({
     if (targetModel) {
       applyModelSelection(targetModel);
     }
-  }, [initialModel, applyModelSelection]);
+  }, [initialModel, applyModelSelection, modelDirectoryRevision]);
 
   // ── Sync with initialPrompt prop and URL ?remixPrompt= / ?prompt= / ?ar= / ?quality= / ?batch= ──────────────────
   useEffect(() => {
@@ -2746,6 +2747,7 @@ export default function ImageStudio({
               <div className="relative">
                 <button
                   type="button"
+                  data-studio-model={selectedModelId}
                   onClick={(e) => {
                     e.stopPropagation();
                     setDropdownOpen((o) => (o === "model" ? null : "model"));

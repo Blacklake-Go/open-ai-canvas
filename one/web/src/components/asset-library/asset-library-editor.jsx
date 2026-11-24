@@ -23,9 +23,9 @@ const SCENE_FIELD_KEYS = ['description', 'prompt'];
 function initialValues(asset, defaultFolderId) {
   const definition = asset?.data?.definition || {};
   const values = {
-    kind: asset?.kind === 'entity' ? 'entity' : 'text',
+    kind: asset?.kind || 'text',
     category: asset?.category || 'other',
-    folderId: asset?.folderId || defaultFolderId || '',
+    folderId: (asset ? asset.folderId : defaultFolderId) || '',
     title: asset?.title || '',
     coverUrl: asset?.coverUrl || '',
     tags: Array.isArray(asset?.tags) ? asset.tags : [],
@@ -69,7 +69,12 @@ export default function AssetEditorModal({ open, asset, defaultFolderId, folders
   );
 
   const submit = async () => {
-    const values = await form.validateFields();
+    let values;
+    try {
+      values = await form.validateFields();
+    } catch {
+      return;
+    }
     const definition = {};
     const keys = kind === 'entity' && (values.category === 'environment' || values.category === 'prop')
       ? SCENE_FIELD_KEYS
@@ -87,13 +92,15 @@ export default function AssetEditorModal({ open, asset, defaultFolderId, folders
       category: values.category || 'other',
       folderId: values.folderId || null,
       title: values.title?.trim() || '',
-      coverUrl: values.coverUrl?.trim() || null,
       tags: values.tags || [],
       source: values.source?.trim() || '',
       note: values.note?.trim() || '',
     };
     if (kind === 'text') payload.data = { content: values.content || '' };
-    else payload.data = { definition };
+    if (kind === 'entity') {
+      payload.coverUrl = values.coverUrl?.trim() || null;
+      payload.data = { definition };
+    }
 
     await onSave(payload);
   };
@@ -124,7 +131,7 @@ export default function AssetEditorModal({ open, asset, defaultFolderId, folders
               <Select
                 classNames={{ popup: { root: 'asset-library-overlay-root' } }}
                 disabled={Boolean(asset)}
-                options={[
+                options={asset ? [{ label: copy.kindLabels[asset.kind] || asset.kind, value: asset.kind }] : [
                   { label: copy.kindLabels.text, value: 'text' },
                   { label: copy.kindLabels.entity, value: 'entity' },
                 ]}
@@ -178,11 +185,11 @@ export default function AssetEditorModal({ open, asset, defaultFolderId, folders
                 </div>
               )}
             </>
-          ) : (
+          ) : kind === 'text' ? (
             <Form.Item name="content" label={copy.fieldContent} rules={[{ required: true, message: copy.contentRequired }]}>
               <Input.TextArea rows={10} placeholder={copy.contentPlaceholder} />
             </Form.Item>
-          )}
+          ) : null}
           <div className="asset-editor-row">
             <Form.Item name="source" label={copy.fieldSource}>
               <Input allowClear placeholder={copy.sourcePlaceholder} />

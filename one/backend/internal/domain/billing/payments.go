@@ -243,6 +243,7 @@ func (g *HTTPGateway) stripeRefund(ctx context.Context, req GatewayRefundRequest
 	}
 	form := url.Values{}
 	form.Set("payment_intent", pi)
+	form.Set("metadata[order_id]", req.Order.ID)
 	if req.Reason != "" {
 		form.Set("metadata[reason]", req.Reason)
 	}
@@ -275,7 +276,7 @@ func (g *HTTPGateway) stripeRefund(ctx context.Context, req GatewayRefundRequest
 		}
 		return nil, svcErr(http.StatusBadGateway, "STRIPE_REFUND_FAILED", msg)
 	}
-	return &GatewayRefundResponse{ExternalRefundID: out.ID, Status: firstStr(out.Status, "succeeded")}, nil
+	return &GatewayRefundResponse{ExternalRefundID: out.ID, Status: out.Status}, nil
 }
 
 func (g *HTTPGateway) alipayCreds(ctx context.Context) (appID, privKey, notifyURL string, err error) {
@@ -635,7 +636,7 @@ func (g *HTTPGateway) paypalRefund(ctx context.Context, req GatewayRefundRequest
 	if resp.StatusCode >= 400 || out.ID == "" {
 		return nil, svcErr(http.StatusBadGateway, "PAYPAL_REFUND_FAILED", firstStr(out.Message, "PayPal 退款请求失败"))
 	}
-	return &GatewayRefundResponse{ExternalRefundID: out.ID, Status: firstStr(out.Status, "COMPLETED")}, nil
+	return &GatewayRefundResponse{ExternalRefundID: out.ID, Status: out.Status}, nil
 }
 
 func signAlipayRSA2(params map[string]string, privKeyText string) (string, error) {
@@ -730,6 +731,9 @@ func (s *Service) RefundOrder(ctx context.Context, orderID, reason, actorID stri
 	if o.Status == "refunded" {
 		return nil, svcErr(http.StatusBadRequest, "ORDER_ALREADY_REFUNDED", "该订单已处于退款状态")
 	}
+	if o.Status != "paid" {
+		return nil, svcErr(http.StatusConflict, "ORDER_NOT_PAID", "只能对已支付的订单申请退款")
+	}
 
 	var extRefundID, provStatus string
 	prov := strings.ToLower(strings.TrimSpace(o.Provider))
@@ -752,6 +756,13 @@ func (s *Service) RefundOrder(ctx context.Context, orderID, reason, actorID stri
 		}
 		extRefundID = rfResp.ExternalRefundID
 		provStatus = rfResp.Status
+		switch strings.ToLower(strings.TrimSpace(provStatus)) {
+		case "succeeded", "success", "completed":
+		case "pending", "processing", "requires_action":
+			return nil, svcErr(http.StatusConflict, "REFUND_AWAITING_PROVIDER", "退款申请已受理，等待支付渠道确认")
+		default:
+			return nil, svcErr(http.StatusBadGateway, "REFUND_NOT_CONFIRMED", "支付渠道尚未确认退款成功，请核实渠道状态")
+		}
 	}
 
 	if _, err := s.Repo.ApplyPaymentWebhook(ctx, WebhookFulfillmentInput{
@@ -813,6 +824,13 @@ func (s *Service) ReplayWebhookEvent(ctx context.Context, eventID string) (*Webh
 	var obj map[string]any
 	_ = json.Unmarshal(rawPayload, &obj)
 	in := buildReplayWebhookInput(provider, evID, evType, obj)
+	if provider == "stripe" {
+		var eligible bool
+		in, eligible = stripeWebhookInput(evID, evType, obj)
+		if !eligible {
+			return nil, svcErr(http.StatusUnprocessableEntity, "WEBHOOK_NO_SETTLEMENT", "此事件不包含已确认的支付或退款")
+		}
+	}
 	res, err := s.Repo.ApplyPaymentWebhook(ctx, in, s.now())
 	if err != nil {
 		_ = s.Repo.MarkWebhookFailed(ctx, provider, evID, err.Error(), s.now())
@@ -831,19 +849,6 @@ func buildReplayWebhookInput(provider, eventID, eventType string, obj map[string
 		RawPayload: obj,
 	}
 	switch strings.ToLower(provider) {
-	case "stripe":
-		if meta, ok := obj["metadata"].(map[string]any); ok {
-			in.OrderID, _ = meta["order_id"].(string)
-		}
-		in.ProviderOrderID, _ = obj["id"].(string)
-		in.ProviderPaymentID = firstStr(strFromAny(obj["payment_intent"]), in.ProviderOrderID)
-		in.ProviderSubscriptionID, _ = obj["subscription"].(string)
-		in.PaidAmountMinor = int64(toFloat(obj["amount_total"]))
-		if in.PaidAmountMinor == 0 {
-			in.PaidAmountMinor = int64(toFloat(obj["amount_received"]))
-		}
-		in.Currency = strings.ToUpper(strFromAny(obj["currency"]))
-		in.IsRefund = eventType == "charge.refunded" || eventType == "refund.updated"
 	case "alipay":
 		in.OrderID = strFromAny(obj["out_trade_no"])
 		in.ProviderOrderID = in.OrderID

@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect, useMemo } from 'react';
 import { createPortal } from 'react-dom';
+import { useTranslations } from 'next-intl';
 import {
   X,
   Check,
@@ -9,9 +10,7 @@ import {
   Sparkles,
   ShieldCheck,
   Gift,
-  HelpCircle,
   ChevronDown,
-  ChevronUp,
   Info,
   Loader2,
 } from 'lucide-react';
@@ -19,6 +18,7 @@ import RechargeModal from '@/components/account/RechargeModal';
 import AuthModal from '@/components/AuthModal';
 import { EXCLUSIVE_BENEFITS } from '@/lib/pricing/exclusiveBenefits';
 import { getSubscriptionStrings, useSubscriptionLocale } from './subscriptionI18n';
+import SubscriptionFAQ from './SubscriptionFAQ';
 
 const RESTRICTED_COPY = {
   en: { title: 'Limited experience', detail: 'Only the verified models below are available. New purchases are closed.', open: 'Open image studio', empty: 'No model is available right now.', credits: 'credits' },
@@ -91,6 +91,7 @@ export default function SubscriptionModal({
   locale = null,
 }) {
   const activeLocale = useSubscriptionLocale(locale);
+  const catalogCopy = useTranslations('adminPlans');
   const strings = useMemo(() => getSubscriptionStrings(activeLocale), [activeLocale]);
   const restrictedCopy = RESTRICTED_COPY[activeLocale] || RESTRICTED_COPY.en;
 
@@ -102,10 +103,9 @@ export default function SubscriptionModal({
   // 选中的充值套餐打开
   const [isRechargeOpen, setIsRechargeOpen] = useState(false);
   const [selectedPlanId, setSelectedPlanId] = useState(null);
-  const [showFaq, setShowFaq] = useState(true);
-  const [faqConfig, setFaqConfig] = useState(null);
-  const [expandedFaqIds, setExpandedFaqIds] = useState(new Set(['faq-4', 'faq-5']));
   const [dynamicPlans, setDynamicPlans] = useState(null);
+  const [catalogError, setCatalogError] = useState(false);
+  const [catalogRetry, setCatalogRetry] = useState(0);
   const [expandedMoreFeatures, setExpandedMoreFeatures] = useState({});
   const [publicLaunch, setPublicLaunch] = useState({ restricted: false, models: [] });
 
@@ -147,30 +147,24 @@ export default function SubscriptionModal({
   }, []);
 
   useEffect(() => {
-    if (!isOpen && !isInline) return;
-    // 异步拉取运营配置的最新订阅问答与前台套餐 (按需懒加载)
-    if (!faqConfig) {
-      fetch('/api/site/subscription-faq')
-        .then((res) => res.ok && res.json())
-        .then((data) => {
-          if (data && Array.isArray(data.items)) {
-            setFaqConfig(data);
-          }
-        })
-        .catch(() => {});
-    }
-
-    if (!dynamicPlans) {
-      fetch('/api/billing/plans')
-        .then((res) => res.ok && res.json())
-        .then((data) => {
-          if (data && Array.isArray(data.plans) && data.plans.length > 0) {
-            setDynamicPlans(data.plans);
-          }
-        })
-        .catch(() => {});
-    }
-  }, [isOpen, isInline, faqConfig, dynamicPlans]);
+    if (!isOpen && !isInline) return undefined;
+    const controller = new AbortController();
+    setDynamicPlans(null);
+    setCatalogError(false);
+    fetch('/api/billing/plans', { cache: 'no-store', signal: controller.signal })
+      .then((res) => {
+        if (!res.ok) throw new Error('PLAN_CATALOG_UNAVAILABLE');
+        return res.json();
+      })
+      .then((data) => {
+        if (!Array.isArray(data.plans)) throw new Error('INVALID_PLAN_CATALOG');
+        if (!controller.signal.aborted) setDynamicPlans(data.plans);
+      })
+      .catch(() => {
+        if (!controller.signal.aborted) setCatalogError(true);
+      });
+    return () => controller.abort();
+  }, [isOpen, isInline, catalogRetry]);
 
   useEffect(() => {
     if (isInline) return;
@@ -366,53 +360,46 @@ export default function SubscriptionModal({
   ], []);
 
   const displayPlans = useMemo(() => {
-    return (dynamicPlans && dynamicPlans.length > 0 ? dynamicPlans : PLANS)
-      .filter((p) => p.id !== 'free')
+    return (dynamicPlans || [])
+      .filter((p) => p.id !== 'free' && p.enabled !== false)
       .map((p) => {
         const isBuiltIn = PLANS.find((bp) => bp.id === p.id);
-        const monthlyPrice = p.monthlyPrice ?? p.monthlyCny ?? isBuiltIn?.monthlyPrice ?? 0;
-        const monthlyOrigin = p.monthlyOrigin ?? p.monthlyOriginCny ?? isBuiltIn?.monthlyOrigin ?? Math.round(monthlyPrice * 1.2);
-        const quarterlyPrice = p.quarterlyPrice ?? p.quarterlyCny ?? isBuiltIn?.quarterlyPrice ?? Math.round(monthlyPrice * 3);
-        const quarterlyOrigin = p.quarterlyOrigin ?? p.quarterlyOriginCny ?? isBuiltIn?.quarterlyOrigin ?? monthlyOrigin * 3;
-        const yearlyPrice = p.yearlyPrice ?? p.yearlyCny ?? isBuiltIn?.yearlyPrice ?? Math.round(monthlyPrice * 10);
-        const yearlyOrigin = p.yearlyOrigin ?? p.yearlyOriginCny ?? isBuiltIn?.yearlyOrigin ?? monthlyOrigin * 12;
-        const quotaBase = p.creditsMonthly ?? p.quotaBase ?? isBuiltIn?.creditsMonthly ?? 2000;
-        const badge = p.id === 'basic' ? strings.badgeRecommended : p.id === 'pro' ? strings.badgeFlagship : (p.badge || isBuiltIn?.badge || null);
-        const topRoofWindow = p.id === 'basic' ? strings.roofBasic : p.id === 'pro' ? strings.roofPro : (p.topRoofWindow || isBuiltIn?.topRoofWindow || null);
+        const monthlyPrice = p.monthlyCny || p.monthlyUsd;
+        const quarterlyPrice = p.quarterlyCny || p.quarterlyUsd;
+        const yearlyPrice = p.yearlyCny || p.yearlyUsd;
+        const quotaBase = p.quotaBase;
+        const badge = p.configured ? p.badge : p.id === 'basic' ? strings.badgeRecommended : p.id === 'pro' ? strings.badgeFlagship : p.badge;
+        const topRoofWindow = p.configured ? null : p.id === 'basic' ? strings.roofBasic : p.id === 'pro' ? strings.roofPro : isBuiltIn?.topRoofWindow;
         const highlight = p.highlight ?? (p.id === 'basic' || badge?.includes('受') || badge?.includes('推荐') || badge === strings.badgeRecommended);
         const exclusive = p.exclusiveFeatures || p.meta?.exclusiveFeatures || isBuiltIn?.exclusiveFeatures || [];
 
         return {
           id: p.id,
           codeName: p.codeName || isBuiltIn?.codeName || p.id.toUpperCase(),
-          name: strings.planNames?.[p.id] || p.name || isBuiltIn?.name,
-          tagMonthly: isBuiltIn?.tagMonthly || '限时优惠',
-          tagQuarterly: isBuiltIn?.tagQuarterly || strings.tagQuarterly,
-          tagYearly: isBuiltIn?.tagYearly || strings.tagYearly,
+          name: p.configured ? p.name : strings.planNames?.[p.id] || p.name,
+          tagMonthly: p.configured ? null : isBuiltIn?.tagMonthly,
+          tagQuarterly: p.configured ? null : isBuiltIn?.tagQuarterly,
+          tagYearly: p.configured ? null : isBuiltIn?.tagYearly,
           monthlyPrice,
-          monthlyOrigin,
+          monthlyOrigin: p.configured ? null : isBuiltIn?.monthlyOrigin,
+          monthlySymbol: p.monthlyCny ? '¥' : '$',
           quarterlyPrice,
-          quarterlyOrigin,
+          quarterlyOrigin: p.configured ? null : isBuiltIn?.quarterlyOrigin,
+          quarterlySymbol: p.quarterlyCny ? '¥' : '$',
           yearlyPrice,
-          yearlyOrigin,
+          yearlyOrigin: p.configured ? null : isBuiltIn?.yearlyOrigin,
+          yearlySymbol: p.yearlyCny ? '¥' : '$',
           creditsMonthly: quotaBase,
-          bonusCredits: isBuiltIn?.bonusCredits || 0,
           highlight,
           badge,
           topRoofWindow,
           cardBorderClass: isBuiltIn?.cardBorderClass || 'border-line hover:border-line-strong',
           btnBgClass: isBuiltIn?.btnBgClass || 'bg-surface-inverse text-ink-inverse hover:bg-wash-strong',
-          modelRates: isBuiltIn?.modelRates || {
-            seedancePro: { text: '约 ¥0.30/s' },
-            seedance25: { text: '约 ¥0.48/s' },
-            minimaxH3: { text: '约 ¥0.10/s' },
-            fluxPro: { text: '约 ¥0.15/张' },
-          },
-          unitCostYearly: isBuiltIn?.unitCostYearly || '¥0.070',
+          modelRates: p.configured ? null : isBuiltIn?.modelRates,
           exclusiveFeatures: exclusive,
-          videoFeatures: p.videoFeatures?.length ? p.videoFeatures : (isBuiltIn?.videoFeatures || []),
-          imageFeatures: p.imageFeatures?.length ? p.imageFeatures : (isBuiltIn?.imageFeatures || []),
-          moreFeatures: p.moreFeatures?.length ? p.moreFeatures : (isBuiltIn?.moreFeatures || (Array.isArray(p.features) ? p.features : [])),
+          videoFeatures: p.configured ? [] : isBuiltIn?.videoFeatures || [],
+          imageFeatures: p.configured ? [] : isBuiltIn?.imageFeatures || [],
+          moreFeatures: p.configured ? p.features || [] : isBuiltIn?.moreFeatures || [],
         };
       });
   }, [dynamicPlans, PLANS, strings]);
@@ -592,6 +579,17 @@ export default function SubscriptionModal({
       </div>
 
       {/* 卡片栅格展示 (4 列卡片，深度复刻统一的结构、色块与折算细节) */}
+      {catalogError ? (
+        <div role="alert" className="mb-4 flex flex-wrap items-center gap-3 rounded-xl border border-line p-4 text-ink">
+          <span>{catalogCopy('loadFailed')}</span>
+          <button type="button" className="control-focus min-h-11 px-3 text-brand-text"
+            onClick={() => setCatalogRetry((current) => current + 1)}>{catalogCopy('retry')}</button>
+        </div>
+      ) : !dynamicPlans || displayPlans.length === 0 ? (
+        <p role="status" className="mb-4 rounded-xl border border-line p-4 text-ink-muted">
+          {catalogCopy(dynamicPlans ? 'empty' : 'loading')}
+        </p>
+      ) : null}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 pb-6 items-stretch">
         {displayPlans.map((plan) => {
           const currentPrice =
@@ -600,6 +598,7 @@ export default function SubscriptionModal({
               : billingCycle === 'quarterly'
               ? plan.quarterlyPrice
               : plan.monthlyPrice;
+          const symbol = plan[`${billingCycle}Symbol`];
 
           const originPrice =
             billingCycle === 'yearly'
@@ -622,10 +621,8 @@ export default function SubscriptionModal({
               ? plan.tagQuarterly
               : plan.tagMonthly;
 
-          const unitCost =
-            billingCycle === 'yearly'
-              ? plan.unitCostYearly
-              : `¥${(currentPrice / (plan.creditsMonthly || 1)).toFixed(3)}`;
+          const cycleMonths = billingCycle === 'yearly' ? 12 : billingCycle === 'quarterly' ? 3 : 1;
+          const unitCost = `${symbol}${(currentPrice / cycleMonths / plan.creditsMonthly).toFixed(3)}`;
 
           const isMoreOpen = expandedMoreFeatures[plan.id];
 
@@ -667,9 +664,9 @@ export default function SubscriptionModal({
                       <span className="text-xl font-black tracking-wide text-ink uppercase font-sans">
                         {plan.codeName}
                       </span>
-                      <span className="rounded-md border border-line bg-wash-press px-2 py-0.5 text-micro font-bold text-ink">
+                      {currentDiscountBadge && <span className="rounded-md border border-line bg-wash-press px-2 py-0.5 text-micro font-bold text-ink">
                         {currentDiscountBadge}
-                      </span>
+                      </span>}
                     </div>
                     <p className="mt-1 text-xs text-ink-muted font-medium truncate">
                       {plan.name}
@@ -679,7 +676,7 @@ export default function SubscriptionModal({
                   {/* 价格主呈现区 (大字号金额 + 原价划线 + 周期) */}
                   <div className="mt-4 flex items-baseline gap-1.5 flex-wrap min-h-[44px]">
                     <span className="text-3xl sm:text-4xl font-black tracking-tight text-ink font-mono">
-                      ¥{currentPrice}
+                      {currentPrice > 0 ? `${symbol}${currentPrice}` : '—'}
                     </span>
                     {originPrice ? (
                       <span className="text-xs text-ink-subtle line-through font-mono">
@@ -694,17 +691,12 @@ export default function SubscriptionModal({
                     <div className="flex items-center gap-1.5 text-xs font-bold text-ink">
                       <Sparkles className="size-3.5 shrink-0 text-brand-text" strokeWidth={1.8} aria-hidden="true" />
                       <span>{strings.creditsPerMonth(plan.creditsMonthly)}</span>
-                      {plan.bonusCredits > 0 && (
-                        <span className="text-ink-muted font-normal">
-                          {strings.bonusCreditsTag(plan.bonusCredits)}
-                        </span>
-                      )}
                     </div>
 
                     {/* 行 2: 折合月单价与单点折算成本 */}
-                    <div className="text-[11px] text-ink-muted">
+                    {symbol === '¥' && currentPrice > 0 && <div className="text-[11px] text-ink-muted">
                       {strings.unitCostLine(perMonthPrice, unitCost)}
-                    </div>
+                    </div>}
 
                     {/* 行 3: 立即到账与签到权益说明 */}
                     <div className="flex items-center text-[10px] text-ink-subtle">
@@ -717,7 +709,7 @@ export default function SubscriptionModal({
                   <button
                     type="button"
                     onClick={() => handleSubscribe(plan)}
-                    disabled={isRechargeOpen && selectedPlanId === plan.id}
+                    disabled={!currentPrice || (isRechargeOpen && selectedPlanId === plan.id)}
                     className={`control-focus mt-4 flex h-control-lg w-full items-center justify-center gap-1.5 rounded-full text-label font-semibold uppercase tracking-wide transition-[background-color,border-color,color,transform] duration-fast ease-standard active:scale-[0.98] active:duration-press cursor-pointer disabled:pointer-events-none disabled:opacity-45 ${plan.btnBgClass}`}
                   >
                     {isRechargeOpen && selectedPlanId === plan.id ? (
@@ -730,6 +722,7 @@ export default function SubscriptionModal({
                     )}
                   </button>
 
+                  {plan.modelRates && <>
                   {/* 模块一：常用模型折算 */}
                   <div className="mt-5 border-t border-line pt-4 min-h-[148px]">
                     <div className="flex items-center gap-1 text-[11px] font-bold text-ink-muted mb-2.5">
@@ -865,6 +858,7 @@ export default function SubscriptionModal({
                   </div>
 
                   {/* 专属特权标签条 */}
+                  </>}
                   {plan.exclusiveFeatures && plan.exclusiveFeatures.length > 0 && (
                     <div className="mt-4 rounded-xl border border-brand-line bg-brand-soft p-2.5 space-y-1.5 min-h-[58px]">
                       <span className="text-[10px] font-bold uppercase tracking-wider text-brand-text flex items-center gap-1">
@@ -888,10 +882,11 @@ export default function SubscriptionModal({
                   )}
 
                   {/* 更多权益折叠/展开 */}
-                  <div className="mt-4 border-t border-line pt-3">
+                  {plan.moreFeatures.length > 0 && <div className="mt-4 border-t border-line pt-3">
                     <button
                       type="button"
                       onClick={() => toggleMoreFeatures(plan.id)}
+                      aria-expanded={Boolean(isMoreOpen)}
                       className="w-full flex items-center justify-center gap-1 text-[11px] font-semibold text-ink-muted hover:text-ink transition-colors cursor-pointer"
                     >
                       <span>{strings.moreFeatures}</span>
@@ -910,7 +905,7 @@ export default function SubscriptionModal({
                         ))}
                       </ul>
                     )}
-                  </div>
+                  </div>}
                 </div>
 
                 {/* 底部支付保障说明 */}
@@ -931,84 +926,7 @@ export default function SubscriptionModal({
         })}
       </div>
 
-      {/* 底部常见问题 FAQ 手风琴列表 */}
-      <div className="border-t border-line pt-8 mt-4">
-        <div className="flex items-center justify-between pb-4">
-          <button
-            type="button"
-            onClick={() => setShowFaq(!showFaq)}
-            className="inline-flex items-center gap-2 text-sm font-bold text-ink hover:text-brand-text transition-colors cursor-pointer group"
-          >
-            <HelpCircle className="size-4 text-brand-text" strokeWidth={1.8} />
-            <span>{strings.faqTitle(showFaq)}</span>
-            {showFaq ? <ChevronUp className="size-4 text-ink-muted" /> : <ChevronDown className="size-4 text-ink-muted" />}
-          </button>
-
-          {showFaq && (
-            <div className="text-[11px] text-ink-subtle hidden sm:block">
-              {strings.faqSubtitle}
-            </div>
-          )}
-        </div>
-
-        {showFaq && (
-          <div className="space-y-2.5 max-w-4xl mx-auto text-left animate-in fade-in duration-200">
-            {((faqConfig?.items && activeLocale === 'zh-CN') ? faqConfig.items : strings.faqs).map((faq, idx) => {
-              const isExpanded = expandedFaqIds.has(faq.id);
-              const displayIndex = faq.order || idx + 1;
-              return (
-                <div
-                  key={faq.id || idx}
-                  className={`rounded-xl border transition-[background-color,border-color] duration-fast ease-standard overflow-hidden ${
-                    isExpanded
-                      ? 'border-line-strong bg-raised shadow-elevation-1'
-                      : 'border-line bg-well/60 hover:border-line-strong hover:bg-surface'
-                  }`}
-                >
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setExpandedFaqIds((prev) => {
-                        const next = new Set(prev);
-                        if (next.has(faq.id)) next.delete(faq.id);
-                        else next.add(faq.id);
-                        return next;
-                      });
-                    }}
-                    className="w-full flex items-center justify-between p-4 text-left cursor-pointer group"
-                  >
-                    <span className="text-xs sm:text-sm font-bold text-ink group-hover:text-brand-text transition-colors pr-3">
-                      {displayIndex}. {faq.question}
-                    </span>
-                    <ChevronDown
-                      className={`size-4 shrink-0 transition-transform duration-200 ${
-                        isExpanded ? 'rotate-180 text-brand-text' : 'text-ink-subtle group-hover:text-ink-muted'
-                      }`}
-                    />
-                  </button>
-
-                  {isExpanded && (
-                    <div className="px-4 pb-4 pt-2 border-t border-line text-xs text-ink-muted leading-relaxed whitespace-pre-wrap animate-in fade-in duration-150">
-                      {faq.answer}
-                    </div>
-                  )}
-                </div>
-              );
-            })}
-
-            {/* 底部客服与政策说明小注 */}
-            <div className="pt-4 text-center text-[11px] text-ink-subtle">
-              <span>{strings.supportContact}</span>
-              <a
-                href={`mailto:${faqConfig?.supportEmail || 'support@Supdance.com'}`}
-                className="text-brand-text hover:underline ml-1 font-mono"
-              >
-                {faqConfig?.supportEmail || 'support@Supdance.com'}
-              </a>
-            </div>
-          </div>
-        )}
-      </div>
+      <SubscriptionFAQ locale={activeLocale} collapsible className="mt-4 border-t border-line pt-8" />
     </div>
   );
 
@@ -1041,7 +959,6 @@ export default function SubscriptionModal({
           onClose={() => setIsRechargeOpen(false)}
           initialPlanId={selectedPlanId}
           initialBillingCycle={billingCycle}
-          autoCheckout={true}
           locale={activeLocale}
           onPaySuccess={() => {
             setIsRechargeOpen(false);

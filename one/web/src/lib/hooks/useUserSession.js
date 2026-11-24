@@ -2,249 +2,174 @@
 
 import { useState, useEffect, useCallback } from 'react';
 
-let cachedUser = null;
-let cachedCredits = null;
-let cachedEntitlements = null;
+/** @typedef {NonNullable<import('../../services/api/http').AuthMeResponse['user']> & {
+ * locale?: string, avatar?: string, avatar_url?: string, preferences?: Record<string, unknown>,
+ * is_subscribed?: boolean, isSubscribed?: boolean, plan_id?: string
+ * }} SessionUser */
+/** @type {{ user: SessionUser | null, credits: number | null, entitlements: Record<string, unknown> | null }} */
+let session = { user: null, credits: null, entitlements: null };
 let fetchPromise = null;
-let isInitialized = false;
+let revision = 0;
+let initialized = false;
+const listeners = new Set();
 
-// 同步初始化：从 localStorage 中即时恢复已登录状态与权益方案，杜绝切页时从 null 到真实数据的二次跳闪
-function initFromStorage() {
-  if (typeof window === 'undefined' || isInitialized) return;
-  isInitialized = true;
+const accountId = (user) => String(user?.id || '');
+const sessionUserKey = 'ko_user';
+const entitlementsKey = 'ko_entitlements';
+const entitlementsOwnerKey = 'ko_entitlements_owner';
+const preferencesKey = 'supdance_user_preferences';
+
+function readCachedSession() {
+  if (initialized || typeof window === 'undefined') return;
+  initialized = true;
   try {
-    const stored = localStorage.getItem('ko_user');
-    if (stored) {
-      const parsed = JSON.parse(stored);
-      if (parsed && typeof parsed === 'object') {
-        cachedUser = parsed;
-        if (typeof parsed.credits === 'number') {
-          cachedCredits = parsed.credits;
-        }
-      }
-    }
-    const storedEnt = localStorage.getItem('ko_entitlements');
-    if (storedEnt) {
-      const parsedEnt = JSON.parse(storedEnt);
-      if (parsedEnt && typeof parsedEnt === 'object') {
-        cachedEntitlements = parsedEnt;
-      }
-    }
+    const user = JSON.parse(localStorage.getItem(sessionUserKey));
+    if (!accountId(user)) return;
+    const entitlements = localStorage.getItem(entitlementsOwnerKey) === accountId(user)
+      ? JSON.parse(localStorage.getItem(entitlementsKey))
+      : null;
+    session = { user, credits: entitlements?.credits ?? user.credits ?? null, entitlements };
   } catch {}
 }
 
-const listeners = new Set();
-function notifyListeners() {
-  const currentSnapshot = {
-    user: cachedUser,
-    credits: cachedCredits,
-    entitlements: cachedEntitlements,
+function storeSession() {
+  try {
+    const { user, entitlements } = session;
+    if (!user) {
+      localStorage.removeItem(sessionUserKey);
+      localStorage.removeItem(entitlementsKey);
+      localStorage.removeItem(entitlementsOwnerKey);
+      localStorage.removeItem(preferencesKey);
+      return;
+    }
+    if (entitlements) {
+      localStorage.setItem(entitlementsOwnerKey, accountId(user));
+      localStorage.setItem(entitlementsKey, JSON.stringify(entitlements));
+    } else {
+      localStorage.removeItem(entitlementsOwnerKey);
+      localStorage.removeItem(entitlementsKey);
+    }
+    if (user.preferences) localStorage.setItem(preferencesKey, JSON.stringify(user.preferences));
+    else localStorage.removeItem(preferencesKey);
+    localStorage.setItem(sessionUserKey, JSON.stringify(user));
+  } catch {}
+}
+
+function publishSession(changes, { persist = true } = {}) {
+  const user = changes.user === undefined ? session.user : changes.user;
+  const changedOwner = accountId(user) !== accountId(session.user);
+  if (changedOwner) revision += 1;
+  const base = changedOwner ? { user, credits: user?.credits ?? null, entitlements: null } : session;
+  session = {
+    user,
+    credits: user ? (changes.credits === undefined ? base.credits : changes.credits) : null,
+    entitlements: user ? (changes.entitlements === undefined ? base.entitlements : changes.entitlements) : null,
   };
-  listeners.forEach((listener) => {
-    try {
-      listener(currentSnapshot);
-    } catch {}
-  });
+  if (persist) storeSession();
+  for (const listener of listeners) listener(session);
+}
+
+function syncLocale(locale) {
+  if (!locale) return;
+  try {
+    localStorage.setItem('NEXT_LOCALE', locale);
+    localStorage.setItem('locale', locale);
+    const domain = /(^|\.)supdance\.com$/.test(window.location.hostname) ? '; domain=.supdance.com' : '';
+    document.cookie = `NEXT_LOCALE=${encodeURIComponent(locale)}; path=/; max-age=31536000; SameSite=Lax${domain}`;
+    document.cookie = `locale=${encodeURIComponent(locale)}; path=/; max-age=31536000; SameSite=Lax${domain}`;
+  } catch {}
 }
 
 export function fetchUserSession(force = false) {
   if (fetchPromise && !force) return fetchPromise;
+  const requestRevision = ++revision;
 
-  const runFetch = (retriesLeft = 2) => {
-    return fetch('/api/auth/me', { cache: 'no-store' })
-      .then((res) => (res.ok ? res.json() : null))
-      .then((data) => {
-        if (!data?.user && cachedUser && retriesLeft > 0) {
-          // 若本地已存在有效会话用户，但服务端接口暂时未返回用户（可能由于跨进程 cookie 尚未同步完成），延迟重试一次避免误清除
-          return new Promise((resolve) => {
-            setTimeout(() => {
-              resolve(runFetch(retriesLeft - 1));
-            }, 250);
-          });
-        }
-        fetchPromise = null;
-        if (data?.user) {
-          cachedUser = data.user;
-          cachedCredits = data.entitlements?.credits ?? data.user.credits ?? 0;
-          cachedEntitlements = data.entitlements || null;
-          try {
-            localStorage.setItem('ko_user', JSON.stringify(data.user));
-            if (data.user.locale) {
-              const norm = data.user.locale;
-              localStorage.setItem('NEXT_LOCALE', norm);
-              localStorage.setItem('locale', norm);
-              const hostname = typeof window !== 'undefined' ? window.location.hostname : '';
-              const cookieDomain = hostname.endsWith('.supdance.com')
-                ? '; domain=.supdance.com'
-                : hostname === 'supdance.com'
-                  ? '; domain=.supdance.com'
-                  : '';
-              document.cookie = `NEXT_LOCALE=${encodeURIComponent(norm)}; path=/; max-age=31536000; SameSite=Lax${cookieDomain}`;
-              document.cookie = `locale=${encodeURIComponent(norm)}; path=/; max-age=31536000; SameSite=Lax${cookieDomain}`;
-            }
-            if (data.user.preferences) {
-              localStorage.setItem('supdance_user_preferences', JSON.stringify(data.user.preferences));
-            }
-            if (data.entitlements) {
-              localStorage.setItem('ko_entitlements', JSON.stringify(data.entitlements));
-            } else {
-              localStorage.removeItem('ko_entitlements');
-            }
-          } catch {}
-        } else {
-          cachedUser = null;
-          cachedCredits = null;
-          cachedEntitlements = null;
-          try {
-            localStorage.removeItem('ko_user');
-            localStorage.removeItem('ko_entitlements');
-          } catch {}
-        }
-        notifyListeners();
-        return { user: cachedUser, credits: cachedCredits, entitlements: cachedEntitlements };
-      })
-      .catch(() => {
-        fetchPromise = null;
-        return { user: cachedUser, credits: cachedCredits, entitlements: cachedEntitlements };
-      });
-  };
-
-  fetchPromise = runFetch(2);
-  return fetchPromise;
+  const operation = fetch('/api/auth/me', { cache: 'no-store' })
+    .then((response) => {
+      if (response.status === 401) return null;
+      if (!response.ok) throw new Error('Could not read the current session');
+      return response.json();
+    })
+    .then((data) => {
+      if (requestRevision !== revision) return session;
+      const user = data?.user || null;
+      publishSession({ user, credits: data?.entitlements?.credits ?? user?.credits ?? null, entitlements: data?.entitlements || null });
+      syncLocale(user?.locale);
+      return session;
+    })
+    .catch(() => session)
+    .finally(() => { if (fetchPromise === operation) fetchPromise = null; });
+  fetchPromise = operation;
+  return operation;
 }
 
-/**
- * 全局用户登录态与积分单例 Hook (消除路由切换时的用户状态闪屏)
- * @param {Object|null|undefined} initialUser 服务端注入的初始用户信息（避免客户端水合跳闪）
- */
+function handleProfileUpdated(event) {
+  if (event.detail?.user && session.user &&
+      (!event.detail.user.id || accountId(event.detail.user) === accountId(session.user))) {
+    publishSession({ user: { ...session.user, ...event.detail.user } });
+  } else if (event.detail?.avatarUrl !== undefined && session.user) {
+    publishSession({ user: { ...session.user, avatar_url: event.detail.avatarUrl, avatar: event.detail.avatarUrl } });
+  }
+  void fetchUserSession(true);
+}
+
+function handleStorage(event) {
+  if (event.key !== sessionUserKey) return;
+  try {
+    const nextUser = JSON.parse(event.newValue);
+    if (accountId(nextUser) === accountId(session.user)) return;
+    // A different tab changed the identity. Gate private UI until the cookie is verified.
+    publishSession({ user: null }, { persist: false });
+    void fetchUserSession(true);
+  } catch {}
+}
+
+function handleAuthSuccess(event) {
+  if (accountId(event.detail?.user)) {
+    publishSession({
+      user: event.detail.user,
+      credits: event.detail.entitlements?.credits ?? event.detail.user.credits,
+      entitlements: event.detail.entitlements,
+    });
+  }
+  void fetchUserSession(true);
+}
+
+/** @param {SessionUser | null} [initialUser] */
 export function useUserSession(initialUser = undefined) {
-  const isServer = typeof window === 'undefined';
-
-  // 1. 客户端初始化与单例缓存（服务端不污染全局模块缓存）
-  if (!isServer) {
-    initFromStorage();
-    if (initialUser !== undefined && initialUser !== null) {
-      if (!cachedUser) {
-        cachedUser = initialUser;
-        if (typeof initialUser.credits === 'number') {
-          cachedCredits = initialUser.credits;
-        }
-      }
-    }
-  }
-
-  const activeUser = isServer ? (initialUser || null) : (initialUser !== undefined ? initialUser : cachedUser);
-  const isPaidUser = Boolean(
-    activeUser?.is_subscribed ||
-    activeUser?.isSubscribed ||
-    (activeUser?.plan_id && String(activeUser.plan_id).toLowerCase() !== 'free')
-  );
-  const fallbackEntitlements = isPaidUser ? {
-    planId: activeUser.plan_id || 'vip',
-    planName: String(activeUser.plan_id || 'VIP').toUpperCase(),
-    isPaidSubscription: true,
-    credits: activeUser?.credits ?? 0,
-  } : null;
-
-  if (!isServer && !cachedEntitlements && fallbackEntitlements) {
-    cachedEntitlements = fallbackEntitlements;
-  }
-
-  const [state, setState] = useState(() => ({
-    user: isServer ? (initialUser || null) : (initialUser !== undefined ? initialUser : cachedUser),
-    credits: isServer ? (initialUser?.credits ?? null) : (initialUser !== undefined ? (initialUser?.credits ?? null) : cachedCredits),
-    entitlements: isServer ? fallbackEntitlements : (cachedEntitlements || fallbackEntitlements),
-  }));
+  readCachedSession();
+  const [state, setState] = useState(() => {
+    if (initialUser === undefined || accountId(initialUser) === accountId(session.user)) return session;
+    return { user: initialUser || null, credits: initialUser?.credits ?? null, entitlements: null };
+  });
 
   useEffect(() => {
+    const first = listeners.size === 0;
     listeners.add(setState);
-
-    // 挂载时后台静默校验刷新一次
-    fetchUserSession();
-
-    // 监听资料与头像即时更新事件总线
-    const handleProfileUpdated = (e) => {
-      if (e.detail?.user) {
-        cachedUser = { ...cachedUser, ...e.detail.user };
-        notifyListeners();
-      } else if (e.detail?.avatarUrl !== undefined && cachedUser) {
-        cachedUser = {
-          ...cachedUser,
-          avatar_url: e.detail.avatarUrl,
-          avatar: e.detail.avatarUrl,
-        };
-        notifyListeners();
-      }
-      fetchUserSession(true);
-    };
-
-    const handleStorage = (e) => {
-      if (e.key === 'ko_user') {
-        try {
-          cachedUser = e.newValue ? JSON.parse(e.newValue) : null;
-          notifyListeners();
-        } catch {}
-      } else if (e.key === 'ko_entitlements') {
-        try {
-          cachedEntitlements = e.newValue ? JSON.parse(e.newValue) : null;
-          notifyListeners();
-        } catch {}
-      }
-    };
-
-    const handleAuthSuccess = (e) => {
-      if (e.detail?.user) {
-        cachedUser = e.detail.user;
-        if (typeof e.detail.user.credits === 'number') {
-          cachedCredits = e.detail.user.credits;
-        }
-        if (e.detail.entitlements) {
-          cachedEntitlements = e.detail.entitlements;
-          try {
-            localStorage.setItem('ko_entitlements', JSON.stringify(e.detail.entitlements));
-          } catch {}
-        }
-        notifyListeners();
-      }
-      fetchUserSession(true);
-    };
-
-    window.addEventListener('user-profile-updated', handleProfileUpdated);
-    window.addEventListener('storage', handleStorage);
-    window.addEventListener('supdance-auth-success', handleAuthSuccess);
-
+    if (first) {
+      window.addEventListener('user-profile-updated', handleProfileUpdated);
+      window.addEventListener('storage', handleStorage);
+      window.addEventListener('supdance-auth-success', handleAuthSuccess);
+    }
+    void fetchUserSession();
     return () => {
       listeners.delete(setState);
-      window.removeEventListener('user-profile-updated', handleProfileUpdated);
-      window.removeEventListener('storage', handleStorage);
-      window.removeEventListener('supdance-auth-success', handleAuthSuccess);
+      if (!listeners.size) {
+        window.removeEventListener('user-profile-updated', handleProfileUpdated);
+        window.removeEventListener('storage', handleStorage);
+        window.removeEventListener('supdance-auth-success', handleAuthSuccess);
+      }
     };
   }, []);
 
-  const refresh = useCallback((force = true) => {
-    return fetchUserSession(force);
-  }, []);
-
+  const refresh = useCallback((force = true) => fetchUserSession(force), []);
   const mutate = useCallback((updater) => {
-    if (typeof updater === 'function') {
-      const next = updater({ user: cachedUser, credits: cachedCredits, entitlements: cachedEntitlements });
-      if (next.user !== undefined) cachedUser = next.user;
-      if (next.credits !== undefined) cachedCredits = next.credits;
-      if (next.entitlements !== undefined) cachedEntitlements = next.entitlements;
-    } else if (updater && typeof updater === 'object') {
-      if (updater.user !== undefined) cachedUser = updater.user;
-      if (updater.credits !== undefined) cachedCredits = updater.credits;
-      if (updater.entitlements !== undefined) cachedEntitlements = updater.entitlements;
-    }
-    notifyListeners();
+    const next = typeof updater === 'function' ? updater(session) : updater;
+    if (next && typeof next === 'object') publishSession(next);
   }, []);
-
-  return {
-    user: state.user,
-    credits: state.credits,
-    entitlements: state.entitlements,
-    isPaidUser,
-    refresh,
-    mutate,
-  };
+  const plan = state.entitlements?.planId || state.user?.plan_id;
+  const isPaidUser = Boolean(state.user && (
+    state.user.is_subscribed || state.user.isSubscribed || (plan && String(plan).toLowerCase() !== 'free')
+  ));
+  return { ...state, isPaidUser, refresh, mutate };
 }

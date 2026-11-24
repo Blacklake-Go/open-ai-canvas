@@ -1615,7 +1615,7 @@
     "methods": [
       "GET"
     ],
-    "policyTier": "authenticated_or_domain",
+    "policyTier": "public",
     "responseFormat": "success_flagged_json",
     "isApi": true,
     "isAdmin": false

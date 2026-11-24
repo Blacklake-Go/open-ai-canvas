@@ -76,19 +76,6 @@ func (m *memUserRepo) SetAvatarFrame(_ context.Context, id, frame string) error 
 func (m *memUserRepo) HasUnlockedAvatarFrame(_ context.Context, id, frame string) (bool, error) {
 	return m.unlocked[id][frame], nil
 }
-func (m *memUserRepo) GetOrInitAPIKey(_ context.Context, id string, gen func() string) (string, string, error) {
-	p := m.users[id]
-	if k, ok := p.SocialLinks["api_key"].(string); ok && k != "" {
-		return k, "2026-11-15T00:00:00Z", nil
-	}
-	k := gen()
-	p.SocialLinks["api_key"] = k
-	return k, "2026-11-15T00:00:00Z", nil
-}
-func (m *memUserRepo) RotateAPIKey(_ context.Context, id, newKey string) (string, string, error) {
-	m.users[id].SocialLinks["api_key"] = newKey
-	return newKey, "2026-11-15T00:00:00Z", nil
-}
 func (m *memUserRepo) UpdatePassword(_ context.Context, id, h, s string) error {
 	m.users[id].PasswordHash = h
 	m.users[id].PasswordSalt = s
@@ -236,16 +223,6 @@ func TestUserServiceOperations(t *testing.T) {
 	}
 	if _, err := svc.WearAvatarFrame(ctx, "100001", "coin-gold"); err != nil {
 		t.Fatalf("WearAvatarFrame coin-gold error = %v", err)
-	}
-
-	// API key init & rotate
-	k1, _, err := svc.GetAPIKey(ctx, "100001")
-	if err != nil || !strings.HasPrefix(k1, "sk-koyo-live-") {
-		t.Fatalf("GetAPIKey = %q err=%v", k1, err)
-	}
-	k2, _, err := svc.RotateAPIKey(ctx, "100001")
-	if err != nil || k2 == k1 {
-		t.Fatalf("RotateAPIKey failed: k1=%q k2=%q err=%v", k1, k2, err)
 	}
 
 	// Change password checks current password

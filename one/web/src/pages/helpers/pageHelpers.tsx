@@ -160,6 +160,7 @@ export function useAdminRawData<T = any>(path: string | null, deps: any[] = []) 
   const [data, setData] = useState<T | null>(null);
   const [loading, setLoading] = useState<boolean>(Boolean(path));
   const [error, setError] = useState<string | null>(null);
+  const [resolvedPath, setResolvedPath] = useState<string | null>(null);
   const [nonce, setNonce] = useState(0);
 
   const reload = useCallback(() => setNonce((n) => n + 1), []);
@@ -176,11 +177,13 @@ export function useAdminRawData<T = any>(path: string | null, deps: any[] = []) 
       .then((res) => {
         if (!cancelled) {
           setData(res);
+          setResolvedPath(path);
           setLoading(false);
         }
       })
       .catch((err) => {
         if (!cancelled) {
+          setResolvedPath(path);
           setError(err?.message || '加载失败');
           setLoading(false);
         }
@@ -191,6 +194,12 @@ export function useAdminRawData<T = any>(path: string | null, deps: any[] = []) 
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [path, nonce, ...deps]);
 
-  return { data, loading, error, reload };
+  const matchesPath = path !== null && path === resolvedPath;
+  return {
+    data: matchesPath ? data : null,
+    loading: Boolean(path) && (loading || !matchesPath),
+    error: matchesPath ? error : null,
+    reload,
+  };
 }
 

@@ -45,10 +45,22 @@ async function readResponse(response) {
   return payload.data ?? payload;
 }
 
+function fromSmsResponse(payload) {
+  const config = payload?.config || payload || {};
+  const providers = config.settings?.providers || config.providers || {};
+  return {
+    settings: { providers },
+    routes: { china: config.routes?.china || config.routing?.china || { primary: 'tencent_sms', fallback: 'aliyun_sms' } },
+    providers: Array.isArray(payload?.providers) ? payload.providers : [],
+    recentLogs: Array.isArray(payload?.logs) ? payload.logs : [],
+    riskCaptcha: payload?.riskCaptcha || { status: 'unknown', appId: providers.tencent_captcha?.appId },
+  };
+}
+
 export default function SmsProvidersClient({ initial, canWrite = false }) {
-  const [overview, setOverview] = useState(initial);
-  const [providers, setProviders] = useState(initial.settings.providers);
-  const [chinaRoute, setChinaRoute] = useState(initial.routes.china);
+  const [overview, setOverview] = useState(() => fromSmsResponse(initial));
+  const [providers, setProviders] = useState(() => fromSmsResponse(initial).settings.providers);
+  const [chinaRoute, setChinaRoute] = useState(() => fromSmsResponse(initial).routes.china);
   const [secrets, setSecrets] = useState({
     tencent_sms: { secret_id: '', secret_key: '' },
     aliyun_sms: { access_key_id: '', access_key_secret: '' },
@@ -84,7 +96,8 @@ export default function SmsProvidersClient({ initial, canWrite = false }) {
         headers: { 'Content-Type': 'application/json', 'Idempotency-Key': crypto.randomUUID() },
         body: JSON.stringify({ providers, routing: { china: chinaRoute } }),
       });
-      const result = await readResponse(response);
+      await readResponse(response);
+      const result = fromSmsResponse(await readResponse(await fetch('/api/admin/providers/sms', { cache: 'no-store' })));
       setOverview(result);
       setProviders(result.settings.providers);
       setChinaRoute(result.routes.china);
@@ -118,7 +131,7 @@ export default function SmsProvidersClient({ initial, canWrite = false }) {
       });
       setAdminPassword('');
       setMessage('新密钥已加密保存；明文不会回显。');
-      const refreshed = await readResponse(await fetch('/api/admin/providers/sms', { cache: 'no-store' }));
+      const refreshed = fromSmsResponse(await readResponse(await fetch('/api/admin/providers/sms', { cache: 'no-store' })));
       setOverview(refreshed);
     } catch (error) {
       setMessage(error.message || '短信密钥保存失败');
@@ -138,7 +151,7 @@ export default function SmsProvidersClient({ initial, canWrite = false }) {
       });
       const result = await readResponse(response);
       setMessage(`${provider} 健康探针完成：${result.status}${result.latencyMs == null ? '' : `（${result.latencyMs} ms）`}`);
-      const refreshed = await readResponse(await fetch('/api/admin/providers/sms', { cache: 'no-store' }));
+      const refreshed = fromSmsResponse(await readResponse(await fetch('/api/admin/providers/sms', { cache: 'no-store' })));
       setOverview(refreshed);
     } catch (error) {
       setMessage(error.message || '健康检查失败');
@@ -160,7 +173,7 @@ export default function SmsProvidersClient({ initial, canWrite = false }) {
       });
       const result = await readResponse(response);
       setMessage(result.message || '供应商已接受测试短信请求');
-      const refreshed = await readResponse(await fetch('/api/admin/providers/sms', { cache: 'no-store' }));
+      const refreshed = fromSmsResponse(await readResponse(await fetch('/api/admin/providers/sms', { cache: 'no-store' })));
       setOverview(refreshed);
     } catch (error) {
       setMessage(error.message || '测试短信发送失败');
@@ -243,6 +256,7 @@ export default function SmsProvidersClient({ initial, canWrite = false }) {
       </Card>
 
       <div className="grid gap-4 xl:grid-cols-3">
+        {!overview.providers.length && <p className="text-body-sm text-ink-muted">暂无线路健康记录。</p>}
         {overview.providers.map((provider) => (
           <Card key={provider.id}>
             <div className="flex items-start justify-between gap-3">

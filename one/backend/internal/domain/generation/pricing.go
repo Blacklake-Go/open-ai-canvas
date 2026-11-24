@@ -14,6 +14,8 @@ import (
 	"time"
 
 	"github.com/jackc/pgx/v5"
+
+	"one/backend/internal/domain/canvas"
 )
 
 var (
@@ -410,9 +412,10 @@ func (s *Service) CreateQuote(ctx context.Context, req QuoteRequest) (*QuoteResp
 	usdToCny := DefaultUSDToCNY
 	var dbFX float64
 	if err := pool.QueryRow(ctx, `
-		SELECT rate FROM ops_bill.exchange_rates
-		WHERE from_currency = 'USD' AND to_currency = 'CNY'
-		ORDER BY fetched_at DESC LIMIT 1`).Scan(&dbFX); err == nil && dbFX > 0 {
+		SELECT rate FROM ai_studio.exchange_rate_snapshots
+		WHERE base_currency = 'USD' AND quote_currency = 'CNY'
+		  AND (expires_at IS NULL OR expires_at > now())
+		ORDER BY observed_at DESC, fetched_at DESC LIMIT 1`).Scan(&dbFX); err == nil && dbFX > 0 {
 		usdToCny = dbFX
 	}
 
@@ -422,6 +425,37 @@ func (s *Service) CreateQuote(ctx context.Context, req QuoteRequest) (*QuoteResp
 	candidates, err := s.listEligibleRouteCandidates(ctx, req.ModelID, usdToCny, req.Parameters)
 	if err != nil {
 		return nil, &PricingError{Code: "QUOTE_FAILED", Message: "路由候选加载失败", Status: 503}
+	}
+	if req.Site == "workshop" {
+		toolID, _ := req.Parameters["workshop_tool"].(string)
+		contract, _ := req.Parameters["workshop_contract"].(string)
+		tool, known := canvas.WorkshopToolByID(toolID)
+		if !known || req.Parameters["task_type"] != "i2i" || contract == "" {
+			return nil, &PricingError{Code: "WORKSHOP_PLAN_REQUIRED", Message: "请重新获取工作坊生成方案。", Status: 422}
+		}
+		versions, versionsErr := canvas.ListWorkshopVersions(ctx, s.Pool)
+		settings, settingsErr := canvas.ReadWorkshopModelSettings(ctx, s.Pool)
+		if versionsErr != nil || settingsErr != nil {
+			return nil, &PricingError{Code: "WORKSHOP_MODELS_UNAVAILABLE", Message: "暂时无法读取工作坊模型。", Status: 503}
+		}
+		version, available := canvas.ResolveWorkshopVersion(tool, versions, settings.Defaults)
+		if !available || version.ModelID != req.ModelID || version.Contract != contract {
+			return nil, &PricingError{Code: "WORKSHOP_MODEL_CHANGED", Message: "默认模型版本发生变化，请重新读取工具设置。", Status: 409}
+		}
+		if err := version.ValidatePlan(&canvas.ToolPlan{Parameters: req.Parameters}); err != nil {
+			return nil, &PricingError{Code: "WORKSHOP_OPTIONS_UNSUPPORTED", Message: err.Error(), Status: 422}
+		}
+		var pinned []RouteCandidate
+		for _, candidate := range candidates {
+			if candidate.ProviderModelID == version.VersionID {
+				pinned = append(pinned, candidate)
+				break
+			}
+		}
+		if len(pinned) == 0 {
+			return nil, &PricingError{Code: "WORKSHOP_MODEL_VERSION_UNAVAILABLE", Message: "所选模型版本没有可用渠道。", Status: 503}
+		}
+		candidates = pinned
 	}
 
 	var highestCostPtr *float64
@@ -485,6 +519,9 @@ func (s *Service) CreateQuote(ctx context.Context, req QuoteRequest) (*QuoteResp
 		"usdToCny":           usdToCny,
 		"maxFailoverCostCny": costCeilingCNY,
 		"hasWorkingRoute":    len(eligible) > 0,
+	}
+	if req.Site == "workshop" {
+		routeSnapshot["site"] = req.Site
 	}
 	var estCostUSD *float64
 	if selected != nil {

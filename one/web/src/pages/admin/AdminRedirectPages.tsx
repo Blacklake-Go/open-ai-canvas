@@ -21,12 +21,19 @@ export function AdminLegacyRedirectPage({
 
   if (redirectEl) return redirectEl;
 
-  if (!preserveQuery) {
-    return <Navigate to={to} replace />;
+  const target = new URL(to, 'http://localhost');
+  if (preserveQuery) {
+    for (const [key, value] of new URLSearchParams(location.search)) {
+      if (!target.searchParams.has(key)) target.searchParams.set(key, value);
+    }
   }
-  const sp = Object.fromEntries(new URLSearchParams(location.search).entries());
-  const qs = serializeSearchParams(sp);
-  return <Navigate to={buildRedirectTarget(to, qs)} replace />;
+  return <Navigate to={target.pathname + target.search + (target.hash || location.hash)} replace />;
+}
+
+export function AdminRoutingRedirectPage() {
+  const { modelId } = useParams();
+  const target = modelId ? `/admin/models/routing?model=${encodeURIComponent(modelId)}` : '/admin/models/routing';
+  return <AdminLegacyRedirectPage to={target} requiredPermission={PERMISSIONS.modelsRead} />;
 }
 
 export function AdminSystemCatchallRedirectPage() {

@@ -20,7 +20,10 @@ import MobileGenerationActions, {
 import VideoRelayMenu from "./VideoRelayMenu.jsx";
 import {
   applyActiveModelDirectory,
+  findModelForDeepLink,
   t2vModels,
+  i2vModels,
+  v2vModels,
   getAspectRatiosForVideoModel,
   getDurationsForModel,
   getResolutionsForVideoModel,
@@ -891,6 +894,7 @@ export default function VideoStudio({
   useEffect(() => {
     const refreshModelDirectory = () => setModelDirectoryRevision((revision) => revision + 1);
     window.addEventListener("supdance-model-pricing-updated", refreshModelDirectory);
+    if (window.__SUPDANCE_ACTIVE_MODEL_IDS__ instanceof Set) refreshModelDirectory();
     return () => window.removeEventListener("supdance-model-pricing-updated", refreshModelDirectory);
   }, []);
 
@@ -1029,6 +1033,7 @@ export default function VideoStudio({
   const workflowControlId = useId();
   const workflowMenuId = `${workflowControlId}-menu`;
   const hasRestored = useRef(false);
+  const restoredPersistKey = useRef(null);
   const selectionRef = useRef(null);
   selectionRef.current = {
     selectedFamilyId,
@@ -1632,24 +1637,14 @@ export default function VideoStudio({
       }
     }
 
-    // 4. Raw search in t2vModels / i2vModels / v2vModels
-    const rawT2V = t2vModels.find((m) => m.id === cleanKey || m.endpoint === cleanKey);
-    if (rawT2V) {
-      const rawFamily = videoModelCatalog.familyByVariantId.get(rawT2V.id) || { id: rawT2V.id, name: rawT2V.name };
-      applyUserSelectedVariant({ mode: "t2v", model: rawT2V }, "t2v", rawFamily, null);
+    for (const [mode, models] of [["t2v", t2vModels], ["i2v", i2vModels], ["v2v", v2vModels]]) {
+      const model = findModelForDeepLink(models, cleanKey);
+      if (!model) continue;
+      const rawFamily = videoModelCatalog.familyByVariantId.get(model.id) || { id: model.id, name: model.name };
+      applyUserSelectedVariant({ mode, model }, mode, rawFamily, null);
       return;
     }
   }, [applyUserSelectedVariant]);
-
-  // ── Sync with initialModel prop and URL ?model= ──────────────────────────
-  useEffect(() => {
-    const urlParams = typeof window !== "undefined" ? new URLSearchParams(window.location.search) : null;
-    const urlModel = urlParams?.get("model");
-    const targetModel = initialModel || urlModel;
-    if (targetModel) {
-      applyModelSelection(targetModel);
-    }
-  }, [initialModel, applyModelSelection]);
 
   // ── Sync with initialPrompt prop and URL ?prompt= / ?remixPrompt= ────────
   useEffect(() => {
@@ -1676,6 +1671,7 @@ export default function VideoStudio({
 
   // ── Persistence: Load ────────────────────────────────────────────────────
   useEffect(() => {
+    if (!modelDirectoryRevision || restoredPersistKey.current === PERSIST_KEY) return;
     try {
       const stored = localStorage.getItem(PERSIST_KEY);
       if (stored) {
@@ -1783,8 +1779,14 @@ export default function VideoStudio({
       console.warn("Failed to load VideoStudio persistence:", err);
     } finally {
       hasRestored.current = true;
+      restoredPersistKey.current = PERSIST_KEY;
     }
-  }, [applyControlsForModel, defaultModel?.id]);
+  }, [PERSIST_KEY, modelDirectoryRevision, applyControlsForModel, defaultModel?.id]);
+
+  useEffect(() => {
+    const targetModel = initialModel || new URLSearchParams(window.location.search).get("model");
+    if (targetModel && modelDirectoryRevision) applyModelSelection(targetModel);
+  }, [initialModel, PERSIST_KEY, modelDirectoryRevision, applyModelSelection]);
 
   // ── Persistence: Save ────────────────────────────────────────────────────
   useEffect(() => {
@@ -3413,6 +3415,8 @@ export default function VideoStudio({
               <div className="relative">
                 <button
                   type="button"
+                  data-studio-model={selectedModel}
+                  data-studio-task-type={currentFamilyMode}
                   onClick={toggleDropdown("model")}
                   className={promptControlClassName({
                     active: openDropdown === "model",

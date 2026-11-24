@@ -1,9 +1,54 @@
 package generation
 
 import (
+	"context"
+	"encoding/json"
+	"reflect"
 	"testing"
 	"time"
 )
+
+type modelDirectoryFixture []ActiveModel
+
+func (f modelDirectoryFixture) ListActiveModels(context.Context, string) ([]ActiveModel, error) {
+	return f, nil
+}
+
+func TestActiveModelVersionsExposeDeclaredStudioCapabilities(t *testing.T) {
+	legacy := json.RawMessage(`{"modes":["t2v","i2v","i2v","cinema"],"parameters":["negative_prompt"],"internal_note":"private"}`)
+	service := Service{Repo: modelDirectoryFixture{{
+		ID: "mixed-video", GenerationCapabilities: legacy,
+		options: publicModelOptions{
+			inputTypes: json.RawMessage(`["image"]`), outputTypes: json.RawMessage(`["video"]`),
+			resolutions: json.RawMessage(`["720p",null,1]`), durations: json.RawMessage(`["5",10,5]`),
+			aspectRatios: json.RawMessage(`["16:9"]`),
+		},
+	}}}
+	current, err := service.GetActiveModels(context.Background(), "2", "")
+	if err != nil {
+		t.Fatal(err)
+	}
+	var contract []publicGenerationCapability
+	if err := json.Unmarshal(current.Models[0].GenerationCapabilities, &contract); err != nil {
+		t.Fatal(err)
+	}
+	want := []publicGenerationCapability{
+		{TaskType: "i2v", InputTypes: []string{"image"}, OutputTypes: []string{"video"},
+			Resolutions: []string{"720p"}, Durations: []float64{5, 10}, AspectRatios: []string{"16:9"},
+			Parameters: []string{"negative_prompt"}},
+		{TaskType: "cinema"},
+	}
+	if !reflect.DeepEqual(contract, want) {
+		t.Fatalf("unexpected capability contract: %s", current.Models[0].GenerationCapabilities)
+	}
+	previous, err := service.GetActiveModels(context.Background(), "", "")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if string(previous.Models[0].GenerationCapabilities) != string(legacy) {
+		t.Fatalf("legacy contract changed: %s", previous.Models[0].GenerationCapabilities)
+	}
+}
 
 func TestAllocateCreditFundingPriorityAndExpiry(t *testing.T) {
 	now := time.Date(2026, 11, 16, 10, 0, 0, 0, time.UTC)

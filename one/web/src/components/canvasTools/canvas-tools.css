@@ -1,15 +1,15 @@
 .ct-root {
-  --ct-bg: #0b0b0c;
-  --ct-bar: #131314;
-  --ct-card: #1f1f21;
-  --ct-text: #f5f5f5;
-  --ct-dim: rgba(255, 255, 255, 0.698);
-  --ct-dim2: rgba(255, 255, 255, 0.42);
-  --ct-border: rgba(255, 255, 255, 0.08);
-  --ct-border-strong: rgba(255, 255, 255, 0.16);
-  --ct-selected: rgba(255, 255, 255, 0.08);
-  --ct-primary: #fafafa;
-  --ct-primary-text: #1a1a1a;
+  --ct-bg: var(--bg-canvas);
+  --ct-bar: var(--bg-surface);
+  --ct-card: var(--bg-surface-raised);
+  --ct-text: var(--text-primary);
+  --ct-dim: var(--text-secondary);
+  --ct-dim2: var(--text-tertiary);
+  --ct-border: var(--border-line);
+  --ct-border-strong: var(--border-line-strong);
+  --ct-selected: var(--wash-strong);
+  --ct-primary: var(--accent-primary);
+  --ct-primary-text: var(--ink-on-accent);
   display: flex;
   flex-direction: column;
   height: 100dvh;
@@ -29,6 +29,11 @@
 
 .ct-root button {
   font-family: inherit;
+}
+
+.ct-root :is(button, a, textarea, select, [role="button"]):focus-visible {
+  outline: 2px solid var(--brand-ring);
+  outline-offset: 2px;
 }
 
 .ct-login {
@@ -61,10 +66,10 @@
   justify-content: center;
   padding: 28px 28px 96px;
   overflow: hidden;
-  background-color: #0b0b0c;
+  background-color: var(--ct-bg);
   background-image:
-    radial-gradient(rgba(255, 255, 255, 0.055) 1px, transparent 1px),
-    radial-gradient(ellipse at 50% 38%, rgba(255, 255, 255, 0.045), transparent 62%);
+    radial-gradient(var(--wash) 1px, transparent 1px),
+    radial-gradient(ellipse at 50% 38%, var(--wash), transparent 62%);
   background-size: 24px 24px, 100% 100%;
 }
 
@@ -72,7 +77,7 @@
   position: absolute;
   inset: 0;
   pointer-events: none;
-  background: radial-gradient(ellipse at 50% 32%, rgba(120, 140, 255, 0.05), transparent 55%);
+  background: radial-gradient(ellipse at 50% 32%, rgb(var(--accent-primary-rgb) / 0.05), transparent 55%);
 }
 
 .ct-canvas {

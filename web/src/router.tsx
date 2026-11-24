@@ -16,6 +16,7 @@ import { SupDanceRouteHosts } from "@/supdance/adapters/router-hosts";
 
 const AdminPage = lazy(() => import("@/pages/admin"));
 const ConnectOnePage = lazy(() => import("@/supdance/federation/connect-one"));
+const CanvasMediaImportPage = lazy(() => import("@/supdance/federation/canvas-media-import-page"));
 const EcommerceManagementPage = lazyAdminPage(() => import("@/pages/admin/ecommerce-management-page"));
 const EcommerceAgentConfigPage = lazyAdminPage(() => import("@/pages/admin/ecommerce-agent-config-page"));
 const AnalyticsPage = lazyAdminPage(() => import("@/pages/admin/admin-route-pages").then((module) => ({ default: module.AnalyticsPage })));
@@ -165,6 +166,7 @@ const routes: RouteObject[] = [
     { path: "/p/:slug", element: fullScreenDeferred(<PublicHtmlViewerPage />), errorElement: <RouteErrorPage /> },
     { path: "/html/:slug", element: fullScreenDeferred(<PublicHtmlViewerPage />), errorElement: <RouteErrorPage /> },
     { path: "/share/canvas/:token", element: fullScreenDeferred(<SharedCanvasPage />), errorElement: <RouteErrorPage /> },
+    { path: "/canvas/import-one", element: fullScreenDeferred(<CanvasMediaImportPage />), errorElement: <RouteErrorPage /> },
     // H5 真人认证回跳页：多在未登录的手机上打开，不进入工作区登录守卫。
     { path: "/ark-portrait/result", element: fullScreenDeferred(<ArkPortraitResultPage />), errorElement: <RouteErrorPage /> },
     ...(import.meta.env.DEV ? devRoutes() : []),

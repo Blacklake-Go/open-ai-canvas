@@ -729,7 +729,9 @@ export default function AudioStudio({
       const stored = localStorage.getItem(PERSIST_KEY);
       if (stored) {
         const data = JSON.parse(stored);
-        if (data.selectedModelId) setSelectedModelId(data.selectedModelId);
+        if (data.selectedModelId && !new URLSearchParams(window.location.search).get("model")) {
+          setSelectedModelId(data.selectedModelId);
+        }
         if (data.params) setParams(data.params);
         if (!hosted) {
           if (data.internalHistory) setInternalHistory(data.internalHistory);
@@ -920,6 +922,7 @@ export default function AudioStudio({
             <button
               ref={modelBtnRef}
               type="button"
+              data-studio-model={selectedModel?.id || ""}
               onClick={() => setOpenDropdown(!openDropdown)}
               className="flex w-full items-center justify-between gap-2 rounded-xl border border-line bg-wash px-4 py-3.5 text-label font-medium text-ink transition-[background-color,border-color,transform] duration-fast ease-standard hover:border-brand-line/50 hover:bg-wash-strong active:scale-[0.98] active:duration-instant cursor-pointer backdrop-blur-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-ring"
             >

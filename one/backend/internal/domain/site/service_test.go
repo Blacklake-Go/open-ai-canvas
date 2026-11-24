@@ -49,3 +49,22 @@ func TestGenerateSitemapXML(t *testing.T) {
 		t.Fatalf("expected stripped /pricing URL, got:\n%s", custom)
 	}
 }
+
+func TestSubscriptionFAQPublicationDistinguishesDisabledAndUnpublished(t *testing.T) {
+	locale, key, ok := SubscriptionFAQLocale("es-AR")
+	if !ok || locale != "es" || key != "subscription_faq_config:es" {
+		t.Fatalf("unexpected normalized settings key: %q %q", locale, key)
+	}
+	svc := Service{Repo: &stubRepo{settings: map[string]json.RawMessage{
+		key: json.RawMessage(`{"items":[{"id":"disabled","question":"Q","answer":"A","enabled":false}]}`),
+	}}}
+	published, err := svc.GetSubscriptionFAQ(context.Background(), locale, key)
+	if err != nil || !published.Configured || len(published.Items) != 0 {
+		t.Fatalf("disabled questions must stay hidden: %+v, %v", published, err)
+	}
+	locale, key, _ = SubscriptionFAQLocale("ja-JP")
+	unpublished, err := svc.GetSubscriptionFAQ(context.Background(), locale, key)
+	if err != nil || unpublished.Configured || len(unpublished.Items) != 0 {
+		t.Fatalf("unpublished locale should be distinct from saved settings: %+v, %v", unpublished, err)
+	}
+}

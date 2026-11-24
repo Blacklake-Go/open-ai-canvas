@@ -3,9 +3,10 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { localizeStudioPath } from '@/lib/locales';
+import { useTheme } from 'next-themes';
+import { canvasProjectHref } from '@/lib/canvas-project-route';
 import { QueryClient, QueryClientProvider, keepPreviousData, useQuery, useQueryClient } from '@tanstack/react-query';
-import { App as AntApp, Button, ConfigProvider, Dropdown, Input, Modal, Popconfirm } from 'antd';
+import { App as AntApp, Button, ConfigProvider, Dropdown, Input, Modal, Popconfirm, theme } from 'antd';
 import antdEnUS from 'antd/locale/en_US';
 import antdZhCN from 'antd/locale/zh_CN';
 import antdZhTW from 'antd/locale/zh_TW';
@@ -144,10 +145,25 @@ const ANTD_THEME = {
   },
 };
 
+const ANTD_LIGHT_THEME = {
+  algorithm: theme.defaultAlgorithm,
+  token: {
+    colorPrimary: ANTD_THEME.token.colorPrimary,
+    borderRadius: ANTD_THEME.token.borderRadius,
+    controlHeight: ANTD_THEME.token.controlHeight,
+    motionDurationFast: ANTD_THEME.token.motionDurationFast,
+    motionDurationMid: ANTD_THEME.token.motionDurationMid,
+    motionDurationSlow: ANTD_THEME.token.motionDurationSlow,
+  },
+  components: { Button: ANTD_THEME.components.Button },
+};
+
+const reducedMotionQuery = '(prefers-reduced-motion: reduce)';
+
 async function fetchJson(url, signal, fallbackMessage = 'Request failed') {
   const response = await fetch(url, { signal, cache: 'no-store' });
   const payload = await response.json().catch(() => ({}));
-  if (!response.ok) throw new Error(payload.error || fallbackMessage);
+  if (!response.ok || payload.success === false) throw new Error(payload.error || fallbackMessage);
   return payload;
 }
 
@@ -158,7 +174,7 @@ async function mutateJson(url, { method = 'POST', body } = {}, fallbackMessage =
     body: body !== undefined ? JSON.stringify(body) : undefined,
   });
   const payload = await response.json().catch(() => ({}));
-  if (!response.ok) throw new Error(payload.error || fallbackMessage);
+  if (!response.ok || payload.success === false) throw new Error(payload.error || fallbackMessage);
   return payload;
 }
 
@@ -194,6 +210,20 @@ function selectAssetIds(current, visibleIds, id, selected, anchorId) {
 }
 
 export default function AssetLibraryWorkspace(props) {
+  const { resolvedTheme } = useTheme();
+  const [reducedMotion, setReducedMotion] = useState(
+    () => typeof window !== 'undefined' && window.matchMedia(reducedMotionQuery).matches,
+  );
+  useEffect(() => {
+    const media = window.matchMedia(reducedMotionQuery);
+    const update = () => setReducedMotion(media.matches);
+    media.addEventListener('change', update);
+    return () => media.removeEventListener('change', update);
+  }, []);
+  const configTheme = useMemo(() => {
+    const palette = resolvedTheme === 'light' ? ANTD_LIGHT_THEME : ANTD_THEME;
+    return reducedMotion ? { ...palette, token: { ...palette.token, motion: false } } : palette;
+  }, [reducedMotion, resolvedTheme]);
   const [queryClient] = useState(() => new QueryClient({
     defaultOptions: {
       queries: {
@@ -205,11 +235,11 @@ export default function AssetLibraryWorkspace(props) {
   }));
 
   return (
-    <ConfigProvider locale={ANTD_LOCALES[props.copy?.locale] || antdEnUS} theme={ANTD_THEME}>
+    <ConfigProvider locale={ANTD_LOCALES[props.copy?.locale] || antdEnUS} theme={configTheme}>
       <QueryClientProvider client={queryClient}>
         <AntApp component={false}>
           <AssetLibraryCopyProvider copy={props.copy}>
-            <AssetLibraryWorkspaceInner {...props} />
+            <AssetLibraryWorkspaceInner key={props.userId} {...props} />
           </AssetLibraryCopyProvider>
         </AntApp>
       </QueryClientProvider>
@@ -326,6 +356,12 @@ function AssetLibraryWorkspaceInner({ userId, studioHref, sideNav, onLibraryAsse
   }, [debouncedKeyword]);
 
   useEffect(() => {
+    if (!data || libraryQuery.isPlaceholderData) return;
+    const lastPage = Math.max(1, Math.ceil(total / pageSize));
+    setPage((current) => Math.min(current, lastPage));
+  }, [data, libraryQuery.isPlaceholderData, pageSize, total]);
+
+  useEffect(() => {
     setSelectedIds([]);
     setSelectionMode(false);
     selectionAnchor.current = undefined;
@@ -384,11 +420,8 @@ function AssetLibraryWorkspaceInner({ userId, studioHref, sideNav, onLibraryAsse
 
   const openAsset = (asset) => {
     if (asset?.kind === 'canvas') {
-      const target = asset.data?.url || (asset.data?.projectId ? `/canvas/${asset.data.projectId}` : null);
-      if (target) {
-        window.open(localizeStudioPath(target, copy.locale), '_blank', 'noopener');
-        return;
-      }
+      router.push(canvasProjectHref(asset.data?.projectId || asset.id, copy.locale));
+      return;
     }
     setPreviewAsset(asset);
   };
@@ -419,7 +452,7 @@ function AssetLibraryWorkspaceInner({ userId, studioHref, sideNav, onLibraryAsse
   const downloadAsset = (asset) => {
     if (!asset || asset.kind === 'text' || asset.kind === 'entity' || asset.kind === 'canvas') return;
     const link = document.createElement('a');
-    link.href = `/api/assets/${encodeURIComponent(asset.id)}/download`;
+    link.href = `/api/assets/${encodeURIComponent(asset.id)}/download?disposition=attachment`;
     link.rel = 'noopener';
     document.body.appendChild(link);
     link.click();
@@ -463,10 +496,10 @@ function AssetLibraryWorkspaceInner({ userId, studioHref, sideNav, onLibraryAsse
     if (!ids.length || batchWorking) return;
     setBatchWorking(true);
     try {
-      await mutateJson('/api/assets/library/batch', {
+      const result = await mutateJson('/api/assets/library/batch', {
         body: { action: status === 'trash' ? 'trash' : 'restore', assetIds: ids },
       }, copy.operationFailed);
-      message.success(fillCopy(status === 'trash' ? copy.movedToTrashToast : copy.restoredToast, { count: ids.length }));
+      message.success(fillCopy(status === 'trash' ? copy.movedToTrashToast : copy.restoredToast, { count: result.affected }));
       setSelectedIds((current) => current.filter((id) => !ids.includes(id)));
       setArchivingAsset(null);
       setBatchArchiveOpen(false);
@@ -479,16 +512,22 @@ function AssetLibraryWorkspaceInner({ userId, studioHref, sideNav, onLibraryAsse
   };
 
   const purgeAssets = async (ids) => {
-    if (!ids.length || batchWorking) return;
+    if (batchWorking || ids?.length === 0) return;
     setBatchWorking(true);
     try {
-      if (ids.length === 1) {
-        await mutateJson(`/api/assets/library/${encodeURIComponent(ids[0])}?purge=true`, { method: 'DELETE' }, copy.operationFailed);
+      const body = ids ? { action: 'purge', assetIds: ids } : { action: 'empty' };
+      const result = await mutateJson('/api/assets/library/batch', { body }, copy.operationFailed);
+      const failures = result.failures || [];
+      if (failures.length) {
+        const reason = failures.every(({ code }) => code === 'ASSET_IN_USE')
+          ? copy.assetReferenced
+          : copy.operationFailed;
+        message.warning(`${fillCopy(copy.purgePartial, { count: result.deleted, failed: failures.length })} ${reason}`);
       } else {
-        await mutateJson('/api/assets/library/batch', { body: { action: 'purge', assetIds: ids } }, copy.operationFailed);
+        message.success(fillCopy(ids ? copy.purgedToast : copy.trashEmptiedToast, { count: result.deleted }));
       }
-      message.success(fillCopy(copy.purgedToast, { count: ids.length }));
-      setSelectedIds((current) => current.filter((id) => !ids.includes(id)));
+      const removed = new Set(result.deletedIds);
+      setSelectedIds((current) => current.filter((id) => !removed.has(id)));
       setDeletingAsset(null);
       setBatchDeleteOpen(false);
       await refreshLibrary();
@@ -499,27 +538,15 @@ function AssetLibraryWorkspaceInner({ userId, studioHref, sideNav, onLibraryAsse
     }
   };
 
-  const emptyTrash = async () => {
-    setBatchWorking(true);
-    try {
-      const result = await mutateJson('/api/assets/library/batch', { body: { action: 'empty' } }, copy.operationFailed);
-      message.success(fillCopy(copy.trashEmptiedToast, { count: result.count || 0 }));
-      clearSelection();
-      await refreshLibrary();
-    } catch (error) {
-      message.error(error.message);
-    } finally {
-      setBatchWorking(false);
-    }
-  };
+  const emptyTrash = () => purgeAssets();
 
   const moveAssets = async (ids, targetFolderId) => {
     if (!ids.length) return;
     try {
-      await mutateJson('/api/assets/library/batch', {
+      const result = await mutateJson('/api/assets/library/batch', {
         body: { action: 'move', assetIds: ids, targetFolderId: targetFolderId || null },
       }, copy.operationFailed);
-      message.success(fillCopy(copy.movedToast, { count: ids.length }));
+      message.success(fillCopy(copy.movedToast, { count: result.affected }));
       setSelectedIds((current) => current.filter((id) => !ids.includes(id)));
       await refreshLibrary();
     } catch (error) {
@@ -997,7 +1024,6 @@ function AssetLibraryWorkspaceInner({ userId, studioHref, sideNav, onLibraryAsse
                         selected={selectedIds.includes(asset.id)}
                         selectionMode={isSelecting}
                         isTrash={viewMode === 'trash'}
-                        retentionDays={30}
                         folderOptions={folderSelectOptions}
                         onSelect={(selected, range) => selectAsset(asset.id, selected, range)}
                         onOpen={() => openAsset(asset)}

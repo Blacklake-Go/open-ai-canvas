@@ -20,6 +20,8 @@ import (
 	"errors"
 	stdfmt "fmt"
 	"io"
+	"log/slog"
+	"mime"
 	"mime/multipart"
 	"net"
 	"net/http"
@@ -29,6 +31,7 @@ import (
 	"strconv"
 	"strings"
 	"time"
+	"unicode/utf8"
 
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgtype"
@@ -38,10 +41,12 @@ import (
 	"one/backend/internal/domain/assets"
 	"one/backend/internal/domain/canvas"
 	"one/backend/internal/domain/community"
+	"one/backend/internal/domain/designagent"
 	"one/backend/internal/domain/federation"
 	"one/backend/internal/domain/generation"
 	"one/backend/internal/middleware"
 	"one/backend/internal/pkg/envelope"
+	"one/backend/internal/platform/coordination"
 	"one/backend/internal/storage"
 )
 
@@ -139,7 +144,7 @@ var coreSpec = []coreRouteDef{
 	{"/api/assets/upload", []string{"POST"}, "authenticated_or_domain", envelope.FormatSuccessFlaggedJSON},
 	{"/api/canvas-tools/plan", []string{"POST"}, "authenticated_or_domain", envelope.FormatSuccessFlaggedJSON},
 	{"/api/canvas-tools/result/[id]", []string{"GET"}, "authenticated_or_domain", envelope.FormatBinaryRedirectOrText},
-	{"/api/canvas-tools/spec", []string{"GET"}, "authenticated_or_domain", envelope.FormatSuccessFlaggedJSON},
+	{"/api/canvas-tools/spec", []string{"GET"}, "public", envelope.FormatSuccessFlaggedJSON},
 	{"/api/canvas/assets/[id]/content", []string{"GET", "OPTIONS", "HEAD"}, "authenticated_or_domain", envelope.FormatDirectDomainJSON},
 	{"/api/canvas/assets", []string{"GET", "OPTIONS"}, "authenticated_or_domain", envelope.FormatDirectDomainJSON},
 	{"/api/canvas/assets/upload", []string{"POST", "OPTIONS"}, "authenticated_or_domain", envelope.FormatDirectDomainJSON},
@@ -317,6 +322,14 @@ func coreErr(w http.ResponseWriter, r *http.Request, fmt envelope.Format, status
 	envelope.WriteErrorByFormat(w, r, fmt, status, code, msg)
 }
 
+func coreExpectedOwner(w http.ResponseWriter, r *http.Request, format envelope.Format, userID, code string) bool {
+	if expected := r.Header.Get("X-ONE-Expected-User"); expected != "" && expected != userID {
+		coreErr(w, r, format, http.StatusConflict, code, "登录账户已更改")
+		return false
+	}
+	return true
+}
+
 func coreDomainErr(w http.ResponseWriter, status int, msg, code string) {
 	envelope.DomainError(w, status, msg, code)
 }
@@ -341,7 +354,8 @@ func coreNeedUser(w http.ResponseWriter, u *middleware.SessionUser, msg string) 
 
 // coreCanvasUser is the source-equivalent 401 for canvas routes.
 func coreCanvasUser(w http.ResponseWriter, r *http.Request, u *middleware.SessionUser) (*middleware.SessionUser, bool) {
-	if !coreCanvasOriginAllowed(r) {
+	sameOriginRead := r.Method == http.MethodGet && r.Header.Get("Origin") == "" && r.Header.Get("Sec-Fetch-Site") == "same-origin"
+	if !sameOriginRead && !coreCanvasOriginAllowed(r) {
 		coreCanvasJSON(r, w, http.StatusForbidden, map[string]any{"error": "Canvas 请求来源无效", "code": "CANVAS_ORIGIN_INVALID"})
 		return nil, false
 	}
@@ -545,43 +559,13 @@ func coreNow() time.Time { return time.Now().UTC() }
 // lib/security/requestGuard.js (sys_core.rate_limit_buckets). A missing pool or
 // limiter error is a 503 — never a silent allow.
 func coreRateLimit(ctx context.Context, pool *pgxpool.Pool, scope, subject string, limit int, window time.Duration) (bool, int, error) {
-	if pool == nil {
-		return false, 1, errors.New("rate limiter unavailable")
+	if limit < 1 {
+		return false, 1, coordination.ErrScopeRequired
 	}
-	if strings.TrimSpace(scope) == "" || limit < 1 {
-		return false, 1, errors.New("rate limit scope required")
-	}
-	subject = strings.TrimSpace(subject)
-	if subject == "" {
-		subject = "unknown"
-	}
-	h := sha256.Sum256([]byte(scope + ":" + subject))
-	keyHash := hex.EncodeToString(h[:])
-	now := coreNow()
-	reset := now.Add(-window)
-	var count int
-	var started time.Time
-	err := pool.QueryRow(ctx, `
-		INSERT INTO sys_core.rate_limit_buckets
-		  (key_hash, scope, subject, window_started_at, request_count, updated_at)
-		VALUES ($1, $2, $3, $4, 1, $4)
-		ON CONFLICT (key_hash) DO UPDATE SET
-		  window_started_at = CASE
-		    WHEN sys_core.rate_limit_buckets.window_started_at <= $5 THEN $4
-		    ELSE sys_core.rate_limit_buckets.window_started_at END,
-		  request_count = CASE
-		    WHEN sys_core.rate_limit_buckets.window_started_at <= $5 THEN 1
-		    ELSE sys_core.rate_limit_buckets.request_count + 1 END,
-		  updated_at = $4
-		RETURNING request_count, window_started_at`, keyHash, scope, subject, now, reset).Scan(&count, &started)
-	if err != nil {
-		return false, 1, err
-	}
-	retry := int(started.Add(window).Sub(now).Seconds()) + 1
-	if retry < 1 {
-		retry = 1
-	}
-	return count <= limit, retry, nil
+	result, err := coordination.ConsumePostgresRateLimit(ctx, pool, coordination.RateLimitRequest{
+		Scope: scope, Subject: subject, Limit: limit, Window: window,
+	}, coreNow())
+	return result.Allowed, max(result.RetryAfterSeconds, 1), err
 }
 
 func coreLimitOr503(w http.ResponseWriter, r *http.Request, d *Dependencies, fmt envelope.Format, scope, subject string, limit int, window time.Duration) bool {
@@ -690,18 +674,7 @@ func coreDecodeObject(w http.ResponseWriter, r *http.Request, max int64) (map[st
 }
 
 func corePromptOkay(prompt string) bool {
-	// lib/security/contentModeration.js BLOCKED_PATTERNS (translated; conservative).
-	lower := strings.ToLower(strings.TrimSpace(prompt))
-	if lower == "" {
-		return true
-	}
-	bad := []string{"child porn", "child sexual", "csam", "minor nude", "teen nude", "rape", "incest", "bestiality", "snuff", "terrorist attack", "make a bomb", "how to make a bomb"}
-	for _, s := range bad {
-		if strings.Contains(lower, s) {
-			return false
-		}
-	}
-	return true
+	return generation.PromptAllowed(prompt)
 }
 
 // coreHasOwnedCreation validates a user-owned, non-deleted creation for reports.
@@ -871,6 +844,9 @@ func (d *Dependencies) coreGenerationQuote(w http.ResponseWriter, r *http.Reques
 	const fmt = envelope.FormatSuccessFlaggedJSON
 	user, ok := coreNeedUser(w, u, "请先登录")
 	if !ok {
+		return
+	}
+	if !coreExpectedOwner(w, r, fmt, user.ID, "GENERATION_ACCOUNT_CHANGED") {
 		return
 	}
 	if coreBodyTooLarge(w, r, fmt, 128*1024) {
@@ -1139,6 +1115,9 @@ func (d *Dependencies) coreGenerationGet(w http.ResponseWriter, r *http.Request,
 	if !ok {
 		return
 	}
+	if !coreExpectedOwner(w, r, fmt, user.ID, "GENERATION_ACCOUNT_CHANGED") {
+		return
+	}
 	id := pathParam(r, "id")
 	if id == "" {
 		coreErr(w, r, fmt, http.StatusBadRequest, "INVALID_TASK_ID", "缺少任务 ID")
@@ -1199,6 +1178,10 @@ func (d *Dependencies) coreGenerationsList(w http.ResponseWriter, r *http.Reques
 	if !ok {
 		return
 	}
+	if !coreExpectedOwner(w, r, fmt, user.ID, "GENERATION_ACCOUNT_CHANGED") {
+		return
+	}
+	w.Header().Set("Cache-Control", "private, no-store")
 	pool, ok := coreDB(d, w, r, fmt)
 	if !ok {
 		return
@@ -1245,13 +1228,42 @@ func (d *Dependencies) coreGenerationsList(w http.ResponseWriter, r *http.Reques
 		return
 	}
 	limit := queryInt(r, "limit", 50, 1, 100)
+	activeLimit := 0
+	var tracked []string
+	if coreQuery(r, "includeActive") == "true" {
+		activeLimit = 100
+		ids := r.URL.Query()["track"]
+		if len(ids) > 100 {
+			coreErr(w, r, fmt, http.StatusUnprocessableEntity, "TRACKED_TASK_LIMIT", "最多同时跟踪 100 条任务")
+			return
+		}
+		tracked = ids
+	}
 	rows, err := pool.Query(r.Context(), `
+		WITH recent AS (
+			SELECT id FROM ai_studio.creations
+			WHERE user_id = $1 AND deleted_at IS NULL
+			ORDER BY created_at DESC, id DESC LIMIT $2
+		), older_active AS (
+			SELECT c.id FROM ai_studio.creations c
+			WHERE c.user_id = $1 AND c.deleted_at IS NULL
+			  AND (c.status IN ('created','quoted','pending','queued','processing','running','routing','reserved','submitted','credit_reserved','reconciliation_required','refunding')
+			   OR c.completed_at >= now() - interval '30 minutes'
+			   OR c.id = ANY($4::text[]))
+			  AND NOT EXISTS (SELECT 1 FROM recent WHERE recent.id = c.id)
+			ORDER BY c.created_at DESC, c.id DESC LIMIT $3
+		), selected AS (
+			SELECT id FROM recent UNION ALL SELECT id FROM older_active
+		)
 		SELECT c.*, p.id AS community_post_id, p.likes_count AS community_likes,
 		       (p.id IS NOT NULL) AS is_shared
-		FROM ai_studio.creations c
-		LEFT JOIN ai_studio.community_posts p ON c.id = p.creation_id AND p.status = 'published'
-		WHERE c.user_id = $1 AND c.deleted_at IS NULL
-		ORDER BY c.created_at DESC LIMIT $2`, user.ID, limit)
+		FROM selected JOIN ai_studio.creations c ON selected.id = c.id
+		LEFT JOIN LATERAL (
+			SELECT id, likes_count FROM ai_studio.community_posts
+			WHERE creation_id = c.id AND status = 'published'
+			ORDER BY created_at DESC, id DESC LIMIT 1
+		) p ON true
+		ORDER BY c.created_at DESC, c.id DESC`, user.ID, limit, activeLimit, tracked)
 	if err != nil {
 		coreErr(w, r, fmt, http.StatusServiceUnavailable, "GENERATION_READ_FAILED", "读取生成任务失败，请稍后重试")
 		return
@@ -1275,6 +1287,9 @@ func (d *Dependencies) coreGenerationsCreate(w http.ResponseWriter, r *http.Requ
 	if !ok {
 		return
 	}
+	if !coreExpectedOwner(w, r, fmt, user.ID, "GENERATION_ACCOUNT_CHANGED") {
+		return
+	}
 	if coreBodyTooLarge(w, r, fmt, 256*1024) {
 		return
 	}
@@ -1285,9 +1300,17 @@ func (d *Dependencies) coreGenerationsCreate(w http.ResponseWriter, r *http.Requ
 	if !ok {
 		return
 	}
-	if !corePromptOkay(coreString(body["prompt"])) {
+	params, ok := body["parameters"].(map[string]any)
+	if !ok {
+		params = body
+	}
+	prompt := coreFirst(coreString(body["prompt"]), coreString(params["prompt"]))
+	if !corePromptOkay(prompt) {
 		coreErr(w, r, fmt, http.StatusUnprocessableEntity, "CONTENT_POLICY_VIOLATION", "提示词包含敏感或违规内容，请遵守平台使用规范并调整后重试")
 		return
+	}
+	if prompt != "" {
+		params["prompt"] = prompt
 	}
 	quoteID := coreFirst(coreString(body["quoteId"]), coreString(body["quote_id"]))
 	if quoteID == "" {
@@ -1304,13 +1327,42 @@ func (d *Dependencies) coreGenerationsCreate(w http.ResponseWriter, r *http.Requ
 		return
 	}
 	modelID := coreFirst(coreString(body["modelId"]), coreString(body["model"]), coreString(body["endpoint"]))
-	params, ok := body["parameters"].(map[string]any)
-	if !ok {
-		params = body
+	studioID := coreFirst(coreString(body["studioId"]), "studio")
+	if strings.HasPrefix(studioID, "workflow:") {
+		coreErr(w, r, fmt, http.StatusUnprocessableEntity, "WORKFLOW_STEP_REQUIRED", "请通过工作流步骤提交任务")
+		return
+	}
+	if kind, sessionID, isConversation := strings.Cut(studioID, ":"); isConversation && (kind == "design-agent" || kind == "agent-chat") {
+		if !designSessionUUID.MatchString(sessionID) {
+			coreErr(w, r, fmt, http.StatusNotFound, "AGENT_SESSION_NOT_FOUND", "找不到此会话")
+			return
+		}
+		mode := coreString(params["task_type"])
+		mediaTurn := kind == "design-agent" && generation.DesignMediaKind(mode) != ""
+		if prompt == "" || utf8.RuneCountInString(prompt) > 12000 || (mode != "t2t" && !mediaTurn) {
+			coreErr(w, r, fmt, http.StatusUnprocessableEntity, "DESIGN_AGENT_INVALID_INPUT", "请输入有效的设计对话内容")
+			return
+		}
+		if !mediaTurn {
+			var publishedTextModel bool
+			err := pool.QueryRow(r.Context(), `
+				SELECT EXISTS(SELECT 1 FROM ai_studio.ai_models
+					WHERE id=$1 AND category='text' AND status='active' AND is_visible AND auto_route_eligible)`,
+				modelID).Scan(&publishedTextModel)
+			if err != nil {
+				coreErr(w, r, fmt, http.StatusServiceUnavailable, "DESIGN_AGENT_UNAVAILABLE", "暂时无法读取文本模型")
+				return
+			}
+			if !publishedTextModel {
+				coreErr(w, r, fmt, http.StatusUnprocessableEntity, "DESIGN_AGENT_MODEL_UNAVAILABLE", "设计对话模型当前不可用")
+				return
+			}
+		}
+		studioID = kind + ":" + strings.ToLower(sessionID)
 	}
 	res, err := d.generationSvc(pool).CreateTask(r.Context(), generation.CreateTaskRequest{
 		UserID:         user.ID,
-		StudioID:       coreFirst(coreString(body["studioId"]), "studio"),
+		StudioID:       studioID,
 		QuoteID:        quoteID,
 		ModelID:        modelID,
 		Label:          coreString(body["label"]),
@@ -1457,6 +1509,9 @@ func coreAssetProjection(m map[string]any) map[string]any {
 		kind = str("asset_type")
 	}
 	mediaURL := nullable("media_url")
+	if str("object_key") != "" {
+		mediaURL = "/api/assets/" + url.PathEscape(str("id")) + "/download"
+	}
 	out := map[string]any{
 		"id": str("id"), "type": str("asset_type"), "kind": kind,
 		"category": coreFirst(str("category"), "other"),
@@ -1469,6 +1524,7 @@ func coreAssetProjection(m map[string]any) map[string]any {
 		"status":        coreFirst(str("status"), "ready"),
 		"storageStatus": coreFirst(str("storage_status"), "ready"),
 		"createdAt":     m["created_at"], "updatedAt": m["updated_at"],
+		"trashedAt": m["trashed_at"], "coverUrl": nullable("cover_url"),
 		"folderId": nullable("folder_id"), "folderName": nullable("folder_name"),
 		"prompt": coreFirst(str("prompt"), ""), "checksum": nullable("checksum"),
 		"starred": m["is_favorite"] == true,
@@ -1482,10 +1538,16 @@ func coreAssetProjection(m map[string]any) map[string]any {
 		"url": mediaURL, "thumbnailUrl": nullable("thumbnail_url"), "previewUrl": nullable("preview_url"),
 		"width": nullable("width"), "height": nullable("height"),
 		"bytes": coreFloat(m["file_size_bytes"]), "mimeType": nullable("mime_type"),
+		"fileName":   coreFirst(str("original_filename"), str("filename")),
+		"durationMs": coreFloat(m["duration_seconds"]) * 1000,
 	}
 	switch kind {
 	case "text":
-		data = map[string]any{"content": coreFirst(coreString(assetData["content"]), str("prompt"))}
+		content, hasContent := assetData["content"].(string)
+		if !hasContent {
+			content = str("prompt")
+		}
+		data = map[string]any{"content": content}
 	case "entity":
 		data = map[string]any{"definition": assetData["definition"]}
 	case "canvas":
@@ -1517,7 +1579,7 @@ func coreAssetSelect() string {
 		a.kind, a.category, a.source, a.note, a.cover_url, a.asset_data, a.trashed_at,
 		f.name AS folder_name, f.color AS folder_color
 		FROM ai_studio.user_assets a
-		LEFT JOIN ai_studio.asset_folders f ON f.id = a.folder_id`
+		LEFT JOIN ai_studio.asset_folders f ON f.id = a.folder_id AND f.user_id = a.user_id`
 }
 
 // GET /api/assets/[id]/download — redirect to a signed/object URL or media_url.
@@ -1527,6 +1589,15 @@ func (d *Dependencies) coreAssetDownload(w http.ResponseWriter, r *http.Request,
 	if !ok {
 		return
 	}
+	transfer := coreQuery(r, "transfer") == "canvas"
+	if transfer && r.Header.Get("X-ONE-Expected-User") == "" {
+		coreErr(w, r, fmt, http.StatusBadRequest, "ASSET_OWNER_CONTEXT_REQUIRED", "无法确认发起操作时的账户")
+		return
+	}
+	if !coreExpectedOwner(w, r, fmt, user.ID, "ASSET_ACCOUNT_CHANGED") {
+		return
+	}
+	const maxTransferBytes = 100 << 20
 	id := pathParam(r, "id")
 	if id == "" {
 		coreErr(w, r, fmt, http.StatusBadRequest, "INVALID_ASSET_ID", "缺少资产标识")
@@ -1545,6 +1616,10 @@ func (d *Dependencies) coreAssetDownload(w http.ResponseWriter, r *http.Request,
 		coreErr(w, r, fmt, http.StatusServiceUnavailable, "ASSET_READ_FAILED", "读取资产失败")
 		return
 	}
+	if transfer && asset.Size > maxTransferBytes {
+		coreErr(w, r, fmt, http.StatusRequestEntityTooLarge, "ASSET_TRANSFER_TOO_LARGE", "画布导入支持 100 MB 以内的素材")
+		return
+	}
 	stSvc := d.storageSvc(pool)
 	if asset.ObjectKey != "" {
 		disp := coreFirst(coreQuery(r, "disposition"), "inline")
@@ -1552,30 +1627,57 @@ func (d *Dependencies) coreAssetDownload(w http.ResponseWriter, r *http.Request,
 			disp = "inline"
 		}
 		prov := storage.NormalizeProvider(asset.StorageProvider)
-		if prov != "local" {
+		if prov != "local" && !transfer {
 			if signed, sErr := stSvc.SignedURL(r.Context(), asset.StorageProvider, asset.StorageLocationID, asset.Bucket, asset.Region, asset.ObjectKey, disp); sErr == nil && strings.HasPrefix(strings.ToLower(signed), "http") {
 				http.Redirect(w, r, signed, http.StatusFound)
 				return
 			}
 		}
-		if rc, meta, oErr := stSvc.OpenStream(r.Context(), asset.StorageProvider, asset.StorageLocationID, asset.Bucket, asset.Region, asset.ObjectKey, ""); oErr == nil {
+		rangeHeader := strings.TrimSpace(r.Header.Get("Range"))
+		if rc, meta, oErr := stSvc.OpenStream(r.Context(), asset.StorageProvider, asset.StorageLocationID, asset.Bucket, asset.Region, asset.ObjectKey, rangeHeader); oErr == nil {
 			defer rc.Close()
+			if transfer && (meta.ContentLength > maxTransferBytes || meta.Size > maxTransferBytes) {
+				coreErr(w, r, fmt, http.StatusRequestEntityTooLarge, "ASSET_TRANSFER_TOO_LARGE", "画布导入支持 100 MB 以内的素材")
+				return
+			}
 			ct := coreFirst(meta.ContentType, "application/octet-stream")
+			switch asset.MIMEType {
+			case "image/png", "image/jpeg", "image/webp", "image/gif", "image/avif",
+				"video/mp4", "video/webm", "video/quicktime", "audio/wav", "audio/mpeg", "audio/mp4", "audio/ogg":
+				ct = asset.MIMEType
+			}
 			w.Header().Set("Content-Type", ct)
 			w.Header().Set("Cache-Control", "private, no-store")
 			w.Header().Set("X-Content-Type-Options", "nosniff")
 			if disp == "attachment" {
-				w.Header().Set("Content-Disposition", "attachment")
+				w.Header().Set("Content-Disposition", mime.FormatMediaType("attachment", map[string]string{"filename": coreFirst(asset.Filename, asset.ID)}))
 			}
-			if meta.Size > 0 {
+			w.Header().Set("Accept-Ranges", "bytes")
+			if meta.StatusCode == http.StatusPartialContent && meta.ContentRange != "" {
+				w.Header().Set("Content-Range", meta.ContentRange)
+			}
+			if meta.ContentLength > 0 {
+				w.Header().Set("Content-Length", strconv.FormatInt(meta.ContentLength, 10))
+			} else if meta.Size > 0 && rangeHeader == "" {
 				w.Header().Set("Content-Length", strconv.FormatInt(meta.Size, 10))
 			}
-			w.WriteHeader(http.StatusOK)
-			_, _ = io.Copy(w, rc)
+			status := meta.StatusCode
+			if status == 0 {
+				status = http.StatusOK
+			}
+			w.WriteHeader(status)
+			if transfer {
+				_, _ = io.Copy(w, io.LimitReader(rc, maxTransferBytes+1))
+			} else {
+				_, _ = io.Copy(w, rc)
+			}
+			return
+		} else if meta.StatusCode == http.StatusRequestedRangeNotSatisfiable {
+			coreWrite416(r, w, asset.Size)
 			return
 		}
 	}
-	if asset.PublicURL != "" {
+	if asset.PublicURL != "" && !transfer {
 		target := asset.PublicURL
 		if !strings.HasPrefix(strings.ToLower(target), "http://") && !strings.HasPrefix(strings.ToLower(target), "https://") {
 			base := requestOrigin(r)
@@ -1859,15 +1961,23 @@ func (d *Dependencies) coreLibraryList(w http.ResponseWriter, r *http.Request, _
 	folderID := coreFirst(coreQuery(r, "folderId"), coreQuery(r, "folder_id"))
 	uncategorized := coreQuery(r, "uncategorized") == "true" || coreQuery(r, "uncategorized") == "1"
 	search := coreFirst(coreQuery(r, "q"), coreQuery(r, "search"))
-	if len(search) > 200 {
-		search = search[:200]
+	if chars := []rune(search); len(chars) > 200 {
+		search = string(chars[:200])
 	}
 	page := queryInt(r, "page", 1, 1, 1000000)
 	pageSize := queryInt(r, "pageSize", 40, 1, 200)
 	if raw := coreQuery(r, "page_size"); raw != "" && coreQuery(r, "pageSize") == "" {
 		pageSize = queryInt(r, "page_size", 40, 1, 200)
 	}
-	where := " a.user_id = $1 AND a.status = $2 AND a.deleted_at IS NULL"
+	where := " a.user_id = $1 AND a.status = $2"
+	if status == "ready" {
+		where += " AND a.deleted_at IS NULL"
+	}
+	facets, err := coreLibraryFacets(r.Context(), pool, user.ID, status)
+	if err != nil {
+		coreErr(w, r, fmt, http.StatusServiceUnavailable, "ASSET_LIST_FAILED", "获取资产筛选条件失败")
+		return
+	}
 	args := []any{user.ID, status}
 	n := func(v string) string {
 		args = append(args, v)
@@ -1886,7 +1996,8 @@ func (d *Dependencies) coreLibraryList(w http.ResponseWriter, r *http.Request, _
 		where += " AND a.folder_id IS NULL"
 	}
 	if search != "" {
-		where += " AND (a.title ILIKE " + n("%"+search+"%") + " OR a.prompt ILIKE " + n("%"+search+"%") + ")"
+		needle := n(search)
+		where += " AND strpos(lower(concat_ws(' ',a.title,a.prompt,a.note,a.source,array_to_string(a.tags,' '),a.asset_data->>'content',a.asset_data->>'definition')), lower(" + needle + ")) > 0"
 	}
 	var total int
 	if err := pool.QueryRow(r.Context(), `SELECT COUNT(*)::int FROM ai_studio.user_assets a WHERE`+where, args...).Scan(&total); err != nil {
@@ -1895,7 +2006,7 @@ func (d *Dependencies) coreLibraryList(w http.ResponseWriter, r *http.Request, _
 	}
 	args = append(args, pageSize, (page-1)*pageSize)
 	rows, err := pool.Query(r.Context(), coreAssetSelect()+` WHERE`+where+`
-		ORDER BY a.created_at DESC LIMIT $`+strconv.Itoa(len(args)-1)+` OFFSET $`+strconv.Itoa(len(args)), args...)
+		ORDER BY a.created_at DESC,a.id DESC LIMIT $`+strconv.Itoa(len(args)-1)+` OFFSET $`+strconv.Itoa(len(args)), args...)
 	if err != nil {
 		coreErr(w, r, fmt, http.StatusInternalServerError, "ASSET_LIST_FAILED", "获取资产库失败")
 		return
@@ -1914,7 +2025,8 @@ func (d *Dependencies) coreLibraryList(w http.ResponseWriter, r *http.Request, _
 	}
 	envelope.DomainJSON(w, http.StatusOK, map[string]any{
 		"assets": assets, "total": total, "page": page, "pageSize": pageSize,
-		"hasMore": page*pageSize < total,
+		"hasMore":    page*pageSize < total,
+		"kindCounts": facets.kind, "categoryCounts": facets.category, "folderCounts": facets.folder,
 	})
 }
 
@@ -1980,8 +2092,13 @@ func (d *Dependencies) coreLibraryAssetPatch(w http.ResponseWriter, r *http.Requ
 	if !ok {
 		return
 	}
-	if _, err := coreLibraryAssetByID(r.Context(), pool, user.ID, id); err != nil {
+	existing, err := coreLibraryAssetByID(r.Context(), pool, user.ID, id)
+	if errors.Is(err, pgx.ErrNoRows) {
 		coreErr(w, r, fmt, http.StatusNotFound, "ASSET_NOT_FOUND", "资产不存在或已被删除")
+		return
+	}
+	if err != nil {
+		coreErr(w, r, fmt, http.StatusServiceUnavailable, "ASSET_READ_FAILED", "读取素材失败")
 		return
 	}
 	sets := []string{"updated_at = now()"}
@@ -1991,7 +2108,20 @@ func (d *Dependencies) coreLibraryAssetPatch(w http.ResponseWriter, r *http.Requ
 		sets = append(sets, stdfmt.Sprintf(expr, "$"+strconv.Itoa(len(args))))
 	}
 	if v, exists := body["title"]; exists {
-		push("title = %s", coreString(v))
+		title := strings.TrimSpace(coreString(v))
+		if title == "" {
+			coreErr(w, r, fmt, http.StatusUnprocessableEntity, "INVALID_ASSET_DATA", "请填写素材名称")
+			return
+		}
+		push("title = %s", title)
+	}
+	if v, exists := body["category"]; exists {
+		category := coreString(v)
+		if !coreContains([]string{"character", "environment", "prop", "material", "other"}, category) {
+			coreErr(w, r, fmt, http.StatusUnprocessableEntity, "INVALID_ASSET_DATA", "请选择有效的素材分类")
+			return
+		}
+		push("category = %s", category)
 	}
 	if v, exists := body["note"]; exists {
 		push("note = %s", coreString(v))
@@ -2002,10 +2132,16 @@ func (d *Dependencies) coreLibraryAssetPatch(w http.ResponseWriter, r *http.Requ
 	if v, exists := body["coverUrl"]; exists {
 		push("cover_url = %s", coreString(v))
 	}
-	if v, exists := body["folderId"]; exists {
-		push("folder_id = %s", nullString(coreString(v)))
-	} else if v, exists := body["folder_id"]; exists {
-		push("folder_id = %s", nullString(coreString(v)))
+	vFolder, hasFolder := body["folderId"]
+	if !hasFolder {
+		vFolder, hasFolder = body["folder_id"]
+	}
+	if hasFolder {
+		folder := coreString(vFolder)
+		if !coreCheckAssetFolder(r, w, fmt, pool, user.ID, folder) {
+			return
+		}
+		push("folder_id = %s", nullString(folder))
 	}
 	if v, exists := body["isFavorite"]; exists {
 		push("is_favorite = %s", v == true)
@@ -2013,20 +2149,33 @@ func (d *Dependencies) coreLibraryAssetPatch(w http.ResponseWriter, r *http.Requ
 		push("is_favorite = %s", v == true)
 	}
 	if v, exists := body["tags"]; exists {
-		if arr, ok := v.([]any); ok {
-			push("tags = %s", arr)
+		if _, ok := v.([]any); ok {
+			push("tags = %s", coreStringSlice(v))
 		}
 	}
-	if v, exists := body["assetData"]; exists {
-		push("asset_data = %s::jsonb", mustJSON(v))
+	payload, hasData := body["data"]
+	if !hasData {
+		payload, hasData = body["assetData"]
+	}
+	kind := coreString(existing["kind"])
+	if hasData && (kind == "text" || kind == "entity") {
+		if _, isObject := payload.(map[string]any); !isObject {
+			coreErr(w, r, fmt, http.StatusUnprocessableEntity, "INVALID_ASSET_DATA", "素材内容格式无效")
+			return
+		}
+		push("asset_data = %s::jsonb", mustJSON(payload))
 	}
 	if len(sets) == 1 {
 		coreErr(w, r, fmt, http.StatusBadRequest, "INVALID_ASSET_DATA", "没有可更新的素材字段")
 		return
 	}
-	_, err := pool.Exec(r.Context(), `UPDATE ai_studio.user_assets SET `+strings.Join(sets, ", ")+` WHERE id=$1 AND user_id=$2`, args...)
+	tag, err := pool.Exec(r.Context(), `UPDATE ai_studio.user_assets SET `+strings.Join(sets, ", ")+` WHERE id=$1 AND user_id=$2 AND status='ready' AND deleted_at IS NULL`, args...)
 	if err != nil {
 		coreErr(w, r, fmt, http.StatusUnprocessableEntity, "ASSET_UPDATE_FAILED", "更新素材失败")
+		return
+	}
+	if tag.RowsAffected() == 0 {
+		coreErr(w, r, fmt, http.StatusConflict, "ASSET_STATE_CHANGED", "素材状态已更改，请刷新后再试")
 		return
 	}
 	m, err := coreLibraryAssetByID(r.Context(), pool, user.ID, id)
@@ -2059,28 +2208,26 @@ func (d *Dependencies) coreLibraryAssetDelete(w http.ResponseWriter, r *http.Req
 	if !ok {
 		return
 	}
-	if _, err := coreLibraryAssetByID(r.Context(), pool, user.ID, id); err != nil {
-		coreErr(w, r, fmt, http.StatusNotFound, "ASSET_NOT_FOUND", "资产不存在或已被删除")
-		return
-	}
 	purge := coreQuery(r, "purge") == "true"
-	var err error
 	if purge {
-		_, err = pool.Exec(r.Context(), `DELETE FROM ai_studio.user_assets WHERE id=$1 AND user_id=$2`, id, user.ID)
-	} else {
-		_, err = pool.Exec(r.Context(), `
-			UPDATE ai_studio.user_assets
-			SET status='trash', deleted_at=COALESCE(deleted_at,now()),
-			    trashed_at=COALESCE(trashed_at,now()), updated_at=now()
-			WHERE id=$1 AND user_id=$2`, id, user.ID)
-	}
-	if err != nil {
-		msg := "移入回收站失败"
-		if purge {
-			msg = "彻底删除素材失败"
+		if err := assets.Purge(r.Context(), pool, user.ID, id, d.storageSvc(pool).DeleteObject); err != nil {
+			status, message, failure := describeAssetPurgeFailure(id, err)
+			envelope.DomainJSON(w, status, map[string]any{"success": false, "error": message, "code": failure.Code, "references": failure.References})
+			return
 		}
-		coreErr(w, r, fmt, http.StatusUnprocessableEntity, "ASSET_DELETE_FAILED", msg)
-		return
+	} else {
+		tag, err := pool.Exec(r.Context(), `
+			UPDATE ai_studio.user_assets
+			SET status='trash', deleted_at=COALESCE(deleted_at,now()), trashed_at=COALESCE(trashed_at,now()), updated_at=now()
+			WHERE id=$1 AND user_id=$2 AND ((status='ready' AND deleted_at IS NULL) OR status='trash')`, id, user.ID)
+		if err != nil {
+			coreErr(w, r, fmt, http.StatusServiceUnavailable, "ASSET_DELETE_FAILED", "移入回收站失败")
+			return
+		}
+		if tag.RowsAffected() == 0 {
+			coreErr(w, r, fmt, http.StatusNotFound, "ASSET_NOT_FOUND", "素材不存在或不可操作")
+			return
+		}
 	}
 	envelope.SuccessJSON(w, http.StatusOK, map[string]any{"deletedAssetId": id, "purged": purge})
 }
@@ -2108,12 +2255,17 @@ func (d *Dependencies) coreLibraryBatch(w http.ResponseWriter, r *http.Request, 
 		return
 	}
 	if action == "empty" {
-		tag, err := pool.Exec(r.Context(), `DELETE FROM ai_studio.user_assets WHERE user_id=$1 AND status='trash'`, user.ID)
+		rows, err := pool.Query(r.Context(), `SELECT id FROM ai_studio.user_assets WHERE user_id=$1 AND status='trash' ORDER BY id`, user.ID)
 		if err != nil {
 			coreErr(w, r, fmt, http.StatusInternalServerError, "BATCH_FAILED", "批量操作失败")
 			return
 		}
-		envelope.DomainJSON(w, http.StatusOK, map[string]any{"deleted": tag.RowsAffected()})
+		ids, err := pgx.CollectRows(rows, pgx.RowTo[string])
+		if err != nil {
+			coreErr(w, r, fmt, http.StatusInternalServerError, "BATCH_FAILED", "读取回收站失败")
+			return
+		}
+		d.corePurgeAssets(w, r, pool, user.ID, ids)
 		return
 	}
 	ids := coreStringSlice(body["assetIds"])
@@ -2125,39 +2277,63 @@ func (d *Dependencies) coreLibraryBatch(w http.ResponseWriter, r *http.Request, 
 		coreErr(w, r, fmt, http.StatusBadRequest, "INVALID_ASSET_IDS", "素材数量超出批量上限")
 		return
 	}
+	seen := make(map[string]bool, len(ids))
+	unique := ids[:0]
+	for _, id := range ids {
+		if !seen[id] {
+			seen[id] = true
+			unique = append(unique, id)
+		}
+	}
+	ids = unique
+	if action == "purge" {
+		d.corePurgeAssets(w, r, pool, user.ID, ids)
+		return
+	}
 	var sql string
-	var args []any
+	args := []any{user.ID, ids}
+	ctx := r.Context()
+	tx, err := pool.Begin(ctx)
+	if err != nil {
+		coreErr(w, r, fmt, http.StatusServiceUnavailable, "BATCH_FAILED", "暂时无法进行批量操作")
+		return
+	}
+	defer tx.Rollback(ctx)
 	switch action {
 	case "trash":
-		sql = `UPDATE ai_studio.user_assets SET status='trash', deleted_at=COALESCE(deleted_at,now()), trashed_at=COALESCE(trashed_at,now()), updated_at=now() WHERE user_id=$1 AND id=ANY($2) AND deleted_at IS NULL`
-		args = []any{user.ID, ids}
+		sql = `UPDATE ai_studio.user_assets SET status='trash', deleted_at=now(), trashed_at=now(), updated_at=now() WHERE user_id=$1 AND id=ANY($2) AND status='ready' AND deleted_at IS NULL`
 	case "restore":
-		sql = `UPDATE ai_studio.user_assets SET status='ready', deleted_at=NULL, trashed_at=NULL, updated_at=now() WHERE user_id=$1 AND id=ANY($2)`
-		args = []any{user.ID, ids}
-	case "purge":
-		sql = `DELETE FROM ai_studio.user_assets WHERE user_id=$1 AND id=ANY($2)`
-		args = []any{user.ID, ids}
+		sql = `UPDATE ai_studio.user_assets SET status='ready', deleted_at=NULL, trashed_at=NULL, updated_at=now() WHERE user_id=$1 AND id=ANY($2) AND status='trash'`
 	case "move":
 		target := coreFirst(coreString(body["targetFolderId"]), coreString(body["target_folder_id"]))
-		if target != "" {
-			var exists int
-			if err := pool.QueryRow(r.Context(), `SELECT 1 FROM ai_studio.asset_folders WHERE id=$1 AND user_id=$2`, target, user.ID).Scan(&exists); coreIsNoRows(err) {
-				coreErr(w, r, fmt, http.StatusNotFound, "FOLDER_NOT_FOUND", "目标文件夹不存在")
-				return
-			}
+		if !coreCheckAssetFolder(r, w, fmt, tx, user.ID, target) {
+			return
 		}
-		sql = `UPDATE ai_studio.user_assets SET folder_id=$3, updated_at=now() WHERE user_id=$1 AND id=ANY($2)`
-		args = []any{user.ID, ids, nullString(target)}
+		sql = `UPDATE ai_studio.user_assets SET folder_id=$3, updated_at=now() WHERE user_id=$1 AND id=ANY($2) AND status='ready' AND deleted_at IS NULL`
+		args = append(args, nullString(target))
 	case "favorite":
-		sql = `UPDATE ai_studio.user_assets SET is_favorite=$3, updated_at=now() WHERE user_id=$1 AND id=ANY($2)`
-		args = []any{user.ID, ids, body["value"] == true}
+		favorite, ok := body["value"].(bool)
+		if !ok {
+			coreErr(w, r, fmt, http.StatusBadRequest, "INVALID_FAVORITE", "缺少收藏状态")
+			return
+		}
+		sql = `UPDATE ai_studio.user_assets SET is_favorite=$3, updated_at=now() WHERE user_id=$1 AND id=ANY($2) AND status='ready' AND deleted_at IS NULL`
+		args = append(args, favorite)
 	default:
 		coreErr(w, r, fmt, http.StatusBadRequest, "UNSUPPORTED_ACTION", "不支持的操作类型")
 		return
 	}
-	tag, err := pool.Exec(r.Context(), sql, args...)
+	tag, err := tx.Exec(ctx, sql, args...)
 	if err != nil {
 		coreErr(w, r, fmt, http.StatusInternalServerError, "BATCH_FAILED", "批量操作失败")
+		return
+	}
+	if tag.RowsAffected() != int64(len(ids)) {
+		coreErr(w, r, fmt, http.StatusConflict, "ASSET_STATE_CHANGED", "部分素材状态已变化，请刷新后重试")
+		return
+	}
+	if err := tx.Commit(ctx); err != nil {
+		coreErr(w, r, fmt, http.StatusServiceUnavailable, "BATCH_FAILED", "批量操作保存失败")
 		return
 	}
 	envelope.DomainJSON(w, http.StatusOK, map[string]any{"action": action, "affected": tag.RowsAffected()})
@@ -2204,7 +2380,7 @@ func (d *Dependencies) coreLibraryExport(w http.ResponseWriter, r *http.Request,
 	if !ok {
 		return
 	}
-	where := " a.user_id=$1 AND a.status='ready' AND a.deleted_at IS NULL"
+	where := " a.user_id=$1 AND a.status='ready' AND a.deleted_at IS NULL AND COALESCE(a.kind,a.asset_type) IN ('text','entity','image','video','audio','model')"
 	args := []any{user.ID}
 	if len(ids) > 0 {
 		args = append(args, ids)
@@ -2233,37 +2409,48 @@ func (d *Dependencies) coreLibraryExport(w http.ResponseWriter, r *http.Request,
 	exportedFiles := make([]map[string]any, 0, len(list))
 	skippedFiles := make([]map[string]any, 0)
 	assetsMeta := make([]any, 0, len(list))
-	usedNames := map[string]int{}
-	for _, m := range list {
-		assetsMeta = append(assetsMeta, coreAssetProjection(m))
-		objKey := coreString(m["object_key"])
-		if objKey == "" {
-			skippedFiles = append(skippedFiles, map[string]any{"id": m["id"], "reason": "missing_object_key"})
+	for index, m := range list {
+		asset := coreAssetProjection(m)
+		kind := coreString(asset["kind"])
+		if kind == "text" || kind == "entity" {
+			assetsMeta = append(assetsMeta, asset)
 			continue
 		}
-		rc, _, oErr := stSvc.OpenStream(r.Context(), coreString(m["storage_provider"]), coreString(m["storage_location_id"]), coreString(m["bucket"]), coreString(m["region"]), objKey, "")
+		objKey := coreString(m["object_key"])
+		if objKey == "" {
+			skippedFiles = append(skippedFiles, map[string]any{"assetId": asset["id"], "reason": "missing_object_key"})
+			continue
+		}
+		rc, meta, oErr := stSvc.OpenStream(r.Context(), coreString(m["storage_provider"]), coreString(m["storage_location_id"]), coreString(m["bucket"]), coreString(m["region"]), objKey, "")
 		if oErr != nil {
-			skippedFiles = append(skippedFiles, map[string]any{"id": m["id"], "reason": oErr.Error()})
+			skippedFiles = append(skippedFiles, map[string]any{"assetId": asset["id"], "reason": "storage_unavailable"})
 			continue
 		}
 		name := coreFirst(coreString(m["filename"]), coreString(m["original_filename"]), coreString(m["id"])+".bin")
-		name = strings.ReplaceAll(name, "/", "_")
-		if cnt := usedNames[name]; cnt > 0 {
-			name = strconv.Itoa(cnt) + "-" + name
+		name = strings.NewReplacer("/", "_", "\\", "_", "\r", "_", "\n", "_").Replace(name)
+		entry := "assets/" + strconv.Itoa(index+1) + "-" + name
+		fw, fErr := zw.Create(entry)
+		if fErr != nil {
+			_ = rc.Close()
+			skippedFiles = append(skippedFiles, map[string]any{"assetId": asset["id"], "reason": "archive_write_failed"})
+			continue
 		}
-		usedNames[name]++
-		fw, fErr := zw.Create("assets/" + name)
-		if fErr == nil {
-			n, _ := io.Copy(fw, rc)
-			exportedFiles = append(exportedFiles, map[string]any{"id": m["id"], "entry": "assets/" + name, "bytes": n})
-		}
+		n, copyErr := io.Copy(fw, rc)
 		_ = rc.Close()
+		if copyErr != nil || (meta.ContentLength > 0 && n != meta.ContentLength) {
+			skippedFiles = append(skippedFiles, map[string]any{"assetId": asset["id"], "reason": "storage_unavailable"})
+			continue
+		}
+		assetsMeta = append(assetsMeta, asset)
+		exportedFiles = append(exportedFiles, map[string]any{
+			"assetId": asset["id"], "path": entry, "mimeType": coreFirst(coreString(m["mime_type"]), meta.ContentType, "application/octet-stream"), "bytes": n,
+		})
 	}
 	manifestBytes, _ := json.MarshalIndent(map[string]any{
 		"app": "supdance", "version": 1, "exportedAt": coreNow().Format(time.RFC3339Nano),
 		"assets": assetsMeta, "files": exportedFiles, "skipped": skippedFiles,
 	}, "", "  ")
-	if mf, mErr := zw.Create("manifest.json"); mErr == nil {
+	if mf, mErr := zw.Create("assets.json"); mErr == nil {
 		_, _ = mf.Write(manifestBytes)
 	}
 	_ = zw.Close()
@@ -2355,14 +2542,24 @@ func (d *Dependencies) coreLibraryCreate(w http.ResponseWriter, r *http.Request,
 	if !ok {
 		return
 	}
+	folder := coreFirst(coreString(body["folderId"]), coreString(body["folder_id"]))
+	if !coreCheckAssetFolder(r, w, fmt, pool, user.ID, folder) {
+		return
+	}
+	if tags := body["tags"]; tags != nil {
+		if _, isArray := tags.([]any); !isArray {
+			coreErr(w, r, fmt, http.StatusUnprocessableEntity, "INVALID_ASSET_DATA", "素材标签格式无效")
+			return
+		}
+	}
 	id := coreNewID("ast")
 	_, err := pool.Exec(r.Context(), `
 		INSERT INTO ai_studio.user_assets
 		  (id,user_id,folder_id,asset_type,studio_id,title,media_url,thumbnail_url,mime_type,
 		   file_size_bytes,kind,category,source,note,cover_url,asset_data,tags,status,
 		   visibility,storage_status,prompt,created_at,updated_at)
-		VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16::jsonb,$17,'ready','private','ready',$18,now(),now())`,
-		id, user.ID, nullString(coreString(body["folderId"])), assetType, "upload",
+		VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16::jsonb,COALESCE($17::text[],'{}'),'ready','private','ready',$18,now(),now())`,
+		id, user.ID, nullString(folder), assetType, "upload",
 		coreFirst(coreString(body["title"]), "素材"), nullString(mediaURL),
 		nullString(coreString(body["coverUrl"])), coreFirst(coreString(body["mimeType"]), "application/octet-stream"),
 		coreIntAny(body["bytes"]), kind, category,
@@ -2413,6 +2610,9 @@ func (d *Dependencies) coreAssetsUpload(w http.ResponseWriter, r *http.Request, 
 	if !ok {
 		return
 	}
+	if !coreExpectedOwner(w, r, fmt, user.ID, "ASSET_ACCOUNT_CHANGED") {
+		return
+	}
 	pool, ok := coreDB(d, w, r, fmt)
 	if !ok {
 		return
@@ -2420,6 +2620,28 @@ func (d *Dependencies) coreAssetsUpload(w http.ResponseWriter, r *http.Request, 
 	if isMultipart {
 		if err := r.ParseMultipartForm(500 << 20); err != nil {
 			coreErr(w, r, fmt, http.StatusBadRequest, "INVALID_UPLOAD", "请提供有效的待上传文件")
+			return
+		}
+		studioID := coreFirst(r.FormValue("studioId"), "upload")
+		if sessionID, isDesignAgent := strings.CutPrefix(studioID, "design-agent:"); isDesignAgent {
+			sessions := designagent.Sessions{Pool: pool}
+			if !designSessionUUID.MatchString(sessionID) {
+				coreErr(w, r, fmt, http.StatusNotFound, "DESIGN_AGENT_SESSION_NOT_FOUND", "找不到设计会话")
+				return
+			}
+			err := sessions.Owns(r.Context(), user.ID, sessionID)
+			if errors.Is(err, pgx.ErrNoRows) {
+				coreErr(w, r, fmt, http.StatusNotFound, "DESIGN_AGENT_SESSION_NOT_FOUND", "找不到设计会话")
+				return
+			}
+			if err != nil {
+				coreErr(w, r, fmt, http.StatusServiceUnavailable, "DESIGN_AGENT_UNAVAILABLE", "暂时无法验证设计会话")
+				return
+			}
+			studioID = "design-agent:" + strings.ToLower(sessionID)
+		}
+		folder := coreFirst(r.FormValue("folderId"), r.FormValue("folder_id"))
+		if !coreCheckAssetFolder(r, w, fmt, pool, user.ID, folder) {
 			return
 		}
 		file, header, err := r.FormFile("file")
@@ -2486,8 +2708,8 @@ func (d *Dependencies) coreAssetsUpload(w http.ResponseWriter, r *http.Request, 
 			   storage_provider,storage_location_id,bucket,region,media_url,
 			   kind,category,source,note,tags,prompt,created_at,updated_at)
 			VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,'private','ready','ready',$14,$15,$16,$17,$18,$19,$20,$21,$22,$23,'',now(),now())`,
-			id, user.ID, nullString(coreFirst(r.FormValue("folderId"), r.FormValue("folder_id"))),
-			assetType, coreFirst(r.FormValue("studioId"), "upload"),
+			id, user.ID, nullString(folder),
+			assetType, studioID,
 			coreFirst(r.FormValue("title"), header.Filename, "上传素材"), ing.ObjectKey,
 			header.Filename, header.Filename, coreFirst(ing.Extension, coreFileExt(header.Filename)),
 			ing.MIMEType, ing.SizeBytes, ing.Checksum,
@@ -2496,6 +2718,11 @@ func (d *Dependencies) coreAssetsUpload(w http.ResponseWriter, r *http.Request, 
 			nullString(r.FormValue("source")), nullString(r.FormValue("note")),
 			coreSplitTags(r.FormValue("tags")))
 		if err != nil {
+			cleanupCtx, cancel := context.WithTimeout(context.WithoutCancel(r.Context()), 3*time.Second)
+			defer cancel()
+			if cleanupErr := stSvc.DeleteObject(cleanupCtx, ing.Provider, ing.StorageLocationID, ing.Bucket, ing.Region, ing.ObjectKey); cleanupErr != nil {
+				slog.Warn("new asset upload storage cleanup failed", "asset_id", id)
+			}
 			coreErr(w, r, fmt, http.StatusUnprocessableEntity, "UPLOAD_FAILED", "上传文件处理失败")
 			return
 		}
@@ -2528,6 +2755,10 @@ func (d *Dependencies) coreAssetsUpload(w http.ResponseWriter, r *http.Request, 
 		coreErr(w, r, fmt, http.StatusBadRequest, "INVALID_OBJECT_KEY", "对象 Key 无效")
 		return
 	}
+	folder := coreFirst(coreString(body["folderId"]), coreString(body["folder_id"]))
+	if !coreCheckAssetFolder(r, w, fmt, pool, user.ID, folder) {
+		return
+	}
 	id := coreNewID("ast")
 	_, err := pool.Exec(r.Context(), `
 		INSERT INTO ai_studio.user_assets
@@ -2535,7 +2766,7 @@ func (d *Dependencies) coreAssetsUpload(w http.ResponseWriter, r *http.Request, 
 		   extension,mime_type,file_size_bytes,checksum,visibility,storage_status,status,
 		   kind,category,source,note,cover_url,asset_data,created_at,updated_at)
 		VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,'private','ready','ready',$14,$15,$16,$17,$18,$19::jsonb,now(),now())`,
-		id, user.ID, nullString(coreFirst(coreString(body["folderId"]), coreString(body["folder_id"]))),
+		id, user.ID, nullString(folder),
 		coreFirst(coreString(body["type"]), "image"), coreFirst(coreString(body["studioId"]), "upload"),
 		coreFirst(coreString(body["title"]), coreString(body["filename"]), "上传素材"), objectKey,
 		coreString(body["filename"]), coreString(body["filename"]), coreFileExt(coreString(body["filename"])),
@@ -2805,6 +3036,10 @@ func (d *Dependencies) coreCanvasToolsPlan(w http.ResponseWriter, r *http.Reques
 	if !ok {
 		return
 	}
+	if expected := r.Header.Get("X-ONE-Expected-User"); expected != "" && expected != user.ID {
+		coreErr(w, r, fmt, http.StatusConflict, "GENERATION_ACCOUNT_CHANGED", "登录账户已更改。")
+		return
+	}
 	if coreBodyTooLarge(w, r, fmt, 64*1024) {
 		return
 	}
@@ -2829,31 +3064,10 @@ func (d *Dependencies) coreCanvasToolsPlan(w http.ResponseWriter, r *http.Reques
 	if !ok {
 		return
 	}
-	// Catalog availability = an active, publicly selectable i2i image model.
-	var catalogModel string
-	err := pool.QueryRow(r.Context(), `
-		SELECT id FROM ai_studio.ai_models
-		WHERE status='active' AND COALESCE(is_visible,true) AND category IN ('image','image_edit')
-		  AND (category='image_edit'
-		       OR COALESCE((capabilities->>'supports_edit')::boolean,false)
-		       OR COALESCE((capabilities->>'supports_reference')::boolean,false)
-		       OR capabilities IS NULL
-		       OR capabilities::text ILIKE '%i2i%'
-		       OR capabilities::text ILIKE '%image_to_image%')
-		ORDER BY (id = 'seedream-4.5') DESC, sort ASC LIMIT 1`).Scan(&catalogModel)
-	if coreIsNoRows(err) {
-		coreErr(w, r, fmt, http.StatusServiceUnavailable, "NO_IMAGE_TO_IMAGE_MODEL", "当前没有可用的图生图模型，画布工具暂时无法生成。")
-		return
-	}
-	if err != nil {
-		coreErr(w, r, fmt, http.StatusServiceUnavailable, "PLAN_FAILED", "生成方案创建失败，请稍后再试")
-		return
-	}
-	// Queries durable capabilities/category/status predicates for an active i2i model.
 	var mimeType sqlNullString
 	var sizeBytes int64
 	var deletedAt sqlNullTime
-	err = pool.QueryRow(r.Context(), `
+	err := pool.QueryRow(r.Context(), `
 		SELECT mime_type, COALESCE(file_size_bytes,0), deleted_at
 		FROM ai_studio.user_assets WHERE id=$1 AND user_id=$2`, sourceID, user.ID).
 		Scan(&mimeType, &sizeBytes, &deletedAt)
@@ -2897,16 +3111,51 @@ func (d *Dependencies) coreCanvasToolsPlan(w http.ResponseWriter, r *http.Reques
 		coreErr(w, r, fmt, http.StatusUnprocessableEntity, "CONTENT_POLICY_VIOLATION", "提示词包含敏感或违规内容，请遵守平台使用规范并调整后重试")
 		return
 	}
+	workshopID := toolPlan.Tool
+	if workshopID == "preset" {
+		workshopID = coreString(toolPlan.Meta["presetId"])
+	}
+	selectedTool, _ := canvas.WorkshopToolByID(workshopID)
+	versions, err := canvas.ListWorkshopVersions(r.Context(), pool)
+	if err != nil {
+		coreErr(w, r, fmt, http.StatusServiceUnavailable, "WORKSHOP_MODELS_UNAVAILABLE", "暂时无法读取工作坊模型。")
+		return
+	}
+	settings, err := canvas.ReadWorkshopModelSettings(r.Context(), pool)
+	if err != nil {
+		coreErr(w, r, fmt, http.StatusServiceUnavailable, "WORKSHOP_MODELS_UNAVAILABLE", "暂时无法读取工作坊模型。")
+		return
+	}
+	version, available := canvas.ResolveWorkshopVersion(selectedTool, versions, settings.Defaults)
+	if !available {
+		coreErr(w, r, fmt, http.StatusServiceUnavailable, "WORKSHOP_MODEL_VERSION_UNAVAILABLE", "此工具没有可用的模型版本。")
+		return
+	}
+	if expected := coreString(body["modelContract"]); expected != "" && expected != version.Contract {
+		coreErr(w, r, fmt, http.StatusConflict, "WORKSHOP_MODEL_CHANGED", "默认模型版本已更新，请重新读取工具设置。")
+		return
+	}
+	if err := version.ValidatePlan(toolPlan); err != nil {
+		coreErr(w, r, fmt, http.StatusUnprocessableEntity, "WORKSHOP_OPTIONS_UNSUPPORTED", err.Error())
+		return
+	}
+	toolPlan.Parameters["workshop_tool"] = selectedTool.ID
+	toolPlan.Parameters["workshop_contract"] = version.Contract
+	toolPlan.Parameters["prompt"] = toolPlan.Prompt
 	plan := map[string]any{
 		"tool": toolPlan.Tool, "label": toolPlan.Label, "prompt": toolPlan.Prompt,
 		"parameters": toolPlan.Parameters, "meta": toolPlan.Meta,
-		"modelId": catalogModel, "studioId": "canvas", "sourceAssetId": sourceID,
+		"modelId": version.ModelID, "modelVersion": version.VersionName, "studioId": "workshop", "sourceAssetId": sourceID,
 	}
 	envelope.SuccessJSON(w, http.StatusOK, map[string]any{"plan": plan})
 }
 
 // GET /api/canvas-tools/result/[id] — private creation result URL redirect.
 func (d *Dependencies) coreCanvasToolsResult(w http.ResponseWriter, r *http.Request, _ *Dependencies, u *middleware.SessionUser) {
+	d.streamStoredGeneration(w, r, u, true)
+}
+
+func (d *Dependencies) streamStoredGeneration(w http.ResponseWriter, r *http.Request, u *middleware.SessionUser, allowUpstreamRedirect bool) {
 	const fmt = envelope.FormatBinaryRedirectOrText
 	user, ok := coreNeedUser(w, u, "请先登录")
 	if !ok {
@@ -2926,7 +3175,7 @@ func (d *Dependencies) coreCanvasToolsResult(w http.ResponseWriter, r *http.Requ
 		SELECT result_object_key, result_url, storage_provider, storage_location_id,
 		       storage_bucket, storage_region, storage_mime_type
 		FROM ai_studio.creations
-		WHERE id=$1 AND user_id=$2 AND deleted_at IS NULL`, id, user.ID).
+		WHERE id=$1 AND user_id=$2 AND deleted_at IS NULL AND ($3 OR status='succeeded')`, id, user.ID, allowUpstreamRedirect).
 		Scan(&objectKey, &resultURL, &storageProvider, &locationID, &bucket, &region, &mimeType)
 	if coreIsNoRows(err) {
 		coreErr(w, r, fmt, http.StatusNotFound, "TASK_NOT_FOUND", "生成任务不存在或无权查看")
@@ -2938,7 +3187,7 @@ func (d *Dependencies) coreCanvasToolsResult(w http.ResponseWriter, r *http.Requ
 	}
 	if objectKey.String == "" {
 		fallback := resultURL.String
-		if strings.HasPrefix(strings.ToLower(fallback), "https://") || strings.HasPrefix(strings.ToLower(fallback), "http://") {
+		if allowUpstreamRedirect && (strings.HasPrefix(strings.ToLower(fallback), "https://") || strings.HasPrefix(strings.ToLower(fallback), "http://")) {
 			if !strings.Contains(strings.ToLower(fallback), "/uploads/generated/") {
 				http.Redirect(w, r, fallback, http.StatusFound)
 				return
@@ -2956,7 +3205,11 @@ func (d *Dependencies) coreCanvasToolsResult(w http.ResponseWriter, r *http.Requ
 	defer rc.Close()
 	ct := coreFirst(mimeType.String, meta.ContentType, "application/octet-stream")
 	w.Header().Set("Content-Type", ct)
-	w.Header().Set("Content-Disposition", "inline")
+	disposition := "attachment"
+	if allowUpstreamRedirect {
+		disposition = "inline"
+	}
+	w.Header().Set("Content-Disposition", disposition)
 	w.Header().Set("Cache-Control", "private, no-store")
 	w.Header().Set("X-Content-Type-Options", "nosniff")
 	if meta.Size > 0 {
@@ -2974,37 +3227,29 @@ func (d *Dependencies) coreCanvasToolsSpec(w http.ResponseWriter, r *http.Reques
 	if !ok {
 		return
 	}
-	var specModelID, specModelName, specProvider string
-	var specCredits float64
-	var specCapsRaw []byte
-	err := pool.QueryRow(r.Context(), `
-		SELECT m.id, COALESCE(NULLIF(m.display_name,''), m.name, m.id),
-		       COALESCE((SELECT pm.provider_id FROM ai_studio.provider_models pm
-		                 WHERE pm.model_id = m.id AND pm.enabled = true ORDER BY pm.priority DESC LIMIT 1), 'volcengine'),
-		       COALESCE(mp.base_credits, 1)::float8, COALESCE(m.capabilities, '{}'::jsonb)
-		FROM ai_studio.ai_models m
-		LEFT JOIN ai_studio.model_pricing mp ON mp.model_id = m.id AND mp.is_active
-		WHERE m.status='active' AND COALESCE(m.is_visible,true) AND m.category IN ('image','image_edit')
-		  AND (m.category='image_edit'
-		       OR COALESCE((m.capabilities->>'supports_edit')::boolean,false)
-		       OR COALESCE((m.capabilities->>'supports_reference')::boolean,false)
-		       OR m.capabilities IS NULL
-		       OR m.capabilities::text ILIKE '%i2i%'
-		       OR m.capabilities::text ILIKE '%image_to_image%')
-		ORDER BY (m.id = 'seedream-4.5') DESC, m.sort ASC LIMIT 1`).Scan(&specModelID, &specModelName, &specProvider, &specCredits, &specCapsRaw)
-	if coreIsNoRows(err) {
-		coreErr(w, r, fmt, http.StatusServiceUnavailable, "NO_IMAGE_TO_IMAGE_MODEL", "当前没有可用的图生图模型，画布工具暂时无法生成。")
-		return
-	}
+	versions, err := canvas.ListWorkshopVersions(r.Context(), pool)
 	if err != nil {
-		coreErr(w, r, fmt, http.StatusInternalServerError, "SPEC_UNAVAILABLE", "画布工具规格读取失败，请稍后再试")
+		coreErr(w, r, fmt, http.StatusServiceUnavailable, "SPEC_UNAVAILABLE", "无法读取工作坊模型。")
 		return
 	}
-	specCaps := map[string]any{}
-	if len(specCapsRaw) > 0 {
-		_ = json.Unmarshal(specCapsRaw, &specCaps)
+	settings, err := canvas.ReadWorkshopModelSettings(r.Context(), pool)
+	if err != nil {
+		coreErr(w, r, fmt, http.StatusServiceUnavailable, "SPEC_UNAVAILABLE", "无法读取工作坊模型。")
+		return
 	}
-	envelope.SuccessJSON(w, http.StatusOK, canvas.BuildToolSpec(specModelID, specModelName, specProvider, specCredits, specCaps))
+	models := map[string]*canvas.WorkshopVersion{}
+	for _, tool := range canvas.WorkshopTools() {
+		if version, ok := canvas.ResolveWorkshopVersion(tool, versions, settings.Defaults); ok {
+			models[tool.ID] = &version
+		} else {
+			models[tool.ID] = nil
+		}
+	}
+	spec := canvas.BuildToolSpec("", "", "", 0, nil)
+	delete(spec, "model")
+	spec["workshopModels"] = models
+	spec["modelSettingsRevision"] = settings.Version
+	envelope.SuccessJSON(w, http.StatusOK, spec)
 }
 
 // GET/HEAD /api/canvas/assets/[id]/content — owner-scoped media with Range/206.
@@ -3513,7 +3758,10 @@ func coreCanvasProjectByID(ctx context.Context, pool *pgxpool.Pool, userID, id s
 		return nil, err
 	}
 	list, err := coreScalarRows(rows)
-	if err != nil || len(list) == 0 {
+	if err != nil {
+		return nil, err
+	}
+	if len(list) == 0 {
 		return nil, pgx.ErrNoRows
 	}
 	return list[0], nil
@@ -3526,13 +3774,20 @@ func (d *Dependencies) coreCanvasProjectGet(w http.ResponseWriter, r *http.Reque
 	if !ok {
 		return
 	}
+	if !coreExpectedOwner(w, r, fmt, user.ID, "CANVAS_ACCOUNT_CHANGED") {
+		return
+	}
 	pool, ok := coreDB(d, w, r, fmt)
 	if !ok {
 		return
 	}
 	p, err := coreCanvasProjectByID(r.Context(), pool, user.ID, pathParam(r, "id"))
-	if err != nil {
+	if errors.Is(err, pgx.ErrNoRows) {
 		coreCanvasJSON(r, w, http.StatusNotFound, map[string]any{"error": "画布不存在", "code": "PROJECT_NOT_FOUND"})
+		return
+	}
+	if err != nil {
+		coreCanvasJSON(r, w, http.StatusServiceUnavailable, map[string]any{"error": "读取画布失败", "code": "PROJECT_READ_FAILED"})
 		return
 	}
 	coreCanvasJSON(r, w, http.StatusOK, map[string]any{"project": coreCanvasProjectPayload(p)})
@@ -3680,6 +3935,9 @@ func (d *Dependencies) coreCanvasProjectsList(w http.ResponseWriter, r *http.Req
 	const fmt = envelope.FormatDirectDomainJSON
 	user, ok := coreCanvasUser(w, r, u)
 	if !ok {
+		return
+	}
+	if !coreExpectedOwner(w, r, fmt, user.ID, "CANVAS_ACCOUNT_CHANGED") {
 		return
 	}
 	pool, ok := coreDB(d, w, r, fmt)
@@ -4503,13 +4761,6 @@ func (d *Dependencies) coreCanvasSessionLogout(w http.ResponseWriter, r *http.Re
 // Batch 4: community posts, coins, comments, likes, remix
 // ===========================================================================
 
-// coreCommunityPostExists validates a published/non-banned post for sub-routes.
-func coreCommunityPostExists(ctx context.Context, pool *pgxpool.Pool, id string) (int, error) {
-	var n int
-	err := pool.QueryRow(ctx, `SELECT 1 FROM ai_studio.community_posts WHERE id=$1 AND status<>'banned'`, id).Scan(&n)
-	return n, err
-}
-
 // GET /api/community/posts — listCommunityPosts() with filters/viewer is_liked.
 func (d *Dependencies) coreCommunityPostsList(w http.ResponseWriter, r *http.Request, _ *Dependencies, u *middleware.SessionUser) {
 	const fmt = envelope.FormatDirectDomainJSON
@@ -4674,7 +4925,6 @@ func (d *Dependencies) coreCommunityPostGet(w http.ResponseWriter, r *http.Reque
 		return
 	}
 	id := pathParam(r, "id")
-	_, _ = pool.Exec(r.Context(), `UPDATE ai_studio.community_posts SET views_count=views_count+1 WHERE id=$1`, id)
 	viewerSelect := "FALSE AS is_liked"
 	args := []any{id}
 	if u != nil && u.ID != "" {
@@ -4682,10 +4932,13 @@ func (d *Dependencies) coreCommunityPostGet(w http.ResponseWriter, r *http.Reque
 		viewerSelect = "EXISTS(SELECT 1 FROM ai_studio.community_likes l WHERE l.post_id=p.id AND l.user_id=$2) AS is_liked"
 	}
 	rows, err := pool.Query(r.Context(), `
+		WITH published AS (
+			UPDATE ai_studio.community_posts SET views_count=views_count+1
+			WHERE id=$1 AND status='published' RETURNING *
+		)
 		SELECT p.*, u.display_name AS author_name, u.avatar_url AS author_avatar,
 		       u.username AS author_username, u.bio AS author_bio, `+viewerSelect+`
-		FROM ai_studio.community_posts p LEFT JOIN auth_usr.users u ON p.user_id=u.id
-		WHERE p.id=$1 AND p.status <> 'banned'`, args...)
+		FROM published p LEFT JOIN auth_usr.users u ON p.user_id=u.id`, args...)
 	if err != nil {
 		coreErr(w, r, fmt, http.StatusInternalServerError, "COMMUNITY_READ_FAILED", "获取作品详情失败")
 		return
@@ -4734,7 +4987,7 @@ func (d *Dependencies) coreCommunityCoinGet(w http.ResponseWriter, r *http.Reque
 	postID := pathParam(r, "id")
 	var coins int
 	var authorID string
-	err := pool.QueryRow(r.Context(), `SELECT COALESCE(coins_count,0), user_id FROM ai_studio.community_posts WHERE id=$1`, postID).Scan(&coins, &authorID)
+	err := pool.QueryRow(r.Context(), `SELECT COALESCE(coins_count,0), user_id FROM ai_studio.community_posts WHERE id=$1 AND status='published'`, postID).Scan(&coins, &authorID)
 	if coreIsNoRows(err) {
 		coreErr(w, r, fmt, http.StatusNotFound, "POST_NOT_FOUND", "作品不存在")
 		return
@@ -4799,7 +5052,7 @@ func (d *Dependencies) coreCommunityCoinPost(w http.ResponseWriter, r *http.Requ
 	defer func() { _ = tx.Rollback(r.Context()) }()
 	var authorID string
 	var title sqlNullString
-	err = tx.QueryRow(r.Context(), `SELECT user_id, title FROM ai_studio.community_posts WHERE id=$1 FOR UPDATE`, postID).Scan(&authorID, &title)
+	err = tx.QueryRow(r.Context(), `SELECT user_id, title FROM ai_studio.community_posts WHERE id=$1 AND status='published' FOR UPDATE`, postID).Scan(&authorID, &title)
 	if coreIsNoRows(err) {
 		coreErr(w, r, fmt, http.StatusBadRequest, "POST_NOT_FOUND", "作品不存在或已被删除")
 		return
@@ -4895,12 +5148,24 @@ func (d *Dependencies) coreCommunityCommentsGet(w http.ResponseWriter, r *http.R
 		return
 	}
 	limit := queryInt(r, "limit", 50, 1, 200)
+	postID := pathParam(r, "id")
+	var published bool
+	err := pool.QueryRow(r.Context(), `SELECT EXISTS (SELECT 1 FROM ai_studio.community_posts WHERE id=$1 AND status='published')`, postID).Scan(&published)
+	if err != nil {
+		coreErr(w, r, fmt, http.StatusInternalServerError, "COMMENTS_READ_FAILED", "获取评论失败")
+		return
+	}
+	if !published {
+		coreErr(w, r, fmt, http.StatusNotFound, "POST_NOT_FOUND", "作品不存在")
+		return
+	}
 	rows, err := pool.Query(r.Context(), `
 		SELECT c.id, c.post_id, c.user_id, c.content, c.created_at,
 		       u.display_name AS author_name, u.avatar_url AS author_avatar
 		FROM ai_studio.community_comments c
+		JOIN ai_studio.community_posts p ON p.id=c.post_id AND p.status='published'
 		LEFT JOIN auth_usr.users u ON u.id=c.user_id
-		WHERE c.post_id=$1 ORDER BY c.created_at ASC LIMIT $2`, pathParam(r, "id"), limit)
+		WHERE c.post_id=$1 ORDER BY c.created_at ASC LIMIT $2`, postID, limit)
 	if err != nil {
 		coreErr(w, r, fmt, http.StatusInternalServerError, "COMMENTS_READ_FAILED", "获取评论失败")
 		return
@@ -4947,10 +5212,6 @@ func (d *Dependencies) coreCommunityCommentsPost(w http.ResponseWriter, r *http.
 		return
 	}
 	postID := pathParam(r, "id")
-	if _, err := coreCommunityPostExists(r.Context(), pool, postID); err != nil {
-		coreErr(w, r, fmt, http.StatusNotFound, "POST_NOT_FOUND", "作品不存在")
-		return
-	}
 	id := coreNewID("cmt")
 	tx, err := pool.Begin(r.Context())
 	if err != nil {
@@ -4958,6 +5219,16 @@ func (d *Dependencies) coreCommunityCommentsPost(w http.ResponseWriter, r *http.
 		return
 	}
 	defer func() { _ = tx.Rollback(r.Context()) }()
+	var exists int
+	err = tx.QueryRow(r.Context(), `SELECT 1 FROM ai_studio.community_posts WHERE id=$1 AND status='published' FOR UPDATE`, postID).Scan(&exists)
+	if coreIsNoRows(err) {
+		coreErr(w, r, fmt, http.StatusNotFound, "POST_NOT_FOUND", "作品不存在")
+		return
+	}
+	if err != nil {
+		coreErr(w, r, fmt, http.StatusInternalServerError, "COMMENT_CREATE_FAILED", "发表评论失败")
+		return
+	}
 	_, err = tx.Exec(r.Context(), `
 		INSERT INTO ai_studio.community_comments (id,post_id,user_id,content,created_at)
 		VALUES ($1,$2,$3,$4,now())`, id, postID, user.ID, content)
@@ -4998,8 +5269,13 @@ func (d *Dependencies) coreCommunityLike(w http.ResponseWriter, r *http.Request,
 	}
 	defer func() { _ = tx.Rollback(r.Context()) }()
 	var exists int
-	if err = tx.QueryRow(r.Context(), `SELECT 1 FROM ai_studio.community_posts WHERE id=$1`, postID).Scan(&exists); coreIsNoRows(err) {
+	err = tx.QueryRow(r.Context(), `SELECT 1 FROM ai_studio.community_posts WHERE id=$1 AND status='published' FOR UPDATE`, postID).Scan(&exists)
+	if coreIsNoRows(err) {
 		coreErr(w, r, fmt, http.StatusNotFound, "POST_NOT_FOUND", "作品不存在")
+		return
+	}
+	if err != nil {
+		coreErr(w, r, fmt, http.StatusInternalServerError, "LIKE_FAILED", "点赞操作失败")
 		return
 	}
 	var likeID string
@@ -5045,9 +5321,13 @@ func (d *Dependencies) coreCommunityRemix(w http.ResponseWriter, r *http.Request
 	if !ok {
 		return
 	}
-	tag, err := pool.Exec(r.Context(), `UPDATE ai_studio.community_posts SET remix_count=remix_count+1, updated_at=now() WHERE id=$1`, pathParam(r, "id"))
-	if err != nil || tag.RowsAffected() == 0 {
+	tag, err := pool.Exec(r.Context(), `UPDATE ai_studio.community_posts SET remix_count=remix_count+1, updated_at=now() WHERE id=$1 AND status='published'`, pathParam(r, "id"))
+	if err != nil {
 		coreErr(w, r, fmt, http.StatusInternalServerError, "REMIX_FAILED", "记录做同款失败")
+		return
+	}
+	if tag.RowsAffected() == 0 {
+		coreErr(w, r, fmt, http.StatusNotFound, "POST_NOT_FOUND", "作品不存在")
 		return
 	}
 	envelope.DomainJSON(w, http.StatusOK, map[string]any{"ok": true})

@@ -1,4 +1,4 @@
-import { Suspense, useEffect, useState } from 'react';
+import { Suspense } from 'react';
 import Link from 'next/link';
 import {
   ArrowLeft,
@@ -13,6 +13,7 @@ import {
   UserRound,
 } from 'lucide-react';
 import { useLocation, useParams } from 'react-router';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import {
   Button,
   Card,
@@ -57,9 +58,11 @@ import {
   AdminFilterForm,
   normalizeAdminListResponse,
   useAdminData,
+  useAdminRawData,
   useAdminPermissionGuard,
   useDocumentTitle,
 } from '@/pages/helpers/pageHelpers';
+import { ApiClientError, apiRequest } from '@/services/api/http';
 
 function formatDate(value?: string | null) {
   return value
@@ -170,30 +173,11 @@ const KIND_LABELS = Object.fromEntries(FEEDBACK_KINDS.map((kind: any) => [kind.i
 
 export function AdminFeedbackPage() {
   useDocumentTitle('建议与漏洞提交 | SupDance 管理后台');
-  const { redirectEl } = useAdminPermissionGuard(PERMISSIONS.contentRead);
+  const { user, allowed, redirectEl } = useAdminPermissionGuard(PERMISSIONS.contentRead);
   const location = useLocation();
   const params = new URLSearchParams(location.search);
-  const [result, setResult] = useState<{ rows: any[]; meta: Record<string, any> }>({
-    rows: [],
-    meta: {},
-  });
-
-  useEffect(() => {
-    let cancelled = false;
-    fetch(`/api/feedback${location.search}`, { credentials: 'include', cache: 'no-store' })
-      .then((res) => (res.ok ? res.json() : {}))
-      .then((json) => {
-        if (!cancelled) {
-          setResult(normalizeAdminListResponse(json));
-        }
-      })
-      .catch(() => {
-        if (!cancelled) setResult({ rows: [], meta: {} });
-      });
-    return () => {
-      cancelled = true;
-    };
-  }, [location.search]);
+  const { data, loading, error, reload } = useAdminRawData(user && allowed ? `/api/admin/feedback${location.search}` : null, [user?.id]);
+  const result = normalizeAdminListResponse(data);
 
   if (redirectEl) return redirectEl;
 
@@ -346,8 +330,17 @@ export function AdminFeedbackPage() {
         </AdminFilterForm>
       </Card>
 
-      <DataTable columns={columns} rows={result.rows} empty="未找到匹配的反馈记录" />
-      <Pagination meta={result.meta} searchParams={params} />
+      {loading ? <p role="status" className="p-4 text-body-sm text-ink-muted">正在读取反馈列表…</p> : error ? (
+        <Card className="flex flex-wrap items-center gap-3">
+          <p role="alert" className="text-body-sm text-danger">{error}</p>
+          <Button onClick={reload}>重试</Button>
+        </Card>
+      ) : (
+        <>
+          <DataTable columns={columns} rows={result.rows} empty="未找到匹配的反馈记录" />
+          <Pagination meta={result.meta} searchParams={params} />
+        </>
+      )}
     </>
   );
 }
@@ -368,50 +361,33 @@ function AttachmentIcon({ kind }: { kind: string }) {
 export function AdminFeedbackDetailPage() {
   useDocumentTitle('建议与漏洞详情 | SupDance 管理后台');
   const { id } = useParams<{ id?: string }>();
-  const { redirectEl } = useAdminPermissionGuard(PERMISSIONS.contentRead);
-  const [feedback, setFeedback] = useState<any>(null);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    if (!id) {
-      setLoading(false);
-      return;
-    }
-    let cancelled = false;
-    setLoading(true);
-    fetch(`/api/feedback?id=${encodeURIComponent(id)}`, {
-      credentials: 'include',
-      cache: 'no-store',
-    })
-      .then((res) => (res.ok ? res.json() : null))
-      .then((json) => {
-        if (cancelled) return;
-        const item =
-          json?.feedback ||
-          json?.item ||
-          (Array.isArray(json?.items) ? json.items.find((x: any) => String(x.id) === String(id)) : null) ||
-          (Array.isArray(json?.rows) ? json.rows.find((x: any) => String(x.id) === String(id)) : null);
-        setFeedback(item || null);
-        setLoading(false);
-      })
-      .catch(() => {
-        if (!cancelled) {
-          setFeedback(null);
-          setLoading(false);
-        }
-      });
-    return () => {
-      cancelled = true;
-    };
-  }, [id]);
+  const { user, allowed, redirectEl } = useAdminPermissionGuard(PERMISSIONS.contentRead);
+  const client = useQueryClient();
+  const queryKey = ['admin-feedback-detail', user?.id, id];
+  const query = useQuery({
+    queryKey,
+    enabled: Boolean(user && allowed && id),
+    queryFn: ({ signal }) => apiRequest<{ feedback: any }>(`/api/admin/feedback/${encodeURIComponent(id!)}`, { contract: 'admin', cache: 'no-store', signal }),
+    retry: false,
+  });
+  const feedback = query.data?.feedback;
 
   if (redirectEl) return redirectEl;
   if (!id) return <AdminNotFound />;
-  if (loading) {
+  if (query.isPending) {
     return (
       <div className="flex min-h-80 items-center justify-center">
         <div className="h-7 w-7 animate-spin rounded-full border-2 border-white/20 border-t-brand" />
       </div>
+    );
+  }
+  if (query.isError) {
+    if (query.error instanceof ApiClientError && query.error.status === 404) return <AdminNotFound />;
+    return (
+      <Card className="flex flex-wrap items-center gap-3">
+        <p role="alert" className="text-body-sm text-danger">{query.error.message}</p>
+        <Button disabled={query.isFetching} onClick={() => void query.refetch()}>重试</Button>
+      </Card>
     );
   }
   if (!feedback) return <AdminNotFound />;
@@ -552,7 +528,7 @@ export function AdminFeedbackDetailPage() {
                             · {formatFeedbackBytes(attachment.sizeBytes)}
                           </p>
                         </div>
-                        <a
+                        {attachment.url && <a
                           href={attachment.url}
                           target="_blank"
                           rel="noopener noreferrer"
@@ -560,20 +536,19 @@ export function AdminFeedbackDetailPage() {
                         >
                           下载
                           <ExternalLink className="size-3.5" />
-                        </a>
+                        </a>}
                       </div>
 
-                      {attachment.kind === 'video' && (
+                      {attachment.kind === 'video' && preview && (
                         <video
-                          src={attachment.url}
-                          poster={attachment.previewUrl || undefined}
+                          src={preview}
                           controls
                           preload="metadata"
                           className="mt-3 w-full rounded-lg border border-line"
                         />
                       )}
-                      {attachment.kind === 'audio' && (
-                        <audio src={attachment.url} controls preload="metadata" className="mt-3 w-full" />
+                      {attachment.kind === 'audio' && preview && (
+                        <audio src={preview} controls preload="metadata" className="mt-3 w-full" />
                       )}
                     </li>
                   );
@@ -609,7 +584,7 @@ export function AdminFeedbackDetailPage() {
             </div>
           </Card>
 
-          {pending ? (
+          {pending && hasPermission(user?.role, PERMISSIONS.contentWrite) ? (
             <Card>
               <h2 className="text-card-title font-semibold text-ink">审核裁决</h2>
               <p className="mt-1 text-caption leading-relaxed text-ink-muted">
@@ -617,8 +592,10 @@ export function AdminFeedbackDetailPage() {
               </p>
               <div className="mt-4">
                 <FeedbackReviewForm
+                  key={feedback.id}
                   feedbackId={feedback.id}
                   defaultReward={kind?.rewardDefault || 0}
+                  onReviewed={(reviewed: any) => client.setQueryData<{ feedback: any }>(queryKey, (current) => current ? { feedback: { ...current.feedback, ...reviewed } } : current)}
                 />
               </div>
             </Card>
@@ -709,25 +686,19 @@ export function AdminI18nPage() {
 
 export function AdminSettingsPage() {
   useDocumentTitle('系统设置与前台总控 | SupDance 运营后台');
-  const { redirectEl } = useAdminPermissionGuard(PERMISSIONS.settingsRead);
+  const { user, redirectEl } = useAdminPermissionGuard(PERMISSIONS.settingsRead);
   const { data: settingsData, loading: l1 } = useAdminData<any>('/api/admin/settings');
   const { data: brandingData, loading: l2 } = useAdminData<any>('/api/admin/content/branding');
-  const { data: bannerData, loading: l3 } = useAdminData<any>('/api/admin/content/banner');
-  const { data: bannerHistData } = useAdminData<any>('/api/admin/content/banner/history');
   const { data: motionData } = useAdminData<any>('/api/admin/content/motion');
 
   if (redirectEl) return redirectEl;
 
-  const loading = l1 || l2 || l3;
+  const loading = l1 || l2;
   const settings = Array.isArray(settingsData)
     ? settingsData
     : settingsData?.settings || settingsData?.rows || [];
   const brand = brandingData?.brand || brandingData || {};
   const navigation = brandingData?.navigation || [];
-  const banner = bannerData?.banner || bannerData || {};
-  const bannerHistory = Array.isArray(bannerHistData)
-    ? bannerHistData
-    : bannerHistData?.history || bannerHistData?.rows || [];
   const motion = motionData?.motion || motionData || {};
 
   return (
@@ -744,8 +715,7 @@ export function AdminSettingsPage() {
           initialSettings={settings}
           initialBrand={brand}
           initialNavigation={navigation}
-          initialBanner={banner}
-          initialBannerHistory={bannerHistory}
+          canWriteContent={hasPermission(user?.role, PERMISSIONS.contentWrite)}
           initialMotion={motion}
         />
       )}
@@ -1054,12 +1024,12 @@ export function AdminLoginMethodsPage() {
   const { data: socialRegionsData, loading: l2 } = useAdminData<any>(
     '/api/admin/login/social-regions'
   );
-  const { data: smsOverview } = useAdminData<any>('/api/admin/providers/sms');
+  const { data: smsOverview, loading: l3 } = useAdminData<any>('/api/admin/providers/sms');
 
   if (redirectEl) return redirectEl;
 
   const canWrite = hasPermission(user?.role, PERMISSIONS.providersWrite);
-  const loading = l1 || l2;
+  const loading = l1 || l2 || l3;
 
   const allProviders = Array.isArray(providersData)
     ? providersData

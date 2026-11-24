@@ -4,6 +4,16 @@
     "my-agents": "Mis Agentes",
     "my-chats": "Mis Chats"
   },
+  "editor": {
+    "edit": "Editar agente",
+    "save": "Guardar cambios",
+    "conflict": "Este agente se actualizó en otra pestaña. Recarga antes de guardar.",
+    "model": "Modelo de texto",
+    "credits": "créditos",
+    "newChat": "Nuevo chat",
+    "unavailable": "No hay modelos de texto publicados disponibles.",
+    "chooseModel": "El modelo solicitado no está disponible. Elige un modelo publicado."
+  },
   "headings": {
     "agents": "Agentes",
     "createAgent": "Crear Agente"

@@ -65,7 +65,7 @@ func (r *PGRepository) ListOrdersByUser(ctx context.Context, userID string, limi
 		       created_at, paid_at
 		FROM ops_bill.orders
 		WHERE user_id = $1
-		ORDER BY created_at DESC
+		ORDER BY created_at DESC, id DESC
 		LIMIT $2 OFFSET $3
 	`, userID, limit, offset)
 	if err != nil {
@@ -255,11 +255,6 @@ func (r *PGRepository) UpdateSubscriptionCancelAtPeriodEnd(ctx context.Context, 
 		return nil, err
 	}
 	sub.IsSubscribed = sub.PlanID != "" && sub.PlanID != "free"
-	if plan := FindPlanByID(sub.PlanID); plan != nil {
-		sub.MaxConcurrentTasks = plan.AsyncConcurrency
-		sub.ExclusiveFeatures = plan.ExclusiveFeatures
-		sub.PriorityQueue = plan.ID != "free" && plan.ID != "starter"
-	}
 	return &sub, nil
 }
 
@@ -424,7 +419,11 @@ func (r *PGRepository) RedeemCoupon(ctx context.Context, code, userID, ip string
 		if err != nil {
 			return nil, err
 		}
-		if plan := FindPlanByID(planID); plan != nil && plan.QuotaBase > 0 {
+		plan, err := readPlanConfig(ctx, tx, planID)
+		if err != nil {
+			return nil, err
+		}
+		if plan != nil && plan.QuotaBase > 0 {
 			_, err = grantWalletCreditsTx(ctx, tx, userID, "SUBSCRIPTION", plan.QuotaBase, "COUPON_SUBSCRIPTION_GRANT", redmID, fmt.Sprintf("兑换 %s 会员算力", plan.Name), "coupon_sub:"+redmID, &periodEnd, now)
 			if err != nil {
 				return nil, err
@@ -518,17 +517,20 @@ func (r *PGRepository) ApplyPaymentWebhook(ctx context.Context, in WebhookFulfil
 
 	var o Order
 	var metaRaw []byte
+	var originalPaymentID string
 	err = tx.QueryRow(ctx, `
 		SELECT id, user_id, plan_id, COALESCE(billing_cycle, 'monthly'), status, provider,
 		       COALESCE(provider_order_id, ''), amount_minor, COALESCE(paid_amount_minor, 0),
-		       currency, COALESCE(metadata_json, '{}'::jsonb)
+		       currency, COALESCE(metadata_json, '{}'::jsonb), COALESCE(provider_payment_id, '')
 		FROM ops_bill.orders
-		WHERE id = $1 OR ($2 <> '' AND provider = $3 AND provider_order_id = $2)
+		WHERE provider = $3 AND (id = $1 OR ($1 = '' AND (
+		  ($2 <> '' AND provider_order_id = $2) OR ($4 <> '' AND provider_payment_id = $4)
+		)))
 		FOR UPDATE
-	`, in.OrderID, in.ProviderOrderID, in.Provider).Scan(
+	`, in.OrderID, in.ProviderOrderID, in.Provider, in.OriginalPaymentID).Scan(
 		&o.ID, &o.UserID, &o.PlanID, &o.BillingCycle, &o.Status, &o.Provider,
 		&o.ProviderOrderID, &o.AmountCent, &o.PaidAmountCent,
-		&o.Currency, &metaRaw,
+		&o.Currency, &metaRaw, &originalPaymentID,
 	)
 	if errors.Is(err, pgx.ErrNoRows) {
 		return &WebhookDispatchResult{Action: "order_not_found_ignored", OrderID: in.OrderID}, nil
@@ -546,6 +548,15 @@ func (r *PGRepository) ApplyPaymentWebhook(ctx context.Context, in WebhookFulfil
 	if in.IsRefund {
 		if o.Status == "refunded" {
 			return &WebhookDispatchResult{Action: "already_refunded", Duplicate: true, OrderID: o.ID}, nil
+		}
+		if in.Provider == "stripe" && in.EventType != "admin.order_refund" {
+			if (in.OriginalPaymentID != "" && originalPaymentID != "" && in.OriginalPaymentID != originalPaymentID) ||
+				!strings.EqualFold(in.Currency, o.Currency) {
+				return nil, ErrAmountMismatch
+			}
+			if in.PaidAmountMinor != max(o.PaidAmountCent, o.AmountCent) {
+				return &WebhookDispatchResult{Action: "non_full_refund_ignored", OrderID: o.ID}, nil
+			}
 		}
 		if _, err := tx.Exec(ctx, `
 			UPDATE ops_bill.orders
@@ -582,6 +593,9 @@ func (r *PGRepository) ApplyPaymentWebhook(ctx context.Context, in WebhookFulfil
 
 	if o.Status == "paid" {
 		return &WebhookDispatchResult{Action: "already_paid", Duplicate: true, OrderID: o.ID}, nil
+	}
+	if o.Status == "refunded" {
+		return &WebhookDispatchResult{Action: "already_refunded", Duplicate: true, OrderID: o.ID}, nil
 	}
 
 	if in.PaidAmountMinor > 0 && o.AmountCent > 0 && in.PaidAmountMinor < o.AmountCent {

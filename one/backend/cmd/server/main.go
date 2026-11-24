@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"flag"
+	"fmt"
 	"log"
 	"net/http"
 	"os"
@@ -28,6 +29,7 @@ import (
 	"one/backend/internal/middleware"
 	"one/backend/internal/notify"
 	"one/backend/internal/platform/coordination"
+	"one/backend/internal/platform/runtimelog"
 	"one/backend/internal/queue"
 	"one/backend/internal/storage"
 	"one/backend/internal/worker"
@@ -45,6 +47,7 @@ func main() {
 	}
 	ctx, stop := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)
 	defer stop()
+	runtimeLogs := &runtimelog.Buffer{}
 
 	pgPool, poolErr := db.NewPool(ctx, cfg)
 	if cfg.DatabaseURL != "" && poolErr != nil {
@@ -55,12 +58,14 @@ func main() {
 		if err := db.HealthCheck(ctx, pgPool); err != nil {
 			log.Fatalf("database ping failed: %v", err)
 		}
+		runtimeLogs.Info("postgres.connectivity_verified")
 		if *migrateOnly || *applyMigrations {
 			status, err := db.VerifyAndApplyMigrations(ctx, pgPool, cfg.MigrationsDir, true)
 			if err != nil {
 				log.Fatalf("migrations failed: %v", err)
 			}
 			log.Printf("migrations verified: applied=%d pending=%d drifted=%d", len(status.Applied), len(status.Pending), len(status.Drifted))
+			runtimeLogs.Info(fmt.Sprintf("postgres.migrations_verified applied=%d pending=%d drifted=%d", len(status.Applied), len(status.Pending), len(status.Drifted)))
 			if *migrateOnly {
 				return
 			}
@@ -73,6 +78,7 @@ func main() {
 				log.Fatalf("migration checksum drift detected: %v", status.Drifted)
 			}
 			log.Printf("migrations ledger ok: applied=%d pending=%d", len(status.Applied), len(status.Pending))
+			runtimeLogs.Info(fmt.Sprintf("postgres.migrations_verified applied=%d pending=%d", len(status.Applied), len(status.Pending)))
 		}
 	} else if *migrateOnly {
 		log.Fatal("DATABASE_URL is required for -migrate")
@@ -82,6 +88,7 @@ func main() {
 	if pgPool != nil {
 		go func() {
 			if err := hub.ListenLoop(ctx, pgPool); err != nil && !errors.Is(err, context.Canceled) {
+				runtimeLogs.Error("generation.event_listener_stopped")
 				log.Printf("LISTEN/NOTIFY hub stopped: %v", err)
 			}
 		}()
@@ -149,11 +156,7 @@ func main() {
 			if err != nil {
 				return 0, err
 			}
-			plan := billing.FindPlanByID(ent.PlanID)
-			if plan == nil {
-				return 1, nil
-			}
-			gb := int64(plan.StorageGb)
+			gb := int64(ent.StorageGb)
 			if gb <= 0 {
 				gb = 1
 			}
@@ -179,6 +182,7 @@ func main() {
 			Storage:    storageSvc,
 			Billing:    billingSvc,
 			Wakeup:     wakeupCh,
+			RuntimeLog: runtimeLogs,
 		}
 		go func() {
 			defer close(workerDone)
@@ -186,6 +190,7 @@ func main() {
 		}()
 	} else {
 		if cfg.WorkerDisabled {
+			runtimeLogs.Info("generation.worker_disabled")
 			log.Printf("background worker disabled via ONE_WORKER_DISABLED")
 		}
 		close(workerDone)
@@ -211,6 +216,7 @@ func main() {
 		Notify:      notifySvc,
 		Events:      hub,
 		DBCheck:     dbCheck,
+		RuntimeLog:  runtimeLogs,
 	}
 
 	router, err := handler.NewRouter(deps)
@@ -225,6 +231,7 @@ func main() {
 	}
 
 	go func() {
+		runtimeLogs.Info("http.server_starting")
 		log.Printf("one-backend listening on :%s", cfg.Port)
 		if err := srv.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {
 			log.Fatalf("server error: %v", err)

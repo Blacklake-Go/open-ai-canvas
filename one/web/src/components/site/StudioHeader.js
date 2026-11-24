@@ -3,7 +3,8 @@
 import { useEffect, useState, useCallback, useRef } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
-import { ArrowLeft, Menu, X, ChevronRight, Crown, ExternalLink, Workflow, MessageSquarePlus } from 'lucide-react';
+import { useLocation } from 'react-router';
+import { ArrowLeft } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import AuthModal from '@/components/AuthModal';
 import UserOnboardingModal from '@/components/auth/UserOnboardingModal';
@@ -14,14 +15,14 @@ import SubscriptionModal from '@/components/subscription/SubscriptionModal';
 import { useBranding } from '@/lib/hooks/useBranding';
 import { useUserSession } from '@/lib/hooks/useUserSession';
 import { getAuthRoutes } from '@/lib/authCopy';
-import { DEFAULT_LOCALE, getCommonCopy, getLocaleConfig, getLocaleFromPathname, matchPathLocale, normalizeLocale, localizeStudioPath } from '@/lib/locales';
+import { DEFAULT_LOCALE, getCommonCopy, getLocaleConfig, matchPathLocale, normalizeLocale, localizeStudioPath } from '@/lib/locales';
 import BrandLogo from '@/components/site/BrandLogo';
+import HeaderThemeToggle from '@/components/site/HeaderThemeToggle';
+import GenerationRiverControl from '@/components/generation-river/GenerationRiverControl';
 import TopMegaNavigation from '@/components/navigation/TopMegaNavigation';
-import { getMegaNavCategories } from '@/config/mega-navigation';
-import NavIcon from '@/components/navigation/NavIcon';
-import NavBadge from '@/components/navigation/NavBadge';
+import MobileTopNavigation from '@/components/navigation/MobileTopNavigation';
 
-export function BrandMark({ compact = false, locale = null }) {
+export function BrandMark({ compact = false, locale = null, className = '' }) {
   const { brand } = useBranding();
   const pathname = usePathname();
   const getCookieLocale = () => {
@@ -30,18 +31,23 @@ export function BrandMark({ compact = false, locale = null }) {
     return m ? decodeURIComponent(m[1]) : null;
   };
   const activeLocale = normalizeLocale(locale || matchPathLocale(pathname) || getCookieLocale() || DEFAULT_LOCALE);
-  const homeHref = '/';
-  const logoHref = brand?.logoHref || homeHref;
+  const homeHref = activeLocale === 'zh-CN' ? '/' : (getLocaleConfig(activeLocale).rootPath || '/');
+  const logoHref = brand?.logoHref && brand.logoHref !== '/' ? brand.logoHref : homeHref;
   const logoTarget = brand?.logoTarget || '_self';
 
   return (
     <Link
       href={logoHref}
       target={logoTarget}
-      className="group inline-flex items-center gap-2.5 cursor-pointer shrink-0"
+      className={cn("group inline-flex items-center gap-2.5 cursor-pointer shrink-0", className)}
       aria-label={`${brand?.brandName || 'supdance'} Studio`}
     >
-      <BrandLogo brand={brand} className="inline-flex items-center gap-2.5 [&>span:first-child]:group-hover:scale-105" />
+      <BrandLogo
+        brand={brand}
+        className="inline-flex min-w-0 max-w-full items-center gap-2.5 [&>span:first-child]:min-w-0 [&>span:first-child]:group-hover:scale-105"
+        imageClassName="h-full w-auto max-h-8 max-w-full object-contain"
+        nameClassName="truncate font-jost text-sm font-bold tracking-tight text-ink"
+      />
     </Link>
   );
 }
@@ -75,7 +81,7 @@ export default function StudioHeader({
 }) {
   const pathname = usePathname();
   const router = useRouter();
-  const { brand } = useBranding();
+  const { search, hash } = useLocation();
   const { user, credits, entitlements, mutate } = useUserSession(initialUser);
 
   const getCookieLocale = () => {
@@ -93,13 +99,11 @@ export default function StudioHeader({
   );
   const copy = getCommonCopy(activeLocale);
   const studioHref = localizeStudioPath(activeLocale);
-  const categories = getMegaNavCategories(activeLocale);
 
   const [showAuthModal, setShowAuthModal] = useState(false);
   const [isAccountModalOpen, setIsAccountModalOpen] = useState(false);
   const [accountModalTab, setAccountModalTab] = useState('price-details');
   const [isSubscriptionModalOpen, setIsSubscriptionModalOpen] = useState(false);
-  const [isMobileOpen, setIsMobileOpen] = useState(false);
   const [showOnboardingModal, setShowOnboardingModal] = useState(false);
   const onboardingPromptedRef = useRef(false);
 
@@ -117,10 +121,10 @@ export default function StudioHeader({
   // 统一认证路由跳转（彻底弃用旧版弹窗，直达带动效背景的专属认证页面）
   const handleOpenAuth = useCallback((mode = 'login') => {
     const authRoutes = getAuthRoutes(activeLocale);
-    const cleanPath = pathname || authRoutes.studioUrl;
+    const cleanPath = pathname ? `${pathname}${search}${hash}` : authRoutes.studioUrl;
     const baseTarget = mode === 'register' ? authRoutes.registerUrl : authRoutes.loginUrl;
     router.push(`${baseTarget}?redirect=${encodeURIComponent(cleanPath)}`);
-  }, [activeLocale, pathname, router]);
+  }, [activeLocale, pathname, search, hash, router]);
 
   // 跨组件事件监听：唤起账户悬浮窗与会员订阅浮窗
   useEffect(() => {
@@ -151,11 +155,6 @@ export default function StudioHeader({
     setIsAccountModalOpen(true);
   }, [initialAccountTab]);
 
-  // 路由变化时自动收起移动端抽屉
-  useEffect(() => {
-    setIsMobileOpen(false);
-  }, [pathname]);
-
   const resolvedActiveTab = activeTab || (
     pathname === '/community' || pathname?.startsWith('/community/') || pathname === '/zh/community' || pathname?.startsWith('/zh/community/')
       ? 'community'
@@ -173,15 +172,7 @@ export default function StudioHeader({
       >
         {/* 左侧：移动端汉堡菜单 + 返回按钮 + BrandMark + 全局 TopMegaNavigation */}
         <div className="flex items-center gap-2 sm:gap-3 min-w-0 flex-1">
-          {/* 移动端抽屉开关 (lg:hidden) */}
-          <button
-            type="button"
-            onClick={() => setIsMobileOpen(!isMobileOpen)}
-            className="lg:hidden shrink-0 flex size-9 items-center justify-center rounded-lg text-ink-muted hover:bg-wash hover:text-ink transition-colors cursor-pointer"
-            aria-label={copy.shell?.toggleNavMenu || '菜单'}
-          >
-            <Menu className="size-5" />
-          </button>
+          <MobileTopNavigation locale={activeLocale} activeTab={resolvedActiveTab} customItems={customNavItems} />
 
           {showBack && (
             <div className="flex items-center gap-1.5 shrink-0">
@@ -196,7 +187,7 @@ export default function StudioHeader({
             </div>
           )}
 
-          <BrandMark compact locale={activeLocale} />
+          <BrandMark compact locale={activeLocale} className="min-w-0 shrink lg:shrink-0" />
 
           {/* 桌面端水平 Mega Menu 导航 (全站统一穿透，支持图像/视频/音频/智能体/社区/关于) */}
           {customNavItems ? (
@@ -237,7 +228,10 @@ export default function StudioHeader({
 
         {/* 右侧固定功能区 (额度、提醒、语言切换、用户头像 / 登录) */}
         <div className="flex-shrink-0 flex items-center gap-2">
+          <GenerationRiverControl key={user?.id || 'guest'} userId={String(user?.id || '')} locale={activeLocale} />
+          <HeaderThemeToggle locale={activeLocale} />
           <UserDropdownMenu
+            key={user?.id || 'guest'}
             user={user}
             credits={credits}
             entitlements={entitlements}
@@ -272,151 +266,6 @@ export default function StudioHeader({
 
       {/* 2. 占位垫高层 (Fixed Header Spacer - 占据文档流固定 56px 高度，杜绝页面内容被遮挡) */}
       <div className="h-14 shrink-0 w-full pointer-events-none select-none" aria-hidden="true" />
-
-      {/* 3. 移动端全功能滑出抽屉 (Mobile Drawer - 移动端全面享有各分类工具入口) */}
-      {isMobileOpen && (
-        <>
-          <div
-            className="fixed inset-0 z-sticky bg-scrim backdrop-blur-sm lg:hidden animate-fade-in"
-            onClick={() => setIsMobileOpen(false)}
-            aria-hidden="true"
-          />
-          <aside
-            className="fixed bottom-0 left-0 top-14 z-drawer w-72 max-w-[85vw] bg-surface-glass border-r border-line-subtle backdrop-blur-xl flex flex-col p-4 overflow-y-auto custom-scrollbar lg:hidden animate-in slide-in-from-left duration-200"
-          >
-            <div className="flex items-center justify-between pb-3 border-b border-line-subtle mb-3">
-              <span className="text-body-sm font-semibold text-ink">导航菜单</span>
-              <button
-                type="button"
-                onClick={() => setIsMobileOpen(false)}
-                className="p-1 rounded-lg text-ink-muted hover:text-ink hover:bg-wash cursor-pointer"
-                aria-label="关闭菜单"
-              >
-                <X className="size-4" />
-              </button>
-            </div>
-
-            <div className="space-y-4">
-              <Link
-                href={studioHref}
-                onClick={() => setIsMobileOpen(false)}
-                className="flex items-center gap-2.5 px-3 py-2 rounded-xl text-body-sm font-medium text-ink hover:bg-wash transition-colors"
-              >
-                <NavIcon name="sparkles" className="size-4 text-brand" />
-                <span>创作工作台</span>
-              </Link>
-
-              {/* 无限画布 (独立二号白板工作台) */}
-              <Link
-                href="/canvas"
-                target="_blank"
-                rel="noopener noreferrer"
-                onClick={() => setIsMobileOpen(false)}
-                className="flex items-center justify-between px-3 py-2 rounded-xl text-body-sm font-medium text-ink hover:bg-wash transition-colors"
-              >
-                <div className="flex items-center gap-2.5">
-                  <Workflow className="size-4 text-brand" />
-                  <span>{activeLocale.startsWith('zh') ? '无限画布' : 'Infinite Canvas'}</span>
-                </div>
-                <ExternalLink className="size-3.5 text-ink-muted" />
-              </Link>
-
-              {/* 👑 VIP 会员与算力套餐 (移动端专属高亮入口) */}
-              <button
-                type="button"
-                onClick={() => {
-                  setIsMobileOpen(false);
-                  setIsSubscriptionModalOpen(true);
-                }}
-                className="flex w-full items-center justify-between px-3 py-2.5 rounded-xl bg-gradient-to-r from-amber-500/15 via-amber-500/10 to-transparent border border-amber-500/30 text-amber-300 font-semibold text-body-sm hover:border-amber-500/50 hover:bg-amber-500/20 transition-all cursor-pointer shadow-elevation-1 active:scale-98"
-              >
-                <div className="flex items-center gap-2.5">
-                  <Crown className="size-4 text-amber-400" />
-                  <span>VIP 会员与算力套餐</span>
-                </div>
-                <span className="rounded-full bg-amber-400 px-1.5 py-0.5 text-[9px] font-black text-black">
-                  82% OFF
-                </span>
-              </button>
-
-              {categories.map((cat) => {
-                const hasFeatures = Array.isArray(cat.features) && cat.features.length > 0;
-
-                if (!hasFeatures) {
-                  const isDirectActive = pathname === cat.href || pathname === `${cat.href}/`;
-                  return (
-                    <Link
-                      key={cat.id}
-                      href={cat.href}
-                      onClick={() => setIsMobileOpen(false)}
-                      className={`flex items-center justify-between px-3 py-2 rounded-xl text-body-sm font-medium transition-colors ${
-                        isDirectActive ? 'bg-wash-strong text-ink' : 'text-ink hover:bg-wash'
-                      }`}
-                    >
-                      <div className="flex items-center gap-2.5">
-                        <NavIcon name="sparkles" className="size-4 text-brand" />
-                        <span>{cat.label}</span>
-                      </div>
-                      {cat.badge && <NavBadge badge={cat.badge} />}
-                    </Link>
-                  );
-                }
-
-                return (
-                  <div key={cat.id} className="space-y-1">
-                    <div className="px-3 text-caption font-bold text-ink-muted uppercase tracking-wider">
-                      {cat.label}
-                    </div>
-                    <div className="space-y-0.5">
-                      {cat.features?.map((feat) => (
-                        <Link
-                          key={feat.id}
-                          href={feat.href}
-                          onClick={() => setIsMobileOpen(false)}
-                          className="flex items-center justify-between px-3 py-2 rounded-xl text-caption text-ink-muted hover:text-ink hover:bg-wash transition-colors"
-                        >
-                          <div className="flex items-center gap-2">
-                            <NavIcon name={feat.icon} className="size-3.5" />
-                            <span>{feat.label}</span>
-                          </div>
-                          {feat.badge && <NavBadge badge={feat.badge} />}
-                        </Link>
-                      ))}
-                    </div>
-                  </div>
-                );
-              })}
-
-              <div className="pt-2 border-t border-line-subtle space-y-1">
-                <Link
-                  href={activeLocale.startsWith('zh') ? '/zh/community' : '/community'}
-                  onClick={() => setIsMobileOpen(false)}
-                  className="flex items-center gap-2.5 px-3 py-2 rounded-xl text-body-sm font-medium text-ink hover:bg-wash transition-colors"
-                >
-                  <NavIcon name="flame" className="size-4 text-amber-400" />
-                  <span>{activeLocale.startsWith('zh') ? '灵感社区' : 'Community'}</span>
-                </Link>
-                <Link
-                  href="/feedback"
-                  onClick={() => setIsMobileOpen(false)}
-                  className="flex items-center gap-2.5 px-3 py-2 rounded-xl text-body-sm font-medium text-ink hover:bg-wash transition-colors"
-                >
-                  <MessageSquarePlus className="size-4 text-brand" />
-                  <span>{copy?.topNav?.feedback || (activeLocale.startsWith('zh') ? '建议与需求' : 'Feedback')}</span>
-                </Link>
-                <Link
-                  href={activeLocale.startsWith('zh') ? '/zh/about' : '/about'}
-                  onClick={() => setIsMobileOpen(false)}
-                  className="flex items-center gap-2.5 px-3 py-2 rounded-xl text-body-sm font-medium text-ink hover:bg-wash transition-colors"
-                >
-                  <NavIcon name="sparkles" className="size-4 text-sky-400" />
-                  <span>{activeLocale.startsWith('zh') ? '关于本站' : 'About'}</span>
-                </Link>
-              </div>
-            </div>
-          </aside>
-        </>
-      )}
 
       {/* 4. 全局认证模态框 */}
       {showAuthModal && (

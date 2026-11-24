@@ -373,6 +373,7 @@ export default function BrandingTab({
           />
 
           {/* Row 2: 浏览器 Favicon */}
+          <div id="icon-settings" className="scroll-mt-24" />
           <AdminSettingRow
             label="浏览器 Favicon"
             value={

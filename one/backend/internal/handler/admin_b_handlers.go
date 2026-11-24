@@ -20,10 +20,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
-	"os"
-	"path/filepath"
 	"regexp"
-	"sort"
 	"strconv"
 	"strings"
 	"time"
@@ -36,9 +33,11 @@ import (
 	"one/backend/internal/domain/admin"
 	"one/backend/internal/domain/billing"
 	"one/backend/internal/domain/generation"
+	"one/backend/internal/domain/site"
 	"one/backend/internal/middleware"
 	"one/backend/internal/notify"
 	"one/backend/internal/pkg/seckey"
+	"one/backend/internal/platform/runtimelog"
 	"one/backend/internal/storage"
 )
 
@@ -83,7 +82,8 @@ func adminBRoutes() []adminBRoute {
 		{[]string{"POST"}, "/api/admin/moderation/[id]/resolve", "moderationWrite", "moderation_resolve", adminBResolveModeration},
 		{[]string{"GET"}, "/api/admin/orders", "billingRead", "", adminBListRows("orders")},
 		{[]string{"POST"}, "/api/admin/orders/[id]/refund", "billingWrite", "order_refund", adminBOrderRefund},
-		{[]string{"GET", "POST"}, "/api/admin/plans", "plansRead", "plan_create", adminBPlans},
+		{[]string{"GET"}, "/api/admin/plans", "plansRead", "", adminBPlans},
+		{[]string{"POST"}, "/api/admin/plans", "plansWrite", "plan_create", adminBPlans},
 		{[]string{"PATCH"}, "/api/admin/plans/[id]", "plansWrite", "plan_update", adminBPlanPatch},
 		{[]string{"GET"}, "/api/admin/profit-center", "dashboardRead", "", adminBProfitCenter},
 		{[]string{"GET"}, "/api/admin/providers", "providersRead", "", adminBProvidersOverview},
@@ -103,13 +103,15 @@ func adminBRoutes() []adminBRoute {
 		{[]string{"GET", "PATCH"}, "/api/admin/routing", "modelsRead", "", adminBRoutingOverview},
 		{[]string{"GET", "PATCH"}, "/api/admin/routing/[modelId]/channels", "modelsRead", "", adminBRoutingChannels},
 		{[]string{"POST", "DELETE"}, "/api/admin/security/sessions/[hash]", "sessionsRevoke", "session_revoke_single", adminBRevokeSessionByHash},
+		{[]string{"GET"}, "/api/admin/security/sessions", "sessionsRevoke", "", adminBListSessions},
 		{[]string{"GET", "POST"}, "/api/admin/seo/config", "settingsWrite", "", adminBSEOSettings("site_seo")},
 		{[]string{"GET", "POST"}, "/api/admin/seo/push", "settingsWrite", "", adminBSEOPush},
 		{[]string{"GET", "POST"}, "/api/admin/seo/push/config", "settingsWrite", "", adminBSEOSettings("search_push_config")},
 		{[]string{"GET", "POST"}, "/api/admin/settings", "settingsRead", "system_setting_update", adminBSystemSettings},
 		{[]string{"GET", "POST"}, "/api/admin/storage", "storageRead", "storage_settings_save", adminBStorage},
 		{[]string{"GET", "POST"}, "/api/admin/storage/bucket", "storageRead", "", adminBStorageBucket},
-		{[]string{"GET", "PUT"}, "/api/admin/subscription-faq", "plansRead", "", adminBSubscriptionFAQ},
+		{[]string{"GET"}, "/api/admin/subscription-faq", "plansRead", "", adminBSubscriptionFAQ},
+		{[]string{"PUT"}, "/api/admin/subscription-faq", "plansWrite", "subscription_faq_update", adminBSubscriptionFAQ},
 		{[]string{"GET"}, "/api/admin/subscriptions", "billingRead", "", adminBListRows("subscriptions")},
 		{[]string{"GET"}, "/api/admin/system/logs", "healthRead", "", adminBSystemLogs},
 		{[]string{"GET"}, "/api/admin/users", "usersRead", "", adminBListRows("users")},
@@ -1246,13 +1248,16 @@ func adminBModelTelemetry(_ http.ResponseWriter, r *http.Request, d *Dependencie
 	if err != nil {
 		return nil, nil, adminBInternal(err, "管理操作暂时不可用，请稍后重试")
 	}
-	errors, _ := adminBQueryRows(r.Context(), pool, `
+	errors, err := adminBQueryRows(r.Context(), pool, `
 		SELECT COALESCE(att.error_code, 'UNKNOWN') AS error_code,
 		       COALESCE(att.error_reason, '未捕获原因') AS error_reason,
 		       COUNT(att.id)::int AS count
 		FROM ai_studio.generation_attempts att
 		WHERE att.status IN ('failed','timeout') AND att.created_at >= NOW() - `+interval+`
 		GROUP BY att.error_code, att.error_reason ORDER BY count DESC LIMIT 50`)
+	if err != nil {
+		return nil, nil, adminBInternal(err, "读取模型失败归因失败，请稍后重试")
+	}
 	return map[string]any{"timeRange": timeRange, "kpi": kpi,
 		"topModels": topModels, "errorTaxonomy": errors, "limit": limit}, nil, nil
 }
@@ -1447,6 +1452,10 @@ func adminBOrderRefund(_ http.ResponseWriter, r *http.Request, d *Dependencies, 
 	if err != nil {
 		var be *billing.ServiceError
 		if errors.As(err, &be) {
+			if be.Code == "REFUND_AWAITING_PROVIDER" {
+				adminBAudit(r.Context(), pool, u, "orders.refund_requested", "order", orderID, "high", reqID,
+					map[string]any{"reason": body.Reason, "status": "awaiting_provider"})
+			}
 			status := be.Status
 			if status < 400 {
 				status = 422
@@ -1471,107 +1480,45 @@ func adminBPlans(_ http.ResponseWriter, r *http.Request, d *Dependencies, u *mid
 	if ae != nil {
 		return nil, nil, ae
 	}
+	repo := &billing.PGRepository{Pool: pool}
 	if r.Method == http.MethodGet {
-		rows, err := adminBQueryRows(r.Context(), pool, `SELECT * FROM ops_bill.plans_config ORDER BY display_order ASC, id ASC`)
+		plans, err := repo.PlanCatalog(r.Context())
 		if err != nil {
-			return nil, nil, adminBInternal(err, "管理操作暂时不可用，请稍后重试")
+			return nil, nil, adminBInternal(err, "读取套餐配置失败")
 		}
-		return rows, nil, nil
+		return plans, nil, nil
 	}
-	var body struct {
-		ID           string         `json:"id"`
-		PlanID       string         `json:"planId"`
-		Name         string         `json:"name"`
-		MonthlyCny   *float64       `json:"monthlyCny"`
-		MonthlyUsd   *float64       `json:"monthlyUsd"`
-		Features     any            `json:"features"`
-		DisplayOrder *int           `json:"displayOrder"`
-		Enabled      *bool          `json:"enabled"`
-		Meta         map[string]any `json:"meta"`
-	}
-	adminBBodyOptional(r, 128*1024, &body)
-	planID := firstNonEmpty(body.ID, body.PlanID)
-	if planID == "" || strings.TrimSpace(body.Name) == "" {
-		return nil, nil, adminBResultErr("套餐 ID 与名称为必填项")
-	}
-	featuresRaw, _ := json.Marshal(body.Features)
-	if body.Features == nil {
-		featuresRaw = []byte(`[]`)
-	}
-	monthlyCny, monthlyUsd := 0.0, 0.0
-	if body.MonthlyCny != nil {
-		monthlyCny = *body.MonthlyCny
-	}
-	if body.MonthlyUsd != nil {
-		monthlyUsd = *body.MonthlyUsd
-	}
-	order := 0
-	if body.DisplayOrder != nil {
-		order = *body.DisplayOrder
-	}
-	enabled := true
-	if body.Enabled != nil {
-		enabled = *body.Enabled
-	}
-	_, err := pool.Exec(r.Context(), `
-		INSERT INTO ops_bill.plans_config
-			(id, name, monthly_cny, monthly_usd, features_json, display_order, enabled, updated_at)
-		VALUES ($1,$2,$3,$4,$5::jsonb,$6,$7,now())`,
-		planID, body.Name, int64(monthlyCny), int64(monthlyUsd), string(featuresRaw), order, enabled)
-	if err != nil {
-		return nil, nil, adminBInternal(err, "管理操作暂时不可用，请稍后重试")
-	}
-	plan, _, _ := adminBQueryOne(r.Context(), pool, `SELECT * FROM ops_bill.plans_config WHERE id = $1`, planID)
-	adminBAudit(r.Context(), pool, u, "plans.create", "plan", planID, "medium", reqID, plan)
-	return plan, nil, nil
+	return adminBSavePlan(r, repo, u, reqID, true)
 }
 
 func adminBPlanPatch(_ http.ResponseWriter, r *http.Request, d *Dependencies, u *middleware.SessionUser, reqID string) (any, map[string]any, *adminError) {
-	planID := strings.TrimSpace(r.PathValue("id"))
-	var body map[string]any
-	adminBBodyOptional(r, 128*1024, &body)
 	pool, ae := adminBDB(d, reqID)
 	if ae != nil {
 		return nil, nil, ae
 	}
-	before, ok, err := adminBQueryOne(r.Context(), pool, `SELECT * FROM ops_bill.plans_config WHERE id = $1`, planID)
+	return adminBSavePlan(r, &billing.PGRepository{Pool: pool}, u, reqID, false)
+}
+
+func adminBSavePlan(r *http.Request, repo *billing.PGRepository, u *middleware.SessionUser, reqID string, create bool) (any, map[string]any, *adminError) {
+	var body billing.PlanChanges
+	if ae := adminBBody(r, 64*1024, &body); ae != nil {
+		return nil, nil, ae
+	}
+	before, after, err := repo.SavePlan(r.Context(), strings.TrimSpace(r.PathValue("id")), body, create)
 	if err != nil {
-		return nil, nil, adminBInternal(err, "管理操作暂时不可用，请稍后重试")
-	}
-	if !ok {
-		return nil, nil, adminBResultErr("套餐不存在")
-	}
-	sets := []string{"updated_at = now()"}
-	args := []any{}
-	add := func(col string, val any) {
-		args = append(args, val)
-		sets = append(sets, fmt.Sprintf("%s = $%d", col, len(args)))
-	}
-	if v, ok := body["name"].(string); ok {
-		add("name", v)
-	}
-	for key, col := range map[string]string{"monthlyCny": "monthly_cny", "monthlyUsd": "monthly_usd", "displayOrder": "display_order"} {
-		if v, ok := body[key].(float64); ok {
-			add(col, int64(v))
+		var validation *billing.ServiceError
+		if errors.As(err, &validation) {
+			return nil, nil, adminErr(validation.Code, validation.Message, validation.Status)
 		}
+		return nil, nil, adminBInternal(err, "保存套餐配置失败")
 	}
-	if v, ok := body["features"].(any); ok && v != nil {
-		raw, _ := json.Marshal(v)
-		args = append(args, string(raw))
-		sets = append(sets, fmt.Sprintf("features_json = $%d::jsonb", len(args)))
+	action := "plans.update"
+	if create {
+		action = "plans.create"
 	}
-	if v, ok := body["enabled"].(bool); ok {
-		add("enabled", v)
-	}
-	args = append(args, planID)
-	_, err = pool.Exec(r.Context(), fmt.Sprintf(`UPDATE ops_bill.plans_config SET %s WHERE id = $%d`, strings.Join(sets, ", "), len(args)), args...)
-	if err != nil {
-		return nil, nil, adminBInternal(err, "管理操作暂时不可用，请稍后重试")
-	}
-	plan, _, _ := adminBQueryOne(r.Context(), pool, `SELECT * FROM ops_bill.plans_config WHERE id = $1`, planID)
-	adminBAudit(r.Context(), pool, u, "plans.update", "plan", planID, "medium", reqID,
-		map[string]any{"before": before, "after": plan})
-	return plan, nil, nil
+	adminBAudit(r.Context(), repo.Pool, u, action, "plan", after.ID, "medium", reqID,
+		map[string]any{"before": before, "after": after})
+	return after, nil, nil
 }
 
 // ---------------------------------------------------------------------------
@@ -2101,7 +2048,7 @@ func adminBSMSConfig(_ http.ResponseWriter, r *http.Request, d *Dependencies, u 
 			return nil, nil, adminBInternal(err, "管理操作暂时不可用，请稍后重试")
 		}
 		logs, _ := adminBQueryRows(r.Context(), pool, `
-			SELECT id, provider, masked_phone, status, error_code, latency_ms, created_at
+			SELECT id, provider, masked_phone, country, status, error_code, latency_ms, created_at
 			FROM auth_usr.sms_delivery_logs ORDER BY created_at DESC LIMIT 20`)
 		return map[string]any{"config": adminBJSON(value), "logs": logs, "configured": value != nil}, nil, nil
 	}
@@ -2466,6 +2413,30 @@ func adminBRoutingChannels(_ http.ResponseWriter, r *http.Request, d *Dependenci
 // ---------------------------------------------------------------------------
 // /api/admin/security/sessions/[hash] — lib/repositories/sessions.js
 // ---------------------------------------------------------------------------
+
+func adminBListSessions(_ http.ResponseWriter, r *http.Request, d *Dependencies, _ *middleware.SessionUser, reqID string) (any, map[string]any, *adminError) {
+	pool, ae := adminBDB(d, reqID)
+	if ae != nil {
+		return nil, nil, ae
+	}
+	query := `
+		SELECT s.token_hash, s.user_id, s.created_at, s.last_seen_at, s.expires_at,
+		       u.display_name, u.email, u.phone, u.phone_country_code, u.role
+		FROM auth_usr.sessions s
+		JOIN auth_usr.users u ON u.id = s.user_id
+		WHERE s.revoked_at IS NULL AND s.expires_at > now()
+	`
+	var args []any
+	if q := strings.TrimSpace(r.URL.Query().Get("q")); q != "" {
+		query += ` AND strpos(lower(concat_ws(' ', u.id, u.email, u.phone, u.display_name)), lower($1)) > 0`
+		args = append(args, q)
+	}
+	rows, meta, err := adminBPagedQuery(r.Context(), pool, r, query, "s.created_at", "s.token_hash", args...)
+	if err != nil {
+		return nil, nil, adminBInternal(err, "读取活跃会话失败，请稍后重试")
+	}
+	return rows, meta, nil
+}
 
 func adminBRevokeSessionByHash(_ http.ResponseWriter, r *http.Request, d *Dependencies, u *middleware.SessionUser, reqID string) (any, map[string]any, *adminError) {
 	hash := strings.TrimSpace(r.PathValue("hash"))
@@ -2866,164 +2837,79 @@ func adminBSubscriptionFAQ(_ http.ResponseWriter, r *http.Request, d *Dependenci
 	if ae != nil {
 		return nil, nil, ae
 	}
-	defaults := map[string]any{
-		"notice":        "所有会员套餐均支持随时升级或取消，算力随周期自动充值发放，未生成成功系统自动秒级返还。",
-		"supportEmail":  "support@Supdance.com",
-		"invoiceNotice": "已支付订单可在个人中心“支付凭证”中预览并下载；企业开票请在个人中心提交开票信息。",
-		"items":         []any{},
+	locale, key, ok := site.SubscriptionFAQLocale(r.URL.Query().Get("locale"))
+	if !ok {
+		return nil, nil, adminErr("UNSUPPORTED_LOCALE", "不支持的订阅说明语言", http.StatusBadRequest)
 	}
+	ctx := r.Context()
+	var revision int
 	if r.Method == http.MethodGet {
-		value, ok, err := adminBReadSetting(r.Context(), pool, "subscription_faq_config")
+		var raw json.RawMessage
+		err := pool.QueryRow(ctx, `SELECT value_json, version FROM ops_bill.system_settings WHERE key = $1`, key).Scan(&raw, &revision)
+		if err != nil && !errors.Is(err, pgx.ErrNoRows) {
+			return nil, nil, adminBInternal(err, "暂时无法读取订阅说明")
+		}
+		config, err := site.DecodeSubscriptionFAQ(raw, locale)
 		if err != nil {
-			return nil, nil, adminBInternal(err, "管理操作暂时不可用，请稍后重试")
+			return nil, nil, adminBInternal(err, "暂时无法读取订阅说明")
 		}
-		config := defaults
-		if ok {
-			config = adminBJSON(value)
-		}
-		return map[string]any{"config": config, "defaults": defaults}, nil, nil
+		return map[string]any{"locale": locale, "revision": revision, "config": config, "defaults": site.DefaultSubscriptionFAQ(locale)}, nil, nil
 	}
-	var body map[string]any
+	var body struct {
+		Config           *site.SubscriptionFAQPayload `json:"config"`
+		ExpectedRevision *int                         `json:"expectedRevision"`
+	}
 	if ae := adminBBody(r, 128*1024, &body); ae != nil {
 		return nil, nil, ae
 	}
-	config := body
-	if nested, ok := body["config"].(map[string]any); ok {
-		config = nested
+	if body.Config == nil || body.ExpectedRevision == nil || *body.ExpectedRevision < 0 {
+		return nil, nil, adminErr("VALIDATION_ERROR", "请提交完整的订阅说明与版本号。", http.StatusUnprocessableEntity)
 	}
-	if len(config) == 0 {
-		return nil, nil, adminErr("VALIDATION_ERROR", "订阅 FAQ 配置不能为空", 400)
+	config, err := site.ValidateSubscriptionFAQ(*body.Config)
+	if err != nil {
+		return nil, nil, adminErr("INVALID_SUBSCRIPTION_FAQ", err.Error(), http.StatusUnprocessableEntity)
 	}
-	// Mirror saveSubscriptionFaqConfig's normalization: drop blank questions,
-	// coerce fields, sort by order, and fall back to the documented defaults.
-	notice := adminBStr(config["notice"])
-	if notice == "" {
-		notice = "所有会员套餐均支持随时升级或取消，算力随周期自动充值发放，未生成成功系统自动秒级返还。"
+	value, err := json.Marshal(config)
+	if err != nil {
+		return nil, nil, adminBInternal(err, "暂时无法保存订阅说明")
 	}
-	supportEmail := adminBStr(config["supportEmail"])
-	if supportEmail == "" {
-		supportEmail = "support@Supdance.com"
+	actor := adminBActorEmail(u)
+	if *body.ExpectedRevision == 0 {
+		err = pool.QueryRow(ctx, `
+			INSERT INTO ops_bill.system_settings (key, value_json, visibility, version, updated_by, updated_at)
+			VALUES ($1, $2::jsonb, 'public', 1, $3, now())
+			ON CONFLICT (key) DO NOTHING RETURNING version`, key, string(value), actor).Scan(&revision)
+	} else {
+		err = pool.QueryRow(ctx, `
+			UPDATE ops_bill.system_settings SET value_json = $2::jsonb, visibility = 'public',
+				version = version + 1, updated_by = $3, updated_at = now()
+			WHERE key = $1 AND version = $4 RETURNING version`, key, string(value), actor, *body.ExpectedRevision).Scan(&revision)
 	}
-	invoiceNotice := adminBStr(config["invoiceNotice"])
-	if invoiceNotice == "" {
-		invoiceNotice = "已支付订单可在个人中心“支付凭证”中预览并下载；企业开票请在个人中心提交开票信息。"
+	if errors.Is(err, pgx.ErrNoRows) {
+		return nil, nil, adminErr("SUBSCRIPTION_FAQ_REVISION_CONFLICT", "另一标签页已更新订阅说明，请先读取最新版本。", http.StatusConflict)
 	}
-	rawItems, _ := config["items"].([]any)
-	items := make([]map[string]any, 0, len(rawItems))
-	for idx, raw := range rawItems {
-		item, ok := raw.(map[string]any)
-		if !ok {
-			continue
-		}
-		question := strings.TrimSpace(adminBStr(item["question"]))
-		if question == "" {
-			continue
-		}
-		id := adminBStr(item["id"])
-		if id == "" {
-			id = fmt.Sprintf("faq-%d-%d", time.Now().UnixMilli(), idx)
-		}
-		order := idx + 1
-		if v, ok := item["order"].(float64); ok && v > 0 {
-			order = int(v)
-		}
-		enabled := true
-		if v, ok := item["enabled"].(bool); ok {
-			enabled = v
-		}
-		category := strings.TrimSpace(adminBStr(item["category"]))
-		if category == "" {
-			category = "general"
-		}
-		items = append(items, map[string]any{"id": id, "order": order, "enabled": enabled,
-			"category": category, "question": question, "answer": strings.TrimSpace(adminBStr(item["answer"]))})
+	if err != nil {
+		return nil, nil, adminBInternal(err, "暂时无法保存订阅说明")
 	}
-	sort.SliceStable(items, func(i, j int) bool {
-		a, _ := items[i]["order"].(int)
-		b, _ := items[j]["order"].(int)
-		return a < b
-	})
-	clean := map[string]any{"notice": notice, "supportEmail": supportEmail,
-		"invoiceNotice": invoiceNotice, "items": items}
-	before, _, _ := adminBReadSetting(r.Context(), pool, "subscription_faq_config")
-	if err := adminBWriteSetting(r.Context(), pool, "subscription_faq_config", clean, "public", adminBActorEmail(u)); err != nil {
-		return nil, nil, adminBInternal(err, "管理操作暂时不可用，请稍后重试")
-	}
-	adminBAudit(r.Context(), pool, u, "settings.subscription_faq_update", "system_setting", "subscription_faq_config", "medium", reqID,
-		map[string]any{"before": before, "after": clean})
-	return map[string]any{"success": true, "config": clean}, nil, nil
+	adminBAudit(ctx, pool, u, "settings.subscription_faq_update", "system_setting", key, "medium", reqID,
+		map[string]any{"locale": locale, "previousRevision": *body.ExpectedRevision, "revision": revision})
+	return map[string]any{"success": true, "locale": locale, "revision": revision, "config": config}, nil, nil
 }
 
 // ---------------------------------------------------------------------------
-// /api/admin/system/logs — app/api/admin/system/logs/route.js (PM2 log tail)
+// /api/admin/system/logs — process-local operational events.
 // ---------------------------------------------------------------------------
 
-func adminBSystemLogs(_ http.ResponseWriter, r *http.Request, _ *Dependencies, _ *middleware.SessionUser, reqID string) (any, map[string]any, *adminError) {
-	// app/api/admin/system/logs/route.js tails PM2 log files from disk; it has no
-	// database dependency, so a nil Pool must not turn this into DB_UNAVAILABLE.
+func adminBSystemLogs(w http.ResponseWriter, r *http.Request, d *Dependencies, _ *middleware.SessionUser, _ string) (any, map[string]any, *adminError) {
+	w.Header().Set("Cache-Control", "private, no-store")
 	logType := firstNonEmpty(r.URL.Query().Get("type"), "out")
 	if logType != "out" && logType != "error" {
 		return nil, nil, adminErr("VALIDATION_ERROR", "日志类型必须是 out 或 error", 422)
 	}
-	appName := os.Getenv("PM2_APP_NAME")
-	if appName == "" {
-		appName = "supdance-ai-studio"
-	}
-	logDir := os.Getenv("PM2_LOG_DIR")
-	if logDir == "" {
-		home, err := os.UserHomeDir()
-		if err != nil {
-			return nil, nil, adminErr("LOG_READ_FAILED", "读取服务端日志失败", 500)
-		}
-		logDir = filepath.Join(home, ".pm2", "logs")
-	}
-	name := appName + "-out.log"
-	if logType == "error" {
-		name = appName + "-error.log"
-	}
-	path := filepath.Join(logDir, name)
-	const maxLines = 100
-	const maxBytes = 256 * 1024
-	info, err := os.Stat(path)
-	if errors.Is(err, os.ErrNotExist) {
-		return map[string]any{"type": logType, "path": path, "lines": "", "missing": true, "maxLines": maxLines}, nil, nil
-	}
-	if err != nil {
-		return nil, nil, adminErr("LOG_READ_FAILED", "读取服务端日志失败", 500)
-	}
-	f, err := os.Open(path)
-	if err != nil {
-		return nil, nil, adminErr("LOG_READ_FAILED", "读取服务端日志失败", 500)
-	}
-	defer f.Close()
-	toRead := info.Size()
-	if toRead > maxBytes {
-		toRead = maxBytes
-	}
-	if toRead <= 0 {
-		return map[string]any{"type": logType, "path": path, "lines": "", "missing": false, "maxLines": maxLines}, nil, nil
-	}
-	buf := make([]byte, toRead)
-	if _, err := f.ReadAt(buf, info.Size()-toRead); err != nil && !errors.Is(err, io.EOF) {
-		return nil, nil, adminErr("LOG_READ_FAILED", "读取服务端日志失败", 500)
-	}
-	text := string(buf)
-	if info.Size() > toRead {
-		if idx := strings.IndexByte(text, '\n'); idx >= 0 {
-			text = text[idx+1:]
-		} else {
-			text = ""
-		}
-	}
-	lines := strings.Split(strings.ReplaceAll(text, "\r\n", "\n"), "\n")
-	if len(lines) > 0 && lines[len(lines)-1] == "" {
-		lines = lines[:len(lines)-1]
-	}
-	if len(lines) > maxLines {
-		lines = lines[len(lines)-maxLines:]
-	}
-	return map[string]any{"type": logType, "path": path, "lines": strings.Join(lines, "\n"),
-		"missing": false, "maxLines": maxLines}, nil, nil
+	return map[string]any{
+		"type": logType, "lines": d.RuntimeLog.Tail(logType == "error"),
+		"missing": d.RuntimeLog == nil, "maxLines": runtimelog.Limit,
+	}, nil, nil
 }
 
 // ---------------------------------------------------------------------------

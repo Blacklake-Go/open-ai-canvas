@@ -5,6 +5,26 @@ description: 影策后端核心持久化表与状态边界
 
 # 后端数据库
 
+## ONE 开发者密钥
+
+`one/deploy/migrations/095_developer_api_keys.sql` 新增 `auth_usr.developer_api_keys`。每个账号以 `user_id` 持有一条有效记录。记录包含密钥版本 UUID、SHA-256 摘要、末八位和创建时间。更换、撤销会对比当前版本，避免覆盖其他会话的新密钥。账户删除时级联移除记录，账户停用时认证即失效。
+
+从旧资料字段读取过的占位密钥需在开发者平台重新签发。迁移保留原资料，当前资料接口过滤旧密钥字段。部署先以 ONE 的 `server -migrate` 应用并校验迁移，再启用新程序。若需要回退至迁移前后端，应恢复与该版本匹配的数据库备份。
+
+## ONE 公告发布历史
+
+`one/deploy/migrations/094_banner_history_versions.sql` 为 `ops_bill.banner_history` 增加 `campaign_id` 和 `enabled`。原历史记录以旧 `id` 作为活动 ID，匹配当前公告的历史记录继承其启停状态。发布写入独立版本 ID，活动 ID 继续用于用户关闭记忆和公告事件。发布、恢复及删除在 PostgreSQL 事务中使用同一个事务级锁。
+
+部署时先用 ONE 的 `server -migrate` 应用迁移，再启用新程序。回退程序时保留新增列，旧版本写入的历史记录若缺少 `campaign_id`，读取时仍可用该行的 `id` 作为活动 ID。
+
+## ONE 反馈附件与审核
+
+`ops_bill.feedback_reports.attachments` 保存附件名称、已验证的媒体类型、字节数和对象存储定位字段。文件保存在 `feedback/<提交 ID>/` 前缀。接口返回登录后访问的附件路径，调用端从接口读取文件。审核沿用既有记录、钱包流水、站内通知和审计表。该变更使用现有字段。
+
+## ONE 工作流
+
+ONE 的独立 PostgreSQL 迁移 `one/deploy/migrations/092_one_workflows.sql` 新增 `ai_studio.one_workflows` 与 `ai_studio.one_workflow_runs`。定义按用户和版本保存，运行冻结创建时的定义版本、步骤和起始输入。迁移 `093_workflow_automatic_runs.sql` 新增自动执行报价表 `ai_studio.one_workflow_auto_quotes`，并在运行表记录确认后的每步积分上限、自动状态和 Worker 检查时间。步骤继续使用 ONE 现有生成任务、积分账本和私有素材表。接口、迁移和回退说明见仓库中的 `one/docs/workflows.md`。
+
 ## 微信登录（本站 Schema 103）
 
 版本 103 `wechat_oauth` 为 `o_auth_states` 增加 `purpose`（登录、绑定、重新核验用途）、`client_id`（发起时的网站应用 AppID）和 `profile_json`（首次微信注册的临时昵称、头像及身份标识）。旧状态的这些字段为空，不改变 Linux.do 与 OIDC 的处理。

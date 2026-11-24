@@ -18,6 +18,9 @@ var csrfExemptExact = map[string]bool{
 	// sources call no guardMutation, so the edge guard must exempt them explicitly.
 	"/api/webhooks/bilibili": true,
 	"/api/webhooks/douyin":   true,
+	// These handlers require a developer bearer key and never read session cookies.
+	"/api/developer/v1/generations/quote": true,
+	"/api/developer/v1/generations":       true,
 }
 
 func IsCSRFExemptPath(path string) bool {

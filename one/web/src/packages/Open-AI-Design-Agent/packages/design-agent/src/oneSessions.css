@@ -1,0 +1,25 @@
+.one-design-agent {
+  container: one-design-agent / inline-size;
+}
+
+.design-agent-chat-panel {
+  width: var(--design-agent-chat-width);
+}
+
+@container one-design-agent (max-width: 44rem) {
+  .one-design-agent .design-agent-session-panel {
+    position: absolute;
+    inset: 0 auto 0 0;
+    max-width: 100%;
+  }
+
+  .one-design-agent .design-agent-chat-panel[data-open='true'] {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+  }
+
+  .one-design-agent .design-agent-session-actions {
+    opacity: 1;
+  }
+}

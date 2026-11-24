@@ -134,14 +134,14 @@ func DefaultBrandConfig() BrandConfig {
 		TitleTemplate: "%s | SupDance AI Studio",
 		BrandSlogan:   "AI 创意工作室",
 		LogoType:      "image",
-		LogoUrl:       "/uploads/branding/logo-1789960604256-8d69f211113d.png",
+		LogoUrl:       "/branding/logo.png",
 		LogoIcon:      "layers",
 		LogoBgColor:   "#22d3ee",
 		LogoTextColor: "#000000",
 		LogoHref:      "/",
 		LogoTarget:    "_self",
 		ShowBrandName: false,
-		FaviconUrl:    "/uploads/branding/icon-1790631358168-d0b66b0fc4e1.svg",
+		FaviconUrl:    "/branding/favicon.svg",
 	}
 }
 
@@ -163,8 +163,7 @@ func (s *Service) GetBranding(ctx context.Context) BrandingPayload {
 			_ = json.Unmarshal(raw, &brand)
 		}
 		if raw, err := s.Repo.GetSetting(ctx, "site_navigation"); err == nil && len(raw) > 0 {
-			var parsed []NavItem
-			if err := json.Unmarshal(raw, &parsed); err == nil && len(parsed) > 0 {
+			if parsed, err := DecodeNavigation(raw, false); err == nil {
 				nav = parsed
 			}
 		}
@@ -227,8 +226,11 @@ func (s *Service) GetContentConfig(ctx context.Context) ContentConfigPayload {
 	}
 }
 
-func (s *Service) GetSubscriptionFAQ(ctx context.Context) SubscriptionFAQPayload {
-	out := SubscriptionFAQPayload{
+func DefaultSubscriptionFAQ(locale string) SubscriptionFAQPayload {
+	if locale != "zh-CN" {
+		return SubscriptionFAQPayload{SupportEmail: "support@Supdance.com", Items: []FAQItem{}}
+	}
+	return SubscriptionFAQPayload{
 		Notice:        "所有会员套餐均支持随时升级或取消，算力随周期自动充值发放，未生成成功系统自动秒级返还。",
 		SupportEmail:  "support@Supdance.com",
 		InvoiceNotice: "已支付订单可在个人中心“支付凭证”中预览并下载；企业开票请在个人中心提交开票信息。",
@@ -251,19 +253,6 @@ func (s *Service) GetSubscriptionFAQ(ctx context.Context) SubscriptionFAQPayload
 			},
 		},
 	}
-	if s.Repo != nil {
-		if raw, err := s.Repo.GetSetting(ctx, "subscription_faq_config"); err == nil && len(raw) > 0 {
-			_ = json.Unmarshal(raw, &out)
-		}
-	}
-	filtered := make([]FAQItem, 0, len(out.Items))
-	for _, it := range out.Items {
-		if it.Enabled {
-			filtered = append(filtered, it)
-		}
-	}
-	out.Items = filtered
-	return out
 }
 
 var localeAliases = map[string]string{

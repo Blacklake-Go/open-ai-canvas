@@ -41,6 +41,7 @@ const STATIC_SORT_ORDERS = Object.freeze({
 export default function FrontendModelPicker({
   studioType = "image", // "image" | "video"
   selectedModel,
+  eligibleModelIds,
   onSelect,
   onClose,
   copy,
@@ -113,22 +114,7 @@ export default function FrontendModelPicker({
         variantsByMode: { lipsync: { model: m, mode: "lipsync" } },
         defaultVariant: { model: m, mode: "lipsync" },
       }));
-    } else if (studioType === "agent") {
-      const agentCatalog = [
-        { id: 'deepseek-chat', name: 'DeepSeek-V3 通用创作大模型', provider: 'deepseek' },
-        { id: 'deepseek-reasoner', name: 'DeepSeek-R1 深度推理创作大模型', provider: 'deepseek' },
-        { id: 'gpt-4o', name: 'GPT-4o 创意全能助手', provider: 'openai' },
-        { id: 'claude-3-7-sonnet', name: 'Claude 3.7 Sonnet 思考模型', provider: 'anthropic' },
-      ];
-      catalogEntries = agentCatalog.map((m) => ({
-        id: m.id,
-        name: m.name,
-        family: { id: m.id, name: m.name, provider: m.provider },
-        variantIds: new Set([m.id]),
-        variantsByMode: { agent: { model: m, mode: 'agent' } },
-        defaultVariant: { model: m, mode: 'agent' },
-      }));
-    } else {
+    } else if (studioType !== "agent") {
       catalogEntries = filterActiveModelEntries(imageModelPickerEntries);
       if (!catalogEntries.length && !directoryLoaded) {
         catalogEntries = imageModelPickerEntries;
@@ -209,7 +195,9 @@ export default function FrontendModelPicker({
       }
     }
 
-    const rawList = [...catalogEntries, ...dynamicServerEntries];
+    const rawList = [...catalogEntries, ...dynamicServerEntries].filter((entry) => (
+      !eligibleModelIds || eligibleModelIds.includes(entry.id)
+    ));
 
     // Sort: Pinned models first (📌) -> Sort Order -> Catalog order
     return [...rawList].sort((a, b) => {
@@ -225,7 +213,7 @@ export default function FrontendModelPicker({
 
       return 0;
     });
-  }, [studioType, directoryLoaded, directoryRevision]);
+  }, [studioType, directoryLoaded, directoryRevision, eligibleModelIds]);
 
   // Current selected model display name for header
   const currentSelectedName = useMemo(() => {

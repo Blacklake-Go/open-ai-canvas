@@ -26,6 +26,7 @@ import (
 	"one/backend/internal/notify"
 	"one/backend/internal/pkg/envelope"
 	"one/backend/internal/platform/coordination"
+	"one/backend/internal/platform/runtimelog"
 	"one/backend/internal/queue"
 	"one/backend/internal/storage"
 )
@@ -55,6 +56,7 @@ type Dependencies struct {
 	Notify           *notify.Service
 	Events           *queue.EventHub
 	DBCheck          HealthChecker
+	RuntimeLog       *runtimelog.Buffer
 	AgentModelCaller func(ctx context.Context, payload map[string]json.RawMessage) (any, error)
 }
 
@@ -150,13 +152,23 @@ func (d *Dependencies) handleSiteContentConfig(w http.ResponseWriter, r *http.Re
 }
 
 func (d *Dependencies) handleSiteSubscriptionFAQ(w http.ResponseWriter, r *http.Request) {
+	locale, key, ok := site.SubscriptionFAQLocale(r.URL.Query().Get("locale"))
+	if !ok {
+		envelope.DomainError(w, http.StatusBadRequest, "不支持的订阅说明语言", "UNSUPPORTED_LOCALE")
+		return
+	}
 	svc := d.Site
 	if svc == nil {
 		svc = &site.Service{}
 	}
+	config, err := svc.GetSubscriptionFAQ(r.Context(), locale, key)
+	if err != nil {
+		envelope.DomainError(w, http.StatusServiceUnavailable, "订阅说明暂时无法读取", "SUBSCRIPTION_FAQ_UNAVAILABLE")
+		return
+	}
 	w.Header().Del("Pragma")
-	w.Header().Set("Cache-Control", "public, max-age=15, stale-while-revalidate=60")
-	envelope.DomainJSON(w, http.StatusOK, svc.GetSubscriptionFAQ(r.Context()))
+	w.Header().Set("Cache-Control", "public, no-cache")
+	envelope.DomainJSON(w, http.StatusOK, config)
 }
 
 func (d *Dependencies) handleGetI18n(w http.ResponseWriter, r *http.Request) {

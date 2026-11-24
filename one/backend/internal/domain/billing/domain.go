@@ -74,6 +74,10 @@ type PlanItem struct {
 	StorageGb         int      `json:"storageGb"`
 	Badge             string   `json:"badge,omitempty"`
 	ExclusiveFeatures []string `json:"exclusiveFeatures"`
+	Features          []string `json:"features"`
+	Enabled           bool     `json:"enabled"`
+	DisplayOrder      int      `json:"displayOrder"`
+	Configured        bool     `json:"configured"`
 }
 
 type CreditPackItem struct {
@@ -108,6 +112,7 @@ type ExclusivePackItem struct {
 type SubscriptionInfo struct {
 	ID                 string     `json:"id,omitempty"`
 	PlanID             string     `json:"planId"`
+	PlanName           string     `json:"planName,omitempty"`
 	Status             string     `json:"status"`
 	Provider           string     `json:"provider,omitempty"`
 	BillingCycle       string     `json:"billingCycle,omitempty"`
@@ -115,8 +120,11 @@ type SubscriptionInfo struct {
 	CurrentPeriodEnd   *time.Time `json:"currentPeriodEnd,omitempty"`
 	IsSubscribed       bool       `json:"isSubscribed"`
 	MaxConcurrentTasks int        `json:"maxConcurrentTasks"`
+	ModelConcurrency   int        `json:"modelConcurrency"`
+	PortraitCapacity   int        `json:"portraitCapacity"`
 	PriorityQueue      bool       `json:"priorityQueue"`
 	ExclusiveFeatures  []string   `json:"exclusiveFeatures"`
+	StorageGb          int        `json:"storageGb"`
 }
 
 type UsageSummary struct {
@@ -163,6 +171,7 @@ type WebhookFulfillmentInput struct {
 	OrderID                string
 	ProviderOrderID        string
 	ProviderPaymentID      string
+	OriginalPaymentID      string
 	ProviderCustomerID     string
 	ProviderSubscriptionID string
 	PaidAmountMinor        int64
@@ -261,7 +270,7 @@ func CommercialPlans() []PlanItem {
 			ID: "pro", CodeName: "APEX", Name: "Pro (企业旗舰版)",
 			MonthlyCny: 1760, MonthlyUsd: 245, QuarterlyCny: 4752, QuarterlyUsd: 660, YearlyCny: 17600, YearlyUsd: 2440,
 			QuotaBase: 27000, MonthlyCredits: 27000, Concurrency: 16, AsyncConcurrency: 16, PortraitCapacity: 50, StorageGb: 500,
-			ExclusiveFeatures: []string{"no_watermark", "vip_speed_queue", "export_4k", "canvas_premium_tools", "commercial_license", "priority_support"},
+			ExclusiveFeatures: []string{"no_watermark", "vip_speed_queue", "export_4k", "canvas_premium_tools", "commercial_license", "dedicated_support"},
 		},
 	}
 }
@@ -348,16 +357,26 @@ func FindExclusivePackByID(id string) *ExclusivePackItem {
 	return nil
 }
 
-func (s *Service) ListPlans(ctx context.Context) map[string]any {
+func (s *Service) ListPlans(ctx context.Context) (map[string]any, error) {
+	catalog, err := s.planCatalog(ctx)
+	if err != nil {
+		return nil, err
+	}
+	plans := []PlanItem{}
+	for _, plan := range catalog {
+		if plan.Enabled {
+			plans = append(plans, plan.PlanItem)
+		}
+	}
 	return map[string]any{
-		"plans": CommercialPlans(),
+		"plans": plans,
 		"channels": map[string]any{
 			"stripe": map[string]any{"configured": s.Config.StripeSecretKey != ""},
 			"alipay": map[string]any{"configured": s.Config.AlipayAppID != ""},
 			"wechat": map[string]any{"configured": s.Config.WechatMchID != ""},
 			"paypal": map[string]any{"configured": s.Config.PayPalClientID != ""},
 		},
-	}
+	}, nil
 }
 
 func (s *Service) ListCreditPacks(ctx context.Context, userID string) map[string]any {
@@ -417,14 +436,7 @@ func (s *Service) GetEntitlements(ctx context.Context, userID string) (*Subscrip
 			ExclusiveFeatures:  []string{},
 		}, nil
 	}
-	if plan := FindPlanByID(sub.PlanID); plan != nil {
-		sub.MaxConcurrentTasks = plan.AsyncConcurrency
-		sub.ExclusiveFeatures = plan.ExclusiveFeatures
-		sub.PriorityQueue = plan.ID != "free" && plan.ID != "starter"
-	} else if sub.MaxConcurrentTasks == 0 {
-		sub.MaxConcurrentTasks = 2
-	}
-	return sub, nil
+	return s.applyPlanEntitlements(ctx, sub)
 }
 
 func (s *Service) GetEntitlementsMap(ctx context.Context, userID string) (map[string]any, error) {
@@ -434,9 +446,13 @@ func (s *Service) GetEntitlementsMap(ctx context.Context, userID string) (map[st
 	}
 	return map[string]any{
 		"planId":             ent.PlanID,
+		"planName":           ent.PlanName,
 		"isSubscribed":       ent.IsSubscribed,
 		"status":             ent.Status,
 		"maxConcurrentTasks": ent.MaxConcurrentTasks,
+		"modelConcurrency":   ent.ModelConcurrency,
+		"portraitCapacity":   ent.PortraitCapacity,
+		"storageGb":          ent.StorageGb,
 		"priorityQueue":      ent.PriorityQueue,
 		"exclusiveFeatures":  ent.ExclusiveFeatures,
 		"currentPeriodEnd":   ent.CurrentPeriodEnd,
@@ -447,7 +463,11 @@ func (s *Service) UpdateSubscriptionCancel(ctx context.Context, userID string, c
 	if s.Repo == nil {
 		return nil, ErrNotImplemented
 	}
-	return s.Repo.UpdateSubscriptionCancelAtPeriodEnd(ctx, userID, cancel)
+	sub, err := s.Repo.UpdateSubscriptionCancelAtPeriodEnd(ctx, userID, cancel)
+	if err != nil {
+		return nil, err
+	}
+	return s.applyPlanEntitlements(ctx, sub)
 }
 
 func (s *Service) GetUsage(ctx context.Context, userID string) (*UsageSummary, error) {
@@ -514,7 +534,8 @@ func (s *Service) CreateCheckout(ctx context.Context, in CheckoutInput) (*Checko
 		}
 	}
 
-	var priceCny float64
+	var priceCny, subscriptionPriceUsd float64
+	var planName string
 	var creditAmount int64
 	cycle := strings.ToLower(strings.TrimSpace(in.BillingCycle))
 	switch productType {
@@ -524,6 +545,7 @@ func (s *Service) CreateCheckout(ctx context.Context, in CheckoutInput) (*Checko
 			return nil, svcErr(http.StatusBadRequest, "INVALID_PACK", "请选择有效的通用算力包")
 		}
 		priceCny = pack.PriceCny
+		planName = pack.Name
 		creditAmount = pack.Credits
 		cycle = "one_time"
 	case "exclusive_pack":
@@ -538,52 +560,54 @@ func (s *Service) CreateCheckout(ctx context.Context, in CheckoutInput) (*Checko
 			}
 		}
 		priceCny = pack.PriceCny
+		planName = pack.Name
 		creditAmount = pack.StandardTotalCredits
 		if isFirst {
 			creditAmount = pack.FirstTotalCredits
 		}
 		cycle = "one_time"
-	default:
-		plan := FindPlanByID(planID)
-		if plan == nil {
+	case "subscription":
+		plan, err := s.findCatalogPlan(ctx, planID)
+		if err != nil {
+			return nil, err
+		}
+		if plan == nil || !plan.Enabled {
 			return nil, svcErr(http.StatusBadRequest, "INVALID_PLAN", "请选择付费方案")
 		}
+		planName = plan.Name
 		if cycle != "yearly" && cycle != "quarterly" {
 			cycle = "monthly"
 		}
 		switch cycle {
 		case "yearly":
-			priceCny = plan.YearlyCny
+			priceCny, subscriptionPriceUsd = plan.YearlyCny, plan.YearlyUsd
 			creditAmount = plan.QuotaBase * 12
 		case "quarterly":
-			priceCny = plan.QuarterlyCny
+			priceCny, subscriptionPriceUsd = plan.QuarterlyCny, plan.QuarterlyUsd
 			creditAmount = plan.QuotaBase * 3
 		default:
-			priceCny = plan.MonthlyCny
+			priceCny, subscriptionPriceUsd = plan.MonthlyCny, plan.MonthlyUsd
 			creditAmount = plan.QuotaBase
 		}
+	default:
+		return nil, svcErr(http.StatusBadRequest, "INVALID_PRODUCT_TYPE", "不支持的商品类型")
 	}
 
 	currency := "CNY"
 	amountMinor := int64(priceCny * 100)
 	if prov == "stripe" || prov == "paypal" {
 		currency = "USD"
-		// Approx USD minor cents for international checkout parity when plan USD is configured
-		if plan := FindPlanByID(planID); plan != nil && productType == "subscription" {
-			switch cycle {
-			case "yearly":
-				amountMinor = int64(plan.YearlyUsd * 100)
-			case "quarterly":
-				amountMinor = int64(plan.QuarterlyUsd * 100)
-			default:
-				amountMinor = int64(plan.MonthlyUsd * 100)
-			}
+		if productType == "subscription" {
+			amountMinor = int64(subscriptionPriceUsd * 100)
 		} else {
 			amountMinor = int64((priceCny / 7.23) * 100)
 			if amountMinor < 100 {
 				amountMinor = 100
 			}
 		}
+	}
+	if amountMinor <= 0 {
+		return nil, svcErr(http.StatusUnprocessableEntity, "PLAN_PRICE_UNAVAILABLE", "此支付渠道或周期尚未设置有效价格")
 	}
 
 	orderID, _ := ids.NewPrefixedID("order")
@@ -600,6 +624,7 @@ func (s *Service) CreateCheckout(ctx context.Context, in CheckoutInput) (*Checko
 		Metadata: map[string]any{
 			"productType":  productType,
 			"productId":    planID,
+			"productName":  planName,
 			"creditAmount": creditAmount,
 			"billingCycle": cycle,
 		},
@@ -614,22 +639,18 @@ func (s *Service) CreateCheckout(ctx context.Context, in CheckoutInput) (*Checko
 	}
 	var qrCode string
 	if order.CheckoutURL == "" && s.Gateway != nil {
-		origin := strings.TrimRight(firstStr(in.Origin, s.Config.PublicAppURL, "https://www.supdance.com"), "/")
-		planName := planID
-		if p := FindPlanByID(planID); p != nil {
-			planName = p.Name
-		} else if cp := FindCreditPackByID(planID); cp != nil {
-			planName = cp.Name
-		} else if ep := FindExclusivePackByID(planID); ep != nil {
-			planName = ep.Name
+		origin := strings.TrimRight(firstStr(s.Config.PublicAppURL, in.Origin, "https://www.supdance.com"), "/")
+		returnURL := origin + "/billing/success?orderId=" + url.QueryEscape(order.ID)
+		if storedName, ok := order.Metadata["productName"].(string); ok && storedName != "" {
+			planName = storedName
 		}
 		gwResp, err := s.Gateway.CreateCheckout(ctx, GatewayCheckoutRequest{
 			Order:        order,
 			UserEmail:    in.UserEmail,
 			PlanName:     planName,
-			CreditAmount: creditAmount,
-			SuccessURL:   origin + "/billing/success?orderId=" + url.QueryEscape(order.ID),
-			CancelURL:    origin + "/pricing?canceled=1&orderId=" + url.QueryEscape(order.ID),
+			CreditAmount: extractCreditAmount(&order),
+			SuccessURL:   returnURL,
+			CancelURL:    returnURL + "&canceled=1",
 		})
 		if err != nil {
 			return nil, err

@@ -77,7 +77,7 @@ func ResolveCredentials(ctx context.Context, pool *pgxpool.Pool, cfg config.Conf
 	if norm == "muapi" {
 		selectedEnv = "production"
 		var rawSetting []byte
-		if err := pool.QueryRow(ctx, `SELECT value FROM ops_bill.system_settings WHERE key = 'provider_active_env'`).Scan(&rawSetting); err == nil {
+		if err := pool.QueryRow(ctx, `SELECT value_json FROM ops_bill.system_settings WHERE key = 'provider_active_env'`).Scan(&rawSetting); err == nil {
 			var m map[string]any
 			if json.Unmarshal(rawSetting, &m) == nil {
 				if envVal, _ := m["muapi"].(string); strings.EqualFold(strings.TrimSpace(envVal), "sandbox") {
@@ -159,11 +159,14 @@ func ResolveAndBuild(ctx context.Context, pool *pgxpool.Pool, cfg config.Config,
 	if pool != nil && baseURL == "" {
 		var dbBase string
 		var cfgRaw []byte
-		if err := pool.QueryRow(ctx, `SELECT COALESCE(base_url,''), COALESCE(config,'{}'::jsonb) FROM ai_studio.ai_providers WHERE id = $1`, providerID).Scan(&dbBase, &cfgRaw); err == nil {
-			baseURL = strings.TrimSpace(dbBase)
-			if len(cfgRaw) > 0 {
-				_ = json.Unmarshal(cfgRaw, &pCfg)
-			}
+		if err := pool.QueryRow(ctx, `SELECT COALESCE(base_url,''), COALESCE(metadata,'{}'::jsonb) FROM ai_studio.ai_providers WHERE id = $1`, providerID).Scan(&dbBase, &cfgRaw); err != nil {
+			cred.Value = ""
+			cred.Status = "error"
+			return NewAdapter(providerID, "", "", nil, cfg.AllowedPrivateHosts), cred
+		}
+		baseURL = strings.TrimSpace(dbBase)
+		if len(cfgRaw) > 0 {
+			_ = json.Unmarshal(cfgRaw, &pCfg)
 		}
 	}
 	if baseURL == "" && strings.EqualFold(providerID, "muapi") {

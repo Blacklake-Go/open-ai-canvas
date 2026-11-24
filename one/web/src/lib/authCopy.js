@@ -29,6 +29,12 @@ export function normalizeAuthLocale(locale) {
   return 'en';
 }
 
+export function getAuthReturnPath(value, fallback) {
+  return typeof value === 'string' && /^\/(?!\/)/.test(value) && !/[\\\u0000-\u001f\u007f]/.test(value)
+    ? value
+    : fallback;
+}
+
 export function getAuthRoutes(locale = 'zh-CN', currentPath = '') {
   const normalized = normalizeAuthLocale(locale);
   const config = AUTH_LOCALE_CONFIGS[normalized] || AUTH_LOCALE_CONFIGS.en;

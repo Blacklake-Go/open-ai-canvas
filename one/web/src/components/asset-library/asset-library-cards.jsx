@@ -49,13 +49,15 @@ export function AssetCover({ asset, selected = false, onSelect, onOpen, menuItem
   const copy = useAssetLibraryCopy();
   const KindIcon = ASSET_KIND_ICONS[asset.kind] || FileText;
   const clock = asset.kind === 'video' || asset.kind === 'audio' ? formatAssetClock(asset.data?.durationMs) : null;
-  const showPlay = assetMediaIsVideo(asset);
+  const showPlay = asset.status !== 'trash' && assetMediaIsVideo(asset);
   const isLight = asset.kind === 'audio' || asset.kind === 'text' || asset.kind === 'model';
 
   return (
     <div className={`library-card-media assets-cover${isLight ? ' is-light' : ''}`}>
       <button type="button" className="assets-cover-link" onClick={onOpen} aria-label={fillCopy(copy.viewAssetAria, { title: asset.title })}>
-        {asset.kind === 'audio' ? (
+        {asset.status === 'trash' ? (
+          <div className="assets-cover-fallback"><KindIcon /></div>
+        ) : asset.kind === 'audio' ? (
           <AudioWaveCover asset={asset} />
         ) : asset.kind === 'entity' ? (
           asset.category === 'environment' || asset.category === 'prop' ? (
@@ -168,21 +170,11 @@ export function audioWaveBars(seed) {
   return bars;
 }
 
-export function formatExpirationHint(updatedAt, retentionDays, copy) {
-  if (!retentionDays || retentionDays <= 0) return copy.permanentRetention;
-  const updatedTime = new Date(updatedAt).getTime();
-  if (!Number.isFinite(updatedTime)) return fillCopy(copy.retentionDays, { days: retentionDays });
-  const remainingDays = Math.ceil((updatedTime + retentionDays * 24 * 60 * 60 * 1000 - Date.now()) / (24 * 60 * 60 * 1000));
-  if (remainingDays <= 0) return copy.expiringSoon;
-  return fillCopy(copy.expiringIn, { days: remainingDays });
-}
-
 export default function AssetCard({
   asset,
   selected = false,
   selectionMode = false,
   isTrash = false,
-  retentionDays = 30,
   folderOptions = [],
   onSelect,
   onOpen,
@@ -216,7 +208,7 @@ export default function AssetCard({
           },
         ]
       : [
-        ...(asset.kind === 'text' || asset.kind === 'entity' ? [{ key: 'edit', icon: <PencilLine />, label: copy.edit, onClick: onEdit }] : []),
+        { key: 'edit', icon: <PencilLine />, label: copy.edit, onClick: onEdit },
         ...(asset.kind === 'text' ? [{ key: 'copy', icon: <Copy />, label: copy.copyText, onClick: () => onCopy?.(asset) }] : []),
         ...(asset.kind === 'image' || asset.kind === 'video' || asset.kind === 'audio' || asset.kind === 'model'
           ? [{ key: 'download', icon: <Download />, label: copy.download, onClick: () => onDownload?.(asset) }]
@@ -254,7 +246,7 @@ export default function AssetCard({
         {isTrash ? (
           <div className="asset-collection-expiry">
             <AlertTriangle />
-            <span>{formatExpirationHint(asset.trashedAt || asset.updatedAt, retentionDays, copy)}</span>
+            <span>{copy.inTrash}</span>
           </div>
         ) : (
           <div className="asset-collection-summary" title={assetSummary(asset, copy)}>{assetSummary(asset, copy)}</div>

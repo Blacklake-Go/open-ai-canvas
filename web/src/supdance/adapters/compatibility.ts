@@ -171,6 +171,15 @@ export const SUPDANCE_UPSTREAM_PATCH_REGISTRY: readonly UpstreamPatchRecord[] = 
         upgradeRisk: "HIGH",
     },
     {
+        id: "supdance-one-canvas-import",
+        upstreamBaseline: "v1.8.4.1@9b1523b9",
+        feature: "将 ONE 已保存的作品导入 Canvas",
+        coupledUpstreamFiles: ["web/src/router.tsx"],
+        files: ["web/src/supdance/federation/canvas-media-import.ts", "web/src/supdance/federation/canvas-media-import-page.tsx", "web/src/supdance/plugins/i18n/locales/federation.ts"],
+        reason: "接收页通过双方来源与窗口校验建立短时浏览器通道，用户确认接收账号后复用宿主私有资源上传与画布同步。",
+        upgradeRisk: "MEDIUM",
+    },
+    {
         id: "supdance-delivery-integrity",
         upstreamBaseline: "v1.8.4.1@ac044960",
         feature: "音乐共享宿主钱包并移除退役视觉插件",

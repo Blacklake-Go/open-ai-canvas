@@ -1,554 +1,298 @@
 'use client';
 
-import React, { useState } from 'react';
+import { cloneElement, useId, useRef, useState } from 'react';
+import { useTranslations } from 'next-intl';
+import { ArrowDown, ArrowUp, Edit3, Plus, Save, Trash2 } from 'lucide-react';
+import { Card, PageHeader } from '@/components/admin/AdminUi';
+import { Button, IconButton } from '@/components/ui/button';
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogTitle } from '@/components/ui/dialog';
 import {
-  HelpCircle,
-  Plus,
-  Save,
-  RotateCcw,
-  Trash2,
-  Edit3,
-  CheckCircle2,
-  AlertCircle,
-  Eye,
-  EyeOff,
-  ArrowUp,
-  ArrowDown,
-  Mail,
-  FileText,
-  Search,
-  X,
-  Sparkles,
-} from 'lucide-react';
-import { PageHeader } from '@/components/admin/AdminUi';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
+  AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
+  AlertDialogDescription, AlertDialogFooter, AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
+import { getSubscriptionStrings } from '@/components/subscription/subscriptionI18n';
+import { notifySubscriptionFAQPublished } from '@/lib/hooks/useSubscriptionFAQ';
+import { getLocaleConfig, SUPPORTED_LOCALES } from '@/lib/locales';
+import { useAdminData } from '@/pages/helpers/pageHelpers';
+import { oneApi } from '@/services/api/http';
 
-const CATEGORIES = [
-  { value: 'all', label: '全部类别' },
-  { value: 'quota', label: '算力与额度' },
-  { value: 'subscription', label: '套餐与升降档' },
-  { value: 'payment', label: '支付与开票' },
-  { value: 'refund', label: '退款与售后' },
-  { value: 'copyright', label: '版权与商用' },
-  { value: 'legal', label: '协议与免责' },
-  { value: 'general', label: '综合问答' },
-];
+const categories = ['quota', 'subscription', 'payment', 'refund', 'copyright', 'legal', 'general'];
+const fieldStyle = 'control-focus min-h-control-lg w-full rounded-lg border border-line bg-surface px-3 py-2 text-body-sm text-ink';
+const ordered = items => items.map((item, index) => ({ ...item, order: index + 1 }));
 
-export default function SubscriptionFaqManagerClient({ initialConfig, defaultConfig }) {
-  const [config, setConfig] = useState(initialConfig || defaultConfig);
-  const [searchQuery, setSearchQuery] = useState('');
-  const [selectedCategory, setSelectedCategory] = useState('all');
-  const [isSaving, setIsSaving] = useState(false);
-  const [message, setMessage] = useState(null);
+function Field({ label, children }) {
+  const id = useId();
+  return <div className="grid min-w-0 gap-1.5 text-body-sm text-ink">
+    <label htmlFor={id}>{label}</label>
+    {cloneElement(children, { id, className: fieldStyle })}
+  </div>;
+}
 
-  // 编辑弹窗状态
-  const [editingItem, setEditingItem] = useState(null);
-  const [isModalOpen, setIsModalOpen] = useState(false);
+function ConfirmDraftAction({ confirmation, close, opener }) {
+  const t = useTranslations('adminSubscriptionFaq');
+  return <AlertDialog open={Boolean(confirmation)} onOpenChange={open => { if (!open) close(); }}>
+    <AlertDialogContent onCloseAutoFocus={event => {
+      event.preventDefault();
+      opener.current?.focus();
+    }}>
+      <AlertDialogTitle>{confirmation?.title}</AlertDialogTitle>
+      <AlertDialogDescription>{confirmation?.description}</AlertDialogDescription>
+      <AlertDialogFooter>
+        <AlertDialogCancel size="lg">{t('cancel')}</AlertDialogCancel>
+        <AlertDialogAction size="lg" variant={confirmation?.danger ? 'danger' : 'primary'} onClick={confirmation?.action}>
+          {t('confirm')}
+        </AlertDialogAction>
+      </AlertDialogFooter>
+    </AlertDialogContent>
+  </AlertDialog>;
+}
 
-  // 基础设置变更
-  const handleMetaChange = (field, value) => {
-    setConfig((prev) => ({ ...prev, [field]: value }));
+function LocaleEditor({ locale, draft, updateDraft, canWrite, onSaving }) {
+  const t = useTranslations('adminSubscriptionFaq');
+  const path = `/api/admin/subscription-faq?locale=${encodeURIComponent(locale)}`;
+  const remote = useAdminData(path);
+  const [published, setPublished] = useState(null);
+  const [filter, setFilter] = useState('all');
+  const [search, setSearch] = useState('');
+  const [editing, setEditing] = useState(null);
+  const [confirmation, setConfirmation] = useState(null);
+  const [feedback, setFeedback] = useState(null);
+  const [saving, setSaving] = useState(false);
+  const inFlight = useRef(false);
+  const opener = useRef(null);
+  const addButton = useRef(null);
+  const [conflict, setConflict] = useState(false);
+
+  if (remote.loading) return <p role="status">{t('loading')}</p>;
+  if (remote.error || !remote.data) return <Card className="space-y-3">
+    <p role="alert" className="text-danger">{remote.error || t('loadFailed')}</p>
+    <Button size="lg" variant="outline" onClick={remote.reload}>{t('retry')}</Button>
+  </Card>;
+
+  const defaults = locale === 'zh-CN' ? remote.data.defaults : {
+    ...remote.data.defaults,
+    items: getSubscriptionStrings(locale).faqs.map(item => ({
+      ...item, enabled: true, category: 'general',
+    })),
   };
+  const baseline = published || remote.data;
+  const config = draft?.config || (baseline.revision === 0 ? defaults : baseline.config);
+  const revision = draft?.revision ?? baseline.revision;
+  const term = search.trim().toLowerCase();
+  const visible = config.items.filter(item => (filter === 'all' || item.category === filter)
+    && (!term || item.question.toLowerCase().includes(term) || item.answer.toLowerCase().includes(term)));
+  const labelCategory = category => categories.includes(category) ? t(category) : category;
 
-  // 切换项启用状态
-  const toggleItemEnabled = (id) => {
-    setConfig((prev) => ({
-      ...prev,
-      items: prev.items.map((it) => (it.id === id ? { ...it, enabled: !it.enabled } : it)),
-    }));
-  };
-
-  // 删除某一项
-  const handleDeleteItem = (id) => {
-    if (!window.confirm('确定要删除该问答项吗？删除后需点击上方“保存全部更改”才会正式持久化生效。')) {
-      return;
-    }
-    setConfig((prev) => ({
-      ...prev,
-      items: prev.items.filter((it) => it.id !== id),
-    }));
-  };
-
-  // 上下移动排序
-  const handleMoveOrder = (index, direction) => {
-    const targetIndex = direction === 'up' ? index - 1 : index + 1;
-    if (targetIndex < 0 || targetIndex >= config.items.length) return;
-
-    const newItems = [...config.items];
-    const temp = newItems[index];
-    newItems[index] = newItems[targetIndex];
-    newItems[targetIndex] = temp;
-
-    // 重新校准排序数值
-    const reordered = newItems.map((item, idx) => ({ ...item, order: idx + 1 }));
-    setConfig((prev) => ({ ...prev, items: reordered }));
-  };
-
-  // 打开编辑/新增
-  const handleOpenEdit = (item = null) => {
-    if (item) {
-      setEditingItem({ ...item });
-    } else {
-      setEditingItem({
-        id: `faq-${Date.now()}`,
-        order: config.items.length + 1,
-        enabled: true,
-        category: 'general',
-        question: '',
-        answer: '',
-      });
-    }
-    setIsModalOpen(true);
-  };
-
-  // 保存单个项编辑
-  const handleSaveItemModal = (e) => {
-    e.preventDefault();
-    if (!editingItem.question.trim()) {
-      alert('请填写常见问题标题');
-      return;
-    }
-
-    setConfig((prev) => {
-      const exists = prev.items.some((it) => it.id === editingItem.id);
-      let updatedItems;
-      if (exists) {
-        updatedItems = prev.items.map((it) => (it.id === editingItem.id ? editingItem : it));
-      } else {
-        updatedItems = [...prev.items, editingItem];
-      }
-      return {
-        ...prev,
-        items: updatedItems.sort((a, b) => (Number(a.order) || 0) - (Number(b.order) || 0)),
-      };
+  function change(next) {
+    updateDraft({ config: next, revision });
+    if (!conflict) setFeedback(null);
+  }
+  function changeItems(items) {
+    change({ ...config, items: ordered(items) });
+  }
+  function move(id, peerId) {
+    const items = [...config.items];
+    const first = items.findIndex(item => item.id === id);
+    const second = items.findIndex(item => item.id === peerId);
+    if (first < 0 || second < 0) return;
+    [items[first], items[second]] = [items[second], items[first]];
+    changeItems(items);
+  }
+  function startEditing(event, item) {
+    opener.current = event.currentTarget;
+    setEditing(item || {
+      id: `faq-${crypto.randomUUID()}`, order: config.items.length + 1,
+      enabled: true, category: filter === 'all' ? 'general' : filter, question: '', answer: '',
     });
-
-    setIsModalOpen(false);
-    setEditingItem(null);
-  };
-
-  // 重置为官方预设
-  const handleResetToDefaults = () => {
-    if (!window.confirm('确认要一键恢复为官方完整 10 大标准预设问答吗？当前的自定义修改将被覆盖。')) {
+  }
+  function applyItem(event) {
+    event.preventDefault();
+    const question = editing.question.trim();
+    const answer = editing.answer.trim();
+    if (!question || !answer) {
+      const field = event.currentTarget.elements.namedItem(question ? 'faqAnswer' : 'faqQuestion');
+      field.setCustomValidity(t('required'));
+      field.reportValidity();
       return;
     }
-    setConfig(JSON.parse(JSON.stringify(defaultConfig)));
-    setMessage({ type: 'success', text: '已恢复官方预设，请点击“保存更改”提交生效。' });
-  };
-
-  // 保存到服务端
-  const handleSaveAll = async () => {
+    const items = config.items.filter(item => item.id !== editing.id);
+    items.splice(editing.order - 1, 0, { ...editing, question, answer });
+    changeItems(items);
+    setEditing(null);
+  }
+  function ask(event, request) {
+    opener.current = event.currentTarget;
+    setConfirmation(request);
+  }
+  async function save(event) {
+    event.preventDefault();
+    if (!canWrite || inFlight.current || conflict || !draft) return;
+    inFlight.current = true;
+    setSaving(true);
+    onSaving(true);
+    setFeedback(null);
     try {
-      setIsSaving(true);
-      setMessage(null);
-
-      const res = await fetch('/api/admin/subscription-faq', {
+      const saved = await oneApi.adminRequest(path, {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ config }),
+        headers: { 'Idempotency-Key': crypto.randomUUID() },
+        body: { config, expectedRevision: revision },
       });
-
-      const payload = await res.json();
-      const nextConfig = payload?.data?.config || payload?.config;
-      if (res.ok) {
-        setMessage({ type: 'success', text: '订阅说明与 QA 问答配置已成功保存并实时生效！' });
-        if (nextConfig) setConfig(nextConfig);
-      } else {
-        setMessage({ type: 'error', text: payload?.error || '保存失败，请检查填写内容' });
-      }
-    } catch (err) {
-      setMessage({ type: 'error', text: '网络请求异常，保存失败' });
+      setPublished(saved);
+      updateDraft(null);
+      setFeedback({ text: t('published') });
+      notifySubscriptionFAQPublished(locale);
+    } catch (error) {
+      const stale = error.code === 'SUBSCRIPTION_FAQ_REVISION_CONFLICT';
+      setConflict(stale);
+      setFeedback({ error: true, text: stale ? t('conflict') : error.message });
     } finally {
-      setIsSaving(false);
+      setSaving(false);
+      onSaving(false);
+      inFlight.current = false;
     }
-  };
+  }
 
-  // 筛选问答
-  const items = Array.isArray(config?.items) ? config.items : [];
-  const filteredItems = items.filter((item) => {
-    const matchCat = selectedCategory === 'all' || item.category === selectedCategory;
-    const matchQuery =
-      !searchQuery.trim() ||
-      item.question.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      item.answer.toLowerCase().includes(searchQuery.toLowerCase());
-    return matchCat && matchQuery;
-  });
-
-  return (
-    <div className="space-y-6 animate-in fade-in duration-200">
-      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-        <PageHeader
-          eyebrow="计费与权益配置"
-          title="订阅说明与 QA 问答管理"
-          description="在线管理前台订阅浮层底部的 10 大问答规则、套餐升级退换货细则、开票指引及客服支持邮箱。"
-        />
-
-        <div className="flex flex-wrap items-center gap-2.5 shrink-0">
-          <Button
-            type="button"
-            variant="outline"
-            size="sm"
-            onClick={handleResetToDefaults}
-            className="gap-1.5 border-white/10 bg-white/5 text-zinc-300 hover:text-white hover:bg-white/10"
-          >
-            <RotateCcw className="size-3.5" />
-            <span>恢复官方预设</span>
+  const editField = (key, value) => setEditing(item => ({ ...item, [key]: value }));
+  const itemCount = config.items.some(item => item.id === editing?.id) ? config.items.length : config.items.length + 1;
+  const meta = [['notice', 'notice'], ['supportEmail', 'email'], ['invoiceNotice', 'invoice']];
+  return <div className="space-y-4">
+    <form onSubmit={save} className="space-y-4">
+      <Card className="space-y-4">
+        {!canWrite && <p className="text-body-sm text-ink-muted">{t('readOnly')}</p>}
+        <fieldset disabled={!canWrite || saving} className="grid gap-4 md:grid-cols-3">
+          {meta.map(([key, label]) => <Field key={key} label={t(label)}>
+            {key === 'supportEmail'
+              ? <input type="email" value={config[key]} onChange={event => change({ ...config, [key]: event.target.value })} />
+              : <textarea rows={2} value={config[key]} onChange={event => change({ ...config, [key]: event.target.value })} />}
+          </Field>)}
+        </fieldset>
+        {feedback && <p role={feedback.error ? 'alert' : 'status'} className={feedback.error ? 'text-danger' : 'text-success'}>{feedback.text}</p>}
+        {canWrite && <div className="flex flex-wrap items-center gap-2">
+          <Button size="lg" type="submit" variant="primary" loading={saving} disabled={!draft || conflict || saving}>
+            <Save className="size-4" aria-hidden="true" />{t('save')}
           </Button>
+          <Button size="lg" type="button" variant="outline" disabled={saving || conflict} onClick={event => ask(event, {
+            title: t('reset'), description: t('resetDescription'), action: () => change(defaults),
+          })}>{t('reset')}</Button>
+          {conflict && <Button size="lg" type="button" variant="outline" onClick={event => ask(event, {
+            title: t('reload'), description: t('reloadDescription'), action: () => {
+              updateDraft(null);
+              setPublished(null);
+              setConflict(false);
+              setFeedback(null);
+              remote.reload();
+            },
+          })}>{t('reload')}</Button>}
+          {draft && <span className="text-body-sm text-ink-muted">{t('unsaved')}</span>}
+        </div>}
+      </Card>
+    </form>
 
-          <Button
-            type="button"
-            variant="outline"
-            size="sm"
-            onClick={() => handleOpenEdit(null)}
-            className="gap-1.5 border-lime-400/30 bg-lime-400/10 text-lime-400 hover:bg-lime-400/20"
-          >
-            <Plus className="size-3.5" />
-            <span>新增问答项</span>
-          </Button>
-
-          <Button
-            type="button"
-            variant="primary"
-            size="sm"
-            onClick={handleSaveAll}
-            disabled={isSaving}
-            className="gap-1.5 bg-gradient-to-r from-lime-400 to-emerald-500 text-black font-bold hover:brightness-110 shadow-md shadow-lime-400/20 active:scale-95"
-          >
-            <Save className="size-3.5" />
-            <span>{isSaving ? '正在保存…' : '保存全部更改'}</span>
-          </Button>
-        </div>
+    <Card className="space-y-4">
+      <div className="flex flex-wrap items-end gap-3">
+        <h2 className="mr-auto self-center text-body font-semibold text-ink">{t('items')}</h2>
+        <Field label={t('category')}>
+          <select value={filter} onChange={event => setFilter(event.target.value)}>
+            {['all', ...categories].map(category => <option key={category} value={category}>{t(category)}</option>)}
+          </select>
+        </Field>
+        <Field label={t('search')}>
+          <input type="search" value={search} onChange={event => setSearch(event.target.value)} />
+        </Field>
+        {canWrite && <Button ref={addButton} size="lg" variant="outline" disabled={saving} onClick={event => startEditing(event)}>
+          <Plus className="size-4" aria-hidden="true" />{t('add')}
+        </Button>}
       </div>
-
-      {/* 提示消息 */}
-      {message && (
-        <div
-          className={`flex items-center gap-2.5 p-3.5 rounded-xl border text-xs font-medium animate-in fade-in duration-200 ${
-            message.type === 'success'
-              ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-300'
-              : 'bg-red-500/10 border-red-500/30 text-red-300'
-          }`}
-        >
-          {message.type === 'success' ? (
-            <CheckCircle2 className="size-4 shrink-0" />
-          ) : (
-            <AlertCircle className="size-4 shrink-0" />
-          )}
-          <span>{message.text}</span>
-        </div>
-      )}
-
-      {/* 1. 全局订阅说明与客服配置卡片 */}
-      <div className="rounded-2xl border border-white/[0.08] bg-base p-5 space-y-4">
-        <h3 className="text-sm font-bold text-white tracking-tight flex items-center gap-2">
-          <Sparkles className="size-4 text-lime-400" />
-          <span>全局基础说明配置</span>
-        </h3>
-
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <div className="space-y-1.5">
-            <label className="text-xs font-semibold text-zinc-300 flex items-center gap-1.5">
-              <FileText className="size-3.5 text-zinc-400" />
-              <span>顶部常驻提示语 (Notice)</span>
-            </label>
-            <input
-              type="text"
-              value={config.notice || ''}
-              onChange={(e) => handleMetaChange('notice', e.target.value)}
-              placeholder="例如：所有会员套餐均支持随时升级或取消..."
-              className="w-full rounded-xl border border-white/10 bg-black/40 px-3 py-2 text-xs text-white placeholder-zinc-500 focus:border-lime-400/50 focus:outline-none"
-            />
+      {!visible.length && <p role="status" className="text-body-sm text-ink-muted">{t('empty')}</p>}
+      <ul className="divide-y divide-line-subtle">
+        {visible.map((item, index) => <li key={item.id} data-faq-item={item.id} className="flex flex-wrap items-start gap-3 py-4">
+          <div className="min-w-0 flex-1 basis-56 space-y-1">
+            <span className="text-caption text-ink-subtle">{labelCategory(item.category)}</span>
+            <h3 className="break-words text-body-sm font-semibold text-ink">{item.question}</h3>
+            <p className="line-clamp-2 break-words whitespace-pre-wrap text-body-sm text-ink-muted">{item.answer}</p>
           </div>
+          {canWrite ? <div className="flex flex-wrap gap-1">
+            <IconButton size="lg" variant="ghost" icon={ArrowUp} label={t('up')} disabled={saving || index === 0} onClick={() => move(item.id, visible[index - 1].id)} />
+            <IconButton size="lg" variant="ghost" icon={ArrowDown} label={t('down')} disabled={saving || index === visible.length - 1} onClick={() => move(item.id, visible[index + 1].id)} />
+            <Button size="lg" variant="outline" aria-pressed={item.enabled} disabled={saving} onClick={() =>
+              changeItems(config.items.map(candidate => candidate.id === item.id ? { ...item, enabled: !item.enabled } : candidate))}>
+              {t(item.enabled ? 'enabled' : 'disabled')}
+            </Button>
+            <IconButton size="lg" variant="ghost" icon={Edit3} label={t('edit')} disabled={saving} onClick={event => startEditing(event, item)} />
+            <IconButton size="lg" variant="ghost" icon={Trash2} label={t('delete')} disabled={saving} onClick={event => ask(event, {
+              title: t('delete'), description: t('deleteDescription'), danger: true,
+              action: () => changeItems(config.items.filter(candidate => candidate.id !== item.id)),
+            })} />
+          </div> : <span className="text-body-sm text-ink-muted">{t(item.enabled ? 'enabled' : 'disabled')}</span>}
+        </li>)}
+      </ul>
+    </Card>
 
-          <div className="space-y-1.5">
-            <label className="text-xs font-semibold text-zinc-300 flex items-center gap-1.5">
-              <Mail className="size-3.5 text-zinc-400" />
-              <span>官方客服与售后邮箱</span>
-            </label>
-            <input
-              type="text"
-              value={config.supportEmail || ''}
-              onChange={(e) => handleMetaChange('supportEmail', e.target.value)}
-              placeholder="support@Supdance.com"
-              className="w-full rounded-xl border border-white/10 bg-black/40 px-3 py-2 text-xs text-white placeholder-zinc-500 focus:border-lime-400/50 focus:outline-none"
-            />
+    <Dialog open={Boolean(editing)} onOpenChange={open => { if (!open) setEditing(null); }}>
+      <DialogContent onCloseAutoFocus={event => {
+        event.preventDefault();
+        (opener.current?.isConnected ? opener.current : addButton.current)?.focus();
+      }}>
+        <DialogTitle>{t(config.items.some(item => item.id === editing?.id) ? 'edit' : 'add')}</DialogTitle>
+        <DialogDescription>{t('draftDescription')}</DialogDescription>
+        {editing && <form onSubmit={applyItem} className="space-y-3">
+          <Field label={t('question')}>
+            <input name="faqQuestion" required value={editing.question} onChange={event => {
+              event.target.setCustomValidity('');
+              editField('question', event.target.value);
+            }} />
+          </Field>
+          <Field label={t('answer')}>
+            <textarea name="faqAnswer" rows={5} required value={editing.answer} onChange={event => {
+              event.target.setCustomValidity('');
+              editField('answer', event.target.value);
+            }} />
+          </Field>
+          <div className="grid grid-cols-2 gap-3">
+            <Field label={t('category')}>
+              <select value={editing.category} onChange={event => editField('category', event.target.value)}>
+                {(categories.includes(editing.category) ? categories : [...categories, editing.category])
+                  .map(category => <option key={category} value={category}>{labelCategory(category)}</option>)}
+              </select>
+            </Field>
+            <Field label={t('order')}>
+              <input type="number" required min={1} max={itemCount} value={editing.order}
+                onChange={event => editField('order', event.target.value === '' ? '' : Number(event.target.value))} />
+            </Field>
           </div>
+          <label className="flex min-h-control-lg items-center gap-3 text-body-sm text-ink">
+            <input type="checkbox" checked={editing.enabled} className="size-4 accent-brand" onChange={event => editField('enabled', event.target.checked)} />
+            {t('show')}
+          </label>
+          <DialogFooter>
+            <Button size="lg" type="button" variant="outline" onClick={() => setEditing(null)}>{t('cancel')}</Button>
+            <Button size="lg" type="submit" variant="primary">{t('apply')}</Button>
+          </DialogFooter>
+        </form>}
+      </DialogContent>
+    </Dialog>
+    <ConfirmDraftAction confirmation={confirmation} opener={opener} close={() => {
+      if (!opener.current?.isConnected) opener.current = addButton.current;
+      setConfirmation(null);
+    }} />
+  </div>;
+}
 
-          <div className="space-y-1.5">
-            <label className="text-xs font-semibold text-zinc-300 flex items-center gap-1.5">
-              <FileText className="size-3.5 text-zinc-400" />
-              <span>发票与凭证说明摘要</span>
-            </label>
-            <input
-              type="text"
-              value={config.invoiceNotice || ''}
-              onChange={(e) => handleMetaChange('invoiceNotice', e.target.value)}
-              placeholder="支持开具增值税电子发票..."
-              className="w-full rounded-xl border border-white/10 bg-black/40 px-3 py-2 text-xs text-white placeholder-zinc-500 focus:border-lime-400/50 focus:outline-none"
-            />
-          </div>
-        </div>
-      </div>
-
-      {/* 2. 问答管理列表 */}
-      <div className="rounded-2xl border border-white/[0.08] bg-base overflow-hidden">
-        {/* 顶部工具栏 */}
-        <div className="p-4 border-b border-white/[0.08] flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-white/[0.01]">
-          <div className="flex items-center gap-2">
-            <HelpCircle className="size-4 text-[#bef264]" />
-            <h3 className="text-sm font-bold text-white">问答条目列表 ({filteredItems.length}/{config.items.length})</h3>
-          </div>
-
-          <div className="flex flex-wrap items-center gap-2.5">
-            {/* 类别下拉筛选 */}
-            <select
-              value={selectedCategory}
-              onChange={(e) => setSelectedCategory(e.target.value)}
-              className="rounded-lg border border-white/10 bg-black/60 px-2.5 py-1.5 text-xs text-zinc-300 focus:border-lime-400/50 focus:outline-none"
-            >
-              {CATEGORIES.map((c) => (
-                <option key={c.value} value={c.value}>
-                  {c.label}
-                </option>
-              ))}
-            </select>
-
-            {/* 搜索框 */}
-            <div className="relative">
-              <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 size-3.5 text-zinc-500" />
-              <input
-                type="text"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="搜索问题或解答内容..."
-                className="w-48 sm:w-60 rounded-lg border border-white/10 bg-black/60 pl-8 pr-3 py-1.5 text-xs text-white placeholder-zinc-500 focus:border-lime-400/50 focus:outline-none"
-              />
-            </div>
-          </div>
-        </div>
-
-        {/* 问答表格 */}
-        <div className="overflow-x-auto">
-          <table className="w-full text-left text-xs text-zinc-300">
-            <thead className="bg-white/[0.02] text-zinc-400 border-b border-white/[0.06] font-medium uppercase tracking-wider text-[11px]">
-              <tr>
-                <th className="py-3 px-3 w-16 text-center">排序</th>
-                <th className="py-3 px-3 w-24">分类</th>
-                <th className="py-3 px-4 min-w-[220px]">问题标题 (Question)</th>
-                <th className="py-3 px-4">解答概要 (Answer)</th>
-                <th className="py-3 px-3 w-20 text-center">状态</th>
-                <th className="py-3 px-4 w-36 text-right">操作</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-white/[0.04]">
-              {filteredItems.length === 0 ? (
-                <tr>
-                  <td colSpan={6} className="py-12 text-center text-zinc-500">
-                    未查找到匹配的问答条目
-                  </td>
-                </tr>
-              ) : (
-                filteredItems.map((item, idx) => (
-                  <tr key={item.id} className="hover:bg-white/[0.02] transition-colors group">
-                    <td className="py-3 px-3 text-center font-mono text-zinc-400">
-                      <div className="flex items-center justify-center gap-1">
-                        <button
-                          type="button"
-                          onClick={() => handleMoveOrder(idx, 'up')}
-                          disabled={idx === 0}
-                          className="text-zinc-500 hover:text-white disabled:opacity-20 cursor-pointer"
-                          title="上移"
-                        >
-                          <ArrowUp className="size-3" />
-                        </button>
-                        <span>{item.order || idx + 1}</span>
-                        <button
-                          type="button"
-                          onClick={() => handleMoveOrder(idx, 'down')}
-                          disabled={idx === filteredItems.length - 1}
-                          className="text-zinc-500 hover:text-white disabled:opacity-20 cursor-pointer"
-                          title="下移"
-                        >
-                          <ArrowDown className="size-3" />
-                        </button>
-                      </div>
-                    </td>
-
-                    <td className="py-3 px-3">
-                      <span className="inline-block px-2 py-0.5 rounded text-[10px] font-medium bg-white/5 border border-white/10 text-zinc-300">
-                        {CATEGORIES.find((c) => c.value === item.category)?.label || item.category}
-                      </span>
-                    </td>
-
-                    <td className="py-3 px-4 font-semibold text-white">
-                      {item.question}
-                    </td>
-
-                    <td className="py-3 px-4 text-zinc-400 max-w-md">
-                      <p className="line-clamp-2 leading-relaxed whitespace-pre-wrap">
-                        {item.answer}
-                      </p>
-                    </td>
-
-                    <td className="py-3 px-3 text-center">
-                      <button
-                        type="button"
-                        onClick={() => toggleItemEnabled(item.id)}
-                        className={`inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-bold cursor-pointer transition-colors ${
-                          item.enabled
-                            ? 'bg-emerald-500/15 text-emerald-300 border border-emerald-500/30'
-                            : 'bg-zinc-800 text-zinc-500 border border-white/5'
-                        }`}
-                        title={item.enabled ? '已展示在前台，点击隐藏' : '已隐藏，点击启用'}
-                      >
-                        {item.enabled ? <Eye className="size-3" /> : <EyeOff className="size-3" />}
-                        <span>{item.enabled ? '显示中' : '已下架'}</span>
-                      </button>
-                    </td>
-
-                    <td className="py-3 px-4 text-right">
-                      <div className="flex items-center justify-end gap-2">
-                        <button
-                          type="button"
-                          onClick={() => handleOpenEdit(item)}
-                          className="flex items-center gap-1 px-2 py-1 rounded bg-white/5 hover:bg-white/10 text-zinc-300 hover:text-white transition-colors cursor-pointer"
-                          title="编辑问题与解答"
-                        >
-                          <Edit3 className="size-3 text-brand" />
-                          <span>编辑</span>
-                        </button>
-
-                        <button
-                          type="button"
-                          onClick={() => handleDeleteItem(item.id)}
-                          className="flex items-center gap-1 px-2 py-1 rounded bg-red-500/10 hover:bg-red-500/20 text-red-400 transition-colors cursor-pointer"
-                          title="删除该问答"
-                        >
-                          <Trash2 className="size-3" />
-                          <span>删除</span>
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                ))
-              )}
-            </tbody>
-          </table>
-        </div>
-      </div>
-
-      {/* 3. 新增 / 编辑弹窗 */}
-      {isModalOpen && editingItem && (
-        <div
-          className="fixed inset-0 z-50 flex items-center justify-center overflow-y-auto bg-black/80 backdrop-blur-sm p-4 animate-in fade-in duration-150"
-          onClick={(e) => {
-            if (e.target === e.currentTarget) setIsModalOpen(false);
-          }}
-        >
-          <div className="relative w-full max-w-2xl rounded-2xl border border-white/[0.12] bg-surface p-6 text-white shadow-2xl">
-            <div className="flex items-center justify-between border-b border-white/[0.08] pb-3 mb-4">
-              <h3 className="text-base font-bold text-white flex items-center gap-2">
-                <Edit3 className="size-4 text-lime-400" />
-                <span>{editingItem.id && config.items.some((x) => x.id === editingItem.id) ? '编辑常见问题' : '新增常见问题'}</span>
-              </h3>
-              <button
-                type="button"
-                onClick={() => setIsModalOpen(false)}
-                className="text-zinc-500 hover:text-white transition-colors cursor-pointer"
-              >
-                <X className="size-4" />
-              </button>
-            </div>
-
-            <form onSubmit={handleSaveItemModal} className="space-y-4">
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                <div className="space-y-1">
-                  <label className="text-xs font-semibold text-zinc-300">分类领域</label>
-                  <select
-                    value={editingItem.category}
-                    onChange={(e) => setEditingItem({ ...editingItem, category: e.target.value })}
-                    className="w-full rounded-xl border border-white/10 bg-black/50 px-3 py-2 text-xs text-white focus:border-lime-400/50 focus:outline-none"
-                  >
-                    {CATEGORIES.filter((c) => c.value !== 'all').map((c) => (
-                      <option key={c.value} value={c.value}>
-                        {c.label}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-
-                <div className="space-y-1">
-                  <label className="text-xs font-semibold text-zinc-300">展示排序号</label>
-                  <input
-                    type="number"
-                    value={editingItem.order}
-                    onChange={(e) => setEditingItem({ ...editingItem, order: Number(e.target.value) || 1 })}
-                    className="w-full rounded-xl border border-white/10 bg-black/50 px-3 py-2 text-xs text-white focus:border-lime-400/50 focus:outline-none"
-                  />
-                </div>
-              </div>
-
-              <div className="space-y-1">
-                <label className="text-xs font-semibold text-zinc-300">问题标题 (Question)</label>
-                <input
-                  type="text"
-                  required
-                  value={editingItem.question}
-                  onChange={(e) => setEditingItem({ ...editingItem, question: e.target.value })}
-                  placeholder="例如：订阅后切换套餐，算力及权益会怎么变化？"
-                  className="w-full rounded-xl border border-white/10 bg-black/50 px-3 py-2 text-xs text-white placeholder-zinc-500 focus:border-lime-400/50 focus:outline-none"
-                />
-              </div>
-
-              <div className="space-y-1">
-                <label className="text-xs font-semibold text-zinc-300">解答正文 (Answer - 支持分行与段落)</label>
-                <textarea
-                  rows={8}
-                  required
-                  value={editingItem.answer}
-                  onChange={(e) => setEditingItem({ ...editingItem, answer: e.target.value })}
-                  placeholder="详细说明政策细节与规则，支持换行排版..."
-                  className="w-full rounded-xl border border-white/10 bg-black/50 p-3 text-xs text-white placeholder-zinc-500 focus:border-lime-400/50 focus:outline-none leading-relaxed"
-                />
-              </div>
-
-              <div className="flex items-center gap-2 pt-1">
-                <input
-                  type="checkbox"
-                  id="enabledCheck"
-                  checked={editingItem.enabled}
-                  onChange={(e) => setEditingItem({ ...editingItem, enabled: e.target.checked })}
-                  className="size-4 rounded border-white/20 bg-black/60 text-lime-400 focus:ring-lime-400/40"
-                />
-                <label htmlFor="enabledCheck" className="text-xs text-zinc-300 cursor-pointer">
-                  在前台订阅弹窗中正式公开显示
-                </label>
-              </div>
-
-              <div className="flex items-center justify-end gap-3 pt-3 border-t border-white/[0.08]">
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setIsModalOpen(false)}
-                  className="border-white/10 text-zinc-300"
-                >
-                  取消
-                </Button>
-                <Button
-                  type="submit"
-                  variant="primary"
-                  size="sm"
-                  className="bg-lime-400 text-black font-bold hover:bg-lime-300"
-                >
-                  确定更新
-                </Button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
+export default function SubscriptionFaqManagerClient({ canWrite }) {
+  const t = useTranslations('adminSubscriptionFaq');
+  const [locale, setLocale] = useState('zh-CN');
+  const [drafts, setDrafts] = useState({});
+  const [saving, setSaving] = useState(false);
+  return <div className="space-y-4">
+    <PageHeader title={t('heading')} description={t('description')} />
+    <div className="max-w-xs">
+      <Field label={t('locale')}>
+        <select disabled={saving} value={locale} onChange={event => setLocale(event.target.value)}>
+          {SUPPORTED_LOCALES.map(id => <option key={id} value={id}>{getLocaleConfig(id).nativeName}</option>)}
+        </select>
+      </Field>
     </div>
-  );
+    <LocaleEditor key={locale} locale={locale} draft={drafts[locale]} canWrite={canWrite} onSaving={setSaving}
+      updateDraft={next => setDrafts(previous => ({ ...previous, [locale]: next }))} />
+  </div>;
 }

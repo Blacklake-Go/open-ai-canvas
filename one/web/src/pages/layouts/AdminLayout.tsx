@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
-import { Navigate, Outlet } from 'react-router';
+import { Navigate, Outlet, useLocation } from 'react-router';
 import { hasPermission, PERMISSIONS, ROLE_PERMISSIONS } from '@/lib/admin/permissions';
 import AdminShell from '@/components/admin/AdminShell';
 import { AdminSessionContext, useDocumentTitle } from '@/pages/helpers/pageHelpers';
@@ -8,6 +8,7 @@ import { oneApi } from '@/services/api/http';
 
 export default function AdminLayout() {
   useDocumentTitle('管理后台 | SupDance AI Studio');
+  const { pathname, search, hash } = useLocation();
   const [user, setUser] = useState<Record<string, any> | null>(null);
   const [loading, setLoading] = useState(true);
   const [nonce, setNonce] = useState(0);
@@ -45,7 +46,8 @@ export default function AdminLayout() {
   }
 
   if (!user) {
-    return <Navigate to="/account?next=/admin" replace />;
+    const redirect = encodeURIComponent(`${pathname}${search}${hash}`);
+    return <Navigate to={`/login?redirect=${redirect}`} replace />;
   }
 
   if (!hasPermission(user.role, PERMISSIONS.dashboardRead)) {

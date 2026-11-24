@@ -335,6 +335,69 @@
   --font-mono: "JetBrains Mono", "Fira Code", monospace;
 }
 
+:root[data-theme="light"] {
+  --bg-canvas-rgb: 255 255 255;
+  --bg-base-rgb: 247 247 248;
+  --bg-surface-rgb: 244 244 245;
+  --bg-surface-raised-rgb: 255 255 255;
+  --bg-overlay-rgb: 250 250 250;
+  --bg-subtle-rgb: 242 242 243;
+  --text-primary-rgb: 23 23 23;
+  --text-secondary-rgb: 91 91 92;
+  --text-tertiary-rgb: 110 110 111;
+  --text-disabled-rgb: 128 128 129;
+  --text-inverse-rgb: 255 255 255;
+
+  --bg-canvas: rgb(var(--bg-canvas-rgb));
+  --bg-base: rgb(var(--bg-base-rgb));
+  --bg-surface: rgb(var(--bg-surface-rgb));
+  --bg-surface-raised: rgb(var(--bg-surface-raised-rgb));
+  --bg-overlay: rgb(var(--bg-overlay-rgb));
+  --bg-subtle: rgb(var(--bg-subtle-rgb));
+  --text-primary: rgb(var(--text-primary-rgb));
+  --text-secondary: rgb(var(--text-secondary-rgb));
+  --text-tertiary: rgb(var(--text-tertiary-rgb));
+  --text-disabled: rgb(var(--text-disabled-rgb));
+  --text-inverse: rgb(var(--text-inverse-rgb));
+  --brand-text: #be185d;
+  --border-subtle: rgb(17 17 17 / 0.12);
+  --border-default: rgb(17 17 17 / 0.18);
+  --border-strong: rgb(17 17 17 / 0.28);
+  --wash: rgb(17 17 17 / 0.05);
+  --wash-strong: rgb(17 17 17 / 0.09);
+  --wash-press: rgb(17 17 17 / 0.13);
+  --scrim: rgb(17 17 17 / 0.42);
+  --danger: #dc2626;
+  --success: #15803d;
+  --warning: #92400e;
+  --info: #2563eb;
+  --background: 0 0% 100%;
+  --foreground: 0 0% 9%;
+  --card: 240 9% 97%;
+  --card-foreground: var(--foreground);
+  --popover: 0 0% 98%;
+  --popover-foreground: var(--foreground);
+  --secondary: 0 0% 100%;
+  --secondary-foreground: var(--foreground);
+  --muted: 240 5% 96%;
+  --muted-foreground: 0 0% 36%;
+  --border: 240 3% 82%;
+  --input: var(--border);
+  --glass-popover-bg: rgb(255 255 255 / 0.78);
+  --glass-popover-border: rgb(220 225 231 / 0.82);
+  --glass-popover-shadow: 0 26px 72px rgb(15 23 42 / 0.18), 0 4px 18px rgb(15 23 42 / 0.08);
+}
+
+.theme-transitioning::view-transition-old(root),
+.theme-transitioning::view-transition-new(root) {
+  animation: none;
+  mix-blend-mode: normal;
+}
+
+.theme-transitioning::view-transition-new(root) {
+  z-index: 1;
+}
+
 @layer base {
   * {
     border-color: var(--border-subtle);
@@ -885,14 +948,6 @@
   }
 }
 
-.animate-banner-shimmer {
-  animation: bannerShimmer 4.5s cubic-bezier(0.4, 0, 0.2, 1) infinite;
-}
-
-.animate-banner-radar {
-  animation: bannerRadar 2s cubic-bezier(0, 0, 0.2, 1) infinite;
-}
-
 /* Ambient Diffusion Glow & Mesh Aura Keyframes */
 @keyframes bannerAuraBreathe {
   0%, 100% {
@@ -917,12 +972,22 @@
   }
 }
 
-.animate-banner-aura {
-  animation: bannerAuraBreathe 6s ease-in-out infinite;
-}
+@media (prefers-reduced-motion: no-preference) {
+  html:not(.no-motion) .animate-banner-shimmer {
+    animation: bannerShimmer 4.5s var(--ease-standard) infinite;
+  }
 
-.animate-banner-drift {
-  animation: bannerAuraDrift 9s ease-in-out infinite;
+  html:not(.no-motion) .animate-banner-radar {
+    animation: bannerRadar 2s var(--ease-exit) infinite;
+  }
+
+  html:not(.no-motion) .animate-banner-aura {
+    animation: bannerAuraBreathe 6s var(--ease-standard) infinite;
+  }
+
+  html:not(.no-motion) .animate-banner-drift {
+    animation: bannerAuraDrift 9s var(--ease-standard) infinite;
+  }
 }
 
 /* Ambient Overflow Glow (向下溢出映射到页面背景) */

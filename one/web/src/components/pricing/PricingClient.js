@@ -2,10 +2,14 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import Link from 'next/link';
-import { ArrowUpRight, Briefcase, Check, ChevronDown, CircleUserRound, CreditCard, Gift, Loader2, ShieldCheck, Sparkles, X, Zap } from 'lucide-react';
+import { ArrowUpRight, Briefcase, Check, CircleUserRound, CreditCard, Gift, Loader2, ShieldCheck, Sparkles, X, Zap } from 'lucide-react';
 import { useRouter } from 'next/navigation';
+import { useLocale, useTranslations } from 'next-intl';
 import AuthModal from '@/components/AuthModal';
+import { Button } from '@/components/ui/button';
+import { getLocaleConfig } from '@/lib/locales';
 import RechargeModal from '@/components/account/RechargeModal';
+import SubscriptionFAQ from '@/components/subscription/SubscriptionFAQ';
 
 const PLAN_CODE_NAMES = {
   starter: 'BASE',
@@ -13,21 +17,6 @@ const PLAN_CODE_NAMES = {
   plus: 'PRO',
   pro: 'APEX',
 };
-
-const FAQS = [
-  {
-    question: '订阅额度和通用算力有什么区别？',
-    answer: '订阅方案展示每月随方案发放的额度；通用算力包是一次性购买，到账后进入永久算力余额。余额扣减顺序以账户的实际钱包明细为准。',
-  },
-  {
-    question: '目前支持哪些订阅周期和付款方式？',
-    answer: '当前可下单周期为月付。季付、年付暂未开放；付款方式仅显示服务端确认可用的渠道，未配置成功的渠道不会生成订单。',
-  },
-  {
-    question: '付款后额度如何到账？',
-    answer: '当前新购暂未开放。新购重新开放前会完成支付回调、退款和对账验收；已创建订单仍按支付状态正常处理。',
-  },
-];
 
 function formatNumber(value) {
   return Number(value || 0).toLocaleString('en-US');
@@ -113,7 +102,7 @@ function PlanCard({ plan, onBuy, disabled }) {
 
       <div className="mt-5">
         <div className="flex items-baseline gap-1.5">
-          <span className="text-4xl font-extrabold tracking-tight text-ink">¥{formatNumber(plan.monthlyCny)}</span>
+          <span className="text-4xl font-extrabold tracking-tight text-ink">{plan.monthlyCny ? '¥' : '$'}{formatNumber(plan.monthlyCny || plan.monthlyUsd)}</span>
           <span className="text-xs text-ink-subtle">/ 月</span>
         </div>
         <p className="mt-1 text-caption text-ink-subtle">月度计费 · 暂仅开放月付</p>
@@ -187,6 +176,8 @@ function CreditPackCard({ pack, selected, onSelect }) {
 
 export default function PricingClient() {
   const router = useRouter();
+  const locale = useLocale();
+  const ordersCopy = useTranslations('billingOrders');
   const [user, setUser] = useState(null);
   const [plans, setPlans] = useState([]);
   const [packs, setPacks] = useState([]);
@@ -200,7 +191,6 @@ export default function PricingClient() {
   const [selectedPackId, setSelectedPackId] = useState('credit_490');
   const [showAuthModal, setShowAuthModal] = useState(false);
   const [checkout, setCheckout] = useState(null);
-  const [openFaq, setOpenFaq] = useState(0);
   const pendingCheckoutRef = useRef(null);
 
   const loadInitialData = useCallback(async () => {
@@ -225,7 +215,7 @@ export default function PricingClient() {
     if (planResult.status === 'fulfilled') {
       const published = Array.isArray(planResult.value.plans) ? planResult.value.plans : [];
       const commercial = published
-        .filter((plan) => ['starter', 'basic', 'plus', 'pro'].includes(plan.id) && plan.enabled !== false)
+        .filter((plan) => plan.id !== 'free' && plan.enabled !== false)
         .sort((a, b) => Number(a.displayOrder || 0) - Number(b.displayOrder || 0));
       setPlans(commercial);
       setPlanProviders(planResult.value.providers || {});
@@ -322,6 +312,9 @@ export default function PricingClient() {
           <p className="mx-auto mt-4 max-w-3xl rounded-xl border border-warning-line bg-warning-soft px-4 py-3 text-xs leading-5 text-warning" role="status">
             新购暂未开放。支付成功、退款与对账流程完成验收后再开放；已有订单查询与支付回调仍可正常处理。
           </p>
+          <Button asChild variant="outline" size="lg" className="mt-3">
+            <Link href={`${getLocaleConfig(locale).rootPath}/billing/orders`}>{ordersCopy('history')}</Link>
+          </Button>
         </section>
 
         <section id="plans" aria-label="会员订阅方案" className="scroll-mt-0 mt-8">
@@ -403,19 +396,7 @@ export default function PricingClient() {
           </div>
         </section>
 
-        <section className="mx-auto mt-16 max-w-4xl">
-          <h2 className="mb-3 text-center text-lg font-extrabold text-ink">订阅与算力常见问题</h2>
-          <div className="pricing-card-bg divide-y divide-line-subtle rounded-2xl border border-line px-4 sm:px-6">
-            {FAQS.map((item, index) => (
-              <div key={item.question} className="py-4">
-                <button type="button" onClick={() => setOpenFaq(openFaq === index ? -1 : index)} className="flex w-full items-center justify-between gap-4 text-left text-xs font-bold text-ink">
-                  <span>{item.question}</span><ChevronDown className={`size-4 shrink-0 transition-transform ${openFaq === index ? 'rotate-180' : ''}`} />
-                </button>
-                {openFaq === index && <p className="mt-3 max-w-3xl text-xs leading-6 text-ink-muted">{item.answer}</p>}
-              </div>
-            ))}
-          </div>
-        </section>
+        <SubscriptionFAQ locale={locale} pricing className="mt-16" />
       </main>
 
       {showAuthModal && (
@@ -427,8 +408,7 @@ export default function PricingClient() {
           key={`${checkout.type}:${checkout.id}`}
           isOpen
           initialTab={checkout.type === 'credit_pack' ? 'points' : 'sub'}
-          initialPlanId={checkout.type === 'subscription' ? checkout.id : null}
-          initialCreditPackId={checkout.type === 'credit_pack' ? checkout.id : null}
+          initialPlanId={checkout.id}
           onClose={() => setCheckout(null)}
           onPaySuccess={loadInitialData}
         />

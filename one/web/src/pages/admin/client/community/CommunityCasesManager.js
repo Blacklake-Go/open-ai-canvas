@@ -99,7 +99,7 @@ export default function CommunityCasesManager({ canWrite }) {
       });
       const payload = await response.json();
       if (!response.ok) throw new Error(payload?.error?.message || '保存失败');
-      setFeedback({ type: 'success', message: editing.isFeatured ? '已保存，并已进入前台精选案例展示。' : '作品信息已保存。' });
+      setFeedback({ type: 'success', message: editing.isFeatured && editing.status === 'published' ? '已保存，并已进入前台精选案例展示。' : '作品信息已保存。' });
       setEditing(null);
       await load();
     } catch (error) {

@@ -245,10 +245,17 @@ const MODAL_COPY = {
 export default function CommunityDetailModal({ postId, initialPost = null, onClose, onLikeChange, locale = null }) {
   const norm = normalizeLocale(locale || (typeof window !== 'undefined' && window.location.pathname.startsWith('/zh') ? 'zh-CN' : 'en'));
   const t = MODAL_COPY[norm] || MODAL_COPY.en;
+  const detailPath = `${norm === 'zh-CN' ? '/zh' : ''}/community/${encodeURIComponent(postId || '')}`;
+  const location = typeof window !== 'undefined' ? window.location : null;
+  const returnPath = location?.pathname.endsWith(`/${encodeURIComponent(postId || '')}`)
+    ? location.pathname + location.search + location.hash
+    : detailPath;
+  const loginHref = localizeStudioPath(`/login?redirect=${encodeURIComponent(returnPath)}`, norm);
 
   const [post, setPost] = useState(initialPost);
   const [loading, setLoading] = useState(!initialPost);
   const [comments, setComments] = useState([]);
+  const [signInRequired, setSignInRequired] = useState(false);
   const [newComment, setNewComment] = useState('');
   const [submittingComment, setSubmittingComment] = useState(false);
   const [likeBusy, setLikeBusy] = useState(false);
@@ -263,20 +270,33 @@ export default function CommunityDetailModal({ postId, initialPost = null, onClo
   useEffect(() => {
     if (!postId) return;
     let mounted = true;
+    const controller = new AbortController();
+    const options = { signal: controller.signal };
+    setLoading(true);
+    setSignInRequired(false);
     Promise.all([
-      fetch(`/api/community/posts/${postId}`),
-      fetch(`/api/community/posts/${postId}/comments`),
-      fetch(`/api/community/posts/${postId}/coin`).then(r => r.ok ? r.json() : null).catch(() => null),
+      fetch(`/api/community/posts/${postId}`, options),
+      fetch(`/api/community/posts/${postId}/comments`, options),
+      fetch(`/api/community/posts/${postId}/coin`, options).then(r => r.ok ? r.json() : null).catch(() => null),
     ]).then(async ([postResponse, commentsResponse, coinData]) => {
+      if (!postResponse.ok) {
+        if (mounted && postResponse.status === 401) setSignInRequired(true);
+        throw new Error('Community post unavailable');
+      }
       const postData = await postResponse.json();
       const commentData = await commentsResponse.json();
       if (mounted) {
-        if (postData.post) setPost(postData.post);
-        if (Array.isArray(commentData.comments)) setComments(commentData.comments);
+        setPost(postData.post || null);
+        setComments(Array.isArray(commentData.comments) ? commentData.comments : []);
         if (coinData) setCoinInfo(coinData);
       }
-    }).catch(() => toast(t.loadDetailFailToast)).finally(() => mounted && setLoading(false));
-    return () => { mounted = false; };
+    }).catch(() => {
+      if (mounted) {
+        setPost(null);
+        setComments([]);
+      }
+    }).finally(() => mounted && setLoading(false));
+    return () => { mounted = false; controller.abort(); };
   }, [postId, t.loadDetailFailToast]);
 
   useEffect(() => {
@@ -308,8 +328,8 @@ export default function CommunityDetailModal({ postId, initialPost = null, onClo
         toast(data.error || t.loginFirst);
         return;
       }
-      setPost((prev) => prev ? { ...prev, is_liked: data.isLiked, likes_count: data.likesCount } : prev);
-      onLikeChange?.(post.id, data.isLiked, data.likesCount);
+      setPost((prev) => prev ? { ...prev, is_liked: data.liked, likes_count: data.likesCount } : prev);
+      onLikeChange?.(post.id, data.liked, data.likesCount);
     } catch {
       toast(t.networkError);
     } finally {
@@ -415,12 +435,22 @@ export default function CommunityDetailModal({ postId, initialPost = null, onClo
         <Button type="button" variant="secondary" size="icon" className="absolute right-4 top-4 z-10" onClick={onClose} aria-label={t.closeAria}>
           <X />
         </Button>
-        {loading || !post ? (
+        {loading ? (
           <div className="flex flex-1 items-center justify-center">
             <span className="flex items-center gap-2 text-sm text-muted-foreground">
               <span className="size-4 animate-spin rounded-full border-2 border-primary border-t-transparent" />
               {t.loading}
             </span>
+          </div>
+        ) : !post ? (
+          <div role="alert" className="flex flex-1 flex-col items-center justify-center gap-3 px-6 text-center text-body-sm text-ink-muted">
+            {signInRequired ? (
+              <Button asChild>
+                <Link href={loginHref}>
+                  {t.loginFirst}
+                </Link>
+              </Button>
+            ) : t.loadDetailFailToast}
           </div>
         ) : (
           <>
@@ -531,7 +561,7 @@ export default function CommunityDetailModal({ postId, initialPost = null, onClo
                   </Button>
                 </form>
                 <div className="grid grid-cols-4 gap-2">
-                  <Button type="button" variant={post.is_liked ? 'default' : 'outline'} onClick={toggleLike} className="px-2">
+                  <Button type="button" variant={post.is_liked ? 'default' : 'outline'} aria-pressed={Boolean(post.is_liked)} disabled={likeBusy} onClick={toggleLike} className="px-2">
                     <Heart className={post.is_liked ? 'fill-current' : ''} data-icon="inline-start" />{post.likes_count || 0}
                   </Button>
 

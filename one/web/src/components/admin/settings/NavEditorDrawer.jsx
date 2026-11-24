@@ -15,6 +15,7 @@ import {
   EyeOff,
 } from 'lucide-react';
 import DynamicNavIcon from '@/components/navigation/DynamicNavIcon';
+import { getNavigationHref } from '@/lib/site/navigation';
 
 const NAV_ICON_OPTIONS = [
   { id: 'sparkles', label: '星芒' },
@@ -49,6 +50,7 @@ export default function NavEditorDrawer({
   onChange,
 }) {
   const [editingItem, setEditingItem] = useState(null);
+  const [linkError, setLinkError] = useState(false);
 
   if (!isOpen) return null;
 
@@ -101,7 +103,7 @@ export default function NavEditorDrawer({
       id: `nav-${Date.now()}`,
       label: route.label,
       labelEn: route.labelEn,
-      path: route.path,
+      href: route.path,
       icon: route.icon,
       badge: route.badge || '',
       enabled: true,
@@ -128,6 +130,7 @@ export default function NavEditorDrawer({
           <button
             type="button"
             onClick={onClose}
+            aria-label="关闭导航编排"
             className="p-1 rounded-lg text-ink-subtle hover:text-ink hover:bg-white/[0.06] transition"
           >
             <X className="size-4" />
@@ -156,10 +159,13 @@ export default function NavEditorDrawer({
                 onSubmit={(e) => {
                   e.preventDefault();
                   const fd = new FormData(e.currentTarget);
+                  const href = getNavigationHref(fd.get('href'));
+                  setLinkError(!href);
+                  if (!href) return;
                   handleSaveItem({
                     label: fd.get('label'),
                     labelEn: fd.get('labelEn'),
-                    path: fd.get('path'),
+                    href,
                     badge: fd.get('badge'),
                     icon: fd.get('icon'),
                     target: fd.get('target'),
@@ -195,16 +201,21 @@ export default function NavEditorDrawer({
 
                 <div className="grid grid-cols-2 gap-3">
                   <div>
-                    <label className="block text-caption font-medium text-ink-muted mb-1">
+                    <label htmlFor="navigation-href" className="block text-caption font-medium text-ink-muted mb-1">
                       跳转路径 (Path / URL)
                     </label>
                     <input
-                      name="path"
+                      id="navigation-href"
+                      name="href"
                       type="text"
                       required
-                      defaultValue={editingItem.path || '/'}
+                      defaultValue={editingItem.href || editingItem.path || '/'}
+                      aria-invalid={linkError}
+                      aria-describedby={linkError ? 'navigation-href-error' : undefined}
+                      onChange={() => setLinkError(false)}
                       className="w-full rounded-lg border border-line bg-base px-3 py-1.5 text-xs text-ink font-mono outline-none focus:border-brand"
                     />
+                    {linkError && <p id="navigation-href-error" className="mt-1 text-caption text-danger" role="alert">请输入以 / 开头的站内路径或完整的 HTTP(S) 链接。</p>}
                   </div>
                   <div>
                     <label className="block text-caption font-medium text-ink-muted mb-1">
@@ -337,7 +348,7 @@ export default function NavEditorDrawer({
                       )}
                     </div>
                     <span className="text-[11px] text-ink-subtle font-mono block truncate">
-                      {item.path}
+                      {item.href || item.path}
                     </span>
                   </div>
                 </div>

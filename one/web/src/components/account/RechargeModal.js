@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useRef, useCallback, useMemo } from 'react';
 import { createPortal } from 'react-dom';
+import { useTranslations } from 'next-intl';
 import {
   Check,
   Crown,
@@ -73,25 +74,6 @@ function PayPalIcon({ className = 'size-5' }) {
   );
 }
 
-// 商业订阅默认备用数据 (v2.2 价格体系: 140/350/800/1760)
-const FALLBACK_MEMBERSHIP_TIERS = [
-  { id: 'starter', name: 'Starter (入门探索版)', monthlyCny: 140, monthlyOriginCny: 233, yearlyCny: 1680, yearlyOriginCny: 2800, quarterlyCny: 420, quarterlyOriginCny: 700, quotaBase: 2000, features: ['每月 2,000 创作积分', '2 路并行生成', '5GB 专属资产存储'] },
-  { id: 'basic', name: 'Basic (进阶标准版)', monthlyCny: 350, monthlyOriginCny: 500, yearlyCny: 3600, yearlyOriginCny: 6000, quarterlyCny: 945, quarterlyOriginCny: 1500, quotaBase: 5000, features: ['每月 5,000 创作积分', '4 路并行生成', '极速优先通道'] },
-  { id: 'plus', name: 'Plus (专业创作版)', monthlyCny: 800, monthlyOriginCny: 1000, yearlyCny: 8000, yearlyOriginCny: 12000, quarterlyCny: 2160, quarterlyOriginCny: 3000, quotaBase: 12000, features: ['每月 12,000 创作积分', '6 路并行生成', '专属 GPU 队列通道'] },
-  { id: 'pro', name: 'Pro (旗舰大师版)', monthlyCny: 1760, monthlyOriginCny: 2000, yearlyCny: 17600, yearlyOriginCny: 24000, quarterlyCny: 4752, quarterlyOriginCny: 6000, quotaBase: 27000, features: ['每月 27,000 创作积分', '8 路顶级并发上限', 'VIP 最高调度权重'] },
-];
-
-// 通用算力包默认数据 (v2.2: ¥1 = 10 积分，永久有效，7 档)
-const DEFAULT_UNIVERSAL_PACKS = [
-  { id: 'credit_49', name: '尝鲜算力包', priceCny: 49, credits: 490, unitPriceYuan: 0.10, validity: '永久有效' },
-  { id: 'credit_140', name: '基础算力包', priceCny: 140, credits: 1400, unitPriceYuan: 0.10, validity: '永久有效' },
-  { id: 'credit_210', name: '轻量创作包', priceCny: 210, credits: 2100, unitPriceYuan: 0.10, validity: '永久有效' },
-  { id: 'credit_350', name: '进阶算力包', priceCny: 350, credits: 3500, unitPriceYuan: 0.10, validity: '永久有效' },
-  { id: 'credit_700', name: '专业生产包', priceCny: 700, credits: 7000, unitPriceYuan: 0.10, validity: '永久有效' },
-  { id: 'credit_1400', name: '高阶工作室包', priceCny: 1400, credits: 14000, unitPriceYuan: 0.10, validity: '永久有效' },
-  { id: 'credit_7000', name: '企业批量包', priceCny: 7000, credits: 70000, unitPriceYuan: 0.10, validity: '永久有效' },
-];
-
 export default function RechargeModal({
   isOpen,
   onClose,
@@ -103,19 +85,22 @@ export default function RechargeModal({
   locale = null,
 }) {
   const activeLocale = useRechargeLocale(locale);
+  const catalogCopy = useTranslations('adminPlans');
+  const orderCopy = useTranslations('billingOrders');
   const strings = useMemo(() => getRechargeStrings(activeLocale), [activeLocale]);
 
   const [mounted, setMounted] = useState(false);
-  const [activeTab, setActiveTab] = useState(initialTab === 'exclusive' ? 'universal' : initialTab); // 'sub' | 'universal' | 'coupon'
-  const [subscriptionPlans, setSubscriptionPlans] = useState(FALLBACK_MEMBERSHIP_TIERS);
-  const [universalPacks, setUniversalPacks] = useState(DEFAULT_UNIVERSAL_PACKS);
+  const [activeTab, setActiveTab] = useState(['exclusive', 'points'].includes(initialTab) ? 'universal' : initialTab);
+  const [subscriptionPlans, setSubscriptionPlans] = useState(null);
+  const [subscriptionError, setSubscriptionError] = useState(false);
+  const [catalogRetry, setCatalogRetry] = useState(0);
+  const [universalPacks, setUniversalPacks] = useState(null);
+  const [packsError, setPacksError] = useState(false);
   const [selectedPackId, setSelectedPackId] = useState(null);
 
-  const [planId, setPlanId] = useState(initialPlanId || 'starter');
+  const [planId, setPlanId] = useState(initialPlanId);
   const [billingCycle, setBillingCycle] = useState(initialBillingCycle);
-  const [availableProviders, setAvailableProviders] = useState({
-    alipay: { enabled: true, configured: true },
-  });
+  const [availableProviders, setAvailableProviders] = useState({});
   const [pilotPackId, setPilotPackId] = useState(null);
   const [payMethod, setPayMethod] = useState('alipay');
   const [loading, setLoading] = useState(false);
@@ -149,7 +134,7 @@ export default function RechargeModal({
         setSelectedPackId(initialPlanId);
       } else if (initialPlanId.startsWith('exclusive_')) {
         setActiveTab('universal');
-        setSelectedPackId('credit_140');
+        setSelectedPackId(null);
       } else {
         setActiveTab('sub');
         setPlanId(initialPlanId);
@@ -198,6 +183,11 @@ export default function RechargeModal({
     if (!isOpen) return undefined;
     let cancelled = false;
     setError(null);
+    setSubscriptionPlans(null);
+    setSubscriptionError(false);
+    setUniversalPacks(null);
+    setPacksError(false);
+    setAvailableProviders({});
 
     Promise.all([
       fetch('/api/billing/plans', { cache: 'no-store' }).then((r) => (r.ok ? r.json() : {})).catch(() => ({})),
@@ -218,13 +208,16 @@ export default function RechargeModal({
           return Object.keys(provs).find((p) => provs[p]?.enabled) || '';
         });
       }
-      if (Array.isArray(plansPayload?.plans) && plansPayload.plans.length > 0) {
-        const filtered = plansPayload.plans.filter((item) => item.id !== 'free');
-        if (filtered.length > 0) setSubscriptionPlans(filtered);
-      }
-      if (Array.isArray(packsPayload?.universalPacks) && packsPayload.universalPacks.length > 0) {
-        setUniversalPacks(packsPayload.universalPacks);
-      }
+      if (Array.isArray(plansPayload?.plans)) {
+        const filtered = plansPayload.plans.filter((item) => item.id !== 'free' && item.enabled !== false);
+        setSubscriptionPlans(filtered);
+        setPlanId((current) => filtered.some((item) => item.id === current) ? current : null);
+      } else setSubscriptionError(true);
+      const availablePacks = packsPayload?.packs || packsPayload?.universalPacks;
+      if (Array.isArray(availablePacks)) {
+        setUniversalPacks(availablePacks);
+        setSelectedPackId(current => availablePacks.some(pack => pack.id === current) ? current : availablePacks[0]?.id || null);
+      } else setPacksError(true);
     }).catch((fetchError) => {
       if (!cancelled) setError(fetchError.message || '加载商品方案失败');
     });
@@ -232,7 +225,7 @@ export default function RechargeModal({
     return () => {
       cancelled = true;
     };
-  }, [isOpen]);
+  }, [isOpen, catalogRetry]);
 
   // 轮询订单支付状态
   useEffect(() => {
@@ -254,7 +247,8 @@ export default function RechargeModal({
       try {
         const res = await fetch(`/api/billing/orders/${checkoutData.orderId}/status`, { cache: 'no-store' });
         if (res.ok) {
-          const data = await res.json();
+          const payload = await res.json();
+          const data = payload.order || payload;
           // 若后台已解析出支付宝原生二维码，无缝升级为无损矢量 SVG
           if (data.qrCode && !checkoutData?.qrUrl) {
             setCheckoutData((current) => (current ? { ...current, qrUrl: data.qrCode } : current));
@@ -284,72 +278,61 @@ export default function RechargeModal({
     return () => clearTimers();
   }, [checkoutData, onPaySuccess, pollStatus, clearTimers]);
 
-  const getPlanPrice = (targetPlan, cycle) => {
-    if (!targetPlan) return 140;
-    if (cycle === 'yearly') {
-      return Number(targetPlan.yearlyCny || targetPlan.meta?.yearlyCny) || (targetPlan.id === 'pro' ? 17600 : targetPlan.id === 'plus' ? 8000 : targetPlan.id === 'basic' ? 3600 : 1680);
-    }
-    if (cycle === 'quarterly') {
-      return Number(targetPlan.quarterlyCny || targetPlan.meta?.quarterlyCny) || (targetPlan.id === 'pro' ? 4752 : targetPlan.id === 'plus' ? 2160 : targetPlan.id === 'basic' ? 945 : 420);
-    }
-    return Number(targetPlan.monthlyCny || targetPlan.meta?.monthlyCny) || (targetPlan.id === 'pro' ? 1760 : targetPlan.id === 'plus' ? 800 : targetPlan.id === 'basic' ? 350 : 140);
-  };
-
-  const getPlanOriginPrice = (targetPlan, cycle) => {
-    if (!targetPlan) return null;
-    if (cycle === 'yearly') {
-      return Number(targetPlan.yearlyOriginCny || targetPlan.meta?.yearlyOriginCny) || (targetPlan.id === 'pro' ? 24000 : targetPlan.id === 'plus' ? 12000 : targetPlan.id === 'basic' ? 6000 : 2800);
-    }
-    if (cycle === 'quarterly') {
-      return Number(targetPlan.quarterlyOriginCny || targetPlan.meta?.quarterlyOriginCny) || (targetPlan.id === 'pro' ? 6000 : targetPlan.id === 'plus' ? 3000 : targetPlan.id === 'basic' ? 1500 : 700);
-    }
-    return Number(targetPlan.monthlyOriginCny || targetPlan.meta?.monthlyOriginCny) || (targetPlan.id === 'pro' ? 2000 : targetPlan.id === 'plus' ? 1000 : targetPlan.id === 'basic' ? 500 : 233);
-  };
+  const subscriptionCurrency = payMethod === 'stripe' || payMethod === 'paypal' ? 'Usd' : 'Cny';
 
   // 计算当前视窗选中商品的价格与名称
   const currentSelectionInfo = useMemo(() => {
     if (activeTab === 'universal') {
-      const pack = universalPacks.find((p) => p.id === (selectedPackId || 'credit_140')) || universalPacks[1];
+      const pack = universalPacks?.find(p => p.id === selectedPackId);
       return {
-        id: pack?.id || 'credit_140',
-        name: pack?.name || '通用算力包',
-        priceYuan: pack?.priceCny || 140,
-        credits: pack?.credits || 1400,
+        id: pack?.id,
+        name: pack?.name,
+        priceYuan: pack?.priceCny || 0,
+        credits: pack?.credits || 0,
         productType: 'credit_pack',
         billingCycle: 'one_time',
       };
     }
-    const currentSub = subscriptionPlans.find((p) => p.id === planId) || subscriptionPlans[0];
-    const subPrice = getPlanPrice(currentSub, billingCycle);
-    const subQuota = currentSub?.quotaBase || (currentSub?.id === 'pro' ? 27000 : currentSub?.id === 'plus' ? 12000 : currentSub?.id === 'basic' ? 5000 : 2000);
+    const currentSub = subscriptionPlans?.find((p) => p.id === planId);
+    const subPrice = currentSub?.[`${billingCycle}${subscriptionCurrency}`] || 0;
+    const subQuota = currentSub?.quotaBase || 0;
     const mult = billingCycle === 'yearly' ? 12 : billingCycle === 'quarterly' ? 3 : 1;
     return {
-      id: currentSub?.id || 'starter',
+      id: currentSub?.id,
       name: currentSub?.name || '会员方案',
       priceYuan: subPrice,
       credits: subQuota * mult,
       productType: 'subscription',
       billingCycle,
     };
-  }, [activeTab, selectedPackId, planId, billingCycle, universalPacks, subscriptionPlans]);
+  }, [activeTab, selectedPackId, planId, billingCycle, universalPacks, subscriptionPlans, subscriptionCurrency]);
 
   // 提交生成订单
   const handleCreateOrder = async (overridePlanId = null, overrideProvider = null, overrideCycle = null) => {
-    let activePlanId = overridePlanId || currentSelectionInfo.id;
-    const activeProvider = overrideProvider || payMethod || 'alipay';
+    const activePlanId = overridePlanId || currentSelectionInfo.id;
+    const activeProvider = overrideProvider || payMethod;
     if (!activePlanId) {
       setError('请先选择充值方案');
       return;
     }
     const pilotAllowed = activeProvider === 'alipay' && pilotPackId === activePlanId;
-    if (availableProviders && availableProviders[activeProvider]?.enabled === false && !pilotAllowed) {
+    if (!availableProviders[activeProvider]?.enabled && !pilotAllowed) {
       setError('当前支付渠道暂不可用');
       return;
     }
 
     const isCreditPack = activePlanId.startsWith('credit_');
+    if (isCreditPack && !universalPacks?.some(pack => pack.id === activePlanId)) {
+      setError(orderCopy('creditPacksEmpty'));
+      return;
+    }
     const productType = isCreditPack ? 'credit_pack' : 'subscription';
     const activeCycle = productType === 'subscription' ? (overrideCycle || billingCycle || 'monthly') : 'one_time';
+    const currencyKey = activeProvider === 'stripe' || activeProvider === 'paypal' ? 'Usd' : 'Cny';
+    if (!isCreditPack && !subscriptionPlans?.find((plan) => plan.id === activePlanId)?.[`${activeCycle}${currencyKey}`]) {
+      setError(catalogCopy('empty'));
+      return;
+    }
 
     setLoading(true);
     setError(null);
@@ -376,7 +359,8 @@ export default function RechargeModal({
         return;
       }
 
-      if (!payload.qrCodeUrl && !payload.checkoutUrl) {
+      const qr = payload.qrCode || payload.qrCodeUrl;
+      if (!qr && !payload.checkoutUrl) {
         throw new Error(payload.error || '获取支付二维码失败，请稍后重试');
       }
 
@@ -386,11 +370,11 @@ export default function RechargeModal({
         providerPaymentId: payload.providerPaymentId || null,
         createdAt: payload.createdAt || new Date().toISOString(),
         status: 'pending',
-        qrUrl: payload.qrCodeUrl,
+        qrUrl: qr,
         qrImgUrl: payload.qrImgUrl || null,
-        checkoutUrl: payload.checkoutUrl || payload.qrCodeUrl,
-        isPagePay: Boolean(payload.isPagePay),
-        amountYuan: payload.amountYuan || currentSelectionInfo.priceYuan.toFixed(2),
+        checkoutUrl: payload.checkoutUrl || qr,
+        isPagePay: Boolean(payload.isPagePay || (!qr && payload.checkoutUrl)),
+        amountYuan: (Number(payload.amountMinor) / 100).toFixed(2),
         provider: activeProvider,
         planName: payload.planName || currentSelectionInfo.name,
         billingCycle: activeCycle,
@@ -411,11 +395,11 @@ export default function RechargeModal({
       return;
     }
     const targetId = initialPlanId || currentSelectionInfo.id;
-    const targetProvider = (payMethod && availableProviders[payMethod]?.enabled !== false)
+    const targetProvider = (payMethod && availableProviders[payMethod]?.enabled)
       ? payMethod
-      : (Object.keys(availableProviders).find((p) => availableProviders[p]?.enabled) || 'alipay');
+      : Object.keys(availableProviders).find((p) => availableProviders[p]?.enabled);
 
-    if ((autoCheckout || initialPlanId) && !autoCheckedOutRef.current && targetId && targetProvider && !checkoutData && !loading) {
+    if (autoCheckout && currentSelectionInfo.id === targetId && !autoCheckedOutRef.current && targetId && targetProvider && !checkoutData && !loading) {
       autoCheckedOutRef.current = true;
       if (targetProvider !== payMethod) {
         setPayMethod(targetProvider);
@@ -495,7 +479,7 @@ export default function RechargeModal({
       onClick={handleClose}
     >
       <div
-        className="relative w-full max-w-commerce-modal max-h-commerce-modal min-h-commerce-modal rounded-modal border border-line-strong bg-overlay shadow-elevation-4 flex flex-col md:flex-row overflow-hidden text-ink animate-scale-in cursor-default"
+        className="relative flex max-h-commerce-modal w-full max-w-commerce-modal flex-col overflow-y-auto rounded-modal border border-line-strong bg-overlay text-ink shadow-elevation-4 animate-scale-in cursor-default md:min-h-commerce-modal md:flex-row md:overflow-hidden"
         onClick={(event) => event.stopPropagation()}
         role="dialog"
         aria-modal="true"
@@ -513,7 +497,7 @@ export default function RechargeModal({
         </button>
 
         {/* 左侧侧边栏：方案选择与账单明细 */}
-        <aside className="w-full md:w-[280px] shrink-0 border-b md:border-b-0 md:border-r border-line-subtle bg-well p-5 lg:p-6 flex flex-col justify-between select-none overflow-y-auto custom-scrollbar">
+        <aside className="flex w-full shrink-0 select-none flex-col justify-between border-b border-line-subtle bg-well p-5 custom-scrollbar md:w-[280px] md:overflow-y-auto md:border-b-0 md:border-r lg:p-6">
           <div>
             {checkoutData ? (
               <div>
@@ -566,7 +550,6 @@ export default function RechargeModal({
                     onClick={() => {
                       setActiveTab('universal');
                       setError(null);
-                      if (!selectedPackId || !selectedPackId.startsWith('credit_')) setSelectedPackId('credit_140');
                     }}
                     className={`w-full rounded-lg px-3 py-2 text-left text-body-sm transition-colors cursor-pointer ${
                       activeTab === 'universal' ? 'bg-wash-strong text-ink font-semibold' : 'text-ink-muted hover:bg-wash'
@@ -593,7 +576,7 @@ export default function RechargeModal({
         </aside>
 
         {/* 右侧主收银与扫码区 */}
-        <main className="flex-1 h-full min-w-0 p-6 lg:p-8 bg-surface flex flex-col justify-center overflow-y-auto custom-scrollbar">
+        <main className="flex min-w-0 shrink-0 flex-col bg-surface p-6 custom-scrollbar md:min-h-0 md:flex-1 md:overflow-y-auto lg:p-8">
           {checkoutData ? (
             <div className="flex flex-col items-center justify-center text-center my-auto py-4">
               {pollStatus === 'paid' ? (
@@ -697,7 +680,7 @@ export default function RechargeModal({
               <h3 className="text-section-title font-semibold text-ink">{strings.connectingChannel}</h3>
               <p className="mt-2 text-caption text-ink-muted max-w-sm">{strings.connectingGateway}</p>
             </div>
-          ) : error && (autoCheckout || initialPlanId) ? (
+          ) : error && autoCheckout ? (
             <div className="flex flex-col items-center justify-center text-center my-auto py-8">
               <div className="size-12 rounded-full bg-danger/10 flex items-center justify-center text-danger mb-3">
                 <X className="size-6" />
@@ -773,15 +756,15 @@ export default function RechargeModal({
 
                 {/* 套餐网格 */}
                 <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4 mt-4">
-                  {subscriptionPlans.map((item) => {
+                  {(subscriptionPlans || []).map((item) => {
                     const isSelected = planId === item.id;
-                    const itemPrice = getPlanPrice(item, billingCycle);
-                    const originPrice = getPlanOriginPrice(item, billingCycle);
+                    const itemPrice = item[`${billingCycle}${subscriptionCurrency}`];
                     return (
                       <button
                         key={item.id}
                         type="button"
                         onClick={() => setPlanId(item.id)}
+                        aria-pressed={isSelected}
                         className={`relative rounded-xl border p-3.5 text-left transition-[background-color,border-color,box-shadow] cursor-pointer ${
                           isSelected
                             ? 'border-brand-line bg-brand-soft ring-2 ring-brand-ring shadow-elevation-1'
@@ -790,10 +773,7 @@ export default function RechargeModal({
                       >
                         <p className="text-body-sm font-semibold text-ink truncate">{item.name}</p>
                         <div className="mt-2 flex items-baseline gap-1.5 flex-wrap">
-                          <span className="text-xl font-bold font-mono text-brand">￥{itemPrice}</span>
-                          {originPrice ? (
-                            <span className="text-micro text-ink-subtle line-through">￥{originPrice}</span>
-                          ) : null}
+                          <span className="text-xl font-bold font-mono text-brand">{itemPrice > 0 ? `${subscriptionCurrency === 'Usd' ? '$' : '￥'}${itemPrice}` : '—'}</span>
                           <span className="text-micro text-ink-muted font-normal">
                             {billingCycle === 'yearly' ? strings.perYear : billingCycle === 'quarterly' ? strings.perQuarter : strings.perMonth}
                           </span>
@@ -810,6 +790,12 @@ export default function RechargeModal({
                     );
                   })}
                 </div>
+                {subscriptionError ? <div className="mt-3 flex items-center gap-2">
+                  <p role="alert" className="text-danger">{catalogCopy('loadFailed')}</p>
+                  <Button size="lg" onClick={() => setCatalogRetry((current) => current + 1)}>{catalogCopy('retry')}</Button>
+                </div> : !subscriptionPlans?.length && <p role="status" className="mt-3 text-ink-muted">
+                  {catalogCopy(subscriptionPlans ? 'empty' : 'loading')}
+                </p>}
 
                 {/* 支付方式选择 */}
                 {renderPaymentProviders()}
@@ -819,14 +805,14 @@ export default function RechargeModal({
               <div className="mt-5 flex items-center justify-between border-t border-line-subtle pt-3.5">
                 <div>
                   <p className="text-caption text-ink-muted">{strings.amountToPay}</p>
-                  <p className="text-2xl font-bold font-mono text-brand">￥{currentSelectionInfo.priceYuan.toFixed(2)}</p>
+                  <p className="text-2xl font-bold font-mono text-brand">{currentSelectionInfo.priceYuan > 0 ? `${subscriptionCurrency === 'Usd' ? '$' : '￥'}${currentSelectionInfo.priceYuan.toFixed(2)}` : '—'}</p>
                 </div>
                 <Button
                   variant="primary"
                   size="lg"
                   className="font-semibold shadow-elevation-1 cursor-pointer"
                   onClick={() => handleCreateOrder(planId, payMethod, billingCycle)}
-                  disabled={loading || !availableProviders[payMethod]?.enabled}
+                  disabled={loading || !currentSelectionInfo.priceYuan || !availableProviders[payMethod]?.enabled}
                 >
                   {loading ? (strings.paying || '处理中...') : payMethod === 'stripe' ? (strings.goToStripe || '前往 Stripe 收银台') : payMethod === 'paypal' ? (strings.goToPaypal || '前往 PayPal 收银台') : (strings.payNow || '立即支付')}
                 </Button>
@@ -847,14 +833,22 @@ export default function RechargeModal({
                   </span>
                 </div>
 
-                {/* 7 档算力包网格 */}
+                {packsError ? (
+                  <div className="mt-4 space-y-2">
+                    <p role="alert" className="text-danger">{orderCopy('creditPacksFailed')}</p>
+                    <Button size="lg" onClick={() => setCatalogRetry(current => current + 1)}>{catalogCopy('retry')}</Button>
+                  </div>
+                ) : !universalPacks?.length && (
+                  <p role="status" className="mt-4 text-ink-muted">{orderCopy(universalPacks ? 'creditPacksEmpty' : 'creditPacksLoading')}</p>
+                )}
                 <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4 mt-4">
-                  {universalPacks.map((pack) => {
-                    const isSelected = (selectedPackId || 'credit_140') === pack.id;
+                  {universalPacks?.map((pack) => {
+                    const isSelected = selectedPackId === pack.id;
                     return (
                       <button
                         key={pack.id}
                         type="button"
+                        aria-pressed={isSelected}
                         onClick={() => setSelectedPackId(pack.id)}
                         className={`relative rounded-xl border p-3.5 text-left transition-[background-color,border-color,box-shadow] cursor-pointer ${
                           isSelected
@@ -864,7 +858,7 @@ export default function RechargeModal({
                       >
                         <div className="flex items-center justify-between">
                           <p className="text-body-sm font-semibold text-ink truncate">{pack.name}</p>
-                          <span className="text-micro text-ink-muted font-mono">{strings.unitPriceDesc('0.10')}</span>
+                          <span className="text-micro text-ink-muted font-mono">{pack.credits > 0 ? strings.unitPriceDesc((pack.priceCny / pack.credits).toFixed(2)) : ''}</span>
                         </div>
                         <div className="mt-2 flex items-baseline gap-1">
                           <span className="text-xl font-bold font-mono text-brand">￥{pack.priceCny}</span>
@@ -886,14 +880,14 @@ export default function RechargeModal({
               <div className="mt-5 flex items-center justify-between border-t border-line-subtle pt-3.5">
                 <div>
                   <p className="text-caption text-ink-muted">{strings.amountToPay}</p>
-                  <p className="text-2xl font-bold font-mono text-brand">￥{currentSelectionInfo.priceYuan.toFixed(2)}</p>
+                  <p className="text-2xl font-bold font-mono text-brand">{currentSelectionInfo.id ? `￥${currentSelectionInfo.priceYuan.toFixed(2)}` : '—'}</p>
                 </div>
                 <Button
                   variant="primary"
                   size="lg"
                   className="font-semibold shadow-elevation-1 cursor-pointer"
-                  onClick={() => handleCreateOrder(selectedPackId || 'credit_140', payMethod, 'one_time')}
-                  disabled={loading || !(availableProviders[payMethod]?.enabled || (payMethod === 'alipay' && pilotPackId === currentSelectionInfo.id))}
+                  onClick={() => handleCreateOrder(currentSelectionInfo.id, payMethod, 'one_time')}
+                  disabled={!currentSelectionInfo.id || loading || !(availableProviders[payMethod]?.enabled || (payMethod === 'alipay' && pilotPackId === currentSelectionInfo.id))}
                 >
                   {loading ? (strings.paying || '处理中...') : payMethod === 'stripe' ? (strings.goToStripe || '前往 Stripe 收银台') : payMethod === 'paypal' ? (strings.goToPaypal || '前往 PayPal 收银台') : (strings.payNow || '立即支付')}
                 </Button>

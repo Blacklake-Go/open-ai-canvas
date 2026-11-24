@@ -1,5 +1,37 @@
 import type { SupDanceI18nEntry } from "../types";
 const definitions = [
+    ["canvasImportTitle", "导入 ONE 作品", "Import work from ONE", "匯入 ONE 作品", "ONE の作品をインポート", "ONE 작품 가져오기", "Importar obra de ONE"],
+    ["canvasImportWaiting", "正在连接 ONE…", "Connecting to ONE…", "正在連線至 ONE…", "ONE に接続中…", "ONE에 연결 중…", "Conectando con ONE…"],
+    [
+        "canvasImportExpired",
+        "导入请求已失效，请返回 ONE 重新打开作品。",
+        "This request expired. Reopen the work from ONE.",
+        "匯入要求已失效，請返回 ONE 重新開啟作品。",
+        "リクエストの期限が切れました。ONE から作品を開き直してください。",
+        "요청이 만료되었습니다. ONE에서 작품을 다시 여세요.",
+        "La solicitud caducó. Vuelve a abrir la obra desde ONE.",
+    ],
+    ["canvasImportSignIn", "登录 Canvas", "Sign in to Canvas", "登入 Canvas", "Canvas にログイン", "Canvas에 로그인", "Iniciar sesión en Canvas"],
+    [
+        "canvasImportRecipient",
+        "作品将保存到 {{account}} 的新画布。",
+        "The work will be saved to a new canvas for {{account}}.",
+        "作品將儲存至 {{account}} 的新畫布。",
+        "作品は {{account}} の新しいキャンバスに保存されます。",
+        "작품이 {{account}}의 새 캔버스에 저장됩니다.",
+        "La obra se guardará en un lienzo nuevo de {{account}}.",
+    ],
+    [
+        "canvasImportFailed",
+        "导入失败，请重试或返回 ONE 重新打开作品。",
+        "Import failed. Try again or reopen the work from ONE.",
+        "匯入失敗，請重試或返回 ONE 重新開啟作品。",
+        "インポートに失敗しました。再試行するか、ONE から作品を開き直してください。",
+        "가져오기에 실패했습니다. 다시 시도하거나 ONE에서 작품을 다시 여세요.",
+        "No se pudo importar. Inténtalo de nuevo o vuelve a abrir la obra desde ONE.",
+    ],
+    ["canvasImportConfirm", "导入到新画布", "Import to a new canvas", "匯入至新畫布", "新しいキャンバスにインポート", "새 캔버스로 가져오기", "Importar a un lienzo nuevo"],
+    ["canvasImportBack", "返回画布列表", "Back to canvases", "返回畫布清單", "キャンバス一覧に戻る", "캔버스 목록으로 돌아가기", "Volver a los lienzos"],
     ["title", "连接 ONE 创作者账户", "Connect your ONE creator account", "連接 ONE 創作者帳戶", "ONE クリエイターアカウントを連携", "ONE 크리에이터 계정 연결", "Conectar tu cuenta de creador ONE"],
     [
         "intro",
@@ -64,6 +96,14 @@ const definitions = [
     ["append", "添加到当前提示词", "Add to current prompt", "新增至目前提示詞", "現在のプロンプトに追加", "현재 프롬프트에 추가", "Añadir a la indicación actual"],
 ] as const;
 const nativeTranslations: Record<string, Record<string, string>> = {
+    canvasImportTitle: { "fr-FR": "Importer une œuvre depuis ONE", "de-DE": "Werk aus ONE importieren" },
+    canvasImportWaiting: { "fr-FR": "Connexion à ONE…", "de-DE": "Verbindung zu ONE wird hergestellt…" },
+    canvasImportExpired: { "fr-FR": "La demande a expiré. Rouvrez l’œuvre depuis ONE.", "de-DE": "Die Anfrage ist abgelaufen. Öffne das Werk erneut in ONE." },
+    canvasImportSignIn: { "fr-FR": "Se connecter à Canvas", "de-DE": "Bei Canvas anmelden" },
+    canvasImportRecipient: { "fr-FR": "L’œuvre sera enregistrée dans un nouveau canevas pour {{account}}.", "de-DE": "Das Werk wird auf einer neuen Leinwand für {{account}} gespeichert." },
+    canvasImportFailed: { "fr-FR": "L’importation a échoué. Réessayez ou rouvrez l’œuvre depuis ONE.", "de-DE": "Der Import ist fehlgeschlagen. Versuche es erneut oder öffne das Werk erneut in ONE." },
+    canvasImportConfirm: { "fr-FR": "Importer dans un nouveau canevas", "de-DE": "In eine neue Leinwand importieren" },
+    canvasImportBack: { "fr-FR": "Retour aux canevas", "de-DE": "Zurück zu den Leinwänden" },
     title: {
         "fr-FR": "Connecter votre compte créateur ONE",
         "de-DE": "ONE-Kreativkonto verbinden",

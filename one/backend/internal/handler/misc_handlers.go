@@ -34,6 +34,7 @@ func init() {
 	registerBatch(func(d *Dependencies, mount mountFunc) {
 		mount("GET", "/api/feedback", wrapDomain(d, "authenticated_or_domain", miscFeedback))
 		mount("POST", "/api/feedback", wrapDomain(d, "authenticated_or_domain", miscFeedback))
+		mount("GET", "/api/feedback/[id]/attachments/[index]", wrapDomain(d, "authenticated_or_domain", feedbackOwnerAttachment))
 		mount("POST", "/api/analytics/track", wrapDomain(d, "public", miscAnalyticsTrack))
 		mount("POST", "/api/analytics/banner-event", wrapDomain(d, "public", miscBannerEvent))
 		// Source webhook/IndexNow routes call no auth helper at all: they are public platform
@@ -84,6 +85,9 @@ func miscFeedback(w http.ResponseWriter, r *http.Request, d *Dependencies, u *mi
 		}
 		return
 	}
+	if !coreExpectedOwner(w, r, envelope.FormatDirectDomainJSON, u.ID, "FEEDBACK_ACCOUNT_CHANGED") {
+		return
+	}
 	if d.Pool == nil {
 		dbUnavailable(w, r, envelope.FormatDirectDomainJSON)
 		return
@@ -106,14 +110,30 @@ func miscFeedback(w http.ResponseWriter, r *http.Request, d *Dependencies, u *mi
 			var attachments []byte
 			var reward float64
 			var reviewedAt, createdAt any
-			if rows.Scan(&id, &kind, &title, &pageURL, &githubURL, &attachments, &status, &reward, &reviewNote, &reviewedAt, &createdAt) == nil {
-				items = append(items, map[string]any{
-					"id": id, "kind": kind, "title": title, "page_url": pageURL,
-					"github_url": githubURL, "attachments": json.RawMessage(attachments),
-					"status": status, "reward_coins": reward, "review_note": reviewNote,
-					"reviewed_at": reviewedAt, "created_at": createdAt,
-				})
+			if err := rows.Scan(&id, &kind, &title, &pageURL, &githubURL, &attachments, &status, &reward, &reviewNote, &reviewedAt, &createdAt); err != nil {
+				envelope.DomainError(w, http.StatusServiceUnavailable, "获取提交记录失败", "FEEDBACK_READ_FAILED")
+				return
 			}
+			items = append(items, map[string]any{
+				"id": id, "kind": kind, "title": title, "page_url": pageURL,
+				"github_url": githubURL, "attachments": json.RawMessage(attachments),
+				"status": status, "reward_coins": reward, "review_note": reviewNote,
+				"reviewed_at": reviewedAt, "created_at": createdAt,
+				"pageUrl": pageURL, "rewardCoins": reward, "reviewNote": reviewNote, "createdAt": createdAt,
+			})
+		}
+		if rows.Err() != nil {
+			envelope.DomainError(w, http.StatusServiceUnavailable, "获取提交记录失败", "FEEDBACK_READ_FAILED")
+			return
+		}
+		for _, item := range items {
+			list, err := feedbackAttachmentMetadata(item["id"].(string), item["attachments"], false)
+			if err != nil {
+				envelope.DomainError(w, http.StatusServiceUnavailable, "获取附件记录失败", "FEEDBACK_READ_FAILED")
+				return
+			}
+			item["attachments"] = list
+			item["attachmentCount"] = len(list)
 		}
 		envelope.DomainJSON(w, http.StatusOK, map[string]any{"items": items})
 		return
@@ -121,7 +141,11 @@ func miscFeedback(w http.ResponseWriter, r *http.Request, d *Dependencies, u *mi
 
 	// POST: rate limit 10/hour, JSON or multipart body, exact validation from sanitizeSubmit.
 	res, err := miscConsumeRateLimit(r.Context(), d, "feedback_submit", u.ID, 10, time.Hour)
-	if err != nil || !res.Allowed {
+	if err != nil {
+		envelope.DomainError(w, http.StatusServiceUnavailable, "暂时无法提交，请稍后重试", "FEEDBACK_SAVE_FAILED")
+		return
+	}
+	if !res.Allowed {
 		miscWriteRateLimited(w, res)
 		return
 	}
@@ -134,18 +158,17 @@ func miscFeedback(w http.ResponseWriter, r *http.Request, d *Dependencies, u *mi
 		Detail    string `json:"detail"`
 	}
 	if strings.Contains(strings.ToLower(r.Header.Get("Content-Type")), "multipart/form-data") {
-		if err := r.ParseMultipartForm(20 << 20); err != nil {
-			envelope.DomainError(w, http.StatusBadRequest, "提交失败，请稍后重试", "INVALID_BODY")
+		r.Body = http.MaxBytesReader(w, r.Body, feedbackMaxBytes+(1<<20))
+		if err := r.ParseMultipartForm(1 << 20); err != nil {
+			writeFeedbackError(w, feedbackMultipartError(err))
 			return
 		}
+		defer r.MultipartForm.RemoveAll()
 		body.Kind = r.FormValue("kind")
 		body.Title = r.FormValue("title")
 		body.PageURL = firstNonEmptyValues(r.FormValue("pageUrl"), r.FormValue("page_url"))
 		body.GithubURL = firstNonEmptyValues(r.FormValue("githubUrl"), r.FormValue("github_url"))
 		body.Detail = r.FormValue("detail")
-		// Attachments are validated/persisted by the storage pipeline; this wave records the
-		// report with an empty attachment list when none were supplied, matching the JS
-		// default `files = []` path. Storage ingestion is an explicit integration-verify item.
 	} else if !decodeJSONBody(w, r, 64*1024, &body) {
 		return
 	}
@@ -193,14 +216,32 @@ func miscFeedback(w http.ResponseWriter, r *http.Request, d *Dependencies, u *mi
 	if githubURL != "" {
 		githubArg = githubURL
 	}
+	stored := []feedbackAttachment{}
+	if r.MultipartForm != nil {
+		var problem *feedbackError
+		stored, problem = storeFeedbackAttachments(r.Context(), d.storageSvc(d.Pool), id, u.ID, r.MultipartForm.File["attachments"])
+		if problem != nil {
+			writeFeedbackError(w, problem)
+			return
+		}
+	}
+	attachmentJSON, _ := json.Marshal(stored)
 	_, err = d.Pool.Exec(r.Context(), `
 		INSERT INTO ops_bill.feedback_reports
 		  (id, user_id, kind, title, page_url, github_url, detail, attachments, status, reward_coins, created_at, updated_at)
-		VALUES ($1, $2, $3, $4, $5, $6, $7, '[]'::jsonb, 'pending', 0, now(), now())`,
-		id, u.ID, kind, title, pageArg, githubArg, detail)
+		VALUES ($1, $2, $3, $4, $5, $6, $7, $8::jsonb, 'pending', 0, now(), now())`,
+		id, u.ID, kind, title, pageArg, githubArg, detail, attachmentJSON)
 	if err != nil {
-		envelope.DomainError(w, http.StatusBadRequest, "提交失败，请稍后重试", "FEEDBACK_INVALID")
-		return
+		ctx, cancel := context.WithTimeout(context.WithoutCancel(r.Context()), 5*time.Second)
+		defer cancel()
+		var exists bool
+		if checkErr := d.Pool.QueryRow(ctx, `SELECT EXISTS (SELECT 1 FROM ops_bill.feedback_reports WHERE id=$1 AND user_id=$2)`, id, u.ID).Scan(&exists); checkErr != nil || !exists {
+			if checkErr == nil {
+				cleanupFeedbackAttachments(ctx, d.storageSvc(d.Pool), stored)
+			}
+			envelope.DomainError(w, http.StatusServiceUnavailable, "提交结果暂时无法确认，请查看提交记录后重试", "FEEDBACK_SAVE_FAILED")
+			return
+		}
 	}
 	envelope.DomainJSON(w, http.StatusOK, map[string]any{
 		"id": id, "message": "提交成功，审核通过后硬币会自动到账",

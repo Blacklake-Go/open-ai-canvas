@@ -211,8 +211,8 @@ func TestCheckoutAndCatalogsAndCoupons(t *testing.T) {
 		Now:    func() time.Time { return now },
 	}
 
-	plans := svc.ListPlans(context.Background())
-	if len(plans["plans"].([]PlanItem)) != 4 {
+	plans, err := svc.ListPlans(context.Background())
+	if err != nil || len(plans["plans"].([]PlanItem)) != 4 {
 		t.Fatalf("expected 4 plans")
 	}
 
@@ -318,7 +318,7 @@ func TestWebhooksCryptoAndFailClosedPayPal(t *testing.T) {
 	}
 
 	// 2. Stripe HMAC signature + idempotent duplicate ignore
-	stripeBody := []byte(`{"id":"evt_1","type":"checkout.session.completed","data":{"object":{"id":"cs_1","amount_total":5000,"currency":"usd","payment_intent":"pi_1","metadata":{"order_id":"order_st_1"}}}}`)
+	stripeBody := []byte(`{"id":"evt_1","type":"checkout.session.completed","data":{"object":{"id":"cs_1","payment_status":"paid","amount_total":5000,"currency":"usd","payment_intent":"pi_1","metadata":{"order_id":"order_st_1"}}}}`)
 	mac := hmac.New(sha256.New, []byte("whsec_test_secret"))
 	mac.Write([]byte(fmt.Sprintf("%d.", now.Unix())))
 	mac.Write(stripeBody)

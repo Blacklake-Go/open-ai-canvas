@@ -82,6 +82,7 @@ function defaultSimulationParameters(model) {
 
 export default function RoutingClient({
   initialTab = 'topology',
+  initialModelId = '',
   initialSnapshot = { models: [], providers: [] },
   initialPricing = [],
   initialStrategy = {},
@@ -100,8 +101,10 @@ export default function RoutingClient({
 
   // ================= Tab 1: 路由拓扑与模拟器 =================
   const [snapshot, setSnapshot] = useState(initialSnapshot);
-  const [search, setSearch] = useState('');
-  const [simModelId, setSimModelId] = useState(initialSnapshot.models?.[0]?.id || '');
+  const [search, setSearch] = useState(initialModelId);
+  const [simModelId, setSimModelId] = useState(
+    initialSnapshot.models?.find(model => model.id === initialModelId)?.id || initialSnapshot.models?.[0]?.id || ''
+  );
   const initialSimulatorModel = initialSnapshot.models?.find((m) => m.id === simModelId);
   const [paramsText, setParamsText] = useState(() =>
     JSON.stringify(defaultSimulationParameters(initialSimulatorModel), null, 2)

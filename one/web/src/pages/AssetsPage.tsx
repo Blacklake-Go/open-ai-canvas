@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Navigate, useParams } from 'react-router';
+import { Navigate, useLocation, useParams } from 'react-router';
 import JimengAssetCenter from '@/components/assets/JimengAssetCenter';
 import { getAssetLibraryCopy } from '@/lib/assetLibraryCopy';
 import { getLocaleConfig, isSupportedLocale, normalizeLocale } from '@/lib/locales';
@@ -9,6 +9,7 @@ import { oneApi } from '@/services/api/http';
 
 export function AssetsPage({ forcedLocale }: { forcedLocale?: string }) {
   const { locale: routeLocale } = useParams<{ locale?: string }>();
+  const { search } = useLocation();
   const [authState, setAuthState] = useState<{ loading: boolean; user: any }>({
     loading: true,
     user: null,
@@ -64,7 +65,7 @@ export function AssetsPage({ forcedLocale }: { forcedLocale?: string }) {
 
   if (isDynamicLocale) {
     const { rootPath } = getLocaleConfig(normalizedDynamic);
-    const targetPath = `${rootPath}/assets`;
+    const targetPath = `${rootPath}/assets${search}`;
     if (!authState.user) {
       return <Navigate to={`${rootPath}/login?redirect=${encodeURIComponent(targetPath)}`} replace />;
     }
@@ -79,7 +80,7 @@ export function AssetsPage({ forcedLocale }: { forcedLocale?: string }) {
 
   if (forcedLocale === 'zh-CN') {
     if (!authState.user) {
-      return <Navigate to="/zh/login?redirect=/zh/assets" replace />;
+      return <Navigate to={`/zh/login?redirect=${encodeURIComponent(`/zh/assets${search}`)}`} replace />;
     }
     return (
       <JimengAssetCenter
@@ -92,14 +93,12 @@ export function AssetsPage({ forcedLocale }: { forcedLocale?: string }) {
 
   const effectiveLocale = resolveEffectiveLocaleClient(authState.user?.locale);
   if (!authState.user) {
-    if (effectiveLocale === 'zh-CN') {
-      return <Navigate to="/zh/login?redirect=/zh/assets" replace />;
-    }
-    return <Navigate to="/login?redirect=/assets" replace />;
+    const rootPath = effectiveLocale === 'zh-CN' ? '/zh' : '';
+    return <Navigate to={`${rootPath}/login?redirect=${encodeURIComponent(`${rootPath}/assets${search}`)}`} replace />;
   }
 
   if (effectiveLocale === 'zh-CN') {
-    return <Navigate to="/zh/assets" replace />;
+    return <Navigate to={`/zh/assets${search}`} replace />;
   }
 
   return (

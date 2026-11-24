@@ -63,6 +63,8 @@ export const ROUTE_POLICIES = [
   { match: '/creations', auth: 'client', index: 'index', note: '服务端零检查，客户端决定登录态' },
   { match: '/community/**', auth: 'public', index: 'index', note: '游客可浏览；发帖接口各自查会话' },
   { match: '/pricing', auth: 'public', index: 'index', note: '正文硬编码中文，无 locale prop' },
+  { match: '/billing/orders', auth: 'session', index: 'none', note: '当前账号的订单记录与分页' },
+  { match: '/billing/success', auth: 'session', index: 'none', note: '收银台返回与订单状态，可登录后回到原订单' },
   {
     match: '/call-api',
     auth: 'public',
@@ -156,6 +158,8 @@ export const LOCALIZED_PATHS = {
  */
 export const PREFIX_AGNOSTIC_BASES = [
   'assets',
+  'billing',
+  'call-api',
   'content-policy',
   'login',
   'privacy',
@@ -170,7 +174,7 @@ export const PREFIX_AGNOSTIC_BASES = [
  * 不该被一个语言前缀悄悄重路由过去。
  */
 export const UNPREFIXED_TOP_SEGMENTS = [
-  'about', 'account', 'admin', 'agents', 'assets', 'assistant', 'benefits', 'call-api', 'canvas-tools', 'change-password', 'community', 'coins',
+  'about', 'account', 'admin', 'agents', 'assets', 'assistant', 'benefits', 'billing', 'call-api', 'canvas-tools', 'change-password', 'community', 'coins',
   'content-policy', 'creations', 'credits', 'design-system', 'embed-auth', 'feedback', 'forgot-password', 'lab', 'login', 'models', 'onboarding',
   'pricing', 'privacy', 'profile', 'refund', 'register', 'reset-password', 'sitemap.xml', 'studio', 'subscription', 'terms', 'u', 'workflow',
 ];

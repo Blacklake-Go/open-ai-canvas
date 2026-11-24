@@ -133,6 +133,9 @@ export interface ContentConfigResponse {
   };
   motion: {
     motionLevel: string;
+    ambientGlow: boolean;
+    cardTiltHover: boolean;
+    bannerPulse: boolean;
   };
   features: Record<string, boolean>;
 }
@@ -140,8 +143,13 @@ export interface ContentConfigResponse {
 export interface SubscriptionFAQResponse {
   notice: string;
   supportEmail: string;
+  invoiceNotice: string;
+  configured: boolean;
   items: Array<{
     id: string;
+    order: number;
+    enabled: boolean;
+    category: string;
     question: string;
     answer: string;
   }>;
@@ -183,8 +191,10 @@ export const oneApi = {
     apiRequest<BrandingResponse>('/api/site/branding', { contract: 'domain', signal }),
   getContentConfig: (signal?: AbortSignal) =>
     apiRequest<ContentConfigResponse>('/api/site/content-config', { contract: 'domain', signal }),
-  getSubscriptionFAQ: (signal?: AbortSignal) =>
-    apiRequest<SubscriptionFAQResponse>('/api/site/subscription-faq', { contract: 'domain', signal }),
+  getSubscriptionFAQ: (locale: string, signal?: AbortSignal) =>
+    apiRequest<SubscriptionFAQResponse>(`/api/site/subscription-faq?locale=${encodeURIComponent(locale)}`, {
+      contract: 'domain', signal, cache: 'no-cache',
+    }),
   getI18n: (locale: string, signal?: AbortSignal) =>
     apiRequest<I18nResponse>(`/api/i18n?locale=${encodeURIComponent(locale)}`, {
       contract: 'domain',

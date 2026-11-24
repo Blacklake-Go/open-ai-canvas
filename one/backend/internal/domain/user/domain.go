@@ -127,8 +127,6 @@ type Repository interface {
 	SetAvatarFrame(ctx context.Context, userID string, frame string) error
 	HasUnlockedAvatarFrame(ctx context.Context, userID string, frame string) (bool, error)
 
-	GetOrInitAPIKey(ctx context.Context, userID string, generator func() string) (string, string, error)
-	RotateAPIKey(ctx context.Context, userID string, newKey string) (string, string, error)
 
 	UpdatePassword(ctx context.Context, userID, passwordHash, passwordSalt string) error
 	BindEmail(ctx context.Context, userID, email string) error
@@ -346,27 +344,6 @@ func (s *Service) WearAvatarFrame(ctx context.Context, userID, frame string) (ma
 		msg = "头像框已佩戴"
 	}
 	return map[string]any{"success": true, "avatarFrame": clean, "message": msg}, nil
-}
-
-func generateAPIKey() string {
-	return "sk-koyo-live-" + auth.GenerateRandomHex(20)
-}
-
-func (s *Service) GetAPIKey(ctx context.Context, userID string) (string, string, error) {
-	if s.Repo == nil {
-		return "", "", ErrNotImplemented
-	}
-	return s.Repo.GetOrInitAPIKey(ctx, userID, generateAPIKey)
-}
-
-func (s *Service) RotateAPIKey(ctx context.Context, userID string) (string, string, error) {
-	if s.Repo == nil {
-		return "", "", ErrNotImplemented
-	}
-	if err := s.checkLimit(ctx, "user.api-key", userID, 20, time.Minute); err != nil {
-		return "", "", err
-	}
-	return s.Repo.RotateAPIKey(ctx, userID, generateAPIKey())
 }
 
 func (s *Service) ChangePassword(ctx context.Context, userID, currentPassword, newPassword string) error {

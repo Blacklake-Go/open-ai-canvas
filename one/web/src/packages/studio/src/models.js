@@ -1,5 +1,8 @@
 import { getMediaCapability } from "./modelCapabilities.js";
 import { publishedStudioModels } from "./publishedModelDirectory.js";
+import { isServerModelGenerationEligible } from "@/lib/modelCenter/generationEligibility";
+
+export { isServerModelGenerationEligible };
 import { setServerModelMeta } from "./modelDescriptions.js";
 
 // Synced from the canonical Muapi schema_data.json catalog.
@@ -31661,18 +31664,20 @@ const GLOBAL_ACTIVE_IDS_KEY = '__SUPDANCE_ACTIVE_MODEL_IDS__';
 
 let activeModelIds = null;
 let modelPricingById = new Map();
+let canonicalByCatalogId = new Map();
 
-export function isServerModelGenerationEligible(row) {
-  const creditsPrice = Number(row?.creditsPrice);
-  return Boolean(
-    row?.id
-    && row.isActive === true
-    && row.isVisible === true
-    && row.autoRouteEligible === true
-    && row.hasWorkingRoute === true
-    && Number.isFinite(creditsPrice)
-    && creditsPrice > 0
-  );
+export function canonicalGenerationModelId(modelId) {
+  return canonicalByCatalogId.get(modelId) || modelId;
+}
+
+export function findModelForDeepLink(models, modelId) {
+  return models.find(model => model.id === modelId || model.endpoint === modelId)
+    || models.find(model => canonicalGenerationModelId(model.id) === modelId);
+}
+
+export function availableTextModels(models) {
+  return models.filter(row => row.category === 'text' && isServerModelGenerationEligible(row))
+    .sort((left, right) => Number(left.creditsPrice) - Number(right.creditsPrice));
 }
 
 export function isModelActive(modelId) {
@@ -31771,6 +31776,13 @@ export function applyActiveModelDirectory(rows) {
   const list = rows;
   const aliasesById = Object.fromEntries(list.map(row => [row.id, [...(SERVER_TO_CATALOG_ALIASES[row.id] || []), ...publishedStudioModels(row).map(model => model.id)]]));
   setServerModelMeta(list, aliasesById);
+  const eligible = list.filter(isServerModelGenerationEligible);
+  canonicalByCatalogId = new Map(eligible.map(row => [row.id, row.id]));
+  for (const row of eligible) {
+    for (const key of [row.endpoint, ...aliasesById[row.id]]) {
+      if (key && !canonicalByCatalogId.has(key)) canonicalByCatalogId.set(key, row.id);
+    }
+  }
 
   const activeIds = new Set(
     list

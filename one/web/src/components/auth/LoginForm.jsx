@@ -13,7 +13,7 @@ import {
   DouyinIcon,
   BilibiliIcon,
 } from '@/components/SocialIcons';
-import { getAuthCopy, getAuthRoutes } from '@/lib/authCopy';
+import { getAuthCopy, getAuthRoutes, getAuthReturnPath } from '@/lib/authCopy';
 import { openOAuthPopup } from '@/lib/auth/oauthPopup';
 import { fetchSocialOptions as fetchSocialOptionsRequest } from '@/lib/auth/socialOptionsClient';
 
@@ -44,7 +44,7 @@ export default function LoginForm({ locale = 'en' }) {
   const copy = getAuthCopy(locale).login;
   const routes = getAuthRoutes(locale);
 
-  const redirectUrl = searchParams.get('redirect') || routes.studioUrl;
+  const redirectUrl = getAuthReturnPath(searchParams.get('redirect'), routes.studioUrl);
 
   // Tabs: 'email' | 'phone'
   const [activeTab, setActiveTab] = useState('email');

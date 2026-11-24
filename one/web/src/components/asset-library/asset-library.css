@@ -739,6 +739,10 @@
   .assets-library-grid { gap: var(--space-4) var(--space-3); }
   .assets-header-actions { width: 100%; flex-direction: column; align-items: stretch; }
   .assets-header-action-buttons { flex-wrap: wrap; }
+  .assets-header-action-buttons .ant-btn,
+  .asset-archive-actions .ant-btn,
+  .assets-batch-actions .ant-btn,
+  .assets-filter-item { min-height: var(--control-lg); }
   .assets-batch-count { width: 100%; margin-right: 0; }
   .asset-editor-layout { grid-template-columns: 1fr; max-height: 72vh; }
   .assets-storage-usage { width: 100%; }

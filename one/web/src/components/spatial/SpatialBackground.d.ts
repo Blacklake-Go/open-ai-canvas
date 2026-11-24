@@ -4,6 +4,7 @@ export interface SpatialBackgroundProps {
   variant?: 'hero' | 'studio' | 'canvas' | 'minimal' | string;
   showGrid?: boolean;
   showAurora?: boolean;
+  motionLevel?: string;
   showArc?: boolean | null;
   showPointer?: boolean | null;
   showNoise?: boolean;

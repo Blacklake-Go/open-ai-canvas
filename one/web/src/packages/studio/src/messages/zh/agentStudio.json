@@ -4,6 +4,16 @@
     "my-agents": "我的智能体",
     "my-chats": "我的对话"
   },
+  "editor": {
+    "edit": "编辑智能体",
+    "save": "保存更改",
+    "conflict": "此智能体已在其他标签页更新。请先刷新再保存。",
+    "model": "文本模型",
+    "credits": "积分",
+    "newChat": "新对话",
+    "unavailable": "当前没有可用的已发布文本模型。",
+    "chooseModel": "请求的模型暂不可用，请从列表选择已发布模型。"
+  },
   "headings": {
     "agents": "智能体",
     "createAgent": "创建智能体"

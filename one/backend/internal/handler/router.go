@@ -238,6 +238,8 @@ func NewRouter(deps Dependencies) (http.Handler, error) {
 	mount("GET", "/api/ready", http.HandlerFunc(deps.handleReady))
 
 	mount("GET", "/api/site/branding", http.HandlerFunc(deps.handleSiteBranding))
+	mount("GET", "/uploads/branding/[filename]", http.HandlerFunc(deps.handleBrandingUploadRead))
+	mount("HEAD", "/uploads/branding/[filename]", http.HandlerFunc(deps.handleBrandingUploadRead))
 	mount("GET", "/api/site/content-config", http.HandlerFunc(deps.handleSiteContentConfig))
 	mount("GET", "/api/site/subscription-faq", http.HandlerFunc(deps.handleSiteSubscriptionFAQ))
 
@@ -248,6 +250,8 @@ func NewRouter(deps Dependencies) (http.Handler, error) {
 	mount("GET", "/api/models/active", middleware.OptionalAuth(deps.SessionAuth)(http.HandlerFunc(deps.handleModelsActive)))
 
 	mount("GET", "/api/generations/events", middleware.RequireAuth(deps.SessionAuth)(http.HandlerFunc(deps.handleGenerationsEvents)))
+	mount("GET", "/api/generations/references/[job]/[asset]", http.HandlerFunc(deps.handleDesignAssetReference))
+	mount("HEAD", "/api/generations/references/[job]/[asset]", http.HandlerFunc(deps.handleDesignAssetReference))
 
 	// Batch B1: Auth, OAuth, Non-API Auth/Sitemap, and User Domain (40 newly mounted routes; /api/auth/me mounted above)
 	mount("POST", "/api/auth/login", http.HandlerFunc(deps.handleAuthLogin))
@@ -280,8 +284,6 @@ func NewRouter(deps Dependencies) (http.Handler, error) {
 	mount("GET", "/sitemap.xml", http.HandlerFunc(deps.handleSitemapXML))
 
 	mount("GET", "/api/user/activity-dashboard", middleware.OptionalAuth(deps.SessionAuth)(http.HandlerFunc(deps.handleUserActivityDashboard)))
-	mount("GET", "/api/user/api-key", middleware.RequireAuth(deps.SessionAuth)(http.HandlerFunc(deps.handleUserAPIKey)))
-	mount("POST", "/api/user/api-key", middleware.RequireAuth(deps.SessionAuth)(http.HandlerFunc(deps.handleUserAPIKey)))
 	mount("GET", "/api/user/avatar", middleware.OptionalAuth(deps.SessionAuth)(http.HandlerFunc(deps.handleUserAvatar)))
 	mount("POST", "/api/user/avatar", middleware.RequireAuth(deps.SessionAuth)(http.HandlerFunc(deps.handleUserAvatar)))
 	mount("DELETE", "/api/user/avatar", middleware.RequireAuth(deps.SessionAuth)(http.HandlerFunc(deps.handleUserAvatar)))

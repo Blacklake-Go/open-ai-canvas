@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useRef, useState, useEffect } from 'react';
+import React, { useState } from 'react';
 
 /**
  * AuroraVideoLayer
@@ -14,25 +14,8 @@ export default function AuroraVideoLayer({
   videoSrc = '/branding/videos/spatial-aurora.mp4',
   posterSrc = '/branding/videos/spatial-aurora-poster.jpg',
 }) {
-  const videoRef = useRef(null);
   const [videoLoaded, setVideoLoaded] = useState(false);
   const [videoFailed, setVideoFailed] = useState(false);
-
-  useEffect(() => {
-    const video = videoRef.current;
-    if (!video) return;
-
-    // Ensure autoplay starts reliably
-    const playPromise = video.play();
-    if (playPromise !== undefined) {
-      playPromise
-        .then(() => setVideoLoaded(true))
-        .catch(() => {
-          // If browser restricts autoplay, fallback gracefully
-          setVideoFailed(false);
-        });
-    }
-  }, [videoSrc]);
 
   return (
     <div
@@ -42,7 +25,7 @@ export default function AuroraVideoLayer({
     >
       {/* Fallback CSS Glow Layer (Active before video loads or if video fails) */}
       <div
-        className="pointer-events-none absolute inset-0 transition-opacity duration-1000 ease-in-out"
+        className="pointer-events-none absolute inset-0 transition-opacity duration-smooth ease-in-out"
         style={{
           opacity: videoLoaded ? 0.2 : 0.6,
           background:
@@ -53,10 +36,8 @@ export default function AuroraVideoLayer({
       {/* Main 3D Volumetric Fluid Video */}
       {!videoFailed && (
         <video
-          ref={videoRef}
-          aria-label=""
-          width="1920"
-          height="1080"
+          width="2304"
+          height="1440"
           preload="metadata"
           autoPlay
           loop
@@ -65,7 +46,7 @@ export default function AuroraVideoLayer({
           poster={posterSrc}
           onCanPlay={() => setVideoLoaded(true)}
           onError={() => setVideoFailed(true)}
-          className="h-full w-full object-cover"
+          className="pointer-events-none h-full w-full object-cover"
           style={{
             filter: 'contrast(1.05) brightness(1.02)',
           }}

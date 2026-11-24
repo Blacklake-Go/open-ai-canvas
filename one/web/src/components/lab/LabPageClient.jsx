@@ -1,6 +1,7 @@
 'use client';
 
 import Link from 'next/link';
+import { useTranslations } from 'next-intl';
 import {
   ArrowRight,
   Box,
@@ -16,6 +17,8 @@ import {
   User,
 } from 'lucide-react';
 import StudioHeader from '@/components/site/StudioHeader';
+import { SpatialBackground } from '@/components/spatial';
+import { useSiteContentConfig } from '@/lib/hooks/useSiteContentConfig';
 import WorkshopProjects from './WorkshopProjects';
 
 const BASIC_TOOLS = [
@@ -56,7 +59,6 @@ const STORY_TOOLS = [
     description: '正面 / 侧面 / 背面全身设定，保持造型与服装一致。',
     href: '/zh/canvas-tools/three-view/character',
     icon: User,
-    badge: 'HOT',
   },
   {
     id: 'face',
@@ -64,7 +66,6 @@ const STORY_TOOLS = [
     description: '五官、发型与妆容在多个角度下保持一致。',
     href: '/zh/canvas-tools/three-view/face',
     icon: Smile,
-    badge: 'NEW',
   },
   {
     id: 'product',
@@ -93,7 +94,6 @@ const STORY_TOOLS = [
     description: '3×3 九机位同一主体，覆盖多种角度与景别。',
     href: '/zh/canvas-tools/three-view/nine-grid',
     icon: LayoutGrid,
-    badge: 'NEW',
   },
 ];
 
@@ -104,17 +104,12 @@ function ToolCard({ tool }) {
     <Link
       href={tool.href}
       prefetch={false}
-      className="group flex h-full flex-col rounded-2xl border border-line bg-surface p-5 transition-colors duration-fast hover:border-line-strong hover:bg-wash"
+      className="control-focus group flex h-full flex-col rounded-2xl border border-line bg-surface p-5 transition-colors duration-fast hover:border-line-strong hover:bg-wash"
     >
       <div className="flex items-start justify-between gap-3">
         <span className="flex size-11 items-center justify-center rounded-xl border border-line bg-wash text-brand transition-colors duration-fast group-hover:border-line-strong group-hover:bg-wash-strong">
           <Icon className="size-5" aria-hidden="true" />
         </span>
-        {tool.badge ? (
-          <span className="rounded-full border border-brand-line bg-brand-soft px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-brand">
-            {tool.badge}
-          </span>
-        ) : null}
       </div>
       <h3 className="mt-4 text-lg font-bold text-ink">{tool.title}</h3>
       <p className="mt-1.5 text-sm leading-relaxed text-ink-muted">{tool.description}</p>
@@ -126,12 +121,11 @@ function ToolCard({ tool }) {
   );
 }
 
-function ToolSection({ index, title, caption, tools }) {
+function ToolSection({ title, caption, tools }) {
   return (
     <section className="mt-12">
       <div className="mb-5 flex items-end justify-between gap-4">
         <div>
-          <div className="text-[11px] font-mono uppercase tracking-[0.18em] text-ink-subtle">{index}</div>
           <h2 className="mt-1 text-2xl font-bold text-ink">{title}</h2>
           <p className="mt-1 text-sm text-ink-muted">{caption}</p>
         </div>
@@ -147,13 +141,14 @@ function ToolSection({ index, title, caption, tools }) {
 }
 
 export default function LabPageClient() {
+  const t = useTranslations('workshopModels');
+  const { data } = useSiteContentConfig();
   return (
     <div className="relative min-h-screen overflow-x-hidden bg-canvas font-sans text-ink selection:bg-brand/30">
       <StudioHeader locale="zh" className="relative z-40" />
 
-      <div className="pointer-events-none fixed inset-0 z-0 overflow-hidden">
-        <div className="absolute -top-40 left-1/2 h-[420px] w-[1000px] -translate-x-1/2 rounded-full bg-gradient-to-b from-brand/10 via-brand/5 to-transparent blur-[140px]" />
-      </div>
+      <SpatialBackground variant="studio" showGrid showArc
+        showAurora={data?.motion?.ambientGlow ?? true} motionLevel={data?.motion?.motionLevel || 'balanced'} />
 
       <main className="relative z-10 mx-auto max-w-[1440px] px-4 pb-24 pt-8 sm:px-6 lg:px-12">
         <section className="relative overflow-hidden rounded-3xl border border-line bg-surface px-6 py-10 sm:px-10 sm:py-12">
@@ -192,13 +187,11 @@ export default function LabPageClient() {
         <WorkshopProjects />
 
         <ToolSection
-          index="01 / EDIT"
           title="基础编辑"
           caption="单张画面的扩图、清晰度、抠图与机位调整。"
           tools={BASIC_TOOLS}
         />
         <ToolSection
-          index="02 / STORYBOARD"
           title="分镜与三视图"
           caption="角色、产品、场景设定与连续分镜的快速拆分。"
           tools={STORY_TOOLS}
@@ -222,7 +215,7 @@ export default function LabPageClient() {
         </div>
 
         <p className="mt-6 text-center text-xs leading-relaxed text-ink-subtle">
-          所有工具由 Seedream 4.5 承接。每次生成会消耗积分，实际价格以工具页报价为准。
+          {t('quoteNote')}
         </p>
       </main>
     </div>

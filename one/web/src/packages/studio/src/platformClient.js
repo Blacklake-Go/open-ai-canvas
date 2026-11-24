@@ -1,4 +1,4 @@
-import { getModelById, getVideoModelById, getI2IModelById, getI2VModelById, getV2VModelById, getRecastModelById, getLipSyncModelById, getAudioModelById, getMotionControlModelById } from './models.js';
+import { canonicalGenerationModelId, getModelById, getVideoModelById, getI2IModelById, getI2VModelById, getV2VModelById, getRecastModelById, getLipSyncModelById, getAudioModelById, getMotionControlModelById } from './models.js';
 import {
     buildVideoToolPayload,
     serializeVideoToolOptions,
@@ -210,8 +210,9 @@ async function submitAndPoll(endpoint, payload, key, onRequestId, maxAttempts = 
     }
     if (typeof window !== 'undefined' && BASE_URL === '/api') {
         const resolvedStudioId = resolveStudioId(studioId);
+        const canonicalModelId = canonicalGenerationModelId(endpoint);
         return submitPlatformGeneration({
-            modelId: endpoint,
+            modelId: canonicalModelId,
             studioId: resolvedStudioId,
             prompt: payload.prompt || '',
             parameters: payload,
@@ -222,7 +223,7 @@ async function submitAndPoll(endpoint, payload, key, onRequestId, maxAttempts = 
             onAuthRequired: notifyAuthRequired,
             onPhase: (phase, requestId) => {
                 window.dispatchEvent(new CustomEvent('supdance:credits-updated', {
-                    detail: { phase, requestId, modelId: endpoint, studioId: resolvedStudioId },
+                    detail: { phase, requestId, modelId: canonicalModelId, studioId: resolvedStudioId },
                 }));
             },
         }).catch((error) => {

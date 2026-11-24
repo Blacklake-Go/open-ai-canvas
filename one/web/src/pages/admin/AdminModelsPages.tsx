@@ -81,6 +81,7 @@ export function AdminModelsRoutingPage() {
   useDocumentTitle('智能路由拓扑与定价策略 - SupDance 后台');
   const { user, redirectEl } = useAdminPermissionGuard(PERMISSIONS.modelsRead);
   const location = useLocation();
+  const model = new URLSearchParams(location.search).get('model') || '';
   let initialTab = new URLSearchParams(location.search).get('tab') || 'topology';
   if (initialTab === 'rules' || initialTab === 'breakdown') {
     initialTab = 'pricing';
@@ -131,7 +132,9 @@ export function AdminModelsRoutingPage() {
         <div className="h-64 animate-pulse rounded-2xl bg-white/[0.03]" />
       ) : (
         <RoutingClient
+          key={model}
           initialTab={initialTab}
+          initialModelId={model}
           initialSnapshot={snapshot}
           initialPricing={pricingList}
           initialStrategy={initialStrategy}
@@ -196,7 +199,7 @@ export function AdminModelsPublicationPage() {
 export function AdminModelsTelemetryPage() {
   useDocumentTitle('模型调用量与遥测大盘 | SupDance 管理后台');
   const { redirectEl } = useAdminPermissionGuard(PERMISSIONS.modelsRead);
-  const { data, loading } = useAdminData<any>('/api/admin/models/telemetry?timeRange=24h&limit=50');
+  const { data, loading, error } = useAdminData<any>('/api/admin/models/telemetry?timeRange=24h&limit=50');
 
   if (redirectEl) return redirectEl;
 
@@ -210,7 +213,7 @@ export function AdminModelsTelemetryPage() {
       {loading ? (
         <div className="h-64 animate-pulse rounded-2xl bg-white/[0.03]" />
       ) : (
-        <ModelTelemetryClient initialData={data || null} initialRange="24h" />
+        <ModelTelemetryClient initialData={data} initialRange="24h" initialError={error} />
       )}
     </>
   );

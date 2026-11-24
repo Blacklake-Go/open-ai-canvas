@@ -2,7 +2,7 @@
 
 import { useState, useRef, useEffect, useCallback } from 'react';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import toast from 'react-hot-toast';
 import {
   Layers,
@@ -25,7 +25,11 @@ import {
 } from 'lucide-react';
 import StudioHeader from '@/components/site/StudioHeader';
 import { SpatialBackground } from '@/components/spatial';
+import { useSiteContentConfig } from '@/lib/hooks/useSiteContentConfig';
 import { useUserSession } from '@/lib/hooks/useUserSession';
+import { isCanvasTransferable, useCanvasMediaTransfer } from '@/lib/hooks/useCanvasMediaTransfer';
+import { canvasProjectHref } from '@/lib/canvas-project-route';
+import { riverMode, riverResultUrl } from '@/services/api/generation-river';
 import { localizeStudioPath, normalizeLocale, getCommonCopy, getLocaleConfig } from '@/lib/locales';
 import HomeStudioPromptComposer from './HomeStudioPromptComposer';
 import AuthModal from '@/components/AuthModal';
@@ -45,6 +49,15 @@ const IMAGE_CREATION_BACKDROP =
 const pick = (dict, locale) => {
   const norm = normalizeLocale(locale);
   return dict[norm] || dict.en || Object.values(dict)[0] || '';
+};
+
+const CANVAS_TRANSFER_ERRORS = {
+  en: { popup: 'Allow SupDance to open the Canvas tab, then try again.', expired: 'The Canvas import expired. Try opening the work again.' },
+  'zh-CN': { popup: '请允许 SupDance 打开画布标签页后重试。', expired: '画布导入已超时，请重新打开作品。' },
+  'zh-TW': { popup: '請允許 SupDance 開啟畫布分頁後重試。', expired: '畫布匯入已逾時，請重新開啟作品。' },
+  'ja-JP': { popup: 'Canvas のタブを開くことを許可して再試行してください。', expired: 'インポートの期限が切れました。作品を開き直してください。' },
+  'ko-KR': { popup: 'Canvas 탭 열기를 허용한 뒤 다시 시도하세요.', expired: '가져오기가 만료되었습니다. 작품을 다시 열어 주세요.' },
+  es: { popup: 'Permite que SupDance abra la pestaña de Canvas e inténtalo de nuevo.', expired: 'La importación ha caducado. Vuelve a abrir la obra.' },
 };
 
 const PORTAL_COPY = {
@@ -1158,15 +1171,32 @@ const getRecentFeatures = (locale, tHome, rootPath) => {
   ];
 };
 
+/** @param {{ locale?: string, initialUser?: Parameters<typeof useUserSession>[0], googleOneTapEligible?: boolean }} props */
 export default function JimengHomePortal({ locale = 'en', initialUser = undefined, googleOneTapEligible = false }) {
-  const router = useRouter();
   const { user } = useUserSession(initialUser);
+  const owner = String(user?.id || '');
+  const [scope, setScope] = useState(() => ({ owner, revision: 0 }));
+  if (scope.owner !== owner) {
+    setScope({ owner, revision: scope.revision + (scope.owner ? 1 : 0) });
+  }
+  return <HomePortalContent key={scope.revision} locale={locale} user={user} googleOneTapEligible={googleOneTapEligible} />;
+}
+
+function HomePortalContent({ locale, user, googleOneTapEligible }) {
+  const { data: siteContent } = useSiteContentConfig();
+  const router = useRouter();
+  const query = useSearchParams();
+  const restoringInputs = Boolean(query.get('restoreTask') || query.get('restoreAttempt'));
+  const owner = String(user?.id || '');
   const [activeMode, setActiveMode] = useState('generate'); // 'generate' | 'canvas'
   const [composerMode, setComposerMode] = useState('agent'); // 'image' | 'video' | 'audio' | 'agent' | 'digital-human'
   const composerRef = useRef(null);
   const [showAuthModal, setShowAuthModal] = useState(false);
-  const [pendingTask, setPendingTask] = useState(null);
   const [activeSkillId, setActiveSkillId] = useState(null);
+  const handleComposerMode = useCallback((mode) => {
+    setComposerMode(mode);
+    setActiveSkillId(null);
+  }, []);
   const [mounted, setMounted] = useState(false);
   const pendingAuthResolverRef = useRef(null);
 
@@ -1184,12 +1214,19 @@ export default function JimengHomePortal({ locale = 'en', initialUser = undefine
 
   useEffect(() => {
     setMounted(true);
+    return () => pendingAuthResolverRef.current?.resolve(null);
   }, []);
+  useEffect(() => {
+    if (restoringInputs) setActiveMode('generate');
+  }, [restoringInputs]);
 
   const normLocale = normalizeLocale(locale);
   const copy = getCommonCopy(normLocale);
   const tHome = copy.homePortal || {};
   const portalCopy = PORTAL_COPY[normLocale] || PORTAL_COPY.en;
+  const canvasTransfer = useCanvasMediaTransfer(owner, (failure) => {
+    toast.error((CANVAS_TRANSFER_ERRORS[normLocale] || CANVAS_TRANSFER_ERRORS.en)[failure]);
+  });
   const rootPath = getLocaleConfig(normLocale)?.rootPath || '';
   const studioBase = localizeStudioPath(normLocale);
   const assetHref = localizeStudioPath('/assets', normLocale);
@@ -1199,64 +1236,72 @@ export default function JimengHomePortal({ locale = 'en', initialUser = undefine
   const recentFeatures = getRecentFeatures(normLocale, tHome, rootPath);
 
   // 请求真实后端 /api/generations 接口装配历史创作
-  const fetchRecentGenerations = useCallback(async () => {
-    if (!user) {
+  useEffect(() => {
+    if (!owner) {
       setUserCreations([]);
       setGalleryTab('featured');
       return;
     }
+    const controller = new AbortController();
     setLoadingCreations(true);
-    try {
-      const res = await fetch('/api/generations?limit=8', { credentials: 'include' });
-      if (res.ok) {
-        const data = await res.json();
-        const list = Array.isArray(data?.creations) ? data.creations : [];
+    fetch('/api/generations?limit=8', { credentials: 'include', cache: 'no-store',
+      headers: { 'X-ONE-Expected-User': owner }, signal: controller.signal })
+      .then((response) => {
+        if (!response.ok) throw new Error('Could not load recent creations');
+        return response.json();
+      })
+      .then((data) => {
+        if (controller.signal.aborted) return;
+        const list = Array.isArray(data?.creations) ? data.creations.map((creation) => {
+          const mode = riverMode(creation.studio_id);
+          return {
+            ...creation,
+            prompt: creation.input_summary_json?.prompt || creation.label,
+            result_url: creation.asset_id
+              ? `/api/assets/${encodeURIComponent(creation.asset_id)}/download?inline=1`
+              : riverResultUrl(creation.result_url),
+            mediaType: mode === 'digital-human' ? 'video' : mode,
+          };
+        }) : [];
         setUserCreations(list);
         if (list.length > 0) {
           setGalleryTab('user');
         }
-      }
-    } catch (err) {
-      console.warn('[JimengHomePortal] Failed to load user creations:', err);
-    } finally {
-      setLoadingCreations(false);
-    }
-  }, [user]);
-
-  useEffect(() => {
-    fetchRecentGenerations();
-  }, [fetchRecentGenerations]);
+      })
+      .catch((err) => {
+        if (!controller.signal.aborted) console.warn('[JimengHomePortal] Failed to load user creations:', err);
+      })
+      .finally(() => { if (!controller.signal.aborted) setLoadingCreations(false); });
+    return () => controller.abort();
+  }, [owner]);
 
   // 读取最近云端画布（最多展示 3 个）
   useEffect(() => {
-    let cancelled = false;
-    if (!user) {
+    if (!owner) {
       setCanvasProjects([]);
       setLoadingCanvasProjects(false);
-      return () => {
-        cancelled = true;
-      };
+      return;
     }
+    const controller = new AbortController();
     setLoadingCanvasProjects(true);
-    fetch('/api/canvas/projects', { credentials: 'include', cache: 'no-store' })
+    fetch('/api/canvas/projects', { credentials: 'include', cache: 'no-store',
+      headers: { 'X-ONE-Expected-User': owner }, signal: controller.signal })
       .then((res) => (res.ok ? res.json() : null))
       .then((data) => {
-        if (cancelled) return;
+        if (controller.signal.aborted) return;
         const list = Array.isArray(data?.projects) ? data.projects : [];
         setCanvasProjects(list.slice(0, 2));
       })
       .catch((err) => {
-        if (!cancelled) {
+        if (!controller.signal.aborted) {
           console.warn('[JimengHomePortal] Failed to load canvas projects:', err);
         }
       })
       .finally(() => {
-        if (!cancelled) setLoadingCanvasProjects(false);
+        if (!controller.signal.aborted) setLoadingCanvasProjects(false);
       });
-    return () => {
-      cancelled = true;
-    };
-  }, [user]);
+    return () => controller.abort();
+  }, [owner]);
 
   // 全局账户额度守卫：在首页遇到未登录时弹出统一 AuthModal
   const requireAccountGate = useCallback(() => {
@@ -1422,18 +1467,6 @@ export default function JimengHomePortal({ locale = 'en', initialUser = undefine
       pendingAuthResolverRef.current.resolve?.(user || true);
       pendingAuthResolverRef.current = null;
     }
-    if (pendingTask) {
-      const { prompt, model, ar, quality, batch, mode } = pendingTask;
-      const params = new URLSearchParams();
-      params.set('tab', mode || 'image');
-      if (prompt) params.set('prompt', prompt);
-      if (model) params.set('model', model);
-      if (ar) params.set('ar', ar);
-      if (quality) params.set('quality', quality);
-      if (batch > 1) params.set('batch', String(batch));
-      params.set('auto', '1');
-      router.push(`${studioBase}?${params.toString()}`);
-    }
   };
 
   const handleAuthClose = () => {
@@ -1447,8 +1480,7 @@ export default function JimengHomePortal({ locale = 'en', initialUser = undefine
   return (
     <div className="min-h-screen bg-canvas text-ink relative selection:bg-brand selection:text-white flex flex-col justify-between overflow-x-hidden">
       {/* 1. 保留网站既有空间极光与工程点阵背景特效 */}
-      <SpatialBackground />
-      <div className="absolute inset-0 bg-dot-grid opacity-40 pointer-events-none z-0" />
+      <SpatialBackground showAurora={siteContent?.motion?.ambientGlow ?? true} motionLevel={siteContent?.motion?.motionLevel || 'balanced'} />
 
       {/* 2. 统一顶栏：显式透传服务端一致的 locale 与 user */}
       <StudioHeader locale={normLocale} activeTab={null} className="relative z-40" initialUser={user} />
@@ -1581,12 +1613,10 @@ export default function JimengHomePortal({ locale = 'en', initialUser = undefine
                     />
                   ))
                 : canvasProjects.map((project, index) => (
-                    <a
+                    <Link
                       key={project.id}
-                      href={localizeStudioPath('/canvas', normLocale)}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      title={portalCopy.openInCanvas}
+                      href={canvasProjectHref(project.id, normLocale)}
+                      title={project.name || portalCopy.untitledCanvas}
                       className="group relative aspect-[16/10] overflow-hidden rounded-2xl border border-white/10 transition-all duration-300 hover:-translate-y-0.5 hover:border-white/25 shadow-elevation-1 hover:shadow-elevation-2"
                     >
                       <span
@@ -1609,7 +1639,7 @@ export default function JimengHomePortal({ locale = 'en', initialUser = undefine
                         </span>
                         <ArrowUpRight className="size-4 shrink-0 translate-y-1 -translate-x-1 text-white/40 opacity-0 transition-all duration-200 group-hover:translate-x-0 group-hover:translate-y-0 group-hover:opacity-100" />
                       </span>
-                    </a>
+                    </Link>
                   ))}
 
               {/* 未登录：同步入口 */}
@@ -1717,18 +1747,15 @@ export default function JimengHomePortal({ locale = 'en', initialUser = undefine
           <HomeStudioPromptComposer
             ref={composerRef}
             locale={locale}
+            user={user}
             skillOptions={skillPresets}
             onSkillSelect={handleSkillClick}
-            onModeChange={(mode) => {
-              setComposerMode(mode);
-              setActiveSkillId(null);
-            }}
+            onModeChange={handleComposerMode}
             onTaskComplete={(task) => {
               setUserCreations((prev) => [task, ...prev]);
               setGalleryTab('user');
             }}
-            onRequireAuth={(task) => {
-              setPendingTask(task);
+            onRequireAuth={() => {
               setShowAuthModal(true);
             }}
           />
@@ -1908,7 +1935,7 @@ export default function JimengHomePortal({ locale = 'en', initialUser = undefine
                       </p>
 
                       {/* 鼠标悬浮时展示便捷操作 */}
-                      <div className="flex items-center gap-1.5 opacity-0 group-hover:opacity-100 transition-opacity duration-200 pt-1">
+                      <div className="flex items-center gap-1.5 md:opacity-0 group-hover:opacity-100 group-focus-within:opacity-100 transition-opacity duration-fast pt-1">
                         <button
                           type="button"
                           onClick={() => handleApplyUserCreation(creation)}
@@ -1918,16 +1945,16 @@ export default function JimengHomePortal({ locale = 'en', initialUser = undefine
                           <span>{portalCopy.remix}</span>
                         </button>
 
-                        {assetUrl && (
-                          <a
-                            href={localizeStudioPath(`/canvas?importAsset=${encodeURIComponent(assetUrl)}`, normLocale)}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="h-7 px-2.5 rounded-lg bg-white/10 hover:bg-white/20 text-white text-[11px] font-medium flex items-center justify-center gap-1 transition-colors cursor-pointer"
+                        {isCanvasTransferable(creation) && (
+                          <button
+                            type="button"
+                            onClick={() => canvasTransfer.start(creation)}
+                            className="control-focus flex min-h-11 min-w-11 items-center justify-center rounded-lg bg-wash text-ink hover:bg-wash-press transition-colors duration-fast"
                             title={portalCopy.openInCanvas}
+                            aria-label={portalCopy.openInCanvas}
                           >
-                            <Layers className="size-3" />
-                          </a>
+                            <Layers className="size-4" aria-hidden="true" />
+                          </button>
                         )}
 
                         {assetUrl && (
@@ -2053,15 +2080,13 @@ export default function JimengHomePortal({ locale = 'en', initialUser = undefine
                   <Wand2 className="size-3.5" />
                   <span>{portalCopy.remix}</span>
                 </button>
-                <a
-                  href={localizeStudioPath(`/canvas?importAsset=${encodeURIComponent(previewModalItem.result_url || previewModalItem.url || '')}`, normLocale)}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="px-3 py-1.5 rounded-lg bg-white/10 hover:bg-white/20 text-white text-xs font-medium flex items-center gap-1.5 transition-colors cursor-pointer"
-                >
-                  <Layers className="size-3.5" />
-                  <span>{portalCopy.openInCanvas}</span>
-                </a>
+                {isCanvasTransferable(previewModalItem) && (
+                  <button type="button" onClick={() => canvasTransfer.start(previewModalItem)}
+                    className="control-focus flex min-h-11 items-center gap-1.5 rounded-lg bg-wash px-3 text-caption font-medium text-ink hover:bg-wash-press transition-colors duration-fast">
+                    <Layers className="size-4" aria-hidden="true" />
+                    <span>{portalCopy.openInCanvas}</span>
+                  </button>
+                )}
               </div>
             </div>
           </div>

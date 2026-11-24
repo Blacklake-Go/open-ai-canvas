@@ -66,7 +66,7 @@ function perlin2D(x, y) {
   return lerp(x1, x2, v);
 }
 
-export default function StitchCanvasGrid({ className = '', opacity = 1, dotScale = 1.0 }) {
+export default function StitchCanvasGrid({ className = '', opacity = 1, dotScale = 1.0, animated = true }) {
   const canvasRef = useRef(null);
   const pointsRef = useRef([]);
   const mouseRef = useRef(null);
@@ -208,6 +208,7 @@ export default function StitchCanvasGrid({ className = '', opacity = 1, dotScale
         ctx.scale(dpr, dpr);
       }
       initGrid(w, h);
+      if (!animated) renderFrame();
     };
 
     const ro = new ResizeObserver(handleResize);
@@ -215,10 +216,14 @@ export default function StitchCanvasGrid({ className = '', opacity = 1, dotScale
     handleResize();
 
     return () => ro.disconnect();
-  }, [initGrid]);
+  }, [animated, initGrid, renderFrame]);
 
   // Mouse event listeners on window
   useEffect(() => {
+    if (!animated) {
+      mouseRef.current = null;
+      return;
+    }
     const canvas = canvasRef.current;
     if (!canvas) return;
     const parent = canvas.parentElement;
@@ -252,17 +257,18 @@ export default function StitchCanvasGrid({ className = '', opacity = 1, dotScale
       window.removeEventListener('mousemove', handleMouseMove);
       window.removeEventListener('mouseleave', handleMouseLeave);
     };
-  }, []);
+  }, [animated]);
 
   // Animation lifecycle
   useEffect(() => {
+    if (!animated) return;
     animFrameRef.current = requestAnimationFrame(loop);
     return () => {
       if (animFrameRef.current !== null) {
         cancelAnimationFrame(animFrameRef.current);
       }
     };
-  }, [loop]);
+  }, [animated, loop]);
 
   useEffect(() => {
     const frame = requestAnimationFrame(() => setMounted(true));
@@ -275,7 +281,7 @@ export default function StitchCanvasGrid({ className = '', opacity = 1, dotScale
       className={`pointer-events-none absolute inset-0 z-[1] ${className}`}
       style={{
         opacity: mounted ? 1 : 0,
-        transition: 'opacity 1.2s ease-in',
+        transition: animated ? 'opacity var(--duration-smooth, 240ms) ease-in' : 'none',
       }}
     >
       <canvas
@@ -283,6 +289,7 @@ export default function StitchCanvasGrid({ className = '', opacity = 1, dotScale
         aria-hidden="true"
         style={{
           position: 'absolute',
+          pointerEvents: 'none',
           inset: 0,
         }}
       />

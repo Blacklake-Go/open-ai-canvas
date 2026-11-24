@@ -8,14 +8,14 @@ export const DEFAULT_BRAND = {
   titleTemplate: '%s | SupDance AI Studio',
   brandSlogan: 'AI 创意工作室',
   logoType: 'image',
-  logoUrl: '/uploads/branding/logo-1789960604256-8d69f211113d.png',
+  logoUrl: '/branding/logo.png',
   logoIcon: 'layers',
   logoBgColor: '#22d3ee',
   logoTextColor: '#000000',
   logoHref: '/',
   logoTarget: '_self',
   showBrandName: false,
-  faviconUrl: '/uploads/branding/icon-1790631358168-d0b66b0fc4e1.svg',
+  faviconUrl: '/branding/favicon.svg',
 };
 
 export const DEFAULT_NAVIGATION = [

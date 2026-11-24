@@ -5,6 +5,57 @@ description: 信封、错误码与 OpenAPI
 
 # HTTP API 合同
 
+## ONE 支付返回与订单记录
+
+收银台返回 `/billing/success?orderId=<id>`，取消返回附带 `canceled=1`。旧版 `/pricing?canceled=1&orderId=<id>` 保留跳转。返回页读取当前账号的 `GET /api/billing/orders/{id}/status`，支付结果取自服务器订单。用户从收银台返回时若订单尚未确认，仍显示待确认。订单历史 `/billing/orders` 通过 `GET /api/billing/orders/my?offset=0&limit=21` 分页，两条读取接口均使用私有禁缓存响应，并支持 `X-ONE-Expected-User` 校验账号是否发生切换。
+
+管理后台退款入口要求 `billing.write`、有效的 `Idempotency-Key` 和已支付订单。渠道仍在处理时返回 `409 REFUND_AWAITING_PROVIDER`，订单保持已支付并记录管理员申请。Stripe 签名通知只有确认支付后才发放积分。全额退款按支付渠道、原交易编号、金额和币种核对，待处理或部分退款不会把整笔订单标记为已退款。已退款订单再次收到已支付通知时保留退款状态。
+
+## ONE 开发者 API
+
+开发者平台位于 `/call-api`。账户会话可通过 `GET /api/user/api-key` 读取 `keyInfo`（`id`、`suffix`、`createdAt`，无密钥时为 `null`）。以 JSON `{}` 调用 `POST` 创建密钥，提交 `{previousKeyId}` 更换已有密钥。完整 `apiKey` 仅在签发响应返回。以 `DELETE` 提交同样的 `{previousKeyId}` 可撤销密钥。另一窗口已变更密钥时返回 409，需要重新读取状态。管理接口沿用登录会话和写入来源校验。
+
+程序接口统一位于 `/api/developer/v1`，要求 `Authorization: Bearer <token>`。有效密钥只代表当前有效账户，可查询模型、额度及同一账户的生成结果，也可按该账户的同一套生成权限与计费规则提交任务。
+
+| 方法与路径 | 响应与请求要点 |
+| --- | --- |
+| `GET /models` | 当前模型目录。可传 `schemaVersion=2` 获取结构化能力列表。 |
+| `GET /wallet` | 返回 `credits` 与钱包视图。 |
+| `POST /generations/quote` | 提交 `{modelId, parameters}`，返回 `quoteId`、`credits` 与 `expiresAt`。 |
+| `POST /generations` | 使用同一模型和参数，加上 `quoteId`。返回任务 `id`、`status`、`credits`。首次提交为 201，幂等复用为 200。 |
+| `GET /generations/{id}` | 查询任务状态、积分、归档状态，以及已就绪的 `resultPath` 或 `resultText`。 |
+| `GET /generations/{id}/result` | 通过同一 API 下载已归档的私有生成文件。尚无归档的任务返回 404。 |
+
+两个 POST 请求均需各自的 `Idempotency-Key`，重试同一写操作时复用原标识。报价有效期为五分钟，获得报价后可以检查费用再提交。任务完成但媒体尚未成功归档时，通过 `storageStatus` 查看归档状态。账号、网页会话和供应商密钥各自使用独立的认证入口。
+
+## ONE 短剧工作坊模型
+
+`GET /api/canvas-tools/spec` 可公开读取。响应中的 `workshopModels` 为 10 个子工具分别提供当前可用的模型、版本及参数范围；没有可用模型的项目值为 `null`。
+
+`GET /api/admin/workshop/models` 要求 `models.read`，列出已发布且支持工具参数的模型版本。写入要求 `models.write`，通过 `PUT` 提交 `{defaults, expectedRevision}`。每项默认值包含 `modelId`、`versionId` 和服务端提供的 `contract`。显式选择在版本停用或变化后需要管理员重新选择；省略配置的子工具可以按目录顺序自动选择合格版本。
+
+已登录用户上传自有图片后，通过 `POST /api/canvas-tools/plan` 获得生成参数。 `POST /api/generation/quote` 以 `site: "workshop"` 校验当前版本并固定供应商版本。任务使用 `studioId: "workshop"` 消费匹配的报价，引用和参数须一致。Worker 使用已固定的版本运行，结果作为私有图片资源归档。
+
+## ONE 订阅常见问题
+
+`GET /api/site/subscription-faq?locale=<locale>` 按语言返回已发布的提示、发票说明、客服邮箱和启用的问题。问题按配置排序。省略语言时沿用简体中文。尚未发布时 `configured` 为 `false`，前台使用当前语言的默认内容。已发布的空列表显示空态。
+
+`GET /api/admin/subscription-faq?locale=<locale>` 要求 `plans.read` 并返回包括停用项在内的配置与 `revision`。同路径的 `PUT` 要求 `plans.write`，提交 `{config, expectedRevision}`。首次发布使用版本 0，已有配置使用读取的版本。版本冲突返回 409，请求不会覆盖另一标签页的发布。后台保留本地草稿，直到运营人员明确丢弃它。
+
+各语言独立使用系统设置现有的版本字段。简体中文沿用 `subscription_faq_config`，其他受支持语言使用 `subscription_faq_config:<locale>`。这一变更无需数据库迁移。
+
+## ONE 站点公告
+
+`GET /api/admin/content/banner` 与 `GET /api/admin/content/banner/history` 需要 `content.read`。发布、恢复和删除需要 `content.write`。发布提交完整公告设置，并在同一事务中更新公开配置和写入版本记录。恢复使用历史版本的 `id`，保留其原活动、作用域和启停状态。当前发布版本不能删除。
+
+`GET /api/site/content-config` 中的 `banner.id` 是活动 ID。编辑同一活动会新增历史版本，用户关闭该活动后继续沿用原隐藏期限。后台的「复制为新活动」为新草稿生成活动 ID，发布后独立记录用户反馈。
+
+## ONE 公开模型目录
+
+`GET /api/models/active?schemaVersion=2` 的每条模型以数组形式返回 `generationCapabilities`。普通图片和视频能力按已声明的 `taskType` 列出输入和输出类型，可选比例、分辨率、时长与质量来自模型目录。模型没有声明某项参数时，工作台不提供该参数选项。默认查询和 `schemaVersion=1` 沿用既有对象格式。
+
+顶部导航仅展示已启用、可见、允许自动路由、有可用渠道且有正数积分定价的模型。模型链接、服务端报价及任务创建使用同一规范模型 ID。
+
 ## SupDance 灵感公开隔离
 
 现有模型选择器配置 API 复用管理员鉴权与审计，新增 `homepageShowcaseEnabled`、`complianceLock` 和只读 `updatedAt`；解锁请求必须显式提供 `unlockConfirmed: true`，且至少有一条当前内容仍匹配的已授权案例。全局关闭会同时关闭首页展示，合规锁开启时拒绝公开开启请求。
@@ -862,6 +913,42 @@ Skills 的 `tool_completed` / `tool_failed` 事件附带 `skillId`、`skillName`
 | `POST /api/admin/ark-portraits/reviews/reject` | `{ ids, reason }` 驳回，原因展示给用户 |
 
 生成任务的参考图、视频和音频中出现 `asset://<id>` 时：属于他人自建组、未授权的平台组或已过期真人组的 ID 返回 403；未登记的 ID（方舟公共数字人等）不受限制。
+
+## ONE 我的素材
+
+`GET /api/assets/library` 支持按素材状态、类型、业务分类、文件夹和关键词筛选，并返回分页内容及同一状态下的分类计数。关键词可匹配标题、正文、标签、来源、备注和实体设定。使用 `status=trash` 查看回收站。回收站提供恢复和手动清理。
+
+`PATCH /api/assets/library/:id` 持久化标题、分类、标签、文件夹和文本或实体的 `data`；媒体元数据编辑保留原文件。上传、修改和移动只接受当前账号拥有的文件夹。
+
+`POST /api/assets/library/batch` 的移入回收站、恢复、移动和收藏操作按批次提交，素材状态变化导致整个批次回滚。清理操作 `purge` 和 `empty` 按素材返回实际结果，响应含 `deleted`、`deletedIds` 和 `failures`。永久删除仅处理回收站内的素材。活跃引用返回 `ASSET_IN_USE` 和引用来源，存储清理失败返回 `ASSET_PURGE_UNAVAILABLE`，两种情况下都保留素材记录。
+
+`GET /api/assets/:id/download` 校验登录用户和文件归属，默认预览。添加 `?disposition=attachment` 可下载附件。回收站内的文件在恢复后可再次下载。
+
+`GET /api/assets/library/export` 导出可重新导入的 ZIP。包内 `assets.json` 保存素材及媒体文件索引，索引中的 `assetId`、`path`、`mimeType` 和 `bytes` 对应实际写入的文件。文字与实体使用清单中的数据。缺失或读取失败的媒体列入 `skipped`，其余素材可以继续导入。
+
+## ONE 反馈与审核
+
+- `GET /api/feedback` 读取当前账号最近 20 条记录，包括状态、回复、奖励和附件入口。`POST /api/feedback` 接受原有 JSON 表单和 multipart 表单。multipart 的附件字段为 `attachments`，最多 5 个文件，合计 30 MiB。附件在记录保存前完成校验和存储。
+- `GET /api/admin/feedback` 支持按关键字、类型、状态和游标读取后台列表。详情及附件读取需要 `content.read`。前台附件路径 `/api/feedback/:id/attachments/:index` 校验提交人归属，后台对应路径为 `/api/admin/feedback/:id/attachments/:index`。媒体可以行内预览，文本、文档和压缩包作为附件下载。
+- `POST /api/admin/feedback/:id/review` 需要 `content.write` 与 `Idempotency-Key`。采纳填写整数奖励，驳回不扣币。状态、奖励流水、通知及审计随同事务提交。提交人在个人记录和站内通知查看结果。
+
+## ONE 生成河
+
+`GET /api/generations?limit=30&includeActive=true` 返回当前账号最近提交的任务，以及额外的进行中任务和最近 30 分钟完成的任务。客户端可用重复的 `track` 参数继续跟踪上一轮还在运行的任务。请求最多跟踪 100 个 ID，所有查询均按当前账号和未删除的记录过滤。
+
+`GET /api/generations?id=任务ID` 提供同账号任务的保存参数。首页从失败或已取消的任务恢复原参数，点击恢复仅填充表单。已完成的首页驱动语音可作为数字人音频输入。可复用的参考素材使用账号私有素材地址，并由生成服务在提交时重新校验归属。
+
+生成列表、任务详情、报价、创建任务、素材上传和首页画布列表可携带 `X-ONE-Expected-User`。浏览器 Cookie 所属账号与请求期望的账号不一致时，接口返回 `409` 和对应的 `*_ACCOUNT_CHANGED` 原因。客户端在账号离开时中止首页的旧请求并清除私有草稿、素材预览和画布列表。
+
+首页的 ONE 画布卡片和资产库中的画布资产链接到 `/assets?canvasProject=项目ID`。页面从 `GET /api/canvas/projects/:id` 读取当前账号的项目和已保存快照，使用 `X-ONE-Expected-User` 保证请求和登录账号一致。项目记录可以下载 JSON 备份。不存在、已删除或不属于当前账号的项目返回 `404 PROJECT_NOT_FOUND`，暂时无法读取时返回 `503 PROJECT_READ_FAILED`。
+
+首页向 Canvas 导入已保存的作品时，`GET /api/assets/:id/download?transfer=canvas` 要求 `X-ONE-Expected-User`。用户在 Canvas 确认接收账号后，ONE 才从该账号的素材存储流式读取原文件，上限 100 MiB。该模式只从已登记的对象存储读文件，响应为原始媒体字节。
+
+## ONE 订阅套餐配置
+
+- `GET /api/admin/plans` 需要 `plans.read`。`POST /api/admin/plans` 和 `PATCH /api/admin/plans/:id` 需要 `plans.write` 与 `Idempotency-Key`。更新时提交当前 `revision`，过期版本返回 `409 PLAN_CHANGED`，页面保留表单，直到操作者选择读取最新版本。
+- 管理后台、公开 `GET /api/billing/plans` 和新建订阅订单读取同一份已配置价格、月度积分和权益。未配置过的内置商业档使用当前产品默认值，旧版自定义档先保留为隐藏草稿。配置保存在现有 `ops_bill.plans_config.features_json.oneCatalog`，变更同时更新基础列并记录管理员审计。
+- `enabled=false` 隐藏前台入口并拒绝创建新订单。订单创建时记录商品名称、币种、金额与积分，后续套餐更价或隐藏不改变已创建订单的金额和履约积分。没有有效价格的周期或币种会在创建订单前被拒绝。
 
 ## 管理员支付订单
 

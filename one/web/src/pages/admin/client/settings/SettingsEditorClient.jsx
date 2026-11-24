@@ -1,7 +1,9 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
+import { useQueryClient } from '@tanstack/react-query';
+import { siteContentQueryKey, siteContentUpdateKey } from '@/lib/hooks/useSiteContentConfig';
 import { AdminUnderlineTabs } from '@/components/admin/AdminUi';
 import BrandingTab from '@/components/admin/settings/BrandingTab';
 import BannerTab from '@/components/admin/settings/BannerTab';
@@ -20,12 +22,16 @@ export default function SettingsEditorClient({
   initialSettings = [],
   initialBrand = {},
   initialNavigation = [],
-  initialBanner = {},
-  initialBannerHistory = [],
+  canWriteContent = false,
   initialMotion = {},
 }) {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const queryClient = useQueryClient();
+  const refreshPublicContent = () => {
+    void queryClient.invalidateQueries({ queryKey: siteContentQueryKey });
+    try { localStorage.setItem(siteContentUpdateKey, String(Date.now())); } catch {}
+  };
 
   // 选项卡状态与 URL 双向同步
   const tabParam = searchParams.get('tab');
@@ -37,22 +43,12 @@ export default function SettingsEditorClient({
     return 'branding';
   };
 
-  const [activeTab, setActiveTab] = useState(() => normalizeTab(tabParam));
-
-  useEffect(() => {
-    if (tabParam) {
-      const normalized = normalizeTab(tabParam);
-      if (normalized !== activeTab) {
-        setActiveTab(normalized);
-      }
-    }
-  }, [tabParam]);
+  const activeTab = normalizeTab(tabParam);
 
   const handleTabChange = (newTab) => {
-    setActiveTab(newTab);
     const params = new URLSearchParams(searchParams.toString());
     params.set('tab', newTab);
-    router.replace(`/admin/settings?${params.toString()}`, { scroll: false });
+    router.push(`/admin/settings?${params.toString()}`, { scroll: false });
   };
 
   // 1. 品牌与导航状态
@@ -75,30 +71,6 @@ export default function SettingsEditorClient({
   const [navigation, setNavigation] = useState(initialNavigation || []);
   const [isBrandingSaving, setIsBrandingSaving] = useState(false);
   const [brandingFeedback, setBrandingFeedback] = useState({ type: '', message: '' });
-
-  // 2. 横幅状态
-  const [banner, setBanner] = useState({
-    title: '上新特惠公告',
-    highlightText: '上新特惠：',
-    message: '年会员享 Flova Image 2.5、Seedance 2.5 最低4折，1K 低至 ¥0.058/张',
-    ctaText: '立即订阅',
-    linkUrl: '/studio?account=open&tab=membership',
-    linkTarget: '_self',
-    theme: 'indigo',
-    ambientGlow: true,
-    glowStyle: 'aurora',
-    dynamicEffect: 'breathe',
-    badgeText: 'HOT',
-    showPulseDot: true,
-    dismissible: true,
-    autoHideDays: 7,
-    targetScope: 'all',
-    enabled: true,
-    ...initialBanner,
-  });
-  const [bannerHistory, setBannerHistory] = useState(initialBannerHistory || []);
-  const [isBannerSaving, setIsBannerSaving] = useState(false);
-  const [bannerFeedback, setBannerFeedback] = useState({ type: '', message: '' });
 
   // 3. 动效状态
   const [motion, setMotion] = useState({
@@ -179,42 +151,6 @@ export default function SettingsEditorClient({
     }
   };
 
-  // 保存横幅
-  const handleSaveBanner = async () => {
-    setIsBannerSaving(true);
-    setBannerFeedback({ type: '', message: '' });
-    try {
-      const res = await fetch('/api/admin/content/banner', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Idempotency-Key': crypto.randomUUID(),
-        },
-        body: JSON.stringify(banner),
-      });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data?.error?.message || '保存横幅失败');
-
-      setBanner(data.data || banner);
-      setBannerFeedback({ type: 'success', message: '横幅配置已更新，全网实时生效！' });
-
-      // 刷新历史
-      try {
-        const histRes = await fetch('/api/admin/content/banner/history');
-        if (histRes.ok) {
-          const histData = await histRes.json();
-          if (histData?.data) setBannerHistory(histData.data);
-        }
-      } catch {}
-
-      setTimeout(() => setBannerFeedback({ type: '', message: '' }), 4000);
-    } catch (err) {
-      setBannerFeedback({ type: 'error', message: err.message });
-    } finally {
-      setIsBannerSaving(false);
-    }
-  };
-
   // 保存动效设置
   const handleSaveMotion = async () => {
     setIsMotionSaving(true);
@@ -232,6 +168,7 @@ export default function SettingsEditorClient({
       if (!res.ok) throw new Error(data?.error?.message || '保存动效设置失败');
 
       setMotion(data.data || motion);
+      refreshPublicContent();
       setMotionFeedback({ type: 'success', message: '全站动效能耗配置已生效！' });
       setTimeout(() => setMotionFeedback({ type: '', message: '' }), 4000);
     } catch (err) {
@@ -305,15 +242,7 @@ export default function SettingsEditorClient({
       )}
 
       {activeTab === 'banner' && (
-        <BannerTab
-          banner={banner}
-          setBanner={setBanner}
-          historyList={bannerHistory}
-          setHistoryList={setBannerHistory}
-          onSave={handleSaveBanner}
-          isSaving={isBannerSaving}
-          feedback={bannerFeedback}
-        />
+        <BannerTab canWrite={canWriteContent} refreshPublicContent={refreshPublicContent} />
       )}
 
       {activeTab === 'motion' && (

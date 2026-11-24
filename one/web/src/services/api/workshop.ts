@@ -1,4 +1,36 @@
-import { apiRequest } from './http';
+import { apiRequest, oneApi } from './http';
+
+export const workshopModelSettingsUpdateKey = 'one-workshop-model-settings-published';
+
+export interface WorkshopModelSelection {
+  modelId: string;
+  versionId: string;
+  contract: string;
+}
+
+export interface WorkshopModelVersion extends WorkshopModelSelection {
+  modelName: string;
+  versionName: string;
+  provider: string;
+  baseCredits: number;
+  ratios: string[];
+  resolutions: string[];
+}
+
+export interface WorkshopModelConfiguration {
+  revision: number;
+  defaults: Record<string, WorkshopModelSelection>;
+  tools: Array<{ id: string; versions: WorkshopModelVersion[] }>;
+}
+
+export const workshopModelsAdminPath = '/api/admin/workshop/models';
+
+export function saveWorkshopModels(defaults: Record<string, WorkshopModelSelection>, expectedRevision: number) {
+  return oneApi.adminRequest<WorkshopModelConfiguration>(workshopModelsAdminPath, {
+    method: 'PUT', body: { defaults, expectedRevision },
+    headers: { 'Idempotency-Key': crypto.randomUUID() },
+  });
+}
 
 export interface WorkshopProjectSummary {
   id: string;

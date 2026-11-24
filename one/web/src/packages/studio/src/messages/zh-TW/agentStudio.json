@@ -4,6 +4,16 @@
     "my-agents": "我的智慧代理",
     "my-chats": "我的對話"
   },
+  "editor": {
+    "edit": "編輯代理",
+    "save": "儲存變更",
+    "conflict": "此代理已在其他分頁更新。請重新整理後再儲存。",
+    "model": "文字模型",
+    "credits": "點數",
+    "newChat": "新對話",
+    "unavailable": "目前沒有可用的已發布文字模型。",
+    "chooseModel": "所選模型目前無法使用，請從清單選擇已發布模型。"
+  },
   "headings": {
     "agents": "智慧代理",
     "createAgent": "建立智慧代理"

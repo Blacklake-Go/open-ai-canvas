@@ -599,9 +599,7 @@ export function AdminSessionsPage() {
   const { redirectEl } = useAdminPermissionGuard(PERMISSIONS.sessionsRevoke);
   const location = useLocation();
   const params = new URLSearchParams(location.search);
-  const { data: raw } = useAdminRawData(`/api/admin/security/sessions${location.search}`, [
-    location.search,
-  ]);
+  const { data: raw, loading, error, reload } = useAdminRawData(`/api/admin/security/sessions${location.search}`);
 
   if (redirectEl) return redirectEl;
 
@@ -723,8 +721,17 @@ export function AdminSessionsPage() {
         </AdminFilterForm>
       </Card>
 
-      <DataTable columns={columns} rows={result.rows} empty="当前没有匹配的有效会话" />
-      <Pagination meta={result.meta} searchParams={params} />
+      {loading ? <p role="status" className="text-ink-muted">正在读取活跃会话…</p> : error ? (
+        <Card className="flex items-center gap-3">
+          <p role="alert" className="text-danger">{error}</p>
+          <button type="button" className="btn-secondary" onClick={reload}>重试</button>
+        </Card>
+      ) : (
+        <>
+          <DataTable columns={columns} rows={result.rows} empty="当前没有匹配的有效会话" />
+          <Pagination meta={result.meta} searchParams={params} />
+        </>
+      )}
     </>
   );
 }

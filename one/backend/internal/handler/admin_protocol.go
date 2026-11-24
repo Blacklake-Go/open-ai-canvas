@@ -108,6 +108,7 @@ func wrapAdmin(d *Dependencies, permission, scope string, fn adminHandler) http.
 		reqID := envelope.NewRequestID(r)
 		defer func() {
 			if recover() != nil {
+				d.RuntimeLog.Error("admin.request_panic")
 				envelope.AdminError(w, http.StatusInternalServerError, "INTERNAL_ERROR", "管理操作暂时不可用，请稍后重试", reqID)
 			}
 		}()
@@ -148,6 +149,9 @@ func wrapAdmin(d *Dependencies, permission, scope string, fn adminHandler) http.
 
 		data, meta, aerr := fn(w, r, d, u, reqID)
 		if aerr != nil {
+			if aerr.status >= http.StatusInternalServerError {
+				d.RuntimeLog.Error("admin.request_failed")
+			}
 			envelope.AdminError(w, aerr.status, aerr.code, aerr.message, reqID)
 			return
 		}

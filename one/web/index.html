@@ -2,12 +2,27 @@
 <html
   lang="en"
   class="dark bg-canvas"
-  style="background-color: #030303; color-scheme: dark;"
+  data-theme="dark"
+  style="color-scheme: dark;"
 >
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="theme-color" content="#030303" />
+    <script>
+      (() => {
+        let theme = 'dark';
+        try { if (localStorage.getItem('theme') === 'light') theme = 'light'; } catch {}
+        const root = document.documentElement;
+        root.dataset.theme = theme;
+        root.classList.replace('dark', theme);
+        root.style.colorScheme = theme;
+      })();
+    </script>
+    <style>
+      html[data-theme="dark"] { background-color: #030303; }
+      html[data-theme="light"] { background-color: #ffffff; }
+    </style>
     <meta
       name="description"
       content="Generate AI images and videos using 200+ models — Flux, Midjourney, Kling, Veo, Seedance and more."
@@ -17,10 +32,7 @@
     <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
     <title>SupDance — Free AI Image &amp; Video Studio</title>
   </head>
-  <body
-    class="bg-canvas text-ink"
-    style="background-color: #030303; color: #ededf0;"
-  >
+  <body class="bg-canvas text-ink">
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
   </body>

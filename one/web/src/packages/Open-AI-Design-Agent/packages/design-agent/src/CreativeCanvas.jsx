@@ -22,6 +22,10 @@ import PlanVisualizer from "./components/PlanVisualizer";
 import Link from "next/link";
 import { GoBook } from "react-icons/go";
 import { VscLayoutSidebarLeftOff } from "react-icons/vsc";
+import { getSessionCopy } from "./oneSessionCopy.js";
+import { getMediaSkillCopy, getPublishedMediaSkills } from "./oneMediaSkills.js";
+import { useAccountTextTurns } from "@/lib/hooks/useAccountTextTurns.js";
+import "./oneSessions.css";
 
 const CanvasArea = dynamic(() => import("./CanvasArea"), { ssr: false });
 const SyntaxHighlighter = dynamic(
@@ -88,6 +92,11 @@ export default function CreativeCanvas({
   // userBalanceLabel: string like "$ 5.00" or "1200 credits" to show in the dropdown.
   // If not provided, falls back to "$ {user.balance}".
   userBalanceLabel = null,
+  platformSession = false,
+  authChecked = false,
+  onRequireAuth,
+  locale = "en",
+  unavailableCopy,
   onGenerationStart,
   onGenerationEnd,
   onGenerationComplete,
@@ -96,6 +105,8 @@ export default function CreativeCanvas({
   const router = useRouter();
   const searchParams = useSearchParams();
   const inEmbedMode = isEmbed && !!embedCode;
+  const sessionCopy = getSessionCopy(locale);
+  const mediaCopy = getMediaSkillCopy(locale);
   const embedStorageKey = inEmbedMode ? `muapi_agent_session_${embedCode}` : null;
   const notifiedGenerationEventsRef = useRef(new Set());
   const generationActivityEventIdsRef = useRef(new Set());
@@ -104,6 +115,10 @@ export default function CreativeCanvas({
     return window.localStorage.getItem(embedStorageKey) || null;
   });
   const sessionId = inEmbedMode ? embedSessionId : searchParams.get("session");
+  const textTurns = useAccountTextTurns({
+    enabled: platformSession, owner: user?.id, sessionId, locale, studioPrefix: "design-agent",
+    jobsPath: sessionId ? `${API}/sessions/${encodeURIComponent(sessionId)}/jobs` : null,
+  });
 
   const [input, setInput] = useState("");
   const [messages, setMessages] = useState([]);
@@ -118,12 +133,29 @@ export default function CreativeCanvas({
   const [isDragging, setIsDragging] = useState(false);
 
   const [sessions, setSessions] = useState([]);
+  const [sessionsError, setSessionsError] = useState(false);
+  const [sessionUnavailable, setSessionUnavailable] = useState(false);
+  const [creatingSession, setCreatingSession] = useState(false);
   const [currentSessionName, setCurrentSessionName] = useState("Creative Canvas");
   const [isEditingName, setIsEditingName] = useState(false);
   const [newName, setNewName] = useState("");
   const [showSessions, setShowSessions] = useState(false);
-  const [skills, setSkills] = useState([]);
+  const [legacySkills, setLegacySkills] = useState([]);
   const [activeSkill, setActiveSkill] = useState(null);
+  const [pendingHandoff, setPendingHandoff] = useState(null);
+  const [selectedMediaModel, setSelectedMediaModel] = useState("");
+  const [mediaQuote, setMediaQuote] = useState(null);
+  const quoteReply = useRef(null);
+  const quoteCancelButton = useRef(null);
+  const returnToPrompt = useRef(false);
+  const composerMounted = useRef(false);
+  const composerOwner = useRef(user?.id);
+  composerOwner.current = user?.id;
+  const skills = platformSession ? getPublishedMediaSkills(textTurns.catalog, mediaCopy) : legacySkills;
+  const currentMediaSkill = platformSession
+    ? skills.find(skill => skill.name === (pendingHandoff?.skill || activeSkill?.name))
+    : null;
+  const currentMediaModel = currentMediaSkill?.models.find(model => model.id === selectedMediaModel) || currentMediaSkill?.models[0];
   const [showSkillsMenu, setShowSkillsMenu] = useState(false);
   const [showAssetsMenu, setShowAssetsMenu] = useState(false);
   const [showMentionPopup, setShowMentionPopup] = useState(false);
@@ -167,14 +199,35 @@ export default function CreativeCanvas({
   const syncedUrlsRef = useRef(new Set());
   const justCreatedSessionRef = useRef(false);
   const initialHandoffProcessed = useRef(false);
+  const sessionCreationKey = useRef(null);
+  const sessionCreation = useRef(null);
+  const historyRevision = useRef(new Map());
+  const activeSession = useRef(sessionId);
+  const [saveHistoryRequest, requestHistorySave] = useState(null);
+  activeSession.current = sessionId;
 
   const getHeaders = useCallback(() => {
+    if (platformSession) return user?.id ? { "X-ONE-Expected-User": String(user.id) } : {};
     if (inEmbedMode) {
       return { "x-agent-embed-code": embedCode };
     }
     const token = typeof window !== "undefined" ? localStorage.getItem("token") : null;
     return token ? { Authorization: `Bearer ${token}` } : {};
-  }, [inEmbedMode, embedCode]);
+  }, [platformSession, user?.id, inEmbedMode, embedCode]);
+
+  const openSession = (id, replace = false) => {
+    const params = new URLSearchParams(searchParams);
+    if (platformSession) {
+      params.set("tab", "design-agent");
+      for (const key of ["q", "skill", "a"]) params.delete(key);
+    }
+    if (id) params.set("session", id);
+    else params.delete("session");
+    const query = params.toString();
+    const destination = window.location.pathname + (query ? `?${query}` : "") + window.location.hash;
+    if (replace) router.replace(destination, { scroll: false });
+    else router.push(destination, { scroll: false });
+  };
 
   // Persist embed session_id across page reloads so the conversation resumes.
   const setActiveEmbedSession = useCallback((id) => {
@@ -188,13 +241,14 @@ export default function CreativeCanvas({
   // Initialize
   useEffect(() => {
     setMounted(true);
+    if (platformSession && !user?.id) return;
     // In embed mode there's no concept of "switch to another session" — the
     // visitor only ever sees the one keyed by their localStorage. Skip the
     // sessions list fetch (which would also 403-on-allowed-origins or surface
     // sessions from other embeds spawned by the same owner).
     if (!inEmbedMode) fetchSessions();
-    fetchSkills();
-  }, []);
+    if (!platformSession) fetchSkills();
+  }, [platformSession, user?.id]);
 
   // Handle initial query and skill from URL (Fallback only)
   useEffect(() => {
@@ -211,6 +265,22 @@ export default function CreativeCanvas({
 
     if (!q && !skillName && !a) {
       initialHandoffProcessed.current = true;
+      return;
+    }
+
+    if (platformSession) {
+      if (q) setInput(q);
+      if (!user?.id) return;
+      initialHandoffProcessed.current = true;
+      if (skillName || a) {
+        setPendingHandoff({
+          skill: skillName?.slice(0, 120),
+          assetLabels: a?.split(",").filter(Boolean).slice(0, 10) || [],
+        });
+      }
+      const params = new URLSearchParams(searchParams);
+      for (const key of ["q", "skill", "a"]) params.delete(key);
+      router.replace(`?${params.toString()}`, { scroll: false });
       return;
     }
 
@@ -255,9 +325,10 @@ export default function CreativeCanvas({
       newParams.delete("a");
       router.replace(`?${newParams.toString()}`, { scroll: false });
     }
-  }, [mounted, busy, messages, skills.length, searchParams]);
+  }, [mounted, busy, messages, skills.length, searchParams, platformSession, user?.id]);
 
   useEffect(() => {
+    if (platformSession && !user?.id) return;
     if (justCreatedSessionRef.current) {
       justCreatedSessionRef.current = false;
       return;
@@ -265,40 +336,41 @@ export default function CreativeCanvas({
     // Clear the sync-tracking set whenever the session changes so assets from
     // the new session are always painted to canvas (prevents stale URL leakage).
     syncedUrlsRef.current.clear();
+    setSessionUnavailable(false);
+    setAttachments([]);
+    setAssets([]);
     if (sessionId) {
+      setMessages([]);
+      setCurrentSessionName(sessions.find(s => s.id === sessionId)?.name || "");
       loadHistory();
       loadAssets();
-      // Sync name if sessions are already loaded
-      const current = sessions.find(s => s.id === sessionId);
-      if (current) {
-        setCurrentSessionName(current.name);
-      } else {
-        fetchSessions(); // Re-fetch to find the name if not in list
-      }
     } else {
       setMessages([{ role: "assistant", content: `Hello ${user?.username || "User"} — what shall we create today?`, timestamp: new Date().toISOString() }]);
-      setAssets([]);
-      setCurrentSessionName("New Session");
+      setCurrentSessionName(sessionCopy.newSession);
     }
-  }, [sessionId]); // Removed sessions from deps to avoid infinite loop if fetchSessions updates sessions
+  }, [sessionId, platformSession, user?.id]); // The list is refreshed separately from history.
 
   const fetchSessions = async () => {
     try {
       const { data } = await axios.get(`${API}/sessions`, { headers: getHeaders() });
       setSessions(data);
-      if (sessionId) {
-        const current = data.find(s => s.id === sessionId);
-        if (current) setCurrentSessionName(current.name);
-      }
-    } catch {}
+      setSessionsError(false);
+    } catch {
+      setSessionsError(true);
+    }
   };
+
+  useEffect(() => {
+    const session = sessions.find(item => item.id === sessionId);
+    if (session) setCurrentSessionName(session.name);
+  }, [sessions, sessionId]);
 
   const fetchSkills = async () => {
     try {
       const { data } = await axios.get(`${API}/agent-skills`, { headers: getHeaders() });
-      setSkills(data);
-    } catch (err) {
-      console.error("Failed to fetch skills:", err);
+      setLegacySkills(data);
+    } catch {
+      setLegacySkills([]);
     }
   };
 
@@ -537,12 +609,22 @@ export default function CreativeCanvas({
     setBusy(false);
     loadAssets();
     // Persist final state
-    setMessages(prev => {
-      const next = [...prev];
-      axios.patch(`${API}/sessions/${sessionId}/messages`, { messages: next }, { headers: getHeaders() }).catch(() => {});
-      return next;
-    });
+    if (sessionId) requestHistorySave({ id: sessionId });
   };
+
+  useEffect(() => {
+    if (!saveHistoryRequest || !saveHistoryRequest.id) return;
+    const id = saveHistoryRequest.id;
+    if (platformSession && activeSession.current !== id) return;
+    const revision = historyRevision.current.get(id);
+    if (platformSession && !revision) return;
+    const payload = platformSession ? { messages, revision } : { messages };
+    axios.patch(`${API}/sessions/${id}/messages`, payload, { headers: getHeaders() })
+      .then(({ data }) => {
+        if (platformSession) historyRevision.current.set(id, data.revision);
+      })
+      .catch(() => toast.error(sessionCopy.saveError));
+  }, [saveHistoryRequest]);
 
   const handleJobAction = async (jobId, action) => {
     try {
@@ -567,11 +649,15 @@ export default function CreativeCanvas({
   };
 
   const loadHistory = async () => {
+    const id = sessionId;
     try {
-      const { data } = await axios.get(`${API}/sessions/${sessionId}/messages`, { headers: getHeaders() });
-      if (data && data.length > 0) {
+      const { data } = await axios.get(`${API}/sessions/${id}/messages`, { headers: getHeaders() });
+      if (activeSession.current !== id) return;
+      const items = platformSession ? data.messages : data;
+      if (platformSession) historyRevision.current.set(id, data.revision);
+      if (items.length > 0) {
         // Cleanup: Hide approval cards that already have results or are for inactive jobs
-        const cleaned = data.map(m => ({
+        const cleaned = items.map(m => ({
           ...m,
           events: (m.events || []).map((e, idx, arr) => {
             if ((e.type === "info" && (e.content?.includes("approval") || e.content?.includes("confirmation"))) || e.type === "plan_propose") {
@@ -584,12 +670,15 @@ export default function CreativeCanvas({
           })
         }));
         setMessages(cleaned);
-        checkActiveJobs(cleaned);
+        if (!platformSession) checkActiveJobs(cleaned);
       } else {
         setMessages([{ role: "assistant", content: `Session ready — what shall we create?`, timestamp: new Date().toISOString() }]);
       }
     } catch {
-      setMessages([{ role: "assistant", content: `Session ready — what shall we create?`, timestamp: new Date().toISOString() }]);
+      if (activeSession.current === id) {
+        setSessionUnavailable(true);
+        setMessages([]);
+      }
     }
   };
 
@@ -597,6 +686,7 @@ export default function CreativeCanvas({
     if (!sessionId) return;
     try {
       const { data } = await axios.get(`${API}/sessions/${sessionId}/jobs`, { headers: getHeaders() });
+      if (activeSession.current !== sessionId) return;
       const active = data.find(j => (j.status === "pending" || j.status === "processing") && j.id);
       if (active) {
         // If the last message is assistant but empty/no events, it might be the one for this job.
@@ -619,28 +709,96 @@ export default function CreativeCanvas({
     if (!sessionId) return;
     try {
       const { data } = await axios.get(`${API}/sessions/${sessionId}/assets`, { headers: getHeaders() });
-      setAssets(data);
-    } catch {}
+      if (activeSession.current === sessionId) setAssets(data);
+    } catch (error) {
+      if (activeSession.current === sessionId && error.response?.status === 404) setSessionUnavailable(true);
+    }
   };
+
+  const newestGeneratedAsset = textTurns.messages.findLast(message => message.assetId)?.assetId;
+  useEffect(() => {
+    if (platformSession && newestGeneratedAsset) void loadAssets();
+  }, [platformSession, sessionId, newestGeneratedAsset]);
+
+  useEffect(() => {
+    composerMounted.current = true;
+    return () => {
+      composerMounted.current = false;
+      quoteReply.current?.resolve(false);
+      quoteReply.current = null;
+    };
+  }, []);
+
+  useEffect(() => {
+    const pending = quoteReply.current;
+    if (pending && (pending.owner !== user?.id || (sessionId && sessionId !== pending.id))) {
+      pending.resolve(false);
+      quoteReply.current = null;
+      setMediaQuote(null);
+    }
+  }, [sessionId, user?.id]);
+
+  useEffect(() => {
+    if (mediaQuote) quoteCancelButton.current?.focus();
+  }, [mediaQuote]);
+
+  useEffect(() => {
+    if (!busy && returnToPrompt.current) {
+      returnToPrompt.current = false;
+      textareaRef.current?.focus();
+    }
+  }, [busy]);
+
+  function respondToMediaQuote(accepted) {
+    const pending = quoteReply.current;
+    quoteReply.current = null;
+    returnToPrompt.current = true;
+    setMediaQuote(null);
+    pending?.resolve(accepted);
+  }
 
   useEffect(() => {
     chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [messages, busy]);
+  }, [messages, busy, textTurns.messages.length, textTurns.waiting]);
   
-  const ensureSession = async () => {
-    if (sessionId) return sessionId;
-    const { data } = await axios.post(`${API}/sessions`, {}, { headers: getHeaders() });
-    justCreatedSessionRef.current = true;
-    if (inEmbedMode) {
-      setActiveEmbedSession(data.id);
+  const createSession = (replace) => {
+    if (sessionCreation.current) return sessionCreation.current;
+    if (platformSession) sessionCreationKey.current ||= crypto.randomUUID();
+    const payload = platformSession ? { name: sessionCopy.newSession, creationKey: sessionCreationKey.current } : {};
+    setCreatingSession(true);
+    sessionCreation.current = axios.post(`${API}/sessions`, payload, { headers: getHeaders() }).then(({ data }) => {
+      justCreatedSessionRef.current = replace;
+      if (platformSession) historyRevision.current.set(data.id, 1);
+      if (inEmbedMode) setActiveEmbedSession(data.id);
+      else openSession(data.id, replace);
+      sessionCreationKey.current = null;
+      setCurrentSessionName(data.name || sessionCopy.newSession);
+      if (!inEmbedMode) void fetchSessions();
+      return data.id;
+    }).finally(() => {
+      sessionCreation.current = null;
+      setCreatingSession(false);
+    });
+    return sessionCreation.current;
+  };
+
+  const ensureSession = () => sessionId ? Promise.resolve(sessionId) : createSession(true);
+
+  const startNewSession = async () => {
+    if (platformSession) {
+      if (!user?.id) return onRequireAuth?.();
+      try { await createSession(false); }
+      catch { toast.error(sessionCopy.unavailable); }
+    } else if (inEmbedMode) {
+      setActiveEmbedSession(null);
     } else {
-      router.replace(`?session=${data.id}`, { scroll: false });
-      fetchSessions();
+      router.push("/canvas");
     }
-    return data.id;
   };
 
   const processFile = async (file) => {
+    if (!file || sessionUnavailable) return;
+    if (platformSession && !user?.id) return onRequireAuth?.();
     if (!file) return;
 
     setUploading(true);
@@ -649,6 +807,23 @@ export default function CreativeCanvas({
     try {
       // 0. Make sure we have a session — uploaded assets must belong to one.
       const activeSessionId = await ensureSession();
+      if (platformSession) {
+        const form = new FormData();
+        form.append("file", file);
+        form.append("studioId", `design-agent:${activeSessionId}`);
+        form.append("title", file.name);
+        const { data } = await axios.post("/api/assets/upload", form, {
+          headers: getHeaders(),
+          onUploadProgress: (event) => {
+            if (event.total) setUploadProgress(Math.round(100 * event.loaded / event.total));
+          },
+        });
+        const kind = file.type.startsWith("video/") ? "video" : file.type.startsWith("audio/") ? "audio" : "image";
+        const asset = { asset_label: data.asset.id, url: `/api/assets/${data.asset.id}/download?inline=1`, kind };
+        setAttachments(previous => [...previous, asset]);
+        setAssets(previous => [...previous, asset]);
+        return;
+      }
 
       // 1. Get signed URL
       const { data: signData } = await axios.get("/api/v1/get_upload_url", {
@@ -733,12 +908,80 @@ export default function CreativeCanvas({
   };
 
   const sendMessage = async (textOverride = null, skillOverride = null, attachmentsOverride = null) => {
+    if (sessionUnavailable) return;
     const typed = (typeof textOverride === 'string' ? textOverride : input).trim();
-    const currentAttachments = attachmentsOverride || attachments;
-    if ((!typed && currentAttachments.length === 0) || busy) return;
+    const handoffAssets = (pendingHandoff?.assetLabels || []).map(label => assets.find(asset => asset.asset_label === label));
+    const handoffSkill = pendingHandoff?.skill && skills.find(skill => skill.name === pendingHandoff.skill);
+    if (platformSession && (handoffAssets.some(asset => !asset) || (pendingHandoff?.skill && !handoffSkill))) {
+      toast.error(unavailableCopy?.title || sessionCopy.unavailable);
+      return;
+    }
+    const currentAttachments = attachmentsOverride || [...attachments, ...handoffAssets];
+    if ((!typed && currentAttachments.length === 0) || busy || textTurns.waiting) return;
+    if (platformSession && !user?.id) return onRequireAuth?.();
     
-    const currentSkill = skillOverride || activeSkill;
+    const currentSkill = skillOverride || handoffSkill || activeSkill;
 
+    if (platformSession) {
+      if (!typed) return;
+      const skill = currentSkill && skills.find(item => item.name === currentSkill.name);
+      const references = new Map(currentAttachments.map(asset => [asset.asset_label, asset]));
+      const mentions = typed.matchAll(/@([A-Za-z0-9_-]+)/g);
+      for (const [, label] of mentions) {
+        const asset = assets.find(item => item.asset_label === label);
+        if (asset) references.set(label, asset);
+      }
+      const [reference] = references.values();
+      if (skill?.reference && (references.size !== 1 || reference?.kind !== "image")) {
+        toast.error(mediaCopy.reference);
+        return;
+      }
+      if (!skill?.reference && references.size) {
+        toast.error(mediaCopy.remove);
+        return;
+      }
+      const mediaModel = skill?.models.find(model => model.id === selectedMediaModel) || skill?.models[0];
+      if (currentSkill && !mediaModel) {
+        toast.error(mediaCopy.unavailable);
+        return;
+      }
+      if (!skill && !textTurns.model) {
+        toast.error(sessionCopy.modelUnavailable);
+        return;
+      }
+      const owner = user.id;
+      setBusy(true);
+      try {
+        const id = await ensureSession();
+        const media = skill ? {
+          model: mediaModel,
+          parameters: {
+            task_type: skill.mode,
+            ...(skill.mode.endsWith("v") ? { duration: 5 } : {}),
+            ...(reference ? { image_url: `koyo-asset:${reference.asset_label}` } : {}),
+          },
+          confirmQuote: quote => {
+            if (!composerMounted.current || composerOwner.current !== owner ||
+                (activeSession.current && activeSession.current !== id)) return false;
+            if (!Number.isInteger(quote.credits) || quote.credits < 0) throw new Error(textTurns.copy.loadError);
+            return new Promise(resolve => {
+              quoteReply.current = { id, owner, resolve };
+              setMediaQuote({ model: mediaModel.displayName || mediaModel.name, credits: quote.credits, duration: skill.mode.endsWith("v") ? 5 : null });
+            });
+          },
+        } : undefined;
+        await textTurns.submit(id, typed, media);
+        setInput("");
+        setAttachments([]);
+        setPendingHandoff(null);
+        if (textareaRef.current) textareaRef.current.style.height = "auto";
+      } catch (error) {
+        if (error.code !== "GENERATION_QUOTE_DECLINED") toast.error(error.message || textTurns.copy.failed);
+      } finally {
+        setBusy(false);
+      }
+      return;
+    }
     
     let activeSessionId;
     try {
@@ -803,23 +1046,22 @@ export default function CreativeCanvas({
       }
 
       const enqueueRes = await axios.post(endpoint, payload, { headers: getHeaders() });
+      setPendingHandoff(null);
       await resumePolling(enqueueRes.data.job_id, aIdx);
     } catch (err) {
+      const status = err.response?.status;
+      const failure = (status === 402 || status === 503) && unavailableCopy?.title
+        ? unavailableCopy.title
+        : err.response?.data?.error || err.response?.data?.detail || err.message;
       setMessages(prev => {
         const arr = [...prev];
-        if (aIdx >= 0) arr[aIdx] = { ...arr[aIdx], content: `❌ ${err.message || err}` };
+        if (aIdx >= 0) arr[aIdx] = { ...arr[aIdx], content: failure };
         return arr;
       });
     } finally {
       setBusy(false);
       await loadAssets();
-      if (activeSessionId) {
-        setMessages(prev => {
-          const newMsgs = [...prev];
-          axios.patch(`${API}/sessions/${activeSessionId}/messages`, { messages: newMsgs }, { headers: getHeaders() }).catch(() => {});
-          return newMsgs;
-        });
-      }
+      if (activeSessionId) requestHistorySave({ id: activeSessionId });
     }
   };
 
@@ -945,7 +1187,8 @@ export default function CreativeCanvas({
       } else {
         fetchSessions();
         if (id === sessionId) {
-          router.push("/canvas");
+          if (platformSession) openSession(null, true);
+          else router.push("/canvas");
         }
       }
     } catch (err) {
@@ -1018,21 +1261,34 @@ export default function CreativeCanvas({
     }
   };
 
-  const handleKey = (e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); sendMessage(); } };
+  const handleKey = (e) => {
+    if (e.key === "Enter" && !e.shiftKey && !e.nativeEvent.isComposing && e.keyCode !== 229) {
+      e.preventDefault();
+      sendMessage();
+    }
+  };
+  const displayMessages = [...messages, ...textTurns.messages].sort(
+    (first, second) => (first?.timestamp || "").localeCompare(second?.timestamp || "")
+  );
   
-  const filteredSkills = skills.filter(s => s.name.toLowerCase().includes(mentionQuery.toLowerCase()));
+  const filteredSkills = skills.filter(skill =>
+    [skill.name, skill.label].some(label => label?.toLowerCase().includes(mentionQuery.toLowerCase()))
+  );
   const filteredAssets = assets.filter(a => (a.asset_label || "").toLowerCase().includes(mentionQuery.toLowerCase()));
 
   if (!mounted) return null;
 
   return (
-    <div className="h-dvh w-full text-sm flex flex-col bg-bg-page text-primary-text overflow-hidden" style={{ fontFamily: "'Inter', sans-serif" }}>
+    <div className={`${platformSession ? "one-design-agent h-full bg-transparent" : "h-dvh bg-bg-page"} w-full text-body-sm flex flex-col text-primary-text overflow-hidden`}>
       <Toaster position="top-right" reverseOrder={false} />
-      <main className="flex h-full w-full overflow-hidden">
+      <main className="relative flex h-full w-full overflow-hidden">
         {/* Left Sidebar: Session List — owner only. Embed visitors don't get
             a session switcher; the iframe is scoped to one localStorage-keyed
             session per embed code. */}
-        <div className={`flex-shrink-0 flex flex-col bg-bg-card border-r border-divider shadow-[4px_0_12px_rgba(0,0,0,0.05)] z-20 transition-all duration-300 ${(showLeftSidebar || inEmbedMode) ? 'overflow-hidden w-0' : 'w-64'}`}>
+        <div id="design-agent-session-panel"
+          inert={showLeftSidebar || inEmbedMode}
+          aria-hidden={showLeftSidebar || inEmbedMode}
+          className={`design-agent-session-panel flex-shrink-0 flex flex-col bg-bg-card border-r border-divider shadow-elevation-1 z-30 transition-[width] duration-normal ${(showLeftSidebar || inEmbedMode) ? 'overflow-hidden w-0' : 'w-64'}`}>
           <div className="p-3 border-b border-divider flex items-center justify-between bg-bg-card/50">
             <div className="flex items-center gap-2 overflow-hidden">
               <Link 
@@ -1059,8 +1315,13 @@ export default function CreativeCanvas({
             </button>
           </div>
           <div className="flex-1 overflow-y-auto scrollbar-subtle">
-            {sessions.length === 0 ? (
-              <div className="px-4 py-8 text-center text-secondary-text italic text-[11px]">No previous sessions</div>
+            {sessionsError ? (
+              <div className="px-4 py-3 text-body-sm text-secondary-text">
+                <p role="alert">{sessionCopy.loadError}</p>
+                <button type="button" onClick={fetchSessions} className="control-focus min-h-11 text-primary">{sessionCopy.retry}</button>
+              </div>
+            ) : sessions.length === 0 ? (
+              <div className="px-4 py-8 text-center text-secondary-text text-caption">{sessionCopy.empty}</div>
             ) : (
               sessions.map((s) => (
                 <div
@@ -1069,35 +1330,39 @@ export default function CreativeCanvas({
                   onMouseLeave={() => setHoveredSessionId(null)}
                   className={`relative w-full flex items-center gap-3 px-4 py-3.5 cursor-pointer transition-all border-l-2 group
                     ${sessionId === s.id ? "border-primary bg-primary/5" : "border-transparent hover:bg-bg-card-hover"}`}
-                  onClick={() => {router.push(`?session=${s.id}`); setShowLeftSidebar(!showLeftSidebar);}}
                 >
                   <div className="flex-1 min-w-0 pr-12">
                     {editingSessionId === s.id ? (
                       <input
                         autoFocus
+                        aria-label={sessionCopy.name}
+                        maxLength={120}
                         className="bg-bg-card border border-primary px-2 py-1 rounded text-xs focus:outline-none w-full"
                         value={editingSessionName}
                         onChange={(e) => setEditingSessionName(e.target.value)}
                         onBlur={() => renameSession(s.id, editingSessionName)}
                         onKeyDown={(e) => {
-                          if (e.key === "Enter") renameSession(s.id, editingSessionName);
+                          if (e.key === "Enter") e.currentTarget.blur();
                           if (e.key === "Escape") setEditingSessionId(null);
                         }}
                         onClick={(e) => e.stopPropagation()}
                       />
                     ) : (
-                      <div className={`flex items-center gap-2 text-[13px] font-semibold transition-colors ${sessionId === s.id ? "text-primary" : "text-primary-text"}`}>
+                      <button type="button" aria-current={sessionId === s.id ? "true" : undefined}
+                        disabled={busy || uploading || creatingSession}
+                        onClick={() => { openSession(s.id); setShowLeftSidebar(true); }}
+                        className={`control-focus flex min-h-11 w-full items-center gap-2 rounded-md text-left text-body-sm font-semibold transition-colors ${sessionId === s.id ? "text-primary" : "text-primary-text"}`}>
                         <span className="truncate flex-1">{s.name}</span>
-                        <span className="flex items-center gap-1 text-[10px] text-secondary-text opacity-70">
+                        {typeof s.asset_count === "number" && <span className="flex items-center gap-1 text-caption text-secondary-text">
                           <FiImage size={10} /> {s.asset_count}
-                        </span>
-                      </div>
+                        </span>}
+                      </button>
                     )}
                   </div>
 
                   {/* Hover Actions */}
-                  {hoveredSessionId === s.id && editingSessionId !== s.id && (
-                    <div className="flex items-center gap-0.5 animate-fade-in absolute right-2 top-1/2 -translate-y-1/2 bg-bg-card/90 backdrop-blur-sm pl-2 py-1 rounded-l shadow-[-12px_0_12px_rgba(0,0,0,0.1)]">
+                  {editingSessionId !== s.id && (
+                    <div className={`design-agent-session-actions flex items-center gap-0.5 absolute right-2 top-1/2 -translate-y-1/2 bg-bg-card/90 backdrop-blur-sm rounded-l shadow-elevation-1 ${hoveredSessionId === s.id ? "" : "opacity-0 focus-within:opacity-100"}`}>
                       <button
                         onClick={(e) => {
                           e.stopPropagation();
@@ -1106,6 +1371,7 @@ export default function CreativeCanvas({
                         }}
                         className="p-1.5 hover:bg-bg-page rounded text-secondary-text hover:text-primary transition-colors"
                         title="Rename"
+                        disabled={busy || uploading}
                       >
                         <FiEdit2 size={13} />
                       </button>
@@ -1116,6 +1382,7 @@ export default function CreativeCanvas({
                         }}
                         className="p-1.5 hover:bg-red-500/10 rounded text-secondary-text hover:text-red-500 transition-colors"
                         title="Delete"
+                        disabled={busy || uploading}
                       >
                         <HiOutlineTrash size={14} />
                       </button>
@@ -1132,15 +1399,18 @@ export default function CreativeCanvas({
             </div>
           </div>
         </div>
-        <div className="flex flex-col relative bg-bg-page flex-1 overflow-hidden">
+        <div className={`flex min-w-0 flex-col relative ${platformSession ? "bg-transparent" : "bg-bg-page"} flex-1 overflow-hidden`}>
           {/* Canvas Top Bar */}
           <div className="flex justify-between items-center z-10 p-2 border-b border-divider bg-bg-page">
             <div className="relative flex items-center gap-1">
               {!inEmbedMode && (
-                <button
+                <button type="button"
                   onClick={() => setShowLeftSidebar(!showLeftSidebar)}
-                  className={`p-2 hover:bg-bg-card rounded transition-colors ${showLeftSidebar ? "text-primary" : "hidden"}`}
-                  title="Toggle Sessions"
+                  className={`control-focus min-h-11 min-w-11 place-items-center hover:bg-bg-card rounded-lg transition-colors ${showLeftSidebar ? "grid text-primary" : "hidden"}`}
+                  aria-controls="design-agent-session-panel"
+                  aria-expanded={!showLeftSidebar}
+                  aria-label={sessionCopy.open}
+                  title={sessionCopy.open}
                 >
                   <VscLayoutSidebarLeftOff size={18} />
                 </button>
@@ -1279,7 +1549,8 @@ export default function CreativeCanvas({
 
           {/* Main Canvas View */}
           <div className="flex-1 relative overflow-hidden bg-bg-page/50 w-full">
-            <CanvasArea 
+            <CanvasArea
+              key={sessionId || "draft"}
               ref={canvasRef} 
               theme={resolvedTheme}
               activeTasks={activeTasks}
@@ -1315,8 +1586,10 @@ export default function CreativeCanvas({
 
         {/* Right Panel: Chat Sidebar */}
         <div 
-          className={`flex-shrink-0 flex flex-col bg-bg-card border-l border-divider shadow-[-10px_0_20px_rgba(0,0,0,0.02)] z-20 transition-all duration-300 ${!showChat ? 'overflow-hidden' : ''}`}
-          style={{ width: sidebarWidth }}
+          data-open={showChat}
+          inert={!showChat}
+          className={`design-agent-chat-panel flex-shrink-0 flex flex-col bg-bg-card border-l border-divider shadow-elevation-1 z-20 transition-[width] duration-normal ${!showChat ? 'overflow-hidden' : ''}`}
+          style={{ "--design-agent-chat-width": `${sidebarWidth}px` }}
         >
           {/* Sidebar Header */}
           <div className="p-4 flex items-center justify-between border-b border-divider bg-bg-card">
@@ -1335,16 +1608,16 @@ export default function CreativeCanvas({
               >
                 <CgTerminal size={16} />
               </Link>
-              {sessionId && (
+              {(platformSession || sessionId) && (
                 <button
-                  onClick={() => {
-                    if (inEmbedMode) setActiveEmbedSession(null);
-                    else router.push("/canvas");
-                  }}
-                  className="p-1.5 hover:bg-bg-page hover:text-primary-text transition-colors rounded text-secondary-text"
-                  title="New Session"
+                  type="button"
+                  onClick={startNewSession}
+                  disabled={creatingSession || busy || uploading || (platformSession && !authChecked)}
+                  className="control-focus inline-flex min-h-11 min-w-11 items-center justify-center hover:bg-bg-page hover:text-primary-text transition-colors rounded-lg text-secondary-text"
+                  aria-label={platformSession && !user ? sessionCopy.signIn : sessionCopy.create}
+                  title={platformSession && !user ? sessionCopy.signIn : sessionCopy.create}
                 >
-                  <FiPlus size={16} />
+                  {creatingSession ? <BiLoaderAlt className="animate-spin" size={16} aria-hidden="true" /> : <FiPlus size={16} aria-hidden="true" />}
                 </button>
               )}
               <button
@@ -1356,11 +1629,23 @@ export default function CreativeCanvas({
               </button>
             </div>
           </div>
+          {sessionUnavailable && (
+            <div className="px-4 py-3 text-body-sm text-secondary-text">
+              <p role="alert">{sessionCopy.unavailable}</p>
+              <button type="button" onClick={startNewSession} className="control-focus min-h-11 text-primary">{sessionCopy.create}</button>
+            </div>
+          )}
+          {textTurns.historyError && !sessionUnavailable && (
+            <div role="alert" className="px-4 py-3 text-body-sm text-secondary-text">
+              <p>{textTurns.copy.loadError}</p>
+              <button type="button" onClick={textTurns.refresh} className="control-focus min-h-11 text-primary">{textTurns.copy.refresh}</button>
+            </div>
+          )}
           {/* Chat History */}
           <div className="flex-1 overflow-y-auto p-4 space-y-6 scrollbar-subtle">
-            {messages.map((msg, idx) => {
+            {displayMessages.map((msg, idx) => {
               if (!msg) return null;
-              const prevMsg = idx > 0 ? messages[idx - 1] : null;
+              const prevMsg = idx > 0 ? displayMessages[idx - 1] : null;
               const showDateHeader = msg.timestamp && (
                 !prevMsg || 
                 !prevMsg.timestamp || 
@@ -1368,7 +1653,7 @@ export default function CreativeCanvas({
               );
 
               return (
-                <React.Fragment key={idx}>
+                <React.Fragment key={msg.id || idx}>
                   {showDateHeader && msg.timestamp && (
                     <div className="flex justify-center my-4">
                       <span className="px-2 py-1 bg-bg-page border border-divider rounded text-[10px] font-medium text-secondary-text shadow-sm">
@@ -1376,7 +1661,7 @@ export default function CreativeCanvas({
                       </span>
                     </div>
                   )}
-                  <div className={`flex flex-col gap-2 ${msg.role === "user" ? "items-end" : "items-start"} animate-fade-in-up group`}>
+                  <div data-design-turn-status={msg.jobStatus} className={`flex flex-col gap-2 ${msg.role === "user" ? "items-end" : "items-start"} animate-fade-in-up group`}>
                     <div className="flex items-center gap-2">
                       {msg.role === "assistant" && (
                         <div className="flex items-center gap-1.5 text-[10px] font-medium text-secondary-text ml-1">
@@ -1446,6 +1731,12 @@ export default function CreativeCanvas({
                           ) : (msg.role === "assistant" && busy) && (
                             <TypingDots />
                           )}
+                          {msg.assetId && (
+                            <a href={`/api/assets/${encodeURIComponent(msg.assetId)}/download?inline=1`} target="_blank"
+                              rel="noreferrer" className="control-focus inline-flex min-h-11 items-center text-primary">
+                              {mediaCopy.open}
+                            </a>
+                          )}
                           
                           {(msg.events || []).filter(e => e && ["tool_call", "tool_result", "plan_propose", "error", "info"].includes(e.type)).map((ev, i) => (
                             <EventPill key={i} event={{...ev, onAction: handleJobAction}} />
@@ -1481,6 +1772,33 @@ export default function CreativeCanvas({
                 ${isDragging ? "border-dashed border-primary bg-primary/5 ring-4 ring-primary/10" : ""}
                 ${busy ? "border-primary ring-1 ring-primary/20" : "border-divider focus-within:ring-2 focus-within:ring-primary/20 focus-within:border-primary"}`}
             >
+              {platformSession && user?.id && textTurns.models && (
+                <div className="flex flex-wrap items-center gap-2 border-b border-divider px-3 py-1">
+                  {currentMediaSkill ? (
+                    <label className="flex min-w-0 flex-wrap items-center gap-2 text-caption text-secondary-text">
+                      {mediaCopy.model}
+                      <select value={currentMediaModel?.id || ""} disabled={busy}
+                        onChange={event => setSelectedMediaModel(event.target.value)}
+                        className="control-focus min-h-11 max-w-full rounded-lg border border-divider bg-bg-card px-2 text-body-sm text-primary-text">
+                        {currentMediaSkill.models.map(model => (
+                          <option key={model.id} value={model.id}>{model.displayName || model.name}</option>
+                        ))}
+                      </select>
+                      {currentMediaSkill.reference && <span>{mediaCopy.reference}</span>}
+                    </label>
+                  ) : textTurns.models.length ? (
+                    <label className="flex min-w-0 flex-wrap items-center gap-2 text-caption text-secondary-text">
+                      {sessionCopy.textModel}
+                      <select value={textTurns.modelId} onChange={event => textTurns.setModelId(event.target.value)}
+                        className="control-focus min-h-11 max-w-full rounded-lg border border-divider bg-bg-card px-2 text-body-sm text-primary-text">
+                        {textTurns.models.map(model => (
+                          <option key={model.id} value={model.id}>{model.displayName || model.name} · {model.creditsPrice} {sessionCopy.credits}</option>
+                        ))}
+                      </select>
+                    </label>
+                  ) : <span role="status" className="py-2 text-caption text-secondary-text">{sessionCopy.modelUnavailable}</span>}
+                </div>
+              )}
               {activeSkill && (
                 <div className="flex items-center gap-2 p-1 animate-fade-in-up">
                   <button 
@@ -1488,7 +1806,33 @@ export default function CreativeCanvas({
                     className="flex items-center gap-1.5 px-2 py-1 rounded-full bg-bg-page border border-divider text-xs hover:bg-red-500 hover:text-white transition-colors"
                   >
                     <FiX size={12} />
-                    <span>{activeSkill.name}</span>
+                    <span>{activeSkill.label || activeSkill.name}</span>
+                  </button>
+                </div>
+              )}
+              {mediaQuote && (
+                <div className="flex flex-wrap items-center gap-2 border-b border-divider px-3 py-2 text-body-sm"
+                  onKeyDown={event => {
+                    if (event.key === "Escape") {
+                      event.preventDefault();
+                      respondToMediaQuote(false);
+                    }
+                  }}>
+                  <span role="status" className="mr-auto min-w-0 break-words">
+                    {mediaQuote.model} · {mediaQuote.duration ? `${mediaQuote.duration}s · ` : ""}{mediaQuote.credits} {sessionCopy.credits}
+                  </span>
+                  <button ref={quoteCancelButton} type="button" onClick={() => respondToMediaQuote(false)}
+                    className="control-focus min-h-11 rounded-lg border border-divider px-3 hover:bg-bg-page">{mediaCopy.cancel}</button>
+                  <button type="button" onClick={() => respondToMediaQuote(true)}
+                    className="control-focus min-h-11 rounded-lg bg-[var(--accent-primary)] px-3 text-[var(--ink-on-accent)] hover:bg-[var(--accent-primary-hover-solid)]">{mediaCopy.confirm}</button>
+                </div>
+              )}
+              {pendingHandoff && (
+                <div className="flex flex-wrap items-center gap-2 border-b border-divider px-3 py-1 text-caption text-secondary-text">
+                  <span className="min-w-0 break-words">{[pendingHandoff.skill, ...pendingHandoff.assetLabels].filter(Boolean).join(" · ")}</span>
+                  <button type="button" onClick={() => setPendingHandoff(null)} className="control-focus inline-flex min-h-11 min-w-11 items-center justify-center rounded-lg"
+                    aria-label={textTurns.copy.close}>
+                    <FiX aria-hidden="true" />
                   </button>
                 </div>
               )}
@@ -1536,7 +1880,7 @@ export default function CreativeCanvas({
                           className="w-full text-left px-3 py-2 hover:bg-bg-page transition-colors flex items-center gap-2 group"
                         >
                           <RiSparklingLine size={12} className="text-primary opacity-50 group-hover:opacity-100" />
-                          <span className="text-xs font-medium text-primary-text">{skill.name}</span>
+                          <span className="text-xs font-medium text-primary-text">{skill.label || skill.name}</span>
                         </button>
                       ))}                      
                       {filteredSkills.length === 0 && filteredAssets.length === 0 && (
@@ -1572,7 +1916,7 @@ export default function CreativeCanvas({
                 }}
                 onKeyDown={handleKey}
                 onInput={e => { e.target.style.height = "auto"; e.target.style.height = Math.min(e.target.scrollHeight, 120) + "px"; }}
-                placeholder={activeSkill ? `Oh, Let us create ${activeSkill.name.toLowerCase()}s, start with your ${activeSkill.inputs?.[0]?.replace(/_/g, ' ') || 'idea'}?` : "Start with an idea or mention assets using @..."}
+                placeholder={currentMediaSkill ? mediaCopy.placeholder : activeSkill ? `Oh, Let us create ${activeSkill.name.toLowerCase()}s, start with your ${activeSkill.inputs?.[0]?.replace(/_/g, ' ') || 'idea'}?` : "Start with an idea or mention assets using @..."}
                 className="w-full bg-transparent px-3 py-3 text-[13px] resize-none focus:outline-none min-h-[50px] max-h-[120px] scrollbar-subtle"
                 rows={1}
                 disabled={busy}
@@ -1677,47 +2021,54 @@ export default function CreativeCanvas({
                     <button
                       type="button"
                       onClick={() => setShowSkillsMenu(!showSkillsMenu)}
-                      className={`p-1.5 rounded hover:bg-bg-page transition-all flex items-center gap-1.5
+                      disabled={busy}
+                      aria-expanded={showSkillsMenu}
+                      className={`control-focus min-h-11 min-w-11 justify-center p-1.5 rounded hover:bg-bg-page transition-all flex items-center gap-1.5
                         ${showSkillsMenu ? "bg-bg-page text-primary shadow-inner" : "text-secondary-text"}`}
-                      title="Agent Skills"
+                      title={platformSession ? mediaCopy.menu : "Agent Skills"}
                     >
                       <GoBook size={16} />
                     </button>
 
                     {showSkillsMenu && (
-                      <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-3 w-[320px] bg-bg-card border border-divider rounded shadow-2xl z-50 overflow-hidden animate-in fade-in slide-in-from-bottom-2 duration-200">
+                      <div className="popover-surface absolute bottom-full left-0 mb-3 w-max max-w-[min(19rem,calc(100vw-6rem))] z-[var(--z-popover)] overflow-hidden">
                         <div className="px-4 py-3 border-b border-divider flex items-center justify-between bg-bg-page/30">
                           <div>
-                            <h3 className="text-[12px] font-bold text-primary-text uppercase tracking-tight">Expert Skills</h3>
+                            <h3 className="text-body-sm font-semibold text-primary-text">{platformSession ? mediaCopy.menu : "Expert Skills"}</h3>
                           </div>
-                          <Link 
+                          {!platformSession && <Link
                             href="https://muapi.ai/docs/design-agent-api"
                             target="_blank" 
                             className="text-[10px] font-bold text-primary hover:underline flex items-center gap-1"
                           >
                             <CgTerminal size={10} />
                             API Docs
-                          </Link>
+                          </Link>}
                         </div>
                         <div className="max-h-80 overflow-y-auto p-1.5 scrollbar-subtle">
+                          {platformSession && !skills.length && <p role="status" className="p-3 text-caption text-secondary-text">{mediaCopy.unavailable}</p>}
                           {skills.map(skill => (
                             <button
                               key={skill.name}
+                              type="button"
+                              aria-pressed={currentMediaSkill?.name === skill.name || activeSkill?.name === skill.name}
                               onClick={() => {
+                                if (platformSession) setPendingHandoff(previous => previous && { ...previous, skill: null });
                                 setActiveSkill(skill);
+                                setSelectedMediaModel("");
                                 setShowSkillsMenu(false);
                                 textareaRef.current?.focus();
                               }}
-                              className={`w-full flex items-center gap-3 px-3 py-2.5 rounded hover:bg-bg-page transition-all text-left group ${activeSkill?.name === skill.name ? "bg-primary/5 border border-primary" : "border border-transparent"}`}
+                              className={`control-focus min-h-11 w-full flex items-center gap-3 px-3 py-2.5 rounded hover:bg-bg-page transition-colors text-left group ${activeSkill?.name === skill.name ? "bg-primary/5 border border-primary" : "border border-transparent"}`}
                             >
                               <div className={`w-8 h-8 rounded flex items-center justify-center transition-colors shadow-sm ${activeSkill?.name === skill.name ? "bg-primary text-white" : "bg-bg-page text-primary border border-divider group-hover:bg-primary group-hover:text-white"}`}>
                                 <RiSparklingLine size={16} />
                               </div>
                               <div className="flex-1 min-w-0">
                                 <div className={`font-bold capitalize text-[12px] transition-colors ${activeSkill?.name === skill.name ? "text-primary" : "text-primary-text group-hover:text-primary"}`}>
-                                  {skill.name}
+                                  {skill.label || skill.name}
                                 </div>
-                                <div className="text-[10px] text-secondary-text mt-0.5 line-clamp-1 opacity-70 italic">{skill.description || "Specialized workflow"}</div>
+                                {(!platformSession || skill.reference) && <div className="text-caption text-secondary-text mt-0.5">{platformSession ? mediaCopy.reference : skill.description}</div>}
                               </div>
                             </button>
                           ))}
@@ -1727,7 +2078,7 @@ export default function CreativeCanvas({
                             onClick={() => setShowSkillsMenu(false)}
                             className="text-[10px] font-bold text-secondary-text hover:text-primary-text transition-colors"
                           >
-                            Dismiss
+                            {platformSession ? mediaCopy.cancel : "Dismiss"}
                           </button>
                         </div>
                       </div>
@@ -1793,7 +2144,8 @@ export default function CreativeCanvas({
                   <button
                     type="button"
                     onClick={() => sendMessage()}
-                    disabled={busy || (!input.trim() && attachments.length === 0)}
+                    aria-label={sessionCopy.send}
+                    disabled={busy || textTurns.waiting || (!input.trim() && attachments.length === 0)}
                     className={`w-8 h-8 rounded-full flex items-center justify-center transition-all shadow-sm ml-1
                       ${busy || (!input.trim() && attachments.length === 0)
                         ? "bg-[var(--bg-card-hover)] text-[var(--text-muted)] cursor-not-allowed"

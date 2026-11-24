@@ -16,6 +16,7 @@ import React from 'react';
 export default function AuroraField({
   variant = 'hero', // 'hero' | 'studio' | 'canvas' | 'minimal'
   simplified = false,
+  animated = true,
   className = '',
 }) {
   const isMinimal = variant === 'minimal';
@@ -39,7 +40,7 @@ export default function AuroraField({
     >
       {/* Aurora A: Ice Cyan (左下天际光场) */}
       <div
-        className="absolute -bottom-[25vw] -left-[20vw] w-[110vw] h-[85vw] rounded-[48%] animate-aurora-drift-a"
+        className={`absolute -bottom-[25vw] -left-[20vw] w-[110vw] h-[85vw] rounded-[48%] ${animated ? 'animate-aurora-drift-a' : ''}`}
         style={{
           background: 'radial-gradient(ellipse 65% 55% at 45% 60%, rgba(85, 230, 255, 0.42) 0%, rgba(85, 230, 255, 0.15) 40%, rgba(90, 124, 255, 0.04) 70%, transparent 100%)',
           filter: simplified ? 'blur(60px)' : 'blur(120px)',
@@ -49,7 +50,7 @@ export default function AuroraField({
 
       {/* Aurora B: Electric Violet (右下深空光场) */}
       <div
-        className="absolute -bottom-[30vw] -right-[25vw] w-[130vw] h-[95vw] rounded-[52%] animate-aurora-drift-b"
+        className={`absolute -bottom-[30vw] -right-[25vw] w-[130vw] h-[95vw] rounded-[52%] ${animated ? 'animate-aurora-drift-b' : ''}`}
         style={{
           background: 'radial-gradient(ellipse 70% 60% at 55% 55%, rgba(135, 103, 255, 0.46) 0%, rgba(177, 108, 255, 0.18) 45%, rgba(90, 124, 255, 0.05) 75%, transparent 100%)',
           filter: simplified ? 'blur(70px)' : 'blur(140px)',
@@ -60,7 +61,7 @@ export default function AuroraField({
       {/* Aurora C: Soft Indigo (中央底部纵深光场 - 仅在非极简模式下开启) */}
       {!isMinimal && (
         <div
-          className="absolute -bottom-[15vw] left-[15vw] w-[90vw] h-[65vw] rounded-full animate-aurora-breathe-c"
+          className={`absolute -bottom-[15vw] left-[15vw] w-[90vw] h-[65vw] rounded-full ${animated ? 'animate-aurora-breathe-c' : ''}`}
           style={{
             background: 'radial-gradient(circle at 50% 60%, rgba(90, 124, 255, 0.28) 0%, rgba(135, 103, 255, 0.12) 50%, transparent 80%)',
             filter: simplified ? 'blur(60px)' : 'blur(110px)',
@@ -72,7 +73,7 @@ export default function AuroraField({
       {/* Aurora D: Subtle Rose Violet (右侧边缘薄雾高光 - 仅在 hero 与 studio 模式开启) */}
       {!isMinimal && !simplified && !isCanvas && (
         <div
-          className="absolute top-[10vw] -right-[15vw] w-[75vw] h-[75vw] rounded-full opacity-60 animate-aurora-drift-a"
+          className={`absolute top-[10vw] -right-[15vw] w-[75vw] h-[75vw] rounded-full opacity-60 ${animated ? 'animate-aurora-drift-a' : ''}`}
           style={{
             background: 'radial-gradient(circle at 60% 40%, rgba(217, 131, 255, 0.24) 0%, rgba(135, 103, 255, 0.08) 55%, transparent 75%)',
             filter: 'blur(130px)',

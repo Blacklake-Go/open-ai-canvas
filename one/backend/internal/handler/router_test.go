@@ -271,7 +271,7 @@ func TestVerticalSliceSiteAndI18n(t *testing.T) {
 	}{
 		{"/api/site/branding", "private, no-store, max-age=0"},
 		{"/api/site/content-config", "public, max-age=15, stale-while-revalidate=60"},
-		{"/api/site/subscription-faq", "public, max-age=15, stale-while-revalidate=60"},
+		{"/api/site/subscription-faq", "public, no-cache"},
 	} {
 		rec := httptest.NewRecorder()
 		router.ServeHTTP(rec, httptest.NewRequest(http.MethodGet, tc.path, nil))

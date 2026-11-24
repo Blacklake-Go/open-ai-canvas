@@ -68,6 +68,8 @@ const DesignSystemPage = lazyNamed(() => import('@/pages/PublicFeaturePages'), '
 const WorkflowAliasPage = lazyNamed(() => import('@/pages/PublicFeaturePages'), 'WorkflowAliasPage');
 const AccountRedirectPage = lazyNamed(() => import('@/pages/PublicFeaturePages'), 'AccountRedirectPage');
 const PricingRedirectPage = lazyNamed(() => import('@/pages/PublicFeaturePages'), 'PricingRedirectPage');
+const BillingReturnPage = lazyNamed(() => import('@/pages/BillingOrderPages'), 'BillingReturnPage');
+const BillingHistoryPage = lazyNamed(() => import('@/pages/BillingOrderPages'), 'BillingHistoryPage');
 const AssistantRedirectPage = lazyNamed(() => import('@/pages/PublicFeaturePages'), 'AssistantRedirectPage');
 const WorkflowIndexRedirectPage = lazyNamed(() => import('@/pages/PublicFeaturePages'), 'WorkflowIndexRedirectPage');
 const AgentsIndexRedirectPage = lazyNamed(() => import('@/pages/PublicFeaturePages'), 'AgentsIndexRedirectPage');
@@ -80,6 +82,7 @@ const LocalizedFallbackPage = lazyNamed(() => import('@/pages/PublicFeaturePages
 // Admin Pages
 const AdminDashboardPage = lazy(() => import('@/pages/admin/AdminDashboardPage'));
 const AdminLegacyRedirectPage = lazyNamed(() => import('@/pages/admin/AdminRedirectPages'), 'AdminLegacyRedirectPage');
+const AdminRoutingRedirectPage = lazyNamed(() => import('@/pages/admin/AdminRedirectPages'), 'AdminRoutingRedirectPage');
 const AdminSystemCatchallRedirectPage = lazyNamed(() => import('@/pages/admin/AdminRedirectPages'), 'AdminSystemCatchallRedirectPage');
 const AdminBrandsRedirectPage = lazyNamed(() => import('@/pages/admin/AdminRedirectPages'), 'AdminBrandsRedirectPage');
 const AdminPricingRedirectPage = lazyNamed(() => import('@/pages/admin/AdminRedirectPages'), 'AdminPricingRedirectPage');
@@ -108,6 +111,7 @@ const AdminModelsProvidersPage = lazyNamed(() => import('@/pages/admin/AdminMode
 const AdminModelsPublicationPage = lazyNamed(() => import('@/pages/admin/AdminModelsPages'), 'AdminModelsPublicationPage');
 const AdminModelsTelemetryPage = lazyNamed(() => import('@/pages/admin/AdminModelsPages'), 'AdminModelsTelemetryPage');
 const AdminModelsCanvasPage = lazyNamed(() => import('@/pages/admin/AdminModelsPages'), 'AdminModelsCanvasPage');
+const AdminWorkshopModelsPage = lazy(() => import('@/pages/admin/AdminWorkshopModelsPage'));
 
 const AdminGenerationsPage = lazyNamed(() => import('@/pages/admin/AdminGenerationsAndOpsPages'), 'AdminGenerationsPage');
 const AdminFailedGenerationsPage = lazyNamed(() => import('@/pages/admin/AdminGenerationsAndOpsPages'), 'AdminFailedGenerationsPage');
@@ -157,7 +161,7 @@ function CanonicalRedirectGuard({ children }: { children: React.ReactNode }) {
     if (decision.location.startsWith('http://') || decision.location.startsWith('https://')) {
       return <ExternalRedirect to={decision.location} />;
     }
-    return <Navigate to={decision.location} replace />;
+    return <Navigate to={`${decision.location}${location.hash}`} replace />;
   }
 
   return <>{children}</>;
@@ -241,8 +245,9 @@ function AppRoutes() {
           <Route path="/zh/benefits" element={<BenefitsPage forcedLocale="zh-CN" />} />
           <Route path="/about" element={<AboutPage />} />
           <Route path="/zh/about" element={<AboutPage forcedLocale="zh-CN" />} />
-          <Route path="/call-api" element={<CallApiPage locale="en" />} />
-          <Route path="/zh/call-api" element={<CallApiPage locale="zh-CN" />} />
+          <Route path="/call-api" element={<CallApiPage />} />
+          <Route path="/zh/call-api" element={<CallApiPage />} />
+          <Route path="/:locale/call-api" element={<CallApiPage />} />
           <Route path="/feedback" element={<FeedbackPage />} />
           <Route path="/profile" element={<ProfilePage />} />
           <Route path="/zh/profile" element={<ProfilePage forcedLocale="zh-CN" />} />
@@ -253,14 +258,22 @@ function AppRoutes() {
           <Route path="/account" element={<AccountRedirectPage />} />
           <Route path="/pricing" element={<PricingRedirectPage locale="en" />} />
           <Route path="/zh/pricing" element={<PricingRedirectPage locale="zh-CN" />} />
+          <Route path="/:locale/pricing" element={<PricingRedirectPage />} />
+          <Route path="/billing/success" element={<BillingReturnPage />} />
+          <Route path="/:locale/billing/success" element={<BillingReturnPage />} />
+          <Route path="/billing/orders" element={<BillingHistoryPage />} />
+          <Route path="/:locale/billing/orders" element={<BillingHistoryPage />} />
           <Route path="/subscription" element={<PricingRedirectPage locale="en" />} />
           <Route path="/zh/subscription" element={<PricingRedirectPage locale="zh-CN" />} />
+          <Route path="/:locale/subscription" element={<PricingRedirectPage />} />
           <Route path="/assistant" element={<AssistantRedirectPage locale="en" />} />
           <Route path="/zh/assistant" element={<AssistantRedirectPage locale="zh-CN" />} />
           <Route path="/workflow" element={<WorkflowIndexRedirectPage locale="en" />} />
           <Route path="/zh/workflow" element={<WorkflowIndexRedirectPage locale="zh-CN" />} />
           <Route path="/workflow/:id" element={<WorkflowAliasPage />} />
           <Route path="/workflow/:id/:tab" element={<WorkflowAliasPage />} />
+          <Route path="/:locale/workflow/:id" element={<WorkflowAliasPage />} />
+          <Route path="/:locale/workflow/:id/:tab" element={<WorkflowAliasPage />} />
 
           {/* Design System Layout & Page */}
           <Route element={<DesignSystemLayout />}>
@@ -307,6 +320,7 @@ function AppRoutes() {
             <Route path="models/publication" element={<AdminModelsPublicationPage />} />
             <Route path="models/telemetry" element={<AdminModelsTelemetryPage />} />
             <Route path="models/canvas" element={<AdminModelsCanvasPage />} />
+            <Route path="models/workshop" element={<AdminWorkshopModelsPage />} />
             <Route path="models/brands" element={<AdminBrandsRedirectPage />} />
             <Route path="models/pricing" element={<AdminPricingRedirectPage />} />
             <Route path="models/catalog" element={<AdminLegacyRedirectPage to="/admin/models/providers" preserveQuery={false} requiredPermission="models.read" />} />
@@ -315,13 +329,13 @@ function AppRoutes() {
             <Route path="models/frontend" element={<AdminLegacyRedirectPage to="/admin/models" />} />
             <Route path="models/profit-center" element={<AdminLegacyRedirectPage to="/admin/profit-center" />} />
             <Route path="models/registry" element={<AdminLegacyRedirectPage to="/admin/models?tab=models" />} />
-            <Route path="routing" element={<AdminLegacyRedirectPage to="/admin/models?tab=routing" />} />
-            <Route path="routing/:modelId" element={<AdminLegacyRedirectPage to="/admin/models?tab=routing" />} />
+            <Route path="routing" element={<AdminLegacyRedirectPage to="/admin/models/routing" />} />
+            <Route path="routing/:modelId" element={<AdminRoutingRedirectPage />} />
 
             {/* Providers & Legacy System Redirects */}
-            <Route path="providers" element={<AdminLegacyRedirectPage to="/admin/models?tab=providers" />} />
-            <Route path="providers/ai" element={<AdminLegacyRedirectPage to="/admin/models?tab=providers" />} />
-            <Route path="providers/models" element={<AdminLegacyRedirectPage to="/admin/models?tab=routing" />} />
+            <Route path="providers" element={<AdminLegacyRedirectPage to="/admin/models/providers" />} />
+            <Route path="providers/ai" element={<AdminLegacyRedirectPage to="/admin/models/providers" />} />
+            <Route path="providers/models" element={<AdminLegacyRedirectPage to="/admin/models/routing" />} />
             <Route path="providers/email" element={<AdminLegacyRedirectPage to="/admin/system/email" />} />
             <Route path="providers/sms" element={<AdminLegacyRedirectPage to="/admin/system/login?category=sms" />} />
             <Route path="providers/social" element={<AdminLegacyRedirectPage to="/admin/system/login?category=social" />} />
@@ -346,7 +360,7 @@ function AppRoutes() {
             <Route path="content/banners" element={<AdminLegacyRedirectPage to="/admin/settings?tab=banner" preserveQuery={false} requiredPermission="settings.read" />} />
             <Route path="content/branding" element={<AdminLegacyRedirectPage to="/admin/settings?tab=branding" preserveQuery={false} requiredPermission="settings.read" />} />
             <Route path="content/effects" element={<AdminLegacyRedirectPage to="/admin/settings?tab=motion" preserveQuery={false} requiredPermission="settings.read" />} />
-            <Route path="content/icon" element={<AdminLegacyRedirectPage to="/admin/operations?tab=branding" />} />
+            <Route path="content/icon" element={<AdminLegacyRedirectPage to="/admin/settings?tab=branding#icon-settings" preserveQuery={false} requiredPermission="settings.read" />} />
             <Route path="content/visitors" element={<AdminVisitorsPage />} />
             <Route path="content/x-prompts" element={<AdminXPromptsPage />} />
             <Route path="visitors" element={<AdminLegacyRedirectPage to="/admin/content/visitors" preserveQuery={false} requiredPermission="users.read" />} />
@@ -354,6 +368,7 @@ function AppRoutes() {
             <Route path="feedback/:id" element={<AdminFeedbackDetailPage />} />
             <Route path="i18n" element={<AdminI18nPage />} />
             <Route path="settings" element={<AdminSettingsPage />} />
+            <Route path="settings/appearance" element={<AdminLegacyRedirectPage to="/admin/settings?tab=motion" preserveQuery={false} requiredPermission="settings.read" />} />
             <Route path="settings/storage" element={<AdminStorageSettingsPage />} />
             <Route path="storage" element={<AdminLegacyRedirectPage to="/admin/settings/storage" preserveQuery={false} requiredPermission="storage.read" />} />
 

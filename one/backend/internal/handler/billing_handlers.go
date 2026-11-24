@@ -24,7 +24,12 @@ func (d *Dependencies) billingService() *billing.Service {
 }
 
 func (d *Dependencies) handleBillingPlans(w http.ResponseWriter, r *http.Request) {
-	envelope.DomainJSON(w, http.StatusOK, d.billingService().ListPlans(r.Context()))
+	catalog, err := d.billingService().ListPlans(r.Context())
+	if err != nil {
+		writeDomainError(w, err, "读取会员套餐失败")
+		return
+	}
+	envelope.DomainJSON(w, http.StatusOK, catalog)
 }
 
 func (d *Dependencies) handleBillingCreditPacks(w http.ResponseWriter, r *http.Request) {
@@ -87,6 +92,10 @@ func (d *Dependencies) handleBillingUsage(w http.ResponseWriter, r *http.Request
 
 func (d *Dependencies) handleBillingOrdersMy(w http.ResponseWriter, r *http.Request) {
 	u, _ := middleware.UserFromContext(r.Context())
+	w.Header().Set("Cache-Control", "private, no-store")
+	if !coreExpectedOwner(w, r, envelope.FormatDirectDomainJSON, u.ID, "BILLING_ACCOUNT_CHANGED") {
+		return
+	}
 	limit, _ := strconv.Atoi(r.URL.Query().Get("limit"))
 	offset, _ := strconv.Atoi(r.URL.Query().Get("offset"))
 	orders, err := d.billingService().ListMyOrders(r.Context(), u.ID, limit, offset)
@@ -99,6 +108,10 @@ func (d *Dependencies) handleBillingOrdersMy(w http.ResponseWriter, r *http.Requ
 
 func (d *Dependencies) handleBillingOrderStatus(w http.ResponseWriter, r *http.Request) {
 	u, _ := middleware.UserFromContext(r.Context())
+	w.Header().Set("Cache-Control", "private, no-store")
+	if !coreExpectedOwner(w, r, envelope.FormatDirectDomainJSON, u.ID, "BILLING_ACCOUNT_CHANGED") {
+		return
+	}
 	orderID := r.PathValue("id")
 	order, err := d.billingService().GetOrderStatusForUser(r.Context(), orderID, u.ID)
 	if err != nil {

@@ -54,7 +54,7 @@ func (r *PGRepository) GetProfileByIdentifier(ctx context.Context, identifier st
 			COALESCE(u.following_count, 0),
 			COALESCE(u.is_activity_public, TRUE),
 			COALESCE(u.privacy_settings, '{}'::jsonb),
-			COALESCE(u.social_links, '{}'::jsonb),
+			COALESCE(u.social_links, '{}'::jsonb) - 'agent_api_key',
 			COALESCE(u.preferences_json, '{}'::jsonb),
 			COALESCE(u.zodiac, ''),
 			COALESCE(u.industry, ''),
@@ -133,6 +133,7 @@ func (r *PGRepository) UpdateProfilePatch(ctx context.Context, userID string, pa
 		var curRaw json.RawMessage
 		_ = r.Pool.QueryRow(ctx, `SELECT COALESCE(social_links, '{}'::jsonb) FROM auth_usr.users WHERE id = $1`, userID).Scan(&curRaw)
 		merged := mergeJSONMap(curRaw, patch.SocialLinks)
+		delete(merged, "agent_api_key")
 		b, _ := json.Marshal(merged)
 		s := string(b)
 		socialJSON = &s
@@ -197,50 +198,6 @@ func (r *PGRepository) HasUnlockedAvatarFrame(ctx context.Context, userID, frame
 		return false, err
 	}
 	return count > 0, nil
-}
-
-func (r *PGRepository) GetOrInitAPIKey(ctx context.Context, userID string, generator func() string) (string, string, error) {
-	if r == nil || r.Pool == nil {
-		return "", "", ErrNotImplemented
-	}
-	var raw json.RawMessage
-	err := r.Pool.QueryRow(ctx, `SELECT COALESCE(social_links, '{}'::jsonb) FROM auth_usr.users WHERE id = $1`, userID).Scan(&raw)
-	if err != nil {
-		return "", "", err
-	}
-	links := map[string]any{}
-	_ = json.Unmarshal(raw, &links)
-	if info, ok := links["agent_api_key"].(map[string]any); ok {
-		if keyStr, ok2 := info["key"].(string); ok2 && keyStr != "" {
-			created, _ := info["createdAt"].(string)
-			return keyStr, created, nil
-		}
-	}
-	return r.RotateAPIKey(ctx, userID, generator())
-}
-
-func (r *PGRepository) RotateAPIKey(ctx context.Context, userID, newKey string) (string, string, error) {
-	if r == nil || r.Pool == nil {
-		return "", "", ErrNotImplemented
-	}
-	var raw json.RawMessage
-	err := r.Pool.QueryRow(ctx, `SELECT COALESCE(social_links, '{}'::jsonb) FROM auth_usr.users WHERE id = $1`, userID).Scan(&raw)
-	if err != nil {
-		return "", "", err
-	}
-	createdAt := time.Now().UTC().Format(time.RFC3339)
-	links := mergeJSONMap(raw, map[string]any{
-		"agent_api_key": map[string]any{
-			"key":       newKey,
-			"createdAt": createdAt,
-		},
-	})
-	encoded, _ := json.Marshal(links)
-	_, err = r.Pool.Exec(ctx, `UPDATE auth_usr.users SET social_links = $2::jsonb, updated_at = NOW() WHERE id = $1`, userID, string(encoded))
-	if err != nil {
-		return "", "", err
-	}
-	return newKey, createdAt, nil
 }
 
 func (r *PGRepository) UpdatePassword(ctx context.Context, userID, passwordHash, passwordSalt string) error {

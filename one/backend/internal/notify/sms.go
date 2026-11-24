@@ -84,7 +84,7 @@ func (s *Service) readSMSConfig(ctx context.Context) smsConfig {
 
 	if s != nil && s.Pool != nil {
 		var raw []byte
-		if err := s.Pool.QueryRow(ctx, `SELECT value FROM ops_bill.system_settings WHERE key = 'sms_routing'`).Scan(&raw); err == nil && len(raw) > 0 {
+		if err := s.Pool.QueryRow(ctx, `SELECT value_json FROM ops_bill.system_settings WHERE key = 'sms_routing'`).Scan(&raw); err == nil && len(raw) > 0 {
 			var m map[string]any
 			if json.Unmarshal(raw, &m) == nil {
 				if routing, ok := m["routing"].(map[string]any); ok {

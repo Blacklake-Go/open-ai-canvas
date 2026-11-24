@@ -8,6 +8,7 @@ import {
 } from 'lucide-react';
 import { Card, MetricCard, StatusBadge, Button } from '@/components/admin/AdminUi';
 import BrandLogo from '@/components/admin/BrandLogo';
+import { oneApi } from '@/services/api/http';
 
 const TIME_RANGES = [
   { id: '24h', label: '过去 24 小时' },
@@ -28,47 +29,52 @@ function formatMs(ms) {
   return `${(ms / 1000).toFixed(1)}s`;
 }
 
-export default function ModelTelemetryClient({ initialData, initialRange = '24h' }) {
+function normalizeKpi(kpi) {
+  if (!kpi) return null;
+  const totalCalls = Number(kpi.total_calls ?? kpi.totalCalls);
+  const successCalls = Number(kpi.success_calls ?? kpi.successCalls);
+  return {
+    totalCalls,
+    successCalls,
+    failedCalls: Number(kpi.failed_calls ?? kpi.failedCalls),
+    successRate: totalCalls > 0 ? Math.round(successCalls * 1000 / totalCalls) / 10 : null,
+    avgDurationMs: Number(kpi.avg_duration_ms ?? kpi.avgDurationMs),
+    p50DurationMs: Number(kpi.p50_duration_ms ?? kpi.p50DurationMs),
+    p90DurationMs: Number(kpi.p90_duration_ms ?? kpi.p90DurationMs),
+    totalCostUsd: Number(kpi.total_cost_usd ?? kpi.totalCostUsd),
+    totalCreditsDeducted: Number(kpi.total_credits_deducted ?? kpi.totalCreditsDeducted),
+    activeModelsCount: Number(kpi.active_models_count ?? kpi.activeModelsCount),
+  };
+}
+
+export default function ModelTelemetryClient({ initialData, initialError, initialRange = '24h' }) {
   const [range, setRange] = useState(initialRange);
   const [data, setData] = useState(initialData || {});
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(initialError || '');
   const [search, setSearch] = useState('');
   const [categoryFilter, setCategoryFilter] = useState('all');
   const [expandedErrorKey, setExpandedErrorKey] = useState(null);
 
   const fetchTelemetry = useCallback(async (selectedRange) => {
     setLoading(true);
+    setError('');
     try {
-      const res = await fetch(`/api/admin/models/telemetry?timeRange=${selectedRange}&limit=50`);
-      const json = await res.json();
-      if (res.ok && json.data) {
-        setData(json.data);
-      }
+      const result = await oneApi.adminRequest(`/api/admin/models/telemetry?timeRange=${selectedRange}&limit=50`);
+      setData(result);
+      setRange(selectedRange);
     } catch (err) {
-      console.error('[ModelTelemetryClient] Fetch error:', err);
+      setError(err.message || '无法读取模型遥测数据');
     } finally {
       setLoading(false);
     }
   }, []);
 
   const handleRangeChange = (r) => {
-    setRange(r);
     fetchTelemetry(r);
   };
 
-  const kpi = data?.kpi || {
-    totalCalls: 0,
-    successCalls: 0,
-    failedCalls: 0,
-    successRate: 100,
-    avgDurationMs: 0,
-    p50DurationMs: 0,
-    p90DurationMs: 0,
-    totalCostUsd: 0,
-    totalCostCny: 0,
-    totalCreditsDeducted: 0,
-    activeModelsCount: 0,
-  };
+  const kpi = normalizeKpi(data?.kpi);
 
   const topModels = data?.topModels || [];
   const errorTaxonomy = data?.errorTaxonomy || [];
@@ -117,6 +123,8 @@ export default function ModelTelemetryClient({ initialData, initialRange = '24h'
                   key={t.id}
                   type="button"
                   onClick={() => handleRangeChange(t.id)}
+                  aria-pressed={active}
+                  disabled={loading}
                   className={`rounded-full px-3 py-1.5 text-xs font-semibold transition-all ${
                     active
                       ? 'bg-brand text-white shadow-sm'
@@ -145,7 +153,8 @@ export default function ModelTelemetryClient({ initialData, initialRange = '24h'
       </div>
 
       {/* ─── Real KPI Metrics Grid ──────────────────────────────────────────── */}
-      <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
+      {error && <p role="alert" className="text-body-sm text-danger">{error}</p>}
+      {kpi && <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
         <MetricCard
           label="总调用量"
           value={kpi.totalCalls.toLocaleString()}
@@ -155,9 +164,9 @@ export default function ModelTelemetryClient({ initialData, initialRange = '24h'
 
         <MetricCard
           label="成功率"
-          value={`${kpi.successRate}%`}
-          hint={kpi.failedCalls === 0 ? '全量 100% 成功' : `异常率 ${(100 - kpi.successRate).toFixed(1)}%`}
-          tone={kpi.successRate >= 95 ? 'good' : kpi.successRate >= 80 ? 'warn' : 'danger'}
+          value={kpi.successRate === null ? '—' : `${kpi.successRate}%`}
+          hint={kpi.successRate === null ? '当前时段暂无调用' : `成功 ${kpi.successCalls} / ${kpi.totalCalls}`}
+          tone={kpi.successRate === null ? 'neutral' : kpi.successRate >= 95 ? 'good' : kpi.successRate >= 80 ? 'warn' : 'danger'}
         />
 
         <MetricCard
@@ -177,7 +186,7 @@ export default function ModelTelemetryClient({ initialData, initialRange = '24h'
         <MetricCard
           label="上游总成本"
           value={`$${kpi.totalCostUsd.toFixed(2)}`}
-          hint={`≈ ¥${kpi.totalCostCny} (扣减点: ${kpi.totalCreditsDeducted})`}
+          hint={`扣减点：${kpi.totalCreditsDeducted}`}
           tone="neutral"
         />
 
@@ -187,7 +196,7 @@ export default function ModelTelemetryClient({ initialData, initialRange = '24h'
           hint={`窗口期内接收到任务的模型`}
           tone="good"
         />
-      </div>
+      </div>}
 
       {/* ─── Top Models Calling Leaderboard ─────────────────────────────────── */}
       <Card className="p-0 overflow-hidden">

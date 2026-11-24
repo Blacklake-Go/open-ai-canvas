@@ -4,6 +4,16 @@
     "my-agents": "내 에이전트",
     "my-chats": "내 채팅"
   },
+  "editor": {
+    "edit": "에이전트 편집",
+    "save": "변경사항 저장",
+    "conflict": "다른 탭에서 업데이트되었습니다. 새로고침한 후 저장하세요.",
+    "model": "텍스트 모델",
+    "credits": "크레딧",
+    "newChat": "새 채팅",
+    "unavailable": "사용 가능한 공개 텍스트 모델이 없습니다.",
+    "chooseModel": "요청한 모델을 사용할 수 없습니다. 공개된 모델을 선택하세요."
+  },
   "headings": {
     "agents": "에이전트",
     "createAgent": "에이전트 생성"

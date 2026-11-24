@@ -3,9 +3,11 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import Link from 'next/link';
 import StudioHeader from '@/components/site/StudioHeader';
+import { useTranslations } from 'next-intl';
+import { useLocation } from 'react-router';
+import { workshopModelSettingsUpdateKey } from '@/services/api/workshop';
 
-const RATIO_OPTIONS = ['21:9', '16:9', '4:3', '1:1', '9:16'];
-const FALLBACK_RATIOS = ['1:1', '16:9', '9:16', '4:3', '3:4', '21:9'];
+const FALLBACK_RATIOS = ['1:1', '16:9', '9:16', '4:3', '3:4', '3:2', '2:3', '21:9'];
 const SCALE_OPTIONS = [
   { value: 1.5, label: '1.5x' },
   { value: 2, label: '2x' },
@@ -20,7 +22,7 @@ const DETAIL_OPTIONS = [
   { value: 'medium', label: '中' },
   { value: 'high', label: '高' },
 ];
-const RESOLUTION_OPTIONS = ['2k', '4k', '8k'];
+const RESOLUTION_OPTIONS = ['2k', '4k'];
 const MAX_PROMPT_LENGTH = 600;
 const MAX_UPLOAD_BYTES = 30 * 1024 * 1024;
 const ACCEPTED_IMAGE = /^image\/(?:jpeg|png|webp|gif)$/;
@@ -86,12 +88,12 @@ function ratioAspect(value) {
 }
 
 function buildRawParams(toolId, current, sourceRatio, supportedRatios, presetMeta) {
-  const ratio = current.ratio === 'original' || !current.ratio
+  const ratio = !supportedRatios.includes(current.ratio)
     ? nearestRatio(sourceRatio, supportedRatios)
     : current.ratio;
   switch (toolId) {
     case 'outpaint':
-      return { scale: current.scale, aspectRatio: ratio };
+      return { scale: current.scale, aspectRatio: ratio, prompt: String(current.prompt || '').trim() };
     case 'upscale':
       return { mode: current.mode, detail: current.detail, resolution: current.resolution, aspectRatio: ratio };
     case 'cutout':
@@ -427,7 +429,9 @@ function Dropdown({ value, options, onChange, label }) {
 }
 
 export default function CanvasToolsStudio({ initialUser = null, initialTool = 'outpaint', initialPreset = null }) {
-  const [user] = useState(initialUser);
+  const t = useTranslations('workshopModels');
+  const { pathname, search } = useLocation();
+  const user = initialUser;
   const [spec, setSpec] = useState(null);
   const [specError, setSpecError] = useState('');
   const [specVersion, setSpecVersion] = useState(0);
@@ -446,7 +450,30 @@ export default function CanvasToolsStudio({ initialUser = null, initialTool = 'o
   const [error, setError] = useState('');
   const [quote, setQuote] = useState({ status: 'idle', credits: null });
   const quoteCacheRef = useRef(new Map());
+  const generationInFlight = useRef(false);
   const fileInputRef = useRef(null);
+  const userIDRef = useRef(user?.id);
+  userIDRef.current = user?.id;
+
+  useEffect(() => {
+    const refresh = () => setSpecVersion(version => version + 1);
+    const onStorage = event => {
+      if (event.key === workshopModelSettingsUpdateKey) refresh();
+    };
+    window.addEventListener('storage', onStorage);
+    window.addEventListener('focus', refresh);
+    return () => {
+      window.removeEventListener('storage', onStorage);
+      window.removeEventListener('focus', refresh);
+    };
+  }, []);
+
+  useEffect(() => {
+    setSource(null);
+    setResult(null);
+    setError('');
+    quoteCacheRef.current.clear();
+  }, [user?.id]);
 
   useEffect(() => {
     let cancelled = false;
@@ -476,11 +503,10 @@ export default function CanvasToolsStudio({ initialUser = null, initialTool = 'o
     ));
   }, [initialPreset]);
 
-  const supportedRatios = useMemo(() => (
-    Array.isArray(spec?.capabilities?.aspectRatios) && spec.capabilities.aspectRatios.length
-      ? spec.capabilities.aspectRatios
-      : FALLBACK_RATIOS
-  ), [spec]);
+  const workshopKey = toolId === 'preset' ? settings.preset.presetId : toolId;
+  const modelVersion = spec?.workshopModels?.[workshopKey] || null;
+  const supportedRatios = modelVersion?.ratios || FALLBACK_RATIOS;
+  const supportedResolutions = modelVersion?.resolutions || [];
 
   const toolMeta = useMemo(() => spec?.tools?.find((item) => item.id === toolId) || null, [spec, toolId]);
   const presetList = useMemo(() => (
@@ -489,10 +515,6 @@ export default function CanvasToolsStudio({ initialUser = null, initialTool = 'o
   const cameraPresets = useMemo(() => (
     spec?.tools?.find((item) => item.id === 'view_control')?.cameraPresets || FALLBACK_CAMERAS
   ), [spec]);
-  const upscaleResolutions = useMemo(() => {
-    const declared = spec?.tools?.find((item) => item.id === 'upscale')?.resolutions;
-    return Array.isArray(declared) && declared.length ? declared : ['2k', '4k'];
-  }, [spec]);
   const distanceOptions = useMemo(() => (
     spec?.tools?.find((item) => item.id === 'view_control')?.distances
     || [{ value: 0, label: '近景' }, { value: 1, label: '中景' }, { value: 2, label: '远景' }]
@@ -500,18 +522,20 @@ export default function CanvasToolsStudio({ initialUser = null, initialTool = 'o
 
   const sourceRatio = source?.width && source?.height ? source.width / source.height : 1;
   const current = settings[toolId];
+  const resolution = supportedResolutions.includes(current.resolution) ? current.resolution : supportedResolutions[0];
   const presetMeta = presetList.find((item) => item.id === settings.preset.presetId) || presetList[0] || FALLBACK_PRESETS[0];
 
   const previewParams = useMemo(
-    () => buildRawParams(toolId, current, sourceRatio, supportedRatios, presetMeta),
-    [toolId, current, sourceRatio, supportedRatios, presetMeta],
+    () => buildRawParams(toolId, { ...current, resolution }, sourceRatio, supportedRatios, presetMeta),
+    [toolId, current, resolution, sourceRatio, supportedRatios, presetMeta],
   );
   const previewKey = JSON.stringify(previewParams);
 
-  const basePrice = Number(spec?.model?.creditsPrice) || 0;
+  const basePrice = modelVersion?.baseCredits;
+  const canGenerate = Boolean(user && source && modelVersion && !generating);
 
   useEffect(() => {
-    if (!user || !source || !spec) {
+    if (!user || !source || !modelVersion) {
       setQuote({ status: 'idle', credits: null });
       return undefined;
     }
@@ -536,17 +560,17 @@ export default function CanvasToolsStudio({ initialUser = null, initialTool = 'o
       clearTimeout(timer);
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [user?.id, source?.assetId, sourceRatio, toolId, previewKey, spec?.model?.id]);
+  }, [user?.id, source?.assetId, sourceRatio, toolId, previewKey, modelVersion?.contract]);
 
   async function requestPlan(tool, params, sourceAssetId) {
     const response = await fetch('/api/canvas-tools/plan', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ tool, params, sourceAssetId }),
+      headers: { 'Content-Type': 'application/json', 'X-ONE-Expected-User': user.id },
+      body: JSON.stringify({ tool, params, sourceAssetId, modelContract: modelVersion.contract }),
     });
     const data = await response.json().catch(() => ({}));
     if (!response.ok || !data?.success || !data?.plan) {
-      throw new Error(data?.error || '画布参数准备失败');
+      throw Object.assign(new Error(data?.error || '画布参数准备失败'), { code: data?.code });
     }
     return data.plan;
   }
@@ -559,13 +583,15 @@ export default function CanvasToolsStudio({ initialUser = null, initialTool = 'o
     const response = await fetch('/api/generation/quote', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'Idempotency-Key': randomKey() },
-      body: JSON.stringify({ modelId, parameters }),
+      body: JSON.stringify({ modelId, parameters, site: 'workshop' }),
     });
     const data = await response.json().catch(() => ({}));
-    if (!response.ok || !data?.quoteId) throw new Error(data?.error || '获取模型报价失败');
+    if (!response.ok || !data?.quoteId || !Number.isFinite(data.credits)) {
+      throw Object.assign(new Error(data?.error || '获取模型报价失败'), { code: data?.code });
+    }
     const entry = {
       quoteId: data.quoteId,
-      credits: Number(data.credits) || 0,
+      credits: data.credits,
       expiresAt: data.expiresAt || new Date(Date.now() + 240000).toISOString(),
     };
     quoteCacheRef.current.set(cacheKey, entry);
@@ -573,6 +599,7 @@ export default function CanvasToolsStudio({ initialUser = null, initialTool = 'o
   }
 
   function updateCurrent(patch) {
+    if (generationInFlight.current) return;
     setSettings((prev) => ({ ...prev, [toolId]: { ...prev[toolId], ...patch } }));
     setResult(null);
     setError('');
@@ -586,7 +613,7 @@ export default function CanvasToolsStudio({ initialUser = null, initialTool = 'o
   }
 
   async function uploadFile(file) {
-    if (!file) return;
+    if (!file || generationInFlight.current) return;
     if (!user) {
       setError('请先登录后再上传图片');
       return;
@@ -606,11 +633,14 @@ export default function CanvasToolsStudio({ initialUser = null, initialTool = 'o
       const formData = new FormData();
       formData.append('file', file);
       formData.append('type', 'image');
-      formData.append('studioId', 'canvas');
+      formData.append('studioId', 'workshop');
       formData.append('title', file.name || '画布源图');
-      const response = await fetch('/api/assets/upload', { method: 'POST', body: formData });
+      const response = await fetch('/api/assets/upload', {
+        method: 'POST', body: formData, headers: { 'X-ONE-Expected-User': user.id },
+      });
       const data = await response.json().catch(() => ({}));
       if (!response.ok || !data?.asset?.id) throw new Error(data?.error || '图片上传失败');
+      if (userIDRef.current !== user.id) return;
       setSource({
         assetId: data.asset.id,
         url: data.url || data.asset.url,
@@ -653,31 +683,29 @@ export default function CanvasToolsStudio({ initialUser = null, initialTool = 'o
       attempt += 1;
       await sleep(attempt === 1 ? 2500 : 4000);
       if (onTick) onTick(`正在生成… 已用时 ${Math.floor((Date.now() - startedAt) / 1000)}s`);
-      const response = await fetch(`/api/generations?id=${encodeURIComponent(creationId)}`, { cache: 'no-store' });
+      const response = await fetch(`/api/generations/${encodeURIComponent(creationId)}`, { cache: 'no-store' });
       const data = await response.json().catch(() => ({}));
       if (!response.ok) throw new Error(data?.error || '查询生成进度失败');
-      const creation = data?.creation || data?.trace?.creation || null;
-      if (!creation) throw new Error('查询生成进度失败');
-      const url = creation.result_url || creation.resultUrl || null;
-      if (url) return url;
-      if (creation.status === 'failed' || creation.status === 'cancelled') {
-        throw new Error(creation.error_message || creation.error || '生成失败，请稍后重试');
+      if (data.status === 'succeeded') {
+        const resultURL = data.url || data.outputs?.[0];
+        if (!resultURL) throw new Error('任务已完成，但没有返回图片地址');
+        return resultURL;
+      }
+      if (data.status === 'failed' || data.status === 'cancelled') {
+        throw new Error(data.error || '生成失败，请稍后重试');
       }
     }
     throw new Error('生成超时，请稍后到作品页查看结果');
   }
 
   async function handleGenerate() {
-    if (!user || !source || !spec || generating) return;
+    if (!canGenerate || generationInFlight.current) return;
+    generationInFlight.current = true;
     setGenerating(true);
     setError('');
     setProgress('正在创建任务…');
     try {
-      const params = buildRawParams(toolId, current, sourceRatio, supportedRatios, presetMeta);
-      const planParams = toolId === 'outpaint'
-        ? { ...params, prompt: String(current.prompt || '').trim() }
-        : params;
-      const plan = await requestPlan(toolId, planParams, source.assetId);
+      const plan = await requestPlan(toolId, previewParams, source.assetId);
       const cacheKey = `${plan.modelId}|${stableStringify(plan.parameters)}`;
       let quoted = await requestQuote(plan.modelId, plan.parameters);
       let response = null;
@@ -687,15 +715,14 @@ export default function CanvasToolsStudio({ initialUser = null, initialTool = 'o
         setProgress('正在提交生成任务…');
         response = await fetch('/api/generations', {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json', 'Idempotency-Key': randomKey() },
+          headers: { 'Content-Type': 'application/json', 'Idempotency-Key': randomKey(), 'X-ONE-Expected-User': user.id },
           body: JSON.stringify({
             modelId: plan.modelId,
-            studioId: 'canvas',
+            studioId: plan.studioId,
             prompt: plan.prompt,
             parameters: plan.parameters,
             quoteId: quoted.quoteId,
             label: plan.label,
-            routingMode: 'cost',
           }),
         });
         data = await response.json().catch(() => ({}));
@@ -719,16 +746,19 @@ export default function CanvasToolsStudio({ initialUser = null, initialTool = 'o
       quoteCacheRef.current.delete(cacheKey);
 
       let resultUrl = data?.result_url || data?.creation?.result_url || null;
-      const creationId = data?.creation?.id || data?.creation_id || data?.creationId || null;
+      const creationId = data?.id || data?.request_id || data?.creation?.id || data?.creation_id || data?.creationId || null;
       if (!resultUrl && creationId) {
         resultUrl = await pollCreation(creationId, setProgress);
       }
       if (!resultUrl) throw new Error('任务已完成，但没有返回图片地址');
+      if (userIDRef.current !== user.id) return;
       setResult({ url: proxiedResultUrl(creationId, resultUrl), creationId, sourceUrl: resultUrl });
       setProgress('');
     } catch (generateError) {
       setError(generateError.message || '生成失败，请稍后重试');
+      if (generateError.code === 'WORKSHOP_MODEL_CHANGED') setSpecVersion(version => version + 1);
     } finally {
+      generationInFlight.current = false;
       setGenerating(false);
       setProgress('');
     }
@@ -768,11 +798,11 @@ export default function CanvasToolsStudio({ initialUser = null, initialTool = 'o
     }
   }
 
-  const effectiveRatioValue = current.ratio === 'original' || !current.ratio
+  const effectiveRatioValue = !supportedRatios.includes(current.ratio)
     ? nearestRatio(sourceRatio, supportedRatios)
     : current.ratio;
   const frameAspect = ratioAspect(effectiveRatioValue);
-  const ratioChips = ['original', ...RATIO_OPTIONS.filter((item) => supportedRatios.includes(item))];
+  const ratioChips = ['original', ...supportedRatios];
   const displayScale = SCALE_OPTIONS.find((item) => Number(item.value) === Number(settings.outpaint.scale))?.label || `${settings.outpaint.scale}x`;
 
   function renderRatioChips() {
@@ -870,15 +900,15 @@ export default function CanvasToolsStudio({ initialUser = null, initialTool = 'o
             <div className="ct-label"><span>输出分辨率</span></div>
             <div className="ct-segment">
               {RESOLUTION_OPTIONS.map((value) => {
-                const supported = upscaleResolutions.includes(value);
+                const supported = supportedResolutions.includes(value);
                 return (
                   <button
                     key={value}
                     type="button"
                     className="ct-segment-item"
-                    data-active={settings.upscale.resolution === value}
+                    data-active={resolution === value}
                     disabled={!supported}
-                    title={supported ? `${value.toUpperCase()} 输出` : '8K 暂未开放'}
+                    title={supported ? `${value.toUpperCase()} 输出` : '默认模型版本不支持此分辨率'}
                     onClick={() => updateCurrent({ resolution: value })}
                   >
                     {value.toUpperCase()}
@@ -899,8 +929,6 @@ export default function CanvasToolsStudio({ initialUser = null, initialTool = 'o
             <div className="ct-label"><span>选区方式</span></div>
             <div className="ct-chips">
               <button type="button" className="ct-chip" data-active="true" disabled>自动识别</button>
-              <button type="button" className="ct-chip" disabled title="蒙版画笔暂未开放">蒙版画笔</button>
-              <button type="button" className="ct-chip" disabled title="反向选区暂未开放">反向选区</button>
             </div>
           </div>
           <div className="ct-section">
@@ -930,7 +958,7 @@ export default function CanvasToolsStudio({ initialUser = null, initialTool = 'o
                   <span className="ct-preset-icon"><PresetGlyph id={preset.id} /></span>
                   <span className="ct-preset-label">{preset.label}</span>
                   <span className="ct-preset-hint">{preset.hint}</span>
-                  <span className="ct-preset-tag">{preset.aspectRatio === '16:9' ? '16:9 · 2K / 4K' : '原比例 · 2K / 4K'}</span>
+                  <span className="ct-preset-tag">{preset.aspectRatio === '16:9' ? '16:9' : '原图比例'}</span>
                 </button>
               ))}
             </div>
@@ -938,12 +966,13 @@ export default function CanvasToolsStudio({ initialUser = null, initialTool = 'o
           <div className="ct-section">
             <div className="ct-label"><span>输出分辨率</span></div>
             <div className="ct-segment">
-              {['2k', '4k'].map((value) => (
+              {RESOLUTION_OPTIONS.map((value) => (
                 <button
                   key={value}
                   type="button"
                   className="ct-segment-item"
-                  data-active={settings.preset.resolution === value}
+                  data-active={resolution === value}
+                  disabled={!supportedResolutions.includes(value)}
                   onClick={() => updateCurrent({ resolution: value })}
                 >
                   {value.toUpperCase()}
@@ -1069,8 +1098,8 @@ export default function CanvasToolsStudio({ initialUser = null, initialTool = 'o
             <div className="ct-login-card">
               <span className="ct-dropzone-icon"><CameraIcon size={24} /></span>
               <h2>登录后使用画布工具</h2>
-              <p>扩图、智能超清、抠图、三视图与多角度，全部由 Seedream 图生图承接。登录后按次消耗站点积分。</p>
-              <Link className="ct-login" href={`/zh/login?redirect=${encodeURIComponent('/zh/canvas-tools')}`}>
+              <p>{t('quoteNote')}</p>
+              <Link className="ct-login" href={`/zh/login?redirect=${encodeURIComponent(pathname + search)}`}>
                 登录 / 注册
               </Link>
             </div>
@@ -1112,7 +1141,7 @@ export default function CanvasToolsStudio({ initialUser = null, initialTool = 'o
                 <button type="button" className="ct-action" onClick={handleUseAsInput} disabled={generating}>
                   <ImageIcon size={14} />用作输入
                 </button>
-                <button type="button" className="ct-action ct-action-primary" onClick={handleGenerate} disabled={generating}>
+                <button type="button" className="ct-action ct-action-primary" onClick={handleGenerate} disabled={!canGenerate}>
                   <RefreshIcon size={14} />重新生成
                 </button>
               </div>
@@ -1168,10 +1197,10 @@ export default function CanvasToolsStudio({ initialUser = null, initialTool = 'o
           ) : null}
 
           {generating ? (
-            <div className="ct-generating">
+            <div className="ct-generating" role="status" aria-live="polite">
               <span className="ct-generating-spinner" />
               <span className="ct-generating-title">正在生成，请稍候</span>
-              <span className="ct-generating-sub">{progress || 'Seedream 图生图处理中…'}</span>
+              <span className="ct-generating-sub">{progress || modelVersion?.modelName}</span>
             </div>
           ) : null}
 
@@ -1192,7 +1221,7 @@ export default function CanvasToolsStudio({ initialUser = null, initialTool = 'o
                 <h1 className="ct-panel-title">{panelTitle}</h1>
                 <p className="ct-panel-hint">{panelHint}</p>
               </div>
-              <button type="button" className="ct-ghost-btn" onClick={openFilePicker} disabled={uploading}>
+              <button type="button" className="ct-ghost-btn" onClick={openFilePicker} disabled={uploading || generating}>
                 <UploadIcon size={14} />{source ? '更换图片' : '上传图片'}
               </button>
             </div>
@@ -1212,17 +1241,19 @@ export default function CanvasToolsStudio({ initialUser = null, initialTool = 'o
                 <span className="ct-source-meta">
                   <span className="ct-source-name">{source.name}</span>
                   <span className="ct-source-dims">
-                    {source.width && source.height ? `${source.width} × ${source.height}` : '图片已就绪'} · {toolId === 'upscale' ? `${settings.upscale.resolution.toUpperCase()} 输出` : '2K 输出'}
+                    {source.width && source.height ? `${source.width} × ${source.height}` : '图片已就绪'}{modelVersion && ` · ${(resolution || '2k').toUpperCase()} 输出`}
                   </span>
                 </span>
               </div>
             ) : null}
 
-            {renderPanelBody()}
+            <fieldset disabled={generating} className="m-0 min-w-0 border-0 p-0">{renderPanelBody()}</fieldset>
 
             <div className="ct-model-line">
-              {spec ? (
-                <span>上游模型：{spec.model?.name || spec.model?.id} · 每次生成 1 张</span>
+              {modelVersion ? (
+                <span data-workshop-model={modelVersion.modelId} data-workshop-version={modelVersion.versionId}>{modelVersion.modelName} · {modelVersion.versionName}</span>
+              ) : spec ? (
+                <span role="status">{t('unavailableCurrent')}</span>
               ) : specError ? (
                 <span>模型信息加载失败</span>
               ) : (
@@ -1250,7 +1281,7 @@ export default function CanvasToolsStudio({ initialUser = null, initialTool = 'o
                   className="ct-send"
                   aria-label="生成"
                   onClick={handleGenerate}
-                  disabled={!source || !spec || generating}
+                  disabled={!canGenerate}
                 >
                   {generating ? <span className="ct-spinner" /> : <ArrowUpIcon size={18} />}
                 </button>
@@ -1259,7 +1290,7 @@ export default function CanvasToolsStudio({ initialUser = null, initialTool = 'o
                   type="button"
                   className="ct-generate"
                   onClick={handleGenerate}
-                  disabled={!source || !spec || generating}
+                  disabled={!canGenerate}
                 >
                   {generating ? <><span className="ct-spinner" />生成中</> : '生成'}
                 </button>

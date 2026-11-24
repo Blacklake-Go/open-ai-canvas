@@ -9,8 +9,8 @@ import React, {
   forwardRef,
   useImperativeHandle,
 } from 'react';
-import { useRouter } from 'next/navigation';
-import toast from 'react-hot-toast';
+import { useRouter, useSearchParams } from 'next/navigation';
+import hotToast, { Toaster } from 'react-hot-toast';
 import {
   Sparkles,
   Image as ImageIcon,
@@ -19,9 +19,7 @@ import {
   Smile,
   Play,
   Pause,
-  Download,
   ExternalLink,
-  RotateCcw,
   X,
   Plus,
   Box,
@@ -33,15 +31,16 @@ import {
   Settings2,
   Maximize2,
   SlidersHorizontal,
-  Layers,
   Wand2,
   Upload,
   Radio,
   Music,
   ArrowUpRight,
 } from 'lucide-react';
-import { useUserSession } from '@/lib/hooks/useUserSession';
-import { localizeStudioPath } from '@/lib/locales';
+import { useGenerationRiverFeedback, useReadGenerationAttempt } from '@/lib/hooks/useGenerationRiver';
+import { getRiverCopy } from '@/components/generation-river/copy';
+import { readHomeRiverDraft } from '@/services/api/generation-river';
+import { localizeStudioPath, normalizeLocale } from '@/lib/locales';
 
 // Studio components and primitives
 import {
@@ -70,8 +69,11 @@ import { hasTemporaryReferenceUrl } from '@/packages/studio/src/stableAssetRefer
 import {
   t2iModels,
   t2vModels,
-  audioModels,
+  getAudioModelById,
+  getLipSyncModelById,
   lipsyncModels,
+  applyActiveModelDirectory,
+  availableTextModels,
   isModelActive,
   getAspectRatiosForModel,
   getResolutionsForModel,
@@ -111,6 +113,22 @@ import zhTwMessages from '@/packages/studio/src/messages/zh-TW/imageStudio.json'
 import esMessages from '@/packages/studio/src/messages/es/imageStudio.json';
 
 const PERSIST_PREFIX = 'hg_home_composer_v2';
+const AUDIO_MODE_MODELS = {
+  tts: ['minimax-speech-2.6-hd', 'minimax-speech-2.6-turbo'],
+  clone: ['minimax-voice-clone'],
+  music: ['suno-create-music'],
+};
+const SPEECH_MODEL = AUDIO_MODE_MODELS.tts[0];
+const composerToasterId = 'home-composer';
+const toast = {
+  error: (message) => hotToast.error(message, { toasterId: composerToasterId }),
+  success: (message) => hotToast.success(message, { toasterId: composerToasterId }),
+};
+
+function storedMediaReference(url) {
+  const asset = /^\/api\/assets\/([\w-]+)\/download(?:\?inline=1)?$/.exec(url || '');
+  return asset ? `koyo-asset:${asset[1]}` : url;
+}
 
 // 5 Core Modes definition for Dreamina Style Workbench
 const CREATION_MODES = [
@@ -124,28 +142,28 @@ const CREATION_MODES = [
 // Presets for Audio TTS Voices
 const AUDIO_VOICE_PRESETS = [
   {
-    id: 'female_warm',
+    id: 'Wise_Woman',
     name: '温暖女声 · 抒情解说',
     previewUrl: 'https://assets.mixkit.co/active_storage/sfx/2874/2874-preview.mp3',
     gender: 'female',
     tag: '解说/播客',
   },
   {
-    id: 'male_magnetic',
+    id: 'Deep_Voice_Man',
     name: '磁性男声 · 影视旁白',
     previewUrl: 'https://assets.mixkit.co/active_storage/sfx/2568/2568-preview.mp3',
     gender: 'male',
     tag: '电影/纪录片',
   },
   {
-    id: 'female_vibrant',
+    id: 'Lively_Girl',
     name: '活力带货 · 激情口播',
     previewUrl: 'https://assets.mixkit.co/active_storage/sfx/209/209-preview.mp3',
     gender: 'female',
     tag: '电商/短视频',
   },
   {
-    id: 'male_tech',
+    id: 'Patient_Man',
     name: '沉稳男声 · 科技分析',
     previewUrl: 'https://assets.mixkit.co/active_storage/sfx/1435/1435-preview.mp3',
     gender: 'male',
@@ -154,21 +172,13 @@ const AUDIO_VOICE_PRESETS = [
 ];
 
 // Music Style Tags
-const MUSIC_GENRE_TAGS = [
-  '流行流行 Pop',
-  '电子电子 EDM',
-  '古典交响 Orchestral',
-  '电影配乐 Cinematic',
-  '赛博朋克 Cyberpunk',
-  '嘻哈节奏 Hip-Hop',
-  '纯净钢琴 Piano Solo',
-];
+const MUSIC_GENRE_TAGS = ['Pop', 'EDM', 'Orchestral', 'Cinematic', 'Cyberpunk', 'Hip-Hop', 'Piano Solo', 'Ambient'];
 
 const HomeStudioPromptComposer = forwardRef(function HomeStudioPromptComposer(
   {
     locale = 'zh',
+    user,
     onRequireAuth,
-    onStartCreation,
     onModeChange,
     onTaskComplete,
     skillOptions = [],
@@ -178,7 +188,13 @@ const HomeStudioPromptComposer = forwardRef(function HomeStudioPromptComposer(
   ref,
 ) {
   const router = useRouter();
-  const { user } = useUserSession();
+  const searchParams = useSearchParams();
+  const restoreTask = searchParams.get('restoreTask');
+  const restoreAttempt = searchParams.get('restoreAttempt');
+  const urlType = searchParams.get('type');
+  const publishRiverTask = useGenerationRiverFeedback();
+  const readGenerationAttempt = useReadGenerationAttempt();
+  const riverCopy = useMemo(() => getRiverCopy(normalizeLocale(locale)), [locale]);
   const apiKey = user?.apiKey || user?.id || null;
   const isZh = String(locale).startsWith('zh');
   const studioBase = localizeStudioPath(locale);
@@ -200,7 +216,9 @@ const HomeStudioPromptComposer = forwardRef(function HomeStudioPromptComposer(
   }, [locale]);
 
   // Mode Selection: default to the first screenshot mode; query strings still override it.
-  const [activeTab, setActiveTab] = useState('agent');
+  const [activeTab, setActiveTab] = useState(() => CREATION_MODES.some((mode) => mode.id === urlType) ? urlType : 'agent');
+  const [modelDirectoryLoaded, setModelDirectoryLoaded] = useState(false);
+  const [textModels, setTextModels] = useState([]);
 
   // Multi-mode draft storage to isolate and preserve parameters per mode
   const [drafts, setDrafts] = useState({
@@ -230,27 +248,28 @@ const HomeStudioPromptComposer = forwardRef(function HomeStudioPromptComposer(
     },
     audio: {
       prompt: '',
-      modelId: 'minimax-speech-2.6',
+      modelId: SPEECH_MODEL,
       subMode: 'tts', // 'tts' | 'clone' | 'music'
-      voiceId: 'female_warm',
+      voiceId: 'Wise_Woman',
       speed: 1.0,
       language: 'zh',
       cloneAudioUrl: null,
-      musicStyle: '电影配乐 Cinematic',
+      musicStyle: 'Cinematic',
       isInstrumental: false,
     },
     agent: {
       prompt: '',
-      modelId: 'deepseek-chat',
+      modelId: '',
       referenceUrls: [],
     },
     'digital-human': {
       prompt: '',
-      modelId: 'infinitetalk',
-      driveType: 'text', // 'text' | 'audio'
+      modelId: 'infinitetalk-image-to-video',
+      driveType: 'audio',
       avatarUrl: null,
+      avatarKind: 'image',
       driveAudioUrl: null,
-      voiceId: 'female_warm',
+      voiceId: 'Wise_Woman',
       resolution: '720p',
     },
   });
@@ -261,7 +280,10 @@ const HomeStudioPromptComposer = forwardRef(function HomeStudioPromptComposer(
     fetch('/api/models/active?nocache=1')
       .then((res) => res.ok ? res.json() : null)
       .then((data) => {
-        if (!isMounted || !Array.isArray(data?.models) || !data.models.length) return;
+        if (!isMounted || !Array.isArray(data?.models)) return;
+        applyActiveModelDirectory(data.models);
+        const eligibleText = availableTextModels(data.models);
+        setTextModels(eligibleText);
         const activeIds = new Set(data.models.map((m) => m.id));
         setDrafts((prev) => {
           let changed = false;
@@ -278,24 +300,25 @@ const HomeStudioPromptComposer = forwardRef(function HomeStudioPromptComposer(
             next.video = { ...next.video, modelId: firstVid };
             changed = true;
           }
+          if (!eligibleText.some(model => model.id === prev.agent.modelId)) {
+            next.agent = { ...next.agent, modelId: eligibleText[0]?.id || '' };
+            changed = true;
+          }
           return changed ? next : prev;
         });
       })
-      .catch(() => {});
+      .catch(() => {})
+      .finally(() => { if (isMounted) setModelDirectoryLoaded(true); });
     return () => { isMounted = false; };
   }, []);
 
   // Load URL query param on mount
   useEffect(() => {
-    if (typeof window !== 'undefined') {
-      const searchParams = new URLSearchParams(window.location.search);
-      const urlType = searchParams.get('type');
-      if (urlType && CREATION_MODES.some((m) => m.id === urlType)) {
-        setActiveTab(urlType);
-        onModeChange?.(urlType);
-      }
+    if (urlType && CREATION_MODES.some((mode) => mode.id === urlType)) {
+      setActiveTab(urlType);
+      onModeChange?.(urlType);
     }
-  }, [onModeChange]);
+  }, [onModeChange, urlType]);
 
   const stopAudition = useCallback(() => {
     if (audioPlayerRef.current) {
@@ -310,21 +333,34 @@ const HomeStudioPromptComposer = forwardRef(function HomeStudioPromptComposer(
     stopAudition();
     setActiveTab(modeId);
     onModeChange?.(modeId);
-    if (typeof window !== 'undefined') {
-      const url = new URL(window.location.href);
-      url.searchParams.set('type', modeId);
-      window.history.replaceState({}, '', url.pathname + url.search);
-    }
-  }, [onModeChange, stopAudition]);
+    const url = new URL(window.location.href);
+    url.searchParams.set('type', modeId);
+    router.replace(url.pathname + url.search + url.hash, { scroll: false });
+  }, [onModeChange, router, stopAudition]);
 
   // Current active draft helper
   const currentDraft = drafts[activeTab] || drafts.image;
+  const generatingAvatarAudio = activeTab === 'digital-human' && currentDraft.driveType === 'text';
+  const submitModelId = generatingAvatarAudio ? SPEECH_MODEL : currentDraft.modelId;
+  const submitLabel = generatingAvatarAudio
+    ? (isZh ? '生成驱动语音' : 'Generate driving speech')
+    : (isZh ? '开始生成' : 'Start generation');
+  const eligibleModelIds = (() => {
+    if (activeTab === 'agent') return textModels.map(model => model.id);
+    if (activeTab === 'audio') return AUDIO_MODE_MODELS[currentDraft.subMode];
+    if (activeTab === 'digital-human') {
+      return lipsyncModels.filter(model => model.category === currentDraft.avatarKind && isModelActive(model.id)).map(model => model.id);
+    }
+    return undefined;
+  })();
+  const avatarModelUnavailable = activeTab === 'digital-human' && !generatingAvatarAudio
+    && modelDirectoryLoaded && eligibleModelIds.length === 0;
 
   const updateCurrentDraft = useCallback((updater) => {
     setDrafts((prev) => {
       const modeData = prev[activeTab] || {};
-      const nextData = typeof updater === 'function' ? updater(modeData) : { ...modeData, ...updater };
-      return { ...prev, [activeTab]: nextData };
+      const changes = typeof updater === 'function' ? updater(modeData) : updater;
+      return { ...prev, [activeTab]: { ...modeData, ...changes } };
     });
   }, [activeTab]);
 
@@ -414,12 +450,11 @@ const HomeStudioPromptComposer = forwardRef(function HomeStudioPromptComposer(
   const [isDrawModalOpen, setIsDrawModalOpen] = useState(false);
   const [fullscreenUrl, setFullscreenUrl] = useState(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const submittingRef = useRef(null);
   const [uploadProgress, setUploadProgress] = useState(0);
 
   // Active generation task state for in-place rendering & progress
-  const [activeTask, setActiveTask] = useState(null);
   // Recent completed creations in session
-  const [recentCreations, setRecentCreations] = useState([]);
 
   // Audio audition sample state
   const [auditionPlaying, setAuditionPlaying] = useState(null);
@@ -428,6 +463,73 @@ const HomeStudioPromptComposer = forwardRef(function HomeStudioPromptComposer(
   const textareaRef = useRef(null);
   const dropdownRef = useRef(null);
   const avatarInputRef = useRef(null);
+  const lifetime = useRef(null);
+  const guestObjectUrls = useRef(new Set());
+  useEffect(() => {
+    const controller = new AbortController();
+    lifetime.current = controller;
+    const player = audioPlayerRef.current;
+    const objectUrls = guestObjectUrls.current;
+    return () => {
+      controller.abort();
+      player?.pause();
+      for (const url of objectUrls) URL.revokeObjectURL(url);
+      objectUrls.clear();
+    };
+  }, []);
+  const draftsRef = useRef(drafts);
+  draftsRef.current = drafts;
+
+  useEffect(() => {
+    if (!user?.id || !modelDirectoryLoaded || (!restoreTask && !restoreAttempt)) return undefined;
+    const controller = new AbortController();
+    const baseline = draftsRef.current;
+    const owner = String(user.id);
+    const id = restoreTask || restoreAttempt;
+
+    async function restore() {
+      const url = new URL(window.location.href);
+      try {
+        if (!/^[A-Za-z0-9_-]{1,160}$/.test(id)) throw new Error('Invalid task ID');
+        const recovery = restoreTask
+          ? await readHomeRiverDraft(id, controller.signal, owner)
+          : readGenerationAttempt(owner, id);
+        if (controller.signal.aborted) return;
+        if (!recovery || !CREATION_MODES.some(({ id: mode }) => mode === recovery.mode)) {
+          throw new Error('Task inputs unavailable');
+        }
+        const { mode, fields } = recovery;
+        if (draftsRef.current[mode] !== baseline[mode]) {
+          toast.error(riverCopy.restoreConflict);
+          return;
+        }
+        setDrafts(previous => ({
+          ...previous,
+          [mode]: {
+            ...previous[mode], ...fields,
+            ...(fields.advanced && { advanced: { ...previous[mode].advanced, ...fields.advanced } }),
+          },
+        }));
+        stopAudition();
+        setActiveTab(mode);
+        onModeChange?.(mode);
+        setDropdownOpen(null);
+        url.searchParams.set('type', mode);
+        textareaRef.current?.focus();
+        toast.success(riverCopy.inputsRestored);
+      } catch {
+        if (!controller.signal.aborted) toast.error(riverCopy.restoreUnavailable);
+      } finally {
+        if (!controller.signal.aborted) {
+          url.searchParams.delete('restoreTask');
+          url.searchParams.delete('restoreAttempt');
+          router.replace(url.pathname + url.search + url.hash, { scroll: false });
+        }
+      }
+    }
+    void restore();
+    return () => controller.abort();
+  }, [modelDirectoryLoaded, onModeChange, readGenerationAttempt, restoreAttempt, restoreTask, riverCopy, router, stopAudition, user?.id]);
 
   // Close popovers on outside click
   useEffect(() => {
@@ -521,6 +623,7 @@ const HomeStudioPromptComposer = forwardRef(function HomeStudioPromptComposer(
   // File Upload Handlers (Supports Image, Video, Audio)
   const handleFileUpload = useCallback(async (file, targetSlot = 'general') => {
     if (!file) return;
+    const signal = lifetime.current?.signal;
 
     // Check size limit: 100MB for video/audio, 20MB for image
     const isLargeMedia = file.type.startsWith('video') || file.type.startsWith('audio');
@@ -530,12 +633,12 @@ const HomeStudioPromptComposer = forwardRef(function HomeStudioPromptComposer(
       return;
     }
 
-    // Immediate local preview object URL
-    const localUrl = URL.createObjectURL(file);
     setUploadProgress(10);
 
     // If user is unauthenticated, allow local preview until generation
     if (!user) {
+      const localUrl = URL.createObjectURL(file);
+      guestObjectUrls.current.add(localUrl);
       if (activeTab === 'image') {
         updateCurrentDraft((prev) => ({ imageUrls: [...prev.imageUrls, localUrl] }));
       } else if (activeTab === 'agent') {
@@ -548,7 +651,7 @@ const HomeStudioPromptComposer = forwardRef(function HomeStudioPromptComposer(
       } else if (activeTab === 'audio') {
         updateCurrentDraft({ cloneAudioUrl: localUrl });
       } else if (activeTab === 'digital-human') {
-        if (targetSlot === 'avatar') updateCurrentDraft({ avatarUrl: localUrl });
+        if (targetSlot === 'avatar') updateCurrentDraft({ avatarUrl: localUrl, avatarKind: file.type.startsWith('video/') ? 'video' : 'image' });
         else updateCurrentDraft({ driveAudioUrl: localUrl });
       }
       setUploadProgress(100);
@@ -568,7 +671,9 @@ const HomeStudioPromptComposer = forwardRef(function HomeStudioPromptComposer(
       const res = await fetch('/api/assets/upload', {
         method: 'POST',
         credentials: 'same-origin',
+        headers: { 'X-ONE-Expected-User': String(user.id) },
         body: formData,
+        signal,
       });
 
       if (!res.ok) {
@@ -576,12 +681,10 @@ const HomeStudioPromptComposer = forwardRef(function HomeStudioPromptComposer(
       }
 
       const data = await res.json();
+      if (signal?.aborted) return;
       const assetId = data.asset?.id;
-      const isImageReference = activeTab === 'image' || (activeTab === 'video' && targetSlot !== 'video_ref');
-      if (isImageReference && !assetId) throw new Error(isZh ? '素材保存失败，请重新上传' : 'Asset could not be saved. Please upload again.');
-      const finalUrl = isImageReference
-        ? `/api/assets/${encodeURIComponent(assetId)}/download?inline=1`
-        : data.url || data.asset?.url || localUrl;
+      if (!assetId) throw new Error(isZh ? '素材保存失败，请重新上传' : 'Asset could not be saved. Please upload again.');
+      const finalUrl = `/api/assets/${encodeURIComponent(assetId)}/download?inline=1`;
       setUploadProgress(100);
 
       // Save into respective slot
@@ -597,11 +700,20 @@ const HomeStudioPromptComposer = forwardRef(function HomeStudioPromptComposer(
       } else if (activeTab === 'audio') {
         updateCurrentDraft({ cloneAudioUrl: finalUrl });
       } else if (activeTab === 'digital-human') {
-        if (targetSlot === 'avatar') updateCurrentDraft({ avatarUrl: finalUrl });
+        if (targetSlot === 'avatar') {
+          const avatarKind = file.type.startsWith('video/') ? 'video' : 'image';
+          updateCurrentDraft(previous => ({
+            ...previous, avatarUrl: finalUrl, avatarKind,
+            modelId: getLipSyncModelById(previous.modelId)?.category === avatarKind
+              ? previous.modelId
+              : lipsyncModels.find(model => model.category === avatarKind && isModelActive(model.id))?.id || '',
+          }));
+        }
         else updateCurrentDraft({ driveAudioUrl: finalUrl });
       }
       toast.success(isZh ? '素材上传并解析成功' : 'Asset uploaded successfully');
     } catch (err) {
+      if (signal?.aborted) return;
       console.error('[Upload error]', err);
       toast.error(isZh ? '上传失败，请重试' : 'Upload failed');
     } finally {
@@ -674,13 +786,22 @@ const HomeStudioPromptComposer = forwardRef(function HomeStudioPromptComposer(
 
   // Generation submission handler
   const handleTriggerSubmit = useCallback(async () => {
-    if (isSubmitting) return;
+    if (submittingRef.current) return;
 
     const draft = currentDraft;
     const promptText = (draft.prompt || '').trim();
+    if (activeTab === 'agent' && !modelDirectoryLoaded) return;
+    if (activeTab === 'agent' && !submitModelId) {
+      toast.error(isZh ? '当前没有可用的创作助手模型' : 'No creative assistant model is currently available.');
+      return;
+    }
+    if (activeTab === 'agent' && draft.referenceUrls?.length) {
+      toast.error(isZh ? '当前模型只支持文字。请移除参考素材，或在设计 Agent 中打开素材。' : 'This model accepts text. Remove the references or open them in Design Agent.');
+      return;
+    }
 
     // 1. Input Validation
-    if (!promptText && activeTab !== 'digital-human') {
+    if (!promptText && (activeTab !== 'digital-human' || generatingAvatarAudio) && !(activeTab === 'audio' && draft.subMode === 'clone')) {
       toast.error(isZh ? '请输入创作提示词或指令' : 'Please enter a creation prompt');
       textareaRef.current?.focus();
       return;
@@ -710,8 +831,27 @@ const HomeStudioPromptComposer = forwardRef(function HomeStudioPromptComposer(
       return;
     }
 
-    if (activeTab === 'digital-human' && !draft.avatarUrl) {
+    if (activeTab === 'digital-human' && !generatingAvatarAudio && !draft.avatarUrl) {
       toast.error(isZh ? '请先上传数字人肖像图片或视频' : 'Please upload avatar photo or video');
+      return;
+    }
+    if (activeTab === 'digital-human' && !generatingAvatarAudio && !draft.driveAudioUrl) {
+      toast.error(isZh ? '请上传数字人驱动音频' : 'Upload driving audio');
+      return;
+    }
+    if (activeTab === 'digital-human' && !generatingAvatarAudio) {
+      if (avatarModelUnavailable) {
+        toast.error(isZh ? '当前没有可用的数字人模型，请稍后重试' : 'No avatar model is currently available. Try again later.');
+        return;
+      }
+      const lipSync = getLipSyncModelById(submitModelId);
+      if (lipSync?.category !== draft.avatarKind) {
+        toast.error(isZh ? '请选择与形象素材类型匹配的数字人模型' : 'Choose an avatar model that accepts this reference type');
+        return;
+      }
+    }
+    if (activeTab === 'audio' && draft.subMode === 'clone' && !draft.cloneAudioUrl) {
+      toast.error(isZh ? '请先上传用于克隆的音频' : 'Upload a voice reference first');
       return;
     }
 
@@ -728,8 +868,13 @@ const HomeStudioPromptComposer = forwardRef(function HomeStudioPromptComposer(
       return;
     }
 
+    const media = [draft.avatarUrl, draft.driveAudioUrl, draft.cloneAudioUrl, draft.videoRefUrl];
+    if (media.some(url => /^(blob:|data:)/i.test(url || '')) || hasTemporaryReferenceUrl(media)) {
+      toast.error(isZh ? '请在登录后重新上传参考素材' : 'Upload the reference again after signing in');
+      return;
+    }
+
     // 3. Prepare task payload according to mode
-    setIsSubmitting(true);
     let taskParams = {};
 
     if (activeTab === 'image') {
@@ -739,7 +884,7 @@ const HomeStudioPromptComposer = forwardRef(function HomeStudioPromptComposer(
         batch_size: draft.batch,
         negative_prompt: draft.advanced?.negativePrompt || undefined,
         seed: draft.advanced?.seed !== -1 ? Number(draft.advanced?.seed) : undefined,
-        image_urls: draft.imageUrls?.length > 0 ? draft.imageUrls : undefined,
+        image_urls: draft.imageUrls?.length > 0 ? draft.imageUrls.map(storedMediaReference) : undefined,
         width: draft.width || undefined,
         height: draft.height || undefined,
       };
@@ -754,129 +899,103 @@ const HomeStudioPromptComposer = forwardRef(function HomeStudioPromptComposer(
         first_frame_url: draft.firstFrameUrl || undefined,
         end_frame_url: draft.endFrameUrl || undefined,
         image_urls: draft.imageUrls?.length > 0 ? draft.imageUrls : undefined,
-        video_url: draft.videoRefUrl || undefined,
+        video_url: storedMediaReference(draft.videoRefUrl) || undefined,
       };
     } else if (activeTab === 'audio') {
-      taskParams = {
-        audio_mode: draft.subMode,
-        voice_id: draft.voiceId,
-        speed: draft.speed,
-        language: draft.language,
-        clone_audio_url: draft.cloneAudioUrl || undefined,
-        music_style: draft.musicStyle || undefined,
-        instrumental: draft.isInstrumental,
-      };
+      if (draft.subMode === 'music') {
+        const inputs = getAudioModelById(submitModelId)?.inputs;
+        taskParams = { style: draft.musicStyle, custom_mode: true, model: inputs?.model?.default, instrumental: draft.isInstrumental };
+      } else if (draft.subMode === 'clone') {
+        const source = storedMediaReference(draft.cloneAudioUrl);
+        taskParams = { audio_url: source, custom_voice_id: `voice${source.replace(/[^a-z0-9]/gi, '').slice(-24)}` };
+      } else {
+        taskParams = { voice_id: draft.voiceId, speed: draft.speed };
+      }
     } else if (activeTab === 'digital-human') {
-      taskParams = {
-        avatar_url: draft.avatarUrl,
-        drive_type: draft.driveType,
-        audio_url: draft.driveAudioUrl || undefined,
-        voice_id: draft.voiceId || 'female_warm',
-        resolution: draft.resolution || '720p',
+      taskParams = generatingAvatarAudio ? { voice_id: draft.voiceId } : {
+        [draft.avatarKind === 'video' ? 'video_url' : 'image_url']: storedMediaReference(draft.avatarUrl),
+        audio_url: storedMediaReference(draft.driveAudioUrl),
+        resolution: draft.resolution,
       };
     } else if (activeTab === 'agent') {
-      taskParams = {
-        reference_urls: draft.referenceUrls || [],
-      };
+      taskParams = { task_type: 't2t' };
     }
 
-    // 4. Initialize active in-place status tracking card
-    const trackingId = `local-task-${Date.now()}`;
-    setActiveTask({
+    const owner = String(user.id);
+    const signal = lifetime.current?.signal;
+    const trackingId = crypto.randomUUID();
+    const task = {
       id: trackingId,
-      status: 'queued',
-      phase: '正在请求服务端报价与锁定额度...',
-      progress: 15,
-      elapsed: 0,
+      studioId: generatingAvatarAudio ? 'home-avatar-speech' : `home-${activeTab}`,
+      mode: generatingAvatarAudio ? 'audio' : activeTab,
+      status: 'submitting',
       prompt: promptText,
-      modelId: draft.modelId,
-      mediaType: activeTab,
-      resultUrl: null,
-    });
-
-    const timer = setInterval(() => {
-      setActiveTask((prev) => {
-        if (!prev || prev.status === 'succeeded' || prev.status === 'failed') return prev;
-        return { ...prev, elapsed: (prev.elapsed || 0) + 1 };
-      });
-    }, 1000);
+      model: submitModelId,
+      ratio: draft.ar,
+      resolution: draft.quality || draft.resolution,
+      createdAt: new Date().toISOString(),
+    };
+    let requestId;
+    const releaseSubmit = () => {
+      if (submittingRef.current === trackingId) {
+        submittingRef.current = null;
+        setIsSubmitting(false);
+      }
+    };
+    submittingRef.current = trackingId;
+    setIsSubmitting(true);
+    publishRiverTask(owner, task);
 
     try {
       const result = await submitPlatformGeneration({
-        modelId: draft.modelId,
-        studioId: `home-${activeTab}`,
+        modelId: submitModelId,
+        ownerUserId: owner,
+        signal,
+        studioId: task.studioId,
         prompt: promptText,
         parameters: taskParams,
-        onPhase: (phase, reqId) => {
-          setActiveTask((prev) => {
-            if (!prev) return prev;
-            let progress = prev.progress;
-            let phaseDesc = '正在处理中...';
-            if (phase === 'reserved') {
-              progress = 30;
-              phaseDesc = isZh ? '任务已排队，正在调度最优模型供应商...' : 'Queued, scheduling model route...';
-            } else if (phase === 'completed') {
-              progress = 100;
-              phaseDesc = isZh ? '生成完成！' : 'Generation complete!';
-            }
-            return {
-              ...prev,
-              id: reqId || prev.id,
-              status: phase === 'completed' ? 'succeeded' : 'processing',
-              phase: phaseDesc,
-              progress,
-            };
-          });
+        onRequestId: (id) => {
+          if (signal?.aborted) return;
+          requestId = id;
+          publishRiverTask(owner, { ...task, requestId, status: 'queued' });
+          releaseSubmit();
         },
       });
-
-      clearInterval(timer);
-      const finalUrl = result?.result_url || result?.url || (Array.isArray(result?.outputs) ? result.outputs[0] : null);
-
-      setActiveTask({
-        id: result?.id || trackingId,
-        status: 'succeeded',
-        phase: isZh ? '生成完成！已同步至云端资产库' : 'Complete! Synced to Asset Library',
-        progress: 100,
-        resultUrl: finalUrl,
-        prompt: promptText,
-        modelId: draft.modelId,
-        mediaType: activeTab,
-      });
-
+      if (signal?.aborted) return;
+      const finalUrl = result?.result_url || result?.url;
+      publishRiverTask(owner, { ...task, status: 'succeeded', requestId, resultUrl: finalUrl, resultText: result?.result_text });
+      if (generatingAvatarAudio && finalUrl) {
+        setDrafts(previous => previous['digital-human'].prompt.trim() === promptText && previous['digital-human'].driveType === 'text'
+          ? { ...previous, 'digital-human': { ...previous['digital-human'], driveType: 'audio', driveAudioUrl: finalUrl } }
+          : previous);
+      }
       if (finalUrl) {
-        const completedItem = {
-          id: result?.id || trackingId,
+        onTaskComplete?.({
+          id: result.id,
           url: finalUrl,
           result_url: finalUrl,
           prompt: promptText,
-          mediaType: activeTab,
-          studio_id: activeTab,
-          modelId: draft.modelId,
-          model_id: draft.modelId,
-          createdAt: new Date().toISOString(),
+          mediaType: generatingAvatarAudio ? 'audio' : activeTab === 'digital-human' ? 'video' : activeTab,
+          studio_id: generatingAvatarAudio ? 'audio' : activeTab,
+          modelId: submitModelId,
+          model_id: submitModelId,
+          createdAt: task.createdAt,
           status: 'succeeded',
-        };
-        setRecentCreations((prev) => [completedItem, ...prev]);
-        onTaskComplete?.(completedItem);
+        });
       }
-
-      toast.success(isZh ? '创作任务已成功生成！' : 'Creation successful!');
-    } catch (err) {
-      clearInterval(timer);
-      console.error('[Generation submission error]', err);
-      setActiveTask({
-        id: trackingId,
-        status: 'failed',
-        phase: err.message || (isZh ? '生成任务失败，额度已安全释放' : 'Generation failed'),
-        progress: 100,
-        error: err.message,
+    } catch (error) {
+      if (signal?.aborted) return;
+      publishRiverTask(owner, {
+        ...task,
+        status: error.pending ? 'checking' : 'failed',
+        requestId: requestId || error.requestId,
+        homeDraft: !requestId && !error.requestId ? { mode: activeTab, fields: draft } : undefined,
+        error: error.generationResult?.error?.message || error.message,
       });
-      toast.error(err.message || (isZh ? '生成遇到异常，已自动退款' : 'Generation error'));
     } finally {
-      setIsSubmitting(false);
+      releaseSubmit();
     }
-  }, [isSubmitting, currentDraft, activeTab, isZh, user, onRequireAuth]);
+  }, [currentDraft, activeTab, generatingAvatarAudio, avatarModelUnavailable, modelDirectoryLoaded, submitModelId, isZh, user, onRequireAuth, onTaskComplete, publishRiverTask]);
 
   // Mode Specific Placeholders
   const placeholderText = useMemo(() => {
@@ -911,6 +1030,8 @@ const HomeStudioPromptComposer = forwardRef(function HomeStudioPromptComposer(
   // Audio HTML element for auditioning
   return (
     <>
+      <Toaster toasterId={composerToasterId} position="top-right" containerStyle={{ top: '4rem' }}
+        toastOptions={{ style: { background: 'var(--bg-surface)', color: 'var(--text-primary)' } }} />
       <audio ref={audioPlayerRef} onEnded={() => setAuditionPlaying(null)} className="hidden" />
 
       {/* Main Creative Composer Island */}
@@ -929,6 +1050,19 @@ const HomeStudioPromptComposer = forwardRef(function HomeStudioPromptComposer(
         <div
           role="tablist"
           aria-label={isZh ? '创作类型' : 'Creation type'}
+          onKeyDown={(event) => {
+            const current = CREATION_MODES.findIndex(mode => mode.id === activeTab);
+            const last = CREATION_MODES.length - 1;
+            let next;
+            if (event.key === 'Home') next = 0;
+            if (event.key === 'End') next = last;
+            if (event.key === 'ArrowRight') next = current === last ? 0 : current + 1;
+            if (event.key === 'ArrowLeft') next = current <= 0 ? last : current - 1;
+            if (next === undefined) return;
+            event.preventDefault();
+            handleSwitchTab(CREATION_MODES[next].id);
+            event.currentTarget.querySelectorAll('[role="tab"]')[next]?.focus();
+          }}
           className="flex min-h-[64px] items-center gap-1.5 overflow-x-auto px-4 py-2 scrollbar-rail select-none"
         >
           {CREATION_MODES.map((tab) => {
@@ -939,6 +1073,7 @@ const HomeStudioPromptComposer = forwardRef(function HomeStudioPromptComposer(
                 key={tab.id}
                 role="tab"
                 aria-selected={isActive}
+                tabIndex={isActive ? 0 : -1}
                 type="button"
                 onClick={() => handleSwitchTab(tab.id)}
                 className={`relative flex h-12 shrink-0 items-center gap-2 rounded-xl border px-4 sm:px-5 text-sm font-medium transition-colors duration-200 cursor-pointer whitespace-nowrap active:scale-[0.98] ${
@@ -992,14 +1127,15 @@ const HomeStudioPromptComposer = forwardRef(function HomeStudioPromptComposer(
                 {isZh ? '类型:' : 'Type:'}
               </span>
               {[
-                { id: 'tts', label: '文本朗读 (TTS)' },
-                { id: 'clone', label: '声音克隆' },
-                { id: 'music', label: '音乐与音效' },
+                { id: 'tts', label: isZh ? '文本朗读' : 'Text to speech' },
+                { id: 'clone', label: isZh ? '声音克隆' : 'Voice clone' },
+                { id: 'music', label: isZh ? '音乐与音效' : 'Music' },
               ].map((m) => (
                 <button
                   key={m.id}
                   type="button"
-                  onClick={() => updateCurrentDraft({ subMode: m.id })}
+                  aria-pressed={currentDraft.subMode === m.id}
+                  onClick={() => updateCurrentDraft({ subMode: m.id, modelId: AUDIO_MODE_MODELS[m.id][0] })}
                   className={`control-focus h-control-xs shrink-0 rounded-full border px-3 text-label font-medium transition-[background-color,border-color,color] duration-fast ease-standard cursor-pointer ${
                     currentDraft.subMode === m.id
                       ? 'border-brand-line bg-brand-soft font-semibold text-ink'
@@ -1203,7 +1339,12 @@ const HomeStudioPromptComposer = forwardRef(function HomeStudioPromptComposer(
 
             {/* Digital Human Avatar Slot */}
             {activeTab === 'digital-human' && (
-              <div className="flex items-center gap-3">
+              <div className="flex flex-wrap items-center gap-3">
+                {avatarModelUnavailable && (
+                  <p role="status" className="w-full text-body-sm text-ink-muted">
+                    {isZh ? '当前没有适用的数字人模型，请稍后重试。' : 'No avatar model is currently available for this reference type.'}
+                  </p>
+                )}
                 <div className="relative">
                   <input
                     ref={avatarInputRef}
@@ -1220,7 +1361,9 @@ const HomeStudioPromptComposer = forwardRef(function HomeStudioPromptComposer(
                   {currentDraft.avatarUrl ? (
                     <div className="relative group size-[72px] overflow-hidden rounded-xl border border-brand-line bg-black/40">
                       {/* eslint-disable-next-line @next/next/no-img-element */}
-                      <img src={currentDraft.avatarUrl} alt={isZh ? '数字人参考素材' : 'Avatar reference'} className="size-full object-cover" />
+                      {currentDraft.avatarKind === 'video'
+                        ? <video src={currentDraft.avatarUrl} className="size-full object-cover" muted preload="metadata" />
+                        : <img src={currentDraft.avatarUrl} alt={isZh ? '数字人参考素材' : 'Avatar reference'} className="size-full object-cover" />}
                       <button
                         type="button"
                         onClick={() => updateCurrentDraft({ avatarUrl: null })}
@@ -1248,6 +1391,7 @@ const HomeStudioPromptComposer = forwardRef(function HomeStudioPromptComposer(
                         <button
                           type="button"
                           onClick={() => updateCurrentDraft({ driveAudioUrl: null })}
+                          aria-label={isZh ? '移除驱动音频' : 'Remove driving audio'}
                           className="text-white/40 hover:text-white"
                         >
                           <X className="size-3" />
@@ -1311,7 +1455,7 @@ const HomeStudioPromptComposer = forwardRef(function HomeStudioPromptComposer(
                   <Box className="size-4 shrink-0 text-ink-muted" aria-hidden="true" />
                 )}
                 <span className="whitespace-nowrap text-sm font-semibold text-current">
-                  {activeTab === 'agent' ? (isZh ? '自动' : 'Auto') : getModelDisplayName(currentDraft.modelId, currentDraft.modelId)}
+                  {getModelDisplayName(currentDraft.modelId, currentDraft.modelId) || (isZh ? '选择模型' : 'Choose model')}
                 </span>
                 <PromptChevronIcon />
               </button>
@@ -1325,6 +1469,7 @@ const HomeStudioPromptComposer = forwardRef(function HomeStudioPromptComposer(
                 >
                   <FrontendModelPicker
                     studioType={activeTab}
+                    eligibleModelIds={eligibleModelIds}
                     selectedModel={currentDraft.modelId}
                     onSelect={handleModelSelect}
                     onClose={() => setDropdownOpen(null)}
@@ -1544,8 +1689,26 @@ const HomeStudioPromptComposer = forwardRef(function HomeStudioPromptComposer(
               </button>
             )}
 
+            {activeTab === 'audio' && currentDraft.subMode === 'music' && (
+              <>
+                <select aria-label={riverCopy.musicStyle} value={currentDraft.musicStyle}
+                  onChange={(event) => updateCurrentDraft({ musicStyle: event.target.value })}
+                  className={promptControlClassName({ className: 'min-h-11 shrink-0 bg-surface px-3 text-ink' })}>
+                  {!MUSIC_GENRE_TAGS.includes(currentDraft.musicStyle) &&
+                    <option value={currentDraft.musicStyle}>{currentDraft.musicStyle}</option>}
+                  {MUSIC_GENRE_TAGS.map((style) => <option key={style} value={style}>{style}</option>)}
+                </select>
+                <button type="button" aria-pressed={currentDraft.isInstrumental}
+                  onClick={() => updateCurrentDraft((previous) => ({ isInstrumental: !previous.isInstrumental }))}
+                  className={promptControlClassName({ active: currentDraft.isInstrumental, className: 'min-h-11 shrink-0' })}>
+                  <Music className="size-3.5" aria-hidden="true" />
+                  <span className={PROMPT_CONTROL_LABEL_CLASS}>{riverCopy.instrumental}</span>
+                </button>
+              </>
+            )}
+
             {/* Audio Voice Timbre Selector */}
-            {((activeTab === 'audio' && currentDraft.subMode === 'tts') || activeTab === 'digital-human') && (
+            {((activeTab === 'audio' && currentDraft.subMode === 'tts') || generatingAvatarAudio) && (
               <div className="relative shrink-0">
                 <button
                   type="button"
@@ -1741,7 +1904,7 @@ const HomeStudioPromptComposer = forwardRef(function HomeStudioPromptComposer(
             <div className="flex items-center gap-1.5 select-none whitespace-nowrap text-ink">
               <Sparkles className="size-3.5 text-brand" aria-hidden="true" />
               <ModelPriceTag
-                ids={currentDraft.modelId}
+                ids={submitModelId}
                 multiplier={currentDraft.batch || 1}
                 locale={locale}
                 compact
@@ -1756,15 +1919,18 @@ const HomeStudioPromptComposer = forwardRef(function HomeStudioPromptComposer(
               circular
               aria-label={
                 isSubmitting
+                || (activeTab === 'agent' && !modelDirectoryLoaded)
                   ? (isZh ? '生成中' : 'Generating')
-                  : (isZh ? '开始生成' : 'Start generation')
+                  : submitLabel
               }
-              title={isZh ? '开始生成' : 'Start generation'}
+              title={submitLabel}
               disabled={
                 isSubmitting
-                || (activeTab === 'digital-human'
-                  ? !currentDraft.avatarUrl
-                  : !String(currentDraft.prompt || '').trim())
+                || (activeTab === 'digital-human' && !generatingAvatarAudio
+                  ? avatarModelUnavailable || !currentDraft.avatarUrl || !currentDraft.driveAudioUrl
+                  : activeTab === 'audio' && currentDraft.subMode === 'clone'
+                    ? !currentDraft.cloneAudioUrl
+                    : !String(currentDraft.prompt || '').trim())
               }
               className="disabled:bg-raised disabled:border-line disabled:text-ink-subtle disabled:shadow-none"
             >
@@ -1778,147 +1944,6 @@ const HomeStudioPromptComposer = forwardRef(function HomeStudioPromptComposer(
         </PromptFooter>
       </PromptComposer>
 
-      {/* ── 6. Live Active In-Place Task Progress Card (Dreamina High-Fidelity Feedback) ── */}
-      {activeTask && (
-        <div className="w-full max-w-[960px] mt-4 rounded-2xl bg-[#16181d]/90 border border-white/10 p-4 sm:p-5 backdrop-blur-xl shadow-elevation-3 flex flex-col gap-3 animate-fade-in">
-          <div className="flex items-center justify-between pb-2 border-b border-white/10">
-            <div className="flex items-center gap-2.5">
-              <span className="rounded-full border border-brand-line bg-brand-soft px-2.5 py-0.5 text-micro font-semibold uppercase tracking-wide text-brand-text">
-                {activeTask.mediaType}
-              </span>
-              <span className="text-xs font-semibold text-white/90 truncate max-w-[280px] sm:max-w-[420px]">
-                {activeTask.prompt}
-              </span>
-            </div>
-            <div className="flex items-center gap-2">
-              <span className="text-xs text-ink-subtle font-mono">
-                {activeTask.elapsed ? `${activeTask.elapsed}s` : ''}
-              </span>
-              <button
-                type="button"
-                onClick={() => setActiveTask(null)}
-                className="text-white/40 hover:text-white p-1"
-              >
-                <X className="size-4" />
-              </button>
-            </div>
-          </div>
-
-          {/* Progress / Status feedback */}
-          {activeTask.status !== 'succeeded' && activeTask.status !== 'failed' && (
-            <div className="flex flex-col gap-2 py-2">
-              <div className="flex items-center justify-between text-xs">
-                <span className="text-ink-muted flex items-center gap-2">
-                  <span className="animate-spin inline-block text-brand">◌</span>
-                  <span>{activeTask.phase}</span>
-                </span>
-                <span className="text-white font-mono">{activeTask.progress}%</span>
-              </div>
-              <div className="h-1.5 w-full overflow-hidden rounded-full bg-wash-strong">
-                <div
-                  className="h-full bg-brand transition-all duration-300"
-                  style={{ width: `${activeTask.progress}%` }}
-                />
-              </div>
-            </div>
-          )}
-
-          {/* Succeeded Result Viewers */}
-          {activeTask.status === 'succeeded' && activeTask.resultUrl && (
-            <div className="flex flex-col sm:flex-row items-center gap-4 pt-1">
-              {/* Media viewer */}
-              {activeTask.mediaType === 'video' ? (
-                <div className="w-full sm:w-1/2 rounded-xl overflow-hidden bg-black/60 shadow-elevation-2">
-                  <video
-                    src={activeTask.resultUrl}
-                    controls
-                    autoPlay
-                    loop
-                    playsInline
-                    className="w-full max-h-[300px] object-contain"
-                  />
-                </div>
-              ) : activeTask.mediaType === 'audio' ? (
-                <div className="w-full p-4 rounded-xl bg-white/[0.03] border border-white/10 flex flex-col gap-2">
-                  <audio src={activeTask.resultUrl} controls className="w-full" autoPlay />
-                </div>
-              ) : (
-                <div className="w-full sm:w-1/2 rounded-xl overflow-hidden bg-black/60 shadow-elevation-2">
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img
-                    src={activeTask.resultUrl}
-                    alt="Result"
-                    className="w-full max-h-[300px] object-contain cursor-pointer hover:scale-105 transition-transform"
-                    onClick={() => setFullscreenUrl(activeTask.resultUrl)}
-                  />
-                </div>
-              )}
-
-              {/* Action Buttons: Open in Canvas, Download, Regenerate */}
-              <div className="w-full sm:w-1/2 flex flex-col gap-2.5">
-                <h4 className="text-sm font-bold text-white flex items-center gap-1.5">
-                  <Check className="size-4 text-emerald-400" />
-                  <span>{isZh ? '作品已就绪' : 'Artwork Ready'}</span>
-                </h4>
-                <p className="text-xs text-ink-muted leading-relaxed">
-                  {isZh
-                    ? '已自动同步至您的专属资产库，并已注入无限画布资产索引中。'
-                    : 'Synced to your private Asset Library and indexed for Infinite Canvas.'}
-                </p>
-
-                <div className="flex items-center gap-2 pt-2 flex-wrap">
-                  {/* 1. Open in Infinite Canvas */}
-                  <a
-                    href={`/canvas?importAsset=${encodeURIComponent(activeTask.resultUrl)}&type=${activeTask.mediaType}`}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="control-focus flex h-control-sm items-center gap-1.5 rounded-lg bg-brand px-3 text-label font-semibold text-ink-on-accent transition-colors duration-fast hover:bg-brand-hover-solid"
-                  >
-                    <Layers className="size-3.5" />
-                    <span>{isZh ? '在无限画布中打开 ↗' : 'Open in Canvas ↗'}</span>
-                  </a>
-
-                  {/* 2. Download File */}
-                  <a
-                    href={activeTask.resultUrl}
-                    download={`koyosim-${activeTask.mediaType}-${Date.now()}`}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="control-focus flex h-control-sm items-center gap-1.5 rounded-lg border border-line bg-wash px-3 text-label font-medium text-ink transition-colors duration-fast hover:border-line-strong hover:bg-wash-strong"
-                  >
-                    <Download className="size-3.5" />
-                    <span>{isZh ? '下载原文件' : 'Download'}</span>
-                  </a>
-
-                  {/* 3. Regenerate */}
-                  <button
-                    type="button"
-                    onClick={handleTriggerSubmit}
-                    className="control-focus flex h-control-sm items-center gap-1.5 rounded-lg px-3 text-label text-ink-muted transition-colors duration-fast hover:bg-wash hover:text-ink"
-                  >
-                    <RotateCcw className="size-3.5" />
-                    <span>{isZh ? '重新生成' : 'Regenerate'}</span>
-                  </button>
-                </div>
-              </div>
-            </div>
-          )}
-
-          {/* Failed State */}
-          {activeTask.status === 'failed' && (
-            <div className="flex items-center justify-between rounded-lg border border-danger-line bg-danger-soft p-3 text-caption text-danger">
-              <span>{activeTask.error || (isZh ? '生成任务失败，请检查提示词或网络' : 'Generation failed')}</span>
-              <button
-                type="button"
-                onClick={handleTriggerSubmit}
-                className="control-focus rounded-md border border-danger-line bg-danger-soft px-3 py-1 text-label font-medium text-danger transition-colors duration-fast hover:text-ink"
-              >
-                {isZh ? '重试' : 'Retry'}
-              </button>
-            </div>
-          )}
-        </div>
-      )}
 
       {/* ── Draw Canvas Modal ── */}
       <DrawModal

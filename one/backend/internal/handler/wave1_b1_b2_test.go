@@ -227,12 +227,6 @@ func (r *hUserRepo) SetAvatarFrame(_ context.Context, _, frame string) error {
 func (r *hUserRepo) HasUnlockedAvatarFrame(_ context.Context, _, _ string) (bool, error) {
 	return true, nil
 }
-func (r *hUserRepo) GetOrInitAPIKey(_ context.Context, _ string, gen func() string) (string, string, error) {
-	return gen(), "2026-11-15T00:00:00Z", nil
-}
-func (r *hUserRepo) RotateAPIKey(_ context.Context, _, k string) (string, string, error) {
-	return k, "2026-11-15T00:00:00Z", nil
-}
 func (r *hUserRepo) UpdatePassword(_ context.Context, _, h, s string) error {
 	r.profile.PasswordHash, r.profile.PasswordSalt = h, s
 	return nil

@@ -34,6 +34,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { useUserSession } from '@/lib/hooks/useUserSession';
+import { apiRequest } from '@/services/api/http';
 import { normalizeLocale, matchPathLocale } from '@/lib/locales';
 import {
   DEFAULT_FEEDBACK_SUPPORT_EMAIL,
@@ -75,9 +76,19 @@ function AttachmentIcon({ kind }) {
   return <FileText className="size-4 text-brand" />;
 }
 
-export default function FeedbackPageClient({ supportEmail = DEFAULT_FEEDBACK_SUPPORT_EMAIL }) {
+export default function FeedbackPageClient(props) {
+  const session = useUserSession();
+  const scope = useRef({ owner: '', key: 0 });
+  const owner = String(session.user?.id || '');
+  if (scope.current.owner && scope.current.owner !== owner) scope.current.key++;
+  scope.current.owner = owner;
+  return <FeedbackContent key={scope.current.key} {...props} session={session} />;
+}
+
+function FeedbackContent({ supportEmail = DEFAULT_FEEDBACK_SUPPORT_EMAIL, session }) {
   const pathname = usePathname();
-  const { user, mutate } = useUserSession();
+  const { user, mutate } = session;
+  const owner = String(user?.id || '');
   const activeLocale = normalizeLocale(matchPathLocale(pathname) || user?.locale || 'zh');
 
   const [kind, setKind] = useState(FEEDBACK_KINDS[0].id);
@@ -93,35 +104,37 @@ export default function FeedbackPageClient({ supportEmail = DEFAULT_FEEDBACK_SUP
 
   const [items, setItems] = useState([]);
   const [itemsLoading, setItemsLoading] = useState(false);
+  const [itemsError, setItemsError] = useState('');
 
   const inputRef = useRef(null);
   const attachmentsRef = useRef([]);
   const fileIdRef = useRef(0);
+  const historyRequest = useRef(null);
+  const submitRequest = useRef(null);
 
   const loadMine = useCallback(async () => {
-    if (!user) {
-      setItems([]);
-      return;
-    }
+    if (!owner) return;
+    historyRequest.current?.abort();
+    const controller = new AbortController();
+    historyRequest.current = controller;
     setItemsLoading(true);
+    setItemsError('');
     try {
-      const res = await fetch('/api/feedback', { cache: 'no-store' });
-      if (res.ok) {
-        const data = await res.json();
-        setItems(Array.isArray(data.items) ? data.items : []);
-      }
-    } catch {
-      // 保持静默
+      const data = await apiRequest('/api/feedback', {
+        cache: 'no-store', headers: { 'X-ONE-Expected-User': owner }, signal: controller.signal,
+      });
+      if (!controller.signal.aborted) setItems(data.items);
+    } catch (error) {
+      if (!controller.signal.aborted) setItemsError(error.message || '读取记录失败，请重试');
     } finally {
-      setItemsLoading(false);
+      if (!controller.signal.aborted) setItemsLoading(false);
     }
-  }, [user]);
+  }, [owner]);
 
   useEffect(() => {
-    if (user) {
-      loadMine();
-    }
-  }, [user, loadMine]);
+    void loadMine();
+    return () => historyRequest.current?.abort();
+  }, [loadMine]);
 
   useEffect(() => {
     attachmentsRef.current = attachments;
@@ -129,6 +142,7 @@ export default function FeedbackPageClient({ supportEmail = DEFAULT_FEEDBACK_SUP
 
   useEffect(
     () => () => {
+      submitRequest.current?.abort();
       attachmentsRef.current.forEach((item) => {
         if (item.previewUrl) URL.revokeObjectURL(item.previewUrl);
       });
@@ -186,6 +200,7 @@ export default function FeedbackPageClient({ supportEmail = DEFAULT_FEEDBACK_SUP
 
   async function handleSubmit(event) {
     event.preventDefault();
+    if (submitRequest.current) return;
     setMessage(null);
 
     if (!user) {
@@ -195,6 +210,8 @@ export default function FeedbackPageClient({ supportEmail = DEFAULT_FEEDBACK_SUP
     if (!validateForm()) return;
 
     setSubmitting(true);
+    const controller = new AbortController();
+    submitRequest.current = controller;
     try {
       const formData = new FormData();
       formData.append('kind', kind);
@@ -203,12 +220,10 @@ export default function FeedbackPageClient({ supportEmail = DEFAULT_FEEDBACK_SUP
       formData.append('detail', detail.trim());
       attachments.forEach((item) => formData.append('attachments', item.file, item.file.name));
 
-      const res = await fetch('/api/feedback', { method: 'POST', body: formData });
-      const data = await res.json().catch(() => ({}));
-      if (!res.ok) {
-        setMessage({ tone: 'error', text: data.error || '提交失败，请稍后重试' });
-        return;
-      }
+      const data = await apiRequest('/api/feedback', {
+        method: 'POST', body: formData, headers: { 'X-ONE-Expected-User': owner }, signal: controller.signal,
+      });
+      if (controller.signal.aborted) return;
 
       setMessage({
         tone: 'success',
@@ -220,10 +235,11 @@ export default function FeedbackPageClient({ supportEmail = DEFAULT_FEEDBACK_SUP
       clearAttachments();
       setFieldErrors({});
       await loadMine();
-    } catch {
-      setMessage({ tone: 'error', text: '网络异常，提交未送达。请检查网络后重试。' });
+    } catch (error) {
+      if (!controller.signal.aborted) setMessage({ tone: 'error', text: error.message || '提交失败，请稍后重试' });
     } finally {
-      setSubmitting(false);
+      if (submitRequest.current === controller) submitRequest.current = null;
+      if (!controller.signal.aborted) setSubmitting(false);
     }
   }
 
@@ -599,6 +615,8 @@ export default function FeedbackPageClient({ supportEmail = DEFAULT_FEEDBACK_SUP
                 登录查看
               </Button>
             </div>
+          ) : itemsError ? (
+            <p role="alert" className="px-5 py-8 text-body-sm text-danger sm:px-6">{itemsError}</p>
           ) : itemsLoading && items.length === 0 ? (
             <div className="py-10 text-center text-body-sm text-ink-muted flex items-center justify-center gap-2">
               <RefreshCw className="size-4 animate-spin text-brand" />
@@ -642,6 +660,18 @@ export default function FeedbackPageClient({ supportEmail = DEFAULT_FEEDBACK_SUP
                       )}
                       <span>· {formatTime(item.createdAt)}</span>
                     </p>
+                    {item.attachments?.some((attachment) => attachment.url) && (
+                      <ul className="mt-2 flex flex-wrap gap-2">
+                        {item.attachments.filter((attachment) => attachment.url).map((attachment) => (
+                          <li key={attachment.url}>
+                            <a href={attachment.url} download className="control-focus inline-flex min-h-11 items-center gap-1.5 rounded-lg px-2.5 text-caption text-brand hover:bg-wash">
+                              <Paperclip className="size-3.5" aria-hidden="true" />
+                              {attachment.name}
+                            </a>
+                          </li>
+                        ))}
+                      </ul>
+                    )}
                     {item.reviewNote && (
                       <p className="mt-2 rounded-xl border border-line bg-well px-3 py-2 text-caption leading-relaxed text-ink-muted">
                         审核回复：{item.reviewNote}
@@ -666,7 +696,6 @@ export default function FeedbackPageClient({ supportEmail = DEFAULT_FEEDBACK_SUP
           onSuccess={async () => {
             setShowAuthModal(false);
             if (mutate) await mutate();
-            await loadMine();
           }}
         />
       )}

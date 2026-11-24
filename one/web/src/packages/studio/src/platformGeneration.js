@@ -135,14 +135,16 @@ function reportPhase(onPhase, phase, requestId) {
   onPhase?.(phase, requestId);
 }
 
-async function requestPlatformQuote({ modelId, parameters, capabilityVersion, idempotencyKey, fetchImpl, onAuthRequired }) {
+async function requestPlatformQuote({ modelId, parameters, capabilityVersion, idempotencyKey, fetchImpl, onAuthRequired, ownerUserId, signal }) {
   const response = await fetchImpl('/api/generation/quote', {
     method: 'POST',
     credentials: 'same-origin',
     headers: {
       'Content-Type': 'application/json',
       'Idempotency-Key': await quoteIdempotencyKey(idempotencyKey),
+      ...(ownerUserId ? { 'X-ONE-Expected-User': String(ownerUserId) } : {}),
     },
+    signal,
     body: JSON.stringify({ modelId, parameters, ...(capabilityVersion ? {capabilityVersion} : {}) }),
   });
   const payload = await readJson(response);
@@ -172,7 +174,7 @@ async function requestPlatformQuote({ modelId, parameters, capabilityVersion, id
     }));
   }
 
-  return quoteId;
+  return { id: quoteId, credits };
 }
 
 function failedGeneration(creation, creationId) {
@@ -193,17 +195,38 @@ function failedGeneration(creation, creationId) {
   return error;
 }
 
-function completedGeneration(creation, creationId) {
+export function completedGeneration(creation, creationId) {
   const assetId = creation.asset_id || creation.assetId;
   const url = assetId ? `/api/assets/${encodeURIComponent(assetId)}/download?inline=1`
     : (creation.result_url || creation.resultUrl || null);
+  let parsedOutputs = [];
+  if (Array.isArray(creation.outputs) && creation.outputs.length > 0) {
+    parsedOutputs = creation.outputs;
+  } else if (creation.metadata_json) {
+    const meta = typeof creation.metadata_json === 'string'
+      ? (() => { try { return JSON.parse(creation.metadata_json); } catch { return {}; } })()
+      : creation.metadata_json;
+    if (Array.isArray(meta?.outputs) && meta.outputs.length > 0) parsedOutputs = meta.outputs;
+    else if (Array.isArray(meta?.images) && meta.images.length > 0) parsedOutputs = meta.images;
+  }
+  if (!parsedOutputs.length && creation.result_text) {
+    try {
+      const parsed = JSON.parse(creation.result_text);
+      if (Array.isArray(parsed)) parsedOutputs = parsed;
+      else if (Array.isArray(parsed?.outputs)) parsedOutputs = parsed.outputs;
+      else if (Array.isArray(parsed?.images)) parsedOutputs = parsed.images;
+    } catch {}
+  }
+  const outputs = parsedOutputs.length > 0 ? parsedOutputs : (url ? [url] : []);
+  const primaryUrl = outputs[0] || url;
   return {
     id: creationId,
     request_id: creationId,
     status: 'completed',
-    url,
-    result_url: url,
-    outputs: url ? [url] : [],
+    url: primaryUrl,
+    result_url: primaryUrl,
+    outputs,
+    images: outputs,
     result_text: creation.result_text || creation.resultText || null,
     output: creation.result_text || creation.resultText || null,
     cost: {
@@ -222,6 +245,7 @@ export async function submitPlatformGeneration({
   capabilityVersion,
   ownerUserId,
   resumeExistingTask = false,
+  returnOnQueue = false,
   studioId = 'studio',
   prompt = '',
   parameters = {},
@@ -235,6 +259,8 @@ export async function submitPlatformGeneration({
   fetchImpl = globalThis.fetch,
   waitImpl = wait,
   onAuthRequired,
+  confirmQuote,
+  signal,
 } = {}) {
   if (!modelId) throw new Error('A model ID is required for platform generation.');
   if (typeof fetchImpl !== 'function') throw new Error('Platform generation transport is unavailable.');
@@ -261,7 +287,8 @@ export async function submitPlatformGeneration({
   let confirmedAbsent=false;
   if (resumeExistingTask || generationIntent.resumed) {
     const response=await fetchImpl(`/api/generations?idempotencyKey=${encodeURIComponent(normalizedIdempotencyKey)}`,{
-      method:'GET',credentials:'same-origin',cache:'no-store',headers:{Accept:'application/json'},
+      method:'GET', credentials:'same-origin', cache:'no-store', signal,
+      headers:{ Accept:'application/json', ...(ownerUserId ? { 'X-ONE-Expected-User': String(ownerUserId) } : {}) },
     });
     const trace=await readJson(response);
     if (response.ok && trace?.creation?.id) {
@@ -275,7 +302,7 @@ export async function submitPlatformGeneration({
   }
   const recovered=Boolean(submitData);
   if (!submitData) {
-    const quoteId = await requestPlatformQuote({
+    const quote = await requestPlatformQuote({
       modelId,
       capabilityVersion,
       parameters,
@@ -284,16 +311,23 @@ export async function submitPlatformGeneration({
       idempotencyKey: confirmedAbsent ? `${normalizedIdempotencyKey}:${createIdempotencyKey()}` : normalizedIdempotencyKey,
       fetchImpl,
       onAuthRequired,
+      ownerUserId,
+      signal,
     });
+    if (confirmQuote && !await confirmQuote(quote)) {
+      throw Object.assign(new Error('Generation quote declined.'), { code: 'GENERATION_QUOTE_DECLINED' });
+    }
 
     const submitResponse = await fetchImpl('/api/generations', {
       method: 'POST',
       credentials: 'same-origin',
+      signal,
       headers: {
         'Content-Type': 'application/json',
         'Idempotency-Key': normalizedIdempotencyKey,
+        ...(ownerUserId ? { 'X-ONE-Expected-User': String(ownerUserId) } : {}),
       },
-      body: JSON.stringify({ modelId, studioId, prompt, parameters, label, quoteId, ...(capabilityVersion ? {capabilityVersion} : {}) }),
+      body: JSON.stringify({ modelId, studioId, prompt, parameters, label, quoteId: quote.id, ...(capabilityVersion ? {capabilityVersion} : {}) }),
     });
     submitData = await readJson(submitResponse);
 
@@ -316,6 +350,7 @@ export async function submitPlatformGeneration({
   reportPhase(onPhase, recovered ? 'recovered' : 'reserved', creationId);
 
   const initialCreation = submitData.creation || submitData.task || submitData;
+  if (returnOnQueue) return { ...initialCreation, id: creationId };
   const initialStatus = String(initialCreation?.status || '').toLowerCase();
   if (SUCCESS_STATUSES.has(initialStatus)) {
     clearGenerationIntent(generationIntent);
@@ -328,13 +363,13 @@ export async function submitPlatformGeneration({
     throw failedGeneration(initialCreation,creationId);
   }
 
-  return pollPlatformGeneration({ creationId, maxAttempts, intervalMs, fetchImpl, waitImpl, onAuthRequired, onPhase,
+  return pollPlatformGeneration({ creationId, maxAttempts, intervalMs, fetchImpl, waitImpl, onAuthRequired, onPhase, ownerUserId, signal,
     onTerminal: () => clearGenerationIntent(generationIntent) });
 }
 
 /** Resume a known owner-scoped job using reads only; this never quotes or submits. */
 export async function pollPlatformGeneration({ creationId, maxAttempts = 900, intervalMs = 2_000,
-  fetchImpl = globalThis.fetch, waitImpl = wait, onAuthRequired, onPhase, onTerminal, signal } = {}) {
+  fetchImpl = globalThis.fetch, waitImpl = wait, onAuthRequired, onPhase, onTerminal, signal, ownerUserId } = {}) {
   if (!creationId) throw new Error('An existing generation ID is required.');
   for (let attempt = 0; attempt < maxAttempts; attempt += 1) {
     await waitImpl(intervalMs);
@@ -342,7 +377,8 @@ export async function pollPlatformGeneration({ creationId, maxAttempts = 900, in
     let pollResponse;
     try {
       pollResponse = await fetchImpl(`/api/generations?id=${encodeURIComponent(creationId)}`, {
-        method: 'GET', credentials: 'same-origin', cache: 'no-store', headers: { Accept: 'application/json' }, signal,
+        method: 'GET', credentials: 'same-origin', cache: 'no-store', signal,
+        headers: { Accept: 'application/json', ...(ownerUserId ? { 'X-ONE-Expected-User': String(ownerUserId) } : {}) },
       });
     } catch (error) { throw Object.assign(error, { requestId: creationId, pending: true }); }
     const trace = await readJson(pollResponse);

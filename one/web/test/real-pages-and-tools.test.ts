@@ -78,21 +78,17 @@ describe('ONE Real Pages, Real Tools & Route Integrity Guard', () => {
 
   test('Simulated placeholders in CallApiPage, CreditsClient and benefits catalog are resolved', () => {
     const publicFeatures = readFileSync(resolve(SRC_ROOT, 'pages/PublicFeaturePages.tsx'), 'utf8');
+    const developerPlatform = readFileSync(resolve(SRC_ROOT, 'components/call-api/DeveloperPlatform.tsx'), 'utf8');
     const creditsClient = readFileSync(resolve(SRC_ROOT, 'components/credits/CreditsClient.js'), 'utf8');
     const benefitsCatalog = readFileSync(resolve(SRC_ROOT, 'lib/benefits/catalog.js'), 'utf8');
 
-    // CallApiPage contains real developer platform content
-    assert.equal(publicFeatures.includes('开发者 API — 筹备中'), false, 'CallApiPage must not say 筹备中');
-    assert.equal(publicFeatures.includes('公开 API 尚未开放'), false, 'CallApiPage must not say 尚未开放');
-    assert.equal(publicFeatures.includes('此页面不提供 API 文档或代码示例'), false, 'CallApiPage must not deny API docs');
-
-    assert.ok(publicFeatures.includes('https://one.supdance.com/api'), 'Must document Base URL');
-    assert.ok(publicFeatures.includes('/api/generations'), 'Must document /api/generations endpoint');
-    assert.ok(publicFeatures.includes('/api/tasks/:id'), 'Must document /api/tasks/:id endpoint');
-    assert.ok(publicFeatures.includes('/api/canvas-tools/plan'), 'Must document /api/canvas-tools/plan endpoint');
-    assert.ok(publicFeatures.includes('curlSnippet'), 'Must include cURL code snippet');
-    assert.ok(publicFeatures.includes('pythonSnippet'), 'Must include Python code snippet');
-    assert.ok(publicFeatures.includes('tsSnippet'), 'Must include TypeScript code snippet');
+    assert.ok(publicFeatures.includes('<DeveloperPlatform />'));
+    assert.ok(developerPlatform.includes("'/api/developer/v1'"));
+    assert.ok(developerPlatform.includes("'/generations/quote'"));
+    assert.ok(developerPlatform.includes("'/generations/{id}/result'"));
+    assert.ok(developerPlatform.includes('Idempotency-Key'));
+    assert.ok(developerPlatform.includes('SUPDANCE_MAX_CREDITS'));
+    assert.ok(developerPlatform.includes('curlExample') && developerPlatform.includes('pythonExample') && developerPlatform.includes('typescriptExample'));
 
     // CreditsClient has all prizes active
     assert.equal(creditsClient.includes('敬请期待'), false, 'CreditsClient must not have 敬请期待');

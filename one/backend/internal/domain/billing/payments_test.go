@@ -228,3 +228,29 @@ func TestHTTPGatewayQueryOrderStatus(t *testing.T) {
 		}
 	}
 }
+
+func TestStripeSettlementRequiresFinalStateAndAmount(t *testing.T) {
+	for _, tc := range []struct {
+		name, event string
+		obj         map[string]any
+		eligible    bool
+		refund      bool
+	}{
+		{"checkout without payment status", "checkout.session.completed", map[string]any{"amount_total": 500, "currency": "usd"}, false, false},
+		{"delayed settlement", "checkout.session.async_payment_succeeded", map[string]any{"payment_status": "paid", "amount_total": 500, "currency": "usd"}, true, false},
+		{"invoice without paid amount", "invoice.paid", map[string]any{"amount_total": 500, "currency": "usd"}, false, false},
+		{"refund in progress", "refund.updated", map[string]any{"status": "pending", "amount": 500, "currency": "usd"}, false, true},
+		{"partial charge refund", "charge.refunded", map[string]any{"refunded": false, "amount_refunded": 250, "currency": "usd"}, false, true},
+		{"settled refund", "refund.updated", map[string]any{"status": "succeeded", "amount": 500, "currency": "usd", "payment_intent": "pi_fixture"}, true, true},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			input, eligible := stripeWebhookInput("evt_fixture", tc.event, tc.obj)
+			if eligible != tc.eligible || input.IsRefund != tc.refund {
+				t.Fatalf("eligible=%v, isRefund=%v", eligible, input.IsRefund)
+			}
+			if tc.eligible && tc.refund && input.OriginalPaymentID != "pi_fixture" {
+				t.Fatal("settled refund discarded its original payment reference")
+			}
+		})
+	}
+}

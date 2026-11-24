@@ -273,6 +273,26 @@ func normalizeRateLimitReq(req RateLimitRequest) (string, string, int, time.Dura
 	return scope, subject, limit, window, nil
 }
 
+// ConsumePostgresRateLimit shares the database bucket between interactive and background generation.
+func ConsumePostgresRateLimit(ctx context.Context, pool *pgxpool.Pool, req RateLimitRequest, now time.Time) (RateLimitResult, error) {
+	scope, subject, limit, window, err := normalizeRateLimitReq(req)
+	if err != nil {
+		return RateLimitResult{}, err
+	}
+	if pool == nil {
+		return RateLimitResult{}, errors.New("rate limiter unavailable")
+	}
+	store := pgPoolStore{pool: pool}
+	count, started, err := store.ConsumeRateLimitBucket(ctx, RateLimitKeyHash(scope, subject), scope, subject, now, now.Add(-window))
+	if err != nil {
+		return RateLimitResult{}, err
+	}
+	return RateLimitResult{
+		Allowed: count <= limit, Limit: limit, Remaining: max(limit-count, 0),
+		RetryAfterSeconds: max(int(started.Add(window).Sub(now).Seconds())+1, 1), Backend: "postgres",
+	}, nil
+}
+
 func (c *Coordinator) ConsumeRateLimit(ctx context.Context, req RateLimitRequest) (RateLimitResult, error) {
 	scope, subject, limit, window, err := normalizeRateLimitReq(req)
 	if err != nil {

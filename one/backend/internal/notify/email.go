@@ -99,7 +99,7 @@ func (s *Service) readSMTPSettings(ctx context.Context) (smtpSettings, error) {
 	var rawMap map[string]any
 	if s != nil && s.Pool != nil {
 		var raw []byte
-		err := s.Pool.QueryRow(ctx, `SELECT value FROM ops_bill.system_settings WHERE key = 'email_smtp'`).Scan(&raw)
+		err := s.Pool.QueryRow(ctx, `SELECT value_json FROM ops_bill.system_settings WHERE key = 'email_smtp'`).Scan(&raw)
 		if err == nil && len(raw) > 0 {
 			_ = json.Unmarshal(raw, &rawMap)
 		}

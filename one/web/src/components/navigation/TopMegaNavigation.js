@@ -3,15 +3,13 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { createPortal } from 'react-dom';
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
+import { useLocation } from 'react-router';
 import * as NavigationMenu from '@radix-ui/react-navigation-menu';
-import { ChevronDown } from 'lucide-react';
-import { ExternalLink } from 'lucide-react';
-import { getMegaNavCategories } from '../../config/mega-navigation';
-import { withPublicNavigationModels } from '../../lib/modelCenter/megaNavigationModels';
+import { ChevronDown, ExternalLink } from 'lucide-react';
 import MegaMenuPanel from './MegaMenuPanel';
 import NavBadge from './NavBadge';
-import { getCommonCopy, getLocaleConfig, normalizeLocale } from '@/lib/locales';
+import { useTopNavigation } from './useTopNavigation';
+import { normalizeLocale } from '@/lib/locales';
 import { inferStudioTabFromModel } from '@/lib/studio-routes';
 import {
   FOCUS_RING,
@@ -31,36 +29,13 @@ export default function TopMegaNavigation({
   activeTab = 'image',
   locale = 'zh',
   onSelectTab,
+  studioItems = [],
   className = '',
 }) {
-  const pathname = usePathname();
+  const { pathname, search } = useLocation();
   const normLocale = normalizeLocale(locale);
-  const copy = getCommonCopy(normLocale);
+  const { copy, menuCopy, homeHref, assetsHref, categories, shortcuts, about, restricted } = useTopNavigation(normLocale);
   const tNav = copy.topNav || {};
-  const rootPath = getLocaleConfig(normLocale)?.rootPath || '';
-  const [launchScope, setLaunchScope] = useState({ restricted: false, models: [] });
-  const categories = withPublicNavigationModels(getMegaNavCategories(normLocale), launchScope.models, rootPath);
-
-  useEffect(() => {
-    let cancelled = false;
-    fetch('/api/models/active', { cache: 'no-store' })
-      .then((response) => {
-        if (!response.ok) throw new Error('MODEL_DIRECTORY_UNAVAILABLE');
-        return response.json();
-      })
-      .then((payload) => {
-        if (!cancelled) {
-          setLaunchScope({
-            restricted: payload.launchScope?.restricted === true,
-            models: Array.isArray(payload.models) ? payload.models : [],
-          });
-        }
-      })
-      .catch(() => {
-        if (!cancelled) setLaunchScope({ restricted: false, models: [] });
-      });
-    return () => { cancelled = true; };
-  }, []);
 
   const getNavLabel = (key, defaultLabel) => {
     if (tNav[key]) return tNav[key];
@@ -77,10 +52,15 @@ export default function TopMegaNavigation({
   const [viewportOffset, setViewportOffset] = useState(0);
   const [headerBottom, setHeaderBottom] = useState(56);
   const [mounted, setMounted] = useState(false);
+  const moreItems = [...(restricted ? [] : studioItems), ...shortcuts];
+  const menuCategories = moreItems.length
+    ? [...categories, { id: 'site-shortcuts', label: menuCopy.more, features: moreItems }]
+    : categories;
 
   useEffect(() => {
     setMounted(true);
   }, []);
+  useEffect(() => setCurrentOpenValue(''), [pathname, search]);
 
   const rootRef = useRef(null);
   const triggerRefs = useRef({});
@@ -141,6 +121,7 @@ export default function TopMegaNavigation({
 
   // 处理菜单项点击
   const handleItemClick = (e, item, cat) => {
+    if (e.button !== 0 || e.metaKey || e.ctrlKey || e.altKey || e.shiftKey || item.target === '_blank') return;
     setCurrentOpenValue('');
     const targetTabId = item.tabId || cat?.tabId || (item.modelKey ? inferStudioTabFromModel(item.modelKey) : null);
     if (targetTabId && onSelectTab) {
@@ -152,8 +133,15 @@ export default function TopMegaNavigation({
     <>
       <NavigationMenu.Root
         ref={rootRef}
+        aria-label={menuCopy.navigation}
         value={currentOpenValue}
         onValueChange={setCurrentOpenValue}
+        onKeyDownCapture={(event) => {
+          if (event.key !== 'Escape' || !currentOpenValue) return;
+          event.preventDefault();
+          setCurrentOpenValue('');
+          triggerRefs.current[currentOpenValue]?.focus();
+        }}
         delayDuration={120}
         skipDelayDuration={300}
         className={`relative z-header flex items-center min-w-0 [&>div]:w-full [&>div]:min-w-0 ${withoutRadiusUtilities(className)}`}
@@ -164,10 +152,11 @@ export default function TopMegaNavigation({
           <NavigationMenu.Item>
             <NavigationMenu.Link asChild>
               <Link
-                href="/"
+                href={homeHref}
+                aria-current={pathname === homeHref ? 'page' : undefined}
                 prefetch={false}
                 className={`inline-flex items-center gap-1.5 rounded-lg border border-transparent px-3 h-control-sm text-body-sm font-medium font-jost transition-[background-color,color,border-color] duration-fast hover:bg-wash hover:text-ink shrink-0 select-none ${FOCUS_RING} ${
-                  pathname === '/' || pathname === '/zh' || pathname === '/zh/' || (rootPath && pathname === rootPath) ? 'bg-wash-strong text-ink font-semibold border-line-subtle' : 'text-ink-muted'
+                  pathname === homeHref ? 'bg-wash-strong text-ink font-semibold border-line-subtle' : 'text-ink-muted'
                 }`}
               >
                 {getNavLabel('home', 'Home')}
@@ -179,7 +168,8 @@ export default function TopMegaNavigation({
           <NavigationMenu.Item>
             <NavigationMenu.Link asChild>
               <Link
-                href={rootPath ? `${rootPath}/assets` : '/assets'}
+                href={assetsHref}
+                aria-current={pathname === assetsHref ? 'page' : undefined}
                 prefetch={false}
                 className={`inline-flex items-center gap-1.5 rounded-lg border border-transparent px-3 h-control-sm text-body-sm font-medium font-jost transition-[background-color,color,border-color] duration-fast hover:bg-wash hover:text-ink shrink-0 select-none ${FOCUS_RING} ${
                   pathname?.includes('/assets') ? 'bg-wash-strong text-ink font-semibold border-line-subtle' : 'text-ink-muted'
@@ -191,30 +181,20 @@ export default function TopMegaNavigation({
           </NavigationMenu.Item>
 
           {/* 各主分类 Mega Menu (图像、视频、音频、智能体、短剧工作坊、社区) */}
-          {launchScope.restricted && launchScope.models.some((model) => model.category === 'image') && (
-            <NavigationMenu.Item>
-              <NavigationMenu.Link asChild>
-                <Link
-                  href={rootPath ? `${rootPath}/studio/image` : '/studio/image'}
-                  prefetch={false}
-                  className={`inline-flex items-center gap-1.5 rounded-lg border border-transparent px-3 h-control-sm text-body-sm font-medium font-jost text-ink-muted transition-[background-color,color,border-color] duration-fast hover:bg-wash hover:text-ink shrink-0 select-none ${FOCUS_RING}`}
-                >
-                  {categories.find((category) => category.id === 'images')?.label || getNavLabel('images', 'Image')}
-                </Link>
-              </NavigationMenu.Link>
-            </NavigationMenu.Item>
-          )}
-          {!launchScope.restricted && categories.map((cat) => {
+          {menuCategories.map((cat) => {
             const label = cat.label;
             const isDirectCategory = !cat.features?.length && !cat.models?.length;
 
             if (isDirectCategory) {
-              const isDirectActive = pathname === cat.href || pathname === `${cat.href}/`;
+              const isDirectActive = cat.tabId ? cat.tabId === activeTab : pathname === cat.href;
               return (
                 <NavigationMenu.Item key={cat.id}>
                   <NavigationMenu.Link asChild>
                     <Link
                       href={cat.href}
+                      target={cat.target}
+                      rel={cat.target === '_blank' ? 'noopener noreferrer' : undefined}
+                      aria-current={isDirectActive ? 'page' : undefined}
                       prefetch={false}
                       className={`inline-flex items-center gap-1.5 rounded-lg border px-3 h-control-sm text-body-sm font-medium font-jost transition-[background-color,color,border-color] duration-fast shrink-0 select-none ${FOCUS_RING} ${
                         isDirectActive
@@ -230,7 +210,8 @@ export default function TopMegaNavigation({
               );
             }
 
-            const isCategoryActive = cat.features?.some((f) => f.tabId === activeTab) || (cat.id === 'community' && (pathname === '/community' || pathname?.startsWith('/community/') || pathname === '/zh/community' || pathname?.startsWith('/zh/community/')));
+            const isCategoryActive = cat.features?.some((f) => (f.tabId && f.tabId === activeTab) || f.href === pathname)
+              || (cat.id === 'community' && pathname.split('/').includes('community'));
 
             return (
               <NavigationMenu.Item key={cat.id} value={cat.id}>
@@ -268,7 +249,7 @@ export default function TopMegaNavigation({
           })}
 
           {/* SupDance 的第二创作工作台使用同一账号与业务 API。 */}
-          {!launchScope.restricted && <NavigationMenu.Item key="infinite-canvas">
+          {!restricted && <NavigationMenu.Item key="infinite-canvas">
             <NavigationMenu.Link asChild>
               <Link
                 href="/canvas"
@@ -300,21 +281,24 @@ export default function TopMegaNavigation({
           </NavigationMenu.Item>
 
           {/* 顶部导航栏最后一个菜单项：关于本站 (Fixed Final Item: About) */}
-          <NavigationMenu.Item key="nav_about_pinned">
+          {about && <NavigationMenu.Item key="nav_about_pinned">
             <NavigationMenu.Link asChild>
               <Link
-                href={rootPath ? `${rootPath}/about` : '/about'}
+                href={about.href}
+                target={about.target}
+                rel={about.target === '_blank' ? 'noopener noreferrer' : undefined}
+                aria-current={pathname === about.href ? 'page' : undefined}
                 prefetch={false}
                 className={`inline-flex items-center gap-1.5 rounded-lg border px-3 h-control-sm text-body-sm font-medium font-jost transition-[background-color,color,border-color] duration-fast shrink-0 select-none ${FOCUS_RING} ${
-                  pathname === '/about' || (rootPath && pathname === `${rootPath}/about`)
+                  pathname === about.href
                     ? 'bg-wash-strong text-ink font-semibold border-line-subtle'
                     : 'border-transparent text-ink-muted hover:bg-wash hover:text-ink'
                 }`}
               >
-                <span>{getNavLabel('about', 'About')}</span>
+                <span>{about.label}</span>
               </Link>
             </NavigationMenu.Link>
-          </NavigationMenu.Item>
+          </NavigationMenu.Item>}
 
         </NavigationMenu.List>
 

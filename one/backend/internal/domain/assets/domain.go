@@ -25,6 +25,9 @@ type Asset struct {
 	StorageLocationID string `json:"storage_location_id,omitempty"`
 	Bucket            string `json:"bucket,omitempty"`
 	Region            string `json:"region,omitempty"`
+	MIMEType          string `json:"mime_type,omitempty"`
+	Filename          string `json:"-"`
+	Size              int64  `json:"size,omitempty"`
 }
 
 type Repository interface {
@@ -50,11 +53,14 @@ func (r *PGRepository) GetAsset(ctx context.Context, userID, assetID string) (*A
 		       COALESCE(storage_provider, ''),
 		       COALESCE(storage_location_id, ''),
 		       COALESCE(bucket, ''),
-		       COALESCE(region, '')
+		       COALESCE(region, ''),
+		       COALESCE(mime_type, ''),
+		       COALESCE(NULLIF(original_filename,''), NULLIF(filename,''), ''),
+		       COALESCE(file_size_bytes, 0)
 		FROM ai_studio.user_assets
 		WHERE id = $1 AND user_id = $2 AND deleted_at IS NULL`, assetID, userID).
 		Scan(&out.ID, &out.UserID, &out.Kind, &out.StorageKey, &out.ObjectKey, &out.PublicURL,
-			&out.Visibility, &out.StorageProvider, &out.StorageLocationID, &out.Bucket, &out.Region)
+			&out.Visibility, &out.StorageProvider, &out.StorageLocationID, &out.Bucket, &out.Region, &out.MIMEType, &out.Filename, &out.Size)
 	if errors.Is(err, pgx.ErrNoRows) {
 		return nil, ErrNotFound
 	}

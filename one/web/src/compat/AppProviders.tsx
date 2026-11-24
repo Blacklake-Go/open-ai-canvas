@@ -1,12 +1,12 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { QueryClient, QueryClientProvider, useQueryClient } from '@tanstack/react-query';
 import { ThemeProvider } from 'next-themes';
 import { NextIntlClientProvider } from 'next-intl';
 import { usePathname, useSearchParams } from 'next/navigation';
 import { BrandingProvider } from '@/lib/hooks/useBranding';
 import { getLocaleConfig, matchPathLocale, resolveClientLocale } from '@/lib/locales';
 import { getMessagesForLocale } from '@/i18n/request';
-import { oneApi } from '@/services/api/http';
+import { siteContentQueryKey, siteContentUpdateKey, useSiteContentConfig } from '@/lib/hooks/useSiteContentConfig';
 import DynamicFavicon from '@/components/site/DynamicFavicon';
 import ChunkSelfHealing from '@/components/ChunkSelfHealing';
 import VisitorAnalytics from '@/components/analytics/VisitorAnalytics';
@@ -24,6 +24,28 @@ export interface AppProvidersProps {
   visitorAnalytics?: any;
 }
 
+function SiteContent({ banner }: { banner: AppProvidersProps['banner'] }) {
+  const { data } = useSiteContentConfig();
+  const queryClient = useQueryClient();
+  const motionLevel = data?.motion?.motionLevel;
+
+  useEffect(() => {
+    const root = document.documentElement;
+    root.classList.toggle('no-motion', motionLevel === 'minimal' || motionLevel === 'none');
+    return () => root.classList.remove('no-motion');
+  }, [motionLevel]);
+
+  useEffect(() => {
+    const refreshContent = (event: StorageEvent) => {
+      if (event.key === siteContentUpdateKey) void queryClient.invalidateQueries({ queryKey: siteContentQueryKey });
+    };
+    window.addEventListener('storage', refreshContent);
+    return () => window.removeEventListener('storage', refreshContent);
+  }, [queryClient]);
+
+  return <GlobalSiteBanner banner={data?.banner ?? banner} pulse={data?.motion?.bannerPulse !== false} />;
+}
+
 export function AppProviders({
   children,
   locale: explicitLocale,
@@ -38,7 +60,6 @@ export function AppProviders({
   const searchParams = useSearchParams();
   const search = searchParams ? searchParams.toString() : '';
   const [localeEventTick, setLocaleEventTick] = useState(0);
-  const [contentBanner, setContentBanner] = useState<any>(null);
 
   const [queryClient] = useState(
     () =>
@@ -81,31 +102,6 @@ export function AppProviders({
     document.documentElement.lang = getLocaleConfig(activeLocale).htmlLang || activeLocale;
   }, [activeLocale]);
 
-  useEffect(() => {
-    if (typeof window === 'undefined' || typeof fetch !== 'function') return undefined;
-    const ac = new AbortController();
-    oneApi
-      .getContentConfig(ac.signal)
-      .then((cfg) => {
-        if (ac.signal.aborted || !cfg) return;
-        if (banner == null && cfg.banner) {
-          setContentBanner(cfg.banner);
-        }
-        if (typeof document !== 'undefined') {
-          document.documentElement.classList.toggle(
-            'no-motion',
-            cfg.motion?.motionLevel === 'none',
-          );
-        }
-      })
-      .catch(() => {
-        // Ignore offline/backend-unavailable failures; baseline UI renders without banner.
-      });
-    return () => ac.abort();
-  }, [banner]);
-
-  const resolvedBanner = banner ?? contentBanner;
-
   return (
     <QueryClientProvider client={queryClient}>
       <NextIntlClientProvider locale={activeLocale} messages={intlMessages}>
@@ -113,7 +109,7 @@ export function AppProviders({
           <DynamicFavicon />
           <ChunkSelfHealing />
           <VisitorAnalytics config={visitorAnalytics} />
-          <GlobalSiteBanner banner={resolvedBanner} />
+          <SiteContent banner={banner} />
           <BrandingProvider initialBrand={initialBrand} initialNav={initialNav}>
             <MaintenanceGate maintenance={maintenance} user={user}>
               {children}

@@ -62,6 +62,7 @@ export const ADMIN_NAV_GROUPS = [
       { id: 'model-overview', href: '/admin/models', label: '模型管理', permission: 'models.read' },
       { id: 'model-publication', href: '/admin/models/publication', label: '模型接入与发布', permission: 'models.read' },
       { id: 'canvas-model-config', href: '/admin/models/canvas', label: '无限画布配置', permission: 'models.read' },
+      { id: 'workshop-model-config', href: '/admin/models/workshop', label: '短剧工作坊模型', permission: 'models.read' },
       { id: 'model-providers', href: '/admin/models/providers', label: '供应商管理', permission: 'providers.read' },
       { id: 'model-routing', href: '/admin/models/routing', label: '智能路由与策略', permission: 'models.read' },
       { id: 'model-telemetry', href: '/admin/models/telemetry', label: '调用量与遥测', permission: 'models.read' },

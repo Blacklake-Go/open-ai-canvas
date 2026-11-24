@@ -196,7 +196,7 @@ func (s *Service) ReadSettings(ctx context.Context, fresh bool) (AdapterConfig, 
 		return cfg, nil
 	}
 	var rawBytes []byte
-	err := s.Pool.QueryRow(ctx, `SELECT value FROM ops_bill.system_settings WHERE key = $1`, settingsKeyV2).Scan(&rawBytes)
+	err := s.Pool.QueryRow(ctx, `SELECT value_json FROM ops_bill.system_settings WHERE key = $1`, settingsKeyV2).Scan(&rawBytes)
 	if errors.Is(err, pgx.ErrNoRows) {
 		s.cacheMu.Lock()
 		cp := cfg
@@ -820,6 +820,19 @@ func (s *Service) OpenStream(ctx context.Context, provider, locationID, bucket, 
 		return nil, ObjectMeta{}, err
 	}
 	return adapter.OpenStream(ctx, key, rangeHeader)
+}
+
+// DeleteObject removes an owned object's bytes from its original storage location.
+func (s *Service) DeleteObject(ctx context.Context, provider, locationID, bucket, region, key string) error {
+	adapter, cfg, err := s.AdapterForLocation(ctx, provider, locationID, bucket, region)
+	if err != nil {
+		return err
+	}
+	if (locationID != "" && locationID != cfg.StorageLocationID) ||
+		(provider != "" && NormalizeProvider(provider) != cfg.Provider) {
+		return fmt.Errorf("%w: cannot verify the asset storage location", ErrInvalidConfig)
+	}
+	return adapter.Delete(ctx, key)
 }
 
 // AdvanceMigration processes a batch of historical assets, creations, and avatars to the target storage location.

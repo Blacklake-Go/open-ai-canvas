@@ -198,25 +198,6 @@ func (d *Dependencies) handleUserAvatarFrame(w http.ResponseWriter, r *http.Requ
 	envelope.DomainJSON(w, http.StatusOK, res)
 }
 
-func (d *Dependencies) handleUserAPIKey(w http.ResponseWriter, r *http.Request) {
-	u, _ := middleware.UserFromContext(r.Context())
-	if r.Method == http.MethodGet {
-		key, createdAt, err := d.userService().GetAPIKey(r.Context(), u.ID)
-		if err != nil {
-			writeDomainError(w, err, "获取 API Key 失败")
-			return
-		}
-		envelope.SuccessJSON(w, http.StatusOK, map[string]any{"apiKey": key, "createdAt": createdAt})
-		return
-	}
-	key, createdAt, err := d.userService().RotateAPIKey(r.Context(), u.ID)
-	if err != nil {
-		writeDomainError(w, err, "重置 API Key 失败")
-		return
-	}
-	envelope.SuccessJSON(w, http.StatusOK, map[string]any{"apiKey": key, "createdAt": createdAt, "rotated": true})
-}
-
 func (d *Dependencies) handleUserPassword(w http.ResponseWriter, r *http.Request) {
 	u, _ := middleware.UserFromContext(r.Context())
 	var body struct {
@@ -428,6 +409,9 @@ func (d *Dependencies) handleUserFollow(w http.ResponseWriter, r *http.Request) 
 
 func (d *Dependencies) handleUserNotifications(w http.ResponseWriter, r *http.Request) {
 	u, hasUser := middleware.UserFromContext(r.Context())
+	if hasUser && u != nil && !coreExpectedOwner(w, r, envelope.FormatSuccessFlaggedJSON, u.ID, "NOTIFICATIONS_ACCOUNT_CHANGED") {
+		return
+	}
 	if r.Method == http.MethodGet {
 		if !hasUser || u == nil {
 			envelope.SuccessJSON(w, http.StatusOK, map[string]any{

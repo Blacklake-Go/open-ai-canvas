@@ -113,6 +113,10 @@ export default defineConfig({
         target: process.env.VITE_BACKEND_PROXY_TARGET || 'http://127.0.0.1:8080',
         changeOrigin: true,
       },
+      '/uploads/branding/': {
+        target: process.env.VITE_BACKEND_PROXY_TARGET || 'http://127.0.0.1:8080',
+        changeOrigin: true,
+      },
       '/sitemap.xml': {
         target: process.env.VITE_BACKEND_PROXY_TARGET || 'http://127.0.0.1:8080',
         changeOrigin: true,

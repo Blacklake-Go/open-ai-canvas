@@ -39,6 +39,8 @@ export default function MegaMenuPanel({ category, locale = 'zh', onItemClick }) 
                 <Link
                   key={feat.id}
                   href={feat.href}
+                  target={feat.target}
+                  rel={feat.target === '_blank' ? 'noopener noreferrer' : undefined}
                   prefetch={false}
                   onClick={(e) => onItemClick?.(e, feat)}
                   className="group flex min-h-10 items-start gap-3 rounded-md p-2.5 transition-none hover:bg-wash-strong"
@@ -88,7 +90,7 @@ export default function MegaMenuPanel({ category, locale = 'zh', onItemClick }) 
                     href={model.href}
                     prefetch={false}
                     onClick={(e) => onItemClick?.(e, model, category)}
-                    className="group flex min-h-10 items-start gap-3 rounded-md p-2.5 transition-none hover:bg-wash-strong"
+                    className="control-focus group flex min-h-11 items-start gap-3 rounded-md p-2.5 transition-none hover:bg-wash-strong"
                   >
                     <NavIcon isModel className="size-4" />
 

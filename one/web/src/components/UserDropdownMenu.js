@@ -29,6 +29,7 @@ import SubscriptionModal from '@/components/subscription/SubscriptionModal';
 import AvatarFrame from '@/components/profile/AvatarFrame';
 import UserAvatar from '@/components/ui/UserAvatar';
 import { FOCUS_RING } from 'studio/ui/tokens';
+import { apiRequest } from '@/services/api/http';
 
 const LANGUAGE_FLAGS = {
   en: '/flags/en.svg',
@@ -70,14 +71,7 @@ export default function UserDropdownMenu({
   const [isNotifOpen, setIsNotifOpen] = useState(false);
   const [isLangOpen, setIsLangOpen] = useState(false);
   const [liveAvatar, setLiveAvatar] = useState(null);
-  const [userEntitlements, setUserEntitlements] = useState(
-    entitlements || (typeof window !== 'undefined' ? (() => {
-      try {
-        const stored = localStorage.getItem('ko_entitlements');
-        return stored ? JSON.parse(stored) : null;
-      } catch { return null; }
-    })() : null)
-  );
+  const [userEntitlements, setUserEntitlements] = useState(entitlements || null);
   const [unreadCount, setUnreadCount] = useState(0);
   const [notifications, setNotifications] = useState([]);
   const [isSubscriptionModalOpen, setIsSubscriptionModalOpen] = useState(false);
@@ -87,6 +81,7 @@ export default function UserDropdownMenu({
 
   const menuRef = useRef(null);
   const notifRef = useRef(null);
+  const notificationRequest = useRef(null);
   const langRef = useRef(null);
   const router = useRouter();
   const pathname = usePathname();
@@ -126,27 +121,32 @@ export default function UserDropdownMenu({
     }
   }, [onOpenSubscription]);
 
-  // 加载真实用户通知与未读数 (前后端真实联调)
+  const notificationOwner = String(user?.id || '');
   const fetchNotifications = useCallback(async () => {
-    if (!user) {
+    if (!notificationOwner) {
       setNotifications([]);
       setUnreadCount(0);
       return;
     }
+    notificationRequest.current?.abort();
+    const controller = new AbortController();
+    notificationRequest.current = controller;
     try {
-      const res = await fetch('/api/user/notifications', { cache: 'no-store' });
-      if (res.ok) {
-        const data = await res.json();
-        setNotifications(Array.isArray(data.notifications) ? data.notifications : []);
-        setUnreadCount(Number(data.unreadCount || 0));
+      const data = await apiRequest('/api/user/notifications', {
+        contract: 'success', cache: 'no-store', headers: { 'X-ONE-Expected-User': notificationOwner }, signal: controller.signal,
+      });
+      if (!controller.signal.aborted) {
+        setNotifications(data.notifications);
+        setUnreadCount(data.unreadCount);
       }
     } catch {
-      // 网络静默容错
+      // 读取失败时保留之前确认过的通知，可重新打开面板重试。
     }
-  }, [user]);
+  }, [notificationOwner]);
 
   useEffect(() => {
-    fetchNotifications();
+    void fetchNotifications();
+    return () => notificationRequest.current?.abort();
   }, [fetchNotifications]);
 
   // 加载用户专属 K 币余额与今日登录打卡状态
@@ -224,11 +224,10 @@ export default function UserDropdownMenu({
   // 全部标记已读
   const handleMarkAllAsRead = async () => {
     try {
-      const res = await fetch('/api/user/notifications', { method: 'POST' });
-      if (res.ok) {
-        setUnreadCount(0);
-        setNotifications((prev) => prev.map((n) => ({ ...n, is_read: true })));
-      }
+      await apiRequest('/api/user/notifications', {
+        method: 'POST', contract: 'success', headers: { 'X-ONE-Expected-User': notificationOwner },
+      });
+      await fetchNotifications();
     } catch {}
   };
 
@@ -317,10 +316,13 @@ export default function UserDropdownMenu({
   // 退出登录
   const handleLogoutClick = async () => {
     setIsMenuOpen(false);
+    if (onLogout) {
+      await onLogout();
+      return;
+    }
     try {
       await fetch('/api/auth/logout', { method: 'POST' });
     } catch {}
-    if (onLogout) await onLogout();
     if (typeof window !== 'undefined') {
       window.location.href = '/';
     }
@@ -359,6 +361,7 @@ export default function UserDropdownMenu({
           <button
             type="button"
             onClick={() => {
+              if (!isNotifOpen) void fetchNotifications();
               setIsNotifOpen((prev) => !prev);
               setIsMenuOpen(false);
             }}
@@ -368,6 +371,7 @@ export default function UserDropdownMenu({
                 : 'border-line-subtle bg-wash text-ink-muted hover:border-line hover:bg-wash-strong hover:text-ink'
             }`}
             aria-label={t.notificationsHeading || 'Notifications'}
+            aria-expanded={isNotifOpen}
             title={t.notificationsTitle || 'Notification Center'}
           >
             <Bell className="size-3.5" strokeWidth={1.8} />
@@ -416,17 +420,17 @@ export default function UserDropdownMenu({
                   notifications.map((n) => (
                     <Link
                       key={n.id}
-                      href={n.link_url || '#'}
+                      href={n.link || '#'}
                       onClick={() => setIsNotifOpen(false)}
                       className={`block rounded-lg p-2.5 text-caption transition-colors duration-fast ${
-                        n.is_read
+                        n.isRead
                           ? 'bg-wash text-ink-muted hover:bg-wash-strong hover:text-ink'
                           : 'border border-brand-line bg-brand-soft text-ink hover:bg-brand-pressed'
                       }`}
                     >
                       <div className="flex items-start justify-between gap-1.5">
                         <p className="font-semibold text-ink truncate">{n.title}</p>
-                        {!n.is_read && (
+                        {!n.isRead && (
                           <span className="size-1.5 shrink-0 rounded-full bg-brand mt-1" />
                         )}
                       </div>
@@ -511,7 +515,7 @@ export default function UserDropdownMenu({
             setIsMenuOpen(false);
             setIsNotifOpen(false);
           }}
-          className={`${FOCUS_RING} flex h-control-sm select-none items-center gap-1.5 rounded-lg border px-2.5 text-label font-medium transition-[background-color,border-color,color] duration-fast ease-standard active:scale-[0.98] active:duration-press cursor-pointer ${
+          className={`${FOCUS_RING} flex size-11 select-none items-center justify-center gap-1.5 rounded-lg border text-label font-medium transition-[background-color,border-color,color] duration-fast ease-standard active:scale-[0.98] active:duration-press cursor-pointer sm:h-control-sm sm:w-auto sm:px-2.5 ${
             isLangOpen
               ? 'border-brand-line bg-brand-soft text-ink'
               : 'border-line-subtle bg-wash text-ink-muted hover:border-line hover:bg-wash-strong hover:text-ink'
@@ -522,9 +526,9 @@ export default function UserDropdownMenu({
           title={t.interfaceLanguage || 'Language'}
         >
           <Globe className="size-3.5 shrink-0" strokeWidth={1.8} />
-          <span className="text-ink">{activeLanguage.native}</span>
+          <span className="hidden text-ink sm:inline">{activeLanguage.native}</span>
           <ChevronDown
-            className={`size-3.5 shrink-0 text-ink-subtle transition-transform duration-fast ease-standard ${isLangOpen ? 'rotate-180' : ''}`}
+            className={`hidden size-3.5 shrink-0 text-ink-subtle transition-transform duration-fast ease-standard sm:block ${isLangOpen ? 'rotate-180' : ''}`}
             strokeWidth={1.8}
           />
         </button>
@@ -771,6 +775,18 @@ export default function UserDropdownMenu({
                     VIP
                   </span>
                 </button>
+
+                <Link
+                  href={`${LOCALE_CONFIGS[activeLocale]?.rootPath || ''}/billing/orders`}
+                  onClick={() => setIsMenuOpen(false)}
+                  className="control-focus flex min-h-11 w-full items-center justify-between rounded-md px-3 py-2 text-body text-ink-muted hover:bg-wash-strong hover:text-ink"
+                >
+                  <span className="flex items-center gap-2.5">
+                    <WalletCards className="size-4" strokeWidth={1.8} aria-hidden="true" />
+                    {copy.billingOrders.history}
+                  </span>
+                  <ChevronRight className="size-3.5 text-ink-subtle" strokeWidth={1.8} aria-hidden="true" />
+                </Link>
 
                 {/* 管理员控制台 (仅限管理员) */}
                 {isAdmin && (

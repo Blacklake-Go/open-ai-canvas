@@ -15,19 +15,23 @@ import (
 
 	ai "one/backend/internal/adapters/ai"
 	"one/backend/internal/config"
+	"one/backend/internal/domain/canvas"
 	"one/backend/internal/queue"
+	"one/backend/internal/storage"
 )
 
 type CreateTaskRequest struct {
-	UserID         string
-	StudioID       string
-	QuoteID        string
-	ModelID        string
-	Label          string
-	Parameters     map[string]any
-	IdempotencyKey string
-	ProjectID      string // optional canvas_project_jobs link
-	NodeID         string // optional canvas_project_jobs link
+	UserID            string
+	StudioID          string
+	QuoteID           string
+	ModelID           string
+	Label             string
+	Parameters        map[string]any
+	IdempotencyKey    string
+	ProjectID         string // optional canvas_project_jobs link
+	NodeID            string // optional canvas_project_jobs link
+	RequireExactQuote bool
+	WorkflowStep      *WorkflowStepSubmission
 }
 
 type CreateTaskResult struct {
@@ -45,8 +49,10 @@ func (s *Service) CreateTask(ctx context.Context, req CreateTaskRequest) (*Creat
 		return nil, &PricingError{Code: "DB_UNAVAILABLE", Message: "数据库不可用", Status: 503}
 	}
 	pool := s.Pool
+	kind, conversationID, hasConversationID := strings.Cut(req.StudioID, ":")
+	isConversation := hasConversationID && (kind == "design-agent" || kind == "agent-chat")
 
-	if req.IdempotencyKey != "" {
+	if req.IdempotencyKey != "" && !isConversation && !req.RequireExactQuote {
 		var existingID, existingStatus string
 		var credits int
 		err := pool.QueryRow(ctx, `
@@ -67,17 +73,60 @@ func (s *Service) CreateTask(ctx context.Context, req CreateTaskRequest) (*Creat
 	}
 	defer func() { _ = tx.Rollback(ctx) }()
 
+	if req.RequireExactQuote && req.IdempotencyKey != "" {
+		if _, err := tx.Exec(ctx, "SELECT pg_advisory_xact_lock(hashtextextended($1, 0))", req.UserID+":"+req.IdempotencyKey); err != nil {
+			return nil, &PricingError{Code: "GENERATION_CREATE_FAILED", Message: "暂时无法同步任务，请重试", Status: 503}
+		}
+		var existing CreateTaskResult
+		err := tx.QueryRow(ctx, `
+			SELECT id,status,credit_cost FROM ai_studio.creations WHERE user_id=$1 AND idempotency_key=$2
+			AND studio_id=$3 LIMIT 1`, req.UserID, req.IdempotencyKey, req.StudioID).
+			Scan(&existing.CreationID, &existing.Status, &existing.Credits)
+		if err == nil {
+			existing.Idempotent = true
+			return &existing, nil
+		}
+		if !errors.Is(err, pgx.ErrNoRows) {
+			return nil, &PricingError{Code: "GENERATION_CREATE_FAILED", Message: "暂时无法读取任务，请重试", Status: 503}
+		}
+	}
+
+	if isConversation {
+		existing, err := s.prepareConversationTurn(ctx, tx, &req, kind, conversationID)
+		if err != nil || existing != nil {
+			return existing, err
+		}
+	}
+
+	workflowCap, err := lockWorkflowStep(ctx, tx, req)
+	if err != nil {
+		return nil, err
+	}
+
 	var qModel string
 	var qCredits int
 	var qExpires time.Time
 	var qConsumed *time.Time
 	var qEstCost *float64
+	var qMatches bool
 	var rsRaw []byte
+	var quotedParameters *string
+	mode, _ := req.Parameters["task_type"].(string)
+	workshop := req.StudioID == "workshop"
+	if workshop || req.RequireExactQuote || designMediaCreation(req.StudioID, mode) != "" {
+		raw, err := json.Marshal(req.Parameters)
+		if err != nil {
+			return nil, &PricingError{Code: "DESIGN_AGENT_INVALID_INPUT", Message: "技能参数无效", Status: 422}
+		}
+		serialized := string(raw)
+		quotedParameters = &serialized
+	}
 	err = tx.QueryRow(ctx, `
-		SELECT model_id, credits_quoted, expires_at, consumed_at, estimated_provider_cost_usd, COALESCE(route_snapshot_json,'{}'::jsonb)
+		SELECT model_id, credits_quoted, expires_at, consumed_at, estimated_provider_cost_usd,
+		       COALESCE(route_snapshot_json,'{}'::jsonb), $3::jsonb IS NULL OR parameters_json=$3::jsonb
 		FROM ai_studio.generation_quotes
-		WHERE id = $1 AND user_id = $2 FOR UPDATE`, req.QuoteID, req.UserID).
-		Scan(&qModel, &qCredits, &qExpires, &qConsumed, &qEstCost, &rsRaw)
+		WHERE id = $1 AND user_id = $2 FOR UPDATE`, req.QuoteID, req.UserID, quotedParameters).
+		Scan(&qModel, &qCredits, &qExpires, &qConsumed, &qEstCost, &rsRaw, &qMatches)
 	if errors.Is(err, pgx.ErrNoRows) {
 		return nil, &PricingError{Code: "QUOTE_MISMATCH", Message: "报价不存在或不属于当前用户", Status: 422}
 	}
@@ -88,12 +137,23 @@ func (s *Service) CreateTask(ctx context.Context, req CreateTaskRequest) (*Creat
 	if qConsumed != nil || qExpires.Before(now) {
 		return nil, &PricingError{Code: "QUOTE_MISMATCH", Message: "报价已使用或已过期", Status: 409}
 	}
+	if !qMatches {
+		return nil, &PricingError{Code: "QUOTE_MISMATCH", Message: "任务参数与报价不一致，请重新报价", Status: 409}
+	}
+	if workflowCap != nil && qCredits > int(*workflowCap) {
+		return nil, &PricingError{Code: "WORKFLOW_PRICE_CHANGED", Status: 409, Message: "步骤报价超过已确认的积分上限"}
+	}
 	modelID := req.ModelID
 	if modelID == "" {
 		modelID = qModel
 	}
 	if modelID != qModel {
 		return nil, &PricingError{Code: "QUOTE_MISMATCH", Message: "生成模型与报价不一致", Status: 409}
+	}
+	var routeSnap map[string]any
+	_ = json.Unmarshal(rsRaw, &routeSnap)
+	if isWorkshopQuote := routeSnap["site"] == "workshop"; workshop != isWorkshopQuote {
+		return nil, &PricingError{Code: "QUOTE_MISMATCH", Message: "报价与当前工作台不一致，请重新报价。", Status: 422}
 	}
 
 	creationID := randomHexID("gen")
@@ -121,8 +181,6 @@ func (s *Service) CreateTask(ctx context.Context, req CreateTaskRequest) (*Creat
 		reservationID = res.ReservationID
 	}
 
-	var routeSnap map[string]any
-	_ = json.Unmarshal(rsRaw, &routeSnap)
 	selProvider, _ := routeSnap["selectedProviderId"].(string)
 	routingMode, _ := routeSnap["routingMode"].(string)
 
@@ -141,7 +199,7 @@ func (s *Service) CreateTask(ctx context.Context, req CreateTaskRequest) (*Creat
 			(id, user_id, studio_id, label, status, credit_cost, model, provider, selected_provider_id,
 			 routing_mode, estimated_cost_usd, reservation_id, quote_id, idempotency_key,
 			 input_summary_json, metadata_json, created_at, updated_at)
-		VALUES ($1,$2,$3,$4,'queued',$5,$6,$7,$7,$8,$9,$10,$11,$12,$13::jsonb,$14::jsonb,$15,$15)`,
+		VALUES ($1,$2,$3,$4,'queued',$5,$6,$7::text,$7::text,$8,$9,$10,$11,$12,$13::jsonb,$14::jsonb,$15,$15)`,
 		creationID, req.UserID, studioID, nullableStr(req.Label), qCredits, modelID, nullableStr(selProvider),
 		nullableStr(routingMode), qEstCost, nullableStr(reservationID), req.QuoteID, nullableStr(req.IdempotencyKey),
 		string(paramsBytes), string(metaBytes), now)
@@ -222,36 +280,59 @@ func (s *Service) FinalizeSuccess(ctx context.Context, creationID, providerID, p
 	if s == nil || s.Pool == nil {
 		return errors.New("db unavailable")
 	}
-	var userID, modelID, studioID, status string
+	var userID, modelID, studioID, status, taskMode, prompt string
 	var reservationID, existingObjKey *string
 	var credits int
 	var estCostUSD *float64
 	err := s.Pool.QueryRow(ctx, `
-		SELECT user_id, COALESCE(model,''), studio_id, status, reservation_id, credit_cost, estimated_cost_usd, result_object_key
+		SELECT user_id, COALESCE(model,''), studio_id, status, reservation_id, credit_cost, estimated_cost_usd, result_object_key,
+		       COALESCE(input_summary_json->>'task_type',''), COALESCE(input_summary_json->>'prompt','')
 		FROM ai_studio.creations WHERE id = $1`, creationID).
-		Scan(&userID, &modelID, &studioID, &status, &reservationID, &credits, &estCostUSD, &existingObjKey)
+		Scan(&userID, &modelID, &studioID, &status, &reservationID, &credits, &estCostUSD, &existingObjKey, &taskMode, &prompt)
 	if err != nil {
 		return err
 	}
+	mediaKind := designMediaCreation(studioID, taskMode)
+	if taskMode == "t2i" && strings.HasPrefix(studioID, "workflow:") {
+		mediaKind = "image"
+	}
+	if studioID == "workshop" && taskMode == "i2i" {
+		mediaKind = "image"
+	}
+	if mediaKind != "" && status != "queued" && status != "processing" {
+		return nil
+	}
 
 	// Best-effort durable archival into object storage before finalizing so assets stay private & permanent.
-	var storedObjKey, storedProvider, storedLocID, storedBucket, storedRegion, storedMIME, storageErr string
+	var storedObjKey, storedProvider, storedLocID, storedBucket, storedRegion, storedMIME, storedChecksum, storageErr string
 	var storedSize int64
 	storageStatus := "pending"
+	keepDesignMedia := false
 	if resultURL != "" && s.Storage != nil && (existingObjKey == nil || *existingObjKey == "") {
 		assetType := "generated_image"
 		if strings.Contains(strings.ToLower(resultURL), ".mp4") || strings.Contains(strings.ToLower(modelID), "video") || strings.Contains(strings.ToLower(modelID), "seedance") {
 			assetType = "generated_video"
 		}
+		if mediaKind != "" {
+			assetType = mediaKind
+		}
 		ing, ingErr := s.Storage.IngestRemoteURL(ctx, resultURL, userID, assetType, creationID)
 		if ingErr == nil {
-			storageStatus = "archived"
+			if mediaKind != "" {
+				defer func() {
+					if !keepDesignMedia {
+						s.discardUnpublishedDesignMedia(ctx, ing)
+					}
+				}()
+			}
+			storageStatus = "ready"
 			storedObjKey = ing.ObjectKey
 			storedProvider = ing.Provider
 			storedLocID = ing.StorageLocationID
 			storedBucket = ing.Bucket
 			storedRegion = ing.Region
 			storedMIME = ing.MIMEType
+			storedChecksum = ing.Checksum
 			storedSize = ing.SizeBytes
 			if !strings.HasPrefix(resultURL, "http://") && !strings.HasPrefix(resultURL, "https://") {
 				resultURL = "/api/canvas-tools/result/" + creationID
@@ -260,8 +341,16 @@ func (s *Service) FinalizeSuccess(ctx context.Context, creationID, providerID, p
 			storageStatus = "failed"
 			storageErr = ingErr.Error()
 		}
-	} else if resultURL != "" {
-		storageStatus = "external"
+	} else if existingObjKey != nil && *existingObjKey != "" {
+		storageStatus = "ready"
+	}
+	if mediaKind != "" && (storedObjKey == "" || !designMediaTypeMatches(mediaKind, storedMIME)) {
+		if studioID == "workshop" {
+			return s.FinalizeFailure(ctx, creationID, "failed", providerID, providerReqID,
+				"WORKSHOP_IMAGE_ARCHIVE_FAILED", "无法保存工作坊输出，已释放本次预扣积分。")
+		}
+		return s.FinalizeFailure(ctx, creationID, "failed", providerID, providerReqID,
+			"DESIGN_MEDIA_ARCHIVE_FAILED", "无法保存生成素材，已释放本次预扣积分")
 	}
 
 	tx, err := s.Pool.Begin(ctx)
@@ -276,6 +365,26 @@ func (s *Service) FinalizeSuccess(ctx context.Context, creationID, providerID, p
 	}
 	if curStatus == "succeeded" {
 		return tx.Commit(ctx)
+	}
+	var assetID string
+	if mediaKind != "" {
+		if curStatus != "queued" && curStatus != "processing" {
+			return tx.Commit(ctx)
+		}
+		assetID = randomHexID("ast")
+		resultURL = "/api/assets/" + assetID + "/download?inline=1"
+		_, err = tx.Exec(ctx, `
+			INSERT INTO ai_studio.user_assets
+			  (id,user_id,creation_id,asset_type,kind,studio_id,title,prompt,model_id,
+			   source_type,source_provider,source_task_id,credit_cost,
+			   object_key,mime_type,file_size_bytes,checksum,storage_provider,storage_location_id,bucket,region)
+			VALUES ($1,$2,$3,$4,$4,$5,LEFT($6,160),$6,$7,'generation',NULLIF($8,''),$3,$9,
+			        $10,$11,$12,$13,$14,$15,$16,$17)`,
+			assetID, userID, creationID, mediaKind, studioID, prompt, modelID, providerID, credits,
+			storedObjKey, storedMIME, storedSize, storedChecksum, storedProvider, storedLocID, storedBucket, storedRegion)
+		if err != nil {
+			return err
+		}
 	}
 
 	if reservationID != nil && *reservationID != "" {
@@ -301,6 +410,7 @@ func (s *Service) FinalizeSuccess(ctx context.Context, creationID, providerID, p
 		    storage_size_bytes = CASE WHEN $13 > 0 THEN $13 ELSE storage_size_bytes END,
 		    storage_status = $14,
 		    storage_error_code = NULLIF($15,''),
+		    asset_id = COALESCE(NULLIF($16,''), asset_id),
 		    error_code = NULL,
 		    error_reason = NULL,
 		    next_poll_at = NULL,
@@ -309,7 +419,7 @@ func (s *Service) FinalizeSuccess(ctx context.Context, creationID, providerID, p
 		    updated_at = now()
 		WHERE id = $1`,
 		creationID, resultURL, resultText, providerID, providerReqID, actualCostUSD,
-		storedObjKey, storedProvider, storedLocID, storedBucket, storedRegion, storedMIME, storedSize, storageStatus, storageErr)
+		storedObjKey, storedProvider, storedLocID, storedBucket, storedRegion, storedMIME, storedSize, storageStatus, storageErr, assetID)
 	if err != nil {
 		return err
 	}
@@ -340,6 +450,7 @@ func (s *Service) FinalizeSuccess(ctx context.Context, creationID, providerID, p
 	if err := tx.Commit(ctx); err != nil {
 		return err
 	}
+	keepDesignMedia = true
 
 	if s.Events != nil {
 		_ = s.Events.PublishPG(ctx, s.Pool, queue.GenerationEvent{
@@ -387,6 +498,8 @@ func (s *Service) FinalizeFailure(ctx context.Context, creationID, targetStatus,
 		    provider_request_id = COALESCE(NULLIF($4,''), provider_request_id),
 		    error_code = COALESCE(NULLIF($5,''), 'GENERATION_FAILED'),
 		    error_reason = COALESCE(NULLIF($6,''), '生成任务失败'),
+		    storage_status = CASE WHEN $5::text = 'DESIGN_MEDIA_ARCHIVE_FAILED' THEN 'failed' ELSE storage_status END,
+		    storage_error_code = CASE WHEN $5::text = 'DESIGN_MEDIA_ARCHIVE_FAILED' THEN $5::text ELSE storage_error_code END,
 		    next_poll_at = NULL,
 		    poll_locked_until = NULL,
 		    completed_at = COALESCE(completed_at, now()),
@@ -416,14 +529,14 @@ func (s *Service) ProcessCreation(ctx context.Context, creationID string) error 
 	if s == nil || s.Pool == nil {
 		return errors.New("db unavailable")
 	}
-	var userID, modelID, status, prompt string
+	var userID, modelID, status, studioID, prompt string
 	var providerID, providerReqID, quoteID *string
 	var summaryRaw, metaRaw []byte
 	err := s.Pool.QueryRow(ctx, `
-		SELECT user_id, COALESCE(model,''), status, COALESCE(provider, selected_provider_id),
+		SELECT user_id, COALESCE(model,''), status, studio_id, COALESCE(provider, selected_provider_id),
 		       provider_request_id, quote_id, COALESCE(input_summary_json,'{}'::jsonb), COALESCE(metadata_json,'{}'::jsonb)
 		FROM ai_studio.creations WHERE id = $1`, creationID).
-		Scan(&userID, &modelID, &status, &providerID, &providerReqID, &quoteID, &summaryRaw, &metaRaw)
+		Scan(&userID, &modelID, &status, &studioID, &providerID, &providerReqID, &quoteID, &summaryRaw, &metaRaw)
 	if err != nil {
 		return err
 	}
@@ -437,15 +550,46 @@ func (s *Service) ProcessCreation(ctx context.Context, creationID string) error 
 			prompt = p
 		}
 	}
-	s.resolveKoyoAssetURLs(ctx, userID, params)
+	var designJobID string
+	mode, _ := params["task_type"].(string)
+	if designMediaCreation(studioID, mode) != "" || studioID == "workshop" {
+		designJobID = creationID
+	}
+	if err := s.resolveKoyoAssetURLs(ctx, userID, designJobID, params); err != nil {
+		return s.FinalizeFailure(ctx, creationID, "failed", "", "", "ASSET_REFERENCE_UNAVAILABLE", "参考素材不可用，请重新选择后再生成")
+	}
 
+	candidates := extractCandidatesFromMeta(meta)
+	contract, _ := params["workshop_contract"].(string)
+	if studioID == "workshop" {
+		delete(params, "workshop_contract")
+		delete(params, "workshop_tool")
+	}
 	// If provider_request_id is already present, poll the active provider instead of re-submitting.
 	if providerReqID != nil && *providerReqID != "" && providerID != nil && *providerID != "" {
-		return s.pollExistingCreation(ctx, creationID, userID, modelID, *providerID, *providerReqID, params)
+		endpoint := ""
+		if studioID == "workshop" && len(candidates) == 1 && candidates[0].ProviderID == *providerID {
+			modelID, endpoint = candidates[0].ProviderModelName, candidates[0].ProviderEndpoint
+		}
+		return s.pollExistingCreation(ctx, creationID, userID, modelID, endpoint, *providerID, *providerReqID, params)
 	}
 
 	// Build candidate list from quote route snapshot or live DB routes.
-	candidates := extractCandidatesFromMeta(meta)
+	if studioID == "workshop" {
+		versions, err := canvas.ListWorkshopVersions(ctx, s.Pool)
+		valid := false
+		if err == nil && len(candidates) == 1 {
+			for _, version := range versions {
+				if version.ModelID == modelID && version.VersionID == candidates[0].ProviderModelID && version.Contract == contract {
+					valid = true
+					break
+				}
+			}
+		}
+		if !valid {
+			return s.FinalizeFailure(ctx, creationID, "failed", "", "", "WORKSHOP_MODEL_VERSION_UNAVAILABLE", "工作坊模型版本已不可用，已释放本次预扣积分。")
+		}
+	}
 	if len(candidates) == 0 {
 		candidates, err = s.listEligibleRouteCandidates(ctx, modelID, DefaultUSDToCNY, params)
 		if err != nil || len(candidates) == 0 {
@@ -469,17 +613,31 @@ func (s *Service) ProcessCreation(ctx context.Context, creationID string) error 
 			IdempotencyKey:   creationID,
 		})
 		if err == nil {
-			s.recordAttempt(ctx, creationID, idx+1, cand.ProviderID, cand.ProviderModelName, res.ProviderRequestID, res.Status, "", "", res.ActualCostUSD)
-			if res.Status == "succeeded" {
-				return s.FinalizeSuccess(ctx, creationID, cand.ProviderID, res.ProviderRequestID, res.ResultURL, res.ResultText, res.ActualCostUSD)
+			attemptStatus := res.Status
+			if attemptStatus != "succeeded" && attemptStatus != "failed" && attemptStatus != "cancelled" {
+				attemptStatus = "processing"
 			}
-			_, _ = s.Pool.Exec(ctx, `
+			s.recordAttempt(ctx, creationID, idx+1, cand.ProviderID, cand.ProviderModelName, res.ProviderRequestID, attemptStatus, "", "", res.ActualCostUSD)
+			switch res.Status {
+			case "succeeded":
+				return s.FinalizeSuccess(ctx, creationID, cand.ProviderID, res.ProviderRequestID, res.ResultURL, res.ResultText, res.ActualCostUSD)
+			case "failed", "cancelled":
+				return s.FinalizeFailure(ctx, creationID, res.Status, cand.ProviderID, res.ProviderRequestID, "PROVIDER_TASK_FAILED", redactDesignReference(res.Error))
+			}
+			if strings.TrimSpace(res.ProviderRequestID) == "" {
+				return s.FinalizeFailure(ctx, creationID, "failed", cand.ProviderID, "", "PROVIDER_TASK_ID_MISSING", "供应商未返回可跟踪的任务编号")
+			}
+			updated, err := s.Pool.Exec(ctx, `
 				UPDATE ai_studio.creations
-				SET status = 'processing', provider = $2, selected_provider_id = $2,
+				SET status = 'processing', provider = $2::text, selected_provider_id = $2::text,
 				    provider_request_id = $3, next_poll_at = now() + interval '4 seconds',
 				    poll_locked_until = NULL, started_at = COALESCE(started_at, now()), updated_at = now()
-				WHERE id = $1`, creationID, cand.ProviderID, nullableStr(res.ProviderRequestID))
-			if s.Events != nil {
+				WHERE id = $1 AND status IN ('queued','processing') AND provider_request_id IS NULL`,
+				creationID, cand.ProviderID, res.ProviderRequestID)
+			if err != nil {
+				return fmt.Errorf("persist provider task reference: %w", err)
+			}
+			if updated.RowsAffected() > 0 && s.Events != nil {
 				_ = s.Events.PublishPG(ctx, s.Pool, queue.GenerationEvent{
 					Type: "generation.processing", UserID: userID, TaskID: creationID, Status: "processing", Progress: 10,
 				})
@@ -491,6 +649,7 @@ func (s *Service) ProcessCreation(ctx context.Context, creationID string) error 
 		if !errors.As(err, &pe) {
 			pe = ai.NormalizeError(cand.ProviderID, err, 0, nil)
 		}
+		pe.Message = redactDesignReference(pe.Message)
 		lastErr = pe
 		s.recordAttempt(ctx, creationID, idx+1, cand.ProviderID, cand.ProviderModelName, pe.ProviderRequestID, "failed", string(pe.Code), pe.Message, pe.ActualCostUSD)
 		if !pe.Retryable {
@@ -507,13 +666,13 @@ func (s *Service) ProcessCreation(ctx context.Context, creationID string) error 
 	return s.FinalizeFailure(ctx, creationID, "failed", provID, "", errCode, errMsg)
 }
 
-func (s *Service) pollExistingCreation(ctx context.Context, creationID, userID, modelID, providerID, providerReqID string, params map[string]any) error {
+func (s *Service) pollExistingCreation(ctx context.Context, creationID, userID, modelID, endpoint, providerID, providerReqID string, params map[string]any) error {
 	adapter, _ := ai.ResolveAndBuild(ctx, s.Pool, s.Config, providerID, "")
-	res, err := adapter.GetTask(ctx, providerReqID, ai.TaskRequest{ProviderModelID: modelID, Parameters: params})
+	res, err := adapter.GetTask(ctx, providerReqID, ai.TaskRequest{ProviderModelID: modelID, ProviderEndpoint: endpoint, Parameters: params})
 	if err != nil {
 		var pe *ai.ProviderError
 		if errors.As(err, &pe) && (pe.TerminalFailure || !pe.Retryable) {
-			return s.FinalizeFailure(ctx, creationID, "failed", providerID, providerReqID, string(pe.Code), pe.Message)
+			return s.FinalizeFailure(ctx, creationID, "failed", providerID, providerReqID, string(pe.Code), redactDesignReference(pe.Message))
 		}
 		// Keep processing on transient poll error; push next_poll_at forward.
 		_, _ = s.Pool.Exec(ctx, `
@@ -530,7 +689,7 @@ func (s *Service) pollExistingCreation(ctx context.Context, creationID, userID, 
 	case "succeeded":
 		return s.FinalizeSuccess(ctx, creationID, providerID, providerReqID, res.ResultURL, res.ResultText, res.ActualCostUSD)
 	case "failed", "cancelled":
-		return s.FinalizeFailure(ctx, creationID, res.Status, providerID, providerReqID, "PROVIDER_TASK_FAILED", res.Error)
+		return s.FinalizeFailure(ctx, creationID, res.Status, providerID, providerReqID, "PROVIDER_TASK_FAILED", redactDesignReference(res.Error))
 	default:
 		_, _ = s.Pool.Exec(ctx, `
 			UPDATE ai_studio.creations SET next_poll_at = now() + interval '5 seconds', poll_locked_until = NULL, updated_at = now() WHERE id = $1`, creationID)
@@ -561,54 +720,76 @@ func extractCandidatesFromMeta(meta map[string]any) []RouteCandidate {
 }
 
 var reKoyoAssetRef = regexp.MustCompile(`^koyo-asset:([A-Za-z0-9_-]{1,160})$`)
+var reAssetDownloadRef = regexp.MustCompile(`^/api/assets/([A-Za-z0-9_-]{1,160})/download(?:\?inline=1)?$`)
+var errAssetReferenceUnavailable = errors.New("asset reference unavailable")
 
-func (s *Service) resolveKoyoAssetURLs(ctx context.Context, userID string, params map[string]any) {
-	if s.Storage == nil || params == nil {
-		return
-	}
-	resolveOne := func(val string) string {
-		m := reKoyoAssetRef.FindStringSubmatch(strings.TrimSpace(val))
+func (s *Service) resolveKoyoAssetURLs(ctx context.Context, userID, designJobID string, params map[string]any) error {
+	resolveOne := func(val string) (string, error) {
+		clean := strings.TrimSpace(val)
+		m := reKoyoAssetRef.FindStringSubmatch(clean)
 		if len(m) != 2 {
-			return val
+			m = reAssetDownloadRef.FindStringSubmatch(clean)
+		}
+		if len(m) != 2 {
+			return val, nil
+		}
+		if s.Storage == nil {
+			return "", errAssetReferenceUnavailable
 		}
 		var prov, locID, bucket, region, objKey sqlNullStringVal
 		err := s.Pool.QueryRow(ctx, `
 			SELECT COALESCE(storage_provider,''), COALESCE(storage_location_id,''),
-			       COALESCE(storage_bucket,''), COALESCE(storage_region,''), COALESCE(object_key,'')
+			       COALESCE(bucket,''), COALESCE(region,''), COALESCE(object_key,'')
 			FROM ai_studio.user_assets WHERE id = $1 AND user_id = $2 AND deleted_at IS NULL`, m[1], userID).
 			Scan(&prov.s, &locID.s, &bucket.s, &region.s, &objKey.s)
 		if err != nil || objKey.s == "" {
-			return val
+			return "", errAssetReferenceUnavailable
+		}
+		if designJobID != "" && storage.NormalizeProvider(prov.s) == "local" {
+			return s.localDesignReferenceURL(designJobID, m[1])
 		}
 		if signed, err := s.Storage.SignedURL(ctx, prov.s, locID.s, bucket.s, region.s, objKey.s, "inline"); err == nil && signed != "" {
 			if strings.HasPrefix(signed, "http://") || strings.HasPrefix(signed, "https://") {
-				return signed
+				return signed, nil
 			}
 			if pub := strings.TrimRight(s.Config.PublicAppURL, "/"); pub != "" && strings.HasPrefix(signed, "/") {
-				return pub + signed
+				return pub + signed, nil
 			}
 		}
-		return val
+		return "", errAssetReferenceUnavailable
 	}
-	for _, k := range []string{"image_url", "imageUrl", "input_image", "first_frame_image"} {
+	for _, k := range []string{"image_url", "imageUrl", "input_image", "first_frame_image", "first_frame_url", "end_frame_url", "audio_url", "video_url"} {
 		if v, ok := params[k].(string); ok {
-			params[k] = resolveOne(v)
+			resolved, err := resolveOne(v)
+			if err != nil {
+				return err
+			}
+			params[k] = resolved
 		}
 	}
-	for _, k := range []string{"image_urls", "reference_images"} {
+	for _, k := range []string{"image_urls", "reference_images", "reference_urls"} {
 		switch arr := params[k].(type) {
 		case []any:
 			for i, item := range arr {
 				if str, ok := item.(string); ok {
-					arr[i] = resolveOne(str)
+					resolved, err := resolveOne(str)
+					if err != nil {
+						return err
+					}
+					arr[i] = resolved
 				}
 			}
 		case []string:
 			for i, item := range arr {
-				arr[i] = resolveOne(item)
+				resolved, err := resolveOne(item)
+				if err != nil {
+					return err
+				}
+				arr[i] = resolved
 			}
 		}
 	}
+	return nil
 }
 
 type sqlNullStringVal struct{ s string }

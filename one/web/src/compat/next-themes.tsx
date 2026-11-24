@@ -1,4 +1,4 @@
-import React, { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
+import React, { createContext, useCallback, useContext, useLayoutEffect, useMemo, useState } from 'react';
 
 interface ThemeContextValue {
   theme?: string;
@@ -25,6 +25,10 @@ export interface ThemeProviderProps {
   storageKey?: string;
 }
 
+function normalizeTheme(value: string | null | undefined): 'dark' | 'light' {
+  return value === 'light' ? 'light' : 'dark';
+}
+
 export function ThemeProvider({
   children,
   attribute = 'class',
@@ -33,20 +37,20 @@ export function ThemeProvider({
   storageKey = 'theme',
 }: ThemeProviderProps) {
   const [theme, setThemeState] = useState<string>(() => {
-    if (forcedTheme) return forcedTheme;
+    if (forcedTheme) return normalizeTheme(forcedTheme);
     if (typeof window !== 'undefined') {
       try {
-        return window.localStorage.getItem(storageKey) || defaultTheme;
+        return normalizeTheme(window.localStorage.getItem(storageKey) || defaultTheme);
       } catch {
-        return defaultTheme;
+        return normalizeTheme(defaultTheme);
       }
     }
-    return defaultTheme;
+    return normalizeTheme(defaultTheme);
   });
 
-  const resolvedTheme = forcedTheme || (theme === 'system' ? 'dark' : theme) || 'dark';
+  const resolvedTheme = normalizeTheme(forcedTheme || theme);
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     if (typeof document === 'undefined') return;
     const root = document.documentElement;
     if (attribute === 'class') {
@@ -55,16 +59,19 @@ export function ThemeProvider({
     } else if (attribute) {
       root.setAttribute(attribute, resolvedTheme);
     }
-    root.style.colorScheme = resolvedTheme === 'light' ? 'light' : 'dark';
+    root.dataset.theme = resolvedTheme;
+    root.style.colorScheme = resolvedTheme;
+    document.querySelector('meta[name="theme-color"]')?.setAttribute('content', resolvedTheme === 'light' ? '#ffffff' : '#030303');
   }, [attribute, resolvedTheme]);
 
   const setTheme = useCallback(
     (next: string) => {
       if (forcedTheme) return;
-      setThemeState(next);
+      const normalized = normalizeTheme(next);
+      setThemeState(normalized);
       if (typeof window !== 'undefined') {
         try {
-          window.localStorage.setItem(storageKey, next);
+          window.localStorage.setItem(storageKey, normalized);
         } catch {
           // ignore storage failure
         }

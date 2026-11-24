@@ -8,6 +8,7 @@ import { useUserSession } from '@/lib/hooks/useUserSession';
 import AssetLibraryWorkspace from '@/components/asset-library/AssetLibraryWorkspace';
 import StudioHeader from '@/components/site/StudioHeader';
 import AuthModal from '@/components/AuthModal';
+import CanvasProjectRecord from './CanvasProjectRecord';
 
 const ASSET_CENTER_COPY = {
   en: {
@@ -175,6 +176,7 @@ export default function JimengAssetCenter({ locale = 'en', initialUser = null, a
   return (
     <div className="min-h-screen bg-base text-ink flex flex-col overflow-hidden asset-library-shell">
       <StudioHeader locale={activeLocale} initialUser={user} />
+      <CanvasProjectRecord key={user.id} owner={user.id} locale={activeLocale} />
 
       <div className="flex-1 min-h-0 flex flex-col overflow-hidden">
         <AssetLibraryWorkspace

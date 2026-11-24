@@ -169,6 +169,7 @@ export function AssetDrawer({ asset, onClose, onCopy, onEdit, onDownload }) {
   const copy = useAssetLibraryCopy();
   const facts = asset ? assetArchiveFacts(asset, copy) : [];
   const KindIcon = asset ? (ASSET_KIND_ICONS[asset.kind] || FileText) : Clapperboard;
+  const isTrashed = asset?.status === 'trash';
 
   return (
     <Drawer rootClassName="asset-library-drawer-root asset-library-overlay-root" className="library-drawer asset-library-drawer" title={copy.assetArchive} open={Boolean(asset)} size={400} onClose={onClose}>
@@ -187,7 +188,9 @@ export function AssetDrawer({ asset, onClose, onCopy, onEdit, onDownload }) {
             </div>
           </div>
 
-          {asset.kind === 'entity' && (asset.category === 'environment' || asset.category === 'prop') ? (
+          {isTrashed && asset.kind !== 'text' && asset.kind !== 'entity' ? (
+            <div className="asset-archive-preview-note">{copy.trashDescription}</div>
+          ) : asset.kind === 'entity' && (asset.category === 'environment' || asset.category === 'prop') ? (
             <div className="asset-archive-preview">
               <div className="asset-archive-preview-note">
                 <p>{String(asset.data?.definition?.description || copy.pendingImage)}</p>
@@ -241,19 +244,19 @@ export function AssetDrawer({ asset, onClose, onCopy, onEdit, onDownload }) {
             </div>
           ) : null}
 
-          <div className="asset-archive-actions">
+          {!isTrashed && <div className="asset-archive-actions">
             {asset.kind === 'text' ? (
               <Button type="primary" icon={<Copy />} onClick={() => onCopy(asset)}>{copy.copyText}</Button>
             ) : asset.kind !== 'entity' && asset.data?.url ? (
               <Button type="primary" icon={<Download />} onClick={() => onDownload?.(asset)}>{copy.downloadSource}</Button>
             ) : null}
-            {asset.kind === 'text' || asset.kind === 'entity' ? (
+            {asset.kind !== 'canvas' ? (
               <Button icon={<PencilLine />} onClick={() => onEdit?.(asset)}>{copy.edit}</Button>
             ) : null}
             {asset.kind !== 'text' && asset.kind !== 'entity' && asset.data?.url ? (
               <Button icon={<Maximize2 />} onClick={() => window.open(asset.data.url, '_blank', 'noopener,noreferrer')}>{copy.openSource}</Button>
             ) : null}
-          </div>
+          </div>}
         </div>
       ) : null}
     </Drawer>

@@ -866,7 +866,6 @@ export default function LayersStudio({
     if (isDemoImage(currentImageUrl)) {
       setIsProcessing(true);
       setProgress(15);
-      onGenerationStart?.();
 
       let p = 15;
       const interval = setInterval(() => {
@@ -888,12 +887,10 @@ export default function LayersStudio({
             ),
           );
           setIsProcessing(false);
-          onGenerationComplete?.({ images: DEFAULT_SAMPLE_LAYERS });
-          onGenerationEnd?.();
         } else {
           setProgress(p);
         }
-      }, 200);
+      }, 100);
       return;
     }
 

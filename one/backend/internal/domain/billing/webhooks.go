@@ -267,45 +267,56 @@ func (s *Service) HandleStripeWebhook(ctx context.Context, rawBody []byte, sigHe
 	if err := json.Unmarshal(rawBody, &ev); err != nil || ev.ID == "" {
 		return nil, svcErr(http.StatusBadRequest, "INVALID_EVENT", "无效的事件数据")
 	}
-	obj := ev.Data.Object
-	meta, _ := obj["metadata"].(map[string]any)
-	orderID, _ := meta["order_id"].(string)
-	isRefund := ev.Type == "charge.refunded" || ev.Type == "refund.updated"
-	isPaidEvent := ev.Type == "checkout.session.completed" || ev.Type == "payment_intent.succeeded" || ev.Type == "invoice.paid" || ev.Type == "invoice.payment_succeeded"
-	if ev.Type == "checkout.session.completed" {
-		if ps, ok := obj["payment_status"].(string); ok && ps == "unpaid" {
-			isPaidEvent = false
-		}
+	in, eligible := stripeWebhookInput(ev.ID, ev.Type, ev.Data.Object)
+	if !eligible {
+		return &WebhookDispatchResult{Received: true, Action: "ignored_" + ev.Type, OrderID: in.OrderID}, nil
 	}
-	if !isRefund && !isPaidEvent {
-		return &WebhookDispatchResult{Received: true, Action: "ignored_" + ev.Type, OrderID: orderID}, nil
-	}
-	paidAmt := int64(toFloat(obj["amount_total"]))
-	if paidAmt == 0 {
-		paidAmt = int64(toFloat(obj["amount_received"]))
-	}
-	currency, _ := obj["currency"].(string)
-	providerPayID, _ := obj["payment_intent"].(string)
-	if providerPayID == "" {
-		providerPayID, _ = obj["id"].(string)
-	}
-	providerOrderID, _ := obj["id"].(string)
-	providerSubID, _ := obj["subscription"].(string)
+	return s.dispatchWebhookToRepo(ctx, in)
+}
 
-	return s.dispatchWebhookToRepo(ctx, WebhookFulfillmentInput{
-		Provider:               "stripe",
-		EventID:                ev.ID,
-		EventType:              ev.Type,
-		OrderID:                orderID,
-		ProviderOrderID:        providerOrderID,
-		ProviderPaymentID:      providerPayID,
-		ProviderSubscriptionID: providerSubID,
-		PaidAmountMinor:        paidAmt,
-		Currency:               strings.ToUpper(currency),
-		IsRefund:               isRefund,
-		RawPayload:             obj,
-		Headers:                map[string]string{"stripe-signature": sigHeader},
-	})
+func stripeWebhookInput(eventID, eventType string, obj map[string]any) (WebhookFulfillmentInput, bool) {
+	meta, _ := obj["metadata"].(map[string]any)
+	providerID := strFromAny(obj["id"])
+	paymentID := strFromAny(obj["payment_intent"])
+	in := WebhookFulfillmentInput{
+		Provider: "stripe", EventID: eventID, EventType: eventType,
+		OrderID: strFromAny(meta["order_id"]), ProviderOrderID: providerID,
+		ProviderPaymentID:      firstStr(paymentID, providerID),
+		ProviderSubscriptionID: strFromAny(obj["subscription"]),
+		Currency:               strings.ToUpper(strFromAny(obj["currency"])), RawPayload: obj,
+	}
+	switch eventType {
+	case "checkout.session.completed", "checkout.session.async_payment_succeeded":
+		if strFromAny(obj["payment_status"]) != "paid" {
+			return in, false
+		}
+		in.PaidAmountMinor = int64(toFloat(obj["amount_total"]))
+	case "payment_intent.succeeded":
+		in.ProviderOrderID = ""
+		in.PaidAmountMinor = int64(toFloat(obj["amount_received"]))
+	case "invoice.paid", "invoice.payment_succeeded":
+		in.ProviderOrderID = ""
+		in.PaidAmountMinor = int64(toFloat(obj["amount_paid"]))
+	case "charge.refunded", "refund.updated":
+		in.IsRefund = true
+		in.OriginalPaymentID = paymentID
+		in.ProviderPaymentID = providerID
+		in.ProviderOrderID = ""
+		if eventType == "charge.refunded" {
+			if obj["refunded"] != true {
+				return in, false
+			}
+			in.PaidAmountMinor = int64(toFloat(obj["amount_refunded"]))
+		} else {
+			if strFromAny(obj["status"]) != "succeeded" {
+				return in, false
+			}
+			in.PaidAmountMinor = int64(toFloat(obj["amount"]))
+		}
+	default:
+		return in, false
+	}
+	return in, in.PaidAmountMinor > 0 && in.Currency != ""
 }
 
 func (s *Service) HandleAlipayWebhook(ctx context.Context, rawBody []byte) (*WebhookDispatchResult, error) {

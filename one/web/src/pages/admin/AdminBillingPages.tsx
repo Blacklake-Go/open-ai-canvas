@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import { useTranslations } from 'next-intl';
 import { useLocation } from 'react-router';
 import {
   Card,
@@ -34,13 +35,6 @@ function formatDate(value?: string | null) {
     ? new Date(value).toLocaleString('zh-CN', { timeZone: 'Asia/Shanghai', hour12: false })
     : '—';
 }
-
-const DEFAULT_SUBSCRIPTION_FAQ_CONFIG = {
-  notice: '所有会员套餐均支持随时升级或取消，算力随周期自动充值发放，未生成成功系统自动秒级返还。',
-  supportEmail: 'support@Supdance.com',
-  invoiceNotice: '已支付订单可在个人中心“支付凭证”中预览并下载；企业开票请在个人中心提交开票信息。',
-  items: [],
-};
 
 export function AdminOrdersPage() {
   useDocumentTitle('订单与支付记录 | SupDance 管理后台');
@@ -118,8 +112,9 @@ export function AdminOrdersPage() {
             method="POST"
             fields={[{ name: 'reason', placeholder: '退款原因说明', required: true }]}
             label="退款"
+            requiredPermission={PERMISSIONS.billingWrite}
             tone="danger"
-            confirmMessage="确认对该订单执行退款？此操作将立即变更订单状态并追加审计记录。"
+            confirmMessage="确认申请退款？支付渠道确认成功后，系统会更新订单与账务记录。"
           />
         ) : row.status === 'refunded' ? (
           <span className="text-xs text-white/30">已退款</span>
@@ -565,35 +560,26 @@ export function AdminCouponsPage() {
 }
 
 export function AdminPlansPage() {
-  useDocumentTitle('订阅套餐管理 | SupDance 管理后台');
-  const { redirectEl } = useAdminPermissionGuard(PERMISSIONS.plansRead);
-  const { data, loading } = useAdminData<any>('/api/admin/plans');
+  const t = useTranslations('adminPlans');
+  useDocumentTitle(`${t('title')} | SupDance`);
+  const { user, redirectEl } = useAdminPermissionGuard(PERMISSIONS.plansRead);
+  const { data, loading, error, reload } = useAdminData<any[]>(redirectEl ? null : '/api/admin/plans');
 
   if (redirectEl) return redirectEl;
 
-  const plans = Array.isArray(data) ? data : data?.plans || data?.rows || [];
-  return loading ? (
-    <div className="h-48 animate-pulse rounded-2xl bg-white/[0.03]" />
-  ) : (
-    <PlansManagerClient initialPlans={plans} />
+  return (
+    <PlansManagerClient initialPlans={data || []} loading={loading} error={error}
+      reload={reload} canWrite={hasPermission(user?.role, PERMISSIONS.plansWrite)} />
   );
 }
 
 export function AdminSubscriptionFaqPage() {
   useDocumentTitle('订阅说明与QA问答管理 | SupDance 运营后台');
-  const { redirectEl } = useAdminPermissionGuard(PERMISSIONS.plansRead);
-  const { data, loading } = useAdminData<any>('/api/admin/subscription-faq');
+  const { user, redirectEl } = useAdminPermissionGuard(PERMISSIONS.plansRead);
 
   if (redirectEl) return redirectEl;
 
-  return loading ? (
-    <div className="h-48 animate-pulse rounded-2xl bg-white/[0.03]" />
-  ) : (
-    <SubscriptionFaqManagerClient
-      initialConfig={data?.config || DEFAULT_SUBSCRIPTION_FAQ_CONFIG}
-      defaultConfig={data?.defaults || DEFAULT_SUBSCRIPTION_FAQ_CONFIG}
-    />
-  );
+  return <SubscriptionFaqManagerClient canWrite={hasPermission(user?.role, PERMISSIONS.plansWrite)} />;
 }
 
 const PERIOD_LABELS: Record<string, string> = {
