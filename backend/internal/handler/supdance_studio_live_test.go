@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"crypto/rand"
+	"crypto/sha256"
 	"encoding/base64"
 	"encoding/hex"
 	"encoding/json"
@@ -41,6 +42,7 @@ func TestSupdanceStudioLiveBridge(t *testing.T) {
 	if bun == "" {
 		bun = "bun"
 	}
+	clip := makeStudioFixtureVideo(t)
 	t.Setenv("CANVAS_ALLOWED_PRIVATE_UPSTREAM_HOSTS", "127.0.0.1")
 	gin.SetMode(gin.TestMode)
 	dir := t.TempDir()
@@ -61,8 +63,56 @@ func TestSupdanceStudioLiveBridge(t *testing.T) {
 		t.Fatal(err)
 	}
 	const fixtureReference = "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+aJ1sAAAAASUVORK5CYII="
-	var productCalls, shotCalls, failedCalls atomic.Int32
+	var productCalls, partialCalls, shotCalls, failedCalls atomic.Int32
+	var videoCreates, videoPolls, videoFiles atomic.Int32
 	upstream := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
+		switch req.Method + " " + req.URL.Path {
+		case "POST /v1beta/models/veo-fixture:predictLongRunning":
+			videoCreates.Add(1)
+			var input struct {
+				Instances []struct {
+					Prompt string
+					Image  struct {
+						InlineData struct {
+							Data     string
+							MimeType string
+						}
+					}
+				}
+				Parameters struct {
+					AspectRatio     string
+					DurationSeconds int
+					Resolution      string
+				}
+			}
+			if err := json.NewDecoder(req.Body).Decode(&input); err != nil || len(input.Instances) != 1 {
+				t.Errorf("invalid video create request: %v", err)
+				w.WriteHeader(http.StatusBadRequest)
+				return
+			}
+			image := input.Instances[0].Image.InlineData
+			parameters := input.Parameters
+			if image.MimeType != "image/png" || image.Data != base64.StdEncoding.EncodeToString(picture.Bytes()) ||
+				input.Instances[0].Prompt != "The courier steps off the train." || parameters.DurationSeconds != 4 ||
+				parameters.AspectRatio != "16:9" || parameters.Resolution != "720p" {
+				t.Errorf("video did not receive its role reference and requested parameters: %+v, has image=%t", parameters, image.Data != "")
+				w.WriteHeader(http.StatusBadRequest)
+				return
+			}
+			w.Header().Set("Content-Type", "application/json")
+			_, _ = io.WriteString(w, `{"name":"operations/video-fixture"}`)
+			return
+		case "GET /v1beta/operations/video-fixture":
+			videoPolls.Add(1)
+			w.Header().Set("Content-Type", "application/json")
+			_, _ = io.WriteString(w, `{"done":true,"response":{"videos":["http://`+req.Host+`/video-fixture.mp4"]}}`)
+			return
+		case "GET /video-fixture.mp4":
+			videoFiles.Add(1)
+			w.Header().Set("Content-Type", "video/mp4")
+			_, _ = w.Write(clip)
+			return
+		}
 		if req.Method != http.MethodPost || req.URL.Path != "/v1/images/edits" {
 			t.Errorf("unexpected upstream request %s %s", req.Method, req.URL.Path)
 			w.WriteHeader(http.StatusBadRequest)
@@ -89,6 +139,8 @@ func TestSupdanceStudioLiveBridge(t *testing.T) {
 		switch {
 		case err == nil && strings.Contains(prompt, "solid white background") && base64.StdEncoding.EncodeToString(data) == fixtureReference:
 			productCalls.Add(1)
+		case err == nil && strings.Contains(prompt, "requested scene") && base64.StdEncoding.EncodeToString(data) == fixtureReference && req.FormValue("n") == "2":
+			partialCalls.Add(1)
 		case err == nil && prompt == "Courier portrait for the first shot." && bytes.Equal(data, picture.Bytes()):
 			shotCalls.Add(1)
 		case err == nil && prompt == "Reject this test frame." && bytes.Equal(data, picture.Bytes()):
@@ -146,14 +198,16 @@ func TestSupdanceStudioLiveBridge(t *testing.T) {
 	RegisterSupdanceOpenAIBridgeRoutes(api, svc)
 	bridge := httptest.NewServer(router)
 	t.Cleanup(bridge.Close)
+	videoDigest := sha256.Sum256(clip)
 	request, err := json.Marshal(map[string]string{
 		"url": bridge.URL + "/api/supdance-openai", "secret": secretHex,
 		"projectId": project.ID, "castId": cast.ID, "castAssetId": castAsset.ID,
+		"videoSHA256": hex.EncodeToString(videoDigest[:]),
 	})
 	if err != nil {
 		t.Fatal(err)
 	}
-	ctx, cancel := context.WithTimeout(context.Background(), 45*time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), 80*time.Second)
 	defer cancel()
 	cmd := exec.CommandContext(ctx, bun, "test/studio-live.ts")
 	cmd.Dir = root
@@ -166,25 +220,48 @@ func TestSupdanceStudioLiveBridge(t *testing.T) {
 	if product, shot := productCalls.Load(), shotCalls.Load(); product != 1 || shot != 1 {
 		t.Errorf("expected one worker request per operation (product=%d, shot=%d)", product, shot)
 	}
+	if partialCalls.Load() != 1 {
+		t.Error("expected one request for a multi-image product scene")
+	}
 	if failedCalls.Load() == 0 {
 		t.Error("the failed task did not reach the fixture")
+	}
+	if creates, polls, files := videoCreates.Load(), videoPolls.Load(), videoFiles.Load(); creates != 1 || polls != 1 || files != 1 {
+		t.Errorf("expected one video create, status poll, and result fetch, got %d/%d/%d", creates, polls, files)
 	}
 	var orders []model.BillingOrder
 	if err := db.Where("user_id = ?", "alice").Find(&orders).Error; err != nil {
 		t.Fatal(err)
 	}
-	settled, refunded := 0, 0
+	settledImages, settledVideos, refunded := 0, 0, 0
 	for _, order := range orders {
 		switch {
 		case order.Status == model.BillingStatusSettled && order.ActualAmountMicrocredits == 100:
-			settled++
+			settledImages++
+		case order.Status == model.BillingStatusSettled && order.ActualAmountMicrocredits == 200:
+			settledVideos++
 		case order.Status == model.BillingStatusRefunded && order.ActualAmountMicrocredits == 0:
 			refunded++
 		}
 	}
-	if len(orders) != 3 || settled != 2 || refunded != 1 {
-		t.Fatalf("expected two settled orders of 100 test microcredits and one refund, got %d orders (%d settled, %d refunded)", len(orders), settled, refunded)
+	if len(orders) != 5 || settledImages != 3 || settledVideos != 1 || refunded != 1 {
+		t.Fatalf("expected three image settlements, one video settlement and one refund, got %d orders (%d/%d/%d)", len(orders), settledImages, settledVideos, refunded)
 	}
+}
+
+func makeStudioFixtureVideo(t *testing.T) []byte {
+	t.Helper()
+	ctx, cancel := context.WithTimeout(t.Context(), 10*time.Second)
+	defer cancel()
+	cmd := exec.CommandContext(ctx, "ffmpeg", "-loglevel", "error", "-f", "lavfi", "-i", "color=blue:s=32x32:r=2", "-t", "4",
+		"-c:v", "libx264", "-threads", "1", "-pix_fmt", "yuv420p", "-movflags", "frag_keyframe+empty_moov", "-f", "mp4", "pipe:1")
+	var diagnostics bytes.Buffer
+	cmd.Stderr = &diagnostics
+	clip, err := cmd.Output()
+	if err != nil {
+		t.Fatalf("create synthetic test video with ffmpeg: %v: %s", err, diagnostics.String())
+	}
+	return clip
 }
 
 func seedStudioLiveModels(t *testing.T, db *gorm.DB, upstream string) {
@@ -196,6 +273,19 @@ func seedStudioLiveModels(t *testing.T, db *gorm.DB, upstream string) {
 	profile.Image.Size.AllowCustom = false
 	profile.Image.Size.Presets = nil
 	spec, err := service.CapabilitySpecFromModelCapabilityConfig(profile, "image")
+	if err != nil {
+		t.Fatal(err)
+	}
+	const fixtureVideoModel = "veo-fixture"
+	const fixtureVideoProtocol = model.ChannelInterfaceGeminiVeo
+	videoProfile := service.DefaultModelCapabilityConfigForModel(string(fixtureVideoProtocol), fixtureVideoModel)
+	videoProfile.Video.References.MaxImages = 1
+	videoProfile.Video.Duration.Selection = "enum"
+	videoProfile.Video.Duration.Values = []int{4}
+	videoProfile.Video.Duration.Default = 4
+	videoProfile.Video.Ratios = []string{"16:9", "9:16"}
+	videoProfile.Video.Resolutions = []string{"720p"}
+	videoSpec, err := service.CapabilitySpecFromModelCapabilityConfig(videoProfile, "video")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -211,13 +301,23 @@ func seedStudioLiveModels(t *testing.T, db *gorm.DB, upstream string) {
 		&model.User{ID: "alice", Username: "alice", Email: "alice@example.invalid", Role: model.UserRoleUser, Status: model.UserStatusActive},
 		&model.User{ID: "bob", Username: "bob", Email: "bob@example.invalid", Role: model.UserRoleUser, Status: model.UserStatusActive},
 		&model.CreditAccount{UserID: "alice", AvailableMicrocredits: 10_000},
-		&model.SystemSetting{Key: "feature_availability", ValueJSON: `{"frontendModelsEnabled":true,"shortDramaEnabled":true,"ecommerceEnabled":true,"imageWorkbenchEnabled":true,"creditsEnabled":true}`},
+		&model.SystemSetting{Key: "feature_availability", ValueJSON: `{"frontendModelsEnabled":true,"shortDramaEnabled":true,"ecommerceEnabled":true,"imageWorkbenchEnabled":true,"videoWorkbenchEnabled":true,"creditsEnabled":true}`},
 		&model.ModelChannel{ID: "studio-e2e-channel", Scope: model.ChannelScopeSystem, Enabled: true, Name: "Local test provider", BaseURL: upstream, APIKey: "fixture-provider"},
 		&model.ChannelModel{ID: "studio-e2e-channel-model", ChannelID: "studio-e2e-channel", ModelKey: fixtureModel, ProviderModelKey: fixtureModel, Capability: "image", Protocol: model.ChannelInterfaceOpenAIImage, Enabled: true, CapabilityConfigJSON: encode(profile), BillingMode: "fixed_request", PriceConfigured: true},
 		&model.ChannelModelPriceTier{ID: "studio-e2e-tier", ChannelModelID: "studio-e2e-channel-model", SelectorKey: "{}", SelectorJSON: "{}", BillingMode: "fixed_request", UnitPriceMicrocredits: 100, PriceConfigured: true, Enabled: true},
 		&model.LogicalModel{ID: "studio-e2e-image", Code: "studio-e2e-image", Name: "Local test image", Capability: "image", Enabled: true, ActiveRevisionID: "studio-e2e-rev", PricePolicy: "channel", BillingMode: "fixed_request"},
 		&model.LogicalModelRevision{ID: "studio-e2e-rev", LogicalModelID: "studio-e2e-image", Version: 1, CapabilitySpecJSON: encode(spec), DefaultOptionsJSON: "{}"},
 		&model.LogicalModelRoute{ID: "studio-e2e-route", LogicalModelRevisionID: "studio-e2e-rev", ChannelModelID: "studio-e2e-channel-model", Enabled: true, Weight: 1},
+		&model.ChannelModel{ID: "studio-e2e-video-channel-model", ChannelID: "studio-e2e-channel", ModelKey: fixtureVideoModel, ProviderModelKey: fixtureVideoModel, Capability: "video", Protocol: fixtureVideoProtocol, Enabled: true, CapabilityConfigJSON: encode(videoProfile), BillingMode: "per_second", PriceConfigured: true},
+		&model.ChannelModelPriceTier{ID: "studio-e2e-video-tier", ChannelModelID: "studio-e2e-video-channel-model", SelectorKey: "{}", SelectorJSON: "{}", BillingMode: "per_second", UnitPriceMicrocredits: 50, PriceConfigured: true, Enabled: true},
+		&model.LogicalModel{ID: "studio-e2e-video", Code: "studio-e2e-video", Name: "Local test video", Capability: "video", Enabled: true, ActiveRevisionID: "studio-e2e-video-rev", PricePolicy: "channel", BillingMode: "per_second"},
+		&model.LogicalModelRevision{ID: "studio-e2e-video-rev", LogicalModelID: "studio-e2e-video", Version: 1, CapabilitySpecJSON: encode(videoSpec), DefaultOptionsJSON: "{}"},
+		&model.LogicalModelRoute{ID: "studio-e2e-video-route", LogicalModelRevisionID: "studio-e2e-video-rev", ChannelModelID: "studio-e2e-video-channel-model", Enabled: true, Weight: 1},
+		&model.ChannelModel{ID: "studio-e2e-missing-channel-model", ChannelID: "studio-e2e-channel", ModelKey: "missing-video", Capability: "video", Protocol: "custom-video", Enabled: true, CapabilityConfigJSON: encode(videoProfile), BillingMode: "per_second", PriceConfigured: true},
+		&model.ChannelModelPriceTier{ID: "studio-e2e-missing-tier", ChannelModelID: "studio-e2e-missing-channel-model", SelectorKey: "{}", SelectorJSON: "{}", BillingMode: "per_second", UnitPriceMicrocredits: 50, PriceConfigured: true, Enabled: true},
+		&model.LogicalModel{ID: "studio-e2e-missing", Code: "studio-e2e-missing", Name: "Missing video protocol", Capability: "video", Enabled: true, ActiveRevisionID: "studio-e2e-missing-rev", PricePolicy: "channel", BillingMode: "per_second"},
+		&model.LogicalModelRevision{ID: "studio-e2e-missing-rev", LogicalModelID: "studio-e2e-missing", Version: 1, CapabilitySpecJSON: encode(videoSpec), DefaultOptionsJSON: "{}"},
+		&model.LogicalModelRoute{ID: "studio-e2e-missing-route", LogicalModelRevisionID: "studio-e2e-missing-rev", ChannelModelID: "studio-e2e-missing-channel-model", Enabled: true, Weight: 1},
 	} {
 		if err := db.Create(row).Error; err != nil {
 			t.Fatal(err)

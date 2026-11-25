@@ -94,7 +94,8 @@ func (s *Service) StudioModels(userID, kind string) ([]StudioModel, error) {
 		}
 		for _, route := range snapshot.Models[item.ID].Routes {
 			channelID := route.ChannelModel.ChannelID
-			if !route.Route.Enabled || route.Route.Weight <= 0 || !access.allowsChannel(channelID) || s.logicalRouteBlocked(route) {
+			if !route.Route.Enabled || route.Route.Weight <= 0 || !access.allowsChannel(channelID) ||
+				!s.studioProtocolAvailable(route.ChannelModel) || s.logicalRouteBlocked(route) {
 				continue
 			}
 			if _, checked := channels[channelID]; !checked {
@@ -110,6 +111,15 @@ func (s *Service) StudioModels(userID, kind string) ([]StudioModel, error) {
 		}
 	}
 	return result, nil
+}
+
+func (s *Service) studioProtocolAvailable(channelModel model.ChannelModel) bool {
+	id := string(channelModel.Protocol)
+	if !channelModel.Enabled || strings.TrimSpace(id) == "" {
+		return false
+	}
+	release, err := selectModelRelease(s.protocolRegistry(), id, channelModel.ProtocolRelease, false)
+	return err == nil && validateGenerationInterfaceWithRegistry(release.Registry, channelModel.Capability, id) == nil
 }
 
 func (s *Service) studioChannelConfigured(id string) bool {
@@ -284,7 +294,7 @@ func (s *Service) studioPrepare(userID, id string, req StudioGeneration) (*model
 		return nil, nil, err
 	}
 	channelModel, err := s.repo.ChannelModel(task.ChannelModelID)
-	if err != nil || !s.studioChannelConfigured(channelModel.ChannelID) {
+	if err != nil || !s.studioProtocolAvailable(*channelModel) || !s.studioChannelConfigured(channelModel.ChannelID) {
 		return nil, nil, studioError(http.StatusUnprocessableEntity, "studio_model_unavailable")
 	}
 	task.ID = id
