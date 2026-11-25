@@ -388,6 +388,11 @@ func (s *Service) prepareDramaShotUpdate(userID, projectID, shotID string, req U
 	}
 	before := *shot
 	fields := map[string]any{}
+	if req.studioEdit != nil {
+		if err := s.applyStudioShotEdit(project.ID, shot, fields, req.studioEdit); err != nil {
+			return nil, err
+		}
+	}
 	for _, f := range []struct {
 		column string
 		target *string
@@ -424,7 +429,7 @@ func (s *Service) prepareDramaShotUpdate(userID, projectID, shotID string, req U
 		duration := int64(value * 1000)
 		if duration != shot.DurationMs {
 			// 一个剧情段一次生成，段总时长不能超过该段视频模型的单次上限。
-			if err := s.checkDramaSegmentDuration(project.ID, p, *shot, duration); err != nil {
+			if err := s.checkDramaSegmentDuration(project.ID, p, *shot, duration, req.studioEdit != nil); err != nil {
 				return nil, err
 			}
 			shot.DurationMs = duration
@@ -1168,7 +1173,7 @@ func (s *Service) ReleaseDramaMedia(userID string, projectID string, req Release
 	return s.DramaSummary(userID, projectID)
 }
 
-func (s *Service) checkDramaSegmentDuration(projectID string, p *model.DramaProduction, shot model.DramaShot, nextMs int64) error {
+func (s *Service) checkDramaSegmentDuration(projectID string, p *model.DramaProduction, shot model.DramaShot, nextMs int64, allowUnconfigured ...bool) error {
 	shots, err := s.repo.DramaShots(shot.EpisodeID)
 	if err != nil {
 		return err
@@ -1188,6 +1193,9 @@ func (s *Service) checkDramaSegmentDuration(projectID string, p *model.DramaProd
 		if segment.SegmentIndex == shot.SegmentIndex {
 			choice = segmentVideoChoice(segment, choice)
 		}
+	}
+	if choice.Empty() && len(allowUnconfigured) > 0 && allowUnconfigured[0] {
+		return nil
 	}
 	profile, err := s.dramaVideoProfile(choice)
 	if err != nil {

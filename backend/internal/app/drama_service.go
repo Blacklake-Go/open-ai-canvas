@@ -204,12 +204,14 @@ func (s *Service) SaveDramaDraft(userID string, projectID string, req CreateDram
 	}
 	creation.project.CreatedAt = project.CreatedAt
 	creation.production.CreatedAt = productionRow.CreatedAt
-	if err := s.repo.ReplaceDramaDraft(&creation.project, creation.chapters, &creation.production, creation.episodes); err != nil {
+	if err := s.repo.ReplaceDramaDraft(&creation.project, creation.chapters, &creation.production, creation.episodes, req.expectedStudioRevision); err != nil {
 		switch {
 		case errors.Is(err, repository.ErrProjectNameConflict):
 			return DramaSummary{}, dramaNameConflict()
 		case errors.Is(err, repository.ErrDramaDraftStarted):
 			return DramaSummary{}, BadAuthRequest("作品已开始制作，不能再按草稿修改")
+		case errors.Is(err, repository.ErrDramaSegmentChanged):
+			return DramaSummary{}, studioError(409, "studio_revision_conflict")
 		}
 		return DramaSummary{}, err
 	}
