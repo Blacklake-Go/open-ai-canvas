@@ -127,7 +127,7 @@ export function ArkAdminCreateModal({ open, resume, onClose, onCreated }: { open
             onCancel={() => {
                 if (!working) onClose();
             }}
-            maskClosable={false}
+            mask={{ closable: false }}
             footer={
                 session ? (
                     <div className="flex flex-wrap justify-end gap-2">

@@ -13,7 +13,7 @@ export type AppModalProps = ModalProps & {
     flush?: boolean;
 };
 
-export function AppModal({ flush = false, destroyOnHidden = true, styles, ...props }: AppModalProps) {
+export function AppModal({ flush = false, destroyOnHidden = true, styles, maskClosable, mask, ...props }: AppModalProps) {
     useOverlayExtensionRevision();
     const mergeResolvedStyles = (resolved: unknown) => {
         const base = resolveOverlayExtensionStyles("modal", resolved);
@@ -27,6 +27,7 @@ export function AppModal({ flush = false, destroyOnHidden = true, styles, ...pro
         };
     };
     const mergedStyles = typeof styles === "function" ? (info: { props: ModalProps }) => mergeResolvedStyles(styles(info)) : mergeResolvedStyles(styles);
+    const resolvedMask = mask !== undefined ? (typeof mask === "object" && mask !== null ? { closable: maskClosable, ...mask } : mask) : maskClosable !== undefined ? { closable: maskClosable } : undefined;
 
-    return <Modal destroyOnHidden={destroyOnHidden} {...props} styles={mergedStyles as ModalProps["styles"]} />;
+    return <Modal destroyOnHidden={destroyOnHidden} {...props} mask={resolvedMask} styles={mergedStyles as ModalProps["styles"]} />;
 }

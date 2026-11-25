@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Button, Modal } from "antd";
+import { Button } from "antd";
 import { XCircle } from "lucide-react";
 
 import { CanvasImagePreview } from "@/components/canvas/canvas-image-preview";
@@ -32,7 +32,7 @@ export function CanvasProjectStatusDialogs({ theme, task, taskLogs, taskLoading,
     const config = useEffectiveConfig();
     return (
         <>
-            <Modal title="任务详情" open={Boolean(task)} footer={null} width="min(920px, calc(100vw - 32px))" onCancel={onCloseTask}>
+            <AppModal title="任务详情" open={Boolean(task)} footer={null} width="min(920px, calc(100vw - 32px))" onCancel={onCloseTask}>
                 {task ? (
                     <div className="space-y-4 text-sm">
                         <div className="grid grid-cols-2 gap-3 rounded-lg border p-3" style={{ borderColor: theme.node.stroke, background: theme.node.panel }}>
@@ -71,11 +71,11 @@ export function CanvasProjectStatusDialogs({ theme, task, taskLogs, taskLoading,
                         </div>
                     </div>
                 ) : null}
-            </Modal>
+            </AppModal>
 
-            <Modal title="AI 超分" open={Boolean(superResolveNode?.metadata?.content)} centered footer={null} onCancel={onCloseSuperResolve}>
+            <AppModal title="AI 超分" open={Boolean(superResolveNode?.metadata?.content)} centered footer={null} onCancel={onCloseSuperResolve}>
                 <div className="py-8 text-center text-base font-medium">暂未实现</div>
-            </Modal>
+            </AppModal>
 
             <AppModal
                 title="视频预览"
@@ -101,7 +101,7 @@ export function CanvasProjectStatusDialogs({ theme, task, taskLogs, taskLoading,
                 />
             ) : null}
 
-            <Modal
+            <AppModal
                 title="清空画布？"
                 open={clearConfirmOpen}
                 centered
@@ -116,7 +116,7 @@ export function CanvasProjectStatusDialogs({ theme, task, taskLogs, taskLoading,
                 }
             >
                 <p className="text-sm opacity-60">这会删除当前画布上的所有节点和连线。</p>
-            </Modal>
+            </AppModal>
         </>
     );
 }

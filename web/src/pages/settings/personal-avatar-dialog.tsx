@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
-import { Alert, App, Button, Collapse, Modal, Select, Spin } from "antd";
+import { Alert, App, Button, Collapse, Select, Spin } from "antd";
+import { AppModal } from "@/components/ui/product/app-modal";
 import { Upload } from "lucide-react";
 import { useReducedMotion } from "motion/react";
 import { useTranslation } from "react-i18next";
@@ -117,7 +118,7 @@ export function PersonalAvatarDialog({ userId, onClose }: { userId: string; onCl
     }
 
     return (
-        <Modal
+        <AppModal
             open
             title={t("personalAvatar.title")}
             onCancel={onClose}
@@ -252,6 +253,6 @@ export function PersonalAvatarDialog({ userId, onClose }: { userId: string; onCl
                     />
                 ) : null}
             </div>
-        </Modal>
+        </AppModal>
     );
 }

@@ -269,3 +269,53 @@ func TestCreationHistoryProtectsMediaFromDetachedCleanup(t *testing.T) {
 		t.Fatalf("history media was collected: %v", err)
 	}
 }
+
+func TestCreationHistoryAcceptsExpandedSettings(t *testing.T) {
+	s, _ := historyTestService(t)
+	message := historyMessage("m-settings", "settings test", 0)
+	message.Data["settings"] = map[string]any{
+		"ratio":                 "16:9",
+		"duration":              60.0,
+		"instrumental":          true,
+		"transparentBackground": false,
+		"thinkingLevel":         "high",
+		"model":                 "jimeng-v2",
+		"mode":                  "image",
+		"style":                 "cinematic",
+		"songLanguage":          "zh",
+		"resolution":            "2k",
+		"imageResolution":       "1.5K",
+	}
+	res := syncHistory(t, s, "c-settings", CreationHistoryMutation{Messages: []CreationHistoryMessage{message}})
+	if len(res.Messages) != 1 {
+		t.Fatalf("expected 1 message, got %d", len(res.Messages))
+	}
+	settings, ok := res.Messages[0].Data["settings"].(map[string]any)
+	if !ok {
+		t.Fatalf("settings missing or not map: %+v", res.Messages[0].Data)
+	}
+	if settings["instrumental"] != true || settings["transparentBackground"] != false || settings["duration"] != "60" {
+		t.Fatalf("settings normalization failed: %+v", settings)
+	}
+	if settings["imageResolution"] != "1.5K" || settings["thinkingLevel"] != "high" {
+		t.Fatalf("expanded settings dropped: %+v", settings)
+	}
+}
+
+func TestCreationHistoryBooleanSettingsRoundTrip(t *testing.T) {
+	s, _ := historyTestService(t)
+	// 旧客户端把布尔存成字符串：读回应恢复为原生布尔，前端 typeof 判定不再失效。
+	legacy := historyMessage("m-legacy", "legacy bool", 0)
+	legacy.Data["settings"] = map[string]any{"ratio": "1:1", "seconds": "0", "quality": "auto", "videoQuality": "720", "count": "1", "instrumental": "true"}
+	res := syncHistory(t, s, "c-bool", CreationHistoryMutation{Messages: []CreationHistoryMessage{legacy}})
+	settings := res.Messages[0].Data["settings"].(map[string]any)
+	if settings["instrumental"] != true {
+		t.Fatalf("legacy string bool not restored: %+v", settings)
+	}
+	// 非布尔字段不允许布尔值，避免脏类型进入持久层。
+	invalid := historyMessage("m-bad", "bad bool", 0)
+	invalid.Data["settings"] = map[string]any{"ratio": true}
+	if _, err := s.SyncCreationHistory("u1", "c-bool-bad", CreationHistoryMutation{Messages: []CreationHistoryMessage{invalid}}); err == nil {
+		t.Fatal("boolean ratio was accepted")
+	}
+}

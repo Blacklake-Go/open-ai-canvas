@@ -399,10 +399,6 @@ export function refreshGenerationTaskStatus(id: string, options?: { signal?: Abo
     return http.get<GenerationTask>(`/tasks/${encodeURIComponent(id)}`, { signal: options?.signal }).then(observedTask);
 }
 
-export function deleteGenerationTask(id: string) {
-    return http.delete<void>(`/tasks/${encodeURIComponent(id)}`);
-}
-
 export async function listTaskLogs(id: string) {
     const raw = await http.get<Array<{ level?: unknown; message?: unknown; payload?: unknown; createdAt?: unknown }>>(`/tasks/${encodeURIComponent(id)}/logs`);
     return raw.map((log, index) => projectBackendSafeTaskLog(id, log, index));

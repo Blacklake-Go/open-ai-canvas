@@ -138,6 +138,19 @@ export class CreationHistorySync {
         this.publishStatus({ phase: this.deps.cloud ? "pending" : "local" });
         return this.persist();
     }
+    /**
+     * 保存后防抖推送云端。save() 只落本地队列；页面若只 save 不 sync，
+     * 新会话会停留 pending 直到刷新/重连，换设备即丢。定时器句柄由页面持有并在卸载时清理。
+     */
+    saveAndScheduleSync(value: CreationConversation[], timer: { current: number | null }, delayMs = 700): Promise<void> {
+        const pending = this.save(value);
+        if (!timer.current)
+            timer.current = window.setTimeout(() => {
+                timer.current = null;
+                if (!this.disposed && this.deps.active()) void this.sync();
+            }, delayMs);
+        return pending;
+    }
     remove(id: string, remaining: CreationConversation[]) {
         this.assertActive();
         if (!id) throw new Error("缺少要删除的创作对话 ID");

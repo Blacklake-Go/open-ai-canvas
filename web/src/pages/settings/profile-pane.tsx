@@ -338,19 +338,19 @@ export function ProfilePane({ returnToModal = false }: { returnToModal?: boolean
                             </Button>
                         </div>
                         <div className="mt-4 grid grid-cols-1 gap-2.5 sm:grid-cols-2 lg:grid-cols-4">
-                            <div className="rounded-xl border border-white/5 bg-white/[0.02] p-3">
+                            <div className="rounded-xl border border-border/60 bg-muted/30 p-3">
                                 <span className="mb-1 block text-[var(--fs-label)] text-foreground/45">创作者 ID</span>
-                                <div className="truncate font-mono text-xs font-semibold text-white">@{profile.user.username}</div>
+                                <div className="truncate font-mono text-xs font-semibold text-foreground">@{profile.user.username}</div>
                             </div>
-                            <div className="rounded-xl border border-white/5 bg-white/[0.02] p-3">
+                            <div className="rounded-xl border border-border/60 bg-muted/30 p-3">
                                 <span className="mb-1 block text-[var(--fs-label)] text-foreground/45">显示昵称</span>
-                                <div className="truncate text-xs font-semibold text-white">{profile.user.displayName || profile.user.username}</div>
+                                <div className="truncate text-xs font-semibold text-foreground">{profile.user.displayName || profile.user.username}</div>
                             </div>
-                            <div className="rounded-xl border border-white/5 bg-white/[0.02] p-3">
+                            <div className="rounded-xl border border-border/60 bg-muted/30 p-3">
                                 <span className="mb-1 block text-[var(--fs-label)] text-foreground/45">账号角色</span>
-                                <div className="text-xs font-semibold text-[#00f5d4]">{profile.user.role === "admin" ? "平台管理员" : "创作者"}</div>
+                                <div className="text-xs font-semibold text-primary">{profile.user.role === "admin" ? "平台管理员" : "创作者"}</div>
                             </div>
-                            <div className="rounded-xl border border-white/5 bg-white/[0.02] p-3" title={profile.user.id}>
+                            <div className="rounded-xl border border-border/60 bg-muted/30 p-3" title={profile.user.id}>
                                 <span className="mb-1 block text-[var(--fs-label)] text-foreground/45">系统 UID</span>
                                 <div className="truncate font-mono text-[var(--fs-label)] text-foreground/70">{profile.user.id}</div>
                             </div>

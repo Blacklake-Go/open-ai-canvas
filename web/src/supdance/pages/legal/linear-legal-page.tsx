@@ -1,10 +1,9 @@
 import { TopbarLanguageSwitcher, useI18n } from "@/supdance/plugins/i18n";
-import { useEffect, useState, type ReactNode } from "react";
+import { useEffect, type ReactNode } from "react";
 import { ArrowDown, ArrowUp } from "lucide-react";
 import { useLocaleStore } from "@/stores/use-locale-store";
 import { useLocation } from "react-router";
 
-import { useThemeStore } from "@/stores/use-theme-store";
 import { type LocalizedLegalDoc } from "./legal-i18n-content";
 import { LEGAL_LOCALE_MAP, LEGAL_PAGE_COPY, type PolicyLanguage } from "./service-policies";
 import { LegalThemeToggler } from "./legal-theme-toggler";
@@ -24,7 +23,6 @@ interface LinearLegalPageProps {
  */
 export function LinearLegalPage({ docMap, currentSlug, children }: LinearLegalPageProps) {
     const location = useLocation();
-    const isDark = useThemeStore((state) => state.theme === "dark");
     const locale = useLocaleStore((state) => state.locale);
     const { t } = useI18n();
     const lang = LEGAL_LOCALE_MAP[locale];
@@ -84,10 +82,7 @@ export function LinearLegalPage({ docMap, currentSlug, children }: LinearLegalPa
     const currentDoc = docMap[lang] || docMap.en;
 
     return (
-        <div
-            className={`legal-public-page transition-colors duration-200 ${isDark ? "bg-[#000000] text-[#f4f4f6]" : "bg-[#ffffff] text-[#111111]"}`}
-            style={{ fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif' }}
-        >
+        <div className="legal-public-page bg-background font-sans text-foreground transition-colors duration-200">
             {/* 顶部 Sticky Header (Linear 风格) */}
             <header className="legal-public-header flex h-16 w-full items-center justify-between px-6 sm:px-12 transition-colors">
                 {/* 左侧：Logo 与品牌 */}
@@ -106,26 +101,26 @@ export function LinearLegalPage({ docMap, currentSlug, children }: LinearLegalPa
             {/* 主文本区：严格对标 Linear 极简黑夜大气质感 */}
             <main lang={locale} className="mx-auto max-w-[760px] px-6 pt-24 pb-16 sm:pt-28 sm:pb-12 lg:pt-32 lg:pb-16">
                 {/* 大标题 */}
-                <h1 className={`text-4xl sm:text-5xl lg:text-[58px] font-semibold tracking-[-0.035em] leading-[1.08] mb-4 ${isDark ? "text-white" : "text-[#111111]"}`}>{currentDoc.title}</h1>
+                <h1 className="text-4xl sm:text-5xl lg:text-[58px] font-semibold tracking-[-0.035em] leading-[1.08] mb-4 text-foreground">{currentDoc.title}</h1>
 
                 {/* 元数据行 */}
-                <div className={`font-mono text-[11px] uppercase tracking-[0.12em] pb-6 mb-8 border-b ${isDark ? "text-[#8a8f98] border-white/10" : "text-[#666666] border-black/10"}`}>
+                <div className="font-mono text-[var(--fs-label)] uppercase tracking-[0.12em] pb-6 mb-8 border-b border-border text-muted-foreground">
                     {pageCopy.effective}: {currentDoc.effectiveDate} · {pageCopy.version} {currentDoc.version}
                 </div>
 
                 {/* 文档导语段落 */}
-                <div className={`text-base sm:text-[17px] leading-[1.8] mb-12 ${isDark ? "text-[#e6e6e6]" : "text-[#222222]"}`}>{currentDoc.summary}</div>
+                <div className="text-base sm:text-[17px] leading-[1.8] mb-12 text-foreground/90">{currentDoc.summary}</div>
 
                 {/* 条款章节列表 */}
                 <article className="space-y-12">
                     {currentDoc.sections.map((section) => (
                         <section key={section.id} id={section.id} className="scroll-mt-24">
                             {/* 章节标题 */}
-                            <h2 className={`text-xl sm:text-[22px] font-semibold tracking-[-0.02em] mb-4 flex items-center justify-between ${isDark ? "text-white" : "text-[#111111]"}`}>
+                            <h2 className="text-xl sm:text-[22px] font-semibold tracking-[-0.02em] mb-4 flex items-center justify-between text-foreground">
                                 <span>{section.title}</span>
                                 <a
                                     href={`#${section.id}`}
-                                    className="opacity-0 hover:opacity-100 focus-visible:opacity-100 text-xs font-mono text-sky-400 font-normal transition-opacity"
+                                    className="opacity-0 hover:opacity-100 focus-visible:opacity-100 text-xs font-mono text-sky-600 dark:text-sky-400 font-normal transition-opacity"
                                     aria-label={`${pageCopy.section}: ${section.title}`}
                                     title={pageCopy.section}
                                 >
@@ -135,19 +130,19 @@ export function LinearLegalPage({ docMap, currentSlug, children }: LinearLegalPa
 
                             {/* 段落 */}
                             {section.paragraphs?.map((p, pIdx) => (
-                                <p key={pIdx} className={`text-[15px] leading-[1.85] mb-4 ${isDark ? "text-[#cccccc]" : "text-[#444444]"}`}>
+                                <p key={pIdx} className="text-[15px] leading-[1.85] mb-4 text-foreground/80">
                                     {p}
                                 </p>
                             ))}
 
                             {/* 重点声明框 Callout */}
-                            {section.callout && <div className={`my-6 rounded-xl border p-4 text-sm leading-relaxed ${isDark ? "border-white/15 bg-white/[0.02] text-[#e0e0e0]" : "border-black/10 bg-black/[0.02] text-[#333333]"}`}>{section.callout}</div>}
+                            {section.callout && <div className="my-6 rounded-xl border border-border bg-muted/50 p-4 text-sm leading-relaxed text-foreground/90">{section.callout}</div>}
 
                             {/* 项目列表 Bullets */}
                             {section.bullets && (
-                                <ul className="my-4 space-y-2 pl-5 list-disc marker:text-white/40">
+                                <ul className="my-4 space-y-2 pl-5 list-disc marker:text-muted-foreground">
                                     {section.bullets.map((b, bIdx) => (
-                                        <li key={bIdx} className={`text-[15px] leading-[1.8] ${isDark ? "text-[#cccccc]" : "text-[#444444]"}`}>
+                                        <li key={bIdx} className="text-[15px] leading-[1.8] text-foreground/80">
                                             {b}
                                         </li>
                                     ))}
@@ -156,12 +151,12 @@ export function LinearLegalPage({ docMap, currentSlug, children }: LinearLegalPa
 
                             {/* 结构化表格 Table */}
                             {section.table && (
-                                <div className={`my-6 overflow-x-auto rounded-lg border ${isDark ? "border-white/10 bg-white/[0.02]" : "border-black/10 bg-black/[0.02]"}`}>
+                                <div className="my-6 overflow-x-auto rounded-lg border border-border bg-card">
                                     <table className="w-full text-left text-xs border-collapse">
                                         <thead>
-                                            <tr className={isDark ? "border-b border-white/10 bg-white/[0.04]" : "border-b border-black/10 bg-black/[0.04]"}>
+                                            <tr className="border-b border-border bg-muted/60">
                                                 {section.table.head.map((th, thIdx) => (
-                                                    <th key={thIdx} className={`p-3 font-semibold font-mono tracking-wider ${isDark ? "text-white/80" : "text-black/80"}`}>
+                                                    <th key={thIdx} className="p-3 font-semibold font-mono tracking-wider text-foreground">
                                                         {th}
                                                     </th>
                                                 ))}
@@ -169,9 +164,9 @@ export function LinearLegalPage({ docMap, currentSlug, children }: LinearLegalPa
                                         </thead>
                                         <tbody>
                                             {section.table.rows.map((row, rIdx) => (
-                                                <tr key={rIdx} className={isDark ? "border-b border-white/5 last:border-b-0" : "border-b border-black/5 last:border-b-0"}>
+                                                <tr key={rIdx} className="border-b border-border/60 last:border-b-0">
                                                     {row.map((cell, cIdx) => (
-                                                        <td key={cIdx} className={`p-3 align-top leading-relaxed ${cIdx === 0 ? (isDark ? "font-medium text-white" : "font-medium text-black") : isDark ? "text-[#a2a2ad]" : "text-[#555555]"}`}>
+                                                        <td key={cIdx} className={`p-3 align-top leading-relaxed ${cIdx === 0 ? "font-medium text-foreground" : "text-muted-foreground"}`}>
                                                             {cell}
                                                         </td>
                                                     ))}
@@ -195,7 +190,7 @@ export function LinearLegalPage({ docMap, currentSlug, children }: LinearLegalPa
                             const el = document.querySelector(".legal-public-page");
                             if (el) el.scrollTo({ top: el.scrollHeight, behavior: "smooth" });
                         }}
-                        className="flex size-10 items-center justify-center rounded-full border border-black/10 bg-white/95 text-black shadow-lg backdrop-blur-md transition-all hover:scale-110 active:scale-95 dark:border-white/15 dark:bg-black/95 dark:text-white"
+                        className="flex size-10 items-center justify-center rounded-full border border-border bg-popover/95 text-foreground shadow-[var(--elevation-overlay)] backdrop-blur-md transition-all hover:scale-110 active:scale-95"
                         title={t("legal.scroll_to_bottom")}
                         aria-label={t("legal.scroll_to_bottom")}
                     >
@@ -208,7 +203,7 @@ export function LinearLegalPage({ docMap, currentSlug, children }: LinearLegalPa
                             const el = document.querySelector(".legal-public-page");
                             if (el) el.scrollTo({ top: 0, behavior: "smooth" });
                         }}
-                        className="flex size-10 items-center justify-center rounded-full border border-black/10 bg-white/95 text-black shadow-lg backdrop-blur-md transition-all hover:scale-110 active:scale-95 dark:border-white/15 dark:bg-black/95 dark:text-white"
+                        className="flex size-10 items-center justify-center rounded-full border border-border bg-popover/95 text-foreground shadow-[var(--elevation-overlay)] backdrop-blur-md transition-all hover:scale-110 active:scale-95"
                         title={t("legal.back_to_top")}
                         aria-label={t("legal.back_to_top")}
                     >

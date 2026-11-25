@@ -24,7 +24,6 @@
 // 管理端接口不受插件开关影响。
 import { compactApiParams, http } from "@/services/api/request";
 import type { AssetCategory } from "@/lib/asset-category";
-import type { ProjectCharacterDetail } from "@/services/api/projects";
 
 export type OfficialAssetMediaType = "image" | "video" | "audio" | "entity";
 export type OfficialAssetStatus = "draft" | "published" | "unpublished";
@@ -208,9 +207,9 @@ export async function fetchOfficialAssetReference(id: string, signal?: AbortSign
     return http.get<OfficialAssetReference>(`/official-assets/${encodeURIComponent(id)}/reference`, { signal });
 }
 
-export async function copyOfficialCharacter(id: string, input: { name: string; definition: Record<string, unknown>; sourceVersionId: string }) {
-    return http.post<ProjectCharacterDetail>(`/official-assets/${encodeURIComponent(id)}/copy-character`, input);
-}
+// 官方角色卡「另存为我的角色」暂缓开放（后端路由未注册，测试显式 Skip）。
+// 开放时恢复：POST /official-assets/:id/copy-character { name, definition, sourceVersionId }，
+// 并在 backend RegisterOfficialAssetRoutes 挂载 copyOfficialCharacterHandler。
 
 /** 管理员列表：全部状态（含草稿与已下架，不含已软删）。 */
 export async function fetchAdminOfficialAssets(params: AdminOfficialAssetListParams, signal?: AbortSignal) {

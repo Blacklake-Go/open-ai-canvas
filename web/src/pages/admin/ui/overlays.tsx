@@ -35,8 +35,9 @@ export function AdminDrawer({ flush = false, destroyOnHidden = true, styles, cla
     return <Drawer destroyOnHidden={destroyOnHidden} className={cn("admin-drawer-panel", className)} rootClassName={cn("admin-drawer", rootClassName)} {...props} styles={mergedStyles as DrawerProps["styles"]} />;
 }
 
-export function AdminModal({ flush = false, destroyOnHidden = true, styles, className, rootClassName, ...props }: AdminModalProps) {
+export function AdminModal({ flush = false, destroyOnHidden = true, styles, className, rootClassName, maskClosable, mask, ...props }: AdminModalProps) {
     const mergedStyles = typeof styles === "function" ? (info: { props: ModalProps }) => mergeFlushStyles(styles(info), flush, "modal") : mergeFlushStyles(styles, flush, "modal");
+    const resolvedMask = mask !== undefined ? (typeof mask === "object" && mask !== null ? { closable: maskClosable, ...mask } : mask) : maskClosable !== undefined ? { closable: maskClosable } : undefined;
 
-    return <Modal destroyOnHidden={destroyOnHidden} className={cn("admin-modal-panel", className)} rootClassName={cn("admin-modal-root", rootClassName)} {...props} styles={mergedStyles as ModalProps["styles"]} />;
+    return <Modal destroyOnHidden={destroyOnHidden} className={cn("admin-modal-panel", className)} rootClassName={cn("admin-modal-root", rootClassName)} {...props} mask={resolvedMask} styles={mergedStyles as ModalProps["styles"]} />;
 }

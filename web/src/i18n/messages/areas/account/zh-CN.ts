@@ -601,16 +601,6 @@ export const zhCN = {
         creditLicense: "{{credit}} · 署名与许可",
         filmLabel: "{{title}}影片片段",
         closeFilm: "关闭影片",
-        contributors: {
-            title: "一起把故事搬上银幕",
-            description: "{{count}} 位创作者参与产品、开发、测试与社区建设",
-            viewLabel: "在 GitHub README 查看贡献者清单",
-            view: "查看清单",
-            list: "项目贡献者",
-            wechat: "微信：{{id}}",
-            separator: "，",
-            founder: "项目发起者",
-        },
     },
     settings: {
         systemRefreshFailedWith: "系统模型刷新失败：{{error}}",

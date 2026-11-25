@@ -94,6 +94,8 @@ Suno 音乐结果同时包含音频、封面与文本。1.1.1 仅将有 URL 的�
 
 创作页音乐模式的 `music: { lyrics, instrumental, duration }` 会进入 `request.extra`；Suno/Mureka/MiniMax Music 的歌词与纯音乐开关来自该映射。
 
+MiniMax Music 上游没有独立风格字段：音乐工作台提交的风格标签与歌曲语言偏好由宿主并入 `prompt` 描述后再进入本协议（1.1.3 起与 Suno/Mureka 一致使用分离式轮询，长任务不占用 worker 并发槽位）。
+
 <!-- YINGCE_MANIFEST_CONTRACT_START -->
 ## Manifest 完整接口定义
 
@@ -104,7 +106,7 @@ Suno 音乐结果同时包含音频、封面与文本。1.1.1 仅将有 URL 的�
   "apiVersion": "yingce.plugin/v2",
   "id": "runninghub-standard",
   "name": "RunningHub Standard Model",
-  "version": "1.1.2",
+  "version": "1.1.3",
   "author": "RunningHub / 影策",
   "description": "RunningHub 标准模型 API 独立请求协议插件。",
   "permissions": [
@@ -3312,6 +3314,7 @@ Suno 音乐结果同时包含音频、封面与文本。1.1.1 仅将有 URL 的�
       {
         "id": "runninghub-standard-audio-minimax-music",
         "label": "RunningHub Standard Audio (MiniMax Music)",
+        "detachedPolling": true,
         "capabilities": [
           "audio"
         ],

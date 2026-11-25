@@ -60,11 +60,11 @@ function SocialVectorIcon({ id }: { id: string }) {
 
 function getSocialHoverClass(id: string): string {
     const key = id.toLowerCase();
-    if (key === "youtube") return "hover:border-red-500/40 hover:bg-red-500/10 hover:text-[#FF0000]";
-    if (key === "instagram") return "hover:border-pink-500/40 hover:bg-pink-500/10 hover:text-[#E4405F]";
-    if (key === "xiaohongshu" || key === "xhs" || key === "red") return "hover:border-rose-500/40 hover:bg-rose-500/10 hover:text-[#FF2442]";
-    if (key === "qq") return "hover:border-sky-400/40 hover:bg-sky-400/10 hover:text-[#12B7F5]";
-    return "hover:border-white/40 hover:bg-white/10 hover:text-white";
+    if (key === "youtube") return "hover:border-red-500/40 hover:bg-red-500/10 hover:text-red-600 dark:hover:text-red-400";
+    if (key === "instagram") return "hover:border-pink-500/40 hover:bg-pink-500/10 hover:text-pink-600 dark:hover:text-pink-400";
+    if (key === "xiaohongshu" || key === "xhs" || key === "red") return "hover:border-rose-500/40 hover:bg-rose-500/10 hover:text-rose-600 dark:hover:text-rose-400";
+    if (key === "qq") return "hover:border-sky-400/40 hover:bg-sky-400/10 hover:text-sky-600 dark:hover:text-sky-400";
+    return "hover:border-foreground/30 hover:bg-surface-hover hover:text-foreground";
 }
 
 function SmartLink({ href, className, children }: { href: string; className?: string; children: React.ReactNode }) {
@@ -140,32 +140,28 @@ export function SupdanceAboutFooter({ pagePath, configOverride, forceShow = fals
     }
 
     return (
-        <footer className="supdance-site-footer relative mt-20 border-t border-white/[0.08] pt-16 pb-12 overflow-hidden text-white">
-            {/* 底部全景极光微光环境背光 (指针安全) */}
-            <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-[1200px] h-[480px] bg-gradient-to-t from-[#e11d74]/10 via-[#3772FF]/5 to-transparent blur-[160px] pointer-events-none" />
-            <div className="absolute -bottom-24 -left-20 w-[420px] h-[420px] bg-[#00f5d4]/5 blur-[130px] rounded-full pointer-events-none" />
-
+        <footer className="supdance-site-footer relative mt-20 border-t border-border bg-background pt-16 pb-12 overflow-hidden text-foreground">
             <div className="max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-12 relative z-10">
                 {/* TIER 3: 产品体系、开发者生态、合规政策与技术订阅 */}
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-12 gap-10 pb-12 border-b border-white/[0.08]">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-12 gap-10 pb-12 border-b border-border">
                     {/* 第 1 列：品牌徽标与企业愿景 (占据 4 列) */}
                     <div className="lg:col-span-4 flex flex-col items-start space-y-4">
                         <Link to="/" className="group flex flex-col items-start gap-1.5 cursor-pointer no-underline" aria-label={`${cfg.brandName} Home`}>
                             <img src="/supdance-footer-logo.png" alt={cfg.brandName} className="supdance-footer-logo" width="1000" height="220" />
-                            <span className="text-xs font-mono tracking-wider uppercase">{t(cfg.brandSlogan)}</span>
+                            <span className="text-xs font-mono tracking-wider text-muted-foreground uppercase">{t(cfg.brandSlogan)}</span>
                         </Link>
 
-                        <p className="text-xs text-white/60 leading-relaxed max-w-sm m-0">{t(cfg.brandVision)}</p>
+                        <p className="text-xs text-muted-foreground leading-relaxed max-w-sm m-0">{t(cfg.brandVision)}</p>
 
-                        <div className="pt-2 text-xs font-mono text-white/50 space-y-1">
-                            <a href={`mailto:${cfg.supportEmail}`} className="text-white/50 hover:text-white transition-colors no-underline">
+                        <div className="pt-2 text-xs font-mono text-muted-foreground space-y-1">
+                            <a href={`mailto:${cfg.supportEmail}`} className="text-muted-foreground hover:text-foreground transition-colors no-underline">
                                 {cfg.supportEmail}
                             </a>
                         </div>
 
                         {/* 品牌官方社交与社区入口 */}
                         <div className="pt-3 flex flex-col items-start gap-2.5">
-                            <span className="text-[11px] font-mono text-white/45 tracking-wider uppercase">{t(cfg.officialChannelsText)}</span>
+                            <span className="text-[11px] font-mono text-muted-foreground tracking-wider uppercase">{t(cfg.officialChannelsText)}</span>
                             <div className="flex items-center flex-wrap gap-2">
                                 {cfg.socialLinks.map((item) => (
                                     <a
@@ -173,7 +169,7 @@ export function SupdanceAboutFooter({ pagePath, configOverride, forceShow = fals
                                         href={item.href}
                                         target="_blank"
                                         rel="noopener noreferrer"
-                                        className={`relative flex items-center justify-center w-9 h-9 rounded-xl bg-white/[0.04] border border-white/[0.08] text-white/60 transition-all duration-200 cursor-pointer hover:scale-105 active:scale-95 ${getSocialHoverClass(item.id)}`}
+                                        className={`relative flex items-center justify-center w-9 h-9 rounded-xl bg-muted/60 border border-border text-muted-foreground transition-all duration-200 cursor-pointer hover:scale-105 active:scale-95 ${getSocialHoverClass(item.id)}`}
                                         title={`${item.name} (${item.handle})`}
                                         aria-label={`${item.name} ${item.handle}`}
                                     >
@@ -187,11 +183,11 @@ export function SupdanceAboutFooter({ pagePath, configOverride, forceShow = fals
                     {/* 第 2 & 3 列：导航链接矩阵 (各占 2 列) */}
                     {toolColumns.map((col, idx) => (
                         <div key={`${col.title}-${idx}`} className="lg:col-span-2 space-y-3">
-                            <div className="text-xs font-bold text-white uppercase tracking-wider font-mono">{col.title}</div>
-                            <ul className="space-y-2 text-xs text-white/60 list-none p-0 m-0">
+                            <div className="text-xs font-bold text-foreground uppercase tracking-wider font-mono">{col.title}</div>
+                            <ul className="space-y-2 text-xs text-muted-foreground list-none p-0 m-0">
                                 {col.links.map((lnk, lIdx) => (
                                     <li key={`${lnk.label}-${lIdx}`}>
-                                        <SmartLink href={lnk.href} className="text-white/60 hover:text-white transition-colors no-underline">
+                                        <SmartLink href={lnk.href} className="text-muted-foreground hover:text-foreground transition-colors no-underline">
                                             {lnk.label}
                                         </SmartLink>
                                     </li>
@@ -201,8 +197,8 @@ export function SupdanceAboutFooter({ pagePath, configOverride, forceShow = fals
                     ))}
 
                     <div className="lg:col-span-4 space-y-3">
-                        <div className="text-xs font-bold text-white uppercase tracking-wider font-mono">{t("public.footer.legal_support")}</div>
-                        <ul className="space-y-2 text-xs text-white/60 list-none p-0 m-0">
+                        <div className="text-xs font-bold text-foreground uppercase tracking-wider font-mono">{t("public.footer.legal_support")}</div>
+                        <ul className="space-y-2 text-xs text-muted-foreground list-none p-0 m-0">
                             {[
                                 { label: t("legal.terms"), href: "/terms" },
                                 { label: t("legal.privacy"), href: "/privacy" },
@@ -213,7 +209,7 @@ export function SupdanceAboutFooter({ pagePath, configOverride, forceShow = fals
                                 { label: labels.contact, href: `mailto:${cfg.supportEmail}` },
                             ].map((item) => (
                                 <li key={item.href}>
-                                    <SmartLink href={item.href} className="text-white/60 hover:text-white transition-colors no-underline">
+                                    <SmartLink href={item.href} className="text-muted-foreground hover:text-foreground transition-colors no-underline">
                                         {item.label}
                                     </SmartLink>
                                 </li>
@@ -223,13 +219,13 @@ export function SupdanceAboutFooter({ pagePath, configOverride, forceShow = fals
                 </div>
 
                 {/* TIER 4: 底部版权标识、技术底座致敬与安全状态条 */}
-                <div className="pt-8 flex flex-col md:flex-row items-center justify-between gap-4 text-[11px] font-mono text-white/40">
+                <div className="pt-8 flex flex-col md:flex-row items-center justify-between gap-4 text-[11px] font-mono text-muted-foreground/80">
                     <div className="flex flex-wrap items-center gap-2">
                         <span>© {new Date().getFullYear()} Supdance</span>
                         {cfg.icpNumber && (
                             <>
                                 <span className="hidden sm:inline">·</span>
-                                <a href={cfg.icpHref || "https://beian.miit.gov.cn/"} target="_blank" rel="noopener noreferrer" className="text-white/40 hover:text-white transition-colors no-underline">
+                                <a href={cfg.icpHref || "https://beian.miit.gov.cn/"} target="_blank" rel="noopener noreferrer" className="text-muted-foreground/80 hover:text-foreground transition-colors no-underline">
                                     {cfg.icpNumber}
                                 </a>
                             </>

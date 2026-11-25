@@ -787,16 +787,16 @@
     right: 0 !important;
     z-index: 50 !important;
     height: 64px !important;
-    background-color: #ffffff !important;
-    color: #111111 !important;
-    border-bottom: 1px solid rgba(0, 0, 0, 0.08) !important;
+    background-color: var(--background) !important;
+    color: var(--foreground) !important;
+    border-bottom: 1px solid var(--border) !important;
     box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.04);
 }
 
 html.dark .legal-public-header {
-    background-color: #000000 !important;
-    color: #f4f4f6 !important;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.08) !important;
+    background-color: var(--background) !important;
+    color: var(--foreground) !important;
+    border-bottom: 1px solid var(--border) !important;
     box-shadow: none;
 }
 

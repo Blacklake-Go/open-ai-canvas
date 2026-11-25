@@ -8,6 +8,47 @@ description: 当前项目已实现功能的手工验证清单与未确认边界
 - 从自由画布验证新建和打开世界引擎、加入角色与道具、设置天气、保存运镜和导出构图与白模。
 - 待用户确认八语言拍摄术语、触屏操作及真实模型辅助搭景。
 
+## 图片工作台主链路补齐（本地候选）
+
+创作页图片模式提交后跳转到 `/workspace/image/:sessionId` 独立工作台。本轮补齐了主链路回归：云端恢复的成功结果按 `resultStorageKeys` 重建展示（不再误判失败）、生成结果经幂等物化自动入素材库（删除假数据保存）、网络中断标记 `syncInterrupted` 并自动重连（不诱导重复扣费）、未确认失败只提供「重新获取结果」、参数面板与报价接模型能力合同和服务端 `quoteModel`、删除/重命名失败不再吞错、个人路由补 `imageWorkbenchEnabled` 门禁、团队空间不再暴露图片工作台路由。创作历史 settings 前后端 16 键对齐（含 `imageResolution`），`instrumental`/`transparentBackground` 布尔往返保持类型；MiniMax Music 协议补 `detachedPolling`，风格/语言并入 prompt（上游无独立 style 字段），包版本 1.1.3。全部新增文案接入八语词条，`i18n-scan`/`i18n-sync-backend` 门禁通过。
+
+Ponytail 审查后追加修复：工作台保存改走 `CreationHistorySync.saveAndScheduleSync`（防抖推送 + focus/visibility/15s 轮询兜底，创作页同步复用同一方法），修复只落本地不上云导致换设备丢会话；删除 workbench 桥接层无调用方的 `thinkingLevel` 双写与白名单（避免未声明参数误拒任务）；`imageWorkbenchEnabled` 关闭时创作页图片入口、URL/偏好模式和会话重定向同步关闭并回退文本。
+
+- [ ] 真实浏览器验收「生成 → 刷新 → 换设备恢复 → 再次生成」闭环，含明暗主题、390px 手机、多标签并发物化；本地仅单测+类型+构建覆盖，未做运行态页面验收。
+- [ ] 真实付费生图验收服务端报价与结算一致；image_usage/token 计费显示「按实际用量结算」的模型需核对账单。
+- [ ] MiniMax Music 真实上游生成验收风格/语言并入 prompt 的效果与计费；未验证真实密钥路径。
+- [ ] 管理员关闭「图片生成」功能后确认工作台入口与提交均被拦截（前端门禁+后端 403 双保险）；创作页模式选项应隐藏图片、已存图片偏好回退文本、`?mode=image` 与图片会话不再重定向。
+- [ ] 工作台生成后不刷新页面，700ms 内同步状态应从 pending 变为 synced；换设备登录能看到新会话（防抖推送回归已有单测，云端链路需真实验收）。
+
+## 全站完整性审计第二轮（本地候选）
+
+次要页面（设置/技能/插件/任务/素材/短剧/推广/团队/后台）、六个 SupDance 插件注册与 admin 入口、公开页链接均核对通过，无用户可见功能断链。本轮补齐：图片工作台同步状态指示与冲突副本处理（复用创作页 historySync 词条与 CreationHistoryConflicts）、提示词技能引用 `@[skill:ID]` 提交时展开（与创作页同链路）；清理 `account.welcome.contributors.*` 死词条（8 键 × 8 语言）并重新生成后端词典；修正 features.mdx 与代码关于画布时间线的矛盾（本站按 `supdance-canvas-timeline-editor` 约定保留本地剪辑，文档如实描述）。
+
+- [ ] 真实浏览器确认工作台顶部同步状态条在明暗主题、手机视口不遮挡时间流标题，冲突副本弹窗可打开处理。
+- [ ] 带技能引用的图片生成真实提交一次，确认技能上下文进入任务且账单正常。
+- 已知留置（非用户可见故障，按二次开发约定保留）：editor-shell 插件注册但无入口，其转写/导出 slot 指向已退役 `/timeline/*` 接口；`timelineTranscriptionEnabled` 开关无前端管理面。两者属上游退役接缝，清理需产品确认后另行处理。
+
+- 已清理三个无消费方的死 API 函数（`deleteGenerationTask`、`setAdminWorkbenchPresetEnabled`、`copyOfficialCharacter`），官方角色卡另存恢复方式已在源码注释登记（后端测试显式 Skip，产品暂缓）。
+- 真实 HTTP 冒烟（全新隔离数据目录 + 一次性后端，验证后已停止并清理）：注册/登录、feature 开关（image/video 工作台默认开启）、创作历史扩展 settings 同步与布尔往返（`imageResolution:"2K"`、`instrumental:true`、`transparentBackground:false` 类型保持）、会话删除写路径、工作台任务准入强校验、退役 `/timeline/transcriptions` 返回 404、音乐能力接口与 OpenAPI 均通过。
+- [ ] 浏览器逐页验收仍未执行（需用户授权启动 dev server）；真实付费生成与上游路径未验证。
+
+### 推送前门禁与分支同步状态
+
+- 本地推送门禁 `bun scripts/verify-before-push.mjs --base HEAD`（GOTOOLCHAIN=go1.25.0，与 CI 一致）：**13 项全部通过，0 失败**。首轮两处失败均已排除：`TestCanvasOperationsHTTPFailureDiagnostics` 仅在本机 go1.27.3 下失败（encoding/json 的 UnmarshalTypeError.Field 从 `operations.patch` 变为 `operations.0.patch`，go1.25.0 与 CI 通过，不改代码）；分镜 DOM 与 pi-runtime 失败为高并行负载竞态，单独复跑与降并行全量均绿。门禁前已按 Prettier 收敛 9 个改动文件的格式。
+- 本地未覆盖（CI 兜底）：支付插件双架构 Docker 构建、golangci-lint v2.5.0、依赖 PostgreSQL/Redis 的 5 个后端用例。
+- 分支同步：本地工作已提交并 rebase 到 origin/main（世界引擎、维护者信息加固、钱包展示等 20 个远端提交合入）；词典与 baseline 冲突按生成物口径重新生成收敛，文档冲突两侧内容均保留。
+
+## 全站浏览器逐页验收（隔离副本，2026-11-25）
+
+真实 Chrome 在隔离预览环境（Vite 3000 → 后端 8081，数据为开发库一次性副本 `.local/browser-qa-20261125`，Schema 112/112）逐页访问 83 次，覆盖 75 个路由 URL：74 个渲染与交互通过，6 个 redirects 跳转正确，4 个 expected-404 友好错误态，0 白屏、0 JS 运行时异常。18 项交互检查全部执行（八语切换刷新保持、明暗主题、无模型禁提交、素材/历史抽屉、空提交拦截、后台弹窗、功能开关默认开、深链刷新、前进后退、390px 移动视口）。完整报告：`.local/browser-qa-20261125/REPORT.md`。
+
+验收发现并已修复 2 个真实缺陷（均经浏览器复验 PASS）：
+- P1：直达 `/workspace/image` 时路由兜底生成新 ID 未写入会话列表，云端 404 误报「会话不存在」。修复：新 ID 先写入 conversations 与本地快照再跳转；复验 8 次直达 0 错误态。
+- P2：auth scope 切换 abort 首次历史加载时 catch 提前置 hydrated，冷加载直达每次抢先新建空会话。修复：aborted/inactive 分支静默返回；复验 5 次直达全部选中已有会话、会话数不增长、AbortError warn 归零。
+
+- [ ] 游客态逐页、多标签并发物化、实体手机软键盘/触控未覆盖；付费生成、真实上游、SSE 断线重连需真实密钥后另行验收。
+- [ ] 隔离副本无渠道模型/素材/画布，相关页面以空态验收；带真实数据的页面深度交互待生产或带数据副本复验。
+
 ## 微信 Native 实单
 
 确认商户 Native 权限和已授权的 AppID，并在站点支付配置保存 APIv3 参数后，使用独立的 ¥0.01 测试商品验证微信扫码、异步通知和积分只入账一次。测完下架测试商品。

@@ -73,7 +73,7 @@ export function buildNav(features: FeatureAvailability, t: (key: string) => stri
                 { ...toolItem("create", "/", t), id: "home", title: t("nav.sidebar.home") },
                 { ...toolItem("assets", "/assets", t), title: t("nav.sidebar.assets") },
                 { ...toolItem("canvas", "/canvas", t), title: t("nav.sidebar.canvas") },
-                ...(features.teamsEnabled ? [{ id: "teams", title: "公司与团队", icon: Users, to: "/teams" }] : []),
+                ...(features.teamsEnabled ? [{ id: "teams", title: t("managedUi.84491334"), icon: Users, to: "/teams" }] : []),
                 ...(features.shortDramaEnabled ? [{ ...toolItem("projects", "/projects", t), title: t("nav.sidebar.projects") }] : []),
                 ...(features.ecommerceEnabled ? [{ id: "ecommerce", title: t("nav.sidebar.ecommerce"), icon: ShoppingBag, to: "/ecommerce" }] : []),
             ],

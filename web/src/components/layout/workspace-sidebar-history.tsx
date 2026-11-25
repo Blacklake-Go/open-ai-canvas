@@ -1,5 +1,5 @@
 import { useInfiniteQuery } from "@tanstack/react-query";
-import { ChevronDown, ChevronUp, FileText, Image as ImageIcon, LoaderCircle, PanelsTopLeft, Plus, Video } from "lucide-react";
+import { ChevronDown, ChevronUp, FileText, Image as ImageIcon, LoaderCircle, Music, PanelsTopLeft, Plus, Video } from "lucide-react";
 import { useMemo, useRef, useState, type ReactNode } from "react";
 import { useTranslation } from "react-i18next";
 import { Link } from "react-router";
@@ -9,6 +9,7 @@ import { cn } from "@/lib/utils";
 import { loadCanvasProjectPage } from "@/lib/workspace-route-modules";
 import { listRemoteCanvasProjectsPage, type CanvasLibrarySummary } from "@/services/api/user-data";
 import { resolveBackendApiUrl } from "@/stores/use-config-store";
+import { workspacePath } from "@/lib/workspace-routes";
 import { useCreationSidebarHistory } from "@/hooks/use-creation-sidebar-history";
 import { useUserStore } from "@/stores/use-user-store";
 import { CanvasNodeType } from "@/types/canvas";
@@ -63,7 +64,7 @@ function HistoryPagination({ hasMore, expanded, loading, failed, onMore, onColla
     );
 }
 
-const conversationIcons = { video: Video, image: ImageIcon, text: FileText };
+const conversationIcons = { video: Video, image: ImageIcon, text: FileText, music: Music };
 
 function ConversationHistory({ userId, onNavigate }: { userId: string; onNavigate: () => void }) {
     const { t } = useTranslation();

@@ -1,4 +1,5 @@
-import { App, Modal, Upload } from "antd";
+import { App, Upload } from "antd";
+import { AppModal } from "@/components/ui/product/app-modal";
 import { CloudUpload, FileText, ShieldCheck } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 
@@ -88,7 +89,7 @@ export function UploadPluginModal({ open, onClose, onUpload }: UploadPluginModal
     const isCompact = activeTab === "install";
 
     return (
-        <Modal
+        <AppModal
             className={`workspace-modal plugin-upload-modal ${isCompact ? "plugin-upload-modal-compact" : "workspace-modal-wide"}`}
             title="上传插件"
             open={open}
@@ -192,7 +193,7 @@ export function UploadPluginModal({ open, onClose, onUpload }: UploadPluginModal
                     </section>
                 </div>
             )}
-        </Modal>
+        </AppModal>
     );
 }
 
@@ -204,7 +205,7 @@ type PluginDetailsModalProps = {
 
 export function PluginDetailsModal({ plugin, restoreFocus, onClose }: PluginDetailsModalProps) {
     return (
-        <Modal
+        <AppModal
             className="workspace-modal workspace-modal-wide plugin-details-modal"
             title={
                 plugin ? (
@@ -224,6 +225,6 @@ export function PluginDetailsModal({ plugin, restoreFocus, onClose }: PluginDeta
             styles={{ body: { maxHeight: "min(78vh, 820px)", overflowY: "auto", overscrollBehavior: "contain" } }}
         >
             {plugin ? <PluginMarkdown className="plugin-details-document" source={getPluginDocumentation(plugin.manifest)} /> : null}
-        </Modal>
+        </AppModal>
     );
 }

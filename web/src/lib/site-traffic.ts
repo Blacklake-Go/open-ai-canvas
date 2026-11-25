@@ -44,5 +44,7 @@ export function resolveSiteTrafficPage(pathname: string): SiteTrafficPage | null
     if (path === "/referral") return "referral";
     if (path === "/toolbox/image") return "tools_image";
     if (path === "/toolbox/video") return "tools_video";
+    // 即梦式图片工作台与 /toolbox/image 同属图片生成业务，共用统计键，避免新增后端枚举。
+    if (/^\/workspace\/image(?:\/[^/]+)?$/.test(path)) return "tools_image";
     return null;
 }

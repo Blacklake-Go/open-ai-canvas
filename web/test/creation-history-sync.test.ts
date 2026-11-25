@@ -8,6 +8,23 @@ const copy = <T>(value: T): T => structuredClone(value);
 const message = (id: string, content = id): CreationMessage => ({ id, content, role: "assistant", status: "done", createdAt: "2026-10-24T01:00:00Z" });
 const conversation = (id: string, messages = [message("m1")]): CreationConversation => ({ id, title: id, updatedAt: "2026-10-24T01:00:00Z", messages });
 
+// Bun 测试进程可能没有 window；只补齐防抖调度所需的最小面，测试结束恢复原状。
+function captureWindowTimeout() {
+    const host = globalThis as { window?: { setTimeout: typeof setTimeout } };
+    const hadWindow = "window" in globalThis;
+    const original = host.window?.setTimeout;
+    if (!host.window) host.window = { setTimeout: globalThis.setTimeout.bind(globalThis) };
+    return {
+        replace(fn: typeof setTimeout) {
+            host.window!.setTimeout = fn;
+        },
+        restore() {
+            if (!hadWindow) delete host.window;
+            else if (original) host.window!.setTimeout = original;
+        },
+    };
+}
+
 // Protocol fixture for client queue races. Actual HTTP/database behavior is tested in Go.
 function server() {
     const rows = new Map<string, HistoryDetail>();
@@ -572,5 +589,55 @@ describe("创作历史离线队列与修订合并", () => {
         await a.save([conversation("c", [item])]);
         expect(JSON.parse(a.disk()).conversations[0].messages[0].resultUrls).toBeUndefined();
         expect(a.value()[0].messages[0].resultUrls).toHaveLength(1);
+    });
+
+    test("saveAndScheduleSync 防抖后自动推送云端；仅 save 会停留 pending（回归：换设备丢会话）", async () => {
+        const remote = server();
+        const a = device(remote);
+        await a.load();
+        const timer: { current: number | null } = { current: null };
+        const scheduled: (() => void)[] = [];
+        const win = captureWindowTimeout();
+        win.replace(((fn: () => void) => {
+            scheduled.push(fn);
+            return scheduled.length;
+        }) as typeof setTimeout);
+        try {
+            await a.sync.saveAndScheduleSync([conversation("c-new")], timer);
+            expect(a.status().phase).toBe("pending");
+            expect(remote.rows.has("c-new")).toBe(false);
+            // 防抖窗口内的重复保存不重复排队。
+            await a.sync.saveAndScheduleSync([conversation("c-new", [message("m1"), message("m2")])], timer);
+            expect(scheduled).toHaveLength(1);
+            scheduled[0]();
+            await a.sync.sync();
+            expect(remote.rows.get("c-new")?.messages).toHaveLength(2);
+            expect(a.status().phase).toBe("synced");
+            expect(timer.current).toBeNull();
+        } finally {
+            win.restore();
+        }
+    });
+
+    test("会话切换后旧定时器触发不再推送已 dispose 的 session", async () => {
+        const remote = server();
+        const a = device(remote);
+        await a.load();
+        const timer: { current: number | null } = { current: null };
+        let fire: (() => void) | null = null;
+        const win = captureWindowTimeout();
+        win.replace(((fn: () => void) => {
+            fire = fn;
+            return 1;
+        }) as typeof setTimeout);
+        try {
+            await a.sync.saveAndScheduleSync([conversation("c-late")], timer);
+            a.stop();
+            fire!();
+            await Promise.resolve();
+            expect(remote.rows.has("c-late")).toBe(false);
+        } finally {
+            win.restore();
+        }
     });
 });

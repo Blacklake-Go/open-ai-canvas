@@ -1,5 +1,6 @@
 import { CollectionToolbar } from "@/components/layout/collection-toolbar";
-import { App, Button, Input, Modal, Typography } from "antd";
+import { App, Button, Input, Typography } from "antd";
+import { AppModal } from "@/components/ui/product/app-modal";
 import { Switch } from "@/components/ui/base/switch";
 import {
     AudioLines,
@@ -536,7 +537,7 @@ export default function PluginsPage() {
                             />
                         )}
 
-                        <Modal
+                        <AppModal
                             className="workspace-modal workspace-modal-wide plugin-settings-modal"
                             title={settingsPlugin ? `${settingsPlugin.manifest.name} 设置` : null}
                             open={Boolean(settingsPlugin)}
@@ -651,7 +652,7 @@ export default function PluginsPage() {
                                     </div>
                                 </div>
                             ) : null}
-                        </Modal>
+                        </AppModal>
                         <PluginDetailsModal plugin={detailsPlugin} restoreFocus={detailsRestoreFocus} onClose={() => setDetailsPluginId(null)} />
                     </div>
                 </div>

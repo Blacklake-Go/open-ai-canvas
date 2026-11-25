@@ -33,6 +33,12 @@ func musicProtocolProfile(protocol, upstream string) (music.ModelCapabilities, s
 		profile.LyricsSupported = true
 		profile.StyleSupported = true
 		return profile, "runninghub-standard-audio-mureka", true
+	case protocol == "runninghub-standard-audio-minimax-music" || protocol == "runninghub-standard-audio" && (strings.HasPrefix(upstream, "minimax/music-") || strings.HasPrefix(upstream, "rhart-audio/text-to-audio/music-")):
+		profile.Modes = []string{"simple", "custom"}
+		profile.InstrumentalSupported = true
+		profile.LyricsSupported = true
+		profile.StyleSupported = true
+		return profile, "runninghub-standard-audio-minimax-music", true
 	default:
 		return profile, "", false
 	}
@@ -235,6 +241,24 @@ func (s *Service) submitSiteMusicTask(ctx context.Context, userID string, req mu
 	prompt := req.Prompt
 	if strings.TrimSpace(prompt) == "" {
 		prompt = req.Lyrics
+	}
+	// MiniMax Music 上游没有独立 style 字段（见 runninghub-standard 接口文档），风格与语言偏好
+	// 只能并入 prompt 描述；否则用户在风格栏填写的内容会被协议模板静默丢弃。
+	storedSelected, err := s.SystemChannelModel(selected.ChannelID, selected.ModelKey)
+	if err != nil {
+		return nil, err
+	}
+	if _, protocolID, wired := musicProtocolProfile(string(storedSelected.Protocol), firstNonEmpty(storedSelected.ProviderModelKey, storedSelected.ModelKey)); wired && protocolID == "runninghub-standard-audio-minimax-music" {
+		style := strings.TrimSpace(req.Tags)
+		if language := strings.TrimSpace(req.SongLanguage); language != "" {
+			style = strings.TrimSpace(style + "\nSong language preference: " + language)
+		}
+		if style != "" {
+			prompt = strings.TrimSpace(prompt + "\n" + style)
+		}
+		if utf8.RuneCountInString(prompt) > selected.MaxPromptChars {
+			return nil, BadAuthRequest("Music input exceeds the model limit.")
+		}
 	}
 	options := map[string]any{"mode": req.Mode, "title": req.Title, "lyrics": req.Lyrics, "style": req.Tags, "songLanguage": req.SongLanguage, "instrumental": req.Instrumental}
 	metadata := map[string]any{"source": "music-workbench", "musicFingerprint": fingerprint, "music": options}

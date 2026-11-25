@@ -268,7 +268,7 @@ func videoOperation(refs []TaskReference) string {
 
 func normalizeTaskParameters(kind string, params map[string]any) (map[string]any, error) {
 	allowed := map[string]map[string]bool{
-		KindImage: {"size": true, "quality": true, "imageResolution": true, "count": true},
+		KindImage: {"size": true, "quality": true, "imageResolution": true, "count": true, "transparentBackground": true},
 		KindVideo: {"seconds": true, "ratio": true, "resolution": true, "generateAudio": true, "watermark": true},
 	}[kind]
 	if allowed == nil {
@@ -299,12 +299,19 @@ func normalizeTaskParameters(kind string, params map[string]any) (map[string]any
 				return nil, kernel.BadAuthRequest("生成参数数值无效: " + key)
 			}
 			normalized[key] = number
-		case "generateAudio", "watermark":
-			flag, ok := value.(bool)
-			if !ok {
+		case "generateAudio", "watermark", "transparentBackground":
+			switch flag := value.(type) {
+			case bool:
+				normalized[key] = flag
+			case string:
+				if flag == "true" || flag == "false" {
+					normalized[key] = flag == "true"
+				} else {
+					return nil, kernel.BadAuthRequest("生成参数格式无效: " + key)
+				}
+			default:
 				return nil, kernel.BadAuthRequest("生成参数格式无效: " + key)
 			}
-			normalized[key] = flag
 		}
 	}
 	return normalized, nil

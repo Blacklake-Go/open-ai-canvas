@@ -114,7 +114,7 @@ export function ProviderCredentialModal({ provider, revision, draft: draftProp, 
             okText={busy ? "正在保存…" : "保存凭证"}
             cancelText="取消"
             okButtonProps={{ loading: busy, icon: <KeyRound className="size-3.5" /> }}
-            maskClosable={!hasTypedValue}
+            mask={{ closable: !hasTypedValue }}
             keyboard={!hasTypedValue}
         >
             <div className="flex flex-col gap-4 py-2 text-xs">

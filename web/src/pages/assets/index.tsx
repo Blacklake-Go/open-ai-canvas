@@ -20,7 +20,8 @@ import { AssetRenameModal } from "./asset-rename-modal";
 import { assetGridCardMinWidth, type AssetGridDensity, assetGridDensityOptions, parseAssetGridDensity } from "./asset-grid-density";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { keepPreviousData, useQuery, useQueryClient } from "@tanstack/react-query";
-import { App, Form, Popconfirm, Button, Checkbox, Dropdown, Input, Modal, Space, Tag, Typography, Progress } from "antd";
+import { App, Form, Popconfirm, Button, Checkbox, Dropdown, Input, Space, Tag, Typography, Progress } from "antd";
+import { AppModal } from "@/components/ui/product/app-modal";
 import { useNavigate, useSearchParams } from "react-router";
 import { createOfficialAssetRecommendation } from "@/services/api/official-asset-recommendations";
 import { ensureAssetAvailableForRecommendation } from "@/services/user-data-sync";
@@ -1092,7 +1093,7 @@ export default function AssetsPage() {
                     }}
                 />
             ) : null}
-            <Modal
+            <AppModal
                 className="workspace-modal workspace-modal-wide library-modal"
                 centered
                 styles={{
@@ -1165,7 +1166,7 @@ export default function AssetsPage() {
                             </Form.Item>
                         ) : (
                             <Form.Item label={t("library.assets.form.image")} required>
-                                <div className="rounded-lg border border-dashed border-stone-300 p-4 dark:border-stone-700">
+                                <div className="rounded-lg border border-dashed border-border p-4">
                                     <Button disabled={imageUploading} icon={<Upload className="size-4" />} onClick={() => imageInputRef.current?.click()}>
                                         {imageUploading ? t("library.assets.form.imageUploading") : t("library.assets.form.chooseImage")}
                                     </Button>
@@ -1191,7 +1192,7 @@ export default function AssetsPage() {
                         <Typography.Text strong className="text-xs">
                             {t("library.assets.form.preview")}
                         </Typography.Text>
-                        <div className="mt-2 overflow-hidden rounded-md bg-stone-100 dark:bg-stone-900">
+                        <div className="mt-2 overflow-hidden rounded-md bg-muted">
                             {coverUrl || imageDraft?.dataUrl ? (
                                 <div className={`asset-preview-uploading ${imageUploading ? "is-uploading" : ""}`}>
                                     <img src={coverUrl || imageDraft?.dataUrl} alt="" loading="lazy" decoding="async" className="aspect-[4/3] w-full object-cover" />
@@ -1206,7 +1207,7 @@ export default function AssetsPage() {
                                     ) : null}
                                 </div>
                             ) : (
-                                <div className="flex aspect-[4/3] items-center justify-center bg-stone-100 p-5 text-center text-sm text-stone-500 dark:bg-stone-900">{content || t("library.assets.form.noCover")}</div>
+                                <div className="flex aspect-[4/3] items-center justify-center bg-muted p-5 text-center text-sm text-muted-foreground">{content || t("library.assets.form.noCover")}</div>
                             )}
                             <div className="bg-background p-3">
                                 <Typography.Text strong ellipsis className="block">
@@ -1247,7 +1248,7 @@ export default function AssetsPage() {
                         event.target.value = "";
                     }}
                 />
-            </Modal>
+            </AppModal>
 
             <AssetDrawer
                 asset={previewAsset}
@@ -1268,7 +1269,7 @@ export default function AssetsPage() {
                 }
             />
 
-            <Modal
+            <AppModal
                 className="library-modal library-confirm-modal"
                 title="推荐为官方素材"
                 open={Boolean(recommendAsset)}
@@ -1287,7 +1288,7 @@ export default function AssetsPage() {
                     </Checkbox>
                     <Input.TextArea value={recommendNote} maxLength={2000} showCount rows={4} placeholder="可补充素材用途、来源或合规说明（选填）" onChange={(event) => setRecommendNote(event.target.value)} />
                 </Space>
-            </Modal>
+            </AppModal>
 
             <AssetBatchUploadModal
                 open={batchUploadOpen}
@@ -1300,7 +1301,7 @@ export default function AssetsPage() {
                 }}
             />
 
-            <Modal
+            <AppModal
                 className="library-modal library-confirm-modal"
                 title={folderEditor === "new" ? t("library.assets.folder.create") : t("library.assets.folder.rename")}
                 open={Boolean(folderEditor)}
@@ -1313,7 +1314,7 @@ export default function AssetsPage() {
                 cancelText={t("common.cancel")}
             >
                 <Input autoFocus value={folderName} maxLength={40} placeholder={t("library.assets.folder.namePlaceholder")} onChange={(event) => setFolderName(event.target.value)} onPressEnter={() => void saveFolder()} />
-            </Modal>
+            </AppModal>
 
             <input ref={assetInputRef} type="file" accept="application/zip,.zip" className="hidden" onChange={(event) => void importAssetZip(event.target.files?.[0])} />
             <input
@@ -1327,7 +1328,7 @@ export default function AssetsPage() {
                 }}
             />
 
-            <Modal
+            <AppModal
                 className="library-modal library-confirm-modal"
                 title={t("library.assets.archive.title")}
                 open={Boolean(archivingAsset)}
@@ -1345,8 +1346,8 @@ export default function AssetsPage() {
                 cancelText={t("common.cancel")}
             >
                 {t("library.assets.archive.confirm", { name: archivingAsset?.title })}
-            </Modal>
-            <Modal
+            </AppModal>
+            <AppModal
                 className="library-modal library-confirm-modal"
                 title={t("library.assets.archive.batchTitle")}
                 open={batchArchiveOpen}
@@ -1360,8 +1361,8 @@ export default function AssetsPage() {
                 cancelText={t("common.cancel")}
             >
                 {t("library.assets.archive.batchConfirm", { count: selectedIds.length })}
-            </Modal>
-            <Modal
+            </AppModal>
+            <AppModal
                 className="library-modal library-confirm-modal"
                 title={t("library.assets.delete.title")}
                 open={Boolean(deletingAsset)}
@@ -1372,8 +1373,8 @@ export default function AssetsPage() {
                 cancelText={t("common.cancel")}
             >
                 {t("library.assets.delete.confirm", { name: deletingAsset?.title })}
-            </Modal>
-            <Modal
+            </AppModal>
+            <AppModal
                 className="library-modal library-confirm-modal"
                 title={t("library.assets.delete.batchTitle")}
                 open={batchDeleteOpen}
@@ -1388,7 +1389,7 @@ export default function AssetsPage() {
                 cancelText={t("common.cancel")}
             >
                 {t("library.assets.delete.batchConfirm", { count: selectedIds.length })}
-            </Modal>
+            </AppModal>
             {teamsEnabled && teamShareIds ? <TeamAssetShareModal key={userId} assetIds={teamShareIds} onClose={() => setTeamShareIds(null)} /> : null}
         </>
     );

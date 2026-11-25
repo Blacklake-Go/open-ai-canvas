@@ -1,6 +1,6 @@
 import { creationSource as _creationSource, creationLabel as _creationLabel } from "@/supdance/plugins/i18n/creation-text";
 import { creationText as _creationText, useCreationLocale as _useCreationLocale } from "@/supdance/plugins/i18n/creation-text";
-import { App, Modal } from "antd";
+import { App } from "antd";
 import { ArrowUpRight, Check, ChevronLeft, ChevronRight, FolderOpen, Images, Trash2, X } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { AppModal } from "@/components/ui/product/app-modal";
@@ -384,7 +384,7 @@ export function EcommerceProjectHistory({
                     </nav>
                 </footer>
             </section>
-            <Modal
+            <AppModal
                 className="ecommerce-delete-confirm"
                 open={Boolean(deleteTarget)}
                 title={
@@ -411,7 +411,7 @@ export function EcommerceProjectHistory({
                           : _creationText("creation.9046f7067d426c0f", { value1: deleteTarget?.count || 0 })}
                 </p>
                 <p>{_creationText("creation.2b48ab3883f83e58")}</p>
-            </Modal>
+            </AppModal>
         </AppModal>
     );
 }

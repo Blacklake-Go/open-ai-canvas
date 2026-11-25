@@ -608,16 +608,6 @@ export const deDE: DeepStringRecord<typeof zhCN> = {
         creditLicense: "{{credit}} · Namensnennung und Lizenz",
         filmLabel: "Filmausschnitt {{title}}",
         closeFilm: "Film schließen",
-        contributors: {
-            title: "Gemeinsam Geschichten auf die Leinwand bringen",
-            description: "{{count}} Kreative wirken an Produkt, Entwicklung, Tests und Community mit",
-            viewLabel: "Liste der Mitwirkenden im GitHub-README ansehen",
-            view: "Liste ansehen",
-            list: "Projektmitwirkende",
-            wechat: "WeChat: {{id}}",
-            separator: ", ",
-            founder: "Projektgründer",
-        },
     },
     settings: {
         systemRefreshFailedWith: "Systemmodelle konnten nicht aktualisiert werden: {{error}}",

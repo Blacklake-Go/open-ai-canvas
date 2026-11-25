@@ -28,7 +28,7 @@ export function AppWorkspaceShell({ children }: { children: ReactNode }) {
     useWorkspaceDocumentTitle();
 
     const pagePath = workspacePagePath(pathname);
-    const hideChrome = pathname.startsWith("/admin") || /^\/canvas\/[^/]+/.test(pagePath);
+    const hideChrome = pathname.startsWith("/admin") || /^\/canvas\/[^/]+/.test(pagePath) || /^\/workspace\/image(?:\/|$)/.test(pagePath);
     const showGlobalTopBar = !hideChrome;
     const spatialWorkbench = isSpatialWorkbenchPath(pathname);
     const creationWorkspace = pagePath === "/" || pagePath === "/create";
