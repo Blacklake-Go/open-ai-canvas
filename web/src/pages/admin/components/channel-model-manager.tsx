@@ -640,7 +640,7 @@ export function ChannelModelManager({
                 width={720}
                 rootClassName="admin-model-import-modal"
                 onCancel={closeFetchPreview}
-                maskClosable={!importing}
+                mask={{ closable: !importing }}
                 closable={!importing}
                 footer={[
                     <Button key="cancel" disabled={importing} onClick={closeFetchPreview}>

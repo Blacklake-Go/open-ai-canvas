@@ -1,5 +1,11 @@
 
 
+## AI Pose Gallery 子路径部署
+
+- 线上静态应用来源固定为 `https://github.com/Blacklake-Go/ai-pose-gallery-zh`，部署在 `www.supdance.com/pose/` 与 `one.supdance.com/pose/`。
+- 上游按站点根路径构建。`supdance/pose-subpath` 的 `8b386bb`、`8e33220` 只增加 `/pose/` 的 Vite base、路由 basepath、素材与代理路径适配，不改图库内容、生成协议或权限。
+- 2026-11-25 生产目录切换到 `ec7a81e` 加上述适配；旧目录保留为 `pose.bak-20261125`。`/pose/api/proxy` 仍无生产路由，Qwen/Doubao 代理不在本次范围。
+
 ## 默认英语与八语补译
 
 预演台以当前语言呈现演员、道具、机位、灯光、动作与镜头选项。画布人像质感的选项与无障碍标签也读取词库。场景对象名称、预设 ID 与生成提示词继续按原数据保存。
@@ -387,3 +393,6 @@ The host seams are registered under `supdance-one-identity-community`.
 
 `web/test/supdance-maintainer-metadata.test.ts` 随 GitHub 的 Web 质量检查运行。解决上游冲突后，核对名录、头像、维护者联系方式及原始 MIT 声明。Web 镜像同时携带 `LICENSE` 和 `NOTICE`，正式发布应以通过检查的 SupDance 标签构建并部署。
 
+## 图片工作台与全站完整性补齐
+
+创作页图片模式提交后跳转独立 `/workspace/image/:sessionId` 工作台（`web/src/pages/workspace/`）。结果经 `consumeGenerationTaskMessage` 幂等物化入素材库；云端恢复按 `resultStorageKeys` 重建展示；网络中断标 `syncInterrupted` 自动重连，未确认失败只提供重新获取结果；参数面板与报价接模型能力合同和服务端 `quoteModel`；个人路由受 `imageWorkbenchEnabled` 门禁，团队空间不开放图片生成。创作历史 settings 前后端 16 键对齐（含 `imageResolution`），`instrumental`/`transparentBackground` 布尔往返保持类型。MiniMax Music 协议补 `detachedPolling`，风格/语言并入 prompt（runninghub-standard 1.1.3）。上游退役的 `/timeline/*` 接口与 editor-shell 留置不改动画布本地时间线（`supdance-canvas-timeline-editor`）。

@@ -4,37 +4,37 @@
    ========================================================================== */
 
 .plugin-music-generation {
-    /* --- V2.0 Design Tokens Mapping with Backward-Compatible Fallbacks --- */
-    --music-bg-canvas: var(--ui-bg-canvas, var(--background, #ffffff));
-    --music-bg-surface: var(--ui-bg-surface, var(--card, #ffffff));
-    --music-bg-surface-raised: var(--ui-bg-surface-raised, var(--surface-secondary, var(--muted, #f4f4f5)));
-    --music-bg-overlay: var(--ui-bg-overlay, var(--popover, #ffffff));
-    --music-bg-hover: var(--ui-bg-hover, var(--accent, rgba(0, 0, 0, 0.04)));
-    --music-bg-active: var(--ui-bg-active, rgba(0, 0, 0, 0.08));
+    /* --- Design Tokens Mapping aligned with globals.css --- */
+    --music-bg-canvas: var(--background, #ffffff);
+    --music-bg-surface: var(--card, #ffffff);
+    --music-bg-surface-raised: var(--surface-secondary, var(--muted, #f4f4f5));
+    --music-bg-overlay: var(--popover, #ffffff);
+    --music-bg-hover: var(--accent, rgba(0, 0, 0, 0.04));
+    --music-bg-active: rgba(0, 0, 0, 0.08);
 
-    --music-border-subtle: var(--ui-border-subtle, var(--border, #e4e4e7));
-    --music-border-control: var(--ui-border-control, var(--border, #d4d4d8));
-    --music-border-strong: var(--ui-border-strong, #a1a1aa);
+    --music-border-subtle: var(--border, #e4e4e7);
+    --music-border-control: var(--border, #d4d4d8);
+    --music-border-strong: var(--user-border-strong, #a1a1aa);
 
-    --music-text-primary: var(--ui-text-primary, var(--foreground, #18181b));
-    --music-text-secondary: var(--ui-text-secondary, var(--muted-foreground, #71717a));
-    --music-text-muted: var(--ui-text-muted, #a1a1aa);
+    --music-text-primary: var(--foreground, #18181b);
+    --music-text-secondary: var(--muted-foreground, #71717a);
+    --music-text-muted: var(--user-text-tertiary, #a1a1aa);
 
-    --music-primary: var(--ui-primary, var(--primary, #18181b));
-    --music-primary-fg: var(--ui-primary-foreground, var(--primary-foreground, #ffffff));
-    --music-primary-hover: var(--ui-primary-hover, #27272a);
+    --music-primary: var(--primary, #18181b);
+    --music-primary-fg: var(--primary-foreground, #ffffff);
+    --music-primary-hover: var(--primary-hover, #27272a);
 
-    --music-color-error: var(--ui-color-error, var(--destructive, #ef4444));
-    --music-color-success: var(--ui-color-success, #10b981);
-    --music-color-warning: var(--ui-color-warning, #f59e0b);
+    --music-color-error: var(--destructive, #ef4444);
+    --music-color-success: var(--success, #10b981);
+    --music-color-warning: var(--warning, #f59e0b);
 
-    --music-ring: var(--ui-ring, var(--ring, rgba(24, 24, 27, 0.2)));
+    --music-ring: var(--ring, rgba(24, 24, 27, 0.2));
 
     --music-radius-xs: var(--radius-xs, 4px);
     --music-radius-sm: var(--radius-sm, 6px);
-    --music-radius-md: var(--radius-md, var(--user-radius-control, var(--radius, 8px)));
-    --music-radius-lg: var(--radius-lg, var(--user-radius-card, 12px));
-    --music-radius-full: var(--radius-full, 9999px);
+    --music-radius-md: var(--user-radius-control, var(--radius, 8px));
+    --music-radius-lg: var(--user-radius-card, 12px);
+    --music-radius-full: 9999px;
 
     --music-elevation-card: var(--elevation-card, 0 1px 3px 0 rgba(0, 0, 0, 0.04), 0 1px 2px -1px rgba(0, 0, 0, 0.04));
     --music-elevation-overlay: var(--elevation-overlay, 0 10px 15px -3px rgba(0, 0, 0, 0.08), 0 4px 6px -4px rgba(0, 0, 0, 0.04));
@@ -49,8 +49,8 @@
 
 /* Dark mode elevation refinement: hairline inner border and deep drop shadow */
 .dark .plugin-music-generation {
-    --music-bg-hover: var(--ui-bg-hover, rgba(255, 255, 255, 0.06));
-    --music-bg-active: var(--ui-bg-active, rgba(255, 255, 255, 0.1));
+    --music-bg-hover: rgba(255, 255, 255, 0.06);
+    --music-bg-active: rgba(255, 255, 255, 0.1);
     --music-elevation-card: var(--elevation-card, inset 0 0 0 1px rgba(255, 255, 255, 0.08), 0 2px 4px rgba(0, 0, 0, 0.3));
     --music-elevation-overlay: var(--elevation-overlay, inset 0 0 0 1px rgba(255, 255, 255, 0.12), 0 12px 30px -4px rgba(0, 0, 0, 0.5));
 }

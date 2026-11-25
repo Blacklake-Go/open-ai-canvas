@@ -221,3 +221,21 @@
   - 创作面板居中 `960px`，灵感大厅保持 4 列卡片流。
 - **Wide (`> 1440px`, `2xl`)**：
   - 支持多窗格并列（如左侧生成列表、右侧画布实时联动）。
+
+---
+
+## 9. 运行时权威令牌与尺寸对齐表 (Canonical Runtime Token & Dimension Reconciliation)
+
+为确保规范文档与 `web/src/styles/globals.css`、`button-tokens.css`、`admin-tokens.css` 及 `app-theme.ts` 运行时实现完全一致，代码中必须消费真实注册的运行时 CSS 变量（而非文档概念前缀 `--ui-*`）：
+
+### 9.1 语义令牌运行时映射
+- **画布与页面底色 (`--ui-bg-canvas`)**：全局/公开页使用 `--background` (`bg-background`) 或 `--auth-page-bg`；用户工作台 (`.app-user-workspace`) 使用 `--user-page-bg`。
+- **卡片与表面 (`--ui-bg-surface` / `--ui-bg-surface-subtle` / `--ui-bg-overlay`)**：全局使用 `--card` (`bg-card`)、`--muted` (`bg-muted`)、`--popover` (`bg-popover`)、`--auth-card-bg`；用户工作台使用 `--user-surface`、`--user-surface-muted`、`--user-surface-raised`、`--user-surface-hover`。
+- **文本层级 (`--ui-text-primary` / `--ui-text-muted` / `--ui-text-tertiary`)**：全局使用 `--foreground` (`text-foreground`)、`--muted-foreground` (`text-muted-foreground`)、`--text-secondary`、`--text-tertiary`；用户工作台使用 `--user-ink`、`--user-ink-muted`、`--user-ink-soft`。
+- **边框与主按钮 (`--ui-border-*` / `--ui-primary`)**：边框使用 `--border` (`border-border`) 与 `--ring`；主操作按钮统一消费 `button-tokens.css` 的 `--button-primary-bg`、`--button-primary-fg`、`--button-primary-hover-bg`、`--button-primary-active-bg`、`--button-height` (`34px`)、`--button-radius` (`8px`)。
+- **Z-Index 运行时变量 (`--z-*`)**：实际 CSS 注册变量为 `--z-canvas: 0`、`--z-canvas-overlay: 5`、`--z-node: 10`、`--z-node-active: 20`、`--z-toolbar: 30`、`--z-node-toolbar: 50`、`--z-panel: 60`、`--z-panel-floating: 80`、`--z-modal: 100`、`--z-modal-overlay: 110`、`--z-canvas-overlay-active: 150`、`--z-popover: 200`、`--z-toast: 500`、`--z-dialog-popover: 1100`、`--z-tooltip: 1150`、`--z-loader: 1200`、`--z-max: 2000`（以及页面级别名 `--z-page: 0`、`--z-sticky: 30`、`--z-dropdown: 200`、`--z-drawer: 300`、`--z-dialog: 400`、`--z-notice: 500`）。
+
+### 9.2 布局与控件尺寸运行时基准
+- **用户工作台侧边栏宽度**：`--workspace-sidebar-width: 200px`（折叠态 `64px`）。
+- **用户工作台顶栏高度**：`--workspace-topbar-height: 56px`。
+- **工作台与通用按钮标准高度**：`--user-control-height: 34px` / `--button-height: 34px`（SM `--user-control-height-sm: 28px`，LG `40px`；`getWorkspaceAntThemeConfig()` 对应 `34 / 28 / 40`，全局默认 `getAntThemeConfig()` 对应 `36 / 30 / 42`）。

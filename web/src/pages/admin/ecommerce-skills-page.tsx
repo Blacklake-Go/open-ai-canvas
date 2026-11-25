@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { Alert, App, Button, Input, Progress, Select, Space, Switch, Table, Tag, Typography, Upload } from "antd";
 import { Download, RefreshCw, Sparkles } from "lucide-react";
-import { AppModal } from "@/components/ui/product/app-modal";
+import { AdminModal } from "./ui/overlays";
 import { EcommerceLibraryPanel } from "./ecommerce-library-panel";
 import { installEcommerceSkillFile, installEcommerceSkillGitHub, renameEcommerceSkill, listEcommerceManagedSkills, setEcommerceManagedSkillEnabled, type EcommerceManagedSkill } from "@/services/api/ecommerce-skills";
 import "./ecommerce-skills.css";
@@ -229,7 +229,7 @@ export default function EcommerceSkillsPage() {
                     },
                 ]}
             />
-            <AppModal title="安装电商 Skills" open={installOpen} onCancel={() => !installing && setInstallOpen(false)} closable={!installing} maskClosable={!installing} footer={null}>
+            <AdminModal title="安装电商 Skills" open={installOpen} onCancel={() => !installing && setInstallOpen(false)} closable={!installing} mask={{ closable: !installing }} footer={null}>
                 <Space orientation="vertical" size={16} style={{ width: "100%" }}>
                     <Alert
                         type="info"
@@ -259,7 +259,7 @@ export default function EcommerceSkillsPage() {
                         从 GitHub 安装并自动更新
                     </Button>
                 </Space>
-            </AppModal>
+            </AdminModal>
         </EcommerceLibraryPanel>
     );
 }

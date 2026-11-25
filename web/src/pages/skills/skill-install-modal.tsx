@@ -1,4 +1,5 @@
-import { App, Button, Form, Input, Modal, Upload, type UploadFile } from "antd";
+import { App, Button, Form, Input, Upload, type UploadFile } from "antd";
+import { AppModal } from "@/components/ui/product/app-modal";
 import { Select } from "@/components/ui/base/select";
 import { Switch } from "@/components/ui/base/switch";
 import { SegmentedControl } from "@/components/ui/base/segmented-control";
@@ -103,7 +104,7 @@ export function SkillInstallModal({ open, onClose, onInstalled, onManualCreate }
     };
 
     return (
-        <Modal
+        <AppModal
             className="skill-install-modal"
             open={open}
             width={680}
@@ -209,6 +210,6 @@ export function SkillInstallModal({ open, onClose, onInstalled, onManualCreate }
                     </Form.Item>
                 ) : null}
             </Form>
-        </Modal>
+        </AppModal>
     );
 }

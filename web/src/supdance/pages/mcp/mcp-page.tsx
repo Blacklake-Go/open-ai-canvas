@@ -15,7 +15,7 @@ export default function McpPage() {
     }, []);
 
     return (
-        <div className="min-h-screen bg-[#fafafc] text-zinc-800 selection:bg-rose-500/20 selection:text-rose-600 dark:bg-[#070709] dark:text-zinc-100 dark:selection:bg-rose-500/30 dark:selection:text-white transition-colors duration-200">
+        <div className="min-h-screen bg-background text-foreground selection:bg-primary/15 selection:text-foreground transition-colors duration-200">
             {/* 顶栏 Header */}
             <McpHeader />
 
@@ -36,14 +36,14 @@ export default function McpPage() {
                     </div>
 
                     {/* 主标题 */}
-                    <h1 className="mt-6 text-4xl font-extrabold tracking-tight text-zinc-900 sm:text-6xl sm:leading-[1.15] dark:text-white">
+                    <h1 className="mt-6 text-4xl font-extrabold tracking-tight text-foreground sm:text-6xl sm:leading-[1.15]">
                         让 AI 创意无限流动
                         <br />
                         <span className="bg-gradient-to-r from-rose-500 via-pink-500 to-purple-600 bg-clip-text text-transparent dark:from-rose-400 dark:via-pink-400 dark:to-purple-400">SupDance 插件与 MCP 中枢</span>
                     </h1>
 
                     {/* 副标题 */}
-                    <p className="mx-auto mt-6 max-w-2xl text-base leading-relaxed text-zinc-600 sm:text-lg dark:text-zinc-400">
+                    <p className="mx-auto mt-6 max-w-2xl text-base leading-relaxed text-muted-foreground sm:text-lg">
                         专为 Cursor、Claude Desktop、Windsurf 及 ComfyUI 创作者打造。一键安装 SupDance CLI，无缝接入文生图、高清生视频、多轨音乐与智能分镜 Agent 能力。
                     </p>
 
@@ -51,24 +51,18 @@ export default function McpPage() {
                     <div className="mt-8 flex flex-wrap items-center justify-center gap-3.5">
                         <a
                             href="#cli-quickstart"
-                            className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-rose-500 to-pink-600 px-6 py-3 text-sm font-semibold text-white shadow-lg shadow-rose-500/25 transition-all hover:scale-105 hover:from-rose-600 hover:to-pink-700"
+                            className="inline-flex items-center gap-2 rounded-xl bg-[var(--button-primary-bg)] px-6 py-3 text-sm font-semibold text-[var(--button-primary-fg)] shadow-[var(--button-primary-shadow)] transition-all hover:scale-105 hover:bg-[var(--button-primary-hover-bg)]"
                         >
                             <Terminal className="size-4" />
                             <span>快速安装 CLI / MCP</span>
                         </a>
 
-                        <a
-                            href="#plugins-market"
-                            className="inline-flex items-center gap-2 rounded-xl border border-zinc-200 bg-white px-6 py-3 text-sm font-semibold text-zinc-800 shadow-sm backdrop-blur-sm transition-all hover:bg-zinc-50 dark:border-white/15 dark:bg-white/5 dark:text-white dark:hover:bg-white/10"
-                        >
+                        <a href="#plugins-market" className="inline-flex items-center gap-2 rounded-xl border border-border bg-card px-6 py-3 text-sm font-semibold text-foreground shadow-xs backdrop-blur-sm transition-all hover:bg-muted">
                             <Layers className="size-4" />
                             <span>浏览插件生态</span>
                         </a>
 
-                        <a
-                            href="#tools-schema"
-                            className="inline-flex items-center gap-2 rounded-xl border border-zinc-200 bg-white px-5 py-3 text-sm font-semibold text-zinc-700 shadow-sm transition-all hover:bg-zinc-50 dark:border-white/15 dark:bg-white/5 dark:text-zinc-200 dark:hover:bg-white/10 dark:hover:text-white"
-                        >
+                        <a href="#tools-schema" className="inline-flex items-center gap-2 rounded-xl border border-border bg-card px-5 py-3 text-sm font-semibold text-foreground shadow-xs transition-all hover:bg-muted">
                             <Wrench className="size-4" />
                             <span>查看可用工具清单</span>
                         </a>
@@ -77,7 +71,7 @@ export default function McpPage() {
                             href={OFFICIAL_REPO_URL}
                             target="_blank"
                             rel="noreferrer"
-                            className="inline-flex items-center gap-1.5 rounded-xl border border-zinc-200 bg-white px-4 py-3 text-sm font-semibold text-zinc-700 shadow-sm transition-all hover:bg-zinc-50 dark:border-white/15 dark:bg-white/5 dark:text-zinc-200 dark:hover:bg-white/10 dark:hover:text-white"
+                            className="inline-flex items-center gap-1.5 rounded-xl border border-border bg-card px-4 py-3 text-sm font-semibold text-foreground shadow-xs transition-all hover:bg-muted"
                         >
                             <GitHubIcon className="size-4" />
                             <span>GitHub</span>
@@ -86,7 +80,7 @@ export default function McpPage() {
                     </div>
 
                     {/* 核心亮点标签 */}
-                    <div className="mt-12 flex flex-wrap items-center justify-center gap-6 border-t border-zinc-200/80 pt-8 text-xs text-zinc-500 dark:border-white/5 dark:text-zinc-400">
+                    <div className="mt-12 flex flex-wrap items-center justify-center gap-6 border-t border-border pt-8 text-xs text-muted-foreground">
                         <div className="flex items-center gap-2">
                             <ShieldCheck className="size-4 text-emerald-500" />
                             <span>100% Anthropic MCP 协议标准</span>

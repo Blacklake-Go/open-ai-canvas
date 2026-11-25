@@ -2,7 +2,8 @@ import { creationOptions as _creationOptions } from "@/supdance/plugins/i18n/cre
 import { creationText as _creationText, useCreationLocale as _useCreationLocale } from "@/supdance/plugins/i18n/creation-text";
 import { useUserStore } from "@/stores/use-user-store";
 import { useSkillAdministrationAccess, useSkillLibraryAccess } from "@/lib/skill-access";
-import { App, Button, Checkbox, Input, Modal, Segmented } from "antd";
+import { App, Button, Checkbox, Input, Segmented } from "antd";
+import { AppModal } from "@/components/ui/product/app-modal";
 import { BookOpen, RefreshCw, Search, Upload } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { addSkill, installSkillUpload, listAddedSkills, listSkills, type Skill } from "@/services/api/skills";
@@ -198,7 +199,7 @@ function AuthorizedEcommerceSkillPicker({ selected, onChange, disabled }: Props)
                 </>
             ) : null}
             {selected.length ? <small className="ecommerce-model-note"> {_creationText("creation.b9a564c2c1240627")}</small> : null}
-            <Modal title={_creationText("creation.24f92e8b35c127ff")} open={open} onCancel={() => setOpen(false)} footer={<Button onClick={() => setOpen(false)}> {_creationText("creation.c0b3fbff51ccc40b")}</Button>} width={780} destroyOnHidden>
+            <AppModal title={_creationText("creation.24f92e8b35c127ff")} open={open} onCancel={() => setOpen(false)} footer={<Button onClick={() => setOpen(false)}> {_creationText("creation.c0b3fbff51ccc40b")}</Button>} width={780} destroyOnHidden>
                 <div className="ecommerce-skill-controls">
                     <Segmented
                         value={tab}
@@ -291,7 +292,7 @@ function AuthorizedEcommerceSkillPicker({ selected, onChange, disabled }: Props)
                     </Button>
                 ) : null}
                 <p className="ecommerce-skill-count">{_creationText("creation.d98610e2350ba7fd", { value1: selected.length })}</p>
-            </Modal>
+            </AppModal>
         </div>
     );
 }

@@ -19,11 +19,11 @@ export default function NotFound() {
                     {Emblem ? <Emblem /> : <WorkspaceSignalIcon variant="empty" size="lg" className="mx-auto mb-5" />}
                     <div className="mb-2 text-xs font-semibold tabular-nums text-foreground/45">404</div>
                     <h1 className="not-found-title text-3xl font-semibold tracking-normal">{notFound?.title || t("account.notFound.title")}</h1>
-                    <p className="mt-3 text-sm leading-6 text-stone-500 dark:text-stone-400">{notFound?.description || t("account.notFound.description")}</p>
+                    <p className="mt-3 text-sm leading-6 text-muted-foreground">{notFound?.description || t("account.notFound.description")}</p>
                     <div className="mt-8 flex flex-wrap justify-center gap-3">
                         <Link
                             to="/"
-                            className="inline-flex h-9 items-center gap-2 rounded-md bg-stone-950 px-4 text-[var(--fs-body)] font-medium text-white transition-colors hover:bg-stone-800 dark:bg-stone-100 dark:text-stone-950 dark:hover:bg-stone-200"
+                            className="inline-flex h-[var(--button-height)] items-center gap-[var(--button-gap)] rounded-[var(--button-radius)] bg-[var(--button-primary-bg)] px-[var(--button-padding-x-lg)] text-[var(--button-font-size)] font-medium text-[var(--button-primary-fg)] shadow-[var(--button-primary-shadow)] transition-colors hover:bg-[var(--button-primary-hover-bg)] active:bg-[var(--button-primary-active-bg)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--ring)]"
                         >
                             <Home className="size-4" />
                             {t("auth.backHome")}

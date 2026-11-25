@@ -9,7 +9,7 @@
 // 文件本身不经本页直接传给官方素材接口：先走现有 `uploadResourceFile`
 // （`@/services/api/resources`，分片/直传两条路径）拿到 Resource ID，
 // 再调创建/编辑接口；`resourceId` 也可手动填写已上传资源的 ID。
-import { App, Button, Form, Input, InputNumber, Modal, Progress } from "antd";
+import { App, Button, Form, Input, InputNumber, Progress } from "antd";
 import type { ColumnsType } from "antd/es/table";
 import { AudioLines, Box, CloudUpload, Eye, Image as ImageIcon, Pencil, RefreshCw, Search, Trash2, Video } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
@@ -36,6 +36,7 @@ import {
 
 import { AdminPageFrame } from "./components/admin-shell";
 import { AdminDataTable, AdminStatusBadge, AdminTableEmpty, PaginationBar } from "./components/admin-ui";
+import { AdminModal } from "./ui/overlays";
 
 const STATUS_META: Record<OfficialAssetStatus, { label: string; tone: "neutral" | "success" | "warning" }> = {
     draft: { label: "草稿", tone: "neutral" },
@@ -546,7 +547,7 @@ export default function AdminOfficialAssetsPage() {
                 }
             />
 
-            <Modal
+            <AdminModal
                 title={editing ? `编辑官方素材` : "上传官方素材"}
                 open={formOpen}
                 destroyOnClose
@@ -625,9 +626,9 @@ export default function AdminOfficialAssetsPage() {
                         </Button>
                     </div>
                 </Form>
-            </Modal>
+            </AdminModal>
 
-            <Modal title={preview ? preview.title : ""} open={Boolean(preview)} footer={null} width={720} onCancel={() => setPreview(null)}>
+            <AdminModal title={preview ? preview.title : ""} open={Boolean(preview)} footer={null} width={720} onCancel={() => setPreview(null)}>
                 {preview ? (
                     <div className="grid gap-3">
                         <div className="overflow-hidden rounded-lg bg-muted">
@@ -690,7 +691,7 @@ export default function AdminOfficialAssetsPage() {
                         </dl>
                     </div>
                 ) : null}
-            </Modal>
+            </AdminModal>
         </AdminPageFrame>
     );
 }

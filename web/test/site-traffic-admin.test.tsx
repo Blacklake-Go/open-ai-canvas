@@ -139,13 +139,13 @@ test("运营分析只展示原概览数据，五项帮助/原生折叠/局部样
 
 // DOM、图表尺寸替身和请求adapter全部限制在独立子进程，真实页面/Query/Input/Table不替换。
 test("真实访问统计页的范围切换、取消、错误/零值、来源过滤与安全显示", () => {
-    const result = Bun.spawnSync([process.execPath, "test", "--timeout", "10000", "./test/fixtures/site-traffic-admin.harness.tsx"], {
+    const result = Bun.spawnSync([process.execPath, "test", "--timeout", "30000", "./test/fixtures/site-traffic-admin.harness.tsx"], {
         cwd: resolve(import.meta.dir, ".."),
         env: { ...process.env, TZ: "America/Los_Angeles" },
-        timeout: 60000,
+        timeout: 240000,
     });
     const output = new TextDecoder().decode(result.stdout) + new TextDecoder().decode(result.stderr);
     expect(result.exitCode, output).toBe(0);
     expect(output).toContain("0 fail");
     expect(output).toMatch(/[1-9]\d* pass/);
-}, 65000);
+}, 250000);

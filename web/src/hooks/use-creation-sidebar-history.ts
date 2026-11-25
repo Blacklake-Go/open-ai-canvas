@@ -42,7 +42,7 @@ export function useCreationSidebarHistory(userId: string) {
                     let mode: CreationMode = "text";
                     for (let index = conversation.messages.length - 1; index >= 0; index--) {
                         const candidate = conversation.messages[index].mode;
-                        if (candidate === "video" || candidate === "image" || candidate === "text") {
+                        if (candidate === "video" || candidate === "image" || candidate === "text" || candidate === "music") {
                             mode = candidate;
                             break;
                         }

@@ -1,5 +1,6 @@
 import { useEffect, useState, useCallback } from "react";
-import { App, Button, Modal, Tag, Image as AntImage, Segmented } from "antd";
+import { App, Button, Tag, Image as AntImage, Segmented } from "antd";
+import { AppModal } from "@/components/ui/product/app-modal";
 import { Archive, Bug, CheckCircle2, Clock, Inbox, Lightbulb, MessageSquare, Paperclip, Play, Plus, RefreshCw } from "lucide-react";
 import { useTranslation } from "react-i18next";
 
@@ -125,11 +126,11 @@ export function FeedbackInboxPane() {
             />
 
             {previewVideoUrl ? (
-                <Modal open={Boolean(previewVideoUrl)} onCancel={() => setPreviewVideoUrl(null)} footer={null} width={720} destroyOnClose title={t("account.feedback.videoPreview")}>
+                <AppModal open={Boolean(previewVideoUrl)} onCancel={() => setPreviewVideoUrl(null)} footer={null} width={720} destroyOnClose title={t("account.feedback.videoPreview")}>
                     <div className="py-2">
                         <video src={previewVideoUrl} controls autoPlay className="w-full max-h-[60vh] rounded-lg bg-black" />
                     </div>
-                </Modal>
+                </AppModal>
             ) : null}
         </section>
     );

@@ -1,6 +1,7 @@
 import { creationSource as _creationSource, creationLabel as _creationLabel } from "@/supdance/plugins/i18n/creation-text";
 import { creationText as _creationText, useCreationLocale as _useCreationLocale } from "@/supdance/plugins/i18n/creation-text";
-import { Button, Modal } from "antd";
+import { Button } from "antd";
+import { AppModal } from "@/components/ui/product/app-modal";
 import { useRef, useState } from "react";
 import type { EcommerceDraft, EcommercePlan } from "@/services/api/ecommerce";
 import { assertCommerceClaimsGrounded, assertCommercePlanCurrent, excludeCommerceFacts } from "./planner";
@@ -74,7 +75,7 @@ export function GenerationConfirmation({
                 {label ||
                     (completed ? _creationText("creation.ea1044031e628098") : remaining < plan.images.length ? _creationText("creation.b1f4e5832f275057", { value1: remaining }) : _creationText("creation.a37ae81f86b20a91", { value1: plan.images.length }))}
             </Button>
-            <Modal
+            <AppModal
                 title={_creationText("creation.219004c1c9e86529")}
                 open={open}
                 footer={null}
@@ -102,7 +103,7 @@ export function GenerationConfirmation({
                     />
                 </div>
                 {confirming ? <p role="status">{_creationText("creation.9ce9f7db2016c391")}</p> : null}
-            </Modal>
+            </AppModal>
         </>
     );
 }

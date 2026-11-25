@@ -3,9 +3,9 @@ import { captureSkillLibraryAccess, hasSkillLibraryAccess, isSkillLibraryAccessC
 import { lazy, Suspense, useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { App, Button, Spin } from "antd";
 import { Tooltip } from "@/components/ui/base/tooltip";
-import { History, Maximize2, PenLine } from "lucide-react";
+import { ChevronDown, History, Maximize2, PenLine } from "lucide-react";
 import { AnimatePresence, motion, useReducedMotion } from "motion/react";
-import { useNavigate } from "react-router";
+import { useNavigate, useSearchParams } from "react-router";
 import { useTranslation } from "react-i18next";
 
 import type { AssetLibraryPickerItem } from "@/components/assets/asset-library-picker-modal";
@@ -25,15 +25,17 @@ import { LEGACY_TEXT_THINKING_CONFIG, isThinkingLevel, resolveThinkingLevel, thi
 import { modelCapabilityConfigFor, videoDurationAllowed, videoDurationOptions } from "@/lib/model-capabilities";
 import { preserveImageSettings as normalizeImageValue, mediaSettingIssues } from "@/lib/media-settings";
 import { inferVideoOperation, modelGroupReferenceLimits, resolveCompatibleModel, mergedImageCapabilityConfig, type ModelRequirements } from "@/lib/model-selection";
-import type { BackendGenerationResult } from "@/services/api/generation-task";
+import { createClientUUID } from "@/lib/client-id";
+import { prepareBackendGenerationTask, type BackendGenerationResult } from "@/services/api/generation-task";
 import type { Skill } from "@/services/api/skills";
-import type { GenerationTask } from "@/services/api/task-center";
+import { createGenerationTask, type CreateTaskInput, type GenerationTask } from "@/services/api/task-center";
 import { loadCreationConversations, pendingCreationTaskIds, removeCreationConversationSnapshot, updateCreationConversationSnapshot } from "@/services/creation-conversation-store";
 import { readCreationConversationSnapshot, writeCreationConversationSnapshot } from "@/services/creation-conversation-snapshot";
 import { localForageStorageForScope } from "@/lib/localforage-storage";
 import { creationHistoryAPI } from "@/services/api/creation-history";
 import { CreationHistorySync, CREATION_HISTORY_SYNC_KEY, type HistorySyncStatus } from "@/services/creation-history-sync";
 import { creationHistoryMedia, restoreHistoryMedia } from "@/services/creation-history-media";
+import { historySettingBool } from "@/services/creation-history-payload";
 import { resolveModelChannel, resolveModelRequestConfig, selectableModelsByCapability, useConfigStore, useEffectiveConfig } from "@/stores/use-config-store";
 import { useCreationPreferencesStore } from "@/stores/use-creation-preferences-store";
 import { useAssetStore } from "@/stores/use-asset-store";
@@ -187,9 +189,35 @@ export default function CreatePage() {
     const remoteHistorySnapshots = useRef(new WeakSet<CreationConversation[]>());
     const [historySync, setHistorySync] = useState<HistorySyncStatus>({ phase: "local" });
     const inspirationSourcesVisible = useUserStore((state) => state.features.inspirationSourcesVisible);
+    const imageWorkbenchEnabled = useUserStore((state) => state.features.imageWorkbenchEnabled);
     const { homepageShowcaseEnabled: showInspirations } = useCompactPickerSettings();
+    const [searchParams, setSearchParams] = useSearchParams();
+    const urlModeParam = searchParams.get("mode") || searchParams.get("type");
+    // 功能关闭时图片模式请求按未指定处理，偏好/URL 都回退到文本，避免跳进被门禁拦下的工作台。
+    const validUrlMode: CreationMode | null = (urlModeParam === "image" && imageWorkbenchEnabled) || urlModeParam === "video" || urlModeParam === "music" || urlModeParam === "text" ? urlModeParam : null;
+    const requestedConversation = searchParams.get("conversation");
+    useEffect(() => {
+        if (!requestedConversation) return;
+        if (!imageWorkbenchEnabled) return;
+        if (requestedConversation === "new") {
+            if (validUrlMode === "image") {
+                navigate(workspacePath("/workspace/image"), { replace: true });
+            }
+            return;
+        }
+        // 如果请求的会话是图像生成会话（或当前为图像模式），重定向至独立创作工作区
+        const found = conversations.find((c) => c.id === requestedConversation);
+        const isImage = found ? found.messages.some((m) => m.mode === "image") : validUrlMode === "image";
+        if (isImage) {
+            navigate(workspacePath(`/workspace/image/${encodeURIComponent(requestedConversation)}`), { replace: true });
+        }
+    }, [requestedConversation, conversations, validUrlMode, navigate, imageWorkbenchEnabled]);
     const [conversationScope, setConversationScope] = useState<string | null>(() => (initialConversationSnapshot ? activeConversationScope : null));
-    const [mode, setMode] = useState<CreationMode>(() => (workspaceTeamId ? "text" : initialComposerPreferences.mode || defaultCreationMode));
+    const [mode, setMode] = useState<CreationMode>(() => {
+        if (workspaceTeamId) return "text";
+        const preferred = validUrlMode || initialComposerPreferences.mode || defaultCreationMode;
+        return preferred === "image" && !imageWorkbenchEnabled ? "text" : preferred;
+    });
     const [prompt, setPrompt] = useState("");
     const [attachments, setAttachments] = useState<CreationAttachment[]>([]);
     const promptRef = useRef(prompt);
@@ -236,6 +264,7 @@ export default function CreatePage() {
     const reducedMotion = useReducedMotion();
     const [launchpadCondensed, setLaunchpadCondensed] = useState(false);
     const followLatestMessageRef = useRef(true);
+    const [showScrollBottom, setShowScrollBottom] = useState(false);
     const taskSyncWarningRef = useRef(false);
     const activeGenerationTaskIdsRef = useRef(new Set<string>());
     const retryPreparingRef = useRef(new Set<string>());
@@ -331,7 +360,9 @@ export default function CreatePage() {
             ),
         [addedSkills, attachments, draftReferences, canUseSkills],
     );
-    const isEmpty = !activeConversation?.messages.length;
+    // 首页对于图片生成始终跳转至独立工作区；首页仅保留输入入口与校验反馈
+    const isImageConversation = activeConversation?.messages.some((m) => m.mode === "image");
+    const isEmpty = mode === "image" || isImageConversation || !activeConversation?.messages.length;
 
     // 空首页从顶部开始；有消息的对话由跟随消息逻辑管理滚动。
     useLayoutEffect(() => {
@@ -358,7 +389,8 @@ export default function CreatePage() {
     useEffect(() => {
         if (!composerPreferencesHydrated || composerPreferencesInitialized) return;
         const saved = useCreationPreferencesStore.getState().preferences;
-        const nextMode = workspaceTeamId ? "text" : saved.mode || defaultCreationMode;
+        const preferredMode = workspaceTeamId ? "text" : validUrlMode || saved.mode || defaultCreationMode;
+        const nextMode = preferredMode === "image" && !imageWorkbenchEnabled ? "text" : preferredMode;
         setMode(nextMode);
         if (nextMode === "image" && saved.image) {
             if (saved.image.ratio) setRatio(saved.image.ratio);
@@ -371,7 +403,18 @@ export default function CreatePage() {
             if (saved.video.videoQuality) setVideoQuality(saved.video.videoQuality);
         }
         setComposerPreferencesInitialized(true);
-    }, [composerPreferencesHydrated, composerPreferencesInitialized]);
+    }, [composerPreferencesHydrated, composerPreferencesInitialized, validUrlMode, imageWorkbenchEnabled]);
+
+    useEffect(() => {
+        if (validUrlMode && validUrlMode !== mode && (!workspaceTeamId || validUrlMode === "text")) {
+            setMode(validUrlMode);
+        }
+    }, [validUrlMode, mode]);
+
+    // 功能开关异步刷新后可能变 false：当前停留在图片模式时立即回退，入口和提交同步关闭。
+    useEffect(() => {
+        if (!imageWorkbenchEnabled && mode === "image") setMode("text");
+    }, [imageWorkbenchEnabled, mode]);
 
     useEffect(() => {
         if (!composerPreferencesHydrated || !composerPreferencesInitialized || mode !== "image") return;
@@ -483,13 +526,7 @@ export default function CreatePage() {
     const saveConversationHistory = useCallback(async (items: CreationConversation[]) => {
         const session = historySessionRef.current;
         if (!session) throw new Error("创作历史尚未就绪");
-        await session.save(items);
-        if (session !== historySessionRef.current) return;
-        if (!historyTimerRef.current)
-            historyTimerRef.current = window.setTimeout(() => {
-                historyTimerRef.current = null;
-                if (session === historySessionRef.current) void session.sync();
-            }, 700);
+        await session.saveAndScheduleSync(items, historyTimerRef);
     }, []);
 
     useEffect(() => () => abortRef.current?.abort(), []);
@@ -731,8 +768,19 @@ export default function CreatePage() {
 
     const selectMode = (next: CreationMode) => {
         if (workspaceTeamId && next !== "text") return;
+        if (next === "image" && !imageWorkbenchEnabled) return;
         setMode(next);
         rememberMode(next);
+        setSearchParams(
+            (prev) => {
+                const nextParams = new URLSearchParams(prev);
+                if (nextParams.get("mode") !== next) {
+                    nextParams.set("mode", next);
+                }
+                return nextParams;
+            },
+            { replace: true },
+        );
         if (next === "music") return;
         const nextModels = selectableModelsByCapability(config, next);
         const current = next === "text" ? config.textModel : next === "image" ? config.imageModel : config.videoModel;
@@ -1009,7 +1057,13 @@ export default function CreatePage() {
         }
         const releaseSubmitGate = () => submitGateRef.current.release(submitToken);
         const text = prompt.trim() || (mode === "music" ? musicLyrics.trim() : "");
-        if (!text || busy || referenceReplacementBusy || referenceDropLock.current || !activeConversation) {
+        if (!text) {
+            releaseRetryLock();
+            releaseSubmitGate();
+            toast.warning(t("create.page.promptRequired", "请输入提示词后再生成"));
+            return;
+        }
+        if (busy || referenceReplacementBusy || referenceDropLock.current || !activeConversation) {
             releaseRetryLock();
             releaseSubmitGate();
             return;
@@ -1099,6 +1153,98 @@ export default function CreatePage() {
         }
         const expandedPrompt = skillExecution.prompt;
         const referenceMetadata = skillExecution.metadata;
+
+        if (mode === "image") {
+            const taskCount = Math.max(1, Math.min(imageBatchLimit, Math.floor(Number(count) || 1)));
+            const targetSessionId = `c-${createClientUUID()}`;
+
+            let taskInput: CreateTaskInput;
+            try {
+                taskInput = await prepareBackendGenerationTask({
+                    mode: "image",
+                    prompt: expandedPrompt,
+                    config: {
+                        ...generationConfig,
+                        model: selectedModel,
+                        imageModel: selectedModel,
+                        size: ratio,
+                        quality,
+                        imageResolution,
+                        count: "1",
+                    },
+                    referenceImages,
+                    metadata: {
+                        source: "create-page",
+                        conversationId: targetSessionId,
+                        ...referenceMetadata,
+                    },
+                });
+            } catch (error) {
+                toast.error(error instanceof Error ? error.message : t("create.page.runtimeLoadFailed"));
+                releaseRetryLock();
+                releaseSubmitGate();
+                return;
+            }
+
+            let createdTasks: GenerationTask[] = [];
+            try {
+                createdTasks = await Promise.all(
+                    Array.from({ length: taskCount }, (_, batchIndex) =>
+                        createGenerationTask({
+                            ...taskInput,
+                            input: {
+                                ...taskInput.input,
+                                metadata: {
+                                    ...((taskInput.input?.metadata as Record<string, unknown>) || {}),
+                                    batchIndex,
+                                    batchCount: taskCount,
+                                },
+                            },
+                        }),
+                    ),
+                );
+            } catch (error) {
+                toast.error(error instanceof Error ? error.message : t("create.page.submitFailed"));
+                releaseRetryLock();
+                releaseSubmitGate();
+                return;
+            }
+
+            const taskIds = createdTasks.map((t) => t.id);
+            const userMsg = newMessage("user", text, { mode, model: selectedModel, attachments, references, settings });
+            const assistantMsg = newMessage("assistant", "", {
+                mode,
+                model: selectedModel,
+                status: "pending",
+                settings,
+                taskIds,
+            });
+            assistantMsg.generationStatus = "queued";
+
+            const newConv: CreationConversation = {
+                id: targetSessionId,
+                title: text.slice(0, 30),
+                updatedAt: new Date().toISOString(),
+                messages: [userMsg, assistantMsg],
+            };
+
+            const nextConversations = [newConv, ...conversationsRef.current];
+            conversationsRef.current = nextConversations;
+            writeCreationConversationSnapshot(activeConversationScope, nextConversations);
+            if (historySessionRef.current) {
+                void historySessionRef.current.save(nextConversations);
+            }
+
+            setPrompt("");
+            setAttachments([]);
+            setDraftReferences([]);
+            releaseRetryLock();
+            releaseSubmitGate();
+
+            navigate(workspacePath(`/workspace/image/${encodeURIComponent(targetSessionId)}`));
+            return;
+        }
+
         followLatestMessageRef.current = true;
         const userMessage = newMessage("user", text, { mode, model: selectedModel, attachments, references, settings });
         const assistantMessage = newMessage("assistant", "", { mode, model: selectedModel, status: mode === "text" && textStreaming ? "streaming" : "pending", settings, ...retryContext });
@@ -1147,21 +1293,14 @@ export default function CreatePage() {
         const controller = new AbortController();
         const requestLifecycle = runtime.beginGenerationConsumer(controller.signal);
         abortRef.current = controller;
-        const normalizedImage =
-            mode === "image"
-                ? imageProfile.parameters
-                    ? { size: ratio, quality, imageResolution, imageParameters, count }
-                    : normalizeImageValue(imageProfile, { size: ratio, quality, imageResolution, imageParameters, count }, resolveModelRequestConfig(config, selectedModel).interfaceType)
-                : undefined;
         const requestConfig = {
             ...generationConfig,
             model: selectedModel,
             imageModel: selectedModel,
-            imageResolution: normalizedImage?.imageResolution || imageResolution,
-            imageParameters: normalizedImage?.imageParameters || imageParameters,
+            imageResolution,
+            imageParameters,
             videoModel: selectedModel,
             textModel: selectedModel,
-            ...(mode === "image" ? { size: normalizedImage?.size || ratio, quality: normalizedImage?.quality || quality, count: normalizedImage?.count || count, videoSeconds: config.videoSeconds } : {}),
         };
         let handedOverToRecovery = false;
         try {
@@ -1226,81 +1365,6 @@ export default function CreatePage() {
                 );
                 if (!result.text?.trim()) throw new Error(t("create.page.noTextResult"));
                 updateOriginAssistant((item) => ({ ...item, content: result.text || "", reasoning: result.reasoning }));
-            } else if (mode === "image") {
-                const taskCount = Math.max(1, Math.min(imageBatchLimit, Math.floor(Number(count) || 1)));
-                const settled = await runtime.runGenerationOperationOnce(retryContext?.clientOperationId, () =>
-                    runtime.runBackendGenerationTaskBatch({
-                        mode: "image",
-                        prompt: expandedPrompt,
-                        config: { ...requestConfig, count: "1" },
-                        referenceImages,
-                        signal: requestLifecycle.signal,
-                        metadata: { source: "create-page", conversationId: activeConversation.id, messageId: assistantMessage.id, ...referenceMetadata },
-                        onTaskUpdate: bindTask,
-                        count: taskCount,
-                        ...retryContext,
-                    }),
-                );
-                if (requestLifecycle.signal.aborted) throw new DOMException("Aborted", "AbortError");
-                const boundTaskIdList = Array.from(boundTaskIds);
-                const generatedTasks = settled.flatMap((entry, batchIndex) => {
-                    if (entry.status !== "fulfilled") return [];
-                    return [
-                        {
-                            result: entry.value,
-                            taskId: boundTaskIdsByBatchIndex.get(batchIndex) || boundTaskIdList[batchIndex],
-                            batchIndex,
-                        },
-                    ];
-                });
-                const taskFailures = settled.filter((entry): entry is PromiseRejectedResult => entry.status === "rejected");
-                const storedImages = await Promise.allSettled(
-                    generatedTasks.map(async ({ result, taskId, batchIndex }) => {
-                        if (!taskId) throw new Error(t("create.page.missingTaskId"));
-                        const task = completedCreationGenerationTask(runtime, {
-                            taskId,
-                            task: boundTasks.get(taskId),
-                            mode: "image",
-                            prompt: expandedPrompt,
-                            result,
-                            conversationId: activeConversation.id,
-                            messageId: assistantMessage.id,
-                            batchIndex,
-                            batchCount: taskCount,
-                        });
-                        const materialized = await runtime.consumeGenerationTaskMessage(
-                            task,
-                            assistantMessage.id,
-                            async ({ resultUrls, resultStorageKeys, effectKey }) => {
-                                await updateOriginAssistant(
-                                    (item) =>
-                                        runtime.applyGenerationConsumerEffect(item, effectKey, (current) => ({
-                                            ...current,
-                                            status: "done" as const,
-                                            content: t("create.status.imageGenerated"),
-                                            ...(resultUrls.length ? { resultUrls: Array.from(new Set([...(current.resultUrls || []), ...resultUrls])) } : {}),
-                                            ...(resultStorageKeys.length ? { resultStorageKeys: Array.from(new Set([...(current.resultStorageKeys || []), ...resultStorageKeys])) } : {}),
-                                        })).value,
-                                );
-                            },
-                            { signal: requestLifecycle.signal },
-                        );
-                        const urls = runtime.generationTaskMaterializedUrls(materialized);
-                        if (!urls.length) throw new Error(t("create.page.imageResultUnavailable"));
-                        return urls;
-                    }),
-                );
-                const resultUrls = storedImages.flatMap((entry) => (entry.status === "fulfilled" ? entry.value : []));
-                const resourceFailures = storedImages.filter((entry): entry is PromiseRejectedResult => entry.status === "rejected");
-                const failedCount = taskFailures.length + resourceFailures.length;
-                if (!resultUrls.length) {
-                    // 只要有一张图是“页面没跟上”而不是后端确认失败，就交给恢复监听继续跟进，而不是整条判失败。
-                    const reasons = [...taskFailures, ...resourceFailures].map((entry) => entry.reason);
-                    const reason = reasons.find((candidate) => !runtime.isGenerationTaskTerminalError(candidate)) ?? reasons[0];
-                    throw reason instanceof Error ? reason : new Error(t("create.page.noImageResult"));
-                }
-                if (failedCount) toast.warning(t("create.page.imagesPartiallyGenerated", { done: resultUrls.length, failed: failedCount }));
-                updateOriginAssistant((item) => ({ ...item, content: failedCount ? t("create.status.imagesPartiallyGenerated", { done: resultUrls.length, failed: failedCount }) : t("create.status.imageGenerated") }));
             } else {
                 const result = await runtime.runGenerationOperationOnce(retryContext?.clientOperationId, () =>
                     runtime.runBackendGenerationTask({
@@ -1475,11 +1539,14 @@ export default function CreatePage() {
             else startNewConversation();
         },
     });
-    const startNewConversationFromHistory = () => selectConversationRoute(startNewConversation());
+    const startNewConversationFromHistory = () => {
+        setHistoryOpen(false);
+        navigate(workspacePath("/workspace/image"));
+    };
     const selectConversationFromHistory = (conversation: CreationConversation) => {
         if (busy || openingCanvas || !conversationStorageReady) return;
-        selectConversation(conversation);
-        selectConversationRoute(conversation.id);
+        setHistoryOpen(false);
+        navigate(workspacePath(`/workspace/image/${encodeURIComponent(conversation.id)}`));
     };
 
     const confirmDeleteConversation = (conversation: CreationConversation) => {
@@ -1557,7 +1624,8 @@ export default function CreatePage() {
         if (nextMode === "music") {
             const parsedDuration = Number(nextSettings.duration || nextSettings.seconds);
             if (Number.isFinite(parsedDuration) && parsedDuration > 0) setMusicDuration(parsedDuration);
-            if (typeof nextSettings.instrumental === "boolean") setMusicInstrumental(nextSettings.instrumental);
+            const instrumental = historySettingBool(nextSettings.instrumental);
+            if (instrumental !== undefined) setMusicInstrumental(instrumental);
         }
         if (nextMode === "image") rememberImageSettings({ ratio: nextSettings.ratio, quality: nextSettings.quality, count: nextSettings.count });
         if (nextMode === "video") rememberVideoSettings({ ratio: nextSettings.ratio, seconds: nextSettings.seconds, videoQuality: nextSettings.videoQuality });
@@ -1654,7 +1722,9 @@ export default function CreatePage() {
     const handleThreadScroll = () => {
         const container = threadScrollRef.current;
         if (!container) return;
-        followLatestMessageRef.current = container.scrollHeight - container.scrollTop - container.clientHeight <= 160;
+        const distFromBottom = container.scrollHeight - container.scrollTop - container.clientHeight;
+        followLatestMessageRef.current = distFromBottom <= 160;
+        setShowScrollBottom(distFromBottom > 240);
         if (isEmpty) {
             // Keep the original editor in flow: changing its height here feeds
             // scroll anchoring back into this handler and causes flicker.
@@ -1925,6 +1995,23 @@ export default function CreatePage() {
                                 </div>
                             </section>
                         </main>
+                        {showScrollBottom ? (
+                            <button
+                                type="button"
+                                className="creation-scroll-bottom-pill"
+                                onClick={() => {
+                                    const container = threadScrollRef.current;
+                                    if (container) {
+                                        container.scrollTo({ top: container.scrollHeight, behavior: reducedMotion ? "auto" : "smooth" });
+                                        followLatestMessageRef.current = true;
+                                        setShowScrollBottom(false);
+                                    }
+                                }}
+                            >
+                                <ChevronDown size={14} />
+                                <span>{t("upstream.managedUi.47101a20", "回到底部")}</span>
+                            </button>
+                        ) : null}
                         <section className="creation-thread-composer">
                             <CreationComposer {...composerProps} variant="thread" />
                         </section>

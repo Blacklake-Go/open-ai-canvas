@@ -424,7 +424,7 @@ export default function WorkbenchToolsPage() {
                 okButtonProps={{ disabled: uploadCount > 0 }}
                 cancelButtonProps={{ disabled: editorBusy }}
                 confirmLoading={saving}
-                maskClosable={!editorBusy}
+                mask={{ closable: !editorBusy }}
                 keyboard={!editorBusy}
                 closable={!editorBusy}
                 width={1080}

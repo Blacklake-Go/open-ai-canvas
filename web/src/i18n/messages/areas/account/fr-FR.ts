@@ -608,16 +608,6 @@ export const frFR: DeepStringRecord<typeof zhCN> = {
         creditLicense: "{{credit}} · Attribution et licence",
         filmLabel: "Extrait du film {{title}}",
         closeFilm: "Fermer le film",
-        contributors: {
-            title: "Porter ensemble les histoires à l'écran",
-            description: "{{count}} créateurs participent au produit, au développement, aux tests et à la communauté",
-            viewLabel: "Voir la liste des contributeurs dans le README GitHub",
-            view: "Voir la liste",
-            list: "Contributeurs du projet",
-            wechat: "WeChat : {{id}}",
-            separator: ", ",
-            founder: "Initiateur du projet",
-        },
     },
     settings: {
         systemRefreshFailedWith: "Échec de l'actualisation des modèles système : {{error}}",

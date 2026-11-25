@@ -606,16 +606,6 @@ export const koKR: DeepStringRecord<typeof zhCN> = {
         creditLicense: "{{credit}} · 저작자 표시 및 라이선스",
         filmLabel: "{{title}} 영상 클립",
         closeFilm: "영상 닫기",
-        contributors: {
-            title: "함께 이야기를 스크린으로",
-            description: "{{count}}명의 크리에이터가 제품, 개발, 테스트, 커뮤니티 구축에 참여하고 있습니다",
-            viewLabel: "GitHub README에서 기여자 목록 보기",
-            view: "목록 보기",
-            list: "프로젝트 기여자",
-            wechat: "WeChat: {{id}}",
-            separator: ", ",
-            founder: "프로젝트 창시자",
-        },
     },
     settings: {
         systemRefreshFailedWith: "시스템 모델을 새로고침하지 못했습니다: {{error}}",

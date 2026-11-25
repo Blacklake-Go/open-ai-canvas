@@ -1,6 +1,7 @@
 import { creationSource as _creationSource, creationLabel as _creationLabel } from "@/supdance/plugins/i18n/creation-text";
 import { creationText as _creationText, useCreationLocale as _useCreationLocale } from "@/supdance/plugins/i18n/creation-text";
-import { App, Modal } from "antd";
+import { App } from "antd";
+import { AppModal } from "@/components/ui/product/app-modal";
 import { Images, MoreHorizontal, Trash2 } from "lucide-react";
 import { HistoryIcon } from "@/components/ui/ecommerce-icons";
 import { useEffect, useRef, useState } from "react";
@@ -186,7 +187,7 @@ export function CompactEcommerceHistory({
                     {_creationText("creation.5b9e2a1016f04af6", { value1: total })}
                 </button>
             ) : null}
-            <Modal
+            <AppModal
                 title={_creationText("creation.70ee599f5e2114e4")}
                 open={Boolean(deleteTarget)}
                 centered
@@ -203,7 +204,7 @@ export function CompactEcommerceHistory({
                     {deleteTarget?.name?.trim() || _creationText("creation.54e0d8e8d65ee7ca")}
                     {_creationText("creation.1e1a9aac7a7b1277")}
                 </p>
-            </Modal>
+            </AppModal>
         </div>
     );
 }

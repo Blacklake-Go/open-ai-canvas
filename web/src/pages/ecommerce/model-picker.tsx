@@ -1,6 +1,7 @@
 import { creationOptions as _creationOptions } from "@/supdance/plugins/i18n/creation-text";
 import { creationText as _creationText, useCreationLocale as _useCreationLocale } from "@/supdance/plugins/i18n/creation-text";
-import { App, Button, Modal, Select, Switch } from "antd";
+import { App, Button, Select, Switch } from "antd";
+import { AppModal } from "@/components/ui/product/app-modal";
 import { Check, Images, Search, Trash2, ZoomIn } from "lucide-react";
 import { useState } from "react";
 import { resourceStorageKey } from "@/services/api/resources";
@@ -114,7 +115,7 @@ export function EcommerceModelPicker({ enabled, references, primaryId, uploading
             ) : (
                 <p className="ecommerce-model-hint">{_creationText("creation.2b3c064647a7ab91")}</p>
             )}
-            <Modal title={_creationText("creation.ec594a29ea4bac26")} open={open} onCancel={() => setOpen(false)} footer={<Button onClick={() => setOpen(false)}>{_creationText("settings.channel_complete_btn")}</Button>} width={1000} destroyOnHidden>
+            <AppModal title={_creationText("creation.ec594a29ea4bac26")} open={open} onCancel={() => setOpen(false)} footer={<Button onClick={() => setOpen(false)}>{_creationText("settings.channel_complete_btn")}</Button>} width={1000} destroyOnHidden>
                 <p className="ecommerce-model-hint">{_creationText("creation.e9e2191b507a0d81")}</p>
                 <div className="ecommerce-model-filters">
                     <Select
@@ -179,8 +180,8 @@ export function EcommerceModelPicker({ enabled, references, primaryId, uploading
                         );
                     })}
                 </div>
-            </Modal>
-            <Modal
+            </AppModal>
+            <AppModal
                 title={preview?.name || _creationText("creation.3e6247e7b8f807fb")}
                 open={Boolean(preview)}
                 onCancel={() => setPreview(null)}
@@ -194,7 +195,7 @@ export function EcommerceModelPicker({ enabled, references, primaryId, uploading
                 width={1120}
             >
                 {preview ? <img className="ecommerce-model-preview" src={preview.image} alt={_creationText("creation.25f4ec74c344650f", { value1: preview.name })} /> : null}
-            </Modal>
+            </AppModal>
         </section>
     );
 }

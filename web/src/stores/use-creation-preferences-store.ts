@@ -71,7 +71,7 @@ export function normalizeCreationComposerPreferences(value: unknown): CreationCo
     const image = normalizeImagePreferences(raw.image);
     const video = normalizeVideoPreferences(raw.video);
     return {
-        ...(raw.mode === "text" || raw.mode === "image" || raw.mode === "video" ? { mode: raw.mode } : {}),
+        ...(raw.mode === "text" || raw.mode === "image" || raw.mode === "video" || raw.mode === "music" ? { mode: raw.mode } : {}),
         ...(image ? { image } : {}),
         ...(video ? { video } : {}),
     };

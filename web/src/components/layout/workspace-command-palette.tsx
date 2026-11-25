@@ -1,5 +1,5 @@
 import { useTranslation } from "react-i18next";
-import { Bot, Command, Home, Search, X } from "lucide-react";
+import { Bot, Command, Gift, Home, Image as ImageIcon, Music, Search, Video, X } from "lucide-react";
 import { useGlobalAgentStore } from "@/stores/use-global-agent-store";
 import { useEffect, useMemo, useRef, useState, type ComponentType } from "react";
 import { useNavigate } from "react-router";
@@ -25,6 +25,7 @@ export function WorkspaceCommandPalette({ open, onClose }: { open: boolean; onCl
     const { t } = useI18n();
     const navigate = useNavigate();
     const features = useUserStore((state) => state.features);
+    const referralAvailable = useUserStore((state) => state.referralAvailable);
     const canUseSkills = useSkillLibraryAccess();
     const [query, setQuery] = useState("");
     const [highlight, setHighlight] = useState(0);
@@ -38,6 +39,7 @@ export function WorkspaceCommandPalette({ open, onClose }: { open: boolean; onCl
             tasks: t("nav.tasks"),
             assets: t("nav.assets"),
             skills: t("nav.skills"),
+            plugins: t("nav.tools.plugins"),
             wallet: t("nav.credits"),
             settings: t("nav.settings"),
         };
@@ -47,17 +49,22 @@ export function WorkspaceCommandPalette({ open, onClose }: { open: boolean; onCl
         };
         return [
             { id: "home", title: t("nav.create"), icon: Home, to: "/" },
+            { id: "toolbox-image", title: t("nav.sidebar.toolboxImage"), icon: ImageIcon, to: "/toolbox/image" },
+            { id: "toolbox-video", title: t("nav.sidebar.toolboxVideo"), icon: Video, to: "/toolbox/video" },
+            { id: "toolbox-music", title: t("upstream.creation.musicNavigation"), icon: Music, to: "/toolbox/music" },
             ...(features.shortDramaEnabled ? [toolEntry("projects", "/projects")] : []),
             toolEntry("canvas", "/canvas"),
             ...(features.taskCenterEnabled ? [toolEntry("tasks", "/tasks")] : []),
             toolEntry("assets", "/assets"),
             ...(canUseSkills ? [toolEntry("skills", "/skills")] : []),
+            ...(features.pluginCenterEnabled ? [toolEntry("plugins", "/plugins")] : []),
+            ...(referralAvailable ? [{ id: "referral", title: t("shell.account.referral"), icon: Gift, to: "/referral" }] : []),
             ...(features.creditsEnabled ? [{ ...toolEntry("wallet"), run: () => openWorkspaceWallet() }] : []),
             toolEntry("settings", "/settings"),
             // 与 ⌘/Ctrl+J 相同：打开平台 Agent 面板。
             { id: "agent", title: t("shell.palette.agent"), icon: Bot, run: () => useGlobalAgentStore.getState().openAgent() },
         ];
-    }, [features, t, i18n.language, canUseSkills]);
+    }, [features, referralAvailable, t, i18n.language, canUseSkills]);
 
     const filtered = useMemo(() => {
         const keyword = query.trim().toLowerCase();

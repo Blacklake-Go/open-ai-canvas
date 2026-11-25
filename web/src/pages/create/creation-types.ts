@@ -18,6 +18,13 @@ export type CreationSettings = {
     duration?: string;
     instrumental?: boolean;
     model?: string;
+    mode?: string;
+    style?: string;
+    songLanguage?: string;
+    resolution?: string;
+    imageResolution?: string;
+    transparentBackground?: boolean;
+    thinkingLevel?: string;
 };
 export type CreationRetryContext = GenerationRetryContext & { retryContextsByBatchIndex?: GenerationRetryContext[] };
 

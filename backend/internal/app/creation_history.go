@@ -5,6 +5,7 @@ import (
 	"errors"
 	"regexp"
 	"sort"
+	"strconv"
 	"strings"
 	"time"
 	"unicode/utf8"
@@ -178,11 +179,34 @@ func historyPayload(input map[string]any, id string) (string, []string, time.Tim
 			if !ok {
 				return "", nil, time.Time{}, BadAuthRequest("无效的创作参数")
 			}
+			allowedKeys := " ratio seconds quality videoQuality count title duration instrumental model mode style songLanguage resolution imageResolution transparentBackground thinkingLevel "
 			for k, v := range settings {
-				if !strings.Contains(" ratio seconds quality videoQuality count ", " "+k+" ") {
+				if !strings.Contains(allowedKeys, " "+k+" ") {
 					return "", nil, time.Time{}, BadAuthRequest("不支持的创作参数")
 				}
-				if _, ok := v.(string); !ok {
+				switch val := v.(type) {
+				case string:
+					// 历史版本把布尔参数存成字符串；新写入保留原生布尔，读取端两种形态都兼容。
+					if (k == "instrumental" || k == "transparentBackground") && (val == "true" || val == "false") {
+						settings[k] = val == "true"
+					}
+				case bool:
+					if k != "instrumental" && k != "transparentBackground" {
+						return "", nil, time.Time{}, BadAuthRequest("无效的创作参数值")
+					}
+				case float64:
+					if val == float64(int64(val)) {
+						settings[k] = strconv.FormatInt(int64(val), 10)
+					} else {
+						settings[k] = strconv.FormatFloat(val, 'f', -1, 64)
+					}
+				case int:
+					settings[k] = strconv.Itoa(val)
+				case int64:
+					settings[k] = strconv.FormatInt(val, 10)
+				case json.Number:
+					settings[k] = val.String()
+				default:
 					return "", nil, time.Time{}, BadAuthRequest("无效的创作参数值")
 				}
 			}

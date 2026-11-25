@@ -1,6 +1,6 @@
 import { creationLabel as _creationLabel } from "@/supdance/plugins/i18n/creation-text";
 import { creationText as _creationText, useCreationLocale as _useCreationLocale } from "@/supdance/plugins/i18n/creation-text";
-import { Modal } from "antd";
+import { AppModal } from "@/components/ui/product/app-modal";
 import { ArrowUpRight, Check, LoaderCircle, PencilLine, Sparkles, Wand2 } from "lucide-react";
 import { useEffect, useMemo, useState, type CSSProperties } from "react";
 import type { EcommerceCreativeDirection, EcommerceStyleRewrite } from "@/services/api/ecommerce";
@@ -148,7 +148,7 @@ export function CommerceStylePicker({
     };
     const total = directions.length + library.length;
     return (
-        <Modal open={open} onCancel={onClose} footer={null} width={1120} centered destroyOnHidden title={_creationText("creation.4e982299f3fc680e")} className="commerce-style-picker-modal" rootClassName="commerce-style-picker-root">
+        <AppModal open={open} onCancel={onClose} footer={null} width={1120} centered destroyOnHidden title={_creationText("creation.4e982299f3fc680e")} className="commerce-style-picker-modal" rootClassName="commerce-style-picker-root">
             <div className="commerce-style-picker">
                 <header className="commerce-style-picker-head">
                     <span className="commerce-style-picker-avatar" aria-hidden="true">
@@ -270,6 +270,6 @@ export function CommerceStylePicker({
                     </div>
                 </footer>
             </div>
-        </Modal>
+        </AppModal>
     );
 }

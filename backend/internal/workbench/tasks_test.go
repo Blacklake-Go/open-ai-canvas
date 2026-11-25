@@ -121,3 +121,24 @@ func TestToolRequiresPromptDefaultsAndOverride(t *testing.T) {
 		t.Fatal("tool configured for optional prompts must allow an empty prompt")
 	}
 }
+
+func TestNormalizeTaskParametersImage(t *testing.T) {
+	params := map[string]any{
+		"size":                  "1024x1024",
+		"quality":               "hd",
+		"imageResolution":       "4k",
+		"count":                 2,
+		"transparentBackground": true,
+	}
+	normalized, err := normalizeTaskParameters(KindImage, params)
+	if err != nil {
+		t.Fatalf("normalizeTaskParameters failed: %v", err)
+	}
+	if normalized["transparentBackground"] != true || normalized["count"] != 2 {
+		t.Fatalf("unexpected normalized params: %+v", normalized)
+	}
+	// thinkingLevel 暂无工作台调用方；未经声明的图片参数不得进入 provider config。
+	if _, err := normalizeTaskParameters(KindImage, map[string]any{"thinkingLevel": "high"}); err == nil {
+		t.Fatal("thinkingLevel must be rejected until a workbench caller needs it")
+	}
+}

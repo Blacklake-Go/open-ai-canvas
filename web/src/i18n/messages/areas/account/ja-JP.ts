@@ -608,16 +608,6 @@ export const jaJP: DeepStringRecord<typeof zhCN> = {
         creditLicense: "{{credit}} · クレジットとライセンス",
         filmLabel: "{{title}}の映像クリップ",
         closeFilm: "映像を閉じる",
-        contributors: {
-            title: "一緒に物語をスクリーンへ",
-            description: "{{count}} 人のクリエイターが製品、開発、テスト、コミュニティづくりに参加しています",
-            viewLabel: "GitHub README でコントリビューター一覧を見る",
-            view: "一覧を見る",
-            list: "プロジェクトのコントリビューター",
-            wechat: "WeChat：{{id}}",
-            separator: "、",
-            founder: "プロジェクト発起人",
-        },
     },
     settings: {
         systemRefreshFailedWith: "システムモデルの更新に失敗しました：{{error}}",

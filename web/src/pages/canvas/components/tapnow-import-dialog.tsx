@@ -1,4 +1,5 @@
-import { App, Button, Input, Modal, Tag } from "antd";
+import { App, Button, Input, Tag } from "antd";
+import { AppModal } from "@/components/ui/product/app-modal";
 import { CircleAlert, ExternalLink, Import, LoaderCircle } from "lucide-react";
 import { useMemo, useRef, useState } from "react";
 
@@ -115,7 +116,7 @@ export function TapNowImportDialog({ open, projectId, viewport, viewportSize, on
     const hasWarnings = result ? Boolean(result.skippedNodes.length || result.skippedConnections.length || result.multiResultNodeCount || result.reusedFailedNodeCount || result.placeholderNodeCount || result.warnings.length) : false;
 
     return (
-        <Modal
+        <AppModal
             className="workspace-modal"
             open={open}
             onCancel={close}
@@ -190,6 +191,6 @@ export function TapNowImportDialog({ open, projectId, viewport, viewportSize, on
                     </div>
                 ) : null}
             </div>
-        </Modal>
+        </AppModal>
     );
 }

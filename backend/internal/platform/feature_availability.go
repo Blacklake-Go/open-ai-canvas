@@ -70,8 +70,8 @@ func DefaultFeatureAvailability() FeatureAvailability {
 		SystemPluginsVisibleToUsers:  true,
 		InspirationSourcesVisible:    true,
 		TimelineTranscriptionEnabled: true,
-		ImageWorkbenchEnabled:        false,
-		VideoWorkbenchEnabled:        false,
+		ImageWorkbenchEnabled:        true,
+		VideoWorkbenchEnabled:        true,
 		EcommerceEnabled:             false,
 		EcommerceVideoEnabled:        false,
 	}

@@ -1,4 +1,5 @@
-import { App, Button, Input, Modal, Tag } from "antd";
+import { App, Button, Input, Tag } from "antd";
+import { AppModal } from "@/components/ui/product/app-modal";
 import { CircleAlert, ExternalLink, Import, LoaderCircle } from "lucide-react";
 import { useMemo, useRef, useState } from "react";
 
@@ -109,7 +110,7 @@ export function LibTVImportDialog({ open, projectId, viewport, viewportSize, onC
     };
 
     return (
-        <Modal
+        <AppModal
             className="workspace-modal"
             open={open}
             onCancel={close}
@@ -183,6 +184,6 @@ export function LibTVImportDialog({ open, projectId, viewport, viewportSize, onC
                     </div>
                 ) : null}
             </div>
-        </Modal>
+        </AppModal>
     );
 }

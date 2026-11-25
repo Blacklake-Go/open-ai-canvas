@@ -1,4 +1,5 @@
 import { assertMediaSettings, resolvedMediaConfig } from "@/lib/media-settings";
+import { translate } from "@/i18n";
 import type { ThinkingRequest } from "@/lib/text-thinking";
 import { createClientUUID } from "@/lib/client-id";
 import { normalizeAudioFormatForConfig, normalizeAudioVoiceForConfig } from "@/lib/audio-generation";
@@ -102,6 +103,7 @@ export async function runBackendGenerationTask(
     dependencies: GenerationTaskDependencies = defaultDependencies,
 ) {
     throwIfAborted(signal);
+    assertClientPromptPresent({ mode, prompt, config, metadata });
     assertClientPromptLimit(mode, prompt, config, metadata);
     assertBackendRuntimeConfigured(config, mode);
     const prepared = await prepareGenerationReferences({ config, mode, referenceImages, referenceVideos, referenceAudios, mask });
@@ -117,6 +119,7 @@ export async function runBackendGenerationTask(
 // 后端自动回填负责，不能让页面 mutation 一直等待供应商完成。
 export async function submitBackendGenerationTask(options: BackendGenerationTaskOptions, dependencies: GenerationTaskDependencies = defaultDependencies): Promise<GenerationTask> {
     throwIfAborted(options.signal);
+    assertClientPromptPresent(options);
     assertClientPromptLimit(options.mode, options.prompt, options.config, options.metadata);
     assertBackendRuntimeConfigured(options.config, options.mode);
     const prepared = await prepareGenerationReferences(options);
@@ -191,6 +194,7 @@ export async function runBackendToolGenerationTask(options: BackendToolGeneratio
 export async function runBackendGenerationTaskBatch(options: BackendGenerationTaskOptions & { count: number }, dependencies: GenerationTaskDependencies = defaultDependencies) {
     const count = Math.max(1, Math.min(15, Math.floor(Number(options.count)) || 1));
     throwIfAborted(options.signal);
+    assertClientPromptPresent(options);
     assertClientPromptLimit(options.mode, options.prompt, options.config, options.metadata);
     if (options.retryContextsByBatchIndex && options.retryContextsByBatchIndex.length !== count) throw new Error("生成重试批次任务数量不匹配");
     const prepared = await prepareGenerationReferences(options);
@@ -236,6 +240,13 @@ function assertBackendRuntimeConfigured(config: AiConfig, mode: BackendGeneratio
 
 function throwIfAborted(signal?: AbortSignal) {
     if (signal?.aborted) throw new DOMException("Aborted", "AbortError");
+}
+
+// 与后端 CreateTask 的 prompt 必填语义一致：视频以参考媒体为主体，
+// 提示词模板任务由服务端编译正文，两者都不要求客户端先填提示词。
+function assertClientPromptPresent(options: BackendGenerationTaskOptions) {
+    if (options.mode === "video" || options.metadata?.promptTemplateOperation) return;
+    if (!options.prompt?.trim()) throw new Error(translate("managedUi.18f63d46"));
 }
 
 function assertClientPromptLimit(mode: BackendGenerationMode, prompt: string, config: AiConfig, metadata?: Record<string, unknown>) {
@@ -289,6 +300,7 @@ async function createBackendGenerationTask(options: BackendGenerationTaskOptions
 
 export async function prepareBackendGenerationTask(options: BackendGenerationTaskOptions): Promise<CreateTaskInput> {
     throwIfAborted(options.signal);
+    assertClientPromptPresent(options);
     assertClientPromptLimit(options.mode, options.prompt, options.config, options.metadata);
     assertBackendRuntimeConfigured(options.config, options.mode);
     const prepared = await prepareGenerationReferences(options);

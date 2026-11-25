@@ -793,12 +793,12 @@ SEO 标题、描述、可选关键词会投影到浏览器 metadata、Open Graph
 
 ## 成片与专业工具交付
 
-影策保留短剧自动成片、视频查看、抽帧、下载、模型驱动的视频延长与局部修改。手工多轨剪辑、专业字幕制作、时间线 AI 编辑与内置剪辑插件已退出；不再提供画布时间线、“到画布精剪”或独立剪辑器入口。
+影策保留短剧自动成片、视频查看、抽帧、下载、模型驱动的视频延长与局部修改。上游的手工多轨剪辑、专业字幕制作与时间线 AI 编辑入口已退出；本站按二次开发约定保留画布内时间线编辑器（节点悬停工具「进入剪辑」，导出走浏览器本地 FFmpeg，不依赖后端渲染任务），登记见 `docs/supdance/CUSTOMIZATIONS.md` 的 `supdance-canvas-timeline-editor`。独立 `/timeline/*` 页面与“到画布精剪”入口不再提供。
 
 - 短剧各剧情段按顺序自动合成，保留段视频自带的对白与音效；后端仍通过受限任务队列执行 ffmpeg 渲染。
 - 成片页可下载视频、导出剪映草稿，在剪映中继续专业剪辑；作品资产包保留角色、声音、设定参考、剧情段视频、提示词与结构清单。
 - 已有画布的时间线快照、引用资源及字幕元数据继续保留于画布存储和导入导出，不因移除编辑器清空。已有字幕继续在视频预览展示，并可从节点菜单下载 SRT；分享页不新增下载权限。
-- 新建手工时间线的 `/timeline/renders`、`/timeline/transcriptions` HTTP 入口已移除。历史任务处理器保留以完成在途任务，短剧内部自动合成不受影响。
+- 新建手工时间线的 `/timeline/renders`、`/timeline/transcriptions` HTTP 入口已移除。历史任务处理器保留以完成在途任务，短剧内部自动合成不受影响。保留的画布时间线导出不调用这两个接口。
 - 浏览器 FFmpeg 仍供参考视频片段、音轨提取、视频合并及预演转码使用；不会因删除编辑器就移除这些共享能力。
 
 相关实现：制作台 `studio/final-view.tsx`、`studio/asset-transfer.tsx`，后端 `app/drama_export.go`、`app/task_render.go`、`app/timeline_render_plan.go`；字幕下载使用 `web/src/lib/timeline/srt-parser.ts`。

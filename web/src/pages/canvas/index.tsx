@@ -3,7 +3,8 @@ import { migrateCanvasNodeModel } from "@/lib/canvas/migrate-canvas-node-model";
 import { lazy, Suspense, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router";
 import { keepPreviousData, useInfiniteQuery, useQuery } from "@tanstack/react-query";
-import { App, Button, Dropdown, Modal } from "antd";
+import { App, Button, Dropdown } from "antd";
+import { AppModal } from "@/components/ui/product/app-modal";
 import { Select } from "@/components/ui/base/select";
 import { ArrowDownAZ, Clock3, Download, FileUp, History, ListFilter, LoaderCircle, Plus, SlidersHorizontal } from "lucide-react";
 import { ListSearchInput } from "@/components/ui/base/list-search-input";
@@ -591,7 +592,7 @@ export default function CanvasPage() {
             </div>
 
             <input ref={inputRef} type="file" accept="application/zip,.zip" className="hidden" onChange={(event) => void importCanvas(event.target.files?.[0])} />
-            <Modal
+            <AppModal
                 title="加入项目"
                 open={associationOpen}
                 okText="保存关联"
@@ -608,7 +609,7 @@ export default function CanvasPage() {
                     options={(projectQuery.data?.projects || []).map((item) => ({ label: item.project.name, value: item.project.id }))}
                     onChange={setAssociationProjectId}
                 />
-            </Modal>
+            </AppModal>
             <CanvasHistoryDrawer open={historyOpen} onClose={() => setHistoryOpen(false)} />
             {deleteDialogOpen ? (
                 <Suspense fallback={null}>

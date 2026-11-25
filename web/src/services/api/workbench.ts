@@ -215,10 +215,6 @@ export function updateAdminWorkbenchPreset(id: string, input: SaveAdminWorkbench
     return http.patch<{ preset: WorkbenchPromptPreset }>(`/admin/workbench/tools/${encodeURIComponent(input.toolId)}/presets/${encodeURIComponent(id)}`, input).then(({ preset }) => preset);
 }
 
-export function setAdminWorkbenchPresetEnabled(id: string, enabled: boolean) {
-    return http.post<{ id: string; enabled: boolean }>(`/admin/workbench/tools/presets/${encodeURIComponent(id)}/${enabled ? "publish" : "unpublish"}`).then((result) => result.enabled);
-}
-
 export function setAdminWorkbenchToolEnabled(id: string, enabled: boolean) {
     return http.post<{ id: string; enabled: boolean }>(`/admin/workbench/tools/${encodeURIComponent(id)}/${enabled ? "publish" : "unpublish"}`).then((result) => result.enabled);
 }

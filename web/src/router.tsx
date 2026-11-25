@@ -67,7 +67,7 @@ const SupDanceI18nSettingsPage = lazyAdminPage(() => import("@/supdance/plugins/
 const SupDanceI18nEntriesPage = lazyAdminPage(() => import("@/supdance/plugins/i18n/admin/i18n-entries-page"));
 const SocialAuthSettingsPage = lazyAdminPage(() => import("@/supdance/plugins/social-auth/admin/social-auth-settings-page"));
 const SocialAuthOperationsPage = lazyAdminPage(() => import("@/supdance/plugins/social-auth/admin/social-auth-operations-page"));
-const MusicWorkbenchPage = lazy(() => import("@/supdance/plugins/music-generation/pages/music-workbench-page"));
+const MusicWorkbenchPage = workspaceRoutePages.musicWorkbench;
 const MusicAdminSettingsPage = lazyAdminPage(() => import("@/supdance/plugins/music-generation/admin/music-admin-settings-page"));
 const PageManagement = lazyAdminPage(() => import("@/supdance/plugins/compact-model-picker/page-management"));
 const DarkLoginPage = lazy(() => import("@/supdance/pages/dark-login-page"));
@@ -86,6 +86,7 @@ const CanvasProjectPage = workspaceRoutePages.canvasProject;
 const SharedCanvasPage = lazy(() => import("@/pages/canvas/shared"));
 const ArkPortraitResultPage = lazy(() => import("@/pages/ark-portrait-result"));
 const CreatePage = workspaceRoutePages.create;
+const ImageWorkspacePage = workspaceRoutePages.imageWorkspace;
 const EcommercePage = workspaceRoutePages.ecommerce;
 const ImageWorkbenchPage = workspaceRoutePages.imageWorkbench;
 const VideoWorkbenchPage = workspaceRoutePages.videoWorkbench;
@@ -203,6 +204,22 @@ const routes: RouteObject[] = [
         children: [
             { path: "/", element: deferred(<CreatePage />) },
             { path: "/create", element: deferred(<CreatePage />) },
+            {
+                path: "/workspace/image",
+                element: (
+                    <RequireAuth>
+                        <RequireFeature feature="imageWorkbenchEnabled">{deferred(<ImageWorkspacePage />)}</RequireFeature>
+                    </RequireAuth>
+                ),
+            },
+            {
+                path: "/workspace/image/:sessionId",
+                element: (
+                    <RequireAuth>
+                        <RequireFeature feature="imageWorkbenchEnabled">{deferred(<ImageWorkspacePage />)}</RequireFeature>
+                    </RequireAuth>
+                ),
+            },
             { path: "/connect-one", element: <RequireAuth>{deferred(<ConnectOnePage />)}</RequireAuth> },
             { path: "/ecommerce", element: <RequireAuth>{deferred(<EcommercePage />)}</RequireAuth> },
             {

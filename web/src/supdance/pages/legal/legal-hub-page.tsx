@@ -1,10 +1,9 @@
 import { TopbarLanguageSwitcher } from "@/supdance/plugins/i18n";
 import { interfaceText } from "@/i18n/interface-text";
-import { ArrowRight, FileText, Globe, Shield } from "lucide-react";
-import { useEffect, useState } from "react";
+import { ArrowRight, FileText, Shield } from "lucide-react";
+import { useEffect } from "react";
 import { Link } from "react-router";
 
-import { useThemeStore } from "@/stores/use-theme-store";
 import { LEGAL_OPERATOR_CONFIG } from "./legal-i18n-content";
 import { LegalThemeToggler } from "./legal-theme-toggler";
 import { LegalBrand } from "./legal-brand";
@@ -50,13 +49,8 @@ export default function LegalHubPage() {
         };
     }, []);
 
-    const isDark = useThemeStore((state) => state.theme === "dark");
-
     return (
-        <div
-            className={`legal-public-page transition-colors duration-200 ${isDark ? "bg-[#000000] text-[#f4f4f6]" : "bg-[#ffffff] text-[#111111]"}`}
-            style={{ fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif' }}
-        >
+        <div className="legal-public-page bg-background font-sans text-foreground transition-colors duration-200">
             {/* 顶栏 */}
             <header className="legal-public-header flex h-16 w-full items-center justify-between px-6 sm:px-12 transition-colors">
                 <LegalBrand />
@@ -70,72 +64,57 @@ export default function LegalHubPage() {
 
             {/* 展台区 */}
             <main className="mx-auto max-w-[840px] px-6 pt-24 pb-16 sm:pt-28 sm:pb-24">
-                <div className="font-mono text-[11px] uppercase tracking-[0.16em] text-sky-400 mb-3">§ 官方合规门户</div>
-                <h1 className={`text-4xl sm:text-5xl lg:text-6xl font-semibold tracking-[-0.035em] leading-[1.08] mb-6 ${isDark ? "text-white" : "text-[#111111]"}`}>法律与合规中心</h1>
-                <p className={`text-base sm:text-lg leading-relaxed mb-12 ${isDark ? "text-[#a2a2ad]" : "text-[#555555]"}`}>
+                <div className="font-mono text-[var(--fs-label)] uppercase tracking-[0.16em] text-sky-600 dark:text-sky-400 mb-3">§ 官方合规门户</div>
+                <h1 className="text-4xl sm:text-5xl lg:text-6xl font-semibold tracking-[-0.035em] leading-[1.08] mb-6 text-foreground">法律与合规中心</h1>
+                <p className="text-base sm:text-lg leading-relaxed mb-12 text-muted-foreground">
                     {interfaceText("查看 {product} 的法律协议、隐私政策与内容规则。英文为权威版本，另提供简体中文、繁体中文、西班牙语、法语、德语、日语和韩语译文。", { product: LEGAL_OPERATOR_CONFIG.productName })}
                 </p>
 
                 {/* 三大核心法务卡片 */}
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-16">
                     {/* 1. TOS */}
-                    <Link
-                        to="/terms"
-                        className={`flex flex-col justify-between rounded-2xl border p-6 no-underline transition-all group ${
-                            isDark ? "border-white/10 bg-white/[0.02] hover:border-white/30 hover:bg-white/[0.04]" : "border-black/10 bg-black/[0.01] hover:border-black/30 hover:bg-black/[0.03]"
-                        }`}
-                    >
+                    <Link to="/terms" className="group flex flex-col justify-between rounded-2xl border border-border bg-card p-6 no-underline transition-all hover:border-foreground/25 hover:bg-muted/50">
                         <div>
                             <div className="flex items-center justify-between mb-4">
-                                <span className="font-mono text-[11px] uppercase tracking-wider text-sky-400 font-semibold">服务条款 · V2 积分</span>
-                                <FileText className="size-4 text-white/40 group-hover:text-sky-400 transition-colors" />
+                                <span className="font-mono text-[var(--fs-label)] uppercase tracking-wider text-sky-600 dark:text-sky-400 font-semibold">服务条款 · V2 积分</span>
+                                <FileText className="size-4 text-muted-foreground group-hover:text-sky-600 dark:group-hover:text-sky-400 transition-colors" />
                             </div>
-                            <h2 className={`text-lg font-semibold tracking-tight mb-2 ${isDark ? "text-white" : "text-black"}`}>服务条款</h2>
-                            <p className={`text-xs leading-relaxed ${isDark ? "text-[#8a8f98]" : "text-[#666666]"}`}>规范账号资格、积分预付即时数字交付、Waffo Pancake PCI-DSS 安全支付、7天退款与 AI 资产所有权。</p>
+                            <h2 className="text-lg font-semibold tracking-tight mb-2 text-foreground">服务条款</h2>
+                            <p className="text-xs leading-relaxed text-muted-foreground">规范账号资格、积分预付即时数字交付、Waffo Pancake PCI-DSS 安全支付、7天退款与 AI 资产所有权。</p>
                         </div>
-                        <div className="flex items-center gap-1 text-xs font-mono text-sky-400 pt-6 mt-6 border-t border-white/5">
+                        <div className="flex items-center gap-1 text-xs font-mono text-sky-600 dark:text-sky-400 pt-6 mt-6 border-t border-border">
                             <span>阅读政策</span>
                             <ArrowRight className="size-3 group-hover:translate-x-1 transition-transform" />
                         </div>
                     </Link>
 
                     {/* 2. Privacy */}
-                    <Link
-                        to="/privacy"
-                        className={`flex flex-col justify-between rounded-2xl border p-6 no-underline transition-all group ${
-                            isDark ? "border-white/10 bg-white/[0.02] hover:border-white/30 hover:bg-white/[0.04]" : "border-black/10 bg-black/[0.01] hover:border-black/30 hover:bg-black/[0.03]"
-                        }`}
-                    >
+                    <Link to="/privacy" className="group flex flex-col justify-between rounded-2xl border border-border bg-card p-6 no-underline transition-all hover:border-foreground/25 hover:bg-muted/50">
                         <div>
                             <div className="flex items-center justify-between mb-4">
-                                <span className="font-mono text-[11px] uppercase tracking-wider text-emerald-400 font-semibold">隐私 · GDPR / CCPA</span>
-                                <Shield className="size-4 text-white/40 group-hover:text-emerald-400 transition-colors" />
+                                <span className="font-mono text-[var(--fs-label)] uppercase tracking-wider text-emerald-600 dark:text-emerald-400 font-semibold">隐私 · GDPR / CCPA</span>
+                                <Shield className="size-4 text-muted-foreground group-hover:text-emerald-600 dark:group-hover:text-emerald-400 transition-colors" />
                             </div>
-                            <h2 className={`text-lg font-semibold tracking-tight mb-2 ${isDark ? "text-white" : "text-black"}`}>隐私政策</h2>
-                            <p className={`text-xs leading-relaxed ${isDark ? "text-[#8a8f98]" : "text-[#666666]"}`}>个人信息收集范围、不存卡号承诺、不出售用户隐私承诺、主流模型推理隔离与 72h 泄露通报。</p>
+                            <h2 className="text-lg font-semibold tracking-tight mb-2 text-foreground">隐私政策</h2>
+                            <p className="text-xs leading-relaxed text-muted-foreground">个人信息收集范围、不存卡号承诺、不出售用户隐私承诺、主流模型推理隔离与 72h 泄露通报。</p>
                         </div>
-                        <div className="flex items-center gap-1 text-xs font-mono text-emerald-400 pt-6 mt-6 border-t border-white/5">
+                        <div className="flex items-center gap-1 text-xs font-mono text-emerald-600 dark:text-emerald-400 pt-6 mt-6 border-t border-border">
                             <span>阅读政策</span>
                             <ArrowRight className="size-3 group-hover:translate-x-1 transition-transform" />
                         </div>
                     </Link>
 
                     {/* 3. AUP */}
-                    <Link
-                        to="/aup"
-                        className={`flex flex-col justify-between rounded-2xl border p-6 no-underline transition-all group ${
-                            isDark ? "border-white/10 bg-white/[0.02] hover:border-white/30 hover:bg-white/[0.04]" : "border-black/10 bg-black/[0.01] hover:border-black/30 hover:bg-black/[0.03]"
-                        }`}
-                    >
+                    <Link to="/aup" className="group flex flex-col justify-between rounded-2xl border border-border bg-card p-6 no-underline transition-all hover:border-foreground/25 hover:bg-muted/50">
                         <div>
                             <div className="flex items-center justify-between mb-4">
-                                <span className="font-mono text-[11px] uppercase tracking-wider text-amber-400 font-semibold">AUP · 内容规则</span>
-                                <Shield className="size-4 text-white/40 group-hover:text-amber-400 transition-colors" />
+                                <span className="font-mono text-[var(--fs-label)] uppercase tracking-wider text-amber-600 dark:text-amber-400 font-semibold">AUP · 内容规则</span>
+                                <Shield className="size-4 text-muted-foreground group-hover:text-amber-600 dark:group-hover:text-amber-400 transition-colors" />
                             </div>
-                            <h2 className={`text-lg font-semibold tracking-tight mb-2 ${isDark ? "text-white" : "text-black"}`}>可接受使用政策（AUP）</h2>
-                            <p className={`text-xs leading-relaxed ${isDark ? "text-[#8a8f98]" : "text-[#666666]"}`}>六大禁止类别（色情/暴力/仇恨/CSAM/深伪冒充/侵权）、真人肖像授权要求、举报时效与处置。</p>
+                            <h2 className="text-lg font-semibold tracking-tight mb-2 text-foreground">可接受使用政策（AUP）</h2>
+                            <p className="text-xs leading-relaxed text-muted-foreground">六大禁止类别（色情/暴力/仇恨/CSAM/深伪冒充/侵权）、真人肖像授权要求、举报时效与处置。</p>
                         </div>
-                        <div className="flex items-center gap-1 text-xs font-mono text-amber-400 pt-6 mt-6 border-t border-white/5">
+                        <div className="flex items-center gap-1 text-xs font-mono text-amber-600 dark:text-amber-400 pt-6 mt-6 border-t border-border">
                             <span>阅读政策</span>
                             <ArrowRight className="size-3 group-hover:translate-x-1 transition-transform" />
                         </div>
@@ -143,26 +122,26 @@ export default function LegalHubPage() {
                 </div>
 
                 {/* 经营主体公示 */}
-                <section className={`rounded-2xl border p-8 text-xs leading-relaxed ${isDark ? "border-white/10 bg-white/[0.02]" : "border-black/10 bg-black/[0.02]"}`}>
-                    <h3 className={`text-sm font-semibold mb-4 tracking-tight ${isDark ? "text-white" : "text-black"}`}>运营主体与合规联络渠道</h3>
+                <section className="rounded-2xl border border-border bg-card p-8 text-xs leading-relaxed">
+                    <h3 className="text-sm font-semibold mb-4 tracking-tight text-foreground">运营主体与合规联络渠道</h3>
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         <div>
-                            <span className="text-[#8a8f98] block mb-1">经营者 / 商户法定名称</span>
-                            <span className="font-mono text-white font-medium">{LEGAL_OPERATOR_CONFIG.legalName}</span>
+                            <span className="text-muted-foreground block mb-1">经营者 / 商户法定名称</span>
+                            <span className="font-mono text-foreground font-medium">{LEGAL_OPERATOR_CONFIG.legalName}</span>
                         </div>
                         <div>
-                            <span className="text-[#8a8f98] block mb-1">对外经营名称 (Trade Name)</span>
-                            <span className="font-mono text-white font-medium">{LEGAL_OPERATOR_CONFIG.tradeName}</span>
+                            <span className="text-muted-foreground block mb-1">对外经营名称 (Trade Name)</span>
+                            <span className="font-mono text-foreground font-medium">{LEGAL_OPERATOR_CONFIG.tradeName}</span>
                         </div>
                         <div>
-                            <span className="text-[#8a8f98] block mb-1">客户支持与账单退款</span>
-                            <a href={`mailto:${LEGAL_OPERATOR_CONFIG.supportEmail}`} className="font-mono text-sky-400 no-underline hover:underline">
+                            <span className="text-muted-foreground block mb-1">客户支持与账单退款</span>
+                            <a href={`mailto:${LEGAL_OPERATOR_CONFIG.supportEmail}`} className="font-mono text-sky-600 dark:text-sky-400 no-underline hover:underline">
                                 {LEGAL_OPERATOR_CONFIG.supportEmail}
                             </a>
                         </div>
                         <div>
-                            <span className="text-[#8a8f98] block mb-1">内容安全与 AUP 举报通道</span>
-                            <a href={`mailto:${LEGAL_OPERATOR_CONFIG.safetyEmail}`} className="font-mono text-amber-400 no-underline hover:underline">
+                            <span className="text-muted-foreground block mb-1">内容安全与 AUP 举报通道</span>
+                            <a href={`mailto:${LEGAL_OPERATOR_CONFIG.safetyEmail}`} className="font-mono text-amber-600 dark:text-amber-400 no-underline hover:underline">
                                 {LEGAL_OPERATOR_CONFIG.safetyEmail}
                             </a>
                         </div>

@@ -9,6 +9,7 @@ const PAGE_TITLE_KEYS: Record<string, string> = {
     settings: "nav.pageTitles.settings",
     ecommerce: "nav.sidebar.ecommerce",
     referral: "shell.account.referral",
+    teams: "managedUi.84491334",
 };
 const TOOLBOX_TITLE_KEYS: Record<string, string> = {
     music: "upstream.creation.musicNavigation",

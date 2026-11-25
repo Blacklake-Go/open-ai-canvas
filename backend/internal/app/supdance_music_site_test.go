@@ -259,6 +259,75 @@ func TestMusicCatalogQuoteAndHostAdmission(t *testing.T) {
 	}
 }
 
+// MiniMax Music 上游没有独立 style 字段；宿主必须把风格与语言偏好并入 prompt，
+// 否则协议模板只发送 prompt/lyrics/isInstrumental，用户填写的风格会被静默丢弃。
+func TestMusicMiniMaxStyleMergesIntoPrompt(t *testing.T) {
+	s, db := newMediaRecoveryTestService(t)
+	ensureTestUsers(t, db)
+	userID := testGroupUserID(s)
+	center, err := newPluginRuntime(s.dataDir)
+	if err != nil {
+		t.Fatal(err)
+	}
+	s.pluginRuntime = center
+	ResetMusicLifecycleManagerForTest(MusicLifecycleEnabled)
+	defer ResetMusicLifecycleManagerForTest(MusicLifecycleEnabled)
+	if err := db.Create(&model.PluginPlatformState{PluginID: PluginSupDanceMusicGeneration, Available: true}).Error; err != nil {
+		t.Fatal(err)
+	}
+	channel := model.ModelChannel{ID: "minimax-music-channel", Name: "Music", Scope: model.ChannelScopeSystem, Enabled: true, APIKey: "server-only", BaseURL: "https://www.runninghub.ai", APIFormat: "openai"}
+	if err := db.Create(&channel).Error; err != nil {
+		t.Fatal(err)
+	}
+	cm := model.ChannelModel{ID: "minimax-music-model", ChannelID: channel.ID, ModelKey: "minimax-display", ProviderModelKey: "minimax/music-2.6", DisplayName: "MiniMax Music", Capability: "audio", Protocol: "runninghub-standard-audio", Enabled: true, PriceConfigured: true, BillingMode: "fixed_request"}
+	if err := db.Create(&cm).Error; err != nil {
+		t.Fatal(err)
+	}
+	tier := model.ChannelModelPriceTier{ID: "minimax-music-price", ChannelModelID: cm.ID, SelectorKey: "{}", SelectorJSON: "{}", BillingMode: "fixed_request", PriceConfigured: true, Enabled: true, UnitPriceMicrocredits: 1500 * CreditScale}
+	if err := db.Create(&tier).Error; err != nil {
+		t.Fatal(err)
+	}
+	if err := db.Create(&model.CreditAccount{UserID: userID, AvailableMicrocredits: 200000 * CreditScale}).Error; err != nil {
+		t.Fatal(err)
+	}
+	caps, err := s.MusicCapabilitiesForUser(context.Background(), userID)
+	if err != nil || len(caps) != 1 {
+		t.Fatalf("catalog = %+v, %v", caps, err)
+	}
+	quote, err := s.QuoteMusicTask(userID, caps[0].ID)
+	if err != nil {
+		t.Fatal(err)
+	}
+	request := music.MusicGenerationRequest{Model: caps[0].ID, Mode: "custom", Lyrics: "[Verse]\nWalking in the rain", Tags: "dreamy synthpop", SongLanguage: "Mandarin", IdempotencyNonce: "minimax-style-merge", QuotedMicrocredits: &quote.AmountMicrocredits}
+	receipt, err := s.SubmitMusicTask(context.Background(), userID, request)
+	if err != nil {
+		t.Fatal(err)
+	}
+	var task model.Task
+	if err := db.First(&task, "id = ?", receipt.TaskID).Error; err != nil {
+		t.Fatal(err)
+	}
+	var input struct {
+		Prompt string `json:"prompt"`
+	}
+	if err := json.Unmarshal([]byte(task.InputJSON), &input); err != nil {
+		t.Fatal(err)
+	}
+	if !strings.Contains(input.Prompt, "dreamy synthpop") || !strings.Contains(input.Prompt, "Song language preference: Mandarin") {
+		t.Fatalf("style and language preference lost before protocol dispatch: %q", input.Prompt)
+	}
+	if !strings.Contains(input.Prompt, "Walking in the rain") {
+		t.Fatalf("lyrics fallback prompt lost: %q", input.Prompt)
+	}
+	// 超出模型 prompt 上限时强校验拒绝，不得静默截断。
+	overlong := request
+	overlong.IdempotencyNonce = "minimax-style-overlong"
+	overlong.Tags = strings.Repeat("风", 1500)
+	if _, err := s.SubmitMusicTask(context.Background(), userID, overlong); err == nil || !strings.Contains(err.Error(), "exceeds the model limit") {
+		t.Fatalf("overlong merged prompt accepted: %v", err)
+	}
+}
+
 func TestMusicResolvedChannelAliasCanArchive(t *testing.T) {
 	s, db := newMediaRecoveryTestService(t)
 	channel := model.ModelChannel{ID: "music-alias-channel", Scope: model.ChannelScopeSystem, Enabled: true, BaseURL: "https://8.8.8.8", ModelsJSON: `[]`}
@@ -291,6 +360,10 @@ func TestMusicProtocolProfileUsesWiredOperations(t *testing.T) {
 	mureka, _, ok := musicProtocolProfile("runninghub-standard-audio", "mureka-ai/mureka-v9/generate-song")
 	if !ok || !mureka.LyricsSupported || mureka.InstrumentalSupported || mureka.DurationSupported || mureka.TitleSupported {
 		t.Fatalf("incorrect Mureka contract: %+v", mureka)
+	}
+	minimax, protocolMM, ok := musicProtocolProfile("runninghub-standard-audio", "minimax/music-2.6")
+	if !ok || protocolMM != "runninghub-standard-audio-minimax-music" || !minimax.InstrumentalSupported || !minimax.LyricsSupported || !minimax.StyleSupported {
+		t.Fatalf("incorrect MiniMax contract: %+v %s", minimax, protocolMM)
 	}
 	if _, _, ok := musicProtocolProfile("openai-audio", "suno-v6"); ok {
 		t.Fatal("name matching cannot grant music capabilities to another protocol")

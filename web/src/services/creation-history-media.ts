@@ -73,8 +73,12 @@ export function creationHistoryMedia(scope: string, signal: AbortSignal, active:
 /** Only reconstruct authenticated canonical paths; actual access URLs remain ephemeral. */
 export function restoreHistoryMedia(message: CreationMessage): CreationMessage {
     const urlFor = (key?: string) => (resourceIdFromStorageKey(key) ? resourceFileUrl(resourceIdFromStorageKey(key)) : "");
+    // 历史契约只持久化 resultStorageKeys；展示地址在这里按稳定资源路径重建，
+    // 否则换设备/清缓存恢复的成功消息会因为没有 resultUrls 被误判成失败。
+    const restoredResultUrls = message.resultStorageKeys?.length ? message.resultStorageKeys.map((key, index) => urlFor(key) || message.resultUrls?.[index] || "") : undefined;
     return {
         ...message,
+        ...(restoredResultUrls ? { resultUrls: restoredResultUrls } : {}),
         ...(message.attachments
             ? {
                   attachments: message.attachments.map((item) =>

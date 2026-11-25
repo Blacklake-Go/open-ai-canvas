@@ -1,10 +1,11 @@
-import { App, Button, Form, Image, Input, Modal, Select, Space, Table, Tag, Typography } from "antd";
+import { App, Button, Form, Image, Input, Select, Space, Table, Tag, Typography } from "antd";
 import { useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { AdminPageFrame } from "./components/admin-shell";
 import { fetchAdminOfficialAssetRecommendation, fetchAdminOfficialAssetRecommendations, reviewOfficialAssetRecommendation, type OfficialAssetRecommendation, type OfficialAssetRecommendationStatus } from "@/services/api/official-asset-recommendations";
 import { ASSET_CATEGORY_OPTIONS, normalizeAssetCategory } from "@/lib/asset-category";
 import { adminResourceFileUrl } from "@/services/api/admin-storage";
+import { AdminModal } from "./ui/overlays";
 
 const statusLabel: Record<OfficialAssetRecommendationStatus, string> = { pending: "待审核", approved: "已通过", rejected: "已拒绝", changes_requested: "需补充" };
 const statusColor: Record<OfficialAssetRecommendationStatus, string> = { pending: "gold", approved: "green", rejected: "red", changes_requested: "blue" };
@@ -260,7 +261,7 @@ export default function OfficialAssetRecommendationsPage() {
                     },
                 ]}
             />
-            <Modal open={Boolean(publishTarget) || detailLoading} title="查看素材推荐详情" footer={null} onCancel={() => setPublishTarget(null)} destroyOnClose confirmLoading={detailLoading}>
+            <AdminModal open={Boolean(publishTarget) || detailLoading} title="查看素材推荐详情" footer={null} onCancel={() => setPublishTarget(null)} destroyOnClose confirmLoading={detailLoading}>
                 {publishTarget?.assetPreviewUrl && isImageRecommendation(publishTarget) ? (
                     <div className="mb-4 flex justify-center">
                         <Image src={adminResourceFileUrl(publishTarget.assetResourceId || "")} style={{ maxHeight: 240, maxWidth: "100%", objectFit: "contain", borderRadius: 8 }} />
@@ -365,8 +366,8 @@ export default function OfficialAssetRecommendationsPage() {
                         </Button>
                     </Space>
                 </Form>
-            </Modal>
-            <Modal
+            </AdminModal>
+            <AdminModal
                 open={Boolean(reviewing)}
                 title={reviewing?.action === "reject" ? "拒绝推荐" : "退回补充"}
                 onCancel={() => setReviewing(null)}
@@ -379,7 +380,7 @@ export default function OfficialAssetRecommendationsPage() {
                 cancelText="取消"
             >
                 <Input.TextArea value={note} maxLength={2000} showCount rows={4} placeholder="填写给推荐人的说明（选填）" onChange={(event) => setNote(event.target.value)} />
-            </Modal>
+            </AdminModal>
         </AdminPageFrame>
     );
 }

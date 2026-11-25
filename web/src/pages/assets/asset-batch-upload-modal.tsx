@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { App, Button, Modal, Progress } from "antd";
+import { App, Button, Progress } from "antd";
+import { AppModal } from "@/components/ui/product/app-modal";
 import { useTranslation } from "react-i18next";
 import { StatusBadge } from "@/components/ui/base/badges";
 import { FileImage, UploadCloud, X } from "lucide-react";
@@ -130,7 +131,7 @@ export function AssetBatchUploadModal({ open, defaultFolderId, folders, onClose,
     };
 
     return (
-        <Modal className="library-modal library-batch-upload-modal" title={t("library.assets.batch.title")} open={open} onCancel={close} footer={null} destroyOnHidden>
+        <AppModal className="library-modal library-batch-upload-modal" title={t("library.assets.batch.title")} open={open} onCancel={close} footer={null} destroyOnHidden>
             <div className="space-y-4">
                 <div className="grid gap-3 sm:grid-cols-3">
                     <label className="text-xs font-medium text-foreground/65">
@@ -269,6 +270,6 @@ export function AssetBatchUploadModal({ open, defaultFolderId, folders, onClose,
                     </Button>
                 </div>
             </div>
-        </Modal>
+        </AppModal>
     );
 }
