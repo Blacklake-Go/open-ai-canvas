@@ -421,6 +421,7 @@ func studioBillableMode(mode string) bool {
 type StudioTask struct {
 	ID          string        `json:"id"`
 	ProjectID   string        `json:"projectId,omitempty"`
+	ShotID      string        `json:"shotId,omitempty"`
 	Kind        string        `json:"kind"`
 	Status      string        `json:"status"`
 	Error       string        `json:"error,omitempty"`
@@ -470,6 +471,9 @@ func (s *Service) studioTaskView(task model.Task) (StudioTask, error) {
 		UpdatedAt: task.UpdatedAt.UnixMilli(), Billing: "unknown", Assets: []StudioAsset{}}
 	var input canvasGenerationInput
 	_ = json.Unmarshal([]byte(task.InputJSON), &input)
+	if id := stringValue(input.Metadata["studioDramaShotId"]); task.ProjectID != "" && supdanceOpenAIID.MatchString(id) {
+		view.ShotID = id
+	}
 	if refs, ok := input.Metadata["studioReferenceIds"].([]any); ok {
 		for _, ref := range refs {
 			if id, ok := ref.(string); ok && supdanceOpenAIID.MatchString(id) {
