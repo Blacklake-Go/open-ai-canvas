@@ -52,26 +52,6 @@
     align-items: center;
     gap: var(--space-2);
 }
-.creation-guest-tool {
-    display: inline-flex;
-    min-height: 44px;
-    align-items: center;
-    gap: var(--space-2);
-    border: 1px solid var(--user-border);
-    border-radius: var(--user-radius-button);
-    padding: var(--space-1) var(--space-3);
-    color: var(--user-ink);
-    font-size: var(--user-button-font-size);
-    text-decoration: none;
-    transition: background var(--user-motion);
-}
-.creation-guest-tool:hover {
-    background: var(--user-surface-muted);
-}
-.creation-guest-tool:focus-visible {
-    outline: 2px solid var(--control-focus-ring);
-    outline-offset: 2px;
-}
 /* 与工作台文字按钮同一语言：透明底、弱化文字，hover 只换表面。 */
 .creation-history-entry {
     display: inline-flex;

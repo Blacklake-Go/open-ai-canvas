@@ -14,16 +14,19 @@ let registeredEntries: SupDanceI18nEntry[] | undefined;
 /** Published overrides target explicit UI keys; source matching never touches user content. */
 export function registerSupDanceTranslations(entries: SupDanceI18nEntry[]) {
     if (registeredEntries === entries) return;
+    const restoreBuiltin = registeredEntries?.some((entry) => entry.origin !== "builtin" && MANAGED_TRANSLATION_TARGETS.has(entry.key));
     registeredEntries = entries;
     const template = toI18nextTemplate;
     for (const { code } of SUPPORTED_LOCALES) {
-        // Rebuild from immutable resources so deleting an override restores the exact builtin.
-        i18n.removeResourceBundle(code, "translation");
-        i18n.addResourceBundle(code, "translation", expandCatalog(NATIVE_CATALOGS[code]));
-        i18n.removeResourceBundle(code, CREATION_NAMESPACE);
-        i18n.addResourceBundle(code, CREATION_NAMESPACE, Object.fromEntries(Object.entries(CREATION_CATALOGS[code]).map(([key, text]) => [key, template(text)])));
-        i18n.removeResourceBundle(code, MODEL_NAMESPACE);
-        i18n.addResourceBundle(code, MODEL_NAMESPACE, { ...MODEL_CATALOGS[code] });
+        // The base bundles are already initialized. Restore them only after published overrides have changed their values.
+        if (restoreBuiltin) {
+            i18n.removeResourceBundle(code, "translation");
+            i18n.addResourceBundle(code, "translation", expandCatalog(NATIVE_CATALOGS[code]));
+            i18n.removeResourceBundle(code, CREATION_NAMESPACE);
+            i18n.addResourceBundle(code, CREATION_NAMESPACE, Object.fromEntries(Object.entries(CREATION_CATALOGS[code]).map(([key, text]) => [key, template(text)])));
+            i18n.removeResourceBundle(code, MODEL_NAMESPACE);
+            i18n.addResourceBundle(code, MODEL_NAMESPACE, { ...MODEL_CATALOGS[code] });
+        }
         const resources: Record<string, string> = {};
         for (const entry of entries) {
             const text = template(entry.translations[code]?.trim() || entry.translations["en-US"]?.trim() || entry.sourceText);

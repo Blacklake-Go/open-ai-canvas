@@ -103,6 +103,14 @@ const SettingsPage = workspaceRoutePages.settings;
 const ReferralPage = workspaceRoutePages.referral;
 const AdminReferralPage = lazyAdminPage(() => import("@/pages/admin/referral/referral-admin-page"));
 const UserLayout = preloadableLazy(() => import("@/layouts/user-layout"));
+
+export function preloadInitialHome(pathname: string) {
+    if (!isGuestWorkspacePath(pathname)) return;
+    // Load the workspace and composer while the session is restored.
+    void UserLayout.preload().catch(() => undefined);
+    void CreatePage.preload().catch(() => undefined);
+}
+
 const RequirePlugin = lazy(() => import("@/components/auth/require-plugin").then((module) => ({ default: module.RequirePlugin })));
 const TeamsPage = preloadableLazy(() => import("@/pages/teams"));
 const TeamWorkspacePage = preloadableLazy<object>(() => import("@/pages/teams").then((module) => ({ default: module.TeamWorkspacePage })));

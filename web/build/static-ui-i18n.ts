@@ -224,11 +224,42 @@ export function transformStaticUi(source: string, file: string, options: { colle
     return { messages, code: result?.code ?? source, map: result?.map ?? null, changed };
 }
 
+const compactCatalogId = "\0supdance:compact-interface-catalog";
+
+export function staticUiCatalogModule(catalogs: Record<string, Record<string, string>>) {
+    const locales = Object.entries(catalogs);
+    const keys = [...new Set(locales.flatMap(([, messages]) => Object.keys(messages)))];
+    const columns = locales.map(([code, messages]) => [code, keys.map((key) => messages[key] ?? null)]);
+    const payload = JSON.stringify(JSON.stringify([keys, columns]));
+    // Ship each key once and keep each locale's sentences adjacent for compression.
+    return `
+        const [keys, columns] = JSON.parse(${payload});
+        for (const column of columns) {
+            const messages = {};
+            column[1].forEach((text, index) => {
+                if (text !== null) messages[keys[index]] = text;
+            });
+            column[1] = messages;
+        }
+        export default Object.fromEntries(columns);
+    `;
+}
+
 export function staticUiI18n(): Plugin {
     const knownKeys = new Set(Object.keys(catalog["zh-CN"]));
+    let productionBuild = false;
     return {
         name: "supdance-static-ui-i18n",
         enforce: "pre",
+        configResolved(config) {
+            productionBuild = config.command === "build";
+        },
+        resolveId(source, importer) {
+            if (productionBuild && source === "./messages/interface.json" && importer?.replaceAll("\\", "/").endsWith("/src/i18n/catalogs.ts")) return compactCatalogId;
+        },
+        load(id) {
+            if (id === compactCatalogId) return staticUiCatalogModule(catalog);
+        },
         transform(code, id) {
             const result = transformStaticUi(code, id.split("?")[0], { knownKeys });
             return result.changed ? { code: result.code, map: result.map } : null;

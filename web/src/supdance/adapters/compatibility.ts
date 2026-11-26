@@ -911,7 +911,7 @@ export const SUPDANCE_UPSTREAM_PATCH_REGISTRY: readonly UpstreamPatchRecord[] = 
     {
         id: "supdance-guest-workspace-tools",
         upstreamBaseline: "v1.8.7.1",
-        feature: "游客首页五项主推工具与侧栏开关",
+        feature: "游客工作区工具导航与首次创作",
         coupledUpstreamFiles: [
             "backend/internal/handler/feature_availability.go",
             "web/src/layouts/user-layout.tsx",
@@ -920,8 +920,8 @@ export const SUPDANCE_UPSTREAM_PATCH_REGISTRY: readonly UpstreamPatchRecord[] = 
             "web/src/services/api/auth.ts",
             "web/src/stores/use-user-store.ts",
         ],
-        files: ["web/src/supdance/components/guest-creation-tools.tsx", "web/src/supdance/guest-creation-draft.ts", "web/test/guest-creation-draft.test.ts"],
-        reason: "首页游客可发现五项主推工具，侧栏读取后台开关，工具入口继续沿用现有登录与回跳流程。",
+        files: ["web/src/supdance/guest-creation-draft.ts", "web/test/guest-creation-draft.test.ts"],
+        reason: "游客侧栏读取后台开关，工具入口沿用现有登录与回跳流程，创作页恢复游客草稿。",
         upgradeRisk: "LOW",
     },
     {

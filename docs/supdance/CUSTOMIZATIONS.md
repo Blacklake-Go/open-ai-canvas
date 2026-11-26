@@ -290,7 +290,12 @@ TikTok Login Kit 仅申请 Web 的 `user.info.basic`，回调为 `/api/auth/soci
 
 ### 补丁 ID：`supdance-guest-workspace-tools`
 
-- 创作首页通过 `web/src/pages/create/index.tsx` 挂载游客工具导航，展示短剧制作、电商 Agent、图片生成、视频生成和音乐生成，沿用已有路由守卫与登录后回跳。工作区通过 `GET /api/public/workspace-tools` 获取游客侧栏所需的六个布尔开关，侧栏继续按后台配置显示。上游合并时核对首页挂载点、公开字段、工作区初始化和工具路由守卫。
+- 游客工作区侧栏通过 `GET /api/public/workspace-tools` 获取后台工具开关，工具沿用已有路由守卫与登录后回跳。创作首页行内保留原有创作模式。上游合并时核对公开字段、工作区初始化、游客草稿和工具路由守卫。
+
+### 创作首页首屏
+
+- `web/src/application.tsx` 和 `web/src/router.tsx` 在直接打开创作首页时并行预取工作区和创作页。路由继续通过现有会话恢复和权限守卫决定何时渲染。
+- 构建时由 `web/build/static-ui-i18n.ts` 合并八语界面词典共享的键。运行时还原同一份词典，只有替换已生效的后台译文时才重建受覆盖的基础资源。
 
 ### 上游 v1.8.7.2
 
