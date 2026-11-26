@@ -4,6 +4,19 @@ import type { HtmlPagesAdminOverview, HtmlSiteFooterConfig, ManagedHtmlPage } fr
 const BASE_PUBLIC = "/plugins/supdance-html-page-manager";
 const BASE_ADMIN = "/admin/plugins/supdance-html-page-manager";
 
+const additionalSocialLinks = [
+    { id: "threads", name: "Threads", handle: "@supdance_ai", href: "https://www.threads.com/@supdance_ai" },
+    { id: "discord", name: "Discord", handle: "SupDance", href: "https://discord.gg/dBDAqa5HAG" },
+    { id: "reddit", name: "Reddit", handle: "r/Supdance_ai", href: "https://www.reddit.com/r/Supdance_ai/" },
+];
+
+function withSocialLinkFields(overview: HtmlPagesAdminOverview): HtmlPagesAdminOverview {
+    const { siteFooter } = overview;
+    const existingIds = new Set(siteFooter.socialLinks.map(({ id }) => id.toLowerCase()));
+    const missing = additionalSocialLinks.filter(({ id }) => !existingIds.has(id));
+    return { ...overview, siteFooter: { ...siteFooter, socialLinks: [...siteFooter.socialLinks, ...missing] } };
+}
+
 export const DEFAULT_HTML_SITE_FOOTER_CONFIG: HtmlSiteFooterConfig = {
     enabled: true,
     brandName: "supdance",
@@ -14,9 +27,10 @@ export const DEFAULT_HTML_SITE_FOOTER_CONFIG: HtmlSiteFooterConfig = {
     socialLinks: [
         { id: "x", name: "X (Twitter)", handle: "@supdance_ai", href: "https://x.com/supdance_ai" },
         { id: "youtube", name: "YouTube", handle: "SupDance AI", href: "https://www.youtube.com/channel/UCOoro6d-vr6M-1UIpP5POew" },
-        { id: "instagram", name: "Instagram", handle: "@supdance_com", href: "https://www.instagram.com/supdance_com/" },
-        { id: "xiaohongshu", name: "小红书 (RED)", handle: "SupDance", href: "https://www.xiaohongshu.com/search_result?keyword=SupDance" },
+        { id: "instagram", name: "Instagram", handle: "@supdance_ai", href: "https://www.instagram.com/supdance_ai/" },
+        { id: "xiaohongshu", name: "小红书 (RED)", handle: "SupDance", href: "https://www.xiaohongshu.com/user/profile/678ada5f000000000d0084c9" },
         { id: "qq", name: "QQ 交流群", handle: "SupDance 官方群", href: "https://qm.qq.com/q/e8alJlLDuE" },
+        ...additionalSocialLinks,
     ],
     columns: [
         {
@@ -91,7 +105,7 @@ export async function fetchPublicHtmlSiteFooterConfig(signal?: AbortSignal): Pro
 
 /** 管理员获取所有 HTML 页面与页脚概览 */
 export async function fetchAdminHtmlPagesOverview(signal?: AbortSignal): Promise<HtmlPagesAdminOverview> {
-    return http.get<HtmlPagesAdminOverview>(`${BASE_ADMIN}/overview`, { signal });
+    return withSocialLinkFields(await http.get<HtmlPagesAdminOverview>(`${BASE_ADMIN}/overview`, { signal }));
 }
 
 /** 管理员保存或更新页面列表 */
@@ -111,5 +125,5 @@ export async function saveAdminHtmlSiteFooter(siteFooter: HtmlSiteFooterConfig):
 
 /** 管理员重置页脚与受管站点页面配置为默认 */
 export async function resetAdminHtmlSiteFooter(): Promise<HtmlPagesAdminOverview> {
-    return http.post<HtmlPagesAdminOverview>(`${BASE_ADMIN}/site-footer/reset`, {});
+    return withSocialLinkFields(await http.post<HtmlPagesAdminOverview>(`${BASE_ADMIN}/site-footer/reset`, {}));
 }
