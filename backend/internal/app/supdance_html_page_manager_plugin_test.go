@@ -99,3 +99,39 @@ func TestDefaultHtmlSiteFooterConfig(t *testing.T) {
 		t.Errorf("normalizeHtmlSiteFooterConfig 未正确填充默认字段")
 	}
 }
+
+func TestDefaultHtmlSidebarDockConfig(t *testing.T) {
+	cfg := DefaultHtmlSidebarDockConfig()
+	if !cfg.Enabled || !cfg.HideStandalonePricingGroup {
+		t.Fatal("预期侧边栏停靠区默认开启并收起中部孤立定价表分组")
+	}
+	if len(cfg.Cards) != 3 {
+		t.Fatalf("预期默认提供 3 格生态快链卡片，实际 %d", len(cfg.Cards))
+	}
+	wantHrefs := []string{"/html/about", "/pricing.html", "/mcp"}
+	for i, want := range wantHrefs {
+		if cfg.Cards[i].Href != want {
+			t.Errorf("卡片 #%d 路由应为 %s，实际 %s", i, want, cfg.Cards[i].Href)
+		}
+		if len(cfg.Cards[i].Labels) != 8 {
+			t.Errorf("卡片 #%d 应包含 8 语种短标签，实际 %d", i, len(cfg.Cards[i].Labels))
+		}
+	}
+	if len(cfg.SocialLinks) < 5 {
+		t.Errorf("预期至少包含 5 个官方社媒渠道，实际 %d", len(cfg.SocialLinks))
+	}
+
+	normalized := normalizeHtmlSidebarDockConfig(HtmlSidebarDockConfig{
+		Enabled: true,
+		Cards: []HtmlSidebarDockCard{
+			{ID: "", Icon: "INVALID", Href: "javascript:alert(1)", Target: "bad"},
+		},
+		MaxVisibleSocials: 99,
+	})
+	if normalized.Cards[0].Href != "/" || normalized.Cards[0].Icon != "docs" || normalized.Cards[0].Target != "_top" {
+		t.Errorf("normalizeHtmlSidebarDockConfig 未正确清洗危险路由与非法字段: %+v", normalized.Cards[0])
+	}
+	if normalized.MaxVisibleSocials != 5 {
+		t.Errorf("超出上限的社媒展示数应回落至 5，实际 %d", normalized.MaxVisibleSocials)
+	}
+}
