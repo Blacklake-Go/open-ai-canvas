@@ -381,3 +381,7 @@ The host seams are registered under `supdance-one-identity-community`.
 
 补丁 `supdance-wallet-checkout-presentation` 在现有结算栏将已识别的渠道显示为品牌简称。积分套餐在总积分下显示已包含的赠送数量，只有商品说明中的基础积分与赠送积分之和等于发放总额才展示明细。积分标识使用中性色宝石图标。此接缝独立于下单和积分发放。
 
+## SupDance Studio 私有业务入口
+
+候选侧栏在官网后端进程内增加独立私有监听，可选配置见 `.env.example`。网关的 v1 和 v2 使用各自的服务凭据，官网公开监听保留现有 v1 配置。候选的 MCP 和 OAuth 保持独立进程及数据卷。启用时，短剧项目、用户权限、资源、积分账本与后台任务沿用官网服务和数据，存储配额检查由同一后端进程协调。本变更没有数据库迁移。
+

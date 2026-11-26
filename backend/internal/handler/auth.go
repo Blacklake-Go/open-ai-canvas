@@ -310,6 +310,10 @@ func SystemProxyNoRouteHandler(svc *service.Service) gin.HandlerFunc {
 
 func shortSystemProxyPath(rawPath string) (string, string, bool) {
 	const prefix = "/api/"
+	const privateStudio = "/api" + studioBridgePath
+	if rawPath == privateStudio || strings.HasPrefix(rawPath, privateStudio+"/") {
+		return "", "", false
+	}
 	if !strings.HasPrefix(rawPath, prefix) {
 		return "", "", false
 	}

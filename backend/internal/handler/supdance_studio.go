@@ -4,6 +4,7 @@ import (
 	"crypto/subtle"
 	"encoding/base64"
 	"encoding/hex"
+	"fmt"
 	"io"
 	"mime"
 	"net/http"
@@ -13,20 +14,65 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"yingce/backend/internal/assets"
+	"yingce/backend/internal/logging"
 	"yingce/backend/internal/service"
 )
 
-func RegisterSupdanceStudioRoutes(r *gin.RouterGroup, svc *service.Service) {
-	raw, err := os.ReadFile(os.Getenv("CANVAS_SUPDANCE_STUDIO_BRIDGE_SECRET_FILE"))
+const (
+	studioBridgePath           = "/supdance-openai/v2/studio"
+	studioSecretFileEnv        = "CANVAS_SUPDANCE_STUDIO_BRIDGE_SECRET_FILE"
+	studioPartnerSecretFileEnv = "CANVAS_SUPDANCE_STUDIO_PARTNER_SECRET_FILE"
+)
+
+// NewSupdanceStudioBridge serves the isolated ingress using the website's services.
+func NewSupdanceStudioBridge(svc *service.Service) (http.Handler, error) {
+	studioSecret, err := readSupdanceBridgeSecret(studioSecretFileEnv)
 	if err != nil {
-		return
+		return nil, err
+	}
+	partnerSecret, err := readSupdanceBridgeSecret(studioPartnerSecretFileEnv)
+	if err != nil {
+		return nil, err
+	}
+	if subtle.ConstantTimeCompare(studioSecret, partnerSecret) == 1 {
+		return nil, fmt.Errorf("%s and %s must contain different credentials", studioSecretFileEnv, studioPartnerSecretFileEnv)
+	}
+	if strings.TrimSpace(os.Getenv(supdanceOpenAISecretFileEnv)) != "" {
+		legacySecret, err := readSupdanceBridgeSecret(supdanceOpenAISecretFileEnv)
+		if err != nil {
+			return nil, err
+		}
+		if subtle.ConstantTimeCompare(legacySecret, partnerSecret) == 1 || subtle.ConstantTimeCompare(legacySecret, studioSecret) == 1 {
+			return nil, fmt.Errorf("Studio ingress requires credentials distinct from %s", supdanceOpenAISecretFileEnv)
+		}
+	}
+	router := gin.New()
+	router.Use(logging.Recovery(), RequestCorrelationMiddleware())
+	api := router.Group("/api")
+	registerSupdanceOpenAIBridgeRoutes(api, svc, partnerSecret)
+	registerSupdanceStudioRoutes(api, svc, studioSecret)
+	return router, nil
+}
+
+func readSupdanceBridgeSecret(envName string) ([]byte, error) {
+	path := strings.TrimSpace(os.Getenv(envName))
+	if path == "" {
+		return nil, fmt.Errorf("%s is required", envName)
+	}
+	raw, err := os.ReadFile(path)
+	if err != nil {
+		return nil, fmt.Errorf("cannot read %s", envName)
 	}
 	secret, err := hex.DecodeString(strings.TrimSpace(string(raw)))
 	if err != nil || len(secret) != 32 {
-		return
+		return nil, fmt.Errorf("%s must contain a 32-byte hexadecimal credential", envName)
 	}
+	return secret, nil
+}
+
+func registerSupdanceStudioRoutes(r *gin.RouterGroup, svc *service.Service, secret []byte) {
 	authorization := "Bearer " + hex.EncodeToString(secret)
-	group := r.Group("/supdance-openai/v2/studio", func(c *gin.Context) {
+	group := r.Group(studioBridgePath, func(c *gin.Context) {
 		if subtle.ConstantTimeCompare([]byte(c.GetHeader("Authorization")), []byte(authorization)) != 1 {
 			c.AbortWithStatus(http.StatusUnauthorized)
 			return

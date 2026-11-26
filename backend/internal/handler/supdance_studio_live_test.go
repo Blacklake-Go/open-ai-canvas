@@ -160,17 +160,23 @@ func TestSupdanceStudioLiveBridge(t *testing.T) {
 	t.Cleanup(upstream.Close)
 	seedStudioLiveModels(t, db, upstream.URL)
 
-	secret := make([]byte, 32)
-	if _, err := rand.Read(secret); err != nil {
-		t.Fatal(err)
+	setSecret := func(envName, filename string) string {
+		t.Helper()
+		secret := make([]byte, 32)
+		if _, err := rand.Read(secret); err != nil {
+			t.Fatal(err)
+		}
+		secretHex := hex.EncodeToString(secret)
+		path := filepath.Join(dir, filename)
+		if err := os.WriteFile(path, []byte(secretHex), 0o600); err != nil {
+			t.Fatal(err)
+		}
+		t.Setenv(envName, path)
+		return secretHex
 	}
-	secretHex := hex.EncodeToString(secret)
-	secretPath := filepath.Join(dir, "bridge.secret")
-	if err := os.WriteFile(secretPath, []byte(secretHex), 0o600); err != nil {
-		t.Fatal(err)
-	}
-	t.Setenv("CANVAS_SUPDANCE_STUDIO_BRIDGE_SECRET_FILE", secretPath)
-	t.Setenv("CANVAS_SUPDANCE_OPENAI_BRIDGE_SECRET_FILE", secretPath)
+	secretHex := setSecret(studioSecretFileEnv, "bridge.secret")
+	partnerSecretHex := setSecret(studioPartnerSecretFileEnv, "partner.secret")
+	t.Setenv(supdanceOpenAISecretFileEnv, "")
 	svc := service.New(repository.New(db), dir)
 	t.Cleanup(func() { _ = svc.Close() })
 	previousRuntime := runtimeService
@@ -192,15 +198,15 @@ func TestSupdanceStudioLiveBridge(t *testing.T) {
 		t.Fatal(err)
 	}
 	svc.StartWorker()
-	router := gin.New()
-	api := router.Group("/api")
-	RegisterSupdanceStudioRoutes(api, svc)
-	RegisterSupdanceOpenAIBridgeRoutes(api, svc)
+	router, err := NewSupdanceStudioBridge(svc)
+	if err != nil {
+		t.Fatal(err)
+	}
 	bridge := httptest.NewServer(router)
 	t.Cleanup(bridge.Close)
 	videoDigest := sha256.Sum256(clip)
 	request, err := json.Marshal(map[string]string{
-		"url": bridge.URL + "/api/supdance-openai", "secret": secretHex,
+		"url": bridge.URL + "/api/supdance-openai", "secret": secretHex, "partnerSecret": partnerSecretHex,
 		"projectId": project.ID, "castId": cast.ID, "castAssetId": castAsset.ID,
 		"videoSHA256": hex.EncodeToString(videoDigest[:]),
 	})
@@ -216,6 +222,17 @@ func TestSupdanceStudioLiveBridge(t *testing.T) {
 		t.Fatalf("plugin HTTP validation failed: %v\n%s", err, out)
 	} else {
 		t.Log(strings.TrimSpace(string(out)))
+	}
+	websiteProject, err := svc.DramaSummary("alice", project.ID)
+	if err != nil || websiteProject.Project.ID != project.ID || len(websiteProject.Episodes) != 1 {
+		t.Fatalf("website did not find Studio's project and episode: %v", err)
+	}
+	websiteEpisode, err := svc.DramaEpisodeDetail("alice", project.ID, websiteProject.Episodes[0].ID)
+	if err != nil || len(websiteEpisode.Shots) != 2 {
+		t.Fatalf("website did not find both Studio shots: %v", err)
+	}
+	if websiteEpisode.Shots[0].Action != "The courier turns around." || websiteEpisode.Shots[1].Scene != "Station" {
+		t.Fatal("website did not see Studio's edit and unchanged neighboring shot")
 	}
 	if product, shot := productCalls.Load(), shotCalls.Load(); product != 1 || shot != 1 {
 		t.Errorf("expected one worker request per operation (product=%d, shot=%d)", product, shot)
