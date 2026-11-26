@@ -11,6 +11,9 @@
             // vendor metadata. Only the consented parent can initialize or send a purchase.
             (() => {
                 if (location.hostname !== "www.supdance.com" || parent === window) return;
+                const isSales = new URLSearchParams(location.search).get("source") === "sales";
+                const pixelId = isSales ? "rih9p" : "rinhf";
+                const purchaseEventId = isSales ? "tw-rih9p-rk5ya" : "tw-rinhf-rinl3";
                 let ready = false;
                 const reply = (type) => parent.postMessage({ source: "supdance-x-pixel", type }, location.origin);
                 window.addEventListener("message", (event) => {
@@ -20,7 +23,7 @@
                         const currency = event.data.currency;
                         const conversionId = event.data.conversion_id;
                         if (!Number.isFinite(value) || value <= 0 || !["CNY", "USD"].includes(currency) || !/^[a-f0-9]{64}$/.test(conversionId)) return;
-                        twq("event", "tw-rinhf-rinl3", { value, currency, conversion_id: conversionId });
+                        twq("event", purchaseEventId, { value, currency, conversion_id: conversionId });
                     }
                 });
                 const pixel = (window.twq = function () {
@@ -33,7 +36,7 @@
                 script.async = true;
                 script.referrerPolicy = "no-referrer";
                 script.onload = () => {
-                    pixel("config", "rinhf");
+                    pixel("config", pixelId);
                     ready = true;
                     reply("ready");
                 };
