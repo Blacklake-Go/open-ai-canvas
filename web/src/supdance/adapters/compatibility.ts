@@ -26,6 +26,15 @@ export type UpstreamPatchRecord = {
  */
 export const SUPDANCE_UPSTREAM_PATCH_REGISTRY: readonly UpstreamPatchRecord[] = [
     {
+        id: "supdance-native-image-creation",
+        upstreamBaseline: "v1.8.7.2",
+        feature: "统一创作对话中的原生图片生成",
+        coupledUpstreamFiles: ["web/src/lib/workspace-route-modules.ts", "web/src/pages/create/creation-workspace.tsx", "web/src/pages/create/index.tsx", "web/src/pages/create/use-creation-conversation-route.ts", "web/src/router.tsx"],
+        files: ["web/test/image-workspace.test.ts", "web/test/fixtures/creation-sidebar-route.harness.tsx"],
+        reason: "恢复创作页内原有的图片任务提交和结果展示。旧图片工作台链接携带会话 ID 进入个人创作页。",
+        upgradeRisk: "MEDIUM",
+    },
+    {
         id: "supdance-maintainer-metadata",
         upstreamBaseline: "v1.8.7.1@5ca284ce",
         feature: "站点维护者信息与许可证入口",

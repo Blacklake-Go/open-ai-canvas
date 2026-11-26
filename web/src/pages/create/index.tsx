@@ -28,10 +28,8 @@ import { LEGACY_TEXT_THINKING_CONFIG, isThinkingLevel, resolveThinkingLevel, thi
 import { modelCapabilityConfigFor, videoDurationAllowed, videoDurationOptions } from "@/lib/model-capabilities";
 import { preserveImageSettings as normalizeImageValue, mediaSettingIssues } from "@/lib/media-settings";
 import { inferVideoOperation, modelGroupReferenceLimits, resolveCompatibleModel, mergedImageCapabilityConfig, type ModelRequirements } from "@/lib/model-selection";
-import { createClientUUID } from "@/lib/client-id";
-import { prepareBackendGenerationTask, type BackendGenerationResult } from "@/services/api/generation-task";
 import type { Skill } from "@/services/api/skills";
-import { createGenerationTask, type CreateTaskInput, type GenerationTask } from "@/services/api/task-center";
+import type { GenerationTask } from "@/services/api/task-center";
 import { loadCreationConversations, pendingCreationTaskIds, removeCreationConversationSnapshot, updateCreationConversationSnapshot } from "@/services/creation-conversation-store";
 import { readCreationConversationSnapshot, writeCreationConversationSnapshot } from "@/services/creation-conversation-snapshot";
 import { localForageStorageForScope } from "@/lib/localforage-storage";
@@ -198,23 +196,6 @@ export default function CreatePage() {
     const urlModeParam = searchParams.get("mode") || searchParams.get("type");
     // 功能关闭时图片模式请求按未指定处理，偏好/URL 都回退到文本，避免跳进被门禁拦下的工作台。
     const validUrlMode: CreationMode | null = (urlModeParam === "image" && imageWorkbenchEnabled) || urlModeParam === "video" || urlModeParam === "music" || urlModeParam === "text" ? urlModeParam : null;
-    const requestedConversation = searchParams.get("conversation");
-    useEffect(() => {
-        if (!requestedConversation) return;
-        if (!imageWorkbenchEnabled) return;
-        if (requestedConversation === "new") {
-            if (validUrlMode === "image") {
-                navigate(workspacePath("/workspace/image"), { replace: true });
-            }
-            return;
-        }
-        // 如果请求的会话是图像生成会话（或当前为图像模式），重定向至独立创作工作区
-        const found = conversations.find((c) => c.id === requestedConversation);
-        const isImage = found ? found.messages.some((m) => m.mode === "image") : validUrlMode === "image";
-        if (isImage) {
-            navigate(workspacePath(`/workspace/image/${encodeURIComponent(requestedConversation)}`), { replace: true });
-        }
-    }, [requestedConversation, conversations, validUrlMode, navigate, imageWorkbenchEnabled]);
     const [conversationScope, setConversationScope] = useState<string | null>(() => (initialConversationSnapshot ? activeConversationScope : null));
     const [mode, setMode] = useState<CreationMode>(() => {
         if (workspaceTeamId) return "text";
@@ -363,9 +344,7 @@ export default function CreatePage() {
             ),
         [addedSkills, attachments, draftReferences, canUseSkills],
     );
-    // 首页对于图片生成始终跳转至独立工作区；首页仅保留输入入口与校验反馈
-    const isImageConversation = activeConversation?.messages.some((m) => m.mode === "image");
-    const isEmpty = mode === "image" || isImageConversation || !activeConversation?.messages.length;
+    const isEmpty = !activeConversation?.messages.length;
 
     // 空首页从顶部开始；有消息的对话由跟随消息逻辑管理滚动。
     useLayoutEffect(() => {
@@ -1140,7 +1119,7 @@ export default function CreatePage() {
                       model: selectedModel,
                       title: text.slice(0, 40),
                   }
-                : { ratio, seconds, quality, videoQuality, count };
+                : { ratio, seconds, quality, videoQuality, count, ...(mode === "image" ? { imageResolution } : {}) };
         const references = selectedCreationReferences(text, mentionReferences);
         // 后端对图片和视频使用不同的参考字段；这里先拆分，避免媒体类型在写入任务时被误判。
         const { referenceImages, referenceVideos, referenceAudios } = splitCreationAttachments(attachments);
@@ -1177,97 +1156,6 @@ export default function CreatePage() {
         }
         const expandedPrompt = skillExecution.prompt;
         const referenceMetadata = skillExecution.metadata;
-
-        if (mode === "image") {
-            const taskCount = Math.max(1, Math.min(imageBatchLimit, Math.floor(Number(count) || 1)));
-            const targetSessionId = `c-${createClientUUID()}`;
-
-            let taskInput: CreateTaskInput;
-            try {
-                taskInput = await prepareBackendGenerationTask({
-                    mode: "image",
-                    prompt: expandedPrompt,
-                    config: {
-                        ...generationConfig,
-                        model: selectedModel,
-                        imageModel: selectedModel,
-                        size: ratio,
-                        quality,
-                        imageResolution,
-                        count: "1",
-                    },
-                    referenceImages,
-                    metadata: {
-                        source: "create-page",
-                        conversationId: targetSessionId,
-                        ...referenceMetadata,
-                    },
-                });
-            } catch (error) {
-                toast.error(error instanceof Error ? error.message : t("create.page.runtimeLoadFailed"));
-                releaseRetryLock();
-                releaseSubmitGate();
-                return;
-            }
-
-            let createdTasks: GenerationTask[] = [];
-            try {
-                createdTasks = await Promise.all(
-                    Array.from({ length: taskCount }, (_, batchIndex) =>
-                        createGenerationTask({
-                            ...taskInput,
-                            input: {
-                                ...taskInput.input,
-                                metadata: {
-                                    ...((taskInput.input?.metadata as Record<string, unknown>) || {}),
-                                    batchIndex,
-                                    batchCount: taskCount,
-                                },
-                            },
-                        }),
-                    ),
-                );
-            } catch (error) {
-                toast.error(error instanceof Error ? error.message : t("create.page.submitFailed"));
-                releaseRetryLock();
-                releaseSubmitGate();
-                return;
-            }
-
-            const taskIds = createdTasks.map((t) => t.id);
-            const userMsg = newMessage("user", text, { mode, model: selectedModel, attachments, references, settings });
-            const assistantMsg = newMessage("assistant", "", {
-                mode,
-                model: selectedModel,
-                status: "pending",
-                settings,
-                taskIds,
-            });
-            assistantMsg.generationStatus = "queued";
-
-            const newConv: CreationConversation = {
-                id: targetSessionId,
-                title: text.slice(0, 30),
-                updatedAt: new Date().toISOString(),
-                messages: [userMsg, assistantMsg],
-            };
-
-            const nextConversations = [newConv, ...conversationsRef.current];
-            conversationsRef.current = nextConversations;
-            writeCreationConversationSnapshot(activeConversationScope, nextConversations);
-            if (historySessionRef.current) {
-                void historySessionRef.current.save(nextConversations);
-            }
-
-            setPrompt("");
-            setAttachments([]);
-            setDraftReferences([]);
-            releaseRetryLock();
-            releaseSubmitGate();
-
-            navigate(workspacePath(`/workspace/image/${encodeURIComponent(targetSessionId)}`));
-            return;
-        }
 
         followLatestMessageRef.current = true;
         const userMessage = newMessage("user", text, { mode, model: selectedModel, attachments, references, settings });
@@ -1389,6 +1277,81 @@ export default function CreatePage() {
                 );
                 if (!result.text?.trim()) throw new Error(t("create.page.noTextResult"));
                 updateOriginAssistant((item) => ({ ...item, content: result.text || "", reasoning: result.reasoning }));
+            } else if (mode === "image") {
+                const taskCount = Math.max(1, Math.min(imageBatchLimit, Math.floor(Number(count) || 1)));
+                const settled = await runtime.runGenerationOperationOnce(retryContext?.clientOperationId, () =>
+                    runtime.runBackendGenerationTaskBatch({
+                        mode: "image",
+                        prompt: expandedPrompt,
+                        config: { ...requestConfig, count: "1" },
+                        referenceImages,
+                        signal: requestLifecycle.signal,
+                        metadata: { source: "create-page", conversationId: activeConversation.id, messageId: assistantMessage.id, ...referenceMetadata },
+                        onTaskUpdate: bindTask,
+                        count: taskCount,
+                        ...retryContext,
+                    }),
+                );
+                if (requestLifecycle.signal.aborted) throw new DOMException("Aborted", "AbortError");
+                const boundTaskIdList = Array.from(boundTaskIds);
+                const generatedTasks = settled.flatMap((entry, batchIndex) => {
+                    if (entry.status !== "fulfilled") return [];
+                    return [
+                        {
+                            result: entry.value,
+                            taskId: boundTaskIdsByBatchIndex.get(batchIndex) || boundTaskIdList[batchIndex],
+                            batchIndex,
+                        },
+                    ];
+                });
+                const taskFailures = settled.filter((entry): entry is PromiseRejectedResult => entry.status === "rejected");
+                const storedImages = await Promise.allSettled(
+                    generatedTasks.map(async ({ result, taskId, batchIndex }) => {
+                        if (!taskId) throw new Error(t("create.page.missingTaskId"));
+                        const task = completedCreationGenerationTask(runtime, {
+                            taskId,
+                            task: boundTasks.get(taskId),
+                            mode: "image",
+                            prompt: expandedPrompt,
+                            result,
+                            conversationId: activeConversation.id,
+                            messageId: assistantMessage.id,
+                            batchIndex,
+                            batchCount: taskCount,
+                        });
+                        const materialized = await runtime.consumeGenerationTaskMessage(
+                            task,
+                            assistantMessage.id,
+                            async ({ resultUrls, resultStorageKeys, effectKey }) => {
+                                await updateOriginAssistant(
+                                    (item) =>
+                                        runtime.applyGenerationConsumerEffect(item, effectKey, (current) => ({
+                                            ...current,
+                                            status: "done" as const,
+                                            content: t("create.status.imageGenerated"),
+                                            ...(resultUrls.length ? { resultUrls: Array.from(new Set([...(current.resultUrls || []), ...resultUrls])) } : {}),
+                                            ...(resultStorageKeys.length ? { resultStorageKeys: Array.from(new Set([...(current.resultStorageKeys || []), ...resultStorageKeys])) } : {}),
+                                        })).value,
+                                );
+                            },
+                            { signal: requestLifecycle.signal },
+                        );
+                        const urls = runtime.generationTaskMaterializedUrls(materialized);
+                        if (!urls.length) throw new Error(t("create.page.imageResultUnavailable"));
+                        return urls;
+                    }),
+                );
+                const resultUrls = storedImages.flatMap((entry) => (entry.status === "fulfilled" ? entry.value : []));
+                const resourceFailures = storedImages.filter((entry): entry is PromiseRejectedResult => entry.status === "rejected");
+                const failedCount = taskFailures.length + resourceFailures.length;
+                if (!resultUrls.length) {
+                    // 只要有一张图是“页面没跟上”而不是后端确认失败，就交给恢复监听继续跟进，而不是整条判失败。
+                    const reasons = [...taskFailures, ...resourceFailures].map((entry) => entry.reason);
+                    const reason = reasons.find((candidate) => !runtime.isGenerationTaskTerminalError(candidate)) ?? reasons[0];
+                    throw reason instanceof Error ? reason : new Error(t("create.page.noImageResult"));
+                }
+                if (failedCount) toast.warning(t("create.page.imagesPartiallyGenerated", { done: resultUrls.length, failed: failedCount }));
+                updateOriginAssistant((item) => ({ ...item, content: failedCount ? t("create.status.imagesPartiallyGenerated", { done: resultUrls.length, failed: failedCount }) : t("create.status.imageGenerated") }));
             } else {
                 const result = await runtime.runGenerationOperationOnce(retryContext?.clientOperationId, () =>
                     runtime.runBackendGenerationTask({
@@ -1551,6 +1514,7 @@ export default function CreatePage() {
         ready: conversationReady,
         activeId,
         canSelect: !busy && !openingCanvas,
+        historySynced: !userId || historySync.phase === "synced" || historySync.phase === "conflict",
         ids: conversations.map((conversation) => conversation.id),
         onSelect: (id) => {
             const conversation = conversationsRef.current.find((item) => item.id === id);
@@ -1577,15 +1541,12 @@ export default function CreatePage() {
             { replace: true },
         );
         if (draft) setPrompt((current) => current || draft);
-    }, [guestDraftToken, userId, conversationReady, activeConversation, busy, setSearchParams]);
-    const startNewConversationFromHistory = () => {
-        setHistoryOpen(false);
-        navigate(workspacePath("/workspace/image"));
-    };
+    }, [guestDraftToken, userId, conversationReady, activeConversation, workspaceTeamId, busy, setSearchParams]);
+    const startNewConversationFromHistory = () => selectConversationRoute(startNewConversation());
     const selectConversationFromHistory = (conversation: CreationConversation) => {
         if (busy || openingCanvas || !conversationStorageReady) return;
-        setHistoryOpen(false);
-        navigate(workspacePath(`/workspace/image/${encodeURIComponent(conversation.id)}`));
+        selectConversation(conversation);
+        selectConversationRoute(conversation.id);
     };
 
     const confirmDeleteConversation = (conversation: CreationConversation) => {
@@ -1666,7 +1627,10 @@ export default function CreatePage() {
             const instrumental = historySettingBool(nextSettings.instrumental);
             if (instrumental !== undefined) setMusicInstrumental(instrumental);
         }
-        if (nextMode === "image") rememberImageSettings({ ratio: nextSettings.ratio, quality: nextSettings.quality, count: nextSettings.count });
+        if (nextMode === "image") {
+            if (nextSettings.imageResolution) setImageResolution(nextSettings.imageResolution);
+            rememberImageSettings({ ratio: nextSettings.ratio, quality: nextSettings.quality, count: nextSettings.count, ...(nextSettings.imageResolution ? { imageResolution: nextSettings.imageResolution } : {}) });
+        }
         if (nextMode === "video") rememberVideoSettings({ ratio: nextSettings.ratio, seconds: nextSettings.seconds, videoQuality: nextSettings.videoQuality });
     };
 

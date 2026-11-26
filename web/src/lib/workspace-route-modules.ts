@@ -21,7 +21,6 @@ export const workspaceRoutePages = {
     settings: preloadableLazy(() => import("@/pages/settings")),
     referral: preloadableLazy(() => import("@/pages/referral")),
     musicWorkbench: preloadableLazy(() => import("@/supdance/plugins/music-generation/pages/music-workbench-page")),
-    imageWorkspace: preloadableLazy(() => import("@/pages/workspace/image-workspace-page")),
 };
 
 export const loadCanvasProjectPage = workspaceRoutePages.canvasProject.preload;
@@ -69,7 +68,7 @@ export function preloadWorkspaceRoute(pathnameOrSlug: string) {
         return;
     }
     if (slug === "workspace") {
-        if (segments[1] === "image") warm("imageWorkspace");
+        if (segments[1] === "image") warm("create");
         return;
     }
     const key = workspaceRouteSlugs[slug];
