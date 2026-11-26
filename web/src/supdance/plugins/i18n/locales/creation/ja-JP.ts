@@ -1726,6 +1726,7 @@ const pack: Record<string, string> = {
     "creation.fd0d4b7258c28a99": "オープニング",
     "creation.251bc40e7027dfc0": "待機中",
     "workbench.first_frame": "先頭フレーム",
+    "projects.opening_reference": "冒頭の参照画像",
     "creation.3aceab88c79d7f8e": "オープニング シーケンス",
     "creation.d5524f2fe0218866": "セグメントの終了フレーム {value1}",
     "creation.0f8378c4c0979af2": "前の段落を待っています",

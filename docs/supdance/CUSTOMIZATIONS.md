@@ -279,6 +279,10 @@ TikTok Login Kit 仅申请 Web 的 `user.info.basic`，回调为 `/api/auth/soci
 
 - 创作首页通过 `web/src/pages/create/index.tsx` 挂载游客工具导航，展示短剧制作、电商 Agent、图片生成、视频生成和音乐生成，沿用已有路由守卫与登录后回跳。工作区通过 `GET /api/public/workspace-tools` 获取游客侧栏所需的六个布尔开关，侧栏继续按后台配置显示。上游合并时核对首页挂载点、公开字段、工作区初始化和工具路由守卫。
 
+### 上游 v1.8.7.2
+
+- 保留 SupDance 创作结果入库、音乐模式、短剧剪辑时间线、访客入口、八语启动提示和 Studio 私有网关，合并上游结果恢复、精修画布和页面资源恢复。上游 Agent 历史归档迁移顺延到本站 113。19 个重叠协议包核对了协议字段、文档和附带文件后采用上游正式发行版，已安装的定制版本由现有发行版记录管理。
+
 ### 补丁 ID：`supdance-asset-form-viewport`
 
 - `web/src/pages/assets/index.tsx` 仅限制新增和编辑素材共用弹窗的高度，让正文独立滚动并保留可见的底部操作区。上游合并时核对弹窗正文与操作区的布局。

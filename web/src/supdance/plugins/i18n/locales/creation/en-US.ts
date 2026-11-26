@@ -1735,6 +1735,7 @@ const pack: Record<string, string> = {
     "creation.fd0d4b7258c28a99": "opening",
     "creation.251bc40e7027dfc0": "waiting",
     "workbench.first_frame": "First Frame",
+    "projects.opening_reference": "Opening reference",
     "creation.3aceab88c79d7f8e": "opening sequence",
     "creation.d5524f2fe0218866": "End frame of segment {value1}",
     "creation.0f8378c4c0979af2": "Waiting for the previous paragraph",

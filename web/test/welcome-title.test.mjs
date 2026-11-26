@@ -9,12 +9,14 @@ test("welcome entry loads configured appearance", async () => {
     let calls = 0;
     const imports = [];
     const main = source("../src/main.tsx")
-        .replace(/^import .*;\n/gm, "")
+        .replace(/^import .*;\r?\n/gm, "")
         .replace(/import\.meta\.env\.DEV/g, "false")
         .replace(/import\(/g, "loadModule(");
     vm.runInNewContext(main, {
         window: { location: { pathname: "/welcome" } },
-        installChunkRecovery() {},
+        reportStartupLoadFailure(error) {
+            throw error;
+        },
         isIsolatedDirectorRepro: () => false,
         bootstrapAppearance: async () => {
             calls++;

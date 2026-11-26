@@ -3,19 +3,19 @@
   "upstreamRepository": "https://github.com/ddcat-ai/open-ai-canvas",
   "forkRepository": "https://github.com/Blacklake-Go/open-ai-canvas",
   "upstreamBaseline": {
-    "tag": "v1.8.7.1",
-    "releaseTag": "v1.8.7.1",
-    "releaseCommit": "882a1d1a50523fe992831e2b0da69f44b4469835",
-    "commit": "5ca284ce98c2ab6daa3ec2c5536775aa91206e63",
-    "schemaVersion": 109
+    "tag": "v1.8.7.2",
+    "releaseTag": "v1.8.7.2",
+    "releaseCommit": "7da665512f30efeb46fa6f9703aa6472dedadcf1",
+    "commit": "7da665512f30efeb46fa6f9703aa6472dedadcf1",
+    "schemaVersion": 110
   },
   "integrationRelease": {
-    "schemaVersion": 112,
+    "schemaVersion": 113,
     "yingceSchemaVersion": 4,
-    "version": "v1.8.7.1-supdance.8",
-    "baseCommit": "832831ad935aec201d09a4a292c7a842ceb5c852",
-    "sourceBranch": "codex/world-engine-20261121",
-    "deploymentEvidence": "docs/supdance/UPSTREAM_WORLD_ENGINE.md"
+    "version": "v1.8.7.2-supdance.1",
+    "baseCommit": "cbf18b4d4a857fa839425c90f12e1871f9589d56",
+    "sourceBranch": "codex/guest-home-upstream-1872",
+    "deploymentEvidence": "docs/supdance/UPSTREAM_BASELINE.md"
   },
   "supdanceRelease": {
     "tag": "supdance/v2026.10.28.2",

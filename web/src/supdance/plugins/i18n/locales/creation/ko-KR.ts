@@ -1725,6 +1725,7 @@ const pack: Record<string, string> = {
     "creation.fd0d4b7258c28a99": "오프닝",
     "creation.251bc40e7027dfc0": "대기 중",
     "workbench.first_frame": "첫 프레임",
+    "projects.opening_reference": "오프닝 참조 이미지",
     "creation.3aceab88c79d7f8e": "오프닝 시퀀스",
     "creation.d5524f2fe0218866": "세그먼트 {value1}의 끝 프레임",
     "creation.0f8378c4c0979af2": "이전 단락을 기다리는 중",

@@ -392,6 +392,7 @@ export function ReferenceBoard({
                     </button>
                 ) : null}
                 <span>
+                    {request.tailFrameAsReference && !first && `${_creationText("projects.opening_reference")} · `}
                     {first ? _creationText("creation.3ffd76e271e3a941") : request.firstFrameResourceId ? _creationText("creation.b51e78db2f31b708", { value1: segment.index }) : _creationText("creation.91475a5b2a7d0bb7", { value1: segment.index })}
                 </span>
             </div>

@@ -394,6 +394,7 @@ export type RuntimeResourcePolicy = {
     storedFileGB: number;
     structuredDataMB: number;
     agentHistoryMB: number;
+    agentHistoryGlobalMB: number;
     taskDataGB: number;
     assetCount: number;
     canvasCount: number;

@@ -13,8 +13,8 @@ import (
 	"gorm.io/gorm"
 )
 
-// Preserve the published SupDance migration ledger through version 108.
-const CurrentSchemaVersion int64 = 112
+// Upstream v1.8.7.2's migration 110 follows the published SupDance ledger.
+const CurrentSchemaVersion int64 = 113
 
 const baselineSchemaChecksum = "sha256:open-ai-canvas-schema-v1-20260830"
 const schemaMigrationAppliedAtIndexChecksum = "sha256:schema-migrations-applied-at-index-v2-20260830"
@@ -395,6 +395,12 @@ var schemaMigrations = []migration{
 			return nil
 		}
 		return tx.Migrator().CreateIndex(&model.ChannelModel{}, "ProtocolRelease")
+	}},
+	{version: 113, name: "cloud_agent_history_archives", checksum: "sha256:cloud-agent-history-archives-v110-20261123", apply: func(tx *gorm.DB) error {
+		if err := tx.AutoMigrate(&model.CloudAgentExecution{}, &model.CloudAgentHistoryArchive{}); err != nil {
+			return err
+		}
+		return reconcileAgentStorageUsage(tx)
 	}},
 }
 

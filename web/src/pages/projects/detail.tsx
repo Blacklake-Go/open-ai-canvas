@@ -101,7 +101,7 @@ export default function DramaStudioPage() {
     const running = summary?.production.status === "running";
     const episodeQuery = useDramaEpisode(projectId, episodeId, Boolean(running || (summary?.jobCounts.running || 0) > 0));
     const detail = episodeQuery.data?.episode.id === episodeId ? episodeQuery.data : undefined;
-    const castQuery = useDramaCast(projectId, Boolean(running));
+    const castQuery = useDramaCast(projectId, summary);
     const { cast, byId: castById } = castQuery;
     const shots = useMemo(() => detail?.shots || [], [detail]);
     const currentShot = shots.find((shot) => shot.id === shotParam);
@@ -472,7 +472,13 @@ export default function DramaStudioPage() {
                                 <span className="drama-topbar-action-label">{_creationText("projects.asset_package")}</span>
                             </Button>
                         </Dropdown>
-                        <Button icon={<Brush className="size-4" />} loading={canvas.opening === "canvas"} onClick={() => void canvas.open()} aria-label={_creationText("projects.drama_refine_canvas")} title={_creationText("creation.a16487c1271d0f6d")}>
+                        <Button
+                            icon={<Brush className="size-4" />}
+                            loading={canvas.opening !== null}
+                            onClick={() => void canvas.open(episodeRow?.stats.segments ? { kind: "episode", episodeId: episodeRow.id } : undefined)}
+                            aria-label={_creationText("projects.drama_refine_canvas")}
+                            title={_creationText("creation.a16487c1271d0f6d")}
+                        >
                             <span className="drama-topbar-action-label">{_creationText("projects.drama_refine_canvas")}</span>
                         </Button>
                         {awaitingCount ? (

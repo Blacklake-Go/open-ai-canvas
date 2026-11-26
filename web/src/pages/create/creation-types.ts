@@ -81,7 +81,20 @@ export const modeLabels: Record<CreationMode, string> = {
     },
 };
 export const defaultCreationMode: CreationMode = "image";
-export const shotScriptLabels: Record<CreationMode, string> = { text: "创作思路", image: "画面指令", video: "镜头脚本", music: "音乐提示" };
+export const shotScriptLabels: Record<CreationMode, string> = {
+    get text() {
+        return translate("create.shotScript.text");
+    },
+    get image() {
+        return translate("create.shotScript.image");
+    },
+    get video() {
+        return translate("create.shotScript.video");
+    },
+    get music() {
+        return translate("create.mode.music");
+    },
+};
 export const ratioOptions = [
     {
         value: "1:1",

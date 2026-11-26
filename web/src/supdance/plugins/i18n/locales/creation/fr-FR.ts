@@ -1750,6 +1750,7 @@ const pack: Record<string, string> = {
     "creation.fd0d4b7258c28a99": "Ouverture",
     "creation.251bc40e7027dfc0": "En attente",
     "workbench.first_frame": "Première image",
+    "projects.opening_reference": "Image de référence d’ouverture",
     "creation.3aceab88c79d7f8e": "Segment d'ouverture",
     "creation.d5524f2fe0218866": "Dernière image du segment n° {value1}",
     "creation.0f8378c4c0979af2": "En attente du segment précédent",

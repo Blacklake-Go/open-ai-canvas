@@ -1720,6 +1720,7 @@ export const CREATION_UI_SOURCES: Record<string, string> = {
     "creation.fd0d4b7258c28a99": "开场",
     "creation.251bc40e7027dfc0": "等待",
     "workbench.first_frame": "首帧",
+    "projects.opening_reference": "开场参考",
     "creation.3aceab88c79d7f8e": "开场段",
     "creation.d5524f2fe0218866": "第 {value1} 段尾帧",
     "creation.0f8378c4c0979af2": "等待上一段",

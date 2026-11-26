@@ -1,6 +1,7 @@
 import { translate } from "@/i18n";
 import { createClientId } from "@/lib/client-id";
 import { generationErrorMessage } from "@/lib/generation-error";
+import { creationMessageMayHaveExternalVideoResult } from "@/lib/creation-message-recovery";
 import type { BackendGenerationResult } from "@/services/api/generation-task";
 import type { GenerationTask } from "@/services/api/task-center";
 import { creationAttachmentKind, type CreationAttachment } from "./creation-assets";
@@ -98,15 +99,15 @@ export async function materializeCreationTaskResults(runtime: CreationRuntime, t
                     ? { ...materialized, ...(creationResultUrls.length ? { creationResultUrls } : {}), ...(creationResultStorageKeys.length ? { creationResultStorageKeys } : {}) }
                     : materialized;
             } catch (error) {
-                return { ...task, creationError: error instanceof Error ? error.message : "生成结果资源化失败" };
+                return { ...task, creationError: error instanceof Error ? error.message : translate("create.conversation.materializeFailed") };
             }
         }),
     );
 }
 
 /** 失败但后端没有确认任务失败（含旧版本未分类的失败）：作品可能已生成，应提供“重新获取结果”。 */
-export function creationMessageNeedsResultSync(message: Pick<CreationMessage, "status" | "errorKind" | "taskIds">) {
-    return message.status === "error" && message.errorKind !== "task" && Boolean(message.taskIds?.length);
+export function creationMessageNeedsResultSync(message: Pick<CreationMessage, "status" | "errorKind" | "taskIds"> & Partial<Pick<CreationMessage, "mode" | "error">>) {
+    return message.status === "error" && Boolean(message.taskIds?.length) && (message.errorKind !== "task" || creationMessageMayHaveExternalVideoResult(message));
 }
 
 // 仍需用任务终态来收敛的媒体消息：生成中，或失败但后端没有确认失败。
@@ -220,9 +221,9 @@ export function reconcileCreationTaskMessages(runtime: CreationRuntime, conversa
                     ...message,
                     ...clearedCreationSyncState,
                     status: "error" as const,
-                    content: "生成失败",
+                    content: translate("create.status.failed"),
                     errorKind: "sync" as const,
-                    error: generationErrorMessage(unavailable.creationError || "任务已完成，但生成结果暂时无法读取"),
+                    error: generationErrorMessage(unavailable.creationError || translate("create.conversation.resultUnreadable")),
                     generationStatus: "succeeded" as const,
                     taskIds: nextTaskIds,
                 };

@@ -1742,6 +1742,7 @@ const pack: Record<string, string> = {
     "creation.fd0d4b7258c28a99": "Intro",
     "creation.251bc40e7027dfc0": "Warten",
     "workbench.first_frame": "Erstes Bild",
+    "projects.opening_reference": "Referenzbild für den Einstieg",
     "creation.3aceab88c79d7f8e": "Introsegment",
     "creation.d5524f2fe0218866": "Letztes Bild des Segments {value1}",
     "creation.0f8378c4c0979af2": "Wartet auf das vorherige Segment",

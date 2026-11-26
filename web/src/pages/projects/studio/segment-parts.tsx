@@ -114,12 +114,11 @@ export function SegmentInputs({ segment, castById, compact = false, frameOnly = 
     _useCreationLocale();
     const { request } = segment;
     const first = segment.index === 0 && !request.firstFrameResourceId && !request.firstFramePending;
+    const frameLabel = _creationText(request.tailFrameAsReference ? "projects.opening_reference" : "workbench.first_frame");
     return (
         <div className={`drama-sg-inputs ${compact ? "is-compact" : ""}`}>
             <Tooltip
-                title={_creationText("creation.0bc52e528c019cc0", {
-                    value1: first ? _creationText("creation.b49ab8abf92f68e2") : request.firstFrameResourceId ? _creationText("creation.a932f4da7bc101ba", { value1: segment.index }) : _creationText("creation.95cfa4d2b8826add", { value1: segment.index }),
-                })}
+                title={`${frameLabel} · ${first ? _creationText("creation.b49ab8abf92f68e2") : request.firstFrameResourceId ? _creationText("creation.a932f4da7bc101ba", { value1: segment.index }) : _creationText("creation.95cfa4d2b8826add", { value1: segment.index })}`}
                 mouseEnterDelay={0.3}
             >
                 <div className="drama-sg-input is-frame">
@@ -129,11 +128,11 @@ export function SegmentInputs({ segment, castById, compact = false, frameOnly = 
                         ) : (
                             <span className="drama-sg-thumb-empty">{first ? _creationText("creation.fd0d4b7258c28a99") : _creationText("creation.251bc40e7027dfc0")}</span>
                         )}
-                        <em>{_creationText("workbench.first_frame")}</em>
+                        <em>{frameLabel}</em>
                     </span>
                     {compact ? null : (
                         <span className="drama-sg-input-text">
-                            <b>{_creationText("workbench.first_frame")}</b>
+                            <b>{frameLabel}</b>
                             <small>
                                 {first
                                     ? _creationText("creation.a6b5c993a5d1d1bf")

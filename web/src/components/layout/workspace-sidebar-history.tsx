@@ -179,7 +179,7 @@ function CanvasHistory({ userId, onNavigate }: { userId: string; onNavigate: () 
         }
     };
     const preload = () => {
-        void loadCanvasProjectPage();
+        void loadCanvasProjectPage().catch(() => undefined);
     };
     return (
         <HistorySection
