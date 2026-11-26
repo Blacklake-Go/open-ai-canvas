@@ -1,8 +1,9 @@
 import { http } from "@/services/api/request";
-import type { HtmlPagesAdminOverview, HtmlSiteFooterConfig, ManagedHtmlPage } from "./types";
+import type { HtmlPagesAdminOverview, HtmlSidebarDockConfig, HtmlSiteFooterConfig, ManagedHtmlPage } from "./types";
 
 const BASE_PUBLIC = "/plugins/supdance-html-page-manager";
 const BASE_ADMIN = "/admin/plugins/supdance-html-page-manager";
+export const SIDEBAR_DOCK_UPDATED_EVENT = "supdance:sidebar-dock:updated";
 
 const additionalSocialLinks = [
     { id: "threads", name: "Threads", handle: "@supdance_ai", href: "https://www.threads.com/@supdance_ai" },
@@ -126,4 +127,110 @@ export async function saveAdminHtmlSiteFooter(siteFooter: HtmlSiteFooterConfig):
 /** 管理员重置页脚与受管站点页面配置为默认 */
 export async function resetAdminHtmlSiteFooter(): Promise<HtmlPagesAdminOverview> {
     return withSocialLinkFields(await http.post<HtmlPagesAdminOverview>(`${BASE_ADMIN}/site-footer/reset`, {}));
+}
+
+export const DEFAULT_HTML_SIDEBAR_DOCK_CONFIG: HtmlSidebarDockConfig = {
+    enabled: true,
+    hideStandalonePricingGroup: true,
+    cards: [
+        {
+            id: "about",
+            icon: "about",
+            href: "/html/about",
+            target: "_top",
+            visible: true,
+            order: 1,
+            defaultLabel: "关于",
+            labels: {
+                "zh-CN": "关于",
+                "en-US": "About",
+                "zh-TW": "關於",
+                "es-ES": "Info",
+                "fr-FR": "À propos",
+                "de-DE": "Über",
+                "ja-JP": "概要",
+                "ko-KR": "소개",
+            },
+        },
+        {
+            id: "pricing",
+            icon: "pricing",
+            href: "/pricing.html",
+            target: "_top",
+            visible: true,
+            order: 2,
+            defaultLabel: "定价",
+            labels: {
+                "zh-CN": "定价",
+                "en-US": "Pricing",
+                "zh-TW": "定價",
+                "es-ES": "Precios",
+                "fr-FR": "Tarifs",
+                "de-DE": "Preise",
+                "ja-JP": "料金",
+                "ko-KR": "요금",
+            },
+        },
+        {
+            id: "mcp",
+            icon: "mcp",
+            href: "/mcp",
+            target: "_self",
+            visible: true,
+            order: 3,
+            defaultLabel: "MCP",
+            labels: {
+                "zh-CN": "MCP",
+                "en-US": "MCP",
+                "zh-TW": "MCP",
+                "es-ES": "MCP",
+                "fr-FR": "MCP",
+                "de-DE": "MCP",
+                "ja-JP": "MCP",
+                "ko-KR": "MCP",
+            },
+        },
+    ],
+    socialEnabled: true,
+    syncWithSiteFooter: true,
+    maxVisibleSocials: 5,
+    socialLinks: [
+        { id: "x", name: "X (Twitter)", handle: "@supdance_ai", href: "https://x.com/supdance_ai", visible: true, order: 1 },
+        { id: "youtube", name: "YouTube", handle: "SupDance AI", href: "https://www.youtube.com/channel/UCOoro6d-vr6M-1UIpP5POew", visible: true, order: 2 },
+        { id: "instagram", name: "Instagram", handle: "@supdance_ai", href: "https://www.instagram.com/supdance_ai/", visible: true, order: 3 },
+        { id: "xiaohongshu", name: "小红书 (RED)", handle: "SupDance", href: "https://www.xiaohongshu.com/user/profile/678ada5f000000000d0084c9", visible: true, order: 4 },
+        { id: "qq", name: "QQ 交流群", handle: "SupDance 官方群", href: "https://qm.qq.com/q/e8alJlLDuE", visible: true, order: 5 },
+        ...additionalSocialLinks.map((item, index) => ({ ...item, visible: false, order: 6 + index })),
+    ],
+    updatedAt: new Date(0).toISOString(),
+};
+
+function notifySidebarDockUpdated(config?: HtmlSidebarDockConfig): void {
+    if (typeof window !== "undefined" && config) {
+        window.dispatchEvent(new CustomEvent<HtmlSidebarDockConfig>(SIDEBAR_DOCK_UPDATED_EVENT, { detail: config }));
+    }
+}
+
+/** 获取公开侧边栏停靠区配置（免登录，失败回退默认配置） */
+export async function fetchPublicHtmlSidebarDockConfig(signal?: AbortSignal): Promise<HtmlSidebarDockConfig> {
+    try {
+        const res = await http.get<{ sidebarDock: HtmlSidebarDockConfig }>(`${BASE_PUBLIC}/sidebar-dock`, { signal });
+        return res.sidebarDock || DEFAULT_HTML_SIDEBAR_DOCK_CONFIG;
+    } catch {
+        return DEFAULT_HTML_SIDEBAR_DOCK_CONFIG;
+    }
+}
+
+/** 管理员保存侧边栏停靠区配置并触发全局热更新 */
+export async function saveAdminHtmlSidebarDock(sidebarDock: HtmlSidebarDockConfig): Promise<HtmlPagesAdminOverview> {
+    const overview = withSocialLinkFields(await http.put<HtmlPagesAdminOverview>(`${BASE_ADMIN}/sidebar-dock`, { sidebarDock }));
+    notifySidebarDockUpdated(overview.sidebarDock);
+    return overview;
+}
+
+/** 管理员重置侧边栏停靠区配置为默认 */
+export async function resetAdminHtmlSidebarDock(): Promise<HtmlPagesAdminOverview> {
+    const overview = withSocialLinkFields(await http.post<HtmlPagesAdminOverview>(`${BASE_ADMIN}/sidebar-dock/reset`, {}));
+    notifySidebarDockUpdated(overview.sidebarDock);
+    return overview;
 }

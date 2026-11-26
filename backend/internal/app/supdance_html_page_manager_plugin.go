@@ -17,6 +17,7 @@ const (
 	PluginSupDanceHtmlPageManager = "supdance-html-page-manager"
 	HtmlPagesSettingKey           = "plugin.supdance-html-page-manager.pages"
 	HtmlSiteFooterSettingKey      = "plugin.supdance-html-page-manager.site_footer"
+	HtmlSidebarDockSettingKey     = "plugin.supdance-html-page-manager.sidebar_dock"
 )
 
 func init() {
@@ -100,12 +101,48 @@ type HtmlPagesStorePayload struct {
 	UpdatedBy string         `json:"updatedBy,omitempty"`
 }
 
+// HtmlSidebarDockCard 代表侧边栏底部生态快链卡片
+type HtmlSidebarDockCard struct {
+	ID           string            `json:"id"`
+	Icon         string            `json:"icon"`
+	Href         string            `json:"href"`
+	Target       string            `json:"target"` // "_self" | "_top" | "_blank"
+	Visible      bool              `json:"visible"`
+	Order        int               `json:"order"`
+	DefaultLabel string            `json:"defaultLabel"`
+	Labels       map[string]string `json:"labels"`
+}
+
+// HtmlSidebarDockSocial 代表侧边栏底部社交媒体快捷入口
+type HtmlSidebarDockSocial struct {
+	ID      string `json:"id"`
+	Name    string `json:"name"`
+	Handle  string `json:"handle"`
+	Href    string `json:"href"`
+	Visible bool   `json:"visible"`
+	Order   int    `json:"order"`
+}
+
+// HtmlSidebarDockConfig 代表侧边栏生态停靠区热插拔配置
+type HtmlSidebarDockConfig struct {
+	Enabled                    bool                    `json:"enabled"`
+	HideStandalonePricingGroup bool                    `json:"hideStandalonePricingGroup"`
+	Cards                      []HtmlSidebarDockCard   `json:"cards"`
+	SocialEnabled              bool                    `json:"socialEnabled"`
+	SyncWithSiteFooter         bool                    `json:"syncWithSiteFooter"`
+	MaxVisibleSocials          int                     `json:"maxVisibleSocials"`
+	SocialLinks                []HtmlSidebarDockSocial `json:"socialLinks"`
+	UpdatedAt                  time.Time               `json:"updatedAt"`
+	UpdatedBy                  string                  `json:"updatedBy,omitempty"`
+}
+
 type HtmlPagesAdminOverview struct {
-	PluginID   string               `json:"pluginId"`
-	Available  bool                 `json:"available"`
-	Pages      []HtmlPageItem       `json:"pages"`
-	SiteFooter HtmlSiteFooterConfig `json:"siteFooter"`
-	UpdatedAt  time.Time            `json:"updatedAt"`
+	PluginID    string                `json:"pluginId"`
+	Available   bool                  `json:"available"`
+	Pages       []HtmlPageItem        `json:"pages"`
+	SiteFooter  HtmlSiteFooterConfig  `json:"siteFooter"`
+	SidebarDock HtmlSidebarDockConfig `json:"sidebarDock"`
+	UpdatedAt   time.Time             `json:"updatedAt"`
 }
 
 var defaultPagesMutex sync.RWMutex
@@ -186,13 +223,210 @@ func (s *Service) AdminHtmlPagesOverview(actor *model.User) (*HtmlPagesAdminOver
 	if err != nil {
 		siteFooter = DefaultHtmlSiteFooterConfig()
 	}
+	sidebarDock, err := s.readStoredSidebarDockConfig()
+	if err != nil {
+		sidebarDock = DefaultHtmlSidebarDockConfig()
+	}
 	return &HtmlPagesAdminOverview{
-		PluginID:   PluginSupDanceHtmlPageManager,
-		Available:  available,
-		Pages:      pages,
-		SiteFooter: siteFooter,
-		UpdatedAt:  time.Now(),
+		PluginID:    PluginSupDanceHtmlPageManager,
+		Available:   available,
+		Pages:       pages,
+		SiteFooter:  siteFooter,
+		SidebarDock: sidebarDock,
+		UpdatedAt:   time.Now(),
 	}, nil
+}
+
+// PublicHtmlSidebarDockConfig 获取公开侧边栏停靠区配置（支持热插拔：插件关闭时返回 Enabled=false）
+func (s *Service) PublicHtmlSidebarDockConfig() (*HtmlSidebarDockConfig, error) {
+	if s.repo != nil {
+		available, err := s.HtmlPageManagerPluginAvailable()
+		if err == nil && !available {
+			return &HtmlSidebarDockConfig{Enabled: false, UpdatedAt: time.Now()}, nil
+		}
+	}
+	cfg, err := s.readStoredSidebarDockConfig()
+	if err != nil {
+		fallback := DefaultHtmlSidebarDockConfig()
+		return &fallback, nil
+	}
+	return &cfg, nil
+}
+
+// AdminSaveHtmlSidebarDock 保存或更新侧边栏生态停靠区配置（需要管理员权限）
+func (s *Service) AdminSaveHtmlSidebarDock(actor *model.User, cfg HtmlSidebarDockConfig) (*HtmlPagesAdminOverview, error) {
+	if err := s.RequireAdmin(actor); err != nil {
+		return nil, err
+	}
+	if s.repo == nil {
+		return nil, errors.New("存储不可用")
+	}
+
+	now := time.Now()
+	normalized := normalizeHtmlSidebarDockConfig(cfg)
+	normalized.UpdatedAt = now
+	normalized.UpdatedBy = actor.ID
+
+	val, err := json.Marshal(normalized)
+	if err != nil {
+		return nil, fmt.Errorf("序列化侧边栏停靠区配置失败: %w", err)
+	}
+
+	setting := &model.SystemSetting{
+		Key:       HtmlSidebarDockSettingKey,
+		ValueJSON: string(val),
+		UpdatedBy: actor.ID,
+		UpdatedAt: now,
+	}
+	if err := s.repo.SaveSystemSetting(setting); err != nil {
+		return nil, fmt.Errorf("保存侧边栏停靠区配置失败: %w", err)
+	}
+
+	return s.AdminHtmlPagesOverview(actor)
+}
+
+// AdminResetHtmlSidebarDock 重置侧边栏生态停靠区配置为官方默认
+func (s *Service) AdminResetHtmlSidebarDock(actor *model.User) (*HtmlPagesAdminOverview, error) {
+	if err := s.RequireAdmin(actor); err != nil {
+		return nil, err
+	}
+	return s.AdminSaveHtmlSidebarDock(actor, DefaultHtmlSidebarDockConfig())
+}
+
+func (s *Service) readStoredSidebarDockConfig() (HtmlSidebarDockConfig, error) {
+	if s.repo == nil {
+		return DefaultHtmlSidebarDockConfig(), nil
+	}
+	setting, err := s.repo.SystemSettingOptional(HtmlSidebarDockSettingKey)
+	if err != nil {
+		return DefaultHtmlSidebarDockConfig(), err
+	}
+	if setting == nil || strings.TrimSpace(setting.ValueJSON) == "" {
+		return DefaultHtmlSidebarDockConfig(), nil
+	}
+	var cfg HtmlSidebarDockConfig
+	if err := json.Unmarshal([]byte(setting.ValueJSON), &cfg); err != nil {
+		return DefaultHtmlSidebarDockConfig(), nil
+	}
+	return normalizeHtmlSidebarDockConfig(cfg), nil
+}
+
+func sanitizeDockHref(raw string) string {
+	trimmed := strings.TrimSpace(raw)
+	if strings.HasPrefix(trimmed, "/") || strings.HasPrefix(trimmed, "https://") || strings.HasPrefix(trimmed, "http://") {
+		return trimmed
+	}
+	return "/"
+}
+
+var allowedDockIcons = map[string]bool{
+	"about": true, "pricing": true, "mcp": true,
+	"skills": true, "plugins": true, "docs": true, "community": true,
+}
+
+func normalizeHtmlSidebarDockConfig(cfg HtmlSidebarDockConfig) HtmlSidebarDockConfig {
+	def := DefaultHtmlSidebarDockConfig()
+	if len(cfg.Cards) == 0 {
+		cfg.Cards = def.Cards
+	} else {
+		if len(cfg.Cards) > 6 {
+			cfg.Cards = cfg.Cards[:6]
+		}
+		for i := range cfg.Cards {
+			c := &cfg.Cards[i]
+			c.ID = strings.TrimSpace(c.ID)
+			if c.ID == "" {
+				c.ID = fmt.Sprintf("card-%d", i+1)
+			}
+			if !allowedDockIcons[strings.ToLower(strings.TrimSpace(c.Icon))] {
+				c.Icon = "docs"
+			} else {
+				c.Icon = strings.ToLower(strings.TrimSpace(c.Icon))
+			}
+			c.Href = sanitizeDockHref(c.Href)
+			if c.Target != "_self" && c.Target != "_top" && c.Target != "_blank" {
+				c.Target = "_top"
+			}
+			if c.Order == 0 {
+				c.Order = i + 1
+			}
+			if c.Labels == nil {
+				c.Labels = map[string]string{}
+			}
+			if strings.TrimSpace(c.DefaultLabel) == "" {
+				if zh := strings.TrimSpace(c.Labels["zh-CN"]); zh != "" {
+					c.DefaultLabel = zh
+				} else {
+					c.DefaultLabel = c.ID
+				}
+			}
+		}
+	}
+	if cfg.MaxVisibleSocials <= 0 || cfg.MaxVisibleSocials > 8 {
+		cfg.MaxVisibleSocials = def.MaxVisibleSocials
+	}
+	if len(cfg.SocialLinks) == 0 {
+		cfg.SocialLinks = def.SocialLinks
+	} else {
+		if len(cfg.SocialLinks) > 8 {
+			cfg.SocialLinks = cfg.SocialLinks[:8]
+		}
+		for i := range cfg.SocialLinks {
+			s := &cfg.SocialLinks[i]
+			s.ID = strings.ToLower(strings.TrimSpace(s.ID))
+			s.Href = sanitizeDockHref(s.Href)
+			if s.Order == 0 {
+				s.Order = i + 1
+			}
+		}
+	}
+	return cfg
+}
+
+// DefaultHtmlSidebarDockConfig 提供方案一侧边栏生态停靠区默认配置（关于 / 定价 / MCP + 官方 5 社媒）
+func DefaultHtmlSidebarDockConfig() HtmlSidebarDockConfig {
+	now := time.Now()
+	return HtmlSidebarDockConfig{
+		Enabled:                    true,
+		HideStandalonePricingGroup: true,
+		Cards: []HtmlSidebarDockCard{
+			{
+				ID: "about", Icon: "about", Href: "/html/about", Target: "_top", Visible: true, Order: 1, DefaultLabel: "关于",
+				Labels: map[string]string{
+					"zh-CN": "关于", "en-US": "About", "zh-TW": "關於", "es-ES": "Info",
+					"fr-FR": "À propos", "de-DE": "Über", "ja-JP": "概要", "ko-KR": "소개",
+				},
+			},
+			{
+				ID: "pricing", Icon: "pricing", Href: "/pricing.html", Target: "_top", Visible: true, Order: 2, DefaultLabel: "定价",
+				Labels: map[string]string{
+					"zh-CN": "定价", "en-US": "Pricing", "zh-TW": "定價", "es-ES": "Precios",
+					"fr-FR": "Tarifs", "de-DE": "Preise", "ja-JP": "料金", "ko-KR": "요금",
+				},
+			},
+			{
+				ID: "mcp", Icon: "mcp", Href: "/mcp", Target: "_self", Visible: true, Order: 3, DefaultLabel: "MCP",
+				Labels: map[string]string{
+					"zh-CN": "MCP", "en-US": "MCP", "zh-TW": "MCP", "es-ES": "MCP",
+					"fr-FR": "MCP", "de-DE": "MCP", "ja-JP": "MCP", "ko-KR": "MCP",
+				},
+			},
+		},
+		SocialEnabled:      true,
+		SyncWithSiteFooter: true,
+		MaxVisibleSocials:  5,
+		SocialLinks: []HtmlSidebarDockSocial{
+			{ID: "x", Name: "X (Twitter)", Handle: "@supdance_ai", Href: "https://x.com/supdance_ai", Visible: true, Order: 1},
+			{ID: "youtube", Name: "YouTube", Handle: "SupDance AI", Href: "https://www.youtube.com/channel/UCOoro6d-vr6M-1UIpP5POew", Visible: true, Order: 2},
+			{ID: "instagram", Name: "Instagram", Handle: "@supdance_ai", Href: "https://www.instagram.com/supdance_ai/", Visible: true, Order: 3},
+			{ID: "xiaohongshu", Name: "小红书 (RED)", Handle: "SupDance", Href: "https://www.xiaohongshu.com/user/profile/678ada5f000000000d0084c9", Visible: true, Order: 4},
+			{ID: "qq", Name: "QQ 交流群", Handle: "SupDance 官方群", Href: "https://qm.qq.com/q/e8alJlLDuE", Visible: true, Order: 5},
+			{ID: "threads", Name: "Threads", Handle: "@supdance_ai", Href: "https://www.threads.com/@supdance_ai", Visible: false, Order: 6},
+			{ID: "discord", Name: "Discord", Handle: "SupDance", Href: "https://discord.gg/dBDAqa5HAG", Visible: false, Order: 7},
+			{ID: "reddit", Name: "Reddit", Handle: "r/Supdance_ai", Href: "https://www.reddit.com/r/Supdance_ai/", Visible: false, Order: 8},
+		},
+		UpdatedAt: now,
+	}
 }
 
 // AdminSaveHtmlSiteFooter 保存或更新页脚与站点页面配置（需要管理员权限）

@@ -7,6 +7,7 @@ import { RequirePlugin } from "@/components/auth/require-plugin";
 import "./page-management.css";
 
 const HtmlPages = lazy(() => import("@/supdance/plugins/html-page-manager/admin/html-page-manager"));
+const SidebarDockAdmin = lazy(() => import("@/supdance/plugins/html-page-manager/admin/sidebar-dock-manager"));
 const EmailCenter = lazy(() => import("@/supdance/plugins/email-marketing/admin/email-marketing-manager"));
 const InspirationCuration = lazy(() => import("@/supdance/plugins/inspiration-curation/admin"));
 
@@ -14,7 +15,7 @@ export default function PageManagement() {
     const { t } = useI18n();
     const [params, setParams] = useSearchParams();
     const selected = params.get("page");
-    const section = selected === "html" || selected === "email" || selected === "inspirations" ? selected : "models";
+    const section = selected === "html" || selected === "email" || selected === "inspirations" || selected === "sidebar-dock" ? selected : "models";
     return (
         <div className="page-management" data-plugin-scope="supdance-compact-model-picker">
             <div className="page-management-navigation">
@@ -53,6 +54,17 @@ export default function PageManagement() {
                             <Suspense fallback={<Spin tip={t("page.management.loading")} />}>
                                 <RequirePlugin pluginId="supdance-email-marketing" pluginName={t("page.management.email")}>
                                     <EmailCenter />
+                                </RequirePlugin>
+                            </Suspense>
+                        ),
+                    },
+                    {
+                        key: "sidebar-dock",
+                        label: "侧边栏停靠区",
+                        children: (
+                            <Suspense fallback={<Spin tip={t("page.management.loading")} />}>
+                                <RequirePlugin pluginId="supdance-html-page-manager" pluginName="侧边栏停靠区">
+                                    <SidebarDockAdmin />
                                 </RequirePlugin>
                             </Suspense>
                         ),
