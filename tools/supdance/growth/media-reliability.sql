@@ -64,21 +64,28 @@ WITH tasks_in_scope AS (
            COUNT(*) FILTER (WHERE status = 'failed') AS failed,
            COUNT(DISTINCT user_id) FILTER (WHERE status = 'failed') AS users_with_failure
     FROM details WHERE created_at >= statement_timestamp() - interval '90 minutes' GROUP BY type
-), edit_ultra_configuration AS (
-    SELECT COUNT(*) FILTER (WHERE mc.enabled AND cm.enabled AND p.enabled) AS enabled_price_tiers,
+), reference_only_skus (sku) AS (
+    VALUES ('rhart-image-n-pro-official/edit-ultra'),
+           ('rhart-image-n-g31-flash-official/image-to-image')
+), image_edit_configuration AS (
+    SELECT known.sku,
+           COUNT(*) FILTER (WHERE mc.enabled AND cm.enabled AND p.enabled) AS enabled_price_tiers,
            COUNT(*) FILTER (WHERE mc.enabled AND cm.enabled AND p.enabled
                             AND COALESCE(CASE WHEN pg_input_is_valid(p.selector_json, 'jsonb')
                                               THEN p.selector_json::jsonb->>'operation' END, '') <> 'image_to_image') AS enabled_without_edit_selector
-    FROM channel_model_price_tiers p JOIN channel_models cm ON cm.id = p.channel_model_id
-    JOIN model_channels mc ON mc.id = cm.channel_id
-    WHERE p.provider_model_key = 'rhart-image-n-pro-official/edit-ultra' AND mc.scope = 'system'
-      AND p.deleted_at IS NULL AND cm.deleted_at IS NULL AND mc.deleted_at IS NULL
+    FROM reference_only_skus known
+    LEFT JOIN channel_model_price_tiers p ON p.provider_model_key = known.sku AND p.deleted_at IS NULL
+    LEFT JOIN channel_models cm ON cm.id = p.channel_model_id AND cm.deleted_at IS NULL AND cm.protocol = 'runninghub-standard-image'
+    LEFT JOIN model_channels mc ON mc.id = cm.channel_id AND mc.deleted_at IS NULL AND mc.scope = 'system'
+    GROUP BY known.sku
 )
 SELECT jsonb_build_object(
     'from', current_date - 28, 'as_of', statement_timestamp(), 'timezone', 'Asia/Taipei',
     'outcomes', (SELECT COALESCE(jsonb_agg(to_jsonb(o) ORDER BY o.period, o.type), '[]'::jsonb) FROM outcomes o),
     'created_last_90_minutes', (SELECT COALESCE(jsonb_agg(to_jsonb(r) ORDER BY r.type), '[]'::jsonb) FROM recent r),
-    'runninghub_edit_ultra_configuration', (SELECT to_jsonb(c) FROM edit_ultra_configuration c),
+    'runninghub_edit_ultra_configuration', (SELECT to_jsonb(c) - 'sku' FROM image_edit_configuration c
+                                          WHERE c.sku = 'rhart-image-n-pro-official/edit-ultra'),
+    'runninghub_image_edit_configuration', (SELECT jsonb_agg(to_jsonb(c) ORDER BY c.sku) FROM image_edit_configuration c),
     'channel_outcomes', (SELECT COALESCE(jsonb_agg(to_jsonb(c) ORDER BY c.period, c.failed DESC, c.type, c.channel, c.model), '[]'::jsonb) FROM channel_outcomes c),
     'failure_groups', (SELECT COALESCE(jsonb_agg(to_jsonb(f) ORDER BY f.tasks DESC, f.period, f.type, f.channel, f.model), '[]'::jsonb) FROM failure_groups f)
 );

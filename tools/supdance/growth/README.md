@@ -4,4 +4,4 @@
 
 - `baseline.sql` 用最近 28 个完整自然日建立注册队列，并按注册周追踪首次提交、24 小时及 7 日首次成功。首次成功后的第 1–7 日以完整自然日计算。今天的未成熟队列单列。匿名访问覆盖由最早的观测日标记，匿名会话与注册账户缺少可直接关联的标识。
 - `media-reliability.sql` 按任务创建时间统计图片和视频的成功或失败终态，分别观察上一段 21 个完整日、最近 7 个完整日、今天以及最近 90 分钟。优先用最后一条相关 API 记录的渠道，缺失时使用订单或渠道模型。失败分组中的人数在各组内去重，跨组相加会重复计算。最后 API 响应的分类提供排查线索，最终状态以任务表为准。
-- RunningHub `rhart-image-n-pro-official/edit-ultra` 需要参考图。巡检结果中的 `enabled_without_edit_selector` 大于零时，应核对启用档位的操作选择器和请求是否含有参考图，再决定是否切换，避免用编辑档承接纯文本生图。
+- `runninghub_image_edit_configuration` 分别统计 RunningHub Edit Ultra 和 Nano Banana Flash 官方图生图端点的启用档位。若 `enabled_without_edit_selector` 大于零，核对档位的生成方式和失败请求是否有参考图。旧输出 `runninghub_edit_ultra_configuration` 继续提供 Ultra 的单项计数。
