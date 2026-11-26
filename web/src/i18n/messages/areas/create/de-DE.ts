@@ -141,8 +141,10 @@ export const deDE: DeepStringRecord<typeof zhCN> = {
             firstShotHint: "Beschreibe Szene, Kamerabewegung und Licht",
             referenceTitle: "Mit einer Referenz beginnen",
             referenceHint: "Lade ein Stilbild hoch und generiere im gleichen Stil",
-            storyTitle: "Geschichte fortsetzen",
-            storyHint: "Besprich Handlung, Figuren und Dialoge mit der KI",
+            storyTitle: "Erstes Storyboard entwerfen",
+            storyHint: "Eine bearbeitbare Vorlage mit drei Einstellungen",
+            storyPrompt:
+                "Schreibe ein Storyboard mit drei Einstellungen für einen 15-sekündigen Kurzfilm. Nach dem Regen lässt ein Fahrradkurier an der Straßenecke einen Regenschirm für eine streunende Katze zurück. Nenne pro Einstellung den Bildausschnitt, die Handlung, den Ton und die Dauer. Insgesamt sollen es 15 Sekunden sein.",
             skillTitle: "Mit Skills erweitern",
             skillHint: "@Skill für Storyboard, Vertonung und mehr",
         },

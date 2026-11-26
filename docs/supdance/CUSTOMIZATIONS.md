@@ -1,5 +1,9 @@
 
 
+## 游客文本草稿登录回跳
+
+游客从创作页提交不含附件或素材引用的文本时，通过现有登录弹窗传入回跳路径。提示词暂存在当前标签页，回跳路径只携带随机标记。账号与创作工作区载入后可在 30 分钟内恢复一次并清理暂存，用户可以继续编辑后手动提交。
+
 ## AI Pose Gallery 子路径部署
 
 - 线上静态应用来源固定为 `https://github.com/Blacklake-Go/ai-pose-gallery-zh`，部署在 `www.supdance.com/pose/` 与 `one.supdance.com/pose/`。
