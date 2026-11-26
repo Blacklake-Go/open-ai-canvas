@@ -18,6 +18,16 @@ WITH bounds AS (
 ), first_attempt AS (
     SELECT DISTINCT ON (id) id, type, status, completed_at
     FROM attempts ORDER BY id, created_at, task_id
+), cohort_payments AS (
+    SELECT c.id,
+           MIN(p.credited_at) FILTER (
+               WHERE p.status = 'credited' AND p.credited_at < b.until
+                 AND p.provider_paid_at IS NOT NULL AND NULLIF(p.provider_trade_no, '') IS NOT NULL
+                 AND p.amount_fen > 0 AND p.provider_id IN ('alipay-page-pay', 'wechat-native')
+           ) AS credited_live_at
+    FROM cohort c JOIN payment_orders p ON p.user_id = c.id CROSS JOIN bounds b
+    WHERE p.created_at >= c.created_at AND p.created_at < b.until
+    GROUP BY c.id
 ), won AS (
     SELECT id, MIN(completed_at) AS first_at
     FROM attempts CROSS JOIN bounds b
@@ -66,10 +76,13 @@ WITH bounds AS (
            COUNT(a.id) FILTER (WHERE f.type = 'canvas_image' AND f.status = 'succeeded' AND f.completed_at < b.until) AS image_first_succeeded,
            COUNT(a.id) FILTER (WHERE f.type = 'canvas_image' AND f.status = 'failed' AND f.completed_at < b.until) AS image_first_failed,
            COUNT(a.id) FILTER (WHERE f.type = 'canvas_image' AND f.status = 'failed' AND f.completed_at < b.until
-                               AND a.first_at IS NOT NULL) AS image_first_failed_then_succeeded
+                               AND a.first_at IS NOT NULL) AS image_first_failed_then_succeeded,
+           COUNT(p.id) AS checkout_users,
+           COUNT(p.id) FILTER (WHERE p.credited_live_at IS NOT NULL) AS credited_live_payment_users
     FROM bounds b CROSS JOIN LATERAL generate_series(b.until - 7, b.until - 1, interval '1 day') AS d(signup_day)
     LEFT JOIN accounts a ON a.created_at >= d.signup_day AND a.created_at < d.signup_day + interval '1 day'
     LEFT JOIN first_attempt f ON f.id = a.id
+    LEFT JOIN cohort_payments p ON p.id = a.id
     GROUP BY 1
 ), task_outcomes AS (
     SELECT t.type, COUNT(*) FILTER (WHERE t.status = 'succeeded') AS succeeded,
