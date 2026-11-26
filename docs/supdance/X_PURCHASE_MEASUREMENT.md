@@ -4,7 +4,9 @@
 
 前端扩展在 `web/src/supdance/marketing/`；宿主仅在应用根挂载同意组件，并在 `usePaymentOrderFlow.settle` 接收服务端 `credited` 订单时调用。不修改下单、通知验签、积分账本或数据库 Schema。
 
-生产像素 `rinhf`，购买事件 `tw-rinhf-rinl3`。`web/public/supdance-x-measurement.html` 是真实运行的测量桥接文档，不是产品页面或验收仿制页面。只有同意后的宿主创建该 iframe；vendor 脚本运行在此固定地址，自动元数据不会携带工作台地址、标题、付款回跳参数或素材链接。父页面通过检查来源的 postMessage 仅传递金额、币种、SHA-256 订单去重编号；合法广告点击标识以 twclid 传入独立文档。拒绝或撤回会移除 iframe，不加载第三方脚本；隐私页提供随时管理入口。支持原有 supdance-i18n 六种语言。
+系列 `43150930` 使用像素 `rih9p`、购买事件 `tw-rih9p-rk5ya`。网站按已核对的三个 X 付费系列标识 `supdance_sales_zh`、`supdance_sales_ja`、`supdance_sales_202611` 选择该像素，其余访问使用 `rinhf`、`tw-rinhf-rinl3`。同意后，系列标识和有效点击 ID 最多保留 30 天，用于恢复登录和付款返回后的归因。另一广告系列的访问替换本次归因，撤回时清除归因。一次购买只发送到其对应像素。
+
+`web/public/supdance-x-measurement.html` 是正式测量桥接文档。用户同意后宿主创建 iframe，vendor 脚本在独立文档中运行，自动元数据不会携带工作台地址、标题、付款回跳参数或素材链接。父页面通过检查来源的 postMessage 传递金额、币种和 SHA-256 订单去重编号。合法点击标识以 twclid 传入独立文档。拒绝或撤回会移除 iframe，隐私页提供随时管理入口。支持原有 supdance-i18n 六种语言。
 
 只发送本次接入后新建、已入账且金额有效的支付宝 `alipay-page-pay` 或微信 `wechat-native` 订单。CNY / USD 均按订单快照最小单位除以 100，不自行换汇。Waffo Enterprise、Waffo Pancake 与未知渠道目前不具备本扩展的正式收款确认名单，全部不发送；新增渠道必须先确认其生产/沙盒隔离。旧订单、兑换码、管理员改积分、URL 成功参数、待付款、失败和关闭订单不发送。
 

@@ -71,6 +71,34 @@ test("no consent means no third-party script or purchase transmission", async ()
     expect(dom.localStorage.getItem(MARKETING_CONSENT_KEY)).toBe("declined");
 });
 
+test("current Sales attribution follows consented X clicks through checkout navigation", async () => {
+    for (const campaign of ["supdance_sales_zh", "supdance_sales_ja", "supdance_sales_202611"]) {
+        dom.history.replaceState(null, "", `/?utm_source=x&utm_medium=paid_social&utm_campaign=${campaign}&twclid=x-click`);
+        expect(await loadXPixel()).toBe(false);
+        expect(dom.localStorage.length).toBe(0);
+
+        const urls: string[] = [];
+        const append = spyOn(document.body, "append").mockImplementation((node) => {
+            urls.push((node as HTMLIFrameElement).src);
+        });
+        setMarketingConsent(true);
+        const landing = loadXPixel();
+        const sales = "https://www.supdance.com/supdance-x-measurement.html?source=sales&twclid=x-click";
+        expect(urls).toEqual([sales]);
+        dom.history.replaceState(null, "", "/wallet?order=private");
+        expect(loadXPixel()).toBe(landing);
+
+        dom.history.replaceState(null, "", "/?utm_source=x&utm_medium=paid_social&utm_campaign=another_campaign&twclid=other-click");
+        const other = loadXPixel();
+        expect(await landing).toBe(false);
+        expect(urls).toEqual([sales, "https://www.supdance.com/supdance-x-measurement.html?twclid=other-click"]);
+        setMarketingConsent(false);
+        expect(await other).toBe(false);
+        dom.localStorage.clear();
+        append.mockRestore();
+    }
+});
+
 test("confirmed payment sends currency, value and hashed dedup ID once; withdrawal stops new orders", async () => {
     setMarketingConsent(true);
     expect(marketingConsent()).toBe(true);
