@@ -8,6 +8,36 @@ import { HTML_ADMIN_I18N_ENTRIES } from "../src/supdance/plugins/i18n/locales/ht
 const html = readFileSync(new URL("../public/pricing.html", import.meta.url), "utf8");
 const script = readFileSync(new URL("../public/pricing-i18n.js", import.meta.url), "utf8");
 
+test("standalone pricing renders the saved social URLs and brand symbols", async () => {
+    const window = new Window({ url: "https://example.com/pricing.html" });
+    try {
+        window.document.write(html);
+        const footerScript = [...window.document.scripts].find((candidate) => candidate.textContent?.includes("/site-footer"))!.textContent!;
+        const socialLinks = [
+            { id: "threads", name: "Threads", handle: "@updated", href: "https://www.threads.com/@updated" },
+            { id: "discord", name: "Discord", handle: "", href: "https://discord.gg/example" },
+            { id: "reddit", name: "Reddit", handle: "r/Supdance_ai", href: "https://www.reddit.com/r/Supdance_ai/" },
+            { id: "x", name: "X", handle: "", href: "" },
+            { id: "youtube", name: "YouTube", handle: "", href: "data:text/html,invalid" },
+        ];
+        const { promise, resolve } = Promise.withResolvers<void>();
+        window.document.addEventListener("supdance:footer-config-applied", () => resolve());
+        runInNewContext(footerScript, {
+            document: window.document,
+            Event: window.Event,
+            URL,
+            fetch: async () => ({ ok: true, json: async () => ({ data: { siteFooter: { socialLinks } } }) }),
+        });
+        await promise;
+        const anchors = [...window.document.querySelectorAll("#sd-ft-social-list a")];
+        expect(anchors.map((anchor) => anchor.getAttribute("href"))).toEqual(socialLinks.slice(0, 3).map(({ href }) => href));
+        expect(anchors.map((anchor) => anchor.querySelector("use")?.getAttribute("href"))).toEqual(socialLinks.slice(0, 3).map(({ id }) => "/supdance-social-icons.svg#" + id));
+        expect(anchors.map((anchor) => anchor.getAttribute("aria-label"))).toEqual(["Threads (@updated)", "Discord", "Reddit (r/Supdance_ai)"]);
+    } finally {
+        await window.happyDOM.close();
+    }
+});
+
 describe("standalone pricing native languages", () => {
     test("a first visit uses English even with a Chinese browser preference", async () => {
         const window = new Window({ url: "https://example.com/pricing.html" });
