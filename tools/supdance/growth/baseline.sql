@@ -59,13 +59,26 @@ WITH bounds AS (
     WHERE t.type IN ('canvas_text', 'canvas_image', 'canvas_video', 'canvas_audio')
       AND t.created_at >= b.since AND t.created_at < b.until
     GROUP BY t.type
+), partial_today AS (
+    SELECT COUNT(*) AS registered, COUNT(*) FILTER (WHERE creative.attempted) AS attempted,
+           COUNT(*) FILTER (WHERE creative.succeeded) AS succeeded
+    FROM users u
+    CROSS JOIN LATERAL (
+        SELECT COUNT(*) > 0 AS attempted,
+               COUNT(*) FILTER (WHERE status = 'succeeded' AND completed_at < statement_timestamp()) > 0 AS succeeded
+        FROM tasks t
+        WHERE t.user_id = u.id AND t.created_at >= u.created_at AND t.created_at < statement_timestamp()
+          AND t.type IN ('canvas_text', 'canvas_image', 'canvas_video', 'canvas_audio')
+    ) creative
+    WHERE u.role = 'user' AND u.created_at >= current_date AND u.created_at < statement_timestamp()
 )
 SELECT jsonb_build_object(
     'period', jsonb_build_object('from', b.since, 'to_exclusive', b.until, 'timezone', 'Asia/Taipei'),
     'traffic', to_jsonb(traffic), 'new_account_activation', to_jsonb(activation),
     'activation_by_signup_week', (SELECT COALESCE(jsonb_agg(to_jsonb(w) ORDER BY w.week_of), '[]'::jsonb) FROM activation_by_signup_week w),
+    'today_partial', jsonb_build_object('date', current_date, 'as_of', statement_timestamp()) || to_jsonb(partial_today),
     'task_outcomes_all_roles', (SELECT COALESCE(jsonb_agg(to_jsonb(t) ORDER BY t.type), '[]'::jsonb) FROM task_outcomes t)
 )
-FROM bounds b CROSS JOIN traffic CROSS JOIN activation;
+FROM bounds b CROSS JOIN traffic CROSS JOIN activation CROSS JOIN partial_today;
 
 ROLLBACK;
