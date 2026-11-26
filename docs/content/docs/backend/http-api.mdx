@@ -744,6 +744,8 @@ Token 报价的 `estimated` 为 `true`，`quantity` 是预留 Token 数。`inten
 
 充值商品增加 `currency`（`CNY` / `USD`），`amountFen` 表示该货币最小单位（分 / 美分）；新建未传 `currency` 时使用默认充值货币，更新未传时保留原值。支付订单 `currency` 取自商品。充值设置接口：`GET /api/payments/settings`（登录用户）、`GET/PUT /api/admin/payments/settings`（`{ defaultCurrency: "CNY" | "USD", usdCnyRate: string }`，PUT 整体替换）；`defaultCurrency` 未设置时为 `USD`，`usdCnyRate` 为 1 USD 兑换的 CNY（最多 6 位小数，0–10000，空串表示未配置）。用户端 `/payments/products` 把默认货币的商品排在前面，切换默认货币不改写已有商品价格。
 
+`GET /api/payments/settings` 和 `GET /api/admin/payments/settings` 的 `settings.waffoIconStyle` 返回 Waffo Pancake 充值入口的图标样式。管理员通过 `PUT /api/admin/payments/providers/waffo-pancake/icon` 提交 `{ style: "wallets" | "original" }`，成功响应的 `data.style` 是已保存样式。默认 `wallets` 并排显示微信支付与支付宝，`original` 恢复原图标。图标偏好独立于计价设置和支付渠道配置版本。
+
 每个支付渠道有结算货币：渠道配置的 `settlementCurrency`（易支付可选 `CNY` / `USD`），其余官方渠道为 `CNY`。商品货币与结算货币不同时，下单按 `usdCnyRate` 换算并四舍五入到分；未配置汇率时返回 400，不创建订单。`GET /api/payments/providers` 的每个渠道返回 `settlementCurrency` 和 `methods`（`[{ id, name, icon }]`，渠道内已启用的支付方式，来自插件清单 `methods` / `methodsField` 与渠道配置）。`POST /api/payments/orders` 增加可选 `method`：渠道有多种方式时必填且必须是已启用方式，只有一种时可省略，渠道没有方式时必须省略；同一幂等键换用其他方式返回 409。订单视图增加 `paymentMethod`、`chargeAmountFen`、`chargeCurrency` 和 `exchangeRate`（跨币种时的汇率字符串）；回调、查单和对账按实收金额与货币校验。
 
 ## 管理员积分成本

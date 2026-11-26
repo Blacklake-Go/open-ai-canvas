@@ -17,10 +17,12 @@ import (
 
 	"gorm.io/gorm"
 	"yingce/backend/internal/model"
+	"yingce/backend/internal/repository"
 )
 
 const (
 	paymentSettingsKey = "payment_settings"
+	waffoIconStyleKey  = "supdance.waffo_icon_style"
 	// paymentRateScale 是汇率定点精度：1 USD = rate / 1e6 CNY。
 	paymentRateScale        = int64(1_000_000)
 	maxPaymentRateMicros    = 10_000 * paymentRateScale
@@ -32,7 +34,8 @@ const (
 type PaymentSettings struct {
 	DefaultCurrency string `json:"defaultCurrency"`
 	// UsdCnyRate 是 1 USD 兑换的 CNY 数量（十进制字符串，如 "7.2"）；为空表示未配置，跨币种渠道不可下单。
-	UsdCnyRate string `json:"usdCnyRate"`
+	UsdCnyRate     string `json:"usdCnyRate"`
+	WaffoIconStyle string `json:"waffoIconStyle,omitempty"`
 }
 
 func normalizePaymentCurrency(value string) (string, error) {
@@ -162,18 +165,63 @@ func (s *Service) AdminPaymentSettings(actor *model.User) (PaymentSettings, erro
 	if err := s.RequireAdmin(actor); err != nil {
 		return PaymentSettings{}, err
 	}
-	return s.paymentSettings()
+	return s.paymentSettingsView()
 }
 
-// PublicPaymentSettings 返回用户端充值面板需要的默认货币和汇率（用于预估跨币种实付金额）。
+// PublicPaymentSettings 返回充值面板需要的计价和展示设置。
 func (s *Service) PublicPaymentSettings(actor *model.User) (PaymentSettings, error) {
 	if actor == nil {
 		return PaymentSettings{}, Unauthorized("请先登录")
 	}
-	return s.paymentSettings()
+	return s.paymentSettingsView()
 }
 
-// UpdatePaymentSettings 整体替换充值设置；调用方需同时提交默认货币与汇率。
+func (s *Service) paymentSettingsView() (PaymentSettings, error) {
+	settings, err := s.paymentSettings()
+	if err != nil {
+		return PaymentSettings{}, err
+	}
+	icon, err := s.repo.SystemSettingOptional(waffoIconStyleKey)
+	if err != nil {
+		return PaymentSettings{}, err
+	}
+	settings.WaffoIconStyle = "wallets"
+	if icon != nil && icon.ValueJSON == `"original"` {
+		settings.WaffoIconStyle = "original"
+	}
+	return settings, nil
+}
+
+func (s *Service) UpdateWaffoIconStyle(actor *model.User, style string) error {
+	if err := s.RequireAdmin(actor); err != nil {
+		return err
+	}
+	if style != "wallets" && style != "original" {
+		return BadAuthRequest("无效的 Waffo 支付图标样式")
+	}
+	audit, err := newAdminAuditEvent(actor, "payment_settings.waffo_icon.update", "system_setting", waffoIconStyleKey, "更新 Waffo 充值图标", style)
+	if err != nil {
+		return err
+	}
+	encoded := strconv.Quote(style)
+	return s.repo.Transaction(func(tx *repository.Repository) error {
+		if err := tx.LockSystemSetting(waffoIconStyleKey, encoded); err != nil {
+			return err
+		}
+		setting, err := tx.SystemSetting(waffoIconStyleKey)
+		if err != nil {
+			return err
+		}
+		setting.ValueJSON = encoded
+		setting.UpdatedBy = actor.ID
+		if err := tx.SaveSystemSetting(setting); err != nil {
+			return err
+		}
+		return tx.AppendAdminAudit(audit)
+	})
+}
+
+// UpdatePaymentSettings 整体替换默认货币与汇率。
 func (s *Service) UpdatePaymentSettings(actor *model.User, req PaymentSettings) (PaymentSettings, error) {
 	if err := s.RequireAdmin(actor); err != nil {
 		return PaymentSettings{}, err

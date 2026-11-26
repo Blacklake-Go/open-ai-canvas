@@ -14,7 +14,7 @@ import { formatCredits } from "@/constant/credits";
 import { useAccountFileStorageUsage } from "@/hooks/use-account-file-storage-usage";
 import { accountFileStorageUsageQueryKey, accountStorageMeter } from "@/lib/account-storage-usage";
 import { estimatePaymentCharge, paymentOptionsFromProviders, type PaymentOption } from "@/lib/payment-options";
-import { getPaymentSettings, listPaymentProviders, listTopupProducts, type PaymentOrder, type TopupProduct, type TopupProductKind } from "@/services/api/payments";
+import { getPaymentSettings, listPaymentProviders, listTopupProducts, type PaymentOrder, type TopupProduct, type TopupProductKind, type WaffoIconStyle } from "@/services/api/payments";
 import { listMyStorageGrants } from "@/services/api/storage-grants";
 import { getWallet, redeemCredits, type WalletHistoryType, type WalletSummary } from "@/services/api/wallet";
 import { openWorkspaceWallet, WORKSPACE_WALLET_OPEN_EVENT, type WorkspaceWalletOpenDetail } from "@/lib/workspace-wallet";
@@ -106,6 +106,7 @@ export function WorkspaceWalletModal({
     const [products, setProducts] = useState<TopupProduct[]>([]);
     const [paymentOptions, setPaymentOptions] = useState<PaymentOption[]>([]);
     const [usdCnyRate, setUsdCnyRate] = useState("");
+    const [waffoIconStyle, setWaffoIconStyle] = useState<WaffoIconStyle>();
     const [paymentsLoading, setPaymentsLoading] = useState(false);
     const [selectedProductId, setSelectedProductId] = useState("");
     const [selectedOptionKey, setSelectedOptionKey] = useState("");
@@ -159,6 +160,7 @@ export function WorkspaceWalletModal({
                 setProducts(enabledProducts);
                 setPaymentOptions(options);
                 setUsdCnyRate(settingsResult.settings.usdCnyRate || "");
+                setWaffoIconStyle(settingsResult.settings.waffoIconStyle);
                 // 从容量入口进入时优先选中存储空间套餐。
                 const preferred = enabledProducts.filter((item) => !initialCategory || initialCategory === "all" || item.kind === initialCategory);
                 setSelectedProductId((current) =>
@@ -334,6 +336,7 @@ export function WorkspaceWalletModal({
                             products={products}
                             paymentOptions={paymentOptions}
                             usdCnyRate={usdCnyRate}
+                            waffoIconStyle={waffoIconStyle}
                             focusKind={focusKind}
                             focusToken={focusToken}
                             selectedProduct={selectedProduct}

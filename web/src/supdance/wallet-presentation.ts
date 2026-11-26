@@ -1,5 +1,9 @@
 import type { PaymentOption } from "@/lib/payment-options";
-import type { TopupProduct } from "@/services/api/payments";
+import type { TopupProduct, WaffoIconStyle } from "@/services/api/payments";
+
+export function walletPaymentIcon(option: PaymentOption, waffoIconStyle: WaffoIconStyle | undefined): string | undefined {
+    return option.providerId === "waffo-pancake" && !option.method && waffoIconStyle !== "original" ? "brand:waffo-wallets" : option.icon;
+}
 
 const PAYMENT_BRAND_KEYS: Record<string, string> = {
     "brand:alipay": "alipay",
