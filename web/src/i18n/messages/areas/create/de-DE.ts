@@ -116,6 +116,7 @@ export const deDE: DeepStringRecord<typeof zhCN> = {
         text: "Kreative Notizen",
         image: "Bildanweisung",
         video: "Shot-Skript",
+        music: "Musik-Prompt",
     },
     ratio: {
         square: "Quadrat",

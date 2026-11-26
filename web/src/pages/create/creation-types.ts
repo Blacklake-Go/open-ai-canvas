@@ -92,7 +92,7 @@ export const shotScriptLabels: Record<CreationMode, string> = {
         return translate("create.shotScript.video");
     },
     get music() {
-        return translate("create.mode.music");
+        return translate("create.shotScript.music");
     },
 };
 export const ratioOptions = [

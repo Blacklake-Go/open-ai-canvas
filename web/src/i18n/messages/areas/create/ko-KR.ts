@@ -115,6 +115,7 @@ export const koKR: DeepStringRecord<typeof zhCN> = {
         text: "창작 메모",
         image: "화면 지시",
         video: "숏 스크립트",
+        music: "음악 프롬프트",
     },
     ratio: {
         square: "정사각형",

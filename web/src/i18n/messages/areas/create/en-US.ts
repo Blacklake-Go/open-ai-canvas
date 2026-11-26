@@ -116,6 +116,7 @@ export const enUS: DeepStringRecord<typeof zhCN> = {
         text: "Creative notes",
         image: "Image direction",
         video: "Shot script",
+        music: "Music prompt",
     },
     ratio: {
         square: "Square",

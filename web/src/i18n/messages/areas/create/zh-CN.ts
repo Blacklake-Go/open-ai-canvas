@@ -113,6 +113,7 @@ export const zhCN = {
         text: "创作思路",
         image: "画面指令",
         video: "镜头脚本",
+        music: "音乐提示",
     },
     ratio: {
         square: "方形",

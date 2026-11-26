@@ -115,6 +115,7 @@ export const jaJP: DeepStringRecord<typeof zhCN> = {
         text: "制作メモ",
         image: "画面指示",
         video: "ショット台本",
+        music: "音楽プロンプト",
     },
     ratio: {
         square: "正方形",

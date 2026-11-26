@@ -396,6 +396,7 @@
     "create.shotScript.text": "notas creativas",
     "create.shotScript.image": "Dirección de la imagen",
     "create.shotScript.video": "Guión de tiro",
+    "create.shotScript.music": "Prompt musical",
     "create.ratio.square": "Cuadrado",
     "create.ratio.landscape": "Paisaje",
     "create.ratio.portrait": "Retrato",
