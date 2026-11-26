@@ -420,3 +420,10 @@ The host seams are registered under `supdance-one-identity-community`.
 
 Studio 优先使用官网系统渠道目录。渠道报价与生成通过现有任务入口重建规格、价格档和执行协议，报价签名含实际协议绑定。工作台继续接受已支持的逻辑模型选择。此变更不调整官网模型 API。
 
+## 正式版 1.8.7.2 创作和 Agent 历史修复
+
+- `supdance-production-regressions-1872` 登记在兼容层和 `supdance/config/baseline.json`。创作页的已有素材恢复先认任务 ID，仅在历史消息明确绑定单一任务时回退到未记录任务 ID 的素材。
+- Agent 面板在远端删除完成后从当前快照移除目标，已经发出的旧历史读取失效。用户和全站配额的自动归档保留有可逆快照的最新画布变更，由撤销入口继续核验画布版本。
+- Nano Banana 2 Edit 在系统渠道和逻辑线路的任务准入与报价检查参考图。RunningHub 1.1.8 在协议包处理端点参数，站点模型与价格仍由现有渠道配置控制。历史钉住的包版本继续可读。
+- X 双语 Sales 活动通过已有名单识别，保留营销同意、已入账支付与去重规则。
+

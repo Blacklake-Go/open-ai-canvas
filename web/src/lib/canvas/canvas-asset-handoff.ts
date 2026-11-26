@@ -101,9 +101,14 @@ export function creationResultAssetIds(assets: Asset[], input: { messageId: stri
     }).filter((id): id is string => Boolean(id));
 }
 
-/** 已经写入素材库的结果仍可作为消息恢复依据，即使任务快照暂时没有返回 resultJson。 */
-export function creationResultStorageKeysForMessage(assets: Asset[], input: { messageId: string; taskIds: string[] }) {
-    return creationResultAssets(assets, input).flatMap((asset) => ((asset.kind === "image" || asset.kind === "video") && asset.data.storageKey ? [asset.data.storageKey] : []));
+/** 任务缺少结果快照时，只能恢复能证明属于该任务的素材。 */
+export function creationResultStorageKeysForTask(assets: Asset[], input: { taskId: string; messageId: string; messageTaskIds?: string[] }) {
+    const { taskId, messageId, messageTaskIds } = input;
+    const candidates = creationResultAssets(assets, { messageId, taskIds: [taskId] });
+    const exact = candidates.filter((asset) => asset.metadata?.taskId === taskId);
+    const legacy = messageTaskIds?.length === 1 && messageTaskIds[0] === taskId;
+    const results = exact.length ? exact : legacy ? candidates.filter((asset) => asset.metadata?.messageId === messageId && !asset.metadata?.taskId) : [];
+    return results.flatMap((asset) => ((asset.kind === "image" || asset.kind === "video") && asset.data.storageKey ? [asset.data.storageKey] : []));
 }
 
 export function creationResultStorageKeys(assets: Asset[], input: { messageId: string; taskIds: string[]; resultUrls: string[]; resultStorageKeys?: string[] }) {
