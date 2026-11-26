@@ -9,6 +9,14 @@ export const ZHIFUFM_LOGO_SRC =
  */
 export function PaymentBrandIcon({ providerId, icon, compact = false }: { providerId: string; icon?: string; compact?: boolean }) {
     const size = compact ? "size-6" : "size-10";
+    if (icon === "brand:waffo-wallets") {
+        return (
+            <span className="inline-flex shrink-0 items-center gap-1" aria-hidden="true">
+                <PaymentBrandIcon providerId={providerId} icon="brand:wechat-pay" compact={compact} />
+                <PaymentBrandIcon providerId={providerId} icon="brand:alipay" compact={compact} />
+            </span>
+        );
+    }
     if (icon === "brand:qq-pay") {
         return (
             <span className={`grid ${size} shrink-0 place-items-center rounded-lg bg-[#12b7f5]/10 text-[#12b7f5]`}>

@@ -157,8 +157,9 @@ export function updateAdminPaymentProvider(id: string, input: { enabled: boolean
 }
 
 export type PaymentCurrency = "CNY" | "USD";
+export type WaffoIconStyle = "wallets" | "original";
 /** usdCnyRate 是 1 USD 兑换的 CNY（十进制字符串），为空表示未配置，跨币种渠道不可下单。 */
-export type PaymentSettings = { defaultCurrency: PaymentCurrency; usdCnyRate: string };
+export type PaymentSettings = { defaultCurrency: PaymentCurrency; usdCnyRate: string; waffoIconStyle?: WaffoIconStyle };
 
 export function getPaymentSettings() {
     return http.get<{ settings: PaymentSettings }>("/payments/settings");
@@ -166,8 +167,12 @@ export function getPaymentSettings() {
 export function getAdminPaymentSettings() {
     return http.get<{ settings: PaymentSettings }>("/admin/payments/settings");
 }
-export function updateAdminPaymentSettings(input: PaymentSettings) {
+export function updateAdminPaymentSettings(input: Pick<PaymentSettings, "defaultCurrency" | "usdCnyRate">) {
     return http.put<{ settings: PaymentSettings }>("/admin/payments/settings", input);
+}
+
+export function updateAdminWaffoIconStyle(style: WaffoIconStyle) {
+    return http.put<{ style: WaffoIconStyle }>("/admin/payments/providers/waffo-pancake/icon", { style });
 }
 
 /** 按货币格式化最小单位金额：CNY → ¥12.00，USD → $12.00。 */

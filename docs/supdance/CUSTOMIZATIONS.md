@@ -427,3 +427,7 @@ The host seams are registered under `supdance-one-identity-community`.
 
 Studio 优先使用官网系统渠道目录。渠道报价与生成通过现有任务入口重建规格、价格档和执行协议，报价签名含实际协议绑定。工作台继续接受已支持的逻辑模型选择。此变更不调整官网模型 API。
 
+
+## Waffo 充值图标
+
+Waffo Pancake 的充值入口默认并排显示微信支付和支付宝图标。可在「支付充值 → 支付渠道 → Waffo Pancake → 配置 → 充值页支付图标」恢复原图标。该选项自动保存到充值设置，沿用现有支付配置版本和回调地址。宿主接触点包括 `internal/app/payment_settings.go`、支付渠道配置抽屉、钱包图标和充值面板。
