@@ -9,7 +9,7 @@ import {
     resetAdminHtmlSidebarDock,
     saveAdminHtmlSidebarDock,
 } from "../api";
-import { SidebarEcosystemDock } from "../components/sidebar-ecosystem-dock";
+import { DockSocialSvg, SidebarEcosystemDock } from "../components/sidebar-ecosystem-dock";
 import type { HtmlSidebarDockCard, HtmlSidebarDockConfig, HtmlSiteFooterConfig } from "../types";
 import "./sidebar-dock-manager.css";
 
@@ -299,9 +299,7 @@ export default function SidebarDockManager() {
 
                     {draft.socialLinks.map((item, idx) => (
                         <div key={item.id} className="sd-admin-social-row">
-                            <svg width={16} height={16} viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-                                <use href={`/supdance-social-icons.svg#${item.id}`} />
-                            </svg>
+                            <DockSocialSvg id={item.id} size={16} />
                             <span className="truncate text-xs font-medium">{item.name}</span>
                             <Input
                                 size="small"
