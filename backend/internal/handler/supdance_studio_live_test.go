@@ -202,7 +202,22 @@ func TestSupdanceStudioLiveBridge(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	bridge := httptest.NewServer(router)
+	bridge := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.Method != http.MethodPost || r.URL.Path != "/api/supdance-openai/v2/studio/quote" {
+			router.ServeHTTP(w, r)
+			return
+		}
+		result := httptest.NewRecorder()
+		router.ServeHTTP(result, r)
+		if result.Code >= http.StatusBadRequest {
+			t.Logf("Studio quote rejected HTTP %d: %s", result.Code, result.Body.String())
+		}
+		for name, values := range result.Header() {
+			w.Header()[name] = values
+		}
+		w.WriteHeader(result.Code)
+		_, _ = result.Body.WriteTo(w)
+	}))
 	t.Cleanup(bridge.Close)
 	videoDigest := sha256.Sum256(clip)
 	request, err := json.Marshal(map[string]string{
@@ -289,10 +304,6 @@ func seedStudioLiveModels(t *testing.T, db *gorm.DB, upstream string) {
 	profile.Image.Size.Default = "1024x1024"
 	profile.Image.Size.AllowCustom = false
 	profile.Image.Size.Presets = nil
-	spec, err := service.CapabilitySpecFromModelCapabilityConfig(profile, "image")
-	if err != nil {
-		t.Fatal(err)
-	}
 	const fixtureVideoModel = "veo-fixture"
 	const fixtureVideoProtocol = model.ChannelInterfaceGeminiVeo
 	videoProfile := service.DefaultModelCapabilityConfigForModel(string(fixtureVideoProtocol), fixtureVideoModel)
@@ -302,10 +313,6 @@ func seedStudioLiveModels(t *testing.T, db *gorm.DB, upstream string) {
 	videoProfile.Video.Duration.Default = 4
 	videoProfile.Video.Ratios = []string{"16:9", "9:16"}
 	videoProfile.Video.Resolutions = []string{"720p"}
-	videoSpec, err := service.CapabilitySpecFromModelCapabilityConfig(videoProfile, "video")
-	if err != nil {
-		t.Fatal(err)
-	}
 	encode := func(value any) string {
 		t.Helper()
 		raw, err := json.Marshal(value)
@@ -318,23 +325,14 @@ func seedStudioLiveModels(t *testing.T, db *gorm.DB, upstream string) {
 		&model.User{ID: "alice", Username: "alice", Email: "alice@example.invalid", Role: model.UserRoleUser, Status: model.UserStatusActive},
 		&model.User{ID: "bob", Username: "bob", Email: "bob@example.invalid", Role: model.UserRoleUser, Status: model.UserStatusActive},
 		&model.CreditAccount{UserID: "alice", AvailableMicrocredits: 10_000},
-		&model.SystemSetting{Key: "feature_availability", ValueJSON: `{"frontendModelsEnabled":true,"shortDramaEnabled":true,"ecommerceEnabled":true,"imageWorkbenchEnabled":true,"videoWorkbenchEnabled":true,"creditsEnabled":true}`},
+		&model.SystemSetting{Key: "feature_availability", ValueJSON: `{"frontendModelsEnabled":false,"shortDramaEnabled":true,"ecommerceEnabled":true,"imageWorkbenchEnabled":true,"videoWorkbenchEnabled":true,"creditsEnabled":true}`},
 		&model.ModelChannel{ID: "studio-e2e-channel", Scope: model.ChannelScopeSystem, Enabled: true, Name: "Local test provider", BaseURL: upstream, APIKey: "fixture-provider"},
 		&model.ChannelModel{ID: "studio-e2e-channel-model", ChannelID: "studio-e2e-channel", ModelKey: fixtureModel, ProviderModelKey: fixtureModel, Capability: "image", Protocol: model.ChannelInterfaceOpenAIImage, Enabled: true, CapabilityConfigJSON: encode(profile), BillingMode: "fixed_request", PriceConfigured: true},
 		&model.ChannelModelPriceTier{ID: "studio-e2e-tier", ChannelModelID: "studio-e2e-channel-model", SelectorKey: "{}", SelectorJSON: "{}", BillingMode: "fixed_request", UnitPriceMicrocredits: 100, PriceConfigured: true, Enabled: true},
-		&model.LogicalModel{ID: "studio-e2e-image", Code: "studio-e2e-image", Name: "Local test image", Capability: "image", Enabled: true, ActiveRevisionID: "studio-e2e-rev", PricePolicy: "channel", BillingMode: "fixed_request"},
-		&model.LogicalModelRevision{ID: "studio-e2e-rev", LogicalModelID: "studio-e2e-image", Version: 1, CapabilitySpecJSON: encode(spec), DefaultOptionsJSON: "{}"},
-		&model.LogicalModelRoute{ID: "studio-e2e-route", LogicalModelRevisionID: "studio-e2e-rev", ChannelModelID: "studio-e2e-channel-model", Enabled: true, Weight: 1},
 		&model.ChannelModel{ID: "studio-e2e-video-channel-model", ChannelID: "studio-e2e-channel", ModelKey: fixtureVideoModel, ProviderModelKey: fixtureVideoModel, Capability: "video", Protocol: fixtureVideoProtocol, Enabled: true, CapabilityConfigJSON: encode(videoProfile), BillingMode: "per_second", PriceConfigured: true},
 		&model.ChannelModelPriceTier{ID: "studio-e2e-video-tier", ChannelModelID: "studio-e2e-video-channel-model", SelectorKey: "{}", SelectorJSON: "{}", BillingMode: "per_second", UnitPriceMicrocredits: 50, PriceConfigured: true, Enabled: true},
-		&model.LogicalModel{ID: "studio-e2e-video", Code: "studio-e2e-video", Name: "Local test video", Capability: "video", Enabled: true, ActiveRevisionID: "studio-e2e-video-rev", PricePolicy: "channel", BillingMode: "per_second"},
-		&model.LogicalModelRevision{ID: "studio-e2e-video-rev", LogicalModelID: "studio-e2e-video", Version: 1, CapabilitySpecJSON: encode(videoSpec), DefaultOptionsJSON: "{}"},
-		&model.LogicalModelRoute{ID: "studio-e2e-video-route", LogicalModelRevisionID: "studio-e2e-video-rev", ChannelModelID: "studio-e2e-video-channel-model", Enabled: true, Weight: 1},
 		&model.ChannelModel{ID: "studio-e2e-missing-channel-model", ChannelID: "studio-e2e-channel", ModelKey: "missing-video", Capability: "video", Protocol: "custom-video", Enabled: true, CapabilityConfigJSON: encode(videoProfile), BillingMode: "per_second", PriceConfigured: true},
 		&model.ChannelModelPriceTier{ID: "studio-e2e-missing-tier", ChannelModelID: "studio-e2e-missing-channel-model", SelectorKey: "{}", SelectorJSON: "{}", BillingMode: "per_second", UnitPriceMicrocredits: 50, PriceConfigured: true, Enabled: true},
-		&model.LogicalModel{ID: "studio-e2e-missing", Code: "studio-e2e-missing", Name: "Missing video protocol", Capability: "video", Enabled: true, ActiveRevisionID: "studio-e2e-missing-rev", PricePolicy: "channel", BillingMode: "per_second"},
-		&model.LogicalModelRevision{ID: "studio-e2e-missing-rev", LogicalModelID: "studio-e2e-missing", Version: 1, CapabilitySpecJSON: encode(videoSpec), DefaultOptionsJSON: "{}"},
-		&model.LogicalModelRoute{ID: "studio-e2e-missing-route", LogicalModelRevisionID: "studio-e2e-missing-rev", ChannelModelID: "studio-e2e-missing-channel-model", Enabled: true, Weight: 1},
 	} {
 		if err := db.Create(row).Error; err != nil {
 			t.Fatal(err)

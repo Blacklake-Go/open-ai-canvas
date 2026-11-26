@@ -8,6 +8,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"maps"
 	"net/http"
 	"sort"
 	"strconv"
@@ -22,6 +23,8 @@ import (
 	"yingce/backend/internal/model"
 	"yingce/backend/internal/repository"
 )
+
+const studioChannelModelPrefix = "channel-"
 
 type StudioGeneration struct {
 	Kind       string   `json:"kind"`
@@ -71,12 +74,17 @@ func (s *Service) StudioModels(userID, kind string) ([]StudioModel, error) {
 	if err := s.studioMediaFeature(kind); err != nil {
 		return nil, err
 	}
-	if err := s.RequireFeature(FeatureFrontendModels); err != nil {
-		return nil, err
-	}
 	access, err := s.userGroupAccess(userID)
 	if err != nil {
 		return nil, err
+	}
+	channelModels, err := s.studioSystemModels(access, kind)
+	if err != nil || len(channelModels) > 0 {
+		return channelModels, err
+	}
+	frontendEnabled, err := s.FeatureEnabled(FeatureFrontendModels)
+	if err != nil || !frontendEnabled {
+		return channelModels, err
 	}
 	models, err := s.PublicLogicalModels(access, nil)
 	if err != nil {
@@ -102,10 +110,56 @@ func (s *Service) StudioModels(userID, kind string) ([]StudioModel, error) {
 				channels[channelID] = s.studioChannelConfigured(channelID)
 			}
 			if channels[channelID] {
-				result = append(result, studioModelView(item))
+				result = append(result, studioModelView(item.ID, defaultString(item.Name, item.Code), item.Capability, item.CapabilitySpec))
 				break
 			}
 		}
+		if len(result) == 100 {
+			break
+		}
+	}
+	return result, nil
+}
+
+// Use the website's system catalog and its group and price filters. Only show
+// routes this Studio can execute with an installed protocol and credentials.
+func (s *Service) studioSystemModels(access *userGroupAccess, kind string) ([]StudioModel, error) {
+	channels, err := s.publicSystemChannelCatalog(access, nil)
+	if err != nil {
+		return nil, err
+	}
+	items := make([]PublicChannelModel, 0)
+	ids := make([]string, 0)
+	for _, channel := range channels {
+		if !s.studioChannelConfigured(channel.ID) {
+			continue
+		}
+		for _, item := range channel.Models {
+			if item.Capability == kind && item.Available && supdanceOpenAIID.MatchString(studioChannelModelPrefix+item.ID) {
+				items = append(items, item)
+				ids = append(ids, item.ID)
+			}
+		}
+	}
+	models, err := s.repo.ChannelModelsByIDs(ids)
+	if err != nil {
+		return nil, err
+	}
+	byID := make(map[string]model.ChannelModel, len(models))
+	for _, item := range models {
+		byID[item.ID] = item
+	}
+	result := make([]StudioModel, 0, min(100, len(items)))
+	for _, item := range items {
+		channelModel := byID[item.ID]
+		if !s.studioProtocolAvailable(channelModel) {
+			continue
+		}
+		spec, err := channelModelCapabilitySpec(channelModel, s.protocolRegistry())
+		if err != nil {
+			continue
+		}
+		result = append(result, studioModelView(studioChannelModelPrefix+item.ID, defaultString(item.DisplayName, item.ModelKey), kind, spec))
 		if len(result) == 100 {
 			break
 		}
@@ -127,12 +181,11 @@ func (s *Service) studioChannelConfigured(id string) bool {
 	return err == nil && channel.Enabled && strings.TrimSpace(channel.BaseURL) != "" && strings.TrimSpace(channel.APIKey) != ""
 }
 
-func studioModelView(item PublicLogicalModel) StudioModel {
-	spec := item.CapabilitySpec
+func studioModelView(id, name, kind string, spec CapabilitySpec) StudioModel {
 	refs := spec.Inputs["image"]
-	result := StudioModel{ID: item.ID, Name: truncateRunes(defaultString(item.Name, item.Code), 160), Kind: item.Capability,
+	result := StudioModel{ID: id, Name: truncateRunes(name, 160), Kind: kind,
 		Ratios: []string{}, Sizes: []string{}, Durations: []int{}, Counts: []int{}, MinReferences: refs.Min, MaxReferences: min(16, refs.Max)}
-	if item.Capability == "video" {
+	if kind == "video" {
 		result.Ratios = studioOptionStrings(spec.Options["size"])
 		result.Sizes = studioOptionStrings(spec.Options["vquality"])
 		result.Durations = studioOptionInts(spec.Options["videoSeconds"], 120)
@@ -277,23 +330,47 @@ func (s *Service) studioPrepare(userID, id string, req StudioGeneration) (*model
 			options["vquality"] = req.Size
 		}
 		if req.Duration > 0 {
-			options["videoSeconds"] = req.Duration
+			options["videoSeconds"] = strconv.Itoa(req.Duration)
 		}
 	}
 	preparation := &creationTaskPreparation{}
-	input := map[string]any{"mode": req.Kind, "prompt": prompt, "config": options, "capabilityOptions": options,
+	logicalModelID := req.Model
+	config := options
+	channelModelID, system := strings.CutPrefix(req.Model, studioChannelModelPrefix)
+	if system {
+		channelModel, err := s.repo.ChannelModel(channelModelID)
+		if errors.Is(err, gorm.ErrRecordNotFound) || err == nil && (channelModel.Capability != req.Kind || !s.studioProtocolAvailable(*channelModel)) {
+			return nil, nil, studioError(http.StatusUnprocessableEntity, "studio_model_unavailable")
+		}
+		if err != nil {
+			return nil, nil, err
+		}
+		config = maps.Clone(options)
+		config["channelId"] = channelModel.ChannelID
+		config["model"] = channelModel.ModelKey
+		logicalModelID = ""
+	}
+	input := map[string]any{"mode": req.Kind, "prompt": prompt, "config": config, "capabilityOptions": options,
 		"referenceImages": images, "metadata": meta}
 	source := "text"
 	if len(images) > 0 {
 		source = "image"
 	}
 	task, err := s.CreateTask(userID, CreateTaskRequest{ProjectID: req.ProjectID, Type: "canvas_" + req.Kind,
-		Prompt: prompt, LogicalModelID: req.Model, Operation: source + "_to_" + req.Kind, Input: input, workbenchKind: req.Kind,
+		Prompt: prompt, LogicalModelID: logicalModelID, Operation: source + "_to_" + req.Kind, Input: input, workbenchKind: req.Kind,
 		creationPrepare: preparation})
 	if err != nil {
 		return nil, nil, err
 	}
-	channelModel, err := s.repo.ChannelModel(task.ChannelModelID)
+	if !system {
+		channelModelID = task.ChannelModelID
+	} else if task.ProtocolBindingJSON != "" {
+		binding, err := decodeTaskProtocolBinding(task.ProtocolBindingJSON)
+		if err != nil || binding.ChannelModelID != channelModelID {
+			return nil, nil, studioError(http.StatusUnprocessableEntity, "studio_model_unavailable")
+		}
+	}
+	channelModel, err := s.repo.ChannelModel(channelModelID)
 	if err != nil || !s.studioProtocolAvailable(*channelModel) || !s.studioChannelConfigured(channelModel.ChannelID) {
 		return nil, nil, studioError(http.StatusUnprocessableEntity, "studio_model_unavailable")
 	}
@@ -314,6 +391,9 @@ func studioQuoteSignature(secret []byte, userID string, generation StudioGenerat
 	quote.ID = ""
 	mac := hmac.New(sha256.New, secret)
 	fmt.Fprintf(mac, "supdance-studio-v2\x00%s\x00%s\x00%s\x00", userID, task.LogicalModelRevisionID, studioRequestHash(StudioSubmit{generation, quote}))
+	if strings.HasPrefix(generation.Model, studioChannelModelPrefix) {
+		fmt.Fprint(mac, task.ProtocolBindingJSON, "\x00")
+	}
 	var input canvasGenerationInput
 	_ = json.Unmarshal([]byte(task.InputJSON), &input)
 	refs, _ := json.Marshal(input.ReferenceImages)
