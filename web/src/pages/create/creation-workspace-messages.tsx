@@ -142,8 +142,6 @@ export function CreationMessageView({
                         onRefreshResult={onRefreshResult}
                         onRecoverMedia={onRecoverMedia}
                         refreshingResult={refreshingResult}
-                        onCreateVariant={onCreateVariant}
-                        onEditUserMessage={onEditUserMessage}
                         onContinueCanvas={onContinueCanvas}
                         openingCanvas={openingCanvas}
                     />
@@ -300,8 +298,6 @@ export function resolveCreationMusicTitle(item: CreationMessage, promptMessage: 
     return fallbackTitle;
 }
 
-const FOLLOWUP_REFINEMENT_SUGGESTIONS = ["把表情和五官细节再对齐参考图", "生成更严格的多视角全身对照", "补上发际线和局部特写细节"] as const;
-
 export function MediaResult({
     item,
     promptMessage,
@@ -309,8 +305,6 @@ export function MediaResult({
     onRefreshResult,
     onRecoverMedia,
     refreshingResult = false,
-    onCreateVariant,
-    onEditUserMessage,
     onContinueCanvas,
     openingCanvas,
 }: {
@@ -320,8 +314,6 @@ export function MediaResult({
     onRefreshResult: () => void;
     onRecoverMedia: () => void;
     refreshingResult?: boolean;
-    onCreateVariant: () => void;
-    onEditUserMessage?: (text: string) => void;
     onContinueCanvas: (ids?: string[]) => void;
     openingCanvas: boolean;
 }) {
@@ -493,79 +485,57 @@ export function MediaResult({
                     musicCardSkeleton
                 )
             ) : (
-                <>
-                    {!isMusic && !isVideo ? (
-                        <div className="creation-turn-metadata-bar">
-                            <span className="creation-turn-chip">{item.model || effectiveConfig.imageModel || "Seedream 5.5"}</span>
-                            <span className="creation-turn-chip">{item.settings?.ratio || t("managedUi.f395fc48", undefined, "智能比例")}</span>
-                            <span className="creation-turn-chip">{item.settings?.imageResolution || item.settings?.resolution || "1.5K"}</span>
-                            <span className="creation-turn-chip">
-                                {item.settings?.count || displayResultUrls.length} {t("managedUi.810b9dd1", undefined, "张")}
-                            </span>
-                        </div>
-                    ) : null}
-                    <div className="creation-image-result-grid">
-                        {resultEntries.map(({ key, url }) => (
-                            <button
-                                key={key}
-                                type="button"
-                                className="creation-image-result"
-                                data-media-state={mediaStates[key] || "loading"}
-                                style={creationResultTileStyle(naturalRatios[key] || creationResultAssetRatio(assets, key) || fallbackRatio)}
-                                onClick={() => {
-                                    if (mediaStates[key] === "error") return retryResultMedia(key);
-                                    if (mediaStates[key] !== "loaded") return;
-                                    setPreviewType("image");
-                                    setPreviewUrl(url);
+                <div className="creation-image-result-grid">
+                    {resultEntries.map(({ key, url }) => (
+                        <button
+                            key={key}
+                            type="button"
+                            className="creation-image-result"
+                            data-media-state={mediaStates[key] || "loading"}
+                            style={creationResultTileStyle(naturalRatios[key] || creationResultAssetRatio(assets, key) || fallbackRatio)}
+                            onClick={() => {
+                                if (mediaStates[key] === "error") return retryResultMedia(key);
+                                if (mediaStates[key] !== "loaded") return;
+                                setPreviewType("image");
+                                setPreviewUrl(url);
+                            }}
+                            aria-label={mediaStates[key] === "error" ? "图片加载失败，点击重新加载" : mediaStates[key] === "loaded" ? "预览生成图片" : "图片加载中"}
+                            aria-busy={mediaStates[key] === "loaded" || mediaStates[key] === "error" ? undefined : true}
+                        >
+                            <img
+                                key={`${key}:${mediaAttempts[key] || 0}`}
+                                src={url}
+                                alt="生成结果"
+                                draggable={mediaStates[key] === "loaded"}
+                                onDragStart={(event) => {
+                                    if (mediaStates[key] !== "loaded") {
+                                        event.preventDefault();
+                                        return;
+                                    }
+                                    event.dataTransfer.effectAllowed = "copy";
+                                    event.dataTransfer.setData(CREATION_IMAGE_DRAG_TYPE, JSON.stringify({ messageId: item.id, resultKey: key }));
                                 }}
-                                aria-label={mediaStates[key] === "error" ? "图片加载失败，点击重新加载" : mediaStates[key] === "loaded" ? "预览生成图片" : "图片加载中"}
-                                aria-busy={mediaStates[key] === "loaded" || mediaStates[key] === "error" ? undefined : true}
-                            >
-                                <img
-                                    key={`${key}:${mediaAttempts[key] || 0}`}
-                                    src={url}
-                                    alt="生成结果"
-                                    draggable={mediaStates[key] === "loaded"}
-                                    onDragStart={(event) => {
-                                        if (mediaStates[key] !== "loaded") {
-                                            event.preventDefault();
-                                            return;
-                                        }
-                                        event.dataTransfer.effectAllowed = "copy";
-                                        event.dataTransfer.setData(CREATION_IMAGE_DRAG_TYPE, JSON.stringify({ messageId: item.id, resultKey: key }));
-                                    }}
-                                    decoding="async"
-                                    onLoad={(event) => {
-                                        const { naturalWidth, naturalHeight } = event.currentTarget;
-                                        if (naturalWidth > 0 && naturalHeight > 0) setNaturalRatios((current) => (current[key] === naturalWidth / naturalHeight ? current : { ...current, [key]: naturalWidth / naturalHeight }));
-                                        markResultMedia(key, "loaded");
-                                    }}
-                                    onError={() => markResultMedia(key, "error")}
-                                />
-                                {mediaStates[key] === "error" ? <CreationResultMediaError label="图片加载失败，点击重试" /> : null}
-                                <span>
-                                    <Maximize2 />
-                                </span>
-                            </button>
-                        ))}
-                        {pendingImageKeys.map((storageKey) => (
-                            <i key={`pending:${storageKey}`} className="creation-image-result" data-media-state="loading" style={creationResultTileStyle(creationResultAssetRatio(assets, storageKey) || fallbackRatio)} aria-hidden="true" />
-                        ))}
-                    </div>
-                </>
+                                decoding="async"
+                                onLoad={(event) => {
+                                    const { naturalWidth, naturalHeight } = event.currentTarget;
+                                    if (naturalWidth > 0 && naturalHeight > 0) setNaturalRatios((current) => (current[key] === naturalWidth / naturalHeight ? current : { ...current, [key]: naturalWidth / naturalHeight }));
+                                    markResultMedia(key, "loaded");
+                                }}
+                                onError={() => markResultMedia(key, "error")}
+                            />
+                            {mediaStates[key] === "error" ? <CreationResultMediaError label="图片加载失败，点击重试" /> : null}
+                            <span>
+                                <Maximize2 />
+                            </span>
+                        </button>
+                    ))}
+                    {pendingImageKeys.map((storageKey) => (
+                        <i key={`pending:${storageKey}`} className="creation-image-result" data-media-state="loading" style={creationResultTileStyle(creationResultAssetRatio(assets, storageKey) || fallbackRatio)} aria-hidden="true" />
+                    ))}
+                </div>
             )}
             <div className="creation-media-actions">
                 <span>{isMusic ? t("music.result_count", { count: displayResultUrls.length }) : isVideo ? t("music.video_results") : t("music.image_result_count", { count: displayResultUrls.length })}</span>
-                {onEditUserMessage && promptMessage?.content ? (
-                    <button type="button" className="creation-action-reedit" onClick={() => onEditUserMessage(promptMessage.content)}>
-                        <Pencil size={13} />
-                        {t("managedUi.3e99a297", undefined, "重新编辑")}
-                    </button>
-                ) : null}
-                <button type="button" className="creation-action-regenerate" onClick={onCreateVariant}>
-                    <RefreshCw size={13} />
-                    {t("managedUi.ecd81fad", undefined, "重新生成")}
-                </button>
                 <Button type="link" size="small" loading={openingCanvas} disabled={!canContinueWithResults} title={canContinueWithResults ? undefined : "素材保存完成后才能转入画布"} onClick={() => onContinueCanvas(resultAssetIds)}>
                     添加到画布
                 </Button>
@@ -582,27 +552,6 @@ export function MediaResult({
                     </a>
                 ))}
             </div>
-            {!isMusic && !isVideo && item.status === "done" && onEditUserMessage && promptMessage?.content ? (
-                <div className="creation-followup-suggestions">
-                    <span className="creation-followup-label">{t("managedUi.2bababac", undefined, "我建议这样写")}</span>
-                    <div className="creation-followup-chips">
-                        {FOLLOWUP_REFINEMENT_SUGGESTIONS.map((tip) => (
-                            <button
-                                key={tip}
-                                type="button"
-                                className="creation-followup-chip"
-                                onClick={() => {
-                                    const base = promptMessage.content;
-                                    onEditUserMessage(`${base}，${tip}`);
-                                }}
-                            >
-                                {tip}
-                                <span aria-hidden="true"> ›</span>
-                            </button>
-                        ))}
-                    </div>
-                </div>
-            ) : null}
             <CreationMediaPreviewModal url={previewUrl} type={previewType} onClose={() => setPreviewUrl("")} />
         </div>
     );
