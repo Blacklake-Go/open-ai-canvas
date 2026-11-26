@@ -856,11 +856,13 @@ operations 的结构化配额在提交事务内实时统计账号的素材/画�
 
 `POST /auth/register` 接受可选 `referralCode`（来自推广链接 `/register?ref=推广码`）。推广码无效、推广人当时无资格或绑定写入失败时注册照常成功，只是不记录归属。积分充值订单入账后按当时设置计算返佣：`floor(到账积分 × 比例 / 10000)`，以积分写入推广人账户，流水类型 `referral_commission`；同一订单只返佣一次，存储空间订单不返佣。
 
-## 欢迎页开放配置
+## 公开入口配置
 
 `GET /public/welcome` 无需登录，信封 `data` 仅包含布尔值 `welcomeEnabled`，响应禁用缓存。读取失败按标准错误信封返回。
 
 管理员通过 `GET/PATCH /admin/settings/features` 读取和保存 `welcomeEnabled`，默认 `true`，与其他功能开关一起存入 `system_settings` 的 `feature_availability` JSON，并记录管理员审计。关闭后新访问 `/welcome` 的浏览器跳转到 `/`。
+
+`GET /public/workspace-tools` 无需登录。信封 `data.features` 提供短剧、电商、图片工作台、视频工作台、插件中心和任务中心六项侧栏展示开关，来源为同一后台功能配置。响应禁用缓存。进入受保护工具时需要登录。
 
 ## 云端 Agent
 

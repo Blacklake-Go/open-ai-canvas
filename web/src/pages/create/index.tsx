@@ -20,6 +20,7 @@ import { audioUploadTitleFromFileName } from "@/lib/audio-upload-title";
 import { continueCreationConversationOnCanvas } from "@/services/creation-canvas-conversation";
 import { useAuthEntry } from "@/hooks/use-auth-entry";
 import { CommunityHandoff } from "@/supdance/federation/community-handoff";
+import { GuestCreationTools } from "@/supdance/components/guest-creation-tools";
 import { useExternalAssetSources } from "@/hooks/use-external-asset-sources";
 import { LEGACY_TEXT_THINKING_CONFIG, isThinkingLevel, resolveThinkingLevel, thinkingLevelsFor, type ThinkingLevel, type ThinkingRequest } from "@/lib/text-thinking";
 import { modelCapabilityConfigFor, videoDurationAllowed, videoDurationOptions } from "@/lib/model-capabilities";
@@ -1891,6 +1892,7 @@ export default function CreatePage() {
                                         <span>{t("create.history.title")}</span>
                                     </button>
                                 </header>
+                                {!userId && <GuestCreationTools />}
                                 <div className={cn("creation-composer-stage is-home-mode", agentMode && "is-agent-mode")}>
                                     <CreationModeCard
                                         mode={mode}

@@ -11,7 +11,7 @@ import { useGlobalAgentStore } from "@/stores/use-global-agent-store";
 import { useUserStore } from "@/stores/use-user-store";
 import { TeamInvitationCenter } from "@/components/layout/team-invitation-center";
 import { TeamSpaceDirectoryHost } from "@/components/layout/team-space-directory";
-import { getFeatureAvailability } from "@/services/api/auth";
+import { getFeatureAvailability, getPublicWorkspaceTools } from "@/services/api/auth";
 import "@/styles/workspace-product.css";
 import "@/styles/workspace-menus.css";
 
@@ -29,17 +29,18 @@ export default function UserLayout({ children }: { children: ReactNode }) {
     const userId = useUserStore((state) => state.user?.id);
     const teamsEnabled = useUserStore((state) => state.features.teamsEnabled);
     useEffect(() => {
-        if (!userId || adminWorkspace) return;
+        if (adminWorkspace) return;
         let active = true;
         const refresh = async () => {
             if (document.visibilityState !== "visible") return;
             try {
-                const { features } = await getFeatureAvailability();
+                const { features } = await (userId ? getFeatureAvailability() : getPublicWorkspaceTools());
                 if (active && useUserStore.getState().user?.id === userId) useUserStore.getState().setFeatures(features);
             } catch (error) {
                 if (active) console.warn("工作台功能开放状态刷新失败", error);
             }
         };
+        if (!userId) void refresh();
         document.addEventListener("visibilitychange", refresh);
         return () => {
             active = false;

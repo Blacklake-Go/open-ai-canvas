@@ -2344,6 +2344,16 @@ paths:
       tags: [meta]
       summary: 登录用户读取功能开放状态
       responses: { '200': { description: data.features 包括布尔值 teamsEnabled（默认 false）和 creditsEnabled } }
+  /public/workspace-tools:
+    get:
+      tags: [meta]
+      security: []
+      summary: 读取游客工作区侧栏开关
+      responses:
+        "200":
+          description: data.features 包含 shortDramaEnabled、ecommerceEnabled、imageWorkbenchEnabled、videoWorkbenchEnabled、pluginCenterEnabled、taskCenterEnabled 六个布尔值，Cache-Control 为 no-store
+        "500":
+          $ref: "#/components/responses/Error"
   /admin/settings/features:
     get:
       tags: [admin]

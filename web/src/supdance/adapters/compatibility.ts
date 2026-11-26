@@ -876,6 +876,22 @@ export const SUPDANCE_UPSTREAM_PATCH_REGISTRY: readonly UpstreamPatchRecord[] = 
         upgradeRisk: "MEDIUM",
     },
     {
+        id: "supdance-guest-workspace-tools",
+        upstreamBaseline: "v1.8.7.1",
+        feature: "游客首页五项主推工具与侧栏开关",
+        coupledUpstreamFiles: [
+            "backend/internal/handler/feature_availability.go",
+            "web/src/layouts/user-layout.tsx",
+            "web/src/pages/create/creation-product.css",
+            "web/src/pages/create/index.tsx",
+            "web/src/services/api/auth.ts",
+            "web/src/stores/use-user-store.ts",
+        ],
+        files: ["web/src/supdance/components/guest-creation-tools.tsx"],
+        reason: "首页游客可发现五项主推工具，侧栏读取后台开关，工具入口继续沿用现有登录与回跳流程。",
+        upgradeRisk: "LOW",
+    },
+    {
         id: "supdance-codex-agent-connector",
         upstreamBaseline: "v1.7.3",
         feature: "本机 SupDance Canvas Agent (Codex) 连接器发现、配对、SSE 与对话转发",

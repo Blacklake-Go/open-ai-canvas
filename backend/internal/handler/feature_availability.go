@@ -19,6 +19,23 @@ func RegisterFeatureAvailabilityRoutes(r *gin.RouterGroup, svc *service.Service)
 		ok(c, gin.H{"welcomeEnabled": setting.WelcomeEnabled})
 	})
 
+	r.GET("/public/workspace-tools", func(c *gin.Context) {
+		c.Header("Cache-Control", "no-store")
+		setting, err := svc.FeatureAvailability()
+		if err != nil {
+			failService(c, err)
+			return
+		}
+		ok(c, gin.H{"features": gin.H{
+			"shortDramaEnabled":     setting.ShortDramaEnabled,
+			"ecommerceEnabled":      setting.EcommerceEnabled,
+			"imageWorkbenchEnabled": setting.ImageWorkbenchEnabled,
+			"videoWorkbenchEnabled": setting.VideoWorkbenchEnabled,
+			"pluginCenterEnabled":   setting.PluginCenterEnabled,
+			"taskCenterEnabled":     setting.TaskCenterEnabled,
+		}})
+	})
+
 	r.GET("/features", func(c *gin.Context) {
 		if _, err := currentUser(c, svc); err != nil {
 			failService(c, err)

@@ -531,6 +531,12 @@ export function getFeatureAvailability() {
     return http.get<{ features: FeatureAvailability }>("/features");
 }
 
+export function getPublicWorkspaceTools() {
+    return http.get<{
+        features: Pick<FeatureAvailability, "shortDramaEnabled" | "ecommerceEnabled" | "imageWorkbenchEnabled" | "videoWorkbenchEnabled" | "pluginCenterEnabled" | "taskCenterEnabled">;
+    }>("/public/workspace-tools", { session: "public" });
+}
+
 export function getAdminFeatureAvailability() {
     return http.get<{ features: FeatureAvailability }>("/admin/settings/features");
 }

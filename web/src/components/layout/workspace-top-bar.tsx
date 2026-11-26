@@ -5,7 +5,6 @@ import { currentLocale } from "@/i18n";
 
 import { TopbarFeedbackButton } from "@/components/feedback/topbar-feedback-button";
 import { SystemAnnouncementCenter } from "@/components/layout/system-announcement-center";
-import { WorkspaceCreditGiftMark } from "@/components/layout/workspace-credit-gift-mark";
 import { WorkspaceAccountMenu } from "@/components/layout/workspace-account-menu";
 import { useThemePack } from "@/themes/use-theme-pack";
 import { WorkspaceTopBarExtensionSlot } from "@/components/layout/workspace-top-bar-extension";
@@ -73,7 +72,7 @@ export function WorkspaceTopBar({ sidebarOpen, onToggleSidebar }: { sidebarOpen:
                             </button>
                         ) : (
                             <button type="button" className="app-workspace-topbar-credit-pill" aria-label={t("shell.openWallet", { balance })} onClick={() => openWorkspaceWallet()}>
-                                <WorkspaceCreditGiftMark />
+                                <BalanceMark aria-hidden />
                                 <span>{t("shell.credits")}</span>
                                 <strong>{balance}</strong>
                             </button>

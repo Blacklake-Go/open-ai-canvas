@@ -4,7 +4,8 @@
 
 - 线上静态应用来源固定为 `https://github.com/Blacklake-Go/ai-pose-gallery-zh`，部署在 `www.supdance.com/pose/` 与 `one.supdance.com/pose/`。
 - 上游按站点根路径构建。`supdance/pose-subpath` 的 `8b386bb`、`8e33220` 只增加 `/pose/` 的 Vite base、路由 basepath、素材与代理路径适配，不改图库内容、生成协议或权限。
-- 2026-11-25 生产目录切换到 `ec7a81e` 加上述适配；旧目录保留为 `pose.bak-20261125`。`/pose/api/proxy` 仍无生产路由，Qwen/Doubao 代理不在本次范围。
+- 2026-11-25 生产目录切换到 `ec7a81e` 加上述适配；旧目录保留为 `pose.bak-20261125`。`www.supdance.com` 与 `one.supdance.com` 分别补齐 `/pose/` 静态路由，并保留配置备份。
+- `/pose/api/proxy` 由 `scripts/supdance-proxy.ts` 打包为 `127.0.0.1:4187` 的 systemd 服务 `supdance-pose-proxy`，复用 `functions/api/proxy.ts` 的默认白名单、10 MiB 请求体限流与重定向保护；Nginx 只在两个站点的 `/pose/api/proxy` 精确路径转发。代理不读取或保存密钥，仅转发当前请求携带的允许请求头。
 
 ## 默认英语与八语补译
 
@@ -271,6 +272,10 @@ TikTok Login Kit 仅申请 Web 的 `user.info.basic`，回调为 `/api/auth/soci
 ---
 
 ## 2. 不可避免的上游核心文件补丁登记
+
+### 补丁 ID：`supdance-guest-workspace-tools`
+
+- 创作首页通过 `web/src/pages/create/index.tsx` 挂载游客工具导航，展示短剧制作、电商 Agent、图片生成、视频生成和音乐生成，沿用已有路由守卫与登录后回跳。工作区通过 `GET /api/public/workspace-tools` 获取游客侧栏所需的六个布尔开关，侧栏继续按后台配置显示。上游合并时核对首页挂载点、公开字段、工作区初始化和工具路由守卫。
 
 ### 补丁 ID：`supdance-asset-form-viewport`
 

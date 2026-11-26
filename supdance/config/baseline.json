@@ -110,6 +110,7 @@
     "backend/internal/database/wechat_migration_test.go",
     "backend/internal/handler/api.go",
     "backend/internal/handler/custom_proxy.go",
+    "backend/internal/handler/feature_availability.go",
     "backend/internal/handler/inspiration_feed.go",
     "backend/internal/handler/openapi.yaml",
     "backend/internal/handler/payment.go",
