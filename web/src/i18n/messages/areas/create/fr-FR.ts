@@ -141,8 +141,10 @@ export const frFR: DeepStringRecord<typeof zhCN> = {
             firstShotHint: "Décrivez la scène, le mouvement de caméra et la lumière",
             referenceTitle: "Partir d'une référence",
             referenceHint: "Importez une image de style et générez dans ce style",
-            storyTitle: "Poursuivre une histoire",
-            storyHint: "Discutez intrigue, personnages et dialogues avec l'IA",
+            storyTitle: "Créez un premier story-board",
+            storyHint: "Insérez un exemple modifiable en trois plans",
+            storyPrompt:
+                "Écrivez un story-board en trois plans pour un court métrage de 15 secondes. Après la pluie, un coursier à vélo laisse un parapluie à un chat errant au coin de la rue. Indiquez le cadrage, l’action, le son et la durée de chaque plan. La durée totale doit être de 15 secondes.",
             skillTitle: "Renforcer avec des compétences",
             skillHint: "@compétence pour le storyboard, le doublage, etc.",
         },

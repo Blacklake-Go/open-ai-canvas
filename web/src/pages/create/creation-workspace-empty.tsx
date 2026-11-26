@@ -55,6 +55,19 @@ export function CreationEmptyBanner() {
 
 export const creationEmptySuggestions: Array<{ mode: CreationMode; icon: typeof Clapperboard; title: string; hint: string; prompt: string; openLibrary?: boolean }> = [
     {
+        mode: "text",
+        icon: FileText,
+        get title() {
+            return translate("create.empty.suggest.storyTitle");
+        },
+        get hint() {
+            return translate("create.empty.suggest.storyHint");
+        },
+        get prompt() {
+            return translate("create.empty.suggest.storyPrompt");
+        },
+    },
+    {
         mode: "video",
         icon: Clapperboard,
         get title() {
@@ -76,17 +89,6 @@ export const creationEmptySuggestions: Array<{ mode: CreationMode; icon: typeof 
         },
         prompt: "",
         openLibrary: true,
-    },
-    {
-        mode: "text",
-        icon: FileText,
-        get title() {
-            return translate("create.empty.suggest.storyTitle");
-        },
-        get hint() {
-            return translate("create.empty.suggest.storyHint");
-        },
-        prompt: "帮我续写一个短剧故事，先聊聊剧情走向：",
     },
     {
         mode: "video",
