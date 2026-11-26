@@ -2,6 +2,8 @@
 
 Suno 音乐结果同时包含音频、封面与文本。1.1.1 仅将有 URL 的非图片结果交给音频持久化，保留每首歌曲的原始地址，避免封面下载触发音频类型校验失败。
 
+1.1.7 对 `seedream-v5-pro/text-to-image` 将画幅和分辨率档位一起转换为整数 `width` 和 `height`。1:1 的 1K 发送 1024 × 1024，2K 发送 2048 × 2048。RunningHub 优先使用 `resolution`，所以只有自动画幅才发送这个字段。该端点只支持 1K 和 2K。
+
 ## 协议身份
 
 - 插件 ID：`runninghub-standard`。
@@ -28,8 +30,8 @@ Suno 音乐结果同时包含音频、封面与文本。1.1.1 仅将有 URL 的�
 | `videos` | media[] | 否 | video：`videoUrl` | 参考视频。 |
 | `audios` | media[] | 否 | audio：`audioUrl`；video：`audioUrl` | 参考音频。 |
 | `duration` | integer | 否 | video/audio：`duration`（字符串化） | 时长秒数。 |
-| `aspectRatio` | string | 否 | `aspectRatio` | 画幅比例。 |
-| `resolution` | string | 否 | `resolution` | 分辨率档位。 |
+| `aspectRatio` | string | 否 | Seedream 5.0 Pro 文生图：`width` / `height`；其他端点：`aspectRatio` | 画幅比例。 |
+| `resolution` | string | 否 | Seedream 5.0 Pro 文生图指定画幅：`width` / `height`；其他情况：`resolution` | 分辨率档位。 |
 | `quality` | string | 否 | `quality` | 质量档位。 |
 | `watermark` | boolean | 否 | video：`watermark` | 水印开关。 |
 | `generateAudio` | boolean | 否 | video-kling：`sound`（始终发送） | 仅可灵专用 provider 使用；上游把 `sound` 设为必填，必须显式给 true/false，不能省略。 |
@@ -106,7 +108,7 @@ MiniMax Music 上游没有独立风格字段：音乐工作台提交的风格标
   "apiVersion": "yingce.plugin/v2",
   "id": "runninghub-standard",
   "name": "RunningHub Standard Model",
-  "version": "1.1.3",
+  "version": "1.1.7",
   "author": "RunningHub / 影策",
   "description": "RunningHub 标准模型 API 独立请求协议插件。",
   "permissions": [
@@ -236,6 +238,266 @@ MiniMax Music 上游没有独立风格字段：音乐工作台提交的风格标
             "binding": "quality"
           }
         ],
+        "requestBindings": [
+          {
+            "name": "seedreamProText",
+            "value": {
+              "$eq": [
+                {
+                  "$ref": "request.model"
+                },
+                "seedream-v5-pro/text-to-image"
+              ]
+            }
+          },
+          {
+            "name": "seedreamProBaseDimensions",
+            "value": {
+              "$if": {
+                "condition": {
+                  "$ref": "bindings.seedreamProText"
+                },
+                "then": {
+                  "$switch": {
+                    "cases": [
+                      {
+                        "when": {
+                          "$eq": [
+                            {
+                              "$ref": "request.aspectRatio"
+                            },
+                            "1:1"
+                          ]
+                        },
+                        "then": [
+                          1024,
+                          1024
+                        ]
+                      },
+                      {
+                        "when": {
+                          "$eq": [
+                            {
+                              "$ref": "request.aspectRatio"
+                            },
+                            "16:9"
+                          ]
+                        },
+                        "then": [
+                          1408,
+                          792
+                        ]
+                      },
+                      {
+                        "when": {
+                          "$eq": [
+                            {
+                              "$ref": "request.aspectRatio"
+                            },
+                            "9:16"
+                          ]
+                        },
+                        "then": [
+                          792,
+                          1408
+                        ]
+                      },
+                      {
+                        "when": {
+                          "$eq": [
+                            {
+                              "$ref": "request.aspectRatio"
+                            },
+                            "4:3"
+                          ]
+                        },
+                        "then": [
+                          1152,
+                          864
+                        ]
+                      },
+                      {
+                        "when": {
+                          "$eq": [
+                            {
+                              "$ref": "request.aspectRatio"
+                            },
+                            "3:4"
+                          ]
+                        },
+                        "then": [
+                          864,
+                          1152
+                        ]
+                      },
+                      {
+                        "when": {
+                          "$eq": [
+                            {
+                              "$ref": "request.aspectRatio"
+                            },
+                            "3:2"
+                          ]
+                        },
+                        "then": [
+                          1248,
+                          832
+                        ]
+                      },
+                      {
+                        "when": {
+                          "$eq": [
+                            {
+                              "$ref": "request.aspectRatio"
+                            },
+                            "2:3"
+                          ]
+                        },
+                        "then": [
+                          832,
+                          1248
+                        ]
+                      },
+                      {
+                        "when": {
+                          "$eq": [
+                            {
+                              "$ref": "request.aspectRatio"
+                            },
+                            "5:4"
+                          ]
+                        },
+                        "then": [
+                          1120,
+                          896
+                        ]
+                      },
+                      {
+                        "when": {
+                          "$eq": [
+                            {
+                              "$ref": "request.aspectRatio"
+                            },
+                            "4:5"
+                          ]
+                        },
+                        "then": [
+                          896,
+                          1120
+                        ]
+                      },
+                      {
+                        "when": {
+                          "$eq": [
+                            {
+                              "$ref": "request.aspectRatio"
+                            },
+                            "21:9"
+                          ]
+                        },
+                        "then": [
+                          1568,
+                          672
+                        ]
+                      }
+                    ]
+                  }
+                }
+              }
+            }
+          },
+          {
+            "name": "seedreamProExplicitSize",
+            "value": {
+              "$gt": [
+                {
+                  "$len": {
+                    "$ref": "bindings.seedreamProBaseDimensions"
+                  }
+                },
+                0
+              ]
+            }
+          },
+          {
+            "name": "seedreamProTier",
+            "value": {
+              "$lower": {
+                "$ref": "request.resolution"
+              }
+            }
+          },
+          {
+            "name": "seedreamProScale",
+            "value": {
+              "$if": {
+                "condition": {
+                  "$eq": [
+                    {
+                      "$ref": "bindings.seedreamProTier"
+                    },
+                    "2k"
+                  ]
+                },
+                "then": 2,
+                "else": 1
+              }
+            }
+          }
+        ],
+        "validations": [
+          {
+            "assert": {
+              "$or": [
+                {
+                  "$not": {
+                    "$ref": "bindings.seedreamProText"
+                  }
+                },
+                {
+                  "$in": [
+                    {
+                      "$ref": "request.aspectRatio"
+                    },
+                    [
+                      "",
+                      "auto"
+                    ]
+                  ]
+                },
+                {
+                  "$ref": "bindings.seedreamProExplicitSize"
+                }
+              ]
+            },
+            "message": "当前 RunningHub Seedream 5.0 Pro 文生图端点不支持此画幅比例"
+          },
+          {
+            "assert": {
+              "$or": [
+                {
+                  "$not": {
+                    "$ref": "bindings.seedreamProText"
+                  }
+                },
+                {
+                  "$in": [
+                    {
+                      "$ref": "bindings.seedreamProTier"
+                    },
+                    [
+                      "",
+                      "auto",
+                      "1k",
+                      "2k"
+                    ]
+                  ]
+                }
+              ]
+            },
+            "message": "当前 RunningHub Seedream 5.0 Pro 文生图端点仅支持 1K 和 2K 分辨率"
+          }
+        ],
         "create": {
           "method": "POST",
           "path": "/openapi/v2/{{request.model}}",
@@ -258,13 +520,65 @@ MiniMax Music 上游没有独立风格字段：音乐工作台提交的风格标
               }
             },
             "aspectRatio": {
-              "$omitEmpty": {
-                "$ref": "request.aspectRatio"
+              "$if": {
+                "condition": {
+                  "$not": {
+                    "$ref": "bindings.seedreamProText"
+                  }
+                },
+                "then": {
+                  "$omitEmpty": {
+                    "$ref": "request.aspectRatio"
+                  }
+                }
+              }
+            },
+            "width": {
+              "$if": {
+                "condition": {
+                  "$ref": "bindings.seedreamProExplicitSize"
+                },
+                "then": {
+                  "$multiply": [
+                    {
+                      "$ref": "bindings.seedreamProBaseDimensions.0"
+                    },
+                    {
+                      "$ref": "bindings.seedreamProScale"
+                    }
+                  ]
+                }
+              }
+            },
+            "height": {
+              "$if": {
+                "condition": {
+                  "$ref": "bindings.seedreamProExplicitSize"
+                },
+                "then": {
+                  "$multiply": [
+                    {
+                      "$ref": "bindings.seedreamProBaseDimensions.1"
+                    },
+                    {
+                      "$ref": "bindings.seedreamProScale"
+                    }
+                  ]
+                }
               }
             },
             "resolution": {
-              "$omitEmpty": {
-                "$ref": "request.resolution"
+              "$if": {
+                "condition": {
+                  "$not": {
+                    "$ref": "bindings.seedreamProExplicitSize"
+                  }
+                },
+                "then": {
+                  "$omitEmpty": {
+                    "$ref": "request.resolution"
+                  }
+                }
               }
             },
             "quality": {
