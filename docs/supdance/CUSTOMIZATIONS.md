@@ -89,6 +89,10 @@
 
 # SupDance Canvas — 独立改造与定制代码清单 (CUSTOMIZATIONS.md)
 
+## 恢复原有创作对话
+
+`supdance-native-image-creation` 恢复 `/create` 内的图片任务提交、追踪、素材入库和会话展示。独立 `/workspace/image` 页面退役，旧链接保留图片模式和会话 ID，远端历史同步后可打开对应会话。
+
 ## 上游世界引擎
 
 合入上游 `5ca284ce` 的世界引擎，保留自由画布的团队路由、字幕与剪辑时间线，以及视频拼接的音画时间基准处理。工具、预设和界面词条使用现有八语词库，场景名称、预设标识和模型提示词沿用源值。世界引擎沿用上游的局部浅色面板以保持 WebGL 叠层对比度。接缝登记为 `supdance-world-engine`，详见[集成记录](UPSTREAM_WORLD_ENGINE.md)。

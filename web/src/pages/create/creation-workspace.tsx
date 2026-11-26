@@ -910,7 +910,7 @@ const creationModeItems: { mode: CreationMode; icon: ReactNode; label: string }[
 
 function useCreationModeItems() {
     const musicPluginActive = usePluginStore(musicPluginGate);
-    // 图片生成整体关闭时同步收起入口，避免提交后被 /workspace/image 的功能门禁弹回。
+    // 图片生成关闭时同步收起创作入口。
     const imageWorkbenchEnabled = useUserStore((state) => state.features.imageWorkbenchEnabled);
     const { t } = useI18n();
     return creationModeItems

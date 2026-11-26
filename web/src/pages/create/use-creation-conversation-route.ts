@@ -9,6 +9,7 @@ export function useCreationConversationRoute({
     ready,
     activeId,
     canSelect,
+    historySynced,
     ids,
     onSelect,
     onNew,
@@ -18,6 +19,7 @@ export function useCreationConversationRoute({
     ready: boolean;
     activeId: string;
     canSelect: boolean;
+    historySynced: boolean;
     ids: readonly string[];
     onSelect: (id: string) => void;
     onNew: () => string;
@@ -27,8 +29,9 @@ export function useCreationConversationRoute({
     const { key } = useLocation();
     const requested = params.get("conversation");
     const handled = useRef("");
-    const latest = useRef({ ids, onSelect, onNew, onHome });
-    latest.current = { ids, onSelect, onNew, onHome };
+    const latest = useRef({ onSelect, onNew, onHome });
+    latest.current = { onSelect, onNew, onHome };
+    const waitingForHistory = Boolean(requested && requested !== "new" && !ids.includes(requested) && !historySynced);
     const selectRoute = (id: string) => {
         setParams(
             (current) => {
@@ -47,7 +50,7 @@ export function useCreationConversationRoute({
     useEffect(() => () => clearCreationConversationNavigation(scope), [scope]);
 
     useEffect(() => {
-        if (!ready) return;
+        if (!ready || waitingForHistory) return;
         const identity = `${scope}:${key}:${requested}`;
         if (handled.current === identity) return;
         handled.current = identity;
@@ -58,7 +61,7 @@ export function useCreationConversationRoute({
         }
         if (requested === activeId) return;
         // 忙碌时拒绝本次切换，不把它排队到生成结束后偷偷执行。
-        if (!canSelect || (requested !== "new" && !latest.current.ids.includes(requested))) {
+        if (!canSelect || (requested !== "new" && !ids.includes(requested))) {
             selectRoute(activeId);
             return;
         }
@@ -67,7 +70,7 @@ export function useCreationConversationRoute({
         } else {
             latest.current.onSelect(requested);
         }
-    }, [scope, key, requested, ready, activeId, canSelect]);
+    }, [scope, key, requested, ready, activeId, canSelect, ids, waitingForHistory]);
 
     return selectRoute;
 }
