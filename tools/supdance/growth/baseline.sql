@@ -52,6 +52,16 @@ WITH bounds AS (
            COUNT(*) FILTER (WHERE created_at <= b.until - 7 AND first_at < created_at + interval '7 days') AS activated_7d
     FROM accounts CROSS JOIN bounds b
     GROUP BY 1
+), activation_by_signup_day AS (
+    SELECT d.signup_day::date AS signup_day,
+           COUNT(a.id) AS registered,
+           COUNT(a.id) FILTER (WHERE a.attempted) AS attempted,
+           COUNT(a.id) FILTER (WHERE a.first_at IS NOT NULL) AS first_success,
+           COUNT(a.id) FILTER (WHERE a.created_at <= b.until - 1) AS eligible_24h,
+           COUNT(a.id) FILTER (WHERE a.created_at <= b.until - 1 AND a.first_at < a.created_at + interval '24 hours') AS activated_24h
+    FROM bounds b CROSS JOIN LATERAL generate_series(b.until - 7, b.until - 1, interval '1 day') AS d(signup_day)
+    LEFT JOIN accounts a ON a.created_at >= d.signup_day AND a.created_at < d.signup_day + interval '1 day'
+    GROUP BY 1
 ), task_outcomes AS (
     SELECT t.type, COUNT(*) FILTER (WHERE t.status = 'succeeded') AS succeeded,
            COUNT(*) FILTER (WHERE t.status = 'failed') AS failed
@@ -76,6 +86,7 @@ SELECT jsonb_build_object(
     'period', jsonb_build_object('from', b.since, 'to_exclusive', b.until, 'timezone', 'Asia/Taipei'),
     'traffic', to_jsonb(traffic), 'new_account_activation', to_jsonb(activation),
     'activation_by_signup_week', (SELECT COALESCE(jsonb_agg(to_jsonb(w) ORDER BY w.week_of), '[]'::jsonb) FROM activation_by_signup_week w),
+    'activation_by_signup_day', (SELECT jsonb_agg(to_jsonb(d) ORDER BY d.signup_day) FROM activation_by_signup_day d),
     'today_partial', jsonb_build_object('date', current_date, 'as_of', statement_timestamp()) || to_jsonb(partial_today),
     'task_outcomes_all_roles', (SELECT COALESCE(jsonb_agg(to_jsonb(t) ORDER BY t.type), '[]'::jsonb) FROM task_outcomes t)
 )
