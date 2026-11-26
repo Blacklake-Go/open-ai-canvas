@@ -1,11 +1,13 @@
 import json
+import gzip
+import io
 from pathlib import Path
 import tempfile
 import time
 import unittest
 from unittest.mock import patch
 
-from retention import DAY, Retention, aged, digest, overlaps, safe_artifact
+from retention import DAY, Retention, aged, digest, overlaps, safe_artifact, weekly_offsite
 
 
 class BoundaryTests(unittest.TestCase):
@@ -176,6 +178,54 @@ class ServiceTests(unittest.TestCase):
                  patch.object(self.service, "action") as action:
                 self.service.prune_images()
                 action.assert_not_called()
+
+    def test_retains_release_image_and_base_archive_named_by_rollback(self):
+        root = self.service.state.parent
+        snapshot = root / "backups" / "previous"
+        snapshot.mkdir()
+        release = root / "releases" / "previous"
+        base = root / "backups" / "base"
+        (snapshot / "predeploy.env").write_text(
+            f'CANVAS_WEB_RELEASE_PATH="{release}"\nCANVAS_WEB_IMAGE=supdance-canvas-web:previous\n')
+        (snapshot / "BASE-BACKUP").write_text(f"{base}\n")
+
+        paths, images = self.service.deployment_references()
+        self.assertEqual(paths, {str(release), str(base)})
+        self.assertEqual(images, {"supdance-canvas-web:previous"})
+
+    def test_bad_historical_pin_blocks_removal_but_not_new_backups(self):
+        self.service.backup = True
+        with patch.object(self.service, "live_ids", return_value=["live"]), \
+             patch.object(self.service, "health"), \
+             patch.object(self.service, "make_backups") as backup, \
+             patch.object(self.service, "validate_pins", side_effect=FileNotFoundError), \
+             patch.object(self.service, "prune_artifacts") as prune, patch("builtins.print"):
+            self.assertEqual(self.service.execute(), 1)
+            backup.assert_called_once()
+            prune.assert_not_called()
+
+    def test_weekly_source_survives_failed_offsite_manifest_publish(self):
+        source = self.service.managed / "test.tgz"
+        source.write_bytes(gzip.compress(b"archive"))
+        manifest = self.service.managed / "test.json"
+        self.service.config["weekly_offsite"] = True
+        self.service.record_backup("weekly", [source])
+        original = json.loads(manifest.read_text())
+        remote = {**original["files"][0], "offsite": {"key": "remote", "size": 10}}
+        with patch.object(weekly_offsite, "store", return_value=remote), \
+             patch.object(weekly_offsite, "publish_manifest", side_effect=RuntimeError("upload failed")):
+            with self.assertRaisesRegex(RuntimeError, "upload failed"):
+                self.service.migrate_weekly_archives([(manifest, original)])
+        self.assertTrue(source.exists())
+        self.assertEqual(json.loads(manifest.read_text()), original)
+
+    def test_gzip_readback_validates_stream_and_hash(self):
+        packed = gzip.compress(b"archive")
+        source = self.service.managed / "compressed.tgz"
+        source.write_bytes(packed)
+        self.assertEqual(weekly_offsite.archive_digest(io.BytesIO(packed)), digest(source))
+        with self.assertRaises(EOFError):
+            weekly_offsite.archive_digest(io.BytesIO(packed[:-1]))
 
     def test_updater_last_backup_is_protected_regardless_of_archive_age(self):
         backup = self.service.state / "old-rollback.zip"

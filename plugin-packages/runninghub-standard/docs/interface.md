@@ -6,6 +6,10 @@ Suno 音乐结果同时包含音频、封面与文本。1.1.1 仅将有 URL 的�
 
 1.1.8 保留 1.1.7 的 Seedream Pro 参数规则。MiniMax H3 Max 文生视频发送 `ratio` 和大写分辨率。悠船 V8.1 默认使用 `quality: "1"`、`hd: false`，FLUX.3 文生图默认使用 `768sq`，对应本站现有规格与售价。
 
+1.1.4 修正 Grok Quality Edit 与 FLUX Klein 9B Edit 的参考字段。缺参考图时，协议在发出上游创建请求前拒绝上述两条线路及 GPT Image 2 Edit、Qwen Image 3.0 Edit。Seedream 5.0 Pro 图像编辑在发出请求前校验 5 字符最小提示词长度。
+
+1.1.9 合并 1.1.4 的图像编辑字段与 1.1.8 的生产规格。Grok Imagine Quality Edit 缺省分辨率为 `1k`。
+
 ## 协议身份
 
 - 插件 ID：`runninghub-standard`。
@@ -49,7 +53,9 @@ Suno 音乐结果同时包含音频、封面与文本。1.1.1 仅将有 URL 的�
 | `create.path` | `"/openapi/v2/{{request.model}}"` |
 | `create.contentType` | `"application/json"` |
 | `create.body.prompt` | `{"$ref":"request.prompt"}` |
-| `create.body.imageUrls` (image) | `{"$omitEmpty":{"$map":{"from":{"$ref":"request.images"},"as":"media","in":{"$ref":"media.value"}}}}` |
+| `create.body.imageUrls` (image) | 标准图片端点的参考图数组，空值省略。 |
+| `create.body.imageUrl` (image) | Grok Imagine Quality Edit 发送 1–3 张图的数组，FLUX Klein 9B Edit 发送单图字符串。两条线路都省略 `imageUrls`。 |
+| `create.body.numImages/outputFormat` (image) | Grok Quality Edit 固定单张 JPEG，FLUX Klein 9B Edit 发送 PNG。 |
 | `create.body.imageUrl/firstImageUrl` (video) | 第一张参考图 URL |
 | `create.body.lastImageUrl` (video) | role 为 `last` 的参考图 URL |
 | `create.body.imageUrls` (video) | 参考图 URL 列表；单图也发送，满足只接受 `imageUrls` 的端点（如 Veo 3.1 Fast） |
@@ -110,7 +116,7 @@ MiniMax Music 上游没有独立风格字段：音乐工作台提交的风格标
   "apiVersion": "yingce.plugin/v2",
   "id": "runninghub-standard",
   "name": "RunningHub Standard Model",
-  "version": "1.1.8",
+  "version": "1.1.9",
   "author": "RunningHub / 影策",
   "description": "RunningHub 标准模型 API 独立请求协议插件。",
   "permissions": [
@@ -168,7 +174,7 @@ MiniMax Music 上游没有独立风格字段：音乐工作台提交的风格标
             "type": "media[]",
             "required": false,
             "mapping": "imageUrls",
-            "description": "参考图或编辑源图，图生图端点必填。"
+            "description": "参考图或编辑源图，图生图端点必填；Grok Quality Edit 与 FLUX Klein 9B Edit 使用 imageUrl。"
           },
           {
             "name": "aspectRatio",
@@ -498,6 +504,115 @@ MiniMax Music 上游没有独立风格字段：音乐工作台提交的风格标
               ]
             },
             "message": "当前 RunningHub Seedream 5.0 Pro 文生图端点仅支持 1K 和 2K 分辨率"
+          },
+          {
+            "assert": {
+              "$or": [
+                {
+                  "$not": {
+                    "$in": [
+                      {
+                        "$ref": "request.model"
+                      },
+                      [
+                        "rhart-imagine-image-quality/edit",
+                        "rhart-image/f-2-klein-9b/edit",
+                        "rhart-image-g-2/image-to-image",
+                        "alibaba/qwen-image-3.0/image-edit"
+                      ]
+                    ]
+                  }
+                },
+                {
+                  "$gt": [
+                    {
+                      "$len": {
+                        "$ref": "request.images"
+                      }
+                    },
+                    0
+                  ]
+                }
+              ]
+            },
+            "message": "当前图像编辑模型需要添加参考图"
+          },
+          {
+            "assert": {
+              "$or": [
+                {
+                  "$ne": [
+                    {
+                      "$ref": "request.model"
+                    },
+                    "rhart-imagine-image-quality/edit"
+                  ]
+                },
+                {
+                  "$lte": [
+                    {
+                      "$len": {
+                        "$ref": "request.images"
+                      }
+                    },
+                    3
+                  ]
+                }
+              ]
+            },
+            "message": "Grok Imagine Quality Edit 最多接受 3 张参考图"
+          },
+          {
+            "assert": {
+              "$or": [
+                {
+                  "$ne": [
+                    {
+                      "$ref": "request.model"
+                    },
+                    "rhart-image/f-2-klein-9b/edit"
+                  ]
+                },
+                {
+                  "$lte": [
+                    {
+                      "$len": {
+                        "$ref": "request.images"
+                      }
+                    },
+                    1
+                  ]
+                }
+              ]
+            },
+            "message": "FLUX Klein 9B Edit 只接受 1 张参考图"
+          },
+          {
+            "assert": {
+              "$or": [
+                {
+                  "$ne": [
+                    {
+                      "$ref": "request.model"
+                    },
+                    "seedream-v5-pro/image-to-image"
+                  ]
+                },
+                {
+                  "$gte": [
+                    {
+                      "$len": {
+                        "$trim": {
+                          "$ref": "request.prompt"
+                        }
+                      }
+                    },
+                    5
+                  ]
+                }
+              ]
+            },
+            "message": "Seedream 5.0 Pro 图像编辑提示词至少需要 5 个字符"
           }
         ],
         "create": {
@@ -510,13 +625,28 @@ MiniMax Music 上游没有独立风格字段：音乐工作台提交的风格标
             },
             "imageUrls": {
               "$omitEmpty": {
-                "$map": {
-                  "from": {
-                    "$ref": "request.images"
+                "$if": {
+                  "condition": {
+                    "$in": [
+                      {
+                        "$ref": "request.model"
+                      },
+                      [
+                        "rhart-imagine-image-quality/edit",
+                        "rhart-image/f-2-klein-9b/edit"
+                      ]
+                    ]
                   },
-                  "as": "media",
-                  "in": {
-                    "$ref": "media.value"
+                  "else": {
+                    "$map": {
+                      "from": {
+                        "$ref": "request.images"
+                      },
+                      "as": "media",
+                      "in": {
+                        "$ref": "media.value"
+                      }
+                    }
                   }
                 }
               }
@@ -576,29 +706,49 @@ MiniMax Music 上游没有独立风格字段：音乐工作台提交的风格标
                     {
                       "$ref": "request.model"
                     },
-                    "rhart-image-flux3/text-to-image"
+                    "rhart-imagine-image-quality/edit"
                   ]
                 },
                 "then": {
                   "$coalesce": [
                     {
-                      "$omitEmpty": {
-                        "$ref": "request.resolution"
-                      }
+                      "$ref": "request.resolution"
                     },
-                    "768sq"
+                    "1k"
                   ]
                 },
                 "else": {
                   "$if": {
                     "condition": {
-                      "$not": {
-                        "$ref": "bindings.seedreamProExplicitSize"
-                      }
+                      "$eq": [
+                        {
+                          "$ref": "request.model"
+                        },
+                        "rhart-image-flux3/text-to-image"
+                      ]
                     },
                     "then": {
-                      "$omitEmpty": {
-                        "$ref": "request.resolution"
+                      "$coalesce": [
+                        {
+                          "$omitEmpty": {
+                            "$ref": "request.resolution"
+                          }
+                        },
+                        "768sq"
+                      ]
+                    },
+                    "else": {
+                      "$if": {
+                        "condition": {
+                          "$not": {
+                            "$ref": "bindings.seedreamProExplicitSize"
+                          }
+                        },
+                        "then": {
+                          "$omitEmpty": {
+                            "$ref": "request.resolution"
+                          }
+                        }
                       }
                     }
                   }
@@ -652,6 +802,93 @@ MiniMax Music 上游没有独立风格字段：音乐工作台提交的风格标
                   ]
                 },
                 "then": false
+              }
+            },
+            "imageUrl": {
+              "$omitEmpty": {
+                "$switch": {
+                  "cases": [
+                    {
+                      "when": {
+                        "$eq": [
+                          {
+                            "$ref": "request.model"
+                          },
+                          "rhart-imagine-image-quality/edit"
+                        ]
+                      },
+                      "then": {
+                        "$map": {
+                          "from": {
+                            "$ref": "request.images"
+                          },
+                          "as": "media",
+                          "in": {
+                            "$ref": "media.value"
+                          }
+                        }
+                      }
+                    },
+                    {
+                      "when": {
+                        "$eq": [
+                          {
+                            "$ref": "request.model"
+                          },
+                          "rhart-image/f-2-klein-9b/edit"
+                        ]
+                      },
+                      "then": {
+                        "$ref": "request.images.0.value"
+                      }
+                    }
+                  ]
+                }
+              }
+            },
+            "numImages": {
+              "$omitEmpty": {
+                "$if": {
+                  "condition": {
+                    "$eq": [
+                      {
+                        "$ref": "request.model"
+                      },
+                      "rhart-imagine-image-quality/edit"
+                    ]
+                  },
+                  "then": "1"
+                }
+              }
+            },
+            "outputFormat": {
+              "$omitEmpty": {
+                "$switch": {
+                  "cases": [
+                    {
+                      "when": {
+                        "$eq": [
+                          {
+                            "$ref": "request.model"
+                          },
+                          "rhart-imagine-image-quality/edit"
+                        ]
+                      },
+                      "then": "jpeg"
+                    },
+                    {
+                      "when": {
+                        "$eq": [
+                          {
+                            "$ref": "request.model"
+                          },
+                          "rhart-image/f-2-klein-9b/edit"
+                        ]
+                      },
+                      "then": "png"
+                    }
+                  ]
+                }
               }
             }
           },

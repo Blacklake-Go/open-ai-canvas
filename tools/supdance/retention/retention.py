@@ -17,6 +17,8 @@ import urllib.parse
 import urllib.request
 import zipfile
 
+import weekly_offsite
+
 DAY = 86400
 FORBIDDEN = {"pgdata", "postgres-data", "redis-data", "resources", "uploads"}
 
@@ -74,9 +76,10 @@ def safe_artifact(path, roots, protected):
 
 
 class Retention:
-    def __init__(self, config, apply=False, backup=False):
+    def __init__(self, config, apply=False, backup=False, weekly_now=False, migrate_weekly=False):
         self.config = config
         self.apply, self.backup = apply, backup
+        self.weekly_now, self.migrate_weekly = weekly_now, migrate_weekly
         self.state = Path(config["state"])
         self.state.mkdir(parents=True, exist_ok=True, mode=0o700)
         self.managed = Path(config["managed_backups"])
@@ -110,10 +113,36 @@ class Retention:
                 paths.append(str(path))
         return paths
 
+    def deployment_references(self):
+        root = Path(self.config["root"])
+        backups = root / "backups"
+        inputs = [root / ".env"]
+        inputs.extend(p for p in backups.glob("*/*")
+                      if p.name in {"BASE-BACKUP", "PREVIOUS-DELTA"} or "env" in p.name)
+        paths, images = set(), set()
+        for p in inputs:
+            if p.is_symlink() or not p.is_file() or p.stat().st_size > 1024 * 1024:
+                continue
+            text = p.read_text(errors="replace")
+            if p.name in {"BASE-BACKUP", "PREVIOUS-DELTA"}:
+                target = Path(text.strip())
+                if target.is_absolute() and backups in target.resolve().parents:
+                    paths.add(str(target))
+                continue
+            for line in text.splitlines():
+                name, _, value = line.partition("=")
+                name, value = name.strip(), value.strip().strip("'\"")
+                if name in {"CANVAS_WEB_RELEASE_PATH", "CANVAS_FRONTEND_DIST"} and value.startswith("/"):
+                    paths.add(value)
+                if name in {"CANVAS_WEB_IMAGE", "CANVAS_BACKEND_IMAGE", "YINGCE_AGENT_IMAGE", "CANVAS_AGENT_IMAGE"} and value:
+                    images.add(value)
+        return paths, images
+
     def protections(self):
         containers = self.containers()
         protected = list(self.config["protected_paths"]) + [str(self.managed), str(self.state)]
         protected += self.updater_references()
+        protected += list(self.deployment_references()[0])
         # Even stopped database containers and unexpired drills protect their mounts.
         protected += [m["Source"] for c in containers for m in c["Mounts"]]
         for unit in self.config["services"]:
@@ -190,7 +219,13 @@ class Retention:
             if d.get("version") != 1 or d.get("kind") not in ("daily", "weekly"):
                 raise RuntimeError("Invalid managed backup metadata")
             for f in d["files"]:
-                if f["name"] in seen or Path(f["name"]).name != f["name"] or digest(self.managed / f["name"]) != f["sha256"]:
+                if f["name"] in seen or Path(f["name"]).name != f["name"]:
+                    raise RuntimeError("Managed backup hash mismatch")
+                if "offsite" in f:
+                    if d["kind"] != "weekly" or not self.config.get("weekly_offsite"):
+                        raise RuntimeError("Offsite weekly archive verify mode unavailable")
+                    weekly_offsite.validate(f)
+                elif digest(self.managed / f["name"]) != f["sha256"]:
                     raise RuntimeError("Managed backup hash mismatch")
                 seen.add(f["name"])
             result.append((p, d))
@@ -225,7 +260,16 @@ class Retention:
         files.append(one)
         self.record_backup("daily", files)
         weekly = [d for _, d in self.valid_records() if d["kind"] == "weekly"]
-        if not weekly or time.time() - max(d["created"] for d in weekly) >= 7 * DAY:
+        if self.weekly_now or not weekly or time.time() - max(d["created"] for d in weekly) >= 7 * DAY:
+            if self.config.get("weekly_offsite"):
+                files = [weekly_offsite.store(f"{stamp}-{label}.tgz", self.managed, source=source)
+                         for label, source in self.config["weekly_sources"].items()]
+                entry = {"version": 1, "kind": "weekly", "created": time.time(), "files": files}
+                manifest = self.managed / (Path(files[0]["name"]).stem + ".json")
+                weekly_offsite.publish_manifest(manifest, entry)
+                write_json(manifest, entry)
+                self.report["weekly_offsite"] = {"manifest": str(manifest), "archives": len(files)}
+                return
             if shutil.disk_usage(self.managed).free < 3 * 1024**3:
                 raise RuntimeError("Insufficient room for a verified full backup; no cleanup")
             archives = []
@@ -244,6 +288,38 @@ class Retention:
                         completed.unlink(missing_ok=True)
                     raise
             self.record_backup("weekly", archives)
+
+    def migrate_weekly_archives(self, records):
+        if not self.config.get("weekly_offsite"):
+            raise RuntimeError("Weekly offsite configuration is disabled")
+        for manifest, entry in records:
+            if entry["kind"] != "weekly":
+                continue
+            local = [f for f in entry["files"] if "offsite" not in f]
+            if local:
+                updated = []
+                for item in entry["files"]:
+                    if "offsite" not in item:
+                        path = self.managed / item["name"]
+                        if path.is_symlink() or not path.is_file() or path.stat().st_nlink != 1:
+                            raise RuntimeError("Weekly source must be a regular local archive")
+                        updated_item = weekly_offsite.store(item["name"], self.managed, existing=path)
+                        if updated_item["sha256"] != item["sha256"]:
+                            raise RuntimeError("Weekly source changed during offsite migration")
+                        item = updated_item
+                    updated.append(item)
+                entry = {**entry, "files": updated}
+                weekly_offsite.publish_manifest(manifest, entry)
+                write_json(manifest, entry)
+            for item in entry["files"]:
+                path = self.managed / item["name"]
+                if not path.exists():
+                    continue
+                if path.is_symlink() or path.stat().st_nlink != 1 or digest(path) != item["sha256"]:
+                    raise RuntimeError("Weekly on-disk source does not match verified offsite archive")
+                if not local:
+                    weekly_offsite.verify_remote(item)
+                self.action("migrated-weekly-local-copy", path, path.stat().st_size, path.unlink)
 
     def backup_gate(self):
         records = self.valid_records()
@@ -269,7 +345,7 @@ class Retention:
             items = [(p, d["created"]) for p, d in records if d["kind"] == kind]
             selected = set(aged(items, keep, days, time.time()))
             for p, d in records:
-                if p not in selected:
+                if p not in selected or any("offsite" in f for f in d["files"]):
                     continue
                 files = [self.managed / f["name"] for f in d["files"]]
                 self.action("managed-backup", p, sum(f.stat().st_size for f in files),
@@ -327,6 +403,7 @@ class Retention:
         images = json.loads(run(["docker", "image", "inspect", *sorted(set(ids))])) if ids else []
         pinned = {json.loads(run(["docker", "image", "inspect", p]))[0]["Id"] for p in self.config["rollback_images"]}
         referenced = {c["Image"] for c in self.containers()}
+        rollback_tags = self.deployment_references()[1]
         families = {}
         for image in images:
             tags = image.get("RepoTags") or []
@@ -338,11 +415,14 @@ class Retention:
         for entries in families.values():
             selected = aged([(i["Id"], t) for i, t in entries], 2, 14, time.time())
             for i, _ in entries:
-                if i["Id"] not in selected or i["Id"] in pinned | referenced:
+                names = set((i.get("RepoTags") or []) + (i.get("RepoDigests") or []))
+                if i["Id"] not in selected or i["Id"] in pinned | referenced or names & rollback_tags:
                     continue
-                def remove(image=i):
+                def remove(image=i, image_names=names):
                     if image["Id"] in {c["Image"] for c in self.containers()}:
                         raise RuntimeError("Image acquired a container reference")
+                    if image_names & self.deployment_references()[1]:
+                        raise RuntimeError("Image acquired a rollback reference")
                     run(["docker", "image", "rm", *image["RepoTags"]])
                 self.action("unused-image", i["Id"], i["Size"], remove)
 
@@ -351,14 +431,18 @@ class Retention:
         self.report["disk_before"] = shutil.disk_usage(self.config["root"])._asdict()
         try:
             self.health()
-            self.validate_pins()
             if self.apply and self.backup:
+                self.updater_references()
                 self.make_backups()
+            self.validate_pins()
             records = self.backup_gate()
-            self.prune_managed(records)
-            self.prune_containers()
-            self.prune_artifacts()
-            self.prune_images()
+            if self.migrate_weekly:
+                self.migrate_weekly_archives(records)
+            else:
+                self.prune_managed(records)
+                self.prune_containers()
+                self.prune_artifacts()
+                self.prune_images()
             self.report["status"] = "success"
         except Exception as error:
             self.report["status"] = "failed"
@@ -395,9 +479,14 @@ def main():
     parser.add_argument("--config", default="/etc/supdance-retention/policy.json")
     parser.add_argument("--apply", action="store_true")
     parser.add_argument("--backup", action="store_true")
+    parser.add_argument("--weekly-now", action="store_true")
+    parser.add_argument("--migrate-weekly", action="store_true")
     parser.add_argument("--register", metavar="PATH")
     parser.add_argument("--days", type=int, default=7)
     args = parser.parse_args()
+    if ((args.weekly_now and not (args.apply and args.backup))
+            or (args.migrate_weekly and (not args.apply or args.backup))):
+        parser.error("Weekly generation requires --apply --backup; weekly migration requires only --apply")
     os.umask(0o077)
     with open("/run/lock/supdance-maintenance.lock", "a") as lock:
         try:
@@ -405,7 +494,8 @@ def main():
         except BlockingIOError:
             print("Another maintenance run is active", file=sys.stderr)
             return 1
-        service = Retention(json.loads(Path(args.config).read_text()), args.apply, args.backup)
+        service = Retention(json.loads(Path(args.config).read_text()), args.apply, args.backup,
+                            args.weekly_now, args.migrate_weekly)
         if args.register:
             p = Path(args.register).absolute()
             if not safe_artifact(p, [Path(service.config["root"]) / "backups", Path(service.config["root"]) / "releases"], service.protections()):
