@@ -154,6 +154,21 @@ func run(ctx context.Context) error {
 		return err
 	}
 	httpServer := &http.Server{Handler: r, ReadHeaderTimeout: 10 * time.Second}
+	var studioServer *http.Server
+	var studioListener net.Listener
+	if studioAddr := strings.TrimSpace(os.Getenv("CANVAS_SUPDANCE_STUDIO_BRIDGE_ADDR")); studioAddr != "" {
+		bridge, err := handler.NewSupdanceStudioBridge(svc)
+		if err != nil {
+			_ = listener.Close()
+			return fmt.Errorf("configure SupDance Studio ingress: %w", err)
+		}
+		studioListener, err = net.Listen("tcp", studioAddr)
+		if err != nil {
+			_ = listener.Close()
+			return fmt.Errorf("listen for SupDance Studio ingress: %w", err)
+		}
+		studioServer = &http.Server{Handler: bridge, ReadHeaderTimeout: 10 * time.Second}
+	}
 	svc.StartWorker()
 	// 启动后回填存量视频的播放副本转码（幂等，无待处理项即退出）。
 	go svc.BackfillPlaybackTranscodes()
@@ -163,6 +178,14 @@ func run(ctx context.Context) error {
 	serveErr := make(chan error, 1)
 	go func() { serveErr <- httpServer.Serve(listener) }()
 	slog.Info("backend listening", "addr", addr)
+	if studioServer != nil {
+		go func() {
+			if err := studioServer.Serve(studioListener); err != nil && !errors.Is(err, http.ErrServerClosed) {
+				slog.Error("SupDance Studio private ingress stopped", "error", err)
+			}
+		}()
+		slog.Info("SupDance Studio private ingress listening", "addr", studioListener.Addr().String())
+	}
 
 	var serveFailure error
 	select {
@@ -183,6 +206,12 @@ func run(ctx context.Context) error {
 	if err := httpServer.Shutdown(httpShutdownCtx); err != nil {
 		_ = httpServer.Close()
 		shutdownFailures = append(shutdownFailures, fmt.Errorf("关闭 HTTP 服务：%w", err))
+	}
+	if studioServer != nil {
+		if err := studioServer.Shutdown(httpShutdownCtx); err != nil {
+			_ = studioServer.Close()
+			shutdownFailures = append(shutdownFailures, fmt.Errorf("closing SupDance Studio ingress: %w", err))
+		}
 	}
 	workerCtx, workerCancel := context.WithTimeout(context.Background(), workerTimeout)
 	defer workerCancel()

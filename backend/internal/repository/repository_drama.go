@@ -74,10 +74,10 @@ var ErrDramaDraftStarted = errors.New("drama draft started")
 
 // ReplaceDramaDraft 在同一事务内整体替换草稿：项目名称与画幅、原著章节、按章分集的集和制作控制面。
 // 只在作品仍是草稿且没有任何作业时替换；名称与同用户其他项目重复时返回 ErrProjectNameConflict。
-func (r *Repository) ReplaceDramaDraft(project *model.Project, chapters []model.ProjectUnit, production *model.DramaProduction, episodes []model.DramaEpisode) error {
+func (r *Repository) ReplaceDramaDraft(project *model.Project, chapters []model.ProjectUnit, production *model.DramaProduction, episodes []model.DramaEpisode, expected ...*int64) error {
 	return r.db.Transaction(func(tx *gorm.DB) error {
 		var current model.DramaProduction
-		if err := tx.First(&current, "project_id = ? AND user_id = ?", project.ID, project.UserID).Error; err != nil {
+		if err := tx.Clauses(clause.Locking{Strength: "UPDATE"}).First(&current, "project_id = ? AND user_id = ?", project.ID, project.UserID).Error; err != nil {
 			return err
 		}
 		var jobs int64
@@ -86,6 +86,18 @@ func (r *Repository) ReplaceDramaDraft(project *model.Project, chapters []model.
 		}
 		if current.Status != model.DramaStatusDraft || jobs > 0 {
 			return ErrDramaDraftStarted
+		}
+		if len(expected) > 0 && expected[0] != nil && *expected[0] != current.Revision {
+			return ErrDramaSegmentChanged
+		}
+		if len(expected) > 0 && expected[0] != nil {
+			var shots int64
+			if err := tx.Model(&model.DramaShot{}).Where("project_id = ?", project.ID).Count(&shots).Error; err != nil {
+				return err
+			}
+			if shots > 0 {
+				return ErrDramaSegmentChanged
+			}
 		}
 		var taken int64
 		if err := tx.Model(&model.Project{}).Where("user_id = ? AND name = ? AND id <> ?", project.UserID, project.Name, project.ID).Count(&taken).Error; err != nil {
@@ -117,7 +129,11 @@ func (r *Repository) ReplaceDramaDraft(project *model.Project, chapters []model.
 			}
 		}
 		production.Revision = current.Revision + 1
-		return tx.Select("*").Where("project_id = ?", project.ID).Updates(production).Error
+		result := tx.Select("*").Where("project_id = ? AND revision = ?", project.ID, current.Revision).Updates(production)
+		if result.Error == nil && result.RowsAffected == 0 {
+			return ErrDramaSegmentChanged
+		}
+		return result.Error
 	})
 }
 
@@ -986,6 +1002,33 @@ func (r *Repository) ApplyDramaScript(episodeID string, revision *int64, fields 
 	return applied, err
 }
 
+// ApplyStudioStoryboard adopts initial shots only while the same draft and episode are current.
+func (r *Repository) ApplyStudioStoryboard(userID, projectID string, expected int64, episode model.DramaEpisode, fields map[string]any, shots []model.DramaShot) error {
+	return r.Transaction(func(repo *Repository) error {
+		gate := repo.db.Model(&model.DramaProduction{}).Where("project_id = ? AND user_id = ? AND status = ? AND revision = ?",
+			projectID, userID, model.DramaStatusDraft, expected).UpdateColumn("revision", gorm.Expr("revision + 1"))
+		if gate.Error != nil {
+			return gate.Error
+		}
+		if gate.RowsAffected != 1 {
+			return ErrDramaSegmentChanged
+		}
+		var count int64
+		if err := repo.db.Model(&model.DramaShot{}).Where("project_id = ?", projectID).Count(&count).Error; err != nil {
+			return err
+		}
+		if count != 0 {
+			return ErrDramaSegmentChanged
+		}
+		fields["revision"] = gorm.Expr("revision + 1")
+		applied, err := repo.ApplyDramaScript(episode.ID, &episode.Revision, fields, shots)
+		if err == nil && !applied {
+			return ErrDramaSegmentChanged
+		}
+		return err
+	})
+}
+
 func (r *Repository) UpdateDramaCastFields(id string, fields map[string]any) error {
 	return r.db.Transaction(func(tx *gorm.DB) error {
 		fields["updated_at"] = time.Now()
@@ -1373,6 +1416,23 @@ func (r *Repository) UpdateDramaShotScript(shot model.DramaShot, fields map[stri
 		}
 		if !current.UpdatedAt.Equal(shot.UpdatedAt) {
 			return ErrDramaSegmentChanged
+		}
+		if position, ok := fields["position"].(int); ok && position != current.Position {
+			var target model.DramaShot
+			if err := tx.First(&target, "episode_id = ? AND segment_index = ? AND position = ?", current.EpisodeID, current.SegmentIndex, position).Error; err != nil {
+				if errors.Is(err, gorm.ErrRecordNotFound) {
+					return ErrDramaSegmentChanged
+				}
+				return err
+			}
+			low, high, delta := min(position, current.Position), max(position, current.Position), 1
+			if position > current.Position {
+				delta = -1
+			}
+			if err := tx.Model(&model.DramaShot{}).Where("episode_id = ? AND position BETWEEN ? AND ? AND id <> ?", current.EpisodeID, low, high, current.ID).
+				Updates(map[string]any{"position": gorm.Expr("position + ?", delta), "updated_at": time.Now()}).Error; err != nil {
+				return err
+			}
 		}
 		fields["updated_at"] = time.Now()
 		if err := tx.Model(&model.DramaShot{}).Where("id = ? AND project_id = ?", shot.ID, shot.ProjectID).Updates(fields).Error; err != nil {

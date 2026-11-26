@@ -299,7 +299,8 @@ type CreateDramaRequest struct {
 	// 没选中的章节原文照常保存为预留章节，不参与资产提取、分集与改编，之后可在制作台加入。
 	SelectedChapters []int `json:"selectedChapters"`
 	// Draft 是 start=false 时随草稿保存的创建页表单，回到创建页时原样回填；开工时不保存。
-	Draft *DramaDraftForm `json:"draft,omitempty"`
+	Draft                  *DramaDraftForm `json:"draft,omitempty"`
+	expectedStudioRevision *int64
 }
 
 // DramaDraftForm 是创建页里设置之外、回填所需的表单内容：导入的原始正文（按当前分集方式重新拆章）和画风 ID。
@@ -712,6 +713,7 @@ type UpdateDramaShotRequest struct {
 	// Transition 是进入本镜头的转场；DurationSeconds 手动设置镜头时长。
 	Transition      *string  `json:"transition"`
 	DurationSeconds *float64 `json:"durationSeconds"`
+	studioEdit      *studioShotEdit
 }
 
 // SetDramaCastVoiceRequest 为角色指定声音：VoiceProfileID 从声音库选，SampleResourceID 是刚上传或录制的样本音频

@@ -16,19 +16,22 @@ import (
 	"yingce/backend/internal/service"
 )
 
-const supdanceOpenAISubject = "supdanceOpenAISubject"
+const (
+	supdanceOpenAISubject       = "supdanceOpenAISubject"
+	supdanceOpenAISecretFileEnv = "CANVAS_SUPDANCE_OPENAI_BRIDGE_SECRET_FILE"
+)
 
 // The bridge is disabled unless the host is explicitly provisioned with its
 // own service credential. The public website session is never used for bridge calls.
 func RegisterSupdanceOpenAIBridgeRoutes(r *gin.RouterGroup, svc *service.Service) {
-	raw, err := os.ReadFile(os.Getenv("CANVAS_SUPDANCE_OPENAI_BRIDGE_SECRET_FILE"))
+	secret, err := readSupdanceBridgeSecret(supdanceOpenAISecretFileEnv)
 	if err != nil {
 		return
 	}
-	secret, err := hex.DecodeString(strings.TrimSpace(string(raw)))
-	if err != nil || len(secret) != 32 {
-		return
-	}
+	registerSupdanceOpenAIBridgeRoutes(r, svc, secret)
+}
+
+func registerSupdanceOpenAIBridgeRoutes(r *gin.RouterGroup, svc *service.Service, secret []byte) {
 	authorization := "Bearer " + hex.EncodeToString(secret)
 	v1 := r.Group("/supdance-openai/v1", func(c *gin.Context) {
 		if subtle.ConstantTimeCompare([]byte(c.GetHeader("Authorization")), []byte(authorization)) != 1 {

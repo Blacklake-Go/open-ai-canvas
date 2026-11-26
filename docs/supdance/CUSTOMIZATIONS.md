@@ -127,6 +127,8 @@
 
 独立 Supdance 插件通过 `/api/supdance-openai/v1` 访问主站。服务凭据由宿主注入，按账号校验项目与画布归属。画布追加分镜前绑定预览、版本和用户，提交沿用原生变更回执。后端无数据迁移。审核文本使用主站任务和积分预授权，仅在同时配置审核账号和模型时开放。部署及验收见 [OpenAI 插件业务桥接](./OPENAI_PLUGIN_BRIDGE.md)。
 
+SupDance Studio 私有 v2 入口同时承载官网图像、视频和音乐生成。音乐采用官网音乐插件的启用状态、系统模型、报价、任务去重、积分账本和媒体归档。素材分页复用官网用户素材表的活动状态、分类和搜索，并验证关联资源的账号归属。已部署版本由独立候选 MCP 调用该私有入口。
+
 上游接缝登记为 `supdance-openai-plugin-bridge`。生产发版后需使用专用审核账号复测桥接与 ChatGPT 两端用例。
 
 ## 上游 v1.8.3 合并接缝
@@ -401,3 +403,10 @@ The host seams are registered under `supdance-one-identity-community`.
 ## 图片工作台与全站完整性补齐
 
 创作页图片模式提交后跳转独立 `/workspace/image/:sessionId` 工作台（`web/src/pages/workspace/`）。结果经 `consumeGenerationTaskMessage` 幂等物化入素材库；云端恢复按 `resultStorageKeys` 重建展示；网络中断标 `syncInterrupted` 自动重连，未确认失败只提供重新获取结果；参数面板与报价接模型能力合同和服务端 `quoteModel`；个人路由受 `imageWorkbenchEnabled` 门禁，团队空间不开放图片生成。创作历史 settings 前后端 16 键对齐（含 `imageResolution`），`instrumental`/`transparentBackground` 布尔往返保持类型。MiniMax Music 协议补 `detachedPolling`，风格/语言并入 prompt（runninghub-standard 1.1.3）。上游退役的 `/timeline/*` 接口与 editor-shell 留置不改动画布本地时间线（`supdance-canvas-timeline-editor`）。
+
+## SupDance Studio 私有业务入口
+
+候选侧栏在官网后端进程内增加独立私有监听，可选配置见 `.env.example`。网关的 v1 和 v2 使用各自的服务凭据，官网公开监听保留现有 v1 配置。候选的 MCP 和 OAuth 保持独立进程及数据卷。启用时，短剧项目、用户权限、资源、积分账本与后台任务沿用官网服务和数据，存储配额检查由同一后端进程协调。本变更没有数据库迁移。
+
+Studio 优先使用官网系统渠道目录。渠道报价与生成通过现有任务入口重建规格、价格档和执行协议，报价签名含实际协议绑定。工作台继续接受已支持的逻辑模型选择。此变更不调整官网模型 API。
+

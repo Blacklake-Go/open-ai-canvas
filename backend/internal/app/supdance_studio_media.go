@@ -1,0 +1,669 @@
+package app
+
+import (
+	"crypto/hmac"
+	"crypto/sha256"
+	"encoding/base64"
+	"encoding/hex"
+	"encoding/json"
+	"errors"
+	"fmt"
+	"maps"
+	"net/http"
+	"sort"
+	"strconv"
+	"strings"
+	"time"
+	"unicode/utf8"
+
+	"github.com/google/uuid"
+	"gorm.io/gorm"
+	"yingce/backend/internal/imagebilling"
+	"yingce/backend/internal/kernel"
+	"yingce/backend/internal/model"
+	"yingce/backend/internal/repository"
+)
+
+const studioChannelModelPrefix = "channel-"
+
+type StudioGeneration struct {
+	Kind       string   `json:"kind"`
+	Purpose    string   `json:"purpose"`
+	Model      string   `json:"model"`
+	Prompt     string   `json:"prompt"`
+	ProjectID  string   `json:"projectId,omitempty"`
+	Ratio      string   `json:"ratio,omitempty"`
+	Size       string   `json:"size,omitempty"`
+	Duration   int      `json:"duration,omitempty"`
+	Count      int      `json:"count,omitempty"`
+	References []string `json:"references"`
+	ShotID     string   `json:"shotId,omitempty"`
+}
+
+type StudioQuote struct {
+	ID           string `json:"id"`
+	Microcredits int64  `json:"microcredits"`
+	ExpiresAt    int64  `json:"expiresAt"`
+	Estimated    bool   `json:"estimated"`
+}
+
+type StudioSubmit struct {
+	Generation StudioGeneration `json:"generation"`
+	Quote      StudioQuote      `json:"quote"`
+}
+
+type StudioModel struct {
+	ID            string   `json:"id"`
+	Name          string   `json:"name"`
+	Kind          string   `json:"kind"`
+	Ratios        []string `json:"ratios"`
+	Sizes         []string `json:"sizes"`
+	Durations     []int    `json:"durations"`
+	Counts        []int    `json:"counts"`
+	MinReferences int      `json:"minReferences"`
+	MaxReferences int      `json:"maxReferences"`
+}
+
+func studioError(status int, reason string) *AppError {
+	err := NewAppError(status, "SupDance Studio request unavailable")
+	err.Reason = kernel.ErrorReason(reason)
+	return err
+}
+
+func (s *Service) StudioModels(userID, kind string) ([]StudioModel, error) {
+	if err := s.studioMediaFeature(kind); err != nil {
+		return nil, err
+	}
+	access, err := s.userGroupAccess(userID)
+	if err != nil {
+		return nil, err
+	}
+	channelModels, err := s.studioSystemModels(access, kind)
+	if err != nil || len(channelModels) > 0 {
+		return channelModels, err
+	}
+	frontendEnabled, err := s.FeatureEnabled(FeatureFrontendModels)
+	if err != nil || !frontendEnabled {
+		return channelModels, err
+	}
+	models, err := s.PublicLogicalModels(access, nil)
+	if err != nil {
+		return nil, err
+	}
+	snapshot, err := s.routeCatalogSnapshot()
+	if err != nil {
+		return nil, err
+	}
+	channels := map[string]bool{}
+	result := make([]StudioModel, 0)
+	for _, item := range models {
+		if !item.Available || item.Capability != kind || !supdanceOpenAIID.MatchString(item.ID) {
+			continue
+		}
+		for _, route := range snapshot.Models[item.ID].Routes {
+			channelID := route.ChannelModel.ChannelID
+			if !route.Route.Enabled || route.Route.Weight <= 0 || !access.allowsChannel(channelID) ||
+				!s.studioProtocolAvailable(route.ChannelModel) || s.logicalRouteBlocked(route) {
+				continue
+			}
+			if _, checked := channels[channelID]; !checked {
+				channels[channelID] = s.studioChannelConfigured(channelID)
+			}
+			if channels[channelID] {
+				result = append(result, studioModelView(item.ID, defaultString(item.Name, item.Code), item.Capability, item.CapabilitySpec))
+				break
+			}
+		}
+		if len(result) == 100 {
+			break
+		}
+	}
+	return result, nil
+}
+
+// Use the website's system catalog and its group and price filters. Only show
+// routes this Studio can execute with an installed protocol and credentials.
+func (s *Service) studioSystemModels(access *userGroupAccess, kind string) ([]StudioModel, error) {
+	channels, err := s.publicSystemChannelCatalog(access, nil)
+	if err != nil {
+		return nil, err
+	}
+	items := make([]PublicChannelModel, 0)
+	ids := make([]string, 0)
+	for _, channel := range channels {
+		if !s.studioChannelConfigured(channel.ID) {
+			continue
+		}
+		for _, item := range channel.Models {
+			if item.Capability == kind && item.Available && supdanceOpenAIID.MatchString(studioChannelModelPrefix+item.ID) {
+				items = append(items, item)
+				ids = append(ids, item.ID)
+			}
+		}
+	}
+	models, err := s.repo.ChannelModelsByIDs(ids)
+	if err != nil {
+		return nil, err
+	}
+	byID := make(map[string]model.ChannelModel, len(models))
+	for _, item := range models {
+		byID[item.ID] = item
+	}
+	result := make([]StudioModel, 0, min(100, len(items)))
+	for _, item := range items {
+		channelModel := byID[item.ID]
+		if !s.studioProtocolAvailable(channelModel) {
+			continue
+		}
+		spec, err := channelModelCapabilitySpec(channelModel, s.protocolRegistry())
+		if err != nil {
+			continue
+		}
+		result = append(result, studioModelView(studioChannelModelPrefix+item.ID, defaultString(item.DisplayName, item.ModelKey), kind, spec))
+		if len(result) == 100 {
+			break
+		}
+	}
+	return result, nil
+}
+
+func (s *Service) studioProtocolAvailable(channelModel model.ChannelModel) bool {
+	id := string(channelModel.Protocol)
+	if !channelModel.Enabled || strings.TrimSpace(id) == "" {
+		return false
+	}
+	release, err := selectModelRelease(s.protocolRegistry(), id, channelModel.ProtocolRelease, false)
+	return err == nil && validateGenerationInterfaceWithRegistry(release.Registry, channelModel.Capability, id) == nil
+}
+
+func (s *Service) studioChannelConfigured(id string) bool {
+	channel, err := s.repo.SystemChannel(id)
+	return err == nil && channel.Enabled && strings.TrimSpace(channel.BaseURL) != "" && strings.TrimSpace(channel.APIKey) != ""
+}
+
+func studioModelView(id, name, kind string, spec CapabilitySpec) StudioModel {
+	refs := spec.Inputs["image"]
+	result := StudioModel{ID: id, Name: truncateRunes(name, 160), Kind: kind,
+		Ratios: []string{}, Sizes: []string{}, Durations: []int{}, Counts: []int{}, MinReferences: refs.Min, MaxReferences: min(16, refs.Max)}
+	if kind == "video" {
+		result.Ratios = studioOptionStrings(spec.Options["size"])
+		result.Sizes = studioOptionStrings(spec.Options["vquality"])
+		result.Durations = studioOptionInts(spec.Options["videoSeconds"], 120)
+		return result
+	}
+	result.Counts = studioOptionInts(spec.Options["count"], 10)
+	if spec.ImageSize != nil && len(spec.ImageSize.Presets) > 0 {
+		for _, preset := range spec.ImageSize.Presets {
+			if preset.Size != "" {
+				result.Sizes = append(result.Sizes, preset.Size)
+			}
+		}
+		result.Sizes = uniqueNonEmpty(result.Sizes)
+	} else {
+		result.Sizes = studioOptionStrings(spec.Options["size"])
+		if len(result.Sizes) == 0 {
+			result.Ratios = studioOptionStrings(spec.Options["aspectRatio"])
+		}
+	}
+	result.Sizes = result.Sizes[:min(len(result.Sizes), 40)]
+	return result
+}
+
+func studioOptionStrings(option OptionConstraint) []string {
+	result := make([]string, 0)
+	for _, value := range option.Values {
+		if text, ok := value.(string); ok && len(text) <= 40 {
+			result = append(result, text)
+		}
+	}
+	return result[:min(len(result), 40)]
+}
+
+func studioOptionInts(option OptionConstraint, maxValue int) []int {
+	result := make([]int, 0)
+	for _, value := range option.Values {
+		if count, err := strconv.Atoi(fmt.Sprint(value)); err == nil && count >= 1 && count <= maxValue {
+			result = append(result, count)
+		}
+	}
+	if option.Min != nil && option.Max != nil && len(result) == 0 {
+		for n := 1; n <= maxValue; n++ {
+			if matchOptionConstraint("", option, n) {
+				result = append(result, n)
+			}
+		}
+	}
+	return result
+}
+
+func (s *Service) studioMediaFeature(kind string) error {
+	switch kind {
+	case "image":
+		return s.RequireFeature(FeatureImageWorkbench)
+	case "video":
+		return s.RequireFeature(FeatureVideoWorkbench)
+	default:
+		return BadAuthRequest("Invalid media type")
+	}
+}
+
+func (s *Service) studioPrepare(userID, id string, req StudioGeneration) (*model.Task, *model.BillingOrder, error) {
+	if err := s.studioMediaFeature(req.Kind); err != nil {
+		return nil, nil, err
+	}
+	prompt := strings.TrimSpace(req.Prompt)
+	if !supdanceOpenAIID.MatchString(req.Model) || prompt == "" || utf8.RuneCountInString(prompt) > 4000 ||
+		len(req.References) > 16 || len(req.Ratio) > 24 || len(req.Size) > 40 || req.Duration < 0 || req.Duration > 120 || req.Count < 0 || req.Count > 10 {
+		return nil, nil, BadAuthRequest("Invalid studio generation parameters")
+	}
+	switch req.Purpose {
+	case "general":
+	case "product-white", "product-scene":
+		if err := s.RequireFeature(FeatureEcommerce); err != nil {
+			return nil, nil, err
+		}
+		if req.Kind != "image" || len(req.References) == 0 {
+			return nil, nil, studioError(http.StatusBadRequest, "studio_invalid_reference")
+		}
+		brief := "Use the first reference image as the source of truth for the product. Preserve its shape, color, markings, and proportions."
+		if req.Purpose == "product-white" {
+			brief += " Place the product on a clean, solid white background."
+		} else {
+			brief += " Place the product in the requested scene."
+		}
+		prompt = brief + "\n\n" + prompt
+	case "reference-video":
+		if req.Kind != "video" || len(req.References) == 0 {
+			return nil, nil, studioError(http.StatusBadRequest, "studio_invalid_reference")
+		}
+	default:
+		return nil, nil, BadAuthRequest("Invalid studio purpose")
+	}
+	if req.ProjectID != "" {
+		if _, err := s.activeProjectForUser(userID, req.ProjectID); err != nil {
+			return nil, nil, supdanceOpenAINotFound(err)
+		}
+	}
+	meta := map[string]any{"source": "supdance-chatgpt-studio", "studioPurpose": req.Purpose}
+	refs := append([]string{}, req.References...)
+	if req.ShotID != "" {
+		var err error
+		refs, err = s.studioShotReferences(userID, req.ProjectID, req.ShotID, refs, meta)
+		if err != nil {
+			return nil, nil, err
+		}
+	}
+	images := make([]map[string]any, 0, len(refs))
+	seen := make(map[string]bool, len(refs))
+	for _, ref := range refs {
+		if seen[ref] || !supdanceOpenAIID.MatchString(ref) {
+			return nil, nil, studioError(http.StatusBadRequest, "studio_invalid_reference")
+		}
+		seen[ref] = true
+		res, err := s.repo.ResourceForUser(userID, ref)
+		if errors.Is(err, gorm.ErrRecordNotFound) || err == nil && (res.Status != model.ResourceStatusReady || res.Kind != "image") {
+			return nil, nil, studioError(http.StatusBadRequest, "studio_invalid_reference")
+		}
+		if err != nil {
+			return nil, nil, err
+		}
+		images = append(images, map[string]any{"id": ref, "storageKey": "resource:" + ref, "mimeType": res.MimeType,
+			"bytes": res.Size, "width": res.Width, "height": res.Height})
+	}
+	meta["studioReferenceIds"] = refs
+	options := map[string]any{}
+	if req.Kind == "image" {
+		if req.Size != "" {
+			options["size"] = req.Size
+		}
+		if req.Ratio != "" {
+			options["aspectRatio"] = req.Ratio
+		}
+		if req.Count > 0 {
+			options["count"] = req.Count
+		}
+	} else {
+		if req.Ratio != "" {
+			options["size"] = req.Ratio
+		}
+		if req.Size != "" {
+			options["vquality"] = req.Size
+		}
+		if req.Duration > 0 {
+			options["videoSeconds"] = strconv.Itoa(req.Duration)
+		}
+	}
+	preparation := &creationTaskPreparation{}
+	logicalModelID := req.Model
+	config := options
+	channelModelID, system := strings.CutPrefix(req.Model, studioChannelModelPrefix)
+	if system {
+		channelModel, err := s.repo.ChannelModel(channelModelID)
+		if errors.Is(err, gorm.ErrRecordNotFound) || err == nil && (channelModel.Capability != req.Kind || !s.studioProtocolAvailable(*channelModel)) {
+			return nil, nil, studioError(http.StatusUnprocessableEntity, "studio_model_unavailable")
+		}
+		if err != nil {
+			return nil, nil, err
+		}
+		config = maps.Clone(options)
+		config["channelId"] = channelModel.ChannelID
+		config["model"] = channelModel.ModelKey
+		logicalModelID = ""
+	}
+	input := map[string]any{"mode": req.Kind, "prompt": prompt, "config": config, "capabilityOptions": options,
+		"referenceImages": images, "metadata": meta}
+	source := "text"
+	if len(images) > 0 {
+		source = "image"
+	}
+	task, err := s.CreateTask(userID, CreateTaskRequest{ProjectID: req.ProjectID, Type: "canvas_" + req.Kind,
+		Prompt: prompt, LogicalModelID: logicalModelID, Operation: source + "_to_" + req.Kind, Input: input, workbenchKind: req.Kind,
+		creationPrepare: preparation})
+	if err != nil {
+		return nil, nil, err
+	}
+	if !system {
+		channelModelID = task.ChannelModelID
+	} else if task.ProtocolBindingJSON != "" {
+		binding, err := decodeTaskProtocolBinding(task.ProtocolBindingJSON)
+		if err != nil || binding.ChannelModelID != channelModelID {
+			return nil, nil, studioError(http.StatusUnprocessableEntity, "studio_model_unavailable")
+		}
+	}
+	channelModel, err := s.repo.ChannelModel(channelModelID)
+	if err != nil || !s.studioProtocolAvailable(*channelModel) || !s.studioChannelConfigured(channelModel.ChannelID) {
+		return nil, nil, studioError(http.StatusUnprocessableEntity, "studio_model_unavailable")
+	}
+	task.ID = id
+	if preparation.Order != nil {
+		preparation.Order.TaskID = id
+	}
+	return task, preparation.Order, nil
+}
+
+func studioRequestHash(req StudioSubmit) string {
+	data, _ := json.Marshal(req)
+	digest := sha256.Sum256(data)
+	return hex.EncodeToString(digest[:])
+}
+
+func studioQuoteSignature(secret []byte, userID string, generation StudioGeneration, quote StudioQuote, task *model.Task) string {
+	quote.ID = ""
+	mac := hmac.New(sha256.New, secret)
+	fmt.Fprintf(mac, "supdance-studio-v2\x00%s\x00%s\x00%s\x00", userID, task.LogicalModelRevisionID, studioRequestHash(StudioSubmit{generation, quote}))
+	if strings.HasPrefix(generation.Model, studioChannelModelPrefix) {
+		fmt.Fprint(mac, task.ProtocolBindingJSON, "\x00")
+	}
+	var input canvasGenerationInput
+	_ = json.Unmarshal([]byte(task.InputJSON), &input)
+	refs, _ := json.Marshal(input.ReferenceImages)
+	mac.Write(refs)
+	fmt.Fprint(mac, "\x00", stringValue(input.Metadata["studioDramaShotRevision"]))
+	return base64.RawURLEncoding.EncodeToString(mac.Sum(nil))
+}
+
+func (s *Service) StudioEstimate(userID string, secret []byte, req StudioGeneration) (StudioQuote, error) {
+	task, order, err := s.studioPrepare(userID, newID(), req)
+	if err != nil {
+		return StudioQuote{}, err
+	}
+	if order == nil || !studioBillableMode(order.BillingMode) {
+		return StudioQuote{}, studioError(http.StatusUnprocessableEntity, "studio_quote_required")
+	}
+	quote := StudioQuote{Microcredits: order.AmountMicrocredits, ExpiresAt: time.Now().Add(5 * time.Minute).UnixMilli(),
+		Estimated: order.BillingMode == "token" || order.BillingMode == imagebilling.Mode}
+	quote.ID = studioQuoteSignature(secret, userID, req, quote, task)
+	return quote, nil
+}
+
+func studioTaskID(userID, key string) string {
+	return uuid.NewSHA1(uuid.NameSpaceOID, []byte("supdance-studio-task\x00"+userID+"\x00"+key)).String()
+}
+
+func (s *Service) StudioOperation(userID, key string, req StudioSubmit) (StudioTask, error) {
+	if !supdanceOpenAIID.MatchString(key) {
+		return StudioTask{}, BadAuthRequest("Invalid request ID")
+	}
+	task, err := s.repo.TaskForUser(userID, studioTaskID(userID, key))
+	if errors.Is(err, gorm.ErrRecordNotFound) {
+		return StudioTask{}, NotFound("Studio task unavailable")
+	}
+	if err != nil {
+		return StudioTask{}, err
+	}
+	if task.SubmissionHash != studioRequestHash(req) {
+		return StudioTask{}, studioError(http.StatusConflict, "studio_idempotency_conflict")
+	}
+	return s.studioTaskView(*task)
+}
+
+func (s *Service) StudioFindTask(userID, key string) (StudioTask, error) {
+	if !supdanceOpenAIID.MatchString(key) {
+		return StudioTask{}, BadAuthRequest("Invalid request ID")
+	}
+	task, err := s.StudioTask(userID, studioTaskID(userID, key))
+	if !studioNotFound(err) {
+		return task, err
+	}
+	return s.StudioTask(userID, musicRequestTaskID(userID, key))
+}
+
+func (s *Service) StudioSubmit(userID string, secret []byte, key string, req StudioSubmit) (StudioTask, error) {
+	if previous, err := s.StudioOperation(userID, key, req); err == nil || !studioNotFound(err) {
+		return previous, err
+	}
+	if req.Quote.ExpiresAt <= time.Now().UnixMilli() || req.Quote.Microcredits < 0 {
+		return StudioTask{}, studioError(http.StatusConflict, "studio_quote_changed")
+	}
+	task, order, err := s.studioPrepare(userID, studioTaskID(userID, key), req.Generation)
+	if err != nil {
+		return StudioTask{}, err
+	}
+	if order == nil || order.AmountMicrocredits != req.Quote.Microcredits ||
+		!hmac.Equal([]byte(req.Quote.ID), []byte(studioQuoteSignature(secret, userID, req.Generation, req.Quote, task))) {
+		return StudioTask{}, studioError(http.StatusConflict, "studio_quote_changed")
+	}
+	if !studioBillableMode(order.BillingMode) {
+		return StudioTask{}, studioError(http.StatusUnprocessableEntity, "studio_quote_required")
+	}
+	var input map[string]any
+	if err := json.Unmarshal([]byte(task.InputJSON), &input); err != nil {
+		return StudioTask{}, err
+	}
+	if config, ok := input["config"].(map[string]any); ok {
+		if meta, ok := input["metadata"].(map[string]any); ok {
+			count, _ := strconv.Atoi(stringValue(config["count"]))
+			meta["studioExpectedOutputs"] = max(count, 1)
+		}
+	}
+	if err := s.protectTaskSecrets(input); err != nil {
+		return StudioTask{}, err
+	}
+	encoded, err := json.Marshal(input)
+	if err != nil {
+		return StudioTask{}, err
+	}
+	task.InputJSON, task.SubmissionHash = string(encoded), studioRequestHash(req)
+	task.BillingOrderID, task.AuthorizedChargeMicrocredits = order.ID, order.AmountMicrocredits
+	order.ChargeLimitSet, order.ChargeLimitMicrocredits = true, order.AmountMicrocredits
+	policy, err := s.RuntimePolicy()
+	if err != nil {
+		return StudioTask{}, err
+	}
+	if err := s.createTaskWithinStorageQuota(task, order, policy); err != nil {
+		if previous, lookupErr := s.StudioOperation(userID, key, req); !studioNotFound(lookupErr) {
+			return previous, lookupErr
+		}
+		if errors.Is(err, repository.ErrInsufficientCredits) {
+			return StudioTask{}, studioError(http.StatusPaymentRequired, "studio_entitlement_required")
+		}
+		return StudioTask{}, err
+	}
+	s.recordActivity(userID, "task", 1)
+	return s.studioTaskView(*task)
+}
+
+func studioNotFound(err error) bool {
+	var failure *AppError
+	return errors.As(err, &failure) && failure.Status == http.StatusNotFound
+}
+
+func studioBillableMode(mode string) bool {
+	return mode == "fixed_request" || mode == "per_second" || mode == "token" || mode == imagebilling.Mode
+}
+
+type StudioTask struct {
+	ID          string        `json:"id"`
+	ProjectID   string        `json:"projectId,omitempty"`
+	ShotID      string        `json:"shotId,omitempty"`
+	Kind        string        `json:"kind"`
+	Status      string        `json:"status"`
+	Stage       string        `json:"stage,omitempty"`
+	Error       string        `json:"error,omitempty"`
+	UpdatedAt   int64         `json:"updatedAt"`
+	Assets      []StudioAsset `json:"assets"`
+	References  []string      `json:"references,omitempty"`
+	ErrorDetail string        `json:"errorDetail,omitempty"`
+	Billing     string        `json:"billing"`
+}
+
+func (s *Service) StudioTask(userID, taskID string) (StudioTask, error) {
+	task, err := s.repo.TaskForUser(userID, taskID)
+	if errors.Is(err, gorm.ErrRecordNotFound) || err == nil && !studioTaskKind(task.WorkbenchKind) && !isStudioMusicTask(task.Type, task.InputJSON) {
+		return StudioTask{}, NotFound("Studio task unavailable")
+	}
+	if err != nil {
+		return StudioTask{}, err
+	}
+	return s.studioTaskView(*task)
+}
+
+func studioTaskKind(kind string) bool { return kind == "image" || kind == "video" || kind == "audio" }
+
+func (s *Service) StudioHistory(userID string) ([]StudioTask, error) {
+	items := []model.Task{}
+	for _, kind := range []string{"image", "video"} {
+		tasks, err := s.repo.TasksWithWorkbenchKind(userID, 40, "", false, kind)
+		if err != nil {
+			return nil, err
+		}
+		items = append(items, tasks...)
+	}
+	musicTasks, _, err := s.repo.MusicTaskPage(userID, "", 0, 40)
+	if err != nil {
+		return nil, err
+	}
+	items = append(items, musicTasks...)
+	sort.SliceStable(items, func(i, j int) bool { return items[i].UpdatedAt.After(items[j].UpdatedAt) })
+	result := make([]StudioTask, 0, min(40, len(items)))
+	for _, task := range items[:min(40, len(items))] {
+		// The history queries already enforce ownership, but their projections can omit UserID.
+		task.UserID = userID
+		view, err := s.studioTaskView(task)
+		if err != nil {
+			return nil, err
+		}
+		result = append(result, view)
+	}
+	return result, nil
+}
+
+func (s *Service) studioTaskView(task model.Task) (StudioTask, error) {
+	view := StudioTask{ID: task.ID, ProjectID: task.ProjectID, Kind: task.WorkbenchKind, Status: string(task.Status),
+		Stage: task.Stage, UpdatedAt: task.UpdatedAt.UnixMilli(), Billing: "unknown", Assets: []StudioAsset{}}
+	if isStudioMusicTask(task.Type, task.InputJSON) {
+		view.Kind = "audio"
+		if task.ResultJSON == "" && task.MediaRecoveryJSON != "" {
+			mediaTask, err := s.musicHostTaskView(&task)
+			if err != nil {
+				return view, err
+			}
+			task.ResultJSON = mediaTask.ResultJSON
+		}
+	}
+	var input canvasGenerationInput
+	_ = json.Unmarshal([]byte(task.InputJSON), &input)
+	if id := stringValue(input.Metadata["studioDramaShotId"]); task.ProjectID != "" && supdanceOpenAIID.MatchString(id) {
+		view.ShotID = id
+	}
+	if refs, ok := input.Metadata["studioReferenceIds"].([]any); ok {
+		for _, ref := range refs {
+			if id, ok := ref.(string); ok && supdanceOpenAIID.MatchString(id) {
+				view.References = append(view.References, id)
+			}
+		}
+	}
+	if task.BillingOrderID != "" {
+		order, err := s.repo.BillingOrder(task.BillingOrderID)
+		if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
+			return view, err
+		}
+		if order != nil && order.UserID == task.UserID {
+			switch order.Status {
+			case model.BillingStatusReserved, model.BillingStatusRunning:
+				view.Billing = "reserved"
+			case model.BillingStatusSettled, model.BillingStatusRefunded:
+				view.Billing = string(order.Status)
+			}
+		}
+	}
+	var raw any
+	if json.Unmarshal([]byte(task.ResultJSON), &raw) == nil {
+		ids := []string{}
+		studioResultResources(raw, &ids)
+		ids = uniqueNonEmpty(ids)
+		for index, id := range ids[:min(len(ids), 24)] {
+			resource, err := s.StudioAssetRecord(task.UserID, id)
+			if err != nil || resource.Kind != view.Kind {
+				continue
+			}
+			view.Assets = append(view.Assets, studioAssetView(resource, generationMediaAssetTitle(task, resource.Kind, index, len(ids))))
+		}
+	}
+	if task.Status == model.TaskStatusFailed {
+		view.Error = "generation_failed"
+		if diagnostic := taskExecutionDiagnostic(&task); diagnostic != nil {
+			view.ErrorDetail = diagnostic.SafeMessage
+		}
+		if len(view.Assets) > 0 {
+			view.Status = "partial"
+		}
+	} else if task.Status == model.TaskStatusSucceeded {
+		requestedCount, _ := strconv.Atoi(input.Config.Count)
+		if saved, ok := input.Metadata["studioExpectedOutputs"].(float64); ok {
+			requestedCount = int(saved)
+		}
+		count := max(requestedCount, 1)
+		if len(view.Assets) < count {
+			view.Status, view.Error = "failed", "outputs_missing"
+			if len(view.Assets) > 0 {
+				view.Status = "partial"
+			}
+		}
+	}
+	return view, nil
+}
+
+func studioResultResources(raw any, ids *[]string) {
+	switch item := raw.(type) {
+	case []any:
+		for _, child := range item {
+			studioResultResources(child, ids)
+		}
+	case map[string]any:
+		for _, key := range []string{"url", "dataUrl", "resultUrl", "outputUrl"} {
+			if id := resourceIDFromFileURL(stringValue(item[key])); id != "" {
+				*ids = append(*ids, id)
+			}
+		}
+		if id := stringValue(item["resourceId"]); supdanceOpenAIID.MatchString(id) {
+			*ids = append(*ids, id)
+		}
+		if key := stringValue(item["storageKey"]); strings.HasPrefix(key, "resource:") {
+			*ids = append(*ids, strings.TrimPrefix(key, "resource:"))
+		}
+		for _, key := range []string{"image", "video", "audio", "images", "videos", "audios", "output", "outputs", "result"} {
+			studioResultResources(item[key], ids)
+		}
+	}
+}
