@@ -24,7 +24,7 @@ def install(root, source):
         fcntl.flock(handle, fcntl.LOCK_EX | fcntl.LOCK_NB)
         runtime = root / "usr/local/lib/supdance-retention"
         runtime.mkdir(parents=True, exist_ok=True)
-        for name in ["retention.py", "verify_installation.py"]:
+        for name in ["retention.py", "verify_installation.py", "weekly_offsite.py"]:
             target = runtime / name
             temporary = target.with_suffix(".next")
             temporary.write_bytes((source / name).read_bytes())
