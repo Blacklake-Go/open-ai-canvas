@@ -295,7 +295,7 @@ TikTok Login Kit 仅申请 Web 的 `user.info.basic`，回调为 `/api/auth/soci
 ### 创作首页首屏
 
 - `web/src/application.tsx` 和 `web/src/router.tsx` 在直接打开创作首页时并行预取工作区和创作页。路由继续通过现有会话恢复和权限守卫决定何时渲染。
-- 构建时由 `web/build/static-ui-i18n.ts` 合并八语界面词典共享的键。运行时还原同一份词典，只有替换已生效的后台译文时才重建受覆盖的基础资源。
+- 生产构建在 `web/build/static-ui-i18n.ts` 按前端模块和语言生成静态界面词包。模块只请求当前语言，后台翻译管理页按需载入完整词表。原词条键和后台发布记录继续沿用。
 
 ### 上游 v1.8.7.2
 

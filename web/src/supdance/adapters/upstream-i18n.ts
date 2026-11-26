@@ -1,5 +1,6 @@
 import { i18n } from "@/i18n";
 import { toI18nextTemplate } from "@/i18n/interpolation";
+import { setPublishedInterfaceMessages } from "@/i18n/interface-packs";
 import { NATIVE_CATALOGS, expandCatalog } from "@/i18n/catalogs";
 import { SUPPORTED_LOCALES } from "@/i18n/locales";
 import { CREATION_CATALOGS, CREATION_NAMESPACE } from "@/supdance/plugins/i18n/creation-catalogs";
@@ -28,15 +29,22 @@ export function registerSupDanceTranslations(entries: SupDanceI18nEntry[]) {
             i18n.addResourceBundle(code, MODEL_NAMESPACE, { ...MODEL_CATALOGS[code] });
         }
         const resources: Record<string, string> = {};
+        const interfaceOverrides: Record<string, string> = {};
         for (const entry of entries) {
             const text = template(entry.translations[code]?.trim() || entry.translations["en-US"]?.trim() || entry.sourceText);
             resources[entry.key] = text;
+            if (entry.origin === "builtin") continue;
             const target = MANAGED_TRANSLATION_TARGETS.get(entry.key);
-            if (target && entry.origin !== "builtin") {
+            if (target) {
                 if (target.namespace !== "translation") i18n.addResourceBundle(code, target.namespace, { [target.key]: text }, true, true);
                 else i18n.addResource(code, target.namespace, target.key, text, { silent: true });
+            } else {
+                const interfaceKey = /^upstream\.managedUi\.([0-9a-f]{1,8})$/.exec(entry.key)?.[1];
+                const translated = entry.translations[code]?.trim();
+                if (interfaceKey && translated) interfaceOverrides[interfaceKey] = template(translated);
             }
         }
+        setPublishedInterfaceMessages(i18n, code, interfaceOverrides);
         i18n.removeResourceBundle(code, SUPDANCE_TRANSLATION_NAMESPACE);
         i18n.addResourceBundle(code, SUPDANCE_TRANSLATION_NAMESPACE, resources);
     }

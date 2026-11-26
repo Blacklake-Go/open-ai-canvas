@@ -1,7 +1,10 @@
 import { transformSync, type NodePath, type PluginObj } from "@babel/core";
 import * as t from "@babel/types";
+import { createHash } from "node:crypto";
 import type { Plugin } from "vite";
 import { interfaceTextKey } from "../src/i18n/message-key";
+import { SUPPORTED_LOCALES } from "../src/i18n/locales";
+import { toI18nextTemplate } from "../src/i18n/interpolation";
 import catalog from "../src/i18n/messages/interface.json";
 
 export type StaticUiMessage = { key: string; source: string; file: string; line: number };
@@ -199,9 +202,10 @@ export function transformStaticUi(source: string, file: string, options: { colle
             CallExpression(path) {
                 if (!t.isIdentifier(path.node.callee, { name: "interfaceText" }) || !t.isStringLiteral(path.node.arguments[0])) return;
                 const keyScope = t.isStringLiteral(path.node.arguments[2]) ? path.node.arguments[2].value : "";
-                if (options.collectOnly) register(path.node.arguments[0].value, [], path.node.loc?.start.line ?? 0, keyScope);
-                else if (eligible && path.findParent((parent) => parent.isJSXElement() || parent.isJSXFragment())) {
-                    register(path.node.arguments[0].value, [], path.node.loc?.start.line ?? 0, keyScope);
+                const text = path.node.arguments[0].value;
+                const inJsx = eligible && path.findParent((parent) => parent.isJSXElement() || parent.isJSXFragment());
+                if (options.collectOnly || inJsx || options.knownKeys?.has(interfaceTextKey(text, keyScope))) register(text, [], path.node.loc?.start.line ?? 0, keyScope);
+                if (!options.collectOnly && inJsx) {
                     markJsx(path);
                     changed = true;
                 }
@@ -225,6 +229,18 @@ export function transformStaticUi(source: string, file: string, options: { colle
 }
 
 const compactCatalogId = "\0supdance:compact-interface-catalog";
+const emptyCatalogId = "\0supdance:empty-interface-catalog";
+const packPrefix = "virtual:supdance-interface:";
+const commonPack = "common";
+const packMarker = (name: string, code: string) => `__supdance_ui_pack:${name}:${code}__`;
+
+function interfacePackName(file: string) {
+    const [directory, area, feature] = file.split("/src/").at(-1)!.split("/");
+    if (directory === "pages" && !area.includes(".")) return `page-${area}`;
+    if ((directory === "components" || directory === "lib") && area === "canvas") return "canvas";
+    if (directory === "supdance" && area === "plugins" && feature && !feature.includes(".")) return `plugin-${feature}`;
+    return "shared";
+}
 
 export function staticUiCatalogModule(catalogs: Record<string, Record<string, string>>) {
     const locales = Object.entries(catalogs);
@@ -246,7 +262,13 @@ export function staticUiCatalogModule(catalogs: Record<string, Record<string, st
 }
 
 export function staticUiI18n(): Plugin {
-    const knownKeys = new Set(Object.keys(catalog["zh-CN"]));
+    const catalogs: Record<string, Record<string, string>> = catalog;
+    const knownKeys = new Set(Object.keys(catalogs["zh-CN"]));
+    const packKeys = new Map<string, Set<string>>();
+    const requestedPacks = new Set<string>();
+    const packPaths = new Map<string, string>();
+    const assignedKeys = new Set<string>();
+    const commonKeys = new Set<string>();
     let productionBuild = false;
     return {
         name: "supdance-static-ui-i18n",
@@ -255,14 +277,69 @@ export function staticUiI18n(): Plugin {
             productionBuild = config.command === "build";
         },
         resolveId(source, importer) {
-            if (productionBuild && source === "./messages/interface.json" && importer?.replaceAll("\\", "/").endsWith("/src/i18n/catalogs.ts")) return compactCatalogId;
+            if (!productionBuild) return;
+            if (source.startsWith(packPrefix)) return "\0" + source;
+            if (!source.endsWith("/messages/interface.json")) return;
+            const file = importer?.replaceAll("\\", "/");
+            if (file?.endsWith("/src/i18n/catalogs.ts")) return emptyCatalogId;
+            if (file?.endsWith("/managed-interface-admin.ts")) return compactCatalogId;
         },
         load(id) {
-            if (id === compactCatalogId) return staticUiCatalogModule(catalog);
+            if (id === compactCatalogId) return staticUiCatalogModule(catalogs);
+            if (id === emptyCatalogId) return `export default ${JSON.stringify(Object.fromEntries(SUPPORTED_LOCALES.map(({ code }) => [code, {}])))};`;
+            if (!id.startsWith("\0" + packPrefix)) return;
+            const name = id.slice(packPrefix.length + 1);
+            requestedPacks.add(name);
+            const urls = SUPPORTED_LOCALES.map(({ code }) => `${JSON.stringify(code)}: new URL(/* @vite-ignore */ ${JSON.stringify(packMarker(name, code))}, import.meta.url).href`);
+            return `import { installInterfacePack } from "@/i18n"; await installInterfacePack({${urls.join(",")}});`;
         },
         transform(code, id) {
-            const result = transformStaticUi(code, id.split("?")[0], { knownKeys });
-            return result.changed ? { code: result.code, map: result.map } : null;
+            const file = id.split("?")[0].replaceAll("\\", "/");
+            const collectOnly = productionBuild && (file.includes("/supdance/plugins/i18n/admin/") || file.endsWith("/supdance/plugins/html-page-manager/templates/index.ts"));
+            const result = transformStaticUi(code, file, { knownKeys, collectOnly });
+            if (!productionBuild) return result.changed ? { code: result.code, map: result.map } : null;
+            if (/\/src\/(?:welcome-)?application\.tsx$/.test(file)) return { code: `${result.code}\nimport "${packPrefix}${commonPack}";`, map: result.map };
+            if (file.includes("/src/") && !file.includes("/node_modules/") && /\.[jt]sx?$/.test(file)) {
+                for (const [key] of code.matchAll(/\bmanagedUi\.[0-9a-f]{1,8}\b/g)) if (knownKeys.has(key)) commonKeys.add(key);
+            }
+            if (!result.messages.length) return result.changed ? { code: result.code, map: result.map } : null;
+            const group = interfacePackName(file);
+            const keys = packKeys.get(group) ?? new Set<string>();
+            for (const row of result.messages) {
+                if (interfaceTextKey(row.source) === row.key) commonKeys.add(row.key);
+                else {
+                    assignedKeys.add(row.key);
+                    keys.add(row.key);
+                }
+            }
+            if (!keys.size) return result.changed ? { code: result.code, map: result.map } : null;
+            packKeys.set(group, keys);
+            return { code: `${result.code}\nimport "${packPrefix}${group}";`, map: result.map };
+        },
+        buildEnd(error) {
+            if (error || !productionBuild) return;
+            // Hand-written lookups and historical keys remain available on every route.
+            for (const key of knownKeys) if (!assignedKeys.has(key)) commonKeys.add(key);
+            packKeys.set(commonPack, commonKeys);
+            for (const name of requestedPacks) {
+                const keys = packKeys.get(name)!;
+                for (const { code } of SUPPORTED_LOCALES) {
+                    const messages = Object.fromEntries(Array.from(keys, (key) => [key.slice("managedUi.".length), toI18nextTemplate(catalogs[code][key])]));
+                    const source = JSON.stringify(messages);
+                    const hash = createHash("sha256").update(source).digest("hex").slice(0, 16);
+                    const filename = `ui-${name}-${code}-${hash}.json`;
+                    packPaths.set(packMarker(name, code), `./${filename}`);
+                    this.emitFile({ type: "asset", fileName: `assets/${filename}`, source });
+                }
+            }
+        },
+        renderChunk(code) {
+            const next = code.replace(/__supdance_ui_pack:[\w-]+:[\w-]+__/g, (marker) => {
+                const path = packPaths.get(marker);
+                if (!path) throw new Error(`Interface translation asset missing for ${marker}`);
+                return path;
+            });
+            return next === code ? null : { code: next, map: null };
         },
     };
 }

@@ -325,6 +325,7 @@ export function useI18n() {
     const t = useMemo(
         () =>
             (key: string, params?: Record<string, string | number>, fallbackText?: string): string => {
+                if (key.startsWith("upstream.managedUi.")) return nativeT(key.slice("upstream.".length), { ...params, defaultValue: fallbackText ?? key }) as string;
                 const entry = dictionary.byKey.get(key) ?? dictionary.bySourceText.get(key.trim());
                 if (entry) return i18n.t(entry.key, { ...params, ns: SUPDANCE_TRANSLATION_NAMESPACE, keySeparator: false, lng: nativeLocale, defaultValue: fallbackText ?? key }) as string;
                 for (const rule of dictionary.templateRules) {

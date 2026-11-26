@@ -2012,7 +2012,7 @@ export default function CreatePage() {
                                 }}
                             >
                                 <ChevronDown size={14} />
-                                <span>{t("upstream.managedUi.47101a20", "回到底部")}</span>
+                                <span>{t("managedUi.47101a20", "回到底部")}</span>
                             </button>
                         ) : null}
                         <section className="creation-thread-composer">

@@ -8,6 +8,7 @@ import { MODEL_CATALOGS, MODEL_NAMESPACE } from "@/supdance/plugins/i18n/model-c
 import { walletCheckoutCatalog, WALLET_CHECKOUT_NAMESPACE } from "@/supdance/plugins/i18n/locales/wallet-checkout";
 import { toI18nextTemplate } from "./interpolation";
 import { DEFAULT_LOCALE, SUPPORTED_LOCALES, type AppLocale } from "./locales";
+import { INTERFACE_NAMESPACE, prepareInterfaceLocale, registerInterfacePack, type InterfacePack } from "./interface-packs";
 
 /** 每种语言 = 公共目录 + 各页面区域目录（区域名作为顶级命名空间）。 */
 function buildResources(): Resource {
@@ -34,6 +35,7 @@ void i18n.use(initReactI18next).init({
     resources: buildResources(),
     lng: useLocaleStore.getState().locale,
     fallbackLng: DEFAULT_LOCALE,
+    fallbackNS: INTERFACE_NAMESPACE,
     initAsync: false,
     returnNull: false,
     interpolation: { escapeValue: false },
@@ -41,8 +43,18 @@ void i18n.use(initReactI18next).init({
 });
 
 useLocaleStore.subscribe((state, previous) => {
-    if (state.locale !== previous.locale) void i18n.changeLanguage(state.locale);
+    if (state.locale === previous.locale) return;
+    const packsReady = prepareInterfaceLocale(i18n, state.locale);
+    if (!packsReady) void i18n.changeLanguage(state.locale);
+    else
+        void packsReady.then(() => {
+            if (useLocaleStore.getState().locale === state.locale) void i18n.changeLanguage(state.locale);
+        });
 });
+
+export function installInterfacePack(pack: InterfacePack) {
+    return registerInterfacePack(i18n, pack, useLocaleStore.getState().locale);
+}
 
 /** 当前界面语言；用于 Intl 日期与数字格式化。 */
 export function currentLocale(): AppLocale {

@@ -4,6 +4,9 @@ import { mkdtempSync, writeFileSync, rmSync, symlinkSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
 import { pathToFileURL } from "node:url";
+import i18next from "i18next";
+import { INTERFACE_NAMESPACE, prepareInterfaceLocale, registerInterfacePack, setPublishedInterfaceMessages } from "../../src/i18n/interface-packs";
+import { SUPPORTED_LOCALES, type AppLocale } from "../../src/i18n/locales";
 const dom = new Window({ url: "http://localhost/" });
 for (const [key, value] of Object.entries({ window: dom, document: dom.document, navigator: dom.navigator, HTMLElement: dom.HTMLElement, Element: dom.Element, Node: dom.Node, IS_REACT_ACT_ENVIRONMENT: true }))
     Object.defineProperty(globalThis, key, { configurable: true, writable: true, value });
@@ -49,6 +52,38 @@ test("compiled copy reacts to publication while retaining input nodes and busine
     } finally {
         await act(async () => root.unmount());
         host.remove();
+    }
+});
+
+test("page packs fetch the selected language and preserve published overrides across loading and rollback", async () => {
+    const instance = i18next.createInstance();
+    await instance.init({ lng: "en-US", fallbackLng: "en-US", fallbackNS: INTERFACE_NAMESPACE, resources: {} });
+    const files = (page: string) => Object.fromEntries(SUPPORTED_LOCALES.map(({ code }) => [code, `/${page}-${code}.json`])) as Record<AppLocale, string>;
+    const requests: string[] = [];
+    const originalFetch = globalThis.fetch;
+    globalThis.fetch = (async (url: string) => {
+        requests.push(url);
+        return Response.json(url.startsWith("/home-") ? { abc: url.includes("en-US") ? "Welcome" : "Bienvenue" } : { def: "Settings" });
+    }) as typeof fetch;
+    try {
+        setPublishedInterfaceMessages(instance, "en-US", { abc: "Published homepage" });
+        const home = files("home");
+        await Promise.all([registerInterfacePack(instance, home, "en-US"), registerInterfacePack(instance, home, "en-US")]);
+        expect(requests).toEqual(["/home-en-US.json"]);
+        expect(instance.t("managedUi.abc")).toBe("Published homepage");
+        setPublishedInterfaceMessages(instance, "en-US", {});
+        expect(instance.t("managedUi.abc")).toBe("Welcome");
+
+        await prepareInterfaceLocale(instance, "fr-FR");
+        await instance.changeLanguage("fr-FR");
+        expect(instance.t("managedUi.abc")).toBe("Bienvenue");
+        expect(requests).toEqual(["/home-en-US.json", "/home-fr-FR.json"]);
+
+        await registerInterfacePack(instance, files("settings"), "fr-FR");
+        expect(instance.t("managedUi.def")).toBe("Settings");
+        expect(requests.at(-1)).toBe("/settings-fr-FR.json");
+    } finally {
+        globalThis.fetch = originalFetch;
     }
 });
 afterAll(async () => {
