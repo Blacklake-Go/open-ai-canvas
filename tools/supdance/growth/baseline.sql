@@ -11,10 +11,13 @@ WITH bounds AS (
     FROM users u CROSS JOIN bounds b
     WHERE u.role = 'user' AND u.created_at >= b.since AND u.created_at < b.until
 ), attempts AS (
-    SELECT c.id, t.type, t.status, t.completed_at
+    SELECT c.id, t.id AS task_id, t.type, t.status, t.created_at, t.completed_at
     FROM cohort c JOIN tasks t ON t.user_id = c.id CROSS JOIN bounds b
     WHERE t.type IN ('canvas_text', 'canvas_image', 'canvas_video', 'canvas_audio')
       AND t.created_at >= c.created_at AND t.created_at < b.until
+), first_attempt AS (
+    SELECT DISTINCT ON (id) id, type, status, completed_at
+    FROM attempts ORDER BY id, created_at, task_id
 ), won AS (
     SELECT id, MIN(completed_at) AS first_at
     FROM attempts CROSS JOIN bounds b
@@ -58,9 +61,15 @@ WITH bounds AS (
            COUNT(a.id) FILTER (WHERE a.attempted) AS attempted,
            COUNT(a.id) FILTER (WHERE a.first_at IS NOT NULL) AS first_success,
            COUNT(a.id) FILTER (WHERE a.created_at <= b.until - 1) AS eligible_24h,
-           COUNT(a.id) FILTER (WHERE a.created_at <= b.until - 1 AND a.first_at < a.created_at + interval '24 hours') AS activated_24h
+           COUNT(a.id) FILTER (WHERE a.created_at <= b.until - 1 AND a.first_at < a.created_at + interval '24 hours') AS activated_24h,
+           COUNT(a.id) FILTER (WHERE f.type = 'canvas_image') AS image_first_attempted,
+           COUNT(a.id) FILTER (WHERE f.type = 'canvas_image' AND f.status = 'succeeded' AND f.completed_at < b.until) AS image_first_succeeded,
+           COUNT(a.id) FILTER (WHERE f.type = 'canvas_image' AND f.status = 'failed' AND f.completed_at < b.until) AS image_first_failed,
+           COUNT(a.id) FILTER (WHERE f.type = 'canvas_image' AND f.status = 'failed' AND f.completed_at < b.until
+                               AND a.first_at IS NOT NULL) AS image_first_failed_then_succeeded
     FROM bounds b CROSS JOIN LATERAL generate_series(b.until - 7, b.until - 1, interval '1 day') AS d(signup_day)
     LEFT JOIN accounts a ON a.created_at >= d.signup_day AND a.created_at < d.signup_day + interval '1 day'
+    LEFT JOIN first_attempt f ON f.id = a.id
     GROUP BY 1
 ), task_outcomes AS (
     SELECT t.type, COUNT(*) FILTER (WHERE t.status = 'succeeded') AS succeeded,
