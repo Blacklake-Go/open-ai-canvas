@@ -441,7 +441,11 @@ func (s *Service) StudioFindTask(userID, key string) (StudioTask, error) {
 	if !supdanceOpenAIID.MatchString(key) {
 		return StudioTask{}, BadAuthRequest("Invalid request ID")
 	}
-	return s.StudioTask(userID, studioTaskID(userID, key))
+	task, err := s.StudioTask(userID, studioTaskID(userID, key))
+	if !studioNotFound(err) {
+		return task, err
+	}
+	return s.StudioTask(userID, musicRequestTaskID(userID, key))
 }
 
 func (s *Service) StudioSubmit(userID string, secret []byte, key string, req StudioSubmit) (StudioTask, error) {
@@ -514,6 +518,7 @@ type StudioTask struct {
 	ShotID      string        `json:"shotId,omitempty"`
 	Kind        string        `json:"kind"`
 	Status      string        `json:"status"`
+	Stage       string        `json:"stage,omitempty"`
 	Error       string        `json:"error,omitempty"`
 	UpdatedAt   int64         `json:"updatedAt"`
 	Assets      []StudioAsset `json:"assets"`
@@ -524,7 +529,7 @@ type StudioTask struct {
 
 func (s *Service) StudioTask(userID, taskID string) (StudioTask, error) {
 	task, err := s.repo.TaskForUser(userID, taskID)
-	if errors.Is(err, gorm.ErrRecordNotFound) || err == nil && !studioTaskKind(task.WorkbenchKind) {
+	if errors.Is(err, gorm.ErrRecordNotFound) || err == nil && !studioTaskKind(task.WorkbenchKind) && !isStudioMusicTask(task.Type, task.InputJSON) {
 		return StudioTask{}, NotFound("Studio task unavailable")
 	}
 	if err != nil {
@@ -533,7 +538,7 @@ func (s *Service) StudioTask(userID, taskID string) (StudioTask, error) {
 	return s.studioTaskView(*task)
 }
 
-func studioTaskKind(kind string) bool { return kind == "image" || kind == "video" }
+func studioTaskKind(kind string) bool { return kind == "image" || kind == "video" || kind == "audio" }
 
 func (s *Service) StudioHistory(userID string) ([]StudioTask, error) {
 	items := []model.Task{}
@@ -544,6 +549,11 @@ func (s *Service) StudioHistory(userID string) ([]StudioTask, error) {
 		}
 		items = append(items, tasks...)
 	}
+	musicTasks, _, err := s.repo.MusicTaskPage(userID, "", 0, 40)
+	if err != nil {
+		return nil, err
+	}
+	items = append(items, musicTasks...)
 	sort.SliceStable(items, func(i, j int) bool { return items[i].UpdatedAt.After(items[j].UpdatedAt) })
 	result := make([]StudioTask, 0, min(40, len(items)))
 	for _, task := range items[:min(40, len(items))] {
@@ -558,7 +568,17 @@ func (s *Service) StudioHistory(userID string) ([]StudioTask, error) {
 
 func (s *Service) studioTaskView(task model.Task) (StudioTask, error) {
 	view := StudioTask{ID: task.ID, ProjectID: task.ProjectID, Kind: task.WorkbenchKind, Status: string(task.Status),
-		UpdatedAt: task.UpdatedAt.UnixMilli(), Billing: "unknown", Assets: []StudioAsset{}}
+		Stage: task.Stage, UpdatedAt: task.UpdatedAt.UnixMilli(), Billing: "unknown", Assets: []StudioAsset{}}
+	if isStudioMusicTask(task.Type, task.InputJSON) {
+		view.Kind = "audio"
+		if task.ResultJSON == "" && task.MediaRecoveryJSON != "" {
+			mediaTask, err := s.musicHostTaskView(&task)
+			if err != nil {
+				return view, err
+			}
+			task.ResultJSON = mediaTask.ResultJSON
+		}
+	}
 	var input canvasGenerationInput
 	_ = json.Unmarshal([]byte(task.InputJSON), &input)
 	if id := stringValue(input.Metadata["studioDramaShotId"]); task.ProjectID != "" && supdanceOpenAIID.MatchString(id) {
@@ -640,7 +660,7 @@ func studioResultResources(raw any, ids *[]string) {
 		if key := stringValue(item["storageKey"]); strings.HasPrefix(key, "resource:") {
 			*ids = append(*ids, strings.TrimPrefix(key, "resource:"))
 		}
-		for _, key := range []string{"image", "video", "images", "videos", "output", "outputs", "result"} {
+		for _, key := range []string{"image", "video", "audio", "images", "videos", "audios", "output", "outputs", "result"} {
 			studioResultResources(item[key], ids)
 		}
 	}

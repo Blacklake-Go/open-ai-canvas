@@ -13,6 +13,7 @@ import (
 
 type UserAssetPageFilter struct {
 	Kind          string
+	Kinds         []string
 	Category      string
 	FolderID      *string
 	Uncategorized bool
@@ -59,6 +60,8 @@ func (r *Repository) UserAssetFacets(userID string, status string) ([]UserAssetF
 func userAssetFilteredQuery(query *gorm.DB, filter UserAssetPageFilter, includeSearch bool) *gorm.DB {
 	if value := strings.TrimSpace(filter.Kind); value != "" {
 		query = query.Where("kind = ?", value)
+	} else if len(filter.Kinds) != 0 {
+		query = query.Where("kind IN ?", filter.Kinds)
 	}
 	if value := strings.TrimSpace(filter.Category); value != "" {
 		query = query.Where("category = ?", value)

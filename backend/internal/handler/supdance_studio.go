@@ -9,6 +9,7 @@ import (
 	"mime"
 	"net/http"
 	"os"
+	"strconv"
 	"strings"
 	"time"
 
@@ -103,6 +104,31 @@ func registerSupdanceStudioRoutes(r *gin.RouterGroup, svc *service.Service, secr
 		c.Set(supdanceOpenAISubject, id)
 	})
 	identity := func(c *gin.Context) string { return c.GetString(supdanceOpenAISubject) }
+	business.GET("/music/models", func(c *gin.Context) {
+		value, err := svc.StudioMusicModels(c.Request.Context(), identity(c))
+		supdanceOpenAIResult(c, value, err)
+	})
+	business.POST("/music/quote", func(c *gin.Context) {
+		var request service.StudioMusicDraft
+		if supdanceOpenAIDecode(c, &request) {
+			value, err := svc.StudioMusicEstimate(c.Request.Context(), identity(c), secret, request)
+			supdanceOpenAIResult(c, value, err)
+		}
+	})
+	business.POST("/music/tasks", func(c *gin.Context) {
+		var request service.StudioMusicSubmit
+		if supdanceOpenAIDecode(c, &request) {
+			value, err := svc.StudioMusicCreate(c.Request.Context(), identity(c), secret, c.GetHeader("Idempotency-Key"), request)
+			supdanceOpenAIResult(c, value, err)
+		}
+	})
+	business.POST("/music/operations/:id", func(c *gin.Context) {
+		var request service.StudioMusicSubmit
+		if supdanceOpenAIDecode(c, &request) {
+			value, err := svc.StudioMusicOperation(identity(c), c.Param("id"), request)
+			supdanceOpenAIResult(c, value, err)
+		}
+	})
 	business.GET("/models/:kind", func(c *gin.Context) {
 		value, err := svc.StudioModels(identity(c), c.Param("kind"))
 		supdanceOpenAIResult(c, value, err)
@@ -147,6 +173,15 @@ func registerSupdanceStudioRoutes(r *gin.RouterGroup, svc *service.Service, secr
 	})
 	business.GET("/assets", func(c *gin.Context) {
 		value, err := svc.StudioAssets(identity(c))
+		supdanceOpenAIResult(c, value, err)
+	})
+	business.GET("/asset-library", func(c *gin.Context) {
+		page, err := strconv.Atoi(c.DefaultQuery("page", "1"))
+		if err != nil {
+			c.Status(http.StatusBadRequest)
+			return
+		}
+		value, err := svc.StudioAssetLibrary(identity(c), c.Query("kind"), c.Query("query"), page)
 		supdanceOpenAIResult(c, value, err)
 	})
 	business.GET("/assets/:id", func(c *gin.Context) {

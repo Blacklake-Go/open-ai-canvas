@@ -166,18 +166,28 @@ func validateSiteMusicRequest(req music.MusicGenerationRequest, cap music.ModelC
 	return nil
 }
 
+func musicRequestIdentity(userID string, req music.MusicGenerationRequest) (string, string, error) {
+	req.UserID, req.TaskID = "", ""
+	encoded, err := json.Marshal(req)
+	if err != nil {
+		return "", "", err
+	}
+	sum := sha256.Sum256(encoded)
+	return musicRequestTaskID(userID, req.IdempotencyNonce), hex.EncodeToString(sum[:]), nil
+}
+
+func musicRequestTaskID(userID, key string) string {
+	return uuid.NewSHA1(uuid.NameSpaceOID, []byte("supdance-music:"+userID+":"+key)).String()
+}
+
 func (s *Service) submitSiteMusicTask(ctx context.Context, userID string, req music.MusicGenerationRequest) (*music.MusicGenerationResponse, error) {
 	if len(req.IdempotencyNonce) < 8 || len(req.IdempotencyNonce) > 128 || req.QuotedMicrocredits == nil || *req.QuotedMicrocredits < 0 {
 		return nil, BadAuthRequest("A current quote and submission ID are required.")
 	}
-	req.UserID, req.TaskID = "", ""
-	encoded, err := json.Marshal(req)
+	id, fingerprint, err := musicRequestIdentity(userID, req)
 	if err != nil {
 		return nil, err
 	}
-	sum := sha256.Sum256(encoded)
-	fingerprint := hex.EncodeToString(sum[:])
-	id := uuid.NewSHA1(uuid.NameSpaceOID, []byte("supdance-music:"+userID+":"+req.IdempotencyNonce)).String()
 	if existing, err := s.repo.TaskForUser(userID, id); err == nil {
 		var input struct {
 			Metadata struct {

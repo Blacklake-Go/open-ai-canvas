@@ -3,6 +3,7 @@ package app
 import (
 	"bytes"
 	"crypto/sha256"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"image"
@@ -14,6 +15,7 @@ import (
 	"gorm.io/gorm"
 	"yingce/backend/internal/assets"
 	"yingce/backend/internal/model"
+	"yingce/backend/internal/repository"
 )
 
 type StudioAsset struct {
@@ -33,7 +35,7 @@ func studioAssetView(resource *model.Resource, name string) StudioAsset {
 		}
 		return r
 	}, base)
-	extension := map[string]string{"image/jpeg": ".jpg", "image/png": ".png", "image/webp": ".webp", "image/gif": ".gif", "image/avif": ".avif", "video/mp4": ".mp4", "video/webm": ".webm", "video/quicktime": ".mov"}[resource.MimeType]
+	extension := map[string]string{"image/jpeg": ".jpg", "image/png": ".png", "image/webp": ".webp", "image/gif": ".gif", "image/avif": ".avif", "video/mp4": ".mp4", "video/webm": ".webm", "video/quicktime": ".mov", "audio/mpeg": ".mp3", "audio/mp4": ".m4a", "audio/wav": ".wav", "audio/x-wav": ".wav", "audio/ogg": ".ogg", "audio/flac": ".flac"}[resource.MimeType]
 	if extension != "" && !strings.EqualFold(path.Ext(base), extension) {
 		base += extension
 	}
@@ -76,6 +78,47 @@ func (s *Service) StudioAssets(userID string) ([]StudioAsset, error) {
 		}
 	}
 	return result, err
+}
+
+type StudioAssetPage struct {
+	Assets   []StudioAsset `json:"assets"`
+	NextPage int           `json:"nextPage,omitempty"`
+}
+
+func (s *Service) StudioAssetLibrary(userID, kind, query string, page int) (StudioAssetPage, error) {
+	if (kind != "" && !studioTaskKind(kind)) || page < 1 || page > 10000 || len(query) > 160 {
+		return StudioAssetPage{}, BadAuthRequest("Invalid asset filters")
+	}
+	const pageSize = 24
+	items, total, err := s.repo.UserAssetsPage(userID, page, pageSize, repository.UserAssetPageFilter{
+		Kind: kind, Kinds: []string{"image", "video", "audio"}, Status: "active", Query: query,
+	})
+	result := StudioAssetPage{Assets: []StudioAsset{}}
+	if err != nil {
+		return result, err
+	}
+	for _, item := range items {
+		var payload struct{ Data any }
+		if json.Unmarshal(clientAssetListPayload(item), &payload) != nil {
+			continue
+		}
+		ids := []string{}
+		studioResultResources(payload.Data, &ids)
+		for _, id := range ids {
+			resource, err := s.StudioAssetRecord(userID, id)
+			if err == nil && resource.Kind == item.Kind {
+				result.Assets = append(result.Assets, studioAssetView(resource, item.Title))
+				break
+			}
+			if err != nil && !studioNotFound(err) {
+				return result, err
+			}
+		}
+	}
+	if page < 10000 && int64(page*pageSize) < total {
+		result.NextPage = page + 1
+	}
+	return result, nil
 }
 
 func (s *Service) StudioUpload(userID, mime, filename string, data []byte) (StudioAsset, error) {

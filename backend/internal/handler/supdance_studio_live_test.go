@@ -43,6 +43,10 @@ func TestSupdanceStudioLiveBridge(t *testing.T) {
 		bun = "bun"
 	}
 	clip := makeStudioFixtureVideo(t)
+	audio, err := exec.CommandContext(t.Context(), "ffmpeg", "-loglevel", "error", "-f", "lavfi", "-i", "sine=frequency=523:duration=1", "-c:a", "libmp3lame", "-f", "mp3", "pipe:1").Output()
+	if err != nil {
+		t.Fatalf("create audio fixture: %v", err)
+	}
 	t.Setenv("CANVAS_ALLOWED_PRIVATE_UPSTREAM_HOSTS", "127.0.0.1")
 	gin.SetMode(gin.TestMode)
 	dir := t.TempDir()
@@ -65,8 +69,33 @@ func TestSupdanceStudioLiveBridge(t *testing.T) {
 	const fixtureReference = "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+aJ1sAAAAASUVORK5CYII="
 	var productCalls, partialCalls, shotCalls, failedCalls atomic.Int32
 	var videoCreates, videoPolls, videoFiles atomic.Int32
+	var musicCreates, musicPolls, musicFiles atomic.Int32
 	upstream := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
 		switch req.Method + " " + req.URL.Path {
+		case "POST /openapi/v2/rhart-audio/suno-v6/single":
+			musicCreates.Add(1)
+			var input struct {
+				Description  string
+				Instrumental string `json:"make_instrumental"`
+			}
+			if json.NewDecoder(req.Body).Decode(&input) != nil || input.Description != "Studio chamber quartet" || input.Instrumental != "true" {
+				t.Error("music provider received incorrect input")
+				w.WriteHeader(http.StatusBadRequest)
+				return
+			}
+			w.Header().Set("Content-Type", "application/json")
+			_, _ = io.WriteString(w, `{"taskId":"music-fixture","status":"QUEUED"}`)
+			return
+		case "POST /openapi/v2/query":
+			musicPolls.Add(1)
+			w.Header().Set("Content-Type", "application/json")
+			_, _ = io.WriteString(w, `{"taskId":"music-fixture","status":"SUCCESS","results":[{"url":"http://`+req.Host+`/music-fixture.mp3"}]}`)
+			return
+		case "GET /music-fixture.mp3":
+			musicFiles.Add(1)
+			w.Header().Set("Content-Type", "audio/mpeg")
+			_, _ = w.Write(audio)
+			return
 		case "POST /v1beta/models/veo-fixture:predictLongRunning":
 			videoCreates.Add(1)
 			var input struct {
@@ -220,15 +249,17 @@ func TestSupdanceStudioLiveBridge(t *testing.T) {
 	}))
 	t.Cleanup(bridge.Close)
 	videoDigest := sha256.Sum256(clip)
+	audioDigest := sha256.Sum256(audio)
 	request, err := json.Marshal(map[string]string{
 		"url": bridge.URL + "/api/supdance-openai", "secret": secretHex, "partnerSecret": partnerSecretHex,
 		"projectId": project.ID, "castId": cast.ID, "castAssetId": castAsset.ID,
 		"videoSHA256": hex.EncodeToString(videoDigest[:]),
+		"audioSHA256": hex.EncodeToString(audioDigest[:]),
 	})
 	if err != nil {
 		t.Fatal(err)
 	}
-	ctx, cancel := context.WithTimeout(context.Background(), 80*time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), 120*time.Second)
 	defer cancel()
 	cmd := exec.CommandContext(ctx, bun, "test/studio-live.ts")
 	cmd.Dir = root
@@ -261,23 +292,28 @@ func TestSupdanceStudioLiveBridge(t *testing.T) {
 	if creates, polls, files := videoCreates.Load(), videoPolls.Load(), videoFiles.Load(); creates != 1 || polls != 1 || files != 1 {
 		t.Errorf("expected one video create, status poll, and result fetch, got %d/%d/%d", creates, polls, files)
 	}
+	if creates, polls, files := musicCreates.Load(), musicPolls.Load(), musicFiles.Load(); creates != 1 || polls != 1 || files != 1 {
+		t.Errorf("expected one music create, status poll, and result fetch, got %d/%d/%d", creates, polls, files)
+	}
 	var orders []model.BillingOrder
 	if err := db.Where("user_id = ?", "alice").Find(&orders).Error; err != nil {
 		t.Fatal(err)
 	}
-	settledImages, settledVideos, refunded := 0, 0, 0
+	settledImages, settledVideos, settledMusic, refunded := 0, 0, 0, 0
 	for _, order := range orders {
 		switch {
 		case order.Status == model.BillingStatusSettled && order.ActualAmountMicrocredits == 100:
 			settledImages++
 		case order.Status == model.BillingStatusSettled && order.ActualAmountMicrocredits == 200:
 			settledVideos++
+		case order.Status == model.BillingStatusSettled && order.ActualAmountMicrocredits == 300:
+			settledMusic++
 		case order.Status == model.BillingStatusRefunded && order.ActualAmountMicrocredits == 0:
 			refunded++
 		}
 	}
-	if len(orders) != 5 || settledImages != 3 || settledVideos != 1 || refunded != 1 {
-		t.Fatalf("expected three image settlements, one video settlement and one refund, got %d orders (%d/%d/%d)", len(orders), settledImages, settledVideos, refunded)
+	if len(orders) != 6 || settledImages != 3 || settledVideos != 1 || settledMusic != 1 || refunded != 1 {
+		t.Fatalf("expected image/video/music settlements and one refund, got %d orders (%d/%d/%d/%d)", len(orders), settledImages, settledVideos, settledMusic, refunded)
 	}
 }
 
@@ -331,6 +367,9 @@ func seedStudioLiveModels(t *testing.T, db *gorm.DB, upstream string) {
 		&model.ChannelModelPriceTier{ID: "studio-e2e-tier", ChannelModelID: "studio-e2e-channel-model", SelectorKey: "{}", SelectorJSON: "{}", BillingMode: "fixed_request", UnitPriceMicrocredits: 100, PriceConfigured: true, Enabled: true},
 		&model.ChannelModel{ID: "studio-e2e-video-channel-model", ChannelID: "studio-e2e-channel", ModelKey: fixtureVideoModel, ProviderModelKey: fixtureVideoModel, Capability: "video", Protocol: fixtureVideoProtocol, Enabled: true, CapabilityConfigJSON: encode(videoProfile), BillingMode: "per_second", PriceConfigured: true},
 		&model.ChannelModelPriceTier{ID: "studio-e2e-video-tier", ChannelModelID: "studio-e2e-video-channel-model", SelectorKey: "{}", SelectorJSON: "{}", BillingMode: "per_second", UnitPriceMicrocredits: 50, PriceConfigured: true, Enabled: true},
+		&model.ChannelModel{ID: "studio-e2e-music", ChannelID: "studio-e2e-channel", ModelKey: "studio-music", ProviderModelKey: "rhart-audio/suno-v6/single", DisplayName: "Music fixture", Capability: "audio", Protocol: "runninghub-standard-audio-suno", Enabled: true, BillingMode: "fixed_request", PriceConfigured: true},
+		&model.PluginPlatformState{PluginID: "supdance-music-generation", Available: true},
+		&model.ChannelModelPriceTier{ID: "studio-e2e-music-tier", ChannelModelID: "studio-e2e-music", SelectorKey: "{}", SelectorJSON: "{}", BillingMode: "fixed_request", UnitPriceMicrocredits: 300, PriceConfigured: true, Enabled: true},
 		&model.ChannelModel{ID: "studio-e2e-missing-channel-model", ChannelID: "studio-e2e-channel", ModelKey: "missing-video", Capability: "video", Protocol: "custom-video", Enabled: true, CapabilityConfigJSON: encode(videoProfile), BillingMode: "per_second", PriceConfigured: true},
 		&model.ChannelModelPriceTier{ID: "studio-e2e-missing-tier", ChannelModelID: "studio-e2e-missing-channel-model", SelectorKey: "{}", SelectorJSON: "{}", BillingMode: "per_second", UnitPriceMicrocredits: 50, PriceConfigured: true, Enabled: true},
 	} {
