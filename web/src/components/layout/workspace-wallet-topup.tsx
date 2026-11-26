@@ -9,10 +9,10 @@ import { currentLocale, translate } from "@/i18n";
 import { accountStorageMeter, accountStorageStateMessage, formatStorageCapacity, formatStorageDate, formatStorageDuration } from "@/lib/account-storage-usage";
 import { estimatePaymentCharge, type PaymentOption } from "@/lib/payment-options";
 import { cn } from "@/lib/utils";
-import { formatPaymentAmount, type TopupProduct, type TopupProductKind } from "@/services/api/payments";
+import { formatPaymentAmount, type TopupProduct, type TopupProductKind, type WaffoIconStyle } from "@/services/api/payments";
 import type { AccountFileStorageUsage } from "@/services/api/resources";
 import { storageGrantActive, type UserStorageGrant } from "@/services/api/storage-grants";
-import { paymentBrandKey, topupCreditPresentation } from "@/supdance/wallet-presentation";
+import { paymentBrandKey, topupCreditPresentation, walletPaymentIcon } from "@/supdance/wallet-presentation";
 
 import "./workspace-wallet-topup.css";
 
@@ -162,6 +162,7 @@ export function WalletTopupPanel({
     products,
     paymentOptions,
     usdCnyRate,
+    waffoIconStyle,
     focusKind,
     focusToken,
     selectedProduct,
@@ -180,6 +181,7 @@ export function WalletTopupPanel({
     paymentOptions: PaymentOption[];
     /** 1 USD 兑换的 CNY，用于预估跨币种渠道的实付金额。 */
     usdCnyRate?: string;
+    waffoIconStyle?: WaffoIconStyle;
     /** 从容量入口进入时滚动到对应分组；focusToken 变化时重新定位。 */
     focusKind?: TopupProductKind;
     focusToken?: number;
@@ -272,6 +274,7 @@ export function WalletTopupPanel({
                                 // 渠道结算货币与商品不同且未配置汇率时无法换算，入口禁用并说明原因。
                                 const unavailable = Boolean(selectedProduct && !chargeFor(option));
                                 const brand = paymentBrandKey(option);
+                                const icon = walletPaymentIcon(option, waffoIconStyle);
                                 return (
                                     <button
                                         key={option.key}
@@ -284,7 +287,7 @@ export function WalletTopupPanel({
                                         onClick={() => onSelectOption(option.key)}
                                     >
                                         <span aria-hidden="true">
-                                            <PaymentBrandIcon providerId={option.providerId} icon={option.icon} compact />
+                                            <PaymentBrandIcon providerId={option.providerId} icon={icon} compact />
                                         </span>
                                         {brand ? t(`supdance-wallet:brand.${brand}`) : option.name}
                                     </button>

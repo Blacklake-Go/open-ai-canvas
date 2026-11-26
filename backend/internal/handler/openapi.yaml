@@ -254,6 +254,24 @@ paths:
           description: 未登录
         "400":
           description: 分页参数无效
+  /admin/payments/providers/waffo-pancake/icon:
+    put:
+      tags: [admin]
+      summary: 更新 Waffo Pancake 的充值页支付图标
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [style]
+              properties:
+                style: { type: string, enum: [wallets, original] }
+      responses:
+        "200": { description: data.style 包含已保存的图标样式 }
+        "400": { $ref: "#/components/responses/Error" }
+        "401": { $ref: "#/components/responses/Error" }
+        "403": { $ref: "#/components/responses/Error" }
   /admin/api-logs/{id}:
     get:
       tags: [admin]

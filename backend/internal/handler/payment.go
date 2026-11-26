@@ -252,6 +252,25 @@ func RegisterPaymentRoutes(r *gin.RouterGroup, svc *service.Service) {
 		}
 		ok(c, gin.H{"settings": settings})
 	})
+	admin.PUT("/providers/waffo-pancake/icon", func(c *gin.Context) {
+		user, err := currentUser(c, svc)
+		if err != nil {
+			failService(c, err)
+			return
+		}
+		var request struct {
+			Style string `json:"style" binding:"required"`
+		}
+		if err := c.ShouldBindJSON(&request); err != nil {
+			fail(c, http.StatusBadRequest, err)
+			return
+		}
+		if err := svc.UpdateWaffoIconStyle(user, request.Style); err != nil {
+			failService(c, err)
+			return
+		}
+		ok(c, gin.H{"style": request.Style})
+	})
 	admin.GET("/providers", func(c *gin.Context) {
 		user, err := currentUser(c, svc)
 		if err != nil {

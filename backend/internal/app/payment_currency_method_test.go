@@ -3,9 +3,12 @@ package app
 import (
 	"testing"
 
+	"gorm.io/driver/sqlite"
+	"gorm.io/gorm"
 	"yingce/backend/internal/model"
 	"yingce/backend/internal/payment"
 	"yingce/backend/internal/protocol"
+	"yingce/backend/internal/repository"
 )
 
 func TestPaymentRateParsingIsExactAndBounded(t *testing.T) {
@@ -33,6 +36,41 @@ func TestPaymentSettingsDefaultToUSD(t *testing.T) {
 	settings, err = normalizePaymentSettings(PaymentSettings{DefaultCurrency: "cny", UsdCnyRate: "7.20"})
 	if err != nil || settings.DefaultCurrency != model.PriceCurrencyCNY || settings.UsdCnyRate != "7.2" {
 		t.Fatalf("settings = %#v, %v", settings, err)
+	}
+}
+
+func TestPaymentWaffoIconStylePersistsIndependently(t *testing.T) {
+	db, err := gorm.Open(sqlite.Open(t.TempDir()+"/settings.db"), &gorm.Config{})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err := db.AutoMigrate(&model.SystemSetting{}, &model.AdminAuditEvent{}); err != nil {
+		t.Fatal(err)
+	}
+	svc := &Service{repo: repository.New(db)}
+	admin := &model.User{ID: "admin", Role: model.UserRoleAdmin}
+	user := &model.User{ID: "user", Role: model.UserRoleUser}
+	if _, err := svc.UpdatePaymentSettings(admin, PaymentSettings{DefaultCurrency: "CNY", UsdCnyRate: "7.2"}); err != nil {
+		t.Fatal(err)
+	}
+	settings, err := svc.PublicPaymentSettings(user)
+	if err != nil || settings.WaffoIconStyle != "wallets" {
+		t.Fatalf("legacy settings = %#v, %v", settings, err)
+	}
+	if err := svc.UpdateWaffoIconStyle(user, "original"); err == nil {
+		t.Fatal("non-admin icon update accepted")
+	}
+	if err := svc.UpdateWaffoIconStyle(admin, "unknown"); err == nil {
+		t.Fatal("invalid icon style accepted")
+	}
+	for _, style := range []string{"original", "wallets"} {
+		if err := svc.UpdateWaffoIconStyle(admin, style); err != nil {
+			t.Fatal(err)
+		}
+		settings, err := svc.PublicPaymentSettings(user)
+		if err != nil || settings.WaffoIconStyle != style || settings.DefaultCurrency != "CNY" || settings.UsdCnyRate != "7.2" {
+			t.Fatalf("settings = %#v, %v; want %s and existing currencies", settings, err, style)
+		}
 	}
 }
 

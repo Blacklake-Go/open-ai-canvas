@@ -2,7 +2,7 @@ import { describe, expect, test } from "bun:test";
 
 import { estimatePaymentCharge, parsePaymentRateMicros, paymentOptionsFromProviders } from "@/lib/payment-options";
 import type { PaymentProvider } from "@/services/api/payments";
-import { paymentBrandKey, topupCreditPresentation } from "@/supdance/wallet-presentation";
+import { paymentBrandKey, topupCreditPresentation, walletPaymentIcon } from "@/supdance/wallet-presentation";
 
 const provider = (overrides: Partial<PaymentProvider>): PaymentProvider => ({
     id: "epay",
@@ -27,6 +27,11 @@ describe("wallet checkout presentation", () => {
         ]);
 
         expect([alipay, waffo, wxpay, custom].map(paymentBrandKey)).toEqual(["alipay", "waffo", "wechat", undefined]);
+        expect(walletPaymentIcon(waffo, undefined)).toBe("brand:waffo-wallets");
+        expect(walletPaymentIcon(waffo, "wallets")).toBe("brand:waffo-wallets");
+        expect(walletPaymentIcon(waffo, "original")).toBe(waffo.icon);
+        expect(walletPaymentIcon(wxpay, "wallets")).toBe("brand:wechat-pay");
+        expect(waffo).toMatchObject({ key: "waffo-pancake", providerId: "waffo-pancake" });
         expect(wxpay).toMatchObject({ key: "epay:wxpay", providerId: "epay", method: "wxpay" });
     });
 

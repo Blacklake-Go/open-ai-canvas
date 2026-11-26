@@ -31,6 +31,7 @@ import {
     queryAdminPaymentOrder,
     runAdminPaymentReconciliation,
     updateAdminPaymentProvider,
+    updateAdminWaffoIconStyle,
     updateAdminTopupProduct,
     type AdminPaymentProvider,
     type AdminPaymentOrder,
@@ -40,6 +41,7 @@ import {
     type PaymentReconciliationItem,
     type PaymentReconciliationRun,
     type TopupProduct,
+    type WaffoIconStyle,
 } from "@/services/api/payments";
 
 import { AdminPageFrame } from "../components/admin-shell";
@@ -109,6 +111,8 @@ export default function AdminPaymentsPage() {
     const [loading, setLoading] = useState(true);
     const [defaultCurrency, setDefaultCurrency] = useState<PaymentCurrency>("USD");
     const [usdCnyRate, setUsdCnyRate] = useState("");
+    const [waffoIconStyle, setWaffoIconStyle] = useState<WaffoIconStyle>("wallets");
+    const [waffoIconSaving, setWaffoIconSaving] = useState(false);
     const [rateDraft, setRateDraft] = useState("");
     const [currencySaving, setCurrencySaving] = useState(false);
 
@@ -190,6 +194,7 @@ export default function AdminPaymentsPage() {
             setProducts(productResult.products);
             setDefaultCurrency(settingsResult.settings.defaultCurrency);
             setUsdCnyRate(settingsResult.settings.usdCnyRate || "");
+            setWaffoIconStyle(settingsResult.settings.waffoIconStyle ?? "wallets");
             setRateDraft(settingsResult.settings.usdCnyRate || "");
             setBillProviderId((current) => current || providerResult.providers.find((item) => item.configured)?.id || providerResult.providers[0]?.id || "");
         } catch (error) {
@@ -369,6 +374,19 @@ export default function AdminPaymentsPage() {
             message.error(error instanceof Error ? error.message : "保存充值设置失败");
         } finally {
             setCurrencySaving(false);
+        }
+    };
+
+    const saveWaffoIconStyle = async (style: WaffoIconStyle) => {
+        setWaffoIconSaving(true);
+        try {
+            const result = await updateAdminWaffoIconStyle(style);
+            setWaffoIconStyle(result.style);
+            message.success(translate("supdance-wallet:waffoIcon.saved"));
+        } catch (error) {
+            message.error(error instanceof Error ? error.message : translate("supdance-wallet:waffoIcon.saveFailed"));
+        } finally {
+            setWaffoIconSaving(false);
         }
     };
 
@@ -1025,6 +1043,20 @@ export default function AdminPaymentsPage() {
                             tone={providerDrawer.pluginEnabled ? "info" : "warning"}
                             title={providerDrawer.pluginEnabled ? "密钥会加密保存，历史订单固定使用创建时的配置版本。" : "该宿主插件当前已在插件管理中停用；保存配置后仍需开放插件才能接受新订单。"}
                         />
+                        {providerDrawer.id === "waffo-pancake" && (
+                            <Form.Item label={translate("supdance-wallet:waffoIcon.label")} extra={translate("supdance-wallet:waffoIcon.description")}>
+                                <Select<WaffoIconStyle>
+                                    ariaLabel={translate("supdance-wallet:waffoIcon.label")}
+                                    value={waffoIconStyle}
+                                    disabled={loading || waffoIconSaving}
+                                    options={[
+                                        { value: "wallets", label: translate("supdance-wallet:waffoIcon.wallets") },
+                                        { value: "original", label: translate("supdance-wallet:waffoIcon.original") },
+                                    ]}
+                                    onChange={(value) => void saveWaffoIconStyle(value)}
+                                />
+                            </Form.Item>
+                        )}
                         <Form.Item name="enabled" label="渠道配置启用" valuePropName="checked">
                             <Switch />
                         </Form.Item>
