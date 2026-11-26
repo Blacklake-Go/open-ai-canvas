@@ -67,13 +67,7 @@ function toolItem(slug: NavigationToolSlug, to: string, t: (key: string) => stri
     return { id: slug, title: tool ? t(tool.labelKey) : slug, icon: tool?.icon, to };
 }
 
-export function buildNav(
-    features: FeatureAvailability,
-    t: (key: string) => string,
-    musicPluginActive = true,
-    canUseSkills = true,
-    hideStandalonePricing = false,
-): { groups: WorkspaceNavGroup[]; footer: WorkspaceNavItem[] } {
+export function buildNav(features: FeatureAvailability, t: (key: string) => string, musicPluginActive = true, canUseSkills = true, hideStandalonePricing = false): { groups: WorkspaceNavGroup[]; footer: WorkspaceNavItem[] } {
     const groups: WorkspaceNavGroup[] = [
         {
             items: [
@@ -401,10 +395,7 @@ export function WorkspaceSidebarNav({ collapsed, onNavigate, onOpenSearch, onExp
     const canUseSkills = useSkillLibraryAccess();
     const { hideStandalonePricingGroup } = useSidebarDockState();
     const teamId = features.teamsEnabled ? teamIdFromPath(pathname) : undefined;
-    const personalNav = useMemo(
-        () => buildNav(features, t, musicPluginActive, canUseSkills, !teamId && hideStandalonePricingGroup),
-        [features, t, musicPluginActive, canUseSkills, teamId, hideStandalonePricingGroup],
-    );
+    const personalNav = useMemo(() => buildNav(features, t, musicPluginActive, canUseSkills, !teamId && hideStandalonePricingGroup), [features, t, musicPluginActive, canUseSkills, teamId, hideStandalonePricingGroup]);
     const base = teamId ? `/teams/${encodeURIComponent(teamId)}` : "";
     const { groups, footer } = teamId
         ? {

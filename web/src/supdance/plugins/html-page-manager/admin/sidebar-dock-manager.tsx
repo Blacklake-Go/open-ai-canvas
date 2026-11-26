@@ -2,13 +2,7 @@ import { Alert, App, Button, Input, Select, Spin } from "antd";
 import { AdminSwitch as Switch } from "@/pages/admin/ui/controls";
 import { ArrowDown, ArrowUp, Plus, RotateCcw, Save, Trash2 } from "lucide-react";
 import { useEffect, useState } from "react";
-import {
-    DEFAULT_HTML_SIDEBAR_DOCK_CONFIG,
-    DEFAULT_HTML_SITE_FOOTER_CONFIG,
-    fetchAdminHtmlPagesOverview,
-    resetAdminHtmlSidebarDock,
-    saveAdminHtmlSidebarDock,
-} from "../api";
+import { DEFAULT_HTML_SIDEBAR_DOCK_CONFIG, DEFAULT_HTML_SITE_FOOTER_CONFIG, fetchAdminHtmlPagesOverview, resetAdminHtmlSidebarDock, saveAdminHtmlSidebarDock } from "../api";
 import { DockSocialSvg, SidebarEcosystemDock } from "../components/sidebar-ecosystem-dock";
 import type { HtmlSidebarDockCard, HtmlSidebarDockConfig, HtmlSiteFooterConfig } from "../types";
 import "./sidebar-dock-manager.css";
@@ -173,23 +167,14 @@ export default function SidebarDockManager() {
                         <span className="text-xs opacity-60">插件作用域：supdance-html-page-manager</span>
                     </div>
 
-                    <Alert
-                        type="info"
-                        showIcon
-                        className="mb-3"
-                        message="开启后工作台侧边栏底部将挂载「3 格生态快链 + 5 枚官方社媒图标」；关闭此开关或在插件管理禁用插件时，停靠区会立即热卸载并自动恢复原有「定价表」导航分组。"
-                    />
+                    <Alert type="info" showIcon className="mb-3" message="开启后工作台侧边栏底部将挂载「3 格生态快链 + 5 枚官方社媒图标」；关闭此开关或在插件管理禁用插件时，停靠区会立即热卸载并自动恢复原有「定价表」导航分组。" />
 
                     <div className="sd-admin-switch-row">
                         <div>
                             <div className="text-[13px] font-medium">启用侧边栏生态停靠区</div>
                             <div className="text-xs opacity-65">控制全站工作台侧边栏底部停靠区是否热挂载。</div>
                         </div>
-                        <Switch
-                            aria-label="启用侧边栏生态停靠区"
-                            checked={draft.enabled}
-                            onChange={(checked) => setDraft((prev) => ({ ...prev, enabled: checked }))}
-                        />
+                        <Switch aria-label="启用侧边栏生态停靠区" checked={draft.enabled} onChange={(checked) => setDraft((prev) => ({ ...prev, enabled: checked }))} />
                     </div>
 
                     <div className="sd-admin-switch-row">
@@ -197,11 +182,7 @@ export default function SidebarDockManager() {
                             <div className="text-[13px] font-medium">自动收起中部孤立「定价表」导航分组</div>
                             <div className="text-xs opacity-65">启用停靠区时隐藏中部孤立的定价表分组，释放历史会话列表空间；卸载插件后自动恢复。</div>
                         </div>
-                        <Switch
-                            aria-label="自动收起中部孤立定价表分组"
-                            checked={draft.hideStandalonePricingGroup}
-                            onChange={(checked) => setDraft((prev) => ({ ...prev, hideStandalonePricingGroup: checked }))}
-                        />
+                        <Switch aria-label="自动收起中部孤立定价表分组" checked={draft.hideStandalonePricingGroup} onChange={(checked) => setDraft((prev) => ({ ...prev, hideStandalonePricingGroup: checked }))} />
                     </div>
                 </section>
 
@@ -218,24 +199,9 @@ export default function SidebarDockManager() {
                         return (
                             <div key={card.id} className="sd-admin-card-item">
                                 <div className="sd-admin-card-grid">
-                                    <Select
-                                        size="small"
-                                        value={card.icon}
-                                        options={ICON_OPTIONS}
-                                        onChange={(val) => updateCard(idx, { icon: val })}
-                                    />
-                                    <Input
-                                        size="small"
-                                        value={card.href}
-                                        placeholder="/html/about"
-                                        onChange={(e) => updateCard(idx, { href: e.target.value })}
-                                    />
-                                    <Select
-                                        size="small"
-                                        value={card.target}
-                                        options={TARGET_OPTIONS}
-                                        onChange={(val) => updateCard(idx, { target: val })}
-                                    />
+                                    <Select size="small" value={card.icon} options={ICON_OPTIONS} onChange={(val) => updateCard(idx, { icon: val })} />
+                                    <Input size="small" value={card.href} placeholder="/html/about" onChange={(e) => updateCard(idx, { href: e.target.value })} />
+                                    <Select size="small" value={card.target} options={TARGET_OPTIONS} onChange={(val) => updateCard(idx, { target: val })} />
                                     <div className="flex items-center gap-1.5">
                                         <Button size="small" icon={<ArrowUp className="size-3.5" />} disabled={idx === 0} onClick={() => moveCard(idx, -1)} />
                                         <Button size="small" icon={<ArrowDown className="size-3.5" />} disabled={idx === draft.cards.length - 1} onClick={() => moveCard(idx, 1)} />
@@ -243,12 +209,7 @@ export default function SidebarDockManager() {
                                             {i18nOpen ? "收起语种" : "8 语种"}
                                         </Button>
                                         <Button size="small" danger icon={<Trash2 className="size-3.5" />} disabled={draft.cards.length <= 1} onClick={() => removeCard(idx)} />
-                                        <Switch
-                                            size="sm"
-                                            aria-label={`启用卡片 ${card.id}`}
-                                            checked={card.visible}
-                                            onChange={(checked) => updateCard(idx, { visible: checked })}
-                                        />
+                                        <Switch size="sm" aria-label={`启用卡片 ${card.id}`} checked={card.visible} onChange={(checked) => updateCard(idx, { visible: checked })} />
                                     </div>
                                 </div>
 
@@ -278,11 +239,7 @@ export default function SidebarDockManager() {
                 <section className="sd-admin-panel">
                     <div className="sd-admin-panel-head">
                         <h3 className="sd-admin-panel-title">社交媒体图标栏（单行最多 5 枚）</h3>
-                        <Switch
-                            aria-label="启用社交媒体图标栏"
-                            checked={draft.socialEnabled}
-                            onChange={(checked) => setDraft((prev) => ({ ...prev, socialEnabled: checked }))}
-                        />
+                        <Switch aria-label="启用社交媒体图标栏" checked={draft.socialEnabled} onChange={(checked) => setDraft((prev) => ({ ...prev, socialEnabled: checked }))} />
                     </div>
 
                     <div className="sd-admin-switch-row mb-3">
@@ -290,11 +247,7 @@ export default function SidebarDockManager() {
                             <div className="text-[13px] font-medium">同步全站「site-footer」官方链接</div>
                             <div className="text-xs opacity-65">开启后社媒地址直接沿用页脚管理器数据，这里仅控制显隐勾选。</div>
                         </div>
-                        <Switch
-                            aria-label="同步全站 site-footer 社媒链接"
-                            checked={draft.syncWithSiteFooter}
-                            onChange={(checked) => setDraft((prev) => ({ ...prev, syncWithSiteFooter: checked }))}
-                        />
+                        <Switch aria-label="同步全站 site-footer 社媒链接" checked={draft.syncWithSiteFooter} onChange={(checked) => setDraft((prev) => ({ ...prev, syncWithSiteFooter: checked }))} />
                     </div>
 
                     {draft.socialLinks.map((item, idx) => (
@@ -357,11 +310,7 @@ export default function SidebarDockManager() {
                 </div>
                 <div className={`sd-admin-preview-stage ${previewTheme === "light" ? "is-light" : "dark"}`}>
                     <div className={`sd-admin-preview-shell ${previewCollapsed ? "is-collapsed" : ""}`}>
-                        <SidebarEcosystemDock
-                            collapsed={previewCollapsed}
-                            configOverride={draft}
-                            siteFooterOverride={siteFooter}
-                        />
+                        <SidebarEcosystemDock collapsed={previewCollapsed} configOverride={draft} siteFooterOverride={siteFooter} />
                     </div>
                 </div>
             </aside>

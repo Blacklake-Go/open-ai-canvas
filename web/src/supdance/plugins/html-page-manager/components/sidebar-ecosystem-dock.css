@@ -30,7 +30,11 @@
     gap: 3px;
     text-decoration: none;
     min-width: 0;
-    transition: background-color 150ms ease, border-color 150ms ease, color 150ms ease, transform 130ms ease;
+    transition:
+        background-color 150ms ease,
+        border-color 150ms ease,
+        color 150ms ease,
+        transform 130ms ease;
 }
 
 .dark .sd-dock-card {
@@ -87,7 +91,11 @@
     align-items: center;
     justify-content: center;
     text-decoration: none;
-    transition: color 150ms ease, border-color 150ms ease, background-color 150ms ease, transform 130ms ease;
+    transition:
+        color 150ms ease,
+        border-color 150ms ease,
+        background-color 150ms ease,
+        transform 130ms ease;
 }
 
 .dark .sd-dock-social-btn {
@@ -190,7 +198,10 @@
     align-items: center;
     justify-content: center;
     cursor: pointer;
-    transition: background-color 150ms ease, border-color 150ms ease, color 150ms ease;
+    transition:
+        background-color 150ms ease,
+        border-color 150ms ease,
+        color 150ms ease;
 }
 
 .dark .sd-dock-collapsed-trigger {
