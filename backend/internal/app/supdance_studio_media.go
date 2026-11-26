@@ -557,6 +557,8 @@ func (s *Service) StudioHistory(userID string) ([]StudioTask, error) {
 	sort.SliceStable(items, func(i, j int) bool { return items[i].UpdatedAt.After(items[j].UpdatedAt) })
 	result := make([]StudioTask, 0, min(40, len(items)))
 	for _, task := range items[:min(40, len(items))] {
+		// The history queries already enforce ownership, but their projections can omit UserID.
+		task.UserID = userID
 		view, err := s.studioTaskView(task)
 		if err != nil {
 			return nil, err

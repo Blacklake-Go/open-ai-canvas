@@ -315,6 +315,19 @@ func TestSupdanceStudioLiveBridge(t *testing.T) {
 	if len(orders) != 6 || settledImages != 3 || settledVideos != 1 || settledMusic != 1 || refunded != 1 {
 		t.Fatalf("expected image/video/music settlements and one refund, got %d orders (%d/%d/%d/%d)", len(orders), settledImages, settledVideos, settledMusic, refunded)
 	}
+	history, err := svc.StudioHistory("alice")
+	if err != nil {
+		t.Fatal(err)
+	}
+	recovered := map[string]int{}
+	for _, task := range history {
+		if task.Billing == "settled" && len(task.Assets) > 0 && (task.Status == "succeeded" || task.Status == "partial") {
+			recovered[task.Kind]++
+		}
+	}
+	if len(history) != 6 || recovered["image"] != 3 || recovered["video"] != 1 || recovered["audio"] != 1 {
+		t.Fatalf("expected Studio history to restore completed assets and their billing, got %d tasks (%v)", len(history), recovered)
+	}
 }
 
 func makeStudioFixtureVideo(t *testing.T) []byte {
