@@ -273,6 +273,7 @@
     "web/src/lib/plugins/plugin-types.ts",
     "web/src/lib/user-session.ts",
     "web/src/lib/workspace-page-title.ts",
+    "web/src/lib/workspace-route-modules.ts",
     "web/src/pages/admin/components/admin-shell.tsx",
     "web/src/pages/admin/components/channel-model-cost-summary.tsx",
     "web/src/pages/admin/components/channel-model-editor.tsx",
