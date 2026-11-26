@@ -301,6 +301,8 @@ export const CanvasCloudAgentPanel = memo(function CanvasCloudAgentPanel() {
     const [cloudOpeningId, setCloudOpeningId] = useState("");
     const [cloudDeletingId, setCloudDeletingId] = useState("");
     const cloudOpeningRef = useRef<string | null>(null);
+    const cloudDeletionRef = useRef<{ id: string } | null>(null);
+    const cloudHistoryRevisionRef = useRef(0);
     const conversationLoadControllerRef = useRef<AbortController | null>(null);
     const cloudRunTransitionRef = useRef<string | null>(null);
     const historyRestoreScope = useRef("");
@@ -966,11 +968,12 @@ export const CanvasCloudAgentPanel = memo(function CanvasCloudAgentPanel() {
             refreshing = true;
             if (!background) setCloudHistoryLoading(true);
             try {
+                const revision = cloudHistoryRevisionRef.current;
                 const cache = conversationSnapshots.current;
                 const selected = cache.find((item) => item.id === cloudLiveState.current.activeConversationId);
                 const selectedId = selected ? cloudAgentConversationServerId(selected) : undefined;
                 const remote = await refreshCloudAgentConversations({ canvasId: canvasId || undefined, observedConversationIds: selectedId ? [selectedId] : [], existing: cache, scope: accountScope, signal: controller.signal });
-                if (!active || !accountIsCurrent() || cloudLiveState.current.canvasId !== canvasId) return;
+                if (!active || !accountIsCurrent() || cloudLiveState.current.canvasId !== canvasId || revision !== cloudHistoryRevisionRef.current) return;
                 const live = cloudLiveState.current;
                 const updates = remote.filter((item) => !cache.includes(item));
                 const merged = updates.length ? mergeCloudAgentConversations(conversationSnapshots.current, updates) : conversationSnapshots.current;
@@ -989,6 +992,7 @@ export const CanvasCloudAgentPanel = memo(function CanvasCloudAgentPanel() {
                 // 有排队消息时不切到别的对话：队列属于当前对话，切走会让它停在看不见的地方。同一对话的更新照常跟随。
                 const decision = followDecision === "switch" && live.outboxCount > 0 ? "offer" : followDecision;
                 if (!candidate?.run || (decision !== "current" && decision !== "switch")) return;
+                if (cloudDeletionRef.current?.id === candidate.id || cloudDeletionRef.current?.id === currentScope.current) return;
                 const sameRun = candidate.id === live.activeConversationId && candidate.run.id === live.run?.id;
                 if (sameRun && (candidate.lastEventSeq || 0) < lastSeqRef.current) return;
                 if (sameRun && (candidate.run.revision || 0) <= (live.run?.revision || 0) && candidate.run.status === live.run?.status && Boolean(candidate.run.cleanupPending) === Boolean(live.run?.cleanupPending)) return;
@@ -1002,6 +1006,9 @@ export const CanvasCloudAgentPanel = memo(function CanvasCloudAgentPanel() {
                     submissionRequestRef.current ||
                     pendingSubmission.current ||
                     cloudOpeningRef.current ||
+                    revision !== cloudHistoryRevisionRef.current ||
+                    cloudDeletionRef.current?.id === candidate.id ||
+                    cloudDeletionRef.current?.id === currentScope.current ||
                     cloudLiveState.current.canvasId !== canvasId
                 )
                     return;
@@ -1485,7 +1492,14 @@ export const CanvasCloudAgentPanel = memo(function CanvasCloudAgentPanel() {
 
         const outboxItem = options?.outboxItem;
         const composerExtras = outboxItem ? undefined : options?.composerExtras;
-        if (!accountIsCurrent() || cloudOpeningRef.current || (canvasId && !cloudHistoryReady && !pendingSubmission.current?.request) || (modelRestoreError && !pendingSubmission.current?.request && !outboxItem)) return "skipped";
+        if (
+            !accountIsCurrent() ||
+            cloudOpeningRef.current ||
+            cloudDeletionRef.current?.id === currentScope.current ||
+            (canvasId && !cloudHistoryReady && !pendingSubmission.current?.request) ||
+            (modelRestoreError && !pendingSubmission.current?.request && !outboxItem)
+        )
+            return "skipped";
         const activity = canvasId ? canvasEditLeases.agent(canvasId) : null;
         if (activity && activity.runId !== run?.id && !pendingSubmission.current?.request) return "skipped";
         const draft = (outboxItem ? outboxItem.text : (override ?? prompt)).trim();
@@ -1954,7 +1968,7 @@ export const CanvasCloudAgentPanel = memo(function CanvasCloudAgentPanel() {
     };
 
     const canSwitchConversation = () => {
-        if (!accountIsCurrent() || !historyHydrated || !pendingHydrated || busy || running || submissionRequestRef.current || pendingSubmission.current || cloudOpeningRef.current) return false;
+        if (!accountIsCurrent() || !historyHydrated || !pendingHydrated || busy || running || submissionRequestRef.current || pendingSubmission.current || cloudOpeningRef.current || cloudDeletionRef.current?.id === currentScope.current) return false;
         return true;
     };
 
@@ -2058,7 +2072,7 @@ export const CanvasCloudAgentPanel = memo(function CanvasCloudAgentPanel() {
             });
     };
     const openConversation = async (conversation: CloudAgentConversation) => {
-        if (!canSwitchConversation()) return;
+        if (!canSwitchConversation() || cloudDeletionRef.current?.id === conversation.id) return;
         if (codex.connected) codex.disconnect();
         const id = cloudAgentConversationServerId(conversation);
         if (!id) {
@@ -2095,11 +2109,13 @@ export const CanvasCloudAgentPanel = memo(function CanvasCloudAgentPanel() {
         }
     };
     const deleteConversation = async (id: string) => {
-        if (!canSwitchConversation() || cloudDeletingId) return;
-        const target = conversations.find((item) => item.id === id);
+        if (!canSwitchConversation() || cloudDeletionRef.current) return;
+        const target = conversationSnapshots.current.find((item) => item.id === id);
         if (!target) return;
         const serverId = cloudAgentConversationServerId(target);
         if (serverId) {
+            const deletion = { id };
+            cloudDeletionRef.current = deletion;
             setCloudDeletingId(id);
             try {
                 await deleteAgentConversation(serverId);
@@ -2107,19 +2123,25 @@ export const CanvasCloudAgentPanel = memo(function CanvasCloudAgentPanel() {
                 if (accountIsCurrent()) setCloudHistoryError(cause instanceof Error ? cause.message : "云端对话删除失败");
                 return;
             } finally {
-                setCloudDeletingId("");
+                if (cloudDeletionRef.current === deletion) {
+                    cloudDeletionRef.current = null;
+                    setCloudDeletingId("");
+                }
             }
         }
-        const next = conversations.filter((item) => item.id !== id);
-        setConversations(next);
-        if (id === activeConversationId) newConversation();
-        await Promise.allSettled([clearCloudAgentPendingSubmission(id, accountScope), clearCloudAgentOutbox(id, accountScope)]);
+        if (!accountIsCurrent()) return;
+        cloudHistoryRevisionRef.current++;
+        const activeId = currentScope.current;
+        const next = conversationSnapshots.current.filter((item) => item.id !== id);
         cancelConversationAutosave();
+        setConversations((current) => current.filter((item) => item.id !== id));
+        if (id === activeId) newConversation();
         try {
-            await saveCloudAgentConversations(id === activeConversationId ? null : activeConversationId, next, accountScope);
+            await saveCloudAgentConversations(id === activeId ? null : activeId, next, accountScope);
         } catch (cause) {
             if (accountIsCurrent()) setCloudHistoryError(cause instanceof Error ? cause.message : "对话历史保存失败");
         }
+        await Promise.allSettled([clearCloudAgentPendingSubmission(id, accountScope), clearCloudAgentOutbox(id, accountScope)]);
     };
 
     // ---- 输入区：发送 / 排队 / 插话 / 保存的路由与提示 ----

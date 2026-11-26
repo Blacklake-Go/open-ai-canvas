@@ -15,7 +15,7 @@ import { creationMessageMayHaveExternalVideoResult } from "@/lib/creation-messag
 import { useGenerationBatchLimit } from "@/lib/generation-batch-limit";
 import { isGenerationCostUncertainError } from "@/lib/canvas/canvas-generation-batch";
 import { imageParameterRequest } from "@/lib/image-parameters";
-import { creationResultAssetIds, creationResultStorageKeysForMessage } from "@/lib/canvas/canvas-asset-handoff";
+import { creationResultAssetIds, creationResultStorageKeysForTask } from "@/lib/canvas/canvas-asset-handoff";
 import { getActiveUserScope } from "@/lib/user-scope";
 import { audioUploadTitleFromFileName } from "@/lib/audio-upload-title";
 import { continueCreationConversationOnCanvas } from "@/services/creation-canvas-conversation";
@@ -596,7 +596,8 @@ export default function CreatePage() {
             const recoveredTasks = persistedTasks.map((task) => {
                 const messageId = task.clientContext?.messageId;
                 if (task.status !== "succeeded" || !messageId || task.creationResultStorageKeys?.length || task.creationResultUrls?.length) return task;
-                const existingStorageKeys = creationResultStorageKeysForMessage(assetsAlreadyInLibrary, { messageId, taskIds: [task.id] });
+                const message = conversationsRef.current.find((item) => item.id === task.clientContext?.conversationId)?.messages.find((item) => item.id === messageId);
+                const existingStorageKeys = creationResultStorageKeysForTask(assetsAlreadyInLibrary, { messageId, taskId: task.id, messageTaskIds: message?.taskIds });
                 return existingStorageKeys.length ? { ...task, creationResultStorageKeys: existingStorageKeys } : task;
             });
             for (const task of recoveredTasks.filter(

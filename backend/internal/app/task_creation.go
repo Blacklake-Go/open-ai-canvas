@@ -759,11 +759,15 @@ func (s *Service) resolveSystemChannelModelSelection(access *userGroupAccess, in
 		return input, ModelPriceNotConfigured("指定的模型未配置当前规格的有效价格")
 	}
 
+	providerModelKey := firstNonEmpty(priceTier.ProviderModelKey, channelModel.ProviderModelKey, channelModel.ModelKey)
+	if err := validateSupDanceRunningHubImageEdit(channelModel.Protocol, providerModelKey, intent); err != nil {
+		return input, err
+	}
 	nextConfig["channelId"] = channel.ID
 	nextConfig["model"] = channelModel.ModelKey
 	nextConfig["channelModelKey"] = channelModel.ModelKey
 	nextConfig["priceTierId"] = priceTier.ID
-	nextConfig["providerModelKey"] = firstNonEmpty(priceTier.ProviderModelKey, channelModel.ProviderModelKey, channelModel.ModelKey)
+	nextConfig["providerModelKey"] = providerModelKey
 	nextConfig["interfaceType"] = string(channelModel.Protocol)
 	nextConfig["protocolRelease"], nextConfig["priceRevision"], nextConfig["profileRevision"] = channelModel.ProtocolRelease, channelModel.PriceVersion, channelModel.CapabilityVersion
 	nextConfig["apiFormat"] = channelAPIFormatForProtocol(channel.APIFormat, channelModel.Protocol)

@@ -197,13 +197,26 @@ func (r *Repository) CompactCloudAgentRun(userID, runID string) (int64, error) {
 	return released, err
 }
 
+func (r *Repository) automaticCloudAgentArchiveCandidates(before time.Time) *gorm.DB {
+	// Keep the most recent reversible mutation live. The undo path checks
+	// canvas hashes at request time, so a later edit does not expire this hold.
+	latest := r.db.Table("cloud_agent_canvas_mutations AS latest").Select("latest.id").
+		Where("latest.user_id = cloud_agent_executions.user_id AND latest.run_id = cloud_agent_executions.id").
+		Order("latest.created_at DESC, latest.id DESC").Limit(1)
+	reversible := r.db.Table("cloud_agent_canvas_mutations AS mutation").Select("1").
+		Where("mutation.id = (?) AND mutation.status = ? AND mutation.has_submitted_task = false AND mutation.before_json <> ''", latest, "applied")
+	return r.db.Model(&model.CloudAgentExecution{}).
+		Where("history_compacted = false AND cleanup_pending = false AND status IN ? AND updated_at < ?", []string{"completed", "failed", "cancelled", "rejected"}, before).
+		Where("NOT EXISTS (?)", reversible).
+		Order("updated_at ASC, id ASC")
+}
+
 func (r *Repository) compactOldestCloudAgentHistoryLocked(userID string, before time.Time, required int64) (int64, error) {
 	if required <= 0 {
 		return 0, nil
 	}
 	var runs []model.CloudAgentExecution
-	err := r.db.Where("user_id = ? AND history_compacted = false AND cleanup_pending = false AND status IN ? AND updated_at < ?", userID, []string{"completed", "failed", "cancelled", "rejected"}, before).
-		Order("updated_at ASC, id ASC").Limit(32).Find(&runs).Error
+	err := r.automaticCloudAgentArchiveCandidates(before).Where("user_id = ?", userID).Limit(32).Find(&runs).Error
 	if err != nil {
 		return 0, err
 	}
@@ -232,8 +245,7 @@ func (r *Repository) compactOldestCloudAgentHistoryGlobalLocked(before time.Time
 		return 0, nil
 	}
 	var runs []model.CloudAgentExecution
-	if err := r.db.Where("history_compacted = false AND cleanup_pending = false AND status IN ? AND updated_at < ?", []string{"completed", "failed", "cancelled", "rejected"}, before).
-		Order("updated_at ASC, id ASC").Limit(64).Find(&runs).Error; err != nil {
+	if err := r.automaticCloudAgentArchiveCandidates(before).Limit(64).Find(&runs).Error; err != nil {
 		return 0, err
 	}
 	var freed int64

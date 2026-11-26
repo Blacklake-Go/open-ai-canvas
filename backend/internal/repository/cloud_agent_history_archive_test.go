@@ -114,6 +114,51 @@ func TestCompactCloudAgentRunPreservesArchiveReadsAndWindow(t *testing.T) {
 	}
 }
 
+func TestAutomaticCloudAgentArchivePreservesUndoableRun(t *testing.T) {
+	for _, driver := range []string{"sqlite", "postgres"} {
+		for _, scope := range []string{"user", "global"} {
+			t.Run(driver+"/"+scope, func(t *testing.T) {
+				repo, _ := agentLifecycleRepositories(t, driver)
+				protected := archiveTestRun("user", "protected", "conversation", "completed")
+				released := archiveTestRun("user", "released", "conversation", "completed")
+				released.UserID = "other"
+				if scope == "user" {
+					protected.UserID = released.UserID
+				}
+				seedArchiveTestPayload(t, repo, protected)
+				if protected.UserID == released.UserID {
+					if err := repo.db.Where("user_id = ?", released.UserID).Delete(&model.AgentStorageUsage{}).Error; err != nil {
+						t.Fatal(err)
+					}
+				}
+				seedArchiveTestPayload(t, repo, released)
+				// An earlier reversible mutation must not override the state of the latest mutation.
+				latest := model.CloudAgentCanvasMutation{ID: "released-z", RunID: released.ID, UserID: released.UserID, Status: "undone", CreatedAt: released.CreatedAt.Add(time.Minute)}
+				if err := repo.db.Create(&latest).Error; err != nil {
+					t.Fatal(err)
+				}
+				before := time.Now().Add(-time.Minute)
+				var freed int64
+				var err error
+				if scope == "user" {
+					freed, err = repo.compactOldestCloudAgentHistoryLocked(released.UserID, before, 1)
+				} else {
+					freed, err = repo.compactOldestCloudAgentHistoryGlobalLocked(before, 1)
+				}
+				if err != nil || freed <= 0 {
+					t.Fatalf("automatic archive freed %d, err=%v", freed, err)
+				}
+				for _, run := range []*model.CloudAgentExecution{protected, released} {
+					got, err := repo.CloudAgent(run.UserID, run.ID)
+					if err != nil || got.HistoryCompacted != (run.ID == released.ID) {
+						t.Fatalf("run %s history=%+v err=%v", run.ID, got, err)
+					}
+				}
+			})
+		}
+	}
+}
+
 func TestDeleteCloudAgentConversationRemovesHotAndColdHistoryOnly(t *testing.T) {
 	repo, _ := agentLifecycleRepositories(t, "sqlite")
 	first := archiveTestRun("user", "run-1", "conversation", "completed")

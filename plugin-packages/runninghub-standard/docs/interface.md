@@ -4,6 +4,8 @@ Suno 音乐结果同时包含音频、封面与文本。1.1.1 仅将有 URL 的�
 
 1.1.7 对 `seedream-v5-pro/text-to-image` 将画幅和分辨率档位一起转换为整数 `width` 和 `height`。1:1 的 1K 发送 1024 × 1024，2K 发送 2048 × 2048。RunningHub 优先使用 `resolution`，所以只有自动画幅才发送这个字段。该端点只支持 1K 和 2K。
 
+1.1.8 保留 1.1.7 的 Seedream Pro 参数规则。MiniMax H3 Max 文生视频发送 `ratio` 和大写分辨率。悠船 V8.1 默认使用 `quality: "1"`、`hd: false`，FLUX.3 文生图默认使用 `768sq`，对应本站现有规格与售价。
+
 ## 协议身份
 
 - 插件 ID：`runninghub-standard`。
@@ -108,7 +110,7 @@ MiniMax Music 上游没有独立风格字段：音乐工作台提交的风格标
   "apiVersion": "yingce.plugin/v2",
   "id": "runninghub-standard",
   "name": "RunningHub Standard Model",
-  "version": "1.1.7",
+  "version": "1.1.8",
   "author": "RunningHub / 影策",
   "description": "RunningHub 标准模型 API 独立请求协议插件。",
   "permissions": [
@@ -570,25 +572,86 @@ MiniMax Music 上游没有独立风格字段：音乐工作台提交的风格标
             "resolution": {
               "$if": {
                 "condition": {
-                  "$not": {
-                    "$ref": "bindings.seedreamProExplicitSize"
-                  }
+                  "$eq": [
+                    {
+                      "$ref": "request.model"
+                    },
+                    "rhart-image-flux3/text-to-image"
+                  ]
                 },
                 "then": {
-                  "$omitEmpty": {
-                    "$ref": "request.resolution"
+                  "$coalesce": [
+                    {
+                      "$omitEmpty": {
+                        "$ref": "request.resolution"
+                      }
+                    },
+                    "768sq"
+                  ]
+                },
+                "else": {
+                  "$if": {
+                    "condition": {
+                      "$not": {
+                        "$ref": "bindings.seedreamProExplicitSize"
+                      }
+                    },
+                    "then": {
+                      "$omitEmpty": {
+                        "$ref": "request.resolution"
+                      }
+                    }
                   }
                 }
               }
             },
             "quality": {
               "$omitEmpty": {
-                "$ref": "request.quality"
+                "$if": {
+                  "condition": {
+                    "$eq": [
+                      {
+                        "$ref": "request.model"
+                      },
+                      "youchuan/text-to-image-v81"
+                    ]
+                  },
+                  "then": {
+                    "$if": {
+                      "condition": {
+                        "$eq": [
+                          {
+                            "$ref": "request.quality"
+                          },
+                          "4"
+                        ]
+                      },
+                      "then": "4",
+                      "else": "1"
+                    }
+                  },
+                  "else": {
+                    "$ref": "request.quality"
+                  }
+                }
               }
             },
             "seed": {
               "$omitEmpty": {
                 "$ref": "request.seed"
+              }
+            },
+            "hd": {
+              "$if": {
+                "condition": {
+                  "$eq": [
+                    {
+                      "$ref": "request.model"
+                    },
+                    "youchuan/text-to-image-v81"
+                  ]
+                },
+                "then": false
               }
             }
           },
@@ -1090,12 +1153,41 @@ MiniMax Music 上游没有独立风格字段：音乐工作台提交的风格标
             },
             "aspectRatio": {
               "$omitEmpty": {
-                "$ref": "request.aspectRatio"
+                "$if": {
+                  "condition": {
+                    "$ne": [
+                      {
+                        "$ref": "request.model"
+                      },
+                      "minimax/hailuo-h3-max/text-to-video"
+                    ]
+                  },
+                  "then": {
+                    "$ref": "request.aspectRatio"
+                  }
+                }
               }
             },
             "resolution": {
               "$omitEmpty": {
-                "$ref": "request.resolution"
+                "$if": {
+                  "condition": {
+                    "$eq": [
+                      {
+                        "$ref": "request.model"
+                      },
+                      "minimax/hailuo-h3-max/text-to-video"
+                    ]
+                  },
+                  "then": {
+                    "$upper": {
+                      "$ref": "request.resolution"
+                    }
+                  },
+                  "else": {
+                    "$ref": "request.resolution"
+                  }
+                }
               }
             },
             "quality": {
@@ -1111,6 +1203,23 @@ MiniMax Music 上游没有独立风格字段：音乐工作台提交的风格标
             "seed": {
               "$omitEmpty": {
                 "$ref": "request.seed"
+              }
+            },
+            "ratio": {
+              "$omitEmpty": {
+                "$if": {
+                  "condition": {
+                    "$eq": [
+                      {
+                        "$ref": "request.model"
+                      },
+                      "minimax/hailuo-h3-max/text-to-video"
+                    ]
+                  },
+                  "then": {
+                    "$ref": "request.aspectRatio"
+                  }
+                }
               }
             }
           },

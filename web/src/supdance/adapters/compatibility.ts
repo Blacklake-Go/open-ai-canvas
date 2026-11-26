@@ -43,6 +43,22 @@ export const SUPDANCE_UPSTREAM_PATCH_REGISTRY: readonly UpstreamPatchRecord[] = 
         upgradeRisk: "MEDIUM",
     },
     {
+        id: "supdance-production-regressions-1872",
+        upstreamBaseline: "v1.8.7.2@7da66551",
+        feature: "创作结果归属、Agent 历史和 RunningHub 请求约束",
+        coupledUpstreamFiles: [
+            "backend/internal/app/model_router.go",
+            "backend/internal/app/task_creation.go",
+            "backend/internal/repository/cloud_agent_history_archive.go",
+            "web/src/components/canvas/canvas-cloud-agent-panel.tsx",
+            "web/src/lib/canvas/canvas-asset-handoff.ts",
+            "web/src/pages/create/index.tsx",
+        ],
+        files: ["backend/internal/app/supdance_runninghub_contract.go", "plugin-packages/runninghub-standard/manifest.json", "web/src/supdance/marketing/x-purchase.ts"],
+        reason: "沿用现有定价和界面，校验真实供应端点的输入，按任务恢复结果，保留撤销所需画布变更并隔离历史删除竞态。",
+        upgradeRisk: "MEDIUM",
+    },
+    {
         id: "supdance-maintainer-metadata",
         upstreamBaseline: "v1.8.7.1@5ca284ce",
         feature: "站点维护者信息与许可证入口",
