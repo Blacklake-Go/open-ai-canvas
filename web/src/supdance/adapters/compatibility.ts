@@ -7,8 +7,8 @@ import type { RouteObject } from "react-router";
 import type { PluginHostContext, PluginManifest, PluginManifestV2, RegisteredPlugin } from "@/lib/plugins/plugin-types";
 import { getRegisteredPlugin, registerPlugin, unregisterPlugin } from "@/lib/plugins/plugin-registry";
 
-export const SUPDANCE_HOST_VERSION = "1.8.7.1" as const;
-export const SUPDANCE_SCHEMA_BASELINE = 109 as const;
+export const SUPDANCE_HOST_VERSION = "1.8.7.2" as const;
+export const SUPDANCE_SCHEMA_BASELINE = 110 as const;
 
 export type UpstreamPatchRecord = {
     id: string;

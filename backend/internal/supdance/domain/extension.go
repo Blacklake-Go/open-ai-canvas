@@ -28,8 +28,8 @@ type ExtensionMetadata struct {
 func DefaultMetadata() ExtensionMetadata {
 	return ExtensionMetadata{
 		Namespace:        "supdance",
-		UpstreamBaseline: "v1.8.7.1@882a1d1a",
-		SchemaBaseline:   109,
+		UpstreamBaseline: "v1.8.7.2@7da66551",
+		SchemaBaseline:   110,
 		Features: []string{
 			"codex-agent-connector",
 			"supdance-studio-theme",
