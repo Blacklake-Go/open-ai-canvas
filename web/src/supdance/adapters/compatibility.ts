@@ -887,7 +887,7 @@ export const SUPDANCE_UPSTREAM_PATCH_REGISTRY: readonly UpstreamPatchRecord[] = 
             "web/src/services/api/auth.ts",
             "web/src/stores/use-user-store.ts",
         ],
-        files: ["web/src/supdance/components/guest-creation-tools.tsx"],
+        files: ["web/src/supdance/components/guest-creation-tools.tsx", "web/src/supdance/guest-creation-draft.ts", "web/test/guest-creation-draft.test.ts"],
         reason: "首页游客可发现五项主推工具，侧栏读取后台开关，工具入口继续沿用现有登录与回跳流程。",
         upgradeRisk: "LOW",
     },

@@ -22,6 +22,7 @@ import { continueCreationConversationOnCanvas } from "@/services/creation-canvas
 import { useAuthEntry } from "@/hooks/use-auth-entry";
 import { CommunityHandoff } from "@/supdance/federation/community-handoff";
 import { GuestCreationTools } from "@/supdance/components/guest-creation-tools";
+import { GUEST_TEXT_DRAFT_PARAM, guestTextDraftSignInPath, takeGuestTextDraft } from "@/supdance/guest-creation-draft";
 import { useExternalAssetSources } from "@/hooks/use-external-asset-sources";
 import { LEGACY_TEXT_THINKING_CONFIG, isThinkingLevel, resolveThinkingLevel, thinkingLevelsFor, type ThinkingLevel, type ThinkingRequest } from "@/lib/text-thinking";
 import { modelCapabilityConfigFor, videoDurationAllowed, videoDurationOptions } from "@/lib/model-capabilities";
@@ -1091,8 +1092,9 @@ export default function CreatePage() {
             return;
         }
         if (!useUserStore.getState().user) {
-            // 未发送的提示词只保存在本页内存里，跳转登录页会丢失；两种登录模式都改用弹窗。
-            openAuth({ preferDialog: true });
+            // OAuth leaves the page even when sign-in starts in a dialog.
+            const next = mode === "text" && !workspaceTeamId && !attachments.length && !draftReferences.length ? guestTextDraftSignInPath(prompt) : undefined;
+            openAuth({ preferDialog: true, next });
             releaseRetryLock();
             releaseSubmitGate();
             return;
@@ -1543,9 +1545,10 @@ export default function CreatePage() {
         setHistoryOpen(false);
     };
 
+    const conversationReady = userSessionHydrated && hydrated && conversationStorageReady && conversationScope === activeConversationScope;
     const selectConversationRoute = useCreationConversationRoute({
         scope: activeConversationScope,
-        ready: userSessionHydrated && hydrated && conversationStorageReady && conversationScope === activeConversationScope,
+        ready: conversationReady,
         activeId,
         canSelect: !busy && !openingCanvas,
         ids: conversations.map((conversation) => conversation.id),
@@ -1561,6 +1564,20 @@ export default function CreatePage() {
             else startNewConversation();
         },
     });
+    const guestDraftToken = searchParams.get(GUEST_TEXT_DRAFT_PARAM);
+    useEffect(() => {
+        if (!guestDraftToken || !userId || !conversationReady || !activeConversation || workspaceTeamId || busy) return;
+        const draft = takeGuestTextDraft(guestDraftToken);
+        setSearchParams(
+            (current) => {
+                const next = new URLSearchParams(current);
+                next.delete(GUEST_TEXT_DRAFT_PARAM);
+                return next;
+            },
+            { replace: true },
+        );
+        if (draft) setPrompt((current) => current || draft);
+    }, [guestDraftToken, userId, conversationReady, activeConversation, busy, setSearchParams]);
     const startNewConversationFromHistory = () => {
         setHistoryOpen(false);
         navigate(workspacePath("/workspace/image"));
