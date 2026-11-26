@@ -3,9 +3,6 @@ import "@fontsource-variable/jetbrains-mono";
 import { reportStartupLoadFailure } from "@/lib/chunk-recovery";
 import { bootstrapAppearance } from "@/services/appearance-bootstrap";
 import { isIsolatedPrevisRepro } from "@/lib/dev-repro";
-import { reuseEntryModulePreloads } from "@/lib/module-preload";
-
-reuseEntryModulePreloads();
 
 // The public film entry checks its availability independently of workspace bootstrap.
 if (/^\/welcome\/?$/.test(window.location.pathname)) {

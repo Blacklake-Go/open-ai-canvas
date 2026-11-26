@@ -18,7 +18,6 @@ test("welcome entry loads configured appearance", async () => {
             throw error;
         },
         isIsolatedDirectorRepro: () => false,
-        reuseEntryModulePreloads() {},
         bootstrapAppearance: async () => {
             calls++;
         },

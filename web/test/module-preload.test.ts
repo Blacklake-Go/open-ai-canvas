@@ -62,25 +62,6 @@ test("404 与 HTML 响应立即失败，失败请求不会永久缓存", async (
     }
 });
 
-test("后续路由复用已验证的不可变资源，可变资源继续检查", async () => {
-    const original = globalThis.fetch;
-    const immutable = "https://assets.example/reuse-immutable.js";
-    const mutable = "https://assets.example/reuse-mutable.js";
-    const calls: string[] = [];
-    globalThis.fetch = (async (input) => {
-        const url = String(input);
-        calls.push(url);
-        return new Response("export default 1", { headers: { "Content-Type": "application/javascript", "Cache-Control": url === immutable ? "public, max-age=31536000, immutable" : "no-cache" } });
-    }) as typeof fetch;
-    try {
-        await warmPreloadResources([immutable, mutable]);
-        await warmPreloadResources([immutable, mutable]);
-        expect(calls).toEqual([immutable, mutable, mutable]);
-    } finally {
-        globalThis.fetch = original;
-    }
-});
-
 test("后台最多三路，打开预取中的页面时提升排队资源优先级且复用请求", async () => {
     const original = globalThis.fetch;
     const downloads = new Map<string, () => void>();

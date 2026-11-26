@@ -24,7 +24,6 @@ type Download = {
 const foreground: ModuleLoadPriority = { foreground: true };
 let currentPriority = foreground;
 const requests = new Map<string, Download>();
-const validatedAssets = new Set<string>();
 const queue: Download[] = [];
 const active = new Set<Download>();
 
@@ -44,42 +43,31 @@ export function prioritizeModuleLoad(priority: ModuleLoadPriority) {
     drain();
 }
 
-/** The entry can execute only after its static module dependencies are valid. */
-export function reuseEntryModulePreloads() {
-    if (typeof document === "undefined") return;
-    for (const link of document.head.querySelectorAll<HTMLLinkElement>('link[rel="modulepreload"]')) {
-        const url = new URL(link.href);
-        if (url.origin === document.location.origin && url.pathname.startsWith("/assets/")) validatedAssets.add(url.href);
-    }
-}
-
 /** Validate transport before native import, which can cache a failed module for this document. */
 export async function warmPreloadResources(urls: string[]) {
     const priority = currentPriority;
-    const pending = urls
-        .filter((url) => !validatedAssets.has(url))
-        .map((url) => {
-            let download = requests.get(url);
-            if (!download) {
-                let start!: () => void;
-                const promise = new Promise<void>((resolve, reject) => {
-                    start = () => {
-                        void fetchResource(url, isForeground(download!))
-                            .finally(() => {
-                                active.delete(download!);
-                                requests.delete(url);
-                                drain();
-                            })
-                            .then(resolve, reject);
-                    };
-                });
-                download = { owners: new Set(), start, promise };
-                requests.set(url, download);
-                queue.push(download);
-            }
-            download.owners.add(priority);
-            return download.promise;
-        });
+    const pending = urls.map((url) => {
+        let download = requests.get(url);
+        if (!download) {
+            let start!: () => void;
+            const promise = new Promise<void>((resolve, reject) => {
+                start = () => {
+                    void fetchResource(url, isForeground(download!))
+                        .finally(() => {
+                            active.delete(download!);
+                            requests.delete(url);
+                            drain();
+                        })
+                        .then(resolve, reject);
+                };
+            });
+            download = { owners: new Set(), start, promise };
+            requests.set(url, download);
+            queue.push(download);
+        }
+        download.owners.add(priority);
+        return download.promise;
+    });
     drain();
     await Promise.all(pending);
 }
@@ -117,7 +105,6 @@ async function fetchResource(url: string, foreground: boolean) {
             }
             // Complete the body so the subsequent module/link load can reuse the immutable HTTP cache.
             await response.arrayBuffer();
-            if (/(?:^|,)\s*immutable\s*(?:,|$)/i.test(response.headers.get("Cache-Control") ?? "")) validatedAssets.add(url);
             return;
         } catch (error) {
             if (!retryable || attempt === 2 || globalThis.navigator?.onLine === false) {
