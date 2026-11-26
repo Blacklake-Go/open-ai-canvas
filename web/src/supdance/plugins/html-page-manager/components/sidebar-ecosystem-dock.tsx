@@ -77,7 +77,7 @@ export function DockSocialSvg({ id, size = 15 }: { id: string; size?: number }) 
     const icon = SOCIAL_ICON_ALIASES[key] ?? key;
     const path = SOCIAL_SVG_PATHS[icon];
     if (!path) {
-        return <span className="font-mono text-[10px] font-bold">{id.slice(0, 2).toUpperCase()}</span>;
+        return <span className="font-mono text-label font-bold">{id.slice(0, 2).toUpperCase()}</span>;
     }
     return (
         <svg width={size} height={size} viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">

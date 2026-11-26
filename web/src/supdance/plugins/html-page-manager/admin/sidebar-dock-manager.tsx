@@ -171,7 +171,7 @@ export default function SidebarDockManager() {
 
                     <div className="sd-admin-switch-row">
                         <div>
-                            <div className="text-[13px] font-medium">启用侧边栏生态停靠区</div>
+                            <div className="text-ui font-medium">启用侧边栏生态停靠区</div>
                             <div className="text-xs opacity-65">控制全站工作台侧边栏底部停靠区是否热挂载。</div>
                         </div>
                         <Switch aria-label="启用侧边栏生态停靠区" checked={draft.enabled} onChange={(checked) => setDraft((prev) => ({ ...prev, enabled: checked }))} />
@@ -179,7 +179,7 @@ export default function SidebarDockManager() {
 
                     <div className="sd-admin-switch-row">
                         <div>
-                            <div className="text-[13px] font-medium">自动收起中部孤立「定价表」导航分组</div>
+                            <div className="text-ui font-medium">自动收起中部孤立「定价表」导航分组</div>
                             <div className="text-xs opacity-65">启用停靠区时隐藏中部孤立的定价表分组，释放历史会话列表空间；卸载插件后自动恢复。</div>
                         </div>
                         <Switch aria-label="自动收起中部孤立定价表分组" checked={draft.hideStandalonePricingGroup} onChange={(checked) => setDraft((prev) => ({ ...prev, hideStandalonePricingGroup: checked }))} />
@@ -244,7 +244,7 @@ export default function SidebarDockManager() {
 
                     <div className="sd-admin-switch-row mb-3">
                         <div>
-                            <div className="text-[13px] font-medium">同步全站「site-footer」官方链接</div>
+                            <div className="text-ui font-medium">同步全站「site-footer」官方链接</div>
                             <div className="text-xs opacity-65">开启后社媒地址直接沿用页脚管理器数据，这里仅控制显隐勾选。</div>
                         </div>
                         <Switch aria-label="同步全站 site-footer 社媒链接" checked={draft.syncWithSiteFooter} onChange={(checked) => setDraft((prev) => ({ ...prev, syncWithSiteFooter: checked }))} />
