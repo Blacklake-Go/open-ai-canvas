@@ -89,6 +89,10 @@
 
 # SupDance Canvas — 独立改造与定制代码清单 (CUSTOMIZATIONS.md)
 
+## Seedream 5.0 Pro 文生图画幅
+
+`runninghub-standard` 1.1.6 在声明式插件中将 `seedream-v5-pro/text-to-image` 的画幅映射成上游要求的像素宽高。映射按端点限定。主站后端启动时加载镜像内的官方插件包，并保留已绑定的请求版本。
+
 ## 恢复原有创作对话
 
 `supdance-native-image-creation` 恢复 `/create` 内的图片任务提交、追踪、素材入库和会话展示。独立 `/workspace/image` 页面退役，旧链接保留图片模式和会话 ID，远端历史同步后可打开对应会话。
