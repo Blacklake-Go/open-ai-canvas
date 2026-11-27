@@ -1,123 +1,320 @@
+import { ArrowDown, ArrowUpRight } from "lucide-react";
 import { useEffect } from "react";
-import { Sparkles, Terminal, Layers, ArrowUpRight, ShieldCheck, Wrench } from "lucide-react";
-import { GitHubIcon } from "./github-icon";
-import { McpHeader } from "./mcp-header";
-import { McpCliSection } from "./mcp-cli-section";
-import { McpPluginGrid } from "./mcp-plugin-grid";
-import { McpToolsSection } from "./mcp-tools-section";
-import { McpFaqSection } from "./mcp-faq-section";
-import { OFFICIAL_REPO_URL } from "./mcp-plugin-list";
+import { Link } from "react-router";
+import { useLocaleStore } from "@/stores/use-locale-store";
+import { useUserStore } from "@/stores/use-user-store";
 import { SupdanceAboutFooter } from "@/supdance/components/site-footer/supdance-about-footer";
+import { McpCliSection } from "./mcp-cli-section";
+import { McpFaqSection } from "./mcp-faq-section";
+import { McpHeader } from "./mcp-header";
+import { McpToolsSection } from "./mcp-tools-section";
+import "./mcp-page.css";
+
+interface ArchItem {
+    num: string;
+    title: Record<string, string>;
+    desc: Record<string, string>;
+    tags: readonly string[];
+}
+
+const ARCHITECTURE_PILLARS: ArchItem[] = [
+    {
+        num: "01",
+        title: {
+            "zh-CN": "标准化协议层", "zh-TW": "標準化協議層", "en-US": "Standardized Protocol Layer",
+            "es-ES": "Capa de Protocolo Estándar", "fr-FR": "Couche Protocole Standard", "de-DE": "Standardisierte Protokollschicht",
+            "ja-JP": "標準プロトコル層", "ko-KR": "표준 프로토콜 계층",
+        },
+        desc: {
+            "zh-CN": "严格遵循 Anthropic Model Context Protocol 规范，统一工具发现（tools/list）、结构化入参校验与标准 JSON-RPC 调用响应。",
+            "zh-TW": "嚴格遵循 Anthropic Model Context Protocol 規範，統一工具探索（tools/list）、結構化參數校驗與標準 JSON-RPC 呼叫回應。",
+            "en-US": "Built strictly on the Anthropic Model Context Protocol specification—unifying tool discovery (tools/list), typed input validation, and JSON-RPC responses.",
+            "es-ES": "Construido siguiendo Model Context Protocol con descubrimiento unificado (tools/list), validación tipada y respuestas JSON-RPC.",
+            "fr-FR": "Basé sur la spécification Model Context Protocol avec découverte d'outils (tools/list), validation typée et JSON-RPC.",
+            "de-DE": "Basiert strikt auf dem Model Context Protocol: vereinheitlichtes Discovery (tools/list), typisierte Validierung und JSON-RPC.",
+            "ja-JP": "Anthropic Model Context Protocol に完全準拠し、tools/list・型安全バリデーション・JSON-RPC 応答を統一します。",
+            "ko-KR": "Anthropic Model Context Protocol 사양을 준수하여 tools/list 도구 탐색, 타입 검증 및 JSON-RPC 응답을 통일합니다.",
+        },
+        tags: ["JSON-RPC 2.0", "Streamable HTTP", "stdio"],
+    },
+    {
+        num: "02",
+        title: {
+            "zh-CN": "创作级异步管线", "zh-TW": "創作級非同步管線", "en-US": "Production Async Pipelines",
+            "es-ES": "Pipelines Asíncronos", "fr-FR": "Pipelines Asynchrones", "de-DE": "Asynchrone Produktions-Pipelines",
+            "ja-JP": "制作向け非同期パイプライン", "ko-KR": "프로덕션 비동기 파이프라인",
+        },
+        desc: {
+            "zh-CN": "针对影视视频与多轨音频生成长耗时场景内建任务轮询、断点状态恢复与资产直链回写，不阻塞客户端对话流。",
+            "zh-TW": "針對影視影片與多軌音訊產生長耗時場景內建任務輪詢、斷點狀態恢復與資產直鏈回寫，不阻塞用戶端對話流。",
+            "en-US": "Engineered for long-running video and multi-track audio generation with non-blocking polling, crash-safe recovery, and canvas asset writeback.",
+            "es-ES": "Diseñado para renders largos de video y audio con sondeo sin bloqueo, recuperación segura y guardado en lienzo.",
+            "fr-FR": "Conçu pour les rendus longs vidéo et audio sans bloquer votre assistant, avec reprise sur erreur et sauvegarde canevas.",
+            "de-DE": "Entwickelt für langlaufende Video- und Audio-Renders mit non-blocking Polling, Wiederherstellung und Canvas-Synchronisation.",
+            "ja-JP": "長時間の動画・音声生成に対応したノンブロッキングポーリングと障害復旧を備え、対話フローを妨げずキャンバスへ保存します。",
+            "ko-KR": "장시간 소요되는 비디오·오디오 렌더링을 위한 논블로킹 폴링, 장애 복구 및 캔버스 자동 기록을 지원합니다.",
+        },
+        tags: ["Async Tasks", "Asset Sync", "Canvas Writeback"],
+    },
+    {
+        num: "03",
+        title: {
+            "zh-CN": "统一身份与额度隔离", "zh-TW": "統一身份與額度隔離", "en-US": "Unified Identity & Quota Guard",
+            "es-ES": "Identidad y Cuotas Aisladas", "fr-FR": "Identité & Quotas Isolés", "de-DE": "Identität & Kontingentschutz",
+            "ja-JP": "統合認証とクォータ保護", "ko-KR": "통합 인증 및 할당량 보호",
+        },
+        desc: {
+            "zh-CN": "复用生产环境同源沙盒、Scoped Token 鉴权、单日用量上限与积分预留核算，外部工具调用与主站共用安全审计边界。",
+            "zh-TW": "複用生產環境同源沙盒、Scoped Token 驗證、單日用量上限與積分預留核算，外部工具呼叫與主站共用安全稽核邊界。",
+            "en-US": "Shares production sandboxing, scoped tokens, daily usage limits, and credit ledger reservations—applying identical audit boundaries.",
+            "es-ES": "Comparte sandbox de producción, tokens limitados, límites diarios y contabilidad de créditos bajo la misma auditoría.",
+            "fr-FR": "Partage le bac à sable de production, les jetons limités, les plafonds quotidiens et les audits de sécurité.",
+            "de-DE": "Nutzt Produktions-Sandbox, Scoped Tokens, Tageslimits und Credit-Buchhaltung unter identischen Sicherheitsrichtlinien.",
+            "ja-JP": "本番環境と同一のサンドボックス、Scoped Token、日次上限、クレジット予約会計を共有し監査境界を統一します。",
+            "ko-KR": "프로덕션 샌드박스, 범위 제한 토큰, 일일 한도 및 크레딧 예약 정산을 공유하여 일관된 보안 경계를 유지합니다.",
+        },
+        tags: ["Scoped Auth", "Quota Guard", "Audit Ledger"],
+    },
+];
+
+const CLIENT_TARGETS = ["Cursor", "Claude Desktop", "Windsurf", "Cline", "Custom Agents"] as const;
+
+interface RoadmapItem {
+    phase: string;
+    status: Record<string, string>;
+    stateClass: string;
+    title: Record<string, string>;
+    desc: Record<string, string>;
+}
+
+const ROADMAP_PHASES: RoadmapItem[] = [
+    {
+        phase: "PHASE 01",
+        status: { "zh-CN": "已就绪 · LIVE", "en-US": "LIVE", "zh-TW": "已就緒 · LIVE", "ja-JP": "稼働中 · LIVE", "ko-KR": "라이브 · LIVE" },
+        stateClass: "is-live",
+        title: { "zh-CN": "工作台内置 MCP 连接器", "zh-TW": "工作台內建 MCP 連接器", "en-US": "Built-In Workspace Connectors", "ja-JP": "ワークスペース内蔵コネクタ", "ko-KR": "워크스페이스 내장 커넥터" },
+        desc: {
+            "zh-CN": "画布 Agent 已支持安全接入第三方兼容 MCP 服务，并与内部节点、短剧分镜工具同台协作。",
+            "zh-TW": "畫布 Agent 已支援安全接入第三方相容 MCP 服務，並與內部節點、短劇分鏡工具同台協作。",
+            "en-US": "Canvas Agent already connects securely to external MCP services alongside native canvas and drama tools.",
+            "ja-JP": "Canvas Agent は外部 MCP サービスと安全に連携し、内蔵キャンバスツールと協調動作しています。",
+            "ko-KR": "Canvas Agent는 이미 호환 외부 MCP 서비스와 안전하게 연결되어 기본 캔버스 도구와 함께 작동합니다.",
+        },
+    },
+    {
+        phase: "PHASE 02",
+        status: { "zh-CN": "构建中 · ACTIVE", "en-US": "IN PROGRESS", "zh-TW": "建構中 · ACTIVE", "ja-JP": "開発中 · ACTIVE", "ko-KR": "구축 중 · ACTIVE" },
+        stateClass: "is-building",
+        title: { "zh-CN": "SupDance MCP Server 核心", "zh-TW": "SupDance MCP Server 核心", "en-US": "SupDance MCP Server Core", "ja-JP": "SupDance MCP Server コア", "ko-KR": "SupDance MCP Server 코어" },
+        desc: {
+            "zh-CN": "正在完善分镜拆解、角色锁定、视频镜头与多轨音频四大原子创作工具的类型契约与异步任务接口。",
+            "zh-TW": "正完善分鏡拆解、角色鎖定、影片鏡頭與多軌音訊四大原子創作工具的型別契約與非同步任務介面。",
+            "en-US": "Finalizing typed schemas and async execution contracts for storyboard, character lock, video, and audio tools.",
+            "ja-JP": "絵コンテ分解・キャラ固定・動画・音楽4大ツールの型定義と非同期タスクインターフェースを実装中です。",
+            "ko-KR": "스토리보드, 캐릭터 고정, 비디오, 오디오 4대 핵심 도구의 타입 계약과 비동기 인터페이스를 고도화 중입니다.",
+        },
+    },
+    {
+        phase: "PHASE 03",
+        status: { "zh-CN": "规划中 · NEXT", "en-US": "PLANNED", "zh-TW": "規劃中 · NEXT", "ja-JP": "予定 · NEXT", "ko-KR": "예정 · NEXT" },
+        stateClass: "",
+        title: { "zh-CN": "OAuth 2.1 与凭据中心", "zh-TW": "OAuth 2.1 與憑證中心", "en-US": "OAuth 2.1 & Credential Hub", "ja-JP": "OAuth 2.1 と認証情報ハブ", "ko-KR": "OAuth 2.1 및 자격 증명 허브" },
+        desc: {
+            "zh-CN": "在个人账户中心开放开发者 Scoped API Key 管理、权限范围裁剪与细粒度消费限额设置。",
+            "zh-TW": "於個人帳戶中心開放開發者 Scoped API Key 管理、權限範圍裁剪與細粒度消費限額設定。",
+            "en-US": "Self-serve scoped API keys in Account Settings with fine-grained permission scopes and daily spend limits.",
+            "ja-JP": "アカウント設定で開発者向け Scoped API Key 発行・権限制限・日次上限設定を開放予定です。",
+            "ko-KR": "계정 설정에서 개발자용 Scoped API Key 발급, 권한 범위 제어 및 일일 한도 설정 기능을 제공합니다.",
+        },
+    },
+    {
+        phase: "PHASE 04",
+        status: { "zh-CN": "规划中 · UPCOMING", "en-US": "UPCOMING", "zh-TW": "規劃中 · UPCOMING", "ja-JP": "計画中 · UPCOMING", "ko-KR": "로드맵 · UPCOMING" },
+        stateClass: "",
+        title: { "zh-CN": "开放 SDK 与工作流桥接", "zh-TW": "開放 SDK 與工作流橋接", "en-US": "Open SDK & Pipeline Bridges", "ja-JP": "公開 SDK とワークフロー連携", "ko-KR": "오픈 SDK 및 파이프라인 브릿지" },
+        desc: {
+            "zh-CN": "推出跨平台 CLI 包与第三方工作流桥接节点，支持外部管线批量驱动云端渲染与资产双向同步。",
+            "zh-TW": "推出跨平台 CLI 套件與第三方工作流橋接節點，支援外部管線批次驅動雲端渲染與資產雙向同步。",
+            "en-US": "Cross-platform CLI tooling and workflow bridges for batch cloud rendering and bidirectional asset sync.",
+            "ja-JP": "クロスプラットフォーム CLI とワークフロー連携ノードにより外部からの一括クラウド描画を実現します。",
+            "ko-KR": "크로스 플랫폼 CLI 패키지 및 외부 파이프라인 연동을 위한 클라우드 렌더링·자산 동기화 브릿지를 제공합니다.",
+        },
+    },
+];
+
+function pickCopy(locale: string, map: Record<string, string>): string {
+    return map[locale] || map["en-US"] || map["zh-CN"];
+}
 
 export default function McpPage() {
+    const user = useUserStore((s) => s.user);
+    const locale = useLocaleStore((s) => s.locale);
+
     useEffect(() => {
-        document.title = "SupDance MCP 协议与插件生态 | 影视多模态 AI 扩展中心";
-    }, []);
+        document.title = locale.startsWith("zh")
+            ? "SupDance MCP — 开放创作协议与 Agent 扩展中心"
+            : "SupDance MCP — Model Context Protocol & Agent Hub";
+    }, [locale]);
 
     return (
-        <div className="min-h-screen bg-background text-foreground selection:bg-primary/15 selection:text-foreground transition-colors duration-200">
-            {/* 顶栏 Header */}
+        <div className="mcp-editorial-root">
             <McpHeader />
 
-            {/* Hero 区域 */}
-            <section className="relative overflow-hidden pt-16 pb-20 md:pt-24 md:pb-28">
-                {/* 背景渐变光晕与点阵质感 */}
-                <div className="pointer-events-none absolute left-1/2 top-0 -translate-x-1/2 h-[560px] w-full max-w-7xl">
-                    <div className="absolute top-1/4 left-1/3 size-96 rounded-full bg-rose-500/10 blur-[120px] dark:bg-rose-600/15" />
-                    <div className="absolute top-1/3 right-1/3 size-96 rounded-full bg-purple-500/10 blur-[120px] dark:bg-purple-600/15" />
-                    <div className="absolute -top-10 left-1/2 size-72 -translate-x-1/2 rounded-full bg-amber-500/10 blur-[100px]" />
-                </div>
+            {/* Band 1: 暗黑序幕 Hero（承袭关于页等高线纹理与极简排版） */}
+            <section className="mcp-hero">
+                <svg className="mcp-hero-waves" viewBox="0 0 1440 820" preserveAspectRatio="xMidYMid slice" fill="none" aria-hidden="true">
+                    <path d="M-80 260C220 190 480 340 780 250C1060 165 1290 280 1520 210" stroke="#eee7d7" strokeOpacity="0.22" strokeWidth="1" />
+                    <path d="M-80 320C240 255 510 390 810 300C1080 220 1300 330 1520 265" stroke="#eee7d7" strokeOpacity="0.16" strokeWidth="1" />
+                    <path d="M-80 385C260 320 530 445 830 360C1100 285 1310 385 1520 325" stroke="#eee7d7" strokeOpacity="0.12" strokeWidth="1" />
+                    <path d="M-80 460C270 395 540 515 840 430C1110 355 1320 450 1520 395" stroke="#eee7d7" strokeOpacity="0.09" strokeWidth="1" />
+                    <path d="M-80 540C280 475 550 590 850 510C1120 435 1330 520 1520 470" stroke="#eee7d7" strokeOpacity="0.07" strokeWidth="1" />
+                </svg>
+                <div className="mcp-hero-vignette" />
 
-                <div className="relative mx-auto max-w-5xl px-4 text-center sm:px-6">
-                    {/* 徽标 */}
-                    <div className="inline-flex items-center gap-2 rounded-full border border-rose-500/30 bg-rose-500/10 px-4 py-1.5 text-xs font-semibold text-rose-600 backdrop-blur-md dark:text-rose-300">
-                        <Sparkles className="size-3.5 text-rose-500 dark:text-rose-400" />
-                        <span>官方开源 MCP 协议与影视创作插件中枢</span>
+                <div className="mcp-hero-content">
+                    <div className="mcp-hero-kicker mcp-eyebrow">
+                        <span className="mcp-hero-status-dot" aria-hidden="true" />
+                        <span>MODEL CONTEXT PROTOCOL · 正在构建中</span>
                     </div>
 
-                    {/* 主标题 */}
-                    <h1 className="mt-6 text-4xl font-extrabold tracking-tight text-foreground sm:text-6xl sm:leading-[1.15]">
-                        让 AI 创意无限流动
+                    <h1 className="mcp-hero-title">
+                        让任意 AI 助手，
                         <br />
-                        <span className="bg-gradient-to-r from-rose-500 via-pink-500 to-purple-600 bg-clip-text text-transparent dark:from-rose-400 dark:via-pink-400 dark:to-purple-400">SupDance 插件与 MCP 中枢</span>
+                        直接驱动你的创作工作台。
                     </h1>
 
-                    {/* 副标题 */}
-                    <p className="mx-auto mt-6 max-w-2xl text-base leading-relaxed text-muted-foreground sm:text-lg">
-                        专为 Cursor、Claude Desktop、Windsurf 及 ComfyUI 创作者打造。一键安装 SupDance CLI，无缝接入文生图、高清生视频、多轨音乐与智能分镜 Agent 能力。
+                    <p className="mcp-hero-subtitle">
+                        SupDance MCP 协议与服务端正在研发构建中。未来无论身处 Cursor、Claude Desktop 还是自研 Agent 运行时，都能通过统一上下文协议直连短剧分镜、图像、视频与多轨音乐引擎。
                     </p>
 
-                    {/* 行动按钮 */}
-                    <div className="mt-8 flex flex-wrap items-center justify-center gap-3.5">
-                        <a
-                            href="#cli-quickstart"
-                            className="inline-flex items-center gap-2 rounded-xl bg-[var(--button-primary-bg)] px-6 py-3 text-sm font-semibold text-[var(--button-primary-fg)] shadow-[var(--button-primary-shadow)] transition-all hover:scale-105 hover:bg-[var(--button-primary-hover-bg)]"
-                        >
-                            <Terminal className="size-4" />
-                            <span>快速安装 CLI / MCP</span>
+                    <div className="mcp-hero-actions">
+                        <a href="#tools-schema" className="mcp-btn-pill-light">
+                            <span>查看协议预览</span>
+                            <ArrowDown className="size-4" strokeWidth={1.8} aria-hidden="true" />
                         </a>
-
-                        <a href="#plugins-market" className="inline-flex items-center gap-2 rounded-xl border border-border bg-card px-6 py-3 text-sm font-semibold text-foreground shadow-xs backdrop-blur-sm transition-all hover:bg-muted">
-                            <Layers className="size-4" />
-                            <span>浏览插件生态</span>
-                        </a>
-
-                        <a href="#tools-schema" className="inline-flex items-center gap-2 rounded-xl border border-border bg-card px-5 py-3 text-sm font-semibold text-foreground shadow-xs transition-all hover:bg-muted">
-                            <Wrench className="size-4" />
-                            <span>查看可用工具清单</span>
-                        </a>
-
-                        <a
-                            href={OFFICIAL_REPO_URL}
-                            target="_blank"
-                            rel="noreferrer"
-                            className="inline-flex items-center gap-1.5 rounded-xl border border-border bg-card px-4 py-3 text-sm font-semibold text-foreground shadow-xs transition-all hover:bg-muted"
-                        >
-                            <GitHubIcon className="size-4" />
-                            <span>GitHub</span>
-                            <ArrowUpRight className="size-3.5 opacity-60" />
-                        </a>
+                        <Link to={user ? "/create" : "/"} className="mcp-btn-pill-dark-outline">
+                            <span>进入线上工作台</span>
+                            <ArrowUpRight className="size-4" strokeWidth={1.8} aria-hidden="true" />
+                        </Link>
                     </div>
 
-                    {/* 核心亮点标签 */}
-                    <div className="mt-12 flex flex-wrap items-center justify-center gap-6 border-t border-border pt-8 text-xs text-muted-foreground">
-                        <div className="flex items-center gap-2">
-                            <ShieldCheck className="size-4 text-emerald-500" />
-                            <span>100% Anthropic MCP 协议标准</span>
+                    <div className="mcp-hero-emblem" aria-hidden="true">
+                        <span className="mcp-hero-emblem-line" />
+                        <span className="mcp-hero-emblem-mark">
+                            <img src="/supdance-mark.png" alt="" />
+                        </span>
+                        <span className="mcp-hero-emblem-line" />
+                    </div>
+
+                    <div className="mcp-hero-pillars">
+                        <div>
+                            <div className="mcp-pillar-label">01 · PROTOCOL PREVIEW</div>
+                            <p className="mcp-pillar-text">诚实透明的协议设计期预览：工具入参契约与远程端点正在联调与安全压测中。</p>
                         </div>
-                        <div className="flex items-center gap-2">
-                            <span className="size-2 rounded-full bg-rose-500 animate-pulse" />
-                            <span>ComfyUI 本地与云端极速桥接</span>
+                        <div>
+                            <div className="mcp-pillar-label">02 · AGENT CONNECTED</div>
+                            <p className="mcp-pillar-text">线上工作台画布助手（Canvas Agent）已率先支持挂载外部兼容 MCP 服务。</p>
                         </div>
-                        <div className="flex items-center gap-2">
-                            <Sparkles className="size-4 text-amber-500" />
-                            <span>即梦 & Seedance 动力学视频调度</span>
+                        <div>
+                            <div className="mcp-pillar-label">03 · SAME SANDBOX</div>
+                            <p className="mcp-pillar-text">严格延续生产环境同源鉴权、积分核算与资产归属体系，拒绝临时拼凑网关。</p>
                         </div>
                     </div>
                 </div>
             </section>
 
-            {/* Section 1: 即梦风格 CLI 快速安装区 */}
-            <div id="cli-quickstart">
-                <McpCliSection />
-            </div>
+            {/* Band 2: 暖白宣纸区 · 架构原则与客户端生态 */}
+            <section id="mcp-architecture" className="mcp-section-paper">
+                <div className="mcp-container">
+                    <div className="mcp-section-head">
+                        <span className="mcp-eyebrow mcp-eyebrow--light">ARCHITECTURE & PRINCIPLES</span>
+                        <h2 className="mcp-section-h2">为全模态影视工作流而生的开放协议层</h2>
+                        <p className="mcp-section-lead">
+                            不同于简单的文本推理封装，SupDance MCP 从一开始便针对重资产、长耗时、多步骤的创作管线进行工程设计，确保每次外部调用都能稳定沉淀为画布中的可控作品。
+                        </p>
+                    </div>
 
-            {/* Section 2: MCP Tools 工具清单展示区 */}
-            <div id="tools-schema">
-                <McpToolsSection />
-            </div>
+                    <div className="mcp-arch-grid">
+                        {ARCHITECTURE_PILLARS.map((item) => (
+                            <article key={item.num} className="mcp-arch-card">
+                                <span className="mcp-arch-num">{item.num}</span>
+                                <h3 className="mcp-arch-title">{pickCopy(locale, item.title)}</h3>
+                                <p className="mcp-arch-desc">{pickCopy(locale, item.desc)}</p>
+                                <div className="mcp-arch-tags">
+                                    {item.tags.map((tag) => (
+                                        <span key={tag} className="mcp-mono-chip">
+                                            {tag}
+                                        </span>
+                                    ))}
+                                </div>
+                            </article>
+                        ))}
+                    </div>
 
-            {/* Section 3: Liblib 风格插件生态市场区 */}
-            <div id="plugins-market">
-                <McpPluginGrid />
-            </div>
+                    <div className="mcp-clients-bar">
+                        <span className="mcp-clients-label">PLANNED COMPATIBLE CLIENTS</span>
+                        <div className="mcp-clients-list">
+                            {CLIENT_TARGETS.map((client) => (
+                                <span key={client} className="mcp-client-pill">
+                                    <span className="mcp-client-dot" aria-hidden="true" />
+                                    <span>{client}</span>
+                                </span>
+                            ))}
+                        </div>
+                    </div>
+                </div>
+            </section>
 
-            {/* Section 4: 常见故障排查 FAQ 区 */}
-            <div id="faqs">
-                <McpFaqSection />
-            </div>
+            {/* Band 3: 暖灰宣纸区 · 工具规范契约预览 */}
+            <McpToolsSection />
 
-            {/* Footer */}
+            {/* Band 4: 深炭黑技术区 · 配置片段预览 */}
+            <McpCliSection />
+
+            {/* Band 5: 暖白宣纸区 · 研发路线图 + 诚实 FAQ + CTA */}
+            <section id="mcp-roadmap" className="mcp-section-paper">
+                <div className="mcp-container">
+                    <div className="mcp-section-head">
+                        <span className="mcp-eyebrow mcp-eyebrow--light">DELIVERY ROADMAP</span>
+                        <h2 className="mcp-section-h2">务实推进的构建路线图</h2>
+                        <p className="mcp-section-lead">先把底座做扎实，再分阶段开放接口。你可以先在画布工作台中使用已上线的外部 MCP 连接能力。</p>
+                    </div>
+
+                    <div className="mcp-roadmap-grid">
+                        {ROADMAP_PHASES.map((step) => (
+                            <article key={step.phase} className="mcp-roadmap-card">
+                                <div className="mcp-roadmap-top">
+                                    <span className="mcp-roadmap-phase">{step.phase}</span>
+                                    <span className={`mcp-roadmap-pill${step.stateClass ? ` ${step.stateClass}` : ""}`}>{pickCopy(locale, step.status)}</span>
+                                </div>
+                                <h3 className="mcp-roadmap-title">{pickCopy(locale, step.title)}</h3>
+                                <p className="mcp-roadmap-desc">{pickCopy(locale, step.desc)}</p>
+                            </article>
+                        ))}
+                    </div>
+
+                    <McpFaqSection />
+
+                    <div className="mcp-cta-banner">
+                        <div>
+                            <span className="mcp-eyebrow mcp-eyebrow--dark">READY TODAY · WORKSPACE</span>
+                            <h3 className="mcp-cta-title">立即进入 SupDance 工作台体验</h3>
+                            <p className="mcp-cta-sub">在正式版外部 MCP Server 开放之前，你已可在工作台内使用自由画布、短剧制作与内置 Agent 连接器。</p>
+                        </div>
+                        <div className="mcp-cta-btns">
+                            <Link to={user ? "/create" : "/"} className="mcp-btn-pill-light">
+                                <span>开始创作</span>
+                                <ArrowUpRight className="size-4" strokeWidth={1.8} aria-hidden="true" />
+                            </Link>
+                            <a href="/html/about" className="mcp-btn-pill-dark-outline">
+                                <span>了解 SupDance</span>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            {/* Band 6: 统一站点页脚 */}
             <SupdanceAboutFooter pagePath="/mcp" />
         </div>
     );
