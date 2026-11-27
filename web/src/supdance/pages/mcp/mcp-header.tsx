@@ -69,12 +69,12 @@ export function McpHeader() {
                         <img
                             src="/supdance-brand-dark.png"
                             alt="SupDance"
-                            className="hidden dark:block h-7 sm:h-8 w-auto max-w-[155px] object-contain"
+                            className={`h-7 sm:h-8 w-auto max-w-[155px] object-contain ${scrolled ? "hidden" : "block"}`}
                         />
                         <img
                             src="/supdance-brand-light.png"
                             alt="SupDance"
-                            className="block dark:hidden h-7 sm:h-8 w-auto max-w-[155px] object-contain"
+                            className={`h-7 sm:h-8 w-auto max-w-[155px] object-contain ${scrolled ? "block" : "hidden"}`}
                         />
                     </Link>
                     <span className="mcp-brand-tag">MCP</span>
