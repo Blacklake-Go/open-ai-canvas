@@ -234,7 +234,7 @@ function UploadHero({ onPick, onPaste }: { onPick: () => void; onPaste: () => vo
                 {PIPELINE.map((step, index) => (
                     <span key={step}>
                         <b>{index + 1}</b>
-                        {step}
+                        {_creationLabel(step)}
                     </span>
                 ))}
             </div>
@@ -282,7 +282,7 @@ function DramaCard({ item, onDelete }: { item: DramaListItem; onDelete: () => vo
                 <DramaCover item={item} />
                 <span className={`drama-chip drama-library-badge is-${needsAction ? "paused" : item.status}`}>
                     <span className="drama-dot" />
-                    {needsAction ? _creationText("creation.b7e3e715f18b9bac") : STATUS_LABEL[item.status]}
+                    {needsAction ? _creationText("creation.b7e3e715f18b9bac") : _creationLabel(STATUS_LABEL[item.status])}
                 </span>
                 <div className="drama-library-body">
                     <h3 title={item.project.name}>{item.project.name}</h3>

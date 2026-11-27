@@ -108,8 +108,7 @@ export default function DarkLoginPage() {
                     <h1 className="text-4xl font-extrabold tracking-tight text-foreground sm:text-5xl lg:leading-tight">
                         把无限想象力，
                         <br />
-                        化作真实的
-                        <span className="bg-gradient-to-r from-[var(--auth-accent)] via-foreground/80 to-muted-foreground bg-clip-text text-transparent ml-2">光影世界</span>
+                        化作真实的 <span className="bg-gradient-to-r from-[var(--auth-accent)] via-foreground/80 to-muted-foreground bg-clip-text text-transparent ml-2">光影世界</span>
                     </h1>
 
                     <p className="max-w-md text-sm leading-relaxed text-muted-foreground">从智能剧本拆解、高精角色分镜设计，到端到端视频生成与画布流编排，为独立创作者与影视团队提供工业级 AI 生产力。</p>

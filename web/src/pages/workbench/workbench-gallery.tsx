@@ -243,15 +243,16 @@ const BatchCard = memo(function BatchCard({ batch, kind, actions, busyTaskIds }:
     const ref = useOnceVisible<HTMLElement>(() => actions.visible(batch.key));
     const { counts } = batch;
     const style = { "--wb-tile-ratio": batch.ratio ? String(batch.ratio) : "1", "--wb-tile-min": `${tileMinWidth(batch.ratio)}px` } as CSSProperties;
-    const unit = kind === "image" ? "张" : "条";
     const status =
         batch.submitting && counts.done + counts.failed === 0 && !batch.tasks.length
-            ? "正在提交"
+            ? interfaceText("正在提交")
             : counts.active
-              ? `${counts.done} / ${counts.total} 已完成 · ${counts.active} ${unit}生成中`
+              ? interfaceText("{done} / {total} 已完成 · {active} 项生成中", { done: counts.done, total: counts.total, active: counts.active })
               : counts.failed || batch.resumable
-                ? `${counts.done} / ${counts.total} 已完成`
-                : `${counts.total} ${unit}`;
+                ? interfaceText("{done} / {total} 已完成", { done: counts.done, total: counts.total })
+                : kind === "image"
+                  ? interfaceText("{count} 张图片", { count: counts.total })
+                  : interfaceText("{count} 条视频", { count: counts.total });
     const menuItems = [
         ...(counts.active ? [{ key: "cancel", label: "取消未完成的任务" }] : []),
         ...(counts.failed ? [{ key: "retry", label: "重新生成失败项" }] : []),
@@ -398,15 +399,15 @@ export function WorkbenchGallery({
         }),
         { outputs: 0, generating: 0, activeBatches: 0, failedBatches: 0 },
     );
-    const unit = kind === "image" ? "张" : "条";
+    const outputCount = kind === "image" ? interfaceText("{count} 张图片", { count: totals.outputs }) : interfaceText("{count} 条视频", { count: totals.outputs });
     return (
         <section className="wb-gallery" aria-label="作品">
             <header className="wb-gallery-head">
                 <div className="wb-gallery-title">
                     <h2>作品</h2>
                     <span>
-                        {totals.outputs} {unit}
-                        {totals.generating ? ` · ${totals.generating} ${unit}生成中` : ""}
+                        {outputCount}
+                        {totals.generating ? ` · ${interfaceText("{count} 项生成中", { count: totals.generating })}` : ""}
                     </span>
                 </div>
                 <div className="wb-gallery-tools">

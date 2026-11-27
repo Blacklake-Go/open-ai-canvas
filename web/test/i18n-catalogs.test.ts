@@ -20,6 +20,7 @@ import { PREVIS_ACTOR_TEMPLATES, PREVIS_CAMERA_PRESETS, PREVIS_LIGHT_PRESETS } f
 import { PREVIS_MOTIONS } from "@/lib/canvas/previs/previs-motion";
 import { PREVIS_PROP_LIBRARY } from "@/lib/canvas/previs/previs-prop-library";
 import { formatCreationConversationTime, formatCreationHistoryDay, modeLabels } from "@/pages/create/creation-types";
+import { commerceScenes } from "@/pages/ecommerce/scenes";
 import { localizedApiErrorMessage } from "@/services/api/error-codes";
 import { useLocaleStore } from "@/stores/use-locale-store";
 import { useUserStore } from "@/stores/use-user-store";
@@ -90,6 +91,15 @@ describe("i18n catalogs", () => {
         for (const { code } of SUPPORTED_LOCALES) {
             const messages = flatten(NATIVE_CATALOGS[code]);
             for (const source of sources) expect(messages[interfaceTextKey(source)]?.trim(), `${code}: ${source}`).toBeTruthy();
+        }
+    });
+    test("commerce scenes, reference labels and suggestions ship in all eight languages", () => {
+        const sources = new Set(commerceScenes.flatMap(({ label, summary, materials, phrases }) => [label, summary, materials.required, materials.suggested, ...phrases.flatMap((group) => [group.label, ...group.phrases])]));
+        for (const { code } of SUPPORTED_LOCALES) {
+            const messages = flatten(NATIVE_CATALOGS[code]);
+            for (const source of sources) {
+                if (source) expect(messages[interfaceTextKey(source)]?.trim(), `${code}: ${source}`).toBeTruthy();
+            }
         }
     });
     test("rendered built-in style fields include copy for each supported locale", () => {

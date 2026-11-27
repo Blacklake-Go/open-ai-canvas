@@ -1,4 +1,5 @@
 import { interfaceText } from "@/i18n/interface-text";
+import { currentLocale } from "@/i18n";
 import { useState } from "react";
 import { useOutletContext } from "react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
@@ -19,7 +20,13 @@ export function TeamWalletPane() {
     const userId = useUserStore((state) => state.user?.id) || "";
     const prefix = teamKeys.space(userId, team.id);
     const owner = team.role === "owner";
-    const captions = team.parentId ? { ...actions, fund: "从公司公共池转入", withdraw: "转回公司公共池" } : { ...actions, fund: "从个人钱包转入" };
+    const captions = {
+        fund: team.parentId ? interfaceText("从公司公共池转入") : interfaceText("从个人钱包转入"),
+        withdraw: team.parentId ? interfaceText("转回公司公共池") : interfaceText("转回个人"),
+        allocate: interfaceText("划拨额度"),
+        reclaim: interfaceText("回收额度"),
+    };
+    const creditsUnit = interfaceText("积分");
     const { message } = App.useApp();
     const queryClient = useQueryClient();
     const wallet = useQuery({ queryKey: [...prefix, "wallet"], queryFn: ({ signal }) => getTeamWallet(team.id, signal) });
@@ -35,8 +42,8 @@ export function TeamWalletPane() {
     const parsedAmount = parseTeamCreditAmount(amount);
     const transfer = useMutation({
         mutationFn: async () => {
-            if (!form || parsedAmount === undefined) throw new Error("请输入大于零且最多六位小数的积分");
-            if ((form.action === "allocate" || form.action === "reclaim") && !form.membershipId) throw new Error("请选择团队成员");
+            if (!form || parsedAmount === undefined) throw new Error(interfaceText("请输入大于零且最多六位小数的积分"));
+            if ((form.action === "allocate" || form.action === "reclaim") && !form.membershipId) throw new Error(interfaceText("请选择团队成员"));
             return transferTeamCredits(team.id, { ...form, amountMicrocredits: parsedAmount });
         },
         onSuccess: async () => {
@@ -50,18 +57,18 @@ export function TeamWalletPane() {
     });
     const account = wallet.data?.myAccount;
     const ledgerAccount = (entry: TeamLedgerEntry) => {
-        if (entry.accountId === account?.id) return "我的团队额度";
-        if (entry.accountId === wallet.data?.pool?.id) return "团队待分配";
+        if (entry.accountId === account?.id) return interfaceText("我的团队额度");
+        if (entry.accountId === wallet.data?.pool?.id) return interfaceText("团队待分配");
         if (entry.membershipId) {
             const member = members.data?.find((candidate) => candidate.id === entry.membershipId);
-            return member?.displayName || member?.username || "历史成员额度";
+            return member?.displayName || member?.username || interfaceText("历史成员额度");
         }
-        return "所有者个人钱包";
+        return interfaceText("所有者个人钱包");
     };
     return (
         <div className="space-y-5">
             <PageHeader
-                title={owner ? "团队积分" : "我的团队额度"}
+                title={owner ? interfaceText("团队积分") : interfaceText("我的团队额度")}
                 description="公共池中的积分由所有者划拨。分给你的额度只能在当前空间消费。"
                 actions={
                     owner ? (
@@ -79,15 +86,15 @@ export function TeamWalletPane() {
             {wallet.isError ? <Alert type="error" title="额度读取失败" description={wallet.error.message} action={<Button onClick={() => void wallet.refetch()}>重试</Button>} /> : null}
             <div className="grid gap-3 sm:grid-cols-3">
                 {[
-                    { label: "我的可用额度", value: account?.availableMicrocredits },
-                    { label: "公共待分配", value: wallet.data?.poolAvailableMicrocredits },
-                    { label: "我的任务冻结", value: account?.reservedMicrocredits },
+                    { key: "available", label: interfaceText("我的可用额度"), value: account?.availableMicrocredits },
+                    { key: "pool", label: interfaceText("公共待分配"), value: wallet.data?.poolAvailableMicrocredits },
+                    { key: "reserved", label: interfaceText("我的任务冻结"), value: account?.reservedMicrocredits },
                 ].map((stat) => (
-                    <div key={stat.label} className="rounded-xl border border-border bg-background p-5">
-                        <p className="text-sm text-foreground/60">{interfaceText(stat.label)}</p>
+                    <div key={stat.key} className="rounded-xl border border-border bg-background p-5">
+                        <p className="text-sm text-foreground/60">{stat.label}</p>
                         <strong className="mt-2 block text-2xl tabular-nums">
                             {stat.value === undefined ? "—" : teamCredits(stat.value)}
-                            <span className="ml-1 text-xs font-normal">积分</span>
+                            <span className="ml-1 text-xs font-normal">{creditsUnit}</span>
                         </strong>
                     </div>
                 ))}
@@ -141,7 +148,7 @@ export function TeamWalletPane() {
                     pagination={{ current: page, pageSize: 20, total: ledger.data?.total, onChange: setPage, showSizeChanger: false }}
                     scroll={{ x: 650 }}
                     columns={[
-                        { title: "时间", dataIndex: "createdAt", render: (value: string) => new Date(value).toLocaleString() },
+                        { title: "时间", dataIndex: "createdAt", render: (value: string) => new Date(value).toLocaleString(currentLocale()) },
                         { title: "账户", key: "account", render: (_, entry) => ledgerAccount(entry) },
                         { title: "说明", key: "description", render: (_, entry) => (entry.type === "team_transfer" ? transferDescriptions[entry.note || ""] || "团队划转" : billingDescriptions[entry.type]) },
                         { title: "可用变动", dataIndex: "availableDeltaMicrocredits", render: (value: number) => teamCredits(value) },
@@ -186,7 +193,7 @@ export function TeamWalletPane() {
                                 setAmount(event.target.value);
                                 if (form) setForm({ ...form, idempotencyKey: crypto.randomUUID() });
                             }}
-                            suffix="积分"
+                            suffix={creditsUnit}
                         />
                     </label>
                     <p className="text-sm text-foreground/60">

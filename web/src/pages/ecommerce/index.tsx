@@ -2,6 +2,7 @@ import { creationSource as _creationSource } from "@/supdance/plugins/i18n/creat
 import { creationOptions as _creationOptions, creationLabel as _creationLabel } from "@/supdance/plugins/i18n/creation-text";
 import { creationText as _creationText, useCreationLocale as _useCreationLocale } from "@/supdance/plugins/i18n/creation-text";
 import { createClientUUID } from "@/lib/client-id";
+import { interfaceText } from "@/i18n/interface-text";
 import { App, Button, Input, Select } from "antd";
 import { AlertCircle, ArrowDownToLine, ArrowUp, ChevronDown, Clapperboard, Image as ImageIcon, LoaderCircle, Minus, Plus, RotateCcw, Save, Sparkles } from "lucide-react";
 import { HistoryIcon, LightbulbIcon } from "@/components/ui/ecommerce-icons";
@@ -447,6 +448,7 @@ function EcommerceWorkspace({ scope }: { scope: string }) {
     const resolutionChoices = imageProfile?.resolution.supported ? imageProfile.resolution.values : [imageProfile?.quality.default || "auto"];
     const scene = currentCommerceScene(draft);
     const selectedQuickType = scene?.label || labelOf(imageTypes, draft.imageType);
+    const selectedQuickTypeLabel = scene ? interfaceText(scene.label) : _creationLabel(selectedQuickType);
     const chooseQuickType = (type: CommerceScene) => {
         setCreativeDirections([]);
         setRecommendationId("");
@@ -2101,25 +2103,28 @@ function EcommerceWorkspace({ scope }: { scope: string }) {
     const activePhraseGroup = phraseGroups.find((group) => group.key === phraseGroup) || phraseGroups[0];
     const busyIndicator = confirmingGeneration || busy || planningPending;
     // 整条流程折算成五步进度：作品区顶部的进度条、空态提示和底部按钮说明都从这里取，不再各写一套。
-    const flowSteps = resolveCommerceFlow({
-        direct: creationMode === "direct",
-        hasProduct: Boolean(productReferences.length || rememberedReferenceCount),
-        hasInstruction: Boolean(composerText.trim()) || Boolean(rememberedReferenceCount),
-        directionsLoading: directionsStatus === "loading" || directionsPending,
-        directionsReady: creativeDirections.length > 0,
-        directionChosen: Boolean(chosenDirection || draft.creativeDirectionId),
-        planningPending,
-        planReady: Boolean(plan?.images.length && plan.inputSignature === commerceInputSignature(draft)),
-        planCount: plan?.images.length || 0,
-        submitted,
-        completed,
-        failed: plan?.images.filter((image) => image.taskId && ["failed", "cancelled"].includes(tasks[image.taskId]?.status || "")).length || 0,
-        active: activeImages,
-    });
+    const flowSteps = resolveCommerceFlow(
+        {
+            direct: creationMode === "direct",
+            hasProduct: Boolean(productReferences.length || rememberedReferenceCount),
+            hasInstruction: Boolean(composerText.trim()) || Boolean(rememberedReferenceCount),
+            directionsLoading: directionsStatus === "loading" || directionsPending,
+            directionsReady: creativeDirections.length > 0,
+            directionChosen: Boolean(chosenDirection || draft.creativeDirectionId),
+            planningPending,
+            planReady: Boolean(plan?.images.length && plan.inputSignature === commerceInputSignature(draft)),
+            planCount: plan?.images.length || 0,
+            submitted,
+            completed,
+            failed: plan?.images.filter((image) => image.taskId && ["failed", "cancelled"].includes(tasks[image.taskId]?.status || "")).length || 0,
+            active: activeImages,
+        },
+        interfaceText,
+    );
     const nextStep = !ecommerceEnabled
-        ? "电商创作暂未开放，历史方案和作品仍可查看与下载。"
+        ? interfaceText("电商创作暂未开放，历史方案和作品仍可查看与下载。")
         : !productReferences.length && !rememberedReferenceCount
-          ? `先在右侧添加${scene?.materials.required || "商品图"}，作品会显示在这里。`
+          ? _creationText("creation.746b0b826e7df930", { value1: scene ? interfaceText(scene.materials.required) : interfaceText("商品图") })
           : commerceFlowNextStep(flowSteps);
     const roundDelivered = Boolean(plan && submitted > 0 && completed === total);
     // 商品视频交给视频生成页：带上一张已完成的作品做首帧。两个开关都开着才出现入口。
@@ -2459,7 +2464,7 @@ function EcommerceWorkspace({ scope }: { scope: string }) {
                     <div className="ecs-project-line">
                         <strong>{project?.name || draft.productName || _creationText("creation.fcdb1a807f84a7a1")}</strong>
                         <span>
-                            {selectedQuickType} · {_creationLabel(labelOf(platforms, draft.platform))}
+                            {selectedQuickTypeLabel} · {_creationLabel(labelOf(platforms, draft.platform))}
                         </span>
                     </div>
                     {!ecommerceEnabled ? (
@@ -2472,12 +2477,12 @@ function EcommerceWorkspace({ scope }: { scope: string }) {
                             <div className="ecs-scene-grid" role="group" aria-label={_creationText("creation.7350cff1988f2d65")}>
                                 {commerceScenes.map((item) => (
                                     <button type="button" key={item.label} className="ecs-scene" aria-pressed={selectedQuickType === item.label} onClick={() => chooseQuickType(item)}>
-                                        <strong>{_creationLabel(item.label)}</strong>
+                                        <strong>{interfaceText(item.label)}</strong>
                                         <small>{item.planned ? _creationText("creation.c26e646596249412") : _creationText("creation.c1f12954448b6a72", { value1: item.count })}</small>
                                     </button>
                                 ))}
                             </div>
-                            {scene ? <p className="ecs-note">{scene.summary}</p> : null}
+                            {scene ? <p className="ecs-note">{interfaceText(scene.summary)}</p> : null}
                             {draft.imageType === "marketing" ? (
                                 <button type="button" className="ecs-select-row" aria-haspopup="dialog" onClick={() => setFlyPanel("material")}>
                                     <span className="ecs-select-row-text">
@@ -2492,7 +2497,10 @@ function EcommerceWorkspace({ scope }: { scope: string }) {
                             title={_creationText("creation.95ac7db7cd68cf94")}
                             hint={
                                 scene
-                                    ? _creationText("creation.c6d5411e953e923e", { value1: scene.materials.required, value2: scene.materials.suggested ? _creationText("creation.e1d84de02689af30", { value1: scene.materials.suggested }) : "" })
+                                    ? _creationText("creation.c6d5411e953e923e", {
+                                          value1: interfaceText(scene.materials.required),
+                                          value2: scene.materials.suggested ? _creationText("creation.e1d84de02689af30", { value1: interfaceText(scene.materials.suggested) }) : "",
+                                      })
                                     : undefined
                             }
                         >
@@ -2554,7 +2562,7 @@ function EcommerceWorkspace({ scope }: { scope: string }) {
                                     onChange={(event) => changeComposerInstruction(event.target.value)}
                                     onKeyDown={submitComposerOnEnter}
                                     onPaste={pasteComposerImages}
-                                    placeholder={_creationText("creation.da68d26e8fef9972", { value1: selectedQuickType })}
+                                    placeholder={_creationText("creation.da68d26e8fef9972", { value1: selectedQuickTypeLabel })}
                                 />
                                 <div className="ecs-prompt-meta">
                                     <div className="commerce-example-wrap">
@@ -2584,14 +2592,14 @@ function EcommerceWorkspace({ scope }: { scope: string }) {
                                     <div className="ecs-phrase-tabs" role="tablist" aria-label={_creationText("creation.9e854108e4a9ae06")}>
                                         {phraseGroups.map((group) => (
                                             <button type="button" key={group.key} role="tab" aria-selected={group.key === activePhraseGroup.key} onClick={() => setPhraseGroup(group.key)}>
-                                                {_creationLabel(group.label)}
+                                                {interfaceText(group.label)}
                                             </button>
                                         ))}
                                     </div>
-                                    <div className="ecs-phrase-chips" role="group" aria-label={_creationText("creation.1e22ad90df2dda42", { value1: activePhraseGroup.label })}>
+                                    <div className="ecs-phrase-chips" role="group" aria-label={_creationText("creation.1e22ad90df2dda42", { value1: interfaceText(activePhraseGroup.label) })}>
                                         {activePhraseGroup.phrases.map((phrase) => (
                                             <button type="button" key={phrase} className="ecs-chip" aria-pressed={promptHasPhrase(composerText, phrase)} onClick={() => changeComposerInstruction(togglePromptPhrase(composerText, phrase))}>
-                                                {phrase}
+                                                {interfaceText(phrase)}
                                             </button>
                                         ))}
                                     </div>
@@ -2789,7 +2797,7 @@ function EcommerceWorkspace({ scope }: { scope: string }) {
                 <p className="commerce-confirm-caption">{creationMode === "direct" ? _creationText("creation.5966d43d9fa43d46") : confirmAction === "plan" ? _creationText("creation.dad58f3b2bdd57e6") : _creationText("creation.1cc2e60062c082ad")}</p>
                 <div className="commerce-confirm-grid">
                     {[
-                        ["创作类型", selectedQuickType],
+                        ["创作类型", selectedQuickTypeLabel],
                         ["电商平台", labelOf(platforms, draft.platform)],
                         ["语言", labelOf(languages, draft.language)],
                         ["生图模型", modelDisplayName(config, draft.imageModel)],

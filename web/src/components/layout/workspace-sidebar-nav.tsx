@@ -28,6 +28,7 @@ import { TeamSpaceSwitcher } from "./team-space-switcher";
 import { teamIdFromPath } from "@/lib/team-query-keys";
 import "./workspace-sidebar-history.css";
 import { useI18n } from "@/supdance/plugins/i18n";
+import { interfaceText } from "@/i18n/interface-text";
 import { SidebarEcosystemDock, useSidebarDockState } from "@/supdance/plugins/html-page-manager/components/sidebar-ecosystem-dock";
 import { SUPDANCE_MUSIC_PLUGIN_ID } from "@/supdance/plugins/music-generation/types";
 
@@ -405,8 +406,8 @@ export function WorkspaceSidebarNav({ collapsed, onNavigate, onOpenSearch, onExp
                           ...personalNav.groups[0].items
                               .filter((item) => item.id === "canvas" || item.id === "assets" || (features.creditsEnabled && item.id === "home"))
                               .map((item) => ({ ...item, to: `${base}${item.id === "home" ? "/create" : item.to}` })),
-                          { id: "team-members", title: "成员与邀请", icon: Users, to: `${base}/members` },
-                          ...(features.creditsEnabled ? [{ id: "team-wallet", title: "团队积分", icon: Wallet, to: `${base}/wallet` }] : []),
+                          { id: "team-members", title: interfaceText("成员与邀请"), icon: Users, to: `${base}/members` },
+                          ...(features.creditsEnabled ? [{ id: "team-wallet", title: interfaceText("团队积分"), icon: Wallet, to: `${base}/wallet` }] : []),
                       ],
                   },
               ],

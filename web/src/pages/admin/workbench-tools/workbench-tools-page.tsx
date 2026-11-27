@@ -4,6 +4,7 @@ import { AdminModal } from "@/pages/admin/ui/overlays";
 import type { ColumnsType } from "antd/es/table";
 import { CloudUpload, Edit3, Plus, RefreshCw, Search, Trash2, Shapes } from "lucide-react";
 import { useCallback, useEffect, useMemo, useState } from "react";
+import { interfaceText } from "@/i18n/interface-text";
 
 import { AdminPageFrame } from "@/pages/admin/components/admin-shell";
 import { AdminDataTable, AdminStatusBadge } from "@/pages/admin/components/admin-ui";
@@ -350,14 +351,14 @@ export default function WorkbenchToolsPage() {
                 <div className="admin-workbench-tool-main">
                     <span className="admin-workbench-tool-icon">{tool.iconUrl ? <img src={tool.iconUrl} alt="" /> : <Shapes className="size-4" />}</span>
                     <span>
-                        <strong>{tool.name}</strong>
-                        <small>{tool.subtitle || tool.description}</small>
+                        <strong>{interfaceText(tool.name)}</strong>
+                        <small>{interfaceText(tool.subtitle || tool.description)}</small>
                     </span>
                 </div>
             ),
         },
-        { title: "分类", dataIndex: "categoryId", width: 140, align: "center", render: workbenchCategoryLabel },
-        { title: "预设", dataIndex: "presets", width: 90, align: "center", render: (value: WorkbenchPromptPreset[]) => `${value.filter((item) => item.enabled).length} 项启用` },
+        { title: "分类", dataIndex: "categoryId", width: 140, align: "center", render: (value: string) => interfaceText(workbenchCategoryLabel(value)) },
+        { title: "预设", dataIndex: "presets", width: 90, align: "center", render: (value: WorkbenchPromptPreset[]) => interfaceText("{count} 项启用", { count: value.filter((item) => item.enabled).length }) },
         { title: "排序", dataIndex: "sortOrder", width: 80, align: "center" },
         {
             title: "状态",
@@ -367,7 +368,7 @@ export default function WorkbenchToolsPage() {
             render: (enabled: boolean, tool) => (
                 <div className="admin-workbench-tool-status">
                     <AdminStatusBadge label={enabled ? "已开放" : "未开放"} tone={enabled ? "success" : "neutral"} />
-                    <Switch checked={enabled} aria-label={`${enabled ? "下线" : "开放"}${tool.name}`} onChange={(checked) => void toggle(tool, checked)} />
+                    <Switch checked={enabled} aria-label={enabled ? interfaceText("下线 {tool}", { tool: interfaceText(tool.name) }) : interfaceText("开放 {tool}", { tool: interfaceText(tool.name) })} onChange={(checked) => void toggle(tool, checked)} />
                 </div>
             ),
         },

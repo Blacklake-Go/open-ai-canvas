@@ -2,6 +2,7 @@ import { ChevronRight, Coins, PanelLeftClose, PanelLeftOpen, UserPlus } from "lu
 import { Link, useLocation } from "react-router";
 import { useTranslation } from "react-i18next";
 import { currentLocale } from "@/i18n";
+import { interfaceText } from "@/i18n/interface-text";
 
 import { TopbarFeedbackButton } from "@/components/feedback/topbar-feedback-button";
 import { SystemAnnouncementCenter } from "@/components/layout/system-announcement-center";
@@ -38,11 +39,11 @@ export function WorkspaceTopBar({ sidebarOpen, onToggleSidebar }: { sidebarOpen:
     const scopedCredit = data?.spaces.find((space) => space.teamId === teamId);
     const spaceCredit = teamId ? scopedCredit : data?.personal;
     const spaceBalance = spaceCredit ? teamCredits(spaceCredit.availableMicrocredits) : "—";
-    const spaceTitle = teamId ? "本空间积分" : "个人积分";
-    const teamTotal = !teamId && data?.spaces.length ? `团队 ${teamCredits(data.spaces.reduce((sum, space) => sum + space.availableMicrocredits, 0))}` : "";
-    const spaceLabel = [spaceTitle, spaceBalance, teamTotal].filter(Boolean).join(" ") + "，查看各空间额度";
+    const spaceTitle = teamId ? interfaceText("本空间积分") : interfaceText("个人积分");
+    const teamTotal = !teamId && data?.spaces.length ? interfaceText("团队 {credits}", { credits: teamCredits(data.spaces.reduce((sum, space) => sum + space.availableMicrocredits, 0)) }) : "";
+    const spaceLabel = interfaceText("{balance}，查看各空间额度", { balance: [spaceTitle, spaceBalance, teamTotal].filter(Boolean).join(" ") });
     const sectionKey = workspacePageTitleKey(pathname);
-    const pageTitle = teamId ? scopedCredit?.name || "团队空间" : pathname === "/teams" ? "公司与团队" : sectionKey ? t(sectionKey) : brandName;
+    const pageTitle = teamId ? scopedCredit?.name || interfaceText("团队空间") : pathname === "/teams" ? interfaceText("公司与团队") : sectionKey ? t(sectionKey) : brandName;
     const balance = availableMicrocredits === null ? "--" : (availableMicrocredits / 1_000_000).toLocaleString(currentLocale(), { maximumFractionDigits: 2 });
 
     return (

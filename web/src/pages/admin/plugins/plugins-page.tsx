@@ -14,6 +14,8 @@ import { EAGLE_PLUGIN_ID } from "@/lib/plugins/builtin/eagle";
 import { RUNNINGHUB_PLUGIN_ID } from "@/lib/plugins/builtin/workflows";
 import { isOfficialApplicationPluginId } from "@/lib/plugins/official-applications";
 import { listRegisteredPlugins } from "@/lib/plugins/plugin-registry";
+import { pluginCatalogText } from "@/lib/plugins/plugin-catalog-text";
+import { interfaceText } from "@/i18n/interface-text";
 import { fetchAdminPlugins, setPluginPlatformAvailability, uninstallPlugin, uploadPlugin, type AdminPluginState, type BackendPlugin, type PluginManagement } from "@/services/api/plugins";
 import { UploadPluginModal } from "@/pages/plugins/plugin-documentation-modals";
 
@@ -167,10 +169,10 @@ export default function AdminPluginsPage() {
                             <button
                                 type="button"
                                 className="min-w-0 truncate rounded-sm text-left font-medium text-foreground underline-offset-4 hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--control-focus-ring)]"
-                                title={`查看 ${item.manifest.name} 详情`}
+                                title={interfaceText("查看 {plugin} 详情", { plugin: pluginCatalogText(item.management.origin, item.manifest.name) })}
                                 onClick={() => setDetailId(item.manifest.id)}
                             >
-                                {item.manifest.name}
+                                {pluginCatalogText(item.management.origin, item.manifest.name)}
                             </button>
                             <span className="shrink-0 text-xs text-foreground/42">v{item.manifest.version}</span>
                         </div>
@@ -181,8 +183,8 @@ export default function AdminPluginsPage() {
                             <span className="text-foreground/20" aria-hidden="true">
                                 ·
                             </span>
-                            <span className={`truncate ${item.error ? "text-status-error" : "text-foreground/52"}`} title={item.error || item.manifest.description || "未提供插件说明"}>
-                                {item.error || item.manifest.description || "未提供插件说明"}
+                            <span className={`truncate ${item.error ? "text-status-error" : "text-foreground/52"}`} title={item.error || pluginCatalogText(item.management.origin, item.manifest.description) || interfaceText("未提供插件说明")}>
+                                {item.error || pluginCatalogText(item.management.origin, item.manifest.description) || interfaceText("未提供插件说明")}
                             </span>
                         </div>
                         {item.manifest.id === SUPDANCE_I18N_PLUGIN_ID ? (

@@ -36,6 +36,7 @@ import { useSyncProgressStore } from "@/stores/use-sync-progress-store";
 import { ensureCanvasNodeAsset } from "@/services/project-asset-sync";
 import { useAppearanceStore } from "@/stores/use-appearance-store";
 import { trackSiteTrafficAction } from "@/services/site-traffic";
+import { interfaceText } from "@/i18n/interface-text";
 
 const CanvasDeleteProjectsDialog = lazy(() => import("@/components/canvas/canvas-delete-projects-dialog").then((module) => ({ default: module.CanvasDeleteProjectsDialog })));
 
@@ -133,13 +134,18 @@ export default function CanvasPage() {
     const hasRenderableProjects = visibleProjects.length > 0;
     const hasMore = userId ? libraryQuery.hasNextPage : visibleProjects.length < filteredProjects.length;
     const selectedProjects = projects.filter((project) => selectedIds.includes(project.id));
-    const projectFilterLabel = projectFilter === "all" ? "全部画布" : projectFilter === "independent" ? "自由画布" : projectNames.get(projectFilter) || "项目画布";
-    const sortLabel = sort === "name" ? "按名称" : sort === "nodes" ? "按节点" : "最近更新";
-    const projectFilterItems = useMemo(() => [{ key: "all", label: "全部画布" }, { key: "independent", label: "自由画布" }, ...(projectQuery.data?.projects || []).map(({ project }) => ({ key: project.id, label: project.name }))], [projectQuery.data]);
+    const allCanvasesLabel = interfaceText("全部画布");
+    const independentCanvasesLabel = interfaceText("自由画布");
+    const projectFilterLabel = projectFilter === "all" ? allCanvasesLabel : projectFilter === "independent" ? independentCanvasesLabel : projectNames.get(projectFilter) || interfaceText("项目画布");
+    const sortLabel = sort === "name" ? interfaceText("按名称") : sort === "nodes" ? interfaceText("按节点") : interfaceText("最近更新");
+    const projectFilterItems = useMemo(
+        () => [{ key: "all", label: allCanvasesLabel }, { key: "independent", label: independentCanvasesLabel }, ...(projectQuery.data?.projects || []).map(({ project }) => ({ key: project.id, label: project.name }))],
+        [allCanvasesLabel, independentCanvasesLabel, projectQuery.data],
+    );
     const sortItems = [
-        { key: "updated", label: "最近更新", icon: <Clock3 className="size-3.5" /> },
-        { key: "name", label: "按名称", icon: <ArrowDownAZ className="size-3.5" /> },
-        { key: "nodes", label: "按节点数量", icon: <ListFilter className="size-3.5" /> },
+        { key: "updated", label: interfaceText("最近更新"), icon: <Clock3 className="size-3.5" /> },
+        { key: "name", label: interfaceText("按名称"), icon: <ArrowDownAZ className="size-3.5" /> },
+        { key: "nodes", label: interfaceText("按节点数量"), icon: <ListFilter className="size-3.5" /> },
     ];
     useEffect(() => {
         setLoadedProjectCount(50);

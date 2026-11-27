@@ -31,6 +31,7 @@ import { EmptyState } from "@/components/ui/product/empty-state";
 import { PageHeader } from "@/components/layout/workspace-page";
 import { listRegisteredPlugins } from "@/lib/plugins/plugin-registry";
 import { pluginMatchesSearch } from "@/lib/plugins/plugin-search";
+import { pluginCatalogText } from "@/lib/plugins/plugin-catalog-text";
 import "@/lib/plugins/builtin";
 import { EAGLE_PLUGIN_ID } from "@/lib/plugins/builtin/eagle";
 import { PROMPT_OPTIMIZER_PLUGIN_ID } from "@/lib/plugins/builtin/prompt-optimizer";
@@ -48,6 +49,8 @@ import { useUserStore } from "@/stores/use-user-store";
 import { PluginDetailsModal } from "./plugin-documentation-modals";
 import "./plugins.css";
 import { Select } from "@/components/ui/base/select";
+import { currentLocale } from "@/i18n";
+import { interfaceText } from "@/i18n/interface-text";
 
 const categoryLabels: Record<string, string> = {
     provider: "模型渠道",
@@ -82,8 +85,6 @@ const permissionLabels: Record<string, string> = {
     "external.open": "打开外部详情",
 };
 
-const pluginDateFormatter = new Intl.DateTimeFormat("zh-CN", { year: "numeric", month: "short", day: "numeric" });
-
 const protocolSectionMeta = [
     { key: "text", label: "文本协议", description: "对话、推理与流式响应", icon: MessageSquareText },
     { key: "image", label: "图片协议", description: "生成、编辑与参考图", icon: ImageIcon },
@@ -94,6 +95,8 @@ const protocolSectionMeta = [
 
 export default function PluginsPage() {
     const { message } = App.useApp();
+    const locale = currentLocale();
+    const dateFormatter = useMemo(() => new Intl.DateTimeFormat(locale, { year: "numeric", month: "short", day: "numeric" }), [locale]);
     const navigate = useNavigate();
     const brandName = useAppearanceStore((state) => state.appearance.brandName);
     const user = useUserStore((state) => state.user);
@@ -291,7 +294,7 @@ export default function PluginsPage() {
                                     >
                                         <span className="plugins-sidebar-item-label">
                                             <SectionIcon className="size-4" />
-                                            {section.label}
+                                            {interfaceText(section.label)}
                                         </span>
                                         <span>{categoryCounts[section.key] || 0}</span>
                                     </button>
@@ -369,8 +372,8 @@ export default function PluginsPage() {
                                                     <SectionIcon className="size-4" />
                                                 </span>
                                                 <div>
-                                                    <h2>{section.label}</h2>
-                                                    <p>{section.description}</p>
+                                                    <h2>{interfaceText(section.label)}</h2>
+                                                    <p>{interfaceText(section.description)}</p>
                                                 </div>
                                                 <span className="plugin-section-count">{section.plugins.length}</span>
                                             </header>
@@ -384,12 +387,15 @@ export default function PluginsPage() {
                                                         const state = pluginStates[plugin.manifest.id];
                                                         const sourceLabel = pluginSourceLabel(plugin, state);
                                                         const canConfigure = canConfigurePlugin(plugin);
+                                                        const manifest = plugin.manifest;
+                                                        const name = pluginCatalogText(plugin.source, manifest.name);
+                                                        const description = pluginCatalogText(plugin.source, manifest.description);
                                                         return (
                                                             <section key={plugin.manifest.id} className={`product-collection-card plugin-card library-card-surface${trusted ? " is-trusted" : ""}`}>
                                                                 <button
                                                                     type="button"
                                                                     className="plugin-card-main"
-                                                                    aria-label={`查看${plugin.manifest.name}文档`}
+                                                                    aria-label={interfaceText("查看 {plugin} 文档", { plugin: name })}
                                                                     onClick={(event) => {
                                                                         const openedByKeyboard = event.detail === 0;
                                                                         setDetailsRestoreFocus(openedByKeyboard);
@@ -403,11 +409,11 @@ export default function PluginsPage() {
                                                                         </span>
                                                                         <div className="min-w-0 flex-1">
                                                                             <div className="plugin-card-title-row">
-                                                                                <h3>{plugin.manifest.name}</h3>
+                                                                                <h3>{name}</h3>
                                                                                 <span className="plugin-version">v{plugin.manifest.version}</span>
                                                                             </div>
                                                                             <div className="plugin-card-labels">
-                                                                                <span className={`plugin-source-label${sourceLabel === "系统插件" ? " is-system" : ""}`}>{sourceLabel}</span>
+                                                                                <span className={`plugin-source-label${sourceLabel === "系统插件" ? " is-system" : ""}`}>{interfaceText(sourceLabel)}</span>
                                                                                 {trusted ? (
                                                                                     <span className="plugin-trust-label">
                                                                                         <ShieldCheck className="size-3.5" />
@@ -416,29 +422,29 @@ export default function PluginsPage() {
                                                                                 ) : null}
                                                                                 <span className="plugin-category-label">
                                                                                     {contributionKindsFor(plugin.manifest)
-                                                                                        .map((kind) => categoryLabels[kind] ?? kind)
+                                                                                        .map((kind) => interfaceText(categoryLabels[kind] ?? kind))
                                                                                         .join(" · ")}
                                                                                 </span>
                                                                             </div>
                                                                         </div>
                                                                     </div>
 
-                                                                    <p className="plugin-card-description">{plugin.manifest.description}</p>
+                                                                    <p className="plugin-card-description">{description}</p>
 
                                                                     <div className="plugin-card-meta">
                                                                         <span>
                                                                             <CalendarDays className="size-3.5" />
-                                                                            发布 {formatPluginDate(plugin.manifest.publishedAt)}
+                                                                            发布 {formatPluginDate(dateFormatter, plugin.manifest.publishedAt)}
                                                                         </span>
                                                                         <span>
                                                                             <Clock3 className="size-3.5" />
-                                                                            更新 {formatPluginDate(plugin.manifest.updatedAt)}
+                                                                            更新 {formatPluginDate(dateFormatter, plugin.manifest.updatedAt)}
                                                                         </span>
                                                                     </div>
 
                                                                     <div className="plugin-card-tags">
                                                                         {(plugin.manifest.surfaces || []).map((surface) => (
-                                                                            <span key={surface}>{surfaceLabels[surface] ?? surface}</span>
+                                                                            <span key={surface}>{interfaceText(surfaceLabels[surface] ?? surface)}</span>
                                                                         ))}
                                                                         {(plugin.manifest.contributes.providers || []).flatMap((provider) =>
                                                                             provider.capabilities.map((capability) => (
@@ -448,7 +454,7 @@ export default function PluginsPage() {
                                                                             )),
                                                                         )}
                                                                         {plugin.manifest.contributes.providers?.some((provider) => provider.poll) ? <span>异步轮询</span> : null}
-                                                                        <span>{plugin.manifest.permissions.length} 项能力</span>
+                                                                        <span>{interfaceText("{count} 项能力", { count: plugin.manifest.permissions.length })}</span>
                                                                     </div>
                                                                 </button>
 
@@ -661,10 +667,10 @@ export default function PluginsPage() {
     );
 }
 
-function formatPluginDate(value?: string) {
-    if (!value) return "未记录";
-    const timestamp = Date.parse(value);
-    return Number.isFinite(timestamp) ? pluginDateFormatter.format(timestamp) : "未记录";
+function formatPluginDate(formatter: Intl.DateTimeFormat, value?: string) {
+    const timestamp = value ? Date.parse(value) : NaN;
+    if (!Number.isFinite(timestamp)) return interfaceText("未记录");
+    return formatter.format(timestamp);
 }
 
 function toRegisteredPlugin(plugin: BackendPlugin): RegisteredPlugin {
