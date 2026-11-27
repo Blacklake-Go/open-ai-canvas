@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState, type MouseEvent as ReactMouseEvent, type ReactNode } from "react";
 import { App, Button } from "antd";
 import { Clapperboard, Eye, FileText, Image as ImageIcon, LockKeyhole, LogIn, Send, Share2, Video } from "lucide-react";
+import { useTranslation } from "react-i18next";
 import { Link, useParams } from "react-router";
 import { nanoid } from "nanoid";
 
@@ -28,13 +29,16 @@ import { CanvasNodeType, type CanvasNodeData, type Position, type ViewportTransf
 import { nodeGenerationPrompt } from "@/lib/canvas/generation-contract";
 import { useThemePack } from "@/themes/use-theme-pack";
 import { useAppearanceStore } from "@/stores/use-appearance-store";
+import { useUserStore } from "@/stores/use-user-store";
 type ContextMenu = { x: number; y: number; world: Position; nodeId?: string };
 type DragState = { primaryId: string; nodeIds: string[]; startX: number; startY: number; origins: Map<string, Position>; moved: boolean };
 
 export default function SharedCanvasPage() {
     useCanvasThemeScope();
     const { token = "" } = useParams();
+    const { t } = useTranslation();
     const { message } = App.useApp();
+    const signedIn = useUserStore((state) => Boolean(state.user));
     const colorTheme = useCanvasThemeStore((state) => state.theme);
     const theme = canvasThemes[colorTheme];
     const containerRef = useRef<HTMLDivElement>(null);
@@ -332,11 +336,17 @@ export default function SharedCanvasPage() {
                         只读分享
                     </span>
                 </div>
-                <AuthLoginLink className="pointer-events-auto">
-                    <Button type="text" icon={<LogIn className="size-4" />}>
-                        登录
-                    </Button>
-                </AuthLoginLink>
+                {signedIn ? (
+                    <Link className="pointer-events-auto inline-flex min-h-11 items-center px-3 text-sm" to="/">
+                        {t("auth.backHome")}
+                    </Link>
+                ) : (
+                    <AuthLoginLink className="pointer-events-auto">
+                        <Button type="text" icon={<LogIn className="size-4" />}>
+                            登录
+                        </Button>
+                    </AuthLoginLink>
+                )}
             </header>
 
             <CanvasViewport

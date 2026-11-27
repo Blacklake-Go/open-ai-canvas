@@ -3,13 +3,47 @@ import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import { createElement, Suspense } from "react";
 import { renderToString } from "react-dom/server";
+import { runInNewContext } from "node:vm";
 import { preloadableLazy } from "../src/lib/preloadable-lazy";
+import { workspacePagePath } from "../src/lib/workspace-routes";
 
 function source(path: string) {
     return readFileSync(resolve(import.meta.dir, path), "utf8");
 }
 
 describe("workspace route loading", () => {
+    test("direct canvas navigation starts with native module preloads", () => {
+        const router = source("../src/router.tsx");
+        const block = router.slice(router.indexOf("export function preloadInitialRoute"), router.indexOf("const RequirePlugin"));
+        const calls: Array<[string, boolean]> = [];
+        const page = (name: string) => ({
+            preload: ({ useNativePreloads }: { useNativePreloads: boolean }) => {
+                calls.push([name, useNativePreloads]);
+                return Promise.resolve();
+            },
+        });
+        const script = new Bun.Transpiler({ loader: "ts" }).transformSync(block.replace("export ", ""));
+        const preload = runInNewContext(`${script}; preloadInitialRoute`, {
+            workspacePagePath,
+            isGuestWorkspacePath: (value: string) => value === "/",
+            UserLayout: page("layout"),
+            CanvasProjectPage: page("editor"),
+            SharedCanvasPage: page("share"),
+            CreatePage: page("create"),
+        });
+        for (const [path, expected] of [
+            ["/canvas/example", ["layout", "editor"]],
+            ["/teams/example/canvas/board", ["layout", "editor"]],
+            ["/share/canvas/token", ["share"]],
+            ["/", ["layout", "create"]],
+            ["/login", []],
+        ] as const) {
+            calls.length = 0;
+            preload(path);
+            expect(calls).toEqual(expected.map((name) => [name, true]));
+        }
+    });
+
     test("keeps lazy workspace routes inside the workspace stage", () => {
         const router = source("../src/router.tsx");
         const deferred = router.slice(router.indexOf("function deferred"), router.indexOf("function fullScreenDeferred"));

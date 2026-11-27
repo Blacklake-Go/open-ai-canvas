@@ -105,12 +105,18 @@ const ReferralPage = workspaceRoutePages.referral;
 const AdminReferralPage = lazyAdminPage(() => import("@/pages/admin/referral/referral-admin-page"));
 const UserLayout = preloadableLazy(() => import("@/layouts/user-layout"));
 
-export function preloadInitialHome(pathname: string) {
-    if (!isGuestWorkspacePath(pathname)) return;
-    // Load the workspace and composer while the session is restored.
+export function preloadInitialRoute(pathname: string) {
     const startup = { useNativePreloads: true };
-    void UserLayout.preload(startup).catch(() => undefined);
-    void CreatePage.preload(startup).catch(() => undefined);
+    // A directly opened canvas has a large chunk graph. Let native preloads share the browser's module cache.
+    if (/^\/share\/canvas\/[^/]+\/?$/.test(pathname)) {
+        void SharedCanvasPage.preload(startup).catch(() => undefined);
+    } else if (/^\/canvas\/[^/]+\/?$/.test(workspacePagePath(pathname))) {
+        void UserLayout.preload(startup).catch(() => undefined);
+        void CanvasProjectPage.preload(startup).catch(() => undefined);
+    } else if (isGuestWorkspacePath(pathname)) {
+        void UserLayout.preload(startup).catch(() => undefined);
+        void CreatePage.preload(startup).catch(() => undefined);
+    }
 }
 
 const RequirePlugin = lazy(() => import("@/components/auth/require-plugin").then((module) => ({ default: module.RequirePlugin })));

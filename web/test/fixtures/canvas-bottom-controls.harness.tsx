@@ -41,6 +41,7 @@ for (const [key, value] of Object.entries({
 const { act, useState } = await import("react");
 const { createRoot } = await import("react-dom/client");
 const { CanvasZoomControls } = await import("../../src/components/canvas/canvas-zoom-controls");
+const { i18n } = await import("../../src/i18n");
 const { CanvasToolbar } = await import("../../src/components/canvas/canvas-toolbar");
 const { clearToolbarPrefs, defaultToolbarPrefs, persistToolbarPrefs } = await import("../../src/lib/canvas/tool-registry");
 afterAll(() => dom.happyDOM.abort());
@@ -362,6 +363,7 @@ test("真实视图控制保留缩放、快速比例、连线、小地图及快�
     }
     const click = async (label: string) => act(async () => host.querySelector<HTMLButtonElement>(`[aria-label="${label}"]`)!.click());
     try {
+        await i18n.changeLanguage("zh-CN");
         await act(async () => root.render(<ViewControls />));
         expect(host.querySelector('[aria-label="放大画布"]')).toBeNull();
         await click("精确缩放");
@@ -385,8 +387,15 @@ test("真实视图控制保留缩放、快速比例、连线、小地图及快�
         await click("自动整理节点");
         await click("画布快捷键");
         expect(calls).toEqual(["fit", "arrange", "shortcuts"]);
+        await i18n.changeLanguage("fr-FR");
+        await act(async () => root.render(<ViewControls />));
+        expect(host.querySelector('[aria-label="Fermer la mini-carte"]')?.getAttribute("aria-pressed")).toBe("true");
+        expect(host.querySelector('[aria-label="Afficher toutes les connexions"]')?.getAttribute("aria-pressed")).toBe("true");
+        await click("Fermer la mini-carte");
+        expect(host.querySelector('[aria-label="Ouvrir la mini-carte"]')?.getAttribute("aria-pressed")).toBe("false");
     } finally {
         await act(async () => root.unmount());
+        await i18n.changeLanguage("en-US");
         host.remove();
     }
 });

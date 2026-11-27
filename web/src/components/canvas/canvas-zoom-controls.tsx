@@ -2,6 +2,7 @@ import { useCallback, useEffect, useId, useLayoutEffect, useRef, useState, type 
 import { CircleDashed, Focus, Grip, HelpCircle, Map, Minus, Plus, RotateCcw, Search } from "lucide-react";
 import { subscribeCanvasViewportPreview } from "@/lib/canvas/canvas-live-viewport";
 import { canvasBottomRowLayout } from "@/lib/canvas/canvas-overlay-layout";
+import { interfaceText } from "@/i18n/interface-text";
 import { CanvasZoomReadout, useCanvasZoomPercent } from "./canvas-zoom-readout";
 import "./canvas-bottom-toolbar.css";
 import "./canvas-zoom-controls.css";
@@ -140,8 +141,8 @@ export function CanvasZoomControls({ scale, onScaleChange, onFitContent, onAutoA
     }
 
     const modifier = /Mac|iPhone|iPad/.test(navigator.platform) ? "⌘" : "Ctrl ";
-    const connectionLabel = hideNodeConnections ? "显示全部连线" : "设置隐藏节点连线";
-    const mapLabel = isMiniMapOpen ? "关闭小地图" : "打开小地图";
+    const connectionLabel = hideNodeConnections ? interfaceText("显示全部连线") : interfaceText("设置隐藏节点连线");
+    const mapLabel = isMiniMapOpen ? interfaceText("关闭小地图") : interfaceText("打开小地图");
 
     return (
         <div ref={rootRef} data-canvas-no-zoom className="canvas-zoom-controls relative z-[var(--z-toolbar)]" onMouseDown={(event) => event.stopPropagation()} onPointerDown={(event) => event.stopPropagation()} onWheel={(event) => event.stopPropagation()}>

@@ -4,6 +4,7 @@ import { useNavigate } from "react-router";
 
 import { WorkspacePage } from "@/components/layout/workspace-page";
 import { WorkspaceErrorState, WorkspaceLoadingState, WorkspaceState } from "@/components/layout/workspace-state";
+import { interfaceText } from "@/i18n/interface-text";
 import { refreshFeatureAvailability } from "@/lib/user-session";
 import { useUserStore } from "@/stores/use-user-store";
 
@@ -26,6 +27,7 @@ export function RequireFeature({ feature, children }: { feature: FeatureKey; chi
     const features = useUserStore((state) => state.features);
     const [checking, setChecking] = useState(() => !useUserStore.getState().features[feature]);
     const [error, setError] = useState("");
+    const featureName = interfaceText(featureNames[feature]);
 
     useEffect(() => {
         let cancelled = false;
@@ -45,7 +47,7 @@ export function RequireFeature({ feature, children }: { feature: FeatureKey; chi
     if (checking)
         return (
             <WorkspacePage>
-                <WorkspaceLoadingState label="正在确认功能状态" detail={featureNames[feature]} rows={3} />
+                <WorkspaceLoadingState label="正在确认功能状态" detail={featureName} rows={3} />
             </WorkspacePage>
         );
     if (error)
@@ -65,7 +67,7 @@ export function RequireFeature({ feature, children }: { feature: FeatureKey; chi
                 <WorkspaceState
                     kind="forbidden"
                     icon="settings"
-                    title={`${featureNames[feature]}暂未开放`}
+                    title={`${featureName}暂未开放`}
                     description="当前功能已由平台管理员关闭。"
                     action={
                         <Button type="primary" onClick={() => navigate(backPath, { replace: true })}>

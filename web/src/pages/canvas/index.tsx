@@ -118,7 +118,7 @@ export default function CanvasPage() {
     );
     const createAndEnter = () => {
         trackSiteTrafficAction("new_canvas");
-        const id = useCanvasStore.getState().createDraftProject(`自由画布 ${projects.length + 1}`);
+        const id = useCanvasStore.getState().createDraftProject(interfaceText("自由画布 {number}", { number: projects.length + 1 }));
         enterProject(id);
     };
     const filteredProjects = useMemo(() => {
@@ -448,7 +448,7 @@ export default function CanvasPage() {
             enterProject(projects[0].id);
             return;
         }
-        const id = useCanvasStore.getState().createDraftProject(`自由画布 ${projects.length + 1}`);
+        const id = useCanvasStore.getState().createDraftProject(interfaceText("自由画布 {number}", { number: projects.length + 1 }));
         enterProject(id);
     }, [hydrated, message, mode, projects, sessionHydrated, userId, libraryQuery.isSuccess]);
 
@@ -460,7 +460,7 @@ export default function CanvasPage() {
                 <PageHeader
                     title="自由画布"
                     description="把镜头、素材和想法留在同一张画布里。"
-                    meta={<span className="app-projects-header-meta">{totalProjects} 个</span>}
+                    meta={<span className="app-projects-header-meta">{interfaceText("画布数：{count}", { count: totalProjects })}</span>}
                     actions={
                         <div className="collection-header-actions">
                             <Button type="primary" disabled={!hydrated} icon={<Plus />} onClick={createAndEnter}>
