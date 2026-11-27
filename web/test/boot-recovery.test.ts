@@ -15,7 +15,9 @@ describe("index.html boot recovery", () => {
         const html = readFileSync(resolve(import.meta.dir, "../index.html"), "utf8");
         const script = [...html.matchAll(/<script>([\s\S]*?)<\/script>/g)].map((match) => match[1]).find((source) => source.includes("bootTimer"))!;
         const dom = new Window({ url: "https://canvas.example/canvas?mode=recent" });
-        dom.document.body.innerHTML = html.slice(html.indexOf('<div id="root">'), html.indexOf("<script>", html.indexOf('<div id="root">')));
+        const recoveryStart = html.indexOf('<section id="boot-recovery"');
+        const recoveryEnd = html.indexOf("</section>", recoveryStart) + "</section>".length;
+        dom.document.body.innerHTML = html.slice(html.indexOf('<div id="root">'), recoveryEnd);
         const entry = dom.document.createElement("script");
         entry.type = "module";
         entry.src = "/assets/index-old.js";
