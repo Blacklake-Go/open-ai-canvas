@@ -10,14 +10,18 @@ import type { WorkbenchKind, WorkbenchTool } from "@/services/api/workbench";
 import { SceneGlyph } from "./workbench-composer";
 import { filterWorkbenchTools, toolMatchesFacet, WORKBENCH_SCENE_FACETS, workbenchPageCategories, workbenchToolSubtitle } from "./workbench-presets";
 import { interfaceText } from "@/i18n/interface-text";
+import { currentLocale } from "@/i18n";
 
 const FACET_CATEGORIES = new Set(["all", "recommended", "ecommerce", "product"]);
 
 function sceneRequirement(tool: WorkbenchTool) {
     const required = tool.inputContract?.slots.filter((slot) => slot.required || slot.minCount > 0) || [];
-    if (required.length) return `需上传 ${required.map((slot) => slot.name).join("、")}`;
-    if (tool.inputContract?.slots.length) return "素材可选";
-    return "只需描述";
+    if (required.length) {
+        const assets = new Intl.ListFormat(currentLocale()).format(required.map((slot) => interfaceText(slot.name)));
+        return interfaceText("需上传{assets}", { assets });
+    }
+    if (tool.inputContract?.slots.length) return interfaceText("素材可选");
+    return interfaceText("只需描述");
 }
 
 export function SceneLibraryModal({
@@ -44,7 +48,7 @@ export function SceneLibraryModal({
     const [query, setQuery] = useState("");
     const [category, setCategory] = useState("all");
     const [facetKey, setFacetKey] = useState("");
-    const categories = useMemo(() => [{ value: "all", label: "全部" }, ...workbenchPageCategories(tools)], [tools]);
+    const categories = useMemo(() => [{ value: "all", label: interfaceText("全部") }, ...workbenchPageCategories(tools)], [tools]);
     const facets = WORKBENCH_SCENE_FACETS[kind];
     const showFacets = FACET_CATEGORIES.has(category);
     const facet = showFacets ? facets.find((item) => item.key === facetKey) : undefined;

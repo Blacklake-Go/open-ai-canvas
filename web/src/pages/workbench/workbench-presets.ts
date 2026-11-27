@@ -85,7 +85,8 @@ export const WORKBENCH_SCENE_FACETS: Record<WorkbenchKind, SceneFacet[]> = {
 };
 
 function toolSearchText(tool: WorkbenchTool) {
-    return `${tool.name} ${tool.subtitle || ""} ${tool.description || ""} ${(tool.searchKeywords || []).join(" ")}`.toLocaleLowerCase();
+    const fields = [tool.name, tool.subtitle || "", tool.description || ""];
+    return [...fields, ...fields.map((value) => interfaceText(value)), ...(tool.searchKeywords || [])].join(" ").toLocaleLowerCase();
 }
 
 export function toolMatchesFacet(tool: WorkbenchTool, facet: SceneFacet) {
@@ -111,7 +112,7 @@ export function workbenchPageCategories(tools: WorkbenchTool[]) {
     const hasRecommended = tools.some((tool) => tool.recommended);
     const known = PAGE_CATEGORY_ORDER.filter((id) => (id === "recommended" ? hasRecommended : present.has(id)));
     const unknown = [...present].filter((id) => !PAGE_CATEGORY_ORDER.includes(id));
-    return [...known, ...unknown].map((value) => ({ value, label: value === "recommended" ? "推荐" : workbenchCategoryLabel(value) }));
+    return [...known, ...unknown].map((value) => ({ value, label: value === "recommended" ? interfaceText("推荐") : workbenchCategoryLabel(value) }));
 }
 
 /** 快捷场景：后台标为推荐的电商工具优先，其次电商与商品分类。 */

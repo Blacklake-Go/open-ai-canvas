@@ -24,6 +24,8 @@ import { localizedApiErrorMessage } from "@/services/api/error-codes";
 import { useLocaleStore } from "@/stores/use-locale-store";
 import { useUserStore } from "@/stores/use-user-store";
 import { MCP_BUILDING_FAQS, MCP_CATEGORIES, MCP_PLUGINS, OFFICIAL_MCP_TOOLS } from "@/supdance/pages/mcp/mcp-plugin-list";
+import workbenchCatalog from "../../backend/internal/workbench/seed/catalog.json";
+import { WORKBENCH_INSPIRATIONS } from "@/pages/workbench/workbench-presets";
 
 function flatten(value: unknown, prefix = "", result: Record<string, string> = {}): Record<string, string> {
     if (typeof value === "string") result[prefix] = value;
@@ -79,6 +81,15 @@ describe("i18n catalogs", () => {
                 for (const command of [...source.matchAll(/`([^`]+)`/g)].map((match) => match[1])) expect(text).toContain(command);
                 if (source.startsWith("@supdance")) expect(text).toStartWith("@supdance");
             }
+        }
+    });
+    test("every default image and video scene has eight-language display copy", () => {
+        const sources = new Set(
+            [...workbenchCatalog.flatMap(({ name, focus, inputOne, inputTwo }) => [name, focus, inputOne, inputTwo]), ...Object.values(WORKBENCH_INSPIRATIONS).flatMap((groups) => groups.flatMap(({ phrases }) => phrases))].filter(Boolean),
+        );
+        for (const { code } of SUPPORTED_LOCALES) {
+            const messages = flatten(NATIVE_CATALOGS[code]);
+            for (const source of sources) expect(messages[interfaceTextKey(source)]?.trim(), `${code}: ${source}`).toBeTruthy();
         }
     });
     test("rendered built-in style fields include copy for each supported locale", () => {

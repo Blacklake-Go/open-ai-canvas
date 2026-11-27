@@ -91,7 +91,7 @@ export function SceneSection({
                 </Button>
             }
         >
-            <button type="button" className="wb-scene-current" onClick={onOpenLibrary} aria-haspopup="dialog" title={tool ? `${tool.name}\n${subtitle}` : "选择出品场景"}>
+            <button type="button" className="wb-scene-current" onClick={onOpenLibrary} aria-haspopup="dialog" title={tool ? `${interfaceText(tool.name)}\n${subtitle}` : "选择出品场景"}>
                 <SceneGlyph tool={tool} kind={kind} size="lg" />
                 <span className="wb-scene-current-copy">
                     <strong>{tool ? interfaceText(tool.name) : interfaceText("自由创作")}</strong>
@@ -115,7 +115,7 @@ export function SceneSection({
             ) : quickTools.length ? (
                 <div className="wb-scene-chips" role="group" aria-label="常用场景">
                     {quickTools.map((item) => (
-                        <button key={item.id} type="button" className="wb-chip" aria-pressed={item.id === tool?.id} title={workbenchToolSubtitle(item) || item.name} onClick={() => onChoose(item.id === tool?.id ? null : item)}>
+                        <button key={item.id} type="button" className="wb-chip" aria-pressed={item.id === tool?.id} title={interfaceText(workbenchToolSubtitle(item) || item.name)} onClick={() => onChoose(item.id === tool?.id ? null : item)}>
                             {interfaceText(item.name)}
                         </button>
                     ))}
@@ -286,7 +286,7 @@ export function ReferenceSection({
     onClear: () => void;
 }) {
     const slots = tool?.inputContract?.slots || [];
-    const mediaHint = kind === "image" ? "支持拖拽、粘贴截图" : "图片 / 视频 / 音频，支持拖拽";
+    const mediaHint = kind === "image" ? interfaceText("支持拖拽、粘贴截图") : interfaceText("图片 / 视频 / 音频，支持拖拽");
     const clearAction = references.length ? (
         <Button size="small" type="text" className="wb-text-action" onClick={onClear}>
             清空
@@ -309,14 +309,18 @@ export function ReferenceSection({
     if (!slots.length) {
         if (unslottedLimit <= 0) {
             return (
-                <ComposerSection title={kind === "image" ? "商品素材" : "参考素材"} hint="当前模型不接受参考素材">
+                <ComposerSection title={kind === "image" ? "商品素材" : "参考素材"} hint={interfaceText("当前模型不接受参考素材")}>
                     <p className="wb-muted-note">换一个支持参考图的模型后，可以上传商品原图保持外观一致。</p>
                 </ComposerSection>
             );
         }
         return (
             <ComposerSection title={kind === "image" ? "商品素材" : "参考素材"} hint={`${references.length} / ${unslottedLimit} · ${mediaHint}`} aside={clearAction}>
-                {renderGroup(references, { limit: unslottedLimit, label: kind === "image" ? "上传商品图" : "上传参考素材", detail: kind === "image" ? "白底或实拍图，外观越清晰越好" : "图片可设为首帧或尾帧" })}
+                {renderGroup(references, {
+                    limit: unslottedLimit,
+                    label: kind === "image" ? interfaceText("上传商品图") : interfaceText("上传参考素材"),
+                    detail: kind === "image" ? interfaceText("白底或实拍图，外观越清晰越好") : interfaceText("图片可设为首帧或尾帧"),
+                })}
             </ComposerSection>
         );
     }
@@ -330,13 +334,13 @@ export function ReferenceSection({
                     return (
                         <div key={slot.key} className={cn("wb-slot", missing && "is-missing")}>
                             <div className="wb-slot-head">
-                                <strong>{slot.name || "参考素材"}</strong>
+                                <strong>{interfaceText(slot.name || "参考素材")}</strong>
                                 <span className={cn("wb-badge", required && "is-required")}>{required ? "必填" : "可选"}</span>
                                 <small>
                                     {items.length} / {slot.maxCount}
                                 </small>
                             </div>
-                            {renderGroup(items, { slotKey: slot.key, limit: slot.maxCount, label: `上传${slot.name || "素材"}`, detail: slotRequirementText(slot) })}
+                            {renderGroup(items, { slotKey: slot.key, limit: slot.maxCount, label: interfaceText("上传{asset}", { asset: interfaceText(slot.name || "素材") }), detail: slotRequirementText(slot) })}
                         </div>
                     );
                 })}
@@ -373,7 +377,7 @@ export function PromptSection({
     return (
         <ComposerSection
             title="画面描述"
-            hint={kind === "image" ? "写清商品、场景、光线和需要保留的细节" : "写清主体动作、运镜、节奏和结尾画面"}
+            hint={kind === "image" ? interfaceText("写清商品、场景、光线和需要保留的细节") : interfaceText("写清主体动作、运镜、节奏和结尾画面")}
             aside={
                 prompt ? (
                     <Button size="small" type="text" className="wb-text-action" onClick={onClear}>
@@ -385,7 +389,7 @@ export function PromptSection({
             {tool?.presets.length ? (
                 <div className="wb-preset-row" role="group" aria-label="场景提示词模板">
                     {tool.presets.slice(0, 5).map((item) => (
-                        <button key={item.id} type="button" className="wb-preset" aria-pressed={preset?.id === item.id} title={item.summary || item.name} onClick={() => onChoosePreset(item)}>
+                        <button key={item.id} type="button" className="wb-preset" aria-pressed={preset?.id === item.id} title={interfaceText(item.summary || item.name)} onClick={() => onChoosePreset(item)}>
                             {preset?.id === item.id ? <Check /> : null}
                             <span>{interfaceText(item.name)}</span>
                         </button>
