@@ -1,13 +1,14 @@
 import { Link, useLocation } from "react-router";
 import { cn } from "@/lib/utils";
+import { interfaceText } from "@/i18n/interface-text";
 
 export function SocialAuthNavTabs() {
     const location = useLocation();
     const isOperations = location.pathname.includes("/admin/settings/social-auth/operations");
 
     const tabs = [
-        { label: "渠道凭证配置", path: "/admin/settings/social-auth", active: !isOperations },
-        { label: "运营控制与大盘", path: "/admin/settings/social-auth/operations", active: isOperations },
+        { label: interfaceText("渠道凭证配置"), path: "/admin/settings/social-auth", active: !isOperations },
+        { label: interfaceText("运营控制与大盘"), path: "/admin/settings/social-auth/operations", active: isOperations },
     ];
 
     return (

@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
+import { interfaceText } from "@/i18n/interface-text";
 import { Alert, App, Button, Select, Typography } from "antd";
 import { ArrowUpRight, RefreshCw, X } from "lucide-react";
 import { useNavigate } from "react-router";
@@ -153,8 +154,8 @@ export function EcommerceStageModels({ embedded = false, onSaved }: { embedded?:
                         <li key={stage.key}>
                             <span className="ecommerce-stage-models-index">{index + 1}</span>
                             <div className="ecommerce-stage-models-label">
-                                <strong>{stage.label}</strong>
-                                <small>{missing[stage.key] ? "已保存的模型已下架或不可用，请重新选择" : stage.hint}</small>
+                                <strong>{interfaceText(stage.label)}</strong>
+                                <small>{missing[stage.key] ? "已保存的模型已下架或不可用，请重新选择" : interfaceText(stage.hint)}</small>
                             </div>
                             <div className="ecommerce-stage-models-picker">
                                 <ModelPicker
@@ -183,10 +184,18 @@ export function EcommerceStageModels({ embedded = false, onSaved }: { embedded?:
                                     modelDisabledReason={(value) => (value === draft[stage.key].model ? "已是主模型" : visionReason(value))}
                                     onChange={(fallback) => update(stage.key, { fallback })}
                                 />
-                                {draft[stage.key].fallback ? <Button size="small" type="text" icon={<X size={14} />} aria-label={`清除${stage.label}备用模型`} onClick={() => update(stage.key, { fallback: "" })} /> : null}
+                                {draft[stage.key].fallback ? (
+                                    <Button size="small" type="text" icon={<X size={14} />} aria-label={interfaceText("清除 {stage} 的备用模型", { stage: interfaceText(stage.label) })} onClick={() => update(stage.key, { fallback: "" })} />
+                                ) : null}
                             </div>
                             <div className="ecommerce-stage-models-picker">
-                                <Select className="w-full" aria-label={`${stage.label}思考等级`} value={draft[stage.key].thinkingLevel} options={THINKING_REQUEST_OPTIONS} onChange={(thinkingLevel) => update(stage.key, { thinkingLevel })} />
+                                <Select
+                                    className="w-full"
+                                    aria-label={interfaceText("{stage}思考等级", { stage: interfaceText(stage.label) })}
+                                    value={draft[stage.key].thinkingLevel}
+                                    options={THINKING_REQUEST_OPTIONS}
+                                    onChange={(thinkingLevel) => update(stage.key, { thinkingLevel })}
+                                />
                             </div>
                         </li>
                     ))}

@@ -1,4 +1,5 @@
 import { Button } from "antd";
+import { interfaceText } from "@/i18n/interface-text";
 import { ArrowUpRight, Clapperboard, Image as ImageIcon, Layers3, ListChecks, RefreshCw, ShoppingBag } from "lucide-react";
 import { useCallback, useEffect, useState, type ReactNode } from "react";
 import { useNavigate } from "react-router";
@@ -114,14 +115,14 @@ export default function EcommerceAgentConfigPage() {
                             <li key={row.key}>
                                 <span className="eac-availability-icon">{row.icon}</span>
                                 <div>
-                                    <strong>{row.title}</strong>
-                                    <span>{row.description}</span>
+                                    <strong>{interfaceText(row.title)}</strong>
+                                    <span>{interfaceText(row.description)}</span>
                                 </div>
                                 <div className="eac-readiness-actions">
                                     <AdminStatusBadge label={row.ready ? "已就绪" : row.required ? "未完成" : "未开启"} tone={row.ready ? "success" : row.required ? "warning" : "neutral"} />
                                     {row.ready ? null : (
                                         <Button size="small" icon={<ArrowUpRight className="size-3.5" />} iconPlacement="end" onClick={row.action.run}>
-                                            {row.action.label}
+                                            {interfaceText(row.action.label)}
                                         </Button>
                                     )}
                                 </div>

@@ -2716,7 +2716,7 @@ function EcommerceWorkspace({ scope }: { scope: string }) {
                     {adminModels.problem && creationMode !== "direct" ? (
                         // 后台配置问题常驻在按钮上方，而不是每点一次弹一条报错。
                         <p className="ecs-notice is-error ecs-footer-issue" role="alert">
-                            {adminModels.problem}
+                            {interfaceText(adminModels.problem)}
                         </p>
                     ) : null}
                     <footer className="ecs-footer">

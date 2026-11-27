@@ -1,4 +1,5 @@
 import { AdminPageFrame } from "../components/admin-shell";
+import { interfaceText } from "@/i18n/interface-text";
 import { AlertTriangle, RefreshCw, Database, RotateCcw, HardDrive, Cloud, Check, ShieldCheck, Server, BadgeCheck, Save, Globe2, LocateFixed, KeyRound, Wifi } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Select, Switch } from "@/pages/admin/ui/controls";
@@ -328,7 +329,7 @@ export default function StorageSettingsPage() {
                             <Database className="size-4" aria-hidden="true" />
                         </span>
                         <div>
-                            <strong>{dirty ? "有未保存的存储调整" : `当前使用：${storageProviderLabel(draftMode)}`}</strong>
+                            <strong>{dirty ? "有未保存的存储调整" : interfaceText("当前使用 {provider}", { provider: interfaceText(storageProviderLabel(draftMode)) })}</strong>
                             <p>{dirty ? "保存后仅影响新增资源。" : formatSettingTime(setting.updatedAt, "使用系统默认值")}</p>
                         </div>
                     </div>
@@ -373,10 +374,10 @@ export default function StorageSettingsPage() {
                                     >
                                         <span className="admin-storage-mode-icon">{item.mode === "local" ? <HardDrive className="size-4" aria-hidden="true" /> : <Cloud className="size-4" aria-hidden="true" />}</span>
                                         <span className="admin-storage-mode-copy">
-                                            <strong>{item.label}</strong>
-                                            <small>{item.description}</small>
+                                            <strong>{interfaceText(item.label)}</strong>
+                                            <small>{interfaceText(item.description)}</small>
                                         </span>
-                                        <span className="admin-storage-mode-meta">{item.short}</span>
+                                        <span className="admin-storage-mode-meta">{interfaceText(item.short)}</span>
                                         {draftMode === item.mode ? (
                                             <span className="admin-storage-mode-selected">
                                                 <Check className="size-3.5" aria-hidden="true" />
@@ -398,7 +399,7 @@ export default function StorageSettingsPage() {
                     <SettingsSectionCard
                         className="admin-storage-section admin-storage-configuration-section"
                         icon={draftMode === "local" ? <Server className="size-4" aria-hidden="true" /> : <Cloud className="size-4" aria-hidden="true" />}
-                        title={draftMode === "local" ? "2. 配置服务器本地访问" : `2. 配置 ${storageProviderLabel(draftMode)} 接入`}
+                        title={draftMode === "local" ? "2. 配置服务器本地访问" : interfaceText("2. 配置 {provider} 接入", { provider: interfaceText(storageProviderLabel(draftMode)) })}
                         description={draftMode === "local" ? "填写浏览器访问本地资源时使用的服务器根地址，然后保存。" : "按顺序填写存储位置、读取出口和服务端访问密钥，然后测试并保存。"}
                         status={
                             <AdminStatusBadge

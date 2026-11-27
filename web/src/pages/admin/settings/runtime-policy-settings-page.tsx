@@ -1,4 +1,5 @@
 import { App, Button, Form, InputNumber, Skeleton } from "antd";
+import { interfaceText } from "@/i18n/interface-text";
 import { AlertTriangle, Database, Gauge, Infinity as InfinityIcon, Network, RefreshCw, RotateCcw, Save, ShieldCheck, TimerReset, Orbit } from "lucide-react";
 import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { useBlocker } from "react-router";
@@ -539,21 +540,22 @@ function PolicySection({ icon, title, description, fields, status }: PolicySecti
                 {fields.map((field) => {
                     const inputId = `admin-runtime-policy-${field.group}-${field.name}`;
                     const min = field.min ?? 1;
+                    const label = interfaceText(field.label);
                     return (
-                        <Form.Item key={`${field.group}.${field.name}`} label={field.label} htmlFor={inputId} extra={field.extra}>
+                        <Form.Item key={`${field.group}.${field.name}`} label={label} htmlFor={inputId} extra={interfaceText(field.extra)}>
                             <div className="admin-runtime-policy-number-control">
                                 <Form.Item
                                     noStyle
                                     name={[field.group, field.name]}
                                     rules={[
-                                        { required: true, message: `请填写${field.label}` },
-                                        { type: "number", min, max: field.max, message: `${field.label}必须是 ${min}-${field.max} 的整数` },
+                                        { required: true, message: interfaceText("请填写 {label}", { label }) },
+                                        { type: "number", min, max: field.max, message: interfaceText("{label}必须是 {min} 到 {max} 的整数", { label, min, max: field.max }) },
                                     ]}
                                 >
-                                    <InputNumber id={inputId} min={min} max={field.max} precision={0} aria-label={field.label} />
+                                    <InputNumber id={inputId} min={min} max={field.max} precision={0} aria-label={label} />
                                 </Form.Item>
                                 <span className="admin-runtime-policy-number-unit" aria-hidden="true">
-                                    {field.unit}
+                                    {interfaceText(field.unit)}
                                 </span>
                             </div>
                         </Form.Item>

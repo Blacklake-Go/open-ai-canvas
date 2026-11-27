@@ -4,6 +4,8 @@ import { AlertTriangle, AppWindow, BadgeCheck, Check, ChevronDown, FileText, Glo
 import { useCallback, useEffect, useRef, useState, type ReactNode } from "react";
 import { useBlocker } from "react-router";
 import { useTranslation } from "react-i18next";
+import { currentLocale } from "@/i18n";
+import { interfaceText } from "@/i18n/interface-text";
 
 import { cn } from "@/lib/utils";
 import { useAppearanceStore } from "@/stores/use-appearance-store";
@@ -358,7 +360,12 @@ export default function AccessSettingsPanel() {
                         <p>
                             {dirty || wechatDirty
                                 ? "完成接入信息后保存生效。"
-                                : `新用户注册${registration.enabled ? "已开放" : "已关闭"} · Linux.do ${linuxdo.enabled ? "已启用" : "未启用"} · 微信 ${wechat.enabled ? "已启用" : "未启用"} · ${(registration.loginMode ?? "modal") === "page" ? "独立页面登录" : "弹窗登录"}`}
+                                : interfaceText("新用户注册 {registration} · Linux.do {linuxdo} · 微信 {wechat} · {mode}", {
+                                      registration: registration.enabled ? interfaceText("已开放") : interfaceText("已关闭"),
+                                      linuxdo: linuxdo.enabled ? interfaceText("已启用") : interfaceText("未启用"),
+                                      wechat: wechat.enabled ? interfaceText("已启用") : interfaceText("未启用"),
+                                      mode: registration.loginMode === "page" ? interfaceText("独立页面登录") : interfaceText("弹窗登录"),
+                                  })}
                         </p>
                     </div>
                 </div>
@@ -399,7 +406,7 @@ export default function AccessSettingsPanel() {
                                 <AdminStatusBadge label="切换即保存" tone="info" />
                             </div>
                             <p>关闭后，本地注册和未绑定账号的第三方首次登录都会被拒绝；已有账号及已绑定身份仍可继续登录。</p>
-                            <span>{formatSettingTime(registration.updatedAt, "当前来自部署环境默认值")}</span>
+                            <span>{formatSettingTime(registration.updatedAt, interfaceText("当前来自部署环境默认值"))}</span>
                         </div>
                         <Switch checked={registration.enabled} loading={savingRegistration} disabled={loading || refreshing || savingLinuxDO} onChange={requestRegistrationChange} aria-label="允许创建新账号，切换后立即生效" />
                     </div>
@@ -691,10 +698,10 @@ export default function AccessSettingsPanel() {
                                     >
                                         <span className="admin-storage-mode-icon">{item.mode === "modal" ? <AppWindow className="size-4" aria-hidden="true" /> : <PanelsTopLeft className="size-4" aria-hidden="true" />}</span>
                                         <span className="admin-storage-mode-copy">
-                                            <strong>{item.label}</strong>
-                                            <small>{item.description}</small>
+                                            <strong>{interfaceText(item.label)}</strong>
+                                            <small>{interfaceText(item.description)}</small>
                                         </span>
-                                        <span className="admin-storage-mode-meta">{item.short}</span>
+                                        <span className="admin-storage-mode-meta">{interfaceText(item.short)}</span>
                                         {selected ? (
                                             <span className="admin-storage-mode-selected">
                                                 <Check className="size-3.5" aria-hidden="true" />
@@ -813,5 +820,5 @@ function formatSettingTime(value: string | undefined, fallback: string) {
     if (!value) return fallback;
     const date = new Date(value);
     if (Number.isNaN(date.getTime()) || date.getFullYear() < 2000) return fallback;
-    return `更新于 ${date.toLocaleString("zh-CN", { hour12: false })}`;
+    return interfaceText("更新于 {date}", { date: date.toLocaleString(currentLocale(), { hour12: false }) });
 }

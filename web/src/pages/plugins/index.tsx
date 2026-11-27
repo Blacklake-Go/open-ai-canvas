@@ -449,7 +449,10 @@ export default function PluginsPage() {
                                                                         {(plugin.manifest.contributes.providers || []).flatMap((provider) =>
                                                                             provider.capabilities.map((capability) => (
                                                                                 <span key={`${provider.id}-${capability}`} title={`Provider：${provider.label}（${provider.id}）`}>
-                                                                                    {provider.kind === "processing" ? "处理工具" : "生成协议"} · {provider.kind === "processing" ? `${capabilityLabel(capability)}处理` : `${capabilityLabel(capability)}生成`}
+                                                                                    {provider.kind === "processing" ? interfaceText("处理工具") : interfaceText("生成协议")} ·{" "}
+                                                                                    {provider.kind === "processing"
+                                                                                        ? interfaceText("{capability}处理", { capability: capabilityLabel(capability) })
+                                                                                        : interfaceText("{capability}生成", { capability: capabilityLabel(capability) })}
                                                                                 </span>
                                                                             )),
                                                                         )}
@@ -714,7 +717,7 @@ function pluginMatchesCategory(manifest: PluginManifest, category: string) {
 }
 
 function capabilityLabel(value: string) {
-    return ({ text: "文本", image: "图片", video: "视频", audio: "音频" } as Record<string, string>)[value] || value;
+    return ({ text: interfaceText("文本"), image: interfaceText("图片"), video: interfaceText("视频"), audio: interfaceText("音频") } as Record<string, string>)[value] || value;
 }
 
 function eagleFolderOptions(folders: EagleFolder[]) {

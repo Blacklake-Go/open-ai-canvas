@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef, useState, type ReactNode } from "react";
+import { interfaceText } from "@/i18n/interface-text";
 import { App, Button, Skeleton } from "antd";
 import { Switch } from "@/pages/admin/ui/controls";
 import { AlertTriangle, ArrowUpRight, Boxes, Clapperboard, Coins, CornerDownRight, History, ImageIcon, MonitorCog, PlugZap, Quote, RadioTower, RefreshCw, ShieldCheck, ShoppingBag, SlidersHorizontal, Video, Wallet } from "lucide-react";
@@ -444,7 +445,7 @@ function FeatureRowView({ row, draft, savingKey, onChange, nested = false }: { r
                 <div className="afp-row-copy">
                     <div className="afp-row-title">
                         <strong>{row.title}</strong>
-                        <span className="afp-location">{row.location}</span>
+                        <span className="afp-location">{interfaceText(row.location)}</span>
                     </div>
                     <p>
                         {row.description}
