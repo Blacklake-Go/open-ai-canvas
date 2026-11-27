@@ -1,5 +1,7 @@
 import { afterEach, beforeEach, describe, expect, spyOn, test } from "bun:test";
 import { Window } from "happy-dom";
+import { readFileSync } from "node:fs";
+import { runInNewContext } from "node:vm";
 import type { PaymentOrder } from "@/services/api/payments";
 import { loadXPixel, marketingConsent, MARKETING_CONSENT_KEY, purchaseValues, safePixelLocation, setMarketingConsent, trackXPurchase } from "@/supdance/marketing/x-purchase";
 
@@ -72,7 +74,7 @@ test("no consent means no third-party script or purchase transmission", async ()
 });
 
 test("current Sales attribution follows consented X clicks through checkout navigation", async () => {
-    for (const campaign of ["supdance_sales_zh", "supdance_sales_ja", "supdance_sales_202611", "supdance_sales_zh_ja_202611"]) {
+    for (const campaign of ["supdance_sales_zh", "supdance_sales_ja", "supdance_sales_202611", "supdance_sales_zh_ja_202611", "canvas_zh_market_202611"]) {
         dom.history.replaceState(null, "", `/?utm_source=x&utm_medium=paid_social&utm_campaign=${campaign}&twclid=x-click`);
         expect(await loadXPixel()).toBe(false);
         expect(dom.localStorage.length).toBe(0);
@@ -96,6 +98,35 @@ test("current Sales attribution follows consented X clicks through checkout navi
         expect(await other).toBe(false);
         dom.localStorage.clear();
         append.mockRestore();
+    }
+});
+
+test("measurement bridge routes only the consented Canvas X landing to the sales pixel for cached clients", () => {
+    const html = readFileSync(new URL("../public/supdance-x-measurement.html", import.meta.url), "utf8");
+    const code = html.match(/<script>\s*([\s\S]+?)<\/script>/)?.[1];
+    if (!code) throw new Error("SupDance measurement bridge script was not found");
+    const origin = "https://www.supdance.com";
+    const query = "?utm_source=x&utm_medium=paid_social&utm_campaign=canvas_zh_market_202611";
+    for (const [path, consent, pixelId] of [
+        [`/${query}`, "accepted", "rih9p"],
+        [`/${query}`, "declined", "rinhf"],
+        [`/wallet${query}`, "accepted", "rinhf"],
+        [`/${query.replace("paid_social", "organic")}`, "accepted", "rinhf"],
+        [`/${query.replace("utm_source=x", "utm_source=direct")}`, "accepted", "rinhf"],
+        [`/${query.replace("canvas_zh_market_202611", "another_campaign")}`, "accepted", "rinhf"],
+    ]) {
+        const script: { onload?: () => void } = {};
+        const scope = {
+            URL,
+            URLSearchParams,
+            location: new URL(`${origin}/supdance-x-measurement.html?twclid=x-click`),
+            parent: { location: { href: `${origin}${path}` }, localStorage: { getItem: () => consent }, postMessage() {} },
+            document: { createElement: () => script, head: { append() {} } },
+            window: { addEventListener() {}, twq: undefined as { queue: ArrayLike<unknown>[] } | undefined },
+        };
+        runInNewContext(code, scope);
+        script.onload?.();
+        expect(scope.window.twq?.queue.map((args) => Array.from(args))).toEqual([["config", pixelId]]);
     }
 });
 
