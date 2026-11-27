@@ -18,13 +18,15 @@ test("welcome entry loads configured appearance", async () => {
             throw error;
         },
         isIsolatedPrevisRepro: () => false,
+        prepareStartupInterface: () => Promise.resolve(),
         withModuleLoadPriority: (_priority, load) => load(),
         loadModule: async (name) => {
             imports.push(name);
             if (name === "@/services/appearance-bootstrap") return { bootstrapAppearance: () => calls++ };
+            return { startApplication() {} };
         },
     });
-    await Promise.resolve();
+    await new Promise((resolve) => setTimeout(resolve, 0));
     assert.equal(calls, 1, "welcome entry must bootstrap appearance");
     assert.deepEqual(imports, ["./welcome-application", "@/services/appearance-bootstrap"]);
 });

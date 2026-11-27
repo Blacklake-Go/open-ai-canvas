@@ -4,6 +4,7 @@ import { zhCN as canvasCZh } from "../src/i18n/messages/areas/canvasC/zh-CN";
 import { readFileSync } from "node:fs";
 import { canvasDockStyle } from "../src/lib/canvas/canvas-aceternity-style";
 import { canvasThemes } from "../src/lib/canvas-theme";
+import { NATIVE_CATALOGS } from "../src/i18n/catalogs";
 
 const component = (name: string) => readFileSync(new URL(`../src/components/canvas/${name}`, import.meta.url), "utf8");
 
@@ -17,7 +18,11 @@ test("canvas removes the standalone asset tray while retaining sidebar assets an
 
 test("workspace keeps a permanent rail and independent task/history entries", () => {
     const source = component("canvas-workspace-panel.tsx");
-    for (const label of ["节点", "素材库", "任务", "历史"]) expect(source).toContain(label);
+    for (const name of ["nodes", "assets", "tasks", "history", "open", "collapse"]) {
+        const key = `canvasC.workspaceRail.${name}`;
+        expect(source).toContain(key);
+        for (const catalog of Object.values(NATIVE_CATALOGS)) expect(catalog[key]?.trim()).toBeTruthy();
+    }
     expect(source).not.toContain("主页");
     expect(source).not.toContain('id: "tools"');
     expect(source).not.toContain("CanvasWorkspaceToolPanel");

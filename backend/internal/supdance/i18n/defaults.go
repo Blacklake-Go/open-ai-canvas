@@ -119,7 +119,7 @@ func entry(key, ns, zhCN, enUS, zhTW, jaJP, koKR, esES, frFR, deDE, desc string)
 // BuiltinEntries returns the canonical built-in dictionary covering all 6 languages.
 // BuiltinEntries 由 web/scripts/i18n-sync-backend.mjs 从前端词典生成，不要手工编辑词条体。
 func BuiltinEntries() []Entry {
-	entries := make([]Entry, 0, 23310)
+	entries := make([]Entry, 0, 23316)
 	entries = append(entries, builtinEntryBatch0()...)
 	entries = append(entries, builtinEntryBatch1()...)
 	entries = append(entries, builtinEntryBatch2()...)
@@ -2928,7 +2928,7 @@ func builtinEntryBatch10() []Entry {
 		entry("inspiration.count_total", "inspiration", "共 {count} 条", "{count} items", "共 {count} 條", "合計 {count} 件", "총 {count}개", "Total {count}", "{count} articles", "{count} Artikel", "灵感总数统计标签"),
 		entry("inspiration.filter_by_source", "inspiration", "按来源筛选灵感", "Filter inspirations by source", "按來源篩選靈感", "ソースでインスピレーションを絞り込む", "출처별 영감 필터링", "Filtrar inspiraciones por fuente", "Filtrer les inspirations par source", "Inspirationen nach Quelle filtern", "按来源筛选无障碍标签"),
 		entry("inspiration.filter_by_category", "inspiration", "按分类筛选灵感", "Filter inspirations by category", "按分類篩選靈感", "カテゴリでインスピレーションを絞り込む", "카테고리별 영감 필터링", "Filtrar inspiraciones por categoría", "Filtrer les inspirations par catégorie", "Inspirationen nach Kategorie filtern", "按分类筛选无障碍标签"),
-		// ==================== upstreamUI: 上游原生界面 (17708) ====================
+		// ==================== upstreamUI: 上游原生界面 (17714) ====================
 		entry("upstream.upstreamSync.instrumentalOn", "upstreamUI", "纯音乐模式已开启（无声乐演唱）", "Instrumental mode is on (no vocals)", "純音樂模式已開啟（無聲樂演唱）", "インストゥルメンタルが有効です（歌唱なし）", "연주곡 모드가 켜져 있습니다(보컬 없음)", "El modo instrumental está activado (sin voces)", "Mode instrumental activé (sans voix)", "Instrumentalmodus ist aktiv (ohne Gesang)", "translation: upstreamSync.instrumentalOn"),
 		entry("upstream.upstreamSync.instrumentalEnable", "upstreamUI", "开启纯音乐模式（无声乐演唱）", "Enable instrumental mode (no vocals)", "開啟純音樂模式（無聲樂演唱）", "インストゥルメンタルを有効にする（歌唱なし）", "연주곡 모드 켜기(보컬 없음)", "Habilitar modo instrumental (sin voces)", "Activer le mode instrumental (sans voix)", "Instrumentalmodus aktivieren (ohne Gesang)", "translation: upstreamSync.instrumentalEnable"),
 		entry("upstream.upstreamSync.instrumental", "upstreamUI", "纯音乐", "Instrumental", "純音樂", "歌唱なし", "연주곡", "Instrumental", "Instrumental", "Instrumental", "translation: upstreamSync.instrumental"),
@@ -6552,6 +6552,12 @@ func builtinEntryBatch24() []Entry {
 		entry("upstream.canvasC.workspaceTasks.title", "upstreamUI", "任务", "Tasks", "任務", "タスク", "작업", "Tareas", "Tâches", "Aufgaben", "translation: canvasC.workspaceTasks.title"),
 		entry("upstream.canvasC.workspaceTasks.emptyTitle", "upstreamUI", "暂无任务", "No tasks yet", "暂无任务", "タスクはまだありません", "작업이 없습니다", "Aún no hay tareas", "Aucune tâche", "Noch keine Aufgaben", "translation: canvasC.workspaceTasks.emptyTitle"),
 		entry("upstream.canvasC.workspaceTasks.emptyDescription", "upstreamUI", "点击画布上的生成按钮开始创作。", "Click a generate button on the canvas to start creating.", "點選畫布上的生成按鈕開始創作。", "キャンバスの生成ボタンをクリックして制作を始めましょう。", "캔버스의 생성 버튼을 눌러 창작을 시작하세요.", "Haga clic en un botón generar en el lienzo para comenzar a crear.", "Cliquez sur un bouton de génération du canevas pour commencer.", "Klicken Sie auf einen Generieren-Button im Canvas, um loszulegen.", "translation: canvasC.workspaceTasks.emptyDescription"),
+		entry("upstream.canvasC.workspaceRail.nodes", "upstreamUI", "节点", "Nodes", "節點", "ノード", "노드", "Nodos", "Nœuds", "Knoten", "translation: canvasC.workspaceRail.nodes"),
+		entry("upstream.canvasC.workspaceRail.assets", "upstreamUI", "素材库", "Assets", "素材庫", "素材", "소재", "Recursos", "Ressources", "Medien", "translation: canvasC.workspaceRail.assets"),
+		entry("upstream.canvasC.workspaceRail.tasks", "upstreamUI", "任务", "Tasks", "任務", "タスク", "작업", "Tareas", "Tâches", "Aufgaben", "translation: canvasC.workspaceRail.tasks"),
+		entry("upstream.canvasC.workspaceRail.history", "upstreamUI", "历史", "History", "歷史", "履歴", "기록", "Historial", "Historique", "Verlauf", "translation: canvasC.workspaceRail.history"),
+		entry("upstream.canvasC.workspaceRail.collapse", "upstreamUI", "收起{label}", "Collapse {label}", "收合{label}", "{label}を閉じる", "{label} 패널 접기", "Contraer {label}", "Réduire le panneau « {label} »", "„{label}“ einklappen", "translation: canvasC.workspaceRail.collapse"),
+		entry("upstream.canvasC.workspaceRail.open", "upstreamUI", "打开{label}", "Open {label}", "開啟{label}", "{label}を開く", "{label} 패널 열기", "Abrir {label}", "Ouvrir le panneau « {label} »", "„{label}“ öffnen", "translation: canvasC.workspaceRail.open"),
 		entry("upstream.canvasC.nodeList.title", "upstreamUI", "画布节点", "Canvas nodes", "畫布節點", "キャンバスのノード", "캔버스 노드", "Nodos de lienzo", "Nœuds du canevas", "Canvas-Knoten", "translation: canvasC.nodeList.title"),
 		entry("upstream.canvasC.nodeList.searchPlaceholder", "upstreamUI", "搜索节点、章节、镜头、模型或标签…", "Search nodes, chapters, shots, models, or tags…", "搜尋節點、章節、鏡頭、模型或標籤…", "ノード・章・ショット・モデル・タグを検索…", "노드, 챕터, 샷, 모델 또는 태그 검색…", "Buscar nodos, capítulos, tomas, modelos o etiquetas…", "Rechercher des nœuds, chapitres, plans, modèles ou tags…", "Knoten, Kapitel, Einstellungen, Modelle oder Tags suchen …", "translation: canvasC.nodeList.searchPlaceholder"),
 		entry("upstream.canvasC.nodeList.searchLabel", "upstreamUI", "搜索画布节点", "Search canvas nodes", "搜尋畫布節點", "キャンバスのノードを検索", "캔버스 노드 검색", "Buscar nodos del lienzo", "Rechercher des nœuds du canevas", "Canvas-Knoten suchen", "translation: canvasC.nodeList.searchLabel"),
@@ -6731,17 +6737,17 @@ func builtinEntryBatch24() []Entry {
 		entry("upstream.personalAvatar.exampleSteps", "upstreamUI", "1. 用参考素材统一 Q 版五官、服饰和配饰。\n2. 分别制作待命、排队、工作、思考、完成、异常、停止、拒绝八种绿幕动作，保持同一机位和人物比例。\n3. 统一视频尺寸，检查循环首尾与动作衔接，再导出 MP4。\n4. 用 avatar.json 登记尺寸和视频文件名，与视频一起放在 ZIP 根目录；上传后预览并确认状态映射。", "1. Create a consistent chibi face, clothing and accessories from reference images.\n2. Produce eight green-screen actions: idle, queued, working, thinking, completed, failed, cancelled and rejected. Keep framing and proportions consistent.\n3. Match dimensions and check loop seams and transitions before exporting MP4.\n4. List dimensions and clip filenames in avatar.json; put it with the videos at the ZIP root. Preview and verify state mapping after upload.", "1. 用參考素材統一 Q 版五官、服飾和配飾。\n2. 分別製作待命、排隊、工作、思考、完成、異常、停止、拒絕八種綠幕動作，保持相同機位與人物比例。\n3. 統一影片尺寸，檢查循環首尾與動作銜接，再匯出 MP4。\n4. 用 avatar.json 登記尺寸和影片檔名，與影片一起放在 ZIP 根目錄；上傳後預覽並確認狀態對應。", "1. 参考画像からデフォルメ顔・衣装・装飾を統一。\n2. 待機・待ち行列・作業・思考・完了・エラー・停止・拒否の8動作を緑背景で制作。構図と比率を固定。\n3. サイズを統一し、ループと動作のつながりを確認して MP4 に出力。\n4. avatar.json にサイズとファイル名を記載し、動画と ZIP のルートへ。アップロード後にプレビューと状態の割り当てを確認。", "1. 참고 이미지로 SD 얼굴, 의상과 장식을 통일합니다.\n2. 대기, 순서 대기, 작업, 생각, 완료, 오류, 중지, 거절의 녹색 배경 동작 8개를 제작합니다. 구도와 비율을 고정합니다.\n3. 크기를 맞추고 루프와 전환을 확인한 뒤 MP4로 출력합니다.\n4. avatar.json에 크기와 파일명을 적고 영상과 함께 ZIP 루트에 넣습니다. 업로드 후 미리 보기와 상태 연결을 확인합니다.", "1. Usa referencias para mantener el rostro, la ropa y los accesorios del personaje.\n2. Crea ocho animaciones con fondo verde: espera, cola, trabajo, pensamiento, finalización, error, parada y rechazo. Mantén la cámara y las proporciones.\n3. Unifica las dimensiones, revisa los bucles y las transiciones y exporta a MP4.\n4. Registra las dimensiones y los nombres de los vídeos en avatar.json y colócalos en la raíz del ZIP. Previsualiza y confirma la asignación de estados.", "1. Harmoniser visage chibi, vêtements et accessoires à partir des références.\n2. Créer huit actions sur fond vert : repos, file, travail, réflexion, réussite, erreur, arrêt et refus. Garder le cadrage et les proportions.\n3. Uniformiser les dimensions, vérifier les boucles et transitions, puis exporter en MP4.\n4. Inscrire dimensions et noms dans avatar.json, avec les vidéos à la racine du ZIP. Vérifier l’aperçu et l’association des états.", "1. Chibi-Gesicht, Kleidung und Accessoires anhand der Vorlagen vereinheitlichen.\n2. Acht Aktionen vor Grün erstellen: Ruhe, Warteschlange, Arbeit, Denken, Abschluss, Fehler, Stopp und Ablehnung. Bildausschnitt und Proportionen beibehalten.\n3. Abmessungen angleichen, Schleifen und Übergänge prüfen, dann MP4 exportieren.\n4. Abmessungen und Dateinamen in avatar.json eintragen und zusammen mit den Videos ins ZIP-Hauptverzeichnis legen. Vorschau und Statuszuordnung prüfen.", "translation: personalAvatar.exampleSteps"),
 		entry("upstream.personalAvatar.structure", "upstreamUI", "配置示例", "Configuration example", "設定範例", "設定例", "설정 예시", "Ejemplo de configuración", "Exemple de configuration", "Konfigurationsbeispiel", "translation: personalAvatar.structure"),
 		entry("upstream.personalAvatar.choose", "upstreamUI", "选择 ZIP", "Choose ZIP", "選擇 ZIP", "ZIP を選択", "ZIP 선택", "Elegir ZIP", "Choisir un ZIP", "ZIP auswählen", "translation: personalAvatar.choose"),
+	}
+}
+
+func builtinEntryBatch25() []Entry {
+	return []Entry{
 		entry("upstream.personalAvatar.state", "upstreamUI", "助手状态", "Assistant state", "助手狀態", "アシスタントの状態", "도우미 상태", "Estado del asistente", "État de l’assistant", "Assistentenstatus", "translation: personalAvatar.state"),
 		entry("upstream.personalAvatar.clip", "upstreamUI", "对应动画", "Animation clip", "對應動畫", "アニメーション", "애니메이션", "Animación asignada", "Animation", "Animation", "translation: personalAvatar.clip"),
 		entry("upstream.personalAvatar.use", "upstreamUI", "使用此形象", "Use this avatar", "使用此形象", "この外見を使用", "이 외형 사용", "Usar esta apariencia", "Utiliser cet avatar", "Diesen Avatar verwenden", "translation: personalAvatar.use"),
 		entry("upstream.personalAvatar.saved", "upstreamUI", "已应用个人助手形象", "Personal avatar applied", "已套用個人助手形象", "個人用の外見を適用しました", "개인 도우미 외형을 적용했습니다", "Apariencia personal aplicada", "Avatar personnel appliqué", "Persönlicher Avatar angewendet", "translation: personalAvatar.saved"),
 		entry("upstream.personalAvatar.fileError", "upstreamUI", "请选择不超过 128 MiB 的 ZIP 文件", "Choose a ZIP no larger than 128 MiB", "請選擇不超過 128 MiB 的 ZIP 檔案", "128 MiB 以下の ZIP を選択してください", "128 MiB 이하 ZIP을 선택하세요", "Elige un ZIP de hasta 128 MiB", "Choisissez un ZIP de 128 MiB maximum", "ZIP mit maximal 128 MiB auswählen", "translation: personalAvatar.fileError"),
 		entry("upstream.personalAvatar.uploadError", "upstreamUI", "形象上传失败", "Avatar upload failed", "形象上傳失敗", "アップロードに失敗しました", "외형 업로드 실패", "No se pudo subir la apariencia", "Échec de l’importation", "Avatar-Upload fehlgeschlagen", "translation: personalAvatar.uploadError"),
-	}
-}
-
-func builtinEntryBatch25() []Entry {
-	return []Entry{
 		entry("upstream.personalAvatar.previewError", "upstreamUI", "形象预览失败", "Avatar preview failed", "形象預覽失敗", "プレビューに失敗しました", "외형 미리 보기 실패", "No se pudo previsualizar la apariencia", "Échec de l’aperçu", "Avatar-Vorschau fehlgeschlagen", "translation: personalAvatar.previewError"),
 		entry("upstream.personalAvatar.retry", "upstreamUI", "重试", "Retry", "重試", "再試行", "다시 시도", "Reintentar", "Réessayer", "Erneut versuchen", "translation: personalAvatar.retry"),
 		entry("upstream.personalAvatar.close", "upstreamUI", "关闭", "Close", "關閉", "閉じる", "닫기", "Cerrar", "Fermer", "Schließen", "translation: personalAvatar.close"),
@@ -6992,17 +6998,17 @@ func builtinEntryBatch25() []Entry {
 		entry("upstream.managedUi.d1d841f4", "upstreamUI", "导出 CSV 审计表", "Export CSV audit table", "匯出 CSV 稽核表", "CSV 監査表をエクスポート", "CSV 감사 테이블 내보내기", "Exportar tabla de auditoría CSV", "Exporter la table d'audit CSV", "CSV-Prüftabelle exportieren", "translation: managedUi.d1d841f4"),
 		entry("upstream.managedUi.b875d88f", "upstreamUI", "刷新日志", "Refresh log", "刷新日誌", "ログを更新", "로그 새로고침", "Actualizar registro", "Actualiser le journal", "Protokoll aktualisieren", "translation: managedUi.b875d88f"),
 		entry("upstream.managedUi.26833c1e", "upstreamUI", "时间", "Time", "時間", "時間", "시간", "Hora", "Heure", "Zeit", "translation: managedUi.26833c1e"),
+	}
+}
+
+func builtinEntryBatch26() []Entry {
+	return []Entry{
 		entry("upstream.managedUi.b7a94cf", "upstreamUI", "账号 / 用户", "Account/User", "帳號 / 用戶", "アカウント / ユーザー", "계정 / 사용자", "Cuenta/Usuario", "Compte/Utilisateur", "Konto/Benutzer", "translation: managedUi.b7a94cf"),
 		entry("upstream.managedUi.c84167e5", "upstreamUI", "渠道", "Channel", "渠道", "チャネル", "채널", "Canal", "Chaîne", "Kanal", "translation: managedUi.c84167e5"),
 		entry("upstream.managedUi.d3df7b3f", "upstreamUI", "IP 地址", "IP address", "IP 位址", "IP アドレス", "IP 주소", "dirección IP", "Adresse IP", "IP-Adresse", "translation: managedUi.d3df7b3f"),
 		entry("upstream.managedUi.7135a4d3", "upstreamUI", "结果", "Result", "結果", "結果", "결과", "Resultado", "Résultat", "Ergebnis", "translation: managedUi.7135a4d3"),
 		entry("upstream.managedUi.108c6bd4", "upstreamUI", "审计说明", "Audit Instructions", "審計說明", "監査の説明", "감사 설명", "Instrucciones de auditoría", "Instructions d'audit", "Prüfungsanweisungen", "translation: managedUi.108c6bd4"),
 		entry("upstream.managedUi.460f90e3", "upstreamUI", "暂无审计日志记录", "No audit log record yet", "暫無稽核日誌記錄", "監査ログの記録はありません", "감사 로그 기록이 없습니다", "Aún no hay registro de auditoría", "Aucun enregistrement de journal d'audit pour l'instant", "Noch kein Audit-Log-Eintrag", "translation: managedUi.460f90e3"),
-	}
-}
-
-func builtinEntryBatch26() []Entry {
-	return []Entry{
 		entry("upstream.managedUi.6cb17521", "upstreamUI", "成功", "Success", "成功", "成功", "성공", "Éxito", "Succès", "Erfolg", "translation: managedUi.6cb17521"),
 		entry("upstream.managedUi.cbf40776", "upstreamUI", "失败", "Failed", "失敗", "失敗", "실패", "Fallido", "Échec", "Fehlgeschlagen", "translation: managedUi.cbf40776"),
 		entry("upstream.managedUi.585bcdc5", "upstreamUI", "{value1} 端点可达 ({value2}ms)，真实登录待验证", "{value1} The endpoint is reachable ({value2}ms), real login needs to be verified", "{value1} 端點可達 ({value2}ms)，真實登入待驗證", "{value1} エンドポイントに到達可能 ({value2}ms)、実際のログインは要検証", "{value1} 엔드포인트 도달 가능 ({value2}ms), 실제 로그인은 검증 필요", "{value1} Se puede acceder al punto final ({value2}ms), es necesario verificar el inicio de sesión real", "{value1} Le point de terminaison est accessible ({value2}ms), la véritable connexion doit être vérifiée", "{value1} Der Endpunkt ist erreichbar ({value2}ms), die echte Anmeldung muss überprüft werden", "translation: managedUi.585bcdc5"),
@@ -7253,17 +7259,17 @@ func builtinEntryBatch26() []Entry {
 		entry("upstream.managedUi.f5ce1f41", "upstreamUI", "运营主体与合规联络渠道", "Operating entities and compliance contact channels", "營運主體與合規聯絡管道", "運営主体とコンプライアンス連絡窓口", "운영 주체 및 컴플라이언스 연락 채널", "Entidades operativas y canales de contacto de cumplimiento", "Entités opérationnelles et canaux de contact pour la conformité", "Betriebseinheiten und Compliance-Kontaktkanäle", "translation: managedUi.f5ce1f41"),
 		entry("upstream.managedUi.a33c1a54", "upstreamUI", "经营者 / 商户法定名称", "Operator/merchant legal name", "經營者 / 商家法定名稱", "事業者・店舗の正式名称", "사업자/가맹점 법적 명칭", "Nombre legal del operador/comerciante", "Nom légal de l'opérateur/commerçant", "Firmenname des Betreibers/Händlers", "translation: managedUi.a33c1a54"),
 		entry("upstream.managedUi.2fb733db", "upstreamUI", "对外经营名称 (Trade Name)", "External business name (Trade Name)", "對外經營名稱 (Trade Name)", "対外営業名称（Trade Name）", "대외 영업명(Trade Name)", "Razón social externa (Nombre comercial)", "Nom commercial externe (Nom commercial)", "Externer Firmenname (Handelsname)", "translation: managedUi.2fb733db"),
+	}
+}
+
+func builtinEntryBatch27() []Entry {
+	return []Entry{
 		entry("upstream.managedUi.146489fd", "upstreamUI", "客户支持与账单退款", "Customer Support and Bill Refunds", "客戶支援與帳單退款", "カスタマーサポート・請求返金窓口", "고객 지원 및 결제 환불", "Atención al cliente y reembolsos de facturas", "Assistance client et remboursements de factures", "Kundensupport und Rechnungsrückerstattung", "translation: managedUi.146489fd"),
 		entry("upstream.managedUi.cfe5ac0a", "upstreamUI", "内容安全与 AUP 举报通道", "Content Security and AUP Reporting Channel", "內容安全與 AUP 檢舉通道", "コンテンツ安全・AUP 通報窓口", "콘텐츠 안전 및 AUP 신고 채널", "Canal de informes de seguridad de contenido y AUP", "Sécurité du contenu et canal de signalement AUP", "Inhaltssicherheit und AUP-Berichtskanal", "translation: managedUi.cfe5ac0a"),
 		entry("upstream.managedUi.f3b327cc", "upstreamUI", "点选支持的比例，再次点击可移除。已有精确尺寸保持不变，有换算规则时自动填入。", "Click to select the supported ratio and click again to remove. Existing exact dimensions remain unchanged and are automatically filled in when there are conversion rules.", "點選支援的比例，再次點選可移除。已有精確尺寸不變，有換算規則時自動填入。", "対応する比率をクリックして選択し、再度クリックすると解除できます。既存の正確な寸法はそのまま保持され、換算ルールがある場合は自動入力されます。", "지원하는 비율을 클릭하여 선택하고, 다시 클릭하면 제거됩니다. 기존 정확한 크기는 그대로 유지되며, 변환 규칙이 있으면 자동으로 채워집니다.", "Haga clic para seleccionar la proporción admitida y haga clic nuevamente para eliminar. Las dimensiones exactas existentes permanecen sin cambios y se completan automáticamente cuando existen reglas de conversión.", "Cliquez pour sélectionner le rapport pris en charge et cliquez à nouveau pour le supprimer. Les dimensions exactes existantes restent inchangées et sont automatiquement renseignées lorsqu'il existe des règles de conversion.", "Klicken Sie, um das unterstützte Verhältnis auszuwählen, und klicken Sie erneut, um es zu entfernen. Vorhandene exakte Maße bleiben unverändert und werden bei Umrechnungsregeln automatisch ergänzt.", "translation: managedUi.f3b327cc"),
 		entry("upstream.managedUi.f391b830", "upstreamUI", "比例配置", "Proportional configuration", "比例配置", "比率設定", "비율 구성", "Configuración proporcional", "Configuration proportionnelle", "Proportionale Konfiguration", "translation: managedUi.f391b830"),
 		entry("upstream.managedUi.342d0e65", "upstreamUI", "{value1} 个比例", "{value1} ratio", "{value1} 個比例", "{value1} 個の比率", "비율 {value1}개", "{value1} relación", "{value1} rapport", "{value1} Verhältnis", "translation: managedUi.342d0e65"),
 		entry("upstream.managedUi.a249517b", "upstreamUI", "未启用", "Not enabled", "未啟用", "無効", "미사용", "Deshabilitado", "Non activé", "Nicht aktiviert", "translation: managedUi.a249517b"),
-	}
-}
-
-func builtinEntryBatch27() []Entry {
-	return []Entry{
 		entry("upstream.managedUi.ed94539d", "upstreamUI", "启用 {value1} 规格", "Enable {value1} specification", "啟用 {value1} 規格", "{value1} 仕様を有効化", "{value1} 규격 활성화", "Habilitar la especificación {value1}", "Activer la spécification {value1}", "{value1}-Spezifikation aktivieren", "translation: managedUi.ed94539d"),
 		entry("upstream.managedUi.913dae99", "upstreamUI", "选择常用比例", "Select a common ratio", "選擇常用比例", "よく使う比率を選択", "자주 쓰는 비율 선택", "Seleccione una proporción común", "Sélectionnez un rapport commun", "Wählen Sie ein gemeinsames Verhältnis", "translation: managedUi.913dae99"),
 		entry("upstream.managedUi.78b723fa", "upstreamUI", "请填写所选比例的宽度和高度，完成像素尺寸配置后再保存。", "Please fill in the width and height of the selected ratio and complete the pixel size configuration before saving.", "請填寫所選比例的寬度和高度，完成像素尺寸配置後再儲存。", "選択した比率の幅と高さを入力し、ピクセルサイズを設定してから保存してください。", "선택한 비율의 너비와 높이를 입력하고 픽셀 크기 설정을 완료한 후 저장해 주세요.", "Complete el ancho y el alto de la proporción seleccionada y complete la configuración del tamaño de píxel antes de guardar.", "Veuillez renseigner la largeur et la hauteur du rapport sélectionné et compléter la configuration de la taille des pixels avant d'enregistrer.", "Bitte geben Sie vor dem Speichern die Breite und Höhe des ausgewählten Verhältnisses ein und schließen Sie die Konfiguration der Pixelgröße ab.", "translation: managedUi.78b723fa"),
@@ -7514,17 +7520,17 @@ func builtinEntryBatch27() []Entry {
 		entry("upstream.managedUi.9821fcdd", "upstreamUI", "移除市场条目失败", "Failed to remove market entry", "移除市場條目失敗", "マーケット項目の削除に失敗しました", "마켓 항목 제거 실패", "No se pudo eliminar la entrada al mercado", "Échec de la suppression de l'entrée sur le marché", "Der Markteintrag konnte nicht entfernt werden", "translation: managedUi.9821fcdd"),
 		entry("upstream.managedUi.699c7a49", "upstreamUI", "市场条目已移除", "Market entry removed", "市場條目已移除", "マーケット項目が削除されました", "마켓 항목이 제거되었습니다", "Entrada al mercado eliminada", "Entrée sur le marché supprimée", "Markteintrag entfernt", "translation: managedUi.699c7a49"),
 		entry("upstream.managedUi.54d74d2", "upstreamUI", "工具连接", "Tool connection", "工具連接", "ツール接続", "도구 연결", "Conexión de herramienta", "Connexion outil", "Werkzeuganschluss", "translation: managedUi.54d74d2"),
+	}
+}
+
+func builtinEntryBatch28() []Entry {
+	return []Entry{
 		entry("upstream.managedUi.5dde16aa", "upstreamUI", "把可靠的外部工具交给 Agent，连接、授权和执行边界都由你掌控。", "Put reliable external tools in the hands of Agent, and you have control over connections, authorization, and execution boundaries.", "把可靠的外部工具交給 Agent，連接、授權和執行邊界都由你掌控。", "信頼できる外部ツールを Agent に渡し、接続、認可、実行の境界をあなたが制御します。", "신뢰할 수 있는 외부 도구를 Agent에 제공하고 연결, 권한 부여 및 실행 경계를 직접 제어합니다.", "Ponga herramientas externas confiables en manos del Agente y tendrá control sobre las conexiones, la autorización y los límites de ejecución.", "Mettez des outils externes fiables entre les mains de l'agent et vous contrôlez les connexions, les autorisations et les limites d'exécution.", "Geben Sie zuverlässige externe Tools in die Hände des Agenten und Sie haben die Kontrolle über Verbindungen, Autorisierung und Ausführungsgrenzen.", "translation: managedUi.5dde16aa"),
 		entry("upstream.managedUi.3165e8a1", "upstreamUI", "MCP 概览", "MCP Overview", "MCP 概覽", "MCP 概要", "MCP 개요", "MCP Descripción general", "MCP Aperçu", "MCP Übersicht", "translation: managedUi.3165e8a1"),
 		entry("upstream.managedUi.e27c7336", "upstreamUI", "连接", "Connect", "連接", "接続", "연결", "Conectar", "Connecter", "Verbinden", "translation: managedUi.e27c7336"),
 		entry("upstream.managedUi.3b7340b6", "upstreamUI", "已发现工具", "Tool found", "已發現工具", "検出されたツール", "발견된 도구", "Herramienta encontrada", "Outil trouvé", "Werkzeug gefunden", "translation: managedUi.3b7340b6"),
 		entry("upstream.managedUi.8a9d4cbd", "upstreamUI", "平台连接", "Platform connection", "平台連接", "プラットフォーム接続", "플랫폼 연결", "Conexión de plataforma", "Connexion à la plateforme", "Plattformverbindung", "translation: managedUi.8a9d4cbd"),
 		entry("upstream.managedUi.3d585918", "upstreamUI", "市场管理", "Market Management", "市場管理", "マーケット管理", "마켓 관리", "Gestión de Mercado", "Gestion du marché", "Marktmanagement", "translation: managedUi.3d585918"),
-	}
-}
-
-func builtinEntryBatch28() []Entry {
-	return []Entry{
 		entry("upstream.managedUi.647b522b", "upstreamUI", "MCP 市场", "MCP Market", "MCP 市場", "MCP マーケット", "MCP 마켓", "MCP Mercado", "MCP Marché", "MCP Markt", "translation: managedUi.647b522b"),
 		entry("upstream.managedUi.8fd08ad7", "upstreamUI", "刷新 MCP 列表", "Refresh MCP list", "刷新 MCP 列表", "MCP リストを更新", "MCP 목록 새로고침", "Actualizar MCP lista", "Actualiser la liste MCP", "MCP-Liste aktualisieren", "translation: managedUi.8fd08ad7"),
 		entry("upstream.managedUi.7a10059f", "upstreamUI", "添加条目", "Add entry", "新增條目", "エントリを追加", "항목 추가", "Agregar entrada", "Ajouter une entrée", "Eintrag hinzufügen", "translation: managedUi.7a10059f"),
@@ -7775,17 +7781,17 @@ func builtinEntryBatch28() []Entry {
 		entry("upstream.managedUi.df962feb", "upstreamUI", "请先配置支持参考视频的视频模型", "Please configure a video model that supports reference videos first", "請先配置支援參考影片的視訊模型", "参照動画に対応した動画モデルを先に設定してください", "먼저 참고 영상을 지원하는 비디오 모델을 설정하세요.", "Primero configure un modelo de video que admita videos de referencia", "Veuillez d'abord configurer un modèle vidéo prenant en charge les vidéos de référence.", "Bitte konfigurieren Sie zunächst ein Videomodell, das Referenzvideos unterstützt", "translation: managedUi.df962feb"),
 		entry("upstream.managedUi.b47ad9bf", "upstreamUI", "生成模式", "Generate mode", "生成模式", "生成モード", "생성 모드", "Modo generar", "Mode Générer", "Generierungsmodus", "translation: managedUi.b47ad9bf"),
 		entry("upstream.managedUi.a403485", "upstreamUI", "选择生成模式", "Select generation mode", "選擇生成模式", "生成モードを選択", "생성 모드 선택", "Seleccionar modo de generación", "Sélectionnez le mode de génération", "Generierungsmodus auswählen", "translation: managedUi.a403485"),
+	}
+}
+
+func builtinEntryBatch29() []Entry {
+	return []Entry{
 		entry("upstream.managedUi.2a277dc8", "upstreamUI", "生成提示词", "Generate prompt words", "產生提示詞", "生成プロンプト", "생성 프롬프트", "Generar palabras rápidas", "Générer des mots d'invite", "Generieren Sie Aufforderungswörter", "translation: managedUi.2a277dc8"),
 		entry("upstream.managedUi.680a2f2d", "upstreamUI", "描述后续要生成的视频内容…", "Describe the video content to be generated later...", "描述後續要產生的影片內容…", "後で生成する動画の内容を記述…", "나중에 생성할 영상 내용을 설명하세요…", "Describe el contenido del vídeo que se generará más adelante...", "Décrivez le contenu vidéo à générer plus tard...", "Beschreiben Sie den Videoinhalt, der später generiert werden soll ...", "translation: managedUi.680a2f2d"),
 		entry("upstream.managedUi.d89ddff", "upstreamUI", "每个片段会连接一个待生成视频节点，但不会自动提交任务。你可以继续调整参考素材、模型和提示词。", "Each clip will be connected to a video node to be generated, but the task will not be automatically submitted. You can continue to adjust the reference materials, models and prompt words.", "每個片段會連接一個待產生視訊節點，但不會自動提交任務。你可以繼續調整參考素材、模型和提示詞。", "各クリップは生成待ちの動画ノードに接続されますが、タスクは自動的に送信されません。参考素材、モデル、プロンプトは引き続き調整できます。", "각 클립은 생성 대기 중인 비디오 노드에 연결되지만, 작업이 자동으로 제출되지는 않습니다. 참고 자료, 모델, 프롬프트는 계속 조정할 수 있습니다.", "Cada clip se conectará a un nodo de video para generarse, pero la tarea no se enviará automáticamente. Puede continuar ajustando los materiales de referencia, los modelos y las palabras clave.", "Chaque clip sera connecté à un nœud vidéo à générer, mais la tâche ne sera pas automatiquement soumise. Vous pouvez continuer à ajuster les documents de référence, les modèles et les mots d'invite.", "Jeder Clip wird mit einem zu generierenden Videoknoten verbunden, die Aufgabe wird jedoch nicht automatisch übermittelt. Sie können die Referenzmaterialien, Modelle und Aufforderungswörter weiterhin anpassen.", "translation: managedUi.d89ddff"),
 		entry("upstream.managedUi.815f87ee", "upstreamUI", "片段将作为独立视频节点创建并保持选中，不需要配置视频模型。", "The clip will be created as a standalone video node and remain selected, no need to configure the video model.", "片段將作為獨立視訊節點建立並保持選中，不需要配置視訊模型。", "クリップは独立した動画ノードとして作成され、選択状態が保持されます。動画モデルの設定は不要です。", "클립은 독립적인 비디오 노드로 생성되며 선택 상태가 유지되고, 비디오 모델을 구성할 필요가 없습니다.", "El clip se creará como un nodo de video independiente y permanecerá seleccionado, no es necesario configurar el modelo de video.", "Le clip sera créé en tant que nœud vidéo autonome et restera sélectionné, pas besoin de configurer le modèle vidéo.", "Der Clip wird als eigenständiger Videoknoten erstellt und bleibt ausgewählt, das Videomodell muss nicht konfiguriert werden.", "translation: managedUi.815f87ee"),
 		entry("upstream.managedUi.5a9e60d9", "upstreamUI", "片段起点（秒）", "Fragment start point (seconds)", "片段起點（秒）", "クリップの開始（秒）", "클립 시작(초)", "Punto de inicio del fragmento (segundos)", "Point de départ du fragment (secondes)", "Fragmentstartpunkt (Sekunden)", "translation: managedUi.5a9e60d9"),
 		entry("upstream.managedUi.511b8e4d", "upstreamUI", "跳转到起点", "Jump to starting point", "跳到起點", "開始位置へ移動", "시작점으로 이동", "Saltar al punto de partida", "Aller au point de départ", "Zum Startpunkt springen", "translation: managedUi.511b8e4d"),
-	}
-}
-
-func builtinEntryBatch29() []Entry {
-	return []Entry{
 		entry("upstream.managedUi.b549b138", "upstreamUI", "片段终点（秒）", "End point of segment (seconds)", "片段終點（秒）", "クリップの終了（秒）", "클립 종료(초)", "Punto final del segmento (segundos)", "Point final du segment (secondes)", "Endpunkt des Segments (Sekunden)", "translation: managedUi.b549b138"),
 		entry("upstream.managedUi.4f549c9a", "upstreamUI", "跳转到终点", "Jump to end point", "跳到終點", "終了位置へ移動", "끝점으로 이동", "Saltar al punto final", "Aller au point final", "Zum Endpunkt springen", "translation: managedUi.4f549c9a"),
 		entry("upstream.managedUi.18c2fe7f", "upstreamUI", "使用全部", "Use all", "使用全部", "全体を使用", "전체 사용", "Usar todo", "Utiliser tout", "Alle verwenden", "translation: managedUi.18c2fe7f"),
@@ -8036,17 +8042,17 @@ func builtinEntryBatch29() []Entry {
 		entry("upstream.managedUi.56da6367", "upstreamUI", "撤销 ⌘Z", "Undo ⌘Z", "撤銷 ⌘Z", "元に戻す ⌘Z", "실행 취소 ⌘Z", "Deshacer ⌘Z", "Annuler ⌘Z", "⌘Z rückgängig machen", "translation: managedUi.56da6367"),
 		entry("upstream.managedUi.ad5513bf", "upstreamUI", "重做 ⇧⌘Z", "Redo ⇧⌘Z", "重做 ⇧⌘Z", "やり直し ⇧⌘Z", "다시 실행 ⇧⌘Z", "Rehacer ⇧⌘Z", "Refaire ⇧⌘Z", "Wiederholen Sie ⇧⌘Z", "translation: managedUi.ad5513bf"),
 		entry("upstream.managedUi.ad32da83", "upstreamUI", "清空全部区域", "Clear all areas", "清空全部區域", "すべての領域をクリア", "모든 영역 지우기", "Borrar todas las áreas", "Effacer toutes les zones", "Räumen Sie alle Bereiche frei", "translation: managedUi.ad32da83"),
+	}
+}
+
+func builtinEntryBatch30() []Entry {
+	return []Entry{
 		entry("upstream.managedUi.daf2c4cc", "upstreamUI", "已标记", "Flagged", "已標記", "マーク済み", "표시됨", "Marcado", "Marqué", "Gekennzeichnet", "translation: managedUi.daf2c4cc"),
 		entry("upstream.managedUi.c0ae221d", "upstreamUI", "处", "at", "處", "で", "에서", "en", "à", "bei", "translation: managedUi.c0ae221d"),
 		entry("upstream.managedUi.a912ade8", "upstreamUI", "框选区域后，用 @区域N 分别描述要怎么改", "After selecting the area, use @areaN to describe how to change it.", "框選區域後，用 @區域N 分別描述要怎麼改", "領域を選択したら、@領域N で変更内容を個別に記述してください", "영역을 선택한 후 @영역N으로 변경할 내용을 각각 설명하세요", "Después de seleccionar el área, usa @áreaN para describir cómo cambiarla", "Après avoir sélectionné la zone, utilisez @areaN pour décrire comment la modifier.", "Nachdem Sie den Bereich ausgewählt haben, verwenden Sie @areaN, um zu beschreiben, wie Sie ihn ändern können.", "translation: managedUi.a912ade8"),
 		entry("upstream.managedUi.102b9f5f", "upstreamUI", "关闭", "Close", "關閉", "閉じる", "닫기", "Cerrar", "Fermer", "Schließen", "translation: managedUi.102b9f5f"),
 		entry("upstream.managedUi.3bff0d34", "upstreamUI", "区域", "area", "區域", "領域", "영역", "área", "zone", "Bereich", "translation: managedUi.3bff0d34"),
 		entry("upstream.managedUi.48319475", "upstreamUI", "选中{value1}", "selected{value1}", "選取{value1}", "選択中{value1}", "선택됨{value1}", "seleccionado{value1}", "choisi{value1}", "ausgewählt{value1}", "translation: managedUi.48319475"),
-	}
-}
-
-func builtinEntryBatch30() []Entry {
-	return []Entry{
 		entry("upstream.managedUi.587d4a2c", "upstreamUI", "还没有区域", "No area yet", "還沒有區域", "領域がまだありません", "아직 영역이 없습니다", "Aún no hay áreas", "Pas encore de zone", "Noch kein Bereich", "translation: managedUi.587d4a2c"),
 		entry("upstream.managedUi.3e2766b9", "upstreamUI", "在左侧图片上拖拽画框，每个框会自动编号，并在提示词里加一行引用。", "Drag the frames on the picture on the left, each frame will be automatically numbered, and a line of quotation will be added to the prompt word.", "在左側圖片上拖曳畫框，每個框會自動編號，並在提示詞裡加一行引用。", "左側の画像上でドラッグして枠を描くと、各枠に自動的に番号が付き、プロンプトに参照行が追加されます。", "왼쪽 이미지에서 드래그하여 상자를 그리면 각 상자에 자동으로 번호가 지정되고 프롬프트에 참조 행이 추가됩니다.", "Arrastra para dibujar recuadros en la imagen izquierda, cada recuadro se numerará automáticamente y se añadirá una línea de referencia en el prompt.", "Faites glisser les cadres sur l'image de gauche, chaque cadre sera automatiquement numéroté et une ligne de citation sera ajoutée au mot d'invite.", "Ziehen Sie die Rahmen auf dem Bild links. Jeder Rahmen wird automatisch nummeriert und dem Aufforderungswort wird eine Zitatzeile hinzugefügt.", "translation: managedUi.3e2766b9"),
 		entry("upstream.managedUi.2ad25351", "upstreamUI", "修改要求", "Modification requirements", "修改要求", "修正要件", "수정 요구 사항", "Requisitos de modificación", "Modifier la demande", "Anfrage ändern", "translation: managedUi.2ad25351"),
@@ -8297,17 +8303,17 @@ func builtinEntryBatch30() []Entry {
 		entry("upstream.managedUi.1515a22f", "upstreamUI", "{value1} · 拖动可调整位置，聚焦后可用方向键移动", "{value1} · Drag to adjust the position, and use the direction keys to move after focusing", "{value1} · 拖曳可調整位置，聚焦後可用方向鍵移動", "{value1} · ドラッグして位置を調整、フォーカス後は方向キーで移動可能", "{value1} · 드래그하여 위치 조정, 포커스 후 방향키로 이동 가능", "{value1} · Arrastra para ajustar la posición y usa las teclas de dirección para moverte después de enfocar", "{value1} · Faites glisser pour ajuster la position et utilisez les touches de direction pour vous déplacer après la mise au point", "{value1} · Ziehen Sie, um die Position anzupassen, und verwenden Sie die Richtungstasten, um nach dem Fokussieren zu verschieben", "translation: managedUi.1515a22f"),
 		entry("upstream.managedUi.bf7d95c4", "upstreamUI", "正在唤醒…", "Awakening…", "正在喚醒…", "起動中…", "깨우는 중…", "Despertar…", "Éveil…", "Aufwachen…", "translation: managedUi.bf7d95c4"),
 		entry("upstream.managedUi.869b1156", "upstreamUI", "正在加载助手形象", "Loading assistant image", "正在載入助手形象", "アシスタント画像を読み込み中", "어시스턴트 이미지 불러오는 중", "Cargando imagen del asistente", "Chargement de l'image de l'assistant", "Assistentenbild wird geladen", "translation: managedUi.869b1156"),
+	}
+}
+
+func builtinEntryBatch31() []Entry {
+	return []Entry{
 		entry("upstream.managedUi.d5a22b38", "upstreamUI", "待审批", "Pending approval", "待審批", "承認待ち", "승인 대기", "Pendiente de aprobación", "En attente d'approbation", "Genehmigung ausstehend", "translation: managedUi.d5a22b38"),
 		entry("upstream.managedUi.2e8d3167", "upstreamUI", "展开{value1}形象", "Expand {value1}image", "展開{value1}形象", "{value1}の画像を展開", "{value1} 이미지 펼치기", "Ampliar {value1}imagen", "Agrandir l'image {value1}", "Erweitern Sie das Bild {value1}", "translation: managedUi.2e8d3167"),
 		entry("upstream.managedUi.43df1ea5", "upstreamUI", "收起{value1}形象", "Collapse {value1}image", "收起{value1}形象", "{value1}の画像を折りたたむ", "{value1} 이미지 접기", "Contraer {value1}imagen", "Réduire {value1}image", "Collapse {value1}Bild", "translation: managedUi.43df1ea5"),
 		entry("upstream.managedUi.f9cb3a1f", "upstreamUI", "展开形象", "Expand image", "展開形象", "画像を展開", "이미지 펼치기", "Ampliar imagen", "Agrandir l'image", "Bild vergrößern", "translation: managedUi.f9cb3a1f"),
 		entry("upstream.managedUi.ad917132", "upstreamUI", "收起形象，只保留小入口", "Collapse the image and keep only the small entrance", "收起形象，只保留小入口", "画像を折りたたみ、小さな入口のみを保持", "이미지를 접고 작은 입구만 유지", "Contrae la imagen, dejando solo la pequeña entrada.", "Réduire l'image, ne laissant que la petite entrée", "Reduzieren Sie das Bild und lassen Sie nur den kleinen Eingang übrig", "translation: managedUi.ad917132"),
 		entry("upstream.managedUi.8800c58b", "upstreamUI", "历史对话，当前：{value1}", "Historical dialogue, current: {value1}", "歷史對話，當前：{value1}", "履歴会話、現在：{value1}", "대화 기록, 현재: {value1}", "Diálogo histórico, actual: {value1}", "Conversation historique, actuelle : {value1}", "Historischer Dialog, aktuell: {value1}", "translation: managedUi.8800c58b"),
-	}
-}
-
-func builtinEntryBatch31() []Entry {
-	return []Entry{
 		entry("upstream.managedUi.2b37aefc", "upstreamUI", "切换历史对话", "Switch historical conversation", "切換歷史對話", "履歴会話を切り替え", "대화 기록 전환", "Cambiar conversación histórica", "Changer de conversation historique", "Historische Konversation wechseln", "translation: managedUi.2b37aefc"),
 		entry("upstream.managedUi.61f410cf", "upstreamUI", "新建对话", "New conversation", "新建對話", "新規会話", "새 대화", "Nueva conversación", "Nouvelle conversation", "Neue Unterhaltung", "translation: managedUi.61f410cf"),
 		entry("upstream.managedUi.d76958b5", "upstreamUI", "更多", "More", "更多", "その他", "더보기", "Más", "Plus", "Mehr", "translation: managedUi.d76958b5"),
@@ -8558,17 +8564,17 @@ func builtinEntryBatch31() []Entry {
 		entry("upstream.managedUi.9bd02470", "upstreamUI", "提示词模块", "Prompt word module", "提示詞模組", "プロンプトモジュール", "프롬프트 모듈", "Módulo de palabra rápida", "Module de mots d'invite", "Eingabeaufforderungswortmodul", "translation: managedUi.9bd02470"),
 		entry("upstream.managedUi.8f9dec8", "upstreamUI", "只填写该资产需要追加的稳定视觉要求", "Only fill in the additional stable visual requirements for this asset", "只填寫該資產需要追加的穩定視覺要求", "このアセットに追加する必要がある安定した視覚要件のみを入力してください", "이 자산에 추가해야 하는 안정적인 시각 요구 사항만 입력하세요", "Complete solo los requisitos visuales estables adicionales para este activo", "Remplissez uniquement les exigences visuelles stables supplémentaires pour cet actif", "Geben Sie nur die zusätzlichen stabilen visuellen Anforderungen für dieses Asset ein", "translation: managedUi.8f9dec8"),
 		entry("upstream.managedUi.574beed2", "upstreamUI", "建议生成参数", "Recommended generation parameters", "建議產生參數", "推奨生成パラメータ", "권장 생성 매개변수", "Parámetros de generación recomendados", "Paramètres de génération recommandés", "Empfohlene Generierungsparameter", "translation: managedUi.574beed2"),
+	}
+}
+
+func builtinEntryBatch32() []Entry {
+	return []Entry{
 		entry("upstream.managedUi.57ea0847", "upstreamUI", "可选", "Optional", "選填", "任意", "선택 사항", "Opcional", "Facultatif", "Optional", "translation: managedUi.57ea0847"),
 		entry("upstream.managedUi.fb6e6dd9", "upstreamUI", "推荐尺寸", "Recommended size", "推薦尺寸", "推奨サイズ", "권장 크기", "Tamaño recomendado", "Taille recommandée", "Empfohlene Größe", "translation: managedUi.fb6e6dd9"),
 		entry("upstream.managedUi.8e5bc60c", "upstreamUI", "例如 1024x1536", "For example 1024x1536", "例如 1024x1536", "例: 1024x1536", "예: 1024x1536", "p.ej. 1024x1536", "par exemple. 1024x1536", "Zum Beispiel 1024x1536", "translation: managedUi.8e5bc60c"),
 		entry("upstream.managedUi.67475a6c", "upstreamUI", "许可快照", "License Snapshot", "許可快照", "ライセンススナップショット", "라이선스 스냅샷", "Instantánea de licencia", "Instantané de licence", "Lizenz-Snapshot", "translation: managedUi.67475a6c"),
 		entry("upstream.managedUi.f501dde8", "upstreamUI", "商业使用", "Commercial use", "商業使用", "商用利用", "상업적 사용", "Uso comercial", "Utilisation commerciale", "Kommerzielle Nutzung", "translation: managedUi.f501dde8"),
 		entry("upstream.managedUi.2e55e119", "upstreamUI", "尚未确认", "Not yet confirmed", "尚未確認", "まだ確認されていません", "아직 확인되지 않음", "Aún no confirmado", "Pas encore confirmé", "Noch nicht bestätigt", "translation: managedUi.2e55e119"),
-	}
-}
-
-func builtinEntryBatch32() []Entry {
-	return []Entry{
 		entry("upstream.managedUi.19989fc4", "upstreamUI", "允许商用", "Commercial use allowed", "允許商用", "商用利用可", "상업적 사용 허용", "Uso comercial permitido", "Utilisation commerciale autorisée", "Kommerzielle Nutzung erlaubt", "translation: managedUi.19989fc4"),
 		entry("upstream.managedUi.113593f9", "upstreamUI", "不可商用", "Not for commercial use", "不可商用", "商用利用不可", "상업적 이용 불가", "No para uso comercial", "Pas pour un usage commercial", "Nicht für kommerzielle Nutzung", "translation: managedUi.113593f9"),
 		entry("upstream.managedUi.450441a7", "upstreamUI", "许可来源", "Licensed source", "許可來源", "ライセンス元", "라이선스 출처", "Fuente con licencia", "Source sous licence", "Lizenzierte Quelle", "translation: managedUi.450441a7"),
@@ -8819,17 +8825,17 @@ func builtinEntryBatch32() []Entry {
 		entry("upstream.managedUi.87854ba7", "upstreamUI", "取消选择，回到镜头设置", "Cancel selection and return to lens settings", "取消選擇，回到鏡頭設置", "選択を解除し、カメラ設定に戻る", "선택을 취소하고 카메라 설정으로 돌아가기", "Cancelar la selección y volver a la configuración de la lente", "Annuler la sélection et revenir aux paramètres de l'objectif", "Auswahl abbrechen und zu den Objektiveinstellungen zurückkehren", "translation: managedUi.87854ba7"),
 		entry("upstream.managedUi.b1d4469", "upstreamUI", "返回镜头", "Return to camera", "返回鏡頭", "カメラに戻る", "카메라로 돌아가기", "Volver a la cámara", "Retour à la caméra", "Zurück zur Kamera", "translation: managedUi.b1d4469"),
 		entry("upstream.managedUi.c0128b57", "upstreamUI", "关闭属性面板", "Close the properties panel", "關閉屬性面板", "プロパティパネルを閉じる", "속성 패널 닫기", "Cerrar el panel de propiedades", "Fermez le panneau des propriétés", "Schließen Sie das Eigenschaftenfenster", "translation: managedUi.c0128b57"),
+	}
+}
+
+func builtinEntryBatch33() []Entry {
+	return []Entry{
 		entry("upstream.managedUi.85387a4f", "upstreamUI", "最新镜头截图", "Latest screenshots", "最新鏡頭截圖", "最新のカットスクリーンショット", "최신 샷 스크린샷", "Últimas capturas de pantalla", "Dernières captures d'écran", "Neueste Screenshots", "translation: managedUi.85387a4f"),
 		entry("upstream.managedUi.fce63a7", "upstreamUI", "最新截图", "Latest screenshot", "最新截圖", "最新のスクリーンショット", "최신 스크린샷", "Última captura de pantalla", "Dernière capture d'écran", "Neueste Screenshots", "translation: managedUi.fce63a7"),
 		entry("upstream.managedUi.9d2f21ca", "upstreamUI", "已加入画布", "has been added to the canvas", "已加入畫布", "キャンバスに追加されました", "캔버스에 추가됨", "se ha agregado al lienzo", "a été ajouté au canevas", "wurde zur Leinwand hinzugefügt", "translation: managedUi.9d2f21ca"),
 		entry("upstream.managedUi.4c692bee", "upstreamUI", "加入画布做图生视频", "Add canvas to make Tusheng video", "加入畫布做圖生視頻", "キャンバスに追加して画像から動画を作成", "캔버스에 추가하여 이미지 생성 비디오 만들기", "Agrega lienzo para hacer un video de Tusheng", "Ajouter un canevas pour créer une vidéo Tusheng", "Fügen Sie eine Leinwand hinzu, um ein Tusheng-Video zu erstellen", "translation: managedUi.4c692bee"),
 		entry("upstream.managedUi.39d00ea", "upstreamUI", "加入画布", "Add to canvas", "加入畫布", "キャンバスに追加", "캔버스에 추가", "Agregar al lienzo", "Ajouter à la toile", "Zur Leinwand hinzufügen", "translation: managedUi.39d00ea"),
 		entry("upstream.managedUi.d5a30234", "upstreamUI", "镜头列表", "Shot List", "鏡頭列表", "ショットリスト", "샷 목록", "Lista de tomas", "Liste des plans", "Aufnahmeliste", "translation: managedUi.d5a30234"),
-	}
-}
-
-func builtinEntryBatch33() []Entry {
-	return []Entry{
 		entry("upstream.managedUi.72c762bd", "upstreamUI", "新增镜头", "Add Shot", "新增鏡頭", "ショットを追加", "샷 추가", "Añadir toma", "Ajouter une photo", "Aufnahme hinzufügen", "translation: managedUi.72c762bd"),
 		entry("upstream.managedUi.79f59f95", "upstreamUI", "生成提示词", "Generate prompt words", "產生提示詞", "プロンプトを生成", "프롬프트 생성", "Generar palabras rápidas", "Générer des mots d'invite", "Generieren Sie Aufforderungswörter", "translation: managedUi.79f59f95"),
 		entry("upstream.managedUi.37d821e0", "upstreamUI", "白膜视频已生成", "White film video has been generated", "白膜影片已生成", "ホワイトモデル動画が生成されました", "화이트 모델 영상이 생성되었습니다", "Se ha generado un vídeo de película blanca.", "Une vidéo de film blanc a été générée", "Weißes Filmvideo wurde generiert", "translation: managedUi.37d821e0"),
@@ -9080,17 +9086,17 @@ func builtinEntryBatch33() []Entry {
 		entry("upstream.managedUi.adce1f82", "upstreamUI", "提取视频画面", "Extract video footage", "擷取影片畫面", "動画フレームを抽出", "동영상 프레임 추출", "Extraer fotogramas de video", "Extraire des images de la vidéo", "Video-Frames extrahieren", "translation: managedUi.adce1f82"),
 		entry("upstream.managedUi.756f8e98", "upstreamUI", "视频节点", "Video Node", "影片節點", "動画ノード", "비디오 노드", "Nodo de video", "Nœud vidéo", "Videoknoten", "translation: managedUi.756f8e98"),
 		entry("upstream.managedUi.482ebfeb", "upstreamUI", "视频预览加载失败，请检查素材是否仍然可用", "Video preview failed to load, please check if the material is still available", "影片預覽載入失敗，請檢查素材是否仍可使用", "ビデオプレビューの読み込みに失敗しました。素材が引き続き利用可能かどうかを確認してください", "비디오 미리보기를 불러오지 못했습니다. 소재가 계속 사용 가능한지 확인해 주세요.", "No se pudo cargar la vista previa del video, verifique si el material aún está disponible", "L'aperçu vidéo n'a pas pu être chargé, veuillez vérifier si le matériel est toujours disponible", "Die Videovorschau konnte nicht geladen werden. Bitte prüfen Sie, ob das Material noch verfügbar ist", "translation: managedUi.482ebfeb"),
+	}
+}
+
+func builtinEntryBatch34() []Entry {
+	return []Entry{
 		entry("upstream.managedUi.d0933591", "upstreamUI", "正在加载视频…", "Loading video...", "正在載入影片…", "動画を読み込み中...", "비디오 불러오는 중...", "Cargando video...", "Chargement de la vidéo...", "Video wird geladen...", "translation: managedUi.d0933591"),
 		entry("upstream.managedUi.bb2f70fe", "upstreamUI", "当前时间", "Current time", "當前時間", "現在時刻", "현재 시간", "Hora actual", "Heure actuelle", "Aktuelle Uhrzeit", "translation: managedUi.bb2f70fe"),
 		entry("upstream.managedUi.cf56f31e", "upstreamUI", "当前取帧时间（秒）", "Current frame acquisition time (seconds)", "目前取幀時間（秒）", "現在のフレーム取得時間（秒）", "현재 프레임 추출 시간(초)", "Tiempo de adquisición del cuadro actual (segundos)", "Temps d'acquisition de l'image actuelle (secondes)", "Aktuelle Frame-Abrufzeit (Sekunden)", "translation: managedUi.cf56f31e"),
 		entry("upstream.managedUi.8dece2af", "upstreamUI", "首帧", "First frame", "首影格", "最初のフレーム", "첫 프레임", "Primer fotograma", "Première image", "Erstes Bild", "translation: managedUi.8dece2af"),
 		entry("upstream.managedUi.623aacc2", "upstreamUI", "添加当前画面", "Add current screen", "新增目前畫面", "現在の画面を追加", "현재 화면 추가", "Agregar pantalla actual", "Ajouter l'écran actuel", "Aktuellen Bildschirm hinzufügen", "translation: managedUi.623aacc2"),
 		entry("upstream.managedUi.1c545a57", "upstreamUI", "尾帧", "Last frame", "尾影格", "最後のフレーム", "마지막 프레임", "Último fotograma", "Dernière image", "Letztes Bild", "translation: managedUi.1c545a57"),
-	}
-}
-
-func builtinEntryBatch34() []Entry {
-	return []Entry{
 		entry("upstream.managedUi.c15ad130", "upstreamUI", "已选画面", "Selected screen", "已選畫面", "選択された画面", "선택한 화면", "Pantalla seleccionada", "Écran sélectionné", "Ausgewählter Bildschirm", "translation: managedUi.c15ad130"),
 		entry("upstream.managedUi.43dcec9", "upstreamUI", "画面", "Visual Frame", "畫面", "画面", "화면", "Fotograma", "Visuel", "Bild", "translation: managedUi.43dcec9"),
 		entry("upstream.managedUi.6b9eb873", "upstreamUI", "删除画面 {value1}", "Delete screen {value1}", "刪除畫面 {value1}", "画面 {value1} を削除", "화면 {value1} 삭제", "Eliminar pantalla {value1}", "Supprimer l'écran {value1}", "Bildschirm löschen {value1}", "translation: managedUi.6b9eb873"),
@@ -9341,17 +9347,17 @@ func builtinEntryBatch34() []Entry {
 		entry("upstream.managedUi.6912bb78", "upstreamUI", "收起面板，扩大画布", "Collapse the panel and expand the canvas", "收起面板，擴大畫布", "パネルを折りたたみ、キャンバスを拡大する", "패널을 접고 캔버스 넓히기", "Contraer el panel y expandir el lienzo", "Réduire le panneau et agrandir le canevas", "Reduzieren Sie das Bedienfeld und erweitern Sie die Leinwand", "translation: managedUi.6912bb78"),
 		entry("upstream.managedUi.b953f09f", "upstreamUI", "展开工作区面板", "Expand the workspace panel", "展開工作區面板", "ワークスペースパネルを展開する", "작업 공간 패널 펼치기", "Expandir el panel del espacio de trabajo", "Développez le panneau de l'espace de travail", "Erweitern Sie das Arbeitsbereichsfenster", "translation: managedUi.b953f09f"),
 		entry("upstream.managedUi.af153aa9", "upstreamUI", "收起", "Close", "收起", "折りたたむ", "접기", "Plegar", "Réduire", "Schließen", "translation: managedUi.af153aa9"),
+	}
+}
+
+func builtinEntryBatch35() []Entry {
+	return []Entry{
 		entry("upstream.managedUi.97f26bc7", "upstreamUI", "展开", "Expand", "展開", "展開する", "펼치기", "Ampliar", "Agrandir", "Erweitern", "translation: managedUi.97f26bc7"),
 		entry("upstream.managedUi.707186e9", "upstreamUI", "画布工作区", "Canvas workspace", "畫布工作區", "キャンバスワークスペース", "캔버스 작업 공간", "Espacio de trabajo de lienzo", "Espace de travail Canvas", "Canvas-Arbeitsbereich", "translation: managedUi.707186e9"),
 		entry("upstream.managedUi.a6f35257", "upstreamUI", "正在打开", "Opening", "正在打開", "開いています", "여는 중", "Apertura", "Ouverture", "Eröffnung", "translation: managedUi.a6f35257"),
 		entry("upstream.managedUi.2cdf1849", "upstreamUI", "版本历史", "Version history", "版本歷史", "バージョン履歴", "버전 기록", "Historial de versiones", "Historique des versions", "Versionsverlauf", "translation: managedUi.2cdf1849"),
 		entry("upstream.managedUi.5377699", "upstreamUI", "下载 {value1} 个资源", "Download {value1} resources", "下載 {value1} 個資源", "{value1} 件のリソースをダウンロード", "리소스 {value1}개 다운로드", "Descargar {value1} recursos", "Télécharger {value1} ressources", "Laden Sie {value1} Ressourcen herunter", "translation: managedUi.5377699"),
 		entry("upstream.managedUi.47d4528d", "upstreamUI", "下载资源", "Download resources", "下載資源", "リソースをダウンロード", "리소스 다운로드", "Descargar recursos", "Télécharger les ressources", "Ressourcen herunterladen", "translation: managedUi.47d4528d"),
-	}
-}
-
-func builtinEntryBatch35() []Entry {
-	return []Entry{
 		entry("upstream.managedUi.6689d793", "upstreamUI", "设置资产分类", "Set asset classification", "設定資產分類", "アセットカテゴリを設定する", "에셋 분류 설정", "Establecer clasificación de activos", "Définir la classification des actifs", "Asset-Klassifizierung festlegen", "translation: managedUi.6689d793"),
 		entry("upstream.managedUi.82915676", "upstreamUI", "项目用途", "Project purpose", "專案用途", "プロジェクトの用途", "프로젝트 용도", "Propósito del proyecto", "Objectif du projet", "Projektzweck", "translation: managedUi.82915676"),
 		entry("upstream.managedUi.75dbb1ab", "upstreamUI", "自适应整理画布", "Adaptive organizing canvas", "自適應整理畫布", "キャンバスを自動的に整理する", "캔버스 자동 정리", "Lienzo organizador adaptable", "Canevas d'organisation adaptatif", "Adaptive Organisationsleinwand", "translation: managedUi.75dbb1ab"),
@@ -9602,17 +9608,17 @@ func builtinEntryBatch35() []Entry {
 		entry("upstream.managedUi.7a1e0e32", "upstreamUI", "分集", "Episode", "分集", "エピソード", "회차", "Episodio", "Épisode", "Folge", "translation: managedUi.7a1e0e32"),
 		entry("upstream.managedUi.9cba2887", "upstreamUI", "分集规划完成后会出现在这里", "Will appear here after episode planning is completed", "分集規劃完成後會出現在這裡", "エピソード計画が完了するとここに表示されます", "회차 기획이 완료되면 여기에 표시됩니다", "Aparecerá aquí una vez que se complete la planificación del episodio.", "Apparaîtra ici une fois la planification de l'épisode terminée", "Wird hier erscheinen, nachdem die Episodenplanung abgeschlossen ist", "translation: managedUi.9cba2887"),
 		entry("upstream.managedUi.58ac9bdd", "upstreamUI", "已用积分", "Points used", "已用積分", "使用済みポイント", "사용한 크레딧", "Puntos usados", "Points utilisés", "Verwendete Punkte", "translation: managedUi.58ac9bdd"),
+	}
+}
+
+func builtinEntryBatch36() []Entry {
+	return []Entry{
 		entry("upstream.managedUi.14283a8d", "upstreamUI", "其中画布精修", "Among them, canvas refinement", "其中畫布精修", "うちキャンバス精修", "이 중 캔버스 정교 수정", "Entre ellos, refinamiento del lienzo.", "Parmi eux, le raffinement de la toile", "Darunter die Leinwandveredelung", "translation: managedUi.14283a8d"),
 		entry("upstream.managedUi.162f2d9e", "upstreamUI", "第", "No.", "第", "No.", "아니요.", "No.", "Segment ", "Segment ", "translation: managedUi.162f2d9e"),
 		entry("upstream.managedUi.ac0405c0", "upstreamUI", "集", "episodes", "集", "話", "화", "episodios", "Épisode", "Episode", "translation: managedUi.ac0405c0"),
 		entry("upstream.managedUi.16cd7d7a", "upstreamUI", "整集投送", "Full episode delivery", "整集投送", "エピソード全体を投送", "회차 전체 투사", "Entrega del episodio completo", "Livraison de l'épisode complet", "Vollständige Episodenlieferung", "translation: managedUi.16cd7d7a"),
 		entry("upstream.managedUi.d879c3ba", "upstreamUI", "把这一集的全部剧情段投送到画布（已投送的段跳过）", "Submit all plot segments of this episode to the canvas (sent segments will be skipped)", "把這集的全部劇情段投送到畫布（已投送的段跳過）", "このエピソードのすべてのプロットセグメントをキャンバスに送信（送信済みはスキップ）", "이 에피소드의 모든 플롯 세그먼트를 캔버스에 제출(이미 제출된 세그먼트는 건너뜀)", "Envíe todos los segmentos de la trama de este episodio al lienzo (los segmentos enviados se omiten)", "Soumettez tous les segments de l'intrigue de cet épisode au canevas (les segments envoyés seront ignorés)", "Alle Handlungsabschnitte dieser Episode an die Leinwand senden (gesendete Abschnitte werden übersprungen)", "translation: managedUi.d879c3ba"),
 		entry("upstream.managedUi.646c60a2", "upstreamUI", "定位成片", "Positioning into film", "定位成片", "完成映像を特定", "완성본 찾기", "Posicionamiento en una película", "Positionnement dans un film", "Positionierung in einem Film", "translation: managedUi.646c60a2"),
-	}
-}
-
-func builtinEntryBatch36() []Entry {
-	return []Entry{
 		entry("upstream.managedUi.c46e3fff", "upstreamUI", "成片", "Final Cut", "成片", "完成作品", "완성본", "Corte final", "Film final", "Fertiger Film", "translation: managedUi.c46e3fff"),
 		entry("upstream.managedUi.b84b3b9e", "upstreamUI", "把这一集的成片投送到画布", "Submit the finished episode of this episode to canvas", "把這集的成片投送到畫布", "このエピソードの完成映像をキャンバスに送信", "이 에피소드의 완성본을 캔버스에 제출", "Envíe el episodio terminado al lienzo.", "Soumettre l'épisode terminé sur toile", "Senden Sie die fertige Episode an Canvas", "translation: managedUi.b84b3b9e"),
 		entry("upstream.managedUi.e61213d2", "upstreamUI", "这一集还没有成片", "This episode has not been filmed yet", "這集還沒成片", "このエピソードにはまだ完成映像がありません", "이 에피소드에는 아직 완성본이 없습니다", "Este episodio aún no ha sido filmado", "Cet épisode n'a pas encore été filmé", "Diese Episode wurde noch nicht gedreht", "translation: managedUi.e61213d2"),
@@ -9863,17 +9869,17 @@ func builtinEntryBatch36() []Entry {
 		entry("upstream.managedUi.d0e4aaa3", "upstreamUI", "安装", "Install", "安裝", "インストール", "설치", "Instalar", "Installer", "Installieren", "translation: managedUi.d0e4aaa3"),
 		entry("upstream.managedUi.14474289", "upstreamUI", "不想让某个技能被自动使用，可以在 Agent 设置的 Skills 里把它改成「仅手动」。", "If you don’t want a skill to be used automatically, you can change it to “Manual Only” in the Skills in Agent settings.", "不想讓某個技能自動使用，可以在 Agent 設定的 Skills 裡把它改成「僅手動」。", "特定のスキルを自動で使用させたくない場合は、Agent 設定の Skills で「手動のみ」に変更できます。", "특정 스킬이 자동으로 사용되지 않도록 하려면, Agent 설정의 Skills에서 '수동 전용'으로 변경하세요.", "Si no desea que una habilidad se use automáticamente, puede cambiarla a \"Solo manual\" en las Habilidades en la configuración del Agente.", "Si vous ne souhaitez pas qu'une compétence soit utilisée automatiquement, vous pouvez la modifier en « Manuel uniquement » dans les paramètres Compétences de l'agent.", "Wenn Sie nicht möchten, dass ein Skill automatisch verwendet wird, können Sie ihn in den Skills-Einstellungen des Agenten auf „Nur manuell“ ändern.", "translation: managedUi.14474289"),
 		entry("upstream.managedUi.21c825ed", "upstreamUI", "暂停", "Pause", "暫停", "一時停止", "일시 중지", "Pausar", "Pause", "Pause", "translation: managedUi.21c825ed"),
+	}
+}
+
+func builtinEntryBatch37() []Entry {
+	return []Entry{
 		entry("upstream.managedUi.8428311a", "upstreamUI", "试听", "Audition", "試聽", "試聴", "미리 듣기", "Audición", "Écouter", "Anhören", "translation: managedUi.8428311a"),
 		entry("upstream.managedUi.54f46c59", "upstreamUI", "{value1} 试听进度", "{value1} Audition progress", "{value1} 試聽進度", "{value1} 試聴の進捗", "{value1} 미리 듣기 진행률", "{value1} Progreso de la audición", "{value1} Progression de l'audition", "{value1} Audition-Fortschritt", "translation: managedUi.54f46c59"),
 		entry("upstream.managedUi.9372905", "upstreamUI", "分辨率", "Resolution", "解析度", "解像度", "해상도", "Resolución", "Résolution", "Auflösung", "translation: managedUi.9372905"),
 		entry("upstream.managedUi.699bafe", "upstreamUI", "自动尺寸", "Automatic size", "自動尺寸", "自動サイズ", "자동 크기", "Tamaño automático", "Taille automatique", "Automatische Größe", "translation: managedUi.699bafe"),
 		entry("upstream.managedUi.17a7e6a5", "upstreamUI", "宽高比", "Aspect Ratio", "寬高比", "アスペクト比", "화면 비율", "Relación de aspecto", "Format d'image", "Seitenverhältnis", "translation: managedUi.17a7e6a5"),
 		entry("upstream.managedUi.4518079f", "upstreamUI", "未配置预设尺寸", "No default size configured", "未配置預設尺寸", "プリセットサイズが設定されていません", "사전 설정된 크기가 없습니다", "No se ha configurado ningún tamaño predeterminado", "Aucune taille par défaut configurée", "Keine Standardgröße konfiguriert", "translation: managedUi.4518079f"),
-	}
-}
-
-func builtinEntryBatch37() []Entry {
-	return []Entry{
 		entry("upstream.managedUi.cedc9d05", "upstreamUI", "，可输入自定义比例或尺寸", ", you can enter custom proportions or sizes", "，可輸入自訂比例或尺寸", "、カスタムの比率やサイズを入力できます", "에서 사용자 지정 비율 또는 크기를 입력할 수 있습니다", ", puedes ingresar proporciones o tamaños personalizados", ", vous pouvez saisir des proportions ou des tailles personnalisées", "können Sie benutzerdefinierte Proportionen oder Größen eingeben", "translation: managedUi.cedc9d05"),
 		entry("upstream.managedUi.4d17b796", "upstreamUI", "尺寸由模型决定", "Size determined by model", "尺寸由模型決定", "サイズはモデルによって決まります", "크기는 모델에 따라 결정됩니다", "Tamaño determinado por modelo", "Taille déterminée par le modèle", "Größe je nach Modell", "translation: managedUi.4d17b796"),
 		entry("upstream.managedUi.727f4b2e", "upstreamUI", "尺寸为换算参考，实际像素由模型决定", "The size is for conversion reference, the actual pixels are determined by the model", "尺寸為換算參考，實際像素由模型決定", "サイズは換算参考であり、実際のピクセルはモデルによって決まります", "크기는 환산 참고용이며, 실제 픽셀은 모델에 따라 결정됩니다", "El tamaño es una referencia para la conversión y los píxeles reales los determina el modelo.", "La taille est à titre de référence de conversion, les pixels réels sont déterminés par le modèle", "Die Größe ist eine Konvertierungsreferenz und die tatsächlichen Pixel werden vom Modell bestimmt.", "translation: managedUi.727f4b2e"),
@@ -10124,17 +10130,17 @@ func builtinEntryBatch37() []Entry {
 		entry("upstream.managedUi.88177955", "upstreamUI", "按来源筛选", "Filter by Source", "按來源篩選", "ソースで絞り込み", "출처별 필터링", "Filtrar por origen", "Filtrer par source", "Nach Quelle filtern", "translation: managedUi.88177955"),
 		entry("upstream.managedUi.1b43c4e7", "upstreamUI", "查看{value1}文档", "View {value1}Documents", "查看{value1}文檔", "{value1}ドキュメントを表示", "{value1} 문서 보기", "Ver {value1}Documentos", "Vérifier{value1}document", "{value1}Dokumente anzeigen", "translation: managedUi.1b43c4e7"),
 		entry("upstream.managedUi.839aa3e5", "upstreamUI", "发布", "Posted", "發布", "公開", "게시", "Publicado", "libérer", "Gepostet", "translation: managedUi.839aa3e5"),
+	}
+}
+
+func builtinEntryBatch38() []Entry {
+	return []Entry{
 		entry("upstream.managedUi.1163421", "upstreamUI", "更新", "Updated", "更新", "更新", "업데이트", "Actualizado", "Mis à jour", "Aktualisiert", "translation: managedUi.1163421"),
 		entry("upstream.managedUi.12a08340", "upstreamUI", "异步轮询", "Asynchronous Polling", "非同步輪詢", "非同期ポーリング", "비동기 폴링", "Sondeo asíncrono", "Interrogation asynchrone", "Asynchrone Abfrage", "translation: managedUi.12a08340"),
 		entry("upstream.managedUi.4c8feb88", "upstreamUI", "项能力", "ability", "項能力", "個の機能", "개의 기능", "habilidad", "capacité", "Fähigkeit", "translation: managedUi.4c8feb88"),
 		entry("upstream.managedUi.af8355ac", "upstreamUI", "{value1}，当前{value2}", "{value1}, currently {value2}", "{value1}，當前{value2}", "{value1}、現在{value2}", "{value1}, 현재 {value2}", "{value1}, actualmente {value2}", "{value1},actuel{value2}", "{value1}, aktuell {value2}", "translation: managedUi.af8355ac"),
 		entry("upstream.managedUi.b2007d55", "upstreamUI", "设置", "Settings", "設定", "設定", "설정", "Configuración", "Paramètres", "Einstellungen", "translation: managedUi.b2007d55"),
 		entry("upstream.managedUi.933be742", "upstreamUI", "配置中心", "Configuration Center", "設定中心", "設定センター", "구성 센터", "Centro de configuración", "Centre de configuration", "Konfigurationscenter", "translation: managedUi.933be742"),
-	}
-}
-
-func builtinEntryBatch38() []Entry {
-	return []Entry{
 		entry("upstream.managedUi.4973c824", "upstreamUI", "多语言设置", "Multi-Language Settings", "多語言設定", "多言語設定", "다국어 설정", "Configuración de idiomas", "Paramètres multilingues", "Mehrsprachige Einstellungen", "translation: managedUi.4973c824"),
 		entry("upstream.managedUi.b9138df7", "upstreamUI", "编辑页面", "Edit page", "編輯頁面", "ページを編集", "페이지 편집", "Editar página", "Modifier la page", "Seite bearbeiten", "translation: managedUi.b9138df7"),
 		entry("upstream.managedUi.eeb61670", "upstreamUI", "暂无该类型的插件", "No plugins of this kind", "暫無該類型的外掛", "このタイプのプラグインはありません", "이 유형의 플러그인 없음", "Sin extensiones de este tipo", "Aucun plugin de ce genre", "Keine Plugins dieser Art", "translation: managedUi.eeb61670"),
@@ -10385,17 +10391,17 @@ func builtinEntryBatch38() []Entry {
 		entry("upstream.managedUi.c40a9d9c", "upstreamUI", "访问统计", "Access Statistics", "訪問統計", "アクセス統計", "방문 통계", "Estadísticas de acceso", "Statistiques d'accès", "Zugriffsstatistik", "translation: managedUi.c40a9d9c"),
 		entry("upstream.managedUi.24a24e8c", "upstreamUI", "独立统计站点访问与关键操作，不与运行总览的生成任务混算。", "Site visits and key actions are counted independently and are not mixed with generation tasks in the runtime overview.", "獨立統計站點訪問與關鍵操作，不與運行總覽的生成任務混算。", "サイト訪問と主要操作は独立して集計され、運用概要の生成タスクとは混在しません。", "사이트 방문 및 핵심 조작은 독립적으로 집계되며 실행 개요의 생성 작업과 혼합되지 않습니다.", "Las visitas al sitio y las acciones clave se cuentan de forma independiente y no se mezclan con las tareas de generación del resumen de ejecución.", "Les visites du site et les actions clés sont comptées indépendamment et ne sont pas mélangées avec les tâches de génération de la vue d'ensemble d'exécution.", "Site-Besuche und Schlüsselaktionen werden unabhängig gezählt und nicht mit Generierungsaufgaben in der Laufzeitübersicht vermischt.", "translation: managedUi.24a24e8c"),
 		entry("upstream.managedUi.3a87887", "upstreamUI", "时间范围与筛选控制", "Time range and filtering control", "時間範圍與篩選控制", "時間範囲とフィルターの制御", "시간 범위 및 필터 제어", "Control de rango de tiempo y filtro", "Plage de temps et contrôle du filtre", "Zeitbereich und Filtersteuerung", "translation: managedUi.3a87887"),
+	}
+}
+
+func builtinEntryBatch39() []Entry {
+	return []Entry{
 		entry("upstream.managedUi.59db9642", "upstreamUI", "动态刷新中 · 15s", "Dynamic refreshing · 15s", "動態刷新中 · 15s", "動的リフレッシュ中 · 15秒", "동적 새로고침 중 · 15초", "Actualización dinámica · 15s", "Rafraîchissement dynamique · 15s", "Dynamische Auffrischung · 15s", "translation: managedUi.59db9642"),
 		entry("upstream.managedUi.627f4705", "upstreamUI", "动态刷新", "Dynamic refresh", "動態刷新", "動的リフレッシュ", "동적 새로고침", "Actualización dinámica", "Actualisation dynamique", "Dynamische Aktualisierung", "translation: managedUi.627f4705"),
 		entry("upstream.managedUi.5ff955fa", "upstreamUI", "刷新", "Refresh", "重新整理", "更新", "새로고침", "Actualizar", "Actualiser", "Aktualisieren", "translation: managedUi.5ff955fa"),
 		entry("upstream.managedUi.5f76e338", "upstreamUI", "导出当前成功快照 CSV", "Export current successful snapshot to CSV", "匯出目前成功快照 CSV", "現在の成功スナップショットを CSV としてエクスポート", "현재 성공 스냅샷을 CSV로 내보내기", "Exportar la instantánea actual exitosa a CSV", "Exporter l'instantané réussi actuel vers CSV", "Aktuellen erfolgreichen Snapshot in CSV exportieren", "translation: managedUi.5f76e338"),
 		entry("upstream.managedUi.f595d69", "upstreamUI", "应用日期与当前来源筛选；导出全部匹配功能", "Apply date and current source filters; export all matches feature", "應用日期與目前來源篩選；匯出全部符合功能", "日付と現在のソースフィルターを適用し、一致するすべての機能をエクスポート", "날짜 및 현재 소스 필터를 적용하고 일치하는 모든 기능을 내보내기", "Aplicar filtros de fecha y fuente actual; Función Exportar todas las coincidencias", "Appliquer des filtres de date et de source actuelle ; Fonctionnalité d'exportation de toutes les correspondances", "Datums- und aktuelle Quellfilter anwenden; Funktion „Alle Übereinstimmungen exportieren“.", "translation: managedUi.f595d69"),
 		entry("upstream.managedUi.603d73b4", "upstreamUI", "仅应用日期范围；不受来源筛选和明细分页影响", "Applies date range only; is not affected by source filtering and detail paging", "僅應用日期範圍；不受來源篩選和明細分頁影響", "日付範囲のみを適用し、ソースフィルターと明細ページングの影響を受けません", "날짜 범위만 적용하며 소스 필터링 및 세부 페이지네이션의 영향을 받지 않습니다", "Aplica únicamente el rango de fechas; no se ve afectado por el filtrado de fuentes y la paginación de detalles", "S'applique uniquement à la plage de dates ; n'est pas affecté par le filtrage des sources et la pagination des détails", "Gilt nur für den Datumsbereich; wird von der Quellfilterung und dem Detail-Paging nicht beeinflusst", "translation: managedUi.603d73b4"),
-	}
-}
-
-func builtinEntryBatch39() []Entry {
-	return []Entry{
 		entry("upstream.managedUi.c05f37dc", "upstreamUI", "快捷日期范围", "Quick date range", "快捷日期範圍", "クイック日付範囲", "빠른 날짜 범위", "Rango de fechas rápido", "Plage de dates rapide", "Schneller Datumsbereich", "translation: managedUi.c05f37dc"),
 		entry("upstream.managedUi.6719ec4c", "upstreamUI", "天", "days", "天", "日", "일", "días", "jours", "Tage", "translation: managedUi.6719ec4c"),
 		entry("upstream.managedUi.7091ca42", "upstreamUI", "自定义区间", "Custom interval", "自訂區間", "カスタム範囲", "사용자 지정 범위", "Intervalo personalizado", "Intervalle personnalisé", "Benutzerdefiniertes Intervall", "translation: managedUi.7091ca42"),
@@ -10646,17 +10652,17 @@ func builtinEntryBatch39() []Entry {
 		entry("upstream.managedUi.61c0337", "upstreamUI", "已撤销第三方参数的未保存调整", "Unsaved adjustments to third-party parameters have been undone", "已撤銷第三方參數的未儲存調整", "サードパーティのパラメータに対する未保存の調整を取り消しました", "서드파티 파라미터의 저장되지 않은 조정을 취소했습니다", "Se han deshecho los ajustes no guardados a parámetros de terceros", "Les ajustements non enregistrés des paramètres tiers ont été annulés", "Nicht gespeicherte Anpassungen an Parametern von Drittanbietern wurden rückgängig gemacht", "translation: managedUi.61c0337"),
 		entry("upstream.managedUi.acb95716", "upstreamUI", "放弃调整并重新读取？", "Discard changes and reload?", "放棄調整並重新讀取？", "変更を破棄して再読み込みしますか？", "변경 사항을 취소하고 다시 불러오시겠습니까?", "¿Descartar cambios y recargar?", "Annuler les modifications et recharger ?", "Änderungen verwerfen und neu laden?", "translation: managedUi.acb95716"),
 		entry("upstream.managedUi.b9828007", "upstreamUI", "重新读取会丢弃当前导入开关草稿，并以服务端配置为准。", "Rereading will discard the current import switch draft and refer to the server configuration.", "重新讀取會丟棄目前匯入開關草稿，並以服務端配置為準。", "再読み込みすると現在のインポート切り替え下書きが破棄され、サーバー側の設定が優先されます。", "다시 불러오면 현재 가져오기 설정 초안이 삭제되고 서버 설정이 적용됩니다.", "La relectura descartará el borrador del cambio de importación actual y hará referencia a la configuración del servidor.", "La relecture supprimera le brouillon actuel du commutateur d'importation et fera référence à la configuration du serveur.", "Durch erneutes Lesen wird der aktuelle Import-Switch-Entwurf verworfen und auf die Serverkonfiguration verwiesen.", "translation: managedUi.b9828007"),
+	}
+}
+
+func builtinEntryBatch40() []Entry {
+	return []Entry{
 		entry("upstream.managedUi.b406cb5f", "upstreamUI", "放弃并刷新", "Discard and Refresh", "放棄並重新整理", "破棄して更新", "취소하고 새로고침", "Descartar y actualizar", "Supprimer et actualiser", "Verwerfen und aktualisieren", "translation: managedUi.b406cb5f"),
 		entry("upstream.managedUi.d7feb5ec", "upstreamUI", "请先连接 LibTV 账号，再启用画布导入", "Please connect your LibTV account first and then enable canvas import.", "請先連接 LibTV 帳號，再啟用畫布匯入", "キャンバスインポートを有効にする前に、まず LibTV アカウントを接続してください", "캔버스 가져오기를 활성화하려면 먼저 LibTV 계정을 연결하세요", "Primero conecte su cuenta LibTV y luego habilite la importación de lienzo.", "Veuillez d'abord connecter votre compte LibTV, puis activer l'importation de canevas.", "Bitte verbinden Sie zuerst Ihr LibTV-Konto und aktivieren Sie dann den Canvas-Import.", "translation: managedUi.d7feb5ec"),
 		entry("upstream.managedUi.2d4a0ed0", "upstreamUI", "请在打开的窗口中用微信扫码授权", "Please use WeChat to scan the QR code in the opened window to authorize", "請在開啟的視窗中用微信掃碼授權", "開いたウィンドウで WeChat を使って QR コードをスキャンし、認可してください", "열린 창에서 WeChat으로 QR 코드를 스캔하여 인증하세요", "Utilice WeChat para escanear el código QR en la ventana abierta para autorizar", "Veuillez utiliser WeChat pour scanner le code dans la fenêtre ouverte pour autoriser", "Bitte verwenden Sie WeChat, um den QR-Code im geöffneten Fenster zur Autorisierung zu scannen", "translation: managedUi.2d4a0ed0"),
 		entry("upstream.managedUi.3f81b202", "upstreamUI", "请粘贴授权完成后的完整回调地址", "Please paste the complete callback address after authorization is completed", "請貼上授權完成後的完整回呼位址", "認可完了後の完全なコールバック URL を貼り付けてください", "인증 완료 후 전체 콜백 URL을 붙여넣으세요", "Pegue la dirección de devolución de llamada completa después de completar la autorización", "Veuillez coller l'adresse de rappel complète une fois l'autorisation terminée", "Bitte fügen Sie die vollständige Rückrufadresse ein, nachdem die Autorisierung abgeschlossen ist", "translation: managedUi.3f81b202"),
 		entry("upstream.managedUi.7d2954b9", "upstreamUI", "断开 LibTV 账号？", "Disconnect LibTV account?", "斷開 LibTV 帳號？", "LibTV アカウントを切断しますか？", "LibTV 계정 연결을 해제할까요?", "¿Desconectar la cuenta de LibTV?", "Déconnecter le compte LibTV ?", "LibTV-Konto trennen?", "translation: managedUi.7d2954b9"),
 		entry("upstream.managedUi.a8ed15f8", "upstreamUI", "断开后将同时关闭用户导入入口。已导入到画布中的节点和连线不会被删除。", "After disconnection, the user import entrance will be closed at the same time. Nodes and connections that have been imported into the canvas will not be deleted.", "斷開後將同時關閉使用者匯入入口。已匯入到畫布中的節點和連線不會被刪除。", "切断すると、ユーザーインポート入口も同時に閉じられます。キャンバスにインポート済みのノードと接続は削除されません。", "연결을 해제하면 사용자 가져오기 입구도 함께 닫힙니다. 캔버스로 가져온 노드와 연결은 삭제되지 않습니다.", "Después de la desconexión, la entrada de importación de usuarios se cerrará al mismo tiempo. Los nodos y conexiones que se hayan importado al lienzo no se eliminarán.", "Après la déconnexion, l'entrée d'importation d'utilisateur sera fermée en même temps. Les nœuds et les connexions importés dans le canevas ne seront pas supprimés.", "Nach der Trennung wird gleichzeitig der Benutzerimporteingang geschlossen. Knoten und Verbindungen, die in die Leinwand importiert wurden, werden nicht gelöscht.", "translation: managedUi.a8ed15f8"),
-	}
-}
-
-func builtinEntryBatch40() []Entry {
-	return []Entry{
 		entry("upstream.managedUi.c9d010f5", "upstreamUI", "断开连接", "Disconnect", "中斷連線", "切断", "연결 끊기", "Desconectar", "Déconnecter", "Verbindung trennen", "translation: managedUi.c9d010f5"),
 		entry("upstream.managedUi.14c02a03", "upstreamUI", "取消", "Cancel", "取消", "キャンセル", "취소", "Cancelar", "Annuler", "Abbrechen", "translation: managedUi.14c02a03"),
 		entry("upstream.managedUi.692f506c", "upstreamUI", "已断开 LibTV 账号", "LibTV account has been disconnected", "已中斷 LibTV 帳號", "LibTV アカウントの接続を解除しました", "LibTV 계정 연결이 해제되었습니다", "La cuenta LibTV ha sido desconectada", "Le compte LibTV a été déconnecté", "LibTV-Konto wurde getrennt", "translation: managedUi.692f506c"),
@@ -10907,17 +10913,17 @@ func builtinEntryBatch40() []Entry {
 		entry("upstream.managedUi.12e89407", "upstreamUI", "无法读取外观配置", "Unable to read appearance configuration", "無法讀取外觀配置", "外観設定を読み込めません", "외관 설정을 읽을 수 없습니다", "No se puede leer la configuración de apariencia", "Impossible de lire la configuration de l'apparence", "Darstellungskonfiguration kann nicht gelesen werden", "translation: managedUi.12e89407"),
 		entry("upstream.managedUi.facf51de", "upstreamUI", "当前没有可显示的配置，请稍后重试。", "No configuration available to display; please try again later.", "目前沒有可顯示的設定，請稍後重試。", "表示可能な設定がありません。後でもう一度お試しください。", "표시할 수 있는 설정이 없습니다. 잠시 후 다시 시도해 주세요.", "No hay configuración disponible para mostrar; inténtalo de nuevo más tarde.", "Aucune configuration disponible à afficher ; veuillez réessayer plus tard.", "Keine Konfiguration zur Anzeige verfügbar; Bitte versuchen Sie es später noch einmal.", "translation: managedUi.facf51de"),
 		entry("upstream.managedUi.48b6dfda", "upstreamUI", "重新读取", "Reread", "重新讀取", "再読み込み", "다시 읽기", "Volver a leer", "Recharger", "Neu laden", "translation: managedUi.48b6dfda"),
+	}
+}
+
+func builtinEntryBatch41() []Entry {
+	return []Entry{
 		entry("upstream.managedUi.635dda05", "upstreamUI", "站点配置有调整待保存", "The site configuration has been adjusted and needs to be saved.", "站點配置有調整待保存", "サイト設定に保存待ちの変更があります", "사이트 설정에 저장해야 할 조정이 있습니다", "La configuración del sitio tiene ajustes pendientes de guardar", "La configuration du site a été ajustée et doit être enregistrée.", "Die Site-Konfiguration wurde angepasst und muss gespeichert werden.", "translation: managedUi.635dda05"),
 		entry("upstream.managedUi.717936a6", "upstreamUI", "站点及外观已与服务端同步", "The site and appearance have been synchronized with the server", "站點及外觀已與服務端同步", "サイトと外観はサーバーと同期済みです", "사이트 및 외관이 서버와 동기화되었습니다", "El sitio y la apariencia se han sincronizado con el servidor", "Le site et l'apparence ont été synchronisés avec le serveur", "Die Website und das Erscheinungsbild wurden mit dem Server synchronisiert", "translation: managedUi.717936a6"),
 		entry("upstream.managedUi.3efd70e5", "upstreamUI", "尚未生效", "Not yet effective", "尚未生效", "まだ有効化されていません", "아직 적용되지 않음", "Aún no efectivo", "Pas encore en vigueur", "Noch nicht wirksam", "translation: managedUi.3efd70e5"),
 		entry("upstream.managedUi.f4113b1b", "upstreamUI", "服务端当前值", "Current Server Value", "伺服器端目前數值", "サーバー側の現在値", "서버 현재 값", "Valor actual del servidor", "Valeur actuelle du serveur", "Aktueller Serverwert", "translation: managedUi.f4113b1b"),
 		entry("upstream.managedUi.c5a0d6a1", "upstreamUI", "切换分类保留草稿；保存修改会一次应用品牌、登录页、更新公告、SEO、备案和皮肤调整。", "Switch categories to keep the draft; saving changes will apply branding, login page, update announcement, SEO, filing and skin adjustments at once.", "切換分類保留草稿；儲存修改會一次應用品牌、登入頁、更新公告、SEO、備案和皮膚調整。", "カテゴリを切り替えても下書きは保持されます。変更を保存すると、ブランド、ログインページ、更新通知、SEO、备案、スキンの設定がまとめて適用されます。", "카테고리를 전환해도 초안이 유지됩니다. 수정 사항을 저장하면 브랜드, 로그인 페이지, 업데이트 공지, SEO, 기록 및 스킨 조정이 한 번에 적용됩니다.", "Al cambiar de categoría se conserva el borrador; al guardar los cambios se aplicarán de una vez los ajustes de marca, página de inicio de sesión, anuncio de actualización, SEO, registro y apariencia.", "Changez de catégorie pour conserver le brouillon ; l'enregistrement des modifications appliquera simultanément les ajustements de la marque, de la page de connexion, de l'annonce de mise à jour, du référencement, du classement et de l'apparence.", "Kategorien wechseln, um den Entwurf beizubehalten; Durch das Speichern von Änderungen werden Branding, Anmeldeseite, Update-Ankündigung, SEO, Ablage und Skin-Anpassungen gleichzeitig übernommen.", "translation: managedUi.c5a0d6a1"),
 		entry("upstream.managedUi.5ec1e058", "upstreamUI", "按分类管理站点配置；欢迎页开关独立即时保存，其余修改统一保存。", "Manage site configuration by category; the welcome page switch is saved independently and instantly, and other modifications are saved uniformly.", "依分類管理網站設定；歡迎頁開關獨立即時保存，其餘修改統一保存。", "カテゴリ別にサイト設定を管理します。ウェルカムページのスイッチは個別に即時保存され、その他の変更はまとめて保存されます。", "카테고리별로 사이트 설정을 관리합니다. 환영 페이지 스위치는 독립적으로 즉시 저장되며, 나머지 수정 사항은 통합 저장됩니다.", "Gestiona la configuración del sitio por categorías; el interruptor de la página de bienvenida se guarda de forma independiente e inmediata, y el resto de modificaciones se guardan de forma unificada.", "Gérer la configuration du site par catégorie ; le changement de page d'accueil est enregistré indépendamment et instantanément, et les autres modifications sont enregistrées uniformément.", "Site-Konfiguration nach Kategorie verwalten; Der Wechsel zur Begrüßungsseite wird unabhängig und sofort gespeichert, und andere Änderungen werden einheitlich gespeichert.", "translation: managedUi.5ec1e058"),
-	}
-}
-
-func builtinEntryBatch41() []Entry {
-	return []Entry{
 		entry("upstream.managedUi.60217b45", "upstreamUI", "撤销调整", "Revert Adjustments", "復原調整", "調整を元に戻す", "조정 되돌리기", "Revertir ajustes", "Annuler les ajustements", "Anpassungen zurücksetzen", "translation: managedUi.60217b45"),
 		entry("upstream.managedUi.f423c684", "upstreamUI", "恢复影策默认", "Restore shadow strategy default", "恢復影策默認", "影策のデフォルトに戻す", "Yingce 기본값 복원", "Restaurar predeterminado de Yingce", "Restaurer la stratégie d'ombre par défaut", "Standardeinstellung der Schattenstrategie wiederherstellen", "translation: managedUi.f423c684"),
 		entry("upstream.managedUi.30d96cb4", "upstreamUI", "刷新状态", "Refresh status", "重新整理狀態", "状態を更新", "상태 새로고침", "Actualizar estado", "Actualiser le statut", "Status aktualisieren", "translation: managedUi.30d96cb4"),
@@ -11168,17 +11174,17 @@ func builtinEntryBatch41() []Entry {
 		entry("upstream.managedUi.211e82c8", "upstreamUI", "去审核", "to review", "去審核", "審査へ", "심사하러 가기", "Ir a revisar", "revoir", "zu überprüfen", "translation: managedUi.211e82c8"),
 		entry("upstream.managedUi.3dd303eb", "upstreamUI", "进行中的平台真人认证", "Ongoing platform real person certification", "進行中的平台真人認證", "進行中のプラットフォーム実人物認証", "진행 중인 플랫폼 실인증", "Certificación de persona real de la plataforma en curso", "Certification continue de la plateforme en personne réelle", "Laufende Plattform-Zertifizierung als echte Person", "translation: managedUi.3dd303eb"),
 		entry("upstream.managedUi.e0ba3db6", "upstreamUI", "前有效", "Valid before", "前有效", "前有効", "이전 유효", "Válido antes de", "Valable avant", "Gültig vorher", "translation: managedUi.e0ba3db6"),
+	}
+}
+
+func builtinEntryBatch42() []Entry {
+	return []Entry{
 		entry("upstream.managedUi.121487fa", "upstreamUI", "搜索名称或方舟素材组 ID", "Search name or Ark material group ID", "搜尋名稱或方舟素材組 ID", "名前またはアーク素材グループ ID を検索", "이름 또는 아크 자재 그룹 ID 검색", "Buscar nombre o ID de grupo de materiales de Ark", "Rechercher le nom ou l'ID du groupe de matériaux Ark", "Suchen Sie nach dem Namen oder der Ark-Materialgruppen-ID", "translation: managedUi.121487fa"),
 		entry("upstream.managedUi.bf2569e8", "upstreamUI", "全部归属", "All vested", "全部歸屬", "すべての帰属", "모든 귀속", "Todas las pertenencias", "Tous acquis", "Alle bekleidet", "translation: managedUi.bf2569e8"),
 		entry("upstream.managedUi.fd5c9c9d", "upstreamUI", "用户自建", "User-built", "用戶自建", "ユーザー自作", "사용자 자체 제작", "Autoconstruido por el usuario", "Construit par l'utilisateur", "Vom Benutzer erstellt", "translation: managedUi.fd5c9c9d"),
 		entry("upstream.managedUi.ddef0fe5", "upstreamUI", "平台素材组", "Platform material group", "平台素材組", "プラットフォーム素材グループ", "플랫폼 자재 그룹", "Grupo de materiales de la plataforma", "Groupe de matériaux de plateforme", "Plattformmaterialgruppe", "translation: managedUi.ddef0fe5"),
 		entry("upstream.managedUi.65f081ec", "upstreamUI", "全部授权状态", "All authorization status", "全部授權狀態", "すべての許可状況", "모든 권한 부여 상태", "Todos los estados de autorización", "Tous les statuts d'autorisation", "Alle Autorisierungsstatus", "translation: managedUi.65f081ec"),
 		entry("upstream.managedUi.efc867b9", "upstreamUI", "有效", "Valid", "有效", "有効", "유효", "Válido", "Valide", "Gültig", "translation: managedUi.efc867b9"),
-	}
-}
-
-func builtinEntryBatch42() []Entry {
-	return []Entry{
 		entry("upstream.managedUi.e25fdd9e", "upstreamUI", "30 天内到期", "Expires within 30 days", "30 天內到期", "30 日以内に期限切れ", "30일 내 만료", "Vence dentro de los 30 días", "Expire sous 30 jours", "Läuft in 30 Tagen ab", "translation: managedUi.e25fdd9e"),
 		entry("upstream.managedUi.2391c54", "upstreamUI", "已过期", "Expired", "已過期", "期限切れ", "만료됨", "Expirado", "Expiré", "Abgelaufen", "translation: managedUi.2391c54"),
 		entry("upstream.managedUi.c8b97e24", "upstreamUI", "类型：{value1}", "type:{value1}", "類型：{value1}", "種類：{value1}", "유형: {value1}", "Tipo: {value1}", "taper:{value1}", "Typ:{value1}", "translation: managedUi.c8b97e24"),
@@ -11429,17 +11435,17 @@ func builtinEntryBatch42() []Entry {
 		entry("upstream.managedUi.566c33a7", "upstreamUI", "已撤销存储服务的未保存调整", "Unsaved adjustments to the storage service have been revoked", "已撤​​銷儲存服務的未儲存調整", "ストレージサービスの未保存の調整を取り消しました", "스토리지 서비스에 대한 저장되지 않은 조정을 취소했습니다.", "Se han revocado los ajustes no guardados al servicio de almacenamiento", "Les ajustements non enregistrés du service de stockage ont été révoqués", "Nicht gespeicherte Anpassungen des Speicherdienstes wurden widerrufen", "translation: managedUi.566c33a7"),
 		entry("upstream.managedUi.88117a8a", "upstreamUI", "放弃调整并重新读取？", "Discard changes and reload?", "放棄調整並重新讀取？", "変更を破棄して再読み込みしますか？", "변경 사항을 취소하고 다시 불러오시겠습니까?", "¿Descartar cambios y recargar?", "Annuler les modifications et recharger ?", "Änderungen verwerfen und neu laden?", "translation: managedUi.88117a8a"),
 		entry("upstream.managedUi.c08a1248", "upstreamUI", "重新读取会丢弃当前存储表单中的未保存内容，并以服务端配置为准。", "Rereading will discard the unsaved content in the current storage form and is subject to the server configuration.", "重新讀取會丟棄目前儲存表單中的未儲存內容，並以服務端設定為準。", "再読み込みを行うと、現在のストレージフォームにある未保存の内容が破棄され、サーバー側の設定が優先されます。", "다시 읽으면 현재 스토리지 양식에 저장되지 않은 내용이 삭제되고 서버 구성이 적용됩니다.", "La relectura descartará el contenido no guardado en el formulario de almacenamiento actual y está sujeto a la configuración del servidor.", "La relecture supprimera le contenu non enregistré dans le formulaire de stockage actuel et est soumise à la configuration du serveur.", "Beim erneuten Lesen werden die nicht gespeicherten Inhalte in der aktuellen Speicherform verworfen und unterliegen der Serverkonfiguration.", "translation: managedUi.c08a1248"),
+	}
+}
+
+func builtinEntryBatch43() []Entry {
+	return []Entry{
 		entry("upstream.managedUi.cb779cb3", "upstreamUI", "放弃并刷新", "Discard and Refresh", "放棄並重新整理", "破棄して更新", "취소하고 새로고침", "Descartar y actualizar", "Supprimer et actualiser", "Verwerfen und aktualisieren", "translation: managedUi.cb779cb3"),
 		entry("upstream.managedUi.dcde759c", "upstreamUI", "平台存储配置已保存", "Platform storage configuration has been saved", "平台儲存配置已儲存", "プラットフォームのストレージ設定を保存しました", "플랫폼 스토리지 구성이 저장되었습니다.", "Se ha guardado la configuración de almacenamiento de la plataforma", "La configuration du stockage de la plateforme a été enregistrée", "Plattformspeicherkonfiguration wurde gespeichert", "translation: managedUi.dcde759c"),
 		entry("upstream.managedUi.2f8d66af", "upstreamUI", "连接测试通过", "Connection test passed", "連線測試通過", "接続テストに合格しました", "연결 테스트 통과", "Prueba de conexión exitosa", "Test de connexion réussi", "Verbindungstest erfolgreich", "translation: managedUi.2f8d66af"),
 		entry("upstream.managedUi.a07cef36", "upstreamUI", "连接测试失败", "Connection test failed", "連線測試失敗", "接続テストに失敗しました", "연결 테스트 실패", "Prueba de conexión fallida", "Échec du test de connexion", "Verbindungstest fehlgeschlagen", "translation: managedUi.a07cef36"),
 		entry("upstream.managedUi.23d82d4f", "upstreamUI", "存储服务", "Storage Service", "儲存服務", "ストレージサービス", "스토리지 서비스", "Proveedor de almacenamiento", "Service de stockage", "Speicherdienst", "translation: managedUi.23d82d4f"),
 		entry("upstream.managedUi.46f2d3c3", "upstreamUI", "配置新增资源的默认存储位置", "Configure the default storage location for new resources", "設定新增資源的預設儲存位置", "新しいリソースの既定の保存先を設定", "새 리소스의 기본 저장 위치 구성", "Configurar la ubicación de almacenamiento predeterminada para nuevos recursos", "Configurer l'emplacement de stockage par défaut pour les nouvelles ressources", "Standard-Speicherort für neue Ressourcen konfigurieren", "translation: managedUi.46f2d3c3"),
-	}
-}
-
-func builtinEntryBatch43() []Entry {
-	return []Entry{
 		entry("upstream.managedUi.8deb48ff", "upstreamUI", "正在读取平台存储配置", "Reading platform storage configuration", "正在讀取平台儲存配置", "プラットフォームのストレージ設定を読み込んでいます", "플랫폼 스토리지 구성을 읽는 중입니다.", "Configuración de almacenamiento de la plataforma de lectura", "Configuration du stockage de la plateforme de lecture", "Speicherkonfiguration der Plattform lesen", "translation: managedUi.8deb48ff"),
 		entry("upstream.managedUi.4706dda7", "upstreamUI", "无法读取平台存储配置", "Unable to read platform storage configuration", "無法讀取平台儲存配置", "プラットフォームのストレージ設定を読み込めません", "플랫폼 스토리지 구성을 읽지 못했습니다.", "No se puede leer la configuración de almacenamiento de la plataforma", "Impossible de lire la configuration du stockage de la plateforme", "Plattformspeicherkonfiguration kann nicht gelesen werden", "translation: managedUi.4706dda7"),
 		entry("upstream.managedUi.9f7b0bff", "upstreamUI", "当前没有可显示的配置，请稍后重试。", "No configuration available to display; please try again later.", "目前沒有可顯示的設定，請稍後重試。", "表示可能な設定がありません。後でもう一度お試しください。", "표시할 수 있는 설정이 없습니다. 잠시 후 다시 시도해 주세요.", "No hay configuración disponible para mostrar; inténtalo de nuevo más tarde.", "Aucune configuration disponible à afficher ; veuillez réessayer plus tard.", "Keine Konfiguration zur Anzeige verfügbar; Bitte versuchen Sie es später noch einmal.", "translation: managedUi.9f7b0bff"),
@@ -11690,17 +11696,17 @@ func builtinEntryBatch43() []Entry {
 		entry("upstream.managedUi.9cf15ff5", "upstreamUI", "对账执行中，完成后可导出", "Reconciliation is being executed and can be exported after completion.", "對帳執行中，完成後可匯出", "照合を実行中です。完了後にエクスポートできます。", "정산 실행 중이며 완료 후 내보낼 수 있습니다.", "La conciliación se está ejecutando y se puede exportar una vez finalizada.", "La réconciliation est en cours d'exécution et peut être exportée une fois terminée.", "Der Abgleich wird ausgeführt und kann nach Abschluss exportiert werden.", "translation: managedUi.9cf15ff5"),
 		entry("upstream.managedUi.813716c1", "upstreamUI", "导出当前账单及结果筛选下的全部明细，最多 10000 行", "Export the current bill and all details under the result filter, up to 10,000 rows", "匯出目前帳單及結果篩選下的全部明細，最多 10000 行", "現在の請求書と結果フィルターに該当するすべての明細をエクスポートします。最大 10000 行まで", "현재 청구서 및 결과 필터에 해당하는 모든 상세 내역을 내보냅니다. 최대 10000행", "Exporte la factura actual y todos los detalles bajo el filtro de resultados, hasta 10,000 filas", "Exportez la facture actuelle et tous les détails sous le filtre de résultat, jusqu'à 10 000 lignes", "Exportieren Sie die aktuelle Rechnung und alle Details unter dem Ergebnisfilter, bis zu 10.000 Zeilen", "translation: managedUi.813716c1"),
 		entry("upstream.managedUi.933d4c2f", "upstreamUI", "导出明细 CSV", "Export details to CSV", "導出明細 CSV", "明細を CSV でエクスポート", "상세 내역 CSV 내보내기", "Exportar detalles CSV", "Exporter les détails CSV", "Details CSV exportieren", "translation: managedUi.933d4c2f"),
+	}
+}
+
+func builtinEntryBatch44() []Entry {
+	return []Entry{
 		entry("upstream.managedUi.b87fada6", "upstreamUI", "本次对账未生成明细", "No details were generated for this reconciliation", "本次對帳未產生明細", "今回の照合では明細が生成されませんでした", "이번 정산에서 상세 내역이 생성되지 않았습니다", "No se generaron detalles para esta conciliación", "Aucun détail n'a été généré pour ce rapprochement", "Für diesen Abgleich wurden keine Details generiert", "translation: managedUi.b87fada6"),
 		entry("upstream.managedUi.1fc2c1e0", "upstreamUI", "账单没有交易记录", "There is no transaction record in the bill", "帳單沒有交易紀錄", "請求書に取引記録がありません", "청구서에 거래 기록이 없습니다", "No hay registro de transacción en la factura", "Il n'y a aucun enregistrement de transaction dans la facture", "Die Rechnung enthält keinen Transaktionsdatensatz", "translation: managedUi.1fc2c1e0"),
 		entry("upstream.managedUi.28ada67e", "upstreamUI", "推广设置已保存，用户刷新页面后入口随之更新", "The promotion settings have been saved, and the entrance will be updated after the user refreshes the page.", "推廣設定已儲存，使用者刷新頁面後入口隨之更新", "プロモーション設定が保存されました。ユーザーがページを更新すると、エントリも更新されます。", "프로모션 설정이 저장되었으며, 사용자가 페이지를 새로고침하면 입구도 함께 업데이트됩니다.", "La configuración de la promoción se ha guardado y la entrada se actualizará después de que el usuario actualice la página.", "Les paramètres de promotion ont été enregistrés et l'entrée sera mise à jour une fois que l'utilisateur aura actualisé la page.", "Die Werbeeinstellungen wurden gespeichert und der Eingang wird aktualisiert, nachdem der Benutzer die Seite aktualisiert hat.", "translation: managedUi.28ada67e"),
 		entry("upstream.managedUi.fc9212c5", "upstreamUI", "保存推广设置失败", "Failed to save promotion settings", "儲存推廣設定失敗", "プロモーション設定の保存に失敗しました", "프로모션 설정 저장 실패", "No se pudo guardar la configuración de la promoción", "Échec de l'enregistrement des paramètres de promotion", "Aktionseinstellungen konnten nicht gespeichert werden", "translation: managedUi.fc9212c5"),
 		entry("upstream.managedUi.c5b53222", "upstreamUI", "推广中心", "Promotion Center", "推廣中心", "紹介センター", "프로모션 센터", "Centro de referidos", "Parrainage", "Empfehlungsprogramm", "translation: managedUi.c5b53222"),
 		entry("upstream.managedUi.67e7552f", "upstreamUI", "选择全民推广或只开放给指定推广人，并设置被邀请用户积分充值的返佣比例。", "Choose between public promotion or restricting access to designated promoters, and set the commission ratio for invited users' credit top-ups.", "選擇全民推廣或只開放給指定推廣人，並設定被邀請使用者點數儲值的返佣比例。", "全体公開のプロモーションにするか、指定したプロモーターのみに公開するかを選択し、招待されたユーザーのクレジットチャージに対する還元率を設定します。", "전체 프로모션을 진행하거나 지정된 프로모터에게만 공개하고, 초대된 사용자의 크레딧 충전에 대한 수수료 비율을 설정하세요.", "Elija entre promoción pública o acceso solo para promotores designados, y establezca la comisión por recargas de crédito de usuarios invitados.", "Choisissez entre une promotion publique ou un accès réservé aux promoteurs désignés, et définissez le taux de commission sur les recharges de crédits des utilisateurs invités.", "Wählen Sie zwischen öffentlicher Werbung oder Beschränkung auf bestimmte Promoter und legen Sie den Provisionssatz für Guthabenaufladungen eingeladener Nutzer fest.", "translation: managedUi.67e7552f"),
-	}
-}
-
-func builtinEntryBatch44() []Entry {
-	return []Entry{
 		entry("upstream.managedUi.98bb84b4", "upstreamUI", "刷新", "Refresh", "重新整理", "更新", "새로고침", "Actualizar", "Actualiser", "Aktualisieren", "translation: managedUi.98bb84b4"),
 		entry("upstream.managedUi.a2e8fca6", "upstreamUI", "推广设置", "Promotion settings", "推廣設置", "プロモーション設定", "프로모션 설정", "Configuración de promoción", "Paramètres de promotion", "Werbeeinstellungen", "translation: managedUi.a2e8fca6"),
 		entry("upstream.managedUi.3b0534cf", "upstreamUI", "返佣按被邀请用户每笔积分充值到账数量计算，以积分发放给推广人；存储空间订单不返佣。", "The rebate is calculated based on the number of points recharged by the invited users, and is distributed to the promoter in points; there is no commission rebate for storage space orders.", "返傭以被邀請用戶每筆積分充值到帳數量計算，以積分發放給推廣人；儲存空間訂單不返傭。", "紹介手数料は、招待されたユーザーがポイントをチャージするたびに、その入金額に応じて計算され、ポイントとしてプロモーターに付与されます。ストレージ容量の注文は手数料の対象外です。", "수수료는 초대된 사용자의 포인트 충전 금액에 따라 계산되어 포인트로 홍보자에게 지급됩니다. 스토리지 주문은 수수료 지급 대상이 아닙니다.", "El reembolso se calcula en base a la cantidad de puntos recargados por los usuarios invitados y se distribuye al promotor en puntos; No hay reembolso de comisión por pedidos de espacio de almacenamiento.", "La remise est calculée en fonction du nombre de points rechargés par les utilisateurs invités, et est distribuée au promoteur en points ; il n'y a pas de remise de commission pour les commandes d'espace de stockage.", "Der Rabatt wird auf der Grundlage der Anzahl der von den eingeladenen Benutzern aufgeladenen Punkte berechnet und in Punkten an den Veranstalter verteilt. Für Lagerplatzbestellungen gibt es keinen Provisionsrabatt.", "translation: managedUi.3b0534cf"),
@@ -11951,17 +11957,17 @@ func builtinEntryBatch44() []Entry {
 		entry("upstream.managedUi.fd50a494", "upstreamUI", "确认卸载", "Confirm uninstallation", "確認卸載", "アンインストールを確認", "삭제 확인", "Confirmar desinstalación", "Confirmer la désinstallation", "Bestätigen Sie die Deinstallation", "translation: managedUi.fd50a494"),
 		entry("upstream.managedUi.63fcd4af", "upstreamUI", "取消", "Cancel", "取消", "キャンセル", "취소", "Cancelar", "Annuler", "Abbrechen", "translation: managedUi.63fcd4af"),
 		entry("upstream.managedUi.7ef1c3b5", "upstreamUI", "自定义插件已卸载", "Custom plug-in has been uninstalled", "自訂外掛程式已卸載", "カスタムプラグインがアンインストールされました", "사용자 지정 플러그인이 삭제되었습니다", "Se ha desinstalado el complemento personalizado", "Le plug-in personnalisé a été désinstallé", "Das benutzerdefinierte Plug-in wurde deinstalliert", "translation: managedUi.7ef1c3b5"),
+	}
+}
+
+func builtinEntryBatch45() []Entry {
+	return []Entry{
 		entry("upstream.managedUi.43c8b09c", "upstreamUI", "卸载插件失败", "Failed to uninstall plug-in", "卸載插件失敗", "プラグインのアンインストールに失敗しました", "플러그인 삭제에 실패했습니다", "No se pudo desinstalar el complemento", "Échec de la désinstallation du plug-in", "Plug-in konnte nicht deinstalliert werden", "translation: managedUi.43c8b09c"),
 		entry("upstream.managedUi.c9fbbe0", "upstreamUI", "查看 {value1} 详情", "View {value1} details", "查看 {value1} 詳情", "{value1} の詳細を表示", "{value1}(을)를 확인하세요", "Ver {value1} detalles", "Afficher les détails de {value1}", "{value1}-Details anzeigen", "translation: managedUi.c9fbbe0"),
 		entry("upstream.managedUi.1f7454d6", "upstreamUI", "未提供插件说明", "No plug-in description provided", "未提供插件說明", "プラグインの説明がありません", "제공된 플러그인 설명이 없습니다", "No se proporciona descripción del complemento", "Aucune description du plug-in fournie", "Keine Plug-in-Beschreibung angegeben", "translation: managedUi.1f7454d6"),
 		entry("upstream.managedUi.a44b1133", "upstreamUI", "语言管理设置", "Language Settings", "語言管理設定", "言語管理設定", "언어 관리 설정", "Configuración de idiomas", "Paramètres de langue", "Spracheinstellungen", "translation: managedUi.a44b1133"),
 		entry("upstream.managedUi.b5bccb5a", "upstreamUI", "词条与字段修改", "Modification of terms and fields", "詞條與字段修改", "エントリとフィールドの変更", "항목 및 필드 수정", "Modificación de términos y campos", "Modification des termes et champs", "Änderung von Begriffen und Feldern", "translation: managedUi.b5bccb5a"),
 		entry("upstream.managedUi.e013be9c", "upstreamUI", "社交登录配置中心", "Social login configuration center", "社群登入設定中心", "ソーシャルログイン設定センター", "소셜 로그인 설정 센터", "Centro de configuración de inicio de sesión social", "Centre de configuration de connexion sociale", "Konfigurationscenter für soziale Anmeldungen", "translation: managedUi.e013be9c"),
-	}
-}
-
-func builtinEntryBatch45() []Entry {
-	return []Entry{
 		entry("upstream.managedUi.1d6442ed", "upstreamUI", "音乐生成管理配置", "Music generation management configuration", "音樂生成管理配置", "音楽生成管理設定", "음악 생성 관리 설정", "Configuración de gestión de generación de música", "Configuration de la gestion de la génération de musique", "Konfiguration der Musikgenerierungsverwaltung", "translation: managedUi.1d6442ed"),
 		entry("upstream.managedUi.e294ca4f", "upstreamUI", "进入创作岛", "Enter the Creation Island", "進入創作島", "クリエイションアイランドへ入る", "크리에이션 아일랜드 입장", "Ingresa a la Isla de la Creación", "Entrez sur l'île de la création", "Betreten Sie die Schöpfungsinsel", "translation: managedUi.e294ca4f"),
 		entry("upstream.managedUi.d830e1a1", "upstreamUI", "来源未验证", "Source not verified", "來源未驗證", "出典未確認", "출처 미확인", "Fuente no verificada", "Source non vérifiée", "Quelle nicht überprüft", "translation: managedUi.d830e1a1"),
@@ -12212,17 +12218,17 @@ func builtinEntryBatch45() []Entry {
 		entry("upstream.managedUi.8391086d", "upstreamUI", "积分模板操作失败", "Points template operation failed", "積分模板操作失敗", "ポイントテンプレートの操作に失敗しました", "포인트 템플릿 작업 실패", "Error en la operación de la plantilla de puntos", "L'opération du modèle de points a échoué", "Der Vorgang der Punktevorlage ist fehlgeschlagen", "translation: managedUi.8391086d"),
 		entry("upstream.managedUi.d15f80b0", "upstreamUI", "定价模板", "Pricing Template", "定價模板", "料金テンプレート", "가격 템플릿", "Plantilla de precios", "Modèle de tarification", "Preisvorlage", "translation: managedUi.d15f80b0"),
 		entry("upstream.managedUi.1fe95dbe", "upstreamUI", "积分模板", "Points Template", "積分模板", "ポイントテンプレート", "포인트 템플릿", "Plantilla de puntos", "Modèle de points", "Punktevorlage", "translation: managedUi.1fe95dbe"),
+	}
+}
+
+func builtinEntryBatch46() []Entry {
+	return []Entry{
 		entry("upstream.managedUi.70726b1a", "upstreamUI", "保存在本机，应用后保存模型生效。", "Save it on this machine and save the model to take effect after application.", "保存在本機，應用後保存模型生效。", "このマシンに保存し、適用後にモデルを保存すると有効になります。", "로컬에 저장하고 적용 후 모델을 저장하면 적용됩니다.", "se guarda en la máquina local y entrará en vigor después de guardar el modelo.", "est enregistré sur la machine locale et prendra effet après l'enregistrement du modèle.", "Speichern Sie auf dem lokalen Computer und speichern Sie das Modell, damit es nach der Anwendung wirksam wird.", "translation: managedUi.70726b1a"),
 		entry("upstream.managedUi.e7337369", "upstreamUI", "选择模板", "Select template", "選擇模板", "テンプレートを選択", "템플릿 선택", "Seleccionar plantilla", "Sélectionnez un modèle", "Vorlage auswählen", "translation: managedUi.e7337369"),
 		entry("upstream.managedUi.767394e4", "upstreamUI", "应用定价模板", "Apply Pricing Template", "應用定價模板", "料金テンプレートを適用", "가격 템플릿 적용", "Aplicar plantilla de precios", "Appliquer le modèle de tarification", "Preisvorlage anwenden", "translation: managedUi.767394e4"),
 		entry("upstream.managedUi.1d435497", "upstreamUI", "应用", "Apply", "應用", "適用", "적용", "Aplicar", "Appliquer", "Anwenden", "translation: managedUi.1d435497"),
 		entry("upstream.managedUi.509d6adc", "upstreamUI", "新增积分模板", "New points template", "新增積分模板", "ポイントテンプレートを新規作成", "포인트 템플릿 추가", "Nueva plantilla de puntos", "Nouveau modèle de points", "Neue Punktevorlage", "translation: managedUi.509d6adc"),
 		entry("upstream.managedUi.f89ac445", "upstreamUI", "新增", "Added", "新增", "追加", "추가", "Añadido", "Ajout", "Hinzugefügt", "translation: managedUi.f89ac445"),
-	}
-}
-
-func builtinEntryBatch46() []Entry {
-	return []Entry{
 		entry("upstream.managedUi.f8d73903", "upstreamUI", "编辑积分模板", "Edit points template", "編輯積分模板", "ポイントテンプレートを編集", "포인트 템플릿 편집", "Editar plantilla de puntos", "Modifier le modèle de points", "Punktevorlage bearbeiten", "translation: managedUi.f8d73903"),
 		entry("upstream.managedUi.c5bfe10a", "upstreamUI", "编辑", "Edit", "編輯", "編集", "편집", "Editar", "Modifier", "Bearbeiten", "translation: managedUi.c5bfe10a"),
 		entry("upstream.managedUi.4261ce26", "upstreamUI", "将当前积分配置保存为模板", "Save the current points configuration as a template", "將目前積分配置儲存為模板", "現在のポイント設定をテンプレートとして保存", "현재 포인트 설정을 템플릿으로 저장", "Guarde la configuración de puntos actual como plantilla", "Enregistrez la configuration actuelle des points comme modèle", "Speichern Sie die aktuelle Weichenkonfiguration als Vorlage", "translation: managedUi.4261ce26"),
@@ -12473,17 +12479,17 @@ func builtinEntryBatch46() []Entry {
 		entry("upstream.managedUi.d7c4ccb3", "upstreamUI", "搜索并选择渠道", "Search and select channels", "搜尋並選擇頻道", "チャネルを検索して選択", "채널 검색 후 선택", "Buscar y seleccionar canales", "Rechercher et sélectionner des chaînes", "Kanäle suchen und auswählen", "translation: managedUi.d7c4ccb3"),
 		entry("upstream.managedUi.cfc8811c", "upstreamUI", "目标位置", "Target location", "目標位置", "移動先の位置", "목표 위치", "Ubicación de destino", "Emplacement cible", "Zielort", "translation: managedUi.cfc8811c"),
 		entry("upstream.managedUi.d321b727", "upstreamUI", "位置", "Position", "位置", "位置", "위치", "Posición", "Position", "Position", "translation: managedUi.d321b727"),
+	}
+}
+
+func builtinEntryBatch47() []Entry {
+	return []Entry{
 		entry("upstream.managedUi.570e332c", "upstreamUI", "移动到此位置", "Move to this location", "移動到此位置", "この位置に移動", "이 위치로 이동", "Múdate a esta ubicación", "Déplacer vers cet emplacement", "An diesen Ort verschieben", "translation: managedUi.570e332c"),
 		entry("upstream.managedUi.a69ddd8c", "upstreamUI", "展示顺序", "Display order", "展示順序", "表示順", "표시 순서", "Orden de visualización", "Ordre d'affichage", "Anzeigereihenfolge", "translation: managedUi.a69ddd8c"),
 		entry("upstream.managedUi.a3e77823", "upstreamUI", "暂无可排序条目", "There are currently no items to sort.", "暫無可排序條目", "並び替え可能な項目がありません", "정렬할 항목이 없습니다", "Actualmente no hay entradas ordenadas.", "Il n'y a actuellement aucune entrée triée.", "Derzeit sind keine Elemente zum Sortieren vorhanden.", "translation: managedUi.a3e77823"),
 		entry("upstream.managedUi.212ec24e", "upstreamUI", "已停用", "Disabled", "已停用", "無効", "비활성화됨", "Deshabilitado", "Désactivé", "Deaktiviert", "translation: managedUi.212ec24e"),
 		entry("upstream.managedUi.4d3247d7", "upstreamUI", "上移{value1}", "Move up {value1}", "上移{value1}", "{value1} 上へ移動", "{value1} 위로 이동", "Subir {value1}", "Monter {value1}", "Nach oben bewegen {value1}", "translation: managedUi.4d3247d7"),
 		entry("upstream.managedUi.4150d74b", "upstreamUI", "上移", "Move up", "上移", "上に移動", "위로 이동", "Subir", "Monter", "Nach oben", "translation: managedUi.4150d74b"),
-	}
-}
-
-func builtinEntryBatch47() []Entry {
-	return []Entry{
 		entry("upstream.managedUi.3062ebea", "upstreamUI", "下移{value1}", "Move down {value1}", "下移{value1}", "{value1} 下へ移動", "{value1} 아래로 이동", "Bajar {value1}", "Descendre {value1}", "Nach unten bewegen {value1}", "translation: managedUi.3062ebea"),
 		entry("upstream.managedUi.493b857a", "upstreamUI", "下移", "Move down", "下移", "下に移動", "아래로 이동", "Mover hacia abajo", "Descendre", "Nach unten", "translation: managedUi.493b857a"),
 		entry("upstream.managedUi.1b81d7ec", "upstreamUI", "能力模板操作失败", "Capability template operation failed", "能力模板操作失敗", "ケイパビリティテンプレートの操作に失敗しました", "기능 템플릿 작업 실패", "Error en la operación de la plantilla de capacidad", "Échec de l'opération du modèle de capacité", "Der Vorgang der Fähigkeitsvorlage ist fehlgeschlagen", "translation: managedUi.1b81d7ec"),
@@ -12734,17 +12740,17 @@ func builtinEntryBatch47() []Entry {
 		entry("upstream.managedUi.fb684ea6", "upstreamUI", "计价货币", "Quotation currency", "計價貨幣", "見積通貨", "견적 통화", "Moneda de cotización", "Devise de cotation", "Notierungswährung", "translation: managedUi.fb684ea6"),
 		entry("upstream.managedUi.5d00506e", "upstreamUI", "参考视频计费", "Reference video billing", "參考影片計費", "参考動画の課金", "참고 동영상 과금", "Vídeo de referencia de facturación", "Facturation vidéo de référence", "Referenzvideo-Abrechnung", "translation: managedUi.5d00506e"),
 		entry("upstream.managedUi.f3c22bf4", "upstreamUI", "积分价格规则列表", "Points price rule list", "積分價格規則列表", "ポイント価格ルールリスト", "포인트 가격 규칙 목록", "Lista de reglas de precios de puntos", "Liste des règles de prix des points", "Liste der Punktepreisregeln", "translation: managedUi.f3c22bf4"),
+	}
+}
+
+func builtinEntryBatch48() []Entry {
+	return []Entry{
 		entry("upstream.managedUi.a177fc2f", "upstreamUI", "新增规格价格", "New specifications and prices", "新增規格價格", "新しい仕様と価格", "새 규격 가격", "Nuevas especificaciones y precios", "Nouvelles spécifications et prix", "Neue Spezifikationen und Preise", "translation: managedUi.a177fc2f"),
 		entry("upstream.managedUi.aaefa68c", "upstreamUI", "新增统一默认价格", "Add unified default price", "新增統一預設價格", "統一されたデフォルト価格を追加", "통일 기본 가격 추가", "Precio predeterminado unificado agregado", "Ajout d'un prix par défaut unifié", "Einheitlicher Standardpreis hinzugefügt", "translation: managedUi.aaefa68c"),
 		entry("upstream.managedUi.efd948ad", "upstreamUI", "记忆文件为空。", "The memory file is empty.", "記憶文件為空。", "メモリファイルが空です。", "메모리 파일이 비어 있습니다.", "El archivo de memoria está vacío.", "Le fichier mémoire est vide.", "Die Speicherdatei ist leer.", "translation: managedUi.efd948ad"),
 		entry("upstream.managedUi.1583463d", "upstreamUI", "条", "items", "條", "件", "개", "elementos", "éléments", "Einträge", "translation: managedUi.1583463d"),
 		entry("upstream.managedUi.885ba84c", "upstreamUI", "暂无", "None", "暫無", "なし", "없음", "Ninguno", "Aucune", "Keine", "translation: managedUi.885ba84c"),
 		entry("upstream.managedUi.dd982372", "upstreamUI", "读取记忆文件失败", "Failed to read memory file", "讀取記憶檔失敗", "メモリファイルの読み取りに失敗しました", "메모리 파일을 읽지 못했습니다.", "Error al leer el archivo de memoria", "Échec de la lecture du fichier mémoire", "Fehler beim Lesen der Speicherdatei", "translation: managedUi.dd982372"),
-	}
-}
-
-func builtinEntryBatch48() []Entry {
-	return []Entry{
 		entry("upstream.managedUi.ff31479b", "upstreamUI", "字", "words", "字", "ワード", "단어", "palabras", "caractères", "Zeichen", "translation: managedUi.ff31479b"),
 		entry("upstream.managedUi.c1f94759", "upstreamUI", "{value1} 条", "{value1}", "{value1} 條", "{value1} 件", "{value1}개", "{value1}", "{value1}", "{value1}", "translation: managedUi.c1f94759"),
 		entry("upstream.managedUi.4526c4ea", "upstreamUI", "每个用户一份记忆文件，由该用户的 Agent 在对话中维护，用户可随时编辑和撤销。这里只读，展开行查看正文。", "A memory file for each user, which is maintained by the user's Agent in the conversation and can be edited and revoked by the user at any time. This is read only, expand the line to view the text.", "每位使用者一份記憶文件，由該使用者的 Agent 在對話中維護，使用者可隨時編輯撤銷。這裡只讀，展開行查看正文。", "ユーザーごとに 1 つのメモリファイルがあり、そのユーザーの Agent が会話の中で維持管理します。ユーザーはいつでも編集や取り消しが可能です。ここでは読み取り専用です。行を展開すると本文を確認できます。", "사용자당 메모리 파일 1개가 있으며, 해당 사용자의 Agent가 대화 중에 유지 관리합니다. 사용자는 언제든지 편집하고 취소할 수 있습니다. 이곳은 읽기 전용이며, 행을 펼치면 본문을 확인할 수 있습니다.", "Un archivo de memoria para cada usuario, que el Agente del usuario mantiene en la conversación y que el usuario puede editar y revocar en cualquier momento. Esto es de solo lectura, expanda la línea para ver el texto.", "Un fichier mémoire pour chaque utilisateur, qui est conservé par l'agent de l'utilisateur dans la conversation et peut être modifié et révoqué par l'utilisateur à tout moment. Ceci est en lecture seule, développez la ligne pour afficher le texte.", "Eine Speicherdatei für jeden Benutzer, die vom Agenten des Benutzers in der Konversation verwaltet wird und vom Benutzer jederzeit bearbeitet und widerrufen werden kann. Dies ist schreibgeschützt. Erweitern Sie die Zeile, um den Text anzuzeigen.", "translation: managedUi.4526c4ea"),
@@ -12995,17 +13001,17 @@ func builtinEntryBatch48() []Entry {
 		entry("upstream.managedUi.37e8feb9", "upstreamUI", "已生成 {value1} 个兑换码", "{value1} redemption codes have been generated", "已產生 {value1} 個兌換碼", "交換コードを {value1} 件生成しました", "교환 코드 {value1}개가 생성되었습니다.", "Se han generado {value1} códigos de canje", "{value1} des codes de remboursement ont été générés", "{value1} Einlösungscodes wurden generiert", "translation: managedUi.37e8feb9"),
 		entry("upstream.managedUi.dc39f987", "upstreamUI", "已禁用 {value1} 个兑换码", "has disabled {value1} redemption codes", "已停用 {value1} 個兌換碼", "交換コードを {value1} 件無効にしました", "교환 코드 {value1}개가 비활성화되었습니다.", "Se han desactivado {value1} códigos de canje", "a désactivé les codes d'échange {value1}", "hat {value1}-Einlösungscodes deaktiviert", "translation: managedUi.dc39f987"),
 		entry("upstream.managedUi.85563dcb", "upstreamUI", "未备注批次", "No batch noted", "未備註批次", "バッチメモなし", "배치 메모 없음", "Sin nota de lote", "Aucun lot noté", "Keine Charge vermerkt", "translation: managedUi.85563dcb"),
+	}
+}
+
+func builtinEntryBatch49() []Entry {
+	return []Entry{
 		entry("upstream.managedUi.573d884e", "upstreamUI", "永久有效", "Permanent", "永久有效", "無期限有効", "평생 유효", "Permanente", "Permanent", "Dauerhaft", "translation: managedUi.573d884e"),
 		entry("upstream.managedUi.7a8e5138", "upstreamUI", "查看明细", "View details", "檢視明細", "明細を表示", "세부 정보 보기", "Ver detalles", "Voir les détails", "Details anzeigen", "translation: managedUi.7a8e5138"),
 		entry("upstream.managedUi.e60bc6f3", "upstreamUI", "禁用批次", "Disable batch", "停用批次", "バッチを無効化", "배치 비활성화", "Deshabilitar lote", "Désactiver le lot", "Charge deaktivieren", "translation: managedUi.e60bc6f3"),
 		entry("upstream.managedUi.3dc865e2", "upstreamUI", "禁用该批次的可用兑换码？", "Disable available redemption codes in this batch?", "停用該批次的可用兌換碼？", "このバッチの利用可能な引換コードを無効にしますか？", "이 배치의 사용 가능한 리딤 코드를 비활성화할까요?", "¿Deshabilitar los códigos de canje disponibles en este lote?", "Désactiver les codes d'échange disponibles dans ce lot ?", "Verfügbare Einlösecodes in dieser Charge deaktivieren?", "translation: managedUi.3dc865e2"),
 		entry("upstream.managedUi.820b15e3", "upstreamUI", "{value1}：{value2}；已核销和已过期记录不变，操作不可撤销。", "{value1}: {value2}; redeemed and expired records remain unchanged, action is irreversible.", "{value1}：{value2}；已核銷和已過期記錄不變，操作不可撤銷。", "{value1}：{value2}；済および期限切れの記録は変更されず、この操作は取り消せません。", "{value1}: {value2}; 사용 완료 및 만료된 기록은 변경되지 않으며 되돌릴 수 없습니다.", "{value1}: {value2}; los registros canjeados y vencidos permanecen sin cambios, la acción es irreversible.", "{value1} : {value2} ; les enregistrements échangés et expirés restent inchangés, l'action est irréversible.", "{value1}: {value2}; eingelöste und abgelaufene Datensätze bleiben unverändert, die Aktion ist unumkehrbar.", "translation: managedUi.820b15e3"),
 		entry("upstream.managedUi.680a2283", "upstreamUI", "确认禁用", "Confirm disable", "確認停用", "無効化を確定", "비활성화 확인", "Confirmar deshabilitación", "Confirmer la désactivation", "Deaktivierung bestätigen", "translation: managedUi.680a2283"),
-	}
-}
-
-func builtinEntryBatch49() []Entry {
-	return []Entry{
 		entry("upstream.managedUi.89cac12c", "upstreamUI", "生成结果待核对", "The generated result needs to be checked", "產生結果待核對", "生成結果を確認してください", "생성 결과를 확인해야 합니다.", "Resultado de generación pendiente de verificación", "Le résultat généré doit être vérifié", "Das generierte Ergebnis muss überprüft werden", "translation: managedUi.89cac12c"),
 		entry("upstream.managedUi.f578c9d", "upstreamUI", "完整批次列表已刷新，请确认没有重复批次后再生成", "The complete batch list has been refreshed. Please confirm that there are no duplicate batches before generating it.", "完整批次清單已刷新，請確認沒有重複批次後再生成", "バッチの完全なリストを更新しました。生成する前に重複バッチがないことを確認してください。", "전체 배치 목록이 새로고침되었습니다. 생성하기 전에 중복 배치가 없는지 확인하세요.", "La lista completa de lotes se ha actualizado; confirma que no haya lotes duplicados antes de generar", "La liste complète des lots a été actualisée. Veuillez confirmer qu'il n'y a pas de lots en double avant de le générer.", "Die komplette Chargenliste wurde aktualisiert. Bitte stellen Sie vor der Generierung sicher, dass keine doppelten Chargen vorhanden sind.", "translation: managedUi.f578c9d"),
 		entry("upstream.managedUi.fa392b90", "upstreamUI", "刷新完整列表", "Refresh complete list", "刷新完整列表", "完全なリストを更新", "전체 목록 새로고침", "Actualizar lista completa", "Actualiser la liste complète", "Komplette Liste aktualisieren", "translation: managedUi.fa392b90"),
@@ -13256,17 +13262,17 @@ func builtinEntryBatch49() []Entry {
 		entry("upstream.managedUi.dce0d4c1", "upstreamUI", "{value1}服务协议", "{value1}Service Agreement", "{value1}服務協議", "{value1}利用規約", "{value1}서비스 약관", "{value1}Acuerdo de servicio", "{value1}Contrat de service", "{value1}Servicevereinbarung", "translation: managedUi.dce0d4c1"),
 		entry("upstream.managedUi.8d50cb36", "upstreamUI", "协议条款内容", "Contents of Agreement Terms", "協議條款內容", "規約条項の内容", "약관 조항 내용", "Contenido de los términos del acuerdo", "Contenu des conditions de l'accord", "Inhalt der Vertragsbedingungen", "translation: managedUi.8d50cb36"),
 		entry("upstream.managedUi.75f27894", "upstreamUI", "输入服务协议条款正文", "Enter the text of the service agreement terms", "輸入服務協議條款正文", "利用規約の本文を入力", "서비스 약관 조항 본문 입력", "Ingrese el texto de los términos del acuerdo de servicio", "Saisissez le texte des termes du contrat de service", "Geben Sie den Text der Servicevertragsbedingungen ein", "translation: managedUi.75f27894"),
+	}
+}
+
+func builtinEntryBatch50() []Entry {
+	return []Entry{
 		entry("upstream.managedUi.f5745b8c", "upstreamUI", "没有准备条款时，可先填入通用模板再按需修改。", "When there are no prepared terms, you can first fill in the general template and then modify it as needed.", "沒有準備條款時，可先填入通用範本再按需修改。", "条項が準備できていない場合は、まず汎用テンプレートを入力してから必要に応じて修正できます。", "약관이 준비되지 않은 경우 먼저 일반 템플릿을 입력한 후 필요에 따라 수정할 수 있습니다.", "Cuando no hay términos preparados, primero puede completar la plantilla general y luego modificarla según sea necesario.", "Lorsqu'il n'y a pas de termes préparés, vous pouvez d'abord remplir le modèle général puis le modifier si nécessaire.", "Wenn keine vorbereiteten Begriffe vorhanden sind, können Sie zunächst die allgemeine Vorlage ausfüllen und diese dann nach Bedarf ändern.", "translation: managedUi.f5745b8c"),
 		entry("upstream.managedUi.833f77e2", "upstreamUI", "{value1} 段 · {value2} 字", "{value1} paragraph · {value2} word", "{value1} 段 · {value2} 字", "{value1} 段落 · {value2} 文字", "{value1} 단락 · {value2} 자", "{value1} párrafo · {value2} palabra", "{value1} paragraphe · {value2} mot", "{value1} Absatz · {value2} Wort", "translation: managedUi.833f77e2"),
 		entry("upstream.managedUi.6d9590f9", "upstreamUI", "尚未填写条款", "Terms have not been filled in yet", "尚未填寫條款", "条項が未入力です", "약관이 아직 입력되지 않았습니다", "Los términos aún no se han completado", "Les termes n'ont pas encore été renseignés", "Die Bedingungen wurden noch nicht ausgefüllt", "translation: managedUi.6d9590f9"),
 		entry("upstream.managedUi.708dbdc0", "upstreamUI", "填入通用模板", "Fill in the general template", "填入通用模板", "汎用テンプレートを入力", "일반 템플릿 입력", "Rellenar la plantilla general", "Remplissez le modèle général", "Füllen Sie die allgemeine Vorlage aus", "translation: managedUi.708dbdc0"),
 		entry("upstream.managedUi.1a1bfab9", "upstreamUI", "清空", "Clear", "清空", "クリア", "지우기", "Limpiar", "Effacer", "Leeren", "translation: managedUi.1a1bfab9"),
 		entry("upstream.managedUi.774b6a85", "upstreamUI", "4. 登录与注册的打开方式", "4. How to open login and registration", "4. 登入與註冊的開啟方式", "4. ログインと登録の開き方", "4. 로그인 및 회원가입 열기 방식", "4. Cómo abrir el inicio de sesión y el registro", "4. Comment ouvrir la connexion et l'inscription", "4. So öffnen Sie die Anmeldung und Registrierung", "translation: managedUi.774b6a85"),
-	}
-}
-
-func builtinEntryBatch50() []Entry {
-	return []Entry{
 		entry("upstream.managedUi.73d328bb", "upstreamUI", "登录与注册的打开方式", "How to open login and registration", "登入與註冊的開啟方式", "ログインと登録の開き方", "로그인 및 회원가입 열기 방식", "Cómo abrir el inicio de sesión y el registro", "Comment ouvrir la connexion et l'inscription", "So öffnen Sie die Anmeldung und Registrierung", "translation: managedUi.73d328bb"),
 		entry("upstream.managedUi.6e5ee1a6", "upstreamUI", "当前方式", "Current method", "目前方式", "現在の方式", "현재 방식", "Método actual", "Méthode actuelle", "Aktuelle Methode", "translation: managedUi.6e5ee1a6"),
 		entry("upstream.managedUi.a0698a90", "upstreamUI", "两种方式使用同一套登录、注册与找回密码流程，Linux.do 回跳和推广链接 /register?ref= 均可用。需要保留未发送内容的入口（如首页创作输入框）始终使用弹窗。", "Both methods use the same login, registration and password retrieval process, and both Linux.do bounce and promotion links /register?ref= are available. Entrances that need to retain unsent content (such as the homepage creation input box) always use pop-up windows.", "兩種方式使用同一套登入、註冊與找回密碼流程，Linux.do 回跳與推廣連結 /register?ref= 皆可使用。需要保留未傳送內容的入口（如首頁創作輸入框）始終使用彈跳窗。", "どちらの方式も同じログイン・登録・パスワード再設定のフローを使用し、Linux.do からのリダイレクトとプロモーションリンク /register?ref= の両方が利用可能です。未送信の内容を保持する必要がある入り口（ホームページの作成入力欄など）は、常にポップアップを使用します。", "두 방식 모두 동일한 로그인, 회원가입 및 비밀번호 찾기 흐름을 사용하며 Linux.do 리다이렉트와 홍보 링크 /register?ref= 모두 사용할 수 있습니다. 미전송 콘텐츠를 보존해야 하는 진입 경로(홈페이지 생성 입력창 등)는 항상 팝업을 사용합니다.", "Ambos métodos utilizan el mismo proceso de inicio de sesión, registro y recuperación de contraseña, y tanto los enlaces de rebote como de promoción /register?ref= de Linux.do están disponibles. Las entradas que necesitan conservar contenido no enviado (como el cuadro de entrada de creación de la página de inicio) siempre utilizan ventanas emergentes.", "Les deux méthodes utilisent le même processus de connexion, d'enregistrement et de récupération de mot de passe, et les liens de rebond et de promotion Linux.do /register?ref= sont disponibles. Les entrées qui doivent conserver le contenu non envoyé (comme la zone de saisie de création de page d'accueil) utilisent toujours des fenêtres contextuelles.", "Beide Methoden verwenden den gleichen Anmelde-, Registrierungs- und Passwortabrufprozess und es sind sowohl Linux.do-Bounce- als auch Promotion-Links /register?ref= verfügbar. Eingänge, die nicht gesendete Inhalte behalten müssen (z. B. das Eingabefeld für die Homepage-Erstellung), verwenden immer Popup-Fenster.", "translation: managedUi.a0698a90"),
@@ -13517,17 +13523,17 @@ func builtinEntryBatch50() []Entry {
 		entry("upstream.managedUi.8025da40", "upstreamUI", "恢复任务", "Recovery task", "恢復任務", "タスクを復元", "작업 복원", "Tarea de recuperación", "Tâche de récupération", "Wiederherstellungsaufgabe", "translation: managedUi.8025da40"),
 		entry("upstream.managedUi.e6f841fb", "upstreamUI", "单次最多查询 {value1} 天，请缩小日期范围", "Maximum single query {value1} days, please narrow the date range", "單次最多查詢 {value1} 天，請縮小日期範圍", "1 回のクエリで最大 {value1} 日までです。日付範囲を狭めてください", "한 번에 최대 {value1}일까지 조회할 수 있습니다. 날짜 범위를 좁히세요", "Consulta única máxima {value1} días, limite el rango de fechas", "Requête unique maximale {value1} jours, veuillez restreindre la plage de dates", "Maximale Einzelabfrage {value1} Tage, bitte schränken Sie den Datumsbereich ein", "translation: managedUi.e6f841fb"),
 		entry("upstream.managedUi.7e0c6255", "upstreamUI", "所选记录中没有可恢复的失败视频任务", "There are no recoverable failed video tasks in the selected records", "所選記錄中沒有可恢復的失敗視訊任務", "選択したレコードに復元可能な失敗ビデオタスクがありません", "선택한 기록에 복원 가능한 실패 비디오 작업이 없습니다", "No hay tareas de video fallidas recuperables en los registros seleccionados", "Il n'y a aucune tâche vidéo ayant échoué et récupérable dans les enregistrements sélectionnés", "In den ausgewählten Datensätzen gibt es keine wiederherstellbaren fehlgeschlagenen Videoaufgaben", "translation: managedUi.7e0c6255"),
+	}
+}
+
+func builtinEntryBatch51() []Entry {
+	return []Entry{
 		entry("upstream.managedUi.f14f1098", "upstreamUI", "成功", "Success", "成功", "成功", "성공", "Éxito", "Succès", "Erfolg", "translation: managedUi.f14f1098"),
 		entry("upstream.managedUi.8d45847a", "upstreamUI", "条，失败", "items, failed", "條，失敗", "件、失敗", "건, 실패", "artículos, fallidos", "éléments, échec", "Elemente, fehlgeschlagen", "translation: managedUi.8d45847a"),
 		entry("upstream.managedUi.be4f05d2", "upstreamUI", "条，跳过", "items, skip", "條，跳過", "件、スキップ", "건, 건너뜀", "artículos, omitir", "éléments, ignorer", "Elemente, überspringen", "translation: managedUi.be4f05d2"),
 		entry("upstream.managedUi.5eeb7814", "upstreamUI", "条", "items", "條", "件", "개", "elementos", "éléments", "Einträge", "translation: managedUi.5eeb7814"),
 		entry("upstream.managedUi.dcef95f9", "upstreamUI", "仍在生成中（{value1}）", "Still being generated ({value1})", "仍在生成中（{value1}）", "生成中です（{value1}）", "아직 생성 중（{value1}）", "Aún se está generando ({value1})", "Toujours en cours de génération ({value1})", "Wird noch generiert ({value1})", "translation: managedUi.dcef95f9"),
 		entry("upstream.managedUi.a7ccef37", "upstreamUI", "失败：{value1}", "Failure: {value1}", "失敗：{value1}", "失敗：{value1}", "실패: {value1}", "Fallo: {value1}", "Échec : {value1}", "Fehler: {value1}", "translation: managedUi.a7ccef37"),
-	}
-}
-
-func builtinEntryBatch51() []Entry {
-	return []Entry{
 		entry("upstream.managedUi.5b20ae9e", "upstreamUI", "批量恢复失败", "Batch restore failed", "批次恢復失敗", "一括復元に失敗しました", "일괄 복원 실패", "Falló la recuperación por lotes", "Échec de la récupération par lots", "Die Stapelwiederherstellung ist fehlgeschlagen", "translation: managedUi.5b20ae9e"),
 		entry("upstream.managedUi.a9254918", "upstreamUI", "请求明细", "Request Logs", "請求明細", "リクエスト履歴", "요청 내역", "Registros de solicitudes", "Journaux de demande", "Protokolle anfordern", "translation: managedUi.a9254918"),
 		entry("upstream.managedUi.7dd3984f", "upstreamUI", "模型生成与结果下载记录；仅计费调用扣除积分", "Model generation and result download records; only billable calls deduct credits", "模型生成與結果下載記錄；僅計費呼叫扣除積分", "モデル生成と結果ダウンロードの記録。課金対象の呼び出しのみクレジットを消費します", "모델 생성 및 결과 다운로드 기록; 과금 호출만 크레딧을 차감합니다.", "Registros de generación de modelo y descarga de resultados; solo las llamadas facturables deducen créditos", "Enregistrements de génération de modèle et de téléchargement de résultats ; seuls les appels facturables déduisent des crédits", "Datensätze zu Modellerstellung und Ergebnis-Download; nur abrechenbare Aufrufe ziehen Guthaben ab", "translation: managedUi.7dd3984f"),
@@ -13778,17 +13784,17 @@ func builtinEntryBatch51() []Entry {
 		entry("upstream.managedUi.6573c040", "upstreamUI", "取消", "Cancel", "取消", "キャンセル", "취소", "Cancelar", "Annuler", "Abbrechen", "translation: managedUi.6573c040"),
 		entry("upstream.managedUi.63227319", "upstreamUI", "下一步：核对", "Next step: Check", "下一步：核對", "次へ：確認", "다음: 확인", "Siguiente paso: Verificar", "Étape suivante : Vérifier", "Nächster Schritt: Überprüfen", "translation: managedUi.63227319"),
 		entry("upstream.managedUi.9207a84", "upstreamUI", "可用积分", "Points available", "可用積分", "利用可能ポイント", "사용 가능 크레딧", "Créditos disponibles", "Crédits disponibles", "Verfügbare Credits", "translation: managedUi.9207a84"),
+	}
+}
+
+func builtinEntryBatch52() []Entry {
+	return []Entry{
 		entry("upstream.managedUi.6a3fc245", "upstreamUI", "冻结积分", "Freeze points", "凍結積分", "ポイントを凍結", "포인트 동결", "Congelar puntos", "Geler les points", "Einfrierpunkte", "translation: managedUi.6a3fc245"),
 		entry("upstream.managedUi.33885883", "upstreamUI", "本次变化", "This change", "本次變化", "今回の変更", "이번 변경", "Este cambio", "Ce changement", "Diese Änderung", "translation: managedUi.33885883"),
 		entry("upstream.managedUi.e66bd712", "upstreamUI", "调整后可用", "Available after adjustment", "調整後可用", "調整後の利用可能ポイント", "조정 후 사용 가능", "Disponible después del ajuste", "Disponible après ajustement", "Verfügbar nach Anpassung", "translation: managedUi.e66bd712"),
 		entry("upstream.managedUi.7642500d", "upstreamUI", "依据：", "Based on:", "依據：", "根拠：", "근거:", "Basado en:", "Base :", "Basierend auf:", "translation: managedUi.7642500d"),
 		entry("upstream.managedUi.b7ca8bf9", "upstreamUI", "积分变化", "Points changes", "積分變化", "ポイントの変更", "포인트 변동", "Cambios de puntos", "Modifications des points", "Punkteänderungen", "translation: managedUi.b7ca8bf9"),
 		entry("upstream.managedUi.2c038907", "upstreamUI", "例如 100 或 -20", "e.g. 100 or -20", "例如 100 或 -20", "例：100 または -20", "예: 100 또는 -20", "Por ejemplo, 100 o -20", "par exemple. 100 ou -20", "z.B. 100 oder -20", "translation: managedUi.2c038907"),
-	}
-}
-
-func builtinEntryBatch52() []Entry {
-	return []Entry{
 		entry("upstream.managedUi.ee24f9f6", "upstreamUI", "调整原因", "Reason for adjustment", "調整原因", "調整理由", "조정 사유", "Motivo del ajuste", "Raison de l'ajustement", "Grund für die Anpassung", "translation: managedUi.ee24f9f6"),
 		entry("upstream.managedUi.ac2b67c2", "upstreamUI", "例如：工单 #1234 补偿失败任务", "For example: Work Order #1234 Compensation for failed tasks", "例如：工單 #1234 補償失敗任務", "例：チケット #1234 失敗したタスクの補償", "예: 작업 지시 #1234 실패한 작업 보상", "Por ejemplo: Orden de trabajo #1234 Compensación por tareas fallidas", "Par exemple : Bon de travail n° 1234 Compensation pour les tâches ayant échoué", "Zum Beispiel: Arbeitsauftrag Nr. 1234 Entschädigung für fehlgeschlagene Aufgaben", "translation: managedUi.ac2b67c2"),
 		entry("upstream.managedUi.70faee73", "upstreamUI", "用户管理", "Users", "使用者管理", "ユーザー管理", "사용자 관리", "Gestión de usuarios", "Utilisateurs", "Benutzer", "translation: managedUi.70faee73"),
@@ -14039,17 +14045,17 @@ func builtinEntryBatch52() []Entry {
 		entry("upstream.managedUi.e2777ced", "upstreamUI", "筛选模型状态", "Filter model status", "篩選模型狀態", "モデルのステータスで絞り込み", "모델 상태 필터링", "Estado del modelo de filtro", "Filtrer l'état du modèle", "Modellstatus filtern", "translation: managedUi.e2777ced"),
 		entry("upstream.managedUi.1752640d", "upstreamUI", "全部状态", "All status", "全部狀態", "すべてのステータス", "모든 상태", "Todos los estados", "Tous les statuts", "Alle Status", "translation: managedUi.1752640d"),
 		entry("upstream.managedUi.de31eead", "upstreamUI", "可用（模型与渠道均启用）", "Available (both models and channels enabled)", "可用（模型與通路均啟用）", "利用可能（モデルとチャネルの両方が有効）", "사용 가능(모델과 채널 모두 활성화됨)", "Disponible (ambos modelos y canales habilitados)", "Disponible (modèle et canal activés)", "Verfügbar (beide Modelle und Kanäle aktiviert)", "translation: managedUi.de31eead"),
+	}
+}
+
+func builtinEntryBatch53() []Entry {
+	return []Entry{
 		entry("upstream.managedUi.c4f74044", "upstreamUI", "不可用", "Unavailable", "不可用", "利用不可", "사용 불가", "No disponible", "Indisponible", "Nicht verfügbar", "translation: managedUi.c4f74044"),
 		entry("upstream.managedUi.ad406307", "upstreamUI", "24h 成功率低于 80%", "24h success rate less than 80%", "24h 成功率低於 80%", "24時間の成功率が 80% 未満", "24시간 성공률 80% 미만", "Tasa de éxito en 24 horas inferior al 80 %", "Taux de réussite en 24h inférieur à 80%", "24-Stunden-Erfolgsquote weniger als 80 %", "translation: managedUi.ad406307"),
 		entry("upstream.managedUi.4f26d70d", "upstreamUI", "筛选渠道", "Filtering channels", "篩選渠道", "チャネルを絞り込む", "채널 필터링", "Filtrar canales", "Filtrer les chaînes", "Kanäle filtern", "translation: managedUi.4f26d70d"),
 		entry("upstream.managedUi.c4e0bea5", "upstreamUI", "全部渠道", "All channels", "全部頻道", "すべてのチャネル", "모든 채널", "Todos los canales", "Toutes les chaînes", "Alle Kanäle", "translation: managedUi.c4e0bea5"),
 		entry("upstream.managedUi.dcab617e", "upstreamUI", "读取中…", "Loading…", "讀取中…", "読み込み中…", "불러오는 중…", "Leyendo…", "Chargement…", "Lesen…", "translation: managedUi.dcab617e"),
 		entry("upstream.managedUi.9baa36db", "upstreamUI", "{value1} 个模型 · {value2} 个可用", "{value1} models · {value2} available", "{value1} 個模型 · {value2} 個可用", "{value1} 個のモデル · {value2} 個が利用可能", "모델 {value1}개 · 사용 가능 {value2}개", "{value1} modelos · {value2} disponibles", "Modèles {value1} · {value2} disponibles", "{value1} Modelle · {value2} verfügbar", "translation: managedUi.9baa36db"),
-	}
-}
-
-func builtinEntryBatch53() []Entry {
-	return []Entry{
 		entry("upstream.managedUi.f1d9b999", "upstreamUI", "批量修改", "Batch modification", "批量修改", "一括編集", "일괄 수정", "Modificación por lotes", "Modification par lots", "Batch-Änderung", "translation: managedUi.f1d9b999"),
 		entry("upstream.managedUi.a93398d", "upstreamUI", "统一调价", "Unified price adjustment", "統一調價", "一括価格調整", "통합 가격 조정", "Ajuste de precios unificado", "Ajustement des prix unifié", "Einheitliche Preisanpassung", "translation: managedUi.a93398d"),
 		entry("upstream.managedUi.9ab3699f", "upstreamUI", "单次最多选择 100 个模型", "Maximum selection of 100 models at a time", "單次最多選擇 100 個模型", "一度に選択できるモデルは最大 100 個です", "한 번에 최대 100개 모델 선택 가능", "Se pueden seleccionar hasta 100 modelos a la vez", "Sélectionnez jusqu'à 100 modèles à la fois", "Es können bis zu 100 Modelle gleichzeitig ausgewählt werden", "translation: managedUi.9ab3699f"),
@@ -14300,17 +14306,17 @@ func builtinEntryBatch53() []Entry {
 		entry("upstream.managedUi.ceb92d45", "upstreamUI", "请先生成并检查选中镜头的首帧", "Please generate and check the first frame of the selected shot first", "請先生成並檢查選中鏡頭的首幀", "先に選択ショットの初回フレームを生成して確認してください", "먼저 선택한 샷의 첫 프레임을 생성하고 확인해 주세요", "Por favor, genera y revisa primero el primer fotograma de la toma seleccionada", "Veuillez d'abord générer et vérifier la première image de la photo sélectionnée", "Bitte generieren und prüfen Sie zunächst das erste Bild der ausgewählten Aufnahme", "translation: managedUi.ceb92d45"),
 		entry("upstream.managedUi.20cd2519", "upstreamUI", "{value1} 个选中镜头还没有可用首帧，请全部生成并检查后再确认", "{value1} The first frame of the selected shots is not available yet. Please generate and check them all before confirming.", "{value1} 個選取鏡頭還沒有可用首幀，請全部產生並檢查後再確認", "{value1} 個の選択ショットに利用可能な初回フレームがまだありません。すべて生成・確認してから確定してください", "선택한 샷 {value1}개에 사용 가능한 첫 프레임이 아직 없습니다. 모두 생성하고 확인한 후에 확정해 주세요", "{value1} tomas seleccionadas aún no tienen un primer fotograma disponible. Genéralas y revísalas todas antes de confirmar", "{value1} La première image des prises de vue sélectionnées n'est pas encore disponible. Veuillez les générer et les vérifier tous avant de confirmer.", "{value1} Das erste Bild der ausgewählten Aufnahmen ist noch nicht verfügbar. Bitte generieren und überprüfen Sie diese alle, bevor Sie sie bestätigen.", "translation: managedUi.20cd2519"),
 		entry("upstream.managedUi.a5f5c480", "upstreamUI", "所选镜头视频已生成或正在生成", "The selected lens video has been generated or is being generated", "所選鏡頭影片已產生或正在生成", "選択したショット動画は生成済み、または生成中です", "선택한 샷 동영상이 이미 생성되었거나 생성 중입니다", "El vídeo de la toma seleccionada ya se ha generado o se está generando", "La vidéo de l'objectif sélectionnée a été générée ou est en cours de génération", "Das ausgewählte Objektivvideo wurde generiert oder wird gerade generiert", "translation: managedUi.a5f5c480"),
+	}
+}
+
+func builtinEntryBatch54() []Entry {
+	return []Entry{
 		entry("upstream.managedUi.be2eefc4", "upstreamUI", "请先连接图片或视频到当前文本节点，也可以直接粘贴可访问的视频地址", "Please connect the image or video to the current text node first, or you can directly paste the accessible video address", "請先連接圖片或影片到目前文字節點，也可以直接貼上可存取的影片位址", "先に現在のテキストノードに画像または動画を接続してください。アクセス可能な動画URLを直接貼り付けることもできます", "먼저 현재 텍스트 노드에 이미지 또는 동영상을 연결하거나, 접근 가능한 동영상 주소를 직접 붙여넣을 수 있습니다", "Primero conecte la imagen o el video al nodo de texto actual, o puede pegar directamente la dirección del video accesible.", "Veuillez d'abord connecter l'image ou la vidéo au nœud de texte actuel, ou vous pouvez coller directement l'adresse vidéo accessible", "Bitte verbinden Sie das Bild oder Video zuerst mit dem aktuellen Textknoten, oder Sie können die zugängliche Videoadresse direkt einfügen", "translation: managedUi.be2eefc4"),
 		entry("upstream.managedUi.d30bf27c", "upstreamUI", "视频分析返回格式异常，请重试", "The video analysis return format is abnormal, please try again.", "影片分析回傳格式異常，請重試", "動画分析の戻り値の形式が異常です。再試行してください", "동영상 분석 반환 형식이 비정상입니다. 다시 시도해 주세요.", "El formato de retorno del análisis de video es anormal, inténtelo nuevamente.", "Le format de retour de l'analyse vidéo est anormal, veuillez réessayer.", "Das Rückgabeformat der Videoanalyse ist abnormal. Bitte versuchen Sie es erneut.", "translation: managedUi.d30bf27c"),
 		entry("upstream.managedUi.c3318da1", "upstreamUI", "已生成视频分镜表：{value1} 个镜头", "Video storyboard generated: {value1} shots", "已產生視訊分鏡表：{value1} 個鏡頭", "動画絵コンテを生成しました：{value1} カット", "동영상 스토리보드가 생성되었습니다: {value1}개 샷", "Guión gráfico de vídeo generado: {value1} tomas", "Storyboard vidéo généré : {value1} plans", "Video-Storyboard wurde erstellt: {value1} Aufnahmen", "translation: managedUi.c3318da1"),
 		entry("upstream.managedUi.f3f53cbb", "upstreamUI", "AI 返回格式异常，请重试", "AI return format is abnormal, please try again", "AI 回傳格式異常，請重試", "AI の戻り値の形式が異常です。再試行してください", "AI 반환 형식이 비정상입니다. 다시 시도해 주세요.", "El formato de devolución de AI es anormal, inténtelo de nuevo", "Le format de retour AI est anormal, veuillez réessayer", "Das AI-Rückgabeformat ist abnormal. Bitte versuchen Sie es erneut", "translation: managedUi.f3f53cbb"),
 		entry("upstream.managedUi.632b0705", "upstreamUI", "已生成多维表格：{value1} 列 × {value2} 行", "Multidimensional table generated: {value1} columns × {value2} rows", "已產生多維表格：{value1} 列 × {value2} 行", "多次元テーブルを生成しました：{value1} 列 × {value2} 行", "다차원 테이블이 생성되었습니다: {value1}열 × {value2}행", "Tabla multidimensional generada: {value1} columnas × {value2} filas", "Tableau multidimensionnel généré : {value1} colonnes × {value2} lignes", "Mehrdimensionale Tabelle generiert: {value1} Spalten × {value2} Zeilen", "translation: managedUi.632b0705"),
 		entry("upstream.managedUi.324f256b", "upstreamUI", "列表生成失败", "List generation failed", "清單產生失敗", "リストの生成に失敗しました", "목록 생성 실패", "Error al generar la lista", "Échec de la génération de la liste", "Listengenerierung fehlgeschlagen", "translation: managedUi.324f256b"),
-	}
-}
-
-func builtinEntryBatch54() []Entry {
-	return []Entry{
 		entry("upstream.managedUi.6815a98a", "upstreamUI", "未授权：分享画布仅供查看，该操作不会执行。", "Unauthorized: The shared canvas is for viewing only and the operation will not be performed.", "未授權：分享畫布僅供查看，此操作不會執行。", "権限がありません：共有キャンバスは閲覧専用のため、この操作は実行されません。", "권한 없음: 공유 캔버스는 보기 전용이므로 이 작업은 실행되지 않습니다.", "No autorizado: el lienzo compartido es solo para visualización y no se realizará la operación.", "Non autorisé : le canevas partagé est uniquement destiné à la visualisation et l'opération ne sera pas effectuée.", "Nicht autorisiert: Die freigegebene Leinwand dient nur zur Anzeige und der Vorgang wird nicht ausgeführt.", "translation: managedUi.6815a98a"),
 		entry("upstream.managedUi.f7be61ed", "upstreamUI", "已添加临时节点，刷新页面后会消失", "A temporary node has been added and will disappear after refreshing the page.", "已新增臨時節點，刷新頁面後會消失", "一時ノードを追加しました。ページを更新すると消えます", "임시 노드가 추가되었으며, 페이지를 새로고침하면 사라집니다.", "Se agregó un nodo temporal que desaparecerá después de actualizar la página.", "Un nœud temporaire a été ajouté et disparaîtra après rafraîchissement de la page.", "Ein temporärer Knoten wurde hinzugefügt und verschwindet nach dem Aktualisieren der Seite.", "translation: managedUi.f7be61ed"),
 		entry("upstream.managedUi.af65e842", "upstreamUI", "正在打开共享画布", "Opening shared canvas...", "正在開啟共享畫布", "共有キャンバスを開いています...", "공유 캔버스 여는 중...", "Abriendo lienzo compartido...", "Ouverture du canevas partagé...", "Geteilte Leinwand wird geöffnet...", "translation: managedUi.af65e842"),
@@ -14561,17 +14567,17 @@ func builtinEntryBatch54() []Entry {
 		entry("upstream.managedUi.701ec945", "upstreamUI", "”模板。可以替换当前描述，也可以追加到末尾。", "” template. The current description can be replaced or appended to the end.", "」模板。可以替換目前描述，也可以追加到最後。", "」テンプレートを適用します。現在の説明を置き換えることも、末尾に追加することもできます。", "” 템플릿입니다. 현재 설명을 교체하거나 끝에 추가할 수 있습니다.", "”. Puede reemplazar la descripción actual o añadirla al final.", "». La description actuelle peut être remplacée ou ajoutée à la fin.", "“-Vorlage. Die aktuelle Beschreibung kann ersetzt oder am Ende angehängt werden.", "translation: managedUi.701ec945"),
 		entry("upstream.managedUi.98e6c244", "upstreamUI", "生成结果", "Generate results", "生成結果", "生成結果", "생성 결과", "Resultados de generación", "Générer des résultats", "Ergebnisse generieren", "translation: managedUi.98e6c244"),
 		entry("upstream.managedUi.c81ab0b1", "upstreamUI", "预览视频", "Preview Video", "預覽影片", "動画をプレビュー", "비디오 미리보기", "Vista previa de video", "Aperçu de la vidéo", "Vorschau des Videos", "translation: managedUi.c81ab0b1"),
+	}
+}
+
+func builtinEntryBatch55() []Entry {
+	return []Entry{
 		entry("upstream.managedUi.94ae40f", "upstreamUI", "预览图片", "Preview image", "預覽圖片", "プレビュー画像", "미리보기 이미지", "Imagen de vista previa", "Image d'aperçu", "Vorschaubild", "translation: managedUi.94ae40f"),
 		entry("upstream.managedUi.f73efe58", "upstreamUI", "预览不可用", "Preview not available", "預覽不可用", "プレビューは利用できません", "미리보기를 사용할 수 없습니다", "Vista previa no disponible", "Aperçu indisponible", "Vorschau nicht verfügbar", "translation: managedUi.f73efe58"),
 		entry("upstream.managedUi.8201b5a0", "upstreamUI", "下载", "Download", "下載", "ダウンロード", "다운로드", "Descargar", "Télécharger", "Herunterladen", "translation: managedUi.8201b5a0"),
 		entry("upstream.managedUi.63711e7b", "upstreamUI", "用作参考图", "Used as reference image", "用作參考圖", "参考画像として使用", "참고 이미지로 사용", "Usar como imagen de referencia", "Utilisé comme image de référence", "Wird als Referenzbild verwendet", "translation: managedUi.63711e7b"),
 		entry("upstream.managedUi.7dc7fb9b", "upstreamUI", "做成视频", "Make a Video", "做成視頻", "動画を作成", "영상 만들기", "Hacer un vídeo", "Créer la vidéo", "Video erstellen", "translation: managedUi.7dc7fb9b"),
 		entry("upstream.managedUi.53a5d2d9", "upstreamUI", "查看大图", "View larger image", "看大圖", "拡大して表示", "큰 이미지 보기", "Ver imagen más grande", "Agrandir l'image", "Größeres Bild anzeigen", "translation: managedUi.53a5d2d9"),
-	}
-}
-
-func builtinEntryBatch55() []Entry {
-	return []Entry{
 		entry("upstream.managedUi.6ab0d41e", "upstreamUI", "排队中", "Queued", "排隊中", "順番待ち", "대기 중", "En cola", "En file d'attente", "In der Warteschlange", "translation: managedUi.6ab0d41e"),
 		entry("upstream.managedUi.330d232a", "upstreamUI", "生成中", "Generating", "生成中", "生成中", "생성 중", "Generando", "Génération", "Wird generiert", "translation: managedUi.330d232a"),
 		entry("upstream.managedUi.30a0e3f5", "upstreamUI", "取消这个任务", "Cancel this task", "取消這個任務", "このタスクをキャンセル", "이 작업 취소", "Cancelar esta tarea", "Annuler cette tâche", "Diese Aufgabe abbrechen", "translation: managedUi.30a0e3f5"),
@@ -14822,17 +14828,17 @@ func builtinEntryBatch55() []Entry {
 		entry("upstream.managedUi.970f15ce", "upstreamUI", "使用说明：", "Instructions for use:", "使用說明：", "使用方法：", "사용 방법:", "Instrucciones de uso:", "Mode d'emploi :", "Gebrauchsanweisung:", "translation: managedUi.970f15ce"),
 		entry("upstream.managedUi.2fd73c50", "upstreamUI", "点击麦克风按钮，输入行内展开波形录制条并自动开始录音", "Click the microphone button, expand the waveform recording bar in the input line and start recording automatically", "點選麥克風按鈕，輸入行內展開波形錄製條並自動開始錄音", "マイクボタンをクリックすると、入力欄に波形録音バーが展開され、自動的に録音が開始されます", "마이크 버튼을 클릭하면 입력 줄에 파형 녹음 바가 확장되고 자동으로 녹음이 시작됩니다", "Haz clic en el botón del micrófono, expande la barra de grabación de forma de onda en la línea de entrada y comienza a grabar automáticamente", "Cliquez sur le bouton du microphone, développez la barre d'enregistrement de la forme d'onde dans la ligne d'entrée et démarrez l'enregistrement automatiquement", "Klicken Sie auf die Mikrofonschaltfläche, erweitern Sie die Wellenform-Aufzeichnungsleiste in der Eingabezeile und starten Sie die Aufnahme automatisch", "translation: managedUi.2fd73c50"),
 		entry("upstream.managedUi.b21d7aac", "upstreamUI", "波形动画实时显示音量变化", "Waveform animation displays volume changes in real time", "波形動畫即時顯示音量變化", "波形アニメーションがリアルタイムで音量の変化を表示します", "파형 애니메이션이 실시간으로 음량 변화를 표시합니다", "La animación de la forma de onda muestra los cambios de volumen en tiempo real", "L'animation de forme d'onde affiche les changements de volume en temps réel", "Wellenformanimation zeigt Lautstärkeänderungen in Echtzeit an", "translation: managedUi.b21d7aac"),
+	}
+}
+
+func builtinEntryBatch56() []Entry {
+	return []Entry{
 		entry("upstream.managedUi.5840d2f2", "upstreamUI", "点击停止按钮完成录制，自动上传并转写", "Click the stop button to complete the recording, automatically upload and transcribe", "點選停止按鈕完成錄製，自動上傳轉寫", "停止ボタンをクリックして録音を完了し、自動的にアップロードと文字起こしを行います", "정지 버튼을 클릭하여 녹음을 완료하면 자동으로 업로드 및 전사됩니다", "Haz clic en el botón de detener para finalizar la grabación, subirla y transcribirla automáticamente", "Cliquez sur le bouton d'arrêt pour terminer l'enregistrement, télécharger et transcrire automatiquement", "Klicken Sie auf die Stopp-Schaltfläche, um die Aufnahme abzuschließen, automatisch hochzuladen und zu transkribieren", "translation: managedUi.5840d2f2"),
 		entry("upstream.managedUi.5463e011", "upstreamUI", "转写结果自动填入输入框，可编辑后发送", "The transcription results are automatically filled in the input box and can be edited before sending.", "轉寫結果自動填入輸入框，可編輯後發送", "文字起こし結果が自動的に入力欄に入力され、編集してから送信できます", "전사 결과가 자동으로 입력 상자에 채워지며, 편집 후 전송할 수 있습니다", "Los resultados de la transcripción se rellenan automáticamente en el cuadro de entrada y se pueden editar antes de enviarlos.", "Les résultats de la transcription sont automatiquement renseignés dans la zone de saisie et peuvent être modifiés avant l'envoi.", "Die Transkriptionsergebnisse werden automatisch in das Eingabefeld eingetragen und können vor dem Senden bearbeitet werden.", "translation: managedUi.5463e011"),
 		entry("upstream.managedUi.bba1555d", "upstreamUI", "转写失败时在录制条内提示，可点击麦克风重试", "When the transcription fails, a prompt will appear in the recording bar. You can click on the microphone to try again.", "轉寫失敗時在錄製條內提示，可點選麥克風重試", "文字起こしに失敗した場合は録音バー内に通知が表示され、マイクをクリックして再試行できます", "전사에 실패하면 녹음 바 내에 알림이 표시되며, 마이크를 클릭하여 다시 시도할 수 있습니다", "Cuando la transcripción falle, aparecerá un mensaje en la barra de grabación. Puedes hacer clic en el micrófono para intentarlo de nuevo.", "Lorsque la transcription échoue, une invite apparaîtra dans la barre d'enregistrement. Vous pouvez cliquer sur le microphone pour réessayer.", "Wenn die Transkription fehlschlägt, erscheint eine Meldung in der Aufnahmeleiste. Sie können auf das Mikrofon klicken, um es erneut zu versuchen.", "translation: managedUi.bba1555d"),
 		entry("upstream.managedUi.c3dd5d42", "upstreamUI", "技能详情加载失败", "Failed to load skill details", "技能詳情載入失敗", "スキルの詳細の読み込みに失敗しました", "스킬 세부 정보를 불러오지 못했습니다", "Error al cargar los detalles de la habilidad", "Échec du chargement des détails des compétences", "Fertigkeitsdetails konnten nicht geladen werden", "translation: managedUi.c3dd5d42"),
 		entry("upstream.managedUi.50333349", "upstreamUI", "技能读取失败", "Skill reading failed", "技能讀取失敗", "スキルの読み取りに失敗しました", "스킬을 읽지 못했습니다", "Error al leer la habilidad", "Échec de la lecture des compétences", "Fertigkeitslesen fehlgeschlagen", "translation: managedUi.50333349"),
 		entry("upstream.managedUi.8f3818f4", "upstreamUI", "已加入我的技能", "has been added to my skills", "已加入我的技能", "マイスキルに追加されました", "내 스킬에 추가되었습니다", "se ha añadido a mis habilidades", "a été ajouté à mes compétences", "wurde zu meinen Fähigkeiten hinzugefügt", "translation: managedUi.8f3818f4"),
-	}
-}
-
-func builtinEntryBatch56() []Entry {
-	return []Entry{
 		entry("upstream.managedUi.86d62f7c", "upstreamUI", "已从我的技能移除", "Removed from my skills", "已從我的技能移除", "マイスキルから削除されました", "내 스킬에서 제거되었습니다", "Eliminado de mis habilidades", "Retiré de mes compétences", "Aus meinen Fähigkeiten entfernt", "translation: managedUi.86d62f7c"),
 		entry("upstream.managedUi.5037ac9d", "upstreamUI", "技能状态更新失败", "Skill status update failed", "技能狀態更新失敗", "スキルのステータス更新に失敗しました", "스킬 상태 업데이트에 실패했습니다", "Error al actualizar el estado de la habilidad", "Échec de la mise à jour du statut des compétences", "Die Aktualisierung des Skill-Status ist fehlgeschlagen", "translation: managedUi.5037ac9d"),
 		entry("upstream.managedUi.a3442702", "upstreamUI", "已收藏", "Favorited", "已收藏", "お気に入り済み", "즐겨찾기됨", "Favorito", "Favoris", "Favoriten", "translation: managedUi.a3442702"),
@@ -15083,17 +15089,17 @@ func builtinEntryBatch56() []Entry {
 		entry("upstream.managedUi.df28987c", "upstreamUI", "素材", "Material", "素材", "素材", "소재", "Recurso", "matériel", "Assets", "translation: managedUi.df28987c"),
 		entry("upstream.managedUi.751125bb", "upstreamUI", "回收站", "Recycle Bin", "資源回收筒", "ごみ箱", "휴지통", "Papelera de reciclaje", "Corbeille", "Papierkorb", "translation: managedUi.751125bb"),
 		entry("upstream.managedUi.8124f01e", "upstreamUI", "选择 {value1}", "Select {value1}", "選擇 {value1}", "{value1}を選択してください", "{value1} 선택", "Seleccione {value1}", "Sélectionner {value1}", "{value1} auswählen", "translation: managedUi.8124f01e"),
+	}
+}
+
+func builtinEntryBatch57() []Entry {
+	return []Entry{
 		entry("upstream.managedUi.ebd27947", "upstreamUI", "更多素材操作", "More asset actions", "更多素材操作", "その他の素材操作", "소재 작업 더 보기", "Más acciones de activos", "Plus d'actions", "Weitere Asset-Aktionen", "translation: managedUi.ebd27947"),
 		entry("upstream.managedUi.d90af107", "upstreamUI", "更多操作", "More operations", "更多操作", "その他の操作", "추가 작업", "Más acciones", "Plus d'actions", "Weitere Aktionen", "translation: managedUi.d90af107"),
 		entry("upstream.managedUi.8196e76", "upstreamUI", "空白文本素材", "Blank text material", "空白文字素材", "空のテキスト素材", "빈 텍스트 자산", "Material de texto en blanco", "Texte vierge", "Leeres Textmaterial", "translation: managedUi.8196e76"),
 		entry("upstream.managedUi.a5e2ab31", "upstreamUI", "批量操作", "Batch operation", "批量操作", "一括操作", "일괄 작업", "Operación por lotes", "Opération par lots", "Batch-Betrieb", "translation: managedUi.a5e2ab31"),
 		entry("upstream.managedUi.bbf30a60", "upstreamUI", "已选择", "Selected", "已選擇", "選択中", "선택됨", "Seleccionado", "Sélectionné", "Ausgewählt", "translation: managedUi.bbf30a60"),
 		entry("upstream.managedUi.223a125d", "upstreamUI", "个素材 · 点击卡片多选，Shift 连选", "materials · Click on the card to select multiple items, and use Shift to select continuously", "個素材 · 點選卡片多選，Shift 連選", "件の素材 · カードをクリックして複数選択、Shift で範囲選択", "개 자료 · 카드를 클릭해 여러 개 선택, Shift로 범위 선택", "materiales · Haz clic en la tarjeta para seleccionar varios elementos, y usa Shift para seleccionar de forma continua", "matériaux · Cliquez sur la carte pour sélectionner plusieurs éléments et utilisez Shift pour sélectionner en continu", "Materialien · Klicken Sie auf die Karte, um mehrere Elemente auszuwählen, und verwenden Sie die Umschalttaste, um kontinuierlich auszuwählen", "translation: managedUi.223a125d"),
-	}
-}
-
-func builtinEntryBatch57() []Entry {
-	return []Entry{
 		entry("upstream.managedUi.592cbef4", "upstreamUI", "全选本页", "Select all this page", "全選本頁", "このページをすべて選択", "이 페이지 모두 선택", "Selecciona toda esta página", "Tout sélectionner sur cette page", "Ganze Seite auswählen", "translation: managedUi.592cbef4"),
 		entry("upstream.managedUi.ebf0dc98", "upstreamUI", "取消选择", "Cancel selection", "取消選擇", "選択をキャンセル", "선택 취소", "Cancelar selección", "Désélectionner", "Auswahl aufheben", "translation: managedUi.ebf0dc98"),
 		entry("upstream.managedUi.558a1788", "upstreamUI", "还原已选", "Restore selected", "還原已選", "選択項目を復元", "선택 항목 복원", "Restaurar seleccionados", "Restaurer la sélection", "Ausgewählte wiederherstellen", "translation: managedUi.558a1788"),
@@ -15344,17 +15350,17 @@ func builtinEntryBatch57() []Entry {
 		entry("upstream.managedUi.21ec76f0", "upstreamUI", "费用待确认的任务已排除，请在对应镜头的“画面与资产”中核查后重试。", "Tasks with unconfirmed costs are excluded. Review them in the shot’s Visuals & assets before retrying.", "費用待確認的任務已排除，請在對應鏡頭的“畫面與資產”中核查後重試。", "費用未確定のタスクは除外しました。各ショットの「画面とアセット」で確認後に再試行してください。", "비용 미확정 작업은 제외됩니다. 샷의 화면 및 에셋에서 확인 후 다시 시도하세요.", "Se excluyen las tareas con coste sin confirmar. Revísalas en Imágenes y recursos antes de reintentar.", "Les tâches au coût non confirmé sont exclues. Vérifiez-les dans Images et ressources avant de réessayer.", "Aufgaben mit unbestätigten Kosten sind ausgeschlossen. Vor erneutem Versuch unter Bild und Assets prüfen.", "translation: managedUi.21ec76f0"),
 		entry("upstream.managedUi.3fcc7104", "upstreamUI", "仅生成有描述且尚无结果的镜头，已有结果和进行中的任务会跳过。", "Only shots with descriptions and no results are generated. Existing results and running tasks are skipped.", "僅生成有描述且尚無結果的鏡頭，已有結果和進行中的任務會跳過。", "説明があり未生成のショットのみ生成します。結果があるものや実行中のタスクはスキップします。", "설명이 있고 결과가 없는 샷만 생성합니다. 기존 결과와 진행 중인 작업은 건너뜁니다.", "Solo se generan planos con descripción y sin resultados. Se omiten los resultados existentes y las tareas en curso.", "Seuls les plans décrits sans résultat sont générés. Les résultats existants et tâches en cours sont ignorés.", "Nur beschriebene Einstellungen ohne Ergebnis werden erzeugt. Bestehende Ergebnisse und laufende Aufgaben werden übersprungen.", "translation: managedUi.3fcc7104"),
 		entry("upstream.managedUi.67eb3e4a", "upstreamUI", "当前镜头工作区", "Current shot workspace", "當前鏡頭工作區", "現在のショット作業領域", "현재 샷 작업 공간", "Área del plano actual", "Espace du plan actuel", "Arbeitsbereich der aktuellen Einstellung", "translation: managedUi.67eb3e4a"),
+	}
+}
+
+func builtinEntryBatch58() []Entry {
+	return []Entry{
 		entry("upstream.managedUi.e58657b5", "upstreamUI", "分镜表", "Storyboard table", "分鏡表", "絵コンテ表", "스토리보드 표", "Tabla de planos", "Tableau du storyboard", "Storyboard-Tabelle", "translation: managedUi.e58657b5"),
 		entry("upstream.managedUi.678bb45", "upstreamUI", "当前镜头", "Current shot", "當前鏡頭", "現在のショット", "현재 샷", "Disparo actual", "Plan actuel", "Aktuelle Aufnahme", "translation: managedUi.678bb45"),
 		entry("upstream.managedUi.736716a9", "upstreamUI", "连续切换镜头", "Switch between shots", "連續切換鏡頭", "ショットを連続切り替え", "샷 연속 전환", "Cambiar entre planos", "Passer d’un plan à l’autre", "Zwischen Einstellungen wechseln", "translation: managedUi.736716a9"),
 		entry("upstream.managedUi.3b7ad21", "upstreamUI", "上一镜", "Previous shot", "上一鏡", "前のショット", "이전 샷", "Plano anterior", "Plan précédent", "Vorherige Einstellung", "translation: managedUi.3b7ad21"),
 		entry("upstream.managedUi.9ce85a46", "upstreamUI", "下一镜", "Next shot", "下一鏡", "次のショット", "다음 샷", "Plano siguiente", "Plan suivant", "Nächste Einstellung", "translation: managedUi.9ce85a46"),
 		entry("upstream.managedUi.54ab6a15", "upstreamUI", "分镜内容", "Shot content", "分鏡內容", "ショット内容", "샷 내용", "Contenido del plano", "Contenu du plan", "Inhalt der Einstellung", "translation: managedUi.54ab6a15"),
-	}
-}
-
-func builtinEntryBatch58() []Entry {
-	return []Entry{
 		entry("upstream.managedUi.77aefb4c", "upstreamUI", "生成提示", "Generation prompts", "生成提示", "生成プロンプト", "생성 프롬프트", "Prompts de generación", "Prompts de génération", "Generierungs-Prompts", "translation: managedUi.77aefb4c"),
 		entry("upstream.managedUi.378b9c1f", "upstreamUI", "画面与资产", "Visuals & assets", "畫面與資產", "画面とアセット", "화면 및 에셋", "Imágenes y recursos", "Images et ressources", "Bild und Assets", "translation: managedUi.378b9c1f"),
 		entry("upstream.managedUi.579545fe", "upstreamUI", "当前镜头不在筛选结果中", "Current shot is outside the filter results", "當前鏡頭不在篩選結果中", "現在のショットは絞り込み対象外です", "현재 샷이 필터 결과에 없습니다", "El plano actual no coincide con los filtros", "Le plan actuel est hors des résultats filtrés", "Aktuelle Einstellung liegt außerhalb der Filterergebnisse", "translation: managedUi.579545fe"),
@@ -15605,17 +15611,17 @@ func builtinEntryBatch58() []Entry {
 		entry("upstream.managedUi.e8536906", "upstreamUI", "源视频时长未知，无法报价", "Source video duration unknown; a quote is unavailable", "來源影片時長未知，無法報價", "元動画の長さが不明なため、見積もりできません", "원본 동영상 길이를 알 수 없어 견적을 제공할 수 없습니다", "Se desconoce la duración del vídeo de origen; no hay presupuesto disponible", "La durée de la vidéo source est inconnue ; le devis est indisponible", "Die Dauer des Quellvideos ist unbekannt; kein Preisangebot verfügbar", "translation: managedUi.e8536906"),
 		entry("upstream.managedUi.117da0b4", "upstreamUI", "逐帧生成相对深度视频，用于动作与运镜参考。确认后创建连接原视频的结果节点，原视频保留。", "Generates relative depth frame by frame for motion and camera references. Confirmation creates a result node connected to the source video and keeps the original.", "逐格生成相對深度影片，供動作與運鏡參考。確認後建立連接來源影片的結果節點，原影片保留。", "動作やカメラワークの参照用に、フレームごとの相対深度動画を生成します。確認すると元動画につながる結果ノードを作成し、元動画は保持します。", "동작과 카메라 움직임의 참고용으로 프레임별 상대 깊이 동영상을 생성합니다. 확인하면 원본 동영상에 연결된 결과 노드를 만들며 원본은 유지합니다.", "Genera profundidad relativa por fotograma como referencia de movimiento y cámara. Al confirmar, crea un nodo de resultado conectado al vídeo de origen y conserva el original.", "Génère une profondeur relative image par image pour les références de mouvement et de caméra. La confirmation crée un nœud de résultat relié à la vidéo source, qui est conservée.", "Erzeugt bildweise relative Tiefe als Bewegungs- und Kamerareferenz. Nach Bestätigung wird ein mit dem Quellvideo verbundener Ergebnisknoten erstellt; das Original bleibt erhalten.", "translation: managedUi.117da0b4"),
 		entry("upstream.managedUi.6492e9f0", "upstreamUI", "源视频最长", "Maximum source video duration:", "來源影片最長", "元動画の最大長：", "원본 동영상 최대 길이:", "Duración máxima del vídeo de origen:", "Durée maximale de la vidéo source :", "Maximale Dauer des Quellvideos:", "translation: managedUi.6492e9f0"),
+	}
+}
+
+func builtinEntryBatch59() []Entry {
+	return []Entry{
 		entry("upstream.managedUi.8cecc7a7", "upstreamUI", "秒，分辨率不超过 2K。输出为 HEVC 视频，部分浏览器可能无法直接播放，可下载使用。", "seconds, up to 2K resolution. Output is HEVC video, which some browsers cannot play directly; download it to use it.", "秒，解析度不超過 2K。輸出為 HEVC 影片，部分瀏覽器可能無法直接播放，可下載使用。", "秒、解像度は最大 2K です。出力は HEVC 動画で、一部のブラウザーでは直接再生できません。ダウンロードして利用できます。", "초이며 해상도는 최대 2K입니다. 출력은 HEVC 동영상으로, 일부 브라우저에서는 직접 재생할 수 없습니다. 다운로드하여 사용하세요.", "segundos y resolución máxima de 2K. La salida es un vídeo HEVC; algunos navegadores no pueden reproducirlo directamente. Puedes descargarlo.", "secondes, avec une résolution maximale de 2K. La sortie est une vidéo HEVC ; certains navigateurs ne peuvent pas la lire directement. Vous pouvez la télécharger.", "Sekunden bei höchstens 2K Auflösung. Die Ausgabe ist ein HEVC-Video, das manche Browser nicht direkt abspielen können. Es kann heruntergeladen werden.", "translation: managedUi.8cecc7a7"),
 		entry("upstream.managedUi.22b42fbd", "upstreamUI", "源视频：", "Source video:", "來源影片：", "元動画：", "원본 동영상:", "Vídeo de origen:", "Vidéo source :", "Quellvideo:", "translation: managedUi.22b42fbd"),
 		entry("upstream.managedUi.f6392d0a", "upstreamUI", "秒", "seconds", "秒", "秒", "초", "segundos", "secondes", "Sekunden", "translation: managedUi.f6392d0a"),
 		entry("upstream.managedUi.264d8319", "upstreamUI", "深度处理模型", "Depth processing model", "深度處理模型", "深度処理モデル", "깊이 처리 모델", "Modelo de procesamiento de profundidad", "Modèle de traitement de profondeur", "Modell für Tiefenverarbeitung", "translation: managedUi.264d8319"),
 		entry("upstream.managedUi.c0393257", "upstreamUI", "管理员尚未配置可用的相对深度模型。", "No relative depth model has been configured by an administrator.", "管理員尚未設定可用的相對深度模型。", "管理者が利用可能な相対深度モデルをまだ設定していません。", "관리자가 사용 가능한 상대 깊이 모델을 아직 설정하지 않았습니다.", "El administrador no ha configurado un modelo de profundidad relativa disponible.", "Aucun modèle de profondeur relative disponible n’a été configuré par l’administrateur.", "Es wurde noch kein verfügbares Modell für relative Tiefe konfiguriert.", "translation: managedUi.c0393257"),
 		entry("upstream.managedUi.928d8aef", "upstreamUI", "按秒计费时按源视频时长预扣，完成后按实际输出时长结算，多退少补。", "Per-second billing reserves credits for the source duration, then settles against the actual output duration, refunding or charging the difference.", "按秒計費時依來源影片時長預扣，完成後按實際輸出時長結算，多退少補。", "秒単位課金では元動画の長さで事前確保し、完了後に実際の出力時間で精算します。差額は返却または追加請求します。", "초 단위 과금은 원본 길이에 따라 크레딧을 예약하고, 완료 후 실제 출력 길이로 정산하여 차액을 환불하거나 추가 차감합니다.", "La facturación por segundo reserva créditos según la duración de origen y liquida según la duración real de salida, reembolsando o cobrando la diferencia.", "La facturation à la seconde réserve les crédits selon la durée source, puis régularise selon la durée réelle de sortie, avec remboursement ou débit de la différence.", "Bei sekundengenauer Abrechnung werden Credits für die Quelldauer reserviert und nach der tatsächlichen Ausgabedauer abgerechnet. Die Differenz wird erstattet oder belastet.", "translation: managedUi.928d8aef"),
-	}
-}
-
-func builtinEntryBatch59() []Entry {
-	return []Entry{
 		entry("upstream.managedUi.65376f9f", "upstreamUI", "人物造型库（", "Character outfit library (", "人物造型庫（", "キャラクター衣装ライブラリ（", "캐릭터 의상 라이브러리 (", "Biblioteca de atuendos (", "Bibliothèque de tenues (", "Charakter-Outfitbibliothek (", "translation: managedUi.65376f9f"),
 		entry("upstream.managedUi.dad1ed3a", "upstreamUI", "请从下方点选或上传一张图片，绑定为新造型", "Select or upload an image below to bind it as a new outfit", "請從下方選取或上傳圖片，綁定為新造型", "下から画像を選択またはアップロードし、新しい衣装として登録してください", "아래에서 이미지를 선택하거나 업로드하여 새 의상으로 연결하세요", "Selecciona o sube una imagen abajo para asignarla como nuevo atuendo", "Sélectionnez ou importez une image ci-dessous pour l’associer à une nouvelle tenue", "Wähle unten ein Bild aus oder lade eines hoch, um es als neues Outfit zuzuordnen", "translation: managedUi.dad1ed3a"),
 		entry("upstream.managedUi.cf2ea4bf", "upstreamUI", "同一角色可绑定多套服装造型，引用时仅传当前选中造型的唯一图片", "A character can have multiple outfits. References send only the single image for the currently selected outfit.", "同一角色可綁定多套服裝造型，引用時僅傳送目前所選造型的一張圖片", "同じキャラクターに複数の衣装を登録できます。参照時は現在選択中の衣装画像 1 枚だけを送信します。", "한 캐릭터에 여러 의상을 연결할 수 있습니다. 참조할 때는 현재 선택한 의상의 이미지 한 장만 전송합니다.", "Un personaje puede tener varios atuendos. Las referencias envían solo la imagen del atuendo seleccionado.", "Un personnage peut avoir plusieurs tenues. Seule l’image de la tenue sélectionnée est envoyée comme référence.", "Ein Charakter kann mehrere Outfits haben. Als Referenz wird nur das einzelne Bild des aktuell gewählten Outfits gesendet.", "translation: managedUi.cf2ea4bf"),
@@ -15866,17 +15872,17 @@ func builtinEntryBatch59() []Entry {
 		entry("upstream.managedUi.b9685890", "upstreamUI", "确认发布后复用原素材资源，不为用户复制文件；以下信息将写入官方素材库。", "Publishing reuses the original asset resource without copying files for users. The following information is written to the official library.", "確認發布後重用原素材資源，不為使用者複製檔案；下列資訊將寫入官方素材庫。", "公開すると、ユーザー向けにファイルを複製せず元の素材を再利用します。以下の情報を公式ライブラリに登録します。", "게시하면 사용자용 파일을 복사하지 않고 원본 소재 리소스를 재사용합니다. 다음 정보가 공식 라이브러리에 기록됩니다.", "Al publicar se reutiliza el recurso original sin copiar archivos para los usuarios. La información siguiente se guardará en la biblioteca oficial.", "La publication réutilise la ressource d’origine sans copier de fichiers pour les utilisateurs. Les informations suivantes seront inscrites dans la bibliothèque officielle.", "Die Veröffentlichung verwendet die ursprüngliche Ressource, ohne Dateien für Nutzer zu kopieren. Die folgenden Informationen werden in die offizielle Bibliothek übernommen.", "translation: managedUi.b9685890"),
 		entry("upstream.managedUi.bc045208", "upstreamUI", "名称", "Name", "名稱", "名前", "이름", "Nombre", "Nom", "Name", "translation: managedUi.bc045208"),
 		entry("upstream.managedUi.b371f0dc", "upstreamUI", "基本描述", "Basic description", "基本描述", "基本説明", "기본 설명", "Descripción básica", "Description générale", "Grundbeschreibung", "translation: managedUi.b371f0dc"),
+	}
+}
+
+func builtinEntryBatch60() []Entry {
+	return []Entry{
 		entry("upstream.managedUi.461c01b6", "upstreamUI", "分类", "Category", "分類", "カテゴリ", "카테고리", "Categoría", "Catégorie", "Kategorie", "translation: managedUi.461c01b6"),
 		entry("upstream.managedUi.58327cd8", "upstreamUI", "标签", "Tags", "標籤", "タグ", "태그", "Etiquetas", "Étiquettes", "Tags", "translation: managedUi.58327cd8"),
 		entry("upstream.managedUi.a0434d4", "upstreamUI", "多个标签用逗号或换行分隔", "Separate tags with commas or newlines", "多個標籤以逗號或換行分隔", "タグはカンマまたは改行で区切ってください", "태그는 쉼표나 줄바꿈으로 구분하세요", "Separa las etiquetas con comas o saltos de línea", "Séparez les étiquettes par des virgules ou des retours à la ligne", "Tags durch Kommas oder Zeilenumbrüche trennen", "translation: managedUi.a0434d4"),
 		entry("upstream.managedUi.14f2eb12", "upstreamUI", "授权说明", "License description", "授權說明", "利用許諾の説明", "이용 허락 설명", "Descripción de la licencia", "Description de l’autorisation", "Lizenzbeschreibung", "translation: managedUi.14f2eb12"),
 		entry("upstream.managedUi.83c43283", "upstreamUI", "更多信息", "More information", "更多資訊", "詳細情報", "추가 정보", "Más información", "Plus d’informations", "Weitere Informationen", "translation: managedUi.83c43283"),
 		entry("upstream.managedUi.f384bc65", "upstreamUI", "来源名称", "Source name", "來源名稱", "出典名", "출처 이름", "Nombre del origen", "Nom de la source", "Quellenname", "translation: managedUi.f384bc65"),
-	}
-}
-
-func builtinEntryBatch60() []Entry {
-	return []Entry{
 		entry("upstream.managedUi.2afd0f0d", "upstreamUI", "来源链接", "Source URL", "來源連結", "出典 URL", "출처 링크", "Enlace de origen", "Lien source", "Quellenlink", "translation: managedUi.2afd0f0d"),
 		entry("upstream.managedUi.178a4244", "upstreamUI", "使用说明", "Instructions for use", "使用說明", "使用説明", "사용 설명", "Instrucciones de uso", "Mode d'emploi", "Gebrauchsanweisung", "translation: managedUi.178a4244"),
 		entry("upstream.managedUi.f46e3f03", "upstreamUI", "取消", "Cancel", "取消", "キャンセル", "취소", "Cancelar", "Annuler", "Abbrechen", "translation: managedUi.f46e3f03"),
@@ -16127,17 +16133,17 @@ func builtinEntryBatch60() []Entry {
 		entry("upstream.managedUi.651d216e", "upstreamUI", "元素替换", "Element Replacement", "元素替換", "要素の置換", "요소 교체", "Reemplazo de elemento", "Remplacement d'élément", "Elementaustausch", "translation: managedUi.651d216e"),
 		entry("upstream.managedUi.29239242", "upstreamUI", "风格迁移", "Style Transfer", "風格遷移", "スタイル変換", "스타일 전이", "Transferencia de estilo", "Transfert de styles", "Stilübertragung", "translation: managedUi.29239242"),
 		entry("upstream.managedUi.c8ec2b4", "upstreamUI", "相对深度", "Relative depth", "相對深度", "相対深度", "상대 깊이", "Profundidad relativa", "Profondeur relative", "Relative Tiefe", "translation: managedUi.c8ec2b4"),
+	}
+}
+
+func builtinEntryBatch61() []Entry {
+	return []Entry{
 		entry("upstream.managedUi.ac63e26a", "upstreamUI", "按分辨率配置可用画幅，直接点选或输入比例", "Configure available frames according to resolution, click directly or enter the ratio", "依解析度配置可用片幅，直接點選或輸入比例", "解像度に応じて使用可能なフレームを設定し、比率を直接クリックまたは入力します", "해상도에 따라 사용 가능한 프레임을 구성하고, 비율을 직접 클릭하거나 입력하세요", "Configura los fotogramas disponibles según resolución, haz clic directamente o introduce el ratio", "Configurez les images disponibles en fonction de la résolution, cliquez directement ou entrez le ratio", "Konfigurieren Sie die verfügbaren Bilder entsprechend der Auflösung, klicken Sie direkt oder geben Sie das Verhältnis ein", "translation: managedUi.ac63e26a"),
 		entry("upstream.managedUi.66353749", "upstreamUI", "文生视频", "Text-to-Video", "文生影片", "テキストから動画", "텍스트 투 비디오", "Texto a video", "Texte vers vidéo", "Text zu Video", "translation: managedUi.66353749"),
 		entry("upstream.managedUi.d0c1031c", "upstreamUI", "图生视频", "Image-to-Video", "圖生影片", "画像から動画", "이미지 투 비디오", "Imagen a video", "Image vers vidéo", "Bild-zu-Video", "translation: managedUi.d0c1031c"),
 		entry("upstream.managedUi.93450f33", "upstreamUI", "全模态参考", "Omni-Modal Reference", "全模態參考", "全モダリティ参照", "올모달 참조", "Referencia omnimodal", "Référence omnimodale", "Omnimodale Referenz", "translation: managedUi.93450f33"),
 		entry("upstream.managedUi.a9cfd355", "upstreamUI", "视频续写", "Video Extension", "影片續寫", "動画の延長", "비디오 연장", "Extensión de video", "Extension vidéo", "Videoerweiterung", "translation: managedUi.a9cfd355"),
 		entry("upstream.managedUi.b573df30", "upstreamUI", "元素替换", "Element Replacement", "元素替換", "要素の置換", "요소 교체", "Reemplazo de elemento", "Remplacement d'élément", "Elementaustausch", "translation: managedUi.b573df30"),
-	}
-}
-
-func builtinEntryBatch61() []Entry {
-	return []Entry{
 		entry("upstream.managedUi.f85f7f20", "upstreamUI", "风格迁移", "Style Transfer", "風格遷移", "スタイル変換", "스타일 전이", "Transferencia de estilo", "Transfert de styles", "Stilübertragung", "translation: managedUi.f85f7f20"),
 		entry("upstream.managedUi.fe63a9ef", "upstreamUI", "低", "Low", "低", "低", "낮음", "Bajo", "Faible", "Niedrig", "translation: managedUi.fe63a9ef"),
 		entry("upstream.managedUi.6ca67519", "upstreamUI", "高", "High", "高", "高", "높음", "Alto", "Élevé", "Hoch", "translation: managedUi.6ca67519"),
@@ -16388,17 +16394,17 @@ func builtinEntryBatch61() []Entry {
 		entry("upstream.managedUi.fb7e2088", "upstreamUI", "保存", "Save", "儲存", "保存", "저장", "Guardar", "Enregistrer", "Speichern", "translation: managedUi.fb7e2088"),
 		entry("upstream.managedUi.56986aa1", "upstreamUI", "撤销", "Undo", "復原", "元に戻す", "실행 취소", "Deshacer", "Annuler", "Rückgängig", "translation: managedUi.56986aa1"),
 		entry("upstream.managedUi.520786de", "upstreamUI", "重做", "Redo", "重做", "やり直す", "다시 실행", "Rehacer", "Refaire", "Neu erstellen", "translation: managedUi.520786de"),
+	}
+}
+
+func builtinEntryBatch62() []Entry {
+	return []Entry{
 		entry("upstream.managedUi.29109eb3", "upstreamUI", "技能广场", "Skills Marketplace", "技能廣場", "スキルマーケット", "스킬 마켓", "Mercado de Habilidades", "Marché des compétences", "Kompetenzmarktplatz", "translation: managedUi.29109eb3"),
 		entry("upstream.managedUi.e9f0ec7f", "upstreamUI", "我的技能", "My Skills", "我的技能", "マイスキル", "내 스킬", "Mis habilidades", "Mes compétences", "Meine Fähigkeiten", "translation: managedUi.e9f0ec7f"),
 		entry("upstream.managedUi.9fcb4a0b", "upstreamUI", "我创建的", "Created by me", "我創建的", "自分が作成", "내가 만든 그룹", "Creado por mi", "Créés par moi", "Von mir erstellt", "translation: managedUi.9fcb4a0b"),
 		entry("upstream.managedUi.c1592fe5", "upstreamUI", "最新发布", "Latest release", "最新發布", "最新リリース", "최신 릴리스", "Última versión", "Dernière version", "Neueste Version", "translation: managedUi.c1592fe5"),
 		entry("upstream.managedUi.34b2dafe", "upstreamUI", "最近更新", "Recently Updated", "最近更新", "最近の更新", "최근 수정순", "Recientemente actualizado", "Récemment mis à jour", "Kürzlich aktualisiert", "translation: managedUi.34b2dafe"),
 		entry("upstream.managedUi.de8bf58", "upstreamUI", "全部", "All", "全部", "すべて", "전체", "Todas", "Tous", "Alle", "translation: managedUi.de8bf58"),
-	}
-}
-
-func builtinEntryBatch62() []Entry {
-	return []Entry{
 		entry("upstream.managedUi.818bc34f", "upstreamUI", "收藏", "Collection", "收藏", "お気に入り", "즐겨찾기", "Colección", "Favoris", "Sammlung", "translation: managedUi.818bc34f"),
 		entry("upstream.managedUi.f6acaf2f", "upstreamUI", "已隐藏", "Hidden", "已隱藏", "非表示にしました", "숨김 처리됨", "Oculto", "Caché", "Versteckt", "translation: managedUi.f6acaf2f"),
 		entry("upstream.managedUi.d6d8aec", "upstreamUI", "按标题", "By Title", "依標題", "タイトル順", "제목순", "Por título", "Par titre", "Nach Titel", "translation: managedUi.d6d8aec"),
@@ -16649,17 +16655,17 @@ func builtinEntryBatch62() []Entry {
 		entry("upstream.managedUi.f6fe7f4e", "upstreamUI", "全选节点", "Select all nodes", "全選節點", "すべてのノードを選択", "모든 노드를 선택합니다.", "Seleccione todos los nódulos", "Sélectionnez tous les nœuds", "Wählen Sie alle Noten", "translation: managedUi.f6fe7f4e"),
 		entry("upstream.managedUi.ec09b14c", "upstreamUI", "选择画布中的全部节点", "Select every node on the canvas", "選擇畫布中的全部節點", "各ノードを選択する キャンバス", "각 노드를 선택하십시오 캔버스", "Seleccione cada nodo en la canva", "Sélectionnez chaque node sur les canvas", "Wählen Sie jeden Knoten auf den Kanvas aus", "translation: managedUi.ec09b14c"),
 		entry("upstream.managedUi.d13da0d8", "upstreamUI", "批量连接节点", "Connect multiple nodes", "批次連線節點", "複数のノードを接続", "여러 노드 연결", "Conectar múltiples nódulos", "Connectez plusieurs nœuds", "Mehrfach Node verbinden", "translation: managedUi.d13da0d8"),
+	}
+}
+
+func builtinEntryBatch63() []Entry {
+	return []Entry{
 		entry("upstream.managedUi.472a44c9", "upstreamUI", "为两个或更多已选节点进入批量连接模式", "Select at least two nodes to enter batch connection mode", "為兩個或更多已選節點進入批次連線模式", "少なくとも2つのノードを選択してバッチ接続モードを入力します。", "적어도 두 개의 노드를 선택하여 배치 연결 모드를 입력합니다.", "Seleccione al menos dos nódulos para entrar en el modo de conexión de batch", "Sélectionnez au moins deux nœuds pour entrer dans le mode de connexion de batch", "Wählen Sie mindestens zwei Noten aus, um das Batch-Verbindungsmodus einzugeben", "translation: managedUi.472a44c9"),
 		entry("upstream.managedUi.fcaa460e", "upstreamUI", "复制当前选中的节点", "Copy the selected nodes", "複製當前選中的節點", "選択したノードをコピーする", "선택한 노드를 복사합니다.", "Copiar los nodos seleccionados", "Copier les nœuds sélectionnés", "Kopieren Sie die ausgewählten Knoten", "translation: managedUi.fcaa460e"),
 		entry("upstream.managedUi.e44f3246", "upstreamUI", "粘贴节点或剪贴板内容", "Paste nodes or clipboard contents", "貼上節點或剪貼簿內容", "パスタノードまたはクリップボードコンテンツ", "녹음기 또는 클립보드 콘텐츠", "Paseo de nódulos o contenidos de clipboard", "Passe les nodes ou les contenus de clipboard", "Paste Node oder Clipboard-Inhalte", "translation: managedUi.e44f3246"),
 		entry("upstream.managedUi.13be25a9", "upstreamUI", "粘贴已复制节点、文本或图片", "Paste copied nodes, text or images", "貼上已複製節點、文字或圖片", "コピーされたノード、テキスト、または画像を貼る", "복사된 노드, 텍스트 또는 이미지를 붙여 넣어", "Pasear los nodos copiados, texto o imágenes", "Passe les nœuds copiés, le texte ou les images", "Passe kopierte Knoten, Text oder Bilder", "translation: managedUi.13be25a9"),
 		entry("upstream.managedUi.d829f0e0", "upstreamUI", "删除选中内容", "Delete selection", "刪除選中內容", "選択削除", "선택 삭제", "Eliminar la selección", "Supprimer la sélection", "Löschen Sie die Auswahl", "translation: managedUi.d829f0e0"),
 		entry("upstream.managedUi.9b132440", "upstreamUI", "删除选中的节点或连线", "Delete selected nodes or connections", "刪除選中的節點或連線", "選択したノードや接続を削除する", "선택한 노드 또는 연결을 삭제", "Eliminar los nodos o conexiones seleccionados", "Supprimer les nœuds ou connexions sélectionnés", "Löschen Sie ausgewählte Noten oder Verbindungen", "translation: managedUi.9b132440"),
-	}
-}
-
-func builtinEntryBatch63() []Entry {
-	return []Entry{
 		entry("upstream.managedUi.8aa95cb6", "upstreamUI", "撤销上一步画布编辑", "Undo the last canvas edit", "撤銷上一步畫布編輯", "最後のカンバス編集", "마지막 캔버스 에디트", "El último canvas edit", "Le dernier canvas edit", "Undo der letzte Kanvas Edit", "translation: managedUi.8aa95cb6"),
 		entry("upstream.managedUi.6fcf9874", "upstreamUI", "恢复刚刚撤销的画布编辑", "Redo the canvas edit you just undid", "恢復剛剛撤銷的畫布編輯", "リード・ザ・カンバス 編集 あなた たったの無し", "Redo the canvas edit 당신만  ⁇ 다", "Redo el canvas edit te just undid", "Redo le canvas edit tu just undid", "Redo the canvas edit Sie nur undid", "translation: managedUi.6fcf9874"),
 		entry("upstream.managedUi.1d29724f", "upstreamUI", "取消当前操作", "Cancel current action", "取消當前操作", "現在の行動をキャンセル", "현재의 행동 취소", "Cancelar la acción actual", "Annuler l’action actuelle", "Aktuelle Aktion abgeben", "translation: managedUi.1d29724f"),
@@ -16910,17 +16916,17 @@ func builtinEntryBatch63() []Entry {
 		entry("upstream.managedUi.866d1658", "upstreamUI", "按云厂商控制台显示值填写。", "Use the value shown in the cloud provider console.", "按雲廠商控制檯顯示值填寫。", "クラウドプロバイダーコンソールに表示される値を使用します。", "클라우드 공급자 콘솔에서 표시된 값을 사용합니다.", "Utilice el valor mostrado en la consola de proveedor de nube.", "Utilisez la valeur affichée dans la console de fournisseur de cloud.", "Verwenden Sie die im Cloud Provider konzole angezeigte Wert.", "translation: managedUi.866d1658"),
 		entry("upstream.managedUi.70050096", "upstreamUI", "可自行填写；也可采用外观管理中的英文品牌标识 {value1}。保存时自动去除首尾斜杠。", "Enter a prefix or use the English brand identifier {value1} from Appearance. Leading and trailing slashes are removed when saving.", "可自行填寫；也可採用外觀管理中的英文品牌標識 {value1}。儲存時自動去除首尾斜槓。", "プレフィックスを入力するか、表示から英語ブランドID {value1} を使用します。", "사전 설정을 입력하거나 Appearance에서 영어 브랜드 ID {value1}를 사용합니다. 리더 및 트레이링 슬라이드는 저장할 때 제거됩니다.", "Introduce un prefixo o utilice el identificador de marca en inglés {value1} desde Aparición. Los rasgos de liderazgo y trail se eliminan cuando se ahorra.", "Entrez un préfix ou utilisez l'identificateur de marque anglaise {value1} de l'Apparition. Les traces de direction et de trail sont supprimées lors de l'épargne.", "Einführen Sie einen Vorschrift oder verwenden Sie den Englischen Markenidentifikator {value1} von der Erscheinung. Führende und Trailing Schläge werden bei der Ersparung entfernt.", "translation: managedUi.70050096"),
 		entry("upstream.managedUi.cd4025d2", "upstreamUI", "Endpoint 用于服务端写入；CDN 或绑定域名只决定浏览器读取出口。", "The server writes through the endpoint. The CDN or bound domain controls where the browser reads.", "Endpoint 用於服務端寫入；CDN 或繫結域名只決定瀏覽器讀取出口。", "CDNまたはBund Domain は、ブラウザが読む場所をコントロールします。", "CDN 또는 묶여있는 도메인은 브라우저가 읽는 곳을 제어합니다.", "El servidor escribe a través del punto final.El CDN o dominio vinculado controla donde el navegador lee.", "Le serveur écrit à travers le point de fin. Le CDN ou le domaine lié contrôle où le navigateur lit.", "Der Server schreibt über das Endpunkt. Die CDN oder gebundene Domain kontrolliert, wo der Browser läßt.", "translation: managedUi.cd4025d2"),
+	}
+}
+
+func builtinEntryBatch64() []Entry {
+	return []Entry{
 		entry("upstream.managedUi.8f73663d", "upstreamUI", "可留空并由 Region 生成，也可填写完整 COS Endpoint。", "Leave blank to derive it from Region, or enter the complete COS endpoint.", "可留空並由 Region 生成，也可填寫完整 COS Endpoint。", "空白を残して地域から引き出し、または完全なCOSエンドポイントに入力します。", "지역에서 추출 하려면 빈을 남겨두거나 전체 COS 끝점에 입력 합니다.", "Deja blanco para derivarlo de la Región, o entra en el punto final completo de la COS.", "Laissez blanche pour le dériver de la région, ou entrez le point de fin COS complet.", "Lassen Sie es frei, um es aus Region zu stammen, oder geben Sie den vollständigen COS-Endpunkt ein.", "translation: managedUi.8f73663d"),
 		entry("upstream.managedUi.fb2bfa87", "upstreamUI", "可留空并由 Region 生成；控制台的原生 Endpoint 或 Bucket 域名会换算为同地域 tos-s3 地址。", "Leave blank to derive it from Region. A native console endpoint or bucket domain is converted to the regional tos-s3 address.", "可留空並由 Region 生成；控制檯的原生 Endpoint 或 Bucket 域名會換算為同地域 tos-s3 地址。", "オリジナルコンソールの端点またはバケットドメインが地域の tos-s3 アドレスに変換されます。", "지역에서 유래하려면 빈을 남겨 두십시오.이 지역의 tos-s3 주소로 원주민 콘솔 끝점 또는 부켓 도메인이 변환됩니다.", "Deja blanco para derivarlo de la Región. Un endpoint de consola nativo o dominio bucket se convierte en la dirección regional tos-s3.", "Laissez blanche pour le dériver de la région. Un endpoint de console natif ou un domaine bucket est converti à l'adresse tos-s3 régionale.", "Ein natives Konsol Endpunkt oder Bucket-Domain wird in die regionale tos-s3 Adresse umgewandelt.", "translation: managedUi.fb2bfa87"),
 		entry("upstream.managedUi.f3a8a8", "upstreamUI", "必须填写完整的 http/https 地址，服务端会继续执行出站安全校验。", "Enter a complete HTTP or HTTPS URL. The server also validates outbound connections.", "必須填寫完整的 http/https 地址，服務端會繼續執行出站安全校驗。", "完全な HTTP または HTTPS URL を入力します. サーバーはまた、出力接続を有効にします。", "완전한 HTTP 또는 HTTPS URL을 입력합니다. 서버는 또한 출력 연결을 확인합니다.", "Introduce una URL completa HTTP o HTTPS. El servidor también valida las conexiones de salida.", "Entrez une URL HTTP ou HTTPS complète. le serveur valide également les connexions outbound.", "Geben Sie eine vollständige HTTP oder HTTPS URL ein. Der Server validiert auch Outbound-Verbindungen.", "translation: managedUi.f3a8a8"),
 		entry("upstream.managedUi.2c7473cc", "upstreamUI", "留空时按下方分发策略处理；不会由浏览器自行决定是否代理。", "Leave blank to use the distribution policy below. The server controls proxy use.", "留空時按下方分發策略處理；不會由瀏覽器自行決定是否代理。", "ダウンロードの配布ポリシーを使用するために、オフを残します. サーバーはプロキシの使用を制御します。", "아래의 배포 정책을 사용하려면 빈을 남겨 두십시오. 서버는 프로키 사용을 제어합니다.", "Deja blanco para utilizar la política de distribución a continuación.El servidor controla el uso de proxy.", "Laissez-le vide pour utiliser la politique de distribution ci-dessous. le serveur contrôle l'utilisation de proxy.", "Lassen Sie die Vertriebspolitik unten verwenden. Der Server kontrolliert die Verwendung von Proxy.", "translation: managedUi.2c7473cc"),
 		entry("upstream.managedUi.c2c5c3cb", "upstreamUI", "只填写域名根地址，不包含路径、查询参数或认证信息。", "Enter only the domain root, without a path, query or credentials.", "只填寫域名根地址，不包含路徑、查詢引數或認證資訊。", "ドメインのルートのみを入力し、ルート、リクエスト、または認証なし。", "도메인 뿌리만 입력하고, 경로, 쿼리 또는 인증서가 없습니다.", "Sólo introduzca la raíz del dominio, sin un camino, consulta o credenciales.", "Entrez uniquement la racine de domaine, sans voie, requête ou credentials.", "Geben Sie nur die Domain-Rohne ein, ohne einen Weg, eine Anfrage oder eine Einstellung.", "translation: managedUi.c2c5c3cb"),
 		entry("upstream.managedUi.47f87ca7", "upstreamUI", "public 适用于 CDN 已公开或由 CDN 自行鉴权；qiniu 仅支持七牛私有下载签名。阿里云/腾讯云/火山引擎私有 CDN 暂不自动签名。", "Use public for a public or independently authenticated CDN. qiniu supports only Qiniu private download signatures. Automatic signing for private Alibaba Cloud, Tencent Cloud and Volcano Engine CDNs is unavailable.", "public 適用於 CDN 已公開或由 CDN 自行鑑權；qiniu 僅支援七牛私有下載簽名。阿里雲/騰訊雲/火山引擎私有 CDN 暫不自動簽名。", "公開または独立して認証されたCDNのための公開利用. qiniu は Qiniu プライベートダウンロードサインのみをサポートします. プライバート Alibaba Cloud、Tencent Cloud、および Volcano Engine CDNの自動サインは利用できません。", "공공 또는 독립적으로 인증된 CDN을 사용하십시오. qiniu는 Qiniu의 개인 다운로드 서명만 지원합니다. 개인 Alibaba Cloud, Tencent Cloud 및 Volcano Engine CDN에 대한 자동 서명은 사용할 수 없습니다.", "Uso público para un CDN público o autenticado independientemente. qiniu sólo soporta firmas de descarga privadas de Qiniu. La firma automática para los CDN privados de Alibaba Cloud, Tencent Cloud y Volcano Engine no está disponible.", "Utilisez public pour un CDN public ou authentifié indépendamment. qiniu ne prend en charge que les signatures de téléchargement privées de Qiniu. Signature automatique pour les CDN privés Alibaba Cloud, Tencent Cloud et Volcano Engine n'est pas disponible.", "Verwenden Sie öffentlich für eine öffentliche oder unabhängig authentische CDN. qiniu unterstützt nur Qiniu private Download-Signaturen. automatische Unterzeichnung für private Alibaba Cloud, Tencent Cloud und Volcano Engine CDNs ist nicht verfügbar.", "translation: managedUi.47f87ca7"),
-	}
-}
-
-func builtinEntryBatch64() []Entry {
-	return []Entry{
 		entry("upstream.managedUi.ad000efd", "upstreamUI", "开启后 CDN 鉴权配置不完整时直接失败，不会静默回源。", "When enabled, incomplete CDN authentication fails the request without falling back to the origin.", "開啟後 CDN 鑑權配置不完整時直接失敗，不會靜默回源。", "アクティブになった場合、不完全なCDN認証は、起源に戻ることなく、リクエストが失敗します。", "활성화되면 불완전한 CDN 인증이 원본으로 돌아가지 않고 요청이 실패합니다.", "Cuando se activa, la autenticación CDN incompleta fracasará la solicitud sin caer de vuelta a su origen.", "Une fois activée, l'authentification CDN incomplète échoue la demande sans tomber de retour à l'origine.", "Wenn die unvollständige CDN-Authentifizierung aktiviert wird, fehlt die Anfrage, ohne an die Herkunft zurückzukehren.", "translation: managedUi.ad000efd"),
 		entry("upstream.managedUi.431508b3", "upstreamUI", "密钥仅用于当前后端读写对象；切换厂商时不能复用另一厂商的 Secret。", "The backend uses this secret to read and write objects. Use the new provider's own secret when switching providers.", "金鑰僅用於當前後端讀寫物件；切換廠商時不能複用另一廠商的 Secret。", "バックエンドは、この秘密を使用して、物件を読み書き、新しいプロバイダーの秘密を使用し、プロバイダーを切り替える。", "후원자는 이 비밀을 사용하여 항목을 읽고 쓰고 있습니다.새 공급자의 비밀을 사용할 때 공급자를 전환합니다.", "El backend utiliza este secreto para leer y escribir objetos. Utilice el secreto propio del nuevo proveedor al cambiar proveedores.", "Le backend utilise ce secret pour lire et écrire des objets. Utilisez le secret de la nouvelle fournisseur lors de la conversion des fournisseurs.", "Der Backend verwendet dieses Geheimnis, um Objekte zu lesen und zu schreiben. Verwenden Sie das eigene Geheimnis des neuen Anbieters, wenn Sie Anbietern wechseln.", "translation: managedUi.431508b3"),
 		entry("upstream.managedUi.c379ee89", "upstreamUI", "只在新增或替换当前厂商密钥时填写。", "Fill this in only to add or replace the current provider's key.", "只在新增或替換當前廠商金鑰時填寫。", "これを記入して、現在のプロバイダーのキーを追加または置き換えるだけです。", "이 문서를 작성하여 현재 공급자의 키를 추가하거나 교체하십시오.", "Complete esto en sólo para añadir o reemplazar la clave del proveedor actual.", "Remplissez ceci uniquement pour ajouter ou remplacer la clé du fournisseur actuel.", "Füllen Sie dies nur in, um den aktuellen Anbieter-Schlüssel hinzuzufügen oder zu ersetzen.", "translation: managedUi.c379ee89"),
@@ -17171,17 +17177,17 @@ func builtinEntryBatch64() []Entry {
 		entry("upstream.managedUi.c92ed132", "upstreamUI", "状态分布", "Status breakdown", "狀態分佈", "ステータス 破壊", "상태 분해", "El estado de la descomposición", "Défaillance de statut", "Statusbrechungen", "translation: managedUi.c92ed132"),
 		entry("upstream.managedUi.2195f579", "upstreamUI", "生成后的批次会在这里集中展示和追踪。", "Generated batches appear here for tracking.", "生成後的批次會在這裡集中展示和追蹤。", "生成されたバッチは、ここでトラッキングのために表示されます。", "생성된 배치가 여기에서 추적을 위해 나타납니다.", "Los batches generados aparecen aquí para rastrear.", "Les balises générées apparaissent ici pour le suivi.", "Generierte Battches erscheinen hier für die Tracking.", "translation: managedUi.2195f579"),
 		entry("upstream.managedUi.1441bc9e", "upstreamUI", "适用场景 / 做法", "Use case / Method", "適用場景 / 做法", "使用方法 / 使用方法", "사용 사례 / 방법", "El caso de uso / método", "Cas d'utilisation / Méthode", "Verwendung von Fall / Methode", "translation: managedUi.1441bc9e"),
+	}
+}
+
+func builtinEntryBatch65() []Entry {
+	return []Entry{
 		entry("upstream.managedUi.87af8a10", "upstreamUI", "换一个用户或关键词再查。新的记忆内容在「记忆文件」里查看。", "Try another user or keyword. New memories appear in Memory files.", "換一個使用者或關鍵詞再查。新的記憶內容在「記憶檔案」裡檢視。", "別のユーザーまたはキーワードを試してみてください 新しいメモリがメモリファイルに表示されます。", "다른 사용자 또는 키워드를 시도하십시오.새 메모리가 메모리 파일에 나타납니다.", "Tenga otro usuario o palabra clave. nuevas memorias aparecen en los archivos de memoria.", "Essayez un autre utilisateur ou un mot-clé. de nouvelles mémoires apparaissent dans les fichiers de mémoire.", "Versuchen Sie einen anderen Benutzer oder Keyword. Neue Erinnerungen erscheinen in Memory-Dateien.", "translation: managedUi.87af8a10"),
 		entry("upstream.managedUi.3d4e6e49", "upstreamUI", "资源", "Resource", "資源", "資源", "자원", "Recursos", "ressources", "Ressourcen", "translation: managedUi.3d4e6e49"),
 		entry("upstream.managedUi.be70bd6d", "upstreamUI", "存储", "Storage", "儲存", "ストレージ", "저장소", "almacenamiento", "stockage", "Lagerung", "translation: managedUi.be70bd6d"),
 		entry("upstream.managedUi.ab37a729", "upstreamUI", "可用 {value1} 项", "{value1} available", "可用 {value1} 項", "{value1} 利用可能", "{value1} 이용 가능", "{value1} Disponible", "{value1} Disponible", "{value1} Verfügbar", "translation: managedUi.ab37a729"),
 		entry("upstream.managedUi.401f7b23", "upstreamUI", "包含失败与待处理记录", "Includes failed and pending records", "包含失敗與待處理記錄", "失敗・継続記録を含む。", "실패하고 끊어지는 기록을 포함한다.", "Incluye registros fallidos y pendentes", "Les records échoués et pendants", "Inbegriffen fehlende und abhängige Aufzeichnungen", "translation: managedUi.401f7b23"),
 		entry("upstream.managedUi.28469085", "upstreamUI", "仅统计已就绪资源", "Ready resources only", "僅統計已就緒資源", "準備資源のみ", "준비된 자원만", "Los recursos disponibles solo", "Les ressources uniquement prêtes", "Bereitschaftliche Ressourcen nur", "translation: managedUi.28469085"),
-	}
-}
-
-func builtinEntryBatch65() []Entry {
-	return []Entry{
 		entry("upstream.managedUi.eead74f7", "upstreamUI", "本地 {value1} · 远端", "Local {value1} · Remote", "本地 {value1} · 遠端", "ローカル {value1} · リモート", "로컬 {value1} · 원격", "Local {value1} · Remoto", "Local {value1} · Distant", "Lokal {value1} · Remote", "translation: managedUi.eead74f7"),
 		entry("upstream.managedUi.3ede6ed5", "upstreamUI", "资源上传或生成后会显示在这里。", "Uploaded or generated resources appear here.", "資源上傳或生成後會顯示在這裡。", "アップロードまたは生成されたリソースはこちらからご覧いただけます。", "업로드되거나 생성된 자원은 여기에서 나타납니다.", "Los recursos que se han descargado o generado se encuentran aquí.", "Les ressources enregistrées ou générées apparaissent ici.", "Erhergeteite oder generierte Ressourcen finden Sie hier.", "translation: managedUi.3ede6ed5"),
 		entry("upstream.managedUi.7af8aad5", "upstreamUI", "全部存储", "All storage", "全部儲存", "すべての保管", "모든 저장소", "Todo el almacenamiento", "Toutes les stocks", "Alle Lagerung", "translation: managedUi.7af8aad5"),
@@ -17432,17 +17438,17 @@ func builtinEntryBatch65() []Entry {
 		entry("upstream.managedUi.413b8fb5", "upstreamUI", "人像叙事、文艺片", "Portrait storytelling, art-house films", "人像敘事、文藝片", "ポートレートストーリー、アートハウス映画", "포트레이트 스토리, 아트 하우스 영화", "Portrait Storytelling, películas de arte-house", "Portrait d'histoire, films d'art-house", "Portrait Storytelling, Kunsthausfilme", "translation: managedUi.413b8fb5"),
 		entry("upstream.managedUi.b8a9b3a4", "upstreamUI", "50mm 标准，空间感自然", "A standard 50mm view gives a natural sense of space.", "50mm 標準，空間感自然", "標準50mmの視野は、自然な空間感を与えます。", "표준 50mm 전망은 자연스러운 공간 감각을 제공합니다.", "Una vista de 50 mm estándar da un sentido natural de espacio.", "Une vue standard de 50 mm donne une sensation naturelle d’espace.", "Ein Standard 50mm-Anblick gibt einen natürlichen Gefühl von Raum.", "translation: managedUi.b8a9b3a4"),
 		entry("upstream.managedUi.e071953b", "upstreamUI", "人像、日常、街拍", "Portraits, everyday scenes, street photography", "人像、日常、街拍", "肖像画、日常のシーン、ストリート写真", "초상화, 일상적인 장면, 거리 사진", "Retratos, escenas cotidianas, fotografía de la calle", "Portraits, scènes quotidiennes, photographie de rue", "Portraits, Alltagsszenen, Straßenfotografie", "translation: managedUi.e071953b"),
+	}
+}
+
+func builtinEntryBatch66() []Entry {
+	return []Entry{
 		entry("upstream.managedUi.b01ed43a", "upstreamUI", "中焦", "Short telephoto", "中焦", "中望遠", "단망원", "Teleobjetivo corto", "Téléobjectif court", "Kurzes Teleobjektiv", "translation: managedUi.b01ed43a"),
 		entry("upstream.managedUi.1d8a91a0", "upstreamUI", "65mm 中焦，轻微压缩，讨喜肤色", "A 65mm lens gives slight compression and flattering portraits.", "65mm 中焦，輕微壓縮，討喜膚色", "65mmレンズは、軽い圧縮とフラッティングの肖像画を提供します。", "65mm 렌즈는 가벼운 압축과 빛나는 초상화를 제공합니다.", "Una lente de 65 mm proporciona una compresión ligera y retratos flatterantes.", "Une lentille de 65 mm donne une légère compression et des portraits flatterants.", "Eine 65mm-Linsen bietet leicht komprimierte und flatterende Porträte.", "translation: managedUi.1d8a91a0"),
 		entry("upstream.managedUi.167e659b", "upstreamUI", "半身人像、对话戏", "Waist-up portraits, dialogue scenes", "半身人像、對話戲", "リリース・ポートレート、対話シーン", "포트레이트, 대화 장면", "Los retratos, las escenas de diálogo", "Les portraits, les scènes de dialogue", "Waist-up Porträt, Dialogszenen", "translation: managedUi.167e659b"),
 		entry("upstream.managedUi.7a358059", "upstreamUI", "中长焦", "Medium telephoto", "中長焦", "中望遠", "중망원", "Teleobjetivo medio", "Téléobjectif moyen", "Mittleres Teleobjektiv", "translation: managedUi.7a358059"),
 		entry("upstream.managedUi.531f7dd1", "upstreamUI", "85mm 经典人像焦段", "85mm is a classic portrait focal length.", "85mm 經典人像焦段", "85mmは古典的な肖像の焦点長さです。", "85mm는 고전적인 초점 길이입니다.", "85mm es una longitud focal clásica del retrato.", "85mm est une longueur focale classique du portrait.", "85mm ist eine klassische Porträt-Fokuslänge.", "translation: managedUi.531f7dd1"),
 		entry("upstream.managedUi.a8d711cd", "upstreamUI", "特写人像、婚礼", "Portrait close-ups, weddings", "特寫人像、婚禮", "デート・アウト、結婚式", "포트레이트 가까운, 결혼식", "Retratos de cercanías, bodas", "Portrait de proximité, mariage", "Portrait Neue, Hochzeit", "translation: managedUi.a8d711cd"),
-	}
-}
-
-func builtinEntryBatch66() []Entry {
-	return []Entry{
 		entry("upstream.managedUi.18372438", "upstreamUI", "长焦", "Telephoto", "長焦", "望遠", "망원", "Teleobjetivo", "Téléobjectif", "Teleobjektiv", "translation: managedUi.18372438"),
 		entry("upstream.managedUi.fb12d404", "upstreamUI", "100mm 长焦，背景压缩明显", "A 100mm telephoto lens makes background compression more visible.", "100mm 長焦，背景壓縮明顯", "100mmのテレフォトレンズは、背景圧縮をより目に見えるようにします。", "100mm 텔레포토 렌즈는 배경 압축을 더 눈에 띄게 만듭니다.", "Una lente de teléfonos de 100 mm hace que la compresión de fondo sea más visible.", "Une lentille de téléphoto de 100 mm rend la compression en arrière-plan plus visible.", "Eine 100mm Telephoto-Linsen macht die Hintergrundkompression sichtbarer.", "translation: managedUi.fb12d404"),
 		entry("upstream.managedUi.8271350f", "upstreamUI", "特写、微距、体育", "Close-ups, macro, sports", "特寫、微距、體育", "マクロ、スポーツ、マクロ", "마크로, 마크로 및 스포츠", "Close-ups, macro y deportes", "Close-ups, macro et sport", "Close-ups, Macro und Sport", "translation: managedUi.8271350f"),
@@ -17693,17 +17699,17 @@ func builtinEntryBatch66() []Entry {
 		entry("upstream.managedUi.ba9db68b", "upstreamUI", "新中式", "Contemporary Chinese style", "新中式", "現代中国スタイル", "현대 중국 스타일", "El estilo moderno chino", "Le style chinois contemporain", "Moderne chinesische Stil", "translation: managedUi.ba9db68b"),
 		entry("upstream.managedUi.8b8c42c5", "upstreamUI", "游戏感", "Game-inspired", "遊戲感", "ゲームインスピレーション", "게임 영감", "El juego inspirado", "Jeu inspiré", "Spiele inspiriert", "translation: managedUi.8b8c42c5"),
 		entry("upstream.managedUi.2ea500cf", "upstreamUI", "硬科幻", "Hard science fiction", "硬科幻", "ハードサイエンスフィクション", "하드 과학 판타지", "Ficción Científica dura", "Fiction scientifique dure", "Harte Wissenschaftsfiction", "translation: managedUi.2ea500cf"),
+	}
+}
+
+func builtinEntryBatch67() []Entry {
+	return []Entry{
 		entry("upstream.managedUi.7151d42c", "upstreamUI", "真人短剧", "Live-action short drama", "真人短劇", "ライブ・アクション・ショートドラマ", "라이브 액션 짧은 드라마", "Drama de acción breve", "Drame courte live action", "Live-Aktion kurze Drama", "translation: managedUi.7151d42c"),
 		entry("upstream.managedUi.a672becc", "upstreamUI", "艺术风格", "Art styles", "藝術風格", "アートスタイル", "예술 스타일", "Estilos de Arte", "Les styles d'art", "Kunststile", "translation: managedUi.a672becc"),
 		entry("upstream.managedUi.8ccd1cb", "upstreamUI", "都市霸总", "Urban CEO romance", "都市霸總", "ロマンチックなCEO", "도시 CEO 로맨스", "El director urbano romance", "Le chef de l'entreprise romance", "Urban CEO Romantik", "translation: managedUi.8ccd1cb"),
 		entry("upstream.managedUi.ee9a687d", "upstreamUI", "甜宠恋爱", "Sweet romance", "甜寵戀愛", "甘いロマンチック", "달콤한 로맨스", "El romántico dulce", "La douce romance", "Süße Romantik", "translation: managedUi.ee9a687d"),
 		entry("upstream.managedUi.7be342eb", "upstreamUI", "真假千金", "Heiress identity swap", "真假千金", "相続人アイデンティティスワップ", "유산 정체성 스와프", "El cambio de identidad heredaria", "L’identité héréditaire de la société", "Heiress Identity Swap", "translation: managedUi.7be342eb"),
 		entry("upstream.managedUi.32b3ed0d", "upstreamUI", "重生复仇", "Rebirth and revenge", "重生復仇", "復活と復活", "부활과 복수", "La resurrección y la venganza", "Résurrection et vengeance", "Wiedergeburt und Rache", "translation: managedUi.32b3ed0d"),
-	}
-}
-
-func builtinEntryBatch67() []Entry {
-	return []Entry{
 		entry("upstream.managedUi.45574752", "upstreamUI", "战神赘婿", "War god in an in-law household", "戰神贅婿", "法の家で戦争の神", "전쟁 하느님은 법 집에서", "Dios de la guerra en una casa de ley", "Dieu de guerre dans une maison en droit", "Kriegsgottes in einem in-law-Haushalt", "translation: managedUi.45574752"),
 		entry("upstream.managedUi.83bc18aa", "upstreamUI", "神医下山", "Miracle healer returns to society", "神醫下山", "奇跡の癒しが社会に戻る。", "기적 치유가 사회로 돌아간다.", "Miracle Healer vuelve a la sociedad", "Le Miracle Healer revient à la société", "Miracle Healer kehrt zurück in die Gesellschaft", "translation: managedUi.83bc18aa"),
 		entry("upstream.managedUi.584cdcfe", "upstreamUI", "萌宝助攻", "Little matchmaker", "萌寶助攻", "小さなマッチメーカー", "작은 경기장", "Pequeño Matchmaker", "Un petit matchmaker", "Ein kleiner Matchmaker", "translation: managedUi.584cdcfe"),
@@ -17954,17 +17960,17 @@ func builtinEntryBatch67() []Entry {
 		entry("upstream.managedUi.4fe97ad1", "upstreamUI", "历史", "Historical", "歷史", "歴史", "역사", "Histórico", "Historique", "Historisch", "translation: managedUi.4fe97ad1"),
 		entry("upstream.managedUi.750a0402", "upstreamUI", "古装", "Historical costume", "古裝", "時代衣装", "사극 의상", "Vestuario histórico", "Costumes historiques", "Historische Kostüme", "translation: managedUi.750a0402"),
 		entry("upstream.managedUi.cd301694", "upstreamUI", "宏大场景", "Large-scale scenes", "宏大場景", "大規模な場面", "대규모 장면", "Escenas a gran escala", "Scènes de grande ampleur", "Groß angelegte Szenen", "translation: managedUi.cd301694"),
+	}
+}
+
+func builtinEntryBatch68() []Entry {
+	return []Entry{
 		entry("upstream.managedUi.7ae908df", "upstreamUI", "年代都市", "Period city", "年代都市", "時代ものの都市", "시대극 도시", "Ciudad de época", "Ville d’époque", "Historische Stadt", "translation: managedUi.7ae908df"),
 		entry("upstream.managedUi.de4202cd", "upstreamUI", "情感", "Relationships", "情感", "人間関係", "인간관계", "Relaciones", "Relations", "Beziehungen", "translation: managedUi.de4202cd"),
 		entry("upstream.managedUi.a9612b5e", "upstreamUI", "情绪", "Emotion", "情緒", "感情", "감정", "Emoción", "Émotion", "Emotion", "translation: managedUi.a9612b5e"),
 		entry("upstream.managedUi.e06def", "upstreamUI", "慢生活", "Slow living", "慢生活", "スローライフ", "느린 삶", "Vida pausada", "Vie au ralenti", "Entschleunigtes Leben", "translation: managedUi.e06def"),
 		entry("upstream.managedUi.9e3e4fb0", "upstreamUI", "手工质感", "Handcrafted texture", "手工質感", "手作りの質感", "수작업 질감", "Textura artesanal", "Texture artisanale", "Handgefertigte Textur", "translation: managedUi.9e3e4fb0"),
 		entry("upstream.managedUi.df3ee3ae", "upstreamUI", "梦境", "Dreamscape", "夢境", "夢の風景", "꿈속 풍경", "Paisaje onírico", "Paysage onirique", "Traumlandschaft", "translation: managedUi.df3ee3ae"),
-	}
-}
-
-func builtinEntryBatch68() []Entry {
-	return []Entry{
 		entry("upstream.managedUi.d1843191", "upstreamUI", "水墨", "Ink wash", "水墨", "水墨画", "수묵화", "Aguada de tinta", "Lavis à l’encre", "Tuschemalerei", "translation: managedUi.d1843191"),
 		entry("upstream.managedUi.f047b1cd", "upstreamUI", "法术", "Magic spells", "法術", "呪術", "마법", "Hechizos", "Sortilèges", "Zaubersprüche", "translation: managedUi.f047b1cd"),
 		entry("upstream.managedUi.3e5b8a56", "upstreamUI", "温暖", "Warm", "溫暖", "温かい", "따뜻함", "Cálido", "Chaleureux", "Warm", "translation: managedUi.3e5b8a56"),
@@ -18215,17 +18221,17 @@ func builtinEntryBatch68() []Entry {
 		entry("upstream.managedUi.e4027413", "upstreamUI", "加入 9 个角色", "Add 9 actors", "加入 9 個角色", "キャラクターを9体追加", "캐릭터 9명 추가", "Añadir 9 personajes", "Ajouter 9 personnages", "9 Figuren hinzufügen", "translation: managedUi.e4027413"),
 		entry("upstream.managedUi.15c4f13f", "upstreamUI", "加入「{name}」机位", "Add {name} camera", "加入「{name}」機位", "カメラ「{name}」を追加", "카메라 {name} 추가", "Añadir cámara {name}", "Ajouter la caméra {name}", "Kamera {name} hinzufügen", "translation: managedUi.15c4f13f"),
 		entry("upstream.managedUi.1184f3c2", "upstreamUI", "加入「{name}」", "Add {name}", "加入「{name}」", "「{name}」を追加", "{name} 추가", "Añadir {name}", "Ajouter {name}", "{name} hinzufügen", "translation: managedUi.1184f3c2"),
+	}
+}
+
+func builtinEntryBatch69() []Entry {
+	return []Entry{
 		entry("upstream.managedUi.7bfb900d", "upstreamUI", "站立", "Standing", "站立", "立位", "서 있는 자세", "De pie", "Debout", "Stehend", "translation: managedUi.7bfb900d"),
 		entry("upstream.managedUi.bcd5e216", "upstreamUI", "T 型", "T-pose", "T 型", "Tポーズ", "T 자세", "Pose en T", "Pose en T", "T-Pose", "translation: managedUi.bcd5e216"),
 		entry("upstream.managedUi.718c9c1", "upstreamUI", "行走", "Walking", "行走", "歩く", "걷기", "Caminando", "Marche", "Gehen", "translation: managedUi.718c9c1"),
 		entry("upstream.managedUi.90fd35b", "upstreamUI", "跑步", "Running", "跑步", "走る", "달리기", "Corriendo", "Course", "Laufen", "translation: managedUi.90fd35b"),
 		entry("upstream.managedUi.412d5350", "upstreamUI", "坐姿", "Sitting", "坐姿", "座る", "앉기", "Sentado", "Assis", "Sitzend", "translation: managedUi.412d5350"),
 		entry("upstream.managedUi.b0b8f43a", "upstreamUI", "蹲下", "Squatting", "蹲下", "しゃがむ", "쪼그려 앉기", "En cuclillas", "Accroupi", "Hockend", "translation: managedUi.b0b8f43a"),
-	}
-}
-
-func builtinEntryBatch69() []Entry {
-	return []Entry{
 		entry("upstream.managedUi.9eca9007", "upstreamUI", "单膝跪", "Kneel on one knee", "單膝跪", "片膝をつく", "한쪽 무릎 꿇기", "Arrodillado sobre una rodilla", "À genou sur une jambe", "Auf einem Knie knien", "translation: managedUi.9eca9007"),
 		entry("upstream.managedUi.9cc7fb8", "upstreamUI", "双膝跪", "Kneel on both knees", "雙膝跪", "両膝をつく", "양쪽 무릎 꿇기", "Arrodillado sobre ambas rodillas", "À genoux", "Auf beiden Knien knien", "translation: managedUi.9cc7fb8"),
 		entry("upstream.managedUi.c3e4cffc", "upstreamUI", "叉腰", "Hands on hips", "叉腰", "腰に手を当てる", "허리에 손 올리기", "Manos en las caderas", "Mains sur les hanches", "Hände in die Hüften gestemmt", "translation: managedUi.c3e4cffc"),
@@ -18476,17 +18482,17 @@ func builtinEntryBatch69() []Entry {
 		entry("upstream.managedUi.4b99d9eb", "upstreamUI", "查看额度", "View balance", "檢視額度", "量をチェック", "수량을 확인하십시오.", "Ver la cantidad", "Voir la quantité", "Überprüfen Sie die Höhe", "translation: managedUi.4b99d9eb"),
 		entry("upstream.managedUi.83f9f786", "upstreamUI", "团队邀请", "Team invitations", "團隊邀請", "チーム招待", "팀이 초대합니다.", "El equipo invita", "L’équipe invite", "Team eingeladen", "translation: managedUi.83f9f786"),
 		entry("upstream.managedUi.93c71eea", "upstreamUI", "已加入团队", "Joined the team", "已加入團隊", "チームに加わった。", "팀에 합류했습니다.", "Se unieron al equipo.", "Ils sont rejoints dans le groupe.", "Sie sind zum Team eingereicht.", "translation: managedUi.93c71eea"),
+	}
+}
+
+func builtinEntryBatch70() []Entry {
+	return []Entry{
 		entry("upstream.managedUi.628b45d3", "upstreamUI", "邀请已处理", "Invitation processed", "邀請已處理", "招待状処理", "초대장 처리되었습니다.", "La invitación se ha procesado.", "L’invitation a été traitée.", "Einladung verarbeitet", "translation: managedUi.628b45d3"),
 		entry("upstream.managedUi.ba3dadef", "upstreamUI", "你有", "You have", "你有", "あなたはある", "당신은 있다.", "Tú tienes", "Vous avez", "Du hast", "translation: managedUi.ba3dadef"),
 		entry("upstream.managedUi.3335c048", "upstreamUI", "个团队邀请", "team invitations", "個團隊邀請", "チームの招待状", "한 팀이 초대합니다.", "Un equipo invitado.", "Une équipe invite", "Ein Team eingeladen", "translation: managedUi.3335c048"),
 		entry("upstream.managedUi.50787fb6", "upstreamUI", "团队邀请", "Team invitations", "團隊邀請", "チーム招待", "팀이 초대합니다.", "El equipo invita", "L’équipe invite", "Team eingeladen", "translation: managedUi.50787fb6"),
 		entry("upstream.managedUi.f912c346", "upstreamUI", "接受后可进入相应的公司或小组，与成员共享素材。", "Accept to join the company or group and share assets with its members.", "接受後可進入相應的公司或小組，與成員共享素材。", "受付後、関連する会社またはグループにアクセスし、メンバーと材料を共有することができます。", "수신 후 해당 회사 또는 그룹에 들어가서 회원들과 자료를 공유 할 수 있습니다.", "Después de la recepción, se puede acceder a la empresa o grupo correspondiente, compartir material con los miembros.", "Après l'acceptation, vous pouvez entrer dans la société ou le groupe correspondant, partager des matériaux avec les membres.", "Nach der Annahme können Sie in die entsprechende Firma oder Gruppe eintreten und mit den Mitgliedern Material teilen.", "translation: managedUi.f912c346"),
 		entry("upstream.managedUi.3971fa53", "upstreamUI", "进入团队", "Open team", "進入團隊", "チームに入る", "팀에 들어가기", "Entrar en el equipo", "Entrer dans le groupe", "Eintritt in die Mannschaft", "translation: managedUi.3971fa53"),
-	}
-}
-
-func builtinEntryBatch70() []Entry {
-	return []Entry{
 		entry("upstream.managedUi.7b83794a", "upstreamUI", "邀请读取失败", "Could not load invitations", "邀請讀取失敗", "失敗の読み方", "실패에 대한 초대", "Invitación a leer el fracaso", "L’invitation à lire pour échouer", "Einladung zum Versagen", "translation: managedUi.7b83794a"),
 		entry("upstream.managedUi.83badea", "upstreamUI", "重试", "Retry", "重試", "再試行", "다시 시도", "Reintentar", "Réessayer", "Erneut versuchen", "translation: managedUi.83badea"),
 		entry("upstream.managedUi.eecd689b", "upstreamUI", "正在读取邀请…", "Loading invitations…", "正在讀取邀請…", "招待状を読んで...", "초대장을 읽고 있는 ...", "Se está leyendo la invitación...", "Je lis l’invitation...", "Ich lese die Einladung...", "translation: managedUi.eecd689b"),
@@ -18737,17 +18743,17 @@ func builtinEntryBatch70() []Entry {
 		entry("upstream.managedUi.13743e05", "upstreamUI", "邀请已发送", "Invitation sent", "邀請已傳送", "招待状が送られました。", "초대장이 전송되었습니다.", "La invitación se ha enviado", "L’invitation a été envoyée.", "Einladung wurde geschickt.", "translation: managedUi.13743e05"),
 		entry("upstream.managedUi.22218062", "upstreamUI", "操作成功", "Done", "操作成功", "操作成功", "운영 성공", "operaciones de éxito", "Opération réussie", "Operationen erfolgreich", "translation: managedUi.22218062"),
 		entry("upstream.managedUi.e507ddd9", "upstreamUI", "成员与邀请", "Members and invitations", "成員與邀請", "会員と招待状", "회원 및 초대", "Miembro y invitación", "Membres et invitations", "Mitglieder und Einladungen", "translation: managedUi.e507ddd9"),
+	}
+}
+
+func builtinEntryBatch71() []Entry {
+	return []Entry{
 		entry("upstream.managedUi.7331230", "upstreamUI", "成员共享团队内容，个人账号与个人积分保持独立。", "Members share team assets and keep separate personal accounts and credit balances.", "成員共享團隊內容，個人賬號與個人積分保持獨立。", "メンバーはチームのコンテンツを共有し、個人アカウントと個人クレジットは独立しています。", "회원은 팀 콘텐츠를 공유하고 개인 계정과 개인 크레딧는 독립적으로 유지됩니다.", "Los miembros comparten el contenido del equipo, las cuentas personales se mantienen independientes de los créditos individuales.", "Les membres partagent le contenu de l'équipe, les comptes personnels et les crédits personnels sont indépendants.", "Die Mitglieder teilen Team-Inhalte, die persönlichen Konten und die persönlichen Credits bleiben unabhängig.", "translation: managedUi.7331230"),
 		entry("upstream.managedUi.753791f3", "upstreamUI", "邀请成员", "Invite members", "邀請成員", "会員招待", "회원을 초대합니다.", "Invitación a los miembros", "Les membres invités", "Einladung der Mitglieder", "translation: managedUi.753791f3"),
 		entry("upstream.managedUi.aa4c9e7b", "upstreamUI", "退出当前空间？", "Leave this workspace?", "退出當前空間？", "現在の空間から抜け出した?", "현재 공간에서 벗어나고 있는가?", "¿Desaparecer del espacio actual?", "Sortir de l’espace actuel ?", "Aus dem aktuellen Raum?", "translation: managedUi.aa4c9e7b"),
 		entry("upstream.managedUi.883c6299", "upstreamUI", "小组会收回你的可用额度，你仍是公司成员。", "This group will reclaim your available credits. You'll still belong to the company.", "小組會收回你的可用額度，你仍是公司成員。", "チームはあなたの利用可能な金額を返し、あなたはまだ会社のメンバーです。", "그룹은 귀하의 사용 가능한 금액을 환불하고 귀하는 여전히 회사의 회원입니다.", "El grupo recibirá su cantidad disponible y usted sigue siendo miembro de la compañía.", "Le groupe reprendra votre quantité disponible et vous êtes toujours membre de l'entreprise.", "Die Gruppe wird Ihre verfügbaren Mengen zurückerlangen und Sie sind immer noch Mitglied der Firma.", "translation: managedUi.883c6299"),
 		entry("upstream.managedUi.929eb1cf", "upstreamUI", "同时退出该公司下的所有小组，各空间分别收回你的可用额度。", "You'll leave every group in this company. Each workspace will reclaim your available credits.", "同時退出該公司下的所有小組，各空間分別收回你的可用額度。", "同時に、その会社の下のすべてのグループから脱出し、各スペースはそれぞれあなたの利用可能な量を返します。", "동시에 회사의 모든 그룹을 벗어나 각 공간은 각각 당신의 사용 가능한 양을 환불합니다.", "Al mismo tiempo, se retiran de todos los grupos bajo la compañía, cada espacio devolve su cantidad disponible por separado.", "En même temps, vous quittez tous les groupes sous la société, chaque espace reprend votre quantité disponible respectivement.", "Zur gleichen Zeit, alle Gruppen unter dem Unternehmen zu verlassen, und jede Raum erhebt Ihre verfügbaren Mengen abhängig.", "translation: managedUi.929eb1cf"),
 		entry("upstream.managedUi.cdf5a957", "upstreamUI", "退出团队", "Leave team", "退出團隊", "チームから脱退", "팀을 떠나라.", "Saída del equipo", "Retire de l’équipe", "Aus dem Team gehen", "translation: managedUi.cdf5a957"),
-	}
-}
-
-func builtinEntryBatch71() []Entry {
-	return []Entry{
 		entry("upstream.managedUi.86c545dd", "upstreamUI", "成员读取失败", "Could not load members", "成員讀取失敗", "メンバーが失敗を読む", "멤버들은 실패를 읽는다.", "Los miembros leyen el fracaso", "Les membres ont lu le échec", "Mitglieder lesen Versagen", "translation: managedUi.86c545dd"),
 		entry("upstream.managedUi.5f1beb28", "upstreamUI", "重试", "Retry", "重試", "再試行", "다시 시도", "Reintentar", "Réessayer", "Erneut versuchen", "translation: managedUi.5f1beb28"),
 		entry("upstream.managedUi.a4e9d6fa", "upstreamUI", "成员", "Member", "成員", "メンバー", "회원들", "Miembro", "Membre", "Mitglied", "translation: managedUi.a4e9d6fa"),
@@ -18998,17 +19004,17 @@ func builtinEntryBatch71() []Entry {
 		entry("upstream.managedUi.d2b035b9", "upstreamUI", "s 起，用时", "S, when it comes to use.", "s 起，用時", "時、時、時、時。", "S, 사용하는 시간", "S, cuando se utiliza", "S, à l’heure", "S, wenn es", "translation: managedUi.d2b035b9"),
 		entry("upstream.managedUi.d0deb0bc", "upstreamUI", "在视口里右键地面打标记点（A、B…），就能在这里让演员从 A 点跑 / 飞 / 闪现到 B 点；也可以直接右键「生成移动」。", "The right key to the ground point (A, B...), in the viewing gate, can allow the actor to run / fly / flash from A to B; and the right key to \"Generate Movement\" can also be directly.", "在視口裡右鍵地面打標記點（A、B…），就能在這裡讓演員從 A 點跑 / 飛 / 閃現到 B 點；也可以直接右鍵「生成移動」。", "視野の右キーで地面標識点(A、B・・・)を表示すると、ここでは俳優がA点からA点まで走り/飛び/輝くことができ、右キーで「動きを生み出す」こともできます。", "시각구에서 오른쪽 키가 바닥을 표시하는 점(A,B...), 여기에서 배우가 A 점에서 달리기 / 날기 / 빛나기 B 점까지 볼 수 있으며, 오른쪽 키가 바로 \"움직임을 생성\"할 수 있습니다.", "En la vista, el botón derecho de la punta de la punta de la punta de la punta de la punta de la punta de la punta de la punta de la punta de la punta de la punta de la punta de la punta de la punta de la punta de la punta de la punta de la punta de la punta de la punta de la punta de la punta de la punta de la punta de la punta de la punta de la punta de la punta de la punta de la punta de la punta de la punta de la punta de la punta de la punta de la punta de la punta de la punta de la punta de la punta de la punta de la punta de la punta de la", "Dans la fenêtre, le bouton droit de la surface de la zone (A, B...), peut permettre aux acteurs de courir / voler / briller de A à B; et peut également directement le bouton droit de «Generation de mouvement».", "Die rechte Schaltfläche der Sichtfläche (A, B...), kann hier den Schauspieler von A-Standpunkt zu A-Standpunkt zu A-Standpunkt zu A-Standpunkt zu B-Standpunkt zu A-Standpunkt zu A-Standpunkt zu A-Standpunkt zu A-Standpunkt zu A-Standpunkt zu A-Standpunkt zu A-Standpunkt zu A-Standpunkt zu A-Standpunkt zu A-Standpunkt zu A-Standpunkt zu A-Standpunkt zu A-Standpunkt zu A-Standpunkt zu", "translation: managedUi.d0deb0bc"),
 		entry("upstream.managedUi.d6f3232", "upstreamUI", "删除这段移动", "Remove this move.", "刪除這段移動", "この移動を削除する", "이 이동을 삭제합니다.", "Eliminar este movimiento.", "Supprimer ce mouvement.", "Diese Bewegung löschen.", "translation: managedUi.d6f3232"),
+	}
+}
+
+func builtinEntryBatch72() []Entry {
+	return []Entry{
 		entry("upstream.managedUi.571c6df9", "upstreamUI", "坐标点", "The coordinate point.", "座標點", "コーディネートポイント", "조정점", "Coordenadas", "Point de coordonnées", "Koordinaten", "translation: managedUi.571c6df9"),
 		entry("upstream.managedUi.155d70d7", "upstreamUI", "关闭", "Close", "關閉", "閉じる", "닫기", "Cerrar", "Fermer", "Schließen", "translation: managedUi.155d70d7"),
 		entry("upstream.managedUi.aefb3c19", "upstreamUI", "标记为点", "Signed as a point.", "標記為點", "点をマークする", "점점으로 표시", "Etiquetado por punto", "Marquer un point", "Zeichen für Punkt", "translation: managedUi.aefb3c19"),
 		entry("upstream.managedUi.3b39bd50", "upstreamUI", "Agent 可直接说「从 A 到 B」", "Agent can say directly “from A to B.”", "Agent 可直接說「從 A 到 B」", "エージェントは「AからBまで」と直接言える。", "에이전트는 “A에서 B까지”라고 직접 말할 수 있습니다.", "El agente puede decir directamente “de A a B”.", "L’agent peut dire « de A à B »", "Der Agent kann direkt sagen: „von A bis B“.", "translation: managedUi.3b39bd50"),
 		entry("upstream.managedUi.a0a64621", "upstreamUI", "复制坐标", "Copy of coordinates", "複製座標", "コラボレーションコラボレーション", "코디네이션 복사", "Copia de las coordenadas", "Copier les coordonnées", "Kopieren der Koordinaten", "translation: managedUi.a0a64621"),
 		entry("upstream.managedUi.77552d95", "upstreamUI", "把「", "Take the “", "把「", "を »", "⁇  “", "¡Tenemos »", "« Donner »", "„Geben“", "translation: managedUi.77552d95"),
-	}
-}
-
-func builtinEntryBatch72() []Entry {
-	return []Entry{
 		entry("upstream.managedUi.2ad8afa1", "upstreamUI", "」放到这里", "“Let it here.", "」放到這裡", "「ここに置いて」", "“여기서 던져라.", "“Las pone aquí.", "« Laissez ici", "»Habe es hier", "translation: managedUi.2ad8afa1"),
 		entry("upstream.managedUi.b1c92f46", "upstreamUI", "让「", "to “", "讓「", "ダン »", "⁇   ⁇   ⁇", "¡Que el ‘", "Laissez »", "Lass »", "translation: managedUi.b1c92f46"),
 		entry("upstream.managedUi.2679d53c", "upstreamUI", "」从", "from", "」從", "「から」", "“에서부터", "“De", "« De", "» Von", "translation: managedUi.2679d53c"),
@@ -19259,17 +19265,17 @@ func builtinEntryBatch72() []Entry {
 		entry("upstream.managedUi.562370e0", "upstreamUI", "推拉变焦", "The Tree is Fuel", "推拉變焦", "ドライヤー 焦点", "⁇ 이  ⁇ 이  ⁇ 이  ⁇ 이  ⁇ 이  ⁇ 이  ⁇ 이  ⁇ 이  ⁇ 이  ⁇ 이  ⁇ 이  ⁇ 이  ⁇ 이  ⁇ 이  ⁇ 이  ⁇ 이  ⁇ 이  ⁇ 이  ⁇ 이  ⁇ 이  ⁇ 이  ⁇ 이  ⁇ 이  ⁇ 이  ⁇ 이  ⁇ 이  ⁇ 이  ⁇ 이  ⁇ 이  ⁇ 이  ⁇ 이  ⁇ 이  ⁇ 이  ⁇ 이  ⁇ 이  ⁇ 이  ⁇ 이  ⁇ 이  ⁇ 이  ⁇ 이  ⁇ 이  ⁇ 이  ⁇ 이  ⁇ 이  ⁇ 이  ⁇ 이", "El impulso se desvanece", "La poussée se déplace", "Die Schleierung", "translation: managedUi.562370e0"),
 		entry("upstream.managedUi.b9bfac67", "upstreamUI", "摇移", "to move", "搖移", "振り回す", "움직이기", "moverse", "Mouvement", "Schleppt", "translation: managedUi.b9bfac67"),
 		entry("upstream.managedUi.91140efd", "upstreamUI", "升降环绕", "The rise surrounded.", "升降環繞", "周り上昇", "상승은 주변", "Alcance alrededor", "L’ascension autour", "Aufstieg umgeben", "translation: managedUi.91140efd"),
+	}
+}
+
+func builtinEntryBatch73() []Entry {
+	return []Entry{
 		entry("upstream.managedUi.c41be2b3", "upstreamUI", "跟随", "Followed", "跟隨", "フォロー", "따르기", "Seguimos", "Suivez", "Folgen Sie", "translation: managedUi.c41be2b3"),
 		entry("upstream.managedUi.959e9898", "upstreamUI", "质感", "The sense", "質感", "品質感", "품질감", "Sentimiento de calidad", "Sensation de qualité", "Qualität Gefühl", "translation: managedUi.959e9898"),
 		entry("upstream.managedUi.f9c91bf8", "upstreamUI", "后方", "The Back", "後方", "後ろ", "뒤쪽", "detrás", "Derrière", "Hinter Hinter", "translation: managedUi.f9c91bf8"),
 		entry("upstream.managedUi.b766c57e", "upstreamUI", "前方（倒退跟拍）", "Back to the front (back and back)", "前方（倒退跟拍）", "前方(後方)", "앞쪽 ( 뒤쪽으로 돌아가서 촬영)", "La parte delante (en la vuelta y en la vuelta)", "En avant (à la reverse)", "Vorne (auf der Rückseite und Rückseite)", "translation: managedUi.b766c57e"),
 		entry("upstream.managedUi.961b523b", "upstreamUI", "人物左侧", "The person on the left.", "人物左側", "人物の左側", "왼쪽에 있는 인물", "La personaje a la izquierda", "Le côté gauche de la personnalité", "Die Person links", "translation: managedUi.961b523b"),
 		entry("upstream.managedUi.7169e73e", "upstreamUI", "人物右侧", "The right side of the person.", "人物右側", "人物の右側", "사람의 오른쪽", "La persona a la derecha", "Le côté droit de la personne", "Die Person rechts", "translation: managedUi.7169e73e"),
-	}
-}
-
-func builtinEntryBatch73() []Entry {
-	return []Entry{
 		entry("upstream.managedUi.2a323dcb", "upstreamUI", "正上方俯拍", "Shot upwards.", "正上方俯拍", "向上に振り回される。", "위쪽으로 촬영", "En arriba se deslizan", "En haut, le coup de feu", "oben schießen", "translation: managedUi.2a323dcb"),
 		entry("upstream.managedUi.2ee67c1d", "upstreamUI", "过肩", "over the shoulders.", "過肩", "肩の", "어깨를 넘어", "sobre el hombro", "sur le cou", "über den Schultern", "translation: managedUi.2ee67c1d"),
 		entry("upstream.managedUi.82957408", "upstreamUI", "主观视角", "The subjective perspective", "主觀視角", "主観的な視点", "주관적인 관점", "Perspectiva subjetiva", "Perspective subjective", "Subjektiv Perspektive", "translation: managedUi.82957408"),
@@ -19520,17 +19526,17 @@ func builtinEntryBatch73() []Entry {
 		entry("upstream.managedUi.32a1941f", "upstreamUI", "自行车", "by bicycle", "自行車", "自転車", "자전거", "La bicicleta", "La Bicyclette", "Fahrrad", "translation: managedUi.32a1941f"),
 		entry("upstream.managedUi.fdedf545", "upstreamUI", "花坛", "The Flower", "花壇", "花屋", "꽃집", "Flores en", "fleurs", "Blumen", "translation: managedUi.fdedf545"),
 		entry("upstream.managedUi.7b974fed", "upstreamUI", "草丛", "The Grass", "草叢", "草", "잔디 잔디", "La hierba", "Les herbes", "Gräsengröte", "translation: managedUi.7b974fed"),
+	}
+}
+
+func builtinEntryBatch74() []Entry {
+	return []Entry{
 		entry("upstream.managedUi.cb7c607f", "upstreamUI", "荷花池", "The Hockey Pool", "荷花池", "ホー花池", "호 꽃池", "El barrio de flores", "Le bassin de fleurs", "Hoh Flur", "translation: managedUi.cb7c607f"),
 		entry("upstream.managedUi.2dad7e3", "upstreamUI", "路灯", "The street lights", "路燈", "路灯", "길이 빛", "La luz de la calle", "Lumière de route", "Straßenlicht", "translation: managedUi.2dad7e3"),
 		entry("upstream.managedUi.f1a5b778", "upstreamUI", "轿车", "The car.", "轎車", "車両", "자동차", "El coche", "voiture", "Autos", "translation: managedUi.f1a5b778"),
 		entry("upstream.managedUi.5e02ecb7", "upstreamUI", "道路", "The Road", "道路", "道", "길을", "El camino", "La route", "Der Weg", "translation: managedUi.5e02ecb7"),
 		entry("upstream.managedUi.a164761", "upstreamUI", "野花丛", "The wild flower", "野花叢", "野生の花", "야생 꽃이", "Flor de los bosques", "Les fleurs sauvages", "Wildblumen", "translation: managedUi.a164761"),
 		entry("upstream.managedUi.fb438e91", "upstreamUI", "长椅", "The long chair.", "長椅", "長椅子", "긴 의자", "Cuerta larga", "Longue chaise", "Länge Stuhl", "translation: managedUi.fb438e91"),
-	}
-}
-
-func builtinEntryBatch74() []Entry {
-	return []Entry{
 		entry("upstream.managedUi.1c6df71a", "upstreamUI", "阔叶树", "The tree", "闊葉樹", "広葉木", "넓은 나무", "árboles de gran tamaño", "Les arbres de feuilles", "Große Bäume", "translation: managedUi.1c6df71a"),
 		entry("upstream.managedUi.6b1065b4", "upstreamUI", "集市摊位", "The market place.", "集市攤位", "集合市場", "시장 좌석", "Mercado de la ubicación", "Le marché de la place", "Marktplatz auf", "translation: managedUi.6b1065b4"),
 		entry("upstream.managedUi.c26b6fb0", "upstreamUI", "1:1 正方", "1:1 Square", "1:1 正方", "1:1 スクエア", "1:1 정사각형", "1:1 Cuadrado", "1:1 Carré", "1:1 Quadratisch", "translation: managedUi.c26b6fb0"),
@@ -19781,17 +19787,17 @@ func builtinEntryBatch74() []Entry {
 		entry("upstream.managedUi.df1199ad", "upstreamUI", "使用已锁定的侦探角色图生成 5 秒镜头：镜头缓缓推近面部，雨滴沿伞檐滑落，背景城市霓虹柔焦流动。", "Render a 5-second clip from the locked detective asset: subtle push-in, raindrops dripping off the umbrella brim, soft bokeh city traffic behind.", "使用已鎖定的偵探角色圖產生 5 秒鏡頭：鏡頭緩緩推近面部，雨滴沿傘簷滑落，背景城市霓虹柔焦流動。", "ロック済み探偵アセットから5秒動画を生成：顔へゆっくりプッシュイン、傘の縁から雨粒が落ち、背景のネオンが柔らかく流れる。", "고정된 탐정 에셋으로 5초 클립을 렌더링하세요: 얼굴로 서서히 줌인되며 우산 끝에서 빗방울이 떨어지고 배경 도시 불빛이 흐릅니다.", "Genera un plano de 5 segundos con la referencia fijada de la detective: acércate lentamente a su rostro mientras las gotas caen del borde del paraguas y las luces de neón del fondo se difuminan.", "Génère un plan de 5 secondes à partir de la référence verrouillée de la détective : avance lentement vers son visage, avec des gouttes qui glissent du parapluie et des néons flous à l’arrière-plan.", "Erstelle eine 5-sekündige Einstellung mit der festgelegten Ermittlerinnen-Referenz: Fahre langsam auf ihr Gesicht zu, während Tropfen vom Schirmrand fallen und die Neonlichter im Hintergrund verschwimmen.", "translation: managedUi.df1199ad"),
 		entry("upstream.managedUi.77028de2", "upstreamUI", "首帧或角色参考资产 URI / ID", "First-frame or character asset URI / ID", "首幀或角色參考資產 URI / ID", "先頭フレームまたはキャラクター資産 URI / ID", "첫 프레임 또는 캐릭터 에셋 URI / ID", "URI o ID del primer fotograma o del recurso de personaje", "URI ou identifiant de la première image ou de la référence du personnage", "URI oder ID des ersten Einzelbilds oder der Figurenreferenz", "translation: managedUi.77028de2"),
 		entry("upstream.managedUi.4bbf6e01", "upstreamUI", "运镜轨迹与主体动作指令", "Camera trajectory & subject motion", "運鏡軌跡與主體動作指令", "カメラ軌道と被写体の動き指示", "카메라 궤적 및 피사체 움직임 지시", "Trayectoria de la cámara y movimiento del sujeto", "Trajectoire de la caméra et mouvement du sujet", "Kamerabahn und Bewegung des Motivs", "translation: managedUi.4bbf6e01"),
+	}
+}
+
+func builtinEntryBatch75() []Entry {
+	return []Entry{
 		entry("upstream.managedUi.7df2a79", "upstreamUI", "生成时长（支持 5 秒 / 10 秒）", "Clip duration (5s or 10s)", "產生時長（支援 5 秒 / 10 秒）", "動画尺（5秒 / 10秒）", "클립 길이(5초 / 10초)", "Duración del clip (5 o 10 segundos)", "Durée du clip (5 ou 10 secondes)", "Cliplänge (5 oder 10 Sekunden)", "translation: managedUi.7df2a79"),
 		entry("upstream.managedUi.4c7d8cf8", "upstreamUI", "多轨配乐与声音设计", "Multi-Track Soundtrack", "多軌配樂與聲音設計", "マルチトラック作曲", "멀티트랙 사운드트랙", "Banda Sonora Multipista", "Bande-Son Multipiste", "Mehrspur-Soundtrack", "translation: managedUi.4c7d8cf8"),
 		entry("upstream.managedUi.52f35244", "upstreamUI", "依据画面节奏与情绪曲线创作影视原声带，支持音乐风格锁定、分段长度匹配与分轨 WAV 导出。", "Compose film scores aligned to scene pacing and emotional arcs, supporting style locking and multi-stem WAV export.", "依據畫面節奏與情緒曲線創作影視原聲帶，支援音樂風格鎖定、分段長度匹配與分軌 WAV 匯出。", "映像のテンポと感情曲線に合わせた劇伴を生成し、スタイル固定やマルチステム WAV 書き出しに対応します。", "장면 템포와 감정선에 맞춘 오리지널 스코어를 작곡하고 스타일 고정 및 멀티 스템 WAV 내보내기를 지원합니다.", "Compone música según el ritmo y el arco emocional de la escena. Permite fijar el estilo, ajustar la duración de cada segmento y exportar pistas WAV separadas.", "Compose une musique adaptée au rythme et aux émotions de la scène. Permet de garder un style fixe, d’ajuster la durée des segments et d’exporter des pistes WAV séparées.", "Komponiert Filmmusik passend zum Tempo und Spannungsbogen der Szene. Der Stil lässt sich festlegen, Abschnitte können zeitlich angepasst und einzelne Spuren als WAV exportiert werden.", "translation: managedUi.52f35244"),
 		entry("upstream.managedUi.4c5eb814", "upstreamUI", "生成 15 秒紧凑悬疑电影配乐，前段极简钢琴铺底，8 秒后接入脉冲节奏，适配深夜追踪画面。", "Compose a 15s tense suspense cue: sparse minimal piano intro, transitioning at 8s into a driving sub-bass pulse for a night pursuit scene.", "產生 15 秒緊湊懸疑電影配樂，前段極簡鋼琴鋪底，8 秒後接入脈衝節奏，適配深夜追蹤畫面。", "15秒の緊張感あるサスペンス劇伴を作成：前半はミニマルなピアノ、8秒目から低音パルスが加わる深夜追跡シーン向けBGM。", "15초 길이의 긴장감 있는 서스펜스 영화 음악을 생성하세요. 전반부 미니멀 피아노 후 8초부터 심야 추격에 맞는 펄스 리듬이 추가됩니다.", "Compón 15 segundos de música de suspense para una persecución nocturna: empieza con un piano minimalista y añade un pulso de graves a los 8 segundos.", "Compose 15 secondes de musique à suspense pour une poursuite nocturne : commence par un piano minimaliste et introduis une pulsation grave à 8 secondes.", "Komponiere 15 Sekunden spannungsvolle Musik für eine nächtliche Verfolgung: Beginne mit minimalistischem Klavier und setze nach 8 Sekunden einen pulsierenden Bass ein.", "translation: managedUi.4c5eb814"),
 		entry("upstream.managedUi.d653a615", "upstreamUI", "情绪与配器标签，如 ['悬疑', '钢琴', '低音脉冲']", "Mood & instrumentation tags", "情緒與配器標籤", "ムード・楽器タグ", "분위기 및 악기 태그", "Etiquetas de ambiente e instrumentación, p. ej., suspense, piano y pulso grave", "Étiquettes d’ambiance et d’instrumentation, par exemple suspense, piano et pulsation grave", "Schlagwörter für Stimmung und Instrumentierung, z. B. Spannung, Klavier und Basspuls", "translation: managedUi.d653a615"),
 		entry("upstream.managedUi.df9d3219", "upstreamUI", "音频目标时长（秒），用于对齐镜头", "Target duration in seconds", "音訊目標時長（秒）", "目標秒数", "목표 길이(초)", "Duración objetivo del audio en segundos para sincronizarlo con el plano", "Durée cible de l’audio en secondes pour le synchroniser avec le plan", "Zieldauer des Audios in Sekunden zur Abstimmung auf die Einstellung", "translation: managedUi.df9d3219"),
-	}
-}
-
-func builtinEntryBatch75() []Entry {
-	return []Entry{
 		entry("upstream.managedUi.8f4695e6", "upstreamUI", "异步任务查询与资产入库", "Async Task Queue & Archive", "非同步任務查詢與資產入庫", "非同期タスク監視", "비동기 작업 조회", "Cola de Tareas", "Suivi de Tâches", "Async-Task-Queue", "translation: managedUi.8f4695e6"),
 		entry("upstream.managedUi.5dccd806", "upstreamUI", "安全轮询长耗时视频与多图生成任务状态，完成后自动拉取产物地址并归档到当前工作台画布。", "Safely poll long-running render jobs and automatically archive completed media assets into your workspace canvas.", "安全輪詢長耗時影片與多圖產生任務狀態，完成後自動拉取產物位址並歸檔到目前工作台畫布。", "長時間の動画・画像生成ジョブを安全に監視し、完了したアセットをワークスペースキャンバスへ自動保存します。", "장시간 소요되는 렌더링 작업을 안전하게 폴링하고 완료된 미디어 자산을 캔버스 워크스페이스에 자동 보관합니다.", "Consulta el estado de trabajos largos de vídeo e imagen y archiva los resultados en el lienzo del espacio de trabajo cuando estén listos.", "Suit l’état des longues générations vidéo et image, puis archive les résultats sur le canevas de l’espace de travail dès qu’ils sont prêts.", "Fragt den Status lang laufender Video- und Bildaufträge ab und archiviert die fertigen Ergebnisse automatisch auf der Arbeitsfläche.", "translation: managedUi.5dccd806"),
 		entry("upstream.managedUi.7ecdd04", "upstreamUI", "查询渲染任务 task_01hzx 的实时队列进度，完成后自动归档到当前项目素材库。", "Check live status for render job task_01hzx and archive outputs into the active project asset library once ready.", "查詢渲染任務 task_01hzx 的即時佇列進度，完成後自動歸檔到目前專案素材庫。", "レンダリングジョブ task_01hzx の進行状況を確認し、完了したら現在のプロジェクト素材ライブラリに保存してください。", "렌더 작업 task_01hzx의 실시간 진행 상태를 조회하고 완료 시 현재 프로젝트 에셋 라이브러리에 보관해 주세요.", "Consulta el progreso del trabajo de renderizado task_01hzx y archiva los resultados en la biblioteca del proyecto activo cuando termine.", "Vérifie l’avancement du rendu task_01hzx et archive les résultats dans la bibliothèque du projet actif une fois le rendu terminé.", "Prüfe den Fortschritt des Renderauftrags task_01hzx und archiviere die fertigen Ergebnisse in der Medienbibliothek des aktiven Projekts.", "translation: managedUi.7ecdd04"),
@@ -20042,17 +20048,17 @@ func builtinEntryBatch75() []Entry {
 		entry("upstream.managedUi.51521b9", "upstreamUI", "品牌风格参考", "Brand style reference", "品牌風格參考", "ブランドスタイルリファレンス", "브랜드 스타일 참조", "Referencia de estilo de marca.", "Référence de style de marque", "Referenz zum Markenstil", "translation: managedUi.51521b9"),
 		entry("upstream.managedUi.c275052", "upstreamUI", "竖版商品详情视觉", "Vertical product details visual", "直式版商品詳情視覺", "縦型の製品詳細ビジュアル", "세로형 제품 상세정보 비주얼", "Visual de detalles verticales del producto.", "Visuel de détails du produit vertical", "Vertikale Produktdetails visuell", "translation: managedUi.c275052"),
 		entry("upstream.managedUi.ab8b4be1", "upstreamUI", "按移动端竖屏阅读顺序安排主视觉、材质细节和场景图，商品外观一致且保留安全留白", "Arrange the main visual, material details and scene pictures according to the mobile vertical screen reading order, keep the product appearance consistent and keep safe white space", "依行動版豎屏閱讀順序安排主視覺、材質細節和場景圖，商品外觀一致且保留安全留白", "メインビジュアル、素材詳細、場面写真をモバイルの縦画面の読み取り順序に従って配置し、製品の外観の一貫性を保ち、安全な余白を確保します", "모바일 세로 화면 읽기 순서에 따라 메인 비주얼, 소재 디테일, 장면 사진을 배치하고, 제품 외관을 일관되게 유지하며, 안전한 여백을 유지합니다.", "Organice los principales detalles visuales, materiales y las imágenes de la escena de acuerdo con el orden de lectura de la pantalla vertical del móvil, mantenga la apariencia del producto consistente y mantenga espacios en blanco seguros.", "Organisez les principaux détails visuels, matériels et les images de la scène selon l'ordre de lecture de l'écran vertical mobile, gardez l'apparence du produit cohérente et gardez un espace blanc sûr.", "Ordnen Sie die wichtigsten visuellen Elemente, Materialdetails und Szenenbilder entsprechend der vertikalen Bildschirmlesereihenfolge des Mobilgeräts an, sorgen Sie für ein einheitliches Erscheinungsbild des Produkts und sorgen Sie für sicheren Leerraum", "translation: managedUi.ab8b4be1"),
+	}
+}
+
+func builtinEntryBatch76() []Entry {
+	return []Entry{
 		entry("upstream.managedUi.8ba90a60", "upstreamUI", "详情页参考", "Details page reference", "詳情頁參考", "詳細ページ参照", "상세페이지 참조", "Referencia de la página de detalles", "Référence de la page de détails", "Detailseitenreferenz", "translation: managedUi.8ba90a60"),
 		entry("upstream.managedUi.52e2c25b", "upstreamUI", "电商活动主视觉", "Key visual of e-commerce activities", "電商活動主視覺", "EC活動のキービジュアル", "전자상거래 활동의 키비주얼", "Visual clave de las actividades de comercio electrónico.", "Visuel clé des activités e-commerce", "Keyvisual der E-Commerce-Aktivitäten", "translation: managedUi.52e2c25b"),
 		entry("upstream.managedUi.e2d03eb4", "upstreamUI", "为活动海报生成商品主视觉与可编辑留白，使用指定色彩层级，不生成促销数字、价格或伪文字", "Generate product main vision and editable white space for event posters, use specified color levels, and do not generate promotional numbers, prices or pseudo text", "為活動海報產生商品主視覺與可編輯留白，使用指定色彩層級，不產生促銷數字、價格或偽文字", "製品のメインビジョンとイベントポスター用の編集可能な空白を生成し、指定されたカラーレベルを使用し、プロモーション番号、価格、疑似テキストを生成しません。", "이벤트 포스터를 위한 제품 메인 비전과 편집 가능한 공백을 생성하고 지정된 색상 수준을 사용하며 판촉 번호, 가격 또는 유사 텍스트를 생성하지 않습니다.", "Genere una visión principal del producto y espacios en blanco editables para carteles de eventos, utilice niveles de color específicos y no genere números promocionales, precios ni pseudotexto.", "Générez une vision principale du produit et un espace blanc modifiable pour les affiches d'événements, utilisez les niveaux de couleur spécifiés et ne générez pas de numéros promotionnels, de prix ou de pseudo-texte.", "Generieren Sie die Hauptvision des Produkts und bearbeitbaren Leerraum für Veranstaltungsplakate, verwenden Sie bestimmte Farbstufen und generieren Sie keine Werbenummern, Preise oder Pseudotexte", "translation: managedUi.e2d03eb4"),
 		entry("upstream.managedUi.eb50358d", "upstreamUI", "品牌色参考", "Brand color reference", "品牌色參考", "ブランドカラーリファレンス", "브랜드 색상 참고", "Referencia de color de la marca.", "Référence couleur de la marque", "Farbreferenz der Marke", "translation: managedUi.eb50358d"),
 		entry("upstream.managedUi.f0b817fe", "upstreamUI", "商品 UGC 封面图", "Product UGC cover image", "商品 UGC 封面圖", "製品UGCカバー画像", "제품 UGC 표지 이미지", "Imagen de portada UGC del producto", "Image de couverture UGC du produit", "Produkt-UGC-Titelbild", "translation: managedUi.f0b817fe"),
 		entry("upstream.managedUi.8b4b027d", "upstreamUI", "角色定妆图", "Character makeup picture", "角色定妝圖", "キャラメイク絵", "캐릭터 메이크업 사진", "Imagen de maquillaje de personaje.", "Photo de maquillage du personnage", "Charakter-Make-up-Bild", "translation: managedUi.8b4b027d"),
-	}
-}
-
-func builtinEntryBatch76() []Entry {
-	return []Entry{
 		entry("upstream.managedUi.95b5b1c2", "upstreamUI", "短剧角色服装变体", "Skit character costume variations", "短劇角色服裝變體", "コントキャラ衣装バリエーション", "스킷 캐릭터 의상 변형", "Variaciones del disfraz del personaje del sketch.", "Variations de costumes de personnages de sketchs", "Kostümvariationen für Sketch-Charaktere", "translation: managedUi.95b5b1c2"),
 		entry("upstream.managedUi.34985016", "upstreamUI", "为角色设计指定剧情阶段的服装方案，只改变服装与配件，保留角色身份和时代设定", "Design a costume plan for the character at the designated plot stage. Only the costumes and accessories are changed, while the character’s identity and era settings are retained.", "為角色設計指定劇情階段的服裝方案，只改變服裝與配件，保留角色身分和時代設定", "指定されたプロット段階でキャラクターの衣装プランをデザインします。キャラクターのアイデンティティや時代設定はそのままに、衣装とアクセサリーのみが変更されます。", "지정된 줄거리 단계에서 캐릭터의 의상 계획을 디자인한다. 의상과 장신구만 변경되며, 캐릭터의 아이덴티티와 시대 설정은 그대로 유지됩니다.", "Diseñar un plan de vestuario del personaje en la etapa argumental designada. Solo se cambian el vestuario y los accesorios, mientras que se conservan la identidad del personaje y la configuración de la época.", "Concevoir un plan de costumes pour le personnage à l'étape désignée de l'intrigue. Seuls les costumes et accessoires sont modifiés, tandis que l’identité et l’époque du personnage sont conservées.", "Entwerfen Sie einen Kostümplan für die Figur in der vorgesehenen Handlungsphase. Lediglich die Kostüme und Accessoires werden geändert, während die Identität und Epocheneinstellungen des Charakters beibehalten werden.", "translation: managedUi.34985016"),
 		entry("upstream.managedUi.e60b95be", "upstreamUI", "服装方向参考", "Clothing direction reference", "服裝方向參考", "服装の向きの参考", "의류방향 참고", "Referencia de dirección de ropa.", "Référence de la direction vestimentaire", "Referenz zur Kleidungsrichtung", "translation: managedUi.e60b95be"),
@@ -20303,17 +20309,17 @@ func builtinEntryBatch76() []Entry {
 		entry("upstream.managedUi.9c3d26a0", "upstreamUI", "短剧情感相遇镜头", "Emotional encounter scenes in short plays", "短劇情感相遇鏡頭", "短編劇における感動的な出会いのシーン", "단편극의 감정적 만남 장면", "Escenas de encuentros emocionales en obras de teatro cortas.", "Scènes de rencontres émotionnelles dans de courtes pièces", "Emotionale Begegnungsszenen in Kurzstücken", "translation: managedUi.9c3d26a0"),
 		entry("upstream.managedUi.1892c8c3", "upstreamUI", "柔和棚拍光", "Soft studio lighting", "柔和棚拍光", "柔らかいスタジオ照明", "부드러운 스튜디오 조명", "Iluminación suave de estudio.", "Éclairage doux du studio", "Sanfte Studiobeleuchtung", "translation: managedUi.1892c8c3"),
 		entry("upstream.managedUi.df142be1", "upstreamUI", "自然窗光", "Natural window light", "自然窗光", "窓からの自然光", "자연 창 조명", "Luz natural de ventana", "Lumière naturelle des fenêtres", "Natürliches Fensterlicht", "translation: managedUi.df142be1"),
+	}
+}
+
+func builtinEntryBatch77() []Entry {
+	return []Entry{
 		entry("upstream.managedUi.e3d2eca8", "upstreamUI", "侧逆光勾勒轮廓", "Side backlighting outlines", "側逆光勾勒輪廓", "サイドバックライトの概要", "측면 백라이트 윤곽선", "Contornos de retroiluminación lateral.", "Contours de rétroéclairage latéraux", "Umrisse der seitlichen Hintergrundbeleuchtung", "translation: managedUi.e3d2eca8"),
 		entry("upstream.managedUi.3d75b5f8", "upstreamUI", "高调明亮", "High profile and bright", "高調明亮", "知名度が高く明るい", "높은 프로파일과 밝은", "Perfil alto y brillante.", "Haut profil et lumineux", "Hochkarätig und hell", "translation: managedUi.3d75b5f8"),
 		entry("upstream.managedUi.af787122", "upstreamUI", "低调质感光", "Low-key texture light", "低調質感光", "控えめなテクスチャライト", "로우키 텍스처 라이트", "Luz de textura discreta.", "Lumière de texture discrète", "Zurückhaltendes Texturlicht", "translation: managedUi.af787122"),
 		entry("upstream.managedUi.6a6badf4", "upstreamUI", "真实接触阴影", "Real contact with shadows", "真實接觸陰影", "影とのリアルな接触", "그림자와의 실제 접촉", "Contacto real con las sombras.", "Contact réel avec les ombres", "Echter Kontakt mit Schatten", "translation: managedUi.6a6badf4"),
 		entry("upstream.managedUi.9f378b7e", "upstreamUI", "商品居中完整呈现", "The product is centered and fully presented", "商品居中完整呈現", "製品は中央に配置され、完全に表現されています", "제품이 중앙에 위치하여 완전히 표현됩니다.", "El producto está centrado y totalmente presentado.", "Le produit est centré et entièrement présenté", "Das Produkt wird zentriert und vollständig präsentiert", "translation: managedUi.9f378b7e"),
 		entry("upstream.managedUi.d2539c0d", "upstreamUI", "平视正面", "Looking straight at the front", "平視正面", "正面を見つめる", "정면을 똑바로 바라보다", "Mirando directamente al frente", "Regarder droit devant", "Blick direkt nach vorne", "translation: managedUi.d2539c0d"),
-	}
-}
-
-func builtinEntryBatch77() []Entry {
-	return []Entry{
 		entry("upstream.managedUi.16570762", "upstreamUI", "微距细节特写", "Close-up of macro details", "微距細節特寫", "マクロの詳細の拡大", "매크로 세부정보 클로즈업", "Primer plano de detalles macro.", "Gros plan sur les détails de la macro", "Nahaufnahme von Makrodetails", "translation: managedUi.16570762"),
 		entry("upstream.managedUi.ced45b51", "upstreamUI", "一侧留白便于排版", "Leave one side blank to facilitate typesetting.", "一面留白方便排版", "植字を容易にするために、片側を空白のままにしておきます。", "조판을 용이하게 하기 위해 한쪽은 비워두세요.", "Dejar un lado en blanco para facilitar la composición tipográfica.", "Laissez un côté vierge pour faciliter la composition.", "Eine Seite frei lassen, um das Setzen zu erleichtern.", "translation: managedUi.ced45b51"),
 		entry("upstream.managedUi.93146710", "upstreamUI", "多件组合陈列", "Multiple piece combination display", "多件組合陳列", "複数ピースの組み合わせ表示", "여러 조각 조합 디스플레이", "Expositor combinado de varias piezas.", "Présentoir combiné en plusieurs pièces", "Mehrteiliges Kombinationsdisplay", "translation: managedUi.93146710"),
@@ -20564,17 +20570,17 @@ func builtinEntryBatch77() []Entry {
 		entry("upstream.managedUi.cb53588c", "upstreamUI", "按一个用途做一张图，可用作主图、副图、Banner 或场景图。", "Make a picture according to a purpose, which can be used as a main picture, a secondary picture, a banner or a scene picture.", "依用途做一張圖，可用作主圖、副圖、Banner 或場景圖。", "メイン画像、サブ画像、バナー、シーン画像として使用できる画像を目的に応じて作成します。", "목적에 맞게 사진을 만드세요. 메인 사진, 보조 사진, 배너, 장면 사진 등으로 활용 가능합니다.", "Hacer una imagen según un propósito, que puede usarse como imagen principal, imagen secundaria, pancarta o imagen de escena.", "Créez une image selon un objectif, qui peut être utilisée comme image principale, image secondaire, bannière ou image de scène.", "Erstellen Sie je nach Zweck ein Bild, das als Hauptbild, Nebenbild, Banner oder Szenenbild verwendet werden kann.", "translation: managedUi.cb53588c"),
 		entry("upstream.managedUi.1da3ea9c", "upstreamUI", "按卖点、场景、细节、规格和包装规划连贯的详情页，逐张可调。", "Plan coherent detail pages based on selling points, scenes, details, specifications and packaging, which can be adjusted one by one.", "依賣點、場景、細節、規格和包裝規劃連貫的詳情頁，逐張可調。", "セールスポイント、シーン、ディテール、仕様、パッケージングに基づいて一貫した詳細ページを計画し、それらを 1 つずつ調整できます。", "셀링 포인트, 장면, 세부 사항, 사양 및 포장을 기반으로 일관성 있는 상세 페이지를 계획하며 하나씩 조정할 수 있습니다.", "Planificar páginas de detalles coherentes basadas en argumentos de venta, escenas, detalles, especificaciones y empaques, que se puedan ajustar uno por uno.", "Planifiez des pages de détails cohérentes basées sur les arguments de vente, les scènes, les détails, les spécifications et le packaging, qui peuvent être ajustés un par un.", "Planen Sie kohärente Detailseiten basierend auf Verkaufsargumenten, Szenen, Details, Spezifikationen und Verpackungen, die einzeln angepasst werden können.", "translation: managedUi.1da3ea9c"),
 		entry("upstream.managedUi.142a6e0", "upstreamUI", "按卖点逐张展开", "Expand pictures one by one according to selling points", "按賣點逐張展開", "セールスポイントに応じて写真を 1 つずつ展開します", "판매 포인트에 따라 사진을 하나씩 확장", "Ampliar imágenes una por una según los puntos de venta.", "Agrandissez les images une par une en fonction des arguments de vente", "Erweitern Sie die Bilder einzeln nach Verkaufsargumenten", "translation: managedUi.142a6e0"),
+	}
+}
+
+func builtinEntryBatch78() []Entry {
+	return []Entry{
 		entry("upstream.managedUi.9c48ada1", "upstreamUI", "按名称", "By name", "按名稱", "名前で", "이름으로", "Por nombre", "Par nom", "Mit Namen", "translation: managedUi.9c48ada1"),
 		entry("upstream.managedUi.8af421f1", "upstreamUI", "按节点", "By node", "按節點", "ノード別", "노드별", "Por nodo", "Par nœud", "Nach Knoten", "translation: managedUi.8af421f1"),
 		entry("upstream.managedUi.ddf48c54", "upstreamUI", "按节点数量", "By number of nodes", "按節點數量", "ノード数による", "노드 수별", "Por número de nodos", "Par nombre de nœuds", "Nach Anzahl der Knoten", "translation: managedUi.ddf48c54"),
 		entry("upstream.managedUi.f1d339d4", "upstreamUI", "按选定方向生成图片方案", "Generate picture scheme according to selected direction", "依選定方向產生圖片方案", "選択された方向に従って画像スキームを生成する", "선택한 방향에 따라 그림 구성표 생성", "Generar esquema de imagen según la dirección seleccionada.", "Générer un schéma d'image selon la direction sélectionnée", "Bildschema entsprechend der ausgewählten Richtung erstellen", "translation: managedUi.f1d339d4"),
 		entry("upstream.managedUi.ae5a7786", "upstreamUI", "描述想要的画面，或点选描述短语", "Describe the desired screen, or click the description phrase", "描述想要的畫面，或點選描述短語", "希望の画面を説明するか、説明文をクリックしてください", "원하는 화면을 설명하시거나, 설명문구를 클릭하세요", "Describe la pantalla deseada o haz clic en la frase descriptiva.", "Décrivez l'écran souhaité ou cliquez sur la phrase de description", "Beschreiben Sie den gewünschten Bildschirm oder klicken Sie auf den Beschreibungssatz", "translation: managedUi.ae5a7786"),
 		entry("upstream.managedUi.bd162103", "upstreamUI", "搜索素材", "Search for materials", "搜尋素材", "素材を探す", "자료 검색", "Búsqueda de materiales", "Recherche de matériaux", "Suche nach Materialien", "translation: managedUi.bd162103"),
-	}
-}
-
-func builtinEntryBatch78() []Entry {
-	return []Entry{
 		entry("upstream.managedUi.769eafc3", "upstreamUI", "支付FM", "Pay FM", "支付FM", "Pay FM", "Pay FM", "Paga FM", "Payer FM", "Pay FM", "translation: managedUi.769eafc3"),
 		entry("upstream.managedUi.b2c14a02", "upstreamUI", "支付FM个人免签/签约聚合支付适配器，支持微信/支付宝扫码或收银台跳转。", "Pay FM personal visa-free/contract aggregation payment adapter, supports WeChat/Alipay code scanning or cashier jump.", "支付FM個人免簽/簽約聚合支付適配器，支援微信/支付寶掃碼或收銀台跳轉。", "Pay FM パーソナル ビザフリー/契約集約支払いアダプター、WeChat/Alipay コード スキャンまたはレジ ジャンプをサポートします。", "Pay FM 개인 비자 면제/계약 집계 결제 어댑터, WeChat/Alipay 코드 스캔 또는 출납원 점프를 지원합니다.", "Adaptador de pago de agregación de contrato/sin visa personal Pay FM, admite escaneo de códigos WeChat/Alipay o salto de cajero.", "Adaptateur de paiement personnel Pay FM sans visa/agrégation de contrat, prend en charge la numérisation de code WeChat/Alipay ou le saut de caissier.", "Pay FM-Adapter für persönliche visumfreie/vertragliche Aggregation-Zahlungen, unterstützt das Scannen von WeChat/Alipay-Codes oder den Kassierersprung.", "translation: managedUi.b2c14a02"),
 		entry("upstream.managedUi.613aac07", "upstreamUI", "支付、查单、关单与对账", "Payment, order checking, order closing and reconciliation", "支付、查單、關單與對帳", "支払い、注文の確認、注文の完了および調整", "결제, 주문 확인, 주문 마감 및 조정", "Pago, verificación de pedidos, cierre de pedidos y conciliación", "Paiement, contrôle des commandes, clôture des commandes et rapprochement", "Zahlung, Auftragsprüfung, Auftragsabschluss und Abgleich", "translation: managedUi.613aac07"),
@@ -20825,17 +20831,17 @@ func builtinEntryBatch78() []Entry {
 		entry("upstream.managedUi.9df8af3b", "upstreamUI", "浏览器访问对象资源时使用的签名地址有效期。", "Lifetime of signed URLs used by browsers to read objects.", "瀏覽器訪問物件資源時使用的簽名地址有效期。", "ブロガーが使用するサインされたURLの寿命は、オブジェクトを読むために使用されます。", "서명된 URL의 수명은 브라우저가 항목을 읽기 위해 사용합니다.", "Vida de URLs firmados utilizados por los navegadores para leer objetos.", "La durée de vie des URL signés utilisés par les navigateurs pour lire les objets.", "Lebensdauer von unterschriebenen URLs, die von Browsern verwendet werden, um Objekte zu lesen.", "translation: managedUi.9df8af3b"),
 		entry("upstream.managedUi.74658aa7", "upstreamUI", "清除 {stage} 的备用模型", "Clear the backup model of {stage}", "清除 {stage} 的備用模型", "{stage}のバックアップモデルをクリアします", "{stage}의 백업 모델 지우기", "Borrar el modelo de respaldo de {stage}", "Effacer le modèle de sauvegarde de {stage}", "Löschen Sie das Sicherungsmodell von {stage}", "translation: managedUi.74658aa7"),
 		entry("upstream.managedUi.9d2cc2e5", "upstreamUI", "渠道凭证配置", "Channel voucher configuration", "通路憑證配置", "チャネルバウチャーの設定", "채널 바우처 구성", "Configuración del vale del canal", "Configuration du coupon de canal", "Konfiguration des Kanalgutscheins", "translation: managedUi.9d2cc2e5"),
+	}
+}
+
+func builtinEntryBatch79() []Entry {
+	return []Entry{
 		entry("upstream.managedUi.86ee121e", "upstreamUI", "渠道熔断打开后拒绝请求的时间。", "Time the channel rejects requests after the circuit breaker opens.", "渠道熔斷開啟後拒絕請求的時間。", "チャンネルがリクエストを拒否する時間は、サークルブレーカーが開く後に。", "채널이 요청을 거부하는 시간은 회로 파이커가 열린 후입니다.", "El tiempo que el canal rechaza las solicitudes después de que el interruptor de circuito se abre.", "Le temps que le canal rejette les demandes après que le débris de circuit s'ouvre.", "Zeit, in der der Kanal Anfragen abgibt, nachdem der Kreisbreaker geöffnet wird.", "translation: managedUi.86ee121e"),
 		entry("upstream.managedUi.3c452b70", "upstreamUI", "渠道选择跟随系统时采用的并发上限。", "Concurrency limit for channels that follow the system setting.", "渠道選擇跟隨系統時採用的併發上限。", "システム設定に従うチャンネルの為の通貨制限。", "시스템 설정을 따르는 채널에 대한 통화 제한.", "Limita de cambio para los canales que siguen la configuración del sistema.", "Limite de concurrence pour les canaux qui suivent les paramètres du système.", "Konkursgrenze für Kanäle, die die Systeminstellung folgen.", "translation: managedUi.3c452b70"),
 		entry("upstream.managedUi.b56ec5ac", "upstreamUI", "火山引擎 TOS", "Volcengine TOS", "火山引擎 TOS", "Volcengine TOS", "Volcengine TOS", "Volcengine TOS", "Volcengine TOS", "Volcengine TOS", "translation: managedUi.b56ec5ac"),
 		entry("upstream.managedUi.7303c0c5", "upstreamUI", "熔断失败次数", "Circuit breaker failure threshold", "熔斷失敗次數", "サーキットブレーカーの失敗の限界", "실패한 회로 파괴기", "El límite de fracaso del circuito", "Le défaut de l'interrupteur de circuit", "Kreisbreaker Fehlgrenze", "translation: managedUi.7303c0c5"),
 		entry("upstream.managedUi.e9a89836", "upstreamUI", "熔断持续时间", "Circuit breaker duration", "熔斷持續時間", "サーキットブレーカーの期間", "회로 파괴기 기간", "Duración del circuito de la rotación", "Durée de la rupture du circuit", "Dauer des Kreuzbrüchers", "translation: managedUi.e9a89836"),
 		entry("upstream.managedUi.262915f7", "upstreamUI", "独立页面", "Independent page", "獨立頁面", "独立したページ", "독립 페이지", "Página independiente", "Page indépendante", "Unabhängige Seite", "translation: managedUi.262915f7"),
-	}
-}
-
-func builtinEntryBatch79() []Entry {
-	return []Entry{
 		entry("upstream.managedUi.bcd5ab23", "upstreamUI", "独立页面登录", "Independent page login", "獨立頁面登錄", "独立したページへのログイン", "독립페이지 로그인", "Inicio de sesión de página independiente", "Connexion à la page indépendante", "Unabhängige Seitenanmeldung", "translation: managedUi.bcd5ab23"),
 		entry("upstream.managedUi.108e3333", "upstreamUI", "生成协议", "Generation protocol", "生成協定", "生成プロトコル", "생성 프로토콜", "Protocolo de generación", "Protocole de génération", "Generierungsprotokoll", "translation: managedUi.108e3333"),
 		entry("upstream.managedUi.dfe34724", "upstreamUI", "电商 Agent 内", "Within e-commerce Agent", "電商 Agent 內", "電子商取引エージェント内", "전자상거래 대리점 내", "Dentro del Agente de comercio electrónico", "Au sein de l'agent de commerce électronique", "Innerhalb des E-Commerce-Agenten", "translation: managedUi.dfe34724"),
@@ -21086,17 +21092,17 @@ func builtinEntryBatch79() []Entry {
 		entry("creation.creation.b88848da5445012d", "creationUI", "自定义（每秒 {value1} 字，每 {value2} 秒一句）", "Custom ({value1} characters/s, one line every {value2}s)", "自訂（每秒 {value1} 字，每 {value2} 秒一句）", "カスタム（毎秒{value1}文字、{value2}秒ごとに1行）", "사용자 지정(초당 {value1}자, {value2}초마다 한 줄)", "Personalizado ({value1} caracteres/s, una línea cada {value2}s)", "Personnalisé ({value1} caractères/s, une réplique toutes les {value2} s)", "Eigene Werte ({value1} Zeichen/s, ein Satz alle {value2} s)", "supdance-creation: creation.b88848da5445012d"),
 		entry("creation.creation.5df9c07c81b0ce18", "creationUI", "本段暂不能生成", "This segment cannot be generated yet", "本段暫不能生成", "このセグメントはまだ生成できません", "이 구간은 아직 생성할 수 없습니다", "Este segmento aún no se puede generar", "Ce segment ne peut pas encore être généré", "Dieses Segment kann noch nicht erzeugt werden", "supdance-creation: creation.5df9c07c81b0ce18"),
 		entry("creation.creation.11af39cf036f7c34", "creationUI", "，失败 {value1} 项", ", {value1} failed", "，失敗 {value1} 項", "、{value1}件失敗", ", {value1}개 실패", ", {value1} falló", ", {value1} échecs", ", {value1} fehlgeschlagen", "supdance-creation: creation.11af39cf036f7c34"),
+	}
+}
+
+func builtinEntryBatch80() []Entry {
+	return []Entry{
 		entry("creation.projects.speech_rate_label", "creationUI", "语速（每秒字数）", "Speech rate (characters per second)", "語速（每秒字數）", "話速（毎秒の文字数）", "말하기 속도(초당 글자 수)", "Velocidad de voz (caracteres por segundo)", "Débit (caractères par seconde)", "Sprechtempo (Zeichen pro Sekunde)", "supdance-creation: projects.speech_rate_label"),
 		entry("creation.projects.speech_rate_short", "creationUI", "语速", "Rate", "語速", "話速", "속도", "Tarifa", "Débit", "Tempo", "supdance-creation: projects.speech_rate_short"),
 		entry("creation.projects.chars_per_second", "creationUI", "字/秒", "chars/s", "字/秒", "文字/秒", "자/초", "caracteres/s", "car./s", "Zeichen/s", "supdance-creation: projects.chars_per_second"),
 		entry("creation.projects.line_spacing_label", "creationUI", "平均每隔多少秒一句", "Average seconds between lines", "平均每隔幾秒一句", "セリフの平均間隔（秒）", "대사 사이의 평균 간격(초)", "Promedio de segundos entre líneas", "Secondes moyennes entre les répliques", "Durchschnittliche Sekunden zwischen Sätzen", "supdance-creation: projects.line_spacing_label"),
 		entry("creation.projects.every_short", "creationUI", "每", "Every", "每", "間隔", "간격", "Cada", "Toutes les", "Alle", "supdance-creation: projects.every_short"),
 		entry("creation.projects.seconds_per_line", "creationUI", "秒一句", "s per line", "秒一句", "秒/セリフ", "초/대사", "s por línea", "s par réplique", "s pro Satz", "supdance-creation: projects.seconds_per_line"),
-	}
-}
-
-func builtinEntryBatch80() []Entry {
-	return []Entry{
 		entry("creation.projects.line_max_label", "creationUI", "单句字数上限", "Maximum characters per line", "單字元數上限", "セリフの最大文字数", "대사당 최대 글자 수", "Máximo de caracteres por línea", "Caractères maximum par réplique", "Maximale Zeichen pro Satz", "supdance-creation: projects.line_max_label"),
 		entry("creation.projects.line_short", "creationUI", "单句", "Line", "單句", "セリフ", "대사", "Línea", "Réplique", "Satz", "supdance-creation: projects.line_short"),
 		entry("creation.projects.chars_limit", "creationUI", "字内", "chars max", "字內", "文字まで", "자 이하", "caracteres máximo", "car. max.", "Zeichen max.", "supdance-creation: projects.chars_limit"),
@@ -21347,17 +21353,17 @@ func builtinEntryBatch80() []Entry {
 		entry("creation.creation.28ee6a2cc9504820", "creationUI", "已从结果区移除，原图保留在资产库与创作历史", "has been removed from the results area, and the original image remains in the asset library and creation history.", "已從結果區移除，原圖保留在資產庫與創作歷史", "は結果領域から削除され、元のイメージはアセット ライブラリと作成履歴に残ります。", "가 결과 영역에서 제거되었으며 원본 이미지는 자산 라이브러리 및 생성 기록에 남아 있습니다.", "se eliminó del área de resultados y la imagen original permanece en la biblioteca de recursos y en el historial de creación.", "Retiré de la zone de résultats ; l'image d'origine est conservée dans la bibliothèque d'assets et l'historique de création", "Aus dem Ergebnisbereich entfernt; das Originalbild bleibt in der Asset-Bibliothek und im Erstellungsverlauf erhalten", "supdance-creation: creation.28ee6a2cc9504820"),
 		entry("creation.creation.5963c0cb7af1de7f", "creationUI", "请等待当前提交或上传完成", "Please wait for the current submission or upload to be completed", "请等待当前提交或上传完成", "現在の送信またはアップロードが完了するまでお待ちください。", "현재 제출 또는 업로드가 완료될 때까지 기다리십시오.", "Espere a que se complete el envío o la carga actual.", "Veuillez attendre la fin de la soumission ou du téléversement en cours", "Bitte warten Sie, bis die aktuelle Übermittlung oder das aktuelle Hochladen abgeschlossen ist", "supdance-creation: creation.5963c0cb7af1de7f"),
 		entry("creation.creation.db0dc989c1e0a189", "creationUI", "逐屏参考按原长图顺序生成，调整屏数请重新策划", "The screen-by-screen reference is generated in the order of the original long pictures. Please re-plan when adjusting the number of screens.", "逐屏參考依原長圖順序生成，調整屏數請重新規劃", "画面ごとの参照は、元の長いピクチャの順序で生成されます。画面数を調整する場合は再計画してください。", "화면별 참조는 원본 장사진 순서대로 생성됩니다. 화면 수 조정 시 다시 계획하시기 바랍니다.", "La referencia pantalla por pantalla se genera en el orden de las imágenes largas originales. Vuelva a planificar cuando ajuste el número de pantallas.", "Les références écran par écran sont générées dans l'ordre de la longue image d'origine ; pour ajuster le nombre d'écrans, veuillez replanifier", "Die Bildschirm-für-Bildschirm-Referenzen werden in der Reihenfolge des ursprünglichen Langbilds generiert; passen Sie die Anzahl der Bildschirme an, planen Sie bitte neu", "supdance-creation: creation.db0dc989c1e0a189"),
+	}
+}
+
+func builtinEntryBatch81() []Entry {
+	return []Entry{
 		entry("creation.creation.4f891793ee25a555", "creationUI", "SKU 图片数量请在对应 SKU 中修改后重新策划", "Please modify the number of SKU pictures in the corresponding SKU and then plan again.", "SKU 圖片數量請在對應 SKU 中修改後重新規劃", "対応する SKU の SKU 画像の数を変更して、再度計画してください。", "해당 SKU의 SKU 사진 수를 수정한 후 다시 계획하세요.", "Modifique la cantidad de imágenes de SKU en el SKU correspondiente y luego planifique nuevamente.", "Modifiez le nombre d'images SKU dans le SKU concerné, puis replanifiez", "Ändern Sie die Anzahl der SKU-Bilder im jeweiligen SKU und planen Sie dann neu", "supdance-creation: creation.4f891793ee25a555"),
 		entry("creation.creation.c9301592c5f7f08a", "creationUI", "策划未完成", "planning not completed", "策划未完成", "計画が完了していません", "계획이 완료되지 않았습니다.", "planificación no completada", "Planification inachevée", "Planung nicht abgeschlossen", "supdance-creation: creation.c9301592c5f7f08a"),
 		entry("creation.creation.6322d3affbc90c26", "creationUI", "商品分析未完成", "Product analysis not completed", "商品分析未完成", "製品分析が完了していません", "제품 분석이 완료되지 않았습니다.", "Análisis del producto no completado", "Analyse du produit inachevée", "Produktanalyse nicht abgeschlossen", "supdance-creation: creation.6322d3affbc90c26"),
 		entry("creation.creation.db7cb14759c8d0a4", "creationUI", "参考图模式需先由 Agent 分析，请使用 AI 策划", "reference picture pattern needs to be analyzed by Agent first, please use AI planning", "參考圖模式需先由 Agent 分析，請使用 AI 規劃", "の参照画像パターンは、最初にエージェントによって分析される必要があります。AI プランニングを使用してください。", "참조 사진 패턴은 먼저 에이전트에서 분석해야 합니다. AI 계획을 사용하십시오.", "el patrón de imagen de referencia debe ser analizado primero por el Agente; utilice la planificación de IA", "Le mode image de référence doit d'abord être analysé par l'Agent, veuillez utiliser la planification IA", "Der Referenzbildmodus muss zuerst vom Agenten analysiert werden, bitte nutzen Sie die KI-Planung", "supdance-creation: creation.db7cb14759c8d0a4"),
 		entry("creation.creation.77650e8f50abbc43", "creationUI", "本轮图片仍在生成，完成后可按当前配置继续创作", "This round of pictures is still being generated. After completion, you can continue to create according to the current configuration.", "本輪圖片仍在生成，完成後可依目前配置繼續創作", "このラウンドの画像はまだ生成中です。完了後は、現在の構成に従って作成を続けることができます。", "이 사진 라운드는 아직 생성 중입니다. 완료 후에는 현재 구성에 따라 계속 생성할 수 있습니다.", "Esta ronda de imágenes aún se está generando. Una vez completado, puede continuar creando de acuerdo con la configuración actual.", "Les images de ce tour sont encore en génération ; une fois terminées, vous pourrez continuer à créer selon la configuration actuelle", "Die Bilder dieser Runde werden noch generiert; nach Abschluss können Sie mit der aktuellen Konfiguration weiter erstellen", "supdance-creation: creation.77650e8f50abbc43"),
 		entry("creation.creation.214aab2781ecf589", "creationUI", "请等待图片服务端报价后再生成", "Please wait for the quotation from the image server before generating", "請等待圖片服務端報價後再生成", "画像サーバーからの引用を待ってから生成してください", "생성하기 전에 이미지 서버로부터 견적을 기다리십시오.", "Espere la cotización del servidor de imágenes antes de generar", "Veuillez attendre le devis du serveur d'images avant de générer", "Bitte warten Sie auf das Angebot des Bildservers, bevor Sie generieren", "supdance-creation: creation.214aab2781ecf589"),
-	}
-}
-
-func builtinEntryBatch81() []Entry {
-	return []Entry{
 		entry("creation.creation.585b353aacad2ffa", "creationUI", "图片正在上传，请完成后再添加", "Picture is being uploaded, please add it after completion", "圖片正在上傳，請完成後再加入", "画像をアップロード中です。完了後に追加してください", "사진을 업로드하는 중입니다. 완료 후 추가하세요.", "La imagen se está cargando, agréguela una vez completada", "L'image est en cours de téléversement, veuillez terminer avant d'ajouter", "Das Bild wird hochgeladen, bitte fügen Sie erst nach Abschluss hinzu", "supdance-creation: creation.585b353aacad2ffa"),
 		entry("creation.creation.f087a95277ca9e7b", "creationUI", "正在恢复电商项目与分析任务…", "is resuming e-commerce projects and analysis tasks...", "正在恢復電商專案與分析任務…", "は、e コマース プロジェクトと分析タスクを再開しています...", "는 전자상거래 프로젝트 및 분석 작업을 재개하고 있습니다...", "está retomando proyectos de comercio electrónico y tareas de análisis...", "Restauration du projet e-commerce et des tâches d'analyse…", "E-Commerce-Projekt und Analyseaufgaben werden wiederhergestellt…", "supdance-creation: creation.f087a95277ca9e7b"),
 		entry("creation.creation.fa9400a89c88d78f", "creationUI", "图片导出未完成：{value1}。可以重新点击导出。", "Image export not completed: {value1}. You can click Export again.", "图片导出未完成：{value1}。可以重新点击导出。", "画像のエクスポートが完了していません: {value1}。再度「エクスポート」をクリックします。", "이미지 내보내기가 완료되지 않았습니다: {value1}. 내보내기를 다시 클릭할 수 있습니다.", "Exportación de imagen no completada: {value1}. Puede hacer clic en Exportar nuevamente.", "Export d'image non terminé : {value1}. Vous pouvez cliquer à nouveau sur exporter.", "Bildexport nicht abgeschlossen: {value1}. Sie können den Export erneut klicken.", "supdance-creation: creation.fa9400a89c88d78f"),
@@ -21608,17 +21614,17 @@ func builtinEntryBatch81() []Entry {
 		entry("creation.creation.0fd9f31b3951329a", "creationUI", "第{value1}张图片缺少{value2}", "{value1} picture is missing {value2}", "第{value1}張圖片缺少{value2}", "{value1} の写真がありません {value2}", "{value1} 사진에 {value2}가 없습니다.", "{value1} falta la imagen {value2}", "L'image {value1} manque {value2}", "Bei Bild {value1} fehlt {value2}", "supdance-creation: creation.0fd9f31b3951329a"),
 		entry("creation.creation.e01f1bbe9f2e0e9d", "creationUI", "第{value1}张图片的{value2}格式错误", "{value2} format error for {value1} picture", "第{value1}張圖片的{value2}格式錯誤", "{value1}画像の{value2}フォーマットが間違っています", "{value1} 사진의 {value2} 형식이 잘못되었습니다.", "{value2} error de formato para {value1} imagen", "Le format {value2} de l'image {value1} est incorrect", "Das Format {value2} von Bild {value1} ist fehlerhaft", "supdance-creation: creation.e01f1bbe9f2e0e9d"),
 		entry("creation.creation.507c660335577325", "creationUI", "第{value1}张图片类型与所选创作类型不一致，请重新策划", "The {value1} picture type is inconsistent with the selected creation type, please plan again", "第{value1}張圖片類型與所選創作類型不一致，請重新規劃", "{value1} 画像タイプは、選択した作成タイプと一致しません。再度計画してください。", "{value1} 사진 유형이 선택한 생성 유형과 일치하지 않습니다. 다시 계획하십시오.", "El tipo de imagen {value1} no coincide con el tipo de creación seleccionado, planifique nuevamente", "Le type de l'image {value1} ne correspond pas au type de création sélectionné, veuillez replanifier", "Der Typ von Bild {value1} stimmt nicht mit dem ausgewählten Erstellungstyp überein, bitte neu planen", "supdance-creation: creation.507c660335577325"),
+	}
+}
+
+func builtinEntryBatch82() []Entry {
+	return []Entry{
 		entry("creation.creation.cf6d3d1ac2da586b", "creationUI", "第{value1}张图片未关联真实 SKU", "The {value1} picture is not associated with the real SKU", "第{value1}張圖片未關聯真實 SKU", "{value1} 画像は実際の SKU に関連付けられていません", "{value1} 사진은 실제 SKU와 연결되어 있지 않습니다.", "La imagen {value1} no está asociada con el SKU real", "L'image {value1} n'est associée à aucun SKU réel", "Bild {value1} ist keiner echten SKU zugeordnet", "supdance-creation: creation.cf6d3d1ac2da586b"),
 		entry("creation.creation.33dfa848f23a26e3", "creationUI", "第{value1}张缺少营销物料配置，请重新选择", "No. {value1} is missing marketing material configuration, please select again", "第{value1}張缺少行銷物料配置，請重新選擇", "番号 {value1} にマーケティング資料構成がありません。もう一度選択してください。", "번호 {value1}에 마케팅 자료 구성이 누락되었습니다. 다시 선택하십시오.", "No. {value1} falta la configuración del material de marketing, seleccione nuevamente", "L'image {value1} n'a pas de configuration de supports marketing, veuillez resélectionner", "Für Bild {value1} fehlt die Marketingmaterial-Konfiguration, bitte neu auswählen", "supdance-creation: creation.33dfa848f23a26e3"),
 		entry("creation.creation.388b2e5de10e660b", "creationUI", "第{value1}张缺少可直接上图的文案，请重新策划；不能用内部画面说明代替文案", "The first picture {value1} lacks copywriting that can be directly uploaded to the picture, please re-plan; internal screen descriptions cannot be used instead of copywriting", "第{value1}張缺少可直接上圖的文案，請重新規劃；不能用內部畫面說明代替文案", "最初の写真 {value1} には、写真に直接アップロードできるコピーライティングがありません。再計画してください。内部画面の説明をコピーライティングの代わりに使用することはできません", "첫 번째 사진 {value1}에는 사진에 직접 업로드할 수 있는 카피라이팅이 부족합니다. 다시 계획하세요. 내부 화면 설명은 카피라이팅 대신 사용할 수 없습니다.", "La primera imagen {value1} carece de redacción que se pueda cargar directamente en la imagen; vuelva a planificarla; Las descripciones de la pantalla interna no se pueden utilizar en lugar de redacción.", "L'image {value1} n'a pas de texte directement intégrable à l'image, veuillez replanifier ; les descriptions internes de l'image ne peuvent pas remplacer le texte", "Bei Bild {value1} fehlt ein direkt verwendbarer Text, bitte neu planen; interne Bildbeschreibungen dürfen den Text nicht ersetzen", "supdance-creation: creation.388b2e5de10e660b"),
 		entry("creation.creation.a7ab7e00a6416039", "creationUI", "第{value1}张含高风险宣传词，请修改文案后重新策划", "No. {value1} contains high-risk propaganda, please modify the copy and plan again.", "第{value1}張含高風險宣傳詞，請修改文案後重新規劃", "No. {value1} にはハイリスクなプロパガンダが含まれています。コピーを修正して再度計画してください。", "번호 {value1}에는 고위험 선전이 포함되어 있습니다. 사본을 수정하고 다시 계획하십시오.", "No. {value1} contiene propaganda de alto riesgo, modifique la copia y planifique nuevamente.", "L'image {value1} contient des termes promotionnels à haut risque, veuillez modifier le texte puis replanifier", "Bild {value1} enthält riskante Werbeaussagen, bitte den Text ändern und neu planen", "supdance-creation: creation.a7ab7e00a6416039"),
 		entry("creation.creation.b95887b4ca9b305a", "creationUI", "第{value1}张缺少 Agent 策划的性能/体验角度，请重新策划", "The first {value1} picture lacks the performance/experience perspective of Agent planning, please plan again.", "第{value1}張缺少 Agent 規劃的效能/體驗角度，請重新規劃", "最初の {value1} の図には、エージェント計画のパフォーマンス/エクスペリエンスの観点が欠けています。再度計画してください。", "첫 번째 {value1} 사진은 에이전트 계획의 성능/경험 관점이 부족합니다. 다시 계획하십시오.", "La primera imagen {value1} carece de la perspectiva de desempeño/experiencia de la planificación del agente; planifique nuevamente.", "L'image {value1} manque l'angle performance/expérience planifié par l'Agent, veuillez replanifier", "Bei Bild {value1} fehlt der von Agent geplante Leistungs-/Erlebnis-Aspekt, bitte neu planen", "supdance-creation: creation.b95887b4ca9b305a"),
 		entry("creation.creation.6e786e591aa0bae6", "creationUI", "第{value1}张性能/体验角度缺少策划分类，请重新策划", "The performance/experience perspective of {value1} is missing planning classification, please plan again.", "第{value1}張效能/體驗角度缺少規劃分類，請重新規劃", "{value1} のパフォーマンス/エクスペリエンスの観点に計画分類がありません。再度計画してください。", "{value1}의 성능/경험 관점에서 계획 분류가 누락되었습니다. 다시 계획하시기 바랍니다.", "A la perspectiva de desempeño/experiencia de {value1} le falta la clasificación de planificación, planifique nuevamente.", "La carte {value1} n'a pas de catégorie de planification du point de vue des performances/de l'expérience, veuillez la replanifier", "Karte {value1} fehlt eine Planungskategorie aus Leistungs-/Erlebnissicht, bitte neu planen", "supdance-creation: creation.6e786e591aa0bae6"),
-	}
-}
-
-func builtinEntryBatch82() []Entry {
-	return []Entry{
 		entry("creation.creation.e18b4167c15e4140", "creationUI", "第{value1}张缺少具体的信息组件与版式设计，请重新策划", "The first picture {value1} lacks specific information components and layout design, please plan again.", "第{value1}張缺少具體的資訊元件與版式設計，請重新規劃", "最初の画像 {value1} には、特定の情報コンポーネントとレイアウト設計が不足しています。再度計画してください。", "첫 번째 사진 {value1}에는 특정 정보 구성 요소와 레이아웃 디자인이 부족합니다. 다시 계획하십시오.", "La primera imagen {value1} carece de componentes de información específicos y diseño de diseño, planifique nuevamente.", "La carte {value1} ne comporte pas de composants d'information ni de mise en page spécifiques, veuillez la replanifier", "Karte {value1} enthält keine konkreten Informationskomponenten und kein Layoutdesign, bitte neu planen", "supdance-creation: creation.e18b4167c15e4140"),
 		entry("creation.creation.a6022af60a03652a", "creationUI", "第{value1}张的信息组件与文字模式不匹配，请重新策划", "The information component of {value1} does not match the text mode. Please plan again.", "第{value1}張的訊息元件與文字模式不匹配，請重新規劃", "{value1} の情報コンポーネントはテキスト モードと一致しません。もう一度計画してください。", "{value1}의 정보 구성 요소가 텍스트 모드와 일치하지 않습니다. 다시 계획해주세요.", "El componente de información de {value1} no coincide con el modo texto. Por favor planifique de nuevo.", "Les composants d'information de la carte {value1} ne correspondent pas au mode de texte, veuillez la replanifier", "Die Informationskomponenten von Karte {value1} stimmen nicht mit dem Textmuster überein, bitte neu planen", "supdance-creation: creation.a6022af60a03652a"),
 		entry("creation.creation.2ea39f9ecaae189a", "creationUI", "策划结果中的商品事实与质检项格式错误，请重新策划", "The product facts and quality inspection items in the planning results are in the wrong format, please plan again.\nThe planning number of", "規劃結果中的商品事實與質檢項格式錯誤，請重新規劃", "計画結果の製品ファクトと品質検査項目の形式が間違っています。計画をやり直してください。", "기획결과 상품팩트 및 품질검사 항목의 형식이 잘못되었으니 다시 기획해주시기 바랍니다.", "Los datos del producto y los elementos de inspección de calidad en los resultados de la planificación están en el formato incorrecto; planifique nuevamente.\nEl número de planificación de", "Les informations produit du résultat de planification et le format des éléments de contrôle qualité sont incorrects, veuillez replanifier", "Die Produktfakten im Planungsergebnis und das Format der Qualitätsprüfungselemente sind fehlerhaft, bitte neu planen", "supdance-creation: creation.2ea39f9ecaae189a"),
@@ -21869,17 +21875,17 @@ func builtinEntryBatch82() []Entry {
 		entry("creation.creation.624fbf3d169c505b", "creationUI", "巴黎咖啡馆桌面，胶片颗粒与暖色褪色调，优雅衬线标题", "Paris cafe tabletop, film grain and warm faded tones, elegant serif title", "巴黎咖啡館桌面，膠卷顆粒與暖色褪色調，優雅襯線標題", "パリのカフェのテーブルトップ、フィルムグレインと温かみのあるフェードトーン、エレガントなセリフタイトル", "파리 카페 테이블탑, 필름 그레인 및 따뜻한 빛바랜 톤, 우아한 세리프 제목", "Tablero de cafetería Paris, grano de película y tonos cálidos y descoloridos, elegante título serif", "Bureau de café parisien, grain argentique et tons délavés chauds, titre serif élégant", "Pariser Café-Schreibtisch, Filmkorn und warme verblasste Töne, elegante Serifen-Überschrift", "supdance-creation: creation.624fbf3d169c505b"),
 		entry("creation.creation.3e01ead4a9526ecd", "creationUI", "通透自然光与浅蓝白色调，干净桌面与绿植，细黑体短句", "Transparent natural light and light blue and white tones, clean desktop and green plants, short sentences in thin black text", "通透自然光與淺藍白色調，乾淨桌面與綠植，細黑體短句", "透明な自然光と水色と白の色調、きれいなデスクトップと緑の植物、細い黒いテキストの短い文", "투명한 자연광과 연한 파란색과 흰색 톤, 깔끔한 바탕 화면과 녹색 식물, 얇은 검정색 텍스트의 짧은 문장", "Luz natural transparente y tonos celestes y blancos, escritorio limpio y plantas verdes, frases cortas en texto negro fino", "Lumière naturelle lumineuse et tons bleu clair et blanc, bureau épuré et plantes vertes, courtes phrases en fine typographie sans-serif", "Helles natürliches Licht und Hellblau-Weißtöne, aufgeräumter Schreibtisch mit Grünpflanzen, kurze Sätze in feiner serifenloser Schrift", "supdance-creation: creation.3e01ead4a9526ecd"),
 		entry("creation.creation.8d268cad681e20f1", "creationUI", "深酒红与黑色的戏剧暗场，烛光与丝绒，尖锐衬线标题", "Dramatic dark scene of deep burgundy and black, candlelight and velvet, sharp serif title", "深酒紅與黑色的戲劇暗場，燭光與絲絨，尖銳襯線標題", "深みのあるワインレッドとブラック、キャンドルライトとベルベットのドラマチックなダークシーン、シャープなセリフタイトル", "짙은 버건디와 블랙, 촛불과 벨벳의 드라마틱한 어두운 장면, 날카로운 세리프 타이틀", "Dramática escena oscura de color burdeos intenso y negro, luz de velas y terciopelo, título con serifa nítida", "Mise en scène dramatique en rouge vin profond et noir, lumière de bougies et velours, titre serif acéré", "Dramatische Dunkelheit in tiefem Weinrot und Schwarz, Kerzenlicht und Samt, scharfe Serifen-Überschrift", "supdance-creation: creation.8d268cad681e20f1"),
+	}
+}
+
+func builtinEntryBatch83() []Entry {
+	return []Entry{
 		entry("creation.creation.789de18c464dd77e", "creationUI", "极光渐变与流光粒子，蓝紫梦幻色调，漂浮构图与细线字", "Aurora gradient and flowing particles, blue and purple dreamy tones, floating composition and thin line characters", "極光漸變與流光粒子，藍紫夢幻色調，漂浮構圖與細線字", "オーロラのグラデーションと流れる粒子、青と紫の幻想的なトーン、浮遊する構図と細い線の文字", "오로라 그라데이션 및 흐르는 입자, 파란색과 보라색 몽환적인 톤, 부동 구성 및 가는 선 문자", "Degradado de aurora y partículas fluidas, tonos de ensueño azules y morados, composición flotante y personajes de líneas finas", "Dégradé d'aurore et particules lumineuses fluides, tons oniriques bleu-violet, composition flottante et fines lignes typographiques", "Polarlicht-Verlauf und fließende Lichtpartikel, traumhafte Blau-Violett-Töne, schwebende Komposition und feine Schriftlinien", "supdance-creation: creation.789de18c464dd77e"),
 		entry("creation.creation.078838da4218490b", "creationUI", "字体", "font", "字體", "フォント", "글꼴", "fuente", "Police", "Schriftart", "supdance-creation: creation.078838da4218490b"),
 		entry("creation.creation.e9d39f33ec28a0d7", "creationUI", "改写风格：{value1}", "Rewrite style: {value1}", "改寫風格：{value1}", "書き換えスタイル: {value1}", "재작성 스타일: {value1}", "Estilo de reescritura: {value1}", "Réécrire le style : {value1}", "Stil umschreiben: {value1}", "supdance-creation: creation.e9d39f33ec28a0d7"),
 		entry("creation.common.custom", "creationUI", "自定义", "Custom", "自訂", "カスタム", "사용자 지정", "Personalizado", "Personnalisé", "Benutzerdefiniert", "supdance-creation: common.custom"),
 		entry("creation.creation.4e982299f3fc680e", "creationUI", "选择视觉风格", "Select visual style", "選擇視覺風格", "ビジュアル スタイルを選択してください", "비주얼 스타일 선택", "Seleccionar estilo visual", "Choisir un style visuel", "Visuellen Stil auswählen", "supdance-creation: creation.4e982299f3fc680e"),
 		entry("creation.creation.7d4fd03b89c5b220", "creationUI", "种风格", "styles", "風格", "スタイル", "스타일", "estilos", "styles", "Stile", "supdance-creation: creation.7d4fd03b89c5b220"),
-	}
-}
-
-func builtinEntryBatch83() []Entry {
-	return []Entry{
 		entry("creation.creation.1b7855135d70df8e", "creationUI", "为这件商品选一种视觉风格", "Choose a visual style for this item", "為這件商品挑選一種視覺風格", "このアイテムのビジュアル スタイルを選択してください", "이 항목의 시각적 스타일을 선택하세요", "Elige un estilo visual para este artículo", "Choisissez un style visuel pour ce produit", "Wählen Sie einen visuellen Stil für dieses Produkt", "supdance-creation: creation.1b7855135d70df8e"),
 		entry("creation.creation.3d706059692431a5", "creationUI", "已按这件商品的品类推荐 {value1} 套视觉方案，包含专属场景、字体和版式。可以按分类挑选，或点铅笔改写风格。", "has recommended {value1} set of visual solutions according to the category of this product, including exclusive scenes, fonts and layouts. You can select by category, or click on the pencil to change the style.", "已按此商品的類別推薦 {value1} 套視覺方案，包含專屬場景、字體和版面。可依分類挑選，或點鉛筆改寫風格。", "は、この製品のカテゴリに応じて、専用シーン、フォント、レイアウトを含むビジュアル ソリューションの {value1} セットを推奨しています。カテゴリ別に選択することも、鉛筆をクリックしてスタイルを変更することもできます。", "는 독점 장면, 글꼴 및 레이아웃을 포함하여 이 제품의 카테고리에 따라 {value1} 시각적 솔루션 세트를 권장했습니다. 카테고리별로 선택하거나, 연필을 클릭해 스타일을 변경할 수 있습니다.", "ha recomendado {value1} un conjunto de soluciones visuales según la categoría de este producto, incluidas escenas, fuentes y diseños exclusivos. Puede seleccionar por categoría o hacer clic en el lápiz para cambiar el estilo.", "{value1} propositions visuelles ont été recommandées pour cette catégorie de produit, avec scènes, polices et mises en page dédiées. Vous pouvez les parcourir par catégorie ou cliquer sur le crayon pour modifier le style.", "Für diese Produktkategorie wurden {value1} visuelle Vorschläge empfohlen, mit eigenen Szenen, Schriftarten und Layouts. Sie können nach Kategorie auswählen oder über den Stift den Stil anpassen.", "supdance-creation: creation.3d706059692431a5"),
 		entry("creation.creation.e563381aba3a3cb2", "creationUI", "风格分类", "style classification", "風格分類", "スタイル分類", "스타일 분류", "clasificación de estilos", "Catégorie de style", "Stilkategorie", "supdance-creation: creation.e563381aba3a3cb2"),
@@ -22130,17 +22136,17 @@ func builtinEntryBatch83() []Entry {
 		entry("creation.creation.912754eea9e14536", "creationUI", "本集开始生成参考图与段视频", "This episode begins to generate reference pictures and videos", "本集開始產生參考圖與段落影片", "このエピソードは参考画像とビデオの生成を開始します", "이 에피소드는 참조 사진과 비디오를 생성하기 시작합니다.", "Este episodio comienza a generar imágenes y videos de referencia.", "Génération des images de référence et des segments vidéo pour cet épisode", "Referenzbilder und Videosegmente für diese Episode werden generiert", "supdance-creation: creation.912754eea9e14536"),
 		entry("creation.creation.4d33a953139047d2", "creationUI", "为 {value1} 集开始生成视频？", "Start generating video for set {value1}?", "為 {value1} 集開始產生影片？", "セット {value1} のビデオ生成を開始しますか?", "{value1} 세트에 대한 비디오 생성을 시작하시겠습니까?", "¿Comenzar a generar video para el set {value1}?", "Lancer la génération vidéo pour {value1} épisodes ?", "Videoerstellung für {value1} Episoden starten?", "supdance-creation: creation.4d33a953139047d2"),
 		entry("creation.creation.23dc11b0b846bd4c", "creationUI", "会生成角色、道具与场景参考图，并按剧情段为这些集生成带对白与音效的视频，按实际用量计费。建议先挑一集生成，确认画风与角色形象后再全部开始。", "will generate reference images of characters, props and scenes, and generate videos with dialogue and sound effects for these episodes according to plot segments, and billing is based on actual usage. It is recommended to select an episode to generate first, confirm the style and character image, and then start all of them.", "會產生角色、道具與場景參考圖，並按劇情段為這些集生成帶有對白與音效的視頻，按實際用量計費。建議先挑一集生成，確認畫風與角色形象後再全部開始。", "は、キャラクター、小道具、シーンの参考画像を生成し、プロット セグメントに従ってこれらのエピソードのダイアログと効果音を含むビデオを生成します。請求は実際の使用量に基づいて行われます。最初に生成するエピソードを選択し、スタイルやキャラクターイメージを確認してからすべて開始することをお勧めします。", "는 캐릭터, 소품 및 장면의 참조 이미지를 생성하고 플롯 세그먼트에 따라 이러한 에피소드에 대한 대화 및 음향 효과가 포함된 비디오를 생성하며 청구는 실제 사용량을 기준으로 이루어집니다. 먼저 생성할 에피소드를 선택하고 스타일과 캐릭터 이미지를 확인한 후 모두 시작하는 것이 좋습니다.", "generará imágenes de referencia de personajes, accesorios y escenas, y generará videos con diálogos y efectos de sonido para estos episodios según segmentos de la trama, y ​​la facturación se basa en el uso real. Se recomienda seleccionar un episodio para generar primero, confirmar el estilo y la imagen del personaje y luego iniciarlos todos.", "Des images de référence des personnages, des accessoires et des décors seront générées, et des vidéos avec dialogues et effets sonores seront créées pour ces épisodes selon les segments de l'intrigue. La facturation est basée sur la consommation réelle. Il est conseillé de commencer par générer un épisode pour valider le style visuel et l'apparence des personnages avant de tout lancer.", "Es werden Referenzbilder für Charaktere, Requisiten und Szenen erstellt sowie Videos mit Dialog und Soundeffekten für diese Episoden nach Handlungssegmenten generiert. Die Abrechnung erfolgt nach dem tatsächlichen Verbrauch. Es wird empfohlen, zunächst eine Episode zu erstellen, um Stil und Charakterdesign zu prüfen, bevor alle gestartet werden.", "supdance-creation: creation.23dc11b0b846bd4c"),
+	}
+}
+
+func builtinEntryBatch84() []Entry {
+	return []Entry{
 		entry("creation.creation.e618bd0a0f8e4cbc", "creationUI", "全部开始", "All Start", "全部開始", "オールスタート", "올스타트", "Todo comienza", "Tout lancer", "Alle starten", "supdance-creation: creation.e618bd0a0f8e4cbc"),
 		entry("creation.creation.d8bd7eda66805da0", "creationUI", "再看看", "Look again", "再看看", "もう一度見てください", "다시 보세요", "Mira de nuevo", "Pas maintenant", "Doch nicht", "supdance-creation: creation.d8bd7eda66805da0"),
 		entry("creation.creation.ceafc9be1eef0b9c", "creationUI", "正在打开制作台", "is opening the crafting station", "正在開啟製作台", "がクラフトステーションをオープンしています", "가 제작 스테이션을 엽니다", "está abriendo la estación de elaboración", "Ouverture de l'atelier de création", "Werkstatt wird geöffnet", "supdance-creation: creation.ceafc9be1eef0b9c"),
 		entry("creation.creation.a3fb9d6ca86ded68", "creationUI", "作品不可用", "work is not available", "作品不可用", "作品は利用できません", "작업을 사용할 수 없습니다", "el trabajo no está disponible", "Œuvre indisponible", "Werk nicht verfügbar", "supdance-creation: creation.a3fb9d6ca86ded68"),
 		entry("creation.creation.d497819dbe69f948", "creationUI", "作品不存在、已被删除，或当前账号没有访问权限。", "The work does not exist, has been deleted, or the current account does not have access rights.", "作品不存在、已刪除，或目前帳號沒有存取權限。", "作品が存在しないか、削除されているか、現在のアカウントにアクセス権がありません。", "작품이 존재하지 않거나, 삭제되었거나, 현재 계정에 접근 권한이 없습니다.", "La obra no existe, ha sido eliminada o la cuenta actual no tiene derechos de acceso.", "L'œuvre n'existe pas, a été supprimée, ou votre compte n'a pas les droits d'accès.", "Das Werk existiert nicht, wurde gelöscht oder Ihr Konto hat keinen Zugriffsrecht.", "supdance-creation: creation.d497819dbe69f948"),
 		entry("creation.creation.26db2085e2c652b6", "creationUI", "本集剧本编写失败", "Failed to write the script for this episode", "本集劇本寫失敗", "このエピソードのスクリプトの作成に失敗しました", "이 에피소드의 스크립트를 작성하지 못했습니다.", "No se pudo escribir el guión de este episodio.", "Échec de la rédaction du script de cet épisode", "Fehler beim Schreiben des Skripts für diese Episode", "supdance-creation: creation.26db2085e2c652b6"),
-	}
-}
-
-func builtinEntryBatch84() []Entry {
-	return []Entry{
 		entry("creation.creation.5a3144aa43bb2890", "creationUI", "失败原因见上方提示。可以直接重新改编本集，或在底部队列全部重试。", "The reason for the failure is shown in the prompt above. You can re-adapt this episode directly, or queue it all up at the bottom and try again.", "失敗原因請見上方提示。可以直接重新改編本集，或在底部隊列全部重試。", "失敗の理由は上記のプロンプトに示されています。このエピソードを直接再調整することも、すべてを一番下にキューに入れて再試行することもできます。", "실패 이유는 위의 프롬프트에 표시됩니다. 이 에피소드를 직접 다시 적용하거나 하단에 모두 대기열에 추가하고 다시 시도할 수 있습니다.", "El motivo del error se muestra en el mensaje anterior. Puedes volver a adaptar este episodio directamente o ponerlo todo en cola en la parte inferior e intentarlo de nuevo.", "Consultez le message ci-dessus pour connaître la raison de l’échec. Vous pouvez adapter de nouveau cet épisode ou tout réessayer depuis la file d’attente du bas.", "Der Grund für den Fehler steht im Hinweis oben. Sie können diese Episode neu adaptieren oder alles in der unteren Warteschlange erneut versuchen.", "supdance-creation: creation.5a3144aa43bb2890"),
 		entry("creation.creation.bc2922519bc01dc4", "creationUI", "重新改编本集", "re-adapted this episode", "重新改編本集", "がこのエピソードを再適応しました", "는 이 에피소드를 재조정했습니다.", "readaptó este episodio", "Adapter de nouveau cet épisode", "Diese Episode neu adaptieren", "supdance-creation: creation.bc2922519bc01dc4"),
 		entry("creation.creation.0e96249bedf73d95", "creationUI", "制作已暂停，本集剧本还没开始写", "Production has been suspended and the script for this episode has not been written yet.", "製作已暫停，本集劇本還沒開始寫", "制作は中断されており、このエピソードの脚本はまだ書かれていません。", "제작이 중단되었으며 해당 에피소드의 대본은 아직 작성되지 않았습니다.", "La producción ha sido suspendida y el guión de este episodio aún no se ha escrito.", "La production est en pause, le script de cet épisode n’a pas encore été rédigé", "Die Produktion ist pausiert, das Skript für diese Episode wurde noch nicht begonnen", "supdance-creation: creation.0e96249bedf73d95"),
@@ -22391,17 +22397,17 @@ func builtinEntryBatch84() []Entry {
 		entry("creation.creation.2ca15f1e2bb7d991", "creationUI", "添加失败", "failed to add", "新增失敗", "の追加に失敗しました", "를 추가하지 못했습니다.", "no se pudo agregar", "Échec de l'ajout", "Hinzufügen fehlgeschlagen", "supdance-creation: creation.2ca15f1e2bb7d991"),
 		entry("creation.creation.ec99e5c45d648fd6", "creationUI", "更新失败", "update failed", "更新失敗", "アップデートに失敗しました", "업데이트 실패", "error en la actualización", "Échec de la mise à jour", "Aktualisierung fehlgeschlagen", "supdance-creation: creation.ec99e5c45d648fd6"),
 		entry("creation.creation.e02a055a1d86b349", "creationUI", "造型 · 妆造", "Styling · Makeup", "造型 · 妝造", "スタイリング・メイクアップ", "스타일링 · 메이크업", "Estilismo · Maquillaje", "Style · Maquillage et costumes", "Look · Styling und Kostüm", "supdance-creation: creation.e02a055a1d86b349"),
+	}
+}
+
+func builtinEntryBatch85() []Entry {
+	return []Entry{
 		entry("creation.creation.3d77b9b4c73eef19", "creationUI", "不同时期 / 身份的服装妆造；最多 {value1} 套（{value2}/{value3}）", "Clothing and makeup of different periods/identities; up to {value1} sets ({value2}/{value3})", "不同時期 / 身分的服飾妝；最多 {value1} 套（{value2}/{value3}）", "さまざまな時代/アイデンティティの服装とメイク。最大 {value1} セット ({value2}/{value3})", "다양한 시대/신원의 의류 및 메이크업; 최대 {value1} 세트({value2}/{value3})", "Ropa y maquillaje de diferentes épocas/identidades; hasta {value1} conjuntos ({value2}/{value3})", "Tenues, maquillage et costumes pour différentes époques / identités ; jusqu'à {value1} ensembles ({value2}/{value3})", "Kostüme, Styling und Make-up für verschiedene Epochen / Identitäten ; maximal {value1} Sets ({value2}/{value3})", "supdance-creation: creation.3d77b9b4c73eef19"),
 		entry("creation.creation.8ffe34dc84c3db06", "creationUI", "参考图生成中", "reference image is being generated", "參考圖生成中", "参考画像を生成中", "참조 이미지를 생성하는 중입니다.", "se está generando imagen de referencia", "Génération de l'image de référence", "Referenzbild wird generiert", "supdance-creation: creation.8ffe34dc84c3db06"),
 		entry("creation.creation.97a3666c8b9c2ccd", "creationUI", "参考图生成失败", "Reference image generation failed", "參考圖產生失敗", "参照画像の生成に失敗しました", "참조 이미지 생성 실패", "Falló la generación de la imagen de referencia", "Échec de la génération de l'image de référence", "Generierung des Referenzbilds fehlgeschlagen", "supdance-creation: creation.97a3666c8b9c2ccd"),
 		entry("creation.creation.ef6d1adeddb93d63", "creationUI", "编辑造型 {value1}", "Editorial Style {value1}", "編輯造型 {value1}", "編集スタイル {value1}", "편집 스타일 {value1}", "Estilo editorial {value1}", "Modifier le style {value1}", "Stil {value1} bearbeiten", "supdance-creation: creation.ef6d1adeddb93d63"),
 		entry("creation.creation.fa7c47ccf656c344", "creationUI", "删除造型 {value1}", "Delete appearance {value1}", "刪除造型 {value1}", "外観の削除 {value1}", "모양 삭제 {value1}", "Eliminar apariencia {value1}", "Supprimer le style {value1}", "Stil {value1} löschen", "supdance-creation: creation.fa7c47ccf656c344"),
 		entry("creation.creation.959cb9de4e4b63cd", "creationUI", "添加造型", "Add style", "添加造型", "スタイルを追加", "스타일 추가", "Agregar estilo", "Ajouter un style", "Stil hinzufügen", "supdance-creation: creation.959cb9de4e4b63cd"),
-	}
-}
-
-func builtinEntryBatch85() []Entry {
-	return []Entry{
 		entry("creation.creation.4f2e8764f6a34415", "creationUI", "指定声音失败", "Failed to specify sound", "指定聲音失敗", "サウンドの指定に失敗しました", "사운드를 지정하지 못했습니다.", "No se pudo especificar el sonido", "Échec de l'attribution de la voix", "Zuweisen der Stimme fehlgeschlagen", "supdance-creation: creation.4f2e8764f6a34415"),
 		entry("creation.workbench.upload_failed", "creationUI", "上传失败", "Upload failed", "上傳失敗", "アップロードに失敗しました", "업로드 실패", "Error al subir", "Échec du téléversement", "Hochladen fehlgeschlagen", "supdance-creation: workbench.upload_failed"),
 		entry("creation.creation.2952f485318530a1", "creationUI", "清除失败", "Clearing failed", "清除失敗", "クリアに失敗しました", "지우기 실패", "Error al borrar", "Échec de l'effacement", "Löschen fehlgeschlagen", "supdance-creation: creation.2952f485318530a1"),
@@ -22652,17 +22658,17 @@ func builtinEntryBatch85() []Entry {
 		entry("creation.creation.50aea67e07dfbd5a", "creationUI", "删除镜头 {value1}？", "Delete shot {value1}?", "删除镜头 {value1}？", "レンズ {value1} を削除しますか?", "렌즈 {value1}를 삭제하시겠습니까?", "¿Eliminar toma {value1}?", "Supprimer le plan {value1} ?", "Szene {value1} löschen?", "supdance-creation: creation.50aea67e07dfbd5a"),
 		entry("creation.creation.d34326318806a386", "creationUI", "这个镜头的台词“{value1}”会一起删除，本段视频提示词与视频标记过期。", "The lines \"{value1}\" in this shot will be deleted together. The prompt words and video tags of this video have expired.", "這個鏡頭的台詞「{value1}」會一起刪除，本段影片提示字與影片標記過期。", "このショットの行「{value1}」も一緒に削除されます。この動画のプロンプトワードとビデオタグの有効期限が切れています。", "이 장면의 \"{value1}\" 줄은 함께 삭제됩니다. 이 동영상의 프롬프트 단어와 동영상 태그가 만료되었습니다.", "Las líneas \"{value1}\" en esta toma se eliminarán juntas. Las palabras de aviso y las etiquetas de video de este video han caducado.", "Le dialogue « {value1} » de ce plan sera également supprimé, et le prompt vidéo ainsi que le marqueur vidéo de ce segment seront marqués comme obsolètes.", "Der Dialog « {value1} » dieser Szene wird mitgelöscht, und der Video-Prompt sowie die Videomarkierung dieses Abschnitts werden als veraltet markiert.", "supdance-creation: creation.d34326318806a386"),
 		entry("creation.creation.2a932dd9a7dbfe27", "creationUI", "本段视频提示词与视频会标记过期，需要重新撰写和生成。", "The prompt words and video of this video will be marked as expired and need to be rewritten and generated.", "本段影片提示詞與影片會標示過期，需要重新撰寫與產生。", "このビデオのプロンプト ワードとビデオは期限切れとしてマークされるため、書き換えて生成する必要があります。", "이 비디오의 프롬프트 단어와 비디오는 만료된 것으로 표시되므로 다시 작성하고 생성해야 합니다.", "Las palabras clave y el vídeo de este vídeo se marcarán como caducados y deberán reescribirse y generarse.", "Le prompt vidéo et la vidéo de ce segment seront marqués comme obsolètes et devront être réécrits et régénérés.", "Der Video-Prompt und das Video dieses Abschnitts werden als veraltet markiert und müssen neu verfasst und neu generiert werden.", "supdance-creation: creation.2a932dd9a7dbfe27"),
+	}
+}
+
+func builtinEntryBatch86() []Entry {
+	return []Entry{
 		entry("creation.creation.339c3e4a68f8f4ab", "creationUI", "重新改编第 {value1} 集？", "Re-adaptation of episode {value1}?", "重新改編第 {value1} 集？", "エピソード {value1} の再適応?", "에피소드 {value1}의 재적응?", "¿Readaptación del episodio {value1}?", "Réadapter l'épisode {value1} ?", "Episode {value1} neu bearbeiten?", "supdance-creation: creation.339c3e4a68f8f4ab"),
 		entry("creation.creation.3ef188256ae0a9e1", "creationUI", "会基于原文重新生成剧本、镜头与剧情段，各段视频提示词与视频都需要重新生成；已生成的段视频保留在版本记录中。", "will regenerate scripts, shots and plot segments based on the original text. Each video prompt and video needs to be regenerated; the generated video segments are retained in the version record.", "會基於原文重新生成劇本、鏡頭與劇情段，各段影片提示詞與影片都需要重新生成；已產生的段影片保留在版本記錄中。", "は、元のテキストに基づいてスクリプト、ショット、プロット セグメントを再生成します。各ビデオ プロンプトとビデオを再生成する必要があります。生成されたビデオ セグメントはバージョン レコードに保持されます。", "는 원본 텍스트를 기반으로 스크립트, 샷 및 플롯 세그먼트를 재생성합니다. 각 비디오 메시지와 비디오는 다시 생성되어야 합니다. 생성된 비디오 세그먼트는 버전 기록에 유지됩니다.", "regenerará guiones, tomas y segmentos de trama basados ​​en el texto original. Cada mensaje de vídeo y vídeo debe regenerarse; los segmentos de vídeo generados se conservan en el registro de versión.", "Le script, les plans et les segments d'intrigue seront régénérés à partir du texte original ; les prompts vidéo et les vidéos de chaque segment devront être régénérés ; les vidéos de segments déjà générées sont conservées dans l'historique des versions.", "Drehbuch, Einstellungen und Handlungsabschnitte werden auf Basis des Originaltexts neu erstellt; die Video-Prompts und Videos aller Abschnitte müssen neu generiert werden; bereits generierte Abschnittsvideos bleiben in der Versionshistorie erhalten.", "supdance-creation: creation.3ef188256ae0a9e1"),
 		entry("creation.creation.774aa195509424f8", "creationUI", "重新改编", "Re-adapted", "重新改編", "再適応", "재적응", "Readaptado", "Réadapter", "Neu adaptieren", "supdance-creation: creation.774aa195509424f8"),
 		entry("creation.creation.fd719fc2daf89445", "creationUI", "本集梗概", "Summary of this episode", "本集梗概", "このエピソードの概要", "이번 에피소드 요약", "Resumen de este episodio", "Synopsis de l'épisode", "Kurzfassung der Episode", "supdance-creation: creation.fd719fc2daf89445"),
 		entry("creation.creation.617fb9d0622d0a12", "creationUI", "素材：{value1}", "Material: {value1}", "素材：{value1}", "素材: {value1}", "재질: {value1}", "Material: {value1}", "Asset : {value1}", "Asset: {value1}", "supdance-creation: creation.617fb9d0622d0a12"),
 		entry("creation.creation.fb3a79385e7b3c94", "creationUI", "改编过程", "adaptation process", "改編過程", "適応プロセス", "적응 프로세스", "proceso de adaptación", "Processus d'adaptation", "Adaptionsprozess", "supdance-creation: creation.fb3a79385e7b3c94"),
-	}
-}
-
-func builtinEntryBatch86() []Entry {
-	return []Entry{
 		entry("creation.creation.b5269ef5aea2bd68", "creationUI", "收起原文", "Close the original text", "收起原文", "元のテキストを閉じます", "원문 닫기", "Cerrar el texto original", "Réduire le texte original", "Originaltext einklappen", "supdance-creation: creation.b5269ef5aea2bd68"),
 		entry("creation.creation.61139b7a82e1618e", "creationUI", "对照原文", "compare to original text", "對照原文", "元のテキストとの比較", "원본 텍스트와 비교", "comparar con el texto original", "Comparer avec l'original", "Mit Original vergleichen", "supdance-creation: creation.61139b7a82e1618e"),
 		entry("creation.creation.eb7bc873c8cdd4ba", "creationUI", "开场钩子", "opening hook", "開場鉤子", "開口フック", "오프닝 후크", "gancho de apertura", "Accroche d'ouverture", "Einstiegs-Hook", "supdance-creation: creation.eb7bc873c8cdd4ba"),
@@ -22913,17 +22919,17 @@ func builtinEntryBatch86() []Entry {
 		entry("creation.creation.4ade35525d8b7665", "creationUI", "拉伸第 {value1} 张图片{direction}", "Stretch the {value1} picture {direction}", "拉伸第 {value1} 張圖片{direction}", "{value1} の写真を伸ばす {direction}", "{value1} 사진 {direction} 늘이기", "Estire la imagen {value1} {direction}", "Étirer l'image n° {value1} {direction}", "Bild Nr. {value1} {direction} strecken", "supdance-creation: creation.4ade35525d8b7665"),
 		entry("creation.creation.9cd8b27de42eede0", "creationUI", "{label}功能将在 API 接入后开放", "{label} function will be opened after API access", "{label}功能將在 API 存取後開放", "APIアクセス後、{label}関数がオープンされます", "API 접속 후 {label} 함수가 열립니다.", "La función {label} se abrirá después del acceso API", "La fonctionnalité {label} sera disponible après la connexion à l'API", "Die Funktion {label} wird nach der API-Anbindung verfügbar sein", "supdance-creation: creation.9cd8b27de42eede0"),
 		entry("creation.creation.beade09e9a1c9678", "creationUI", "本轮使用", "used in this round", "本輪使用", "このラウンドで使用", "이번 라운드에 사용됨", "usado en esta ronda", "Utilisé pour ce tour", "In dieser Runde verwendet", "supdance-creation: creation.beade09e9a1c9678"),
+	}
+}
+
+func builtinEntryBatch87() []Entry {
+	return []Entry{
 		entry("creation.creation.7db56679b7bfb873", "creationUI", "/ 8 个 Skills", "/ 8 Skills", "/ 8 個 Skills", "/ 8 スキル", "/ 8 스킬", "/ 8 Habilidades", "/ 8 Skills", "/ 8 Skills", "supdance-creation: creation.7db56679b7bfb873"),
 		entry("creation.creation.87b7f664375502c5", "creationUI", "已按这件商品的品类推荐", "has been recommended by the category of this product", "已按此商品的品類推薦", "この商品のカテゴリー別おすすめ", "이 상품 카테고리에 따라 추천드립니다", "ha sido recomendado por la categoría de este producto", "Recommandé selon la catégorie de cet article", "Basierend auf der Kategorie dieses Artikels empfohlen", "supdance-creation: creation.87b7f664375502c5"),
 		entry("creation.creation.61d757e20527fbea", "creationUI", "套视觉方案，包含专属场景、字体和版式。可以按分类挑选，或点铅笔改写风格。", "A set of visual solutions, including exclusive scenes, fonts and layouts. You can select by category, or click on the pencil to change the style.", "套視覺方案，包含專屬場景、字體和版面。可依分類挑選，或點鉛筆改寫風格。", "専用シーン、フォント、レイアウトを含む一連のビジュアル ソリューション。カテゴリ別に選択することも、鉛筆をクリックしてスタイルを変更することもできます。", "독점 장면, 글꼴, 레이아웃을 포함한 일련의 시각적 솔루션입니다. 카테고리별로 선택하거나, 연필을 클릭해 스타일을 변경할 수 있습니다.", "Un conjunto de soluciones visuales, que incluyen escenas, fuentes y diseños exclusivos. Puede seleccionar por categoría o hacer clic en el lápiz para cambiar el estilo.", "Solution visuelle complète, avec scènes exclusives, police et mise en page. Choisissez par catégorie ou cliquez sur le crayon pour réécrire le style.", "Visuelles Komplettpaket mit exklusiven Szenen, Schriftart und Layout. Nach Kategorien auswählen oder zum Umgestalten des Stils auf den Stift klicken.", "supdance-creation: creation.61d757e20527fbea"),
 		entry("creation.creation.782d1b565eca9ebd", "creationUI", "队列任务，{badge} 张图片生成中", "queue task, {badge} pictures are being generated", "佇列任務，{badge} 張圖片產生中", "キュータスク、{badge} 画像が生成されています", "대기열 작업, {badge} 사진이 생성되는 중", "tarea en cola, {badge} se están generando imágenes", "Tâches en file d'attente, {badge} images en cours de génération", "Aufgaben in der Warteschlange, {badge} Bilder werden generiert", "supdance-creation: creation.782d1b565eca9ebd"),
 		entry("creation.creation.6be0d008df70731d", "creationUI", "参考图版式说明：", "reference picture layout description:\nThe content of", "參考圖版式說明：", "参考画像レイアウトの説明:", "참조 사진 레이아웃 설명:", "descripción del diseño de la imagen de referencia:\nel contenido de", "Note de mise en page des images de référence :", "Hinweis zum Layout der Referenzbilder:", "supdance-creation: creation.6be0d008df70731d"),
 		entry("creation.creation.87f28fc3ad2782ee", "creationUI", "内容超过 {PROMPT_LIMIT} 字，已截断；建议只选中资产卡相关的段落", "exceeds {PROMPT_LIMIT} words and has been truncated; it is recommended to only select the paragraphs related to the asset card", "內容超過 {PROMPT_LIMIT} 字，已截斷；建議只選取資產卡相關的段落", "の内容は {PROMPT_LIMIT} ワードを超えているため、切り詰められています。アセットカードに関連する段落のみを選択することをお勧めします。", "의 내용이 {PROMPT_LIMIT} 단어를 초과하여 잘렸습니다. 자산카드와 관련된 문단만 선택하는 것을 권장합니다.", "supera las {PROMPT_LIMIT} palabras y ha sido truncado; Se recomienda seleccionar solo los párrafos relacionados con la tarjeta de activo.", "Le contenu dépasse {PROMPT_LIMIT} caractères et a été tronqué ; sélectionnez uniquement les passages liés aux cartes d'assets", "Der Inhalt überschreitet {PROMPT_LIMIT} Zeichen und wurde gekürzt; wählen Sie nur die Abschnitte aus, die zu den Asset-Karten passen", "supdance-creation: creation.87f28fc3ad2782ee"),
-	}
-}
-
-func builtinEntryBatch87() []Entry {
-	return []Entry{
 		entry("creation.creation.07632ad2a7a40343", "creationUI", "未包含", "not included", "未包含", "は含まれません", "는 포함되어 있지 않습니다.", "no incluido", "Non inclus", "Nicht enthalten", "supdance-creation: creation.07632ad2a7a40343"),
 		entry("creation.creation.eafda473ba2a458a", "creationUI", "{{角色名称}}", "{{角色名称}}", "{{角色名称}}", "{{角色名称}}", "{{角色名称}}", "{{角色名称}}", "{{角色名称}}", "{{角色名称}}", "supdance-creation: creation.eafda473ba2a458a"),
 		entry("creation.creation.a7e6e3a4940774f8", "creationUI", "{{角色设定}}", "{{角色设定}}", "{{角色设定}}", "{{角色设定}}", "{{角色设定}}", "{{角色设定}}", "{{角色设定}}", "{{角色设定}}", "supdance-creation: creation.a7e6e3a4940774f8"),
@@ -23174,17 +23180,17 @@ func builtinEntryBatch87() []Entry {
 		entry("creation.creation.2698848f609303b9", "creationUI", "改编", "Adaptation", "改編", "適応", "적응", "Adaptación", "Adapter", "Adaptieren", "supdance-creation: creation.2698848f609303b9"),
 		entry("creation.creation.50804542fdfa68cf", "creationUI", "拆镜", "Remove the mirror", "拆鏡", "ミラーを取り外します", "거울을 제거하세요", "Quitar el espejo", "Découper en plans", "Szenen auflösen", "supdance-creation: creation.50804542fdfa68cf"),
 		entry("creation.creation.94ff7c670f53f7b9", "creationUI", "系统会自动完成改编、建档、分镜与成片。", "The system will automatically complete the adaptation, archiving, storyboarding and finalization.", "系統會自動完成改編、建檔、分鏡與成片。", "システムは、適応、アーカイブ、ストーリーボード作成、および完成を自動的に完了します。", "시스템은 각색, 보관, 스토리보드 작성 및 마무리 작업을 자동으로 완료합니다.", "El sistema completará automáticamente la adaptación, el archivo, el guión gráfico y la finalización.", "Le système effectue automatiquement l'adaptation, l'archivage, le storyboard et la production du film.", "Das System übernimmt automatisch Adaptierung, Archivierung, Storyboard und Filmfertigung.", "supdance-creation: creation.94ff7c670f53f7b9"),
+	}
+}
+
+func builtinEntryBatch88() []Entry {
+	return []Entry{
 		entry("creation.creation.f83f64d120f7ebf0", "creationUI", "开始制作", "Start production", "開始製作", "生産開始", "생산 시작", "Iniciar producción", "Commencer la production", "Produktion starten", "supdance-creation: creation.f83f64d120f7ebf0"),
 		entry("creation.creation.b65aec57e06c4fc6", "creationUI", "，{value1} 个已锁定或正在生成", ", {value1} are locked or being generated", "，{value1} 個已鎖定或正在生成", "、{value1} はロックされているか、生成されています", ", {value1}가 잠겨 있거나 생성 중입니다.", ", {value1} están bloqueados o se están generando", ", {value1} verrouillés ou en cours de génération", ", {value1} gesperrt oder in Generierung", "supdance-creation: creation.b65aec57e06c4fc6"),
 		entry("creation.creation.1a7e3387eb6cb5e6", "creationUI", "，{value1} 个剧情段需重新生成", ", {value1} plot segments need to be regenerated", "，{value1} 個劇情片段需重新生成", "、{value1} プロット セグメントを再生成する必要があります", ", {value1} 플롯 세그먼트를 다시 생성해야 합니다.", ", {value1} los segmentos de trama deben regenerarse", ", {value1} segments d'intrigue à régénérer", ", {value1} Handlungsabschnitte müssen neu generiert werden", "supdance-creation: creation.1a7e3387eb6cb5e6"),
 		entry("creation.creation.fdb2b92ef8f9defe", "creationUI", "改编完成后显示本集梗概。", "The synopsis of this episode will be displayed after the adaptation is completed.", "改編完成後顯示本集梗圖。", "このエピソードのあらすじは、適応が完了した後に表示されます。", "이번 에피소드의 시놉시스는 각색이 완료된 후 표시됩니다.", "La sinopsis de este episodio se mostrará una vez completada la adaptación.", "Une fois l'adaptation terminée, le synopsis de l'épisode s'affiche.", "Nach Abschluss der Adaption wird die Zusammenfassung der Episode angezeigt.", "supdance-creation: creation.fdb2b92ef8f9defe"),
 		entry("creation.creation.e5bd38f46b7cd54f", "creationUI", "未命名场景", "Unnamed scene", "未命名場景", "名前のないシーン", "이름이 없는 장면", "Escena sin nombre", "Scène sans titre", "Unbenannte Szene", "supdance-creation: creation.e5bd38f46b7cd54f"),
 		entry("creation.creation.6095b0424ae42d79", "creationUI", "（显示前 {value1} 句）", "(Show the first {value1} sentences)", "（顯示前 {value1} 句）", "(最初の {value1} 文を表示)", "(첫 번째 {value1} 문장 표시)", "(Mostrar las primeras {value1} oraciones)", "(affiche les {value1} premières phrases)", "(zeigt die ersten {value1} Sätze)", "supdance-creation: creation.6095b0424ae42d79"),
-	}
-}
-
-func builtinEntryBatch88() []Entry {
-	return []Entry{
 		entry("creation.creation.ce053c0c9d164e0b", "creationUI", "（未附图）", "(no picture attached)", "（未附圖）", "(写真は添付されていません)", "(사진 첨부 없음)", "(sin imagen adjunta)", "(sans image jointe)", "(ohne angehängtes Bild)", "supdance-creation: creation.ce053c0c9d164e0b"),
 		entry("creation.creation.b49ab8abf92f68e2", "creationUI", "开场段，按提示词与参考图生成", "Opening paragraph, generated according to prompt words and reference pictures", "開場段，依提示詞與參考圖生成", "冒頭の段落、プロンプトワードと参考画像に従って生成", "프롬프트 단어 및 참조 사진에 따라 생성된 시작 단락", "Párrafo inicial, generado según palabras clave e imágenes de referencia", "Segment d'ouverture, généré selon le prompt et l'image de référence", "Eröffnungssegment, gemäß Prompt und Referenzbild generiert", "supdance-creation: creation.b49ab8abf92f68e2"),
 		entry("creation.creation.a932f4da7bc101ba", "creationUI", "第 {value1} 段视频最后一帧", "The last frame of video {value1}", "第 {value1} 段影片最後一幀", "ビデオの最後のフレーム {value1}", "영상의 마지막 프레임 {value1}", "El último fotograma del vídeo {value1}", "Dernière image de la vidéo n° {value1}", "Letztes Frame von Video Nr. {value1}", "supdance-creation: creation.a932f4da7bc101ba"),
@@ -23435,17 +23441,17 @@ func builtinEntryBatch88() []Entry {
 		entry("creation.creation.5f796ea933d4b57c", "creationUI", "已过期，需要重新撰写", "Expired and needs to be rewritten", "已過期，需要重新撰寫", "期限切れのため書き直す必要があります", "만료되었으므로 다시 작성해야 합니다.", "Caducó y debe reescribirse", "Expiré, doit être rédigé à nouveau", "Abgelaufen, muss neu verfasst werden", "supdance-creation: creation.5f796ea933d4b57c"),
 		entry("creation.creation.965c90e76b80957f", "creationUI", "{value1}（按 {value2} 出片）", "{value1} (press {value2} to release the film)", "{value1}（按 {value2} 出片）", "{value1} ({value2} を押してフィルムをリリースします)", "{value1} (영화를 개봉하려면 {value2}를 누르세요)", "{value1} (presione {value2} para lanzar la película)", "{value1} (rendu selon {value2})", "{value1} (Rendering gemäß {value2})", "supdance-creation: creation.965c90e76b80957f"),
 		entry("creation.creation.4d9f2181dfd0fda9", "creationUI", "{value1}（所选模型给不出这个画幅）", "{value1} (The selected model cannot provide this frame)", "{value1}（所選模型給不出這個畫幅）", "{value1} (選択されたモデルはこのフレームを提供できません)", "{value1} (선택한 모델은 이 프레임을 제공할 수 없습니다)", "{value1} (El modelo seleccionado no puede proporcionar este marco)", "{value1} (le modèle sélectionné ne prend pas en charge ce format)", "{value1} (das ausgewählte Modell unterstützt dieses Seitenverhältnis nicht)", "supdance-creation: creation.4d9f2181dfd0fda9"),
+	}
+}
+
+func builtinEntryBatch89() []Entry {
+	return []Entry{
 		entry("creation.creation.bbd83b0cdddba76a", "creationUI", "模型同步生成对白与音效", "The model generates dialogue and sound effects simultaneously", "模型同步產生對白與音效", "モデルはダイアログと効果音を同時に生成します", "모델이 대화와 음향 효과를 동시에 생성합니다.", "El modelo genera diálogos y efectos de sonido simultáneamente.", "Le modèle génère dialogues et effets sonores simultanément", "Das Modell erzeugt Dialoge und Soundeffekte gleichzeitig", "supdance-creation: creation.bbd83b0cdddba76a"),
 		entry("creation.creation.2005bda1262d24eb", "creationUI", "所选模型不出声，本段视频没有对白与音效", "The selected model does not make any sound. This video has no dialogue or sound effects.", "所選機型不出聲，本段影片沒有對白與音效", "選択したモデルでは音が出ません。このビデオにはセリフや効果音がありません。", "선택한 모델에서는 소리가 나지 않습니다. 이 영상에는 대사나 음향효과가 없습니다.", "El modelo seleccionado no emite ningún sonido. Este vídeo no tiene diálogos ni efectos de sonido.", "Le modèle sélectionné ne produit pas de son, cette vidéo n'a ni dialogue ni effets sonores", "Das ausgewählte Modell erzeugt keinen Ton, dieser Videosegment hat weder Dialog noch Soundeffekte", "supdance-creation: creation.2005bda1262d24eb"),
 		entry("creation.creation.3a8a2ddcd8d9f8bb", "creationUI", "{value1}/{value2} 张{value3}", "{value1}/{value2} Zhang {value3}", "{value1}/{value2} 張{value3}", "{value1}/{value2} 張 {value3}", "{value1}/{value2} 장 {value3}", "{value1}/{value2} Zhang {value3}", "{value1}/{value2} images{value3}", "{value1}/{value2} Bilder{value3}", "supdance-creation: creation.3a8a2ddcd8d9f8bb"),
 		entry("creation.creation.00e39bce1882c6b2", "creationUI", "开场段，无首帧", "Opening sequence, no first frame", "開場段，無首幀", "オープニング シーケンス、最初のフレームなし", "오프닝 시퀀스, 첫 번째 프레임 없음", "Secuencia de apertura, sin primer fotograma", "Séquence d'ouverture, sans première image", "Eröffnungssequenz, ohne erstes Bild", "supdance-creation: creation.00e39bce1882c6b2"),
 		entry("creation.creation.ec36699f818ed1f6", "creationUI", "{value1} 秒{value2}", "{value1} Seconds {value2}", "{value1} 秒{value2}", "{value1} 秒 {value2}", "{value1} 초 {value2}", "{value1} Segundos {value2}", "{value1} secondes{value2}", "{value1} Sekunden{value2}", "supdance-creation: creation.ec36699f818ed1f6"),
 		entry("creation.creation.c2c8cc876e0b196c", "creationUI", "作品默认", "Default work", "作品默認", "デフォルトの作品", "기본 작품", "Trabajo predeterminado", "Par défaut de l'œuvre", "Projektstandard", "supdance-creation: creation.c2c8cc876e0b196c"),
-	}
-}
-
-func builtinEntryBatch89() []Entry {
-	return []Entry{
 		entry("creation.creation.ab6ae90082c283ef", "creationUI", "运镜 {value1}", "Mirror {value1}", "運鏡 {value1}", "ミラー {value1}", "거울 {value1}", "Espejo {value1}", "Mouvement de caméra {value1}", "Kamerafahrt {value1}", "supdance-creation: creation.ab6ae90082c283ef"),
 		entry("creation.creation.974acb0dabf910da", "creationUI", "转场 {value1}", "Transition {value1}", "轉場 {value1}", "トランジション {value1}", "전환 {value1}", "Transición {value1}", "Transition {value1}", "Übergang {value1}", "supdance-creation: creation.974acb0dabf910da"),
 		entry("creation.creation.a9d130d79595672c", "creationUI", "运动", "Sports", "運動", "スポーツ", "스포츠", "Deportes", "Mouvement", "Bewegung", "supdance-creation: creation.a9d130d79595672c"),
@@ -23696,17 +23702,17 @@ func builtinEntryBatch89() []Entry {
 		entry("creation.creation.4f7c8b3a62f96c74", "creationUI", "按集核查", "Review by episode", "按集核查", "話ごとに確認", "회차별 검토", "Revisar por episodio", "Vérifier par épisode", "Nach Folge prüfen", "supdance-creation: creation.4f7c8b3a62f96c74"),
 		entry("creation.creation.c5da57d69c77aa61", "creationUI", "资产库", "Asset library", "資產庫", "素材ライブラリ", "에셋 라이브러리", "Biblioteca de recursos", "Bibliothèque de ressources", "Asset-Bibliothek", "supdance-creation: creation.c5da57d69c77aa61"),
 		entry("creation.creation.74dae518774e78b6", "creationUI", "项目资产视图", "Project assets view", "項目資產視圖", "プロジェクトアセット表示", "프로젝트 에셋 보기", "Vista de recursos del proyecto", "Vue des ressources du projet", "Projekt-Asset-Ansicht", "supdance-creation: creation.74dae518774e78b6"),
+	}
+}
+
+func builtinEntryBatch90() []Entry {
+	return []Entry{
 		entry("creation.creation.2897ecd9f1940736", "creationUI", "项目资产", "Project Assets", "專案資產", "プロジェクトアセット", "프로젝트 에셋", "Recursos del proyecto", "Actifs du projet", "Projektvermögenswerte", "supdance-creation: creation.2897ecd9f1940736"),
 		entry("creation.creation.0577a88e45d127cd", "creationUI", "讨论镜头 {value1}", "Discuss shot {value1}", "討論鏡頭 {value1}", "ショット{value1}を相談", "샷 {value1} 논의", "Comentar plano {value1}", "Discuter du plan {value1}", "Einstellung {value1} besprechen", "supdance-creation: creation.0577a88e45d127cd"),
 		entry("creation.creation.a9278124a1b47023", "creationUI", "请优化当前短剧制作台的这个分镜。先读取最新镜头内容，再根据我的要求提出或执行修改。项目 ID：{value1}；集 ID：{value2}；镜头 ID：{value3}。", "Improve this storyboard in the current drama studio. Read the latest shot first, then propose or apply changes based on my request. Project ID: {value1}; episode ID: {value2}; shot ID: {value3}.", "請優化當前短劇製作台的這個分鏡。先讀取最新鏡頭內容，再根據我的要求提出或執行修改。項目 ID：{value1}；集 ID：{value2}；鏡頭 ID：{value3}。", "現在の制作台のこの絵コンテを改善してください。最新のショットを読んでから、要望に応じて変更を提案または実行してください。プロジェクトID：{value1}、話ID：{value2}、ショットID：{value3}。", "현재 제작실의 스토리보드를 개선하세요. 먼저 최신 샷을 읽고 요청에 따라 변경을 제안하거나 실행하세요. 프로젝트 ID: {value1}; 회차 ID: {value2}; 샷 ID: {value3}.", "Mejora este plano del estudio actual. Lee primero su versión más reciente y propón o aplica los cambios solicitados. ID del proyecto: {value1}; episodio: {value2}; plano: {value3}.", "Améliorez ce storyboard dans le studio actuel. Lisez d’abord le plan récent puis proposez ou appliquez mes modifications. ID du projet : {value1} ; épisode : {value2} ; plan : {value3}.", "Dieses Storyboard im aktuellen Studio verbessern. Zuerst die aktuelle Einstellung lesen, dann gewünschte Änderungen vorschlagen oder anwenden. Projekt-ID: {value1}; Folgen-ID: {value2}; Einstellungs-ID: {value3}.", "supdance-creation: creation.a9278124a1b47023"),
 		entry("creation.creation.2c232f25338e62ee", "creationUI", "短剧 · 第 {value1} 集 · 镜头 {value2}", "Drama · Episode {value1} · Shot {value2}", "短劇 · 第 {value1} 集 · 鏡頭 {value2}", "ドラマ · 第{value1}話 · ショット{value2}", "드라마 · {value1}화 · 샷 {value2}", "Drama · Episodio {value1} · Plano {value2}", "Série · Épisode {value1} · Plan {value2}", "Serie · Folge {value1} · Einstellung {value2}", "supdance-creation: creation.2c232f25338e62ee"),
 		entry("creation.creation.2f1c599cceb609a0", "creationUI", "短剧 · 第 {value1} 集{value2}", "Drama · Episode {value1}{value2}", "短劇 · 第 {value1} 集{value2}", "ドラマ · 第{value1}話{value2}", "드라마 · {value1}화{value2}", "Drama · Episodio {value1}{value2}", "Série · Épisode {value1}{value2}", "Serie · Folge {value1}{value2}", "supdance-creation: creation.2f1c599cceb609a0"),
 		entry("creation.creation.22948061b91baadc", "creationUI", "与小影讨论", "Discuss with the Agent", "與小影討論", "Agentに相談", "에이전트와 논의", "Hablar con el agente", "Discuter avec l’Agent", "Mit dem Agent besprechen", "supdance-creation: creation.22948061b91baadc"),
-	}
-}
-
-func builtinEntryBatch90() []Entry {
-	return []Entry{
 		entry("creation.creation.d1694f8bee5cd34b", "creationUI", "正文可直接修改", "Text can be edited directly", "正文可直接修改", "本文は直接編集できます", "본문을 바로 수정할 수 있습니다", "El texto se puede editar directamente", "Le texte peut être modifié directement", "Text kann direkt bearbeitet werden", "supdance-creation: creation.d1694f8bee5cd34b"),
 		entry("creation.creation.684b6a472fda18db", "creationUI", "资产类型颜色", "Asset type colors", "資產類型顏色", "アセット種類の色", "에셋 유형 색상", "Colores por tipo de recurso", "Couleurs des types de ressources", "Farben der Asset-Typen", "supdance-creation: creation.684b6a472fda18db"),
 		entry("creation.creation.269475951c920826", "creationUI", "精修镜头", "Refine shot", "精修鏡頭", "ショットを調整", "샷 정밀 편집", "Ajustar plano", "Affiner le plan", "Einstellung verfeinern", "supdance-creation: creation.269475951c920826"),
@@ -23957,17 +23963,17 @@ func builtinEntryBatch90() []Entry {
 		entry("model.qwen30-image-edit.description", "modelUI", "按中文修改说明调整参考图的内容与视觉细节。", "Adjust the content and visual details of the reference image according to the Chinese modification instructions.", "依中文修改說明調整參考圖的內容與視覺細節。", "中国語の修正手順に従って、参照画像の内容と視覚的な詳細を調整します。", "중국어 수정 지침에 따라 참조 이미지의 내용과 시각적 세부정보를 조정하세요.", "Ajuste el contenido y los detalles visuales de la imagen de referencia de acuerdo con las instrucciones de modificación chinas.", "Ajustez le contenu et les détails visuels de l'image de référence selon les instructions de modification chinoises.", "Passen Sie den Inhalt und die visuellen Details des Referenzbilds gemäß den chinesischen Änderungsanweisungen an.", "supdance-models: qwen30-image-edit.description"),
 		entry("model.qwen30-image-edit.name", "modelUI", "Qwen 3.0 图像编辑", "Qwen 3.0 Image Editing", "Qwen 3.0 影像編輯", "Qwen 3.0 画像編集", "Qwen 3.0 이미지 편집", "Qwen 3.0 Edición de imágenes", "Qwen 3.0 Édition d’images", "Qwen 3.0 Bildbearbeitung", "supdance-models: qwen30-image-edit.name"),
 		entry("model.qwen20-text-image.description", "modelUI", "适合中文场景描述、文字画面与产品视觉构思。", "Suitable for Chinese scene descriptions, text images and product visual concepts.", "適合中文場景描述、文字畫面與產品視覺構思。", "中国の情景説明、テキスト画像、製品のビジュアルコンセプトに適しています。", "중국 장면 설명, 텍스트 이미지, 제품 시각적 컨셉에 적합합니다.", "Adecuado para descripciones de escenas chinas, imágenes de texto y conceptos visuales de productos.", "Convient aux descriptions de scènes chinoises, aux images de texte et aux concepts visuels de produits.", "Geeignet für chinesische Szenenbeschreibungen, Textbilder und visuelle Produktkonzepte.", "supdance-models: qwen20-text-image.description"),
+	}
+}
+
+func builtinEntryBatch91() []Entry {
+	return []Entry{
 		entry("model.qwen20-text-image.name", "modelUI", "Qwen 2.0 文生图", "Qwen 2.0 Text to Image", "Qwen 2.0 文生圖", "Qwen 2.0 テキストから画像", "Qwen 2.0 텍스트로 이미지", "Qwen 2.0 Texto a imagen", "Qwen 2.0 Texte vers image", "Qwen 2.0 Text zu Bild", "supdance-models: qwen20-text-image.name"),
 		entry("model.hailuo23-i2v-pro.description", "modelUI", "从参考图展开动作，适合人物表情与剧情镜头。", "Develop actions from reference pictures, suitable for character expressions and plot shots.", "從參考圖展開動作，適合人物表情與劇情鏡頭。", "キャラクターの表現やストーリーショットに適した参考画像からアクションを開発します。", "캐릭터 표현 및 줄거리 장면에 적합한 참고 사진을 바탕으로 동작을 개발합니다.", "Desarrolla acciones a partir de imágenes de referencia, adecuadas para expresiones de personajes y planos de la trama.", "Démarrez l'action à partir de l'image de référence, qui convient aux expressions de personnages et aux plans d'intrigue.", "Beginnen Sie die Aktion mit dem Referenzbild, das für Charakterausdrücke und Handlungsaufnahmen geeignet ist.", "supdance-models: hailuo23-i2v-pro.description"),
 		entry("model.hailuo23-i2v-pro.name", "modelUI", "MiniMax Hailuo 2.3 Pro 图生视频", "MiniMax Hailuo 2.3 Pro Image to Video", "MiniMax Hailuo 2.3 Pro 圖生影片", "MiniMax Hailuo 2.3 Pro 画像から動画", "MiniMax Hailuo 2.3 Pro 이미지로 동영상", "MiniMax Hailuo 2.3 Pro Imagen a vídeo", "MiniMax Hailuo 2.3 Pro Image vers vidéo", "MiniMax Hailuo 2.3 Pro Bild zu Video", "supdance-models: hailuo23-i2v-pro.name"),
 		entry("model.hailuo23-fast-i2v.description", "modelUI", "适合尝试人物动作和运镜，比较多个分镜方案。", "Suitable for experimenting with character movements and camera movements, and comparing multiple storyboarding plans.", "適合嘗試人物動作和運鏡，比較多個分鏡方案。", "キャラクターの動きやカメラの動きを試したり、複数の絵コンテ案を比較したりするのに適しています。", "캐릭터 움직임과 카메라 움직임을 실험하고 여러 스토리보드 계획을 비교하는 데 적합합니다.", "Adecuado para experimentar con los movimientos de los personajes y de la cámara, y comparar múltiples planes de guiones gráficos.", "Convient pour expérimenter les mouvements des personnages et des caméras, et comparer plusieurs plans de storyboard.", "Geeignet zum Experimentieren mit Charakterbewegungen und Kamerabewegungen und zum Vergleich mehrerer Storyboarding-Pläne.", "supdance-models: hailuo23-fast-i2v.description"),
 		entry("model.hailuo23-fast-i2v.name", "modelUI", "MiniMax Hailuo 2.3 Fast 图生视频", "MiniMax Hailuo 2.3 Fast Image to Video", "MiniMax Hailuo 2.3 Fast 圖生影片", "MiniMax Hailuo 2.3 Fast 画像から動画", "MiniMax Hailuo 2.3 Fast 이미지로 동영상", "MiniMax Hailuo 2.3 Fast Imagen a vídeo", "MiniMax Hailuo 2.3 Fast Image vers vidéo", "MiniMax Hailuo 2.3 Fast Bild zu Video", "supdance-models: hailuo23-fast-i2v.name"),
 		entry("model.suno-v6.description", "modelUI", "根据风格描述与歌词创作歌曲，适合短片配乐与主题曲。", "Create songs based on style description and lyrics, suitable for short film soundtracks and theme songs.", "根據風格描述與歌詞創作歌曲，適合短片配樂與主題曲。", "スタイルの説明と歌詞に基づいて、短編映画のサウンドトラックやテーマソングに適した曲を作成します。", "스타일 설명과 가사를 기반으로 단편영화 사운드트랙과 주제가에 적합한 노래를 만듭니다.", "Crea canciones basadas en la descripción del estilo y la letra, adecuadas para bandas sonoras de cortometrajes y temas musicales.", "Créez une chanson basée sur la description du style et les paroles, adaptée aux bandes sonores de courts métrages et aux chansons thématiques.", "Erstellen Sie ein Lied basierend auf einer Stilbeschreibung und einem Text, das für Kurzfilm-Soundtracks und Titellieder geeignet ist.", "supdance-models: suno-v6.description"),
-	}
-}
-
-func builtinEntryBatch91() []Entry {
-	return []Entry{
 		entry("model.suno-v6.name", "modelUI", "Suno v6", "Suno v6", "Suno v6", "Suno v6", "Suno v6", "Suno v6", "Suno v6", "Suno v6", "supdance-models: suno-v6.name"),
 		entry("model.suno-v5.5.description", "modelUI", "从歌词或音乐想法开始，尝试不同曲风的歌曲版本。", "Start with lyrics or musical ideas and try different versions of the song.", "從歌詞或音樂想法開始，嘗試不同曲風的歌曲版本。", "歌詞や音楽的なアイデアから始めて、曲のさまざまなバージョンを試してください。", "가사나 음악적 아이디어로 시작하고 다양한 버전의 노래를 시도해 보세요.", "Comienza con letras o ideas musicales y prueba diferentes versiones de la canción.", "Commencez par des paroles ou des idées musicales et essayez des versions de la chanson dans différents genres.", "Beginnen Sie mit Texten oder musikalischen Ideen und probieren Sie Versionen des Liedes in verschiedenen Genres aus.", "supdance-models: suno-v5.5.description"),
 		entry("model.suno-v5.5.name", "modelUI", "Suno v5.5", "Suno v5.5", "Suno v5.5", "Suno v5.5", "Suno v5.5", "Suno v5.5", "Suno v5.5", "Suno v5.5", "supdance-models: suno-v5.5.name"),

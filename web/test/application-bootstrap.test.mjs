@@ -15,13 +15,16 @@ async function prepareEntry(dev, pathname) {
             {
                 name: "entry-side-effects",
                 setup(builder) {
-                    builder.onResolve({ filter: /^(@fontsource-variable\/|@\/services\/appearance-bootstrap$|\.\/(welcome-)?application$)/ }, ({ path }) => ({ path, namespace: "entry-test" }));
+                    builder.onResolve({ filter: /^(@fontsource-variable\/|virtual:supdance-interface:common$|@\/services\/appearance-bootstrap$|\.\/(welcome-)?application$)/ }, ({ path }) => ({ path, namespace: "entry-test" }));
                     builder.onLoad({ filter: /.*/, namespace: "entry-test" }, ({ path }) => {
                         if (path.startsWith("@fontsource-variable/")) return { contents: "", loader: "js" };
+                        if (path === "virtual:supdance-interface:common") {
+                            return { contents: "export function prepareStartupInterface() { return translationsReady; }", loader: "js" };
+                        }
                         if (path === "@/services/appearance-bootstrap") {
                             return { contents: 'export function bootstrapAppearance() { events.push("appearance"); appearanceStarted(); return appearanceReady; }', loader: "js" };
                         }
-                        return { contents: `events.push(${JSON.stringify(path)}); entryLoaded();`, loader: "js" };
+                        return { contents: `export function startApplication() { events.push(${JSON.stringify(path)}); entryLoaded(); }`, loader: "js" };
                     });
                 },
             },
@@ -30,18 +33,21 @@ async function prepareEntry(dev, pathname) {
     expect(build.success).toBe(true);
 
     const events = [];
+    let resolveTranslations;
     let resolveAppearance;
     let appearanceStarted;
     let entryLoaded;
+    const translationsReady = new Promise((resolve) => (resolveTranslations = resolve));
     const appearanceReady = new Promise((resolve) => (resolveAppearance = resolve));
     const started = new Promise((resolve) => (appearanceStarted = resolve));
     const loaded = new Promise((resolve) => (entryLoaded = resolve));
-    runInNewContext(await build.outputs[0].text(), { window: { location: { pathname } }, events, appearanceReady, appearanceStarted, entryLoaded });
-    return { events, resolveAppearance, started, loaded };
+    runInNewContext(await build.outputs[0].text(), { window: { location: { pathname } }, events, translationsReady, appearanceReady, appearanceStarted, entryLoaded });
+    return { events, resolveTranslations, resolveAppearance, started, loaded };
 }
 
 test("DEV previs lab loads without calling the appearance backend", async () => {
     const entry = await prepareEntry(true, "/dev/previs-repro");
+    entry.resolveTranslations();
     await entry.loaded;
     expect(entry.events).toEqual(["./application"]);
 });
@@ -55,6 +61,8 @@ for (const [dev, pathname] of [
 ]) {
     test(`appearance loads in parallel with normal startup: dev=${dev} path=${pathname}`, async () => {
         const entry = await prepareEntry(dev, pathname);
+        expect(entry.events).toEqual([]);
+        entry.resolveTranslations();
         await Promise.all([entry.started, entry.loaded]);
         expect(entry.events.sort()).toEqual(["./application", "appearance"]);
         entry.resolveAppearance();
@@ -64,6 +72,7 @@ for (const [dev, pathname] of [
 for (const pathname of ["/welcome", "/welcome/"]) {
     test(`public film entry remains independent: ${pathname}`, async () => {
         const entry = await prepareEntry(false, pathname);
+        entry.resolveTranslations();
         await Promise.all([entry.started, entry.loaded]);
         // 欢迎页沿用站点外观（#683），但外观请求不阻塞欢迎页入口加载。
         expect(entry.events.sort()).toEqual(["./welcome-application", "appearance"]);
