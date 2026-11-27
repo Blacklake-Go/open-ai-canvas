@@ -19,7 +19,7 @@ async function prepareEntry(dev, pathname) {
                     builder.onLoad({ filter: /.*/, namespace: "entry-test" }, ({ path }) => {
                         if (path.startsWith("@fontsource-variable/")) return { contents: "", loader: "js" };
                         if (path === "@/services/appearance-bootstrap") {
-                            return { contents: 'export function bootstrapAppearance() { events.push("appearance"); return appearanceReady; }', loader: "js" };
+                            return { contents: 'export function bootstrapAppearance() { events.push("appearance"); appearanceStarted(); return appearanceReady; }', loader: "js" };
                         }
                         return { contents: `events.push(${JSON.stringify(path)}); entryLoaded();`, loader: "js" };
                     });
@@ -31,11 +31,13 @@ async function prepareEntry(dev, pathname) {
 
     const events = [];
     let resolveAppearance;
+    let appearanceStarted;
     let entryLoaded;
     const appearanceReady = new Promise((resolve) => (resolveAppearance = resolve));
+    const started = new Promise((resolve) => (appearanceStarted = resolve));
     const loaded = new Promise((resolve) => (entryLoaded = resolve));
-    runInNewContext(await build.outputs[0].text(), { window: { location: { pathname } }, events, appearanceReady, entryLoaded });
-    return { events, resolveAppearance, loaded };
+    runInNewContext(await build.outputs[0].text(), { window: { location: { pathname } }, events, appearanceReady, appearanceStarted, entryLoaded });
+    return { events, resolveAppearance, started, loaded };
 }
 
 test("DEV previs lab loads without calling the appearance backend", async () => {
@@ -53,8 +55,8 @@ for (const [dev, pathname] of [
 ]) {
     test(`appearance loads in parallel with normal startup: dev=${dev} path=${pathname}`, async () => {
         const entry = await prepareEntry(dev, pathname);
-        await entry.loaded;
-        expect(entry.events).toEqual(["appearance", "./application"]);
+        await Promise.all([entry.started, entry.loaded]);
+        expect(entry.events.sort()).toEqual(["./application", "appearance"]);
         entry.resolveAppearance();
     });
 }
@@ -62,9 +64,10 @@ for (const [dev, pathname] of [
 for (const pathname of ["/welcome", "/welcome/"]) {
     test(`public film entry remains independent: ${pathname}`, async () => {
         const entry = await prepareEntry(false, pathname);
-        await entry.loaded;
+        await Promise.all([entry.started, entry.loaded]);
         // 欢迎页沿用站点外观（#683），但外观请求不阻塞欢迎页入口加载。
-        expect(entry.events).toEqual(["appearance", "./welcome-application"]);
+        expect(entry.events.sort()).toEqual(["./welcome-application", "appearance"]);
+        entry.resolveAppearance();
     });
 }
 

@@ -190,11 +190,6 @@ export function appearanceLogoURL(appearance: PublicAppearance, theme: "light" |
     return theme === "dark" ? appearance.darkLogoUrl || appearance.logoUrl : appearance.logoUrl || appearance.darkLogoUrl;
 }
 
-export function brandStudioLabel(appearance: PublicAppearance) {
-    if (appearance.brandName === DEFAULT_PUBLIC_APPEARANCE.brandName && appearance.brandSlug === DEFAULT_PUBLIC_APPEARANCE.brandSlug) return "YINGCE STUDIO";
-    return appearance.brandSlug.replace(/-+/g, " ").toLocaleUpperCase();
-}
-
 function normalizeBrandSlug(value: unknown) {
     const candidate = String(value || "")
         .trim()

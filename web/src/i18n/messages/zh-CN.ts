@@ -149,7 +149,7 @@ export const zhCN = {
             topup: "充值 / 兑换",
             actions: "账户操作",
             settings: "账户与设置",
-            referral: "推广中心",
+            referral: "分享激励",
             adminConsole: "管理员后台",
             logout: "退出登录",
             adminTools: "管理工具",

@@ -146,6 +146,13 @@ describe("standalone pricing native languages", () => {
                 selector.value = "en-US";
                 selector.dispatchEvent(new window.Event("change"));
                 expect(cells.map((cell) => cell.textContent)).toEqual(original);
+                const registration = window.document.getElementById("sd-ft-icp")!;
+                registration.textContent = "备案编号：沪ICP备2026050086号-2";
+                window.document.dispatchEvent(new window.Event("supdance:footer-config-applied"));
+                expect(registration.textContent).toBe("ICP registration · 沪ICP备2026050086号-2");
+                selector.value = "fr-FR";
+                selector.dispatchEvent(new window.Event("change"));
+                expect(registration.textContent).toBe("Enregistrement ICP · 沪ICP备2026050086号-2");
                 const customVision = "工作室自定义介绍 — preserve my wording";
                 window.document.getElementById("sd-ft-brand-vision")!.textContent = customVision;
                 window.document.dispatchEvent(new window.Event("supdance:footer-config-applied"));

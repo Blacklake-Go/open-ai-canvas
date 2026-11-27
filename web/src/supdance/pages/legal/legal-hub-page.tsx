@@ -1,4 +1,4 @@
-import { TopbarLanguageSwitcher } from "@/supdance/plugins/i18n";
+import { TopbarLanguageSwitcher, useI18n } from "@/supdance/plugins/i18n";
 import { interfaceText } from "@/i18n/interface-text";
 import { ArrowRight, FileText, Shield } from "lucide-react";
 import { useEffect } from "react";
@@ -9,8 +9,14 @@ import { LegalThemeToggler } from "./legal-theme-toggler";
 import { LegalBrand } from "./legal-brand";
 import { LegalHeaderNav } from "./legal-header-nav";
 import { SupdanceAboutFooter } from "@/supdance/components/site-footer/supdance-about-footer";
+import { usePublicTitle } from "../public-copy/public-page";
+import { REFUND_COPY } from "../public-copy/refund";
+import { SUPPORTED_LOCALES } from "@/i18n/locales";
 
 export default function LegalHubPage() {
+    const { locale } = useI18n();
+    const title = interfaceText("法律与合规中心", undefined, "src/supdance/pages/legal/legal-hub-page.tsx");
+    usePublicTitle(title);
     // 物理级滚轮与键盘全响应支持：确保在任何浏览器与操作系统中，鼠标滚轮、触控板与按键均能顺畅向下滑动
     useEffect(() => {
         const handleWheel = (e: WheelEvent) => {
@@ -65,7 +71,7 @@ export default function LegalHubPage() {
             {/* 展台区 */}
             <main className="mx-auto max-w-[840px] px-6 pt-24 pb-16 sm:pt-28 sm:pb-24">
                 <div className="font-mono text-[var(--fs-label)] uppercase tracking-[0.16em] text-sky-600 dark:text-sky-400 mb-3">§ 官方合规门户</div>
-                <h1 className="text-4xl sm:text-5xl lg:text-6xl font-semibold tracking-[-0.035em] leading-[1.08] mb-6 text-foreground">法律与合规中心</h1>
+                <h1 className="text-4xl sm:text-5xl lg:text-6xl font-semibold tracking-[-0.035em] leading-[1.08] mb-6 text-foreground">{title}</h1>
                 <p className="text-base sm:text-lg leading-relaxed mb-12 text-muted-foreground">
                     {interfaceText("查看 {product} 的法律协议、隐私政策与内容规则。英文为权威版本，另提供简体中文、繁体中文、西班牙语、法语、德语、日语和韩语译文。", { product: LEGAL_OPERATOR_CONFIG.productName })}
                 </p>
@@ -120,6 +126,11 @@ export default function LegalHubPage() {
                         </div>
                     </Link>
                 </div>
+
+                <Link to="/html/refund" className="mb-8 inline-flex min-h-11 items-center gap-2 text-sm text-foreground underline underline-offset-4">
+                    {REFUND_COPY.title[SUPPORTED_LOCALES.findIndex(({ code }) => code === locale)]}
+                    <ArrowRight className="size-4" aria-hidden />
+                </Link>
 
                 {/* 经营主体公示 */}
                 <section className="rounded-2xl border border-border bg-card p-8 text-xs leading-relaxed">

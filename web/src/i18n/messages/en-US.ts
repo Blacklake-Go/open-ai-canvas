@@ -147,7 +147,7 @@ export const enUS: Messages = {
             topup: "Top up / redeem",
             actions: "Account actions",
             settings: "Account & settings",
-            referral: "Referral center",
+            referral: "Share & Earn",
             adminConsole: "Admin console",
             logout: "Sign out",
             adminTools: "Admin tools",

@@ -127,6 +127,7 @@ type HtmlSidebarDockSocial struct {
 type HtmlSidebarDockConfig struct {
 	Enabled                    bool                    `json:"enabled"`
 	HideStandalonePricingGroup bool                    `json:"hideStandalonePricingGroup"`
+	HideIncentiveCard          bool                    `json:"hideIncentiveCard"`
 	Cards                      []HtmlSidebarDockCard   `json:"cards"`
 	SocialEnabled              bool                    `json:"socialEnabled"`
 	SyncWithSiteFooter         bool                    `json:"syncWithSiteFooter"`
@@ -569,9 +570,12 @@ func DefaultHtmlSiteFooterConfig() HtmlSiteFooterConfig {
 		SocialLinks: []HtmlFooterSocialLink{
 			{ID: "x", Name: "X (Twitter)", Handle: "@supdance_ai", Href: "https://x.com/supdance_ai"},
 			{ID: "youtube", Name: "YouTube", Handle: "SupDance AI", Href: "https://www.youtube.com/channel/UCOoro6d-vr6M-1UIpP5POew"},
-			{ID: "instagram", Name: "Instagram", Handle: "@supdance_com", Href: "https://www.instagram.com/supdance_com/"},
-			{ID: "xiaohongshu", Name: "小红书 (RED)", Handle: "SupDance", Href: "https://www.xiaohongshu.com/search_result?keyword=SupDance"},
+			{ID: "instagram", Name: "Instagram", Handle: "@supdance_ai", Href: "https://www.instagram.com/supdance_ai/"},
+			{ID: "xiaohongshu", Name: "小红书", Handle: "SupDance", Href: "https://www.xiaohongshu.com/user/profile/678ada5f000000000d0084c9"},
 			{ID: "qq", Name: "QQ 交流群", Handle: "SupDance 官方群", Href: "https://qm.qq.com/q/e8alJlLDuE"},
+			{ID: "threads", Name: "Threads", Handle: "@supdance_ai", Href: "https://www.threads.com/@supdance_ai"},
+			{ID: "discord", Name: "Discord", Handle: "SupDance", Href: "https://discord.gg/dBDAqa5HAG"},
+			{ID: "reddit", Name: "Reddit", Handle: "r/Supdance_ai", Href: "https://www.reddit.com/r/Supdance_ai/"},
 		},
 		Columns: []HtmlFooterLinkColumn{
 			{
@@ -607,7 +611,7 @@ func DefaultHtmlSiteFooterConfig() HtmlSiteFooterConfig {
 			{Label: "内容安全", Href: "/legal"},
 		},
 		CopyrightText:       "© 2026 supdance (supdance.com). 保留所有权利。",
-		IcpNumber:           "备案编号：沪ICP备2026050086号",
+		IcpNumber:           "备案编号：沪ICP备2026050086号-2",
 		IcpHref:             "https://beian.miit.gov.cn/",
 		OperatingSystemText: "新一代生成式 AI 创意工作系统",
 		StatusPrimaryText:   "高精创作画布内核",

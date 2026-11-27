@@ -1,28 +1,29 @@
 .sd-dock-root {
     width: 100%;
-    padding: 8px 0 6px;
-    border-bottom: 1px solid rgba(0, 0, 0, 0.06);
-    margin-bottom: 8px;
+    padding: 4px 0 4px;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+    margin-bottom: 6px;
     box-sizing: border-box;
 }
 
 .dark .sd-dock-root {
-    border-bottom-color: rgba(255, 255, 255, 0.08);
+    border-bottom-color: rgba(255, 255, 255, 0.06);
 }
 
+/* 上排：去除生硬边框与背景，自然服帖融入侧边栏 */
 .sd-dock-grid {
     display: grid;
     grid-template-columns: repeat(3, minmax(0, 1fr));
-    gap: 6px;
+    gap: 2px;
 }
 
 .sd-dock-card {
-    height: 46px;
+    height: 44px;
     padding: 5px 4px;
-    border-radius: 8px;
-    border: 1px solid rgba(0, 0, 0, 0.08);
-    background: rgba(0, 0, 0, 0.03);
-    color: rgba(23, 23, 26, 0.68);
+    border-radius: 9px;
+    border: 1px solid transparent;
+    background: transparent;
+    color: rgba(23, 23, 26, 0.66);
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -32,28 +33,23 @@
     min-width: 0;
     transition:
         background-color 150ms ease,
-        border-color 150ms ease,
         color 150ms ease,
         transform 130ms ease;
 }
 
 .dark .sd-dock-card {
-    border-color: rgba(255, 255, 255, 0.08);
-    background: rgba(255, 255, 255, 0.04);
-    color: rgba(244, 244, 245, 0.66);
+    color: rgba(244, 244, 245, 0.62);
 }
 
 .sd-dock-card:hover,
 .sd-dock-card:focus-visible {
-    background: rgba(0, 0, 0, 0.07);
-    border-color: rgba(0, 0, 0, 0.16);
+    background: rgba(0, 0, 0, 0.055);
     color: #17171a;
 }
 
 .dark .sd-dock-card:hover,
 .dark .sd-dock-card:focus-visible {
-    background: rgba(255, 255, 255, 0.09);
-    border-color: rgba(255, 255, 255, 0.2);
+    background: rgba(255, 255, 255, 0.07);
     color: #f4f4f5;
 }
 
@@ -72,35 +68,127 @@
     max-width: 100%;
 }
 
+/* 中排：横向分享激励卡（结构参考图 2，色彩严守 SupDance 暗灰 + 暖沙金体系） */
+.sd-dock-incentive-btn {
+    margin-top: 6px;
+    width: 100%;
+    padding: 8px 10px;
+    border-radius: 10px;
+    border: 1px solid rgba(23, 23, 26, 0.08);
+    background: linear-gradient(135deg, rgba(196, 178, 140, 0.14) 0%, rgba(23, 23, 26, 0.03) 65%, rgba(196, 178, 140, 0.08) 100%);
+    color: #17171a;
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    text-align: left;
+    cursor: pointer;
+    box-sizing: border-box;
+    transition:
+        background-color 160ms ease,
+        border-color 160ms ease,
+        transform 130ms ease;
+}
+
+.dark .sd-dock-incentive-btn {
+    border-color: rgba(238, 231, 215, 0.13);
+    background: linear-gradient(135deg, rgba(238, 231, 215, 0.08) 0%, rgba(255, 255, 255, 0.025) 56%, rgba(238, 231, 215, 0.04) 100%);
+    color: #f4f3ef;
+}
+
+.sd-dock-incentive-btn:hover,
+.sd-dock-incentive-btn:focus-visible {
+    border-color: rgba(23, 23, 26, 0.16);
+    background: linear-gradient(135deg, rgba(196, 178, 140, 0.2) 0%, rgba(23, 23, 26, 0.05) 65%, rgba(196, 178, 140, 0.12) 100%);
+}
+
+.dark .sd-dock-incentive-btn:hover,
+.dark .sd-dock-incentive-btn:focus-visible {
+    border-color: rgba(238, 231, 215, 0.25);
+    background: linear-gradient(135deg, rgba(238, 231, 215, 0.125) 0%, rgba(255, 255, 255, 0.045) 56%, rgba(238, 231, 215, 0.07) 100%);
+}
+
+.sd-dock-incentive-btn:active {
+    transform: scale(0.985);
+}
+
+.sd-dock-incentive-icon {
+    width: 26px;
+    height: 26px;
+    border-radius: 7px;
+    flex-shrink: 0;
+    background: rgba(23, 23, 26, 0.06);
+    color: #17171a;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.dark .sd-dock-incentive-icon {
+    background: rgba(238, 231, 215, 0.12);
+    color: #eee7d7;
+}
+
+.sd-dock-incentive-copy {
+    min-width: 0;
+    flex: 1 1 auto;
+    display: flex;
+    flex-direction: column;
+    gap: 1px;
+}
+
+.sd-dock-incentive-title {
+    font-size: 12px;
+    font-weight: 600;
+    line-height: 1.25;
+    color: inherit;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.sd-dock-incentive-sub {
+    font-size: 11px;
+    font-weight: 400;
+    line-height: 1.2;
+    color: rgba(23, 23, 26, 0.56);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.dark .sd-dock-incentive-sub {
+    color: rgba(244, 243, 239, 0.56);
+}
+
+/* 下排：无边框纯净社媒图标行，悬停柔和提亮 */
 .sd-dock-socials {
-    margin-top: 7px;
+    margin-top: 6px;
     display: flex;
     align-items: center;
     justify-content: space-between;
-    gap: 6px;
+    gap: 2px;
 }
 
 .sd-dock-social-btn {
-    height: 30px;
+    height: 28px;
     flex: 1 1 0;
     min-width: 0;
-    border-radius: 8px;
-    border: 1px solid rgba(0, 0, 0, 0.08);
-    color: rgba(23, 23, 26, 0.52);
+    border-radius: 7px;
+    border: none;
+    background: transparent;
+    color: rgba(23, 23, 26, 0.5);
     display: inline-flex;
     align-items: center;
     justify-content: center;
     text-decoration: none;
     transition:
         color 150ms ease,
-        border-color 150ms ease,
         background-color 150ms ease,
         transform 130ms ease;
 }
 
 .dark .sd-dock-social-btn {
-    border-color: rgba(255, 255, 255, 0.08);
-    color: rgba(244, 244, 245, 0.48);
+    color: rgba(244, 244, 245, 0.46);
 }
 
 .sd-dock-social-btn:hover {
@@ -113,21 +201,18 @@
 
 .sd-dock-social-btn[data-social="x"]:hover,
 .sd-dock-social-btn[data-social="threads"]:hover {
-    border-color: rgba(20, 20, 19, 0.28);
     background: rgba(20, 20, 19, 0.06);
     color: #141413;
 }
 
 .dark .sd-dock-social-btn[data-social="x"]:hover,
 .dark .sd-dock-social-btn[data-social="threads"]:hover {
-    border-color: rgba(245, 244, 240, 0.3);
-    background: rgba(255, 255, 255, 0.08);
+    background: rgba(255, 255, 255, 0.075);
     color: #f5f4f0;
 }
 
 .sd-dock-social-btn[data-social="youtube"]:hover {
-    border-color: rgba(239, 68, 68, 0.4);
-    background: rgba(239, 68, 68, 0.1);
+    background: rgba(239, 68, 68, 0.09);
     color: #dc2626;
 }
 .dark .sd-dock-social-btn[data-social="youtube"]:hover {
@@ -135,8 +220,7 @@
 }
 
 .sd-dock-social-btn[data-social="instagram"]:hover {
-    border-color: rgba(236, 72, 153, 0.4);
-    background: rgba(236, 72, 153, 0.1);
+    background: rgba(236, 72, 153, 0.09);
     color: #db2777;
 }
 .dark .sd-dock-social-btn[data-social="instagram"]:hover {
@@ -144,8 +228,7 @@
 }
 
 .sd-dock-social-btn[data-social="xiaohongshu"]:hover {
-    border-color: rgba(244, 63, 94, 0.4);
-    background: rgba(244, 63, 94, 0.1);
+    background: rgba(244, 63, 94, 0.09);
     color: #e11d48;
 }
 .dark .sd-dock-social-btn[data-social="xiaohongshu"]:hover {
@@ -153,8 +236,7 @@
 }
 
 .sd-dock-social-btn[data-social="qq"]:hover {
-    border-color: rgba(56, 189, 248, 0.4);
-    background: rgba(56, 189, 248, 0.1);
+    background: rgba(56, 189, 248, 0.09);
     color: #0284c7;
 }
 .dark .sd-dock-social-btn[data-social="qq"]:hover {
@@ -162,8 +244,7 @@
 }
 
 .sd-dock-social-btn[data-social="discord"]:hover {
-    border-color: rgba(99, 102, 241, 0.4);
-    background: rgba(99, 102, 241, 0.1);
+    background: rgba(99, 102, 241, 0.09);
     color: #4f46e5;
 }
 .dark .sd-dock-social-btn[data-social="discord"]:hover {
@@ -171,15 +252,14 @@
 }
 
 .sd-dock-social-btn[data-social="reddit"]:hover {
-    border-color: rgba(249, 115, 22, 0.4);
-    background: rgba(249, 115, 22, 0.1);
+    background: rgba(249, 115, 22, 0.09);
     color: #ea580c;
 }
 .dark .sd-dock-social-btn[data-social="reddit"]:hover {
     color: #fb923c;
 }
 
-/* 折叠态：居中圆形生态入口钮 */
+/* 折叠态：居中生态入口钮 */
 .sd-dock-root.is-collapsed {
     display: flex;
     justify-content: center;
@@ -191,8 +271,8 @@
     width: 36px;
     height: 36px;
     border-radius: 10px;
-    border: 1px solid rgba(0, 0, 0, 0.08);
-    background: rgba(0, 0, 0, 0.03);
+    border: 1px solid transparent;
+    background: transparent;
     color: rgba(23, 23, 26, 0.62);
     display: inline-flex;
     align-items: center;
@@ -200,33 +280,30 @@
     cursor: pointer;
     transition:
         background-color 150ms ease,
-        border-color 150ms ease,
         color 150ms ease;
 }
 
 .dark .sd-dock-collapsed-trigger {
-    border-color: rgba(255, 255, 255, 0.09);
-    background: rgba(255, 255, 255, 0.04);
     color: rgba(244, 244, 245, 0.64);
 }
 
 .sd-dock-collapsed-trigger:hover {
-    background: rgba(0, 0, 0, 0.07);
+    background: rgba(0, 0, 0, 0.06);
     color: #17171a;
 }
 
 .dark .sd-dock-collapsed-trigger:hover {
-    background: rgba(255, 255, 255, 0.09);
+    background: rgba(255, 255, 255, 0.08);
     color: #f4f4f5;
 }
 
 .sd-dock-popover-box {
-    width: 196px;
+    width: 212px;
     padding: 2px;
 }
 
 .sd-dock-popover-title {
-    margin: 0 0 8px;
+    margin: 0 0 6px;
     font-size: 11px;
     font-weight: 600;
     letter-spacing: 0.04em;

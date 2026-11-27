@@ -148,7 +148,7 @@ export const frFR: Messages = {
             topup: "Recharger / échanger",
             actions: "Actions du compte",
             settings: "Compte et paramètres",
-            referral: "Parrainage",
+            referral: "Partage & Bonus",
             adminConsole: "Console d'administration",
             logout: "Se déconnecter",
             adminTools: "Outils d'administration",

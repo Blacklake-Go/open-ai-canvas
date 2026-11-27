@@ -1,0 +1,456 @@
+/* 社交分享激励浮窗样式 —— 严格对齐 SupDance 首页原生卡片与暖沙金视觉基因 */
+.sd-incentive-modal .ant-modal-content,
+.sd-incentive-modal .ant-modal-container {
+    padding: 0 !important;
+    background: transparent !important;
+    box-shadow: none !important;
+    border: none !important;
+}
+
+.sd-incentive-modal .ant-modal-body {
+    padding: 0 !important;
+}
+
+.sd-incentive-card-shell {
+    position: relative;
+    width: 100%;
+    border-radius: 22px;
+    padding: 26px 26px 24px;
+    background: radial-gradient(circle at 82% 16%, rgba(238, 231, 215, 0.06) 0%, rgba(24, 24, 26, 0.98) 54%, #151517 100%);
+    border: 1px solid rgba(255, 255, 255, 0.11);
+    box-shadow:
+        0 24px 64px rgba(0, 0, 0, 0.65),
+        inset 0 1px 0 rgba(255, 255, 255, 0.06);
+    color: #f4f3ef;
+    box-sizing: border-box;
+}
+
+html:not(.dark) .sd-incentive-card-shell {
+    background: radial-gradient(circle at 82% 16%, rgba(196, 178, 140, 0.1) 0%, #fcfbf8 54%, #f7f5f0 100%);
+    border-color: rgba(20, 20, 19, 0.1);
+    box-shadow:
+        0 24px 60px rgba(20, 20, 19, 0.14),
+        inset 0 1px 0 rgba(255, 255, 255, 0.9);
+    color: #17171a;
+}
+
+.sd-incentive-close {
+    position: absolute;
+    top: 14px;
+    right: 14px;
+    width: 28px;
+    height: 28px;
+    border-radius: 999px;
+    border: none;
+    background: transparent;
+    color: rgba(244, 243, 239, 0.45);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition:
+        background-color 140ms ease,
+        color 140ms ease;
+}
+
+.sd-incentive-close:hover {
+    background: rgba(255, 255, 255, 0.08);
+    color: #f4f3ef;
+}
+
+html:not(.dark) .sd-incentive-close {
+    color: rgba(23, 23, 26, 0.45);
+}
+
+html:not(.dark) .sd-incentive-close:hover {
+    background: rgba(23, 23, 26, 0.07);
+    color: #17171a;
+}
+
+.sd-incentive-hero {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 16px;
+    padding-right: 14px;
+}
+
+.sd-incentive-hero-left {
+    min-width: 0;
+    flex: 1 1 auto;
+}
+
+.sd-incentive-title {
+    margin: 0;
+    font-size: 24px;
+    font-weight: 400;
+    line-height: 1.25;
+    letter-spacing: -0.02em;
+    color: rgba(244, 243, 239, 0.92);
+}
+
+html:not(.dark) .sd-incentive-title {
+    color: #17171a;
+}
+
+.sd-incentive-reward-row {
+    margin-top: 2px;
+    display: flex;
+    align-items: baseline;
+    gap: 6px;
+    flex-wrap: wrap;
+}
+
+.sd-incentive-reward-figure {
+    font-size: 40px;
+    font-weight: 400;
+    line-height: 1.1;
+    letter-spacing: -0.03em;
+    color: #f8f7f3;
+}
+
+html:not(.dark) .sd-incentive-reward-figure {
+    color: #141413;
+}
+
+.sd-incentive-reward-unit {
+    font-size: 16px;
+    font-weight: 400;
+    color: rgba(244, 243, 239, 0.72);
+}
+
+html:not(.dark) .sd-incentive-reward-unit {
+    color: rgba(23, 23, 26, 0.65);
+}
+
+.sd-incentive-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    margin-top: 10px;
+    padding: 4px 12px;
+    border-radius: 999px;
+    background: #eee7d7;
+    color: #18181a;
+    font-size: 12px;
+    font-weight: 600;
+    line-height: 1.4;
+}
+
+html:not(.dark) .sd-incentive-badge {
+    background: #1d1d1b;
+    color: #eee7d7;
+}
+
+.sd-incentive-logo-box {
+    width: 78px;
+    height: 78px;
+    flex-shrink: 0;
+    border-radius: 20px;
+    background: linear-gradient(155deg, rgba(255, 255, 255, 0.08) 0%, rgba(255, 255, 255, 0.02) 100%);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.09);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+}
+
+html:not(.dark) .sd-incentive-logo-box {
+    background: linear-gradient(155deg, #252527 0%, #171719 100%);
+    border-color: rgba(20, 20, 19, 0.12);
+}
+
+.sd-incentive-logo-img {
+    width: 44px;
+    height: 44px;
+    border-radius: 11px;
+    object-fit: cover;
+    display: block;
+}
+
+.sd-incentive-divider {
+    height: 1px;
+    width: 100%;
+    margin: 20px 0 18px;
+    background: rgba(255, 255, 255, 0.1);
+}
+
+html:not(.dark) .sd-incentive-divider {
+    background: rgba(20, 20, 19, 0.09);
+}
+
+.sd-incentive-points {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.sd-incentive-point-item {
+    position: relative;
+    padding-left: 16px;
+    font-size: 13.5px;
+    line-height: 1.55;
+    color: rgba(244, 243, 239, 0.78);
+}
+
+.sd-incentive-point-item::before {
+    content: "";
+    position: absolute;
+    left: 2px;
+    top: 8px;
+    width: 4px;
+    height: 4px;
+    border-radius: 999px;
+    background: rgba(238, 231, 215, 0.85);
+}
+
+.sd-incentive-point-item strong {
+    font-weight: 600;
+    color: #f8f7f3;
+}
+
+html:not(.dark) .sd-incentive-point-item {
+    color: rgba(23, 23, 26, 0.76);
+}
+
+html:not(.dark) .sd-incentive-point-item::before {
+    background: rgba(23, 23, 26, 0.65);
+}
+
+html:not(.dark) .sd-incentive-point-item strong {
+    color: #141413;
+}
+
+.sd-incentive-code-bar {
+    margin-top: 16px;
+    padding: 9px 12px;
+    border-radius: 12px;
+    background: rgba(255, 255, 255, 0.035);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+}
+
+html:not(.dark) .sd-incentive-code-bar {
+    background: rgba(20, 20, 19, 0.035);
+    border-color: rgba(20, 20, 19, 0.08);
+}
+
+.sd-incentive-code-meta {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    min-width: 0;
+}
+
+.sd-incentive-code-label {
+    font-size: 12px;
+    color: rgba(244, 243, 239, 0.56);
+    white-space: nowrap;
+}
+
+html:not(.dark) .sd-incentive-code-label {
+    color: rgba(23, 23, 26, 0.56);
+}
+
+.sd-incentive-code-value {
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+    font-size: 13px;
+    font-weight: 600;
+    letter-spacing: 0.06em;
+    color: #eee7d7;
+}
+
+html:not(.dark) .sd-incentive-code-value {
+    color: #17171a;
+}
+
+.sd-incentive-code-copy {
+    border: none;
+    background: transparent;
+    color: rgba(238, 231, 215, 0.86);
+    font-size: 12px;
+    font-weight: 500;
+    cursor: pointer;
+    padding: 2px 6px;
+    border-radius: 6px;
+    transition: background-color 140ms ease;
+}
+
+.sd-incentive-code-copy:hover {
+    background: rgba(255, 255, 255, 0.08);
+}
+
+html:not(.dark) .sd-incentive-code-copy {
+    color: #17171a;
+}
+
+html:not(.dark) .sd-incentive-code-copy:hover {
+    background: rgba(20, 20, 19, 0.07);
+}
+
+.sd-incentive-cta {
+    margin-top: 18px;
+    width: 100%;
+    height: 46px;
+    border-radius: 999px;
+    border: none;
+    background: #f3f2ee;
+    color: #141413;
+    font-size: 14px;
+    font-weight: 600;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    cursor: pointer;
+    transition:
+        background-color 150ms ease,
+        transform 120ms ease;
+}
+
+.sd-incentive-cta:hover {
+    background: #ffffff;
+}
+
+.sd-incentive-cta:active {
+    transform: scale(0.985);
+}
+
+html:not(.dark) .sd-incentive-cta {
+    background: #17171a;
+    color: #f8f7f3;
+}
+
+html:not(.dark) .sd-incentive-cta:hover {
+    background: #27272c;
+}
+
+.sd-incentive-social-row {
+    margin-top: 12px;
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 8px;
+}
+
+.sd-incentive-social-chip {
+    height: 36px;
+    border-radius: 10px;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    background: rgba(255, 255, 255, 0.03);
+    color: rgba(244, 243, 239, 0.78);
+    font-size: 12px;
+    font-weight: 500;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    cursor: pointer;
+    transition:
+        background-color 140ms ease,
+        border-color 140ms ease,
+        color 140ms ease;
+}
+
+.sd-incentive-social-chip:hover {
+    background: rgba(255, 255, 255, 0.08);
+    border-color: rgba(255, 255, 255, 0.16);
+    color: #ffffff;
+}
+
+html:not(.dark) .sd-incentive-social-chip {
+    border-color: rgba(20, 20, 19, 0.08);
+    background: rgba(20, 20, 19, 0.03);
+    color: rgba(23, 23, 26, 0.78);
+}
+
+html:not(.dark) .sd-incentive-social-chip:hover {
+    background: rgba(20, 20, 19, 0.07);
+    border-color: rgba(20, 20, 19, 0.15);
+    color: #141413;
+}
+
+.sd-incentive-stats-box {
+    margin-top: 16px;
+    padding: 12px 14px;
+    border-radius: 14px;
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.07);
+}
+
+html:not(.dark) .sd-incentive-stats-box {
+    background: rgba(20, 20, 19, 0.025);
+    border-color: rgba(20, 20, 19, 0.07);
+}
+
+.sd-incentive-stats-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 10px;
+}
+
+.sd-incentive-stats-title {
+    font-size: 12px;
+    font-weight: 500;
+    color: rgba(244, 243, 239, 0.56);
+}
+
+html:not(.dark) .sd-incentive-stats-title {
+    color: rgba(23, 23, 26, 0.56);
+}
+
+.sd-incentive-stats-more {
+    display: inline-flex;
+    align-items: center;
+    gap: 2px;
+    font-size: 12px;
+    color: #eee7d7;
+    text-decoration: none;
+    transition: opacity 140ms ease;
+}
+
+.sd-incentive-stats-more:hover {
+    opacity: 0.8;
+}
+
+html:not(.dark) .sd-incentive-stats-more {
+    color: #17171a;
+}
+
+.sd-incentive-stats-grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 10px;
+}
+
+.sd-incentive-stat-cell {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.sd-incentive-stat-label {
+    font-size: 11px;
+    color: rgba(244, 243, 239, 0.5);
+}
+
+.sd-incentive-stat-val {
+    font-size: 16px;
+    font-weight: 600;
+    color: #f4f3ef;
+}
+
+html:not(.dark) .sd-incentive-stat-label {
+    color: rgba(23, 23, 26, 0.52);
+}
+
+html:not(.dark) .sd-incentive-stat-val {
+    color: #17171a;
+}

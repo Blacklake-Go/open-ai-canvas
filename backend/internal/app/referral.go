@@ -38,6 +38,39 @@ type ReferralSetting struct {
 	CommissionRateBasisPoints int64  `json:"commissionRateBasisPoints"`
 }
 
+// ReferralPublicConfig 对外暴露的激励规则只读配置，不含任何用户敏感信息。
+type ReferralPublicConfig struct {
+	Enabled                   bool   `json:"enabled"`
+	Mode                      string `json:"mode"`
+	CommissionRateBasisPoints int64  `json:"commissionRateBasisPoints"`
+}
+
+// PublicReferralConfig 返回当前分享激励规则配置（免登录读取，出错回退默认值）。
+func (s *Service) PublicReferralConfig() (ReferralPublicConfig, error) {
+	if s.repo == nil {
+		def := defaultReferralSetting()
+		return ReferralPublicConfig{
+			Enabled:                   def.Enabled,
+			Mode:                      def.Mode,
+			CommissionRateBasisPoints: def.CommissionRateBasisPoints,
+		}, nil
+	}
+	setting, err := s.referralSetting()
+	if err != nil {
+		def := defaultReferralSetting()
+		return ReferralPublicConfig{
+			Enabled:                   def.Enabled,
+			Mode:                      def.Mode,
+			CommissionRateBasisPoints: def.CommissionRateBasisPoints,
+		}, nil
+	}
+	return ReferralPublicConfig{
+		Enabled:                   setting.Enabled,
+		Mode:                      setting.Mode,
+		CommissionRateBasisPoints: setting.CommissionRateBasisPoints,
+	}, nil
+}
+
 type ReferralOverview struct {
 	Code                      string                   `json:"code"`
 	Mode                      string                   `json:"mode"`

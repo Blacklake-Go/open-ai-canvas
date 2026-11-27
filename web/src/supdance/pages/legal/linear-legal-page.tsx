@@ -10,6 +10,7 @@ import { LegalThemeToggler } from "./legal-theme-toggler";
 import { LegalBrand } from "./legal-brand";
 import { LegalHeaderNav } from "./legal-header-nav";
 import { SupdanceAboutFooter } from "@/supdance/components/site-footer/supdance-about-footer";
+import { usePublicTitle } from "../public-copy/public-page";
 
 interface LinearLegalPageProps {
     children?: ReactNode;
@@ -80,6 +81,7 @@ export function LinearLegalPage({ docMap, currentSlug, children }: LinearLegalPa
     }, [location.hash, lang]);
 
     const currentDoc = docMap[lang] || docMap.en;
+    usePublicTitle(currentDoc.title);
 
     return (
         <div className="legal-public-page bg-background font-sans text-foreground transition-colors duration-200">

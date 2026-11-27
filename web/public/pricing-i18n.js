@@ -1,6 +1,12 @@
 (function () {
     const locales = ["zh-CN", "en-US", "zh-TW", "es-ES", "fr-FR", "de-DE", "ja-JP", "ko-KR"];
     const terms = [
+        ["定价", "PRICING", "定價", "PRECIOS", "TARIFS", "PREISE", "料金", "요금"],
+        ["语言选项", "Language options", "語言選項", "Opciones de idioma", "Options de langue", "Sprachauswahl", "言語の選択肢", "언어 옵션"],
+        ["备案编号", "ICP registration", "備案編號", "Registro ICP", "Enregistrement ICP", "ICP-Registrierung", "ICP 登録番号", "ICP 등록 번호"],
+        ["QQ 交流群", "QQ community group", "QQ 交流群", "Grupo de la comunidad de QQ", "Groupe communautaire QQ", "QQ-Communitygruppe", "QQ コミュニティグループ", "QQ 커뮤니티 그룹"],
+        ["SupDance 官方群", "SupDance official group", "SupDance 官方群", "Grupo oficial de SupDance", "Groupe officiel SupDance", "Offizielle SupDance-Gruppe", "SupDance 公式グループ", "SupDance 공식 그룹"],
+        ["小红书 (RED)", "Xiaohongshu (RED)", "小紅書 (RED)", "Xiaohongshu (RED)", "Xiaohongshu (RED)", "Xiaohongshu (RED)", "小紅書（RED）", "샤오홍슈 (RED)"],
         // BEGIN SHARED FOOTER TRANSLATIONS
         ["AI 创意工作室", "AI Creative Studio", "AI 創意工作室", "Estudio creativo de IA", "Studio de création IA", "Kreativstudio für KI", "AI クリエイティブスタジオ", "AI 크리에이티브 스튜디오"],
         [
@@ -39,6 +45,8 @@
         ["任务中心", "Tasks", "任務中心", "Tareas", "Tâches", "Aufgaben", "タスク", "작업"],
         ["法律与支持", "Legal & support", "法律與支持", "Legales y soporte", "Informations et assistance", "Rechtliches & Support", "法務・サポート", "법률 및 지원"],
         ["定价表", "Pricing", "定價表", "Precios", "Tarifs", "Preise", "料金表", "요금표"],
+        ["关于我们", "About Us", "關於我們", "Sobre nosotros", "À propos", "Über uns", "会社概要", "회사 소개"],
+
         ["联系我们", "Contact us", "聯絡我們", "Contáctenos", "Nous contacter", "Kontakt", "お問い合わせ", "문의하기"],
         ["价目表", "Pricing", "價目表", "Precios", "Grille tarifaire", "Preisliste", "料金表", "요금표"],
         [
@@ -409,7 +417,11 @@
     }
     const attributes = Array.from(document.querySelectorAll("[aria-label]"), (element) => [element, element.getAttribute("data-pricing-aria-source") ?? element.getAttribute("aria-label")]);
     const translations = new Map(terms.map((row) => [row[0], row]));
+    // The public HTML is pre-rendered in English. Some shared navigation strings
+    // can also arrive from the live shell without an inline source marker.
+    for (const row of terms) if (!translations.has(row[1])) translations.set(row[1], row);
     const footerSources = new Map();
+    const socialSources = new WeakMap();
     const footerFields = ["sd-ft-brand-slogan", "sd-ft-brand-vision", "sd-ft-social-label"];
     function translateFooter(index) {
         for (const id of footerFields) {
@@ -417,6 +429,19 @@
             if (!element) continue;
             if (!footerSources.has(id)) footerSources.set(id, element.getAttribute("data-pricing-footer-source") ?? element.textContent);
             element.textContent = translate(footerSources.get(id), index);
+        }
+        const registration = document.getElementById("sd-ft-icp");
+        const registrationNumber = registration?.textContent.match(/\p{Script=Han}ICP备[\d-]+号(?:-\d+)?\s*$/u)?.[0].trim();
+        if (registrationNumber) registration.textContent = `${translations.get("备案编号")[index]} · ${registrationNumber}`;
+        for (const anchor of document.querySelectorAll("#sd-ft-social-list a")) {
+            for (const attribute of ["aria-label", "title"]) {
+                const current = anchor.getAttribute(attribute);
+                if (!current) continue;
+                const original = socialSources.get(anchor) ?? {};
+                original[attribute] ??= current;
+                socialSources.set(anchor, original);
+                anchor.setAttribute(attribute, translate(original[attribute], index));
+            }
         }
     }
     document.addEventListener("supdance:footer-config-applied", () => {
@@ -427,15 +452,15 @@
         translateFooter(Math.max(0, locales.indexOf(root.lang)));
     });
     function translate(source, index) {
-        if (index === 0) return source;
         const text = source.trim();
-        const credits = /^([\d,]+(?:\.\d+)?) 积分\/百万Token$/.exec(text);
+        const translated = translations.get(text)?.[index];
+        if (translated) return source.replace(text, () => translated);
+        const credits = /^([\d,]+(?:\.\d+)?) (?:积分\/百万Token|credits\/1M tokens)$/.exec(text);
         if (credits) {
             const units = ["积分/百万Token", "credits/1M tokens", "積分/百萬Token", "créditos/millón de tokens", "crédits/million de tokens", "Credits/Million Token", "クレジット/100万トークン", "크레딧/백만 토큰"];
             return source.replace(text, () => `${credits[1]} ${units[index]}`);
         }
-        const translated = translations.get(text)?.[index];
-        return translated ? source.replace(text, () => translated) : source;
+        return ["QQ 交流群", "SupDance 官方群", "小红书 (RED)"].reduce((value, name) => value.replace(name, translations.get(name)[index]), source);
     }
     function setLocale(locale) {
         const index = Math.max(0, locales.indexOf(locale));
@@ -457,23 +482,18 @@
         }
         document.querySelector('meta[name="description"]')?.setAttribute("content", translate("Supdance 积分套餐、云存储与 AI 模型公开价目表。", index));
     }
-    function setTheme(theme) {
+    function setTheme(theme, persist = true) {
         root.dataset.theme = theme;
         themeButton.innerHTML = theme === "dark" ? sunIcon : moonIcon;
         themeButton.setAttribute("aria-pressed", String(theme === "dark"));
+        if (!persist) return;
         try {
             localStorage.setItem("yingce:theme_store", JSON.stringify({ state: { theme }, version: 0 }));
         } catch (_) {
             /* Keep the current theme when preferences cannot be persisted. */
         }
     }
-    let storedTheme;
-    try {
-        storedTheme = JSON.parse(localStorage.getItem("yingce:theme_store") || "null")?.state?.theme;
-    } catch (_) {
-        storedTheme = null;
-    }
-    setTheme(storedTheme === "dark" ? "dark" : "light");
+    setTheme(root.dataset.theme, false);
     const params = new URLSearchParams(location.search);
     const requested = params.get("lang");
     let savedLocale;

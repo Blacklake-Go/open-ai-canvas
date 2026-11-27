@@ -13,7 +13,7 @@ export class PageResourceError extends Error {
     }
 }
 
-export type ModuleLoadPriority = { foreground: boolean };
+export type ModuleLoadPriority = { foreground: boolean; useNativePreloads?: boolean };
 
 type Download = {
     owners: Set<ModuleLoadPriority>;
@@ -46,6 +46,9 @@ export function prioritizeModuleLoad(priority: ModuleLoadPriority) {
 /** Validate transport before native import, which can cache a failed module for this document. */
 export async function warmPreloadResources(urls: string[]) {
     const priority = currentPriority;
+    // Startup failures already recover by reloading the entry document.
+    // Let the browser preload that graph directly, avoiding a separate fetch pass.
+    if (priority.useNativePreloads) return;
     const pending = urls.map((url) => {
         let download = requests.get(url);
         if (!download) {

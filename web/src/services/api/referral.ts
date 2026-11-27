@@ -10,6 +10,12 @@ export type ReferralSetting = {
     commissionRateBasisPoints: number;
 };
 
+export type ReferralPublicConfig = {
+    enabled: boolean;
+    mode: ReferralMode;
+    commissionRateBasisPoints: number;
+};
+
 export type ReferralStats = {
     inviteeCount: number;
     paidInviteeCount: number;
@@ -44,6 +50,14 @@ type Paged = { total: number; page: number; pageSize: number };
 
 export function getReferralOverview() {
     return http.get<ReferralOverview>("/referral");
+}
+
+export async function getPublicReferralConfig(signal?: AbortSignal): Promise<ReferralPublicConfig> {
+    try {
+        return await http.get<ReferralPublicConfig>("/referral/public", { signal });
+    } catch {
+        return { enabled: false, mode: "all", commissionRateBasisPoints: 1_000 };
+    }
 }
 
 export function listReferralInvitees(params: PageParams = {}) {

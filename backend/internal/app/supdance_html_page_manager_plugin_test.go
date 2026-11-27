@@ -102,8 +102,8 @@ func TestDefaultHtmlSiteFooterConfig(t *testing.T) {
 
 func TestDefaultHtmlSidebarDockConfig(t *testing.T) {
 	cfg := DefaultHtmlSidebarDockConfig()
-	if !cfg.Enabled || !cfg.HideStandalonePricingGroup {
-		t.Fatal("预期侧边栏停靠区默认开启并收起中部孤立定价表分组")
+	if !cfg.Enabled || !cfg.HideStandalonePricingGroup || cfg.HideIncentiveCard {
+		t.Fatal("预期侧边栏停靠区默认开启、收起中部孤立定价表分组且默认展示分享激励卡")
 	}
 	if len(cfg.Cards) != 3 {
 		t.Fatalf("预期默认提供 3 格生态快链卡片，实际 %d", len(cfg.Cards))

@@ -1,84 +1,93 @@
+import { ArrowUpRight } from "lucide-react";
+import { useEffect, useState, type MouseEvent } from "react";
 import { Link } from "react-router";
-import { Sparkles, ArrowRight } from "lucide-react";
-import { GitHubIcon } from "./github-icon";
-import { LegalThemeToggler } from "../legal/legal-theme-toggler";
-import { TopbarLanguageSwitcher } from "@/supdance/plugins/i18n";
-import { OFFICIAL_REPO_URL } from "./mcp-plugin-list";
+import { useLocaleStore } from "@/stores/use-locale-store";
 import { useUserStore } from "@/stores/use-user-store";
+import { TopbarLanguageSwitcher } from "@/supdance/plugins/i18n";
+
+const HEADER_NAV_COPY: Record<string, Record<string, string>> = {
+    arch: {
+        "zh-CN": "架构理念", "zh-TW": "架構理念", "en-US": "Architecture",
+        "ja-JP": "アーキテクチャ", "ko-KR": "아키텍처", "es-ES": "Arquitectura", "fr-FR": "Architecture", "de-DE": "Architektur",
+    },
+    tools: {
+        "zh-CN": "工具规范", "zh-TW": "工具規範", "en-US": "Tools Schema",
+        "ja-JP": "ツール定義", "ko-KR": "도구 명세", "es-ES": "Esquema de herramientas", "fr-FR": "Schéma d'outils", "de-DE": "Tool-Schema",
+    },
+    config: {
+        "zh-CN": "接入预览", "zh-TW": "接入預覽", "en-US": "Config Spec",
+        "ja-JP": "接続プレビュー", "ko-KR": "연동 미리보기", "es-ES": "Vista de configuración", "fr-FR": "Config & Intégration", "de-DE": "Konfiguration",
+    },
+    roadmap: {
+        "zh-CN": "研发路线", "zh-TW": "研發路線", "en-US": "Roadmap",
+        "ja-JP": "ロードマップ", "ko-KR": "로드맵", "es-ES": "Hoja de ruta", "fr-FR": "Feuille de route", "de-DE": "Roadmap",
+    },
+    about: {
+        "zh-CN": "关于我们", "zh-TW": "關於我們", "en-US": "About",
+        "ja-JP": "私たちについて", "ko-KR": "회사 소개", "es-ES": "Acerca de", "fr-FR": "À propos", "de-DE": "Über uns",
+    },
+    enterWorkspace: {
+        "zh-CN": "进入工作台", "zh-TW": "進入工作台", "en-US": "Workspace",
+        "ja-JP": "ワークスペース", "ko-KR": "워크스페이스", "es-ES": "Espacio de trabajo", "fr-FR": "Espace de travail", "de-DE": "Workspace",
+    },
+};
+
+function pickNav(locale: string, key: keyof typeof HEADER_NAV_COPY): string {
+    const item = HEADER_NAV_COPY[key];
+    return item[locale] || item["en-US"] || item["zh-CN"];
+}
 
 export function McpHeader() {
     const user = useUserStore((s) => s.user);
+    const locale = useLocaleStore((s) => s.locale);
+    const [scrolled, setScrolled] = useState(false);
+
+    useEffect(() => {
+        const onScroll = () => {
+            const y = window.scrollY || document.documentElement.scrollTop;
+            setScrolled(y > 30);
+        };
+        onScroll();
+        window.addEventListener("scroll", onScroll, { passive: true });
+        return () => window.removeEventListener("scroll", onScroll);
+    }, []);
+
+    const handleAnchorClick = (e: MouseEvent<HTMLAnchorElement>, selector: string) => {
+        e.preventDefault();
+        const target = document.querySelector(selector);
+        if (target) {
+            target.scrollIntoView({ behavior: "smooth", block: "start" });
+        }
+    };
 
     return (
-        <header className="sticky top-0 z-50 flex h-16 w-full items-center justify-between border-b border-border bg-background/85 px-4 sm:px-8 backdrop-blur-xl transition-colors">
-            {/* 左侧：Logo 与品牌 */}
-            <div className="flex items-center gap-3">
-                <Link to="/" className="group flex items-center gap-2.5 text-base font-semibold tracking-tight no-underline">
-                    <span className="grid size-8 shrink-0 place-items-center rounded-lg bg-neutral-950 ring-1 ring-border">
-                        <img src="/supdance-mark.png" alt="" className="size-[27px] object-contain" />
-                    </span>
-                    <span className="font-bold tracking-tight text-foreground">SupDance</span>
-                </Link>
-                <span className="rounded border border-rose-500/30 bg-rose-500/10 px-2 py-0.5 font-mono text-[var(--fs-label)] font-semibold tracking-wider text-rose-600 dark:text-rose-400">MCP & PLUGINS</span>
-            </div>
-
-            {/* 中间导航 */}
-            <nav className="hidden items-center gap-6 text-xs font-medium text-muted-foreground md:flex">
-                <a href="#cli-quickstart" className="transition-colors hover:text-foreground">
-                    CLI 安装指南
-                </a>
-                <a href="#plugins-market" className="transition-colors hover:text-foreground">
-                    插件集市
-                </a>
-                <a href="#tools-schema" className="transition-colors hover:text-foreground">
-                    MCP 工具清单
-                </a>
-                <a href="#faqs" className="transition-colors hover:text-foreground">
-                    常见排查
-                </a>
-                <a href="/pricing.html" className="transition-colors hover:text-foreground">
-                    定价表
-                </a>
-                <a href={OFFICIAL_REPO_URL} target="_blank" rel="noreferrer" className="flex items-center gap-1.5 transition-colors hover:text-foreground">
-                    <GitHubIcon className="size-3.5" />
-                    <span>开源仓库</span>
-                </a>
-            </nav>
-
-            {/* 右侧：多语言、明暗、GitHub Star 与登录/工作台入口 */}
-            <div className="flex items-center gap-2.5">
-                <div className="hidden sm:block">
-                    <TopbarLanguageSwitcher surface="legal" className="min-h-9 rounded-lg border border-border px-2.5 text-xs text-muted-foreground hover:text-foreground" />
+        <header className={`mcp-header${scrolled ? " is-scrolled" : ""}`}>
+            <div className="mcp-header-inner">
+                <div className="mcp-brand-wrap">
+                    <Link to="/" className="mcp-brand-link" aria-label="SupDance Home">
+                        <span className="mcp-brand-mark-box">
+                            <img src="/supdance-mark.png" alt="SupDance" />
+                        </span>
+                        <span>SupDance</span>
+                    </Link>
+                    <span className="mcp-brand-tag">MCP</span>
                 </div>
-                <LegalThemeToggler />
 
-                <a
-                    href={OFFICIAL_REPO_URL}
-                    target="_blank"
-                    rel="noreferrer"
-                    className="hidden sm:inline-flex items-center gap-1.5 rounded-lg border border-border bg-muted/60 px-3 py-1.5 text-xs font-semibold text-foreground transition-colors hover:bg-muted"
-                >
-                    <GitHubIcon className="size-3.5" />
-                    <span>Star</span>
-                </a>
+                <nav className="mcp-header-nav" aria-label="MCP 页面导航">
+                    <a href="#mcp-architecture" onClick={(e) => handleAnchorClick(e, "#mcp-architecture")}>{pickNav(locale, "arch")}</a>
+                    <a href="#tools-schema" onClick={(e) => handleAnchorClick(e, "#tools-schema")}>{pickNav(locale, "tools")}</a>
+                    <a href="#config-spec" onClick={(e) => handleAnchorClick(e, "#config-spec")}>{pickNav(locale, "config")}</a>
+                    <a href="#mcp-roadmap" onClick={(e) => handleAnchorClick(e, "#mcp-roadmap")}>{pickNav(locale, "roadmap")}</a>
+                    <a href="/html/about">{pickNav(locale, "about")}</a>
+                </nav>
 
-                {user ? (
-                    <Link
-                        to="/create"
-                        className="inline-flex items-center gap-1.5 rounded-lg bg-[var(--button-primary-bg)] px-3.5 py-1.5 text-xs font-semibold text-[var(--button-primary-fg)] shadow-[var(--button-primary-shadow)] transition-transform hover:scale-105 hover:bg-[var(--button-primary-hover-bg)]"
-                    >
-                        <span>进入创作台</span>
-                        <ArrowRight className="size-3.5" />
+                <div className="mcp-header-actions">
+                    <TopbarLanguageSwitcher surface="legal" className="mcp-lang-btn" />
+                    <Link to={user ? "/create" : "/"} className="mcp-header-cta">
+                        <span>{pickNav(locale, "enterWorkspace")}</span>
+                        <ArrowUpRight className="size-3.5" strokeWidth={1.8} aria-hidden="true" />
                     </Link>
-                ) : (
-                    <Link
-                        to="/login"
-                        className="inline-flex items-center gap-1.5 rounded-lg bg-[var(--button-primary-bg)] px-3.5 py-1.5 text-xs font-semibold text-[var(--button-primary-fg)] shadow-[var(--button-primary-shadow)] transition-transform hover:scale-105 hover:bg-[var(--button-primary-hover-bg)]"
-                    >
-                        <Sparkles className="size-3.5" />
-                        <span>立即登录</span>
-                    </Link>
-                )}
+                </div>
             </div>
         </header>
     );

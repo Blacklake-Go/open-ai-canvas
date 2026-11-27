@@ -10,6 +10,14 @@ import (
 
 // RegisterReferralRoutes 注册推广中心接口；开放资格和管理员权限都在 service 校验。
 func RegisterReferralRoutes(r *gin.RouterGroup, svc *service.Service) {
+	r.GET("/referral/public", func(c *gin.Context) {
+		cfg, err := svc.PublicReferralConfig()
+		if err != nil {
+			failService(c, err)
+			return
+		}
+		ok(c, cfg)
+	})
 	r.GET("/referral", func(c *gin.Context) {
 		user, err := currentUser(c, svc)
 		if err != nil {

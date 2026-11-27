@@ -5,6 +5,22 @@ import { runInNewContext } from "node:vm";
 import { resilientPreload } from "../build/resilient-preload";
 import { PageResourceError, prioritizeModuleLoad, warmPreloadResources, withModuleLoadPriority } from "../src/lib/module-preload";
 
+test("入口使用浏览器预加载，后续页面仍验证资源", async () => {
+    const original = globalThis.fetch;
+    const downloads: string[] = [];
+    globalThis.fetch = (async (input) => {
+        downloads.push(String(input));
+        return new Response("export default 1", { headers: { "Content-Type": "application/javascript" } });
+    }) as typeof fetch;
+    try {
+        await withModuleLoadPriority({ foreground: true, useNativePreloads: true }, () => warmPreloadResources(["https://assets.example/startup.js"]));
+        await warmPreloadResources(["https://assets.example/route.js"]);
+        expect(downloads).toEqual(["https://assets.example/route.js"]);
+    } finally {
+        globalThis.fetch = original;
+    }
+});
+
 test("有效的资源下载不受前端总时限中止", async () => {
     const original = globalThis.fetch;
     try {

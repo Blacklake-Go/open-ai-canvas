@@ -1,4 +1,4 @@
-import { lazy, Suspense, type ReactNode } from "react";
+import { lazy, Suspense, useEffect, type ReactNode } from "react";
 import { createBrowserRouter, Navigate, Outlet, redirectDocument, useLocation, useParams, type RouteObject } from "react-router";
 import { PageManagementRedirect } from "@/supdance/plugins/compact-model-picker/page-redirect";
 import { lazyAdminPage } from "@/pages/admin/admin-page-loader";
@@ -20,6 +20,7 @@ import { SupDanceRouteHosts } from "@/supdance/adapters/router-hosts";
 // 仅引入常量模块，不触发插件运行时注册；插件 id 必须与清单 id 一致，后端准入判定同样以该 id 为准。
 import { teamIdFromPath } from "@/lib/team-query-keys";
 import { workspacePagePath, workspaceTeamId } from "@/lib/workspace-routes";
+import { PUBLIC_PAGE_ALIASES } from "@/supdance/pages/public-copy/routes";
 
 const AdminPage = preloadableLazy(() => import("@/pages/admin"));
 const ConnectOnePage = lazy(() => import("@/supdance/federation/connect-one"));
@@ -107,8 +108,9 @@ const UserLayout = preloadableLazy(() => import("@/layouts/user-layout"));
 export function preloadInitialHome(pathname: string) {
     if (!isGuestWorkspacePath(pathname)) return;
     // Load the workspace and composer while the session is restored.
-    void UserLayout.preload().catch(() => undefined);
-    void CreatePage.preload().catch(() => undefined);
+    const startup = { useNativePreloads: true };
+    void UserLayout.preload(startup).catch(() => undefined);
+    void CreatePage.preload(startup).catch(() => undefined);
 }
 
 const RequirePlugin = lazy(() => import("@/components/auth/require-plugin").then((module) => ({ default: module.RequirePlugin })));
@@ -188,7 +190,14 @@ function devRoutes() {
     ];
 }
 
+function PublicPageAlias({ target }: { target: string }) {
+    const { search, hash } = useLocation();
+    useEffect(() => window.location.replace(target + search + hash), [target, search, hash]);
+    return null;
+}
+
 const routes: RouteObject[] = [
+    ...Object.entries(PUBLIC_PAGE_ALIASES).map(([path, target]) => ({ path, element: <PublicPageAlias target={target} /> })),
     {
         element: <AuthScene />,
         errorElement: <RouteErrorPage />,
@@ -206,6 +215,7 @@ const routes: RouteObject[] = [
     { path: "/legal", element: fullScreenDeferred(<LegalHubPage />), errorElement: <RouteErrorPage /> },
     { path: "/mcp", element: fullScreenDeferred(<McpPage />), errorElement: <RouteErrorPage /> },
     { path: "/inspirations", element: <Navigate to="/create" replace /> },
+    { path: "/about", element: fullScreenDeferred(<PublicHtmlViewerPage fixedSlug="about" />), errorElement: <RouteErrorPage /> },
     { path: "/p/:slug", element: fullScreenDeferred(<PublicHtmlViewerPage />), errorElement: <RouteErrorPage /> },
     { path: "/html/:slug", element: fullScreenDeferred(<PublicHtmlViewerPage />), errorElement: <RouteErrorPage /> },
     { path: "/share/canvas/:token", element: fullScreenDeferred(<SharedCanvasPage />), errorElement: <RouteErrorPage /> },

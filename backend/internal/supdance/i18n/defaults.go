@@ -1299,7 +1299,7 @@ func builtinEntryBatch4() []Entry {
 		entry("nav.topup_redeem", "nav", "充值 / 兑换", "Top Up / Redeem", "儲值 / 兌換", "チャージ / 交換", "충전 / 교환", "Recargar / Canjear", "Recharger / échanger", "Aufladen / einlösen", "账户卡片：充值兑换"),
 		entry("nav.refresh_balance", "nav", "刷新余额", "Refresh Balance", "重新整理餘額", "残高を更新", "잔액 새로고침", "Actualizar saldo", "Actualiser le solde", "Guthaben aktualisieren", "账户卡片：刷新余额"),
 		entry("nav.account_settings", "nav", "账户与设置", "Account & Settings", "帳戶與設定", "アカウントと設定", "계정 및 설정", "Cuenta y Configuración", "Compte et paramètres", "Konto und Einstellungen", "账户卡片：账户与设置"),
-		entry("nav.referral_center", "nav", "推广中心", "Referral Center", "推廣中心", "紹介センター", "추천인 센터", "Centro de referidos", "Parrainage", "Empfehlungsprogramm", "账户卡片：推广中心"),
+		entry("nav.referral_center", "nav", "分享激励", "Share & Earn", "分享激勵", "シェア特典", "공유 리워드", "Compartir y ganar", "Partage & Bonus", "Teilen & Verdienen", "账户卡片：分享激励"),
 		entry("nav.admin_console", "nav", "管理员后台", "Admin Console", "管理員後台", "管理コンソール", "관리자 콘솔", "Consola de Administración", "Console d'administration", "Admin-Konsole", "账户卡片：管理员后台"),
 		entry("nav.logout", "nav", "退出登录", "Log Out", "登出", "ログアウト", "로그아웃", "Cerrar sesión", "Se déconnecter", "Abmelden", "账户卡片：退出登录"),
 		entry("nav.dark_mode", "nav", "深色模式", "Dark Mode", "深色模式", "ダークモード", "다크 모드", "Modo oscuro", "Mode sombre", "Dunkler Modus", "账户菜单：深色模式"),

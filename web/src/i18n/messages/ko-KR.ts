@@ -148,7 +148,7 @@ export const koKR: Messages = {
             topup: "충전 / 교환",
             actions: "계정 작업",
             settings: "계정 및 설정",
-            referral: "추천 센터",
+            referral: "공유 리워드",
             adminConsole: "관리자 콘솔",
             logout: "로그아웃",
             adminTools: "관리 도구",

@@ -1,23 +1,29 @@
 .supdance-site-footer {
-    --footer-ink: var(--foreground);
-    --footer-muted: var(--text-secondary);
-    background: var(--background);
-    color: var(--foreground);
+    --footer-ink: #f7f7f5;
+    --footer-muted: #8e8e8a;
+    background: #0a0a09 !important;
+    color: #f7f7f5 !important;
+    border-top: 1px solid rgba(255, 255, 255, 0.08) !important;
 }
 
 .supdance-footer-logo {
     width: 240px;
     max-width: 100%;
     height: auto;
-    filter: invert(1);
+    filter: invert(1) !important;
 }
 
 html:not(.dark) .supdance-footer-logo {
-    filter: none;
+    filter: invert(1) !important;
+}
+
+.supdance-site-footer a {
+    color: #8e8e8a;
+    transition: color 0.15s ease;
 }
 
 .supdance-site-footer a:hover {
-    color: var(--footer-ink);
+    color: #f7f7f5 !important;
 }
 
 .legal-public-page main footer a,
@@ -26,7 +32,7 @@ html:not(.dark) .supdance-footer-logo {
 }
 
 .supdance-site-footer a:focus-visible {
-    outline: 2px solid var(--ring);
+    outline: 2px solid rgba(255, 255, 255, 0.3);
     outline-offset: 4px;
 }
 

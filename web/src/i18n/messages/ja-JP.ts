@@ -148,7 +148,7 @@ export const jaJP: Messages = {
             topup: "チャージ / 引き換え",
             actions: "アカウント操作",
             settings: "アカウントと設定",
-            referral: "紹介センター",
+            referral: "シェア特典",
             adminConsole: "管理コンソール",
             logout: "ログアウト",
             adminTools: "管理ツール",

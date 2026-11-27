@@ -1,11 +1,13 @@
 import { Popover } from "antd";
-import { Blocks, BookOpen, CircleDollarSign, FileText, Globe, Info, MessageSquare, Plug } from "lucide-react";
+import { Blocks, BookOpen, CircleDollarSign, FileText, Gift, Globe, Info, MessageSquare, Plug } from "lucide-react";
 import { useEffect, useMemo, useState, type ReactNode } from "react";
 import { Link } from "react-router";
+import { formatReferralRate, getPublicReferralConfig, type ReferralPublicConfig } from "@/services/api/referral";
 import { useLocaleStore } from "@/stores/use-locale-store";
 import { selectPluginEffectivelyEnabled, usePluginStore } from "@/stores/use-plugin-store";
 import { DEFAULT_HTML_SIDEBAR_DOCK_CONFIG, DEFAULT_HTML_SITE_FOOTER_CONFIG, fetchPublicHtmlSidebarDockConfig, fetchPublicHtmlSiteFooterConfig, SIDEBAR_DOCK_UPDATED_EVENT } from "../api";
 import { SUPDANCE_HTML_PAGE_MANAGER_PLUGIN_ID, type HtmlSidebarDockCard, type HtmlSidebarDockConfig, type HtmlSidebarDockSocial, type HtmlSiteFooterConfig } from "../types";
+import { ShareIncentiveModal } from "./share-incentive-modal";
 import "./sidebar-ecosystem-dock.css";
 
 const pluginGate = selectPluginEffectivelyEnabled(SUPDANCE_HTML_PAGE_MANAGER_PLUGIN_ID, true);
@@ -36,6 +38,17 @@ const COLLAPSED_POPOVER_TITLES: Readonly<Record<string, string>> = {
     "de-DE": "Ökosystem & Social",
     "ja-JP": "エコシステム & SNS",
     "ko-KR": "생태계 & 소셜",
+};
+
+const INCENTIVE_LABELS: Readonly<Record<string, { title: string; subtitle: (rate: string) => string }>> = {
+    "zh-CN": { title: "分享赢积分", subtitle: (rate) => `邀友赚 +${rate} 积分` },
+    "zh-TW": { title: "分享贏積分", subtitle: (rate) => `邀友賺 +${rate} 積分` },
+    "en-US": { title: "Share & Earn", subtitle: (rate) => `Earn +${rate} credits` },
+    "es-ES": { title: "Comparte y gana", subtitle: (rate) => `+${rate} en créditos` },
+    "fr-FR": { title: "Partager & Gagner", subtitle: (rate) => `+${rate} en crédits` },
+    "de-DE": { title: "Teilen & Verdienen", subtitle: (rate) => `+${rate} Credits sichern` },
+    "ja-JP": { title: "シェアで獲得", subtitle: (rate) => `+${rate} クレジット還元` },
+    "ko-KR": { title: "공유 리워드", subtitle: (rate) => `+${rate} 크레딧 적립` },
 };
 
 function safeHref(href: string): string | undefined {
@@ -199,6 +212,19 @@ export function SidebarEcosystemDock({ collapsed, onNavigate, configOverride, si
     const locale = useLocaleStore((state) => state.locale);
     const liveState = useSidebarDockState();
     const [popoverOpen, setPopoverOpen] = useState(false);
+    const [incentiveOpen, setIncentiveOpen] = useState(false);
+    const [publicReferral, setPublicReferral] = useState<ReferralPublicConfig>({
+        enabled: true,
+        mode: "all",
+        commissionRateBasisPoints: 1_000,
+    });
+
+    useEffect(() => {
+        if (configOverride) return;
+        const controller = new AbortController();
+        void getPublicReferralConfig(controller.signal).then(setPublicReferral);
+        return () => controller.abort();
+    }, [configOverride]);
 
     const config = configOverride ?? liveState.config;
     const siteFooter = siteFooterOverride ?? liveState.siteFooter;
@@ -215,11 +241,15 @@ export function SidebarEcosystemDock({ collapsed, onNavigate, configOverride, si
         return resolveDockSocialLinks(config, siteFooter);
     }, [config, siteFooter]);
 
-    if (!isEnabled || (visibleCards.length === 0 && visibleSocials.length === 0)) {
+    const showIncentive = !config.hideIncentiveCard;
+
+    if (!isEnabled || (visibleCards.length === 0 && !showIncentive && visibleSocials.length === 0)) {
         return null;
     }
 
     const title = COLLAPSED_POPOVER_TITLES[locale] || COLLAPSED_POPOVER_TITLES["zh-CN"];
+    const rateLabel = publicReferral.commissionRateBasisPoints > 0 ? formatReferralRate(publicReferral.commissionRateBasisPoints) : "10%";
+    const incentiveText = INCENTIVE_LABELS[locale] || INCENTIVE_LABELS["zh-CN"];
 
     const dockContent = (closePopover?: () => void) => (
         <>
@@ -242,6 +272,27 @@ export function SidebarEcosystemDock({ collapsed, onNavigate, configOverride, si
                 </div>
             ) : null}
 
+            {showIncentive ? (
+                <button
+                    type="button"
+                    className="sd-dock-incentive-btn"
+                    onClick={() => {
+                        if (configOverride) return;
+                        closePopover?.();
+                        setIncentiveOpen(true);
+                    }}
+                    aria-label={incentiveText.title}
+                >
+                    <span className="sd-dock-incentive-icon" aria-hidden="true">
+                        <Gift className="size-3.5" strokeWidth={1.9} />
+                    </span>
+                    <span className="sd-dock-incentive-copy">
+                        <span className="sd-dock-incentive-title">{incentiveText.title}</span>
+                        <span className="sd-dock-incentive-sub">{incentiveText.subtitle(rateLabel)}</span>
+                    </span>
+                </button>
+            ) : null}
+
             {visibleSocials.length > 0 ? (
                 <div className="sd-dock-socials" aria-label="Official Social Links">
                     {visibleSocials.map((item) => {
@@ -259,33 +310,41 @@ export function SidebarEcosystemDock({ collapsed, onNavigate, configOverride, si
         </>
     );
 
+    const modalNode = configOverride ? null : <ShareIncentiveModal open={incentiveOpen} onClose={() => setIncentiveOpen(false)} publicConfig={publicReferral} />;
+
     if (collapsed) {
         return (
-            <div className="sd-dock-root is-collapsed" data-plugin-id={SUPDANCE_HTML_PAGE_MANAGER_PLUGIN_ID}>
-                <Popover
-                    open={popoverOpen}
-                    onOpenChange={setPopoverOpen}
-                    trigger="click"
-                    placement="rightBottom"
-                    arrow={false}
-                    content={
-                        <div className="sd-dock-popover-box">
-                            <p className="sd-dock-popover-title">{title}</p>
-                            {dockContent(() => setPopoverOpen(false))}
-                        </div>
-                    }
-                >
-                    <button type="button" className="sd-dock-collapsed-trigger" aria-label={title} title={title}>
-                        <Globe className="size-4" strokeWidth={1.8} aria-hidden="true" />
-                    </button>
-                </Popover>
-            </div>
+            <>
+                <div className="sd-dock-root is-collapsed" data-plugin-id={SUPDANCE_HTML_PAGE_MANAGER_PLUGIN_ID}>
+                    <Popover
+                        open={popoverOpen}
+                        onOpenChange={setPopoverOpen}
+                        trigger="click"
+                        placement="rightBottom"
+                        arrow={false}
+                        content={
+                            <div className="sd-dock-popover-box">
+                                <p className="sd-dock-popover-title">{title}</p>
+                                {dockContent(() => setPopoverOpen(false))}
+                            </div>
+                        }
+                    >
+                        <button type="button" className="sd-dock-collapsed-trigger" aria-label={title} title={title}>
+                            <Globe className="size-4" strokeWidth={1.8} aria-hidden="true" />
+                        </button>
+                    </Popover>
+                </div>
+                {modalNode}
+            </>
         );
     }
 
     return (
-        <div className="sd-dock-root" data-plugin-id={SUPDANCE_HTML_PAGE_MANAGER_PLUGIN_ID}>
-            {dockContent()}
-        </div>
+        <>
+            <div className="sd-dock-root" data-plugin-id={SUPDANCE_HTML_PAGE_MANAGER_PLUGIN_ID}>
+                {dockContent()}
+            </div>
+            {modalNode}
+        </>
     );
 }
