@@ -509,12 +509,26 @@
     const langTrigger = document.getElementById("lang-trigger");
     const langDropdown = document.getElementById("lang-dropdown");
     if (langTrigger && langDropdown) {
+        function updateDropdownPos() {
+            if (typeof langTrigger.getBoundingClientRect !== "function") return;
+            const rect = langTrigger.getBoundingClientRect();
+            const winWidth = typeof window !== "undefined" && window.innerWidth ? window.innerWidth : 1200;
+            langDropdown.style.top = `${rect.bottom + 8}px`;
+            langDropdown.style.right = `${Math.max(12, winWidth - rect.right)}px`;
+            langDropdown.style.left = "auto";
+        }
         langTrigger.addEventListener("click", (e) => {
             e.stopPropagation();
             const isOpen = langDropdown.classList.contains("is-open");
+            if (!isOpen) updateDropdownPos();
             langDropdown.classList.toggle("is-open", !isOpen);
             langTrigger.setAttribute("aria-expanded", String(!isOpen));
         });
+        if (typeof window !== "undefined") {
+            window.addEventListener("resize", () => {
+                if (langDropdown.classList.contains("is-open")) updateDropdownPos();
+            });
+        }
         const options = langDropdown.querySelectorAll(".language-menu-option");
         for (const opt of options) {
             opt.addEventListener("click", () => {

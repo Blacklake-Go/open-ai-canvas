@@ -230,6 +230,47 @@ html.is-mcp-page .ant-app {
     background-color: rgba(20, 20, 19, 0.06);
 }
 
+.mcp-header .legal-theme-toggler {
+    min-height: 36px;
+    min-width: 36px;
+    height: 36px;
+    width: 36px;
+    padding: 0;
+    border-radius: 999px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--mcp-ink-on-dark);
+    border: 1px solid rgba(245, 244, 240, 0.18);
+    background-color: rgba(255, 255, 255, 0.04);
+    transition: background-color 0.2s ease, border-color 0.28s ease, color 0.28s ease;
+}
+
+.mcp-header .legal-theme-toggler svg {
+    width: 16px;
+    height: 16px;
+    color: var(--mcp-ink-on-dark);
+}
+
+.mcp-header .legal-theme-toggler:hover {
+    background-color: rgba(255, 255, 255, 0.09);
+    border-color: rgba(245, 244, 240, 0.32);
+}
+
+.mcp-header.is-scrolled .legal-theme-toggler {
+    color: var(--mcp-ink-primary);
+    border-color: rgba(20, 20, 19, 0.14);
+    background-color: rgba(20, 20, 19, 0.03);
+}
+
+.mcp-header.is-scrolled .legal-theme-toggler svg {
+    color: var(--mcp-ink-primary);
+}
+
+.mcp-header.is-scrolled .legal-theme-toggler:hover {
+    background-color: rgba(20, 20, 19, 0.06);
+}
+
 .mcp-header-cta {
     display: inline-flex;
     align-items: center;
