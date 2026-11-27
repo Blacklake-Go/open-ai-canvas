@@ -1,5 +1,9 @@
 
 
+## 游客文本草稿登录回跳
+
+游客从创作页提交不含附件或素材引用的文本时，通过现有登录弹窗传入回跳路径。提示词暂存在当前标签页，回跳路径只携带随机标记。账号与创作工作区载入后可在 30 分钟内恢复一次并清理暂存，用户可以继续编辑后手动提交。
+
 ## AI Pose Gallery 子路径部署
 
 - 线上静态应用来源固定为 `https://github.com/Blacklake-Go/ai-pose-gallery-zh`，部署在 `www.supdance.com/pose/` 与 `one.supdance.com/pose/`。
@@ -39,6 +43,7 @@ Waffo Pancake 的充值入口默认并排显示微信支付和支付宝图标。
 
 ## HTML 页面管理后台 V2 规范覆盖
 
+- 定价页读取 HTML 页面后台保存的社媒条目及顺序，与共用页脚复用站内品牌图标。后台为已有配置补齐 Threads、Discord、Reddit 编辑字段，复用原页脚保存接口。
 - 后台样式隔离于 `html-page-manager/admin/`，复用 `--admin-*`、AdminModal 和 AdminSwitch，补齐响应式、键盘操作、加载失败与未保存提醒及六语种词条。
 - iframe 保持脚本可用但移除同源权限，使用临时存储支持模板主题控件；格式化不改写原始脚本与预格式化空白。保存页面不会覆盖未保存页脚。
 - 原有组合根 `backend/internal/app/supdance_html_page_manager_plugin.go` 增加批次保存强校验，无新增宿主挂载点和数据库迁移。操作与回退见 [HTML 页面管理](HTML_PAGE_MANAGER.md)。
@@ -90,6 +95,14 @@ Waffo Pancake 的充值入口默认并排显示微信支付和支付宝图标。
 - 宿主接缝登记 `supdance-upstream-185-preservation`；完整边界见 [源码集成说明](./UPSTREAM_V1_8_5_SOURCE_MERGE.md)。
 
 # SupDance Canvas — 独立改造与定制代码清单 (CUSTOMIZATIONS.md)
+
+## Seedream 5.0 Pro 文生图画幅
+
+`runninghub-standard` 1.1.7 在声明式插件中为 `seedream-v5-pro/text-to-image` 映射画幅与 1K、2K 档位。指定画幅时使用 `width` 和 `height`，因为上游若收到 `resolution` 就会忽略这两个值。主站后端启动时加载镜像内的官方插件包，并保留已绑定的请求版本。
+
+## 恢复原有创作对话
+
+`supdance-native-image-creation` 恢复 `/create` 内的图片任务提交、追踪、素材入库和原有结果卡。独立 `/workspace/image` 页面退役，旧链接保留图片模式和会话 ID，远端历史同步后可打开对应会话。
 
 ## 上游世界引擎
 
@@ -279,7 +292,12 @@ TikTok Login Kit 仅申请 Web 的 `user.info.basic`，回调为 `/api/auth/soci
 
 ### 补丁 ID：`supdance-guest-workspace-tools`
 
-- 创作首页通过 `web/src/pages/create/index.tsx` 挂载游客工具导航，展示短剧制作、电商 Agent、图片生成、视频生成和音乐生成，沿用已有路由守卫与登录后回跳。工作区通过 `GET /api/public/workspace-tools` 获取游客侧栏所需的六个布尔开关，侧栏继续按后台配置显示。上游合并时核对首页挂载点、公开字段、工作区初始化和工具路由守卫。
+- 游客工作区侧栏通过 `GET /api/public/workspace-tools` 获取后台工具开关，工具沿用已有路由守卫与登录后回跳。创作首页行内保留原有创作模式。上游合并时核对公开字段、工作区初始化、游客草稿和工具路由守卫。
+
+### 创作首页首屏
+
+- `web/src/application.tsx` 和 `web/src/router.tsx` 在直接打开创作首页时并行预取工作区和创作页。路由继续通过现有会话恢复和权限守卫决定何时渲染。
+- 生产构建在 `web/build/static-ui-i18n.ts` 按前端模块和语言生成静态界面词包。模块只请求当前语言，后台翻译管理页按需载入完整词表。原词条键和后台发布记录继续沿用。
 
 ### 上游 v1.8.7.2
 
@@ -416,3 +434,14 @@ The host seams are registered under `supdance-one-identity-community`.
 
 Studio 优先使用官网系统渠道目录。渠道报价与生成通过现有任务入口重建规格、价格档和执行协议，报价签名含实际协议绑定。工作台继续接受已支持的逻辑模型选择。此变更不调整官网模型 API。
 
+
+## Waffo 充值图标
+
+Waffo Pancake 的充值入口默认并排显示微信支付和支付宝图标。可在「支付充值 → 支付渠道 → Waffo Pancake → 配置 → 充值页支付图标」恢复原图标。该选项自动保存到充值设置，沿用现有支付配置版本和回调地址。宿主接触点包括 `internal/app/payment_settings.go`、支付渠道配置抽屉、钱包图标和充值面板。
+
+## 正式版 1.8.7.2 创作和 Agent 历史修复
+
+- `supdance-production-regressions-1872` 登记在兼容层和 `supdance/config/baseline.json`。创作页的已有素材恢复先认任务 ID，仅在历史消息明确绑定单一任务时回退到未记录任务 ID 的素材。
+- Agent 面板在远端删除完成后从当前快照移除目标，已经发出的旧历史读取失效。用户和全站配额的自动归档保留有可逆快照的最新画布变更，由撤销入口继续核验画布版本。
+- Nano Banana 2 Edit 在系统渠道和逻辑线路的任务准入与报价检查参考图。RunningHub 1.1.8 在协议包处理端点参数，站点模型与价格仍由现有渠道配置控制。历史钉住的包版本继续可读。
+- X 双语 Sales 活动通过已有名单识别，保留营销同意、已入账支付与去重规则。

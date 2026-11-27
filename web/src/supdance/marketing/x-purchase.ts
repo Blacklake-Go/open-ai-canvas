@@ -3,7 +3,7 @@ import type { PaymentOrder } from "@/services/api/payments";
 export const MARKETING_CONSENT_KEY = "supdance:marketing-consent:v1";
 const SENT_KEY = "supdance:x-purchases:v1";
 const SALES_CLICK_KEY = "supdance:x-sales-click:v1";
-const SALES_CAMPAIGNS = new Set(["supdance_sales_zh", "supdance_sales_ja", "supdance_sales_202611"]);
+const SALES_CAMPAIGNS = new Set(["supdance_sales_zh", "supdance_sales_ja", "supdance_sales_202611", "supdance_sales_zh_ja_202611"]);
 const CLICK_ID = /^[a-zA-Z0-9_-]{1,512}$/;
 const ATTRIBUTION_WINDOW_MS = 30 * 86_400_000;
 // Only the existing live Alipay/WeChat integrations are admitted. Waffo sandbox

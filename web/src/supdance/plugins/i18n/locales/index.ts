@@ -2140,11 +2140,11 @@ for (const [code, pack] of Object.entries({ "en-US": enUSPack, "zh-TW": zhTWPack
     applyPackToBuiltinEntries(code as SupDanceLocaleCode, pack);
 }
 
-export function mergeI18nEntries(customEntries: Record<string, SupDanceI18nEntry> = {}): SupDanceI18nEntry[] {
+export function mergeI18nEntries(customEntries: Record<string, SupDanceI18nEntry> = {}, builtins = BUILTIN_I18N_ENTRIES): SupDanceI18nEntry[] {
     const builtinKeySet = new Set<string>();
     const result: SupDanceI18nEntry[] = [];
 
-    for (const builtin of BUILTIN_I18N_ENTRIES) {
+    for (const builtin of builtins) {
         builtinKeySet.add(builtin.key);
         const override = customEntries[builtin.key];
         if (!override) {

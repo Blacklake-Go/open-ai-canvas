@@ -1,5 +1,5 @@
 import { lazy, Suspense, type ReactNode } from "react";
-import { createBrowserRouter, Navigate, Outlet, redirectDocument, useLocation, type RouteObject } from "react-router";
+import { createBrowserRouter, Navigate, Outlet, redirectDocument, useLocation, useParams, type RouteObject } from "react-router";
 import { PageManagementRedirect } from "@/supdance/plugins/compact-model-picker/page-redirect";
 import { lazyAdminPage } from "@/pages/admin/admin-page-loader";
 
@@ -87,7 +87,6 @@ const CanvasProjectPage = workspaceRoutePages.canvasProject;
 const SharedCanvasPage = preloadableLazy(() => import("@/pages/canvas/shared"));
 const ArkPortraitResultPage = preloadableLazy(() => import("@/pages/ark-portrait-result"));
 const CreatePage = workspaceRoutePages.create;
-const ImageWorkspacePage = workspaceRoutePages.imageWorkspace;
 const EcommercePage = workspaceRoutePages.ecommerce;
 const ImageWorkbenchPage = workspaceRoutePages.imageWorkbench;
 const VideoWorkbenchPage = workspaceRoutePages.videoWorkbench;
@@ -104,6 +103,14 @@ const SettingsPage = workspaceRoutePages.settings;
 const ReferralPage = workspaceRoutePages.referral;
 const AdminReferralPage = lazyAdminPage(() => import("@/pages/admin/referral/referral-admin-page"));
 const UserLayout = preloadableLazy(() => import("@/layouts/user-layout"));
+
+export function preloadInitialHome(pathname: string) {
+    if (!isGuestWorkspacePath(pathname)) return;
+    // Load the workspace and composer while the session is restored.
+    void UserLayout.preload().catch(() => undefined);
+    void CreatePage.preload().catch(() => undefined);
+}
+
 const RequirePlugin = lazy(() => import("@/components/auth/require-plugin").then((module) => ({ default: module.RequirePlugin })));
 const TeamsPage = preloadableLazy(() => import("@/pages/teams"));
 const TeamWorkspacePage = preloadableLazy<object>(() => import("@/pages/teams").then((module) => ({ default: module.TeamWorkspacePage })));
@@ -135,6 +142,12 @@ function AuthenticatedWorkspaceLayout() {
             </Suspense>
         </RequireAuth>
     );
+}
+
+function LegacyImageWorkspaceRedirect() {
+    const { sessionId } = useParams();
+    const params = new URLSearchParams({ mode: "image", conversation: sessionId || "new" });
+    return <Navigate to={`/create?${params}`} replace />;
 }
 
 function RootLayout() {
@@ -205,22 +218,7 @@ const routes: RouteObject[] = [
         children: [
             { path: "/", element: deferred(<CreatePage />) },
             { path: "/create", element: deferred(<CreatePage />) },
-            {
-                path: "/workspace/image",
-                element: (
-                    <RequireAuth>
-                        <RequireFeature feature="imageWorkbenchEnabled">{deferred(<ImageWorkspacePage />)}</RequireFeature>
-                    </RequireAuth>
-                ),
-            },
-            {
-                path: "/workspace/image/:sessionId",
-                element: (
-                    <RequireAuth>
-                        <RequireFeature feature="imageWorkbenchEnabled">{deferred(<ImageWorkspacePage />)}</RequireFeature>
-                    </RequireAuth>
-                ),
-            },
+            { path: "/workspace/image/:sessionId?", element: <LegacyImageWorkspaceRedirect /> },
             { path: "/connect-one", element: <RequireAuth>{deferred(<ConnectOnePage />)}</RequireAuth> },
             { path: "/ecommerce", element: <RequireAuth>{deferred(<EcommercePage />)}</RequireAuth> },
             {

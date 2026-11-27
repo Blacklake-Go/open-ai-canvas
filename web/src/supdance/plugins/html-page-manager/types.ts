@@ -75,10 +75,43 @@ export interface HtmlSiteFooterConfig {
     updatedBy?: string;
 }
 
+export interface HtmlSidebarDockCard {
+    id: string;
+    icon: "about" | "pricing" | "mcp" | "skills" | "plugins" | "docs" | "community" | string;
+    href: string;
+    target: "_self" | "_top" | "_blank" | string;
+    visible: boolean;
+    order: number;
+    defaultLabel: string;
+    labels: Record<string, string>;
+}
+
+export interface HtmlSidebarDockSocial {
+    id: string;
+    name: string;
+    handle: string;
+    href: string;
+    visible: boolean;
+    order: number;
+}
+
+export interface HtmlSidebarDockConfig {
+    enabled: boolean;
+    hideStandalonePricingGroup: boolean;
+    cards: HtmlSidebarDockCard[];
+    socialEnabled: boolean;
+    syncWithSiteFooter: boolean;
+    maxVisibleSocials: number;
+    socialLinks: HtmlSidebarDockSocial[];
+    updatedAt: string;
+    updatedBy?: string;
+}
+
 export interface HtmlPagesAdminOverview {
     pluginId: string;
     available: boolean;
     pages: ManagedHtmlPage[];
     siteFooter: HtmlSiteFooterConfig;
+    sidebarDock?: HtmlSidebarDockConfig;
     updatedAt: string;
 }

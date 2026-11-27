@@ -72,7 +72,7 @@ test("no consent means no third-party script or purchase transmission", async ()
 });
 
 test("current Sales attribution follows consented X clicks through checkout navigation", async () => {
-    for (const campaign of ["supdance_sales_zh", "supdance_sales_ja", "supdance_sales_202611"]) {
+    for (const campaign of ["supdance_sales_zh", "supdance_sales_ja", "supdance_sales_202611", "supdance_sales_zh_ja_202611"]) {
         dom.history.replaceState(null, "", `/?utm_source=x&utm_medium=paid_social&utm_campaign=${campaign}&twclid=x-click`);
         expect(await loadXPixel()).toBe(false);
         expect(dom.localStorage.length).toBe(0);

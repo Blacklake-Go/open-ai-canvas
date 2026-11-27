@@ -222,6 +222,13 @@ func (s *Service) ResolveLogicalModel(access *userGroupAccess, logicalModelID st
 			return nil, BadAuthRequest("当前模型尚未配置所选规格的价格")
 		}
 	}
+	providerModelKey := firstNonEmpty(selected.ChannelModel.ProviderModelKey, selected.ChannelModel.ModelKey)
+	if priceTier != nil {
+		providerModelKey = firstNonEmpty(priceTier.ProviderModelKey, providerModelKey)
+	}
+	if err := validateSupDanceRunningHubImageEdit(selected.ChannelModel.Protocol, providerModelKey, intent); err != nil {
+		return nil, err
+	}
 	return &RoutedModel{LogicalModel: cached.Model, Revision: cached.Revision, Route: selected.Route, ChannelModel: selected.ChannelModel, CapabilitySpec: selected.CapabilitySpec, PriceTier: priceTier, Defaults: cached.Defaults, Intent: intent}, nil
 }
 

@@ -1,7 +1,8 @@
 import { describe, expect, test } from "bun:test";
 import { readFileSync } from "node:fs";
-import { creationResultStorageKeysForMessage } from "@/lib/canvas/canvas-asset-handoff";
+import { creationResultStorageKeysForTask } from "@/lib/canvas/canvas-asset-handoff";
 import { creationResultEntries, usableResultUrl } from "@/pages/create/creation-result-urls";
+import type { Asset } from "@/stores/use-asset-store";
 
 const now = Date.parse("2026-10-21T08:00:00Z");
 const remote = (storageKey: string) => storageKey.startsWith("resource:");
@@ -49,22 +50,33 @@ describe("快速创作结果展示地址", () => {
 });
 
 describe("创作消息结果恢复", () => {
-    test("任务快照缺少结果字段时仍能从已落库素材恢复稳定定位", () => {
-        const assets = [
-            {
-                id: "asset-1",
-                kind: "video",
-                title: "镜头",
-                coverUrl: "",
-                tags: [],
-                createdAt: "",
-                updatedAt: "",
-                metadata: { source: "generation-task", taskId: "task-1", messageId: "message-1", outputIndex: 0 },
-                data: { url: "/api/resources/video-1/file", storageKey: "resource:video-1", width: 0, height: 0, bytes: 1, mimeType: "video/mp4" },
-            },
-        ] as never[];
+    const video = (id: string, metadata: Asset["metadata"]): Asset => ({
+        id,
+        kind: "video",
+        title: "镜头",
+        coverUrl: "",
+        tags: [],
+        createdAt: "",
+        updatedAt: "",
+        metadata: { source: "generation-task", ...metadata },
+        data: { url: `/api/resources/${id}/file`, storageKey: `resource:${id}`, width: 0, height: 0, bytes: 1, mimeType: "video/mp4" },
+    });
 
-        expect(creationResultStorageKeysForMessage(assets, { messageId: "message-1", taskIds: ["task-1"] })).toEqual(["resource:video-1"]);
+    test("同一消息的其他任务和归属不明的旧素材不会混入，结果按输出顺序恢复", () => {
+        const assets = [
+            video("later", { taskId: "task-1", messageId: "message-1", outputIndex: 1 }),
+            video("sibling", { taskId: "task-2", messageId: "message-1", outputIndex: 0 }),
+            video("legacy", { messageId: "message-1" }),
+            video("first", { taskId: "task-1", messageId: "message-1", outputIndex: 0 }),
+        ];
+        expect(creationResultStorageKeysForTask(assets, { messageId: "message-1", taskId: "task-1", messageTaskIds: ["task-1", "task-2"] })).toEqual(["resource:first", "resource:later"]);
+        expect(creationResultStorageKeysForTask(assets, { messageId: "message-1", taskId: "task-3", messageTaskIds: ["task-1", "task-3"] })).toEqual([]);
+    });
+
+    test("只有消息明确绑定唯一任务时才恢复缺少任务 ID 的历史素材", () => {
+        const assets = [video("legacy", { messageId: "message-1" }), video("other", { messageId: "message-2" })];
+        expect(creationResultStorageKeysForTask(assets, { messageId: "message-1", taskId: "task-1", messageTaskIds: ["task-1"] })).toEqual(["resource:legacy"]);
+        expect(creationResultStorageKeysForTask(assets, { messageId: "message-1", taskId: "task-1" })).toEqual([]);
     });
 });
 

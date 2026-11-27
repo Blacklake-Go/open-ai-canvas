@@ -1,0 +1,143 @@
+/* 访客态顶部与侧栏共用的登录 / 注册药丸按钮。
+   「立即注册」复用主按钮皮肤令牌（--button-primary-*，在洋红夜幕下即 #e11d74 -> #be185d -> #9d174d）
+   与 AntD 主按钮一致的 150ms 质感过渡；使用独立作用域选择器以防止 AntD 运行时 a 标签规则覆盖颜色。 */
+.workspace-guest-actions {
+    display: flex;
+    gap: 8px;
+}
+
+.workspace-guest-actions.is-compact {
+    flex-direction: column;
+}
+
+.workspace-guest-actions .workspace-guest-action {
+    position: relative;
+    isolation: isolate;
+    overflow: hidden;
+    display: inline-flex;
+    min-height: 44px;
+    min-width: 44px;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    border-radius: 9999px;
+    border: 1px solid transparent;
+    padding-inline: 12px;
+    font-size: 12px;
+    font-weight: 500;
+    line-height: 1;
+    white-space: nowrap;
+    text-decoration: none;
+    cursor: pointer;
+    transition:
+        color var(--button-motion, 150ms cubic-bezier(0.2, 0, 0, 1)),
+        background-color var(--button-motion, 150ms cubic-bezier(0.2, 0, 0, 1)),
+        border-color var(--button-motion, 150ms cubic-bezier(0.2, 0, 0, 1)),
+        box-shadow var(--button-motion, 150ms cubic-bezier(0.2, 0, 0, 1));
+}
+
+.workspace-guest-actions.is-compact .workspace-guest-action {
+    padding-inline: 0;
+}
+
+.workspace-guest-actions .workspace-guest-action:focus-visible {
+    outline: 2px solid var(--ring);
+    outline-offset: 2px;
+}
+
+/* 「登录」次要按钮：保留次要表面质感，悬停轻微呼应洋红边框与底晕 */
+.workspace-guest-actions .workspace-guest-action-login,
+.workspace-guest-actions .workspace-guest-action-login:visited {
+    border-color: var(--button-secondary-border);
+    background: var(--button-secondary-bg);
+    color: var(--button-secondary-fg);
+    box-shadow: var(--button-secondary-shadow);
+}
+
+.workspace-guest-actions .workspace-guest-action-login:hover {
+    border-color: color-mix(in srgb, var(--primary) 38%, var(--button-secondary-hover-border));
+    background: color-mix(in srgb, var(--primary) 8%, var(--button-secondary-hover-bg));
+    color: var(--button-secondary-fg);
+}
+
+.workspace-guest-actions .workspace-guest-action-login:active {
+    border-color: color-mix(in srgb, var(--primary) 48%, var(--button-secondary-hover-border));
+    background: color-mix(in srgb, var(--primary) 14%, var(--button-secondary-active-bg));
+    color: var(--button-secondary-fg);
+    box-shadow: none;
+}
+
+.dark .workspace-guest-actions .workspace-guest-action-login:hover {
+    border-color: color-mix(in srgb, #e11d74 48%, var(--button-secondary-hover-border));
+    background: color-mix(in srgb, #e11d74 10%, var(--button-secondary-hover-bg));
+}
+
+.dark .workspace-guest-actions .workspace-guest-action-login:active {
+    border-color: color-mix(in srgb, #e11d74 58%, var(--button-secondary-hover-border));
+    background: color-mix(in srgb, #e11d74 16%, var(--button-secondary-active-bg));
+}
+
+/* 「立即注册」主按钮：与登录弹窗主按钮同源（--button-primary-*），并用双叠层实现 gradient 的 150ms 平滑色阶过渡 */
+.workspace-guest-actions .workspace-guest-action-register,
+.workspace-guest-actions .workspace-guest-action-register:visited {
+    border-color: transparent;
+    background: var(--button-primary-bg);
+    color: var(--button-primary-fg);
+    box-shadow: var(--button-primary-shadow);
+}
+
+.workspace-guest-actions .workspace-guest-action-register::before,
+.workspace-guest-actions .workspace-guest-action-register::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+    border-radius: inherit;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity var(--button-motion, 150ms cubic-bezier(0.2, 0, 0, 1));
+}
+
+.workspace-guest-actions .workspace-guest-action-register::before {
+    background: var(--button-primary-hover-bg);
+}
+
+.workspace-guest-actions .workspace-guest-action-register::after {
+    background: var(--button-primary-active-bg);
+}
+
+.workspace-guest-actions .workspace-guest-action-register > span,
+.workspace-guest-actions .workspace-guest-action-register > svg {
+    position: relative;
+    z-index: 1;
+}
+
+.workspace-guest-actions .workspace-guest-action-register:hover {
+    color: var(--button-primary-fg);
+    box-shadow: var(--button-primary-shadow);
+}
+
+.workspace-guest-actions .workspace-guest-action-register:hover::before {
+    opacity: 1;
+}
+
+.workspace-guest-actions .workspace-guest-action-register:active {
+    color: var(--button-primary-fg);
+    box-shadow: var(--button-primary-active-shadow);
+}
+
+.workspace-guest-actions .workspace-guest-action-register:active::before {
+    opacity: 0;
+}
+
+.workspace-guest-actions .workspace-guest-action-register:active::after {
+    opacity: 1;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .workspace-guest-actions .workspace-guest-action,
+    .workspace-guest-actions .workspace-guest-action-register::before,
+    .workspace-guest-actions .workspace-guest-action-register::after {
+        transition: none;
+    }
+}

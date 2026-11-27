@@ -1,5 +1,12 @@
 import { expect, test } from "bun:test";
-import { transformStaticUi } from "../../build/static-ui-i18n";
+import { runInNewContext } from "node:vm";
+import { staticUiCatalogModule, transformStaticUi } from "../../build/static-ui-i18n";
+import interfaceCatalog from "../../src/i18n/messages/interface.json";
+
+test("the production catalog preserves every locale and interface phrase", () => {
+    const module = staticUiCatalogModule(interfaceCatalog);
+    expect(runInNewContext(module.replace("export default ", ""))).toEqual(interfaceCatalog);
+});
 
 const file = "/project/web/src/pages/test.tsx";
 test("static UI compilation translates explicit display sinks and preserves task data", () => {

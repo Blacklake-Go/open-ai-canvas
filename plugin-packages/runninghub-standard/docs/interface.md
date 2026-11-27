@@ -2,6 +2,14 @@
 
 Suno 音乐结果同时包含音频、封面与文本。1.1.1 仅将有 URL 的非图片结果交给音频持久化，保留每首歌曲的原始地址，避免封面下载触发音频类型校验失败。
 
+1.1.7 对 `seedream-v5-pro/text-to-image` 将画幅和分辨率档位一起转换为整数 `width` 和 `height`。1:1 的 1K 发送 1024 × 1024，2K 发送 2048 × 2048。RunningHub 优先使用 `resolution`，所以只有自动画幅才发送这个字段。该端点只支持 1K 和 2K。
+
+1.1.8 保留 1.1.7 的 Seedream Pro 参数规则。MiniMax H3 Max 文生视频发送 `ratio` 和大写分辨率。悠船 V8.1 默认使用 `quality: "1"`、`hd: false`，FLUX.3 文生图默认使用 `768sq`，对应本站现有规格与售价。
+
+1.1.4 修正 Grok Quality Edit 与 FLUX Klein 9B Edit 的参考字段。缺参考图时，协议在发出上游创建请求前拒绝上述两条线路及 GPT Image 2 Edit、Qwen Image 3.0 Edit。Seedream 5.0 Pro 图像编辑在发出请求前校验 5 字符最小提示词长度。
+
+1.1.9 合并 1.1.4 的图像编辑字段与 1.1.8 的生产规格。Grok Imagine Quality Edit 缺省分辨率为 `1k`。
+
 ## 协议身份
 
 - 插件 ID：`runninghub-standard`。
@@ -28,8 +36,8 @@ Suno 音乐结果同时包含音频、封面与文本。1.1.1 仅将有 URL 的�
 | `videos` | media[] | 否 | video：`videoUrl` | 参考视频。 |
 | `audios` | media[] | 否 | audio：`audioUrl`；video：`audioUrl` | 参考音频。 |
 | `duration` | integer | 否 | video/audio：`duration`（字符串化） | 时长秒数。 |
-| `aspectRatio` | string | 否 | `aspectRatio` | 画幅比例。 |
-| `resolution` | string | 否 | `resolution` | 分辨率档位。 |
+| `aspectRatio` | string | 否 | Seedream 5.0 Pro 文生图：`width` / `height`；其他端点：`aspectRatio` | 画幅比例。 |
+| `resolution` | string | 否 | Seedream 5.0 Pro 文生图指定画幅：`width` / `height`；其他情况：`resolution` | 分辨率档位。 |
 | `quality` | string | 否 | `quality` | 质量档位。 |
 | `watermark` | boolean | 否 | video：`watermark` | 水印开关。 |
 | `generateAudio` | boolean | 否 | video-kling：`sound`（始终发送） | 仅可灵专用 provider 使用；上游把 `sound` 设为必填，必须显式给 true/false，不能省略。 |
@@ -84,8 +92,6 @@ Suno 音乐结果同时包含音频、封面与文本。1.1.1 仅将有 URL 的�
 
 标准模型各端点的参数集合不同（例如 gpt-image 端点要求 `quality`，可灵端点要求 `firstImageUrl`）。模板统一携带通用字段并省略空值，端点会忽略与其无关的字段；模型特有参数通过渠道模型的参数默认值或 `providerOptions.runninghub-standard.*` 传入。上游官方文档声明标准模型 API 仅支持企业级-共享 API Key。
 
-1.1.4 修正 Grok Quality Edit 与 FLUX Klein 9B Edit 的参考字段。缺参考图时，协议在发出上游创建请求前拒绝上述两条线路及 GPT Image 2 Edit、Qwen Image 3.0 Edit。Seedream 5.0 Pro 图像编辑在发出请求前校验 5 字符最小提示词长度。
-
 ## 音乐 Provider 字段映射
 
 通用 `runninghub-standard-audio` 模板面向 TTS 端点（`text` 必填）。音乐端点的必填字段不同，因此拆分出三个专用 provider；创建/查询/响应映射与通用 audio provider 一致。
@@ -110,7 +116,7 @@ MiniMax Music 上游没有独立风格字段：音乐工作台提交的风格标
   "apiVersion": "yingce.plugin/v2",
   "id": "runninghub-standard",
   "name": "RunningHub Standard Model",
-  "version": "1.1.4",
+  "version": "1.1.9",
   "author": "RunningHub / 影策",
   "description": "RunningHub 标准模型 API 独立请求协议插件。",
   "permissions": [
@@ -240,7 +246,265 @@ MiniMax Music 上游没有独立风格字段：音乐工作台提交的风格标
             "binding": "quality"
           }
         ],
+        "requestBindings": [
+          {
+            "name": "seedreamProText",
+            "value": {
+              "$eq": [
+                {
+                  "$ref": "request.model"
+                },
+                "seedream-v5-pro/text-to-image"
+              ]
+            }
+          },
+          {
+            "name": "seedreamProBaseDimensions",
+            "value": {
+              "$if": {
+                "condition": {
+                  "$ref": "bindings.seedreamProText"
+                },
+                "then": {
+                  "$switch": {
+                    "cases": [
+                      {
+                        "when": {
+                          "$eq": [
+                            {
+                              "$ref": "request.aspectRatio"
+                            },
+                            "1:1"
+                          ]
+                        },
+                        "then": [
+                          1024,
+                          1024
+                        ]
+                      },
+                      {
+                        "when": {
+                          "$eq": [
+                            {
+                              "$ref": "request.aspectRatio"
+                            },
+                            "16:9"
+                          ]
+                        },
+                        "then": [
+                          1408,
+                          792
+                        ]
+                      },
+                      {
+                        "when": {
+                          "$eq": [
+                            {
+                              "$ref": "request.aspectRatio"
+                            },
+                            "9:16"
+                          ]
+                        },
+                        "then": [
+                          792,
+                          1408
+                        ]
+                      },
+                      {
+                        "when": {
+                          "$eq": [
+                            {
+                              "$ref": "request.aspectRatio"
+                            },
+                            "4:3"
+                          ]
+                        },
+                        "then": [
+                          1152,
+                          864
+                        ]
+                      },
+                      {
+                        "when": {
+                          "$eq": [
+                            {
+                              "$ref": "request.aspectRatio"
+                            },
+                            "3:4"
+                          ]
+                        },
+                        "then": [
+                          864,
+                          1152
+                        ]
+                      },
+                      {
+                        "when": {
+                          "$eq": [
+                            {
+                              "$ref": "request.aspectRatio"
+                            },
+                            "3:2"
+                          ]
+                        },
+                        "then": [
+                          1248,
+                          832
+                        ]
+                      },
+                      {
+                        "when": {
+                          "$eq": [
+                            {
+                              "$ref": "request.aspectRatio"
+                            },
+                            "2:3"
+                          ]
+                        },
+                        "then": [
+                          832,
+                          1248
+                        ]
+                      },
+                      {
+                        "when": {
+                          "$eq": [
+                            {
+                              "$ref": "request.aspectRatio"
+                            },
+                            "5:4"
+                          ]
+                        },
+                        "then": [
+                          1120,
+                          896
+                        ]
+                      },
+                      {
+                        "when": {
+                          "$eq": [
+                            {
+                              "$ref": "request.aspectRatio"
+                            },
+                            "4:5"
+                          ]
+                        },
+                        "then": [
+                          896,
+                          1120
+                        ]
+                      },
+                      {
+                        "when": {
+                          "$eq": [
+                            {
+                              "$ref": "request.aspectRatio"
+                            },
+                            "21:9"
+                          ]
+                        },
+                        "then": [
+                          1568,
+                          672
+                        ]
+                      }
+                    ]
+                  }
+                }
+              }
+            }
+          },
+          {
+            "name": "seedreamProExplicitSize",
+            "value": {
+              "$gt": [
+                {
+                  "$len": {
+                    "$ref": "bindings.seedreamProBaseDimensions"
+                  }
+                },
+                0
+              ]
+            }
+          },
+          {
+            "name": "seedreamProTier",
+            "value": {
+              "$lower": {
+                "$ref": "request.resolution"
+              }
+            }
+          },
+          {
+            "name": "seedreamProScale",
+            "value": {
+              "$if": {
+                "condition": {
+                  "$eq": [
+                    {
+                      "$ref": "bindings.seedreamProTier"
+                    },
+                    "2k"
+                  ]
+                },
+                "then": 2,
+                "else": 1
+              }
+            }
+          }
+        ],
         "validations": [
+          {
+            "assert": {
+              "$or": [
+                {
+                  "$not": {
+                    "$ref": "bindings.seedreamProText"
+                  }
+                },
+                {
+                  "$in": [
+                    {
+                      "$ref": "request.aspectRatio"
+                    },
+                    [
+                      "",
+                      "auto"
+                    ]
+                  ]
+                },
+                {
+                  "$ref": "bindings.seedreamProExplicitSize"
+                }
+              ]
+            },
+            "message": "当前 RunningHub Seedream 5.0 Pro 文生图端点不支持此画幅比例"
+          },
+          {
+            "assert": {
+              "$or": [
+                {
+                  "$not": {
+                    "$ref": "bindings.seedreamProText"
+                  }
+                },
+                {
+                  "$in": [
+                    {
+                      "$ref": "bindings.seedreamProTier"
+                    },
+                    [
+                      "",
+                      "auto",
+                      "1k",
+                      "2k"
+                    ]
+                  ]
+                }
+              ]
+            },
+            "message": "当前 RunningHub Seedream 5.0 Pro 文生图端点仅支持 1K 和 2K 分辨率"
+          },
           {
             "assert": {
               "$or": [
@@ -359,6 +623,187 @@ MiniMax Music 上游没有独立风格字段：音乐工作台提交的风格标
             "prompt": {
               "$ref": "request.prompt"
             },
+            "imageUrls": {
+              "$omitEmpty": {
+                "$if": {
+                  "condition": {
+                    "$in": [
+                      {
+                        "$ref": "request.model"
+                      },
+                      [
+                        "rhart-imagine-image-quality/edit",
+                        "rhart-image/f-2-klein-9b/edit"
+                      ]
+                    ]
+                  },
+                  "else": {
+                    "$map": {
+                      "from": {
+                        "$ref": "request.images"
+                      },
+                      "as": "media",
+                      "in": {
+                        "$ref": "media.value"
+                      }
+                    }
+                  }
+                }
+              }
+            },
+            "aspectRatio": {
+              "$if": {
+                "condition": {
+                  "$not": {
+                    "$ref": "bindings.seedreamProText"
+                  }
+                },
+                "then": {
+                  "$omitEmpty": {
+                    "$ref": "request.aspectRatio"
+                  }
+                }
+              }
+            },
+            "width": {
+              "$if": {
+                "condition": {
+                  "$ref": "bindings.seedreamProExplicitSize"
+                },
+                "then": {
+                  "$multiply": [
+                    {
+                      "$ref": "bindings.seedreamProBaseDimensions.0"
+                    },
+                    {
+                      "$ref": "bindings.seedreamProScale"
+                    }
+                  ]
+                }
+              }
+            },
+            "height": {
+              "$if": {
+                "condition": {
+                  "$ref": "bindings.seedreamProExplicitSize"
+                },
+                "then": {
+                  "$multiply": [
+                    {
+                      "$ref": "bindings.seedreamProBaseDimensions.1"
+                    },
+                    {
+                      "$ref": "bindings.seedreamProScale"
+                    }
+                  ]
+                }
+              }
+            },
+            "resolution": {
+              "$if": {
+                "condition": {
+                  "$eq": [
+                    {
+                      "$ref": "request.model"
+                    },
+                    "rhart-imagine-image-quality/edit"
+                  ]
+                },
+                "then": {
+                  "$coalesce": [
+                    {
+                      "$ref": "request.resolution"
+                    },
+                    "1k"
+                  ]
+                },
+                "else": {
+                  "$if": {
+                    "condition": {
+                      "$eq": [
+                        {
+                          "$ref": "request.model"
+                        },
+                        "rhart-image-flux3/text-to-image"
+                      ]
+                    },
+                    "then": {
+                      "$coalesce": [
+                        {
+                          "$omitEmpty": {
+                            "$ref": "request.resolution"
+                          }
+                        },
+                        "768sq"
+                      ]
+                    },
+                    "else": {
+                      "$if": {
+                        "condition": {
+                          "$not": {
+                            "$ref": "bindings.seedreamProExplicitSize"
+                          }
+                        },
+                        "then": {
+                          "$omitEmpty": {
+                            "$ref": "request.resolution"
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            },
+            "quality": {
+              "$omitEmpty": {
+                "$if": {
+                  "condition": {
+                    "$eq": [
+                      {
+                        "$ref": "request.model"
+                      },
+                      "youchuan/text-to-image-v81"
+                    ]
+                  },
+                  "then": {
+                    "$if": {
+                      "condition": {
+                        "$eq": [
+                          {
+                            "$ref": "request.quality"
+                          },
+                          "4"
+                        ]
+                      },
+                      "then": "4",
+                      "else": "1"
+                    }
+                  },
+                  "else": {
+                    "$ref": "request.quality"
+                  }
+                }
+              }
+            },
+            "seed": {
+              "$omitEmpty": {
+                "$ref": "request.seed"
+              }
+            },
+            "hd": {
+              "$if": {
+                "condition": {
+                  "$eq": [
+                    {
+                      "$ref": "request.model"
+                    },
+                    "youchuan/text-to-image-v81"
+                  ]
+                },
+                "then": false
+              }
+            },
             "imageUrl": {
               "$omitEmpty": {
                 "$switch": {
@@ -398,64 +843,6 @@ MiniMax Music 上游没有独立风格字段：音乐工作台提交的风格标
                       }
                     }
                   ]
-                }
-              }
-            },
-            "imageUrls": {
-              "$omitEmpty": {
-                "$if": {
-                  "condition": {
-                    "$in": [
-                      {
-                        "$ref": "request.model"
-                      },
-                      [
-                        "rhart-imagine-image-quality/edit",
-                        "rhart-image/f-2-klein-9b/edit"
-                      ]
-                    ]
-                  },
-                  "else": {
-                    "$map": {
-                      "from": {
-                        "$ref": "request.images"
-                      },
-                      "as": "media",
-                      "in": {
-                        "$ref": "media.value"
-                      }
-                    }
-                  }
-                }
-              }
-            },
-            "aspectRatio": {
-              "$omitEmpty": {
-                "$ref": "request.aspectRatio"
-              }
-            },
-            "resolution": {
-              "$omitEmpty": {
-                "$if": {
-                  "condition": {
-                    "$eq": [
-                      {
-                        "$ref": "request.model"
-                      },
-                      "rhart-imagine-image-quality/edit"
-                    ]
-                  },
-                  "then": {
-                    "$coalesce": [
-                      {
-                        "$ref": "request.resolution"
-                      },
-                      "1k"
-                    ]
-                  },
-                  "else": {
-                    "$ref": "request.resolution"
-                  }
                 }
               }
             },
@@ -502,16 +889,6 @@ MiniMax Music 上游没有独立风格字段：音乐工作台提交的风格标
                     }
                   ]
                 }
-              }
-            },
-            "quality": {
-              "$omitEmpty": {
-                "$ref": "request.quality"
-              }
-            },
-            "seed": {
-              "$omitEmpty": {
-                "$ref": "request.seed"
               }
             }
           },
@@ -1013,12 +1390,41 @@ MiniMax Music 上游没有独立风格字段：音乐工作台提交的风格标
             },
             "aspectRatio": {
               "$omitEmpty": {
-                "$ref": "request.aspectRatio"
+                "$if": {
+                  "condition": {
+                    "$ne": [
+                      {
+                        "$ref": "request.model"
+                      },
+                      "minimax/hailuo-h3-max/text-to-video"
+                    ]
+                  },
+                  "then": {
+                    "$ref": "request.aspectRatio"
+                  }
+                }
               }
             },
             "resolution": {
               "$omitEmpty": {
-                "$ref": "request.resolution"
+                "$if": {
+                  "condition": {
+                    "$eq": [
+                      {
+                        "$ref": "request.model"
+                      },
+                      "minimax/hailuo-h3-max/text-to-video"
+                    ]
+                  },
+                  "then": {
+                    "$upper": {
+                      "$ref": "request.resolution"
+                    }
+                  },
+                  "else": {
+                    "$ref": "request.resolution"
+                  }
+                }
               }
             },
             "quality": {
@@ -1034,6 +1440,23 @@ MiniMax Music 上游没有独立风格字段：音乐工作台提交的风格标
             "seed": {
               "$omitEmpty": {
                 "$ref": "request.seed"
+              }
+            },
+            "ratio": {
+              "$omitEmpty": {
+                "$if": {
+                  "condition": {
+                    "$eq": [
+                      {
+                        "$ref": "request.model"
+                      },
+                      "minimax/hailuo-h3-max/text-to-video"
+                    ]
+                  },
+                  "then": {
+                    "$ref": "request.aspectRatio"
+                  }
+                }
               }
             }
           },

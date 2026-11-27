@@ -47,6 +47,15 @@ func RegisterSupDanceHtmlPageManagerRoutes(r *gin.RouterGroup, svc *service.Serv
 			}
 			ok(c, gin.H{"siteFooter": cfg})
 		})
+
+		publicGroup.GET("/sidebar-dock", func(c *gin.Context) {
+			cfg, err := svc.PublicHtmlSidebarDockConfig()
+			if err != nil {
+				failService(c, err)
+				return
+			}
+			ok(c, gin.H{"sidebarDock": cfg})
+		})
 	}
 
 	// 管理员后台接口
@@ -115,6 +124,41 @@ func RegisterSupDanceHtmlPageManagerRoutes(r *gin.RouterGroup, svc *service.Serv
 				return
 			}
 			overview, err := svc.AdminResetHtmlSiteFooter(user)
+			if err != nil {
+				failService(c, err)
+				return
+			}
+			ok(c, overview)
+		})
+
+		adminGroup.PUT("/sidebar-dock", func(c *gin.Context) {
+			user, err := currentUser(c, svc)
+			if err != nil {
+				failService(c, err)
+				return
+			}
+			var req struct {
+				SidebarDock app.HtmlSidebarDockConfig `json:"sidebarDock"`
+			}
+			if err := c.ShouldBindJSON(&req); err != nil {
+				fail(c, http.StatusBadRequest, err)
+				return
+			}
+			overview, err := svc.AdminSaveHtmlSidebarDock(user, req.SidebarDock)
+			if err != nil {
+				failService(c, err)
+				return
+			}
+			ok(c, overview)
+		})
+
+		adminGroup.POST("/sidebar-dock/reset", func(c *gin.Context) {
+			user, err := currentUser(c, svc)
+			if err != nil {
+				failService(c, err)
+				return
+			}
+			overview, err := svc.AdminResetHtmlSidebarDock(user)
 			if err != nil {
 				failService(c, err)
 				return

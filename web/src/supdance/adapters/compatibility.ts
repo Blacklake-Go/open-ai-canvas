@@ -26,6 +26,39 @@ export type UpstreamPatchRecord = {
  */
 export const SUPDANCE_UPSTREAM_PATCH_REGISTRY: readonly UpstreamPatchRecord[] = [
     {
+        id: "supdance-native-image-creation",
+        upstreamBaseline: "v1.8.7.2",
+        feature: "统一创作对话中的原生图片生成",
+        coupledUpstreamFiles: [
+            "web/src/lib/workspace-route-modules.ts",
+            "web/src/pages/create/creation-product.css",
+            "web/src/pages/create/creation-workspace-messages.tsx",
+            "web/src/pages/create/creation-workspace.tsx",
+            "web/src/pages/create/index.tsx",
+            "web/src/pages/create/use-creation-conversation-route.ts",
+            "web/src/router.tsx",
+        ],
+        files: ["web/test/image-workspace.test.ts", "web/test/fixtures/creation-sidebar-route.harness.tsx", "web/test/creation-media-result-placeholder.test.tsx"],
+        reason: "恢复创作页内原有的图片任务提交和结果操作。旧图片工作台链接携带会话 ID 进入个人创作页。",
+        upgradeRisk: "MEDIUM",
+    },
+    {
+        id: "supdance-production-regressions-1872",
+        upstreamBaseline: "v1.8.7.2@7da66551",
+        feature: "创作结果归属、Agent 历史和 RunningHub 请求约束",
+        coupledUpstreamFiles: [
+            "backend/internal/app/model_router.go",
+            "backend/internal/app/task_creation.go",
+            "backend/internal/repository/cloud_agent_history_archive.go",
+            "web/src/components/canvas/canvas-cloud-agent-panel.tsx",
+            "web/src/lib/canvas/canvas-asset-handoff.ts",
+            "web/src/pages/create/index.tsx",
+        ],
+        files: ["backend/internal/app/supdance_runninghub_contract.go", "plugin-packages/runninghub-standard/manifest.json", "web/src/supdance/marketing/x-purchase.ts"],
+        reason: "沿用现有定价和界面，校验真实供应端点的输入，按任务恢复结果，保留撤销所需画布变更并隔离历史删除竞态。",
+        upgradeRisk: "MEDIUM",
+    },
+    {
         id: "supdance-maintainer-metadata",
         upstreamBaseline: "v1.8.7.1@5ca284ce",
         feature: "站点维护者信息与许可证入口",
@@ -878,7 +911,7 @@ export const SUPDANCE_UPSTREAM_PATCH_REGISTRY: readonly UpstreamPatchRecord[] = 
     {
         id: "supdance-guest-workspace-tools",
         upstreamBaseline: "v1.8.7.1",
-        feature: "游客首页五项主推工具与侧栏开关",
+        feature: "游客工作区工具导航与首次创作",
         coupledUpstreamFiles: [
             "backend/internal/handler/feature_availability.go",
             "web/src/layouts/user-layout.tsx",
@@ -887,8 +920,8 @@ export const SUPDANCE_UPSTREAM_PATCH_REGISTRY: readonly UpstreamPatchRecord[] = 
             "web/src/services/api/auth.ts",
             "web/src/stores/use-user-store.ts",
         ],
-        files: ["web/src/supdance/components/guest-creation-tools.tsx"],
-        reason: "首页游客可发现五项主推工具，侧栏读取后台开关，工具入口继续沿用现有登录与回跳流程。",
+        files: ["web/src/supdance/guest-creation-draft.ts", "web/test/guest-creation-draft.test.ts"],
+        reason: "游客侧栏读取后台开关，工具入口沿用现有登录与回跳流程，创作页恢复游客草稿。",
         upgradeRisk: "LOW",
     },
     {

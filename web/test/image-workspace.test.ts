@@ -12,15 +12,10 @@ import { defaultConfig, type AiConfig } from "../src/stores/use-config-store";
 const dummyConfig = { ...defaultConfig, channels: [] } as AiConfig;
 
 describe("图片工作台路由与任务入口（真实实现）", () => {
-    test("workspaceRoutePages 注册 imageWorkspace 且可预加载", () => {
-        expect(workspaceRoutePages.imageWorkspace).toBeDefined();
-        expect(typeof workspaceRoutePages.imageWorkspace.preload).toBe("function");
-    });
-
-    test("preloadWorkspaceRoute 对 /workspace/image 预热 imageWorkspace 模块", async () => {
-        const original = workspaceRoutePages.imageWorkspace.preload;
+    test("preloadWorkspaceRoute 对旧图片链接预热统一创作页", async () => {
+        const original = workspaceRoutePages.create.preload;
         let calls = 0;
-        workspaceRoutePages.imageWorkspace.preload = (async () => {
+        workspaceRoutePages.create.preload = (async () => {
             calls += 1;
             return original();
         }) as typeof original;
@@ -31,7 +26,7 @@ describe("图片工作台路由与任务入口（真实实现）", () => {
             preloadWorkspaceRoute("/workspace/video");
             expect(calls).toBe(2);
         } finally {
-            workspaceRoutePages.imageWorkspace.preload = original;
+            workspaceRoutePages.create.preload = original;
         }
     });
 
@@ -81,21 +76,20 @@ describe("图片工作台参数合同（真实实现）", () => {
     });
 });
 
-describe("图片工作台路由门禁（源码结构回归，非运行验证）", () => {
-    test("个人 /workspace/image 有 RequireAuth+RequireFeature，团队路由不再暴露图片工作台", async () => {
+describe("旧图片工作台链接（源码结构回归）", () => {
+    test("旧链接携带会话 ID 回到个人创作页，独立工作台不再挂载", async () => {
         const source = await Bun.file(new URL("../src/router.tsx", import.meta.url)).text();
-        const personal = source.indexOf('path: "/workspace/image"');
-        expect(personal).toBeGreaterThan(-1);
-        const personalBlock = source.slice(personal, personal + 400);
-        expect(personalBlock).toContain("RequireAuth");
-        expect(personalBlock).toContain('feature="imageWorkbenchEnabled"');
-        // 团队 children 内不得再注册 workspace/image（团队仅开放文本生成）。
+        expect(source).toContain('path: "/workspace/image/:sessionId?", element: <LegacyImageWorkspaceRedirect />');
+        expect(source).toContain('new URLSearchParams({ mode: "image", conversation: sessionId || "new" })');
+        expect(source).not.toContain("<ImageWorkspacePage");
         const teamSection = source.slice(source.indexOf('path: "/teams/:teamId"'), source.indexOf('path: "/skills"'));
         expect(teamSection).not.toContain('"workspace/image"');
     });
 
-    test("AppTopNav 对 /workspace/image 隐藏全局导航（源码结构回归）", async () => {
-        const source = await Bun.file(new URL("../src/components/layout/app-top-nav.tsx", import.meta.url)).text();
-        expect(source).toContain(String.raw`/^\/workspace\/image(?:\/|$)/`);
+    test("图片提交与会话历史留在统一创作页", async () => {
+        const source = await Bun.file(new URL("../src/pages/create/index.tsx", import.meta.url)).text();
+        expect(source).toContain("runtime.runBackendGenerationTaskBatch(");
+        expect(source).toContain("selectConversationRoute(conversation.id)");
+        expect(source).not.toContain("/workspace/image");
     });
 });

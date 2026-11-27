@@ -9,11 +9,13 @@ import "@/themes/load";
 import { RouterProvider } from "react-router";
 
 import { AppProviders } from "@/components/layout/app-providers";
-import { router } from "@/router";
+import { preloadInitialHome, router } from "@/router";
 import { MarketingConsentHost } from "@/supdance/marketing/consent";
 import { installSiteTrafficCollector } from "@/services/site-traffic";
 
 document.body.style.fontFamily = '"SF Pro Display","SF Pro Text","PingFang SC","Microsoft YaHei","Helvetica Neue",sans-serif';
+
+preloadInitialHome(window.location.pathname);
 
 createRoot(document.getElementById("root")!).render(
     <React.StrictMode>

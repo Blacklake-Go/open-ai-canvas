@@ -12,6 +12,7 @@ import { AdminDataTable, AdminFilterChip, AdminStatTile, AdminStatusBadge, Admin
 import { AdminDrawer, AdminModal } from "@/pages/admin/ui/overlays";
 import { deleteAdminSupDanceI18nEntry, exportAdminSupDanceI18n, getPublicSupDanceI18nBundle, importAdminSupDanceI18n, listAdminSupDanceI18nEntries, upsertAdminSupDanceI18nEntries } from "../api";
 import { DEFAULT_SUPDANCE_LANGUAGES, NAMESPACE_LABELS, SUPPORTED_LOCALE_CODES } from "../locales";
+import { adminI18nEntries } from "../managed-interface-admin";
 import { useI18n, useSupDanceI18nStore } from "../store";
 import { TranslationWorkflowPanel } from "./translation-workflow";
 import { SUPDANCE_I18N_PLUGIN_ID, type SupDanceDiscoveredTextItem, type SupDanceI18nEntry, type SupDanceLocaleCode } from "../types";
@@ -67,7 +68,8 @@ export function SupDanceI18nEntriesPage() {
     const navigate = useNavigate();
     const [searchParams, setSearchParams] = useSearchParams();
 
-    const storeEntries = useSupDanceI18nStore((s) => s.entries);
+    const customEntries = useSupDanceI18nStore((s) => s.customEntries);
+    const storeEntries = useMemo(() => adminI18nEntries(customEntries), [customEntries]);
     const storeSettings = useSupDanceI18nStore((s) => s.settings);
     const discoveredUntranslated = useSupDanceI18nStore((s) => s.discoveredUntranslated);
     const clearDiscoveredUntranslated = useSupDanceI18nStore((s) => s.clearDiscoveredUntranslated);

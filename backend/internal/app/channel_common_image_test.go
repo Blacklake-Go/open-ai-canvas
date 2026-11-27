@@ -3,6 +3,7 @@ package app
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"reflect"
 	"testing"
@@ -10,6 +11,53 @@ import (
 	"yingce/backend/internal/model"
 	"yingce/backend/internal/protocol"
 )
+
+func TestRunningHubNanoBanana2EditRequiresReferenceBeforePricingAndTaskCreation(t *testing.T) {
+	const adapterID = "runninghub-standard-image"
+	const endpoint = "rhart-image-n-g31-flash-official/image-to-image"
+	svc, _, admin := seedBatchUpdates(t)
+	adapter := commonImageEndpointAdapter(t, adapterID, "/image-edit", nil)
+	registry, err := protocol.NewRegistry(adapter)
+	if err != nil {
+		t.Fatal(err)
+	}
+	svc.pluginRuntime = &pluginRuntime{registry: registry}
+	existingPrice := int64(7_500_000)
+	modelKey := "image-edit-fixture"
+	profile := DefaultModelCapabilityConfigForModel(adapterID, modelKey)
+	profile.Image.References.MaxImages = 3
+	_, err = svc.SaveAdminChannelModel(admin, "channel", "", ChannelModelRequest{
+		ModelKey: modelKey, ProviderModelKey: endpoint, Capability: "image", Protocol: adapterID, CapabilityConfig: profile, Enabled: batchBool(true),
+		PriceTiers: []ChannelModelPriceTierRequest{{BillingMode: "fixed_request", PriceConfigured: true, UnitPriceMicrocredits: existingPrice}},
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	userID := testGroupUserID(svc)
+	request := ChannelModelQuoteRequest{ChannelID: "channel", ModelKey: modelKey, Intent: ModelRequestIntent{Capability: "image"}}
+	assertMissingImage := func(err error) {
+		t.Helper()
+		var missing *modelCapabilityArgumentError
+		if !errors.As(err, &missing) || missing.Field != "referenceImages" || missing.Issue != "required" {
+			t.Fatalf("expected missing reference image, got %v", err)
+		}
+	}
+	_, err = svc.QuoteChannelModel(userID, request)
+	assertMissingImage(err)
+	access, err := svc.userGroupAccess(userID)
+	if err != nil {
+		t.Fatal(err)
+	}
+	input := map[string]any{"mode": "image", "prompt": "Edit the image", "config": map[string]any{"channelId": "channel", "model": modelKey}}
+	_, err = svc.resolveSystemChannelModelSelection(access, input, "canvas_image", "image_generate")
+	assertMissingImage(err)
+
+	request.Intent.Inputs = map[string]int{"image": 1}
+	quote, err := svc.QuoteChannelModel(userID, request)
+	if err != nil || quote.AmountMicrocredits != existingPrice {
+		t.Fatalf("quote=%+v err=%v", quote, err)
+	}
+}
 
 func commonImageEndpointAdapter(t *testing.T, id, path string, fields []protocol.ImageParameter) protocol.Adapter {
 	t.Helper()

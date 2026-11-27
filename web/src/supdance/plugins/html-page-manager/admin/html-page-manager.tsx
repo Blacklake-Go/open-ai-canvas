@@ -1014,7 +1014,7 @@ export default function HtmlPageManager() {
                                     </div>
 
                                     <div className="space-y-2 pt-2">
-                                        <label className="text-xs text-[var(--admin-text-secondary)] block">{t("admin.html.social_links")}</label>
+                                        <span className="text-xs text-[var(--admin-text-secondary)] block">{t("public.footer.official_channels")}</span>
                                         {siteFooter.socialLinks.map((soc, sIdx) => (
                                             <div key={soc.id} className="grid grid-cols-12 gap-2 items-center">
                                                 <span className="col-span-3 font-mono text-xs text-[var(--admin-text-secondary)] truncate">{soc.name}</span>

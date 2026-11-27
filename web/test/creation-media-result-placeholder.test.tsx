@@ -15,7 +15,6 @@ function renderResult(item: Partial<CreationMessage>) {
             onRetryFailure={noop}
             onRefreshResult={noop}
             onRecoverMedia={noop}
-            onCreateVariant={noop}
             onContinueCanvas={noop}
             openingCanvas={false}
         />,
@@ -23,6 +22,15 @@ function renderResult(item: Partial<CreationMessage>) {
 }
 
 describe("首页图片结果在加载完成前就占好位置", () => {
+    test("图片结果沿用原版操作区，隐藏内部模型标识和额外提示", () => {
+        const markup = renderResult({ model: "CHANNEL_000002::seedream-v5-pro-text", resultStorageKeys: ["resource:image-1"], resultUrls: ["/api/resources/image-1/file"] });
+        expect(markup).toContain("creation-image-result");
+        expect(markup).toContain("creation-media-actions");
+        expect(markup).not.toContain("CHANNEL_000002");
+        expect(markup).not.toContain("creation-turn-metadata-bar");
+        expect(markup).not.toContain("creation-followup-suggestions");
+    });
+
     test("图片还没加载出来时按生成比例预留尺寸并显示加载态", () => {
         const markup = renderResult({ resultStorageKeys: ["resource:image-1"], resultUrls: ["/api/resources/image-1/file"] });
         expect(markup).toContain('data-media-state="loading"');

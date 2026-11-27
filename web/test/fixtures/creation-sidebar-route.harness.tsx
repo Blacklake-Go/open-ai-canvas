@@ -37,7 +37,7 @@ function History({ userId }: { userId: string }) {
     history = useCreationSidebarHistory(userId);
     return <p>{history.items.map((item) => item.title).join("|")}</p>;
 }
-function Page({ ready, busy }: { ready: boolean; busy: boolean }) {
+function Page({ ready, busy, historySynced, ids }: { ready: boolean; busy: boolean; historySynced: boolean; ids: string[] }) {
     const [activeId, setActiveId] = useState("text");
     const location = useLocation();
     const navigate = useNavigate();
@@ -46,7 +46,8 @@ function Page({ ready, busy }: { ready: boolean; busy: boolean }) {
         ready,
         activeId,
         canSelect: !busy,
-        ids: ["text", "video", "new-id"],
+        historySynced,
+        ids,
         onSelect: (id) => {
             selected.push(id);
             setActiveId(id);
@@ -76,15 +77,23 @@ function Page({ ready, busy }: { ready: boolean; busy: boolean }) {
         </>
     );
 }
-async function renderPage(initial: string, ready = true, busy = false) {
+async function renderPage(initial: string, ready = true, busy = false, historySynced = true, ids = ["text", "video", "new-id"]) {
     await act(async () =>
         root.render(
             <MemoryRouter initialEntries={[initial]}>
-                <Page ready={ready} busy={busy} />
+                <Page ready={ready} busy={busy} historySynced={historySynced} ids={ids} />
             </MemoryRouter>,
         ),
     );
 }
+test("旧图片链接在远端会话加载前保留 ID，加载后打开对应会话", async () => {
+    const url = "/create?mode=image&conversation=cloud-image";
+    await renderPage(url, true, false, false);
+    expect(host.querySelector("output")?.textContent).toBe("text|?mode=image&conversation=cloud-image");
+    await renderPage(url, true, false, true, ["text", "cloud-image"]);
+    expect(host.querySelector("output")?.textContent).toBe("cloud-image|?mode=image&conversation=cloud-image");
+    expect(selected).toEqual(["cloud-image"]);
+});
 async function renderHistory(userId = "user-a") {
     await act(async () =>
         root.render(

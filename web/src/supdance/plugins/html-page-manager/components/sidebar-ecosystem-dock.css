@@ -1,0 +1,234 @@
+.sd-dock-root {
+    width: 100%;
+    padding: 8px 0 6px;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+    margin-bottom: 8px;
+    box-sizing: border-box;
+}
+
+.dark .sd-dock-root {
+    border-bottom-color: rgba(255, 255, 255, 0.08);
+}
+
+.sd-dock-grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 6px;
+}
+
+.sd-dock-card {
+    height: 46px;
+    padding: 5px 4px;
+    border-radius: 8px;
+    border: 1px solid rgba(0, 0, 0, 0.08);
+    background: rgba(0, 0, 0, 0.03);
+    color: rgba(23, 23, 26, 0.68);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 3px;
+    text-decoration: none;
+    min-width: 0;
+    transition:
+        background-color 150ms ease,
+        border-color 150ms ease,
+        color 150ms ease,
+        transform 130ms ease;
+}
+
+.dark .sd-dock-card {
+    border-color: rgba(255, 255, 255, 0.08);
+    background: rgba(255, 255, 255, 0.04);
+    color: rgba(244, 244, 245, 0.66);
+}
+
+.sd-dock-card:hover,
+.sd-dock-card:focus-visible {
+    background: rgba(0, 0, 0, 0.07);
+    border-color: rgba(0, 0, 0, 0.16);
+    color: #17171a;
+}
+
+.dark .sd-dock-card:hover,
+.dark .sd-dock-card:focus-visible {
+    background: rgba(255, 255, 255, 0.09);
+    border-color: rgba(255, 255, 255, 0.2);
+    color: #f4f4f5;
+}
+
+.sd-dock-card:active {
+    transform: scale(0.97);
+}
+
+.sd-dock-card-label {
+    font-size: 11px;
+    font-weight: 500;
+    line-height: 1.15;
+    letter-spacing: -0.01em;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 100%;
+}
+
+.sd-dock-socials {
+    margin-top: 7px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 6px;
+}
+
+.sd-dock-social-btn {
+    height: 30px;
+    flex: 1 1 0;
+    min-width: 0;
+    border-radius: 8px;
+    border: 1px solid rgba(0, 0, 0, 0.08);
+    color: rgba(23, 23, 26, 0.52);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    text-decoration: none;
+    transition:
+        color 150ms ease,
+        border-color 150ms ease,
+        background-color 150ms ease,
+        transform 130ms ease;
+}
+
+.dark .sd-dock-social-btn {
+    border-color: rgba(255, 255, 255, 0.08);
+    color: rgba(244, 244, 245, 0.48);
+}
+
+.sd-dock-social-btn:hover {
+    transform: translateY(-1px);
+}
+
+.sd-dock-social-btn:active {
+    transform: scale(0.95);
+}
+
+.sd-dock-social-btn[data-social="x"]:hover,
+.sd-dock-social-btn[data-social="threads"]:hover {
+    border-color: rgba(20, 20, 19, 0.28);
+    background: rgba(20, 20, 19, 0.06);
+    color: #141413;
+}
+
+.dark .sd-dock-social-btn[data-social="x"]:hover,
+.dark .sd-dock-social-btn[data-social="threads"]:hover {
+    border-color: rgba(245, 244, 240, 0.3);
+    background: rgba(255, 255, 255, 0.08);
+    color: #f5f4f0;
+}
+
+.sd-dock-social-btn[data-social="youtube"]:hover {
+    border-color: rgba(239, 68, 68, 0.4);
+    background: rgba(239, 68, 68, 0.1);
+    color: #dc2626;
+}
+.dark .sd-dock-social-btn[data-social="youtube"]:hover {
+    color: #f87171;
+}
+
+.sd-dock-social-btn[data-social="instagram"]:hover {
+    border-color: rgba(236, 72, 153, 0.4);
+    background: rgba(236, 72, 153, 0.1);
+    color: #db2777;
+}
+.dark .sd-dock-social-btn[data-social="instagram"]:hover {
+    color: #f472b6;
+}
+
+.sd-dock-social-btn[data-social="xiaohongshu"]:hover {
+    border-color: rgba(244, 63, 94, 0.4);
+    background: rgba(244, 63, 94, 0.1);
+    color: #e11d48;
+}
+.dark .sd-dock-social-btn[data-social="xiaohongshu"]:hover {
+    color: #fb7185;
+}
+
+.sd-dock-social-btn[data-social="qq"]:hover {
+    border-color: rgba(56, 189, 248, 0.4);
+    background: rgba(56, 189, 248, 0.1);
+    color: #0284c7;
+}
+.dark .sd-dock-social-btn[data-social="qq"]:hover {
+    color: #38bdf8;
+}
+
+.sd-dock-social-btn[data-social="discord"]:hover {
+    border-color: rgba(99, 102, 241, 0.4);
+    background: rgba(99, 102, 241, 0.1);
+    color: #4f46e5;
+}
+.dark .sd-dock-social-btn[data-social="discord"]:hover {
+    color: #818cf8;
+}
+
+.sd-dock-social-btn[data-social="reddit"]:hover {
+    border-color: rgba(249, 115, 22, 0.4);
+    background: rgba(249, 115, 22, 0.1);
+    color: #ea580c;
+}
+.dark .sd-dock-social-btn[data-social="reddit"]:hover {
+    color: #fb923c;
+}
+
+/* 折叠态：居中圆形生态入口钮 */
+.sd-dock-root.is-collapsed {
+    display: flex;
+    justify-content: center;
+    padding: 6px 0;
+    margin-bottom: 6px;
+}
+
+.sd-dock-collapsed-trigger {
+    width: 36px;
+    height: 36px;
+    border-radius: 10px;
+    border: 1px solid rgba(0, 0, 0, 0.08);
+    background: rgba(0, 0, 0, 0.03);
+    color: rgba(23, 23, 26, 0.62);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition:
+        background-color 150ms ease,
+        border-color 150ms ease,
+        color 150ms ease;
+}
+
+.dark .sd-dock-collapsed-trigger {
+    border-color: rgba(255, 255, 255, 0.09);
+    background: rgba(255, 255, 255, 0.04);
+    color: rgba(244, 244, 245, 0.64);
+}
+
+.sd-dock-collapsed-trigger:hover {
+    background: rgba(0, 0, 0, 0.07);
+    color: #17171a;
+}
+
+.dark .sd-dock-collapsed-trigger:hover {
+    background: rgba(255, 255, 255, 0.09);
+    color: #f4f4f5;
+}
+
+.sd-dock-popover-box {
+    width: 196px;
+    padding: 2px;
+}
+
+.sd-dock-popover-title {
+    margin: 0 0 8px;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    opacity: 0.65;
+}

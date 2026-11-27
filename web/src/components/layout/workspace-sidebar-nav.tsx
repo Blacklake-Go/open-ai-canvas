@@ -28,6 +28,7 @@ import { TeamSpaceSwitcher } from "./team-space-switcher";
 import { teamIdFromPath } from "@/lib/team-query-keys";
 import "./workspace-sidebar-history.css";
 import { useI18n } from "@/supdance/plugins/i18n";
+import { SidebarEcosystemDock, useSidebarDockState } from "@/supdance/plugins/html-page-manager/components/sidebar-ecosystem-dock";
 import { SUPDANCE_MUSIC_PLUGIN_ID } from "@/supdance/plugins/music-generation/types";
 
 // 音乐岛入口的显隐必须与后端准入判定使用同一插件 id（清单 id），
@@ -66,7 +67,7 @@ function toolItem(slug: NavigationToolSlug, to: string, t: (key: string) => stri
     return { id: slug, title: tool ? t(tool.labelKey) : slug, icon: tool?.icon, to };
 }
 
-export function buildNav(features: FeatureAvailability, t: (key: string) => string, musicPluginActive = true, canUseSkills = true): { groups: WorkspaceNavGroup[]; footer: WorkspaceNavItem[] } {
+export function buildNav(features: FeatureAvailability, t: (key: string) => string, musicPluginActive = true, canUseSkills = true, hideStandalonePricing = false): { groups: WorkspaceNavGroup[]; footer: WorkspaceNavItem[] } {
     const groups: WorkspaceNavGroup[] = [
         {
             items: [
@@ -89,10 +90,14 @@ export function buildNav(features: FeatureAvailability, t: (key: string) => stri
                 ...(features.taskCenterEnabled ? [{ id: "tasks", title: t("nav.sidebar.history"), icon: HistoryIcon, to: "/tasks" }] : []),
             ],
         },
-        {
-            heading: t("nav.sidebar.headingAssets"),
-            items: [{ id: "pricing", title: t("nav.pricing"), icon: CircleDollarSign, to: "/pricing.html" }],
-        },
+        ...(!hideStandalonePricing
+            ? [
+                  {
+                      heading: t("nav.sidebar.headingAssets"),
+                      items: [{ id: "pricing", title: t("nav.pricing"), icon: CircleDollarSign, to: "/pricing.html" }],
+                  },
+              ]
+            : []),
     ];
 
     // 管理、设置和退出登录不再占据参考站式侧栏底部，而是通过用户卡片菜单进入。
@@ -388,8 +393,9 @@ export function WorkspaceSidebarNav({ collapsed, onNavigate, onOpenSearch, onExp
     const musicPluginActive = usePluginStore(musicPluginGate);
     const { handleLogout } = useWorkspaceLogout();
     const canUseSkills = useSkillLibraryAccess();
-    const personalNav = useMemo(() => buildNav(features, t, musicPluginActive, canUseSkills), [features, t, musicPluginActive, canUseSkills]);
+    const { hideStandalonePricingGroup } = useSidebarDockState();
     const teamId = features.teamsEnabled ? teamIdFromPath(pathname) : undefined;
+    const personalNav = useMemo(() => buildNav(features, t, musicPluginActive, canUseSkills, !teamId && hideStandalonePricingGroup), [features, t, musicPluginActive, canUseSkills, teamId, hideStandalonePricingGroup]);
     const base = teamId ? `/teams/${encodeURIComponent(teamId)}` : "";
     const { groups, footer } = teamId
         ? {
@@ -459,6 +465,7 @@ export function WorkspaceSidebarNav({ collapsed, onNavigate, onOpenSearch, onExp
             </LayoutGroup>
 
             <div className="app-workspace-sidebar-footer shrink-0 px-3 py-3">
+                {!teamId ? <SidebarEcosystemDock collapsed={collapsed} onNavigate={onNavigate} /> : null}
                 <WorkspaceSidebarProfile collapsed={collapsed} user={user} />
                 {footer.length ? (
                     <div className="mt-2 flex flex-col gap-0.5">
