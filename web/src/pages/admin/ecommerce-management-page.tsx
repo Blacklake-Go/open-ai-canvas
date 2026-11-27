@@ -1,4 +1,5 @@
 import { lazy, Suspense, useMemo } from "react";
+import { interfaceText } from "@/i18n/interface-text";
 import { Skeleton } from "antd";
 import { useLocation, useNavigate } from "react-router";
 import { AdminPageFrame } from "./components/admin-shell";
@@ -35,7 +36,7 @@ export default function EcommerceManagementPage() {
                         const target = tabs.find((tab) => tab.value === value);
                         if (target) navigate(target.path, { replace: true });
                     }}
-                    options={tabs.map((tab) => ({ value: tab.value, label: tab.label }))}
+                    options={tabs.map((tab) => ({ value: tab.value, label: interfaceText(tab.label) }))}
                 />
             }
             scroll

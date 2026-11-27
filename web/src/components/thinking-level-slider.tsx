@@ -1,4 +1,5 @@
 import { useId, useRef, useState, type CSSProperties } from "react";
+import { interfaceText } from "@/i18n/interface-text";
 import { THINKING_LEVEL_LABELS, type ThinkingLevel, type ThinkingRequest } from "@/lib/text-thinking";
 import "./thinking-level-slider.css";
 
@@ -23,7 +24,7 @@ export function ThinkingLevelSlider({ levels, value, resolvedLevel, onChange, di
     const position = draft ?? savedIndex;
     const index = Math.max(0, Math.min(options.length - 1, Math.round(position)));
     const selected = options[index];
-    const label = selected === "auto" ? "默认" : THINKING_LEVEL_LABELS[selected as ThinkingLevel];
+    const label = selected === "auto" ? interfaceText("默认") : interfaceText(THINKING_LEVEL_LABELS[selected as ThinkingLevel]);
     const tone = selected === "max" ? "max" : selected === "off" || selected === "auto" ? "off" : "on";
     const commit = () => {
         if (!dragging.current) return;

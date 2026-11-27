@@ -1,4 +1,5 @@
 import { ChartNoAxesCombined, Eye, MousePointerClick } from "lucide-react";
+import { interfaceText } from "@/i18n/interface-text";
 import { useEffect, useId, useState, type CSSProperties } from "react";
 import { Area, CartesianGrid, ComposedChart, Line, ResponsiveContainer, Tooltip as ChartTooltip, XAxis, YAxis } from "recharts";
 
@@ -143,7 +144,7 @@ export function TrafficTrendChart({
         : hourly
           ? (today?.hours ?? []).map((point) => ({ ...point, date: `${today!.date} ${String(point.hour).padStart(2, "0")}:00` }))
           : (overview?.trend ?? []);
-    const trendTitle = features ? "功能使用日趋势" : trendView === "visits" ? "访问趋势" : "关键操作趋势";
+    const trendTitle = features ? interfaceText("功能使用日趋势") : trendView === "visits" ? interfaceText("访问趋势") : interfaceText("关键操作趋势");
     const activePeriods = trendPoints.filter((point) => (trendView === "visits" ? (point.pageViews ?? 0) > 0 || (point.visitors ?? 0) > 0 || (point.visits ?? 0) > 0 : (point.actions ?? 0) > 0)).length;
     const peakValue = trendPoints.reduce((max, point) => Math.max(max, (trendView === "visits" ? point.pageViews : point.actions) ?? 0), 0);
     const unknownPeriods = features ? trendPoints.filter((point) => point.features === null).length : 0;

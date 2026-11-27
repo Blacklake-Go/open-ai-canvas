@@ -1,4 +1,6 @@
 import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { currentLocale } from "@/i18n";
+import { interfaceText } from "@/i18n/interface-text";
 import { App, Button, InputNumber } from "antd";
 import { Gift, RefreshCw, Save } from "lucide-react";
 import { useEffect, useState } from "react";
@@ -56,7 +58,7 @@ export default function AdminReferralPage() {
                     icon={<Gift className="size-4" />}
                     title="推广设置"
                     description="指定推广人模式下，在「用户管理」编辑用户并打开「推广人」开关。"
-                    status={setting.data ? { label: setting.data.enabled ? "已开启" : "已关闭", color: setting.data.enabled ? "success" : undefined } : undefined}
+                    status={setting.data ? { label: setting.data.enabled ? interfaceText("已开启") : interfaceText("已关闭"), color: setting.data.enabled ? "success" : undefined } : undefined}
                     footer={
                         <>
                             <span className="text-xs text-foreground/55">返佣按被邀请用户每笔积分充值到账数量计算，以积分发放给推广人；存储空间订单不返佣。</span>
@@ -129,13 +131,19 @@ export default function AdminReferralPage() {
                             dataSource: commissions.data?.commissions ?? [],
                             pagination: false,
                             columns: [
-                                { key: "inviter", title: "推广人", dataIndex: "inviterName" },
-                                { key: "invitee", title: "被邀请用户", dataIndex: "inviteeName" },
-                                { key: "amount", title: "充值金额", dataIndex: "orderAmountFen", align: "right", render: (value: number) => <span className="tabular-nums">{formatReferralYuan(value)}</span> },
-                                { key: "credits", title: "到账积分", dataIndex: "orderCreditsMicrocredits", align: "right", render: (value: number) => <span className="tabular-nums">{formatReferralCredits(value)}</span> },
-                                { key: "rate", title: "比例", dataIndex: "rateBasisPoints", align: "center", render: (value: number) => formatReferralRate(value) },
-                                { key: "commission", title: "返佣积分", dataIndex: "commissionMicrocredits", align: "right", render: (value: number) => <span className="tabular-nums">+{formatReferralCredits(value)}</span> },
-                                { key: "createdAt", title: "入账时间", dataIndex: "createdAt", align: "center", render: (value: string) => <span className="tabular-nums">{new Date(value).toLocaleString("zh-CN", { hour12: false })}</span> },
+                                { key: "inviter", title: interfaceText("推广人"), dataIndex: "inviterName" },
+                                { key: "invitee", title: interfaceText("被邀请用户"), dataIndex: "inviteeName" },
+                                { key: "amount", title: interfaceText("充值金额"), dataIndex: "orderAmountFen", align: "right", render: (value: number) => <span className="tabular-nums">{formatReferralYuan(value)}</span> },
+                                { key: "credits", title: interfaceText("到账积分"), dataIndex: "orderCreditsMicrocredits", align: "right", render: (value: number) => <span className="tabular-nums">{formatReferralCredits(value)}</span> },
+                                { key: "rate", title: interfaceText("比例"), dataIndex: "rateBasisPoints", align: "center", render: (value: number) => formatReferralRate(value) },
+                                { key: "commission", title: interfaceText("返佣积分"), dataIndex: "commissionMicrocredits", align: "right", render: (value: number) => <span className="tabular-nums">+{formatReferralCredits(value)}</span> },
+                                {
+                                    key: "createdAt",
+                                    title: interfaceText("入账时间"),
+                                    dataIndex: "createdAt",
+                                    align: "center",
+                                    render: (value: string) => <span className="tabular-nums">{new Date(value).toLocaleString(currentLocale(), { hour12: false })}</span>,
+                                },
                             ],
                         }}
                     />

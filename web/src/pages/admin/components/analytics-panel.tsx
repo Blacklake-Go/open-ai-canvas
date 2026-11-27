@@ -1,4 +1,5 @@
 import { Alert, App, Button, DatePicker, Tabs, Tag } from "antd";
+import { interfaceText } from "@/i18n/interface-text";
 import { Tooltip } from "@/pages/admin/ui/controls";
 import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 
@@ -149,7 +150,7 @@ export default function AnalyticsPanel({ users, channels }: Props) {
         { title: "P50 / P95", width: 145, render: (_, row) => `${formatDuration(row.p50DurationMs)} / ${formatDuration(row.p95DurationMs)}` },
         { title: "Token（入 / 出 / 缓存）", width: 190, render: (_, row) => (row.usageAvailable ? `${formatNumber(row.inputTokens)} / ${formatNumber(row.outputTokens)} / ${formatNumber(row.cachedTokens)}` : "--") },
         { title: "媒体 / 视频秒", width: 125, render: (_, row) => `${row.mediaCount} / ${row.videoSeconds}` },
-        ...analyticsFinanceColumns,
+        ...analyticsFinanceColumns.map((column) => ({ ...column, title: typeof column.title === "string" ? interfaceText(column.title) : column.title })),
     ];
 
     const userColumns: ColumnsType<AdminAnalytics["users"][number]> = [
@@ -191,7 +192,7 @@ export default function AnalyticsPanel({ users, channels }: Props) {
     const finance = data?.kpi.finance;
     const financeUnavailable = data !== null && (!finance || modelRows.some((row) => !row.finance));
     const trendHasData = trendMetric === "volume" ? trend.some((item) => item.tasks > 0 || item.requests > 0) : trendMetric === "quality" ? trend.some((item) => item.requests > 0) : trend.some((item) => item.activeUsers > 0);
-    const trendTitle = trendMetric === "volume" ? "任务与请求趋势" : trendMetric === "quality" ? "请求质量趋势" : "用户活跃趋势";
+    const trendTitle = trendMetric === "volume" ? interfaceText("任务与请求趋势") : trendMetric === "quality" ? interfaceText("请求质量趋势") : interfaceText("用户活跃趋势");
     const pageRows = <T,>(rows: T[], page: number) => rows.slice((page - 1) * analyticsPageSize, page * analyticsPageSize);
 
     const applyRangePreset = (preset: RangePreset) => {
@@ -375,7 +376,7 @@ export default function AnalyticsPanel({ users, channels }: Props) {
                         </div>
                     </div>
                     {trendHasData ? (
-                        <div className="admin-analytics-chart" role="img" aria-label={`${trendTitle}图`}>
+                        <div className="admin-analytics-chart" role="img" aria-label={interfaceText("{trend}图", { trend: trendTitle })}>
                             <ResponsiveContainer width="100%" height="100%">
                                 <ComposedChart data={data?.trend || []} margin={{ top: 8, right: 12, bottom: 0, left: -16 }}>
                                     <CartesianGrid stroke="currentColor" className="text-foreground/10" vertical={false} />

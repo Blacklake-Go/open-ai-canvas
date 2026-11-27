@@ -1,4 +1,5 @@
 import { App, Button, Form, Input, InputNumber, Skeleton } from "antd";
+import { interfaceText } from "@/i18n/interface-text";
 import { Select } from "@/components/ui/base/select";
 import { AdminSegmented, Switch } from "@/pages/admin/ui/controls";
 import { AlertTriangle, CloudUpload, Coins, KeyRound, RefreshCw, RotateCcw, Save, UsersRound } from "lucide-react";
@@ -94,7 +95,12 @@ export default function ArkPrivateAssetsSettingsPage() {
         setSearchParams(params, { replace: true });
     };
     return (
-        <AdminPageFrame title="方舟素材库" description={PAGE_DESCRIPTION} actions={<AdminSegmented<ArkTab> ariaLabel="方舟素材库视图" value={tab} onChange={selectTab} options={ARK_TABS} />} scroll>
+        <AdminPageFrame
+            title="方舟素材库"
+            description={PAGE_DESCRIPTION}
+            actions={<AdminSegmented<ArkTab> ariaLabel={interfaceText("方舟素材库视图")} value={tab} onChange={selectTab} options={ARK_TABS.map((item) => ({ ...item, label: interfaceText(item.label) }))} />}
+            scroll
+        >
             <div className="admin-ark-tabs-body">
                 {tab === "groups" ? <ArkAdminGroupsTab onOpenReviews={() => selectTab("reviews")} /> : null}
                 {tab === "reviews" ? <ArkAdminReviewsTab /> : null}

@@ -1,4 +1,5 @@
 import { App, AutoComplete, Button, Form, Input, Progress } from "antd";
+import { interfaceText } from "@/i18n/interface-text";
 import type { ColumnsType } from "antd/es/table";
 import { keepPreviousData, useQuery } from "@tanstack/react-query";
 import { CloudDownload, FileJson, Pencil, Plus, RefreshCw, RotateCcw, Search, Square, Trash2, Upload } from "lucide-react";
@@ -327,7 +328,7 @@ export default function PoseLibraryAdminPage() {
                 toolbarFilters={
                     <>
                         <Select
-                            ariaLabel="来源"
+                            ariaLabel={interfaceText("来源")}
                             className="w-52"
                             value={source}
                             options={[{ value: "", label: "全部来源" }, ...sources.map((item) => ({ value: item.key, label: item.name }))]}
@@ -337,7 +338,7 @@ export default function PoseLibraryAdminPage() {
                             }}
                         />
                         <Select
-                            ariaLabel="体系"
+                            ariaLabel={interfaceText("体系")}
                             className="w-48"
                             value={system}
                             options={[{ value: "", label: "全部体系" }, ...Array.from(new Set(systems.map((item) => item.system))).map((name) => ({ value: name, label: name }))]}
@@ -347,7 +348,7 @@ export default function PoseLibraryAdminPage() {
                             }}
                         />
                         <Select
-                            ariaLabel="同步状态"
+                            ariaLabel={interfaceText("同步状态")}
                             className="w-32"
                             value={status}
                             options={[

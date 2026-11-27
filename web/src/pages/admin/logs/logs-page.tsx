@@ -1,4 +1,5 @@
 import { Alert, App, Button, DatePicker, Segmented } from "antd";
+import { interfaceText } from "@/i18n/interface-text";
 import { IconButton } from "@/pages/admin/ui/controls";
 import { AdminModal } from "@/pages/admin/ui/overlays";
 import type { ColumnsType } from "antd/es/table";
@@ -381,7 +382,7 @@ export default function LogsPage() {
                                     UTC
                                 </span>
                             }
-                            placeholder={["开始日期", "结束日期"]}
+                            placeholder={[interfaceText("开始日期"), interfaceText("结束日期")]}
                             disabledDate={(day) => day.format("YYYY-MM-DD") > defaultRange.to}
                             onChange={(dates) => applyDateRange(dates?.[0] || null, dates?.[1] || null)}
                         />

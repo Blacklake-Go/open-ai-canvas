@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import { interfaceText } from "@/i18n/interface-text";
 import { App, Button, Skeleton, Tooltip } from "antd";
 import { useQueryClient } from "@tanstack/react-query";
 import { AlertTriangle, Check, Copy, ExternalLink, Image, KeyRound, RefreshCw } from "lucide-react";
@@ -216,12 +217,12 @@ export default function SocialAuthSettingsPage() {
                 <div className="flex flex-col gap-3 rounded-lg border border-[var(--admin-border)] bg-[var(--admin-surface)] p-3.5 sm:flex-row sm:items-center sm:justify-between">
                     <div className="flex items-center gap-3">
                         <SegmentedControl
-                            ariaLabel="社交登录分区"
+                            ariaLabel={interfaceText("社交登录分区")}
                             value={activeRegion}
                             onChange={(value) => setActiveRegion(value as SocialAuthRegion)}
                             options={REGION_TABS.map((tab) => ({
                                 value: tab.value,
-                                label: `${tab.label} (${tab.value === "cn" ? cnProviders.length : intlProviders.length})`,
+                                label: `${interfaceText(tab.label)} (${tab.value === "cn" ? cnProviders.length : intlProviders.length})`,
                             }))}
                         />
                     </div>
@@ -232,7 +233,13 @@ export default function SocialAuthSettingsPage() {
                         </span>
                         <div className="flex items-center gap-1.5 border-l border-[var(--admin-border)] pl-3">
                             <span className="text-[var(--admin-text-muted)]">未知 IP 回退:</span>
-                            <Select size="sm" ariaLabel="未知或异常 IP 的默认回退分区" value={data.defaultFallbackRegion || "cn"} onChange={(value) => void handleFallbackRegionChange(value as SocialAuthRegion)} options={FALLBACK_OPTIONS} />
+                            <Select
+                                size="sm"
+                                ariaLabel={interfaceText("未知或异常 IP 的默认回退分区")}
+                                value={data.defaultFallbackRegion || "cn"}
+                                onChange={(value) => void handleFallbackRegionChange(value as SocialAuthRegion)}
+                                options={FALLBACK_OPTIONS.map((item) => ({ ...item, label: interfaceText(item.label) }))}
+                            />
                         </div>
                         <IconButton icon={RefreshCw} loading={refreshing} title="刷新配置状态" aria-label="刷新配置状态" onClick={() => void loadSettings(false)} />
                     </div>

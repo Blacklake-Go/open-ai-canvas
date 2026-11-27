@@ -1,4 +1,5 @@
 import { Alert, Button, DatePicker } from "antd";
+import { interfaceText } from "@/i18n/interface-text";
 import type { ColumnsType } from "antd/es/table";
 import dayjs from "dayjs";
 import { RefreshCw, RotateCcw, Search } from "lucide-react";
@@ -171,15 +172,20 @@ export default function LoginLogsPage() {
                             aria-label="搜索登录日志用户"
                             onValueChange={(value) => update({ keyword: value, page: 1 }, true)}
                         />
-                        <Select ariaLabel="事件类型" value={event} options={[{ value: "", label: "全部事件" }, ...Object.entries(loginEventLabels).map(([value, label]) => ({ value, label }))]} onChange={(value) => update({ event: value, page: 1 })} />
                         <Select
-                            ariaLabel="登录方式"
+                            ariaLabel={interfaceText("事件类型")}
+                            value={event}
+                            options={[{ value: "", label: "全部事件" }, ...Object.entries(loginEventLabels).map(([value, label]) => ({ value, label }))]}
+                            onChange={(value) => update({ event: value, page: 1 })}
+                        />
+                        <Select
+                            ariaLabel={interfaceText("登录方式")}
                             value={method}
                             options={[{ value: "", label: "全部登录方式" }, ...Object.entries(loginMethodLabels).map(([value, label]) => ({ value, label }))]}
                             onChange={(value) => update({ method: value, page: 1 })}
                         />
                         <Select
-                            ariaLabel="登录结果"
+                            ariaLabel={interfaceText("登录结果")}
                             value={result}
                             options={[
                                 { value: "", label: "全部结果" },
@@ -195,7 +201,7 @@ export default function LoginLogsPage() {
                             format="YYYY-MM-DD HH:mm:ss"
                             aria-label="登录日志时间范围"
                             value={[from && dayjs(from).isValid() ? dayjs(from) : null, to && dayjs(to).isValid() ? dayjs(to) : null]}
-                            placeholder={["开始时间", "结束时间"]}
+                            placeholder={[interfaceText("开始时间"), interfaceText("结束时间")]}
                             onChange={(dates) => update({ from: dates?.[0]?.toISOString() || "", to: dates?.[1]?.toISOString() || "", page: 1 })}
                         />
                         <Button type="text" className="admin-login-log-reset" disabled={!filtered} title={filtered ? "清除全部筛选条件" : "当前未应用筛选"} icon={<RotateCcw className="size-3.5" />} onClick={resetFilters}>

@@ -273,7 +273,7 @@ export default function TrafficPage() {
         coverageUnknown: Object.values({ visitors: row.visitors, pageViews: row.pageViews, visits: row.visits, actions: row.actions }).every((value) => value === 0) && (!availableDay || row.date < availableDay),
     }));
     const currentDailyPage = Math.min(dailyPage, Math.max(1, Math.ceil(dailyRows.length / dailyPageSize)));
-    const emptyTitle = loading ? "正在读取统计…" : data ? "当前范围暂无采集记录" : rangeError ? "请先应用有效日期" : "统计数据不可用";
+    const emptyTitle = loading ? interfaceText("正在读取统计…") : data ? interfaceText("当前范围暂无采集记录") : rangeError ? interfaceText("请先应用有效日期") : interfaceText("统计数据不可用");
     const todayEmptyTitle = todayQuery.isPending ? "正在读取今日统计…" : "今日统计数据不可用";
 
     const kpiCards = [

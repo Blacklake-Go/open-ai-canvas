@@ -20,7 +20,7 @@ export function CreativeOptionsPanel({ draft, onChange }: { draft: EcommerceDraf
                         <span>{_creationLabel(field.label)}</span>
                         <Select<string>
                             variant="filled"
-                            aria-label={field.label}
+                            aria-label={_creationLabel(field.label)}
                             value={!allowsText && field.key === "textMode" ? "none" : selected[field.key]}
                             options={_creationOptions(field.options)}
                             disabled={field.key === "textMode" ? fixedNoText : !allowsText && ["copyTone", "fontStyle", "informationDensity"].includes(field.key)}

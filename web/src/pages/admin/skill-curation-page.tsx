@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import { interfaceText } from "@/i18n/interface-text";
 import { Alert, App, Button, Input, InputNumber } from "antd";
 import { Check, CheckCircle2, ChevronRight, FolderTree, Plus, RefreshCw, Search, Shapes, SlidersHorizontal } from "lucide-react";
 import { AdminPageFrame } from "./components/admin-shell";
@@ -12,12 +13,7 @@ import "./skill-curation-page.css";
 const emptyRoot = (): CurationRoot => ({ id: "", name: "", iconKey: "shapes", sortOrder: 0, enabled: true });
 const emptyCategory = (rootTag = "drama"): CurationCategory => ({ id: "", rootTag, name: "", sortOrder: 0, enabled: true });
 
-type EditorTarget =
-    | { kind: "root"; id: string }
-    | { kind: "category"; id: string }
-    | { kind: "new-root" }
-    | { kind: "new-category"; rootTag: string }
-    | null;
+type EditorTarget = { kind: "root"; id: string } | { kind: "category"; id: string } | { kind: "new-root" } | { kind: "new-category"; rootTag: string } | null;
 
 function normalizeName(value: string) {
     return value.replace(/\s+/g, " ").trim();
@@ -56,7 +52,16 @@ export default function SkillCurationPage() {
     const selectedEditorRootId = target?.kind === "root" ? target.id : target?.kind === "category" ? category.rootTag : target?.kind === "new-category" ? target.rootTag : "";
     const editorIsRoot = target?.kind === "root" || target?.kind === "new-root";
     const editorIsCategory = target?.kind === "category" || target?.kind === "new-category";
-    const editorTitle = target?.kind === "new-root" ? "新增一级分类" : target?.kind === "new-category" ? "新增子分类" : target?.kind === "root" ? `编辑一级分类 · ${root.name || "未命名"}` : target?.kind === "category" ? `编辑子分类 · ${category.name || "未命名"}` : "选择一个分类";
+    const editorTitle =
+        target?.kind === "new-root"
+            ? interfaceText("新增一级分类")
+            : target?.kind === "new-category"
+              ? interfaceText("新增子分类")
+              : target?.kind === "root"
+                ? interfaceText("编辑一级分类 · {name}", { name: root.name || interfaceText("未命名") })
+                : target?.kind === "category"
+                  ? interfaceText("编辑子分类 · {name}", { name: category.name || interfaceText("未命名") })
+                  : interfaceText("选择一个分类");
     const editorDescription = editorIsRoot ? "一级分类用于组织技能库的主导航和图示。" : editorIsCategory ? "子分类必须归属于一个启用中的一级分类。" : "从左侧分类树选择一个节点，或先创建新的一级分类。";
 
     const reload = async () => {
@@ -316,7 +321,14 @@ export default function SkillCurationPage() {
                                         <div className="admin-skill-curation-tree-orphans">
                                             <div className="admin-skill-curation-tree-orphans-title">未关联一级分类</div>
                                             {orphanCategories.map((item) => (
-                                                <button key={item.id} type="button" role="treeitem" aria-selected={target?.kind === "category" && target.id === item.id} className={`admin-skill-curation-tree-node admin-skill-curation-tree-node-child${target?.kind === "category" && target.id === item.id ? " is-active" : ""}`} onClick={() => selectCategory(item)}>
+                                                <button
+                                                    key={item.id}
+                                                    type="button"
+                                                    role="treeitem"
+                                                    aria-selected={target?.kind === "category" && target.id === item.id}
+                                                    className={`admin-skill-curation-tree-node admin-skill-curation-tree-node-child${target?.kind === "category" && target.id === item.id ? " is-active" : ""}`}
+                                                    onClick={() => selectCategory(item)}
+                                                >
                                                     <span className="admin-skill-curation-tree-node-marker" aria-hidden="true" />
                                                     <span className="admin-skill-curation-tree-node-copy">
                                                         <span className="admin-skill-curation-tree-node-name">{item.name}</span>
@@ -349,7 +361,13 @@ export default function SkillCurationPage() {
                             icon={<Shapes className="size-4" aria-hidden="true" />}
                             title={editorTitle}
                             description={editorDescription}
-                            status={editorIsRoot || editorIsCategory ? <AdminStatusBadge label={target?.kind?.startsWith("new-") ? "新建中" : "已选中"} tone={target?.kind?.startsWith("new-") ? "warning" : "info"} /> : <AdminStatusBadge label="未选择" tone="neutral" />}
+                            status={
+                                editorIsRoot || editorIsCategory ? (
+                                    <AdminStatusBadge label={target?.kind?.startsWith("new-") ? "新建中" : "已选中"} tone={target?.kind?.startsWith("new-") ? "warning" : "info"} />
+                                ) : (
+                                    <AdminStatusBadge label="未选择" tone="neutral" />
+                                )
+                            }
                         >
                             {!data ? (
                                 <div className="admin-skill-curation-editor-empty" role="status">
@@ -385,7 +403,14 @@ export default function SkillCurationPage() {
                                                     const Icon = curationIcon(key);
                                                     const selected = (root.iconKey || "shapes") === key;
                                                     return (
-                                                        <button key={key} type="button" role="radio" aria-checked={selected} className={`admin-skill-curation-icon-choice${selected ? " is-selected" : ""}`} onClick={() => setRoot({ ...root, iconKey: key })}>
+                                                        <button
+                                                            key={key}
+                                                            type="button"
+                                                            role="radio"
+                                                            aria-checked={selected}
+                                                            className={`admin-skill-curation-icon-choice${selected ? " is-selected" : ""}`}
+                                                            onClick={() => setRoot({ ...root, iconKey: key })}
+                                                        >
                                                             <Icon className="size-4" aria-hidden="true" />
                                                             <span>{curationIconLabels[key]}</span>
                                                         </button>
@@ -577,7 +602,16 @@ export default function SkillCurationPage() {
                                             availableCategories.map((item) => {
                                                 const selected = categoryIds.includes(item.id);
                                                 return (
-                                                    <button key={item.id} type="button" role="option" aria-selected={selected} aria-pressed={selected} className={`admin-skill-curation-assign-chip${selected ? " is-selected" : ""}`} disabled={!selectedSkill} onClick={() => setCategoryIds((current) => (selected ? current.filter((id) => id !== item.id) : [...current, item.id]))}>
+                                                    <button
+                                                        key={item.id}
+                                                        type="button"
+                                                        role="option"
+                                                        aria-selected={selected}
+                                                        aria-pressed={selected}
+                                                        className={`admin-skill-curation-assign-chip${selected ? " is-selected" : ""}`}
+                                                        disabled={!selectedSkill}
+                                                        onClick={() => setCategoryIds((current) => (selected ? current.filter((id) => id !== item.id) : [...current, item.id]))}
+                                                    >
                                                         <span>{item.name}</span>
                                                     </button>
                                                 );
