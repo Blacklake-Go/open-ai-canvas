@@ -1,14 +1,15 @@
 import { Check, Code2, Copy, Globe, Layers, Terminal } from "lucide-react";
 import copy from "copy-to-clipboard";
 import { useState, type ReactNode } from "react";
+import { interfaceText } from "@/i18n/interface-text";
+import type { AppLocale } from "@/i18n/locales";
 import { useLocaleStore } from "@/stores/use-locale-store";
 
 interface ConfigSpecTab {
     id: string;
     label: Record<string, string>;
     icon: ReactNode;
-    status: string;
-    description: Record<string, string>;
+    description: Record<AppLocale, string>;
     code: Record<string, string>;
 }
 
@@ -17,11 +18,13 @@ const CONFIG_TABS: ConfigSpecTab[] = [
         id: "cursor",
         label: { "zh-CN": "Cursor (mcp.json)", "en-US": "Cursor (mcp.json)" },
         icon: <Code2 className="size-3.5" strokeWidth={1.8} aria-hidden="true" />,
-        status: "SPEC DRAFT · STDIO / HTTP",
         description: {
             "zh-CN": "规划接入方式：通过标准 mcp.json 注册 SupDance 工作台能力（公测开放后提供专属令牌）",
             "zh-TW": "規劃接入方式：透過標準 mcp.json 註冊 SupDance 工作台能力（公測開放後提供專屬權杖）",
             "en-US": "Planned integration: register SupDance workspace capabilities via standard mcp.json (scoped tokens available at launch).",
+            "es-ES": "Integración prevista: registra las funciones de SupDance en el archivo estándar mcp.json. Los tokens con permisos específicos estarán disponibles en el lanzamiento.",
+            "fr-FR": "Intégration prévue : enregistrez les fonctionnalités SupDance dans le fichier standard mcp.json. Les jetons à portée limitée seront disponibles au lancement.",
+            "de-DE": "Geplante Integration: Registriere SupDance-Funktionen in der standardmäßigen mcp.json. Tokens mit begrenzten Berechtigungen folgen zum Start.",
             "ja-JP": "予定接続方式：標準 mcp.json 経由で SupDance ワークスペース機能を登録（公開後に専用トークンを発行）。",
             "ko-KR": "예정 연동 방식: 표준 mcp.json으로 SupDance 워크스페이스 기능을 등록(출시 후 전용 토큰 발급).",
         },
@@ -44,11 +47,13 @@ const CONFIG_TABS: ConfigSpecTab[] = [
         id: "claude",
         label: { "zh-CN": "Claude Desktop", "en-US": "Claude Desktop" },
         icon: <Terminal className="size-3.5" strokeWidth={1.8} aria-hidden="true" />,
-        status: "SPEC DRAFT · CLAUDE DESKTOP",
         description: {
             "zh-CN": "规划接入方式：在 claude_desktop_config.json 中挂载并自动发现分镜、图像与音乐工具",
             "zh-TW": "規劃接入方式：於 claude_desktop_config.json 中掛載並自動探索分鏡、圖像與音樂工具",
             "en-US": "Planned integration: mount in claude_desktop_config.json to auto-discover storyboard, image, and audio tools.",
+            "es-ES": "Integración prevista: añade el servidor a claude_desktop_config.json para detectar automáticamente las herramientas de guion gráfico, imagen y audio.",
+            "fr-FR": "Intégration prévue : ajoutez le serveur à claude_desktop_config.json pour détecter automatiquement les outils de storyboard, d’image et d’audio.",
+            "de-DE": "Geplante Integration: Trage den Server in claude_desktop_config.json ein, um Storyboard-, Bild- und Audiowerkzeuge automatisch zu erkennen.",
             "ja-JP": "予定接続方式：claude_desktop_config.json に設定して絵コンテ・画像・音楽ツールを自動検出。",
             "ko-KR": "예정 연동 방식: claude_desktop_config.json에 등록해 스토리보드·이미지·오디오 도구를 자동 검색.",
         },
@@ -70,11 +75,13 @@ const CONFIG_TABS: ConfigSpecTab[] = [
         id: "http",
         label: { "zh-CN": "Streamable HTTP", "en-US": "Streamable HTTP" },
         icon: <Globe className="size-3.5" strokeWidth={1.8} aria-hidden="true" />,
-        status: "SPEC DRAFT · REMOTE MCP",
         description: {
             "zh-CN": "规划远程端接入：免本地运行时直连云端托管 MCP 网关，内置 OAuth 2.1 与作用域鉴权",
             "zh-TW": "規劃遠端接入：免本地執行環境直連雲端託管 MCP 閘道，內建 OAuth 2.1 與作用域驗證",
             "en-US": "Planned remote endpoint: connect directly to the managed cloud MCP gateway without local runtimes, secured with OAuth 2.1.",
+            "es-ES": "Conexión remota prevista: conéctate directamente a la pasarela MCP en la nube, sin entorno de ejecución local y con OAuth 2.1.",
+            "fr-FR": "Connexion distante prévue : accédez directement à la passerelle MCP hébergée, sans environnement d’exécution local et avec OAuth 2.1.",
+            "de-DE": "Geplanter Fernzugriff: Verbinde dich ohne lokale Laufzeit direkt mit dem verwalteten MCP-Gateway in der Cloud, abgesichert durch OAuth 2.1.",
             "ja-JP": "予定リモート接続：ローカル実行不要でクラウド管理型 MCP ゲートウェイに直結（OAuth 2.1 対応）。",
             "ko-KR": "예정 원격 엔드포인트: 로컬 런타임 없이 OAuth 2.1 기반 클라우드 MCP 게이트웨이에 직접 연결.",
         },
@@ -105,11 +112,13 @@ Accept: application/json, text/event-stream
             "ko-KR": "워크스페이스 클라이언트 (라이브)",
         },
         icon: <Layers className="size-3.5" strokeWidth={1.8} aria-hidden="true" />,
-        status: "LIVE IN PRODUCTION",
         description: {
             "zh-CN": "当前线上工作台 Canvas Agent 已支持挂载外部兼容 MCP 服务，进入画布即可体验",
             "zh-TW": "目前線上工作台 Canvas Agent 已支援掛載外部相容 MCP 服務，進入畫布即可體驗",
             "en-US": "Canvas Agent inside the live workspace already connects to compatible external MCP servers today.",
+            "es-ES": "Canvas Agent ya admite conexiones a servidores MCP externos compatibles desde el espacio de trabajo.",
+            "fr-FR": "Canvas Agent se connecte déjà aux serveurs MCP externes compatibles depuis l’espace de travail.",
+            "de-DE": "Canvas Agent kann bereits aus dem Workspace eine Verbindung zu kompatiblen externen MCP-Servern herstellen.",
             "ja-JP": "本番ワークスペースの Canvas Agent は既に互換外部 MCP サーバーの接続に対応しています。",
             "ko-KR": "현재 라이브 워크스페이스의 Canvas Agent에서 호환 외부 MCP 서버를 즉시 연결할 수 있습니다.",
         },
@@ -133,7 +142,7 @@ export function McpCliSection() {
 
     const activeTab = CONFIG_TABS.find((t) => t.id === activeTabId) || CONFIG_TABS[0];
     const activeCode = activeTab.code[locale] || activeTab.code[locale.startsWith("zh") ? "zh-CN" : "en-US"] || activeTab.code["zh-CN"];
-    const activeDesc = activeTab.description[locale] || activeTab.description["en-US"] || activeTab.description["zh-CN"];
+    const activeDesc = activeTab.description[locale];
 
     const handleCopy = () => {
         copy(activeCode);
@@ -145,11 +154,9 @@ export function McpCliSection() {
         <section id="config-spec" className="mcp-section-dark">
             <div className="mcp-container">
                 <div className="mcp-section-head">
-                    <span className="mcp-eyebrow mcp-eyebrow--dark">CONFIGURATION SPEC PREVIEW</span>
+                    <span className="mcp-eyebrow mcp-eyebrow--dark">配置规范预览</span>
                     <h2 className="mcp-section-h2">标准协议接入规范与配置预览</h2>
-                    <p className="mcp-section-lead">
-                        对外开放的 SupDance MCP Server 正在研发调试中，待测试验证完备后正式发布 CLI 包与远程网关地址；工作台内外部 MCP 连接器已可直接使用。
-                    </p>
+                    <p className="mcp-section-lead">对外开放的 SupDance MCP Server 正在研发调试中，待测试验证完备后正式发布 CLI 包与远程网关地址；工作台内外部 MCP 连接器已可直接使用。</p>
                 </div>
 
                 <div className="mcp-spec-panel">
@@ -159,14 +166,7 @@ export function McpCliSection() {
                                 const isActive = tab.id === activeTabId;
                                 const tabLabel = tab.label[locale] || tab.label["en-US"] || tab.label["zh-CN"];
                                 return (
-                                    <button
-                                        key={tab.id}
-                                        type="button"
-                                        role="tab"
-                                        aria-selected={isActive}
-                                        onClick={() => setActiveTabId(tab.id)}
-                                        className={`mcp-spec-tab${isActive ? " is-active" : ""}`}
-                                    >
+                                    <button key={tab.id} type="button" role="tab" aria-selected={isActive} onClick={() => setActiveTabId(tab.id)} className={`mcp-spec-tab${isActive ? " is-active" : ""}`}>
                                         {tab.icon}
                                         <span>{tabLabel}</span>
                                     </button>
@@ -182,7 +182,7 @@ export function McpCliSection() {
 
                     <div className="mcp-spec-meta">
                         <span className="mcp-spec-desc">{activeDesc}</span>
-                        <span className="mcp-spec-status">{activeTab.status}</span>
+                        <span className="mcp-spec-status">{activeTab.id === "workspace-outbound" ? interfaceText("已上线") : interfaceText("规范草案")}</span>
                     </div>
 
                     <pre className="mcp-spec-code">

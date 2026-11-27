@@ -4,13 +4,7 @@ import { Check, ChevronRight, Copy, Send, Share2, Sparkles, X } from "lucide-rea
 import { useState } from "react";
 import { Link } from "react-router";
 import { useAuthEntry } from "@/hooks/use-auth-entry";
-import {
-    formatReferralCredits,
-    formatReferralRate,
-    getReferralOverview,
-    referralLink,
-    type ReferralPublicConfig,
-} from "@/services/api/referral";
+import { formatReferralCredits, formatReferralRate, getReferralOverview, referralLink, type ReferralPublicConfig } from "@/services/api/referral";
 import { useUserStore } from "@/stores/use-user-store";
 import "./share-incentive-modal.css";
 
@@ -20,8 +14,7 @@ export interface ShareIncentiveModalProps {
     publicConfig: ReferralPublicConfig;
 }
 
-const X_ICON_PATH =
-    "M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z";
+const X_ICON_PATH = "M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z";
 
 export function ShareIncentiveModal({ open, onClose, publicConfig }: ShareIncentiveModalProps) {
     const { message } = App.useApp();
@@ -96,17 +89,7 @@ export function ShareIncentiveModal({ open, onClose, publicConfig }: ShareIncent
     };
 
     return (
-        <Modal
-            open={open}
-            onCancel={onClose}
-            footer={null}
-            closable={false}
-            centered
-            width={436}
-            destroyOnHidden={false}
-            className="sd-incentive-modal"
-            aria-label="分享赢取积分奖励"
-        >
+        <Modal open={open} onCancel={onClose} footer={null} closable={false} centered width={436} destroyOnHidden={false} className="sd-incentive-modal" aria-label="分享赢取积分奖励">
             <div className="sd-incentive-card-shell">
                 <button type="button" className="sd-incentive-close" onClick={onClose} aria-label="关闭激励浮窗">
                     <X className="size-4" strokeWidth={1.8} />
@@ -150,11 +133,7 @@ export function ShareIncentiveModal({ open, onClose, publicConfig }: ShareIncent
                             <span className="sd-incentive-code-label">专属邀请码</span>
                             <span className="sd-incentive-code-value">{overview.code}</span>
                         </div>
-                        <button
-                            type="button"
-                            className="sd-incentive-code-copy"
-                            onClick={() => void copyText(overview.code, "code", "专属邀请码已复制")}
-                        >
+                        <button type="button" className="sd-incentive-code-copy" onClick={() => void copyText(overview.code, "code", "专属邀请码已复制")}>
                             {copiedType === "code" ? "已复制" : "复制"}
                         </button>
                     </div>
@@ -187,12 +166,7 @@ export function ShareIncentiveModal({ open, onClose, publicConfig }: ShareIncent
                             <Send className="size-3.5" strokeWidth={1.8} aria-hidden="true" />
                             <span>TG</span>
                         </button>
-                        <button
-                            type="button"
-                            className="sd-incentive-social-chip"
-                            onClick={() => (copiedType === "copy" ? undefined : void copyText(shareCopy, "copy", "完整推荐文案已复制"))}
-                            title="复制完整推荐文案"
-                        >
+                        <button type="button" className="sd-incentive-social-chip" onClick={() => (copiedType === "copy" ? undefined : void copyText(shareCopy, "copy", "完整推荐文案已复制"))} title="复制完整推荐文案">
                             {copiedType === "copy" ? <Check className="size-3.5" strokeWidth={2} /> : <Copy className="size-3.5" strokeWidth={1.8} />}
                             <span>{copiedType === "copy" ? "已复制" : "文案"}</span>
                         </button>

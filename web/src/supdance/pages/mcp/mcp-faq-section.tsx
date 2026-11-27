@@ -14,7 +14,7 @@ export function McpFaqSection() {
     return (
         <div id="faqs" className="mcp-faq-wrap">
             <div>
-                <span className="mcp-eyebrow mcp-eyebrow--light">FAQ & TRANSPARENCY</span>
+                <span className="mcp-eyebrow mcp-eyebrow--light">常见问题与说明</span>
                 <h2 className="mcp-section-h2">研发说明与常见问题</h2>
                 <p className="mcp-section-lead">关于当前 MCP 构建进展、线上已开放连接器及未来安全边界的坦诚说明。</p>
             </div>
@@ -22,8 +22,8 @@ export function McpFaqSection() {
             <div className="mcp-faq-list">
                 {MCP_BUILDING_FAQS.map((faq, idx) => {
                     const isOpen = openIndex === idx;
-                    const questionText = faq.q[locale] || faq.q["zh-CN"];
-                    const answerText = faq.a[locale] || faq.a["zh-CN"];
+                    const questionText = faq.q[locale];
+                    const answerText = faq.a[locale];
                     return (
                         <div key={faq.id} className="mcp-faq-item">
                             <button type="button" onClick={() => toggle(idx)} className="mcp-faq-trigger" aria-expanded={isOpen}>

@@ -2,6 +2,7 @@ import { Popover } from "antd";
 import { Blocks, BookOpen, CircleDollarSign, FileText, Gift, Globe, Info, MessageSquare, Plug } from "lucide-react";
 import { useEffect, useMemo, useState, type ReactNode } from "react";
 import { Link } from "react-router";
+import { interfaceText } from "@/i18n/interface-text";
 import { formatReferralRate, getPublicReferralConfig, type ReferralPublicConfig } from "@/services/api/referral";
 import { useLocaleStore } from "@/stores/use-locale-store";
 import { selectPluginEffectivelyEnabled, usePluginStore } from "@/stores/use-plugin-store";
@@ -38,17 +39,6 @@ const COLLAPSED_POPOVER_TITLES: Readonly<Record<string, string>> = {
     "de-DE": "Ökosystem & Social",
     "ja-JP": "エコシステム & SNS",
     "ko-KR": "생태계 & 소셜",
-};
-
-const INCENTIVE_LABELS: Readonly<Record<string, { title: string; subtitle: (rate: string) => string }>> = {
-    "zh-CN": { title: "分享赢积分", subtitle: (rate) => `邀友赚 +${rate} 积分` },
-    "zh-TW": { title: "分享贏積分", subtitle: (rate) => `邀友賺 +${rate} 積分` },
-    "en-US": { title: "Share & Earn", subtitle: (rate) => `Earn +${rate} credits` },
-    "es-ES": { title: "Comparte y gana", subtitle: (rate) => `+${rate} en créditos` },
-    "fr-FR": { title: "Partager & Gagner", subtitle: (rate) => `+${rate} en crédits` },
-    "de-DE": { title: "Teilen & Verdienen", subtitle: (rate) => `+${rate} Credits sichern` },
-    "ja-JP": { title: "シェアで獲得", subtitle: (rate) => `+${rate} クレジット還元` },
-    "ko-KR": { title: "공유 리워드", subtitle: (rate) => `+${rate} 크레딧 적립` },
 };
 
 function safeHref(href: string): string | undefined {
@@ -249,7 +239,8 @@ export function SidebarEcosystemDock({ collapsed, onNavigate, configOverride, si
 
     const title = COLLAPSED_POPOVER_TITLES[locale] || COLLAPSED_POPOVER_TITLES["zh-CN"];
     const rateLabel = publicReferral.commissionRateBasisPoints > 0 ? formatReferralRate(publicReferral.commissionRateBasisPoints) : "10%";
-    const incentiveText = INCENTIVE_LABELS[locale] || INCENTIVE_LABELS["zh-CN"];
+    const incentiveTitle = interfaceText("分享赢积分");
+    const incentiveSubtitle = interfaceText("邀友赚 +{rate} 积分", { rate: rateLabel });
 
     const dockContent = (closePopover?: () => void) => (
         <>
@@ -281,14 +272,14 @@ export function SidebarEcosystemDock({ collapsed, onNavigate, configOverride, si
                         closePopover?.();
                         setIncentiveOpen(true);
                     }}
-                    aria-label={incentiveText.title}
+                    aria-label={incentiveTitle}
                 >
                     <span className="sd-dock-incentive-icon" aria-hidden="true">
                         <Gift className="size-3.5" strokeWidth={1.9} />
                     </span>
                     <span className="sd-dock-incentive-copy">
-                        <span className="sd-dock-incentive-title">{incentiveText.title}</span>
-                        <span className="sd-dock-incentive-sub">{incentiveText.subtitle(rateLabel)}</span>
+                        <span className="sd-dock-incentive-title">{incentiveTitle}</span>
+                        <span className="sd-dock-incentive-sub">{incentiveSubtitle}</span>
                     </span>
                 </button>
             ) : null}

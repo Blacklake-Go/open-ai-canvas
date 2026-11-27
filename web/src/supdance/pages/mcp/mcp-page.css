@@ -40,7 +40,16 @@ html.is-mcp-page .ant-app {
     max-height: none !important;
     background-color: var(--mcp-bg-paper);
     color: var(--mcp-ink-primary);
-    font-family: "Inter", "SF Pro Display", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+    font-family:
+        "Inter",
+        "SF Pro Display",
+        "PingFang SC",
+        "Hiragino Sans GB",
+        "Microsoft YaHei",
+        system-ui,
+        -apple-system,
+        BlinkMacSystemFont,
+        sans-serif;
     line-height: 1.6;
     overflow-x: hidden !important;
     overflow-y: visible !important;
@@ -166,7 +175,9 @@ html.is-mcp-page .ant-app {
     border-radius: 999px;
     border: 1px solid rgba(245, 244, 240, 0.16);
     color: rgba(245, 244, 240, 0.72);
-    transition: border-color 0.28s var(--mcp-ease), color 0.28s var(--mcp-ease);
+    transition:
+        border-color 0.28s var(--mcp-ease),
+        color 0.28s var(--mcp-ease);
 }
 
 .mcp-header.is-scrolled .mcp-brand-tag {
@@ -293,9 +304,7 @@ html.is-mcp-page .ant-app {
     inset: 0;
     z-index: 1;
     pointer-events: none;
-    background:
-        radial-gradient(ellipse 68% 56% at 50% 46%, rgba(8, 8, 8, 0.16) 0%, rgba(8, 8, 8, 0.84) 76%, #080808 100%),
-        linear-gradient(180deg, rgba(8, 8, 8, 0.52) 0%, transparent 22%, transparent 78%, #080808 100%);
+    background: radial-gradient(ellipse 68% 56% at 50% 46%, rgba(8, 8, 8, 0.16) 0%, rgba(8, 8, 8, 0.84) 76%, #080808 100%), linear-gradient(180deg, rgba(8, 8, 8, 0.52) 0%, transparent 22%, transparent 78%, #080808 100%);
 }
 
 .mcp-hero-content {
@@ -369,7 +378,9 @@ html.is-mcp-page .ant-app {
     font-size: 14px;
     font-weight: 500;
     text-decoration: none;
-    transition: transform 0.2s var(--mcp-ease), opacity 0.2s ease;
+    transition:
+        transform 0.2s var(--mcp-ease),
+        opacity 0.2s ease;
 }
 
 .mcp-btn-pill-light:hover {
@@ -391,7 +402,9 @@ html.is-mcp-page .ant-app {
     font-size: 14px;
     font-weight: 500;
     text-decoration: none;
-    transition: border-color 0.2s ease, background-color 0.2s ease;
+    transition:
+        border-color 0.2s ease,
+        background-color 0.2s ease;
 }
 
 .mcp-btn-pill-dark-outline:hover {
@@ -845,7 +858,9 @@ html.is-mcp-page .ant-app {
     font-weight: 500;
     color: var(--mcp-ink-primary);
     cursor: pointer;
-    transition: border-color 0.2s ease, background-color 0.2s ease;
+    transition:
+        border-color 0.2s ease,
+        background-color 0.2s ease;
 }
 
 .mcp-copy-btn:hover {
@@ -891,7 +906,10 @@ html.is-mcp-page .ant-app {
     font-size: 12.5px;
     font-weight: 500;
     cursor: pointer;
-    transition: background-color 0.18s ease, color 0.18s ease, border-color 0.18s ease;
+    transition:
+        background-color 0.18s ease,
+        color 0.18s ease,
+        border-color 0.18s ease;
 }
 
 .mcp-spec-tab:hover {
@@ -917,7 +935,9 @@ html.is-mcp-page .ant-app {
     font-size: 12px;
     font-weight: 500;
     cursor: pointer;
-    transition: background-color 0.18s ease, border-color 0.18s ease;
+    transition:
+        background-color 0.18s ease,
+        border-color 0.18s ease;
 }
 
 .mcp-spec-copy-dark:hover {

@@ -7,28 +7,64 @@ import { TopbarLanguageSwitcher } from "@/supdance/plugins/i18n";
 
 const HEADER_NAV_COPY: Record<string, Record<string, string>> = {
     arch: {
-        "zh-CN": "架构理念", "zh-TW": "架構理念", "en-US": "Architecture",
-        "ja-JP": "アーキテクチャ", "ko-KR": "아키텍처", "es-ES": "Arquitectura", "fr-FR": "Architecture", "de-DE": "Architektur",
+        "zh-CN": "架构理念",
+        "zh-TW": "架構理念",
+        "en-US": "Architecture",
+        "ja-JP": "アーキテクチャ",
+        "ko-KR": "아키텍처",
+        "es-ES": "Arquitectura",
+        "fr-FR": "Architecture",
+        "de-DE": "Architektur",
     },
     tools: {
-        "zh-CN": "工具规范", "zh-TW": "工具規範", "en-US": "Tools Schema",
-        "ja-JP": "ツール定義", "ko-KR": "도구 명세", "es-ES": "Esquema de herramientas", "fr-FR": "Schéma d'outils", "de-DE": "Tool-Schema",
+        "zh-CN": "工具规范",
+        "zh-TW": "工具規範",
+        "en-US": "Tools Schema",
+        "ja-JP": "ツール定義",
+        "ko-KR": "도구 명세",
+        "es-ES": "Esquema de herramientas",
+        "fr-FR": "Schéma d'outils",
+        "de-DE": "Tool-Schema",
     },
     config: {
-        "zh-CN": "接入预览", "zh-TW": "接入預覽", "en-US": "Config Spec",
-        "ja-JP": "接続プレビュー", "ko-KR": "연동 미리보기", "es-ES": "Vista de configuración", "fr-FR": "Config & Intégration", "de-DE": "Konfiguration",
+        "zh-CN": "接入预览",
+        "zh-TW": "接入預覽",
+        "en-US": "Config Spec",
+        "ja-JP": "接続プレビュー",
+        "ko-KR": "연동 미리보기",
+        "es-ES": "Vista de configuración",
+        "fr-FR": "Config & Intégration",
+        "de-DE": "Konfiguration",
     },
     roadmap: {
-        "zh-CN": "研发路线", "zh-TW": "研發路線", "en-US": "Roadmap",
-        "ja-JP": "ロードマップ", "ko-KR": "로드맵", "es-ES": "Hoja de ruta", "fr-FR": "Feuille de route", "de-DE": "Roadmap",
+        "zh-CN": "研发路线",
+        "zh-TW": "研發路線",
+        "en-US": "Roadmap",
+        "ja-JP": "ロードマップ",
+        "ko-KR": "로드맵",
+        "es-ES": "Hoja de ruta",
+        "fr-FR": "Feuille de route",
+        "de-DE": "Roadmap",
     },
     about: {
-        "zh-CN": "关于我们", "zh-TW": "關於我們", "en-US": "About",
-        "ja-JP": "私たちについて", "ko-KR": "회사 소개", "es-ES": "Acerca de", "fr-FR": "À propos", "de-DE": "Über uns",
+        "zh-CN": "关于我们",
+        "zh-TW": "關於我們",
+        "en-US": "About",
+        "ja-JP": "私たちについて",
+        "ko-KR": "회사 소개",
+        "es-ES": "Acerca de",
+        "fr-FR": "À propos",
+        "de-DE": "Über uns",
     },
     enterWorkspace: {
-        "zh-CN": "进入工作台", "zh-TW": "進入工作台", "en-US": "Workspace",
-        "ja-JP": "ワークスペース", "ko-KR": "워크스페이스", "es-ES": "Espacio de trabajo", "fr-FR": "Espace de travail", "de-DE": "Workspace",
+        "zh-CN": "进入工作台",
+        "zh-TW": "進入工作台",
+        "en-US": "Workspace",
+        "ja-JP": "ワークスペース",
+        "ko-KR": "워크스페이스",
+        "es-ES": "Espacio de trabajo",
+        "fr-FR": "Espace de travail",
+        "de-DE": "Workspace",
     },
 };
 
@@ -74,10 +110,18 @@ export function McpHeader() {
                 </div>
 
                 <nav className="mcp-header-nav" aria-label="MCP 页面导航">
-                    <a href="#mcp-architecture" onClick={(e) => handleAnchorClick(e, "#mcp-architecture")}>{pickNav(locale, "arch")}</a>
-                    <a href="#tools-schema" onClick={(e) => handleAnchorClick(e, "#tools-schema")}>{pickNav(locale, "tools")}</a>
-                    <a href="#config-spec" onClick={(e) => handleAnchorClick(e, "#config-spec")}>{pickNav(locale, "config")}</a>
-                    <a href="#mcp-roadmap" onClick={(e) => handleAnchorClick(e, "#mcp-roadmap")}>{pickNav(locale, "roadmap")}</a>
+                    <a href="#mcp-architecture" onClick={(e) => handleAnchorClick(e, "#mcp-architecture")}>
+                        {pickNav(locale, "arch")}
+                    </a>
+                    <a href="#tools-schema" onClick={(e) => handleAnchorClick(e, "#tools-schema")}>
+                        {pickNav(locale, "tools")}
+                    </a>
+                    <a href="#config-spec" onClick={(e) => handleAnchorClick(e, "#config-spec")}>
+                        {pickNav(locale, "config")}
+                    </a>
+                    <a href="#mcp-roadmap" onClick={(e) => handleAnchorClick(e, "#mcp-roadmap")}>
+                        {pickNav(locale, "roadmap")}
+                    </a>
                     <a href="/html/about">{pickNav(locale, "about")}</a>
                 </nav>
 

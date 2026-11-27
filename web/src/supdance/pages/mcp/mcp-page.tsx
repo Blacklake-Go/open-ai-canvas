@@ -1,6 +1,8 @@
 import { ArrowDown, ArrowUpRight } from "lucide-react";
 import { useEffect, type MouseEvent } from "react";
 import { Link, useLocation } from "react-router";
+import { interfaceText } from "@/i18n/interface-text";
+import type { AppLocale } from "@/i18n/locales";
 import { useLocaleStore } from "@/stores/use-locale-store";
 import { useUserStore } from "@/stores/use-user-store";
 import { SupdanceAboutFooter } from "@/supdance/components/site-footer/supdance-about-footer";
@@ -12,8 +14,8 @@ import "./mcp-page.css";
 
 interface ArchItem {
     num: string;
-    title: Record<string, string>;
-    desc: Record<string, string>;
+    title: Record<AppLocale, string>;
+    desc: Record<AppLocale, string>;
     tags: readonly string[];
 }
 
@@ -51,7 +53,8 @@ const HERO_COPY = {
     subtitle: {
         "zh-CN": "SupDance MCP 协议与服务端正在研发构建中。未来无论身处 Cursor、Claude Desktop 还是自研 Agent 运行时，都能通过统一上下文协议直连短剧分镜、图像、视频与多轨音乐引擎。",
         "zh-TW": "SupDance MCP 協議與伺服端正研發建構中。未來無論身處 Cursor、Claude Desktop 還是自研 Agent 執行階段，都能透過統一上下文協議直連短劇分鏡、圖像、影片與多軌音樂引擎。",
-        "en-US": "The SupDance MCP server and protocol layer are under active engineering. Soon, whether in Cursor, Claude Desktop, or custom Agent runtimes, you will connect directly to storyboard, image, video, and music engines through one unified context protocol.",
+        "en-US":
+            "The SupDance MCP server and protocol layer are under active engineering. Soon, whether in Cursor, Claude Desktop, or custom Agent runtimes, you will connect directly to storyboard, image, video, and music engines through one unified context protocol.",
         "ja-JP": "SupDance MCP プロトコルおよびサーバーは現在構築中です。Cursor、Claude Desktop、自作 Agent から、絵コンテ・画像・動画・音楽エンジンへ統一プロトコルで直接接続できます。",
         "ko-KR": "SupDance MCP 프로토콜과 서버가 활발히 구축 중입니다. Cursor, Claude Desktop 또는 자체 Agent 런타임에서 스토리보드, 이미지, 비디오, 오디오 엔진에 직접 연결할 수 있습니다.",
         "es-ES": "El protocolo y servidor MCP de SupDance se encuentran en desarrollo activo para conectar directamente Cursor, Claude Desktop o agentes propios con nuestros motores creativos.",
@@ -84,9 +87,14 @@ const ARCHITECTURE_PILLARS: ArchItem[] = [
     {
         num: "01",
         title: {
-            "zh-CN": "标准化协议层", "zh-TW": "標準化協議層", "en-US": "Standardized Protocol Layer",
-            "es-ES": "Capa de Protocolo Estándar", "fr-FR": "Couche Protocole Standard", "de-DE": "Standardisierte Protokollschicht",
-            "ja-JP": "標準プロトコル層", "ko-KR": "표준 프로토콜 계층",
+            "zh-CN": "标准化协议层",
+            "zh-TW": "標準化協議層",
+            "en-US": "Standardized Protocol Layer",
+            "es-ES": "Capa de Protocolo Estándar",
+            "fr-FR": "Couche Protocole Standard",
+            "de-DE": "Standardisierte Protokollschicht",
+            "ja-JP": "標準プロトコル層",
+            "ko-KR": "표준 프로토콜 계층",
         },
         desc: {
             "zh-CN": "严格遵循 Anthropic Model Context Protocol 规范，统一工具发现（tools/list）、结构化入参校验与标准 JSON-RPC 调用响应。",
@@ -103,9 +111,14 @@ const ARCHITECTURE_PILLARS: ArchItem[] = [
     {
         num: "02",
         title: {
-            "zh-CN": "创作级异步管线", "zh-TW": "創作級非同步管線", "en-US": "Production Async Pipelines",
-            "es-ES": "Pipelines Asíncronos", "fr-FR": "Pipelines Asynchrones", "de-DE": "Asynchrone Produktions-Pipelines",
-            "ja-JP": "制作向け非同期パイプライン", "ko-KR": "프로덕션 비동기 파이프라인",
+            "zh-CN": "创作级异步管线",
+            "zh-TW": "創作級非同步管線",
+            "en-US": "Production Async Pipelines",
+            "es-ES": "Pipelines Asíncronos",
+            "fr-FR": "Pipelines Asynchrones",
+            "de-DE": "Asynchrone Produktions-Pipelines",
+            "ja-JP": "制作向け非同期パイプライン",
+            "ko-KR": "프로덕션 비동기 파이프라인",
         },
         desc: {
             "zh-CN": "针对影视视频与多轨音频生成长耗时场景内建任务轮询、断点状态恢复与资产直链回写，不阻塞客户端对话流。",
@@ -122,9 +135,14 @@ const ARCHITECTURE_PILLARS: ArchItem[] = [
     {
         num: "03",
         title: {
-            "zh-CN": "统一身份与额度隔离", "zh-TW": "統一身份與額度隔離", "en-US": "Unified Identity & Quota Guard",
-            "es-ES": "Identidad y Cuotas Aisladas", "fr-FR": "Identité & Quotas Isolés", "de-DE": "Identität & Kontingentschutz",
-            "ja-JP": "統合認証とクォータ保護", "ko-KR": "통합 인증 및 할당량 보호",
+            "zh-CN": "统一身份与额度隔离",
+            "zh-TW": "統一身份與額度隔離",
+            "en-US": "Unified Identity & Quota Guard",
+            "es-ES": "Identidad y Cuotas Aisladas",
+            "fr-FR": "Identité & Quotas Isolés",
+            "de-DE": "Identität & Kontingentschutz",
+            "ja-JP": "統合認証とクォータ保護",
+            "ko-KR": "통합 인증 및 할당량 보호",
         },
         desc: {
             "zh-CN": "复用生产环境同源沙盒、Scoped Token 鉴权、单日用量上限与积分预留核算，外部工具调用与主站共用安全审计边界。",
@@ -144,69 +162,117 @@ const CLIENT_TARGETS = ["Cursor", "Claude Desktop", "Windsurf", "Cline", "Custom
 
 interface RoadmapItem {
     phase: string;
-    status: Record<string, string>;
+    status: Record<AppLocale, string>;
     stateClass: string;
-    title: Record<string, string>;
-    desc: Record<string, string>;
+    title: Record<AppLocale, string>;
+    desc: Record<AppLocale, string>;
 }
 
 const ROADMAP_PHASES: RoadmapItem[] = [
     {
         phase: "PHASE 01",
-        status: { "zh-CN": "已就绪 · LIVE", "en-US": "LIVE", "zh-TW": "已就緒 · LIVE", "ja-JP": "稼働中 · LIVE", "ko-KR": "라이브 · LIVE" },
+        status: { "zh-CN": "已就绪 · LIVE", "en-US": "LIVE", "zh-TW": "已就緒 · LIVE", "ja-JP": "稼働中 · LIVE", "ko-KR": "라이브 · LIVE", "es-ES": "Disponible", "fr-FR": "Disponible", "de-DE": "Verfügbar" },
         stateClass: "is-live",
-        title: { "zh-CN": "工作台内置 MCP 连接器", "zh-TW": "工作台內建 MCP 連接器", "en-US": "Built-In Workspace Connectors", "ja-JP": "ワークスペース内蔵コネクタ", "ko-KR": "워크스페이스 내장 커넥터" },
+        title: {
+            "zh-CN": "工作台内置 MCP 连接器",
+            "zh-TW": "工作台內建 MCP 連接器",
+            "en-US": "Built-In Workspace Connectors",
+            "ja-JP": "ワークスペース内蔵コネクタ",
+            "ko-KR": "워크스페이스 내장 커넥터",
+            "es-ES": "Conectores integrados en el espacio de trabajo",
+            "fr-FR": "Connecteurs intégrés à l’espace de travail",
+            "de-DE": "Integrierte Workspace-Konnektoren",
+        },
         desc: {
             "zh-CN": "画布 Agent 已支持安全接入第三方兼容 MCP 服务，并与内部节点、短剧分镜工具同台协作。",
             "zh-TW": "畫布 Agent 已支援安全接入第三方相容 MCP 服務，並與內部節點、短劇分鏡工具同台協作。",
             "en-US": "Canvas Agent already connects securely to external MCP services alongside native canvas and drama tools.",
             "ja-JP": "Canvas Agent は外部 MCP サービスと安全に連携し、内蔵キャンバスツールと協調動作しています。",
             "ko-KR": "Canvas Agent는 이미 호환 외부 MCP 서비스와 안전하게 연결되어 기본 캔버스 도구와 함께 작동합니다.",
+            "es-ES": "Canvas Agent ya puede conectar de forma segura con servidores MCP externos y utilizarlos junto con las herramientas de lienzo y guion gráfico.",
+            "fr-FR": "Canvas Agent se connecte déjà de façon sécurisée aux serveurs MCP externes, aux côtés des outils de canevas et de storyboard intégrés.",
+            "de-DE": "Canvas Agent verbindet sich bereits sicher mit externen MCP-Diensten und nutzt sie zusammen mit den integrierten Canvas- und Storyboard-Werkzeugen.",
         },
     },
     {
         phase: "PHASE 02",
-        status: { "zh-CN": "构建中 · ACTIVE", "en-US": "IN PROGRESS", "zh-TW": "建構中 · ACTIVE", "ja-JP": "開発中 · ACTIVE", "ko-KR": "구축 중 · ACTIVE" },
+        status: { "zh-CN": "构建中 · ACTIVE", "en-US": "IN PROGRESS", "zh-TW": "建構中 · ACTIVE", "ja-JP": "開発中 · ACTIVE", "ko-KR": "구축 중 · ACTIVE", "es-ES": "En desarrollo", "fr-FR": "En développement", "de-DE": "In Entwicklung" },
         stateClass: "is-building",
-        title: { "zh-CN": "SupDance MCP Server 核心", "zh-TW": "SupDance MCP Server 核心", "en-US": "SupDance MCP Server Core", "ja-JP": "SupDance MCP Server コア", "ko-KR": "SupDance MCP Server 코어" },
+        title: {
+            "zh-CN": "SupDance MCP Server 核心",
+            "zh-TW": "SupDance MCP Server 核心",
+            "en-US": "SupDance MCP Server Core",
+            "ja-JP": "SupDance MCP Server コア",
+            "ko-KR": "SupDance MCP Server 코어",
+            "es-ES": "Núcleo del servidor MCP de SupDance",
+            "fr-FR": "Noyau du serveur MCP SupDance",
+            "de-DE": "Kern des SupDance-MCP-Servers",
+        },
         desc: {
             "zh-CN": "正在完善分镜拆解、角色锁定、视频镜头与多轨音频四大原子创作工具的类型契约与异步任务接口。",
             "zh-TW": "正完善分鏡拆解、角色鎖定、影片鏡頭與多軌音訊四大原子創作工具的型別契約與非同步任務介面。",
             "en-US": "Finalizing typed schemas and async execution contracts for storyboard, character lock, video, and audio tools.",
             "ja-JP": "絵コンテ分解・キャラ固定・動画・音楽4大ツールの型定義と非同期タスクインターフェースを実装中です。",
             "ko-KR": "스토리보드, 캐릭터 고정, 비디오, 오디오 4대 핵심 도구의 타입 계약과 비동기 인터페이스를 고도화 중입니다.",
+            "es-ES": "Se están ultimando los esquemas y las interfaces asíncronas para guiones gráficos, coherencia de personajes, vídeo y audio multipista.",
+            "fr-FR": "Les schémas et les interfaces asynchrones pour les storyboards, la cohérence des personnages, la vidéo et l’audio multipiste sont en cours de finalisation.",
+            "de-DE": "Die typisierten Schemata und asynchronen Schnittstellen für Storyboards, Figurenkonsistenz, Video und Mehrspur-Audio werden fertiggestellt.",
         },
     },
     {
         phase: "PHASE 03",
-        status: { "zh-CN": "规划中 · NEXT", "en-US": "PLANNED", "zh-TW": "規劃中 · NEXT", "ja-JP": "予定 · NEXT", "ko-KR": "예정 · NEXT" },
+        status: { "zh-CN": "规划中 · NEXT", "en-US": "PLANNED", "zh-TW": "規劃中 · NEXT", "ja-JP": "予定 · NEXT", "ko-KR": "예정 · NEXT", "es-ES": "Previsto", "fr-FR": "Prévu", "de-DE": "Geplant" },
         stateClass: "",
-        title: { "zh-CN": "OAuth 2.1 与凭据中心", "zh-TW": "OAuth 2.1 與憑證中心", "en-US": "OAuth 2.1 & Credential Hub", "ja-JP": "OAuth 2.1 と認証情報ハブ", "ko-KR": "OAuth 2.1 및 자격 증명 허브" },
+        title: {
+            "zh-CN": "OAuth 2.1 与凭据中心",
+            "zh-TW": "OAuth 2.1 與憑證中心",
+            "en-US": "OAuth 2.1 & Credential Hub",
+            "ja-JP": "OAuth 2.1 と認証情報ハブ",
+            "ko-KR": "OAuth 2.1 및 자격 증명 허브",
+            "es-ES": "OAuth 2.1 y gestión de credenciales",
+            "fr-FR": "OAuth 2.1 et gestion des identifiants",
+            "de-DE": "OAuth 2.1 und Zugangsdatenverwaltung",
+        },
         desc: {
             "zh-CN": "在个人账户中心开放开发者 Scoped API Key 管理、权限范围裁剪与细粒度消费限额设置。",
             "zh-TW": "於個人帳戶中心開放開發者 Scoped API Key 管理、權限範圍裁剪與細粒度消費限額設定。",
             "en-US": "Self-serve scoped API keys in Account Settings with fine-grained permission scopes and daily spend limits.",
             "ja-JP": "アカウント設定で開発者向け Scoped API Key 発行・権限制限・日次上限設定を開放予定です。",
             "ko-KR": "계정 설정에서 개발자용 Scoped API Key 발급, 권한 범위 제어 및 일일 한도 설정 기능을 제공합니다.",
+            "es-ES": "La configuración de la cuenta permitirá gestionar claves de API con permisos específicos y límites de consumo diarios.",
+            "fr-FR": "Les paramètres du compte permettront de gérer des clés d’API à portée limitée, avec des autorisations précises et des plafonds quotidiens.",
+            "de-DE": "In den Kontoeinstellungen lassen sich API-Schlüssel mit gezielten Berechtigungen und täglichen Verbrauchslimits verwalten.",
         },
     },
     {
         phase: "PHASE 04",
-        status: { "zh-CN": "规划中 · UPCOMING", "en-US": "UPCOMING", "zh-TW": "規劃中 · UPCOMING", "ja-JP": "計画中 · UPCOMING", "ko-KR": "로드맵 · UPCOMING" },
+        status: { "zh-CN": "规划中 · UPCOMING", "en-US": "UPCOMING", "zh-TW": "規劃中 · UPCOMING", "ja-JP": "計画中 · UPCOMING", "ko-KR": "로드맵 · UPCOMING", "es-ES": "Próximamente", "fr-FR": "À venir", "de-DE": "In Planung" },
         stateClass: "",
-        title: { "zh-CN": "开放 SDK 与工作流桥接", "zh-TW": "開放 SDK 與工作流橋接", "en-US": "Open SDK & Pipeline Bridges", "ja-JP": "公開 SDK とワークフロー連携", "ko-KR": "오픈 SDK 및 파이프라인 브릿지" },
+        title: {
+            "zh-CN": "开放 SDK 与工作流桥接",
+            "zh-TW": "開放 SDK 與工作流橋接",
+            "en-US": "Open SDK & Pipeline Bridges",
+            "ja-JP": "公開 SDK とワークフロー連携",
+            "ko-KR": "오픈 SDK 및 파이프라인 브릿지",
+            "es-ES": "SDK abierto e integración de flujos de trabajo",
+            "fr-FR": "SDK ouvert et intégration des flux de travail",
+            "de-DE": "Offenes SDK und Workflow-Anbindung",
+        },
         desc: {
             "zh-CN": "推出跨平台 CLI 包与第三方工作流桥接节点，支持外部管线批量驱动云端渲染与资产双向同步。",
             "zh-TW": "推出跨平台 CLI 套件與第三方工作流橋接節點，支援外部管線批次驅動雲端渲染與資產雙向同步。",
             "en-US": "Cross-platform CLI tooling and workflow bridges for batch cloud rendering and bidirectional asset sync.",
             "ja-JP": "クロスプラットフォーム CLI とワークフロー連携ノードにより外部からの一括クラウド描画を実現します。",
             "ko-KR": "크로스 플랫폼 CLI 패키지 및 외부 파이프라인 연동을 위한 클라우드 렌더링·자산 동기화 브릿지를 제공합니다.",
+            "es-ES": "Herramientas de línea de comandos multiplataforma e integraciones para renderizado por lotes en la nube y sincronización bidireccional de recursos.",
+            "fr-FR": "Des outils en ligne de commande multiplateformes et des intégrations pour le rendu par lots dans le cloud et la synchronisation bidirectionnelle des ressources.",
+            "de-DE": "Plattformübergreifende CLI-Werkzeuge und Integrationen für Cloud-Stapelrendering und bidirektionale Mediensynchronisierung.",
         },
     },
 ];
 
-function pickCopy(locale: string, map: Record<string, string>): string {
-    return map[locale] || map["en-US"] || map["zh-CN"];
+function pickCopy(locale: AppLocale, map: Record<AppLocale, string>): string {
+    return map[locale];
 }
 
 export default function McpPage() {
@@ -265,9 +331,7 @@ export default function McpPage() {
     }, [location.hash]);
 
     useEffect(() => {
-        document.title = locale.startsWith("zh")
-            ? "SupDance MCP — 开放创作协议与 Agent 扩展中心"
-            : "SupDance MCP — Model Context Protocol & Agent Hub";
+        document.title = interfaceText("SupDance MCP — 开放创作协议与 Agent 扩展中心");
     }, [locale]);
 
     const handleScrollToTools = (e: MouseEvent<HTMLAnchorElement>) => {
@@ -305,9 +369,7 @@ export default function McpPage() {
                         {pickCopy(locale, HERO_COPY.title2)}
                     </h1>
 
-                    <p className="mcp-hero-subtitle">
-                        {pickCopy(locale, HERO_COPY.subtitle)}
-                    </p>
+                    <p className="mcp-hero-subtitle">{pickCopy(locale, HERO_COPY.subtitle)}</p>
 
                     <div className="mcp-hero-actions">
                         <a href="#tools-schema" onClick={handleScrollToTools} className="mcp-btn-pill-light">
@@ -330,15 +392,15 @@ export default function McpPage() {
 
                     <div className="mcp-hero-pillars">
                         <div>
-                            <div className="mcp-pillar-label">01 · PROTOCOL PREVIEW</div>
+                            <div className="mcp-pillar-label">01 · {interfaceText("协议预览")}</div>
                             <p className="mcp-pillar-text">诚实透明的协议设计期预览：工具入参契约与远程端点正在联调与安全压测中。</p>
                         </div>
                         <div>
-                            <div className="mcp-pillar-label">02 · AGENT CONNECTED</div>
+                            <div className="mcp-pillar-label">02 · {interfaceText("Agent 已接入")}</div>
                             <p className="mcp-pillar-text">线上工作台画布助手（Canvas Agent）已率先支持挂载外部兼容 MCP 服务。</p>
                         </div>
                         <div>
-                            <div className="mcp-pillar-label">03 · SAME SANDBOX</div>
+                            <div className="mcp-pillar-label">03 · {interfaceText("统一沙箱")}</div>
                             <p className="mcp-pillar-text">严格延续生产环境同源鉴权、积分核算与资产归属体系，拒绝临时拼凑网关。</p>
                         </div>
                     </div>
@@ -349,11 +411,9 @@ export default function McpPage() {
             <section id="mcp-architecture" className="mcp-section-paper">
                 <div className="mcp-container">
                     <div className="mcp-section-head">
-                        <span className="mcp-eyebrow mcp-eyebrow--light">ARCHITECTURE & PRINCIPLES</span>
+                        <span className="mcp-eyebrow mcp-eyebrow--light">架构与原则</span>
                         <h2 className="mcp-section-h2">为全模态影视工作流而生的开放协议层</h2>
-                        <p className="mcp-section-lead">
-                            不同于简单的文本推理封装，SupDance MCP 从一开始便针对重资产、长耗时、多步骤的创作管线进行工程设计，确保每次外部调用都能稳定沉淀为画布中的可控作品。
-                        </p>
+                        <p className="mcp-section-lead">不同于简单的文本推理封装，SupDance MCP 从一开始便针对重资产、长耗时、多步骤的创作管线进行工程设计，确保每次外部调用都能稳定沉淀为画布中的可控作品。</p>
                     </div>
 
                     <div className="mcp-arch-grid">
@@ -374,7 +434,7 @@ export default function McpPage() {
                     </div>
 
                     <div className="mcp-clients-bar">
-                        <span className="mcp-clients-label">PLANNED COMPATIBLE CLIENTS</span>
+                        <span className="mcp-clients-label">计划支持的客户端</span>
                         <div className="mcp-clients-list">
                             {CLIENT_TARGETS.map((client) => (
                                 <span key={client} className="mcp-client-pill">
@@ -397,7 +457,7 @@ export default function McpPage() {
             <section id="mcp-roadmap" className="mcp-section-paper">
                 <div className="mcp-container">
                     <div className="mcp-section-head">
-                        <span className="mcp-eyebrow mcp-eyebrow--light">DELIVERY ROADMAP</span>
+                        <span className="mcp-eyebrow mcp-eyebrow--light">研发路线图</span>
                         <h2 className="mcp-section-h2">务实推进的构建路线图</h2>
                         <p className="mcp-section-lead">先把底座做扎实，再分阶段开放接口。你可以先在画布工作台中使用已上线的外部 MCP 连接能力。</p>
                     </div>
@@ -419,7 +479,7 @@ export default function McpPage() {
 
                     <div className="mcp-cta-banner">
                         <div>
-                            <span className="mcp-eyebrow mcp-eyebrow--dark">READY TODAY · WORKSPACE</span>
+                            <span className="mcp-eyebrow mcp-eyebrow--dark">工作台现已可用</span>
                             <h3 className="mcp-cta-title">立即进入 SupDance 工作台体验</h3>
                             <p className="mcp-cta-sub">在正式版外部 MCP Server 开放之前，你已可在工作台内使用自由画布、短剧制作与内置 Agent 连接器。</p>
                         </div>
