@@ -137,7 +137,7 @@ export const DEFAULT_HTML_SIDEBAR_DOCK_CONFIG: HtmlSidebarDockConfig = {
         {
             id: "about",
             icon: "about",
-            href: "/html/about",
+            href: "/about",
             target: "_top",
             visible: true,
             order: 1,

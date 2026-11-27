@@ -109,7 +109,7 @@ export function SupdanceAboutFooter({ pagePath, configOverride, forceShow = fals
                 { label: t("nav.tools.create"), href: "/create" },
                 { label: t("nav.sidebar.ecommerce"), href: "/ecommerce" },
                 { label: t("nav.tools.tasks"), href: "/tasks" },
-                { label: aboutLabels[locale] || "About Us", href: "/html/about" },
+                { label: aboutLabels[locale] || "About Us", href: "/about" },
             ],
         },
     ];

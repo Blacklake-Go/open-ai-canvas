@@ -5,8 +5,13 @@ import { ArrowLeft, ExternalLink, FileCode, RefreshCw } from "lucide-react";
 import { fetchPublicHtmlPageBySlug } from "@/supdance/plugins/html-page-manager/api";
 import type { ManagedHtmlPage } from "@/supdance/plugins/html-page-manager/types";
 
-export default function PublicHtmlViewerPage() {
-    const { slug } = useParams<{ slug: string }>();
+interface PublicHtmlViewerPageProps {
+    defaultSlug?: string;
+}
+
+export default function PublicHtmlViewerPage({ defaultSlug }: PublicHtmlViewerPageProps = {}) {
+    const params = useParams<{ slug: string }>();
+    const slug = defaultSlug || params.slug;
     const [page, setPage] = useState<ManagedHtmlPage | null>(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);

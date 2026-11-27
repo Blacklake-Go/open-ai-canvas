@@ -428,7 +428,7 @@ export default function McpPage() {
                                 <span>开始创作</span>
                                 <ArrowUpRight className="size-4" strokeWidth={1.8} aria-hidden="true" />
                             </Link>
-                            <a href="/html/about" className="mcp-btn-pill-dark-outline">
+                            <a href="/about" className="mcp-btn-pill-dark-outline">
                                 <span>了解 SupDance</span>
                             </a>
                         </div>

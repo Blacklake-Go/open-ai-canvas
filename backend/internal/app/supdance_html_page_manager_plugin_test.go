@@ -108,7 +108,7 @@ func TestDefaultHtmlSidebarDockConfig(t *testing.T) {
 	if len(cfg.Cards) != 3 {
 		t.Fatalf("预期默认提供 3 格生态快链卡片，实际 %d", len(cfg.Cards))
 	}
-	wantHrefs := []string{"/html/about", "/pricing.html", "/mcp"}
+	wantHrefs := []string{"/about", "/pricing.html", "/mcp"}
 	for i, want := range wantHrefs {
 		if cfg.Cards[i].Href != want {
 			t.Errorf("卡片 #%d 路由应为 %s，实际 %s", i, want, cfg.Cards[i].Href)

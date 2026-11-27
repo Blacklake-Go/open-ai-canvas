@@ -392,7 +392,7 @@ func DefaultHtmlSidebarDockConfig() HtmlSidebarDockConfig {
 		HideStandalonePricingGroup: true,
 		Cards: []HtmlSidebarDockCard{
 			{
-				ID: "about", Icon: "about", Href: "/html/about", Target: "_top", Visible: true, Order: 1, DefaultLabel: "关于",
+				ID: "about", Icon: "about", Href: "/about", Target: "_top", Visible: true, Order: 1, DefaultLabel: "关于",
 				Labels: map[string]string{
 					"zh-CN": "关于", "en-US": "About", "zh-TW": "關於", "es-ES": "Info",
 					"fr-FR": "À propos", "de-DE": "Über", "ja-JP": "概要", "ko-KR": "소개",

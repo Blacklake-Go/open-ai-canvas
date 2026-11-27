@@ -85,7 +85,7 @@ export function McpHeader() {
                     <a href="#tools-schema" onClick={(e) => handleAnchorClick(e, "#tools-schema")}>{pickNav(locale, "tools")}</a>
                     <a href="#config-spec" onClick={(e) => handleAnchorClick(e, "#config-spec")}>{pickNav(locale, "config")}</a>
                     <a href="#mcp-roadmap" onClick={(e) => handleAnchorClick(e, "#mcp-roadmap")}>{pickNav(locale, "roadmap")}</a>
-                    <a href="/html/about">{pickNav(locale, "about")}</a>
+                    <a href="/about">{pickNav(locale, "about")}</a>
                 </nav>
 
                 <div className="mcp-header-actions flex items-center gap-3">

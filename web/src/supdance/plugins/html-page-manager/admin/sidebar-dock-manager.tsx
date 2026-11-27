@@ -208,7 +208,7 @@ export default function SidebarDockManager() {
                             <div key={card.id} className="sd-admin-card-item">
                                 <div className="sd-admin-card-grid">
                                     <Select size="small" value={card.icon} options={ICON_OPTIONS} onChange={(val) => updateCard(idx, { icon: val })} />
-                                    <Input size="small" value={card.href} placeholder="/html/about" onChange={(e) => updateCard(idx, { href: e.target.value })} />
+                                    <Input size="small" value={card.href} placeholder="/about" onChange={(e) => updateCard(idx, { href: e.target.value })} />
                                     <Select size="small" value={card.target} options={TARGET_OPTIONS} onChange={(val) => updateCard(idx, { target: val })} />
                                     <div className="flex items-center gap-1.5">
                                         <Button size="small" icon={<ArrowUp className="size-3.5" />} disabled={idx === 0} onClick={() => moveCard(idx, -1)} />
