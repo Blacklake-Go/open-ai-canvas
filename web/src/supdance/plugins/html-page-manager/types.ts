@@ -98,6 +98,7 @@ export interface HtmlSidebarDockSocial {
 export interface HtmlSidebarDockConfig {
     enabled: boolean;
     hideStandalonePricingGroup: boolean;
+    hideIncentiveCard?: boolean;
     cards: HtmlSidebarDockCard[];
     socialEnabled: boolean;
     syncWithSiteFooter: boolean;

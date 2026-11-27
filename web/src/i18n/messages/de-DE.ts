@@ -148,7 +148,7 @@ export const deDE: Messages = {
             topup: "Aufladen / einlösen",
             actions: "Kontoaktionen",
             settings: "Konto und Einstellungen",
-            referral: "Empfehlungsprogramm",
+            referral: "Teilen & Verdienen",
             adminConsole: "Admin-Konsole",
             logout: "Abmelden",
             adminTools: "Admin-Werkzeuge",

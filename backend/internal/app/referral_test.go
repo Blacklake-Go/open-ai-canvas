@@ -123,3 +123,22 @@ func TestReferralCommissionAmountAvoidsOverflow(t *testing.T) {
 		t.Fatalf("got %d", got)
 	}
 }
+
+func TestPublicReferralConfig(t *testing.T) {
+	s, db := newReferralTestService(t)
+	cfg, err := s.PublicReferralConfig()
+	if err != nil {
+		t.Fatal(err)
+	}
+	if cfg.Enabled || cfg.CommissionRateBasisPoints != 1_000 || cfg.Mode != ReferralModeAll {
+		t.Fatalf("unexpected default public referral config %#v", cfg)
+	}
+	saveReferralTestSetting(t, db, ReferralSetting{Enabled: true, Mode: ReferralModeAssigned, CommissionRateBasisPoints: 1_500})
+	cfg, err = s.PublicReferralConfig()
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !cfg.Enabled || cfg.Mode != ReferralModeAssigned || cfg.CommissionRateBasisPoints != 1_500 {
+		t.Fatalf("unexpected saved public referral config %#v", cfg)
+	}
+}

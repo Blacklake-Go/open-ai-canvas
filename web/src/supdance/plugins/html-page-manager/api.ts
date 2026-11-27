@@ -132,6 +132,7 @@ export async function resetAdminHtmlSiteFooter(): Promise<HtmlPagesAdminOverview
 export const DEFAULT_HTML_SIDEBAR_DOCK_CONFIG: HtmlSidebarDockConfig = {
     enabled: true,
     hideStandalonePricingGroup: true,
+    hideIncentiveCard: false,
     cards: [
         {
             id: "about",

@@ -184,6 +184,14 @@ export default function SidebarDockManager() {
                         </div>
                         <Switch aria-label="自动收起中部孤立定价表分组" checked={draft.hideStandalonePricingGroup} onChange={(checked) => setDraft((prev) => ({ ...prev, hideStandalonePricingGroup: checked }))} />
                     </div>
+
+                    <div className="sd-admin-switch-row">
+                        <div>
+                            <div className="text-ui font-medium">显示横向「分享激励」卡片</div>
+                            <div className="text-xs opacity-65">在生态快链与社媒图标之间展示横向分享激励卡片，点击弹出分享赢积分浮窗。</div>
+                        </div>
+                        <Switch aria-label="显示横向分享激励卡片" checked={!draft.hideIncentiveCard} onChange={(checked) => setDraft((prev) => ({ ...prev, hideIncentiveCard: !checked }))} />
+                    </div>
                 </section>
 
                 <section className="sd-admin-panel">

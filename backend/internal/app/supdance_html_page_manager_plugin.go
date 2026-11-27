@@ -127,6 +127,7 @@ type HtmlSidebarDockSocial struct {
 type HtmlSidebarDockConfig struct {
 	Enabled                    bool                    `json:"enabled"`
 	HideStandalonePricingGroup bool                    `json:"hideStandalonePricingGroup"`
+	HideIncentiveCard          bool                    `json:"hideIncentiveCard"`
 	Cards                      []HtmlSidebarDockCard   `json:"cards"`
 	SocialEnabled              bool                    `json:"socialEnabled"`
 	SyncWithSiteFooter         bool                    `json:"syncWithSiteFooter"`
