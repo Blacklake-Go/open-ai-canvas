@@ -800,11 +800,15 @@ html.dark .legal-public-header {
     box-shadow: none;
 }
 
-/* 法务文档与合规中心页面：解除画布特有的全局 fixed/hidden 锁死，恢复标准原生视口滚动与触摸弹性 */
+/* 法务文档与 MCP 协议页面：解除画布特有的全局 fixed/hidden 锁死，恢复标准原生视口滚动与触摸弹性 */
 html.is-legal-doc-page,
 html.is-legal-doc-page body,
 html.is-legal-doc-page #root,
-html.is-legal-doc-page .ant-app {
+html.is-legal-doc-page .ant-app,
+html.is-mcp-page,
+html.is-mcp-page body,
+html.is-mcp-page #root,
+html.is-mcp-page .ant-app {
     position: static !important;
     width: 100% !important;
     height: auto !important;
@@ -814,13 +818,15 @@ html.is-legal-doc-page .ant-app {
     overscroll-behavior-y: auto !important;
 }
 
-html.is-legal-doc-page .legal-public-page {
+html.is-legal-doc-page .legal-public-page,
+html.is-mcp-page .mcp-editorial-root {
     position: relative !important;
     width: 100% !important;
     min-height: 100vh !important;
     height: auto !important;
     max-height: none !important;
-    overflow: visible !important;
+    overflow-x: hidden !important;
+    overflow-y: visible !important;
 }
 
 /* 首页同款 View Transition 已用圆形 clip 完成整页揭示；这里关闭法务页自身颜色过渡，避免出现二次拖影。 */

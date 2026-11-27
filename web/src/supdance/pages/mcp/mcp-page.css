@@ -1,5 +1,20 @@
 /* SupDance /mcp 品牌级协议主页样式 —— 1:1 承袭「关于我们」页面 Editorial 设计系统 */
 
+/* 解除 open-ai-canvas 全局固定视口锁定，恢复完整的 Window 原生滚动与视口流转 */
+html.is-mcp-page,
+html.is-mcp-page body,
+html.is-mcp-page #root,
+html.is-mcp-page .ant-app {
+    position: static !important;
+    width: 100% !important;
+    height: auto !important;
+    min-height: 100% !important;
+    overflow-x: hidden !important;
+    overflow-y: auto !important;
+    overscroll-behavior-y: auto !important;
+    scroll-behavior: smooth;
+}
+
 .mcp-editorial-root {
     --mcp-bg-hero: #080808;
     --mcp-bg-dark: #141413;
@@ -18,12 +33,17 @@
     --mcp-accent-sand: #eee7d7;
     --mcp-ease: cubic-bezier(0.2, 0, 0, 1);
 
-    min-height: 100vh;
+    position: relative !important;
+    width: 100% !important;
+    min-height: 100vh !important;
+    height: auto !important;
+    max-height: none !important;
     background-color: var(--mcp-bg-paper);
     color: var(--mcp-ink-primary);
     font-family: "Inter", "SF Pro Display", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
     line-height: 1.6;
-    overflow-x: hidden;
+    overflow-x: hidden !important;
+    overflow-y: visible !important;
     -webkit-font-smoothing: antialiased;
 }
 

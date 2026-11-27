@@ -1,6 +1,6 @@
 import { ArrowDown, ArrowUpRight } from "lucide-react";
-import { useEffect } from "react";
-import { Link } from "react-router";
+import { useEffect, type MouseEvent } from "react";
+import { Link, useLocation } from "react-router";
 import { useLocaleStore } from "@/stores/use-locale-store";
 import { useUserStore } from "@/stores/use-user-store";
 import { SupdanceAboutFooter } from "@/supdance/components/site-footer/supdance-about-footer";
@@ -16,6 +16,69 @@ interface ArchItem {
     desc: Record<string, string>;
     tags: readonly string[];
 }
+
+const HERO_COPY = {
+    status: {
+        "zh-CN": "MODEL CONTEXT PROTOCOL · 正在构建中",
+        "zh-TW": "MODEL CONTEXT PROTOCOL · 正建構中",
+        "en-US": "MODEL CONTEXT PROTOCOL · IN ACTIVE DEVELOPMENT",
+        "ja-JP": "MODEL CONTEXT PROTOCOL · 開発中",
+        "ko-KR": "MODEL CONTEXT PROTOCOL · 개발 진행 중",
+        "es-ES": "MODEL CONTEXT PROTOCOL · EN DESARROLLO",
+        "fr-FR": "MODEL CONTEXT PROTOCOL · EN DÉVELOPPEMENT",
+        "de-DE": "MODEL CONTEXT PROTOCOL · IN ENTWICKLUNG",
+    },
+    title1: {
+        "zh-CN": "让任意 AI 助手，",
+        "zh-TW": "讓任意 AI 助手，",
+        "en-US": "Let any AI assistant,",
+        "ja-JP": "あらゆる AI アシスタントから、",
+        "ko-KR": "모든 AI 어시스턴트에서,",
+        "es-ES": "Permite a cualquier asistente de IA,",
+        "fr-FR": "Laissez n'importe quel assistant IA,",
+        "de-DE": "Lassen Sie jeden KI-Assistenten,",
+    },
+    title2: {
+        "zh-CN": "直接驱动你的创作工作台。",
+        "zh-TW": "直接驅動你的創作工作台。",
+        "en-US": "drive your creative workspace directly.",
+        "ja-JP": "あなたの制作ワークスペースを直接操作。",
+        "ko-KR": "창작 워크스페이스를 직접 제어하세요.",
+        "es-ES": "controlar tu espacio creativo directamente.",
+        "fr-FR": "piloter directement votre espace créatif.",
+        "de-DE": "Ihren kreativen Workspace direkt steuern.",
+    },
+    subtitle: {
+        "zh-CN": "SupDance MCP 协议与服务端正在研发构建中。未来无论身处 Cursor、Claude Desktop 还是自研 Agent 运行时，都能通过统一上下文协议直连短剧分镜、图像、视频与多轨音乐引擎。",
+        "zh-TW": "SupDance MCP 協議與伺服端正研發建構中。未來無論身處 Cursor、Claude Desktop 還是自研 Agent 執行階段，都能透過統一上下文協議直連短劇分鏡、圖像、影片與多軌音樂引擎。",
+        "en-US": "The SupDance MCP server and protocol layer are under active engineering. Soon, whether in Cursor, Claude Desktop, or custom Agent runtimes, you will connect directly to storyboard, image, video, and music engines through one unified context protocol.",
+        "ja-JP": "SupDance MCP プロトコルおよびサーバーは現在構築中です。Cursor、Claude Desktop、自作 Agent から、絵コンテ・画像・動画・音楽エンジンへ統一プロトコルで直接接続できます。",
+        "ko-KR": "SupDance MCP 프로토콜과 서버가 활발히 구축 중입니다. Cursor, Claude Desktop 또는 자체 Agent 런타임에서 스토리보드, 이미지, 비디오, 오디오 엔진에 직접 연결할 수 있습니다.",
+        "es-ES": "El protocolo y servidor MCP de SupDance se encuentran en desarrollo activo para conectar directamente Cursor, Claude Desktop o agentes propios con nuestros motores creativos.",
+        "fr-FR": "Le serveur et protocole MCP SupDance sont en cours de développement pour connecter Cursor, Claude Desktop ou vos propres agents à nos moteurs de création.",
+        "de-DE": "Das SupDance MCP-Protokoll und der Server befinden sich in aktiver Entwicklung, um Cursor, Claude Desktop oder eigene Agenten direkt mit unserer Creative Suite zu verbinden.",
+    },
+    ctaViewSpec: {
+        "zh-CN": "查看协议预览",
+        "zh-TW": "查看協議預覽",
+        "en-US": "Explore Protocol Spec",
+        "ja-JP": "仕様プレビューを見る",
+        "ko-KR": "프로토콜 명세 보기",
+        "es-ES": "Ver especificación",
+        "fr-FR": "Voir les spécifications",
+        "de-DE": "Spezifikation ansehen",
+    },
+    ctaOpenWorkspace: {
+        "zh-CN": "进入线上工作台",
+        "zh-TW": "進入線上工作台",
+        "en-US": "Open Live Workspace",
+        "ja-JP": "ワークスペースを開く",
+        "ko-KR": "라이브 워크스페이스 열기",
+        "es-ES": "Abrir espacio en vivo",
+        "fr-FR": "Ouvrir l'espace de travail",
+        "de-DE": "Live-Workspace öffnen",
+    },
+};
 
 const ARCHITECTURE_PILLARS: ArchItem[] = [
     {
@@ -149,12 +212,71 @@ function pickCopy(locale: string, map: Record<string, string>): string {
 export default function McpPage() {
     const user = useUserStore((s) => s.user);
     const locale = useLocaleStore((s) => s.locale);
+    const location = useLocation();
+
+    // 挂载时解除画布特有的全局 fixed/hidden 视口锁定，赋予页面 100% 原生 Window 下拉滚动体验
+    useEffect(() => {
+        document.documentElement.classList.add("is-mcp-page");
+        document.body.classList.add("is-mcp-page");
+        return () => {
+            document.documentElement.classList.remove("is-mcp-page");
+            document.body.classList.remove("is-mcp-page");
+        };
+    }, []);
+
+    // 滚轮与键盘全场景辅助支持，确保触控板/鼠标滚轮在所有视口下均可顺畅下拉浏览
+    useEffect(() => {
+        const handleWheel = (e: WheelEvent) => {
+            if (document.documentElement.scrollTop === 0 && e.deltaY > 0 && window.scrollY === 0) {
+                window.scrollBy({ top: e.deltaY, behavior: "auto" });
+            }
+        };
+
+        const handleKeyDown = (e: KeyboardEvent) => {
+            if (e.key === "ArrowDown" || e.key === "PageDown") {
+                window.scrollBy({ top: e.key === "PageDown" ? 600 : 150, behavior: "smooth" });
+            } else if (e.key === "ArrowUp" || e.key === "PageUp") {
+                window.scrollBy({ top: e.key === "PageUp" ? -600 : -150, behavior: "smooth" });
+            } else if (e.key === " " && (e.target as HTMLElement)?.tagName !== "INPUT" && (e.target as HTMLElement)?.tagName !== "TEXTAREA") {
+                e.preventDefault();
+                window.scrollBy({ top: e.shiftKey ? -600 : 600, behavior: "smooth" });
+            }
+        };
+
+        window.addEventListener("wheel", handleWheel, { passive: true });
+        window.addEventListener("keydown", handleKeyDown);
+        return () => {
+            window.removeEventListener("wheel", handleWheel);
+            window.removeEventListener("keydown", handleKeyDown);
+        };
+    }, []);
+
+    // 处理 hash 锚点平滑滚动（例如 #tools-schema, #config-spec, #mcp-roadmap）
+    useEffect(() => {
+        if (location.hash) {
+            const targetId = location.hash.replace("#", "");
+            const el = document.getElementById(targetId);
+            if (el) {
+                setTimeout(() => {
+                    el.scrollIntoView({ behavior: "smooth", block: "start" });
+                }, 100);
+            }
+        }
+    }, [location.hash]);
 
     useEffect(() => {
         document.title = locale.startsWith("zh")
             ? "SupDance MCP — 开放创作协议与 Agent 扩展中心"
             : "SupDance MCP — Model Context Protocol & Agent Hub";
     }, [locale]);
+
+    const handleScrollToTools = (e: MouseEvent<HTMLAnchorElement>) => {
+        e.preventDefault();
+        const target = document.querySelector("#tools-schema");
+        if (target) {
+            target.scrollIntoView({ behavior: "smooth", block: "start" });
+        }
+    };
 
     return (
         <div className="mcp-editorial-root">
@@ -174,26 +296,26 @@ export default function McpPage() {
                 <div className="mcp-hero-content">
                     <div className="mcp-hero-kicker mcp-eyebrow">
                         <span className="mcp-hero-status-dot" aria-hidden="true" />
-                        <span>MODEL CONTEXT PROTOCOL · 正在构建中</span>
+                        <span>{pickCopy(locale, HERO_COPY.status)}</span>
                     </div>
 
                     <h1 className="mcp-hero-title">
-                        让任意 AI 助手，
+                        {pickCopy(locale, HERO_COPY.title1)}
                         <br />
-                        直接驱动你的创作工作台。
+                        {pickCopy(locale, HERO_COPY.title2)}
                     </h1>
 
                     <p className="mcp-hero-subtitle">
-                        SupDance MCP 协议与服务端正在研发构建中。未来无论身处 Cursor、Claude Desktop 还是自研 Agent 运行时，都能通过统一上下文协议直连短剧分镜、图像、视频与多轨音乐引擎。
+                        {pickCopy(locale, HERO_COPY.subtitle)}
                     </p>
 
                     <div className="mcp-hero-actions">
-                        <a href="#tools-schema" className="mcp-btn-pill-light">
-                            <span>查看协议预览</span>
+                        <a href="#tools-schema" onClick={handleScrollToTools} className="mcp-btn-pill-light">
+                            <span>{pickCopy(locale, HERO_COPY.ctaViewSpec)}</span>
                             <ArrowDown className="size-4" strokeWidth={1.8} aria-hidden="true" />
                         </a>
                         <Link to={user ? "/create" : "/"} className="mcp-btn-pill-dark-outline">
-                            <span>进入线上工作台</span>
+                            <span>{pickCopy(locale, HERO_COPY.ctaOpenWorkspace)}</span>
                             <ArrowUpRight className="size-4" strokeWidth={1.8} aria-hidden="true" />
                         </Link>
                     </div>
