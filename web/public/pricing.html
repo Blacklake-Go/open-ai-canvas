@@ -259,23 +259,26 @@
                 color: var(--muted);
                 font-size: 12px;
             }
-            /* SupDance About Footer (Dark) */
+            /* SupDance About Footer (Gallery Pure Dark #0a0a09) */
             .sd-site-footer {
                 position: relative;
                 margin-top: 80px;
                 padding: 64px 0 48px;
-                background: #000;
-                border-top: 1px solid rgba(255, 255, 255, 0.08);
-                color: #ffffff;
+                background: #0a0a09 !important;
+                border-top: 1px solid rgba(255, 255, 255, 0.08) !important;
+                color: #f7f7f5 !important;
                 overflow: hidden;
                 user-select: none;
                 font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "PingFang SC", sans-serif;
             }
             #supdance-about-footer a,
-            #supdance-about-footer a:visited,
+            #supdance-about-footer a:visited {
+                color: #8e8e8a;
+                transition: color 0.15s ease;
+            }
             #supdance-about-footer a:hover,
             #supdance-about-footer .sd-brand-name {
-                color: #fff;
+                color: #f7f7f5 !important;
             }
             .sd-site-footer .sd-link-list a {
                 display: inline-flex;
@@ -288,29 +291,20 @@
                 width: 240px;
                 max-width: 100%;
                 height: auto;
-                filter: invert(1);
+                filter: invert(1) !important;
             }
-            html[data-theme="light"] .sd-site-footer {
-                background: white;
-                color: #111;
-                border-color: #ddd;
+            .sd-col-heading {
+                color: #f7f7f5 !important;
             }
-            html[data-theme="light"] .sd-footer-logo {
-                filter: none;
+            .sd-brand-vision,
+            .sd-brand-slogan,
+            .sd-social-label,
+            .sd-footer-bottom {
+                color: #8e8e8a !important;
             }
-            html[data-theme="light"] #supdance-about-footer a,
-            html[data-theme="light"] .sd-col-heading {
-                color: #111;
-            }
-            html[data-theme="light"] .sd-brand-vision,
-            html[data-theme="light"] .sd-brand-slogan,
-            html[data-theme="light"] .sd-social-label,
-            html[data-theme="light"] .sd-footer-bottom {
-                color: #555;
-            }
-            html[data-theme="light"] .sd-footer-grid,
-            html[data-theme="light"] .sd-social-btn {
-                border-color: #ddd;
+            .sd-footer-grid,
+            .sd-social-btn {
+                border-color: rgba(255, 255, 255, 0.1) !important;
             }
             .sd-site-footer[hidden] {
                 display: none !important;
@@ -1858,6 +1852,9 @@
                             <li>
                                 <a href="/tasks"><!--pricing-source:%E4%BB%BB%E5%8A%A1%E4%B8%AD%E5%BF%83-->Tasks</a>
                             </li>
+                            <li>
+                                <a href="/html/about"><!--pricing-source:%E5%85%B3%E4%BA%8E%E6%88%91%E4%BB%AC-->About Us</a>
+                            </li>
                         </ul>
                     </div>
                     <div class="sd-col-links">
@@ -1886,7 +1883,7 @@
                     </div>
                 </div>
                 <div class="sd-footer-bottom">
-                    <div class="sd-bottom-left"><span>© 2026 Supdance</span><span>·</span><a id="sd-ft-icp" href="https://beian.miit.gov.cn/" target="_blank" rel="noopener noreferrer">备案编号：沪ICP备2026050086号</a></div>
+                    <div class="sd-bottom-left"><span>© 2026 Supdance</span><span>·</span><a id="sd-ft-icp" href="https://beian.miit.gov.cn/" target="_blank" rel="noopener noreferrer">备案编号：沪ICP备2026050086号-2</a></div>
                 </div>
             </div>
         </footer>

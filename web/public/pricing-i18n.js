@@ -39,6 +39,8 @@
         ["任务中心", "Tasks", "任務中心", "Tareas", "Tâches", "Aufgaben", "タスク", "작업"],
         ["法律与支持", "Legal & support", "法律與支持", "Legales y soporte", "Informations et assistance", "Rechtliches & Support", "法務・サポート", "법률 및 지원"],
         ["定价表", "Pricing", "定價表", "Precios", "Tarifs", "Preise", "料金表", "요금표"],
+        ["关于我们", "About Us", "關於我們", "Sobre nosotros", "À propos", "Über uns", "会社概要", "회사 소개"],
+
         ["联系我们", "Contact us", "聯絡我們", "Contáctenos", "Nous contacter", "Kontakt", "お問い合わせ", "문의하기"],
         ["价目表", "Pricing", "價目表", "Precios", "Grille tarifaire", "Preisliste", "料金表", "요금표"],
         [
