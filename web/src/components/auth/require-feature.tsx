@@ -67,7 +67,7 @@ export function RequireFeature({ feature, children }: { feature: FeatureKey; chi
                 <WorkspaceState
                     kind="forbidden"
                     icon="settings"
-                    title={`${featureName}暂未开放`}
+                    title={interfaceText("{value1}暂未开放", { value1: featureName }, "src/components/auth/require-feature.tsx")}
                     description="当前功能已由平台管理员关闭。"
                     action={
                         <Button type="primary" onClick={() => navigate(backPath, { replace: true })}>
