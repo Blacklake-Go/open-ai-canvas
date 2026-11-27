@@ -5,8 +5,24 @@ import { LEGAL_OPERATOR } from "@/supdance/pages/legal/legal-meta";
 import { LEGAL_LOCALE_MAP, SERVICE_PRIVACY, SERVICE_TERMS } from "@/supdance/pages/legal/service-policies";
 import { renderLegalHtml } from "@/supdance/pages/legal/legal-html";
 import { BUILTIN_HTML_TEMPLATES } from "@/supdance/plugins/html-page-manager/templates";
+import { REFUND_COPY, PUBLIC_CHROME } from "@/supdance/pages/public-copy/refund";
+import { ABOUT_EXTRA, ABOUT_LITERAL_COPY } from "@/supdance/pages/public-copy/about-extra";
 
 describe("Public service policies", () => {
+    it("has a nonempty entry in each supported language for every managed public phrase", () => {
+        for (const [key, translations] of Object.entries({ ...REFUND_COPY, ...PUBLIC_CHROME, ...ABOUT_EXTRA, ...ABOUT_LITERAL_COPY })) {
+            expect(translations, key).toHaveLength(SUPPORTED_LOCALES.length);
+            expect(
+                translations.every((text) => text.trim().length > 0),
+                key,
+            ).toBe(true);
+        }
+        expect(new Set(ABOUT_EXTRA["hero.learnMore"]).size).toBe(SUPPORTED_LOCALES.length);
+        for (const { code } of SUPPORTED_LOCALES) {
+            expect(AUP_DOC_MAP[LEGAL_LOCALE_MAP[code]]?.sections).toHaveLength(7);
+        }
+    });
+
     it("keeps route exports on the same content source", () => {
         expect(TOS_DOC_MAP).toBe(SERVICE_TERMS);
         expect(PRIVACY_DOC_MAP).toBe(SERVICE_PRIVACY);

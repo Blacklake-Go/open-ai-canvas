@@ -6,6 +6,7 @@ import "./site-footer.css";
 
 import { DEFAULT_HTML_SITE_FOOTER_CONFIG, fetchPublicHtmlSiteFooterConfig } from "@/supdance/plugins/html-page-manager/api";
 import type { HtmlSiteFooterConfig } from "@/supdance/plugins/html-page-manager/types";
+import { localizeSocialLabel, publicChrome } from "@/supdance/pages/public-copy/public-page";
 
 const aboutLabels: Readonly<Record<string, string>> = {
     "zh-TW": "關於我們",
@@ -143,7 +144,7 @@ export function SupdanceAboutFooter({ pagePath, configOverride, forceShow = fals
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-12 gap-10 pb-12 border-b border-white/10">
                     {/* 第 1 列：品牌徽标与企业愿景 (占据 4 列) */}
                     <div className="lg:col-span-4 flex flex-col items-start space-y-4">
-                        <Link to="/" className="group flex flex-col items-start gap-1.5 cursor-pointer no-underline" aria-label={`${cfg.brandName} Home`}>
+                        <Link to="/" className="group flex flex-col items-start gap-1.5 cursor-pointer no-underline" aria-label={`${cfg.brandName} · ${publicChrome("home", locale)}`}>
                             <img src="/supdance-footer-logo.png" alt={cfg.brandName} className="supdance-footer-logo" width="1000" height="220" />
                             <span className="text-xs font-mono tracking-wider text-[#8e8e8a] uppercase">{t(cfg.brandSlogan)}</span>
                         </Link>
@@ -163,7 +164,7 @@ export function SupdanceAboutFooter({ pagePath, configOverride, forceShow = fals
                                 {cfg.socialLinks.map((item) => {
                                     const href = safeSocialHref(item.href);
                                     if (!href) return null;
-                                    const label = item.handle ? `${item.name} (${item.handle})` : item.name;
+                                    const label = localizeSocialLabel(item.handle ? `${item.name} (${item.handle})` : item.name, locale);
                                     return (
                                         <a
                                             key={item.id}
@@ -228,7 +229,7 @@ export function SupdanceAboutFooter({ pagePath, configOverride, forceShow = fals
                             <>
                                 <span className="hidden sm:inline">·</span>
                                 <a href={cfg.icpHref || "https://beian.miit.gov.cn/"} target="_blank" rel="noopener noreferrer" className="text-[#70706b] hover:text-[#f7f7f5] transition-colors no-underline">
-                                    {cfg.icpNumber}
+                                    {cfg.icpNumber.replace(/^备案编号[：:]\s*/, `${publicChrome("icp", locale)} · `)}
                                 </a>
                             </>
                         )}
