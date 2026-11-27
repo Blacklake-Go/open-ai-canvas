@@ -11,7 +11,22 @@
             // vendor metadata. Only the consented parent can initialize or send a purchase.
             (() => {
                 if (location.hostname !== "www.supdance.com" || parent === window) return;
-                const isSales = new URLSearchParams(location.search).get("source") === "sales";
+                let isSales = new URLSearchParams(location.search).get("source") === "sales";
+                // Older cached app bundles do not pass source=sales for the Canvas campaign.
+                if (!isSales) {
+                    try {
+                        const landing = new URL(parent.location.href);
+                        isSales =
+                            landing.origin === location.origin &&
+                            landing.pathname === "/" &&
+                            landing.searchParams.get("utm_source") === "x" &&
+                            landing.searchParams.get("utm_medium") === "paid_social" &&
+                            landing.searchParams.get("utm_campaign") === "canvas_zh_market_202611" &&
+                            parent.localStorage.getItem("supdance:marketing-consent:v1") === "accepted";
+                    } catch {
+                        // A cross-origin parent cannot supply landing attribution.
+                    }
+                }
                 const pixelId = isSales ? "rih9p" : "rinhf";
                 const purchaseEventId = isSales ? "tw-rih9p-rk5ya" : "tw-rinhf-rinl3";
                 let ready = false;
