@@ -41,6 +41,16 @@ test("collecting does not mutate input and preserved source attributes remain li
     expect(transformStaticUi(source, "/project/web/src/i18n/messages.ts").changed).toBe(false);
 });
 
+test("module-scoped labels are included in the startup translations", () => {
+    const file = "/project/web/src/lib/canvas/canvas-shortcuts.ts";
+    const source = 'const CANVAS_SHORTCUTS = [{label: "画布快捷键", id: "canvas"}]; function label() { return interfaceText("搜索快捷键"); }';
+    const scanned = transformStaticUi(source, file, { collectOnly: true });
+    const shortcut = scanned.messages.find(({ source }) => source === "画布快捷键")!;
+    const search = scanned.messages.find(({ source }) => source === "搜索快捷键")!;
+    const compiled = transformStaticUi(source, file, { knownKeys: new Set([shortcut.key, search.key]) });
+    expect([...compiled.eagerKeys]).toEqual([shortcut.key]);
+});
+
 test("form validation copy is localized while validation rules and data remain intact", () => {
     const source = 'const Page=()=> <><Form.Item name="storage" rules={[{type:"number",min:1,max:100,message:`请输入 ${min} 到 ${max} 的整数`}]}/><Editor rules={[{message:"任务内容"}]}/></>';
     const result = transformStaticUi(source, file);

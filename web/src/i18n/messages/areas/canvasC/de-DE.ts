@@ -44,6 +44,14 @@ export const deDE: DeepStringRecord<typeof zhCN> = {
         emptyTitle: "Noch keine Aufgaben",
         emptyDescription: "Klicken Sie auf einen Generieren-Button im Canvas, um loszulegen.",
     },
+    workspaceRail: {
+        nodes: "Knoten",
+        assets: "Medien",
+        tasks: "Aufgaben",
+        history: "Verlauf",
+        collapse: "„{{label}}“ einklappen",
+        open: "„{{label}}“ öffnen",
+    },
     nodeList: {
         title: "Canvas-Knoten",
         searchPlaceholder: "Knoten, Kapitel, Einstellungen, Modelle oder Tags suchen …",

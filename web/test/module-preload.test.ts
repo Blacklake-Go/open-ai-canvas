@@ -115,11 +115,16 @@ test("真实 Vite helper 的预热失败沿用可取消的恢复事件，不执�
     expect(start).toBeGreaterThan(0);
     expect(end).toBeGreaterThan(start);
     const transform = resilientPreload().transform as Function;
-    const transformed = transform(vite.slice(start, end), "\0vite/preload-helper.js").code.replace('import { PageResourceError, warmPreloadResources } from "@/lib/module-preload";', "").replaceAll("import.meta", "importMeta");
+    const transformed = transform(vite.slice(start, end), "\0vite/preload-helper.js")
+        .code.replace('import { PageResourceError, warmPreloadResources } from "@/lib/module-preload";', "")
+        .replace('import { waitForInterfacePackDownloads } from "@/i18n/interface-packs";', "")
+        .replaceAll("import.meta", "importMeta");
     const events: Event[] = [];
     const failure = new Error("asset 404");
     let cancel = true;
     let imported = false;
+    let warmed = false;
+    let completeTranslation: (() => void) | undefined;
     const preload = runInNewContext(`${transformed}; preload`, {
         Event,
         PageResourceError,
@@ -127,8 +132,10 @@ test("真实 Vite helper 的预热失败沿用可取消的恢复事件，不执�
         importMeta: { url: "https://assets.example/entry.js" },
         assetsURL: (dep: string) => dep,
         warmPreloadResources: async () => {
-            throw failure;
+            if (!warmed) throw failure;
         },
+        waitForInterfacePackDownloads: () => new Promise<void>((resolve) => (completeTranslation = resolve)),
+        __VITE_IS_MODERN__: true,
         window: {
             dispatchEvent: (event: Event) => {
                 events.push(event);
@@ -146,4 +153,17 @@ test("真实 Vite helper 的预热失败沿用可取消的恢复事件，不执�
     cancel = false;
     await expect(preload(nativeImport, ["./missing.js"])).rejects.toThrow("asset 404");
     expect(imported).toBe(false);
+
+    warmed = true;
+    const route = { default: "canvas" };
+    let rendered = false;
+    const resolved = preload(async () => route).then((module: unknown) => {
+        rendered = true;
+        return module;
+    });
+    await new Promise((resolve) => setTimeout(resolve, 0));
+    expect(completeTranslation).toBeDefined();
+    expect(rendered).toBe(false);
+    completeTranslation!();
+    await expect(resolved).resolves.toBe(route);
 });

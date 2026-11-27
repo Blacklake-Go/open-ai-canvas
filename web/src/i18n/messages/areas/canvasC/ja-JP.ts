@@ -44,6 +44,14 @@ export const jaJP: DeepStringRecord<typeof zhCN> = {
         emptyTitle: "タスクはまだありません",
         emptyDescription: "キャンバスの生成ボタンをクリックして制作を始めましょう。",
     },
+    workspaceRail: {
+        nodes: "ノード",
+        assets: "素材",
+        tasks: "タスク",
+        history: "履歴",
+        collapse: "{{label}}を閉じる",
+        open: "{{label}}を開く",
+    },
     nodeList: {
         title: "キャンバスのノード",
         searchPlaceholder: "ノード・章・ショット・モデル・タグを検索…",

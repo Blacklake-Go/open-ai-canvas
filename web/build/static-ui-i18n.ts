@@ -14,7 +14,28 @@ const uiCollections = new Set(["options", "items", "menu", "columns", "actions",
 // Literal copy on these component props is rendered to the user. Properties on data objects
 // with the same names (including prompts, descriptions and model parameters) are independent.
 const displayProps: Record<string, ReadonlySet<string>> = {
-    description: new Set(["AdminTableEmpty", "AnalyticsAttentionItem", "AssetPicker", "CapabilityGroup", "CreationMediaNotice", "EcommerceLibraryPanel", "EmptyState", "FormSectionTitle", "PageHeader", "ParameterField", "Popconfirm", "PromptTemplateDialog", "ProtocolParameterCard", "ReferenceCard", "SectionHeading", "SettingsSectionCard", "WorkspaceErrorState", "WorkspaceForbiddenState", "WorkspaceNoResultsState", "WorkspaceState"]),
+    description: new Set([
+        "AdminTableEmpty",
+        "AnalyticsAttentionItem",
+        "AssetPicker",
+        "CapabilityGroup",
+        "CreationMediaNotice",
+        "EcommerceLibraryPanel",
+        "EmptyState",
+        "FormSectionTitle",
+        "PageHeader",
+        "ParameterField",
+        "Popconfirm",
+        "PromptTemplateDialog",
+        "ProtocolParameterCard",
+        "ReferenceCard",
+        "SectionHeading",
+        "SettingsSectionCard",
+        "WorkspaceErrorState",
+        "WorkspaceForbiddenState",
+        "WorkspaceNoResultsState",
+        "WorkspaceState",
+    ]),
     detail: new Set(["AdminStatTile", "AnalyticsHealthCard", "ArkStatCard", "CreationMediaNotice", "FlowStep", "MenuButton", "PerformanceKpi", "UpdateAlert", "WorkspaceLoadingState"]),
     extra: new Set(["AdminDrawer", "AppDrawer", "Form.Item"]),
     help: new Set(["ColorTokenField", "Form.Item"]),
@@ -108,8 +129,9 @@ export function eligibleUiFile(file: string) {
 
 export function transformStaticUi(source: string, file: string, options: { collectOnly?: boolean; knownKeys?: ReadonlySet<string> } = {}) {
     const messages: StaticUiMessage[] = [];
+    const eagerKeys = new Set<string>();
     const eligible = eligibleUiFile(file);
-    if ((!eligible && !(options.collectOnly && file.includes("/supdance/plugins/i18n/admin/"))) || !han.test(source)) return { messages, code: source, map: null, changed: false };
+    if ((!eligible && !(options.collectOnly && file.includes("/supdance/plugins/i18n/admin/"))) || !han.test(source)) return { messages, eagerKeys, code: source, map: null, changed: false };
     const scope = "src/" + file.replaceAll("\\", "/").split("/src/").at(-1)!;
     let changed = false;
     let alias: t.Identifier;
@@ -159,7 +181,7 @@ export function transformStaticUi(source: string, file: string, options: { colle
                 if (!t.isStringLiteral(literal) || !han.test(literal.value)) return;
                 const clean = literal.value.trim();
                 if (!clean) return;
-                const call = register(clean, [], path.node.loc?.start.line ?? 0);
+                const call = register(clean, [], path.node.loc?.start.line ?? 0, scope, !path.getFunctionParent());
                 if (options.collectOnly) return;
                 markJsx(path);
                 const nodes: t.JSXExpressionContainer[] = [];
@@ -173,7 +195,7 @@ export function transformStaticUi(source: string, file: string, options: { colle
             StringLiteral(path) {
                 if (!eligible) return;
                 if (!han.test(path.node.value) || !isUiValue(path, file)) return;
-                const call = register(path.node.value, [], path.node.loc?.start.line ?? 0);
+                const call = register(path.node.value, [], path.node.loc?.start.line ?? 0, scope, !path.getFunctionParent());
                 if (options.collectOnly) return;
                 markJsx(path);
                 path.replaceWith(path.parentPath.isJSXAttribute() ? t.jsxExpressionContainer(call) : call);
@@ -191,7 +213,7 @@ export function transformStaticUi(source: string, file: string, options: { colle
                     text += `{${name}}${path.node.quasis[index + 1].value.cooked ?? path.node.quasis[index + 1].value.raw}`;
                     values.push(t.objectProperty(t.identifier(name), expression));
                 });
-                const call = register(text, values, path.node.loc?.start.line ?? 0);
+                const call = register(text, values, path.node.loc?.start.line ?? 0, scope, !path.getFunctionParent());
                 if (!options.collectOnly) {
                     markJsx(path);
                     path.replaceWith(call);
@@ -204,7 +226,7 @@ export function transformStaticUi(source: string, file: string, options: { colle
                 const keyScope = t.isStringLiteral(path.node.arguments[2]) ? path.node.arguments[2].value : "";
                 const text = path.node.arguments[0].value;
                 const inJsx = eligible && path.findParent((parent) => parent.isJSXElement() || parent.isJSXFragment());
-                if (options.collectOnly || inJsx || options.knownKeys?.has(interfaceTextKey(text, keyScope))) register(text, [], path.node.loc?.start.line ?? 0, keyScope);
+                if (options.collectOnly || inJsx || options.knownKeys?.has(interfaceTextKey(text, keyScope))) register(text, [], path.node.loc?.start.line ?? 0, keyScope, !path.getFunctionParent());
                 if (!options.collectOnly && inJsx) {
                     markJsx(path);
                     changed = true;
@@ -218,14 +240,15 @@ export function transformStaticUi(source: string, file: string, options: { colle
             },
         },
     });
-    function register(text: string, values: t.ObjectProperty[], line: number, keyScope = scope) {
+    function register(text: string, values: t.ObjectProperty[], line: number, keyScope = scope, eager = false) {
         const key = interfaceTextKey(text, keyScope);
+        if (eager) eagerKeys.add(key);
         messages.push({ key, source: text, file: scope, line });
         if (options.knownKeys && !options.knownKeys.has(key)) throw new Error(`Missing eight-locale UI entry: ${scope}:${line} ${key} ${text}`);
         return t.callExpression(alias, [t.stringLiteral(text), values.length ? t.objectExpression(values) : t.identifier("undefined"), t.stringLiteral(scope)]);
     }
     const result = transformSync(source, { filename: file, babelrc: false, configFile: false, parserOpts: { plugins: ["typescript", ...(/\.[jt]sx$/.test(file) ? ["jsx" as const] : [])] }, plugins: [plugin], sourceMaps: true, sourceFileName: file });
-    return { messages, code: result?.code ?? source, map: result?.map ?? null, changed };
+    return { messages, eagerKeys, code: result?.code ?? source, map: result?.map ?? null, changed };
 }
 
 const compactCatalogId = "\0supdance:compact-interface-catalog";
@@ -270,6 +293,7 @@ export function staticUiI18n(): Plugin {
     const assignedKeys = new Set<string>();
     const commonKeys = new Set<string>();
     let productionBuild = false;
+    const startupInterfaceId = packPrefix + commonPack;
     return {
         name: "supdance-static-ui-i18n",
         enforce: "pre",
@@ -277,6 +301,7 @@ export function staticUiI18n(): Plugin {
             productionBuild = config.command === "build";
         },
         resolveId(source, importer) {
+            if (source === startupInterfaceId) return "\0" + source;
             if (!productionBuild) return;
             if (source.startsWith(packPrefix)) return "\0" + source;
             if (!source.endsWith("/messages/interface.json")) return;
@@ -289,16 +314,21 @@ export function staticUiI18n(): Plugin {
             if (id === emptyCatalogId) return `export default ${JSON.stringify(Object.fromEntries(SUPPORTED_LOCALES.map(({ code }) => [code, {}])))};`;
             if (!id.startsWith("\0" + packPrefix)) return;
             const name = id.slice(packPrefix.length + 1);
+            if (!productionBuild) return "export const prepareStartupInterface = () => Promise.resolve();";
             requestedPacks.add(name);
             const urls = SUPPORTED_LOCALES.map(({ code }) => `${JSON.stringify(code)}: new URL(/* @vite-ignore */ ${JSON.stringify(packMarker(name, code))}, import.meta.url).href`);
-            return `import { installInterfacePack } from "@/i18n"; await installInterfacePack({${urls.join(",")}});`;
+            const pack = `{${urls.join(",")}}`;
+            if (name === commonPack) {
+                return `const pack = ${pack}; export const prepareStartupInterface = () => import("@/i18n").then(({ installInterfacePack }) => installInterfacePack(pack));`;
+            }
+            // Async module initializers can wait on one another in circular production chunks.
+            return `import { installInterfacePack } from "@/i18n"; void installInterfacePack(${pack});`;
         },
         transform(code, id) {
             const file = id.split("?")[0].replaceAll("\\", "/");
             const collectOnly = productionBuild && (file.includes("/supdance/plugins/i18n/admin/") || file.endsWith("/supdance/plugins/html-page-manager/templates/index.ts"));
             const result = transformStaticUi(code, file, { knownKeys, collectOnly });
             if (!productionBuild) return result.changed ? { code: result.code, map: result.map } : null;
-            if (/\/src\/(?:welcome-)?application\.tsx$/.test(file)) return { code: `${result.code}\nimport "${packPrefix}${commonPack}";`, map: result.map };
             if (file.includes("/src/") && !file.includes("/node_modules/") && /\.[jt]sx?$/.test(file)) {
                 for (const [key] of code.matchAll(/\bmanagedUi\.[0-9a-f]{1,8}\b/g)) if (knownKeys.has(key)) commonKeys.add(key);
             }
@@ -306,7 +336,7 @@ export function staticUiI18n(): Plugin {
             const group = interfacePackName(file);
             const keys = packKeys.get(group) ?? new Set<string>();
             for (const row of result.messages) {
-                if (interfaceTextKey(row.source) === row.key) commonKeys.add(row.key);
+                if (result.eagerKeys.has(row.key) || interfaceTextKey(row.source) === row.key) commonKeys.add(row.key);
                 else {
                     assignedKeys.add(row.key);
                     keys.add(row.key);

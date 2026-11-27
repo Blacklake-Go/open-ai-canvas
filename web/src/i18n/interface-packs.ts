@@ -6,6 +6,7 @@ export type InterfacePack = Record<AppLocale, string>;
 
 const packs = new Set<InterfacePack>();
 const downloads = new Map<string, Promise<void>>();
+const pendingDownloads = new Set<Promise<void>>();
 const builtin = new Map<AppLocale, Record<string, string>>();
 const published = new Map<AppLocale, Record<string, string>>();
 
@@ -38,7 +39,13 @@ function loadInterfacePack(i18n: I18n, pack: InterfacePack, locale: AppLocale) {
         console.warn("Could not load interface translations", locale, url, error);
     });
     downloads.set(url, download);
+    pendingDownloads.add(download);
+    void download.finally(() => pendingDownloads.delete(download));
     return download;
+}
+
+export function waitForInterfacePackDownloads() {
+    if (pendingDownloads.size) return Promise.all(pendingDownloads);
 }
 
 export function registerInterfacePack(i18n: I18n, pack: InterfacePack, locale: AppLocale) {

@@ -44,6 +44,14 @@ export const koKR: DeepStringRecord<typeof zhCN> = {
         emptyTitle: "작업이 없습니다",
         emptyDescription: "캔버스의 생성 버튼을 눌러 창작을 시작하세요.",
     },
+    workspaceRail: {
+        nodes: "노드",
+        assets: "소재",
+        tasks: "작업",
+        history: "기록",
+        collapse: "{{label}} 패널 접기",
+        open: "{{label}} 패널 열기",
+    },
     nodeList: {
         title: "캔버스 노드",
         searchPlaceholder: "노드, 챕터, 샷, 모델 또는 태그 검색…",

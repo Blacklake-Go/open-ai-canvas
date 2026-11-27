@@ -4,6 +4,7 @@ import type { InsertAssetPayload } from "./asset-picker-modal";
 import { useDeferredValue, useMemo, useRef, useState, type CSSProperties, type KeyboardEvent, type PointerEvent, type ReactNode } from "react";
 import { Button } from "antd";
 import { PanelLeftClose, PanelLeftOpen, Layers3, Images, ListChecks, History, X } from "lucide-react";
+import { useTranslation } from "react-i18next";
 import { searchCanvasNodes } from "@/lib/canvas/canvas-node-search";
 import { useEffectiveConfig } from "@/stores/use-config-store";
 import { canvasDockStyle } from "@/lib/canvas/canvas-aceternity-style";
@@ -43,6 +44,7 @@ export function CanvasWorkspacePanel({
     onProjectAssets?: () => void;
     onCancelTask: (task: GenerationTask) => void;
 }) {
+    const { t } = useTranslation();
     const [tab, setTab] = useState("nodes");
     const theme = canvasThemes[useActiveTheme()];
     const [query, setQuery] = useState("");
@@ -92,10 +94,10 @@ export function CanvasWorkspacePanel({
         </div>
     );
     const entries = [
-        { id: "nodes", label: "节点", icon: Layers3 },
-        { id: "assets", label: "素材库", icon: Images },
-        { id: "tasks", label: "任务", icon: ListChecks },
-        { id: "history", label: "历史", icon: History },
+        { id: "nodes", label: t("canvasC.workspaceRail.nodes"), icon: Layers3 },
+        { id: "assets", label: t("canvasC.workspaceRail.assets"), icon: Images },
+        { id: "tasks", label: t("canvasC.workspaceRail.tasks"), icon: ListChecks },
+        { id: "history", label: t("canvasC.workspaceRail.history"), icon: History },
     ];
     return (
         <div
@@ -122,7 +124,7 @@ export function CanvasWorkspacePanel({
                                 key={id}
                                 type="button"
                                 className="canvas-workspace-rail-button"
-                                title={open && tab === id ? `收起${label}` : `打开${label}`}
+                                title={t(open && tab === id ? "canvasC.workspaceRail.collapse" : "canvasC.workspaceRail.open", { label })}
                                 aria-pressed={open && tab === id}
                                 onPointerDown={markPointer}
                                 onKeyDown={markKeyboard}

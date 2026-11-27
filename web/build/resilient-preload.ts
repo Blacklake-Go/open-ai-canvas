@@ -8,9 +8,11 @@ export function resilientPreload(): Plugin {
         transform(code, id) {
             if (id !== "\0vite/preload-helper.js") return;
             const entry = /function\s+preload\s*\(\s*baseModule\s*,\s*deps\s*,\s*importerUrl\s*\)\s*\{/;
+            const loadModule = "return baseModule().catch(handlePreloadError);";
             const seenCheck = /if\s*\(\s*dep\s+in\s+seen\s*\)\s*return\s*;/;
-            const cssBlock = /if\s*\(\s*isCss\s*\)\s*return\s+new Promise\s*\(\s*\(\s*res\s*,\s*rej\s*\)\s*=>\s*\{\s*(?:link\.addEventListener\(\s*["']load["']\s*,\s*res\s*\);\s*)?link\.addEventListener\(\s*["']error["']\s*,\s*\(\s*\)\s*=>\s*rej\([^;\n]*\)\s*\);\s*\}\s*\)\s*;/;
-            if (!entry.test(code)) {
+            const cssBlock =
+                /if\s*\(\s*isCss\s*\)\s*return\s+new Promise\s*\(\s*\(\s*res\s*,\s*rej\s*\)\s*=>\s*\{\s*(?:link\.addEventListener\(\s*["']load["']\s*,\s*res\s*\);\s*)?link\.addEventListener\(\s*["']error["']\s*,\s*\(\s*\)\s*=>\s*rej\([^;\n]*\)\s*\);\s*\}\s*\)\s*;/;
+            if (!entry.test(code) || !code.includes(loadModule)) {
                 throw new Error("Vite preload helper changed; update the resource preload adapter");
             }
             let transformedCode = code.replace(
@@ -20,6 +22,7 @@ export function resilientPreload(): Plugin {
                     "await warmPreloadResources((deps || []).map(dep => new URL(assetsURL(dep, importerUrl), importerUrl || import.meta.url).href));\n" +
                     "} catch (error) { return handlePreloadError(error); }\n",
             );
+            transformedCode = transformedCode.replace(loadModule, "return baseModule().then(async module => { await waitForInterfacePackDownloads(); return module; }).catch(handlePreloadError);");
             if (seenCheck.test(transformedCode)) {
                 transformedCode = transformedCode.replace(seenCheck, "if (dep in seen) return seen[dep] === true ? undefined : seen[dep];");
             }
@@ -30,7 +33,7 @@ export function resilientPreload(): Plugin {
                 );
             }
             return {
-                code: 'import { PageResourceError, warmPreloadResources } from "@/lib/module-preload";\n' + transformedCode,
+                code: 'import { PageResourceError, warmPreloadResources } from "@/lib/module-preload";\nimport { waitForInterfacePackDownloads } from "@/i18n/interface-packs";\n' + transformedCode,
                 map: null,
             };
         },

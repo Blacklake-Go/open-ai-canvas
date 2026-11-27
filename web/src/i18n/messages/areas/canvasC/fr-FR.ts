@@ -44,6 +44,14 @@ export const frFR: DeepStringRecord<typeof zhCN> = {
         emptyTitle: "Aucune tâche",
         emptyDescription: "Cliquez sur un bouton de génération du canevas pour commencer.",
     },
+    workspaceRail: {
+        nodes: "Nœuds",
+        assets: "Ressources",
+        tasks: "Tâches",
+        history: "Historique",
+        collapse: "Réduire le panneau « {{label}} »",
+        open: "Ouvrir le panneau « {{label}} »",
+    },
     nodeList: {
         title: "Nœuds du canevas",
         searchPlaceholder: "Rechercher des nœuds, chapitres, plans, modèles ou tags…",

@@ -14,7 +14,7 @@ if (import.meta.hot)
         disposeTraffic?.();
     });
 
-async function renderWelcome() {
+export async function startApplication() {
     document.documentElement.lang = currentLocale();
     try {
         const { welcomeEnabled } = await getWelcomeAvailability();
@@ -41,5 +41,3 @@ async function renderWelcome() {
         );
     }
 }
-
-void renderWelcome();

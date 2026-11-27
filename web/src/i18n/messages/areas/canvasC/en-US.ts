@@ -44,6 +44,14 @@ export const enUS: DeepStringRecord<typeof zhCN> = {
         emptyTitle: "No tasks yet",
         emptyDescription: "Click a generate button on the canvas to start creating.",
     },
+    workspaceRail: {
+        nodes: "Nodes",
+        assets: "Assets",
+        tasks: "Tasks",
+        history: "History",
+        collapse: "Collapse {{label}}",
+        open: "Open {{label}}",
+    },
     nodeList: {
         title: "Canvas nodes",
         searchPlaceholder: "Search nodes, chapters, shots, models, or tags…",

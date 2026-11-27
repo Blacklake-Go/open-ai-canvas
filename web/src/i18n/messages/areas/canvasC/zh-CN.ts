@@ -43,6 +43,14 @@ export const zhCN = {
         emptyTitle: "暂无任务",
         emptyDescription: "点击画布上的生成按钮开始创作。",
     },
+    workspaceRail: {
+        nodes: "节点",
+        assets: "素材库",
+        tasks: "任务",
+        history: "历史",
+        collapse: "收起{{label}}",
+        open: "打开{{label}}",
+    },
     nodeList: {
         title: "画布节点",
         searchPlaceholder: "搜索节点、章节、镜头、模型或标签…",

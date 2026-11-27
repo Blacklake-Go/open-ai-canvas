@@ -13,19 +13,21 @@ import { preloadInitialHome, router } from "@/router";
 import { MarketingConsentHost } from "@/supdance/marketing/consent";
 import { installSiteTrafficCollector } from "@/services/site-traffic";
 
-document.body.style.fontFamily = '"SF Pro Display","SF Pro Text","PingFang SC","Microsoft YaHei","Helvetica Neue",sans-serif';
+export function startApplication() {
+    document.body.style.fontFamily = '"SF Pro Display","SF Pro Text","PingFang SC","Microsoft YaHei","Helvetica Neue",sans-serif';
 
-preloadInitialHome(window.location.pathname);
+    preloadInitialHome(window.location.pathname);
 
-createRoot(document.getElementById("root")!).render(
-    <React.StrictMode>
-        <AppProviders>
-            <RouterProvider router={router} useTransitions={false} />
-            <MarketingConsentHost navigation={router} />
-        </AppProviders>
-    </React.StrictMode>,
-);
+    createRoot(document.getElementById("root")!).render(
+        <React.StrictMode>
+            <AppProviders>
+                <RouterProvider router={router} useTransitions={false} />
+                <MarketingConsentHost navigation={router} />
+            </AppProviders>
+        </React.StrictMode>,
+    );
 
-// 在 React 生命周期外安装，游客与 StrictMode 都共用一次路由订阅。
-const disposeTraffic = installSiteTrafficCollector(router);
-if (import.meta.hot) import.meta.hot.dispose(disposeTraffic);
+    // 在 React 生命周期外安装，游客与 StrictMode 都共用一次路由订阅。
+    const disposeTraffic = installSiteTrafficCollector(router);
+    if (import.meta.hot) import.meta.hot.dispose(disposeTraffic);
+}

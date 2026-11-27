@@ -3,6 +3,10 @@
 declare const __APP_VERSION__: string;
 declare const __APP_CHANGELOG__: string;
 
+declare module "virtual:supdance-interface:common" {
+    export function prepareStartupInterface(): Promise<void>;
+}
+
 interface ImportMetaEnv {
     readonly VITE_APP_VERSION?: string;
     readonly VITE_BUILD_COMMIT?: string;
