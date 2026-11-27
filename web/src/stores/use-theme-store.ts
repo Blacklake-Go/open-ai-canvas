@@ -27,3 +27,9 @@ export const useThemeStore = create<ThemeStore>()(
         },
     ),
 );
+
+if (typeof window !== "undefined") {
+    window.addEventListener?.("supdance:boot-theme", (event: Event) => {
+        useThemeStore.getState().setTheme((event as CustomEvent<ThemeName>).detail);
+    });
+}
