@@ -17,17 +17,16 @@ test("welcome entry loads configured appearance", async () => {
         reportStartupLoadFailure(error) {
             throw error;
         },
-        isIsolatedDirectorRepro: () => false,
-        bootstrapAppearance: async () => {
-            calls++;
-        },
+        isIsolatedPrevisRepro: () => false,
+        withModuleLoadPriority: (_priority, load) => load(),
         loadModule: async (name) => {
             imports.push(name);
+            if (name === "@/services/appearance-bootstrap") return { bootstrapAppearance: () => calls++ };
         },
     });
     await Promise.resolve();
     assert.equal(calls, 1, "welcome entry must bootstrap appearance");
-    assert.deepEqual(imports, ["./welcome-application"]);
+    assert.deepEqual(imports, ["./welcome-application", "@/services/appearance-bootstrap"]);
 });
 
 test("welcome effects preserve configured SEO title", () => {

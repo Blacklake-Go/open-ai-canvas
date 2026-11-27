@@ -6,17 +6,19 @@ import { prioritizeModuleLoad, withModuleLoadPriority, type ModuleLoadPriority }
 // 即使模块已经预取，lazy 仍会拿到一个新的 Promise 挂起一次，Suspense 提示随即替换掉整块内容，
 // 看起来像白屏一下。这里记住已解析的组件：预取过或打开过的页面直接同步渲染，不再经过 Suspense。
 
-export type PreloadableComponent<P extends object> = ComponentType<P> & { preload: () => Promise<unknown> };
+type PreloadOptions = Pick<ModuleLoadPriority, "useNativePreloads">;
+
+export type PreloadableComponent<P extends object> = ComponentType<P> & { preload: (options?: PreloadOptions) => Promise<unknown> };
 
 export function preloadableLazy<P extends object>(factory: () => Promise<{ default: ComponentType<P> }>): PreloadableComponent<P> {
     let loaded: ComponentType<P> | undefined;
     let pending: { priority: ModuleLoadPriority; promise: Promise<{ default: ComponentType<P> }> } | undefined;
-    const load = (foreground: boolean) => {
+    const load = (foreground: boolean, options?: PreloadOptions) => {
         if (pending) {
             if (foreground) prioritizeModuleLoad(pending.priority);
             return pending.promise;
         }
-        const priority = { foreground };
+        const priority = { foreground, ...options };
         const promise = withModuleLoadPriority(priority, factory).then(
             (module) => {
                 loaded = module.default;
@@ -42,7 +44,7 @@ export function preloadableLazy<P extends object>(factory: () => Promise<{ defau
     function PreloadableEntry(props: P) {
         return createElement(PageResourceBoundary, { onRetry: retry, children: createElement(LoadPage, props) });
     }
-    return Object.assign(PreloadableEntry, { preload: () => load(false) });
+    return Object.assign(PreloadableEntry, { preload: (options?: PreloadOptions) => load(false, options) });
 }
 
 /** 浏览器空闲时逐个预取，避免一次并发大量请求拖慢当前页面；失败的页面在真正打开时再按需加载。 */

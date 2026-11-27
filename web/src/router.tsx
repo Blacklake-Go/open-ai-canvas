@@ -107,8 +107,9 @@ const UserLayout = preloadableLazy(() => import("@/layouts/user-layout"));
 export function preloadInitialHome(pathname: string) {
     if (!isGuestWorkspacePath(pathname)) return;
     // Load the workspace and composer while the session is restored.
-    void UserLayout.preload().catch(() => undefined);
-    void CreatePage.preload().catch(() => undefined);
+    const startup = { useNativePreloads: true };
+    void UserLayout.preload(startup).catch(() => undefined);
+    void CreatePage.preload(startup).catch(() => undefined);
 }
 
 const RequirePlugin = lazy(() => import("@/components/auth/require-plugin").then((module) => ({ default: module.RequirePlugin })));

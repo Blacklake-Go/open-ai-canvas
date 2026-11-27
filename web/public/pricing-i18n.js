@@ -459,23 +459,18 @@
         }
         document.querySelector('meta[name="description"]')?.setAttribute("content", translate("Supdance 积分套餐、云存储与 AI 模型公开价目表。", index));
     }
-    function setTheme(theme) {
+    function setTheme(theme, persist = true) {
         root.dataset.theme = theme;
         themeButton.innerHTML = theme === "dark" ? sunIcon : moonIcon;
         themeButton.setAttribute("aria-pressed", String(theme === "dark"));
+        if (!persist) return;
         try {
             localStorage.setItem("yingce:theme_store", JSON.stringify({ state: { theme }, version: 0 }));
         } catch (_) {
             /* Keep the current theme when preferences cannot be persisted. */
         }
     }
-    let storedTheme;
-    try {
-        storedTheme = JSON.parse(localStorage.getItem("yingce:theme_store") || "null")?.state?.theme;
-    } catch (_) {
-        storedTheme = null;
-    }
-    setTheme(storedTheme === "dark" ? "dark" : "light");
+    setTheme(root.dataset.theme, false);
     const params = new URLSearchParams(location.search);
     const requested = params.get("lang");
     let savedLocale;

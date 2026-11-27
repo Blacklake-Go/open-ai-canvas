@@ -23,6 +23,12 @@
     "baseCommit": "259e7e3fba0b6f70ac3cfd65941c3ca345d60249"
   },
   "coupledUpstreamFiles": [
+    "web/build/startup-chunks.ts",
+    "web/src/main.tsx",
+    "web/src/lib/module-preload.ts",
+    "web/src/lib/preloadable-lazy.ts",
+    "web/src/stores/use-theme-store.ts",
+    "web/src/stores/use-appearance-store.ts",
     "Dockerfile",
     "web/src/components/channel-headers-editor.tsx",
     "web/src/components/canvas/canvas-create-menu.tsx",

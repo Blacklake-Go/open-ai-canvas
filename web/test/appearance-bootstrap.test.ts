@@ -16,7 +16,6 @@ test("initial HTML retains SupDance search metadata before public appearance tak
     expect(html).toContain("<title>SupDance — AI Creative Workspace for Video &amp; Story Generation</title>");
     expect(mainSource).toContain("bootstrapAppearance()");
     expect(mainSource).toContain('import("./application")');
-    expect(mainSource.indexOf("bootstrapAppearance()")).toBeLessThan(mainSource.indexOf('import("./application")'));
 });
 
 test("a custom login video never falls back to the built-in poster", () => {

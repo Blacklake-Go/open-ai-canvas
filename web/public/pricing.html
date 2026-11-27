@@ -6,6 +6,12 @@
         <link rel="icon" href="/supdance-mark.png" type="image/png" />
         <title>Pricing · Supdance</title>
         <meta name="description" content="Public price list for Supdance credits plans, cloud storage, and AI models." />
+        <script>
+            try {
+                const stored = JSON.parse(localStorage.getItem("yingce:theme_store") || "null");
+                if (stored?.state?.theme === "light") document.documentElement.dataset.theme = "light";
+            } catch {}
+        </script>
         <style>
             :root,
             html[data-theme="dark"] {

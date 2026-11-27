@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="en" translate="no" class="font-sans">
+<html lang="en" translate="no" class="font-sans dark">
     <head>
         <meta charset="UTF-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -113,10 +113,9 @@
         <script>
             try {
                 var s = JSON.parse(localStorage.getItem("yingce:theme_store") || "{}");
-                var t = s.state && s.state.theme === "dark" ? "dark" : "light";
-                document.documentElement.classList.toggle("dark", t === "dark");
-                document.documentElement.style.colorScheme = t;
+                document.documentElement.classList.toggle("dark", s?.state?.theme !== "light");
             } catch (e) {}
+            document.documentElement.style.colorScheme = document.documentElement.classList.contains("dark") ? "dark" : "light";
         </script>
     </head>
     <body class="bg-background text-foreground antialiased">

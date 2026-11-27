@@ -1,5 +1,13 @@
 # SupDance Canvas — 生产部署规范与在线更新防护 (DEPLOYMENT.md)
 
+## 官网冷启动与深色主题发布
+
+2026-11-27 在 `www.supdance.com` 发布静态更新，入口为 `home-204a38f5ac9b-index-BMDGD-qe.js`。以正在服务的资源图为基线，保留独立发布的注册推广和价目表改动。更新后的模块及其引用使用新文件名，HTML 入口通过同文件系统内的原子改名切换。
+
+第一次 Web 容器切换因全量复制超时，公网短暂返回 502。恢复脚本通过 `compose.www-home-recovery.yml` 直接启动现有 Web 镜像内的 Nginx，随后从已恢复的站点原子发布。维护用 Compose 配置解析得到的 `CANVAS_WEB_RELEASE_PATH` 指向 `www-home-dark-perf-20261127-static`。恢复运行的容器沿用临时覆盖编排，后续常规重建应使用现有部署文档的 Compose 文件和新指针。原子切换前的 HTML 快照存于 `backups/www-home-dark-perf-20261127/pre-atomic-rc7`，需要回滚时恢复两个入口并核对发布指针。
+
+线上 Chrome 三次桌面冷启动的中位数从 9.82 秒降至 5.30 秒（最大内容绘制），同期页面资源传输量从 7.57 MB 降至 3.94 MB。移动视口一次冷启动为 4.74 秒。线上验收覆盖浏览器系统浅色下初始深色、主题切换和刷新持久化、价目表与应用共享主题、主题旧值损坏回退，以及中文登录页旧品牌角标移除和背景视频可用。
+
 ## 1. 生产环境真实架构 (`43.133.253.76`)
 
 经只读审计确认，生产环境 (`https://y.supdance.com` -> `https://one.supdance.com`) 当前采用 **Docker Compose 受管镜像 + SupDance 前端静态构建挂载** 的混合部署模式：
