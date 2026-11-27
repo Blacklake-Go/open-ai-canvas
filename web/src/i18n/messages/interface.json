@@ -12953,7 +12953,9 @@
         "managedUi.bc8dcb58": "绿植与自然光",
         "managedUi.e92cb8af": "简约居家场景",
         "managedUi.7a8eaa60": "户外阳光",
-        "managedUi.36f67811": "节日氛围布景"
+        "managedUi.36f67811": "节日氛围布景",
+        "managedUi.6a98a5db": "个人空间",
+        "managedUi.51399eb8": "团队空间"
     },
     "en-US": {
         "managedUi.1291a587": "{label} · Video",
@@ -25909,7 +25911,9 @@
         "managedUi.bc8dcb58": "Plants and natural light",
         "managedUi.e92cb8af": "Minimalist home setting",
         "managedUi.7a8eaa60": "Outdoor sunlight",
-        "managedUi.36f67811": "Festive setting"
+        "managedUi.36f67811": "Festive setting",
+        "managedUi.6a98a5db": "Personal space",
+        "managedUi.51399eb8": "Team space"
     },
     "fr-FR": {
         "managedUi.1291a587": "{label} · Vidéo",
@@ -38865,7 +38869,9 @@
         "managedUi.bc8dcb58": "Plantes et lumière naturelle",
         "managedUi.e92cb8af": "Intérieur minimaliste",
         "managedUi.7a8eaa60": "Soleil en extérieur",
-        "managedUi.36f67811": "Décor festif"
+        "managedUi.36f67811": "Décor festif",
+        "managedUi.6a98a5db": "Espace personnel",
+        "managedUi.51399eb8": "Espace d’équipe"
     },
     "de-DE": {
         "managedUi.1291a587": "{label} · Video",
@@ -51821,7 +51827,9 @@
         "managedUi.bc8dcb58": "Pflanzen und natürliches Licht",
         "managedUi.e92cb8af": "Minimalistisches Wohnambiente",
         "managedUi.7a8eaa60": "Sonnenlicht im Freien",
-        "managedUi.36f67811": "Festliche Kulisse"
+        "managedUi.36f67811": "Festliche Kulisse",
+        "managedUi.6a98a5db": "Persönlicher Bereich",
+        "managedUi.51399eb8": "Team-Bereich"
     },
     "zh-TW": {
         "managedUi.1291a587": "{label} · 影片",
@@ -64777,7 +64785,9 @@
         "managedUi.bc8dcb58": "綠植與自然光",
         "managedUi.e92cb8af": "簡約居家場景",
         "managedUi.7a8eaa60": "戶外陽光",
-        "managedUi.36f67811": "節日氛圍布景"
+        "managedUi.36f67811": "節日氛圍布景",
+        "managedUi.6a98a5db": "個人空間",
+        "managedUi.51399eb8": "團隊空間"
     },
     "es-ES": {
         "managedUi.1291a587": "{label} · Vídeo",
@@ -77733,7 +77743,9 @@
         "managedUi.bc8dcb58": "Plantas y luz natural",
         "managedUi.e92cb8af": "Interior minimalista",
         "managedUi.7a8eaa60": "Luz solar al aire libre",
-        "managedUi.36f67811": "Escena festiva"
+        "managedUi.36f67811": "Escena festiva",
+        "managedUi.6a98a5db": "Espacio personal",
+        "managedUi.51399eb8": "Espacio de equipo"
     },
     "ja-JP": {
         "managedUi.1291a587": "{label} · 動画",
@@ -90689,7 +90701,9 @@
         "managedUi.bc8dcb58": "観葉植物と自然光",
         "managedUi.e92cb8af": "シンプルな室内",
         "managedUi.7a8eaa60": "屋外の日差し",
-        "managedUi.36f67811": "お祝いの装飾"
+        "managedUi.36f67811": "お祝いの装飾",
+        "managedUi.6a98a5db": "個人スペース",
+        "managedUi.51399eb8": "チームスペース"
     },
     "ko-KR": {
         "managedUi.1291a587": "{label} · 동영상",
@@ -103645,6 +103659,8 @@
         "managedUi.bc8dcb58": "식물과 자연광",
         "managedUi.e92cb8af": "미니멀한 실내",
         "managedUi.7a8eaa60": "야외 햇빛",
-        "managedUi.36f67811": "축제 분위기 연출"
+        "managedUi.36f67811": "축제 분위기 연출",
+        "managedUi.6a98a5db": "개인 공간",
+        "managedUi.51399eb8": "팀 공간"
     }
 }

@@ -2,6 +2,7 @@ import { useQuery } from "@tanstack/react-query";
 import { ChevronsUpDown, UserRound, UsersRound } from "lucide-react";
 import { useLocation } from "react-router";
 import { useSpaceCreditOverview } from "@/hooks/use-space-credit-overview";
+import { interfaceText } from "@/i18n/interface-text";
 import { teamIdFromPath, teamKeys } from "@/lib/team-query-keys";
 import { listTeams } from "@/services/api/teams";
 import { useUserStore } from "@/stores/use-user-store";
@@ -15,7 +16,7 @@ export function TeamSpaceSwitcher({ collapsed, onNavigate }: { collapsed: boolea
     const overview = useSpaceCreditOverview();
     const list = useQuery({ queryKey: teamKeys.list(userId), queryFn: ({ signal }) => listTeams(signal), enabled: Boolean(userId && teamId) && !creditsEnabled, staleTime: 15_000 });
     const team = creditsEnabled ? !overview.isError && overview.data?.spaces.find((space) => space.teamId === teamId) : !list.isError && list.data?.find((space) => space.id === teamId);
-    const label = teamId ? (team && team.name) || "团队空间" : "个人空间";
+    const label = teamId ? (team && team.name) || interfaceText("团队空间") : interfaceText("个人空间");
     const Icon = teamId ? UsersRound : UserRound;
     return (
         <button

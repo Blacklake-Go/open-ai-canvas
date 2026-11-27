@@ -1,3 +1,4 @@
+import { interfaceText } from "@/i18n/interface-text";
 import { useEffect, useRef, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Alert, Button, Input, type InputRef } from "antd";
@@ -29,7 +30,7 @@ function SpaceRows({ spaces, personalBalance, filter = "", activeId, onChoose }:
         group.push(space);
         children.set(space.parentId, group);
     }
-    const rows: SpaceRow[] = [{ id: "", name: "个人空间", availableMicrocredits: personalBalance }, ...spaces.filter((space) => !space.parentId).flatMap((root) => [root, ...(children.get(root.id) || [])])];
+    const rows: SpaceRow[] = [{ id: "", name: interfaceText("个人空间"), availableMicrocredits: personalBalance }, ...spaces.filter((space) => !space.parentId).flatMap((root) => [root, ...(children.get(root.id) || [])])];
     const visible = rows.filter((space) => `${space.parentName || ""} ${space.name}`.toLocaleLowerCase().includes(needle));
     if (!visible.length)
         return (
