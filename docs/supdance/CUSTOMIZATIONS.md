@@ -46,7 +46,8 @@ Waffo Pancake 的充值入口默认并排显示微信支付和支付宝图标。
 - 定价页读取 HTML 页面后台保存的社媒条目及顺序，与共用页脚复用站内品牌图标。后台为已有配置补齐 Threads、Discord、Reddit 编辑字段，复用原页脚保存接口。
 - 后台样式隔离于 `html-page-manager/admin/`，复用 `--admin-*`、AdminModal 和 AdminSwitch，补齐响应式、键盘操作、加载失败与未保存提醒及六语种词条。
 - iframe 保持脚本可用但移除同源权限，使用临时存储支持模板主题控件；格式化不改写原始脚本与预格式化空白。保存页面不会覆盖未保存页脚。
-- 原有组合根 `backend/internal/app/supdance_html_page_manager_plugin.go` 增加批次保存强校验，无新增宿主挂载点和数据库迁移。操作与回退见 [HTML 页面管理](HTML_PAGE_MANAGER.md)。
+- 原有组合根 `backend/internal/app/supdance_html_page_manager_plugin.go` 增加批次保存强校验，显式保存空列表时保留删除结果。操作与回退见 [HTML 页面管理](HTML_PAGE_MANAGER.md)。
+- 页面管理使用后台统一页头与独立的内容滚动区。宿主 `admin-chrome.css` 允许指针穿过没有操作控件的提示，内嵌邮件日志使用独立页码 `logPage`。SupDance 邮件使用页脚 PNG 的不可变快照。无需数据库迁移。见 [邮件中心与页面管理](EMAIL_CENTER_LANGUAGES.md)。
 
 
 

@@ -25,6 +25,11 @@ description: 当前项目已实现功能的手工验证清单与未确认边界
 
 - [ ] 在桌面和手机上打开未登录首页，确认主区域保留原有创作模式，侧栏随后台开关显示工具，并确认弹窗与独立页面两种登录模式均能进入所选工具。
 
+## 二开插件页面管理
+
+- [ ] 主站发布后，在后台复核 HTML 编辑保存、站点页脚滚动、邮件日志翻页及刷新深链接。
+- [ ] 在部署允许的测试邮箱发送一封模板邮件，核对发送记录、真实收件和页脚 Logo 的显示。
+
 ## 图片工作台主链路补齐（本地候选）
 
 创作页图片模式提交后跳转到 `/workspace/image/:sessionId` 独立工作台。本轮补齐了主链路回归：云端恢复的成功结果按 `resultStorageKeys` 重建展示（不再误判失败）、生成结果经幂等物化自动入素材库（删除假数据保存）、网络中断标记 `syncInterrupted` 并自动重连（不诱导重复扣费）、未确认失败只提供「重新获取结果」、参数面板与报价接模型能力合同和服务端 `quoteModel`、删除/重命名失败不再吞错、个人路由补 `imageWorkbenchEnabled` 门禁、团队空间不再暴露图片工作台路由。创作历史 settings 前后端 16 键对齐（含 `imageResolution`），`instrumental`/`transparentBackground` 布尔往返保持类型；MiniMax Music 协议补 `detachedPolling`，风格/语言并入 prompt（上游无独立 style 字段），包版本 1.1.3。全部新增文案接入八语词条，`i18n-scan`/`i18n-sync-backend` 门禁通过。

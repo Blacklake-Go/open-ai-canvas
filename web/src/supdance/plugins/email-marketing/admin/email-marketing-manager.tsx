@@ -4,7 +4,7 @@ import { Link, useBlocker, useSearchParams } from "react-router";
 import { useI18n } from "@/supdance/plugins/i18n";
 import { AdminPageFrame } from "@/pages/admin/components/admin-shell";
 import EmailSettingsPanel from "@/pages/admin/components/email-settings-panel";
-import EmailLogsPage from "@/pages/admin/email-logs/email-logs-page";
+import { EmailLogs } from "@/pages/admin/email-logs/email-logs-page";
 import { editEmailTemplate, fetchEmailCenter, fetchEmailBrand, initializeEmailCenter, previewEmailTemplate, uploadEmailAsset } from "../api";
 import type { EmailBlock, EmailCenterOverview, EmailDocument, EmailPreview } from "../types";
 import "./email-center.css";
@@ -486,7 +486,7 @@ export default function EmailMarketingManager() {
                             {section === "logs" && (
                                 <>
                                     <EmailQueuePanel />
-                                    <EmailLogsPage />
+                                    <EmailLogs embedded />
                                 </>
                             )}
                             {section === "versions" && (

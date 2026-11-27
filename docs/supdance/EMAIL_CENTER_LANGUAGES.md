@@ -4,7 +4,7 @@
 
 ## 本轮需求与结构
 
-- 邮件读取正式站点外观中的品牌和 Logo，不使用粉色方块等替代图形；站点换 Logo 后，新的预览与发送读取新资源。
+- 邮件读取正式站点外观中的品牌。SupDance 品牌使用与站点页脚相同的 `supdance-footer-logo.png`，邮件模板按原比例显示，并通过内容哈希地址公开图片。其他品牌继续读取各自的外观 Logo。
 - 用户持久化语言，账户邮件与获明确订阅的营销邮件按收件人语言发送。
 - 简体中文 `zh-CN`、英语 `en-US`、繁体中文 `zh-TW`、西班牙语 `es-ES`、法语 `fr-FR`、德语 `de-DE`、日语 `ja-JP`、韩语 `ko-KR`，与站点原生语言列表一致。
 - 原 `supdance-compact-model-picker` 插件保留 ID，显示名称改为「页面管理」，统一承载模型展示、HTML 页面与邮件中心三个分区。原有模块和权限继续复用。
@@ -65,7 +65,7 @@
 | `/admin/plugins/html-pages`、`/admin/html-pages` | `page=html` |
 | `/admin/plugins/email-marketing`、`/admin/email-center` | `page=email` |
 
-邮件 `section`、`emailLocale` 等查询参数继续保留。SMTP 设置页与发送记录原地址仍可访问；插件列表和后台导航指向统一入口。页面内部切换沿用路由拦截，未保存内容由原编辑器确认。
+邮件 `section`、`emailLocale` 等查询参数继续保留。内嵌发送记录使用 `logPage`，独立发送记录页继续使用 `page`。SMTP 设置页与发送记录原地址仍可访问，插件列表和后台导航指向统一入口。页面内部切换沿用路由拦截，未保存内容由原编辑器确认。
 
 ## API 与增量迁移
 

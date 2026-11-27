@@ -228,6 +228,7 @@ export const SUPDANCE_UPSTREAM_PATCH_REGISTRY: readonly UpstreamPatchRecord[] = 
             "web/src/pages/admin/components/admin-shell.tsx",
             "web/src/pages/admin/plugins/plugins-page.tsx",
             "web/src/pages/admin/email-logs/email-logs-page.tsx",
+            "web/src/pages/admin/theme/admin-chrome.css",
             "web/src/services/api/email.ts",
             "nginx.conf",
         ],

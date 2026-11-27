@@ -654,6 +654,9 @@ func (s *Service) AdminSaveHtmlPages(actor *model.User, pages []HtmlPageItem) (*
 	if s.repo == nil {
 		return nil, errors.New("存储不可用")
 	}
+	if pages == nil {
+		return nil, kernel.BadAuthRequest("请提供 HTML 页面列表")
+	}
 	if err := validateHtmlPages(pages); err != nil {
 		return nil, err
 	}
@@ -712,7 +715,7 @@ func (s *Service) readStoredPages() ([]HtmlPageItem, error) {
 	if err := json.Unmarshal([]byte(setting.ValueJSON), &payload); err != nil {
 		return defaultBuiltinHtmlPages(), nil
 	}
-	if len(payload.Pages) == 0 {
+	if payload.Pages == nil {
 		return defaultBuiltinHtmlPages(), nil
 	}
 	return payload.Pages, nil

@@ -60,6 +60,7 @@
     border-radius: var(--admin-radius-lg);
     background: var(--admin-surface);
     display: grid;
+    grid-template-columns: minmax(0, 1fr);
     gap: 12px;
     min-width: 0;
 }
@@ -103,7 +104,8 @@
     height: auto;
     max-height: 80px;
     object-fit: contain;
-    background: var(--admin-surface);
+    color-scheme: light;
+    background: Canvas;
     padding: 8px;
 }
 .email-center dl {
@@ -117,12 +119,11 @@
 .email-center dt {
     color: var(--admin-text-secondary);
 }
-.email-center table {
+.email-center .email-center-panel > table {
     width: 100%;
     border-collapse: collapse;
 }
-.email-center th,
-.email-center td {
+.email-center .email-center-panel > table :is(th, td) {
     text-align: start;
     padding: 12px;
     border-bottom: 1px solid var(--admin-border);

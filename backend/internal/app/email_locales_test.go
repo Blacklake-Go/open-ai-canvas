@@ -101,7 +101,7 @@ func TestEmailCenterLocaleVersionsAndRecipientPreference(t *testing.T) {
 	}
 }
 
-func TestEmailCenterLogoFollowsActualAppearanceAndKeepsOldSnapshot(t *testing.T) {
+func TestEmailCenterCustomBrandLogoFollowsAppearanceAndKeepsOldSnapshot(t *testing.T) {
 	s, db, actor := emailCenterFixture(t)
 	if err := db.AutoMigrate(&model.Resource{}); err != nil {
 		t.Fatal(err)
@@ -126,7 +126,7 @@ func TestEmailCenterLogoFollowsActualAppearanceAndKeepsOldSnapshot(t *testing.T)
 			t.Fatal(err)
 		}
 		setting := defaultAppearanceSetting()
-		setting.BrandName = "SupDance"
+		setting.BrandName = "Custom Studio"
 		setting.LogoResourceID = id
 		if _, err := s.UpdateAppearance(actor, setting); err != nil {
 			t.Fatal(err)
@@ -152,6 +152,41 @@ func TestEmailCenterLogoFollowsActualAppearanceAndKeepsOldSnapshot(t *testing.T)
 	old := brands[0].LogoURL[strings.LastIndex(brands[0].LogoURL, "/")+1:]
 	if _, err := s.EmailCenterBrandAsset(old); err != nil {
 		t.Fatal("old mail image was destroyed")
+	}
+}
+
+func TestEmailCenterSupDanceUsesFooterArtwork(t *testing.T) {
+	s, _, actor := emailCenterFixture(t)
+	setting := defaultAppearanceSetting()
+	setting.BrandName = "supdance"
+	if _, err := s.UpdateAppearance(actor, setting); err != nil {
+		t.Fatal(err)
+	}
+	_, source, _, _ := runtime.Caller(0)
+	artwork, err := os.ReadFile(filepath.Join(filepath.Dir(source), "../../../web/public/supdance-footer-logo.png"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	brand, err := s.AdminEmailBrand(actor)
+	if err != nil {
+		t.Fatal(err)
+	}
+	hash := sha256.Sum256(artwork)
+	id := hex.EncodeToString(hash[:])
+	asset, err := s.EmailCenterBrandAsset(id)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if brand.LogoURL != "https://mail.example.com/api/public/email-center/brand/"+id || asset.ContentType != "image/png" || !bytes.Equal(asset.Data, artwork) {
+		t.Fatal("SupDance mail brand did not use the site footer PNG")
+	}
+	event, ok := emailcenter.LocalizedEvent("test", emailcenter.Locale)
+	if !ok {
+		t.Fatal("SMTP test template is missing")
+	}
+	preview, err := s.PreviewEmailCenter(actor, event.Key, EmailCenterEditRequest{Locale: event.Locale, Document: emailcenter.DefaultDocument(event)})
+	if err != nil || !strings.Contains(preview.HTML, `src="`+brand.LogoURL+`"`) {
+		t.Fatalf("SMTP test template did not render the footer logo: %v", err)
 	}
 }
 

@@ -1,7 +1,6 @@
 import { Alert, App, Button, Spin, Tag, Tooltip } from "antd";
 import { AdminSwitch as Switch } from "@/pages/admin/ui/controls";
 import {
-    ArrowLeft,
     Code2,
     Columns2,
     Copy,
@@ -33,6 +32,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { useI18n } from "@/supdance/plugins/i18n";
 import { interfaceText } from "@/i18n/interface-text";
 import { useBlocker, useNavigate } from "react-router";
+import { AdminPageFrame } from "@/pages/admin/components/admin-shell";
 import { AdminModal as Modal } from "@/pages/admin/ui/overlays";
 import "./html-page-manager.css";
 import { buildPreviewDocument } from "./preview-document";
@@ -385,54 +385,38 @@ export default function HtmlPageManager() {
     // 视口尺寸计算
     const viewportWidthStyle = deviceViewport === "mobile" ? "375px" : deviceViewport === "tablet" ? "768px" : "100%";
 
-    return (
-        <div className="plugin-scope-html-admin flex min-h-0 min-w-0 w-full flex-1 flex-col overflow-hidden" aria-busy={loading || saving || savingFooter}>
-            {/* 顶栏 Header */}
+    const workspace = (
+        <div className="plugin-scope-html-admin flex min-h-0 min-w-0 w-full flex-1 flex-col overflow-hidden" data-plugin-scope="supdance-html-page-manager" aria-busy={loading || saving || savingFooter}>
             <fieldset className="plugin-html-actions" disabled={loading || !!loadError || saving || savingFooter}>
-                <header className="plugin-html-header flex shrink-0 items-center justify-between border-b border-[var(--admin-border)] px-4 bg-[var(--admin-surface)]">
-                    <div className="flex items-center gap-3">
+                <div className="plugin-html-header flex shrink-0 items-center justify-between border-b border-[var(--admin-border)] px-4 bg-[var(--admin-surface)]">
+                    <div className="flex items-center gap-1 rounded-lg border border-[var(--admin-border)] bg-[var(--admin-surface-2)] p-1">
                         <button
                             type="button"
-                            onClick={() => navigate("/admin/plugins")}
-                            className="inline-flex items-center gap-1.5 rounded-lg border border-[var(--admin-border)] px-2.5 py-1 text-xs text-[var(--admin-text-secondary)] hover:border-[var(--admin-border)] hover:text-[var(--admin-text)] transition-colors"
-                            title={t("admin.html.back")}
+                            aria-pressed={activeSection === "editor"}
+                            onClick={() => setActiveSection("editor")}
+                            className={`flex items-center gap-1.5 rounded px-2.5 py-1 text-xs transition-colors ${activeSection === "editor" ? "bg-[var(--admin-surface-2)] text-[var(--admin-text)] border border-[var(--admin-border)] font-medium" : "text-[var(--admin-text-secondary)] hover:text-[var(--admin-text)]"}`}
                         >
-                            <ArrowLeft className="size-3.5" />
-                            {t("admin.html.plugins")}
+                            <Code2 className="size-3.5" />
+                            {t("admin.html.editor")}
                         </button>
-                        <div className="h-4 w-px bg-[var(--admin-surface-2)]" />
-                        <div className="flex items-center gap-2">
-                            <FileCode className="size-4 text-[var(--admin-text)]" />
-                            <h1 className="text-sm font-semibold tracking-tight text-[var(--admin-text)]">{t("admin.html.title")}</h1>
-                        </div>
-
-                        {/* 模块切换导航 */}
-                        <div className="ml-2 flex items-center gap-1 rounded-lg border border-[var(--admin-border)] bg-[var(--admin-surface-2)] p-1">
-                            <button
-                                type="button"
-                                onClick={() => setActiveSection("editor")}
-                                className={`flex items-center gap-1.5 rounded px-2.5 py-1 text-xs transition-colors ${activeSection === "editor" ? "bg-[var(--admin-surface-2)] text-[var(--admin-text)] border border-[var(--admin-border)] font-medium" : "text-[var(--admin-text-secondary)] hover:text-[var(--admin-text)]"}`}
-                            >
-                                <Code2 className="size-3.5" />
-                                {t("admin.html.editor")}
-                            </button>
-                            <button
-                                type="button"
-                                onClick={() => setActiveSection("site-pages")}
-                                className={`flex items-center gap-1.5 rounded px-2.5 py-1 text-xs transition-colors ${activeSection === "site-pages" ? "bg-[var(--admin-surface-2)] text-[var(--admin-text)] border border-[var(--admin-border)] font-medium" : "text-[var(--admin-text-secondary)] hover:text-[var(--admin-text)]"}`}
-                            >
-                                <Globe className="size-3.5" />
-                                {t("admin.html.site_pages")}
-                            </button>
-                            <button
-                                type="button"
-                                onClick={() => setActiveSection("footer-manager")}
-                                className={`flex items-center gap-1.5 rounded px-2.5 py-1 text-xs transition-colors ${activeSection === "footer-manager" ? "bg-[var(--admin-surface-2)] text-[var(--admin-text)] border border-[var(--admin-border)] font-medium" : "text-[var(--admin-text-secondary)] hover:text-[var(--admin-text)]"}`}
-                            >
-                                <LayoutPanelTop className="size-3.5" />
-                                {t("admin.html.footer")}
-                            </button>
-                        </div>
+                        <button
+                            type="button"
+                            aria-pressed={activeSection === "site-pages"}
+                            onClick={() => setActiveSection("site-pages")}
+                            className={`flex items-center gap-1.5 rounded px-2.5 py-1 text-xs transition-colors ${activeSection === "site-pages" ? "bg-[var(--admin-surface-2)] text-[var(--admin-text)] border border-[var(--admin-border)] font-medium" : "text-[var(--admin-text-secondary)] hover:text-[var(--admin-text)]"}`}
+                        >
+                            <Globe className="size-3.5" />
+                            {t("admin.html.site_pages")}
+                        </button>
+                        <button
+                            type="button"
+                            aria-pressed={activeSection === "footer-manager"}
+                            onClick={() => setActiveSection("footer-manager")}
+                            className={`flex items-center gap-1.5 rounded px-2.5 py-1 text-xs transition-colors ${activeSection === "footer-manager" ? "bg-[var(--admin-surface-2)] text-[var(--admin-text)] border border-[var(--admin-border)] font-medium" : "text-[var(--admin-text-secondary)] hover:text-[var(--admin-text)]"}`}
+                        >
+                            <LayoutPanelTop className="size-3.5" />
+                            {t("admin.html.footer")}
+                        </button>
                     </div>
 
                     {/* 中间：仅在 HTML 编辑器模式下展示视图分栏与设备切换 */}
@@ -560,7 +544,7 @@ export default function HtmlPageManager() {
                             </Button>
                         </div>
                     )}
-                </header>
+                </div>
             </fieldset>
 
             {loading && (
@@ -1297,6 +1281,11 @@ export default function HtmlPageManager() {
                 </div>
             </Modal>
         </div>
+    );
+    return (
+        <AdminPageFrame title={t("admin.html.title")} back={{ label: t("admin.html.back"), onClick: () => navigate("/admin/plugins") }}>
+            {workspace}
+        </AdminPageFrame>
     );
 }
 

@@ -56,6 +56,7 @@
     "backend/internal/repository/email_logs.go",
     "backend/internal/model/models_email.go",
     "web/src/pages/admin/email-logs/email-logs-page.tsx",
+    "web/src/pages/admin/theme/admin-chrome.css",
     "web/src/services/api/email.ts",
     ".env.example",
     ".github/workflows/quality.yml",

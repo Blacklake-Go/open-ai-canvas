@@ -137,7 +137,10 @@ func (s *Service) emailCenterBrand() (emailcenter.Brand, error) {
 			return brand, kernel.BadAuthRequest("邮件品牌站点地址必须为 HTTPS")
 		}
 	}
-	if public.LogoConfigured {
+	var logo []byte
+	if brand.Name == "SupDance" {
+		logo = supDanceFooterMailLogo
+	} else if public.LogoConfigured {
 		slot := AppearanceAssetLogo
 		if value.LogoResourceID == "" {
 			slot = AppearanceAssetDarkLogo
@@ -147,14 +150,16 @@ func (s *Service) emailCenterBrand() (emailcenter.Brand, error) {
 			return brand, err
 		}
 		defer stream.Body.Close()
-		data, err := io.ReadAll(io.LimitReader(stream.Body, appearanceLogoMaxBytes+1))
+		logo, err = io.ReadAll(io.LimitReader(stream.Body, appearanceLogoMaxBytes+1))
 		if err != nil {
 			return brand, err
 		}
-		if len(data) > int(appearanceLogoMaxBytes) {
+		if len(logo) > int(appearanceLogoMaxBytes) {
 			return brand, kernel.BadAuthRequest("邮件 Logo 超出限制")
 		}
-		data, kind, err := normalizeMailLogo(data)
+	}
+	if logo != nil {
+		data, kind, err := normalizeMailLogo(logo)
 		if err != nil {
 			return brand, err
 		}
@@ -166,7 +171,6 @@ func (s *Service) emailCenterBrand() (emailcenter.Brand, error) {
 		if brand.SiteURL != "" {
 			brand.LogoURL = brand.SiteURL + "/api/public/email-center/brand/" + id
 		}
-		brand.Version = id + ":" + public.Revision
 	}
 	brand.Version = ""
 	payload, err := json.Marshal(brand)

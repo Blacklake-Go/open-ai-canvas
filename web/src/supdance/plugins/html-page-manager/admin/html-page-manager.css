@@ -141,19 +141,6 @@
 
     .plugin-html-header > div {
         width: 100%;
-        flex-wrap: nowrap;
-        overflow-x: auto;
-    }
-
-    .plugin-html-header > div:first-child {
-        flex-wrap: wrap;
-    }
-
-    .plugin-html-header > div:first-child > div:last-child {
-        width: 100%;
-        margin-left: 0;
-        flex-wrap: nowrap;
-        overflow-x: auto;
     }
 
     .plugin-html-header button {

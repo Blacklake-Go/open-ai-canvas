@@ -51,13 +51,18 @@ const stageLabels: Record<string, string> = {
 };
 
 export default function EmailLogsPage() {
+    return <EmailLogs />;
+}
+
+export function EmailLogs({ embedded = false }: { embedded?: boolean }) {
     const [searchParams, setSearchParams] = useSearchParams();
     const keyword = searchParams.get("keyword") || "";
     const purpose = searchParams.get("purpose") || "";
     const status = searchParams.get("status") || "";
     const from = searchParams.get("from") || "";
     const to = searchParams.get("to") || "";
-    const rawPage = Number(searchParams.get("page") || 1);
+    const pageParam = embedded ? "logPage" : "page";
+    const rawPage = Number(searchParams.get(pageParam) || 1);
     const page = Number.isSafeInteger(rawPage) && rawPage > 0 ? rawPage : 1;
     const rawSize = Number(searchParams.get("pageSize") || 20);
     const pageSize = [20, 50, 100].includes(rawSize) ? rawSize : 20;
@@ -70,8 +75,9 @@ export default function EmailLogsPage() {
 
     const update = (patch: Record<string, string | number>, replace = false) => {
         const next = new URLSearchParams(searchParams);
-        for (const [key, value] of Object.entries(patch)) {
-            if (value === "" || (key === "page" && value === 1) || (key === "pageSize" && value === 20)) next.delete(key);
+        for (const [field, value] of Object.entries(patch)) {
+            const key = field === "page" ? pageParam : field;
+            if (value === "" || (field === "page" && value === 1) || (field === "pageSize" && value === 20)) next.delete(key);
             else next.set(key, String(value));
         }
         setSearchParams(next, { replace });
@@ -146,21 +152,18 @@ export default function EmailLogsPage() {
     const stats = data?.last24h ?? {};
     const failedRecently = (stats.failed ?? 0) > 0;
 
-    return (
-        <AdminPageFrame
-            title="邮件发送记录"
-            description="每封系统邮件的投递结果，保留 90 天 · 不保存正文和验证码"
-            actions={
-                <div className="flex items-center gap-2">
-                    <Link to="/admin/settings/email">
-                        <Button>邮件服务设置</Button>
-                    </Link>
-                    <Button icon={<RefreshCw className="size-4" />} loading={loading} onClick={() => setRetry((value) => value + 1)}>
-                        刷新
-                    </Button>
-                </div>
-            }
-        >
+    const actions = (
+        <div className="flex flex-wrap items-center gap-2">
+            <Link to="/admin/settings/email">
+                <Button>邮件服务设置</Button>
+            </Link>
+            <Button icon={<RefreshCw className="size-4" />} loading={loading} onClick={() => setRetry((value) => value + 1)}>
+                刷新
+            </Button>
+        </div>
+    );
+    const content = (
+        <>
             <div className="admin-email-log-stats" aria-label="近 24 小时发送概况">
                 {(["smtp_accepted", "failed", "unknown", "skipped"] as const).map((key) => (
                     <button type="button" key={key} className="admin-email-log-stat" aria-pressed={status === key} onClick={() => update({ status: status === key ? "" : key, page: 1 })}>
@@ -231,6 +234,17 @@ export default function EmailLogsPage() {
                 footer={<PaginationBar alwaysShow current={page} pageSize={pageSize} total={data?.total ?? 0} onChange={(next, size) => update({ page: next, pageSize: size })} />}
                 table={{ rowKey: "id", dataSource: data?.logs ?? [], columns, loading, pagination: false, scroll: { x: 1300 }, size: "small" }}
             />
+        </>
+    );
+    return embedded ? (
+        <section className="email-center-panel">
+            <h2>邮件发送记录</h2>
+            {actions}
+            {content}
+        </section>
+    ) : (
+        <AdminPageFrame title="邮件发送记录" description="每封系统邮件的投递结果，保留 90 天 · 不保存正文和验证码" actions={actions}>
+            {content}
         </AdminPageFrame>
     );
 }

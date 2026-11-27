@@ -1,19 +1,10 @@
 .page-management {
     display: flex;
     flex-direction: column;
-    height: 100%;
+    flex: 1;
+    min-width: 0;
     min-height: 0;
     color: var(--admin-text);
-}
-.page-management-navigation {
-    flex: none;
-    padding-inline: var(--admin-space-4, 16px);
-    border-bottom: 1px solid var(--admin-border);
-    background: var(--admin-surface);
-}
-.page-management-navigation > strong {
-    display: block;
-    padding-top: var(--admin-space-3, 12px);
 }
 .page-management > .page-management-tabs {
     flex: 1;
@@ -27,10 +18,12 @@
 .page-management > .page-management-tabs > .ant-tabs-nav .ant-tabs-tab {
     min-height: 44px;
 }
-.page-management > .page-management-tabs > .ant-tabs-content-holder {
+.page-management > .page-management-tabs > .ant-tabs-body-holder {
     min-height: 0;
 }
-.page-management > .page-management-tabs > .ant-tabs-content-holder > .ant-tabs-content,
-.page-management > .page-management-tabs > .ant-tabs-content-holder > .ant-tabs-content > .ant-tabs-tabpane {
+.page-management > .page-management-tabs .page-management-tab-body,
+.page-management > .page-management-tabs .page-management-tab-panel {
     height: 100%;
+    min-width: 0;
+    min-height: 0;
 }

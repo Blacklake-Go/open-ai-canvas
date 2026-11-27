@@ -80,6 +80,13 @@ func TestHtmlPageManagerPersistenceAndAuthorization(t *testing.T) {
 	if overview.SiteFooter.BrandName != footer.BrandName || overview.Pages[0].HTML != page.HTML {
 		t.Fatal("footer save must preserve pages")
 	}
+	overview, err = svc.AdminSaveHtmlPages(admin, []HtmlPageItem{})
+	if err != nil || overview.Pages == nil || len(overview.Pages) != 0 {
+		t.Fatalf("saving an empty list must not restore default pages: %v, %v", overview, err)
+	}
+	if _, err := svc.PublicHtmlPageBySlug(page.Slug); err == nil {
+		t.Fatal("removed published page is still public")
+	}
 	if _, err := svc.AdminResetHtmlPages(admin); err != nil {
 		t.Fatal(err)
 	}

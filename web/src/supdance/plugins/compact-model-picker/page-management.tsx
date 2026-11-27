@@ -18,11 +18,10 @@ export default function PageManagement() {
     const section = selected === "html" || selected === "email" || selected === "inspirations" || selected === "sidebar-dock" ? selected : "models";
     return (
         <div className="page-management" data-plugin-scope="supdance-compact-model-picker">
-            <div className="page-management-navigation">
-                <strong>{t("page.management.title")}</strong>
-            </div>
             <Tabs
                 className="page-management-tabs"
+                classNames={{ body: "page-management-tab-body", content: "page-management-tab-panel" }}
+                aria-label={t("page.management.title")}
                 destroyOnHidden
                 activeKey={section}
                 items={[

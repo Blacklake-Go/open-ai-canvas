@@ -364,6 +364,10 @@
     overflow: auto;
 }
 
+body.admin-overlays .ant-message-notice:not(:has(:is(a[href], button))) {
+    pointer-events: none;
+}
+
 [data-admin-root] .admin-page-header {
     min-height: 48px;
     gap: 12px !important;

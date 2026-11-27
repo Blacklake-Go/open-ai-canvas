@@ -2,12 +2,18 @@ package app
 
 import (
 	"bytes"
+	_ "embed"
 	_ "golang.org/x/image/webp"
 	"image"
 	"image/png"
 	"net/http"
 	"yingce/backend/internal/kernel"
 )
+
+// Keep the embedded artwork byte-for-byte with web/public/supdance-footer-logo.png.
+//
+//go:embed supdance-footer-logo.png
+var supDanceFooterMailLogo []byte
 
 // The site permits WebP. Encode that same graphic as PNG for mail, retaining
 // dimensions, aspect ratio and transparency rather than substituting a mark.
