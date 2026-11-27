@@ -79,11 +79,11 @@ export function SceneSection({
     onChoose: (tool: WorkbenchTool | null) => void;
     onRetry: () => void;
 }) {
-    const subtitle = tool ? workbenchToolSubtitle(tool) : kind === "image" ? "不套用场景模板，直接描述想要的商品画面" : "不套用场景模板，直接描述镜头里发生什么";
+    const subtitle = tool ? interfaceText(workbenchToolSubtitle(tool)) : kind === "image" ? interfaceText("不套用场景模板，直接描述想要的商品画面") : interfaceText("不套用场景模板，直接描述镜头里发生什么");
     return (
         <ComposerSection
             title="出品场景"
-            hint={tool ? undefined : "自动套用模板与素材要求"}
+            hint={tool ? undefined : interfaceText("自动套用模板与素材要求")}
             aside={
                 <Button size="small" type="text" className="wb-text-action" onClick={onOpenLibrary}>
                     全部场景
@@ -94,7 +94,7 @@ export function SceneSection({
             <button type="button" className="wb-scene-current" onClick={onOpenLibrary} aria-haspopup="dialog" title={tool ? `${tool.name}\n${subtitle}` : "选择出品场景"}>
                 <SceneGlyph tool={tool} kind={kind} size="lg" />
                 <span className="wb-scene-current-copy">
-                    <strong>{tool?.name || "自由创作"}</strong>
+                    <strong>{tool ? interfaceText(tool.name) : interfaceText("自由创作")}</strong>
                     <small>{subtitle}</small>
                 </span>
                 <span className="wb-scene-current-switch">更换</span>
@@ -116,7 +116,7 @@ export function SceneSection({
                 <div className="wb-scene-chips" role="group" aria-label="常用场景">
                     {quickTools.map((item) => (
                         <button key={item.id} type="button" className="wb-chip" aria-pressed={item.id === tool?.id} title={workbenchToolSubtitle(item) || item.name} onClick={() => onChoose(item.id === tool?.id ? null : item)}>
-                            {item.name}
+                            {interfaceText(item.name)}
                         </button>
                     ))}
                 </div>
@@ -387,7 +387,7 @@ export function PromptSection({
                     {tool.presets.slice(0, 5).map((item) => (
                         <button key={item.id} type="button" className="wb-preset" aria-pressed={preset?.id === item.id} title={item.summary || item.name} onClick={() => onChoosePreset(item)}>
                             {preset?.id === item.id ? <Check /> : null}
-                            <span>{item.name}</span>
+                            <span>{interfaceText(item.name)}</span>
                         </button>
                     ))}
                 </div>
@@ -416,7 +416,7 @@ export function PromptSection({
                             return (
                                 <button key={phrase} type="button" className="wb-chip is-soft" aria-pressed={active} onClick={() => onTogglePhrase(phrase)}>
                                     {active ? <Check /> : null}
-                                    {phrase}
+                                    {interfaceText(phrase)}
                                 </button>
                             );
                         })}
@@ -496,10 +496,9 @@ export function SwitchRow({ items }: { items: Array<{ key: string; label: string
 }
 
 /** 生成数量沿用全站“[1][2][3][4▲▼]”四格规范：前三格直选，第四格为可输入的微调框。 */
-export function CountStepper({ kind, value, max, onChange }: { kind: WorkbenchKind; value: number; max: number; onChange: (value: number) => void }) {
+export function CountStepper({ value, max, onChange }: { value: number; max: number; onChange: (value: number) => void }) {
     const limit = Math.max(1, max);
     const current = Math.min(limit, Math.max(1, Math.floor(value) || 1));
-    const unit = kind === "image" ? "张" : "条";
     const stepperActive = current >= 4;
     const [draft, setDraft] = useState(String(Math.max(4, current)));
     useEffect(() => {
@@ -512,7 +511,7 @@ export function CountStepper({ kind, value, max, onChange }: { kind: WorkbenchKi
     };
     const base = stepperActive ? current : Number(draft) || 4;
     return (
-        <div className="wb-count" role="group" aria-label={`生成数量，最多 ${limit} ${unit}`}>
+        <div className="wb-count" role="group" aria-label={interfaceText("生成数量（最多 {limit}）", { limit })}>
             {Array.from({ length: Math.min(3, limit) }, (_, index) => index + 1).map((item) => (
                 <button key={item} type="button" className={cn("wb-count-cell", current === item && "is-active")} aria-pressed={current === item} onClick={() => onChange(item)}>
                     {item}
@@ -523,7 +522,7 @@ export function CountStepper({ kind, value, max, onChange }: { kind: WorkbenchKi
                     <input
                         type="text"
                         inputMode="numeric"
-                        aria-label={`自定义数量（4 到 ${limit} ${unit}）`}
+                        aria-label={interfaceText("自定义数量（4 到 {limit}）", { limit })}
                         value={draft}
                         onChange={(event) => setDraft(event.target.value.replace(/\D/g, "").slice(0, 2))}
                         onFocus={(event) => {
@@ -543,7 +542,7 @@ export function CountStepper({ kind, value, max, onChange }: { kind: WorkbenchKi
                         <button
                             type="button"
                             tabIndex={-1}
-                            aria-label={`增加 1 ${unit}`}
+                            aria-label={interfaceText("增加 1")}
                             disabled={stepperActive && current >= limit}
                             onClick={(event) => {
                                 event.stopPropagation();
@@ -555,7 +554,7 @@ export function CountStepper({ kind, value, max, onChange }: { kind: WorkbenchKi
                         <button
                             type="button"
                             tabIndex={-1}
-                            aria-label={`减少 1 ${unit}`}
+                            aria-label={interfaceText("减少 1")}
                             disabled={stepperActive && current <= 1}
                             onClick={(event) => {
                                 event.stopPropagation();
@@ -590,8 +589,8 @@ export function ComposerFooter({
     disabledReason?: string;
     onSubmit: () => void;
 }) {
-    const unit = kind === "image" ? "张" : "条";
-    const label = count > 1 ? `生成 ${count} ${unit}` : kind === "image" ? "生成图片" : "生成视频";
+    const quantity = kind === "image" ? interfaceText("{count} 张图片", { count }) : interfaceText("{count} 条视频", { count });
+    const label = kind === "image" ? (count > 1 ? interfaceText("生成 {count} 张图片", { count }) : interfaceText("生成图片")) : count > 1 ? interfaceText("生成 {count} 条视频", { count }) : interfaceText("生成视频");
     const button = (
         <Button className="wb-submit" type="primary" size="large" loading={busy} disabled={Boolean(disabledReason)} onClick={onSubmit}>
             <ArrowUp />
@@ -601,10 +600,10 @@ export function ComposerFooter({
     return (
         <footer className="wb-footer">
             <div className="wb-estimate" aria-live="polite">
-                <strong>{estimate || `${count} ${unit}`}</strong>
+                <strong>{estimate || quantity}</strong>
                 <span>
                     <LayoutGrid />
-                    {estimate ? `${count} ${unit} · ` : ""}
+                    {estimate ? `${quantity} · ` : ""}
                     {taskCount} 个任务{estimateDetail ? ` · ${estimateDetail}` : ""}
                 </span>
             </div>

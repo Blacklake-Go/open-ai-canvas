@@ -1,3 +1,4 @@
+import { interfaceText } from "@/i18n/interface-text";
 import { commitPublicAppearance, DEFAULT_PUBLIC_APPEARANCE } from "@/stores/use-appearance-store";
 import { deleteAdminResources } from "@/services/api/admin-storage";
 import { AdminStatusBadge, SettingsSectionCard } from "@/pages/admin/components/admin-ui";
@@ -679,7 +680,7 @@ export default function AppearanceSettingsPage() {
                                                     onSelect={selectFile}
                                                     onReset={resetAsset}
                                                     disabled={saving || refreshing || restoring}
-                                                    emptyLabel={darkLogoSelected ? "将自动复用深色模式 Logo" : "未上传时使用项目原始 Logo"}
+                                                    emptyLabel={darkLogoSelected ? interfaceText("将自动复用深色模式 Logo") : interfaceText("未上传时使用项目原始 Logo")}
                                                 />
                                                 <AssetPicker
                                                     slot="logo-dark"
@@ -691,7 +692,7 @@ export default function AppearanceSettingsPage() {
                                                     onSelect={selectFile}
                                                     onReset={resetAsset}
                                                     disabled={saving || refreshing || restoring}
-                                                    emptyLabel={lightLogoSelected ? "将自动复用浅色模式 Logo" : "未上传时使用项目原始 Logo"}
+                                                    emptyLabel={lightLogoSelected ? interfaceText("将自动复用浅色模式 Logo") : interfaceText("未上传时使用项目原始 Logo")}
                                                 />
                                                 <div className="admin-appearance-logo-frame-option">
                                                     <div className="admin-appearance-logo-frame-copy">

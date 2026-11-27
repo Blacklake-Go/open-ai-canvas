@@ -13,6 +13,7 @@ import type { WorkbenchKind, WorkbenchTool } from "@/services/api/workbench";
 import type { WorkbenchOutput } from "./workbench-batches";
 import { SceneGlyph } from "./workbench-composer";
 import { workbenchToolSubtitle } from "./workbench-presets";
+import { interfaceText } from "@/i18n/interface-text";
 
 export type GalleryTile =
     | { type: "output"; key: string; output: WorkbenchOutput; task: GenerationTask }
@@ -465,8 +466,8 @@ export function WorkbenchGallery({
                                     <button key={tool.id} type="button" className="wb-empty-scene" onClick={() => onChooseTool(tool)}>
                                         <SceneGlyph tool={tool} kind={kind} />
                                         <span className="wb-empty-scene-copy">
-                                            <strong>{tool.name}</strong>
-                                            <small>{workbenchToolSubtitle(tool)}</small>
+                                            <strong>{interfaceText(tool.name)}</strong>
+                                            <small>{interfaceText(workbenchToolSubtitle(tool))}</small>
                                         </span>
                                         <ArrowUpRight />
                                     </button>

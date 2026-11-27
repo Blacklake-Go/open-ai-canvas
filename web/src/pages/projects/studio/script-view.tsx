@@ -8,7 +8,7 @@ import { AlertTriangle, ArrowDownToLine, ArrowUpToLine, BookOpen, BookOpenText, 
 import { averageShotSeconds, normalizeStoryboard, PACING_LABEL, TRANSITION_LABEL } from "@/lib/drama/storyboard";
 import { getDramaChapter, type DramaDialogueCheck, type DramaEpisodeDetail, type DramaShot, type DramaShotPatch, type DramaStoryboardSettings } from "@/services/api/drama";
 
-import { formatCount, SOURCE_FORMAT_LABEL, sourceFormatOf } from "../drama-shared";
+import { formatCount, sourceFormatCopy, sourceFormatOf } from "../drama-shared";
 import { SourceEditModal } from "./episode-source";
 import { ChapterRenameButton } from "./chapter-rename-button";
 import { JobDetailModal } from "./job-detail";
@@ -114,8 +114,8 @@ export function ScriptView({
                 <section className="drama-scriptv-brief">
                     <div className="drama-scriptv-brief-head">
                         <span className="drama-eyebrow">{_creationText("creation.fd719fc2daf89445")}</span>
-                        <span className="drama-scriptv-format" title={SOURCE_FORMAT_LABEL[format].detail}>
-                            {_creationText("creation.617fb9d0622d0a12", { value1: SOURCE_FORMAT_LABEL[format].title })}
+                        <span className="drama-scriptv-format" title={sourceFormatCopy(format).detail}>
+                            {_creationText("creation.617fb9d0622d0a12", { value1: sourceFormatCopy(format).title })}
                         </span>
                         <div className="ml-auto flex items-center gap-2">
                             {detail.scriptJob ? (

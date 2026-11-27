@@ -1,3 +1,5 @@
+import type { AppLocale } from "@/i18n/locales";
+
 export interface McpToolItem {
     name: string;
     displayName: string;
@@ -210,4 +212,3 @@ export const MCP_FAQS = MCP_BUILDING_FAQS.map((item) => ({
 }));
 
 export const MCP_PLUGINS: McpPluginItem[] = [];
-import type { AppLocale } from "@/i18n/locales";

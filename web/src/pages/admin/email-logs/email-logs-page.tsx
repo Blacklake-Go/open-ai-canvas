@@ -200,13 +200,13 @@ export function EmailLogs({ embedded = false }: { embedded?: boolean }) {
                             onValueChange={(value) => update({ keyword: value, page: 1 }, true)}
                         />
                         <Select
-                            ariaLabel="邮件类型"
+                            ariaLabel={interfaceText("邮件类型")}
                             value={purpose}
                             options={[{ value: "", label: "全部类型" }, ...Object.entries(emailPurposeLabels).map(([value, label]) => ({ value, label: interfaceText(label) }))]}
                             onChange={(value) => update({ purpose: value, page: 1 })}
                         />
                         <Select
-                            ariaLabel="发送结果"
+                            ariaLabel={interfaceText("发送结果")}
                             value={status}
                             options={[{ value: "", label: "全部结果" }, ...Object.entries(statusMeta).map(([value, meta]) => ({ value, label: interfaceText(meta.label) }))]}
                             onChange={(value) => update({ status: value, page: 1 })}
@@ -216,7 +216,7 @@ export function EmailLogs({ embedded = false }: { embedded?: boolean }) {
                             format="YYYY-MM-DD HH:mm:ss"
                             aria-label="发送时间范围"
                             value={[from && dayjs(from).isValid() ? dayjs(from) : null, to && dayjs(to).isValid() ? dayjs(to) : null]}
-                            placeholder={["开始时间", "结束时间"]}
+                            placeholder={[interfaceText("开始时间"), interfaceText("结束时间")]}
                             onChange={(dates) => update({ from: dates?.[0]?.toISOString() || "", to: dates?.[1]?.toISOString() || "", page: 1 })}
                         />
                         <Button type="text" disabled={!filtered} icon={<RotateCcw className="size-3.5" />} onClick={resetFilters}>

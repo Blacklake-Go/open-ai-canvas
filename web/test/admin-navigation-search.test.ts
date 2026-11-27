@@ -1,5 +1,8 @@
 import { readFileSync } from "node:fs";
 import { expect, test } from "bun:test";
+import { SUPPORTED_LOCALES } from "@/i18n/locales";
+import { interfaceTextKey } from "@/i18n/message-key";
+import catalog from "@/i18n/messages/interface.json";
 import { searchAdminNavigation } from "../src/pages/admin/lib/navigation-search";
 
 const entries = [
@@ -35,4 +38,16 @@ test("搜索和侧栏共用菜单，每个搜索入口都对应已注册后台�
     }
     expect(shell).toContain("visibleNavigationGroups(features).flatMap");
     expect(shell).toContain("<AdminGlobalSearch entries={searchEntries} />");
+});
+
+test("后台分组、搜索项目和折叠标签都具备八语词条", () => {
+    const scope = "src/pages/admin/components/admin-shell.tsx";
+    const shell = readFileSync(new URL(`../${scope}`, import.meta.url), "utf8");
+    const menu = shell.slice(shell.indexOf("const adminNavigation:"), shell.indexOf("export function getAdminNavigation"));
+    const labels = new Set([...menu.matchAll(/\b(?:label|shortLabel): "([^"]+)"/g)].map((match) => match[1]).filter((label) => /\p{Script=Han}/u.test(label)));
+    expect(labels.size).toBeGreaterThan(70);
+    for (const { code } of SUPPORTED_LOCALES) {
+        const messages: Record<string, string> = catalog[code];
+        for (const label of labels) expect(messages[interfaceTextKey(label, scope)]?.trim(), `${code}: ${label}`).toBeTruthy();
+    }
 });

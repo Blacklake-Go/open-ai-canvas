@@ -1,3 +1,5 @@
+import { interfaceText } from "@/i18n/interface-text";
+
 export const ASSET_CATEGORIES = ["character", "environment", "prop", "material", "other", "ark"] as const;
 
 export type AssetCategory = (typeof ASSET_CATEGORIES)[number];
@@ -17,7 +19,9 @@ export const ARK_ASSET_CATEGORY: AssetCategory = "ark";
 /** 全部业务分类，用于筛选与展示。 */
 export const ASSET_CATEGORY_OPTIONS = ASSET_CATEGORIES.map((value) => ({
     value,
-    label: ASSET_CATEGORY_LABELS[value],
+    get label() {
+        return assetCategoryLabel(value);
+    },
 }));
 
 /** 用户可以手动选择的业务分类（不含方舟认证）。 */
@@ -53,5 +57,5 @@ export function defaultAssetCategoryForKind(kind: string): AssetCategory {
 }
 
 export function assetCategoryLabel(value: unknown) {
-    return ASSET_CATEGORY_LABELS[normalizeAssetCategory(value)];
+    return interfaceText(ASSET_CATEGORY_LABELS[normalizeAssetCategory(value)], undefined, "src/lib/asset-category.ts");
 }

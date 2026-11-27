@@ -1,4 +1,5 @@
 import { i18n } from "@/i18n";
+import { interfaceText } from "@/i18n/interface-text";
 import { useTranslation } from "react-i18next";
 import { ConfigProvider, Dropdown } from "antd";
 import type { MenuProps } from "antd";
@@ -202,7 +203,16 @@ const adminNavigation: AdminNavigationGroup[] = [
 ];
 
 export function getAdminNavigation(): AdminNavigationGroup[] {
-    return adminNavigation;
+    const scope = "src/pages/admin/components/admin-shell.tsx";
+    return adminNavigation.map(({ label, items, ...group }) => ({
+        ...group,
+        label: interfaceText(label, undefined, scope),
+        items: items.map(({ label, shortLabel, ...item }) => ({
+            ...item,
+            label: interfaceText(label, undefined, scope),
+            shortLabel: interfaceText(shortLabel, undefined, scope),
+        })),
+    }));
 }
 
 function isAdminNavigationPath(pathname: string, navigationPath: string) {

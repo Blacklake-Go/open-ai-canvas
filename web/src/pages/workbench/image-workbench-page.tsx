@@ -1,3 +1,4 @@
+import { interfaceText } from "@/i18n/interface-text";
 import { App, Button } from "antd";
 import { Clapperboard, Image as ImageIcon, RotateCcw } from "lucide-react";
 import { lazy, Suspense, useCallback, useEffect, useMemo, useRef, useState, type ClipboardEvent } from "react";
@@ -1375,17 +1376,17 @@ export function WorkbenchPage({ kind }: { kind: WorkbenchKind }) {
             ? "正在计算积分"
             : estimate.tone === "usage"
               ? "按实际用量结算"
-              : "报价暂不可用";
+              : interfaceText("报价暂不可用");
     const countHint =
         kind === "image"
             ? plan.length > 1
                 ? `模型单次最多 ${maxOutputsPerTask} 张，将拆成 ${plan.length} 个任务并行生成`
                 : requestedCount > 1
                   ? `一个任务一次出 ${requestedCount} 张`
-                  : `最多 ${batchLimit} 张`
+                  : interfaceText("最多 {count} 张图片", { count: batchLimit })
             : requestedCount > 1
               ? `并行提交 ${requestedCount} 个任务，每条独立生成`
-              : `最多 ${batchLimit} 条`;
+              : interfaceText("最多 {count} 条视频", { count: batchLimit });
     const limitHint = requestedCount >= batchLimit && batchLimit < (kind === "image" ? 12 : 8) ? `账号同时最多 ${activeTaskLimit} 个任务` : "";
     const durationOptions = videoProfile
         ? (videoProfile.duration.selection === "enum"
@@ -1478,7 +1479,7 @@ export function WorkbenchPage({ kind }: { kind: WorkbenchKind }) {
                 </div>
                 <aside className="wb-composer" aria-label={`${kindLabel}创作面板`} onPasteCapture={handlePaste}>
                     <header className="wb-composer-head">
-                        <h1 className="sr-only">{kindLabel}生成</h1>
+                        <h1 className="sr-only">{kind === "image" ? interfaceText("图片生成") : interfaceText("视频生成")}</h1>
                         {bothKinds ? (
                             <nav className="wb-kind-switch" aria-label="切换生成类型">
                                 <button type="button" aria-pressed={kind === "image"} className={kind === "image" ? "is-active" : ""} onClick={() => kind !== "image" && navigate("/toolbox/image")}>
@@ -1545,7 +1546,7 @@ export function WorkbenchPage({ kind }: { kind: WorkbenchKind }) {
                                 />
                             }
                         />
-                        <ComposerSection title="模型与规格" hint="可选参数随模型变化">
+                        <ComposerSection title="模型与规格" hint={interfaceText("可选参数随模型变化")}>
                             {models.length ? (
                                 <ModelPicker
                                     config={config}
@@ -1565,7 +1566,7 @@ export function WorkbenchPage({ kind }: { kind: WorkbenchKind }) {
                                 />
                             ) : (
                                 <div className="wb-inline-error">
-                                    <span>暂无可用的{kindLabel}模型</span>
+                                    <span>{interfaceText("暂无可用模型")}</span>
                                     <a href="/settings?section=models" target="_blank" rel="noreferrer">
                                         去模型设置
                                     </a>
@@ -1601,7 +1602,7 @@ export function WorkbenchPage({ kind }: { kind: WorkbenchKind }) {
                             {selectedModel ? <p className="wb-muted-note">{WORKBENCH_SPEC_TIPS[kind]}</p> : null}
                         </ComposerSection>
                         <ComposerSection title="生成数量" hint={limitHint ? `${countHint} · ${limitHint}` : countHint}>
-                            <CountStepper kind={kind} value={requestedCount} max={batchLimit} onChange={changeCount} />
+                            <CountStepper value={requestedCount} max={batchLimit} onChange={changeCount} />
                         </ComposerSection>
                     </div>
                     <ComposerFooter kind={kind} count={requestedCount} taskCount={plan.length} estimate={estimateLabel} busy={busy} disabledReason={disabledReason} onSubmit={() => void submit()} />

@@ -1,4 +1,4 @@
-import { creationText as _creationText, useCreationLocale as _useCreationLocale } from "@/supdance/plugins/i18n/creation-text";
+import { creationLabel as _creationLabel, creationText as _creationText, useCreationLocale as _useCreationLocale } from "@/supdance/plugins/i18n/creation-text";
 import { useEffect, useState, type CSSProperties, type ReactNode } from "react";
 import { InputNumber } from "antd";
 import { AlertTriangle } from "lucide-react";
@@ -41,7 +41,7 @@ export const MEDIA_MODE_LABEL: Record<DramaMediaMode, { title: string; detail: s
 };
 
 /** 素材类型文案：新建页、追加单集与原文编辑共用。placeholder 是粘贴框的格式提示。 */
-export const SOURCE_FORMAT_LABEL: Record<DramaSourceFormat, { title: string; detail: string; placeholder: string; guide: string[] }> = {
+const SOURCE_FORMAT_LABEL: Record<DramaSourceFormat, { title: string; detail: string; placeholder: string; guide: string[] }> = {
     novel: {
         title: "小说原文",
         detail: "按原文改编成镜头，引号里的对白逐字保留",
@@ -61,6 +61,11 @@ export const SOURCE_FORMAT_LABEL: Record<DramaSourceFormat, { title: string; det
         guide: ["第一行是表头：场景、角色、景别、运镜、画面、台词、时长、转场", "Markdown 表格或从 Excel 复制的内容直接导入，不经过模型", "一格多句台词用 <br> 分开，会拆成连续镜头"],
     },
 };
+
+export function sourceFormatCopy(format: DramaSourceFormat) {
+    const { title, detail, placeholder, guide } = SOURCE_FORMAT_LABEL[format];
+    return { title: _creationLabel(title), detail: _creationLabel(detail), placeholder: _creationLabel(placeholder), guide: guide.map(_creationLabel) };
+}
 
 /** 每集章数：1 为每章一集；集数随章数实时换算。新建页与设置页共用。 */
 export function EpisodeGroupField({ value, onChange, chapterCount, error, disabled }: { value: number; onChange: (value: number) => void; chapterCount?: number; error?: string; disabled?: boolean }) {
@@ -93,8 +98,8 @@ export function SourceFormatPicker({ value, onChange, disabled, row }: { value: 
                 <button key={format} type="button" role="radio" aria-checked={value === format} className="drama-media-mode" disabled={disabled} onClick={() => onChange(format)}>
                     <span className="drama-radio" />
                     <span>
-                        <strong>{SOURCE_FORMAT_LABEL[format].title}</strong>
-                        <span>{SOURCE_FORMAT_LABEL[format].detail}</span>
+                        <strong>{sourceFormatCopy(format).title}</strong>
+                        <span>{sourceFormatCopy(format).detail}</span>
                     </span>
                 </button>
             ))}

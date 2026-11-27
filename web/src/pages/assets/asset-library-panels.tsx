@@ -8,6 +8,7 @@ import { CachedResourceImage } from "@/components/cached-resource-image";
 import { StatusBadge } from "@/components/ui/base/badges";
 import { useCopyText } from "@/hooks/use-copy-text";
 import { currentLocale } from "@/i18n";
+import { interfaceText } from "@/i18n/interface-text";
 import { arkAssetStatusTone, arkCertificationBadgeKey, arkCertificationExpired, formatArkDate, type ArkLibraryProgress } from "@/lib/ark-assets";
 import { cn } from "@/lib/utils";
 import { useAppearanceStore } from "@/stores/use-appearance-store";
@@ -109,7 +110,7 @@ export function AssetsEmptyState({ onNew, onImport, onGoCanvas }: { onNew: () =>
                 {frames.map((frame, index) => (
                     <figure key={frame.caption} className={`assets-empty-banner-frame ${index === 1 ? "is-main" : index === 0 ? "is-back" : "is-front"}`}>
                         <img src={frame.src} alt="" loading="lazy" decoding="async" />
-                        <span>{frame.caption}</span>
+                        <span>{interfaceText(frame.caption)}</span>
                     </figure>
                 ))}
                 <span className="assets-empty-banner-caption">

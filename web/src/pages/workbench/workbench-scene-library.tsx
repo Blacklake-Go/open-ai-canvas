@@ -138,12 +138,13 @@ export function SceneLibraryModal({
                                 ) : null}
                                 {filtered.map((tool) => {
                                     const selected = tool.id === selectedId;
-                                    const subtitle = workbenchToolSubtitle(tool);
+                                    const subtitle = interfaceText(workbenchToolSubtitle(tool));
+                                    const name = interfaceText(tool.name);
                                     return (
-                                        <button key={tool.id} type="button" className={cn("wb-scene-card", selected && "is-selected")} aria-pressed={selected} title={`${tool.name}\n${subtitle}`} onClick={() => onChoose(tool)}>
+                                        <button key={tool.id} type="button" className={cn("wb-scene-card", selected && "is-selected")} aria-pressed={selected} title={`${name}\n${subtitle}`} onClick={() => onChoose(tool)}>
                                             <SceneGlyph tool={tool} kind={kind} />
                                             <span className="wb-scene-card-copy">
-                                                <strong>{tool.name}</strong>
+                                                <strong>{name}</strong>
                                                 <small>{subtitle}</small>
                                             </span>
                                             <span className="wb-scene-card-meta">

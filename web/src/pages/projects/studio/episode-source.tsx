@@ -9,7 +9,7 @@ import { decodeNovelText } from "@/lib/canvas/canvas-document";
 import { EPISODE_SOURCE_CHARS, sourceChars } from "@/lib/drama/novel-parse";
 import { addDramaEpisode, getDramaChapter, updateDramaChapter, updateDramaEpisode, type DramaChapterRef, type DramaSourceFormat } from "@/services/api/drama";
 
-import { formatCount, SOURCE_FORMAT_LABEL, SourceFormatPicker } from "../drama-shared";
+import { formatCount, sourceFormatCopy, SourceFormatPicker } from "../drama-shared";
 
 // 逐集制作：在作品末尾追加一集、插到某一集前后，或修改某一集的原文与素材类型。原文修改后需要重新改编才会重写剧本。
 
@@ -113,9 +113,9 @@ function SourceComposer({
                             <SourceFormatPicker value={format} onChange={onFormat} />
                         </div>
                         <div className="drama-composer-guide">
-                            <span className="drama-composer-label">{_creationText("creation.cd3aa44f1398935c", { value1: SOURCE_FORMAT_LABEL[format].title })}</span>
+                            <span className="drama-composer-label">{_creationText("creation.cd3aa44f1398935c", { value1: sourceFormatCopy(format).title })}</span>
                             <ul>
-                                {SOURCE_FORMAT_LABEL[format].guide.map((line) => (
+                                {sourceFormatCopy(format).guide.map((line) => (
                                     <li key={line}>{line}</li>
                                 ))}
                             </ul>
@@ -139,7 +139,7 @@ function SourceComposer({
                             className="drama-composer-text thin-scrollbar"
                             value={loading ? "" : text}
                             disabled={loading}
-                            placeholder={loading ? _creationText("creation.4e8dbea41eda1af7") : _creationText("creation.aef00d508315c0d4", { value1: SOURCE_FORMAT_LABEL[format].placeholder })}
+                            placeholder={loading ? _creationText("creation.4e8dbea41eda1af7") : _creationText("creation.aef00d508315c0d4", { value1: sourceFormatCopy(format).placeholder })}
                             aria-label={_creationText("creation.c6003b87469ef2dd")}
                             onChange={(event) => onText(event.target.value)}
                         />

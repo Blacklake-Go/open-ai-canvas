@@ -45,7 +45,8 @@ const addAsset = mock((_value: { title: string; folderId?: string }) => "fixture
 mock.module("../../src/services/image-storage", () => ({ uploadImage }));
 mock.module("../../src/services/user-data-sync", () => ({ saveRemoteUserDataNow: sync, localSavedRemotePendingMessage: (text: string) => text }));
 mock.module("../../src/stores/use-asset-store", () => ({ useAssetStore: (selector: (store: { addAsset: typeof addAsset }) => unknown) => selector({ addAsset }), flushAssetStorePersistence: flush }));
-mock.module("react-i18next", () => ({ useTranslation: () => ({ t: (key: string) => key }) }));
+const reactI18next = await import("react-i18next");
+mock.module("react-i18next", () => ({ ...reactI18next, useTranslation: () => ({ t: (key: string) => key }) }));
 
 const { act } = await import("react");
 const { createRoot } = await import("react-dom/client");

@@ -34,7 +34,7 @@ import {
     type DramaVideoContinuity,
 } from "@/services/api/drama";
 
-import { EpisodeGroupField, formatCount, formatCredits, MEDIA_MODE_LABEL, SOURCE_FORMAT_LABEL, SourceFormatPicker, VIDEO_CONTINUITY_LABEL } from "./drama-shared";
+import { EpisodeGroupField, formatCount, formatCredits, MEDIA_MODE_LABEL, sourceFormatCopy, SourceFormatPicker, VIDEO_CONTINUITY_LABEL } from "./drama-shared";
 import { AssetSchemePicker, defaultAssetSettings, useAssetSchemes } from "./asset-scheme";
 import { DramaModelPicker, useDramaModelCatalog } from "./drama-model-picker";
 import { DramaAssetImageModels, DramaTextSteps, VideoResolutionField } from "./step-settings";
@@ -405,7 +405,7 @@ export default function DramaCreatePage() {
                                     autoFocus
                                     value={pasteText}
                                     onChange={(event) => setPasteText(event.target.value)}
-                                    placeholder={_creationText("creation.8950267da3835c28", { value1: SOURCE_FORMAT_LABEL[sourceFormat].placeholder, value2: sourceFormat === "novel" ? "" : _creationText("creation.24a4e6859c59204a") })}
+                                    placeholder={_creationText("creation.8950267da3835c28", { value1: sourceFormatCopy(sourceFormat).placeholder, value2: sourceFormat === "novel" ? "" : _creationText("creation.24a4e6859c59204a") })}
                                     autoSize={{ minRows: 14, maxRows: 24 }}
                                 />
                                 <div className="flex justify-end gap-2">
@@ -420,13 +420,13 @@ export default function DramaCreatePage() {
                                 <span className="drama-drop-icon">
                                     <BookOpenText className="size-7" />
                                 </span>
-                                <h2>{_creationText("creation.41418eeb93a4f9c2", { value1: SOURCE_FORMAT_LABEL[sourceFormat].title })}</h2>
+                                <h2>{_creationText("creation.41418eeb93a4f9c2", { value1: sourceFormatCopy(sourceFormat).title })}</h2>
                                 <p>
                                     {_creationText("creation.19eafdf264729e3b")}
                                     {sourceFormat === "novel" ? _creationText("creation.2e8d7cf8e5631278") : _creationText("creation.c7bd76c9be25451d")}
                                 </p>
                                 <Button type="primary" size="large" icon={<FileUp className="size-4" />} onClick={() => fileInputRef.current?.click()}>
-                                    {_creationText("creation.d49c54fa9d2b95ca", { value1: SOURCE_FORMAT_LABEL[sourceFormat].title })}
+                                    {_creationText("creation.d49c54fa9d2b95ca", { value1: sourceFormatCopy(sourceFormat).title })}
                                 </Button>
                                 <button type="button" className="drama-link inline-flex items-center gap-1" onClick={() => setPasteMode(true)}>
                                     <ClipboardPaste className="size-3.5" />
@@ -436,7 +436,7 @@ export default function DramaCreatePage() {
                                     {[sourceFormat === "storyboard" ? "导入分镜" : "解析分集", "建立角色、道具与场景", sourceFormat === "novel" ? "改编剧本与段提示词" : "拆镜与段提示词", "按剧情段生成视频", "合成成片"].map((step, index) => (
                                         <span key={step}>
                                             <b>{index + 1}</b>
-                                            {step}
+                                            {_creationLabel(step)}
                                         </span>
                                     ))}
                                 </div>
