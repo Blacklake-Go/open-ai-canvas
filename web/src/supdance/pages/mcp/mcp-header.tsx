@@ -4,6 +4,7 @@ import { Link } from "react-router";
 import { useLocaleStore } from "@/stores/use-locale-store";
 import { useUserStore } from "@/stores/use-user-store";
 import { TopbarLanguageSwitcher } from "@/supdance/plugins/i18n";
+import { LegalThemeToggler } from "../legal/legal-theme-toggler";
 
 const HEADER_NAV_COPY: Record<string, Record<string, string>> = {
     arch: {
@@ -63,12 +64,18 @@ export function McpHeader() {
     return (
         <header className={`mcp-header${scrolled ? " is-scrolled" : ""}`}>
             <div className="mcp-header-inner">
-                <div className="mcp-brand-wrap">
-                    <Link to="/" className="mcp-brand-link" aria-label="SupDance Home">
-                        <span className="mcp-brand-mark-box">
-                            <img src="/supdance-mark.png" alt="SupDance" />
-                        </span>
-                        <span>SupDance</span>
+                <div className="mcp-brand-wrap flex items-center gap-2">
+                    <Link to="/" className="mcp-brand-link flex items-center" aria-label="SupDance Home">
+                        <img
+                            src="/supdance-brand-dark.png"
+                            alt="SupDance"
+                            className="hidden dark:block h-7 sm:h-8 w-auto max-w-[155px] object-contain"
+                        />
+                        <img
+                            src="/supdance-brand-light.png"
+                            alt="SupDance"
+                            className="block dark:hidden h-7 sm:h-8 w-auto max-w-[155px] object-contain"
+                        />
                     </Link>
                     <span className="mcp-brand-tag">MCP</span>
                 </div>
@@ -81,8 +88,9 @@ export function McpHeader() {
                     <a href="/html/about">{pickNav(locale, "about")}</a>
                 </nav>
 
-                <div className="mcp-header-actions">
+                <div className="mcp-header-actions flex items-center gap-3">
                     <TopbarLanguageSwitcher surface="legal" className="mcp-lang-btn" />
+                    <LegalThemeToggler />
                     <Link to={user ? "/create" : "/"} className="mcp-header-cta">
                         <span>{pickNav(locale, "enterWorkspace")}</span>
                         <ArrowUpRight className="size-3.5" strokeWidth={1.8} aria-hidden="true" />

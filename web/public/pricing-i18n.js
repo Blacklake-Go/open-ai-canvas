@@ -439,10 +439,28 @@
         const translated = translations.get(text)?.[index];
         return translated ? source.replace(text, () => translated) : source;
     }
+    const localeLabels = {
+        "zh-CN": "简体中文",
+        "en-US": "English",
+        "zh-TW": "繁體中文",
+        "es-ES": "Español",
+        "fr-FR": "Français",
+        "de-DE": "Deutsch",
+        "ja-JP": "日本語",
+        "ko-KR": "한국어",
+    };
     function setLocale(locale) {
         const index = Math.max(0, locales.indexOf(locale));
         root.lang = locales[index];
         selector.value = locales[index];
+        const currentLabel = document.getElementById("lang-current-label");
+        if (currentLabel) {
+            currentLabel.textContent = localeLabels[locales[index]] || "English";
+        }
+        const options = document.querySelectorAll("#lang-dropdown .language-menu-option");
+        for (const opt of options) {
+            opt.setAttribute("aria-selected", String(opt.dataset.code === locales[index]));
+        }
         for (const [node, source] of nodes) node.nodeValue = translate(source, index);
         for (const [element, source] of attributes) element.setAttribute("aria-label", translate(source, index));
         translateFooter(index);
@@ -487,6 +505,35 @@
     }
     setLocale(locales.includes(requested) ? requested : locales.includes(savedLocale) ? savedLocale : "en-US");
     selector.addEventListener("change", () => setLocale(selector.value));
+
+    const langTrigger = document.getElementById("lang-trigger");
+    const langDropdown = document.getElementById("lang-dropdown");
+    if (langTrigger && langDropdown) {
+        langTrigger.addEventListener("click", (e) => {
+            e.stopPropagation();
+            const isOpen = langDropdown.classList.contains("is-open");
+            langDropdown.classList.toggle("is-open", !isOpen);
+            langTrigger.setAttribute("aria-expanded", String(!isOpen));
+        });
+        const options = langDropdown.querySelectorAll(".language-menu-option");
+        for (const opt of options) {
+            opt.addEventListener("click", () => {
+                const code = opt.dataset.code;
+                if (code && selector) {
+                    selector.value = code;
+                    selector.dispatchEvent(new Event("change"));
+                }
+                langDropdown.classList.remove("is-open");
+                langTrigger.setAttribute("aria-expanded", "false");
+            });
+        }
+        document.addEventListener("click", (e) => {
+            if (!langTrigger.contains(e.target) && !langDropdown.contains(e.target)) {
+                langDropdown.classList.remove("is-open");
+                langTrigger.setAttribute("aria-expanded", "false");
+            }
+        });
+    }
     let revealing = false;
     themeButton.addEventListener("click", async () => {
         if (revealing) return;
