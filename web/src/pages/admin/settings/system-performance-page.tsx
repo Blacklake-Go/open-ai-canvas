@@ -296,7 +296,7 @@ export default function SystemPerformancePage() {
                             icon={<Database className="size-4" />}
                             title="数据库"
                             description="连接池、结构版本与数据库内部统计。"
-                            status={{ label: data?.database.connected ? "连接正常" : "连接异常", color: data?.database.connected ? "success" : "error" }}
+                            status={{ label: data?.database.connected ? interfaceText("连接正常") : interfaceText("连接异常"), color: data?.database.connected ? "success" : "error" }}
                         >
                             <FactGrid>
                                 <Fact label="驱动" value={data?.database.driver === "postgres" ? "PostgreSQL" : data?.database.driver || "未知"} />
@@ -321,7 +321,10 @@ export default function SystemPerformancePage() {
                             icon={<Activity className="size-4" />}
                             title="Redis"
                             description="内存、客户端、命中率与连接池。"
-                            status={{ label: data?.redis.connected ? "连接正常" : data?.redis.mode === "local" ? "本地降级" : "连接异常", color: data?.redis.connected ? "success" : data?.redis.mode === "local" ? "warning" : "error" }}
+                            status={{
+                                label: data?.redis.connected ? interfaceText("连接正常") : data?.redis.mode === "local" ? interfaceText("本地降级") : interfaceText("连接异常"),
+                                color: data?.redis.connected ? "success" : data?.redis.mode === "local" ? "warning" : "error",
+                            }}
                         >
                             <FactGrid>
                                 <Fact label="模式 / 版本" value={data?.redis.connected ? `Redis ${data.redis.version || "未知"}` : data?.redis.statusMessage || "未配置"} />
@@ -346,7 +349,7 @@ export default function SystemPerformancePage() {
                             icon={<Orbit className="size-4" />}
                             title="画布 Agent 服务"
                             description="同时进行中的对话占用一个名额。审批等待不占用。降低上限不会中断已经开始的对话，也不会在这台机器上再启动容器。"
-                            status={{ label: agent.healthy ? "服务可连接" : "服务不可达", color: agent.healthy ? "success" : "error" }}
+                            status={{ label: agent.healthy ? interfaceText("服务可连接") : interfaceText("服务不可达"), color: agent.healthy ? "success" : "error" }}
                             footer={
                                 <>
                                     <span className="admin-performance-cache-note">

@@ -13866,7 +13866,12 @@
         "managedUi.fb87b869": "音频",
         "managedUi.a510db2b": "音频任务的最长执行时间。",
         "managedUi.31c2fdf2": "音频任务超时",
-        "managedUi.e7c16e02": "默认任务超时"
+        "managedUi.e7c16e02": "默认任务超时",
+        "managedUi.a39a5f7f": "连接正常",
+        "managedUi.30252996": "连接异常",
+        "managedUi.c90d8299": "本地降级",
+        "managedUi.f577b719": "服务可连接",
+        "managedUi.c48044b": "服务不可达"
     },
     "en-US": {
         "managedUi.1291a587": "{label} · Video",
@@ -27735,7 +27740,12 @@
         "managedUi.fb87b869": "Audio",
         "managedUi.a510db2b": "Maximum runtime for an audio task.",
         "managedUi.31c2fdf2": "Audio task timeout",
-        "managedUi.e7c16e02": "Default task timeout"
+        "managedUi.e7c16e02": "Default task timeout",
+        "managedUi.a39a5f7f": "Connected",
+        "managedUi.30252996": "Connection error",
+        "managedUi.c90d8299": "Local fallback",
+        "managedUi.f577b719": "Service reachable",
+        "managedUi.c48044b": "Service unreachable"
     },
     "fr-FR": {
         "managedUi.1291a587": "{label} · Vidéo",
@@ -41604,7 +41614,12 @@
         "managedUi.fb87b869": "Audio",
         "managedUi.a510db2b": "Temps de fonctionnement maximum pour une tâche audio.",
         "managedUi.31c2fdf2": "Télécharger Audio Task Timeout",
-        "managedUi.e7c16e02": "Temps de tâche de défaut"
+        "managedUi.e7c16e02": "Temps de tâche de défaut",
+        "managedUi.a39a5f7f": "Connexion établie",
+        "managedUi.30252996": "Erreur de connexion",
+        "managedUi.c90d8299": "Mode local de secours",
+        "managedUi.f577b719": "Service accessible",
+        "managedUi.c48044b": "Service inaccessible"
     },
     "de-DE": {
         "managedUi.1291a587": "{label} · Video",
@@ -55473,7 +55488,12 @@
         "managedUi.fb87b869": "Audio",
         "managedUi.a510db2b": "Maximale Betriebszeit für eine Audio-Task.",
         "managedUi.31c2fdf2": "Audio-Task Timout",
-        "managedUi.e7c16e02": "Standard-Task Timeout"
+        "managedUi.e7c16e02": "Standard-Task Timeout",
+        "managedUi.a39a5f7f": "Verbunden",
+        "managedUi.30252996": "Verbindungsfehler",
+        "managedUi.c90d8299": "Lokaler Ersatzbetrieb",
+        "managedUi.f577b719": "Dienst erreichbar",
+        "managedUi.c48044b": "Dienst nicht erreichbar"
     },
     "zh-TW": {
         "managedUi.1291a587": "{label} · 影片",
@@ -69342,7 +69362,12 @@
         "managedUi.fb87b869": "音訊",
         "managedUi.a510db2b": "音訊任務的最長執行時間。",
         "managedUi.31c2fdf2": "音訊任務超時",
-        "managedUi.e7c16e02": "預設任務超時"
+        "managedUi.e7c16e02": "預設任務超時",
+        "managedUi.a39a5f7f": "連線正常",
+        "managedUi.30252996": "連線異常",
+        "managedUi.c90d8299": "本機降級模式",
+        "managedUi.f577b719": "服務可連線",
+        "managedUi.c48044b": "服務無法連線"
     },
     "es-ES": {
         "managedUi.1291a587": "{label} · Vídeo",
@@ -83211,7 +83236,12 @@
         "managedUi.fb87b869": "Audio",
         "managedUi.a510db2b": "Tamaño máximo para una tarea de audio.",
         "managedUi.31c2fdf2": "Tareas de audio Timeout",
-        "managedUi.e7c16e02": "Tareas de tiempo de trabajo"
+        "managedUi.e7c16e02": "Tareas de tiempo de trabajo",
+        "managedUi.a39a5f7f": "Conexión correcta",
+        "managedUi.30252996": "Error de conexión",
+        "managedUi.c90d8299": "Modo local de respaldo",
+        "managedUi.f577b719": "Servicio accesible",
+        "managedUi.c48044b": "Servicio inaccesible"
     },
     "ja-JP": {
         "managedUi.1291a587": "{label} · 動画",
@@ -97080,7 +97110,12 @@
         "managedUi.fb87b869": "音声",
         "managedUi.a510db2b": "オーディオタスクの最大実行時間",
         "managedUi.31c2fdf2": "オーディオタスクタイムアウト",
-        "managedUi.e7c16e02": "デフォルトタスクタイムアウト"
+        "managedUi.e7c16e02": "デフォルトタスクタイムアウト",
+        "managedUi.a39a5f7f": "接続正常",
+        "managedUi.30252996": "接続エラー",
+        "managedUi.c90d8299": "ローカル代替モード",
+        "managedUi.f577b719": "サービスに接続可能",
+        "managedUi.c48044b": "サービスに接続できません"
     },
     "ko-KR": {
         "managedUi.1291a587": "{label} · 동영상",
@@ -110949,6 +110984,11 @@
         "managedUi.fb87b869": "오디오",
         "managedUi.a510db2b": "오디오 작업을 위한 최대 실행 시간.",
         "managedUi.31c2fdf2": "오디오 작업 시간",
-        "managedUi.e7c16e02": "기본 작업 시간표"
+        "managedUi.e7c16e02": "기본 작업 시간표",
+        "managedUi.a39a5f7f": "연결 정상",
+        "managedUi.30252996": "연결 오류",
+        "managedUi.c90d8299": "로컬 대체 모드",
+        "managedUi.f577b719": "서비스에 연결 가능",
+        "managedUi.c48044b": "서비스에 연결할 수 없음"
     }
 }
