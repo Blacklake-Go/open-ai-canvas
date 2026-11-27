@@ -13,6 +13,7 @@ import { CanvasNode } from "@/components/canvas/canvas-node";
 import { CanvasCharacterReferenceNodeContent } from "@/components/canvas/canvas-character-reference-node";
 import { CanvasCharacterReferenceModal } from "@/components/canvas/canvas-character-reference-modal";
 import { CanvasBatchTableNodeContent } from "@/components/canvas/canvas-batch-table-node";
+import { Minimap } from "@/components/canvas/canvas-mini-map";
 import { CanvasZoomControls } from "@/components/canvas/canvas-zoom-controls";
 import { CanvasViewport } from "@/components/canvas/canvas-viewport";
 import { FullScreenLoader } from "@/components/ui/aceternity/full-screen-loader";
@@ -20,6 +21,7 @@ import { WorkspaceState } from "@/components/layout/workspace-state";
 import { NODE_DEFAULT_SIZE } from "@/constant/canvas";
 import { canvasAppearanceBaseTheme, canvasAppearanceForTheme, DEFAULT_CANVAS_BACKGROUND_MODE, normalizeCanvasAppearance, resolveCanvasAppearance, type CanvasAppearance } from "@/lib/canvas/canvas-appearance";
 import { canvasThemes } from "@/lib/canvas-theme";
+import { applyCanvasLiveViewport } from "@/lib/canvas/canvas-live-viewport";
 import { FOLDER_COLLAPSED_HEIGHT, FOLDER_COLLAPSED_WIDTH, isCanvasFolderNode, isFrameNode, isNodeHiddenByCollapsedFrame, resolveFrameConnection } from "@/lib/canvas/canvas-frame";
 import { ensureMediaNodeMinimumSize } from "@/lib/canvas/canvas-node-size";
 import { getContextResourceNodes } from "@/lib/canvas/canvas-resource-references";
@@ -51,6 +53,8 @@ export default function SharedCanvasPage() {
     const [appearance, setAppearance] = useState<CanvasAppearance>(() => canvasAppearanceForTheme(colorTheme));
     const [backgroundMode, setBackgroundMode] = useState<"lines" | "dots" | "blank">("dots");
     const [viewport, setViewport] = useState<ViewportTransform>({ x: 0, y: 0, k: 1 });
+    const [isMiniMapOpen, setIsMiniMapOpen] = useState(false);
+    const [viewportSize, setViewportSize] = useState({ width: 0, height: 0 });
     const [selectedNodeId, setSelectedNodeId] = useState<string | null>(null);
     const [infoNodeId, setInfoNodeId] = useState<string | null>(null);
     const [toolbarNodeId, setToolbarNodeId] = useState<string | null>(null);
@@ -60,6 +64,16 @@ export default function SharedCanvasPage() {
     const [loadError, setLoadError] = useState("");
     const pack = useThemePack();
     const brandName = useAppearanceStore((state) => state.appearance.brandName);
+
+    useEffect(() => {
+        const container = containerRef.current;
+        if (loading || !isMiniMapOpen || !container) return;
+        const updateSize = () => setViewportSize({ width: container.clientWidth, height: container.clientHeight });
+        const observer = new ResizeObserver(updateSize);
+        updateSize();
+        observer.observe(container);
+        return () => observer.disconnect();
+    }, [isMiniMapOpen, loading]);
 
     const unauthorized = useCallback(() => message.warning("未授权：分享画布仅供查看，该操作不会执行。"), [message]);
     const infoNode = nodes.find((node) => node.id === infoNodeId) || null;
@@ -490,8 +504,11 @@ export default function SharedCanvasPage() {
                 onNineGrid={unauthorized}
             />
 
+            {isMiniMapOpen && (
+                <Minimap nodes={nodes} viewport={viewport} viewportSize={viewportSize} canvasContainerRef={containerRef} onViewportPreviewChange={(next) => applyCanvasLiveViewport(containerRef.current, next)} onViewportChange={onViewportChange} />
+            )}
             <div className="absolute bottom-5 left-5 z-[var(--z-panel-floating)]">
-                <CanvasZoomControls scale={viewport.k} containerRef={containerRef} onScaleChange={setZoom} onFitContent={resetViewport} isMiniMapOpen={false} onToggleMiniMap={unauthorized} onOpenShortcuts={unauthorized} />
+                <CanvasZoomControls scale={viewport.k} containerRef={containerRef} onScaleChange={setZoom} onFitContent={resetViewport} isMiniMapOpen={isMiniMapOpen} onToggleMiniMap={() => setIsMiniMapOpen((open) => !open)} />
             </div>
             <div className="pointer-events-none absolute bottom-5 right-5 z-[var(--z-panel-floating)] max-w-[340px] text-right text-xs leading-5" style={{ color: theme.node.muted }}>
                 访客操作仅在当前页面临时生效

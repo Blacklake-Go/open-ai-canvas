@@ -399,3 +399,27 @@ test("真实视图控制保留缩放、快速比例、连线、小地图及快�
         host.remove();
     }
 });
+
+test("只读视图可使用小地图并隐藏没有提供动作的快捷键入口", async () => {
+    const host = document.createElement("div");
+    document.body.append(host);
+    const root = createRoot(host);
+    function ReadOnlyControls() {
+        const [open, setOpen] = useState(false);
+        return <CanvasZoomControls scale={1} onScaleChange={noop} onFitContent={noop} isMiniMapOpen={open} onToggleMiniMap={() => setOpen((value) => !value)} />;
+    }
+    try {
+        await act(async () => root.render(<ReadOnlyControls />));
+        expect(host.querySelector(".canvas-view-help")).toBeNull();
+        const toggle = host.querySelector<HTMLButtonElement>('button[aria-label="Open minimap"]')!;
+        await act(async () => toggle.click());
+        expect(toggle.getAttribute("aria-label")).toBe("Close minimap");
+        expect(toggle.getAttribute("aria-pressed")).toBe("true");
+        await act(async () => toggle.click());
+        expect(toggle.getAttribute("aria-label")).toBe("Open minimap");
+        expect(toggle.getAttribute("aria-pressed")).toBe("false");
+    } finally {
+        await act(async () => root.unmount());
+        host.remove();
+    }
+});

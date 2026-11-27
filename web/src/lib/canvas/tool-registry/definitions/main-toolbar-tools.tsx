@@ -1,6 +1,7 @@
 import { PanelsTopLeft, Eraser, FolderOpen, Hand, MousePointer2, Palette, PersonStanding, Plus, Redo2, Trash2, Undo2 } from "lucide-react";
 
 import { registerToolbarTools, type ToolDefinition } from "@/lib/canvas/tool-registry";
+import { interfaceText } from "@/i18n/interface-text";
 import type { CanvasToolMode } from "@/types/canvas";
 
 const canvasModeOptions = [
@@ -29,7 +30,7 @@ export const mainToolbarTools: ToolDefinition[] = [
         id: "tool-undo",
         toolbar: "main",
         category: "history",
-        label: "撤销",
+        label: () => interfaceText("撤销", undefined, "src/pages/canvas/canvas-project-top-bar.tsx"),
         icon: <Undo2 />,
         defaultVisible: true,
         defaultOrder: 30,

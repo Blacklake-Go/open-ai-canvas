@@ -7,6 +7,7 @@ import { AntTooltip as Tooltip } from "@/components/ui/base/tooltip/ant-tooltip"
 
 import { WorkspaceCreditGiftMark } from "@/components/layout/workspace-credit-gift-mark";
 import { useWalletBalance } from "@/hooks/use-wallet-balance";
+import { interfaceText } from "@/i18n/interface-text";
 import { openWorkspaceWallet } from "@/lib/workspace-wallet";
 import { canvasDockStyle } from "@/lib/canvas/canvas-aceternity-style";
 import type { CanvasContextSummary } from "@/lib/canvas/canvas-context-summary";
@@ -277,8 +278,8 @@ export function CanvasTopBar({ projectHeading, view, onViewChange, onOpenSearch,
 // 文字收进提示与 aria-label。窄屏两侧命令组占满时隐藏，入口保留在画布菜单里。
 function CanvasViewSwitch({ view, onChange, dockStyle, theme }: { view: CanvasProjectView; onChange: (view: CanvasProjectView) => void; dockStyle: CSSProperties; theme: CanvasTheme }) {
     const items: Array<{ value: CanvasProjectView; label: string; icon: ReactNode }> = [
-        { value: "canvas", label: "画布", icon: <Workflow /> },
-        { value: "assets", label: "资产", icon: <PanelsLeftBottom /> },
+        { value: "canvas", label: interfaceText("切换到画布视图", undefined, "src/pages/canvas/canvas-project-top-bar.tsx"), icon: <Workflow /> },
+        { value: "assets", label: interfaceText("切换到资产视图", undefined, "src/pages/canvas/canvas-project-top-bar.tsx"), icon: <PanelsLeftBottom /> },
     ];
     const style = {
         ...dockStyle,
@@ -290,9 +291,9 @@ function CanvasViewSwitch({ view, onChange, dockStyle, theme }: { view: CanvasPr
     return (
         <div role="group" aria-label="画布视图" className="canvas-topbar-cluster canvas-topbar-view-switch pointer-events-auto col-start-2 row-start-1 hidden items-center justify-self-center xl:flex" style={style}>
             {items.map((item) => (
-                <CanvasTopBarTooltip key={item.value} label={view === item.value ? `当前：${item.label}视图` : `切换到${item.label}视图`}>
+                <CanvasTopBarTooltip key={item.value} label={item.label}>
                     {/* 未分层的 `button { color: inherit }` 会压过 @layer 里的颜色规则，颜色走行内变量，由样式表按状态切换。 */}
-                    <button type="button" className="canvas-topbar-view-option" style={{ color: "var(--view-switch-color)" }} aria-label={`${item.label}视图`} aria-pressed={view === item.value} onClick={() => onChange(item.value)}>
+                    <button type="button" className="canvas-topbar-view-option" style={{ color: "var(--view-switch-color)" }} aria-label={item.label} aria-pressed={view === item.value} onClick={() => onChange(item.value)}>
                         {item.icon}
                     </button>
                 </CanvasTopBarTooltip>

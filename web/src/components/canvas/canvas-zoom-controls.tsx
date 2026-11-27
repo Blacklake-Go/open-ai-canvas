@@ -16,7 +16,7 @@ type CanvasZoomControlsProps = {
     onHideNodeConnectionsChange?: (value: boolean) => void;
     isMiniMapOpen: boolean;
     onToggleMiniMap: () => void;
-    onOpenShortcuts: () => void;
+    onOpenShortcuts?: () => void;
     containerRef?: RefObject<HTMLDivElement | null>;
 };
 
@@ -232,9 +232,11 @@ export function CanvasZoomControls({ scale, onScaleChange, onFitContent, onAutoA
                     <Map />
                 </button>
             </div>
-            <button type="button" className="canvas-view-help" aria-label="画布快捷键" title="画布快捷键" onClick={onOpenShortcuts}>
-                <HelpCircle />
-            </button>
+            {onOpenShortcuts && (
+                <button type="button" className="canvas-view-help" aria-label="画布快捷键" title="画布快捷键" onClick={onOpenShortcuts}>
+                    <HelpCircle />
+                </button>
+            )}
         </div>
     );
 }

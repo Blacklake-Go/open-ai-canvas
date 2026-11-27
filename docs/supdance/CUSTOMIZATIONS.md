@@ -309,6 +309,7 @@ TikTok Login Kit 仅申请 Web 的 `user.info.basic`，回调为 `/api/auth/soci
 - 生产构建在 `web/build/static-ui-i18n.ts` 按前端模块和语言生成静态界面词包。模块只请求当前语言，后台翻译管理页按需载入完整词表。原词条键和后台发布记录继续沿用。
 - `web/src/main.tsx` 在执行页面模块前准备公共词包及模块初始化时使用的标签。`web/build/resilient-preload.ts` 在页面模块完成求值后等待已发出的词包请求，避免词包等待进入模块依赖链。画布左侧菜单使用 `canvasC.workspaceRail` 八语词条。
 - `web/src/router.tsx` 对个人、团队和共享画布的直接导航预热其原生模块。画布视图控制、列表计数、默认名称和功能不可用提示沿用托管词条。同步上游时核对路由首次进入与共享只读状态。
+- `web/src/pages/canvas/shared.tsx` 复用画布小地图，仅更新本页视口。共享工具栏只渲染提供了实际动作的入口，视图切换与撤销复用已发布词条。
 
 ### 上游 v1.8.7.2
 
