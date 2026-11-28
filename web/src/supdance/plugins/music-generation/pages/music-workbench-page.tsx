@@ -1,9 +1,8 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { Button } from "antd";
 import { MusicAdvancedDialog } from "../components/music-advanced-dialog";
 import { musicOutputLabel, trackSource, type MusicSource } from "../services/music-tools";
 import { Link, useNavigate, useSearchParams } from "react-router";
-import { ArrowDownUp, Check, ChevronDown, Disc3, FolderOpen, List, Plus, RefreshCw, Search, SlidersHorizontal, Tag, Upload, Users } from "lucide-react";
+import { ArrowDownUp, AudioLines, Check, Disc3, FolderOpen, RefreshCw, Search, SlidersHorizontal } from "lucide-react";
 import { TrackList } from "../components/track-list";
 import { MusicTrimDialog } from "../components/music-trim-dialog";
 import { getMusicAssetHref, saveMusicClip } from "../services/music-assets";
@@ -11,15 +10,17 @@ import { groupMusicHistory } from "../services/workspace-list";
 import type { MusicTask, MusicOutput } from "../services/music-api";
 import { WorkspacePage } from "@/components/layout/workspace-page";
 import { AppDrawer } from "@/components/ui/product/app-drawer";
+import { IconButton } from "@/components/ui/base/buttons";
 import { useUserStore } from "@/stores/use-user-store";
 import { selectPluginEffectivelyEnabled, usePluginStore } from "@/stores/use-plugin-store";
 import { useI18n } from "@/supdance/plugins/i18n";
 import { selectPlayerWork, useMusicStore } from "../stores/use-music-store";
 import { SUPDANCE_MUSIC_PLUGIN_ID } from "../types";
 import { MusicForm } from "../components/music-form";
-import { WaveformPlayer } from "../components/waveform-player";
+import { MusicTrackPlayer } from "../components/music-track-player";
 import { MusicTaskDetails } from "../components/music-task-details";
 import "../styles/music-workbench.css";
+import "../styles/music-track-page.css";
 
 const musicEnabled = selectPluginEffectivelyEnabled(SUPDANCE_MUSIC_PLUGIN_ID);
 export default function MusicWorkbenchPage() {
@@ -78,9 +79,10 @@ function MusicStudio({ userId }: { userId?: string }) {
     const loadTasks = useMusicStore((s) => s.loadTasks);
     const selected = useMusicStore(selectPlayerWork);
     const playingId = useMusicStore((s) => s.playingTaskId);
-    const [mobile, setMobile] = useState(() => (searchParams.get("tab") === "library" ? "library" : "create"));
+    const [selectedOutputId, setSelectedOutputId] = useState<string>();
+    const [mobile, setMobile] = useState<"create" | "player" | "library">(() => (searchParams.get("tab") === "library" ? "library" : "create"));
     const [filter, setFilter] = useState("all");
-    const [showFilters, setShowFilters] = useState(true);
+    const [showFilters, setShowFilters] = useState(false);
     const [search, setSearch] = useState("");
     const [detailId, setDetailId] = useState<string | null>(null);
     useEffect(() => {
@@ -93,8 +95,21 @@ function MusicStudio({ userId }: { userId?: string }) {
         return () => useMusicStore.getState().resetUser();
     }, [userId]);
     const days = useMemo(() => groupMusicHistory(tasks, search, filter, oldestFirst, favorites, locale), [tasks, search, filter, oldestFirst, favorites, locale]);
-    const output = selected?.outputs?.find((item) => (playingId ? item.id === playingId : item.audioUrl));
-    const track = selected && output ? { task: selected, output } : null;
+    const works = useMemo(() => tasks.filter((task) => task.status === "completed").flatMap((task) => (task.outputs || []).map((output) => ({ task, output }))), [tasks]);
+    const playingOutput = selected?.outputs?.find((item) => item.id === playingId);
+    const track = works.find(({ output }) => output.id === selectedOutputId) ?? (selected && playingOutput ? { task: selected, output: playingOutput } : undefined) ?? works.find(({ output }) => output.audioUrl) ?? works[0];
+    const playable = useMemo(() => works.filter(({ output }) => output.audioUrl), [works]);
+    const trackIndex = playable.findIndex(({ output }) => output.id === track?.output.id);
+    const chooseTrack = (output: MusicOutput) => {
+        setSelectedOutputId(output.id);
+        setMobile("player");
+        const playback = useMusicStore.getState();
+        if (playback.playingTaskId !== output.id) playback.pauseAudio();
+    };
+    const playTrack = (output: MusicOutput) => {
+        chooseTrack(output);
+        if (output.audioUrl) useMusicStore.getState().playAudio(output.id, output.audioUrl);
+    };
     const detail = tasks.find((task) => task.taskId === detailId);
     const reuse = () => {
         if (!detail || !userId) return;
@@ -112,12 +127,12 @@ function MusicStudio({ userId }: { userId?: string }) {
         setDetailId(null);
     };
     return (
-        <WorkspacePage fluid scroll={false} className="plugin-music-generation music-workbench-page">
+        <WorkspacePage fluid scroll={false} className="creation-home plugin-music-generation music-workbench-page">
             <div ref={studio} className="music-studio-shell" translate="no" data-i18n-ignore="true" data-plugin-scope="supdance-music-generation">
                 <div className="music-mobile-tabs" role="group" aria-label={t("music.studio_title")}>
-                    {["create", "library"].map((tab) => (
+                    {(["create", "player", "library"] as const).map((tab) => (
                         <button type="button" key={tab} aria-pressed={mobile === tab} onClick={() => setMobile(tab)}>
-                            {t(tab === "create" ? "music.create_music" : "music.my_works")}
+                            {t(tab === "create" ? "music.create_music" : tab === "player" ? "music.track_playing_panel" : "music.my_works")}
                         </button>
                     ))}
                 </div>
@@ -125,78 +140,61 @@ function MusicStudio({ userId }: { userId?: string }) {
                     <section className={`music-composer ${mobile === "create" ? "is-mobile-active" : ""}`}>
                         <div className="music-composer-heading">
                             <h1>{t("music.compose_heading")}</h1>
-                            {enabled && userId && (
-                                <Button htmlType="button" icon={<SlidersHorizontal size={15} />} onClick={() => setAdvanced({})}>
-                                    {t("music.adv_tools")}
-                                </Button>
-                            )}
+                            {enabled && userId && <IconButton icon={SlidersHorizontal} className="size-11" aria-label={t("music.adv_tools")} title={t("music.adv_tools")} onClick={() => setAdvanced({})} />}
                         </div>
                         {enabled && userId ? <MusicForm userId={userId} onSubmitted={showSubmitted} /> : <p role="status">{t("music.generation_disabled", undefined, "New music generation is disabled. Your tasks and saved works remain available.")}</p>}
+                    </section>
+                    <section className={`music-stage ${mobile === "player" ? "is-mobile-active" : ""}`} aria-label={t("music.track_playing_panel")}>
+                        {track ? (
+                            <MusicTrackPlayer
+                                key={track.output.id}
+                                studio
+                                task={track.task}
+                                output={track.output}
+                                refreshing={loading}
+                                onRefresh={() => void loadTasks()}
+                                onPrevious={trackIndex > 0 ? () => playTrack(playable[trackIndex - 1].output) : undefined}
+                                onNext={trackIndex >= 0 && trackIndex + 1 < playable.length ? () => playTrack(playable[trackIndex + 1].output) : undefined}
+                            />
+                        ) : (
+                            <div className="music-stage-empty" role="status">
+                                <AudioLines size={32} aria-hidden />
+                                <h2>{t("music.track_playing_panel")}</h2>
+                                <p>{t(loading ? "common.loading" : "music.track_playing_empty")}</p>
+                            </div>
+                        )}
                     </section>
                     <section className={`music-library ${mobile === "library" ? "is-mobile-active" : ""}`} aria-label={t("music.my_works")}>
                         <div className="music-library-header">
                             <div className="music-library-heading">
-                                <nav className="music-breadcrumb" aria-label={t("music.workspace_breadcrumb")}>
-                                    <span>{t("music.workspace_breadcrumb")}</span>
-                                </nav>
                                 <h2>{t("music.my_works")}</h2>
                             </div>
                             <div className="music-header-actions">
-                                <Link to="/assets" className="music-asset-link">
-                                    <FolderOpen size={16} />
-                                    {t("music.assets_heading")}
-                                </Link>
-                                <button type="button" title={t("music.refresh_works")} aria-label={t("music.refresh_works")} onClick={() => void loadTasks()} disabled={loading}>
-                                    <RefreshCw size={16} />
-                                </button>
+                                <IconButton icon={FolderOpen} className="size-11" aria-label={t("music.assets_heading")} title={t("music.assets_heading")} onClick={() => void navigate("/assets")} />
+                                <IconButton icon={RefreshCw} className="size-11" title={t("music.refresh_works")} aria-label={t("music.refresh_works")} onClick={() => void loadTasks()} disabled={loading} />
                             </div>
-                        </div>
-                        <div className="music-suno-toolbar" role="toolbar" aria-label={t("music.my_works")}>
-                            <button type="button" className="music-suno-tool is-primary" aria-pressed={showFilters} onClick={() => setShowFilters(!showFilters)}>
-                                <SlidersHorizontal size={14} />
-                                {t("music.workspace_filters")}
-                                {filter !== "all" && <span className="music-suno-tool-count">1</span>}
-                            </button>
-                            <button
-                                type="button"
-                                className="music-suno-tool"
-                                onClick={() => {
-                                    setMobile("create");
-                                    setDetailId(null);
-                                }}
-                            >
-                                <Plus size={14} />
-                                {t("music.workspace_new")}
-                                <ChevronDown size={12} />
-                            </button>
-                            <button type="button" className="music-suno-tool" aria-pressed={false}>
-                                <List size={14} />
-                                {t("music.workspace_list")}
-                                <ChevronDown size={12} />
-                            </button>
-                            <span className="music-suno-toolbar-spacer" />
-                            <button type="button" className="music-suno-tool" disabled title={t("music.workspace_label")}>
-                                <Tag size={14} />
-                                {t("music.workspace_label")}
-                            </button>
-                            <button type="button" className="music-suno-tool" disabled title={t("music.workspace_public")}>
-                                <Users size={14} />
-                                {t("music.workspace_public")}
-                            </button>
-                            <button type="button" className="music-suno-tool" disabled title={t("music.workspace_uploads")}>
-                                <Upload size={14} />
-                                {t("music.workspace_uploads")}
-                            </button>
                         </div>
                         <div className="music-tools">
                             <label className="music-search">
                                 <Search size={16} aria-hidden />
                                 <input type="search" aria-label={t("music.search_works")} value={search} onChange={(event) => setSearch(event.target.value)} placeholder={t("music.search_works")} />
                             </label>
-                            <button className="music-sort" type="button" onClick={() => setOldestFirst(!oldestFirst)}>
-                                <ArrowDownUp size={15} />
-                                {t(oldestFirst ? "music.order_old" : "music.order_new")}
-                            </button>
+                            <IconButton
+                                icon={SlidersHorizontal}
+                                className="size-11"
+                                aria-pressed={showFilters || filter !== "all"}
+                                title={t("music.workspace_filters")}
+                                aria-label={t("music.workspace_filters")}
+                                onClick={() => setShowFilters(!showFilters)}
+                            />
+                            <IconButton
+                                icon={ArrowDownUp}
+                                className="size-11"
+                                aria-pressed={oldestFirst}
+                                title={t(oldestFirst ? "music.order_old" : "music.order_new")}
+                                aria-label={t(oldestFirst ? "music.order_old" : "music.order_new")}
+                                onClick={() => setOldestFirst(!oldestFirst)}
+                            />
                         </div>
                         {showFilters && (
                             <div className="music-filters" role="group" aria-label={t("music.filter_works")}>
@@ -232,6 +230,8 @@ function MusicStudio({ userId }: { userId?: string }) {
                                                 task={task}
                                                 favorites={favorites}
                                                 onlyFavorites={filter === "favorites"}
+                                                selectedOutputId={track?.output.id}
+                                                onSelect={chooseTrack}
                                                 onFavorite={favorite}
                                                 onDetails={(output) => {
                                                     setDetailId(task.taskId);
@@ -264,15 +264,6 @@ function MusicStudio({ userId }: { userId?: string }) {
                         )}
                     </section>
                 </div>
-                {track?.output.audioUrl && (
-                    <WaveformPlayer
-                        taskId={track.output.id}
-                        audioUrl={track.output.audioUrl}
-                        title={[track.task.title, musicOutputLabel(track.output, t)].filter(Boolean).join(" · ")}
-                        durationSeconds={(track.output.durationMs || 0) / 1000}
-                        output={track.output}
-                    />
-                )}
                 <AppDrawer rootClassName="plugin-music-generation" open={Boolean(detail)} onClose={() => setDetailId(null)} title={detail?.title || t("music.default_track_title")}>
                     {detail && (
                         <MusicTaskDetails
@@ -301,7 +292,7 @@ function MusicStudio({ userId }: { userId?: string }) {
                 )}
                 {trim && (
                     <MusicTrimDialog
-                        returnFocusTo={studio.current?.querySelector<HTMLButtonElement>('[data-output-id="' + CSS.escape(trim.output.id) + '"] .music-trim-trigger')}
+                        returnFocusTo={studio.current?.querySelector<HTMLButtonElement>('[data-output-id="' + CSS.escape(trim.output.id) + '"] .music-track-actions-trigger')}
                         url={trim.output.audioUrl || ""}
                         storageKey={trim.output.storageKey}
                         title={[trim.task.title || t("music.default_track_title"), musicOutputLabel(trim.output, t)].join(" · ")}

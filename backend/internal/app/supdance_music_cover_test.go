@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"yingce/backend/internal/model"
+	"yingce/backend/internal/protocol"
 	"yingce/backend/internal/supdance/music"
 )
 
@@ -107,6 +108,44 @@ func TestMusicCoverConfigAndCreationUseSiteQuote(t *testing.T) {
 	reloaded, err := svc.repo.Task(parent.ID)
 	if err != nil || !strings.Contains(reloaded.ResultJSON, "resource:song-audio") || reloaded.BillingOrderID != "" {
 		t.Fatalf("song audio or billing was replaced: %+v %v", reloaded, err)
+	}
+}
+
+func TestMusicCoverUsesImplicitSingleOutputForSiteImageChannels(t *testing.T) {
+	const provider = "runninghub-standard-image"
+	const modelKey = "cover-image-text"
+	svc, _, admin := seedBatchUpdates(t)
+	fields := []protocol.ImageParameter{
+		{Name: "size", Label: "Aspect ratio", Type: "string", Binding: "aspectRatio", Encoding: "ratio", Values: []any{"1:1", "16:9"}, Default: "1:1"},
+		{Name: "imageResolution", Label: "Resolution", Type: "string", Binding: "resolution", Values: []any{"1k", "2k"}, Default: "1k", Pricing: true},
+	}
+	adapter := commonImageEndpointAdapter(t, provider, "/image", fields)
+	registry, err := protocol.NewRegistry(adapter)
+	if err != nil {
+		t.Fatal(err)
+	}
+	svc.pluginRuntime = &pluginRuntime{registry: registry}
+	profile := DefaultModelCapabilityConfigForModel(provider, modelKey)
+	profile.Image.Size = ImageSizeConfig{Parameter: "aspect_ratio", Values: []string{"1:1", "16:9"}, Default: "1:1"}
+	profile.Image.Parameters = fields
+	const price = int64(400_000)
+	if _, err := svc.SaveAdminChannelModel(admin, "channel", "", ChannelModelRequest{
+		ModelKey: modelKey, ProviderModelKey: "automatic/text-to-image", Capability: "image", Protocol: provider, CapabilityConfig: profile, Enabled: batchBool(true),
+		PriceTiers: []ChannelModelPriceTierRequest{{Selector: map[string]string{"imageResolution": "1k"}, BillingMode: "fixed_request", PriceConfigured: true, UnitPriceMicrocredits: price}},
+	}); err != nil {
+		t.Fatal(err)
+	}
+	intent, err := svc.musicCoverIntent("channel", modelKey)
+	if err != nil {
+		t.Fatal(err)
+	}
+	quote, err := svc.quoteChannelModel(admin.ID, ChannelModelQuoteRequest{ChannelID: "channel", ModelKey: modelKey, Intent: intent}, true)
+	if err != nil || quote.AmountMicrocredits != price {
+		t.Fatalf("fixed price for model without a count field: %+v %v", quote, err)
+	}
+	choices, err := svc.musicCoverModels(admin.ID, nil)
+	if err != nil || len(choices) != 1 || choices[0].QuoteMicrocredits != price {
+		t.Fatalf("cover catalog: %+v %v", choices, err)
 	}
 }
 

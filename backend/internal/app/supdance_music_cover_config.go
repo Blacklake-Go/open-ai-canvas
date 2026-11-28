@@ -64,7 +64,10 @@ func (s *Service) musicCoverIntent(channelID, modelKey string) (ModelRequestInte
 		}
 		request.Size = preset.Size
 	}
-	intent := ModelRequestIntent{Capability: "image", Operation: "text_to_image", Options: map[string]any{"count": 1}}
+	intent := ModelRequestIntent{Capability: "image", Operation: "text_to_image", Options: map[string]any{}}
+	if _, acceptsCount := spec.Options["count"]; acceptsCount {
+		intent.Options["count"] = 1
+	}
 	request.apply(intent.Options)
 	return intent, nil
 }

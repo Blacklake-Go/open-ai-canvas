@@ -1,7 +1,9 @@
 import { useState } from "react";
-import { Link } from "react-router";
+import { useNavigate } from "react-router";
+import { Dropdown, type MenuProps } from "antd";
 import { recoverGenerationTaskMedia } from "@/services/api/task-center";
-import { ChevronRight, Disc3, Download, FolderOpen, Heart, Info, Music2, Pause, Play, Scissors, Share2, SlidersHorizontal } from "lucide-react";
+import { Disc3, Download, ExternalLink, FolderOpen, Heart, Info, MoreHorizontal, Pause, Play, Scissors, Share2, SlidersHorizontal } from "lucide-react";
+import { IconButton } from "@/components/ui/base/buttons";
 import { useI18n } from "@/supdance/plugins/i18n";
 import { useMusicStore } from "../stores/use-music-store";
 import { musicOutputLabel } from "../services/music-tools";
@@ -20,6 +22,8 @@ type Props = {
     task: MusicTask;
     favorites: ReadonlySet<string>;
     onlyFavorites: boolean;
+    selectedOutputId?: string;
+    onSelect: (output: MusicOutput) => void;
     onFavorite: (output: MusicOutput) => void;
     onDetails: (output?: MusicOutput) => void;
     onTrim: (output: MusicOutput) => void;
@@ -27,8 +31,9 @@ type Props = {
     onAsset: (output: MusicOutput) => Promise<void>;
 };
 
-export function TrackList({ task, favorites, onlyFavorites, onFavorite, onDetails, onTrim, onAsset, onAdvanced }: Props) {
+export function TrackList({ task, favorites, onlyFavorites, selectedOutputId, onSelect, onFavorite, onDetails, onTrim, onAsset, onAdvanced }: Props) {
     const { t } = useI18n();
+    const navigate = useNavigate();
     const currentlyPlaying = useMusicStore((s) => (s.isPlaying ? s.playingTaskId : null));
     const toggle = useMusicStore((s) => s.togglePlayback);
     const [error, setError] = useState("");
@@ -36,11 +41,6 @@ export function TrackList({ task, favorites, onlyFavorites, onFavorite, onDetail
     const [busy, setBusy] = useState<string | null>(null);
     const title = task.title || t("music.default_track_title");
     const model = task.model.split("::").at(-1);
-    const description = (task.prompt || task.lyrics || "")
-        .replace(/\[[^\]]+\]/g, "")
-        .replace(/\s+/g, " ")
-        .trim()
-        .slice(0, 140);
     const share = async (href: string) => {
         setError("");
         setCopied(false);
@@ -74,70 +74,46 @@ export function TrackList({ task, favorites, onlyFavorites, onFavorite, onDetail
                     const liked = favorites.has(output.id);
                     const canOpen = canLocateMusicAsset(output);
                     const trackHref = musicTrackHref({ taskId: task.taskId, outputIndex: output.outputIndex });
+                    const actions: MenuProps["items"] = [
+                        { key: "open", icon: <ExternalLink size={16} />, label: t("music.track_open_page"), onClick: () => void navigate(trackHref) },
+                        { key: "favorite", icon: <Heart size={16} fill={liked ? "currentColor" : "none"} />, label: t(liked ? "music.track_unfavorite" : "music.favorite_local"), onClick: () => onFavorite(output) },
+                        { key: "copy", icon: <Share2 size={16} />, label: t("music.track_copy"), onClick: () => void share(trackHref) },
+                        { key: "details", icon: <Info size={16} />, label: t("music.track_details"), onClick: () => onDetails(output) },
+                        { key: "trim", icon: <Scissors size={16} />, label: t("music.trim_track"), disabled: !output.audioUrl && !output.storageKey, onClick: () => onTrim(output) },
+                        { key: "asset", icon: <FolderOpen size={16} />, label: t("music.manage_in_assets"), disabled: !canOpen || busy === output.id, onClick: () => void run(output.id, () => onAsset(output)) },
+                        {
+                            key: "download",
+                            icon: <Download size={16} />,
+                            label: t("music.original_download"),
+                            disabled: busy === output.id || (!output.audioUrl && !output.storageKey),
+                            onClick: () => void run(output.id, () => downloadMusicOutput(output, title + "-" + number)),
+                        },
+                    ];
+                    if (onAdvanced) actions.splice(4, 0, { key: "tools", icon: <SlidersHorizontal size={16} />, label: t("music.adv_tools"), disabled: !canOpen, onClick: () => onAdvanced(output) });
                     return (
-                        <article key={output.id} aria-label={title + " · " + variant} data-output-id={output.id} className={"music-record" + (active ? " is-playing" : "")}>
+                        <article key={output.id} aria-label={title + " · " + variant} data-output-id={output.id} className={"music-record" + (selectedOutputId === output.id ? " is-selected" : "")}>
                             <button
                                 className="music-cover"
                                 type="button"
                                 aria-label={t(active ? "music.player_pause" : "music.player_play") + " · " + variant}
                                 disabled={!output.audioUrl}
-                                onClick={() => output.audioUrl && toggle(output.id, output.audioUrl)}
+                                onClick={() => {
+                                    if (output.audioUrl) {
+                                        onSelect(output);
+                                        toggle(output.id, output.audioUrl);
+                                    }
+                                }}
                             >
-                                <Disc3 size={34} className="music-disc" aria-hidden />
-                                <span className="music-cover-control">{active ? <Pause size={14} /> : <Play size={14} />}</span>
+                                <Disc3 size={20} className="music-disc" aria-hidden />
+                                <span className="music-cover-control">{active ? <Pause size={16} /> : <Play size={16} />}</span>
                             </button>
-                            <Link className="music-record-title" to={trackHref}>
+                            <button type="button" className="music-record-title" aria-current={selectedOutputId === output.id ? "true" : undefined} onClick={() => onSelect(output)}>
                                 <strong>{title}</strong>
-                                <span>
-                                    {variant} <i>·</i> {model}{" "}
-                                    {task.instrumental && (
-                                        <>
-                                            {" "}
-                                            <i>·</i> <Music2 size={12} aria-label={t("music.instrumental_label")} />
-                                        </>
-                                    )}
-                                </span>
-                                {description && <span className="music-record-desc">{description}</span>}
-                                <ChevronRight className="music-record-chevron" size={16} aria-hidden />
-                            </Link>
-                            <span className="music-record-length">{output.durationMs ? musicTime(output.durationMs / 1000) : "—"}</span>
-                            <div className="music-record-actions">
-                                <button type="button" aria-pressed={liked} title={t("music.favorite_local")} aria-label={t("music.favorite_local")} onClick={() => onFavorite(output)}>
-                                    <Heart size={16} fill={liked ? "currentColor" : "none"} />
-                                </button>
-                                {onAdvanced && (
-                                    <button type="button" aria-label={t("music.adv_tools")} title={t("music.adv_tools")} disabled={!canOpen} onClick={() => onAdvanced(output)}>
-                                        <SlidersHorizontal size={16} />
-                                    </button>
-                                )}
-                                <button type="button" aria-label={t("music.track_copy")} title={t("music.track_copy")} onClick={() => void share(trackHref)}>
-                                    <Share2 size={16} />
-                                </button>
-                                <button type="button" aria-label={t("music.track_details")} title={t("music.track_details")} onClick={() => onDetails(output)}>
-                                    <Info size={16} />
-                                </button>
-                                <button type="button" className="music-trim-trigger" disabled={!output.audioUrl && !output.storageKey} aria-label={t("music.trim_track")} title={t("music.trim_track")} onClick={() => onTrim(output)}>
-                                    <Scissors size={16} />
-                                </button>
-                                <button
-                                    type="button"
-                                    disabled={!canOpen || busy === output.id}
-                                    aria-label={t("music.manage_in_assets")}
-                                    title={t(canOpen ? "music.manage_in_assets" : "music.asset_unavailable")}
-                                    onClick={() => void run(output.id, () => onAsset(output))}
-                                >
-                                    <FolderOpen size={16} />
-                                </button>
-                                <button
-                                    type="button"
-                                    disabled={busy === output.id || (!output.audioUrl && !output.storageKey)}
-                                    title={t("music.original_download")}
-                                    aria-label={t("music.original_download")}
-                                    onClick={() => void run(output.id, () => downloadMusicOutput(output, title + "-" + number))}
-                                >
-                                    <Download size={16} />
-                                </button>
-                            </div>
+                                <span>{[variant, output.durationMs ? musicTime(output.durationMs / 1000) : "", model].filter(Boolean).join(" · ")}</span>
+                            </button>
+                            <Dropdown menu={{ items: actions }} trigger={["click"]} placement="bottomRight">
+                                <IconButton icon={MoreHorizontal} className="music-track-actions-trigger size-11" aria-label={t("music.track_actions")} title={t("music.track_actions")} />
+                            </Dropdown>
                         </article>
                     );
                 })}

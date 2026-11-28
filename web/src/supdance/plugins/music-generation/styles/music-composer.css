@@ -222,16 +222,12 @@
 
 /* ==========================================================================
    图 2 歌词输入岛（Lyrics Island）—— scoped to .plugin-music-generation
-   居中衬线标题 + 半透明玻璃卡片 + 话题 pill + 橙粉渐变 CTA。
-   主色角色独立于 --music-primary（主命令），岛内 CTA 用 --music-island-accent。
+   歌词编辑沿用创作页的表面和控件令牌。
    ========================================================================== */
 
 .plugin-music-generation {
-    --music-island-accent: #f97316;
-    --music-island-accent-2: #ec4899;
-    --music-island-gradient: linear-gradient(100deg, var(--music-island-accent) 0%, var(--music-island-accent-2) 100%);
-    --music-island-card-bg: color-mix(in srgb, var(--music-island-accent) 7%, var(--music-bg-surface-raised, var(--muted)));
-    --music-island-card-border: color-mix(in srgb, var(--music-island-accent) 22%, var(--music-border-subtle, var(--border)));
+    --music-island-card-bg: var(--music-bg-surface-raised, var(--muted));
+    --music-island-card-border: var(--music-border-subtle, var(--border));
 }
 
 .plugin-music-generation .music-lyrics-island {
@@ -241,7 +237,7 @@
     padding: 18px 16px;
     border: 1px solid var(--music-island-card-border);
     border-radius: var(--music-radius-lg, var(--radius));
-    background: radial-gradient(120% 90% at 50% 0%, color-mix(in srgb, var(--music-island-accent) 10%, transparent) 0%, transparent 55%), var(--music-bg-surface, var(--card));
+    background: var(--music-bg-surface, var(--card));
     box-shadow: var(--music-elevation-card, none);
 }
 
@@ -254,8 +250,7 @@
 
 .plugin-music-generation .music-lyrics-island-intro h2 {
     margin: 0;
-    font-family: Georgia, "Songti SC", "Noto Serif SC", serif;
-    font-size: 1.75rem;
+    font-size: var(--fs-title);
     font-weight: 600;
     letter-spacing: -0.01em;
     color: var(--music-text-primary, var(--foreground));
@@ -276,7 +271,6 @@
     border: 1px solid var(--music-island-card-border);
     border-radius: var(--music-radius-md, var(--radius));
     background: var(--music-island-card-bg);
-    backdrop-filter: blur(6px);
 }
 
 .plugin-music-generation .music-lyrics-card-head {
@@ -302,8 +296,8 @@
     height: 30px;
     border: none;
     border-radius: 50%;
-    background: var(--music-island-gradient);
-    color: #fff;
+    background: var(--music-primary, var(--foreground));
+    color: var(--music-primary-fg, var(--background));
     cursor: pointer;
     transition:
         transform var(--music-motion-fast, 150ms) ease,
@@ -426,8 +420,8 @@
     min-height: 44px;
     border: none;
     border-radius: var(--music-radius-full, 9999px);
-    background: var(--music-island-gradient);
-    color: #fff;
+    background: var(--music-primary, var(--foreground));
+    color: var(--music-primary-fg, var(--background));
     font-size: var(--font-size-sm, 0.875rem);
     font-weight: 600;
     cursor: pointer;
@@ -476,18 +470,6 @@
     margin-left: auto;
     font-size: var(--font-size-xs, 0.75rem);
     color: var(--music-text-muted, #a1a1aa);
-}
-
-/* 图 3：橙粉渐变主 CTA（仅修饰现有 music-create-button，不改变语义角色） */
-.plugin-music-generation .music-create-button.is-suno-gradient {
-    background: var(--music-island-gradient);
-    border: none;
-    color: #fff;
-}
-
-.plugin-music-generation .music-create-button.is-suno-gradient:hover:not(:disabled) {
-    background: var(--music-island-gradient);
-    opacity: 0.92;
 }
 
 .plugin-music-generation .music-save-to {

@@ -56,25 +56,6 @@
     grid-column: 1;
 }
 
-.plugin-music-track-lyric-scroll {
-    max-block-size: 24rem;
-    overflow-y: auto;
-    overscroll-behavior: contain;
-}
-
-.plugin-music-track-lyric-scroll p {
-    margin: 0;
-    padding: var(--space-2);
-    overflow-wrap: anywhere;
-    font-size: var(--fs-ui);
-}
-
-.plugin-music-track-lyric-scroll p[aria-current="true"] {
-    border-radius: var(--r-md);
-    background: var(--creation-surface-selected);
-    font-weight: 600;
-}
-
 .plugin-music-track-versions ul {
     display: grid;
     gap: var(--space-2);

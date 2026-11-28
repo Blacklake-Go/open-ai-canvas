@@ -3,6 +3,7 @@ import { Button, Switch as AntSwitch } from "antd";
 import { AdminSegmented } from "@/pages/admin/ui/controls";
 import { BookMarked, ChevronDown, LibraryBig, Music2, SlidersHorizontal, WandSparkles } from "lucide-react";
 import { SegmentedControl } from "@/components/ui/base/segmented-control";
+import { IconButton } from "@/components/ui/base/buttons";
 import { Select } from "@/components/ui/base/select";
 import { ModelPicker } from "@/components/model-picker";
 import { useConfigStore } from "@/stores/use-config-store";
@@ -101,39 +102,39 @@ export function MusicForm({ userId, onSubmitted, admin = false }: { userId: stri
     }
     const styleActions = (
         <div className="music-composer-tools">
-            <Button
-                htmlType="button"
-                icon={<WandSparkles size={15} />}
+            <IconButton
+                icon={WandSparkles}
+                className="size-11"
+                aria-label={t("music.prompt_builder")}
+                title={t("music.prompt_builder")}
                 disabled={!canUseStyles}
                 onClick={(e) => {
                     opener.current = e.currentTarget as HTMLButtonElement;
                     setPanel("builder");
                 }}
-            >
-                {t("music.prompt_builder")}
-            </Button>
-            <Button
-                htmlType="button"
-                icon={<LibraryBig size={15} />}
+            />
+            <IconButton
+                icon={LibraryBig}
+                className="size-11"
+                aria-label={t("music.pattern_library")}
+                title={t("music.pattern_library")}
                 disabled={!canUseStyles}
                 onClick={(e) => {
                     opener.current = e.currentTarget as HTMLButtonElement;
                     setPanel("templates");
                 }}
-            >
-                {t("music.pattern_library")}
-            </Button>
-            <Button
-                htmlType="button"
-                icon={<BookMarked size={15} />}
+            />
+            <IconButton
+                icon={BookMarked}
+                className="size-11"
+                aria-label={t("music.saved_styles")}
+                title={t("music.saved_styles")}
                 disabled={!canUseStyles}
                 onClick={(e) => {
                     opener.current = e.currentTarget as HTMLButtonElement;
                     setPanel("saved");
                 }}
-            >
-                {t("music.saved_styles")}
-            </Button>
+            />
         </div>
     );
 
@@ -352,7 +353,7 @@ export function MusicForm({ userId, onSubmitted, admin = false }: { userId: stri
                         {t("music.wallet_unavailable")}
                     </p>
                 )}
-                <Button type="primary" htmlType="submit" loading={submitting} icon={<Music2 size={18} />} disabled={!valid || !enough || submitting} className="music-create-button is-suno-gradient">
+                <Button type="primary" htmlType="submit" loading={submitting} icon={<Music2 size={18} />} disabled={!valid || !enough || submitting} className="music-create-button">
                     {t(submitting ? "music.submitting" : "music.create_music")}
                 </Button>
                 <p className="text-xs text-muted-foreground music-save-to">
