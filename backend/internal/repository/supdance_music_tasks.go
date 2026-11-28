@@ -4,7 +4,7 @@ import "yingce/backend/internal/model"
 
 func (r *Repository) ActiveMusicTaskCount() (int64, error) {
 	var count int64
-	err := r.db.Model(&model.Task{}).Where("type = ? AND input_json LIKE ? AND status IN ?", "canvas_audio", `%"source":"music-workbench"%`, []string{"queued", "running"}).Count(&count).Error
+	err := r.db.Model(&model.Task{}).Where("status IN ? AND ((type = ? AND input_json LIKE ?) OR (type = ? AND input_json LIKE ?))", []string{"queued", "running"}, "canvas_audio", `%"source":"music-workbench"%`, "canvas_image", `%"source":"music-cover"%`).Count(&count).Error
 	return count, err
 }
 

@@ -429,3 +429,9 @@ func (r *Repository) TaskLogs(userID string, taskID string) ([]model.TaskLog, er
 	err := r.db.Order("created_at asc").Find(&logs, "user_id = ? AND task_id = ?", userID, taskID).Error
 	return logs, err
 }
+
+// ReplaceCompletedAudioTaskResult updates auxiliary metadata without overwriting concurrent changes.
+func (r *Repository) ReplaceCompletedAudioTaskResult(userID, id, previous, result string) (bool, error) {
+	update := r.db.Model(&model.Task{}).Where("user_id = ? AND id = ? AND type = ? AND status = ? AND result_json = ?", userID, id, "canvas_audio", model.TaskStatusSucceeded, previous).UpdateColumn("result_json", result)
+	return update.RowsAffected == 1, update.Error
+}

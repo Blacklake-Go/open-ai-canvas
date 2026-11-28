@@ -41,6 +41,7 @@
     height: 38px;
     flex: 0 0 38px;
     place-items: center;
+    overflow: hidden;
     border: 1px solid var(--creation-border, rgba(255, 255, 255, 0.1));
     border-radius: var(--r-md, 10px);
     background: var(--creation-surface-raised, #22252b);

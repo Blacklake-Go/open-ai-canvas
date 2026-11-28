@@ -41,6 +41,7 @@ export function projectSiteMusicTask(task: GenerationTask): MusicTask {
         format: (item.format || (item.mimeType?.split(";")[0] === "audio/mpeg" ? "mp3" : undefined)) as MusicTask["format"],
     }));
     return {
+        coverSupported: true,
         outputs,
         upstreamTaskId: task.providerRequestId,
         mediaStage: task.mediaStage,

@@ -1,3 +1,4 @@
+import { useQueryClient } from "@tanstack/react-query";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Download, FastForward, Rewind } from "lucide-react";
 import { Button } from "antd";
@@ -10,12 +11,15 @@ import { downloadMusicOutput } from "../services/music-site-api";
 import { musicOutputLabel } from "../services/music-tools";
 import { useMusicStore } from "../stores/use-music-store";
 import { CreationMusicCard } from "./creation-music-card";
+import { MusicCoverControls, useMusicCover } from "./music-cover-controls";
 
 const playbackRates = [0.75, 1, 1.25, 1.5, 2];
 
 export function MusicTrackPlayer({ task, output, onRefresh, refreshing }: { task: MusicTask; output: MusicOutput; onRefresh: () => void; refreshing: boolean }) {
     const { t, locale } = useI18n();
     const outputId = output.id;
+    const cover = useMusicCover(task.userId, task.taskId, Boolean(task.coverSupported));
+    const queryClient = useQueryClient();
     const title = task.title || t("music.default_track_title");
     const active = useMusicStore((s) => s.playingTaskId === outputId);
     const audio = useMusicStore((s) => (s.playingTaskId === outputId ? s.audioElement : null));
@@ -81,6 +85,7 @@ export function MusicTrackPlayer({ task, output, onRefresh, refreshing }: { task
                 messageId={task.taskId}
                 title={title}
                 pageTitle
+                coverStorageKey={cover.data?.storageKey}
                 instrumental={instrumental}
                 metadata={[(task.outputs?.length || 0) > 1 ? musicOutputLabel(output, t) : "", created, output.format?.toUpperCase() || ""]}
                 tracks={[{ key: output.id, identity: { taskId: task.taskId, outputIndex: output.outputIndex }, url: output.audioUrl || "", storageKey: output.storageKey, durationMs: output.durationMs }]}
@@ -101,6 +106,7 @@ export function MusicTrackPlayer({ task, output, onRefresh, refreshing }: { task
                         onClick={() => void downloadAudio()}
                     />
                 </div>
+                {cover.data && <MusicCoverControls userId={task.userId} taskId={task.taskId} cover={cover.data} onChange={(view) => queryClient.setQueryData(["music-cover", task.userId, task.taskId], view)} />}
                 {!output.audioUrl && (
                     <div className="creation-music-track-error" role="alert">
                         <span>{t("music.playback_failed")}</span>

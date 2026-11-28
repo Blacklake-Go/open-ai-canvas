@@ -47,6 +47,7 @@ type (
 	MusicStoredConfig         = app.MusicStoredConfig
 	MusicAdminConfigView      = app.MusicAdminConfigView
 	MusicUpdateConfigRequest  = app.MusicUpdateConfigRequest
+	MusicCoverRequest         = app.MusicCoverRequest
 	MusicModelPricingConfig   = app.MusicModelPricingConfig
 	MusicGenerationRequest    = app.MusicGenerationRequest
 	MusicGenerationResponse   = app.MusicGenerationResponse

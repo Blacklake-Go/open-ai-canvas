@@ -15,6 +15,7 @@ import { WaveformPlayer } from "../components/waveform-player";
 import { useMusicStore } from "../stores/use-music-store";
 import { siteMusicQuote } from "../services/music-site-api";
 import { SUPDANCE_MUSIC_PLUGIN_VERSION } from "../types";
+import { MusicCoverSettings } from "./music-cover-settings";
 import {
     fetchMusicCapabilities,
     fetchMusicAdminOverview,
@@ -295,6 +296,7 @@ export default function MusicAdminSettingsPage() {
                         <p>{t("music.admin_upgrade_hint", undefined, "Configuration switches apply at runtime. Upgrading this implementation and its protocol package requires a host build and restart.")}</p>
                     </SettingsSectionCard>
                 )}
+                {tab === "settings" && lifecycle?.state === "enabled" && <MusicCoverSettings writable={!loading} />}
                 <AdminDrawer rootClassName="plugin-music-generation music-admin" open={Boolean(detail)} onClose={() => setDetailId(null)} title={<span translate="no">{detail?.title || t("music.default_track_title")}</span>}>
                     {detail && <MusicTaskDetails task={detail} />}
                 </AdminDrawer>

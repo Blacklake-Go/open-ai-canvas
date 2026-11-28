@@ -19,6 +19,7 @@ type taskAdmission struct {
 	ID             string
 	MaxCharge      int64
 	MusicOperation string
+	MusicCover     bool
 	AgentRunID     string
 	GenerationID   string
 	ApprovalID     string
@@ -254,11 +255,19 @@ func (s *Service) CreateTask(userID string, req CreateTaskRequest) (*model.Task,
 		(billingOrder.BillingMode != "fixed_request" || billingOrder.Quantity != 1 || billingOrder.AmountMicrocredits != req.admission.MaxCharge)) {
 		return nil, BadAuthRequest("The music tool price changed. Refresh the operation quote.")
 	}
+	if req.admission != nil && req.admission.MusicCover && ((billingOrder == nil && req.admission.MaxCharge > 0) || (billingOrder != nil && billingOrder.AmountMicrocredits != req.admission.MaxCharge)) {
+		return nil, NewAppError(409, "The cover quote changed. Reload the price before generating.")
+	}
 	if req.admission != nil && billingOrder != nil {
 		if billingOrder.AmountMicrocredits > req.admission.MaxCharge {
 			return nil, BadAuthRequest("模型调用报价超过本轮 Agent 积分上限，尚未创建任务或扣费")
 		}
 		switch billingOrder.BillingMode {
+		case "image_usage":
+			if !req.admission.MusicCover {
+				return nil, BadAuthRequest("Agent 暂不支持当前模型计费方式")
+			}
+			fallthrough
 		case "fixed_request", "per_second", "token":
 			billingOrder.ChargeLimitSet = true
 			billingOrder.ChargeLimitMicrocredits = billingOrder.AmountMicrocredits

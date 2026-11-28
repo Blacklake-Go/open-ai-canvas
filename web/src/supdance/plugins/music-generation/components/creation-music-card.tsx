@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } fro
 import { ChevronRight, Disc3, Download, LoaderCircle, Pause, Play, Repeat1, Volume2, VolumeX } from "lucide-react";
 import { Link, useLocation } from "react-router";
 
+import { CachedResourceImage } from "@/components/cached-resource-image";
 import { Tooltip } from "@/components/ui/base/tooltip";
 import { translate } from "@/i18n";
 import { loadAudioWaveform } from "@/lib/canvas/canvas-audio-waveform";
@@ -31,6 +32,7 @@ export type CreationMusicCardProps = {
     onRefreshResult?: () => void;
     refreshingResult?: boolean;
     pageTitle?: boolean;
+    coverStorageKey?: string;
     metadata?: string[];
     children?: ReactNode;
 };
@@ -392,7 +394,7 @@ function CreationMusicTrackRow({
     );
 }
 
-export function CreationMusicCard({ messageId, taskIds, title, modelLabel, targetDurationSeconds, instrumental, tracks, onRefreshResult, refreshingResult, pageTitle, metadata = [], children }: CreationMusicCardProps) {
+export function CreationMusicCard({ messageId, taskIds, title, modelLabel, targetDurationSeconds, instrumental, tracks, onRefreshResult, refreshingResult, pageTitle, coverStorageKey, metadata = [], children }: CreationMusicCardProps) {
     const { t } = useI18n();
     const playingTaskId = useMusicStore((s) => (s.isPlaying ? s.playingTaskId : null));
     const trackIds = tracks.map(({ identity, key }, index) => (identity ? `${identity.taskId}:${identity.outputIndex}` : resolveInlineTrackId(messageId, taskIds?.[index] || taskIds?.[0], key, index)));
@@ -405,7 +407,7 @@ export function CreationMusicCard({ messageId, taskIds, title, modelLabel, targe
     const heading = (
         <div className="creation-music-card-identity">
             <span className={`creation-music-card-cover${anyPlaying ? " is-playing" : ""}`} aria-hidden="true">
-                <Disc3 />
+                {coverStorageKey ? <CachedResourceImage storageKey={coverStorageKey} alt="" className="size-full object-cover" fallback={<Disc3 />} /> : <Disc3 />}
             </span>
             <div className="creation-music-card-title-group">
                 <Title className="creation-music-card-title" title={title} translate="no">
