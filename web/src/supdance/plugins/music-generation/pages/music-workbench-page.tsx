@@ -2,7 +2,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { Button } from "antd";
 import { MusicAdvancedDialog } from "../components/music-advanced-dialog";
 import { musicOutputLabel, trackSource, type MusicSource } from "../services/music-tools";
-import { Link, useNavigate } from "react-router";
+import { Link, useNavigate, useSearchParams } from "react-router";
 import { ArrowDownUp, Check, ChevronDown, Disc3, FolderOpen, List, Plus, RefreshCw, Search, SlidersHorizontal, Tag, Upload, Users } from "lucide-react";
 import { TrackList } from "../components/track-list";
 import { MusicTrimDialog } from "../components/music-trim-dialog";
@@ -30,6 +30,7 @@ export default function MusicWorkbenchPage() {
 function MusicStudio({ userId }: { userId?: string }) {
     const { t, locale } = useI18n();
     const navigate = useNavigate();
+    const [searchParams] = useSearchParams();
     const favoriteKey = "supdance:music:favorites:" + userId;
     const [favorites, setFavorites] = useState<Set<string>>(() => {
         try {
@@ -77,7 +78,7 @@ function MusicStudio({ userId }: { userId?: string }) {
     const loadTasks = useMusicStore((s) => s.loadTasks);
     const selected = useMusicStore(selectPlayerWork);
     const playingId = useMusicStore((s) => s.playingTaskId);
-    const [mobile, setMobile] = useState("create");
+    const [mobile, setMobile] = useState(() => (searchParams.get("tab") === "library" ? "library" : "create"));
     const [filter, setFilter] = useState("all");
     const [showFilters, setShowFilters] = useState(true);
     const [search, setSearch] = useState("");

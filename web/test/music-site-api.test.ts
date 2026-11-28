@@ -2,6 +2,8 @@ import { describe, expect, test } from "bun:test";
 import { projectSiteMusicTask, projectMusicTask, projectAdminMusicTask } from "@/supdance/plugins/music-generation/services/music-site-api";
 import { musicCreationAllowed } from "@/supdance/plugins/music-generation/components/music-form";
 import type { GenerationTask } from "@/services/api/task-center";
+import { musicLyricTimeline } from "@/supdance/plugins/music-generation/services/music-lyric-timeline";
+import { musicTrackHref, parseMusicOutputIndex, resolveCreationMusicTrack } from "@/supdance/plugins/music-generation/services/music-track-route";
 
 function task(overrides: Partial<GenerationTask> = {}): GenerationTask {
     return {
@@ -20,6 +22,24 @@ function task(overrides: Partial<GenerationTask> = {}): GenerationTask {
 }
 
 describe("music workbench platform integration", () => {
+    test("track routing keeps the archived output identity and rejects malformed indexes", () => {
+        expect(musicTrackHref(resolveCreationMusicTrack(["task"], 2)!)).toBe("/toolbox/music/tracks/task/2");
+        expect(resolveCreationMusicTrack(["one", "two"], 8, { taskId: "two", outputIndex: 1 })).toEqual({ taskId: "two", outputIndex: 1 });
+        expect(resolveCreationMusicTrack(["one", "two"], 1, { taskId: "other", outputIndex: 1 })).toBeUndefined();
+        expect(parseMusicOutputIndex("0")).toBe(0);
+        for (const value of ["-1", "1.1", "1e3", "00", "9007199254740992"]) expect(parseMusicOutputIndex(value)).toBeUndefined();
+    });
+
+    test("lyrics estimate skips section labels and waits for a known duration", () => {
+        expect(musicLyricTimeline("[Verse]\nFirst line\n\n[Chorus]\nSecond line", 36)).toEqual([
+            { text: "Verse", start: null, section: true },
+            { text: "First line", start: 0, section: false },
+            { text: "Chorus", start: null, section: true },
+            { text: "Second line", start: 18, section: false },
+        ]);
+        expect(musicLyricTimeline("First line", 0)[0].start).toBeNull();
+    });
+
     test("admin playback uses the existing admin resource route and ordinary playback keeps user authorization", () => {
         const ordinary = projectSiteMusicTask(task());
         const admin = projectAdminMusicTask(task());

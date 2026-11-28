@@ -1,5 +1,6 @@
 import { describe, expect, test } from "bun:test";
 import { renderToStaticMarkup } from "react-dom/server";
+import { MemoryRouter } from "react-router";
 
 import { CreationMusicCard } from "@/supdance/plugins/music-generation/components/creation-music-card";
 import { reconcileCreationTaskMessages } from "@/pages/create/creation-conversations";
@@ -42,6 +43,16 @@ describe("生成岛内联音乐结果与数据一致性", () => {
         expect(html).toContain("0:00 / 1:12");
         expect(html).toContain("Track 1");
         expect(html).toContain("Track 2");
+    });
+
+    test("音乐结果入口使用服务端音轨序号，即使其他音轨尚未载入", () => {
+        const html = renderToStaticMarkup(
+            <MemoryRouter initialEntries={["/create?conversation=music-session"]}>
+                <CreationMusicCard messageId="msg-music-2" title="双轨测试" tracks={[{ key: "res-b", url: "https://cdn.example.com/b.mp3", identity: { taskId: "task-2", outputIndex: 1 } }]} />
+            </MemoryRouter>,
+        );
+        expect(html).toContain('href="/toolbox/music/tracks/task-2/1"');
+        expect(html).toContain("creation-music-song-card");
     });
 
     test("历史记录回放即使遗留了「图片已生成」占位文案，也会回退为用户提示词摘要", () => {

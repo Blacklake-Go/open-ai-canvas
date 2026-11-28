@@ -2,6 +2,7 @@ import { describe, expect, test } from "bun:test";
 import { readFileSync, existsSync } from "node:fs";
 import { resolve } from "node:path";
 import { SUPDANCE_HOST_VERSION, type SupDancePluginManifest, validateSupDancePluginManifest } from "@/supdance";
+import { supdanceMusicManifest } from "@/supdance/plugins/music-generation";
 
 describe("Challenger 2: Manifest V2 Adversarial Schema and Permission Conformance", () => {
     const manifestPath = resolve(import.meta.dir, "../../supdance/plugins/supdance-music-generation/manifest.json");
@@ -49,7 +50,8 @@ describe("Challenger 2: Manifest V2 Adversarial Schema and Permission Conformanc
 
         expect(manifest.apiVersion).toBe("yingce.plugin/v2");
         expect(manifest.id).toBe("supdance-music-generation");
-        expect(manifest.version).toBe("1.4.0");
+        expect(manifest.version).toBe(supdanceMusicManifest.version);
+        expect(manifest.updatedAt).toBe(supdanceMusicManifest.updatedAt);
         expect(manifest.minHostVersion).toBe("1.7.4");
 
         // Surface bindings must be valid

@@ -21,6 +21,7 @@ import { SupDanceRouteHosts } from "@/supdance/adapters/router-hosts";
 import { teamIdFromPath } from "@/lib/team-query-keys";
 import { workspacePagePath, workspaceTeamId } from "@/lib/workspace-routes";
 import { PUBLIC_PAGE_ALIASES } from "@/supdance/pages/public-copy/routes";
+import { musicTrackRoute } from "@/supdance/plugins/music-generation/services/music-track-route";
 
 const AdminPage = preloadableLazy(() => import("@/pages/admin"));
 const ConnectOnePage = lazy(() => import("@/supdance/federation/connect-one"));
@@ -70,6 +71,7 @@ const SupDanceI18nEntriesPage = lazyAdminPage(() => import("@/supdance/plugins/i
 const SocialAuthSettingsPage = lazyAdminPage(() => import("@/supdance/plugins/social-auth/admin/social-auth-settings-page"));
 const SocialAuthOperationsPage = lazyAdminPage(() => import("@/supdance/plugins/social-auth/admin/social-auth-operations-page"));
 const MusicWorkbenchPage = workspaceRoutePages.musicWorkbench;
+const MusicTrackPage = workspaceRoutePages.musicTrack;
 const MusicAdminSettingsPage = lazyAdminPage(() => import("@/supdance/plugins/music-generation/admin/music-admin-settings-page"));
 const PageManagement = lazyAdminPage(() => import("@/supdance/plugins/compact-model-picker/page-management"));
 const DarkLoginPage = lazy(() => import("@/supdance/pages/dark-login-page"));
@@ -256,6 +258,11 @@ const routes: RouteObject[] = [
             {
                 path: "/toolbox/music",
                 element: <RequireAuth>{deferred(<MusicWorkbenchPage />)}</RequireAuth>,
+            },
+            {
+                path: musicTrackRoute,
+                element: <RequireAuth>{deferred(<MusicTrackPage />)}</RequireAuth>,
+                handle: { focusedPlayback: true },
             },
             {
                 path: "/tasks",

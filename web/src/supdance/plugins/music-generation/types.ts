@@ -1,4 +1,5 @@
 export const SUPDANCE_MUSIC_PLUGIN_ID = "supdance-music-generation" as const;
+export const SUPDANCE_MUSIC_PLUGIN_VERSION = "1.5.0" as const;
 
 export type SupDanceMusicLifecycleState = "installed" | "enabled" | "draining" | "disabled" | "updating" | "error" | "uninstalled";
 

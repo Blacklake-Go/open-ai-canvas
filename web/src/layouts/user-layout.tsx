@@ -1,5 +1,5 @@
 import { lazy, Suspense, useEffect, useLayoutEffect, useRef, type ReactNode } from "react";
-import { useLocation } from "react-router";
+import { useLocation, useMatches } from "react-router";
 import { ConfigProvider } from "antd";
 
 import { AppWorkspaceShell } from "@/components/layout/app-top-nav";
@@ -21,6 +21,7 @@ const GlobalAgentPanel = lazy(() => import("@/components/canvas/canvas-cloud-age
 
 export default function UserLayout({ children }: { children: ReactNode }) {
     const { pathname, search, key } = useLocation();
+    const focusedPlayback = useMatches().some(({ handle }) => (handle as { focusedPlayback?: boolean } | undefined)?.focusedPlayback);
     const adminWorkspace = pathname === "/admin" || pathname.startsWith("/admin/");
     const teamWorkspace = pathname.startsWith("/teams/");
     const spatialWorkbench = isSpatialWorkbenchPath(pathname);
@@ -60,8 +61,8 @@ export default function UserLayout({ children }: { children: ReactNode }) {
     useLayoutEffect(() => {
         const navigated = previousLocation.current !== key;
         previousLocation.current = key;
-        if (navigated && creationWorkspace && !new URLSearchParams(search).has("conversation")) useGlobalAgentStore.getState().closeAgent();
-    }, [key, search, creationWorkspace]);
+        if (navigated && (focusedPlayback || (creationWorkspace && !new URLSearchParams(search).has("conversation")))) useGlobalAgentStore.getState().closeAgent();
+    }, [key, search, creationWorkspace, focusedPlayback]);
 
     useLayoutEffect(() => {
         // Ant Design 浮层挂载在 body，必须用路由级标记隔离用户工作台与画布编辑器、运营后台。
@@ -79,7 +80,7 @@ export default function UserLayout({ children }: { children: ReactNode }) {
     const globalAgent =
         userId && !teamWorkspace ? (
             <Suspense fallback={null}>
-                <GlobalAgentPanel key={userId} />
+                <GlobalAgentPanel key={userId} hideLauncher={focusedPlayback} />
             </Suspense>
         ) : null;
 
@@ -103,7 +104,7 @@ export default function UserLayout({ children }: { children: ReactNode }) {
                 style={agentDocked ? { paddingRight: agentDock.width } : undefined}
                 data-agent-docked={agentDocked || undefined}
             >
-                <AppWorkspaceShell>{children}</AppWorkspaceShell>
+                <AppWorkspaceShell hideModelSetupGuide={focusedPlayback}>{children}</AppWorkspaceShell>
             </div>
             {globalAgent}
             {userId && teamsEnabled ? (
