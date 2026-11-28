@@ -158,6 +158,11 @@
     margin-bottom: var(--space-5);
 }
 
+.plugin-music-generation .music-composer {
+    display: flex;
+    flex-direction: column;
+}
+
 .plugin-music-generation .music-library {
     display: flex;
     flex-direction: column;

@@ -10,6 +10,13 @@
     color: var(--music-text-primary, var(--foreground));
 }
 
+.music-form-fields {
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-4);
+}
+
 .plugin-music-form .music-composer-toolbar,
 .plugin-music-form .music-composer-heading,
 .plugin-music-form .music-composer-setting,
@@ -39,7 +46,21 @@
 }
 
 .music-composer > .plugin-music-form {
+    display: grid;
+    flex: 1;
+    min-height: 0;
+    grid-template-rows: minmax(0, 1fr) auto;
+    gap: 0;
+}
+
+.music-composer .music-form-fields {
+    min-height: 0;
     gap: var(--space-5);
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    padding: var(--space-1) var(--space-1) var(--space-3);
+    margin-inline: calc(-1 * var(--space-1));
+    scroll-padding-block: var(--space-2);
 }
 
 .music-composer > .plugin-music-form .music-composer-toolbar {
@@ -227,6 +248,17 @@
     position: static;
     gap: var(--space-3);
     padding-block: var(--space-4) var(--space-2);
+}
+
+@media (max-height: 680px) {
+    .music-composer > .plugin-music-form {
+        display: flex;
+        flex: none;
+    }
+
+    .music-composer .music-form-fields {
+        overflow: visible;
+    }
 }
 
 .plugin-music-form .music-quote-line {

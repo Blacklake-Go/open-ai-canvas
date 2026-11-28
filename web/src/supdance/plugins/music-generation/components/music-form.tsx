@@ -218,159 +218,161 @@ export function MusicForm({ userId, onSubmitted, admin = false }: { userId: stri
                 else void submitSong();
             }}
         >
-            {admin && (
-                <div className="music-suno-tabs" role="tablist" aria-label={t("music.songs_tab")}>
-                    <button type="button" role="tab" aria-selected="true" className="is-active">
-                        {t("music.songs_tab")}
-                    </button>
-                    <button type="button" role="tab" aria-selected="false" disabled title={t("music.speech_tab")}>
-                        {t("music.speech_tab")}
-                    </button>
-                    <span className="music-suno-version">{selected?.id?.split("::").at(-1) || t("music.no_models")}</span>
-                </div>
-            )}
-            <div className="music-composer-toolbar">
-                <ModeSelector
-                    value={draft.mode}
-                    ariaLabel={t("music.creation_mode")}
-                    options={(["simple", "custom"] as const).map((mode) => ({
-                        value: mode,
-                        label: t(mode === "simple" ? "music.mode_description" : "music.mode_lyrics"),
-                        disabled: submitting || !capabilities.some((c) => c.available && c.modes.includes(mode)),
-                    }))}
-                    onChange={changeMode}
-                />
-                <div className="music-model-picker-field">
-                    <ModelPicker
-                        fullWidth
-                        config={config}
-                        value={selected?.id}
-                        placeholder={t(loading ? "common.loading" : capabilities.length ? "music.select_model" : "music.no_models")}
-                        disabled={loading || submitting || !capabilities.length}
-                        capability="audio"
-                        className="music-model-picker"
-                        showSelectedPrice={false}
-                        showOptionPrices
-                        showConfiguredModelName
-                        modelFilter={(model) => capabilities.some((cap) => cap.id === model)}
-                        modelDisabledReason={(model) => {
-                            const cap = capabilities.find((item) => item.id === model);
-                            return cap?.available ? "" : cap?.unavailableReason || t("music.no_models");
-                        }}
-                        onChange={(v) => {
-                            if (loading || submitting || !capabilities.some((cap) => cap.id === v && cap.available)) return;
-                            setNotice("");
-                            setError("");
-                            setModel(v, userId);
-                        }}
-                    />
-                </div>
-            </div>
-            {draft.mode === "simple" && (
-                <section className="music-composer-panel">
-                    <div className="music-composer-heading">
-                        <label htmlFor="music-song-description">{t("music.prompt_label")}</label>
-                        {selected && (
-                            <span>
-                                {Array.from(draft.prompt).length} / {selected.maxPromptChars}
-                            </span>
-                        )}
+            <div className="music-form-fields">
+                {admin && (
+                    <div className="music-suno-tabs" role="tablist" aria-label={t("music.songs_tab")}>
+                        <button type="button" role="tab" aria-selected="true" className="is-active">
+                            {t("music.songs_tab")}
+                        </button>
+                        <button type="button" role="tab" aria-selected="false" disabled title={t("music.speech_tab")}>
+                            {t("music.speech_tab")}
+                        </button>
+                        <span className="music-suno-version">{selected?.id?.split("::").at(-1) || t("music.no_models")}</span>
                     </div>
-                    <textarea
-                        id="music-song-description"
-                        rows={admin ? 5 : 4}
-                        value={draft.prompt}
-                        aria-invalid={!!selected && Array.from(draft.prompt).length > selected.maxPromptChars}
-                        onChange={(e) => {
-                            setField("prompt", e.target.value, userId);
-                            setNotice("");
-                        }}
-                        placeholder={t("music.description_hint")}
+                )}
+                <div className="music-composer-toolbar">
+                    <ModeSelector
+                        value={draft.mode}
+                        ariaLabel={t("music.creation_mode")}
+                        options={(["simple", "custom"] as const).map((mode) => ({
+                            value: mode,
+                            label: t(mode === "simple" ? "music.mode_description" : "music.mode_lyrics"),
+                            disabled: submitting || !capabilities.some((c) => c.available && c.modes.includes(mode)),
+                        }))}
+                        onChange={changeMode}
                     />
-                    {selected && Array.from(draft.prompt).length > selected.maxPromptChars && (
-                        <p role="alert" className="text-xs text-destructive">
-                            {t("music.limit_hint")}
-                        </p>
-                    )}
-                    {styleActions}
-                </section>
-            )}
-            {draft.mode === "custom" && selected?.lyricsSupported && (
-                <LyricsEditor
-                    value={draft.lyrics}
-                    onChange={(value) => setField("lyrics", value, userId)}
-                    maxChars={selected.maxLyricsChars}
-                    instrumental={selected.instrumentalSupported && draft.instrumental}
-                    language={draft.songLanguage}
-                    onAIAction={lyricsAIEnabled ? runLyricsAI : undefined}
-                />
-            )}
-            {(admin || draft.mode === "custom") && styleEditor}
-            {notice && (
-                <p role="status" className="text-xs text-muted-foreground">
-                    {notice}
-                </p>
-            )}
-            {selected?.instrumentalSupported && (
-                <div className="music-composer-setting">
-                    <label htmlFor="music-instrumental">{t("music.instrumental_label")}</label>
-                    <InstrumentalSwitch id="music-instrumental" checked={draft.instrumental} onChange={(v) => setField("instrumental", v, userId)} />
+                    <div className="music-model-picker-field">
+                        <ModelPicker
+                            fullWidth
+                            config={config}
+                            value={selected?.id}
+                            placeholder={t(loading ? "common.loading" : capabilities.length ? "music.select_model" : "music.no_models")}
+                            disabled={loading || submitting || !capabilities.length}
+                            capability="audio"
+                            className="music-model-picker"
+                            showSelectedPrice={false}
+                            showOptionPrices
+                            showConfiguredModelName
+                            modelFilter={(model) => capabilities.some((cap) => cap.id === model)}
+                            modelDisabledReason={(model) => {
+                                const cap = capabilities.find((item) => item.id === model);
+                                return cap?.available ? "" : cap?.unavailableReason || t("music.no_models");
+                            }}
+                            onChange={(v) => {
+                                if (loading || submitting || !capabilities.some((cap) => cap.id === v && cap.available)) return;
+                                setNotice("");
+                                setError("");
+                                setModel(v, userId);
+                            }}
+                        />
+                    </div>
                 </div>
-            )}
-            <details className="music-composer-options">
-                <summary>
-                    <SlidersHorizontal size={16} />
-                    {t("music.composer_options")}
-                    <ChevronDown size={15} />
-                </summary>
-                <div>
-                    {!admin && draft.mode === "simple" && styleEditor}
-                    {selected?.titleSupported && (
-                        <label>
-                            {t("music.song_title")}
-                            <input value={draft.title} maxLength={200} onChange={(e) => setField("title", e.target.value, userId)} />
-                        </label>
-                    )}
-                    {selected?.styleSupported && (
-                        <label>
-                            {t("music.song_language")}
-                            <input maxLength={80} value={draft.songLanguage} onChange={(e) => setField("songLanguage", e.target.value, userId)} />
-                            <small>{t("music.language_preference_hint")}</small>
-                        </label>
-                    )}
-                    <p className="text-xs text-muted-foreground">{t("music.native_output_hint")}</p>
-                </div>
-            </details>
-            {panel === "templates" && <StyleTemplates admin={admin} onClose={closePanel} onApply={addStyle} />}
-            {panel === "builder" && <PromptBuilder admin={admin} onClose={closePanel} onApply={addStyle} />}
-            {panel === "saved" && <SavedPrompts admin={admin} key={userId} userId={userId} current={draft[mainField]} onClose={closePanel} onApply={addStyle} />}
-            {quoteError && (
-                <p role="alert" className="text-sm text-destructive">
-                    {quoteError}
-                </p>
-            )}
-            {error && (
-                <p role="alert" className="text-sm text-destructive">
-                    {error}
-                </p>
-            )}
-            {(quoteError || wallet.isError) && selected?.available && (
-                <button
-                    type="button"
-                    className="music-quote-retry min-h-11 rounded-lg border border-border px-3"
-                    onClick={() => {
-                        setQuoteRevision((value) => value + 1);
-                        if (creditsEnabled) void wallet.refresh();
-                    }}
-                >
-                    {t("music.refresh_quote")}
-                </button>
-            )}
-            {!loading && !capabilities.length && (
-                <p role="status" className="text-sm text-muted-foreground">
-                    {t("music.no_models")}
-                </p>
-            )}
+                {draft.mode === "simple" && (
+                    <section className="music-composer-panel">
+                        <div className="music-composer-heading">
+                            <label htmlFor="music-song-description">{t("music.prompt_label")}</label>
+                            {selected && (
+                                <span>
+                                    {Array.from(draft.prompt).length} / {selected.maxPromptChars}
+                                </span>
+                            )}
+                        </div>
+                        <textarea
+                            id="music-song-description"
+                            rows={admin ? 5 : 4}
+                            value={draft.prompt}
+                            aria-invalid={!!selected && Array.from(draft.prompt).length > selected.maxPromptChars}
+                            onChange={(e) => {
+                                setField("prompt", e.target.value, userId);
+                                setNotice("");
+                            }}
+                            placeholder={t("music.description_hint")}
+                        />
+                        {selected && Array.from(draft.prompt).length > selected.maxPromptChars && (
+                            <p role="alert" className="text-xs text-destructive">
+                                {t("music.limit_hint")}
+                            </p>
+                        )}
+                        {styleActions}
+                    </section>
+                )}
+                {draft.mode === "custom" && selected?.lyricsSupported && (
+                    <LyricsEditor
+                        value={draft.lyrics}
+                        onChange={(value) => setField("lyrics", value, userId)}
+                        maxChars={selected.maxLyricsChars}
+                        instrumental={selected.instrumentalSupported && draft.instrumental}
+                        language={draft.songLanguage}
+                        onAIAction={lyricsAIEnabled ? runLyricsAI : undefined}
+                    />
+                )}
+                {(admin || draft.mode === "custom") && styleEditor}
+                {notice && (
+                    <p role="status" className="text-xs text-muted-foreground">
+                        {notice}
+                    </p>
+                )}
+                {selected?.instrumentalSupported && (
+                    <div className="music-composer-setting">
+                        <label htmlFor="music-instrumental">{t("music.instrumental_label")}</label>
+                        <InstrumentalSwitch id="music-instrumental" checked={draft.instrumental} onChange={(v) => setField("instrumental", v, userId)} />
+                    </div>
+                )}
+                <details className="music-composer-options">
+                    <summary>
+                        <SlidersHorizontal size={16} />
+                        {t("music.composer_options")}
+                        <ChevronDown size={15} />
+                    </summary>
+                    <div>
+                        {!admin && draft.mode === "simple" && styleEditor}
+                        {selected?.titleSupported && (
+                            <label>
+                                {t("music.song_title")}
+                                <input value={draft.title} maxLength={200} onChange={(e) => setField("title", e.target.value, userId)} />
+                            </label>
+                        )}
+                        {selected?.styleSupported && (
+                            <label>
+                                {t("music.song_language")}
+                                <input maxLength={80} value={draft.songLanguage} onChange={(e) => setField("songLanguage", e.target.value, userId)} />
+                                <small>{t("music.language_preference_hint")}</small>
+                            </label>
+                        )}
+                        <p className="text-xs text-muted-foreground">{t("music.native_output_hint")}</p>
+                    </div>
+                </details>
+                {panel === "templates" && <StyleTemplates admin={admin} onClose={closePanel} onApply={addStyle} />}
+                {panel === "builder" && <PromptBuilder admin={admin} onClose={closePanel} onApply={addStyle} />}
+                {panel === "saved" && <SavedPrompts admin={admin} key={userId} userId={userId} current={draft[mainField]} onClose={closePanel} onApply={addStyle} />}
+                {quoteError && (
+                    <p role="alert" className="text-sm text-destructive">
+                        {quoteError}
+                    </p>
+                )}
+                {error && (
+                    <p role="alert" className="text-sm text-destructive">
+                        {error}
+                    </p>
+                )}
+                {(quoteError || wallet.isError) && selected?.available && (
+                    <button
+                        type="button"
+                        className="music-quote-retry min-h-11 rounded-lg border border-border px-3"
+                        onClick={() => {
+                            setQuoteRevision((value) => value + 1);
+                            if (creditsEnabled) void wallet.refresh();
+                        }}
+                    >
+                        {t("music.refresh_quote")}
+                    </button>
+                )}
+                {!loading && !capabilities.length && (
+                    <p role="status" className="text-sm text-muted-foreground">
+                        {t("music.no_models")}
+                    </p>
+                )}
+            </div>
             <div className="music-create-footer">
                 {(availableCover || includeCover) && (
                     <section className="flex flex-col gap-2">
