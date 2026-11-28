@@ -3,11 +3,13 @@ import { EMAIL_CENTER_I18N_ENTRIES } from "@/supdance/plugins/email-marketing/me
 import { PAGE_MANAGEMENT_ENTRIES } from "@/supdance/plugins/compact-model-picker/page-messages";
 import { HTML_ADMIN_I18N_ENTRIES } from "../html-admin";
 import { PAYMENT_RECONCILIATION_CATALOGS } from "../payment-reconciliation";
+import { MUSIC_SITE_I18N_ENTRIES } from "../music-site";
 
 export default {
     ...Object.fromEntries(HTML_ADMIN_I18N_ENTRIES.map((entry) => [entry.key, entry.translations["fr-FR"]])),
     ...Object.fromEntries([...EMAIL_CENTER_I18N_ENTRIES, ...PAGE_MANAGEMENT_ENTRIES].map((entry) => [entry.key, entry.translations["fr-FR"]])),
     ...PAYMENT_RECONCILIATION_CATALOGS["fr-FR"],
+    ...Object.fromEntries(MUSIC_SITE_I18N_ENTRIES.flatMap(({ key, translations }) => (translations["fr-FR"] ? [[key, translations["fr-FR"]]] : []))),
     "federation.title": "Connecter votre compte créateur ONE",
     "federation.intro": "Vérifiez les deux comptes. Les nouvelles créations utilisent le portefeuille principal ; les anciens crédits et transactions ONE conservent leur valeur et leur expiration.",
     "federation.one": "Compte ONE",

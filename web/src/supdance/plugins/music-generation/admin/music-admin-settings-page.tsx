@@ -14,6 +14,8 @@ import { TaskCard } from "../components/task-card";
 import { WaveformPlayer } from "../components/waveform-player";
 import { useMusicStore } from "../stores/use-music-store";
 import { siteMusicQuote } from "../services/music-site-api";
+import { SUPDANCE_MUSIC_PLUGIN_VERSION } from "../types";
+import { MusicCoverSettings } from "./music-cover-settings";
 import {
     fetchMusicCapabilities,
     fetchMusicAdminOverview,
@@ -173,6 +175,7 @@ export default function MusicAdminSettingsPage() {
                             <Skeleton active paragraph={{ rows: 2 }} />
                         ) : (
                             <div className="music-admin-stats">
+                                <AdminStatTile label={t("music.admin_release_version")} value={SUPDANCE_MUSIC_PLUGIN_VERSION} />
                                 <AdminStatTile label={t("music.admin_plugin_state")} value={lifecycle ? t("music.lifecycle_" + lifecycle.state) : "—"} />
                                 <AdminStatTile label={t("music.admin_available_models")} value={lifecycle ? models.filter((model) => model.available).length : "—"} />
                             </div>
@@ -281,7 +284,7 @@ export default function MusicAdminSettingsPage() {
                 )}
                 {track?.output.audioUrl && <WaveformPlayer taskId={track.output.id} audioUrl={track.output.audioUrl} title={track.task.title} durationSeconds={(track.output.durationMs || 0) / 1000} output={track.output} />}
                 {tab === "settings" && (
-                    <SettingsSectionCard icon={<Settings2 size={16} />} title={t("music.admin_tab_settings")} contentClassName="music-admin-section">
+                    <SettingsSectionCard icon={<Settings2 size={16} />} title={t("music.admin_tab_settings")} status={<span>{SUPDANCE_MUSIC_PLUGIN_VERSION}</span>} contentClassName="music-admin-section">
                         <p>{t("music.admin_lifecycle_hint", undefined, "Disabling blocks new tasks. Existing tasks continue, and history and ledger entries are retained.")}</p>
                         <div className="flex flex-wrap gap-3">
                             {(["enabled", "draining"] as const).map((state) => (
@@ -293,6 +296,7 @@ export default function MusicAdminSettingsPage() {
                         <p>{t("music.admin_upgrade_hint", undefined, "Configuration switches apply at runtime. Upgrading this implementation and its protocol package requires a host build and restart.")}</p>
                     </SettingsSectionCard>
                 )}
+                {tab === "settings" && lifecycle?.state === "enabled" && <MusicCoverSettings writable={!loading} />}
                 <AdminDrawer rootClassName="plugin-music-generation music-admin" open={Boolean(detail)} onClose={() => setDetailId(null)} title={<span translate="no">{detail?.title || t("music.default_track_title")}</span>}>
                     {detail && <MusicTaskDetails task={detail} />}
                 </AdminDrawer>

@@ -1,0 +1,88 @@
+.music-lyrics-display {
+    min-width: 0;
+    min-height: 0;
+}
+
+.music-lyrics-heading {
+    display: flex;
+    justify-content: space-between;
+    align-items: start;
+    gap: var(--space-3);
+}
+
+.music-lyrics-heading h2 {
+    margin: 0;
+    font-size: var(--fs-section);
+    font-weight: 600;
+}
+
+.music-lyrics-heading p {
+    margin-block: var(--space-1) 0;
+}
+
+.music-lyrics-viewport {
+    overflow: auto;
+    overscroll-behavior: contain;
+    touch-action: pan-y;
+    max-block-size: 24rem;
+    padding-block: var(--space-2);
+    cursor: grab;
+    user-select: none;
+}
+
+.music-lyrics-viewport:active {
+    cursor: grabbing;
+}
+
+.music-lyric-line {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: center;
+    gap: var(--space-3);
+    min-height: 52px;
+    padding: var(--space-1) var(--space-2);
+    overflow-wrap: anywhere;
+    color: var(--creation-muted, var(--muted-foreground));
+    font-size: var(--fs-heading);
+    line-height: 1.35;
+}
+
+.music-lyric-line[aria-current="true"] {
+    color: var(--creation-text, var(--foreground));
+    font-size: var(--fs-title);
+    font-weight: 650;
+}
+
+.music-lyric-time {
+    min-inline-size: 44px;
+    padding-inline: var(--space-1);
+    color: var(--creation-muted, var(--muted-foreground));
+    font-size: var(--fs-caption);
+    font-variant-numeric: tabular-nums;
+    font-weight: 500;
+    text-align: center;
+    border-radius: var(--r-md);
+}
+
+button.music-lyric-time {
+    min-block-size: 44px;
+    cursor: pointer;
+}
+
+button.music-lyric-time:hover,
+.music-lyrics-heading button[aria-pressed="true"] {
+    background: color-mix(in srgb, var(--creation-text, var(--foreground)) 8%, transparent);
+    color: var(--creation-text, var(--foreground));
+}
+
+.music-lyric-section {
+    padding: var(--space-2);
+    font-size: var(--fs-caption);
+    color: var(--creation-muted, var(--muted-foreground));
+}
+
+.music-lyrics-empty {
+    margin: 0;
+    padding-block: var(--space-6);
+    color: var(--creation-muted, var(--muted-foreground));
+}

@@ -35,6 +35,10 @@ type ChannelModelQuoteRequest struct {
 // QuoteChannelModel uses the same admission/defaults/SKU selection as task
 // creation, without reserving credits or submitting a provider request.
 func (s *Service) QuoteChannelModel(userID string, req ChannelModelQuoteRequest) (*LogicalModelQuote, error) {
+	return s.quoteChannelModel(userID, req, false)
+}
+
+func (s *Service) quoteChannelModel(userID string, req ChannelModelQuoteRequest, validateMedia bool) (*LogicalModelQuote, error) {
 	if strings.TrimSpace(req.ChannelID) == "" || strings.TrimSpace(req.ModelKey) == "" {
 		return nil, InvalidModelSelection("报价必须指定系统渠道和模型")
 	}
@@ -51,6 +55,11 @@ func (s *Service) QuoteChannelModel(userID string, req ChannelModelQuoteRequest)
 	input, err = s.resolveSystemChannelModelSelection(access, input, "canvas_"+req.Intent.Capability, req.Intent.Operation)
 	if err != nil {
 		return nil, err
+	}
+	if validateMedia {
+		if err := s.ValidateTaskCapability(input); err != nil {
+			return nil, err
+		}
 	}
 	config = input["config"].(map[string]any)
 	estimate := estimateTaskBillingTokens(input, req.Intent.Capability)

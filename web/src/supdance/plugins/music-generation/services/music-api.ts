@@ -40,6 +40,7 @@ export type ModelCapabilities = {
 };
 
 export type MusicTask = {
+    coverSupported?: boolean;
     outputs?: MusicOutput[];
     mediaStage?: string;
     canRecoverMedia?: boolean;
@@ -110,7 +111,21 @@ export type SubmitMusicTaskPayload = {
     idempotencyNonce: string;
 };
 
+export type MusicCoverConfig = {
+    enabled: boolean;
+    defaultModel: string;
+    allowedModels: string[];
+    allowUpload: boolean;
+    maxUploadBytes: number;
+    maxDimension: number;
+    promptTemplate: string;
+};
+
+export type MusicCoverModel = { id: string; name: string; channel?: string; quoteMicrocredits: number; estimated: boolean };
+
 export type AdminMusicConfig = {
+    cover: MusicCoverConfig;
+    coverModels: MusicCoverModel[];
     baseUrl: string;
     hasApiKey: boolean;
     maskedApiKey: string;
@@ -169,8 +184,8 @@ export async function setMusicPluginLifecycle(state: MusicLifecycleInfo["state"]
     return http.post<MusicLifecycleInfo>("/admin/plugins/music-generation/lifecycle", { state });
 }
 
-export async function fetchMusicAdminConfig(): Promise<AdminMusicConfig> {
-    return http.get<AdminMusicConfig>("/admin/plugins/music-generation/config");
+export async function fetchMusicAdminConfig(signal?: AbortSignal): Promise<AdminMusicConfig> {
+    return http.get<AdminMusicConfig>("/admin/plugins/music-generation/config", { signal });
 }
 
 export async function updateMusicAdminConfig(payload: Partial<AdminMusicConfig> & { apiKey?: string; webhookSecret?: string }): Promise<AdminMusicConfig> {

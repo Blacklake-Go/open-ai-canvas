@@ -17,6 +17,20 @@ func RegisterSupDanceMusicRoutes(r *gin.RouterGroup, svc *service.Service) {
 	// Client music endpoints
 	musicGroup := r.Group("/v1/supdance/music")
 	{
+		musicGroup.GET("/cover-config", func(c *gin.Context) {
+			user, err := currentUser(c, svc)
+			if err != nil {
+				failService(c, err)
+				return
+			}
+			options, err := svc.MusicCoverOptions(user)
+			if err != nil {
+				failService(c, err)
+				return
+			}
+			ok(c, options)
+		})
+
 		musicGroup.GET("/capabilities", func(c *gin.Context) {
 			user, err := currentUser(c, svc)
 			if err != nil {
@@ -109,6 +123,60 @@ func RegisterSupDanceMusicRoutes(r *gin.RouterGroup, svc *service.Service) {
 				return
 			}
 			ok(c, pageResult)
+		})
+
+		musicGroup.GET("/tasks/:id/cover", func(c *gin.Context) {
+			user, err := currentUser(c, svc)
+			if err != nil {
+				failService(c, err)
+				return
+			}
+			view, err := svc.MusicCoverView(user, c.Param("id"))
+			if err != nil {
+				failService(c, err)
+				return
+			}
+			ok(c, view)
+		})
+
+		musicGroup.POST("/tasks/:id/cover/regenerate", func(c *gin.Context) {
+			user, err := currentUser(c, svc)
+			if err != nil {
+				failService(c, err)
+				return
+			}
+			var req service.MusicCoverRequest
+			if err := c.ShouldBindJSON(&req); err != nil {
+				fail(c, http.StatusBadRequest, err)
+				return
+			}
+			view, err := svc.GenerateMusicCover(user, c.Param("id"), req)
+			if err != nil {
+				failService(c, err)
+				return
+			}
+			ok(c, view)
+		})
+
+		musicGroup.PUT("/tasks/:id/cover", func(c *gin.Context) {
+			user, err := currentUser(c, svc)
+			if err != nil {
+				failService(c, err)
+				return
+			}
+			var req struct {
+				ResourceID string `json:"resourceId" binding:"required"`
+			}
+			if err := c.ShouldBindJSON(&req); err != nil {
+				fail(c, http.StatusBadRequest, err)
+				return
+			}
+			view, err := svc.AttachMusicCover(user, c.Param("id"), req.ResourceID)
+			if err != nil {
+				failService(c, err)
+				return
+			}
+			ok(c, view)
 		})
 
 		musicGroup.GET("/tasks/:id/download", func(c *gin.Context) {

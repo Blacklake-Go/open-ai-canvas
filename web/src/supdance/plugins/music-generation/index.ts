@@ -1,15 +1,15 @@
 import { PLUGIN_API_VERSION_V2, type RegisteredPlugin } from "@/lib/plugins/plugin-types";
 import { registerSupDancePlugin, type SupDancePluginManifest } from "@/supdance/adapters/compatibility";
-import { SUPDANCE_MUSIC_PLUGIN_ID } from "./types";
+import { SUPDANCE_MUSIC_PLUGIN_ID, SUPDANCE_MUSIC_PLUGIN_VERSION } from "./types";
 import { MUSIC_SITE_DESCRIPTION } from "../i18n/locales/music-site";
 
 export const supdanceMusicManifest: SupDancePluginManifest = {
     apiVersion: PLUGIN_API_VERSION_V2,
     id: SUPDANCE_MUSIC_PLUGIN_ID,
     name: "Supdance音乐音频生成",
-    version: "1.4.0",
+    version: SUPDANCE_MUSIC_PLUGIN_VERSION,
     publishedAt: "2026-10-29",
-    updatedAt: "2026-11-16",
+    updatedAt: "2026-11-28",
     minHostVersion: "1.7.4",
     author: "SupDance Team",
     description: MUSIC_SITE_DESCRIPTION,
