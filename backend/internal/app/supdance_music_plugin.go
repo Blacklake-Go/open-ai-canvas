@@ -505,7 +505,19 @@ func (s *Service) MusicAdminConfigView(actor *model.User) (*music.AdminMusicConf
 	if err := s.RequireAdmin(actor); err != nil {
 		return nil, err
 	}
-	return s.MusicService().GetAdminConfigView(context.Background())
+	view, err := s.MusicService().GetAdminConfigView(context.Background())
+	if err != nil {
+		return nil, err
+	}
+	view.Cover, err = s.musicCoverConfig()
+	if err != nil {
+		return nil, err
+	}
+	view.CoverModels, err = s.musicCoverModels(actor.ID, nil)
+	if err != nil {
+		return nil, err
+	}
+	return view, nil
 }
 
 func (s *Service) UpdateMusicAdminConfig(actor *model.User, req music.UpdateMusicConfigRequest) (*music.AdminMusicConfigView, error) {
@@ -514,6 +526,15 @@ func (s *Service) UpdateMusicAdminConfig(actor *model.User, req music.UpdateMusi
 	}
 	if req.APIKey != "" || req.BaseURL != "" || req.WebhookSecret != "" || req.ModelPricing != nil {
 		return nil, BadAuthRequest("Manage music credentials and prices in site channels. Legacy music configuration is retained as a backup.")
+	}
+	if req.Cover != nil {
+		if req.DefaultModel != "" {
+			return nil, BadAuthRequest("Save cover settings separately from the legacy music configuration.")
+		}
+		if err := s.saveMusicCoverConfig(actor, *req.Cover); err != nil {
+			return nil, err
+		}
+		return s.MusicAdminConfigView(actor)
 	}
 	view, err := s.MusicService().UpdateAdminConfig(context.Background(), actor.ID, req)
 	if err != nil {

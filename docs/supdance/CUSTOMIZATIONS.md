@@ -219,6 +219,9 @@ SupDance Studio 私有 v2 入口同时承载官网图像、视频和音乐生成
 
 ## 音乐素材写入边界
 
+- 音乐插件 1.5.0 在创作岛结果与音乐工作台挂接 `/toolbox/music/tracks/:taskId/:outputIndex`。宿主组合认证路由与懒加载，插件复用创作岛音乐卡、波形与明暗主题，以及既有任务详情、历史读取、资源鉴权和单实例播放。播放路由在页内保留助手入口，路由地址仅定位任务及音轨。
+- 封面配置由插件管理台保存到 `plugin.supdance-music-generation.cover`。封面生成复用系统文生图队列及账本，基于歌曲结果以独立任务计费。已完成歌曲通过原任务结果记录封面关联。无需数据库迁移。
+
 - 平台音频任务的规范素材由后端 `registerRecoveredMediaAssets` 按任务和输出序号生成稳定 ID；音乐工作台只读任务及资源，不再在载入历史或轮询完成时调用前端 `addAsset`。移除仅内存去重的旧桥接，避免目录未 hydration 或刷新后产生随机副本。历史重载、账号状态重置和轮询完成共用真实 store 回归；既有素材不自动删除。
 - 创作页模型分组、目标时长与音乐结果组件保留最小适配，业务协议在 `plugin-packages/runninghub-standard/`，独立工作台适配在 `web/src/supdance/plugins/music-generation/services/music-site-api.ts`。
 - 复用平台模型目录、报价、`canvas_audio` 任务和资源访问 API，不增加账本、用户或数据表；新文案通过 `supdance-i18n` 六语词条模块提供。

@@ -36,6 +36,7 @@ import { CREATION_IMAGE_DRAG_TYPE } from "./creation-reference-drop";
 import { useI18n } from "@/supdance/plugins/i18n";
 import { interfaceText } from "@/i18n/interface-text";
 import { translate } from "@/i18n";
+import { resolveCreationMusicTrack } from "@/supdance/plugins/music-generation/services/music-track-route";
 
 const CreationMusicCard = lazy(() =>
     import("@/supdance/plugins/music-generation/components/creation-music-card").then((m) => ({
@@ -438,7 +439,9 @@ export function MediaResult({
         ? resultEntries.map(({ key, url }) => {
               const storageKey = resultStorageKeys.includes(key) ? key : undefined;
               const matchedAsset = assets.find((candidate): candidate is AudioAsset => candidate.kind === "audio" && (Boolean(storageKey && candidate.data.storageKey === storageKey) || candidate.data.url === url));
-              return { key, url, storageKey, durationMs: matchedAsset?.data.durationMs };
+              const resultIndex = storageKey ? resultStorageKeys.indexOf(storageKey) : storedResultUrls.indexOf(url);
+              const identity = resolveCreationMusicTrack(item.taskIds || [], resultIndex, matchedAsset?.metadata);
+              return { key, url, storageKey, identity, durationMs: matchedAsset?.data.durationMs };
           })
         : [];
     const musicCardSkeleton = <div className="creation-music-card-skeleton" aria-busy="true" aria-label={t("music.player_title", undefined, "正在加载音乐播放器")} />;

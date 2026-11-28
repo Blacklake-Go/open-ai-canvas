@@ -41,6 +41,7 @@
     height: 38px;
     flex: 0 0 38px;
     place-items: center;
+    overflow: hidden;
     border: 1px solid var(--creation-border, rgba(255, 255, 255, 0.1));
     border-radius: var(--r-md, 10px);
     background: var(--creation-surface-raised, #22252b);
@@ -108,30 +109,35 @@
     line-height: 1.35;
 }
 
-.creation-music-card-studio-link {
-    display: inline-flex;
-    flex: 0 0 auto;
+.creation-music-card .creation-music-song-card {
+    display: flex;
+    flex: 1 1 auto;
+    justify-content: space-between;
     align-items: center;
-    gap: 4px;
-    border-radius: var(--r-sm, 6px);
-    padding: 4px 8px;
-    color: var(--creation-muted, #838991);
-    font-size: var(--fs-caption, 12px);
+    min-width: 0;
+    min-height: 44px;
+    gap: var(--space-3, 12px);
+    padding: var(--space-2, 8px) var(--space-3, 12px);
+    color: var(--creation-text, var(--foreground));
+    font-size: var(--fs-ui);
+    font-weight: 500;
     text-decoration: none;
-    white-space: nowrap;
-    transition:
-        background-color var(--motion-state, 160ms) ease,
-        color var(--motion-state, 160ms) ease;
 }
 
-.creation-music-card-studio-link:hover {
-    background: var(--creation-surface-hover, rgba(255, 255, 255, 0.06));
-    color: var(--creation-text, #f2f3f4);
+.creation-music-card .creation-music-song-chevron {
+    width: 16px;
+    height: 16px;
+    flex: none;
+    color: var(--creation-muted, var(--muted-foreground));
 }
 
-.creation-music-card-studio-link:focus-visible {
-    outline: 2px solid var(--creation-accent, #f5f5f5);
-    outline-offset: 1px;
+.creation-music-card .creation-music-track-download:hover {
+    background: var(--creation-surface-hover, var(--surface-hover));
+}
+
+.creation-music-card :is(.creation-music-song-card, .creation-music-track-download):focus-visible {
+    outline: 2px solid var(--creation-accent, var(--ring));
+    outline-offset: 2px;
 }
 
 .creation-music-card-tracks {
@@ -161,16 +167,14 @@
 }
 
 .creation-music-track-download {
-    display: inline-flex;
-    align-items: center;
-    gap: 4px;
-    color: var(--creation-muted, #838991);
+    display: grid;
+    flex: 0 0 44px;
+    height: 44px;
+    place-items: center;
+    border: 1px solid var(--creation-border, var(--border));
+    border-radius: var(--r-md);
+    color: var(--creation-text, var(--foreground));
     text-decoration: none;
-    transition: color var(--motion-state, 160ms) ease;
-}
-
-.creation-music-track-download:hover {
-    color: var(--creation-text, #f2f3f4);
 }
 
 .creation-music-track-controls {

@@ -41,6 +41,7 @@ export function projectSiteMusicTask(task: GenerationTask): MusicTask {
         format: (item.format || (item.mimeType?.split(";")[0] === "audio/mpeg" ? "mp3" : undefined)) as MusicTask["format"],
     }));
     return {
+        coverSupported: true,
         outputs,
         upstreamTaskId: task.providerRequestId,
         mediaStage: task.mediaStage,
@@ -51,7 +52,7 @@ export function projectSiteMusicTask(task: GenerationTask): MusicTask {
         model: task.model || "",
         mode: music.mode || (music.lyrics ? "custom" : "simple"),
         prompt: task.prompt,
-        title: music.title || task.prompt.slice(0, 30),
+        title: music.title?.trim() || task.prompt.trim().split(/\r?\n/, 1)[0].slice(0, 48),
         lyrics: music.lyrics,
         tags: music.style,
         songLanguage: music.songLanguage,
@@ -99,13 +100,15 @@ export function projectAdminMusicTask(task: GenerationTask | MusicTask): MusicTa
     return projected;
 }
 
-async function accessibleMusicTask(task: GenerationTask | MusicTask) {
+type MusicReadOptions = { signal?: AbortSignal; forceRefreshAudio?: boolean };
+
+async function accessibleMusicTask(task: GenerationTask | MusicTask, options: MusicReadOptions = {}) {
     const projected = projectMusicTask(task);
     await Promise.all(
         (projected.outputs || []).map(async (output) => {
             if (!output.storageKey) return;
             try {
-                const access = await getResourceAccess(output.storageKey, "display");
+                const access = await getResourceAccess(output.storageKey, "display", "original", "", { forceRefresh: options.forceRefreshAudio });
                 output.audioUrl = resolveResourceAccessURL(access.url);
             } catch {
                 output.audioUrl = undefined;
@@ -114,18 +117,19 @@ async function accessibleMusicTask(task: GenerationTask | MusicTask) {
             }
         }),
     );
+    options.signal?.throwIfAborted();
     projected.resultAudioUrl = projected.outputs?.[0]?.audioUrl;
     return projected;
 }
 
-export async function querySiteMusicTask(taskId: string, admin = false) {
-    const task = await http.get<GenerationTask | MusicTask>(`/v1/supdance/music/tasks/${encodeURIComponent(taskId)}`);
-    return admin ? projectAdminMusicTask(task) : accessibleMusicTask(task);
+export async function querySiteMusicTask(taskId: string, admin = false, options: MusicReadOptions = {}) {
+    const task = await http.get<GenerationTask | MusicTask>(`/v1/supdance/music/tasks/${encodeURIComponent(taskId)}`, { signal: options.signal });
+    return admin ? projectAdminMusicTask(task) : accessibleMusicTask(task, options);
 }
 
 export async function listSiteMusicTasks(page: number, pageSize: number) {
     const response = await http.get<{ items: GenerationTask[]; legacyItems?: MusicTask[]; total: number }>("/v1/supdance/music/tasks", { params: { page, pageSize } });
-    const items = await Promise.all([...response.items, ...(response.legacyItems || [])].map(accessibleMusicTask));
+    const items = await Promise.all([...response.items, ...(response.legacyItems || [])].map((task) => accessibleMusicTask(task)));
     items.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
     return { items, total: response.total, page, pageSize };
 }

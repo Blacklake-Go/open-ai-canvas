@@ -1,11 +1,14 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { Disc3, Download, ExternalLink, LoaderCircle, Pause, Play, Repeat1, Volume2, VolumeX } from "lucide-react";
+import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
+import { ChevronRight, Disc3, Download, LoaderCircle, Pause, Play, Repeat1, Volume2, VolumeX } from "lucide-react";
+import { Link, useLocation } from "react-router";
 
+import { CachedResourceImage } from "@/components/cached-resource-image";
 import { Tooltip } from "@/components/ui/base/tooltip";
 import { translate } from "@/i18n";
 import { loadAudioWaveform } from "@/lib/canvas/canvas-audio-waveform";
 import { useI18n } from "@/supdance/plugins/i18n";
 import { useMusicStore } from "../stores/use-music-store";
+import { musicTrackHref, type MusicTrackIdentity } from "../services/music-track-route";
 import "../styles/creation-music-card.css";
 
 const INLINE_WAVEFORM_BARS = 56;
@@ -15,6 +18,7 @@ export type CreationMusicTrackEntry = {
     url: string;
     storageKey?: string;
     durationMs?: number;
+    identity?: MusicTrackIdentity;
 };
 
 export type CreationMusicCardProps = {
@@ -27,6 +31,10 @@ export type CreationMusicCardProps = {
     tracks: CreationMusicTrackEntry[];
     onRefreshResult?: () => void;
     refreshingResult?: boolean;
+    pageTitle?: boolean;
+    coverStorageKey?: string;
+    metadata?: string[];
+    children?: ReactNode;
 };
 
 function formatClock(seconds: number): string {
@@ -59,6 +67,16 @@ function resolveInlineTrackId(messageId: string, taskId: string | undefined, tra
     return `create:${base}:${trackKey || index}`;
 }
 
+function SongCardLink({ identity, title, children }: { identity: MusicTrackIdentity; title: string; children: React.ReactNode }) {
+    const { pathname, search } = useLocation();
+    return (
+        <Link to={musicTrackHref(identity)} state={{ from: pathname + search }} className="product-collection-card creation-music-song-card" title={title}>
+            {children}
+            <ChevronRight className="creation-music-song-chevron" aria-hidden />
+        </Link>
+    );
+}
+
 function CreationMusicTrackRow({
     trackId,
     track,
@@ -88,6 +106,7 @@ function CreationMusicTrackRow({
     const isMuted = useMusicStore((s) => s.isMuted);
     const togglePlayback = useMusicStore((s) => s.togglePlayback);
     const playAudio = useMusicStore((s) => s.playAudio);
+    const pauseAudio = useMusicStore((s) => s.pauseAudio);
     const seekAudio = useMusicStore((s) => s.seekAudio);
     const toggleAudioLoop = useMusicStore((s) => s.toggleAudioLoop);
     const toggleAudioMute = useMusicStore((s) => s.toggleAudioMute);
@@ -282,10 +301,15 @@ function CreationMusicTrackRow({
         <div className="creation-music-track">
             {totalTracks > 1 ? (
                 <div className="creation-music-track-subhead">
-                    <span>{t("music.track_number", { number: index + 1 }, "作品 {number}")}</span>
-                    <a href={track.url} download={downloadFileName} className="creation-music-track-download">
+                    {track.identity ? (
+                        <SongCardLink identity={track.identity} title={title}>
+                            <span>{t("music.track_number", { number: track.identity.outputIndex + 1 })}</span>
+                        </SongCardLink>
+                    ) : (
+                        <span>{t("music.track_number", { number: index + 1 }, "作品 {number}")}</span>
+                    )}
+                    <a href={track.url} download={downloadFileName} className="creation-music-track-download" aria-label={t("music.original_download")} title={t("music.original_download")}>
                         <Download className="size-3" aria-hidden="true" />
-                        <span>{t("music.original_download", undefined, "下载音频")}</span>
                     </a>
                 </div>
             ) : null}
@@ -295,7 +319,12 @@ function CreationMusicTrackRow({
                     type="button"
                     className="creation-music-play-btn"
                     disabled={!track.url}
-                    onClick={() => track.url && togglePlayback(trackId, track.url)}
+                    onClick={() => {
+                        if (!track.url) return;
+                        if (isPlaying) pauseAudio();
+                        else if (playbackError) playAudio(trackId, track.url);
+                        else togglePlayback(trackId, track.url);
+                    }}
                     aria-label={t(isPlaying ? "music.player_pause" : "music.player_play", undefined, isPlaying ? "暂停播放" : "开始播放")}
                 >
                     {isBuffering ? <LoaderCircle className="size-4 animate-spin" aria-hidden="true" /> : isPlaying ? <Pause className="size-4 fill-current" aria-hidden="true" /> : <Play className="ml-0.5 size-4 fill-current" aria-hidden="true" />}
@@ -365,50 +394,55 @@ function CreationMusicTrackRow({
     );
 }
 
-export function CreationMusicCard({ messageId, taskIds, title, modelLabel, targetDurationSeconds, instrumental, tracks, onRefreshResult, refreshingResult }: CreationMusicCardProps) {
+export function CreationMusicCard({ messageId, taskIds, title, modelLabel, targetDurationSeconds, instrumental, tracks, onRefreshResult, refreshingResult, pageTitle, coverStorageKey, metadata = [], children }: CreationMusicCardProps) {
     const { t } = useI18n();
     const playingTaskId = useMusicStore((s) => (s.isPlaying ? s.playingTaskId : null));
-    const trackIds = useMemo(() => tracks.map((track, index) => resolveInlineTrackId(messageId, taskIds?.[index] || taskIds?.[0], track.key, index)), [messageId, taskIds, tracks]);
+    const trackIds = tracks.map(({ identity, key }, index) => (identity ? `${identity.taskId}:${identity.outputIndex}` : resolveInlineTrackId(messageId, taskIds?.[index] || taskIds?.[0], key, index)));
     const anyPlaying = Boolean(playingTaskId && trackIds.includes(playingTaskId));
 
-    const metaParts = [modelLabel?.trim()].filter(Boolean) as string[];
+    const metaParts = [modelLabel?.trim(), ...metadata].filter((part): part is string => Boolean(part));
+
+    const identity = !pageTitle && tracks.length === 1 ? tracks[0].identity : undefined;
+    const Title = pageTitle ? "h1" : "strong";
+    const heading = (
+        <div className="creation-music-card-identity">
+            <span className={`creation-music-card-cover${anyPlaying ? " is-playing" : ""}`} aria-hidden="true">
+                {coverStorageKey ? <CachedResourceImage storageKey={coverStorageKey} alt="" className="size-full object-cover" fallback={<Disc3 />} /> : <Disc3 />}
+            </span>
+            <div className="creation-music-card-title-group">
+                <Title className="creation-music-card-title" title={title} translate="no">
+                    {title}
+                </Title>
+                {metaParts.length || instrumental ? (
+                    <span className="creation-music-card-meta">
+                        {metaParts.map((part, idx) => (
+                            <span key={`${part}-${idx}`} className="creation-music-card-model" title={part}>
+                                {idx > 0 ? <span className="creation-music-card-sep">· </span> : null}
+                                {part}
+                            </span>
+                        ))}
+                        {instrumental ? (
+                            <>
+                                {metaParts.length ? <span className="creation-music-card-sep">·</span> : null}
+                                <span className="creation-music-card-badge">{translate("create.music.instrumentalBadge")}</span>
+                            </>
+                        ) : null}
+                    </span>
+                ) : null}
+            </div>
+        </div>
+    );
 
     return (
         <div className="creation-music-card" data-playing={anyPlaying ? "true" : "false"}>
             <div className="creation-music-card-head">
-                <div className="creation-music-card-identity">
-                    <span className={`creation-music-card-cover${anyPlaying ? " is-playing" : ""}`} aria-hidden="true">
-                        <Disc3 />
-                    </span>
-                    <div className="creation-music-card-title-group">
-                        <strong className="creation-music-card-title" title={title}>
-                            {title}
-                        </strong>
-                        {metaParts.length || instrumental ? (
-                            <div className="creation-music-card-meta">
-                                {metaParts.map((part, idx) => (
-                                    <span key={`${part}-${idx}`} className="creation-music-card-model" title={part}>
-                                        {idx > 0 ? <span className="creation-music-card-sep">· </span> : null}
-                                        {part}
-                                    </span>
-                                ))}
-                                {instrumental ? (
-                                    <>
-                                        {metaParts.length ? <span className="creation-music-card-sep">·</span> : null}
-                                        <span className="creation-music-card-badge">{translate("create.music.instrumentalBadge")}</span>
-                                    </>
-                                ) : null}
-                            </div>
-                        ) : null}
-                    </div>
-                </div>
-
-                <Tooltip title={translate("create.music.studioLinkTooltip")}>
-                    <a href="/toolbox/music" target="_blank" rel="noreferrer" className="creation-music-card-studio-link">
-                        <span>{translate("create.music.studioLink")}</span>
-                        <ExternalLink className="size-3" aria-hidden="true" />
-                    </a>
-                </Tooltip>
+                {identity ? (
+                    <SongCardLink identity={identity} title={title}>
+                        {heading}
+                    </SongCardLink>
+                ) : (
+                    heading
+                )}
             </div>
 
             <div className="creation-music-card-tracks">
@@ -426,6 +460,7 @@ export function CreationMusicCard({ messageId, taskIds, title, modelLabel, targe
                     />
                 ))}
             </div>
+            {children}
         </div>
     );
 }

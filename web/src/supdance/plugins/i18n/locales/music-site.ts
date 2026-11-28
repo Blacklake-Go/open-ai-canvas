@@ -3,6 +3,7 @@ import { musicTrimDefinitions } from "./music-trim";
 import { composerDefinitions } from "./music-composer";
 import { advancedMusicDefinitions } from "./music-advanced";
 import { musicLyricsDefinitions } from "./music-lyrics";
+import { musicTrackDefinitions } from "./music-track";
 
 export const MUSIC_SITE_DESCRIPTION = "音乐工作台使用后台配置的平台音乐模型、统一音频生成任务与实时报价，提供简单和歌词创作、目标时长、原始 MP3 播放下载及共享任务历史。模型与版本由渠道配置决定。";
 
@@ -11,6 +12,7 @@ const definitions = [
     ...composerDefinitions,
     ...advancedMusicDefinitions,
     ...musicLyricsDefinitions,
+    ...musicTrackDefinitions,
     [
         "music.plugin_description",
         MUSIC_SITE_DESCRIPTION,
@@ -322,11 +324,11 @@ const definitions = [
     ],
 ];
 
-export const MUSIC_SITE_I18N_ENTRIES: SupDanceI18nEntry[] = definitions.map(([key, zhCN, enUS, zhTW, jaJP, koKR, esES]) => ({
+export const MUSIC_SITE_I18N_ENTRIES: SupDanceI18nEntry[] = definitions.map(([key, zhCN, enUS, zhTW, jaJP, koKR, esES, frFR, deDE]) => ({
     key: `music.${key}`,
     namespace: "music",
     sourceText: zhCN,
     description: "",
     origin: "builtin",
-    translations: { "zh-CN": zhCN, "en-US": enUS, "zh-TW": zhTW, "ja-JP": jaJP, "ko-KR": koKR, "es-ES": esES },
+    translations: { "zh-CN": zhCN, "en-US": enUS, "zh-TW": zhTW, "ja-JP": jaJP, "ko-KR": koKR, "es-ES": esES, ...(frFR && { "fr-FR": frFR }), ...(deDE && { "de-DE": deDE }) },
 }));

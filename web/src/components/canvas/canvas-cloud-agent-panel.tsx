@@ -185,7 +185,7 @@ const agentSkillLookupPattern = /@(?!\[)|@\[skill:|(?:^|\s)[/、]/u;
  * 平台唯一的 Agent 面板，挂在用户布局上，所有页面共用同一份对话。
  * 页面通过 useGlobalAgentStore 发布画布或短剧上下文，发送时冻结当前目标。
  */
-export const CanvasCloudAgentPanel = memo(function CanvasCloudAgentPanel() {
+export const CanvasCloudAgentPanel = memo(function CanvasCloudAgentPanel({ hideLauncher = false }: { hideLauncher?: boolean }) {
     // 只订阅渲染要用的字段。画布每次选中、拖动或编辑都会重发上下文；订阅整份会让面板和全部消息跟着重渲染。
     // 选中节点只在发送时读取，审批目标节点状态只在有审批时订阅（见 approvalTargetGenerating）。
     const canvasId = useGlobalAgentStore((state) => state.canvas?.canvasId ?? "");
@@ -2570,7 +2570,7 @@ export const CanvasCloudAgentPanel = memo(function CanvasCloudAgentPanel() {
 
     return (
         <>
-            <AgentLauncher theme={theme} statusColor={statusColor} approvalPending={Boolean(approval)} reducedMotion={Boolean(reducedMotion)} status={status} hidden={open} onOpen={onOpen} />
+            {!hideLauncher && <AgentLauncher theme={theme} statusColor={statusColor} approvalPending={Boolean(approval)} reducedMotion={Boolean(reducedMotion)} status={status} hidden={open} onOpen={onOpen} />}
             <AnimatePresence>
                 {open ? (
                     <motion.aside

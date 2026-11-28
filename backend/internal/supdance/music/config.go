@@ -41,6 +41,8 @@ type ModelPricingConfig struct {
 
 // AdminMusicConfigView is the safe public view exposed to Admin UI.
 type AdminMusicConfigView struct {
+	Cover       CoverConfig  `json:"cover"`
+	CoverModels []CoverModel `json:"coverModels"`
 	// BaseURL is the configured upstream API endpoint.
 	BaseURL string `json:"baseUrl"`
 
@@ -68,7 +70,8 @@ type AdminMusicConfigView struct {
 
 // UpdateMusicConfigRequest represents the admin request payload.
 type UpdateMusicConfigRequest struct {
-	BaseURL string `json:"baseUrl,omitempty"`
+	Cover   *CoverConfig `json:"cover,omitempty"`
+	BaseURL string       `json:"baseUrl,omitempty"`
 
 	// APIKey updates the secret key if non-empty and not masked.
 	APIKey string `json:"apiKey,omitempty"`

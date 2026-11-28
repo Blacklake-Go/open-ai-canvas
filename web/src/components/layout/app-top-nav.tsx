@@ -18,7 +18,7 @@ import { isSpatialWorkbenchPath, workspacePagePath } from "@/lib/workspace-route
 
 const WorkspaceCommandPalette = lazy(() => import("@/components/layout/workspace-command-palette").then((module) => ({ default: module.WorkspaceCommandPalette })));
 
-export function AppWorkspaceShell({ children }: { children: ReactNode }) {
+export function AppWorkspaceShell({ children, hideModelSetupGuide = false }: { children: ReactNode; hideModelSetupGuide?: boolean }) {
     const { t } = useTranslation();
     const { pathname } = useLocation();
     const navigate = useNavigate();
@@ -118,7 +118,7 @@ export function AppWorkspaceShell({ children }: { children: ReactNode }) {
             <WorkspaceWalletHost />
             <WorkspaceStorageLimitNotice />
             <GenerationSuccessNotifier />
-            <ModelSetupGuide hidden={creationWorkspace || pathname === "/login" || pathname === "/register" || pathname.startsWith("/admin") || pathname.startsWith("/teams")} />
+            <ModelSetupGuide hidden={hideModelSetupGuide || creationWorkspace || pathname === "/login" || pathname === "/register" || pathname.startsWith("/admin") || pathname.startsWith("/teams")} />
         </>
     );
 }
