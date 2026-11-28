@@ -44,17 +44,19 @@ type NotificationResponse struct {
 // Method 是用户在渠道内选中的支付方式（如易支付的 alipay / wxpay），渠道没有声明支付方式时为空；
 // 旧插件忽略该字段即可保持原行为。
 type CreateRequest struct {
-	MerchantOrderNo string
-	Description     string
-	AmountFen       int64
-	Currency        string
-	Method          string `json:",omitempty"`
-	ExpiresAt       time.Time
-	NotifyURL       string
-	ReturnURL       string
-	UserID          string `json:",omitempty"`
-	UserEmail       string `json:",omitempty"`
-	ProductID       string `json:",omitempty"`
+	MerchantOrderNo  string
+	Description      string
+	AmountFen        int64
+	Currency         string
+	Method           string `json:",omitempty"`
+	ExpiresAt        time.Time
+	NotifyURL        string
+	ReturnURL        string
+	UserID           string `json:",omitempty"`
+	UserEmail        string `json:",omitempty"`
+	ProductID        string `json:",omitempty"`
+	ProviderConfigID string `json:",omitempty"`
+	ProviderTradeNo  string `json:",omitempty"`
 }
 
 type Checkout struct {
@@ -64,8 +66,15 @@ type Checkout struct {
 	ProviderTradeNo string `json:",omitempty"`
 }
 
-type QueryRequest struct{ MerchantOrderNo string }
-type CloseRequest struct{ MerchantOrderNo string }
+type QueryRequest struct {
+	MerchantOrderNo string
+	ProviderTradeNo string `json:",omitempty"`
+}
+type CloseRequest struct {
+	MerchantOrderNo string
+	ProviderTradeNo string     `json:",omitempty"`
+	ExpiresAt       *time.Time `json:",omitempty"`
+}
 
 type Result struct {
 	MerchantOrderNo string    `json:"merchantOrderNo"`
@@ -79,8 +88,10 @@ type Result struct {
 }
 
 type Notification struct {
-	EventID  string                `json:"eventId"`
-	Response *NotificationResponse `json:"response,omitempty"`
+	EventID          string                `json:"eventId"`
+	Response         *NotificationResponse `json:"response,omitempty"`
+	ProviderConfigID string                `json:"providerConfigId,omitempty"`
+	Ignored          bool                  `json:"ignored,omitempty"`
 	Result
 }
 

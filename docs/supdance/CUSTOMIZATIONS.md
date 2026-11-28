@@ -37,6 +37,8 @@
 
 ## 支付下单名额与账单能力边界
 
+`supdance-payment-stripe` 以支付 RPC 包接入主站钱包和后台支付渠道。宿主接缝登记为 `supdance-stripe-payment`，传递已保存的 Checkout Session ID，并让各渠道的固定 Webhook 地址接收旧配置订单的已签名事件。沙盒伴随包以独立渠道 ID 保存配置，并限制为测试模式和指定账号。钱包展示使用官方 Stripe 标志与一位小数积分格式。插件使用现有配置、订单与通知收件箱表及权益账本，无数据库迁移。构建、配置和测试入口见 [Stripe 插件说明](../../supdance/plugins/supdance-payment-stripe/README.md)。
+
 Waffo Pancake 的充值入口默认并排显示微信支付和支付宝图标。可在「支付充值 → 支付渠道 → Waffo Pancake → 配置 → 充值页支付图标」恢复原图标。该选项自动保存到充值设置，沿用现有支付配置版本和回调地址。宿主接触点包括 `internal/app/payment_settings.go`、支付渠道配置抽屉、钱包图标和充值面板。
 
 `internal/repository/payment.go` 将过期非终态订单与可付款名额分离，保留旧插件依赖和晚到支付幂等路径；不通过改写订单终态解除阻塞。`payment_reconciliation.go`、model、导出及后台支付页新增明确的 `unsupported` 终态，插件未实现账单时不再作为临时失败反复重试，也不标记核对成功。支付宝适配器仅将账单查询的已验签 `NO_BILL_DATA` 映射为无账单。八语提示集中在 `supdance/plugins/i18n/locales/payment-reconciliation.ts`，复用后台 Badge 与 Callout。无数据库结构迁移，不改价格、余额、权限和支付通知验签。

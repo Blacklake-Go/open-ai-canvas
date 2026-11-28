@@ -254,6 +254,22 @@ paths:
           description: 未登录
         "400":
           description: 分页参数无效
+  /payments/notify/stripe/webhook:
+    post:
+      security: []
+      summary: 接收 Stripe Checkout 的签名事件
+      description: 验证 Stripe-Signature 和原始报文，按事件中的配置版本匹配订单，同一事件重送安全。支持 Checkout 完成、异步付款成功或失败及会话过期。
+      parameters:
+        - { in: header, name: Stripe-Signature, required: true, schema: { type: string } }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { type: object }
+      responses:
+        "204": { description: 事件已接收、已处理或无需处理 }
+        "400": { description: 签名、配置或订单证据无效 }
+        "500": { description: 宿主暂时无法接受事件 }
   /admin/payments/providers/waffo-pancake/icon:
     put:
       tags: [admin]

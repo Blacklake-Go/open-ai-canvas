@@ -1,0 +1,37 @@
+{
+  "apiVersion": "yingce.plugin/v1",
+  "id": "supdance-payment-stripe",
+  "name": "Stripe",
+  "version": "1.0.0",
+  "minHostVersion": "1.8.7.2",
+  "author": "SupDance",
+  "description": "Stripe-hosted Checkout for SupDance wallet products.",
+  "enabled": true,
+  "installable": true,
+  "runtime": { "backend": "rpc", "backendEntry": "backend/provider" },
+  "surfaces": ["wallet", "settings"],
+  "permissions": ["payment.create", "payment.query", "payment.close"],
+  "configuration": {
+    "fields": [
+      { "name": "publicBaseUrl", "type": "url", "label": "Public HTTPS URL", "required": true },
+      { "name": "mode", "type": "string", "label": "Stripe mode", "required": true, "default": "test", "values": ["test", "live"] },
+      { "name": "apiKey", "type": "password", "label": "Stripe API key", "required": true, "secret": true },
+      { "name": "webhookSigningSecret", "type": "password", "label": "Stripe webhook signing secret", "required": true, "secret": true },
+      { "name": "settlementCurrency", "type": "string", "label": "Settlement currency", "required": true, "default": "USD", "values": ["USD", "CNY"] },
+      { "name": "allowedUserId", "type": "string", "label": "Reviewer user ID" }
+    ]
+  },
+  "contributes": {
+    "paymentProviders": [
+      {
+        "id": "stripe",
+        "label": "Stripe",
+        "icon": "brand:stripe",
+        "checkoutMode": "redirect",
+        "identityFields": ["mode"],
+        "expiryPolicy": { "defaultMinutes": 45, "minMinutes": 35, "maxMinutes": 1440 },
+        "notificationSuccess": { "status": 204 }
+      }
+    ]
+  }
+}

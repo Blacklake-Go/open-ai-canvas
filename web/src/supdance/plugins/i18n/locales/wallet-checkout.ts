@@ -53,6 +53,18 @@ const waffoIconSaveErrors: Record<AppLocale, string> = {
     "de-DE": "Das Waffo-Zahlungssymbol konnte nicht gespeichert werden",
 };
 
+const stripeConfigKeys = ["publicBaseUrl", "mode", "apiKey", "webhookSigningSecret", "settlementCurrency", "allowedUserId", "webhookURL"] as const;
+const stripeConfigLabels: Record<AppLocale, readonly [string, string, string, string, string, string, string]> = {
+    "zh-CN": ["站点公网 HTTPS 地址", "Stripe 模式", "Stripe API 密钥", "Webhook 签名密钥", "结算货币", "测试用户 ID（测试模式必填）", "Stripe Webhook 地址"],
+    "zh-TW": ["網站公開 HTTPS 網址", "Stripe 模式", "Stripe API 金鑰", "Webhook 簽章密鑰", "結算貨幣", "測試使用者 ID（測試模式必填）", "Stripe Webhook 網址"],
+    "en-US": ["Public site HTTPS URL", "Stripe mode", "Stripe API key", "Webhook signing secret", "Settlement currency", "Reviewer user ID (required in test mode)", "Stripe Webhook URL"],
+    "ja-JP": ["公開サイトの HTTPS URL", "Stripe モード", "Stripe API キー", "Webhook 署名シークレット", "決済通貨", "テストユーザー ID（テストモードで必須）", "Stripe Webhook URL"],
+    "ko-KR": ["공개 사이트 HTTPS URL", "Stripe 모드", "Stripe API 키", "Webhook 서명 비밀키", "결제 통화", "테스트 사용자 ID(테스트 모드에서 필수)", "Stripe Webhook URL"],
+    "es-ES": ["URL HTTPS pública del sitio", "Modo de Stripe", "Clave API de Stripe", "Secreto de firma del webhook", "Moneda de liquidación", "ID del usuario de prueba (obligatorio en modo de prueba)", "URL del webhook de Stripe"],
+    "fr-FR": ["URL HTTPS publique du site", "Mode Stripe", "Clé API Stripe", "Secret de signature du webhook", "Devise de règlement", "ID utilisateur de test (obligatoire en mode test)", "URL du webhook Stripe"],
+    "de-DE": ["Öffentliche HTTPS-URL der Website", "Stripe-Modus", "Stripe-API-Schlüssel", "Webhook-Signaturgeheimnis", "Abrechnungswährung", "Testnutzer-ID (im Testmodus erforderlich)", "Stripe-Webhook-URL"],
+};
+
 export function walletCheckoutCatalog(locale: AppLocale): Record<string, string> {
     const chinese = locale === "zh-CN" || locale === "zh-TW";
     const waffoIcon = waffoIconLabels[locale];
@@ -72,5 +84,6 @@ export function walletCheckoutCatalog(locale: AppLocale): Record<string, string>
         "waffoIcon.original": waffoIcon.original,
         "waffoIcon.saved": waffoIcon.saved,
         "waffoIcon.saveFailed": waffoIconSaveErrors[locale],
+        ...Object.fromEntries(stripeConfigKeys.map((key, index) => [`stripe.${key}`, stripeConfigLabels[locale][index]])),
     };
 }

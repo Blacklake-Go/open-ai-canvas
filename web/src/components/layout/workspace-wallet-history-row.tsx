@@ -30,20 +30,20 @@ export function WalletHistoryRow({ entry }: { entry: WalletHistoryEntry }) {
     let summary = "";
     let detail = "";
     if (billing) {
-        const reserved = formatCredits(billing.reservedMicrocredits, 6);
+        const reserved = formatCredits(billing.reservedMicrocredits);
         switch (billing.billingStatus) {
             case "settled":
-                summary = t("account.wallet.ledger.actualCharge", { amount: formatCredits(billing.chargedMicrocredits, 6) });
+                summary = t("account.wallet.ledger.actualCharge", { amount: formatCredits(billing.chargedMicrocredits) });
                 detail =
                     billing.refundedMicrocredits > 0
-                        ? t("account.wallet.ledger.releasedDetail", { reserved, released: formatCredits(billing.refundedMicrocredits, 6) })
+                        ? t("account.wallet.ledger.releasedDetail", { reserved, released: formatCredits(billing.refundedMicrocredits) })
                         : billing.chargedMicrocredits > billing.reservedMicrocredits
-                          ? t("account.wallet.ledger.supplementDetail", { reserved, supplement: formatCredits(billing.chargedMicrocredits - billing.reservedMicrocredits, 6) })
+                          ? t("account.wallet.ledger.supplementDetail", { reserved, supplement: formatCredits(billing.chargedMicrocredits - billing.reservedMicrocredits) })
                           : t("account.wallet.ledger.reservedDetail", { reserved });
                 break;
             case "refunded":
                 summary = t("account.wallet.ledger.refundedNoCharge");
-                detail = t("account.wallet.ledger.releasedDetail", { reserved, released: formatCredits(billing.refundedMicrocredits, 6) });
+                detail = t("account.wallet.ledger.releasedDetail", { reserved, released: formatCredits(billing.refundedMicrocredits) });
                 break;
             case "uncertain":
                 summary = t("account.wallet.ledger.uncertain");
@@ -74,7 +74,7 @@ export function WalletHistoryRow({ entry }: { entry: WalletHistoryEntry }) {
             {entry.type !== "billing" ? (
                 <b className={positive ? "is-income" : "is-consume"}>
                     {positive ? "+" : ""}
-                    {formatCredits(entry.amountMicrocredits, 6)}
+                    {formatCredits(entry.amountMicrocredits)}
                 </b>
             ) : null}
         </article>

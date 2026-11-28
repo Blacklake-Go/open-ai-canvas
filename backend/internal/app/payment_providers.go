@@ -266,6 +266,9 @@ func (s *Service) UpdatePaymentProviderConfig(actor *model.User, providerID stri
 		}
 		values[field.Name] = value
 	}
+	if providerID == stripeSandboxProviderID && values["mode"] != "test" {
+		return nil, BadAuthRequest("Stripe 沙盒渠道仅支持测试模式")
+	}
 	changedIdentityField := ""
 	for field, previous := range previousIdentity {
 		if previous != "" && strings.TrimSpace(values[field]) != previous {

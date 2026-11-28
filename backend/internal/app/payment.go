@@ -22,7 +22,14 @@ import (
 const (
 	maxActivePaymentOrdersPerUser = 5
 	maxTopupCreditsMicrocredits   = int64(1_000_000_000) * CreditScale
+	stripeProviderID              = "stripe"
+	stripeSandboxProviderID       = "stripe-sandbox"
+	stripeWebhookConfigAlias      = "webhook"
 )
+
+func isStripeProviderID(id string) bool {
+	return id == stripeProviderID || id == stripeSandboxProviderID
+}
 
 type PaymentProviderView struct {
 	ID                string `json:"id"`
@@ -307,8 +314,17 @@ func paymentCreateRequest(order *model.PaymentOrder, description string, values 
 		Currency: order.ChargeCurrency, Method: order.PaymentMethod, ExpiresAt: order.ExpiresAt,
 		NotifyURL: baseURL + "/api/payments/notify/" + url.PathEscape(order.ProviderID) + "/" + url.PathEscape(configID),
 		ReturnURL: baseURL + "/api/payments/return/" + url.PathEscape(order.ProviderID) + "?orderId=" + url.QueryEscape(order.ID),
-		UserID:    order.UserID, ProductID: order.ProductID,
+		UserID:    order.UserID, ProductID: order.ProductID, ProviderConfigID: configID,
+		ProviderTradeNo: paymentQueryRequest(order).ProviderTradeNo,
 	}
+}
+
+func paymentQueryRequest(order *model.PaymentOrder) payment.QueryRequest {
+	request := payment.QueryRequest{MerchantOrderNo: order.MerchantOrderNo}
+	if order.ProviderTradeNo != nil {
+		request.ProviderTradeNo = *order.ProviderTradeNo
+	}
+	return request
 }
 
 func (s *Service) PaymentOrder(actor *model.User, id string) (*PaymentOrderView, error) {
@@ -374,7 +390,7 @@ func (s *Service) RefreshPaymentCheckout(ctx context.Context, actor *model.User,
 	if err != nil {
 		return nil, err
 	}
-	providerResult, queryErr := provider.QueryOrder(ctx, values, payment.QueryRequest{MerchantOrderNo: order.MerchantOrderNo})
+	providerResult, queryErr := provider.QueryOrder(ctx, values, paymentQueryRequest(order))
 	if queryErr == nil {
 		if strings.TrimSpace(providerResult.MerchantOrderNo) != order.MerchantOrderNo {
 			return nil, repository.ErrPaymentEvidenceMismatch
@@ -468,7 +484,17 @@ func (s *Service) AcceptPaymentNotificationWithResponse(ctx context.Context, pro
 	if !ok {
 		return nil, BadAuthRequest("未知支付通知渠道")
 	}
-	config, err := s.repo.PaymentProviderConfig(configID)
+	var config *model.PaymentProviderConfig
+	var err error
+	stableStripeEndpoint := isStripeProviderID(providerID) && configID == stripeWebhookConfigAlias
+	if stableStripeEndpoint {
+		config, err = s.repo.LatestPaymentProviderConfig(providerID)
+	} else {
+		config, err = s.repo.PaymentProviderConfig(configID)
+	}
+	if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
+		return nil, err
+	}
 	if err != nil || config.ProviderID != providerID {
 		return nil, BadAuthRequest("支付通知配置版本不存在")
 	}
@@ -480,6 +506,9 @@ func (s *Service) AcceptPaymentNotificationWithResponse(ctx context.Context, pro
 	if err != nil {
 		return nil, BadAuthRequest("支付通知验签失败")
 	}
+	if notification.Ignored {
+		return nil, nil
+	}
 	if response := notification.Response; response != nil {
 		if response.Status != http.StatusOK || response.ContentType != "application/json" || response.Body != `{"message":"success"}` || len(response.Signature) > 4096 {
 			return nil, BadAuthRequest("支付插件应答格式无效")
@@ -488,9 +517,35 @@ func (s *Service) AcceptPaymentNotificationWithResponse(ctx context.Context, pro
 			return nil, BadAuthRequest("支付插件应答签名无效")
 		}
 	}
+	orderConfigID := config.ID
+	if stableStripeEndpoint {
+		orderConfigID = notification.ProviderConfigID
+		// The same Stripe account may forward events from another deployment.
+		// A signed configuration ID that is absent here belongs to another host.
+		if orderConfigID != config.ID {
+			pinned, lookupErr := s.repo.PaymentProviderConfig(orderConfigID)
+			if errors.Is(lookupErr, gorm.ErrRecordNotFound) {
+				return nil, nil
+			}
+			if lookupErr != nil {
+				return nil, lookupErr
+			}
+			if pinned.ProviderID != providerID {
+				return nil, BadAuthRequest("支付通知配置版本不匹配")
+			}
+		}
+	}
 	order, err := s.repo.PaymentOrderByMerchant(providerID, notification.MerchantOrderNo)
-	if err != nil || order.ProviderConfigID != config.ID {
+	if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
+		return nil, err
+	}
+	if err != nil || order.ProviderConfigID != orderConfigID {
 		return nil, BadAuthRequest("支付通知订单不存在或配置版本不匹配")
+	}
+	if isStripeProviderID(providerID) && (notification.ProviderConfigID != orderConfigID ||
+		notification.AmountFen != order.ChargeAmountFen || notification.Currency != order.ChargeCurrency ||
+		(order.ProviderTradeNo != nil && *order.ProviderTradeNo != "" && *order.ProviderTradeNo != notification.ProviderTradeNo)) {
+		return nil, BadAuthRequest("Stripe 支付通知与订单不匹配")
 	}
 	normalized, err := json.Marshal(notification.Result)
 	if err != nil {
@@ -503,7 +558,7 @@ func (s *Service) AcceptPaymentNotificationWithResponse(ctx context.Context, pro
 	digest := sha256.Sum256(rawBody)
 	inbox := &model.PaymentNotification{
 		ID: newID(), ProviderID: providerID, ProviderEventID: truncateRunes(notification.EventID, 160),
-		ProviderConfigID: config.ID, MerchantOrderNo: order.MerchantOrderNo, PaymentOrderID: order.ID,
+		ProviderConfigID: orderConfigID, MerchantOrderNo: order.MerchantOrderNo, PaymentOrderID: order.ID,
 		PayloadDigest: hex.EncodeToString(digest[:]), PayloadCipher: payloadCipher, NormalizedJSON: string(normalized),
 		Status: model.PaymentNotificationPending, NextAttemptAt: time.Now(),
 	}
@@ -524,7 +579,7 @@ func (s *Service) processPaymentNotification(notification *model.PaymentNotifica
 	if err := json.Unmarshal([]byte(notification.NormalizedJSON), &result); err != nil {
 		return err
 	}
-	if !result.Paid && !result.Closed {
+	if !isStripeProviderID(notification.ProviderID) && !result.Paid && !result.Closed {
 		return errors.New("支付通知不是成功状态")
 	}
 	if _, err := s.applyPaymentResult(notification.ProviderID, result); err != nil {
@@ -539,7 +594,7 @@ func (s *Service) queryPaymentOrder(ctx context.Context, order *model.PaymentOrd
 		return err
 	}
 	_ = config
-	result, err := provider.QueryOrder(ctx, values, payment.QueryRequest{MerchantOrderNo: order.MerchantOrderNo})
+	result, err := provider.QueryOrder(ctx, values, paymentQueryRequest(order))
 	if errors.Is(err, payment.ErrOrderNotFound) {
 		_ = s.repo.RecordPaymentQuery(order.ID, "NOT_FOUND")
 		return nil
@@ -561,7 +616,8 @@ func (s *Service) closePaymentOrder(ctx context.Context, order *model.PaymentOrd
 		return err
 	}
 	queryNotFound := false
-	result, queryErr := provider.QueryOrder(ctx, values, payment.QueryRequest{MerchantOrderNo: order.MerchantOrderNo})
+	request := paymentQueryRequest(order)
+	result, queryErr := provider.QueryOrder(ctx, values, request)
 	if queryErr == nil {
 		if strings.TrimSpace(result.MerchantOrderNo) != order.MerchantOrderNo {
 			return repository.ErrPaymentEvidenceMismatch
@@ -578,7 +634,11 @@ func (s *Service) closePaymentOrder(ctx context.Context, order *model.PaymentOrd
 	} else {
 		return WrapAppError(http.StatusBadGateway, "关单前查单失败，请稍后重试", queryErr)
 	}
-	closed, err := provider.CloseOrder(ctx, values, payment.CloseRequest{MerchantOrderNo: order.MerchantOrderNo})
+	closed, err := provider.CloseOrder(ctx, values, payment.CloseRequest{
+		MerchantOrderNo: request.MerchantOrderNo,
+		ProviderTradeNo: request.ProviderTradeNo,
+		ExpiresAt:       &order.ExpiresAt,
+	})
 	if err == nil {
 		if closed.MerchantOrderNo == "" {
 			closed.MerchantOrderNo = order.MerchantOrderNo
@@ -596,7 +656,7 @@ func (s *Service) closePaymentOrder(ctx context.Context, order *model.PaymentOrd
 	// A payment can complete after the first query and immediately before the
 	// close request. Query once more on every close failure so a successful
 	// payment is credited instead of being left in a closing retry loop.
-	recheck, recheckErr := provider.QueryOrder(ctx, values, payment.QueryRequest{MerchantOrderNo: order.MerchantOrderNo})
+	recheck, recheckErr := provider.QueryOrder(ctx, values, request)
 	if recheckErr == nil {
 		if strings.TrimSpace(recheck.MerchantOrderNo) != order.MerchantOrderNo {
 			return repository.ErrPaymentEvidenceMismatch

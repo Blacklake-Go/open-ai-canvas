@@ -10,12 +10,18 @@ export type PaymentOption = {
     settlementCurrency: string;
 };
 
+export function isStripePaymentProvider(providerId: string): boolean {
+    return providerId === "stripe" || providerId === "stripe-sandbox";
+}
+
 /** 把渠道列表展开成按钮：声明了支付方式的渠道每种方式一个入口，其余渠道一个入口。 */
 export function paymentOptionsFromProviders(providers: PaymentProvider[]): PaymentOption[] {
-    return providers.flatMap((provider): PaymentOption[] => {
+    const stripe = providers.find((provider) => provider.id === "stripe") ?? providers.find((provider) => provider.id === "stripe-sandbox");
+    const orderedProviders = stripe ? [stripe, ...providers.filter((provider) => !isStripePaymentProvider(provider.id))] : providers;
+    return orderedProviders.flatMap((provider): PaymentOption[] => {
         const settlementCurrency = provider.settlementCurrency || "CNY";
         const methods = provider.methods || [];
-        if (!methods.length) return [{ key: provider.id, providerId: provider.id, name: provider.name, icon: provider.icon, settlementCurrency }];
+        if (!methods.length) return [{ key: provider.id, providerId: provider.id, name: isStripePaymentProvider(provider.id) ? "Stripe" : provider.name, icon: provider.icon, settlementCurrency }];
         // 只有一种方式时按钮仍显示方式名称（如“支付宝”），渠道名放在 title 里，避免用户看不出走的是哪种方式。
         return methods.map((method) => ({ key: `${provider.id}:${method.id}`, providerId: provider.id, method: method.id, name: method.name, icon: method.icon, settlementCurrency }));
     });

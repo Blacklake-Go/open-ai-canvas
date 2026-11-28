@@ -10,9 +10,9 @@ const settled: WalletBillingEntry = {
     type: "billing",
     billingOrderId: "order-1",
     billingStatus: "settled",
-    reservedMicrocredits: 11_666,
-    chargedMicrocredits: 3_904,
-    refundedMicrocredits: 7_762,
+    reservedMicrocredits: 1_166_600,
+    chargedMicrocredits: 390_400,
+    refundedMicrocredits: 776_200,
     model: "deepseek-v4.1-flash-1017",
     scene: "text",
     createdAt: "2026-11-17T10:47:32+08:00",
@@ -21,38 +21,38 @@ const settled: WalletBillingEntry = {
 describe("wallet order history", () => {
     test("shows the actual charge and released reservation in one real row", () => {
         const html = renderToStaticMarkup(<WalletHistoryRow entry={settled} />);
-        expect(html).toContain("模型调用 · 实际消耗 0.003904 积分");
-        expect(html).toContain("原预留 0.011666，未使用的 0.007762 已释放。");
+        expect(html).toContain("模型调用 · 实际消耗 0.4 积分");
+        expect(html).toContain("原预留 1.2，未使用的 0.8 已释放。");
         expect(html).toContain(settled.model!);
         expect(html).not.toContain("消费退款");
-        expect(html).not.toContain("+0.007762");
+        expect(html).not.toContain("+0.8");
         expect(html.match(/<article/g)).toHaveLength(1);
     });
 
-    test("keeps microcredit precision and zero-cost settlements", () => {
+    test("rounds very small amounts and still distinguishes settled from pending", () => {
         const tiny = renderToStaticMarkup(<WalletHistoryRow entry={{ ...settled, reservedMicrocredits: 55, chargedMicrocredits: 5, refundedMicrocredits: 50 }} />);
-        expect(tiny).toContain("实际消耗 0.000005 积分");
-        expect(tiny).toContain("原预留 0.000055，未使用的 0.00005 已释放。");
+        expect(tiny).toContain("实际消耗 0 积分");
+        expect(tiny).toContain("原预留 0，未使用的 0 已释放。");
         const free = renderToStaticMarkup(<WalletHistoryRow entry={{ ...settled, reservedMicrocredits: 0, chargedMicrocredits: 0, refundedMicrocredits: 0 }} />);
         expect(free).toContain("实际消耗 0 积分");
         expect(free).not.toContain("待结算");
     });
 
     test("shows supplemental charges without treating the reservation as final cost", () => {
-        const html = renderToStaticMarkup(<WalletHistoryRow entry={{ ...settled, reservedMicrocredits: 10, chargedMicrocredits: 25, refundedMicrocredits: 0 }} />);
-        expect(html).toContain("实际消耗 0.000025 积分");
-        expect(html).toContain("原预留 0.00001，另补扣 0.000015 积分。");
+        const html = renderToStaticMarkup(<WalletHistoryRow entry={{ ...settled, reservedMicrocredits: 100_000, chargedMicrocredits: 250_000, refundedMicrocredits: 0 }} />);
+        expect(html).toContain("实际消耗 0.3 积分");
+        expect(html).toContain("原预留 0.1，另补扣 0.2 积分。");
     });
 
     test("distinguishes full returns, pending settlement and review", () => {
-        const refunded = renderToStaticMarkup(<WalletHistoryRow entry={{ ...settled, billingStatus: "refunded", chargedMicrocredits: 0, refundedMicrocredits: 11_666, note: "任务取消" }} />);
+        const refunded = renderToStaticMarkup(<WalletHistoryRow entry={{ ...settled, billingStatus: "refunded", chargedMicrocredits: 0, refundedMicrocredits: settled.reservedMicrocredits, note: "任务取消" }} />);
         expect(refunded).toContain("已退回 · 未扣费");
-        expect(refunded).toContain("未使用的 0.011666 已释放");
+        expect(refunded).toContain("未使用的 1.2 已释放");
         expect(refunded).not.toContain("实际消耗");
         for (const billingStatus of ["reserved", "running", "uncertain"] as const) {
             const html = renderToStaticMarkup(<WalletHistoryRow entry={{ ...settled, billingStatus, chargedMicrocredits: 0, refundedMicrocredits: 0 }} />);
             expect(html).toContain(billingStatus === "uncertain" ? "费用待核对" : "待结算");
-            expect(html).toContain("冻结 0.011666 积分");
+            expect(html).toContain("冻结 1.2 积分");
             expect(html).not.toContain("实际消耗 0 积分");
             expect(html).not.toContain("已释放");
         }

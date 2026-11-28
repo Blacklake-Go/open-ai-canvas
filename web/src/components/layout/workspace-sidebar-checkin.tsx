@@ -29,7 +29,7 @@ export function WorkspaceSidebarCheckin({ collapsed }: { collapsed: boolean }) {
     });
     if (!user || !visible || !policy) return null;
 
-    const amount = formatCredits(policy.checkinBonusMicrocredits, 2);
+    const amount = formatCredits(policy.checkinBonusMicrocredits);
     const title = sidebarCheckinTitle(brandName);
     const summary = t("nav.checkin_summary", { title, amount }, `${title}，今日可领 ${amount} 积分`);
 

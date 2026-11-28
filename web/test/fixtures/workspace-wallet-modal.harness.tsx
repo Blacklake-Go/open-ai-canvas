@@ -41,9 +41,9 @@ const billing: WalletHistoryEntry = {
     type: "billing",
     billingOrderId: "billing",
     billingStatus: "settled",
-    reservedMicrocredits: 11_666,
-    chargedMicrocredits: 3_904,
-    refundedMicrocredits: 7_762,
+    reservedMicrocredits: 1_166_600,
+    chargedMicrocredits: 390_400,
+    refundedMicrocredits: 776_200,
     createdAt,
 };
 const income: WalletHistoryEntry = {
@@ -133,13 +133,13 @@ test("income sits before expenses, paginates separately and ignores late respons
         expect(labels.indexOf("充值记录") + 1).toBe(labels.indexOf("积分消耗历史"));
         expect(modal.requests[0]).toMatchObject({ type: "expenses", page: 1 });
         await act(async () => modal.requests[0]!.reply([billing], 21));
-        expect(document.body.textContent).toContain("实际消耗 0.003904 积分");
+        expect(document.body.textContent).toContain("实际消耗 0.4 积分");
         await clickButton("下一页");
         expect(modal.requests[1]).toMatchObject({ type: "expenses", page: 2 });
 
         await clickButton("充值记录");
         expect(modal.requests[2]).toMatchObject({ type: "income", page: 1 });
-        expect(document.body.textContent).not.toContain("实际消耗 0.003904 积分");
+        expect(document.body.textContent).not.toContain("实际消耗 0.4 积分");
         await act(async () => modal.requests[2]!.reply([income], 21));
         expect(document.body.textContent).toContain("充值渠道：微信支付");
         expect(document.body.textContent).toContain("第 1 / 2 页");

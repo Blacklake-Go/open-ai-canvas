@@ -119,6 +119,11 @@ export default function AdminPaymentsPage() {
     const [providerDrawer, setProviderDrawer] = useState<AdminPaymentProvider>();
     const [providerSaving, setProviderSaving] = useState(false);
     const [providerForm] = Form.useForm<ProviderFormValues>();
+    const stripeBaseURL = String(Form.useWatch(["values", "publicBaseUrl"], providerForm) || "")
+        .trim()
+        .replace(/\/+$/, "");
+    const isStripeProvider = providerDrawer?.id === "stripe" || providerDrawer?.id === "stripe-sandbox";
+    const stripeWebhookURL = `${stripeBaseURL}/api/payments/notify/${providerDrawer?.id}/webhook`;
 
     const [productDrawer, setProductDrawer] = useState<TopupProduct | null | undefined>();
     const [productSaving, setProductSaving] = useState(false);
@@ -1064,8 +1069,9 @@ export default function AdminPaymentsPage() {
                             <InputNumber min={5} max={1440} precision={0} className="w-full" />
                         </Form.Item>
                         {providerDrawer.configFields.map((field) => {
+                            const label = isStripeProvider ? translate(`supdance-wallet:stripe.${field.name}`, { defaultValue: field.label || field.name }) : field.label || field.name;
                             const secretReady = Boolean(providerDrawer.secretConfigured[field.name]);
-                            const rules = field.required && !secretReady ? [{ required: true, message: `请输入${field.label || field.name}` }] : undefined;
+                            const rules = field.required && !secretReady ? [{ required: true }] : undefined;
                             const placeholder = field.secret && secretReady ? configuredSecretText : field.description || undefined;
                             const options = (field.values || []).map((value) => ({ value, label: value }));
                             if (field.type === "multiselect") {
@@ -1074,7 +1080,7 @@ export default function AdminPaymentsPage() {
                                     <Form.Item
                                         key={field.name}
                                         name={["values", field.name]}
-                                        label={field.label || field.name}
+                                        label={label}
                                         extra={field.description}
                                         rules={rules}
                                         getValueProps={(value: string | undefined) => ({ value: splitConfigList(value) })}
@@ -1100,11 +1106,18 @@ export default function AdminPaymentsPage() {
                                     <Input placeholder={placeholder} />
                                 );
                             return (
-                                <Form.Item key={field.name} name={["values", field.name]} label={field.label || field.name} extra={field.description} rules={rules}>
+                                <Form.Item key={field.name} name={["values", field.name]} label={label} extra={field.description} rules={rules}>
                                     {input}
                                 </Form.Item>
                             );
                         })}
+                        {isStripeProvider && (
+                            <Form.Item label={translate("supdance-wallet:stripe.webhookURL")}>
+                                <Typography.Text className="break-all" copyable={stripeBaseURL ? { text: stripeWebhookURL } : false}>
+                                    {stripeWebhookURL}
+                                </Typography.Text>
+                            </Form.Item>
+                        )}
                     </Form>
                 ) : null}
             </AdminDrawer>

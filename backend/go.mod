@@ -16,6 +16,7 @@ require (
 	github.com/modelcontextprotocol/go-sdk v1.8.0
 	github.com/qiniu/go-sdk/v7 v7.27.0
 	github.com/redis/go-redis/v9 v9.22.0
+	github.com/stripe/stripe-go/v87 v87.2.0
 	github.com/tencentyun/cos-go-sdk-v5 v0.7.75
 	github.com/volcengine/volc-sdk-golang v1.0.253
 	github.com/waffo-com/waffo-go/v2 v2.3.0
@@ -80,6 +81,7 @@ require (
 	github.com/remyoudompheng/bigfft v0.0.0-20230129092748-24d4a6f8daec // indirect
 	github.com/segmentio/asm v1.1.3 // indirect
 	github.com/segmentio/encoding v0.5.4 // indirect
+	github.com/shopspring/decimal v1.5.0 // indirect
 	github.com/sirupsen/logrus v1.9.0 // indirect
 	github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/common v1.0.744 // indirect
 	github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/sms v1.0.744 // indirect

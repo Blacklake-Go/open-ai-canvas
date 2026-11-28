@@ -38,7 +38,7 @@ function productAvailability(product: TopupProduct) {
 
 /** 选中商品的权益摘要，结算栏与卡片共用。 */
 export function topupProductValue(product: TopupProduct) {
-    return product.kind === "storage" ? `+${formatStorageCapacity(product.storageBytes)}` : translate("account.wallet.topup.creditsValue", { amount: formatCredits(product.creditsMicrocredits, 6) });
+    return product.kind === "storage" ? `+${formatStorageCapacity(product.storageBytes)}` : translate("account.wallet.topup.creditsValue", { amount: formatCredits(product.creditsMicrocredits) });
 }
 
 function ProductCard({ product, selected, onSelect }: { product: TopupProduct; selected: boolean; onSelect: () => void }) {

@@ -1,5 +1,6 @@
 import { describe, expect, test } from "bun:test";
 
+import { formatCredits } from "@/constant/credits";
 import { estimatePaymentCharge, parsePaymentRateMicros, paymentOptionsFromProviders } from "@/lib/payment-options";
 import type { PaymentProvider } from "@/services/api/payments";
 import { paymentBrandKey, topupCreditPresentation, walletPaymentIcon } from "@/supdance/wallet-presentation";
@@ -18,6 +19,13 @@ const provider = (overrides: Partial<PaymentProvider>): PaymentProvider => ({
 });
 
 describe("wallet checkout presentation", () => {
+    test("formats point amounts at most one decimal place", () => {
+        expect(formatCredits(1_013_103_358)).toBe("1,013.1");
+        expect(formatCredits(1_000_000_000)).toBe("1,000");
+        expect(formatCredits(-50_000)).toBe("-0.1");
+        expect(formatCredits(-1)).toBe("0");
+    });
+
     test("uses the brand without changing the provider or method identity", () => {
         const [alipay, waffo, wxpay, custom] = paymentOptionsFromProviders([
             provider({ id: "alipay-page-pay", name: "支付宝电脑网站支付" }),
@@ -51,6 +59,23 @@ describe("wallet checkout presentation", () => {
 });
 
 describe("paymentOptionsFromProviders", () => {
+    test("offers Stripe Checkout as one provider option for the configured currency", () => {
+        const [option] = paymentOptionsFromProviders([provider({ id: "stripe", name: "Stripe", icon: "brand:stripe", settlementCurrency: "USD" })]);
+        expect(option).toEqual({ key: "stripe", providerId: "stripe", name: "Stripe", icon: "brand:stripe", settlementCurrency: "USD" });
+        expect(walletPaymentIcon(option, "wallets")).toBe("brand:stripe");
+        expect(estimatePaymentCharge(1000, "CNY", option.settlementCurrency, "7.2")).toEqual({ amountFen: 139, currency: "USD" });
+    });
+
+    test("defaults to eligible Stripe with its public name and keeps the correct provider identity", () => {
+        const alipay = provider({ id: "alipay-page-pay" });
+        const sandbox = provider({ id: "stripe-sandbox", name: "Stripe Sandbox", icon: "brand:stripe", settlementCurrency: "USD" });
+        const live = provider({ id: "stripe", name: "Stripe", icon: "brand:stripe", settlementCurrency: "USD" });
+
+        expect(paymentOptionsFromProviders([alipay, sandbox])[0]).toMatchObject({ key: "stripe-sandbox", providerId: "stripe-sandbox", name: "Stripe" });
+        expect(paymentOptionsFromProviders([alipay, sandbox, live]).map((option) => option.key)).toEqual(["stripe", "alipay-page-pay"]);
+        expect(paymentOptionsFromProviders([alipay])[0].key).toBe("alipay-page-pay");
+    });
+
     test("expands provider methods into individual options", () => {
         const options = paymentOptionsFromProviders([
             provider({

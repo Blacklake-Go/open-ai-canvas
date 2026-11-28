@@ -13,7 +13,7 @@ import { AppModal } from "@/components/ui/product/app-modal";
 import { formatCredits } from "@/constant/credits";
 import { useAccountFileStorageUsage } from "@/hooks/use-account-file-storage-usage";
 import { accountFileStorageUsageQueryKey, accountStorageMeter } from "@/lib/account-storage-usage";
-import { estimatePaymentCharge, paymentOptionsFromProviders, type PaymentOption } from "@/lib/payment-options";
+import { estimatePaymentCharge, isStripePaymentProvider, paymentOptionsFromProviders, type PaymentOption } from "@/lib/payment-options";
 import { getPaymentSettings, listPaymentProviders, listTopupProducts, type PaymentOrder, type TopupProduct, type TopupProductKind, type WaffoIconStyle } from "@/services/api/payments";
 import { listMyStorageGrants } from "@/services/api/storage-grants";
 import { getWallet, redeemCredits, type WalletHistoryType, type WalletSummary } from "@/services/api/wallet";
@@ -166,7 +166,11 @@ export function WorkspaceWalletModal({
                 setSelectedProductId((current) =>
                     current && enabledProducts.some((item) => item.id === current) && !initialCategory ? current : preferred.find((item) => item.canPurchase)?.id || enabledProducts.find((item) => item.canPurchase)?.id || "",
                 );
-                setSelectedOptionKey((current) => (current && options.some((item) => item.key === current) ? current : options[0]?.key || ""));
+                const firstOption = options[0];
+                setSelectedOptionKey((current) => {
+                    if (firstOption && isStripePaymentProvider(firstOption.providerId)) return firstOption.key;
+                    return options.some((item) => item.key === current) ? current : firstOption?.key || "";
+                });
             })
             .catch((error) => message.error(error instanceof Error ? error.message : t("account.wallet.configLoadFailed")))
             .finally(() => setPaymentsLoading(false));
@@ -276,8 +280,8 @@ export function WorkspaceWalletModal({
                             {creditsEnabled ? (
                                 <div className="workspace-wallet-balance">
                                     <span>{t("shell.account.availableCredits")}</span>
-                                    <strong>{wallet ? formatCredits(available, 6) : "--"}</strong>
-                                    <small>{t("account.wallet.reserved", { amount: wallet ? formatCredits(wallet.account.reservedMicrocredits, 6) : "--" })}</small>
+                                    <strong>{wallet ? formatCredits(available) : "--"}</strong>
+                                    <small>{t("account.wallet.reserved", { amount: wallet ? formatCredits(wallet.account.reservedMicrocredits) : "--" })}</small>
                                 </div>
                             ) : null}
                             <button type="button" className="workspace-wallet-balance is-storage" aria-label={t("account.wallet.viewStorage")} onClick={() => focusProducts("storage")}>

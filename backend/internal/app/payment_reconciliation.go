@@ -182,7 +182,7 @@ func (s *Service) comparePaymentReconciliation(ctx context.Context, provider pay
 		// authorization. This is especially important for Alipay bill URLs that
 		// may use the provider-documented HTTP download host. Confirm every
 		// recovery through the signed API response before granting credits.
-		confirmed, confirmErr := provider.QueryOrder(ctx, values, payment.QueryRequest{MerchantOrderNo: merchantOrderNo})
+		confirmed, confirmErr := provider.QueryOrder(ctx, values, paymentQueryRequest(order))
 		if confirmErr != nil {
 			item.Result = model.PaymentReconciliationCreditFailed
 			item.Detail = "渠道账单显示已支付，但签名查单确认失败：" + safePaymentReconciliationError(confirmErr)

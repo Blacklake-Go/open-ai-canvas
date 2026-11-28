@@ -504,6 +504,24 @@ export const SUPDANCE_UPSTREAM_PATCH_REGISTRY: readonly UpstreamPatchRecord[] = 
         upgradeRisk: "HIGH",
     },
     {
+        id: "supdance-stripe-payment",
+        upstreamBaseline: "v1.8.7.2@7da66551",
+        feature: "Stripe 托管收银台与固定 Webhook 入口",
+        coupledUpstreamFiles: [
+            "backend/go.mod",
+            "backend/go.sum",
+            "backend/payment-sdk/types.go",
+            "backend/internal/app/payment.go",
+            "backend/internal/app/payment_reconciliation.go",
+            "backend/internal/handler/openapi.yaml",
+            "web/src/components/payment-brand-icons.tsx",
+            "web/src/pages/admin/payments/payments-page.tsx",
+        ],
+        files: ["backend/internal/supdance/stripepayment/provider.go", "supdance/plugins/supdance-payment-stripe/manifest.json"],
+        reason: "传递 Checkout Session 标识及已验签配置版本，复用商品、收件箱和权益账本。",
+        upgradeRisk: "HIGH",
+    },
+    {
         id: "supdance-waffo-enterprise-payment",
         upstreamBaseline: "v1.8.0@2fe3ca13",
         feature: "Waffo 企业版沙盒宿主支付合同",
@@ -1217,6 +1235,7 @@ export type SupDancePluginCompatibilityReport = {
 };
 
 const SEMVER_REGEX = /^\d+\.\d+\.\d+(?:-[0-9A-Za-z.-]+)?$/;
+const HOST_VERSION_REGEX = /^\d+\.\d+\.\d+(?:\.\d+)?(?:-[0-9A-Za-z.-]+)?$/;
 
 export function compareSemVer(a: string, b: string): number {
     const parse = (v: string) => {
@@ -1259,8 +1278,8 @@ export function validateSupDancePluginManifest(manifest: SupDancePluginManifest,
     }
     if (manifest.minHostVersion !== undefined) {
         const cleanedMin = manifest.minHostVersion.trim().replace(/^v/, "");
-        if (!SEMVER_REGEX.test(cleanedMin)) {
-            errors.push(`最低宿主版本声明 "${manifest.minHostVersion}" 必须遵循 SemVer`);
+        if (!HOST_VERSION_REGEX.test(cleanedMin)) {
+            errors.push(`最低宿主版本声明 "${manifest.minHostVersion}" 必须遵循 SemVer 或 SupDance 四段版本格式`);
         } else if (compareSemVer(hostVersion, cleanedMin) < 0) {
             errors.push(`当前宿主版本 (${hostVersion}) 低于插件要求的最低兼容版本 (${manifest.minHostVersion})`);
         }
