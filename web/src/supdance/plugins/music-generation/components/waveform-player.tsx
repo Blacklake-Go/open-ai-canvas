@@ -1,4 +1,4 @@
-import { Play, Pause, Volume2, VolumeX, SkipBack, SkipForward, Download, Repeat1 } from "lucide-react";
+import { Play, Pause, Volume2, VolumeX, SkipBack, SkipForward, Download, Repeat1, Maximize2, Minimize2 } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { useI18n } from "@/supdance/plugins/i18n";
 import { useMusicStore } from "../stores/use-music-store";
@@ -12,6 +12,8 @@ export function WaveformPlayer({
     durationSeconds = 0,
     output,
     navigation,
+    docked = true,
+    onToggleLyrics,
 }: {
     taskId: string;
     audioUrl?: string;
@@ -19,11 +21,15 @@ export function WaveformPlayer({
     durationSeconds?: number;
     output?: MusicOutput;
     navigation?: { previous?: () => void; next?: () => void };
+    docked?: boolean;
+    onToggleLyrics?: () => void;
 }) {
     const { t } = useI18n();
+    const lyricsLabel = docked ? t("music.track_expand_lyrics", undefined, "Expand lyrics") : t("common.close");
     const [downloadError, setDownloadError] = useState(false);
     const playerRef = useRef<HTMLDivElement>(null);
     useEffect(() => {
+        if (!docked) return;
         const changed = () => window.dispatchEvent(new Event("workspace-bottom-bar-change"));
         const observer = new ResizeObserver(changed);
         if (playerRef.current) observer.observe(playerRef.current);
@@ -32,7 +38,7 @@ export function WaveformPlayer({
             observer.disconnect();
             queueMicrotask(changed);
         };
-    }, []);
+    }, [docked]);
     const playing = useMusicStore((s) => s.playingTaskId === taskId && s.isPlaying);
     const current = useMusicStore((s) => (s.playingTaskId === taskId ? s.currentTime : 0));
     const measuredDuration = useMusicStore((s) => (s.playingTaskId === taskId ? s.duration : 0));
@@ -65,7 +71,7 @@ export function WaveformPlayer({
     const previous = navigation ? navigation.previous : index > 0 ? () => move(-1) : undefined;
     const next = navigation ? navigation.next : index >= 0 && index + 1 < queue.length ? () => move(1) : undefined;
     return (
-        <div ref={playerRef} data-workspace-bottom-bar className="music-player" role="region" translate="no" data-i18n-ignore="true" aria-label={t("music.player_title", undefined, "Music player")}>
+        <div ref={playerRef} data-workspace-bottom-bar={docked ? "" : undefined} className="music-player" role="region" translate="no" data-i18n-ignore="true" aria-label={t("music.player_title", undefined, "Music player")}>
             <div className="music-player-title">
                 <strong>{title || t("music.default_track_title")}</strong>
                 <span>
@@ -105,6 +111,11 @@ export function WaveformPlayer({
                         aria-label={t("music.original_download")}
                     >
                         <Download size={18} />
+                    </button>
+                )}
+                {onToggleLyrics && (
+                    <button type="button" aria-haspopup={docked ? "dialog" : undefined} onClick={onToggleLyrics} title={lyricsLabel} aria-label={lyricsLabel}>
+                        {docked ? <Maximize2 size={18} /> : <Minimize2 size={18} />}
                     </button>
                 )}
             </div>

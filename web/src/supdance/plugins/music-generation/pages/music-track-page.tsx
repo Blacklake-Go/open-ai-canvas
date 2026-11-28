@@ -1,4 +1,4 @@
-import { useRef } from "react";
+import { useRef, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { ArrowLeft, Bot, ChevronRight, Disc3 } from "lucide-react";
 import { Button } from "antd";
@@ -12,6 +12,7 @@ import { useGlobalAgentStore } from "@/stores/use-global-agent-store";
 import { useUserStore } from "@/stores/use-user-store";
 import { useI18n } from "@/supdance/plugins/i18n";
 import { MusicTrackPlayer } from "../components/music-track-player";
+import { MusicExpandedPlayer } from "../components/music-expanded-player";
 import { querySiteMusicTask } from "../services/music-site-api";
 import { musicOutputLabel } from "../services/music-tools";
 import { musicLibraryPath, musicTrackHref, parseMusicOutputIndex } from "../services/music-track-route";
@@ -53,6 +54,7 @@ function MusicTrackContent({ userId, taskId, outputIndex }: { userId: string; ta
     const { t } = useI18n();
     const { state } = useLocation();
     const refreshAudio = useRef(false);
+    const [lyricsExpanded, setLyricsExpanded] = useState(false);
     const query = useQuery({
         queryKey: ["music-track", userId, taskId],
         queryFn: ({ signal }) => {
@@ -87,11 +89,13 @@ function MusicTrackContent({ userId, taskId, outputIndex }: { userId: string; ta
                 task={task}
                 output={output}
                 refreshing={query.isFetching}
+                onExpand={() => setLyricsExpanded(true)}
                 onRefresh={() => {
                     refreshAudio.current = true;
                     void query.refetch();
                 }}
             />
+            <MusicExpandedPlayer task={task} output={output} open={lyricsExpanded} onClose={() => setLyricsExpanded(false)} navigation={{}} />
             {otherOutputs.length > 1 && (
                 <section className="creation-music-card plugin-music-track-versions" aria-labelledby="music-track-versions-heading">
                     <h2 id="music-track-versions-heading" className="creation-music-card-title">

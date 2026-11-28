@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { Button } from "antd";
 import { Image, ImageOff, ImagePlus, RotateCw, Upload } from "lucide-react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { CachedResourceImage } from "@/components/cached-resource-image";
 import { IconButton } from "@/components/ui/base/buttons";
 import { Select } from "@/components/ui/base/select";
@@ -14,15 +14,30 @@ import type { MusicCoverView } from "../services/music-api";
 
 const coverMimeTypes = ["image/jpeg", "image/png", "image/webp"];
 
-export function useMusicCover(userId: string, taskId: string, supported: boolean, placeholderData?: MusicCoverView) {
-    return useQuery({
+export function useMusicCover(userId: string, taskId: string, enabled: boolean, snapshot?: MusicCoverView) {
+    const client = useQueryClient();
+    const listedStatus = snapshot?.status;
+    const listedKey = snapshot?.storageKey;
+    const query = useQuery({
         queryKey: ["music-cover", userId, taskId],
         queryFn: ({ signal }) => getMusicCover(taskId, signal),
-        refetchInterval: (query) => (query.state.data?.status === "pending" ? 2500 : false),
-        enabled: supported,
-        placeholderData,
+        refetchInterval: ({ state }) => ((state.data?.status === "none" ? listedStatus : (state.data?.status ?? listedStatus)) === "pending" ? 2500 : false),
+        enabled,
+        placeholderData: snapshot,
         retry: false,
     });
+    const refetch = query.refetch;
+
+    useEffect(() => {
+        if (!listedKey) return;
+        const key = ["music-cover", userId, taskId];
+        const cached = client.getQueryData<MusicCoverView>(key);
+        if (cached && cached.storageKey !== listedKey) void refetch({ cancelRefetch: false });
+    }, [client, listedKey, refetch, taskId, userId]);
+
+    const cachedCover = query.data;
+    const data = !cachedCover || cachedCover.status === "none" ? (snapshot ?? cachedCover) : { ...cachedCover, storageKey: cachedCover.storageKey ?? listedKey };
+    return { ...query, data };
 }
 
 export function useMusicCoverOptions(userId: string, enabled = true) {

@@ -21,3 +21,11 @@ test("estimates only lyric lines when the source lacks timestamps", () => {
     ]);
     expect(musicLyricTimeline("First", 0)[0].start).toBeNull();
 });
+
+test("uses the LRC offset and ends each cue at the next source timestamp", () => {
+    const lines = musicLyricTimeline("[offset:+500]\r\n[00:04.00]<00:04.00>First <00:05.00>line\r\n[00:10.00]Second line", 24);
+    expect(lines.map(({ text, start, end }) => [text, start, end])).toEqual([
+        ["First line", 3.5, 9.5],
+        ["Second line", 9.5, 24],
+    ]);
+});

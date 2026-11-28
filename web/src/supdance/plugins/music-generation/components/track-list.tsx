@@ -42,7 +42,7 @@ export function TrackList({ task, favorites, onlyFavorites, selectedOutputId, on
     const [copied, setCopied] = useState(false);
     const [busy, setBusy] = useState<string | null>(null);
     const title = task.title || t("music.default_track_title");
-    const cover = useMusicCover(task.userId, task.taskId, task.cover?.status === "pending", task.cover);
+    const cover = useMusicCover(task.userId, task.taskId, Boolean(task.coverSupported && task.cover?.status === "pending"), task.cover);
     const coverKey = cover.data?.storageKey;
     const model = task.model.split("::").at(-1);
     const share = async (href: string) => {

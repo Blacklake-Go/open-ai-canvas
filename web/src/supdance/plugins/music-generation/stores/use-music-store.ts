@@ -399,7 +399,7 @@ export const useMusicStore = create<MusicState>((set, get) => ({
         };
         audio.onended = () => {
             if (!get().isLoop) {
-                set({ isPlaying: false, currentTime: 0 });
+                set({ isPlaying: false, currentTime: audio.currentTime });
             }
         };
         audio.onerror = () => {
@@ -439,7 +439,7 @@ export const useMusicStore = create<MusicState>((set, get) => ({
         if (audioElement) {
             audioElement.pause();
         }
-        set({ isPlaying: false });
+        set({ isPlaying: false, currentTime: audioElement?.currentTime ?? 0 });
     },
 
     togglePlayback: (taskId: string, audioUrl: string) => {

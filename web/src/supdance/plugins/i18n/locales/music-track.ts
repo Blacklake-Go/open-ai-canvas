@@ -7,6 +7,7 @@ export const musicTrackDefinitions = [
     ["track_versions", "此任务的音轨", "Tracks from this generation", "此任務的音軌", "この生成のトラック", "이 작업의 트랙", "Pistas de esta generación", "Pistes de cette génération", "Titel aus dieser Generierung"],
     ["track_lyrics", "歌词", "Lyrics", "歌詞", "歌詞", "가사", "Letra", "Paroles", "Liedtext"],
     ["track_lyrics_follow", "跟随播放进度", "Follow playback", "跟隨播放進度", "再生位置に追従", "재생 위치 따라가기", "Seguir la reproducción", "Suivre la lecture", "Wiedergabe folgen"],
+    ["track_expand_lyrics", "展开歌词", "Expand lyrics", "展開歌詞", "歌詞を拡大", "가사 펼치기", "Ampliar la letra", "Agrandir les paroles", "Liedtext erweitern"],
     ["track_playing_panel", "播放", "Player", "播放", "プレーヤー", "플레이어", "Reproductor", "Lecteur", "Player"],
     [
         "track_playing_empty",

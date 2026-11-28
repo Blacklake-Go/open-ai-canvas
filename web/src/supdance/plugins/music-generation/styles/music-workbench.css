@@ -110,7 +110,7 @@
 
 .plugin-music-generation .music-studio-columns {
     display: grid;
-    grid-template-columns: clamp(318px, 29%, 416px) minmax(0, 1fr) clamp(254px, 23%, 352px);
+    grid-template-columns: clamp(17rem, 24%, 21rem) minmax(0, 1fr) clamp(16rem, 23%, 22rem);
     flex: 1;
     gap: var(--space-4);
     min-height: 0;
@@ -142,7 +142,7 @@
 }
 
 .plugin-music-generation .music-composer h1 {
-    font-size: var(--fs-title);
+    font-size: var(--fs-heading);
 }
 
 .plugin-music-generation .music-library h2 {
@@ -155,12 +155,13 @@
     align-items: center;
     justify-content: space-between;
     gap: var(--space-3);
-    margin-bottom: var(--space-5);
+    margin-bottom: var(--space-3);
 }
 
 .plugin-music-generation .music-composer {
     display: flex;
     flex-direction: column;
+    padding: var(--space-4);
 }
 
 .plugin-music-generation .music-library {

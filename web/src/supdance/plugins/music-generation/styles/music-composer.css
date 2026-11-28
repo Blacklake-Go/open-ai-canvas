@@ -55,7 +55,7 @@
 
 .music-composer .music-form-fields {
     min-height: 0;
-    gap: var(--space-5);
+    gap: var(--space-3);
     overflow-y: auto;
     overscroll-behavior: contain;
     padding: var(--space-1) var(--space-1) var(--space-3);
@@ -66,11 +66,12 @@
 .music-composer > .plugin-music-form .music-composer-toolbar {
     display: grid;
     grid-template-columns: minmax(0, 1fr);
-    gap: var(--space-3);
+    gap: var(--space-2);
 }
 
 .music-composer > .plugin-music-form .music-composer-panel {
-    padding: var(--space-4);
+    padding: var(--space-3);
+    box-shadow: none;
 }
 
 .music-composer > .plugin-music-form .music-composer-tools {
@@ -78,15 +79,15 @@
 }
 
 .music-composer > .plugin-music-form textarea {
-    margin-block: var(--space-3);
-    padding: var(--space-3);
+    margin-block: var(--space-2);
+    padding: var(--space-2) var(--space-3);
     font-size: var(--fs-body);
-    line-height: 1.55;
+    line-height: var(--lh-body);
     letter-spacing: normal;
 }
 
 .music-composer > .plugin-music-form :is(.music-composer-panel label, .music-composer-setting label, .music-composer-options summary) {
-    font-size: var(--fs-body);
+    font-size: var(--fs-ui);
     line-height: var(--lh-body);
 }
 
@@ -246,8 +247,8 @@
 
 .music-composer > .plugin-music-form .music-create-footer {
     position: static;
-    gap: var(--space-3);
-    padding-block: var(--space-4) var(--space-2);
+    gap: var(--space-2);
+    padding-block: var(--space-3) 0;
 }
 
 @media (max-height: 680px) {
@@ -319,12 +320,11 @@
 .plugin-music-generation .music-lyrics-island {
     display: flex;
     flex-direction: column;
-    gap: var(--space-4);
-    padding: var(--space-4);
+    gap: var(--space-3);
+    padding: var(--space-3);
     border: 1px solid var(--music-island-card-border);
     border-radius: var(--music-radius-lg, var(--radius));
     background: var(--music-bg-surface, var(--card));
-    box-shadow: var(--music-elevation-card, none);
 }
 
 .plugin-music-generation .music-lyrics-island-intro {
@@ -353,7 +353,7 @@
 .plugin-music-generation .music-lyrics-card {
     display: flex;
     flex-direction: column;
-    gap: var(--space-3);
+    gap: var(--space-2);
     padding: var(--space-3);
     border: 1px solid var(--music-island-card-border);
     border-radius: var(--music-radius-md, var(--radius));
@@ -401,20 +401,43 @@
     width: 100%;
     box-sizing: border-box;
     margin-block: 0;
-    min-height: 120px;
+    min-height: var(--space-20);
     padding: 4px 2px;
     border: none;
     background: transparent;
     color: var(--music-text-primary, var(--foreground));
     font: inherit;
-    font-size: var(--fs-heading);
-    line-height: 1.55;
+    font-size: var(--fs-body);
+    line-height: var(--lh-body);
     resize: vertical;
 }
 
 .plugin-music-generation .music-lyrics-card textarea:focus-visible {
     outline: none;
     box-shadow: none;
+}
+
+.music-composer .music-lyrics-island {
+    background: var(--music-bg-surface-raised);
+}
+
+.music-composer .music-lyrics-island .music-lyrics-card {
+    padding: 0;
+    border: 0;
+    background: transparent;
+}
+
+.music-composer .music-lyrics-island .music-lyrics-card textarea {
+    height: calc(4lh + var(--space-4));
+    padding: var(--space-2);
+    background: var(--music-bg-canvas);
+    border: 1px solid var(--music-border-control);
+    border-radius: var(--music-radius-md);
+}
+
+.music-composer .music-lyrics-island .music-lyrics-card textarea:focus-visible {
+    outline: 2px solid var(--music-ring);
+    outline-offset: 2px;
 }
 
 .plugin-music-generation .music-lyrics-topics {
@@ -454,19 +477,18 @@
 .plugin-music-generation .music-lyrics-ai {
     display: grid;
     gap: 8px;
-    padding: 12px 14px;
-    border: 1px dashed var(--music-island-card-border);
-    border-radius: var(--music-radius-md, var(--radius));
-    background: color-mix(in srgb, var(--music-island-accent) 4%, transparent);
+    padding-block-start: var(--space-2);
+    border-block-start: 1px solid var(--music-island-card-border);
 }
 
 .plugin-music-generation .music-lyrics-ai-row {
     display: flex;
     gap: 8px;
+    flex-wrap: wrap;
 }
 
 .plugin-music-generation .music-lyrics-ai-row input {
-    flex: 1;
+    flex: 1 1 9rem;
     min-width: 0;
     min-height: 36px;
     padding: 0 12px;
