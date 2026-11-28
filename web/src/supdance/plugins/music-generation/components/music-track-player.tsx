@@ -98,6 +98,7 @@ export function MusicTrackPlayer({ task, output, onRefresh, refreshing, studio =
                     <IconButton icon={Rewind} disabled={!measuredDuration} className="size-11" aria-label={t("music.track_rewind")} title={t("music.track_rewind")} onClick={() => seek(current - 15)} />
                     <IconButton icon={FastForward} disabled={!measuredDuration} className="size-11" aria-label={t("music.track_forward")} title={t("music.track_forward")} onClick={() => seek(current + 15)} />
                     <Select<string> ariaLabel={t("music.track_rate")} options={rateOptions} value={rate} onChange={setRate} className="min-h-11" />
+                    {cover.data && <MusicCoverControls key={task.taskId} userId={task.userId} taskId={task.taskId} cover={cover.data} onChange={(view) => queryClient.setQueryData(["music-cover", task.userId, task.taskId], view)} />}
                     {!studio && (
                         <IconButton
                             icon={Download}
@@ -110,7 +111,6 @@ export function MusicTrackPlayer({ task, output, onRefresh, refreshing, studio =
                         />
                     )}
                 </div>
-                {cover.data && <MusicCoverControls key={task.taskId} userId={task.userId} taskId={task.taskId} cover={cover.data} onChange={(view) => queryClient.setQueryData(["music-cover", task.userId, task.taskId], view)} />}
                 {!output.audioUrl && (
                     <div className="creation-music-track-error" role="alert">
                         <span>{t("music.playback_failed")}</span>

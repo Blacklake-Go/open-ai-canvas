@@ -59,7 +59,7 @@
 .music-composer > .plugin-music-form textarea {
     margin-block: var(--space-3);
     padding: var(--space-3);
-    font-size: var(--fs-heading);
+    font-size: var(--fs-body);
     line-height: 1.55;
     letter-spacing: normal;
 }
@@ -72,6 +72,18 @@
 .music-composer > .plugin-music-form :is(.music-composer-heading span, .music-quote-line) {
     font-size: var(--fs-caption);
     line-height: var(--lh-body);
+}
+
+.music-composer > .plugin-music-form .music-composer-heading span {
+    flex-shrink: 0;
+    white-space: nowrap;
+}
+
+.music-composer > .plugin-music-form .music-composer-options .music-composer-panel {
+    padding: 0;
+    border: 0;
+    box-shadow: none;
+    background: transparent;
 }
 
 /* Panels */

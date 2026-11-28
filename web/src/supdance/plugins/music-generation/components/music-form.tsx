@@ -180,6 +180,33 @@ export function MusicForm({ userId, onSubmitted, admin = false }: { userId: stri
             />
         </div>
     );
+    const styleEditor = selected?.styleSupported && (
+        <section className="music-composer-panel">
+            <div className="music-composer-heading">
+                <label htmlFor="music-style-field">{t("music.style_field")}</label>
+                <span>
+                    {Array.from(draft.tags).length} / {selected.maxPromptChars}
+                </span>
+            </div>
+            <textarea
+                id="music-style-field"
+                rows={3}
+                value={draft.tags}
+                aria-invalid={Array.from(draft.tags).length > selected.maxPromptChars}
+                onChange={(e) => {
+                    setField("tags", e.target.value, userId);
+                    setNotice("");
+                }}
+                placeholder={t("music.style_hint")}
+            />
+            {Array.from(draft.tags).length > selected.maxPromptChars && (
+                <p role="alert" className="text-xs text-destructive">
+                    {t("music.limit_hint")}
+                </p>
+            )}
+            {draft.mode === "custom" && styleActions}
+        </section>
+    );
 
     return (
         <form
@@ -251,7 +278,7 @@ export function MusicForm({ userId, onSubmitted, admin = false }: { userId: stri
                     </div>
                     <textarea
                         id="music-song-description"
-                        rows={5}
+                        rows={admin ? 5 : 4}
                         value={draft.prompt}
                         aria-invalid={!!selected && Array.from(draft.prompt).length > selected.maxPromptChars}
                         onChange={(e) => {
@@ -278,33 +305,7 @@ export function MusicForm({ userId, onSubmitted, admin = false }: { userId: stri
                     onAIAction={lyricsAIEnabled ? runLyricsAI : undefined}
                 />
             )}
-            {selected?.styleSupported && (
-                <section className="music-composer-panel">
-                    <div className="music-composer-heading">
-                        <label htmlFor="music-style-field">{t("music.style_field")}</label>
-                        <span>
-                            {Array.from(draft.tags).length} / {selected.maxPromptChars}
-                        </span>
-                    </div>
-                    <textarea
-                        id="music-style-field"
-                        rows={3}
-                        value={draft.tags}
-                        aria-invalid={Array.from(draft.tags).length > selected.maxPromptChars}
-                        onChange={(e) => {
-                            setField("tags", e.target.value, userId);
-                            setNotice("");
-                        }}
-                        placeholder={t("music.style_hint")}
-                    />
-                    {Array.from(draft.tags).length > selected.maxPromptChars && (
-                        <p role="alert" className="text-xs text-destructive">
-                            {t("music.limit_hint")}
-                        </p>
-                    )}
-                    {draft.mode === "custom" && styleActions}
-                </section>
-            )}
+            {(admin || draft.mode === "custom") && styleEditor}
             {notice && (
                 <p role="status" className="text-xs text-muted-foreground">
                     {notice}
@@ -323,6 +324,7 @@ export function MusicForm({ userId, onSubmitted, admin = false }: { userId: stri
                     <ChevronDown size={15} />
                 </summary>
                 <div>
+                    {!admin && draft.mode === "simple" && styleEditor}
                     {selected?.titleSupported && (
                         <label>
                             {t("music.song_title")}
@@ -422,7 +424,6 @@ export function MusicForm({ userId, onSubmitted, admin = false }: { userId: stri
                     {t(submitting ? "music.submitting" : "music.create_music")}
                 </Button>
                 <p className="text-xs text-muted-foreground music-save-to">
-                    {t("music.save_to")} · {t("music.my_works")}
                     {t("music.site_billing_tip")}
                     {quote ? ` · ${t("music.billing_" + quote.billingMode)} × ${quote.quantity}` : ""}
                 </p>

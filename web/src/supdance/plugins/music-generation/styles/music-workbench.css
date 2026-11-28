@@ -134,12 +134,19 @@
 
 .plugin-music-generation .music-composer h1,
 .plugin-music-generation .music-library h2 {
-    font-size: var(--fs-title);
     font-weight: 600;
     line-height: var(--lh-heading);
     letter-spacing: var(--ls-title);
     color: var(--music-text-primary);
     margin: 0;
+}
+
+.plugin-music-generation .music-composer h1 {
+    font-size: var(--fs-title);
+}
+
+.plugin-music-generation .music-library h2 {
+    font-size: var(--fs-heading);
 }
 
 .plugin-music-generation .music-composer > .music-composer-heading {

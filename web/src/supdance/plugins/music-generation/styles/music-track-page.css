@@ -64,6 +64,24 @@
     white-space: normal;
 }
 
+.music-cover-dialog {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-4);
+    font-size: var(--fs-body);
+    line-height: var(--lh-body);
+}
+
+.music-cover-dialog-art {
+    display: block;
+    width: min(100%, 16rem);
+    aspect-ratio: 1;
+    margin-inline: auto;
+    border-radius: var(--r-md);
+    background: var(--muted);
+    object-fit: contain;
+}
+
 .plugin-music-track-navigation {
     justify-content: space-between;
 }
