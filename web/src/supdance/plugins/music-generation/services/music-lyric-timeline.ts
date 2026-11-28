@@ -2,7 +2,29 @@ const timestamp = /\[(\d+):([0-5]?\d)(?:[.:](\d{1,3}))?\]/g;
 
 type LyricLine = { text: string; start: number | null; end?: number; section: boolean; timestamped?: true };
 
-export function musicLyricTimeline(lyrics: string, duration: number): LyricLine[] {
+export type MusicLyricCue = { text: string; startMs: number; endMs: number };
+
+export function readMusicLyricCues(value: unknown): MusicLyricCue[] | undefined {
+    if (!Array.isArray(value) || value.length === 0) return undefined;
+    const cues: MusicLyricCue[] = [];
+    let previousEnd = 0;
+    for (const cue of value) {
+        if (typeof cue?.text !== "string" || !cue.text.trim() || !Number.isSafeInteger(cue.startMs) || !Number.isSafeInteger(cue.endMs) || cue.startMs < previousEnd || cue.startMs >= cue.endMs) {
+            return undefined;
+        }
+        cues.push({ text: cue.text.trim(), startMs: cue.startMs, endMs: cue.endMs });
+        previousEnd = cue.endMs;
+    }
+    return cues;
+}
+
+export function activeMusicLyricIndex(timeline: LyricLine[], seconds: number) {
+    return timeline.findLastIndex((row) => row.start !== null && row.start <= seconds && (row.end === undefined || seconds < row.end));
+}
+
+export function musicLyricTimeline(lyrics: string, duration: number, cues?: MusicLyricCue[]): LyricLine[] {
+    if (cues?.length) return cues.map(({ text, startMs, endMs }) => ({ text, start: startMs / 1000, end: endMs / 1000, section: false, timestamped: true }));
+
     const lines = lyrics
         .split(/\r?\n/)
         .map((line) => line.trim())
@@ -23,7 +45,7 @@ export function musicLyricTimeline(lyrics: string, duration: number): LyricLine[
     });
     if (timed.length) {
         timed.sort((a, b) => a.start - b.start);
-        return timed.map((line, index) => ({ ...line, end: timed[index + 1]?.start ?? duration }));
+        return timed.map((line, index) => ({ ...line, end: timed[index + 1]?.start ?? (duration > line.start ? duration : undefined) }));
     }
 
     const count = lines.filter((line) => !/^\[[^\]]+\]$/.test(line)).length;

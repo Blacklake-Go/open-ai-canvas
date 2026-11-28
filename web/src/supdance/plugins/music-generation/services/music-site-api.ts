@@ -10,6 +10,7 @@ import { downloadBrowserMedia } from "@/services/browser-download";
 import { startBrowserDownload } from "@/services/browser-download";
 import { adminResourceFileUrl } from "@/services/api/admin-storage";
 import { resourceIdFromStorageKey } from "@/services/api/resources";
+import { readMusicLyricCues } from "./music-lyric-timeline";
 
 export async function downloadMusicOutput(output: MusicOutput, title: string) {
     const format = output.format || (output.mimeType?.split(";")[0] === "audio/mpeg" ? "mp3" : undefined);
@@ -41,6 +42,7 @@ export function projectSiteMusicTask(task: MusicHostTask): MusicTask {
         bytes: item.bytes,
         mimeType: item.mimeType,
         format: (item.format || (item.mimeType?.split(";")[0] === "audio/mpeg" ? "mp3" : undefined)) as MusicTask["format"],
+        lyricsCues: "lyricsCues" in item ? readMusicLyricCues(item.lyricsCues) : undefined,
     }));
     return {
         coverSupported: true,

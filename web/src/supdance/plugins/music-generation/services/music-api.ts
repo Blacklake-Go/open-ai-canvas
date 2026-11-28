@@ -2,6 +2,7 @@ import { http } from "@/services/api/request";
 import { listSiteMusicTasks, querySiteMusicTask, projectMusicTask, projectAdminMusicTask } from "./music-site-api";
 import type { GenerationTask } from "@/services/api/task-center";
 
+import type { MusicLyricCue } from "./music-lyric-timeline";
 import type { MusicOperation } from "./music-tools";
 
 export type AudioFormat = "mp3" | "wav" | "flac";
@@ -85,6 +86,7 @@ export type MusicOutput = {
     bytes?: number;
     mimeType?: string;
     format?: AudioFormat;
+    lyricsCues?: MusicLyricCue[];
 };
 
 export type SubmitMusicTaskPayload = {

@@ -236,6 +236,7 @@ SupDance Studio 私有 v2 入口同时承载官网图像、视频和音乐生成
 - 音频沿宿主分离轮询、媒体 checkpoint、稳定资产 ID 和账务状态机；恢复旧后台测试只回查原上游 ID，不创建任务到供应商、不补扣历史账目。生命周期状态、准入与管理员审计原子提交，卸载保留配置和用户偏好。
 - 宿主接缝登记于 `supdance-music-host-tasks`、`supdance-music-player-docking`、`supdance-music-original-asset-titles` compatibility registry 与 `supdance/config/baseline.json`。实现、迁移与风险见 [音乐实现说明](music-studio/IMPLEMENTATION.md)，实测范围见 [音乐验收记录](music-studio/VERIFICATION.md)。
 - 音乐工作台和独立播放页通过路由配置收起全局悬浮 Agent，使用页面工具栏中的 Agent 入口，避免遮挡作品操作和播放控制。
+- 已校准的歌词以毫秒起止时间随音频输出的 `lyricsCues` 保存。展开和收起的歌词视图共用该时间轴，纯伴奏间隔清除高亮。已有 LRC 和只有歌词原文的历史结果继续使用对应的读取方式。
 
 ## 完整上游同步：正式版与 main
 

@@ -59,13 +59,14 @@ describe("music workbench platform integration", () => {
         expect(musicCreationAllowed(null, 2000000000)).toBe(false);
     });
     test("keeps every real output grouped with its task and preserves millisecond durations", () => {
+        const lyricsCues = [{ text: "A rendered line", startMs: 1950, endMs: 5350 }];
         const result = projectSiteMusicTask(
             task({
                 resultJson: JSON.stringify({
                     mode: "audio",
                     audios: [
                         { dataUrl: "/one.mp3", format: "mp3", durationMs: 207600, bytes: 4883001 },
-                        { dataUrl: "/two.mp3", format: "mp3", durationMs: 209200, bytes: 4743657 },
+                        { dataUrl: "/two.mp3", format: "mp3", durationMs: 209200, bytes: 4743657, lyricsCues },
                     ],
                 }),
             }),
@@ -75,6 +76,8 @@ describe("music workbench platform integration", () => {
             ["music-task:1", 209200],
         ]);
         expect(projectMusicTask(result).outputs).toEqual(result.outputs);
+        expect(result.outputs?.[0].lyricsCues).toBeUndefined();
+        expect(result.outputs?.[1].lyricsCues).toEqual(lyricsCues);
     });
     test("recovers stable audio references, target duration and actual duration separately", () => {
         const result = projectSiteMusicTask(task());

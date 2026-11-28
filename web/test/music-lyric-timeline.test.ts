@@ -1,5 +1,28 @@
 import { expect, test } from "bun:test";
-import { musicLyricTimeline } from "../src/supdance/plugins/music-generation/services/music-lyric-timeline";
+import { activeMusicLyricIndex, musicLyricTimeline, readMusicLyricCues } from "../src/supdance/plugins/music-generation/services/music-lyric-timeline";
+
+test("uses the recorded vocal cue intervals and clears highlighting during instrumental gaps", () => {
+    const cues = readMusicLyricCues([
+        { text: "Refrain", startMs: 8140, endMs: 10_080 },
+        { text: "Refrain", startMs: 22_240, endMs: 24_120 },
+    ]);
+    const lines = musicLyricTimeline("A different draft", 34, cues);
+
+    expect(lines.map(({ text, start, end, timestamped }) => [text, start, end, timestamped])).toEqual([
+        ["Refrain", 8.14, 10.08, true],
+        ["Refrain", 22.24, 24.12, true],
+    ]);
+    expect([8.139, 8.14, 10.079, 10.08, 22.24, 24.12].map((second) => activeMusicLyricIndex(lines, second))).toEqual([-1, 0, 0, -1, 1, -1]);
+});
+
+test("rejects invalid or overlapping cue intervals without silently dropping individual lines", () => {
+    const first = { text: "First", startMs: 100, endMs: 200 };
+    expect(readMusicLyricCues([first, { ...first, startMs: 199, endMs: 300 }])).toBeUndefined();
+    expect(readMusicLyricCues([{ ...first, startMs: -1 }])).toBeUndefined();
+    expect(readMusicLyricCues([{ ...first, text: " " }])).toBeUndefined();
+    expect(readMusicLyricCues([{ ...first, endMs: "200" }])).toBeUndefined();
+    expect(readMusicLyricCues([null])).toBeUndefined();
+});
 
 test("keeps source timestamps and sorts repeated LRC cues", () => {
     const lines = musicLyricTimeline("[00:12.50][01:03.025]Refrain\n[00:04.2]Verse\n[ar:Artist]", 75);

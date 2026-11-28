@@ -2,7 +2,7 @@ import { useEffect, useId, useMemo, useRef, useState } from "react";
 import { LocateFixed, Maximize2 } from "lucide-react";
 import { IconButton } from "@/components/ui/base/buttons";
 import { useI18n } from "@/supdance/plugins/i18n";
-import { musicLyricTimeline } from "../services/music-lyric-timeline";
+import { activeMusicLyricIndex, musicLyricTimeline } from "../services/music-lyric-timeline";
 import type { MusicOutput } from "../services/music-api";
 import { useMusicStore } from "../stores/use-music-store";
 import "../styles/music-lyrics-display.css";
@@ -25,7 +25,8 @@ export function MusicLyricsDisplay({ lyrics, instrumental, output, expanded, onE
     const active = useMusicStore((state) => state.playingTaskId === output.id && !state.playbackError);
     const measured = useMusicStore((state) => (state.playingTaskId === output.id ? state.duration : 0));
     const duration = measured || Math.max(0, output.durationMs || 0) / 1000;
-    const timeline = useMemo(() => musicLyricTimeline(lyrics, duration), [lyrics, duration]);
+    const cues = instrumental ? undefined : output.lyricsCues;
+    const timeline = useMemo(() => musicLyricTimeline(lyrics, duration, cues), [lyrics, duration, cues]);
     const hasLyrics = timeline.some((row) => !row.section);
 
     useEffect(() => {
@@ -35,8 +36,9 @@ export function MusicLyricsDisplay({ lyrics, instrumental, output, expanded, onE
         const paint = () => {
             const playback = useMusicStore.getState();
             const selected = playback.playingTaskId === output.id && !playback.playbackError;
-            const current = selected ? (playback.audioElement?.currentTime ?? playback.currentTime) : 0;
-            const index = selected ? timeline.findLastIndex((row) => row.start !== null && row.start <= current) : -1;
+            const audio = playback.audioElement;
+            const current = audio && !audio.seeking ? audio.currentTime : playback.currentTime;
+            const index = selected ? activeMusicLyricIndex(timeline, current) : -1;
             if (index !== lastIndex) {
                 lastIndex = index;
                 setActiveIndex(index);
