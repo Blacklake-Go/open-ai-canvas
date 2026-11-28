@@ -88,7 +88,7 @@ type MusicState = {
     loadUserDraft: (userId: string) => Promise<void>;
     loadCapabilities: () => Promise<void>;
     loadTasks: (page?: number) => Promise<void>;
-    submitGeneration: (userId: string, quotedMicrocredits?: number) => Promise<{ taskId: string } | null>;
+    submitGeneration: (userId: string, quotedMicrocredits?: number, cover?: SubmitMusicTaskPayload["cover"]) => Promise<{ taskId: string } | null>;
     playAudio: (taskId: string, audioUrl: string) => void;
     pauseAudio: () => void;
     togglePlayback: (taskId: string, audioUrl: string) => void;
@@ -326,7 +326,7 @@ export const useMusicStore = create<MusicState>((set, get) => ({
         }
     },
 
-    submitGeneration: async (userId: string, quotedMicrocredits?: number) => {
+    submitGeneration: async (userId, quotedMicrocredits, cover) => {
         const sequence = userScopeSequence;
         const { draft, submitting } = get();
         if (!userId) throw new Error("Login is required to generate music");
@@ -336,10 +336,11 @@ export const useMusicStore = create<MusicState>((set, get) => ({
 
         set({ submitting: true });
         try {
-            const fingerprint = JSON.stringify({ draft, quotedMicrocredits });
+            const fingerprint = JSON.stringify({ draft, quotedMicrocredits, cover });
             if (pendingSubmission?.fingerprint !== fingerprint) pendingSubmission = { fingerprint, nonce: crypto.randomUUID() };
             const payload: SubmitMusicTaskPayload = {
                 quotedMicrocredits,
+                cover,
                 model: draft.model,
                 mode: draft.mode,
                 prompt: draft.mode === "simple" ? draft.prompt.trim() : "",

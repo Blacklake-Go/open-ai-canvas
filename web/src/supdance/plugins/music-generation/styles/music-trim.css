@@ -6,7 +6,9 @@
 .music-trim-overlay .music-trim-editor {
     color: var(--music-text-primary, var(--foreground));
     min-width: 0;
-    padding-block: 4px 8px;
+    padding-block: var(--space-1) var(--space-2);
+    font-size: var(--fs-body);
+    line-height: var(--lh-body);
     font-variant-numeric: tabular-nums;
 }
 
@@ -22,13 +24,13 @@
 .music-trim-editor .music-trim-actions {
     display: flex;
     align-items: center;
-    gap: 8px;
+    gap: var(--space-2);
 }
 
 .music-trim-editor .music-trim-track {
-    margin: 0 0 20px;
+    margin: 0 0 var(--space-4);
     color: var(--music-text-secondary, var(--muted-foreground));
-    font-size: var(--font-size-sm, 0.875rem);
+    font-size: var(--fs-body);
 }
 
 .music-trim-track svg {
@@ -44,8 +46,8 @@
 .music-trim-editor .music-trim-ruler {
     justify-content: space-between;
     color: var(--music-text-secondary, var(--muted-foreground));
-    font-size: var(--font-size-xs, 0.75rem);
-    margin-bottom: 8px;
+    font-size: var(--fs-caption);
+    margin-bottom: var(--space-2);
 }
 
 .music-trim-editor .music-trim-ruler b {
@@ -139,15 +141,15 @@
 }
 
 .music-trim-editor .music-trim-help {
-    margin: 12px 0 20px;
+    margin: var(--space-3) 0 var(--space-4);
     color: var(--music-text-secondary, var(--muted-foreground));
-    font-size: var(--font-size-sm, 0.875rem);
+    font-size: var(--fs-body);
 }
 
 .music-trim-editor .music-trim-values {
     display: grid;
     grid-template-columns: repeat(3, minmax(0, 1fr));
-    gap: 12px;
+    gap: var(--space-3);
 }
 
 .music-trim-values label,
@@ -155,20 +157,20 @@
     display: flex;
     flex-direction: column;
     align-items: stretch;
-    gap: 4px;
+    gap: var(--space-1);
 }
 
 .music-trim-values span {
     color: var(--music-text-secondary, var(--muted-foreground));
-    font-size: var(--font-size-xs, 0.75rem);
+    font-size: var(--fs-caption);
     overflow-wrap: anywhere;
 }
 
 .music-trim-values input {
     width: 100%;
     min-width: 0;
-    min-height: 40px;
-    padding: 6px 10px;
+    min-height: 44px;
+    padding: var(--space-2) var(--space-3);
     border: 1px solid var(--music-border-control, var(--border));
     border-radius: var(--music-radius-md, var(--radius));
     color: var(--music-text-primary, var(--foreground));
@@ -179,13 +181,13 @@
 .music-trim-values strong {
     display: flex;
     align-items: center;
-    min-height: 40px;
-    font-size: var(--font-size-sm, 0.875rem);
+    min-height: 44px;
+    font-size: var(--fs-body);
     color: var(--music-text-primary, var(--foreground));
 }
 
 .music-trim-editor .music-trim-actions {
-    margin-top: 18px;
+    margin-top: var(--space-4);
     flex-wrap: wrap;
     gap: 8px;
 }
@@ -195,7 +197,9 @@
 }
 
 .music-trim-overlay .ant-btn {
-    min-height: 40px;
+    height: auto;
+    min-height: 44px;
+    padding-block: var(--space-2);
     border-radius: var(--music-radius-md, var(--radius));
     white-space: normal;
 }

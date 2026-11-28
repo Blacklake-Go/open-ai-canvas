@@ -9,6 +9,7 @@ import (
 
 	"yingce/backend/internal/model"
 	"yingce/backend/internal/repository"
+	"yingce/backend/internal/supdance/music"
 
 	"gorm.io/gorm"
 )
@@ -16,15 +17,16 @@ import (
 // Internal admission constraints are not JSON fields. Callers cannot select a
 // task ID or bypass the quoted-charge ceiling through the public tasks API.
 type taskAdmission struct {
-	ID             string
-	MaxCharge      int64
-	MusicOperation string
-	MusicCover     bool
-	AgentRunID     string
-	GenerationID   string
-	ApprovalID     string
-	NonBillable    bool
-	RequireBilling bool
+	MusicCoverSelection *music.CoverSelection
+	ID                  string
+	MaxCharge           int64
+	MusicOperation      string
+	MusicCover          bool
+	AgentRunID          string
+	GenerationID        string
+	ApprovalID          string
+	NonBillable         bool
+	RequireBilling      bool
 }
 
 // CreateTask 收敛任务进入系统前的 admission 流程：输入标准化、逻辑模型路由、
@@ -47,6 +49,12 @@ func (s *Service) CreateTask(userID string, req CreateTaskRequest) (*model.Task,
 	normalizedInput, err := normalizeTaskInput(req.Input)
 	if err != nil {
 		return nil, err
+	}
+	if metadata, ok := normalizedInput["metadata"].(map[string]any); ok {
+		delete(metadata, "musicCoverSelection")
+		if taskType == "canvas_audio" && req.admission != nil && req.admission.MusicCoverSelection != nil {
+			metadata["musicCoverSelection"] = req.admission.MusicCoverSelection
+		}
 	}
 	if err := s.requireTaskGenerationFeatures(userID, req.ProjectID, taskType, req.Operation, req.workbenchKind, normalizedInput); err != nil {
 		return nil, err

@@ -1,8 +1,10 @@
 import { useEffect, useRef, useState } from "react";
 import { Button, Switch as AntSwitch } from "antd";
 import { AdminSegmented } from "@/pages/admin/ui/controls";
-import { BookMarked, ChevronDown, LibraryBig, Music2, SlidersHorizontal, WandSparkles } from "lucide-react";
+import { BookMarked, ChevronDown, ImagePlus, LibraryBig, Music2, SlidersHorizontal, WandSparkles } from "lucide-react";
 import { SegmentedControl } from "@/components/ui/base/segmented-control";
+import { Checkbox } from "@/components/ui/base/checkbox";
+import { AppModal } from "@/components/ui/product/app-modal";
 import { IconButton } from "@/components/ui/base/buttons";
 import { Select } from "@/components/ui/base/select";
 import { ModelPicker } from "@/components/model-picker";
@@ -20,6 +22,7 @@ import { LyricsEditor, type LyricAIRequest } from "./lyrics-editor";
 import { PromptBuilder, SavedPrompts, StyleTemplates } from "./style-templates";
 import { appendStyle } from "./composer-patterns";
 import { generateLyrics, isLyricsAIRuntimeConfigured } from "../services/lyrics-ai";
+import { useMusicCoverOptions } from "./music-cover-controls";
 import "../styles/music-composer.css";
 
 export function musicCreationAllowed(quote: LogicalModelQuote | null, available: number | null | undefined) {
@@ -29,7 +32,7 @@ export function musicCreationAllowed(quote: LogicalModelQuote | null, available:
 export function MusicForm({ userId, onSubmitted, admin = false }: { userId: string; onSubmitted?: (taskId: string) => void; admin?: boolean }) {
     const ModeSelector = admin ? AdminSegmented : SegmentedControl;
     const InstrumentalSwitch = admin ? AntSwitch : Switch;
-    const { t } = useI18n();
+    const { t, locale } = useI18n();
     const config = useConfigStore((s) => s.config);
     const draft = useMusicStore((s) => s.draft);
     const capabilities = useMusicStore((s) => s.capabilities).filter((cap) => !cap.operations?.length);
@@ -49,6 +52,15 @@ export function MusicForm({ userId, onSubmitted, admin = false }: { userId: stri
     const [quoteRevision, setQuoteRevision] = useState(0);
     const creditsEnabled = useUserStore((s) => s.features.creditsEnabled);
     const wallet = useWalletBalance(userId, creditsEnabled);
+    const coverOptions = useMusicCoverOptions(userId, !admin);
+    const [includeCover, setIncludeCover] = useState(false);
+    const [coverModelId, setCoverModelId] = useState("");
+    const [confirmCover, setConfirmCover] = useState(false);
+    const availableCover = coverOptions.data?.enabled ? coverOptions.data : undefined;
+    const coverModel = availableCover?.models.find((item) => item.id === coverModelId) ?? availableCover?.models.find((item) => item.id === availableCover.defaultModel);
+    const coverSelection = includeCover && coverModel ? { model: coverModel.id, quotedMicrocredits: coverModel.quoteMicrocredits } : undefined;
+    const total = quote ? quote.amountMicrocredits + (coverSelection?.quotedMicrocredits ?? 0) : undefined;
+    const formatCredits = (microcredits?: number) => (microcredits === undefined ? "—" : new Intl.NumberFormat(locale, { maximumFractionDigits: 6 }).format(microcredits / 1_000_000));
     // AI 歌词助手只在文本模型协议真正配置时启用；否则话题 pill 降级为本地起手稿，不渲染必然报错的按钮。
     const lyricsAIEnabled = isLyricsAIRuntimeConfigured(config);
     const runLyricsAI = async (request: LyricAIRequest) => {
@@ -72,7 +84,7 @@ export function MusicForm({ userId, onSubmitted, admin = false }: { userId: stri
         return () => controller.abort();
     }, [selected?.id, selected?.available, userId, quoteRevision]);
 
-    const enough = creditsEnabled ? musicCreationAllowed(quote, wallet.availableMicrocredits) : Boolean(quote);
+    const enough = (!includeCover || Boolean(coverSelection)) && total !== undefined && (!creditsEnabled || (wallet.availableMicrocredits != null && wallet.availableMicrocredits >= total));
     const mainField = draft.mode === "simple" ? "prompt" : "tags";
     const input = draft.mode === "simple" ? draft.prompt : draft.lyrics;
     const limit = draft.mode === "simple" ? selected?.maxPromptChars : selected?.maxLyricsChars;
@@ -100,6 +112,37 @@ export function MusicForm({ userId, onSubmitted, admin = false }: { userId: stri
             if (opener.current?.isConnected) opener.current.focus({ preventScroll: true });
         });
     }
+    async function submitSong() {
+        if (!valid || !enough || !quote || submitting) return;
+        setConfirmCover(false);
+        setError("");
+        try {
+            const result = await submit(userId, quote.amountMicrocredits, coverSelection);
+            if (result) onSubmitted?.(result.taskId);
+        } catch (cause) {
+            if (cause instanceof ApiError && ["music_quote_changed", "music_cover_quote_changed"].includes(cause.reason || "")) {
+                setError(t("music.quote_changed"));
+                setQuoteRevision((value) => value + 1);
+                if (includeCover) void coverOptions.refetch();
+            } else {
+                setError(cause instanceof Error ? cause.message : String(cause));
+            }
+        } finally {
+            if (creditsEnabled) await wallet.refresh();
+        }
+    }
+    const coverBreakdown = coverSelection && (
+        <dl className="music-cover-quote">
+            <dt>{t("music.cover_audio_credits")}</dt>
+            <dd>{formatCredits(quote?.amountMicrocredits)}</dd>
+            <dt>{t("music.cover_image_credits")}</dt>
+            <dd>{formatCredits(coverSelection.quotedMicrocredits)}</dd>
+            <dt>{t("music.cover_total_credits")}</dt>
+            <dd>
+                <strong>{formatCredits(total)}</strong>
+            </dd>
+        </dl>
+    );
     const styleActions = (
         <div className="music-composer-tools">
             <IconButton
@@ -141,30 +184,24 @@ export function MusicForm({ userId, onSubmitted, admin = false }: { userId: stri
     return (
         <form
             className="plugin-music-form"
-            onSubmit={async (event) => {
+            onSubmit={(event) => {
                 event.preventDefault();
                 if (!valid || !enough || !quote || submitting) return;
-                setError("");
-                try {
-                    const result = await submit(userId, quote.amountMicrocredits);
-                    if (result) onSubmitted?.(result.taskId);
-                    if (creditsEnabled) await wallet.refresh();
-                } catch (cause) {
-                    setError(cause instanceof ApiError && cause.reason === "music_quote_changed" ? t("music.quote_changed") : cause instanceof Error ? cause.message : String(cause));
-                    if (cause instanceof ApiError && cause.reason === "music_quote_changed") setQuoteRevision((value) => value + 1);
-                    if (creditsEnabled) await wallet.refresh();
-                }
+                if (coverSelection) setConfirmCover(true);
+                else void submitSong();
             }}
         >
-            <div className="music-suno-tabs" role="tablist" aria-label={t("music.songs_tab")}>
-                <button type="button" role="tab" aria-selected="true" className="is-active">
-                    {t("music.songs_tab")}
-                </button>
-                <button type="button" role="tab" aria-selected="false" disabled title={t("music.speech_tab")}>
-                    {t("music.speech_tab")}
-                </button>
-                <span className="music-suno-version">{selected?.id?.split("::").at(-1) || t("music.no_models")}</span>
-            </div>
+            {admin && (
+                <div className="music-suno-tabs" role="tablist" aria-label={t("music.songs_tab")}>
+                    <button type="button" role="tab" aria-selected="true" className="is-active">
+                        {t("music.songs_tab")}
+                    </button>
+                    <button type="button" role="tab" aria-selected="false" disabled title={t("music.speech_tab")}>
+                        {t("music.speech_tab")}
+                    </button>
+                    <span className="music-suno-version">{selected?.id?.split("::").at(-1) || t("music.no_models")}</span>
+                </div>
+            )}
             <div className="music-composer-toolbar">
                 <ModeSelector
                     value={draft.mode}
@@ -333,17 +370,45 @@ export function MusicForm({ userId, onSubmitted, admin = false }: { userId: stri
                 </p>
             )}
             <div className="music-create-footer">
+                {(availableCover || includeCover) && (
+                    <section className="flex flex-col gap-2">
+                        <Checkbox className="min-h-11" checked={includeCover} onChange={(event) => setIncludeCover(event.target.checked)} disabled={submitting}>
+                            <span className="inline-flex items-center gap-2">
+                                <ImagePlus size={16} aria-hidden />
+                                {t("music.cover_include")}
+                            </span>
+                        </Checkbox>
+                        {includeCover && availableCover && coverModel && (
+                            <Select<string>
+                                ariaLabel={t("music.cover_allowed_models")}
+                                options={availableCover.models.map((item) => ({ value: item.id, label: item.name }))}
+                                value={coverModel.id}
+                                onChange={setCoverModelId}
+                                className="min-h-11"
+                                disabled={submitting}
+                            />
+                        )}
+                        {includeCover && !availableCover && (
+                            <p role="alert" className="text-sm text-destructive">
+                                {t("music.quote_changed")}
+                            </p>
+                        )}
+                        {coverBreakdown}
+                    </section>
+                )}
                 <div className="music-quote-line">
-                    <span>
-                        {t("music.estimated_credits")} <strong>{quote ? (quote.amountMicrocredits / 1_000_000).toLocaleString(undefined, { maximumFractionDigits: 6 }) : "—"}</strong>
-                    </span>
+                    {!includeCover && (
+                        <span>
+                            {t("music.estimated_credits")} <strong>{quote ? (quote.amountMicrocredits / 1_000_000).toLocaleString(undefined, { maximumFractionDigits: 6 }) : "—"}</strong>
+                        </span>
+                    )}
                     {creditsEnabled && (
                         <span>
                             {t("music.available_balance")} {wallet.availableMicrocredits === null ? "—" : (wallet.availableMicrocredits / 1_000_000).toLocaleString(currentLocale(), { maximumFractionDigits: 2 })}
                         </span>
                     )}
                 </div>
-                {quote && wallet.availableMicrocredits !== null && !enough && (
+                {creditsEnabled && total !== undefined && wallet.availableMicrocredits != null && wallet.availableMicrocredits < total && (
                     <p role="alert" className="text-sm text-destructive">
                         {t("music.insufficient_balance")}
                     </p>
@@ -362,6 +427,12 @@ export function MusicForm({ userId, onSubmitted, admin = false }: { userId: stri
                     {quote ? ` · ${t("music.billing_" + quote.billingMode)} × ${quote.quantity}` : ""}
                 </p>
             </div>
+            {confirmCover && (
+                <AppModal open centered title={t("music.cover_include")} onCancel={() => setConfirmCover(false)} onOk={() => void submitSong()} okText={t("music.create_music")} okButtonProps={{ disabled: !enough }}>
+                    <p className="mb-3 text-sm text-muted-foreground">{t("music.cover_after_audio")}</p>
+                    {coverBreakdown}
+                </AppModal>
+            )}
         </form>
     );
 }

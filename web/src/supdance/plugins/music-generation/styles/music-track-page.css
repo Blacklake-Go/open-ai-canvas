@@ -6,10 +6,13 @@
 .plugin-music-track-shell {
     display: grid;
     grid-template-columns: minmax(0, 3fr) minmax(0, 2fr);
-    gap: var(--space-4);
+    gap: var(--space-5);
     width: min(860px, 100% - 2 * var(--space-4));
     margin-inline: auto;
     padding-block: var(--space-6) var(--space-10);
+    font-size: var(--fs-body);
+    line-height: var(--lh-body);
+    letter-spacing: normal;
 }
 
 .plugin-music-track-shell > :not(.plugin-music-track-lyrics, .plugin-music-track-versions) {
@@ -21,10 +24,18 @@
     align-self: start;
 }
 
-.plugin-music-track-shell h1.creation-music-card-title {
+.plugin-music-track-shell .creation-music-card-title,
+.music-stage .creation-music-card-title {
     font-size: var(--fs-title);
+    line-height: var(--lh-heading);
+    letter-spacing: var(--ls-title);
     white-space: normal;
     overflow-wrap: anywhere;
+}
+
+.plugin-music-track-shell .creation-music-card-meta,
+.music-stage .creation-music-card-meta {
+    line-height: var(--lh-body);
 }
 
 .plugin-music-track-shell :is(.creation-music-play-btn, .creation-music-util-btn) {
@@ -41,7 +52,16 @@
     display: flex;
     flex-wrap: wrap;
     align-items: center;
-    gap: var(--space-2);
+    gap: var(--space-3);
+}
+
+.plugin-music-track-toolbar .ant-btn {
+    height: auto;
+    min-height: 44px;
+    padding-block: var(--space-2);
+    font-size: var(--fs-ui);
+    line-height: var(--lh-body);
+    white-space: normal;
 }
 
 .plugin-music-track-navigation {
@@ -58,7 +78,7 @@
 
 .plugin-music-track-versions ul {
     display: grid;
-    gap: var(--space-2);
+    gap: var(--space-3);
 }
 
 .plugin-music-track-versions li span {

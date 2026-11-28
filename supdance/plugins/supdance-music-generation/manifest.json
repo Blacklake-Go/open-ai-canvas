@@ -2,7 +2,7 @@
   "apiVersion": "yingce.plugin/v2",
   "id": "supdance-music-generation",
   "name": "Supdance音乐音频生成",
-  "version": "1.5.0",
+  "version": "1.5.1",
   "publishedAt": "2026-10-29",
   "updatedAt": "2026-11-28",
   "minHostVersion": "1.7.4",

@@ -1,6 +1,6 @@
 import { useQueryClient } from "@tanstack/react-query";
 import { useEffect, useMemo, useRef, useState } from "react";
-import { Download, FastForward, Rewind, SkipBack, SkipForward } from "lucide-react";
+import { Download, FastForward, Rewind } from "lucide-react";
 import { Button } from "antd";
 import { IconButton } from "@/components/ui/base/buttons";
 import { Select } from "@/components/ui/base/select";
@@ -15,26 +15,10 @@ import { MusicLyricsDisplay } from "./music-lyrics-display";
 
 const playbackRates = [0.75, 1, 1.25, 1.5, 2];
 
-export function MusicTrackPlayer({
-    task,
-    output,
-    onRefresh,
-    refreshing,
-    studio = false,
-    onPrevious,
-    onNext,
-}: {
-    task: MusicTask;
-    output: MusicOutput;
-    onRefresh: () => void;
-    refreshing: boolean;
-    studio?: boolean;
-    onPrevious?: () => void;
-    onNext?: () => void;
-}) {
+export function MusicTrackPlayer({ task, output, onRefresh, refreshing, studio = false }: { task: MusicTask; output: MusicOutput; onRefresh: () => void; refreshing: boolean; studio?: boolean }) {
     const { t, locale } = useI18n();
     const outputId = output.id;
-    const cover = useMusicCover(task.userId, task.taskId, Boolean(task.coverSupported));
+    const cover = useMusicCover(task.userId, task.taskId, Boolean(task.coverSupported), task.cover);
     const queryClient = useQueryClient();
     const title = task.title || t("music.default_track_title");
     const active = useMusicStore((s) => s.playingTaskId === outputId);
@@ -111,22 +95,22 @@ export function MusicTrackPlayer({
                 refreshingResult={refreshing}
             >
                 <div className="plugin-music-track-toolbar">
-                    {studio && <IconButton icon={SkipBack} className="size-11" aria-label={t("music.previous_track")} title={t("music.previous_track")} disabled={!onPrevious} onClick={onPrevious} />}
                     <IconButton icon={Rewind} disabled={!measuredDuration} className="size-11" aria-label={t("music.track_rewind")} title={t("music.track_rewind")} onClick={() => seek(current - 15)} />
                     <IconButton icon={FastForward} disabled={!measuredDuration} className="size-11" aria-label={t("music.track_forward")} title={t("music.track_forward")} onClick={() => seek(current + 15)} />
-                    {studio && <IconButton icon={SkipForward} className="size-11" aria-label={t("music.next_track")} title={t("music.next_track")} disabled={!onNext} onClick={onNext} />}
                     <Select<string> ariaLabel={t("music.track_rate")} options={rateOptions} value={rate} onChange={setRate} className="min-h-11" />
-                    <IconButton
-                        icon={Download}
-                        className="ms-auto size-11"
-                        disabled={!output.audioUrl && !output.storageKey}
-                        loading={download === "busy"}
-                        aria-label={t("music.original_download")}
-                        title={t("music.original_download")}
-                        onClick={() => void downloadAudio()}
-                    />
+                    {!studio && (
+                        <IconButton
+                            icon={Download}
+                            className="ms-auto size-11"
+                            disabled={!output.audioUrl && !output.storageKey}
+                            loading={download === "busy"}
+                            aria-label={t("music.original_download")}
+                            title={t("music.original_download")}
+                            onClick={() => void downloadAudio()}
+                        />
+                    )}
                 </div>
-                {!studio && cover.data && <MusicCoverControls userId={task.userId} taskId={task.taskId} cover={cover.data} onChange={(view) => queryClient.setQueryData(["music-cover", task.userId, task.taskId], view)} />}
+                {cover.data && <MusicCoverControls key={task.taskId} userId={task.userId} taskId={task.taskId} cover={cover.data} onChange={(view) => queryClient.setQueryData(["music-cover", task.userId, task.taskId], view)} />}
                 {!output.audioUrl && (
                     <div className="creation-music-track-error" role="alert">
                         <span>{t("music.playback_failed")}</span>

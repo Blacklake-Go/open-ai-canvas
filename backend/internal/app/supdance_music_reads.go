@@ -4,9 +4,12 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
-	"gorm.io/gorm"
+	"log/slog"
 	"sort"
 	"time"
+
+	"gorm.io/gorm"
+
 	"yingce/backend/internal/model"
 	"yingce/backend/internal/supdance/music"
 )
@@ -15,6 +18,7 @@ type MusicHostTask struct {
 	*model.Task
 	Billing        *TaskBillingSummary `json:"billing,omitempty"`
 	PartiallySaved bool                `json:"partiallySaved,omitempty"`
+	Cover          *MusicCoverView     `json:"cover,omitempty"`
 }
 
 type MusicTaskPage struct {
@@ -83,7 +87,17 @@ func (s *Service) MusicTaskView(ctx context.Context, actor *model.User, id strin
 	if task.Type != "canvas_audio" {
 		return nil, NotFound("Music task not found")
 	}
-	return s.musicHostTaskView(task)
+	view, err := s.musicHostTaskView(task)
+	if err != nil || task.Status != model.TaskStatusSucceeded {
+		return view, err
+	}
+	state, err := readMusicCoverState(task)
+	if err != nil {
+		return nil, err
+	}
+	cover, err := s.projectMusicCover(task, state)
+	view.Cover = &cover
+	return view, err
 }
 
 func (s *Service) MusicTaskPage(ctx context.Context, actor *model.User, status string, offset, limit int, admin bool) (*MusicTaskPage, error) {
@@ -142,7 +156,28 @@ func (s *Service) MusicTaskPage(ctx context.Context, actor *model.User, status s
 		}
 		return merged[i].at.After(merged[j].at)
 	})
-	for _, entry := range merged[min(offset, len(merged)):min(offset+limit, len(merged))] {
+	entries := merged[min(offset, len(merged)):min(offset+limit, len(merged))]
+	states := make(map[string]musicCoverState, len(entries))
+	childIDs := make([]string, 0, len(entries))
+	for _, entry := range entries {
+		if entry.host == nil || entry.host.Status != model.TaskStatusSucceeded {
+			continue
+		}
+		state, err := readMusicCoverState(entry.host)
+		if err != nil {
+			slog.Warn("music cover metadata unavailable in history", "task_id", entry.host.ID, "error", err)
+			continue
+		}
+		states[entry.host.ID] = state
+		if state.ChildTaskID != "" {
+			childIDs = append(childIDs, state.ChildTaskID)
+		}
+	}
+	children, err := s.repo.WithContext(ctx).MusicCoverChildren(childIDs)
+	if err != nil {
+		return nil, err
+	}
+	for _, entry := range entries {
 		if entry.legacy != nil {
 			page.LegacyItems = append(page.LegacyItems, entry.legacy)
 			continue
@@ -150,6 +185,14 @@ func (s *Service) MusicTaskPage(ctx context.Context, actor *model.User, status s
 		view, err := s.musicHostTaskView(entry.host)
 		if err != nil {
 			return nil, err
+		}
+		if state, ok := states[entry.host.ID]; ok {
+			cover, err := musicCoverViewFromTasks(entry.host, state, children[state.ChildTaskID])
+			if err != nil {
+				slog.Warn("music cover image unavailable in history", "task_id", entry.host.ID, "error", err)
+				cover = MusicCoverView{Status: "failed", StorageKey: state.StorageKey}
+			}
+			view.Cover = &cover
 		}
 		page.Items = append(page.Items, view)
 	}

@@ -18,11 +18,14 @@ description: 影策 SupDance 音乐生成插件后台管理接口、RequireAdmin
 | `GET /api/admin/plugins/music-generation/config` | 管理员读取配置与渠道模型实时报价 |
 | `PUT /api/admin/plugins/music-generation/config` | 以 `cover` 字段保存，服务端校验并写入后台审计 |
 | `GET /api/v1/supdance/music/cover-config` | 用户读取本账号有权使用的模型、价格和上传限制 |
+| `POST /api/v1/supdance/music/tasks` | 可通过 `cover: { model, quotedMicrocredits }` 提交封面选择，服务端独立核对报价与余额 |
 | `GET /api/v1/supdance/music/tasks/:id/cover` | 歌曲所有者读取已完成任务的封面与状态 |
 | `POST /api/v1/supdance/music/tasks/:id/cover/regenerate` | 提交模型、当前封面报价和幂等 ID，启动独立图片任务 |
 | `PUT /api/v1/supdance/music/tasks/:id/cover` | 绑定本账号的图片资源，服务端复核体积、文件类型和尺寸 |
 
 封面使用现有图片任务预授权与结算。任务失败时保留上一张封面，由图片任务账本处理退款。歌曲音频及其订单独立保留。配置保存为 `system_settings` 的 `plugin.supdance-music-generation.cover`，封面关联保存在已完成音频任务的结果中，无需改表。原有歌曲均可播放，旧版独立表中的歌曲无需补写封面。
+
+用户确认的封面选择随歌曲任务保存。成功归档的歌曲在后台提交独立图片任务，浏览器关闭、服务重启均可恢复派发。图片任务以歌曲 ID 派生幂等标识。音乐提交时展示积分合计，音乐与封面分别预授权。后续封面派发时若模型、报价或余额发生变化，作品保留原音频和封面重试入口。音乐历史与歌曲详情响应中的 `cover` 给出状态与资源标识。
 
 ## 1. 权限边界与 RBAC 架构
 

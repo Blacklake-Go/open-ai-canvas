@@ -243,6 +243,11 @@ func (s *Service) submitSiteMusicTask(ctx context.Context, userID string, req mu
 		failure.Reason = "music_quote_changed"
 		return nil, failure
 	}
+	if req.Cover != nil {
+		if err := s.validateMusicCoverSelection(userID, req.Operation, quote.AmountMicrocredits, *req.Cover); err != nil {
+			return nil, err
+		}
+	}
 	if source != nil {
 		if err := s.verifyMusicSourceAudio(ctx, req, source); err != nil {
 			return nil, err
@@ -284,7 +289,7 @@ func (s *Service) submitSiteMusicTask(ctx context.Context, userID string, req mu
 	}
 	input["prompt"] = prompt
 	task, err := s.CreateTask(userID, CreateTaskRequest{Type: "canvas_audio", Operation: "audio", Model: selected.ModelKey, Prompt: prompt,
-		admission: &taskAdmission{ID: id, MaxCharge: *req.QuotedMicrocredits, MusicOperation: req.Operation},
+		admission: &taskAdmission{ID: id, MaxCharge: *req.QuotedMicrocredits, MusicOperation: req.Operation, MusicCoverSelection: req.Cover},
 		Input:     input,
 	})
 	if err != nil {

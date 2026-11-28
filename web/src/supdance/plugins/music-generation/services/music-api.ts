@@ -41,6 +41,7 @@ export type ModelCapabilities = {
 
 export type MusicTask = {
     coverSupported?: boolean;
+    cover?: MusicCoverView;
     outputs?: MusicOutput[];
     mediaStage?: string;
     canRecoverMedia?: boolean;
@@ -87,6 +88,7 @@ export type MusicOutput = {
 };
 
 export type SubmitMusicTaskPayload = {
+    cover?: { model: string; quotedMicrocredits: number };
     operation?: MusicOperation;
     sourceResourceId?: string;
     editStartMs?: number;
@@ -122,6 +124,7 @@ export type MusicCoverConfig = {
 };
 
 export type MusicCoverModel = { id: string; name: string; channel?: string; quoteMicrocredits: number; estimated: boolean };
+export type MusicCoverView = { status: "none" | "pending" | "ready" | "failed"; storageKey?: string };
 
 export type AdminMusicConfig = {
     cover: MusicCoverConfig;

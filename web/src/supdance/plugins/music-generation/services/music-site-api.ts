@@ -24,7 +24,9 @@ export async function siteMusicQuote(model: string, _duration = 0, signal?: Abor
     return http.post<LogicalModelQuote>("/v1/supdance/music/quote", { model, operation }, { signal });
 }
 
-export function projectSiteMusicTask(task: GenerationTask): MusicTask {
+type MusicHostTask = GenerationTask & Pick<MusicTask, "cover">;
+
+export function projectSiteMusicTask(task: MusicHostTask): MusicTask {
     const input = task.inputJson ? JSON.parse(task.inputJson) : {};
     const music = input.metadata?.music || {};
     const result = task.resultJson ? parseBackendGenerationResult(task) : undefined;
@@ -42,6 +44,7 @@ export function projectSiteMusicTask(task: GenerationTask): MusicTask {
     }));
     return {
         coverSupported: true,
+        cover: task.cover,
         outputs,
         upstreamTaskId: task.providerRequestId,
         mediaStage: task.mediaStage,

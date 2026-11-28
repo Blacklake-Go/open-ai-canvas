@@ -56,7 +56,7 @@ export function MusicCoverSettings({ writable }: { writable: boolean }) {
                 )
             ) : (
                 <form
-                    className="flex min-w-0 flex-col gap-4"
+                    className="music-admin-cover-form"
                     onSubmit={async (event) => {
                         event.preventDefault();
                         if (locked) return;
@@ -77,29 +77,31 @@ export function MusicCoverSettings({ writable }: { writable: boolean }) {
                         <span>{t("music.cover_enable_generation")}</span>
                         <AdminSwitch aria-label={t("music.cover_enable_generation")} checked={config.enabled} disabled={locked} onChange={(enabled) => update({ enabled })} />
                     </div>
-                    <fieldset className="flex min-w-0 flex-col gap-2">
+                    <fieldset className="min-w-0">
                         <legend>{t("music.cover_allowed_models")}</legend>
                         {!available.length && <p className="text-muted-foreground">{t("music.cover_no_models")}</p>}
-                        {[...available, ...unavailable].map((model) => (
-                            <AdminCheckbox
-                                key={model.id}
-                                disabled={locked}
-                                checked={allowed.includes(model.id)}
-                                onChange={(event) => {
-                                    const allowedModels = event.target.checked ? [...allowed, model.id] : allowed.filter((item) => item !== model.id);
-                                    const defaultModel = allowedModels.includes(config.defaultModel) ? config.defaultModel : allowedModels[0] || "";
-                                    update({ allowedModels, defaultModel });
-                                }}
-                            >
-                                <span translate="no">
-                                    {model.name}
-                                    {model.channel ? " · " + model.channel : ""}
-                                </span>{" "}
-                                <span className="ms-2 text-muted-foreground">
-                                    {model.quoteMicrocredits !== undefined ? t(model.estimated ? "music.cover_estimated_price" : "music.cover_price", { credits: price(model.quoteMicrocredits) }) : t("music.cover_model_unavailable")}
-                                </span>
-                            </AdminCheckbox>
-                        ))}
+                        <div className="music-admin-cover-models">
+                            {[...available, ...unavailable].map((model) => (
+                                <AdminCheckbox
+                                    key={model.id}
+                                    disabled={locked}
+                                    checked={allowed.includes(model.id)}
+                                    onChange={(event) => {
+                                        const allowedModels = event.target.checked ? [...allowed, model.id] : allowed.filter((item) => item !== model.id);
+                                        const defaultModel = allowedModels.includes(config.defaultModel) ? config.defaultModel : allowedModels[0] || "";
+                                        update({ allowedModels, defaultModel });
+                                    }}
+                                >
+                                    <span translate="no">
+                                        {model.name}
+                                        {model.channel ? " · " + model.channel : ""}
+                                    </span>{" "}
+                                    <span className="ms-2 text-muted-foreground">
+                                        {model.quoteMicrocredits !== undefined ? t(model.estimated ? "music.cover_estimated_price" : "music.cover_price", { credits: price(model.quoteMicrocredits) }) : t("music.cover_model_unavailable")}
+                                    </span>
+                                </AdminCheckbox>
+                            ))}
+                        </div>
                     </fieldset>
                     <div className="grid gap-2">
                         <span>{t("music.cover_default_model")}</span>
@@ -109,7 +111,7 @@ export function MusicCoverSettings({ writable }: { writable: boolean }) {
                         {t("music.cover_prompt_template")}
                         <Input.TextArea value={config.promptTemplate} disabled={locked} autoSize={{ minRows: 2, maxRows: 5 }} maxLength={1000} onChange={(event) => update({ promptTemplate: event.target.value })} />
                     </label>
-                    <p className="text-muted-foreground">{t("music.cover_template_tokens", { title: "{title}", prompt: "{prompt}", lyrics: "{lyrics}" })}</p>
+                    <p className="text-caption text-muted-foreground">{t("music.cover_template_tokens", { title: "{title}", prompt: "{prompt}", lyrics: "{lyrics}" })}</p>
                     <div className="flex flex-wrap items-center justify-between gap-3">
                         <span>{t("music.cover_allow_upload")}</span>
                         <AdminSwitch aria-label={t("music.cover_allow_upload")} checked={config.allowUpload} disabled={locked} onChange={(allowUpload) => update({ allowUpload })} />

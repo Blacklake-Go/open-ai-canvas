@@ -5,19 +5,22 @@
 
 .music-advanced {
     display: grid;
-    gap: 14px;
+    gap: var(--space-4);
     color: var(--music-text-primary, var(--foreground));
+    font-size: var(--fs-body);
+    line-height: var(--lh-body);
+    letter-spacing: normal;
     max-height: min(72dvh, 700px);
     overflow: auto;
     overscroll-behavior: contain;
-    padding: 4px;
+    padding: var(--space-1);
 }
 
 .music-advanced fieldset,
 .music-advanced label,
 .music-tool-source {
     display: grid;
-    gap: 8px;
+    gap: var(--space-2);
     min-width: 0;
 }
 
@@ -25,13 +28,13 @@
     border: 0;
     margin: 0;
     padding: 0;
-    gap: 16px;
+    gap: var(--space-4);
 }
 
 .music-advanced label,
 .music-tool-source strong,
 .music-tool-footer {
-    font-size: var(--font-size-sm, 0.875rem);
+    font-size: var(--fs-body);
     color: var(--music-text-primary, var(--foreground));
 }
 
@@ -39,13 +42,14 @@
 .music-advanced label > input:not([type="checkbox"]):not([type="file"]) {
     border: 1px solid var(--music-border-control, var(--border));
     border-radius: var(--music-radius-md, var(--radius));
-    padding: 8px 12px;
-    min-height: 40px;
+    padding: var(--space-2) var(--space-3);
+    min-height: 44px;
     min-width: 0;
     background: var(--music-bg-canvas, var(--background));
     width: 100%;
     color: var(--music-text-primary, var(--foreground));
-    font-size: var(--font-size-sm, 0.875rem);
+    font-size: var(--fs-body);
+    line-height: var(--lh-body);
     transition:
         border-color var(--music-motion-fast, 150ms) ease,
         box-shadow var(--music-motion-fast, 150ms) ease;
@@ -62,7 +66,7 @@
 .music-tool-source span,
 .music-tool-note {
     color: var(--music-text-secondary, var(--muted-foreground));
-    font-size: var(--font-size-xs, 0.75rem);
+    font-size: var(--fs-caption);
     overflow-wrap: anywhere;
 }
 
@@ -72,17 +76,24 @@
     display: flex;
     align-items: center;
     flex-wrap: wrap;
-    gap: 8px;
+    gap: var(--space-2);
 }
 
 .music-tool-actions {
-    margin-top: 6px;
+    margin-top: var(--space-2);
+}
+
+.music-advanced .ant-btn {
+    min-height: 44px;
+    height: auto;
+    padding-block: var(--space-2);
+    white-space: normal;
 }
 
 .music-tool-range {
     display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 10px;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: var(--space-3);
 }
 
 .music-tool-range button {
@@ -95,20 +106,8 @@
     bottom: 0;
     z-index: 2;
     background: var(--music-bg-surface, var(--card));
-    padding-bottom: 6px;
+    padding-bottom: var(--space-2);
     justify-content: space-between;
     border-top: 1px solid var(--music-border-subtle, var(--border));
-    padding-top: 14px;
-}
-
-.music-workbench-page .music-composer-heading {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 10px;
-    margin-bottom: 16px;
-}
-
-.music-workbench-page .music-composer-heading h1 {
-    margin: 0;
+    padding-top: var(--space-4);
 }

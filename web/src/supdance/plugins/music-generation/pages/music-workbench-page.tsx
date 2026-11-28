@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { MusicAdvancedDialog } from "../components/music-advanced-dialog";
 import { musicOutputLabel, trackSource, type MusicSource } from "../services/music-tools";
-import { Link, useNavigate, useSearchParams } from "react-router";
+import { useNavigate, useSearchParams } from "react-router";
 import { ArrowDownUp, AudioLines, Check, Disc3, FolderOpen, RefreshCw, Search, SlidersHorizontal } from "lucide-react";
 import { TrackList } from "../components/track-list";
 import { MusicTrimDialog } from "../components/music-trim-dialog";
@@ -19,6 +19,7 @@ import { SUPDANCE_MUSIC_PLUGIN_ID } from "../types";
 import { MusicForm } from "../components/music-form";
 import { MusicTrackPlayer } from "../components/music-track-player";
 import { MusicTaskDetails } from "../components/music-task-details";
+import { WaveformPlayer } from "../components/waveform-player";
 import "../styles/music-workbench.css";
 import "../styles/music-track-page.css";
 
@@ -107,7 +108,7 @@ function MusicStudio({ userId }: { userId?: string }) {
         if (playback.playingTaskId !== output.id) playback.pauseAudio();
     };
     const playTrack = (output: MusicOutput) => {
-        chooseTrack(output);
+        setSelectedOutputId(output.id);
         if (output.audioUrl) useMusicStore.getState().playAudio(output.id, output.audioUrl);
     };
     const detail = tasks.find((task) => task.taskId === detailId);
@@ -146,16 +147,7 @@ function MusicStudio({ userId }: { userId?: string }) {
                     </section>
                     <section className={`music-stage ${mobile === "player" ? "is-mobile-active" : ""}`} aria-label={t("music.track_playing_panel")}>
                         {track ? (
-                            <MusicTrackPlayer
-                                key={track.output.id}
-                                studio
-                                task={track.task}
-                                output={track.output}
-                                refreshing={loading}
-                                onRefresh={() => void loadTasks()}
-                                onPrevious={trackIndex > 0 ? () => playTrack(playable[trackIndex - 1].output) : undefined}
-                                onNext={trackIndex >= 0 && trackIndex + 1 < playable.length ? () => playTrack(playable[trackIndex + 1].output) : undefined}
-                            />
+                            <MusicTrackPlayer key={track.output.id} studio task={track.task} output={track.output} refreshing={loading} onRefresh={() => void loadTasks()} />
                         ) : (
                             <div className="music-stage-empty" role="status">
                                 <AudioLines size={32} aria-hidden />
@@ -209,7 +201,7 @@ function MusicStudio({ userId }: { userId?: string }) {
                             <div className="music-saved-clip" role="status">
                                 <Check size={16} />
                                 {t("music.clip_saved")}
-                                <Link to={savedHref}>{t("music.manage_in_assets")}</Link>
+                                <IconButton icon={FolderOpen} className="size-11" aria-label={t("music.manage_in_assets")} title={t("music.manage_in_assets")} onClick={() => void navigate(savedHref)} />
                             </div>
                         )}
                         {loadError && (
@@ -264,6 +256,20 @@ function MusicStudio({ userId }: { userId?: string }) {
                         )}
                     </section>
                 </div>
+                {track && (
+                    <WaveformPlayer
+                        key={track.output.id}
+                        taskId={track.output.id}
+                        audioUrl={track.output.audioUrl}
+                        title={track.task.title}
+                        durationSeconds={(track.output.durationMs || 0) / 1000}
+                        output={track.output}
+                        navigation={{
+                            previous: trackIndex > 0 ? () => playTrack(playable[trackIndex - 1].output) : undefined,
+                            next: trackIndex >= 0 && trackIndex + 1 < playable.length ? () => playTrack(playable[trackIndex + 1].output) : undefined,
+                        }}
+                    />
+                )}
                 <AppDrawer rootClassName="plugin-music-generation" open={Boolean(detail)} onClose={() => setDetailId(null)} title={detail?.title || t("music.default_track_title")}>
                     {detail && (
                         <MusicTaskDetails

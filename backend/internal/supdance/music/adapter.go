@@ -30,31 +30,37 @@ const (
 )
 
 // MusicGenerationRequest is the unified internal request struct for music generation tasks.
+type CoverSelection struct {
+	Model              string `json:"model"`
+	QuotedMicrocredits *int64 `json:"quotedMicrocredits"`
+}
+
 type MusicGenerationRequest struct {
-	Operation          string   `json:"operation,omitempty"`
-	SourceResourceID   string   `json:"sourceResourceId,omitempty"`
-	EditStartMs        int64    `json:"editStartMs,omitempty"`
-	EditEndMs          int64    `json:"editEndMs,omitempty"`
-	QuotedMicrocredits *int64   `json:"quotedMicrocredits,omitempty"`
-	UserID             string   `json:"userId,omitempty"`
-	TaskID             string   `json:"taskId,omitempty"`
-	Model              string   `json:"model" binding:"required"`
-	Mode               string   `json:"mode" binding:"required,oneof=simple custom"`
-	Prompt             string   `json:"prompt"`
-	Title              string   `json:"title,omitempty"`
-	Lyrics             string   `json:"lyrics,omitempty"`
-	Tags               string   `json:"tags,omitempty"`
-	SongLanguage       string   `json:"songLanguage,omitempty"`
-	Instrumental       bool     `json:"instrumental"`
-	DurationSeconds    int      `json:"duration,omitempty"`
-	Format             string   `json:"format,omitempty"`
-	VocalGender        string   `json:"vocalGender,omitempty"`
-	TempoBpm           int      `json:"tempoBpm,omitempty"`
-	KeySignature       string   `json:"keySignature,omitempty"`
-	SynthIDWatermark   *bool    `json:"synthIdWatermark,omitempty"`
-	Stems              []string `json:"stems,omitempty"`
-	ContinuationClipID string   `json:"continuationClipId,omitempty"`
-	IdempotencyNonce   string   `json:"idempotencyNonce" binding:"required"`
+	Cover              *CoverSelection `json:"cover,omitempty"`
+	Operation          string          `json:"operation,omitempty"`
+	SourceResourceID   string          `json:"sourceResourceId,omitempty"`
+	EditStartMs        int64           `json:"editStartMs,omitempty"`
+	EditEndMs          int64           `json:"editEndMs,omitempty"`
+	QuotedMicrocredits *int64          `json:"quotedMicrocredits,omitempty"`
+	UserID             string          `json:"userId,omitempty"`
+	TaskID             string          `json:"taskId,omitempty"`
+	Model              string          `json:"model" binding:"required"`
+	Mode               string          `json:"mode" binding:"required,oneof=simple custom"`
+	Prompt             string          `json:"prompt"`
+	Title              string          `json:"title,omitempty"`
+	Lyrics             string          `json:"lyrics,omitempty"`
+	Tags               string          `json:"tags,omitempty"`
+	SongLanguage       string          `json:"songLanguage,omitempty"`
+	Instrumental       bool            `json:"instrumental"`
+	DurationSeconds    int             `json:"duration,omitempty"`
+	Format             string          `json:"format,omitempty"`
+	VocalGender        string          `json:"vocalGender,omitempty"`
+	TempoBpm           int             `json:"tempoBpm,omitempty"`
+	KeySignature       string          `json:"keySignature,omitempty"`
+	SynthIDWatermark   *bool           `json:"synthIdWatermark,omitempty"`
+	Stems              []string        `json:"stems,omitempty"`
+	ContinuationClipID string          `json:"continuationClipId,omitempty"`
+	IdempotencyNonce   string          `json:"idempotencyNonce" binding:"required"`
 }
 
 // MusicGenerationResponse is the unified internal response struct for music generation queries.

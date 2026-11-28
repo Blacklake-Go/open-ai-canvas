@@ -26,9 +26,11 @@ type MusicCoverRequest struct {
 }
 
 type musicCoverState struct {
-	StorageKey  string    `json:"storageKey,omitempty"`
-	ChildTaskID string    `json:"childTaskId,omitempty"`
-	RequestedAt time.Time `json:"requestedAt,omitempty"`
+	StorageKey       string    `json:"storageKey,omitempty"`
+	ChildTaskID      string    `json:"childTaskId,omitempty"`
+	RequestedAt      time.Time `json:"requestedAt,omitempty"`
+	AutomaticPending bool      `json:"automaticPending,omitempty"`
+	AutomaticFailed  bool      `json:"automaticFailed,omitempty"`
 }
 
 const musicCoverSubmissionGrace = time.Minute
@@ -56,23 +58,35 @@ func readMusicCoverState(task *model.Task) (musicCoverState, error) {
 }
 
 func (s *Service) projectMusicCover(parent *model.Task, cover musicCoverState) (MusicCoverView, error) {
+	if cover.ChildTaskID == "" {
+		return musicCoverViewFromTasks(parent, cover, nil)
+	}
+	child, err := s.repo.TaskForUser(parent.UserID, cover.ChildTaskID)
+	if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
+		return MusicCoverView{}, err
+	}
+	return musicCoverViewFromTasks(parent, cover, child)
+}
+
+func musicCoverViewFromTasks(parent *model.Task, cover musicCoverState, child *model.Task) (MusicCoverView, error) {
 	view := MusicCoverView{StorageKey: cover.StorageKey, Status: "none"}
 	if cover.StorageKey != "" {
 		view.Status = "ready"
 	}
 	if cover.ChildTaskID == "" {
+		if cover.AutomaticFailed {
+			view.Status = "failed"
+		} else if cover.StorageKey == "" && hasMusicCoverSelection(parent) {
+			view.Status = "pending"
+		}
 		return view, nil
 	}
-	child, err := s.repo.TaskForUser(parent.UserID, cover.ChildTaskID)
-	if errors.Is(err, gorm.ErrRecordNotFound) {
+	if child == nil || child.UserID != parent.UserID || child.ID != cover.ChildTaskID || child.Type != "canvas_image" {
 		view.Status = "failed"
 		if time.Since(cover.RequestedAt) < musicCoverSubmissionGrace {
 			view.Status = "pending"
 		}
 		return view, nil
-	}
-	if err != nil {
-		return view, err
 	}
 	switch child.Status {
 	case model.TaskStatusQueued, model.TaskStatusRunning:
@@ -139,6 +153,10 @@ func (s *Service) writeMusicCover(task *model.Task, cover musicCoverState) error
 }
 
 func (s *Service) GenerateMusicCover(actor *model.User, id string, request MusicCoverRequest) (MusicCoverView, error) {
+	return s.generateMusicCover(actor, id, request, false)
+}
+
+func (s *Service) generateMusicCover(actor *model.User, id string, request MusicCoverRequest, automatic bool) (MusicCoverView, error) {
 	parent, err := s.musicCoverParent(actor, id)
 	if err != nil {
 		return MusicCoverView{}, err
@@ -157,8 +175,16 @@ func (s *Service) GenerateMusicCover(actor *model.User, id string, request Music
 	if err != nil {
 		return MusicCoverView{}, err
 	}
-	childID := uuid.NewSHA1(uuid.NameSpaceOID, []byte("supdance:music-cover:"+actor.ID+":"+id+":"+request.Nonce)).String()
-	if current.Status == "pending" && cover.ChildTaskID != childID {
+	nonceScope := ""
+	if automatic {
+		nonceScope = "automatic:"
+		// An explicit cover action takes precedence over the original opt-in.
+		if !cover.AutomaticPending && (cover.ChildTaskID != "" || cover.StorageKey != "" || cover.AutomaticFailed) {
+			return current, nil
+		}
+	}
+	childID := uuid.NewSHA1(uuid.NameSpaceOID, []byte("supdance:music-cover:"+actor.ID+":"+id+":"+nonceScope+request.Nonce)).String()
+	if current.Status == "pending" && cover.ChildTaskID != childID && !(automatic && cover.ChildTaskID == "") {
 		return current, NewAppError(409, "A cover is already being generated for this song.")
 	}
 	if cover.ChildTaskID == childID {
@@ -213,7 +239,7 @@ func (s *Service) GenerateMusicCover(actor *model.User, id string, request Music
 		"{prompt}", shorten(parent.Prompt, 500),
 		"{lyrics}", shorten(input.Metadata.Music.Lyrics, 500),
 	).Replace(config.PromptTemplate)
-	pending := musicCoverState{StorageKey: current.StorageKey, ChildTaskID: childID, RequestedAt: time.Now().UTC()}
+	pending := musicCoverState{StorageKey: current.StorageKey, ChildTaskID: childID, RequestedAt: time.Now().UTC(), AutomaticPending: automatic}
 	if err := s.writeMusicCover(parent, pending); err != nil {
 		return current, err
 	}
@@ -231,7 +257,7 @@ func (s *Service) GenerateMusicCover(actor *model.User, id string, request Music
 		} else if !errors.Is(lookupErr, gorm.ErrRecordNotFound) {
 			return current, errors.Join(createErr, lookupErr)
 		}
-		clearErr := s.writeMusicCover(parent, musicCoverState{StorageKey: current.StorageKey})
+		clearErr := s.writeMusicCover(parent, musicCoverState{StorageKey: current.StorageKey, AutomaticPending: automatic})
 		return current, errors.Join(createErr, clearErr)
 	}
 	return MusicCoverView{StorageKey: current.StorageKey, Status: "pending"}, nil

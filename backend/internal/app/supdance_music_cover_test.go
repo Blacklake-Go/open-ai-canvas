@@ -2,6 +2,8 @@ package app
 
 import (
 	"bytes"
+	"context"
+	"encoding/json"
 	"image"
 	"image/png"
 	"strings"
@@ -108,6 +110,56 @@ func TestMusicCoverConfigAndCreationUseSiteQuote(t *testing.T) {
 	reloaded, err := svc.repo.Task(parent.ID)
 	if err != nil || !strings.Contains(reloaded.ResultJSON, "resource:song-audio") || reloaded.BillingOrderID != "" {
 		t.Fatalf("song audio or billing was replaced: %+v %v", reloaded, err)
+	}
+
+	if err := svc.validateMusicCoverSelection(userID, "", price, music.CoverSelection{Model: selection, QuotedMicrocredits: &stale}); err == nil {
+		t.Fatal("accepted stale combined quote")
+	}
+	auto := &model.Task{ID: "automatic-song-cover", UserID: userID, Type: "canvas_audio", Status: model.TaskStatusFailed, Prompt: parent.Prompt, ResultJSON: `{"mode":"audio","audios":[{"storageKey":"resource:song-audio"}]}`}
+	input, err := json.Marshal(map[string]any{"metadata": map[string]any{"source": "music-workbench", "musicCoverSelection": music.CoverSelection{Model: selection, QuotedMicrocredits: &expected}}})
+	if err != nil {
+		t.Fatal(err)
+	}
+	auto.InputJSON = string(input)
+	if err := db.Create(auto).Error; err != nil {
+		t.Fatal(err)
+	}
+	if tasks, err := svc.repo.MusicTasksAwaitingCover(20); err != nil || len(tasks) != 0 {
+		t.Fatalf("failed audio scheduled a cover: %+v %v", tasks, err)
+	}
+	if err := db.Model(auto).Update("status", model.TaskStatusSucceeded).Error; err != nil {
+		t.Fatal(err)
+	}
+	auto.Status = model.TaskStatusSucceeded
+	if tasks, err := svc.repo.MusicTasksAwaitingCover(20); err != nil || len(tasks) != 1 || tasks[0].ID != auto.ID {
+		t.Fatalf("successful audio did not schedule a cover: %+v %v", tasks, err)
+	}
+	for range 2 {
+		if err := svc.dispatchRequestedMusicCover(auto); err != nil {
+			t.Fatal(err)
+		}
+	}
+	if err := db.Where("type = ?", "canvas_image").Find(&children).Error; err != nil || len(children) != 2 {
+		t.Fatalf("automatic cover was lost or duplicated: %d %v", len(children), err)
+	}
+	if tasks, err := svc.repo.MusicTasksAwaitingCover(20); err != nil || len(tasks) != 0 {
+		t.Fatalf("created child is still waiting for dispatch: %+v %v", tasks, err)
+	}
+	latest, err := svc.repo.TaskForUser(userID, auto.ID)
+	if err != nil {
+		t.Fatal(err)
+	}
+	state, err := readMusicCoverState(latest)
+	if err != nil || state.AutomaticPending || state.ChildTaskID == "" {
+		t.Fatalf("cover state was not persisted: %+v %v", state, err)
+	}
+	if err := db.Model(&model.Task{}).Where("id = ?", state.ChildTaskID).
+		Updates(map[string]any{"status": model.TaskStatusSucceeded, "result_json": `{"images":[{"storageKey":"resource:automatic-cover"}]}`}).Error; err != nil {
+		t.Fatal(err)
+	}
+	page, err := svc.MusicTaskPage(context.Background(), owner, "completed", 0, 10, false)
+	if err != nil || len(page.Items) != 1 || page.Items[0].Cover == nil || page.Items[0].Cover.StorageKey != "resource:automatic-cover" {
+		t.Fatalf("history did not project the cover: %+v %v", page, err)
 	}
 }
 

@@ -1,7 +1,5 @@
 import { http } from "@/services/api/request";
-import type { MusicCoverModel } from "./music-api";
-
-export type MusicCoverView = { status: "none" | "pending" | "ready" | "failed"; storageKey?: string };
+import type { MusicCoverModel, MusicCoverView } from "./music-api";
 
 type MusicCoverOptions = {
     enabled: boolean;

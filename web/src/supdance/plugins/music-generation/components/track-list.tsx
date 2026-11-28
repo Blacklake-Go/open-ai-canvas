@@ -4,6 +4,7 @@ import { Dropdown, type MenuProps } from "antd";
 import { recoverGenerationTaskMedia } from "@/services/api/task-center";
 import { Disc3, Download, ExternalLink, FolderOpen, Heart, Info, MoreHorizontal, Pause, Play, Scissors, Share2, SlidersHorizontal } from "lucide-react";
 import { IconButton } from "@/components/ui/base/buttons";
+import { CachedResourceImage } from "@/components/cached-resource-image";
 import { useI18n } from "@/supdance/plugins/i18n";
 import { useMusicStore } from "../stores/use-music-store";
 import { musicOutputLabel } from "../services/music-tools";
@@ -12,6 +13,7 @@ import { downloadMusicOutput } from "../services/music-site-api";
 import type { MusicTask, MusicOutput } from "../services/music-api";
 import { TaskCard } from "./task-card";
 import { musicTrackHref } from "../services/music-track-route";
+import { useMusicCover } from "./music-cover-controls";
 
 export function musicTime(seconds: number) {
     if (!Number.isFinite(seconds) || seconds < 0) return "—";
@@ -40,6 +42,8 @@ export function TrackList({ task, favorites, onlyFavorites, selectedOutputId, on
     const [copied, setCopied] = useState(false);
     const [busy, setBusy] = useState<string | null>(null);
     const title = task.title || t("music.default_track_title");
+    const cover = useMusicCover(task.userId, task.taskId, task.cover?.status === "pending", task.cover);
+    const coverKey = cover.data?.storageKey;
     const model = task.model.split("::").at(-1);
     const share = async (href: string) => {
         setError("");
@@ -96,6 +100,8 @@ export function TrackList({ task, favorites, onlyFavorites, selectedOutputId, on
                                 className="music-cover"
                                 type="button"
                                 aria-label={t(active ? "music.player_pause" : "music.player_play") + " · " + variant}
+                                data-has-art={coverKey ? true : undefined}
+                                data-playing={active ? true : undefined}
                                 disabled={!output.audioUrl}
                                 onClick={() => {
                                     if (output.audioUrl) {
@@ -104,7 +110,11 @@ export function TrackList({ task, favorites, onlyFavorites, selectedOutputId, on
                                     }
                                 }}
                             >
-                                <Disc3 size={20} className="music-disc" aria-hidden />
+                                {coverKey ? (
+                                    <CachedResourceImage storageKey={coverKey} variant="thumbnail" alt="" className="absolute inset-0 size-full object-cover" fallback={<Disc3 size={20} className="music-disc" aria-hidden />} />
+                                ) : (
+                                    <Disc3 size={20} className="music-disc" aria-hidden />
+                                )}
                                 <span className="music-cover-control">{active ? <Pause size={16} /> : <Play size={16} />}</span>
                             </button>
                             <button type="button" className="music-record-title" aria-current={selectedOutputId === output.id ? "true" : undefined} onClick={() => onSelect(output)}>

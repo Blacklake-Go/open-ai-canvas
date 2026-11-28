@@ -5,7 +5,21 @@ import { useMusicStore } from "../stores/use-music-store";
 import type { MusicOutput } from "../services/music-api";
 import { downloadMusicOutput } from "../services/music-site-api";
 
-export function WaveformPlayer({ taskId, audioUrl, title, durationSeconds = 0, output }: { taskId: string; audioUrl: string; title?: string; durationSeconds?: number; output?: MusicOutput }) {
+export function WaveformPlayer({
+    taskId,
+    audioUrl,
+    title,
+    durationSeconds = 0,
+    output,
+    navigation,
+}: {
+    taskId: string;
+    audioUrl?: string;
+    title?: string;
+    durationSeconds?: number;
+    output?: MusicOutput;
+    navigation?: { previous?: () => void; next?: () => void };
+}) {
     const { t } = useI18n();
     const [downloadError, setDownloadError] = useState(false);
     const playerRef = useRef<HTMLDivElement>(null);
@@ -48,8 +62,10 @@ export function WaveformPlayer({ taskId, audioUrl, title, durationSeconds = 0, o
         const next = queue[index + offset];
         if (next?.audioUrl) useMusicStore.getState().playAudio(next.id, next.audioUrl);
     };
+    const previous = navigation ? navigation.previous : index > 0 ? () => move(-1) : undefined;
+    const next = navigation ? navigation.next : index >= 0 && index + 1 < queue.length ? () => move(1) : undefined;
     return (
-        <div ref={playerRef} data-workspace-bottom-bar className="music-player" translate="no" data-i18n-ignore="true" aria-label={t("music.player_title", undefined, "Music player")}>
+        <div ref={playerRef} data-workspace-bottom-bar className="music-player" role="region" translate="no" data-i18n-ignore="true" aria-label={t("music.player_title", undefined, "Music player")}>
             <div className="music-player-title">
                 <strong>{title || t("music.default_track_title")}</strong>
                 <span>
@@ -57,13 +73,13 @@ export function WaveformPlayer({ taskId, audioUrl, title, durationSeconds = 0, o
                 </span>
             </div>
             <div className="music-player-controls">
-                <button type="button" disabled={index <= 0} onClick={() => move(-1)} aria-label={t("music.previous_track", undefined, "Previous track")}>
+                <button type="button" disabled={!previous} onClick={previous} aria-label={t("music.previous_track", undefined, "Previous track")}>
                     <SkipBack size={18} />
                 </button>
-                <button type="button" className="music-main-play" onClick={() => toggle(taskId, audioUrl)} aria-label={t(playing ? "music.player_pause" : "music.player_play")}>
+                <button type="button" className="music-main-play" disabled={!audioUrl} onClick={() => audioUrl && toggle(taskId, audioUrl)} aria-label={t(playing ? "music.player_pause" : "music.player_play")}>
                     {playing ? <Pause size={20} /> : <Play size={20} />}
                 </button>
-                <button type="button" disabled={index < 0 || index >= queue.length - 1} onClick={() => move(1)} aria-label={t("music.next_track", undefined, "Next track")}>
+                <button type="button" disabled={!next} onClick={next} aria-label={t("music.next_track", undefined, "Next track")}>
                     <SkipForward size={18} />
                 </button>
                 <button type="button" aria-pressed={loop} onClick={() => useMusicStore.getState().toggleAudioLoop()} title={t("music.loop_one")} aria-label={t("music.loop_one")}>
@@ -77,6 +93,7 @@ export function WaveformPlayer({ taskId, audioUrl, title, durationSeconds = 0, o
                 {output && (
                     <button
                         type="button"
+                        disabled={!output.audioUrl && !output.storageKey}
                         onClick={async () => {
                             setDownloadError(false);
                             try {

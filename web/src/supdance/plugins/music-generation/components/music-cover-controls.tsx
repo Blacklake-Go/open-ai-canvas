@@ -1,36 +1,54 @@
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Button } from "antd";
-import { ImagePlus, Upload } from "lucide-react";
+import { ImagePlus, RotateCw, Upload } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { Select } from "@/components/ui/base/select";
+import { AppModal } from "@/components/ui/product/app-modal";
 import { uploadResourceFile } from "@/services/api/resources";
 import { ApiError } from "@/services/api/request";
 import { useI18n } from "@/supdance/plugins/i18n";
-import { attachMusicCover, generateMusicCover, getMusicCover, getMusicCoverOptions, type MusicCoverView } from "../services/music-cover-api";
+import { attachMusicCover, generateMusicCover, getMusicCover, getMusicCoverOptions } from "../services/music-cover-api";
+import type { MusicCoverView } from "../services/music-api";
 
 const coverMimeTypes = ["image/jpeg", "image/png", "image/webp"];
 
-export function useMusicCover(userId: string, taskId: string, supported: boolean) {
+export function useMusicCover(userId: string, taskId: string, supported: boolean, placeholderData?: MusicCoverView) {
     return useQuery({
         queryKey: ["music-cover", userId, taskId],
         queryFn: ({ signal }) => getMusicCover(taskId, signal),
         refetchInterval: (query) => (query.state.data?.status === "pending" ? 2500 : false),
         enabled: supported,
+        placeholderData,
+        retry: false,
+    });
+}
+
+export function useMusicCoverOptions(userId: string, enabled = true) {
+    return useQuery({
+        queryKey: ["music-cover-options", userId],
+        queryFn: ({ signal }) => getMusicCoverOptions(signal),
+        enabled: enabled && Boolean(userId),
+        staleTime: 30_000,
         retry: false,
     });
 }
 
 export function MusicCoverControls({ userId, taskId, cover, onChange }: { userId: string; taskId: string; cover: MusicCoverView; onChange: (cover: MusicCoverView) => void }) {
     const { t, locale } = useI18n();
-    const optionsQuery = useQuery({
-        queryKey: ["music-cover-options", userId],
-        queryFn: ({ signal }) => getMusicCoverOptions(signal),
-        retry: false,
-    });
+    const optionsQuery = useMusicCoverOptions(userId);
     const options = optionsQuery.data;
     const [modelId, setModelId] = useState("");
     const [error, setError] = useState("");
     const [busy, setBusy] = useState<"generate" | "upload">();
+    const [preview, setPreview] = useState<{ file: File; url: string }>();
+    const [dimensionsValid, setDimensionsValid] = useState(false);
+    const previewUpload = useRef<{ file: File; resourceId: string }>(null);
+    useEffect(
+        () => () => {
+            if (preview) URL.revokeObjectURL(preview.url);
+        },
+        [preview],
+    );
     const request = useRef<{ model: string; price: number; nonce: string } | null>(null);
     const input = useRef<HTMLInputElement>(null);
     const pending = cover.status === "pending";
@@ -61,14 +79,29 @@ export function MusicCoverControls({ userId, taskId, cover, onChange }: { userId
         });
     };
 
-    const upload = (file: File) => {
+    const selectUpload = (file: File) => {
         if (!options || !coverMimeTypes.includes(file.type) || file.size > options.maxUploadBytes) {
             setError(t("music.cover_upload_invalid"));
             return;
         }
+        setError("");
+        setDimensionsValid(false);
+        previewUpload.current = null;
+        setPreview({ file, url: URL.createObjectURL(file) });
+    };
+
+    const upload = (file: File) => {
         void run("upload", async () => {
-            const resource = await uploadResourceFile(file, "image", { expectedUserId: userId, fileName: file.name });
-            return attachMusicCover(userId, taskId, resource.id);
+            let resourceId = previewUpload.current?.file === file ? previewUpload.current.resourceId : undefined;
+            if (!resourceId) {
+                const resource = await uploadResourceFile(file, "image", { expectedUserId: userId, fileName: file.name });
+                resourceId = resource.id;
+                previewUpload.current = { file, resourceId };
+            }
+            const view = await attachMusicCover(userId, taskId, resourceId);
+            previewUpload.current = null;
+            setPreview(undefined);
+            return view;
         });
     };
 
@@ -85,13 +118,13 @@ export function MusicCoverControls({ userId, taskId, cover, onChange }: { userId
                         {options.models.length > 1 && (
                             <Select<string> ariaLabel={t("music.cover_allowed_models")} options={options.models.map((item) => ({ value: item.id, label: item.name }))} value={model.id} onChange={setModelId} disabled={pending || Boolean(busy)} />
                         )}
-                        <Button icon={<ImagePlus size={16} />} loading={busy === "generate"} disabled={pending || Boolean(busy)} onClick={generate}>
-                            {t("music.cover_payment_confirm", { price: charge })}
+                        <Button className="min-h-11" icon={cover.status === "none" ? <ImagePlus size={16} /> : <RotateCw size={16} />} loading={busy === "generate"} disabled={pending || Boolean(busy)} onClick={generate}>
+                            {cover.status === "none" ? t("music.cover_payment_confirm", { price: charge }) : `${t("music.cover_regenerate")} · ${charge}`}
                         </Button>
                     </>
                 )}
                 {options?.allowUpload && (
-                    <Button icon={<Upload size={16} />} loading={busy === "upload"} disabled={pending || Boolean(busy)} onClick={() => input.current?.click()}>
+                    <Button className="min-h-11" icon={<Upload size={16} />} loading={busy === "upload"} disabled={pending || Boolean(busy)} onClick={() => input.current?.click()}>
                         {t("music.cover_upload")}
                     </Button>
                 )}
@@ -104,7 +137,7 @@ export function MusicCoverControls({ userId, taskId, cover, onChange }: { userId
                         onChange={(event) => {
                             const file = event.currentTarget.files?.[0];
                             event.currentTarget.value = "";
-                            if (file) upload(file);
+                            if (file) selectUpload(file);
                         }}
                     />
                 )}
@@ -114,10 +147,36 @@ export function MusicCoverControls({ userId, taskId, cover, onChange }: { userId
                     {t("music.cover_pending")}
                 </p>
             )}
-            {(error || cover.status === "failed") && (
+            {((!preview && error) || cover.status === "failed") && (
                 <p role="alert" className="creation-music-track-error">
-                    {error || t("music.cover_failed")}
+                    {(!preview && error) || t("music.cover_failed")}
                 </p>
+            )}
+            {preview && (
+                <AppModal open centered title={t("music.cover_upload")} onCancel={() => setPreview(undefined)} closable={busy !== "upload"} keyboard={busy !== "upload"} maskClosable={false} footer={null}>
+                    <div className="flex flex-col items-start gap-3">
+                        <img
+                            className="aspect-square w-full max-w-64 self-center rounded-lg bg-muted object-contain"
+                            src={preview.url}
+                            alt={t("music.cover_preview")}
+                            onLoad={({ currentTarget }) => {
+                                const longestEdge = Math.max(currentTarget.naturalWidth, currentTarget.naturalHeight);
+                                const valid = longestEdge > 0 && longestEdge <= (options?.maxDimension ?? 0);
+                                setDimensionsValid(valid);
+                                if (!valid) setError(t("music.cover_upload_invalid"));
+                            }}
+                            onError={() => setError(t("music.cover_upload_invalid"))}
+                        />
+                        {error && (
+                            <p role="alert" className="text-destructive">
+                                {error}
+                            </p>
+                        )}
+                        <Button type="primary" icon={<Upload size={16} />} disabled={pending || !dimensionsValid} loading={busy === "upload"} onClick={() => upload(preview.file)}>
+                            {t("music.cover_upload")}
+                        </Button>
+                    </div>
+                </AppModal>
             )}
         </div>
     );

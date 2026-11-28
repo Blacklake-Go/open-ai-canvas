@@ -217,6 +217,7 @@ func (s *Service) StartWorker() {
 		return
 	}
 	s.taskWorker().start(ctx)
+	s.startMusicCoverDispatchWorker()
 	s.startResourceDeletionWorker(ctx)
 	s.startResourceOffloadWorker()
 	s.startSkillSyncWorker(ctx)
