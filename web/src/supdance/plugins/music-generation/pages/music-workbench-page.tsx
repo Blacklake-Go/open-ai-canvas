@@ -2,7 +2,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { MusicAdvancedDialog } from "../components/music-advanced-dialog";
 import { musicOutputLabel, trackSource, type MusicSource } from "../services/music-tools";
 import { useNavigate, useSearchParams } from "react-router";
-import { ArrowDownUp, AudioLines, Check, Disc3, FolderOpen, RefreshCw, Search, SlidersHorizontal } from "lucide-react";
+import { ArrowDownUp, AudioLines, Bot, Check, Disc3, FolderOpen, RefreshCw, Search, SlidersHorizontal } from "lucide-react";
 import { TrackList } from "../components/track-list";
 import { MusicTrimDialog } from "../components/music-trim-dialog";
 import { getMusicAssetHref, saveMusicClip } from "../services/music-assets";
@@ -11,6 +11,8 @@ import type { MusicTask, MusicOutput } from "../services/music-api";
 import { WorkspacePage } from "@/components/layout/workspace-page";
 import { AppDrawer } from "@/components/ui/product/app-drawer";
 import { IconButton } from "@/components/ui/base/buttons";
+import { translate } from "@/i18n";
+import { useGlobalAgentStore } from "@/stores/use-global-agent-store";
 import { useUserStore } from "@/stores/use-user-store";
 import { selectPluginEffectivelyEnabled, usePluginStore } from "@/stores/use-plugin-store";
 import { useI18n } from "@/supdance/plugins/i18n";
@@ -147,7 +149,12 @@ function MusicStudio({ userId }: { userId?: string }) {
                     <section className={`music-composer ${mobile === "create" ? "is-mobile-active" : ""}`}>
                         <div className="music-composer-heading">
                             <h1>{t("music.compose_heading")}</h1>
-                            {enabled && userId && <IconButton icon={SlidersHorizontal} className="size-11" aria-label={t("music.adv_tools")} title={t("music.adv_tools")} onClick={() => setAdvanced({})} />}
+                            {userId && (
+                                <div className="flex items-center gap-1">
+                                    <IconButton icon={Bot} className="size-11" aria-label={translate("shell.palette.agent")} title={translate("shell.palette.agent")} onClick={() => useGlobalAgentStore.getState().openAgent()} />
+                                    {enabled && <IconButton icon={SlidersHorizontal} className="size-11" aria-label={t("music.adv_tools")} title={t("music.adv_tools")} onClick={() => setAdvanced({})} />}
+                                </div>
+                            )}
                         </div>
                         {enabled && userId ? <MusicForm userId={userId} onSubmitted={showSubmitted} /> : <p role="status">{t("music.generation_disabled", undefined, "New music generation is disabled. Your tasks and saved works remain available.")}</p>}
                     </section>

@@ -881,8 +881,16 @@ export const SUPDANCE_UPSTREAM_PATCH_REGISTRY: readonly UpstreamPatchRecord[] = 
             "web/src/lib/canvas/agent-launcher-position.ts",
             "web/src/router.tsx",
         ],
-        files: ["web/src/components/canvas/use-agent-launcher-position.ts", "web/src/lib/canvas/agent-launcher-position.ts", "web/src/supdance/plugins/music-generation/components/waveform-player.tsx", "web/test/agent-launcher-position.test.mjs"],
-        reason: "通过底部工具栏标记约束助手停靠，独立播放路由使用就地入口，避免悬浮助手和模型提示遮挡控制区。",
+        files: [
+            "web/src/components/canvas/use-agent-launcher-position.ts",
+            "web/src/layouts/user-layout.tsx",
+            "web/src/lib/canvas/agent-launcher-position.ts",
+            "web/src/router.tsx",
+            "web/src/supdance/plugins/music-generation/components/waveform-player.tsx",
+            "web/src/supdance/plugins/music-generation/pages/music-workbench-page.tsx",
+            "web/test/agent-launcher-position.test.mjs",
+        ],
+        reason: "音乐工作台和独立播放页使用就地 Agent 入口，避免悬浮助手遮挡作品操作和播放控制。",
         upgradeRisk: "MEDIUM",
     },
     {

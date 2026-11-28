@@ -21,7 +21,9 @@ const GlobalAgentPanel = lazy(() => import("@/components/canvas/canvas-cloud-age
 
 export default function UserLayout({ children }: { children: ReactNode }) {
     const { pathname, search, key } = useLocation();
-    const focusedPlayback = useMatches().some(({ handle }) => (handle as { focusedPlayback?: boolean } | undefined)?.focusedPlayback);
+    const handles = useMatches().map(({ handle }) => handle as { focusedPlayback?: boolean; hideFloatingAgent?: boolean } | undefined);
+    const focusedPlayback = handles.some((handle) => handle?.focusedPlayback);
+    const hideFloatingAgent = focusedPlayback || handles.some((handle) => handle?.hideFloatingAgent);
     const adminWorkspace = pathname === "/admin" || pathname.startsWith("/admin/");
     const teamWorkspace = pathname.startsWith("/teams/");
     const spatialWorkbench = isSpatialWorkbenchPath(pathname);
@@ -56,13 +58,12 @@ export default function UserLayout({ children }: { children: ReactNode }) {
     useLayoutEffect(() => {
         if (teamWorkspace) useGlobalAgentStore.getState().reset();
     }, [teamWorkspace]);
-    // 从画布编辑器回到创作首页时收起 Agent：画布里停靠在右侧的面板到首页会变成浮窗，挡住首页。
-    // 只收起面板，对话和运行照常继续；在绘制前收起，首页不会先闪出浮窗。
+    // 进入有就地 Agent 入口的页面或创作首页时，在绘制前收起面板，对话和运行照常继续。
     useLayoutEffect(() => {
         const navigated = previousLocation.current !== key;
         previousLocation.current = key;
-        if (navigated && (focusedPlayback || (creationWorkspace && !new URLSearchParams(search).has("conversation")))) useGlobalAgentStore.getState().closeAgent();
-    }, [key, search, creationWorkspace, focusedPlayback]);
+        if (navigated && (hideFloatingAgent || (creationWorkspace && !new URLSearchParams(search).has("conversation")))) useGlobalAgentStore.getState().closeAgent();
+    }, [key, search, creationWorkspace, hideFloatingAgent]);
 
     useLayoutEffect(() => {
         // Ant Design 浮层挂载在 body，必须用路由级标记隔离用户工作台与画布编辑器、运营后台。
@@ -80,7 +81,7 @@ export default function UserLayout({ children }: { children: ReactNode }) {
     const globalAgent =
         userId && !teamWorkspace ? (
             <Suspense fallback={null}>
-                <GlobalAgentPanel key={userId} hideLauncher={focusedPlayback} />
+                <GlobalAgentPanel key={userId} hideLauncher={hideFloatingAgent} />
             </Suspense>
         ) : null;
 

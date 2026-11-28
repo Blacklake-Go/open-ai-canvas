@@ -258,6 +258,7 @@ const routes: RouteObject[] = [
             {
                 path: "/toolbox/music",
                 element: <RequireAuth>{deferred(<MusicWorkbenchPage />)}</RequireAuth>,
+                handle: { hideFloatingAgent: true },
             },
             {
                 path: musicTrackRoute,
