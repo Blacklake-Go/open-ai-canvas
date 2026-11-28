@@ -130,7 +130,7 @@ export function StyleTemplates({ onClose, onApply, admin = false }: DialogProps)
                         return (
                             <article key={p.id} className="music-pattern-card">
                                 <header>
-                                    <div className={"music-pattern-art music-pattern-art-" + p.genre} aria-hidden="true">
+                                    <div className="music-pattern-art" aria-hidden="true">
                                         <Disc3 />
                                     </div>
                                     <div>

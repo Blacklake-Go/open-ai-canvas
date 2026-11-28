@@ -633,40 +633,20 @@
     gap: 6px;
 }
 
-/* Gradient Art Badges */
 .music-pattern-dialog .music-pattern-art {
     flex: 0 0 2.75rem;
     height: 2.75rem;
     display: grid;
     place-items: center;
     border-radius: var(--music-radius-md, var(--radius));
-    --art-ink: var(--music-primary, var(--primary));
-    --art-paper: var(--music-bg-canvas, var(--background));
-    color: var(--art-paper);
-    background: repeating-radial-gradient(circle at 30% 70%, var(--art-ink) 0 3px, var(--art-paper) 4px 5px, var(--art-ink) 6px 11px);
+    border: 1px solid var(--music-border-subtle, var(--border));
+    color: var(--music-text-primary, var(--foreground));
+    background: var(--music-bg-surface-raised, var(--muted));
 }
 
 .music-pattern-dialog .music-pattern-art svg {
-    padding: 4px;
-    width: 1.5rem;
-    height: 1.5rem;
-    border-radius: 50%;
-    background: var(--art-ink);
-}
-
-.music-pattern-dialog .music-pattern-art-electro,
-.music-pattern-dialog .music-pattern-art-rock {
-    background: repeating-linear-gradient(130deg, var(--art-ink) 0 5px, var(--art-paper) 6px 8px, var(--art-ink) 9px 14px);
-}
-
-.music-pattern-dialog .music-pattern-art-chinese,
-.music-pattern-dialog .music-pattern-art-folk {
-    background: repeating-radial-gradient(ellipse at 85% 110%, var(--art-paper) 0 3px, var(--art-ink) 4px 8px);
-}
-
-.music-pattern-dialog .music-pattern-art-hiphop,
-.music-pattern-dialog .music-pattern-art-jazz {
-    background: repeating-conic-gradient(from 24deg at 15% 85%, var(--art-ink) 0deg 9deg, var(--art-paper) 10deg 14deg);
+    width: var(--space-5);
+    height: var(--space-5);
 }
 
 .music-pattern-dialog .music-pattern-empty {
